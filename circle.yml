@@ -40,7 +40,7 @@ defaults:
         if [ $(uname) = Linux ]; then
           export TMPDIR=/dev/shm
         fi
-	git clone --depth 1 https://github.com/ethereum/tests.git
+        git clone --depth 1 https://github.com/ethereum/tests.git
         export ETHEREUM_TEST_PATH=~/tests
         ctest --output-on-failure -j $TEST_PARALLEL_JOBS
 
