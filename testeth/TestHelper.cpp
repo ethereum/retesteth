@@ -71,6 +71,7 @@ string jsonTypeAsString(Json::ValueType _type)
 	default:
 		break;
 	}
+	return "";
 }
 
 DataObject convertJsonCPPtoData(Json::Value const& _input)

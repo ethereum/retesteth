@@ -69,56 +69,8 @@ DataObject StateTestSuite::doTests(DataObject const& _input, bool _fillin) const
 		BOOST_REQUIRE_MESSAGE(inputTest.count("env") > 0, testname + " env not set!");
 		BOOST_REQUIRE_MESSAGE(inputTest.count("pre") > 0, testname + " pre not set!");
 		BOOST_REQUIRE_MESSAGE(inputTest.count("transaction") > 0, testname + " transaction not set!");
-/*
-		ImportTest importer(inputTest, outputTest);
-		Listener::ExecTimeGuard guard{i.first};
-        importer.executeTest(_fillin);
 
-        if (_fillin)
-		{
-#if ETH_FATDB
-			if (inputTest.count("_info"))
-				outputTest["_info"] = inputTest.at("_info");
 
-			if (importer.exportTest())
-				cerr << testname << endl;
-#else
-			BOOST_THROW_EXCEPTION(Exception() << errinfo_comment(testname + " You can not fill tests when FATDB is switched off"));
-#endif
-		}
-		else
-		{
-			BOOST_REQUIRE_MESSAGE(inputTest.count("post") > 0, testname + " post not set!");
-			BOOST_REQUIRE_MESSAGE(inputTest.at("post").type() == obj_type, testname + " post field is not an object.");
-
-			//check post hashes against cpp client on all networks
-			bool foundResults = false;
-			mObject post = inputTest.at("post").get_obj();
-			vector<size_t> wrongTransactionsIndexes;
-			for (mObject::const_iterator i = post.begin(); i != post.end(); ++i)
-			{
-				BOOST_REQUIRE_MESSAGE(i->second.type() == array_type, testname + " post field should contain an array for each network.");
-				for (auto const& exp: i->second.get_array())
-				{
-					BOOST_REQUIRE_MESSAGE(exp.type() == obj_type, " post field should contain an array of objects for each network.");
-					if (!Options::get().singleTestNet.empty() && i->first != Options::get().singleTestNet)
-						continue;
-					if (test::isDisabledNetwork(test::stringToNetId(i->first)))
-						continue;
-					if (importer.checkGeneralTestSection(exp.get_obj(), wrongTransactionsIndexes, i->first))
-						foundResults = true;
-				}
-			}
-
-			if (!foundResults)
-			{
-				Options const& opt = Options::get();
-				BOOST_ERROR("Transaction not found! (Network: " + (opt.singleTestNet.empty() ? "Any" : opt.singleTestNet) + ", dataInd: " + toString(opt.trDataIndex) + ", gasInd: " + toString(opt.trGasIndex) + ", valInd: " + toString(opt.trValueIndex) + ")");
-			}
-
-			if (Options::get().statediff)
-				importer.traceStateDiff();
-		}*/
 	}
 	return v;
 }

@@ -1,0 +1,136 @@
+defaults:
+
+  upload-hunter-cache: &upload-hunter-cache
+    run:
+      name: "Upload Hunter cache"
+      working_directory: ~/build
+      command: |  # Upload Hunter cache if not PR build.
+        if [ ! "$CIRCLE_PR_NUMBER" ]; then
+          cmake --build . --target hunter_upload_cache
+        fi
+
+  environment-info: &environment-info
+    run:
+      name: "Environment info"
+      command: |
+        echo CXX: $CXX
+        $CXX --version
+        $CXX --version > compiler.version
+
+  configure: &configure
+    run:
+      name: "Configure"
+      # Build "out-of-source" to have better coverage report
+      # (ninja is using relative paths otherwise).
+      working_directory: ~/build
+      command: |
+        cmake ../project -G "$GENERATOR" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCOVERAGE=ON $CMAKE_OPTIONS
+
+  build: &build
+    run:
+      name: "Build"
+      working_directory: ~/build
+      command: cmake --build . -- -j $BUILD_PARALLEL_JOBS
+
+  test: &test
+    run:
+      name: "Test"
+      working_directory: ~/build/testeth
+      command: |
+        if [ $(uname) = Linux ]; then
+          export TMPDIR=/dev/shm
+        fi
+        git clone --depth 1 https://github.com/ethereum/tests.git
+        export ETHEREUM_TEST_PATH=~/build/testeth/tests
+        ctest --output-on-failure -j $TEST_PARALLEL_JOBS
+
+  store-retesteth: &store-retesteth
+    store_artifacts:
+      path: ~/build/testeth
+      destination: retesteth
+
+  upload-coverage-data: &upload-coverage-data
+    run:
+      name: "Upload coverage data"
+      command: |
+        pwd
+        $GCOV --version
+        codecov --required --gcov-exec "$GCOV" --gcov-root ~/build
+
+  linux-steps: &linux-steps
+    - checkout
+    - *environment-info
+    - *configure
+#    - *upload-hunter-cache
+    - *build
+    - *store-retesteth
+    - *test
+    - *upload-coverage-data
+
+
+version: 2
+jobs:
+
+  Linux-Clang5:
+    environment:
+      - CXX: clang++-5.0
+      - CC:  clang-5.0
+      - GCOV: llvm-cov-5.0 gcov
+      - GENERATOR: Ninja
+      - BUILD_PARALLEL_JOBS: 8
+      - TEST_PARALLEL_JOBS: 8
+    docker:
+      - image: ethereum/cpp-build-env
+    steps: *linux-steps
+
+  Linux-GCC6-Debug:
+    environment:
+      - BUILD_TYPE: Debug
+      - CXX: g++-6
+      - CC:  gcc-6
+      - GCOV: gcov-6
+      - GENERATOR: Ninja
+      - BUILD_PARALLEL_JOBS: 4
+      - TEST_PARALLEL_JOBS: 4
+      # TODO: Fix memory leaks reported in leveldb.
+      # - CMAKE_OPTIONS: -DSANITIZE=address
+      # - ASAN_OPTIONS: detect_leaks=0
+    docker:
+      - image: ethereum/cpp-build-env
+    steps: *linux-steps
+
+  macOS-XCode9:
+    environment:
+      - CXX: clang++
+      - GCOV: gcov
+      - GENERATOR: Ninja
+      - BUILD_PARALLEL_JOBS: 8
+      - TEST_PARALLEL_JOBS: 8
+    macos:
+      xcode: "9.0"
+    steps:
+      - checkout
+      - *environment-info
+      - run:
+          name: "Install macOS dependencies"
+          command: |
+            pip install -q requests codecov &
+            HOMEBREW_NO_AUTO_UPDATE=1 brew install -q cmake ninja &
+            wait
+      - *configure
+#      - *upload-hunter-cache
+      - *build
+      - *store-retesteth
+      - *test
+      - *upload-coverage-data
+
+# TODO: Run GCC6 build only in develop branch.
+# TODO: Enabled nightly builds and add more configs.
+# TODO: Separate builds from testing jobs.
+workflows:
+  version: 2
+  cpp-ethereum:
+    jobs:
+      - macOS-XCode9
+      - Linux-Clang5
+      - Linux-GCC6-Debug

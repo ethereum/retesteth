@@ -39,6 +39,7 @@ namespace {
 
 void removeComments(test::DataObject& _obj)
 {
+	(void)_obj;
 	/*if (_obj.type() == Json::objectValue)
 	{
 		list<string> removeList;
@@ -64,6 +65,9 @@ void removeComments(test::DataObject& _obj)
 
 void addClientInfo(test::DataObject& _v, fs::path const& _testSource, h256 const& _testSourceHash)
 {
+	(void)_v;
+	(void)_testSource;
+	(void)_testSourceHash;
 	/*for (auto& i: _v.get_obj())
 	{
 		json_spirit::mObject& o = i.second.get_obj();
@@ -88,6 +92,8 @@ void addClientInfo(test::DataObject& _v, fs::path const& _testSource, h256 const
 
 void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
 {
+	(void)_compiledTest;
+	(void)_sourceTest;
 	/*Json::Value v;
 	string const s = asString(dev::contents(_compiledTest));
 	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _compiledTest.string() + " is empty.");
@@ -213,6 +219,9 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
 			if (!Options::get().singleTest)
 				std::cout << "Populating tests...";
 
+			test::DataObject data;
+			removeComments(data);
+			addClientInfo(data,boostRelativeTestPath, h256());
 			/*json_spirit::mValue v;
 			bytes const byteContents = dev::contents(_testFileName);
 			string const s = asString(byteContents);

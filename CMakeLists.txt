@@ -10,17 +10,23 @@ HunterGate(
 	LOCAL
 )
 
-
 project(retesteth)
 set(CMAKE_CXX_STANDARD 11) # C++11...
 set(CMAKE_CXX_STANDARD_REQUIRED ON) #...is required...
 set(CMAKE_CXX_EXTENSIONS OFF) #...without compiler extensions like gnu++11
 
-
 hunter_add_package(Boost COMPONENTS filesystem program_options system thread)
 find_package(Boost CONFIG REQUIRED filesystem program_options system thread)
 hunter_add_package(jsoncpp)
 find_package(jsoncpp CONFIG REQUIRED)
+
+#Cmake files configuration
+set(ETH_CMAKE_DIR "${CMAKE_CURRENT_LIST_DIR}/cmake" CACHE PATH "The path to the cmake directory")
+list(APPEND CMAKE_MODULE_PATH ${ETH_CMAKE_DIR})
+include(EthOptions)
+include(EthDependencies)
+include(EthCompilerSettings)
+configure_project()
 
 add_subdirectory(devcore)
 add_subdirectory(testeth)
