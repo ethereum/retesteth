@@ -35,13 +35,13 @@ defaults:
   test: &test
     run:
       name: "Test"
-      working_directory: ~/build
+      working_directory: ~/build/testeth
       command: |
         if [ $(uname) = Linux ]; then
           export TMPDIR=/dev/shm
         fi
         git clone --depth 1 https://github.com/ethereum/tests.git
-        export ETHEREUM_TEST_PATH=~/tests
+        export ETHEREUM_TEST_PATH=~/build/testeth/tests
         ctest --output-on-failure -j $TEST_PARALLEL_JOBS
 
   store-retesteth: &store-retesteth
