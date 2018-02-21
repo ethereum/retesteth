@@ -33,7 +33,6 @@ class DataObject
 	}
 	void setSubObjectKey(size_t _index, std::string const& _key)
 	{
-		assert(_index >= 0);
 		assert(_index < m_subObjects.size());
 		if (m_subObjects.size() > _index)
 			m_subObjects.at(_index).setKey(_key);
@@ -51,7 +50,7 @@ class DataObject
 		m_type = DataType::Array;
 		m_subObjects.push_back(_obj);
 	}
-	void print(int level = 0) const
+	void print(size_t level = 0) const
 	{
 		for (size_t i = 0; i < level; i++)
 			std::cerr << "-";

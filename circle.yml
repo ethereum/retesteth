@@ -44,7 +44,7 @@ defaults:
         export ETHEREUM_TEST_PATH=~/tests
         ctest --output-on-failure -j $TEST_PARALLEL_JOBS
 
-  store-testeth: &store-retesteth
+  store-retesteth: &store-retesteth
     store_artifacts:
       path: ~/build/testeth
       destination: retesteth

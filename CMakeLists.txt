@@ -25,6 +25,7 @@ set(ETH_CMAKE_DIR "${CMAKE_CURRENT_LIST_DIR}/cmake" CACHE PATH "The path to the 
 list(APPEND CMAKE_MODULE_PATH ${ETH_CMAKE_DIR})
 include(EthOptions)
 include(EthDependencies)
+include(EthCompilerSettings)
 configure_project()
 
 add_subdirectory(devcore)
