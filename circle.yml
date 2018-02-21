@@ -60,7 +60,7 @@ defaults:
     - checkout
     - *environment-info
     - *configure
-    - *upload-hunter-cache
+#    - *upload-hunter-cache
     - *build
     - *store-retesteth
     - *test
@@ -117,7 +117,7 @@ jobs:
             HOMEBREW_NO_AUTO_UPDATE=1 brew install -q cmake ninja &
             wait
       - *configure
-      - *upload-hunter-cache
+#      - *upload-hunter-cache
       - *build
       - *store-retesteth
       - *test
