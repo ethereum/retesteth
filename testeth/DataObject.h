@@ -46,7 +46,7 @@ class DataObject
 	}
 	void addArrayObject(DataObject const& _obj)
 	{
-		assert(m_type == DataType::Null);
+		assert(m_type == DataType::Null || m_type == DataType::Array);
 		m_type = DataType::Array;
 		m_subObjects.push_back(_obj);
 	}
