@@ -109,7 +109,6 @@ jobs:
       xcode: "9.0"
     steps:
       - checkout
-      - *update-submodules
       - *environment-info
       - run:
           name: "Install macOS dependencies"
