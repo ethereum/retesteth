@@ -58,7 +58,6 @@ defaults:
 
   linux-steps: &linux-steps
     - checkout
-    - *update-submodules
     - *environment-info
     - *configure
     - *upload-hunter-cache
