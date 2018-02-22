@@ -219,7 +219,7 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
 			if (!Options::get().singleTest)
 				std::cout << "Populating tests...";
 
-			test::DataObject data;
+			test::DataObject data(DataType::Null);
 			removeComments(data);
 			addClientInfo(data,boostRelativeTestPath, h256());
 			/*json_spirit::mValue v;

@@ -1,4 +1,5 @@
 #include <testeth/TestHelper.h>
+#include <testeth/TestOutputHelper.h>
 #include <testeth/Options.h>
 
 using namespace std;
@@ -57,6 +58,28 @@ void copyFile(fs::path const& _source, fs::path const& _destination)
 	dst << src.rdbuf();
 }
 
+void requireJsonFields(DataObject const& _o, string const& _section,
+	map<string, DataType> const& _validationMap)
+{
+	// check for unexpected fiedls
+	for (auto const field : _o.getSubObjects())
+		BOOST_CHECK_MESSAGE(_validationMap.count(field.getKey()),
+			field.getKey() + " should not be declared in " + _section + " section!");
+
+	// check field types with validation map
+	for (auto const vmap : _validationMap)
+	{
+		BOOST_REQUIRE_MESSAGE(_o.count(vmap.first) > 0, vmap.first + " not found in " + _section +
+															" section! " +
+															TestOutputHelper::get().testName());
+		BOOST_REQUIRE_MESSAGE(_o.at(vmap.first).type() == vmap.second,
+			_section + " " + vmap.first + " expected to be " + DataObject::dataTypeAsString(vmap.second) +
+				", but set to " + DataObject::dataTypeAsString(_o.at(vmap.first).type()) + " in " +
+				TestOutputHelper::get().testName());
+	}
+}
+
+
 string jsonTypeAsString(Json::ValueType _type)
 {
 	switch (_type) {
@@ -77,7 +100,7 @@ string jsonTypeAsString(Json::ValueType _type)
 DataObject convertJsonCPPtoData(Json::Value const& _input)
 {
 	if (_input.isNull())
-		return DataObject();
+		return DataObject(DataType::Null);
 
 	if (_input.isString())
 		return DataObject(_input.asString());
@@ -87,7 +110,7 @@ DataObject convertJsonCPPtoData(Json::Value const& _input)
 
 	if (_input.isArray())
 	{
-		DataObject root;
+		DataObject root(DataType::Array);
 		for (Json::ArrayIndex i = 0; i < _input.size(); i++)
 			root.addArrayObject(convertJsonCPPtoData(_input.get(i, Json::Value())));
 		return root;
@@ -95,7 +118,7 @@ DataObject convertJsonCPPtoData(Json::Value const& _input)
 
 	if (_input.isObject())
 	{
-		DataObject root;
+		DataObject root(DataType::Object);
 		for (auto const& i: _input)
 			root.addSubObject(convertJsonCPPtoData(i));
 
@@ -106,7 +129,7 @@ DataObject convertJsonCPPtoData(Json::Value const& _input)
 	}
 
 	BOOST_ERROR("Error parsing JSON node. Element type not defined! " + jsonTypeAsString(_input.type()));
-	return DataObject();
+	return DataObject(DataType::Null);
 }
 
 
