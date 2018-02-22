@@ -52,6 +52,7 @@ class DataObject
 		for (auto& i: m_subObjects)
 			if (i.getKey() == _key)
 				return i;
+		return m_subObjects[0]; // should never hit this line
 	}
 
 	DataObject const& at(std::string const& _key) const
