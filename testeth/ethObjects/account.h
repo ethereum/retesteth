@@ -1,14 +1,15 @@
 #pragma once
 #include <devcore/Common.h>
 #include <testeth/TestHelper.h>
+#include <testeth/ethObjects/object.h>
 
 using namespace dev;
 namespace  test {
-	class account
+	class account : public object
 	{
 		public:
 		account(DataObject const& _account):
-			m_account(_account)
+			object(_account)
 		{
 			test::requireJsonFields(_account, "account " + _account.getKey(), {
 				{"balance", DataType::String},
@@ -17,8 +18,5 @@ namespace  test {
 				{"storage", DataType::Object}
 			});
 		}
-		private:
-		DataObject m_account;
-
 	};
 }

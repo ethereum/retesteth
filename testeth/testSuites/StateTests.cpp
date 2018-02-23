@@ -126,7 +126,23 @@ DataObject StateTestSuite::doTests(DataObject const& _input, bool _fillin) const
 		std::vector<transactionInfo> transactions = parseGeneralTransaction(inputTest.at("transaction"));
 
 		//RPCSession& session = RPCSession::instance("/home/wins/.ethereum/geth.ipc");
-		//session.test_setChainParams("");
+
+		DataObject genesis;
+		genesis.addSubObject(DataObject("version", "1"));
+		DataObject params;
+		params.addSubObject(DataObject("miningMethod", "NoProof"));
+		params.addSubObject(DataObject("forkRules", "Frontier"));
+		genesis.addSubObject("params", params);
+		genesis.addSubObject("genesis", aTestGenesis.getData());
+		genesis.addSubObject("state", aState.getData());
+
+		genesis["params"]["forkRules"] = "Homestead";
+
+		//genesis.print();
+		//std::cerr << genesis.asJson();
+		std::cerr << transactions[0].transaction.getData().asJson();
+
+		//session.test_setChainParams(genesis.asJson());
 
 	}
 	return v;
