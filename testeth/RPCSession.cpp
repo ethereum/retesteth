@@ -252,6 +252,16 @@ void RPCSession::test_setChainParams(vector<string> const& _accounts)
 	test_setChainParams(Json::FastWriter().write(config));
 }
 
+string RPCSession::test_addTransaction(std::string const& _transaction)
+{
+	return rpcCall("test_addTransaction", { _transaction }).asString();
+}
+
+string RPCSession::test_getPostState(std::string const& _config)
+{
+	return rpcCall("test_getPostState", { _config }).asString();
+}
+
 void RPCSession::test_setChainParams(string const& _config)
 {
 	BOOST_REQUIRE(rpcCall("test_setChainParams", { _config }) == true);
@@ -280,7 +290,10 @@ void RPCSession::test_mineBlocks(int _number)
 		unsigned timeSpent = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
 		if (timeSpent > m_maxMiningTime)
 			BOOST_FAIL("Error in test_mineBlocks: block mining timeout!");
-		if (fromBigEndian<u256>(fromHex(rpcCall("eth_blockNumber").asString())) >= startBlock + _number)
+
+		bigint number = fromBigEndian<u256>(fromHex(rpcCall("eth_blockNumber").asString()));
+		std::cerr << "current Number: " << number << std::endl;
+		if (number >= startBlock + _number)
 			break;
 		else
 			sleepTime *= 2;
@@ -354,9 +367,9 @@ string const& RPCSession::accountCreateIfNotExists(size_t _id)
 RPCSession::RPCSession(const string& _path):
 	m_ipcSocket(_path)
 {
-	accountCreate();
-	// This will pre-fund the accounts create prior.
-	test_setChainParams(m_accounts);
+	//accountCreate();
+	//This will pre-fund the accounts create prior.
+	//test_setChainParams(m_accounts);
 }
 
 string RPCSession::TransactionData::toJson() const

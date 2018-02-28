@@ -96,7 +96,9 @@ public:
 	std::string eth_getStorageRoot(std::string const& _address, std::string const& _blockNumber);
 	std::string personal_newAccount(std::string const& _password);
 	void personal_unlockAccount(std::string const& _address, std::string const& _password, int _duration);
-	void test_setChainParams(std::vector<std::string> const& _accounts);
+	std::string test_getPostState(std::string const& _config);
+	std::string test_addTransaction(std::string const& _transaction);
+	void test_setChainParams(std::vector<std::string> const& _genesis);
 	void test_setChainParams(std::string const& _config);
 	void test_rewindToBlock(size_t _blockNr);
 	void test_modifyTimestamp(size_t _timestamp);
@@ -116,7 +118,7 @@ private:
 
 	IPCSocket m_ipcSocket;
 	size_t m_rpcSequence = 1;
-	unsigned m_maxMiningTime = 6000000; // 600 seconds
+	unsigned m_maxMiningTime = 60000; // 6 seconds
 	unsigned m_sleepTime = 10; // 10 milliseconds
 	unsigned m_successfulMineRuns = 0;
 

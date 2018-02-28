@@ -125,7 +125,7 @@ DataObject StateTestSuite::doTests(DataObject const& _input, bool _fillin) const
 		test::genesis aTestGenesis(inputTest.at("env"), aState);
 		std::vector<transactionInfo> transactions = parseGeneralTransaction(inputTest.at("transaction"));
 
-		//RPCSession& session = RPCSession::instance("/home/wins/.ethereum/geth.ipc");
+		RPCSession& session = RPCSession::instance("/home/wins/.ethereum/geth.ipc");
 
 		DataObject genesis;
 		genesis.addSubObject(DataObject("version", "1"));
@@ -137,12 +137,12 @@ DataObject StateTestSuite::doTests(DataObject const& _input, bool _fillin) const
 		genesis.addSubObject("state", aState.getData());
 
 		genesis["params"]["forkRules"] = "Homestead";
+		genesis["params"]["blockReward"] = "0x00";
 
-		//genesis.print();
-		//std::cerr << genesis.asJson();
-		std::cerr << transactions[0].transaction.getData().asJson();
-
-		//session.test_setChainParams(genesis.asJson());
+		session.test_setChainParams(genesis.asJson());
+		session.test_addTransaction(transactions[0].transaction.getData().asJson());
+		session.test_mineBlocks(1);
+		std::cerr << "PostState: " << session.test_getPostState("{ \"version\" : \"1\" }") << std::endl;
 
 	}
 	return v;

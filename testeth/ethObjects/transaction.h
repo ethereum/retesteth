@@ -19,6 +19,7 @@ namespace test {
 				{"to", DataType::String},
 				{"value", DataType::String}
 			});
+			m_data["version"] = "0x01";
 		}
 	};
 }
