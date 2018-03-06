@@ -47,16 +47,20 @@ class DataObject
 		return false;
 	}
 	std::string asString() const { return m_strVal; }
+	int asInt() const { return m_intVal; }
 	DataObject& operator[] (std::string const& _key)
 	{
+		assert(m_type == DataType::Null || m_type == DataType::Object);
 		for (auto& i: m_subObjects)
 			if (i.getKey() == _key)
 				return i;
 		DataObject obj(DataType::Null);
 		obj.setKey(_key);
 		m_subObjects.push_back(obj);
-		return m_subObjects[m_subObjects.size() - 1];
+		m_type = DataType::Object;
+		return m_subObjects.at(m_subObjects.size() - 1);
 	}
+
 	DataObject& operator = (std::string const& _value)
 	{
 		assert(m_type == DataType::String || m_type == DataType::Null);
@@ -64,6 +68,15 @@ class DataObject
 		m_strVal = _value;
 		return *this;
 	}
+
+	/*DataObject& operator = (DataObject const& _value)
+	{
+		assert(m_type == DataType::Null);
+		m_type = _value.type();
+		m_strKey = _value.getKey();
+		m_subObjects = _value.getSubObjects();
+		return *this;
+	}*/
 
 	DataObject const& at(std::string const& _key) const
 	{
@@ -141,6 +154,7 @@ class DataObject
 				if (!m_strKey.empty())
 					out << "\"" << m_strKey << "\" : ";
 				out << "\"" << "null" << "\"";
+			break;
 			case DataType::Object:
 				if (!m_strKey.empty())
 				{

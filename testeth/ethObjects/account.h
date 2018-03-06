@@ -12,10 +12,10 @@ namespace  test {
 			object(_account)
 		{
 			test::requireJsonFields(_account, "account " + _account.getKey(), {
-				{"balance", DataType::String},
-				{"code", DataType::String},
-				{"nonce", DataType::String},
-				{"storage", DataType::Object}
+				{"balance", {{DataType::String}} },
+				{"code", {{DataType::String}} },
+				{"nonce", {{DataType::String}} },
+				{"storage", {{DataType::Object}} }
 			});
 		}
 	};

@@ -45,12 +45,13 @@ namespace test {
 
 struct transactionInfo
 {
-	transactionInfo(int _gasInd, int _dataInd, int _valueInd, DataObject const& _transaction) :
-		gasInd(_gasInd), dataInd(_dataInd), valueInd(_valueInd), transaction(_transaction)
+	transactionInfo(size_t _dataInd, size_t _gasInd, size_t _valueInd, DataObject const& _transaction) :
+		gasInd(_gasInd), dataInd(_dataInd), valueInd(_valueInd), executed(false), transaction(_transaction)
 		{}
-	int gasInd;
-	int dataInd;
-	int valueInd;
+	size_t gasInd;
+	size_t dataInd;
+	size_t valueInd;
+	bool executed;
 	test::transaction transaction;
 };
 
@@ -58,13 +59,13 @@ std::vector<transactionInfo> parseGeneralTransaction(DataObject const& _generalT
 {
 	std::vector<transactionInfo> ret;
 	test::requireJsonFields(_generalTransaction, "transaction", {
-		{"data", DataType::Array},
-		{"gasLimit", DataType::Array},
-		{"gasPrice", DataType::String},
-		{"nonce", DataType::String},
-		{"secretKey", DataType::String},
-		{"to", DataType::String},
-		{"value", DataType::Array}
+		{"data", {{DataType::Array}} },
+		{"gasLimit", {{DataType::Array}} },
+		{"gasPrice", {{DataType::String}} },
+		{"nonce", {{DataType::String}} },
+		{"secretKey", {{DataType::String}} },
+		{"to", {{DataType::String}} },
+		{"value", {{DataType::Array}} }
 	});
 
 	for (size_t dataInd = 0; dataInd < _generalTransaction.at("data").getSubObjects().size(); dataInd++)
@@ -91,6 +92,106 @@ std::vector<transactionInfo> parseGeneralTransaction(DataObject const& _generalT
 		}
 	}
 	return ret;
+}
+
+void parseJsonIntValueIntoSet(DataObject const& _json, set<int>& _out)
+{
+	if (_json.type() == DataType::Array)
+	{
+		for (auto const& val: _json.getSubObjects())
+			_out.emplace(val.asInt());
+	}
+	else if (_json.type() == DataType::Integer)
+		_out.emplace(_json.asInt());
+}
+
+void FillTest()
+{
+
+}
+
+void RunTest(DataObject const& _testFile)
+{
+	test::state aState(_testFile.at("pre"));
+	test::genesis aTestGenesis(_testFile.at("env"), aState);
+	std::vector<transactionInfo> transactions = parseGeneralTransaction(_testFile.at("transaction"));
+	BOOST_REQUIRE_MESSAGE(_testFile.count("post") > 0, TestOutputHelper::get().testName() + " post not set!");
+
+	RPCSession& session = RPCSession::instance("/home/wins/.ethereum/geth.ipc");
+
+	DataObject genesis;
+	genesis["version"] = "1";
+	genesis.addSubObject("genesis", aTestGenesis.getData());
+	genesis.addSubObject("state", aState.getData());
+	genesis["params"]["miningMethod"] = "NoProof";
+	genesis["params"]["blockReward"] = "0x00";
+	genesis["genesis"]["timestamp"] = "0x00";	//Set Genesis tstmp to 0. the actual timestamp specified in env section is a timestamp of the first block.
+
+	// read post state results
+	for (auto const& post: _testFile.at("post").getSubObjects())
+	{
+		if (!Options::get().singleTestNet.empty() && Options::get().singleTestNet != post.getKey())
+			continue;
+
+		BOOST_REQUIRE_MESSAGE(getNetworks().count(post.getKey()), "Unknown network in the post section of the test! " + TestOutputHelper::get().testName() + " network: " + post.getKey());
+		genesis["params"]["forkRules"] = post.getKey();
+
+		session.test_setChainParams(genesis.asJson());
+
+		// read all results for a specific fork
+		for (auto const& results: post.getSubObjects())
+		{
+			requireJsonFields(results, "post", {
+				{"hash", {{DataType::String}} },
+				{"logs", {{DataType::String}} },
+				{"indexes", {{DataType::Object}} }
+			});
+			requireJsonFields(results.at("indexes"), "indexes", {
+				{"data", {{DataType::Array}, {DataType::Integer}} },
+				{"gas", {{DataType::Array}, {DataType::Integer}} },
+				{"value", {{DataType::Array}, {DataType::Integer}} }
+			});
+
+			set<int> _dataIndexes;
+			parseJsonIntValueIntoSet(results.at("indexes").at("data"), _dataIndexes);
+			set<int> _gasIndexes;
+			parseJsonIntValueIntoSet(results.at("indexes").at("gas"), _gasIndexes);
+			set<int> _valueIndexes;
+			parseJsonIntValueIntoSet(results.at("indexes").at("value"), _valueIndexes);
+
+			// look for a transaction with this indexes and execute it on a client
+			for (auto& tr: transactions)
+			{
+				bool blockMined = false;
+				if ((_dataIndexes.count(tr.dataInd) || _dataIndexes.count(-1)) &&
+					(_gasIndexes.count(tr.gasInd) || _gasIndexes.count(-1)) &&
+					(_valueIndexes.count(tr.valueInd) || _valueIndexes.count(-1)))
+				{
+					u256 a(aTestGenesis.getData().at("timestamp").asString());
+					session.test_modifyTimestamp(a.convert_to<size_t>());
+					session.test_addTransaction(tr.transaction.getData().asJson());
+					session.test_mineBlocks(1);
+					tr.executed = true;
+					blockMined = true;
+					string fullPost;
+					string postHash = session.test_getPostState("{ \"version\" : \"1\" }");
+					if (postHash != results.at("hash").asString())
+						fullPost = session.test_getPostState("{ \"version\" : \"2\" }");
+					BOOST_CHECK_MESSAGE(postHash == results.at("hash").asString(),
+						"Error at " + TestOutputHelper::get().testName() + ", fork: " + post.getKey() + ", hash mismatch: " + postHash + ", expected: " + results.at("hash").asString()
+						 + "\nState Dump: " + fullPost);
+				}
+				if (blockMined)
+					session.test_rewindToBlock(0);
+			}
+		}
+
+		for (auto const& tr: transactions)
+		{
+			BOOST_REQUIRE_MESSAGE(tr.executed == true, "A transaction was specified, but there is no execution results in a test! Transaction: dInd="
+			+ toString(tr.dataInd) + " gInd=" + toString(tr.gasInd) + " vInd=" + toString(tr.valueInd));
+		}
+	}
 }
 
 DataObject StateTestSuite::doTests(DataObject const& _input, bool _fillin) const
@@ -121,29 +222,10 @@ DataObject StateTestSuite::doTests(DataObject const& _input, bool _fillin) const
 		BOOST_REQUIRE_MESSAGE(inputTest.count("pre") > 0, testname + " pre not set!");
 		BOOST_REQUIRE_MESSAGE(inputTest.count("transaction") > 0, testname + " transaction not set!");
 
-		test::state aState(inputTest.at("pre"));
-		test::genesis aTestGenesis(inputTest.at("env"), aState);
-		std::vector<transactionInfo> transactions = parseGeneralTransaction(inputTest.at("transaction"));
-
-		RPCSession& session = RPCSession::instance("/home/wins/.ethereum/geth.ipc");
-
-		DataObject genesis;
-		genesis.addSubObject(DataObject("version", "1"));
-		DataObject params;
-		params.addSubObject(DataObject("miningMethod", "NoProof"));
-		params.addSubObject(DataObject("forkRules", "Frontier"));
-		genesis.addSubObject("params", params);
-		genesis.addSubObject("genesis", aTestGenesis.getData());
-		genesis.addSubObject("state", aState.getData());
-
-		genesis["params"]["forkRules"] = "Homestead";
-		genesis["params"]["blockReward"] = "0x00";
-
-		session.test_setChainParams(genesis.asJson());
-		session.test_addTransaction(transactions[0].transaction.getData().asJson());
-		session.test_mineBlocks(1);
-		std::cerr << "PostState: " << session.test_getPostState("{ \"version\" : \"1\" }") << std::endl;
-
+		if (_fillin)
+			FillTest();
+		else
+			RunTest(inputTest);
 	}
 	return v;
 }

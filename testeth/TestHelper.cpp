@@ -59,7 +59,7 @@ void copyFile(fs::path const& _source, fs::path const& _destination)
 }
 
 void requireJsonFields(DataObject const& _o, string const& _section,
-	map<string, DataType> const& _validationMap)
+	map<string, possibleType> const& _validationMap)
 {
 	// check for unexpected fiedls
 	for (auto const field : _o.getSubObjects())
@@ -72,10 +72,22 @@ void requireJsonFields(DataObject const& _o, string const& _section,
 		BOOST_REQUIRE_MESSAGE(_o.count(vmap.first) > 0, vmap.first + " not found in " + _section +
 															" section! " +
 															TestOutputHelper::get().testName());
-		BOOST_REQUIRE_MESSAGE(_o.at(vmap.first).type() == vmap.second,
-			_section + " " + vmap.first + " expected to be " + DataObject::dataTypeAsString(vmap.second) +
-				", but set to " + DataObject::dataTypeAsString(_o.at(vmap.first).type()) + " in " +
-				TestOutputHelper::get().testName());
+		bool matched = false;
+		string sTypes;
+		for(auto const& type: vmap.second)
+		{
+			if (sTypes.size())
+				sTypes += ", or ";
+			sTypes += DataObject::dataTypeAsString(type);
+			if (_o.at(vmap.first).type() == type)
+				matched = true;
+		}
+		if (matched == false)
+		{
+			BOOST_ERROR(_section + " " + vmap.first + " expected to be " + sTypes +
+					", but set to " + DataObject::dataTypeAsString(_o.at(vmap.first).type()) + " in " +
+					TestOutputHelper::get().testName());
+		}
 	}
 }
 
@@ -132,5 +144,18 @@ DataObject convertJsonCPPtoData(Json::Value const& _input)
 	return DataObject(DataType::Null);
 }
 
+set<string> const& getNetworks()
+{
+	static set<string> networks;
+	if(networks.size() == 0)
+	{
+		networks.emplace("Frontier");
+		networks.emplace("Homestead");
+		networks.emplace("EIP150");
+		networks.emplace("EIP158");
+		networks.emplace("Byzantium");
+	}
+	return networks;
+}
 
 }

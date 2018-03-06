@@ -8,7 +8,7 @@ namespace test {
 		object(DataObject const& _json):
 			m_data(_json)
 		{}
-		DataObject const& getData() { return m_data; }
+		DataObject const& getData() const { return m_data; }
 		protected:
 		DataObject m_data;
 	};

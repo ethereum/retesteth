@@ -28,6 +28,8 @@
 #include <thread>
 #include <chrono>
 
+#include <testeth/TestOutputHelper.h>
+
 using namespace std;
 using namespace dev;
 
@@ -289,10 +291,10 @@ void RPCSession::test_mineBlocks(int _number)
 		auto endTime = std::chrono::steady_clock::now();
 		unsigned timeSpent = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
 		if (timeSpent > m_maxMiningTime)
-			BOOST_FAIL("Error in test_mineBlocks: block mining timeout!");
+			break; // coul be that some blocks are invalid.
+			//BOOST_FAIL("Error in test_mineBlocks: block mining timeout! " + test::TestOutputHelper::get().testName());
 
 		bigint number = fromBigEndian<u256>(fromHex(rpcCall("eth_blockNumber").asString()));
-		std::cerr << "current Number: " << number << std::endl;
 		if (number >= startBlock + _number)
 			break;
 		else
@@ -345,7 +347,7 @@ Json::Value RPCSession::rpcCall(string const& _methodName, vector<string> const&
 		if (_canFail)
 			return Json::Value();
 
-		BOOST_FAIL("Error on JSON-RPC call: " + result["error"]["message"].asString());
+		BOOST_FAIL("Error on JSON-RPC call (" + test::TestOutputHelper::get().testName() + "): " + result["error"]["message"].asString());
 	}
 	return result["result"];
 }
