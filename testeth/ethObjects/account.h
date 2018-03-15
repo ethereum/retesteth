@@ -18,24 +18,11 @@ namespace  test {
 				{"nonce", {{DataType::String}} },
 				{"storage", {{DataType::Object}} }
             });
-            // make all fields hex
-            m_data.setKey(validateAddress(m_data.getKey()));
-		}
 
-        static std::string validateAddress(std::string const& _address)
-        {
-            static std::string addressAlphabet = "0123456789abcdef";
-            std::string rightAddress;
-            if(_address.length() == 40)
-                rightAddress = "0x" + _address;
-            else if (_address.length() == 42)
-                rightAddress = _address;
-            assert(rightAddress.length() == 42);
-            assert(rightAddress[0] == '0' && rightAddress[1] == 'x');
-            for (size_t i = 2; i < rightAddress.length(); i++)
-                assert(addressAlphabet.find(rightAddress[i]) != std::string::npos);
-            return rightAddress;
-        }
+            // Make all fields hex
+            m_data.setKey(makeHexAddress(m_data.getKey()));
+            makeAllFieldsHex(m_data);
+		}
     };
 
     class expectAccount: public object
@@ -49,7 +36,10 @@ namespace  test {
             m_hasNonce = _account.count("nonce");
             m_hasCode = _account.count("code");
             m_hasStorage = _account.count("storage");
-            m_data.setKey(account::validateAddress(m_data.getKey()));
+
+            // Make all fields hex
+            m_data.setKey(account::makeHexAddress(m_data.getKey()));
+            makeAllFieldsHex(m_data);
         }
 
         bool shouldNotExist() const { return m_shouldNotExist; }
@@ -62,12 +52,13 @@ namespace  test {
         {
             BOOST_REQUIRE(_storage.type() == DataType::Object);
             BOOST_REQUIRE(hasStorage());
+
             DataObject const& myStorage = m_data.at("storage");
             for (auto const& element: myStorage.getSubObjects())
             {
-                BOOST_CHECK_MESSAGE(!_storage.count(element.getKey()),
-                   TestOutputHelper::get().testName() + " Missing expected storage key in the post state: "
-                   + address() + " expected to have storage set at " + element.getKey() + " key");
+                BOOST_CHECK_MESSAGE(_storage.count(element.getKey()),
+                   TestOutputHelper::get().testName() + " '" + address() + "' expected storage key: '"
+                    + element.getKey() + "' to be set!");
 
                 std::string valueInStorage = _storage.at(element.getKey()).asString();
                 BOOST_CHECK_MESSAGE(valueInStorage == element.asString(),

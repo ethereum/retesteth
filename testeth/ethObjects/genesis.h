@@ -29,6 +29,7 @@ namespace test {
 			m_data.renameKey("currentNumber", "number");
 			m_data.renameKey("currentTimestamp", "timestamp");
 			m_data.renameKey("previousHash", "parentHash");
+            makeAllFieldsHex(m_data);
 		}
 
 		private:

@@ -25,6 +25,7 @@
 //#include <libevm/VMFactory.h>
 //#include <libweb3jsonrpc/Debug.h>
 #include <testeth/Options.h>
+#include <testeth/TestHelper.h>
 //#include <test/tools/fuzzTesting/fuzzHelper.h>
 
 
@@ -199,6 +200,7 @@ Options::Options(int argc, const char** argv)
 		{
 			throwIfNoArgumentFollows();
 			singleTestNet = std::string{argv[++i]};
+            test::checkAllowedNetwork(singleTestNet);
 			//ImportTest::checkAllowedNetwork(singleTestNet);
         }
         else if (arg == "--fulloutput")

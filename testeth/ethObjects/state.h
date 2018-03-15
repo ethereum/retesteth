@@ -12,7 +12,6 @@ namespace test {
 		{
             for (auto const& accountObj : _state.getSubObjects())
                 m_accounts.push_back(account(accountObj));
-
             refreshData();
 		}
 
@@ -42,12 +41,12 @@ namespace test {
         std::vector<account> m_accounts;
         void refreshData()
         {
-            // refresh data with information from m_accounts
+            //update data from account list
             std::string key = m_data.getKey();
             m_data.clear();
+            m_data.setKey(key);
             for (auto const& accountObj : m_accounts)
                 m_data.addSubObject(accountObj.getData());
-            m_data.setKey(key);
         }
 	};
 
@@ -59,22 +58,22 @@ namespace test {
         {
             for (auto const& accountObj : _state.getSubObjects())
                 m_accounts.push_back(expectAccount(accountObj));
-
             refreshData();
-          }
+        }
         std::vector<expectAccount> const& getAccounts() const {return m_accounts; }
 
         private:
         std::vector<expectAccount> m_accounts;
         void refreshData()
         {
-            // refresh data with information from m_accounts
+            //update data from account list
             std::string key = m_data.getKey();
             m_data.clear();
+            m_data.setKey(key);
             for (auto const& accountObj : m_accounts)
                 m_data.addSubObject(accountObj.getData());
-            m_data.setKey(key);
         }
+
     };
 
     /// Check expect section against Post state section

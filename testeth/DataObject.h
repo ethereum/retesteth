@@ -27,6 +27,7 @@ class DataObject
 	void setKey(std::string const& _key) { m_strKey = _key; }
 	std::string const& getKey() const { return m_strKey; }
 	std::vector<DataObject>const& getSubObjects() const { return m_subObjects; }
+    std::vector<DataObject>& getSubObjectsUnsafe() { return m_subObjects; }
 	void addSubObject(DataObject const& _obj) {	_addSubObject(_obj); }
 	void addSubObject(std::string const& _key, DataObject const& _obj)
 	{
@@ -87,8 +88,8 @@ class DataObject
     }
 
 	DataObject const& at(std::string const& _key) const
-	{
-		assert(count(_key));
+    {
+        assert(count(_key));
 		for (auto const& i: m_subObjects)
 			if (i.getKey() == _key)
 				return i;
@@ -215,7 +216,7 @@ class DataObject
                 printLevel();
                 if (!m_strKey.empty())
                     out << "\"" << m_strKey << "\" : ";
-                out << "\"" << m_intVal << "\"";
+                out << m_intVal;
             break;
 			default:
 				out << "unknown " << dataTypeAsString(m_type) << std::endl;

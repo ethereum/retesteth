@@ -57,36 +57,26 @@ struct transactionInfo
 	test::transaction transaction;
 };
 
-std::vector<transactionInfo> parseGeneralTransaction(DataObject const& _generalTransaction)
+std::vector<transactionInfo> parseGeneralTransaction(test::transactionGeneral const& _genTr)
 {
-	std::vector<transactionInfo> ret;
-	test::requireJsonFields(_generalTransaction, "transaction", {
-		{"data", {{DataType::Array}} },
-		{"gasLimit", {{DataType::Array}} },
-		{"gasPrice", {{DataType::String}} },
-		{"nonce", {{DataType::String}} },
-		{"secretKey", {{DataType::String}} },
-		{"to", {{DataType::String}} },
-		{"value", {{DataType::Array}} }
-	});
-
-	for (size_t dataInd = 0; dataInd < _generalTransaction.at("data").getSubObjects().size(); dataInd++)
+    std::vector<transactionInfo> ret;
+    for (size_t dataInd = 0; dataInd < _genTr.getData().at("data").getSubObjects().size(); dataInd++)
 	{
-		for (size_t gasInd = 0; gasInd < _generalTransaction.at("gasLimit").getSubObjects().size(); gasInd++)
+        for (size_t gasInd = 0; gasInd < _genTr.getData().at("gasLimit").getSubObjects().size(); gasInd++)
 		{
-			for (size_t valueInd = 0; valueInd < _generalTransaction.at("value").getSubObjects().size(); valueInd++)
+            for (size_t valueInd = 0; valueInd < _genTr.getData().at("value").getSubObjects().size(); valueInd++)
 			{
 				DataObject singleTransaction(DataType::Object);
-				DataObject data("data", _generalTransaction.at("data").getSubObjects().at(dataInd).asString());
-				DataObject gas("gasLimit", _generalTransaction.at("gasLimit").getSubObjects().at(gasInd).asString());
-				DataObject value("value", _generalTransaction.at("value").getSubObjects().at(valueInd).asString());
+                DataObject data("data", _genTr.getData().at("data").getSubObjects().at(dataInd).asString());
+                DataObject gas("gasLimit", _genTr.getData().at("gasLimit").getSubObjects().at(gasInd).asString());
+                DataObject value("value", _genTr.getData().at("value").getSubObjects().at(valueInd).asString());
 
 				singleTransaction.addSubObject(data);
 				singleTransaction.addSubObject(gas);
-				singleTransaction.addSubObject(_generalTransaction.at("gasPrice"));
-				singleTransaction.addSubObject(_generalTransaction.at("nonce"));
-				singleTransaction.addSubObject(_generalTransaction.at("secretKey"));
-				singleTransaction.addSubObject(_generalTransaction.at("to"));
+                singleTransaction.addSubObject(_genTr.getData().at("gasPrice"));
+                singleTransaction.addSubObject(_genTr.getData().at("nonce"));
+                singleTransaction.addSubObject(_genTr.getData().at("secretKey"));
+                singleTransaction.addSubObject(_genTr.getData().at("to"));
 				singleTransaction.addSubObject(value);
 				transactionInfo info(dataInd, gasInd, valueInd, singleTransaction);
 				ret.push_back(info);
@@ -102,14 +92,15 @@ DataObject FillTest(DataObject const& _testFile)
     DataObject filledTest;
     test::state aState(_testFile.at("pre"));
     test::genesis aTestGenesis(_testFile.at("env"), aState);
-    std::vector<transactionInfo> transactions = parseGeneralTransaction(_testFile.at("transaction"));
+    test::transactionGeneral aGeneralTransaction(_testFile.at("transaction"));
+    std::vector<transactionInfo> transactions = parseGeneralTransaction(aGeneralTransaction);
     BOOST_REQUIRE_MESSAGE(_testFile.count("expect") > 0, TestOutputHelper::get().testName() + " expect section not set!");
 
     // Copy Sctions form test source
     filledTest.setKey(_testFile.getKey());
-    filledTest["pre"] = _testFile.at("pre");
-    filledTest["env"] = _testFile.at("env");
-    filledTest["transaction"] = _testFile.at("transaction");
+    filledTest["pre"] = aState.getData();
+    filledTest["env"] = aTestGenesis.getData();
+    filledTest["transaction"] = aGeneralTransaction.getData();
 
     DataObject genesis;
     genesis["version"] = "1";
@@ -135,6 +126,9 @@ DataObject FillTest(DataObject const& _testFile)
     // run transactions on all networks that we need
     for (auto const& net: allNetworksDeclaredInExpectSection)
     {
+        if (!Options::get().singleTestNet.empty() && Options::get().singleTestNet != net)
+            continue;
+
         genesis["params"]["forkRules"] = net;
         session.test_setChainParams(genesis.asJson());
 
@@ -165,12 +159,10 @@ DataObject FillTest(DataObject const& _testFile)
 
                         // check that the post state qualifies to the expect section
                         state postState = (test::convertJsonCPPtoData(readJson(fullPost)));
-                        //std::cerr << postState.getData().asJson();
                         expectState expectSection (expect.getData().at("result"));
-                        std::cerr << expectSection.getData().asJson();
                         bool error = test::compareStates(expectSection, postState);
-                        BOOST_CHECK_MESSAGE(!error, "TrInfo: d: " + toString(tr.dataInd) + " g: "
-                                            + toString(tr.gasInd) + " v: " + toString(tr.valueInd));
+                        BOOST_CHECK_MESSAGE(!error, "Network: " + net + ", TrInfo: d: " + toString(tr.dataInd) + ", g: "
+                                            + toString(tr.gasInd) + ", v: " + toString(tr.valueInd));
 
                         DataObject indexes;
                         indexes["data"] = tr.dataInd;
