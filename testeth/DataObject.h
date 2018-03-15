@@ -69,14 +69,22 @@ class DataObject
 		return *this;
 	}
 
-	/*DataObject& operator = (DataObject const& _value)
+    DataObject& operator = (int _value)
+    {
+        assert(m_type == DataType::Integer || m_type == DataType::Null);
+        m_type = DataType::Integer;
+        m_intVal = _value;
+        return *this;
+    }
+
+    DataObject& operator = (DataObject const& _value)
 	{
 		assert(m_type == DataType::Null);
 		m_type = _value.type();
-		m_strKey = _value.getKey();
+        //m_strKey = _value.getKey();
 		m_subObjects = _value.getSubObjects();
 		return *this;
-	}*/
+    }
 
 	DataObject const& at(std::string const& _key) const
 	{
@@ -108,6 +116,14 @@ class DataObject
 		}
 	}
 
+    void clear()
+    {
+        m_strKey = "";
+        m_intVal = 0;
+        m_subObjects.clear();
+        m_type = DataType::Null;
+    }
+
 	void print(size_t level = 0) const
 	{
 		for (size_t i = 0; i < level; i++)
@@ -125,22 +141,26 @@ class DataObject
 			obj.print(level+1);
 	}
 
-	std::string asJson(int level = 0) const
+    std::string asJson(int level = 0, bool _debug = false) const
 	{
 		std::ostringstream out;
-		auto printLevel = [level, &out]() -> void
+        auto printLevel = [level, &out, _debug]() -> void
 		{
-			for (int i = 0; i < level; i++)
-				out << " ";
+            for (int i = 0; i < level*2; i++)
+            {
+                if (_debug)
+                    out << level << " ";
+                else
+                    out << " ";
+            }
 		};
 
-		auto printElements = [this, &out, level, &printLevel]() -> void
+        auto printElements = [this, &out, level, &printLevel, _debug]() -> void
 		{
 			for(std::vector<DataObject>::const_iterator it = this->m_subObjects.begin();
 				it < this->m_subObjects.end(); it++)
-			{
-				printLevel();
-				out << (*it).asJson(level+1);
+            {
+                out << (*it).asJson(level+1, _debug);
 				if (it+1 != this->m_subObjects.end())
 					out << ",";
 				out << std::endl;
@@ -174,13 +194,16 @@ class DataObject
 				if (!m_strKey.empty())
 				{
 					printLevel();
-					out << "\"" << m_strKey << "\" : " << std::endl;
+                    out << "\"" << m_strKey << "\" : [" << std::endl;
 				}
-				printLevel();
-				out << "[" << std::endl;
+                else
+                {
+                    printLevel();
+                    out << "[" << std::endl;
+                }
 				printElements();
 				printLevel();
-				out << "]" << std::endl;
+                out << "]";
 			break;
 			case DataType::String:
 				printLevel();
@@ -188,6 +211,12 @@ class DataObject
 					out << "\"" << m_strKey << "\" : ";
 				out << "\"" << m_strVal << "\"";
 			break;
+            case DataType::Integer:
+                printLevel();
+                if (!m_strKey.empty())
+                    out << "\"" << m_strKey << "\" : ";
+                out << "\"" << m_intVal << "\"";
+            break;
 			default:
 				out << "unknown " << dataTypeAsString(m_type) << std::endl;
 			break;

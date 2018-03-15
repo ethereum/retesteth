@@ -4,11 +4,16 @@
 #include <set>
 #include <boost/filesystem.hpp>
 #include <json/json.h>
+
 #include <testeth/DataObject.h>
+
 namespace fs = boost::filesystem;
 namespace test {
 
 // Helping functions
+
+/// Construct Json object from string
+Json::Value readJson(std::string const& _s);
 
 /// Get files from directory
 std::vector<boost::filesystem::path> getFiles(boost::filesystem::path const& _dirPath, std::set<std::string> _extentionMask, std::string const& _particularFile = {});
@@ -27,7 +32,18 @@ void requireJsonFields(DataObject const& _o, std::string const& _section, std::m
 DataObject convertJsonCPPtoData(Json::Value const& _input);
 
 /// Get Networks / Fork Rules
-std::set<std::string> const& getNetworks();
+std::vector<std::string> const& getNetworks();
 
+/// Translate smart network names into network names ( `<=Homestead` to `Frontier, Homestead`)
+std::set<std::string> translateNetworks(std::set<std::string> const& _networks);
+
+/// Check string to be a valid network name
+void checkAllowedNetwork(std::string const& _network);
+
+/// Read a single string object or an Array of string objects into set<string>
+void parseJsonStrValueIntoSet(DataObject const& _json, std::set<std::string>& _out);
+
+/// Read a single int object or an Array of int objects into set<int>
+void parseJsonIntValueIntoSet(DataObject const& _json, std::set<int>& _out);
 
 }

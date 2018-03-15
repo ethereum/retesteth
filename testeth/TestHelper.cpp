@@ -7,6 +7,16 @@ namespace fs = boost::filesystem;
 
 namespace  test {
 
+Json::Value readJson(string const& _s)
+{
+    Json::Value v;
+    Json::Reader reader;
+    bool parsingSuccessful = reader.parse(_s, v);
+    if (!parsingSuccessful)
+        BOOST_ERROR("Failed to parse configuration\n" + reader.getFormattedErrorMessages());
+    return v;
+}
+
 vector<fs::path> getFiles(
 	fs::path const& _dirPath, set<string> const _extentionMask, string const& _particularFile)
 {
@@ -112,7 +122,7 @@ string jsonTypeAsString(Json::ValueType _type)
 DataObject convertJsonCPPtoData(Json::Value const& _input)
 {
 	if (_input.isNull())
-		return DataObject(DataType::Null);
+        return DataObject(DataType::Object); // threat json "null" as empty object
 
 	if (_input.isString())
 		return DataObject(_input.asString());
@@ -144,18 +154,139 @@ DataObject convertJsonCPPtoData(Json::Value const& _input)
 	return DataObject(DataType::Null);
 }
 
-set<string> const& getNetworks()
+vector<string> const& getNetworks()
 {
-	static set<string> networks;
+    static vector<string> networks;
 	if(networks.size() == 0)
 	{
-		networks.emplace("Frontier");
-		networks.emplace("Homestead");
-		networks.emplace("EIP150");
-		networks.emplace("EIP158");
-		networks.emplace("Byzantium");
+        networks.push_back("Frontier");
+        networks.push_back("Homestead");
+        networks.push_back("EIP150");
+        networks.push_back("EIP158");
+        networks.push_back("Byzantium");
 	}
 	return networks;
 }
 
+/// translate network names in expect section field
+/// >Homestead to EIP150, EIP158, Byzantium, ...
+/// <=Homestead to Frontier, Homestead
+set<string> translateNetworks(set<string> const& _networks)
+{
+    // construct vector with test network names in a right order (from Frontier to Homestead ... to
+    // Constantinople)
+    vector<string> const& forks = getNetworks();
+
+    set<string> out;
+    for (auto const& net : _networks)
+    {
+        bool isNetworkTranslated = false;
+        string possibleNet = net.substr(1, net.length() - 1);
+        vector<string>::const_iterator it = std::find(forks.begin(), forks.end(), possibleNet);
+
+        if (it != forks.end() && net.size() > 1)
+        {
+            if (net[0] == '>')
+            {
+                while (++it != forks.end())
+                {
+                    out.emplace(*it);
+                    isNetworkTranslated = true;
+                }
+            }
+            else if (net[0] == '<')
+            {
+                while (it != forks.begin())
+                {
+                    out.emplace(*(--it));
+                    isNetworkTranslated = true;
+                }
+            }
+        }
+
+        possibleNet = net.substr(2, net.length() - 2);
+        it = std::find(forks.begin(), forks.end(), possibleNet);
+        if (it != forks.end() && net.size() > 2)
+        {
+            if (net[0] == '>' && net[1] == '=')
+            {
+                while (it != forks.end())
+                {
+                    out.emplace(*(it++));
+                    isNetworkTranslated = true;
+                }
+            }
+            else if (net[0] == '<' && net[1] == '=')
+            {
+                out.emplace(*it);
+                isNetworkTranslated = true;
+                while (it != forks.begin())
+                    out.emplace(*(--it));
+            }
+        }
+
+        // if nothing has been inserted, just push the untranslated network as is
+        if (!isNetworkTranslated)
+        {
+            checkAllowedNetwork(net);
+            out.emplace(net);
+        }
+    }
+    return out;
 }
+
+
+void checkAllowedNetwork(string const& _network)
+{
+    bool found = false;
+    vector<string> const& allowedNetowks = getNetworks();
+    for(auto const& net: allowedNetowks)
+    {
+        if (net == _network)
+            found = true;
+    }
+
+    if (!found)
+    {
+        // Can't use boost at this point
+        std::cerr << TestOutputHelper::get().testName() + " Specified Network not found: "
+                  << _network << "\n";
+        exit(1);
+    }
+}
+
+void parseJsonStrValueIntoSet(DataObject const& _json, set<string>& _out)
+{
+    if (_json.type() == DataType::Array)
+    {
+        for (auto const& val: _json.getSubObjects())
+        {
+             BOOST_REQUIRE(val.type() == DataType::String);
+            _out.emplace(val.asString());
+        }
+    }
+    else
+    {
+        BOOST_REQUIRE(_json.type() == DataType::String);
+        _out.emplace(_json.asString());
+    }
+}
+
+void parseJsonIntValueIntoSet(DataObject const& _json, set<int>& _out)
+{
+    if (_json.type() == DataType::Array)
+    {
+        for (auto const& val: _json.getSubObjects())
+        {
+            BOOST_REQUIRE(val.type() == DataType::Integer);
+            _out.emplace(val.asInt());
+        }
+    }
+    else if (_json.type() == DataType::Integer)
+    {
+        BOOST_REQUIRE(_json.type() == DataType::Integer);
+        _out.emplace(_json.asInt());
+    }
+}
+
+}//namespace

@@ -34,6 +34,8 @@
 #include <testeth/ethObjects/genesis.h>
 #include <testeth/ethObjects/state.h>
 #include <testeth/ethObjects/transaction.h>
+#include <testeth/ethObjects/expectSectionElement.h>
+#include <testeth/ethObjects/postSectionElement.h>
 
 #include <testeth/RPCSession.h>
 
@@ -94,22 +96,106 @@ std::vector<transactionInfo> parseGeneralTransaction(DataObject const& _generalT
 	return ret;
 }
 
-void parseJsonIntValueIntoSet(DataObject const& _json, set<int>& _out)
+/// Rewrite the test file
+DataObject FillTest(DataObject const& _testFile)
 {
-	if (_json.type() == DataType::Array)
-	{
-		for (auto const& val: _json.getSubObjects())
-			_out.emplace(val.asInt());
-	}
-	else if (_json.type() == DataType::Integer)
-		_out.emplace(_json.asInt());
+    DataObject filledTest;
+    test::state aState(_testFile.at("pre"));
+    test::genesis aTestGenesis(_testFile.at("env"), aState);
+    std::vector<transactionInfo> transactions = parseGeneralTransaction(_testFile.at("transaction"));
+    BOOST_REQUIRE_MESSAGE(_testFile.count("expect") > 0, TestOutputHelper::get().testName() + " expect section not set!");
+
+    // Copy Sctions form test source
+    filledTest.setKey(_testFile.getKey());
+    filledTest["pre"] = _testFile.at("pre");
+    filledTest["env"] = _testFile.at("env");
+    filledTest["transaction"] = _testFile.at("transaction");
+
+    DataObject genesis;
+    genesis["version"] = "1";
+    genesis.addSubObject("genesis", aTestGenesis.getData());
+    genesis.addSubObject("state", aState.getData());
+    genesis["params"]["miningMethod"] = "NoProof";
+    genesis["params"]["blockReward"] = "0x00";
+    genesis["genesis"]["timestamp"] = "0x00";	//Set Genesis tstmp to 0. the actual timestamp specified in env section is a timestamp of the first block.
+
+    RPCSession& session = RPCSession::instance("/home/wins/.ethereum/geth.ipc");
+
+    // Go through the expect sections, check its validity, read and combine the networks
+    set<string> allNetworksDeclaredInExpectSection;
+    std::vector<expectSectionElement> expectElements;
+    for (auto const& expect: _testFile.at("expect").getSubObjects())
+    {
+        expectSectionElement expElement(expect);
+        expectElements.push_back(expElement);
+        for (auto const& net : expElement.getNetworks())
+            allNetworksDeclaredInExpectSection.emplace(net);
+    }
+
+    // run transactions on all networks that we need
+    for (auto const& net: allNetworksDeclaredInExpectSection)
+    {
+        genesis["params"]["forkRules"] = net;
+        session.test_setChainParams(genesis.asJson());
+
+        DataObject transactionResults;
+        DataObject forkResults;
+        forkResults.setKey(net);
+
+        // run transactions for defined expect sections only
+        for (auto const& expect: expectElements)
+        {
+            // if expect section for this networks
+            if (expect.getNetworks().count(net))
+            {
+                for (auto& tr: transactions)
+                {
+                    bool blockMined = false;
+                    // if expect section is for this transaction
+                    if (expect.checkIndexes(tr.dataInd, tr.gasInd, tr.valueInd))
+                    {
+                        u256 a(aTestGenesis.getData().at("timestamp").asString());
+                        session.test_modifyTimestamp(a.convert_to<size_t>());
+                        session.test_addTransaction(tr.transaction.getData().asJson());
+                        session.test_mineBlocks(1);
+                        tr.executed = true;
+                        blockMined = true;
+                        string postHash = session.test_getPostState("{ \"version\" : \"0x01\" }");
+                        string fullPost = session.test_getPostState("{ \"version\" : \"0x02\" }");
+
+                        // check that the post state qualifies to the expect section
+                        state postState = (test::convertJsonCPPtoData(readJson(fullPost)));
+                        //std::cerr << postState.getData().asJson();
+                        expectState expectSection (expect.getData().at("result"));
+                        std::cerr << expectSection.getData().asJson();
+                        bool error = test::compareStates(expectSection, postState);
+                        BOOST_CHECK_MESSAGE(!error, "TrInfo: d: " + toString(tr.dataInd) + " g: "
+                                            + toString(tr.gasInd) + " v: " + toString(tr.valueInd));
+
+                        DataObject indexes;
+                        indexes["data"] = tr.dataInd;
+                        indexes["gas"] = tr.gasInd;
+                        indexes["value"] = tr.valueInd;
+
+                        transactionResults["indexes"] = indexes;
+                        transactionResults["hash"] = postHash;
+                        transactionResults["logs"] = "0x00";
+                        forkResults.addArrayObject(transactionResults);
+                    }
+                    if (blockMined)
+                        session.test_rewindToBlock(0);
+                }
+            }
+        }
+
+        filledTest["post"].addSubObject(forkResults);
+    }
+
+    std::cerr << filledTest.asJson();
+    return filledTest;
 }
 
-void FillTest()
-{
-
-}
-
+/// Read and execute the test file
 void RunTest(DataObject const& _testFile)
 {
 	test::state aState(_testFile.at("pre"));
@@ -133,40 +219,20 @@ void RunTest(DataObject const& _testFile)
 		if (!Options::get().singleTestNet.empty() && Options::get().singleTestNet != post.getKey())
 			continue;
 
-		BOOST_REQUIRE_MESSAGE(getNetworks().count(post.getKey()), "Unknown network in the post section of the test! " + TestOutputHelper::get().testName() + " network: " + post.getKey());
-		genesis["params"]["forkRules"] = post.getKey();
-
+        checkAllowedNetwork(post.getKey());
+        genesis["params"]["forkRules"] = post.getKey();
 		session.test_setChainParams(genesis.asJson());
 
 		// read all results for a specific fork
 		for (auto const& results: post.getSubObjects())
 		{
-			requireJsonFields(results, "post", {
-				{"hash", {{DataType::String}} },
-				{"logs", {{DataType::String}} },
-				{"indexes", {{DataType::Object}} }
-			});
-			requireJsonFields(results.at("indexes"), "indexes", {
-				{"data", {{DataType::Array}, {DataType::Integer}} },
-				{"gas", {{DataType::Array}, {DataType::Integer}} },
-				{"value", {{DataType::Array}, {DataType::Integer}} }
-			});
-
-			set<int> _dataIndexes;
-			parseJsonIntValueIntoSet(results.at("indexes").at("data"), _dataIndexes);
-			set<int> _gasIndexes;
-			parseJsonIntValueIntoSet(results.at("indexes").at("gas"), _gasIndexes);
-			set<int> _valueIndexes;
-			parseJsonIntValueIntoSet(results.at("indexes").at("value"), _valueIndexes);
-
+            postSectionElement postElement(results);
 			// look for a transaction with this indexes and execute it on a client
 			for (auto& tr: transactions)
 			{
 				bool blockMined = false;
-				if ((_dataIndexes.count(tr.dataInd) || _dataIndexes.count(-1)) &&
-					(_gasIndexes.count(tr.gasInd) || _gasIndexes.count(-1)) &&
-					(_valueIndexes.count(tr.valueInd) || _valueIndexes.count(-1)))
-				{
+                if (postElement.checkIndexes(tr.dataInd, tr.gasInd, tr.valueInd))
+                {
 					u256 a(aTestGenesis.getData().at("timestamp").asString());
 					session.test_modifyTimestamp(a.convert_to<size_t>());
 					session.test_addTransaction(tr.transaction.getData().asJson());
@@ -174,12 +240,16 @@ void RunTest(DataObject const& _testFile)
 					tr.executed = true;
 					blockMined = true;
 					string fullPost;
-					string postHash = session.test_getPostState("{ \"version\" : \"1\" }");
+                    string postHash = session.test_getPostState("{ \"version\" : \"0x01\" }");
 					if (postHash != results.at("hash").asString())
-						fullPost = session.test_getPostState("{ \"version\" : \"2\" }");
+                        fullPost = session.test_getPostState("{ \"version\" : \"0x02\" }");
 					BOOST_CHECK_MESSAGE(postHash == results.at("hash").asString(),
 						"Error at " + TestOutputHelper::get().testName() + ", fork: " + post.getKey() + ", hash mismatch: " + postHash + ", expected: " + results.at("hash").asString()
 						 + "\nState Dump: " + fullPost);
+                    //string postLogs = session.test_getPostState("{ \"version\" : \"0x03\" }");
+                    //BOOST_CHECK_MESSAGE(postLogs == results.at("logs").asString(),
+                    //    "Error at " + TestOutputHelper::get().testName() + ", fork: " + post.getKey() + ", logs hash mismatch: " + postHash + ", expected: " + results.at("logs").asString());
+
 				}
 				if (blockMined)
 					session.test_rewindToBlock(0);
@@ -223,7 +293,7 @@ DataObject StateTestSuite::doTests(DataObject const& _input, bool _fillin) const
 		BOOST_REQUIRE_MESSAGE(inputTest.count("transaction") > 0, testname + " transaction not set!");
 
 		if (_fillin)
-			FillTest();
+            FillTest(inputTest);
 		else
 			RunTest(inputTest);
 	}

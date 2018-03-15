@@ -219,45 +219,37 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
 			if (!Options::get().singleTest)
 				std::cout << "Populating tests...";
 
-			test::DataObject data(DataType::Null);
-			removeComments(data);
-			addClientInfo(data,boostRelativeTestPath, h256());
-			/*json_spirit::mValue v;
+            DataObject v;
 			bytes const byteContents = dev::contents(_testFileName);
 			string const s = asString(byteContents);
 			BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _testFileName.string() + " is empty.");
 
 			if (_testFileName.extension() == ".json")
-				json_spirit::read_string(s, v);
-			else if (_testFileName.extension() == ".yml")
-				v = test::parseYamlToJson(s);
+                v = test::convertJsonCPPtoData(readJson(s));
+            //else if (_testFileName.extension() == ".yml")
+            //	v = test::parseYamlToJson(s);
 			else
 				BOOST_ERROR("Unknow test format!" + TestOutputHelper::get().testFile().string());
 
 			removeComments(v);
-			json_spirit::mValue output = doTests(v, true);
-			addClientInfo(output, boostRelativeTestPath, sha3(byteContents));
-			writeFile(boostTestPath, asBytes(json_spirit::write_string(output, true)));*/
+            DataObject output = doTests(v, true);
+            addClientInfo(output, boostRelativeTestPath, h256()/*sha3(byteContents)*/);
+            //writeFile(boostTestPath, asBytes(json_spirit::write_string(output, true)));
 		}
 	}
 
 	// Test is generated. Now run it and check that there should be no errors
 	if ((Options::get().singleTest && Options::get().singleTestName == testname) || !Options::get().singleTest)
-		cnote << "TEST " << testname << ":";
+        cnote << "TEST " << testname + ":";
 
 	executeFile(boostTestPath);
 }
 
 void TestSuite::executeFile(boost::filesystem::path const& _file) const
 {
-	Json::Value v;
 	string const s = asString(dev::contents(_file));
 	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " << _file.string() << " is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
-	Json::Reader reader;
-	bool parsingSuccessful = reader.parse(s, v);
-	if (!parsingSuccessful)
-		BOOST_ERROR("Failed to parse configuration\n" + reader.getFormattedErrorMessages());
-	doTests(test::convertJsonCPPtoData(v), false);
+    doTests(test::convertJsonCPPtoData(readJson(s)), false);
 }
 
 }
