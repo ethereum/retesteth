@@ -80,10 +80,10 @@ class DataObject
 
     DataObject& operator = (DataObject const& _value)
 	{
-		assert(m_type == DataType::Null);
-		m_type = _value.type();
-        //m_strKey = _value.getKey();
-		m_subObjects = _value.getSubObjects();
+        assert(m_type == DataType::Null); // So not to overwrite the existing data
+        // Do not replace the key. Assuming that key is set upon calling DataObject[key] =
+        m_type = _value.type();
+        m_subObjects = _value.getSubObjects();
 		return *this;
     }
 

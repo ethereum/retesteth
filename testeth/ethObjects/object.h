@@ -4,7 +4,7 @@
 namespace test {
 	class object
 	{
-		public:
+        public:
 		object(DataObject const& _json):
 			m_data(_json)
 		{}

@@ -26,10 +26,22 @@ namespace test {
 		}
 	};
 
-    class transactionGeneral: public object
+    class generalTransaction: public object
     {
         public:
-        transactionGeneral(DataObject const& _transaction):
+        struct transactionInfo
+        {
+            transactionInfo(size_t _dataInd, size_t _gasInd, size_t _valueInd, DataObject const& _transaction) :
+                gasInd(_gasInd), dataInd(_dataInd), valueInd(_valueInd), executed(false), transaction(_transaction)
+                {}
+            size_t gasInd;
+            size_t dataInd;
+            size_t valueInd;
+            bool executed;
+            test::transaction transaction;
+        };
+
+        generalTransaction(DataObject const& _transaction):
             object(_transaction)
         {
             test::requireJsonFields(_transaction, "transaction", {
@@ -45,6 +57,39 @@ namespace test {
             {
                 if (element.getKey() != "data")
                     makeAllFieldsHex(element);
+            }
+            parseGeneralTransaction();
+        }
+
+        std::vector<transactionInfo> const& getTransactions() const { return m_transactions; }
+        std::vector<transactionInfo>& getTransactionsUnsafe() { return m_transactions; }
+
+        private:
+        std::vector<transactionInfo> m_transactions;
+        void parseGeneralTransaction()
+        {
+            for (size_t dataInd = 0; dataInd < m_data.at("data").getSubObjects().size(); dataInd++)
+            {
+                for (size_t gasInd = 0; gasInd < m_data.at("gasLimit").getSubObjects().size(); gasInd++)
+                {
+                    for (size_t valueInd = 0; valueInd < m_data.at("value").getSubObjects().size(); valueInd++)
+                    {
+                        DataObject singleTransaction(DataType::Object);
+                        DataObject data("data", m_data.at("data").getSubObjects().at(dataInd).asString());
+                        DataObject gas("gasLimit", m_data.at("gasLimit").getSubObjects().at(gasInd).asString());
+                        DataObject value("value", m_data.at("value").getSubObjects().at(valueInd).asString());
+
+                        singleTransaction.addSubObject(data);
+                        singleTransaction.addSubObject(gas);
+                        singleTransaction.addSubObject(m_data.at("gasPrice"));
+                        singleTransaction.addSubObject(m_data.at("nonce"));
+                        singleTransaction.addSubObject(m_data.at("secretKey"));
+                        singleTransaction.addSubObject(m_data.at("to"));
+                        singleTransaction.addSubObject(value);
+                        transactionInfo info(dataInd, gasInd, valueInd, singleTransaction);
+                        m_transactions.push_back(info);
+                    }
+                }
             }
         }
     };

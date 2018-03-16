@@ -2,6 +2,7 @@
 #include <testeth/DataObject.h>
 #include <testeth/ethObjects/account.h>
 #include <testeth/ethObjects/object.h>
+#include <testeth/ethObjects/postSectionElement.h>
 
 namespace test {
 	class state: public object
@@ -78,6 +79,30 @@ namespace test {
 
     /// Check expect section against Post state section
     bool compareStates(expectState const& _stateExpect, state const& _statePost);
+
+    class postState
+    {
+        public:
+        typedef std::vector<postSectionElement> postSectionElements;
+        postState(DataObject const& _post)
+        {
+            BOOST_CHECK_MESSAGE(_post.type() == DataType::Object, "State tests post section must be json object!");
+            for(auto const& element: _post.getSubObjects())
+            {
+               test::checkAllowedNetwork(element.getKey());
+               BOOST_CHECK_MESSAGE(element.type() == DataType::Array, "State tests post section value at fork results must be json array!");
+               postSectionElements results;
+               for (auto const& res: element.getSubObjects())
+                   results.push_back(postSectionElement(res));
+
+               m_elements[element.getKey()] = results;
+            }
+        }
+        std::map<std::string, postSectionElements>const& getResults() const { return m_elements; }
+
+        private:
+        std::map<std::string, postSectionElements> m_elements;
+    };
 
 }
 

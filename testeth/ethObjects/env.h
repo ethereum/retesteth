@@ -1,17 +1,16 @@
 #pragma once
 #include <testeth/DataObject.h>
 #include <testeth/TestHelper.h>
-#include <testeth/ethObjects/state.h>
 #include <testeth/ethObjects/object.h>
 
 using namespace dev;
 
 namespace test {
-	class genesis: public object
+    class env: public object
 	{
 		public:
-		genesis(DataObject const& _env, state const& _state):
-			object(_env), m_state(_state)
+        env(DataObject const& _env):
+            object(_env)
 		{
 			test::requireJsonFields(_env, "env", {
 				{"currentCoinbase", {{DataType::String}} },
@@ -31,9 +30,6 @@ namespace test {
 			m_data.renameKey("previousHash", "parentHash");
             makeAllFieldsHex(m_data);
 		}
-
-		private:
-		state m_state;
 	};
 }
 
