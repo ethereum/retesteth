@@ -1,3 +1,5 @@
+#include <BuildInfo.h>
+#include <boost/algorithm/string/trim.hpp>
 #include <testeth/TestHelper.h>
 #include <testeth/TestOutputHelper.h>
 #include <testeth/Options.h>
@@ -164,6 +166,7 @@ vector<string> const& getNetworks()
         networks.push_back("EIP150");
         networks.push_back("EIP158");
         networks.push_back("Byzantium");
+		networks.push_back("Constantinople");
 	}
 	return networks;
 }
@@ -287,6 +290,56 @@ void parseJsonIntValueIntoSet(DataObject const& _json, set<int>& _out)
         BOOST_REQUIRE(_json.type() == DataType::Integer);
         _out.emplace(_json.asInt());
     }
+}
+
+string prepareVersionString()
+{
+    // cpp-1.3.0+commit.6be76b64.Linux.g++
+    string commit(DEV_QUOTED(ETH_COMMIT_HASH));
+    string version = "cpp-" + string(ETH_PROJECT_VERSION);
+    version += "+commit." + commit.substr(0, 8);
+    version +=
+        "." + string(DEV_QUOTED(ETH_BUILD_OS)) + "." + string(DEV_QUOTED(ETH_BUILD_COMPILER));
+    return version;
+}
+
+string prepareLLLCVersionString()
+{
+    string result = test::executeCmd("lllc --version");
+    string::size_type pos = result.rfind("Version");
+    if (pos != string::npos)
+        return result.substr(pos, result.length());
+    return "Error getting LLLC Version";
+}
+
+string executeCmd(string const& _command)
+{
+#if defined(_WIN32)
+    BOOST_ERROR("executeCmd() has not been implemented for Windows.");
+    return "";
+#else
+    string out;
+    char output[1024];
+    FILE* fp = popen(_command.c_str(), "r");
+    if (fp == NULL)
+        BOOST_ERROR("Failed to run " + _command);
+    if (fgets(output, sizeof(output) - 1, fp) == NULL)
+        BOOST_ERROR("Reading empty result for " + _command);
+    else
+    {
+        while (true)
+        {
+            out += string(output);
+            if (fgets(output, sizeof(output) - 1, fp) == NULL)
+                break;
+        }
+    }
+
+    int exitCode = pclose(fp);
+    if (exitCode != 0)
+        BOOST_ERROR("The command '" + _command + "' exited with " + toString(exitCode) + " code.");
+    return boost::trim_copy(out);
+#endif
 }
 
 }//namespace

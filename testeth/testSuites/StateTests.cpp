@@ -60,11 +60,11 @@ DataObject FillTest(DataObject const& _testFile)
 
     // Copy Sctions form test source
     filledTest.setKey(_testFile.getKey());
-    filledTest["pre"] = test.getPre().getData();
-    filledTest["env"] = test.getEnv().getData();
-    filledTest["transaction"] = test.getGenTransaction().getData();
 
     RPCSession& session = RPCSession::instance("/home/wins/.ethereum/geth.ipc");
+    filledTest["env"] = test.getEnv().getData();
+    filledTest["pre"] = test.getPre().getData();
+    filledTest["transaction"] = test.getGenTransaction().getData();
 
     // run transactions on all networks that we need
     for (auto const& net: test.getAllNetworksFromExpectSection())
@@ -103,6 +103,7 @@ DataObject FillTest(DataObject const& _testFile)
                         blockMined = true;
                         string postHash = session.test_getPostState("{ \"version\" : \"0x01\" }");
                         string fullPost = session.test_getPostState("{ \"version\" : \"0x02\" }");
+                        string postLogs = session.test_getPostState("{ \"version\" : \"0x03\" }");
 
                         // check that the post state qualifies to the expect section
                         state postState = (test::convertJsonCPPtoData(readJson(fullPost)));
@@ -118,7 +119,7 @@ DataObject FillTest(DataObject const& _testFile)
 
                         transactionResults["indexes"] = indexes;
                         transactionResults["hash"] = postHash;
-                        transactionResults["logs"] = "0x00";
+                        transactionResults["logs"] = postLogs;
                         forkResults.addArrayObject(transactionResults);
                     }
                     if (blockMined)
@@ -130,7 +131,6 @@ DataObject FillTest(DataObject const& _testFile)
         filledTest["post"].addSubObject(forkResults);
     }
 
-    std::cerr << filledTest.asJson();
     return filledTest;
 }
 
@@ -176,9 +176,9 @@ void RunTest(DataObject const& _testFile)
                     BOOST_CHECK_MESSAGE(postHash == result.getData().at("hash").asString(),
                         "Error at " + TestOutputHelper::get().testName() + ", fork: " + network + ", hash mismatch: " + postHash + ", expected: " + result.getData().at("hash").asString()
 						 + "\nState Dump: " + fullPost);
-                    //string postLogs = session.test_getPostState("{ \"version\" : \"0x03\" }");
-                    //BOOST_CHECK_MESSAGE(postLogs == results.at("logs").asString(),
-                    //    "Error at " + TestOutputHelper::get().testName() + ", fork: " + post.getKey() + ", logs hash mismatch: " + postHash + ", expected: " + results.at("logs").asString());
+					string postLogs = session.test_getPostState("{ \"version\" : \"0x03\" }");
+					BOOST_CHECK_MESSAGE(postLogs == result.getData().at("logs").asString(),
+						"Error at " + TestOutputHelper::get().testName() + ", fork: " + network + ", logs hash mismatch: " + postHash + ", expected: " + result.getData().at("logs").asString());
 
 				}
 				if (blockMined)
@@ -200,15 +200,15 @@ DataObject StateTestSuite::doTests(DataObject const& _input, bool _fillin) const
 		TestOutputHelper::get().get().testFile().string() + " A GeneralStateTest file should contain an object.");
 	BOOST_REQUIRE_MESSAGE(!_fillin || _input.getSubObjects().size() == 1,
 		TestOutputHelper::get().testFile().string() + " A GeneralStateTest filler should contain only one test.");
-	DataObject v(DataType::Object);
 
+    DataObject filledTest;
 	for (auto& i: _input.getSubObjects())
 	{
 		string const testname = i.getKey();
 		BOOST_REQUIRE_MESSAGE(i.type() == DataType::Object,
 			TestOutputHelper::get().testFile().string() + " should contain an object under a test name.");
 		DataObject const& inputTest = i;
-		DataObject outputTest(DataType::Object);
+        DataObject outputTest;
 		outputTest.setKey(testname);
 
 		if (_fillin && !TestOutputHelper::get().testFile().empty())
@@ -219,11 +219,13 @@ DataObject StateTestSuite::doTests(DataObject const& _input, bool _fillin) const
 			continue;
 
 		if (_fillin)
-            FillTest(inputTest);
+            outputTest = FillTest(inputTest);
 		else
 			RunTest(inputTest);
+
+        filledTest.addSubObject(outputTest);
 	}
-	return v;
+    return filledTest;
 }
 
 fs::path StateTestSuite::suiteFolder() const

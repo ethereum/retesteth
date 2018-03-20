@@ -87,6 +87,16 @@ class DataObject
 		return *this;
     }
 
+    /// replace this object with _value
+    void replace(DataObject const& _value)
+    {
+        m_strKey = _value.getKey();
+        m_strVal = _value.asString();
+        m_intVal = _value.asInt();
+        m_type = _value.type();
+        m_subObjects = _value.getSubObjects();
+    }
+
 	DataObject const& at(std::string const& _key) const
     {
         assert(count(_key));
@@ -116,6 +126,29 @@ class DataObject
 			}
 		}
 	}
+
+    /// vector<element> erase method with `replace()` function
+    void removeKey(std::string const& _key)
+    {
+        assert(type() == DataType::Object);
+        bool startReplace = false;
+        for (std::vector<DataObject>::iterator it = m_subObjects.begin(); it != m_subObjects.end(); it++)
+        {
+            if ((*it).getKey() == _key)
+                startReplace = true;
+            std::vector<DataObject>::iterator next = it + 1;
+            if (startReplace)
+            {
+                if (next != m_subObjects.end())
+                    (*it).replace(*next);
+                else
+                {
+                    m_subObjects.erase(it);
+                    break;
+                }
+            }
+        }
+    }
 
     void clear()
     {

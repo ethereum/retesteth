@@ -24,11 +24,13 @@
 #include <string>
 #include <devcore/Log.h>
 #include <devcore/CommonIO.h>
+#include <devcore/SHA3.h>
 #include <testeth/TestSuite.h>
 #include <testeth/DataObject.h>
 #include <testeth/TestOutputHelper.h>
 #include <testeth/TestHelper.h>
 #include <testeth/Options.h>
+#include <testeth/RPCSession.h>
 
 using namespace std;
 using namespace dev;
@@ -39,55 +41,50 @@ namespace {
 
 void removeComments(test::DataObject& _obj)
 {
-	(void)_obj;
-	/*if (_obj.type() == Json::objectValue)
+    if (_obj.type() == test::DataType::Object)
 	{
 		list<string> removeList;
-		for (auto& i: _obj.ObjectValues)
+        for (auto& i: _obj.getSubObjectsUnsafe())
 		{
-			if (i.first.substr(0, 2) == "//")
+            if (i.getKey().substr(0, 2) == "//")
 			{
-				removeList.push_back(i.first);
+                removeList.push_back(i.getKey());
 				continue;
 			}
-
-			removeComments(i.second);
+            removeComments(i);
 		}
-		for (auto& i: removeList)
-			_obj.get_obj().erase(_obj.get_obj().find(i));
+        for (auto const& i: removeList)
+            _obj.removeKey(i);
 	}
-	else if (_obj.type() == Json::arrayValue)
+    else if (_obj.type() == test::DataType::Array)
 	{
-		for (auto& i: _obj.get_array())
+        for (auto& i: _obj.getSubObjectsUnsafe())
 			removeComments(i);
-	}*/
+    }
 }
 
 void addClientInfo(test::DataObject& _v, fs::path const& _testSource, h256 const& _testSourceHash)
 {
-	(void)_v;
-	(void)_testSource;
-	(void)_testSourceHash;
-	/*for (auto& i: _v.get_obj())
+    RPCSession& session = RPCSession::instance("/home/wins/.ethereum/geth.ipc");
+    for (auto& o: _v.getSubObjectsUnsafe())
 	{
-		json_spirit::mObject& o = i.second.get_obj();
-		json_spirit::mObject clientinfo;
-
-		string comment;
+        string comment;
+        test::DataObject clientinfo;
 		if (o.count("_info"))
 		{
-			json_spirit::mObject& existingInfo = o["_info"].get_obj();
-			if (existingInfo.count("comment"))
-				comment = existingInfo["comment"].get_str();
+            test::DataObject const& existingInfo = o["_info"];
+            if (existingInfo.count("comment"))
+                comment = existingInfo.at("comment").asString();
 		}
 
-		clientinfo["filledwith"] = test::prepareVersionString();
+        clientinfo["filledwith"] = session.test_getClientInfo();
+        clientinfo["retesteth"] = test::prepareVersionString();
 		clientinfo["lllcversion"] = test::prepareLLLCVersionString();
 		clientinfo["source"] = _testSource.string();
 		clientinfo["sourceHash"] = toString(_testSourceHash);
 		clientinfo["comment"] = comment;
 		o["_info"] = clientinfo;
-	}*/
+    }
 }
 
 void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
@@ -217,7 +214,7 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
 		else
 		{
 			if (!Options::get().singleTest)
-				std::cout << "Populating tests...";
+                std::cout << "Populating tests..." << std::endl;
 
             DataObject v;
 			bytes const byteContents = dev::contents(_testFileName);
@@ -229,11 +226,12 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
             //else if (_testFileName.extension() == ".yml")
             //	v = test::parseYamlToJson(s);
 			else
-				BOOST_ERROR("Unknow test format!" + TestOutputHelper::get().testFile().string());
+                BOOST_ERROR("Unknown test format!" + TestOutputHelper::get().testFile().string());
 
 			removeComments(v);
             DataObject output = doTests(v, true);
-            addClientInfo(output, boostRelativeTestPath, h256()/*sha3(byteContents)*/);
+            addClientInfo(output, boostRelativeTestPath, sha3(byteContents));
+            std::cerr << output.asJson() << std::endl;
             //writeFile(boostTestPath, asBytes(json_spirit::write_string(output, true)));
 		}
 	}

@@ -46,4 +46,13 @@ void parseJsonStrValueIntoSet(DataObject const& _json, std::set<std::string>& _o
 /// Read a single int object or an Array of int objects into set<int>
 void parseJsonIntValueIntoSet(DataObject const& _json, std::set<int>& _out);
 
+/// retesteth version string
+std::string prepareVersionString();
+
+/// local lllc version string
+std::string prepareLLLCVersionString();
+
+/// run system command
+std::string executeCmd(std::string const& _command);
+
 }

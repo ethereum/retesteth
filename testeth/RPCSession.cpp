@@ -259,6 +259,11 @@ string RPCSession::test_addTransaction(std::string const& _transaction)
 	return rpcCall("test_addTransaction", { _transaction }).asString();
 }
 
+string RPCSession::test_getClientInfo()
+{
+    return rpcCall("test_getClientInfo", {}).asString();
+}
+
 string RPCSession::test_getPostState(std::string const& _config)
 {
 	return rpcCall("test_getPostState", { _config }).asString();
@@ -347,7 +352,9 @@ Json::Value RPCSession::rpcCall(string const& _methodName, vector<string> const&
 		if (_canFail)
 			return Json::Value();
 
-		BOOST_FAIL("Error on JSON-RPC call (" + test::TestOutputHelper::get().testName() + "): " + result["error"]["message"].asString());
+		BOOST_FAIL("Error on JSON-RPC call (" + test::TestOutputHelper::get().testName() + "): "
+		 + result["error"]["message"].asString()
+		 + " Request: " + request);
 	}
 	return result["result"];
 }

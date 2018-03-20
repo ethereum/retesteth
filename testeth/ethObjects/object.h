@@ -1,5 +1,6 @@
 #pragma once
 #include <testeth/DataObject.h>
+#include <testeth/TestOutputHelper.h>
 
 namespace test {
 	class object
@@ -46,27 +47,37 @@ namespace test {
         }
 
         static std::string makeHexCode(std::string const& _data)
-        {
-            std::string prefixedData = _data;
-            if (!(_data[0] == '0' && _data[1] == 'x'))
-                prefixedData = "0x" + prefixedData;
-            assert(stringIntegerType(prefixedData.substr(2)) == DigitsType::Hex);
-            assert(_data.length() % 2 == 0);
-            return prefixedData;
+		{
+			BOOST_CHECK_MESSAGE(_data.length() % 2 == 0, TestOutputHelper::get().testName() + ": Hex data is expected to be of odd length: '" + _data + "'");
+			switch (stringIntegerType(_data))
+			{
+				case DigitsType::HexPrefixed: return _data;
+				case DigitsType::Hex: return "0x" + _data;
+				case DigitsType::Decimal:
+				case DigitsType::String:
+					BOOST_ERROR(TestOutputHelper::get().testName() + ": Hex data is expected to be hex string: " + _data);
+				default:
+					BOOST_ERROR(TestOutputHelper::get().testName() + "Unknown digits type! " + _data);
+					break;
+			}
+			return "";
         }
 
         static std::string makeHexAddress(std::string const& _address)
         {
             if (_address[0] == '0' && _address[1] == 'x')
-                assert(_address.length() == 42);
+				BOOST_CHECK_MESSAGE(_address.length() == 42, TestOutputHelper::get().testName() + ": Wrong address: " + _address);
             else
-                assert(_address.length() == 40);
+				BOOST_CHECK_MESSAGE(_address.length() == 40, TestOutputHelper::get().testName() + ": Wrong address: " + _address);
             return makeHexCode(_address);
         }
 
 		protected:
         void makeKeyHex(DataObject& _key)
         {
+			if (_key.getKey() == "to" && _key.asString().empty())
+				return;
+			// make empty data and code fields as "0x", others as "0x00" if 0
             static std::set<std::string> empty0xFields = {"data", "code"};
             if(stringIntegerType(_key.asString()) == DigitsType::Decimal)
                 _key = dev::toCompactHexPrefixed(dev::u256(_key.asString()),
