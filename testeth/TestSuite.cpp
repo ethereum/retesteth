@@ -89,24 +89,21 @@ void addClientInfo(test::DataObject& _v, fs::path const& _testSource, h256 const
 
 void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
 {
-	(void)_compiledTest;
-	(void)_sourceTest;
-	/*Json::Value v;
 	string const s = asString(dev::contents(_compiledTest));
 	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _compiledTest.string() + " is empty.");
-	json_spirit::read_string(s, v);
+    test::DataObject v = test::convertJsonCPPtoData(test::readJson(s));
 	h256 const fillerHash = sha3(dev::contents(_sourceTest));
 
-	for (auto& i: v.get_obj())
+    for (auto const& i: v.getSubObjects())
 	{
-		BOOST_REQUIRE_MESSAGE(i.second.type() == json_spirit::obj_type, i.first + " should contain an object under a test name.");
-		json_spirit::mObject const& obj = i.second.get_obj();
-		BOOST_REQUIRE_MESSAGE(obj.count("_info") > 0, "_info section not set! " + _compiledTest.string());
-		json_spirit::mObject const& info = obj.at("_info").get_obj();
-		BOOST_REQUIRE_MESSAGE(info.count("sourceHash") > 0, "sourceHash not found in " + _compiledTest.string() + " in " + i.first);
-		h256 const sourceHash = h256(info.at("sourceHash").get_str());
-		BOOST_CHECK_MESSAGE(sourceHash == fillerHash, "Test " + _compiledTest.string() + " in " + i.first + " is outdated. Filler hash is different!");
-	}*/
+        // use eth object _info section class here !!!!!
+        BOOST_REQUIRE_MESSAGE(i.type() == test::DataType::Object, i.getKey() + " should contain an object under a test name.");
+        BOOST_REQUIRE_MESSAGE(i.count("_info") > 0, "_info section not set! " + _compiledTest.string());
+        test::DataObject const& info = i.at("_info");
+        BOOST_REQUIRE_MESSAGE(info.count("sourceHash") > 0, "sourceHash not found in " + _compiledTest.string() + " in " + i.getKey());
+        h256 const sourceHash = h256(info.at("sourceHash").asString());
+        BOOST_CHECK_MESSAGE(sourceHash == fillerHash, "Test " + _compiledTest.string() + " in " + i.getKey() + " is outdated. Filler hash is different!");
+    }
 }
 
 }
