@@ -32,7 +32,7 @@ if(HUNTER_ENABLED)
 endif()
 
 # search for test names and create ctest tests
-set(excludeSuites jsonrpc \"customTestSuite\")
+set(excludeSuites jsonrpc \"customTestSuite\" GeneralStateTests)
 set(allSuites jsonrpc)
 foreach(file ${sources})
 	file(STRINGS ${file} test_list_raw REGEX "BOOST_.*TEST_(SUITE|CASE|SUITE_END)")

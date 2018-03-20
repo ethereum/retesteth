@@ -52,8 +52,18 @@ DataObject const& stateGenesis()
     return genesis;
 }
 
+bool OptionsAllowTransaction(generalTransaction::transactionInfo const& _tr)
+{
+    Options const& opt = Options::get();
+    if ((opt.trDataIndex == (int)_tr.dataInd || opt.trDataIndex == -1) &&
+        (opt.trGasIndex == (int)_tr.gasInd || opt.trGasIndex == -1) &&
+        (opt.trValueIndex == (int)_tr.valueInd || opt.trValueIndex == -1))
+        return true;
+    return false;
+}
+
 /// Rewrite the test file
-DataObject FillTest(DataObject const& _testFile)
+DataObject FillTest(DataObject const& _testFile, TestSuite::TestSuiteOptions& _opt)
 {
     DataObject filledTest;
     test::stateTestFiller test(_testFile);
@@ -79,7 +89,6 @@ DataObject FillTest(DataObject const& _testFile)
         genesis["params"]["forkRules"] = net;
         session.test_setChainParams(genesis.asJson());
 
-        DataObject transactionResults;
         DataObject forkResults;
         forkResults.setKey(net);
 
@@ -91,6 +100,9 @@ DataObject FillTest(DataObject const& _testFile)
             {
                 for (auto& tr: test.getTransactionsUnsafe())
                 {
+                    if (!OptionsAllowTransaction(tr))
+                        continue;
+
                     bool blockMined = false;
                     // if expect section is for this transaction
                     if (expect.checkIndexes(tr.dataInd, tr.gasInd, tr.valueInd))
@@ -108,11 +120,14 @@ DataObject FillTest(DataObject const& _testFile)
                         // check that the post state qualifies to the expect section
                         state postState = (test::convertJsonCPPtoData(readJson(fullPost)));
                         expectState expectSection (expect.getData().at("result"));
-                        bool error = test::compareStates(expectSection, postState);
-                        BOOST_CHECK_MESSAGE(!error, "Network: " + net + ", TrInfo: d: " + toString(tr.dataInd) + ", g: "
+                        CompareResult res = test::compareStates(expectSection, postState);
+                        BOOST_CHECK_MESSAGE(res == CompareResult::Success, "Network: " + net + ", TrInfo: d: " + toString(tr.dataInd) + ", g: "
                                             + toString(tr.gasInd) + ", v: " + toString(tr.valueInd));
+                        if (res != CompareResult::Success)
+                            _opt.wasErrors = true;
 
                         DataObject indexes;
+                        DataObject transactionResults;
                         indexes["data"] = tr.dataInd;
                         indexes["gas"] = tr.gasInd;
                         indexes["value"] = tr.valueInd;
@@ -163,6 +178,9 @@ void RunTest(DataObject const& _testFile)
 				bool blockMined = false;
                 if (result.checkIndexes(tr.dataInd, tr.gasInd, tr.valueInd))
                 {
+                    string testInfo = TestOutputHelper::get().testName() + ", fork: " + network
+                                    + ", TrInfo: d: " + toString(tr.dataInd) + ", g: " + toString(tr.gasInd)
+                                    + ", v: " + toString(tr.valueInd);
                     u256 a(test.getEnv().getData().at("timestamp").asString());
 					session.test_modifyTimestamp(a.convert_to<size_t>());
 					session.test_addTransaction(tr.transaction.getData().asJson());
@@ -174,11 +192,11 @@ void RunTest(DataObject const& _testFile)
                     if (postHash != result.getData().at("hash").asString())
                         fullPost = session.test_getPostState("{ \"version\" : \"0x02\" }");
                     BOOST_CHECK_MESSAGE(postHash == result.getData().at("hash").asString(),
-                        "Error at " + TestOutputHelper::get().testName() + ", fork: " + network + ", hash mismatch: " + postHash + ", expected: " + result.getData().at("hash").asString()
+                        "Error at " + testInfo + ", hash mismatch: " + postHash + ", expected: " + result.getData().at("hash").asString()
 						 + "\nState Dump: " + fullPost);
 					string postLogs = session.test_getPostState("{ \"version\" : \"0x03\" }");
 					BOOST_CHECK_MESSAGE(postLogs == result.getData().at("logs").asString(),
-						"Error at " + TestOutputHelper::get().testName() + ", fork: " + network + ", logs hash mismatch: " + postHash + ", expected: " + result.getData().at("logs").asString());
+                        "Error at " + testInfo + ", logs hash mismatch: " + postHash + ", expected: " + result.getData().at("logs").asString());
 
 				}
 				if (blockMined)
@@ -194,11 +212,11 @@ void RunTest(DataObject const& _testFile)
 	}
 }
 
-DataObject StateTestSuite::doTests(DataObject const& _input, bool _fillin) const
+DataObject StateTestSuite::doTests(DataObject const& _input, TestSuiteOptions& _opt) const
 {
 	BOOST_REQUIRE_MESSAGE(_input.type() == DataType::Object,
 		TestOutputHelper::get().get().testFile().string() + " A GeneralStateTest file should contain an object.");
-	BOOST_REQUIRE_MESSAGE(!_fillin || _input.getSubObjects().size() == 1,
+    BOOST_REQUIRE_MESSAGE(!_opt.doFilling || _input.getSubObjects().size() == 1,
 		TestOutputHelper::get().testFile().string() + " A GeneralStateTest filler should contain only one test.");
 
     DataObject filledTest;
@@ -211,15 +229,15 @@ DataObject StateTestSuite::doTests(DataObject const& _input, bool _fillin) const
         DataObject outputTest;
 		outputTest.setKey(testname);
 
-		if (_fillin && !TestOutputHelper::get().testFile().empty())
+        if (_opt.doFilling && !TestOutputHelper::get().testFile().empty())
 			BOOST_REQUIRE_MESSAGE(testname + "Filler" == TestOutputHelper::get().testFile().stem().string(),
 				TestOutputHelper::get().testFile().string() + " contains a test with a different name '" + testname + "'");
 
 		if (!TestOutputHelper::get().checkTest(testname))
 			continue;
 
-		if (_fillin)
-            outputTest = FillTest(inputTest);
+        if (_opt.doFilling)
+            outputTest = FillTest(inputTest, _opt);
 		else
 			RunTest(inputTest);
 

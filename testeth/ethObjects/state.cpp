@@ -3,45 +3,60 @@
 using namespace  std;
 
 namespace test {
-bool compareStates(expectState const& _stateExpect, state const& _statePost)
+
+CompareResult compareStates(expectState const& _stateExpect, state const& _statePost)
 {
-    bool wasError = false;
+    CompareResult result = CompareResult::Success;
+    auto checkMessage = [&result](bool _flag, CompareResult _type, string const& _error) -> void
+    {
+        BOOST_CHECK_MESSAGE(_flag, _error);
+        if (!_flag)
+            result = _type;
+    };
+
     for (auto const& a: _stateExpect.getAccounts())
     {
         if (a.shouldNotExist())
-            BOOST_CHECK_MESSAGE(!_statePost.hasAccount(a.address()),
-                 TestOutputHelper::get().testName() +  "' Compare States: " << a.address()
-                 << "' address not expected to exist!");
+            checkMessage(!_statePost.hasAccount(a.address()),
+                CompareResult::AccountShouldNotExist,
+                TestOutputHelper::get().testName() +  "' Compare States: " + a.address()
+                + "' address not expected to exist!");
         else
-            BOOST_CHECK_MESSAGE(_statePost.hasAccount(a.address()),
-                 TestOutputHelper::get().testName() +  " Compare States: '" << a.address()
-                 << "' missing expected address!");
+            checkMessage(_statePost.hasAccount(a.address()),
+                CompareResult::MissingExpectedAccount,
+                TestOutputHelper::get().testName() +  " Compare States: Missing expected address: '" + a.address() + "'");
+
+        if (result != CompareResult::Success)
+            break;
 
         // Check account in state post with expect sectino account
         account const& inState = _statePost.getAccount(a.address());
 
         if (a.hasBalance())
-            BOOST_CHECK_MESSAGE(a.getData().at("balance").asString() == inState.getData().at("balance").asString(),
-                 TestOutputHelper::get().testName() + " Check State: '" << a.address()
-                 <<  "': incorrect balance " << inState.getData().at("balance").asString() << ", expected "
-                 << a.getData().at("balance").asString());
+            checkMessage(a.getData().at("balance").asString() == inState.getData().at("balance").asString(),
+                CompareResult::IncorrectBalance,
+                TestOutputHelper::get().testName() + " Check State: '" + a.address()
+                +  "': incorrect balance " + inState.getData().at("balance").asString() + ", expected "
+                + a.getData().at("balance").asString());
 
         if (a.hasNonce())
-            BOOST_CHECK_MESSAGE(a.getData().at("nonce").asString() == inState.getData().at("nonce").asString(),
-                TestOutputHelper::get().testName() + " Check State: '" << a.address()
-                << "': incorrect nonce " << inState.getData().at("nonce").asString() << ", expected "
-                << a.getData().at("nonce").asString());
+            checkMessage(a.getData().at("nonce").asString() == inState.getData().at("nonce").asString(),
+                CompareResult::IncorrectNonce,
+                TestOutputHelper::get().testName() + " Check State: '" + a.address()
+                + "': incorrect nonce " + inState.getData().at("nonce").asString() + ", expected "
+                + a.getData().at("nonce").asString());
 
         // Check that state post has values from expected storage
         if (a.hasStorage())
             a.compareStorage(inState.getData().at("storage"));
 
         if (a.hasCode())
-            BOOST_CHECK_MESSAGE(a.getData().at("code").asString() == inState.getData().at("code").asString(),
-                TestOutputHelper::get().testName() + " Check State: '" << a.address()
-                << "': incorrect code '" << inState.getData().at("code").asString() << "', expected '"
-                << a.getData().at("code").asString() << "'");
+            checkMessage(a.getData().at("code").asString() == inState.getData().at("code").asString(),
+                CompareResult::IncorrectCode,
+                TestOutputHelper::get().testName() + " Check State: '" + a.address()
+                + "': incorrect code '" + inState.getData().at("code").asString() + "', expected '"
+                + a.getData().at("code").asString() + "'");
     }
-    return wasError;
+    return result;
 }
 } // namespace

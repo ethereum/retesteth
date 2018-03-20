@@ -33,9 +33,6 @@ using namespace boost;
 
 void TestOutputHelper::initTest(size_t _maxTests)
 {
-	//Ethash::init();
-	//NoProof::init();
-	//BasicAuthority::init();
 	m_currentTestName = "n/a";
 	m_currentTestFileName = string();
 	m_execTimeResults = std::vector<execTimeName>();
@@ -94,5 +91,4 @@ void TestOutputHelper::printTestExecStats()
 			std::cout << setw(45) << m_execTimeResults[i].second << setw(25) << " time: " + toString(m_execTimeResults[i].first) << "\n";
 	}
 }
-
 

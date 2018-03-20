@@ -31,7 +31,7 @@ namespace  test {
         expectAccount(DataObject const& _account):
             object(_account)
         {
-            m_shouldNotExist = _account.count("shouldNotExist");
+            m_shouldNotExist = _account.count("shouldnotexist");
             m_hasBalance = _account.count("balance");
             m_hasNonce = _account.count("nonce");
             m_hasCode = _account.count("code");

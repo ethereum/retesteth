@@ -42,8 +42,15 @@ public:
 
 	virtual ~TestSuite() {}
 
+    struct TestSuiteOptions
+    {
+        TestSuiteOptions(): doFilling(false), wasErrors(false) {}
+        bool doFilling;
+        bool wasErrors;
+    };
+
 	// Main test executive function. should be declared for each test suite. it fills and runs the test .json file
-	virtual DataObject doTests(DataObject const&, bool) const = 0;
+    virtual DataObject doTests(DataObject const&, TestSuiteOptions& _options) const = 0;
 
 	// Execute all tests from suiteFolder()/_testFolder/*
 	// This functions checks that tests in the repo are updated with /src/suiteFillerFolder()/*Filler tests

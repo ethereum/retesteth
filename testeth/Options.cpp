@@ -22,16 +22,11 @@
 #include <iomanip>
 
 #include <devcore/Log.h>
-//#include <libevm/VMFactory.h>
-//#include <libweb3jsonrpc/Debug.h>
 #include <testeth/Options.h>
 #include <testeth/TestHelper.h>
-//#include <test/tools/fuzzTesting/fuzzHelper.h>
-
 
 using namespace std;
 using namespace test;
-//using namespace dev::eth;
 
 void printHelp()
 {
@@ -75,7 +70,7 @@ void printHelp()
 
 void printVersion()
 {
-	//cout << prepareVersionString() << "\n";
+    cout << prepareVersionString() << "\n";
 }
 
 Options::Options(int argc, const char** argv)

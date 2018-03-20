@@ -190,6 +190,7 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
 	// Filename of the test that would be generated
 	fs::path const boostTestPath = getFullPath(_testFolder) / fs::path(testname + ".json");
 
+    TestSuiteOptions opt;
 	if (Options::get().filltests)
 	{
 		if (isCopySource)
@@ -226,25 +227,30 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
                 BOOST_ERROR("Unknown test format!" + TestOutputHelper::get().testFile().string());
 
 			removeComments(v);
-            DataObject output = doTests(v, true);
+            opt.doFilling = true;
+            DataObject output = doTests(v, opt);
             addClientInfo(output, boostRelativeTestPath, sha3(byteContents));
-            std::cerr << output.asJson() << std::endl;
+            //std::cerr << output.asJson() << std::endl;
             //writeFile(boostTestPath, asBytes(json_spirit::write_string(output, true)));
 		}
 	}
 
-	// Test is generated. Now run it and check that there should be no errors
-	if ((Options::get().singleTest && Options::get().singleTestName == testname) || !Options::get().singleTest)
-        cnote << "TEST " << testname + ":";
+    if (!opt.wasErrors)
+    {
+        // Test is generated. Now run it and check that there should be no errors
+        if ((Options::get().singleTest && Options::get().singleTestName == testname) || !Options::get().singleTest)
+            cnote << "TEST " << testname + ":";
 
-	executeFile(boostTestPath);
+        executeFile(boostTestPath);
+    }
 }
 
 void TestSuite::executeFile(boost::filesystem::path const& _file) const
 {
+    TestSuiteOptions opt;
 	string const s = asString(dev::contents(_file));
 	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " << _file.string() << " is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
-    doTests(test::convertJsonCPPtoData(readJson(s)), false);
+    doTests(test::convertJsonCPPtoData(readJson(s)), opt);
 }
 
 }

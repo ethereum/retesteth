@@ -5,6 +5,17 @@
 #include <testeth/ethObjects/postSectionElement.h>
 
 namespace test {
+    enum CompareResult
+    {
+        Success,
+        AccountShouldNotExist,
+        MissingExpectedAccount,
+        IncorrectBalance,
+        IncorrectNonce,
+        IncorrectCode,
+        None
+    };
+
 	class state: public object
 	{
 		public:
@@ -78,7 +89,7 @@ namespace test {
     };
 
     /// Check expect section against Post state section
-    bool compareStates(expectState const& _stateExpect, state const& _statePost);
+    CompareResult compareStates(expectState const& _stateExpect, state const& _statePost);
 
     class postState
     {
