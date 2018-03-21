@@ -54,8 +54,8 @@ namespace test {
 				case DigitsType::HexPrefixed: return _data;
 				case DigitsType::Hex: return "0x" + _data;
 				case DigitsType::Decimal:
-				case DigitsType::String:
 					BOOST_FALLTHROUGH;
+				case DigitsType::String:
 					BOOST_ERROR(TestOutputHelper::get().testName() + ": Hex data is expected to be hex string: " + _data);
 					break;
 				default:
