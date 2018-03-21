@@ -175,26 +175,21 @@ class DataObject
 			obj.print(level+1);
 	}
 
-    std::string asJson(int level = 0, bool _debug = false) const
+	std::string asJson(int level = 0) const
 	{
 		std::ostringstream out;
-        auto printLevel = [level, &out, _debug]() -> void
+		auto printLevel = [level, &out]() -> void
 		{
             for (int i = 0; i < level*2; i++)
-            {
-                if (_debug)
-                    out << level << " ";
-                else
-                    out << " ";
-            }
+				out << " ";
 		};
 
-        auto printElements = [this, &out, level, &printLevel, _debug]() -> void
+		auto printElements = [this, &out, level]() -> void
 		{
 			for(std::vector<DataObject>::const_iterator it = this->m_subObjects.begin();
 				it < this->m_subObjects.end(); it++)
             {
-                out << (*it).asJson(level+1, _debug);
+				out << (*it).asJson(level+1);
 				if (it+1 != this->m_subObjects.end())
 					out << ",";
 				out << std::endl;

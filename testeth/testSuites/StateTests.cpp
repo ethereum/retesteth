@@ -122,7 +122,7 @@ DataObject FillTest(DataObject const& _testFile, TestSuite::TestSuiteOptions& _o
                         expectState expectSection (expect.getData().at("result"));
                         CompareResult res = test::compareStates(expectSection, postState);
                         BOOST_CHECK_MESSAGE(res == CompareResult::Success, "Network: " + net + ", TrInfo: d: " + toString(tr.dataInd) + ", g: "
-                                            + toString(tr.gasInd) + ", v: " + toString(tr.valueInd));
+											+ toString(tr.gasInd) + ", v: " + toString(tr.valueInd) + "\n");
                         if (res != CompareResult::Success)
                             _opt.wasErrors = true;
 

@@ -55,7 +55,9 @@ namespace test {
 				case DigitsType::Hex: return "0x" + _data;
 				case DigitsType::Decimal:
 				case DigitsType::String:
+					BOOST_FALLTHROUGH;
 					BOOST_ERROR(TestOutputHelper::get().testName() + ": Hex data is expected to be hex string: " + _data);
+					break;
 				default:
 					BOOST_ERROR(TestOutputHelper::get().testName() + "Unknown digits type! " + _data);
 					break;

@@ -33,11 +33,15 @@ CompareResult compareStates(expectState const& _stateExpect, state const& _state
         account const& inState = _statePost.getAccount(a.address());
 
         if (a.hasBalance())
+		{
+			u256 inStateB = u256(inState.getData().at("balance").asString());
             checkMessage(a.getData().at("balance").asString() == inState.getData().at("balance").asString(),
                 CompareResult::IncorrectBalance,
                 TestOutputHelper::get().testName() + " Check State: '" + a.address()
-                +  "': incorrect balance " + inState.getData().at("balance").asString() + ", expected "
-                + a.getData().at("balance").asString());
+				+  "': incorrect balance " + toString(inStateB) + ", expected "
+				+ toString(u256(a.getData().at("balance").asString())) );
+
+		}
 
         if (a.hasNonce())
             checkMessage(a.getData().at("nonce").asString() == inState.getData().at("nonce").asString(),
