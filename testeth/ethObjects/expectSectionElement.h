@@ -18,14 +18,14 @@ namespace test {
             object(_expect)
         {
             requireJsonFields(_expect, "expect", {
-                {"indexes", {{DataType::Object}} },
-                {"network", {{DataType::Array}, {DataType::String}} },
-                {"result", {{DataType::Object}} }
+                {"indexes", {DataType::Object} },
+                {"network", {DataType::Array, DataType::String} },
+                {"result", {DataType::Object} }
             });
             requireJsonFields(_expect.at("indexes"), "indexes", {
-                {"data", {{DataType::Array}, {DataType::Integer}} },
-                {"gas", {{DataType::Array}, {DataType::Integer}} },
-                {"value", {{DataType::Array}, {DataType::Integer}} }
+                {"data", {DataType::Array, DataType::Integer} },
+                {"gas", {DataType::Array, DataType::Integer} },
+                {"value", {DataType::Array, DataType::Integer} }
             });
 
             parseJsonIntValueIntoSet(_expect.at("indexes").at("data"), m_dataIndexes);

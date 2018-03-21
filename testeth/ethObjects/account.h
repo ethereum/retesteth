@@ -13,10 +13,10 @@ namespace  test {
 			object(_account)
 		{
             requireJsonFields(_account, "account " + _account.getKey(), {
-				{"balance", {{DataType::String}} },
-				{"code", {{DataType::String}} },
-				{"nonce", {{DataType::String}} },
-				{"storage", {{DataType::Object}} }
+                {"balance", {DataType::String} },
+                {"code", {DataType::String} },
+                {"nonce", {DataType::String} },
+                {"storage", {DataType::Object} }
             });
 
             // Make all fields hex

@@ -65,11 +65,11 @@ namespace test {
             fieldChecker(DataObject const& _test)
             {
                 requireJsonFields(_test, "stateTest " + _test.getKey(), {
-                    {"_info", {{DataType::Object}} },
-                    {"env", {{DataType::Object}} },
-                    {"pre", {{DataType::Object}} },
-                    {"transaction", {{DataType::Object}} },
-                    {"post", {{DataType::Object}} }
+                    {"_info", {DataType::Object} },
+                    {"env", {DataType::Object} },
+                    {"pre", {DataType::Object} },
+                    {"transaction", {DataType::Object} },
+                    {"post", {DataType::Object} }
                 });
             }
         };
@@ -103,10 +103,10 @@ namespace test {
             fieldChecker(DataObject const& _test)
             {
                 requireJsonFields(_test, "stateTestFiller " + _test.getKey(), {
-                    {"env", {{DataType::Object}} },
-                    {"pre", {{DataType::Object}} },
-                    {"transaction", {{DataType::Object}} },
-                    {"expect", {{DataType::Array}} }
+                    {"env", {DataType::Object} },
+                    {"pre", {DataType::Object} },
+                    {"transaction", {DataType::Object} },
+                    {"expect", {DataType::Array} }
                 });
             }
         };

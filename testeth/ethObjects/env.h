@@ -13,12 +13,12 @@ namespace test {
             object(_env)
 		{
 			test::requireJsonFields(_env, "env", {
-				{"currentCoinbase", {{DataType::String}} },
-				{"currentDifficulty", {{DataType::String}} },
-				{"currentGasLimit", {{DataType::String}} },
-				{"currentNumber", {{DataType::String}} },
-				{"currentTimestamp", {{DataType::String}} },
-				{"previousHash", {{DataType::String}} },
+                {"currentCoinbase", {DataType::String} },
+                {"currentDifficulty", {DataType::String} },
+                {"currentGasLimit", {DataType::String} },
+                {"currentNumber", {DataType::String} },
+                {"currentTimestamp", {DataType::String} },
+                {"previousHash", {DataType::String} },
 			});
 
 			// Convert from state test format to unified json rpc names
