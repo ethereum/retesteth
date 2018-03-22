@@ -13,22 +13,29 @@ namespace test {
             object(_env)
 		{
 			test::requireJsonFields(_env, "env", {
-                {"currentCoinbase", {DataType::String} },
-                {"currentDifficulty", {DataType::String} },
-                {"currentGasLimit", {DataType::String} },
-                {"currentNumber", {DataType::String} },
-                {"currentTimestamp", {DataType::String} },
-                {"previousHash", {DataType::String} },
+				{"currentCoinbase", {DataType::String} },
+				{"currentDifficulty", {DataType::String} },
+				{"currentGasLimit", {DataType::String} },
+				{"currentNumber", {DataType::String} },
+				{"currentTimestamp", {DataType::String} },
+				{"previousHash", {DataType::String} },
 			});
 
+			makeAllFieldsHex(m_data);
+		}
+
+		DataObject getDataForRPC() const
+		{
+			DataObject data;
+			data.replace(m_data);
 			// Convert from state test format to unified json rpc names
-			m_data.renameKey("currentCoinbase", "coinbase");
-			m_data.renameKey("currentDifficulty", "difficulty");
-			m_data.renameKey("currentGasLimit", "gasLimit");
-			m_data.renameKey("currentNumber", "number");
-			m_data.renameKey("currentTimestamp", "timestamp");
-			m_data.renameKey("previousHash", "parentHash");
-            makeAllFieldsHex(m_data);
+			data.renameKey("currentCoinbase", "coinbase");
+			data.renameKey("currentDifficulty", "difficulty");
+			data.renameKey("currentGasLimit", "gasLimit");
+			data.renameKey("currentNumber", "number");
+			data.renameKey("currentTimestamp", "timestamp");
+			data.renameKey("previousHash", "parentHash");
+			return data;
 		}
 	};
 }

@@ -7,29 +7,34 @@ namespace test {
 CompareResult compareStates(expectState const& _stateExpect, state const& _statePost)
 {
     CompareResult result = CompareResult::Success;
-    auto checkMessage = [&result](bool _flag, CompareResult _type, string const& _error) -> void
+	auto checkMessage = [&result](bool _flag, CompareResult _type, string const& _error) -> void
     {
         BOOST_CHECK_MESSAGE(_flag, _error);
         if (!_flag)
-            result = _type;
+			result = _type;
     };
 
     for (auto const& a: _stateExpect.getAccounts())
     {
         if (a.shouldNotExist())
+		{
             checkMessage(!_statePost.hasAccount(a.address()),
                 CompareResult::AccountShouldNotExist,
                 TestOutputHelper::get().testName() +  "' Compare States: " + a.address()
                 + "' address not expected to exist!");
+			if (result != CompareResult::Success)
+				break;
+			continue;
+		}
         else
             checkMessage(_statePost.hasAccount(a.address()),
                 CompareResult::MissingExpectedAccount,
                 TestOutputHelper::get().testName() +  " Compare States: Missing expected address: '" + a.address() + "'");
 
-        if (result != CompareResult::Success)
+		if (result != CompareResult::Success)
             break;
 
-        // Check account in state post with expect sectino account
+		// Check account in state post with expect section account
         account const& inState = _statePost.getAccount(a.address());
 
         if (a.hasBalance())

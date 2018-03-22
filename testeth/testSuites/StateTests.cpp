@@ -83,7 +83,7 @@ DataObject FillTest(DataObject const& _testFile, TestSuite::TestSuiteOptions& _o
             continue;
 
         DataObject genesis = stateGenesis();
-        genesis["genesis"] = test.getEnv().getData();
+		genesis["genesis"] = test.getEnv().getDataForRPC();
         genesis["genesis"]["timestamp"] = "0x00";	//Set Genesis tstmp to 0. the actual timestamp specified in env section is a timestamp of the first block.
         genesis["state"] = test.getPre().getData();
         genesis["params"]["forkRules"] = net;
@@ -107,7 +107,7 @@ DataObject FillTest(DataObject const& _testFile, TestSuite::TestSuiteOptions& _o
                     // if expect section is for this transaction
                     if (expect.checkIndexes(tr.dataInd, tr.gasInd, tr.valueInd))
                     {
-                        u256 a(test.getEnv().getData().at("timestamp").asString());
+						u256 a(test.getEnv().getDataForRPC().at("timestamp").asString());
                         session.test_modifyTimestamp(a.convert_to<size_t>());
                         session.test_addTransaction(tr.transaction.getData().asJson());
                         session.test_mineBlocks(1);
@@ -142,7 +142,7 @@ DataObject FillTest(DataObject const& _testFile, TestSuite::TestSuiteOptions& _o
                 }
             }
         }
-
+		test.checkUnexecutedTransactions();
         filledTest["post"].addSubObject(forkResults);
     }
 
@@ -163,7 +163,7 @@ void RunTest(DataObject const& _testFile)
 			continue;
 
         DataObject genesis = stateGenesis();
-        genesis["genesis"] = test.getEnv().getData();
+		genesis["genesis"] = test.getEnv().getDataForRPC();
         genesis["genesis"]["timestamp"] = "0x00";	//Set Genesis tstmp to 0. the actual timestamp specified in env section is a timestamp of the first block.
         genesis["state"] = test.getPre().getData();
         genesis["params"]["forkRules"] = network;
@@ -175,13 +175,16 @@ void RunTest(DataObject const& _testFile)
 			// look for a transaction with this indexes and execute it on a client
             for (auto& tr: test.getTransactionsUnsafe())
 			{
+				if (!OptionsAllowTransaction(tr))
+					continue;
+
 				bool blockMined = false;
                 if (result.checkIndexes(tr.dataInd, tr.gasInd, tr.valueInd))
                 {
                     string testInfo = TestOutputHelper::get().testName() + ", fork: " + network
                                     + ", TrInfo: d: " + toString(tr.dataInd) + ", g: " + toString(tr.gasInd)
                                     + ", v: " + toString(tr.valueInd);
-                    u256 a(test.getEnv().getData().at("timestamp").asString());
+					u256 a(test.getEnv().getDataForRPC().at("timestamp").asString());
 					session.test_modifyTimestamp(a.convert_to<size_t>());
 					session.test_addTransaction(tr.transaction.getData().asJson());
 					session.test_mineBlocks(1);
@@ -189,9 +192,9 @@ void RunTest(DataObject const& _testFile)
 					blockMined = true;
 					string fullPost;
                     string postHash = session.test_getPostState("{ \"version\" : \"0x01\" }");
-                    if (postHash != result.getData().at("hash").asString())
+					if (postHash != result.getData().at("hash").asString())
                         fullPost = session.test_getPostState("{ \"version\" : \"0x02\" }");
-                    BOOST_CHECK_MESSAGE(postHash == result.getData().at("hash").asString(),
+					BOOST_CHECK_MESSAGE(postHash == result.getData().at("hash").asString(),
                         "Error at " + testInfo + ", hash mismatch: " + postHash + ", expected: " + result.getData().at("hash").asString()
 						 + "\nState Dump: " + fullPost);
 					string postLogs = session.test_getPostState("{ \"version\" : \"0x03\" }");
@@ -204,11 +207,7 @@ void RunTest(DataObject const& _testFile)
 			}
 		}
 
-        for (auto const& tr: test.getTransactions())
-		{
-			BOOST_REQUIRE_MESSAGE(tr.executed == true, "A transaction was specified, but there is no execution results in a test! Transaction: dInd="
-			+ toString(tr.dataInd) + " gInd=" + toString(tr.gasInd) + " vInd=" + toString(tr.valueInd));
-		}
+		test.checkUnexecutedTransactions();
 	}
 }
 

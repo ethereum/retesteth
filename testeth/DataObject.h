@@ -62,6 +62,21 @@ class DataObject
 		return m_subObjects.at(m_subObjects.size() - 1);
 	}
 
+	void setKeyPos(std::string const& _key, size_t _pos)
+	{
+		assert(_pos < m_subObjects.size());
+		DataObject replacedElement;
+		replacedElement.replace(m_subObjects.at(_pos));
+		m_subObjects[_pos].replace(this->at(_key));
+		for (size_t i = _pos + 1; i < m_subObjects.size(); i++)
+		{
+			DataObject origElement;
+			origElement.replace(m_subObjects.at(i));
+			m_subObjects[i].replace(replacedElement);
+			replacedElement.replace(origElement);
+		}
+	}
+
 	DataObject& operator = (std::string const& _value)
 	{
 		assert(m_type == DataType::String || m_type == DataType::Null);
@@ -94,6 +109,7 @@ class DataObject
         m_strVal = _value.asString();
         m_intVal = _value.asInt();
         m_type = _value.type();
+		m_subObjects.clear();
         m_subObjects = _value.getSubObjects();
     }
 
@@ -180,7 +196,7 @@ class DataObject
 		std::ostringstream out;
 		auto printLevel = [level, &out]() -> void
 		{
-            for (int i = 0; i < level*2; i++)
+			for (int i = 0; i < level*4; i++)
 				out << " ";
 		};
 
@@ -252,7 +268,6 @@ class DataObject
 		}
 		return out.str();
 	}
-
 	static std::string dataTypeAsString(DataType _type)
 	{
 		switch (_type) {

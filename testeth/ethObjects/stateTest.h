@@ -1,4 +1,5 @@
 #pragma once
+#include <testeth/Options.h>
 #include <testeth/DataObject.h>
 #include <testeth/ethObjects/account.h>
 #include <testeth/ethObjects/object.h>
@@ -28,6 +29,18 @@ namespace testprivate {
         generalTransaction const& getGenTransaction() const { return m_transaction; }
         std::vector<generalTransaction::transactionInfo> const& getTransactions() const { return m_transaction.getTransactions(); }
         std::vector<generalTransaction::transactionInfo>& getTransactionsUnsafe() { return m_transaction.getTransactionsUnsafe(); }
+		void checkUnexecutedTransactions()
+		{
+			Options const& opt = Options::get();
+			if (opt.trDataIndex == -1 && opt.trGasIndex != -1 && opt.trValueIndex != -1)
+			{
+				for (auto const& tr: m_transaction.getTransactions())
+				{
+					BOOST_REQUIRE_MESSAGE(tr.executed == true, "A transaction was specified, but there is no execution results in a test! Transaction: dInd="
+					+ toString(tr.dataInd) + " gInd=" + toString(tr.gasInd) + " vInd=" + toString(tr.valueInd));
+				}
+			}
+		}
 
         private:
         class fieldChecker
@@ -65,11 +78,11 @@ namespace test {
             fieldChecker(DataObject const& _test)
             {
                 requireJsonFields(_test, "stateTest " + _test.getKey(), {
-                    {"_info", {DataType::Object} },
-                    {"env", {DataType::Object} },
-                    {"pre", {DataType::Object} },
-                    {"transaction", {DataType::Object} },
-                    {"post", {DataType::Object} }
+					{"_info", {DataType::Object} },
+					{"env", {DataType::Object} },
+					{"pre", {DataType::Object} },
+					{"transaction", {DataType::Object} },
+					{"post", {DataType::Object} }
                 });
             }
         };
@@ -103,10 +116,10 @@ namespace test {
             fieldChecker(DataObject const& _test)
             {
                 requireJsonFields(_test, "stateTestFiller " + _test.getKey(), {
-                    {"env", {DataType::Object} },
-                    {"pre", {DataType::Object} },
-                    {"transaction", {DataType::Object} },
-                    {"expect", {DataType::Array} }
+					{"env", {DataType::Object} },
+					{"pre", {DataType::Object} },
+					{"transaction", {DataType::Object} },
+					{"expect", {DataType::Array} }
                 });
             }
         };

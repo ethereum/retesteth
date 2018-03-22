@@ -168,4 +168,17 @@ BOOST_AUTO_TEST_CASE(compareStates_multipleError)
     BOOST_REQUIRE(res == CompareResult::IncorrectCode);
 }
 
+BOOST_AUTO_TEST_CASE(compareStates_accountShouldNotExistAndItsNot)
+{
+	DataObject expectData;
+	expectData["0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["shouldnotexist"] = "1";
+	DataObject postData;
+	postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x82124";
+	postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
+	postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
+	postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["storage"] = DataObject(DataType::Object);
+	CompareResult res = test::compareStates(expectState(expectData), state(postData));
+	BOOST_REQUIRE(res == CompareResult::Success);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

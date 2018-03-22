@@ -77,13 +77,14 @@ void addClientInfo(test::DataObject& _v, fs::path const& _testSource, h256 const
                 comment = existingInfo.at("comment").asString();
 		}
 
+		clientinfo["comment"] = comment;
         clientinfo["filledwith"] = session.test_getClientInfo();
         clientinfo["retesteth"] = test::prepareVersionString();
 		clientinfo["lllcversion"] = test::prepareLLLCVersionString();
 		clientinfo["source"] = _testSource.string();
 		clientinfo["sourceHash"] = toString(_testSourceHash);
-		clientinfo["comment"] = comment;
 		o["_info"] = clientinfo;
+		o.setKeyPos("_info", 0);
     }
 }
 
@@ -229,9 +230,11 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
 			removeComments(v);
             opt.doFilling = true;
             DataObject output = doTests(v, opt);
-            addClientInfo(output, boostRelativeTestPath, sha3(byteContents));
-            //std::cerr << output.asJson() << std::endl;
-            //writeFile(boostTestPath, asBytes(json_spirit::write_string(output, true)));
+			if (!opt.wasErrors)
+			{
+				addClientInfo(output, boostRelativeTestPath, sha3(byteContents));
+				writeFile(boostTestPath, asBytes(output.asJson()));
+			}
 		}
 	}
 
