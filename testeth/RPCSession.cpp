@@ -140,6 +140,11 @@ RPCSession& RPCSession::instance(const string& _path)
 	return session;
 }
 
+string RPCSession::web3_clientVersion()
+{
+	return rpcCall("web3_clientVersion", { }).asString();
+}
+
 string RPCSession::eth_getCode(string const& _address, string const& _blockNumber)
 {
 	return rpcCall("eth_getCode", { quote(_address), quote(_blockNumber) }).asString();

@@ -78,7 +78,7 @@ void addClientInfo(test::DataObject& _v, fs::path const& _testSource, h256 const
 		}
 
 		clientinfo["comment"] = comment;
-        clientinfo["filledwith"] = session.test_getClientInfo();
+		clientinfo["filledwith"] = session.web3_clientVersion();
         clientinfo["retesteth"] = test::prepareVersionString();
 		clientinfo["lllcversion"] = test::prepareLLLCVersionString();
 		clientinfo["source"] = _testSource.string();

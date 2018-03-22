@@ -86,6 +86,7 @@ public:
 
 	static RPCSession& instance(std::string const& _path);
 
+	std::string web3_clientVersion();
 	std::string eth_getCode(std::string const& _address, std::string const& _blockNumber);
 	Json::Value eth_getBlockByNumber(std::string const& _blockNumber, bool _fullObjects);
 	std::string eth_call(TransactionData const& _td, std::string const& _blockNumber);
