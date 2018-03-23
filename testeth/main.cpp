@@ -1,12 +1,6 @@
 #define BOOST_TEST_MODULE EthereumTests
 #define BOOST_TEST_NO_MAIN
 #include <boost/test/included/unit_test.hpp>
-
-//#include <test/tools/jsontests/BlockChainTests.h>
-//#include <test/tools/jsontests/StateTests.h>
-//#include <test/tools/jsontests/TransactionTests.h>
-//#include <test/tools/jsontests/vm.h>
-//#include <test/tools/libtesteth/TestHelper.h>
 #include <clocale>
 #include <cstdlib>
 #include <iostream>
@@ -161,7 +155,7 @@ int main(int argc, const char* argv[])
 
 	int result = 0;
 	auto fakeInit = [](int, char* []) -> boost::unit_test::test_suite* { return nullptr; };
-	if (opt.jsontrace || opt.vmtrace || opt.statediff)
+    if (opt.jsontrace || opt.vmtrace || opt.statediff || opt.createRandomTest)
 	{
 		// Do not use travis '.' output thread if debug is defined
 		result = unit_test_main(fakeInit, argc, const_cast<char**>(argv));

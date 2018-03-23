@@ -24,11 +24,13 @@
 #include <string>
 #include <devcore/Log.h>
 #include <devcore/CommonIO.h>
+#include <devcore/SHA3.h>
 #include <testeth/TestSuite.h>
 #include <testeth/DataObject.h>
 #include <testeth/TestOutputHelper.h>
 #include <testeth/TestHelper.h>
 #include <testeth/Options.h>
+#include <testeth/RPCSession.h>
 
 using namespace std;
 using namespace dev;
@@ -39,77 +41,70 @@ namespace {
 
 void removeComments(test::DataObject& _obj)
 {
-	(void)_obj;
-	/*if (_obj.type() == Json::objectValue)
+    if (_obj.type() == test::DataType::Object)
 	{
 		list<string> removeList;
-		for (auto& i: _obj.ObjectValues)
+        for (auto& i: _obj.getSubObjectsUnsafe())
 		{
-			if (i.first.substr(0, 2) == "//")
+            if (i.getKey().substr(0, 2) == "//")
 			{
-				removeList.push_back(i.first);
+                removeList.push_back(i.getKey());
 				continue;
 			}
-
-			removeComments(i.second);
+            removeComments(i);
 		}
-		for (auto& i: removeList)
-			_obj.get_obj().erase(_obj.get_obj().find(i));
+        for (auto const& i: removeList)
+            _obj.removeKey(i);
 	}
-	else if (_obj.type() == Json::arrayValue)
+    else if (_obj.type() == test::DataType::Array)
 	{
-		for (auto& i: _obj.get_array())
+        for (auto& i: _obj.getSubObjectsUnsafe())
 			removeComments(i);
-	}*/
+    }
 }
 
 void addClientInfo(test::DataObject& _v, fs::path const& _testSource, h256 const& _testSourceHash)
 {
-	(void)_v;
-	(void)_testSource;
-	(void)_testSourceHash;
-	/*for (auto& i: _v.get_obj())
+    RPCSession& session = RPCSession::instance("/home/wins/.ethereum/geth.ipc");
+    for (auto& o: _v.getSubObjectsUnsafe())
 	{
-		json_spirit::mObject& o = i.second.get_obj();
-		json_spirit::mObject clientinfo;
-
-		string comment;
+        string comment;
+        test::DataObject clientinfo;
 		if (o.count("_info"))
 		{
-			json_spirit::mObject& existingInfo = o["_info"].get_obj();
-			if (existingInfo.count("comment"))
-				comment = existingInfo["comment"].get_str();
+            test::DataObject const& existingInfo = o["_info"];
+            if (existingInfo.count("comment"))
+                comment = existingInfo.at("comment").asString();
 		}
 
-		clientinfo["filledwith"] = test::prepareVersionString();
+		clientinfo["comment"] = comment;
+		clientinfo["filledwith"] = session.web3_clientVersion();
+        clientinfo["retesteth"] = test::prepareVersionString();
 		clientinfo["lllcversion"] = test::prepareLLLCVersionString();
 		clientinfo["source"] = _testSource.string();
 		clientinfo["sourceHash"] = toString(_testSourceHash);
-		clientinfo["comment"] = comment;
 		o["_info"] = clientinfo;
-	}*/
+		o.setKeyPos("_info", 0);
+    }
 }
 
 void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
 {
-	(void)_compiledTest;
-	(void)_sourceTest;
-	/*Json::Value v;
 	string const s = asString(dev::contents(_compiledTest));
 	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _compiledTest.string() + " is empty.");
-	json_spirit::read_string(s, v);
+    test::DataObject v = test::convertJsonCPPtoData(test::readJson(s));
 	h256 const fillerHash = sha3(dev::contents(_sourceTest));
 
-	for (auto& i: v.get_obj())
+    for (auto const& i: v.getSubObjects())
 	{
-		BOOST_REQUIRE_MESSAGE(i.second.type() == json_spirit::obj_type, i.first + " should contain an object under a test name.");
-		json_spirit::mObject const& obj = i.second.get_obj();
-		BOOST_REQUIRE_MESSAGE(obj.count("_info") > 0, "_info section not set! " + _compiledTest.string());
-		json_spirit::mObject const& info = obj.at("_info").get_obj();
-		BOOST_REQUIRE_MESSAGE(info.count("sourceHash") > 0, "sourceHash not found in " + _compiledTest.string() + " in " + i.first);
-		h256 const sourceHash = h256(info.at("sourceHash").get_str());
-		BOOST_CHECK_MESSAGE(sourceHash == fillerHash, "Test " + _compiledTest.string() + " in " + i.first + " is outdated. Filler hash is different!");
-	}*/
+        // use eth object _info section class here !!!!!
+        BOOST_REQUIRE_MESSAGE(i.type() == test::DataType::Object, i.getKey() + " should contain an object under a test name.");
+        BOOST_REQUIRE_MESSAGE(i.count("_info") > 0, "_info section not set! " + _compiledTest.string());
+        test::DataObject const& info = i.at("_info");
+        BOOST_REQUIRE_MESSAGE(info.count("sourceHash") > 0, "sourceHash not found in " + _compiledTest.string() + " in " + i.getKey());
+        h256 const sourceHash = h256(info.at("sourceHash").asString());
+        BOOST_CHECK_MESSAGE(sourceHash == fillerHash, "Test " + _compiledTest.string() + " in " + i.getKey() + " is outdated. Filler hash is different!");
+    }
 }
 
 }
@@ -196,6 +191,7 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
 	// Filename of the test that would be generated
 	fs::path const boostTestPath = getFullPath(_testFolder) / fs::path(testname + ".json");
 
+    TestSuiteOptions opt;
 	if (Options::get().filltests)
 	{
 		if (isCopySource)
@@ -217,47 +213,47 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
 		else
 		{
 			if (!Options::get().singleTest)
-				std::cout << "Populating tests...";
+                std::cout << "Populating tests..." << std::endl;
 
-			test::DataObject data(DataType::Null);
-			removeComments(data);
-			addClientInfo(data,boostRelativeTestPath, h256());
-			/*json_spirit::mValue v;
+            DataObject v;
 			bytes const byteContents = dev::contents(_testFileName);
 			string const s = asString(byteContents);
 			BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _testFileName.string() + " is empty.");
 
 			if (_testFileName.extension() == ".json")
-				json_spirit::read_string(s, v);
-			else if (_testFileName.extension() == ".yml")
-				v = test::parseYamlToJson(s);
+                v = test::convertJsonCPPtoData(readJson(s));
+            //else if (_testFileName.extension() == ".yml")
+            //	v = test::parseYamlToJson(s);
 			else
-				BOOST_ERROR("Unknow test format!" + TestOutputHelper::get().testFile().string());
+                BOOST_ERROR("Unknown test format!" + TestOutputHelper::get().testFile().string());
 
 			removeComments(v);
-			json_spirit::mValue output = doTests(v, true);
-			addClientInfo(output, boostRelativeTestPath, sha3(byteContents));
-			writeFile(boostTestPath, asBytes(json_spirit::write_string(output, true)));*/
+            opt.doFilling = true;
+            DataObject output = doTests(v, opt);
+			if (!opt.wasErrors)
+			{
+				addClientInfo(output, boostRelativeTestPath, sha3(byteContents));
+				writeFile(boostTestPath, asBytes(output.asJson()));
+			}
 		}
 	}
 
-	// Test is generated. Now run it and check that there should be no errors
-	if ((Options::get().singleTest && Options::get().singleTestName == testname) || !Options::get().singleTest)
-		cnote << "TEST " << testname << ":";
+    if (!opt.wasErrors)
+    {
+        // Test is generated. Now run it and check that there should be no errors
+        if ((Options::get().singleTest && Options::get().singleTestName == testname) || !Options::get().singleTest)
+            cnote << "TEST " << testname + ":";
 
-	executeFile(boostTestPath);
+        executeFile(boostTestPath);
+    }
 }
 
 void TestSuite::executeFile(boost::filesystem::path const& _file) const
 {
-	Json::Value v;
+    TestSuiteOptions opt;
 	string const s = asString(dev::contents(_file));
 	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " << _file.string() << " is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
-	Json::Reader reader;
-	bool parsingSuccessful = reader.parse(s, v);
-	if (!parsingSuccessful)
-		BOOST_ERROR("Failed to parse configuration\n" + reader.getFormattedErrorMessages());
-	doTests(test::convertJsonCPPtoData(v), false);
+    doTests(test::convertJsonCPPtoData(readJson(s)), opt);
 }
 
 }

@@ -29,7 +29,7 @@ namespace test
 class StateTestSuite: public TestSuite
 {
 public:
-	DataObject doTests(DataObject const& _input, bool _fillin) const override;
+    DataObject doTests(DataObject const& _input, TestSuiteOptions& _opt) const override;
 	boost::filesystem::path suiteFolder() const override;
 	boost::filesystem::path suiteFillerFolder() const override;
 };

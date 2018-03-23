@@ -30,10 +30,7 @@
 #include <testeth/TestSuite.h>
 #include <testeth/DataObject.h>
 #include <testeth/testSuites/StateTests.h>
-
-#include <testeth/ethObjects/genesis.h>
-#include <testeth/ethObjects/state.h>
-#include <testeth/ethObjects/transaction.h>
+#include <testeth/ethObjects/stateTest.h>
 
 #include <testeth/RPCSession.h>
 
@@ -43,93 +40,209 @@ namespace fs = boost::filesystem;
 
 namespace test {
 
-struct transactionInfo
+DataObject const& stateGenesis()
 {
-	transactionInfo(int _gasInd, int _dataInd, int _valueInd, DataObject const& _transaction) :
-		gasInd(_gasInd), dataInd(_dataInd), valueInd(_valueInd), transaction(_transaction)
-		{}
-	int gasInd;
-	int dataInd;
-	int valueInd;
-	test::transaction transaction;
-};
-
-std::vector<transactionInfo> parseGeneralTransaction(DataObject const& _generalTransaction)
-{
-	std::vector<transactionInfo> ret;
-	test::requireJsonFields(_generalTransaction, "transaction", {
-		{"data", DataType::Array},
-		{"gasLimit", DataType::Array},
-		{"gasPrice", DataType::String},
-		{"nonce", DataType::String},
-		{"secretKey", DataType::String},
-		{"to", DataType::String},
-		{"value", DataType::Array}
-	});
-
-	for (size_t dataInd = 0; dataInd < _generalTransaction.at("data").getSubObjects().size(); dataInd++)
-	{
-		for (size_t gasInd = 0; gasInd < _generalTransaction.at("gasLimit").getSubObjects().size(); gasInd++)
-		{
-			for (size_t valueInd = 0; valueInd < _generalTransaction.at("value").getSubObjects().size(); valueInd++)
-			{
-				DataObject singleTransaction(DataType::Object);
-				DataObject data("data", _generalTransaction.at("data").getSubObjects().at(dataInd).asString());
-				DataObject gas("gasLimit", _generalTransaction.at("gasLimit").getSubObjects().at(gasInd).asString());
-				DataObject value("value", _generalTransaction.at("value").getSubObjects().at(valueInd).asString());
-
-				singleTransaction.addSubObject(data);
-				singleTransaction.addSubObject(gas);
-				singleTransaction.addSubObject(_generalTransaction.at("gasPrice"));
-				singleTransaction.addSubObject(_generalTransaction.at("nonce"));
-				singleTransaction.addSubObject(_generalTransaction.at("secretKey"));
-				singleTransaction.addSubObject(_generalTransaction.at("to"));
-				singleTransaction.addSubObject(value);
-				transactionInfo info(dataInd, gasInd, valueInd, singleTransaction);
-				ret.push_back(info);
-			}
-		}
-	}
-	return ret;
+    static DataObject genesis;
+    if (genesis.type() == DataType::Null)
+    {
+        genesis["version"] = "1";
+        genesis["params"]["miningMethod"] = "NoProof";
+        genesis["params"]["blockReward"] = "0x00";
+    }
+    return genesis;
 }
 
-DataObject StateTestSuite::doTests(DataObject const& _input, bool _fillin) const
+bool OptionsAllowTransaction(generalTransaction::transactionInfo const& _tr)
+{
+    Options const& opt = Options::get();
+    if ((opt.trDataIndex == (int)_tr.dataInd || opt.trDataIndex == -1) &&
+        (opt.trGasIndex == (int)_tr.gasInd || opt.trGasIndex == -1) &&
+        (opt.trValueIndex == (int)_tr.valueInd || opt.trValueIndex == -1))
+        return true;
+    return false;
+}
+
+/// Rewrite the test file
+DataObject FillTest(DataObject const& _testFile, TestSuite::TestSuiteOptions& _opt)
+{
+    DataObject filledTest;
+    test::stateTestFiller test(_testFile);
+
+    // Copy Sctions form test source
+    filledTest.setKey(_testFile.getKey());
+
+    RPCSession& session = RPCSession::instance("/home/wins/.ethereum/geth.ipc");
+    filledTest["env"] = test.getEnv().getData();
+    filledTest["pre"] = test.getPre().getData();
+    filledTest["transaction"] = test.getGenTransaction().getData();
+
+    // run transactions on all networks that we need
+    for (auto const& net: test.getAllNetworksFromExpectSection())
+    {
+        if (!Options::get().singleTestNet.empty() && Options::get().singleTestNet != net)
+            continue;
+
+        DataObject genesis = stateGenesis();
+		genesis["genesis"] = test.getEnv().getDataForRPC();
+        genesis["genesis"]["timestamp"] = "0x00";	//Set Genesis tstmp to 0. the actual timestamp specified in env section is a timestamp of the first block.
+        genesis["state"] = test.getPre().getData();
+        genesis["params"]["forkRules"] = net;
+        session.test_setChainParams(genesis.asJson());
+
+        DataObject forkResults;
+        forkResults.setKey(net);
+
+        // run transactions for defined expect sections only
+        for (auto const& expect: test.getExpectSections())
+        {
+            // if expect section for this networks
+            if (expect.getNetworks().count(net))
+            {
+                for (auto& tr: test.getTransactionsUnsafe())
+                {
+                    if (!OptionsAllowTransaction(tr))
+                        continue;
+
+                    bool blockMined = false;
+                    // if expect section is for this transaction
+                    if (expect.checkIndexes(tr.dataInd, tr.gasInd, tr.valueInd))
+                    {
+						u256 a(test.getEnv().getDataForRPC().at("timestamp").asString());
+                        session.test_modifyTimestamp(a.convert_to<size_t>());
+                        session.test_addTransaction(tr.transaction.getData().asJson());
+                        session.test_mineBlocks(1);
+                        tr.executed = true;
+                        blockMined = true;
+                        string postHash = session.test_getPostState("{ \"version\" : \"0x01\" }");
+                        string fullPost = session.test_getPostState("{ \"version\" : \"0x02\" }");
+                        string postLogs = session.test_getPostState("{ \"version\" : \"0x03\" }");
+
+                        // check that the post state qualifies to the expect section
+                        state postState = (test::convertJsonCPPtoData(readJson(fullPost)));
+                        expectState expectSection (expect.getData().at("result"));
+                        CompareResult res = test::compareStates(expectSection, postState);
+                        BOOST_CHECK_MESSAGE(res == CompareResult::Success, "Network: " + net + ", TrInfo: d: " + toString(tr.dataInd) + ", g: "
+											+ toString(tr.gasInd) + ", v: " + toString(tr.valueInd) + "\n");
+                        if (res != CompareResult::Success)
+                            _opt.wasErrors = true;
+
+                        DataObject indexes;
+                        DataObject transactionResults;
+                        indexes["data"] = tr.dataInd;
+                        indexes["gas"] = tr.gasInd;
+                        indexes["value"] = tr.valueInd;
+
+                        transactionResults["indexes"] = indexes;
+                        transactionResults["hash"] = postHash;
+                        transactionResults["logs"] = postLogs;
+                        forkResults.addArrayObject(transactionResults);
+                    }
+                    if (blockMined)
+                        session.test_rewindToBlock(0);
+                }
+            }
+        }
+		test.checkUnexecutedTransactions();
+        filledTest["post"].addSubObject(forkResults);
+    }
+
+    return filledTest;
+}
+
+/// Read and execute the test file
+void RunTest(DataObject const& _testFile)
+{
+    test::stateTest test(_testFile);
+	RPCSession& session = RPCSession::instance("/home/wins/.ethereum/geth.ipc");
+
+	// read post state results
+    for (auto const& post: test.getPost().getResults())
+	{
+        string const& network = post.first;
+        if (!Options::get().singleTestNet.empty() && Options::get().singleTestNet != network)
+			continue;
+
+        DataObject genesis = stateGenesis();
+		genesis["genesis"] = test.getEnv().getDataForRPC();
+        genesis["genesis"]["timestamp"] = "0x00";	//Set Genesis tstmp to 0. the actual timestamp specified in env section is a timestamp of the first block.
+        genesis["state"] = test.getPre().getData();
+        genesis["params"]["forkRules"] = network;
+		session.test_setChainParams(genesis.asJson());
+
+		// read all results for a specific fork
+        for (auto const& result: post.second)
+        {
+			// look for a transaction with this indexes and execute it on a client
+            for (auto& tr: test.getTransactionsUnsafe())
+			{
+				if (!OptionsAllowTransaction(tr))
+					continue;
+
+				bool blockMined = false;
+                if (result.checkIndexes(tr.dataInd, tr.gasInd, tr.valueInd))
+                {
+                    string testInfo = TestOutputHelper::get().testName() + ", fork: " + network
+                                    + ", TrInfo: d: " + toString(tr.dataInd) + ", g: " + toString(tr.gasInd)
+                                    + ", v: " + toString(tr.valueInd);
+					u256 a(test.getEnv().getDataForRPC().at("timestamp").asString());
+					session.test_modifyTimestamp(a.convert_to<size_t>());
+					session.test_addTransaction(tr.transaction.getData().asJson());
+					session.test_mineBlocks(1);
+					tr.executed = true;
+					blockMined = true;
+					string fullPost;
+                    string postHash = session.test_getPostState("{ \"version\" : \"0x01\" }");
+					if (postHash != result.getData().at("hash").asString())
+                        fullPost = session.test_getPostState("{ \"version\" : \"0x02\" }");
+					BOOST_CHECK_MESSAGE(postHash == result.getData().at("hash").asString(),
+                        "Error at " + testInfo + ", hash mismatch: " + postHash + ", expected: " + result.getData().at("hash").asString()
+						 + "\nState Dump: " + fullPost);
+					string postLogs = session.test_getPostState("{ \"version\" : \"0x03\" }");
+					BOOST_CHECK_MESSAGE(postLogs == result.getData().at("logs").asString(),
+                        "Error at " + testInfo + ", logs hash mismatch: " + postHash + ", expected: " + result.getData().at("logs").asString());
+
+				}
+				if (blockMined)
+					session.test_rewindToBlock(0);
+			}
+		}
+
+		test.checkUnexecutedTransactions();
+	}
+}
+
+DataObject StateTestSuite::doTests(DataObject const& _input, TestSuiteOptions& _opt) const
 {
 	BOOST_REQUIRE_MESSAGE(_input.type() == DataType::Object,
 		TestOutputHelper::get().get().testFile().string() + " A GeneralStateTest file should contain an object.");
-	BOOST_REQUIRE_MESSAGE(!_fillin || _input.getSubObjects().size() == 1,
+    BOOST_REQUIRE_MESSAGE(!_opt.doFilling || _input.getSubObjects().size() == 1,
 		TestOutputHelper::get().testFile().string() + " A GeneralStateTest filler should contain only one test.");
-	DataObject v(DataType::Object);
 
+    DataObject filledTest;
 	for (auto& i: _input.getSubObjects())
 	{
 		string const testname = i.getKey();
 		BOOST_REQUIRE_MESSAGE(i.type() == DataType::Object,
 			TestOutputHelper::get().testFile().string() + " should contain an object under a test name.");
 		DataObject const& inputTest = i;
-		DataObject outputTest(DataType::Object);
+        DataObject outputTest;
 		outputTest.setKey(testname);
 
-		if (_fillin && !TestOutputHelper::get().testFile().empty())
+        if (_opt.doFilling && !TestOutputHelper::get().testFile().empty())
 			BOOST_REQUIRE_MESSAGE(testname + "Filler" == TestOutputHelper::get().testFile().stem().string(),
 				TestOutputHelper::get().testFile().string() + " contains a test with a different name '" + testname + "'");
 
 		if (!TestOutputHelper::get().checkTest(testname))
 			continue;
 
-		BOOST_REQUIRE_MESSAGE(inputTest.count("env") > 0, testname + " env not set!");
-		BOOST_REQUIRE_MESSAGE(inputTest.count("pre") > 0, testname + " pre not set!");
-		BOOST_REQUIRE_MESSAGE(inputTest.count("transaction") > 0, testname + " transaction not set!");
+        if (_opt.doFilling)
+            outputTest = FillTest(inputTest, _opt);
+		else
+			RunTest(inputTest);
 
-		test::state aState(inputTest.at("pre"));
-		test::genesis aTestGenesis(inputTest.at("env"), aState);
-		std::vector<transactionInfo> transactions = parseGeneralTransaction(inputTest.at("transaction"));
-
-		//RPCSession& session = RPCSession::instance("/home/wins/.ethereum/geth.ipc");
-		//session.test_setChainParams("");
-
+        filledTest.addSubObject(outputTest);
 	}
-	return v;
+    return filledTest;
 }
 
 fs::path StateTestSuite::suiteFolder() const
