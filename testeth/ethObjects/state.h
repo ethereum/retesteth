@@ -5,16 +5,6 @@
 #include <testeth/ethObjects/postSectionElement.h>
 
 namespace test {
-    enum CompareResult
-    {
-        Success,
-        AccountShouldNotExist,
-        MissingExpectedAccount,
-        IncorrectBalance,
-        IncorrectNonce,
-        IncorrectCode,
-        None
-    };
 
 	class state: public object
 	{

@@ -46,32 +46,31 @@ namespace test {
             return DigitsType::Hex;
         }
 
-        static std::string makeHexCode(std::string const& _data)
-		{
-			BOOST_CHECK_MESSAGE(_data.length() % 2 == 0, TestOutputHelper::get().testName() + ": Hex data is expected to be of odd length: '" + _data + "'");
-			switch (stringIntegerType(_data))
-			{
-				case DigitsType::HexPrefixed: return _data;
-				case DigitsType::Hex: return "0x" + _data;
-				case DigitsType::Decimal:
-					BOOST_FALLTHROUGH;
-				case DigitsType::String:
-					BOOST_ERROR(TestOutputHelper::get().testName() + ": Hex data is expected to be hex string: " + _data);
-					break;
-				default:
-					BOOST_ERROR(TestOutputHelper::get().testName() + "Unknown digits type! " + _data);
-					break;
-			}
-			return "";
-        }
-
         static std::string makeHexAddress(std::string const& _address)
         {
             if (_address[0] == '0' && _address[1] == 'x')
 				BOOST_CHECK_MESSAGE(_address.length() == 42, TestOutputHelper::get().testName() + ": Wrong address: " + _address);
             else
 				BOOST_CHECK_MESSAGE(_address.length() == 40, TestOutputHelper::get().testName() + ": Wrong address: " + _address);
-            return makeHexCode(_address);
+
+			BOOST_CHECK_MESSAGE(_address.length() % 2 == 0, TestOutputHelper::get().testName() + ": Hex data is expected to be of odd length: '" + _address + "'");
+			switch (stringIntegerType(_address))
+			{
+				case DigitsType::HexPrefixed:
+					return _address;
+				case DigitsType::Decimal:
+					BOOST_FALLTHROUGH;
+				case DigitsType::Hex:
+					return "0x" + _address;
+				case DigitsType::String:
+					BOOST_ERROR(TestOutputHelper::get().testName() + ": Hex data is expected to be hex string (but contains illegal char): " + _address);
+					break;
+				default:
+					BOOST_ERROR(TestOutputHelper::get().testName() + "Unknown digits type! " + _address);
+					break;
+			}
+			BOOST_ERROR(TestOutputHelper::get().testName() + "Error checking address field!");
+			return _address;
         }
 
 		protected:

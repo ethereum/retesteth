@@ -55,4 +55,7 @@ std::string prepareLLLCVersionString();
 /// run system command
 std::string executeCmd(std::string const& _command);
 
+/// compile LLL / wasm or other src code into bytecode
+std::string replaceCode(std::string const& _code);
+
 }

@@ -6,6 +6,18 @@
 
 using namespace dev;
 namespace  test {
+	enum CompareResult
+	{
+		Success,
+		AccountShouldNotExist,
+		MissingExpectedAccount,
+		IncorrectBalance,
+		IncorrectNonce,
+		IncorrectCode,
+		IncorrectStorage,
+		None
+	};
+
 	class account : public object
 	{
 		public:
@@ -18,6 +30,9 @@ namespace  test {
                 {"nonce", {DataType::String} },
                 {"storage", {DataType::Object} }
             });
+
+			// Compile the code
+			m_data["code"] = test::replaceCode(m_data.at("code").asString());
 
             // Make all fields hex
             m_data.setKey(makeHexAddress(m_data.getKey()));
@@ -48,26 +63,41 @@ namespace  test {
         bool hasCode() const { return m_hasCode; }
         bool hasStorage() const { return m_hasStorage; }
         std::string const& address() const { return getData().getKey(); }
-        void compareStorage(DataObject const& _storage) const
+		CompareResult compareStorage(DataObject const& _storage) const
         {
-            BOOST_REQUIRE(_storage.type() == DataType::Object);
+			CompareResult result = CompareResult::Success;
+			auto checkMessage = [&result](bool _flag, CompareResult _type, std::string const& _error) -> void
+			{
+				BOOST_CHECK_MESSAGE(_flag, _error);
+				if (!_flag)
+					result = _type;
+			};
+
+			BOOST_REQUIRE(_storage.type() == DataType::Object);
             BOOST_REQUIRE(hasStorage());
 
-            DataObject const& myStorage = m_data.at("storage");
-            for (auto const& element: myStorage.getSubObjects())
-            {
-                BOOST_CHECK_MESSAGE(_storage.count(element.getKey()),
+			DataObject const& expectStorage = m_data.at("storage");
+			for (auto const& element: expectStorage.getSubObjects())
+			{
+				checkMessage(_storage.count(element.getKey()),
+				   CompareResult::IncorrectStorage,
                    TestOutputHelper::get().testName() + " '" + address() + "' expected storage key: '"
                     + element.getKey() + "' to be set!");
 
+				if (result != CompareResult::Success)
+					return result;
+
                 std::string valueInStorage = _storage.at(element.getKey()).asString();
-                BOOST_CHECK_MESSAGE(valueInStorage == element.asString(),
-                   TestOutputHelper::get().testName() + " Check State: " << address()
-                   << ": incorrect storage [" << element.getKey() << "] = " << valueInStorage
-                   << ", expected [" << element.getKey() << "] = " << element.asString());
+				checkMessage(valueInStorage == element.asString(),
+				   CompareResult::IncorrectStorage,
+				   TestOutputHelper::get().testName() + " Check State: " + address()
+				   + ": incorrect storage [" + element.getKey() + "] = " + valueInStorage
+				   + ", expected [" + element.getKey() + "] = " + element.asString());
             }
-            BOOST_CHECK_MESSAGE(myStorage.getSubObjects().size() == _storage.getSubObjects().size(), TestOutputHelper::get().testName()
-                 + address() + " storage has more storage records then expected!");
+			checkMessage(expectStorage.getSubObjects().size() == _storage.getSubObjects().size(),
+				CompareResult::IncorrectStorage,
+				 TestOutputHelper::get().testName() + address() + " storage has more storage records then expected!");
+			return result;
         }
 
         private:

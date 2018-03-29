@@ -296,7 +296,7 @@ string prepareVersionString()
 {
     // cpp-1.3.0+commit.6be76b64.Linux.g++
     string commit(DEV_QUOTED(ETH_COMMIT_HASH));
-    string version = "cpp-" + string(ETH_PROJECT_VERSION);
+	string version = "retesteth-" + string(ETH_PROJECT_VERSION);
     version += "+commit." + commit.substr(0, 8);
     version +=
         "." + string(DEV_QUOTED(ETH_BUILD_OS)) + "." + string(DEV_QUOTED(ETH_BUILD_COMPILER));
@@ -340,6 +340,52 @@ string executeCmd(string const& _command)
         BOOST_ERROR("The command '" + _command + "' exited with " + toString(exitCode) + " code.");
     return boost::trim_copy(out);
 #endif
+}
+
+void checkHexHasEvenLength(string const& _hex)
+{
+	BOOST_CHECK_MESSAGE(_hex.length() % 2 == 0,
+		TestOutputHelper::get().testName() + ": Hex field is expected to be of odd length: '"
+		 + _hex + "'");
+}
+
+string compileLLL(string const& _code)
+{
+#if defined(_WIN32)
+	BOOST_ERROR("LLL compilation only supported on posix systems.");
+	return "";
+#else
+	fs::path path(fs::temp_directory_path() / fs::unique_path());
+	string cmd = string("lllc ") + path.string();
+	writeFile(path.string(), _code);
+	string result = executeCmd(cmd);
+	fs::remove(path);
+	result = "0x" + result;
+	checkHexHasEvenLength(result);
+	return result;
+#endif
+}
+
+string replaceCode(string const& _code)
+{
+	if (_code == "")
+		return "0x";
+
+	if (_code.substr(0, 2) == "0x" && _code.size() >= 2)
+	{
+		checkHexHasEvenLength(_code);
+		return _code;
+	}
+
+	//wasm support
+	//if (_code.find("(module") == 0)
+	//	return wast2wasm(_code);
+
+	string compiledCode = compileLLL(_code);
+	if (_code.size() > 0)
+		BOOST_REQUIRE_MESSAGE(compiledCode.size() > 0,
+			"Bytecode is missing! '" + _code + "' " + TestOutputHelper::get().testName());
+	return compiledCode;
 }
 
 }//namespace

@@ -72,6 +72,8 @@ DataObject FillTest(DataObject const& _testFile, TestSuite::TestSuiteOptions& _o
     filledTest.setKey(_testFile.getKey());
 
     RPCSession& session = RPCSession::instance("/home/wins/.ethereum/geth.ipc");
+	if (test.getData().count("_info"))
+		filledTest["_info"] = test.getData().at("_info");
     filledTest["env"] = test.getEnv().getData();
     filledTest["pre"] = test.getPre().getData();
     filledTest["transaction"] = test.getGenTransaction().getData();
@@ -87,6 +89,7 @@ DataObject FillTest(DataObject const& _testFile, TestSuite::TestSuiteOptions& _o
         genesis["genesis"]["timestamp"] = "0x00";	//Set Genesis tstmp to 0. the actual timestamp specified in env section is a timestamp of the first block.
         genesis["state"] = test.getPre().getData();
         genesis["params"]["forkRules"] = net;
+
         session.test_setChainParams(genesis.asJson());
 
         DataObject forkResults;
@@ -144,8 +147,7 @@ DataObject FillTest(DataObject const& _testFile, TestSuite::TestSuiteOptions& _o
         }
 		test.checkUnexecutedTransactions();
         filledTest["post"].addSubObject(forkResults);
-    }
-
+	}
     return filledTest;
 }
 

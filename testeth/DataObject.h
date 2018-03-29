@@ -57,24 +57,46 @@ class DataObject
 				return i;
 		DataObject obj(DataType::Null);
 		obj.setKey(_key);
-		m_subObjects.push_back(obj);
-		m_type = DataType::Object;
-		return m_subObjects.at(m_subObjects.size() - 1);
+		_addSubObject(obj);
+		return m_subObjects[m_subObjects.size() - 1];
 	}
 
 	void setKeyPos(std::string const& _key, size_t _pos)
 	{
 		assert(_pos < m_subObjects.size());
-		DataObject replacedElement;
-		replacedElement.replace(m_subObjects.at(_pos));
-		m_subObjects[_pos].replace(this->at(_key));
-		for (size_t i = _pos + 1; i < m_subObjects.size(); i++)
+		assert(count(_key));
+		assert(!_key.empty());
+		_checkDoubleKeys();
+		for (size_t i = 0; i < m_subObjects.size(); i++)
 		{
-			DataObject origElement;
-			origElement.replace(m_subObjects.at(i));
-			m_subObjects[i].replace(replacedElement);
-			replacedElement.replace(origElement);
+			if (m_subObjects[i].getKey() == _key)
+			{
+				if (i == _pos)
+					return;	//item already at _pos;
+				else
+					break;
+			}
 		}
+
+		std::vector<DataObject> newSubObjects;
+		for (size_t i = 0; i < m_subObjects.size(); i++)
+		{
+			if (i == _pos)
+			{
+				if (i == m_subObjects.size() - 1 || (m_subObjects[i-1].getKey() == _key && i >= 1))
+				{
+					newSubObjects.push_back(m_subObjects[i]);
+					newSubObjects.push_back(this->at(_key));
+					continue;
+				}
+				newSubObjects.push_back(this->at(_key));
+			}
+			if (m_subObjects[i].getKey() != _key)
+				newSubObjects.push_back(m_subObjects[i]);
+		}
+		m_subObjects.clear();
+		m_subObjects = newSubObjects;
+		_checkDoubleKeys();
 	}
 
 	DataObject& operator = (std::string const& _value)
@@ -287,7 +309,20 @@ class DataObject
 	{
 		if (m_type == DataType::Null)
 			m_type = DataType::Object;
+		_checkDoubleKeys();
 		m_subObjects.push_back(_obj);
+	}
+	void _checkDoubleKeys() const
+	{
+		assert(m_type == DataType::Object);
+		for(size_t i = 0; i < m_subObjects.size(); i++)
+		{
+			std::string const& key = m_subObjects[i].getKey();
+			if (key.empty())
+				continue;
+			for(size_t j = i + 1; j < m_subObjects.size(); j++)
+				assert(m_subObjects[j].getKey() != key);
+		}
 	}
 	std::vector<DataObject> m_subObjects;
 	DataType m_type;

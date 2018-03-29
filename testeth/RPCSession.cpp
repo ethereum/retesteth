@@ -301,7 +301,7 @@ void RPCSession::test_mineBlocks(int _number)
 		auto endTime = std::chrono::steady_clock::now();
 		unsigned timeSpent = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
 		if (timeSpent > m_maxMiningTime)
-			break; // coul be that some blocks are invalid.
+			break; // could be that some blocks are invalid.
 			//BOOST_FAIL("Error in test_mineBlocks: block mining timeout! " + test::TestOutputHelper::get().testName());
 
 		bigint number = fromBigEndian<u256>(fromHex(rpcCall("eth_blockNumber").asString()));

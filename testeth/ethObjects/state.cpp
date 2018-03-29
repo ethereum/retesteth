@@ -57,7 +57,7 @@ CompareResult compareStates(expectState const& _stateExpect, state const& _state
 
         // Check that state post has values from expected storage
         if (a.hasStorage())
-            a.compareStorage(inState.getData().at("storage"));
+			result = a.compareStorage(inState.getData().at("storage"));
 
         if (a.hasCode())
             checkMessage(a.getData().at("code").asString() == inState.getData().at("code").asString(),
