@@ -68,13 +68,13 @@ namespace  test {
 			CompareResult result = CompareResult::Success;
 			auto checkMessage = [&result](bool _flag, CompareResult _type, std::string const& _error) -> void
 			{
-				BOOST_CHECK_MESSAGE(_flag, _error);
+				ETH_CHECK_MESSAGE(_flag, _error);
 				if (!_flag)
 					result = _type;
 			};
 
-			BOOST_REQUIRE(_storage.type() == DataType::Object);
-            BOOST_REQUIRE(hasStorage());
+			ETH_REQUIRE(_storage.type() == DataType::Object);
+            ETH_REQUIRE(hasStorage());
 
 			DataObject const& expectStorage = m_data.at("storage");
 			for (auto const& element: expectStorage.getSubObjects())

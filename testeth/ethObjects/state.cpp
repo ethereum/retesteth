@@ -9,7 +9,7 @@ CompareResult compareStates(expectState const& _stateExpect, state const& _state
     CompareResult result = CompareResult::Success;
 	auto checkMessage = [&result](bool _flag, CompareResult _type, string const& _error) -> void
     {
-        BOOST_CHECK_MESSAGE(_flag, _error);
+        ETH_CHECK_MESSAGE(_flag, _error);
         if (!_flag)
 			result = _type;
     };

@@ -1,4 +1,5 @@
 #pragma once
+#include <testeth/EthChecks.h>
 #include <testeth/DataObject.h>
 #include <testeth/TestOutputHelper.h>
 
@@ -49,11 +50,11 @@ namespace test {
         static std::string makeHexAddress(std::string const& _address)
         {
             if (_address[0] == '0' && _address[1] == 'x')
-				BOOST_CHECK_MESSAGE(_address.length() == 42, TestOutputHelper::get().testName() + ": Wrong address: " + _address);
+				ETH_CHECK_MESSAGE(_address.length() == 42, TestOutputHelper::get().testName() + ": Wrong address: " + _address);
             else
-				BOOST_CHECK_MESSAGE(_address.length() == 40, TestOutputHelper::get().testName() + ": Wrong address: " + _address);
+				ETH_CHECK_MESSAGE(_address.length() == 40, TestOutputHelper::get().testName() + ": Wrong address: " + _address);
 
-			BOOST_CHECK_MESSAGE(_address.length() % 2 == 0, TestOutputHelper::get().testName() + ": Hex data is expected to be of odd length: '" + _address + "'");
+			ETH_CHECK_MESSAGE(_address.length() % 2 == 0, TestOutputHelper::get().testName() + ": Hex data is expected to be of odd length: '" + _address + "'");
 			switch (stringIntegerType(_address))
 			{
 				case DigitsType::HexPrefixed:

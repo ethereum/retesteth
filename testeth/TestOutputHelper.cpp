@@ -18,9 +18,9 @@
  * Fixture class for boost output when running testeth
  */
 
+#include <mutex>
+#include <thread>
 #include <boost/test/unit_test.hpp>
-//#include <libethashseal/Ethash.h>
-//#include <libethcore/BasicAuthority.h>
 #include <devcore/include.h>
 #include <testeth/TestOutputHelper.h>
 #include <testeth/Options.h>
@@ -28,14 +28,16 @@
 using namespace std;
 using namespace dev;
 using namespace test;
-//using namespace dev::eth;
 using namespace boost;
+
+
+typedef std::pair<double, std::string> execTimeName;
+static std::vector<execTimeName> execTimeResults;
 
 void TestOutputHelper::initTest(size_t _maxTests)
 {
 	m_currentTestName = "n/a";
-	m_currentTestFileName = string();
-	m_execTimeResults = std::vector<execTimeName>();
+    m_currentTestFileName = string();
 	m_timer = Timer();
 	m_timer.restart();
 	m_currentTestCaseName = boost::unit_test::framework::current_test_case().p_name;
@@ -69,6 +71,7 @@ void TestOutputHelper::showProgress()
 	}
 }
 
+std::mutex g_resultsUpdate_mutex;
 void TestOutputHelper::finishTest()
 {
 	if (Options::get().exectimelog)
@@ -77,18 +80,26 @@ void TestOutputHelper::finishTest()
 		res.first = m_timer.elapsed();
 		res.second = caseName();
 		std::cout << res.second + " time: " + toString(res.first) << "\n";
-		m_execTimeResults.push_back(res);
+        std::lock_guard<std::mutex> lock(g_resultsUpdate_mutex);
+        execTimeResults.push_back(res);
 	}
 }
 
 void TestOutputHelper::printTestExecStats()
 {
+    std::lock_guard<std::mutex> lock(g_resultsUpdate_mutex);
 	if (Options::get().exectimelog)
 	{
 		std::cout << std::left;
-		std::sort(m_execTimeResults.begin(), m_execTimeResults.end(), [](execTimeName _a, execTimeName _b) { return (_b.first < _a.first); });
-		for (size_t i = 0; i < m_execTimeResults.size(); i++)
-			std::cout << setw(45) << m_execTimeResults[i].second << setw(25) << " time: " + toString(m_execTimeResults[i].first) << "\n";
+        std::sort(execTimeResults.begin(), execTimeResults.end(), [](execTimeName _a, execTimeName _b) { return (_b.first < _a.first); });
+        for (size_t i = 0; i < execTimeResults.size(); i++)
+            std::cout << setw(45) << execTimeResults[i].second << setw(25) << " time: " + toString(execTimeResults[i].first) << "\n";
 	}
+    execTimeResults.clear();
+}
+
+std::string TestOutputHelper::getThreadID()
+{
+    return toString(std::this_thread::get_id());
 }
 

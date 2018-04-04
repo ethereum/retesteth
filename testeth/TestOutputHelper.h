@@ -51,6 +51,9 @@ public:
 	boost::filesystem::path const& testFile() { return m_currentTestFileName; }
 	void printTestExecStats();
 
+    /// get string representation of current threadID
+    static std::string getThreadID();
+
 private:
 	TestOutputHelper() {}
 	dev::Timer m_timer;
@@ -58,9 +61,7 @@ private:
 	size_t m_maxTests;
 	std::string m_currentTestName;
 	std::string m_currentTestCaseName;
-	boost::filesystem::path m_currentTestFileName;
-	typedef std::pair<double, std::string> execTimeName;
-	std::vector<execTimeName> m_execTimeResults;
+    boost::filesystem::path m_currentTestFileName;
 };
 
 class TestOutputHelperFixture

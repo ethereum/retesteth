@@ -75,13 +75,13 @@ void requireJsonFields(DataObject const& _o, string const& _section,
 {
 	// check for unexpected fiedls
 	for (auto const field : _o.getSubObjects())
-		BOOST_CHECK_MESSAGE(_validationMap.count(field.getKey()),
+		ETH_CHECK_MESSAGE(_validationMap.count(field.getKey()),
 			field.getKey() + " should not be declared in " + _section + " section!");
 
 	// check field types with validation map
 	for (auto const vmap : _validationMap)
 	{
-		BOOST_REQUIRE_MESSAGE(_o.count(vmap.first) > 0, vmap.first + " not found in " + _section +
+		ETH_REQUIRE_MESSAGE(_o.count(vmap.first) > 0, vmap.first + " not found in " + _section +
 															" section! " +
 															TestOutputHelper::get().testName());
 		bool matched = false;
@@ -264,13 +264,13 @@ void parseJsonStrValueIntoSet(DataObject const& _json, set<string>& _out)
     {
         for (auto const& val: _json.getSubObjects())
         {
-             BOOST_REQUIRE(val.type() == DataType::String);
+             ETH_REQUIRE(val.type() == DataType::String);
             _out.emplace(val.asString());
         }
     }
     else
     {
-        BOOST_REQUIRE(_json.type() == DataType::String);
+        ETH_REQUIRE(_json.type() == DataType::String);
         _out.emplace(_json.asString());
     }
 }
@@ -281,13 +281,13 @@ void parseJsonIntValueIntoSet(DataObject const& _json, set<int>& _out)
     {
         for (auto const& val: _json.getSubObjects())
         {
-            BOOST_REQUIRE(val.type() == DataType::Integer);
+            ETH_REQUIRE(val.type() == DataType::Integer);
             _out.emplace(val.asInt());
         }
     }
     else if (_json.type() == DataType::Integer)
     {
-        BOOST_REQUIRE(_json.type() == DataType::Integer);
+        ETH_REQUIRE(_json.type() == DataType::Integer);
         _out.emplace(_json.asInt());
     }
 }
@@ -344,7 +344,7 @@ string executeCmd(string const& _command)
 
 void checkHexHasEvenLength(string const& _hex)
 {
-	BOOST_CHECK_MESSAGE(_hex.length() % 2 == 0,
+	ETH_CHECK_MESSAGE(_hex.length() % 2 == 0,
 		TestOutputHelper::get().testName() + ": Hex field is expected to be of odd length: '"
 		 + _hex + "'");
 }
@@ -383,7 +383,7 @@ string replaceCode(string const& _code)
 
 	string compiledCode = compileLLL(_code);
 	if (_code.size() > 0)
-		BOOST_REQUIRE_MESSAGE(compiledCode.size() > 0,
+		ETH_REQUIRE_MESSAGE(compiledCode.size() > 0,
 			"Bytecode is missing! '" + _code + "' " + TestOutputHelper::get().testName());
 	return compiledCode;
 }

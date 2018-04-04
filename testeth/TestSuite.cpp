@@ -31,6 +31,7 @@
 #include <testeth/TestHelper.h>
 #include <testeth/Options.h>
 #include <testeth/RPCSession.h>
+#include <thread>
 
 using namespace std;
 using namespace dev;
@@ -93,19 +94,19 @@ void addClientInfo(test::DataObject& _v, fs::path const& _testSource, h256 const
 void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
 {
 	string const s = asString(dev::contents(_compiledTest));
-	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _compiledTest.string() + " is empty.");
+    ETH_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _compiledTest.string() + " is empty.");
     test::DataObject v = test::convertJsonCPPtoData(test::readJson(s));
 	h256 const fillerHash = sha3(dev::contents(_sourceTest));
 
     for (auto const& i: v.getSubObjects())
 	{
         // use eth object _info section class here !!!!!
-        BOOST_REQUIRE_MESSAGE(i.type() == test::DataType::Object, i.getKey() + " should contain an object under a test name.");
-        BOOST_REQUIRE_MESSAGE(i.count("_info") > 0, "_info section not set! " + _compiledTest.string());
+        ETH_REQUIRE_MESSAGE(i.type() == test::DataType::Object, i.getKey() + " should contain an object under a test name.");
+        ETH_REQUIRE_MESSAGE(i.count("_info") > 0, "_info section not set! " + _compiledTest.string());
         test::DataObject const& info = i.at("_info");
-        BOOST_REQUIRE_MESSAGE(info.count("sourceHash") > 0, "sourceHash not found in " + _compiledTest.string() + " in " + i.getKey());
+        ETH_REQUIRE_MESSAGE(info.count("sourceHash") > 0, "sourceHash not found in " + _compiledTest.string() + " in " + i.getKey());
         h256 const sourceHash = h256(info.at("sourceHash").asString());
-        BOOST_CHECK_MESSAGE(sourceHash == fillerHash, "Test " + _compiledTest.string() + " in " + i.getKey() + " is outdated. Filler hash is different!");
+        ETH_CHECK_MESSAGE(sourceHash == fillerHash, "Test " + _compiledTest.string() + " in " + i.getKey() + " is outdated. Filler hash is different!");
     }
 }
 
@@ -126,6 +127,12 @@ void TestSuite::runTestWithoutFiller(boost::filesystem::path const& _file) const
 	testOutput.finishTest();
 }
 
+void joinThreads(vector<thread>& _threadVector)
+{
+    for (auto& th : _threadVector)
+        th.join();
+}
+
 void TestSuite::runAllTestsInFolder(string const& _testFolder) const
 {
 	// check that destination folder test files has according Filler file in src folder
@@ -136,8 +143,8 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
 		fs::path const expectedFillerName = getFullPathFiller(_testFolder) / fs::path(file.stem().string() + c_fillerPostf + ".json");
 		fs::path const expectedFillerName2 = getFullPathFiller(_testFolder) / fs::path(file.stem().string() + c_fillerPostf + ".yml");
 		fs::path const expectedCopierName = getFullPathFiller(_testFolder) / fs::path(file.stem().string() + c_copierPostf + ".json");
-		BOOST_REQUIRE_MESSAGE(fs::exists(expectedFillerName) || fs::exists(expectedFillerName2) || fs::exists(expectedCopierName), "Compiled test folder contains test without Filler: " + file.filename().string());
-		BOOST_REQUIRE_MESSAGE(!(fs::exists(expectedFillerName) && fs::exists(expectedFillerName2) && fs::exists(expectedCopierName)), "Src test could either be Filler.json, Filler.yml or Copier.json: " + file.filename().string());
+        ETH_REQUIRE_MESSAGE(fs::exists(expectedFillerName) || fs::exists(expectedFillerName2) || fs::exists(expectedCopierName), "Compiled test folder contains test without Filler: " + file.filename().string());
+        ETH_REQUIRE_MESSAGE(!(fs::exists(expectedFillerName) && fs::exists(expectedFillerName2) && fs::exists(expectedCopierName)), "Src test could either be Filler.json, Filler.yml or Copier.json: " + file.filename().string());
 
 		// Check that filled tests created from actual fillers
 		if (Options::get().filltests == false)
@@ -153,8 +160,25 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
 
 	// run all tests
 	vector<fs::path> const files = test::getFiles(getFullPathFiller(_testFolder), {".json", ".yml"}, filter.empty() ? filter : filter + "Filler");
+    auto& testOutput = test::TestOutputHelper::get();
+    vector<thread> threadVector;
+    testOutput.initTest(files.size());
+    for (auto const& file : files)
+    {
+        testOutput.showProgress();
+        thread testThread(&TestSuite::executeTest, this, _testFolder, file);
+        threadVector.push_back(std::move(testThread));
+        if (threadVector.size() == 16)
+        {
+            joinThreads(threadVector);
+            threadVector.clear();
+        }
+    }
+    joinThreads(threadVector);
+    threadVector.clear();
+    testOutput.finishTest();
 
-	auto& testOutput = test::TestOutputHelper::get();
+/*	auto& testOutput = test::TestOutputHelper::get();
 	testOutput.initTest(files.size());
 	for (auto const& file: files)
 	{
@@ -162,7 +186,7 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
 		testOutput.setCurrentTestFile(file);
 		executeTest(_testFolder, file);
 	}
-	testOutput.finishTest();
+    testOutput.finishTest();*/
 }
 
 fs::path TestSuite::getFullPathFiller(string const& _testFolder) const
@@ -177,7 +201,7 @@ fs::path TestSuite::getFullPath(string const& _testFolder) const
 
 void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFileName) const
 {
-	fs::path const boostRelativeTestPath = fs::relative(_testFileName, getTestPath());
+    fs::path const boostRelativeTestPath = fs::relative(_testFileName, getTestPath());
 	string testname = _testFileName.stem().string();
 	bool isCopySource = false;
 	if (testname.rfind(c_fillerPostf) != string::npos)
@@ -188,7 +212,7 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
 		isCopySource = true;
 	}
 	else
-		BOOST_REQUIRE_MESSAGE(false, "Incorrect file suffix in the filler folder! " + _testFileName.string());
+        ETH_REQUIRE_MESSAGE(false, "Incorrect file suffix in the filler folder! " + _testFileName.string());
 
 	// Filename of the test that would be generated
 	fs::path const boostTestPath = getFullPath(_testFolder) / fs::path(testname + ".json");
@@ -203,7 +227,7 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
 			assert(_testFileName.string() != boostTestPath.string());
 			TestOutputHelper::get().showProgress();
 			test::copyFile(_testFileName, boostTestPath);
-			BOOST_REQUIRE_MESSAGE(boost::filesystem::exists(boostTestPath.string()), "Error when copying the test file!");
+            ETH_REQUIRE_MESSAGE(boost::filesystem::exists(boostTestPath.string()), "Error when copying the test file!");
 
 			// Update _info and build information of the copied test
 			/*Json::Value v;
@@ -214,13 +238,10 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
 		}
 		else
 		{
-			if (!Options::get().singleTest)
-                std::cout << "Populating tests..." << std::endl;
-
             DataObject v;
 			bytes const byteContents = dev::contents(_testFileName);
 			string const s = asString(byteContents);
-			BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _testFileName.string() + " is empty.");
+            ETH_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _testFileName.string() + " is empty.");
 
 			if (_testFileName.extension() == ".json")
                 v = test::convertJsonCPPtoData(readJson(s));
@@ -254,7 +275,7 @@ void TestSuite::executeFile(boost::filesystem::path const& _file) const
 {
     TestSuiteOptions opt;
 	string const s = asString(dev::contents(_file));
-	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " << _file.string() << " is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
+    ETH_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _file.string() + " is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
     doTests(test::convertJsonCPPtoData(readJson(s)), opt);
 }
 

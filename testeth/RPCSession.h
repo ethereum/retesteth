@@ -84,7 +84,8 @@ public:
 		std::string blockNumber;
 	};
 
-	static RPCSession& instance(std::string const& _path);
+    static RPCSession& instance(std::string const& _threadID);
+    static void clear();
 
 	std::string web3_clientVersion();
 	std::string eth_getCode(std::string const& _address, std::string const& _blockNumber);
@@ -97,15 +98,17 @@ public:
 	std::string eth_getStorageRoot(std::string const& _address, std::string const& _blockNumber);
 	std::string personal_newAccount(std::string const& _password);
 	void personal_unlockAccount(std::string const& _address, std::string const& _password, int _duration);
-    std::string test_getClientInfo();
-	std::string test_getPostState(std::string const& _config);
+
+    void test_closeClient();
+    std::string test_getPostState(std::string const& _config);
 	std::string test_addTransaction(std::string const& _transaction);
 	void test_setChainParams(std::vector<std::string> const& _genesis);
 	void test_setChainParams(std::string const& _config);
 	void test_rewindToBlock(size_t _blockNr);
 	void test_modifyTimestamp(size_t _timestamp);
 	void test_mineBlocks(int _number);
-	Json::Value rpcCall(std::string const& _methodName, std::vector<std::string> const& _args = std::vector<std::string>(), bool _canFail = false);
+
+    Json::Value rpcCall(std::string const& _methodName, std::vector<std::string> const& _args = std::vector<std::string>(), bool _canFail = false);
 
 	std::string const& account(size_t _id) const { return m_accounts.at(_id); }
 	std::string const& accountCreate();
@@ -120,7 +123,7 @@ private:
 
 	IPCSocket m_ipcSocket;
 	size_t m_rpcSequence = 1;
-	unsigned m_maxMiningTime = 13600; // should be instant with --test (1 sec)
+    unsigned m_maxMiningTime = 23600; // should be instant with --test (1 sec)
 	unsigned m_sleepTime = 10; // 10 milliseconds
 	unsigned m_successfulMineRuns = 0;
 

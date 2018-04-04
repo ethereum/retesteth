@@ -6,6 +6,8 @@
 #include <iostream>
 #include <thread>
 #include <testeth/Options.h>
+#include <testeth/TestOutputHelper.h>
+#include <testeth/RPCSession.h>
 
 using namespace boost::unit_test;
 
@@ -159,7 +161,8 @@ int main(int argc, const char* argv[])
 	{
 		// Do not use travis '.' output thread if debug is defined
 		result = unit_test_main(fakeInit, argc, const_cast<char**>(argv));
-		//dev::test::TestOutputHelper::get().printTestExecStats();
+        RPCSession::clear();
+        test::TestOutputHelper::get().printTestExecStats();
 		return result;
 	}
 	else
@@ -170,7 +173,8 @@ int main(int argc, const char* argv[])
 		result = unit_test_main(fakeInit, argc, const_cast<char**>(argv));
 		stopTravisOut = true;
 		outputThread.join();
-		//dev::test::TestOutputHelper::get().printTestExecStats();
+        RPCSession::clear();
+        test::TestOutputHelper::get().printTestExecStats();
 		return result;
 	}
 }

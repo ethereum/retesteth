@@ -87,11 +87,11 @@ namespace test {
         typedef std::vector<postSectionElement> postSectionElements;
         postState(DataObject const& _post)
         {
-            BOOST_CHECK_MESSAGE(_post.type() == DataType::Object, "State tests post section must be json object!");
+            ETH_CHECK_MESSAGE(_post.type() == DataType::Object, "State tests post section must be json object!");
             for(auto const& element: _post.getSubObjects())
             {
                test::checkAllowedNetwork(element.getKey());
-               BOOST_CHECK_MESSAGE(element.type() == DataType::Array, "State tests post section value at fork results must be json array!");
+               ETH_CHECK_MESSAGE(element.type() == DataType::Array, "State tests post section value at fork results must be json array!");
                postSectionElements results;
                for (auto const& res: element.getSubObjects())
                    results.push_back(postSectionElement(res));

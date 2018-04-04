@@ -5,6 +5,7 @@
 #include <boost/filesystem.hpp>
 #include <json/json.h>
 
+#include <testeth/EthChecks.h>
 #include <testeth/DataObject.h>
 
 namespace fs = boost::filesystem;

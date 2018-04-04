@@ -33,9 +33,9 @@ namespace test {
             parseJsonIntValueIntoSet(_expect.at("indexes").at("value"), m_valueIndexes);
 
             // currently post section support only single index check
-            BOOST_REQUIRE(m_dataIndexes.size() == 1);
-            BOOST_REQUIRE(m_gasIndexes.size() == 1);
-            BOOST_REQUIRE(m_valueIndexes.size() == 1);
+            ETH_REQUIRE(m_dataIndexes.size() == 1);
+            ETH_REQUIRE(m_gasIndexes.size() == 1);
+            ETH_REQUIRE(m_valueIndexes.size() == 1);
         }
 
         bool checkIndexes(int _d, int _g, int _v) const

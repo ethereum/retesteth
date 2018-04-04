@@ -22,6 +22,7 @@
 #include <testeth/ethObjects/state.h>
 #include <testeth/TestOutputHelper.h>
 #include <boost/test/unit_test.hpp>
+#include <thread>
 
 using namespace std;
 using namespace dev;
@@ -247,7 +248,7 @@ BOOST_AUTO_TEST_CASE(compareStates_noError)
     postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
     postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["storage"] = DataObject(DataType::Object);
     CompareResult res = test::compareStates(expectState(expectData), state(postData));
-    BOOST_REQUIRE(res == CompareResult::Success);
+    ETH_REQUIRE(res == CompareResult::Success);
 }
 
 BOOST_AUTO_TEST_CASE_EXPECTED_FAILURES(compareStates_missingAccount, 1)
@@ -262,7 +263,7 @@ BOOST_AUTO_TEST_CASE(compareStates_missingAccount)
     postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
     postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["storage"] = DataObject(DataType::Object);
     CompareResult res = test::compareStates(expectState(expectData), state(postData));
-    BOOST_REQUIRE(res == CompareResult::MissingExpectedAccount);
+    ETH_REQUIRE(res == CompareResult::MissingExpectedAccount);
 }
 
 BOOST_AUTO_TEST_CASE_EXPECTED_FAILURES(compareStates_shouldnoexist, 1)
@@ -277,7 +278,7 @@ BOOST_AUTO_TEST_CASE(compareStates_shouldnoexist)
     postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
     postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["storage"] = DataObject(DataType::Object);
     CompareResult res = test::compareStates(expectState(expectData), state(postData));
-    BOOST_REQUIRE(res == CompareResult::AccountShouldNotExist);
+    ETH_REQUIRE(res == CompareResult::AccountShouldNotExist);
 }
 
 BOOST_AUTO_TEST_CASE_EXPECTED_FAILURES(compareStates_wrongBalance, 1)
@@ -296,7 +297,7 @@ BOOST_AUTO_TEST_CASE(compareStates_wrongBalance)
     postData["0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
     postData["0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["storage"] = DataObject(DataType::Object);
     CompareResult res = test::compareStates(expectState(expectData), state(postData));
-    BOOST_REQUIRE(res == CompareResult::IncorrectBalance);
+    ETH_REQUIRE(res == CompareResult::IncorrectBalance);
 }
 
 BOOST_AUTO_TEST_CASE_EXPECTED_FAILURES(compareStates_wrongNonce, 1)
@@ -316,7 +317,7 @@ BOOST_AUTO_TEST_CASE(compareStates_wrongNonce)
     postData["0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
     postData["0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["storage"] = DataObject(DataType::Object);
     CompareResult res = test::compareStates(expectState(expectData), state(postData));
-    BOOST_REQUIRE(res == CompareResult::IncorrectNonce);
+    ETH_REQUIRE(res == CompareResult::IncorrectNonce);
 }
 
 BOOST_AUTO_TEST_CASE_EXPECTED_FAILURES(compareStates_multipleError, 2)
@@ -338,7 +339,7 @@ BOOST_AUTO_TEST_CASE(compareStates_multipleError)
     postData["0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
     postData["0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["storage"] = DataObject(DataType::Object);
     CompareResult res = test::compareStates(expectState(expectData), state(postData));
-    BOOST_REQUIRE(res == CompareResult::IncorrectCode);
+    ETH_REQUIRE(res == CompareResult::IncorrectCode);
 }
 
 BOOST_AUTO_TEST_CASE(compareStates_accountShouldNotExistAndItsNot)
@@ -351,7 +352,7 @@ BOOST_AUTO_TEST_CASE(compareStates_accountShouldNotExistAndItsNot)
 	postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
 	postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["storage"] = DataObject(DataType::Object);
 	CompareResult res = test::compareStates(expectState(expectData), state(postData));
-	BOOST_REQUIRE(res == CompareResult::Success);
+	ETH_REQUIRE(res == CompareResult::Success);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

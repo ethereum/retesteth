@@ -36,7 +36,7 @@ namespace testprivate {
 			{
 				for (auto const& tr: m_transaction.getTransactions())
 				{
-					BOOST_REQUIRE_MESSAGE(tr.executed == true, "A transaction was specified, but there is no execution results in a test! Transaction: dInd="
+					ETH_REQUIRE_MESSAGE(tr.executed == true, "A transaction was specified, but there is no execution results in a test! Transaction: dInd="
 					+ toString(tr.dataInd) + " gInd=" + toString(tr.gasInd) + " vInd=" + toString(tr.valueInd));
 				}
 			}
@@ -48,9 +48,9 @@ namespace testprivate {
             public:
             fieldChecker(DataObject const& _test)
             {
-                BOOST_CHECK_MESSAGE(_test.count("env"), "State test must have 'env' section");
-                BOOST_CHECK_MESSAGE(_test.count("pre"), "State test must have 'pre' section");
-                BOOST_CHECK_MESSAGE(_test.count("transaction"), "State test must have 'transaction' section");
+                ETH_CHECK_MESSAGE(_test.count("env"), "State test must have 'env' section");
+                ETH_CHECK_MESSAGE(_test.count("pre"), "State test must have 'pre' section");
+                ETH_CHECK_MESSAGE(_test.count("transaction"), "State test must have 'transaction' section");
             }
         };
         fieldChecker m_checker;

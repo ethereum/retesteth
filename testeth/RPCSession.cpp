@@ -28,6 +28,7 @@
 #include <thread>
 #include <chrono>
 
+#include <testeth/TestHelper.h>
 #include <testeth/TestOutputHelper.h>
 
 using namespace std;
@@ -133,11 +134,69 @@ string IPCSocket::sendRequest(string const& _req)
 #endif
 }
 
-RPCSession& RPCSession::instance(const string& _path)
+struct sessionInfo
 {
-	static RPCSession session(_path);
-	BOOST_REQUIRE_EQUAL(session.m_ipcSocket.path(), _path);
-	return session;
+    sessionInfo(FILE* _pipe, RPCSession* _session, std::string const& _tmpDir)
+    {
+        session.reset(_session);
+        filePipe.reset(_pipe);
+        tmpDir = _tmpDir;
+    }
+    std::unique_ptr<RPCSession> session;
+    std::unique_ptr<FILE> filePipe;
+    std::string tmpDir;
+};
+
+static std::map<std::string, sessionInfo> socketMap;
+RPCSession& RPCSession::instance(const string& _threadID)
+{
+    if (!socketMap.count(_threadID))
+    {
+        string dir = "/home/wins/.ethereum/" + _threadID;
+        string ipcPath = dir + "/geth.ipc";
+        boost::filesystem::create_directory(boost::filesystem::path(dir));
+        string command = "eth --test --db-path " + dir + " --ipcpath " + dir + "/geth.ipc 2>/dev/null";
+        FILE* fp = popen(command.c_str(), "r");
+        if (!fp)
+        {
+            std::cerr << "Failed to start the client: '" + command + "'";
+            exit(1);
+        }
+
+        int maxSeconds = 15;
+        while (!boost::filesystem::exists(ipcPath) && maxSeconds-- > 0)
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+
+        ETH_REQUIRE_MESSAGE(maxSeconds > 0, "Client took too long to start ipc!");
+        sessionInfo info(fp, new RPCSession(ipcPath), dir);
+        socketMap.insert(std::pair<string, sessionInfo>(_threadID, std::move(info)));
+    }
+
+    return *(socketMap.at(_threadID).session.get());
+}
+
+void closeSession(const string& _threadID)
+{
+    ETH_REQUIRE(socketMap.count(_threadID));
+    sessionInfo& element = socketMap.at(_threadID);
+    element.session.get()->test_closeClient();
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    if (!element.filePipe.get())
+        std::cerr << "Missing filePipe pointer!";
+    pclose(element.filePipe.get());
+    boost::filesystem::remove_all(boost::filesystem::path(element.tmpDir));
+    element.filePipe.release();
+    element.session.release();
+}
+
+void RPCSession::clear()
+{
+    std::vector<thread> closingThreads;
+    for (auto& element : socketMap)
+        closingThreads.push_back(std::move(thread(closeSession, element.first)));
+    for (auto& th : closingThreads)
+        th.join();
+    socketMap.clear();
 }
 
 string RPCSession::web3_clientVersion()
@@ -160,7 +219,7 @@ RPCSession::TransactionReceipt RPCSession::eth_getTransactionReceipt(string cons
 {
 	TransactionReceipt receipt;
 	Json::Value const result = rpcCall("eth_getTransactionReceipt", { quote(_transactionHash) });
-	BOOST_REQUIRE(!result.isNull());
+    ETH_REQUIRE(!result.isNull());
 	receipt.gasUsed = result["gasUsed"].asString();
 	receipt.contractAddress = result["contractAddress"].asString();
 	receipt.blockNumber = result["blockNumber"].asString();
@@ -205,16 +264,13 @@ string RPCSession::eth_getStorageRoot(string const& _address, string const& _blo
 
 void RPCSession::personal_unlockAccount(string const& _address, string const& _password, int _duration)
 {
-	BOOST_REQUIRE_MESSAGE(
-		rpcCall("personal_unlockAccount", { quote(_address), quote(_password), to_string(_duration) }),
-		"Error unlocking account " + _address
-	);
+    rpcCall("personal_unlockAccount", { quote(_address), quote(_password), to_string(_duration) });
 }
 
 string RPCSession::personal_newAccount(string const& _password)
 {
 	string addr = rpcCall("personal_newAccount", { quote(_password) }).asString();
-	BOOST_TEST_MESSAGE("Created account " + addr);
+    ETH_TEST_MESSAGE("Created account " + addr);
 	return addr;
 }
 
@@ -253,20 +309,20 @@ void RPCSession::test_setChainParams(vector<string> const& _accounts)
 	)";
 
 	Json::Value config;
-	BOOST_REQUIRE(Json::Reader().parse(c_configString, config));
+    ETH_REQUIRE(Json::Reader().parse(c_configString, config));
 	for (auto const& account: _accounts)
 		config["accounts"][account]["wei"] = "0x100000000000000000000000000000000000000000";
 	test_setChainParams(Json::FastWriter().write(config));
 }
 
+void RPCSession::test_closeClient()
+{
+    rpcCall("test_closeClient", {});
+}
+
 string RPCSession::test_addTransaction(std::string const& _transaction)
 {
 	return rpcCall("test_addTransaction", { _transaction }).asString();
-}
-
-string RPCSession::test_getClientInfo()
-{
-    return rpcCall("test_getClientInfo", {}).asString();
 }
 
 string RPCSession::test_getPostState(std::string const& _config)
@@ -276,18 +332,18 @@ string RPCSession::test_getPostState(std::string const& _config)
 
 void RPCSession::test_setChainParams(string const& _config)
 {
-	BOOST_REQUIRE(rpcCall("test_setChainParams", { _config }) == true);
+    ETH_REQUIRE(rpcCall("test_setChainParams", { _config }) == true);
 }
 
 void RPCSession::test_rewindToBlock(size_t _blockNr)
 {
-	BOOST_REQUIRE(rpcCall("test_rewindToBlock", { to_string(_blockNr) }) == true);
+    ETH_REQUIRE(rpcCall("test_rewindToBlock", { to_string(_blockNr) }) == true);
 }
 
 void RPCSession::test_mineBlocks(int _number)
 {
 	u256 startBlock = fromBigEndian<u256>(fromHex(rpcCall("eth_blockNumber").asString()));
-	BOOST_REQUIRE(rpcCall("test_mineBlocks", { to_string(_number) }, true) == true);
+    ETH_REQUIRE(rpcCall("test_mineBlocks", { to_string(_number) }, true) == true);
 
 	// We auto-calibrate the time it takes to mine the transaction.
 	// It would be better to go without polling, but that would probably need a change to the test client
@@ -329,7 +385,7 @@ void RPCSession::test_mineBlocks(int _number)
 
 void RPCSession::test_modifyTimestamp(size_t _timestamp)
 {
-	BOOST_REQUIRE(rpcCall("test_modifyTimestamp", { to_string(_timestamp) }) == true);
+    ETH_REQUIRE(rpcCall("test_modifyTimestamp", { to_string(_timestamp) }) == true);
 }
 
 Json::Value RPCSession::rpcCall(string const& _methodName, vector<string> const& _args, bool _canFail)
@@ -345,12 +401,12 @@ Json::Value RPCSession::rpcCall(string const& _methodName, vector<string> const&
 	request += "],\"id\":" + to_string(m_rpcSequence) + "}";
 	++m_rpcSequence;
 
-	BOOST_TEST_MESSAGE("Request: " + request);
+    ETH_TEST_MESSAGE("Request: " + request);
 	string reply = m_ipcSocket.sendRequest(request);
-	BOOST_TEST_MESSAGE("Reply: " + reply);
+    ETH_TEST_MESSAGE("Reply: " + reply);
 
 	Json::Value result;
-	BOOST_REQUIRE(Json::Reader().parse(reply, result, false));
+    ETH_REQUIRE(Json::Reader().parse(reply, result, false));
 
 	if (result.isMember("error"))
 	{

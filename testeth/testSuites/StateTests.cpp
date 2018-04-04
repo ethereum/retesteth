@@ -22,6 +22,7 @@
 
 #include <boost/filesystem/operations.hpp>
 #include <boost/test/unit_test.hpp>
+#include <thread>
 
 #include <devcore/CommonIO.h>
 #include <testeth/Options.h>
@@ -71,7 +72,7 @@ DataObject FillTest(DataObject const& _testFile, TestSuite::TestSuiteOptions& _o
     // Copy Sctions form test source
     filledTest.setKey(_testFile.getKey());
 
-    RPCSession& session = RPCSession::instance("/home/wins/.ethereum/geth.ipc");
+    RPCSession& session = RPCSession::instance(TestOutputHelper::getThreadID());
 	if (test.getData().count("_info"))
 		filledTest["_info"] = test.getData().at("_info");
     filledTest["env"] = test.getEnv().getData();
@@ -124,7 +125,7 @@ DataObject FillTest(DataObject const& _testFile, TestSuite::TestSuiteOptions& _o
                         state postState = (test::convertJsonCPPtoData(readJson(fullPost)));
                         expectState expectSection (expect.getData().at("result"));
                         CompareResult res = test::compareStates(expectSection, postState);
-                        BOOST_CHECK_MESSAGE(res == CompareResult::Success, "Network: " + net + ", TrInfo: d: " + toString(tr.dataInd) + ", g: "
+                        ETH_CHECK_MESSAGE(res == CompareResult::Success, "Network: " + net + ", TrInfo: d: " + toString(tr.dataInd) + ", g: "
 											+ toString(tr.gasInd) + ", v: " + toString(tr.valueInd) + "\n");
                         if (res != CompareResult::Success)
                             _opt.wasErrors = true;
@@ -155,7 +156,7 @@ DataObject FillTest(DataObject const& _testFile, TestSuite::TestSuiteOptions& _o
 void RunTest(DataObject const& _testFile)
 {
     test::stateTest test(_testFile);
-	RPCSession& session = RPCSession::instance("/home/wins/.ethereum/geth.ipc");
+    RPCSession& session = RPCSession::instance(TestOutputHelper::getThreadID());
 
 	// read post state results
     for (auto const& post: test.getPost().getResults())
@@ -196,11 +197,11 @@ void RunTest(DataObject const& _testFile)
                     string postHash = session.test_getPostState("{ \"version\" : \"0x01\" }");
 					if (postHash != result.getData().at("hash").asString())
                         fullPost = session.test_getPostState("{ \"version\" : \"0x02\" }");
-					BOOST_CHECK_MESSAGE(postHash == result.getData().at("hash").asString(),
+                    ETH_CHECK_MESSAGE(postHash == result.getData().at("hash").asString(),
                         "Error at " + testInfo + ", hash mismatch: " + postHash + ", expected: " + result.getData().at("hash").asString()
 						 + "\nState Dump: " + fullPost);
 					string postLogs = session.test_getPostState("{ \"version\" : \"0x03\" }");
-					BOOST_CHECK_MESSAGE(postLogs == result.getData().at("logs").asString(),
+                    ETH_CHECK_MESSAGE(postLogs == result.getData().at("logs").asString(),
                         "Error at " + testInfo + ", logs hash mismatch: " + postHash + ", expected: " + result.getData().at("logs").asString());
 
 				}
@@ -215,23 +216,23 @@ void RunTest(DataObject const& _testFile)
 
 DataObject StateTestSuite::doTests(DataObject const& _input, TestSuiteOptions& _opt) const
 {
-	BOOST_REQUIRE_MESSAGE(_input.type() == DataType::Object,
+    ETH_REQUIRE_MESSAGE(_input.type() == DataType::Object,
 		TestOutputHelper::get().get().testFile().string() + " A GeneralStateTest file should contain an object.");
-    BOOST_REQUIRE_MESSAGE(!_opt.doFilling || _input.getSubObjects().size() == 1,
+    ETH_REQUIRE_MESSAGE(!_opt.doFilling || _input.getSubObjects().size() == 1,
 		TestOutputHelper::get().testFile().string() + " A GeneralStateTest filler should contain only one test.");
 
     DataObject filledTest;
 	for (auto& i: _input.getSubObjects())
 	{
 		string const testname = i.getKey();
-		BOOST_REQUIRE_MESSAGE(i.type() == DataType::Object,
+        ETH_REQUIRE_MESSAGE(i.type() == DataType::Object,
 			TestOutputHelper::get().testFile().string() + " should contain an object under a test name.");
 		DataObject const& inputTest = i;
         DataObject outputTest;
 		outputTest.setKey(testname);
 
         if (_opt.doFilling && !TestOutputHelper::get().testFile().empty())
-			BOOST_REQUIRE_MESSAGE(testname + "Filler" == TestOutputHelper::get().testFile().stem().string(),
+            ETH_REQUIRE_MESSAGE(testname + "Filler" == TestOutputHelper::get().testFile().stem().string(),
 				TestOutputHelper::get().testFile().string() + " contains a test with a different name '" + testname + "'");
 
 		if (!TestOutputHelper::get().checkTest(testname))
