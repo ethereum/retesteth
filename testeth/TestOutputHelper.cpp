@@ -90,8 +90,12 @@ void TestOutputHelper::printTestExecStats()
     std::lock_guard<std::mutex> lock(g_resultsUpdate_mutex);
 	if (Options::get().exectimelog)
 	{
+        int totalTime = 0;
 		std::cout << std::left;
         std::sort(execTimeResults.begin(), execTimeResults.end(), [](execTimeName _a, execTimeName _b) { return (_b.first < _a.first); });
+        for (size_t i = 0; i < execTimeResults.size(); i++)
+            totalTime += execTimeResults[i].first;
+        std::cout << setw(45) << "Total Time: " << setw(25) << "     : " + toString(totalTime) << "\n";
         for (size_t i = 0; i < execTimeResults.size(); i++)
             std::cout << setw(45) << execTimeResults[i].second << setw(25) << " time: " + toString(execTimeResults[i].first) << "\n";
 	}
