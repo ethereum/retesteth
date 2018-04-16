@@ -359,7 +359,7 @@ string compileLLL(string const& _code)
 	string cmd = string("lllc ") + path.string();
 	writeFile(path.string(), _code);
 	string result = executeCmd(cmd);
-	fs::remove(path);
+	fs::remove_all(path);
 	result = "0x" + result;
 	checkHexHasEvenLength(result);
 	return result;
@@ -386,6 +386,70 @@ string replaceCode(string const& _code)
 		ETH_REQUIRE_MESSAGE(compiledCode.size() > 0,
 			"Bytecode is missing! '" + _code + "' " + TestOutputHelper::get().testName());
 	return compiledCode;
+}
+
+#include <sys/wait.h>
+#define READ   0
+#define WRITE  1
+//https://stackoverflow.com/questions/26852198/getting-the-pid-from-popen
+FILE* popen2(string const& _command, vector<string> const& _args, string const& _type, int& _pid)
+{
+    pid_t child_pid;
+    int fd[2];
+    if (pipe(fd) == -1)
+    {
+         perror("pipe");
+         exit(EXIT_FAILURE);
+    }
+
+    if((child_pid = fork()) == -1)
+    {
+        perror("fork");
+        exit(EXIT_FAILURE);
+    }
+
+    /* child process */
+    if (child_pid == 0)
+    {
+        if (_type == "r")
+        {
+            close(fd[READ]);    //Close the READ end of the pipe since the child's fd is write-only
+            dup2(fd[WRITE], 1); //Redirect stdout to pipe
+            dup2(fd[WRITE], 2); //Redirect stdout to pipe
+        }
+        else
+        {
+            close(fd[WRITE]);    //Close the WRITE end of the pipe since the child's fd is read-only
+            dup2(fd[READ], 0);   //Redirect stdin to pipe
+        }
+
+        setpgid(child_pid, child_pid); //Needed so negative PIDs can kill children of /bin/sh
+        string cmd("/bin/" + _command);
+        execl(cmd.c_str(), cmd.c_str(), _args[0].c_str(), _args[1].c_str(), _args[2].c_str(), _args[3].c_str(), _args[4].c_str(), (char*)NULL);
+        exit(0);
+    }
+    else
+    {
+        if (_type == "r")
+            close(fd[WRITE]); //Close the WRITE end of the pipe since parent's fd is read-only
+        else
+            close(fd[READ]); //Close the READ end of the pipe since parent's fd is write-only
+    }
+
+    _pid = child_pid;
+
+    if (_type == "r")
+        return fdopen(fd[READ], "r");
+
+    return fdopen(fd[WRITE], "w");
+}
+
+int pclose2(FILE* _fp, pid_t _pid)
+{
+    string cmd = "kill " + toString((long)_pid);
+    fclose(_fp);
+    int ret = system(cmd.c_str());
+    return ret;
 }
 
 }//namespace

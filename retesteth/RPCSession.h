@@ -95,14 +95,13 @@ public:
 	TransactionReceipt eth_getTransactionReceipt(std::string const& _transactionHash);
 	std::string eth_sendTransaction(TransactionData const& _td);
 	std::string eth_sendTransaction(std::string const& _transaction);
-    std::string eth_sendRawTransaction(std::string const& _rlp);
+	std::string eth_sendRawTransaction(std::string const& _rlp);
 
 	std::string eth_getBalance(std::string const& _address, std::string const& _blockNumber);
 	std::string eth_getStorageRoot(std::string const& _address, std::string const& _blockNumber);
 	std::string personal_newAccount(std::string const& _password);
 	void personal_unlockAccount(std::string const& _address, std::string const& _password, int _duration);
 
-    void test_closeClient();
     std::string test_getPostState(std::string const& _config);
 	void test_setChainParams(std::vector<std::string> const& _genesis);
 	void test_setChainParams(std::string const& _config);

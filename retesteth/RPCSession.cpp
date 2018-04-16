@@ -27,6 +27,7 @@
 #include <stdio.h>
 #include <thread>
 #include <chrono>
+#include <cstdio>
 
 #include <retesteth/TestHelper.h>
 #include <retesteth/TestOutputHelper.h>
@@ -136,14 +137,16 @@ string IPCSocket::sendRequest(string const& _req)
 
 struct sessionInfo
 {
-    sessionInfo(FILE* _pipe, RPCSession* _session, std::string const& _tmpDir)
+    sessionInfo(FILE* _pipe, RPCSession* _session, std::string const& _tmpDir, int _pid)
     {
         session.reset(_session);
         filePipe.reset(_pipe);
         tmpDir = _tmpDir;
+        pipePid = _pid;
     }
     std::unique_ptr<RPCSession> session;
     std::unique_ptr<FILE> filePipe;
+    int pipePid;
     std::string tmpDir;
 };
 
@@ -156,20 +159,28 @@ RPCSession& RPCSession::instance(const string& _threadID)
         string ipcPath = dir + "/geth.ipc";
         boost::filesystem::create_directory(boost::filesystem::path(dir));
 
-        string command = "eth --test --db-path " + dir + " --ipcpath " + dir + "/geth.ipc 2>/dev/null"; //
-        FILE* fp = popen(command.c_str(), "r");
+        string command = "eth";
+        std::vector<string> args;
+        args.push_back("--test");
+        args.push_back("--db-path");
+        args.push_back(dir);
+        args.push_back("--ipcpath");
+        args.push_back(dir + "/geth.ipc");
+
+        int pid = 0;
+        FILE* fp = test::popen2(command, args, "r", pid);
         if (!fp)
         {
             std::cerr << "Failed to start the client: '" + command + "'";
             exit(1);
         }
 
-        int maxSeconds = 15;
+        int maxSeconds = 150;
         while (!boost::filesystem::exists(ipcPath) && maxSeconds-- > 0)
             std::this_thread::sleep_for(std::chrono::seconds(1));
 
         ETH_REQUIRE_MESSAGE(maxSeconds > 0, "Client took too long to start ipc!");
-        sessionInfo info(fp, new RPCSession(ipcPath), dir);
+        sessionInfo info(fp, new RPCSession(ipcPath), dir, pid);
         //sessionInfo info(fp, new RPCSession("/home/wins/.ethereum/geth.ipc"), dir);
         socketMap.insert(std::pair<string, sessionInfo>(_threadID, std::move(info)));
     }
@@ -181,11 +192,10 @@ void closeSession(const string& _threadID)
 {
     ETH_REQUIRE(socketMap.count(_threadID));
     sessionInfo& element = socketMap.at(_threadID);
-    element.session.get()->test_closeClient();
-    std::this_thread::sleep_for(std::chrono::seconds(1));
     if (!element.filePipe.get())
         std::cerr << "Missing filePipe pointer!";
-    pclose(element.filePipe.get());
+    test::pclose2(element.filePipe.get(), element.pipePid);
+    std::this_thread::sleep_for(std::chrono::seconds(1));
     boost::filesystem::remove_all(boost::filesystem::path(element.tmpDir));
     element.filePipe.release();
     element.session.release();
@@ -254,7 +264,7 @@ string RPCSession::eth_sendTransaction(string const& _transaction)
 
 string RPCSession::eth_sendRawTransaction(std::string const& _rlp)
 {
-    return rpcCall("eth_sendRawTransaction", { quote(_rlp) }).asString();
+	return rpcCall("eth_sendRawTransaction", { quote(_rlp) }).asString();
 }
 
 string RPCSession::eth_getBalance(string const& _address, string const& _blockNumber)
@@ -320,11 +330,6 @@ void RPCSession::test_setChainParams(vector<string> const& _accounts)
 	for (auto const& account: _accounts)
 		config["accounts"][account]["wei"] = "0x100000000000000000000000000000000000000000";
 	test_setChainParams(Json::FastWriter().write(config));
-}
-
-void RPCSession::test_closeClient()
-{
-    rpcCall("test_closeClient", {});
 }
 
 string RPCSession::test_getPostState(std::string const& _config)
