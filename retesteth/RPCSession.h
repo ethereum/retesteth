@@ -84,7 +84,6 @@ public:
 		std::string blockNumber;
 	};
 
-    static const size_t threadCount = 8;
     static RPCSession& instance(std::string const& _threadID);
     static void clear();
 
@@ -124,7 +123,7 @@ private:
 
 	IPCSocket m_ipcSocket;
 	size_t m_rpcSequence = 1;
-    unsigned m_maxMiningTime = 23600; // should be instant with --test (1 sec)
+	unsigned m_maxMiningTime = 13600; // should be instant with --test (1 sec)
 	unsigned m_sleepTime = 10; // 10 milliseconds
 	unsigned m_successfulMineRuns = 0;
 

@@ -1,4 +1,7 @@
 #include <BuildInfo.h>
+#include <mutex>
+#include <csignal>
+#include <fcntl.h>
 #include <boost/algorithm/string/trim.hpp>
 #include <retesteth/TestHelper.h>
 #include <retesteth/TestOutputHelper.h>
@@ -254,7 +257,7 @@ void checkAllowedNetwork(string const& _network)
         // Can't use boost at this point
         std::cerr << TestOutputHelper::get().testName() + " Specified Network not found: "
                   << _network << "\n";
-        exit(1);
+        std::raise(SIGABRT);
     }
 }
 
@@ -391,8 +394,18 @@ string replaceCode(string const& _code)
 #include <sys/wait.h>
 #define READ   0
 #define WRITE  1
+#define EXECLARG0(cmd) execl(cmd, cmd, (char*)NULL)
+#define EXECLARG1(cmd, arg1) execl(cmd, cmd, arg1, (char*)NULL)
+#define EXECLARG2(cmd, arg1, arg2) execl(cmd, cmd, arg1, arg2, (char*)NULL)
+#define EXECLARG3(cmd, arg1, arg2, arg3) execl(cmd, cmd, arg1, arg2, arg3, (char*)NULL)
+#define EXECLARG4(cmd, arg1, arg2, arg3, arg4) execl(cmd, cmd, arg1, arg2, arg3, arg4, (char*)NULL)
+#define EXECLARG5(cmd, arg1, arg2, arg3, arg4, arg5) execl(cmd, cmd, arg1, arg2, arg3, arg4, arg5, (char*)NULL)
+#define EXECLARG6(cmd, arg1, arg2, arg3, arg4, arg5, arg6) execl(cmd, cmd, arg1, arg2, arg3, arg4, arg5, arg6, (char*)NULL)
+#define EXECLARG7(cmd, arg1, arg2, arg3, arg4, arg5, arg6, arg7) execl(cmd, cmd, arg1, arg2, arg3, arg4, arg5, arg6, arg7, (char*)NULL)
+#define EXECLARG8(cmd, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) execl(cmd, cmd, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, (char*)NULL)
+
 //https://stackoverflow.com/questions/26852198/getting-the-pid-from-popen
-FILE* popen2(string const& _command, vector<string> const& _args, string const& _type, int& _pid)
+FILE* popen2(string const& _command, vector<string> const& _args, string const& _type, int& _pid, popenOutput _debug)
 {
     pid_t child_pid;
     int fd[2];
@@ -414,8 +427,22 @@ FILE* popen2(string const& _command, vector<string> const& _args, string const& 
         if (_type == "r")
         {
             close(fd[READ]);    //Close the READ end of the pipe since the child's fd is write-only
-            dup2(fd[WRITE], 1); //Redirect stdout to pipe
-            dup2(fd[WRITE], 2); //Redirect stdout to pipe
+            int fdo = open("/dev/null", O_WRONLY);
+            switch (_debug) {
+            case popenOutput::DisableAll:
+                dup2(fdo, 1);
+                dup2(fdo, 2);
+                break;
+            case popenOutput::EnableSTDOUT:
+                dup2(fdo, 2);
+                break;
+            case popenOutput::EnableSTDERR:
+                dup2(fdo, 1);
+                break;
+            case popenOutput::EnableALL: break;
+            default:
+                break;
+            }
         }
         else
         {
@@ -425,7 +452,20 @@ FILE* popen2(string const& _command, vector<string> const& _args, string const& 
 
         setpgid(child_pid, child_pid); //Needed so negative PIDs can kill children of /bin/sh
         string cmd("/bin/" + _command);
-        execl(cmd.c_str(), cmd.c_str(), _args[0].c_str(), _args[1].c_str(), _args[2].c_str(), _args[3].c_str(), _args[4].c_str(), (char*)NULL);
+        switch(_args.size())
+        {
+            case 0: EXECLARG0(cmd.c_str()); break;
+            case 1: EXECLARG1(cmd.c_str(), _args[0].c_str()); break;
+            case 2: EXECLARG2(cmd.c_str(), _args[0].c_str(), _args[1].c_str()); break;
+            case 3: EXECLARG3(cmd.c_str(), _args[0].c_str(), _args[1].c_str(), _args[2].c_str()); break;
+            case 4: EXECLARG4(cmd.c_str(), _args[0].c_str(), _args[1].c_str(), _args[2].c_str(), _args[3].c_str()); break;
+            case 5: EXECLARG5(cmd.c_str(), _args[0].c_str(), _args[1].c_str(), _args[2].c_str(), _args[3].c_str(), _args[4].c_str()); break;
+            case 6: EXECLARG6(cmd.c_str(), _args[0].c_str(), _args[1].c_str(), _args[2].c_str(), _args[3].c_str(), _args[4].c_str(), _args[5].c_str()); break;
+            case 7: EXECLARG7(cmd.c_str(), _args[0].c_str(), _args[1].c_str(), _args[2].c_str(), _args[3].c_str(), _args[4].c_str(), _args[5].c_str(), _args[6].c_str()); break;
+            case 8: EXECLARG8(cmd.c_str(), _args[0].c_str(), _args[1].c_str(), _args[2].c_str(), _args[3].c_str(), _args[4].c_str(), _args[5].c_str(), _args[6].c_str(), _args[7].c_str()); break;
+            default:
+                std::cerr << "Wrong number of arguments provided in popen2!" << std::endl;
+        }
         exit(0);
     }
     else
@@ -444,10 +484,14 @@ FILE* popen2(string const& _command, vector<string> const& _args, string const& 
     return fdopen(fd[WRITE], "w");
 }
 
+std::mutex g_pclosemutex;
 int pclose2(FILE* _fp, pid_t _pid)
 {
     string cmd = "kill " + toString((long)_pid);
-    fclose(_fp);
+    std::lock_guard<std::mutex> lock(g_pclosemutex);
+    if (_fp)
+        pclose(_fp);
+    //std::cerr << cmd << std::endl;
     int ret = system(cmd.c_str());
     return ret;
 }

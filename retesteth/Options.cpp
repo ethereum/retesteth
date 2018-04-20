@@ -130,6 +130,21 @@ Options::Options(int argc, const char** argv)
 			printVersion();
 			exit(0);
 		}
+		else if (arg.substr(0,2) == "-j")
+		{
+			if (arg.length() != 2)
+			{
+				string threadDigits = arg.substr(2, arg.length());
+				threadCount = max(1, atoi(threadDigits.c_str()));
+			}
+			else
+			{
+				throwIfNoArgumentFollows();
+				string nextArg = argv[++i];
+				if (nextArg.substr(0,1) != "-")
+					threadCount = max(1, atoi(nextArg.c_str()));
+			}
+		}
 		else if (arg == "--vm" || arg == "--evmc")
 		{
 			// Skip VM options because they are handled by vmProgramOptions().

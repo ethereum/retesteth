@@ -28,9 +28,13 @@
 #include <thread>
 #include <chrono>
 #include <cstdio>
+#include <mutex>
+#include <csignal>
 
 #include <retesteth/TestHelper.h>
 #include <retesteth/TestOutputHelper.h>
+#include <retesteth/ExitHandler.h>
+#include <retesteth/EthChecks.h>
 
 using namespace std;
 using namespace dev;
@@ -49,11 +53,11 @@ IPCSocket::IPCSocket(string const& _path): m_path(_path)
 		NULL);          // no template file
 
 	if (m_socket == INVALID_HANDLE_VALUE)
-		BOOST_FAIL("Error creating IPC socket object!");
+		ETH_FAIL("Error creating IPC socket object!");
 
 #else
 	if (_path.length() >= sizeof(sockaddr_un::sun_path))
-		BOOST_FAIL("Error opening IPC: socket path is too long!");
+		ETH_FAIL("Error opening IPC: socket path is too long!");
 
 	struct sockaddr_un saun;
 	memset(&saun, 0, sizeof(sockaddr_un));
@@ -72,12 +76,12 @@ IPCSocket::IPCSocket(string const& _path): m_path(_path)
 #endif //  defined(__APPLE__)
 
 	if ((m_socket = socket(AF_UNIX, SOCK_STREAM, 0)) < 0)
-		BOOST_FAIL("Error creating IPC socket object");
+		ETH_FAIL("Error creating IPC socket object");
 
 	if (connect(m_socket, reinterpret_cast<struct sockaddr const*>(&saun), sizeof(struct sockaddr_un)) < 0)
 	{
 		close(m_socket);
-		BOOST_FAIL("Error connecting to IPC socket: " << _path);
+		ETH_FAIL("Error connecting to IPC socket: " + _path);
 	}
 #endif
 }
@@ -95,7 +99,7 @@ string IPCSocket::sendRequest(string const& _req)
 		NULL);                  // not overlapped
 
 	if (!fSuccess || (_req.size() != cbWritten))
-		BOOST_FAIL("WriteFile to pipe failed");
+		ETH_FAIL("WriteFile to pipe failed");
 
 	// Read from the pipe.
 	DWORD cbRead;
@@ -107,12 +111,12 @@ string IPCSocket::sendRequest(string const& _req)
 		NULL);             // not overlapped
 
 	if (!fSuccess)
-		BOOST_FAIL("ReadFile from pipe failed");
+		ETH_FAIL("ReadFile from pipe failed");
 
 	return string(m_readBuf, m_readBuf + cbRead);
 #else
 	if (send(m_socket, _req.c_str(), _req.length(), 0) != (ssize_t)_req.length())
-		BOOST_FAIL("Writing on IPC failed.");
+		ETH_FAIL("Writing on IPC failed.");
 
 	auto start = chrono::steady_clock::now();
 	ssize_t ret;
@@ -121,7 +125,9 @@ string IPCSocket::sendRequest(string const& _req)
 		ret = recv(m_socket, m_readBuf, sizeof(m_readBuf), 0);
 		// Also consider closed socket an error.
 		if (ret < 0)
-			BOOST_FAIL("Reading on IPC failed.");
+			ETH_FAIL("Reading on IPC failed.");
+		if (ExitHandler::shouldExit())
+			return "";
 	}
 	while (
 		ret == 0 &&
@@ -129,7 +135,7 @@ string IPCSocket::sendRequest(string const& _req)
 	);
 
 	if (ret == 0)
-		BOOST_FAIL("Timeout reading on IPC.");
+		ETH_FAIL("Timeout reading on IPC.");
 
 	return string(m_readBuf, m_readBuf + ret);
 #endif
@@ -150,6 +156,7 @@ struct sessionInfo
     std::string tmpDir;
 };
 
+std::mutex g_socketMapMutex;
 static std::map<std::string, sessionInfo> socketMap;
 RPCSession& RPCSession::instance(const string& _threadID)
 {
@@ -161,30 +168,39 @@ RPCSession& RPCSession::instance(const string& _threadID)
 
         string command = "eth";
         std::vector<string> args;
-        args.push_back("--test");
-        args.push_back("--db-path");
-        args.push_back(dir);
-        args.push_back("--ipcpath");
-        args.push_back(dir + "/geth.ipc");
+        args.push_back("--test");              //1
+        args.push_back("--db-path");           //2
+        args.push_back(dir);                   //3
+        args.push_back("--ipcpath");           //4
+        args.push_back(dir + "/geth.ipc");     //5
+        args.push_back("--verbosity");         //6
+        args.push_back("5");                   //7
 
         int pid = 0;
-        FILE* fp = test::popen2(command, args, "r", pid);
+        FILE* fp = test::popen2(command, args, "r", pid, test::popenOutput::DisableAll);
         if (!fp)
         {
             std::cerr << "Failed to start the client: '" + command + "'";
-            exit(1);
+            std::raise(SIGABRT);
         }
 
         int maxSeconds = 150;
         while (!boost::filesystem::exists(ipcPath) && maxSeconds-- > 0)
             std::this_thread::sleep_for(std::chrono::seconds(1));
-
         ETH_REQUIRE_MESSAGE(maxSeconds > 0, "Client took too long to start ipc!");
+
+        //Client has opened ipc socket. wait for it to initialize
+        std::this_thread::sleep_for(std::chrono::seconds(4));
+
         sessionInfo info(fp, new RPCSession(ipcPath), dir, pid);
-        //sessionInfo info(fp, new RPCSession("/home/wins/.ethereum/geth.ipc"), dir);
-        socketMap.insert(std::pair<string, sessionInfo>(_threadID, std::move(info)));
+        //sessionInfo info(fp, new RPCSession("/home/wins/.ethereum/geth.ipc"), dir, pid);
+        {
+            std::lock_guard<std::mutex> lock(g_socketMapMutex);
+            socketMap.insert(std::pair<string, sessionInfo>(_threadID, std::move(info)));
+        }
     }
 
+    std::lock_guard<std::mutex> lock(g_socketMapMutex);
     return *(socketMap.at(_threadID).session.get());
 }
 
@@ -192,10 +208,8 @@ void closeSession(const string& _threadID)
 {
     ETH_REQUIRE(socketMap.count(_threadID));
     sessionInfo& element = socketMap.at(_threadID);
-    if (!element.filePipe.get())
-        std::cerr << "Missing filePipe pointer!";
     test::pclose2(element.filePipe.get(), element.pipePid);
-    std::this_thread::sleep_for(std::chrono::seconds(1));
+    std::this_thread::sleep_for(std::chrono::seconds(4));
     boost::filesystem::remove_all(boost::filesystem::path(element.tmpDir));
     element.filePipe.release();
     element.session.release();
@@ -203,12 +217,15 @@ void closeSession(const string& _threadID)
 
 void RPCSession::clear()
 {
+    std::lock_guard<std::mutex> lock(g_socketMapMutex);
     std::vector<thread> closingThreads;
     for (auto& element : socketMap)
         closingThreads.push_back(std::move(thread(closeSession, element.first)));
     for (auto& th : closingThreads)
         th.join();
+
     socketMap.clear();
+    closingThreads.clear();
 }
 
 string RPCSession::web3_clientVersion()
@@ -360,12 +377,15 @@ void RPCSession::test_mineBlocks(int _number)
 	size_t tries = 0;
 	for (; ; ++tries)
 	{
+		if (ExitHandler::shouldExit())
+			break;
+
 		std::this_thread::sleep_for(chrono::milliseconds(sleepTime));
 		auto endTime = std::chrono::steady_clock::now();
 		unsigned timeSpent = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
 		if (timeSpent > m_maxMiningTime)
 			break; // could be that some blocks are invalid.
-			//BOOST_FAIL("Error in test_mineBlocks: block mining timeout! " + test::TestOutputHelper::get().testName());
+			//ETH_FAIL("Error in test_mineBlocks: block mining timeout! " + test::TestOutputHelper::get().testName());
 
 		bigint number = fromBigEndian<u256>(fromHex(rpcCall("eth_blockNumber").asString()));
 		if (number >= startBlock + _number)
@@ -420,7 +440,7 @@ Json::Value RPCSession::rpcCall(string const& _methodName, vector<string> const&
 		if (_canFail)
 			return Json::Value();
 
-		BOOST_FAIL("Error on JSON-RPC call (" + test::TestOutputHelper::get().testName() + "): "
+		ETH_FAIL("Error on JSON-RPC call (" + test::TestOutputHelper::get().testName() + "): "
 		 + result["error"]["message"].asString()
 		 + " Request: " + request);
 	}

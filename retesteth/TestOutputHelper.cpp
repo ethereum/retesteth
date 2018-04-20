@@ -24,6 +24,7 @@
 #include <libdevcore/include.h>
 #include <retesteth/TestOutputHelper.h>
 #include <retesteth/Options.h>
+#include <retesteth/ExitHandler.h>
 
 using namespace std;
 using namespace dev;
@@ -45,6 +46,7 @@ void TestOutputHelper::initTest(size_t _maxTests)
 		std::cout << "Test Case \"" + m_currentTestCaseName + "\": \n";
 	m_maxTests = _maxTests;
 	m_currTest = 0;
+	ExitHandler::setFinishExecution(false);
 }
 
 bool TestOutputHelper::checkTest(std::string const& _testName)
@@ -83,6 +85,7 @@ void TestOutputHelper::finishTest()
         std::lock_guard<std::mutex> lock(g_resultsUpdate_mutex);
         execTimeResults.push_back(res);
 	}
+	ExitHandler::setFinishExecution(true);
 }
 
 void TestOutputHelper::printTestExecStats()

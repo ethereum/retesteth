@@ -8,6 +8,7 @@
 #include <retesteth/Options.h>
 #include <retesteth/TestOutputHelper.h>
 #include <retesteth/RPCSession.h>
+#include <retesteth/ExitHandler.h>
 
 using namespace boost::unit_test;
 
@@ -71,6 +72,8 @@ void travisOut(std::atomic_bool* _stopTravisOut)
 		++tickCounter;
 		if (tickCounter % 10 == 0)
 			std::cout << ".\n" << std::flush;  // Output dot every 10s.
+		if (ExitHandler::shouldExit())
+			break;
 	}
 }
 
@@ -102,6 +105,9 @@ int main(int argc, const char* argv[])
 {
 	std::string const dynamicTestSuiteName = "customTestSuite";
 	setDefaultOrCLocale();
+	signal(SIGABRT, &ExitHandler::exitHandler);
+	signal(SIGTERM, &ExitHandler::exitHandler);
+	signal(SIGINT, &ExitHandler::exitHandler);
 
 	// Initialize options
 	try

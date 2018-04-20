@@ -29,7 +29,7 @@ namespace test
 class TestOutputHelper
 {
 public:
-	static TestOutputHelper& get()
+	static TestOutputHelper& get()		// Test output helper should have a copy on each thread!!!
 	{
 		static TestOutputHelper instance;
 		return instance;

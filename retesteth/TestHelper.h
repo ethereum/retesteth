@@ -60,7 +60,14 @@ std::string executeCmd(std::string const& _command);
 std::string replaceCode(std::string const& _code);
 
 /// popen with pid at return
-FILE* popen2(std::string const& _command, std::vector<std::string>const& _args, std::string const& _type, int& _pid);
+enum popenOutput
+{
+    DisableAll,
+    EnableSTDOUT,
+    EnableSTDERR,
+    EnableALL
+};
+FILE* popen2(std::string const& _command, std::vector<std::string>const& _args, std::string const& _type, int& _pid, popenOutput _debug = popenOutput::DisableAll);
 int pclose2(FILE* _fp, pid_t _pid);
 
 }

@@ -23,6 +23,7 @@
 #include <boost/filesystem/operations.hpp>
 #include <boost/test/unit_test.hpp>
 #include <thread>
+#include <mutex>
 
 #include <libdevcore/CommonIO.h>
 #include <retesteth/Options.h>
@@ -152,6 +153,7 @@ DataObject FillTest(DataObject const& _testFile, TestSuite::TestSuiteOptions& _o
     return filledTest;
 }
 
+std::mutex g_mutex;
 /// Read and execute the test file
 void RunTest(DataObject const& _testFile)
 {
@@ -170,7 +172,7 @@ void RunTest(DataObject const& _testFile)
         genesis["genesis"]["timestamp"] = "0x00";	//Set Genesis tstmp to 0. the actual timestamp specified in env section is a timestamp of the first block.
         genesis["state"] = test.getPre().getData();
         genesis["params"]["forkRules"] = network;
-		session.test_setChainParams(genesis.asJson());
+        session.test_setChainParams(genesis.asJson());
 
 		// read all results for a specific fork
         for (auto const& result: post.second)

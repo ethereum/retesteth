@@ -22,6 +22,7 @@
 #include <json/value.h>
 #include <json/reader.h>
 #include <string>
+#include <thread>
 #include <libdevcore/Log.h>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/SHA3.h>
@@ -31,7 +32,8 @@
 #include <retesteth/TestHelper.h>
 #include <retesteth/Options.h>
 #include <retesteth/RPCSession.h>
-#include <thread>
+#include <retesteth/ExitHandler.h>
+#include <retesteth/EthChecks.h>
 
 using namespace std;
 using namespace dev;
@@ -168,25 +170,17 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
         testOutput.showProgress();
         thread testThread(&TestSuite::executeTest, this, _testFolder, file);
         threadVector.push_back(std::move(testThread));
-        if (threadVector.size() == RPCSession::threadCount)
+        if (threadVector.size() == Options::get().threadCount)
         {
             joinThreads(threadVector);
             threadVector.clear();
         }
+        if (ExitHandler::shouldExit())
+            break;
     }
     joinThreads(threadVector);
     threadVector.clear();
     testOutput.finishTest();
-
-/*	auto& testOutput = test::TestOutputHelper::get();
-	testOutput.initTest(files.size());
-	for (auto const& file: files)
-	{
-		testOutput.showProgress();
-		testOutput.setCurrentTestFile(file);
-		executeTest(_testFolder, file);
-	}
-    testOutput.finishTest();*/
 }
 
 fs::path TestSuite::getFullPathFiller(string const& _testFolder) const
@@ -248,7 +242,7 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
             //else if (_testFileName.extension() == ".yml")
             //	v = test::parseYamlToJson(s);
 			else
-                BOOST_ERROR("Unknown test format!" + TestOutputHelper::get().testFile().string());
+				ETH_ERROR("Unknown test format!" + TestOutputHelper::get().testFile().string());
 
 			removeComments(v);
             opt.doFilling = true;
