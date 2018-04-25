@@ -1,7 +1,7 @@
 #pragma once
+#include "object.h"
 #include <retesteth/DataObject.h>
 #include <retesteth/TestHelper.h>
-#include <retesteth/ethObjects/object.h>
 
 using namespace dev;
 

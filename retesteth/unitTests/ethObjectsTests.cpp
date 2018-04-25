@@ -18,8 +18,7 @@
  * Unit tests for ethObjects functions.
  */
 
-#include <retesteth/ethObjects/object.h>
-#include <retesteth/ethObjects/state.h>
+#include <retesteth/ethObjects/common.h>
 #include <retesteth/TestOutputHelper.h>
 #include <boost/test/unit_test.hpp>
 #include <thread>

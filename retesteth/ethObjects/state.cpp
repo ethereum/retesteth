@@ -1,4 +1,6 @@
-#include <retesteth/ethObjects/state.h>
+#include "state.h"
+#include "postState.h"
+#include "expectState.h"
 #include <retesteth/TestOutputHelper.h>
 using namespace  std;
 

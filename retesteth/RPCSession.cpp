@@ -228,6 +228,16 @@ void RPCSession::clear()
     closingThreads.clear();
 }
 
+Json::Value RPCSession::debug_accountRangeAt(std::string const& _blockHashOrNumber, int _txIndex, string const& _address, int _maxResults)
+{
+    return rpcCall("debug_accountRangeAt", { quote(_blockHashOrNumber), to_string(_txIndex), quote(_address), to_string(_maxResults) });
+}
+
+Json::Value RPCSession::debug_storageRangeAt(std::string const& _blockHashOrNumber, int _txIndex, string const& _address, string const& _begin, int _maxResults)
+{
+    return rpcCall("debug_storageRangeAt", { quote(_blockHashOrNumber), to_string(_txIndex), quote(_address) , quote(_begin), to_string(_maxResults) });
+}
+
 string RPCSession::web3_clientVersion()
 {
 	return rpcCall("web3_clientVersion", { }).asString();
@@ -244,24 +254,11 @@ Json::Value RPCSession::eth_getBlockByNumber(string const& _blockNumber, bool _f
 	return rpcCall("eth_getBlockByNumber", { quote(_blockNumber), _fullObjects ? "true" : "false" });
 }
 
-RPCSession::TransactionReceipt RPCSession::eth_getTransactionReceipt(string const& _transactionHash)
+Json::Value RPCSession::eth_getTransactionReceipt(string const& _transactionHash)
 {
-	TransactionReceipt receipt;
 	Json::Value const result = rpcCall("eth_getTransactionReceipt", { quote(_transactionHash) });
     ETH_REQUIRE(!result.isNull());
-	receipt.gasUsed = result["gasUsed"].asString();
-	receipt.contractAddress = result["contractAddress"].asString();
-	receipt.blockNumber = result["blockNumber"].asString();
-	for (auto const& log: result["logs"])
-	{
-		LogEntry entry;
-		entry.address = log["address"].asString();
-		entry.data = log["data"].asString();
-		for (auto const& topic: log["topics"])
-			entry.topics.push_back(topic.asString());
-		receipt.logEntries.push_back(entry);
-	}
-	return receipt;
+    return result;
 }
 
 string RPCSession::eth_sendTransaction(TransactionData const& _td)
@@ -284,6 +281,11 @@ string RPCSession::eth_sendRawTransaction(std::string const& _rlp)
 	return rpcCall("eth_sendRawTransaction", { quote(_rlp) }).asString();
 }
 
+std::string RPCSession::eth_getTransactionCount(std::string const& _address, std::string const& _blockNumber)
+{
+	return rpcCall("eth_getTransactionCount", { quote(_address), quote(_blockNumber) }).asString();
+}
+
 string RPCSession::eth_getBalance(string const& _address, string const& _blockNumber)
 {
 	string address = (_address.length() == 20) ? "0x" + _address : _address;
@@ -294,6 +296,11 @@ string RPCSession::eth_getStorageRoot(string const& _address, string const& _blo
 {
 	string address = (_address.length() == 20) ? "0x" + _address : _address;
 	return rpcCall("eth_getStorageRoot", { quote(address), quote(_blockNumber) }).asString();
+}
+
+string RPCSession::eth_getStorageAt(string const& _address, string const& _position, string const& _blockNumber)
+{
+	return rpcCall("eth_getStorageAt", { quote(_address), quote(_position), quote(_blockNumber) }).asString();
 }
 
 void RPCSession::personal_unlockAccount(string const& _address, string const& _password, int _duration)

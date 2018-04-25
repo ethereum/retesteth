@@ -70,36 +70,27 @@ public:
 		std::string toJson() const;
 	};
 
-	struct LogEntry {
-		std::string address;
-		std::vector<std::string> topics;
-		std::string data;
-	};
-
-	struct TransactionReceipt
-	{
-		std::string gasUsed;
-		std::string contractAddress;
-		std::vector<LogEntry> logEntries;
-		std::string blockNumber;
-	};
-
     static RPCSession& instance(std::string const& _threadID);
     static void clear();
 
 	std::string web3_clientVersion();
-	std::string eth_getCode(std::string const& _address, std::string const& _blockNumber);
-	Json::Value eth_getBlockByNumber(std::string const& _blockNumber, bool _fullObjects);
 	std::string eth_call(TransactionData const& _td, std::string const& _blockNumber);
-	TransactionReceipt eth_getTransactionReceipt(std::string const& _transactionHash);
 	std::string eth_sendTransaction(TransactionData const& _td);
 	std::string eth_sendTransaction(std::string const& _transaction);
 	std::string eth_sendRawTransaction(std::string const& _rlp);
 
+	Json::Value eth_getTransactionReceipt(std::string const& _transactionHash);
+	std::string eth_getTransactionCount(std::string const& _address, std::string const& _blockNumber);
+	std::string eth_getCode(std::string const& _address, std::string const& _blockNumber);
+	Json::Value eth_getBlockByNumber(std::string const& _blockNumber, bool _fullObjects);
 	std::string eth_getBalance(std::string const& _address, std::string const& _blockNumber);
 	std::string eth_getStorageRoot(std::string const& _address, std::string const& _blockNumber);
+	std::string eth_getStorageAt(std::string const& _address, std::string const& _position, std::string const& _blockNumber);
+
 	std::string personal_newAccount(std::string const& _password);
 	void personal_unlockAccount(std::string const& _address, std::string const& _password, int _duration);
+	Json::Value debug_accountRangeAt(std::string const& _blockHashOrNumber, int _txIndex, std::string const& _address, int _maxResults);
+	Json::Value debug_storageRangeAt(std::string const& _blockHashOrNumber, int _txIndex, std::string const& _address, std::string const& _begin, int _maxResults);
 
     std::string test_getPostState(std::string const& _config);
 	void test_setChainParams(std::vector<std::string> const& _genesis);

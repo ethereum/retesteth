@@ -32,7 +32,8 @@
 #include <retesteth/TestSuite.h>
 #include <retesteth/DataObject.h>
 #include <retesteth/testSuites/StateTests.h>
-#include <retesteth/ethObjects/stateTest.h>
+#include <retesteth/ethObjects/common.h>
+#include <retesteth/ethObjects/transactionReceipt.h>
 
 #include <retesteth/RPCSession.h>
 
@@ -52,6 +53,48 @@ DataObject const& stateGenesis()
         genesis["params"]["blockReward"] = "0x00";
     }
     return genesis;
+}
+
+DataObject getRemoteState(RPCSession& _session, string const& _trHash)
+{
+    DataObject remoteState;
+    DataObject trReceipt = test::convertJsonCPPtoData(_session.eth_getTransactionReceipt(_trHash));
+    test::transactionReceipt receipt(trReceipt);
+    remoteState["logHash"] = receipt.getLogHash();
+    remoteState["postHash"] = receipt.getLogHash();
+
+    const int cmaxRows = 1000;
+    string blockNumber = toString(receipt.getData().at("blockNumber").asInt());
+    int trIndex = receipt.getData().at("transactionIndex").asInt();
+
+    DataObject accountObj;
+    Json::Value res = _session.debug_accountRangeAt(blockNumber, trIndex, "0", cmaxRows);
+    for (auto acc : res)
+    {
+        // Balance
+        Json::Value ret = _session.eth_getBalance(acc.asString(), blockNumber);
+        accountObj[acc.asString()]["balance"] = ret.asString();
+
+        // Code
+        ret = _session.eth_getCode(acc.asString(), blockNumber);
+        accountObj[acc.asString()]["code"] = ret.asString();
+
+        // Nonce
+        ret = _session.eth_getTransactionCount(acc.asString(), blockNumber);
+        accountObj[acc.asString()]["nonce"] = dev::toCompactHexPrefixed(u256(ret.asString()), 1);
+
+        // Storage
+        DataObject storage(DataType::Object);
+        DataObject debugStorageAt = test::convertJsonCPPtoData(_session.debug_storageRangeAt(blockNumber, 1, acc.asString(), "0", cmaxRows));
+        for (auto const& element: debugStorageAt["storage"].getSubObjects())
+            storage[element.at("key").asString()] = element.at("value").asString();
+        accountObj[acc.asString()]["storage"] = storage;
+    }
+
+    remoteState["state"] = accountObj;
+
+    //std::cerr << remoteState.asJson() << std::endl;
+    return remoteState;
 }
 
 bool OptionsAllowTransaction(generalTransaction::transactionInfo const& _tr)
@@ -118,9 +161,9 @@ DataObject FillTest(DataObject const& _testFile, TestSuite::TestSuiteOptions& _o
                         session.test_mineBlocks(1);
                         tr.executed = true;
                         blockMined = true;
-                        string postHash = session.test_getPostState("{ \"version\" : \"0x01\" }");
-                        string fullPost = session.test_getPostState("{ \"version\" : \"0x02\" }");
-                        string postLogs = session.test_getPostState("{ \"version\" : \"0x03\" }");
+                        string postHash = session.test_getPostState("{ \"version\" : \"justhash\" }");
+                        string fullPost = session.test_getPostState("{ \"version\" : \"fullstate\" }");
+                        string postLogs = session.test_getPostState("{ \"version\" : \"justloghash\" }");
 
                         // check that the post state qualifies to the expect section
                         state postState = (test::convertJsonCPPtoData(readJson(fullPost)));
@@ -191,21 +234,21 @@ void RunTest(DataObject const& _testFile)
                                     + ", v: " + toString(tr.valueInd);
 					u256 a(test.getEnv().getDataForRPC().at("timestamp").asString());
 					session.test_modifyTimestamp(a.convert_to<size_t>());
-                    session.eth_sendRawTransaction(tr.transaction.getSignedRLP());
+					string trHash = session.eth_sendRawTransaction(tr.transaction.getSignedRLP());
 					session.test_mineBlocks(1);
 					tr.executed = true;
 					blockMined = true;
+					getRemoteState(session, trHash, result.getData().at("logs").asString());
 					string fullPost;
-                    string postHash = session.test_getPostState("{ \"version\" : \"0x01\" }");
+					string postHash = session.test_getPostState("{ \"version\" : \"justhash\" }");
 					if (postHash != result.getData().at("hash").asString())
-                        fullPost = session.test_getPostState("{ \"version\" : \"0x02\" }");
+						fullPost = session.test_getPostState("{ \"version\" : \"fullstate\" }");
                     ETH_CHECK_MESSAGE(postHash == result.getData().at("hash").asString(),
                         "Error at " + testInfo + ", hash mismatch: " + postHash + ", expected: " + result.getData().at("hash").asString()
 						 + "\nState Dump: " + fullPost);
-					string postLogs = session.test_getPostState("{ \"version\" : \"0x03\" }");
+					string postLogs = session.test_getPostState("{ \"version\" : \"justloghash\" }");
                     ETH_CHECK_MESSAGE(postLogs == result.getData().at("logs").asString(),
                         "Error at " + testInfo + ", logs hash mismatch: " + postHash + ", expected: " + result.getData().at("logs").asString());
-
 				}
 				if (blockMined)
 					session.test_rewindToBlock(0);

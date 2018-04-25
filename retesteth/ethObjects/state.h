@@ -1,8 +1,6 @@
 #pragma once
+#include "account.h"
 #include <retesteth/DataObject.h>
-#include <retesteth/ethObjects/account.h>
-#include <retesteth/ethObjects/object.h>
-#include <retesteth/ethObjects/postSectionElement.h>
 
 namespace test {
 
@@ -51,59 +49,5 @@ namespace test {
                 m_data.addSubObject(accountObj.getData());
         }
 	};
-
-    class expectState: public object
-    {
-        public:
-        expectState(DataObject const& _state):
-            object(_state)
-        {
-            for (auto const& accountObj : _state.getSubObjects())
-                m_accounts.push_back(expectAccount(accountObj));
-            refreshData();
-        }
-        std::vector<expectAccount> const& getAccounts() const {return m_accounts; }
-
-        private:
-        std::vector<expectAccount> m_accounts;
-        void refreshData()
-        {
-            //update data from account list
-            std::string key = m_data.getKey();
-            m_data.clear();
-            m_data.setKey(key);
-            for (auto const& accountObj : m_accounts)
-                m_data.addSubObject(accountObj.getData());
-        }
-
-    };
-
-    /// Check expect section against Post state section
-    CompareResult compareStates(expectState const& _stateExpect, state const& _statePost);
-
-    class postState
-    {
-        public:
-        typedef std::vector<postSectionElement> postSectionElements;
-        postState(DataObject const& _post)
-        {
-            ETH_CHECK_MESSAGE(_post.type() == DataType::Object, "State tests post section must be json object!");
-            for(auto const& element: _post.getSubObjects())
-            {
-               test::checkAllowedNetwork(element.getKey());
-               ETH_CHECK_MESSAGE(element.type() == DataType::Array, "State tests post section value at fork results must be json array!");
-               postSectionElements results;
-               for (auto const& res: element.getSubObjects())
-                   results.push_back(postSectionElement(res));
-
-               m_elements[element.getKey()] = results;
-            }
-        }
-        std::map<std::string, postSectionElements>const& getResults() const { return m_elements; }
-
-        private:
-        std::map<std::string, postSectionElements> m_elements;
-    };
-
 }
 
