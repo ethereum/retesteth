@@ -30,6 +30,7 @@ public:
 	};
 
 	size_t threadCount = 1;	///< Execute tests on threads
+	bool enableClientsOutput = false; ///< Enable stderr from clients
 	bool vmtrace = false;	///< Create EVM execution tracer
 	bool filltests = false; ///< Create JSON test files from execution results
 	bool fillchain = false; ///< Fill tests as a blockchain tests if possible

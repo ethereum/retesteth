@@ -18,6 +18,7 @@
 
 #include <libdevcore/CommonData.h>
 #include <libdevcore/Common.h>
+#include <retesteth/ethObjects/common.h>
 
 #if defined(_WIN32)
 class IPCSocket : public boost::noncopyable
@@ -79,10 +80,11 @@ public:
 	std::string eth_sendTransaction(std::string const& _transaction);
 	std::string eth_sendRawTransaction(std::string const& _rlp);
 
-	Json::Value eth_getTransactionReceipt(std::string const& _transactionHash);
+	std::string eth_blockNumber();
+	test::scheme_transactionReceipt eth_getTransactionReceipt(std::string const& _transactionHash);
 	std::string eth_getTransactionCount(std::string const& _address, std::string const& _blockNumber);
 	std::string eth_getCode(std::string const& _address, std::string const& _blockNumber);
-	Json::Value eth_getBlockByNumber(std::string const& _blockNumber, bool _fullObjects);
+	test::scheme_block eth_getBlockByNumber(std::string const& _blockNumber, bool _fullObjects);
 	std::string eth_getBalance(std::string const& _address, std::string const& _blockNumber);
 	std::string eth_getStorageRoot(std::string const& _address, std::string const& _blockNumber);
 	std::string eth_getStorageAt(std::string const& _address, std::string const& _position, std::string const& _blockNumber);
@@ -92,7 +94,7 @@ public:
 	Json::Value debug_accountRangeAt(std::string const& _blockHashOrNumber, int _txIndex, std::string const& _address, int _maxResults);
 	Json::Value debug_storageRangeAt(std::string const& _blockHashOrNumber, int _txIndex, std::string const& _address, std::string const& _begin, int _maxResults);
 
-    std::string test_getPostState(std::string const& _config);
+	std::string test_getLogHash(std::string const& _txHash);
 	void test_setChainParams(std::vector<std::string> const& _genesis);
 	void test_setChainParams(std::string const& _config);
 	void test_rewindToBlock(size_t _blockNr);
@@ -114,7 +116,7 @@ private:
 
 	IPCSocket m_ipcSocket;
 	size_t m_rpcSequence = 1;
-	unsigned m_maxMiningTime = 13600; // should be instant with --test (1 sec)
+	unsigned m_maxMiningTime = 50000; // should be instant with --test (1 sec)
 	unsigned m_sleepTime = 10; // 10 milliseconds
 	unsigned m_successfulMineRuns = 0;
 

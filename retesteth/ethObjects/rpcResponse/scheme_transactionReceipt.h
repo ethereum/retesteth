@@ -1,16 +1,16 @@
 #pragma once
-#include "object.h"
-#include <retesteth/DataObject.h>
+#include "../object.h"
+
 #include <retesteth/TestHelper.h>
 #include <libdevcore/RLP.h>
 #include <libdevcore/SHA3.h>
 #include <libdevcore/Address.h>
 
 namespace test {
-	class transactionReceipt: public object
+	class scheme_transactionReceipt: public object
 	{
 		public:
-		transactionReceipt(DataObject const& _receipt):
+		scheme_transactionReceipt(DataObject const& _receipt):
 			object(_receipt)
 		{
 			std::string statusField = "status";

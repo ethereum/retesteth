@@ -120,14 +120,30 @@ string IPCSocket::sendRequest(string const& _req)
 
 	auto start = chrono::steady_clock::now();
 	ssize_t ret;
+	string reply;
 	do
 	{
 		ret = recv(m_socket, m_readBuf, sizeof(m_readBuf), 0);
+
 		// Also consider closed socket an error.
 		if (ret < 0)
 			ETH_FAIL("Reading on IPC failed.");
 		if (ExitHandler::shouldExit())
 			return "";
+
+		// check for a long message
+		if (ret != 0)
+		{
+			ssize_t ret2 = ret;
+			do
+			{
+				reply += string(m_readBuf, m_readBuf + ret2);
+				ret2 = recv(m_socket, m_readBuf, sizeof(m_readBuf), MSG_DONTWAIT);
+				if (ret2 > 0)
+					std::this_thread::sleep_for(std::chrono::milliseconds(100)); //wait for socket update
+			}
+			while (ret2 > 0);
+		}
 	}
 	while (
 		ret == 0 &&
@@ -137,7 +153,7 @@ string IPCSocket::sendRequest(string const& _req)
 	if (ret == 0)
 		ETH_FAIL("Timeout reading on IPC.");
 
-	return string(m_readBuf, m_readBuf + ret);
+	return reply;
 #endif
 }
 
@@ -177,7 +193,8 @@ RPCSession& RPCSession::instance(const string& _threadID)
         args.push_back("5");                   //7
 
         int pid = 0;
-        FILE* fp = test::popen2(command, args, "r", pid, test::popenOutput::DisableAll);
+        test::popenOutput mode = (Options::get().enableClientsOutput) ? test::popenOutput::EnableALL : test::popenOutput::DisableAll;
+        FILE* fp = test::popen2(command, args, "r", pid, mode);
         if (!fp)
         {
             std::cerr << "Failed to start the client: '" + command + "'";
@@ -248,17 +265,22 @@ string RPCSession::eth_getCode(string const& _address, string const& _blockNumbe
 	return rpcCall("eth_getCode", { quote(_address), quote(_blockNumber) }).asString();
 }
 
-Json::Value RPCSession::eth_getBlockByNumber(string const& _blockNumber, bool _fullObjects)
+test::scheme_block RPCSession::eth_getBlockByNumber(string const& _blockNumber, bool _fullObjects)
 {
 	// NOTE: to_string() converts bool to 0 or 1
-	return rpcCall("eth_getBlockByNumber", { quote(_blockNumber), _fullObjects ? "true" : "false" });
+	Json::Value response = rpcCall("eth_getBlockByNumber", { quote(_blockNumber), _fullObjects ? "true" : "false" });
+	return test::scheme_block(test::convertJsonCPPtoData(response));
 }
 
-Json::Value RPCSession::eth_getTransactionReceipt(string const& _transactionHash)
+test::scheme_transactionReceipt RPCSession::eth_getTransactionReceipt(string const& _transactionHash)
 {
 	Json::Value const result = rpcCall("eth_getTransactionReceipt", { quote(_transactionHash) });
-    ETH_REQUIRE(!result.isNull());
-    return result;
+	return test::scheme_transactionReceipt(test::convertJsonCPPtoData(result));
+}
+
+string RPCSession::eth_blockNumber()
+{
+    return rpcCall("eth_blockNumber", { }).asString();
 }
 
 string RPCSession::eth_sendTransaction(TransactionData const& _td)
@@ -356,9 +378,9 @@ void RPCSession::test_setChainParams(vector<string> const& _accounts)
 	test_setChainParams(Json::FastWriter().write(config));
 }
 
-string RPCSession::test_getPostState(std::string const& _config)
+string RPCSession::test_getLogHash(std::string const& _txHash)
 {
-	return rpcCall("test_getPostState", { _config }).asString();
+	return rpcCall("test_getLogHash", { quote(_txHash) }).asString();
 }
 
 void RPCSession::test_setChainParams(string const& _config)

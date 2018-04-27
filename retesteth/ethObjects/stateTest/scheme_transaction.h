@@ -1,18 +1,18 @@
 #pragma once
-#include <retesteth/DataObject.h>
+#include "../object.h"
+#include "scheme_account.h"
+
 #include <retesteth/TestHelper.h>
-#include <retesteth/ethObjects/object.h>
-#include <retesteth/ethObjects/account.h>
 #include <libdevcore/RLP.h>
 #include <libdevcore/SHA3.h>
 #include <libdevcrypto/Common.h>
 using namespace dev;
 
 namespace test {
-	class transaction: public object
+	class scheme_transaction: public object
 	{
 		public:
-		transaction(DataObject const& _transaction):
+		scheme_transaction(DataObject const& _transaction):
 			object(_transaction)
 		{
 			test::requireJsonFields(_transaction, "transaction", {
@@ -26,7 +26,7 @@ namespace test {
 			});
 			m_data["version"] = "0x01";
             if (!m_data.at("to").asString().empty())
-                m_data["to"] = account::makeHexAddress(m_data.at("to").asString());
+                m_data["to"] = scheme_account::makeHexAddress(m_data.at("to").asString());
 			// convert into rpc format
 			m_data["gas"] = m_data["gasLimit"].asString();
             makeAllFieldsHex(m_data);
@@ -77,7 +77,7 @@ namespace test {
         }
     };
 
-    class generalTransaction: public object
+    class scheme_generalTransaction: public object
     {
         public:
         struct transactionInfo
@@ -89,10 +89,10 @@ namespace test {
             size_t dataInd;
             size_t valueInd;
             bool executed;
-            test::transaction transaction;
+            test::scheme_transaction transaction;
         };
 
-        generalTransaction(DataObject const& _transaction):
+        scheme_generalTransaction(DataObject const& _transaction):
             object(_transaction)
         {
             test::requireJsonFields(_transaction, "transaction", {

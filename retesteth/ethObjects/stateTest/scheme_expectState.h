@@ -1,24 +1,24 @@
 #pragma once
-#include "state.h"
-#include "expectAccount.h"
-#include <retesteth/DataObject.h>
+#include "../object.h"
+#include "scheme_state.h"
+#include "scheme_expectAccount.h"
 
 namespace test {
 
-    class expectState: public object
+    class scheme_expectState: public object
     {
         public:
-        expectState(DataObject const& _state):
+        scheme_expectState(DataObject const& _state):
             object(_state)
         {
             for (auto const& accountObj : _state.getSubObjects())
-                m_accounts.push_back(expectAccount(accountObj));
+                m_accounts.push_back(scheme_expectAccount(accountObj));
             refreshData();
         }
-        std::vector<expectAccount> const& getAccounts() const {return m_accounts; }
+        std::vector<scheme_expectAccount> const& getAccounts() const {return m_accounts; }
 
         private:
-        std::vector<expectAccount> m_accounts;
+        std::vector<scheme_expectAccount> m_accounts;
         void refreshData()
         {
             //update data from account list
@@ -32,6 +32,6 @@ namespace test {
     };
 
     /// Check expect section against Post state section
-    CompareResult compareStates(expectState const& _stateExpect, state const& _statePost);
+    CompareResult compareStates(scheme_expectState const& _stateExpect, scheme_state const& _statePost);
 }
 

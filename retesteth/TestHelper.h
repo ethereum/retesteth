@@ -25,10 +25,6 @@ boost::filesystem::path getTestPath();
 /// Copy file from _source to _destination
 void copyFile(fs::path const& _source, fs::path const& _destination);
 
-/// check the presents of fields in a DataObject with a validation map
-typedef std::set<DataType> possibleType;
-void requireJsonFields(DataObject const& _o, std::string const& _section, std::map<std::string, possibleType> const& _validationMap);
-
 /// Read Json Object into DataObject
 DataObject convertJsonCPPtoData(Json::Value const& _input);
 

@@ -145,6 +145,10 @@ Options::Options(int argc, const char** argv)
 					threadCount = max(1, atoi(nextArg.c_str()));
 			}
 		}
+		else if (arg == "--stderr")
+		{
+			enableClientsOutput = true;
+		}
 		else if (arg == "--vm" || arg == "--evmc")
 		{
 			// Skip VM options because they are handled by vmProgramOptions().
@@ -231,9 +235,9 @@ Options::Options(int argc, const char** argv)
 			else
 				logVerbosity = Verbosity::Full;
 
-			//int indentLevelInt = atoi(argv[i]);
-			//if (indentLevelInt > g_logVerbosity)
-				//g_logVerbosity = indentLevelInt;
+			int indentLevelInt = atoi(argv[i]);
+			if (indentLevelInt > g_logVerbosity)
+				g_logVerbosity = indentLevelInt;
 		}
 		else if (arg == "--options")
 		{

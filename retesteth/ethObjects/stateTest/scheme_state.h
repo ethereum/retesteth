@@ -1,21 +1,21 @@
 #pragma once
-#include "account.h"
+#include "scheme_account.h"
 #include <retesteth/DataObject.h>
 
 namespace test {
 
-	class state: public object
+	class scheme_state: public object
 	{
 		public:
-        state(DataObject const& _state):
+		scheme_state(DataObject const& _state):
 			object(_state)
 		{
             for (auto const& accountObj : _state.getSubObjects())
-                m_accounts.push_back(account(accountObj));
+                m_accounts.push_back(scheme_account(accountObj));
             refreshData();
 		}
 
-        std::vector<account> const& getAccounts() {return m_accounts; }
+        std::vector<scheme_account> const& getAccounts() {return m_accounts; }
         bool hasAccount(std::string const& _address) const
         {
             for (auto const& a: m_accounts)
@@ -26,7 +26,7 @@ namespace test {
             return false;
         }
 
-        account const& getAccount(std::string const& _account) const
+        scheme_account const& getAccount(std::string const& _account) const
         {
             assert(hasAccount(_account));
             for (auto const& a: m_accounts)
@@ -38,7 +38,7 @@ namespace test {
         }
 
 		private:
-        std::vector<account> m_accounts;
+		std::vector<scheme_account> m_accounts;
         void refreshData()
         {
             //update data from account list

@@ -96,7 +96,7 @@ bool DataObject::asBool() const
 void DataObject::setKeyPos(std::string const& _key, size_t _pos)
 {
 	_assert(_pos < m_subObjects.size(), "_pos < m_subObjects.size()");
-	_assert(count(_key), "count(_key)");
+	_assert(count(_key), "count(_key) _key = " + _key);
 	_assert(!_key.empty(), "!_key.empty()");
 	_checkDoubleKeys();
 	for (size_t i = 0; i < m_subObjects.size(); i++)
@@ -158,7 +158,7 @@ void DataObject::replace(DataObject const& _value)
 
 DataObject const& DataObject::at(std::string const& _key) const
 {
-	_assert(count(_key), "count(_key)");
+	_assert(count(_key), "count(_key) _key=" + _key);
 	for (auto const& i: m_subObjects)
 		if (i.getKey() == _key)
 			return i;

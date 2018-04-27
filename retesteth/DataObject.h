@@ -73,6 +73,17 @@ class DataObject
 		assert(m_type == DataType::Null); // So not to overwrite the existing data
 		// Do not replace the key. Assuming that key is set upon calling DataObject[key] =
 		m_type = _value.type();
+		switch(_value.type())
+		{
+			case DataType::Integer:
+				m_intVal = _value.asInt(); break;
+			case DataType::String:
+				m_strVal = _value.asString(); break;
+			case DataType::Bool:
+				m_boolVal = _value.asBool(); break;
+			default:
+				break;
+		}
 		m_subObjects = _value.getSubObjects();
 		return *this;
 	}

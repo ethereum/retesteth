@@ -1,12 +1,12 @@
-#include "state.h"
-#include "postState.h"
-#include "expectState.h"
+#include "scheme_state.h"
+#include "scheme_postState.h"
+#include "scheme_expectState.h"
 #include <retesteth/TestOutputHelper.h>
 using namespace  std;
 
 namespace test {
 
-CompareResult compareStates(expectState const& _stateExpect, state const& _statePost)
+CompareResult compareStates(scheme_expectState const& _stateExpect, scheme_state const& _statePost)
 {
     CompareResult result = CompareResult::Success;
 	auto checkMessage = [&result](bool _flag, CompareResult _type, string const& _error) -> void
@@ -37,7 +37,7 @@ CompareResult compareStates(expectState const& _stateExpect, state const& _state
             break;
 
 		// Check account in state post with expect section account
-        account const& inState = _statePost.getAccount(a.address());
+		scheme_account const& inState = _statePost.getAccount(a.address());
 
         if (a.hasBalance())
 		{

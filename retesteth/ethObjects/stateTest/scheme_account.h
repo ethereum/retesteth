@@ -1,7 +1,5 @@
 #pragma once
-#include "object.h"
-#include <libdevcore/Common.h>
-#include <retesteth/TestOutputHelper.h>
+#include "../object.h"
 #include <retesteth/TestHelper.h>
 
 using namespace dev;
@@ -18,10 +16,10 @@ namespace  test {
 		None
 	};
 
-	class account : public object
+	class scheme_account : public object
 	{
 		public:
-		account(DataObject const& _account):
+		scheme_account(DataObject const& _account):
 			object(_account)
 		{
             requireJsonFields(_account, "account " + _account.getKey(), {
