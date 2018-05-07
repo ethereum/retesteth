@@ -197,17 +197,20 @@ RPCSession& RPCSession::instance(const string& _threadID)
         FILE* fp = test::popen2(command, args, "r", pid, mode);
         if (!fp)
         {
-            std::cerr << "Failed to start the client: '" + command + "'";
+            ETH_ERROR("Failed to start the client: '" + command + "'");
+            ExitHandler::setFinishExecution(true);
             std::raise(SIGABRT);
         }
+        else
+        {
+            int maxSeconds = 150;
+            while (!boost::filesystem::exists(ipcPath) && maxSeconds-- > 0)
+                std::this_thread::sleep_for(std::chrono::seconds(1));
+            ETH_REQUIRE_MESSAGE(maxSeconds > 0, "Client took too long to start ipc!");
 
-        int maxSeconds = 150;
-        while (!boost::filesystem::exists(ipcPath) && maxSeconds-- > 0)
-            std::this_thread::sleep_for(std::chrono::seconds(1));
-        ETH_REQUIRE_MESSAGE(maxSeconds > 0, "Client took too long to start ipc!");
-
-        //Client has opened ipc socket. wait for it to initialize
-        std::this_thread::sleep_for(std::chrono::seconds(4));
+            //Client has opened ipc socket. wait for it to initialize
+            std::this_thread::sleep_for(std::chrono::seconds(4));
+        }
 
         sessionInfo info(fp, new RPCSession(ipcPath), dir, pid);
         //sessionInfo info(fp, new RPCSession("/home/wins/.ethereum/geth.ipc"), dir, pid);
