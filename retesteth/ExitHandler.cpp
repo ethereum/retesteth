@@ -13,7 +13,7 @@ void ExitHandler::exitHandler(int)
 	while (!m_finishedExecution && waitTime--)  //m_finishedExecution should have a copy on each thread!!!
 	{
 		/* wait for all tests to finish */
-		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
 	}
 	RPCSession::clear();
 }

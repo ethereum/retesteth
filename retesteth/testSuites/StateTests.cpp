@@ -41,15 +41,85 @@ namespace fs = boost::filesystem;
 
 namespace test {
 
-DataObject const& stateGenesis()
+DataObject stateGenesis(string const& _netRules)
 {
-    static DataObject genesis;
-    if (genesis.type() == DataType::Null)
+    test::checkAllowedNetwork(_netRules);
+    DataObject genesis;
+    genesis["sealEngine"] = "NoProof";
+    if (_netRules == "Frontier")
+    {
+        genesis["params"] = DataObject(DataType::Object);
+    }
+    else if (_netRules == "Homestead")
+    {
+        genesis["params"]["homesteadForkBlock"] = "0x00";
+    }
+    else if (_netRules == "EIP150")
+    {
+        genesis["params"]["homesteadForkBlock"] = "0x00";
+        genesis["params"]["EIP150ForkBlock"] = "0x00";
+    }
+    else if (_netRules == "EIP158")
+    {
+        genesis["params"]["homesteadForkBlock"] = "0x00";
+        genesis["params"]["EIP150ForkBlock"] = "0x00";
+        genesis["params"]["EIP158ForkBlock"] = "0x00";
+    }
+    else if (_netRules == "Byzantium")
+    {
+        genesis["params"]["homesteadForkBlock"] = "0x00";
+        genesis["params"]["EIP150ForkBlock"] = "0x00";
+        genesis["params"]["EIP158ForkBlock"] = "0x00";
+        genesis["params"]["byzantiumForkBlock"] = "0x00";
+    }
+    else if (_netRules == "Constantinople")
+    {
+        genesis["params"]["homesteadForkBlock"] = "0x00";
+        genesis["params"]["EIP150ForkBlock"] = "0x00";
+        genesis["params"]["EIP158ForkBlock"] = "0x00";
+        genesis["params"]["byzantiumForkBlock"] = "0x00";
+        genesis["params"]["constantinopleForkBlock"] = "0x00";
+    }
+
+    /*static std::string const c_configString = R"(
+    {
+        "sealEngine": "NoProof",
+        "params": {
+            "accountStartNonce": "0x00",
+            "maximumExtraDataSize": "0x1000000",
+            "blockReward": "0x",
+            "allowFutureBlocks": true,
+            "homesteadForkBlock": "0x00",
+            "EIP150ForkBlock": "0x00",
+            "EIP158ForkBlock": "0x00"
+        },
+        "genesis": {
+            "author": "0000000000000010000000000000000000000000",
+            "timestamp": "0x00",
+            "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "extraData": "0x",
+            "gasLimit": "0x1000000000000"
+        },
+        "accounts": {
+            "0000000000000000000000000000000000000001": { "wei": "1", "precompiled": { "name": "ecrecover", "linear": { "base": 3000, "word": 0 } } },
+            "0000000000000000000000000000000000000002": { "wei": "1", "precompiled": { "name": "sha256", "linear": { "base": 60, "word": 12 } } },
+            "0000000000000000000000000000000000000003": { "wei": "1", "precompiled": { "name": "ripemd160", "linear": { "base": 600, "word": 120 } } },
+            "0000000000000000000000000000000000000004": { "wei": "1", "precompiled": { "name": "identity", "linear": { "base": 15, "word": 3 } } },
+            "0000000000000000000000000000000000000005": { "wei": "1", "precompiled": { "name": "modexp" } },
+            "0000000000000000000000000000000000000006": { "wei": "1", "precompiled": { "name": "alt_bn128_G1_add", "linear": { "base": 500, "word": 0 } } },
+            "0000000000000000000000000000000000000007": { "wei": "1", "precompiled": { "name": "alt_bn128_G1_mul", "linear": { "base": 40000, "word": 0 } } },
+            "0000000000000000000000000000000000000008": { "wei": "1", "precompiled": { "name": "alt_bn128_pairing_product" } }
+        }
+    }
+    )";
+    */
+
+    /*if (genesis.type() == DataType::Null)
     {
         genesis["version"] = "1";
         genesis["params"]["miningMethod"] = "NoProof";
         genesis["params"]["blockReward"] = "0x00";
-    }
+    }*/
     return genesis;
 }
 
@@ -144,12 +214,10 @@ DataObject FillTest(DataObject const& _testFile, TestSuite::TestSuiteOptions& _o
         if (!Options::get().singleTestNet.empty() && Options::get().singleTestNet != net)
             continue;
 
-        DataObject genesis = stateGenesis();
+        DataObject genesis = stateGenesis(net);
 		genesis["genesis"] = test.getEnv().getDataForRPC();
         genesis["genesis"]["timestamp"] = "0x00";	//Set Genesis tstmp to 0. the actual timestamp specified in env section is a timestamp of the first block.
-        genesis["state"] = test.getPre().getData();
-        genesis["params"]["forkRules"] = net;
-
+        genesis["accounts"] = test.getPre().getData();
         session.test_setChainParams(genesis.asJson());
 
         DataObject forkResults;
@@ -222,12 +290,12 @@ void RunTest(DataObject const& _testFile)
         string const& network = post.first;
         if (!Options::get().singleTestNet.empty() && Options::get().singleTestNet != network)
 			continue;
+        if (network == "Byzantium" || network == "Constantinople")
+            continue;
 
-        DataObject genesis = stateGenesis();
+        DataObject genesis = stateGenesis(network);
 		genesis["genesis"] = test.getEnv().getDataForRPC();
-        genesis["genesis"]["timestamp"] = "0x00";	//Set Genesis tstmp to 0. the actual timestamp specified in env section is a timestamp of the first block.
-        genesis["state"] = test.getPre().getData();
-        genesis["params"]["forkRules"] = network;
+        genesis["accounts"] = test.getPre().getData();
         session.test_setChainParams(genesis.asJson());
 
 		// read all results for a specific fork

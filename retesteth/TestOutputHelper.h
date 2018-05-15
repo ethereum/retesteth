@@ -29,12 +29,8 @@ namespace test
 class TestOutputHelper
 {
 public:
-	static TestOutputHelper& get()		// Test output helper should have a copy on each thread!!!
-	{
-		static TestOutputHelper instance;
-		return instance;
-	}
-	TestOutputHelper(TestOutputHelper const&) = delete;
+    static TestOutputHelper& get();
+    //TestOutputHelper(TestOutputHelper const&) = delete;
 	void operator=(TestOutputHelper const&) = delete;
 
 	void initTest(size_t _maxTests = 1);
@@ -44,6 +40,8 @@ public:
 
 	//void setMaxTests(int _count) { m_maxTests = _count; }
 	bool checkTest(std::string const& _testName);
+    void markError() { m_errorCount++; }
+    size_t getErrorCount() const { return m_errorCount; }
 	void setCurrentTestFile(boost::filesystem::path const& _name) { m_currentTestFileName = _name; }
 	void setCurrentTestName(std::string const& _name) { m_currentTestName = _name; }
 	std::string const& testName() { return m_currentTestName; }
@@ -62,6 +60,8 @@ private:
 	std::string m_currentTestName;
 	std::string m_currentTestCaseName;
     boost::filesystem::path m_currentTestFileName;
+    size_t m_errorCount = 0; //flag errors for triggering boost erros after all thread finished
+    void printBoostError();
 };
 
 class TestOutputHelperFixture

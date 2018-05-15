@@ -31,22 +31,40 @@ using namespace dev;
 using namespace test;
 using namespace boost;
 
-
 typedef std::pair<double, std::string> execTimeName;
 static std::vector<execTimeName> execTimeResults;
+static std::map<std::string, TestOutputHelper> helperThreadMap; // threadID => outputHelper
+
+mutex g_helperThreadMapMutex;
+TestOutputHelper& TestOutputHelper::get()
+{
+    std::lock_guard<std::mutex> lock(g_helperThreadMapMutex);
+    if (helperThreadMap.count(getThreadID()))
+        return helperThreadMap.at(getThreadID());
+    else
+    {
+        TestOutputHelper instance;
+        helperThreadMap.emplace(std::make_pair(getThreadID(), std::move(instance)));
+        helperThreadMap.at(getThreadID()).initTest(0);
+    }
+    return helperThreadMap.at(getThreadID());
+}
 
 void TestOutputHelper::initTest(size_t _maxTests)
 {
-	m_currentTestName = "n/a";
+    //_maxTests = 0 means this function is called from testing thread
+    m_currentTestName = "n/a";
     m_currentTestFileName = string();
 	m_timer = Timer();
 	m_timer.restart();
 	m_currentTestCaseName = boost::unit_test::framework::current_test_case().p_name;
-	if (!Options::get().createRandomTest)
+    if (!Options::get().createRandomTest && _maxTests != 0)
 		std::cout << "Test Case \"" + m_currentTestCaseName + "\": \n";
 	m_maxTests = _maxTests;
 	m_currTest = 0;
-	ExitHandler::setFinishExecution(false);
+
+    if (_maxTests != 0)
+        ExitHandler::setFinishExecution(false);
 }
 
 bool TestOutputHelper::checkTest(std::string const& _testName)
@@ -85,7 +103,18 @@ void TestOutputHelper::finishTest()
         std::lock_guard<std::mutex> lock(g_resultsUpdate_mutex);
         execTimeResults.push_back(res);
 	}
+    printBoostError();
 	ExitHandler::setFinishExecution(true);
+}
+
+void TestOutputHelper::printBoostError()
+{
+    size_t errorCount = 0;
+    for (auto const& test: helperThreadMap)
+        errorCount += test.second.getErrorCount();
+    if (errorCount)
+        BOOST_ERROR("TestOutputHelper detected " + toString(errorCount) + " errors during test execution!"); // NOT THREAD SAFE !!!
+    helperThreadMap.clear();
 }
 
 void TestOutputHelper::printTestExecStats()

@@ -42,7 +42,7 @@ class DataObject
 	void setKeyPos(std::string const& _key, size_t _pos);
 	DataObject& operator[] (std::string const& _key)
 	{
-		assert(m_type == DataType::Null || m_type == DataType::Object);
+        _assert(m_type == DataType::Null || m_type == DataType::Object, "m_type == DataType::Null || m_type == DataType::Object");
 		for (auto& i: m_subObjects)
 			if (i.getKey() == _key)
 				return i;

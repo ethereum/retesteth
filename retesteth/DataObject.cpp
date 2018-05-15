@@ -350,7 +350,7 @@ void DataObject::_checkDoubleKeys() const
 		if (key.empty())
 			continue;
 		for(size_t j = i + 1; j < m_subObjects.size(); j++)
-			_assert(m_subObjects[j].getKey() != key, "m_subObjects[j].getKey() != key");
+            _assert(m_subObjects[j].getKey() != key, "m_subObjects[j].getKey() != key, double key: '" + key + "' in the object!");
 	}
 }
 
