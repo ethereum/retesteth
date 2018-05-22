@@ -62,9 +62,6 @@ void TestOutputHelper::initTest(size_t _maxTests)
         std::cout << "Test Case \"" + m_currentTestCaseName + "\": \n";
     m_maxTests = _maxTests;
     m_currTest = 0;
-
-    if (_maxTests != 0)
-        ExitHandler::setFinishExecution(false);
 }
 
 bool TestOutputHelper::checkTest(std::string const& _testName)
@@ -72,7 +69,7 @@ bool TestOutputHelper::checkTest(std::string const& _testName)
 	if (test::Options::get().singleTest && test::Options::get().singleTestName != _testName)
 		return false;
 
-    std::cerr << _testName << std::endl;
+    // std::cerr << _testName << std::endl;
     m_currentTestName = _testName;
 	return true;
 }
@@ -104,7 +101,6 @@ void TestOutputHelper::finishTest()
         execTimeResults.push_back(res);
 	}
     printBoostError();
-	ExitHandler::setFinishExecution(true);
 }
 
 void TestOutputHelper::printBoostError()

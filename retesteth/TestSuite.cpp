@@ -139,6 +139,8 @@ void joinThreads(vector<thread>& _threadVector, bool _all)
             RPCSession::sessionEnd(id, RPCSession::SessionStatus::Available);
         }
         _threadVector.clear();
+        if (ExitHandler::shouldExit())
+            ExitHandler::couldExit();
         return;
     }
 

@@ -128,11 +128,9 @@ string IPCSocket::sendRequest(string const& _req)
 		// Also consider closed socket an error.
 		if (ret < 0)
 			ETH_FAIL("Reading on IPC failed.");
-		if (ExitHandler::shouldExit())
-			return "";
 
-		// check for a long message
-		if (ret != 0)
+        // check for a long message
+        if (ret != 0)
 		{
 			ssize_t ret2 = ret;
 			do
@@ -198,7 +196,6 @@ void RPCSession::runNewInstanceOfAClient(string const& _threadID)
     if (!fp)
     {
         ETH_ERROR("Failed to start the client: '" + command + "'");
-        ExitHandler::setFinishExecution(true);
         std::raise(SIGABRT);
     }
     else
@@ -455,12 +452,9 @@ void RPCSession::test_mineBlocks(int _number)
 	unsigned sleepTime = m_sleepTime;
 	size_t tries = 0;
 	for (; ; ++tries)
-	{
-		if (ExitHandler::shouldExit())
-			break;
-
-		std::this_thread::sleep_for(chrono::milliseconds(sleepTime));
-		auto endTime = std::chrono::steady_clock::now();
+    {
+        std::this_thread::sleep_for(chrono::milliseconds(sleepTime));
+        auto endTime = std::chrono::steady_clock::now();
 		unsigned timeSpent = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
 		if (timeSpent > m_maxMiningTime)
 			break; // could be that some blocks are invalid.

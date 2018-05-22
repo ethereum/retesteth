@@ -5,12 +5,11 @@ class ExitHandler
 {
 public:
 	static void exitHandler(int);
-	static bool shouldExit() { return m_shouldExit; }
-	static void setFinishExecution(bool _status);
+    static bool shouldExit();
+    static void couldExit();
 
 private:
-	static bool m_shouldExit;
-	static bool m_finishedExecution;
+    static bool m_shouldExit;
 };
 
 
