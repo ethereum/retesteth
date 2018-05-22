@@ -180,7 +180,7 @@ int main(int argc, const char* argv[])
 		stopTravisOut = true;
 		outputThread.join();
         RPCSession::clear();
-        test::TestOutputHelper::get().printTestExecStats();
-		return result;
+        test::TestOutputHelper::printTestExecStats();
+        return result;
 	}
 }

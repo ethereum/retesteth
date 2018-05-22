@@ -56,10 +56,11 @@ void TestOutputHelper::initTest(size_t _maxTests)
     m_currentTestName = "n/a";
     m_currentTestFileName = string();
 	m_timer = Timer();
-	m_timer.restart();
-	m_currentTestCaseName = boost::unit_test::framework::current_test_case().p_name;
-    if (!Options::get().createRandomTest && _maxTests != 0)
-		std::cout << "Test Case \"" + m_currentTestCaseName + "\": \n";
+        m_timer.restart();
+        m_currentTestCaseName =
+            boost::unit_test::framework::current_test_case().p_name;
+        if (!Options::get().createRandomTest && _maxTests != 0)
+          std::cout << "Test Case \"" + m_currentTestCaseName + "\": \n";
 	m_maxTests = _maxTests;
 	m_currTest = 0;
 

@@ -25,10 +25,14 @@ namespace test {
         DataObject getDataForRPC() const
         {
             DataObject data;
-            data["coinbase"] = m_data.at("currentCoinbase");
             data["author"] = m_data.at("currentCoinbase");
+            data["difficulty"] = m_data.at("currentDifficulty");
             data["gasLimit"] = m_data.at("currentGasLimit");
-            data["timestamp"] = "0x00"; // the actual timestamp of a block is set in the env section
+            data["nonce"] = "0x00";
+            data["extraData"] = "0x00";
+            // this is genesis block timestamp
+            // the actual timestamp of a block is set in the env section
+            data["timestamp"] = "0x00";
 
             // Convert from state test format to unified json rpc names
             //data.renameKey("currentCoinbase", "coinbase");

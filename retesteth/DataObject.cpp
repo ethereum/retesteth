@@ -211,7 +211,6 @@ void DataObject::removeKey(std::string const& _key)
 
 void DataObject::clear()
 {
-    m_strKey = "";
     m_intVal = 0;
     m_subObjects.clear();
     m_type = DataType::Null;

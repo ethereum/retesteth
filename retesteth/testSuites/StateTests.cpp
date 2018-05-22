@@ -127,7 +127,8 @@ DataObject getRemoteState(RPCSession& _session, string const& _trHash, bool _ful
 {
     DataObject remoteState;
     const int cmaxRows = 1000;
-    string latestBlockNumber = _session.eth_blockNumber();
+    string latestBlockNumber = toString(u256(_session.eth_blockNumber()));
+
     test::scheme_block latestBlock = _session.eth_getBlockByNumber(latestBlockNumber, false);
     remoteState["postHash"] = latestBlock.getData().at("stateRoot");
     remoteState["logHash"] = _session.test_getLogHash(_trHash);
@@ -153,32 +154,37 @@ DataObject getRemoteState(RPCSession& _session, string const& _trHash, bool _ful
         int trIndex = 1;
         DataObject accountObj;
         Json::Value res = _session.debug_accountRangeAt(latestBlockNumber, trIndex, "0", cmaxRows);
-        for (auto acc : res)
-        {
-            // Balance
-            Json::Value ret = _session.eth_getBalance(acc.asString(), latestBlockNumber);
-            accountObj[acc.asString()]["balance"] = ret.asString();
+        for (auto acc : res["addressMap"]) {
+          // Balance
+          Json::Value ret =
+              _session.eth_getBalance(acc.asString(), latestBlockNumber);
+          accountObj[acc.asString()]["balance"] = dev::toCompactHexPrefixed(
+              u256(ret.asString()), 1); // fix odd strings
 
-            // Code
-            ret = _session.eth_getCode(acc.asString(), latestBlockNumber);
-            accountObj[acc.asString()]["code"] = ret.asString();
+          // Code
+          ret = _session.eth_getCode(acc.asString(), latestBlockNumber);
+          accountObj[acc.asString()]["code"] = ret.asString();
 
-            // Nonce
-            ret = _session.eth_getTransactionCount(acc.asString(), latestBlockNumber);
-            accountObj[acc.asString()]["nonce"] = dev::toCompactHexPrefixed(u256(ret.asString()), 1);
+          // Nonce
+          ret = _session.eth_getTransactionCount(acc.asString(),
+                                                 latestBlockNumber);
+          accountObj[acc.asString()]["nonce"] =
+              dev::toCompactHexPrefixed(u256(ret.asString()), 1);
 
-            // Storage
-            DataObject storage(DataType::Object);
-            DataObject debugStorageAt = test::convertJsonCPPtoData(_session.debug_storageRangeAt(latestBlockNumber, 1, acc.asString(), "0", cmaxRows));
-            for (auto const& element: debugStorageAt["storage"].getSubObjects())
-                storage[element.at("key").asString()] = element.at("value").asString();
-            accountObj[acc.asString()]["storage"] = storage;
+          // Storage
+          DataObject storage(DataType::Object);
+          DataObject debugStorageAt =
+              test::convertJsonCPPtoData(_session.debug_storageRangeAt(
+                  latestBlockNumber, 1, acc.asString(), "0", cmaxRows));
+          for (auto const &element : debugStorageAt["storage"].getSubObjects())
+            storage[element.at("key").asString()] =
+                element.at("value").asString();
+          accountObj[acc.asString()]["storage"] = storage;
         }
 
         remoteState["postState"].clear();
         remoteState["postState"] = accountObj;
     }
-
     return remoteState;
 }
 
@@ -216,55 +222,64 @@ DataObject FillTest(DataObject const& _testFile, TestSuite::TestSuiteOptions& _o
 
         DataObject genesis = stateGenesis(net);
 		genesis["genesis"] = test.getEnv().getDataForRPC();
-        genesis["genesis"]["timestamp"] = "0x00";	//Set Genesis tstmp to 0. the actual timestamp specified in env section is a timestamp of the first block.
-        genesis["accounts"] = test.getPre().getData();
-        session.test_setChainParams(genesis.asJson());
+                genesis["accounts"] = test.getPre().getDataForRPC(net);
+                session.test_setChainParams(genesis.asJson());
 
-        DataObject forkResults;
-        forkResults.setKey(net);
+                DataObject forkResults;
+                forkResults.setKey(net);
 
-        // run transactions for defined expect sections only
-        for (auto const& expect: test.getExpectSections())
-        {
-            // if expect section for this networks
-            if (expect.getNetworks().count(net))
-            {
-                for (auto& tr: test.getTransactionsUnsafe())
-                {
-                    if (!OptionsAllowTransaction(tr))
+                // run transactions for defined expect sections only
+                for (auto const &expect : test.getExpectSections()) {
+                  // if expect section for this networks
+                  if (expect.getNetworks().count(net)) {
+                    for (auto &tr : test.getTransactionsUnsafe()) {
+                      if (!OptionsAllowTransaction(tr))
                         continue;
 
                     bool blockMined = false;
                     // if expect section is for this transaction
                     if (expect.checkIndexes(tr.dataInd, tr.gasInd, tr.valueInd))
                     {
-						u256 a(test.getEnv().getDataForRPC().at("timestamp").asString());
-                        session.test_modifyTimestamp(a.convert_to<size_t>());
-                        string trHash = session.eth_sendRawTransaction(tr.transaction.getSignedRLP());
-                        session.test_mineBlocks(1);
-                        tr.executed = true;
-                        blockMined = true;
+                      u256 a(test.getEnv()
+                                 .getData()
+                                 .at("currentTimestamp")
+                                 .asString());
+                      session.test_modifyTimestamp(a.convert_to<size_t>());
+                      string trHash = session.eth_sendRawTransaction(
+                          tr.transaction.getSignedRLP());
+                      session.test_mineBlocks(1);
+                      tr.executed = true;
+                      blockMined = true;
 
-                        DataObject remoteState = getRemoteState(session, trHash, true);
+                      DataObject remoteState =
+                          getRemoteState(session, trHash, true);
 
-                        // check that the post state qualifies to the expect section
-                        scheme_state postState(remoteState.at("postState"));
-                        CompareResult res = test::compareStates(expect.getExpectState(), postState);
-                        ETH_CHECK_MESSAGE(res == CompareResult::Success, "Network: " + net + ", TrInfo: d: " + toString(tr.dataInd) + ", g: "
-											+ toString(tr.gasInd) + ", v: " + toString(tr.valueInd) + "\n");
-                        if (res != CompareResult::Success)
-                            _opt.wasErrors = true;
+                      // check that the post state qualifies to the expect
+                      // section
+                      scheme_state postState(remoteState.at("postState"));
+                      CompareResult res = test::compareStates(
+                          expect.getExpectState(), postState);
+                      ETH_CHECK_MESSAGE(
+                          res == CompareResult::Success,
+                          "Network: " + net +
+                              ", TrInfo: d: " + toString(tr.dataInd) +
+                              ", g: " + toString(tr.gasInd) +
+                              ", v: " + toString(tr.valueInd) + "\n");
+                      if (res != CompareResult::Success)
+                        _opt.wasErrors = true;
 
-                        DataObject indexes;
-                        DataObject transactionResults;
-                        indexes["data"] = tr.dataInd;
-                        indexes["gas"] = tr.gasInd;
-                        indexes["value"] = tr.valueInd;
+                      DataObject indexes;
+                      DataObject transactionResults;
+                      indexes["data"] = tr.dataInd;
+                      indexes["gas"] = tr.gasInd;
+                      indexes["value"] = tr.valueInd;
 
-                        transactionResults["indexes"] = indexes;
-                        transactionResults["hash"] = remoteState.at("postHash").asString();
-                        transactionResults["logs"] = remoteState.at("logHash").asString();
-                        forkResults.addArrayObject(transactionResults);
+                      transactionResults["indexes"] = indexes;
+                      transactionResults["hash"] =
+                          remoteState.at("postHash").asString();
+                      transactionResults["logs"] =
+                          remoteState.at("logHash").asString();
+                      forkResults.addArrayObject(transactionResults);
                     }
                     if (blockMined)
                         session.test_rewindToBlock(0);
@@ -290,13 +305,13 @@ void RunTest(DataObject const& _testFile)
         string const& network = post.first;
         if (!Options::get().singleTestNet.empty() && Options::get().singleTestNet != network)
 			continue;
-        if (network == "Byzantium" || network == "Constantinople")
-            continue;
+        //        if (network == "Byzantium" || network == "Constantinople")
+        //            continue;
 
         DataObject genesis = stateGenesis(network);
 		genesis["genesis"] = test.getEnv().getDataForRPC();
-        genesis["accounts"] = test.getPre().getData();
-        session.test_setChainParams(genesis.asJson());
+                genesis["accounts"] = test.getPre().getDataForRPC(network);
+                session.test_setChainParams(genesis.asJson());
 
 		// read all results for a specific fork
         for (auto const& result: post.second)
@@ -313,20 +328,25 @@ void RunTest(DataObject const& _testFile)
                     string testInfo = TestOutputHelper::get().testName() + ", fork: " + network
                                     + ", TrInfo: d: " + toString(tr.dataInd) + ", g: " + toString(tr.gasInd)
                                     + ", v: " + toString(tr.valueInd);
-					u256 a(test.getEnv().getDataForRPC().at("timestamp").asString());
-					session.test_modifyTimestamp(a.convert_to<size_t>());
-					string trHash = session.eth_sendRawTransaction(tr.transaction.getSignedRLP());
-					session.test_mineBlocks(1);
-					tr.executed = true;
-					blockMined = true;
+                    u256 a(test.getEnv()
+                               .getData()
+                               .at("currentTimestamp")
+                               .asString());
+                    session.test_modifyTimestamp(a.convert_to<size_t>());
+                    string trHash = session.eth_sendRawTransaction(
+                        tr.transaction.getSignedRLP());
+                    session.test_mineBlocks(1);
+                    tr.executed = true;
+                    blockMined = true;
 
-					DataObject remoteState = getRemoteState(session, trHash, false);
-					string expectHash = result.getData().at("hash").asString();
-					string expectLogHash = result.getData().at("logs").asString();
-					if (remoteState.at("postHash").asString() != expectHash)
-					{
-						remoteState.clear();
-						remoteState = getRemoteState(session, trHash, true);
+                    DataObject remoteState =
+                        getRemoteState(session, trHash, false);
+                    string expectHash = result.getData().at("hash").asString();
+                    string expectLogHash =
+                        result.getData().at("logs").asString();
+                    if (remoteState.at("postHash").asString() != expectHash) {
+                      remoteState.clear();
+                      remoteState = getRemoteState(session, trHash, true);
 					}
 
 					ETH_CHECK_MESSAGE(remoteState.at("postHash").asString() == expectHash,

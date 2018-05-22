@@ -75,19 +75,27 @@ void copyFile(fs::path const& _source, fs::path const& _destination)
 
 string jsonTypeAsString(Json::ValueType _type)
 {
-	switch (_type) {
-	case Json::ValueType::nullValue: return "null";
-	case Json::ValueType::intValue: return "int";
-	case Json::ValueType::uintValue: return "uint";
-	case Json::ValueType::realValue: return "double";
-	case Json::ValueType::stringValue: return "string";
-	case Json::ValueType::booleanValue: return "bool";
-	case Json::ValueType::arrayValue: return "array";
-	case Json::ValueType::objectValue: return "object";
-	default:
-		break;
-	}
-	return "";
+  switch (_type) {
+  case Json::ValueType::nullValue:
+    return "null";
+  case Json::ValueType::intValue:
+    return "int";
+  case Json::ValueType::uintValue:
+    return "uint";
+  case Json::ValueType::realValue:
+    return "double";
+  case Json::ValueType::stringValue:
+    return "string";
+  case Json::ValueType::booleanValue:
+    return "bool";
+  case Json::ValueType::arrayValue:
+    return "array";
+  case Json::ValueType::objectValue:
+    return "object";
+  default:
+    break;
+  }
+  return "";
 }
 
 DataObject convertJsonCPPtoData(Json::Value const& _input)

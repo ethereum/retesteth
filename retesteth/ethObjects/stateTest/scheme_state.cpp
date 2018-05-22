@@ -41,12 +41,15 @@ CompareResult compareStates(scheme_expectState const& _stateExpect, scheme_state
 
         if (a.hasBalance())
 		{
-			u256 inStateB = u256(inState.getData().at("balance").asString());
-            checkMessage(a.getData().at("balance").asString() == inState.getData().at("balance").asString(),
-                CompareResult::IncorrectBalance,
-                TestOutputHelper::get().testName() + " Check State: '" + a.address()
-				+  "': incorrect balance " + toString(inStateB) + ", expected "
-				+ toString(u256(a.getData().at("balance").asString())) );
+          u256 inStateB = u256(inState.getData().at("balance").asString());
+          checkMessage(
+              a.getData().at("balance").asString() ==
+                  inState.getData().at("balance").asString(),
+              CompareResult::IncorrectBalance,
+              TestOutputHelper::get().testName() + " Check State: '" +
+                  a.address() + "': incorrect balance " + toString(inStateB) +
+                  ", expected " +
+                  toString(u256(a.getData().at("balance").asString())));
 
 		}
 
@@ -58,8 +61,11 @@ CompareResult compareStates(scheme_expectState const& _stateExpect, scheme_state
                 + a.getData().at("nonce").asString());
 
         // Check that state post has values from expected storage
-        if (a.hasStorage())
-			result = a.compareStorage(inState.getData().at("storage"));
+        if (a.hasStorage()) {
+          CompareResult res = a.compareStorage(inState.getData().at("storage"));
+          if (result == CompareResult::Success)
+            result = res; // Only override success result with potential error
+        }
 
         if (a.hasCode())
             checkMessage(a.getData().at("code").asString() == inState.getData().at("code").asString(),

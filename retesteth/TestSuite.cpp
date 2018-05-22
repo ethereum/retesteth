@@ -68,28 +68,26 @@ void removeComments(test::DataObject& _obj)
 
 void addClientInfo(test::DataObject& _v, fs::path const& _testSource, h256 const& _testSourceHash)
 {
-    RPCSession& session = RPCSession::instance("/home/wins/.ethereum/geth.ipc");
-    for (auto& o: _v.getSubObjectsUnsafe())
-	{
-        string comment;
-		test::DataObject clientinfo;
-		if (o.count("_info"))
-		{
-			test::DataObject const& existingInfo = o.at("_info");
-            if (existingInfo.count("comment"))
-				comment = existingInfo.at("comment").asString();
-		}
+  RPCSession &session = RPCSession::instance(TestOutputHelper::getThreadID());
+  for (auto &o : _v.getSubObjectsUnsafe()) {
+    string comment;
+    test::DataObject clientinfo;
+    if (o.count("_info")) {
+      test::DataObject const &existingInfo = o.at("_info");
+      if (existingInfo.count("comment"))
+        comment = existingInfo.at("comment").asString();
+    }
 
-		clientinfo.setKey("_info");
-		clientinfo["comment"] = comment;
-		clientinfo["filling-rpc-server"] = session.web3_clientVersion();
-		clientinfo["filling-tool-version"] = test::prepareVersionString();
-		clientinfo["lllcversion"] = test::prepareLLLCVersionString();
-		clientinfo["source"] = _testSource.string();
-		clientinfo["sourceHash"] = toString(_testSourceHash);
+    clientinfo.setKey("_info");
+    clientinfo["comment"] = comment;
+    clientinfo["filling-rpc-server"] = session.web3_clientVersion();
+    clientinfo["filling-tool-version"] = test::prepareVersionString();
+    clientinfo["lllcversion"] = test::prepareLLLCVersionString();
+    clientinfo["source"] = _testSource.string();
+    clientinfo["sourceHash"] = toString(_testSourceHash);
 
-		o["_info"].replace(clientinfo);
-		o.setKeyPos("_info", 0);
+    o["_info"].replace(clientinfo);
+    o.setKeyPos("_info", 0);
     }
 }
 

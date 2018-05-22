@@ -189,7 +189,7 @@ RPCSession& RPCSession::instance(const string& _threadID)
         args.push_back(dir);                   //3
         args.push_back("--ipcpath");           //4
         args.push_back(dir + "/geth.ipc");     //5
-        args.push_back("--verbosity");         //6
+        args.push_back("--log-verbosity");     // 6
         args.push_back("5");                   //7
 
         int pid = 0;
@@ -203,13 +203,14 @@ RPCSession& RPCSession::instance(const string& _threadID)
         }
         else
         {
-            int maxSeconds = 150;
-            while (!boost::filesystem::exists(ipcPath) && maxSeconds-- > 0)
-                std::this_thread::sleep_for(std::chrono::seconds(1));
-            ETH_REQUIRE_MESSAGE(maxSeconds > 0, "Client took too long to start ipc!");
+          int maxSeconds = 25;
+          while (!boost::filesystem::exists(ipcPath) && maxSeconds-- > 0)
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+          ETH_REQUIRE_MESSAGE(maxSeconds > 0,
+                              "Client took too long to start ipc!");
 
-            //Client has opened ipc socket. wait for it to initialize
-            std::this_thread::sleep_for(std::chrono::seconds(4));
+          // Client has opened ipc socket. wait for it to initialize
+          std::this_thread::sleep_for(std::chrono::seconds(4));
         }
 
         sessionInfo info(fp, new RPCSession(ipcPath), dir, pid);

@@ -47,12 +47,12 @@ public:
 	std::string const& testName() { return m_currentTestName; }
 	std::string const& caseName() { return m_currentTestCaseName; }
 	boost::filesystem::path const& testFile() { return m_currentTestFileName; }
-	void printTestExecStats();
+        static void printTestExecStats();
 
-    /// get string representation of current threadID
-    static std::string getThreadID();
+        /// get string representation of current threadID
+        static std::string getThreadID();
 
-private:
+      private:
 	TestOutputHelper() {}
 	dev::Timer m_timer;
 	size_t m_currTest;
