@@ -19,21 +19,21 @@
  */
 
 #include <boost/test/unit_test.hpp>
-#include <json/value.h>
 #include <json/reader.h>
-#include <string>
-#include <thread>
-#include <libdevcore/Log.h>
+#include <json/value.h>
 #include <libdevcore/CommonIO.h>
+#include <libdevcore/Log.h>
 #include <libdevcore/SHA3.h>
-#include <retesteth/TestSuite.h>
 #include <retesteth/DataObject.h>
-#include <retesteth/TestOutputHelper.h>
-#include <retesteth/TestHelper.h>
+#include <retesteth/EthChecks.h>
+#include <retesteth/ExitHandler.h>
 #include <retesteth/Options.h>
 #include <retesteth/RPCSession.h>
-#include <retesteth/ExitHandler.h>
-#include <retesteth/EthChecks.h>
+#include <retesteth/TestHelper.h>
+#include <retesteth/TestOutputHelper.h>
+#include <retesteth/TestSuite.h>
+#include <string>
+#include <thread>
 
 using namespace std;
 using namespace dev;
@@ -109,7 +109,6 @@ void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
         ETH_CHECK_MESSAGE(sourceHash == fillerHash, "Test " + _compiledTest.string() + " in " + i.getKey() + " is outdated. Filler hash is different!");
     }
 }
-
 }
 
 namespace test
@@ -193,15 +192,16 @@ fs::path TestSuite::getFullPath(string const& _testFolder) const
 
 void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFileName) const
 {
-    fs::path const boostRelativeTestPath = fs::relative(_testFileName, getTestPath());
-	string testname = _testFileName.stem().string();
-	bool isCopySource = false;
-	if (testname.rfind(c_fillerPostf) != string::npos)
-		testname = testname.substr(0, testname.rfind("Filler"));
-	else if (testname.rfind(c_copierPostf) != string::npos)
-	{
-		testname = testname.substr(0, testname.rfind(c_copierPostf));
-		isCopySource = true;
+  RPCSession::sessionStart(TestOutputHelper::getThreadID());
+  fs::path const boostRelativeTestPath =
+      fs::relative(_testFileName, getTestPath());
+  string testname = _testFileName.stem().string();
+  bool isCopySource = false;
+  if (testname.rfind(c_fillerPostf) != string::npos)
+    testname = testname.substr(0, testname.rfind("Filler"));
+  else if (testname.rfind(c_copierPostf) != string::npos) {
+    testname = testname.substr(0, testname.rfind(c_copierPostf));
+    isCopySource = true;
 	}
 	else
         ETH_REQUIRE_MESSAGE(false, "Incorrect file suffix in the filler folder! " + _testFileName.string());
@@ -261,6 +261,8 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
 
         executeFile(boostTestPath);
     }
+
+    RPCSession::sessionEnd(TestOutputHelper::getThreadID());
 }
 
 void TestSuite::executeFile(boost::filesystem::path const& _file) const

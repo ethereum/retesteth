@@ -66,4 +66,6 @@ enum popenOutput
 FILE* popen2(std::string const& _command, std::vector<std::string>const& _args, std::string const& _type, int& _pid, popenOutput _debug = popenOutput::DisableAll);
 int pclose2(FILE* _fp, pid_t _pid);
 
+/// return path to the unique tmp directory
+fs::path createUniqueTmpDirectory();
 }

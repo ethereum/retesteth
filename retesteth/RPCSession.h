@@ -72,6 +72,8 @@ public:
 	};
 
     static RPCSession& instance(std::string const& _threadID);
+    static void sessionStart(std::string const &_threadID);
+    static void sessionEnd(std::string const &_threadID);
     static void clear();
 
 	std::string web3_clientVersion();
@@ -109,8 +111,9 @@ public:
 
 private:
 	explicit RPCSession(std::string const& _path);
+        static void runNewInstanceOfAClient(std::string const &_threadID);
 
-	inline std::string quote(std::string const& _arg) { return "\"" + _arg + "\""; }
+        inline std::string quote(std::string const& _arg) { return "\"" + _arg + "\""; }
 	/// Parse std::string replacing keywords to values
 	void parseString(std::string& _string, std::map<std::string, std::string> const& _varMap);
 

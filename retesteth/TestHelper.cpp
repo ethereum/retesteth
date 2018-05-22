@@ -1,8 +1,14 @@
 #include <BuildInfo.h>
-#include <mutex>
+#include <boost/algorithm/string/trim.hpp>
+#include <boost/lexical_cast.hpp>
+#include <boost/uuid/uuid.hpp>            // uuid class
+#include <boost/uuid/uuid_generators.hpp> // generators
+#include <boost/uuid/uuid_io.hpp>         // streaming operators etc
+#include <boost/uuid/uuid_io.hpp>
 #include <csignal>
 #include <fcntl.h>
-#include <boost/algorithm/string/trim.hpp>
+#include <mutex>
+
 #include <retesteth/TestHelper.h>
 #include <retesteth/TestOutputHelper.h>
 #include <retesteth/Options.h>
@@ -136,19 +142,22 @@ DataObject convertJsonCPPtoData(Json::Value const& _input)
 	return DataObject(DataType::Null);
 }
 
+std::mutex g_staticDeclaration_getNetworks;
 vector<string> const& getNetworks()
 {
     static vector<string> networks;
-	if(networks.size() == 0)
-	{
+    {
+      std::lock_guard<std::mutex> lock(g_staticDeclaration_getNetworks);
+      if (networks.size() == 0) {
         networks.push_back("Frontier");
         networks.push_back("Homestead");
         networks.push_back("EIP150");
         networks.push_back("EIP158");
         networks.push_back("Byzantium");
-		networks.push_back("Constantinople");
-	}
-	return networks;
+        networks.push_back("Constantinople");
+      }
+    }
+    return networks;
 }
 
 /// translate network names in expect section field
@@ -478,6 +487,15 @@ int pclose2(FILE* _fp, pid_t _pid)
     //std::cerr << cmd << std::endl;
     int ret = system(cmd.c_str());
     return ret;
+}
+
+std::mutex g_createUniqueTmpDirectory;
+fs::path createUniqueTmpDirectory() {
+  std::lock_guard<std::mutex> lock(g_createUniqueTmpDirectory);
+  boost::uuids::uuid uuid = boost::uuids::random_generator()();
+  string uuidStr = boost::lexical_cast<string>(uuid);
+  boost::filesystem::create_directory(fs::temp_directory_path() / uuidStr);
+  return fs::temp_directory_path() / uuidStr;
 }
 
 }//namespace

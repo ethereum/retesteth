@@ -1,7 +1,9 @@
 #include "object.h"
+#include <mutex>
 
 namespace test {
 
+std::mutex g_strFindMutex;
 object::DigitsType object::stringIntegerType(std::string const& _string)
 {
     if (_string[0] == '0' && _string[1] == 'x')
@@ -12,6 +14,8 @@ object::DigitsType object::stringIntegerType(std::string const& _string)
     }
 
     bool isDecimalOnly = true;
+    std::lock_guard<std::mutex> lock(
+        g_strFindMutex); // string.find is not thread safe + static
     static std::string hexAlphabet = "0123456789abcdefABCDEF";
     static std::string decimalAlphabet = "0123456789";
     for (size_t i = 0; i < _string.length(); i++)
