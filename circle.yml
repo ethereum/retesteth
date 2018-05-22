@@ -132,5 +132,5 @@ workflows:
   cpp-ethereum:
     jobs:
       - macOS-XCode9
-      - Linux-Clang5
+      - Linux-Clang6
       - Linux-GCC6-Debug

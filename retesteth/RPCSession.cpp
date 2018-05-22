@@ -284,7 +284,7 @@ void RPCSession::clear()
     std::lock_guard<std::mutex> lock(g_socketMapMutex);
     std::vector<thread> closingThreads;
     for (auto& element : socketMap)
-        closingThreads.push_back(std::move(thread(closeSession, element.first)));
+        closingThreads.push_back(thread(closeSession, element.first));
     for (auto& th : closingThreads)
         th.join();
 
