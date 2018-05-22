@@ -165,98 +165,110 @@ struct sessionInfo
         filePipe.reset(_pipe);
         tmpDir = _tmpDir;
         pipePid = _pid;
-        isUsed = true;
+        isUsed = RPCSession::NotExist;
     }
     std::unique_ptr<RPCSession> session;
     std::unique_ptr<FILE> filePipe;
     int pipePid;
-    bool isUsed;
+    RPCSession::SessionStatus isUsed;
     std::string tmpDir;
 };
 
 std::mutex g_socketMapMutex;
 static std::map<std::string, sessionInfo> socketMap;
-void RPCSession::runNewInstanceOfAClient(string const &_threadID) {
-  fs::path tmpDir = test::createUniqueTmpDirectory();
-  string ipcPath = tmpDir.string() + "/geth.ipc";
+void RPCSession::runNewInstanceOfAClient(string const& _threadID)
+{
+    fs::path tmpDir = test::createUniqueTmpDirectory();
+    string ipcPath = tmpDir.string() + "/geth.ipc";
 
-  string command = "eth";
-  std::vector<string> args;
-  args.push_back("--test");          // 1
-  args.push_back("--db-path");       // 2
-  args.push_back(tmpDir.string());   // 3
-  args.push_back("--ipcpath");       // 4
-  args.push_back(ipcPath);           // 5
-  args.push_back("--log-verbosity"); // 6
-  args.push_back("5");               // 7
+    string command = "eth";
+    std::vector<string> args;
+    args.push_back("--test");           // 1
+    args.push_back("--db-path");        // 2
+    args.push_back(tmpDir.string());    // 3
+    args.push_back("--ipcpath");        // 4
+    args.push_back(ipcPath);            // 5
+    args.push_back("--log-verbosity");  // 6
+    args.push_back("5");                // 7
 
-  int pid = 0;
-  test::popenOutput mode = (Options::get().enableClientsOutput)
-                               ? test::popenOutput::EnableALL
-                               : test::popenOutput::DisableAll;
-  FILE *fp = test::popen2(command, args, "r", pid, mode);
-  if (!fp) {
-    ETH_ERROR("Failed to start the client: '" + command + "'");
-    ExitHandler::setFinishExecution(true);
-    std::raise(SIGABRT);
-  } else {
-    int maxSeconds = 25;
-    while (!boost::filesystem::exists(ipcPath) && maxSeconds-- > 0)
-      std::this_thread::sleep_for(std::chrono::seconds(1));
-    ETH_REQUIRE_MESSAGE(maxSeconds > 0, "Client took too long to start ipc!");
-
-    // Client has opened ipc socket. wait for it to initialize
-    std::this_thread::sleep_for(std::chrono::seconds(4));
-  }
-
-  sessionInfo info(fp, new RPCSession(ipcPath), tmpDir.string(), pid);
-  // sessionInfo info(fp, new RPCSession("/home/wins/.ethereum/geth.ipc"), dir,
-  // pid);
-  {
-    std::lock_guard<std::mutex> lock(
-        g_socketMapMutex); // function must be called from lock
-    socketMap.insert(
-        std::pair<string, sessionInfo>(_threadID, std::move(info)));
-  }
-}
-
-RPCSession &RPCSession::instance(const string &_threadID) {
-  bool needToCreateNew = false;
-  {
-    std::lock_guard<std::mutex> lock(g_socketMapMutex);
-    if (!socketMap.count(_threadID)) {
-      std::cerr << "No instance for threadID: " + _threadID +
-                       ", look for free or create new. MapSize: "
-                << socketMap.size() << std::endl;
-      // look for free clients that already instantiated
-      for (auto &socket : socketMap) {
-        if (socket.second.isUsed == false) {
-          socket.second.isUsed = true;
-          socketMap.insert(std::pair<string, sessionInfo>(
-              _threadID, std::move(socket.second)));
-          socketMap.erase(socketMap.find(socket.first));
-          return *(socketMap.at(_threadID).session.get());
-        }
-      }
-      needToCreateNew = true;
+    int pid = 0;
+    test::popenOutput mode = (Options::get().enableClientsOutput) ? test::popenOutput::EnableALL :
+                                                                    test::popenOutput::DisableAll;
+    FILE* fp = test::popen2(command, args, "r", pid, mode);
+    if (!fp)
+    {
+        ETH_ERROR("Failed to start the client: '" + command + "'");
+        ExitHandler::setFinishExecution(true);
+        std::raise(SIGABRT);
     }
-  }
-  if (needToCreateNew)
-    runNewInstanceOfAClient(_threadID);
-  std::lock_guard<std::mutex> lock(g_socketMapMutex);
-  return *(socketMap.at(_threadID).session.get());
+    else
+    {
+        int maxSeconds = 25;
+        while (!boost::filesystem::exists(ipcPath) && maxSeconds-- > 0)
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+        ETH_REQUIRE_MESSAGE(maxSeconds > 0, "Client took too long to start ipc!");
+        // Client has opened ipc socket. wait for it to initialize
+        std::this_thread::sleep_for(std::chrono::seconds(4));
+    }
+
+    sessionInfo info(fp, new RPCSession(ipcPath), tmpDir.string(), pid);
+    // sessionInfo info(fp, new RPCSession("/home/wins/.ethereum/geth.ipc"), dir, pid);
+    {
+        std::lock_guard<std::mutex> lock(g_socketMapMutex);  // function must be called from lock
+        socketMap.insert(std::pair<string, sessionInfo>(_threadID, std::move(info)));
+    }
 }
 
-void RPCSession::sessionStart(std::string const &_threadID) {
-  std::lock_guard<std::mutex> lock(g_socketMapMutex);
-  if (socketMap.count(_threadID))
-    socketMap.at(_threadID).isUsed = true;
+RPCSession& RPCSession::instance(const string& _threadID)
+{
+    bool needToCreateNew = false;
+    {
+        std::lock_guard<std::mutex> lock(g_socketMapMutex);
+        if (!socketMap.count(_threadID))
+        {
+            // look for free clients that already instantiated
+            for (auto& socket : socketMap)
+            {
+                if (socket.second.isUsed == SessionStatus::Available)
+                {
+                    socket.second.isUsed = SessionStatus::Working;
+                    socketMap.insert(
+                        std::pair<string, sessionInfo>(_threadID, std::move(socket.second)));
+                    socketMap.erase(socketMap.find(socket.first));
+                    return *(socketMap.at(_threadID).session.get());
+                }
+            }
+            needToCreateNew = true;
+        }
+    }
+    if (needToCreateNew)
+        runNewInstanceOfAClient(_threadID);
+    std::lock_guard<std::mutex> lock(g_socketMapMutex);
+    return *(socketMap.at(_threadID).session.get());
 }
 
-void RPCSession::sessionEnd(std::string const &_threadID) {
-  std::lock_guard<std::mutex> lock(g_socketMapMutex);
-  if (socketMap.count(_threadID))
-    socketMap.at(_threadID).isUsed = false;
+void RPCSession::sessionStart(std::string const& _threadID)
+{
+    RPCSession::instance(_threadID);  // initialize the client if not exist
+    std::lock_guard<std::mutex> lock(g_socketMapMutex);
+    if (socketMap.count(_threadID))
+        socketMap.at(_threadID).isUsed = SessionStatus::Working;
+}
+
+void RPCSession::sessionEnd(std::string const& _threadID, SessionStatus _status)
+{
+    std::lock_guard<std::mutex> lock(g_socketMapMutex);
+    assert(socketMap.count(_threadID));
+    if (socketMap.count(_threadID))
+        socketMap.at(_threadID).isUsed = _status;
+}
+
+RPCSession::SessionStatus RPCSession::sessionStatus(std::string const& _threadID)
+{
+    std::lock_guard<std::mutex> lock(g_socketMapMutex);
+    if (socketMap.count(_threadID))
+        return socketMap.at(_threadID).isUsed;
+    return RPCSession::NotExist;
 }
 
 void closeSession(const string& _threadID)

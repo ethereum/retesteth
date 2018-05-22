@@ -71,10 +71,10 @@ defaults:
 version: 2
 jobs:
 
-  Linux-Clang5:
+  Linux-Clang6:
     environment:
-      - CXX: clang++-5.0
-      - CC:  clang-5.0
+      - CXX: clang++-6.0
+      - CC:  clang-6.0
       - GCOV: llvm-cov-5.0 gcov
       - GENERATOR: Ninja
       - BUILD_PARALLEL_JOBS: 8

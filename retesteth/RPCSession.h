@@ -59,8 +59,8 @@ private:
 class RPCSession: public boost::noncopyable
 {
 public:
-	struct TransactionData
-	{
+    struct TransactionData  // remove this
+    {
 		std::string from;
 		std::string to;
 		std::string gas;
@@ -71,9 +71,18 @@ public:
 		std::string toJson() const;
 	};
 
+    enum SessionStatus
+    {
+        Working,      // test execution in progress
+        Available,    // test execution has finished
+        HasFinished,  // has just finished execution
+        NotExist      // socket yet not initialized
+    };
+
     static RPCSession& instance(std::string const& _threadID);
     static void sessionStart(std::string const &_threadID);
-    static void sessionEnd(std::string const &_threadID);
+    static void sessionEnd(std::string const& _threadID, SessionStatus _status);
+    static SessionStatus sessionStatus(std::string const& _threadID);
     static void clear();
 
 	std::string web3_clientVersion();

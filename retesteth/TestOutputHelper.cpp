@@ -55,14 +55,13 @@ void TestOutputHelper::initTest(size_t _maxTests)
     //_maxTests = 0 means this function is called from testing thread
     m_currentTestName = "n/a";
     m_currentTestFileName = string();
-	m_timer = Timer();
-        m_timer.restart();
-        m_currentTestCaseName =
-            boost::unit_test::framework::current_test_case().p_name;
-        if (!Options::get().createRandomTest && _maxTests != 0)
-          std::cout << "Test Case \"" + m_currentTestCaseName + "\": \n";
-	m_maxTests = _maxTests;
-	m_currTest = 0;
+    m_timer = Timer();
+    m_timer.restart();
+    m_currentTestCaseName = boost::unit_test::framework::current_test_case().p_name;
+    if (!Options::get().createRandomTest && _maxTests != 0)
+        std::cout << "Test Case \"" + m_currentTestCaseName + "\": \n";
+    m_maxTests = _maxTests;
+    m_currTest = 0;
 
     if (_maxTests != 0)
         ExitHandler::setFinishExecution(false);
@@ -73,8 +72,8 @@ bool TestOutputHelper::checkTest(std::string const& _testName)
 	if (test::Options::get().singleTest && test::Options::get().singleTestName != _testName)
 		return false;
 
-	//cnote << _testName;
-	m_currentTestName = _testName;
+    std::cerr << _testName << std::endl;
+    m_currentTestName = _testName;
 	return true;
 }
 

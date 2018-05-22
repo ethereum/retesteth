@@ -69,25 +69,27 @@ void removeComments(test::DataObject& _obj)
 void addClientInfo(test::DataObject& _v, fs::path const& _testSource, h256 const& _testSourceHash)
 {
   RPCSession &session = RPCSession::instance(TestOutputHelper::getThreadID());
-  for (auto &o : _v.getSubObjectsUnsafe()) {
-    string comment;
-    test::DataObject clientinfo;
-    if (o.count("_info")) {
-      test::DataObject const &existingInfo = o.at("_info");
-      if (existingInfo.count("comment"))
-        comment = existingInfo.at("comment").asString();
-    }
+  for (auto& o : _v.getSubObjectsUnsafe())
+  {
+      string comment;
+      test::DataObject clientinfo;
+      if (o.count("_info"))
+      {
+          test::DataObject const& existingInfo = o.at("_info");
+          if (existingInfo.count("comment"))
+              comment = existingInfo.at("comment").asString();
+      }
 
-    clientinfo.setKey("_info");
-    clientinfo["comment"] = comment;
-    clientinfo["filling-rpc-server"] = session.web3_clientVersion();
-    clientinfo["filling-tool-version"] = test::prepareVersionString();
-    clientinfo["lllcversion"] = test::prepareLLLCVersionString();
-    clientinfo["source"] = _testSource.string();
-    clientinfo["sourceHash"] = toString(_testSourceHash);
+      clientinfo.setKey("_info");
+      clientinfo["comment"] = comment;
+      clientinfo["filling-rpc-server"] = session.web3_clientVersion();
+      clientinfo["filling-tool-version"] = test::prepareVersionString();
+      clientinfo["lllcversion"] = test::prepareLLLCVersionString();
+      clientinfo["source"] = _testSource.string();
+      clientinfo["sourceHash"] = toString(_testSourceHash);
 
-    o["_info"].replace(clientinfo);
-    o.setKeyPos("_info", 0);
+      o["_info"].replace(clientinfo);
+      o.setKeyPos("_info", 0);
     }
 }
 
@@ -126,10 +128,37 @@ void TestSuite::runTestWithoutFiller(boost::filesystem::path const& _file) const
 	testOutput.finishTest();
 }
 
-void joinThreads(vector<thread>& _threadVector)
+void joinThreads(vector<thread>& _threadVector, bool _all)
 {
-    for (auto& th : _threadVector)
-        th.join();
+    if (_all)
+    {
+        for (auto& th : _threadVector)
+        {
+            string id = toString(th.get_id());
+            th.join();
+            RPCSession::sessionEnd(id, RPCSession::SessionStatus::Available);
+        }
+        _threadVector.clear();
+        return;
+    }
+
+    bool finished = false;
+    while (!finished)
+    {
+        for (vector<thread>::iterator it = _threadVector.begin(); it != _threadVector.end(); it++)
+        {
+            finished =
+                (RPCSession::sessionStatus(toString((*it).get_id())) == RPCSession::HasFinished);
+            if (finished)
+            {
+                string id = toString((*it).get_id());
+                (*it).join();
+                RPCSession::sessionEnd(id, RPCSession::SessionStatus::Available);
+                _threadVector.erase(it);
+                return;
+            }
+        }
+    }
 }
 
 void TestSuite::runAllTestsInFolder(string const& _testFolder) const
@@ -165,18 +194,14 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
     for (auto const& file : files)
     {
         testOutput.showProgress();
+        if (threadVector.size() == Options::get().threadCount)
+            joinThreads(threadVector, false);
         thread testThread(&TestSuite::executeTest, this, _testFolder, file);
         threadVector.push_back(std::move(testThread));
-        if (threadVector.size() == Options::get().threadCount)
-        {
-            joinThreads(threadVector);
-            threadVector.clear();
-        }
         if (ExitHandler::shouldExit())
             break;
     }
-    joinThreads(threadVector);
-    threadVector.clear();
+    joinThreads(threadVector, true);
     testOutput.finishTest();
 }
 
@@ -192,66 +217,66 @@ fs::path TestSuite::getFullPath(string const& _testFolder) const
 
 void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFileName) const
 {
-  RPCSession::sessionStart(TestOutputHelper::getThreadID());
-  fs::path const boostRelativeTestPath =
-      fs::relative(_testFileName, getTestPath());
-  string testname = _testFileName.stem().string();
-  bool isCopySource = false;
-  if (testname.rfind(c_fillerPostf) != string::npos)
-    testname = testname.substr(0, testname.rfind("Filler"));
-  else if (testname.rfind(c_copierPostf) != string::npos) {
-    testname = testname.substr(0, testname.rfind(c_copierPostf));
-    isCopySource = true;
-	}
-	else
+    RPCSession::sessionStart(TestOutputHelper::getThreadID());
+    fs::path const boostRelativeTestPath = fs::relative(_testFileName, getTestPath());
+    string testname = _testFileName.stem().string();
+    bool isCopySource = false;
+    if (testname.rfind(c_fillerPostf) != string::npos)
+        testname = testname.substr(0, testname.rfind("Filler"));
+    else if (testname.rfind(c_copierPostf) != string::npos)
+    {
+        testname = testname.substr(0, testname.rfind(c_copierPostf));
+        isCopySource = true;
+    }
+    else
         ETH_REQUIRE_MESSAGE(false, "Incorrect file suffix in the filler folder! " + _testFileName.string());
 
-	// Filename of the test that would be generated
-	fs::path const boostTestPath = getFullPath(_testFolder) / fs::path(testname + ".json");
+    // Filename of the test that would be generated
+    fs::path const boostTestPath = getFullPath(_testFolder) / fs::path(testname + ".json");
 
     TestSuiteOptions opt;
-	if (Options::get().filltests)
-	{
-		if (isCopySource)
-		{
-			clog << "Copying " << _testFileName.string() << "\n";
-			clog << " TO " << boostTestPath.string() << "\n";
-			assert(_testFileName.string() != boostTestPath.string());
-			TestOutputHelper::get().showProgress();
-			test::copyFile(_testFileName, boostTestPath);
+    if (Options::get().filltests)
+    {
+        if (isCopySource)
+        {
+            clog << "Copying " << _testFileName.string() << "\n";
+            clog << " TO " << boostTestPath.string() << "\n";
+            assert(_testFileName.string() != boostTestPath.string());
+            TestOutputHelper::get().showProgress();
+            test::copyFile(_testFileName, boostTestPath);
             ETH_REQUIRE_MESSAGE(boost::filesystem::exists(boostTestPath.string()), "Error when copying the test file!");
 
-			// Update _info and build information of the copied test
-			/*Json::Value v;
-			string const s = asString(dev::contents(boostTestPath));
-			json_spirit::read_string(s, v);
-			addClientInfo(v, boostRelativeTestPath, sha3(dev::contents(_testFileName)));
-			writeFile(boostTestPath, asBytes(json_spirit::write_string(v, true)));*/
-		}
-		else
-		{
+            // Update _info and build information of the copied test
+            /*Json::Value v;
+            string const s = asString(dev::contents(boostTestPath));
+            json_spirit::read_string(s, v);
+            addClientInfo(v, boostRelativeTestPath, sha3(dev::contents(_testFileName)));
+            writeFile(boostTestPath, asBytes(json_spirit::write_string(v, true)));*/
+        }
+        else
+        {
             DataObject v;
-			bytes const byteContents = dev::contents(_testFileName);
-			string const s = asString(byteContents);
+            bytes const byteContents = dev::contents(_testFileName);
+            string const s = asString(byteContents);
             ETH_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _testFileName.string() + " is empty.");
 
-			if (_testFileName.extension() == ".json")
+            if (_testFileName.extension() == ".json")
                 v = test::convertJsonCPPtoData(readJson(s));
             //else if (_testFileName.extension() == ".yml")
             //	v = test::parseYamlToJson(s);
-			else
-				ETH_ERROR("Unknown test format!" + TestOutputHelper::get().testFile().string());
+            else
+                ETH_ERROR("Unknown test format!" + TestOutputHelper::get().testFile().string());
 
-			removeComments(v);
+            removeComments(v);
             opt.doFilling = true;
             DataObject output = doTests(v, opt);
-			if (!opt.wasErrors)
-			{
-				addClientInfo(output, boostRelativeTestPath, sha3(byteContents));
-				writeFile(boostTestPath, asBytes(output.asJson()));
-			}
-		}
-	}
+            if (!opt.wasErrors)
+            {
+                addClientInfo(output, boostRelativeTestPath, sha3(byteContents));
+                writeFile(boostTestPath, asBytes(output.asJson()));
+            }
+        }
+    }
 
     if (!opt.wasErrors)
     {
@@ -262,7 +287,7 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
         executeFile(boostTestPath);
     }
 
-    RPCSession::sessionEnd(TestOutputHelper::getThreadID());
+    RPCSession::sessionEnd(TestOutputHelper::getThreadID(), RPCSession::SessionStatus::HasFinished);
 }
 
 void TestSuite::executeFile(boost::filesystem::path const& _file) const
