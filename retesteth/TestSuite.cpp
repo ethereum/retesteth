@@ -111,22 +111,6 @@ void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
         ETH_CHECK_MESSAGE(sourceHash == fillerHash, "Test " + _compiledTest.string() + " in " + i.getKey() + " is outdated. Filler hash is different!");
     }
 }
-}
-
-namespace test
-{
-
-string const c_fillerPostf = "Filler";
-string const c_copierPostf = "Copier";
-
-void TestSuite::runTestWithoutFiller(boost::filesystem::path const& _file) const
-{
-	// Allow to execute a custom test .json file on any test suite
-	auto& testOutput = test::TestOutputHelper::get();
-	testOutput.initTest(1);
-	executeFile(_file);
-	testOutput.finishTest();
-}
 
 void joinThreads(vector<thread>& _threadVector, bool _all)
 {
@@ -162,46 +146,92 @@ void joinThreads(vector<thread>& _threadVector, bool _all)
         }
     }
 }
+}
 
-void TestSuite::runAllTestsInFolder(string const& _testFolder) const
+namespace test
 {
-	// check that destination folder test files has according Filler file in src folder
-	string const filter = test::Options::get().singleTestName.empty() ? string() : test::Options::get().singleTestName;
-	vector<fs::path> const compiledFiles = test::getFiles(getFullPath(_testFolder), {".json", ".yml"} ,filter);
-	for (auto const& file: compiledFiles)
-	{
-		fs::path const expectedFillerName = getFullPathFiller(_testFolder) / fs::path(file.stem().string() + c_fillerPostf + ".json");
-		fs::path const expectedFillerName2 = getFullPathFiller(_testFolder) / fs::path(file.stem().string() + c_fillerPostf + ".yml");
-		fs::path const expectedCopierName = getFullPathFiller(_testFolder) / fs::path(file.stem().string() + c_copierPostf + ".json");
+string const c_fillerPostf = "Filler";
+string const c_copierPostf = "Copier";
+
+void TestSuite::runTestWithoutFiller(boost::filesystem::path const& _file) const
+{
+    // Allow to execute a custom test .json file on any test suite
+    auto& testOutput = test::TestOutputHelper::get();
+    testOutput.initTest(1);
+    executeFile(_file);
+    testOutput.finishTest();
+}
+
+string TestSuite::checkFillerExistance(string const& _testFolder) const
+{
+    string filter = test::Options::get().singleTestName.empty() ?
+                        string() :
+                        test::Options::get().singleTestName;
+    vector<fs::path> const compiledFiles =
+        test::getFiles(getFullPath(_testFolder), {".json", ".yml"}, filter);
+    for (auto const& file : compiledFiles)
+    {
+        fs::path const expectedFillerName =
+            getFullPathFiller(_testFolder) /
+            fs::path(file.stem().string() + c_fillerPostf + ".json");
+        fs::path const expectedFillerName2 =
+            getFullPathFiller(_testFolder) /
+            fs::path(file.stem().string() + c_fillerPostf + ".yml");
+        fs::path const expectedCopierName =
+            getFullPathFiller(_testFolder) /
+            fs::path(file.stem().string() + c_copierPostf + ".json");
         ETH_REQUIRE_MESSAGE(fs::exists(expectedFillerName) || fs::exists(expectedFillerName2) || fs::exists(expectedCopierName), "Compiled test folder contains test without Filler: " + file.filename().string());
         ETH_REQUIRE_MESSAGE(!(fs::exists(expectedFillerName) && fs::exists(expectedFillerName2) && fs::exists(expectedCopierName)), "Src test could either be Filler.json, Filler.yml or Copier.json: " + file.filename().string());
 
-		// Check that filled tests created from actual fillers
-		if (Options::get().filltests == false)
-		{
-			if (fs::exists(expectedFillerName))
-				checkFillerHash(file, expectedFillerName);
-			if (fs::exists(expectedFillerName2))
-				checkFillerHash(file, expectedFillerName2);
-			if (fs::exists(expectedCopierName))
-				checkFillerHash(file, expectedCopierName);
-		}
-	}
+        // Check that filled tests created from actual fillers
+        if (Options::get().filltests == false)
+        {
+            if (fs::exists(expectedFillerName))
+            {
+                checkFillerHash(file, expectedFillerName);
+                if (!filter.empty())
+                    return filter + c_fillerPostf;
+            }
+            if (fs::exists(expectedFillerName2))
+            {
+                checkFillerHash(file, expectedFillerName2);
+                if (!filter.empty())
+                    return filter + c_fillerPostf;
+            }
+            if (fs::exists(expectedCopierName))
+            {
+                checkFillerHash(file, expectedCopierName);
+                if (!filter.empty())
+                    return filter + c_copierPostf;
+            }
+        }
+    }
+    return string();
+}
 
-	// run all tests
-	vector<fs::path> const files = test::getFiles(getFullPathFiller(_testFolder), {".json", ".yml"}, filter.empty() ? filter : filter + "Filler");
+void TestSuite::runAllTestsInFolder(string const& _testFolder) const
+{
+    if (ExitHandler::shouldExit())
+        return;
+
+    // check that destination folder test files has according Filler file in src folder
+    string const filter = checkFillerExistance(_testFolder);
+
+    // run all tests
+    vector<fs::path> const files =
+        test::getFiles(getFullPathFiller(_testFolder), {".json", ".yml"}, filter);
     auto& testOutput = test::TestOutputHelper::get();
     vector<thread> threadVector;
     testOutput.initTest(files.size());
     for (auto const& file : files)
     {
+        if (ExitHandler::shouldExit())
+            break;
         testOutput.showProgress();
         if (threadVector.size() == Options::get().threadCount)
             joinThreads(threadVector, false);
         thread testThread(&TestSuite::executeTest, this, _testFolder, file);
         threadVector.push_back(std::move(testThread));
-        if (ExitHandler::shouldExit())
-            break;
     }
     joinThreads(threadVector, true);
     testOutput.finishTest();

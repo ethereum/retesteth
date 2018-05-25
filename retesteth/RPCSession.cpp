@@ -209,7 +209,7 @@ void RPCSession::runNewInstanceOfAClient(string const& _threadID)
     }
 
     sessionInfo info(fp, new RPCSession(ipcPath), tmpDir.string(), pid);
-    // sessionInfo info(fp, new RPCSession("/home/wins/.ethereum/geth.ipc"), dir, pid);
+    // sessionInfo info(fp, new RPCSession("/home/wins/.ethereum/geth.ipc"), tmpDir.string(), pid);
     {
         std::lock_guard<std::mutex> lock(g_socketMapMutex);  // function must be called from lock
         socketMap.insert(std::pair<string, sessionInfo>(_threadID, std::move(info)));
@@ -241,6 +241,8 @@ RPCSession& RPCSession::instance(const string& _threadID)
     if (needToCreateNew)
         runNewInstanceOfAClient(_threadID);
     std::lock_guard<std::mutex> lock(g_socketMapMutex);
+    ETH_REQUIRE_MESSAGE(socketMap.size() <= Options::get().threadCount,
+        "Something went wrong. Retesteth create more instances than needed!");
     return *(socketMap.at(_threadID).session.get());
 }
 
@@ -428,6 +430,11 @@ void RPCSession::test_setChainParams(vector<string> const& _accounts)
 string RPCSession::test_getLogHash(std::string const& _txHash)
 {
 	return rpcCall("test_getLogHash", { quote(_txHash) }).asString();
+}
+
+void RPCSession::test_importRawBlock(std::string const& _blockRLP)
+{
+    rpcCall("test_importRawBlock", {quote(_blockRLP)}, true);
 }
 
 void RPCSession::test_setChainParams(string const& _config)

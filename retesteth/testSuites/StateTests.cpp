@@ -26,168 +26,22 @@
 #include <mutex>
 
 #include <libdevcore/CommonIO.h>
-#include <retesteth/Options.h>
-#include <retesteth/TestOutputHelper.h>
-#include <retesteth/TestHelper.h>
-#include <retesteth/TestSuite.h>
 #include <retesteth/DataObject.h>
-#include <retesteth/testSuites/StateTests.h>
-#include <retesteth/ethObjects/common.h>
+#include <retesteth/Options.h>
 #include <retesteth/RPCSession.h>
+#include <retesteth/TestHelper.h>
+#include <retesteth/TestOutputHelper.h>
+#include <retesteth/TestSuite.h>
+#include <retesteth/ethObjects/common.h>
+#include <retesteth/testSuites/Common.h>
+#include <retesteth/testSuites/StateTests.h>
 
 using namespace std;
 using namespace dev;
 namespace fs = boost::filesystem;
 
-namespace test {
-
-DataObject stateGenesis(string const& _netRules)
+namespace
 {
-    test::checkAllowedNetwork(_netRules);
-    DataObject genesis;
-    genesis["sealEngine"] = "NoProof";
-    if (_netRules == "Frontier")
-    {
-        genesis["params"] = DataObject(DataType::Object);
-    }
-    else if (_netRules == "Homestead")
-    {
-        genesis["params"]["homesteadForkBlock"] = "0x00";
-    }
-    else if (_netRules == "EIP150")
-    {
-        genesis["params"]["homesteadForkBlock"] = "0x00";
-        genesis["params"]["EIP150ForkBlock"] = "0x00";
-    }
-    else if (_netRules == "EIP158")
-    {
-        genesis["params"]["homesteadForkBlock"] = "0x00";
-        genesis["params"]["EIP150ForkBlock"] = "0x00";
-        genesis["params"]["EIP158ForkBlock"] = "0x00";
-    }
-    else if (_netRules == "Byzantium")
-    {
-        genesis["params"]["homesteadForkBlock"] = "0x00";
-        genesis["params"]["EIP150ForkBlock"] = "0x00";
-        genesis["params"]["EIP158ForkBlock"] = "0x00";
-        genesis["params"]["byzantiumForkBlock"] = "0x00";
-    }
-    else if (_netRules == "Constantinople")
-    {
-        genesis["params"]["homesteadForkBlock"] = "0x00";
-        genesis["params"]["EIP150ForkBlock"] = "0x00";
-        genesis["params"]["EIP158ForkBlock"] = "0x00";
-        genesis["params"]["byzantiumForkBlock"] = "0x00";
-        genesis["params"]["constantinopleForkBlock"] = "0x00";
-    }
-
-    /*static std::string const c_configString = R"(
-    {
-        "sealEngine": "NoProof",
-        "params": {
-            "accountStartNonce": "0x00",
-            "maximumExtraDataSize": "0x1000000",
-            "blockReward": "0x",
-            "allowFutureBlocks": true,
-            "homesteadForkBlock": "0x00",
-            "EIP150ForkBlock": "0x00",
-            "EIP158ForkBlock": "0x00"
-        },
-        "genesis": {
-            "author": "0000000000000010000000000000000000000000",
-            "timestamp": "0x00",
-            "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
-            "extraData": "0x",
-            "gasLimit": "0x1000000000000"
-        },
-        "accounts": {
-            "0000000000000000000000000000000000000001": { "wei": "1", "precompiled": { "name": "ecrecover", "linear": { "base": 3000, "word": 0 } } },
-            "0000000000000000000000000000000000000002": { "wei": "1", "precompiled": { "name": "sha256", "linear": { "base": 60, "word": 12 } } },
-            "0000000000000000000000000000000000000003": { "wei": "1", "precompiled": { "name": "ripemd160", "linear": { "base": 600, "word": 120 } } },
-            "0000000000000000000000000000000000000004": { "wei": "1", "precompiled": { "name": "identity", "linear": { "base": 15, "word": 3 } } },
-            "0000000000000000000000000000000000000005": { "wei": "1", "precompiled": { "name": "modexp" } },
-            "0000000000000000000000000000000000000006": { "wei": "1", "precompiled": { "name": "alt_bn128_G1_add", "linear": { "base": 500, "word": 0 } } },
-            "0000000000000000000000000000000000000007": { "wei": "1", "precompiled": { "name": "alt_bn128_G1_mul", "linear": { "base": 40000, "word": 0 } } },
-            "0000000000000000000000000000000000000008": { "wei": "1", "precompiled": { "name": "alt_bn128_pairing_product" } }
-        }
-    }
-    )";
-    */
-
-    /*if (genesis.type() == DataType::Null)
-    {
-        genesis["version"] = "1";
-        genesis["params"]["miningMethod"] = "NoProof";
-        genesis["params"]["blockReward"] = "0x00";
-    }*/
-    return genesis;
-}
-
-DataObject getRemoteState(RPCSession& _session, string const& _trHash, bool _fullPost)
-{
-    DataObject remoteState;
-    const int cmaxRows = 1000;
-    string latestBlockNumber = toString(u256(_session.eth_blockNumber()));
-
-    test::scheme_block latestBlock = _session.eth_getBlockByNumber(latestBlockNumber, false);
-    remoteState["postHash"] = latestBlock.getData().at("stateRoot");
-    remoteState["logHash"] = _session.test_getLogHash(_trHash);
-    remoteState["postState"] = "";
-
-    // Get Log Receipts
-    /*if (latestBlock.getTransactionCount() != 0)
-    {
-        test::scheme_transactionReceipt trReceipt = _session.eth_getTransactionReceipt(_trHash);
-        remoteState["logHash"] = trReceipt.getLogHash();
-        transactionBlockNumber = toString(trReceipt.getData().at("blockNumber").asInt());
-        trIndex = trReceipt.getData().at("transactionIndex").asInt();
-    }
-    else
-    {
-        // returned latest block has no transactions. this transaction is probably invalid.
-        remoteState["logHash"] = toHexPrefixed(dev::EmptyListSHA3);
-        transactionBlockNumber = latestBlockNumber;
-    }*/
-
-    if (_fullPost)
-    {
-        int trIndex = 1;
-        DataObject accountObj;
-        Json::Value res = _session.debug_accountRangeAt(latestBlockNumber, trIndex, "0", cmaxRows);
-        for (auto acc : res["addressMap"]) {
-          // Balance
-          Json::Value ret =
-              _session.eth_getBalance(acc.asString(), latestBlockNumber);
-          accountObj[acc.asString()]["balance"] = dev::toCompactHexPrefixed(
-              u256(ret.asString()), 1); // fix odd strings
-
-          // Code
-          ret = _session.eth_getCode(acc.asString(), latestBlockNumber);
-          accountObj[acc.asString()]["code"] = ret.asString();
-
-          // Nonce
-          ret = _session.eth_getTransactionCount(acc.asString(),
-                                                 latestBlockNumber);
-          accountObj[acc.asString()]["nonce"] =
-              dev::toCompactHexPrefixed(u256(ret.asString()), 1);
-
-          // Storage
-          DataObject storage(DataType::Object);
-          DataObject debugStorageAt =
-              test::convertJsonCPPtoData(_session.debug_storageRangeAt(
-                  latestBlockNumber, 1, acc.asString(), "0", cmaxRows));
-          for (auto const &element : debugStorageAt["storage"].getSubObjects())
-            storage[element.at("key").asString()] =
-                element.at("value").asString();
-          accountObj[acc.asString()]["storage"] = storage;
-        }
-
-        remoteState["postState"].clear();
-        remoteState["postState"] = accountObj;
-    }
-    return remoteState;
-}
-
 bool OptionsAllowTransaction(scheme_generalTransaction::transactionInfo const& _tr)
 {
     Options const& opt = Options::get();
@@ -208,8 +62,8 @@ DataObject FillTest(DataObject const& _testFile, TestSuite::TestSuiteOptions& _o
     filledTest.setKey(_testFile.getKey());
 
     RPCSession& session = RPCSession::instance(TestOutputHelper::getThreadID());
-	if (test.getData().count("_info"))
-		filledTest["_info"] = test.getData().at("_info");
+    if (test.getData().count("_info"))
+        filledTest["_info"] = test.getData().at("_info");
     filledTest["env"] = test.getEnv().getData();
     filledTest["pre"] = test.getPre().getData();
     filledTest["transaction"] = test.getGenTransaction().getData();
@@ -220,75 +74,65 @@ DataObject FillTest(DataObject const& _testFile, TestSuite::TestSuiteOptions& _o
         if (!Options::get().singleTestNet.empty() && Options::get().singleTestNet != net)
             continue;
 
-        DataObject genesis = stateGenesis(net);
-		genesis["genesis"] = test.getEnv().getDataForRPC();
-                genesis["accounts"] = test.getPre().getDataForRPC(net);
-                session.test_setChainParams(genesis.asJson());
+        session.test_setChainParams(test.getGenesisForRPC(net).asJson());
 
-                DataObject forkResults;
-                forkResults.setKey(net);
+        DataObject forkResults;
+        forkResults.setKey(net);
 
-                // run transactions for defined expect sections only
-                for (auto const &expect : test.getExpectSections()) {
-                  // if expect section for this networks
-                  if (expect.getNetworks().count(net)) {
-                    for (auto &tr : test.getTransactionsUnsafe()) {
-                      if (!OptionsAllowTransaction(tr))
+        // run transactions for defined expect sections only
+        for (auto const& expect : test.getExpectSections())
+        {
+            // if expect section for this networks
+            if (expect.getNetworks().count(net))
+            {
+                for (auto& tr : test.getTransactionsUnsafe())
+                {
+                    if (!OptionsAllowTransaction(tr))
                         continue;
 
                     bool blockMined = false;
                     // if expect section is for this transaction
                     if (expect.checkIndexes(tr.dataInd, tr.gasInd, tr.valueInd))
                     {
-                      u256 a(test.getEnv()
-                                 .getData()
-                                 .at("currentTimestamp")
-                                 .asString());
-                      session.test_modifyTimestamp(a.convert_to<size_t>());
-                      string trHash = session.eth_sendRawTransaction(
-                          tr.transaction.getSignedRLP());
-                      session.test_mineBlocks(1);
-                      tr.executed = true;
-                      blockMined = true;
+                        u256 a(test.getEnv().getData().at("currentTimestamp").asString());
+                        session.test_modifyTimestamp(a.convert_to<size_t>());
+                        string trHash =
+                            session.eth_sendRawTransaction(tr.transaction.getSignedRLP());
+                        session.test_mineBlocks(1);
+                        tr.executed = true;
+                        blockMined = true;
 
-                      DataObject remoteState =
-                          getRemoteState(session, trHash, true);
+                        DataObject remoteState = getRemoteState(session, trHash, true);
 
-                      // check that the post state qualifies to the expect
-                      // section
-                      scheme_state postState(remoteState.at("postState"));
-                      CompareResult res = test::compareStates(
-                          expect.getExpectState(), postState);
-                      ETH_CHECK_MESSAGE(
-                          res == CompareResult::Success,
-                          "Network: " + net +
-                              ", TrInfo: d: " + toString(tr.dataInd) +
-                              ", g: " + toString(tr.gasInd) +
-                              ", v: " + toString(tr.valueInd) + "\n");
-                      if (res != CompareResult::Success)
-                        _opt.wasErrors = true;
+                        // check that the post state qualifies to the expect
+                        // section
+                        scheme_state postState(remoteState.at("postState"));
+                        CompareResult res = test::compareStates(expect.getExpectState(), postState);
+                        ETH_CHECK_MESSAGE(res == CompareResult::Success,
+                            "Network: " + net + ", TrInfo: d: " + toString(tr.dataInd) + ", g: " +
+                                toString(tr.gasInd) + ", v: " + toString(tr.valueInd) + "\n");
+                        if (res != CompareResult::Success)
+                            _opt.wasErrors = true;
 
-                      DataObject indexes;
-                      DataObject transactionResults;
-                      indexes["data"] = tr.dataInd;
-                      indexes["gas"] = tr.gasInd;
-                      indexes["value"] = tr.valueInd;
+                        DataObject indexes;
+                        DataObject transactionResults;
+                        indexes["data"] = tr.dataInd;
+                        indexes["gas"] = tr.gasInd;
+                        indexes["value"] = tr.valueInd;
 
-                      transactionResults["indexes"] = indexes;
-                      transactionResults["hash"] =
-                          remoteState.at("postHash").asString();
-                      transactionResults["logs"] =
-                          remoteState.at("logHash").asString();
-                      forkResults.addArrayObject(transactionResults);
+                        transactionResults["indexes"] = indexes;
+                        transactionResults["hash"] = remoteState.at("postHash").asString();
+                        transactionResults["logs"] = remoteState.at("logHash").asString();
+                        forkResults.addArrayObject(transactionResults);
                     }
                     if (blockMined)
                         session.test_rewindToBlock(0);
                 }
             }
         }
-		test.checkUnexecutedTransactions();
+        test.checkUnexecutedTransactions();
         filledTest["post"].addSubObject(forkResults);
-	}
+    }
     return filledTest;
 }
 
@@ -304,16 +148,11 @@ void RunTest(DataObject const& _testFile)
 	{
         string const& network = post.first;
         if (!Options::get().singleTestNet.empty() && Options::get().singleTestNet != network)
-			continue;
-        //        if (network == "Byzantium" || network == "Constantinople")
-        //            continue;
+            continue;
 
-        DataObject genesis = stateGenesis(network);
-		genesis["genesis"] = test.getEnv().getDataForRPC();
-                genesis["accounts"] = test.getPre().getDataForRPC(network);
-                session.test_setChainParams(genesis.asJson());
+        session.test_setChainParams(test.getGenesisForRPC(network).asJson());
 
-		// read all results for a specific fork
+        // read all results for a specific fork
         for (auto const& result: post.second)
         {
 			// look for a transaction with this indexes and execute it on a client
@@ -365,7 +204,10 @@ void RunTest(DataObject const& _testFile)
 		test.checkUnexecutedTransactions();
 	}
 }
+}  // namespace closed
 
+namespace test
+{
 DataObject StateTestSuite::doTests(DataObject const& _input, TestSuiteOptions& _opt) const
 {
     ETH_REQUIRE_MESSAGE(_input.type() == DataType::Object,

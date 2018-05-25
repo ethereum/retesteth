@@ -35,7 +35,8 @@ public:
 	bool filltests = false; ///< Create JSON test files from execution results
 	bool fillchain = false; ///< Fill tests as a blockchain tests if possible
 	bool stats = false;		///< Execution time and stats for state tests
-	std::string statsOutFile; ///< Stats output file. "out" for standard output
+    bool poststate = false;
+    std::string statsOutFile; ///< Stats output file. "out" for standard output
 	bool exectimelog = false; ///< Print execution time for each test suite
 	std::string rCurrentTestSuite; ///< Remember test suite before boost overwrite (for random tests)
 	bool statediff = false;///< Fill full post state in General tests

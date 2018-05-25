@@ -101,8 +101,6 @@ class DataObject
 
     void clear();
 
-    void print(size_t level = 0) const;
-
 	std::string asJson(int level = 0) const;
 	static std::string dataTypeAsString(DataType _type);
 

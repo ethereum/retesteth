@@ -1,4 +1,5 @@
 #include "object.h"
+#include <retesteth/TestHelper.h>
 #include <mutex>
 
 namespace test {
@@ -92,7 +93,9 @@ void object::makeAllFieldsHex(DataObject& _data)
         makeKeyHex(_data);
 }
 
-void requireJsonFields(DataObject const& _o, std::string const& _section, std::map<std::string, possibleType> const& _validationMap)
+void requireJsonFields(DataObject const& _o, std::string const& _section,
+    std::map<std::string, possibleType> const& _validationMap,
+    std::set<std::string> const& _ignoreFields)
 {
 	// check for unexpected fiedls
 	for (auto const field : _o.getSubObjects())
@@ -102,7 +105,9 @@ void requireJsonFields(DataObject const& _o, std::string const& _section, std::m
 	// check field types with validation map
 	for (auto const vmap : _validationMap)
 	{
-		ETH_REQUIRE_MESSAGE(_o.count(vmap.first) > 0, vmap.first + " not found in " + _section +
+        if (!_o.count(vmap.first) && _ignoreFields.count(vmap.first))
+            continue;
+        ETH_REQUIRE_MESSAGE(_o.count(vmap.first) > 0, vmap.first + " not found in " + _section +
 															" section! " +
 															TestOutputHelper::get().testName());
 		bool matched = false;
@@ -122,5 +127,47 @@ void requireJsonFields(DataObject const& _o, std::string const& _section, std::m
 					TestOutputHelper::get().testName());
 		}
 	}
+}
+
+DataObject object::prepareGenesisParams(std::string const& _network, std::string const& _engine)
+{
+    test::checkAllowedNetwork(_network);
+    DataObject genesis;
+    genesis["sealEngine"] = _engine;
+    if (_network == "Frontier")
+    {
+        genesis["params"] = DataObject(DataType::Object);
+    }
+    else if (_network == "Homestead")
+    {
+        genesis["params"]["homesteadForkBlock"] = "0x00";
+    }
+    else if (_network == "EIP150")
+    {
+        genesis["params"]["homesteadForkBlock"] = "0x00";
+        genesis["params"]["EIP150ForkBlock"] = "0x00";
+    }
+    else if (_network == "EIP158")
+    {
+        genesis["params"]["homesteadForkBlock"] = "0x00";
+        genesis["params"]["EIP150ForkBlock"] = "0x00";
+        genesis["params"]["EIP158ForkBlock"] = "0x00";
+    }
+    else if (_network == "Byzantium")
+    {
+        genesis["params"]["homesteadForkBlock"] = "0x00";
+        genesis["params"]["EIP150ForkBlock"] = "0x00";
+        genesis["params"]["EIP158ForkBlock"] = "0x00";
+        genesis["params"]["byzantiumForkBlock"] = "0x00";
+    }
+    else if (_network == "Constantinople")
+    {
+        genesis["params"]["homesteadForkBlock"] = "0x00";
+        genesis["params"]["EIP150ForkBlock"] = "0x00";
+        genesis["params"]["EIP158ForkBlock"] = "0x00";
+        genesis["params"]["byzantiumForkBlock"] = "0x00";
+        genesis["params"]["constantinopleForkBlock"] = "0x00";
+    }
+    return genesis;
 }
 }

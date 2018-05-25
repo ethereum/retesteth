@@ -111,6 +111,7 @@ public:
 	void test_rewindToBlock(size_t _blockNr);
 	void test_modifyTimestamp(size_t _timestamp);
 	void test_mineBlocks(int _number);
+    void test_importRawBlock(std::string const& _blockRLP);
 
     Json::Value rpcCall(std::string const& _methodName, std::vector<std::string> const& _args = std::vector<std::string>(), bool _canFail = false);
 

@@ -216,23 +216,6 @@ void DataObject::clear()
     m_type = DataType::Null;
 }
 
-void DataObject::print(size_t level) const
-{
-	for (size_t i = 0; i < level; i++)
-		std::cerr << "-";
-	std::cerr << dataTypeAsString(m_type) << " ";
-	if (!m_strKey.empty())
-		std::cerr << m_strKey << ": ";
-	if (m_type == DataType::String)
-		std::cerr << m_strVal;
-	if (m_type == DataType::Integer)
-		std::cerr << (m_intVal);
-	std::cerr << std::endl;
-
-	for (auto const& obj : m_subObjects)
-		obj.print(level+1);
-}
-
 std::string DataObject::asJson(int level) const
 {
 	std::ostringstream out;
