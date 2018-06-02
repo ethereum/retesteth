@@ -13,11 +13,43 @@ namespace test {
         {
             for (auto const& accountObj : _state.getSubObjects())
                 m_accounts.push_back(scheme_expectAccount(accountObj));
-            refreshData();
+            refreshData();  // needed?
         }
         std::vector<scheme_expectAccount> const& getAccounts() const {return m_accounts; }
+        bool hasAccount(std::string const& _accountKey) const
+        {
+            for (auto const& acc : m_accounts)
+            {
+                if (acc.address() == _accountKey)
+                    return true;
+            }
+            return false;
+        }
+        std::string getBalance(std::string const& _accountKey) const
+        {
+            for (auto const& acc : m_accounts)
+            {
+                if (acc.address() == _accountKey)
+                    return acc.getBalance();
+            }
+            return std::string();
+        }
+        void setBalance(std::string const& _accountKey, u256 const& _balance)
+        {
+            bool changed = false;
+            for (auto& acc : m_accounts)
+            {
+                if (acc.address() == _accountKey)
+                {
+                    acc.setBalance(_balance);
+                    changed = true;
+                }
+            }
+            if (changed)
+                refreshData();
+        }
 
-        private:
+    private:
         std::vector<scheme_expectAccount> m_accounts;
         void refreshData()
         {

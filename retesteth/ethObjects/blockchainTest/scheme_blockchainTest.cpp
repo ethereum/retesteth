@@ -41,17 +41,6 @@ DataObject scheme_blockchainTest::getGenesisForRPC()
     data["timestamp"] = m_genesisHeader.getData().at("timestamp");
     data["mixHash"] = m_genesisHeader.getData().at("mixHash");
 
-    // blockchain tests data for block hash
-    // data["bloom"] = m_genesisHeader.getData().at("bloom");
-    // data["gasUsed"] = m_genesisHeader.getData().at("gasUsed");
-    // data["hash"] = m_genesisHeader.getData().at("hash");
-    // data["number"] = m_genesisHeader.getData().at("number");
-    // data["parentHash"] = m_genesisHeader.getData().at("parentHash");
-    // data["receiptTrie"] = m_genesisHeader.getData().at("receiptTrie");
-    // data["stateRoot"] = m_genesisHeader.getData().at("stateRoot");
-    // data["transactionsTrie"] = m_genesisHeader.getData().at("transactionsTrie");
-    // data["uncleHash"] = m_genesisHeader.getData().at("uncleHash");
-
     genesis["genesis"] = data;
     genesis["accounts"] = m_pre.getDataForRPC(getData().at("network").asString());
     return genesis;

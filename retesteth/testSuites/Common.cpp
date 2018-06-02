@@ -11,11 +11,12 @@ DataObject getRemoteState(RPCSession& _session, string const& _trHash, bool _ful
     const int cmaxRows = 1000;
     string latestBlockNumber = toString(u256(_session.eth_blockNumber()));
 
-    test::scheme_block latestBlock = _session.eth_getBlockByNumber(latestBlockNumber, false);
+    test::scheme_block latestBlock = _session.eth_getBlockByNumber(latestBlockNumber, true);
     remoteState["postHash"] = latestBlock.getData().at("stateRoot");
     if (!_trHash.empty())
         remoteState["logHash"] = _session.test_getLogHash(_trHash);
     remoteState["postState"] = "";
+    remoteState["rawBlockData"] = latestBlock.getData();
 
     if (_fullPost)
     {

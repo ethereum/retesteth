@@ -22,6 +22,7 @@ namespace test {
             makeAllFieldsHex(m_data);
         }
 
+        std::string getCoinbase() const { return m_data.at("currentCoinbase").asString(); }
         DataObject getDataForRPC() const
         {
             DataObject data;
@@ -33,6 +34,7 @@ namespace test {
             // this is genesis block timestamp
             // the actual timestamp of a block is set in the env section
             data["timestamp"] = "0x00";
+            data["mixHash"] = "0x00";
             return data;
         }
     };

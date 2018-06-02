@@ -52,14 +52,91 @@ bool OptionsAllowTransaction(scheme_generalTransaction::transactionInfo const& _
     return false;
 }
 
-/// Rewrite the test file
-DataObject FillTest(DataObject const& _testFile, TestSuite::TestSuiteOptions& _opt)
+/// Generate a blockchain test from state test filler
+DataObject FillTestAsBlockchain(DataObject const& _testFile, TestSuite::TestSuiteOptions& _opt)
 {
     DataObject filledTest;
     test::scheme_stateTestFiller test(_testFile);
 
-    // Copy Sctions form test source
-    filledTest.setKey(_testFile.getKey());
+    RPCSession& session = RPCSession::instance(TestOutputHelper::getThreadID());
+    // run transactions on all networks that we need
+    for (auto const& net : test.getAllNetworksFromExpectSection())
+    {
+        // run transactions for defined expect sections only
+        for (auto const& expect : test.getExpectSections())
+        {
+            // if expect section for this networks
+            if (expect.getNetworks().count(net))
+            {
+                for (auto& tr : test.getTransactionsUnsafe())
+                {
+                    if (!OptionsAllowTransaction(tr))
+                        continue;
+
+                    // if expect section is for this transaction
+                    if (!expect.checkIndexes(tr.dataInd, tr.gasInd, tr.valueInd))
+                        continue;
+
+                    // State Tests does not have mining rewards
+                    scheme_expectSectionElement mexpect = expect;
+                    mexpect.correctMiningReward(net, test.getEnv().getCoinbase());
+
+                    session.test_setChainParams(test.getGenesisForRPC(net).asJson());
+                    u256 a(test.getEnv().getData().at("currentTimestamp").asString());
+                    session.test_modifyTimestamp(a.convert_to<size_t>());
+                    string signedTransactionRLP = tr.transaction.getSignedRLP();
+                    string trHash = session.eth_sendRawTransaction(signedTransactionRLP);
+                    session.test_mineBlocks(1);
+                    tr.executed = true;
+
+                    DataObject remoteState = getRemoteState(session, trHash, true);
+
+                    // check that the post state qualifies to the expect section
+                    string testInfo = "Network: " + net + ", TrInfo: d: " + toString(tr.dataInd) +
+                                      ", g: " + toString(tr.gasInd) +
+                                      ", v: " + toString(tr.valueInd) + "\n";
+                    scheme_state postState(remoteState.at("postState"));
+                    CompareResult res = test::compareStates(mexpect.getExpectState(), postState);
+                    ETH_CHECK_MESSAGE(res == CompareResult::Success, testInfo);
+                    if (res != CompareResult::Success)
+                        _opt.wasErrors = true;
+
+                    DataObject aBlockchainTest;
+                    if (test.getData().count("_info"))
+                        aBlockchainTest["_info"] = test.getData().at("_info");
+                    aBlockchainTest["genesisBlockHeader"] = test.getEnv().getDataForRPC();
+                    aBlockchainTest["pre"] = test.getPre().getData();
+                    aBlockchainTest["postState"] = remoteState.at("postState");
+                    aBlockchainTest["network"] = net;
+
+                    test::scheme_block blockData(remoteState.at("rawBlockData"));
+                    ETH_REQUIRE_MESSAGE(blockData.getTransactionCount() == 1,
+                        "StateTest transaction execution failed! " + testInfo);
+                    aBlockchainTest["lastblockhash"] = blockData.getBlockHash();
+                    // block["genesisRLP"]
+                    // block["rlp"] = blockData.getBlockRLP();
+                    // aBlockchainTest["blocks"].addArrayObject(block);
+
+                    std::cerr << remoteState.at("rawBlockData").asJson() << std::endl;
+
+                    string dataPostfix = "_d" + toString(tr.dataInd) + "g" + toString(tr.gasInd) +
+                                         "v" + toString(tr.valueInd);
+                    dataPostfix += "_" + net;
+                    filledTest[_testFile.getKey() + dataPostfix] = aBlockchainTest;
+                    session.test_rewindToBlock(0);
+                }
+            }
+        }
+        test.checkUnexecutedTransactions();
+    }
+    return filledTest;
+}
+
+/// Rewrite the test file. Fill General State Test
+DataObject FillTest(DataObject const& _testFile, TestSuite::TestSuiteOptions& _opt)
+{
+    DataObject filledTest;
+    test::scheme_stateTestFiller test(_testFile);
 
     RPCSession& session = RPCSession::instance(TestOutputHelper::getThreadID());
     if (test.getData().count("_info"))
@@ -71,13 +148,9 @@ DataObject FillTest(DataObject const& _testFile, TestSuite::TestSuiteOptions& _o
     // run transactions on all networks that we need
     for (auto const& net: test.getAllNetworksFromExpectSection())
     {
-        if (!Options::get().singleTestNet.empty() && Options::get().singleTestNet != net)
-            continue;
-
-        session.test_setChainParams(test.getGenesisForRPC(net).asJson());
-
         DataObject forkResults;
         forkResults.setKey(net);
+        session.test_setChainParams(test.getGenesisForRPC(net).asJson());
 
         // run transactions for defined expect sections only
         for (auto const& expect : test.getExpectSections())
@@ -90,43 +163,38 @@ DataObject FillTest(DataObject const& _testFile, TestSuite::TestSuiteOptions& _o
                     if (!OptionsAllowTransaction(tr))
                         continue;
 
-                    bool blockMined = false;
                     // if expect section is for this transaction
-                    if (expect.checkIndexes(tr.dataInd, tr.gasInd, tr.valueInd))
-                    {
-                        u256 a(test.getEnv().getData().at("currentTimestamp").asString());
-                        session.test_modifyTimestamp(a.convert_to<size_t>());
-                        string trHash =
-                            session.eth_sendRawTransaction(tr.transaction.getSignedRLP());
-                        session.test_mineBlocks(1);
-                        tr.executed = true;
-                        blockMined = true;
+                    if (!expect.checkIndexes(tr.dataInd, tr.gasInd, tr.valueInd))
+                        continue;
 
-                        DataObject remoteState = getRemoteState(session, trHash, true);
+                    u256 a(test.getEnv().getData().at("currentTimestamp").asString());
+                    session.test_modifyTimestamp(a.convert_to<size_t>());
+                    string trHash = session.eth_sendRawTransaction(tr.transaction.getSignedRLP());
+                    session.test_mineBlocks(1);
+                    tr.executed = true;
 
-                        // check that the post state qualifies to the expect
-                        // section
-                        scheme_state postState(remoteState.at("postState"));
-                        CompareResult res = test::compareStates(expect.getExpectState(), postState);
-                        ETH_CHECK_MESSAGE(res == CompareResult::Success,
-                            "Network: " + net + ", TrInfo: d: " + toString(tr.dataInd) + ", g: " +
-                                toString(tr.gasInd) + ", v: " + toString(tr.valueInd) + "\n");
-                        if (res != CompareResult::Success)
-                            _opt.wasErrors = true;
+                    DataObject remoteState = getRemoteState(session, trHash, true);
 
-                        DataObject indexes;
-                        DataObject transactionResults;
-                        indexes["data"] = tr.dataInd;
-                        indexes["gas"] = tr.gasInd;
-                        indexes["value"] = tr.valueInd;
+                    // check that the post state qualifies to the expect section
+                    scheme_state postState(remoteState.at("postState"));
+                    CompareResult res = test::compareStates(expect.getExpectState(), postState);
+                    ETH_CHECK_MESSAGE(res == CompareResult::Success,
+                        "Network: " + net + ", TrInfo: d: " + toString(tr.dataInd) +
+                            ", g: " + toString(tr.gasInd) + ", v: " + toString(tr.valueInd) + "\n");
+                    if (res != CompareResult::Success)
+                        _opt.wasErrors = true;
 
-                        transactionResults["indexes"] = indexes;
-                        transactionResults["hash"] = remoteState.at("postHash").asString();
-                        transactionResults["logs"] = remoteState.at("logHash").asString();
-                        forkResults.addArrayObject(transactionResults);
-                    }
-                    if (blockMined)
-                        session.test_rewindToBlock(0);
+                    DataObject indexes;
+                    DataObject transactionResults;
+                    indexes["data"] = tr.dataInd;
+                    indexes["gas"] = tr.gasInd;
+                    indexes["value"] = tr.valueInd;
+
+                    transactionResults["indexes"] = indexes;
+                    transactionResults["hash"] = remoteState.at("postHash").asString();
+                    transactionResults["logs"] = remoteState.at("logHash").asString();
+                    forkResults.addArrayObject(transactionResults);
+                    session.test_rewindToBlock(0);
                 }
             }
         }
@@ -136,7 +204,6 @@ DataObject FillTest(DataObject const& _testFile, TestSuite::TestSuiteOptions& _o
     return filledTest;
 }
 
-std::mutex g_mutex;
 /// Read and execute the test file
 void RunTest(DataObject const& _testFile)
 {
@@ -216,35 +283,47 @@ DataObject StateTestSuite::doTests(DataObject const& _input, TestSuiteOptions& _
 		TestOutputHelper::get().testFile().string() + " A GeneralStateTest filler should contain only one test.");
 
     DataObject filledTest;
-	for (auto& i: _input.getSubObjects())
-	{
-		string const testname = i.getKey();
-        ETH_REQUIRE_MESSAGE(i.type() == DataType::Object,
-			TestOutputHelper::get().testFile().string() + " should contain an object under a test name.");
-		DataObject const& inputTest = i;
+    DataObject const& inputTest = _input.getSubObjects().at(0);
+    string const testname = inputTest.getKey();
+    ETH_REQUIRE_MESSAGE(
+        inputTest.type() == DataType::Object, TestOutputHelper::get().testFile().string() +
+                                                  " should contain an object under a test name.");
+
+    if (_opt.doFilling && !TestOutputHelper::get().testFile().empty())
+        ETH_REQUIRE_MESSAGE(
+            testname + "Filler" == TestOutputHelper::get().testFile().stem().string(),
+            TestOutputHelper::get().testFile().string() +
+                " contains a test with a different name '" + testname + "'");
+
+    if (!TestOutputHelper::get().checkTest(testname))
+        return filledTest;
+
+    if (_opt.doFilling)
+    {
         DataObject outputTest;
-		outputTest.setKey(testname);
-
-        if (_opt.doFilling && !TestOutputHelper::get().testFile().empty())
-            ETH_REQUIRE_MESSAGE(testname + "Filler" == TestOutputHelper::get().testFile().stem().string(),
-				TestOutputHelper::get().testFile().string() + " contains a test with a different name '" + testname + "'");
-
-		if (!TestOutputHelper::get().checkTest(testname))
-			continue;
-
-        if (_opt.doFilling)
-            outputTest = FillTest(inputTest, _opt);
-		else
-			RunTest(inputTest);
-
-        filledTest.addSubObject(outputTest);
-	}
+        if (Options::get().fillchain)
+        {
+            // Each transaction will produce many tests
+            outputTest = FillTestAsBlockchain(inputTest, _opt);
+            for (auto const& obj : outputTest.getSubObjects())
+                filledTest.addSubObject(obj);
+        }
+        else
+        {
+            outputTest[testname] = FillTest(inputTest, _opt);
+            filledTest.addSubObject(outputTest);
+        }
+    }
+    else if (!Options::get().fillchain)
+        RunTest(inputTest);
     return filledTest;
 }
 
 fs::path StateTestSuite::suiteFolder() const
 {
-	return "GeneralStateTests";
+    if (Options::get().fillchain)
+        return fs::path("BlockchainTests") / "GeneralStateTests2";
+    return "GeneralStateTests";
 }
 
 fs::path StateTestSuite::suiteFillerFolder() const
