@@ -4,11 +4,14 @@ using namespace test;
 scheme_blockchainTest::fieldChecker::fieldChecker(DataObject const& _test)
 {
     requireJsonFields(_test, "blockchainTest " + _test.getKey(),
-        {{"_info", {DataType::Object}}, {"blocks", {DataType::Array}},
-            {"genesisBlockHeader", {DataType::Object}}, {"genesisRLP", {DataType::String}},
-            {"lastblockhash", {DataType::String}}, {"network", {DataType::String}},
-            {"postState", {DataType::Object}}, {"pre", {DataType::Object}}},
-        {"genesisRLP"});
+        {{"_info", {{DataType::Object}, jsonField::Required}},
+            {"blocks", {{DataType::Array}, jsonField::Required}},
+            {"genesisBlockHeader", {{DataType::Object}, jsonField::Required}},
+            {"genesisRLP", {{DataType::String}, jsonField::Optional}},
+            {"lastblockhash", {{DataType::String}, jsonField::Required}},
+            {"network", {{DataType::String}, jsonField::Required}},
+            {"postState", {{DataType::Object}, jsonField::Required}},
+            {"pre", {{DataType::Object}, jsonField::Required}}});
 }
 
 scheme_blockchainTest::scheme_blockchainTest(DataObject const& _test)
@@ -27,9 +30,9 @@ scheme_blockchainTest::scheme_blockchainTest(DataObject const& _test)
     }
 }
 
-DataObject scheme_blockchainTest::getGenesisForRPC()
+DataObject scheme_blockchainTest::getGenesisForRPC(std::string const& _sealEngine)
 {
-    DataObject genesis = prepareGenesisParams(getData().at("network").asString());
+    DataObject genesis = prepareGenesisParams(getData().at("network").asString(), _sealEngine);
     // genesis["genesis"] = getEnv().getDataForRPC();
 
     DataObject data;

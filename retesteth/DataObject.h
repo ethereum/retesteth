@@ -5,15 +5,14 @@
 #include <libdevcore/CommonIO.h>
 
 namespace  test {
-
 enum DataType
 {
-	String,
-	Integer,
-	Bool,
-	Array,
-	Object,
-	Null
+    String,
+    Integer,
+    Bool,
+    Array,
+    Object,
+    Null
 };
 
 class DataObject

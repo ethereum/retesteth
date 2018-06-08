@@ -81,7 +81,7 @@ DataObject FillTestAsBlockchain(DataObject const& _testFile, TestSuite::TestSuit
                     scheme_expectSectionElement mexpect = expect;
                     mexpect.correctMiningReward(net, test.getEnv().getCoinbase());
 
-                    session.test_setChainParams(test.getGenesisForRPC(net).asJson());
+                    session.test_setChainParams(test.getGenesisForRPC(net, "Ethash").asJson());
                     u256 a(test.getEnv().getData().at("currentTimestamp").asString());
                     session.test_modifyTimestamp(a.convert_to<size_t>());
                     string signedTransactionRLP = tr.transaction.getSignedRLP();
@@ -113,11 +113,11 @@ DataObject FillTestAsBlockchain(DataObject const& _testFile, TestSuite::TestSuit
                     ETH_REQUIRE_MESSAGE(blockData.getTransactionCount() == 1,
                         "StateTest transaction execution failed! " + testInfo);
                     aBlockchainTest["lastblockhash"] = blockData.getBlockHash();
-                    // block["genesisRLP"]
-                    // block["rlp"] = blockData.getBlockRLP();
-                    // aBlockchainTest["blocks"].addArrayObject(block);
+                    aBlockchainTest["genesisRLP"] = "";
 
-                    std::cerr << remoteState.at("rawBlockData").asJson() << std::endl;
+                    DataObject block;
+                    block["rlp"] = blockData.getBlockRLP();
+                    aBlockchainTest["blocks"].addArrayObject(block);
 
                     string dataPostfix = "_d" + toString(tr.dataInd) + "g" + toString(tr.gasInd) +
                                          "v" + toString(tr.valueInd);

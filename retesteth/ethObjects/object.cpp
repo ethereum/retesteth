@@ -94,19 +94,16 @@ void object::makeAllFieldsHex(DataObject& _data)
 }
 
 void requireJsonFields(DataObject const& _o, std::string const& _section,
-    std::map<std::string, possibleType> const& _validationMap,
-    std::set<std::string> const& _ignoreFields)
+    std::map<std::string, possibleType> const& _validationMap)
 {
 	// check for unexpected fiedls
 	for (auto const field : _o.getSubObjects())
-		ETH_CHECK_MESSAGE(_validationMap.count(field.getKey()),
-			field.getKey() + " should not be declared in " + _section + " section!");
+        ETH_CHECK_MESSAGE(_validationMap.count(field.getKey()),
+            field.getKey() + " should not be declared in '" + _section + "' section!");
 
-	// check field types with validation map
+    // check field types with validation map
 	for (auto const vmap : _validationMap)
 	{
-        if (!_o.count(vmap.first) && _ignoreFields.count(vmap.first))
-            continue;
         ETH_REQUIRE_MESSAGE(_o.count(vmap.first) > 0, vmap.first + " not found in " + _section +
 															" section! " +
 															TestOutputHelper::get().testName());
@@ -122,12 +119,67 @@ void requireJsonFields(DataObject const& _o, std::string const& _section,
 		}
 		if (matched == false)
 		{
-			BOOST_ERROR(_section + " " + vmap.first + " expected to be " + sTypes +
-					", but set to " + DataObject::dataTypeAsString(_o.at(vmap.first).type()) + " in " +
-					TestOutputHelper::get().testName());
-		}
+            ETH_ERROR(_section + " " + vmap.first + " expected to be " + sTypes + ", but set to " +
+                      DataObject::dataTypeAsString(_o.at(vmap.first).type()) + " in " +
+                      TestOutputHelper::get().testName());
+        }
 	}
 }
+
+void requireJsonFields(DataObject const& _o, std::string const& _config,
+    std::map<std::string, jsonType> const& _validationMap)
+{
+    // check for unexpected fiedls
+    for (auto const& field : _o.getSubObjects())
+    {
+        if (!_validationMap.count(field.getKey()))
+        {
+            std::string const comment =
+                "Unexpected field '" + field.getKey() + "' in config: " + _config;
+            ETH_ERROR(comment + "\n" + _o.asJson());
+        }
+    }
+
+    // check field types with validation map
+    for (auto const vmap : _validationMap)
+    {
+        // check that all required fields are in the object
+        if (!_o.count(vmap.first))
+        {
+            if (vmap.second.second == jsonField::Required)
+            {
+                std::string const comment =
+                    "Expected field '" + vmap.first + "' not found in config: " + _config;
+                ETH_ERROR(comment + "\n" + _o.asJson());
+            }
+            else if (vmap.second.second == jsonField::Optional)
+                continue;
+        }
+
+        // check that field type is one of allowed field types
+        bool matched = false;
+        for (auto const& type : vmap.second.first)
+        {
+            if (_o.at(vmap.first).type() == type)
+                matched = true;
+        }
+        if (matched == false)
+        {
+            std::string sTypes;
+            for (auto const& type : vmap.second.first)
+            {
+                if (sTypes.size())
+                    sTypes += ", or ";
+                sTypes += DataObject::dataTypeAsString(type);
+            }
+            std::string const comment =
+                "Field '" + vmap.first + "' expected to be " + sTypes + ", but set to " +
+                DataObject::dataTypeAsString(_o.at(vmap.first).type()) + " in " + _config;
+            ETH_ERROR(comment + "\n" + _o.asJson());
+        }
+    }
+}
+
 
 DataObject object::prepareGenesisParams(std::string const& _network, std::string const& _engine)
 {

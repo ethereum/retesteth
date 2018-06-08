@@ -10,9 +10,10 @@ scheme_stateTestBase::scheme_stateTestBase(DataObject const& _test):
     m_transaction(_test.at("transaction"))
 {}
 
-DataObject scheme_stateTestBase::getGenesisForRPC(const string& _network) const
+DataObject scheme_stateTestBase::getGenesisForRPC(
+    const string& _network, const string& _sealEngine) const
 {
-    DataObject genesis = prepareGenesisParams(_network);
+    DataObject genesis = prepareGenesisParams(_network, _sealEngine);
     genesis["genesis"] = getEnv().getDataForRPC();
     genesis["accounts"] = getPre().getDataForRPC(_network);
     return genesis;
