@@ -304,6 +304,7 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
             DataObject output = doTests(v, opt);
             if (!opt.wasErrors)
             {
+                // Add client info for all of the tests in output
                 addClientInfo(output, boostRelativeTestPath, sha3(byteContents));
                 writeFile(boostTestPath, asBytes(output.asJson()));
             }

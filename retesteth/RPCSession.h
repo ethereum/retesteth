@@ -105,12 +105,13 @@ public:
 	Json::Value debug_accountRangeAt(std::string const& _blockHashOrNumber, int _txIndex, std::string const& _address, int _maxResults);
 	Json::Value debug_storageRangeAt(std::string const& _blockHashOrNumber, int _txIndex, std::string const& _address, std::string const& _begin, int _maxResults);
 
-	std::string test_getLogHash(std::string const& _txHash);
+    std::string test_getBlockStatus(std::string const& _blockHash);
+    std::string test_getLogHash(std::string const& _txHash);
 	void test_setChainParams(std::vector<std::string> const& _genesis);
 	void test_setChainParams(std::string const& _config);
 	void test_rewindToBlock(size_t _blockNr);
 	void test_modifyTimestamp(size_t _timestamp);
-	void test_mineBlocks(int _number);
+    void test_mineBlocks(int _number, std::string const& _hash = "");
     void test_importRawBlock(std::string const& _blockRLP);
 
     Json::Value rpcCall(std::string const& _methodName, std::vector<std::string> const& _args = std::vector<std::string>(), bool _canFail = false);

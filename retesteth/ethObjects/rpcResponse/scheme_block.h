@@ -35,6 +35,7 @@ namespace test {
                     {"seedHash", {{DataType::String}, jsonField::Optional}},
                     {"nonce", {{DataType::String}, jsonField::Optional}},
                     {"mixHash", {{DataType::String}, jsonField::Optional}}});
+
             for (auto const& trObj : m_data.at("transactions").getSubObjects())
             {
                 requireJsonFields(trObj, "block rpc",
@@ -42,7 +43,7 @@ namespace test {
                         {"from", {DataType::String}}, {"gas", {DataType::String}},
                         {"gasPrice", {DataType::String}}, {"hash", {DataType::String}},
                         {"input", {DataType::String}}, {"nonce", {DataType::String}},
-                        {"to", {DataType::String}}, {"v", {DataType::String}},
+                        {"to", {DataType::String, DataType::Null}}, {"v", {DataType::String}},
                         {"r", {DataType::String}}, {"s", {DataType::String}},
                         {"transactionIndex", {DataType::String}}, {"value", {DataType::String}}});
             }
@@ -76,27 +77,31 @@ namespace test {
             header << u256(m_data.at("nonce").asString());
             stream.appendRaw(header.out());
 
-            RLPStream transactionList(1);
-            RLPStream transactionRLP(9);
+            if (m_data.at("transactions").getSubObjects().size())
+            {
+                RLPStream transactionList(1);
+                RLPStream transactionRLP(9);
+                DataObject transaction = m_data.at("transactions").getSubObjects().at(0);
+                transactionRLP << u256(transaction.at("nonce").asString());
+                transactionRLP << u256(transaction.at("gasPrice").asString());
+                transactionRLP << u256(transaction.at("gas").asString());
+                if (transaction.at("to").type() == DataType::Null ||
+                    transaction.at("to").asString().empty())
+                    transactionRLP << "";
+                else
+                    transactionRLP << Address(transaction.at("to").asString());
+                transactionRLP << u256(transaction.at("value").asString());
+                transactionRLP << fromHex(transaction.at("input").asString());
 
-            DataObject transaction = m_data.at("transactions").getSubObjects().at(0);
-            transactionRLP << u256(transaction.at("nonce").asString());
-            transactionRLP << u256(transaction.at("gasPrice").asString());
-            transactionRLP << u256(transaction.at("gas").asString());
-            if (transaction.at("to").asString().empty())
-                transactionRLP << "";
+                byte v = 27 + (int)u256(transaction.at("v").asString().c_str());
+                transactionRLP << v;
+                transactionRLP << u256(transaction.at("r").asString());
+                transactionRLP << u256(transaction.at("s").asString());
+                transactionList.appendRaw(transactionRLP.out());
+                stream.appendRaw(transactionList.out());
+            }
             else
-                transactionRLP << Address(transaction.at("to").asString());
-            transactionRLP << u256(transaction.at("value").asString());
-            transactionRLP << fromHex(transaction.at("input").asString());
-
-            byte v = 27 + (int)u256(transaction.at("v").asString().c_str());
-            transactionRLP << v;
-            transactionRLP << u256(transaction.at("r").asString());
-            transactionRLP << u256(transaction.at("s").asString());
-
-            transactionList.appendRaw(transactionRLP.out());
-            stream.appendRaw(transactionList.out());
+                stream.appendRaw(RLPStream(0).out());  // empty transaction list
             stream.appendRaw(RLPStream(0).out());  // empty uncle list
 
             return dev::toHexPrefixed(stream.out());

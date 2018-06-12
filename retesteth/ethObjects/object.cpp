@@ -112,16 +112,16 @@ void requireJsonFields(DataObject const& _o, std::string const& _section,
 		for(auto const& type: vmap.second)
 		{
 			if (sTypes.size())
-				sTypes += ", or ";
-			sTypes += DataObject::dataTypeAsString(type);
+                sTypes += " or ";
+            sTypes += DataObject::dataTypeAsString(type);
 			if (_o.at(vmap.first).type() == type)
 				matched = true;
 		}
 		if (matched == false)
 		{
-            ETH_ERROR(_section + " " + vmap.first + " expected to be " + sTypes + ", but set to " +
-                      DataObject::dataTypeAsString(_o.at(vmap.first).type()) + " in " +
-                      TestOutputHelper::get().testName());
+            ETH_ERROR(_section + " '" + vmap.first + "' expected to be '" + sTypes +
+                      "', but set to: '" + DataObject::dataTypeAsString(_o.at(vmap.first).type()) +
+                      "' in " + TestOutputHelper::get().testName());
         }
 	}
 }

@@ -33,6 +33,7 @@
 #include <retesteth/TestOutputHelper.h>
 #include <retesteth/TestSuite.h>
 #include <retesteth/ethObjects/common.h>
+#include <retesteth/testSuites/BlockchainTests.h>
 #include <retesteth/testSuites/Common.h>
 #include <retesteth/testSuites/StateTests.h>
 
@@ -113,7 +114,9 @@ DataObject FillTestAsBlockchain(DataObject const& _testFile, TestSuite::TestSuit
                     ETH_REQUIRE_MESSAGE(blockData.getTransactionCount() == 1,
                         "StateTest transaction execution failed! " + testInfo);
                     aBlockchainTest["lastblockhash"] = blockData.getBlockHash();
-                    aBlockchainTest["genesisRLP"] = "";
+
+                    test::scheme_block genesisBlock = session.eth_getBlockByNumber("0", true);
+                    aBlockchainTest["genesisRLP"] = genesisBlock.getBlockRLP();
 
                     DataObject block;
                     block["rlp"] = blockData.getBlockRLP();
@@ -314,8 +317,16 @@ DataObject StateTestSuite::doTests(DataObject const& _input, TestSuiteOptions& _
             filledTest.addSubObject(outputTest);
         }
     }
-    else if (!Options::get().fillchain)
-        RunTest(inputTest);
+    else
+    {
+        if (Options::get().fillchain)
+        {
+            BlockchainTestSuite bcTestSuite;
+            bcTestSuite.doTests(_input, _opt);
+        }
+        else
+            RunTest(inputTest);
+    }
     return filledTest;
 }
 
