@@ -20,7 +20,7 @@ DataObject getRemoteState(RPCSession& _session, string const& _trHash, bool _ful
 
     if (_fullPost)
     {
-        int trIndex = 1000;
+        int trIndex = latestBlock.getTransactionCount(); //1000;
         DataObject accountObj;
         Json::Value res = _session.debug_accountRangeAt(latestBlockNumber, trIndex, "0", cmaxRows);
         for (auto acc : res["addressMap"])

@@ -107,7 +107,7 @@ string jsonTypeAsString(Json::ValueType _type)
 DataObject convertJsonCPPtoData(Json::Value const& _input)
 {
 	if (_input.isNull())
-        return DataObject(DataType::Null);  // threat json "null" as empty object
+        return DataObject(DataType::Null);
 
     if (_input.isBool())
 		return DataObject(_input.asBool());
