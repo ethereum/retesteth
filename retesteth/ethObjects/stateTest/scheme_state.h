@@ -52,5 +52,8 @@ namespace test {
                 m_data.addSubObject(accountObj.getData());
         }
 	};
+
+    /// Check two states agains each other
+    CompareResult compareStates(scheme_state const& _stateExpect, scheme_state const& _statePost);
 }
 

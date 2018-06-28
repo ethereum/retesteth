@@ -1,5 +1,6 @@
 #include "scheme_stateTest.h"
-using namespace  test;
+using namespace test;
+using namespace std;
 
 scheme_stateTestBase::scheme_stateTestBase(DataObject const& _test):
     object(_test),
@@ -7,8 +8,15 @@ scheme_stateTestBase::scheme_stateTestBase(DataObject const& _test):
     m_env(_test.at("env")),
     m_pre(_test.at("pre")),
     m_transaction(_test.at("transaction"))
-{
+{}
 
+DataObject scheme_stateTestBase::getGenesisForRPC(
+    const string& _network, const string& _sealEngine) const
+{
+    DataObject genesis = prepareGenesisParams(_network, _sealEngine);
+    genesis["genesis"] = getEnv().getDataForRPC();
+    genesis["accounts"] = getPre().getDataForRPC(_network);
+    return genesis;
 }
 
 scheme_stateTestBase::fieldChecker::fieldChecker(DataObject const& _test)
@@ -80,7 +88,13 @@ scheme_stateTestFiller::scheme_stateTestFiller(DataObject const& _test):
         for (auto const& net : expElement.getNetworks())
             m_allNetworksDeclaredInExpectSection.emplace(net);
     }
+
+    if (!Options::get().singleTestNet.empty())
+    {
+        if (m_allNetworksDeclaredInExpectSection.count(Options::get().singleTestNet))
+        {
+            m_allNetworksDeclaredInExpectSection.clear();
+            m_allNetworksDeclaredInExpectSection.emplace(Options::get().singleTestNet);
+        }
+    }
 }
-
-
-

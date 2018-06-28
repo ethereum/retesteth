@@ -5,15 +5,14 @@
 #include <libdevcore/CommonIO.h>
 
 namespace  test {
-
 enum DataType
 {
-	String,
-	Integer,
-	Bool,
-	Array,
-	Object,
-	Null
+    String,
+    Integer,
+    Bool,
+    Array,
+    Object,
+    Null
 };
 
 class DataObject
@@ -100,8 +99,6 @@ class DataObject
     void removeKey(std::string const& _key);
 
     void clear();
-
-    void print(size_t level = 0) const;
 
 	std::string asJson(int level = 0) const;
 	static std::string dataTypeAsString(DataType _type);

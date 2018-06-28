@@ -22,6 +22,18 @@ namespace  test {
         }
         std::set<std::string> const& getNetworks() const { return m_networks; }
         scheme_expectState const& getExpectState() const { return m_expectState; }
+        scheme_expectState& getExpectStateUnsafe() { return m_expectState; }
+        void correctMiningReward(std::string const& _net, std::string const& _coinbaseAddress)
+        {
+            u256 balance = 5000000000000000000;
+            if (_net == "Byzantium" || _net == "Constantinople")
+                balance = 3000000000000000000;
+            if (getExpectState().hasAccount(_coinbaseAddress))
+            {
+                u256 origBalance = u256(getExpectState().getBalance(_coinbaseAddress));
+                getExpectStateUnsafe().setBalance(_coinbaseAddress, origBalance + balance);
+            }
+        }
         bool checkIndexes(int _d, int _g, int _v) const
         {
             if ((m_dataIndexes.count(_d) || m_dataIndexes.count(-1)) &&

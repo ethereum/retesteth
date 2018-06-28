@@ -209,7 +209,7 @@ void RPCSession::runNewInstanceOfAClient(string const& _threadID)
     }
 
     sessionInfo info(fp, new RPCSession(ipcPath), tmpDir.string(), pid);
-    // sessionInfo info(fp, new RPCSession("/home/wins/.ethereum/geth.ipc"), dir, pid);
+    // sessionInfo info(fp, new RPCSession("/home/wins/.ethereum/geth.ipc"), tmpDir.string(), pid);
     {
         std::lock_guard<std::mutex> lock(g_socketMapMutex);  // function must be called from lock
         socketMap.insert(std::pair<string, sessionInfo>(_threadID, std::move(info)));
@@ -241,6 +241,8 @@ RPCSession& RPCSession::instance(const string& _threadID)
     if (needToCreateNew)
         runNewInstanceOfAClient(_threadID);
     std::lock_guard<std::mutex> lock(g_socketMapMutex);
+    ETH_REQUIRE_MESSAGE(socketMap.size() <= Options::get().threadCount,
+        "Something went wrong. Retesteth create more instances than needed!");
     return *(socketMap.at(_threadID).session.get());
 }
 
@@ -425,9 +427,19 @@ void RPCSession::test_setChainParams(vector<string> const& _accounts)
 	test_setChainParams(Json::FastWriter().write(config));
 }
 
+string RPCSession::test_getBlockStatus(std::string const& _blockHash)
+{
+    return rpcCall("test_getBlockStatus", {quote(_blockHash)}).asString();
+}
+
 string RPCSession::test_getLogHash(std::string const& _txHash)
 {
 	return rpcCall("test_getLogHash", { quote(_txHash) }).asString();
+}
+
+void RPCSession::test_importRawBlock(std::string const& _blockRLP)
+{
+    rpcCall("test_importRawBlock", {quote(_blockRLP)}, true);
 }
 
 void RPCSession::test_setChainParams(string const& _config)
@@ -440,9 +452,9 @@ void RPCSession::test_rewindToBlock(size_t _blockNr)
     ETH_REQUIRE(rpcCall("test_rewindToBlock", { to_string(_blockNr) }) == true);
 }
 
-void RPCSession::test_mineBlocks(int _number)
+void RPCSession::test_mineBlocks(int _number, string const& _hash)
 {
-	u256 startBlock = fromBigEndian<u256>(fromHex(rpcCall("eth_blockNumber").asString()));
+    // u256 startBlock = fromBigEndian<u256>(fromHex(rpcCall("eth_blockNumber").asString()));
     ETH_REQUIRE(rpcCall("test_mineBlocks", { to_string(_number) }, true) == true);
 
 	// We auto-calibrate the time it takes to mine the transaction.
@@ -460,10 +472,13 @@ void RPCSession::test_mineBlocks(int _number)
 			break; // could be that some blocks are invalid.
 			//ETH_FAIL("Error in test_mineBlocks: block mining timeout! " + test::TestOutputHelper::get().testName());
 
-		bigint number = fromBigEndian<u256>(fromHex(rpcCall("eth_blockNumber").asString()));
-		if (number >= startBlock + _number)
-			break;
-		else
+        // std::cerr << test_getBlockStatus(_hash) << std::endl;
+        // bigint number = fromBigEndian<u256>(fromHex(rpcCall("eth_blockNumber").asString()));
+        // if (number >= startBlock + _number)
+        //	break;
+        if (test_getBlockStatus(_hash) == "Ready")
+            break;
+        else
 			sleepTime *= 2;
 	}
 	if (tries > 1)

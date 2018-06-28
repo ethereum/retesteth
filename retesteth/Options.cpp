@@ -219,7 +219,9 @@ Options::Options(int argc, const char** argv)
         }
         else if (arg == "--fulloutput")
             fulloutput = true;
-		else if (arg == "--verbosity")
+        else if (arg == "--poststate")
+            poststate = true;
+        else if (arg == "--verbosity")
 		{
 			throwIfNoArgumentFollows();
 			static std::ostringstream strCout; //static string to redirect logs to

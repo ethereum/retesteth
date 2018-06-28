@@ -26,6 +26,17 @@ namespace  test {
         bool hasNonce() const { return m_hasNonce; }
         bool hasCode() const { return m_hasCode; }
         bool hasStorage() const { return m_hasStorage; }
+        std::string getBalance() const
+        {
+            if (m_hasBalance)
+                return m_data.at("balance").asString();
+            return "";
+        }
+        void setBalance(u256 const& _balance)
+        {
+            m_hasBalance = true;
+            m_data["balance"] = dev::toCompactHexPrefixed(_balance, 1);
+        }
         std::string const& address() const { return getData().getKey(); }
         CompareResult compareStorage(DataObject const& _storage) const
         {

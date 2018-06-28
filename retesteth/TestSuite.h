@@ -30,6 +30,7 @@ class TestSuite
 private:
 	// Execute Test.json file
 	void executeFile(boost::filesystem::path const& _file) const;
+    std::string checkFillerExistance(std::string const& _testFolder) const;
 
 protected:
 	// A folder of the test suite. like "VMTests". should be implemented for each test suite.
@@ -72,7 +73,6 @@ public:
 	// Structure  <suiteFolder>/<testFolder>/<test>.json
 	boost::filesystem::path getFullPath(std::string const& _testFolder) const;
 
-	void executeTests(const std::string& _name, boost::filesystem::path const& _testPathAppendix, boost::filesystem::path const& _fillerPathAppendix, std::function<Json::Value(Json::Value const&, bool)> doTests) const;
 };
 
 }
