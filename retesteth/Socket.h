@@ -47,9 +47,11 @@ private:
 
     std::string m_path;
     int m_socket;
+    SocketType m_socketType;
     /// Socket read timeout in milliseconds. Needs to be large because the key generation routine
     /// might take long.
     unsigned static constexpr m_readTimeOutMS = 30000;
     char m_readBuf[512000];
+    std::string sendRequestIPC(std::string const& _req);
 };
 #endif

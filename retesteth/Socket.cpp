@@ -4,10 +4,12 @@
 #include <thread>
 #include <iostream>
 #include <retesteth/EthChecks.h>
+#include <curl/curl.h>
+
 
 using namespace std;
 
-Socket::Socket(SocketType _type, string const& _path): m_path(_path)
+Socket::Socket(SocketType _type, string const& _path): m_path(_path), m_socketType(_type)
 {
 #if defined(_WIN32)
     m_socket = CreateFile(
@@ -78,36 +80,86 @@ Socket::Socket(SocketType _type, string const& _path): m_path(_path)
 #endif
 }
 
-string Socket::sendRequest(string const& _req)
+namespace
 {
-#if defined(_WIN32)
-    // Write to the pipe.
-    DWORD cbWritten;
-    BOOL fSuccess = WriteFile(
-        m_socket,               // pipe handle
-        _req.c_str(),           // message
-        _req.size(),            // message length
-        &cbWritten,             // bytes written
-        NULL);                  // not overlapped
+    std::size_t writecallback(
+            const char* in,
+            std::size_t size,
+            std::size_t num,
+            std::string* out)
+    {
+        const std::size_t totalBytes(size * num);
+        out->append(in, totalBytes);
+        return totalBytes;
+    }
 
-    if (!fSuccess || (_req.size() != cbWritten))
-        ETH_FAIL("WriteFile to pipe failed");
+    #if defined(_WIN32)
+    string sendRequestWin(string const& _req)
+    {
+        // Write to the pipe.
+        DWORD cbWritten;
+        BOOL fSuccess = WriteFile(
+            m_socket,               // pipe handle
+            _req.c_str(),           // message
+            _req.size(),            // message length
+            &cbWritten,             // bytes written
+            NULL);                  // not overlapped
 
-    // Read from the pipe.
-    DWORD cbRead;
-    fSuccess = ReadFile(
-        m_socket,          // pipe handle
-        m_readBuf,         // buffer to receive reply
-        sizeof(m_readBuf), // size of buffer
-        &cbRead,           // number of bytes read
-        NULL);             // not overlapped
+        if (!fSuccess || (_req.size() != cbWritten))
+            ETH_FAIL("WriteFile to pipe failed");
 
-    if (!fSuccess)
-        ETH_FAIL("ReadFile from pipe failed");
+        // Read from the pipe.
+        DWORD cbRead;
+        fSuccess = ReadFile(
+            m_socket,          // pipe handle
+            m_readBuf,         // buffer to receive reply
+            sizeof(m_readBuf), // size of buffer
+            &cbRead,           // number of bytes read
+            NULL);             // not overlapped
 
-    return string(m_readBuf, m_readBuf + cbRead);
-#else
+        if (!fSuccess)
+            ETH_FAIL("ReadFile from pipe failed");
 
+        return string(m_readBuf, m_readBuf + cbRead);
+    }
+    #endif
+
+    string sendRequestTCP(string const& _req, string const& _address)
+    {
+        CURL *curl;
+        CURLcode res;
+        curl = curl_easy_init();
+
+        string url = _address;
+        if (_address.find("http") == string::npos)
+            url = "http://" + _address;
+        if (curl)
+        {
+            std::unique_ptr<std::string> httpData(new std::string());
+            curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writecallback);
+            curl_easy_setopt(curl, CURLOPT_WRITEDATA, httpData.get());
+            struct curl_slist *header = NULL;
+            header = curl_slist_append(header, "Content-Type: application/json");
+            curl_easy_setopt(curl, CURLOPT_HTTPHEADER, header);
+            curl_easy_setopt(curl, CURLOPT_POSTFIELDS, _req.c_str());
+            curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, -1L);
+
+            res = curl_easy_perform(curl);
+            if(res != CURLE_OK)
+                ETH_FAIL("curl_easy_perform() failed " + string(curl_easy_strerror(res)));
+
+            curl_easy_cleanup(curl);
+            return *httpData.get();
+        }
+        else
+            ETH_FAIL("Error initializing Curl");
+        return string();
+    }
+}
+
+string Socket::sendRequestIPC(string const& _req)
+{
     char buf;
     recv(m_socket, &buf, 1, MSG_PEEK | MSG_DONTWAIT);
     if (errno == ENOTCONN)
@@ -150,5 +202,19 @@ string Socket::sendRequest(string const& _req)
         ETH_FAIL("Timeout reading on socket.");
 
     return reply;
-#endif
+}
+
+string Socket::sendRequest(string const& _req)
+{
+    #if defined(_WIN32)
+        return sendRequestWin(_req);
+    #endif
+
+    if (m_socketType == Socket::TCP)
+        return sendRequestTCP(_req, m_path);
+
+    if (m_socketType == Socket::IPC)
+        return sendRequestIPC(_req);
+
+    return string();
 }

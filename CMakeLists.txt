@@ -26,6 +26,8 @@ hunter_add_package(cryptopp)
 find_package(cryptopp CONFIG REQUIRED)
 hunter_add_package(libscrypt)
 find_package(libscrypt CONFIG REQUIRED)
+hunter_add_package(CURL)
+find_package(CURL CONFIG REQUIRED)
 
 
 #Cmake files configuration
