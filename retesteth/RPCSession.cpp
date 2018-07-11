@@ -39,122 +39,6 @@
 using namespace std;
 using namespace dev;
 
-IPCSocket::IPCSocket(string const& _path): m_path(_path)
-{
-#if defined(_WIN32)
-	m_socket = CreateFile(
-		m_path.c_str(),   // pipe name
-		GENERIC_READ |  // read and write access
-		GENERIC_WRITE,
-		0,              // no sharing
-		NULL,           // default security attribute
-		OPEN_EXISTING,  // opens existing pipe
-		0,              // default attributes
-		NULL);          // no template file
-
-	if (m_socket == INVALID_HANDLE_VALUE)
-		ETH_FAIL("Error creating IPC socket object!");
-
-#else
-	if (_path.length() >= sizeof(sockaddr_un::sun_path))
-		ETH_FAIL("Error opening IPC: socket path is too long!");
-
-	struct sockaddr_un saun;
-	memset(&saun, 0, sizeof(sockaddr_un));
-	saun.sun_family = AF_UNIX;
-	strcpy(saun.sun_path, _path.c_str());
-
-// http://idletechnology.blogspot.ca/2011/12/unix-domain-sockets-on-osx.html
-//
-// SUN_LEN() might be optimal, but it seemingly affects the portability,
-// with at least Android missing this macro.  Just using the sizeof() for
-// structure seemingly works, and would only have the side-effect of
-// sending larger-than-required packets over the socket.  Given that this
-// code is only used for unit-tests, that approach seems simpler.
-#if defined(__APPLE__)
-	saun.sun_len = sizeof(struct sockaddr_un);
-#endif //  defined(__APPLE__)
-
-	if ((m_socket = socket(AF_UNIX, SOCK_STREAM, 0)) < 0)
-		ETH_FAIL("Error creating IPC socket object");
-
-	if (connect(m_socket, reinterpret_cast<struct sockaddr const*>(&saun), sizeof(struct sockaddr_un)) < 0)
-	{
-		close(m_socket);
-		ETH_FAIL("Error connecting to IPC socket: " + _path);
-	}
-#endif
-}
-
-string IPCSocket::sendRequest(string const& _req)
-{
-#if defined(_WIN32)
-	// Write to the pipe.
-	DWORD cbWritten;
-	BOOL fSuccess = WriteFile(
-		m_socket,               // pipe handle
-		_req.c_str(),           // message
-		_req.size(),            // message length
-		&cbWritten,             // bytes written
-		NULL);                  // not overlapped
-
-	if (!fSuccess || (_req.size() != cbWritten))
-		ETH_FAIL("WriteFile to pipe failed");
-
-	// Read from the pipe.
-	DWORD cbRead;
-	fSuccess = ReadFile(
-		m_socket,          // pipe handle
-		m_readBuf,         // buffer to receive reply
-		sizeof(m_readBuf), // size of buffer
-		&cbRead,           // number of bytes read
-		NULL);             // not overlapped
-
-	if (!fSuccess)
-		ETH_FAIL("ReadFile from pipe failed");
-
-	return string(m_readBuf, m_readBuf + cbRead);
-#else
-	if (send(m_socket, _req.c_str(), _req.length(), 0) != (ssize_t)_req.length())
-		ETH_FAIL("Writing on IPC failed.");
-
-	auto start = chrono::steady_clock::now();
-	ssize_t ret;
-	string reply;
-	do
-	{
-		ret = recv(m_socket, m_readBuf, sizeof(m_readBuf), 0);
-
-		// Also consider closed socket an error.
-		if (ret < 0)
-			ETH_FAIL("Reading on IPC failed.");
-
-        // check for a long message
-        if (ret != 0)
-		{
-			ssize_t ret2 = ret;
-			do
-			{
-				reply += string(m_readBuf, m_readBuf + ret2);
-				ret2 = recv(m_socket, m_readBuf, sizeof(m_readBuf), MSG_DONTWAIT);
-				if (ret2 > 0)
-					std::this_thread::sleep_for(std::chrono::milliseconds(100)); //wait for socket update
-			}
-			while (ret2 > 0);
-		}
-	}
-	while (
-		ret == 0 &&
-		chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now() - start).count() < m_readTimeOutMS
-	);
-
-	if (ret == 0)
-		ETH_FAIL("Timeout reading on IPC.");
-
-	return reply;
-#endif
-}
-
 struct sessionInfo
 {
     sessionInfo(FILE* _pipe, RPCSession* _session, std::string const& _tmpDir, int _pid)
@@ -208,7 +92,9 @@ void RPCSession::runNewInstanceOfAClient(string const& _threadID)
         std::this_thread::sleep_for(std::chrono::seconds(4));
     }
 
-    sessionInfo info(fp, new RPCSession(ipcPath), tmpDir.string(), pid);
+    string ppp = "127.0.0.1:8545";
+    //sessionInfo info(fp, new RPCSession(Socket::SocketType::TCP, ppp), tmpDir.string(), pid);
+    sessionInfo info(fp, new RPCSession(Socket::SocketType::IPC, ipcPath), tmpDir.string(), pid);
     // sessionInfo info(fp, new RPCSession("/home/wins/.ethereum/geth.ipc"), tmpDir.string(), pid);
     {
         std::lock_guard<std::mutex> lock(g_socketMapMutex);  // function must be called from lock
@@ -454,7 +340,8 @@ void RPCSession::test_rewindToBlock(size_t _blockNr)
 
 void RPCSession::test_mineBlocks(int _number, string const& _hash)
 {
-    // u256 startBlock = fromBigEndian<u256>(fromHex(rpcCall("eth_blockNumber").asString()));
+       (void)_hash;
+    u256 startBlock = fromBigEndian<u256>(fromHex(rpcCall("eth_blockNumber").asString()));
     ETH_REQUIRE(rpcCall("test_mineBlocks", { to_string(_number) }, true) == true);
 
 	// We auto-calibrate the time it takes to mine the transaction.
@@ -473,11 +360,11 @@ void RPCSession::test_mineBlocks(int _number, string const& _hash)
 			//ETH_FAIL("Error in test_mineBlocks: block mining timeout! " + test::TestOutputHelper::get().testName());
 
         // std::cerr << test_getBlockStatus(_hash) << std::endl;
-        // bigint number = fromBigEndian<u256>(fromHex(rpcCall("eth_blockNumber").asString()));
-        // if (number >= startBlock + _number)
-        //	break;
-        if (test_getBlockStatus(_hash) == "Ready")
+         bigint number = fromBigEndian<u256>(fromHex(rpcCall("eth_blockNumber").asString()));
+         if (number >= startBlock + _number)
             break;
+        //if (test_getBlockStatus(_hash) == "Ready")
+        //    break;
         else
 			sleepTime *= 2;
 	}
@@ -500,39 +387,39 @@ void RPCSession::test_mineBlocks(int _number, string const& _hash)
 
 void RPCSession::test_modifyTimestamp(size_t _timestamp)
 {
-    ETH_REQUIRE(rpcCall("test_modifyTimestamp", { to_string(_timestamp) }) == true);
+    ETH_REQUIRE_MESSAGE(rpcCall("test_modifyTimestamp", { to_string(_timestamp) }) == true, "test_modifyTimestamp was not successfull");
 }
 
 Json::Value RPCSession::rpcCall(string const& _methodName, vector<string> const& _args, bool _canFail)
 {
-	string request = "{\"jsonrpc\":\"2.0\",\"method\":\"" + _methodName + "\",\"params\":[";
-	for (size_t i = 0; i < _args.size(); ++i)
-	{
-		request += _args[i];
-		if (i + 1 != _args.size())
-			request += ", ";
-	}
+    string request = "{\"jsonrpc\":\"2.0\",\"method\":\"" + _methodName + "\",\"params\":[";
+    for (size_t i = 0; i < _args.size(); ++i)
+    {
+        request += _args[i];
+        if (i + 1 != _args.size())
+            request += ", ";
+    }
 
-	request += "],\"id\":" + to_string(m_rpcSequence) + "}";
-	++m_rpcSequence;
+    request += "],\"id\":" + to_string(m_rpcSequence) + "}";
+    ++m_rpcSequence;
 
     ETH_TEST_MESSAGE("Request: " + request);
-	string reply = m_ipcSocket.sendRequest(request);
+    string reply = m_socket.sendRequest(request);
     ETH_TEST_MESSAGE("Reply: " + reply);
 
-	Json::Value result;
+    Json::Value result;
     ETH_REQUIRE(Json::Reader().parse(reply, result, false));
 
-	if (result.isMember("error"))
-	{
-		if (_canFail)
-			return Json::Value();
+    if (result.isMember("error"))
+    {
+        if (_canFail)
+            return Json::Value();
 
-		ETH_FAIL("Error on JSON-RPC call (" + test::TestOutputHelper::get().testName() + "): "
-		 + result["error"]["message"].asString()
-		 + " Request: " + request);
-	}
-	return result["result"];
+        ETH_FAIL("Error on JSON-RPC call (" + test::TestOutputHelper::get().testName() + "): "
+         + result["error"]["message"].asString()
+         + " Request: " + request);
+    }
+    return result["result"];
 }
 
 string const& RPCSession::accountCreate()
@@ -549,8 +436,8 @@ string const& RPCSession::accountCreateIfNotExists(size_t _id)
 	return m_accounts[_id];
 }
 
-RPCSession::RPCSession(const string& _path):
-	m_ipcSocket(_path)
+RPCSession::RPCSession(Socket::SocketType _type, const string& _path):
+    m_socket(_type, _path)
 {
 	//accountCreate();
 	//This will pre-fund the accounts create prior.

@@ -25,6 +25,7 @@
 #include <retesteth/TestOutputHelper.h>
 #include <retesteth/Options.h>
 #include <retesteth/ExitHandler.h>
+#include <libdevcore/Log.h>
 
 using namespace std;
 using namespace dev;
@@ -107,9 +108,13 @@ void TestOutputHelper::printBoostError()
 {
     size_t errorCount = 0;
     for (auto const& test: helperThreadMap)
+    {
         errorCount += test.second.getErrorCount();
+        for (auto const& a : test.second.getErrors())
+            ETH_TEST_MESSAGE(a);
+    }
     if (errorCount)
-        BOOST_ERROR("TestOutputHelper detected " + toString(errorCount) + " errors during test execution!"); // NOT THREAD SAFE !!!
+        ETH_ERROR("TestOutputHelper detected " + toString(errorCount) + " errors during test execution!"); // NOT THREAD SAFE !!!
     helperThreadMap.clear();
 }
 

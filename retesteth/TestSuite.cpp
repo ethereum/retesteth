@@ -301,12 +301,21 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
 
             removeComments(v);
             opt.doFilling = true;
-            DataObject output = doTests(v, opt);
-            if (!opt.wasErrors)
+
+            try
             {
-                // Add client info for all of the tests in output
-                addClientInfo(output, boostRelativeTestPath, sha3(byteContents));
-                writeFile(boostTestPath, asBytes(output.asJson()));
+                DataObject output = doTests(v, opt);
+                if (!opt.wasErrors)
+                {
+                    // Add client info for all of the tests in output
+                    addClientInfo(output, boostRelativeTestPath, sha3(byteContents));
+                    writeFile(boostTestPath, asBytes(output.asJson()));
+                }
+            }
+            catch(std::exception const&)
+            {
+                ETH_ERROR("ERROR OCCURED!");
+                RPCSession::sessionEnd(TestOutputHelper::getThreadID(), RPCSession::SessionStatus::HasFinished);
             }
         }
     }
@@ -317,9 +326,16 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
         if ((Options::get().singleTest && Options::get().singleTestName == testname) || !Options::get().singleTest)
             cnote << "TEST " << testname + ":";
 
-        executeFile(boostTestPath);
+        try
+        {
+            executeFile(boostTestPath);
+        }
+        catch(std::exception const&)
+        {
+            ETH_ERROR("ERROR OCCURED!");
+            RPCSession::sessionEnd(TestOutputHelper::getThreadID(), RPCSession::SessionStatus::HasFinished);
+        }
     }
-
     RPCSession::sessionEnd(TestOutputHelper::getThreadID(), RPCSession::SessionStatus::HasFinished);
 }
 

@@ -1,13 +1,5 @@
 #pragma once
 
-#if defined(_WIN32)
-#include <windows.h>
-#else
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/un.h>
-#endif
-
 #include <json/value.h>
 #include <boost/noncopyable.hpp>
 #include <boost/test/unit_test.hpp>
@@ -19,42 +11,7 @@
 #include <libdevcore/CommonData.h>
 #include <libdevcore/Common.h>
 #include <retesteth/ethObjects/common.h>
-
-#if defined(_WIN32)
-class IPCSocket : public boost::noncopyable
-{
-public:
-	explicit IPCSocket(std::string const& _path);
-	std::string sendRequest(std::string const& _req);
-	~IPCSocket() { CloseHandle(m_socket); }
-
-	std::string const& path() const { return m_path; }
-
-private:
-	std::string m_path;
-	HANDLE m_socket;
-	TCHAR m_readBuf[512000];
-};
-#else
-class IPCSocket: public boost::noncopyable
-{
-public:
-	explicit IPCSocket(std::string const& _path);
-	std::string sendRequest(std::string const& _req);
-	~IPCSocket() { close(m_socket); }
-
-	std::string const& path() const { return m_path; }
-
-private:
-
-	std::string m_path;
-	int m_socket;
-	/// Socket read timeout in milliseconds. Needs to be large because the key generation routine
-	/// might take long.
-	unsigned static constexpr m_readTimeOutMS = 300000;
-	char m_readBuf[512000];
-};
-#endif
+#include <retesteth/Socket.h>
 
 class RPCSession: public boost::noncopyable
 {
@@ -121,18 +78,17 @@ public:
 	std::string const& accountCreateIfNotExists(size_t _id);
 
 private:
-	explicit RPCSession(std::string const& _path);
-        static void runNewInstanceOfAClient(std::string const &_threadID);
+    explicit RPCSession(Socket::SocketType _type, std::string const& _path);
+    static void runNewInstanceOfAClient(std::string const &_threadID);
 
-        inline std::string quote(std::string const& _arg) { return "\"" + _arg + "\""; }
+    inline std::string quote(std::string const& _arg) { return "\"" + _arg + "\""; }
 	/// Parse std::string replacing keywords to values
 	void parseString(std::string& _string, std::map<std::string, std::string> const& _varMap);
 
-	IPCSocket m_ipcSocket;
+    Socket m_socket;
 	size_t m_rpcSequence = 1;
-        unsigned m_maxMiningTime =
-            250000;                // should be instant with --test (1 sec)
-        unsigned m_sleepTime = 10; // 10 milliseconds
+    unsigned m_maxMiningTime = 250000;    // should be instant with --test (1 sec)
+    unsigned m_sleepTime = 10;            // 10 milliseconds
 	unsigned m_successfulMineRuns = 0;
 
 	std::vector<std::string> m_accounts;

@@ -395,10 +395,7 @@ FILE* popen2(string const& _command, vector<string> const& _args, string const& 
 {
     string testIfCmdExist = "which " + _command;
     if (system(testIfCmdExist.c_str()) == 256)
-    {
         ETH_FAIL("Command " + _command + " not found in the system!");
-        return NULL;
-    }
 
     pid_t child_pid;
     int fd[2];

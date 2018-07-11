@@ -22,6 +22,7 @@
 #include <json/value.h>
 #include <boost/filesystem.hpp>
 #include <libdevcore/CommonData.h>
+#include <vector>
 
 namespace test
 {
@@ -40,8 +41,9 @@ public:
 
 	//void setMaxTests(int _count) { m_maxTests = _count; }
 	bool checkTest(std::string const& _testName);
-    void markError() { m_errorCount++; }
-    size_t getErrorCount() const { return m_errorCount; }
+    void markError(std::string const& _message) { m_errors.push_back(_message); }
+    std::vector<std::string> const& getErrors() const { return m_errors;}
+    int getErrorCount() const { return m_errors.size(); }
 	void setCurrentTestFile(boost::filesystem::path const& _name) { m_currentTestFileName = _name; }
 	void setCurrentTestName(std::string const& _name) { m_currentTestName = _name; }
 	std::string const& testName() { return m_currentTestName; }
@@ -60,7 +62,7 @@ public:
 	std::string m_currentTestName;
 	std::string m_currentTestCaseName;
     boost::filesystem::path m_currentTestFileName;
-    size_t m_errorCount = 0; //flag errors for triggering boost erros after all thread finished
+    std::vector<std::string> m_errors; //flag errors for triggering boost erros after all thread finished
     void printBoostError();
 };
 
