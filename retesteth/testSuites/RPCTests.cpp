@@ -126,5 +126,216 @@ BOOST_AUTO_TEST_CASE(net_listening)
     ETH_CHECK_EQUAL(obj.at("result").asBool(), false, cRpcError);
 }
 
+BOOST_AUTO_TEST_CASE(net_peerCount)
+{
+    string const requestStr = R"(
+       {"jsonrpc":"2.0","method":"net_peerCount","params":[],"id":74}
+    )";
+
+    DataObject obj = getResponse(session, requestStr);
+    test::requireJsonFields(obj, "net_peerCount",
+        {{"id", {DataType::Integer}}, {"jsonrpc", {DataType::String}},
+            {"result", {DataType::String}}});
+    checkIdAndVersion(obj, 74);
+    ETH_CHECK_EQUAL(obj.at("result").asString(), string("0x0"), cRpcError);
+}
+
+BOOST_AUTO_TEST_CASE(eth_protocolVersion)
+{
+    string const requestStr = R"(
+       {"jsonrpc":"2.0","method":"eth_protocolVersion","params":[],"id":67}
+    )";
+
+    DataObject obj = getResponse(session, requestStr);
+    test::requireJsonFields(obj, "eth_protocolVersion",
+        {{"id", {DataType::Integer}}, {"jsonrpc", {DataType::String}},
+            {"result", {DataType::String}}});
+    checkIdAndVersion(obj, 67);
+    ETH_CHECK_EQUAL(obj.at("result").asString(), string("0x3f"), cRpcError);
+}
+
+BOOST_AUTO_TEST_CASE(eth_syncing)
+{
+    string const requestStr = R"(
+       {"jsonrpc":"2.0","method":"eth_syncing","params":[],"id":1}
+    )";
+
+    DataObject obj = getResponse(session, requestStr);
+    test::requireJsonFields(obj, "eth_syncing",
+        {{"id", {DataType::Integer}}, {"jsonrpc", {DataType::String}},
+            {"result", {DataType::Object, DataType::Bool}}});
+    checkIdAndVersion(obj, 1);
+    ETH_CHECK_EQUAL(obj.at("result").asBool(), false, cRpcError);
+}
+
+BOOST_AUTO_TEST_CASE(eth_coinbase)
+{
+    string const requestStr = R"(
+       {"jsonrpc":"2.0","method":"eth_coinbase","params":[],"id":64}
+    )";
+
+    DataObject obj = getResponse(session, requestStr);
+    test::requireJsonFields(obj, "eth_coinbase",
+        {{"id", {DataType::Integer}}, {"jsonrpc", {DataType::String}},
+            {"result", {DataType::String}}});
+    checkIdAndVersion(obj, 64);
+    ETH_CHECK_EQUAL(obj.at("result").asString(),
+        string("0x0000000000000000000000000000000000000000"), cRpcError);
+}
+
+BOOST_AUTO_TEST_CASE(eth_mining)
+{
+    string const requestStr = R"(
+       {"jsonrpc":"2.0","method":"eth_mining","params":[],"id":71}
+    )";
+
+    DataObject obj = getResponse(session, requestStr);
+    test::requireJsonFields(obj, "eth_mining",
+        {{"id", {DataType::Integer}}, {"jsonrpc", {DataType::String}},
+            {"result", {DataType::Bool}}});
+    checkIdAndVersion(obj, 71);
+    ETH_CHECK_EQUAL(obj.at("result").asBool(), false, cRpcError);
+}
+
+BOOST_AUTO_TEST_CASE(eth_hashrate)
+{
+    string const requestStr = R"(
+       {"jsonrpc":"2.0","method":"eth_hashrate","params":[],"id":71}
+    )";
+
+    DataObject obj = getResponse(session, requestStr);
+    test::requireJsonFields(obj, "eth_hashrate",
+        {{"id", {DataType::Integer}}, {"jsonrpc", {DataType::String}},
+            {"result", {DataType::String}}});
+    checkIdAndVersion(obj, 71);
+    ETH_CHECK_EQUAL(obj.at("result").asString(), string("0x0"), cRpcError);
+}
+
+BOOST_AUTO_TEST_CASE(eth_gasPrice)
+{
+    string const requestStr = R"(
+       {"jsonrpc":"2.0","method":"eth_gasPrice","params":[],"id":73}
+    )";
+
+    DataObject obj = getResponse(session, requestStr);
+    test::requireJsonFields(obj, "eth_gasPrice",
+        {{"id", {DataType::Integer}}, {"jsonrpc", {DataType::String}},
+            {"result", {DataType::String}}});
+    checkIdAndVersion(obj, 73);
+    ETH_CHECK_EQUAL(obj.at("result").asString(), string("0x4a817c800"), cRpcError);
+}
+
+BOOST_AUTO_TEST_CASE(eth_accounts)
+{
+    string const requestStr = R"(
+       {"jsonrpc":"2.0","method":"eth_accounts","params":[],"id":1}
+    )";
+
+    DataObject obj = getResponse(session, requestStr);
+    test::requireJsonFields(obj, "eth_accounts",
+        {{"id", {DataType::Integer}}, {"jsonrpc", {DataType::String}},
+            {"result", {DataType::Array}}});
+    checkIdAndVersion(obj, 1);
+    ETH_CHECK_EQUAL((int)obj.at("result").getSubObjects().size(), 0, cRpcError);
+}
+
+BOOST_AUTO_TEST_CASE(eth_blockNumber)
+{
+    string const requestStr = R"(
+       {"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":83}
+    )";
+
+    DataObject obj = getResponse(session, requestStr);
+    test::requireJsonFields(obj, "eth_blockNumber",
+        {{"id", {DataType::Integer}}, {"jsonrpc", {DataType::String}},
+            {"result", {DataType::String}}});
+    checkIdAndVersion(obj, 83);
+    ETH_CHECK_EQUAL(obj.at("result").asString(), string("0x0"), cRpcError);
+}
+
+BOOST_AUTO_TEST_CASE(eth_getBalance)
+{
+    string const requestStr = R"(
+       {"jsonrpc":"2.0","method":"eth_getBalance","params":["0xc94770007dda54cF92009BFF0dE90c06F603a09f", "latest"],"id":1}
+    )";
+
+    DataObject obj = getResponse(session, requestStr);
+    test::requireJsonFields(obj, "eth_getBalance",
+        {{"id", {DataType::Integer}}, {"jsonrpc", {DataType::String}},
+            {"result", {DataType::String}}});
+    checkIdAndVersion(obj, 1);
+    ETH_CHECK_EQUAL(obj.at("result").asString(), string("0x0"), cRpcError);
+}
+
+BOOST_AUTO_TEST_CASE(eth_getStorageAt)
+{
+    string const requestStr = R"(
+       {"jsonrpc":"2.0", "method": "eth_getStorageAt", "params": ["0x295a70b2de5e3953354a6a8344e616ed314d7251", "0x0", "latest"], "id": 1}
+    )";
+
+    DataObject obj = getResponse(session, requestStr);
+    test::requireJsonFields(obj, "eth_getBalance",
+        {{"id", {DataType::Integer}}, {"jsonrpc", {DataType::String}},
+            {"result", {DataType::String}}});
+    checkIdAndVersion(obj, 1);
+    ETH_CHECK_EQUAL(obj.at("result").asString(),
+        string("0x0000000000000000000000000000000000000000000000000000000000000000"), cRpcError);
+}
+
+BOOST_AUTO_TEST_CASE(eth_getTransactionCount)
+{
+    string const requestStr = R"(
+       {"jsonrpc":"2.0","method":"eth_getTransactionCount","params":["0xc94770007dda54cF92009BFF0dE90c06F603a09f","latest"],"id":1}
+    )";
+
+    DataObject obj = getResponse(session, requestStr);
+    test::requireJsonFields(obj, "eth_getTransactionCount",
+        {{"id", {DataType::Integer}}, {"jsonrpc", {DataType::String}},
+            {"result", {DataType::String}}});
+    checkIdAndVersion(obj, 1);
+    ETH_CHECK_EQUAL(obj.at("result").asString(), string("0x0"), cRpcError);
+}
+
+BOOST_AUTO_TEST_CASE(eth_getBlockTransactionCountByHash)
+{
+    string const requestStr = R"(
+       {"jsonrpc":"2.0","method":"eth_getBlockTransactionCountByHash","params":["0xc94770007dda54cF92009BFF0dE90c06F603a09f"],"id":1}
+    )";
+
+    DataObject obj = getResponse(session, requestStr);
+    test::requireJsonFields(obj, "eth_getTransactionCount",
+        {{"id", {DataType::Integer}}, {"jsonrpc", {DataType::String}},
+            {"result", {DataType::String}}});
+    checkIdAndVersion(obj, 1);
+    ETH_CHECK_EQUAL(obj.at("result").asString(), string("0x0"), cRpcError);
+}
+
+BOOST_AUTO_TEST_CASE(eth_getBlockTransactionCountByNumber)
+{
+    string const requestStr = R"(
+       {"jsonrpc":"2.0","method":"eth_getBlockTransactionCountByNumber","params":["0xe8"],"id":1}
+    )";
+
+    DataObject obj = getResponse(session, requestStr);
+    test::requireJsonFields(obj, "eth_getBlockTransactionCountByNumber",
+        {{"id", {DataType::Integer}}, {"jsonrpc", {DataType::String}},
+            {"result", {DataType::String}}});
+    checkIdAndVersion(obj, 1);
+    ETH_CHECK_EQUAL(obj.at("result").asString(), string("0x0"), cRpcError);
+}
+
+BOOST_AUTO_TEST_CASE(eth_getUncleCountByBlockHash)
+{
+    string const requestStr = R"(
+       {"jsonrpc":"2.0","method":"eth_getUncleCountByBlockHash","params":["0xc94770007dda54cF92009BFF0dE90c06F603a09f"],"id":1}
+    )";
+
+    DataObject obj = getResponse(session, requestStr);
+    test::requireJsonFields(obj, "eth_getUncleCountByBlockHash",
+        {{"id", {DataType::Integer}}, {"jsonrpc", {DataType::String}},
+            {"result", {DataType::String}}});
+    checkIdAndVersion(obj, 1);
+    ETH_CHECK_EQUAL(obj.at("result").asString(), string("0x0"), cRpcError);
+}
 
 BOOST_AUTO_TEST_SUITE_END()

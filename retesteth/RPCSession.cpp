@@ -92,7 +92,7 @@ void RPCSession::runNewInstanceOfAClient(string const& _threadID)
         std::this_thread::sleep_for(std::chrono::seconds(4));
     }
 
-    // string ppp = "195.201.89.203:8080";
+    // string ppp = "127.0.0.1:8545";
     // sessionInfo info(fp, new RPCSession(Socket::SocketType::TCP, ppp), tmpDir.string(), pid);
     sessionInfo info(fp, new RPCSession(Socket::SocketType::IPC, ipcPath), tmpDir.string(), pid);
     // sessionInfo info(fp, new RPCSession("/home/wins/.ethereum/geth.ipc"), tmpDir.string(), pid);
