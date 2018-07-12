@@ -73,4 +73,15 @@ public:
 	~TestOutputHelperFixture() { TestOutputHelper::get().finishTest(); }
 };
 
+template <class T>
+inline std::string expButGot(T _exp, T _got)
+{
+    return "Expected: '" + std::to_string(_exp) + "', but Got: '" + std::to_string(_got) + "'";
+}
+
+inline std::string expButGot(std::string const& _exp, std::string const& _got)
+{
+    return "Expected: '" + _exp + "', but Got: '" + _got + "'";
+}
+
 } //namespace test

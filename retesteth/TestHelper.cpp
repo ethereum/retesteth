@@ -110,9 +110,9 @@ DataObject convertJsonCPPtoData(Json::Value const& _input)
         return DataObject(DataType::Null);
 
     if (_input.isBool())
-		return DataObject(_input.asBool());
+        return DataObject(DataType::Bool, _input.asBool());
 
-	if (_input.isString())
+    if (_input.isString())
 		return DataObject(_input.asString());
 
 	if (_input.isInt())

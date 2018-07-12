@@ -20,8 +20,8 @@ class DataObject
 	public:
 	DataObject();
 	DataObject(DataType _type);
-	//DataObject(bool _bool);
-	DataObject(std::string const& _str);
+    DataObject(DataType _type, bool _bool);
+    DataObject(std::string const& _str);
 	DataObject(std::string const& _key, std::string const& _str);
 	DataObject(int _int);
 	DataType type() const;

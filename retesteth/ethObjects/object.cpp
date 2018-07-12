@@ -119,9 +119,11 @@ void requireJsonFields(DataObject const& _o, std::string const& _section,
 		}
 		if (matched == false)
 		{
-            ETH_ERROR(_section + " '" + vmap.first + "' expected to be '" + sTypes +
-                      "', but set to: '" + DataObject::dataTypeAsString(_o.at(vmap.first).type()) +
-                      "' in " + TestOutputHelper::get().testName());
+            std::string comment = _section + " '" + vmap.first + "' expected to be '" + sTypes +
+                                  "', but set to: '" +
+                                  DataObject::dataTypeAsString(_o.at(vmap.first).type()) + "' in " +
+                                  TestOutputHelper::get().testName();
+            ETH_ERROR(comment + "\n" + _o.asJson());
         }
 	}
 }

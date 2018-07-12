@@ -312,9 +312,9 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
                     writeFile(boostTestPath, asBytes(output.asJson()));
                 }
             }
-            catch(std::exception const&)
+            catch (std::exception const& _ex)
             {
-                ETH_ERROR("ERROR OCCURED!");
+                ETH_ERROR("ERROR OCCURED: " + string(_ex.what()));
                 RPCSession::sessionEnd(TestOutputHelper::getThreadID(), RPCSession::SessionStatus::HasFinished);
             }
         }
@@ -330,9 +330,9 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
         {
             executeFile(boostTestPath);
         }
-        catch(std::exception const&)
+        catch (std::exception const& _ex)
         {
-            ETH_ERROR("ERROR OCCURED!");
+            ETH_ERROR("ERROR OCCURED: " + string(_ex.what()));
             RPCSession::sessionEnd(TestOutputHelper::getThreadID(), RPCSession::SessionStatus::HasFinished);
         }
     }

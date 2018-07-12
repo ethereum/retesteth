@@ -29,6 +29,13 @@ DataObject::DataObject(int _int)
 	m_intVal = _int;
 }
 
+/// Define dataobject of bool
+DataObject::DataObject(DataType type, bool _bool)
+{
+    m_type = type;
+    m_boolVal = _bool;
+}
+
 /// Get dataobject type
 DataType DataObject::type() const {	return m_type; }
 
@@ -291,8 +298,10 @@ std::string DataObject::asJson(int level) const
 			printLevel();
 			if (!m_strKey.empty())
 				out << "\"" << m_strKey << "\" : ";
-			out << m_boolVal;
-		break;
+            if (m_boolVal)
+                out << "true";
+            out << "false";
+            break;
 		default:
 			out << "unknown " << dataTypeAsString(m_type) << std::endl;
 		break;

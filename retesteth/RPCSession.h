@@ -71,6 +71,7 @@ public:
     void test_mineBlocks(int _number, std::string const& _hash = "");
     void test_importRawBlock(std::string const& _blockRLP);
 
+    std::string sendRawRequest(std::string const& _request);
     Json::Value rpcCall(std::string const& _methodName, std::vector<std::string> const& _args = std::vector<std::string>(), bool _canFail = false);
 
 	std::string const& account(size_t _id) const { return m_accounts.at(_id); }

@@ -92,8 +92,8 @@ void RPCSession::runNewInstanceOfAClient(string const& _threadID)
         std::this_thread::sleep_for(std::chrono::seconds(4));
     }
 
-    string ppp = "127.0.0.1:8545";
-    //sessionInfo info(fp, new RPCSession(Socket::SocketType::TCP, ppp), tmpDir.string(), pid);
+    // string ppp = "195.201.89.203:8080";
+    // sessionInfo info(fp, new RPCSession(Socket::SocketType::TCP, ppp), tmpDir.string(), pid);
     sessionInfo info(fp, new RPCSession(Socket::SocketType::IPC, ipcPath), tmpDir.string(), pid);
     // sessionInfo info(fp, new RPCSession("/home/wins/.ethereum/geth.ipc"), tmpDir.string(), pid);
     {
@@ -388,6 +388,11 @@ void RPCSession::test_mineBlocks(int _number, string const& _hash)
 void RPCSession::test_modifyTimestamp(size_t _timestamp)
 {
     ETH_REQUIRE_MESSAGE(rpcCall("test_modifyTimestamp", { to_string(_timestamp) }) == true, "test_modifyTimestamp was not successfull");
+}
+
+std::string RPCSession::sendRawRequest(string const& _request)
+{
+    return m_socket.sendRequest(_request);
 }
 
 Json::Value RPCSession::rpcCall(string const& _methodName, vector<string> const& _args, bool _canFail)

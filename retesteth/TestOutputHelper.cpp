@@ -54,7 +54,7 @@ TestOutputHelper& TestOutputHelper::get()
 void TestOutputHelper::initTest(size_t _maxTests)
 {
     //_maxTests = 0 means this function is called from testing thread
-    m_currentTestName = "n/a";
+    m_currentTestName = string();
     m_currentTestFileName = string();
     m_timer = Timer();
     m_timer.restart();
@@ -114,7 +114,11 @@ void TestOutputHelper::printBoostError()
             ETH_TEST_MESSAGE(a);
     }
     if (errorCount)
-        ETH_ERROR("TestOutputHelper detected " + toString(errorCount) + " errors during test execution!"); // NOT THREAD SAFE !!!
+    {
+        ETH_ERROR(
+            "TestOutputHelper detected " + toString(errorCount) + " errors during test execution!");
+        BOOST_ERROR("");  // NOT THREAD SAFE !!!
+    }
     helperThreadMap.clear();
 }
 
