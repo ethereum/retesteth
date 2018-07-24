@@ -46,7 +46,7 @@ public:
 	bool jsontrace = false; ///< Vmtrace to stdout in json format
 	//eth::StandardTrace::DebugOptions jsontraceOptions; ///< output config for jsontrace
 	std::string testpath;	///< Custom test folder path
-	Verbosity logVerbosity = Verbosity::NiceReport;
+    unsigned logVerbosity = 1;
 	boost::optional<boost::filesystem::path> randomCodeOptionsPath; ///< Options for random code generation in fuzz tests
 
 	/// Test selection

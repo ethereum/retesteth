@@ -1,4 +1,3 @@
-#include <libdevcore/Log.h>
 #include <retesteth/EthChecks.h>
 #include <retesteth/Options.h>
 #include <retesteth/TestOutputHelper.h>
@@ -10,7 +9,7 @@ namespace test {
 
 void eth_test_message(std::string const& _message)
 {
-    if (g_logVerbosity > 6)
+    if (Options::get().logVerbosity >= 6)
         std::cerr << _message << std::endl;
 }
 

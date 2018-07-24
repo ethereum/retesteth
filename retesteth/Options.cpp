@@ -225,21 +225,16 @@ Options::Options(int argc, const char** argv)
 		{
 			throwIfNoArgumentFollows();
 			static std::ostringstream strCout; //static string to redirect logs to
-			std::string indentLevel = std::string{argv[++i]};
-			if (indentLevel == "0")
-			{
-				logVerbosity = Verbosity::None;
-				std::cout.rdbuf(strCout.rdbuf());
-				std::cerr.rdbuf(strCout.rdbuf());
-			}
-			else if (indentLevel == "1")
-				logVerbosity = Verbosity::NiceReport;
-			else
-				logVerbosity = Verbosity::Full;
-
-			int indentLevelInt = atoi(argv[i]);
-			if (indentLevelInt > g_logVerbosity)
-				g_logVerbosity = indentLevelInt;
+            logVerbosity = atoi(argv[++i]);
+            if (logVerbosity == 0)
+            {
+                // disable all output
+                std::cout.rdbuf(strCout.rdbuf());
+                std::cerr.rdbuf(strCout.rdbuf());
+                break;
+            }
+            if (logVerbosity > (size_t)g_logVerbosity)
+                g_logVerbosity = logVerbosity;
 		}
 		else if (arg == "--options")
 		{
@@ -348,7 +343,7 @@ Options::Options(int argc, const char** argv)
 	}
 
 	//Default option
-	if (logVerbosity == Verbosity::NiceReport)
+    if (logVerbosity == 1)
 		g_logVerbosity = -1;	//disable cnote but leave cerr and cout
 }
 

@@ -109,9 +109,9 @@ void TestOutputHelper::printBoostError()
     size_t errorCount = 0;
     for (auto const& test: helperThreadMap)
     {
-        errorCount += test.second.getErrorCount();
+        errorCount += test.second.getErrors().size();
         for (auto const& a : test.second.getErrors())
-            ETH_TEST_MESSAGE(a);
+            ETH_TEST_MESSAGE("Error: " + a);
     }
     if (errorCount)
     {

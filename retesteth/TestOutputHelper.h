@@ -43,8 +43,7 @@ public:
 	bool checkTest(std::string const& _testName);
     void markError(std::string const& _message) { m_errors.push_back(_message); }
     std::vector<std::string> const& getErrors() const { return m_errors;}
-    int getErrorCount() const { return m_errors.size(); }
-	void setCurrentTestFile(boost::filesystem::path const& _name) { m_currentTestFileName = _name; }
+    void setCurrentTestFile(boost::filesystem::path const& _name) { m_currentTestFileName = _name; }
 	void setCurrentTestName(std::string const& _name) { m_currentTestName = _name; }
 	std::string const& testName() { return m_currentTestName; }
 	std::string const& caseName() { return m_currentTestCaseName; }

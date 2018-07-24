@@ -60,6 +60,9 @@ std::mutex g_socketMapMutex;
 static std::map<std::string, sessionInfo> socketMap;
 void RPCSession::runNewInstanceOfAClient(string const& _threadID)
 {
+    // TODO
+    // Execute as a shell config script from the tests folder with given params
+
     fs::path tmpDir = test::createUniqueTmpDirectory();
     string ipcPath = tmpDir.string() + "/geth.ipc";
 
@@ -158,7 +161,7 @@ RPCSession::SessionStatus RPCSession::sessionStatus(std::string const& _threadID
 
 void closeSession(const string& _threadID)
 {
-    ETH_REQUIRE(socketMap.count(_threadID));
+    ETH_REQUIRE_MESSAGE(socketMap.count(_threadID), "Socket map is empty in closeSession!");
     sessionInfo& element = socketMap.at(_threadID);
     test::pclose2(element.filePipe.get(), element.pipePid);
     std::this_thread::sleep_for(std::chrono::seconds(4));
@@ -307,7 +310,7 @@ void RPCSession::test_setChainParams(vector<string> const& _accounts)
 	)";
 
 	Json::Value config;
-    ETH_REQUIRE(Json::Reader().parse(c_configString, config));
+    ETH_REQUIRE_MESSAGE(Json::Reader().parse(c_configString, config), "setChainParams json is incorrect!");
 	for (auto const& account: _accounts)
 		config["accounts"][account]["wei"] = "0x100000000000000000000000000000000000000000";
 	test_setChainParams(Json::FastWriter().write(config));
@@ -330,19 +333,19 @@ void RPCSession::test_importRawBlock(std::string const& _blockRLP)
 
 void RPCSession::test_setChainParams(string const& _config)
 {
-    ETH_REQUIRE(rpcCall("test_setChainParams", { _config }) == true);
+    ETH_REQUIRE_MESSAGE(rpcCall("test_setChainParams", { _config }) == true, "remote test_setChainParams = false");
 }
 
 void RPCSession::test_rewindToBlock(size_t _blockNr)
 {
-    ETH_REQUIRE(rpcCall("test_rewindToBlock", { to_string(_blockNr) }) == true);
+    ETH_REQUIRE_MESSAGE(rpcCall("test_rewindToBlock", { to_string(_blockNr) }) == true, "remote test_rewintToBlock = false");
 }
 
 void RPCSession::test_mineBlocks(int _number, string const& _hash)
 {
        (void)_hash;
     u256 startBlock = fromBigEndian<u256>(fromHex(rpcCall("eth_blockNumber").asString()));
-    ETH_REQUIRE(rpcCall("test_mineBlocks", { to_string(_number) }, true) == true);
+    ETH_REQUIRE_MESSAGE(rpcCall("test_mineBlocks", { to_string(_number) }, true) == true, "remote test_mineBlocks = false");
 
 	// We auto-calibrate the time it takes to mine the transaction.
 	// It would be better to go without polling, but that would probably need a change to the test client
@@ -413,7 +416,7 @@ Json::Value RPCSession::rpcCall(string const& _methodName, vector<string> const&
     ETH_TEST_MESSAGE("Reply: " + reply);
 
     Json::Value result;
-    ETH_REQUIRE(Json::Reader().parse(reply, result, false));
+    ETH_REQUIRE_MESSAGE(Json::Reader().parse(reply, result, false), "error parsing json from remote response!");
 
     if (result.isMember("error"))
     {
