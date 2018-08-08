@@ -79,7 +79,7 @@ bool DataObject::count(std::string const& _key) const
 }
 
 /// Get string value
-std::string DataObject::asString() const
+std::string const& DataObject::asString() const
 {
 	_assert(m_type == DataType::String, "m_type == DataType::String");
 	return m_strVal;

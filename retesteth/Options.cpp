@@ -24,9 +24,13 @@
 #include <libdevcore/Log.h>
 #include <retesteth/Options.h>
 #include <retesteth/TestHelper.h>
+#include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
 
 using namespace std;
 using namespace test;
+namespace fs = boost::filesystem;
+Options::DynamicOptions Options::m_dynamicOptions;
 
 void printHelp()
 {
@@ -274,7 +278,9 @@ Options::Options(int argc, const char** argv)
 		else if (arg == "--testpath")
 		{
 			throwIfNoArgumentFollows();
-			testpath = std::string{argv[++i]};
+            ETH_REQUIRE_MESSAGE(testpath.empty(),
+                "testpath is already set! Make sure that testpath is provided as a first option.");
+            testpath = std::string{argv[++i]};
 		}
 		else if (arg == "--statediff")
 			statediff = true;
@@ -317,7 +323,20 @@ Options::Options(int argc, const char** argv)
 				BOOST_WARN("Seed is > u64. Using u64_max instead.");
 			randomTestSeed = static_cast<uint64_t>(min<u256>(std::numeric_limits<uint64_t>::max(), input));*/
 		}
-		else if (seenSeparator)
+        else if (arg == "--clients")
+        {
+            throwIfNoArgumentFollows();
+            vector<string> clientNames;
+            string nnn = std::string{argv[++i]};
+            boost::split(clientNames, nnn, boost::is_any_of(", "));
+            for (auto& it : clientNames)
+            {
+                boost::algorithm::trim(it);
+                if (!it.empty())
+                    clients.push_back(it);
+            }
+        }
+        else if (seenSeparator)
 		{
 			cerr << "Unknown option: " + arg << "\n";
 			exit(1);

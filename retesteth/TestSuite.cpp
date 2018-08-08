@@ -220,21 +220,43 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
     // run all tests
     vector<fs::path> const files =
         test::getFiles(getFullPathFiller(_testFolder), {".json", ".yml"}, filter);
-    auto& testOutput = test::TestOutputHelper::get();
-    vector<thread> threadVector;
-    testOutput.initTest(files.size());
-    for (auto const& file : files)
+
+    // repeat this part for all connected clients
+    auto thisPart = [this, &files, &_testFolder]() {
+        auto& testOutput = test::TestOutputHelper::get();
+        vector<thread> threadVector;
+        testOutput.initTest(files.size());
+        for (auto const& file : files)
+        {
+            if (ExitHandler::shouldExit())
+                break;
+            testOutput.showProgress();
+            if (threadVector.size() == Options::get().threadCount)
+                joinThreads(threadVector, false);
+            thread testThread(&TestSuite::executeTest, this, _testFolder, file);
+            threadVector.push_back(std::move(testThread));
+        }
+        joinThreads(threadVector, true);
+        testOutput.finishTest();
+    };
+    runFunctionForAllClients(thisPart);
+}
+
+
+void TestSuite::runFunctionForAllClients(std::function<void()> _func)
+{
+    for (auto const& clientName : Options::get().clients)
     {
-        if (ExitHandler::shouldExit())
-            break;
-        testOutput.showProgress();
-        if (threadVector.size() == Options::get().threadCount)
-            joinThreads(threadVector, false);
-        thread testThread(&TestSuite::executeTest, this, _testFolder, file);
-        threadVector.push_back(std::move(testThread));
+        fs::path configFilePath = getTestPath() / fs::path("Retesteth") / clientName / "config";
+        ETH_REQUIRE_MESSAGE(fs::exists(configFilePath),
+            string("Client config not found: ") + configFilePath.c_str());
+        ClientConfig* cfg = new ClientConfig(
+            test::convertJsonCPPtoData(readJson(dev::contentsString(configFilePath))));
+        Options::getDynamicOptions().currentConfig = cfg;
+        std::cerr << "RUNNING ON CLIENT==== "
+                  << Options::getDynamicOptions().currentConfig->getName() << std::endl;
+        _func();
     }
-    joinThreads(threadVector, true);
-    testOutput.finishTest();
 }
 
 fs::path TestSuite::getFullPathFiller(string const& _testFolder) const

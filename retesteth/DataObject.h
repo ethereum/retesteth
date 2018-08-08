@@ -34,8 +34,8 @@ class DataObject
 	void setSubObjectKey(size_t _index, std::string const& _key);
 
 	bool count(std::string const& _key) const;
-	std::string asString() const;
-	int asInt() const;
+    std::string const& asString() const;
+    int asInt() const;
 	bool asBool() const;
 
 	void setKeyPos(std::string const& _key, size_t _pos);

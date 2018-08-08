@@ -60,11 +60,10 @@ boost::filesystem::path getTestPath()
 
 	string testPath;
 	const char* ptestPath = getenv("ETHEREUM_TEST_PATH");
-
 	if (ptestPath == nullptr)
 	{
-//		ctest << " could not find environment variable ETHEREUM_TEST_PATH \n";
-		testPath = "../../test/jsontests";
+        ETH_TEST_MESSAGE("could not find environment variable ETHEREUM_TEST_PATH");
+        testPath = "../../test/jsontests";
 	}
 	else
 		testPath = ptestPath;

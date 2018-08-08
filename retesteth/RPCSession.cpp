@@ -66,8 +66,9 @@ void RPCSession::runNewInstanceOfAClient(string const& _threadID)
     fs::path tmpDir = test::createUniqueTmpDirectory();
     string ipcPath = tmpDir.string() + "/geth.ipc";
 
-    string command = "eth";
+    string command = "bash";
     std::vector<string> args;
+    args.push_back("/home/wins/Ethereum/tests/Retesteth/eth.sh");
     args.push_back("--test");           // 1
     args.push_back("--db-path");        // 2
     args.push_back(tmpDir.string());    // 3
