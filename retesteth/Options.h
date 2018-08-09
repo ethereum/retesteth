@@ -22,7 +22,13 @@ public:
     struct DynamicOptions
     {
         DynamicOptions() {}
-        ClientConfig* currentConfig;
+        std::vector<ClientConfig> const& getClientConfigs();
+        ClientConfig const& getCurrentConfig() const;
+        void setCurrentConfig(ClientConfig const& _config);
+
+    private:
+        std::vector<ClientConfig> m_clientConfigs;
+        unsigned m_currentConfig;
     };
 
     size_t threadCount = 1;	///< Execute tests on threads

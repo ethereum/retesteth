@@ -77,10 +77,11 @@ public:
 	std::string const& account(size_t _id) const { return m_accounts.at(_id); }
 	std::string const& accountCreate();
 	std::string const& accountCreateIfNotExists(size_t _id);
+    Socket::SocketType getSocketType() const { return m_socket.type(); }
 
 private:
     explicit RPCSession(Socket::SocketType _type, std::string const& _path);
-    static void runNewInstanceOfAClient(std::string const &_threadID);
+    static void runNewInstanceOfAClient(std::string const& _threadID, ClientConfig const& _config);
 
     inline std::string quote(std::string const& _arg) { return "\"" + _arg + "\""; }
 	/// Parse std::string replacing keywords to values

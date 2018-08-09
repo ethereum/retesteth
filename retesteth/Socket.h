@@ -42,6 +42,7 @@ public:
     ~Socket() { close(m_socket); }
 
     std::string const& path() const { return m_path; }
+    SocketType type() const { return m_socketType; }
 
 private:
 

@@ -41,69 +41,82 @@ using namespace dev;
 
 struct sessionInfo
 {
-    sessionInfo(FILE* _pipe, RPCSession* _session, std::string const& _tmpDir, int _pid)
+    sessionInfo(
+        FILE* _pipe, RPCSession* _session, std::string const& _tmpDir, int _pid, unsigned _configId)
     {
         session.reset(_session);
         filePipe.reset(_pipe);
         tmpDir = _tmpDir;
         pipePid = _pid;
         isUsed = RPCSession::NotExist;
+        configId = _configId;
     }
     std::unique_ptr<RPCSession> session;
     std::unique_ptr<FILE> filePipe;
     int pipePid;
     RPCSession::SessionStatus isUsed;
     std::string tmpDir;
+    unsigned configId;
 };
+
+void closeSession(const string& _threadID);
 
 std::mutex g_socketMapMutex;
 static std::map<std::string, sessionInfo> socketMap;
-void RPCSession::runNewInstanceOfAClient(string const& _threadID)
+void RPCSession::runNewInstanceOfAClient(string const& _threadID, ClientConfig const& _config)
 {
-    // TODO
-    // Execute as a shell config script from the tests folder with given params
-
-    fs::path tmpDir = test::createUniqueTmpDirectory();
-    string ipcPath = tmpDir.string() + "/geth.ipc";
-
-    string command = "bash";
-    std::vector<string> args;
-    args.push_back("/home/wins/Ethereum/tests/Retesteth/eth.sh");
-    args.push_back("--test");           // 1
-    args.push_back("--db-path");        // 2
-    args.push_back(tmpDir.string());    // 3
-    args.push_back("--ipcpath");        // 4
-    args.push_back(ipcPath);            // 5
-    args.push_back("--log-verbosity");  // 6
-    args.push_back("5");                // 7
-
-    int pid = 0;
-    test::popenOutput mode = (Options::get().enableClientsOutput) ? test::popenOutput::EnableALL :
-                                                                    test::popenOutput::DisableAll;
-    FILE* fp = test::popen2(command, args, "r", pid, mode);
-    if (!fp)
+    if (_config.getType() == Socket::IPC)
     {
-        ETH_ERROR("Failed to start the client: '" + command + "'");
-        std::raise(SIGABRT);
+        fs::path tmpDir = test::createUniqueTmpDirectory();
+        string ipcPath = tmpDir.string() + "/geth.ipc";
+
+        string command = "bash";
+        std::vector<string> args;
+        args.push_back(_config.getShellPath().c_str());
+        args.push_back(tmpDir.string());
+        args.push_back(ipcPath);
+
+        int pid = 0;
+        test::popenOutput mode = (Options::get().enableClientsOutput) ?
+                                     test::popenOutput::EnableALL :
+                                     test::popenOutput::DisableAll;
+        FILE* fp = test::popen2(command, args, "r", pid, mode);
+        if (!fp)
+        {
+            ETH_ERROR("Failed to start the client: '" + command + "'");
+            std::raise(SIGABRT);
+        }
+        else
+        {
+            int maxSeconds = 25;
+            while (!boost::filesystem::exists(ipcPath) && maxSeconds-- > 0)
+                std::this_thread::sleep_for(std::chrono::seconds(1));
+            ETH_REQUIRE_MESSAGE(maxSeconds > 0, "Client took too long to start ipc!");
+            // Client has opened ipc socket. wait for it to initialize
+            std::this_thread::sleep_for(std::chrono::seconds(4));
+        }
+        // sessionInfo info(fp, new RPCSession("/home/wins/.ethereum/geth.ipc"), tmpDir.string(),
+        // pid);
+        sessionInfo info(fp, new RPCSession(Socket::SocketType::IPC, ipcPath), tmpDir.string(), pid,
+            _config.getId());
+        {
+            std::lock_guard<std::mutex> lock(
+                g_socketMapMutex);  // function must be called from lock
+            socketMap.insert(std::pair<string, sessionInfo>(_threadID, std::move(info)));
+        }
+    }
+    else if (_config.getType() == Socket::TCP)
+    {
+        sessionInfo info(NULL, new RPCSession(Socket::SocketType::TCP, _config.getAddress()), "", 0,
+            _config.getId());
+        {
+            std::lock_guard<std::mutex> lock(
+                g_socketMapMutex);  // function must be called from lock
+            socketMap.insert(std::pair<string, sessionInfo>(_threadID, std::move(info)));
+        }
     }
     else
-    {
-        int maxSeconds = 25;
-        while (!boost::filesystem::exists(ipcPath) && maxSeconds-- > 0)
-            std::this_thread::sleep_for(std::chrono::seconds(1));
-        ETH_REQUIRE_MESSAGE(maxSeconds > 0, "Client took too long to start ipc!");
-        // Client has opened ipc socket. wait for it to initialize
-        std::this_thread::sleep_for(std::chrono::seconds(4));
-    }
-
-    // string ppp = "127.0.0.1:8545";
-    // sessionInfo info(fp, new RPCSession(Socket::SocketType::TCP, ppp), tmpDir.string(), pid);
-    sessionInfo info(fp, new RPCSession(Socket::SocketType::IPC, ipcPath), tmpDir.string(), pid);
-    // sessionInfo info(fp, new RPCSession("/home/wins/.ethereum/geth.ipc"), tmpDir.string(), pid);
-    {
-        std::lock_guard<std::mutex> lock(g_socketMapMutex);  // function must be called from lock
-        socketMap.insert(std::pair<string, sessionInfo>(_threadID, std::move(info)));
-    }
+        ETH_FAIL("Unknown Socket Type in runNewInstanceOfAClient");
 }
 
 RPCSession& RPCSession::instance(const string& _threadID)
@@ -111,25 +124,34 @@ RPCSession& RPCSession::instance(const string& _threadID)
     bool needToCreateNew = false;
     {
         std::lock_guard<std::mutex> lock(g_socketMapMutex);
+        unsigned currentConfigId = Options::getDynamicOptions().getCurrentConfig().getId();
+        if (socketMap.count(_threadID) && socketMap.at(_threadID).configId != currentConfigId)
+        {
+            // For this thread a session is opened but it is opened not for current tested client
+            ETH_FAIL("A session opened for another client id!");
+        }
+
         if (!socketMap.count(_threadID))
         {
             // look for free clients that already instantiated
             for (auto& socket : socketMap)
             {
                 if (socket.second.isUsed == SessionStatus::Available)
-                {
-                    socket.second.isUsed = SessionStatus::Working;
-                    socketMap.insert(
-                        std::pair<string, sessionInfo>(_threadID, std::move(socket.second)));
-                    socketMap.erase(socketMap.find(socket.first));
-                    return *(socketMap.at(_threadID).session.get());
+                    if (socket.second.configId == currentConfigId)
+                    {
+                        socket.second.isUsed = SessionStatus::Working;
+                        socketMap.insert(
+                            std::pair<string, sessionInfo>(_threadID, std::move(socket.second)));
+                        socketMap.erase(socketMap.find(socket.first));  // remove previous threadID
+                                                                        // assigment to this socket
+                        return *(socketMap.at(_threadID).session.get());
                 }
             }
             needToCreateNew = true;
         }
     }
     if (needToCreateNew)
-        runNewInstanceOfAClient(_threadID);
+        runNewInstanceOfAClient(_threadID, Options::getDynamicOptions().getCurrentConfig());
     std::lock_guard<std::mutex> lock(g_socketMapMutex);
     ETH_REQUIRE_MESSAGE(socketMap.size() <= Options::get().threadCount,
         "Something went wrong. Retesteth create more instances than needed!");
@@ -164,11 +186,14 @@ void closeSession(const string& _threadID)
 {
     ETH_REQUIRE_MESSAGE(socketMap.count(_threadID), "Socket map is empty in closeSession!");
     sessionInfo& element = socketMap.at(_threadID);
-    test::pclose2(element.filePipe.get(), element.pipePid);
-    std::this_thread::sleep_for(std::chrono::seconds(4));
-    boost::filesystem::remove_all(boost::filesystem::path(element.tmpDir));
-    element.filePipe.release();
-    element.session.release();
+    if (element.session.get()->getSocketType() == Socket::SocketType::IPC)
+    {
+        test::pclose2(element.filePipe.get(), element.pipePid);
+        std::this_thread::sleep_for(std::chrono::seconds(4));
+        boost::filesystem::remove_all(boost::filesystem::path(element.tmpDir));
+        element.filePipe.release();
+        element.session.release();
+    }
 }
 
 void RPCSession::clear()

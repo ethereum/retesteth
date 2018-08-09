@@ -245,17 +245,13 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
 
 void TestSuite::runFunctionForAllClients(std::function<void()> _func)
 {
-    for (auto const& clientName : Options::get().clients)
+    for (auto const& config : Options::getDynamicOptions().getClientConfigs())
     {
-        fs::path configFilePath = getTestPath() / fs::path("Retesteth") / clientName / "config";
-        ETH_REQUIRE_MESSAGE(fs::exists(configFilePath),
-            string("Client config not found: ") + configFilePath.c_str());
-        ClientConfig* cfg = new ClientConfig(
-            test::convertJsonCPPtoData(readJson(dev::contentsString(configFilePath))));
-        Options::getDynamicOptions().currentConfig = cfg;
-        std::cerr << "RUNNING ON CLIENT==== "
-                  << Options::getDynamicOptions().currentConfig->getName() << std::endl;
+        Options::getDynamicOptions().setCurrentConfig(config);
+        std::cerr << "Running tests for config " << config.getName() << " " << config.getId()
+                  << std::endl;
         _func();
+        RPCSession::clear();
     }
 }
 
