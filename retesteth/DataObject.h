@@ -100,8 +100,8 @@ class DataObject
 
     void clear();
 
-	std::string asJson(int level = 0) const;
-	static std::string dataTypeAsString(DataType _type);
+    std::string asJson(int level = 0, bool pretty = true) const;
+    static std::string dataTypeAsString(DataType _type);
 
 	private:
 	void _addSubObject(DataObject const& _obj);

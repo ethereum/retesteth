@@ -223,28 +223,27 @@ void DataObject::clear()
     m_type = DataType::Null;
 }
 
-std::string DataObject::asJson(int level) const
+std::string DataObject::asJson(int level, bool pretty) const
 {
 	std::ostringstream out;
-	auto printLevel = [level, &out]() -> void
-	{
-		for (int i = 0; i < level*4; i++)
-			out << " ";
-	};
+    auto printLevel = [level, pretty, &out]() -> void {
+        if (pretty)
+            for (int i = 0; i < level * 4; i++)
+                out << " ";
+    };
 
-	auto printElements = [this, &out, level]() -> void
-	{
+    auto printElements = [this, &out, level, pretty]() -> void {
 		for(std::vector<DataObject>::const_iterator it = this->m_subObjects.begin();
 			it < this->m_subObjects.end(); it++)
 		{
-			out << (*it).asJson(level+1);
-			if (it+1 != this->m_subObjects.end())
+            out << (*it).asJson(level + 1, pretty);
+            if (it+1 != this->m_subObjects.end())
 				out << ",";
 			out << std::endl;
 		}
-	};
+    };
 
-	switch(m_type)
+    switch(m_type)
 	{
 		case DataType::Null:
 			printLevel();

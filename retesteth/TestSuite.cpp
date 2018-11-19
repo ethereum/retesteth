@@ -35,12 +35,39 @@
 #include <string>
 #include <thread>
 
+
 using namespace std;
 using namespace dev;
 namespace fs = boost::filesystem;
 
 //Helper functions for test proccessing
 namespace {
+struct TestFileData
+{
+    DataObject data;
+    h256 hash;
+};
+
+TestFileData readTestFile(fs::path const& _testFileName)
+{
+    TestFileData testData;
+    string const s = dev::contentsString(_testFileName);
+    ETH_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _testFileName.string() + " is empty.");
+
+    Json::Value v = readJson(s);
+    if (_testFileName.extension() == ".json")
+        testData.data = test::convertJsonCPPtoData(v);
+    // else if (_testFileName.extension() == ".yml")
+    //    testData.data = test::parseYamlToJson(s);
+    else
+        BOOST_ERROR("Unknow test format!" + test::TestOutputHelper::get().testFile().string());
+
+    Json::FastWriter fastWriter;
+    std::string output = fastWriter.write(v);
+    output = output.substr(0, output.size() - 1);
+    testData.hash = sha3(output);
+    return testData;
+}
 
 void removeComments(test::DataObject& _obj)
 {
@@ -98,8 +125,8 @@ void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
 	string const s = asString(dev::contents(_compiledTest));
     ETH_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _compiledTest.string() + " is empty.");
     test::DataObject v = test::convertJsonCPPtoData(test::readJson(s));
-	h256 const fillerHash = sha3(dev::contents(_sourceTest));
 
+    TestFileData fillerData = readTestFile(_sourceTest);
     for (auto const& i: v.getSubObjects())
 	{
         // use eth object _info section class here !!!!!
@@ -108,7 +135,10 @@ void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
         test::DataObject const& info = i.at("_info");
         ETH_REQUIRE_MESSAGE(info.count("sourceHash") > 0, "sourceHash not found in " + _compiledTest.string() + " in " + i.getKey());
         h256 const sourceHash = h256(info.at("sourceHash").asString());
-        ETH_CHECK_MESSAGE(sourceHash == fillerHash, "Test " + _compiledTest.string() + " in " + i.getKey() + " is outdated. Filler hash is different!");
+        ETH_CHECK_MESSAGE(sourceHash == fillerData.hash,
+            "Test " + _compiledTest.string() + " in " + i.getKey() +
+                " is outdated. Filler hash is different! ( '" + sourceHash.hex().substr(0, 4) +
+                "' != '" + fillerData.hash.hex().substr(0, 4) + "') ");
     }
 }
 
@@ -305,28 +335,17 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
         }
         else
         {
-            DataObject v;
-            bytes const byteContents = dev::contents(_testFileName);
-            string const s = asString(byteContents);
-            ETH_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _testFileName.string() + " is empty.");
-
-            if (_testFileName.extension() == ".json")
-                v = test::convertJsonCPPtoData(readJson(s));
-            //else if (_testFileName.extension() == ".yml")
-            //	v = test::parseYamlToJson(s);
-            else
-                ETH_ERROR("Unknown test format!" + TestOutputHelper::get().testFile().string());
-
-            removeComments(v);
+            TestFileData testData = readTestFile(_testFileName);
+            removeComments(testData.data);
             opt.doFilling = true;
 
             try
             {
-                DataObject output = doTests(v, opt);
+                DataObject output = doTests(testData.data, opt);
                 if (!opt.wasErrors)
                 {
                     // Add client info for all of the tests in output
-                    addClientInfo(output, boostRelativeTestPath, sha3(byteContents));
+                    addClientInfo(output, boostRelativeTestPath, testData.hash);
                     writeFile(boostTestPath, asBytes(output.asJson()));
                 }
             }
