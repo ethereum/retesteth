@@ -51,10 +51,7 @@ struct TestFileData
 TestFileData readTestFile(fs::path const& _testFileName)
 {
     TestFileData testData;
-    string const s = dev::contentsString(_testFileName);
-    ETH_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _testFileName.string() + " is empty.");
-
-    Json::Value v = readJson(s);
+    Json::Value v = readJson(_testFileName);
     if (_testFileName.extension() == ".json")
         testData.data = test::convertJsonCPPtoData(v);
     // else if (_testFileName.extension() == ".yml")
@@ -122,10 +119,7 @@ void addClientInfo(test::DataObject& _v, fs::path const& _testSource, h256 const
 
 void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
 {
-	string const s = asString(dev::contents(_compiledTest));
-    ETH_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _compiledTest.string() + " is empty.");
-    test::DataObject v = test::convertJsonCPPtoData(test::readJson(s));
-
+    test::DataObject v = test::convertJsonCPPtoData(test::readJson(_compiledTest));
     TestFileData fillerData = readTestFile(_sourceTest);
     for (auto const& i: v.getSubObjects())
 	{
@@ -197,6 +191,7 @@ string TestSuite::checkFillerExistance(string const& _testFolder) const
     string filter = test::Options::get().singleTestName.empty() ?
                         string() :
                         test::Options::get().singleTestName;
+    std::cout << "Filter: " << filter << std::endl;
     vector<fs::path> const compiledFiles =
         test::getFiles(getFullPath(_testFolder), {".json", ".yml"}, filter);
     for (auto const& file : compiledFiles)
@@ -213,30 +208,31 @@ string TestSuite::checkFillerExistance(string const& _testFolder) const
         ETH_REQUIRE_MESSAGE(fs::exists(expectedFillerName) || fs::exists(expectedFillerName2) || fs::exists(expectedCopierName), "Compiled test folder contains test without Filler: " + file.filename().string());
         ETH_REQUIRE_MESSAGE(!(fs::exists(expectedFillerName) && fs::exists(expectedFillerName2) && fs::exists(expectedCopierName)), "Src test could either be Filler.json, Filler.yml or Copier.json: " + file.filename().string());
 
-        // Check that filled tests created from actual fillers
-        if (Options::get().filltests == false)
+        // Check that filled tests created from actual fillers depenging on a test type
+        if (fs::exists(expectedFillerName))
         {
-            if (fs::exists(expectedFillerName))
-            {
+            if (Options::get().filltests == false)  // If we are filling the test it is probably
+                                                    // outdated/being updated. no need to check.
                 checkFillerHash(file, expectedFillerName);
-                if (!filter.empty())
-                    return filter + c_fillerPostf;
-            }
-            if (fs::exists(expectedFillerName2))
-            {
+            if (!filter.empty())
+                return filter + c_fillerPostf;
+        }
+        if (fs::exists(expectedFillerName2))
+        {
+            if (Options::get().filltests == false)
                 checkFillerHash(file, expectedFillerName2);
-                if (!filter.empty())
-                    return filter + c_fillerPostf;
-            }
-            if (fs::exists(expectedCopierName))
-            {
+            if (!filter.empty())
+                return filter + c_fillerPostf;
+        }
+        if (fs::exists(expectedCopierName))
+        {
+            if (Options::get().filltests == false)
                 checkFillerHash(file, expectedCopierName);
-                if (!filter.empty())
-                    return filter + c_copierPostf;
-            }
+            if (!filter.empty())
+                return filter + c_copierPostf;
         }
     }
-    return string();
+    return string("Error selecting filter!");
 }
 
 void TestSuite::runAllTestsInFolder(string const& _testFolder) const
@@ -278,7 +274,7 @@ void TestSuite::runFunctionForAllClients(std::function<void()> _func)
     for (auto const& config : Options::getDynamicOptions().getClientConfigs())
     {
         Options::getDynamicOptions().setCurrentConfig(config);
-        std::cerr << "Running tests for config " << config.getName() << " " << config.getId()
+        std::cout << "Running tests for config '" << config.getName() << "' " << config.getId()
                   << std::endl;
         _func();
         RPCSession::clear();
@@ -379,9 +375,7 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
 void TestSuite::executeFile(boost::filesystem::path const& _file) const
 {
     TestSuiteOptions opt;
-	string const s = asString(dev::contents(_file));
-    ETH_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _file.string() + " is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
-    doTests(test::convertJsonCPPtoData(readJson(s)), opt);
+    doTests(test::convertJsonCPPtoData(readJson(_file)), opt);
 }
 
 }

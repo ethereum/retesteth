@@ -95,8 +95,9 @@ void RPCSession::runNewInstanceOfAClient(string const& _threadID, ClientConfig c
             // Client has opened ipc socket. wait for it to initialize
             std::this_thread::sleep_for(std::chrono::seconds(4));
         }
-        // sessionInfo info(fp, new RPCSession("/home/wins/.ethereum/geth.ipc"), tmpDir.string(),
-        // pid);
+        // sessionInfo info(fp,
+        //    new RPCSession(Socket::SocketType::IPC, "/home/wins/.ethereum/geth.ipc"),
+        //    tmpDir.string(), pid, _config.getId());
         sessionInfo info(fp, new RPCSession(Socket::SocketType::IPC, ipcPath), tmpDir.string(), pid,
             _config.getId());
         {
@@ -264,7 +265,7 @@ string RPCSession::eth_sendTransaction(string const& _transaction)
 
 string RPCSession::eth_sendRawTransaction(std::string const& _rlp)
 {
-	return rpcCall("eth_sendRawTransaction", { quote(_rlp) }).asString();
+    return rpcCall("eth_sendRawTransaction", {quote(_rlp)}, true).asString();
 }
 
 std::string RPCSession::eth_getTransactionCount(std::string const& _address, std::string const& _blockNumber)

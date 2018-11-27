@@ -6,6 +6,10 @@
 #include <thread>
 
 namespace test {
+void eth_error_message(std::string const& _message)
+{
+    std::cerr << _message << std::endl;
+}
 
 void eth_test_message(std::string const& _message)
 {
@@ -39,6 +43,7 @@ void eth_require_message(bool _flag, std::string const& _message)
 
 void eth_fail(std::string const& _message)
 {
+    std::cerr << "--------" << std::endl;
     std::cerr << _message << std::endl;
     std::this_thread::sleep_for(std::chrono::seconds(1));
     std::raise(SIGABRT);
@@ -48,7 +53,6 @@ void eth_fail(std::string const& _message)
 
 void eth_error(std::string const& _message)
 {
-    std::cerr << _message << std::endl;
     TestOutputHelper::get().markError(_message);
 }
 

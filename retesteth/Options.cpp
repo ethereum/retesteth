@@ -392,18 +392,24 @@ std::vector<ClientConfig> const& Options::DynamicOptions::getClientConfigs()
 {
     if (m_clientConfigs.size() == 0)
     {
+        std::vector<string> cfgs = Options::get().clients;
+        if (cfgs.empty())
+            cfgs.push_back("aleth");
+
+        std::cout << "Active client configurations: '";
         unsigned id = 0;
-        for (auto const& clientName : Options::get().clients)
+        for (auto const& clientName : cfgs)
         {
+            std::cout << clientName << " ";
             fs::path configPath = getTestPath() / fs::path("Retesteth") / clientName;
             fs::path configFilePath = configPath / "config";
             ETH_REQUIRE_MESSAGE(fs::exists(configFilePath),
                 string("Client config not found: ") + configFilePath.c_str());
-            ClientConfig cfg(
-                test::convertJsonCPPtoData(readJson(dev::contentsString(configFilePath))), id++,
+            ClientConfig cfg(test::convertJsonCPPtoData(readJson(configFilePath)), id++,
                 configPath / string(clientName + ".sh"));
             m_clientConfigs.push_back(cfg);
         }
+        std::cout << "'" << std::endl;
     }
     return m_clientConfigs;
 }

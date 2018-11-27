@@ -17,14 +17,19 @@ using namespace std;
 namespace fs = boost::filesystem;
 
 namespace  test {
-
-Json::Value readJson(string const& _s)
+Json::Value readJson(fs::path const& _file)
 {
     Json::Value v;
     Json::Reader reader;
-    bool parsingSuccessful = reader.parse(_s, v);
+    string s = dev::contentsString(_file);
+    string fname = _file.filename().c_str();
+    ETH_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + fname +
+                                            " is empty. Have you cloned the 'tests' repo branch "
+                                            "develop and set ETHEREUM_TEST_PATH to its path?");
+    bool parsingSuccessful = reader.parse(s, v);
     if (!parsingSuccessful)
-        BOOST_ERROR("Failed to parse configuration\n" + reader.getFormattedErrorMessages());
+        ETH_ERROR(
+            "Failed to parse json file\n" + reader.getFormattedErrorMessages() + "(" + fname + ")");
     return v;
 }
 

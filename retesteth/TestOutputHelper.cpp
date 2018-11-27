@@ -111,7 +111,7 @@ void TestOutputHelper::printBoostError()
     {
         errorCount += test.second.getErrors().size();
         for (auto const& a : test.second.getErrors())
-            ETH_TEST_MESSAGE("Error: " + a);
+            ETH_ERROR_MESSAGE("Error: " + a);
     }
     if (errorCount)
     {

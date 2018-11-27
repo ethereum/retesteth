@@ -14,7 +14,7 @@ namespace test {
 // Helping functions
 
 /// Construct Json object from string
-Json::Value readJson(std::string const& _s);
+Json::Value readJson(fs::path const& _path);
 
 /// Get files from directory
 std::vector<boost::filesystem::path> getFiles(boost::filesystem::path const& _dirPath, std::set<std::string> _extentionMask, std::string const& _particularFile = {});
