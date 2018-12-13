@@ -35,12 +35,36 @@
 #include <string>
 #include <thread>
 
+
 using namespace std;
 using namespace dev;
 namespace fs = boost::filesystem;
 
 //Helper functions for test proccessing
 namespace {
+struct TestFileData
+{
+    DataObject data;
+    h256 hash;
+};
+
+TestFileData readTestFile(fs::path const& _testFileName)
+{
+    TestFileData testData;
+    Json::Value v = readJson(_testFileName);
+    if (_testFileName.extension() == ".json")
+        testData.data = test::convertJsonCPPtoData(v);
+    // else if (_testFileName.extension() == ".yml")
+    //    testData.data = test::parseYamlToJson(s);
+    else
+        BOOST_ERROR("Unknow test format!" + test::TestOutputHelper::get().testFile().string());
+
+    Json::FastWriter fastWriter;
+    std::string output = fastWriter.write(v);
+    output = output.substr(0, output.size() - 1);
+    testData.hash = sha3(output);
+    return testData;
+}
 
 void removeComments(test::DataObject& _obj)
 {
@@ -95,11 +119,8 @@ void addClientInfo(test::DataObject& _v, fs::path const& _testSource, h256 const
 
 void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
 {
-	string const s = asString(dev::contents(_compiledTest));
-    ETH_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _compiledTest.string() + " is empty.");
-    test::DataObject v = test::convertJsonCPPtoData(test::readJson(s));
-	h256 const fillerHash = sha3(dev::contents(_sourceTest));
-
+    test::DataObject v = test::convertJsonCPPtoData(test::readJson(_compiledTest));
+    TestFileData fillerData = readTestFile(_sourceTest);
     for (auto const& i: v.getSubObjects())
 	{
         // use eth object _info section class here !!!!!
@@ -108,7 +129,10 @@ void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
         test::DataObject const& info = i.at("_info");
         ETH_REQUIRE_MESSAGE(info.count("sourceHash") > 0, "sourceHash not found in " + _compiledTest.string() + " in " + i.getKey());
         h256 const sourceHash = h256(info.at("sourceHash").asString());
-        ETH_CHECK_MESSAGE(sourceHash == fillerHash, "Test " + _compiledTest.string() + " in " + i.getKey() + " is outdated. Filler hash is different!");
+        ETH_CHECK_MESSAGE(sourceHash == fillerData.hash,
+            "Test " + _compiledTest.string() + " in " + i.getKey() +
+                " is outdated. Filler hash is different! ( '" + sourceHash.hex().substr(0, 4) +
+                "' != '" + fillerData.hash.hex().substr(0, 4) + "') ");
     }
 }
 
@@ -167,6 +191,7 @@ string TestSuite::checkFillerExistance(string const& _testFolder) const
     string filter = test::Options::get().singleTestName.empty() ?
                         string() :
                         test::Options::get().singleTestName;
+    std::cout << "Filter: " << filter << std::endl;
     vector<fs::path> const compiledFiles =
         test::getFiles(getFullPath(_testFolder), {".json", ".yml"}, filter);
     for (auto const& file : compiledFiles)
@@ -183,30 +208,31 @@ string TestSuite::checkFillerExistance(string const& _testFolder) const
         ETH_REQUIRE_MESSAGE(fs::exists(expectedFillerName) || fs::exists(expectedFillerName2) || fs::exists(expectedCopierName), "Compiled test folder contains test without Filler: " + file.filename().string());
         ETH_REQUIRE_MESSAGE(!(fs::exists(expectedFillerName) && fs::exists(expectedFillerName2) && fs::exists(expectedCopierName)), "Src test could either be Filler.json, Filler.yml or Copier.json: " + file.filename().string());
 
-        // Check that filled tests created from actual fillers
-        if (Options::get().filltests == false)
+        // Check that filled tests created from actual fillers depenging on a test type
+        if (fs::exists(expectedFillerName))
         {
-            if (fs::exists(expectedFillerName))
-            {
+            if (Options::get().filltests == false)  // If we are filling the test it is probably
+                                                    // outdated/being updated. no need to check.
                 checkFillerHash(file, expectedFillerName);
-                if (!filter.empty())
-                    return filter + c_fillerPostf;
-            }
-            if (fs::exists(expectedFillerName2))
-            {
+            if (!filter.empty())
+                return filter + c_fillerPostf;
+        }
+        if (fs::exists(expectedFillerName2))
+        {
+            if (Options::get().filltests == false)
                 checkFillerHash(file, expectedFillerName2);
-                if (!filter.empty())
-                    return filter + c_fillerPostf;
-            }
-            if (fs::exists(expectedCopierName))
-            {
+            if (!filter.empty())
+                return filter + c_fillerPostf;
+        }
+        if (fs::exists(expectedCopierName))
+        {
+            if (Options::get().filltests == false)
                 checkFillerHash(file, expectedCopierName);
-                if (!filter.empty())
-                    return filter + c_copierPostf;
-            }
+            if (!filter.empty())
+                return filter + c_copierPostf;
         }
     }
-    return string();
+    return string("Error selecting filter!");
 }
 
 void TestSuite::runAllTestsInFolder(string const& _testFolder) const
@@ -220,21 +246,39 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
     // run all tests
     vector<fs::path> const files =
         test::getFiles(getFullPathFiller(_testFolder), {".json", ".yml"}, filter);
-    auto& testOutput = test::TestOutputHelper::get();
-    vector<thread> threadVector;
-    testOutput.initTest(files.size());
-    for (auto const& file : files)
+
+    // repeat this part for all connected clients
+    auto thisPart = [this, &files, &_testFolder]() {
+        auto& testOutput = test::TestOutputHelper::get();
+        vector<thread> threadVector;
+        testOutput.initTest(files.size());
+        for (auto const& file : files)
+        {
+            if (ExitHandler::shouldExit())
+                break;
+            testOutput.showProgress();
+            if (threadVector.size() == Options::get().threadCount)
+                joinThreads(threadVector, false);
+            thread testThread(&TestSuite::executeTest, this, _testFolder, file);
+            threadVector.push_back(std::move(testThread));
+        }
+        joinThreads(threadVector, true);
+        testOutput.finishTest();
+    };
+    runFunctionForAllClients(thisPart);
+}
+
+
+void TestSuite::runFunctionForAllClients(std::function<void()> _func)
+{
+    for (auto const& config : Options::getDynamicOptions().getClientConfigs())
     {
-        if (ExitHandler::shouldExit())
-            break;
-        testOutput.showProgress();
-        if (threadVector.size() == Options::get().threadCount)
-            joinThreads(threadVector, false);
-        thread testThread(&TestSuite::executeTest, this, _testFolder, file);
-        threadVector.push_back(std::move(testThread));
+        Options::getDynamicOptions().setCurrentConfig(config);
+        std::cout << "Running tests for config '" << config.getName() << "' " << config.getId()
+                  << std::endl;
+        _func();
+        RPCSession::clear();
     }
-    joinThreads(threadVector, true);
-    testOutput.finishTest();
 }
 
 fs::path TestSuite::getFullPathFiller(string const& _testFolder) const
@@ -287,26 +331,24 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
         }
         else
         {
-            DataObject v;
-            bytes const byteContents = dev::contents(_testFileName);
-            string const s = asString(byteContents);
-            ETH_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _testFileName.string() + " is empty.");
-
-            if (_testFileName.extension() == ".json")
-                v = test::convertJsonCPPtoData(readJson(s));
-            //else if (_testFileName.extension() == ".yml")
-            //	v = test::parseYamlToJson(s);
-            else
-                ETH_ERROR("Unknown test format!" + TestOutputHelper::get().testFile().string());
-
-            removeComments(v);
+            TestFileData testData = readTestFile(_testFileName);
+            removeComments(testData.data);
             opt.doFilling = true;
-            DataObject output = doTests(v, opt);
-            if (!opt.wasErrors)
+
+            try
             {
-                // Add client info for all of the tests in output
-                addClientInfo(output, boostRelativeTestPath, sha3(byteContents));
-                writeFile(boostTestPath, asBytes(output.asJson()));
+                DataObject output = doTests(testData.data, opt);
+                if (!opt.wasErrors)
+                {
+                    // Add client info for all of the tests in output
+                    addClientInfo(output, boostRelativeTestPath, testData.hash);
+                    writeFile(boostTestPath, asBytes(output.asJson()));
+                }
+            }
+            catch (std::exception const& _ex)
+            {
+                ETH_ERROR("ERROR OCCURED: " + string(_ex.what()));
+                RPCSession::sessionEnd(TestOutputHelper::getThreadID(), RPCSession::SessionStatus::HasFinished);
             }
         }
     }
@@ -317,18 +359,23 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
         if ((Options::get().singleTest && Options::get().singleTestName == testname) || !Options::get().singleTest)
             cnote << "TEST " << testname + ":";
 
-        executeFile(boostTestPath);
+        try
+        {
+            executeFile(boostTestPath);
+        }
+        catch (std::exception const& _ex)
+        {
+            ETH_ERROR("ERROR OCCURED: " + string(_ex.what()));
+            RPCSession::sessionEnd(TestOutputHelper::getThreadID(), RPCSession::SessionStatus::HasFinished);
+        }
     }
-
     RPCSession::sessionEnd(TestOutputHelper::getThreadID(), RPCSession::SessionStatus::HasFinished);
 }
 
 void TestSuite::executeFile(boost::filesystem::path const& _file) const
 {
     TestSuiteOptions opt;
-	string const s = asString(dev::contents(_file));
-    ETH_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _file.string() + " is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
-    doTests(test::convertJsonCPPtoData(readJson(s)), opt);
+    doTests(test::convertJsonCPPtoData(readJson(_file)), opt);
 }
 
 }

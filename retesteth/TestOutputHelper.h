@@ -22,6 +22,7 @@
 #include <json/value.h>
 #include <boost/filesystem.hpp>
 #include <libdevcore/CommonData.h>
+#include <vector>
 
 namespace test
 {
@@ -40,9 +41,9 @@ public:
 
 	//void setMaxTests(int _count) { m_maxTests = _count; }
 	bool checkTest(std::string const& _testName);
-    void markError() { m_errorCount++; }
-    size_t getErrorCount() const { return m_errorCount; }
-	void setCurrentTestFile(boost::filesystem::path const& _name) { m_currentTestFileName = _name; }
+    void markError(std::string const& _message) { m_errors.push_back(_message); }
+    std::vector<std::string> const& getErrors() const { return m_errors;}
+    void setCurrentTestFile(boost::filesystem::path const& _name) { m_currentTestFileName = _name; }
 	void setCurrentTestName(std::string const& _name) { m_currentTestName = _name; }
 	std::string const& testName() { return m_currentTestName; }
 	std::string const& caseName() { return m_currentTestCaseName; }
@@ -60,7 +61,7 @@ public:
 	std::string m_currentTestName;
 	std::string m_currentTestCaseName;
     boost::filesystem::path m_currentTestFileName;
-    size_t m_errorCount = 0; //flag errors for triggering boost erros after all thread finished
+    std::vector<std::string> m_errors; //flag errors for triggering boost erros after all thread finished
     void printBoostError();
 };
 
@@ -70,5 +71,16 @@ public:
 	TestOutputHelperFixture() { TestOutputHelper::get().initTest(); }
 	~TestOutputHelperFixture() { TestOutputHelper::get().finishTest(); }
 };
+
+template <class T>
+inline std::string expButGot(T _exp, T _got)
+{
+    return "Expected: '" + std::to_string(_exp) + "', but Got: '" + std::to_string(_got) + "'";
+}
+
+inline std::string expButGot(std::string const& _exp, std::string const& _got)
+{
+    return "Expected: '" + _exp + "', but Got: '" + _got + "'";
+}
 
 } //namespace test

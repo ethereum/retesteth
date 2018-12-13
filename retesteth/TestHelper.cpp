@@ -17,14 +17,19 @@ using namespace std;
 namespace fs = boost::filesystem;
 
 namespace  test {
-
-Json::Value readJson(string const& _s)
+Json::Value readJson(fs::path const& _file)
 {
     Json::Value v;
     Json::Reader reader;
-    bool parsingSuccessful = reader.parse(_s, v);
+    string s = dev::contentsString(_file);
+    string fname = _file.filename().c_str();
+    ETH_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + fname +
+                                            " is empty. Have you cloned the 'tests' repo branch "
+                                            "develop and set ETHEREUM_TEST_PATH to its path?");
+    bool parsingSuccessful = reader.parse(s, v);
     if (!parsingSuccessful)
-        BOOST_ERROR("Failed to parse configuration\n" + reader.getFormattedErrorMessages());
+        ETH_ERROR(
+            "Failed to parse json file\n" + reader.getFormattedErrorMessages() + "(" + fname + ")");
     return v;
 }
 
@@ -60,11 +65,10 @@ boost::filesystem::path getTestPath()
 
 	string testPath;
 	const char* ptestPath = getenv("ETHEREUM_TEST_PATH");
-
 	if (ptestPath == nullptr)
 	{
-//		ctest << " could not find environment variable ETHEREUM_TEST_PATH \n";
-		testPath = "../../test/jsontests";
+        ETH_TEST_MESSAGE("could not find environment variable ETHEREUM_TEST_PATH");
+        testPath = "../../test/jsontests";
 	}
 	else
 		testPath = ptestPath;
@@ -110,9 +114,9 @@ DataObject convertJsonCPPtoData(Json::Value const& _input)
         return DataObject(DataType::Null);
 
     if (_input.isBool())
-		return DataObject(_input.asBool());
+        return DataObject(DataType::Bool, _input.asBool());
 
-	if (_input.isString())
+    if (_input.isString())
 		return DataObject(_input.asString());
 
 	if (_input.isInt())
@@ -395,10 +399,7 @@ FILE* popen2(string const& _command, vector<string> const& _args, string const& 
 {
     string testIfCmdExist = "which " + _command;
     if (system(testIfCmdExist.c_str()) == 256)
-    {
         ETH_FAIL("Command " + _command + " not found in the system!");
-        return NULL;
-    }
 
     pid_t child_pid;
     int fd[2];

@@ -20,8 +20,8 @@ class DataObject
 	public:
 	DataObject();
 	DataObject(DataType _type);
-	//DataObject(bool _bool);
-	DataObject(std::string const& _str);
+    DataObject(DataType _type, bool _bool);
+    DataObject(std::string const& _str);
 	DataObject(std::string const& _key, std::string const& _str);
 	DataObject(int _int);
 	DataType type() const;
@@ -34,8 +34,8 @@ class DataObject
 	void setSubObjectKey(size_t _index, std::string const& _key);
 
 	bool count(std::string const& _key) const;
-	std::string asString() const;
-	int asInt() const;
+    std::string const& asString() const;
+    int asInt() const;
 	bool asBool() const;
 
 	void setKeyPos(std::string const& _key, size_t _pos);
@@ -100,8 +100,8 @@ class DataObject
 
     void clear();
 
-	std::string asJson(int level = 0) const;
-	static std::string dataTypeAsString(DataType _type);
+    std::string asJson(int level = 0, bool pretty = true) const;
+    static std::string dataTypeAsString(DataType _type);
 
 	private:
 	void _addSubObject(DataObject const& _obj);

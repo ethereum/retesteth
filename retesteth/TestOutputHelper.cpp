@@ -25,6 +25,7 @@
 #include <retesteth/TestOutputHelper.h>
 #include <retesteth/Options.h>
 #include <retesteth/ExitHandler.h>
+#include <libdevcore/Log.h>
 
 using namespace std;
 using namespace dev;
@@ -53,7 +54,7 @@ TestOutputHelper& TestOutputHelper::get()
 void TestOutputHelper::initTest(size_t _maxTests)
 {
     //_maxTests = 0 means this function is called from testing thread
-    m_currentTestName = "n/a";
+    m_currentTestName = string();
     m_currentTestFileName = string();
     m_timer = Timer();
     m_timer.restart();
@@ -107,9 +108,17 @@ void TestOutputHelper::printBoostError()
 {
     size_t errorCount = 0;
     for (auto const& test: helperThreadMap)
-        errorCount += test.second.getErrorCount();
+    {
+        errorCount += test.second.getErrors().size();
+        for (auto const& a : test.second.getErrors())
+            ETH_ERROR_MESSAGE("Error: " + a);
+    }
     if (errorCount)
-        BOOST_ERROR("TestOutputHelper detected " + toString(errorCount) + " errors during test execution!"); // NOT THREAD SAFE !!!
+    {
+        ETH_ERROR(
+            "TestOutputHelper detected " + toString(errorCount) + " errors during test execution!");
+        BOOST_ERROR("");  // NOT THREAD SAFE !!!
+    }
     helperThreadMap.clear();
 }
 

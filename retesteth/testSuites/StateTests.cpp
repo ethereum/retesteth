@@ -25,6 +25,7 @@
 #include <thread>
 #include <mutex>
 
+#include <libdevcore/CommonData.h>
 #include <libdevcore/CommonIO.h>
 #include <retesteth/DataObject.h>
 #include <retesteth/Options.h>
@@ -90,7 +91,8 @@ DataObject FillTestAsBlockchain(DataObject const& _testFile, TestSuite::TestSuit
                     session.test_mineBlocks(1);
                     tr.executed = true;
 
-                    DataObject remoteState = getRemoteState(session, trHash, true);
+                    DataObject remoteState =
+                        getRemoteState(session, isHash<h256>(trHash) ? trHash : string(), true);
 
                     // check that the post state qualifies to the expect section
                     string testInfo = "Network: " + net + ", TrInfo: d: " + toString(tr.dataInd) +
@@ -195,7 +197,8 @@ DataObject FillTest(DataObject const& _testFile, TestSuite::TestSuiteOptions& _o
 
                     transactionResults["indexes"] = indexes;
                     transactionResults["hash"] = remoteState.at("postHash").asString();
-                    transactionResults["logs"] = remoteState.at("logHash").asString();
+                    if (remoteState.count("logHash"))
+                        transactionResults["logs"] = remoteState.at("logHash").asString();
                     forkResults.addArrayObject(transactionResults);
                     session.test_rewindToBlock(0);
                 }
@@ -258,15 +261,21 @@ void RunTest(DataObject const& _testFile)
                       remoteState = getRemoteState(session, trHash, true);
 					}
 
-					ETH_CHECK_MESSAGE(remoteState.at("postHash").asString() == expectHash,
-						"Error at " + testInfo + ", post hash mismatch: " + remoteState.at("postHash").asString()
-						+ ", expected: " + expectHash
-						+ "\nState Dump: \n" + remoteState.at("postState").asJson());
-					ETH_CHECK_MESSAGE(remoteState.at("logHash").asString() == expectLogHash,
-						"Error at " + testInfo + ", logs hash mismatch: " + remoteState.at("logHash").asString()
-						+ ", expected: " + expectLogHash);
-				}
-				if (blockMined)
+                    ETH_CHECK_MESSAGE(remoteState.at("postHash").asString() == expectHash,
+                        "Error at " + testInfo + ", post hash mismatch: " +
+                            remoteState.at("postHash").asString() + ", expected: " + expectHash);
+                    if (remoteState.at("postHash").asString() != expectHash)
+                        ETH_TEST_MESSAGE("\nState Dump: \n" + remoteState.at("postState").asJson());
+
+                    if (remoteState.count("logHash"))
+                    {
+                        ETH_CHECK_MESSAGE(remoteState.at("logHash").asString() == expectLogHash,
+                            "Error at " + testInfo +
+                                ", logs hash mismatch: " + remoteState.at("logHash").asString() +
+                                ", expected: " + expectLogHash);
+                    }
+                }
+                if (blockMined)
 					session.test_rewindToBlock(0);
 			}
 		}
@@ -314,7 +323,7 @@ DataObject StateTestSuite::doTests(DataObject const& _input, TestSuiteOptions& _
         else
         {
             outputTest[testname] = FillTest(inputTest, _opt);
-            filledTest.addSubObject(outputTest);
+            filledTest = outputTest;
         }
     }
     else

@@ -1,25 +1,15 @@
 
 #pragma once
 
-#include <boost/program_options.hpp>
+#include <libdevcore/Exceptions.h>
+#include <retesteth/ClientConfig.h>
 #include <boost/filesystem.hpp>
 #include <boost/optional.hpp>
-
-//#include <test/tools/libtestutils/Common.h>
-//#include <test/tools/libtesteth/JsonSpiritHeaders.h>
-#include <libdevcore/Exceptions.h>
-//#include <libethereum/Executive.h>*/
+#include <boost/program_options.hpp>
 
 using namespace dev;
 namespace test
 {
-
-enum class Verbosity
-{
-	None,
-	NiceReport,
-	Full
-};
 
 class Options
 {
@@ -29,7 +19,19 @@ public:
 		InvalidOption(std::string _message = std::string()): Exception(_message) {}
 	};
 
-	size_t threadCount = 1;	///< Execute tests on threads
+    struct DynamicOptions
+    {
+        DynamicOptions() {}
+        std::vector<ClientConfig> const& getClientConfigs();
+        ClientConfig const& getCurrentConfig() const;
+        void setCurrentConfig(ClientConfig const& _config);
+
+    private:
+        std::vector<ClientConfig> m_clientConfigs;
+        unsigned m_currentConfig;
+    };
+
+    size_t threadCount = 1;	///< Execute tests on threads
 	bool enableClientsOutput = false; ///< Enable stderr from clients
 	bool vmtrace = false;	///< Create EVM execution tracer
 	bool filltests = false; ///< Create JSON test files from execution results
@@ -46,10 +48,11 @@ public:
 	bool jsontrace = false; ///< Vmtrace to stdout in json format
 	//eth::StandardTrace::DebugOptions jsontraceOptions; ///< output config for jsontrace
 	std::string testpath;	///< Custom test folder path
-	Verbosity logVerbosity = Verbosity::NiceReport;
+    unsigned logVerbosity = 1;
 	boost::optional<boost::filesystem::path> randomCodeOptionsPath; ///< Options for random code generation in fuzz tests
+    std::vector<std::string> clients;                               ///< Clients to work with
 
-	/// Test selection
+    /// Test selection
 	/// @{
 	bool singleTest = false;
 	boost::optional<std::string> singleTestFile;
@@ -65,10 +68,12 @@ public:
 	/// Get reference to options
 	/// The first time used, options are parsed with argc, argv
 	static Options const& get(int argc = 0, const char** argv = 0);
+    static DynamicOptions& getDynamicOptions() { return m_dynamicOptions; }
 
 private:
 	Options(int argc = 0, const char** argv = 0);
 	Options(Options const&) = delete;
+    static DynamicOptions m_dynamicOptions;
 };
 
 } //namespace test

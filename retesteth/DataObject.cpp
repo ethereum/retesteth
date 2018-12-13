@@ -29,6 +29,13 @@ DataObject::DataObject(int _int)
 	m_intVal = _int;
 }
 
+/// Define dataobject of bool
+DataObject::DataObject(DataType type, bool _bool)
+{
+    m_type = type;
+    m_boolVal = _bool;
+}
+
 /// Get dataobject type
 DataType DataObject::type() const {	return m_type; }
 
@@ -72,7 +79,7 @@ bool DataObject::count(std::string const& _key) const
 }
 
 /// Get string value
-std::string DataObject::asString() const
+std::string const& DataObject::asString() const
 {
 	_assert(m_type == DataType::String, "m_type == DataType::String");
 	return m_strVal;
@@ -216,28 +223,27 @@ void DataObject::clear()
     m_type = DataType::Null;
 }
 
-std::string DataObject::asJson(int level) const
+std::string DataObject::asJson(int level, bool pretty) const
 {
 	std::ostringstream out;
-	auto printLevel = [level, &out]() -> void
-	{
-		for (int i = 0; i < level*4; i++)
-			out << " ";
-	};
+    auto printLevel = [level, pretty, &out]() -> void {
+        if (pretty)
+            for (int i = 0; i < level * 4; i++)
+                out << " ";
+    };
 
-	auto printElements = [this, &out, level]() -> void
-	{
+    auto printElements = [this, &out, level, pretty]() -> void {
 		for(std::vector<DataObject>::const_iterator it = this->m_subObjects.begin();
 			it < this->m_subObjects.end(); it++)
 		{
-			out << (*it).asJson(level+1);
-			if (it+1 != this->m_subObjects.end())
+            out << (*it).asJson(level + 1, pretty);
+            if (it+1 != this->m_subObjects.end())
 				out << ",";
 			out << std::endl;
 		}
-	};
+    };
 
-	switch(m_type)
+    switch(m_type)
 	{
 		case DataType::Null:
 			printLevel();
@@ -291,8 +297,10 @@ std::string DataObject::asJson(int level) const
 			printLevel();
 			if (!m_strKey.empty())
 				out << "\"" << m_strKey << "\" : ";
-			out << m_boolVal;
-		break;
+            if (m_boolVal)
+                out << "true";
+            out << "false";
+            break;
 		default:
 			out << "unknown " << dataTypeAsString(m_type) << std::endl;
 		break;

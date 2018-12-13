@@ -24,9 +24,13 @@
 #include <libdevcore/Log.h>
 #include <retesteth/Options.h>
 #include <retesteth/TestHelper.h>
+#include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
 
 using namespace std;
 using namespace test;
+namespace fs = boost::filesystem;
+Options::DynamicOptions Options::m_dynamicOptions;
 
 void printHelp()
 {
@@ -225,21 +229,16 @@ Options::Options(int argc, const char** argv)
 		{
 			throwIfNoArgumentFollows();
 			static std::ostringstream strCout; //static string to redirect logs to
-			std::string indentLevel = std::string{argv[++i]};
-			if (indentLevel == "0")
-			{
-				logVerbosity = Verbosity::None;
-				std::cout.rdbuf(strCout.rdbuf());
-				std::cerr.rdbuf(strCout.rdbuf());
-			}
-			else if (indentLevel == "1")
-				logVerbosity = Verbosity::NiceReport;
-			else
-				logVerbosity = Verbosity::Full;
-
-			int indentLevelInt = atoi(argv[i]);
-			if (indentLevelInt > g_logVerbosity)
-				g_logVerbosity = indentLevelInt;
+            logVerbosity = atoi(argv[++i]);
+            if (logVerbosity == 0)
+            {
+                // disable all output
+                std::cout.rdbuf(strCout.rdbuf());
+                std::cerr.rdbuf(strCout.rdbuf());
+                break;
+            }
+            if (logVerbosity > (size_t)g_logVerbosity)
+                g_logVerbosity = logVerbosity;
 		}
 		else if (arg == "--options")
 		{
@@ -279,7 +278,9 @@ Options::Options(int argc, const char** argv)
 		else if (arg == "--testpath")
 		{
 			throwIfNoArgumentFollows();
-			testpath = std::string{argv[++i]};
+            ETH_REQUIRE_MESSAGE(testpath.empty(),
+                "testpath is already set! Make sure that testpath is provided as a first option.");
+            testpath = std::string{argv[++i]};
 		}
 		else if (arg == "--statediff")
 			statediff = true;
@@ -322,7 +323,20 @@ Options::Options(int argc, const char** argv)
 				BOOST_WARN("Seed is > u64. Using u64_max instead.");
 			randomTestSeed = static_cast<uint64_t>(min<u256>(std::numeric_limits<uint64_t>::max(), input));*/
 		}
-		else if (seenSeparator)
+        else if (arg == "--clients")
+        {
+            throwIfNoArgumentFollows();
+            vector<string> clientNames;
+            string nnn = std::string{argv[++i]};
+            boost::split(clientNames, nnn, boost::is_any_of(", "));
+            for (auto& it : clientNames)
+            {
+                boost::algorithm::trim(it);
+                if (!it.empty())
+                    clients.push_back(it);
+            }
+        }
+        else if (seenSeparator)
 		{
 			cerr << "Unknown option: " + arg << "\n";
 			exit(1);
@@ -348,7 +362,7 @@ Options::Options(int argc, const char** argv)
 	}
 
 	//Default option
-	if (logVerbosity == Verbosity::NiceReport)
+    if (logVerbosity == 1)
 		g_logVerbosity = -1;	//disable cnote but leave cerr and cout
 }
 
@@ -358,4 +372,44 @@ Options const& Options::get(int argc, const char** argv)
 	return instance;
 }
 
+ClientConfig const& Options::DynamicOptions::getCurrentConfig() const
+{
+    return m_clientConfigs[m_currentConfig];
+}
 
+void Options::DynamicOptions::setCurrentConfig(ClientConfig const& _config)
+{
+    ETH_REQUIRE_MESSAGE(getClientConfigs().size() > 0, "No client configs provided!");
+    bool found = false;
+    for (auto const& cfg : getClientConfigs())
+        if (cfg.getId() == _config.getId() && cfg.getName() == _config.getName())
+            found = true;
+    ETH_REQUIRE_MESSAGE(found, "_config not found in loaded options!");
+    m_currentConfig = _config.getId();
+}
+
+std::vector<ClientConfig> const& Options::DynamicOptions::getClientConfigs()
+{
+    if (m_clientConfigs.size() == 0)
+    {
+        std::vector<string> cfgs = Options::get().clients;
+        if (cfgs.empty())
+            cfgs.push_back("aleth");
+
+        std::cout << "Active client configurations: '";
+        unsigned id = 0;
+        for (auto const& clientName : cfgs)
+        {
+            std::cout << clientName << " ";
+            fs::path configPath = getTestPath() / fs::path("Retesteth") / clientName;
+            fs::path configFilePath = configPath / "config";
+            ETH_REQUIRE_MESSAGE(fs::exists(configFilePath),
+                string("Client config not found: ") + configFilePath.c_str());
+            ClientConfig cfg(test::convertJsonCPPtoData(readJson(configFilePath)), id++,
+                configPath / string(clientName + ".sh"));
+            m_clientConfigs.push_back(cfg);
+        }
+        std::cout << "'" << std::endl;
+    }
+    return m_clientConfigs;
+}

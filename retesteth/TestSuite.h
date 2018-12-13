@@ -19,8 +19,9 @@
  */
 
 #pragma once
-#include <boost/filesystem/path.hpp>
 #include <retesteth/DataObject.h>
+#include <boost/filesystem/path.hpp>
+#include <functional>
 
 namespace test
 {
@@ -73,6 +74,8 @@ public:
 	// Structure  <suiteFolder>/<testFolder>/<test>.json
 	boost::filesystem::path getFullPath(std::string const& _testFolder) const;
 
+    //
+    static void runFunctionForAllClients(std::function<void()> _func);
 };
 
 }
