@@ -139,7 +139,7 @@ fs::path BlockchainTestSuite::suiteFolder() const
 
 fs::path BlockchainTestSuite::suiteFillerFolder() const
 {
-    return "BlockchainTestsFiller";
+    return fs::path("src") / "BlockchainTestsFiller";
 }
 
 }  // Namespace Close

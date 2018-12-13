@@ -14,24 +14,22 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file StateTests.h
- * StateTests functions.
+/** @file RPCTests.h
+ * RPCTests functions.
  */
 
 #pragma once
-#include <retesteth/RPCSession.h>
+#include <retesteth/DataObject.h>
+#include <retesteth/TestSuite.h>
 #include <boost/filesystem/path.hpp>
 
 namespace test
 {
-DataObject getRemoteState(RPCSession& _session, std::string const& _trHash, bool _fullPost);
-
-// Check that test has data object
-void checkDataObject(DataObject const& _input);
-
-// Check that test file has only one test
-void checkOnlyOneTest(DataObject const& _input);
-
-// Check test name in the file is equal to the test name of the file
-void checkTestNameIsEqualToFileName(DataObject const& _input);
+class RPCTestSuite : public TestSuite
+{
+public:
+    DataObject doTests(DataObject const& _input, TestSuiteOptions& _opt) const override;
+    boost::filesystem::path suiteFolder() const override;
+    boost::filesystem::path suiteFillerFolder() const override;
+};
 }

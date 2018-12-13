@@ -289,29 +289,18 @@ namespace test
 {
 DataObject StateTestSuite::doTests(DataObject const& _input, TestSuiteOptions& _opt) const
 {
-    ETH_REQUIRE_MESSAGE(_input.type() == DataType::Object,
-		TestOutputHelper::get().get().testFile().string() + " A GeneralStateTest file should contain an object.");
-    ETH_REQUIRE_MESSAGE(!_opt.doFilling || _input.getSubObjects().size() == 1,
-		TestOutputHelper::get().testFile().string() + " A GeneralStateTest filler should contain only one test.");
+    checkDataObject(_input);
+    checkOnlyOneTest(_input);
 
     DataObject filledTest;
     DataObject const& inputTest = _input.getSubObjects().at(0);
     string const testname = inputTest.getKey();
-    ETH_REQUIRE_MESSAGE(
-        inputTest.type() == DataType::Object, TestOutputHelper::get().testFile().string() +
-                                                  " should contain an object under a test name.");
-
-    if (_opt.doFilling && !TestOutputHelper::get().testFile().empty())
-        ETH_REQUIRE_MESSAGE(
-            testname + "Filler" == TestOutputHelper::get().testFile().stem().string(),
-            TestOutputHelper::get().testFile().string() +
-                " contains a test with a different name '" + testname + "'");
-
     if (!TestOutputHelper::get().checkTest(testname))
         return filledTest;
 
     if (_opt.doFilling)
     {
+        checkTestNameIsEqualToFileName(_input);
         DataObject outputTest;
         if (Options::get().fillchain)
         {
@@ -348,7 +337,7 @@ fs::path StateTestSuite::suiteFolder() const
 
 fs::path StateTestSuite::suiteFillerFolder() const
 {
-	return "GeneralStateTestsFiller";
+    return fs::path("src") / "GeneralStateTestsFiller";
 }
 
 }// Namespace Close

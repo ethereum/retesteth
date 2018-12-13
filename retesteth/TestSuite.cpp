@@ -232,7 +232,9 @@ string TestSuite::checkFillerExistance(string const& _testFolder) const
                 return filter + c_copierPostf;
         }
     }
-    return string("Error selecting filter!");
+
+    // No compiled test files. Filter is empty
+    return filter;
 }
 
 void TestSuite::runAllTestsInFolder(string const& _testFolder) const
@@ -283,7 +285,7 @@ void TestSuite::runFunctionForAllClients(std::function<void()> _func)
 
 fs::path TestSuite::getFullPathFiller(string const& _testFolder) const
 {
-	return test::getTestPath() / "src" / suiteFillerFolder() / _testFolder;
+    return test::getTestPath() / suiteFillerFolder() / _testFolder;
 }
 
 fs::path TestSuite::getFullPath(string const& _testFolder) const
