@@ -41,9 +41,13 @@ public:
     scheme_RPCTestFiller(DataObject const& _test) : scheme_RPCTestBase(_test)
     {
         requireJsonFields(_test, "rpcTest " + _test.getKey(),
-            {{"request_method", {DataType::String}}, {"request_params", {DataType::Array}},
-                {"expect_return", {DataType::Object}}});
+            {{"_info", {{DataType::Object}, jsonField::Optional}},
+                {"request_method", {{DataType::String}, jsonField::Required}},
+                {"request_params", {{DataType::Array}, jsonField::Required}},
+                {"expect_return", {{DataType::Object}, jsonField::Required}}});
     }
-    DataObject get_return() { return m_data.at("expect_return"); }
+    DataObject const& get_return() { return m_data.at("expect_return"); }
+    bool isExact() { return get_return().count("exactly"); }
+    DataObject const& get_exactReturn() { return get_return().at("exactly"); }
 };
 }

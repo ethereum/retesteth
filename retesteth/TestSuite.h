@@ -46,9 +46,10 @@ public:
 
     struct TestSuiteOptions
     {
-        TestSuiteOptions(): doFilling(false), wasErrors(false) {}
-        bool doFilling;
-        bool wasErrors;
+        TestSuiteOptions() : doFilling(false), wasErrors(false), disableSecondRun(false) {}
+        bool doFilling;         // pass the filling flag to doTest function
+        bool wasErrors;         // indicates wether there were errors when filling
+        bool disableSecondRun;  // disable running the test after filling is done
     };
 
 	// Main test executive function. should be declared for each test suite. it fills and runs the test .json file

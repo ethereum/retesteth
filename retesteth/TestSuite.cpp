@@ -192,8 +192,17 @@ string TestSuite::checkFillerExistance(string const& _testFolder) const
                         string() :
                         test::Options::get().singleTestName;
     std::cout << "Filter: " << filter << std::endl;
-    vector<fs::path> const compiledFiles =
+    vector<fs::path> compiledFiles =
         test::getFiles(getFullPath(_testFolder), {".json", ".yml"}, filter);
+
+    bool ghostFile = false;
+    if (compiledFiles.size() == 0)
+    {
+        // no compiled tests yet. check filler existance
+        fs::path ghostFiler = filter;
+        compiledFiles.push_back(ghostFiler);
+        ghostFile = true;
+    }
     for (auto const& file : compiledFiles)
     {
         fs::path const expectedFillerName =
@@ -205,7 +214,17 @@ string TestSuite::checkFillerExistance(string const& _testFolder) const
         fs::path const expectedCopierName =
             getFullPathFiller(_testFolder) /
             fs::path(file.stem().string() + c_copierPostf + ".json");
-        ETH_REQUIRE_MESSAGE(fs::exists(expectedFillerName) || fs::exists(expectedFillerName2) || fs::exists(expectedCopierName), "Compiled test folder contains test without Filler: " + file.filename().string());
+
+        string exceptionStr;
+        if (ghostFile)
+            exceptionStr = "Could not find a filler for provided --singletest filter: " +
+                           file.filename().string();
+        else
+            exceptionStr =
+                "Compiled test folder contains test without Filler: " + file.filename().string();
+        ETH_REQUIRE_MESSAGE(fs::exists(expectedFillerName) || fs::exists(expectedFillerName2) ||
+                                fs::exists(expectedCopierName),
+            exceptionStr);
         ETH_REQUIRE_MESSAGE(!(fs::exists(expectedFillerName) && fs::exists(expectedFillerName2) && fs::exists(expectedCopierName)), "Src test could either be Filler.json, Filler.yml or Copier.json: " + file.filename().string());
 
         // Check that filled tests created from actual fillers depenging on a test type
@@ -355,7 +374,7 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
         }
     }
 
-    if (!opt.wasErrors)
+    if (!opt.wasErrors && !opt.disableSecondRun)
     {
         // Test is generated. Now run it and check that there should be no errors
         if ((Options::get().singleTest && Options::get().singleTestName == testname) || !Options::get().singleTest)

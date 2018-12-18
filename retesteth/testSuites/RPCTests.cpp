@@ -43,15 +43,32 @@ DataObject FillTest(DataObject const& _testFile, TestSuite::TestSuiteOptions& _o
     RPCSession& session = RPCSession::instance(TestOutputHelper::getThreadID());
     Json::Value v = session.rpcCall(rpcTestFiller.get_method(), rpcTestFiller.get_params());
     DataObject returnedData = test::convertJsonCPPtoData(v);
-    std::cerr << "Response: " << std::endl;
-    std::cerr << returnedData.asJson() << std::endl;
+    if (rpcTestFiller.isExact())
+        ETH_CHECK_MESSAGE(returnedData == rpcTestFiller.get_exactReturn(),
+            "Error expected return: " + rpcTestFiller.get_exactReturn().asJson() +
+                " but got: " + returnedData.asJson());
+
+    for (auto const& retField : rpcTestFiller.get_return().getSubObjects())
+    {
+        if (retField.getKey() == "checkstring")
+            ETH_CHECK_MESSAGE(returnedData.type() == DataType::String,
+                "Returned data is expected to be string, but got: '" + returnedData.asJson() + "'");
+        else if (retField.getKey() == "checkint")
+            ETH_CHECK_MESSAGE(returnedData.type() == DataType::Integer,
+                "Returned data is expected to be int, but got: '" + returnedData.asJson() + "'");
+    }
+    filledTest = _testFile;  // Just copy the test filler because the way RPC tests are.
+    _opt.disableSecondRun = true;
     return filledTest;
 }
 
 void RunTest(DataObject const& _testFile)
 {
-    test::scheme_RPCTest rpcTest(_testFile);
-    // RPCSession& session = RPCSession::instance(TestOutputHelper::getThreadID());
+    // Run Test logic works the same as filler. It is here to keep the test structure (fill / run
+    // the test)
+    TestSuite::TestSuiteOptions opt;
+    opt.doFilling = false;
+    FillTest(_testFile, opt);
 }
 
 
