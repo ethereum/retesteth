@@ -1,5 +1,6 @@
 #include "Common.h"
-#include <retesteth/DataObject.h>
+#include <dataObject/ConvertJsoncpp.h>
+#include <dataObject/DataObject.h>
 #include <retesteth/Options.h>
 #include <retesteth/RPCSession.h>
 using namespace std;
@@ -67,8 +68,9 @@ DataObject getRemoteState(RPCSession& _session, string const& _trHash, bool _ful
 
             // Storage
             DataObject storage(DataType::Object);
-            DataObject debugStorageAt = test::convertJsonCPPtoData(_session.debug_storageRangeAt(
-                latestBlockNumber, trIndex, acc.asString(), "0", cmaxRows));
+            DataObject debugStorageAt =
+                dataobject::ConvertJsoncpptoData(_session.debug_storageRangeAt(
+                    latestBlockNumber, trIndex, acc.asString(), "0", cmaxRows));
             for (auto const& element : debugStorageAt["storage"].getSubObjects())
                 storage[element.at("key").asString()] = element.at("value").asString();
             accountObj[acc.asString()]["storage"] = storage;

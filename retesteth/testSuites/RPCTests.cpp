@@ -20,6 +20,9 @@
  * RPC protocol unit tests.
  */
 
+#include <dataObject/ConvertJsoncpp.h>
+#include <dataObject/DataObjectScheme.h>
+#include <dataObject/DataObjectValidator.h>
 #include <retesteth/Options.h>
 #include <retesteth/RPCSession.h>
 #include <retesteth/TestHelper.h>
@@ -37,26 +40,17 @@ namespace test
 DataObject FillTest(DataObject const& _testFile, TestSuite::TestSuiteOptions& _opt)
 {
     DataObject filledTest;
-    test::scheme_RPCTestFiller rpcTestFiller(_testFile);
+    scheme_RPCTestFiller rpcTestFiller(_testFile);
     _opt.wasErrors = false;
 
     RPCSession& session = RPCSession::instance(TestOutputHelper::getThreadID());
     Json::Value v = session.rpcCall(rpcTestFiller.get_method(), rpcTestFiller.get_params());
-    DataObject returnedData = test::convertJsonCPPtoData(v);
-    if (rpcTestFiller.isExact())
-        ETH_CHECK_MESSAGE(returnedData == rpcTestFiller.get_exactReturn(),
-            "Error expected return: " + rpcTestFiller.get_exactReturn().asJson() +
-                " but got: " + returnedData.asJson());
+    DataObject returnedData = dataobject::ConvertJsoncpptoData(v);
 
-    for (auto const& retField : rpcTestFiller.get_return().getSubObjects())
-    {
-        if (retField.getKey() == "checkstring")
-            ETH_CHECK_MESSAGE(returnedData.type() == DataType::String,
-                "Returned data is expected to be string, but got: '" + returnedData.asJson() + "'");
-        else if (retField.getKey() == "checkint")
-            ETH_CHECK_MESSAGE(returnedData.type() == DataType::Integer,
-                "Returned data is expected to be int, but got: '" + returnedData.asJson() + "'");
-    }
+    DataObjectScheme scheme(rpcTestFiller.get_expectReturn());
+    DataObjectValidator validator(scheme);
+    ETH_CHECK_MESSAGE(validator.validatie(returnedData), validator.getError());
+
     filledTest = _testFile;  // Just copy the test filler because the way RPC tests are.
     _opt.disableSecondRun = true;
     return filledTest;
@@ -130,7 +124,7 @@ BOOST_AUTO_TEST_SUITE_END()
 //{
 //    Json::Value result;
 //    ETH_REQUIRE(Json::Reader().parse(_session->sendRawRequest(_request), result, false));
-//    return test::convertJsonCPPtoData(result);
+//    return test::ConvertJsoncpptoData(result);
 //}
 
 // const string cRpcError = "Reply RPC is different: ";

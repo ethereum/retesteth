@@ -1,8 +1,10 @@
 #pragma once
+#include <dataObject/DataObject.h>
 #include <retesteth/EthChecks.h>
-#include <retesteth/DataObject.h>
 #include <retesteth/TestOutputHelper.h>
+#include <boost/test/unit_test.hpp>
 
+using namespace dataobject;
 namespace test {
 	class object
 	{

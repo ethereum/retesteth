@@ -46,8 +46,6 @@ public:
                 {"request_params", {{DataType::Array}, jsonField::Required}},
                 {"expect_return", {{DataType::Object}, jsonField::Required}}});
     }
-    DataObject const& get_return() { return m_data.at("expect_return"); }
-    bool isExact() { return get_return().count("exactly"); }
-    DataObject const& get_exactReturn() { return get_return().at("exactly"); }
+    DataObject const& get_expectReturn() { return m_data.at("expect_return"); }
 };
 }

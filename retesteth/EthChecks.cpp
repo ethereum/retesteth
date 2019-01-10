@@ -30,7 +30,7 @@ void eth_check_message(bool _flag, std::string const& _message)
 {
     if (!_flag)
     {
-        std::cerr << _message << std::endl;
+        //        std::cerr << _message << std::endl;
         TestOutputHelper::get().markError(_message);
     }
 }

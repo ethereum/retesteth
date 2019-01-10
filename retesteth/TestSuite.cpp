@@ -18,13 +18,13 @@
  * Base functions for all test suites
  */
 
-#include <boost/test/unit_test.hpp>
+#include <dataObject/ConvertJsoncpp.h>
+#include <dataObject/DataObject.h>
 #include <json/reader.h>
 #include <json/value.h>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/Log.h>
 #include <libdevcore/SHA3.h>
-#include <retesteth/DataObject.h>
 #include <retesteth/EthChecks.h>
 #include <retesteth/ExitHandler.h>
 #include <retesteth/Options.h>
@@ -32,6 +32,7 @@
 #include <retesteth/TestHelper.h>
 #include <retesteth/TestOutputHelper.h>
 #include <retesteth/TestSuite.h>
+#include <boost/test/unit_test.hpp>
 #include <string>
 #include <thread>
 
@@ -53,7 +54,7 @@ TestFileData readTestFile(fs::path const& _testFileName)
     TestFileData testData;
     Json::Value v = readJson(_testFileName);
     if (_testFileName.extension() == ".json")
-        testData.data = test::convertJsonCPPtoData(v);
+        testData.data = dataobject::ConvertJsoncpptoData(v);
     // else if (_testFileName.extension() == ".yml")
     //    testData.data = test::parseYamlToJson(s);
     else
@@ -66,10 +67,10 @@ TestFileData readTestFile(fs::path const& _testFileName)
     return testData;
 }
 
-void removeComments(test::DataObject& _obj)
+void removeComments(dataobject::DataObject& _obj)
 {
-    if (_obj.type() == test::DataType::Object)
-	{
+    if (_obj.type() == dataobject::DataType::Object)
+    {
 		list<string> removeList;
         for (auto& i: _obj.getSubObjectsUnsafe())
 		{
@@ -83,23 +84,24 @@ void removeComments(test::DataObject& _obj)
         for (auto const& i: removeList)
             _obj.removeKey(i);
 	}
-    else if (_obj.type() == test::DataType::Array)
-	{
+    else if (_obj.type() == dataobject::DataType::Array)
+    {
         for (auto& i: _obj.getSubObjectsUnsafe())
 			removeComments(i);
     }
 }
 
-void addClientInfo(test::DataObject& _v, fs::path const& _testSource, h256 const& _testSourceHash)
+void addClientInfo(
+    dataobject::DataObject& _v, fs::path const& _testSource, h256 const& _testSourceHash)
 {
   RPCSession &session = RPCSession::instance(TestOutputHelper::getThreadID());
   for (auto& o : _v.getSubObjectsUnsafe())
   {
       string comment;
-      test::DataObject clientinfo;
+      dataobject::DataObject clientinfo;
       if (o.count("_info"))
       {
-          test::DataObject const& existingInfo = o.at("_info");
+          dataobject::DataObject const& existingInfo = o.at("_info");
           if (existingInfo.count("comment"))
               comment = existingInfo.at("comment").asString();
       }
@@ -119,14 +121,15 @@ void addClientInfo(test::DataObject& _v, fs::path const& _testSource, h256 const
 
 void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
 {
-    test::DataObject v = test::convertJsonCPPtoData(test::readJson(_compiledTest));
+    dataobject::DataObject v = dataobject::ConvertJsoncpptoData(test::readJson(_compiledTest));
     TestFileData fillerData = readTestFile(_sourceTest);
     for (auto const& i: v.getSubObjects())
 	{
         // use eth object _info section class here !!!!!
-        ETH_REQUIRE_MESSAGE(i.type() == test::DataType::Object, i.getKey() + " should contain an object under a test name.");
+        ETH_REQUIRE_MESSAGE(i.type() == dataobject::DataType::Object,
+            i.getKey() + " should contain an object under a test name.");
         ETH_REQUIRE_MESSAGE(i.count("_info") > 0, "_info section not set! " + _compiledTest.string());
-        test::DataObject const& info = i.at("_info");
+        dataobject::DataObject const& info = i.at("_info");
         ETH_REQUIRE_MESSAGE(info.count("sourceHash") > 0, "sourceHash not found in " + _compiledTest.string() + " in " + i.getKey());
         h256 const sourceHash = h256(info.at("sourceHash").asString());
         ETH_CHECK_MESSAGE(sourceHash == fillerData.hash,
@@ -396,7 +399,7 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
 void TestSuite::executeFile(boost::filesystem::path const& _file) const
 {
     TestSuiteOptions opt;
-    doTests(test::convertJsonCPPtoData(readJson(_file)), opt);
+    doTests(dataobject::ConvertJsoncpptoData(readJson(_file)), opt);
 }
 
 }

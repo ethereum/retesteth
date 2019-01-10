@@ -25,9 +25,9 @@
 #include <thread>
 #include <mutex>
 
+#include <dataObject/DataObject.h>
 #include <libdevcore/CommonData.h>
 #include <libdevcore/CommonIO.h>
-#include <retesteth/DataObject.h>
 #include <retesteth/Options.h>
 #include <retesteth/RPCSession.h>
 #include <retesteth/TestHelper.h>

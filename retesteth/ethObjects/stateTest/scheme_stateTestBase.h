@@ -6,8 +6,8 @@
 #include "scheme_transaction.h"
 #include "scheme_postState.h"
 
+#include <dataObject/DataObject.h>
 #include <retesteth/Options.h>
-#include <retesteth/DataObject.h>
 #include <retesteth/TestHelper.h>
 
 using namespace  test;

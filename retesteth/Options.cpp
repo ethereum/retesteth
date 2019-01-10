@@ -21,6 +21,7 @@
 #include <iostream>
 #include <iomanip>
 
+#include <dataObject/ConvertJsoncpp.h>
 #include <libdevcore/Log.h>
 #include <retesteth/Options.h>
 #include <retesteth/TestHelper.h>
@@ -405,7 +406,7 @@ std::vector<ClientConfig> const& Options::DynamicOptions::getClientConfigs()
             fs::path configFilePath = configPath / "config";
             ETH_REQUIRE_MESSAGE(fs::exists(configFilePath),
                 string("Client config not found: ") + configFilePath.c_str());
-            ClientConfig cfg(test::convertJsonCPPtoData(readJson(configFilePath)), id++,
+            ClientConfig cfg(dataobject::ConvertJsoncpptoData(readJson(configFilePath)), id++,
                 configPath / string(clientName + ".sh"));
             m_clientConfigs.push_back(cfg);
         }

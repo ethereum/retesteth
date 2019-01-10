@@ -19,7 +19,7 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include "BlockchainTests.h"
-#include <retesteth/DataObject.h>
+#include <dataObject/DataObject.h>
 #include <retesteth/EthChecks.h>
 #include <retesteth/Options.h>
 #include <retesteth/RPCSession.h>

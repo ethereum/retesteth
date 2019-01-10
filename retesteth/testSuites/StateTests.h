@@ -19,9 +19,9 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #pragma once
-#include <boost/filesystem/path.hpp>
+#include <dataObject/DataObject.h>
 #include <retesteth/TestSuite.h>
-#include <retesteth/DataObject.h>
+#include <boost/filesystem/path.hpp>
 
 namespace test
 {

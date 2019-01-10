@@ -19,9 +19,10 @@
  */
 
 #pragma once
-#include <retesteth/DataObject.h>
+#include <dataObject/DataObject.h>
 #include <boost/filesystem/path.hpp>
 #include <functional>
+using namespace dataobject;
 
 namespace test
 {

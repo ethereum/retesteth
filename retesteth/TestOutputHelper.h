@@ -19,7 +19,6 @@
  */
 
 #pragma once
-#include <json/value.h>
 #include <boost/filesystem.hpp>
 #include <libdevcore/CommonData.h>
 #include <vector>
@@ -41,7 +40,10 @@ public:
 
 	//void setMaxTests(int _count) { m_maxTests = _count; }
 	bool checkTest(std::string const& _testName);
-    void markError(std::string const& _message) { m_errors.push_back(_message); }
+    void markError(std::string const& _message)
+    {
+        m_errors.push_back(_message + " (" + m_currentTestName + ")");
+    }
     std::vector<std::string> const& getErrors() const { return m_errors;}
     void setCurrentTestFile(boost::filesystem::path const& _name) { m_currentTestFileName = _name; }
 	void setCurrentTestName(std::string const& _name) { m_currentTestName = _name; }
