@@ -90,7 +90,6 @@ public:
             equal = asString() == _value.asString();
             break;
         case DataType::Array:
-        {
             equal = getSubObjects().size() == _value.getSubObjects().size();
             for (size_t i = 0; i < getSubObjects().size(); i++)
             {
@@ -98,7 +97,7 @@ public:
                 if (!equal)
                     break;
             }
-        }
+            break;
         case DataType::Object:
             _assert(getSubObjects().size() == 1,
                 "in DataObject::==(Object)  Type Object must have only 1 object!");

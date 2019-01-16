@@ -33,15 +33,25 @@ private:
 
 struct ExpectedButGot : public DataObjectException
 {
-    ExpectedButGot(std::string const& _expected, std::string const& _got)
+    ExpectedButGot(std::string const& _expected, std::string const& _got, bool _quotes = true)
     {
-        setMessage(m_ErrorMessage + _expected + ", but got: " + _got);
+        if (_quotes)
+            setMessage(m_ErrorMessage + "'" + _expected + "', but got: '" + _got + "'");
+        else
+            setMessage(m_ErrorMessage + _expected + ", but got: " + _got);
+    }
+
+    ExpectedButGot(bool _expected, bool _got)
+    {
+        string expected = _expected ? "'true'" : "'false'";
+        string got = _got ? "'true'" : "'false'";
+        setMessage(m_ErrorMessage + expected + ", but got: " + got);
     }
 
     ExpectedButGot(int _expected, int _got)
     {
-        setMessage(
-            m_ErrorMessage + std::to_string(_expected) + ", but got: " + std::to_string(_got));
+        setMessage(m_ErrorMessage + "'" + std::to_string(_expected) + "', but got: '" +
+                   std::to_string(_got) + "'");
     }
 
 private:

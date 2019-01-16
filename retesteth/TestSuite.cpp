@@ -194,7 +194,7 @@ string TestSuite::checkFillerExistance(string const& _testFolder) const
     string filter = test::Options::get().singleTestName.empty() ?
                         string() :
                         test::Options::get().singleTestName;
-    std::cout << "Filter: " << filter << std::endl;
+    std::cout << "Filter: '" << filter << "'" << std::endl;
     vector<fs::path> compiledFiles =
         test::getFiles(getFullPath(_testFolder), {".json", ".yml"}, filter);
 
@@ -331,6 +331,7 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
     else
         ETH_REQUIRE_MESSAGE(false, "Incorrect file suffix in the filler folder! " + _testFileName.string());
 
+    ETH_LOG("Running " + testname + ": ", 3);
     // Filename of the test that would be generated
     fs::path const boostTestPath = getFullPath(_testFolder) / fs::path(testname + ".json");
 
@@ -379,10 +380,6 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
 
     if (!opt.wasErrors && !opt.disableSecondRun)
     {
-        // Test is generated. Now run it and check that there should be no errors
-        if ((Options::get().singleTest && Options::get().singleTestName == testname) || !Options::get().singleTest)
-            cnote << "TEST " << testname + ":";
-
         try
         {
             executeFile(boostTestPath);

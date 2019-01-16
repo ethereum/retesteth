@@ -3,7 +3,7 @@
 #include <string>
 namespace  test {
 void eth_error_message(std::string const& _message);
-void eth_test_message(std::string const& _message);
+void eth_log_message(std::string const& _message, unsigned _verbosity);
 void eth_require(bool _flag);
 void eth_check_message(bool _flag, std::string const& _message);
 void eth_require_message(bool _flag, std::string const& _message);
@@ -11,7 +11,8 @@ void eth_fail(std::string const& _message);
 void eth_error(std::string const& _message);
 
 #define ETH_ERROR_MESSAGE(message) test::eth_error_message(message)
-#define ETH_TEST_MESSAGE(message) test::eth_test_message(message)
+#define ETH_TEST_MESSAGE(message) test::eth_log_message(message, 6)
+#define ETH_LOG(message, verbosity) test::eth_log_message(message, verbosity)
 #define ETH_CHECK_MESSAGE(flag, message) test::eth_check_message(flag, message)
 #define ETH_REQUIRE_MESSAGE(flag, message) test::eth_require_message(flag, message)
 #define ETH_REQUIRE(flag) test::eth_require(flag)

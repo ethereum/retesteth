@@ -66,7 +66,27 @@ private:
             if (_object.asInt() != _enum.asInt())
                 throw ExpectedButGot(_enum.asInt(), _object.asInt());
             break;
+        case DataType::Bool:
+            if (_object.asBool() != _enum.asBool())
+                throw ExpectedButGot(_enum.asBool(), _object.asBool());
+            break;
+        case DataType::Array:
+            for (auto const& element : _enum.getSubObjects())
+            {
+                bool found = false;
+                for (auto const& element2 : _object.getSubObjects())
+                {
+                    if (element == element2)
+                        found = true;
+                }
+                if (!found)
+                    throw ExpectedButGot("Array elelemnt '" + element.asJson() + "'",
+                        " no elements like this in " + _object.asJson(), false);
+            }
+            break;
         default:
+            throw DataObjectException()
+                << "Unhandled datatype in checkExactValue in DataObjectValidator!";
             break;
         }
     }

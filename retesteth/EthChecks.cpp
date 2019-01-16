@@ -11,10 +11,10 @@ void eth_error_message(std::string const& _message)
     std::cerr << _message << std::endl;
 }
 
-void eth_test_message(std::string const& _message)
+void eth_log_message(std::string const& _message, unsigned _verbosity)
 {
-    if (Options::get().logVerbosity >= 6)
-        std::cerr << _message << std::endl;
+    if (Options::get().logVerbosity >= _verbosity)
+        std::cout << _message << std::endl;
 }
 
 void eth_require(bool _flag)

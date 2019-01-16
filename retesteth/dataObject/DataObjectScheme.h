@@ -58,7 +58,12 @@ private:
             rule.dataTypeExpected = DataType::String;
         else if (_obj.at("type").asString() == "integer")
             rule.dataTypeExpected = DataType::Integer;
-
+        else if (_obj.at("type").asString() == "bool")
+            rule.dataTypeExpected = DataType::Bool;
+        else if (_obj.at("type").asString() == "object")
+            rule.dataTypeExpected = DataType::Object;
+        else if (_obj.at("type").asString() == "array")
+            rule.dataTypeExpected = DataType::Array;
 
         // validation scheme has enum field
         if (_obj.count("enum"))
@@ -66,7 +71,7 @@ private:
             if (_obj.at("enum").type() != DataType::Array)
                 throw DataObjectException() << "Validation scheme 'enum' field must be an array!";
             rule.verificationType = ValidationRule::verification::CHECK_EXACT;
-            rule.dataEnum = _obj.at("enum").getSubObjects().at(0);
+            rule.dataEnum = _obj.at("enum").getSubObjects().at(0);  // enum with only 1 element!!!
         }
 
         rulesVector.push_back(rule);
