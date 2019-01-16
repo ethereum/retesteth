@@ -61,7 +61,7 @@ defaults:
     - checkout
     - *environment-info
     - *configure
-    - *upload-hunter-cache
+#    - *upload-hunter-cache
     - *build
     - *store-retesteth
     - *test
