@@ -73,8 +73,16 @@ public:
         return *this;
     }
 
+    bool operator==(bool _value) const
+    {
+        DataObject tmp(DataType::Bool, _value);
+        return *this == tmp;
+    }
+
     bool operator==(DataObject const& _value) const
     {
+        if (type() != _value.type() || getSubObjects().size() != _value.getSubObjects().size())
+            return false;
         bool equal = true;
         equal = m_type == _value.type();
         equal = getKey() == _value.getKey();

@@ -53,6 +53,7 @@ private:
                        DataObject::dataTypeAsString(_rule.dataTypeExpected) + "'" + ", but got: '" +
                        DataObject::dataTypeAsString(_object.type()) + "'";
     }
+
     void checkExactValue(DataObject const& _object, DataObject const& _enum)
     {
         // assume _object and _enum has same datatype (checked above)
@@ -60,29 +61,39 @@ private:
         {
         case DataType::String:
             if (_object.asString() != _enum.asString())
-                throw ExpectedButGot(_enum.asString(), _object.asString());
+                throw ExpectedButGot(_object.asJson(), _enum.asJson(), false);
             break;
         case DataType::Integer:
             if (_object.asInt() != _enum.asInt())
-                throw ExpectedButGot(_enum.asInt(), _object.asInt());
+                throw ExpectedButGot(_object.asJson(), _enum.asJson(), false);
             break;
         case DataType::Bool:
             if (_object.asBool() != _enum.asBool())
-                throw ExpectedButGot(_enum.asBool(), _object.asBool());
+                throw ExpectedButGot(_object.asJson(), _enum.asJson(), false);
             break;
+        case DataType::Object:
         case DataType::Array:
+            if (_enum.getSubObjects().size() != _object.getSubObjects().size())
+                throw ExpectedButGot("Structure like '" + _enum.asJson() + "'",
+                    " structure like '" + _object.asJson() + "'", false);
+
             for (auto const& element : _enum.getSubObjects())
             {
                 bool found = false;
                 for (auto const& element2 : _object.getSubObjects())
                 {
-                    if (element == element2)
+                    if (element.type() == element2.type() && element.getKey() == element2.getKey())
+                    {
                         found = true;
+                        checkExactValue(element2, element);
+                        break;
+                    }
                 }
                 if (!found)
                     throw ExpectedButGot("Array elelemnt '" + element.asJson() + "'",
                         " no elements like this in " + _object.asJson(), false);
             }
+
             break;
         default:
             throw DataObjectException()

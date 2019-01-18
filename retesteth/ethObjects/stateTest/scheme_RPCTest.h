@@ -16,7 +16,17 @@ public:
         // no static here because of the threads
         std::vector<std::string> params;
         for (auto const& d : m_data.at("request_params").getSubObjects())
-            params.push_back("\"" + d.asString() + "\"");
+        {
+            if (d.type() == DataType::String)
+                params.push_back("\"" + d.asString() + "\"");
+            else if (d.type() == DataType::Bool)
+            {
+                if (d == true)
+                    params.push_back("true");
+                else
+                    params.push_back("false");
+            }
+        }
         return params;
     }
 };
