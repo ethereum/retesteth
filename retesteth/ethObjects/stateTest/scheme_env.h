@@ -10,7 +10,7 @@ namespace test {
         scheme_env(DataObject const& _env):
                 object(_env)
         {
-            test::requireJsonFields(_env, "env", {
+            test::requireJsonFields(_env, _env.getKey(), {
                 {"currentCoinbase", {DataType::String} },
                 {"currentDifficulty", {DataType::String} },
                 {"currentGasLimit", {DataType::String} },

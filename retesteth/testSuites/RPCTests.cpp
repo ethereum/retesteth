@@ -44,6 +44,10 @@ DataObject FillTest(DataObject const& _testFile, TestSuite::TestSuiteOptions& _o
     _opt.wasErrors = false;
 
     RPCSession& session = RPCSession::instance(TestOutputHelper::getThreadID());
+
+    if (rpcTestFiller.hasGenesis())
+        session.test_setChainParams(rpcTestFiller.getGenesisForRPC().asJson());
+
     Json::Value v = session.rpcCall(rpcTestFiller.get_method(), rpcTestFiller.get_params());
     DataObject returnedData = dataobject::ConvertJsoncpptoData(v);
 
