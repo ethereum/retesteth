@@ -77,6 +77,9 @@ public:
 	std::string const& account(size_t _id) const { return m_accounts.at(_id); }
 	std::string const& accountCreate();
 	std::string const& accountCreateIfNotExists(size_t _id);
+
+    /// Returns empty string if last RPC call had no errors, error string if there was an error
+    std::string const& getLastRPCError() const { return m_lastRPCErrorString; }
     Socket::SocketType getSocketType() const { return m_socket.type(); }
 
 private:
@@ -92,6 +95,7 @@ private:
     unsigned m_maxMiningTime = 250000;    // should be instant with --test (1 sec)
     unsigned m_sleepTime = 10;            // 10 milliseconds
 	unsigned m_successfulMineRuns = 0;
+    string m_lastRPCErrorString;          // last RPC error string
 
 	std::vector<std::string> m_accounts;
 };

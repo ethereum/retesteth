@@ -97,6 +97,7 @@ vector<string> const& getNetworks()
         networks.push_back("EIP158");
         networks.push_back("Byzantium");
         networks.push_back("Constantinople");
+        networks.push_back("ConstantinopleFix");
       }
     }
     return networks;

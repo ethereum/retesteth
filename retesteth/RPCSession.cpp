@@ -448,13 +448,14 @@ Json::Value RPCSession::rpcCall(string const& _methodName, vector<string> const&
 
     if (result.isMember("error"))
     {
+        m_lastRPCErrorString = "Error on JSON-RPC call (" + test::TestOutputHelper::get().testName() + "): "
+                            + result["error"]["message"].asString()
+                            + " Request: " + request;
         if (_canFail)
             return Json::Value();
-
-        ETH_FAIL("Error on JSON-RPC call (" + test::TestOutputHelper::get().testName() + "): "
-         + result["error"]["message"].asString()
-         + " Request: " + request);
+        ETH_FAIL(m_lastRPCErrorString);
     }
+    m_lastRPCErrorString = string();    //null the error as last RPC call was success.
     return result["result"];
 }
 

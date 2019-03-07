@@ -175,6 +175,9 @@ DataObject FillTest(DataObject const& _testFile, TestSuite::TestSuiteOptions& _o
                     u256 a(test.getEnv().getData().at("currentTimestamp").asString());
                     session.test_modifyTimestamp(a.convert_to<size_t>());
                     string trHash = session.eth_sendRawTransaction(tr.transaction.getSignedRLP());
+                    if (!session.getLastRPCError().empty())
+                        ETH_ERROR(session.getLastRPCError());
+
                     session.test_mineBlocks(1);
                     tr.executed = true;
 
