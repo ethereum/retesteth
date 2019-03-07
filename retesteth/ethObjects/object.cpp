@@ -186,29 +186,35 @@ void requireJsonFields(DataObject const& _o, std::string const& _config,
 DataObject object::prepareGenesisParams(std::string const& _network, std::string const& _engine)
 {
     test::checkAllowedNetwork(_network);
+    bool networkChecked = false;
     DataObject genesis;
     genesis["sealEngine"] = _engine;
     if (_network == "Frontier")
     {
+        networkChecked = true;
         genesis["params"] = DataObject(DataType::Object);
     }
     else if (_network == "Homestead")
     {
+        networkChecked = true;
         genesis["params"]["homesteadForkBlock"] = "0x00";
     }
     else if (_network == "EIP150")
     {
+        networkChecked = true;
         genesis["params"]["homesteadForkBlock"] = "0x00";
         genesis["params"]["EIP150ForkBlock"] = "0x00";
     }
     else if (_network == "EIP158")
     {
+        networkChecked = true;
         genesis["params"]["homesteadForkBlock"] = "0x00";
         genesis["params"]["EIP150ForkBlock"] = "0x00";
         genesis["params"]["EIP158ForkBlock"] = "0x00";
     }
     else if (_network == "Byzantium")
     {
+        networkChecked = true;
         genesis["params"]["homesteadForkBlock"] = "0x00";
         genesis["params"]["EIP150ForkBlock"] = "0x00";
         genesis["params"]["EIP158ForkBlock"] = "0x00";
@@ -216,6 +222,7 @@ DataObject object::prepareGenesisParams(std::string const& _network, std::string
     }
     else if (_network == "Constantinople" || _network == "ConstantinopleFix")
     {
+        networkChecked = true;
         genesis["params"]["homesteadForkBlock"] = "0x00";
         genesis["params"]["EIP150ForkBlock"] = "0x00";
         genesis["params"]["EIP158ForkBlock"] = "0x00";
@@ -224,6 +231,8 @@ DataObject object::prepareGenesisParams(std::string const& _network, std::string
         if (_network == "ConstantinopleFix")
             genesis["params"]["constantinopleFixForkBlock"] = "0x00";
     }
+    if (!networkChecked)
+        ETH_FAIL("Unhandled network: " + _network + " (DataObject object::prepareGenesisParams)");
     return genesis;
 }
 }

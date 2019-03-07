@@ -116,7 +116,7 @@ void TestOutputHelper::printBoostError()
     if (errorCount)
     {
         std::cerr << std::endl << "--------" << std::endl;
-        std::cerr << "TestOutputHelper detected " + toString(errorCount - 1) + " errors during test execution!" << std::endl;
+        std::cerr << "TestOutputHelper detected " + toString(errorCount) + " errors during test execution!" << std::endl;
         BOOST_ERROR("");  // NOT THREAD SAFE !!!
     }
     helperThreadMap.clear();
