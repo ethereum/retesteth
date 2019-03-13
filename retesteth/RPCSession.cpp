@@ -235,13 +235,13 @@ test::scheme_block RPCSession::eth_getBlockByNumber(string const& _blockNumber, 
 {
 	// NOTE: to_string() converts bool to 0 or 1
 	Json::Value response = rpcCall("eth_getBlockByNumber", { quote(_blockNumber), _fullObjects ? "true" : "false" });
-    return test::scheme_block(dataobject::ConvertJsoncpptoData(response));
+    return test::scheme_block(dataobject::ConvertJsoncppToData(response));
 }
 
 test::scheme_transactionReceipt RPCSession::eth_getTransactionReceipt(string const& _transactionHash)
 {
 	Json::Value const result = rpcCall("eth_getTransactionReceipt", { quote(_transactionHash) });
-    return test::scheme_transactionReceipt(dataobject::ConvertJsoncpptoData(result));
+    return test::scheme_transactionReceipt(dataobject::ConvertJsoncppToData(result));
 }
 
 string RPCSession::eth_blockNumber()

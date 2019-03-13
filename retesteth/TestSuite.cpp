@@ -19,6 +19,7 @@
  */
 
 #include <dataObject/ConvertJsoncpp.h>
+#include <dataObject/ConvertYaml.h>
 #include <dataObject/DataObject.h>
 #include <json/reader.h>
 #include <json/value.h>
@@ -52,18 +53,27 @@ struct TestFileData
 TestFileData readTestFile(fs::path const& _testFileName)
 {
     TestFileData testData;
-    Json::Value v = readJson(_testFileName);
-    if (_testFileName.extension() == ".json")
-        testData.data = dataobject::ConvertJsoncpptoData(v);
-    // else if (_testFileName.extension() == ".yml")
-    //    testData.data = test::parseYamlToJson(s);
-    else
-        BOOST_ERROR("Unknow test format!" + test::TestOutputHelper::get().testFile().string());
 
-    Json::FastWriter fastWriter;
+    // Check that file is not empty
+    string const s = dev::contentsString(_testFileName);
+    ETH_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _testFileName.string() + " is empty.");
+
+    if (_testFileName.extension() == ".json")
+        testData.data = dataobject::ConvertJsoncppToData(readJson(_testFileName));
+    else if (_testFileName.extension() == ".yml")
+        testData.data = dataobject::ConvertYamlToData(YAML::Load(s));
+    else
+        ETH_ERROR("Unknown test format!" + test::TestOutputHelper::get().testFile().string());
+
+    /*Json::FastWriter fastWriter;
     std::string output = fastWriter.write(v);
     output = output.substr(0, output.size() - 1);
-    testData.hash = sha3(output);
+    testData.hash = sha3(output);*/
+
+    string srcString = testData.data.asJson(0, false); //json_spirit::write_string(testData.data, false);
+    if (test::Options::get().showhash)
+        std::cout << "'" << srcString << "'" << std::endl;
+    testData.hash = sha3(srcString);
     return testData;
 }
 
@@ -121,7 +131,7 @@ void addClientInfo(
 
 void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
 {
-    dataobject::DataObject v = dataobject::ConvertJsoncpptoData(test::readJson(_compiledTest));
+    dataobject::DataObject v = dataobject::ConvertJsoncppToData(test::readJson(_compiledTest));
     TestFileData fillerData = readTestFile(_sourceTest);
     for (auto const& i: v.getSubObjects())
 	{
@@ -396,7 +406,7 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
 void TestSuite::executeFile(boost::filesystem::path const& _file) const
 {
     TestSuiteOptions opt;
-    doTests(dataobject::ConvertJsoncpptoData(readJson(_file)), opt);
+    doTests(dataobject::ConvertJsoncppToData(readJson(_file)), opt);
 }
 
 }

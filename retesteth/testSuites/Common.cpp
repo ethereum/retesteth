@@ -69,7 +69,7 @@ DataObject getRemoteState(RPCSession& _session, string const& _trHash, bool _ful
             // Storage
             DataObject storage(DataType::Object);
             DataObject debugStorageAt =
-                dataobject::ConvertJsoncpptoData(_session.debug_storageRangeAt(
+                dataobject::ConvertJsoncppToData(_session.debug_storageRangeAt(
                     latestBlockNumber, trIndex, acc.asString(), "0", cmaxRows));
             for (auto const& element : debugStorageAt["storage"].getSubObjects())
                 storage[element.at("key").asString()] = element.at("value").asString();
