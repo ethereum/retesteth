@@ -45,14 +45,19 @@ public:
     DataObject& operator[](std::string const& _key)
     {
         _assert(m_type == DataType::Null || m_type == DataType::Object,
-            "m_type == DataType::Null || m_type == DataType::Object");
+            "m_type == DataType::Null || m_type == DataType::Object (DataObject& operator[])");
         for (auto& i : m_subObjects)
             if (i.getKey() == _key)
                 return i;
         DataObject obj(DataType::Null);
         obj.setKey(_key);
-        _addSubObject(obj);
-        return m_subObjects[m_subObjects.size() - 1];
+        _addSubObject(obj); // !could change the item order!
+        // need to find our item again
+        for (auto& i : m_subObjects)
+            if (i.getKey() == _key)
+                return i;
+        _assert(false, "key not found after rearrangment! (operator[])");
+        return m_subObjects.at(0);
     }
 
     DataObject& operator=(std::string const& _value)
@@ -124,8 +129,9 @@ public:
 
     DataObject& operator=(DataObject const& _value)
     {
-        assert(m_type == DataType::Null);  // So not to overwrite the existing data
+        // So not to overwrite the existing data
         // Do not replace the key. Assuming that key is set upon calling DataObject[key] =
+        _assert(m_type == DataType::Null, "m_type == DataType::Null (DataObject& operator=). Overwriting dataobject that is not NULL");
         m_type = _value.type();
         switch (_value.type())
         {
@@ -162,7 +168,7 @@ public:
     static std::string dataTypeAsString(DataType _type);
 
 private:
-    void _addSubObject(DataObject const& _obj);
+    void _addSubObject(DataObject const& _obj, string const& _keyOverwrite = string());
     void _checkDoubleKeys() const;
     void _assert(bool _flag, std::string const& _comment = "") const;
 

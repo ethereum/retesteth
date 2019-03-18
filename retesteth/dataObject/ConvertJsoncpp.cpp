@@ -54,12 +54,13 @@ DataObject ConvertJsoncppToData(Json::Value const& _input)
     if (_input.isObject())
     {
         DataObject root(DataType::Object);
-        for (auto const& i : _input)
-            root.addSubObject(ConvertJsoncppToData(i));
-
+        Json::Value::Members members = _input.getMemberNames();
         size_t index = 0;
-        for (auto const& i : _input.getMemberNames())
-            root.setSubObjectKey(index++, i);
+        for (auto const& i : _input)
+        {
+            string const& key = members.at(index++); // hopefuly members are arranged same way as auto: loop
+            root.addSubObject(key, ConvertJsoncppToData(i));
+        }
         return root;
     }
 
