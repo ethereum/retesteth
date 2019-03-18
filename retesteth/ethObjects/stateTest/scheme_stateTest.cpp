@@ -55,6 +55,16 @@ scheme_stateTest::fieldChecker::fieldChecker(DataObject const& _test)
         {"transaction", {DataType::Object} },
         {"post", {DataType::Object} }
     });
+
+    requireJsonFields(_test.at("_info"), "stateTest " + _test.getKey() + " _info ", {
+        {"comment", {{DataType::String}, jsonField::Required} },
+        {"source", {{DataType::String}, jsonField::Required} },
+        {"sourceHash", {{DataType::String}, jsonField::Required} },
+        {"lllcversion", {{DataType::String}, jsonField::Required} },
+        {"filledwith", {{DataType::String}, jsonField::Optional} },
+        {"filling-rpc-server", {{DataType::String}, jsonField::Optional} },
+        {"filling-tool-version", {{DataType::String}, jsonField::Optional} },
+    });
 }
 
 scheme_stateTestFiller::fieldChecker::fieldChecker(DataObject const& _test)

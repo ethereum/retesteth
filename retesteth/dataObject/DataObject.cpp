@@ -435,6 +435,8 @@ void DataObject::_addSubObject(DataObject const& _obj, string const& _keyOverwri
 
 void DataObject::_checkDoubleKeys() const
 {
+    // !! disable this function on release !!
+    #ifdef DEBUG
     _assert(m_type == DataType::Object, "m_type != DataType::Object (DataObject::_checkDoubleKeys())");
     for (size_t i = 0; i < m_subObjects.size(); i++)
     {
@@ -445,6 +447,7 @@ void DataObject::_checkDoubleKeys() const
             _assert(m_subObjects.at(j).getKey() != key,
                 "m_subObjects.at(j).getKey() != key, double key: '" + key + "' in the object!");
     }
+    #endif
 }
 
 void DataObject::_assert(bool _flag, std::string const& _comment) const

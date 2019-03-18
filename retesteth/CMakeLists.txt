@@ -5,6 +5,10 @@ target_link_libraries(${PROJECT_NAME} PUBLIC Boost::filesystem Boost::program_op
 target_include_directories(${PROJECT_NAME} PRIVATE "../")
 target_include_directories(${PROJECT_NAME} PRIVATE "../retesteth")
 
+if(("${CMAKE_BUILD_TYPE}" STREQUAL "Debug") OR ("${CMAKE_BUILD_TYPE}" STREQUAL "RelWithDebInfo"))
+	add_definitions(-DDEBUG)
+endif()
+
 if(HUNTER_ENABLED)
 	# Find Python executable,
 	# prefer version 3 that has requests module included.
