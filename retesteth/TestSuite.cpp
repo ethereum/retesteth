@@ -65,14 +65,23 @@ TestFileData readTestFile(fs::path const& _testFileName)
     else
         ETH_ERROR("Unknown test format!" + test::TestOutputHelper::get().testFile().string());
 
-    /*Json::FastWriter fastWriter;
-    std::string output = fastWriter.write(v);
-    output = output.substr(0, output.size() - 1);
-    testData.hash = sha3(output);*/
+    // Original hash calculation with json
+    std::string output = "Not a Json object!";
+    if (_testFileName.extension() == ".json")
+    {
+        Json::FastWriter fastWriter;
+        Json::Value v = readJson(_testFileName);
+        output = fastWriter.write(v);
+        output = output.substr(0, output.size() - 1);
+    }
 
     string srcString = testData.data.asJson(0, false); //json_spirit::write_string(testData.data, false);
     if (test::Options::get().showhash)
-        std::cout << "'" << srcString << "'" << std::endl;
+    {
+        //std::cout << "'" << srcString << "'" << std::endl;
+        std::cerr << "JSON: '" << std::endl << output << "'" << std::endl;
+        std::cerr << "DATA: '" << std::endl << srcString << "'" << std::endl;
+    }
     testData.hash = sha3(srcString);
     return testData;
 }
