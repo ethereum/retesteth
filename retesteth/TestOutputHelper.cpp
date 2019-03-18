@@ -34,6 +34,7 @@ using namespace boost;
 
 typedef std::pair<double, std::string> execTimeName;
 static std::vector<execTimeName> execTimeResults;
+static int execTotalErrors = 0;
 static std::map<std::string, TestOutputHelper> helperThreadMap; // threadID => outputHelper
 
 mutex g_helperThreadMapMutex;
@@ -117,7 +118,9 @@ void TestOutputHelper::printBoostError()
     {
         std::cerr << std::endl << "--------" << std::endl;
         std::cerr << "TestOutputHelper detected " + toString(errorCount) + " errors during test execution!" << std::endl;
+        std::lock_guard<std::mutex> lock(g_resultsUpdate_mutex);
         BOOST_ERROR("");  // NOT THREAD SAFE !!!
+        execTotalErrors += errorCount;
     }
     helperThreadMap.clear();
 }
@@ -125,18 +128,26 @@ void TestOutputHelper::printBoostError()
 void TestOutputHelper::printTestExecStats()
 {
     std::lock_guard<std::mutex> lock(g_resultsUpdate_mutex);
-	if (Options::get().exectimelog)
-	{
+    if (Options::get().exectimelog)
+    {
         int totalTime = 0;
-		std::cout << std::left;
+        std::cout << std::left;
         std::sort(execTimeResults.begin(), execTimeResults.end(), [](execTimeName _a, execTimeName _b) { return (_b.first < _a.first); });
         for (size_t i = 0; i < execTimeResults.size(); i++)
             totalTime += execTimeResults[i].first;
         std::cout << setw(45) << "Total Time: " << setw(25) << "     : " + toString(totalTime) << "\n";
         for (size_t i = 0; i < execTimeResults.size(); i++)
             std::cout << setw(45) << execTimeResults[i].second << setw(25) << " time: " + toString(execTimeResults[i].first) << "\n";
-	}
+    }
+
+    if (execTotalErrors)
+    {
+        std::cerr << std::endl << "--------" << std::endl;
+        std::cerr << "*** TOTAL ERRORS DETECTED: " + toString(execTotalErrors) + " errors during all test execution!";
+        std::cerr << std::endl << "--------" << std::endl;
+    }
     execTimeResults.clear();
+    execTotalErrors = 0;
 }
 
 std::string TestOutputHelper::getThreadID()
