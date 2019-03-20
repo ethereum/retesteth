@@ -61,22 +61,38 @@ std::string object::makeHexAddress(std::string const& _address)
 	return _address;
 }
 
+std::string object::convertStringToHexPrefixed(string const& _input, short _minimumBytes)
+{
+    DigitsType type = stringIntegerType(_input);
+    if (type == DigitsType::HexPrefixed || type == DigitsType::String)
+        return _input;
+    if (type == DigitsType::Decimal)
+        return dev::toCompactHexPrefixed(dev::u256(_input), _minimumBytes);
+    else if (type == DigitsType::Hex)
+        return dev::toCompactHexPrefixed(dev::u256("0x" + _input), _minimumBytes);
+    ETH_ERROR("Unhendeled path in object::convertStringToHexPrefixed");
+    return _input;
+}
+
 void object::makeKeyHex(DataObject& _key)
 {
+    // If transaction to field is empty its ok.
     if (_key.getKey() == "to" && _key.asString().empty())
         return;
+
     // make empty data and code fields as "0x", others as "0x00" if 0
-    static std::set<std::string> empty0xFields = {"data", "code"};
-    if(stringIntegerType(_key.asString()) == DigitsType::Decimal)
-        _key = dev::toCompactHexPrefixed(dev::u256(_key.asString()),
-                                        empty0xFields.count(_key.getKey()) ? 0 : 1);
-    else if(stringIntegerType(_key.asString()) == DigitsType::Hex)
-        _key = dev::toCompactHexPrefixed(dev::u256("0x" + _key.asString()),
-                                        empty0xFields.count(_key.getKey()) ? 0 : 1);
+    static const std::set<std::string> empty0xFields = {"data", "code"};
+    _key = convertStringToHexPrefixed(_key.asString(), empty0xFields.count(_key.getKey()) ? 0 : 1);
+
+    // make key itself hex
+    if (!_key.getKey().empty())
+        _key.setKey(convertStringToHexPrefixed(_key.getKey(), 1));
 }
 
 void object::makeAllFieldsHex(DataObject& _data)
 {
+    if (_data.type() == DataType::Null)
+        return;
     if (_data.type() == DataType::Object || _data.type() == DataType::Array)
     {
         for (auto& key: _data.getSubObjectsUnsafe())
@@ -99,7 +115,7 @@ void requireJsonFields(DataObject const& _o, std::string const& _section,
 	// check for unexpected fiedls
 	for (auto const field : _o.getSubObjects())
         ETH_CHECK_MESSAGE(_validationMap.count(field.getKey()),
-            field.getKey() + " should not be declared in '" + _section + "' section!");
+            "'" + field.getKey() + "' should not be declared in '" + _section + "' section!");
 
     // check field types with validation map
 	for (auto const vmap : _validationMap)

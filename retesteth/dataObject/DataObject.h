@@ -162,7 +162,7 @@ public:
     /// vector<element> erase method with `replace()` function
     void removeKey(std::string const& _key);
 
-    void clear();
+    void clear(DataType _type = DataType::Null);
 
     std::string asJson(int level = 0, bool pretty = true) const;
     static std::string dataTypeAsString(DataType _type);

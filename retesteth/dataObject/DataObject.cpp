@@ -242,11 +242,13 @@ void DataObject::removeKey(std::string const& _key)
     }
 }
 
-void DataObject::clear()
+void DataObject::clear(DataType _type)
 {
     m_intVal = 0;
+    m_strKey = "";
+    m_strVal = "";
     m_subObjects.clear();
-    m_type = DataType::Null;
+    m_type = _type;
 }
 
 std::string DataObject::asJson(int level, bool pretty) const

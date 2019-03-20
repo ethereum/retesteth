@@ -1,8 +1,9 @@
 #include <retesteth/EthChecks.h>
+#include <retesteth/ExitHandler.h>
 #include <retesteth/Options.h>
 #include <retesteth/TestOutputHelper.h>
-#include <iostream>
 #include <csignal>
+#include <iostream>
 #include <thread>
 
 namespace test {
@@ -29,10 +30,7 @@ void eth_require(bool _flag)
 void eth_check_message(bool _flag, std::string const& _message)
 {
     if (!_flag)
-    {
-        //        std::cerr << _message << std::endl;
         TestOutputHelper::get().markError(_message);
-    }
 }
 
 void eth_require_message(bool _flag, std::string const& _message)
@@ -43,11 +41,10 @@ void eth_require_message(bool _flag, std::string const& _message)
 
 void eth_fail(std::string const& _message)
 {
-    std::cerr << "--------" << std::endl;
-    std::cerr << _message << std::endl;
-    std::this_thread::sleep_for(std::chrono::seconds(1));
-    std::raise(SIGABRT);
     TestOutputHelper::get().markError(_message);
+    // test::TestOutputHelper::get().finishTest();
+    ExitHandler::doExit();
+    std::raise(SIGABRT);
     throw std::exception();
 }
 

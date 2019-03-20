@@ -50,18 +50,20 @@ public:
 	std::string const& testName() { return m_currentTestName; }
 	std::string const& caseName() { return m_currentTestCaseName; }
 	boost::filesystem::path const& testFile() { return m_currentTestFileName; }
-        static void printTestExecStats();
+    static void printTestExecStats();
+    static bool isAllTestsFinished();
 
-        /// get string representation of current threadID
-        static std::string getThreadID();
+    /// get string representation of current threadID
+    static std::string getThreadID();
 
-      private:
+private:
 	TestOutputHelper() {}
 	dev::Timer m_timer;
 	size_t m_currTest;
 	size_t m_maxTests;
 	std::string m_currentTestName;
 	std::string m_currentTestCaseName;
+    bool m_isRunning;
     boost::filesystem::path m_currentTestFileName;
     std::vector<std::string> m_errors; //flag errors for triggering boost erros after all thread finished
     void printBoostError();
@@ -70,8 +72,8 @@ public:
 class TestOutputHelperFixture
 {
 public:
-	TestOutputHelperFixture() { TestOutputHelper::get().initTest(); }
-	~TestOutputHelperFixture() { TestOutputHelper::get().finishTest(); }
+    TestOutputHelperFixture() { TestOutputHelper::get().initTest(); }
+    ~TestOutputHelperFixture() { TestOutputHelper::get().finishTest(); }
 };
 
 template <class T>

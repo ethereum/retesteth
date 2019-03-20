@@ -29,7 +29,10 @@ namespace test {
 		void makeKeyHex(DataObject& _key);
 		void makeAllFieldsHex(DataObject& _data);
 		DataObject m_data;
-	};
+
+    private:
+        std::string convertStringToHexPrefixed(string const& _input, short _minimumBytes);
+    };
 
 	/// check the presents of fields in a DataObject with a validation map
 	typedef std::set<DataType> possibleType;

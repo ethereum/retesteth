@@ -169,8 +169,8 @@ void joinThreads(vector<thread>& _threadVector, bool _all)
             RPCSession::sessionEnd(id, RPCSession::SessionStatus::Available);
         }
         _threadVector.clear();
-        if (ExitHandler::shouldExit())
-            ExitHandler::couldExit();
+        if (ExitHandler::receivedExitSignal())
+            ExitHandler::doExit();
         return;
     }
 
@@ -239,8 +239,9 @@ string TestSuite::checkFillerExistance(string const& _testFolder) const
 
         string exceptionStr;
         if (ghostFile)
-            exceptionStr = "Could not find a filler for provided --singletest filter: " +
-                           file.filename().string();
+            exceptionStr = "Could not find a filler for provided --singletest filter: '" +
+                           file.filename().string() +
+                           "', or no tests were found in the test suite folder!";
         else
             exceptionStr =
                 "Compiled test folder contains test without Filler: " + file.filename().string();
@@ -280,8 +281,12 @@ string TestSuite::checkFillerExistance(string const& _testFolder) const
 
 void TestSuite::runAllTestsInFolder(string const& _testFolder) const
 {
-    if (ExitHandler::shouldExit())
+    if (ExitHandler::receivedExitSignal())
+    {
+        auto& testOutput = test::TestOutputHelper::get();
+        testOutput.finishTest();
         return;
+    }
 
     // check that destination folder test files has according Filler file in src folder
     string const filter = checkFillerExistance(_testFolder);
@@ -297,8 +302,11 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
         testOutput.initTest(files.size());
         for (auto const& file : files)
         {
-            if (ExitHandler::shouldExit())
+            if (ExitHandler::receivedExitSignal())
+            {
+                testOutput.finishTest();
                 break;
+            }
             testOutput.showProgress();
             if (threadVector.size() == Options::get().threadCount)
                 joinThreads(threadVector, false);

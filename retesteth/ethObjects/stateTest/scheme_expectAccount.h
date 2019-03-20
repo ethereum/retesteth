@@ -67,7 +67,6 @@ namespace  test {
                    TestOutputHelper::get().testName() + " '" + address() + "' expected storage key: '"
                     + element.getKey() + "' to be set!");
 
-
                 if (result != CompareResult::Success)
                     return result;
 

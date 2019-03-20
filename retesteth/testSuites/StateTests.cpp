@@ -28,6 +28,7 @@
 #include <dataObject/DataObject.h>
 #include <libdevcore/CommonData.h>
 #include <libdevcore/CommonIO.h>
+#include <retesteth/ExitHandler.h>
 #include <retesteth/Options.h>
 #include <retesteth/RPCSession.h>
 #include <retesteth/TestHelper.h>
@@ -354,8 +355,9 @@ public:
 		string casename = boost::unit_test::framework::current_test_case().p_name;
 		if (casename == "stQuadraticComplexityTest" && !test::Options::get().all)
 		{
-			std::cout << "Skipping " << casename << " because --all option is not specified.\n";
-			return;
+            if (!ExitHandler::receivedExitSignal())
+                std::cout << "Skipping " << casename << " because --all option is not specified.\n";
+            return;
 		}
 		suite.runAllTestsInFolder(casename);
 	}

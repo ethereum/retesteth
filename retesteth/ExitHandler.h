@@ -5,11 +5,11 @@ class ExitHandler
 {
 public:
 	static void exitHandler(int);
-    static bool shouldExit();
-    static void couldExit();
+    static bool receivedExitSignal();
+    static void doExit();
 
 private:
-    static bool m_shouldExit;
+    static bool m_receivedExitSig;
 };
 
 
