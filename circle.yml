@@ -75,12 +75,12 @@ jobs:
     environment:
       - CXX: clang++-6.0
       - CC:  clang-6.0
-      - GCOV: llvm-cov-5.0 gcov
+      - GCOV: llvm-cov-6.0 gcov
       - GENERATOR: Ninja
       - BUILD_PARALLEL_JOBS: 8
       - TEST_PARALLEL_JOBS: 8
     docker:
-      - image: ethereum/cpp-build-env
+      - image: ethereum/cpp-build-env:7
     steps: *linux-steps
 
   Linux-GCC6-Debug:
@@ -96,7 +96,7 @@ jobs:
       # - CMAKE_OPTIONS: -DSANITIZE=address
       # - ASAN_OPTIONS: detect_leaks=0
     docker:
-      - image: ethereum/cpp-build-env
+      - image: ethereum/cpp-build-env:7
     steps: *linux-steps
 
   macOS-XCode9:
@@ -113,10 +113,10 @@ jobs:
       - *environment-info
       - run:
           name: "Install macOS dependencies"
+          # Python3 and requests are needed for Hunter upload.
           command: |
-            pip install -q requests codecov &
-            HOMEBREW_NO_AUTO_UPDATE=1 brew install -q cmake ninja &
-            wait
+            HOMEBREW_NO_AUTO_UPDATE=1 brew install -q llvm37 cmake ninja python3
+            pip3 install -q requests gitpython
       - *configure
 #      - *upload-hunter-cache
       - *build
