@@ -112,7 +112,12 @@ namespace test {
                     continue;
                 }
                 if (element.getKey() != "data")
-                    makeAllFieldsHex(element); 
+                    makeAllFieldsHex(element);
+                else
+                {
+                    for (auto& element2 : element.getSubObjectsUnsafe())
+                        element2 = test::replaceCode(element2.asString());
+                }
             }
             parseGeneralTransaction();
         }
@@ -135,7 +140,6 @@ namespace test {
                         DataObject gas("gasLimit", m_data.at("gasLimit").getSubObjects().at(gasInd).asString());
                         DataObject value("value", m_data.at("value").getSubObjects().at(valueInd).asString());
 
-                        data = test::replaceCode(data.asString());
                         singleTransaction.addSubObject(data);
                         singleTransaction.addSubObject(gas);
                         singleTransaction.addSubObject(m_data.at("gasPrice"));

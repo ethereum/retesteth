@@ -36,9 +36,10 @@ public:
 	void initTest(size_t _maxTests = 1);
 	// Display percantage of completed tests to std::out. Has to be called before execution of every test.
 	void showProgress();
-	void finishTest();
+    void finishTest();
+    static void finisAllTestsManually();
 
-	//void setMaxTests(int _count) { m_maxTests = _count; }
+    //void setMaxTests(int _count) { m_maxTests = _count; }
 	bool checkTest(std::string const& _testName);
     void markError(std::string const& _message)
     {

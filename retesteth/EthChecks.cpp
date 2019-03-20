@@ -18,19 +18,15 @@ void eth_log_message(std::string const& _message, unsigned _verbosity)
         std::cout << _message << std::endl;
 }
 
-void eth_require(bool _flag)
+void eth_error(std::string const& _message)
 {
-    if (!_flag)
-    {
-        std::raise(SIGABRT);
-        TestOutputHelper::get().markError("Flag error");
-    }
+    TestOutputHelper::get().markError(_message);
 }
 
 void eth_check_message(bool _flag, std::string const& _message)
 {
     if (!_flag)
-        TestOutputHelper::get().markError(_message);
+        eth_error(_message);
 }
 
 void eth_require_message(bool _flag, std::string const& _message)
@@ -39,18 +35,18 @@ void eth_require_message(bool _flag, std::string const& _message)
         eth_fail(_message);
 }
 
-void eth_fail(std::string const& _message)
+void eth_require(bool _flag)
 {
-    TestOutputHelper::get().markError(_message);
-    // test::TestOutputHelper::get().finishTest();
-    ExitHandler::doExit();
-    std::raise(SIGABRT);
-    throw std::exception();
+    if (!_flag)
+        eth_fail("Flag error");
 }
 
-void eth_error(std::string const& _message)
+void eth_fail(std::string const& _message)
 {
+    // thread that failing with this function might be being joined in a loop
     TestOutputHelper::get().markError(_message);
+    std::raise(SIGABRT);
+    throw std::exception();
 }
 
 }

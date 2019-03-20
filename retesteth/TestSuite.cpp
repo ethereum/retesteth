@@ -166,12 +166,18 @@ void joinThreads(vector<thread>& _threadVector, bool _all)
         {
             string id = toString(th.get_id());
             th.join();
+            // A thread with exception thrown still being joined here!
             RPCSession::sessionEnd(id, RPCSession::SessionStatus::Available);
         }
         _threadVector.clear();
         if (ExitHandler::receivedExitSignal())
+        {
+            // if one of the tests threads failed with fatal exception
+            // stop retesteth execution
+            TestOutputHelper::get().finishTest();
             ExitHandler::doExit();
-        return;
+        }
+        return;  // otherwise continue test execution
     }
 
     bool finished = false;

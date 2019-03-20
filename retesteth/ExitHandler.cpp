@@ -24,8 +24,11 @@ void ExitHandler::doExit()
             static int totaltime = 0;
             totaltime++;
             if (totaltime > 50)
+            {
                 std::cerr << "Waiting for TestOutputHelper::finishTest()" << std::endl;
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                // attempt to close unfinished tests manually ???
+            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(300));
         }
         RPCSession::clear();
         test::TestOutputHelper::printTestExecStats();

@@ -65,6 +65,18 @@ scheme_stateTest::fieldChecker::fieldChecker(DataObject const& _test)
         {"filling-rpc-server", {{DataType::String}, jsonField::Optional} },
         {"filling-tool-version", {{DataType::String}, jsonField::Optional} },
     });
+
+    // Check that `data` in compiled test is not just a string but a binary string
+    ETH_CHECK_MESSAGE(
+        _test.at("transaction").count("data"), "Field `data` not found in `transaction` section (" +
+                                                   TestOutputHelper::get().caseName() + ")");
+    ETH_CHECK_MESSAGE(_test.at("transaction").at("data").type() == DataType::Array,
+        "Field `data` in `transaction` section is expected to be Array! (" +
+            TestOutputHelper::get().testName() + ")");
+    for (auto const& element : _test.at("transaction").at("data").getSubObjects())
+        ETH_CHECK_MESSAGE(stringIntegerType(element.asString()) == DigitsType::HexPrefixed,
+            "Field `data` is expected to be binary prefixed with 0x in " +
+                TestOutputHelper::get().testName() + ", but got: " + element.asString());
 }
 
 scheme_stateTestFiller::fieldChecker::fieldChecker(DataObject const& _test)

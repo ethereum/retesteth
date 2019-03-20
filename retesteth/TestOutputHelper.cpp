@@ -54,6 +54,13 @@ TestOutputHelper& TestOutputHelper::get()
     return helperThreadMap.at(getThreadID());
 }
 
+void TestOutputHelper::finisAllTestsManually()
+{
+    // thread safe?
+    for (auto& helper : helperThreadMap)
+        helper.second.finishTest();
+}
+
 void TestOutputHelper::initTest(size_t _maxTests)
 {
     //_maxTests = 0 means this function is called from testing thread
@@ -126,7 +133,7 @@ void TestOutputHelper::printBoostError()
     {
         errorCount += test.second.getErrors().size();
         for (auto const& a : test.second.getErrors())
-            ETH_ERROR_MESSAGE("Error: " + a);
+            ETH_STDERROR_MESSAGE("Error: " + a);
     }
     if (errorCount)
     {

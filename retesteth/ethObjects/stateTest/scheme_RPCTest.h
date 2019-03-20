@@ -23,7 +23,9 @@ public:
         if (_test.count("pre") || _test.count("sealEngine") || _test.count("genesis"))
         {
             if (!_test.count("pre") && !_test.count("sealEngine") && !_test.count("genesis"))
-                ETH_ERROR_MESSAGE(TestOutputHelper::get().caseName() + " A genesis information require 'pre', 'sealEngine' and 'genesis' sections to be defined!");
+                ETH_STDERROR_MESSAGE(TestOutputHelper::get().caseName() +
+                                     " A genesis information require 'pre', 'sealEngine' and "
+                                     "'genesis' sections to be defined!");
 
             string sealEngine = _test.at("sealEngine").asString();
             scheme_env env(_test.at("genesis"));
