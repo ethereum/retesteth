@@ -19,7 +19,7 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include "BlockchainTests.h"
-#include <retesteth/DataObject.h>
+#include <dataObject/DataObject.h>
 #include <retesteth/EthChecks.h>
 #include <retesteth/Options.h>
 #include <retesteth/RPCSession.h>
@@ -139,7 +139,7 @@ fs::path BlockchainTestSuite::suiteFolder() const
 
 fs::path BlockchainTestSuite::suiteFillerFolder() const
 {
-    return "BlockchainTestsFiller";
+    return fs::path("src") / "BlockchainTestsFiller";
 }
 
 }  // Namespace Close

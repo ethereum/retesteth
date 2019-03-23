@@ -106,8 +106,18 @@ namespace test {
             });
             for (auto& element: m_data.getSubObjectsUnsafe())
             {
+                if (element.getKey() == "to" && !element.asString().empty())
+                {
+                    element = makeHexAddress(element.asString());
+                    continue;
+                }
                 if (element.getKey() != "data")
                     makeAllFieldsHex(element);
+                else
+                {
+                    for (auto& element2 : element.getSubObjectsUnsafe())
+                        element2 = test::replaceCode(element2.asString());
+                }
             }
             parseGeneralTransaction();
         }

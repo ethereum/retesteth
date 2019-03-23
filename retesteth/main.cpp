@@ -72,8 +72,8 @@ void travisOut(std::atomic_bool* _stopTravisOut)
 		++tickCounter;
 		if (tickCounter % 10 == 0)
 			std::cout << ".\n" << std::flush;  // Output dot every 10s.
-		if (ExitHandler::shouldExit())
-			break;
+        if (ExitHandler::receivedExitSignal())
+            break;
 	}
 }
 
@@ -167,11 +167,10 @@ int main(int argc, const char* argv[])
     if (opt.jsontrace || opt.vmtrace || opt.statediff || opt.createRandomTest)
 	{
 		// Do not use travis '.' output thread if debug is defined
-		result = unit_test_main(fakeInit, argc, const_cast<char**>(argv));
-        RPCSession::clear();
-        test::TestOutputHelper::get().printTestExecStats();
-		return result;
-	}
+        result = unit_test_main(fakeInit, argc, const_cast<char**>(argv));
+        ExitHandler::doExit();
+        return result;
+    }
 	else
 	{
 		// Initialize travis '.' output thread for log activity
@@ -180,8 +179,7 @@ int main(int argc, const char* argv[])
 		result = unit_test_main(fakeInit, argc, const_cast<char**>(argv));
 		stopTravisOut = true;
 		outputThread.join();
-        RPCSession::clear();
-        test::TestOutputHelper::printTestExecStats();
+        ExitHandler::doExit();
         return result;
 	}
 }

@@ -54,6 +54,14 @@ namespace  test {
             DataObject const& expectStorage = m_data.at("storage");
             for (auto const& element: expectStorage.getSubObjects())
             {
+                if (element.asString() == "0x00")
+                {
+                    // treat zeroes as empty (elements might not be set in storage)
+                    if (!_storage.count(element.getKey()))
+                        return CompareResult::Success;
+                }
+
+                // Check that storage element is set
                 checkMessage(_storage.count(element.getKey()),
                    CompareResult::IncorrectStorage,
                    TestOutputHelper::get().testName() + " '" + address() + "' expected storage key: '"
@@ -62,6 +70,7 @@ namespace  test {
                 if (result != CompareResult::Success)
                     return result;
 
+                // Check exact value in the storage
                 std::string valueInStorage = _storage.at(element.getKey()).asString();
                 checkMessage(valueInStorage == element.asString(),
                    CompareResult::IncorrectStorage,

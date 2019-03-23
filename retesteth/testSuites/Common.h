@@ -25,4 +25,13 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 namespace test
 {
 DataObject getRemoteState(RPCSession& _session, std::string const& _trHash, bool _fullPost);
+
+// Check that test has data object
+void checkDataObject(DataObject const& _input);
+
+// Check that test file has only one test
+void checkOnlyOneTest(DataObject const& _input);
+
+// Check test name in the file is equal to the test name of the file
+void checkTestNameIsEqualToFileName(DataObject const& _input);
 }

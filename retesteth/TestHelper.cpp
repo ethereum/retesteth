@@ -1,12 +1,13 @@
 #include <BuildInfo.h>
+#include <fcntl.h>
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/lexical_cast.hpp>
-#include <boost/uuid/uuid.hpp>            // uuid class
-#include <boost/uuid/uuid_generators.hpp> // generators
-#include <boost/uuid/uuid_io.hpp>         // streaming operators etc
+#include <boost/test/unit_test.hpp>
+#include <boost/uuid/uuid.hpp>             // uuid class
+#include <boost/uuid/uuid_generators.hpp>  // generators
+#include <boost/uuid/uuid_io.hpp>          // streaming operators etc
 #include <boost/uuid/uuid_io.hpp>
 #include <csignal>
-#include <fcntl.h>
 #include <mutex>
 
 #include <retesteth/TestHelper.h>
@@ -66,7 +67,7 @@ boost::filesystem::path getTestPath()
 	string testPath;
 	const char* ptestPath = getenv("ETHEREUM_TEST_PATH");
 	if (ptestPath == nullptr)
-	{
+    {
         ETH_TEST_MESSAGE("could not find environment variable ETHEREUM_TEST_PATH");
         testPath = "../../test/jsontests";
 	}
@@ -83,69 +84,6 @@ void copyFile(fs::path const& _source, fs::path const& _destination)
 	dst << src.rdbuf();
 }
 
-string jsonTypeAsString(Json::ValueType _type)
-{
-  switch (_type) {
-  case Json::ValueType::nullValue:
-    return "null";
-  case Json::ValueType::intValue:
-    return "int";
-  case Json::ValueType::uintValue:
-    return "uint";
-  case Json::ValueType::realValue:
-    return "double";
-  case Json::ValueType::stringValue:
-    return "string";
-  case Json::ValueType::booleanValue:
-    return "bool";
-  case Json::ValueType::arrayValue:
-    return "array";
-  case Json::ValueType::objectValue:
-    return "object";
-  default:
-    break;
-  }
-  return "";
-}
-
-DataObject convertJsonCPPtoData(Json::Value const& _input)
-{
-	if (_input.isNull())
-        return DataObject(DataType::Null);
-
-    if (_input.isBool())
-        return DataObject(DataType::Bool, _input.asBool());
-
-    if (_input.isString())
-		return DataObject(_input.asString());
-
-	if (_input.isInt())
-		return DataObject(_input.asInt());
-
-	if (_input.isArray())
-	{
-		DataObject root(DataType::Array);
-		for (Json::ArrayIndex i = 0; i < _input.size(); i++)
-			root.addArrayObject(convertJsonCPPtoData(_input.get(i, Json::Value())));
-		return root;
-	}
-
-	if (_input.isObject())
-	{
-		DataObject root(DataType::Object);
-		for (auto const& i: _input)
-			root.addSubObject(convertJsonCPPtoData(i));
-
-		size_t index = 0;
-		for (auto const& i: _input.getMemberNames())
-			root.setSubObjectKey(index++, i);
-		return root;
-	}
-
-	BOOST_ERROR("Error parsing JSON node. Element type not defined! " + jsonTypeAsString(_input.type()));
-	return DataObject(DataType::Null);
-}
-
 std::mutex g_staticDeclaration_getNetworks;
 vector<string> const& getNetworks()
 {
@@ -159,6 +97,7 @@ vector<string> const& getNetworks()
         networks.push_back("EIP158");
         networks.push_back("Byzantium");
         networks.push_back("Constantinople");
+        networks.push_back("ConstantinopleFix");
       }
     }
     return networks;

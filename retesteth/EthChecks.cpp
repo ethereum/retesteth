@@ -1,8 +1,9 @@
 #include <retesteth/EthChecks.h>
+#include <retesteth/ExitHandler.h>
 #include <retesteth/Options.h>
 #include <retesteth/TestOutputHelper.h>
-#include <iostream>
 #include <csignal>
+#include <iostream>
 #include <thread>
 
 namespace test {
@@ -11,28 +12,21 @@ void eth_error_message(std::string const& _message)
     std::cerr << _message << std::endl;
 }
 
-void eth_test_message(std::string const& _message)
+void eth_log_message(std::string const& _message, unsigned _verbosity)
 {
-    if (Options::get().logVerbosity >= 6)
-        std::cerr << _message << std::endl;
+    if (Options::get().logVerbosity >= _verbosity)
+        std::cout << _message << std::endl;
 }
 
-void eth_require(bool _flag)
+void eth_error(std::string const& _message)
 {
-    if (!_flag)
-    {
-        std::raise(SIGABRT);
-        TestOutputHelper::get().markError("Flag error");
-    }
+    TestOutputHelper::get().markError(_message);
 }
 
 void eth_check_message(bool _flag, std::string const& _message)
 {
     if (!_flag)
-    {
-        std::cerr << _message << std::endl;
-        TestOutputHelper::get().markError(_message);
-    }
+        eth_error(_message);
 }
 
 void eth_require_message(bool _flag, std::string const& _message)
@@ -41,19 +35,18 @@ void eth_require_message(bool _flag, std::string const& _message)
         eth_fail(_message);
 }
 
-void eth_fail(std::string const& _message)
+void eth_require(bool _flag)
 {
-    std::cerr << "--------" << std::endl;
-    std::cerr << _message << std::endl;
-    std::this_thread::sleep_for(std::chrono::seconds(1));
-    std::raise(SIGABRT);
-    TestOutputHelper::get().markError(_message);
-    throw std::exception();
+    if (!_flag)
+        eth_fail("Flag error");
 }
 
-void eth_error(std::string const& _message)
+void eth_fail(std::string const& _message)
 {
+    // thread that failing with this function might be being joined in a loop
     TestOutputHelper::get().markError(_message);
+    std::raise(SIGABRT);
+    throw std::exception();
 }
 
 }

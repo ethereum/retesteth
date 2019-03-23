@@ -31,10 +31,11 @@
 #include <mutex>
 #include <csignal>
 
+#include <dataObject/ConvertJsoncpp.h>
+#include <retesteth/EthChecks.h>
+#include <retesteth/ExitHandler.h>
 #include <retesteth/TestHelper.h>
 #include <retesteth/TestOutputHelper.h>
-#include <retesteth/ExitHandler.h>
-#include <retesteth/EthChecks.h>
 
 using namespace std;
 using namespace dev;
@@ -234,13 +235,13 @@ test::scheme_block RPCSession::eth_getBlockByNumber(string const& _blockNumber, 
 {
 	// NOTE: to_string() converts bool to 0 or 1
 	Json::Value response = rpcCall("eth_getBlockByNumber", { quote(_blockNumber), _fullObjects ? "true" : "false" });
-	return test::scheme_block(test::convertJsonCPPtoData(response));
+    return test::scheme_block(dataobject::ConvertJsoncppToData(response));
 }
 
 test::scheme_transactionReceipt RPCSession::eth_getTransactionReceipt(string const& _transactionHash)
 {
 	Json::Value const result = rpcCall("eth_getTransactionReceipt", { quote(_transactionHash) });
-	return test::scheme_transactionReceipt(test::convertJsonCPPtoData(result));
+    return test::scheme_transactionReceipt(dataobject::ConvertJsoncppToData(result));
 }
 
 string RPCSession::eth_blockNumber()
@@ -447,13 +448,14 @@ Json::Value RPCSession::rpcCall(string const& _methodName, vector<string> const&
 
     if (result.isMember("error"))
     {
+        m_lastRPCErrorString = "Error on JSON-RPC call (" + test::TestOutputHelper::get().testName() + "): "
+                            + result["error"]["message"].asString()
+                            + " Request: " + request;
         if (_canFail)
             return Json::Value();
-
-        ETH_FAIL("Error on JSON-RPC call (" + test::TestOutputHelper::get().testName() + "): "
-         + result["error"]["message"].asString()
-         + " Request: " + request);
+        ETH_FAIL(m_lastRPCErrorString);
     }
+    m_lastRPCErrorString = string();    //null the error as last RPC call was success.
     return result["result"];
 }
 

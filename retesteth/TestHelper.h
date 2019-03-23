@@ -5,9 +5,10 @@
 #include <boost/filesystem.hpp>
 #include <json/json.h>
 
+#include <dataObject/DataObject.h>
 #include <retesteth/EthChecks.h>
-#include <retesteth/DataObject.h>
 
+using namespace dataobject;
 namespace fs = boost::filesystem;
 namespace test {
 
@@ -24,9 +25,6 @@ boost::filesystem::path getTestPath();
 
 /// Copy file from _source to _destination
 void copyFile(fs::path const& _source, fs::path const& _destination);
-
-/// Read Json Object into DataObject
-DataObject convertJsonCPPtoData(Json::Value const& _input);
 
 /// Get Networks / Fork Rules
 std::vector<std::string> const& getNetworks();

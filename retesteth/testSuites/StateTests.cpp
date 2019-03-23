@@ -25,9 +25,10 @@
 #include <thread>
 #include <mutex>
 
+#include <dataObject/DataObject.h>
 #include <libdevcore/CommonData.h>
 #include <libdevcore/CommonIO.h>
-#include <retesteth/DataObject.h>
+#include <retesteth/ExitHandler.h>
 #include <retesteth/Options.h>
 #include <retesteth/RPCSession.h>
 #include <retesteth/TestHelper.h>
@@ -175,6 +176,9 @@ DataObject FillTest(DataObject const& _testFile, TestSuite::TestSuiteOptions& _o
                     u256 a(test.getEnv().getData().at("currentTimestamp").asString());
                     session.test_modifyTimestamp(a.convert_to<size_t>());
                     string trHash = session.eth_sendRawTransaction(tr.transaction.getSignedRLP());
+                    if (!session.getLastRPCError().empty())
+                        ETH_ERROR(session.getLastRPCError());
+
                     session.test_mineBlocks(1);
                     tr.executed = true;
 
@@ -289,29 +293,18 @@ namespace test
 {
 DataObject StateTestSuite::doTests(DataObject const& _input, TestSuiteOptions& _opt) const
 {
-    ETH_REQUIRE_MESSAGE(_input.type() == DataType::Object,
-		TestOutputHelper::get().get().testFile().string() + " A GeneralStateTest file should contain an object.");
-    ETH_REQUIRE_MESSAGE(!_opt.doFilling || _input.getSubObjects().size() == 1,
-		TestOutputHelper::get().testFile().string() + " A GeneralStateTest filler should contain only one test.");
+    checkDataObject(_input);
+    checkOnlyOneTest(_input);
 
     DataObject filledTest;
     DataObject const& inputTest = _input.getSubObjects().at(0);
     string const testname = inputTest.getKey();
-    ETH_REQUIRE_MESSAGE(
-        inputTest.type() == DataType::Object, TestOutputHelper::get().testFile().string() +
-                                                  " should contain an object under a test name.");
-
-    if (_opt.doFilling && !TestOutputHelper::get().testFile().empty())
-        ETH_REQUIRE_MESSAGE(
-            testname + "Filler" == TestOutputHelper::get().testFile().stem().string(),
-            TestOutputHelper::get().testFile().string() +
-                " contains a test with a different name '" + testname + "'");
-
     if (!TestOutputHelper::get().checkTest(testname))
         return filledTest;
 
     if (_opt.doFilling)
     {
+        checkTestNameIsEqualToFileName(_input);
         DataObject outputTest;
         if (Options::get().fillchain)
         {
@@ -348,7 +341,7 @@ fs::path StateTestSuite::suiteFolder() const
 
 fs::path StateTestSuite::suiteFillerFolder() const
 {
-	return "GeneralStateTestsFiller";
+    return fs::path("src") / "GeneralStateTestsFiller";
 }
 
 }// Namespace Close
@@ -362,8 +355,9 @@ public:
 		string casename = boost::unit_test::framework::current_test_case().p_name;
 		if (casename == "stQuadraticComplexityTest" && !test::Options::get().all)
 		{
-			std::cout << "Skipping " << casename << " because --all option is not specified.\n";
-			return;
+            if (!ExitHandler::receivedExitSignal())
+                std::cout << "Skipping " << casename << " because --all option is not specified.\n";
+            return;
 		}
 		suite.runAllTestsInFolder(casename);
 	}
