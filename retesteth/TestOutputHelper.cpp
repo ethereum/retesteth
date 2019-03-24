@@ -129,11 +129,12 @@ void TestOutputHelper::printBoostError()
 {
     size_t errorCount = 0;
     std::lock_guard<std::mutex> lock(g_helperThreadMapMutex);
-    for (auto const& test: helperThreadMap)
+    for (auto& test : helperThreadMap)
     {
         errorCount += test.second.getErrors().size();
         for (auto const& a : test.second.getErrors())
             ETH_STDERROR_MESSAGE("Error: " + a);
+        test.second.resetErrors();
     }
     if (errorCount)
     {

@@ -13,7 +13,7 @@ class scheme_blockchainTest : public object
 {
 public:
     scheme_blockchainTest(DataObject const& _test);
-    DataObject getGenesisForRPC(std::string const& _sealEngine = "NoProof");
+    DataObject getGenesisForRPC();
     std::vector<std::string> const& getBlockRlps() const { return m_blockRLPs; }
     scheme_state const& getPost() const { return m_post; }
 
@@ -28,5 +28,6 @@ private:
     scheme_state m_post;
     scheme_blockHeader m_genesisHeader;
     std::vector<std::string> m_blockRLPs;
+    std::string m_sealEngine;
 };
 }
