@@ -26,6 +26,13 @@ defaults:
       command: |
         cmake ../project -G "$GENERATOR" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCOVERAGE=ON $CMAKE_OPTIONS
 
+  configure: &configureMac
+    run:
+      name: "Configure"
+      working_directory: ~/build
+      command: |
+        cmake ../project -G "$GENERATOR" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCOVERAGE=ON $CMAKE_OPTIONS -DCMAKE_TOOLCHAIN_FILE=~/project/toolchain.cmake
+
   build: &build
     run:
       name: "Build"
@@ -117,12 +124,12 @@ jobs:
           command: |
             HOMEBREW_NO_AUTO_UPDATE=1 brew install -q llvm37 cmake ninja python3
             pip3 install -q requests gitpython
-      - *configure
+      - *configureMac
 #      - *upload-hunter-cache
       - *build
       - *store-retesteth
       - *test
-      - *upload-coverage-data
+#      - *upload-coverage-data
 
 # TODO: Run GCC6 build only in develop branch.
 # TODO: Enabled nightly builds and add more configs.

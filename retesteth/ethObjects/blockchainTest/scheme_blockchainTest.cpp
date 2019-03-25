@@ -11,7 +11,8 @@ scheme_blockchainTest::fieldChecker::fieldChecker(DataObject const& _test)
             {"lastblockhash", {{DataType::String}, jsonField::Required}},
             {"network", {{DataType::String}, jsonField::Required}},
             {"postState", {{DataType::Object}, jsonField::Required}},
-            {"pre", {{DataType::Object}, jsonField::Required}}});
+            {"pre", {{DataType::Object}, jsonField::Required}},
+            {"sealEngine", {{DataType::String}, jsonField::Optional}}});
 }
 
 scheme_blockchainTest::scheme_blockchainTest(DataObject const& _test)
@@ -28,11 +29,16 @@ scheme_blockchainTest::scheme_blockchainTest(DataObject const& _test)
             data.at("rlp").type() == DataType::String, "Block rlp field must be string!");
         m_blockRLPs.push_back(data.at("rlp").asString());
     }
+
+    if (_test.count("sealEngine"))
+        m_sealEngine = _test.at("sealEngine").asString();
+    else
+        m_sealEngine = "NoProof";
 }
 
-DataObject scheme_blockchainTest::getGenesisForRPC(std::string const& _sealEngine)
+DataObject scheme_blockchainTest::getGenesisForRPC()
 {
-    DataObject genesis = prepareGenesisParams(getData().at("network").asString(), _sealEngine);
+    DataObject genesis = prepareGenesisParams(getData().at("network").asString(), m_sealEngine);
     // genesis["genesis"] = getEnv().getDataForRPC();
 
     DataObject data;

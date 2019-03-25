@@ -46,6 +46,7 @@ public:
         m_errors.push_back(_message + " (" + m_currentTestName + ")");
     }
     std::vector<std::string> const& getErrors() const { return m_errors;}
+    void resetErrors() { m_errors.clear(); }
     void setCurrentTestFile(boost::filesystem::path const& _name) { m_currentTestFileName = _name; }
 	void setCurrentTestName(std::string const& _name) { m_currentTestName = _name; }
 	std::string const& testName() { return m_currentTestName; }

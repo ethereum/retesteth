@@ -444,7 +444,8 @@ Json::Value RPCSession::rpcCall(string const& _methodName, vector<string> const&
     ETH_TEST_MESSAGE("Reply: " + reply);
 
     Json::Value result;
-    ETH_REQUIRE_MESSAGE(Json::Reader().parse(reply, result, false), "error parsing json from remote response!");
+    ETH_REQUIRE_MESSAGE(Json::Reader().parse(reply, result, false),
+        "error parsing json from remote response: " + reply);
 
     if (result.isMember("error"))
     {
