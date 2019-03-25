@@ -1,4 +1,6 @@
 cmake_minimum_required(VERSION 3.9.3)
+cmake_policy(SET CMP0054 OLD)
+cmake_policy(SET CMP0045 OLD)
 include("./cmake/Hunter/HunterGate.cmake")
 
 set(HUNTER_CONFIGURATION_TYPES Release)
@@ -15,7 +17,6 @@ project(retesteth VERSION 0.0.1)
 set(CMAKE_CXX_STANDARD 11) # C++11...
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE) #...is required...
 set(CMAKE_CXX_EXTENSIONS OFF) #...without compiler extensions like gnu++11
-
 
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)
