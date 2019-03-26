@@ -32,4 +32,11 @@ public:
     boost::filesystem::path suiteFolder() const override;
     boost::filesystem::path suiteFillerFolder() const override;
 };
+
+class BCGeneralStateTestsSuite: public BlockchainTestSuite
+{
+    boost::filesystem::path suiteFolder() const override;
+    boost::filesystem::path suiteFillerFolder() const override;
+};
+
 }
