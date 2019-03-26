@@ -72,7 +72,7 @@ defaults:
     - *build
     - *store-retesteth
     - *test
-    - *upload-coverage-data
+#    - *upload-coverage-data
 
 
 version: 2
