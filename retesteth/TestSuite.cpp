@@ -231,17 +231,16 @@ string TestSuite::checkFillerExistance(string const& _testFolder) const
         compiledFiles.push_back(ghostFiler);
         ghostFile = true;
     }
+
+    fs::path fullPathToFillers = getFullPathFiller(_testFolder);
     for (auto const& file : compiledFiles)
     {
         fs::path const expectedFillerName =
-            getFullPathFiller(_testFolder) /
-            fs::path(file.stem().string() + c_fillerPostf + ".json");
+            fullPathToFillers / fs::path(file.stem().string() + c_fillerPostf + ".json");
         fs::path const expectedFillerName2 =
-            getFullPathFiller(_testFolder) /
-            fs::path(file.stem().string() + c_fillerPostf + ".yml");
+            fullPathToFillers / fs::path(file.stem().string() + c_fillerPostf + ".yml");
         fs::path const expectedCopierName =
-            getFullPathFiller(_testFolder) /
-            fs::path(file.stem().string() + c_copierPostf + ".json");
+            fullPathToFillers / fs::path(file.stem().string() + c_copierPostf + ".json");
 
         string exceptionStr;
         if (ghostFile)

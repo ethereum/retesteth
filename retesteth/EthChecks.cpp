@@ -44,6 +44,7 @@ void eth_require(bool _flag)
 void eth_fail(std::string const& _message)
 {
     // thread that failing with this function might be being joined in a loop
+    std::cerr << _message << std::endl;
     TestOutputHelper::get().markError(_message);
     std::raise(SIGABRT);
     throw std::exception();
