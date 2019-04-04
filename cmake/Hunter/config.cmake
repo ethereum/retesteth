@@ -23,3 +23,6 @@ hunter_config(ethash VERSION 0.4.0
     URL https://github.com/chfast/ethash/archive/v0.4.0.tar.gz
     SHA1 fd92ffadff2931877a3b68685dd8c53f0bdec539
 )
+
+
+hunter_config(CURL VERSION ${HUNTER_CURL_VERSION} CMAKE_ARGS HTTP_ONLY=ON CMAKE_USE_OPENSSL=OFF CMAKE_USE_LIBSSH2=OFF CURL_CA_PATH=none)
