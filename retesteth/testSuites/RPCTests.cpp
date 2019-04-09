@@ -93,14 +93,14 @@ DataObject RPCTestSuite::doTests(DataObject const& _input, TestSuiteOptions& _op
     return filledTest;
 }
 
-fs::path RPCTestSuite::suiteFolder() const
+TestSuite::TestPath RPCTestSuite::suiteFolder() const
 {
-    return "RPCTests";
+    return TestSuite::TestPath(fs::path("RPCTests"));
 }
 
-fs::path RPCTestSuite::suiteFillerFolder() const
+TestSuite::FillerPath RPCTestSuite::suiteFillerFolder() const
 {
-    return fs::path("src") / "RPCTestsFiller";
+    return TestSuite::FillerPath(fs::path("src") / "RPCTestsFiller");
 }
 
 }  // Namespace Close

@@ -30,8 +30,8 @@ class StateTestSuite: public TestSuite
 {
 public:
     DataObject doTests(DataObject const& _input, TestSuiteOptions& _opt) const override;
-	boost::filesystem::path suiteFolder() const override;
-	boost::filesystem::path suiteFillerFolder() const override;
+    TestSuite::TestPath suiteFolder() const override;
+    TestSuite::FillerPath suiteFillerFolder() const override;
 };
 
 }

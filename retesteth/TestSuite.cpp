@@ -220,8 +220,8 @@ string TestSuite::checkFillerExistance(string const& _testFolder) const
                         string() :
                         test::Options::get().singleTestName;
     std::cout << "Filter: '" << filter << "'" << std::endl;
-    vector<fs::path> compiledFiles =
-        test::getFiles(getFullPath(_testFolder), {".json", ".yml"}, filter);
+    AbsoluteTestPath testsPath = getFullPath(_testFolder);
+    vector<fs::path> compiledFiles = test::getFiles(testsPath.path(), {".json", ".yml"}, filter);
 
     bool ghostFile = false;
     if (compiledFiles.size() == 0)
@@ -232,15 +232,15 @@ string TestSuite::checkFillerExistance(string const& _testFolder) const
         ghostFile = true;
     }
 
-    fs::path fullPathToFillers = getFullPathFiller(_testFolder);
+    AbsoluteFillerPath fullPathToFillers = getFullPathFiller(_testFolder);
     for (auto const& file : compiledFiles)
     {
         fs::path const expectedFillerName =
-            fullPathToFillers / fs::path(file.stem().string() + c_fillerPostf + ".json");
+            fullPathToFillers.path() / fs::path(file.stem().string() + c_fillerPostf + ".json");
         fs::path const expectedFillerName2 =
-            fullPathToFillers / fs::path(file.stem().string() + c_fillerPostf + ".yml");
+            fullPathToFillers.path() / fs::path(file.stem().string() + c_fillerPostf + ".yml");
         fs::path const expectedCopierName =
-            fullPathToFillers / fs::path(file.stem().string() + c_copierPostf + ".json");
+            fullPathToFillers.path() / fs::path(file.stem().string() + c_copierPostf + ".json");
 
         string exceptionStr;
         if (ghostFile)
@@ -297,8 +297,8 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
     string const filter = checkFillerExistance(_testFolder);
 
     // run all tests
-    vector<fs::path> const files =
-        test::getFiles(getFullPathFiller(_testFolder), {".json", ".yml"}, filter);
+    AbsoluteFillerPath fillerPath = getFullPathFiller(_testFolder);
+    vector<fs::path> const files = test::getFiles(fillerPath.path(), {".json", ".yml"}, filter);
 
     // repeat this part for all connected clients
     auto thisPart = [this, &files, &_testFolder]() {
@@ -338,14 +338,15 @@ void TestSuite::runFunctionForAllClients(std::function<void()> _func)
     }
 }
 
-fs::path TestSuite::getFullPathFiller(string const& _testFolder) const
+TestSuite::AbsoluteFillerPath TestSuite::getFullPathFiller(string const& _testFolder) const
 {
-    return test::getTestPath() / suiteFillerFolder() / _testFolder;
+    return TestSuite::AbsoluteFillerPath(
+        test::getTestPath() / suiteFillerFolder().path() / _testFolder);
 }
 
-fs::path TestSuite::getFullPath(string const& _testFolder) const
+TestSuite::AbsoluteTestPath TestSuite::getFullPath(string const& _testFolder) const
 {
-	return test::getTestPath() / suiteFolder() / _testFolder;
+    return TestSuite::AbsoluteTestPath(test::getTestPath() / suiteFolder().path() / _testFolder);
 }
 
 void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFileName) const
@@ -366,7 +367,8 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
 
     ETH_LOG("Running " + testname + ": ", 3);
     // Filename of the test that would be generated
-    fs::path const boostTestPath = getFullPath(_testFolder) / fs::path(testname + ".json");
+    AbsoluteTestPath const boostTestPath =
+        getFullPath(_testFolder).path() / fs::path(testname + ".json");
 
     TestSuiteOptions opt;
     if (Options::get().filltests)
@@ -374,11 +376,12 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
         if (isCopySource)
         {
             clog << "Copying " << _testFileName.string() << "\n";
-            clog << " TO " << boostTestPath.string() << "\n";
-            assert(_testFileName.string() != boostTestPath.string());
+            clog << " TO " << boostTestPath.path().string() << "\n";
+            assert(_testFileName.string() != boostTestPath.path().string());
             TestOutputHelper::get().showProgress();
-            test::copyFile(_testFileName, boostTestPath);
-            ETH_FAIL_REQUIRE_MESSAGE(boost::filesystem::exists(boostTestPath.string()), "Error when copying the test file!");
+            test::copyFile(_testFileName, boostTestPath.path());
+            ETH_FAIL_REQUIRE_MESSAGE(boost::filesystem::exists(boostTestPath.path().string()),
+                "Error when copying the test file!");
 
             // Update _info and build information of the copied test
             /*Json::Value v;
@@ -400,7 +403,7 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
                 {
                     // Add client info for all of the tests in output
                     addClientInfo(output, boostRelativeTestPath, testData.hash);
-                    writeFile(boostTestPath, asBytes(output.asJson()));
+                    writeFile(boostTestPath.path(), asBytes(output.asJson()));
                 }
             }
             catch (std::exception const& _ex)
@@ -415,7 +418,7 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
     {
         try
         {
-            executeFile(boostTestPath);
+            executeFile(boostTestPath.path());
         }
         catch (std::exception const& _ex)
         {

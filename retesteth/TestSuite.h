@@ -33,13 +33,14 @@ private:
 	// Execute Test.json file
 	void executeFile(boost::filesystem::path const& _file) const;
     std::string checkFillerExistance(std::string const& _testFolder) const;
+    struct BoostPath
+    {
+        BoostPath(boost::filesystem::path _path) : m_path(_path) {}
+        boost::filesystem::path const& path() const { return m_path; }
 
-protected:
-	// A folder of the test suite. like "VMTests". should be implemented for each test suite.
-	virtual boost::filesystem::path suiteFolder() const = 0;
-
-	// A folder of the test suite in src folder. like "VMTestsFiller". should be implemented for each test suite.
-	virtual boost::filesystem::path suiteFillerFolder() const = 0;
+    private:
+        boost::filesystem::path m_path;
+    };
 
 public:
 
@@ -53,7 +54,28 @@ public:
         bool disableSecondRun;  // disable running the test after filling is done
     };
 
-	// Main test executive function. should be declared for each test suite. it fills and runs the test .json file
+    // Structures so not to mistake the paths and prevent bugs
+    struct TestPath : BoostPath
+    {
+        TestPath(boost::filesystem::path _path) : BoostPath(_path) {}
+    };
+
+    struct FillerPath : BoostPath
+    {
+        FillerPath(boost::filesystem::path _path) : BoostPath(_path) {}
+    };
+
+    struct AbsoluteTestPath : BoostPath
+    {
+        AbsoluteTestPath(boost::filesystem::path _path) : BoostPath(_path) {}
+    };
+
+    struct AbsoluteFillerPath : BoostPath
+    {
+        AbsoluteFillerPath(boost::filesystem::path _path) : BoostPath(_path) {}
+    };
+
+    // Main test executive function. should be declared for each test suite. it fills and runs the test .json file
     virtual DataObject doTests(DataObject const&, TestSuiteOptions& _options) const = 0;
 
 	// Execute all tests from suiteFolder()/_testFolder/*
@@ -71,13 +93,21 @@ public:
 	void runTestWithoutFiller(boost::filesystem::path const& _file) const;
 
 	// Return full path to folder for tests from _testFolder
-	boost::filesystem::path getFullPathFiller(std::string const& _testFolder) const;
+    AbsoluteFillerPath getFullPathFiller(std::string const& _testFolder) const;
 
-	// Structure  <suiteFolder>/<testFolder>/<test>.json
-	boost::filesystem::path getFullPath(std::string const& _testFolder) const;
+    // Structure  <suiteFolder>/<testFolder>/<test>.json
+    AbsoluteTestPath getFullPath(std::string const& _testFolder) const;
 
     //
     static void runFunctionForAllClients(std::function<void()> _func);
+
+protected:
+    // A folder of the test suite. like "VMTests". should be implemented for each test suite.
+    virtual TestPath suiteFolder() const = 0;
+
+    // A folder of the test suite in src folder. like "VMTestsFiller". should be implemented for
+    // each test suite.
+    virtual FillerPath suiteFillerFolder() const = 0;
 };
 
 }

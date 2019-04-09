@@ -132,24 +132,25 @@ DataObject BlockchainTestSuite::doTests(DataObject const& _input, TestSuiteOptio
     return tests;
 }
 
-fs::path BlockchainTestSuite::suiteFolder() const
+TestSuite::TestPath BlockchainTestSuite::suiteFolder() const
 {
-    return "BlockchainTests";
+    return TestSuite::TestPath(fs::path("BlockchainTests"));
 }
 
-fs::path BlockchainTestSuite::suiteFillerFolder() const
+TestSuite::FillerPath BlockchainTestSuite::suiteFillerFolder() const
 {
-    return fs::path("src") / "BlockchainTestsFiller";
+    return TestSuite::FillerPath(fs::path("src") / "BlockchainTestsFiller");
 }
 
-fs::path BCGeneralStateTestsSuite::suiteFolder() const
+TestSuite::TestPath BCGeneralStateTestsSuite::suiteFolder() const
 {
-    return fs::path("BlockchainTests") / "GeneralStateTests";
+    return TestSuite::TestPath(fs::path("BlockchainTests") / "GeneralStateTests");
 }
 
-fs::path BCGeneralStateTestsSuite::suiteFillerFolder() const
+TestSuite::FillerPath BCGeneralStateTestsSuite::suiteFillerFolder() const
 {
-    return fs::path("src") / fs::path("BlockchainTestsFiller") / "GeneralStateTests";
+    return TestSuite::FillerPath(
+        fs::path("src") / fs::path("BlockchainTestsFiller") / "GeneralStateTests");
 }
 
 }  // Namespace Close

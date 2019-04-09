@@ -332,16 +332,16 @@ DataObject StateTestSuite::doTests(DataObject const& _input, TestSuiteOptions& _
     return filledTest;
 }
 
-fs::path StateTestSuite::suiteFolder() const
+TestSuite::TestPath StateTestSuite::suiteFolder() const
 {
     if (Options::get().fillchain)
-        return fs::path("BlockchainTests") / "GeneralStateTests2";
-    return "GeneralStateTests";
+        return TestSuite::TestPath(fs::path("BlockchainTests") / "GeneralStateTests2");
+    return TestSuite::TestPath(fs::path("GeneralStateTests"));
 }
 
-fs::path StateTestSuite::suiteFillerFolder() const
+TestSuite::FillerPath StateTestSuite::suiteFillerFolder() const
 {
-    return fs::path("src") / "GeneralStateTestsFiller";
+    return TestSuite::FillerPath(fs::path("src") / "GeneralStateTestsFiller");
 }
 
 }// Namespace Close
