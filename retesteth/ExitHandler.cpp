@@ -25,7 +25,7 @@ void ExitHandler::doExit()
             totaltime++;
             if (totaltime > 50)
             {
-                std::cerr << "Waiting for TestOutputHelper::finishTest()" << std::endl;
+                ETH_STDERROR_MESSAGE("Waiting for TestOutputHelper::finishTest()");
                 // attempt to close unfinished tests manually ???
             }
             std::this_thread::sleep_for(std::chrono::milliseconds(300));
@@ -40,6 +40,7 @@ void ExitHandler::exitHandler(int)
 {
     std::lock_guard<std::mutex> lock(g_executionMutex);
     m_receivedExitSig = true;
+    std::cerr << std::endl << "Finishing retesteth run" << std::endl;
 }
 
 
