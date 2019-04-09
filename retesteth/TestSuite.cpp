@@ -56,7 +56,7 @@ TestFileData readTestFile(fs::path const& _testFileName)
 
     // Check that file is not empty
     string const s = dev::contentsString(_testFileName);
-    ETH_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _testFileName.string() + " is empty.");
+    ETH_FAIL_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _testFileName.string() + " is empty.");
 
     if (_testFileName.extension() == ".json")
         testData.data = dataobject::ConvertJsoncppToData(readJson(_testFileName));
@@ -145,13 +145,13 @@ void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
     for (auto const& i: v.getSubObjects())
 	{
         // use eth object _info section class here !!!!!
-        ETH_REQUIRE_MESSAGE(i.type() == dataobject::DataType::Object,
+        ETH_FAIL_REQUIRE_MESSAGE(i.type() == dataobject::DataType::Object,
             i.getKey() + " should contain an object under a test name.");
-        ETH_REQUIRE_MESSAGE(i.count("_info") > 0, "_info section not set! " + _compiledTest.string());
+        ETH_FAIL_REQUIRE_MESSAGE(i.count("_info") > 0, "_info section not set! " + _compiledTest.string());
         dataobject::DataObject const& info = i.at("_info");
-        ETH_REQUIRE_MESSAGE(info.count("sourceHash") > 0, "sourceHash not found in " + _compiledTest.string() + " in " + i.getKey());
+        ETH_FAIL_REQUIRE_MESSAGE(info.count("sourceHash") > 0, "sourceHash not found in " + _compiledTest.string() + " in " + i.getKey());
         h256 const sourceHash = h256(info.at("sourceHash").asString());
-        ETH_CHECK_MESSAGE(sourceHash == fillerData.hash,
+        ETH_ERROR_CHECK_MESSAGE(sourceHash == fillerData.hash,
             "Test " + _compiledTest.string() + " in " + i.getKey() +
                 " is outdated. Filler hash is different! ( '" + sourceHash.hex().substr(0, 4) +
                 "' != '" + fillerData.hash.hex().substr(0, 4) + "') ");
@@ -250,10 +250,10 @@ string TestSuite::checkFillerExistance(string const& _testFolder) const
         else
             exceptionStr =
                 "Compiled test folder contains test without Filler: " + file.filename().string();
-        ETH_REQUIRE_MESSAGE(fs::exists(expectedFillerName) || fs::exists(expectedFillerName2) ||
+        ETH_FAIL_REQUIRE_MESSAGE(fs::exists(expectedFillerName) || fs::exists(expectedFillerName2) ||
                                 fs::exists(expectedCopierName),
             exceptionStr);
-        ETH_REQUIRE_MESSAGE(!(fs::exists(expectedFillerName) && fs::exists(expectedFillerName2) && fs::exists(expectedCopierName)), "Src test could either be Filler.json, Filler.yml or Copier.json: " + file.filename().string());
+        ETH_FAIL_REQUIRE_MESSAGE(!(fs::exists(expectedFillerName) && fs::exists(expectedFillerName2) && fs::exists(expectedCopierName)), "Src test could either be Filler.json, Filler.yml or Copier.json: " + file.filename().string());
 
         // Check that filled tests created from actual fillers depenging on a test type
         if (fs::exists(expectedFillerName))
@@ -362,7 +362,7 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
         isCopySource = true;
     }
     else
-        ETH_REQUIRE_MESSAGE(false, "Incorrect file suffix in the filler folder! " + _testFileName.string());
+        ETH_FAIL_REQUIRE_MESSAGE(false, "Incorrect file suffix in the filler folder! " + _testFileName.string());
 
     ETH_LOG("Running " + testname + ": ", 3);
     // Filename of the test that would be generated
@@ -378,7 +378,7 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
             assert(_testFileName.string() != boostTestPath.string());
             TestOutputHelper::get().showProgress();
             test::copyFile(_testFileName, boostTestPath);
-            ETH_REQUIRE_MESSAGE(boost::filesystem::exists(boostTestPath.string()), "Error when copying the test file!");
+            ETH_FAIL_REQUIRE_MESSAGE(boost::filesystem::exists(boostTestPath.string()), "Error when copying the test file!");
 
             // Update _info and build information of the copied test
             /*Json::Value v;

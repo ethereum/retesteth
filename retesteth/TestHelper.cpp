@@ -24,7 +24,7 @@ Json::Value readJson(fs::path const& _file)
     Json::Reader reader;
     string s = dev::contentsString(_file);
     string fname = _file.filename().c_str();
-    ETH_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + fname +
+    ETH_FAIL_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + fname +
                                             " is empty. Have you cloned the 'tests' repo branch "
                                             "develop and set ETHEREUM_TEST_PATH to its path?");
     bool parsingSuccessful = reader.parse(s, v);
@@ -196,13 +196,13 @@ void parseJsonStrValueIntoSet(DataObject const& _json, set<string>& _out)
     {
         for (auto const& val: _json.getSubObjects())
         {
-             ETH_REQUIRE(val.type() == DataType::String);
+             ETH_FAIL_REQUIRE(val.type() == DataType::String);
             _out.emplace(val.asString());
         }
     }
     else
     {
-        ETH_REQUIRE(_json.type() == DataType::String);
+        ETH_FAIL_REQUIRE(_json.type() == DataType::String);
         _out.emplace(_json.asString());
     }
 }
@@ -213,13 +213,13 @@ void parseJsonIntValueIntoSet(DataObject const& _json, set<int>& _out)
     {
         for (auto const& val: _json.getSubObjects())
         {
-            ETH_REQUIRE(val.type() == DataType::Integer);
+            ETH_FAIL_REQUIRE(val.type() == DataType::Integer);
             _out.emplace(val.asInt());
         }
     }
     else if (_json.type() == DataType::Integer)
     {
-        ETH_REQUIRE(_json.type() == DataType::Integer);
+        ETH_FAIL_REQUIRE(_json.type() == DataType::Integer);
         _out.emplace(_json.asInt());
     }
 }
@@ -276,7 +276,7 @@ string executeCmd(string const& _command)
 
 void checkHexHasEvenLength(string const& _hex)
 {
-	ETH_CHECK_MESSAGE(_hex.length() % 2 == 0,
+    ETH_ERROR_CHECK_MESSAGE(_hex.length() % 2 == 0,
 		TestOutputHelper::get().testName() + ": Hex field is expected to be of odd length: '"
 		 + _hex + "'");
 }
@@ -315,7 +315,7 @@ string replaceCode(string const& _code)
 
 	string compiledCode = compileLLL(_code);
 	if (_code.size() > 0)
-		ETH_REQUIRE_MESSAGE(compiledCode.size() > 0,
+        ETH_FAIL_REQUIRE_MESSAGE(compiledCode.size() > 0,
 			"Bytecode is missing! '" + _code + "' " + TestOutputHelper::get().testName());
 	return compiledCode;
 }

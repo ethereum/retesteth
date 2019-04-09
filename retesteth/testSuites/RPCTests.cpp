@@ -53,7 +53,7 @@ DataObject FillTest(DataObject const& _testFile, TestSuite::TestSuiteOptions& _o
 
     DataObjectScheme scheme(rpcTestFiller.get_expectReturn());
     DataObjectValidator validator(scheme);
-    ETH_CHECK_MESSAGE(validator.validatie(returnedData), validator.getError());
+    ETH_ERROR_CHECK_MESSAGE(validator.validatie(returnedData), validator.getError());
 
     filledTest = _testFile;  // Just copy the test filler because the way RPC tests are.
     _opt.disableSecondRun = true;

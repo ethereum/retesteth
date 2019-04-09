@@ -16,7 +16,7 @@ CompareResult compareStates(scheme_expectState const& _stateExpect, scheme_state
     CompareResult result = CompareResult::Success;
 	auto checkMessage = [&result](bool _flag, CompareResult _type, string const& _error) -> void
     {
-        ETH_CHECK_MESSAGE(_flag, _error);
+        ETH_ERROR_CHECK_MESSAGE(_flag, _error);
         if (!_flag)
 			result = _type;
     };

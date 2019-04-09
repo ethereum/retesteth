@@ -32,12 +32,12 @@ BOOST_AUTO_TEST_CASE(translateNetworks_gtHomestead)
 {
     set<string> networks = {"Frontier", ">Homestead"};
     networks = test::translateNetworks(networks);
-    ETH_REQUIRE(networks.count("Frontier") > 0);
-    ETH_REQUIRE(networks.count("Homestead") == 0);
+    ETH_FAIL_REQUIRE(networks.count("Frontier") > 0);
+    ETH_FAIL_REQUIRE(networks.count("Homestead") == 0);
     for (auto const& net : test::getNetworks())
     {
         if (net != "Frontier" && net != "Homestead")
-            ETH_REQUIRE(networks.count(net) > 0);
+            ETH_FAIL_REQUIRE(networks.count(net) > 0);
     }
 }
 
@@ -46,18 +46,18 @@ BOOST_AUTO_TEST_CASE(translateNetworks_geHomestead)
     set<string> networks = {"Frontier", ">=Homestead"};
     networks = test::translateNetworks(networks);
     for (auto const& net : test::getNetworks())
-        ETH_REQUIRE(networks.count(net) > 0);
+        ETH_FAIL_REQUIRE(networks.count(net) > 0);
 }
 
 BOOST_AUTO_TEST_CASE(translateNetworks_ltHomestead)
 {
     set<string> networks = {"<Homestead"};
     networks = test::translateNetworks(networks);
-    ETH_REQUIRE(networks.count("Frontier") > 0);
+    ETH_FAIL_REQUIRE(networks.count("Frontier") > 0);
     for (auto const& net : test::getNetworks())
     {
         if (net != "Frontier")
-            ETH_REQUIRE(networks.count(net) == 0);
+            ETH_FAIL_REQUIRE(networks.count(net) == 0);
     }
 }
 
@@ -65,23 +65,23 @@ BOOST_AUTO_TEST_CASE(translateNetworks_ltTest)
 {
     set<string> networks = {"<=EIP150", "<EIP158"};
     networks = test::translateNetworks(networks);
-    ETH_REQUIRE(networks.count("Frontier") > 0);
-    ETH_REQUIRE(networks.count("Homestead") > 0);
-    ETH_REQUIRE(networks.count("EIP150") > 0);
-    ETH_REQUIRE(networks.count("EIP158") == 0);
-    ETH_REQUIRE(networks.count("Byzantium") == 0);
+    ETH_FAIL_REQUIRE(networks.count("Frontier") > 0);
+    ETH_FAIL_REQUIRE(networks.count("Homestead") > 0);
+    ETH_FAIL_REQUIRE(networks.count("EIP150") > 0);
+    ETH_FAIL_REQUIRE(networks.count("EIP158") == 0);
+    ETH_FAIL_REQUIRE(networks.count("Byzantium") == 0);
 }
 
 BOOST_AUTO_TEST_CASE(translateNetworks_leHomestead)
 {
     set<string> networks = {"<=Homestead"};
     networks = test::translateNetworks(networks);
-    ETH_REQUIRE(networks.count("Frontier") > 0);
-    ETH_REQUIRE(networks.count("Homestead") > 0);
+    ETH_FAIL_REQUIRE(networks.count("Frontier") > 0);
+    ETH_FAIL_REQUIRE(networks.count("Homestead") > 0);
     for (auto const& net : test::getNetworks())
     {
         if (net != "Frontier" && net != "Homestead")
-            ETH_REQUIRE(networks.count(net) == 0);
+            ETH_FAIL_REQUIRE(networks.count(net) == 0);
     }
 }
 
@@ -89,11 +89,11 @@ BOOST_AUTO_TEST_CASE(translateNetworks_leFrontier)
 {
     set<string> networks = {"<=Frontier"};
     networks = test::translateNetworks(networks);
-    ETH_REQUIRE(networks.count("Frontier") > 0);
+    ETH_FAIL_REQUIRE(networks.count("Frontier") > 0);
     for (auto const& net : test::getNetworks())
     {
         if (net != "Frontier")
-            ETH_REQUIRE(networks.count(net) == 0);
+            ETH_FAIL_REQUIRE(networks.count(net) == 0);
     }
 }
 

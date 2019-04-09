@@ -54,7 +54,7 @@ bool RunTest(DataObject const& _testObject)
     DataObject remoteState = getRemoteState(session, "", true);
     scheme_state postState(remoteState.at("postState"));
     CompareResult res = test::compareStates(inputTest.getPost(), postState);
-    ETH_CHECK_MESSAGE(res == CompareResult::Success, "Error in " + inputTest.getData().getKey());
+    ETH_ERROR_CHECK_MESSAGE(res == CompareResult::Success, "Error in " + inputTest.getData().getKey());
     return (res != CompareResult::Success);
 }
 
@@ -65,7 +65,7 @@ namespace test
 DataObject BlockchainTestSuite::doTests(DataObject const& _input, TestSuiteOptions& _opt) const
 {
     DataObject tests;
-    ETH_REQUIRE_MESSAGE(
+    ETH_FAIL_REQUIRE_MESSAGE(
         _input.type() == DataType::Object, TestOutputHelper::get().get().testFile().string() +
                                                " A BlockchainTest file should contain an object.");
 

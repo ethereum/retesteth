@@ -45,15 +45,15 @@ public:
         std::string const& socketTypeStr = _obj.at("socketType").asString();
         if (socketTypeStr == "ipc")
         {
-            ETH_REQUIRE_MESSAGE(
+            ETH_FAIL_REQUIRE_MESSAGE(
                 getAddress() == "local", "A client socket of type ipc must be deployed locally!");
             m_socketType = Socket::SocketType::IPC;
-            ETH_REQUIRE_MESSAGE(fs::exists(_shell),
+            ETH_FAIL_REQUIRE_MESSAGE(fs::exists(_shell),
                 std::string("Client shell script not found: ") + _shell.c_str());
         }
         else if (socketTypeStr == "tcp")
         {
-            ETH_REQUIRE_MESSAGE(validateIP(getAddress()) == true,
+            ETH_FAIL_REQUIRE_MESSAGE(validateIP(getAddress()) == true,
                 "A client tcp socket must be a correct ipv4 address!");
             m_socketType = Socket::SocketType::TCP;
         }

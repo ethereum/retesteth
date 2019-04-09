@@ -15,21 +15,14 @@ void eth_error(std::string const& _message);
 #define ETH_TEST_MESSAGE(message) test::eth_log_message(message, 6)
 #define ETH_LOG(message, verbosity) test::eth_log_message(message, verbosity)
 
-// refactor exceptions !!!
-// 1) FATAL ERROR. STOP TEST. STOP RETESTETH
-// 2) LOCAL TEST ERROR. STOP TEST. WAIT OTHER TO FINISH. CONTINUE SUITE EXEC
-
 // Notice an error during test execution, but continue other tests
-#define ETH_CHECK_MESSAGE(flag, message) test::eth_check_message(flag, message)
 #define ETH_ERROR(message) test::eth_error(message)
-
-// Stop test suite execution, continue other tests
-#define ETH_REQUIRE_MESSAGE(flag, message) test::eth_require_message(flag, message)
-#define ETH_REQUIRE(flag) test::eth_require(flag)
+#define ETH_ERROR_CHECK_MESSAGE(flag, message) test::eth_check_message(flag, message)
 
 // Stop retesteth execution rise sigabrt
 #define ETH_FAIL(message) test::eth_fail(message)
-
+#define ETH_FAIL_REQUIRE(flag) test::eth_require(flag)
+#define ETH_FAIL_REQUIRE_MESSAGE(flag, message) test::eth_require_message(flag, message)
 
 // Helpers
 template <class T>

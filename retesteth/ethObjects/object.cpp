@@ -37,11 +37,11 @@ object::DigitsType object::stringIntegerType(std::string const& _string)
 std::string object::makeHexAddress(std::string const& _address)
 {
     if (_address[0] == '0' && _address[1] == 'x')
-        ETH_CHECK_MESSAGE(_address.length() == 42, TestOutputHelper::get().testName() + ": Wrong address: '" + _address + "'");
+        ETH_ERROR_CHECK_MESSAGE(_address.length() == 42, TestOutputHelper::get().testName() + ": Wrong address: '" + _address + "'");
     else
-        ETH_CHECK_MESSAGE(_address.length() == 40, TestOutputHelper::get().testName() + ": Wrong address: '" + _address + "'");
+        ETH_ERROR_CHECK_MESSAGE(_address.length() == 40, TestOutputHelper::get().testName() + ": Wrong address: '" + _address + "'");
 
-	ETH_CHECK_MESSAGE(_address.length() % 2 == 0, TestOutputHelper::get().testName() + ": Hex data is expected to be of odd length: '" + _address + "'");
+	ETH_ERROR_CHECK_MESSAGE(_address.length() % 2 == 0, TestOutputHelper::get().testName() + ": Hex data is expected to be of odd length: '" + _address + "'");
 	switch (stringIntegerType(_address))
 	{
 		case DigitsType::HexPrefixed:
@@ -114,13 +114,13 @@ void requireJsonFields(DataObject const& _o, std::string const& _section,
 {
 	// check for unexpected fiedls
 	for (auto const field : _o.getSubObjects())
-        ETH_CHECK_MESSAGE(_validationMap.count(field.getKey()),
+        ETH_ERROR_CHECK_MESSAGE(_validationMap.count(field.getKey()),
             "'" + field.getKey() + "' should not be declared in '" + _section + "' section!");
 
     // check field types with validation map
 	for (auto const vmap : _validationMap)
 	{
-        ETH_REQUIRE_MESSAGE(_o.count(vmap.first) > 0, vmap.first + " not found in " + _section +
+        ETH_FAIL_REQUIRE_MESSAGE(_o.count(vmap.first) > 0, vmap.first + " not found in " + _section +
 															" section! " +
 															TestOutputHelper::get().testName());
 		bool matched = false;

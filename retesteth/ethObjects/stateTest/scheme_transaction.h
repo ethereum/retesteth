@@ -56,7 +56,7 @@ namespace test {
             Signature sig = dev::sign(dev::Secret(m_data.at("secretKey").asString()), hash);
 
             SignatureStruct sigStruct = *(SignatureStruct const*)&sig;
-            ETH_REQUIRE_MESSAGE(sigStruct.isValid(), TestOutputHelper::get().testName() + "Could not construct transaction signature!");
+            ETH_FAIL_REQUIRE_MESSAGE(sigStruct.isValid(), TestOutputHelper::get().testName() + "Could not construct transaction signature!");
 
             RLPStream sWithSignature;
             sWithSignature.appendList(9);
