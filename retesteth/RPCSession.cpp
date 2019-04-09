@@ -43,7 +43,7 @@ using namespace dev;
 struct sessionInfo
 {
     sessionInfo(
-        FILE* _pipe, RPCSession* _session, std::string const& _tmpDir, int _pid, unsigned _configId)
+        FILE* _pipe, RPCSession* _session, std::string const& _tmpDir, int _pid, test::ClientConfigID const& _configId)
     {
         session.reset(_session);
         filePipe.reset(_pipe);
@@ -57,7 +57,7 @@ struct sessionInfo
     int pipePid;
     RPCSession::SessionStatus isUsed;
     std::string tmpDir;
-    unsigned configId;
+    test::ClientConfigID configId;
 };
 
 void closeSession(const string& _threadID);
@@ -126,7 +126,7 @@ RPCSession& RPCSession::instance(const string& _threadID)
     bool needToCreateNew = false;
     {
         std::lock_guard<std::mutex> lock(g_socketMapMutex);
-        unsigned currentConfigId = Options::getDynamicOptions().getCurrentConfig().getId();
+        test::ClientConfigID currentConfigId = Options::getDynamicOptions().getCurrentConfig().getId();
         if (socketMap.count(_threadID) && socketMap.at(_threadID).configId != currentConfigId)
         {
             // For this thread a session is opened but it is opened not for current tested client
@@ -154,6 +154,7 @@ RPCSession& RPCSession::instance(const string& _threadID)
     }
     if (needToCreateNew)
         runNewInstanceOfAClient(_threadID, Options::getDynamicOptions().getCurrentConfig());
+
     std::lock_guard<std::mutex> lock(g_socketMapMutex);
     ETH_REQUIRE_MESSAGE(socketMap.size() <= Options::get().threadCount,
         "Something went wrong. Retesteth create more instances than needed!");

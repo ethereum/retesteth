@@ -378,7 +378,13 @@ Options const& Options::get(int argc, const char** argv)
 
 ClientConfig const& Options::DynamicOptions::getCurrentConfig() const
 {
-    return m_clientConfigs[m_currentConfig];
+    for (auto const& cfg: m_clientConfigs)
+    {
+        if (cfg.getId() == m_currentConfigID)
+            return cfg;
+    }
+    ETH_FAIL("ERROR: current config not found! (DynamicOptions::getCurrentConfig())");
+    return m_clientConfigs.at(0);
 }
 
 void Options::DynamicOptions::setCurrentConfig(ClientConfig const& _config)
@@ -388,20 +394,20 @@ void Options::DynamicOptions::setCurrentConfig(ClientConfig const& _config)
     for (auto const& cfg : getClientConfigs())
         if (cfg.getId() == _config.getId() && cfg.getName() == _config.getName())
             found = true;
-    ETH_REQUIRE_MESSAGE(found, "_config not found in loaded options!");
-    m_currentConfig = _config.getId();
+    ETH_REQUIRE_MESSAGE(found, "_config not found in loaded options! (DynamicOptions::setCurrentConfig)");
+    m_currentConfigID = _config.getId();
 }
 
 std::vector<ClientConfig> const& Options::DynamicOptions::getClientConfigs()
 {
     if (m_clientConfigs.size() == 0)
     {
+        // load the configs from options file
         std::vector<string> cfgs = Options::get().clients;
         if (cfgs.empty())
             cfgs.push_back("aleth");
 
         std::cout << "Active client configurations: '";
-        unsigned id = 0;
         for (auto const& clientName : cfgs)
         {
             std::cout << clientName << " ";
@@ -409,7 +415,7 @@ std::vector<ClientConfig> const& Options::DynamicOptions::getClientConfigs()
             fs::path configFilePath = configPath / "config";
             ETH_REQUIRE_MESSAGE(fs::exists(configFilePath),
                 string("Client config not found: ") + configFilePath.c_str());
-            ClientConfig cfg(dataobject::ConvertJsoncppToData(readJson(configFilePath)), id++,
+            ClientConfig cfg(dataobject::ConvertJsoncppToData(readJson(configFilePath)), ClientConfigID(),
                 configPath / string(clientName + ".sh"));
             m_clientConfigs.push_back(cfg);
         }

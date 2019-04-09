@@ -330,10 +330,11 @@ void TestSuite::runFunctionForAllClients(std::function<void()> _func)
     for (auto const& config : Options::getDynamicOptions().getClientConfigs())
     {
         Options::getDynamicOptions().setCurrentConfig(config);
-        std::cout << "Running tests for config '" << config.getName() << "' " << config.getId()
+        std::cout << "Running tests for config '" << config.getName() << "' " << config.getId().id()
                   << std::endl;
         _func();
-        RPCSession::clear();
+        // leave current connections open for the next tests (if commented)
+        // RPCSession::clear();
     }
 }
 

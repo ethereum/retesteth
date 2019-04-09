@@ -2,6 +2,7 @@
 #include <retesteth/Socket.h>
 #include <retesteth/ethObjects/object.h>
 #include <boost/asio.hpp>
+#include <mutex>
 #include <string>
 namespace fs = boost::filesystem;
 
@@ -19,10 +20,23 @@ bool validateIP(std::string const& _ip)
 
 namespace test
 {
+
+struct ClientConfigID
+{
+    /// ClientConfigID handles the unique id logic so not to store it inside int and accedentially change
+    /// or mistake with some other value. ???possibly a class for unique object ids???
+    ClientConfigID();
+    bool operator == (ClientConfigID const& _right) const { return m_id == _right.id(); }
+    bool operator != (ClientConfigID const& _right) const { return m_id != _right.id(); }
+    unsigned id() const { return m_id; }
+private:
+    unsigned m_id;
+};
+
 class ClientConfig : public object
 {
 public:
-    ClientConfig(DataObject const& _obj, unsigned _id, fs::path _shell = fs::path())
+    ClientConfig(DataObject const& _obj, ClientConfigID const& _id, fs::path _shell = fs::path())
       : object(_obj), m_shellPath(_shell), m_id(_id)
     {
         requireJsonFields(_obj, "ClientConfig ",
@@ -52,11 +66,11 @@ public:
     std::string const& getName() const { return m_data.at("name").asString(); }
     Socket::SocketType getType() const { return m_socketType; }
     std::string const& getAddress() const { return m_data.at("socketAddress").asString(); }
-    unsigned getId() const { return m_id; }
+    ClientConfigID const& getId() const { return m_id; }
 
 private:
     Socket::SocketType m_socketType;
     fs::path m_shellPath;
-    unsigned m_id;
+    ClientConfigID m_id;
 };
 }
