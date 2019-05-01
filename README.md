@@ -7,7 +7,7 @@ A test generaion tool for the test fillers https://github.com/ethereum/tests/tre
 
 # The Goal
 
-* A test tool that would be capable of running current Blockchain tests against any client by sending rpc request to the client instatnce on either local or remote host. (using unix or TPC sockets) 
+* A test tool that would be capable of running current Blockchain tests against any client by sending rpc request to the client instatnce on either local or remote host. (using unix or TCP sockets) 
 * Filling existing tests (generating post state from *Filler.json instruction files) using rpc and any exisiting client
 * Running rpc request - response tests with a provided client on localhost
 * Bunch tests execution with many clients with many threads
