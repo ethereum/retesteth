@@ -409,8 +409,11 @@ std::vector<ClientConfig> const& Options::DynamicOptions::getClientConfigs()
 
         std::cout << "Active client configurations: '";
         for (auto const& clientName : cfgs)
-        {
             std::cout << clientName << " ";
+        std::cout << "'" << std::endl;
+
+        for (auto const& clientName : cfgs)
+        {
             fs::path configPath = getTestPath() / fs::path("Retesteth") / clientName;
             fs::path configFilePath = configPath / "config";
             ETH_FAIL_REQUIRE_MESSAGE(fs::exists(configFilePath),
@@ -419,7 +422,6 @@ std::vector<ClientConfig> const& Options::DynamicOptions::getClientConfigs()
                 configPath / string(clientName + ".sh"));
             m_clientConfigs.push_back(cfg);
         }
-        std::cout << "'" << std::endl;
     }
     return m_clientConfigs;
 }

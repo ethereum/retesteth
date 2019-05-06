@@ -60,9 +60,17 @@ public:
                 "A client tcp socket must be a correct ipv4 address!");
             m_socketType = Socket::SocketType::TCP;
         }
+        else if (socketTypeStr == "ipc-debug")
+        {
+            m_socketType = Socket::SocketType::IPCDebug;
+            ETH_FAIL_REQUIRE_MESSAGE(fs::exists(getAddress()),
+                std::string("Client IPC socket file not found: ") + getAddress());
+        }
         else
             ETH_FAIL("Incorrect client socket type: " + socketTypeStr + " in client named '" +
-                     getName() + "'");
+                     getName() +
+                     "' Allowed socket configs [type, \"address\"]: [ipc, \"local\"], [ipc-debug, "
+                     "\"path to .ipc socket\"], [tcp, \"address:port\"]");
     }
 
     fs::path const& getShellPath() const { return m_shellPath; }

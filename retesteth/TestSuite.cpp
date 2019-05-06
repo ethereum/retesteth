@@ -313,7 +313,15 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
                 break;
             }
             testOutput.showProgress();
-            if (threadVector.size() == Options::get().threadCount)
+
+            // If debugging already open instance of a client. Only one thread allowed to connect to
+            // it;
+            size_t maxAllowedThreads = Options::get().threadCount;
+            if (Options::getDynamicOptions().getCurrentConfig().getType() ==
+                Socket::SocketType::IPCDebug)
+                maxAllowedThreads = 1;
+
+            if (threadVector.size() == maxAllowedThreads)
                 joinThreads(threadVector, false);
             thread testThread(&TestSuite::executeTest, this, _testFolder, file);
             threadVector.push_back(std::move(testThread));

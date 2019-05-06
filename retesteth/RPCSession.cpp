@@ -96,9 +96,6 @@ void RPCSession::runNewInstanceOfAClient(string const& _threadID, ClientConfig c
             // Client has opened ipc socket. wait for it to initialize
             std::this_thread::sleep_for(std::chrono::seconds(4));
         }
-        // sessionInfo info(fp,
-        //    new RPCSession(Socket::SocketType::IPC, "/home/wins/.ethereum/geth.ipc"),
-        //    tmpDir.string(), pid, _config.getId());
         sessionInfo info(fp, new RPCSession(Socket::SocketType::IPC, ipcPath), tmpDir.string(), pid,
             _config.getId());
         {
@@ -110,6 +107,21 @@ void RPCSession::runNewInstanceOfAClient(string const& _threadID, ClientConfig c
     else if (_config.getType() == Socket::TCP)
     {
         sessionInfo info(NULL, new RPCSession(Socket::SocketType::TCP, _config.getAddress()), "", 0,
+            _config.getId());
+        {
+            std::lock_guard<std::mutex> lock(
+                g_socketMapMutex);  // function must be called from lock
+            socketMap.insert(std::pair<string, sessionInfo>(_threadID, std::move(info)));
+        }
+    }
+    else if (_config.getType() == Socket::IPCDebug)
+    {
+        // connect to already opend .ipc socket
+        fs::path tmpDir = test::createUniqueTmpDirectory();
+        string ipcPath = _config.getAddress();
+        int pid = 0;
+        FILE* fp = NULL;
+        sessionInfo info(fp, new RPCSession(Socket::SocketType::IPC, ipcPath), tmpDir.string(), pid,
             _config.getId());
         {
             std::lock_guard<std::mutex> lock(
