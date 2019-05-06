@@ -43,13 +43,13 @@ namespace  test {
             CompareResult result = CompareResult::Success;
             auto checkMessage = [&result](bool _flag, CompareResult _type, std::string const& _error) -> void
             {
-                ETH_CHECK_MESSAGE(_flag, _error);
+                ETH_ERROR_CHECK_MESSAGE(_flag, _error);
                 if (!_flag)
                     result = _type;
             };
 
-            ETH_REQUIRE(_storage.type() == DataType::Object);
-            ETH_REQUIRE(hasStorage());
+            ETH_FAIL_REQUIRE(_storage.type() == DataType::Object);
+            ETH_FAIL_REQUIRE(hasStorage());
 
             DataObject const& expectStorage = m_data.at("storage");
             for (auto const& element: expectStorage.getSubObjects())

@@ -29,14 +29,14 @@ class BlockchainTestSuite : public TestSuite
 {
 public:
     DataObject doTests(DataObject const& _input, TestSuiteOptions& _opt) const override;
-    boost::filesystem::path suiteFolder() const override;
-    boost::filesystem::path suiteFillerFolder() const override;
+    TestPath suiteFolder() const override;
+    FillerPath suiteFillerFolder() const override;
 };
 
 class BCGeneralStateTestsSuite: public BlockchainTestSuite
 {
-    boost::filesystem::path suiteFolder() const override;
-    boost::filesystem::path suiteFillerFolder() const override;
+    TestPath suiteFolder() const override;
+    FillerPath suiteFillerFolder() const override;
 };
 
 }

@@ -101,7 +101,7 @@ DataObject FillTestAsBlockchain(DataObject const& _testFile, TestSuite::TestSuit
                                       ", v: " + toString(tr.valueInd) + "\n";
                     scheme_state postState(remoteState.at("postState"));
                     CompareResult res = test::compareStates(mexpect.getExpectState(), postState);
-                    ETH_CHECK_MESSAGE(res == CompareResult::Success, testInfo);
+                    ETH_ERROR_CHECK_MESSAGE(res == CompareResult::Success, testInfo);
                     if (res != CompareResult::Success)
                         _opt.wasErrors = true;
 
@@ -114,7 +114,7 @@ DataObject FillTestAsBlockchain(DataObject const& _testFile, TestSuite::TestSuit
                     aBlockchainTest["network"] = net;
 
                     test::scheme_block blockData(remoteState.at("rawBlockData"));
-                    ETH_REQUIRE_MESSAGE(blockData.getTransactionCount() == 1,
+                    ETH_FAIL_REQUIRE_MESSAGE(blockData.getTransactionCount() == 1,
                         "StateTest transaction execution failed! " + testInfo);
                     aBlockchainTest["lastblockhash"] = blockData.getBlockHash();
 
@@ -187,7 +187,7 @@ DataObject FillTest(DataObject const& _testFile, TestSuite::TestSuiteOptions& _o
                     // check that the post state qualifies to the expect section
                     scheme_state postState(remoteState.at("postState"));
                     CompareResult res = test::compareStates(expect.getExpectState(), postState);
-                    ETH_CHECK_MESSAGE(res == CompareResult::Success,
+                    ETH_ERROR_CHECK_MESSAGE(res == CompareResult::Success,
                         "Network: " + net + ", TrInfo: d: " + toString(tr.dataInd) +
                             ", g: " + toString(tr.gasInd) + ", v: " + toString(tr.valueInd) + "\n");
                     if (res != CompareResult::Success)
@@ -265,7 +265,7 @@ void RunTest(DataObject const& _testFile)
                       remoteState = getRemoteState(session, trHash, true);
 					}
 
-                    ETH_CHECK_MESSAGE(remoteState.at("postHash").asString() == expectHash,
+                    ETH_ERROR_CHECK_MESSAGE(remoteState.at("postHash").asString() == expectHash,
                         "Error at " + testInfo + ", post hash mismatch: " +
                             remoteState.at("postHash").asString() + ", expected: " + expectHash);
                     if (remoteState.at("postHash").asString() != expectHash)
@@ -273,7 +273,7 @@ void RunTest(DataObject const& _testFile)
 
                     if (remoteState.count("logHash"))
                     {
-                        ETH_CHECK_MESSAGE(remoteState.at("logHash").asString() == expectLogHash,
+                        ETH_ERROR_CHECK_MESSAGE(remoteState.at("logHash").asString() == expectLogHash,
                             "Error at " + testInfo +
                                 ", logs hash mismatch: " + remoteState.at("logHash").asString() +
                                 ", expected: " + expectLogHash);
@@ -332,16 +332,16 @@ DataObject StateTestSuite::doTests(DataObject const& _input, TestSuiteOptions& _
     return filledTest;
 }
 
-fs::path StateTestSuite::suiteFolder() const
+TestSuite::TestPath StateTestSuite::suiteFolder() const
 {
     if (Options::get().fillchain)
-        return fs::path("BlockchainTests") / "GeneralStateTests2";
-    return "GeneralStateTests";
+        return TestSuite::TestPath(fs::path("BlockchainTests") / "GeneralStateTests2");
+    return TestSuite::TestPath(fs::path("GeneralStateTests"));
 }
 
-fs::path StateTestSuite::suiteFillerFolder() const
+TestSuite::FillerPath StateTestSuite::suiteFillerFolder() const
 {
-    return fs::path("src") / "GeneralStateTestsFiller";
+    return TestSuite::FillerPath(fs::path("src") / "GeneralStateTestsFiller");
 }
 
 }// Namespace Close

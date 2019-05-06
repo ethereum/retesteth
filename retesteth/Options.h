@@ -28,7 +28,7 @@ public:
 
     private:
         std::vector<ClientConfig> m_clientConfigs;
-        unsigned m_currentConfig;
+        test::ClientConfigID m_currentConfigID;
     };
 
     size_t threadCount = 1;	///< Execute tests on threads

@@ -53,7 +53,7 @@ DataObject FillTest(DataObject const& _testFile, TestSuite::TestSuiteOptions& _o
 
     DataObjectScheme scheme(rpcTestFiller.get_expectReturn());
     DataObjectValidator validator(scheme);
-    ETH_CHECK_MESSAGE(validator.validatie(returnedData), validator.getError());
+    ETH_ERROR_CHECK_MESSAGE(validator.validatie(returnedData), validator.getError());
 
     filledTest = _testFile;  // Just copy the test filler because the way RPC tests are.
     _opt.disableSecondRun = true;
@@ -93,14 +93,14 @@ DataObject RPCTestSuite::doTests(DataObject const& _input, TestSuiteOptions& _op
     return filledTest;
 }
 
-fs::path RPCTestSuite::suiteFolder() const
+TestSuite::TestPath RPCTestSuite::suiteFolder() const
 {
-    return "RPCTests";
+    return TestSuite::TestPath(fs::path("RPCTests"));
 }
 
-fs::path RPCTestSuite::suiteFillerFolder() const
+TestSuite::FillerPath RPCTestSuite::suiteFillerFolder() const
 {
-    return fs::path("src") / "RPCTestsFiller";
+    return TestSuite::FillerPath(fs::path("src") / "RPCTestsFiller");
 }
 
 }  // Namespace Close

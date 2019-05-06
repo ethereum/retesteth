@@ -56,7 +56,7 @@ TestFileData readTestFile(fs::path const& _testFileName)
 
     // Check that file is not empty
     string const s = dev::contentsString(_testFileName);
-    ETH_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _testFileName.string() + " is empty.");
+    ETH_FAIL_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _testFileName.string() + " is empty.");
 
     if (_testFileName.extension() == ".json")
         testData.data = dataobject::ConvertJsoncppToData(readJson(_testFileName));
@@ -145,13 +145,13 @@ void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
     for (auto const& i: v.getSubObjects())
 	{
         // use eth object _info section class here !!!!!
-        ETH_REQUIRE_MESSAGE(i.type() == dataobject::DataType::Object,
+        ETH_FAIL_REQUIRE_MESSAGE(i.type() == dataobject::DataType::Object,
             i.getKey() + " should contain an object under a test name.");
-        ETH_REQUIRE_MESSAGE(i.count("_info") > 0, "_info section not set! " + _compiledTest.string());
+        ETH_FAIL_REQUIRE_MESSAGE(i.count("_info") > 0, "_info section not set! " + _compiledTest.string());
         dataobject::DataObject const& info = i.at("_info");
-        ETH_REQUIRE_MESSAGE(info.count("sourceHash") > 0, "sourceHash not found in " + _compiledTest.string() + " in " + i.getKey());
+        ETH_FAIL_REQUIRE_MESSAGE(info.count("sourceHash") > 0, "sourceHash not found in " + _compiledTest.string() + " in " + i.getKey());
         h256 const sourceHash = h256(info.at("sourceHash").asString());
-        ETH_CHECK_MESSAGE(sourceHash == fillerData.hash,
+        ETH_ERROR_CHECK_MESSAGE(sourceHash == fillerData.hash,
             "Test " + _compiledTest.string() + " in " + i.getKey() +
                 " is outdated. Filler hash is different! ( '" + sourceHash.hex().substr(0, 4) +
                 "' != '" + fillerData.hash.hex().substr(0, 4) + "') ");
@@ -220,8 +220,8 @@ string TestSuite::checkFillerExistance(string const& _testFolder) const
                         string() :
                         test::Options::get().singleTestName;
     std::cout << "Filter: '" << filter << "'" << std::endl;
-    vector<fs::path> compiledFiles =
-        test::getFiles(getFullPath(_testFolder), {".json", ".yml"}, filter);
+    AbsoluteTestPath testsPath = getFullPath(_testFolder);
+    vector<fs::path> compiledFiles = test::getFiles(testsPath.path(), {".json", ".yml"}, filter);
 
     bool ghostFile = false;
     if (compiledFiles.size() == 0)
@@ -232,15 +232,15 @@ string TestSuite::checkFillerExistance(string const& _testFolder) const
         ghostFile = true;
     }
 
-    fs::path fullPathToFillers = getFullPathFiller(_testFolder);
+    AbsoluteFillerPath fullPathToFillers = getFullPathFiller(_testFolder);
     for (auto const& file : compiledFiles)
     {
         fs::path const expectedFillerName =
-            fullPathToFillers / fs::path(file.stem().string() + c_fillerPostf + ".json");
+            fullPathToFillers.path() / fs::path(file.stem().string() + c_fillerPostf + ".json");
         fs::path const expectedFillerName2 =
-            fullPathToFillers / fs::path(file.stem().string() + c_fillerPostf + ".yml");
+            fullPathToFillers.path() / fs::path(file.stem().string() + c_fillerPostf + ".yml");
         fs::path const expectedCopierName =
-            fullPathToFillers / fs::path(file.stem().string() + c_copierPostf + ".json");
+            fullPathToFillers.path() / fs::path(file.stem().string() + c_copierPostf + ".json");
 
         string exceptionStr;
         if (ghostFile)
@@ -250,10 +250,10 @@ string TestSuite::checkFillerExistance(string const& _testFolder) const
         else
             exceptionStr =
                 "Compiled test folder contains test without Filler: " + file.filename().string();
-        ETH_REQUIRE_MESSAGE(fs::exists(expectedFillerName) || fs::exists(expectedFillerName2) ||
+        ETH_FAIL_REQUIRE_MESSAGE(fs::exists(expectedFillerName) || fs::exists(expectedFillerName2) ||
                                 fs::exists(expectedCopierName),
             exceptionStr);
-        ETH_REQUIRE_MESSAGE(!(fs::exists(expectedFillerName) && fs::exists(expectedFillerName2) && fs::exists(expectedCopierName)), "Src test could either be Filler.json, Filler.yml or Copier.json: " + file.filename().string());
+        ETH_FAIL_REQUIRE_MESSAGE(!(fs::exists(expectedFillerName) && fs::exists(expectedFillerName2) && fs::exists(expectedCopierName)), "Src test could either be Filler.json, Filler.yml or Copier.json: " + file.filename().string());
 
         // Check that filled tests created from actual fillers depenging on a test type
         if (fs::exists(expectedFillerName))
@@ -297,8 +297,8 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
     string const filter = checkFillerExistance(_testFolder);
 
     // run all tests
-    vector<fs::path> const files =
-        test::getFiles(getFullPathFiller(_testFolder), {".json", ".yml"}, filter);
+    AbsoluteFillerPath fillerPath = getFullPathFiller(_testFolder);
+    vector<fs::path> const files = test::getFiles(fillerPath.path(), {".json", ".yml"}, filter);
 
     // repeat this part for all connected clients
     auto thisPart = [this, &files, &_testFolder]() {
@@ -313,7 +313,15 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
                 break;
             }
             testOutput.showProgress();
-            if (threadVector.size() == Options::get().threadCount)
+
+            // If debugging already open instance of a client. Only one thread allowed to connect to
+            // it;
+            size_t maxAllowedThreads = Options::get().threadCount;
+            if (Options::getDynamicOptions().getCurrentConfig().getType() ==
+                Socket::SocketType::IPCDebug)
+                maxAllowedThreads = 1;
+
+            if (threadVector.size() == maxAllowedThreads)
                 joinThreads(threadVector, false);
             thread testThread(&TestSuite::executeTest, this, _testFolder, file);
             threadVector.push_back(std::move(testThread));
@@ -330,21 +338,23 @@ void TestSuite::runFunctionForAllClients(std::function<void()> _func)
     for (auto const& config : Options::getDynamicOptions().getClientConfigs())
     {
         Options::getDynamicOptions().setCurrentConfig(config);
-        std::cout << "Running tests for config '" << config.getName() << "' " << config.getId()
+        std::cout << "Running tests for config '" << config.getName() << "' " << config.getId().id()
                   << std::endl;
         _func();
-        RPCSession::clear();
+        // leave current connections open for the next tests (if commented)
+        // RPCSession::clear();
     }
 }
 
-fs::path TestSuite::getFullPathFiller(string const& _testFolder) const
+TestSuite::AbsoluteFillerPath TestSuite::getFullPathFiller(string const& _testFolder) const
 {
-    return test::getTestPath() / suiteFillerFolder() / _testFolder;
+    return TestSuite::AbsoluteFillerPath(
+        test::getTestPath() / suiteFillerFolder().path() / _testFolder);
 }
 
-fs::path TestSuite::getFullPath(string const& _testFolder) const
+TestSuite::AbsoluteTestPath TestSuite::getFullPath(string const& _testFolder) const
 {
-	return test::getTestPath() / suiteFolder() / _testFolder;
+    return TestSuite::AbsoluteTestPath(test::getTestPath() / suiteFolder().path() / _testFolder);
 }
 
 void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFileName) const
@@ -361,11 +371,12 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
         isCopySource = true;
     }
     else
-        ETH_REQUIRE_MESSAGE(false, "Incorrect file suffix in the filler folder! " + _testFileName.string());
+        ETH_FAIL_REQUIRE_MESSAGE(false, "Incorrect file suffix in the filler folder! " + _testFileName.string());
 
     ETH_LOG("Running " + testname + ": ", 3);
     // Filename of the test that would be generated
-    fs::path const boostTestPath = getFullPath(_testFolder) / fs::path(testname + ".json");
+    AbsoluteTestPath const boostTestPath =
+        getFullPath(_testFolder).path() / fs::path(testname + ".json");
 
     TestSuiteOptions opt;
     if (Options::get().filltests)
@@ -373,11 +384,12 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
         if (isCopySource)
         {
             clog << "Copying " << _testFileName.string() << "\n";
-            clog << " TO " << boostTestPath.string() << "\n";
-            assert(_testFileName.string() != boostTestPath.string());
+            clog << " TO " << boostTestPath.path().string() << "\n";
+            assert(_testFileName.string() != boostTestPath.path().string());
             TestOutputHelper::get().showProgress();
-            test::copyFile(_testFileName, boostTestPath);
-            ETH_REQUIRE_MESSAGE(boost::filesystem::exists(boostTestPath.string()), "Error when copying the test file!");
+            test::copyFile(_testFileName, boostTestPath.path());
+            ETH_FAIL_REQUIRE_MESSAGE(boost::filesystem::exists(boostTestPath.path().string()),
+                "Error when copying the test file!");
 
             // Update _info and build information of the copied test
             /*Json::Value v;
@@ -399,7 +411,7 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
                 {
                     // Add client info for all of the tests in output
                     addClientInfo(output, boostRelativeTestPath, testData.hash);
-                    writeFile(boostTestPath, asBytes(output.asJson()));
+                    writeFile(boostTestPath.path(), asBytes(output.asJson()));
                 }
             }
             catch (std::exception const& _ex)
@@ -414,7 +426,7 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
     {
         try
         {
-            executeFile(boostTestPath);
+            executeFile(boostTestPath.path());
         }
         catch (std::exception const& _ex)
         {

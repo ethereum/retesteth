@@ -35,7 +35,8 @@ public:
     enum SocketType
     {
         IPC,
-        TCP
+        TCP,
+        IPCDebug
     };
     explicit Socket(SocketType _type, std::string const& _path);
     std::string sendRequest(std::string const& _req);

@@ -43,7 +43,7 @@ using namespace dev;
 struct sessionInfo
 {
     sessionInfo(
-        FILE* _pipe, RPCSession* _session, std::string const& _tmpDir, int _pid, unsigned _configId)
+        FILE* _pipe, RPCSession* _session, std::string const& _tmpDir, int _pid, test::ClientConfigID const& _configId)
     {
         session.reset(_session);
         filePipe.reset(_pipe);
@@ -57,7 +57,7 @@ struct sessionInfo
     int pipePid;
     RPCSession::SessionStatus isUsed;
     std::string tmpDir;
-    unsigned configId;
+    test::ClientConfigID configId;
 };
 
 void closeSession(const string& _threadID);
@@ -92,13 +92,10 @@ void RPCSession::runNewInstanceOfAClient(string const& _threadID, ClientConfig c
             int maxSeconds = 25;
             while (!boost::filesystem::exists(ipcPath) && maxSeconds-- > 0)
                 std::this_thread::sleep_for(std::chrono::seconds(1));
-            ETH_REQUIRE_MESSAGE(maxSeconds > 0, "Client took too long to start ipc!");
+            ETH_FAIL_REQUIRE_MESSAGE(maxSeconds > 0, "Client took too long to start ipc!");
             // Client has opened ipc socket. wait for it to initialize
             std::this_thread::sleep_for(std::chrono::seconds(4));
         }
-        // sessionInfo info(fp,
-        //    new RPCSession(Socket::SocketType::IPC, "/home/wins/.ethereum/geth.ipc"),
-        //    tmpDir.string(), pid, _config.getId());
         sessionInfo info(fp, new RPCSession(Socket::SocketType::IPC, ipcPath), tmpDir.string(), pid,
             _config.getId());
         {
@@ -117,6 +114,21 @@ void RPCSession::runNewInstanceOfAClient(string const& _threadID, ClientConfig c
             socketMap.insert(std::pair<string, sessionInfo>(_threadID, std::move(info)));
         }
     }
+    else if (_config.getType() == Socket::IPCDebug)
+    {
+        // connect to already opend .ipc socket
+        fs::path tmpDir = test::createUniqueTmpDirectory();
+        string ipcPath = _config.getAddress();
+        int pid = 0;
+        FILE* fp = NULL;
+        sessionInfo info(fp, new RPCSession(Socket::SocketType::IPC, ipcPath), tmpDir.string(), pid,
+            _config.getId());
+        {
+            std::lock_guard<std::mutex> lock(
+                g_socketMapMutex);  // function must be called from lock
+            socketMap.insert(std::pair<string, sessionInfo>(_threadID, std::move(info)));
+        }
+    }
     else
         ETH_FAIL("Unknown Socket Type in runNewInstanceOfAClient");
 }
@@ -126,7 +138,7 @@ RPCSession& RPCSession::instance(const string& _threadID)
     bool needToCreateNew = false;
     {
         std::lock_guard<std::mutex> lock(g_socketMapMutex);
-        unsigned currentConfigId = Options::getDynamicOptions().getCurrentConfig().getId();
+        test::ClientConfigID currentConfigId = Options::getDynamicOptions().getCurrentConfig().getId();
         if (socketMap.count(_threadID) && socketMap.at(_threadID).configId != currentConfigId)
         {
             // For this thread a session is opened but it is opened not for current tested client
@@ -154,8 +166,9 @@ RPCSession& RPCSession::instance(const string& _threadID)
     }
     if (needToCreateNew)
         runNewInstanceOfAClient(_threadID, Options::getDynamicOptions().getCurrentConfig());
+
     std::lock_guard<std::mutex> lock(g_socketMapMutex);
-    ETH_REQUIRE_MESSAGE(socketMap.size() <= Options::get().threadCount,
+    ETH_FAIL_REQUIRE_MESSAGE(socketMap.size() <= Options::get().threadCount,
         "Something went wrong. Retesteth create more instances than needed!");
     return *(socketMap.at(_threadID).session.get());
 }
@@ -186,7 +199,7 @@ RPCSession::SessionStatus RPCSession::sessionStatus(std::string const& _threadID
 
 void closeSession(const string& _threadID)
 {
-    ETH_REQUIRE_MESSAGE(socketMap.count(_threadID), "Socket map is empty in closeSession!");
+    ETH_FAIL_REQUIRE_MESSAGE(socketMap.count(_threadID), "Socket map is empty in closeSession!");
     sessionInfo& element = socketMap.at(_threadID);
     if (element.session.get()->getSocketType() == Socket::SocketType::IPC)
     {
@@ -338,7 +351,7 @@ void RPCSession::test_setChainParams(vector<string> const& _accounts)
 	)";
 
 	Json::Value config;
-    ETH_REQUIRE_MESSAGE(Json::Reader().parse(c_configString, config), "setChainParams json is incorrect!");
+    ETH_FAIL_REQUIRE_MESSAGE(Json::Reader().parse(c_configString, config), "setChainParams json is incorrect!");
 	for (auto const& account: _accounts)
 		config["accounts"][account]["wei"] = "0x100000000000000000000000000000000000000000";
 	test_setChainParams(Json::FastWriter().write(config));
@@ -361,19 +374,19 @@ void RPCSession::test_importRawBlock(std::string const& _blockRLP)
 
 void RPCSession::test_setChainParams(string const& _config)
 {
-    ETH_REQUIRE_MESSAGE(rpcCall("test_setChainParams", { _config }) == true, "remote test_setChainParams = false");
+    ETH_FAIL_REQUIRE_MESSAGE(rpcCall("test_setChainParams", { _config }) == true, "remote test_setChainParams = false");
 }
 
 void RPCSession::test_rewindToBlock(size_t _blockNr)
 {
-    ETH_REQUIRE_MESSAGE(rpcCall("test_rewindToBlock", { to_string(_blockNr) }) == true, "remote test_rewintToBlock = false");
+    ETH_FAIL_REQUIRE_MESSAGE(rpcCall("test_rewindToBlock", { to_string(_blockNr) }) == true, "remote test_rewintToBlock = false");
 }
 
 void RPCSession::test_mineBlocks(int _number, string const& _hash)
 {
        (void)_hash;
     u256 startBlock = fromBigEndian<u256>(fromHex(rpcCall("eth_blockNumber").asString()));
-    ETH_REQUIRE_MESSAGE(rpcCall("test_mineBlocks", { to_string(_number) }, true) == true, "remote test_mineBlocks = false");
+    ETH_FAIL_REQUIRE_MESSAGE(rpcCall("test_mineBlocks", { to_string(_number) }, true) == true, "remote test_mineBlocks = false");
 
 	// We auto-calibrate the time it takes to mine the transaction.
 	// It would be better to go without polling, but that would probably need a change to the test client
@@ -418,7 +431,7 @@ void RPCSession::test_mineBlocks(int _number, string const& _hash)
 
 void RPCSession::test_modifyTimestamp(size_t _timestamp)
 {
-    ETH_REQUIRE_MESSAGE(rpcCall("test_modifyTimestamp", { to_string(_timestamp) }) == true, "test_modifyTimestamp was not successfull");
+    ETH_FAIL_REQUIRE_MESSAGE(rpcCall("test_modifyTimestamp", { to_string(_timestamp) }) == true, "test_modifyTimestamp was not successfull");
 }
 
 std::string RPCSession::sendRawRequest(string const& _request)
@@ -444,7 +457,7 @@ Json::Value RPCSession::rpcCall(string const& _methodName, vector<string> const&
     ETH_TEST_MESSAGE("Reply: " + reply);
 
     Json::Value result;
-    ETH_REQUIRE_MESSAGE(Json::Reader().parse(reply, result, false),
+    ETH_FAIL_REQUIRE_MESSAGE(Json::Reader().parse(reply, result, false),
         "error parsing json from remote response: " + reply);
 
     if (result.isMember("error"))
