@@ -10,9 +10,12 @@ namespace
 {
 bool validateIP(std::string const& _ip)
 {
+    size_t pos = _ip.find_last_of(':');
+    string address = _ip.substr(0, pos);
+    int port = atoi(_ip.substr(pos + 1).c_str());
     boost::system::error_code ec;
-    boost::asio::ip::address::from_string(_ip, ec);
-    if (ec)
+    boost::asio::ip::address::from_string(address, ec);
+    if (port <= 1024 || port > 49151 || ec)
         return false;
     return true;
 }
