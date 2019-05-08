@@ -9,9 +9,21 @@ object::DigitsType object::stringIntegerType(std::string const& _string)
 {
     if (_string[0] == '0' && _string[1] == 'x')
     {
-        DigitsType substringType = stringIntegerType(_string.substr(2));
-        if (substringType == DigitsType::Hex || substringType == DigitsType::Decimal)
+        string substring = _string.substr(2);
+        DigitsType substringType = stringIntegerType(substring);
+        if (substringType == DigitsType::Hex)
             return DigitsType::HexPrefixed;
+
+        if (substringType == DigitsType::Decimal)
+        {
+            if (substring.size() % 2 == 0)
+                return DigitsType::HexPrefixed;
+            else
+                return DigitsType::UnEvenHexPrefixed;
+        }
+
+        if (substringType == DigitsType::UnEvenHex)
+            return DigitsType::UnEvenHexPrefixed;
     }
 
     bool isDecimalOnly = true;
@@ -31,7 +43,10 @@ object::DigitsType object::stringIntegerType(std::string const& _string)
     if (isDecimalOnly)
         return DigitsType::Decimal;
 
-    return DigitsType::Hex;
+    if (_string.size() % 2 == 0)
+        return DigitsType::Hex;
+
+    return DigitsType::UnEvenHex;
 }
 
 std::string object::makeHexAddress(std::string const& _address)
@@ -70,9 +85,11 @@ std::string object::convertStringToHexPrefixed(string const& _input, short _mini
     DigitsType type = stringIntegerType(_input);
     if (type == DigitsType::HexPrefixed || type == DigitsType::String)
         return _input;
+    if (type == DigitsType::UnEvenHexPrefixed)
+        return "0x0" + _input.substr(2);
     if (type == DigitsType::Decimal)
         return dev::toCompactHexPrefixed(dev::u256(_input), _minimumBytes);
-    else if (type == DigitsType::Hex)
+    else if (type == DigitsType::Hex || type == DigitsType::UnEvenHex)
         return dev::toCompactHexPrefixed(dev::u256("0x" + _input), _minimumBytes);
     ETH_ERROR_MESSAGE("Unhendeled path in object::convertStringToHexPrefixed");
     return _input;

@@ -66,7 +66,7 @@ namespace test
 DataObject BlockchainTestSuite::doTests(DataObject const& _input, TestSuiteOptions& _opt) const
 {
     DataObject tests;
-    ETH_FAIL_REQUIRE_MESSAGE(
+    ETH_ERROR_REQUIRE_MESSAGE(
         _input.type() == DataType::Object, TestOutputHelper::get().get().testFile().string() +
                                                " A BlockchainTest file should contain an object.");
 
