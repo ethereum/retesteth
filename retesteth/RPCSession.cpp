@@ -84,7 +84,7 @@ void RPCSession::runNewInstanceOfAClient(string const& _threadID, ClientConfig c
         FILE* fp = test::popen2(command, args, "r", pid, mode);
         if (!fp)
         {
-            ETH_ERROR("Failed to start the client: '" + command + "'");
+            ETH_ERROR_MESSAGE("Failed to start the client: '" + command + "'");
             std::raise(SIGABRT);
         }
         else
@@ -130,7 +130,7 @@ void RPCSession::runNewInstanceOfAClient(string const& _threadID, ClientConfig c
         }
     }
     else
-        ETH_FAIL("Unknown Socket Type in runNewInstanceOfAClient");
+        ETH_FAIL_MESSAGE("Unknown Socket Type in runNewInstanceOfAClient");
 }
 
 RPCSession& RPCSession::instance(const string& _threadID)
@@ -142,7 +142,7 @@ RPCSession& RPCSession::instance(const string& _threadID)
         if (socketMap.count(_threadID) && socketMap.at(_threadID).configId != currentConfigId)
         {
             // For this thread a session is opened but it is opened not for current tested client
-            ETH_FAIL("A session opened for another client id!");
+            ETH_FAIL_MESSAGE("A session opened for another client id!");
         }
 
         if (!socketMap.count(_threadID))
@@ -401,7 +401,8 @@ void RPCSession::test_mineBlocks(int _number, string const& _hash)
 		unsigned timeSpent = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
 		if (timeSpent > m_maxMiningTime)
 			break; // could be that some blocks are invalid.
-			//ETH_FAIL("Error in test_mineBlocks: block mining timeout! " + test::TestOutputHelper::get().testName());
+                   // ETH_FAIL_MESSAGE("Error in test_mineBlocks: block mining timeout! " +
+        // test::TestOutputHelper::get().testName());
 
         // std::cerr << test_getBlockStatus(_hash) << std::endl;
          bigint number = fromBigEndian<u256>(fromHex(rpcCall("eth_blockNumber").asString()));
@@ -467,7 +468,7 @@ Json::Value RPCSession::rpcCall(string const& _methodName, vector<string> const&
                             + " Request: " + request;
         if (_canFail)
             return Json::Value();
-        ETH_FAIL(m_lastRPCErrorString);
+        ETH_FAIL_MESSAGE(m_lastRPCErrorString);
     }
     m_lastRPCErrorString = string();    //null the error as last RPC call was success.
     return result["result"];

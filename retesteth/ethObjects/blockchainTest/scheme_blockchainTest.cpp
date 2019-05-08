@@ -24,8 +24,8 @@ scheme_blockchainTest::scheme_blockchainTest(DataObject const& _test)
 {
     for (auto const& data : _test.at("blocks").getSubObjects())
     {
-        ETH_ERROR_CHECK_MESSAGE(data.count("rlp"), "Block element missing rlp field!");
-        ETH_ERROR_CHECK_MESSAGE(
+        ETH_ERROR_REQUIRE_MESSAGE(data.count("rlp"), "Block element missing rlp field!");
+        ETH_ERROR_REQUIRE_MESSAGE(
             data.at("rlp").type() == DataType::String, "Block rlp field must be string!");
         m_blockRLPs.push_back(data.at("rlp").asString());
     }

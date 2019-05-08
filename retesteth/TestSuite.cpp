@@ -63,7 +63,8 @@ TestFileData readTestFile(fs::path const& _testFileName)
     else if (_testFileName.extension() == ".yml")
         testData.data = dataobject::ConvertYamlToData(YAML::Load(s));
     else
-        ETH_ERROR("Unknown test format!" + test::TestOutputHelper::get().testFile().string());
+        ETH_ERROR_MESSAGE(
+            "Unknown test format!" + test::TestOutputHelper::get().testFile().string());
 
     // Original hash calculation with json
     std::string output = "Not a Json object!";
@@ -151,7 +152,7 @@ void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
         dataobject::DataObject const& info = i.at("_info");
         ETH_FAIL_REQUIRE_MESSAGE(info.count("sourceHash") > 0, "sourceHash not found in " + _compiledTest.string() + " in " + i.getKey());
         h256 const sourceHash = h256(info.at("sourceHash").asString());
-        ETH_ERROR_CHECK_MESSAGE(sourceHash == fillerData.hash,
+        ETH_ERROR_REQUIRE_MESSAGE(sourceHash == fillerData.hash,
             "Test " + _compiledTest.string() + " in " + i.getKey() +
                 " is outdated. Filler hash is different! ( '" + sourceHash.hex().substr(0, 4) +
                 "' != '" + fillerData.hash.hex().substr(0, 4) + "') ");
@@ -414,9 +415,15 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
                     writeFile(boostTestPath.path(), asBytes(output.asJson()));
                 }
             }
+            catch (test::BaseEthException const&)
+            {
+                // Something went wrong inside the test. skip it. (error message is stored at
+                // TestOutputHelper)
+                opt.wasErrors = true;
+            }
             catch (std::exception const& _ex)
             {
-                ETH_ERROR("ERROR OCCURED: " + string(_ex.what()));
+                ETH_ERROR_MESSAGE("ERROR OCCURED FILLING TESTS: " + string(_ex.what()));
                 RPCSession::sessionEnd(TestOutputHelper::getThreadID(), RPCSession::SessionStatus::HasFinished);
             }
         }
@@ -428,9 +435,15 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
         {
             executeFile(boostTestPath.path());
         }
+        catch (test::BaseEthException const&)
+        {
+            // Something went wrong inside the test. skip it. (error message is stored at
+            // TestOutputHelper)
+            opt.wasErrors = true;
+        }
         catch (std::exception const& _ex)
         {
-            ETH_ERROR("ERROR OCCURED: " + string(_ex.what()));
+            ETH_ERROR_MESSAGE("ERROR OCCURED RUNNING TESTS: " + string(_ex.what()));
             RPCSession::sessionEnd(TestOutputHelper::getThreadID(), RPCSession::SessionStatus::HasFinished);
         }
     }

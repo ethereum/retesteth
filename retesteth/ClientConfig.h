@@ -67,10 +67,11 @@ public:
                 std::string("Client IPC socket file not found: ") + getAddress());
         }
         else
-            ETH_FAIL("Incorrect client socket type: " + socketTypeStr + " in client named '" +
-                     getName() +
-                     "' Allowed socket configs [type, \"address\"]: [ipc, \"local\"], [ipc-debug, "
-                     "\"path to .ipc socket\"], [tcp, \"address:port\"]");
+            ETH_FAIL_MESSAGE(
+                "Incorrect client socket type: " + socketTypeStr + " in client named '" +
+                getName() +
+                "' Allowed socket configs [type, \"address\"]: [ipc, \"local\"], [ipc-debug, "
+                "\"path to .ipc socket\"], [tcp, \"address:port\"]");
     }
 
     fs::path const& getShellPath() const { return m_shellPath; }

@@ -351,7 +351,7 @@ BOOST_AUTO_TEST_CASE(compareStates_accountShouldNotExistAndItsNot)
 	postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
 	postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["storage"] = DataObject(DataType::Object);
 	CompareResult res = test::compareStates(scheme_expectState(expectData), scheme_state(postData));
-	ETH_FAIL_REQUIRE(res == CompareResult::Success);
+    ETH_FAIL_REQUIRE(res == CompareResult::Success);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
