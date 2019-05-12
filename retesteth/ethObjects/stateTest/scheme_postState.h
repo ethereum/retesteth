@@ -15,11 +15,13 @@ namespace test {
 
         scheme_postState(DataObject const& _post)
         {
-            ETH_ERROR_CHECK_MESSAGE(_post.type() == DataType::Object, "State tests post section must be json object!");
+            ETH_ERROR_REQUIRE_MESSAGE(
+                _post.type() == DataType::Object, "State tests post section must be json object!");
             for(auto const& element: _post.getSubObjects())
             {
                test::checkAllowedNetwork(element.getKey());
-               ETH_ERROR_CHECK_MESSAGE(element.type() == DataType::Array, "State tests post section value at fork results must be json array!");
+               ETH_ERROR_REQUIRE_MESSAGE(element.type() == DataType::Array,
+                   "State tests post section value at fork results must be json array!");
                postSectionElements results;
                for (auto const& res: element.getSubObjects())
                    results.push_back(scheme_postSectionElement(res));

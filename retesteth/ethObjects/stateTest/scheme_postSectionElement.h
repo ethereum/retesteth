@@ -25,9 +25,12 @@ namespace  test {
             parseJsonIntValueIntoSet(_expect.at("indexes").at("value"), m_valueIndexes);
 
             // currently post section support only single index check
-            ETH_FAIL_REQUIRE(m_dataIndexes.size() == 1);
-            ETH_FAIL_REQUIRE(m_gasIndexes.size() == 1);
-            ETH_FAIL_REQUIRE(m_valueIndexes.size() == 1);
+            ETH_ERROR_REQUIRE_MESSAGE(
+                m_dataIndexes.size() == 1, "Post section support only single data index!");
+            ETH_ERROR_REQUIRE_MESSAGE(
+                m_gasIndexes.size() == 1, "Post section support only single gas index!");
+            ETH_ERROR_REQUIRE_MESSAGE(
+                m_valueIndexes.size() == 1, "Post section support only single value index!");
         }
 
         bool checkIndexes(int _d, int _g, int _v) const

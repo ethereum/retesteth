@@ -101,7 +101,7 @@ DataObject FillTestAsBlockchain(DataObject const& _testFile, TestSuite::TestSuit
                                       ", v: " + toString(tr.valueInd) + "\n";
                     scheme_state postState(remoteState.at("postState"));
                     CompareResult res = test::compareStates(mexpect.getExpectState(), postState);
-                    ETH_ERROR_CHECK_MESSAGE(res == CompareResult::Success, testInfo);
+                    ETH_ERROR_REQUIRE_MESSAGE(res == CompareResult::Success, testInfo);
                     if (res != CompareResult::Success)
                         _opt.wasErrors = true;
 
@@ -177,7 +177,7 @@ DataObject FillTest(DataObject const& _testFile, TestSuite::TestSuiteOptions& _o
                     session.test_modifyTimestamp(a.convert_to<size_t>());
                     string trHash = session.eth_sendRawTransaction(tr.transaction.getSignedRLP());
                     if (!session.getLastRPCError().empty())
-                        ETH_ERROR(session.getLastRPCError());
+                        ETH_ERROR_MESSAGE(session.getLastRPCError());
 
                     session.test_mineBlocks(1);
                     tr.executed = true;
@@ -187,7 +187,7 @@ DataObject FillTest(DataObject const& _testFile, TestSuite::TestSuiteOptions& _o
                     // check that the post state qualifies to the expect section
                     scheme_state postState(remoteState.at("postState"));
                     CompareResult res = test::compareStates(expect.getExpectState(), postState);
-                    ETH_ERROR_CHECK_MESSAGE(res == CompareResult::Success,
+                    ETH_ERROR_REQUIRE_MESSAGE(res == CompareResult::Success,
                         "Network: " + net + ", TrInfo: d: " + toString(tr.dataInd) +
                             ", g: " + toString(tr.gasInd) + ", v: " + toString(tr.valueInd) + "\n");
                     if (res != CompareResult::Success)
@@ -265,7 +265,7 @@ void RunTest(DataObject const& _testFile)
                       remoteState = getRemoteState(session, trHash, true);
 					}
 
-                    ETH_ERROR_CHECK_MESSAGE(remoteState.at("postHash").asString() == expectHash,
+                    ETH_ERROR_REQUIRE_MESSAGE(remoteState.at("postHash").asString() == expectHash,
                         "Error at " + testInfo + ", post hash mismatch: " +
                             remoteState.at("postHash").asString() + ", expected: " + expectHash);
                     if (remoteState.at("postHash").asString() != expectHash)
@@ -273,7 +273,8 @@ void RunTest(DataObject const& _testFile)
 
                     if (remoteState.count("logHash"))
                     {
-                        ETH_ERROR_CHECK_MESSAGE(remoteState.at("logHash").asString() == expectLogHash,
+                        ETH_ERROR_REQUIRE_MESSAGE(
+                            remoteState.at("logHash").asString() == expectLogHash,
                             "Error at " + testInfo +
                                 ", logs hash mismatch: " + remoteState.at("logHash").asString() +
                                 ", expected: " + expectLogHash);

@@ -31,6 +31,13 @@ cmake ..
 make -j4
 ```
 
+# Usage
+Requres to have a client installed on your system. Read the wiki page on detailed instruction on how to configure your client to work with `retesteth`
+https://github.com/ethereum/retesteth/wiki/Add-client-configuration-to-Retesteth
+```
+./retesteth -t BCGeneralStateTests
+```
+
 # Docker instructions
 See: https://github.com/ethereum/retesteth/wiki/Docker-instructions
 

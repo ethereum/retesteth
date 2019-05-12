@@ -14,9 +14,8 @@ CompareResult compareStates(scheme_state const& _stateExpect, scheme_state const
 CompareResult compareStates(scheme_expectState const& _stateExpect, scheme_state const& _statePost)
 {
     CompareResult result = CompareResult::Success;
-	auto checkMessage = [&result](bool _flag, CompareResult _type, string const& _error) -> void
-    {
-        ETH_ERROR_CHECK_MESSAGE(_flag, _error);
+    auto checkMessage = [&result](bool _flag, CompareResult _type, string const& _error) -> void {
+        ETH_MARK_ERROR(_flag, _error);
         if (!_flag)
 			result = _type;
     };
@@ -143,7 +142,7 @@ DataObject scheme_state::getDataForRPC(std::string const& _network) const
     }
 
     if (!networkChecked)
-        ETH_FAIL("Unhandled network: " + _network + " (scheme_state::getDataForRPC)");
+        ETH_FAIL_MESSAGE("Unhandled network: " + _network + " (scheme_state::getDataForRPC)");
     return ret;
 }
 } // namespace test

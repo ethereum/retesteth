@@ -23,13 +23,13 @@ Socket::Socket(SocketType _type, string const& _path): m_path(_path), m_socketTy
         NULL);          // no template file
 
     if (m_socket == INVALID_HANDLE_VALUE)
-        ETH_FAIL("Error creating IPC socket object!");
+        ETH_FAIL_MESSAGE("Error creating IPC socket object!");
 
 #else
     if (_type == SocketType::IPC)
     {
         if (_path.length() >= sizeof(sockaddr_un::sun_path))
-            ETH_FAIL("Error opening IPC: socket path is too long!");
+            ETH_FAIL_MESSAGE("Error opening IPC: socket path is too long!");
 
         struct sockaddr_un saun;
         memset(&saun, 0, sizeof(sockaddr_un));
@@ -48,12 +48,12 @@ Socket::Socket(SocketType _type, string const& _path): m_path(_path), m_socketTy
         #endif //  defined(__APPLE__)
 
         if ((m_socket = socket(AF_UNIX, SOCK_STREAM, 0)) < 0)
-            ETH_FAIL("Error creating IPC socket object");
+            ETH_FAIL_MESSAGE("Error creating IPC socket object");
 
         if (connect(m_socket, reinterpret_cast<struct sockaddr const*>(&saun), sizeof(struct sockaddr_un)) < 0)
         {
             close(m_socket);
-            ETH_FAIL("Error connecting to IPC socket: " + _path);
+            ETH_FAIL_MESSAGE("Error connecting to IPC socket: " + _path);
         }
     } else if (_type == SocketType::TCP)
     {
@@ -69,12 +69,12 @@ Socket::Socket(SocketType _type, string const& _path): m_path(_path), m_socketTy
         sin.sin_port = htons(port);
 
         if ((m_socket = socket(AF_INET, SOCK_STREAM, 0)) < 0)
-            ETH_FAIL("Error creating TCP socket object");
+            ETH_FAIL_MESSAGE("Error creating TCP socket object");
 
         if (connect(m_socket, reinterpret_cast<struct sockaddr const*>(&sin), sizeof(struct sockaddr_in)) < 0)
         {
             close(m_socket);
-            ETH_FAIL("Error connecting to TCP socket: " + _path);
+            ETH_FAIL_MESSAGE("Error connecting to TCP socket: " + _path);
         }
     }
 #endif
@@ -106,7 +106,7 @@ namespace
             NULL);                  // not overlapped
 
         if (!fSuccess || (_req.size() != cbWritten))
-            ETH_FAIL("WriteFile to pipe failed");
+            ETH_FAIL_MESSAGE("WriteFile to pipe failed");
 
         // Read from the pipe.
         DWORD cbRead;
@@ -118,7 +118,7 @@ namespace
             NULL);             // not overlapped
 
         if (!fSuccess)
-            ETH_FAIL("ReadFile from pipe failed");
+            ETH_FAIL_MESSAGE("ReadFile from pipe failed");
 
         return string(m_readBuf, m_readBuf + cbRead);
     }
@@ -147,13 +147,13 @@ namespace
 
             res = curl_easy_perform(curl);
             if(res != CURLE_OK)
-                ETH_FAIL("curl_easy_perform() failed " + string(curl_easy_strerror(res)));
+                ETH_FAIL_MESSAGE("curl_easy_perform() failed " + string(curl_easy_strerror(res)));
 
             curl_easy_cleanup(curl);
             return *httpData.get();
         }
         else
-            ETH_FAIL("Error initializing Curl");
+            ETH_FAIL_MESSAGE("Error initializing Curl");
         return string();
     }
 }
@@ -163,10 +163,10 @@ string Socket::sendRequestIPC(string const& _req)
     char buf;
     recv(m_socket, &buf, 1, MSG_PEEK | MSG_DONTWAIT);
     if (errno == ENOTCONN)
-        ETH_FAIL("Socket connection error! ");
+        ETH_FAIL_MESSAGE("Socket connection error! ");
 
     if (send(m_socket, _req.c_str(), _req.length(), 0) != (ssize_t)_req.length())
-        ETH_FAIL("Writing on socket failed.");
+        ETH_FAIL_MESSAGE("Writing on socket failed.");
 
     auto start = chrono::steady_clock::now();
     ssize_t ret;
@@ -177,7 +177,7 @@ string Socket::sendRequestIPC(string const& _req)
 
         // Also consider closed socket an error.
         if (ret < 0)
-            ETH_FAIL("Reading on socket failed!");
+            ETH_FAIL_MESSAGE("Reading on socket failed!");
 
         // check for a long message
         if (ret != 0)
@@ -199,7 +199,7 @@ string Socket::sendRequestIPC(string const& _req)
     );
 
     if (ret == 0)
-        ETH_FAIL("Timeout reading on socket.");
+        ETH_FAIL_MESSAGE("Timeout reading on socket.");
 
     return reply;
 }

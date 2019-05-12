@@ -16,7 +16,9 @@ namespace test {
             {
                 Decimal,
                 Hex,
+                UnEvenHex,
                 HexPrefixed,
+                UnEvenHexPrefixed,
                 String
             };
 

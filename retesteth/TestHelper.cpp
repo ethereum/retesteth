@@ -29,7 +29,7 @@ Json::Value readJson(fs::path const& _file)
                                             "develop and set ETHEREUM_TEST_PATH to its path?");
     bool parsingSuccessful = reader.parse(s, v);
     if (!parsingSuccessful)
-        ETH_ERROR(
+        ETH_ERROR_MESSAGE(
             "Failed to parse json file\n" + reader.getFormattedErrorMessages() + "(" + fname + ")");
     return v;
 }
@@ -196,13 +196,15 @@ void parseJsonStrValueIntoSet(DataObject const& _json, set<string>& _out)
     {
         for (auto const& val: _json.getSubObjects())
         {
-             ETH_FAIL_REQUIRE(val.type() == DataType::String);
+            ETH_ERROR_REQUIRE_MESSAGE(val.type() == DataType::String,
+                "parseJsonStrValueIntoSet expected value type = string!");
             _out.emplace(val.asString());
         }
     }
     else
     {
-        ETH_FAIL_REQUIRE(_json.type() == DataType::String);
+        ETH_ERROR_REQUIRE_MESSAGE(_json.type() == DataType::String,
+            "parseJsonStrValueIntoSet expected json type = string!");
         _out.emplace(_json.asString());
     }
 }
@@ -213,13 +215,15 @@ void parseJsonIntValueIntoSet(DataObject const& _json, set<int>& _out)
     {
         for (auto const& val: _json.getSubObjects())
         {
-            ETH_FAIL_REQUIRE(val.type() == DataType::Integer);
+            ETH_ERROR_REQUIRE_MESSAGE(val.type() == DataType::Integer,
+                "parseJsonIntValueIntoSet expected value type = int!");
             _out.emplace(val.asInt());
         }
     }
     else if (_json.type() == DataType::Integer)
     {
-        ETH_FAIL_REQUIRE(_json.type() == DataType::Integer);
+        ETH_ERROR_REQUIRE_MESSAGE(_json.type() == DataType::Integer,
+            "parseJsonIntValueIntoSet expected json type = int!");
         _out.emplace(_json.asInt());
     }
 }
@@ -276,9 +280,9 @@ string executeCmd(string const& _command)
 
 void checkHexHasEvenLength(string const& _hex)
 {
-    ETH_ERROR_CHECK_MESSAGE(_hex.length() % 2 == 0,
-		TestOutputHelper::get().testName() + ": Hex field is expected to be of odd length: '"
-		 + _hex + "'");
+    ETH_ERROR_REQUIRE_MESSAGE(
+        _hex.length() % 2 == 0, TestOutputHelper::get().testName() +
+                                    ": Hex field is expected to be of odd length: '" + _hex + "'");
 }
 
 string compileLLL(string const& _code)
@@ -338,7 +342,7 @@ FILE* popen2(string const& _command, vector<string> const& _args, string const& 
 {
     string testIfCmdExist = "which " + _command;
     if (system(testIfCmdExist.c_str()) == 256)
-        ETH_FAIL("Command " + _command + " not found in the system!");
+        ETH_FAIL_MESSAGE("Command " + _command + " not found in the system!");
 
     pid_t child_pid;
     int fd[2];

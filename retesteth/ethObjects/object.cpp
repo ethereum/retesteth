@@ -9,9 +9,21 @@ object::DigitsType object::stringIntegerType(std::string const& _string)
 {
     if (_string[0] == '0' && _string[1] == 'x')
     {
-        DigitsType substringType = stringIntegerType(_string.substr(2));
-        if (substringType == DigitsType::Hex || substringType == DigitsType::Decimal)
+        string substring = _string.substr(2);
+        DigitsType substringType = stringIntegerType(substring);
+        if (substringType == DigitsType::Hex)
             return DigitsType::HexPrefixed;
+
+        if (substringType == DigitsType::Decimal)
+        {
+            if (substring.size() % 2 == 0)
+                return DigitsType::HexPrefixed;
+            else
+                return DigitsType::UnEvenHexPrefixed;
+        }
+
+        if (substringType == DigitsType::UnEvenHex)
+            return DigitsType::UnEvenHexPrefixed;
     }
 
     bool isDecimalOnly = true;
@@ -31,18 +43,25 @@ object::DigitsType object::stringIntegerType(std::string const& _string)
     if (isDecimalOnly)
         return DigitsType::Decimal;
 
-    return DigitsType::Hex;
+    if (_string.size() % 2 == 0)
+        return DigitsType::Hex;
+
+    return DigitsType::UnEvenHex;
 }
 
 std::string object::makeHexAddress(std::string const& _address)
 {
     if (_address[0] == '0' && _address[1] == 'x')
-        ETH_ERROR_CHECK_MESSAGE(_address.length() == 42, TestOutputHelper::get().testName() + ": Wrong address: '" + _address + "'");
+        ETH_ERROR_REQUIRE_MESSAGE(_address.length() == 42,
+            TestOutputHelper::get().testName() + ": Wrong address: '" + _address + "'");
     else
-        ETH_ERROR_CHECK_MESSAGE(_address.length() == 40, TestOutputHelper::get().testName() + ": Wrong address: '" + _address + "'");
+        ETH_ERROR_REQUIRE_MESSAGE(_address.length() == 40,
+            TestOutputHelper::get().testName() + ": Wrong address: '" + _address + "'");
 
-	ETH_ERROR_CHECK_MESSAGE(_address.length() % 2 == 0, TestOutputHelper::get().testName() + ": Hex data is expected to be of odd length: '" + _address + "'");
-	switch (stringIntegerType(_address))
+    ETH_ERROR_REQUIRE_MESSAGE(_address.length() % 2 == 0,
+        TestOutputHelper::get().testName() + ": Hex data is expected to be of odd length: '" +
+            _address + "'");
+    switch (stringIntegerType(_address))
 	{
 		case DigitsType::HexPrefixed:
 			return _address;
@@ -66,11 +85,13 @@ std::string object::convertStringToHexPrefixed(string const& _input, short _mini
     DigitsType type = stringIntegerType(_input);
     if (type == DigitsType::HexPrefixed || type == DigitsType::String)
         return _input;
+    if (type == DigitsType::UnEvenHexPrefixed)
+        return "0x0" + _input.substr(2);
     if (type == DigitsType::Decimal)
         return dev::toCompactHexPrefixed(dev::u256(_input), _minimumBytes);
-    else if (type == DigitsType::Hex)
+    else if (type == DigitsType::Hex || type == DigitsType::UnEvenHex)
         return dev::toCompactHexPrefixed(dev::u256("0x" + _input), _minimumBytes);
-    ETH_ERROR("Unhendeled path in object::convertStringToHexPrefixed");
+    ETH_ERROR_MESSAGE("Unhendeled path in object::convertStringToHexPrefixed");
     return _input;
 }
 
@@ -114,7 +135,7 @@ void requireJsonFields(DataObject const& _o, std::string const& _section,
 {
 	// check for unexpected fiedls
 	for (auto const field : _o.getSubObjects())
-        ETH_ERROR_CHECK_MESSAGE(_validationMap.count(field.getKey()),
+        ETH_ERROR_REQUIRE_MESSAGE(_validationMap.count(field.getKey()),
             "'" + field.getKey() + "' should not be declared in '" + _section + "' section!");
 
     // check field types with validation map
@@ -139,7 +160,7 @@ void requireJsonFields(DataObject const& _o, std::string const& _section,
                                   "', but set to: '" +
                                   DataObject::dataTypeAsString(_o.at(vmap.first).type()) + "' in " +
                                   TestOutputHelper::get().testName();
-            ETH_ERROR(comment + "\n" + _o.asJson());
+            ETH_ERROR_MESSAGE(comment + "\n" + _o.asJson());
         }
 	}
 }
@@ -154,7 +175,7 @@ void requireJsonFields(DataObject const& _o, std::string const& _config,
         {
             std::string const comment =
                 "Unexpected field '" + field.getKey() + "' in config: " + _config;
-            ETH_ERROR(comment + "\n" + _o.asJson());
+            ETH_ERROR_MESSAGE(comment + "\n" + _o.asJson());
         }
     }
 
@@ -168,7 +189,7 @@ void requireJsonFields(DataObject const& _o, std::string const& _config,
             {
                 std::string const comment =
                     "Expected field '" + vmap.first + "' not found in config: " + _config;
-                ETH_ERROR(comment + "\n" + _o.asJson());
+                ETH_ERROR_MESSAGE(comment + "\n" + _o.asJson());
             }
             else if (vmap.second.second == jsonField::Optional)
                 continue;
@@ -193,7 +214,7 @@ void requireJsonFields(DataObject const& _o, std::string const& _config,
             std::string const comment =
                 "Field '" + vmap.first + "' expected to be " + sTypes + ", but set to " +
                 DataObject::dataTypeAsString(_o.at(vmap.first).type()) + " in " + _config;
-            ETH_ERROR(comment + "\n" + _o.asJson());
+            ETH_ERROR_MESSAGE(comment + "\n" + _o.asJson());
         }
     }
 }
@@ -248,7 +269,8 @@ DataObject object::prepareGenesisParams(std::string const& _network, std::string
             genesis["params"]["constantinopleFixForkBlock"] = "0x00";
     }
     if (!networkChecked)
-        ETH_FAIL("Unhandled network: " + _network + " (DataObject object::prepareGenesisParams)");
+        ETH_FAIL_MESSAGE(
+            "Unhandled network: " + _network + " (DataObject object::prepareGenesisParams)");
     return genesis;
 }
 }

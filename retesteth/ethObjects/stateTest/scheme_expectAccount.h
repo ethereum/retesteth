@@ -41,15 +41,16 @@ namespace  test {
         CompareResult compareStorage(DataObject const& _storage) const
         {
             CompareResult result = CompareResult::Success;
-            auto checkMessage = [&result](bool _flag, CompareResult _type, std::string const& _error) -> void
-            {
-                ETH_ERROR_CHECK_MESSAGE(_flag, _error);
+            auto checkMessage = [&result](bool _flag, CompareResult _type,
+                                    std::string const& _error) -> void {
+                ETH_ERROR_REQUIRE_MESSAGE(_flag, _error);
                 if (!_flag)
                     result = _type;
             };
 
-            ETH_FAIL_REQUIRE(_storage.type() == DataType::Object);
-            ETH_FAIL_REQUIRE(hasStorage());
+            ETH_ERROR_REQUIRE_MESSAGE(
+                _storage.type() == DataType::Object, "Storage must be of `Object` type!");
+            ETH_ERROR_REQUIRE_MESSAGE(hasStorage(), "Storage was expected to be set!");
 
             DataObject const& expectStorage = m_data.at("storage");
             for (auto const& element: expectStorage.getSubObjects())

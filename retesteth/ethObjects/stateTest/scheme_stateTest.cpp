@@ -21,9 +21,10 @@ DataObject scheme_stateTestBase::getGenesisForRPC(
 
 scheme_stateTestBase::fieldChecker::fieldChecker(DataObject const& _test)
 {
-    ETH_ERROR_CHECK_MESSAGE(_test.count("env"), "State test must have 'env' section");
-    ETH_ERROR_CHECK_MESSAGE(_test.count("pre"), "State test must have 'pre' section");
-    ETH_ERROR_CHECK_MESSAGE(_test.count("transaction"), "State test must have 'transaction' section");
+    ETH_ERROR_REQUIRE_MESSAGE(_test.count("env"), "State test must have 'env' section");
+    ETH_ERROR_REQUIRE_MESSAGE(_test.count("pre"), "State test must have 'pre' section");
+    ETH_ERROR_REQUIRE_MESSAGE(
+        _test.count("transaction"), "State test must have 'transaction' section");
 }
 
 void scheme_stateTestBase::checkUnexecutedTransactions()
@@ -67,14 +68,14 @@ scheme_stateTest::fieldChecker::fieldChecker(DataObject const& _test)
     });
 
     // Check that `data` in compiled test is not just a string but a binary string
-    ETH_ERROR_CHECK_MESSAGE(
+    ETH_ERROR_REQUIRE_MESSAGE(
         _test.at("transaction").count("data"), "Field `data` not found in `transaction` section (" +
                                                    TestOutputHelper::get().caseName() + ")");
-    ETH_ERROR_CHECK_MESSAGE(_test.at("transaction").at("data").type() == DataType::Array,
+    ETH_ERROR_REQUIRE_MESSAGE(_test.at("transaction").at("data").type() == DataType::Array,
         "Field `data` in `transaction` section is expected to be Array! (" +
             TestOutputHelper::get().testName() + ")");
     for (auto const& element : _test.at("transaction").at("data").getSubObjects())
-        ETH_ERROR_CHECK_MESSAGE(stringIntegerType(element.asString()) == DigitsType::HexPrefixed,
+        ETH_ERROR_REQUIRE_MESSAGE(stringIntegerType(element.asString()) == DigitsType::HexPrefixed,
             "Field `data` is expected to be binary prefixed with 0x in " +
                 TestOutputHelper::get().testName() + ", but got: " + element.asString());
 }

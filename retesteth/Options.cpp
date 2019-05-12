@@ -383,7 +383,7 @@ ClientConfig const& Options::DynamicOptions::getCurrentConfig() const
         if (cfg.getId() == m_currentConfigID)
             return cfg;
     }
-    ETH_FAIL("ERROR: current config not found! (DynamicOptions::getCurrentConfig())");
+    ETH_FAIL_MESSAGE("ERROR: current config not found! (DynamicOptions::getCurrentConfig())");
     return m_clientConfigs.at(0);
 }
 
