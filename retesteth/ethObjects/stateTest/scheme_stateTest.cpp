@@ -76,8 +76,8 @@ scheme_stateTest::fieldChecker::fieldChecker(DataObject const& _test)
             TestOutputHelper::get().testName() + ")");
     for (auto const& element : _test.at("transaction").at("data").getSubObjects())
         ETH_ERROR_REQUIRE_MESSAGE(stringIntegerType(element.asString()) == DigitsType::HexPrefixed,
-            "Field `data` is expected to be binary prefixed with 0x in " +
-                TestOutputHelper::get().testName() + ", but got: " + element.asString());
+            "Field `data` in `transaction` section is expected to be binary prefixed with `0x` in " +
+                TestOutputHelper::get().testName() + ", but got: `" + element.asString() + "`");
 }
 
 scheme_stateTestFiller::fieldChecker::fieldChecker(DataObject const& _test)
