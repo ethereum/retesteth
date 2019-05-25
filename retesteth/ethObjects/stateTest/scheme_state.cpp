@@ -127,18 +127,18 @@ DataObject scheme_state::getDataForRPC(std::string const& _network) const
         networkChecked = true;
 
     DataObject ret = m_data;
-    ret["0000000000000000000000000000000000000001"]["precompiled"] = ecrecoverObj;
-    ret["0000000000000000000000000000000000000002"]["precompiled"] = sha256Obj;
-    ret["0000000000000000000000000000000000000003"]["precompiled"] = ripemd160Obj;
-    ret["0000000000000000000000000000000000000004"]["precompiled"] = identityObj;
+    ret["0x0000000000000000000000000000000000000001"]["precompiled"] = ecrecoverObj;
+    ret["0x0000000000000000000000000000000000000002"]["precompiled"] = sha256Obj;
+    ret["0x0000000000000000000000000000000000000003"]["precompiled"] = ripemd160Obj;
+    ret["0x0000000000000000000000000000000000000004"]["precompiled"] = identityObj;
 
     if (_network == "Byzantium" || _network == "Constantinople" || _network == "ConstantinopleFix")
     {
         networkChecked = true;
-        ret["0000000000000000000000000000000000000005"]["precompiled"]["name"] = "modexp";
-        ret["0000000000000000000000000000000000000006"]["precompiled"] = alt_bn128_G1_addObj;
-        ret["0000000000000000000000000000000000000007"]["precompiled"] = alt_bn128_G1_mulObj;
-        ret["0000000000000000000000000000000000000008"]["precompiled"]["name"] =
+        ret["0x0000000000000000000000000000000000000005"]["precompiled"]["name"] = "modexp";
+        ret["0x0000000000000000000000000000000000000006"]["precompiled"] = alt_bn128_G1_addObj;
+        ret["0x0000000000000000000000000000000000000007"]["precompiled"] = alt_bn128_G1_mulObj;
+        ret["0x0000000000000000000000000000000000000008"]["precompiled"]["name"] =
             "alt_bn128_pairing_product";
     }
 
