@@ -222,18 +222,40 @@ string TestSuite::checkFillerExistance(string const& _testFolder) const
                         test::Options::get().singleTestName;
     std::cout << "Filter: '" << filter << "'" << std::endl;
     AbsoluteTestPath testsPath = getFullPath(_testFolder);
+    if (!fs::exists(testsPath.path()))
+    {
+        ETH_STDERROR_MESSAGE("Tests folder does not exists, creating test folder: '" +
+                             string(testsPath.path().c_str()) + "'");
+        fs::create_directories(testsPath.path());
+    }
     vector<fs::path> compiledFiles = test::getFiles(testsPath.path(), {".json", ".yml"}, filter);
+    AbsoluteFillerPath fullPathToFillers = getFullPathFiller(_testFolder);
 
-    bool ghostFile = false;
+    bool checkFillerWhenFilterIsSetButNoTestsFilled = false;
     if (compiledFiles.size() == 0)
     {
-        // no compiled tests yet. check filler existance
-        fs::path ghostFiler = filter;
-        compiledFiles.push_back(ghostFiler);
-        ghostFile = true;
+        if (filter.empty())
+        {
+            // No tests generated, check at least one filler existence
+            vector<fs::path> existingFillers =
+                test::getFiles(fullPathToFillers.path(), {".json", ".yml"});
+            for (auto const& filler : existingFillers)
+            {
+                // put filler names as if it was actual tests
+                string fillerName(filler.stem().c_str());
+                string fillerSuffix = fillerName.substr(fillerName.size() - 6);
+                if (fillerSuffix == "Filler" || fillerSuffix == "Copier")
+                    compiledFiles.push_back(fillerName.substr(0, fillerName.size() - 6));
+            }
+        }
+        else
+        {
+            // No tests generated and filter is set, check that filler for filter is exist
+            compiledFiles.push_back(fs::path(filter));  // put the test name as if it was compiled.
+            checkFillerWhenFilterIsSetButNoTestsFilled = true;
+        }
     }
 
-    AbsoluteFillerPath fullPathToFillers = getFullPathFiller(_testFolder);
     for (auto const& file : compiledFiles)
     {
         fs::path const expectedFillerName =
@@ -244,7 +266,7 @@ string TestSuite::checkFillerExistance(string const& _testFolder) const
             fullPathToFillers.path() / fs::path(file.stem().string() + c_copierPostf + ".json");
 
         string exceptionStr;
-        if (ghostFile)
+        if (checkFillerWhenFilterIsSetButNoTestsFilled)
             exceptionStr = "Could not find a filler for provided --singletest filter: '" +
                            file.filename().string() +
                            "', or no tests were found in the test suite folder!";

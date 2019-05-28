@@ -84,7 +84,8 @@ DataObject FillTestAsBlockchain(DataObject const& _testFile, TestSuite::TestSuit
                     scheme_expectSectionElement mexpect = expect;
                     mexpect.correctMiningReward(net, test.getEnv().getCoinbase());
 
-                    session.test_setChainParams(test.getGenesisForRPC(net, "Ethash").asJson());
+                    string sEngine = "NoProof";
+                    session.test_setChainParams(test.getGenesisForRPC(net, sEngine).asJson());
                     u256 a(test.getEnv().getData().at("currentTimestamp").asString());
                     session.test_modifyTimestamp(a.convert_to<size_t>());
                     string signedTransactionRLP = tr.transaction.getSignedRLP();
@@ -112,6 +113,7 @@ DataObject FillTestAsBlockchain(DataObject const& _testFile, TestSuite::TestSuit
                     aBlockchainTest["pre"] = test.getPre().getData();
                     aBlockchainTest["postState"] = remoteState.at("postState");
                     aBlockchainTest["network"] = net;
+                    aBlockchainTest["sealEngine"] = sEngine;
 
                     test::scheme_block blockData(remoteState.at("rawBlockData"));
                     ETH_FAIL_REQUIRE_MESSAGE(blockData.getTransactionCount() == 1,
@@ -295,7 +297,8 @@ namespace test
 DataObject StateTestSuite::doTests(DataObject const& _input, TestSuiteOptions& _opt) const
 {
     checkDataObject(_input);
-    checkOnlyOneTest(_input);
+    if (!Options::get().fillchain)
+        checkOnlyOneTest(_input);
 
     DataObject filledTest;
     DataObject const& inputTest = _input.getSubObjects().at(0);

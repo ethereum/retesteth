@@ -48,13 +48,16 @@ vector<fs::path> getFiles(
 		}
 		else
 		{
-			using fsIterator = fs::directory_iterator;
-			for (fsIterator it(_dirPath); it != fsIterator(); ++it)
-			{
-				if (fs::is_regular_file(it->path()) && it->path().extension() == ext)
-					files.push_back(it->path());
-			}
-		}
+            if (fs::exists(_dirPath))
+            {
+                using fsIterator = fs::directory_iterator;
+                for (fsIterator it(_dirPath); it != fsIterator(); ++it)
+                {
+                    if (fs::is_regular_file(it->path()) && it->path().extension() == ext)
+                        files.push_back(it->path());
+                }
+            }
+        }
 	}
 	return files;
 }

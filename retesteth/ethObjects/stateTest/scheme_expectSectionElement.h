@@ -26,8 +26,10 @@ namespace  test {
         void correctMiningReward(std::string const& _net, std::string const& _coinbaseAddress)
         {
             u256 balance = 5000000000000000000;
-            if (_net == "Byzantium" || _net == "Constantinople")
+            if (_net == "Byzantium")
                 balance = 3000000000000000000;
+            if (_net == "Constantinople" || _net == "ConstantinopleFix")
+                balance = 2000000000000000000;
             if (getExpectState().hasAccount(_coinbaseAddress))
             {
                 u256 origBalance = u256(getExpectState().getBalance(_coinbaseAddress));
