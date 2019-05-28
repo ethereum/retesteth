@@ -298,7 +298,9 @@ namespace test
 DataObject StateTestSuite::doTests(DataObject const& _input, TestSuiteOptions& _opt) const
 {
     checkDataObject(_input);
-    if (!Options::get().fillchain)
+
+    // Do not check only one test if RUNNING a blockchain test with (--fillhchain)
+    if (!Options::get().fillchain || _opt.doFilling)
         checkOnlyOneTest(_input);
 
     DataObject filledTest;

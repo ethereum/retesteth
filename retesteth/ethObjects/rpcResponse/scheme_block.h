@@ -99,7 +99,7 @@ namespace test {
             header << h256(m_data.at("transactionsRoot").asString());
             header << h256(m_data.at("receiptsRoot").asString());
             header << h2048(m_data.at("logsBloom").asString());
-            header << u256(m_data.at("totalDifficulty").asString());
+            header << u256(m_data.at("difficulty").asString());
             header << u256(m_data.at("number").asString());
             header << u256(m_data.at("gasLimit").asString());
             header << u256(m_data.at("gasUsed").asString());
