@@ -244,7 +244,7 @@ string TestSuite::checkFillerExistance(string const& _testFolder) const
                 // put filler names as if it was actual tests
                 string fillerName(filler.stem().c_str());
                 string fillerSuffix = fillerName.substr(fillerName.size() - 6);
-                if (fillerSuffix == "Filler" || fillerSuffix == "Copier")
+                if (fillerSuffix == c_fillerPostf || fillerSuffix == c_copierPostf)
                     compiledFiles.push_back(fillerName.substr(0, fillerName.size() - 6));
             }
         }
@@ -386,15 +386,21 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
     fs::path const boostRelativeTestPath = fs::relative(_testFileName, getTestPath());
     string testname = _testFileName.stem().string();
     bool isCopySource = false;
-    if (testname.rfind(c_fillerPostf) != string::npos)
-        testname = testname.substr(0, testname.rfind("Filler"));
-    else if (testname.rfind(c_copierPostf) != string::npos)
-    {
-        testname = testname.substr(0, testname.rfind(c_copierPostf));
-        isCopySource = true;
-    }
+    size_t pos = testname.rfind(c_fillerPostf);
+    if (pos != string::npos)
+        testname = testname.substr(0, pos);
     else
-        ETH_FAIL_REQUIRE_MESSAGE(false, "Incorrect file suffix in the filler folder! " + _testFileName.string());
+    {
+        pos = testname.rfind(c_copierPostf);
+        if (pos != string::npos)
+        {
+            testname = testname.substr(0, pos);
+            isCopySource = true;
+        }
+        else
+            ETH_FAIL_REQUIRE_MESSAGE(
+                false, "Incorrect file suffix in the filler folder! " + _testFileName.string());
+    }
 
     ETH_LOG("Running " + testname + ": ", 3);
     // Filename of the test that would be generated

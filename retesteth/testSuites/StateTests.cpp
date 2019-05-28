@@ -125,6 +125,7 @@ DataObject FillTestAsBlockchain(DataObject const& _testFile, TestSuite::TestSuit
 
                     DataObject block;
                     block["rlp"] = blockData.getBlockRLP();
+                    block["blockHeader"] = blockData.getBlockHeader();
                     aBlockchainTest["blocks"].addArrayObject(block);
 
                     string dataPostfix = "_d" + toString(tr.dataInd) + "g" + toString(tr.gasInd) +

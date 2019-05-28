@@ -52,6 +52,38 @@ namespace test {
 		int getTransactionCount() const { return m_data.at("transactions").getSubObjects().size(); }
         std::string getBlockHash() const { return m_data.at("hash").asString(); }
 
+        DataObject getBlockHeader() const
+        {
+            // Map Block Header
+            DataObject header;
+            header["bloom"] = m_data.at("logsBloom");
+            header["coinbase"] = m_data.at("author");
+            header["difficulty"] = m_data.at("difficulty");
+            header["extraData"] = m_data.at("extraData");
+            header["gasLimit"] = m_data.at("gasLimit");
+            header["gasUsed"] = m_data.at("gasUsed");
+            header["hash"] = m_data.at("hash");
+            if (m_data.count("mixHash"))
+            {
+                header["mixHash"] = m_data.at("mixHash");
+                header["nonce"] = m_data.at("nonce");
+            }
+            else
+            {
+                header["mixHash"] =
+                    "0x0000000000000000000000000000000000000000000000000000000000000000";
+                header["nonce"] = "0x0000000000000000";
+            }
+            header["number"] = m_data.at("number");
+            header["parentHash"] = m_data.at("parentHash");
+            header["receiptTrie"] = m_data.at("receiptsRoot");
+            header["stateRoot"] = m_data.at("stateRoot");
+            header["timestamp"] = m_data.at("timestamp");
+            header["transactionsTrie"] = m_data.at("transactionsRoot");
+            header["uncleHash"] = m_data.at("sha3Uncles");
+            return header;
+        }
+
         // Get Block RLP for state tests
         std::string getBlockRLP() const
         {
