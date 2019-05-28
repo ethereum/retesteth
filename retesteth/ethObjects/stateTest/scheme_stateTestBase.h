@@ -23,7 +23,7 @@ namespace testprivate {
         std::vector<scheme_generalTransaction::transactionInfo>& getTransactionsUnsafe() { return m_transaction.getTransactionsUnsafe(); }
         void checkUnexecutedTransactions();
         DataObject getGenesisForRPC(
-            const std::string& _network, const std::string& _sealEngine = "NoProof") const;
+            const std::string& _network, const std::string& _sealEngine) const;
 
     private:
         class fieldChecker

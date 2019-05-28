@@ -108,12 +108,12 @@ namespace test {
             if (m_data.count("mixHash"))
             {
                 header << h256(m_data.at("mixHash").asString());
-                header << u256(m_data.at("nonce").asString());
+                header << h64(m_data.at("nonce").asString());
             }
             else
             {
                 header << h256(0);
-                header << u256(0);
+                header << h64(0);
             }
             stream.appendRaw(header.out());
 

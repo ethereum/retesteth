@@ -99,7 +99,8 @@ DataObject FillTestAsBlockchain(DataObject const& _testFile, TestSuite::TestSuit
                     // check that the post state qualifies to the expect section
                     string testInfo = "Network: " + net + ", TrInfo: d: " + toString(tr.dataInd) +
                                       ", g: " + toString(tr.gasInd) +
-                                      ", v: " + toString(tr.valueInd) + "\n";
+                                      ", v: " + toString(tr.valueInd) + " (" +
+                                      TestOutputHelper::get().testName() + ")\n";
                     scheme_state postState(remoteState.at("postState"));
                     CompareResult res = test::compareStates(mexpect.getExpectState(), postState);
                     ETH_ERROR_REQUIRE_MESSAGE(res == CompareResult::Success, testInfo);
@@ -116,7 +117,7 @@ DataObject FillTestAsBlockchain(DataObject const& _testFile, TestSuite::TestSuit
                     aBlockchainTest["sealEngine"] = sEngine;
 
                     test::scheme_block blockData(remoteState.at("rawBlockData"));
-                    ETH_FAIL_REQUIRE_MESSAGE(blockData.getTransactionCount() == 1,
+                    ETH_ERROR_REQUIRE_MESSAGE(blockData.getTransactionCount() == 1,
                         "StateTest transaction execution failed! " + testInfo);
                     aBlockchainTest["lastblockhash"] = blockData.getBlockHash();
 
@@ -131,6 +132,8 @@ DataObject FillTestAsBlockchain(DataObject const& _testFile, TestSuite::TestSuit
                     string dataPostfix = "_d" + toString(tr.dataInd) + "g" + toString(tr.gasInd) +
                                          "v" + toString(tr.valueInd);
                     dataPostfix += "_" + net;
+
+                    // !!! Expect sections could contain double cases !!!
                     filledTest[_testFile.getKey() + dataPostfix] = aBlockchainTest;
                     session.test_rewindToBlock(0);
                 }
@@ -159,7 +162,7 @@ DataObject FillTest(DataObject const& _testFile, TestSuite::TestSuiteOptions& _o
     {
         DataObject forkResults;
         forkResults.setKey(net);
-        session.test_setChainParams(test.getGenesisForRPC(net).asJson());
+        session.test_setChainParams(test.getGenesisForRPC(net, "NoReward").asJson());
 
         // run transactions for defined expect sections only
         for (auto const& expect : test.getExpectSections())
@@ -230,7 +233,7 @@ void RunTest(DataObject const& _testFile)
         if (!Options::get().singleTestNet.empty() && Options::get().singleTestNet != network)
             continue;
 
-        session.test_setChainParams(test.getGenesisForRPC(network).asJson());
+        session.test_setChainParams(test.getGenesisForRPC(network, "NoReward").asJson());
 
         // read all results for a specific fork
         for (auto const& result: post.second)
