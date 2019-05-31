@@ -13,6 +13,28 @@
 #include <string>
 #include <boost/noncopyable.hpp>
 
+class SocketResponseValidator
+{
+public:
+    virtual void acceptResponse(std::string const& _response) = 0;
+    virtual bool completeResponse() const = 0;
+    virtual std::string getResponse() const = 0;
+};
+
+class JsonObjectValidator : public SocketResponseValidator
+{
+public:
+    JsonObjectValidator();
+    void acceptResponse(std::string const& _response) override;
+    bool completeResponse() const override;
+    std::string getResponse() const override;
+
+private:
+    std::string m_response;
+    bool m_status;
+    int m_bracersCount;
+};
+
 #if defined(_WIN32)
 class Socket : public boost::noncopyable
 {
@@ -39,7 +61,7 @@ public:
         IPCDebug
     };
     explicit Socket(SocketType _type, std::string const& _path);
-    std::string sendRequest(std::string const& _req);
+    std::string sendRequest(std::string const& _req, SocketResponseValidator& _responseValidator);
     ~Socket() { close(m_socket); }
 
     std::string const& path() const { return m_path; }
@@ -54,6 +76,6 @@ private:
     /// might take long.
     unsigned static constexpr m_readTimeOutMS = 30000;
     char m_readBuf[512000];
-    std::string sendRequestIPC(std::string const& _req);
+    std::string sendRequestIPC(std::string const& _req, SocketResponseValidator& _val);
 };
 #endif

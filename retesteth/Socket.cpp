@@ -158,7 +158,7 @@ namespace
     }
 }
 
-string Socket::sendRequestIPC(string const& _req)
+string Socket::sendRequestIPC(string const& _req, SocketResponseValidator& _validator)
 {
     char buf;
     recv(m_socket, &buf, 1, MSG_PEEK | MSG_DONTWAIT);
@@ -169,9 +169,13 @@ string Socket::sendRequestIPC(string const& _req)
         ETH_FAIL_MESSAGE("Writing on socket failed.");
 
     auto start = chrono::steady_clock::now();
-    ssize_t ret;
+    ssize_t ret = 0;
     string reply;
-    do
+
+    while (
+        _validator.completeResponse() == false &&
+        chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now() - start).count() <
+            m_readTimeOutMS)
     {
         ret = recv(m_socket, m_readBuf, sizeof(m_readBuf), 0);
 
@@ -179,24 +183,11 @@ string Socket::sendRequestIPC(string const& _req)
         if (ret < 0)
             ETH_FAIL_MESSAGE("Reading on socket failed!");
 
-        // check for a long message
-        if (ret != 0)
-        {
-            ssize_t ret2 = ret;
-            do
-            {
-                reply += string(m_readBuf, m_readBuf + ret2);
-                ret2 = recv(m_socket, m_readBuf, sizeof(m_readBuf), MSG_DONTWAIT);
-                if (ret2 > 0)
-                    std::this_thread::sleep_for(std::chrono::milliseconds(100)); //wait for socket update
-            }
-            while (ret2 > 0);
-        }
+        _validator.acceptResponse(m_readBuf);
+        memset(&m_readBuf[0], 0, sizeof(m_readBuf));
     }
-    while (
-        ret == 0 &&
-        chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now() - start).count() < m_readTimeOutMS
-    );
+
+    reply = _validator.getResponse();
 
     if (ret == 0)
         ETH_FAIL_MESSAGE("Timeout reading on socket.");
@@ -204,7 +195,7 @@ string Socket::sendRequestIPC(string const& _req)
     return reply;
 }
 
-string Socket::sendRequest(string const& _req)
+string Socket::sendRequest(string const& _req, SocketResponseValidator& _val)
 {
     #if defined(_WIN32)
         return sendRequestWin(_req);
@@ -214,7 +205,36 @@ string Socket::sendRequest(string const& _req)
         return sendRequestTCP(_req, m_path);
 
     if (m_socketType == Socket::IPC)
-        return sendRequestIPC(_req);
+        return sendRequestIPC(_req, _val);
 
     return string();
+}
+
+JsonObjectValidator::JsonObjectValidator()
+{
+    m_status = false;
+    m_bracersCount = 0;
+}
+void JsonObjectValidator::acceptResponse(std::string const& _response)
+{
+    m_response += _response;
+    for (size_t i = 0; i < _response.size(); i++)
+    {
+        if (_response[i] == '{')
+            m_bracersCount++;
+        else if (_response[i] == '}')
+            m_bracersCount--;
+    }
+    if (m_bracersCount == 0)
+        m_status = true;
+}
+
+bool JsonObjectValidator::completeResponse() const
+{
+    return m_status;
+}
+
+std::string JsonObjectValidator::getResponse() const
+{
+    return m_response;
 }

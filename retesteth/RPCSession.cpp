@@ -437,7 +437,8 @@ void RPCSession::test_modifyTimestamp(size_t _timestamp)
 
 std::string RPCSession::sendRawRequest(string const& _request)
 {
-    return m_socket.sendRequest(_request);
+    JsonObjectValidator validator;
+    return m_socket.sendRequest(_request, validator);
 }
 
 Json::Value RPCSession::rpcCall(string const& _methodName, vector<string> const& _args, bool _canFail)
@@ -454,7 +455,8 @@ Json::Value RPCSession::rpcCall(string const& _methodName, vector<string> const&
     ++m_rpcSequence;
 
     ETH_TEST_MESSAGE("Request: " + request);
-    string reply = m_socket.sendRequest(request);
+    JsonObjectValidator validator;
+    string reply = m_socket.sendRequest(request, validator);
     ETH_TEST_MESSAGE("Reply: " + reply);
 
     Json::Value result;
