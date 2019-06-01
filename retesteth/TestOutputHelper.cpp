@@ -65,6 +65,7 @@ void TestOutputHelper::initTest(size_t _maxTests)
 {
     //_maxTests = 0 means this function is called from testing thread
     m_currentTestName = string();
+    m_currentTestInfo = string();
     m_currentTestFileName = string();
     m_timer = Timer();
     m_currentTestCaseName = boost::unit_test::framework::current_test_case().p_name;

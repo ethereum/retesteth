@@ -80,6 +80,11 @@ DataObject FillTestAsBlockchain(DataObject const& _testFile, TestSuite::TestSuit
                     if (!expect.checkIndexes(tr.dataInd, tr.gasInd, tr.valueInd))
                         continue;
 
+                    TestOutputHelper::get().setCurrentTestInfo(
+                        "Network: " + net + ", TrInfo: d: " + toString(tr.dataInd) +
+                        ", g: " + toString(tr.gasInd) + ", v: " + toString(tr.valueInd) +
+                        ", Test: " + TestOutputHelper::get().testName());
+
                     // State Tests does not have mining rewards
                     scheme_expectSectionElement mexpect = expect;
                     mexpect.correctMiningReward(net, test.getEnv().getCoinbase());
@@ -97,10 +102,7 @@ DataObject FillTestAsBlockchain(DataObject const& _testFile, TestSuite::TestSuit
                         getRemoteState(session, isHash<h256>(trHash) ? trHash : string(), true);
 
                     // check that the post state qualifies to the expect section
-                    string testInfo = "Network: " + net + ", TrInfo: d: " + toString(tr.dataInd) +
-                                      ", g: " + toString(tr.gasInd) +
-                                      ", v: " + toString(tr.valueInd) + " (" +
-                                      TestOutputHelper::get().testName() + ")\n";
+                    string testInfo = TestOutputHelper::get().testInfo();
                     scheme_state postState(remoteState.at("postState"));
                     CompareResult res = test::compareStates(mexpect.getExpectState(), postState);
                     ETH_ERROR_REQUIRE_MESSAGE(res == CompareResult::Success, testInfo);
@@ -179,6 +181,11 @@ DataObject FillTest(DataObject const& _testFile, TestSuite::TestSuiteOptions& _o
                     if (!expect.checkIndexes(tr.dataInd, tr.gasInd, tr.valueInd))
                         continue;
 
+                    TestOutputHelper::get().setCurrentTestInfo(
+                        "Network: " + net + ", TrInfo: d: " + toString(tr.dataInd) +
+                        ", g: " + toString(tr.gasInd) + ", v: " + toString(tr.valueInd) +
+                        ", Test: " + TestOutputHelper::get().testName());
+
                     u256 a(test.getEnv().getData().at("currentTimestamp").asString());
                     session.test_modifyTimestamp(a.convert_to<size_t>());
                     string trHash = session.eth_sendRawTransaction(tr.transaction.getSignedRLP());
@@ -193,9 +200,8 @@ DataObject FillTest(DataObject const& _testFile, TestSuite::TestSuiteOptions& _o
                     // check that the post state qualifies to the expect section
                     scheme_state postState(remoteState.at("postState"));
                     CompareResult res = test::compareStates(expect.getExpectState(), postState);
-                    ETH_ERROR_REQUIRE_MESSAGE(res == CompareResult::Success,
-                        "Network: " + net + ", TrInfo: d: " + toString(tr.dataInd) +
-                            ", g: " + toString(tr.gasInd) + ", v: " + toString(tr.valueInd) + "\n");
+                    ETH_ERROR_REQUIRE_MESSAGE(
+                        res == CompareResult::Success, TestOutputHelper::get().testInfo());
                     if (res != CompareResult::Success)
                         _opt.wasErrors = true;
 
@@ -359,18 +365,20 @@ TestSuite::FillerPath StateTestSuite::suiteFillerFolder() const
 class GeneralTestFixture
 {
 public:
-	GeneralTestFixture()
-	{
-		test::StateTestSuite suite;
-		string casename = boost::unit_test::framework::current_test_case().p_name;
-		if (casename == "stQuadraticComplexityTest" && !test::Options::get().all)
-		{
+    GeneralTestFixture()
+    {
+        test::StateTestSuite suite;
+        string casename = boost::unit_test::framework::current_test_case().p_name;
+        static vector<string> const timeConsumingTestSuites{
+            string{"stTimeConsuming"}, string{"stQuadraticComplexityTest"}};
+        if (test::inArray(timeConsumingTestSuites, casename) && !test::Options::get().all)
+        {
             if (!ExitHandler::receivedExitSignal())
                 std::cout << "Skipping " << casename << " because --all option is not specified.\n";
             return;
-		}
-		suite.runAllTestsInFolder(casename);
-	}
+        }
+        suite.runAllTestsInFolder(casename);
+    }
 };
 
 BOOST_FIXTURE_TEST_SUITE(GeneralStateTests, GeneralTestFixture)
@@ -436,5 +444,6 @@ BOOST_AUTO_TEST_CASE(stBadOpcode){}
 //New Tests
 BOOST_AUTO_TEST_CASE(stArgsZeroOneBalance){}
 BOOST_AUTO_TEST_CASE(stEWASMTests){}
+BOOST_AUTO_TEST_CASE(stTimeConsuming) {}
 BOOST_AUTO_TEST_SUITE_END()
 

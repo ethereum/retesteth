@@ -43,7 +43,7 @@ namespace  test {
             CompareResult result = CompareResult::Success;
             auto checkMessage = [&result](bool _flag, CompareResult _type,
                                     std::string const& _error) -> void {
-                ETH_ERROR_REQUIRE_MESSAGE(_flag, _error);
+                ETH_MARK_ERROR(_flag, _error);
                 if (!_flag)
                     result = _type;
             };
@@ -81,7 +81,19 @@ namespace  test {
             }
             checkMessage(expectStorage.getSubObjects().size() == _storage.getSubObjects().size(),
                 CompareResult::IncorrectStorage,
-                 TestOutputHelper::get().testName() + address() + " storage has more storage records then expected!");
+                TestOutputHelper::get().testName() + " " + address() +
+                    " storage has more storage records then expected!");
+
+            if (expectStorage.getSubObjects().size() < _storage.getSubObjects().size())
+            {
+                for (auto const& element : _storage.getSubObjects())
+                {
+                    string const message = "incorrect storage [" + element.getKey() +
+                                           "] = " + element.asString() + ", expected [" +
+                                           element.getKey() + "] = 0";
+                    ETH_MARK_ERROR(false, message);
+                }
+            }
             return result;
         }
 

@@ -31,16 +31,17 @@ class TestOutputHelper
 public:
     static TestOutputHelper& get();
     //TestOutputHelper(TestOutputHelper const&) = delete;
-	void operator=(TestOutputHelper const&) = delete;
+    void operator=(TestOutputHelper const&) = delete;
 
-	void initTest(size_t _maxTests = 1);
-	// Display percantage of completed tests to std::out. Has to be called before execution of every test.
-	void showProgress();
+    void initTest(size_t _maxTests = 1);
+    // Display percantage of completed tests to std::out. Has to be called before execution of every
+    // test.
+    void showProgress();
     void finishTest();
     static void finisAllTestsManually();
 
     //void setMaxTests(int _count) { m_maxTests = _count; }
-	bool checkTest(std::string const& _testName);
+    bool checkTest(std::string const& _testName);
     void markError(std::string const& _message)
     {
         m_errors.push_back(_message + " (" + m_currentTestName + ")");
@@ -48,10 +49,12 @@ public:
     std::vector<std::string> const& getErrors() const { return m_errors;}
     void resetErrors() { m_errors.clear(); }
     void setCurrentTestFile(boost::filesystem::path const& _name) { m_currentTestFileName = _name; }
-	void setCurrentTestName(std::string const& _name) { m_currentTestName = _name; }
-	std::string const& testName() { return m_currentTestName; }
-	std::string const& caseName() { return m_currentTestCaseName; }
-	boost::filesystem::path const& testFile() { return m_currentTestFileName; }
+    void setCurrentTestName(std::string const& _name) { m_currentTestName = _name; }
+    void setCurrentTestInfo(std::string const& _info) { m_currentTestInfo = _info; }
+    std::string const& testName() const { return m_currentTestName; }
+    std::string const& testInfo() const { return m_currentTestInfo; }
+    std::string const& caseName() const { return m_currentTestCaseName; }
+    boost::filesystem::path const& testFile() const { return m_currentTestFileName; }
     static void printTestExecStats();
     static bool isAllTestsFinished();
 
@@ -59,12 +62,13 @@ public:
     static std::string getThreadID();
 
 private:
-	TestOutputHelper() {}
-	dev::Timer m_timer;
-	size_t m_currTest;
-	size_t m_maxTests;
-	std::string m_currentTestName;
-	std::string m_currentTestCaseName;
+    TestOutputHelper() {}
+    dev::Timer m_timer;
+    size_t m_currTest;
+    size_t m_maxTests;
+    std::string m_currentTestName;
+    std::string m_currentTestCaseName;
+    std::string m_currentTestInfo;
     bool m_isRunning;
     boost::filesystem::path m_currentTestFileName;
     std::vector<std::string> m_errors; //flag errors for triggering boost erros after all thread finished
