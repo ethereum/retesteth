@@ -135,7 +135,9 @@ DataObject FillTestAsBlockchain(DataObject const& _testFile, TestSuite::TestSuit
                                          "v" + toString(tr.valueInd);
                     dataPostfix += "_" + net;
 
-                    // !!! Expect sections could contain double cases !!!
+                    if (filledTest.count(_testFile.getKey() + dataPostfix))
+                        ETH_ERROR_MESSAGE("The test filler contain redundunt expect section: " + testInfo);
+
                     filledTest[_testFile.getKey() + dataPostfix] = aBlockchainTest;
                     session.test_rewindToBlock(0);
                 }
