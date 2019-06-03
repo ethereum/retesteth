@@ -95,11 +95,17 @@ DataObject FillTestAsBlockchain(DataObject const& _testFile, TestSuite::TestSuit
                     session.test_modifyTimestamp(a.convert_to<size_t>());
                     string signedTransactionRLP = tr.transaction.getSignedRLP();
                     string trHash = session.eth_sendRawTransaction(signedTransactionRLP);
+
+                    if (!session.getLastRPCError().empty())
+                        ETH_ERROR_MESSAGE(session.getLastRPCError());
+                    if (!isHash<h256>(trHash))
+                        ETH_ERROR_MESSAGE("eth_sendRawTransaction return invalid hash: '" + trHash +
+                                          "' " + TestOutputHelper::get().testInfo());
+
                     session.test_mineBlocks(1);
                     tr.executed = true;
 
-                    DataObject remoteState =
-                        getRemoteState(session, isHash<h256>(trHash) ? trHash : string(), true);
+                    DataObject remoteState = getRemoteState(session, trHash, true);
 
                     // check that the post state qualifies to the expect section
                     string testInfo = TestOutputHelper::get().testInfo();
@@ -193,6 +199,9 @@ DataObject FillTest(DataObject const& _testFile, TestSuite::TestSuiteOptions& _o
                     string trHash = session.eth_sendRawTransaction(tr.transaction.getSignedRLP());
                     if (!session.getLastRPCError().empty())
                         ETH_ERROR_MESSAGE(session.getLastRPCError());
+                    if (!isHash<h256>(trHash))
+                        ETH_ERROR_MESSAGE("eth_sendRawTransaction return invalid hash: '" + trHash +
+                                          "' " + TestOutputHelper::get().testInfo());
 
                     session.test_mineBlocks(1);
                     tr.executed = true;
