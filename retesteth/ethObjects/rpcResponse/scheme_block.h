@@ -133,7 +133,10 @@ namespace test {
                 transactionRLP << u256(transaction.at("value").asString());
                 transactionRLP << fromHex(transaction.at("input").asString());
 
-                byte v = 27 + (int)u256(transaction.at("v").asString().c_str());
+                byte v = (int)u256(transaction.at("v").asString().c_str());
+                if (v <= 1) {
+                    v += 27; // To deal with Aleth's logic to subtract 27 from V when it is 27 or 28
+                }
                 transactionRLP << v;
                 transactionRLP << u256(transaction.at("r").asString());
                 transactionRLP << u256(transaction.at("s").asString());
