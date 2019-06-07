@@ -66,7 +66,7 @@ std::mutex g_socketMapMutex;
 static std::map<std::string, sessionInfo> socketMap;
 void RPCSession::runNewInstanceOfAClient(string const& _threadID, ClientConfig const& _config)
 {
-    if (_config.getType() == Socket::IPC)
+    if (_config.getSocketType() == Socket::IPC)
     {
         fs::path tmpDir = test::createUniqueTmpDirectory();
         string ipcPath = tmpDir.string() + "/geth.ipc";
@@ -104,17 +104,33 @@ void RPCSession::runNewInstanceOfAClient(string const& _threadID, ClientConfig c
             socketMap.insert(std::pair<string, sessionInfo>(_threadID, std::move(info)));
         }
     }
-    else if (_config.getType() == Socket::TCP)
+    else if (_config.getSocketType() == Socket::TCP)
     {
-        sessionInfo info(NULL, new RPCSession(Socket::SocketType::TCP, _config.getAddress()), "", 0,
-            _config.getId());
+        std::lock_guard<std::mutex> lock(g_socketMapMutex);  // function must be called from lock
+
+        // Create sessionInfo for a tcp address that is still not present in socketMap
+        for (auto const& addr : _config.getAddressObject().getSubObjects())
         {
-            std::lock_guard<std::mutex> lock(
-                g_socketMapMutex);  // function must be called from lock
-            socketMap.insert(std::pair<string, sessionInfo>(_threadID, std::move(info)));
+            bool unused = true;
+            for (auto const& socket : socketMap)
+            {
+                sessionInfo const& sInfo = socket.second;
+                if (sInfo.session.get()->getSocketPath() == addr.asString())
+                {
+                    unused = false;
+                    break;
+                }
+            }
+            if (unused)
+            {
+                sessionInfo info(NULL, new RPCSession(Socket::SocketType::TCP, addr.asString()), "",
+                    0, _config.getId());
+                socketMap.insert(std::pair<string, sessionInfo>(_threadID, std::move(info)));
+                return;
+            }
         }
     }
-    else if (_config.getType() == Socket::IPCDebug)
+    else if (_config.getSocketType() == Socket::IPCDebug)
     {
         // connect to already opend .ipc socket
         fs::path tmpDir = test::createUniqueTmpDirectory();
@@ -169,7 +185,9 @@ RPCSession& RPCSession::instance(const string& _threadID)
 
     std::lock_guard<std::mutex> lock(g_socketMapMutex);
     ETH_FAIL_REQUIRE_MESSAGE(socketMap.size() <= Options::get().threadCount,
-        "Something went wrong. Retesteth create more instances than needed!");
+        "Something went wrong. Retesteth connect to more instances than needed!");
+    ETH_FAIL_REQUIRE_MESSAGE(socketMap.size() != 0,
+        "Something went wrong. Retesteth failed to create socket connection!");
     return *(socketMap.at(_threadID).session.get());
 }
 

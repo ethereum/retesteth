@@ -121,9 +121,9 @@ void addClientInfo(
       dataobject::DataObject clientinfo;
       if (o.count("_info"))
       {
-          dataobject::DataObject const& existingInfo = o.at("_info");
+          dataobject::DataObject const& existingInfo = o.atKey("_info");
           if (existingInfo.count("comment"))
-              comment = existingInfo.at("comment").asString();
+              comment = existingInfo.atKey("comment").asString();
       }
 
       clientinfo.setKey("_info");
@@ -149,9 +149,9 @@ void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
         ETH_FAIL_REQUIRE_MESSAGE(i.type() == dataobject::DataType::Object,
             i.getKey() + " should contain an object under a test name.");
         ETH_FAIL_REQUIRE_MESSAGE(i.count("_info") > 0, "_info section not set! " + _compiledTest.string());
-        dataobject::DataObject const& info = i.at("_info");
+        dataobject::DataObject const& info = i.atKey("_info");
         ETH_FAIL_REQUIRE_MESSAGE(info.count("sourceHash") > 0, "sourceHash not found in " + _compiledTest.string() + " in " + i.getKey());
-        h256 const sourceHash = h256(info.at("sourceHash").asString());
+        h256 const sourceHash = h256(info.atKey("sourceHash").asString());
         ETH_ERROR_REQUIRE_MESSAGE(sourceHash == fillerData.hash,
             "Test " + _compiledTest.string() + " in " + i.getKey() +
                 " is outdated. Filler hash is different! ( '" + sourceHash.hex().substr(0, 4) +
@@ -337,12 +337,16 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
             }
             testOutput.showProgress();
 
-            // If debugging already open instance of a client. Only one thread allowed to connect to
-            // it;
+            // If debugging, already there is an open instance of a client.
+            // Only one thread allowed to connect to it;
             size_t maxAllowedThreads = Options::get().threadCount;
-            if (Options::getDynamicOptions().getCurrentConfig().getType() ==
-                Socket::SocketType::IPCDebug)
+            ClientConfig const& currConfig = Options::get().getDynamicOptions().getCurrentConfig();
+            Socket::SocketType socType = currConfig.getSocketType();
+            if (socType == Socket::SocketType::IPCDebug)
                 maxAllowedThreads = 1;
+            // If connecting to TCP sockets. Max threads are limited with tcp ports provided
+            if (socType == Socket::SocketType::TCP)
+                maxAllowedThreads = min(maxAllowedThreads, currConfig.getAddressObject().getSubObjects().size());
 
             if (threadVector.size() == maxAllowedThreads)
                 joinThreads(threadVector, false);

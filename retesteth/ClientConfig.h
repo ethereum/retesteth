@@ -44,8 +44,10 @@ public:
     {
         requireJsonFields(_obj, "ClientConfig ",
             {{"name", {DataType::String}}, {"socketType", {DataType::String}},
-                {"socketAddress", {DataType::String}}});
-        std::string const& socketTypeStr = _obj.at("socketType").asString();
+                {"socketAddress", {DataType::String, DataType::Array}}},
+            true);
+
+        std::string const& socketTypeStr = _obj.atKey("socketType").asString();
         if (socketTypeStr == "ipc")
         {
             ETH_FAIL_REQUIRE_MESSAGE(
@@ -57,8 +59,15 @@ public:
         else if (socketTypeStr == "tcp")
         {
             ETH_FAIL_REQUIRE_MESSAGE(validateIP(getAddress()) == true,
-                "A client tcp socket must be a correct ipv4 address!");
+                "A client tcp socket must be a correct ipv4 address! (" + getAddress() + ")");
             m_socketType = Socket::SocketType::TCP;
+            if (getAddressObject().type() == DataType::Array)
+            {
+                for (auto const& addr : getAddressObject().getSubObjects())
+                    ETH_FAIL_REQUIRE_MESSAGE(validateIP(addr.asString()) == true,
+                        "A client tcp socket must be a correct ipv4 address! (" + addr.asString() +
+                            ")");
+            }
         }
         else if (socketTypeStr == "ipc-debug")
         {
@@ -75,9 +84,16 @@ public:
     }
 
     fs::path const& getShellPath() const { return m_shellPath; }
-    std::string const& getName() const { return m_data.at("name").asString(); }
-    Socket::SocketType getType() const { return m_socketType; }
-    std::string const& getAddress() const { return m_data.at("socketAddress").asString(); }
+    std::string const& getName() const { return m_data.atKey("name").asString(); }
+    Socket::SocketType getSocketType() const { return m_socketType; }
+    std::string const& getAddress() const
+    {
+        if (m_data.atKey("socketAddress").type() == DataType::String)
+            return m_data.atKey("socketAddress").asString();
+        else
+            return m_data.atKey("socketAddress").at(0).asString();
+    }
+    DataObject const& getAddressObject() const { return m_data.atKey("socketAddress"); }
     ClientConfigID const& getId() const { return m_id; }
 
 private:
