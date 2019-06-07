@@ -30,8 +30,8 @@ namespace test {
 					{"transactionIndex", {DataType::Integer} }
 				});
 
-			for (auto const& log: m_data.at("logs").getSubObjects())
-				m_logs.push_back(logs(log));
+            for (auto const& log : m_data.atKey("logs").getSubObjects())
+                m_logs.push_back(logs(log));
 
 		}
 
@@ -68,12 +68,12 @@ namespace test {
 			void streamRLP(dev::RLPStream& _rlp) const
 			{
 				std::vector<dev::h256> topics;
-				for (auto const& topic: m_data.at("topics").getSubObjects())
-					topics.push_back(dev::h256(topic.asString()));
+                for (auto const& topic : m_data.atKey("topics").getSubObjects())
+                    topics.push_back(dev::h256(topic.asString()));
 
-				_rlp.appendList(3) << dev::Address(m_data.at("address").asString())
-								<< topics << dev::fromHex(m_data.at("data").asString());
-			}
+                _rlp.appendList(3) << dev::Address(m_data.atKey("address").asString()) << topics
+                                   << dev::fromHex(m_data.atKey("data").asString());
+            }
 		};
 
 		std::vector<logs> m_logs;

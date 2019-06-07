@@ -52,7 +52,7 @@ bool RunTest(DataObject const& _testObject)
 
     // compare post state hash
     DataObject remoteState = getRemoteState(session, "", true);
-    scheme_state postState(remoteState.at("postState"));
+    scheme_state postState(remoteState.atKey("postState"));
     CompareResult res = test::compareStates(inputTest.getPost(), postState);
     ETH_ERROR_REQUIRE_MESSAGE(
         res == CompareResult::Success, "Error in " + inputTest.getData().getKey());

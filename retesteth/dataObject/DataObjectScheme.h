@@ -47,31 +47,32 @@ private:
                 << "Validation scheme object is expected to be of object type(1)!";
         if (!_obj.count("type"))
             throw DataObjectException() << "Required field 'type' not found in validation scheme!";
-        if (_obj.at("type").type() != DataType::String)
+        if (_obj.atKey("type").type() != DataType::String)
             throw DataObjectException()
                 << "Validation scheme 'type' field must be a string object!";
 
         ValidationRule rule;
         // Read string field (data type) into DataObject type
         rule.verificationType = ValidationRule::verification::CHECK_TYPE;
-        if (_obj.at("type").asString() == "string")
+        if (_obj.atKey("type").asString() == "string")
             rule.dataTypeExpected = DataType::String;
-        else if (_obj.at("type").asString() == "integer")
+        else if (_obj.atKey("type").asString() == "integer")
             rule.dataTypeExpected = DataType::Integer;
-        else if (_obj.at("type").asString() == "bool")
+        else if (_obj.atKey("type").asString() == "bool")
             rule.dataTypeExpected = DataType::Bool;
-        else if (_obj.at("type").asString() == "object")
+        else if (_obj.atKey("type").asString() == "object")
             rule.dataTypeExpected = DataType::Object;
-        else if (_obj.at("type").asString() == "array")
+        else if (_obj.atKey("type").asString() == "array")
             rule.dataTypeExpected = DataType::Array;
 
         // validation scheme has enum field
         if (_obj.count("enum"))
         {
-            if (_obj.at("enum").type() != DataType::Array)
+            if (_obj.atKey("enum").type() != DataType::Array)
                 throw DataObjectException() << "Validation scheme 'enum' field must be an array!";
             rule.verificationType = ValidationRule::verification::CHECK_EXACT;
-            rule.dataEnum = _obj.at("enum").getSubObjects().at(0);  // enum with only 1 element!!!
+            rule.dataEnum =
+                _obj.atKey("enum").getSubObjects().at(0);  // enum with only 1 element!!!
         }
 
         rulesVector.push_back(rule);

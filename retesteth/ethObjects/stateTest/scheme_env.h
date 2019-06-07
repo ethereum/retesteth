@@ -22,13 +22,13 @@ namespace test {
             makeAllFieldsHex(m_data);
         }
 
-        std::string getCoinbase() const { return m_data.at("currentCoinbase").asString(); }
+        std::string getCoinbase() const { return m_data.atKey("currentCoinbase").asString(); }
         DataObject getDataForRPC() const
         {
             DataObject data;
-            data["author"] = m_data.at("currentCoinbase");
-            data["difficulty"] = m_data.at("currentDifficulty");
-            data["gasLimit"] = m_data.at("currentGasLimit");
+            data["author"] = m_data.atKey("currentCoinbase");
+            data["difficulty"] = m_data.atKey("currentDifficulty");
+            data["gasLimit"] = m_data.atKey("currentGasLimit");
             data["nonce"] = "0x00";
             data["extraData"] = "0x00";
             // this is genesis block timestamp

@@ -39,7 +39,7 @@ namespace test {
 	/// check the presents of fields in a DataObject with a validation map
 	typedef std::set<DataType> possibleType;
     void requireJsonFields(DataObject const& _o, std::string const& _section,
-        std::map<std::string, possibleType> const& _validationMap);
+        std::map<std::string, possibleType> const& _validationMap, bool _fail = false);
 
     enum jsonField
     {

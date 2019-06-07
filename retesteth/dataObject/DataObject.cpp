@@ -148,10 +148,10 @@ void DataObject::setKeyPos(std::string const& _key, size_t _pos)
             if (i == m_subObjects.size() - 1 || (i >= 1 && m_subObjects.at(i - 1).getKey() == _key))
             {
                 newSubObjects.push_back(m_subObjects.at(i));
-                newSubObjects.push_back(this->at(_key));
+                newSubObjects.push_back(this->atKey(_key));
                 continue;
             }
-            newSubObjects.push_back(this->at(_key));
+            newSubObjects.push_back(this->atKey(_key));
         }
         if (m_subObjects.at(i).getKey() != _key)
             newSubObjects.push_back(m_subObjects.at(i));
@@ -186,7 +186,7 @@ void DataObject::replace(DataObject const& _value)
     m_subObjects = _value.getSubObjects();
 }
 
-DataObject const& DataObject::at(std::string const& _key) const
+DataObject const& DataObject::atKey(std::string const& _key) const
 {
     _assert(count(_key), "count(_key) _key=" + _key + " (DataObject::at)");
     for (auto const& i : m_subObjects)
@@ -194,6 +194,12 @@ DataObject const& DataObject::at(std::string const& _key) const
             return i;
     _assert(false, "item not found! (DataObject::at)");
     return m_subObjects.at(0);
+}
+
+DataObject const& DataObject::at(size_t _pos) const
+{
+    _assert((size_t)_pos < m_subObjects.size(), "DataObject::at(int) out of range!");
+    return m_subObjects[_pos];
 }
 
 void DataObject::addArrayObject(DataObject const& _obj)

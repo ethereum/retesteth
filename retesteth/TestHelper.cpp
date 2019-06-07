@@ -29,7 +29,7 @@ Json::Value readJson(fs::path const& _file)
                                             "develop and set ETHEREUM_TEST_PATH to its path?");
     bool parsingSuccessful = reader.parse(s, v);
     if (!parsingSuccessful)
-        ETH_ERROR_MESSAGE(
+        ETH_FAIL_MESSAGE(
             "Failed to parse json file\n" + reader.getFormattedErrorMessages() + "(" + fname + ")");
     return v;
 }

@@ -7,18 +7,16 @@ namespace  test {
     class scheme_expectSectionElement: public object
     {
         public:
-        scheme_expectSectionElement(DataObject const& _expect):
-            object(_expect),
-            m_filedChecker(_expect),
-            m_expectState(_expect.at("result"))
-        {
-            parseJsonIntValueIntoSet(_expect.at("indexes").at("data"), m_dataIndexes);
-            parseJsonIntValueIntoSet(_expect.at("indexes").at("gas"), m_gasIndexes);
-            parseJsonIntValueIntoSet(_expect.at("indexes").at("value"), m_valueIndexes);
+            scheme_expectSectionElement(DataObject const& _expect)
+              : object(_expect), m_filedChecker(_expect), m_expectState(_expect.atKey("result"))
+            {
+                parseJsonIntValueIntoSet(_expect.atKey("indexes").atKey("data"), m_dataIndexes);
+                parseJsonIntValueIntoSet(_expect.atKey("indexes").atKey("gas"), m_gasIndexes);
+                parseJsonIntValueIntoSet(_expect.atKey("indexes").atKey("value"), m_valueIndexes);
 
-            // get allowed networks for this expect section
-            parseJsonStrValueIntoSet(_expect.at("network"), m_networks);
-            m_networks = translateNetworks(m_networks);
+                // get allowed networks for this expect section
+                parseJsonStrValueIntoSet(_expect.atKey("network"), m_networks);
+                m_networks = translateNetworks(m_networks);
         }
         std::set<std::string> const& getNetworks() const { return m_networks; }
         scheme_expectState const& getExpectState() const { return m_expectState; }
@@ -56,11 +54,10 @@ namespace  test {
                     {"network", {DataType::Array, DataType::String} },
                     {"result", {DataType::Object} }
                 });
-                requireJsonFields(_expect.at("indexes"), "indexes", {
-                    {"data", {DataType::Array, DataType::Integer} },
-                    {"gas", {DataType::Array, DataType::Integer} },
-                    {"value", {DataType::Array, DataType::Integer} }
-                });
+                requireJsonFields(_expect.atKey("indexes"), "indexes",
+                    {{"data", {DataType::Array, DataType::Integer}},
+                        {"gas", {DataType::Array, DataType::Integer}},
+                        {"value", {DataType::Array, DataType::Integer}}});
             }
         };
         std::set<int> m_dataIndexes;

@@ -153,7 +153,8 @@ public:
 
     void replace(DataObject const& _value);
 
-    DataObject const& at(std::string const& _key) const;
+    DataObject const& atKey(std::string const& _key) const;
+    DataObject const& at(size_t _pos) const;
 
     void addArrayObject(DataObject const& _obj);
 

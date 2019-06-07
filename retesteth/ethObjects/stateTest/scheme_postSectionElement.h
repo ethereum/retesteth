@@ -14,15 +14,14 @@ namespace  test {
                 {"logs", {DataType::String} },
                 {"indexes", {DataType::Object} }
             });
-            requireJsonFields(_expect.at("indexes"), "indexes", {
-                {"data", {DataType::Array, DataType::Integer} },
-                {"gas", {DataType::Array, DataType::Integer} },
-                {"value", {DataType::Array, DataType::Integer} }
-            });
+            requireJsonFields(_expect.atKey("indexes"), "indexes",
+                {{"data", {DataType::Array, DataType::Integer}},
+                    {"gas", {DataType::Array, DataType::Integer}},
+                    {"value", {DataType::Array, DataType::Integer}}});
 
-            parseJsonIntValueIntoSet(_expect.at("indexes").at("data"), m_dataIndexes);
-            parseJsonIntValueIntoSet(_expect.at("indexes").at("gas"), m_gasIndexes);
-            parseJsonIntValueIntoSet(_expect.at("indexes").at("value"), m_valueIndexes);
+            parseJsonIntValueIntoSet(_expect.atKey("indexes").atKey("data"), m_dataIndexes);
+            parseJsonIntValueIntoSet(_expect.atKey("indexes").atKey("gas"), m_gasIndexes);
+            parseJsonIntValueIntoSet(_expect.atKey("indexes").atKey("value"), m_valueIndexes);
 
             // currently post section support only single index check
             ETH_ERROR_REQUIRE_MESSAGE(

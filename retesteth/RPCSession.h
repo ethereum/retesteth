@@ -81,6 +81,7 @@ public:
     /// Returns empty string if last RPC call had no errors, error string if there was an error
     std::string const& getLastRPCError() const { return m_lastRPCErrorString; }
     Socket::SocketType getSocketType() const { return m_socket.type(); }
+    std::string const& getSocketPath() const { return m_socket.path(); }
 
 private:
     explicit RPCSession(Socket::SocketType _type, std::string const& _path);
@@ -97,7 +98,7 @@ private:
 	unsigned m_successfulMineRuns = 0;
     string m_lastRPCErrorString;          // last RPC error string
 
-	std::vector<std::string> m_accounts;
+    std::vector<std::string> m_accounts;
 };
 
 

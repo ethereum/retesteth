@@ -36,7 +36,7 @@ namespace test {
                     {"nonce", {{DataType::String}, jsonField::Optional}},
                     {"mixHash", {{DataType::String}, jsonField::Optional}}});
 
-            for (auto const& trObj : m_data.at("transactions").getSubObjects())
+            for (auto const& trObj : m_data.atKey("transactions").getSubObjects())
             {
                 requireJsonFields(trObj, "block rpc",
                     {{"blockHash", {DataType::String}}, {"blockNumber", {DataType::String}},
@@ -49,24 +49,27 @@ namespace test {
             }
         }
 
-		int getTransactionCount() const { return m_data.at("transactions").getSubObjects().size(); }
-        std::string getBlockHash() const { return m_data.at("hash").asString(); }
+        int getTransactionCount() const
+        {
+            return m_data.atKey("transactions").getSubObjects().size();
+        }
+        std::string getBlockHash() const { return m_data.atKey("hash").asString(); }
 
         DataObject getBlockHeader() const
         {
             // Map Block Header
             DataObject header;
-            header["bloom"] = m_data.at("logsBloom");
-            header["coinbase"] = m_data.at("author");
-            header["difficulty"] = m_data.at("difficulty");
-            header["extraData"] = m_data.at("extraData");
-            header["gasLimit"] = m_data.at("gasLimit");
-            header["gasUsed"] = m_data.at("gasUsed");
-            header["hash"] = m_data.at("hash");
+            header["bloom"] = m_data.atKey("logsBloom");
+            header["coinbase"] = m_data.atKey("author");
+            header["difficulty"] = m_data.atKey("difficulty");
+            header["extraData"] = m_data.atKey("extraData");
+            header["gasLimit"] = m_data.atKey("gasLimit");
+            header["gasUsed"] = m_data.atKey("gasUsed");
+            header["hash"] = m_data.atKey("hash");
             if (m_data.count("mixHash"))
             {
-                header["mixHash"] = m_data.at("mixHash");
-                header["nonce"] = m_data.at("nonce");
+                header["mixHash"] = m_data.atKey("mixHash");
+                header["nonce"] = m_data.atKey("nonce");
             }
             else
             {
@@ -74,13 +77,13 @@ namespace test {
                     "0x0000000000000000000000000000000000000000000000000000000000000000";
                 header["nonce"] = "0x0000000000000000";
             }
-            header["number"] = m_data.at("number");
-            header["parentHash"] = m_data.at("parentHash");
-            header["receiptTrie"] = m_data.at("receiptsRoot");
-            header["stateRoot"] = m_data.at("stateRoot");
-            header["timestamp"] = m_data.at("timestamp");
-            header["transactionsTrie"] = m_data.at("transactionsRoot");
-            header["uncleHash"] = m_data.at("sha3Uncles");
+            header["number"] = m_data.atKey("number");
+            header["parentHash"] = m_data.atKey("parentHash");
+            header["receiptTrie"] = m_data.atKey("receiptsRoot");
+            header["stateRoot"] = m_data.atKey("stateRoot");
+            header["timestamp"] = m_data.atKey("timestamp");
+            header["transactionsTrie"] = m_data.atKey("transactionsRoot");
+            header["uncleHash"] = m_data.atKey("sha3Uncles");
             return header;
         }
 
@@ -92,23 +95,23 @@ namespace test {
             RLPStream stream(3);
             RLPStream header;
             header.appendList(15);
-            header << h256(m_data.at("parentHash").asString());
-            header << h256(m_data.at("sha3Uncles").asString());
-            header << dev::Address(m_data.at("author").asString());
-            header << h256(m_data.at("stateRoot").asString());
-            header << h256(m_data.at("transactionsRoot").asString());
-            header << h256(m_data.at("receiptsRoot").asString());
-            header << h2048(m_data.at("logsBloom").asString());
-            header << u256(m_data.at("difficulty").asString());
-            header << u256(m_data.at("number").asString());
-            header << u256(m_data.at("gasLimit").asString());
-            header << u256(m_data.at("gasUsed").asString());
-            header << u256(m_data.at("timestamp").asString());
-            header << dev::fromHex(m_data.at("extraData").asString());
+            header << h256(m_data.atKey("parentHash").asString());
+            header << h256(m_data.atKey("sha3Uncles").asString());
+            header << dev::Address(m_data.atKey("author").asString());
+            header << h256(m_data.atKey("stateRoot").asString());
+            header << h256(m_data.atKey("transactionsRoot").asString());
+            header << h256(m_data.atKey("receiptsRoot").asString());
+            header << h2048(m_data.atKey("logsBloom").asString());
+            header << u256(m_data.atKey("difficulty").asString());
+            header << u256(m_data.atKey("number").asString());
+            header << u256(m_data.atKey("gasLimit").asString());
+            header << u256(m_data.atKey("gasUsed").asString());
+            header << u256(m_data.atKey("timestamp").asString());
+            header << dev::fromHex(m_data.atKey("extraData").asString());
             if (m_data.count("mixHash"))
             {
-                header << h256(m_data.at("mixHash").asString());
-                header << h64(m_data.at("nonce").asString());
+                header << h256(m_data.atKey("mixHash").asString());
+                header << h64(m_data.atKey("nonce").asString());
             }
             else
             {
@@ -117,29 +120,29 @@ namespace test {
             }
             stream.appendRaw(header.out());
 
-            if (m_data.at("transactions").getSubObjects().size())
+            if (m_data.atKey("transactions").getSubObjects().size())
             {
                 RLPStream transactionList(1);
                 RLPStream transactionRLP(9);
-                DataObject transaction = m_data.at("transactions").getSubObjects().at(0);
-                transactionRLP << u256(transaction.at("nonce").asString());
-                transactionRLP << u256(transaction.at("gasPrice").asString());
-                transactionRLP << u256(transaction.at("gas").asString());
-                if (transaction.at("to").type() == DataType::Null ||
-                    transaction.at("to").asString().empty())
+                DataObject transaction = m_data.atKey("transactions").getSubObjects().at(0);
+                transactionRLP << u256(transaction.atKey("nonce").asString());
+                transactionRLP << u256(transaction.atKey("gasPrice").asString());
+                transactionRLP << u256(transaction.atKey("gas").asString());
+                if (transaction.atKey("to").type() == DataType::Null ||
+                    transaction.atKey("to").asString().empty())
                     transactionRLP << "";
                 else
-                    transactionRLP << Address(transaction.at("to").asString());
-                transactionRLP << u256(transaction.at("value").asString());
-                transactionRLP << fromHex(transaction.at("input").asString());
+                    transactionRLP << Address(transaction.atKey("to").asString());
+                transactionRLP << u256(transaction.atKey("value").asString());
+                transactionRLP << fromHex(transaction.atKey("input").asString());
 
-                byte v = (int)u256(transaction.at("v").asString().c_str());
+                byte v = (int)u256(transaction.atKey("v").asString().c_str());
                 if (v <= 1) {
                     v += 27; // To deal with Aleth's logic to subtract 27 from V when it is 27 or 28
                 }
                 transactionRLP << v;
-                transactionRLP << u256(transaction.at("r").asString());
-                transactionRLP << u256(transaction.at("s").asString());
+                transactionRLP << u256(transaction.atKey("r").asString());
+                transactionRLP << u256(transaction.atKey("s").asString());
                 transactionList.appendRaw(transactionRLP.out());
                 stream.appendRaw(transactionList.out());
             }

@@ -27,9 +27,9 @@ public:
                                      " A genesis information require 'pre', 'sealEngine' and "
                                      "'genesis' sections to be defined!");
 
-            string sealEngine = _test.at("sealEngine").asString();
-            scheme_env env(_test.at("genesis"));
-            scheme_state pre(_test.at("pre"));
+            string sealEngine = _test.atKey("sealEngine").asString();
+            scheme_env env(_test.atKey("genesis"));
+            scheme_state pre(_test.atKey("pre"));
             string network = "Frontier";
 
             m_genesis = prepareGenesisParams(network, sealEngine);
@@ -46,12 +46,12 @@ public:
         return m_genesis;
     }
 
-    std::string get_method() { return m_data.at("request_method").asString(); }
+    std::string get_method() { return m_data.atKey("request_method").asString(); }
     std::vector<std::string> get_params()
     {
         // no static here because of the threads
         std::vector<std::string> params;
-        for (auto const& d : m_data.at("request_params").getSubObjects())
+        for (auto const& d : m_data.atKey("request_params").getSubObjects())
         {
             if (d.type() == DataType::String)
                 params.push_back("\"" + d.asString() + "\"");
@@ -84,6 +84,6 @@ class scheme_RPCTestFiller : public scheme_RPCTestBase
 {
 public:
     scheme_RPCTestFiller(DataObject const& _test) : scheme_RPCTestBase(_test){}
-    DataObject const& get_expectReturn() { return m_data.at("expect_return"); }
+    DataObject const& get_expectReturn() { return m_data.atKey("expect_return"); }
 };
 }

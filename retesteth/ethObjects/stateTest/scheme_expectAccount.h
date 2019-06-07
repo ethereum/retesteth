@@ -29,7 +29,7 @@ namespace  test {
         std::string getBalance() const
         {
             if (m_hasBalance)
-                return m_data.at("balance").asString();
+                return m_data.atKey("balance").asString();
             return "";
         }
         void setBalance(u256 const& _balance)
@@ -52,7 +52,7 @@ namespace  test {
                 _storage.type() == DataType::Object, "Storage must be of `Object` type!");
             ETH_ERROR_REQUIRE_MESSAGE(hasStorage(), "Storage was expected to be set!");
 
-            DataObject const& expectStorage = m_data.at("storage");
+            DataObject const& expectStorage = m_data.atKey("storage");
             for (auto const& element: expectStorage.getSubObjects())
             {
                 if (element.asString() == "0x00")
@@ -78,7 +78,7 @@ namespace  test {
                     return result;
 
                 // Check exact value in the storage
-                std::string valueInStorage = _storage.at(key).asString();
+                std::string valueInStorage = _storage.atKey(key).asString();
                 checkMessage(valueInStorage == element.asString(), CompareResult::IncorrectStorage,
                     TestOutputHelper::get().testName() + " Check State: " + address() +
                         ": incorrect storage [" + key + "] = " + valueInStorage + ", expected [" +

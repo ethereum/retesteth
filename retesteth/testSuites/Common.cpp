@@ -39,7 +39,7 @@ DataObject getRemoteState(RPCSession& _session, string const& _trHash, bool _ful
     string latestBlockNumber = toString(u256(_session.eth_blockNumber()));
 
     test::scheme_block latestBlock = _session.eth_getBlockByNumber(latestBlockNumber, true);
-    remoteState["postHash"] = latestBlock.getData().at("stateRoot");
+    remoteState["postHash"] = latestBlock.getData().atKey("stateRoot");
     if (!_trHash.empty())
         remoteState["logHash"] = _session.test_getLogHash(_trHash);
     remoteState["postState"] = "";
@@ -72,7 +72,7 @@ DataObject getRemoteState(RPCSession& _session, string const& _trHash, bool _ful
                 dataobject::ConvertJsoncppToData(_session.debug_storageRangeAt(
                     latestBlockNumber, trIndex, acc.asString(), "0", cmaxRows));
             for (auto const& element : debugStorageAt["storage"].getSubObjects())
-                storage[element.at("key").asString()] = element.at("value").asString();
+                storage[element.atKey("key").asString()] = element.atKey("value").asString();
             accountObj[acc.asString()]["storage"] = storage;
         }
 

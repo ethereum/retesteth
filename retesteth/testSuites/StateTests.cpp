@@ -91,7 +91,7 @@ DataObject FillTestAsBlockchain(DataObject const& _testFile, TestSuite::TestSuit
 
                     string sEngine = "NoProof";
                     session.test_setChainParams(test.getGenesisForRPC(net, sEngine).asJson());
-                    u256 a(test.getEnv().getData().at("currentTimestamp").asString());
+                    u256 a(test.getEnv().getData().atKey("currentTimestamp").asString());
                     session.test_modifyTimestamp(a.convert_to<size_t>());
                     string signedTransactionRLP = tr.transaction.getSignedRLP();
                     string trHash = session.eth_sendRawTransaction(signedTransactionRLP);
@@ -109,7 +109,7 @@ DataObject FillTestAsBlockchain(DataObject const& _testFile, TestSuite::TestSuit
 
                     // check that the post state qualifies to the expect section
                     string testInfo = TestOutputHelper::get().testInfo();
-                    scheme_state postState(remoteState.at("postState"));
+                    scheme_state postState(remoteState.atKey("postState"));
                     CompareResult res = test::compareStates(mexpect.getExpectState(), postState);
                     ETH_ERROR_REQUIRE_MESSAGE(res == CompareResult::Success, testInfo);
                     if (res != CompareResult::Success)
@@ -117,14 +117,14 @@ DataObject FillTestAsBlockchain(DataObject const& _testFile, TestSuite::TestSuit
 
                     DataObject aBlockchainTest;
                     if (test.getData().count("_info"))
-                        aBlockchainTest["_info"] = test.getData().at("_info");
+                        aBlockchainTest["_info"] = test.getData().atKey("_info");
                     aBlockchainTest["genesisBlockHeader"] = test.getEnv().getDataForRPC();
                     aBlockchainTest["pre"] = test.getPre().getData();
-                    aBlockchainTest["postState"] = remoteState.at("postState");
+                    aBlockchainTest["postState"] = remoteState.atKey("postState");
                     aBlockchainTest["network"] = net;
                     aBlockchainTest["sealEngine"] = sEngine;
 
-                    test::scheme_block blockData(remoteState.at("rawBlockData"));
+                    test::scheme_block blockData(remoteState.atKey("rawBlockData"));
                     ETH_ERROR_REQUIRE_MESSAGE(blockData.getTransactionCount() == 1,
                         "StateTest transaction execution failed! " + testInfo);
                     aBlockchainTest["lastblockhash"] = blockData.getBlockHash();
@@ -162,7 +162,7 @@ DataObject FillTest(DataObject const& _testFile, TestSuite::TestSuiteOptions& _o
 
     RPCSession& session = RPCSession::instance(TestOutputHelper::getThreadID());
     if (test.getData().count("_info"))
-        filledTest["_info"] = test.getData().at("_info");
+        filledTest["_info"] = test.getData().atKey("_info");
     filledTest["env"] = test.getEnv().getData();
     filledTest["pre"] = test.getPre().getData();
     filledTest["transaction"] = test.getGenTransaction().getData();
@@ -194,7 +194,7 @@ DataObject FillTest(DataObject const& _testFile, TestSuite::TestSuiteOptions& _o
                         ", g: " + toString(tr.gasInd) + ", v: " + toString(tr.valueInd) +
                         ", Test: " + TestOutputHelper::get().testName());
 
-                    u256 a(test.getEnv().getData().at("currentTimestamp").asString());
+                    u256 a(test.getEnv().getData().atKey("currentTimestamp").asString());
                     session.test_modifyTimestamp(a.convert_to<size_t>());
                     string trHash = session.eth_sendRawTransaction(tr.transaction.getSignedRLP());
                     if (!session.getLastRPCError().empty())
@@ -209,7 +209,7 @@ DataObject FillTest(DataObject const& _testFile, TestSuite::TestSuiteOptions& _o
                     DataObject remoteState = getRemoteState(session, trHash, true);
 
                     // check that the post state qualifies to the expect section
-                    scheme_state postState(remoteState.at("postState"));
+                    scheme_state postState(remoteState.atKey("postState"));
                     CompareResult res = test::compareStates(expect.getExpectState(), postState);
                     ETH_ERROR_REQUIRE_MESSAGE(
                         res == CompareResult::Success, TestOutputHelper::get().testInfo());
@@ -223,9 +223,9 @@ DataObject FillTest(DataObject const& _testFile, TestSuite::TestSuiteOptions& _o
                     indexes["value"] = tr.valueInd;
 
                     transactionResults["indexes"] = indexes;
-                    transactionResults["hash"] = remoteState.at("postHash").asString();
+                    transactionResults["hash"] = remoteState.atKey("postHash").asString();
                     if (remoteState.count("logHash"))
-                        transactionResults["logs"] = remoteState.at("logHash").asString();
+                        transactionResults["logs"] = remoteState.atKey("logHash").asString();
                     forkResults.addArrayObject(transactionResults);
                     session.test_rewindToBlock(0);
                 }
@@ -267,10 +267,7 @@ void RunTest(DataObject const& _testFile)
                     string testInfo = TestOutputHelper::get().testName() + ", fork: " + network
                                     + ", TrInfo: d: " + toString(tr.dataInd) + ", g: " + toString(tr.gasInd)
                                     + ", v: " + toString(tr.valueInd);
-                    u256 a(test.getEnv()
-                               .getData()
-                               .at("currentTimestamp")
-                               .asString());
+                    u256 a(test.getEnv().getData().atKey("currentTimestamp").asString());
                     session.test_modifyTimestamp(a.convert_to<size_t>());
                     string trHash = session.eth_sendRawTransaction(
                         tr.transaction.getSignedRLP());
@@ -280,26 +277,28 @@ void RunTest(DataObject const& _testFile)
 
                     DataObject remoteState =
                         getRemoteState(session, trHash, false);
-                    string expectHash = result.getData().at("hash").asString();
-                    string expectLogHash =
-                        result.getData().at("logs").asString();
-                    if (remoteState.at("postHash").asString() != expectHash) {
-                      remoteState.clear();
-                      remoteState = getRemoteState(session, trHash, true);
+                    string expectHash = result.getData().atKey("hash").asString();
+                    string expectLogHash = result.getData().atKey("logs").asString();
+                    if (remoteState.atKey("postHash").asString() != expectHash)
+                    {
+                        remoteState.clear();
+                        remoteState = getRemoteState(session, trHash, true);
 					}
 
-                    ETH_ERROR_REQUIRE_MESSAGE(remoteState.at("postHash").asString() == expectHash,
+                    ETH_ERROR_REQUIRE_MESSAGE(
+                        remoteState.atKey("postHash").asString() == expectHash,
                         "Error at " + testInfo + ", post hash mismatch: " +
-                            remoteState.at("postHash").asString() + ", expected: " + expectHash);
-                    if (remoteState.at("postHash").asString() != expectHash)
-                        ETH_TEST_MESSAGE("\nState Dump: \n" + remoteState.at("postState").asJson());
+                            remoteState.atKey("postHash").asString() + ", expected: " + expectHash);
+                    if (remoteState.atKey("postHash").asString() != expectHash)
+                        ETH_TEST_MESSAGE(
+                            "\nState Dump: \n" + remoteState.atKey("postState").asJson());
 
                     if (remoteState.count("logHash"))
                     {
                         ETH_ERROR_REQUIRE_MESSAGE(
-                            remoteState.at("logHash").asString() == expectLogHash,
+                            remoteState.atKey("logHash").asString() == expectLogHash,
                             "Error at " + testInfo +
-                                ", logs hash mismatch: " + remoteState.at("logHash").asString() +
+                                ", logs hash mismatch: " + remoteState.atKey("logHash").asString() +
                                 ", expected: " + expectLogHash);
                     }
                 }
