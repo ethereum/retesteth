@@ -53,6 +53,17 @@ std::string executeCmd(std::string const& _command);
 /// compile LLL / wasm or other src code into bytecode
 std::string replaceCode(std::string const& _code);
 
+/// find element in array
+template <class T>
+bool inArray(std::vector<T> const& _array, const T& _val)
+{
+    for (auto const& obj : _array)
+        if (obj == _val)
+            return true;
+    return false;
+}
+
+
 /// popen with pid at return
 enum popenOutput
 {

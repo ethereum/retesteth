@@ -30,9 +30,9 @@ namespace  test {
             });
 
 			// Compile the code
-			m_data["code"] = test::replaceCode(m_data.at("code").asString());
+            m_data["code"] = test::replaceCode(m_data.atKey("code").asString());
             m_data["balance"] = dev::toCompactHexPrefixed(
-                u256(m_data.at("balance").asString()), 1);  // fix odd strings
+                u256(m_data.atKey("balance").asString()), 1);  // fix odd strings
 
             // Make all fields hex
             m_data.setKey(makeHexAddress(m_data.getKey()));

@@ -29,7 +29,7 @@ namespace  test {
         std::string getBalance() const
         {
             if (m_hasBalance)
-                return m_data.at("balance").asString();
+                return m_data.atKey("balance").asString();
             return "";
         }
         void setBalance(u256 const& _balance)
@@ -43,7 +43,7 @@ namespace  test {
             CompareResult result = CompareResult::Success;
             auto checkMessage = [&result](bool _flag, CompareResult _type,
                                     std::string const& _error) -> void {
-                ETH_ERROR_REQUIRE_MESSAGE(_flag, _error);
+                ETH_MARK_ERROR(_flag, _error);
                 if (!_flag)
                     result = _type;
             };
@@ -52,7 +52,7 @@ namespace  test {
                 _storage.type() == DataType::Object, "Storage must be of `Object` type!");
             ETH_ERROR_REQUIRE_MESSAGE(hasStorage(), "Storage was expected to be set!");
 
-            DataObject const& expectStorage = m_data.at("storage");
+            DataObject const& expectStorage = m_data.atKey("storage");
             for (auto const& element: expectStorage.getSubObjects())
             {
                 if (element.asString() == "0x00")
@@ -63,25 +63,42 @@ namespace  test {
                 }
 
                 // Check that storage element is set
-                checkMessage(_storage.count(element.getKey()),
-                   CompareResult::IncorrectStorage,
-                   TestOutputHelper::get().testName() + " '" + address() + "' expected storage key: '"
-                    + element.getKey() + "' to be set!");
+                string key = element.getKey();
+                if (key == "0x" && _storage.count("0x00"))
+                    key = "0x00";
+                else if (key == "0x00" && _storage.count("0x"))
+                    key = "0x";
+
+                checkMessage(_storage.count(key), CompareResult::IncorrectStorage,
+                    TestOutputHelper::get().testName() + " '" + address() +
+                        "' expected storage key: '" + element.getKey() + "' to be set to: '" +
+                        element.asString() + "'");
 
                 if (result != CompareResult::Success)
                     return result;
 
                 // Check exact value in the storage
-                std::string valueInStorage = _storage.at(element.getKey()).asString();
-                checkMessage(valueInStorage == element.asString(),
-                   CompareResult::IncorrectStorage,
-                   TestOutputHelper::get().testName() + " Check State: " + address()
-                   + ": incorrect storage [" + element.getKey() + "] = " + valueInStorage
-                   + ", expected [" + element.getKey() + "] = " + element.asString());
+                std::string valueInStorage = _storage.atKey(key).asString();
+                checkMessage(valueInStorage == element.asString(), CompareResult::IncorrectStorage,
+                    TestOutputHelper::get().testName() + " Check State: " + address() +
+                        ": incorrect storage [" + key + "] = " + valueInStorage + ", expected [" +
+                        key + "] = " + element.asString());
             }
             checkMessage(expectStorage.getSubObjects().size() == _storage.getSubObjects().size(),
                 CompareResult::IncorrectStorage,
-                 TestOutputHelper::get().testName() + address() + " storage has more storage records then expected!");
+                TestOutputHelper::get().testName() + " " + address() +
+                    " storage has more storage records then expected!");
+
+            if (expectStorage.getSubObjects().size() < _storage.getSubObjects().size())
+            {
+                for (auto const& element : _storage.getSubObjects())
+                {
+                    string const message = "incorrect storage [" + element.getKey() +
+                                           "] = " + element.asString() + ", expected [" +
+                                           element.getKey() + "] = 0";
+                    ETH_MARK_ERROR(false, message);
+                }
+            }
             return result;
         }
 

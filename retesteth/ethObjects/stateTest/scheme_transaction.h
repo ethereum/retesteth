@@ -25,35 +25,35 @@ namespace test {
                 {"value", {DataType::String} }
 			});
 			m_data["version"] = "0x01";
-            if (!m_data.at("to").asString().empty())
-                m_data["to"] = scheme_account::makeHexAddress(m_data.at("to").asString());
-			// convert into rpc format
+            if (!m_data.atKey("to").asString().empty())
+                m_data["to"] = scheme_account::makeHexAddress(m_data.atKey("to").asString());
+            // convert into rpc format
 			m_data["gas"] = m_data["gasLimit"].asString();
             makeAllFieldsHex(m_data);
 		}
 
         std::string getSignedRLP() const
         {
-            u256 nonce = u256(m_data.at("nonce").asString());
-            u256 gasPrice = u256(m_data.at("gasPrice").asString());
-            u256 gasLimit = u256(m_data.at("gasLimit").asString());
-            Address trTo = Address(m_data.at("to").asString());
-            u256 value = u256(m_data.at("value").asString());
-            bytes data = fromHex(m_data.at("data").asString());
+            u256 nonce = u256(m_data.atKey("nonce").asString());
+            u256 gasPrice = u256(m_data.atKey("gasPrice").asString());
+            u256 gasLimit = u256(m_data.atKey("gasLimit").asString());
+            Address trTo = Address(m_data.atKey("to").asString());
+            u256 value = u256(m_data.atKey("value").asString());
+            bytes data = fromHex(m_data.atKey("data").asString());
 
             dev::RLPStream s;
             s.appendList(6);
             s << nonce;
             s << gasPrice;
             s << gasLimit;
-            if (m_data.at("to").asString().size() == 42)
+            if (m_data.atKey("to").asString().size() == 42)
                 s << trTo;
             else
                 s << "";
             s << value;
             s << data;
             h256 hash(dev::sha3(s.out()));
-            Signature sig = dev::sign(dev::Secret(m_data.at("secretKey").asString()), hash);
+            Signature sig = dev::sign(dev::Secret(m_data.atKey("secretKey").asString()), hash);
 
             SignatureStruct sigStruct = *(SignatureStruct const*)&sig;
             ETH_FAIL_REQUIRE_MESSAGE(sigStruct.isValid(), TestOutputHelper::get().testName() + "Could not construct transaction signature!");
@@ -63,7 +63,7 @@ namespace test {
             sWithSignature << nonce;
             sWithSignature << gasPrice;
             sWithSignature << gasLimit;
-            if (m_data.at("to").asString().size() == 42)
+            if (m_data.atKey("to").asString().size() == 42)
                 sWithSignature << trTo;
             else
                 sWithSignature << "";
@@ -129,23 +129,29 @@ namespace test {
         std::vector<transactionInfo> m_transactions;
         void parseGeneralTransaction()
         {
-            for (size_t dataInd = 0; dataInd < m_data.at("data").getSubObjects().size(); dataInd++)
+            for (size_t dataInd = 0; dataInd < m_data.atKey("data").getSubObjects().size();
+                 dataInd++)
             {
-                for (size_t gasInd = 0; gasInd < m_data.at("gasLimit").getSubObjects().size(); gasInd++)
+                for (size_t gasInd = 0; gasInd < m_data.atKey("gasLimit").getSubObjects().size();
+                     gasInd++)
                 {
-                    for (size_t valueInd = 0; valueInd < m_data.at("value").getSubObjects().size(); valueInd++)
+                    for (size_t valueInd = 0;
+                         valueInd < m_data.atKey("value").getSubObjects().size(); valueInd++)
                     {
                         DataObject singleTransaction(DataType::Object);
-                        DataObject data("data", m_data.at("data").getSubObjects().at(dataInd).asString());
-                        DataObject gas("gasLimit", m_data.at("gasLimit").getSubObjects().at(gasInd).asString());
-                        DataObject value("value", m_data.at("value").getSubObjects().at(valueInd).asString());
+                        DataObject data(
+                            "data", m_data.atKey("data").getSubObjects().at(dataInd).asString());
+                        DataObject gas("gasLimit",
+                            m_data.atKey("gasLimit").getSubObjects().at(gasInd).asString());
+                        DataObject value(
+                            "value", m_data.atKey("value").getSubObjects().at(valueInd).asString());
 
                         singleTransaction.addSubObject(data);
                         singleTransaction.addSubObject(gas);
-                        singleTransaction.addSubObject(m_data.at("gasPrice"));
-                        singleTransaction.addSubObject(m_data.at("nonce"));
-                        singleTransaction.addSubObject(m_data.at("secretKey"));
-                        singleTransaction.addSubObject(m_data.at("to"));
+                        singleTransaction.addSubObject(m_data.atKey("gasPrice"));
+                        singleTransaction.addSubObject(m_data.atKey("nonce"));
+                        singleTransaction.addSubObject(m_data.atKey("secretKey"));
+                        singleTransaction.addSubObject(m_data.atKey("to"));
                         singleTransaction.addSubObject(value);
                         transactionInfo info(dataInd, gasInd, valueInd, singleTransaction);
                         m_transactions.push_back(info);

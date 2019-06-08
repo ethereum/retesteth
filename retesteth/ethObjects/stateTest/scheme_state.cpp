@@ -45,37 +45,39 @@ CompareResult compareStates(scheme_expectState const& _stateExpect, scheme_state
 
         if (a.hasBalance())
 		{
-          u256 inStateB = u256(inState.getData().at("balance").asString());
-          checkMessage(
-              a.getData().at("balance").asString() == inState.getData().at("balance").asString(),
-              CompareResult::IncorrectBalance,
-              TestOutputHelper::get().testName() + " Check State: '" + a.address() +
-                  "': incorrect balance " + toString(inStateB) + ", expected " +
-                  toString(u256(a.getData().at("balance").asString())) + " (" +
-                  a.getData().at("balance").asString() +
-                  " != " + inState.getData().at("balance").asString() + ")");
+            u256 inStateB = u256(inState.getData().atKey("balance").asString());
+            checkMessage(a.getData().atKey("balance").asString() ==
+                             inState.getData().atKey("balance").asString(),
+                CompareResult::IncorrectBalance,
+                TestOutputHelper::get().testName() + " Check State: '" + a.address() +
+                    "': incorrect balance " + toString(inStateB) + ", expected " +
+                    toString(u256(a.getData().atKey("balance").asString())) + " (" +
+                    a.getData().atKey("balance").asString() +
+                    " != " + inState.getData().atKey("balance").asString() + ")");
         }
 
         if (a.hasNonce())
-            checkMessage(a.getData().at("nonce").asString() == inState.getData().at("nonce").asString(),
+            checkMessage(a.getData().atKey("nonce").asString() ==
+                             inState.getData().atKey("nonce").asString(),
                 CompareResult::IncorrectNonce,
-                TestOutputHelper::get().testName() + " Check State: '" + a.address()
-                + "': incorrect nonce " + inState.getData().at("nonce").asString() + ", expected "
-                + a.getData().at("nonce").asString());
+                TestOutputHelper::get().testName() + " Check State: '" + a.address() +
+                    "': incorrect nonce " + inState.getData().atKey("nonce").asString() +
+                    ", expected " + a.getData().atKey("nonce").asString());
 
         // Check that state post has values from expected storage
         if (a.hasStorage()) {
-          CompareResult res = a.compareStorage(inState.getData().at("storage"));
-          if (result == CompareResult::Success)
-            result = res; // Only override success result with potential error
+            CompareResult res = a.compareStorage(inState.getData().atKey("storage"));
+            if (result == CompareResult::Success)
+                result = res;  // Only override success result with potential error
         }
 
         if (a.hasCode())
-            checkMessage(a.getData().at("code").asString() == inState.getData().at("code").asString(),
+            checkMessage(
+                a.getData().atKey("code").asString() == inState.getData().atKey("code").asString(),
                 CompareResult::IncorrectCode,
-                TestOutputHelper::get().testName() + " Check State: '" + a.address()
-                + "': incorrect code '" + inState.getData().at("code").asString() + "', expected '"
-                + a.getData().at("code").asString() + "'");
+                TestOutputHelper::get().testName() + " Check State: '" + a.address() +
+                    "': incorrect code '" + inState.getData().atKey("code").asString() +
+                    "', expected '" + a.getData().atKey("code").asString() + "'");
     }
     return result;
 }

@@ -121,9 +121,9 @@ void addClientInfo(
       dataobject::DataObject clientinfo;
       if (o.count("_info"))
       {
-          dataobject::DataObject const& existingInfo = o.at("_info");
+          dataobject::DataObject const& existingInfo = o.atKey("_info");
           if (existingInfo.count("comment"))
-              comment = existingInfo.at("comment").asString();
+              comment = existingInfo.atKey("comment").asString();
       }
 
       clientinfo.setKey("_info");
@@ -149,9 +149,9 @@ void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
         ETH_FAIL_REQUIRE_MESSAGE(i.type() == dataobject::DataType::Object,
             i.getKey() + " should contain an object under a test name.");
         ETH_FAIL_REQUIRE_MESSAGE(i.count("_info") > 0, "_info section not set! " + _compiledTest.string());
-        dataobject::DataObject const& info = i.at("_info");
+        dataobject::DataObject const& info = i.atKey("_info");
         ETH_FAIL_REQUIRE_MESSAGE(info.count("sourceHash") > 0, "sourceHash not found in " + _compiledTest.string() + " in " + i.getKey());
-        h256 const sourceHash = h256(info.at("sourceHash").asString());
+        h256 const sourceHash = h256(info.atKey("sourceHash").asString());
         ETH_ERROR_REQUIRE_MESSAGE(sourceHash == fillerData.hash,
             "Test " + _compiledTest.string() + " in " + i.getKey() +
                 " is outdated. Filler hash is different! ( '" + sourceHash.hex().substr(0, 4) +
@@ -222,18 +222,40 @@ string TestSuite::checkFillerExistance(string const& _testFolder) const
                         test::Options::get().singleTestName;
     std::cout << "Filter: '" << filter << "'" << std::endl;
     AbsoluteTestPath testsPath = getFullPath(_testFolder);
+    if (!fs::exists(testsPath.path()))
+    {
+        ETH_STDERROR_MESSAGE("Tests folder does not exists, creating test folder: '" +
+                             string(testsPath.path().c_str()) + "'");
+        fs::create_directories(testsPath.path());
+    }
     vector<fs::path> compiledFiles = test::getFiles(testsPath.path(), {".json", ".yml"}, filter);
+    AbsoluteFillerPath fullPathToFillers = getFullPathFiller(_testFolder);
 
-    bool ghostFile = false;
+    bool checkFillerWhenFilterIsSetButNoTestsFilled = false;
     if (compiledFiles.size() == 0)
     {
-        // no compiled tests yet. check filler existance
-        fs::path ghostFiler = filter;
-        compiledFiles.push_back(ghostFiler);
-        ghostFile = true;
+        if (filter.empty())
+        {
+            // No tests generated, check at least one filler existence
+            vector<fs::path> existingFillers =
+                test::getFiles(fullPathToFillers.path(), {".json", ".yml"});
+            for (auto const& filler : existingFillers)
+            {
+                // put filler names as if it was actual tests
+                string fillerName(filler.stem().c_str());
+                string fillerSuffix = fillerName.substr(fillerName.size() - 6);
+                if (fillerSuffix == c_fillerPostf || fillerSuffix == c_copierPostf)
+                    compiledFiles.push_back(fillerName.substr(0, fillerName.size() - 6));
+            }
+        }
+        else
+        {
+            // No tests generated and filter is set, check that filler for filter is exist
+            compiledFiles.push_back(fs::path(filter));  // put the test name as if it was compiled.
+            checkFillerWhenFilterIsSetButNoTestsFilled = true;
+        }
     }
 
-    AbsoluteFillerPath fullPathToFillers = getFullPathFiller(_testFolder);
     for (auto const& file : compiledFiles)
     {
         fs::path const expectedFillerName =
@@ -244,7 +266,7 @@ string TestSuite::checkFillerExistance(string const& _testFolder) const
             fullPathToFillers.path() / fs::path(file.stem().string() + c_copierPostf + ".json");
 
         string exceptionStr;
-        if (ghostFile)
+        if (checkFillerWhenFilterIsSetButNoTestsFilled)
             exceptionStr = "Could not find a filler for provided --singletest filter: '" +
                            file.filename().string() +
                            "', or no tests were found in the test suite folder!";
@@ -315,12 +337,16 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
             }
             testOutput.showProgress();
 
-            // If debugging already open instance of a client. Only one thread allowed to connect to
-            // it;
+            // If debugging, already there is an open instance of a client.
+            // Only one thread allowed to connect to it;
             size_t maxAllowedThreads = Options::get().threadCount;
-            if (Options::getDynamicOptions().getCurrentConfig().getType() ==
-                Socket::SocketType::IPCDebug)
+            ClientConfig const& currConfig = Options::get().getDynamicOptions().getCurrentConfig();
+            Socket::SocketType socType = currConfig.getSocketType();
+            if (socType == Socket::SocketType::IPCDebug)
                 maxAllowedThreads = 1;
+            // If connecting to TCP sockets. Max threads are limited with tcp ports provided
+            if (socType == Socket::SocketType::TCP)
+                maxAllowedThreads = min(maxAllowedThreads, currConfig.getAddressObject().getSubObjects().size());
 
             if (threadVector.size() == maxAllowedThreads)
                 joinThreads(threadVector, false);
@@ -364,15 +390,21 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
     fs::path const boostRelativeTestPath = fs::relative(_testFileName, getTestPath());
     string testname = _testFileName.stem().string();
     bool isCopySource = false;
-    if (testname.rfind(c_fillerPostf) != string::npos)
-        testname = testname.substr(0, testname.rfind("Filler"));
-    else if (testname.rfind(c_copierPostf) != string::npos)
-    {
-        testname = testname.substr(0, testname.rfind(c_copierPostf));
-        isCopySource = true;
-    }
+    size_t pos = testname.rfind(c_fillerPostf);
+    if (pos != string::npos)
+        testname = testname.substr(0, pos);
     else
-        ETH_FAIL_REQUIRE_MESSAGE(false, "Incorrect file suffix in the filler folder! " + _testFileName.string());
+    {
+        pos = testname.rfind(c_copierPostf);
+        if (pos != string::npos)
+        {
+            testname = testname.substr(0, pos);
+            isCopySource = true;
+        }
+        else
+            ETH_FAIL_REQUIRE_MESSAGE(
+                false, "Incorrect file suffix in the filler folder! " + _testFileName.string());
+    }
 
     ETH_LOG("Running " + testname + ": ", 3);
     // Filename of the test that would be generated

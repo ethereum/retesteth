@@ -18,39 +18,39 @@ scheme_blockchainTest::fieldChecker::fieldChecker(DataObject const& _test)
 scheme_blockchainTest::scheme_blockchainTest(DataObject const& _test)
   : object(_test),
     m_checker(_test),
-    m_pre(_test.at("pre")),
-    m_post(_test.at("postState")),
-    m_genesisHeader(_test.at("genesisBlockHeader"))
+    m_pre(_test.atKey("pre")),
+    m_post(_test.atKey("postState")),
+    m_genesisHeader(_test.atKey("genesisBlockHeader"))
 {
-    for (auto const& data : _test.at("blocks").getSubObjects())
+    for (auto const& data : _test.atKey("blocks").getSubObjects())
     {
         ETH_ERROR_REQUIRE_MESSAGE(data.count("rlp"), "Block element missing rlp field!");
         ETH_ERROR_REQUIRE_MESSAGE(
-            data.at("rlp").type() == DataType::String, "Block rlp field must be string!");
-        m_blockRLPs.push_back(data.at("rlp").asString());
+            data.atKey("rlp").type() == DataType::String, "Block rlp field must be string!");
+        m_blockRLPs.push_back(data.atKey("rlp").asString());
     }
 
     if (_test.count("sealEngine"))
-        m_sealEngine = _test.at("sealEngine").asString();
+        m_sealEngine = _test.atKey("sealEngine").asString();
     else
         m_sealEngine = "NoProof";
 }
 
 DataObject scheme_blockchainTest::getGenesisForRPC()
 {
-    DataObject genesis = prepareGenesisParams(getData().at("network").asString(), m_sealEngine);
+    DataObject genesis = prepareGenesisParams(getData().atKey("network").asString(), m_sealEngine);
     // genesis["genesis"] = getEnv().getDataForRPC();
 
     DataObject data;
-    data["author"] = m_genesisHeader.getData().at("coinbase");
-    data["difficulty"] = m_genesisHeader.getData().at("difficulty");
-    data["gasLimit"] = m_genesisHeader.getData().at("gasLimit");
-    data["nonce"] = m_genesisHeader.getData().at("nonce");
-    data["extraData"] = m_genesisHeader.getData().at("extraData");
-    data["timestamp"] = m_genesisHeader.getData().at("timestamp");
-    data["mixHash"] = m_genesisHeader.getData().at("mixHash");
+    data["author"] = m_genesisHeader.getData().atKey("coinbase");
+    data["difficulty"] = m_genesisHeader.getData().atKey("difficulty");
+    data["gasLimit"] = m_genesisHeader.getData().atKey("gasLimit");
+    data["nonce"] = m_genesisHeader.getData().atKey("nonce");
+    data["extraData"] = m_genesisHeader.getData().atKey("extraData");
+    data["timestamp"] = m_genesisHeader.getData().atKey("timestamp");
+    data["mixHash"] = m_genesisHeader.getData().atKey("mixHash");
 
     genesis["genesis"] = data;
-    genesis["accounts"] = m_pre.getDataForRPC(getData().at("network").asString());
+    genesis["accounts"] = m_pre.getDataForRPC(getData().atKey("network").asString());
     return genesis;
 }

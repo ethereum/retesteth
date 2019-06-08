@@ -2,12 +2,12 @@
 using namespace test;
 using namespace std;
 
-scheme_stateTestBase::scheme_stateTestBase(DataObject const& _test):
-    object(_test),
+scheme_stateTestBase::scheme_stateTestBase(DataObject const& _test)
+  : object(_test),
     m_checker(_test),
-    m_env(_test.at("env")),
-    m_pre(_test.at("pre")),
-    m_transaction(_test.at("transaction"))
+    m_env(_test.atKey("env")),
+    m_pre(_test.atKey("pre")),
+    m_transaction(_test.atKey("transaction"))
 {}
 
 DataObject scheme_stateTestBase::getGenesisForRPC(
@@ -40,10 +40,8 @@ void scheme_stateTestBase::checkUnexecutedTransactions()
     }
 }
 
-scheme_stateTest::scheme_stateTest(DataObject const& _test):
-            scheme_stateTestBase(_test),
-            m_checker(_test),
-            m_post(_test.at("post"))
+scheme_stateTest::scheme_stateTest(DataObject const& _test)
+  : scheme_stateTestBase(_test), m_checker(_test), m_post(_test.atKey("post"))
 {
 }
 
@@ -57,24 +55,25 @@ scheme_stateTest::fieldChecker::fieldChecker(DataObject const& _test)
         {"post", {DataType::Object} }
     });
 
-    requireJsonFields(_test.at("_info"), "stateTest " + _test.getKey() + " _info ", {
-        {"comment", {{DataType::String}, jsonField::Required} },
-        {"source", {{DataType::String}, jsonField::Required} },
-        {"sourceHash", {{DataType::String}, jsonField::Required} },
-        {"lllcversion", {{DataType::String}, jsonField::Required} },
-        {"filledwith", {{DataType::String}, jsonField::Optional} },
-        {"filling-rpc-server", {{DataType::String}, jsonField::Optional} },
-        {"filling-tool-version", {{DataType::String}, jsonField::Optional} },
-    });
+    requireJsonFields(_test.atKey("_info"), "stateTest " + _test.getKey() + " _info ",
+        {
+            {"comment", {{DataType::String}, jsonField::Required}},
+            {"source", {{DataType::String}, jsonField::Required}},
+            {"sourceHash", {{DataType::String}, jsonField::Required}},
+            {"lllcversion", {{DataType::String}, jsonField::Required}},
+            {"filledwith", {{DataType::String}, jsonField::Optional}},
+            {"filling-rpc-server", {{DataType::String}, jsonField::Optional}},
+            {"filling-tool-version", {{DataType::String}, jsonField::Optional}},
+        });
 
     // Check that `data` in compiled test is not just a string but a binary string
-    ETH_ERROR_REQUIRE_MESSAGE(
-        _test.at("transaction").count("data"), "Field `data` not found in `transaction` section (" +
-                                                   TestOutputHelper::get().caseName() + ")");
-    ETH_ERROR_REQUIRE_MESSAGE(_test.at("transaction").at("data").type() == DataType::Array,
+    ETH_ERROR_REQUIRE_MESSAGE(_test.atKey("transaction").count("data"),
+        "Field `data` not found in `transaction` section (" + TestOutputHelper::get().caseName() +
+            ")");
+    ETH_ERROR_REQUIRE_MESSAGE(_test.atKey("transaction").atKey("data").type() == DataType::Array,
         "Field `data` in `transaction` section is expected to be Array! (" +
             TestOutputHelper::get().testName() + ")");
-    for (auto const& element : _test.at("transaction").at("data").getSubObjects())
+    for (auto const& element : _test.atKey("transaction").atKey("data").getSubObjects())
         ETH_ERROR_REQUIRE_MESSAGE(stringIntegerType(element.asString()) == DigitsType::HexPrefixed,
             "Field `data` in `transaction` section is expected to be binary prefixed with `0x` in " +
                 TestOutputHelper::get().testName() + ", but got: `" + element.asString() + "`");
@@ -104,7 +103,7 @@ scheme_stateTestFiller::scheme_stateTestFiller(DataObject const& _test):
     m_checker(_test)
 {
     // parse expect section
-    for (auto const& expect: _test.at("expect").getSubObjects())
+    for (auto const& expect : _test.atKey("expect").getSubObjects())
     {
         scheme_expectSectionElement expElement(expect);
         m_expect.push_back(expElement);

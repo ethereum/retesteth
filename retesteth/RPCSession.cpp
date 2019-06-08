@@ -66,7 +66,7 @@ std::mutex g_socketMapMutex;
 static std::map<std::string, sessionInfo> socketMap;
 void RPCSession::runNewInstanceOfAClient(string const& _threadID, ClientConfig const& _config)
 {
-    if (_config.getType() == Socket::IPC)
+    if (_config.getSocketType() == Socket::IPC)
     {
         fs::path tmpDir = test::createUniqueTmpDirectory();
         string ipcPath = tmpDir.string() + "/geth.ipc";
@@ -104,17 +104,33 @@ void RPCSession::runNewInstanceOfAClient(string const& _threadID, ClientConfig c
             socketMap.insert(std::pair<string, sessionInfo>(_threadID, std::move(info)));
         }
     }
-    else if (_config.getType() == Socket::TCP)
+    else if (_config.getSocketType() == Socket::TCP)
     {
-        sessionInfo info(NULL, new RPCSession(Socket::SocketType::TCP, _config.getAddress()), "", 0,
-            _config.getId());
+        std::lock_guard<std::mutex> lock(g_socketMapMutex);  // function must be called from lock
+
+        // Create sessionInfo for a tcp address that is still not present in socketMap
+        for (auto const& addr : _config.getAddressObject().getSubObjects())
         {
-            std::lock_guard<std::mutex> lock(
-                g_socketMapMutex);  // function must be called from lock
-            socketMap.insert(std::pair<string, sessionInfo>(_threadID, std::move(info)));
+            bool unused = true;
+            for (auto const& socket : socketMap)
+            {
+                sessionInfo const& sInfo = socket.second;
+                if (sInfo.session.get()->getSocketPath() == addr.asString())
+                {
+                    unused = false;
+                    break;
+                }
+            }
+            if (unused)
+            {
+                sessionInfo info(NULL, new RPCSession(Socket::SocketType::TCP, addr.asString()), "",
+                    0, _config.getId());
+                socketMap.insert(std::pair<string, sessionInfo>(_threadID, std::move(info)));
+                return;
+            }
         }
     }
-    else if (_config.getType() == Socket::IPCDebug)
+    else if (_config.getSocketType() == Socket::IPCDebug)
     {
         // connect to already opend .ipc socket
         fs::path tmpDir = test::createUniqueTmpDirectory();
@@ -169,7 +185,9 @@ RPCSession& RPCSession::instance(const string& _threadID)
 
     std::lock_guard<std::mutex> lock(g_socketMapMutex);
     ETH_FAIL_REQUIRE_MESSAGE(socketMap.size() <= Options::get().threadCount,
-        "Something went wrong. Retesteth create more instances than needed!");
+        "Something went wrong. Retesteth connect to more instances than needed!");
+    ETH_FAIL_REQUIRE_MESSAGE(socketMap.size() != 0,
+        "Something went wrong. Retesteth failed to create socket connection!");
     return *(socketMap.at(_threadID).session.get());
 }
 
@@ -437,7 +455,8 @@ void RPCSession::test_modifyTimestamp(size_t _timestamp)
 
 std::string RPCSession::sendRawRequest(string const& _request)
 {
-    return m_socket.sendRequest(_request);
+    JsonObjectValidator validator;
+    return m_socket.sendRequest(_request, validator);
 }
 
 Json::Value RPCSession::rpcCall(string const& _methodName, vector<string> const& _args, bool _canFail)
@@ -454,7 +473,8 @@ Json::Value RPCSession::rpcCall(string const& _methodName, vector<string> const&
     ++m_rpcSequence;
 
     ETH_TEST_MESSAGE("Request: " + request);
-    string reply = m_socket.sendRequest(request);
+    JsonObjectValidator validator;
+    string reply = m_socket.sendRequest(request, validator);
     ETH_TEST_MESSAGE("Reply: " + reply);
 
     Json::Value result;
@@ -463,9 +483,10 @@ Json::Value RPCSession::rpcCall(string const& _methodName, vector<string> const&
 
     if (result.isMember("error"))
     {
-        m_lastRPCErrorString = "Error on JSON-RPC call (" + test::TestOutputHelper::get().testName() + "): "
-                            + result["error"]["message"].asString()
-                            + " Request: " + request;
+        test::TestOutputHelper const& helper = test::TestOutputHelper::get();
+        m_lastRPCErrorString = "Error on JSON-RPC call (" + helper.testInfo() +
+                               "): " + result["error"]["message"].asString() +
+                               " Request: " + request;
         if (_canFail)
             return Json::Value();
         ETH_FAIL_MESSAGE(m_lastRPCErrorString);

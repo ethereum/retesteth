@@ -131,12 +131,18 @@ void object::makeAllFieldsHex(DataObject& _data)
 }
 
 void requireJsonFields(DataObject const& _o, std::string const& _section,
-    std::map<std::string, possibleType> const& _validationMap)
+    std::map<std::string, possibleType> const& _validationMap, bool _fail)
 {
 	// check for unexpected fiedls
 	for (auto const field : _o.getSubObjects())
-        ETH_ERROR_REQUIRE_MESSAGE(_validationMap.count(field.getKey()),
-            "'" + field.getKey() + "' should not be declared in '" + _section + "' section!");
+    {
+        string message =
+            "'" + field.getKey() + "' should not be declared in '" + _section + "' section!";
+        if (_fail)
+            ETH_FAIL_REQUIRE_MESSAGE(_validationMap.count(field.getKey()), message);
+        else
+            ETH_ERROR_REQUIRE_MESSAGE(_validationMap.count(field.getKey()), message);
+    }
 
     // check field types with validation map
 	for (auto const vmap : _validationMap)
@@ -151,16 +157,19 @@ void requireJsonFields(DataObject const& _o, std::string const& _section,
 			if (sTypes.size())
                 sTypes += " or ";
             sTypes += DataObject::dataTypeAsString(type);
-			if (_o.at(vmap.first).type() == type)
-				matched = true;
+            if (_o.atKey(vmap.first).type() == type)
+                matched = true;
 		}
 		if (matched == false)
 		{
             std::string comment = _section + " '" + vmap.first + "' expected to be '" + sTypes +
                                   "', but set to: '" +
-                                  DataObject::dataTypeAsString(_o.at(vmap.first).type()) + "' in " +
-                                  TestOutputHelper::get().testName();
-            ETH_ERROR_MESSAGE(comment + "\n" + _o.asJson());
+                                  DataObject::dataTypeAsString(_o.atKey(vmap.first).type()) +
+                                  "' in " + TestOutputHelper::get().testName();
+            if (_fail)
+                ETH_FAIL_MESSAGE(comment + "\n" + _o.asJson());
+            else
+                ETH_ERROR_MESSAGE(comment + "\n" + _o.asJson());
         }
 	}
 }
@@ -199,7 +208,7 @@ void requireJsonFields(DataObject const& _o, std::string const& _config,
         bool matched = false;
         for (auto const& type : vmap.second.first)
         {
-            if (_o.at(vmap.first).type() == type)
+            if (_o.atKey(vmap.first).type() == type)
                 matched = true;
         }
         if (matched == false)
@@ -213,7 +222,7 @@ void requireJsonFields(DataObject const& _o, std::string const& _config,
             }
             std::string const comment =
                 "Field '" + vmap.first + "' expected to be " + sTypes + ", but set to " +
-                DataObject::dataTypeAsString(_o.at(vmap.first).type()) + " in " + _config;
+                DataObject::dataTypeAsString(_o.atKey(vmap.first).type()) + " in " + _config;
             ETH_ERROR_MESSAGE(comment + "\n" + _o.asJson());
         }
     }
