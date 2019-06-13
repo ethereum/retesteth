@@ -1,20 +1,21 @@
 #define BOOST_TEST_MODULE EthereumTests
 #define BOOST_TEST_NO_MAIN
+#include <AllTestNames.h>
+#include <retesteth/ExitHandler.h>
+#include <retesteth/Options.h>
+#include <retesteth/RPCSession.h>
+#include <retesteth/TestOutputHelper.h>
 #include <boost/test/included/unit_test.hpp>
 #include <clocale>
 #include <cstdlib>
 #include <iostream>
 #include <thread>
-#include <retesteth/Options.h>
-#include <retesteth/TestOutputHelper.h>
-#include <retesteth/RPCSession.h>
-#include <retesteth/ExitHandler.h>
 
 using namespace boost::unit_test;
-
 static std::ostringstream strCout;
 std::streambuf* oldCoutStreamBuf;
 std::streambuf* oldCerrStreamBuf;
+void printTestSuiteSuggestions(string const& _sMinusTArg);
 
 void customTestSuite()
 {
@@ -161,25 +162,47 @@ int main(int argc, const char* argv[])
 		framework::master_test_suite().add(ts1);
 	}
 
-	int result = 0;
+    string sMinusTArg;
+    // unit_test_main delete this option from _argv
+    for (int i = 0; i < argc; i++)  // find -t boost arg
+    {
+        std::string const arg = std::string{argv[i]};
+        if (arg == "-t" && i + 1 < argc)
+        {
+            sMinusTArg = std::string{argv[i + 1]};
+            break;
+        }
+    }
+
+    int result = 0;
     std::cout << "Running tests using path: " << test::getTestPath() << std::endl;
     auto fakeInit = [](int, char* []) -> boost::unit_test::test_suite* { return nullptr; };
     if (opt.jsontrace || opt.vmtrace || opt.statediff || opt.createRandomTest)
-	{
-		// Do not use travis '.' output thread if debug is defined
+    {
+        // Do not use travis '.' output thread if debug is defined
         result = unit_test_main(fakeInit, argc, const_cast<char**>(argv));
-        ExitHandler::doExit();
-        return result;
     }
-	else
-	{
-		// Initialize travis '.' output thread for log activity
-		std::atomic_bool stopTravisOut{false};
-		std::thread outputThread(travisOut, &stopTravisOut);
-		result = unit_test_main(fakeInit, argc, const_cast<char**>(argv));
-		stopTravisOut = true;
-		outputThread.join();
-        ExitHandler::doExit();
-        return result;
-	}
+    else
+    {
+        // Initialize travis '.' output thread for log activity
+        std::atomic_bool stopTravisOut{false};
+        std::thread outputThread(travisOut, &stopTravisOut);
+        result = unit_test_main(fakeInit, argc, const_cast<char**>(argv));
+        stopTravisOut = true;
+        outputThread.join();
+    }
+
+    // Print suggestions of a test case if test suite not found
+    if (result == boost::exit_exception_failure && !test::inArray(c_allTestNames, sMinusTArg))
+        printTestSuiteSuggestions(sMinusTArg);
+    ExitHandler::doExit();
+    return result;
+}
+
+void printTestSuiteSuggestions(string const& _sMinusTArg)
+{
+    auto const testList = test::testSuggestions(c_allTestNames, _sMinusTArg);
+    std::cerr << "Did you mean: \n";
+    for (auto const& element : testList)
+        std::cerr << "-t " << element << "\n";
 }

@@ -77,4 +77,8 @@ int pclose2(FILE* _fp, pid_t _pid);
 
 /// return path to the unique tmp directory
 fs::path createUniqueTmpDirectory();
+
+/// return strings from _testList most matching _sMinusTArg
+std::vector<std::string> testSuggestions(
+    std::vector<std::string> const& _testList, std::string const& _sMinusTArg);
 }
