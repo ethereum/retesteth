@@ -379,15 +379,19 @@ public:
     {
         test::StateTestSuite suite;
         string casename = boost::unit_test::framework::current_test_case().p_name;
+        boost::filesystem::path suiteFillerPath = suite.getFullPathFiller(casename).parent_path();
+
         static vector<string> const timeConsumingTestSuites{
             string{"stTimeConsuming"}, string{"stQuadraticComplexityTest"}};
         if (test::inArray(timeConsumingTestSuites, casename) && !test::Options::get().all)
         {
             if (!ExitHandler::receivedExitSignal())
                 std::cout << "Skipping " << casename << " because --all option is not specified.\n";
+            test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
             return;
         }
         suite.runAllTestsInFolder(casename);
+        test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
     }
 };
 

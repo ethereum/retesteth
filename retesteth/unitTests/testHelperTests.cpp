@@ -97,5 +97,23 @@ BOOST_AUTO_TEST_CASE(translateNetworks_leFrontier)
     }
 }
 
+BOOST_AUTO_TEST_CASE(getTestSuggestions)
+{
+    vector<string> const testList = {
+        "test1", "test2", "BlockSuite", "BlockSuite/TestCase", "GeneralBlockchainTests"};
+    auto list = test::testSuggestions(testList, "blocksuit");
+    BOOST_CHECK(test::inArray(list, string("BlockSuite")));
+}
+
+BOOST_AUTO_TEST_CASE(getTestSuggestions2)
+{
+    vector<string> const testList = {"test1", "test2", "BlockSuite", "BlockSuite/TestCase",
+        "GeneralBlockchainTests", "GeneralStateTests/stExample", "BCGeneralStateTests/stExample"};
+
+    auto list = test::testSuggestions(testList, "GeneralStateTests/stExample2");
+    BOOST_CHECK(test::inArray(list, string("GeneralStateTests/stExample")));
+    BOOST_CHECK(test::inArray(list, string("BCGeneralStateTests/stExample")));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
