@@ -61,8 +61,15 @@ public:
     /// get string representation of current threadID
     static std::string getThreadID();
 
+    // Mark the _folderName as executed for a given _suitePath (to filler files)
+    static void markTestFolderAsFinished(
+        boost::filesystem::path const& _suitePath, std::string const& _folderName);
+
 private:
     TestOutputHelper() {}
+    void printBoostError();
+
+private:
     dev::Timer m_timer;
     size_t m_currTest;
     size_t m_maxTests;
@@ -72,7 +79,6 @@ private:
     bool m_isRunning;
     boost::filesystem::path m_currentTestFileName;
     std::vector<std::string> m_errors; //flag errors for triggering boost erros after all thread finished
-    void printBoostError();
 };
 
 class TestOutputHelperFixture

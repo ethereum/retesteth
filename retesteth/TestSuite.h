@@ -37,6 +37,7 @@ private:
     {
         BoostPath(boost::filesystem::path _path) : m_path(_path) {}
         boost::filesystem::path const& path() const { return m_path; }
+        boost::filesystem::path parent_path() { return m_path.parent_path(); }
 
     private:
         boost::filesystem::path m_path;

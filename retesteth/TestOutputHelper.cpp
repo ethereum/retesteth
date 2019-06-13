@@ -32,6 +32,11 @@ using namespace dev;
 using namespace test;
 using namespace boost;
 
+typedef std::set<std::string> FolderNameSet;
+static std::map<boost::filesystem::path, FolderNameSet> finishedTestFoldersMap;
+mutex g_finishedTestFoldersMapMutex;
+void checkUnfinishedTestFolders();  // Checkup that all test folders are active during the test run
+
 typedef std::pair<double, std::string> execTimeName;
 static std::vector<execTimeName> execTimeResults;
 static int execTotalErrors = 0;
@@ -156,6 +161,7 @@ bool TestOutputHelper::isAllTestsFinished()
 
 void TestOutputHelper::printTestExecStats()
 {
+    checkUnfinishedTestFolders();
     std::lock_guard<std::mutex> lock(g_resultsUpdate_mutex);
     if (Options::get().exectimelog)
     {
@@ -185,3 +191,92 @@ std::string TestOutputHelper::getThreadID()
     return toString(std::this_thread::get_id());
 }
 
+// check if a boost path contain no test files
+bool pathHasTests(boost::filesystem::path const& _path)
+{
+    using fsIterator = boost::filesystem::directory_iterator;
+    for (fsIterator it(_path); it != fsIterator(); ++it)
+    {
+        // if the extention of a test file
+        if (boost::filesystem::is_regular_file(it->path()) &&
+            (it->path().extension() == ".json" || it->path().extension() == ".yml"))
+        {
+            // if the filename ends with Filler/Copier type
+            std::string const name = it->path().stem().filename().string();
+            std::string const suffix =
+                (name.length() > 7) ? name.substr(name.length() - 6) : string();
+            if (suffix == "Filler" || suffix == "Copier")
+                return true;
+        }
+    }
+    return false;
+}
+
+void checkUnfinishedTestFolders()
+{
+    std::lock_guard<std::mutex> lock(g_finishedTestFoldersMapMutex);
+    // -t SuiteName/caseName   parse caseName as filter
+    // rCurrentTestSuite is empty if run without -t argument
+    string filter;
+    size_t pos = Options::get().rCurrentTestSuite.find('/');
+    if (pos != string::npos)
+        filter = Options::get().rCurrentTestSuite.substr(pos + 1);
+
+    if (!filter.empty())
+    {
+        if (finishedTestFoldersMap.size() > 1)
+        {
+            std::cerr << "ERROR: Expected a single test to be passed: " << filter << "\n";
+            return;
+        }
+
+        // Unit tests does not mark test folders
+        if (finishedTestFoldersMap.size() == 0)
+            return;
+
+        std::map<boost::filesystem::path, FolderNameSet>::const_iterator it =
+            finishedTestFoldersMap.begin();
+        if (!pathHasTests(it->first / filter))
+            std::cerr << "WARNING: Test folder " << it->first / filter
+                      << " appears to have no tests!"
+                      << "\n";
+    }
+    else
+    {
+        for (auto const& allTestsIt : finishedTestFoldersMap)
+        {
+            boost::filesystem::path path = allTestsIt.first;
+            set<string> allFolders;
+            using fsIterator = boost::filesystem::directory_iterator;
+            for (fsIterator it(path); it != fsIterator(); ++it)
+            {
+                if (boost::filesystem::is_directory(*it))
+                {
+                    allFolders.insert(it->path().filename().string());
+                    if (!pathHasTests(it->path()))
+                        std::cerr << "WARNING: Test folder " << it->path()
+                                  << " appears to have no tests!"
+                                  << "\n";
+                }
+            }
+
+            std::vector<string> diff;
+            FolderNameSet finishedFolders = allTestsIt.second;
+            std::set_difference(allFolders.begin(), allFolders.end(), finishedFolders.begin(),
+                finishedFolders.end(), std::back_inserter(diff));
+            for (auto const& it : diff)
+            {
+                std::cerr << "WARNING: Test folder " << path / it << " appears to be unused!"
+                          << "\n";
+            }
+        }
+    }
+}
+
+void TestOutputHelper::markTestFolderAsFinished(
+    boost::filesystem::path const& _suitePath, string const& _folderName)
+{
+    std::lock_guard<std::mutex> lock(g_finishedTestFoldersMapMutex);
+    // Mark test folder _folderName as finished for the test suite path _suitePath
+    finishedTestFoldersMap[_suitePath].emplace(_folderName);
+}
