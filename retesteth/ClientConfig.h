@@ -44,8 +44,12 @@ public:
     {
         requireJsonFields(_obj, "ClientConfig ",
             {{"name", {DataType::String}}, {"socketType", {DataType::String}},
-                {"socketAddress", {DataType::String, DataType::Array}}},
+                {"socketAddress", {DataType::String, DataType::Array}},
+                {"forks", {DataType::Array}}},
             true);
+
+        for (auto const& name : m_data.atKey("forks").getSubObjects())
+            m_networks.push_back(name.asString());
 
         std::string const& socketTypeStr = _obj.atKey("socketType").asString();
         if (socketTypeStr == "ipc")
@@ -95,10 +99,12 @@ public:
     }
     DataObject const& getAddressObject() const { return m_data.atKey("socketAddress"); }
     ClientConfigID const& getId() const { return m_id; }
+    std::vector<string> const& getNetworks() const { return m_networks; }
 
 private:
-    Socket::SocketType m_socketType;
-    fs::path m_shellPath;
-    ClientConfigID m_id;
+    Socket::SocketType m_socketType;  ///< Connection type
+    fs::path m_shellPath;             ///< Script to start new instance of a client (for ipc)
+    ClientConfigID m_id;              ///< Internal id
+    std::vector<string> m_networks;   ///< Allowed forks as network name
 };
 }

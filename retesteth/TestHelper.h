@@ -26,14 +26,12 @@ boost::filesystem::path getTestPath();
 /// Copy file from _source to _destination
 void copyFile(fs::path const& _source, fs::path const& _destination);
 
-/// Get Networks / Fork Rules
-std::vector<std::string> const& getNetworks();
-
 /// Translate smart network names into network names ( `<=Homestead` to `Frontier, Homestead`)
-std::set<std::string> translateNetworks(std::set<std::string> const& _networks);
+std::set<std::string> translateNetworks(
+    std::set<std::string> const& _networks, vector<string> const& _networkOrder);
 
 /// Check string to be a valid network name
-void checkAllowedNetwork(std::string const& _network);
+void checkAllowedNetwork(std::string const& _network, vector<string> const& _networkOrder);
 
 /// Read a single string object or an Array of string objects into set<string>
 void parseJsonStrValueIntoSet(DataObject const& _json, std::set<std::string>& _out);

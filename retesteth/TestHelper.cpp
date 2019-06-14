@@ -138,33 +138,14 @@ std::vector<std::string> testSuggestions(
     return ret;
 }
 
-std::mutex g_staticDeclaration_getNetworks;
-vector<string> const& getNetworks()
-{
-    static vector<string> networks;
-    {
-      std::lock_guard<std::mutex> lock(g_staticDeclaration_getNetworks);
-      if (networks.size() == 0) {
-        networks.push_back("Frontier");
-        networks.push_back("Homestead");
-        networks.push_back("EIP150");
-        networks.push_back("EIP158");
-        networks.push_back("Byzantium");
-        networks.push_back("Constantinople");
-        networks.push_back("ConstantinopleFix");
-      }
-    }
-    return networks;
-}
-
 /// translate network names in expect section field
 /// >Homestead to EIP150, EIP158, Byzantium, ...
 /// <=Homestead to Frontier, Homestead
-set<string> translateNetworks(set<string> const& _networks)
+set<string> translateNetworks(set<string> const& _networks, vector<string> const& _networkOrder)
 {
-    // construct vector with test network names in a right order (from Frontier to Homestead ... to
-    // Constantinople)
-    vector<string> const& forks = getNetworks();
+    // construct vector with test network names in a right order
+    // (from Frontier to Homestead ... to Constantinople)
+    vector<string> const& forks = _networkOrder;
 
     set<string> out;
     for (auto const& net : _networks)
@@ -217,7 +198,7 @@ set<string> translateNetworks(set<string> const& _networks)
         // if nothing has been inserted, just push the untranslated network as is
         if (!isNetworkTranslated)
         {
-            checkAllowedNetwork(net);
+            checkAllowedNetwork(net, _networkOrder);
             out.emplace(net);
         }
     }
@@ -225,23 +206,17 @@ set<string> translateNetworks(set<string> const& _networks)
 }
 
 
-void checkAllowedNetwork(string const& _network)
+void checkAllowedNetwork(string const& _network, vector<string> const& _networkOrder)
 {
     bool found = false;
-    vector<string> const& allowedNetowks = getNetworks();
-    for(auto const& net: allowedNetowks)
+    for (auto const& net : _networkOrder)
     {
         if (net == _network)
             found = true;
     }
 
     if (!found)
-    {
-        // Can't use boost at this point
-        std::cerr << TestOutputHelper::get().testName() + " Specified Network not found: "
-                  << _network << "\n";
-        std::raise(SIGABRT);
-    }
+        ETH_ERROR_MESSAGE("Specified network not found: '" + _network + "'");
 }
 
 void parseJsonStrValueIntoSet(DataObject const& _json, set<string>& _out)

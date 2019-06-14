@@ -1,9 +1,10 @@
 #pragma once
+#include "../object.h"
+#include "retesteth/Options.h"
+#include "scheme_postSectionElement.h"
+#include "scheme_state.h"
 #include <set>
 #include <string>
-#include "../object.h"
-#include "scheme_state.h"
-#include "scheme_postSectionElement.h"
 
 namespace test {
 
@@ -19,14 +20,15 @@ namespace test {
                 _post.type() == DataType::Object, "State tests post section must be json object!");
             for(auto const& element: _post.getSubObjects())
             {
-               test::checkAllowedNetwork(element.getKey());
-               ETH_ERROR_REQUIRE_MESSAGE(element.type() == DataType::Array,
-                   "State tests post section value at fork results must be json array!");
-               postSectionElements results;
-               for (auto const& res: element.getSubObjects())
-                   results.push_back(scheme_postSectionElement(res));
+                ClientConfig const& cfg = Options::get().getDynamicOptions().getCurrentConfig();
+                test::checkAllowedNetwork(element.getKey(), cfg.getNetworks());
+                ETH_ERROR_REQUIRE_MESSAGE(element.type() == DataType::Array,
+                    "State tests post section value at fork results must be json array!");
+                postSectionElements results;
+                for (auto const& res : element.getSubObjects())
+                    results.push_back(scheme_postSectionElement(res));
 
-               m_elements[element.getKey()] = results;
+                m_elements[element.getKey()] = results;
             }
         }
         std::map<std::string, postSectionElements>const& getResults() const { return m_elements; }
