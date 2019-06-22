@@ -16,6 +16,9 @@ namespace  test {
             m_hasCode = _account.count("code");
             m_hasStorage = _account.count("storage");
 
+            if (m_hasStorage)
+                scheme_account::validateStorage(m_data);
+
             // Make all fields hex
             m_data.setKey(scheme_account::makeHexAddress(m_data.getKey()));
             makeAllFieldsHex(m_data);
@@ -69,22 +72,31 @@ namespace  test {
                 else if (key == "0x00" && _storage.count("0x"))
                     key = "0x";
 
-                checkMessage(_storage.count(key), CompareResult::IncorrectStorage,
-                    TestOutputHelper::get().testName() + " '" + address() +
-                        "' expected storage key: '" + element.getKey() + "' to be set to: '" +
-                        element.asString() + "'");
+                string const message = TestOutputHelper::get().testName() + " Check State: " + address();
+                if (element.asString() == "0x")
+                {
+                    // check that empty element is not set
+                    checkMessage(!_storage.count(key), CompareResult::IncorrectStorage,
+                         message + " expected storage key: '" + element.getKey() + "' to be set to zero");
+                }
+                else
+                {
+                    // check that expected element exist
+                    checkMessage(_storage.count(key), CompareResult::IncorrectStorage,
+                            message + " expected storage key: '" + element.getKey() + "' to be set to: '" +
+                            element.asString() + "'");
 
-                if (result != CompareResult::Success)
-                    return result;
+                    if (result != CompareResult::Success)
+                        return result;
 
-                // Check exact value in the storage
-                std::string valueInStorage = _storage.atKey(key).asString();
-                checkMessage(valueInStorage == element.asString(), CompareResult::IncorrectStorage,
-                    TestOutputHelper::get().testName() + " Check State: " + address() +
-                        ": incorrect storage [" + key + "] = " + valueInStorage + ", expected [" +
-                        key + "] = " + element.asString());
+                    // if expected element exist, check exact value in the storage
+                    std::string valueInStorage = _storage.atKey(key).asString();
+                    checkMessage(valueInStorage == element.asString(), CompareResult::IncorrectStorage,
+                        message + ": incorrect storage [" + key + "] = " + valueInStorage + ", expected [" +
+                            key + "] = " + element.asString());
+                }
             }
-            checkMessage(expectStorage.getSubObjects().size() == _storage.getSubObjects().size(),
+            checkMessage(expectStorage.getSubObjects().size() >= _storage.getSubObjects().size(),
                 CompareResult::IncorrectStorage,
                 TestOutputHelper::get().testName() + " " + address() +
                     " storage has more storage records then expected!");
