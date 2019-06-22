@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 /** @file StateTests.cpp
  * @author Dimitry Khokhlov <dimitry@ethereum.org>
  * @date 2016
@@ -446,6 +447,12 @@ BOOST_AUTO_TEST_CASE(stZeroKnowledge){}
 BOOST_AUTO_TEST_CASE(stZeroKnowledge2){}
 BOOST_AUTO_TEST_CASE(stCodeCopyTest){}
 BOOST_AUTO_TEST_CASE(stBugs){}
+
+//Constantinople Tests
+BOOST_AUTO_TEST_CASE(stShift){}
+BOOST_AUTO_TEST_CASE(stCreate2){}
+BOOST_AUTO_TEST_CASE(stExtCodeHash){}
+BOOST_AUTO_TEST_CASE(stSStoreTest){}
 
 //Stress Tests
 BOOST_AUTO_TEST_CASE(stAttackTest){}
