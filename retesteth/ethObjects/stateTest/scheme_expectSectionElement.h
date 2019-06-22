@@ -1,6 +1,7 @@
 #pragma once
 #include "../object.h"
 #include "scheme_expectState.h"
+#include <retesteth/Options.h>
 #include <retesteth/TestHelper.h>
 
 namespace  test {
@@ -16,11 +17,16 @@ namespace  test {
 
                 // get allowed networks for this expect section
                 parseJsonStrValueIntoSet(_expect.atKey("network"), m_networks);
-                m_networks = translateNetworks(m_networks);
+                ClientConfig const& cfg = Options::get().getDynamicOptions().getCurrentConfig();
+                m_networks = translateNetworks(m_networks, cfg.getNetworks());
         }
         std::set<std::string> const& getNetworks() const { return m_networks; }
         scheme_expectState const& getExpectState() const { return m_expectState; }
         scheme_expectState& getExpectStateUnsafe() { return m_expectState; }
+
+        /// Correct expect section mining reward when filling the blockchain tests out of state
+        /// tests State tests does not count mining rewards, but it is possible to generate a
+        /// blockchain test out of it
         void correctMiningReward(std::string const& _net, std::string const& _coinbaseAddress)
         {
             u256 balance = 5000000000000000000;

@@ -218,12 +218,10 @@ Options::Options(int argc, const char** argv)
 			else
 				singleTestName = std::move(name1);
 		}
-		else if (arg == "--singlenet")
-		{
-			throwIfNoArgumentFollows();
-			singleTestNet = std::string{argv[++i]};
-            test::checkAllowedNetwork(singleTestNet);
-			//ImportTest::checkAllowedNetwork(singleTestNet);
+        else if (arg == "--singlenet")
+        {
+            throwIfNoArgumentFollows();
+            singleTestNet = std::string{argv[++i]};
         }
         else if (arg == "--fulloutput")
             fulloutput = true;
@@ -367,7 +365,7 @@ Options::Options(int argc, const char** argv)
 
 	//Default option
     if (logVerbosity == 1)
-		g_logVerbosity = -1;	//disable cnote but leave cerr and cout
+        g_logVerbosity = -1;  // disable cnote but leave cerr and cout
 }
 
 Options const& Options::get(int argc, const char** argv)
@@ -396,6 +394,11 @@ void Options::DynamicOptions::setCurrentConfig(ClientConfig const& _config)
             found = true;
     ETH_FAIL_REQUIRE_MESSAGE(found, "_config not found in loaded options! (DynamicOptions::setCurrentConfig)");
     m_currentConfigID = _config.getId();
+
+    // Verify singleTestNet for the current config
+    string const& net = Options::get().singleTestNet;
+    if (!net.empty())
+        test::checkAllowedNetwork(net, _config.getNetworks());
 }
 
 std::vector<ClientConfig> const& Options::DynamicOptions::getClientConfigs()

@@ -1,4 +1,5 @@
 #include "object.h"
+#include "Options.h"
 #include <retesteth/TestHelper.h>
 #include <mutex>
 
@@ -231,7 +232,8 @@ void requireJsonFields(DataObject const& _o, std::string const& _config,
 
 DataObject object::prepareGenesisParams(std::string const& _network, std::string const& _engine)
 {
-    test::checkAllowedNetwork(_network);
+    ClientConfig const& cfg = Options::get().getDynamicOptions().getCurrentConfig();
+    test::checkAllowedNetwork(_network, cfg.getNetworks());
     bool networkChecked = false;
     DataObject genesis;
     genesis["sealEngine"] = _engine;

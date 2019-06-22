@@ -26,15 +26,18 @@ using namespace std;
 using namespace dev;
 using namespace test;
 
+static vector<string> exampleNets = {"Frontier", "Homestead", "EIP150", "EIP158", "Byzantium",
+    "Constantinople", "ConstantinopleFix"};
+
 BOOST_FIXTURE_TEST_SUITE(TestHelperSuite, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(translateNetworks_gtHomestead)
 {
     set<string> networks = {"Frontier", ">Homestead"};
-    networks = test::translateNetworks(networks);
+    networks = test::translateNetworks(networks, exampleNets);
     ETH_FAIL_REQUIRE(networks.count("Frontier") > 0);
     ETH_FAIL_REQUIRE(networks.count("Homestead") == 0);
-    for (auto const& net : test::getNetworks())
+    for (auto const& net : exampleNets)
     {
         if (net != "Frontier" && net != "Homestead")
             ETH_FAIL_REQUIRE(networks.count(net) > 0);
@@ -44,17 +47,17 @@ BOOST_AUTO_TEST_CASE(translateNetworks_gtHomestead)
 BOOST_AUTO_TEST_CASE(translateNetworks_geHomestead)
 {
     set<string> networks = {"Frontier", ">=Homestead"};
-    networks = test::translateNetworks(networks);
-    for (auto const& net : test::getNetworks())
+    networks = test::translateNetworks(networks, exampleNets);
+    for (auto const& net : exampleNets)
         ETH_FAIL_REQUIRE(networks.count(net) > 0);
 }
 
 BOOST_AUTO_TEST_CASE(translateNetworks_ltHomestead)
 {
     set<string> networks = {"<Homestead"};
-    networks = test::translateNetworks(networks);
+    networks = test::translateNetworks(networks, exampleNets);
     ETH_FAIL_REQUIRE(networks.count("Frontier") > 0);
-    for (auto const& net : test::getNetworks())
+    for (auto const& net : exampleNets)
     {
         if (net != "Frontier")
             ETH_FAIL_REQUIRE(networks.count(net) == 0);
@@ -64,7 +67,7 @@ BOOST_AUTO_TEST_CASE(translateNetworks_ltHomestead)
 BOOST_AUTO_TEST_CASE(translateNetworks_ltTest)
 {
     set<string> networks = {"<=EIP150", "<EIP158"};
-    networks = test::translateNetworks(networks);
+    networks = test::translateNetworks(networks, exampleNets);
     ETH_FAIL_REQUIRE(networks.count("Frontier") > 0);
     ETH_FAIL_REQUIRE(networks.count("Homestead") > 0);
     ETH_FAIL_REQUIRE(networks.count("EIP150") > 0);
@@ -75,10 +78,10 @@ BOOST_AUTO_TEST_CASE(translateNetworks_ltTest)
 BOOST_AUTO_TEST_CASE(translateNetworks_leHomestead)
 {
     set<string> networks = {"<=Homestead"};
-    networks = test::translateNetworks(networks);
+    networks = test::translateNetworks(networks, exampleNets);
     ETH_FAIL_REQUIRE(networks.count("Frontier") > 0);
     ETH_FAIL_REQUIRE(networks.count("Homestead") > 0);
-    for (auto const& net : test::getNetworks())
+    for (auto const& net : exampleNets)
     {
         if (net != "Frontier" && net != "Homestead")
             ETH_FAIL_REQUIRE(networks.count(net) == 0);
@@ -88,9 +91,9 @@ BOOST_AUTO_TEST_CASE(translateNetworks_leHomestead)
 BOOST_AUTO_TEST_CASE(translateNetworks_leFrontier)
 {
     set<string> networks = {"<=Frontier"};
-    networks = test::translateNetworks(networks);
+    networks = test::translateNetworks(networks, exampleNets);
     ETH_FAIL_REQUIRE(networks.count("Frontier") > 0);
-    for (auto const& net : test::getNetworks())
+    for (auto const& net : exampleNets)
     {
         if (net != "Frontier")
             ETH_FAIL_REQUIRE(networks.count(net) == 0);
