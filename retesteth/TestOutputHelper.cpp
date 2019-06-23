@@ -32,9 +32,10 @@ using namespace dev;
 using namespace test;
 using namespace boost;
 
+mutex g_finishedTestFoldersMapMutex;
 typedef std::set<std::string> FolderNameSet;
 static std::map<boost::filesystem::path, FolderNameSet> finishedTestFoldersMap;
-mutex g_finishedTestFoldersMapMutex;
+static std::map<boost::filesystem::path, FolderNameSet> exceptionTestFoldersMap;
 void checkUnfinishedTestFolders();  // Checkup that all test folders are active during the test run
 
 typedef std::pair<double, std::string> execTimeName;
@@ -252,11 +253,15 @@ void checkUnfinishedTestFolders()
             {
                 if (boost::filesystem::is_directory(*it))
                 {
-                    allFolders.insert(it->path().filename().string());
-                    if (!pathHasTests(it->path()))
-                        std::cerr << "WARNING: Test folder " << it->path()
-                                  << " appears to have no tests!"
-                                  << "\n";
+                    string const folderName = it->path().filename().string();
+                    if (!exceptionTestFoldersMap[path].count(folderName))
+                    {
+                        allFolders.insert(folderName);
+                        if (!pathHasTests(it->path()))
+                            std::cerr << "WARNING: Test folder " << it->path()
+                                      << " appears to have no tests!"
+                                      << "\n";
+                    }
                 }
             }
 
@@ -273,10 +278,19 @@ void checkUnfinishedTestFolders()
     }
 }
 
+
+// Mark test folder _folderName as not to be checked for the test suite path _suitePath
+void TestOutputHelper::markTestFolderAsException(
+    boost::filesystem::path const& _suitePath, string const& _folderName)
+{
+    std::lock_guard<std::mutex> lock(g_finishedTestFoldersMapMutex);
+    exceptionTestFoldersMap[_suitePath].emplace(_folderName);
+}
+
+// Mark test folder _folderName as finished for the test suite path _suitePath
 void TestOutputHelper::markTestFolderAsFinished(
     boost::filesystem::path const& _suitePath, string const& _folderName)
 {
     std::lock_guard<std::mutex> lock(g_finishedTestFoldersMapMutex);
-    // Mark test folder _folderName as finished for the test suite path _suitePath
     finishedTestFoldersMap[_suitePath].emplace(_folderName);
 }

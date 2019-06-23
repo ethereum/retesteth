@@ -170,6 +170,11 @@ public:
             test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
             return;
         }
+        // Mark other folders so not to check them for empty tests
+        test::TestOutputHelper::get().markTestFolderAsException(suiteFillerPath, "TransitionTests");
+        test::TestOutputHelper::get().markTestFolderAsException(
+            suiteFillerPath, "GeneralStateTests");
+
         suite.runAllTestsInFolder(casename);
         test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
     }

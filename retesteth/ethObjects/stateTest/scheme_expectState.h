@@ -16,12 +16,12 @@ namespace test {
             refreshData();  // needed?
         }
         std::vector<scheme_expectAccount> const& getAccounts() const {return m_accounts; }
-        bool hasAccount(std::string const& _accountKey) const
+        bool hasBalance(std::string const& _accountKey) const
         {
             for (auto const& acc : m_accounts)
             {
                 if (acc.address() == _accountKey)
-                    return true;
+                    return acc.hasBalance();
             }
             return false;
         }

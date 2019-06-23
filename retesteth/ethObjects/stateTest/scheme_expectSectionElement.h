@@ -34,7 +34,7 @@ namespace  test {
                 balance = 3000000000000000000;
             if (_net == "Constantinople" || _net == "ConstantinopleFix")
                 balance = 2000000000000000000;
-            if (getExpectState().hasAccount(_coinbaseAddress))
+            if (getExpectState().hasBalance(_coinbaseAddress))
             {
                 u256 origBalance = u256(getExpectState().getBalance(_coinbaseAddress));
                 getExpectStateUnsafe().setBalance(_coinbaseAddress, origBalance + balance);
