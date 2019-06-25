@@ -1,12 +1,12 @@
 #pragma once
+#include "../expectSection/scheme_expectSection.h"
 #include "../object.h"
-#include "scheme_env.h"
-#include "scheme_state.h"
 #include "scheme_account.h"
-#include "scheme_transaction.h"
+#include "scheme_env.h"
 #include "scheme_postState.h"
+#include "scheme_state.h"
 #include "scheme_stateTestBase.h"
-#include "scheme_expectSectionElement.h"
+#include "scheme_transaction.h"
 
 #include <retesteth/Options.h>
 #include <retesteth/TestHelper.h>
@@ -36,17 +36,15 @@ namespace test {
     {
         public:
         scheme_stateTestFiller(DataObject const& _test);
-        std::vector<scheme_expectSectionElement> const& getExpectSections() const { return m_expect; }
-        std::set<std::string> const& getAllNetworksFromExpectSection() const { return m_allNetworksDeclaredInExpectSection; }
+        scheme_expectSection const& getExpectSection() const { return m_expectSection; }
 
-        private:
+    private:
         class fieldChecker
         {
             public:
             fieldChecker(DataObject const& _test);
         };
         fieldChecker m_checker;
-        std::vector<scheme_expectSectionElement> m_expect;
-        std::set<std::string> m_allNetworksDeclaredInExpectSection;
+        scheme_expectSection m_expectSection;
     };
 }

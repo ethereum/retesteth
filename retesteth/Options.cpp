@@ -269,8 +269,10 @@ Options::Options(int argc, const char** argv)
 				randomCodeOptionsPath = file;
 			else
 			{
-				std::cerr << "Options file not found! Default options at: tests/src/randomCodeOptions.json\n";
-				exit(0);
+                ETH_STDERROR_MESSAGE(
+                    "Options file not found! Default options at: "
+                    "tests/src/randomCodeOptions.json\n");
+                exit(0);
 			}
 		}
 		else if (arg == "-t")

@@ -35,6 +35,13 @@ namespace fs = boost::filesystem;
 
 namespace
 {
+/// Generate blockchain test from filler
+bool FillTest(DataObject const& _testObject)
+{
+    (void)_testObject;
+    return true;
+}
+
 /// Read and execute the test from the file
 bool RunTest(DataObject const& _testObject)
 {
@@ -82,49 +89,54 @@ DataObject BlockchainTestSuite::doTests(DataObject const& _input, TestSuiteOptio
 
         if (_opt.doFilling)
         {
+            //            scheme_blockchainTestFiller testFiller(i);
             /*
-            set<test::Network> allnetworks = ImportTest::getAllNetworksFromExpectSections(
-                inputTest.at("expect").get_array(), ImportTest::testType::BlockchainTest);
+                        set<test::Network> allnetworks =
+               ImportTest::getAllNetworksFromExpectSections( inputTest.at("expect").get_array(),
+               ImportTest::testType::BlockchainTest);
 
-            //create a blockchain test for each network
-            for (auto& network : allnetworks)
-            {
-                if (test::isDisabledNetwork(network))
-                    continue;
-                if (!Options::get().singleTestNet.empty() && Options::get().singleTestNet !=
-            test::netIdToString(network)) continue;
+                        //create a blockchain test for each network
+                        for (auto& network : allnetworks)
+                        {
+                            if (test::isDisabledNetwork(network))
+                                continue;
+                            if (!Options::get().singleTestNet.empty() &&
+               Options::get().singleTestNet != test::netIdToString(network)) continue;
 
-                dev::test::TestBlockChain::s_sealEngineNetwork = network;
-                string newtestname = testname + "_" + test::netIdToString(network);
+                            dev::test::TestBlockChain::s_sealEngineNetwork = network;
+                            string newtestname = testname + "_" + test::netIdToString(network);
 
-                json_spirit::mObject jObjOutput = inputTest;
-                // prepare the corresponding expect section for the test
-                json_spirit::mArray const& expects = inputTest.at("expect").get_array();
-                bool found = false;
+                            json_spirit::mObject jObjOutput = inputTest;
+                            // prepare the corresponding expect section for the test
+                            json_spirit::mArray const& expects = inputTest.at("expect").get_array();
+                            bool found = false;
 
-                for (auto& expect : expects)
-                {
-                    set<string> netlist;
-                    json_spirit::mObject const& expectObj = expect.get_obj();
-                    ImportTest::parseJsonStrValueIntoSet(expectObj.at("network"), netlist);
+                            for (auto& expect : expects)
+                            {
+                                set<string> netlist;
+                                json_spirit::mObject const& expectObj = expect.get_obj();
+                                ImportTest::parseJsonStrValueIntoSet(expectObj.at("network"),
+               netlist);
 
-                    if (netlist.count(test::netIdToString(network)) || netlist.count("ALL"))
-                    {
-                        jObjOutput["expect"] = expectObj.at("result");
-                        found = true;
-                        break;
-                    }
-                }
-                if (!found)
-                    jObjOutput.erase(jObjOutput.find("expect"));
+                                if (netlist.count(test::netIdToString(network)) ||
+               netlist.count("ALL"))
+                                {
+                                    jObjOutput["expect"] = expectObj.at("result");
+                                    found = true;
+                                    break;
+                                }
+                            }
+                            if (!found)
+                                jObjOutput.erase(jObjOutput.find("expect"));
 
-                TestOutputHelper::get().setCurrentTestName(newtestname);
-                jObjOutput = fillBCTest(jObjOutput);
-                jObjOutput["network"] = test::netIdToString(network);
-                if (inputTest.count("_info"))
-                    jObjOutput["_info"] = inputTest.at("_info");
-                tests[newtestname] = jObjOutput;
-            }*/
+                            TestOutputHelper::get().setCurrentTestName(newtestname);
+                            jObjOutput = fillBCTest(jObjOutput);
+                            jObjOutput["network"] = test::netIdToString(network);
+                            if (inputTest.count("_info"))
+                                jObjOutput["_info"] = inputTest.at("_info");
+                            tests[newtestname] = jObjOutput;*/
+
+            _opt.wasErrors = FillTest(i);
         }
         else
             _opt.wasErrors = RunTest(i);
@@ -216,7 +228,7 @@ BOOST_AUTO_TEST_CASE(bcMultiChainTest){}
 BOOST_AUTO_TEST_CASE(bcForkStressTest){}
 BOOST_AUTO_TEST_CASE(bcForgedTest){}
 BOOST_AUTO_TEST_CASE(bcRandomBlockhashTest){}
-//BOOST_AUTO_TEST_CASE(bcExploitTest){}
+BOOST_AUTO_TEST_CASE(bcExploitTest) {}
 BOOST_AUTO_TEST_CASE(bcUncleSpecialTests){}
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -98,25 +98,7 @@ scheme_stateTestFiller::fieldChecker::fieldChecker(DataObject const& _test)
 		});
 }
 
-scheme_stateTestFiller::scheme_stateTestFiller(DataObject const& _test):
-    scheme_stateTestBase(_test),
-    m_checker(_test)
+scheme_stateTestFiller::scheme_stateTestFiller(DataObject const& _test)
+  : scheme_stateTestBase(_test), m_checker(_test), m_expectSection(_test.atKey("expect"))
 {
-    // parse expect section
-    for (auto const& expect : _test.atKey("expect").getSubObjects())
-    {
-        scheme_expectSectionElement expElement(expect);
-        m_expect.push_back(expElement);
-        for (auto const& net : expElement.getNetworks())
-            m_allNetworksDeclaredInExpectSection.emplace(net);
-    }
-
-    if (!Options::get().singleTestNet.empty())
-    {
-        if (m_allNetworksDeclaredInExpectSection.count(Options::get().singleTestNet))
-        {
-            m_allNetworksDeclaredInExpectSection.clear();
-            m_allNetworksDeclaredInExpectSection.emplace(Options::get().singleTestNet);
-        }
-    }
 }

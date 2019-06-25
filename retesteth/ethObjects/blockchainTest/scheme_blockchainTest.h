@@ -9,11 +9,28 @@ using namespace test;
 
 namespace test
 {
-class scheme_blockchainTest : public object
+class scheme_blockchainTestBase : public object
+{
+public:
+    scheme_blockchainTestBase(DataObject const& _test);
+    DataObject getGenesisForRPC();
+
+private:
+    class fieldChecker
+    {
+    public:
+        fieldChecker(DataObject const& _test);
+    };
+    fieldChecker m_checker;
+    scheme_state m_pre;
+    scheme_blockHeader m_genesisHeader;
+    std::string m_sealEngine;
+};
+
+class scheme_blockchainTest : public scheme_blockchainTestBase
 {
 public:
     scheme_blockchainTest(DataObject const& _test);
-    DataObject getGenesisForRPC();
     std::vector<std::string> const& getBlockRlps() const { return m_blockRLPs; }
     scheme_state const& getPost() const { return m_post; }
 
@@ -24,10 +41,7 @@ private:
         fieldChecker(DataObject const& _test);
     };
     fieldChecker m_checker;
-    scheme_state m_pre;
     scheme_state m_post;
-    scheme_blockHeader m_genesisHeader;
     std::vector<std::string> m_blockRLPs;
-    std::string m_sealEngine;
 };
 }

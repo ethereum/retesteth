@@ -422,7 +422,6 @@ void RPCSession::test_mineBlocks(int _number, string const& _hash)
                    // ETH_FAIL_MESSAGE("Error in test_mineBlocks: block mining timeout! " +
         // test::TestOutputHelper::get().testName());
 
-        // std::cerr << test_getBlockStatus(_hash) << std::endl;
          bigint number = fromBigEndian<u256>(fromHex(rpcCall("eth_blockNumber").asString()));
          if (number >= startBlock + _number)
             break;
