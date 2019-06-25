@@ -36,10 +36,52 @@ namespace fs = boost::filesystem;
 namespace
 {
 /// Generate blockchain test from filler
-bool FillTest(DataObject const& _testObject)
+bool FillTest(
+    scheme_blockchainTestFiller const& _testObject, string const& _network, DataObject& _testOut)
 {
-    (void)_testObject;
-    return true;
+    // construct filled blockchain test
+    _testOut["network"] = _network;
+    _testOut["pre"] = _testObject.atKey("pre");
+    if (_testObject.count("_info"))
+        _testOut["_info"] = _testObject.atKey("_info");
+
+    RPCSession& session = RPCSession::instance(TestOutputHelper::getThreadID());
+    session.test_setChainParams(_testObject.getGenesisForRPC().asJson());
+
+    // !! Better get block 0 header from remote client and put it as genesis
+    _testOut["genesisBlockHeader"] = _testObject.getGenesisForRPC().atKey("genesis");
+
+    string lastTrHash;
+    string lastBlHash;
+    size_t number = 0;
+    for (auto const& block : _testObject.getBlocks())
+    {
+        TestOutputHelper::get().setCurrentTestInfo("Network: " + _network +
+                                                   ", BlockNumber: " + toString(number++) +
+                                                   ", Test: " + TestOutputHelper::get().testName());
+
+        for (auto const& tr : block.getTransactions())
+        {
+            lastTrHash = session.eth_sendRawTransaction(tr.getSignedRLP());
+            if (!session.getLastRPCError().empty())
+                ETH_ERROR_MESSAGE(session.getLastRPCError());
+            if (!isHash<h256>(lastTrHash))
+                ETH_ERROR_MESSAGE("eth_sendRawTransaction return invalid hash: '" + lastTrHash +
+                                  "' " + TestOutputHelper::get().testInfo());
+        }
+        session.test_mineBlocks(1, lastBlHash);
+    }
+
+    DataObject remoteState = getRemoteState(session, lastTrHash, true);
+    scheme_state postState(remoteState.atKey("postState"));
+    CompareResult res = test::compareStates(
+        _testObject.getExpectSection().getExpectSectionFor(_network), postState);
+    ETH_ERROR_REQUIRE_MESSAGE(res == CompareResult::Success, TestOutputHelper::get().testInfo());
+    if (res != CompareResult::Success)
+        return true;
+    _testOut["postState"] = remoteState.atKey("postState");
+    _testOut["lastblockhash"] = lastBlHash;
+    return false;
 }
 
 /// Read and execute the test from the file
@@ -89,54 +131,27 @@ DataObject BlockchainTestSuite::doTests(DataObject const& _input, TestSuiteOptio
 
         if (_opt.doFilling)
         {
-            //            scheme_blockchainTestFiller testFiller(i);
-            /*
-                        set<test::Network> allnetworks =
-               ImportTest::getAllNetworksFromExpectSections( inputTest.at("expect").get_array(),
-               ImportTest::testType::BlockchainTest);
+            scheme_blockchainTestFiller testFiller(i);
+            // First convert multiple test blockchain filler to a specific network test filler
+            // create a blockchain test for each network described in expect section
+            for (auto& network : testFiller.getExpectSection().getAllNetworksFromExpectSection())
+            {
+                // select expect section corresponding to the network (if any)
+                for (auto const& expect : testFiller.getExpectSection().getExpectSections())
+                {
+                    if (expect.getNetworks().count(network))
+                    {
+                        string const newtestname = testname + "_" + network;
+                        TestOutputHelper::get().setCurrentTestName(newtestname);
 
-                        //create a blockchain test for each network
-                        for (auto& network : allnetworks)
-                        {
-                            if (test::isDisabledNetwork(network))
-                                continue;
-                            if (!Options::get().singleTestNet.empty() &&
-               Options::get().singleTestNet != test::netIdToString(network)) continue;
-
-                            dev::test::TestBlockChain::s_sealEngineNetwork = network;
-                            string newtestname = testname + "_" + test::netIdToString(network);
-
-                            json_spirit::mObject jObjOutput = inputTest;
-                            // prepare the corresponding expect section for the test
-                            json_spirit::mArray const& expects = inputTest.at("expect").get_array();
-                            bool found = false;
-
-                            for (auto& expect : expects)
-                            {
-                                set<string> netlist;
-                                json_spirit::mObject const& expectObj = expect.get_obj();
-                                ImportTest::parseJsonStrValueIntoSet(expectObj.at("network"),
-               netlist);
-
-                                if (netlist.count(test::netIdToString(network)) ||
-               netlist.count("ALL"))
-                                {
-                                    jObjOutput["expect"] = expectObj.at("result");
-                                    found = true;
-                                    break;
-                                }
-                            }
-                            if (!found)
-                                jObjOutput.erase(jObjOutput.find("expect"));
-
-                            TestOutputHelper::get().setCurrentTestName(newtestname);
-                            jObjOutput = fillBCTest(jObjOutput);
-                            jObjOutput["network"] = test::netIdToString(network);
-                            if (inputTest.count("_info"))
-                                jObjOutput["_info"] = inputTest.at("_info");
-                            tests[newtestname] = jObjOutput;*/
-
-            _opt.wasErrors = FillTest(i);
+                        DataObject testOutput;
+                        _opt.wasErrors = FillTest(testFiller, network, testOutput);
+                        if (testFiller.getData().count("_info"))
+                            testOutput["_info"] = testFiller.getData().atKey("_info");
+                        tests[newtestname] = testOutput;
+                    }
+                }
+            }
         }
         else
             _opt.wasErrors = RunTest(i);

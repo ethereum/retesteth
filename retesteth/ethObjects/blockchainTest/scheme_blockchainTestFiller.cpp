@@ -16,3 +16,15 @@ scheme_blockchainTestFiller::fieldChecker::fieldChecker(DataObject const& _test)
 scheme_blockchainTestFiller::scheme_blockchainTestFiller(DataObject const& _test)
   : scheme_blockchainTestBase(_test), m_checker(_test), m_expectSection(_test.atKey("expect"))
 {}
+
+scheme_blockchainTestFiller::blockSection::blockSection(DataObject const& _data)
+{
+    requireJsonFields(_data, "blockchainTest blocks section",
+        {{"blockHeader", {{DataType::Object}, jsonField::Optional}},
+            {"transactions", {{DataType::Array}, jsonField::Required}},
+            {"uncleHeaders", {{DataType::Array}, jsonField::Required}}});
+
+    for (auto const& tr : _data.atKey("transactions").getSubObjects())
+    {
+    }
+}
