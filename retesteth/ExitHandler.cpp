@@ -40,7 +40,7 @@ void ExitHandler::exitHandler(int)
 {
     std::lock_guard<std::mutex> lock(g_executionMutex);
     m_receivedExitSig = true;
-    ETH_STDERROR_MESSAGE("Finishing retesteth run");
+    std::cerr << "Finishing retesteth run" << std::endl;
 }
 
 

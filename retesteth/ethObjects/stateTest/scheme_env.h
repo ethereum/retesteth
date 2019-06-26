@@ -2,7 +2,6 @@
 #include "../object.h"
 
 using namespace  test;
-
 namespace test {
     class scheme_env: public object
     {

@@ -40,16 +40,21 @@ bool FillTest(
     scheme_blockchainTestFiller const& _testObject, string const& _network, DataObject& _testOut)
 {
     // construct filled blockchain test
+    _testOut["sealEngine"] = _testObject.getSealEngine();
     _testOut["network"] = _network;
-    _testOut["pre"] = _testObject.atKey("pre");
-    if (_testObject.count("_info"))
-        _testOut["_info"] = _testObject.atKey("_info");
+    _testOut["pre"] = _testObject.getData().atKey("pre");
+    if (_testObject.getData().count("_info"))
+        _testOut["_info"] = _testObject.getData().atKey("_info");
 
     RPCSession& session = RPCSession::instance(TestOutputHelper::getThreadID());
-    session.test_setChainParams(_testObject.getGenesisForRPC().asJson());
+    DataObject genesisObject = _testObject.getGenesisForRPC(_network);
+    session.test_setChainParams(genesisObject.asJson());
 
-    // !! Better get block 0 header from remote client and put it as genesis
-    _testOut["genesisBlockHeader"] = _testObject.getGenesisForRPC().atKey("genesis");
+    _testOut["genesisBlockHeader"] = session.eth_getBlockByNumber("0", false).getBlockHeader();
+    _testOut["genesisBlockHeader"].removeKey("transactions");
+    _testOut["genesisBlockHeader"].removeKey("uncles");
+    // u256 genesisTimestamp = u256(genesisObject.atKey("genesis").atKey("timestamp").asString());
+    // session.test_modifyTimestamp(genesisTimestamp.convert_to<size_t>());
 
     string lastTrHash;
     string lastBlHash;
@@ -60,6 +65,7 @@ bool FillTest(
                                                    ", BlockNumber: " + toString(number++) +
                                                    ", Test: " + TestOutputHelper::get().testName());
 
+        DataObject blockSection;
         for (auto const& tr : block.getTransactions())
         {
             lastTrHash = session.eth_sendRawTransaction(tr.getSignedRLP());
@@ -68,14 +74,23 @@ bool FillTest(
             if (!isHash<h256>(lastTrHash))
                 ETH_ERROR_MESSAGE("eth_sendRawTransaction return invalid hash: '" + lastTrHash +
                                   "' " + TestOutputHelper::get().testInfo());
+            blockSection["transactions"].addArrayObject(tr.getData());
         }
-        session.test_mineBlocks(1, lastBlHash);
+        session.test_mineBlocks(1);
+
+        DataObject remoteState = getRemoteState(session, "", false);
+        test::scheme_block blockData(remoteState.atKey("rawBlockData"));
+        ETH_ERROR_REQUIRE_MESSAGE(blockData.getTransactionCount() == block.getTransactions().size(),
+            "BlockchainTest transaction execution failed! " + TestOutputHelper::get().testInfo());
+        blockSection["rlp"] = blockData.getBlockRLP();
+        blockSection["blockHeader"] = blockData.getBlockHeader();
+        _testOut["blocks"].addArrayObject(blockSection);
     }
 
     DataObject remoteState = getRemoteState(session, lastTrHash, true);
     scheme_state postState(remoteState.atKey("postState"));
     CompareResult res = test::compareStates(
-        _testObject.getExpectSection().getExpectSectionFor(_network), postState);
+        _testObject.getExpectSection().getExpectSectionFor(_network).getExpectState(), postState);
     ETH_ERROR_REQUIRE_MESSAGE(res == CompareResult::Success, TestOutputHelper::get().testInfo());
     if (res != CompareResult::Success)
         return true;
@@ -94,7 +109,11 @@ bool RunTest(DataObject const& _testObject)
 
     // for all blocks
     for (auto const& brlp : inputTest.getBlockRlps())
+    {
         session.test_importRawBlock(brlp);
+        if (!session.getLastRPCError().empty())
+            ETH_ERROR_MESSAGE("Running blockchain test: " + session.getLastRPCError());
+    }
 
     // wait for blocks to process
     // std::this_thread::sleep_for(std::chrono::seconds(10));
@@ -114,19 +133,14 @@ namespace test
 {
 DataObject BlockchainTestSuite::doTests(DataObject const& _input, TestSuiteOptions& _opt) const
 {
-    DataObject tests;
-    ETH_ERROR_REQUIRE_MESSAGE(
-        _input.type() == DataType::Object, TestOutputHelper::get().get().testFile().string() +
-                                               " A BlockchainTest file should contain an object.");
+    checkDataObject(_input);
+    checkAtLeastOneTest(_input);
 
+    DataObject tests;
     // A blockchain test file contains many tests in one .json file
     for (auto const& i : _input.getSubObjects())
     {
         string const& testname = i.getKey();
-        // Select test by name if --singletest is set
-        if (!Options::get().singleTestNet.empty() && Options::get().singleTest)
-            if (testname != Options::get().singleTestName + "_" + Options::get().singleTestNet)
-                continue;
         TestOutputHelper::get().setCurrentTestName(testname);
 
         if (_opt.doFilling)
@@ -154,7 +168,14 @@ DataObject BlockchainTestSuite::doTests(DataObject const& _input, TestSuiteOptio
             }
         }
         else
+        {
+            // Select test by name if --singletest and --singlenet is set
+            if (!Options::get().singleTestNet.empty() && Options::get().singleTest)
+                if (testname != Options::get().singleTestName + "_" + Options::get().singleTestNet)
+                    continue;
+
             _opt.wasErrors = RunTest(i);
+        }
     }
 
     return tests;

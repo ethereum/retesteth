@@ -18,7 +18,7 @@ public:
     class blockSection
     {
     public:
-        blockSection(DataObject const& _data) {}
+        blockSection(DataObject const& _data);
         std::vector<scheme_transaction> const& getTransactions() const { return m_transactons; }
 
     private:
@@ -29,6 +29,7 @@ public:
     scheme_blockchainTestFiller(DataObject const& _test);
     scheme_expectSection const& getExpectSection() const { return m_expectSection; }
     std::vector<blockSection> const& getBlocks() const { return m_blocks; }
+    string getSealEngine() const;
 
 private:
     class fieldChecker

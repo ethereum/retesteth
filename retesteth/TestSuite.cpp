@@ -387,6 +387,7 @@ TestSuite::AbsoluteTestPath TestSuite::getFullPath(string const& _testFolder) co
 void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFileName) const
 {
     RPCSession::sessionStart(TestOutputHelper::getThreadID());
+    TestOutputHelper::get().setCurrentTestFile(_testFileName);
     fs::path const boostRelativeTestPath = fs::relative(_testFileName, getTestPath());
     string testname = _testFileName.stem().string();
     bool isCopySource = false;
@@ -465,6 +466,7 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
     {
         try
         {
+            TestOutputHelper::get().setCurrentTestFile(boostTestPath.path());
             executeFile(boostTestPath.path());
         }
         catch (test::BaseEthException const&)

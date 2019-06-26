@@ -37,18 +37,18 @@ public:
     {
         return m_expectSections;
     }
-    scheme_expectSectionElement const& getExpectSectionFor(string const& _network)
+    scheme_expectSectionElement const& getExpectSectionFor(string const& _network) const
     {
         for (auto const& expElement : m_expectSections)
         {
             for (auto const& net : expElement.getNetworks())
             {
                 if (net == _network)
-                    return net;
+                    return expElement;
             }
         }
         ETH_ERROR_MESSAGE("getExpectSectionFor(): section for '" + _network + "' not found!");
-        return scheme_expectSectionElement(DataObject());
+        return m_expectSections.at(0);
     }
 
 private:

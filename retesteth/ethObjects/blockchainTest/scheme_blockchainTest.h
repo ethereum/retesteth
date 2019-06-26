@@ -13,7 +13,7 @@ class scheme_blockchainTestBase : public object
 {
 public:
     scheme_blockchainTestBase(DataObject const& _test);
-    DataObject getGenesisForRPC();
+    DataObject getGenesisForRPC(string const& _network = string()) const;
 
 private:
     class fieldChecker

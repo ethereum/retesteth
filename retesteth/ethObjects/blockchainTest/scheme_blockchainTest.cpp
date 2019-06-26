@@ -12,6 +12,8 @@ scheme_blockchainTestBase::fieldChecker::fieldChecker(DataObject const& _test)
             {"genesisRLP", {{DataType::String}, jsonField::Optional}},
             {"lastblockhash", {{DataType::String}, jsonField::Optional}},
             {"network", {{DataType::String}, jsonField::Optional}},
+            {"hash", {{DataType::String}, jsonField::Optional}},
+            {"gasUsed", {{DataType::String}, jsonField::Optional}},
             {"postState", {{DataType::Object}, jsonField::Optional}},
             {"pre", {{DataType::Object}, jsonField::Required}},
             {"sealEngine", {{DataType::String}, jsonField::Optional}}});
@@ -55,9 +57,10 @@ scheme_blockchainTest::scheme_blockchainTest(DataObject const& _test)
     }
 }
 
-DataObject scheme_blockchainTestBase::getGenesisForRPC()
+DataObject scheme_blockchainTestBase::getGenesisForRPC(string const& _network) const
 {
-    DataObject genesis = prepareGenesisParams(getData().atKey("network").asString(), m_sealEngine);
+    string net = (_network.empty() ? getData().atKey("network").asString() : _network);
+    DataObject genesis = prepareGenesisParams(net, m_sealEngine);
 
     DataObject data;
     data["author"] = m_genesisHeader.getData().atKey("coinbase");
@@ -67,8 +70,9 @@ DataObject scheme_blockchainTestBase::getGenesisForRPC()
     data["extraData"] = m_genesisHeader.getData().atKey("extraData");
     data["timestamp"] = m_genesisHeader.getData().atKey("timestamp");
     data["mixHash"] = m_genesisHeader.getData().atKey("mixHash");
+    object::makeAllFieldsHex(data);
 
     genesis["genesis"] = data;
-    genesis["accounts"] = m_pre.getDataForRPC(getData().atKey("network").asString());
+    genesis["accounts"] = m_pre.getDataForRPC(net);
     return genesis;
 }
