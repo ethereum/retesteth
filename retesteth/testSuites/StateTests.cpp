@@ -36,9 +36,9 @@
 #include <retesteth/TestOutputHelper.h>
 #include <retesteth/TestSuite.h>
 #include <retesteth/ethObjects/common.h>
-#include <retesteth/testSuites/BlockchainTests.h>
 #include <retesteth/testSuites/Common.h>
 #include <retesteth/testSuites/StateTests.h>
+#include <retesteth/testSuites/blockchain/BlockchainTests.h>
 
 using namespace std;
 using namespace dev;
@@ -354,7 +354,7 @@ DataObject StateTestSuite::doTests(DataObject const& _input, TestSuiteOptions& _
     {
         if (Options::get().fillchain)
         {
-            BlockchainTestSuite bcTestSuite;
+            BlockchainTestValidSuite bcTestSuite;
             bcTestSuite.doTests(_input, _opt);
         }
         else

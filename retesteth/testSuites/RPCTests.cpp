@@ -34,7 +34,7 @@
 
 using namespace std;
 
-namespace test
+namespace local
 {
 /// Rewrite the test file. Fill RPC Test
 DataObject FillTest(DataObject const& _testFile, TestSuite::TestSuiteOptions& _opt)
@@ -68,8 +68,10 @@ void RunTest(DataObject const& _testFile)
     opt.doFilling = false;
     FillTest(_testFile, opt);
 }
+}
 
-
+namespace test
+{
 DataObject RPCTestSuite::doTests(DataObject const& _input, TestSuiteOptions& _opt) const
 {
     checkDataObject(_input);
@@ -85,11 +87,11 @@ DataObject RPCTestSuite::doTests(DataObject const& _input, TestSuiteOptions& _op
     {
         checkTestNameIsEqualToFileName(_input);
         DataObject outputTest;
-        outputTest[testname] = FillTest(inputTest, _opt);
+        outputTest[testname] = local::FillTest(inputTest, _opt);
         filledTest = outputTest;
     }
     else
-        RunTest(inputTest);
+        local::RunTest(inputTest);
     return filledTest;
 }
 
