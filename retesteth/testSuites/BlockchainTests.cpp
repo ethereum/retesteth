@@ -105,7 +105,7 @@ bool RunTest(DataObject const& _testObject)
     scheme_blockchainTest inputTest(_testObject);
     RPCSession& session = RPCSession::instance(TestOutputHelper::getThreadID());
 
-    session.test_setChainParams(inputTest.getGenesisForRPC().asJson());
+    session.test_setChainParams(inputTest.getGenesisForRPC(inputTest.getNetwork()).asJson());
 
     // for all blocks
     for (auto const& brlp : inputTest.getBlockRlps())

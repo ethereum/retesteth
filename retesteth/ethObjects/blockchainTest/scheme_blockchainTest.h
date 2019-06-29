@@ -33,6 +33,7 @@ public:
     scheme_blockchainTest(DataObject const& _test);
     std::vector<std::string> const& getBlockRlps() const { return m_blockRLPs; }
     scheme_state const& getPost() const { return m_post; }
+    string const& getNetwork() const { return m_data.atKey("network").asString(); }
 
 private:
     class fieldChecker

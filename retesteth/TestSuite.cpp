@@ -450,8 +450,8 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
             }
             catch (test::BaseEthException const&)
             {
-                // Something went wrong inside the test. skip it. (error message is stored at
-                // TestOutputHelper)
+                // Something went wrong inside the test. skip it.
+                // (error message is stored at TestOutputHelper)
                 opt.wasErrors = true;
             }
             catch (std::exception const& _ex)

@@ -271,7 +271,7 @@ void checkUnfinishedTestFolders()
                 finishedFolders.end(), std::back_inserter(diff));
             for (auto const& it : diff)
                 ETH_STDERROR_MESSAGE(string("WARNING: Test folder ") + (path / it).c_str() +
-                                     " appears to be unused!\n");
+                                     " appears to be unused!");
         }
     }
 }

@@ -208,6 +208,10 @@ DataObject FillTest(DataObject const& _testFile, TestSuite::TestSuiteOptions& _o
                     tr.executed = true;
 
                     DataObject remoteState = getRemoteState(session, trHash, true);
+                    test::scheme_block blockData(remoteState.atKey("rawBlockData"));
+                    ETH_ERROR_REQUIRE_MESSAGE(blockData.getTransactionCount() == 1,
+                        "StateTest transaction execution failed! " +
+                            TestOutputHelper::get().testInfo());
 
                     // check that the post state qualifies to the expect section
                     scheme_state postState(remoteState.atKey("postState"));
@@ -362,7 +366,7 @@ DataObject StateTestSuite::doTests(DataObject const& _input, TestSuiteOptions& _
 TestSuite::TestPath StateTestSuite::suiteFolder() const
 {
     if (Options::get().fillchain)
-        return TestSuite::TestPath(fs::path("BlockchainTests") / "GeneralStateTests");
+        return TestSuite::TestPath(fs::path("BlockchainTests") / "GeneralStateTestsRetesteth");
     return TestSuite::TestPath(fs::path("GeneralStateTests"));
 }
 
