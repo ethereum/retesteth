@@ -137,6 +137,7 @@ namespace
         {
             std::unique_ptr<std::string> httpData(new std::string());
             curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+            curl_easy_setopt(curl, CURLOPT_BUFFERSIZE, 3000000);
             curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writecallback);
             curl_easy_setopt(curl, CURLOPT_WRITEDATA, httpData.get());
             struct curl_slist *header = NULL;

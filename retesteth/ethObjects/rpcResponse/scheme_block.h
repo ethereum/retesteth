@@ -49,7 +49,7 @@ namespace test {
             }
         }
 
-        int getTransactionCount() const
+        size_t getTransactionCount() const
         {
             return m_data.atKey("transactions").getSubObjects().size();
         }
@@ -120,11 +120,12 @@ namespace test {
             }
             stream.appendRaw(header.out());
 
-            if (m_data.atKey("transactions").getSubObjects().size())
+            size_t trCount = m_data.atKey("transactions").getSubObjects().size();
+            RLPStream transactionList(trCount);
+            for (size_t i = 0; i < trCount; i++)
             {
-                RLPStream transactionList(1);
                 RLPStream transactionRLP(9);
-                DataObject transaction = m_data.atKey("transactions").getSubObjects().at(0);
+                DataObject transaction = m_data.atKey("transactions").getSubObjects().at(i);
                 transactionRLP << u256(transaction.atKey("nonce").asString());
                 transactionRLP << u256(transaction.atKey("gasPrice").asString());
                 transactionRLP << u256(transaction.atKey("gas").asString());
@@ -144,10 +145,8 @@ namespace test {
                 transactionRLP << u256(transaction.atKey("r").asString());
                 transactionRLP << u256(transaction.atKey("s").asString());
                 transactionList.appendRaw(transactionRLP.out());
-                stream.appendRaw(transactionList.out());
             }
-            else
-                stream.appendRaw(RLPStream(0).out());  // empty transaction list
+            stream.appendRaw(transactionList.out());
             stream.appendRaw(RLPStream(0).out());  // empty uncle list
 
             return dev::toHexPrefixed(stream.out());

@@ -35,17 +35,85 @@ namespace fs = boost::filesystem;
 
 namespace
 {
+/// Generate blockchain test from filler
+bool FillTest(
+    scheme_blockchainTestFiller const& _testObject, string const& _network, DataObject& _testOut)
+{
+    // construct filled blockchain test
+    _testOut["sealEngine"] = _testObject.getSealEngine();
+    _testOut["network"] = _network;
+    _testOut["pre"] = _testObject.getData().atKey("pre");
+    if (_testObject.getData().count("_info"))
+        _testOut["_info"] = _testObject.getData().atKey("_info");
+
+    RPCSession& session = RPCSession::instance(TestOutputHelper::getThreadID());
+    DataObject genesisObject = _testObject.getGenesisForRPC(_network);
+    session.test_setChainParams(genesisObject.asJson());
+
+    _testOut["genesisBlockHeader"] = session.eth_getBlockByNumber("0", false).getBlockHeader();
+    _testOut["genesisBlockHeader"].removeKey("transactions");
+    _testOut["genesisBlockHeader"].removeKey("uncles");
+    // u256 genesisTimestamp = u256(genesisObject.atKey("genesis").atKey("timestamp").asString());
+    // session.test_modifyTimestamp(genesisTimestamp.convert_to<size_t>());
+
+    string lastTrHash;
+    string lastBlHash;
+    size_t number = 0;
+    for (auto const& block : _testObject.getBlocks())
+    {
+        TestOutputHelper::get().setCurrentTestInfo("Network: " + _network +
+                                                   ", BlockNumber: " + toString(number++) +
+                                                   ", Test: " + TestOutputHelper::get().testName());
+
+        DataObject blockSection;
+        for (auto const& tr : block.getTransactions())
+        {
+            lastTrHash = session.eth_sendRawTransaction(tr.getSignedRLP());
+            if (!session.getLastRPCError().empty())
+                ETH_ERROR_MESSAGE(session.getLastRPCError());
+            if (!isHash<h256>(lastTrHash))
+                ETH_ERROR_MESSAGE("eth_sendRawTransaction return invalid hash: '" + lastTrHash +
+                                  "' " + TestOutputHelper::get().testInfo());
+            blockSection["transactions"].addArrayObject(tr.getData());
+        }
+        session.test_mineBlocks(1);
+
+        DataObject remoteState = getRemoteState(session, "", false);
+        test::scheme_block blockData(remoteState.atKey("rawBlockData"));
+        ETH_ERROR_REQUIRE_MESSAGE(blockData.getTransactionCount() == block.getTransactions().size(),
+            "BlockchainTest transaction execution failed! " + TestOutputHelper::get().testInfo());
+        blockSection["rlp"] = blockData.getBlockRLP();
+        blockSection["blockHeader"] = blockData.getBlockHeader();
+        _testOut["blocks"].addArrayObject(blockSection);
+    }
+
+    DataObject remoteState = getRemoteState(session, lastTrHash, true);
+    scheme_state postState(remoteState.atKey("postState"));
+    CompareResult res = test::compareStates(
+        _testObject.getExpectSection().getExpectSectionFor(_network).getExpectState(), postState);
+    ETH_ERROR_REQUIRE_MESSAGE(res == CompareResult::Success, TestOutputHelper::get().testInfo());
+    if (res != CompareResult::Success)
+        return true;
+    _testOut["postState"] = remoteState.atKey("postState");
+    _testOut["lastblockhash"] = lastBlHash;
+    return false;
+}
+
 /// Read and execute the test from the file
 bool RunTest(DataObject const& _testObject)
 {
     scheme_blockchainTest inputTest(_testObject);
     RPCSession& session = RPCSession::instance(TestOutputHelper::getThreadID());
 
-    session.test_setChainParams(inputTest.getGenesisForRPC().asJson());
+    session.test_setChainParams(inputTest.getGenesisForRPC(inputTest.getNetwork()).asJson());
 
     // for all blocks
     for (auto const& brlp : inputTest.getBlockRlps())
+    {
         session.test_importRawBlock(brlp);
+        if (!session.getLastRPCError().empty())
+            ETH_ERROR_MESSAGE("Running blockchain test: " + session.getLastRPCError());
+    }
 
     // wait for blocks to process
     // std::this_thread::sleep_for(std::chrono::seconds(10));
@@ -65,69 +133,49 @@ namespace test
 {
 DataObject BlockchainTestSuite::doTests(DataObject const& _input, TestSuiteOptions& _opt) const
 {
-    DataObject tests;
-    ETH_ERROR_REQUIRE_MESSAGE(
-        _input.type() == DataType::Object, TestOutputHelper::get().get().testFile().string() +
-                                               " A BlockchainTest file should contain an object.");
+    checkDataObject(_input);
+    checkAtLeastOneTest(_input);
 
+    DataObject tests;
     // A blockchain test file contains many tests in one .json file
     for (auto const& i : _input.getSubObjects())
     {
         string const& testname = i.getKey();
-        // Select test by name if --singletest is set
-        if (!Options::get().singleTestNet.empty() && Options::get().singleTest)
-            if (testname != Options::get().singleTestName + "_" + Options::get().singleTestNet)
-                continue;
         TestOutputHelper::get().setCurrentTestName(testname);
 
         if (_opt.doFilling)
         {
-            /*
-            set<test::Network> allnetworks = ImportTest::getAllNetworksFromExpectSections(
-                inputTest.at("expect").get_array(), ImportTest::testType::BlockchainTest);
-
-            //create a blockchain test for each network
-            for (auto& network : allnetworks)
+            scheme_blockchainTestFiller testFiller(i);
+            // First convert multiple test blockchain filler to a specific network test filler
+            // create a blockchain test for each network described in expect section
+            for (auto& network : testFiller.getExpectSection().getAllNetworksFromExpectSection())
             {
-                if (test::isDisabledNetwork(network))
-                    continue;
-                if (!Options::get().singleTestNet.empty() && Options::get().singleTestNet !=
-            test::netIdToString(network)) continue;
-
-                dev::test::TestBlockChain::s_sealEngineNetwork = network;
-                string newtestname = testname + "_" + test::netIdToString(network);
-
-                json_spirit::mObject jObjOutput = inputTest;
-                // prepare the corresponding expect section for the test
-                json_spirit::mArray const& expects = inputTest.at("expect").get_array();
-                bool found = false;
-
-                for (auto& expect : expects)
+                // select expect section corresponding to the network (if any)
+                for (auto const& expect : testFiller.getExpectSection().getExpectSections())
                 {
-                    set<string> netlist;
-                    json_spirit::mObject const& expectObj = expect.get_obj();
-                    ImportTest::parseJsonStrValueIntoSet(expectObj.at("network"), netlist);
-
-                    if (netlist.count(test::netIdToString(network)) || netlist.count("ALL"))
+                    if (expect.getNetworks().count(network))
                     {
-                        jObjOutput["expect"] = expectObj.at("result");
-                        found = true;
-                        break;
+                        string const newtestname = testname + "_" + network;
+                        TestOutputHelper::get().setCurrentTestName(newtestname);
+
+                        DataObject testOutput;
+                        _opt.wasErrors = FillTest(testFiller, network, testOutput);
+                        if (testFiller.getData().count("_info"))
+                            testOutput["_info"] = testFiller.getData().atKey("_info");
+                        tests[newtestname] = testOutput;
                     }
                 }
-                if (!found)
-                    jObjOutput.erase(jObjOutput.find("expect"));
-
-                TestOutputHelper::get().setCurrentTestName(newtestname);
-                jObjOutput = fillBCTest(jObjOutput);
-                jObjOutput["network"] = test::netIdToString(network);
-                if (inputTest.count("_info"))
-                    jObjOutput["_info"] = inputTest.at("_info");
-                tests[newtestname] = jObjOutput;
-            }*/
+            }
         }
         else
+        {
+            // Select test by name if --singletest and --singlenet is set
+            if (!Options::get().singleTestNet.empty() && Options::get().singleTest)
+                if (testname != Options::get().singleTestName + "_" + Options::get().singleTestNet)
+                    continue;
+
             _opt.wasErrors = RunTest(i);
+        }
     }
 
     return tests;
@@ -170,6 +218,11 @@ public:
             test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
             return;
         }
+        // Mark other folders so not to check them for empty tests
+        test::TestOutputHelper::get().markTestFolderAsException(suiteFillerPath, "TransitionTests");
+        test::TestOutputHelper::get().markTestFolderAsException(
+            suiteFillerPath, "GeneralStateTests");
+
         suite.runAllTestsInFolder(casename);
         test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
     }
@@ -211,7 +264,7 @@ BOOST_AUTO_TEST_CASE(bcMultiChainTest){}
 BOOST_AUTO_TEST_CASE(bcForkStressTest){}
 BOOST_AUTO_TEST_CASE(bcForgedTest){}
 BOOST_AUTO_TEST_CASE(bcRandomBlockhashTest){}
-//BOOST_AUTO_TEST_CASE(bcExploitTest){}
+BOOST_AUTO_TEST_CASE(bcExploitTest) {}
 BOOST_AUTO_TEST_CASE(bcUncleSpecialTests){}
 
 BOOST_AUTO_TEST_SUITE_END()

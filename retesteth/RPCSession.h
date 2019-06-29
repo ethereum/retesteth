@@ -68,7 +68,7 @@ public:
 	void test_setChainParams(std::string const& _config);
 	void test_rewindToBlock(size_t _blockNr);
 	void test_modifyTimestamp(size_t _timestamp);
-    void test_mineBlocks(int _number, std::string const& _hash = "");
+    void test_mineBlocks(int _number);
     void test_importRawBlock(std::string const& _blockRLP);
 
     std::string sendRawRequest(std::string const& _request);

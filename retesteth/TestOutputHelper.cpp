@@ -32,9 +32,10 @@ using namespace dev;
 using namespace test;
 using namespace boost;
 
+mutex g_finishedTestFoldersMapMutex;
 typedef std::set<std::string> FolderNameSet;
 static std::map<boost::filesystem::path, FolderNameSet> finishedTestFoldersMap;
-mutex g_finishedTestFoldersMapMutex;
+static std::map<boost::filesystem::path, FolderNameSet> exceptionTestFoldersMap;
 void checkUnfinishedTestFolders();  // Checkup that all test folders are active during the test run
 
 typedef std::pair<double, std::string> execTimeName;
@@ -92,7 +93,6 @@ bool TestOutputHelper::checkTest(std::string const& _testName)
 	if (test::Options::get().singleTest && test::Options::get().singleTestName != _testName)
 		return false;
 
-    // std::cerr << _testName << std::endl;
     m_currentTestName = _testName;
 	return true;
 }
@@ -144,8 +144,9 @@ void TestOutputHelper::printBoostError()
     }
     if (errorCount)
     {
-        std::cerr << std::endl << "--------" << std::endl;
-        std::cerr << "TestOutputHelper detected " + toString(errorCount) + " errors during test execution!" << std::endl;
+        ETH_STDERROR_MESSAGE("\n--------");
+        ETH_STDERROR_MESSAGE(
+            "TestOutputHelper detected " + toString(errorCount) + " errors during test execution!");
         std::lock_guard<std::mutex> lock(g_resultsUpdate_mutex);
         BOOST_ERROR("");  // NOT THREAD SAFE !!!
         execTotalErrors += errorCount;
@@ -178,9 +179,10 @@ void TestOutputHelper::printTestExecStats()
 
     if (execTotalErrors)
     {
-        std::cerr << std::endl << "--------" << std::endl;
-        std::cerr << "*** TOTAL ERRORS DETECTED: " + toString(execTotalErrors) + " errors during all test execution!";
-        std::cerr << std::endl << "--------" << std::endl;
+        ETH_STDERROR_MESSAGE("\n--------");
+        ETH_STDERROR_MESSAGE("*** TOTAL ERRORS DETECTED: " + toString(execTotalErrors) +
+                             " errors during all test execution!");
+        ETH_STDERROR_MESSAGE("--------");
     }
     execTimeResults.clear();
     execTotalErrors = 0;
@@ -226,7 +228,7 @@ void checkUnfinishedTestFolders()
     {
         if (finishedTestFoldersMap.size() > 1)
         {
-            std::cerr << "ERROR: Expected a single test to be passed: " << filter << "\n";
+            ETH_STDERROR_MESSAGE("ERROR: Expected a single test to be passed: " + filter + "\n");
             return;
         }
 
@@ -237,9 +239,8 @@ void checkUnfinishedTestFolders()
         std::map<boost::filesystem::path, FolderNameSet>::const_iterator it =
             finishedTestFoldersMap.begin();
         if (!pathHasTests(it->first / filter))
-            std::cerr << "WARNING: Test folder " << it->first / filter
-                      << " appears to have no tests!"
-                      << "\n";
+            ETH_STDERROR_MESSAGE(string("WARNING: Test folder ") + (it->first / filter).c_str() +
+                                 " appears to have no tests!\n");
     }
     else
     {
@@ -252,11 +253,15 @@ void checkUnfinishedTestFolders()
             {
                 if (boost::filesystem::is_directory(*it))
                 {
-                    allFolders.insert(it->path().filename().string());
-                    if (!pathHasTests(it->path()))
-                        std::cerr << "WARNING: Test folder " << it->path()
-                                  << " appears to have no tests!"
-                                  << "\n";
+                    string const folderName = it->path().filename().string();
+                    if (!exceptionTestFoldersMap[path].count(folderName))
+                    {
+                        allFolders.insert(folderName);
+                        if (!pathHasTests(it->path()))
+                            ETH_STDERROR_MESSAGE(string("WARNING: Test folder ") +
+                                                 it->path().c_str() +
+                                                 " appears to have no tests!\n");
+                    }
                 }
             }
 
@@ -265,18 +270,25 @@ void checkUnfinishedTestFolders()
             std::set_difference(allFolders.begin(), allFolders.end(), finishedFolders.begin(),
                 finishedFolders.end(), std::back_inserter(diff));
             for (auto const& it : diff)
-            {
-                std::cerr << "WARNING: Test folder " << path / it << " appears to be unused!"
-                          << "\n";
-            }
+                ETH_STDERROR_MESSAGE(string("WARNING: Test folder ") + (path / it).c_str() +
+                                     " appears to be unused!");
         }
     }
 }
 
+
+// Mark test folder _folderName as not to be checked for the test suite path _suitePath
+void TestOutputHelper::markTestFolderAsException(
+    boost::filesystem::path const& _suitePath, string const& _folderName)
+{
+    std::lock_guard<std::mutex> lock(g_finishedTestFoldersMapMutex);
+    exceptionTestFoldersMap[_suitePath].emplace(_folderName);
+}
+
+// Mark test folder _folderName as finished for the test suite path _suitePath
 void TestOutputHelper::markTestFolderAsFinished(
     boost::filesystem::path const& _suitePath, string const& _folderName)
 {
     std::lock_guard<std::mutex> lock(g_finishedTestFoldersMapMutex);
-    // Mark test folder _folderName as finished for the test suite path _suitePath
     finishedTestFoldersMap[_suitePath].emplace(_folderName);
 }

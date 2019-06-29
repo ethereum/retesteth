@@ -462,6 +462,7 @@ void DataObject::_assert(bool _flag, std::string const& _comment) const
 {
     if (!_flag)
     {
+        // Make it an exception!
         std::cerr << "Error in DataObject: " << std::endl;
         std::cerr << " key: '" << m_strKey << "'";
         std::cerr << " type: '" << dataTypeAsString(m_type) << "'" << std::endl;

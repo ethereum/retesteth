@@ -28,12 +28,13 @@ namespace test {
                 std::string const& _network, std::string const& _engine = "NoProof");
 
         protected:
-		void makeKeyHex(DataObject& _key);
-		void makeAllFieldsHex(DataObject& _data);
-		DataObject m_data;
+            static void makeKeyHex(DataObject& _key);
+            static void makeAllFieldsHex(DataObject& _data);
+            DataObject m_data;
 
-    private:
-        std::string convertStringToHexPrefixed(string const& _input, short _minimumBytes);
+        private:
+            static std::string convertStringToHexPrefixed(
+                string const& _input, short _minimumBytes);
     };
 
 	/// check the presents of fields in a DataObject with a validation map

@@ -134,8 +134,8 @@ void object::makeAllFieldsHex(DataObject& _data)
 void requireJsonFields(DataObject const& _o, std::string const& _section,
     std::map<std::string, possibleType> const& _validationMap, bool _fail)
 {
-	// check for unexpected fiedls
-	for (auto const field : _o.getSubObjects())
+    // check for unexpected fiedls
+    for (auto const field : _o.getSubObjects())
     {
         string message =
             "'" + field.getKey() + "' should not be declared in '" + _section + "' section!";
@@ -146,23 +146,26 @@ void requireJsonFields(DataObject const& _o, std::string const& _section,
     }
 
     // check field types with validation map
-	for (auto const vmap : _validationMap)
-	{
-        ETH_FAIL_REQUIRE_MESSAGE(_o.count(vmap.first) > 0, vmap.first + " not found in " + _section +
-															" section! " +
-															TestOutputHelper::get().testName());
-		bool matched = false;
-		std::string sTypes;
-		for(auto const& type: vmap.second)
-		{
-			if (sTypes.size())
+    for (auto const vmap : _validationMap)
+    {
+        string message = vmap.first + " not found in " + _section + " section! " +
+                         TestOutputHelper::get().testName();
+        if (_fail)
+            ETH_FAIL_REQUIRE_MESSAGE(_o.count(vmap.first) > 0, message);
+        else
+            ETH_ERROR_REQUIRE_MESSAGE(_o.count(vmap.first) > 0, message);
+        bool matched = false;
+        std::string sTypes;
+        for (auto const& type : vmap.second)
+        {
+            if (sTypes.size())
                 sTypes += " or ";
             sTypes += DataObject::dataTypeAsString(type);
             if (_o.atKey(vmap.first).type() == type)
                 matched = true;
-		}
-		if (matched == false)
-		{
+        }
+        if (matched == false)
+        {
             std::string comment = _section + " '" + vmap.first + "' expected to be '" + sTypes +
                                   "', but set to: '" +
                                   DataObject::dataTypeAsString(_o.atKey(vmap.first).type()) +
@@ -172,7 +175,7 @@ void requireJsonFields(DataObject const& _o, std::string const& _section,
             else
                 ETH_ERROR_MESSAGE(comment + "\n" + _o.asJson());
         }
-	}
+    }
 }
 
 void requireJsonFields(DataObject const& _o, std::string const& _config,

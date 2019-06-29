@@ -35,43 +35,58 @@ Options::DynamicOptions Options::m_dynamicOptions;
 
 void printHelp()
 {
-	cout << "Usage: \n";
-	cout << std::left;
-	cout << "\nSetting test suite\n";
-	cout << setw(30) <<	"-t <TestSuite>" << setw(25) << "Execute test operations\n";
-	cout << setw(30) << "-t <TestSuite>/<TestCase>\n";
-	cout << setw(30) << "--testpath <PathToTheTestRepo>\n";
+    cout << "Usage: \n";
+    cout << std::left;
+    cout << "\nSetting test suite\n";
+    cout << setw(30) << "-t <TestSuite>" << setw(0) << "Execute test operations\n";
+    cout << setw(30) << "-t <TestSuite>/<TestCase>" << setw(0) << "\n";
+    cout << "\nAll options below must be followed by `--`\n";
+    cout << "\nRetesteth options\n";
+    cout << setw(40) << "-j <ThreadNumber>" << setw(0) << "Run test execution using threads\n";
+    cout << setw(40) << "--clients `<client1, client2>`" << setw(0)
+         << "Use following configurations from the testpath/Retesteth\n";
+    cout << setw(40) << "--help" << setw(25) << "Display list of command arguments\n";
+    cout << setw(40) << "--version" << setw(25) << "Display build information\n";
 
-	cout << "\nDebugging\n";
-	cout << setw(30) << "-d <index>" << setw(25) << "Set the transaction data array index when running GeneralStateTests\n";
-	cout << setw(30) << "-g <index>" << setw(25) << "Set the transaction gas array index when running GeneralStateTests\n";
-	cout << setw(30) << "-v <index>" << setw(25) << "Set the transaction value array index when running GeneralStateTests\n";
-	cout << setw(30) << "--singletest <TestName>" << setw(25) << "Run on a single test\n";
-	cout << setw(30) << "--singletest <TestFile> <TestName>\n";
-	cout << setw(30) << "--verbosity <level>" << setw(25) << "Set logs verbosity. 0 - silent, 1 - only errors, 2 - informative, >2 - detailed\n";
-	cout << setw(30) << "--vm <interpreter|jit|smart|hera>" << setw(25) << "Set VM type for VMTests suite\n";
-	cout << setw(30) << "--vmtrace" << setw(25) << "Enable VM trace for the test. (Require build with VMTRACE=1)\n";
-	cout << setw(30) << "--jsontrace <Options>" << setw(25) << "Enable VM trace to stdout in json format. Argument is a json config: '{ \"disableStorage\" : false, \"disableMemory\" : false, \"disableStack\" : false, \"fullStorage\" : true }'\n";
-	cout << setw(30) << "--stats <OutFile>" << setw(25) << "Output debug stats to the file\n";
-	cout << setw(30) << "--exectimelog" << setw(25) << "Output execution time for each test suite\n";
-	cout << setw(30) << "--statediff" << setw(25) << "Trace state difference for state tests\n";
+    cout << "\nSetting test suite\n";
+    cout << setw(40) << "--testpath <PathToTheTestRepo>" << setw(25)
+         << "Set path to the test repo\n";
+    cout << setw(40) << "--singletest <TestFile> <TestName>" << setw(0)
+         << "Run test from a custom file\n";
 
-	cout << "\nAdditional Tests\n";
-	cout << setw(30) << "--all" << setw(25) << "Enable all tests\n";
+    cout << "\nDebugging\n";
+    cout << setw(30) << "-d <index>" << setw(25) << "Set the transaction data array index when running GeneralStateTests\n";
+    cout << setw(30) << "-g <index>" << setw(25) << "Set the transaction gas array index when running GeneralStateTests\n";
+    cout << setw(30) << "-v <index>" << setw(25) << "Set the transaction value array index when running GeneralStateTests\n";
+    cout << setw(30) << "--singletest <TestName>" << setw(0) << "Run on a single test\n";
+    cout << setw(30) << "--verbosity <level>" << setw(25) << "Set logs verbosity. 0 - silent, 1 - only errors, 2 - informative, >2 - detailed\n";
+    //  cout << setw(30) << "--vm <interpreter|jit|smart|hera>" << setw(25) << "Set VM type for
+    //  VMTests suite\n"; cout << setw(30) << "--vmtrace" << setw(25) << "Enable VM trace for the
+    //  test. (Require build with VMTRACE=1)\n"; cout << setw(30) << "--jsontrace <Options>" <<
+    //  setw(25) << "Enable VM trace to stdout in json format. Argument is a json config: '{
+    //  \"disableStorage\" : false, \"disableMemory\" : false, \"disableStack\" : false,
+    //  \"fullStorage\" : true }'\n"; cout << setw(30) << "--stats <OutFile>" << setw(25) << "Output
+    //  debug stats to the file\n";
+    cout << setw(30) << "--exectimelog" << setw(25) << "Output execution time for each test suite\n";
+    cout << setw(30) << "--statediff" << setw(25) << "Trace state difference for state tests\n";
+    cout << setw(30) << "--stderr" << setw(25) << "Redirect ipc client stderr to stdout\n";
+    cout << setw(30) << "--travisout" << setw(25) << "Output `.` to stdout\n";
 
-	cout << "\nTest Generation\n";
-	cout << setw(30) << "--filltests" << setw(25) << "Run test fillers\n";
-	cout << setw(30) << "--fillchain" << setw(25) << "When filling the state tests, fill tests as blockchain instead\n";
+    cout << "\nAdditional Tests\n";
+    cout << setw(30) << "--all" << setw(25) << "Enable all tests\n";
+
+    cout << "\nTest Generation\n";
+    cout << setw(30) << "--filltests" << setw(0) << "Run test fillers\n";
+    cout << setw(30) << "--fillchain" << setw(25) << "When filling the state tests, fill tests as blockchain instead\n";
     cout << setw(30) << "--showhash" << setw(25) << "Show filler hash debug information\n";
-	cout << setw(30) << "--randomcode <MaxOpcodeNum>" << setw(25) << "Generate smart random EVM code\n";
-	cout << setw(30) << "--createRandomTest" << setw(25) << "Create random test and output it to the console\n";
-	cout << setw(30) << "--createRandomTest <PathToOptions.json>" << setw(25) << "Use following options file for random code generation\n";
-	cout << setw(30) << "--seed <uint>" << setw(25) << "Define a seed for random test\n";
-	cout << setw(30) << "--options <PathTo.json>" << setw(25) << "Use following options file for random code generation\n";
-	//cout << setw(30) << "--fulloutput" << setw(25) << "Disable address compression in the output field\n";
-
-	cout << setw(30) << "--help" << setw(25) << "Display list of command arguments\n";
-	cout << setw(30) << "--version" << setw(25) << "Display build information\n";
+    //	cout << setw(30) << "--randomcode <MaxOpcodeNum>" << setw(25) << "Generate smart random EVM
+    //code\n"; 	cout << setw(30) << "--createRandomTest" << setw(25) << "Create random test and
+    //output it to the console\n"; 	cout << setw(30) << "--createRandomTest <PathToOptions.json>" <<
+    //setw(25) << "Use following options file for random code generation\n"; 	cout << setw(30) <<
+    //"--seed <uint>" << setw(25) << "Define a seed for random test\n"; 	cout << setw(30) <<
+    //"--options <PathTo.json>" << setw(25) << "Use following options file for random code
+    //generation\n";  cout << setw(30) << "--fulloutput" << setw(25) << "Disable address compression
+    // in the output field\n";
 }
 
 void printVersion()
@@ -155,7 +170,11 @@ Options::Options(int argc, const char** argv)
 		{
 			enableClientsOutput = true;
 		}
-		else if (arg == "--vm" || arg == "--evmc")
+        else if (arg == "--travisout")
+        {
+            travisOutThread = true;
+        }
+        else if (arg == "--vm" || arg == "--evmc")
 		{
 			// Skip VM options because they are handled by vmProgramOptions().
 			throwIfNoArgumentFollows();
@@ -250,8 +269,10 @@ Options::Options(int argc, const char** argv)
 				randomCodeOptionsPath = file;
 			else
 			{
-				std::cerr << "Options file not found! Default options at: tests/src/randomCodeOptions.json\n";
-				exit(0);
+                ETH_STDERROR_MESSAGE(
+                    "Options file not found! Default options at: "
+                    "tests/src/randomCodeOptions.json\n");
+                exit(0);
 			}
 		}
 		else if (arg == "-t")

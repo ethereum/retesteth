@@ -400,52 +400,50 @@ void RPCSession::test_rewindToBlock(size_t _blockNr)
     ETH_FAIL_REQUIRE_MESSAGE(rpcCall("test_rewindToBlock", { to_string(_blockNr) }) == true, "remote test_rewintToBlock = false");
 }
 
-void RPCSession::test_mineBlocks(int _number, string const& _hash)
+void RPCSession::test_mineBlocks(int _number)
 {
-       (void)_hash;
     u256 startBlock = fromBigEndian<u256>(fromHex(rpcCall("eth_blockNumber").asString()));
     ETH_ERROR_REQUIRE_MESSAGE(rpcCall("test_mineBlocks", { to_string(_number) }, true) == true, "remote test_mineBlocks = false");
 
-	// We auto-calibrate the time it takes to mine the transaction.
-	// It would be better to go without polling, but that would probably need a change to the test client
+    // We auto-calibrate the time it takes to mine the transaction.
+    // It would be better to go without polling, but that would probably need a change to the test
+    // client
 
-	auto startTime = std::chrono::steady_clock::now();
-	unsigned sleepTime = m_sleepTime;
-	size_t tries = 0;
-	for (; ; ++tries)
+    auto startTime = std::chrono::steady_clock::now();
+    unsigned sleepTime = m_sleepTime;
+    size_t tries = 0;
+    for (;; ++tries)
     {
         std::this_thread::sleep_for(chrono::milliseconds(sleepTime));
         auto endTime = std::chrono::steady_clock::now();
-		unsigned timeSpent = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
-		if (timeSpent > m_maxMiningTime)
-			break; // could be that some blocks are invalid.
-                   // ETH_FAIL_MESSAGE("Error in test_mineBlocks: block mining timeout! " +
+        unsigned timeSpent =
+            std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
+        if (timeSpent > m_maxMiningTime)
+            break;  // could be that some blocks are invalid.
+        // ETH_FAIL_MESSAGE("Error in test_mineBlocks: block mining timeout! " +
         // test::TestOutputHelper::get().testName());
 
-        // std::cerr << test_getBlockStatus(_hash) << std::endl;
-         bigint number = fromBigEndian<u256>(fromHex(rpcCall("eth_blockNumber").asString()));
-         if (number >= startBlock + _number)
+        bigint number = fromBigEndian<u256>(fromHex(rpcCall("eth_blockNumber").asString()));
+        if (number >= startBlock + _number)
             break;
-        //if (test_getBlockStatus(_hash) == "Ready")
-        //    break;
         else
-			sleepTime *= 2;
-	}
-	if (tries > 1)
-	{
-		m_successfulMineRuns = 0;
-		m_sleepTime += 2;
-	}
-	else if (tries == 1)
-	{
-		m_successfulMineRuns++;
-		if (m_successfulMineRuns > 5)
-		{
-			m_successfulMineRuns = 0;
-			if (m_sleepTime > 2)
-				m_sleepTime--;
-		}
-	}
+            sleepTime *= 2;
+    }
+    if (tries > 1)
+    {
+        m_successfulMineRuns = 0;
+        m_sleepTime += 2;
+    }
+    else if (tries == 1)
+    {
+        m_successfulMineRuns++;
+        if (m_successfulMineRuns > 5)
+        {
+            m_successfulMineRuns = 0;
+            if (m_sleepTime > 2)
+                m_sleepTime--;
+        }
+    }
 }
 
 void RPCSession::test_modifyTimestamp(size_t _timestamp)

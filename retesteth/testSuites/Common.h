@@ -32,6 +32,9 @@ void checkDataObject(DataObject const& _input);
 // Check that test file has only one test
 void checkOnlyOneTest(DataObject const& _input);
 
+// Check that test file has at least one test
+void checkAtLeastOneTest(DataObject const& _input);
+
 // Check test name in the file is equal to the test name of the file
 void checkTestNameIsEqualToFileName(DataObject const& _input);
 }

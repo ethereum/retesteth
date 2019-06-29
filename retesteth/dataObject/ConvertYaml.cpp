@@ -53,6 +53,7 @@ DataObject ConvertYamlToData(YAML::Node const& _node)
         return jArray;
     }
 
+    // Make it an exception!
     std::cerr << "Error parsing YAML node. Element type not defined! " + yamlTypeAsString(_node.Type());
     return DataObject(DataType::Null);
 }

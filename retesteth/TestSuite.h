@@ -30,8 +30,8 @@ namespace test
 class TestSuite
 {
 private:
-	// Execute Test.json file
-	void executeFile(boost::filesystem::path const& _file) const;
+    // Execute Test.json file
+    void executeFile(boost::filesystem::path const& _file) const;
     std::string checkFillerExistance(std::string const& _testFolder) const;
     struct BoostPath
     {

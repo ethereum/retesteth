@@ -2,7 +2,6 @@
 #include "../object.h"
 
 using namespace  test;
-
 namespace test {
     class scheme_env: public object
     {
@@ -19,6 +18,10 @@ namespace test {
                 {"previousHash", {DataType::String} },
             });
 
+            ETH_ERROR_REQUIRE_MESSAGE(dev::u256(_env.atKey("currentGasLimit").asString()) <=
+                                          dev::u256("0x7fffffffffffffff"),
+                "Env section gasLimit is beyound the limits! " +
+                    TestOutputHelper::get().testInfo());
             makeAllFieldsHex(m_data);
         }
 

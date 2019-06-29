@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 /** @file StateTests.cpp
  * @author Dimitry Khokhlov <dimitry@ethereum.org>
  * @date 2016
@@ -63,10 +64,10 @@ DataObject FillTestAsBlockchain(DataObject const& _testFile, TestSuite::TestSuit
 
     RPCSession& session = RPCSession::instance(TestOutputHelper::getThreadID());
     // run transactions on all networks that we need
-    for (auto const& net : test.getAllNetworksFromExpectSection())
+    for (auto const& net : test.getExpectSection().getAllNetworksFromExpectSection())
     {
         // run transactions for defined expect sections only
-        for (auto const& expect : test.getExpectSections())
+        for (auto const& expect : test.getExpectSection().getExpectSections())
         {
             // if expect section for this networks
             if (expect.getNetworks().count(net))
@@ -168,14 +169,14 @@ DataObject FillTest(DataObject const& _testFile, TestSuite::TestSuiteOptions& _o
     filledTest["transaction"] = test.getGenTransaction().getData();
 
     // run transactions on all networks that we need
-    for (auto const& net: test.getAllNetworksFromExpectSection())
+    for (auto const& net : test.getExpectSection().getAllNetworksFromExpectSection())
     {
         DataObject forkResults;
         forkResults.setKey(net);
         session.test_setChainParams(test.getGenesisForRPC(net, "NoReward").asJson());
 
         // run transactions for defined expect sections only
-        for (auto const& expect : test.getExpectSections())
+        for (auto const& expect : test.getExpectSection().getExpectSections())
         {
             // if expect section for this networks
             if (expect.getNetworks().count(net))
@@ -207,6 +208,10 @@ DataObject FillTest(DataObject const& _testFile, TestSuite::TestSuiteOptions& _o
                     tr.executed = true;
 
                     DataObject remoteState = getRemoteState(session, trHash, true);
+                    test::scheme_block blockData(remoteState.atKey("rawBlockData"));
+                    ETH_ERROR_REQUIRE_MESSAGE(blockData.getTransactionCount() == 1,
+                        "StateTest transaction execution failed! " +
+                            TestOutputHelper::get().testInfo());
 
                     // check that the post state qualifies to the expect section
                     scheme_state postState(remoteState.atKey("postState"));
@@ -361,7 +366,7 @@ DataObject StateTestSuite::doTests(DataObject const& _input, TestSuiteOptions& _
 TestSuite::TestPath StateTestSuite::suiteFolder() const
 {
     if (Options::get().fillchain)
-        return TestSuite::TestPath(fs::path("BlockchainTests") / "GeneralStateTests2");
+        return TestSuite::TestPath(fs::path("BlockchainTests") / "GeneralStateTestsRetesteth");
     return TestSuite::TestPath(fs::path("GeneralStateTests"));
 }
 
@@ -446,6 +451,12 @@ BOOST_AUTO_TEST_CASE(stZeroKnowledge){}
 BOOST_AUTO_TEST_CASE(stZeroKnowledge2){}
 BOOST_AUTO_TEST_CASE(stCodeCopyTest){}
 BOOST_AUTO_TEST_CASE(stBugs){}
+
+//Constantinople Tests
+BOOST_AUTO_TEST_CASE(stShift){}
+BOOST_AUTO_TEST_CASE(stCreate2){}
+BOOST_AUTO_TEST_CASE(stExtCodeHash){}
+BOOST_AUTO_TEST_CASE(stSStoreTest){}
 
 //Stress Tests
 BOOST_AUTO_TEST_CASE(stAttackTest){}

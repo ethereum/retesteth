@@ -9,72 +9,90 @@
 using namespace dev;
 
 namespace test {
-	class scheme_transaction: public object
-	{
-		public:
-		scheme_transaction(DataObject const& _transaction):
-			object(_transaction)
-		{
-			test::requireJsonFields(_transaction, "transaction", {
-                {"data", {DataType::String} },
-                {"gasLimit", {DataType::String} },
-                {"gasPrice", {DataType::String} },
-                {"nonce", {DataType::String} },
-                {"secretKey", {DataType::String} },
-                {"to", {DataType::String} },
-                {"value", {DataType::String} }
-			});
-			m_data["version"] = "0x01";
-            if (!m_data.atKey("to").asString().empty())
-                m_data["to"] = scheme_account::makeHexAddress(m_data.atKey("to").asString());
-            // convert into rpc format
-			m_data["gas"] = m_data["gasLimit"].asString();
-            makeAllFieldsHex(m_data);
-		}
-
-        std::string getSignedRLP() const
+class scheme_transaction : public object
+{
+public:
+    scheme_transaction(DataObject const& _transaction) : object(_transaction)
+    {
+        if (_transaction.count("secretKey") > 0)
         {
-            u256 nonce = u256(m_data.atKey("nonce").asString());
-            u256 gasPrice = u256(m_data.atKey("gasPrice").asString());
-            u256 gasLimit = u256(m_data.atKey("gasLimit").asString());
-            Address trTo = Address(m_data.atKey("to").asString());
-            u256 value = u256(m_data.atKey("value").asString());
-            bytes data = fromHex(m_data.atKey("data").asString());
-
-            dev::RLPStream s;
-            s.appendList(6);
-            s << nonce;
-            s << gasPrice;
-            s << gasLimit;
-            if (m_data.atKey("to").asString().size() == 42)
-                s << trTo;
-            else
-                s << "";
-            s << value;
-            s << data;
-            h256 hash(dev::sha3(s.out()));
-            Signature sig = dev::sign(dev::Secret(m_data.atKey("secretKey").asString()), hash);
-
-            SignatureStruct sigStruct = *(SignatureStruct const*)&sig;
-            ETH_FAIL_REQUIRE_MESSAGE(sigStruct.isValid(), TestOutputHelper::get().testName() + "Could not construct transaction signature!");
-
-            RLPStream sWithSignature;
-            sWithSignature.appendList(9);
-            sWithSignature << nonce;
-            sWithSignature << gasPrice;
-            sWithSignature << gasLimit;
-            if (m_data.atKey("to").asString().size() == 42)
-                sWithSignature << trTo;
-            else
-                sWithSignature << "";
-            sWithSignature << value;
-            sWithSignature << data;
-            byte v = 27 + sigStruct.v;
-            sWithSignature << v;
-            sWithSignature << (u256)sigStruct.r;
-            sWithSignature << (u256)sigStruct.s;
-            return dev::toHexPrefixed(sWithSignature.out());
+            test::requireJsonFields(_transaction, "transaction",
+                {{"data", {DataType::String}}, {"gasLimit", {DataType::String}},
+                    {"gasPrice", {DataType::String}}, {"nonce", {DataType::String}},
+                    {"secretKey", {DataType::String}}, {"to", {DataType::String}},
+                    {"value", {DataType::String}}});
         }
+        else
+        {
+            test::requireJsonFields(_transaction, "transaction",
+                {{"data", {DataType::String}}, {"gasLimit", {DataType::String}},
+                    {"gasPrice", {DataType::String}}, {"nonce", {DataType::String}},
+                    {"v", {DataType::String}}, {"r", {DataType::String}}, {"s", {DataType::String}},
+                    {"to", {DataType::String}}, {"value", {DataType::String}}});
+        }
+
+        m_data["version"] = "0x01";
+        if (!m_data.atKey("to").asString().empty())
+            m_data["to"] = scheme_account::makeHexAddress(m_data.atKey("to").asString());
+        // convert into rpc format
+        m_data["gas"] = m_data["gasLimit"].asString();
+        makeAllFieldsHex(m_data);
+    }
+
+    std::string getSignedRLP() const
+    {
+        u256 nonce = u256(m_data.atKey("nonce").asString());
+        u256 gasPrice = u256(m_data.atKey("gasPrice").asString());
+        u256 gasLimit = u256(m_data.atKey("gasLimit").asString());
+        Address trTo = Address(m_data.atKey("to").asString());
+        u256 value = u256(m_data.atKey("value").asString());
+        bytes data = fromHex(m_data.atKey("data").asString());
+
+        dev::RLPStream s;
+        s.appendList(6);
+        s << nonce;
+        s << gasPrice;
+        s << gasLimit;
+        if (m_data.atKey("to").asString().size() == 42)
+            s << trTo;
+        else
+            s << "";
+        s << value;
+        s << data;
+        h256 hash(dev::sha3(s.out()));
+
+        SignatureStruct sigStruct;
+        if (m_data.count("secretKey"))
+        {
+            Signature sig = dev::sign(dev::Secret(m_data.atKey("secretKey").asString()), hash);
+            sigStruct = *(SignatureStruct const*)&sig;
+            ETH_FAIL_REQUIRE_MESSAGE(sigStruct.isValid(),
+                TestOutputHelper::get().testName() + " Could not construct transaction signature!");
+        }
+        else
+        {
+            u256 vValue(m_data.atKey("v").asString());
+            sigStruct = SignatureStruct(h256(m_data.atKey("r").asString()),
+                h256(m_data.atKey("s").asString()), vValue.convert_to<byte>());
+        }
+
+        RLPStream sWithSignature;
+        sWithSignature.appendList(9);
+        sWithSignature << nonce;
+        sWithSignature << gasPrice;
+        sWithSignature << gasLimit;
+        if (m_data.atKey("to").asString().size() == 42)
+            sWithSignature << trTo;
+        else
+            sWithSignature << "";
+        sWithSignature << value;
+        sWithSignature << data;
+        byte v = m_data.count("secretKey") ? 27 + sigStruct.v : sigStruct.v;
+        sWithSignature << v;
+        sWithSignature << (u256)sigStruct.r;
+        sWithSignature << (u256)sigStruct.s;
+        return dev::toHexPrefixed(sWithSignature.out());
+    }
     };
 
     class scheme_generalTransaction: public object

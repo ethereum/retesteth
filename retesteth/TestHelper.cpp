@@ -430,7 +430,7 @@ FILE* popen2(string const& _command, vector<string> const& _args, string const& 
             case 7: EXECLARG7(cmd.c_str(), _args[0].c_str(), _args[1].c_str(), _args[2].c_str(), _args[3].c_str(), _args[4].c_str(), _args[5].c_str(), _args[6].c_str()); break;
             case 8: EXECLARG8(cmd.c_str(), _args[0].c_str(), _args[1].c_str(), _args[2].c_str(), _args[3].c_str(), _args[4].c_str(), _args[5].c_str(), _args[6].c_str(), _args[7].c_str()); break;
             default:
-                std::cerr << "Wrong number of arguments provided in popen2!" << std::endl;
+                ETH_STDERROR_MESSAGE("Wrong number of arguments provided in popen2!");
         }
         exit(0);
     }
@@ -457,7 +457,6 @@ int pclose2(FILE* _fp, pid_t _pid)
     std::lock_guard<std::mutex> lock(g_pclosemutex);
     if (_fp)
         pclose(_fp);
-    //std::cerr << cmd << std::endl;
     int ret = system(cmd.c_str());
     return ret;
 }
