@@ -40,6 +40,7 @@ DataObject BlockchainTestTransitionSuite::doTests(
 DataObject BlockchainTestInvalidSuite::doTests(
     DataObject const& _input, TestSuiteOptions& _opt) const
 {
+    _opt.allowInvalidBlocks = true;
     return DoTests(_input, _opt);
 }
 
@@ -121,7 +122,7 @@ public:
         string casename = boost::unit_test::framework::current_test_case().p_name;
         boost::filesystem::path suiteFillerPath = suite.getFullPathFiller(casename).parent_path();
 
-        if (casename == "stQuadraticComplexityTest" && !test::Options::get().all)
+        if (casename == "bcExploitTest" && !test::Options::get().all)
         {
             std::cout << "Skipping " << casename << " because --all option is not specified.\n";
             test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
@@ -146,15 +147,14 @@ public:
     }
 };
 
-class bcGeneralTestsFixture
+class BCGeneralTestsFixture
 {
 public:
-    bcGeneralTestsFixture()
+    BCGeneralTestsFixture()
     {
         test::BCGeneralStateTestsSuite suite;
         string const& casename = boost::unit_test::framework::current_test_case().p_name;
         boost::filesystem::path suiteFillerPath = suite.getFullPathFiller(casename).parent_path();
-
 
         // skip this test suite if not run with --all flag (cases are already tested in state tests)
         if (!test::Options::get().all)
@@ -170,25 +170,31 @@ public:
 
 BOOST_AUTO_TEST_SUITE(BlockchainTests)
 
+// Tests that contain only valid blocks and check that import is correct
 BOOST_FIXTURE_TEST_SUITE(ValidBlocks, BlockchainTestValidFixture)
-BOOST_AUTO_TEST_CASE(bcStateTests) {}
 BOOST_AUTO_TEST_CASE(bcBlockGasLimitTest) {}
+BOOST_AUTO_TEST_CASE(bcExploitTest) {}
+BOOST_AUTO_TEST_CASE(bcForkStressTest) {}
 BOOST_AUTO_TEST_CASE(bcGasPricerTest) {}
-BOOST_AUTO_TEST_CASE(bcUncleHeaderValidity) {}
+BOOST_AUTO_TEST_CASE(bcMultiChainTest) {}
+BOOST_AUTO_TEST_CASE(bcRandomBlockhashTest) {}
+BOOST_AUTO_TEST_CASE(bcStateTests) {}
+BOOST_AUTO_TEST_CASE(bcTotalDifficultyTest) {}
+BOOST_AUTO_TEST_CASE(bcUncleSpecialTests) {}
 BOOST_AUTO_TEST_CASE(bcUncleTest) {}
 BOOST_AUTO_TEST_CASE(bcValidBlockTest) {}
 BOOST_AUTO_TEST_CASE(bcWalletTest) {}
-BOOST_AUTO_TEST_CASE(bcTotalDifficultyTest) {}
-BOOST_AUTO_TEST_CASE(bcMultiChainTest) {}
-BOOST_AUTO_TEST_CASE(bcForkStressTest) {}
-BOOST_AUTO_TEST_CASE(bcForgedTest) {}
-BOOST_AUTO_TEST_CASE(bcRandomBlockhashTest) {}
-BOOST_AUTO_TEST_CASE(bcExploitTest) {}
-BOOST_AUTO_TEST_CASE(bcUncleSpecialTests) {}
 BOOST_AUTO_TEST_SUITE_END()
 
+// Tests that might have invalid blocks and check that those are rejected
 BOOST_FIXTURE_TEST_SUITE(InvalidBlocks, BlockchainTestInvalidFixture)
+BOOST_AUTO_TEST_CASE(bcBlockGasLimitTest) {}
+BOOST_AUTO_TEST_CASE(bcForgedTest) {}
 BOOST_AUTO_TEST_CASE(bcInvalidHeaderTest) {}
+BOOST_AUTO_TEST_CASE(bcMultiChainTest) {}
+BOOST_AUTO_TEST_CASE(bcUncleHeaderValidity) {}
+BOOST_AUTO_TEST_CASE(bcUncleSpecialTests) {}
+BOOST_AUTO_TEST_CASE(bcUncleTest) {}
 BOOST_AUTO_TEST_SUITE_END()
 
 // Transition from fork to fork tests
@@ -203,7 +209,7 @@ BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
 
 // General tests in form of blockchain tests
-BOOST_FIXTURE_TEST_SUITE(BCGeneralStateTests, bcGeneralTestsFixture)
+BOOST_FIXTURE_TEST_SUITE(BCGeneralStateTests, BCGeneralTestsFixture)
 
 // Frontier Tests
 BOOST_AUTO_TEST_CASE(stCallCodes) {}

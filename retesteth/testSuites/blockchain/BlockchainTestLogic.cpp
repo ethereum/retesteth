@@ -6,8 +6,8 @@
 namespace test
 {
 /// Generate blockchain test from filler
-bool FillTest(
-    scheme_blockchainTestFiller const& _testObject, string const& _network, DataObject& _testOut)
+bool FillTest(scheme_blockchainTestFiller const& _testObject, string const& _network,
+    TestSuite::TestSuiteOptions const&, DataObject& _testOut)
 {
     // construct filled blockchain test
     _testOut["sealEngine"] = _testObject.getSealEngine();
@@ -70,7 +70,7 @@ bool FillTest(
 }
 
 /// Read and execute the test from the file
-bool RunTest(DataObject const& _testObject)
+bool RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _opt)
 {
     scheme_blockchainTest inputTest(_testObject);
     RPCSession& session = RPCSession::instance(TestOutputHelper::getThreadID());
@@ -81,7 +81,7 @@ bool RunTest(DataObject const& _testObject)
     for (auto const& brlp : inputTest.getBlockRlps())
     {
         session.test_importRawBlock(brlp);
-        if (!session.getLastRPCError().empty())
+        if (!session.getLastRPCError().empty() && !_opt.allowInvalidBlocks)
             ETH_ERROR_MESSAGE("Running blockchain test: " + session.getLastRPCError());
     }
 
@@ -124,7 +124,7 @@ DataObject DoTests(DataObject const& _input, TestSuite::TestSuiteOptions& _opt)
                         TestOutputHelper::get().setCurrentTestName(newtestname);
 
                         DataObject testOutput;
-                        _opt.wasErrors = FillTest(testFiller, network, testOutput);
+                        _opt.wasErrors = FillTest(testFiller, network, _opt, testOutput);
                         if (testFiller.getData().count("_info"))
                             testOutput["_info"] = testFiller.getData().atKey("_info");
                         tests[newtestname] = testOutput;
@@ -139,7 +139,7 @@ DataObject DoTests(DataObject const& _input, TestSuite::TestSuiteOptions& _opt)
                 if (testname != Options::get().singleTestName + "_" + Options::get().singleTestNet)
                     continue;
 
-            _opt.wasErrors = RunTest(i);
+            _opt.wasErrors = RunTest(i, _opt);
         }
     }
 

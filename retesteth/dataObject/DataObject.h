@@ -131,7 +131,18 @@ public:
     {
         // So not to overwrite the existing data
         // Do not replace the key. Assuming that key is set upon calling DataObject[key] =
-        _assert(m_type == DataType::Null, "m_type == DataType::Null (DataObject& operator=). Overwriting dataobject that is not NULL");
+        if (!m_allowOverwrite)
+            _assert(m_type == DataType::Null,
+                "m_type == DataType::Null (DataObject& operator=). Overwriting dataobject that is "
+                "not NULL");
+        else
+        {
+            // overwrite value and key
+            replace(_value);
+            return *this;
+        }
+
+        // initialize new element if it was null before, but keep the key; DataObject[key] =
         m_type = _value.type();
         switch (_value.type())
         {
@@ -168,6 +179,11 @@ public:
     std::string asJson(int level = 0, bool pretty = true) const;
     static std::string dataTypeAsString(DataType _type);
 
+    void setOverwrite(bool _overwrite) { m_allowOverwrite = _overwrite; }
+    void setAutosort(bool _sort) { m_autosort = _sort; }
+    bool isOverwritable() const { return m_allowOverwrite; }
+    bool isAutosort() const { return m_autosort; }
+
 private:
     void _addSubObject(DataObject const& _obj, string const& _keyOverwrite = string());
     void _checkDoubleKeys() const;
@@ -177,7 +193,12 @@ private:
     DataType m_type;
     std::string m_strKey;
     std::string m_strVal;
+    bool m_allowOverwrite = false;  // allow overwrite elements
+    bool m_autosort = false;
     bool m_boolVal;
     int m_intVal;
 };
+
+// Find index that _key should take place in when being added to ordered _objects by key
+size_t findOrderedKeyPosition(string const& _key, vector<DataObject> const& _objects);
 }

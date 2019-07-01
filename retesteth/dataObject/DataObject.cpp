@@ -184,6 +184,8 @@ void DataObject::replace(DataObject const& _value)
     m_type = _value.type();
     m_subObjects.clear();
     m_subObjects = _value.getSubObjects();
+    m_allowOverwrite = _value.isOverwritable();
+    m_autosort = _value.isAutosort();
 }
 
 DataObject const& DataObject::atKey(std::string const& _key) const
@@ -411,38 +413,55 @@ std::string DataObject::dataTypeAsString(DataType _type)
     return "";
 }
 
+size_t dataobject::findOrderedKeyPosition(string const& _key, vector<DataObject> const& _objects)
+{
+    if (_objects.size() == 0)
+        return 0;
+    size_t step = _objects.size() / 2;
+    size_t guess = step;
+    while (step > 0)
+    {
+        step = step / 2;
+        if (_objects.at(guess).getKey() > _key)
+            guess -= std::max(step, (size_t)1);
+        else
+            guess += std::max(step, (size_t)1);
+    }
+    if (guess == _objects.size() || _objects.at(guess).getKey() > _key)
+        return guess;
+    return std::min(guess + 1, _objects.size());
+}
+
 void DataObject::_addSubObject(DataObject const& _obj, string const& _keyOverwrite)
 {
     if (m_type == DataType::Null)
         m_type = DataType::Object;
 
-    m_subObjects.push_back(_obj);
-    if (!_keyOverwrite.empty())
-        setSubObjectKey(m_subObjects.size() - 1, _keyOverwrite);
-    _checkDoubleKeys();
-
-    // sort elements as in JSON
-    if (m_type == DataType::Object && m_subObjects.size() > 0)
+    string const& key = _keyOverwrite.empty() ? _obj.getKey() : _keyOverwrite;
+    if (key.empty() || !m_autosort)
     {
-        string const& actualKey = m_subObjects.at(m_subObjects.size() - 1).getKey();
-        _assert(!actualKey.empty(), "_key must be set when additing to Object type! (DataObject::_addSubObject)");
-
-        int newPosition = -1;
-        for (size_t i = 0; i < m_subObjects.size(); i++)
-        {
-            if (m_subObjects.at(i).getKey() > actualKey)
-            {
-                newPosition = i;
-                break;
-            }
-        }
-        if (newPosition != -1)
-            setKeyPos(actualKey, newPosition); // !works with m_subObjects
+        m_subObjects.push_back(_obj);
+        size_t pos = m_subObjects.size() - 1;
+        setSubObjectKey(pos, key);
+        m_subObjects.at(pos).setAutosort(m_autosort);
+        m_subObjects.at(pos).setOverwrite(m_allowOverwrite);
+    }
+    else
+    {
+        // find ordered position to insert key
+        // better use it only when export as ordered json !!!
+        setOverwrite(true);
+        size_t pos = findOrderedKeyPosition(key, m_subObjects);
+        m_subObjects.insert(m_subObjects.begin() + pos, 1, _obj);
+        m_subObjects.at(pos).setKey(key);
+        m_subObjects.at(pos).setOverwrite(true);
+        setOverwrite(false);
     }
 }
 
 void DataObject::_checkDoubleKeys() const
 {
+    return;
     // !! disable this function on release !!
     #ifdef DEBUG
     _assert(m_type == DataType::Object, "m_type != DataType::Object (DataObject::_checkDoubleKeys())");

@@ -214,15 +214,49 @@ bool pathHasTests(boost::filesystem::path const& _path)
     return false;
 }
 
+string detectFilterForMinusTArgument()
+{
+    // -t SuiteName/caseName   parse caseName as filter
+    // rCurrentTestSuite is empty if run without -t argument
+    Options const& opt = Options::get();
+    if (opt.rCurrentTestSuite.empty())
+        return string();
+
+    string filter;
+    // -t SuiteName/subSuiteName/caseName
+    // if (SuiteName/subSuiteName == -t argument) then filter is empty
+    bool thereisPathEqualToSuite = false;
+    for (auto const& allTestsIt : finishedTestFoldersMap)
+    {
+        // Remove Filler from folder name so it equal to -t argument
+        string parent = allTestsIt.first.parent_path().stem().string();
+        size_t index = parent.find("Filler");
+        if (index == std::string::npos)
+            break;
+        parent = parent.replace(index, 6, "");
+
+        string path = parent + "/" + allTestsIt.first.filename().string();
+        if (opt.rCurrentTestSuite == path)
+        {
+            thereisPathEqualToSuite = true;
+            break;
+        }
+    }
+
+    if (!thereisPathEqualToSuite)
+    {
+        size_t pos = opt.rCurrentTestSuite.find_last_of('/');
+        if (pos != string::npos)
+            filter = opt.rCurrentTestSuite.substr(pos + 1);
+    }
+
+    return filter;
+}
+
 void checkUnfinishedTestFolders()
 {
     std::lock_guard<std::mutex> lock(g_finishedTestFoldersMapMutex);
-    // -t SuiteName/caseName   parse caseName as filter
-    // rCurrentTestSuite is empty if run without -t argument
-    string filter;
-    size_t pos = Options::get().rCurrentTestSuite.find('/');
-    if (pos != string::npos)
-        filter = Options::get().rCurrentTestSuite.substr(pos + 1);
+    string filter = detectFilterForMinusTArgument();
 
     if (!filter.empty())
     {
