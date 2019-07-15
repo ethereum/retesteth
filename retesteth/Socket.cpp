@@ -124,6 +124,34 @@ namespace
     }
     #endif
 
+    struct WriteThis
+    {
+        const char* readptr;
+        size_t sizeleft;
+    };
+
+    static size_t readcallback(void* dest, size_t size, size_t nmemb, void* userp)
+    {
+        struct WriteThis* wt = (struct WriteThis*)userp;
+        size_t buffer_size = size * nmemb;
+
+        if (wt->sizeleft)
+        {
+            /* copy as much as possible from the source to the destination */
+            size_t copy_this_much = wt->sizeleft;
+            if (copy_this_much > buffer_size)
+                copy_this_much = buffer_size;
+            memcpy(dest, wt->readptr, copy_this_much);
+
+            wt->readptr += copy_this_much;
+            wt->sizeleft -= copy_this_much;
+
+            return copy_this_much; /* we copied this many bytes */
+        }
+
+        return 0; /* no more data left to deliver */
+    }
+
     string sendRequestTCP(string const& _req, string const& _address)
     {
         CURL *curl;
@@ -136,16 +164,24 @@ namespace
         if (curl)
         {
             std::unique_ptr<std::string> httpData(new std::string());
+            struct WriteThis wt;
+            wt.readptr = _req.c_str();
+            wt.sizeleft = _req.size();
+
             curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
             curl_easy_setopt(curl, CURLOPT_BUFFERSIZE, 3000000);
             curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writecallback);
             curl_easy_setopt(curl, CURLOPT_WRITEDATA, httpData.get());
-            struct curl_slist *header = NULL;
-            header = curl_slist_append(header, "Content-Type: application/json");
-            curl_easy_setopt(curl, CURLOPT_HTTPHEADER, header);
-            curl_easy_setopt(curl, CURLOPT_POSTFIELDS, _req.c_str());
-            curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, -1L);
+            curl_easy_setopt(curl, CURLOPT_READFUNCTION, readcallback);
+            curl_easy_setopt(curl, CURLOPT_READDATA, &wt);
+            curl_easy_setopt(curl, CURLOPT_POST, 1L);
 
+            struct curl_slist *header = NULL;
+            header = curl_slist_append(header, "Accept: text/plain");
+            header = curl_slist_append(header, "Content-Type: application/json");
+            header = curl_slist_append(header, "Transfer-Encoding: chunked");
+
+            curl_easy_setopt(curl, CURLOPT_HTTPHEADER, header);
             res = curl_easy_perform(curl);
             if(res != CURLE_OK)
                 ETH_FAIL_MESSAGE("curl_easy_perform() failed " + string(curl_easy_strerror(res)));
