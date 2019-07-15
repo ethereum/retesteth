@@ -14,7 +14,7 @@ scheme_blockchainTestBase::fieldChecker::fieldChecker(DataObject const& _test)
             {"network", {{DataType::String}, jsonField::Optional}},
             {"hash", {{DataType::String}, jsonField::Optional}},
             {"gasUsed", {{DataType::String}, jsonField::Optional}},
-            {"postState", {{DataType::Object}, jsonField::Optional}},
+            {"postState", {{DataType::Object, DataType::String}, jsonField::Optional}},
             {"pre", {{DataType::Object}, jsonField::Required}},
             {"sealEngine", {{DataType::String}, jsonField::Optional}}});
 }
@@ -28,7 +28,7 @@ scheme_blockchainTest::fieldChecker::fieldChecker(DataObject const& _test)
             {"genesisRLP", {{DataType::String}, jsonField::Optional}},
             {"lastblockhash", {{DataType::String}, jsonField::Required}},
             {"network", {{DataType::String}, jsonField::Required}},
-            {"postState", {{DataType::Object}, jsonField::Required}},
+            {"postState", {{DataType::Object, DataType::String}, jsonField::Required}},
             {"pre", {{DataType::Object}, jsonField::Required}},
             {"sealEngine", {{DataType::String}, jsonField::Optional}}});
 }

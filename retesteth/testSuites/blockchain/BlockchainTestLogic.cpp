@@ -89,12 +89,26 @@ bool RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _
     // std::this_thread::sleep_for(std::chrono::seconds(10));
 
     // compare post state hash
-    DataObject remoteState = getRemoteState(session, "", true);
-    scheme_state postState(remoteState.atKey("postState"));
-    CompareResult res = test::compareStates(inputTest.getPost(), postState);
-    ETH_ERROR_REQUIRE_MESSAGE(
-        res == CompareResult::Success, "Error in " + inputTest.getData().getKey());
-    return (res != CompareResult::Success);
+    DataObject remoteState;
+    if (inputTest.getPost().getHash().empty())
+    {
+        remoteState = getRemoteState(session, "", true);
+        scheme_state postState(remoteState.atKey("postState"));
+        CompareResult res = test::compareStates(inputTest.getPost(), postState);
+        ETH_ERROR_REQUIRE_MESSAGE(
+            res == CompareResult::Success, "Error in " + inputTest.getData().getKey());
+        return (res != CompareResult::Success);
+    }
+    else
+    {
+        remoteState = getRemoteState(session, "", false);
+        bool flag = remoteState.atKey("postHash").asString() == inputTest.getPost().getHash();
+        ETH_ERROR_REQUIRE_MESSAGE(flag, "Error in " + TestOutputHelper::get().testInfo() +
+                                            ", Expected post state `" +
+                                            inputTest.getPost().getHash() + "', but got: '" +
+                                            remoteState.atKey("postHash").asString() + "'");
+        return flag;
+    }
 }
 
 DataObject DoTests(DataObject const& _input, TestSuite::TestSuiteOptions& _opt)
