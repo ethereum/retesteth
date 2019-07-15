@@ -128,37 +128,25 @@ void DataObject::setKeyPos(std::string const& _key, size_t _pos)
     _assert(_pos < m_subObjects.size(), "_pos < m_subObjects.size()");
     _assert(count(_key), "count(_key) _key = " + _key + " (DataObject::setKeyPos)");
     _assert(!_key.empty(), "!_key.empty() (DataObject::setKeyPos)");
-    _checkDoubleKeys();
+
+    size_t elementPos;
     for (size_t i = 0; i < m_subObjects.size(); i++)
-    {
         if (m_subObjects.at(i).getKey() == _key)
         {
             if (i == _pos)
                 return;  // item already at _pos;
             else
-                break;
-        }
-    }
-
-    std::vector<DataObject> newSubObjects;
-    for (size_t i = 0; i < m_subObjects.size(); i++)
-    {
-        if (i == _pos)
-        {
-            if (i == m_subObjects.size() - 1 || (i >= 1 && m_subObjects.at(i - 1).getKey() == _key))
             {
-                newSubObjects.push_back(m_subObjects.at(i));
-                newSubObjects.push_back(this->atKey(_key));
-                continue;
+                elementPos = i;
+                break;
             }
-            newSubObjects.push_back(this->atKey(_key));
         }
-        if (m_subObjects.at(i).getKey() != _key)
-            newSubObjects.push_back(m_subObjects.at(i));
-    }
-    m_subObjects.clear();
-    m_subObjects = newSubObjects;
-    _checkDoubleKeys();
+
+    setOverwrite(true);
+    DataObject data = m_subObjects.at(elementPos);
+    m_subObjects.erase(m_subObjects.begin() + elementPos);
+    m_subObjects.insert(m_subObjects.begin() + _pos, 1, data);
+    setOverwrite(false);
 }
 
 
@@ -230,6 +218,18 @@ void DataObject::renameKey(std::string const& _currentKey, std::string const& _n
 void DataObject::removeKey(std::string const& _key)
 {
     _assert(type() == DataType::Object, "type() == DataType::Object");
+    for (std::vector<DataObject>::const_iterator it = m_subObjects.begin();
+         it != m_subObjects.end(); it++)
+    {
+        if ((*it).getKey() == _key)
+        {
+            setOverwrite(true);
+            m_subObjects.erase(it);
+            setOverwrite(false);
+        }
+    }
+
+    /*
     bool startReplace = false;
     for (std::vector<DataObject>::iterator it = m_subObjects.begin(); it != m_subObjects.end();
          it++)
@@ -247,7 +247,7 @@ void DataObject::removeKey(std::string const& _key)
                 break;
             }
         }
-    }
+    }*/
 }
 
 void DataObject::clear(DataType _type)
@@ -457,24 +457,6 @@ void DataObject::_addSubObject(DataObject const& _obj, string const& _keyOverwri
         m_subObjects.at(pos).setOverwrite(true);
         setOverwrite(false);
     }
-}
-
-void DataObject::_checkDoubleKeys() const
-{
-    return;
-    // !! disable this function on release !!
-    #ifdef DEBUG
-    _assert(m_type == DataType::Object, "m_type != DataType::Object (DataObject::_checkDoubleKeys())");
-    for (size_t i = 0; i < m_subObjects.size(); i++)
-    {
-        std::string const& key = m_subObjects.at(i).getKey();
-        if (key.empty())
-            continue;
-        for (size_t j = i + 1; j < m_subObjects.size(); j++)
-            _assert(m_subObjects.at(j).getKey() != key,
-                "m_subObjects.at(j).getKey() != key, double key: '" + key + "' in the object!");
-    }
-    #endif
 }
 
 void DataObject::_assert(bool _flag, std::string const& _comment) const

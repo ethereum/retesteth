@@ -186,7 +186,6 @@ public:
 
 private:
     void _addSubObject(DataObject const& _obj, string const& _keyOverwrite = string());
-    void _checkDoubleKeys() const;
     void _assert(bool _flag, std::string const& _comment = "") const;
 
     std::vector<DataObject> m_subObjects;

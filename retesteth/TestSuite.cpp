@@ -23,6 +23,7 @@
 #include <dataObject/DataObject.h>
 #include <json/reader.h>
 #include <json/value.h>
+#include <json/version.h>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/Log.h>
 #include <libdevcore/SHA3.h>
@@ -141,21 +142,31 @@ void addClientInfo(
 
 void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
 {
-    dataobject::DataObject v = dataobject::ConvertJsoncppToData(test::readJson(_compiledTest));
+    Json::Value jv = test::readJson(_compiledTest);
+    dataobject::DataObject v = dataobject::ConvertJsoncppToData(jv, "_info");
     TestFileData fillerData = readTestFile(_sourceTest);
     for (auto const& i: v.getSubObjects())
-	{
-        // use eth object _info section class here !!!!!
-        ETH_FAIL_REQUIRE_MESSAGE(i.type() == dataobject::DataType::Object,
-            i.getKey() + " should contain an object under a test name.");
-        ETH_FAIL_REQUIRE_MESSAGE(i.count("_info") > 0, "_info section not set! " + _compiledTest.string());
-        dataobject::DataObject const& info = i.atKey("_info");
-        ETH_FAIL_REQUIRE_MESSAGE(info.count("sourceHash") > 0, "sourceHash not found in " + _compiledTest.string() + " in " + i.getKey());
-        h256 const sourceHash = h256(info.atKey("sourceHash").asString());
-        ETH_ERROR_REQUIRE_MESSAGE(sourceHash == fillerData.hash,
-            "Test " + _compiledTest.string() + " in " + i.getKey() +
-                " is outdated. Filler hash is different! ( '" + sourceHash.hex().substr(0, 4) +
-                "' != '" + fillerData.hash.hex().substr(0, 4) + "') ");
+    {
+        try
+        {
+            // use eth object _info section class here !!!!!
+            ETH_ERROR_REQUIRE_MESSAGE(i.type() == dataobject::DataType::Object,
+                i.getKey() + " should contain an object under a test name.");
+            ETH_ERROR_REQUIRE_MESSAGE(
+                i.count("_info") > 0, "_info section not set! " + _compiledTest.string());
+            dataobject::DataObject const& info = i.atKey("_info");
+            ETH_ERROR_REQUIRE_MESSAGE(info.count("sourceHash") > 0,
+                "sourceHash not found in " + _compiledTest.string() + " in " + i.getKey());
+            h256 const sourceHash = h256(info.atKey("sourceHash").asString());
+            ETH_ERROR_REQUIRE_MESSAGE(sourceHash == fillerData.hash,
+                "Test " + _compiledTest.string() + " in " + i.getKey() +
+                    " is outdated. Filler hash is different! ( '" + sourceHash.hex().substr(0, 4) +
+                    "' != '" + fillerData.hash.hex().substr(0, 4) + "') ");
+        }
+        catch (test::BaseEthException const&)
+        {
+            continue;
+        }
     }
 }
 
@@ -273,10 +284,15 @@ string TestSuite::checkFillerExistance(string const& _testFolder) const
         else
             exceptionStr =
                 "Compiled test folder contains test without Filler: " + file.filename().string();
-        ETH_FAIL_REQUIRE_MESSAGE(fs::exists(expectedFillerName) || fs::exists(expectedFillerName2) ||
-                                fs::exists(expectedCopierName),
+        ETH_ERROR_REQUIRE_MESSAGE(fs::exists(expectedFillerName) ||
+                                      fs::exists(expectedFillerName2) ||
+                                      fs::exists(expectedCopierName),
             exceptionStr);
-        ETH_FAIL_REQUIRE_MESSAGE(!(fs::exists(expectedFillerName) && fs::exists(expectedFillerName2) && fs::exists(expectedCopierName)), "Src test could either be Filler.json, Filler.yml or Copier.json: " + file.filename().string());
+        ETH_ERROR_REQUIRE_MESSAGE(
+            !(fs::exists(expectedFillerName) && fs::exists(expectedFillerName2) &&
+                fs::exists(expectedCopierName)),
+            "Src test could either be Filler.json, Filler.yml or Copier.json: " +
+                file.filename().string());
 
         // Check that filled tests created from actual fillers depenging on a test type
         if (fs::exists(expectedFillerName))
