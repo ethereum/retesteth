@@ -40,6 +40,7 @@ DataObject ConvertYamlToData(YAML::Node const& _node)
     if (_node.IsMap())
     {
         DataObject jObject(DataType::Object);
+        jObject.setAutosort(true);
         for (auto const& i : _node)
             jObject.addSubObject(i.first.as<string>(), ConvertYamlToData(i.second));
         return jObject;
@@ -48,6 +49,7 @@ DataObject ConvertYamlToData(YAML::Node const& _node)
     if (_node.IsSequence())
     {
         DataObject jArray(DataType::Array);
+        jArray.setAutosort(true);
         for (size_t i = 0; i < _node.size(); i++)
             jArray.addArrayObject(ConvertYamlToData(_node[i]));
         return jArray;

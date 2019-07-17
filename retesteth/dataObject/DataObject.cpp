@@ -28,6 +28,13 @@ DataObject::DataObject(std::string const& _key, std::string const& _str)
     m_strKey = _key;
 }
 
+DataObject::DataObject(std::string const& _key, int _val)
+{
+    m_type = DataType::Integer;
+    m_intVal = _val;
+    m_strKey = _key;
+}
+
 /// Define dataobject of int
 DataObject::DataObject(int _int)
 {
@@ -73,15 +80,15 @@ std::vector<DataObject>& DataObject::getSubObjectsUnsafe()
 }
 
 /// Add new subobject
-void DataObject::addSubObject(DataObject const& _obj)
+DataObject& DataObject::addSubObject(DataObject const& _obj)
 {
-    _addSubObject(_obj);
+    return _addSubObject(_obj);
 }
 
 /// Add new subobject and set it's key
-void DataObject::addSubObject(std::string const& _key, DataObject const& _obj)
+DataObject& DataObject::addSubObject(std::string const& _key, DataObject const& _obj)
 {
-    _addSubObject(_obj, _key);
+    return _addSubObject(_obj, _key);
 }
 
 /// Set key for subobject _index
@@ -173,7 +180,7 @@ void DataObject::replace(DataObject const& _value)
     m_subObjects.clear();
     m_subObjects = _value.getSubObjects();
     m_allowOverwrite = _value.isOverwritable();
-    m_autosort = _value.isAutosort();
+    setAutosort(_value.isAutosort());
 }
 
 DataObject const& DataObject::atKey(std::string const& _key) const
@@ -198,6 +205,7 @@ void DataObject::addArrayObject(DataObject const& _obj)
         "m_type == DataType::Null || m_type == DataType::Array (DataObject::addArrayObject)");
     m_type = DataType::Array;
     m_subObjects.push_back(_obj);
+    m_subObjects.at(m_subObjects.size() - 1).setAutosort(m_autosort);
 }
 
 void DataObject::renameKey(std::string const& _currentKey, std::string const& _newKey)
@@ -427,36 +435,49 @@ size_t dataobject::findOrderedKeyPosition(string const& _key, vector<DataObject>
         else
             guess += std::max(step, (size_t)1);
     }
-    if (guess == _objects.size() || _objects.at(guess).getKey() > _key)
+    if (guess == _objects.size())
         return guess;
-    return std::min(guess + 1, _objects.size());
+    if (guess >= 1)
+        guess--;
+    while (guess < _objects.size() && _objects.at(guess).getKey() <= _key)
+        guess++;
+    return guess;
 }
 
-void DataObject::_addSubObject(DataObject const& _obj, string const& _keyOverwrite)
+DataObject& DataObject::_addSubObject(DataObject const& _obj, string const& _keyOverwrite)
 {
     if (m_type == DataType::Null)
         m_type = DataType::Object;
 
+    size_t pos;
     string const& key = _keyOverwrite.empty() ? _obj.getKey() : _keyOverwrite;
+
     if (key.empty() || !m_autosort)
     {
         m_subObjects.push_back(_obj);
-        size_t pos = m_subObjects.size() - 1;
+        pos = m_subObjects.size() - 1;
         setSubObjectKey(pos, key);
-        m_subObjects.at(pos).setAutosort(m_autosort);
         m_subObjects.at(pos).setOverwrite(m_allowOverwrite);
+        m_subObjects.at(pos).setAutosort(m_autosort);
     }
     else
     {
         // find ordered position to insert key
         // better use it only when export as ordered json !!!
-        setOverwrite(true);
-        size_t pos = findOrderedKeyPosition(key, m_subObjects);
-        m_subObjects.insert(m_subObjects.begin() + pos, 1, _obj);
+        pos = findOrderedKeyPosition(key, m_subObjects);
+        if (pos == m_subObjects.size())
+            m_subObjects.push_back(_obj);
+        else
+        {
+            setOverwrite(true);
+            m_subObjects.insert(m_subObjects.begin() + pos, 1, _obj);
+            setOverwrite(false);
+        }
         m_subObjects.at(pos).setKey(key);
         m_subObjects.at(pos).setOverwrite(true);
-        setOverwrite(false);
+        m_subObjects.at(pos).setAutosort(m_autosort);
     }
+    return m_subObjects.at(pos);
 }
 
 void DataObject::_assert(bool _flag, std::string const& _comment) const

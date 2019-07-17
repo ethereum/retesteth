@@ -18,7 +18,7 @@
  * Base functions for all test suites
  */
 
-#include <dataObject/ConvertJsoncpp.h>
+#include <dataObject/ConvertFile.h>
 #include <dataObject/ConvertYaml.h>
 #include <dataObject/DataObject.h>
 #include <json/reader.h>
@@ -57,30 +57,28 @@ TestFileData readTestFile(fs::path const& _testFileName)
 
     // Check that file is not empty
     string const s = dev::contentsString(_testFileName);
-    ETH_FAIL_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _testFileName.string() + " is empty.");
+    ETH_ERROR_REQUIRE_MESSAGE(
+        s.length() > 0, "Contents of " + _testFileName.string() + " is empty.");
 
     if (_testFileName.extension() == ".json")
-        testData.data = dataobject::ConvertJsoncppToData(readJson(_testFileName));
+        testData.data = dataobject::ConvertJsoncppStringToData(s, string(), true);
     else if (_testFileName.extension() == ".yml")
         testData.data = dataobject::ConvertYamlToData(YAML::Load(s));
     else
         ETH_ERROR_MESSAGE(
             "Unknown test format!" + test::TestOutputHelper::get().testFile().string());
 
-    // Original hash calculation with json
-    std::string output = "Not a Json object!";
-    if (_testFileName.extension() == ".json")
-    {
-        Json::FastWriter fastWriter;
-        Json::Value v = readJson(_testFileName);
-        output = fastWriter.write(v);
-        output = output.substr(0, output.size() - 1);
-    }
-
     string srcString = testData.data.asJson(0, false); //json_spirit::write_string(testData.data, false);
     if (test::Options::get().showhash)
     {
-        //std::cout << "'" << srcString << "'" << std::endl;
+        std::string output = "Not a Json object!";
+        if (_testFileName.extension() == ".json")
+        {
+            Json::FastWriter fastWriter;
+            Json::Value v = readJson(_testFileName);
+            output = fastWriter.write(v);
+            output = output.substr(0, output.size() - 1);
+        }
         std::cerr << "JSON: '" << std::endl << output << "'" << std::endl;
         std::cerr << "DATA: '" << std::endl << srcString << "'" << std::endl;
     }
@@ -142,8 +140,8 @@ void addClientInfo(
 
 void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
 {
-    Json::Value jv = test::readJson(_compiledTest);
-    dataobject::DataObject v = dataobject::ConvertJsoncppToData(jv, "_info");
+    dataobject::DataObject v =
+        dataobject::ConvertJsoncppStringToData(dev::contentsString(_compiledTest), "_info");
     TestFileData fillerData = readTestFile(_sourceTest);
     for (auto const& i: v.getSubObjects())
     {
@@ -503,7 +501,7 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
 void TestSuite::executeFile(boost::filesystem::path const& _file) const
 {
     TestSuiteOptions opt;
-    doTests(dataobject::ConvertJsoncppToData(readJson(_file)), opt);
+    doTests(dataobject::ConvertJsoncppStringToData(dev::contentsString(_file)), opt);
 }
 
 }

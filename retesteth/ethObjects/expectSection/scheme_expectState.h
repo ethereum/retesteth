@@ -57,7 +57,7 @@ private:
         std::string key = m_data.getKey();
         m_data.clear();
         m_data.setKey(key);
-        for (auto const& accountObj : m_accounts)
+        for (auto& accountObj : m_accounts)
             m_data.addSubObject(accountObj.getData());
     }
 };

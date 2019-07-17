@@ -29,7 +29,7 @@ std::string jsonTypeAsString(Json::ValueType _type)
 }
 
 /// Convert Json::Value object to DataObject
-DataObject ConvertJsoncppToData(Json::Value const& _input, string const& _stopper)
+DataObject ConvertJsoncppToData(Json::Value const& _input)
 {
     if (_input.isNull())
         return DataObject(DataType::Null);
@@ -47,7 +47,7 @@ DataObject ConvertJsoncppToData(Json::Value const& _input, string const& _stoppe
     {
         DataObject root(DataType::Array);
         for (Json::ArrayIndex i = 0; i < _input.size(); i++)
-            root.addArrayObject(ConvertJsoncppToData(_input.get(i, Json::Value()), _stopper));
+            root.addArrayObject(ConvertJsoncppToData(_input.get(i, Json::Value())));
         return root;
     }
 
@@ -59,9 +59,7 @@ DataObject ConvertJsoncppToData(Json::Value const& _input, string const& _stoppe
         for (auto const& i : _input)
         {
             string const& key = members.at(index++); // hopefuly members are arranged same way as auto: loop
-            root.addSubObject(key, ConvertJsoncppToData(i, _stopper));
-            if (key == _stopper)
-                return root;
+            root.addSubObject(key, ConvertJsoncppToData(i));
         }
         return root;
     }
