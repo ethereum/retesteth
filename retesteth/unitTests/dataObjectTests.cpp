@@ -30,6 +30,96 @@ using namespace dataobject;
 
 BOOST_FIXTURE_TEST_SUITE(DataObjectTestSuite, TestOutputHelperFixture)
 
+BOOST_AUTO_TEST_CASE(dataobject_invalidJson1)
+{
+    string data = R"(
+        {
+            "name" : {
+        }
+    )";
+    try
+    {
+        ConvertJsoncppStringToData(data);
+    }
+    catch (DataObjectException const&)
+    {
+        return;
+    }
+    BOOST_ERROR("Expected DataObject exception when parsing json!");
+}
+
+BOOST_AUTO_TEST_CASE(dataobject_invalidJson2)
+{
+    string data = R"(
+        {
+            "name" : {]
+        }
+    )";
+    try
+    {
+        ConvertJsoncppStringToData(data);
+    }
+    catch (DataObjectException const&)
+    {
+        return;
+    }
+    BOOST_ERROR("Expected DataObject exception when parsing json!");
+}
+
+BOOST_AUTO_TEST_CASE(dataobject_invalidJson3)
+{
+    string data = R"(
+        [
+            "name" : {}
+        ]
+    )";
+    try
+    {
+        ConvertJsoncppStringToData(data);
+    }
+    catch (DataObjectException const&)
+    {
+        return;
+    }
+    BOOST_ERROR("Expected DataObject exception when parsing json!");
+}
+
+BOOST_AUTO_TEST_CASE(dataobject_invalidJson4)
+{
+    string data = R"(
+        {
+            "name" : "value" : "attempt another value"
+        }
+    )";
+    try
+    {
+        ConvertJsoncppStringToData(data);
+    }
+    catch (DataObjectException const&)
+    {
+        return;
+    }
+    BOOST_ERROR("Expected DataObject exception when parsing json!");
+}
+
+BOOST_AUTO_TEST_CASE(dataobject_invalidJson5)
+{
+    string data = R"(
+        {
+            "name" : [ "element" ] : "attempt another value"
+        }
+    )";
+    try
+    {
+        ConvertJsoncppStringToData(data);
+    }
+    catch (DataObjectException const&)
+    {
+        return;
+    }
+    BOOST_ERROR("Expected DataObject exception when parsing json!");
+}
+
 BOOST_AUTO_TEST_CASE(dataobject_readJson1)
 {
     string data = R"(

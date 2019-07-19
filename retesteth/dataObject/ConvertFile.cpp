@@ -1,4 +1,5 @@
 #include <dataObject/ConvertFile.h>
+#include <dataObject/Exception.h>
 // Manually construct dataobject from file string content
 // bacuse Json::Reader::parse has a memory leak
 
@@ -22,7 +23,7 @@ size_t stripSpaces(string const& _input, size_t _i)
 string parseKeyValue(string const& _input, size_t& _i)
 {
     if (_i + 1 > _input.size())
-        std::cerr << errorPrefix + "reached EOF before reading char: `\"`" << std::endl;
+        throw DataObjectException() << errorPrefix + "reached EOF before reading char: `\"`";
 
     size_t endPos = _input.find('"', _i + 1);
     if (endPos != string::npos)
@@ -32,7 +33,7 @@ string parseKeyValue(string const& _input, size_t& _i)
         return key;
     }
     else
-        std::cerr << errorPrefix + "not found key ending char: `\"`" << std::endl;
+        throw DataObjectException() << errorPrefix + "not found key ending char: `\"`";
     return string();
 }
 
@@ -82,11 +83,15 @@ DataObject ConvertJsoncppStringToData(
     DataObject root;
     root.setAutosort(_autosort);
     DataObject* actualRoot = &root;
+    bool keyEncountered = false;
     string debug;
     for (size_t i = 0; i < _input.length(); i++)
     {
         // std::cerr << root.asJson() << std::endl;
         i = stripSpaces(_input, i);
+        if (i == _input.length())
+            throw DataObjectException() << errorPrefix + "unexpected end of json!";
+
         if (i > 40)
             debug = _input.substr(i - 40, 80);
 
@@ -97,6 +102,17 @@ DataObject ConvertJsoncppStringToData(
             i = stripSpaces(_input, i);
             if (_input.at(i) == ':')
             {
+                if (keyEncountered)
+                    throw DataObjectException() << errorPrefix +
+                                                       "attempt to set key multiple times! (like "
+                                                       "\"key\" : \"key\" : \"value\") around: " +
+                                                       debug;
+
+                keyEncountered = true;
+                if (actualRoot->type() == DataType::Array)
+                    throw DataObjectException()
+                        << errorPrefix +
+                               "array could not have elements with keys! around: " + debug;
                 obj.setKey(key);
                 bool replaceKey = false;
                 for (size_t objI = 0; objI < actualRoot->getSubObjects().size(); objI++)
@@ -120,6 +136,7 @@ DataObject ConvertJsoncppStringToData(
             }
             else
             {
+                keyEncountered = false;
                 if (actualRoot->type() == DataType::Array)
                 {
                     actualRoot->addArrayObject(DataObject(key));
@@ -136,6 +153,8 @@ DataObject ConvertJsoncppStringToData(
                 continue;
             }
         }
+
+        keyEncountered = false;
         if (_input[i] == '{')
         {
             if (actualRoot->type() == DataType::Array || actualRoot->type() == DataType::Object)
@@ -168,9 +187,9 @@ DataObject ConvertJsoncppStringToData(
         if (_input[i] == ']' || _input[i] == '}')
         {
             if (actualRoot->type() == DataType::Array && _input.at(i) != ']')
-                std::cerr << "expected ']' closing the array! around: " << debug << std::endl;
+                throw DataObjectException() << "expected ']' closing the array! around: " + debug;
             if (actualRoot->type() == DataType::Object && _input.at(i) != '}')
-                std::cerr << "expected '}' closing the object! around: " << debug << std::endl;
+                throw DataObjectException() << "expected '}' closing the object! around: " + debug;
 
             if (!_stopper.empty() && actualRoot->getKey() == _stopper)
                 return root;
@@ -180,19 +199,32 @@ DataObject ConvertJsoncppStringToData(
                 i++;
                 i = stripSpaces(_input, i);
                 if (i != _input.length())
-                    std::cerr << errorPrefix + "expected end of json!" << std::endl;
+                    throw DataObjectException() << errorPrefix + "expected end of json!";
                 return root;
             }
             else
             {
                 actualRoot = applyDepth.at(applyDepth.size() - 1);
                 applyDepth.pop_back();
-                // i++;
-                if (_input[i + 1] == ',')
-                    i++;
+                if (i + 1 < _input.length())
+                {
+                    if (_input[i + 1] == ',')
+                        i++;
+                    if (_input[i + 1] == ':')
+                        throw DataObjectException()
+                            << errorPrefix +
+                                   "unexpected ':' after closing an object/array! around: " + debug;
+                }
                 continue;
             }
         }
+
+        if (_input.at(i) == ',')
+            throw DataObjectException()
+                << errorPrefix + "unhendled ',' when parsing json around: " + debug;
+        if (_input.at(i) == ':')
+            throw DataObjectException()
+                << errorPrefix + "unhendled ':' when parsing json around: " + debug;
 
         int res;
         if (readDigit(_input, i, res))
