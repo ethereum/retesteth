@@ -6,27 +6,12 @@
 #include <string>
 #include <stdio.h>
 #include <map>
-
-#include <libdevcore/CommonData.h>
-#include <libdevcore/Common.h>
 #include <retesteth/ethObjects/common.h>
 #include <retesteth/Socket.h>
 
 class RPCSession: public boost::noncopyable
 {
 public:
-    /*struct TransactionData  // remove this
-    {
-        std::string from;
-        std::string to;
-        std::string gas;
-        std::string gasPrice;
-        std::string value;
-        std::string data;
-
-        std::string toJson() const;
-    };*/
-
     enum SessionStatus
     {
         Working,      // test execution in progress

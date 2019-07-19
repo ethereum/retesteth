@@ -136,7 +136,7 @@ void DataObject::setKeyPos(std::string const& _key, size_t _pos)
     _assert(count(_key), "count(_key) _key = " + _key + " (DataObject::setKeyPos)");
     _assert(!_key.empty(), "!_key.empty() (DataObject::setKeyPos)");
 
-    size_t elementPos;
+    size_t elementPos = 0;
     for (size_t i = 0; i < m_subObjects.size(); i++)
         if (m_subObjects.at(i).getKey() == _key)
         {
