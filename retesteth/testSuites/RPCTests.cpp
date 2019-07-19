@@ -48,8 +48,8 @@ DataObject FillTest(DataObject const& _testFile, TestSuite::TestSuiteOptions& _o
     if (rpcTestFiller.hasGenesis())
         session.test_setChainParams(rpcTestFiller.getGenesisForRPC().asJson());
 
-    Json::Value v = session.rpcCall(rpcTestFiller.get_method(), rpcTestFiller.get_params());
-    DataObject returnedData = dataobject::ConvertJsoncppToData(v);
+    DataObject returnedData =
+        session.rpcCall(rpcTestFiller.get_method(), rpcTestFiller.get_params());
 
     DataObjectScheme scheme(rpcTestFiller.get_expectReturn());
     DataObjectValidator validator(scheme);

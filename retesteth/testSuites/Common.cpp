@@ -63,11 +63,11 @@ DataObject getRemoteState(RPCSession& _session, string const& _trHash, bool _ful
     {
         int trIndex = latestBlock.getTransactionCount(); //1000;
         DataObject accountObj;
-        Json::Value res = _session.debug_accountRangeAt(latestBlockNumber, trIndex, "0", cmaxRows);
-        for (auto acc : res["addressMap"])
+        DataObject res = _session.debug_accountRangeAt(latestBlockNumber, trIndex, "0", cmaxRows);
+        for (auto acc : res["addressMap"].getSubObjects())
         {
             // Balance
-            Json::Value ret = _session.eth_getBalance(acc.asString(), latestBlockNumber);
+            DataObject ret = _session.eth_getBalance(acc.asString(), latestBlockNumber);
             accountObj[acc.asString()]["balance"] =
                 dev::toCompactHexPrefixed(u256(ret.asString()), 1);  // fix odd strings
 
@@ -82,9 +82,8 @@ DataObject getRemoteState(RPCSession& _session, string const& _trHash, bool _ful
 
             // Storage
             DataObject storage(DataType::Object);
-            DataObject debugStorageAt =
-                dataobject::ConvertJsoncppToData(_session.debug_storageRangeAt(
-                    latestBlockNumber, trIndex, acc.asString(), "0", cmaxRows));
+            DataObject debugStorageAt = _session.debug_storageRangeAt(
+                latestBlockNumber, trIndex, acc.asString(), "0", cmaxRows);
             for (auto const& element : debugStorageAt["storage"].getSubObjects())
                 storage[element.atKey("key").asString()] = element.atKey("value").asString();
             accountObj[acc.asString()]["storage"] = storage;

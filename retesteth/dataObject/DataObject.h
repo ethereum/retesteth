@@ -83,6 +83,14 @@ public:
         m_intVal = _value;
     }
 
+    void setBool(bool _value)
+    {
+        _assert(m_type == DataType::Bool || m_type == DataType::Null,
+            "In DataObject:setBool(bool) DataObject must be bool or Null!");
+        m_type = DataType::Bool;
+        m_boolVal = _value;
+    }
+
     bool operator==(bool _value) const
     {
         DataObject tmp(DataType::Bool, _value);

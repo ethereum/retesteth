@@ -21,9 +21,6 @@
 #include <dataObject/ConvertFile.h>
 #include <dataObject/ConvertYaml.h>
 #include <dataObject/DataObject.h>
-#include <json/reader.h>
-#include <json/value.h>
-#include <json/version.h>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/Log.h>
 #include <libdevcore/SHA3.h>

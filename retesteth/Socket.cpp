@@ -185,7 +185,7 @@ namespace
             res = curl_easy_perform(curl);
             if(res != CURLE_OK)
                 ETH_FAIL_MESSAGE("curl_easy_perform() failed " + string(curl_easy_strerror(res)));
-
+            curl_slist_free_all(header);
             curl_easy_cleanup(curl);
             return *httpData.get();
         }

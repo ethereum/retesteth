@@ -37,6 +37,37 @@ string parseKeyValue(string const& _input, size_t& _i)
     return string();
 }
 
+bool readBoolOrNull(string const& _input, size_t& _i, bool& _result, bool& _readNull)
+{
+    if (_i + 4 >= _input.size())
+        return false;
+
+    // true false
+    string text = _input.substr(_i, 4);
+    if (text == "null")
+    {
+        _i += 4;
+        _readNull = true;
+        return false;
+    }
+    if (text == "true")
+    {
+        _result = true;
+        _i += 4;
+        return true;
+    }
+    else if (text == "fals")
+    {
+        if (_i + 5 < _input.size() && (_input[_i + 5] == 'e'))
+        {
+            _i += 5;
+            _result = false;
+            return true;
+        }
+    }
+    return false;
+}
+
 bool readDigit(string const& _input, size_t& _i, int& _result)
 {
     bool readMinus = false;
@@ -84,13 +115,13 @@ DataObject ConvertJsoncppStringToData(
     root.setAutosort(_autosort);
     DataObject* actualRoot = &root;
     bool keyEncountered = false;
-    string debug;
+    string debug = _input.substr(0, 40);
     for (size_t i = 0; i < _input.length(); i++)
     {
         // std::cerr << root.asJson() << std::endl;
         i = stripSpaces(_input, i);
         if (i == _input.length())
-            throw DataObjectException() << errorPrefix + "unexpected end of json!";
+            throw DataObjectException() << errorPrefix + "unexpected end of json! around: " + debug;
 
         if (i > 40)
             debug = _input.substr(i - 40, 80);
@@ -115,6 +146,7 @@ DataObject ConvertJsoncppStringToData(
                                "array could not have elements with keys! around: " + debug;
                 obj.setKey(key);
                 bool replaceKey = false;
+                // could be simplified because keys are ordered !!!
                 for (size_t objI = 0; objI < actualRoot->getSubObjects().size(); objI++)
                 {
                     if (actualRoot->getSubObjects().at(objI).getKey() == key)
@@ -189,7 +221,10 @@ DataObject ConvertJsoncppStringToData(
             if (actualRoot->type() == DataType::Array && _input.at(i) != ']')
                 throw DataObjectException() << "expected ']' closing the array! around: " + debug;
             if (actualRoot->type() == DataType::Object && _input.at(i) != '}')
+            {
+                std::cerr << _input << std::endl;
                 throw DataObjectException() << "expected '}' closing the object! around: " + debug;
+            }
 
             if (!_stopper.empty() && actualRoot->getKey() == _stopper)
                 return root;
@@ -226,14 +261,33 @@ DataObject ConvertJsoncppStringToData(
             throw DataObjectException()
                 << errorPrefix + "unhendled ':' when parsing json around: " + debug;
 
-        int res;
-        if (readDigit(_input, i, res))
+        int resInt = 0;
+        bool resBool = false;
+        bool isReadBool = false;
+        bool isReadNull = false;
+        bool isReadDigit = readDigit(_input, i, resInt);
+        if (!isReadDigit)
+            isReadBool = readBoolOrNull(_input, i, resBool, isReadNull);
+
+        if (isReadDigit || isReadBool || isReadNull)
         {
             if (actualRoot->type() == DataType::Array)
-                actualRoot->addArrayObject(res);
+            {
+                if (isReadDigit)
+                    actualRoot->addArrayObject(DataObject(resInt));
+                else if (isReadBool)
+                    actualRoot->addArrayObject(DataObject(DataType::Bool, resBool));
+                else
+                    actualRoot->addArrayObject(DataObject());
+            }
             else
             {
-                actualRoot->setInt(res);
+                if (isReadDigit)
+                    actualRoot->setInt(resInt);
+                else if (isReadBool)
+                    actualRoot->setBool(resBool);
+                else
+                    actualRoot->clearSubobjects();
                 actualRoot = applyDepth.at(applyDepth.size() - 1);
                 applyDepth.pop_back();
             }

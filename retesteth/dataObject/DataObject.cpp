@@ -390,7 +390,8 @@ std::string DataObject::asJson(int level, bool pretty) const
         }
         if (m_boolVal)
             out << "true";
-        out << "false";
+        else
+            out << "false";
         break;
     default:
         out << "unknown " << dataTypeAsString(m_type) << std::endl;

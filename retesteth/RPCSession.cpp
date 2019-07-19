@@ -20,8 +20,6 @@
 /// Low-level IPC communication between the test framework and the Ethereum node.
 
 #include "RPCSession.h"
-#include <json/reader.h>
-#include <json/writer.h>
 
 #include <string>
 #include <stdio.h>
@@ -31,7 +29,7 @@
 #include <mutex>
 #include <csignal>
 
-#include <dataObject/ConvertJsoncpp.h>
+#include <dataObject/ConvertFile.h>
 #include <retesteth/EthChecks.h>
 #include <retesteth/ExitHandler.h>
 #include <retesteth/TestHelper.h>
@@ -242,12 +240,14 @@ void RPCSession::clear()
     closingThreads.clear();
 }
 
-Json::Value RPCSession::debug_accountRangeAt(std::string const& _blockHashOrNumber, int _txIndex, string const& _address, int _maxResults)
+DataObject RPCSession::debug_accountRangeAt(
+    std::string const& _blockHashOrNumber, int _txIndex, string const& _address, int _maxResults)
 {
     return rpcCall("debug_accountRangeAt", { quote(_blockHashOrNumber), to_string(_txIndex), quote(_address), to_string(_maxResults) });
 }
 
-Json::Value RPCSession::debug_storageRangeAt(std::string const& _blockHashOrNumber, int _txIndex, string const& _address, string const& _begin, int _maxResults)
+DataObject RPCSession::debug_storageRangeAt(std::string const& _blockHashOrNumber, int _txIndex,
+    string const& _address, string const& _begin, int _maxResults)
 {
     return rpcCall("debug_storageRangeAt", { quote(_blockHashOrNumber), to_string(_txIndex), quote(_address) , quote(_begin), to_string(_maxResults) });
 }
@@ -264,30 +264,19 @@ string RPCSession::eth_getCode(string const& _address, string const& _blockNumbe
 
 test::scheme_block RPCSession::eth_getBlockByNumber(string const& _blockNumber, bool _fullObjects)
 {
-	// NOTE: to_string() converts bool to 0 or 1
-	Json::Value response = rpcCall("eth_getBlockByNumber", { quote(_blockNumber), _fullObjects ? "true" : "false" });
-    return test::scheme_block(dataobject::ConvertJsoncppToData(response));
+    return test::scheme_block(
+        rpcCall("eth_getBlockByNumber", {quote(_blockNumber), _fullObjects ? "true" : "false"}));
 }
 
 test::scheme_transactionReceipt RPCSession::eth_getTransactionReceipt(string const& _transactionHash)
 {
-	Json::Value const result = rpcCall("eth_getTransactionReceipt", { quote(_transactionHash) });
-    return test::scheme_transactionReceipt(dataobject::ConvertJsoncppToData(result));
+    return test::scheme_transactionReceipt(
+        rpcCall("eth_getTransactionReceipt", {quote(_transactionHash)}));
 }
 
-string RPCSession::eth_blockNumber()
+int RPCSession::eth_blockNumber()
 {
-    return rpcCall("eth_blockNumber", { }).asString();
-}
-
-string RPCSession::eth_sendTransaction(TransactionData const& _td)
-{
-	return rpcCall("eth_sendTransaction", { _td.toJson() }).asString();
-}
-
-string RPCSession::eth_call(TransactionData const& _td, string const& _blockNumber)
-{
-	return rpcCall("eth_call", { _td.toJson(), quote(_blockNumber) }).asString();
+    return rpcCall("eth_blockNumber", {}).asInt();
 }
 
 string RPCSession::eth_sendTransaction(string const& _transaction)
@@ -334,47 +323,6 @@ string RPCSession::personal_newAccount(string const& _password)
 	return addr;
 }
 
-void RPCSession::test_setChainParams(vector<string> const& _accounts)
-{
-	static std::string const c_configString = R"(
-	{
-		"sealEngine": "NoProof",
-		"params": {
-			"accountStartNonce": "0x00",
-			"maximumExtraDataSize": "0x1000000",
-			"blockReward": "0x",
-			"allowFutureBlocks": true,
-			"homesteadForkBlock": "0x00",
-			"EIP150ForkBlock": "0x00",
-			"EIP158ForkBlock": "0x00"
-		},
-		"genesis": {
-			"author": "0000000000000010000000000000000000000000",
-			"timestamp": "0x00",
-			"parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
-			"extraData": "0x",
-			"gasLimit": "0x1000000000000"
-		},
-		"accounts": {
-			"0000000000000000000000000000000000000001": { "wei": "1", "precompiled": { "name": "ecrecover", "linear": { "base": 3000, "word": 0 } } },
-			"0000000000000000000000000000000000000002": { "wei": "1", "precompiled": { "name": "sha256", "linear": { "base": 60, "word": 12 } } },
-			"0000000000000000000000000000000000000003": { "wei": "1", "precompiled": { "name": "ripemd160", "linear": { "base": 600, "word": 120 } } },
-			"0000000000000000000000000000000000000004": { "wei": "1", "precompiled": { "name": "identity", "linear": { "base": 15, "word": 3 } } },
-			"0000000000000000000000000000000000000005": { "wei": "1", "precompiled": { "name": "modexp" } },
-			"0000000000000000000000000000000000000006": { "wei": "1", "precompiled": { "name": "alt_bn128_G1_add", "linear": { "base": 500, "word": 0 } } },
-			"0000000000000000000000000000000000000007": { "wei": "1", "precompiled": { "name": "alt_bn128_G1_mul", "linear": { "base": 40000, "word": 0 } } },
-			"0000000000000000000000000000000000000008": { "wei": "1", "precompiled": { "name": "alt_bn128_pairing_product" } }
-		}
-	}
-	)";
-
-	Json::Value config;
-    ETH_FAIL_REQUIRE_MESSAGE(Json::Reader().parse(c_configString, config), "setChainParams json is incorrect!");
-	for (auto const& account: _accounts)
-		config["accounts"][account]["wei"] = "0x100000000000000000000000000000000000000000";
-	test_setChainParams(Json::FastWriter().write(config));
-}
-
 string RPCSession::test_getBlockStatus(std::string const& _blockHash)
 {
     return rpcCall("test_getBlockStatus", {quote(_blockHash)}).asString();
@@ -402,7 +350,8 @@ void RPCSession::test_rewindToBlock(size_t _blockNr)
 
 void RPCSession::test_mineBlocks(int _number)
 {
-    u256 startBlock = fromBigEndian<u256>(fromHex(rpcCall("eth_blockNumber").asString()));
+    // u256 startBlock = fromBigEndian<u256>(fromHex(rpcCall("eth_blockNumber").asString()));
+    size_t startBlock = (size_t)rpcCall("eth_blockNumber").asInt();
     ETH_ERROR_REQUIRE_MESSAGE(rpcCall("test_mineBlocks", { to_string(_number) }, true) == true, "remote test_mineBlocks = false");
 
     // We auto-calibrate the time it takes to mine the transaction.
@@ -423,7 +372,7 @@ void RPCSession::test_mineBlocks(int _number)
         // ETH_FAIL_MESSAGE("Error in test_mineBlocks: block mining timeout! " +
         // test::TestOutputHelper::get().testName());
 
-        bigint number = fromBigEndian<u256>(fromHex(rpcCall("eth_blockNumber").asString()));
+        bigint number = rpcCall("eth_blockNumber").asInt();
         if (number >= startBlock + _number)
             break;
         else
@@ -457,7 +406,8 @@ std::string RPCSession::sendRawRequest(string const& _request)
     return m_socket.sendRequest(_request, validator);
 }
 
-Json::Value RPCSession::rpcCall(string const& _methodName, vector<string> const& _args, bool _canFail)
+DataObject RPCSession::rpcCall(
+    string const& _methodName, vector<string> const& _args, bool _canFail)
 {
     string request = "{\"jsonrpc\":\"2.0\",\"method\":\"" + _methodName + "\",\"params\":[";
     for (size_t i = 0; i < _args.size(); ++i)
@@ -475,18 +425,15 @@ Json::Value RPCSession::rpcCall(string const& _methodName, vector<string> const&
     string reply = m_socket.sendRequest(request, validator);
     ETH_TEST_MESSAGE("Reply: " + reply);
 
-    Json::Value result;
-    ETH_FAIL_REQUIRE_MESSAGE(Json::Reader().parse(reply, result, false),
-        "error parsing json from remote response: " + reply);
-
-    if (result.isMember("error"))
+    DataObject result = ConvertJsoncppStringToData(reply);
+    if (result.count("error"))
     {
         test::TestOutputHelper const& helper = test::TestOutputHelper::get();
         m_lastRPCErrorString = "Error on JSON-RPC call (" + helper.testInfo() +
                                "): " + result["error"]["message"].asString() +
                                " Request: " + request;
         if (_canFail)
-            return Json::Value();
+            return DataObject(DataType::Null);
         ETH_FAIL_MESSAGE(m_lastRPCErrorString);
     }
     m_lastRPCErrorString = string();    //null the error as last RPC call was success.
@@ -507,24 +454,4 @@ string const& RPCSession::accountCreateIfNotExists(size_t _id)
 	return m_accounts[_id];
 }
 
-RPCSession::RPCSession(Socket::SocketType _type, const string& _path):
-    m_socket(_type, _path)
-{
-	//accountCreate();
-	//This will pre-fund the accounts create prior.
-	//test_setChainParams(m_accounts);
-}
-
-string RPCSession::TransactionData::toJson() const
-{
-	Json::Value json;
-	json["from"] = (from.length() == 20) ? "0x" + from : from;
-	json["to"] = (to.length() == 20 || to == "") ? "0x" + to :  to;
-	json["gas"] = gas;
-	json["gasprice"] = gasPrice;
-	json["value"] = value;
-	json["data"] = data;
-	return Json::FastWriter().write(json);
-
-}
-
+RPCSession::RPCSession(Socket::SocketType _type, const string& _path) : m_socket(_type, _path) {}
