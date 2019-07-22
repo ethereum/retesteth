@@ -42,18 +42,21 @@ defaults:
   test: &test
     run:
       name: "Test"
-      working_directory: ~/build/testeth
+      working_directory: ~/build/retesteth
       command: |
         if [ $(uname) = Linux ]; then
           export TMPDIR=/dev/shm
         fi
-        git clone --depth 1 https://github.com/ethereum/tests.git
-        export ETHEREUM_TEST_PATH=~/build/testeth/tests
-        ctest --output-on-failure -j $TEST_PARALLEL_JOBS
+        ./retesteth -t TestHelperSuite
+        ./retesteth -t EthObjectsSuite
+        ./retesteth -t DataObjectTestSuite
+#        git clone --depth 1 https://github.com/ethereum/tests.git
+#        export ETHEREUM_TEST_PATH=~/build/testeth/tests
+#        ctest --output-on-failure -j $TEST_PARALLEL_JOBS
 
   store-retesteth: &store-retesteth
     store_artifacts:
-      path: ~/build/testeth
+      path: ~/build/retesteth
       destination: retesteth
 
   upload-coverage-data: &upload-coverage-data
