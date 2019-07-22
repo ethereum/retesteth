@@ -177,7 +177,7 @@ namespace
             curl_easy_setopt(curl, CURLOPT_POST, 1L);
 
             struct curl_slist *header = NULL;
-            header = curl_slist_append(header, "Accept: text/plain");
+            header = curl_slist_append(header, "Accept: application/json, text/plain");
             header = curl_slist_append(header, "Content-Type: application/json");
             header = curl_slist_append(header, "Transfer-Encoding: chunked");
 

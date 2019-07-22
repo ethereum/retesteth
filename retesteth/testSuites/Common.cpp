@@ -50,7 +50,7 @@ DataObject getRemoteState(RPCSession& _session, string const& _trHash, bool _ful
 {
     DataObject remoteState;
     const int cmaxRows = 1000;
-    string latestBlockNumber = toString(u256(_session.eth_blockNumber()));
+    string latestBlockNumber = _session.eth_blockNumber();
 
     test::scheme_block latestBlock = _session.eth_getBlockByNumber(latestBlockNumber, true);
     remoteState["postHash"] = latestBlock.getData().atKey("stateRoot");
@@ -76,9 +76,10 @@ DataObject getRemoteState(RPCSession& _session, string const& _trHash, bool _ful
             accountObj[acc.asString()]["code"] = ret.asString();
 
             // Nonce
-            ret = _session.eth_getTransactionCount(acc.asString(), latestBlockNumber);
-            accountObj[acc.asString()]["nonce"] =
-                dev::toCompactHexPrefixed(u256(ret.asString()), 1);
+            {
+                int ret = _session.eth_getTransactionCount(acc.asString(), latestBlockNumber);
+                accountObj[acc.asString()]["nonce"] = dev::toCompactHexPrefixed(ret, 1);
+            }
 
             // Storage
             DataObject storage(DataType::Object);

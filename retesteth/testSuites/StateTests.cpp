@@ -159,6 +159,7 @@ DataObject FillTestAsBlockchain(DataObject const& _testFile, TestSuite::TestSuit
 DataObject FillTest(DataObject const& _testFile, TestSuite::TestSuiteOptions& _opt)
 {
     DataObject filledTest;
+    filledTest.setAutosort(true);
     test::scheme_stateTestFiller test(_testFile);
 
     RPCSession& session = RPCSession::instance(TestOutputHelper::getThreadID());

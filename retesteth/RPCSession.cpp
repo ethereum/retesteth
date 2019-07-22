@@ -274,9 +274,10 @@ test::scheme_transactionReceipt RPCSession::eth_getTransactionReceipt(string con
         rpcCall("eth_getTransactionReceipt", {quote(_transactionHash)}));
 }
 
-int RPCSession::eth_blockNumber()
+string RPCSession::eth_blockNumber()
 {
-    return rpcCall("eth_blockNumber", {}).asInt();
+    DataObject res = rpcCall("eth_blockNumber", {});
+    return res.type() == DataType::String ? res.asString() : toString(res.asInt());
 }
 
 string RPCSession::eth_sendTransaction(string const& _transaction)
@@ -289,9 +290,11 @@ string RPCSession::eth_sendRawTransaction(std::string const& _rlp)
     return rpcCall("eth_sendRawTransaction", {quote(_rlp)}, true).asString();
 }
 
-std::string RPCSession::eth_getTransactionCount(std::string const& _address, std::string const& _blockNumber)
+int RPCSession::eth_getTransactionCount(
+    std::string const& _address, std::string const& _blockNumber)
 {
-	return rpcCall("eth_getTransactionCount", { quote(_address), quote(_blockNumber) }).asString();
+    DataObject res = rpcCall("eth_getTransactionCount", {quote(_address), quote(_blockNumber)});
+    return (res.type() == DataType::String) ? atoi(res.asString().c_str()) : res.asInt();
 }
 
 string RPCSession::eth_getBalance(string const& _address, string const& _blockNumber)
@@ -421,11 +424,19 @@ DataObject RPCSession::rpcCall(
     ++m_rpcSequence;
 
     ETH_TEST_MESSAGE("Request: " + request);
-    JsonObjectValidator validator;
+    JsonObjectValidator validator;  // read response while counting `{}`
     string reply = m_socket.sendRequest(request, validator);
     ETH_TEST_MESSAGE("Reply: " + reply);
 
     DataObject result = ConvertJsoncppStringToData(reply);
+    requireJsonFields(result, "rpcCall_response",
+        {{"jsonrpc", {{DataType::String}, jsonField::Required}},
+            {"id", {{DataType::Integer}, jsonField::Required}},
+            {"result", {{DataType::String, DataType::Integer, DataType::Bool, DataType::Object,
+                            DataType::Array},
+                           jsonField::Required}},
+            {"error", {{DataType::String}, jsonField::Optional}}});
+
     if (result.count("error"))
     {
         test::TestOutputHelper const& helper = test::TestOutputHelper::get();

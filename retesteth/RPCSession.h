@@ -30,10 +30,10 @@ public:
 	std::string eth_sendTransaction(std::string const& _transaction);
 	std::string eth_sendRawTransaction(std::string const& _rlp);
 
-    int eth_blockNumber();
+    std::string eth_blockNumber();
     test::scheme_transactionReceipt eth_getTransactionReceipt(std::string const& _transactionHash);
-	std::string eth_getTransactionCount(std::string const& _address, std::string const& _blockNumber);
-	std::string eth_getCode(std::string const& _address, std::string const& _blockNumber);
+    int eth_getTransactionCount(std::string const& _address, std::string const& _blockNumber);
+    std::string eth_getCode(std::string const& _address, std::string const& _blockNumber);
 	test::scheme_block eth_getBlockByNumber(std::string const& _blockNumber, bool _fullObjects);
 	std::string eth_getBalance(std::string const& _address, std::string const& _blockNumber);
 	std::string eth_getStorageRoot(std::string const& _address, std::string const& _blockNumber);
