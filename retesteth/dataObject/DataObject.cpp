@@ -438,8 +438,7 @@ size_t dataobject::findOrderedKeyPosition(string const& _key, vector<DataObject>
     }
     if (guess == _objects.size())
         return guess;
-    if (guess >= 1)
-        guess--;
+    guess = max(0, (int)guess - 5);
     while (guess < _objects.size() && _objects.at(guess).getKey() <= _key)
         guess++;
     return guess;
