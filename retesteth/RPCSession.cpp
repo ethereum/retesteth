@@ -429,13 +429,15 @@ DataObject RPCSession::rpcCall(
     ETH_TEST_MESSAGE("Reply: " + reply);
 
     DataObject result = ConvertJsoncppStringToData(reply);
+    if (result.count("error"))
+        result["result"] = "";
     requireJsonFields(result, "rpcCall_response",
         {{"jsonrpc", {{DataType::String}, jsonField::Required}},
             {"id", {{DataType::Integer}, jsonField::Required}},
             {"result", {{DataType::String, DataType::Integer, DataType::Bool, DataType::Object,
                             DataType::Array},
                            jsonField::Required}},
-            {"error", {{DataType::String}, jsonField::Optional}}});
+            {"error", {{DataType::String, DataType::Object}, jsonField::Optional}}});
 
     if (result.count("error"))
     {
