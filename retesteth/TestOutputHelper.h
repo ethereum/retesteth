@@ -64,10 +64,6 @@ public:
     // Mark the _folderName as executed for a given _suitePath (to filler files)
     static void markTestFolderAsFinished(
         boost::filesystem::path const& _suitePath, std::string const& _folderName);
-    // Mark the _folderName as not to be checked for empty tests for a given _suitePath (to filler
-    // files)
-    // static void markTestFolderAsException(
-    //    boost::filesystem::path const& _suitePath, std::string const& _folderName);
 
 private:
     TestOutputHelper() {}
