@@ -226,7 +226,9 @@ string TestSuite::checkFillerExistance(string const& _testFolder) const
     string filter = test::Options::get().singleTestName.empty() ?
                         string() :
                         test::Options::get().singleTestName;
-    std::cout << "Filter: '" << filter << "'" << std::endl;
+    std::cout << "Checking test filler hashes for " << boost::unit_test::framework::current_test_case().full_name() << std::endl;
+    if (!filter.empty())
+        std::cout << "Filter: '" << filter << "'" << std::endl;
     AbsoluteTestPath testsPath = getFullPath(_testFolder);
     if (!fs::exists(testsPath.path()))
     {
@@ -320,6 +322,7 @@ string TestSuite::checkFillerExistance(string const& _testFolder) const
 
 void TestSuite::runAllTestsInFolder(string const& _testFolder) const
 {
+    Options::getDynamicOptions().getClientConfigs();
     if (ExitHandler::receivedExitSignal())
     {
         auto& testOutput = test::TestOutputHelper::get();
