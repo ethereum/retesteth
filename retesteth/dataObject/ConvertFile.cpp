@@ -146,8 +146,9 @@ DataObject ConvertJsoncppStringToData(
                                "array could not have elements with keys! around: " + debug;
                 obj.setKey(key);
                 bool replaceKey = false;
-                // could be simplified because keys are ordered !!!
-                for (size_t objI = 0; objI < actualRoot->getSubObjects().size(); objI++)
+                size_t keyPosExpected = _autosort ?
+                        max(0, (int)findOrderedKeyPosition(key, actualRoot->getSubObjects()) - 1) : 0;
+                for (size_t objI = keyPosExpected; objI < actualRoot->getSubObjects().size(); objI++)
                 {
                     if (actualRoot->getSubObjects().at(objI).getKey() == key)
                     {
