@@ -36,17 +36,30 @@ namespace test {
                     {"nonce", {{DataType::String}, jsonField::Optional}},
                     {"mixHash", {{DataType::String}, jsonField::Optional}}});
 
-            for (auto const& trObj : m_data.atKey("transactions").getSubObjects())
+            if (m_data.atKey("transactions").getSubObjects().size())
+                m_isFullTransactions =
+                    m_data.atKey("transactions").getSubObjects().at(0).count("blockHash");
+            else
             {
-                requireJsonFields(trObj, "block rpc",
-                    {{"blockHash", {DataType::String}}, {"blockNumber", {DataType::String}},
-                        {"from", {DataType::String}}, {"gas", {DataType::String}},
-                        {"gasPrice", {DataType::String}}, {"hash", {DataType::String}},
-                        {"input", {DataType::String}}, {"nonce", {DataType::String}},
-                        {"to", {DataType::String, DataType::Null}}, {"v", {DataType::String}},
-                        {"r", {DataType::String}}, {"s", {DataType::String}},
-                        {"transactionIndex", {DataType::String}}, {"value", {DataType::String}}});
+                m_isFullTransactions = true;
+                return;
             }
+
+            if (m_isFullTransactions)
+                for (auto const& trObj : m_data.atKey("transactions").getSubObjects())
+                    requireJsonFields(trObj, "block rpc transaction element",
+                        {{"blockHash", {DataType::String}}, {"blockNumber", {DataType::String}},
+                            {"from", {DataType::String}}, {"gas", {DataType::String}},
+                            {"gasPrice", {DataType::String}}, {"hash", {DataType::String}},
+                            {"input", {DataType::String}}, {"nonce", {DataType::String}},
+                            {"to", {DataType::String, DataType::Null}}, {"v", {DataType::String}},
+                            {"r", {DataType::String}}, {"s", {DataType::String}},
+                            {"transactionIndex", {DataType::String}},
+                            {"value", {DataType::String}}});
+            else
+                for (auto const& trObj : m_data.atKey("transactions").getSubObjects())
+                    ETH_ERROR_REQUIRE_MESSAGE(trObj.type() == DataType::String,
+                        "block rpc transaction element is expected to be hash string!");
         }
 
         size_t getTransactionCount() const
@@ -90,6 +103,8 @@ namespace test {
         // Get Block RLP for state tests
         std::string getBlockRLP() const
         {
+            ETH_ERROR_REQUIRE_MESSAGE(m_isFullTransactions,
+                "Attempt to get blockRLP of a block received without full transactions!");
             // RLP of a block
             // rlpHead .. blockinfo transactions uncles
             RLPStream stream(3);
@@ -151,6 +166,9 @@ namespace test {
 
             return dev::toHexPrefixed(stream.out());
         }
+
+    private:
+        bool m_isFullTransactions = false;
     };
 }
 

@@ -6,6 +6,69 @@
 using namespace std;
 namespace test
 {
+// Validate post condition on remote client
+bool checkExpectSection(
+    RPCSession& _session, ExpectInfo const& _expectedInfo, scheme_remoteState& _remoteState)
+{
+    // expect section provided, perform validation check on remote client
+    if (!_expectedInfo.expectState.isNull())
+    {
+        // check that the post state qualifies to the expect section
+        _remoteState = getRemoteState(_session, StateRequest::AttemptFullPost);
+        test::scheme_block blockData(_remoteState.getData().atKey("rawBlockData"));
+        ETH_ERROR_REQUIRE_MESSAGE(blockData.getTransactionCount() == 1,
+            "Transaction execution failed. Looks like remote block do not contain a transaction! " +
+                TestOutputHelper::get().testInfo());
+
+        CompareResult res;
+        if (_remoteState.hasPostState())
+        {
+            // a small state loaded into postState object. compare expect section to this object
+            scheme_state postState(_remoteState.getPostState());
+            res = test::compareStates(_expectedInfo.expectState, postState);
+        }
+        else
+        {
+            // perform check on a huge state, by doing requests to the client and compare to expect
+            // section
+            res = test::compareStates(_expectedInfo.expectState, _session);
+        }
+        ETH_ERROR_REQUIRE_MESSAGE(
+            res == CompareResult::Success, TestOutputHelper::get().testInfo());
+        return res == CompareResult::Success;
+    }
+
+    _remoteState = getRemoteState(_session, StateRequest::NoPost);
+
+    // trHash provided. ask remote client for logHash for the provided trHash
+    if (!_expectedInfo.trHash.empty() && !_expectedInfo.logHash.empty())
+    {
+        string remoteLogHash = _session.test_getLogHash(_expectedInfo.trHash);
+        if (!remoteLogHash.empty())
+        {
+            ETH_ERROR_REQUIRE_MESSAGE(remoteLogHash == _expectedInfo.logHash,
+                "Error at " + TestOutputHelper::get().testInfo() + ", logs hash mismatch: '" +
+                    remoteLogHash + "'" + ", expected: '" + _expectedInfo.logHash + "'");
+        }
+    }
+
+    // postHash provided, ask remote client for postState hash to compare
+    if (!_expectedInfo.postHash.empty() && _remoteState.getPostHash() != _expectedInfo.postHash)
+    {
+        ETH_ERROR_REQUIRE_MESSAGE(false, "Error at " + TestOutputHelper::get().testInfo() +
+                                             ", post hash mismatch: " + _remoteState.getPostHash() +
+                                             ", expected: " + _expectedInfo.postHash);
+        if (Options::get().logVerbosity > 5)
+        {
+            _remoteState = getRemoteState(_session, StateRequest::AttemptFullPost);
+            ETH_TEST_MESSAGE("\nState Dump: \n" + _remoteState.getPostState().asJson());
+        }
+        return false;
+    }
+
+    return true;
+}
+
 void checkDataObject(DataObject const& _input)
 {
     ETH_ERROR_REQUIRE_MESSAGE(_input.type() == DataType::Object,
@@ -46,55 +109,85 @@ void checkTestNameIsEqualToFileName(DataObject const& _input)
                 "'");
 }
 
-DataObject getRemoteState(RPCSession& _session, string const& _trHash, bool _fullPost)
+scheme_account remoteGetAccount(RPCSession& _session, string const& _account,
+    string const& _latestBlockNumber, size_t& _totalSize)
+{
+    DataObject accountObj;
+    accountObj.setKey(_account);
+    accountObj["code"] = _session.eth_getCode(_account, _latestBlockNumber);
+    _totalSize += accountObj["code"].asString().size();
+    accountObj["nonce"] = to_string(_session.eth_getTransactionCount(_account, _latestBlockNumber));
+    accountObj["balance"] = _session.eth_getBalance(_account, _latestBlockNumber);
+
+    // Storage
+    test::scheme_block latestBlock = _session.eth_getBlockByNumber(_latestBlockNumber, false);
+    int trIndex = latestBlock.getTransactionCount();
+
+    size_t cycles = 10;
+    const int cmaxRows = 100;
+    DataObject storage(DataType::Object);
+    string beginHash = "0";
+    while (cycles--)
+    {
+        DataObject debugStorageAt = _session.debug_storageRangeAt(
+            _latestBlockNumber, trIndex, _account, beginHash, cmaxRows);
+        auto const& subObjects = debugStorageAt["storage"].getSubObjects();
+        _totalSize += subObjects.size() * 64;
+        for (auto const& element : subObjects)
+            storage[element.atKey("key").asString()] = element.atKey("value").asString();
+        if (debugStorageAt.atKey("complete").asBool())
+            break;
+        if (subObjects.size() > 0)
+            beginHash = subObjects.at(subObjects.size() - 1).getKey();
+    }
+    accountObj["storage"] = storage;
+    return scheme_account(accountObj);
+}
+
+scheme_remoteState getRemoteState(RPCSession& _session, StateRequest _stateRequest)
 {
     DataObject remoteState;
-    const int cmaxRows = 1000;
+    const int cmaxRows = 30;
     string latestBlockNumber = _session.eth_blockNumber();
-
-    test::scheme_block latestBlock = _session.eth_getBlockByNumber(latestBlockNumber, true);
+    test::scheme_block latestBlock = _session.eth_getBlockByNumber(
+        latestBlockNumber, _stateRequest == StateRequest::AttemptFullPost ? true : false);
     remoteState["postHash"] = latestBlock.getData().atKey("stateRoot");
-    if (!_trHash.empty())
-        remoteState["logHash"] = _session.test_getLogHash(_trHash);
-    remoteState["postState"] = "";
     remoteState["rawBlockData"] = latestBlock.getData();
 
-    if (_fullPost)
+    if (_stateRequest == StateRequest::AttemptFullPost)
     {
         int trIndex = latestBlock.getTransactionCount(); //1000;
-        DataObject accountObj;
+        DataObject accountsObj;
+        bool isHugeState = false;
         DataObject res = _session.debug_accountRangeAt(latestBlockNumber, trIndex, "0", cmaxRows);
-        for (auto acc : res["addressMap"].getSubObjects())
+        if (res["addressMap"].getSubObjects().size() < 20 || Options::get().fullstate)
         {
-            // Balance
-            DataObject ret = _session.eth_getBalance(acc.asString(), latestBlockNumber);
-            accountObj[acc.asString()]["balance"] =
-                dev::toCompactHexPrefixed(u256(ret.asString()), 1);  // fix odd strings
-
-            // Code
-            ret = _session.eth_getCode(acc.asString(), latestBlockNumber);
-            accountObj[acc.asString()]["code"] = ret.asString();
-
-            // Nonce
+            size_t stateTotalSize = 0;
+            for (auto acc : res["addressMap"].getSubObjects())
             {
-                int ret = _session.eth_getTransactionCount(acc.asString(), latestBlockNumber);
-                accountObj[acc.asString()]["nonce"] = dev::toCompactHexPrefixed(ret, 1);
+                scheme_account accountScheme =
+                    remoteGetAccount(_session, acc.asString(), latestBlockNumber, stateTotalSize);
+                if (stateTotalSize > 1024000 && !Options::get().fullstate)  // > 1MB
+                {
+                    isHugeState = true;
+                    break;
+                }
+                accountsObj.addSubObject(accountScheme.getData());
             }
-
-            // Storage
-            DataObject storage(DataType::Object);
-            DataObject debugStorageAt = _session.debug_storageRangeAt(
-                latestBlockNumber, trIndex, acc.asString(), "0", cmaxRows);
-            for (auto const& element : debugStorageAt["storage"].getSubObjects())
-                storage[element.atKey("key").asString()] = element.atKey("value").asString();
-            accountObj[acc.asString()]["storage"] = storage;
         }
+        else
+            isHugeState = true;
 
-        remoteState["postState"].clear();
-        remoteState["postState"] = accountObj;
+        if (isHugeState)
+        {
+            accountsObj.clear();
+            accountsObj = remoteState["postHash"];
+        }
+        remoteState["postState"] = accountsObj;
+
         if (Options::get().poststate)
-            std::cout << accountObj.asJson() << std::endl;
+            std::cout << accountsObj.asJson() << std::endl;
     }
-    return remoteState;
+    return scheme_remoteState(remoteState);
 }
 }

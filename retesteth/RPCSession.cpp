@@ -353,8 +353,9 @@ void RPCSession::test_rewindToBlock(size_t _blockNr)
 
 void RPCSession::test_mineBlocks(int _number)
 {
-    // u256 startBlock = fromBigEndian<u256>(fromHex(rpcCall("eth_blockNumber").asString()));
-    size_t startBlock = (size_t)rpcCall("eth_blockNumber").asInt();
+    DataObject blockNumber = rpcCall("eth_blockNumber");
+    u256 startBlock = (blockNumber.type() == DataType::String) ? u256(blockNumber.asString()) :
+                                                                 blockNumber.asInt();
     ETH_ERROR_REQUIRE_MESSAGE(rpcCall("test_mineBlocks", { to_string(_number) }, true) == true, "remote test_mineBlocks = false");
 
     // We auto-calibrate the time it takes to mine the transaction.
@@ -375,7 +376,9 @@ void RPCSession::test_mineBlocks(int _number)
         // ETH_FAIL_MESSAGE("Error in test_mineBlocks: block mining timeout! " +
         // test::TestOutputHelper::get().testName());
 
-        bigint number = rpcCall("eth_blockNumber").asInt();
+        blockNumber = rpcCall("eth_blockNumber");
+        bigint number = (blockNumber.type() == DataType::String) ? u256(blockNumber.asString()) :
+                                                                   blockNumber.asInt();
         if (number >= startBlock + _number)
             break;
         else
@@ -398,7 +401,7 @@ void RPCSession::test_mineBlocks(int _number)
     }
 }
 
-void RPCSession::test_modifyTimestamp(size_t _timestamp)
+void RPCSession::test_modifyTimestamp(unsigned long long _timestamp)
 {
     ETH_FAIL_REQUIRE_MESSAGE(rpcCall("test_modifyTimestamp", { to_string(_timestamp) }) == true, "test_modifyTimestamp was not successfull");
 }
@@ -428,7 +431,7 @@ DataObject RPCSession::rpcCall(
     string reply = m_socket.sendRequest(request, validator);
     ETH_TEST_MESSAGE("Reply: " + reply);
 
-    DataObject result = ConvertJsoncppStringToData(reply);
+    DataObject result = ConvertJsoncppStringToData(reply, string(), true);
     if (result.count("error"))
         result["result"] = "";
     requireJsonFields(result, "rpcCall_response",

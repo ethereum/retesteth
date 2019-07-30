@@ -24,6 +24,7 @@ scheme_blockchainTestFiller::blockSection::blockSection(DataObject const& _data)
     requireJsonFields(_data, "blockchainTest blocks section",
         {{"blockHeader", {{DataType::Object}, jsonField::Optional}},
             {"blockHeaderPremine", {{DataType::Object}, jsonField::Optional}},
+            {"blocknumber", {{DataType::String}, jsonField::Optional}},
             {"transactions", {{DataType::Array}, jsonField::Required}},
             {"uncleHeaders", {{DataType::Array}, jsonField::Required}}});
 

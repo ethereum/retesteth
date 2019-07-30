@@ -23,14 +23,15 @@ bool FillTest(scheme_blockchainTestFiller const& _testObject, string const& _net
     _testOut["genesisBlockHeader"] = session.eth_getBlockByNumber("0", false).getBlockHeader();
     _testOut["genesisBlockHeader"].removeKey("transactions");
     _testOut["genesisBlockHeader"].removeKey("uncles");
-    // u256 genesisTimestamp = u256(genesisObject.atKey("genesis").atKey("timestamp").asString());
-    // session.test_modifyTimestamp(genesisTimestamp.convert_to<size_t>());
+    // u256 genesisTimestamp =
+    // std::time(0);//u256(genesisObject.atKey("genesis").atKey("timestamp").asString());
 
     string lastTrHash;
     string lastBlHash;
     size_t number = 0;
     for (auto const& block : _testObject.getBlocks())
     {
+        session.test_modifyTimestamp(1000);  // Shift block timestamp relative to previous block
         TestOutputHelper::get().setCurrentTestInfo("Network: " + _network +
                                                    ", BlockNumber: " + toString(number++) +
                                                    ", Test: " + TestOutputHelper::get().testName());
@@ -48,8 +49,8 @@ bool FillTest(scheme_blockchainTestFiller const& _testObject, string const& _net
         }
         session.test_mineBlocks(1);
 
-        DataObject remoteState = getRemoteState(session, "", false);
-        test::scheme_block blockData(remoteState.atKey("rawBlockData"));
+        scheme_remoteState remoteState = getRemoteState(session, StateRequest::NoPost);
+        test::scheme_block blockData(remoteState.getData().atKey("rawBlockData"));
         ETH_ERROR_REQUIRE_MESSAGE(blockData.getTransactionCount() == block.getTransactions().size(),
             "BlockchainTest transaction execution failed! " + TestOutputHelper::get().testInfo());
         blockSection["rlp"] = blockData.getBlockRLP();
@@ -57,14 +58,22 @@ bool FillTest(scheme_blockchainTestFiller const& _testObject, string const& _net
         _testOut["blocks"].addArrayObject(blockSection);
     }
 
-    DataObject remoteState = getRemoteState(session, lastTrHash, true);
-    scheme_state postState(remoteState.atKey("postState"));
-    CompareResult res = test::compareStates(
-        _testObject.getExpectSection().getExpectSectionFor(_network).getExpectState(), postState);
+    scheme_remoteState remoteState = getRemoteState(session, StateRequest::AttemptFullPost);
+    scheme_state postState(remoteState.getData().atKey("postState"));
+    CompareResult res;
+
+    if (postState.isHash().empty())
+        res = test::compareStates(
+            _testObject.getExpectSection().getExpectSectionFor(_network).getExpectState(),
+            postState);
+    else
+        res = test::compareStates(
+            _testObject.getExpectSection().getExpectSectionFor(_network).getExpectState(), session);
+
     ETH_ERROR_REQUIRE_MESSAGE(res == CompareResult::Success, TestOutputHelper::get().testInfo());
     if (res != CompareResult::Success)
         return true;
-    _testOut["postState"] = remoteState.atKey("postState");
+    _testOut["postState"] = remoteState.getData().atKey("postState");
     _testOut["lastblockhash"] = lastBlHash;
     return false;
 }
@@ -89,11 +98,10 @@ bool RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _
     // std::this_thread::sleep_for(std::chrono::seconds(10));
 
     // compare post state hash
-    DataObject remoteState;
-    if (inputTest.getPost().getHash().empty())
+    if (inputTest.getPost().isHash().empty())
     {
-        remoteState = getRemoteState(session, "", true);
-        scheme_state postState(remoteState.atKey("postState"));
+        scheme_remoteState remoteState = getRemoteState(session, StateRequest::AttemptFullPost);
+        scheme_state postState(remoteState.getData().atKey("postState"));
         CompareResult res = test::compareStates(inputTest.getPost(), postState);
         ETH_ERROR_REQUIRE_MESSAGE(
             res == CompareResult::Success, "Error in " + inputTest.getData().getKey());
@@ -101,12 +109,13 @@ bool RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _
     }
     else
     {
-        remoteState = getRemoteState(session, "", false);
-        bool flag = remoteState.atKey("postHash").asString() == inputTest.getPost().getHash();
-        ETH_ERROR_REQUIRE_MESSAGE(flag, "Error in " + TestOutputHelper::get().testInfo() +
-                                            ", Expected post state `" +
-                                            inputTest.getPost().getHash() + "', but got: '" +
-                                            remoteState.atKey("postHash").asString() + "'");
+        scheme_remoteState remoteState = getRemoteState(session, StateRequest::NoPost);
+        bool flag =
+            remoteState.getData().atKey("postHash").asString() == inputTest.getPost().isHash();
+        ETH_ERROR_REQUIRE_MESSAGE(
+            flag, "Error in " + TestOutputHelper::get().testInfo() + ", Expected post state `" +
+                      inputTest.getPost().isHash() + "', but got: '" +
+                      remoteState.getData().atKey("postHash").asString() + "'");
         return flag;
     }
 }

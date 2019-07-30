@@ -15,6 +15,7 @@ public:
             m_accounts.push_back(scheme_expectAccount(accountObj));
         refreshData();  // needed?
     }
+    bool isNull() const { return m_accounts.size() == 0; }
     std::vector<scheme_expectAccount> const& getAccounts() const { return m_accounts; }
     bool hasBalance(std::string const& _accountKey) const
     {

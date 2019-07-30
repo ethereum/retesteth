@@ -46,7 +46,7 @@ public:
         CompareResult result = CompareResult::Success;
         auto checkMessage = [&result](bool _flag, CompareResult _type,
                                 std::string const& _error) -> void {
-            ETH_MARK_ERROR(_flag, _error);
+            ETH_MARK_ERROR_FLAG(_flag, _error);
             if (!_flag)
                 result = _type;
         };
@@ -110,7 +110,7 @@ public:
                 string const message = "incorrect storage [" + element.getKey() +
                                        "] = " + element.asString() + ", expected [" +
                                        element.getKey() + "] = 0";
-                ETH_MARK_ERROR(false, message);
+                ETH_MARK_ERROR(message);
             }
         }
         return result;

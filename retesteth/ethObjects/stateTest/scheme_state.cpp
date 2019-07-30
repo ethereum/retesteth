@@ -6,81 +6,6 @@
 using namespace  std;
 
 namespace test {
-CompareResult compareStates(scheme_state const& _stateExpect, scheme_state const& _statePost)
-{
-    return compareStates(scheme_expectState(_stateExpect.getData()), _statePost);
-}
-
-CompareResult compareStates(scheme_expectState const& _stateExpect, scheme_state const& _statePost)
-{
-    CompareResult result = CompareResult::Success;
-    auto checkMessage = [&result](bool _flag, CompareResult _type, string const& _error) -> void {
-        ETH_MARK_ERROR(_flag, _error);
-        if (!_flag)
-			result = _type;
-    };
-
-    for (auto const& a: _stateExpect.getAccounts())
-    {
-        if (a.shouldNotExist())
-		{
-            checkMessage(!_statePost.hasAccount(a.address()),
-                CompareResult::AccountShouldNotExist,
-                TestOutputHelper::get().testName() +  "' Compare States: " + a.address()
-                + "' address not expected to exist!");
-			if (result != CompareResult::Success)
-				break;
-			continue;
-		}
-        else
-            checkMessage(_statePost.hasAccount(a.address()),
-                CompareResult::MissingExpectedAccount,
-                TestOutputHelper::get().testName() +  " Compare States: Missing expected address: '" + a.address() + "'");
-
-		if (result != CompareResult::Success)
-            break;
-
-		// Check account in state post with expect section account
-		scheme_account const& inState = _statePost.getAccount(a.address());
-
-        if (a.hasBalance())
-		{
-            u256 inStateB = u256(inState.getData().atKey("balance").asString());
-            checkMessage(a.getData().atKey("balance").asString() ==
-                             inState.getData().atKey("balance").asString(),
-                CompareResult::IncorrectBalance,
-                TestOutputHelper::get().testName() + " Check State: '" + a.address() +
-                    "': incorrect balance " + toString(inStateB) + ", expected " +
-                    toString(u256(a.getData().atKey("balance").asString())) + " (" +
-                    a.getData().atKey("balance").asString() +
-                    " != " + inState.getData().atKey("balance").asString() + ")");
-        }
-
-        if (a.hasNonce())
-            checkMessage(a.getData().atKey("nonce").asString() ==
-                             inState.getData().atKey("nonce").asString(),
-                CompareResult::IncorrectNonce,
-                TestOutputHelper::get().testName() + " Check State: '" + a.address() +
-                    "': incorrect nonce " + inState.getData().atKey("nonce").asString() +
-                    ", expected " + a.getData().atKey("nonce").asString());
-
-        // Check that state post has values from expected storage
-        if (a.hasStorage()) {
-            CompareResult res = a.compareStorage(inState.getData().atKey("storage"));
-            if (result == CompareResult::Success)
-                result = res;  // Only override success result with potential error
-        }
-
-        if (a.hasCode())
-            checkMessage(
-                a.getData().atKey("code").asString() == inState.getData().atKey("code").asString(),
-                CompareResult::IncorrectCode,
-                TestOutputHelper::get().testName() + " Check State: '" + a.address() +
-                    "': incorrect code '" + inState.getData().atKey("code").asString() +
-                    "', expected '" + a.getData().atKey("code").asString() + "'");
-    }
-    return result;
-}
 
 mutex g_staticDeclaration;
 DataObject scheme_state::getDataForRPC(std::string const& _network) const
@@ -92,7 +17,6 @@ DataObject scheme_state::getDataForRPC(std::string const& _network) const
     static DataObject identityObj;
     static DataObject alt_bn128_G1_addObj;
     static DataObject alt_bn128_G1_mulObj;
-
     {
         std::lock_guard<std::mutex> lock(g_staticDeclaration);
         if (!ecrecoverObj.count("name"))

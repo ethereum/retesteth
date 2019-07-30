@@ -18,7 +18,7 @@ public:
         }
     }
 
-    string const& getHash() const { return m_hash; }
+    string const& isHash() const { return m_hash; }
     std::vector<scheme_account> const& getAccounts() const { return m_accounts; }
     bool hasAccount(std::string const& _address) const
     {
@@ -58,7 +58,5 @@ private:
     }
 };
 
-/// Check two states agains each other
-CompareResult compareStates(scheme_state const& _stateExpect, scheme_state const& _statePost);
 }
 
