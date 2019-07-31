@@ -32,14 +32,14 @@ struct ExpectInfo
     ExpectInfo(scheme_expectState const& _expectState)
       : postHash(string()), logHash(string()), trHash(string()), expectState(_expectState)
     {}
-    string postHash;
-    string logHash;
-    string trHash;
+    string postHash;  // Post hash to verify on remote client
+    string logHash;   // Log hash to verify on remote client
+    string trHash;    // Transaction hash to get the remote LogHash
     scheme_expectState expectState;
 };
 
 // Check post condition on a client
-bool checkExpectSection(
+CompareResult checkExpectSection(
     RPCSession& _session, ExpectInfo const& _expectedInfo, scheme_remoteState& _remoteState);
 
 enum StateRequest

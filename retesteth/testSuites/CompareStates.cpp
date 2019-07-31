@@ -89,14 +89,14 @@ bool remoteHasAccount(
     int trIndex = latestBlock.getTransactionCount();
 
     string startHash = "0";
-    size_t cycles = 10;
-    const int cmaxRows = 30;
-    while (cycles--)
+    const int cmaxRows = 100;
+    const size_t cycles_max = 100;
+    size_t cycles = cycles_max;
+    while (--cycles)
     {
         DataObject res =
-            _session.debug_accountRangeAt(_latestBlockNumber, trIndex, startHash, cmaxRows);
+            _session.debug_accountRange(_latestBlockNumber, trIndex, startHash, cmaxRows);
         auto const& subObjects = res.atKey("addressMap").getSubObjects();
-        ;
         for (auto const& element : subObjects)
         {
             if (element.asString() == _account)
@@ -108,6 +108,8 @@ bool remoteHasAccount(
         if (subObjects.size() > 0)
             startHash = subObjects.at(subObjects.size() - 1).getKey();
     }
+    ETH_ERROR_REQUIRE_MESSAGE(cycles > 0,
+        "Remote state has too many accounts! (" + to_string(cycles_max * cmaxRows) + ")");
     return false;
 }
 
@@ -132,6 +134,8 @@ CompareResult compareStates(scheme_expectState const& _stateExpect, RPCSession& 
             result = existanceResult;
             continue;
         }
+        if (!hasAccount)
+            continue;
 
         // Compare account in postState with expect section account
         size_t totalSize = 0;
@@ -155,6 +159,8 @@ CompareResult compareStates(scheme_expectState const& _stateExpect, scheme_state
             result = existanceResult;
             continue;
         }
+        if (!hasAccount)
+            continue;
 
         // Compare account in postState with expect section account
         CompareResult accountCompareResult = compareAccounts(_statePost.getAccount(a.address()), a);

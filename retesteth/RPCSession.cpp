@@ -240,10 +240,11 @@ void RPCSession::clear()
     closingThreads.clear();
 }
 
-DataObject RPCSession::debug_accountRangeAt(
+DataObject RPCSession::debug_accountRange(
     std::string const& _blockHashOrNumber, int _txIndex, string const& _address, int _maxResults)
 {
-    return rpcCall("debug_accountRangeAt", { quote(_blockHashOrNumber), to_string(_txIndex), quote(_address), to_string(_maxResults) });
+    return rpcCall("debug_accountRange",
+        {quote(_blockHashOrNumber), to_string(_txIndex), quote(_address), to_string(_maxResults)});
 }
 
 DataObject RPCSession::debug_storageRangeAt(std::string const& _blockHashOrNumber, int _txIndex,

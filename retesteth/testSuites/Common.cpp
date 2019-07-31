@@ -7,20 +7,23 @@ using namespace std;
 namespace test
 {
 // Validate post condition on remote client
-bool checkExpectSection(
+CompareResult checkExpectSection(
     RPCSession& _session, ExpectInfo const& _expectedInfo, scheme_remoteState& _remoteState)
 {
+    CompareResult res = CompareResult::Success;
     // expect section provided, perform validation check on remote client
     if (!_expectedInfo.expectState.isNull())
     {
         // check that the post state qualifies to the expect section
         _remoteState = getRemoteState(_session, StateRequest::AttemptFullPost);
-        test::scheme_block blockData(_remoteState.getData().atKey("rawBlockData"));
-        ETH_ERROR_REQUIRE_MESSAGE(blockData.getTransactionCount() == 1,
-            "Transaction execution failed. Looks like remote block do not contain a transaction! " +
-                TestOutputHelper::get().testInfo());
+        if (Options::get().logVerbosity >= 6)
+        {
+            test::scheme_block blockData(_remoteState.getData().atKey("rawBlockData"));
+            if (blockData.getTransactionCount() != 1)
+                ETH_TEST_MESSAGE("Warning: Looks like remote block do not contain a transaction! " +
+                                 TestOutputHelper::get().testInfo());
+        }
 
-        CompareResult res;
         if (_remoteState.hasPostState())
         {
             // a small state loaded into postState object. compare expect section to this object
@@ -29,13 +32,13 @@ bool checkExpectSection(
         }
         else
         {
-            // perform check on a huge state, by doing requests to the client and compare to expect
-            // section
+            // perform check on a huge state,
+            // do requests to the client and compare to expect section
             res = test::compareStates(_expectedInfo.expectState, _session);
         }
         ETH_ERROR_REQUIRE_MESSAGE(
             res == CompareResult::Success, TestOutputHelper::get().testInfo());
-        return res == CompareResult::Success;
+        return res;
     }
 
     _remoteState = getRemoteState(_session, StateRequest::NoPost);
@@ -49,10 +52,11 @@ bool checkExpectSection(
             ETH_ERROR_REQUIRE_MESSAGE(remoteLogHash == _expectedInfo.logHash,
                 "Error at " + TestOutputHelper::get().testInfo() + ", logs hash mismatch: '" +
                     remoteLogHash + "'" + ", expected: '" + _expectedInfo.logHash + "'");
+            res = CompareResult::LogHashMismatch;
         }
     }
 
-    // postHash provided, ask remote client for postState hash to compare
+    // postHash provided, compare to remoteState postHash
     if (!_expectedInfo.postHash.empty() && _remoteState.getPostHash() != _expectedInfo.postHash)
     {
         ETH_ERROR_REQUIRE_MESSAGE(false, "Error at " + TestOutputHelper::get().testInfo() +
@@ -63,10 +67,9 @@ bool checkExpectSection(
             _remoteState = getRemoteState(_session, StateRequest::AttemptFullPost);
             ETH_TEST_MESSAGE("\nState Dump: \n" + _remoteState.getPostState().asJson());
         }
-        return false;
+        return res = CompareResult::PostHashMismatch;
     }
-
-    return true;
+    return res;
 }
 
 void checkDataObject(DataObject const& _input)
@@ -123,11 +126,12 @@ scheme_account remoteGetAccount(RPCSession& _session, string const& _account,
     test::scheme_block latestBlock = _session.eth_getBlockByNumber(_latestBlockNumber, false);
     int trIndex = latestBlock.getTransactionCount();
 
-    size_t cycles = 10;
+    const size_t cycles_max = 100;
     const int cmaxRows = 100;
     DataObject storage(DataType::Object);
     string beginHash = "0";
-    while (cycles--)
+    size_t cycles = cycles_max;
+    while (--cycles)
     {
         DataObject debugStorageAt = _session.debug_storageRangeAt(
             _latestBlockNumber, trIndex, _account, beginHash, cmaxRows);
@@ -141,6 +145,8 @@ scheme_account remoteGetAccount(RPCSession& _session, string const& _account,
             beginHash = subObjects.at(subObjects.size() - 1).getKey();
     }
     accountObj["storage"] = storage;
+    ETH_ERROR_REQUIRE_MESSAGE(cycles > 0,
+        "Remote state has too many storage records! (" + to_string(cycles_max * cmaxRows) + ")");
     return scheme_account(accountObj);
 }
 
@@ -159,7 +165,7 @@ scheme_remoteState getRemoteState(RPCSession& _session, StateRequest _stateReque
         int trIndex = latestBlock.getTransactionCount(); //1000;
         DataObject accountsObj;
         bool isHugeState = false;
-        DataObject res = _session.debug_accountRangeAt(latestBlockNumber, trIndex, "0", cmaxRows);
+        DataObject res = _session.debug_accountRange(latestBlockNumber, trIndex, "0", cmaxRows);
         if (res["addressMap"].getSubObjects().size() < 20 || Options::get().fullstate)
         {
             size_t stateTotalSize = 0;

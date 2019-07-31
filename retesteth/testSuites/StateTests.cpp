@@ -106,8 +106,9 @@ DataObject FillTestAsBlockchain(DataObject const& _testFile, TestSuite::TestSuit
                     session.test_mineBlocks(1);
                     tr.executed = true;
                     scheme_remoteState remoteState;
-                    _opt.wasErrors = !checkExpectSection(
+                    CompareResult res = checkExpectSection(
                         session, ExpectInfo(mexpect.getExpectState()), remoteState);
+                    _opt.wasErrors = res == CompareResult::Success;
 
                     scheme_block remoteBlock(remoteState.getRawBlockData());
                     DataObject aBlockchainTest;
@@ -200,8 +201,9 @@ DataObject FillTest(DataObject const& _testFile, TestSuite::TestSuiteOptions& _o
                     tr.executed = true;
 
                     scheme_remoteState remoteState;
-                    _opt.wasErrors = !checkExpectSection(
+                    CompareResult res = checkExpectSection(
                         session, ExpectInfo(expect.getExpectState()), remoteState);
+                    _opt.wasErrors = res == CompareResult::Success;
 
                     DataObject indexes;
                     DataObject transactionResults;

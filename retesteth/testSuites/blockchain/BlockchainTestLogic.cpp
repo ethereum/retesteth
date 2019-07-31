@@ -56,26 +56,17 @@ bool FillTest(scheme_blockchainTestFiller const& _testObject, string const& _net
         blockSection["rlp"] = blockData.getBlockRLP();
         blockSection["blockHeader"] = blockData.getBlockHeader();
         _testOut["blocks"].addArrayObject(blockSection);
+        lastBlHash = blockData.getBlockHash();
     }
 
-    scheme_remoteState remoteState = getRemoteState(session, StateRequest::AttemptFullPost);
-    scheme_state postState(remoteState.getData().atKey("postState"));
-    CompareResult res;
-
-    if (postState.isHash().empty())
-        res = test::compareStates(
-            _testObject.getExpectSection().getExpectSectionFor(_network).getExpectState(),
-            postState);
-    else
-        res = test::compareStates(
-            _testObject.getExpectSection().getExpectSectionFor(_network).getExpectState(), session);
-
-    ETH_ERROR_REQUIRE_MESSAGE(res == CompareResult::Success, TestOutputHelper::get().testInfo());
-    if (res != CompareResult::Success)
-        return true;
-    _testOut["postState"] = remoteState.getData().atKey("postState");
+    ExpectInfo info;
+    scheme_remoteState remoteState;
+    info.expectState =
+        _testObject.getExpectSection().getExpectSectionFor(_network).getExpectState();
+    CompareResult res = test::checkExpectSection(session, info, remoteState);
+    _testOut["postState"] = remoteState.getPostState();
     _testOut["lastblockhash"] = lastBlHash;
-    return false;
+    return res == CompareResult::Success;
 }
 
 /// Read and execute the test from the file
@@ -83,6 +74,8 @@ bool RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _
 {
     scheme_blockchainTest inputTest(_testObject);
     RPCSession& session = RPCSession::instance(TestOutputHelper::getThreadID());
+    string testInfo = TestOutputHelper::get().testName() + ", fork: " + inputTest.getNetwork();
+    TestOutputHelper::get().setCurrentTestInfo(testInfo);
 
     session.test_setChainParams(inputTest.getGenesisForRPC(inputTest.getNetwork()).asJson());
 
@@ -97,27 +90,14 @@ bool RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _
     // wait for blocks to process
     // std::this_thread::sleep_for(std::chrono::seconds(10));
 
-    // compare post state hash
-    if (inputTest.getPost().isHash().empty())
-    {
-        scheme_remoteState remoteState = getRemoteState(session, StateRequest::AttemptFullPost);
-        scheme_state postState(remoteState.getData().atKey("postState"));
-        CompareResult res = test::compareStates(inputTest.getPost(), postState);
-        ETH_ERROR_REQUIRE_MESSAGE(
-            res == CompareResult::Success, "Error in " + inputTest.getData().getKey());
-        return (res != CompareResult::Success);
-    }
+    ExpectInfo info;
+    if (!inputTest.getPost().isHash().empty())  // Blockchain test has state as a hash
+        info.postHash = inputTest.getPost().isHash();
     else
-    {
-        scheme_remoteState remoteState = getRemoteState(session, StateRequest::NoPost);
-        bool flag =
-            remoteState.getData().atKey("postHash").asString() == inputTest.getPost().isHash();
-        ETH_ERROR_REQUIRE_MESSAGE(
-            flag, "Error in " + TestOutputHelper::get().testInfo() + ", Expected post state `" +
-                      inputTest.getPost().isHash() + "', but got: '" +
-                      remoteState.getData().atKey("postHash").asString() + "'");
-        return flag;
-    }
+        info.expectState = scheme_expectState(inputTest.getPost().getData());
+    scheme_remoteState remoteState;
+    CompareResult res = test::checkExpectSection(session, info, remoteState);
+    return res == CompareResult::Success;
 }
 
 DataObject DoTests(DataObject const& _input, TestSuite::TestSuiteOptions& _opt)
