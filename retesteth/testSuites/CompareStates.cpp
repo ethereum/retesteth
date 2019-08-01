@@ -16,7 +16,6 @@ CompareResult checkExistance(scheme_expectAccount const& _expectAccount, bool _a
                        _expectAccount.address() + "' address not expected to exist!");
         return CompareResult::AccountShouldNotExist;
     }
-
     // if expected to exist but actually not exists
     if (!_expectAccount.shouldNotExist() && !_actualExistance)
     {
@@ -25,7 +24,6 @@ CompareResult checkExistance(scheme_expectAccount const& _expectAccount, bool _a
                        "'");
         return CompareResult::MissingExpectedAccount;
     }
-
     return CompareResult::Success;
 }
 
@@ -81,36 +79,29 @@ CompareResult compareAccounts(
     return result;
 }
 
-// inline function
-bool remoteHasAccount(
-    RPCSession& _session, string const& _account, string const& _latestBlockNumber)
+DataObject getRemoteAccountList(RPCSession& _session, LatestInfo const& _latestInfo)
 {
-    test::scheme_block latestBlock = _session.eth_getBlockByNumber(_latestBlockNumber, false);
-    int trIndex = latestBlock.getTransactionCount();
-
+    DataObject accountList;
     string startHash = "0";
     const int cmaxRows = 100;
     const size_t cycles_max = 100;
-    size_t cycles = cycles_max;
-    while (--cycles)
+    size_t cycles = 0;
+    while (cycles++ <= cycles_max)
     {
-        DataObject res =
-            _session.debug_accountRange(_latestBlockNumber, trIndex, startHash, cmaxRows);
+        DataObject res = _session.debug_accountRange(
+            _latestInfo.latestBlockNumber, _latestInfo.latestTrIndex, startHash, cmaxRows);
         auto const& subObjects = res.atKey("addressMap").getSubObjects();
         for (auto const& element : subObjects)
-        {
-            if (element.asString() == _account)
-                return true;
-        }
+            accountList.addSubObject(element.asString(), DataObject(DataType::Null));
         if (res.atKey("nextKey").asString() ==
             "0x0000000000000000000000000000000000000000000000000000000000000000")
             break;
         if (subObjects.size() > 0)
             startHash = subObjects.at(subObjects.size() - 1).getKey();
     }
-    ETH_ERROR_REQUIRE_MESSAGE(cycles > 0,
-        "Remote state has too many accounts! (" + to_string(cycles_max * cmaxRows) + ")");
-    return false;
+    ETH_ERROR_REQUIRE_MESSAGE(cycles <= cycles_max,
+        "Remote state has too many accounts! (>" + to_string(cycles_max * cmaxRows) + ")");
+    return accountList;
 }
 
 // compare states with full post information
@@ -124,10 +115,16 @@ CompareResult compareStates(scheme_state const& _stateExpect, scheme_state const
 CompareResult compareStates(scheme_expectState const& _stateExpect, RPCSession& _session)
 {
     CompareResult result = CompareResult::Success;
-    string latestBlockNumber = _session.eth_blockNumber();
+    test::scheme_block latestBlock =
+        _session.eth_getBlockByNumber(_session.eth_blockNumber(), false);
+
+    LatestInfo latestInfo;
+    latestInfo.latestBlockNumber = latestBlock.getNumber();
+    latestInfo.latestTrIndex = latestBlock.getTransactionCount();
+    DataObject accountList = getRemoteAccountList(_session, latestInfo);
     for (auto const& a : _stateExpect.getAccounts())
     {
-        bool hasAccount = remoteHasAccount(_session, a.address(), latestBlockNumber);
+        bool hasAccount = accountList.count(a.address());
         CompareResult existanceResult = checkExistance(a, hasAccount);
         if (existanceResult != CompareResult::Success)
         {
@@ -139,11 +136,12 @@ CompareResult compareStates(scheme_expectState const& _stateExpect, RPCSession& 
 
         // Compare account in postState with expect section account
         size_t totalSize = 0;
-        CompareResult accountCompareResult = compareAccounts(
-            remoteGetAccount(_session, a.address(), latestBlockNumber, totalSize), a);
+        CompareResult accountCompareResult =
+            compareAccounts(remoteGetAccount(_session, a.address(), latestInfo, totalSize), a);
         if (accountCompareResult != CompareResult::Success)
             result = accountCompareResult;
     }
+
     return result;
 }
 

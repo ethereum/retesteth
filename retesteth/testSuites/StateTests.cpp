@@ -57,7 +57,7 @@ bool OptionsAllowTransaction(scheme_generalTransaction::transactionInfo const& _
 }
 
 /// Generate a blockchain test from state test filler
-DataObject FillTestAsBlockchain(DataObject const& _testFile, TestSuite::TestSuiteOptions& _opt)
+DataObject FillTestAsBlockchain(DataObject const& _testFile)
 {
     DataObject filledTest;
     test::scheme_stateTestFiller test(_testFile);
@@ -106,9 +106,7 @@ DataObject FillTestAsBlockchain(DataObject const& _testFile, TestSuite::TestSuit
                     session.test_mineBlocks(1);
                     tr.executed = true;
                     scheme_remoteState remoteState;
-                    CompareResult res = checkExpectSection(
-                        session, ExpectInfo(mexpect.getExpectState()), remoteState);
-                    _opt.wasErrors = res == CompareResult::Success;
+                    checkExpectSection(session, ExpectInfo(mexpect.getExpectState()), remoteState);
 
                     scheme_block remoteBlock(remoteState.getRawBlockData());
                     DataObject aBlockchainTest;
@@ -148,7 +146,7 @@ DataObject FillTestAsBlockchain(DataObject const& _testFile, TestSuite::TestSuit
 }
 
 /// Rewrite the test file. Fill General State Test
-DataObject FillTest(DataObject const& _testFile, TestSuite::TestSuiteOptions& _opt)
+DataObject FillTest(DataObject const& _testFile)
 {
     DataObject filledTest;
     filledTest.setAutosort(true);
@@ -201,9 +199,7 @@ DataObject FillTest(DataObject const& _testFile, TestSuite::TestSuiteOptions& _o
                     tr.executed = true;
 
                     scheme_remoteState remoteState;
-                    CompareResult res = checkExpectSection(
-                        session, ExpectInfo(expect.getExpectState()), remoteState);
-                    _opt.wasErrors = res == CompareResult::Success;
+                    checkExpectSection(session, ExpectInfo(expect.getExpectState()), remoteState);
 
                     DataObject indexes;
                     DataObject transactionResults;
@@ -307,13 +303,13 @@ DataObject StateTestSuite::doTests(DataObject const& _input, TestSuiteOptions& _
         if (Options::get().fillchain)
         {
             // Each transaction will produce many tests
-            outputTest = FillTestAsBlockchain(inputTest, _opt);
+            outputTest = FillTestAsBlockchain(inputTest);
             for (auto const& obj : outputTest.getSubObjects())
                 filledTest.addSubObject(obj);
         }
         else
         {
-            outputTest[testname] = FillTest(inputTest, _opt);
+            outputTest[testname] = FillTest(inputTest);
             filledTest = outputTest;
         }
     }

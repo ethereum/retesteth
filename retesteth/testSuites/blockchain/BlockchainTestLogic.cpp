@@ -6,7 +6,7 @@
 namespace test
 {
 /// Generate blockchain test from filler
-bool FillTest(scheme_blockchainTestFiller const& _testObject, string const& _network,
+void FillTest(scheme_blockchainTestFiller const& _testObject, string const& _network,
     TestSuite::TestSuiteOptions const&, DataObject& _testOut)
 {
     // construct filled blockchain test
@@ -49,8 +49,10 @@ bool FillTest(scheme_blockchainTestFiller const& _testObject, string const& _net
         }
         session.test_mineBlocks(1);
 
-        scheme_remoteState remoteState = getRemoteState(session, StateRequest::NoPost);
+        scheme_remoteState remoteState = getRemoteState(session, StateRequest::AttemptFullPost);
         test::scheme_block blockData(remoteState.getData().atKey("rawBlockData"));
+
+        // SOME TRANSACTIONS MIGHT BE EXPECTED TO FAIL
         ETH_ERROR_REQUIRE_MESSAGE(blockData.getTransactionCount() == block.getTransactions().size(),
             "BlockchainTest transaction execution failed! " + TestOutputHelper::get().testInfo());
         blockSection["rlp"] = blockData.getBlockRLP();
@@ -63,14 +65,13 @@ bool FillTest(scheme_blockchainTestFiller const& _testObject, string const& _net
     scheme_remoteState remoteState;
     info.expectState =
         _testObject.getExpectSection().getExpectSectionFor(_network).getExpectState();
-    CompareResult res = test::checkExpectSection(session, info, remoteState);
+    checkExpectSection(session, info, remoteState);
     _testOut["postState"] = remoteState.getPostState();
     _testOut["lastblockhash"] = lastBlHash;
-    return res == CompareResult::Success;
 }
 
 /// Read and execute the test from the file
-bool RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _opt)
+void RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _opt)
 {
     scheme_blockchainTest inputTest(_testObject);
     RPCSession& session = RPCSession::instance(TestOutputHelper::getThreadID());
@@ -96,8 +97,7 @@ bool RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _
     else
         info.expectState = scheme_expectState(inputTest.getPost().getData());
     scheme_remoteState remoteState;
-    CompareResult res = test::checkExpectSection(session, info, remoteState);
-    return res == CompareResult::Success;
+    checkExpectSection(session, info, remoteState);
 }
 
 DataObject DoTests(DataObject const& _input, TestSuite::TestSuiteOptions& _opt)
@@ -127,7 +127,7 @@ DataObject DoTests(DataObject const& _input, TestSuite::TestSuiteOptions& _opt)
                         TestOutputHelper::get().setCurrentTestName(newtestname);
 
                         DataObject testOutput;
-                        _opt.wasErrors = FillTest(testFiller, network, _opt, testOutput);
+                        FillTest(testFiller, network, _opt, testOutput);
                         if (testFiller.getData().count("_info"))
                             testOutput["_info"] = testFiller.getData().atKey("_info");
                         tests[newtestname] = testOutput;
@@ -142,7 +142,7 @@ DataObject DoTests(DataObject const& _input, TestSuite::TestSuiteOptions& _opt)
                 if (testname != Options::get().singleTestName + "_" + Options::get().singleTestNet)
                     continue;
 
-            _opt.wasErrors = RunTest(i, _opt);
+            RunTest(i, _opt);
         }
     }
 

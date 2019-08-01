@@ -288,7 +288,10 @@ string RPCSession::eth_sendTransaction(string const& _transaction)
 
 string RPCSession::eth_sendRawTransaction(std::string const& _rlp)
 {
-    return rpcCall("eth_sendRawTransaction", {quote(_rlp)}, true).asString();
+    DataObject result = rpcCall("eth_sendRawTransaction", {quote(_rlp)}, true);
+    if (result.type() == DataType::Null)  // if the method failed
+        return "";
+    return result.asString();
 }
 
 int RPCSession::eth_getTransactionCount(

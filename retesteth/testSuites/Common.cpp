@@ -7,10 +7,9 @@ using namespace std;
 namespace test
 {
 // Validate post condition on remote client
-CompareResult checkExpectSection(
+void checkExpectSection(
     RPCSession& _session, ExpectInfo const& _expectedInfo, scheme_remoteState& _remoteState)
 {
-    CompareResult res = CompareResult::Success;
     // expect section provided, perform validation check on remote client
     if (!_expectedInfo.expectState.isNull())
     {
@@ -24,6 +23,7 @@ CompareResult checkExpectSection(
                                  TestOutputHelper::get().testInfo());
         }
 
+        CompareResult res = CompareResult::Success;
         if (_remoteState.hasPostState())
         {
             // a small state loaded into postState object. compare expect section to this object
@@ -36,9 +36,9 @@ CompareResult checkExpectSection(
             // do requests to the client and compare to expect section
             res = test::compareStates(_expectedInfo.expectState, _session);
         }
-        ETH_ERROR_REQUIRE_MESSAGE(
-            res == CompareResult::Success, TestOutputHelper::get().testInfo());
-        return res;
+
+        if (res != CompareResult::Success)
+            ETH_ERROR_MESSAGE("checkExpectSection on remote client mismatch!");
     }
 
     _remoteState = getRemoteState(_session, StateRequest::NoPost);
@@ -47,29 +47,26 @@ CompareResult checkExpectSection(
     if (!_expectedInfo.trHash.empty() && !_expectedInfo.logHash.empty())
     {
         string remoteLogHash = _session.test_getLogHash(_expectedInfo.trHash);
-        if (!remoteLogHash.empty())
+        if (!remoteLogHash.empty() && remoteLogHash != _expectedInfo.logHash)
         {
-            ETH_ERROR_REQUIRE_MESSAGE(remoteLogHash == _expectedInfo.logHash,
-                "Error at " + TestOutputHelper::get().testInfo() + ", logs hash mismatch: '" +
-                    remoteLogHash + "'" + ", expected: '" + _expectedInfo.logHash + "'");
-            res = CompareResult::LogHashMismatch;
+            ETH_ERROR_MESSAGE("Error at " + TestOutputHelper::get().testInfo() +
+                              ", logs hash mismatch: '" + remoteLogHash + "'" + ", expected: '" +
+                              _expectedInfo.logHash + "'");
         }
     }
 
     // postHash provided, compare to remoteState postHash
     if (!_expectedInfo.postHash.empty() && _remoteState.getPostHash() != _expectedInfo.postHash)
     {
-        ETH_ERROR_REQUIRE_MESSAGE(false, "Error at " + TestOutputHelper::get().testInfo() +
-                                             ", post hash mismatch: " + _remoteState.getPostHash() +
-                                             ", expected: " + _expectedInfo.postHash);
+        ETH_ERROR_MESSAGE("Error at " + TestOutputHelper::get().testInfo() +
+                          ", post hash mismatch: " + _remoteState.getPostHash() +
+                          ", expected: " + _expectedInfo.postHash);
         if (Options::get().logVerbosity > 5)
         {
             _remoteState = getRemoteState(_session, StateRequest::AttemptFullPost);
             ETH_TEST_MESSAGE("\nState Dump: \n" + _remoteState.getPostState().asJson());
         }
-        return res = CompareResult::PostHashMismatch;
     }
-    return res;
 }
 
 void checkDataObject(DataObject const& _input)
@@ -112,20 +109,18 @@ void checkTestNameIsEqualToFileName(DataObject const& _input)
                 "'");
 }
 
-scheme_account remoteGetAccount(RPCSession& _session, string const& _account,
-    string const& _latestBlockNumber, size_t& _totalSize)
+scheme_account remoteGetAccount(
+    RPCSession& _session, string const& _account, LatestInfo const& _latestInfo, size_t& _totalSize)
 {
     DataObject accountObj;
     accountObj.setKey(_account);
-    accountObj["code"] = _session.eth_getCode(_account, _latestBlockNumber);
+    accountObj["code"] = _session.eth_getCode(_account, _latestInfo.latestBlockNumber);
     _totalSize += accountObj["code"].asString().size();
-    accountObj["nonce"] = to_string(_session.eth_getTransactionCount(_account, _latestBlockNumber));
-    accountObj["balance"] = _session.eth_getBalance(_account, _latestBlockNumber);
+    accountObj["nonce"] =
+        to_string(_session.eth_getTransactionCount(_account, _latestInfo.latestBlockNumber));
+    accountObj["balance"] = _session.eth_getBalance(_account, _latestInfo.latestBlockNumber);
 
     // Storage
-    test::scheme_block latestBlock = _session.eth_getBlockByNumber(_latestBlockNumber, false);
-    int trIndex = latestBlock.getTransactionCount();
-
     const size_t cycles_max = 100;
     const int cmaxRows = 100;
     DataObject storage(DataType::Object);
@@ -133,8 +128,8 @@ scheme_account remoteGetAccount(RPCSession& _session, string const& _account,
     size_t cycles = cycles_max;
     while (--cycles)
     {
-        DataObject debugStorageAt = _session.debug_storageRangeAt(
-            _latestBlockNumber, trIndex, _account, beginHash, cmaxRows);
+        DataObject debugStorageAt = _session.debug_storageRangeAt(_latestInfo.latestBlockNumber,
+            _latestInfo.latestTrIndex, _account, beginHash, cmaxRows);
         auto const& subObjects = debugStorageAt["storage"].getSubObjects();
         _totalSize += subObjects.size() * 64;
         for (auto const& element : subObjects)
@@ -153,26 +148,28 @@ scheme_account remoteGetAccount(RPCSession& _session, string const& _account,
 scheme_remoteState getRemoteState(RPCSession& _session, StateRequest _stateRequest)
 {
     DataObject remoteState;
-    const int cmaxRows = 30;
-    string latestBlockNumber = _session.eth_blockNumber();
     test::scheme_block latestBlock = _session.eth_getBlockByNumber(
-        latestBlockNumber, _stateRequest == StateRequest::AttemptFullPost ? true : false);
+        _session.eth_blockNumber(), _stateRequest == StateRequest::AttemptFullPost ? true : false);
     remoteState["postHash"] = latestBlock.getData().atKey("stateRoot");
     remoteState["rawBlockData"] = latestBlock.getData();
 
+    LatestInfo latestInfo;
+    latestInfo.latestBlockNumber = latestBlock.getNumber();
+    latestInfo.latestTrIndex = latestBlock.getTransactionCount();
+
     if (_stateRequest == StateRequest::AttemptFullPost)
     {
-        int trIndex = latestBlock.getTransactionCount(); //1000;
         DataObject accountsObj;
+        DataObject accountList = getRemoteAccountList(_session, latestInfo);
+
         bool isHugeState = false;
-        DataObject res = _session.debug_accountRange(latestBlockNumber, trIndex, "0", cmaxRows);
-        if (res["addressMap"].getSubObjects().size() < 20 || Options::get().fullstate)
+        if (accountList.getSubObjects().size() < 20 || Options::get().fullstate)
         {
             size_t stateTotalSize = 0;
-            for (auto acc : res["addressMap"].getSubObjects())
+            for (auto acc : accountList.getSubObjects())
             {
                 scheme_account accountScheme =
-                    remoteGetAccount(_session, acc.asString(), latestBlockNumber, stateTotalSize);
+                    remoteGetAccount(_session, acc.getKey(), latestInfo, stateTotalSize);
                 if (stateTotalSize > 1024000 && !Options::get().fullstate)  // > 1MB
                 {
                     isHugeState = true;

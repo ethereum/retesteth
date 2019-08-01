@@ -39,13 +39,19 @@ struct ExpectInfo
 };
 
 // Check post condition on a client
-CompareResult checkExpectSection(
+void checkExpectSection(
     RPCSession& _session, ExpectInfo const& _expectedInfo, scheme_remoteState& _remoteState);
 
 enum StateRequest
 {
     AttemptFullPost,
     NoPost
+};
+
+struct LatestInfo
+{
+    string latestBlockNumber;
+    int latestTrIndex;
 };
 
 // Get Remote State From Client
@@ -69,5 +75,8 @@ CompareResult compareStates(scheme_state const& _stateExpect, scheme_state const
 
 // Get account from remote state. inline function
 scheme_account remoteGetAccount(RPCSession& _session, string const& _account,
-    string const& _latestBlockNumber, size_t& _totalSize);
+    LatestInfo const& _latestInfo, size_t& _totalSize);
+
+// Get list of account from remote client
+DataObject getRemoteAccountList(RPCSession& _session, LatestInfo const& _latestInfo);
 }

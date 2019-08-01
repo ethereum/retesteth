@@ -62,6 +62,8 @@ namespace test {
                         "block rpc transaction element is expected to be hash string!");
         }
 
+        string getNumber() const { return m_data.atKey("number").asString(); }
+
         size_t getTransactionCount() const
         {
             return m_data.atKey("transactions").getSubObjects().size();

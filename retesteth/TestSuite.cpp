@@ -426,6 +426,7 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
     AbsoluteTestPath const boostTestPath =
         getFullPath(_testFolder).path() / fs::path(testname + ".json");
 
+    bool wasErrors = false;
     TestSuiteOptions opt;
     if (Options::get().filltests)
     {
@@ -455,28 +456,26 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
             try
             {
                 DataObject output = doTests(testData.data, opt);
-                if (!opt.wasErrors)
-                {
-                    // Add client info for all of the tests in output
-                    addClientInfo(output, boostRelativeTestPath, testData.hash);
-                    writeFile(boostTestPath.path(), asBytes(output.asJson()));
-                }
+                // Add client info for all of the tests in output
+                addClientInfo(output, boostRelativeTestPath, testData.hash);
+                writeFile(boostTestPath.path(), asBytes(output.asJson()));
             }
             catch (test::BaseEthException const&)
             {
                 // Something went wrong inside the test. skip it.
                 // (error message is stored at TestOutputHelper)
-                opt.wasErrors = true;
+                wasErrors = true;
             }
             catch (std::exception const& _ex)
             {
                 ETH_ERROR_MESSAGE("ERROR OCCURED FILLING TESTS: " + string(_ex.what()));
                 RPCSession::sessionEnd(TestOutputHelper::getThreadID(), RPCSession::SessionStatus::HasFinished);
+                wasErrors = true;
             }
         }
     }
 
-    if (!opt.wasErrors && !opt.disableSecondRun)
+    if (!wasErrors && !opt.disableSecondRun)
     {
         try
         {
@@ -485,9 +484,8 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
         }
         catch (test::BaseEthException const&)
         {
-            // Something went wrong inside the test. skip it. (error message is stored at
-            // TestOutputHelper)
-            opt.wasErrors = true;
+            // Something went wrong inside the test. skip it.
+            // (error message is stored at TestOutputHelper)
         }
         catch (std::exception const& _ex)
         {

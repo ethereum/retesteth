@@ -41,7 +41,6 @@ DataObject FillTest(DataObject const& _testFile, TestSuite::TestSuiteOptions& _o
 {
     DataObject filledTest;
     scheme_RPCTestFiller rpcTestFiller(_testFile);
-    _opt.wasErrors = false;
 
     RPCSession& session = RPCSession::instance(TestOutputHelper::getThreadID());
 
