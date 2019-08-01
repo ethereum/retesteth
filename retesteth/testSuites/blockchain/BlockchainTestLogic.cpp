@@ -20,14 +20,13 @@ void FillTest(scheme_blockchainTestFiller const& _testObject, string const& _net
     DataObject genesisObject = _testObject.getGenesisForRPC(_network);
     session.test_setChainParams(genesisObject.asJson());
 
-    _testOut["genesisBlockHeader"] = session.eth_getBlockByNumber("0", false).getBlockHeader();
+    test::scheme_block latestBlock = session.eth_getBlockByNumber("0", false);
+    _testOut["genesisBlockHeader"] = latestBlock.getBlockHeader();
     _testOut["genesisBlockHeader"].removeKey("transactions");
     _testOut["genesisBlockHeader"].removeKey("uncles");
     // u256 genesisTimestamp =
     // std::time(0);//u256(genesisObject.atKey("genesis").atKey("timestamp").asString());
 
-    string lastTrHash;
-    string lastBlHash;
     size_t number = 0;
     for (auto const& block : _testObject.getBlocks())
     {
@@ -39,35 +38,31 @@ void FillTest(scheme_blockchainTestFiller const& _testObject, string const& _net
         DataObject blockSection;
         for (auto const& tr : block.getTransactions())
         {
-            lastTrHash = session.eth_sendRawTransaction(tr.getSignedRLP());
-            if (!session.getLastRPCError().empty())
-                ETH_ERROR_MESSAGE(session.getLastRPCError());
-            if (!isHash<h256>(lastTrHash))
-                ETH_ERROR_MESSAGE("eth_sendRawTransaction return invalid hash: '" + lastTrHash +
-                                  "' " + TestOutputHelper::get().testInfo());
+            session.eth_sendRawTransaction(tr.getSignedRLP());
             blockSection["transactions"].addArrayObject(tr.getData());
         }
-        session.test_mineBlocks(1);
-
-        scheme_remoteState remoteState = getRemoteState(session, StateRequest::AttemptFullPost);
-        test::scheme_block blockData(remoteState.getData().atKey("rawBlockData"));
+        string latestBlockNumber = session.test_mineBlocks(1);
 
         // SOME TRANSACTIONS MIGHT BE EXPECTED TO FAIL
-        ETH_ERROR_REQUIRE_MESSAGE(blockData.getTransactionCount() == block.getTransactions().size(),
+        latestBlock = session.eth_getBlockByNumber(latestBlockNumber, true);
+        ETH_ERROR_REQUIRE_MESSAGE(
+            latestBlock.getTransactionCount() == block.getTransactions().size(),
             "BlockchainTest transaction execution failed! " + TestOutputHelper::get().testInfo());
-        blockSection["rlp"] = blockData.getBlockRLP();
-        blockSection["blockHeader"] = blockData.getBlockHeader();
+        blockSection["rlp"] = latestBlock.getBlockRLP();
+        blockSection["blockHeader"] = latestBlock.getBlockHeader();
         _testOut["blocks"].addArrayObject(blockSection);
-        lastBlHash = blockData.getBlockHash();
     }
 
-    ExpectInfo info;
-    scheme_remoteState remoteState;
-    info.expectState =
-        _testObject.getExpectSection().getExpectSectionFor(_network).getExpectState();
-    checkExpectSection(session, info, remoteState);
-    _testOut["postState"] = remoteState.getPostState();
-    _testOut["lastblockhash"] = lastBlHash;
+    scheme_state remoteState = getRemoteState(session, latestBlock);
+    if (remoteState.isHash())
+        compareStates(_testObject.getExpectSection().getExpectSectionFor(_network).getExpectState(),
+            session, latestBlock);
+    else
+        compareStates(_testObject.getExpectSection().getExpectSectionFor(_network).getExpectState(),
+            remoteState);
+
+    _testOut["postState"] = remoteState.getData();
+    _testOut["lastblockhash"] = latestBlock.getBlockHash();
 }
 
 /// Read and execute the test from the file
@@ -91,13 +86,11 @@ void RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _
     // wait for blocks to process
     // std::this_thread::sleep_for(std::chrono::seconds(10));
 
-    ExpectInfo info;
-    if (!inputTest.getPost().isHash().empty())  // Blockchain test has state as a hash
-        info.postHash = inputTest.getPost().isHash();
+    scheme_block latestBlock = session.eth_getBlockByNumber(session.eth_blockNumber(), false);
+    if (inputTest.getPost().isHash())
+        validatePostHash(session, inputTest.getPost().getHash(), latestBlock);
     else
-        info.expectState = scheme_expectState(inputTest.getPost().getData());
-    scheme_remoteState remoteState;
-    checkExpectSection(session, info, remoteState);
+        compareStates(scheme_expectState(inputTest.getPost().getData()), session, latestBlock);
 }
 
 DataObject DoTests(DataObject const& _input, TestSuite::TestSuiteOptions& _opt)

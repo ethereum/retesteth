@@ -289,6 +289,13 @@ string RPCSession::eth_sendTransaction(string const& _transaction)
 string RPCSession::eth_sendRawTransaction(std::string const& _rlp)
 {
     DataObject result = rpcCall("eth_sendRawTransaction", {quote(_rlp)}, true);
+
+    string lastError = getLastRPCError();
+    if (!lastError.empty())
+        ETH_ERROR_MESSAGE(lastError);
+    if (!isHash<h256>(result.asString()))
+        ETH_ERROR_MESSAGE("eth_sendRawTransaction return invalid hash: '" + result.asString() +
+                          "' " + TestOutputHelper::get().testInfo());
     if (result.type() == DataType::Null)  // if the method failed
         return "";
     return result.asString();
@@ -355,7 +362,7 @@ void RPCSession::test_rewindToBlock(size_t _blockNr)
     ETH_FAIL_REQUIRE_MESSAGE(rpcCall("test_rewindToBlock", { to_string(_blockNr) }) == true, "remote test_rewintToBlock = false");
 }
 
-void RPCSession::test_mineBlocks(int _number)
+string RPCSession::test_mineBlocks(int _number)
 {
     DataObject blockNumber = rpcCall("eth_blockNumber");
     u256 startBlock = (blockNumber.type() == DataType::String) ? u256(blockNumber.asString()) :
@@ -381,28 +388,30 @@ void RPCSession::test_mineBlocks(int _number)
         // test::TestOutputHelper::get().testName());
 
         blockNumber = rpcCall("eth_blockNumber");
-        bigint number = (blockNumber.type() == DataType::String) ? u256(blockNumber.asString()) :
-                                                                   blockNumber.asInt();
+        u256 number = (blockNumber.type() == DataType::String) ? u256(blockNumber.asString()) :
+                                                                 blockNumber.asInt();
         if (number >= startBlock + _number)
-            break;
+            return toString(number);
         else
             sleepTime *= 2;
-    }
-    if (tries > 1)
-    {
-        m_successfulMineRuns = 0;
-        m_sleepTime += 2;
-    }
-    else if (tries == 1)
-    {
-        m_successfulMineRuns++;
-        if (m_successfulMineRuns > 5)
+
+        if (tries > 1)
         {
             m_successfulMineRuns = 0;
-            if (m_sleepTime > 2)
-                m_sleepTime--;
+            m_sleepTime += 2;
+        }
+        else if (tries == 1)
+        {
+            m_successfulMineRuns++;
+            if (m_successfulMineRuns > 5)
+            {
+                m_successfulMineRuns = 0;
+                if (m_sleepTime > 2)
+                    m_sleepTime--;
+            }
         }
     }
+    return toString(startBlock);
 }
 
 void RPCSession::test_modifyTimestamp(unsigned long long _timestamp)

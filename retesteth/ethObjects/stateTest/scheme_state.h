@@ -14,11 +14,12 @@ public:
         {
             for (auto const& accountObj : _state.getSubObjects())
                 m_accounts.push_back(scheme_account(accountObj));
-            refreshData();
+            refreshData();  // because accounts corrected to hex
         }
     }
 
-    string const& isHash() const { return m_hash; }
+    bool isHash() const { return !m_hash.empty(); }
+    string const& getHash() const { return m_hash; }
     std::vector<scheme_account> const& getAccounts() const { return m_accounts; }
     bool hasAccount(std::string const& _address) const
     {

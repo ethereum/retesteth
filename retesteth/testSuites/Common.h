@@ -24,38 +24,13 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace test
 {
-struct ExpectInfo
-{
-    ExpectInfo()
-      : postHash(string()), logHash(string()), trHash(string()), expectState(DataObject())
-    {}
-    ExpectInfo(scheme_expectState const& _expectState)
-      : postHash(string()), logHash(string()), trHash(string()), expectState(_expectState)
-    {}
-    string postHash;  // Post hash to verify on remote client
-    string logHash;   // Log hash to verify on remote client
-    string trHash;    // Transaction hash to get the remote LogHash
-    scheme_expectState expectState;
-};
-
 // Check post condition on a client
-void checkExpectSection(
-    RPCSession& _session, ExpectInfo const& _expectedInfo, scheme_remoteState& _remoteState);
-
-enum StateRequest
-{
-    AttemptFullPost,
-    NoPost
-};
-
-struct LatestInfo
-{
-    string latestBlockNumber;
-    int latestTrIndex;
-};
+// void checkExpectSection(RPCSession& _session, LatestInfo const& _expectedInfo);
+void validatePostHash(
+    RPCSession& _session, string const& _postHash, scheme_block const& _latestInfo);
 
 // Get Remote State From Client
-scheme_remoteState getRemoteState(RPCSession& _session, StateRequest _stateRequest);
+scheme_state getRemoteState(RPCSession& _session, scheme_block const& _latestInfo);
 
 // Check that test has data object
 void checkDataObject(DataObject const& _input);
@@ -70,13 +45,15 @@ void checkAtLeastOneTest(DataObject const& _input);
 void checkTestNameIsEqualToFileName(DataObject const& _input);
 
 // Compare states with session asking post state data on the fly
-CompareResult compareStates(scheme_expectState const& _stateExpect, RPCSession& _session);
-CompareResult compareStates(scheme_state const& _stateExpect, scheme_state const& _statePost);
+CompareResult compareStates(
+    scheme_expectState const& _stateExpect, RPCSession& _session, scheme_block const& _latestInfo);
+CompareResult compareStates(scheme_expectState const& _stateExpect, scheme_state const& _statePost);
+
 
 // Get account from remote state. inline function
 scheme_account remoteGetAccount(RPCSession& _session, string const& _account,
-    LatestInfo const& _latestInfo, size_t& _totalSize);
+    scheme_block const& _latestInfo, size_t& _totalSize);
 
 // Get list of account from remote client
-DataObject getRemoteAccountList(RPCSession& _session, LatestInfo const& _latestInfo);
+DataObject getRemoteAccountList(RPCSession& _session, scheme_block const& _latestInfo);
 }

@@ -79,7 +79,7 @@ CompareResult compareAccounts(
     return result;
 }
 
-DataObject getRemoteAccountList(RPCSession& _session, LatestInfo const& _latestInfo)
+DataObject getRemoteAccountList(RPCSession& _session, scheme_block const& _latestInfo)
 {
     DataObject accountList;
     string startHash = "0";
@@ -89,7 +89,7 @@ DataObject getRemoteAccountList(RPCSession& _session, LatestInfo const& _latestI
     while (cycles++ <= cycles_max)
     {
         DataObject res = _session.debug_accountRange(
-            _latestInfo.latestBlockNumber, _latestInfo.latestTrIndex, startHash, cmaxRows);
+            _latestInfo.getNumber(), _latestInfo.getTransactionCount(), startHash, cmaxRows);
         auto const& subObjects = res.atKey("addressMap").getSubObjects();
         for (auto const& element : subObjects)
             accountList.addSubObject(element.asString(), DataObject(DataType::Null));
@@ -105,23 +105,19 @@ DataObject getRemoteAccountList(RPCSession& _session, LatestInfo const& _latestI
 }
 
 // compare states with full post information
-CompareResult compareStates(scheme_expectState const& _stateExpect, scheme_state const& _statePost);
-CompareResult compareStates(scheme_state const& _stateExpect, scheme_state const& _statePost)
-{
-    return compareStates(scheme_expectState(_stateExpect.getData()), _statePost);
-}
+// CompareResult compareStates(scheme_expectState const& _stateExpect, scheme_state const&
+// _statePost);  CompareResult compareStates(scheme_state const& _stateExpect, scheme_state const&
+// _statePost)
+//{
+//    return compareStates(scheme_expectState(_stateExpect.getData()), _statePost);
+//}
 
 // compare states with session asking post state data on the fly
-CompareResult compareStates(scheme_expectState const& _stateExpect, RPCSession& _session)
+CompareResult compareStates(
+    scheme_expectState const& _stateExpect, RPCSession& _session, scheme_block const& _latestInfo)
 {
     CompareResult result = CompareResult::Success;
-    test::scheme_block latestBlock =
-        _session.eth_getBlockByNumber(_session.eth_blockNumber(), false);
-
-    LatestInfo latestInfo;
-    latestInfo.latestBlockNumber = latestBlock.getNumber();
-    latestInfo.latestTrIndex = latestBlock.getTransactionCount();
-    DataObject accountList = getRemoteAccountList(_session, latestInfo);
+    DataObject accountList = getRemoteAccountList(_session, _latestInfo);
     for (auto const& a : _stateExpect.getAccounts())
     {
         bool hasAccount = accountList.count(a.address());
@@ -137,11 +133,12 @@ CompareResult compareStates(scheme_expectState const& _stateExpect, RPCSession& 
         // Compare account in postState with expect section account
         size_t totalSize = 0;
         CompareResult accountCompareResult =
-            compareAccounts(remoteGetAccount(_session, a.address(), latestInfo, totalSize), a);
+            compareAccounts(remoteGetAccount(_session, a.address(), _latestInfo, totalSize), a);
         if (accountCompareResult != CompareResult::Success)
             result = accountCompareResult;
     }
-
+    if (result != CompareResult::Success)
+        ETH_ERROR_MESSAGE("CompareStates failed with errors!");
     return result;
 }
 
@@ -165,6 +162,8 @@ CompareResult compareStates(scheme_expectState const& _stateExpect, scheme_state
         if (accountCompareResult != CompareResult::Success)
             result = accountCompareResult;
     }
+    if (result != CompareResult::Success)
+        ETH_ERROR_MESSAGE("CompareStates failed with errors!");
     return result;
 }
 }
