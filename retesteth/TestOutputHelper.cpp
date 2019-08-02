@@ -35,7 +35,7 @@ using namespace boost;
 mutex g_finishedTestFoldersMapMutex;
 typedef std::set<std::string> FolderNameSet;
 static std::map<boost::filesystem::path, FolderNameSet> finishedTestFoldersMap;
-static std::map<boost::filesystem::path, FolderNameSet> exceptionTestFoldersMap;
+// static std::map<boost::filesystem::path, FolderNameSet> exceptionTestFoldersMap;
 void checkUnfinishedTestFolders();  // Checkup that all test folders are active during the test run
 
 typedef std::pair<double, std::string> execTimeName;
@@ -217,14 +217,20 @@ bool pathHasTests(boost::filesystem::path const& _path)
 void checkUnfinishedTestFolders()
 {
     std::lock_guard<std::mutex> lock(g_finishedTestFoldersMapMutex);
-    // -t SuiteName/caseName   parse caseName as filter
+    // Unit tests does not mark test folders
+    if (finishedTestFoldersMap.size() == 0)
+        return;
+
+    // -t SuiteName/SubSuiteName/caseName   parse caseName as filter
     // rCurrentTestSuite is empty if run without -t argument
     string filter;
-    size_t pos = Options::get().rCurrentTestSuite.find('/');
+    size_t pos = Options::get().rCurrentTestSuite.rfind('/');
     if (pos != string::npos)
         filter = Options::get().rCurrentTestSuite.substr(pos + 1);
 
-    if (!filter.empty())
+    std::map<boost::filesystem::path, FolderNameSet>::const_iterator singleTest =
+        finishedTestFoldersMap.begin();
+    if (!filter.empty() && boost::filesystem::exists(singleTest->first / filter))
     {
         if (finishedTestFoldersMap.size() > 1)
         {
@@ -232,15 +238,10 @@ void checkUnfinishedTestFolders()
             return;
         }
 
-        // Unit tests does not mark test folders
-        if (finishedTestFoldersMap.size() == 0)
-            return;
-
-        std::map<boost::filesystem::path, FolderNameSet>::const_iterator it =
-            finishedTestFoldersMap.begin();
-        if (!pathHasTests(it->first / filter))
-            ETH_STDERROR_MESSAGE(string("WARNING: Test folder ") + (it->first / filter).c_str() +
-                                 " appears to have no tests!\n");
+        if (!pathHasTests(singleTest->first / filter))
+            ETH_STDERROR_MESSAGE(string("WARNING: Test folder ") +
+                                 (singleTest->first / filter).c_str() +
+                                 " appears to have no tests!");
     }
     else
     {
@@ -254,14 +255,10 @@ void checkUnfinishedTestFolders()
                 if (boost::filesystem::is_directory(*it))
                 {
                     string const folderName = it->path().filename().string();
-                    if (!exceptionTestFoldersMap[path].count(folderName))
-                    {
-                        allFolders.insert(folderName);
-                        if (!pathHasTests(it->path()))
-                            ETH_STDERROR_MESSAGE(string("WARNING: Test folder ") +
-                                                 it->path().c_str() +
-                                                 " appears to have no tests!\n");
-                    }
+                    allFolders.insert(folderName);
+                    if (!pathHasTests(it->path()))
+                        ETH_STDERROR_MESSAGE(string("WARNING: Test folder ") + it->path().c_str() +
+                                             " appears to have no tests!");
                 }
             }
 
@@ -276,14 +273,6 @@ void checkUnfinishedTestFolders()
     }
 }
 
-
-// Mark test folder _folderName as not to be checked for the test suite path _suitePath
-void TestOutputHelper::markTestFolderAsException(
-    boost::filesystem::path const& _suitePath, string const& _folderName)
-{
-    std::lock_guard<std::mutex> lock(g_finishedTestFoldersMapMutex);
-    exceptionTestFoldersMap[_suitePath].emplace(_folderName);
-}
 
 // Mark test folder _folderName as finished for the test suite path _suitePath
 void TestOutputHelper::markTestFolderAsFinished(

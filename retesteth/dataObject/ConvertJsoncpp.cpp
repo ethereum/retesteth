@@ -54,7 +54,7 @@ DataObject ConvertJsoncppToData(Json::Value const& _input)
     if (_input.isObject())
     {
         DataObject root(DataType::Object);
-        Json::Value::Members members = _input.getMemberNames();
+        Json::Value::Members const& members = _input.getMemberNames();
         size_t index = 0;
         for (auto const& i : _input)
         {

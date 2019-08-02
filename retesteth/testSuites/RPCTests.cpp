@@ -34,22 +34,21 @@
 
 using namespace std;
 
-namespace test
+namespace local
 {
 /// Rewrite the test file. Fill RPC Test
 DataObject FillTest(DataObject const& _testFile, TestSuite::TestSuiteOptions& _opt)
 {
     DataObject filledTest;
     scheme_RPCTestFiller rpcTestFiller(_testFile);
-    _opt.wasErrors = false;
 
     RPCSession& session = RPCSession::instance(TestOutputHelper::getThreadID());
 
     if (rpcTestFiller.hasGenesis())
         session.test_setChainParams(rpcTestFiller.getGenesisForRPC().asJson());
 
-    Json::Value v = session.rpcCall(rpcTestFiller.get_method(), rpcTestFiller.get_params());
-    DataObject returnedData = dataobject::ConvertJsoncppToData(v);
+    DataObject returnedData =
+        session.rpcCall(rpcTestFiller.get_method(), rpcTestFiller.get_params());
 
     DataObjectScheme scheme(rpcTestFiller.get_expectReturn());
     DataObjectValidator validator(scheme);
@@ -68,8 +67,10 @@ void RunTest(DataObject const& _testFile)
     opt.doFilling = false;
     FillTest(_testFile, opt);
 }
+}
 
-
+namespace test
+{
 DataObject RPCTestSuite::doTests(DataObject const& _input, TestSuiteOptions& _opt) const
 {
     checkDataObject(_input);
@@ -85,11 +86,11 @@ DataObject RPCTestSuite::doTests(DataObject const& _input, TestSuiteOptions& _op
     {
         checkTestNameIsEqualToFileName(_input);
         DataObject outputTest;
-        outputTest[testname] = FillTest(inputTest, _opt);
+        outputTest[testname] = local::FillTest(inputTest, _opt);
         filledTest = outputTest;
     }
     else
-        RunTest(inputTest);
+        local::RunTest(inputTest);
     return filledTest;
 }
 

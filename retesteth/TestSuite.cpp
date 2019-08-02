@@ -18,11 +18,9 @@
  * Base functions for all test suites
  */
 
-#include <dataObject/ConvertJsoncpp.h>
+#include <dataObject/ConvertFile.h>
 #include <dataObject/ConvertYaml.h>
 #include <dataObject/DataObject.h>
-#include <json/reader.h>
-#include <json/value.h>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/Log.h>
 #include <libdevcore/SHA3.h>
@@ -56,30 +54,28 @@ TestFileData readTestFile(fs::path const& _testFileName)
 
     // Check that file is not empty
     string const s = dev::contentsString(_testFileName);
-    ETH_FAIL_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _testFileName.string() + " is empty.");
+    ETH_ERROR_REQUIRE_MESSAGE(
+        s.length() > 0, "Contents of " + _testFileName.string() + " is empty.");
 
     if (_testFileName.extension() == ".json")
-        testData.data = dataobject::ConvertJsoncppToData(readJson(_testFileName));
+        testData.data = dataobject::ConvertJsoncppStringToData(s, string(), true);
     else if (_testFileName.extension() == ".yml")
         testData.data = dataobject::ConvertYamlToData(YAML::Load(s));
     else
         ETH_ERROR_MESSAGE(
             "Unknown test format!" + test::TestOutputHelper::get().testFile().string());
 
-    // Original hash calculation with json
-    std::string output = "Not a Json object!";
-    if (_testFileName.extension() == ".json")
-    {
-        Json::FastWriter fastWriter;
-        Json::Value v = readJson(_testFileName);
-        output = fastWriter.write(v);
-        output = output.substr(0, output.size() - 1);
-    }
-
     string srcString = testData.data.asJson(0, false); //json_spirit::write_string(testData.data, false);
     if (test::Options::get().showhash)
     {
-        //std::cout << "'" << srcString << "'" << std::endl;
+        std::string output = "Not a Json object!";
+        if (_testFileName.extension() == ".json")
+        {
+            Json::FastWriter fastWriter;
+            Json::Value v = readJson(_testFileName);
+            output = fastWriter.write(v);
+            output = output.substr(0, output.size() - 1);
+        }
         std::cerr << "JSON: '" << std::endl << output << "'" << std::endl;
         std::cerr << "DATA: '" << std::endl << srcString << "'" << std::endl;
     }
@@ -141,21 +137,31 @@ void addClientInfo(
 
 void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
 {
-    dataobject::DataObject v = dataobject::ConvertJsoncppToData(test::readJson(_compiledTest));
+    dataobject::DataObject v =
+        dataobject::ConvertJsoncppStringToData(dev::contentsString(_compiledTest), "_info");
     TestFileData fillerData = readTestFile(_sourceTest);
     for (auto const& i: v.getSubObjects())
-	{
-        // use eth object _info section class here !!!!!
-        ETH_FAIL_REQUIRE_MESSAGE(i.type() == dataobject::DataType::Object,
-            i.getKey() + " should contain an object under a test name.");
-        ETH_FAIL_REQUIRE_MESSAGE(i.count("_info") > 0, "_info section not set! " + _compiledTest.string());
-        dataobject::DataObject const& info = i.atKey("_info");
-        ETH_FAIL_REQUIRE_MESSAGE(info.count("sourceHash") > 0, "sourceHash not found in " + _compiledTest.string() + " in " + i.getKey());
-        h256 const sourceHash = h256(info.atKey("sourceHash").asString());
-        ETH_ERROR_REQUIRE_MESSAGE(sourceHash == fillerData.hash,
-            "Test " + _compiledTest.string() + " in " + i.getKey() +
-                " is outdated. Filler hash is different! ( '" + sourceHash.hex().substr(0, 4) +
-                "' != '" + fillerData.hash.hex().substr(0, 4) + "') ");
+    {
+        try
+        {
+            // use eth object _info section class here !!!!!
+            ETH_ERROR_REQUIRE_MESSAGE(i.type() == dataobject::DataType::Object,
+                i.getKey() + " should contain an object under a test name.");
+            ETH_ERROR_REQUIRE_MESSAGE(
+                i.count("_info") > 0, "_info section not set! " + _compiledTest.string());
+            dataobject::DataObject const& info = i.atKey("_info");
+            ETH_ERROR_REQUIRE_MESSAGE(info.count("sourceHash") > 0,
+                "sourceHash not found in " + _compiledTest.string() + " in " + i.getKey());
+            h256 const sourceHash = h256(info.atKey("sourceHash").asString());
+            ETH_ERROR_REQUIRE_MESSAGE(sourceHash == fillerData.hash,
+                "Test " + _compiledTest.string() + " in " + i.getKey() +
+                    " is outdated. Filler hash is different! ( '" + sourceHash.hex().substr(0, 4) +
+                    "' != '" + fillerData.hash.hex().substr(0, 4) + "') ");
+        }
+        catch (test::BaseEthException const&)
+        {
+            continue;
+        }
     }
 }
 
@@ -220,7 +226,9 @@ string TestSuite::checkFillerExistance(string const& _testFolder) const
     string filter = test::Options::get().singleTestName.empty() ?
                         string() :
                         test::Options::get().singleTestName;
-    std::cout << "Filter: '" << filter << "'" << std::endl;
+    std::cout << "Checking test filler hashes for " << boost::unit_test::framework::current_test_case().full_name() << std::endl;
+    if (!filter.empty())
+        std::cout << "Filter: '" << filter << "'" << std::endl;
     AbsoluteTestPath testsPath = getFullPath(_testFolder);
     if (!fs::exists(testsPath.path()))
     {
@@ -273,10 +281,15 @@ string TestSuite::checkFillerExistance(string const& _testFolder) const
         else
             exceptionStr =
                 "Compiled test folder contains test without Filler: " + file.filename().string();
-        ETH_FAIL_REQUIRE_MESSAGE(fs::exists(expectedFillerName) || fs::exists(expectedFillerName2) ||
-                                fs::exists(expectedCopierName),
+        ETH_ERROR_REQUIRE_MESSAGE(fs::exists(expectedFillerName) ||
+                                      fs::exists(expectedFillerName2) ||
+                                      fs::exists(expectedCopierName),
             exceptionStr);
-        ETH_FAIL_REQUIRE_MESSAGE(!(fs::exists(expectedFillerName) && fs::exists(expectedFillerName2) && fs::exists(expectedCopierName)), "Src test could either be Filler.json, Filler.yml or Copier.json: " + file.filename().string());
+        ETH_ERROR_REQUIRE_MESSAGE(
+            !(fs::exists(expectedFillerName) && fs::exists(expectedFillerName2) &&
+                fs::exists(expectedCopierName)),
+            "Src test could either be Filler.json, Filler.yml or Copier.json: " +
+                file.filename().string());
 
         // Check that filled tests created from actual fillers depenging on a test type
         if (fs::exists(expectedFillerName))
@@ -309,6 +322,7 @@ string TestSuite::checkFillerExistance(string const& _testFolder) const
 
 void TestSuite::runAllTestsInFolder(string const& _testFolder) const
 {
+    Options::getDynamicOptions().getClientConfigs();
     if (ExitHandler::receivedExitSignal())
     {
         auto& testOutput = test::TestOutputHelper::get();
@@ -412,6 +426,7 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
     AbsoluteTestPath const boostTestPath =
         getFullPath(_testFolder).path() / fs::path(testname + ".json");
 
+    bool wasErrors = false;
     TestSuiteOptions opt;
     if (Options::get().filltests)
     {
@@ -441,28 +456,26 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
             try
             {
                 DataObject output = doTests(testData.data, opt);
-                if (!opt.wasErrors)
-                {
-                    // Add client info for all of the tests in output
-                    addClientInfo(output, boostRelativeTestPath, testData.hash);
-                    writeFile(boostTestPath.path(), asBytes(output.asJson()));
-                }
+                // Add client info for all of the tests in output
+                addClientInfo(output, boostRelativeTestPath, testData.hash);
+                writeFile(boostTestPath.path(), asBytes(output.asJson()));
             }
             catch (test::BaseEthException const&)
             {
                 // Something went wrong inside the test. skip it.
                 // (error message is stored at TestOutputHelper)
-                opt.wasErrors = true;
+                wasErrors = true;
             }
             catch (std::exception const& _ex)
             {
                 ETH_ERROR_MESSAGE("ERROR OCCURED FILLING TESTS: " + string(_ex.what()));
                 RPCSession::sessionEnd(TestOutputHelper::getThreadID(), RPCSession::SessionStatus::HasFinished);
+                wasErrors = true;
             }
         }
     }
 
-    if (!opt.wasErrors && !opt.disableSecondRun)
+    if (!wasErrors && !opt.disableSecondRun)
     {
         try
         {
@@ -471,9 +484,8 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
         }
         catch (test::BaseEthException const&)
         {
-            // Something went wrong inside the test. skip it. (error message is stored at
-            // TestOutputHelper)
-            opt.wasErrors = true;
+            // Something went wrong inside the test. skip it.
+            // (error message is stored at TestOutputHelper)
         }
         catch (std::exception const& _ex)
         {
@@ -487,7 +499,7 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
 void TestSuite::executeFile(boost::filesystem::path const& _file) const
 {
     TestSuiteOptions opt;
-    doTests(dataobject::ConvertJsoncppToData(readJson(_file)), opt);
+    doTests(dataobject::ConvertJsoncppStringToData(dev::contentsString(_file)), opt);
 }
 
 }

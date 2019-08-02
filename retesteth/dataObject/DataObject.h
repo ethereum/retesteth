@@ -26,14 +26,15 @@ public:
     DataObject(DataType _type, bool _bool);
     DataObject(std::string const& _str);
     DataObject(std::string const& _key, std::string const& _str);
+    DataObject(std::string const& _key, int _val);
     DataObject(int _int);
     DataType type() const;
     void setKey(std::string const& _key);
     std::string const& getKey() const;
     std::vector<DataObject> const& getSubObjects() const;
     std::vector<DataObject>& getSubObjectsUnsafe();
-    void addSubObject(DataObject const& _obj);
-    void addSubObject(std::string const& _key, DataObject const& _obj);
+    DataObject& addSubObject(DataObject const& _obj);
+    DataObject& addSubObject(std::string const& _key, DataObject const& _obj);
     void setSubObjectKey(size_t _index, std::string const& _key);
 
     bool count(std::string const& _key) const;
@@ -49,33 +50,45 @@ public:
         for (auto& i : m_subObjects)
             if (i.getKey() == _key)
                 return i;
-        DataObject obj(DataType::Null);
-        obj.setKey(_key);
-        _addSubObject(obj); // !could change the item order!
-        // need to find our item again
-        for (auto& i : m_subObjects)
-            if (i.getKey() == _key)
-                return i;
-        _assert(false, "key not found after rearrangment! (operator[])");
-        return m_subObjects.at(0);
+        DataObject newObj(DataType::Null);
+        newObj.setKey(_key);
+        return _addSubObject(newObj);  // !could change the item order!
     }
 
     DataObject& operator=(std::string const& _value)
+    {
+        setString(_value);
+        return *this;
+    }
+
+    void setString(string const& _value)
     {
         _assert(m_type == DataType::String || m_type == DataType::Null,
             "In DataObject=(string) DataObject must be string or Null!");
         m_type = DataType::String;
         m_strVal = _value;
-        return *this;
     }
 
     DataObject& operator=(int _value)
+    {
+        setInt(_value);
+        return *this;
+    }
+
+    void setInt(int _value)
     {
         _assert(m_type == DataType::Integer || m_type == DataType::Null,
             "In DataObject=(int) DataObject must be int or Null!");
         m_type = DataType::Integer;
         m_intVal = _value;
-        return *this;
+    }
+
+    void setBool(bool _value)
+    {
+        _assert(m_type == DataType::Bool || m_type == DataType::Null,
+            "In DataObject:setBool(bool) DataObject must be bool or Null!");
+        m_type = DataType::Bool;
+        m_boolVal = _value;
     }
 
     bool operator==(bool _value) const
@@ -131,7 +144,21 @@ public:
     {
         // So not to overwrite the existing data
         // Do not replace the key. Assuming that key is set upon calling DataObject[key] =
-        _assert(m_type == DataType::Null, "m_type == DataType::Null (DataObject& operator=). Overwriting dataobject that is not NULL");
+        if (!m_allowOverwrite && !m_autosort)
+            _assert(m_type == DataType::Null,
+                "m_type == DataType::Null (DataObject& operator=). Overwriting dataobject that is "
+                "not NULL");
+        else
+        {
+            // overwrite value and key
+            if (m_type != DataType::Null)
+            {
+                replace(_value);
+                return *this;
+            }
+        }
+
+        // initialize new element if it was null before, but keep the key; DataObject[key] =
         m_type = _value.type();
         switch (_value.type())
         {
@@ -147,6 +174,8 @@ public:
         default:
             break;
         }
+        m_allowOverwrite = _value.isOverwritable();
+        setAutosort(_value.isAutosort());
         m_subObjects = _value.getSubObjects();
         return *this;
     }
@@ -168,16 +197,34 @@ public:
     std::string asJson(int level = 0, bool pretty = true) const;
     static std::string dataTypeAsString(DataType _type);
 
+    void setOverwrite(bool _overwrite) { m_allowOverwrite = _overwrite; }
+    void setAutosort(bool _sort)
+    {
+        m_autosort = _sort;
+        m_allowOverwrite = true;
+    }
+    bool isOverwritable() const { return m_allowOverwrite; }
+    bool isAutosort() const { return m_autosort; }
+    void clearSubobjects()
+    {
+        m_subObjects.clear();
+        m_type = DataType::Null;
+    }
+
 private:
-    void _addSubObject(DataObject const& _obj, string const& _keyOverwrite = string());
-    void _checkDoubleKeys() const;
+    DataObject& _addSubObject(DataObject const& _obj, string const& _keyOverwrite = string());
     void _assert(bool _flag, std::string const& _comment = "") const;
 
     std::vector<DataObject> m_subObjects;
     DataType m_type;
     std::string m_strKey;
     std::string m_strVal;
+    bool m_allowOverwrite = false;  // allow overwrite elements
+    bool m_autosort = false;
     bool m_boolVal;
     int m_intVal;
 };
+
+// Find index that _key should take place in when being added to ordered _objects by key
+size_t findOrderedKeyPosition(string const& _key, vector<DataObject> const& _objects);
 }

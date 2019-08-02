@@ -49,10 +49,10 @@ public:
 
     struct TestSuiteOptions
     {
-        TestSuiteOptions() : doFilling(false), wasErrors(false), disableSecondRun(false) {}
-        bool doFilling;         // pass the filling flag to doTest function
-        bool wasErrors;         // indicates wether there were errors when filling
-        bool disableSecondRun;  // disable running the test after filling is done
+        TestSuiteOptions() : doFilling(false), disableSecondRun(false), allowInvalidBlocks(false) {}
+        bool doFilling;           // pass the filling flag to doTest function
+        bool disableSecondRun;    // disable running the test after filling is done
+        bool allowInvalidBlocks;  // allow and check malicious blocks
     };
 
     // Structures so not to mistake the paths and prevent bugs

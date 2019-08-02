@@ -24,6 +24,11 @@ void eth_error(std::string const& _message)
     throw EthError() << _message;
 }
 
+void eth_mark_error(std::string const& _message)
+{
+    TestOutputHelper::get().markError(_message);
+}
+
 void eth_mark_error(bool _flag, std::string const& _message)
 {
     if (!_flag)

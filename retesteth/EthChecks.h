@@ -10,6 +10,7 @@ void eth_require_message(bool _flag, std::string const& _message);
 void eth_fail(std::string const& _message);
 void eth_error(std::string const& _message);
 void eth_mark_error(bool _flag, std::string const& _message);
+void eth_mark_error(std::string const& _message);
 
 // Prints output to stderr/cout (depending on --verbosity option)
 #define ETH_STDERROR_MESSAGE(message) test::eth_stderror_message(message)
@@ -23,7 +24,9 @@ void eth_mark_error(bool _flag, std::string const& _message);
 
 // Notice an error during test execution, but continue current test
 // Thie needed to mark multiple error checks into the log in one test
-#define ETH_MARK_ERROR(flag, message) test::eth_mark_error(flag, message)
+#define ETH_MARK_ERROR(message) test::eth_mark_error(message)
+#define ETH_MARK_ERROR_FLAG(flag, message) test::eth_mark_error(flag, message)
+
 
 // Stop retesteth execution rise sigabrt
 #define ETH_FAIL_REQUIRE(flag) test::eth_require(flag)

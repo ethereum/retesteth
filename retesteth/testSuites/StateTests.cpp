@@ -36,9 +36,9 @@
 #include <retesteth/TestOutputHelper.h>
 #include <retesteth/TestSuite.h>
 #include <retesteth/ethObjects/common.h>
-#include <retesteth/testSuites/BlockchainTests.h>
 #include <retesteth/testSuites/Common.h>
 #include <retesteth/testSuites/StateTests.h>
+#include <retesteth/testSuites/blockchain/BlockchainTests.h>
 
 using namespace std;
 using namespace dev;
@@ -57,7 +57,7 @@ bool OptionsAllowTransaction(scheme_generalTransaction::transactionInfo const& _
 }
 
 /// Generate a blockchain test from state test filler
-DataObject FillTestAsBlockchain(DataObject const& _testFile, TestSuite::TestSuiteOptions& _opt)
+DataObject FillTestAsBlockchain(DataObject const& _testFile)
 {
     DataObject filledTest;
     test::scheme_stateTestFiller test(_testFile);
@@ -103,39 +103,33 @@ DataObject FillTestAsBlockchain(DataObject const& _testFile, TestSuite::TestSuit
                         ETH_ERROR_MESSAGE("eth_sendRawTransaction return invalid hash: '" + trHash +
                                           "' " + TestOutputHelper::get().testInfo());
 
-                    session.test_mineBlocks(1);
+                    string latestBlockNumber = session.test_mineBlocks(1);
                     tr.executed = true;
 
-                    DataObject remoteState = getRemoteState(session, trHash, true);
-
-                    // check that the post state qualifies to the expect section
-                    string testInfo = TestOutputHelper::get().testInfo();
-                    scheme_state postState(remoteState.atKey("postState"));
-                    CompareResult res = test::compareStates(mexpect.getExpectState(), postState);
-                    ETH_ERROR_REQUIRE_MESSAGE(res == CompareResult::Success, testInfo);
-                    if (res != CompareResult::Success)
-                        _opt.wasErrors = true;
+                    scheme_block remoteBlock =
+                        session.eth_getBlockByNumber(latestBlockNumber, true);
+                    scheme_state remoteState = getRemoteState(session, remoteBlock);
+                    if (remoteState.isHash())
+                        compareStates(mexpect.getExpectState(), session, remoteBlock);
+                    else
+                        compareStates(mexpect.getExpectState(), remoteState);
 
                     DataObject aBlockchainTest;
                     if (test.getData().count("_info"))
                         aBlockchainTest["_info"] = test.getData().atKey("_info");
                     aBlockchainTest["genesisBlockHeader"] = test.getEnv().getDataForRPC();
                     aBlockchainTest["pre"] = test.getPre().getData();
-                    aBlockchainTest["postState"] = remoteState.atKey("postState");
+                    aBlockchainTest["postState"] = remoteState.getData();
                     aBlockchainTest["network"] = net;
                     aBlockchainTest["sealEngine"] = sEngine;
-
-                    test::scheme_block blockData(remoteState.atKey("rawBlockData"));
-                    ETH_ERROR_REQUIRE_MESSAGE(blockData.getTransactionCount() == 1,
-                        "StateTest transaction execution failed! " + testInfo);
-                    aBlockchainTest["lastblockhash"] = blockData.getBlockHash();
+                    aBlockchainTest["lastblockhash"] = remoteBlock.getBlockHash();
 
                     test::scheme_block genesisBlock = session.eth_getBlockByNumber("0", true);
                     aBlockchainTest["genesisRLP"] = genesisBlock.getBlockRLP();
 
                     DataObject block;
-                    block["rlp"] = blockData.getBlockRLP();
-                    block["blockHeader"] = blockData.getBlockHeader();
+                    block["rlp"] = remoteBlock.getBlockRLP();
+                    block["blockHeader"] = remoteBlock.getBlockHeader();
                     aBlockchainTest["blocks"].addArrayObject(block);
 
                     string dataPostfix = "_d" + toString(tr.dataInd) + "g" + toString(tr.gasInd) +
@@ -143,7 +137,8 @@ DataObject FillTestAsBlockchain(DataObject const& _testFile, TestSuite::TestSuit
                     dataPostfix += "_" + net;
 
                     if (filledTest.count(_testFile.getKey() + dataPostfix))
-                        ETH_ERROR_MESSAGE("The test filler contain redundunt expect section: " + testInfo);
+                        ETH_ERROR_MESSAGE("The test filler contain redundunt expect section: " +
+                                          TestOutputHelper::get().testInfo());
 
                     filledTest[_testFile.getKey() + dataPostfix] = aBlockchainTest;
                     session.test_rewindToBlock(0);
@@ -156,9 +151,10 @@ DataObject FillTestAsBlockchain(DataObject const& _testFile, TestSuite::TestSuit
 }
 
 /// Rewrite the test file. Fill General State Test
-DataObject FillTest(DataObject const& _testFile, TestSuite::TestSuiteOptions& _opt)
+DataObject FillTest(DataObject const& _testFile)
 {
     DataObject filledTest;
+    filledTest.setAutosort(true);
     test::scheme_stateTestFiller test(_testFile);
 
     RPCSession& session = RPCSession::instance(TestOutputHelper::getThreadID());
@@ -198,28 +194,11 @@ DataObject FillTest(DataObject const& _testFile, TestSuite::TestSuiteOptions& _o
                     u256 a(test.getEnv().getData().atKey("currentTimestamp").asString());
                     session.test_modifyTimestamp(a.convert_to<size_t>());
                     string trHash = session.eth_sendRawTransaction(tr.transaction.getSignedRLP());
-                    if (!session.getLastRPCError().empty())
-                        ETH_ERROR_MESSAGE(session.getLastRPCError());
-                    if (!isHash<h256>(trHash))
-                        ETH_ERROR_MESSAGE("eth_sendRawTransaction return invalid hash: '" + trHash +
-                                          "' " + TestOutputHelper::get().testInfo());
-
-                    session.test_mineBlocks(1);
+                    string latestBlockNumber = session.test_mineBlocks(1);
                     tr.executed = true;
 
-                    DataObject remoteState = getRemoteState(session, trHash, true);
-                    test::scheme_block blockData(remoteState.atKey("rawBlockData"));
-                    ETH_ERROR_REQUIRE_MESSAGE(blockData.getTransactionCount() == 1,
-                        "StateTest transaction execution failed! " +
-                            TestOutputHelper::get().testInfo());
-
-                    // check that the post state qualifies to the expect section
-                    scheme_state postState(remoteState.atKey("postState"));
-                    CompareResult res = test::compareStates(expect.getExpectState(), postState);
-                    ETH_ERROR_REQUIRE_MESSAGE(
-                        res == CompareResult::Success, TestOutputHelper::get().testInfo());
-                    if (res != CompareResult::Success)
-                        _opt.wasErrors = true;
+                    scheme_block blockInfo = session.eth_getBlockByNumber(latestBlockNumber, false);
+                    compareStates(expect.getExpectState(), session, blockInfo);
 
                     DataObject indexes;
                     DataObject transactionResults;
@@ -228,9 +207,13 @@ DataObject FillTest(DataObject const& _testFile, TestSuite::TestSuiteOptions& _o
                     indexes["value"] = tr.valueInd;
 
                     transactionResults["indexes"] = indexes;
-                    transactionResults["hash"] = remoteState.atKey("postHash").asString();
-                    if (remoteState.count("logHash"))
-                        transactionResults["logs"] = remoteState.atKey("logHash").asString();
+                    transactionResults["hash"] = blockInfo.getStateHash();
+
+                    // Fill up the loghash (optional)
+                    string logHash = session.test_getLogHash(trHash);
+                    if (!logHash.empty())
+                        transactionResults["logs"] = logHash;
+
                     forkResults.addArrayObject(transactionResults);
                     session.test_rewindToBlock(0);
                 }
@@ -248,9 +231,9 @@ void RunTest(DataObject const& _testFile)
     test::scheme_stateTest test(_testFile);
     RPCSession& session = RPCSession::instance(TestOutputHelper::getThreadID());
 
-	// read post state results
+    // read post state results
     for (auto const& post: test.getPost().getResults())
-	{
+    {
         string const& network = post.first;
         if (!Options::get().singleTestNet.empty() && Options::get().singleTestNet != network)
             continue;
@@ -260,60 +243,49 @@ void RunTest(DataObject const& _testFile)
         // read all results for a specific fork
         for (auto const& result: post.second)
         {
-			// look for a transaction with this indexes and execute it on a client
+            // look for a transaction with this indexes and execute it on a client
             for (auto& tr: test.getTransactionsUnsafe())
-			{
-				if (!OptionsAllowTransaction(tr))
-					continue;
+            {
+                if (!OptionsAllowTransaction(tr))
+                    continue;
 
-				bool blockMined = false;
+                bool blockMined = false;
                 if (result.checkIndexes(tr.dataInd, tr.gasInd, tr.valueInd))
                 {
                     string testInfo = TestOutputHelper::get().testName() + ", fork: " + network
                                     + ", TrInfo: d: " + toString(tr.dataInd) + ", g: " + toString(tr.gasInd)
                                     + ", v: " + toString(tr.valueInd);
+                    TestOutputHelper::get().setCurrentTestInfo(testInfo);
                     u256 a(test.getEnv().getData().atKey("currentTimestamp").asString());
                     session.test_modifyTimestamp(a.convert_to<size_t>());
-                    string trHash = session.eth_sendRawTransaction(
-                        tr.transaction.getSignedRLP());
-                    session.test_mineBlocks(1);
+                    string trHash = session.eth_sendRawTransaction(tr.transaction.getSignedRLP());
+                    string latestBlockNumber = session.test_mineBlocks(1);
                     tr.executed = true;
                     blockMined = true;
 
-                    DataObject remoteState =
-                        getRemoteState(session, trHash, false);
-                    string expectHash = result.getData().atKey("hash").asString();
-                    string expectLogHash = result.getData().atKey("logs").asString();
-                    if (remoteState.atKey("postHash").asString() != expectHash)
-                    {
-                        remoteState.clear();
-                        remoteState = getRemoteState(session, trHash, true);
-					}
+                    // Validate post state
+                    string postHash = result.getData().atKey("hash").asString();
+                    scheme_block remoteBlockInfo =
+                        session.eth_getBlockByNumber(latestBlockNumber, false);
+                    validatePostHash(session, postHash, remoteBlockInfo);
 
-                    ETH_ERROR_REQUIRE_MESSAGE(
-                        remoteState.atKey("postHash").asString() == expectHash,
-                        "Error at " + testInfo + ", post hash mismatch: " +
-                            remoteState.atKey("postHash").asString() + ", expected: " + expectHash);
-                    if (remoteState.atKey("postHash").asString() != expectHash)
-                        ETH_TEST_MESSAGE(
-                            "\nState Dump: \n" + remoteState.atKey("postState").asJson());
-
-                    if (remoteState.count("logHash"))
+                    // Validate log hash
+                    string postLogHash = result.getData().atKey("logs").asString();
+                    string remoteLogHash = session.test_getLogHash(trHash);
+                    if (!remoteLogHash.empty() && remoteLogHash != postLogHash)
                     {
-                        ETH_ERROR_REQUIRE_MESSAGE(
-                            remoteState.atKey("logHash").asString() == expectLogHash,
-                            "Error at " + testInfo +
-                                ", logs hash mismatch: " + remoteState.atKey("logHash").asString() +
-                                ", expected: " + expectLogHash);
+                        ETH_ERROR_MESSAGE("Error at " + TestOutputHelper::get().testInfo() +
+                                          ", logs hash mismatch: '" + remoteLogHash + "'" +
+                                          ", expected: '" + postLogHash + "'");
                     }
                 }
                 if (blockMined)
-					session.test_rewindToBlock(0);
-			}
-		}
+                    session.test_rewindToBlock(0);
+            }
+        }
 
-		test.checkUnexecutedTransactions();
-	}
+        test.checkUnexecutedTransactions();
+    }
 }
 }  // namespace closed
 
@@ -340,13 +312,13 @@ DataObject StateTestSuite::doTests(DataObject const& _input, TestSuiteOptions& _
         if (Options::get().fillchain)
         {
             // Each transaction will produce many tests
-            outputTest = FillTestAsBlockchain(inputTest, _opt);
+            outputTest = FillTestAsBlockchain(inputTest);
             for (auto const& obj : outputTest.getSubObjects())
                 filledTest.addSubObject(obj);
         }
         else
         {
-            outputTest[testname] = FillTest(inputTest, _opt);
+            outputTest[testname] = FillTest(inputTest);
             filledTest = outputTest;
         }
     }
@@ -354,7 +326,7 @@ DataObject StateTestSuite::doTests(DataObject const& _input, TestSuiteOptions& _
     {
         if (Options::get().fillchain)
         {
-            BlockchainTestSuite bcTestSuite;
+            BlockchainTestValidSuite bcTestSuite;
             bcTestSuite.doTests(_input, _opt);
         }
         else

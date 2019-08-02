@@ -21,7 +21,7 @@
 #include <iostream>
 #include <iomanip>
 
-#include <dataObject/ConvertJsoncpp.h>
+#include <dataObject/ConvertFile.h>
 #include <libdevcore/Log.h>
 #include <retesteth/Options.h>
 #include <retesteth/TestHelper.h>
@@ -60,13 +60,6 @@ void printHelp()
     cout << setw(30) << "-v <index>" << setw(25) << "Set the transaction value array index when running GeneralStateTests\n";
     cout << setw(30) << "--singletest <TestName>" << setw(0) << "Run on a single test\n";
     cout << setw(30) << "--verbosity <level>" << setw(25) << "Set logs verbosity. 0 - silent, 1 - only errors, 2 - informative, >2 - detailed\n";
-    //  cout << setw(30) << "--vm <interpreter|jit|smart|hera>" << setw(25) << "Set VM type for
-    //  VMTests suite\n"; cout << setw(30) << "--vmtrace" << setw(25) << "Enable VM trace for the
-    //  test. (Require build with VMTRACE=1)\n"; cout << setw(30) << "--jsontrace <Options>" <<
-    //  setw(25) << "Enable VM trace to stdout in json format. Argument is a json config: '{
-    //  \"disableStorage\" : false, \"disableMemory\" : false, \"disableStack\" : false,
-    //  \"fullStorage\" : true }'\n"; cout << setw(30) << "--stats <OutFile>" << setw(25) << "Output
-    //  debug stats to the file\n";
     cout << setw(30) << "--exectimelog" << setw(25) << "Output execution time for each test suite\n";
     cout << setw(30) << "--statediff" << setw(25) << "Trace state difference for state tests\n";
     cout << setw(30) << "--stderr" << setw(25) << "Redirect ipc client stderr to stdout\n";
@@ -79,6 +72,7 @@ void printHelp()
     cout << setw(30) << "--filltests" << setw(0) << "Run test fillers\n";
     cout << setw(30) << "--fillchain" << setw(25) << "When filling the state tests, fill tests as blockchain instead\n";
     cout << setw(30) << "--showhash" << setw(25) << "Show filler hash debug information\n";
+    cout << setw(30) << "--fullstate" << setw(25) << "Do not compress large states to hash\n";
     //	cout << setw(30) << "--randomcode <MaxOpcodeNum>" << setw(25) << "Generate smart random EVM
     //code\n"; 	cout << setw(30) << "--createRandomTest" << setw(25) << "Create random test and
     //output it to the console\n"; 	cout << setw(30) << "--createRandomTest <PathToOptions.json>" <<
@@ -96,27 +90,6 @@ void printVersion()
 
 Options::Options(int argc, const char** argv)
 {
-	/*{
-        namespace po = boost::program_options;
-
-        // For some reason boost is confused by -- separator. This extra parser "skips" the --.
-        auto skipDoubleDash = [](const std::string& s) -> std::pair<std::string, std::string> {
-            if (s == "--")
-                return {"--", {}};
-            return {};
-        };
-
-        auto vmOpts = vmProgramOptions();
-        po::parsed_options parsed = po::command_line_parser(argc, argv)
-                                        .options(vmOpts)
-                                        .extra_parser(skipDoubleDash)
-                                        .allow_unregistered()
-                                        .run();
-        po::variables_map vm;
-        po::store(parsed, vm);
-        po::notify(vm);
-	}*/
-
 	trDataIndex = -1;
 	trGasIndex = -1;
 	trValueIndex = -1;
@@ -242,8 +215,8 @@ Options::Options(int argc, const char** argv)
             throwIfNoArgumentFollows();
             singleTestNet = std::string{argv[++i]};
         }
-        else if (arg == "--fulloutput")
-            fulloutput = true;
+        else if (arg == "--fullstate")
+            fullstate = true;
         else if (arg == "--poststate")
             poststate = true;
         else if (arg == "--verbosity")
@@ -442,7 +415,8 @@ std::vector<ClientConfig> const& Options::DynamicOptions::getClientConfigs()
             fs::path configFilePath = configPath / "config";
             ETH_FAIL_REQUIRE_MESSAGE(fs::exists(configFilePath),
                 string("Client config not found: ") + configFilePath.c_str());
-            ClientConfig cfg(dataobject::ConvertJsoncppToData(readJson(configFilePath)), ClientConfigID(),
+            string s = dev::contentsString(configFilePath);
+            ClientConfig cfg(dataobject::ConvertJsoncppStringToData(s), ClientConfigID(),
                 configPath / string(clientName + ".sh"));
             m_clientConfigs.push_back(cfg);
         }

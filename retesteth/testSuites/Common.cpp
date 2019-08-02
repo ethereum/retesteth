@@ -6,6 +6,20 @@
 using namespace std;
 namespace test
 {
+void validatePostHash(
+    RPCSession& _session, string const& _postHash, scheme_block const& _latestInfo)
+{
+    string actualHash = _latestInfo.getStateHash();
+    if (actualHash != _postHash)
+    {
+        ETH_ERROR_MESSAGE("Error at " + TestOutputHelper::get().testInfo() +
+                          ", post hash mismatch: " + actualHash + ", expected: " + _postHash);
+        if (Options::get().logVerbosity > 5)
+            ETH_TEST_MESSAGE(
+                "\nState Dump: \n" + getRemoteState(_session, _latestInfo).getData().asJson());
+    }
+}
+
 void checkDataObject(DataObject const& _input)
 {
     ETH_ERROR_REQUIRE_MESSAGE(_input.type() == DataType::Object,
@@ -46,55 +60,93 @@ void checkTestNameIsEqualToFileName(DataObject const& _input)
                 "'");
 }
 
-DataObject getRemoteState(RPCSession& _session, string const& _trHash, bool _fullPost)
+scheme_account remoteGetAccount(RPCSession& _session, string const& _account,
+    scheme_block const& _latestInfo, size_t& _totalSize)
 {
-    DataObject remoteState;
-    const int cmaxRows = 1000;
-    string latestBlockNumber = toString(u256(_session.eth_blockNumber()));
+    DataObject accountObj;
+    accountObj.setKey(_account);
+    accountObj["code"] = _session.eth_getCode(_account, _latestInfo.getNumber());
+    _totalSize += accountObj["code"].asString().size();
+    accountObj["nonce"] =
+        to_string(_session.eth_getTransactionCount(_account, _latestInfo.getNumber()));
+    accountObj["balance"] = _session.eth_getBalance(_account, _latestInfo.getNumber());
 
-    test::scheme_block latestBlock = _session.eth_getBlockByNumber(latestBlockNumber, true);
-    remoteState["postHash"] = latestBlock.getData().atKey("stateRoot");
-    if (!_trHash.empty())
-        remoteState["logHash"] = _session.test_getLogHash(_trHash);
-    remoteState["postState"] = "";
-    remoteState["rawBlockData"] = latestBlock.getData();
-
-    if (_fullPost)
+    // Storage
+    const size_t cycles_max = 100;
+    const int cmaxRows = 100;
+    DataObject storage(DataType::Object);
+    string beginHash = "0";
+    size_t cycles = cycles_max;
+    while (--cycles)
     {
-        int trIndex = latestBlock.getTransactionCount(); //1000;
-        DataObject accountObj;
-        Json::Value res = _session.debug_accountRangeAt(latestBlockNumber, trIndex, "0", cmaxRows);
-        for (auto acc : res["addressMap"])
-        {
-            // Balance
-            Json::Value ret = _session.eth_getBalance(acc.asString(), latestBlockNumber);
-            accountObj[acc.asString()]["balance"] =
-                dev::toCompactHexPrefixed(u256(ret.asString()), 1);  // fix odd strings
-
-            // Code
-            ret = _session.eth_getCode(acc.asString(), latestBlockNumber);
-            accountObj[acc.asString()]["code"] = ret.asString();
-
-            // Nonce
-            ret = _session.eth_getTransactionCount(acc.asString(), latestBlockNumber);
-            accountObj[acc.asString()]["nonce"] =
-                dev::toCompactHexPrefixed(u256(ret.asString()), 1);
-
-            // Storage
-            DataObject storage(DataType::Object);
-            DataObject debugStorageAt =
-                dataobject::ConvertJsoncppToData(_session.debug_storageRangeAt(
-                    latestBlockNumber, trIndex, acc.asString(), "0", cmaxRows));
-            for (auto const& element : debugStorageAt["storage"].getSubObjects())
-                storage[element.atKey("key").asString()] = element.atKey("value").asString();
-            accountObj[acc.asString()]["storage"] = storage;
-        }
-
-        remoteState["postState"].clear();
-        remoteState["postState"] = accountObj;
-        if (Options::get().poststate)
-            std::cout << accountObj.asJson() << std::endl;
+        DataObject debugStorageAt = _session.debug_storageRangeAt(_latestInfo.getNumber(),
+            _latestInfo.getTransactionCount(), _account, beginHash, cmaxRows);
+        auto const& subObjects = debugStorageAt["storage"].getSubObjects();
+        _totalSize += subObjects.size() * 64;
+        for (auto const& element : subObjects)
+            storage[element.atKey("key").asString()] = element.atKey("value").asString();
+        if (debugStorageAt.atKey("complete").asBool())
+            break;
+        if (subObjects.size() > 0)
+            beginHash = subObjects.at(subObjects.size() - 1).getKey();
     }
-    return remoteState;
+    accountObj["storage"] = storage;
+    ETH_ERROR_REQUIRE_MESSAGE(cycles > 0,
+        "Remote state has too many storage records! (" + to_string(cycles_max * cmaxRows) + ")");
+    return scheme_account(accountObj);
+}
+
+scheme_state getRemoteState(RPCSession& _session, scheme_block const& _latestInfo)
+{
+    const int c_accountLimitBeforeHash = 20;
+    DataObject accountsObj;
+
+    // Probe for a huge state so not to call entire list of accounts if there are more then Limited
+    bool isHugeState = false;
+    DataObject accountList;
+    if (!Options::get().fullstate)
+    {
+        DataObject res = _session.debug_accountRange(_latestInfo.getNumber(),
+            _latestInfo.getTransactionCount(), "", c_accountLimitBeforeHash);
+        if (res.atKey("nextKey").asString() !=
+            "0x0000000000000000000000000000000000000000000000000000000000000000")
+            isHugeState = true;
+        else
+        {
+            // looks like the state is small
+            for (auto const& element : res.atKey("addressMap").getSubObjects())
+                accountList.addSubObject(element.asString(), DataObject(DataType::Null));
+        }
+    }
+    else
+        accountList =
+            getRemoteAccountList(_session, _latestInfo);  // get the whole list of accounts
+
+    if (!isHugeState || Options::get().fullstate)
+    {
+        size_t stateTotalSize = 0;
+        for (auto acc : accountList.getSubObjects())
+        {
+            scheme_account accountScheme =
+                remoteGetAccount(_session, acc.getKey(), _latestInfo, stateTotalSize);
+            if (stateTotalSize > 1024000 && !Options::get().fullstate)  // > 1MB
+            {
+                isHugeState = true;
+                break;
+            }
+            accountsObj.addSubObject(accountScheme.getData());
+        }
+    }
+
+    if (isHugeState)
+    {
+        accountsObj.clear();
+        accountsObj = _latestInfo.getStateHash();
+    }
+
+    if (Options::get().poststate)
+        std::cout << accountsObj.asJson() << std::endl;
+
+    return scheme_state(accountsObj);
 }
 }

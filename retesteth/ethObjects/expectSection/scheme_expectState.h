@@ -11,10 +11,14 @@ class scheme_expectState : public object
 public:
     scheme_expectState(DataObject const& _state) : object(_state)
     {
+        ETH_ERROR_REQUIRE_MESSAGE(_state.getSubObjects().size() < 100,
+            "Expect section has too many accounts! (" + to_string(_state.getSubObjects().size()) +
+                " > 100)");
         for (auto const& accountObj : _state.getSubObjects())
             m_accounts.push_back(scheme_expectAccount(accountObj));
         refreshData();  // needed?
     }
+    bool isNull() const { return m_accounts.size() == 0; }
     std::vector<scheme_expectAccount> const& getAccounts() const { return m_accounts; }
     bool hasBalance(std::string const& _accountKey) const
     {
@@ -57,11 +61,8 @@ private:
         std::string key = m_data.getKey();
         m_data.clear();
         m_data.setKey(key);
-        for (auto const& accountObj : m_accounts)
+        for (auto& accountObj : m_accounts)
             m_data.addSubObject(accountObj.getData());
     }
 };
-
-/// Check expect section against Post state section
-CompareResult compareStates(scheme_expectState const& _stateExpect, scheme_state const& _statePost);
 }

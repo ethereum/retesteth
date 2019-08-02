@@ -24,7 +24,13 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace test
 {
-DataObject getRemoteState(RPCSession& _session, std::string const& _trHash, bool _fullPost);
+// Check post condition on a client
+// void checkExpectSection(RPCSession& _session, LatestInfo const& _expectedInfo);
+void validatePostHash(
+    RPCSession& _session, string const& _postHash, scheme_block const& _latestInfo);
+
+// Get Remote State From Client
+scheme_state getRemoteState(RPCSession& _session, scheme_block const& _latestInfo);
 
 // Check that test has data object
 void checkDataObject(DataObject const& _input);
@@ -37,4 +43,17 @@ void checkAtLeastOneTest(DataObject const& _input);
 
 // Check test name in the file is equal to the test name of the file
 void checkTestNameIsEqualToFileName(DataObject const& _input);
+
+// Compare states with session asking post state data on the fly
+void compareStates(
+    scheme_expectState const& _stateExpect, RPCSession& _session, scheme_block const& _latestInfo);
+void compareStates(scheme_expectState const& _stateExpect, scheme_state const& _statePost);
+string CompareResultToString(CompareResult res);
+
+// Get account from remote state. inline function
+scheme_account remoteGetAccount(RPCSession& _session, string const& _account,
+    scheme_block const& _latestInfo, size_t& _totalSize);
+
+// Get list of account from remote client
+DataObject getRemoteAccountList(RPCSession& _session, scheme_block const& _latestInfo);
 }
