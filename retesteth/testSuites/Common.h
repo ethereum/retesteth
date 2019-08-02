@@ -45,10 +45,10 @@ void checkAtLeastOneTest(DataObject const& _input);
 void checkTestNameIsEqualToFileName(DataObject const& _input);
 
 // Compare states with session asking post state data on the fly
-CompareResult compareStates(
+void compareStates(
     scheme_expectState const& _stateExpect, RPCSession& _session, scheme_block const& _latestInfo);
-CompareResult compareStates(scheme_expectState const& _stateExpect, scheme_state const& _statePost);
-
+void compareStates(scheme_expectState const& _stateExpect, scheme_state const& _statePost);
+string CompareResultToString(CompareResult res);
 
 // Get account from remote state. inline function
 scheme_account remoteGetAccount(RPCSession& _session, string const& _account,

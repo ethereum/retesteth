@@ -113,7 +113,7 @@ DataObject getRemoteAccountList(RPCSession& _session, scheme_block const& _lates
 //}
 
 // compare states with session asking post state data on the fly
-CompareResult compareStates(
+void compareStates(
     scheme_expectState const& _stateExpect, RPCSession& _session, scheme_block const& _latestInfo)
 {
     CompareResult result = CompareResult::Success;
@@ -138,11 +138,10 @@ CompareResult compareStates(
             result = accountCompareResult;
     }
     if (result != CompareResult::Success)
-        ETH_ERROR_MESSAGE("CompareStates failed with errors!");
-    return result;
+        ETH_ERROR_MESSAGE("CompareStates failed with errors: " + CompareResultToString(result));
 }
 
-CompareResult compareStates(scheme_expectState const& _stateExpect, scheme_state const& _statePost)
+void compareStates(scheme_expectState const& _stateExpect, scheme_state const& _statePost)
 {
     CompareResult result = CompareResult::Success;
     for (auto const& a : _stateExpect.getAccounts())
@@ -163,7 +162,29 @@ CompareResult compareStates(scheme_expectState const& _stateExpect, scheme_state
             result = accountCompareResult;
     }
     if (result != CompareResult::Success)
-        ETH_ERROR_MESSAGE("CompareStates failed with errors!");
-    return result;
+        ETH_ERROR_MESSAGE("CompareStates failed with errors: " + CompareResultToString(result));
+}
+
+string CompareResultToString(CompareResult res)
+{
+    switch (res)
+    {
+    case CompareResult::Success:
+        return "Success";
+    case CompareResult::AccountShouldNotExist:
+        return "AccountShouldNotExist";
+    case CompareResult::MissingExpectedAccount:
+        return "MissingExpectedAccount";
+    case CompareResult::IncorrectBalance:
+        return "IncorrectBalance";
+    case CompareResult::IncorrectNonce:
+        return "IncorrectNonce";
+    case CompareResult::IncorrectCode:
+        return "IncorrectCode";
+    case CompareResult::IncorrectStorage:
+        return "IncorrectStorage";
+    default:
+        return "Unparsed Compare Result";
+    }
 }
 }

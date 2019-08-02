@@ -13,8 +13,6 @@ enum CompareResult
     IncorrectNonce,
     IncorrectCode,
     IncorrectStorage,
-    LogHashMismatch,
-    PostHashMismatch,
     None
 };
 

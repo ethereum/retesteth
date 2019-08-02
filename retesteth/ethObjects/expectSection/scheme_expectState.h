@@ -65,7 +65,4 @@ private:
             m_data.addSubObject(accountObj.getData());
     }
 };
-
-/// Check expect section against Post state section
-CompareResult compareStates(scheme_expectState const& _stateExpect, scheme_state const& _statePost);
 }
