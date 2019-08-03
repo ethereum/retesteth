@@ -11,7 +11,7 @@ void validatePostHash(
     string actualHash = _latestInfo.getStateHash();
     if (actualHash != _postHash)
     {
-        if (Options::get().logVerbosity > 5)
+        if (Options::get().logVerbosity >= 5)
             ETH_LOG("\nState Dump: \n" + getRemoteState(_session, _latestInfo).getData().asJson(), 5);
         ETH_ERROR_MESSAGE("Error at " + TestOutputHelper::get().testInfo() +
                           ", post hash mismatch remote: " + actualHash + ", expected: " + _postHash);

@@ -265,13 +265,16 @@ void RunTest(DataObject const& _testFile)
                     continue;
                 }
 
-                string testInfo = TestOutputHelper::get().testName() + ", fork: " + network
-                    + ", TrInfo: d: " + to_string(tr.dataInd) + ", g: " + to_string(tr.gasInd)
-                    + ", v: " + to_string(tr.valueInd);
-                TestOutputHelper::get().setCurrentTestInfo(testInfo);
-
                 if (checkIndexes)
                 {
+                    // VERY EXPENSIVE
+                    string testInfo = TestOutputHelper::get().testName() + ", fork: " + network +
+                                      ", TrInfo: d: " + to_string(tr.dataInd) +
+                                      ", g: " + to_string(tr.gasInd) +
+                                      ", v: " + to_string(tr.valueInd);
+                    TestOutputHelper::get().setCurrentTestInfo(testInfo);
+                    // VERY EXPENSIVE
+
                     u256 a(test.getEnv().getData().atKey("currentTimestamp").asString());
                     session.test_modifyTimestamp(a.convert_to<size_t>());
                     string trHash = session.eth_sendRawTransaction(tr.transaction.getSignedRLP());
@@ -296,7 +299,11 @@ void RunTest(DataObject const& _testFile)
                                           ", expected: '" + postLogHash + "'");
                     }
                     session.test_rewindToBlock(0);
-                    ETH_LOG("Executed: d: " + to_string(tr.dataInd) + ", g: " + to_string(tr.gasInd) + ", v: " + to_string(tr.valueInd) + ", fork: " + network, 5);
+                    if (Options::get().logVerbosity >= 5)
+                        ETH_LOG("Executed: d: " + to_string(tr.dataInd) +
+                                    ", g: " + to_string(tr.gasInd) +
+                                    ", v: " + to_string(tr.valueInd) + ", fork: " + network,
+                            5);
                 }
             } //ForTransactions
             ETH_ERROR_REQUIRE_MESSAGE(resultHaveCorrespondingTransaction,
