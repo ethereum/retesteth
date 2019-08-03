@@ -69,6 +69,7 @@ TestFileData readTestFile(fs::path const& _testFileName)
     if (test::Options::get().showhash)
     {
         std::string output = "Not a Json object!";
+#ifdef JSONCPP
         if (_testFileName.extension() == ".json")
         {
             Json::FastWriter fastWriter;
@@ -76,6 +77,10 @@ TestFileData readTestFile(fs::path const& _testFileName)
             output = fastWriter.write(v);
             output = output.substr(0, output.size() - 1);
         }
+#else
+        output = "compile with -DJSONCPP flag to get the json print";
+#endif
+
         std::cerr << "JSON: '" << std::endl << output << "'" << std::endl;
         std::cerr << "DATA: '" << std::endl << srcString << "'" << std::endl;
     }

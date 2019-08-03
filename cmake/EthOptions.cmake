@@ -9,6 +9,7 @@ macro(configure_project)
 
     # Features:
     option(FASTCTEST "Enable fast ctest" OFF)
+    option(JSONCPP "Enable jsoncpp for .json hash debugging (--showhash)" OFF)
 
     # components
   
@@ -43,6 +44,7 @@ macro(print_config)
     message("-- BUILD_SHARED_LIBS                                         ${BUILD_SHARED_LIBS}")
     message("------------------------------------------------------------------ tests")
     message("-- FASTCTEST        Run only test suites in ctest            ${FASTCTEST}")
+    message("-- JSONCPP          Compile with jsoncpp for debug           ${JSONCPP}")
     message("-- TESTETH_ARGS     Testeth arguments in ctest:               ")
     message("                    ${TESTETH_ARGS}")
     message("------------------------------------------------------------------------")

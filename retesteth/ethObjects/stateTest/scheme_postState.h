@@ -27,13 +27,14 @@ namespace test {
                 postSectionElements results;
                 for (auto const& res : element.getSubObjects())
                 {
-                    scheme_postSectionElement postElement(res);
+                    /*scheme_postSectionElement postElement(res);
                     for(auto const& regPostElement: results)
                     {
                         if (postElement.compareIndexesTo(regPostElement))
-                            ETH_ERROR_MESSAGE("State test post section has expect field with same indexes!" + postElement.getData().asJson());
-                    }
-                    results.push_back(postElement);
+                            ETH_ERROR_MESSAGE("State test post section has expect field with same
+                    indexes!" + postElement.getData().asJson());
+                    }*/
+                    results.push_back(scheme_postSectionElement(res));
                 }
                 m_elements[element.getKey()] = results;
             }

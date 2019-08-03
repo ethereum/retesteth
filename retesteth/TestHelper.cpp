@@ -18,6 +18,7 @@ using namespace std;
 namespace fs = boost::filesystem;
 
 namespace  test {
+#ifdef JSONCPP
 Json::Value readJson(fs::path const& _file)
 {
     Json::Value v;
@@ -34,6 +35,7 @@ Json::Value readJson(fs::path const& _file)
             "Failed to parse json file\n" + reader.getFormattedErrorMessages() + "(" + fname + ")");
     return v;
 }
+#endif
 
 vector<fs::path> getFiles(
 	fs::path const& _dirPath, set<string> const _extentionMask, string const& _particularFile)
