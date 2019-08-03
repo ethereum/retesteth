@@ -32,6 +32,14 @@ namespace  test {
                 m_valueIndexes.size() == 1, "Post section support only single value index!");
         }
 
+        bool compareIndexesTo(scheme_postSectionElement const& _anotheElement)
+        {
+            int ourData = *m_dataIndexes.begin();
+            int ourGas = *m_gasIndexes.begin();
+            int ourVal = *m_valueIndexes.begin();
+            return _anotheElement.checkIndexes(ourData, ourGas, ourVal);
+        }
+
         bool checkIndexes(int _d, int _g, int _v) const
         {
             if ((m_dataIndexes.count(_d) || m_dataIndexes.count(-1)) &&

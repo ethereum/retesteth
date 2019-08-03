@@ -234,39 +234,56 @@ void RunTest(DataObject const& _testFile)
     // read post state results
     for (auto const& post: test.getPost().getResults())
     {
+        bool networkSkip = false;
         string const& network = post.first;
         if (!Options::get().singleTestNet.empty() && Options::get().singleTestNet != network)
-            continue;
+            networkSkip = true;
+        else
+            session.test_setChainParams(test.getGenesisForRPC(network, "NoReward").asJson());
 
-        session.test_setChainParams(test.getGenesisForRPC(network, "NoReward").asJson());
+        // One test could have many transactions on same chainParams
+        // It is expected that for a setted chainParams there going to be a transaction
+        // Rather then all transactions would be filtered out and not executed at all
 
         // read all results for a specific fork
         for (auto const& result: post.second)
         {
+            bool resultHaveCorrespondingTransaction = false;
+            string testInfo = TestOutputHelper::get().testName() + ", fork: " + network;
+            TestOutputHelper::get().setCurrentTestInfo(testInfo);
+
             // look for a transaction with this indexes and execute it on a client
             for (auto& tr: test.getTransactionsUnsafe())
             {
-                if (!OptionsAllowTransaction(tr))
-                    continue;
+                bool checkIndexes = result.checkIndexes(tr.dataInd, tr.gasInd, tr.valueInd);
+                if (checkIndexes)
+                    resultHaveCorrespondingTransaction = true;
 
-                bool blockMined = false;
-                if (result.checkIndexes(tr.dataInd, tr.gasInd, tr.valueInd))
+                if (!OptionsAllowTransaction(tr) || networkSkip)
                 {
-                    string testInfo = TestOutputHelper::get().testName() + ", fork: " + network
-                                    + ", TrInfo: d: " + toString(tr.dataInd) + ", g: " + toString(tr.gasInd)
-                                    + ", v: " + toString(tr.valueInd);
-                    TestOutputHelper::get().setCurrentTestInfo(testInfo);
+                    tr.skipped = true;
+                    continue;
+                }
+
+                string testInfo = TestOutputHelper::get().testName() + ", fork: " + network
+                    + ", TrInfo: d: " + to_string(tr.dataInd) + ", g: " + to_string(tr.gasInd)
+                    + ", v: " + to_string(tr.valueInd);
+                TestOutputHelper::get().setCurrentTestInfo(testInfo);
+
+                if (checkIndexes)
+                {
                     u256 a(test.getEnv().getData().atKey("currentTimestamp").asString());
                     session.test_modifyTimestamp(a.convert_to<size_t>());
                     string trHash = session.eth_sendRawTransaction(tr.transaction.getSignedRLP());
                     string latestBlockNumber = session.test_mineBlocks(1);
                     tr.executed = true;
-                    blockMined = true;
 
                     // Validate post state
                     string postHash = result.getData().atKey("hash").asString();
                     scheme_block remoteBlockInfo =
                         session.eth_getBlockByNumber(latestBlockNumber, false);
+                    ETH_ERROR_REQUIRE_MESSAGE(remoteBlockInfo.getTransactionCount() == 1,
+                         "State test transaction must be valid! " + TestOutputHelper::get().testInfo());
                     validatePostHash(session, postHash, remoteBlockInfo);
 
                     // Validate log hash
@@ -278,14 +295,16 @@ void RunTest(DataObject const& _testFile)
                                           ", logs hash mismatch: '" + remoteLogHash + "'" +
                                           ", expected: '" + postLogHash + "'");
                     }
-                }
-                if (blockMined)
                     session.test_rewindToBlock(0);
-            }
+                    ETH_LOG("Executed: d: " + to_string(tr.dataInd) + ", g: " + to_string(tr.gasInd) + ", v: " + to_string(tr.valueInd) + ", fork: " + network, 5);
+                }
+            } //ForTransactions
+            ETH_ERROR_REQUIRE_MESSAGE(resultHaveCorrespondingTransaction,
+                         "State test has expect section without transaction! " + TestOutputHelper::get().testInfo() + result.getData().asJson());
         }
-
-        test.checkUnexecutedTransactions();
     }
+
+    test.checkUnexecutedTransactions();
 }
 }  // namespace closed
 

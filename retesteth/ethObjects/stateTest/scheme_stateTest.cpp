@@ -29,15 +29,15 @@ scheme_stateTestBase::fieldChecker::fieldChecker(DataObject const& _test)
 
 void scheme_stateTestBase::checkUnexecutedTransactions()
 {
-    Options const& opt = Options::get();
-    if (opt.trDataIndex == -1 && opt.trGasIndex != -1 && opt.trValueIndex != -1)
+    bool atLeastOneExecuted = false;
+    for (auto const& tr: m_transaction.getTransactions())
     {
-        for (auto const& tr: m_transaction.getTransactions())
-        {
-            ETH_FAIL_REQUIRE_MESSAGE(tr.executed == true, "A transaction was specified, but there is no execution results in a test! Transaction: dInd="
-            + toString(tr.dataInd) + " gInd=" + toString(tr.gasInd) + " vInd=" + toString(tr.valueInd));
-        }
+        if (tr.executed)
+            atLeastOneExecuted = true;
+        ETH_ERROR_REQUIRE_MESSAGE(tr.executed == true || tr.skipped == true,
+            "A transaction was specified, but there is no execution results in a test! " + TestOutputHelper::get().testInfo());
     }
+    ETH_ERROR_REQUIRE_MESSAGE(atLeastOneExecuted, "Specified filter did not run a single transaction! " + TestOutputHelper::get().testInfo());
 }
 
 scheme_stateTest::scheme_stateTest(DataObject const& _test)

@@ -107,6 +107,7 @@ public:
             size_t dataInd;
             size_t valueInd;
             bool executed;
+            bool skipped;
             test::scheme_transaction transaction;
         };
 

@@ -9,7 +9,7 @@
 namespace test {
 void eth_stderror_message(std::string const& _message)
 {
-    std::cerr << _message << std::endl;
+    std::cerr << "\x1b[31m" << _message << "\x1b[0m" << std::endl;
 }
 
 void eth_log_message(std::string const& _message, unsigned _verbosity)
