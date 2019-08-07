@@ -47,27 +47,37 @@ DataObject scheme_state::getDataForRPC(std::string const& _network) const
         }
     }
 
-    bool networkChecked = false;
-    if (_network == "Frontier" || _network == "Homestead" || _network == "EIP150" || _network == "EIP158")
-        networkChecked = true;
-
+    bool networkExists = true;
     DataObject ret = m_data;
-    ret["0x0000000000000000000000000000000000000001"]["precompiled"] = ecrecoverObj;
-    ret["0x0000000000000000000000000000000000000002"]["precompiled"] = sha256Obj;
-    ret["0x0000000000000000000000000000000000000003"]["precompiled"] = ripemd160Obj;
-    ret["0x0000000000000000000000000000000000000004"]["precompiled"] = identityObj;
+    
+    do {
+        ret["0x0000000000000000000000000000000000000001"]["precompiled"] = ecrecoverObj;
+        ret["0x0000000000000000000000000000000000000002"]["precompiled"] = sha256Obj;
+        ret["0x0000000000000000000000000000000000000003"]["precompiled"] = ripemd160Obj;
+        ret["0x0000000000000000000000000000000000000004"]["precompiled"] = identityObj;
 
-    if (_network == "Byzantium" || _network == "Constantinople" || _network == "ConstantinopleFix")
-    {
-        networkChecked = true;
+        if (_network == "Frontier" || _network == "Homestead" || _network == "EIP150" || _network == "EIP158")
+            break;
+
         ret["0x0000000000000000000000000000000000000005"]["precompiled"]["name"] = "modexp";
         ret["0x0000000000000000000000000000000000000006"]["precompiled"] = alt_bn128_G1_addObj;
         ret["0x0000000000000000000000000000000000000007"]["precompiled"] = alt_bn128_G1_mulObj;
         ret["0x0000000000000000000000000000000000000008"]["precompiled"]["name"] =
             "alt_bn128_pairing_product";
-    }
+        
+        if (_network == "Byzantium" || _network == "Constantinople" || _network == "ConstantinopleFix")
+            break;
 
-    if (!networkChecked)
+        ret["0x0000000000000000000000000000000000000009"]["precompiled"]["name"] = "blake2bf";
+
+        if (_network == "Istanbul")
+            break;
+
+        // fall through, it's not an enumerated network
+        networkExists = false;
+    } while (false);
+
+    if (!networkExists)
         ETH_FAIL_MESSAGE("Unhandled network: " + _network + " (scheme_state::getDataForRPC)");
     return ret;
 }

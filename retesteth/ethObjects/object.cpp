@@ -237,52 +237,39 @@ DataObject object::prepareGenesisParams(std::string const& _network, std::string
 {
     ClientConfig const& cfg = Options::get().getDynamicOptions().getCurrentConfig();
     test::checkAllowedNetwork(_network, cfg.getNetworks());
-    bool networkChecked = false;
+    bool networkExists = true;
     DataObject genesis;
     genesis["sealEngine"] = _engine;
-    if (_network == "Frontier")
-    {
-        networkChecked = true;
+    do {
         genesis["params"] = DataObject(DataType::Object);
-    }
-    else if (_network == "Homestead")
-    {
-        networkChecked = true;
+        if (_network == "Frontier") break;
+
         genesis["params"]["homesteadForkBlock"] = "0x00";
-    }
-    else if (_network == "EIP150")
-    {
-        networkChecked = true;
-        genesis["params"]["homesteadForkBlock"] = "0x00";
+        if (_network == "Homestead") break;
+
         genesis["params"]["EIP150ForkBlock"] = "0x00";
-    }
-    else if (_network == "EIP158")
-    {
-        networkChecked = true;
-        genesis["params"]["homesteadForkBlock"] = "0x00";
-        genesis["params"]["EIP150ForkBlock"] = "0x00";
+        if (_network == "EIP150") break;
+
         genesis["params"]["EIP158ForkBlock"] = "0x00";
-    }
-    else if (_network == "Byzantium")
-    {
-        networkChecked = true;
-        genesis["params"]["homesteadForkBlock"] = "0x00";
-        genesis["params"]["EIP150ForkBlock"] = "0x00";
-        genesis["params"]["EIP158ForkBlock"] = "0x00";
+        if (_network == "EIP158") break;
+
         genesis["params"]["byzantiumForkBlock"] = "0x00";
-    }
-    else if (_network == "Constantinople" || _network == "ConstantinopleFix")
-    {
-        networkChecked = true;
-        genesis["params"]["homesteadForkBlock"] = "0x00";
-        genesis["params"]["EIP150ForkBlock"] = "0x00";
-        genesis["params"]["EIP158ForkBlock"] = "0x00";
-        genesis["params"]["byzantiumForkBlock"] = "0x00";
+        if (_network == "Byzantium") break;
+
         genesis["params"]["constantinopleForkBlock"] = "0x00";
-        if (_network == "ConstantinopleFix")
-            genesis["params"]["constantinopleFixForkBlock"] = "0x00";
-    }
-    if (!networkChecked)
+        if (_network == "Constantinople") break;
+
+        genesis["params"]["constantinopleFixForkBlock"] = "0x00";
+        if (_network == "ConstantinopleFix") break;
+
+        genesis["params"]["istanbulForkBlock"] = "0x00";
+        if (_network == "Istanbul") break;
+
+        // fall through, it's not an enumerated network
+        networkExists = false;
+    } while (false);
+
+    if (!networkExists)
         ETH_FAIL_MESSAGE(
             "Unhandled network: " + _network + " (DataObject object::prepareGenesisParams)");
     return genesis;

@@ -34,10 +34,12 @@ public:
     /// blockchain test out of it
     void correctMiningReward(std::string const& _net, std::string const& _coinbaseAddress)
     {
-        u256 balance = 5000000000000000000;
-        if (_net == "Byzantium")
+        u256 balance;
+        if (_net == "Frontier" || _net == "Homestead" || _net == "EIP150" || _net == "EIP158") 
+            balance = 5000000000000000000;
+        else if (_net == "Byzantium")
             balance = 3000000000000000000;
-        if (_net == "Constantinople" || _net == "ConstantinopleFix")
+        else 
             balance = 2000000000000000000;
         if (getExpectState().hasBalance(_coinbaseAddress))
         {
