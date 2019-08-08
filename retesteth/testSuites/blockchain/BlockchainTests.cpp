@@ -90,6 +90,20 @@ TestSuite::FillerPath BCGeneralStateTestsSuite::suiteFillerFolder() const
         fs::path("src") / fs::path("BlockchainTestsFiller") / "GeneralStateTests");
 }
 
+TestSuite::TestPath LegacyConstantinopleBCGeneralStateTestsSuite::suiteFolder() const
+{
+    if (Options::get().filltests)
+        ETH_ERROR_MESSAGE("Legacy tests are sealed and not refillable!");
+    return TestSuite::TestPath(
+        fs::path("LegacyTests") / "Constantinople" / "BlockchainTests" / "GeneralStateTests");
+}
+
+TestSuite::FillerPath LegacyConstantinopleBCGeneralStateTestsSuite::suiteFillerFolder() const
+{
+    return TestSuite::FillerPath(fs::path("src") / "LegacyTests" / "Constantinople" /
+                                 "BlockchainTestsFiller" / "GeneralStateTests");
+}
+
 }  // Namespace Close
 
 class BlockchainTestInvalidFixture
@@ -147,26 +161,37 @@ public:
     }
 };
 
+void RunBCGeneralStateTests(test::TestSuite const& _testSuite)
+{
+    string const& casename = boost::unit_test::framework::current_test_case().p_name;
+    boost::filesystem::path suiteFillerPath = _testSuite.getFullPathFiller(casename).parent_path();
+
+    // skip this test suite if not run with --all flag (cases are already tested in state tests)
+    if (!test::Options::get().all)
+    {
+        std::cout << "Skipping hive test " << casename << ". Use --all to run it.\n";
+        test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
+        return;
+    }
+    _testSuite.runAllTestsInFolder(casename);
+    test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
+}
+
 class BCGeneralTestsFixture
 {
 public:
     BCGeneralTestsFixture()
     {
-        test::BCGeneralStateTestsSuite suite;
-        string const& casename = boost::unit_test::framework::current_test_case().p_name;
-        boost::filesystem::path suiteFillerPath = suite.getFullPathFiller(casename).parent_path();
-
-        // skip this test suite if not run with --all flag (cases are already tested in state tests)
-        if (!test::Options::get().all)
-        {
-            std::cout << "Skipping hive test " << casename << ". Use --all to run it.\n";
-            test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
-            return;
-        }
-        suite.runAllTestsInFolder(casename);
-        test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
+        BCGeneralStateTestsSuite suite;
+        RunBCGeneralStateTests(suite);
     }
 };
+
+test::LegacyConstantinopleBCGeneralStateTestFixture::LegacyConstantinopleBCGeneralStateTestFixture()
+{
+    LegacyConstantinopleBCGeneralStateTestsSuite suite;
+    RunBCGeneralStateTests(suite);
+}
 
 BOOST_AUTO_TEST_SUITE(BlockchainTests)
 
@@ -258,6 +283,7 @@ BOOST_AUTO_TEST_CASE(stStaticCall) {}
 BOOST_AUTO_TEST_CASE(stReturnDataTest) {}
 BOOST_AUTO_TEST_CASE(stZeroKnowledge) {}
 BOOST_AUTO_TEST_CASE(stZeroKnowledge2) {}
+BOOST_AUTO_TEST_CASE(stCodeCopyTest) {}
 BOOST_AUTO_TEST_CASE(stBugs) {}
 
 // Constantinople Tests
@@ -276,4 +302,5 @@ BOOST_AUTO_TEST_CASE(stBadOpcode) {}
 
 // New Tests
 BOOST_AUTO_TEST_CASE(stArgsZeroOneBalance) {}
+BOOST_AUTO_TEST_CASE(stTimeConsuming) {}
 BOOST_AUTO_TEST_SUITE_END()

@@ -241,8 +241,7 @@ string TestSuite::checkFillerExistance(string const& _testFolder) const
     AbsoluteTestPath testsPath = getFullPath(_testFolder);
     if (!fs::exists(testsPath.path()))
     {
-        ETH_STDERROR_MESSAGE("Tests folder does not exists, creating test folder: '" +
-                             string(testsPath.path().c_str()) + "'");
+        ETH_LOG("Tests folder does not exists, creating test folder: '" + string(testsPath.path().c_str()) + "'", 2);
         fs::create_directories(testsPath.path());
     }
     vector<fs::path> compiledFiles = test::getFiles(testsPath.path(), {".json", ".yml"}, testNameFilter);

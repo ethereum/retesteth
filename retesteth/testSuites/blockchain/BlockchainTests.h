@@ -42,4 +42,19 @@ class BCGeneralStateTestsSuite : public BlockchainTestValidSuite
     test::TestSuite::TestPath suiteFolder() const override;
     test::TestSuite::FillerPath suiteFillerFolder() const override;
 };
-}
+
+
+/// Suite run/check stateTests converted into blockchain by testeth
+class LegacyConstantinopleBCGeneralStateTestsSuite : public BlockchainTestValidSuite
+{
+    test::TestSuite::TestPath suiteFolder() const override;
+    test::TestSuite::FillerPath suiteFillerFolder() const override;
+};
+
+class LegacyConstantinopleBCGeneralStateTestFixture
+{
+public:
+    LegacyConstantinopleBCGeneralStateTestFixture();
+};
+
+}  // test
