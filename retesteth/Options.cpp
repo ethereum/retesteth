@@ -427,6 +427,11 @@ std::vector<ClientConfig> const& Options::DynamicOptions::getClientConfigs()
                 ETH_FAIL_REQUIRE_MESSAGE(fs::exists(genesisTemplatePath), "default/genesis client config not found!");
             }
 
+            fs::path correctMiningRewardPath = genesisTemplatePath / "correctMiningReward.json";
+            ETH_FAIL_REQUIRE_MESSAGE(fs::exists(correctMiningRewardPath), "correctMiningReward.json client config not found!");
+            s = dev::contentsString(correctMiningRewardPath);
+            cfg.setMiningRewardInfo(dataobject::ConvertJsoncppStringToData(s));
+
             for (auto const& net : cfg.getNetworks())
             {
                 fs::path configGenesisTemplatePath = genesisTemplatePath / (net + ".json");
@@ -434,7 +439,7 @@ std::vector<ClientConfig> const& Options::DynamicOptions::getClientConfigs()
                     "template .json config for network '" + net + "' in " + clientName);
                 cfg.addGenesisTemplate(net, configGenesisTemplatePath);
             }
-            //*/ Loaf genesis templates
+            //*/ Load genesis templates
 
             m_clientConfigs.push_back(cfg);
         }

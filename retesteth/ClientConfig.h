@@ -109,6 +109,8 @@ public:
         ETH_FAIL_REQUIRE_MESSAGE(m_genesisTemplate.count(_network), "Genesis template for network '" + _network + "' not found!");
         return m_genesisTemplate.at(_network);
     }
+    void setMiningRewardInfo(DataObject const& _info) { m_correctReward = _info; }
+    DataObject const& getMiningRewardInfo() const { return m_correctReward; }
 
 private:
     Socket::SocketType m_socketType;  ///< Connection type
@@ -116,5 +118,6 @@ private:
     ClientConfigID m_id;              ///< Internal id
     std::vector<string> m_networks;   ///< Allowed forks as network name
     std::map<string, DataObject> m_genesisTemplate; ///< Template For test_setChainParams
+    DataObject m_correctReward;       ///< Correct mining reward info for StateTests->BlockchainTests
 };
 }

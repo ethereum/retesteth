@@ -34,11 +34,10 @@ public:
     /// blockchain test out of it
     void correctMiningReward(std::string const& _net, std::string const& _coinbaseAddress)
     {
-        u256 balance = 5000000000000000000;
-        if (_net == "Byzantium")
-            balance = 3000000000000000000;
-        if (_net == "Constantinople" || _net == "ConstantinopleFix")
-            balance = 2000000000000000000;
+        ClientConfig const& cfg = Options::getDynamicOptions().getCurrentConfig();
+        ETH_ERROR_REQUIRE_MESSAGE(cfg.getMiningRewardInfo().count(_net), "Network '" + _net
+            + "' not found in correct mining info config! Client: " + cfg.getName());
+        u256 balance (cfg.getMiningRewardInfo().atKey(_net).asString());
         if (getExpectState().hasBalance(_coinbaseAddress))
         {
             u256 origBalance = u256(getExpectState().getBalance(_coinbaseAddress));
