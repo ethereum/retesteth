@@ -42,9 +42,6 @@ public:
         return m_accounts[0];  // should never reach this line
     }
 
-    // Insert precompiled account info into genesis
-    DataObject getDataForRPC(std::string const& _network) const;
-
 private:
     std::vector<scheme_account> m_accounts;
     string m_hash;

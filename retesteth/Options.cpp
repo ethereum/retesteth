@@ -402,7 +402,7 @@ std::vector<ClientConfig> const& Options::DynamicOptions::getClientConfigs()
         // load the configs from options file
         std::vector<string> cfgs = Options::get().clients;
         if (cfgs.empty())
-            cfgs.push_back("aleth");
+            cfgs.push_back("default");
 
         std::cout << "Active client configurations: '";
         for (auto const& clientName : cfgs)
@@ -418,6 +418,24 @@ std::vector<ClientConfig> const& Options::DynamicOptions::getClientConfigs()
             string s = dev::contentsString(configFilePath);
             ClientConfig cfg(dataobject::ConvertJsoncppStringToData(s), ClientConfigID(),
                 configPath / string(clientName + ".sh"));
+
+            // Load genesis templates
+            fs::path genesisTemplatePath = configPath / "genesis";
+            if (!fs::exists(genesisTemplatePath))
+            {
+                genesisTemplatePath = configPath.parent_path() / "default" / "genesis";
+                ETH_FAIL_REQUIRE_MESSAGE(fs::exists(genesisTemplatePath), "default/genesis client config not found!");
+            }
+
+            for (auto const& net : cfg.getNetworks())
+            {
+                fs::path configGenesisTemplatePath = genesisTemplatePath / (net + ".json");
+                ETH_FAIL_REQUIRE_MESSAGE(fs::exists(configGenesisTemplatePath),
+                    "template .json config for network '" + net + "' in " + clientName);
+                cfg.addGenesisTemplate(net, configGenesisTemplatePath);
+            }
+            //*/ Loaf genesis templates
+
             m_clientConfigs.push_back(cfg);
         }
     }

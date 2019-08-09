@@ -1,6 +1,7 @@
 #pragma once
 #include <retesteth/Socket.h>
 #include <retesteth/ethObjects/object.h>
+#include <retesteth/dataObject/ConvertFile.h>
 #include <boost/asio.hpp>
 #include <mutex>
 #include <string>
@@ -100,11 +101,20 @@ public:
     DataObject const& getAddressObject() const { return m_data.atKey("socketAddress"); }
     ClientConfigID const& getId() const { return m_id; }
     std::vector<string> const& getNetworks() const { return m_networks; }
+    void addGenesisTemplate(string const& _network, fs::path const& _pathToJson) {
+        string s = dev::contentsString(_pathToJson);
+        m_genesisTemplate[_network] = dataobject::ConvertJsoncppStringToData(s);
+    }
+    DataObject const& getGenesisTemplate(string const& _network) const {
+        ETH_FAIL_REQUIRE_MESSAGE(m_genesisTemplate.count(_network), "Genesis template for network '" + _network + "' not found!");
+        return m_genesisTemplate.at(_network);
+    }
 
 private:
     Socket::SocketType m_socketType;  ///< Connection type
     fs::path m_shellPath;             ///< Script to start new instance of a client (for ipc)
     ClientConfigID m_id;              ///< Internal id
     std::vector<string> m_networks;   ///< Allowed forks as network name
+    std::map<string, DataObject> m_genesisTemplate; ///< Template For test_setChainParams
 };
 }

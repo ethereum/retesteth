@@ -237,54 +237,10 @@ DataObject object::prepareGenesisParams(std::string const& _network, std::string
 {
     ClientConfig const& cfg = Options::get().getDynamicOptions().getCurrentConfig();
     test::checkAllowedNetwork(_network, cfg.getNetworks());
-    bool networkChecked = false;
+
     DataObject genesis;
+    genesis = cfg.getGenesisTemplate(_network);
     genesis["sealEngine"] = _engine;
-    if (_network == "Frontier")
-    {
-        networkChecked = true;
-        genesis["params"] = DataObject(DataType::Object);
-    }
-    else if (_network == "Homestead")
-    {
-        networkChecked = true;
-        genesis["params"]["homesteadForkBlock"] = "0x00";
-    }
-    else if (_network == "EIP150")
-    {
-        networkChecked = true;
-        genesis["params"]["homesteadForkBlock"] = "0x00";
-        genesis["params"]["EIP150ForkBlock"] = "0x00";
-    }
-    else if (_network == "EIP158")
-    {
-        networkChecked = true;
-        genesis["params"]["homesteadForkBlock"] = "0x00";
-        genesis["params"]["EIP150ForkBlock"] = "0x00";
-        genesis["params"]["EIP158ForkBlock"] = "0x00";
-    }
-    else if (_network == "Byzantium")
-    {
-        networkChecked = true;
-        genesis["params"]["homesteadForkBlock"] = "0x00";
-        genesis["params"]["EIP150ForkBlock"] = "0x00";
-        genesis["params"]["EIP158ForkBlock"] = "0x00";
-        genesis["params"]["byzantiumForkBlock"] = "0x00";
-    }
-    else if (_network == "Constantinople" || _network == "ConstantinopleFix")
-    {
-        networkChecked = true;
-        genesis["params"]["homesteadForkBlock"] = "0x00";
-        genesis["params"]["EIP150ForkBlock"] = "0x00";
-        genesis["params"]["EIP158ForkBlock"] = "0x00";
-        genesis["params"]["byzantiumForkBlock"] = "0x00";
-        genesis["params"]["constantinopleForkBlock"] = "0x00";
-        if (_network == "ConstantinopleFix")
-            genesis["params"]["constantinopleFixForkBlock"] = "0x00";
-    }
-    if (!networkChecked)
-        ETH_FAIL_MESSAGE(
-            "Unhandled network: " + _network + " (DataObject object::prepareGenesisParams)");
     return genesis;
 }
 }
