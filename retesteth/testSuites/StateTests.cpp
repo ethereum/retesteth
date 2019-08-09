@@ -75,7 +75,10 @@ DataObject FillTestAsBlockchain(DataObject const& _testFile)
                 for (auto& tr : test.getTransactionsUnsafe())
                 {
                     if (!OptionsAllowTransaction(tr))
+                    {
+                        tr.skipped = true;
                         continue;
+                    }
 
                     // if expect section is for this transaction
                     if (!expect.checkIndexes(tr.dataInd, tr.gasInd, tr.valueInd))
@@ -180,9 +183,12 @@ DataObject FillTest(DataObject const& _testFile)
                 for (auto& tr : test.getTransactionsUnsafe())
                 {
                     if (!OptionsAllowTransaction(tr))
+                    {
+                        tr.skipped = true;
                         continue;
+                    }
 
-                    // if expect section is for this transaction
+                    // if expect section is not for this transaction
                     if (!expect.checkIndexes(tr.dataInd, tr.gasInd, tr.valueInd))
                         continue;
 
@@ -198,7 +204,13 @@ DataObject FillTest(DataObject const& _testFile)
                     tr.executed = true;
 
                     scheme_block blockInfo = session.eth_getBlockByNumber(latestBlockNumber, false);
-                    compareStates(expect.getExpectState(), session, blockInfo);
+                    if (Options::get().fullstate)
+                    {
+                        scheme_state remoteState = getRemoteState(session, blockInfo);
+                        compareStates(expect.getExpectState(), remoteState);
+                    }
+                    else
+                        compareStates(expect.getExpectState(), session, blockInfo);
 
                     DataObject indexes;
                     DataObject transactionResults;
@@ -234,39 +246,59 @@ void RunTest(DataObject const& _testFile)
     // read post state results
     for (auto const& post: test.getPost().getResults())
     {
+        bool networkSkip = false;
         string const& network = post.first;
         if (!Options::get().singleTestNet.empty() && Options::get().singleTestNet != network)
-            continue;
+            networkSkip = true;
+        else
+            session.test_setChainParams(test.getGenesisForRPC(network, "NoReward").asJson());
 
-        session.test_setChainParams(test.getGenesisForRPC(network, "NoReward").asJson());
+        // One test could have many transactions on same chainParams
+        // It is expected that for a setted chainParams there going to be a transaction
+        // Rather then all transactions would be filtered out and not executed at all
 
         // read all results for a specific fork
         for (auto const& result: post.second)
         {
+            bool resultHaveCorrespondingTransaction = false;
+            string testInfo = TestOutputHelper::get().testName() + ", fork: " + network;
+            TestOutputHelper::get().setCurrentTestInfo(testInfo);
+
             // look for a transaction with this indexes and execute it on a client
             for (auto& tr: test.getTransactionsUnsafe())
             {
-                if (!OptionsAllowTransaction(tr))
-                    continue;
+                bool checkIndexes = result.checkIndexes(tr.dataInd, tr.gasInd, tr.valueInd);
+                if (checkIndexes)
+                    resultHaveCorrespondingTransaction = true;
 
-                bool blockMined = false;
-                if (result.checkIndexes(tr.dataInd, tr.gasInd, tr.valueInd))
+                if (!OptionsAllowTransaction(tr) || networkSkip)
                 {
-                    string testInfo = TestOutputHelper::get().testName() + ", fork: " + network
-                                    + ", TrInfo: d: " + toString(tr.dataInd) + ", g: " + toString(tr.gasInd)
-                                    + ", v: " + toString(tr.valueInd);
+                    tr.skipped = true;
+                    continue;
+                }
+
+                if (checkIndexes)
+                {
+                    // VERY EXPENSIVE
+                    string testInfo = TestOutputHelper::get().testName() + ", fork: " + network +
+                                      ", TrInfo: d: " + to_string(tr.dataInd) +
+                                      ", g: " + to_string(tr.gasInd) +
+                                      ", v: " + to_string(tr.valueInd);
                     TestOutputHelper::get().setCurrentTestInfo(testInfo);
+                    // VERY EXPENSIVE
+
                     u256 a(test.getEnv().getData().atKey("currentTimestamp").asString());
                     session.test_modifyTimestamp(a.convert_to<size_t>());
                     string trHash = session.eth_sendRawTransaction(tr.transaction.getSignedRLP());
                     string latestBlockNumber = session.test_mineBlocks(1);
                     tr.executed = true;
-                    blockMined = true;
 
                     // Validate post state
                     string postHash = result.getData().atKey("hash").asString();
                     scheme_block remoteBlockInfo =
                         session.eth_getBlockByNumber(latestBlockNumber, false);
+                    ETH_ERROR_REQUIRE_MESSAGE(remoteBlockInfo.getTransactionCount() == 1,
+                         "State test transaction must be valid! " + TestOutputHelper::get().testInfo());
                     validatePostHash(session, postHash, remoteBlockInfo);
 
                     // Validate log hash
@@ -278,14 +310,20 @@ void RunTest(DataObject const& _testFile)
                                           ", logs hash mismatch: '" + remoteLogHash + "'" +
                                           ", expected: '" + postLogHash + "'");
                     }
-                }
-                if (blockMined)
                     session.test_rewindToBlock(0);
-            }
+                    if (Options::get().logVerbosity >= 5)
+                        ETH_LOG("Executed: d: " + to_string(tr.dataInd) +
+                                    ", g: " + to_string(tr.gasInd) +
+                                    ", v: " + to_string(tr.valueInd) + ", fork: " + network,
+                            5);
+                }
+            } //ForTransactions
+            ETH_ERROR_REQUIRE_MESSAGE(resultHaveCorrespondingTransaction,
+                         "State test has expect section without transaction! " + TestOutputHelper::get().testInfo() + result.getData().asJson());
         }
-
-        test.checkUnexecutedTransactions();
     }
+
+    test.checkUnexecutedTransactions();
 }
 }  // namespace closed
 
@@ -334,113 +372,4 @@ DataObject StateTestSuite::doTests(DataObject const& _input, TestSuiteOptions& _
     }
     return filledTest;
 }
-
-TestSuite::TestPath StateTestSuite::suiteFolder() const
-{
-    if (Options::get().fillchain)
-        return TestSuite::TestPath(fs::path("BlockchainTests") / "GeneralStateTestsRetesteth");
-    return TestSuite::TestPath(fs::path("GeneralStateTests"));
-}
-
-TestSuite::FillerPath StateTestSuite::suiteFillerFolder() const
-{
-    return TestSuite::FillerPath(fs::path("src") / "GeneralStateTestsFiller");
-}
-
 }// Namespace Close
-
-class GeneralTestFixture
-{
-public:
-    GeneralTestFixture()
-    {
-        test::StateTestSuite suite;
-        string casename = boost::unit_test::framework::current_test_case().p_name;
-        boost::filesystem::path suiteFillerPath = suite.getFullPathFiller(casename).parent_path();
-
-        static vector<string> const timeConsumingTestSuites{
-            string{"stTimeConsuming"}, string{"stQuadraticComplexityTest"}};
-        if (test::inArray(timeConsumingTestSuites, casename) && !test::Options::get().all)
-        {
-            if (!ExitHandler::receivedExitSignal())
-                std::cout << "Skipping " << casename << " because --all option is not specified.\n";
-            test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
-            return;
-        }
-        suite.runAllTestsInFolder(casename);
-        test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
-    }
-};
-
-BOOST_FIXTURE_TEST_SUITE(GeneralStateTests, GeneralTestFixture)
-
-//Frontier Tests
-BOOST_AUTO_TEST_CASE(stCallCodes){}
-BOOST_AUTO_TEST_CASE(stCallCreateCallCodeTest){}
-BOOST_AUTO_TEST_CASE(stExample){}
-BOOST_AUTO_TEST_CASE(stInitCodeTest){}
-BOOST_AUTO_TEST_CASE(stLogTests){}
-BOOST_AUTO_TEST_CASE(stMemoryTest){}
-BOOST_AUTO_TEST_CASE(stPreCompiledContracts){}
-BOOST_AUTO_TEST_CASE(stPreCompiledContracts2){}
-BOOST_AUTO_TEST_CASE(stRandom){}
-BOOST_AUTO_TEST_CASE(stRandom2){}
-BOOST_AUTO_TEST_CASE(stRecursiveCreate){}
-BOOST_AUTO_TEST_CASE(stRefundTest){}
-BOOST_AUTO_TEST_CASE(stSolidityTest){}
-BOOST_AUTO_TEST_CASE(stSpecialTest){}
-BOOST_AUTO_TEST_CASE(stSystemOperationsTest){}
-BOOST_AUTO_TEST_CASE(stTransactionTest){}
-BOOST_AUTO_TEST_CASE(stTransitionTest){}
-BOOST_AUTO_TEST_CASE(stWalletTest){}
-
-//Homestead Tests
-BOOST_AUTO_TEST_CASE(stCallDelegateCodesCallCodeHomestead){}
-BOOST_AUTO_TEST_CASE(stCallDelegateCodesHomestead){}
-BOOST_AUTO_TEST_CASE(stHomesteadSpecific){}
-BOOST_AUTO_TEST_CASE(stDelegatecallTestHomestead){}
-
-//EIP150 Tests
-BOOST_AUTO_TEST_CASE(stChangedEIP150){}
-BOOST_AUTO_TEST_CASE(stEIP150singleCodeGasPrices){}
-BOOST_AUTO_TEST_CASE(stMemExpandingEIP150Calls){}
-BOOST_AUTO_TEST_CASE(stEIP150Specific){}
-
-//EIP158 Tests
-BOOST_AUTO_TEST_CASE(stEIP158Specific){}
-BOOST_AUTO_TEST_CASE(stNonZeroCallsTest){}
-BOOST_AUTO_TEST_CASE(stZeroCallsTest){}
-BOOST_AUTO_TEST_CASE(stZeroCallsRevert){}
-BOOST_AUTO_TEST_CASE(stCodeSizeLimit){}
-BOOST_AUTO_TEST_CASE(stCreateTest){}
-BOOST_AUTO_TEST_CASE(stRevertTest){}
-
-//Metropolis Tests
-BOOST_AUTO_TEST_CASE(stStackTests){}
-BOOST_AUTO_TEST_CASE(stStaticCall){}
-BOOST_AUTO_TEST_CASE(stReturnDataTest){}
-BOOST_AUTO_TEST_CASE(stZeroKnowledge){}
-BOOST_AUTO_TEST_CASE(stZeroKnowledge2){}
-BOOST_AUTO_TEST_CASE(stCodeCopyTest){}
-BOOST_AUTO_TEST_CASE(stBugs){}
-
-//Constantinople Tests
-BOOST_AUTO_TEST_CASE(stShift){}
-BOOST_AUTO_TEST_CASE(stCreate2){}
-BOOST_AUTO_TEST_CASE(stExtCodeHash){}
-BOOST_AUTO_TEST_CASE(stSStoreTest){}
-
-//Stress Tests
-BOOST_AUTO_TEST_CASE(stAttackTest){}
-BOOST_AUTO_TEST_CASE(stMemoryStressTest){}
-BOOST_AUTO_TEST_CASE(stQuadraticComplexityTest){}
-
-//Invalid Opcode Tests
-BOOST_AUTO_TEST_CASE(stBadOpcode){}
-
-//New Tests
-BOOST_AUTO_TEST_CASE(stArgsZeroOneBalance){}
-BOOST_AUTO_TEST_CASE(stEWASMTests){}
-BOOST_AUTO_TEST_CASE(stTimeConsuming) {}
-BOOST_AUTO_TEST_SUITE_END()
-

@@ -73,6 +73,7 @@ DataObject scheme_blockchainTestBase::getGenesisForRPC(string const& _network) c
     object::makeAllFieldsHex(data);
 
     genesis["genesis"] = data;
-    genesis["accounts"] = m_pre.getDataForRPC(net);
+    for (auto const& acc : m_pre.getData().getSubObjects())
+        genesis["accounts"].addSubObject(acc);
     return genesis;
 }

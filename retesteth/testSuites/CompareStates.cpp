@@ -1,5 +1,4 @@
 #include "Common.h"
-#include <dataObject/ConvertJsoncpp.h>
 #include <dataObject/DataObject.h>
 #include <retesteth/Options.h>
 #include <retesteth/RPCSession.h>
@@ -138,7 +137,7 @@ void compareStates(
             result = accountCompareResult;
     }
     if (result != CompareResult::Success)
-        ETH_ERROR_MESSAGE("CompareStates failed with errors: " + CompareResultToString(result));
+        ETH_ERROR_MESSAGE("CompareStates failed with errors: " + CompareResultToString(result) + " " + TestOutputHelper::get().testInfo());
 }
 
 void compareStates(scheme_expectState const& _stateExpect, scheme_state const& _statePost)
@@ -162,7 +161,7 @@ void compareStates(scheme_expectState const& _stateExpect, scheme_state const& _
             result = accountCompareResult;
     }
     if (result != CompareResult::Success)
-        ETH_ERROR_MESSAGE("CompareStates failed with errors: " + CompareResultToString(result));
+        ETH_ERROR_MESSAGE("CompareStates failed with errors: " + CompareResultToString(result) + " " + TestOutputHelper::get().testInfo());
 }
 
 string CompareResultToString(CompareResult res)

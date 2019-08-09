@@ -3,8 +3,9 @@
 #include <vector>
 #include <set>
 #include <boost/filesystem.hpp>
+#ifdef JSONCPP
 #include <json/json.h>
-
+#endif
 #include <dataObject/DataObject.h>
 #include <retesteth/EthChecks.h>
 
@@ -14,8 +15,10 @@ namespace test {
 
 // Helping functions
 
+#ifdef JSONCPP
 /// Construct Json object from string
 Json::Value readJson(fs::path const& _path);
+#endif
 
 /// Get files from directory
 std::vector<boost::filesystem::path> getFiles(boost::filesystem::path const& _dirPath, std::set<std::string> _extentionMask, std::string const& _particularFile = {});

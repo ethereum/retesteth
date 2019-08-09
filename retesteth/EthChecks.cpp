@@ -9,7 +9,7 @@
 namespace test {
 void eth_stderror_message(std::string const& _message)
 {
-    std::cerr << _message << std::endl;
+    std::cerr << "\x1b[31m" << _message << "\x1b[0m" << std::endl;
 }
 
 void eth_log_message(std::string const& _message, unsigned _verbosity)
@@ -56,7 +56,7 @@ void eth_require(bool _flag)
 void eth_fail(std::string const& _message)
 {
     // thread that failing with this function might be being joined in a loop
-    TestOutputHelper::get().markError(_message);
+    TestOutputHelper::get().markError("!Critical!" + _message);
     if (!ExitHandler::receivedExitSignal())
     {
         std::raise(SIGABRT);

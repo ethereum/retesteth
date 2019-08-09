@@ -1,5 +1,4 @@
 #include "Common.h"
-#include <dataObject/ConvertJsoncpp.h>
 #include <dataObject/DataObject.h>
 #include <retesteth/Options.h>
 #include <retesteth/RPCSession.h>
@@ -12,11 +11,10 @@ void validatePostHash(
     string actualHash = _latestInfo.getStateHash();
     if (actualHash != _postHash)
     {
+        if (Options::get().logVerbosity >= 5)
+            ETH_LOG("\nState Dump: \n" + getRemoteState(_session, _latestInfo).getData().asJson(), 5);
         ETH_ERROR_MESSAGE("Error at " + TestOutputHelper::get().testInfo() +
-                          ", post hash mismatch: " + actualHash + ", expected: " + _postHash);
-        if (Options::get().logVerbosity > 5)
-            ETH_TEST_MESSAGE(
-                "\nState Dump: \n" + getRemoteState(_session, _latestInfo).getData().asJson());
+                          ", post hash mismatch remote: " + actualHash + ", expected: " + _postHash);
     }
 }
 

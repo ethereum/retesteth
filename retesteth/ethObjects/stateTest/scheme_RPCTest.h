@@ -34,7 +34,8 @@ public:
 
             m_genesis = prepareGenesisParams(network, sealEngine);
             m_genesis["genesis"] = env.getDataForRPC();
-            m_genesis["accounts"] = pre.getDataForRPC(network);
+            for (auto const& acc : pre.getData().getSubObjects())
+                m_genesis["accounts"].addSubObject(acc);
         }
     }
 

@@ -20,7 +20,6 @@
  * RPC protocol unit tests.
  */
 
-#include <dataObject/ConvertJsoncpp.h>
 #include <dataObject/DataObjectScheme.h>
 #include <dataObject/DataObjectValidator.h>
 #include <retesteth/Options.h>

@@ -92,7 +92,12 @@ configure_file(testSuites/AllTestNames.h.in ${PROJECT_BINARY_DIR}/AllTestNames.h
 
 add_executable(${PROJECT_NAME} ${sources})
 
-target_link_libraries(${PROJECT_NAME} PUBLIC Boost::filesystem Boost::program_options Boost::system Boost::thread jsoncpp_lib_static yaml-cpp::yaml-cpp devcore devcrypto cryptopp-static CURL::libcurl)
+if (JSONCPP)
+    add_definitions(-DJSONCPP)
+    target_link_libraries(${PROJECT_NAME} PUBLIC Boost::filesystem Boost::program_options Boost::system Boost::thread jsoncpp_lib_static yaml-cpp::yaml-cpp devcore devcrypto cryptopp-static CURL::libcurl)
+else()
+    target_link_libraries(${PROJECT_NAME} PUBLIC Boost::filesystem Boost::program_options Boost::system Boost::thread yaml-cpp::yaml-cpp devcore devcrypto cryptopp-static CURL::libcurl)
+endif()
 target_include_directories(${PROJECT_NAME} PRIVATE "../")
 target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_BINARY_DIR})
 target_include_directories(${PROJECT_NAME} PRIVATE "../retesteth")

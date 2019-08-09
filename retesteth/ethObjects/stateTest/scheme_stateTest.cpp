@@ -15,7 +15,8 @@ DataObject scheme_stateTestBase::getGenesisForRPC(
 {
     DataObject genesis = prepareGenesisParams(_network, _sealEngine);
     genesis["genesis"] = getEnv().getDataForRPC();
-    genesis["accounts"] = getPre().getDataForRPC(_network);
+    for (auto const& acc : getPre().getData().getSubObjects())
+        genesis["accounts"].addSubObject(acc);
     return genesis;
 }
 
@@ -29,15 +30,27 @@ scheme_stateTestBase::fieldChecker::fieldChecker(DataObject const& _test)
 
 void scheme_stateTestBase::checkUnexecutedTransactions()
 {
-    Options const& opt = Options::get();
-    if (opt.trDataIndex == -1 && opt.trGasIndex != -1 && opt.trValueIndex != -1)
+    bool atLeastOneExecuted = false;
+    bool atLeastOneWithoutExpectSection = false;
+    for (auto const& tr: m_transaction.getTransactions())
     {
-        for (auto const& tr: m_transaction.getTransactions())
+        if (tr.executed)
+            atLeastOneExecuted = true;
+        bool transactionExecutedOrSkipped = tr.executed == true || tr.skipped == true;
+        atLeastOneWithoutExpectSection =
+            !transactionExecutedOrSkipped || atLeastOneWithoutExpectSection;
+        if (!transactionExecutedOrSkipped)
         {
-            ETH_FAIL_REQUIRE_MESSAGE(tr.executed == true, "A transaction was specified, but there is no execution results in a test! Transaction: dInd="
-            + toString(tr.dataInd) + " gInd=" + toString(tr.gasInd) + " vInd=" + toString(tr.valueInd));
+            string actualTrInfo = " (Errored TR: d: " + to_string(tr.dataInd) +
+                                  ", g: " + to_string(tr.gasInd) + ", v: " + to_string(tr.valueInd);
+            ETH_MARK_ERROR(
+                "A transaction was specified, but there is no execution results in a test! " +
+                TestOutputHelper::get().testInfo() + actualTrInfo);
         }
     }
+    ETH_ERROR_REQUIRE_MESSAGE(atLeastOneExecuted, "Specified filter did not run a single transaction! " + TestOutputHelper::get().testInfo());
+    ETH_ERROR_REQUIRE_MESSAGE(
+        !atLeastOneWithoutExpectSection, "Test has transaction uncovered with expect sections! ");
 }
 
 scheme_stateTest::scheme_stateTest(DataObject const& _test)

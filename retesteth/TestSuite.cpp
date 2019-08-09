@@ -69,6 +69,7 @@ TestFileData readTestFile(fs::path const& _testFileName)
     if (test::Options::get().showhash)
     {
         std::string output = "Not a Json object!";
+#ifdef JSONCPP
         if (_testFileName.extension() == ".json")
         {
             Json::FastWriter fastWriter;
@@ -76,6 +77,10 @@ TestFileData readTestFile(fs::path const& _testFileName)
             output = fastWriter.write(v);
             output = output.substr(0, output.size() - 1);
         }
+#else
+        output = "compile with -DJSONCPP flag to get the json print";
+#endif
+
         std::cerr << "JSON: '" << std::endl << output << "'" << std::endl;
         std::cerr << "DATA: '" << std::endl << srcString << "'" << std::endl;
     }
@@ -223,26 +228,29 @@ void TestSuite::runTestWithoutFiller(boost::filesystem::path const& _file) const
 
 string TestSuite::checkFillerExistance(string const& _testFolder) const
 {
-    string filter = test::Options::get().singleTestName.empty() ?
-                        string() :
-                        test::Options::get().singleTestName;
-    std::cout << "Checking test filler hashes for " << boost::unit_test::framework::current_test_case().full_name() << std::endl;
+    test::Options const& opt = test::Options::get();
+    string const testNameFilter = opt.singleTestName.empty() ? string() : opt.singleTestName;
+    string filter = testNameFilter;
+    filter += opt.singleTestNet.empty() ? string() : " " + opt.singleTestNet;
+    filter += opt.trDataIndex == -1 ? string() : " dInd: " + to_string(opt.trDataIndex);
+    filter += opt.trGasIndex == -1 ? string() : " gInd: " + to_string(opt.trGasIndex);
+    filter += opt.trValueIndex == -1 ? string() : " vInd: " + to_string(opt.trValueIndex);
+    ETH_LOG("Checking test filler hashes for " + boost::unit_test::framework::current_test_case().full_name(), 4);
     if (!filter.empty())
-        std::cout << "Filter: '" << filter << "'" << std::endl;
+        ETH_LOG("Filter: '" + filter +  "'", 0);
     AbsoluteTestPath testsPath = getFullPath(_testFolder);
     if (!fs::exists(testsPath.path()))
     {
-        ETH_STDERROR_MESSAGE("Tests folder does not exists, creating test folder: '" +
-                             string(testsPath.path().c_str()) + "'");
+        ETH_LOG("Tests folder does not exists, creating test folder: '" + string(testsPath.path().c_str()) + "'", 2);
         fs::create_directories(testsPath.path());
     }
-    vector<fs::path> compiledFiles = test::getFiles(testsPath.path(), {".json", ".yml"}, filter);
+    vector<fs::path> compiledFiles = test::getFiles(testsPath.path(), {".json", ".yml"}, testNameFilter);
     AbsoluteFillerPath fullPathToFillers = getFullPathFiller(_testFolder);
 
     bool checkFillerWhenFilterIsSetButNoTestsFilled = false;
     if (compiledFiles.size() == 0)
     {
-        if (filter.empty())
+        if (testNameFilter.empty())
         {
             // No tests generated, check at least one filler existence
             vector<fs::path> existingFillers =
@@ -259,7 +267,7 @@ string TestSuite::checkFillerExistance(string const& _testFolder) const
         else
         {
             // No tests generated and filter is set, check that filler for filter is exist
-            compiledFiles.push_back(fs::path(filter));  // put the test name as if it was compiled.
+            compiledFiles.push_back(fs::path(testNameFilter));  // put the test name as if it was compiled.
             checkFillerWhenFilterIsSetButNoTestsFilled = true;
         }
     }
@@ -297,27 +305,27 @@ string TestSuite::checkFillerExistance(string const& _testFolder) const
             if (Options::get().filltests == false)  // If we are filling the test it is probably
                                                     // outdated/being updated. no need to check.
                 checkFillerHash(file, expectedFillerName);
-            if (!filter.empty())
-                return filter + c_fillerPostf;
+            if (!testNameFilter.empty())
+                return testNameFilter + c_fillerPostf;
         }
         if (fs::exists(expectedFillerName2))
         {
             if (Options::get().filltests == false)
                 checkFillerHash(file, expectedFillerName2);
-            if (!filter.empty())
-                return filter + c_fillerPostf;
+            if (!testNameFilter.empty())
+                return testNameFilter + c_fillerPostf;
         }
         if (fs::exists(expectedCopierName))
         {
             if (Options::get().filltests == false)
                 checkFillerHash(file, expectedCopierName);
-            if (!filter.empty())
-                return filter + c_copierPostf;
+            if (!testNameFilter.empty())
+                return testNameFilter + c_copierPostf;
         }
     }
 
     // No compiled test files. Filter is empty
-    return filter;
+    return testNameFilter;
 }
 
 void TestSuite::runAllTestsInFolder(string const& _testFolder) const

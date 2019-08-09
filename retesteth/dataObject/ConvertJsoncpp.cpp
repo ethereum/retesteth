@@ -1,3 +1,4 @@
+#ifdef JSONCPP
 #include <dataObject/ConvertJsoncpp.h>
 
 namespace dataobject
@@ -70,3 +71,4 @@ DataObject ConvertJsoncppToData(Json::Value const& _input)
     return DataObject(DataType::Null);
 }
 }
+#endif
