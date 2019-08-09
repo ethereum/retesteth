@@ -86,7 +86,7 @@ public:
                 // check that expected element exist
                 checkMessage(_storage.count(key), CompareResult::IncorrectStorage,
                     message + " expected storage key: '" + element.getKey() + "' to be set to: '" +
-                        element.asString() + "'");
+                        element.asString() + "', but key '" + element.getKey() + "' does not exist!");
 
                 if (result != CompareResult::Success)
                     return result;

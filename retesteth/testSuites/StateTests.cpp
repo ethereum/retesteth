@@ -204,7 +204,13 @@ DataObject FillTest(DataObject const& _testFile)
                     tr.executed = true;
 
                     scheme_block blockInfo = session.eth_getBlockByNumber(latestBlockNumber, false);
-                    compareStates(expect.getExpectState(), session, blockInfo);
+                    if (Options::get().fullstate)
+                    {
+                        scheme_state remoteState = getRemoteState(session, blockInfo);
+                        compareStates(expect.getExpectState(), remoteState);
+                    }
+                    else
+                        compareStates(expect.getExpectState(), session, blockInfo);
 
                     DataObject indexes;
                     DataObject transactionResults;
