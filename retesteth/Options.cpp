@@ -175,7 +175,10 @@ Options::Options(int argc, const char** argv)
 		else if (arg == "--filltests")
 			filltests = true;
 		else if (arg == "--fillchain")
-			fillchain = true;
+        {
+            fillchain = true;
+            filltests = true;
+        }
         else if (arg == "--showhash")
             showhash = true;
 		else if (arg == "--stats")
