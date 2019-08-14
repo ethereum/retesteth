@@ -280,7 +280,7 @@ Options::Options(int argc, const char** argv)
             ETH_FAIL_REQUIRE_MESSAGE(testpath.empty(),
                 "testpath is already set! Make sure that testpath is provided as a first option.");
             testpath = std::string{argv[++i]};
-		}
+        }
 		else if (arg == "--statediff")
 			statediff = true;
 		else if (arg == "--randomcode")
@@ -414,6 +414,7 @@ std::vector<ClientConfig> const& Options::DynamicOptions::getClientConfigs()
 
         for (auto const& clientName : cfgs)
         {
+            ETH_FAIL_REQUIRE_MESSAGE(fs::exists(getTestPath()), "Could not locate provided testpath: " + string(getTestPath().c_str()));
             fs::path configPath = getTestPath() / fs::path("Retesteth") / clientName;
             fs::path configFilePath = configPath / "config";
             ETH_FAIL_REQUIRE_MESSAGE(fs::exists(configFilePath),
