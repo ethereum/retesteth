@@ -425,8 +425,11 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
             isCopySource = true;
         }
         else
+        {
+            string requireStr = " require: Filler.json/Filler.yml/Copier.json";
             ETH_FAIL_REQUIRE_MESSAGE(
-                false, "Incorrect file suffix in the filler folder! " + _testFileName.string());
+                false, "Incorrect file suffix in the filler folder! " + _testFileName.string() + requireStr);
+        }
     }
 
     ETH_LOG("Running " + testname + ": ", 3);
