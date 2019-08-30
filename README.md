@@ -3,8 +3,6 @@ testeth via RPC (wiki: https://github.com/ethereum/retesteth/wiki)
 
 A test generaion tool for the test fillers https://github.com/ethereum/tests/tree/develop/src
 
-**! notice: This is a prototype and WIP !**
-
 # The Goal
 
 * A test tool that would be capable of running current Blockchain tests against any client by sending rpc request to the client instatnce on either local or remote host. (using unix or TCP sockets) 
