@@ -120,7 +120,12 @@ DataObject FillTestAsBlockchain(DataObject const& _testFile)
                     DataObject aBlockchainTest;
                     if (test.getData().count("_info"))
                         aBlockchainTest["_info"] = test.getData().atKey("_info");
-                    aBlockchainTest["genesisBlockHeader"] = test.getEnv().getDataForRPC();
+
+                    test::scheme_block latestBlock = session.eth_getBlockByNumber("0", false);
+                    aBlockchainTest["genesisBlockHeader"] = latestBlock.getBlockHeader();
+                    aBlockchainTest["genesisBlockHeader"].removeKey("transactions");
+                    aBlockchainTest["genesisBlockHeader"].removeKey("uncles");
+
                     aBlockchainTest["pre"] = test.getPre().getData();
                     aBlockchainTest["postState"] = remoteState.getData();
                     aBlockchainTest["network"] = net;
@@ -133,6 +138,7 @@ DataObject FillTestAsBlockchain(DataObject const& _testFile)
                     DataObject block;
                     block["rlp"] = remoteBlock.getBlockRLP();
                     block["blockHeader"] = remoteBlock.getBlockHeader();
+                    block["transactions"].addArrayObject(tr.transaction.getDataForBCTest());
                     aBlockchainTest["blocks"].addArrayObject(block);
 
                     string dataPostfix = "_d" + toString(tr.dataInd) + "g" + toString(tr.gasInd) +

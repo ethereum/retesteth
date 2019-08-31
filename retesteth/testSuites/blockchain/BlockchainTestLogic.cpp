@@ -39,7 +39,7 @@ void FillTest(scheme_blockchainTestFiller const& _testObject, string const& _net
         for (auto const& tr : block.getTransactions())
         {
             session.eth_sendRawTransaction(tr.getSignedRLP());
-            blockSection["transactions"].addArrayObject(tr.getData());
+            blockSection["transactions"].addArrayObject(tr.getDataForBCTest());
         }
         string latestBlockNumber = session.test_mineBlocks(1);
 

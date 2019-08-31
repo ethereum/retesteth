@@ -147,4 +147,5 @@ scheme_state getRemoteState(RPCSession& _session, scheme_block const& _latestInf
 
     return scheme_state(accountsObj);
 }
-}
+
+}  // namespace
