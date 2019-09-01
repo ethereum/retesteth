@@ -207,9 +207,15 @@ Options::Options(int argc, const char** argv)
 				else
 				{
 					singleTestFile = std::move(name1);
-					singleTestName = std::move(name2);
-				}
-			}
+                    singleTestName = std::move(name2);
+                    if (!fs::exists(singleTestFile.get()))
+                    {
+                        ETH_STDERROR_MESSAGE(
+                            "Could not locate custom test file: '" + singleTestFile.get() + "'");
+                        exit(-1);
+                    }
+                }
+            }
 			else
 				singleTestName = std::move(name1);
 		}
