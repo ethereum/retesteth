@@ -44,8 +44,9 @@ CompareResult compareAccounts(
         checkMessage(_expectAccount.getData().atKey("balance").asString() ==
                          _inState.getData().atKey("balance").asString(),
             CompareResult::IncorrectBalance,
-            TestOutputHelper::get().testName() + " Check State: '" + _expectAccount.address() +
-                "': incorrect balance " + toString(inStateB) + ", expected " +
+            TestOutputHelper::get().testName() + " Check State: Remote account '" +
+                _expectAccount.address() + "': has incorrect balance " + toString(inStateB) +
+                ", test expected " +
                 toString(u256(_expectAccount.getData().atKey("balance").asString())) + " (" +
                 _expectAccount.getData().atKey("balance").asString() +
                 " != " + _inState.getData().atKey("balance").asString() + ")");
@@ -55,9 +56,10 @@ CompareResult compareAccounts(
         checkMessage(_expectAccount.getData().atKey("nonce").asString() ==
                          _inState.getData().atKey("nonce").asString(),
             CompareResult::IncorrectNonce,
-            TestOutputHelper::get().testName() + " Check State: '" + _expectAccount.address() +
-                "': incorrect nonce " + _inState.getData().atKey("nonce").asString() +
-                ", expected " + _expectAccount.getData().atKey("nonce").asString());
+            TestOutputHelper::get().testName() + " Check State: Remote account '" +
+                _expectAccount.address() + "': has incorrect nonce " +
+                _inState.getData().atKey("nonce").asString() + ", test expected " +
+                _expectAccount.getData().atKey("nonce").asString());
 
     // Check that state post has values from expected storage
     if (_expectAccount.hasStorage())
@@ -71,9 +73,10 @@ CompareResult compareAccounts(
         checkMessage(_expectAccount.getData().atKey("code").asString() ==
                          _inState.getData().atKey("code").asString(),
             CompareResult::IncorrectCode,
-            TestOutputHelper::get().testName() + " Check State: '" + _expectAccount.address() +
-                "': incorrect code '" + _inState.getData().atKey("code").asString() +
-                "', expected '" + _expectAccount.getData().atKey("code").asString() + "'");
+            TestOutputHelper::get().testName() + " Check State: Remote account '" +
+                _expectAccount.address() + "': has incorrect code '" +
+                _inState.getData().atKey("code").asString() + "', test expected '" +
+                _expectAccount.getData().atKey("code").asString() + "'");
 
     return result;
 }

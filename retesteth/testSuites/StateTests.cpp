@@ -304,7 +304,8 @@ void RunTest(DataObject const& _testFile)
                     scheme_block remoteBlockInfo =
                         session.eth_getBlockByNumber(latestBlockNumber, false);
                     ETH_ERROR_REQUIRE_MESSAGE(remoteBlockInfo.getTransactionCount() == 1,
-                         "State test transaction must be valid! " + TestOutputHelper::get().testInfo());
+                        "Error execution transaction on remote client! State test transaction must "
+                        "be valid! " + TestOutputHelper::get().testInfo());
                     validatePostHash(session, postHash, remoteBlockInfo);
 
                     // Validate log hash
