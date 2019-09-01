@@ -321,8 +321,7 @@ void RunTest(DataObject const& _testFile)
                     if (Options::get().logVerbosity >= 5)
                         ETH_LOG("Executed: d: " + to_string(tr.dataInd) +
                                     ", g: " + to_string(tr.gasInd) +
-                                    ", v: " + to_string(tr.valueInd) + ", fork: " + network,
-                            5);
+                                    ", v: " + to_string(tr.valueInd) + ", fork: " + network, 5);
                 }
             } //ForTransactions
             ETH_ERROR_REQUIRE_MESSAGE(resultHaveCorrespondingTransaction,

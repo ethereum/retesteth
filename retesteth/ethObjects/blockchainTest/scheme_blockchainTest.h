@@ -1,9 +1,11 @@
 #pragma once
 #include "../object.h"
 #include "../stateTest/scheme_state.h"
+#include "../stateTest/scheme_transaction.h"
 #include "scheme_blockHeader.h"
 #include <retesteth/Options.h>
 #include <retesteth/TestHelper.h>
+#include <vector>
 
 using namespace test;
 
@@ -44,5 +46,6 @@ private:
     fieldChecker m_checker;
     scheme_state m_post;
     std::vector<std::string> m_blockRLPs;
+    std::vector<scheme_transaction> m_transactions;
 };
 }
