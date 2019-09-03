@@ -67,20 +67,22 @@ vector<fs::path> getFiles(
 
 boost::filesystem::path getTestPath()
 {
-	if (!Options::get().testpath.empty())
-		return Options::get().testpath;
+    if (!Options::get().testpath.empty())
+        return Options::get().testpath;
 
-	string testPath;
-	const char* ptestPath = getenv("ETHEREUM_TEST_PATH");
-	if (ptestPath == nullptr)
+    static boost::filesystem::path testPath;
+    if (!testPath.empty())
+        return testPath;
+
+    const char* ptestPath = getenv("ETHEREUM_TEST_PATH");
+    if (ptestPath == nullptr)
     {
-        ETH_TEST_MESSAGE("could not find environment variable ETHEREUM_TEST_PATH");
-        testPath = "../../test/jsontests";
-	}
-	else
-		testPath = ptestPath;
-
-	return boost::filesystem::path(testPath);
+        ETH_WARNING("WARNING: Could not find environment variable `ETHEREUM_TEST_PATH`");
+        ETH_STDERROR_MESSAGE("Use the --testpath <path> option to set the test path!");
+        throw EthError() << "Error getting the test path!";
+    }
+    testPath = boost::filesystem::path(ptestPath);
+    return testPath;
 }
 
 void copyFile(fs::path const& _source, fs::path const& _destination)

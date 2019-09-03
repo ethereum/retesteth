@@ -183,22 +183,30 @@ int main(int argc, const char* argv[])
     }
 
     int result = 0;
-    std::cout << "Running tests using path: " << test::getTestPath() << std::endl;
-    auto fakeInit = [](int, char* []) -> boost::unit_test::test_suite* { return nullptr; };
-    if (opt.jsontrace || opt.vmtrace || opt.statediff || opt.createRandomTest ||
-        !opt.travisOutThread)
+    try
     {
-        // Do not use travis '.' output thread if debug is defined
-        result = unit_test_main(fakeInit, argc, const_cast<char**>(argv));
+        fs::path const testPath = test::getTestPath();
+        ETH_STDOUT_MESSAGE(string("Running tests using path: ") + testPath.c_str());
+        auto fakeInit = [](int, char* []) -> boost::unit_test::test_suite* { return nullptr; };
+        if (opt.jsontrace || opt.vmtrace || opt.statediff || opt.createRandomTest ||
+            !opt.travisOutThread)
+        {
+            // Do not use travis '.' output thread if debug is defined
+            result = unit_test_main(fakeInit, argc, const_cast<char**>(argv));
+        }
+        else
+        {
+            // Initialize travis '.' output thread for log activity
+            std::atomic_bool stopTravisOut{false};
+            std::thread outputThread(travisOut, &stopTravisOut);
+            result = unit_test_main(fakeInit, argc, const_cast<char**>(argv));
+            stopTravisOut = true;
+            outputThread.join();
+        }
     }
-    else
+    catch (BaseEthException const& _ex)
     {
-        // Initialize travis '.' output thread for log activity
-        std::atomic_bool stopTravisOut{false};
-        std::thread outputThread(travisOut, &stopTravisOut);
-        result = unit_test_main(fakeInit, argc, const_cast<char**>(argv));
-        stopTravisOut = true;
-        outputThread.join();
+        ETH_STDERROR_MESSAGE(string("Error: ") + _ex.what());
     }
 
     ExitHandler::doExit();
