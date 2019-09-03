@@ -216,7 +216,11 @@ DataObject FillTest(DataObject const& _testFile)
                         compareStates(expect.getExpectState(), remoteState);
                     }
                     else
+                    {
+                        if (Options::get().poststate)
+                            ETH_STDOUT_MESSAGE("PostState " + TestOutputHelper::get().testInfo() +  " : \n" + blockInfo.getStateHash());
                         compareStates(expect.getExpectState(), session, blockInfo);
+                    }
 
                     DataObject indexes;
                     DataObject transactionResults;
