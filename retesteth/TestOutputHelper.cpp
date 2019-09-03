@@ -239,9 +239,8 @@ void checkUnfinishedTestFolders()
         }
 
         if (!pathHasTests(singleTest->first / filter))
-            ETH_STDERROR_MESSAGE(string("WARNING: Test folder ") +
-                                 (singleTest->first / filter).c_str() +
-                                 " appears to have no tests!");
+            ETH_WARNING(string("WARNING: Test folder ") + (singleTest->first / filter).c_str() +
+                        " appears to have no tests!");
     }
     else
     {
@@ -257,8 +256,8 @@ void checkUnfinishedTestFolders()
                     string const folderName = it->path().filename().string();
                     allFolders.insert(folderName);
                     if (!pathHasTests(it->path()))
-                        ETH_STDERROR_MESSAGE(string("WARNING: Test folder ") + it->path().c_str() +
-                                             " appears to have no tests!");
+                        ETH_WARNING(string("WARNING: Test folder ") + it->path().c_str() +
+                                    " appears to have no tests!");
                 }
             }
 
@@ -267,8 +266,8 @@ void checkUnfinishedTestFolders()
             std::set_difference(allFolders.begin(), allFolders.end(), finishedFolders.begin(),
                 finishedFolders.end(), std::back_inserter(diff));
             for (auto const& it : diff)
-                ETH_STDERROR_MESSAGE(string("WARNING: Test folder ") + (path / it).c_str() +
-                                     " appears to be unused!");
+                ETH_WARNING(string("WARNING: Test folder ") + (path / it).c_str() +
+                            " appears to be unused!");
         }
     }
 }
