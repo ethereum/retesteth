@@ -48,3 +48,47 @@ See: https://github.com/ethereum/retesteth/wiki/RPC-Methods
 
 # Contact
 Skype: wins_vega
+
+# Building instructions for beginners
+## Dependencies
+
+#### GIT
+```
+sudo apt-get update
+sudo apt-get install git g++ build-essential
+```
+#### Cmake
+Make sure the version is higher than VERSION 3.9.3, otherwise install cmake from a different source
+```
+sudo apt-cache policy cmake
+sudo apt-get install cmake
+```
+
+#### Retesteth
+```
+cd ~
+mkdir Ethereum
+cd Ethereum
+git clone https://github.com/ethereum/retesteth.git
+cd retesteth
+mkdir build
+cd build
+cmake ..
+```
+
+Now you should see the successful build files generation result: 
+```
+Configuring done
+-- Generating done
+-- Build files have been written 
+```
+
+Run the build command to compile:
+-j threadCount to optimize the build speed. Depending on your processor threads it will increase the building speed.
+```
+make -j4
+```
+
+### DONE!
+
+
