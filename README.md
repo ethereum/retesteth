@@ -1,7 +1,8 @@
 # retesteth
 testeth via RPC (wiki: https://github.com/ethereum/retesteth/wiki)
 
-A test generaion tool for the test fillers https://github.com/ethereum/tests/tree/develop/src
+A test generaion tool for the test fillers https://github.com/ethereum/tests/tree/develop/src  
+Building instruction for begginers: [retesteth + solidity build](https://github.com/ethereum/retesteth#building-instructions-for-beginners)
 
 # The Goal
 
@@ -87,6 +88,27 @@ Run the build command to compile:
 -j threadCount to optimize the build speed. Depending on your processor threads it will increase the building speed.
 ```
 make -j4
+```
+
+#### Solidity
+
+check the available boost version by  
+`sudo apt-cache policy libboost-all-dev`
+
+install boost dependency boost if version >=1.65  
+`sudo apt-get install libboost-all-dev`
+
+Solidity building instructions:
+
+```
+cd ~
+cd Ethereum
+git clone https://github.com/ethereum/solidity.git
+cd solidity
+mkdir build
+cd build
+cmake .. -DLLL=1
+make lllc -j4
 ```
 
 ### DONE!
