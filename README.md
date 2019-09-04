@@ -32,6 +32,8 @@ cd build
 cmake ..
 make -j4
 ```
+Or try building instruction for begginers: [retesteth + solidity build](https://github.com/ethereum/retesteth#building-instructions-for-beginners)
+
 
 # Usage
 WIKI: https://github.com/ethereum/retesteth/wiki  
