@@ -446,7 +446,7 @@ std::vector<ClientConfig> const& Options::DynamicOptions::getClientConfigs()
             {
                 fs::path configGenesisTemplatePath = genesisTemplatePath / (net + ".json");
                 ETH_FAIL_REQUIRE_MESSAGE(fs::exists(configGenesisTemplatePath),
-                    "template .json config for network '" + net + "' in " + clientName);
+                    "template .json config for network '" + net + "' in " + clientName + " not found in tests/Retesteth configs!");
                 cfg.addGenesisTemplate(net, configGenesisTemplatePath);
             }
             //*/ Load genesis templates
