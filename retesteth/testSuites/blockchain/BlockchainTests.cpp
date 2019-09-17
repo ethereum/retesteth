@@ -86,8 +86,7 @@ TestSuite::TestPath BCGeneralStateTestsSuite::suiteFolder() const
 
 TestSuite::FillerPath BCGeneralStateTestsSuite::suiteFillerFolder() const
 {
-    return TestSuite::FillerPath(
-        fs::path("src") / fs::path("BlockchainTestsFiller") / "GeneralStateTests");
+    return TestSuite::FillerPath(fs::path("src") / fs::path("GeneralStateTestsFiller"));
 }
 
 TestSuite::TestPath LegacyConstantinopleBCGeneralStateTestsSuite::suiteFolder() const

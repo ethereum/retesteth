@@ -143,8 +143,10 @@ scheme_state getRemoteState(RPCSession& _session, scheme_block const& _latestInf
     }
 
     if (Options::get().poststate)
-        std::cout << accountsObj.asJson() << std::endl;
+        ETH_STDOUT_MESSAGE("PostState " + TestOutputHelper::get().testInfo() +  " : \n"
+                           + accountsObj.asJson());
 
     return scheme_state(accountsObj);
 }
-}
+
+}  // namespace

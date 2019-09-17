@@ -72,21 +72,23 @@ public:
             else if (key == "0x00" && _storage.count("0x"))
                 key = "0x";
 
-            string const message =
-                TestOutputHelper::get().testName() + " Check State: " + address();
+            string const message = TestOutputHelper::get().testName() +
+                                   " Check State: Remote account '" + address() + "'";
             if (element.asString() == "0x")
             {
                 // check that empty element is not set
                 checkMessage(!_storage.count(key), CompareResult::IncorrectStorage,
-                    message + " expected storage key: '" + element.getKey() +
+                    message + " has storage key '" + element.getKey() +
+                        "'. Test expected storage key: '" + element.getKey() +
                         "' to be set to zero");
             }
             else
             {
                 // check that expected element exist
                 checkMessage(_storage.count(key), CompareResult::IncorrectStorage,
-                    message + " expected storage key: '" + element.getKey() + "' to be set to: '" +
-                        element.asString() + "', but key '" + element.getKey() + "' does not exist!");
+                    message + " test expected storage key: '" + element.getKey() +
+                        "' to be set to: '" + element.asString() + "', but remote key '" +
+                        element.getKey() + "' does not exist!");
 
                 if (result != CompareResult::Success)
                     return result;
@@ -94,21 +96,21 @@ public:
                 // if expected element exist, check exact value in the storage
                 std::string valueInStorage = _storage.atKey(key).asString();
                 checkMessage(valueInStorage == element.asString(), CompareResult::IncorrectStorage,
-                    message + ": incorrect storage [" + key + "] = " + valueInStorage +
-                        ", expected [" + key + "] = " + element.asString());
+                    message + ": has incorrect storage [" + key + "] = " + valueInStorage +
+                        ", test expected [" + key + "] = " + element.asString());
             }
         }
         checkMessage(expectStorage.getSubObjects().size() >= _storage.getSubObjects().size(),
             CompareResult::IncorrectStorage,
-            TestOutputHelper::get().testName() + " " + address() +
-                " storage has more storage records then expected!");
+            TestOutputHelper::get().testName() + " Remote account '" + address() +
+                "' storage has more storage records then expected!");
 
         if (expectStorage.getSubObjects().size() < _storage.getSubObjects().size())
         {
             for (auto const& element : _storage.getSubObjects())
             {
-                string const message = "incorrect storage [" + element.getKey() +
-                                       "] = " + element.asString() + ", expected [" +
+                string const message = "incorrect remote storage [" + element.getKey() +
+                                       "] = " + element.asString() + ", test expected [" +
                                        element.getKey() + "] = 0";
                 ETH_MARK_ERROR(message);
             }

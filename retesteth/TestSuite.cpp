@@ -425,8 +425,11 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
             isCopySource = true;
         }
         else
+        {
+            string requireStr = " require: Filler.json/Filler.yml/Copier.json";
             ETH_FAIL_REQUIRE_MESSAGE(
-                false, "Incorrect file suffix in the filler folder! " + _testFileName.string());
+                false, "Incorrect file suffix in the filler folder! " + _testFileName.string() + requireStr);
+        }
     }
 
     ETH_LOG("Running " + testname + ": ", 3);
@@ -476,7 +479,7 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
             }
             catch (std::exception const& _ex)
             {
-                ETH_ERROR_MESSAGE("ERROR OCCURED FILLING TESTS: " + string(_ex.what()));
+                ETH_STDERROR_MESSAGE("ERROR OCCURED FILLING TESTS: " + string(_ex.what()));
                 RPCSession::sessionEnd(TestOutputHelper::getThreadID(), RPCSession::SessionStatus::HasFinished);
                 wasErrors = true;
             }

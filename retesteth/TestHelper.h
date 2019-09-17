@@ -48,6 +48,9 @@ std::string prepareVersionString();
 /// local lllc version string
 std::string prepareLLLCVersionString();
 
+/// check system command
+bool checkCmdExist(std::string const& _command);
+
 /// run system command
 std::string executeCmd(std::string const& _command);
 

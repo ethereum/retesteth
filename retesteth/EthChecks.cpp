@@ -7,6 +7,16 @@
 #include <thread>
 
 namespace test {
+void eth_warning_message(std::string const& _message)
+{
+    std::cout << "\x1b[33m" << _message << "\x1b[0m" << std::endl;
+}
+
+void eth_stdout_message(std::string const& _message)
+{
+    std::cout << _message << std::endl;
+}
+
 void eth_stderror_message(std::string const& _message)
 {
     std::cerr << "\x1b[31m" << _message << "\x1b[0m" << std::endl;
@@ -56,7 +66,7 @@ void eth_require(bool _flag)
 void eth_fail(std::string const& _message)
 {
     // thread that failing with this function might be being joined in a loop
-    TestOutputHelper::get().markError("!Critical!" + _message);
+    TestOutputHelper::get().markError(_message);
     if (!ExitHandler::receivedExitSignal())
         std::raise(SIGABRT);
     throw std::runtime_error(_message);

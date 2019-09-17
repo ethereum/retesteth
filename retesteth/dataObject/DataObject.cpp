@@ -234,6 +234,7 @@ void DataObject::removeKey(std::string const& _key)
             setOverwrite(true);
             m_subObjects.erase(it);
             setOverwrite(false);
+            break;
         }
     }
 

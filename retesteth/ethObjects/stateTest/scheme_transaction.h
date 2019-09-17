@@ -31,12 +31,20 @@ public:
                     {"to", {DataType::String}}, {"value", {DataType::String}}});
         }
 
-        m_data["version"] = "0x01";
         if (!m_data.atKey("to").asString().empty())
             m_data["to"] = scheme_account::makeHexAddress(m_data.atKey("to").asString());
-        // convert into rpc format
+
+        // convert into rpc format. RPC return transaction with this fields
+        // m_data["version"] = "0x01";
         m_data["gas"] = m_data["gasLimit"].asString();
         makeAllFieldsHex(m_data);
+    }
+
+    DataObject getDataForBCTest() const
+    {
+        DataObject newData = m_data;
+        newData.removeKey("gas");
+        return newData;
     }
 
     std::string getSignedRLP() const

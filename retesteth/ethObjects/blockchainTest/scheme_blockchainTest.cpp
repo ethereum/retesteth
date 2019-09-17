@@ -48,12 +48,21 @@ scheme_blockchainTestBase::scheme_blockchainTestBase(DataObject const& _test)
 scheme_blockchainTest::scheme_blockchainTest(DataObject const& _test)
   : scheme_blockchainTestBase(_test), m_checker(_test), m_post(_test.atKey("postState"))
 {
-    for (auto const& data : _test.atKey("blocks").getSubObjects())
+    // Validate blocks section at the filled blockchain test
+    for (auto const& blockSection : _test.atKey("blocks").getSubObjects())
     {
-        ETH_ERROR_REQUIRE_MESSAGE(data.count("rlp"), "Block element missing rlp field!");
-        ETH_ERROR_REQUIRE_MESSAGE(
-            data.atKey("rlp").type() == DataType::String, "Block rlp field must be string!");
-        m_blockRLPs.push_back(data.atKey("rlp").asString());
+        requireJsonFields(blockSection, "blockchainTest " + _test.getKey(),
+            {   {"blockHeader", {{DataType::Object}, jsonField::Required}},
+                {"rlp", {{DataType::String}, jsonField::Required}},
+                {"transactions", {{DataType::Array}, jsonField::Required}},
+                {"uncleHeaders", {{DataType::Array}, jsonField::Optional}},
+                {"blocknumber", {{DataType::String}, jsonField::Optional}},
+                {"chainname", {{DataType::String}, jsonField::Optional}}});
+
+        scheme_blockHeader(blockSection.atKey("blockHeader"));
+        m_blockRLPs.push_back(blockSection.atKey("rlp").asString());
+        for (auto const& trSection: blockSection.atKey("transactions").getSubObjects())
+            m_transactions.push_back(scheme_transaction(trSection));
     }
 }
 

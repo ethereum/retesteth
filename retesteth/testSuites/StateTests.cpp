@@ -120,7 +120,12 @@ DataObject FillTestAsBlockchain(DataObject const& _testFile)
                     DataObject aBlockchainTest;
                     if (test.getData().count("_info"))
                         aBlockchainTest["_info"] = test.getData().atKey("_info");
-                    aBlockchainTest["genesisBlockHeader"] = test.getEnv().getDataForRPC();
+
+                    test::scheme_block latestBlock = session.eth_getBlockByNumber("0", false);
+                    aBlockchainTest["genesisBlockHeader"] = latestBlock.getBlockHeader();
+                    aBlockchainTest["genesisBlockHeader"].removeKey("transactions");
+                    aBlockchainTest["genesisBlockHeader"].removeKey("uncles");
+
                     aBlockchainTest["pre"] = test.getPre().getData();
                     aBlockchainTest["postState"] = remoteState.getData();
                     aBlockchainTest["network"] = net;
@@ -133,6 +138,7 @@ DataObject FillTestAsBlockchain(DataObject const& _testFile)
                     DataObject block;
                     block["rlp"] = remoteBlock.getBlockRLP();
                     block["blockHeader"] = remoteBlock.getBlockHeader();
+                    block["transactions"].addArrayObject(tr.transaction.getDataForBCTest());
                     aBlockchainTest["blocks"].addArrayObject(block);
 
                     string dataPostfix = "_d" + toString(tr.dataInd) + "g" + toString(tr.gasInd) +
@@ -210,7 +216,11 @@ DataObject FillTest(DataObject const& _testFile)
                         compareStates(expect.getExpectState(), remoteState);
                     }
                     else
+                    {
+                        if (Options::get().poststate)
+                            ETH_STDOUT_MESSAGE("PostState " + TestOutputHelper::get().testInfo() +  " : \n" + blockInfo.getStateHash());
                         compareStates(expect.getExpectState(), session, blockInfo);
+                    }
 
                     DataObject indexes;
                     DataObject transactionResults;
@@ -298,7 +308,8 @@ void RunTest(DataObject const& _testFile)
                     scheme_block remoteBlockInfo =
                         session.eth_getBlockByNumber(latestBlockNumber, false);
                     ETH_ERROR_REQUIRE_MESSAGE(remoteBlockInfo.getTransactionCount() == 1,
-                         "State test transaction must be valid! " + TestOutputHelper::get().testInfo());
+                        "Error execution transaction on remote client! State test transaction must "
+                        "be valid! " + TestOutputHelper::get().testInfo());
                     validatePostHash(session, postHash, remoteBlockInfo);
 
                     // Validate log hash
@@ -314,8 +325,7 @@ void RunTest(DataObject const& _testFile)
                     if (Options::get().logVerbosity >= 5)
                         ETH_LOG("Executed: d: " + to_string(tr.dataInd) +
                                     ", g: " + to_string(tr.gasInd) +
-                                    ", v: " + to_string(tr.valueInd) + ", fork: " + network,
-                            5);
+                                    ", v: " + to_string(tr.valueInd) + ", fork: " + network, 5);
                 }
             } //ForTransactions
             ETH_ERROR_REQUIRE_MESSAGE(resultHaveCorrespondingTransaction,

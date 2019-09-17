@@ -67,20 +67,22 @@ vector<fs::path> getFiles(
 
 boost::filesystem::path getTestPath()
 {
-	if (!Options::get().testpath.empty())
-		return Options::get().testpath;
+    if (!Options::get().testpath.empty())
+        return Options::get().testpath;
 
-	string testPath;
-	const char* ptestPath = getenv("ETHEREUM_TEST_PATH");
-	if (ptestPath == nullptr)
+    static boost::filesystem::path testPath;
+    if (!testPath.empty())
+        return testPath;
+
+    const char* ptestPath = getenv("ETHEREUM_TEST_PATH");
+    if (ptestPath == nullptr)
     {
-        ETH_TEST_MESSAGE("could not find environment variable ETHEREUM_TEST_PATH");
-        testPath = "../../test/jsontests";
-	}
-	else
-		testPath = ptestPath;
-
-	return boost::filesystem::path(testPath);
+        ETH_WARNING("WARNING: Could not find environment variable `ETHEREUM_TEST_PATH`");
+        ETH_STDERROR_MESSAGE("Use the --testpath <path> option to set the test path!");
+        throw EthError() << "Error getting the test path!";
+    }
+    testPath = boost::filesystem::path(ptestPath);
+    return testPath;
 }
 
 void copyFile(fs::path const& _source, fs::path const& _destination)
@@ -273,11 +275,24 @@ string prepareVersionString()
 
 string prepareLLLCVersionString()
 {
-    string result = test::executeCmd("lllc --version");
-    string::size_type pos = result.rfind("Version");
-    if (pos != string::npos)
-        return result.substr(pos, result.length());
-    return "Error getting LLLC Version";
+    if (test::checkCmdExist("lllc"))
+    {
+        string result = test::executeCmd("lllc --version");
+        string::size_type pos = result.rfind("Version");
+        if (pos != string::npos)
+            return result.substr(pos, result.length());
+    }
+    string const res = "Error getting LLLC Version";
+    ETH_WARNING("WARNING: " + res);
+    return res;
+}
+
+bool checkCmdExist(std::string const& _command)
+{
+    string checkCmd = string("which " + _command + " > /dev/null 2>&1");
+    if (system(checkCmd.c_str()))
+        return false;
+    return true;
 }
 
 string executeCmd(string const& _command)
@@ -290,9 +305,9 @@ string executeCmd(string const& _command)
     char output[1024];
     FILE* fp = popen(_command.c_str(), "r");
     if (fp == NULL)
-        BOOST_ERROR("Failed to run " + _command);
+        ETH_FAIL_MESSAGE("Failed to run " + _command);
     if (fgets(output, sizeof(output) - 1, fp) == NULL)
-        BOOST_ERROR("Reading empty result for " + _command);
+        ETH_WARNING("WARNING: Reading empty result for " + _command);
     else
     {
         while (true)
@@ -305,7 +320,8 @@ string executeCmd(string const& _command)
 
     int exitCode = pclose(fp);
     if (exitCode != 0)
-        BOOST_ERROR("The command '" + _command + "' exited with " + toString(exitCode) + " code.");
+        ETH_FAIL_MESSAGE(
+            "The command '" + _command + "' exited with " + toString(exitCode) + " code.");
     return boost::trim_copy(out);
 #endif
 }

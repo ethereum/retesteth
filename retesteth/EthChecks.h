@@ -2,6 +2,8 @@
 #include <retesteth/TestOutputHelper.h>
 #include <string>
 namespace  test {
+void eth_warning_message(std::string const& _message);
+void eth_stdout_message(std::string const& _message);
 void eth_stderror_message(std::string const& _message);
 void eth_log_message(std::string const& _message, unsigned _verbosity);
 void eth_require(bool _flag);
@@ -13,6 +15,9 @@ void eth_mark_error(bool _flag, std::string const& _message);
 void eth_mark_error(std::string const& _message);
 
 // Prints output to stderr/cout (depending on --verbosity option)
+#define ETH_WARNING(message) test::eth_warning_message(message)
+
+#define ETH_STDOUT_MESSAGE(message) test::eth_stdout_message(message)
 #define ETH_STDERROR_MESSAGE(message) test::eth_stderror_message(message)
 #define ETH_TEST_MESSAGE(message) test::eth_log_message(message, 6)
 #define ETH_LOG(message, verbosity) test::eth_log_message(message, verbosity)

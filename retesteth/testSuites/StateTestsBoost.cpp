@@ -30,7 +30,7 @@ void runStateTests(test::TestSuite const& _suite)
 TestSuite::TestPath StateTestSuite::suiteFolder() const
 {
     if (Options::get().fillchain)
-        return TestSuite::TestPath(fs::path("BlockchainTests") / "GeneralStateTestsRetesteth");
+        return TestSuite::TestPath(fs::path("BlockchainTests") / "GeneralStateTests");
     return TestSuite::TestPath(fs::path("GeneralStateTests"));
 }
 
@@ -145,4 +145,7 @@ BOOST_AUTO_TEST_CASE(stBadOpcode) {}
 BOOST_AUTO_TEST_CASE(stArgsZeroOneBalance) {}
 BOOST_AUTO_TEST_CASE(stEWASMTests) {}
 BOOST_AUTO_TEST_CASE(stTimeConsuming) {}
+BOOST_AUTO_TEST_CASE(stSLoadTest) {}
+BOOST_AUTO_TEST_CASE(stChainId) {}
+BOOST_AUTO_TEST_CASE(stSelfBalance) {}
 BOOST_AUTO_TEST_SUITE_END()
