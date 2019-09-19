@@ -44,10 +44,19 @@ public:
     {
         DataObject newData = m_data;
         newData.removeKey("gas");
+        if (newData.count("secretKey"))
+        {
+            SignatureStruct sig;
+            getSignedRLP(&sig);
+            newData.removeKey("secretKey");
+            newData["v"] = toCompactHexPrefixed(27 + int(sig.v));
+            newData["r"] = toHexPrefixed(sig.r);
+            newData["s"] = toHexPrefixed(sig.s);
+        }
         return newData;
     }
 
-    std::string getSignedRLP() const
+    std::string getSignedRLP(SignatureStruct* _returnSig = 0) const
     {
         u256 nonce = u256(m_data.atKey("nonce").asString());
         u256 gasPrice = u256(m_data.atKey("gasPrice").asString());
@@ -84,6 +93,13 @@ public:
                 h256(m_data.atKey("s").asString()), vValue.convert_to<byte>());
         }
 
+        if (_returnSig != 0)
+        {
+            _returnSig->v = sigStruct.v;
+            _returnSig->r = sigStruct.r;
+            _returnSig->s = sigStruct.s;
+        }
+
         RLPStream sWithSignature;
         sWithSignature.appendList(9);
         sWithSignature << nonce;
@@ -101,7 +117,7 @@ public:
         sWithSignature << (u256)sigStruct.s;
         return dev::toHexPrefixed(sWithSignature.out());
     }
-    };
+};
 
     class scheme_generalTransaction: public object
     {
