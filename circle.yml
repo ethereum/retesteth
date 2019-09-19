@@ -67,16 +67,41 @@ defaults:
         $GCOV --version
         codecov --required --gcov-exec "$GCOV" --gcov-root ~/build
 
-  install-deps: &install-deps
+  install-deps: &install-deps-mac
     run:
       name: "Install solidity"
       command: |
-        sudo apt-get install libboost-all-dev
+        brew update
+        brew install wget
+        wget -O boost_1_67_0.tar.gz https://sourceforge.net/projects/boost/files/boost/1.67.0/boost_1_67_0.tar.gz/download
+        tar xzvf boost_1_67_0.tar.gz
+        cd boost_1_67_0
+        ./bootstrap.sh
+        sudo ./b2 install
+        cd ..
         git clone https://github.com/ethereum/solidity.git
         cd solidity
         mkdir build
         cd build
         cmake .. -DLLL=1 -DUSE_Z3=0
+        sudo make install lllc -j $BUILD_PARALLEL_JOBS
+  install-deps: &install-deps
+    run:
+      name: "Install solidity"
+      command: |
+        sudo apt-get update
+        sudo apt-get -y install wget python-dev g++-8 gcc-8
+        wget -O boost_1_67_0.tar.gz https://sourceforge.net/projects/boost/files/boost/1.67.0/boost_1_67_0.tar.gz/download
+        tar xzvf boost_1_67_0.tar.gz
+        cd boost_1_67_0
+        ./bootstrap.sh
+        sudo ./b2 install
+        cd ..
+        git clone https://github.com/ethereum/solidity.git
+        cd solidity
+        mkdir build
+        cd build
+        cmake .. -DLLL=1 -DUSE_Z3=0 -DTESTS=0
         sudo make install lllc -j $BUILD_PARALLEL_JOBS
         
   linux-steps: &linux-steps
@@ -142,7 +167,7 @@ jobs:
             pip3 install -q requests gitpython
       - *configureMac
 #      - *upload-hunter-cache
-      - *install-deps
+      - *install-deps-mac
       - *build
       - *store-retesteth
       - *test
