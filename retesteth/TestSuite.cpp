@@ -395,6 +395,19 @@ void TestSuite::runFunctionForAllClients(std::function<void()> _func)
     }
 }
 
+std::mutex g_testPathMutex;
+TestSuite::TestSuite()
+{
+    std::lock_guard<std::mutex> lock(g_testPathMutex);
+    static bool runningTestsMessage = true;
+    if (runningTestsMessage)
+    {
+        boost::filesystem::path const testPath = test::getTestPath();
+        ETH_STDOUT_MESSAGE(string("Running tests using path: ") + testPath.c_str());
+        runningTestsMessage = false;
+    }
+}
+
 TestSuite::AbsoluteFillerPath TestSuite::getFullPathFiller(string const& _testFolder) const
 {
     return TestSuite::AbsoluteFillerPath(
