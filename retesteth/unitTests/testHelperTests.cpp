@@ -31,6 +31,12 @@ static vector<string> exampleNets = {"Frontier", "Homestead", "EIP150", "EIP158"
 
 BOOST_FIXTURE_TEST_SUITE(TestHelperSuite, TestOutputHelperFixture)
 
+BOOST_AUTO_TEST_CASE(lllcVersionString)
+{
+    string version = prepareLLLCVersionString();
+    ETH_FAIL_REQUIRE_MESSAGE(version.find("Error") == string::npos, "Test lllcVersionString failed with warning: " + version);
+}
+
 BOOST_AUTO_TEST_CASE(translateNetworks_gtHomestead)
 {
     set<string> networks = {"Frontier", ">Homestead"};
