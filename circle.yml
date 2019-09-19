@@ -50,6 +50,7 @@ defaults:
         ./retesteth -t TestHelperSuite
         ./retesteth -t EthObjectsSuite
         ./retesteth -t DataObjectTestSuite
+        ./retesteth -t LLLCSuite
 #        git clone --depth 1 https://github.com/ethereum/tests.git
 #        export ETHEREUM_TEST_PATH=~/build/testeth/tests
 #        ctest --output-on-failure -j $TEST_PARALLEL_JOBS
@@ -90,7 +91,7 @@ defaults:
       name: "Install solidity"
       command: |
         sudo apt-get update
-        sudo apt-get -y install wget python-dev g++-8 gcc-8
+        sudo apt-get -y install wget python-dev
         wget -O boost_1_67_0.tar.gz https://sourceforge.net/projects/boost/files/boost/1.67.0/boost_1_67_0.tar.gz/download
         tar xzvf boost_1_67_0.tar.gz
         cd boost_1_67_0
