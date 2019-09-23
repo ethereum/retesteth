@@ -182,6 +182,7 @@ namespace
             header = curl_slist_append(header, "Transfer-Encoding: chunked");
 
             curl_easy_setopt(curl, CURLOPT_HTTPHEADER, header);
+            curl_easy_setopt(curl, CURLOPT_TIMEOUT, 100L);
             res = curl_easy_perform(curl);
             if(res != CURLE_OK)
                 ETH_FAIL_MESSAGE("curl_easy_perform() failed " + string(curl_easy_strerror(res)));
