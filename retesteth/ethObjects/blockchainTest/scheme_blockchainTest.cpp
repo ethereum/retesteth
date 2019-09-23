@@ -14,7 +14,8 @@ scheme_blockchainTestBase::fieldChecker::fieldChecker(DataObject const& _test)
             {"network", {{DataType::String}, jsonField::Optional}},
             {"hash", {{DataType::String}, jsonField::Optional}},
             {"gasUsed", {{DataType::String}, jsonField::Optional}},
-            {"postState", {{DataType::Object, DataType::String}, jsonField::Optional}},
+            {"postState", {{DataType::Object}, jsonField::Optional}},
+            {"postStateHash", {{DataType::String}, jsonField::Optional}},
             {"pre", {{DataType::Object}, jsonField::Required}},
             {"sealEngine", {{DataType::String}, jsonField::Optional}}});
 }
@@ -28,7 +29,8 @@ scheme_blockchainTest::fieldChecker::fieldChecker(DataObject const& _test)
             {"genesisRLP", {{DataType::String}, jsonField::Optional}},
             {"lastblockhash", {{DataType::String}, jsonField::Required}},
             {"network", {{DataType::String}, jsonField::Required}},
-            {"postState", {{DataType::Object, DataType::String}, jsonField::Required}},
+            {"postState", {{DataType::Object}, jsonField::Optional}},
+            {"postStateHash", {{DataType::String}, jsonField::Optional}},
             {"pre", {{DataType::Object}, jsonField::Required}},
             {"sealEngine", {{DataType::String}, jsonField::Optional}}});
 }
@@ -46,7 +48,8 @@ scheme_blockchainTestBase::scheme_blockchainTestBase(DataObject const& _test)
 }
 
 scheme_blockchainTest::scheme_blockchainTest(DataObject const& _test)
-  : scheme_blockchainTestBase(_test), m_checker(_test), m_post(_test.atKey("postState"))
+  : scheme_blockchainTestBase(_test), m_checker(_test),
+    m_post(_test.count("postState") ? _test.atKey("postState") : _test.atKey("postStateHash"))
 {
     // Validate blocks section at the filled blockchain test
     for (auto const& blockSection : _test.atKey("blocks").getSubObjects())
@@ -64,6 +67,7 @@ scheme_blockchainTest::scheme_blockchainTest(DataObject const& _test)
         for (auto const& trSection: blockSection.atKey("transactions").getSubObjects())
             m_transactions.push_back(scheme_transaction(trSection));
     }
+    makeAllFieldsHex(m_data);
 }
 
 DataObject scheme_blockchainTestBase::getGenesisForRPC(string const& _network) const

@@ -12,7 +12,7 @@ void FillTest(scheme_blockchainTestFiller const& _testObject, string const& _net
     // construct filled blockchain test
     _testOut["sealEngine"] = _testObject.getSealEngine();
     _testOut["network"] = _network;
-    _testOut["pre"] = _testObject.getData().atKey("pre");
+    _testOut["pre"] = _testObject.getPre().getData();
     if (_testObject.getData().count("_info"))
         _testOut["_info"] = _testObject.getData().atKey("_info");
 
@@ -61,7 +61,10 @@ void FillTest(scheme_blockchainTestFiller const& _testObject, string const& _net
         compareStates(_testObject.getExpectSection().getExpectSectionFor(_network).getExpectState(),
             remoteState);
 
-    _testOut["postState"] = remoteState.getData();
+    if (remoteState.isHash())
+        _testOut["postStateHash"] = remoteState.getData();
+    else
+        _testOut["postState"] = remoteState.getData();
     _testOut["lastblockhash"] = latestBlock.getBlockHash();
 }
 

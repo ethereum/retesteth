@@ -127,7 +127,10 @@ DataObject FillTestAsBlockchain(DataObject const& _testFile)
                     aBlockchainTest["genesisBlockHeader"].removeKey("uncles");
 
                     aBlockchainTest["pre"] = test.getPre().getData();
-                    aBlockchainTest["postState"] = remoteState.getData();
+                    if (remoteState.isHash())
+                        aBlockchainTest["postStateHash"] = remoteState.getData();
+                    else
+                        aBlockchainTest["postState"] = remoteState.getData();
                     aBlockchainTest["network"] = net;
                     aBlockchainTest["sealEngine"] = sEngine;
                     aBlockchainTest["lastblockhash"] = remoteBlock.getBlockHash();
