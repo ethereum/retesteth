@@ -159,8 +159,8 @@ void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
                 "sourceHash not found in " + _compiledTest.string() + " in " + i.getKey());
             h256 const sourceHash = h256(info.atKey("sourceHash").asString());
             ETH_ERROR_REQUIRE_MESSAGE(sourceHash == fillerData.hash,
-                "Test " + _compiledTest.string() + " in " + i.getKey() +
-                    " is outdated. Filler hash is different! ( '" + sourceHash.hex().substr(0, 4) +
+                "Test " + _compiledTest.string() +
+                    " is outdated. Filler hash is different! ('" + sourceHash.hex().substr(0, 4) +
                     "' != '" + fillerData.hash.hex().substr(0, 4) + "') ");
         }
         catch (test::BaseEthException const&)
@@ -390,8 +390,10 @@ void TestSuite::runFunctionForAllClients(std::function<void()> _func)
         std::cout << "Running tests for config '" << config.getName() << "' " << config.getId().id()
                   << std::endl;
         _func();
-        // leave current connections open for the next tests (if commented)
-        // RPCSession::clear();
+
+        // Disconnect threads from the client
+        if (Options::getDynamicOptions().getClientConfigs().size() > 1)
+            RPCSession::clear();
     }
 }
 
