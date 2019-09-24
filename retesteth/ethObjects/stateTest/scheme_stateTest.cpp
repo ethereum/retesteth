@@ -37,20 +37,11 @@ void scheme_stateTestBase::checkUnexecutedTransactions()
         if (tr.executed)
             atLeastOneExecuted = true;
         bool transactionExecutedOrSkipped = tr.executed == true || tr.skipped == true;
-        atLeastOneWithoutExpectSection =
-            !transactionExecutedOrSkipped || atLeastOneWithoutExpectSection;
-        if (!transactionExecutedOrSkipped)
-        {
-            string actualTrInfo = " (Errored TR: d: " + to_string(tr.dataInd) +
-                                  ", g: " + to_string(tr.gasInd) + ", v: " + to_string(tr.valueInd);
-            ETH_MARK_ERROR(
-                "A transaction was specified, but there is no execution results in a test! " +
-                TestOutputHelper::get().testInfo() + actualTrInfo);
-        }
+        atLeastOneWithoutExpectSection = !transactionExecutedOrSkipped || atLeastOneWithoutExpectSection;
+        if (!transactionExecutedOrSkipped || atLeastOneWithoutExpectSection)
+            ETH_MARK_ERROR("Test has transaction uncovered with expect section!");
     }
-    ETH_ERROR_REQUIRE_MESSAGE(atLeastOneExecuted, "Specified filter did not run a single transaction! " + TestOutputHelper::get().testInfo());
-    ETH_ERROR_REQUIRE_MESSAGE(
-        !atLeastOneWithoutExpectSection, "Test has transaction uncovered with expect sections! ");
+    ETH_ERROR_REQUIRE_MESSAGE(atLeastOneExecuted, "Specified filter did not run a single transaction! ");
 }
 
 scheme_stateTest::scheme_stateTest(DataObject const& _test)

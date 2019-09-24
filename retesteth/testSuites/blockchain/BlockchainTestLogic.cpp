@@ -31,9 +31,8 @@ void FillTest(scheme_blockchainTestFiller const& _testObject, string const& _net
     for (auto const& block : _testObject.getBlocks())
     {
         session.test_modifyTimestamp(1000);  // Shift block timestamp relative to previous block
-        TestOutputHelper::get().setCurrentTestInfo("Network: " + _network +
-                                                   ", BlockNumber: " + toString(number++) +
-                                                   ", Test: " + TestOutputHelper::get().testName());
+        TestInfo errorInfo (_network, number++);
+        TestOutputHelper::get().setCurrentTestInfo(errorInfo);
 
         DataObject blockSection;
         for (auto const& tr : block.getTransactions())
@@ -47,7 +46,7 @@ void FillTest(scheme_blockchainTestFiller const& _testObject, string const& _net
         latestBlock = session.eth_getBlockByNumber(latestBlockNumber, true);
         ETH_ERROR_REQUIRE_MESSAGE(
             latestBlock.getTransactionCount() == block.getTransactions().size(),
-            "BlockchainTest transaction execution failed! " + TestOutputHelper::get().testInfo());
+            "BlockchainTest transaction execution failed! ");
         blockSection["rlp"] = latestBlock.getBlockRLP();
         blockSection["blockHeader"] = latestBlock.getBlockHeader();
         _testOut["blocks"].addArrayObject(blockSection);
@@ -73,8 +72,8 @@ void RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _
 {
     scheme_blockchainTest inputTest(_testObject);
     RPCSession& session = RPCSession::instance(TestOutputHelper::getThreadID());
-    string testInfo = TestOutputHelper::get().testName() + ", fork: " + inputTest.getNetwork();
-    TestOutputHelper::get().setCurrentTestInfo(testInfo);
+    TestInfo errorInfo (inputTest.getNetwork(), 0);
+    TestOutputHelper::get().setCurrentTestInfo(errorInfo);
 
     session.test_setChainParams(inputTest.getGenesisForRPC(inputTest.getNetwork()).asJson());
 

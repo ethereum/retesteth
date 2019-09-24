@@ -20,8 +20,7 @@ namespace test {
 
             ETH_ERROR_REQUIRE_MESSAGE(dev::u256(_env.atKey("currentGasLimit").asString()) <=
                                           dev::u256("0x7fffffffffffffff"),
-                "Env section gasLimit is beyound the limits! " +
-                    TestOutputHelper::get().testInfo());
+                "Env section gasLimit is beyound the limits! ");
             makeAllFieldsHex(m_data);
         }
 

@@ -13,8 +13,7 @@ void validatePostHash(
     {
         if (Options::get().logVerbosity >= 5)
             ETH_LOG("\nState Dump: \n" + getRemoteState(_session, _latestInfo).getData().asJson(), 5);
-        ETH_ERROR_MESSAGE("Error at " + TestOutputHelper::get().testInfo() +
-                          ", post hash mismatch remote: " + actualHash + ", expected: " + _postHash);
+        ETH_ERROR_MESSAGE("Post hash mismatch remote: " + actualHash + ", expected: " + _postHash);
     }
 }
 
@@ -143,7 +142,7 @@ scheme_state getRemoteState(RPCSession& _session, scheme_block const& _latestInf
     }
 
     if (Options::get().poststate)
-        ETH_STDOUT_MESSAGE("PostState " + TestOutputHelper::get().testInfo() +  " : \n"
+        ETH_STDOUT_MESSAGE("PostState " + TestOutputHelper::get().testInfo().getMessage() +  " : \n"
                            + accountsObj.asJson());
 
     return scheme_state(accountsObj);

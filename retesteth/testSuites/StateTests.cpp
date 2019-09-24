@@ -74,6 +74,9 @@ DataObject FillTestAsBlockchain(DataObject const& _testFile)
             {
                 for (auto& tr : test.getTransactionsUnsafe())
                 {
+                    TestInfo errorInfo (net, tr.dataInd, tr.gasInd, tr.valueInd);
+                    TestOutputHelper::get().setCurrentTestInfo(errorInfo);
+
                     if (!OptionsAllowTransaction(tr))
                     {
                         tr.skipped = true;
@@ -83,11 +86,6 @@ DataObject FillTestAsBlockchain(DataObject const& _testFile)
                     // if expect section is for this transaction
                     if (!expect.checkIndexes(tr.dataInd, tr.gasInd, tr.valueInd))
                         continue;
-
-                    TestOutputHelper::get().setCurrentTestInfo(
-                        "Network: " + net + ", TrInfo: d: " + toString(tr.dataInd) +
-                        ", g: " + toString(tr.gasInd) + ", v: " + toString(tr.valueInd) +
-                        ", Test: " + TestOutputHelper::get().testName());
 
                     // State Tests does not have mining rewards
                     scheme_expectSectionElement mexpect = expect;
@@ -103,8 +101,7 @@ DataObject FillTestAsBlockchain(DataObject const& _testFile)
                     if (!session.getLastRPCError().empty())
                         ETH_ERROR_MESSAGE(session.getLastRPCError());
                     if (!isHash<h256>(trHash))
-                        ETH_ERROR_MESSAGE("eth_sendRawTransaction return invalid hash: '" + trHash +
-                                          "' " + TestOutputHelper::get().testInfo());
+                        ETH_ERROR_MESSAGE("eth_sendRawTransaction return invalid hash: '" + trHash);
 
                     string latestBlockNumber = session.test_mineBlocks(1);
                     tr.executed = true;
@@ -149,8 +146,7 @@ DataObject FillTestAsBlockchain(DataObject const& _testFile)
                     dataPostfix += "_" + net;
 
                     if (filledTest.count(_testFile.getKey() + dataPostfix))
-                        ETH_ERROR_MESSAGE("The test filler contain redundunt expect section: " +
-                                          TestOutputHelper::get().testInfo());
+                        ETH_ERROR_MESSAGE("The test filler contain redundunt expect section: ");
 
                     filledTest[_testFile.getKey() + dataPostfix] = aBlockchainTest;
                     session.test_rewindToBlock(0);
@@ -191,6 +187,9 @@ DataObject FillTest(DataObject const& _testFile)
             {
                 for (auto& tr : test.getTransactionsUnsafe())
                 {
+                    TestInfo errorInfo (net, tr.dataInd, tr.gasInd, tr.valueInd);
+                    TestOutputHelper::get().setCurrentTestInfo(errorInfo);
+
                     if (!OptionsAllowTransaction(tr))
                     {
                         tr.skipped = true;
@@ -200,11 +199,6 @@ DataObject FillTest(DataObject const& _testFile)
                     // if expect section is not for this transaction
                     if (!expect.checkIndexes(tr.dataInd, tr.gasInd, tr.valueInd))
                         continue;
-
-                    TestOutputHelper::get().setCurrentTestInfo(
-                        "Network: " + net + ", TrInfo: d: " + toString(tr.dataInd) +
-                        ", g: " + toString(tr.gasInd) + ", v: " + toString(tr.valueInd) +
-                        ", Test: " + TestOutputHelper::get().testName());
 
                     u256 a(test.getEnv().getData().atKey("currentTimestamp").asString());
                     session.test_modifyTimestamp(a.convert_to<size_t>());
@@ -221,7 +215,7 @@ DataObject FillTest(DataObject const& _testFile)
                     else
                     {
                         if (Options::get().poststate)
-                            ETH_STDOUT_MESSAGE("PostState " + TestOutputHelper::get().testInfo() +  " : \n" + blockInfo.getStateHash());
+                            ETH_STDOUT_MESSAGE("PostState " + TestOutputHelper::get().testInfo().getMessage() +  " : \n" + blockInfo.getStateHash());
                         compareStates(expect.getExpectState(), session, blockInfo);
                     }
 
@@ -274,12 +268,11 @@ void RunTest(DataObject const& _testFile)
         for (auto const& result: post.second)
         {
             bool resultHaveCorrespondingTransaction = false;
-            string testInfo = TestOutputHelper::get().testName() + ", fork: " + network;
-            TestOutputHelper::get().setCurrentTestInfo(testInfo);
-
             // look for a transaction with this indexes and execute it on a client
             for (auto& tr: test.getTransactionsUnsafe())
             {
+                TestInfo errorInfo (network, tr.dataInd, tr.gasInd, tr.valueInd);
+                TestOutputHelper::get().setCurrentTestInfo(errorInfo);
                 bool checkIndexes = result.checkIndexes(tr.dataInd, tr.gasInd, tr.valueInd);
                 if (checkIndexes)
                     resultHaveCorrespondingTransaction = true;
@@ -292,14 +285,6 @@ void RunTest(DataObject const& _testFile)
 
                 if (checkIndexes)
                 {
-                    // VERY EXPENSIVE
-                    string testInfo = TestOutputHelper::get().testName() + ", fork: " + network +
-                                      ", TrInfo: d: " + to_string(tr.dataInd) +
-                                      ", g: " + to_string(tr.gasInd) +
-                                      ", v: " + to_string(tr.valueInd);
-                    TestOutputHelper::get().setCurrentTestInfo(testInfo);
-                    // VERY EXPENSIVE
-
                     u256 a(test.getEnv().getData().atKey("currentTimestamp").asString());
                     session.test_modifyTimestamp(a.convert_to<size_t>());
                     string trHash = session.eth_sendRawTransaction(tr.transaction.getSignedRLP());
@@ -311,19 +296,15 @@ void RunTest(DataObject const& _testFile)
                     scheme_block remoteBlockInfo =
                         session.eth_getBlockByNumber(latestBlockNumber, false);
                     ETH_ERROR_REQUIRE_MESSAGE(remoteBlockInfo.getTransactionCount() == 1,
-                        "Error execution transaction on remote client! State test transaction must "
-                        "be valid! " + TestOutputHelper::get().testInfo());
+                        "Failed to execute transaction on remote client! State test transaction must be valid!");
                     validatePostHash(session, postHash, remoteBlockInfo);
 
                     // Validate log hash
                     string postLogHash = result.getData().atKey("logs").asString();
                     string remoteLogHash = session.test_getLogHash(trHash);
                     if (!remoteLogHash.empty() && remoteLogHash != postLogHash)
-                    {
-                        ETH_ERROR_MESSAGE("Error at " + TestOutputHelper::get().testInfo() +
-                                          ", logs hash mismatch: '" + remoteLogHash + "'" +
-                                          ", expected: '" + postLogHash + "'");
-                    }
+                        ETH_ERROR_MESSAGE("Logs hash mismatch: '" + remoteLogHash + "', expected: '" + postLogHash + "'");
+
                     session.test_rewindToBlock(0);
                     if (Options::get().logVerbosity >= 5)
                         ETH_LOG("Executed: d: " + to_string(tr.dataInd) +
@@ -332,7 +313,7 @@ void RunTest(DataObject const& _testFile)
                 }
             } //ForTransactions
             ETH_ERROR_REQUIRE_MESSAGE(resultHaveCorrespondingTransaction,
-                         "State test has expect section without transaction! " + TestOutputHelper::get().testInfo() + result.getData().asJson());
+                         "Test `post` section has expect section without corresponding transaction! " + result.getData().asJson());
         }
     }
 

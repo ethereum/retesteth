@@ -294,8 +294,7 @@ string RPCSession::eth_sendRawTransaction(std::string const& _rlp)
     if (!lastError.empty())
         ETH_ERROR_MESSAGE(lastError);
     if (!isHash<h256>(result.asString()))
-        ETH_ERROR_MESSAGE("eth_sendRawTransaction return invalid hash: '" + result.asString() +
-                          "' " + TestOutputHelper::get().testInfo());
+        ETH_ERROR_MESSAGE("eth_sendRawTransaction return invalid hash: '" + result.asString() + "'");
     if (result.type() == DataType::Null)  // if the method failed
         return "";
     return result.asString();
@@ -458,7 +457,7 @@ DataObject RPCSession::rpcCall(
     if (result.count("error"))
     {
         test::TestOutputHelper const& helper = test::TestOutputHelper::get();
-        m_lastRPCErrorString = "Error on JSON-RPC call (" + helper.testInfo() +
+        m_lastRPCErrorString = "Error on JSON-RPC call (" + helper.testInfo().getMessage() +
                                "): " + result["error"]["message"].asString() +
                                " Request: " + request;
         if (_canFail)

@@ -44,7 +44,7 @@ CompareResult compareAccounts(
         checkMessage(_expectAccount.getData().atKey("balance").asString() ==
                          _inState.getData().atKey("balance").asString(),
             CompareResult::IncorrectBalance,
-            TestOutputHelper::get().testName() + " Check State: Remote account '" +
+            "Check State: Remote account '" +
                 _expectAccount.address() + "': has incorrect balance " + toString(inStateB) +
                 ", test expected " +
                 toString(u256(_expectAccount.getData().atKey("balance").asString())) + " (" +
@@ -56,7 +56,7 @@ CompareResult compareAccounts(
         checkMessage(_expectAccount.getData().atKey("nonce").asString() ==
                          _inState.getData().atKey("nonce").asString(),
             CompareResult::IncorrectNonce,
-            TestOutputHelper::get().testName() + " Check State: Remote account '" +
+            "Check State: Remote account '" +
                 _expectAccount.address() + "': has incorrect nonce " +
                 _inState.getData().atKey("nonce").asString() + ", test expected " +
                 _expectAccount.getData().atKey("nonce").asString());
@@ -73,7 +73,7 @@ CompareResult compareAccounts(
         checkMessage(_expectAccount.getData().atKey("code").asString() ==
                          _inState.getData().atKey("code").asString(),
             CompareResult::IncorrectCode,
-            TestOutputHelper::get().testName() + " Check State: Remote account '" +
+            "Check State: Remote account '" +
                 _expectAccount.address() + "': has incorrect code '" +
                 _inState.getData().atKey("code").asString() + "', test expected '" +
                 _expectAccount.getData().atKey("code").asString() + "'");
@@ -140,7 +140,7 @@ void compareStates(
             result = accountCompareResult;
     }
     if (result != CompareResult::Success)
-        ETH_ERROR_MESSAGE("CompareStates failed with errors: " + CompareResultToString(result) + " " + TestOutputHelper::get().testInfo());
+        ETH_ERROR_MESSAGE("CompareStates failed with errors: " + CompareResultToString(result));
 }
 
 void compareStates(scheme_expectState const& _stateExpect, scheme_state const& _statePost)
@@ -164,7 +164,7 @@ void compareStates(scheme_expectState const& _stateExpect, scheme_state const& _
             result = accountCompareResult;
     }
     if (result != CompareResult::Success)
-        ETH_ERROR_MESSAGE("CompareStates failed with errors: " + CompareResultToString(result) + " " + TestOutputHelper::get().testInfo());
+        ETH_ERROR_MESSAGE("CompareStates failed with errors: " + CompareResultToString(result));
 }
 
 string CompareResultToString(CompareResult res)

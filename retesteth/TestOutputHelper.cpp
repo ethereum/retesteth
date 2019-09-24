@@ -71,7 +71,6 @@ void TestOutputHelper::initTest(size_t _maxTests)
 {
     //_maxTests = 0 means this function is called from testing thread
     m_currentTestName = string();
-    m_currentTestInfo = string();
     m_currentTestFileName = string();
     m_timer = Timer();
     m_currentTestCaseName = boost::unit_test::framework::current_test_case().p_name;
@@ -279,4 +278,17 @@ void TestOutputHelper::markTestFolderAsFinished(
 {
     std::lock_guard<std::mutex> lock(g_finishedTestFoldersMapMutex);
     finishedTestFoldersMap[_suitePath].emplace(_folderName);
+}
+
+
+std::string TestInfo::getMessage() const
+{
+    if (m_sFork.empty())
+        return "";
+    string message = " (" + TestOutputHelper::get().caseName() + "/" + TestOutputHelper::get().testName() + ", fork: " + m_sFork;
+    if (m_isBlockchainTestInfo)
+        message += ", block: " + to_string(m_blockNumber);
+    if (m_isStateTransactionInfo)
+        message += ", TrInfo: d: " + to_string(m_trD) + ", g: " + to_string(m_trG) + ", v: " + to_string(m_trV);
+    return message + ")";
 }
