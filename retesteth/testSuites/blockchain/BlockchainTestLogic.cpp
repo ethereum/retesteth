@@ -81,8 +81,13 @@ void RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _
     for (auto const& brlp : inputTest.getBlockRlps())
     {
         session.test_importRawBlock(brlp);
-        if (!session.getLastRPCError().empty() && !_opt.allowInvalidBlocks)
-            ETH_ERROR_MESSAGE("Running blockchain test: " + session.getLastRPCError());
+        if (session.getLastRPCError().type() != DataType::Null)
+        {
+            if (!_opt.allowInvalidBlocks)
+                ETH_ERROR_MESSAGE("Running blockchain test: " + session.getLastRPCError().atKey("message").asString());
+            else
+                std::cerr << session.getLastRPCError().atKey("error").asString() << std::endl;
+        }
     }
 
     // wait for blocks to process

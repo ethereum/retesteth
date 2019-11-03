@@ -290,9 +290,9 @@ string RPCSession::eth_sendRawTransaction(std::string const& _rlp)
 {
     DataObject result = rpcCall("eth_sendRawTransaction", {quote(_rlp)}, true);
 
-    string lastError = getLastRPCError();
-    if (!lastError.empty())
-        ETH_ERROR_MESSAGE(lastError);
+    DataObject const& lastError = getLastRPCError();
+    if (lastError.type() != DataType::Null)
+        ETH_ERROR_MESSAGE(lastError.atKey("message").asString());
     if (!isHash<h256>(result.asString()))
         ETH_ERROR_MESSAGE("eth_sendRawTransaction return invalid hash: '" + result.asString() + "'");
     if (result.type() == DataType::Null)  // if the method failed
@@ -457,14 +457,15 @@ DataObject RPCSession::rpcCall(
     if (result.count("error"))
     {
         test::TestOutputHelper const& helper = test::TestOutputHelper::get();
-        m_lastRPCErrorString = "Error on JSON-RPC call (" + helper.testInfo().getMessage() +
-                               "): " + result["error"]["message"].asString() +
+        m_lastRPCError["message"] = "Error on JSON-RPC call (" + helper.testInfo().getMessage() +
+                                "): " + result["error"]["message"].asString() +
                                " Request: " + request;
+        m_lastRPCError["error"] = result["error"]["message"].asString();
         if (_canFail)
             return DataObject(DataType::Null);
-        ETH_FAIL_MESSAGE(m_lastRPCErrorString);
+        ETH_FAIL_MESSAGE(m_lastRPCError.atKey("message").asString());
     }
-    m_lastRPCErrorString = string();    //null the error as last RPC call was success.
+    m_lastRPCError.clear();    //null the error as last RPC call was success.
     return result["result"];
 }
 

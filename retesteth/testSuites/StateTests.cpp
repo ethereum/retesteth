@@ -98,8 +98,8 @@ DataObject FillTestAsBlockchain(DataObject const& _testFile)
                     string signedTransactionRLP = tr.transaction.getSignedRLP();
                     string trHash = session.eth_sendRawTransaction(signedTransactionRLP);
 
-                    if (!session.getLastRPCError().empty())
-                        ETH_ERROR_MESSAGE(session.getLastRPCError());
+                    if (session.getLastRPCError().type() != DataType::Null)
+                        ETH_ERROR_MESSAGE(session.getLastRPCError().atKey("message").asString());
                     if (!isHash<h256>(trHash))
                         ETH_ERROR_MESSAGE("eth_sendRawTransaction return invalid hash: '" + trHash);
 
