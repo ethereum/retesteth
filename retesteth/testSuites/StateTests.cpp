@@ -139,6 +139,8 @@ DataObject FillTestAsBlockchain(DataObject const& _testFile)
                     block["rlp"] = remoteBlock.getBlockRLP();
                     block["blockHeader"] = remoteBlock.getBlockHeader();
                     block["transactions"].addArrayObject(tr.transaction.getDataForBCTest());
+                    ETH_ERROR_REQUIRE_MESSAGE(remoteBlock.getTransactionCount() == 1,
+                        "Failed to execute transaction on remote client! State test transaction must be valid!");
                     aBlockchainTest["blocks"].addArrayObject(block);
 
                     string dataPostfix = "_d" + toString(tr.dataInd) + "g" + toString(tr.gasInd) +
