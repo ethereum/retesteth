@@ -46,11 +46,14 @@ public:
         requireJsonFields(_obj, "ClientConfig ",
             {{"name", {DataType::String}}, {"socketType", {DataType::String}},
                 {"socketAddress", {DataType::String, DataType::Array}},
-                {"forks", {DataType::Array}}},
-            true);
+                {"forks", {DataType::Array}},
+                {"additonalForks", {DataType::Array}},
+            }, true);
 
         for (auto const& name : m_data.atKey("forks").getSubObjects())
             m_networks.push_back(name.asString());
+        for (auto const& name : m_data.atKey("additonalForks").getSubObjects())
+            m_additional_networks.push_back(name.asString());
 
         std::string const& socketTypeStr = _obj.atKey("socketType").asString();
         if (socketTypeStr == "ipc")
@@ -102,6 +105,7 @@ public:
     DataObject const& getAddressObject() const { return m_data.atKey("socketAddress"); }
     ClientConfigID const& getId() const { return m_id; }
     std::vector<string> const& getNetworks() const { return m_networks; }
+    std::vector<string> const& getAdditionalNetworks() const { return m_additional_networks; }
     void addGenesisTemplate(string const& _network, fs::path const& _pathToJson) {
         string s = dev::contentsString(_pathToJson);
         m_genesisTemplate[_network] = dataobject::ConvertJsoncppStringToData(s);
@@ -120,6 +124,7 @@ private:
     fs::path m_configCorrectMiningRewardFilePath;        ///< Config correctMiningReward file path
     ClientConfigID m_id;              ///< Internal id
     std::vector<string> m_networks;   ///< Allowed forks as network name
+    std::vector<string> m_additional_networks;   ///< Allowed forks as network name
     std::map<string, DataObject> m_genesisTemplate; ///< Template For test_setChainParams
     DataObject m_correctReward;       ///< Correct mining reward info for StateTests->BlockchainTests
 };

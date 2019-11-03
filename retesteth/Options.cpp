@@ -443,13 +443,17 @@ std::vector<ClientConfig> const& Options::DynamicOptions::getClientConfigs()
             cfg.setMiningRewardInfo(dataobject::ConvertJsoncppStringToData(s));
             cfg.setCorrectMiningRewardFilePath(correctMiningRewardPath);
 
-            for (auto const& net : cfg.getNetworks())
-            {
-                fs::path configGenesisTemplatePath = genesisTemplatePath / (net + ".json");
+            auto registerGenesisTemplate = [&cfg, &genesisTemplatePath, &clientName](string const& _net) {
+                fs::path configGenesisTemplatePath = genesisTemplatePath / (_net + ".json");
                 ETH_FAIL_REQUIRE_MESSAGE(fs::exists(configGenesisTemplatePath),
-                    "template .json config for network '" + net + "' in " + clientName + " not found in tests/Retesteth configs!");
-                cfg.addGenesisTemplate(net, configGenesisTemplatePath);
-            }
+                    "template .json config for network '" + _net + "' in " + clientName + " not found in tests/Retesteth configs!");
+                cfg.addGenesisTemplate(_net, configGenesisTemplatePath);
+            };
+            for (auto const& net : cfg.getNetworks())
+                registerGenesisTemplate(net);
+            for (auto const& net : cfg.getAdditionalNetworks())
+                registerGenesisTemplate(net);
+
             //*/ Load genesis templates
 
             m_clientConfigs.push_back(cfg);
