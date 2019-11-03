@@ -36,7 +36,7 @@ public:
     {
         ClientConfig const& cfg = Options::getDynamicOptions().getCurrentConfig();
         ETH_ERROR_REQUIRE_MESSAGE(cfg.getMiningRewardInfo().count(_net), "Network '" + _net
-            + "' not found in correct mining info config! Client: " + cfg.getName());
+            + "' not found in correct mining info config (" + cfg.getConfigFilePath().string() + ") Client: " + cfg.getName());
         u256 balance (cfg.getMiningRewardInfo().atKey(_net).asString());
         if (getExpectState().hasBalance(_coinbaseAddress))
         {

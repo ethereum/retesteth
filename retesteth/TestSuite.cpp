@@ -525,7 +525,10 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
 void TestSuite::executeFile(boost::filesystem::path const& _file) const
 {
     TestSuiteOptions opt;
-    doTests(dataobject::ConvertJsoncppStringToData(dev::contentsString(_file)), opt);
+    std::string s = dev::contentsString(_file);
+    ETH_ERROR_REQUIRE_MESSAGE(
+        s.length() > 0, "Contents of " + _file.string() + " is empty. Have you filled the test?");
+    doTests(dataobject::ConvertJsoncppStringToData(s), opt);
 }
 
 }

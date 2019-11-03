@@ -441,6 +441,7 @@ std::vector<ClientConfig> const& Options::DynamicOptions::getClientConfigs()
             ETH_FAIL_REQUIRE_MESSAGE(fs::exists(correctMiningRewardPath), "correctMiningReward.json client config not found!");
             s = dev::contentsString(correctMiningRewardPath);
             cfg.setMiningRewardInfo(dataobject::ConvertJsoncppStringToData(s));
+            cfg.setCorrectMiningRewardFilePath(correctMiningRewardPath);
 
             for (auto const& net : cfg.getNetworks())
             {

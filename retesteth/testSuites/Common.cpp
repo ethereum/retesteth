@@ -20,7 +20,7 @@ void validatePostHash(
 void checkDataObject(DataObject const& _input)
 {
     ETH_ERROR_REQUIRE_MESSAGE(_input.type() == DataType::Object,
-        TestOutputHelper::get().get().testFile().string() + " A test file must contain an object.");
+        TestOutputHelper::get().get().testFile().string() + " A test file must contain an object value (json/yaml).");
 }
 
 void checkAtLeastOneTest(DataObject const& _input)
