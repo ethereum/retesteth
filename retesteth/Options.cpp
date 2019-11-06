@@ -202,8 +202,8 @@ Options::Options(int argc, const char** argv)
 				if (name2[0] == '-') // not param, another option
 				{
 					singleTestName = std::move(name1);
-					i--;
-				}
+                    i--;
+                }
 				else
 				{
 					singleTestFile = std::move(name1);
@@ -218,7 +218,14 @@ Options::Options(int argc, const char** argv)
             }
 			else
 				singleTestName = std::move(name1);
-		}
+
+            size_t pos = singleTestName.find_last_of('/');
+            if (pos != string::npos)
+            {
+                singleSubTestName = singleTestName.substr(pos + 1);
+                singleTestName = singleTestName.substr(0, pos);
+            }
+        }
         else if (arg == "--singlenet")
         {
             throwIfNoArgumentFollows();

@@ -70,6 +70,8 @@ void FillTest(scheme_blockchainTestFiller const& _testObject, string const& _net
 /// Read and execute the test from the file
 void RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _opt)
 {
+    if (Options::get().logVerbosity > 1)
+        std::cout << "Running " << TestOutputHelper::get().testName() << std::endl;
     scheme_blockchainTest inputTest(_testObject);
     RPCSession& session = RPCSession::instance(TestOutputHelper::getThreadID());
     TestInfo errorInfo (inputTest.getNetwork(), 0);
@@ -138,9 +140,19 @@ DataObject DoTests(DataObject const& _input, TestSuite::TestSuiteOptions& _opt)
         else
         {
             // Select test by name if --singletest and --singlenet is set
-            if (!Options::get().singleTestNet.empty() && Options::get().singleTest)
-                if (testname != Options::get().singleTestName + "_" + Options::get().singleTestNet)
+            if (Options::get().singleTest)
+            {
+                if (!Options::get().singleSubTestName.empty() &&
+                    testname != Options::get().singleSubTestName)
                     continue;
+            }
+
+            if (!Options::get().singleTestNet.empty())
+            {
+                if (i.count("network") &&
+                    i.atKey("network").asString() != Options::get().singleTestNet)
+                    continue;
+            }
 
             RunTest(i, _opt);
         }

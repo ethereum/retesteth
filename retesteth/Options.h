@@ -10,7 +10,7 @@
 using namespace dev;
 namespace test
 {
-
+class TestOptions;
 class Options
 {
 public:
@@ -58,8 +58,9 @@ public:
 	/// @{
 	bool singleTest = false;
 	boost::optional<std::string> singleTestFile;
-	std::string singleTestName;
-	std::string singleTestNet;
+    std::string singleTestName;     // A test name (usually a file.json test)
+    std::string singleSubTestName;  // A test name inside a file.json (for blockchain tests)
+    std::string singleTestNet;
     int trDataIndex;	///< GeneralState data
     int trGasIndex;		///< GeneralState gas
     int trValueIndex;	///< GeneralState value
@@ -76,6 +77,7 @@ private:
 	Options(int argc = 0, const char** argv = 0);
 	Options(Options const&) = delete;
     static DynamicOptions m_dynamicOptions;
+    friend class TestOptions;
 };
 
 } //namespace test
