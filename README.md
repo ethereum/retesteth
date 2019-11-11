@@ -2,7 +2,7 @@
 testeth via RPC (wiki: https://github.com/ethereum/retesteth/wiki)
 
 A test generaion tool for the test fillers https://github.com/ethereum/tests/tree/develop/src  
-Building instruction for begginers: [retesteth + solidity build](https://github.com/ethereum/retesteth#building-instructions-for-beginners)
+Building instruction for beginners: [retesteth + solidity build](https://github.com/ethereum/retesteth#building-instructions-for-beginners)
 
 # The Goal
 
