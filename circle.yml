@@ -50,7 +50,7 @@ defaults:
         ./retesteth -t TestHelperSuite
         ./retesteth -t EthObjectsSuite
         ./retesteth -t DataObjectTestSuite
-        ./retesteth -t LLLCSuite
+#        ./retesteth -t LLLCSuite
 #        git clone --depth 1 https://github.com/ethereum/tests.git
 #        export ETHEREUM_TEST_PATH=~/build/testeth/tests
 #        ctest --output-on-failure -j $TEST_PARALLEL_JOBS
@@ -68,7 +68,7 @@ defaults:
         $GCOV --version
         codecov --required --gcov-exec "$GCOV" --gcov-root ~/build
 
-  install-deps: &install-deps-mac
+  install-deps: &install-solidity-mac
     run:
       name: "Install solidity"
       command: |
@@ -86,7 +86,7 @@ defaults:
         cd build
         cmake .. -DLLL=1 -DUSE_Z3=0
         sudo make install lllc -j $BUILD_PARALLEL_JOBS
-  install-deps: &install-deps
+  install-deps: &install-solidity
     run:
       name: "Install solidity"
       command: |
@@ -110,7 +110,7 @@ defaults:
     - *environment-info
     - *configure
 #    - *upload-hunter-cache
-    - *install-deps
+#    - *install-solidity
     - *build
     - *store-retesteth
     - *test
@@ -168,7 +168,7 @@ jobs:
             pip3 install -q requests gitpython
       - *configureMac
 #      - *upload-hunter-cache
-      - *install-deps-mac
+#      - *install-solidity-mac
       - *build
       - *store-retesteth
       - *test
