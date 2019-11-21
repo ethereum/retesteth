@@ -22,6 +22,7 @@ class DataObject
 {
 public:
     DataObject();
+    DataObject(DataObject const&) = default;
     DataObject(DataType _type);
     DataObject(DataType _type, bool _bool);
     DataObject(std::string const& _str);
