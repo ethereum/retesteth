@@ -12,7 +12,7 @@ void FillTest(scheme_blockchainTestFiller const& _testObject, string const& _net
     // construct filled blockchain test
     _testOut["sealEngine"] = _testObject.getSealEngine();
     _testOut["network"] = _network;
-    _testOut["pre"] = _testObject.getData().atKey("pre");
+    _testOut["pre"] = _testObject.getPre().getData();
     if (_testObject.getData().count("_info"))
         _testOut["_info"] = _testObject.getData().atKey("_info");
 
@@ -31,9 +31,8 @@ void FillTest(scheme_blockchainTestFiller const& _testObject, string const& _net
     for (auto const& block : _testObject.getBlocks())
     {
         session.test_modifyTimestamp(1000);  // Shift block timestamp relative to previous block
-        TestOutputHelper::get().setCurrentTestInfo("Network: " + _network +
-                                                   ", BlockNumber: " + toString(number++) +
-                                                   ", Test: " + TestOutputHelper::get().testName());
+        TestInfo errorInfo (_network, number++);
+        TestOutputHelper::get().setCurrentTestInfo(errorInfo);
 
         DataObject blockSection;
         for (auto const& tr : block.getTransactions())
@@ -47,7 +46,7 @@ void FillTest(scheme_blockchainTestFiller const& _testObject, string const& _net
         latestBlock = session.eth_getBlockByNumber(latestBlockNumber, true);
         ETH_ERROR_REQUIRE_MESSAGE(
             latestBlock.getTransactionCount() == block.getTransactions().size(),
-            "BlockchainTest transaction execution failed! " + TestOutputHelper::get().testInfo());
+            "BlockchainTest transaction execution failed! ");
         blockSection["rlp"] = latestBlock.getBlockRLP();
         blockSection["blockHeader"] = latestBlock.getBlockHeader();
         _testOut["blocks"].addArrayObject(blockSection);
@@ -61,17 +60,22 @@ void FillTest(scheme_blockchainTestFiller const& _testObject, string const& _net
         compareStates(_testObject.getExpectSection().getExpectSectionFor(_network).getExpectState(),
             remoteState);
 
-    _testOut["postState"] = remoteState.getData();
+    if (remoteState.isHash())
+        _testOut["postStateHash"] = remoteState.getData();
+    else
+        _testOut["postState"] = remoteState.getData();
     _testOut["lastblockhash"] = latestBlock.getBlockHash();
 }
 
 /// Read and execute the test from the file
 void RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _opt)
 {
+    if (Options::get().logVerbosity > 1)
+        std::cout << "Running " << TestOutputHelper::get().testName() << std::endl;
     scheme_blockchainTest inputTest(_testObject);
     RPCSession& session = RPCSession::instance(TestOutputHelper::getThreadID());
-    string testInfo = TestOutputHelper::get().testName() + ", fork: " + inputTest.getNetwork();
-    TestOutputHelper::get().setCurrentTestInfo(testInfo);
+    TestInfo errorInfo (inputTest.getNetwork(), 0);
+    TestOutputHelper::get().setCurrentTestInfo(errorInfo);
 
     session.test_setChainParams(inputTest.getGenesisForRPC(inputTest.getNetwork()).asJson());
 
@@ -79,8 +83,13 @@ void RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _
     for (auto const& brlp : inputTest.getBlockRlps())
     {
         session.test_importRawBlock(brlp);
-        if (!session.getLastRPCError().empty() && !_opt.allowInvalidBlocks)
-            ETH_ERROR_MESSAGE("Running blockchain test: " + session.getLastRPCError());
+        if (session.getLastRPCError().type() != DataType::Null)
+        {
+            if (!_opt.allowInvalidBlocks)
+                ETH_ERROR_MESSAGE("Running blockchain test: " + session.getLastRPCError().atKey("message").asString());
+            else
+                std::cerr << session.getLastRPCError().atKey("error").asString() << std::endl;
+        }
     }
 
     // wait for blocks to process
@@ -131,9 +140,19 @@ DataObject DoTests(DataObject const& _input, TestSuite::TestSuiteOptions& _opt)
         else
         {
             // Select test by name if --singletest and --singlenet is set
-            if (!Options::get().singleTestNet.empty() && Options::get().singleTest)
-                if (testname != Options::get().singleTestName + "_" + Options::get().singleTestNet)
+            if (Options::get().singleTest)
+            {
+                if (!Options::get().singleSubTestName.empty() &&
+                    testname != Options::get().singleSubTestName)
                     continue;
+            }
+
+            if (!Options::get().singleTestNet.empty())
+            {
+                if (i.count("network") &&
+                    i.atKey("network").asString() != Options::get().singleTestNet)
+                    continue;
+            }
 
             RunTest(i, _opt);
         }

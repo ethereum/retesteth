@@ -72,8 +72,7 @@ public:
             else if (key == "0x00" && _storage.count("0x"))
                 key = "0x";
 
-            string const message = TestOutputHelper::get().testName() +
-                                   " Check State: Remote account '" + address() + "'";
+            string const message = "Check State: Remote account '" + address() + "'";
             if (element.asString() == "0x")
             {
                 // check that empty element is not set

@@ -44,8 +44,8 @@ private:
     };
 
 public:
-
-	virtual ~TestSuite() {}
+    TestSuite();
+    virtual ~TestSuite() {}
 
     struct TestSuiteOptions
     {

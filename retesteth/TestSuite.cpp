@@ -159,8 +159,8 @@ void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
                 "sourceHash not found in " + _compiledTest.string() + " in " + i.getKey());
             h256 const sourceHash = h256(info.atKey("sourceHash").asString());
             ETH_ERROR_REQUIRE_MESSAGE(sourceHash == fillerData.hash,
-                "Test " + _compiledTest.string() + " in " + i.getKey() +
-                    " is outdated. Filler hash is different! ( '" + sourceHash.hex().substr(0, 4) +
+                "Test " + _compiledTest.string() +
+                    " is outdated. Filler hash is different! ('" + sourceHash.hex().substr(0, 4) +
                     "' != '" + fillerData.hash.hex().substr(0, 4) + "') ");
         }
         catch (test::BaseEthException const&)
@@ -390,8 +390,23 @@ void TestSuite::runFunctionForAllClients(std::function<void()> _func)
         std::cout << "Running tests for config '" << config.getName() << "' " << config.getId().id()
                   << std::endl;
         _func();
-        // leave current connections open for the next tests (if commented)
-        // RPCSession::clear();
+
+        // Disconnect threads from the client
+        if (Options::getDynamicOptions().getClientConfigs().size() > 1)
+            RPCSession::clear();
+    }
+}
+
+std::mutex g_testPathMutex;
+TestSuite::TestSuite()
+{
+    std::lock_guard<std::mutex> lock(g_testPathMutex);
+    static bool runningTestsMessage = true;
+    if (runningTestsMessage)
+    {
+        boost::filesystem::path const testPath = test::getTestPath();
+        ETH_STDOUT_MESSAGE(string("Running tests using path: ") + testPath.c_str());
+        runningTestsMessage = false;
     }
 }
 
@@ -510,7 +525,10 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
 void TestSuite::executeFile(boost::filesystem::path const& _file) const
 {
     TestSuiteOptions opt;
-    doTests(dataobject::ConvertJsoncppStringToData(dev::contentsString(_file)), opt);
+    std::string s = dev::contentsString(_file);
+    ETH_ERROR_REQUIRE_MESSAGE(
+        s.length() > 0, "Contents of " + _file.string() + " is empty. Have you filled the test?");
+    doTests(dataobject::ConvertJsoncppStringToData(s), opt);
 }
 
 }

@@ -32,7 +32,6 @@ void eth_mark_error(std::string const& _message);
 #define ETH_MARK_ERROR(message) test::eth_mark_error(message)
 #define ETH_MARK_ERROR_FLAG(flag, message) test::eth_mark_error(flag, message)
 
-
 // Stop retesteth execution rise sigabrt
 #define ETH_FAIL_REQUIRE(flag) test::eth_require(flag)
 #define ETH_FAIL_MESSAGE(message) test::eth_fail(message)
@@ -45,7 +44,6 @@ void eth_check_equal(T a, T b, std::string const& _message)
     eth_check_message(a == b, _message + test::expButGot(b, a));
 }
 #define ETH_CHECK_EQUAL(val1, val2, message) test::eth_check_equal(val1, val2, message)
-
 
 /// Base class for all exceptions.
 struct BaseEthException : virtual std::exception

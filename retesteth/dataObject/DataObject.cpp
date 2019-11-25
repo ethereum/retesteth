@@ -193,6 +193,16 @@ DataObject const& DataObject::atKey(std::string const& _key) const
     return m_subObjects.at(0);
 }
 
+DataObject& DataObject::atKeyUnsafe(std::string const& _key)
+{
+    _assert(count(_key), "count(_key) _key=" + _key + " (DataObject::at)");
+    for (auto& i : m_subObjects)
+        if (i.getKey() == _key)
+            return i;
+    _assert(false, "item not found! (DataObject::at)");
+    return m_subObjects.at(0);
+}
+
 DataObject const& DataObject::at(size_t _pos) const
 {
     _assert((size_t)_pos < m_subObjects.size(), "DataObject::at(int) out of range!");

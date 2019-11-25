@@ -13,15 +13,14 @@ void validatePostHash(
     {
         if (Options::get().logVerbosity >= 5)
             ETH_LOG("\nState Dump: \n" + getRemoteState(_session, _latestInfo).getData().asJson(), 5);
-        ETH_ERROR_MESSAGE("Error at " + TestOutputHelper::get().testInfo() +
-                          ", post hash mismatch remote: " + actualHash + ", expected: " + _postHash);
+        ETH_ERROR_MESSAGE("Post hash mismatch remote: " + actualHash + ", expected: " + _postHash);
     }
 }
 
 void checkDataObject(DataObject const& _input)
 {
     ETH_ERROR_REQUIRE_MESSAGE(_input.type() == DataType::Object,
-        TestOutputHelper::get().get().testFile().string() + " A test file must contain an object.");
+        TestOutputHelper::get().get().testFile().string() + " A test file must contain an object value (json/yaml).");
 }
 
 void checkAtLeastOneTest(DataObject const& _input)
@@ -143,7 +142,7 @@ scheme_state getRemoteState(RPCSession& _session, scheme_block const& _latestInf
     }
 
     if (Options::get().poststate)
-        ETH_STDOUT_MESSAGE("PostState " + TestOutputHelper::get().testInfo() +  " : \n"
+        ETH_STDOUT_MESSAGE("PostState " + TestOutputHelper::get().testInfo().getMessage() +  " : \n"
                            + accountsObj.asJson());
 
     return scheme_state(accountsObj);

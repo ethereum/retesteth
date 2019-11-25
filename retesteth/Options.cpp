@@ -202,8 +202,8 @@ Options::Options(int argc, const char** argv)
 				if (name2[0] == '-') // not param, another option
 				{
 					singleTestName = std::move(name1);
-					i--;
-				}
+                    i--;
+                }
 				else
 				{
 					singleTestFile = std::move(name1);
@@ -218,7 +218,14 @@ Options::Options(int argc, const char** argv)
             }
 			else
 				singleTestName = std::move(name1);
-		}
+
+            size_t pos = singleTestName.find_last_of('/');
+            if (pos != string::npos)
+            {
+                singleSubTestName = singleTestName.substr(pos + 1);
+                singleTestName = singleTestName.substr(0, pos);
+            }
+        }
         else if (arg == "--singlenet")
         {
             throwIfNoArgumentFollows();
@@ -441,14 +448,19 @@ std::vector<ClientConfig> const& Options::DynamicOptions::getClientConfigs()
             ETH_FAIL_REQUIRE_MESSAGE(fs::exists(correctMiningRewardPath), "correctMiningReward.json client config not found!");
             s = dev::contentsString(correctMiningRewardPath);
             cfg.setMiningRewardInfo(dataobject::ConvertJsoncppStringToData(s));
+            cfg.setCorrectMiningRewardFilePath(correctMiningRewardPath);
 
-            for (auto const& net : cfg.getNetworks())
-            {
-                fs::path configGenesisTemplatePath = genesisTemplatePath / (net + ".json");
+            auto registerGenesisTemplate = [&cfg, &genesisTemplatePath, &clientName](string const& _net) {
+                fs::path configGenesisTemplatePath = genesisTemplatePath / (_net + ".json");
                 ETH_FAIL_REQUIRE_MESSAGE(fs::exists(configGenesisTemplatePath),
-                    "template .json config for network '" + net + "' in " + clientName + " not found in tests/Retesteth configs!");
-                cfg.addGenesisTemplate(net, configGenesisTemplatePath);
-            }
+                    "template .json config for network '" + _net + "' in " + clientName + " not found in tests/Retesteth configs!");
+                cfg.addGenesisTemplate(_net, configGenesisTemplatePath);
+            };
+            for (auto const& net : cfg.getNetworks())
+                registerGenesisTemplate(net);
+            for (auto const& net : cfg.getAdditionalNetworks())
+                registerGenesisTemplate(net);
+
             //*/ Load genesis templates
 
             m_clientConfigs.push_back(cfg);

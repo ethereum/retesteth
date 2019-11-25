@@ -222,10 +222,7 @@ DataObject ConvertJsoncppStringToData(
             if (actualRoot->type() == DataType::Array && _input.at(i) != ']')
                 throw DataObjectException() << "expected ']' closing the array! around: " + debug;
             if (actualRoot->type() == DataType::Object && _input.at(i) != '}')
-            {
-                std::cerr << _input << std::endl;
                 throw DataObjectException() << "expected '}' closing the object! around: " + debug;
-            }
 
             if (!_stopper.empty() && actualRoot->getKey() == _stopper)
                 return root;

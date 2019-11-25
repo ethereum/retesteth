@@ -22,6 +22,7 @@ class DataObject
 {
 public:
     DataObject();
+    DataObject(DataObject const&) = default;
     DataObject(DataType _type);
     DataObject(DataType _type, bool _bool);
     DataObject(std::string const& _str);
@@ -183,6 +184,7 @@ public:
     void replace(DataObject const& _value);
 
     DataObject const& atKey(std::string const& _key) const;
+    DataObject& atKeyUnsafe(std::string const& _key);
     DataObject const& at(size_t _pos) const;
 
     void addArrayObject(DataObject const& _obj);

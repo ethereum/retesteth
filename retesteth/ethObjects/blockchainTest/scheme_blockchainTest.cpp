@@ -14,9 +14,11 @@ scheme_blockchainTestBase::fieldChecker::fieldChecker(DataObject const& _test)
             {"network", {{DataType::String}, jsonField::Optional}},
             {"hash", {{DataType::String}, jsonField::Optional}},
             {"gasUsed", {{DataType::String}, jsonField::Optional}},
-            {"postState", {{DataType::Object, DataType::String}, jsonField::Optional}},
+            {"postState", {{DataType::Object}, jsonField::Optional}},
+            {"postStateHash", {{DataType::String}, jsonField::Optional}},
             {"pre", {{DataType::Object}, jsonField::Required}},
-            {"sealEngine", {{DataType::String}, jsonField::Optional}}});
+            {"sealEngine", {{DataType::String}, jsonField::Optional}}
+                      });
 }
 
 scheme_blockchainTest::fieldChecker::fieldChecker(DataObject const& _test)
@@ -28,9 +30,11 @@ scheme_blockchainTest::fieldChecker::fieldChecker(DataObject const& _test)
             {"genesisRLP", {{DataType::String}, jsonField::Optional}},
             {"lastblockhash", {{DataType::String}, jsonField::Required}},
             {"network", {{DataType::String}, jsonField::Required}},
-            {"postState", {{DataType::Object, DataType::String}, jsonField::Required}},
+            {"postState", {{DataType::Object}, jsonField::Optional}},
+            {"postStateHash", {{DataType::String}, jsonField::Optional}},
             {"pre", {{DataType::Object}, jsonField::Required}},
-            {"sealEngine", {{DataType::String}, jsonField::Optional}}});
+            {"sealEngine", {{DataType::String}, jsonField::Optional}}
+                      });
 }
 
 scheme_blockchainTestBase::scheme_blockchainTestBase(DataObject const& _test)
@@ -46,24 +50,54 @@ scheme_blockchainTestBase::scheme_blockchainTestBase(DataObject const& _test)
 }
 
 scheme_blockchainTest::scheme_blockchainTest(DataObject const& _test)
-  : scheme_blockchainTestBase(_test), m_checker(_test), m_post(_test.atKey("postState"))
+  : scheme_blockchainTestBase(_test), m_checker(_test),
+    m_post(_test.count("postState") ? _test.atKey("postState") : _test.atKey("postStateHash"))
 {
     // Validate blocks section at the filled blockchain test
     for (auto const& blockSection : _test.atKey("blocks").getSubObjects())
     {
-        requireJsonFields(blockSection, "blockchainTest " + _test.getKey(),
-            {   {"blockHeader", {{DataType::Object}, jsonField::Required}},
-                {"rlp", {{DataType::String}, jsonField::Required}},
-                {"transactions", {{DataType::Array}, jsonField::Required}},
-                {"uncleHeaders", {{DataType::Array}, jsonField::Optional}},
-                {"blocknumber", {{DataType::String}, jsonField::Optional}},
-                {"chainname", {{DataType::String}, jsonField::Optional}}});
+        // Valid block json description
+        if (blockSection.count("blockHeader"))
+        {
+            requireJsonFields(blockSection, "blockchainTest " + _test.getKey(),
+                {   {"blockHeader", {{DataType::Object}, jsonField::Required}},
+                    {"rlp", {{DataType::String}, jsonField::Required}},
+                    {"transactions", {{DataType::Array}, jsonField::Required}},
+                    {"uncleHeaders", {{DataType::Array}, jsonField::Optional}},
+                    {"blocknumber", {{DataType::String}, jsonField::Optional}},
+                    {"chainname", {{DataType::String}, jsonField::Optional}},
+                    {"chainnetwork", {{DataType::String}, jsonField::Optional}}
+                              });
+            scheme_blockHeader(blockSection.atKey("blockHeader"));
+            for (auto const& trSection: blockSection.atKey("transactions").getSubObjects())
+                m_transactions.push_back(scheme_transaction(trSection));
+        }
+        else
+        {
+            // Invalid block json description
+            requireJsonFields(blockSection, "blockchainTest " + _test.getKey(),
+                {   {"blockHeader", {{DataType::Object}, jsonField::Optional}},
+                    {"rlp", {{DataType::String}, jsonField::Required}},
+                    {"transactions", {{DataType::Array}, jsonField::Optional}},
+                    {"uncleHeaders", {{DataType::Array}, jsonField::Optional}},
+                    {"blocknumber", {{DataType::String}, jsonField::Optional}},
+                    {"chainname", {{DataType::String}, jsonField::Optional}},
+                    {"chainnetwork", {{DataType::String}, jsonField::Optional}},
+                    {"expectExceptionByzantium", {{DataType::String}, jsonField::Optional}},
+                    {"expectExceptionConstantinople", {{DataType::String}, jsonField::Optional}},
+                    {"expectExceptionConstantinopleFix", {{DataType::String}, jsonField::Optional}},
+                    {"expectExceptionEIP150", {{DataType::String}, jsonField::Optional}},
+                    {"expectExceptionEIP158", {{DataType::String}, jsonField::Optional}},
+                    {"expectExceptionFrontier", {{DataType::String}, jsonField::Optional}},
+                    {"expectExceptionHomestead", {{DataType::String}, jsonField::Optional}},
+                    {"expectExceptionIstanbul", {{DataType::String}, jsonField::Optional}},
+                    {"expectExceptionALL", {{DataType::String}, jsonField::Optional}}
+                              });
+       }
 
-        scheme_blockHeader(blockSection.atKey("blockHeader"));
         m_blockRLPs.push_back(blockSection.atKey("rlp").asString());
-        for (auto const& trSection: blockSection.atKey("transactions").getSubObjects())
-            m_transactions.push_back(scheme_transaction(trSection));
     }
+    makeAllFieldsHex(m_data);
 }
 
 DataObject scheme_blockchainTestBase::getGenesisForRPC(string const& _network) const

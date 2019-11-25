@@ -185,8 +185,6 @@ int main(int argc, const char* argv[])
     int result = 0;
     try
     {
-        fs::path const testPath = test::getTestPath();
-        ETH_STDOUT_MESSAGE(string("Running tests using path: ") + testPath.c_str());
         auto fakeInit = [](int, char* []) -> boost::unit_test::test_suite* { return nullptr; };
         if (opt.jsontrace || opt.vmtrace || opt.statediff || opt.createRandomTest ||
             !opt.travisOutThread)

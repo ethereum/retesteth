@@ -26,6 +26,31 @@
 namespace test
 {
 
+struct TestInfo
+{
+    TestInfo(std::string const&  _fork, size_t _trD, size_t _trG, size_t _trV)
+        : m_sFork(_fork), m_trD(_trD), m_trG(_trG), m_trV(_trV)
+    {
+        m_isStateTransactionInfo = true;
+    }
+
+    TestInfo(std::string const&  _fork, size_t _block)
+        : m_sFork(_fork), m_blockNumber(_block), m_isStateTransactionInfo(false)
+    {
+        m_isBlockchainTestInfo = true;
+    }
+
+    TestInfo(): m_isStateTransactionInfo(false), m_isBlockchainTestInfo(false) {}
+    std::string getMessage() const;
+
+private:
+    std::string m_sFork;
+    size_t m_trD, m_trG, m_trV;
+    size_t m_blockNumber;
+    bool m_isStateTransactionInfo = false;
+    bool m_isBlockchainTestInfo = false;
+};
+
 class TestOutputHelper
 {
 public:
@@ -44,15 +69,15 @@ public:
     bool checkTest(std::string const& _testName);
     void markError(std::string const& _message)
     {
-        m_errors.push_back(_message + " (" + m_currentTestName + ")");
+        m_errors.push_back(_message + m_testInfo.getMessage());
     }
     std::vector<std::string> const& getErrors() const { return m_errors;}
     void resetErrors() { m_errors.clear(); }
     void setCurrentTestFile(boost::filesystem::path const& _name) { m_currentTestFileName = _name; }
     void setCurrentTestName(std::string const& _name) { m_currentTestName = _name; }
-    void setCurrentTestInfo(std::string const& _info) { m_currentTestInfo = _info; }
+    void setCurrentTestInfo(TestInfo const& _info) { m_testInfo = _info; }
+    TestInfo const& testInfo() const { return m_testInfo; }
     std::string const& testName() const { return m_currentTestName; }
-    std::string const& testInfo() const { return m_currentTestInfo; }
     std::string const& caseName() const { return m_currentTestCaseName; }
     boost::filesystem::path const& testFile() const { return m_currentTestFileName; }
     static void printTestExecStats();
@@ -75,7 +100,7 @@ private:
     size_t m_maxTests;
     std::string m_currentTestName;
     std::string m_currentTestCaseName;
-    std::string m_currentTestInfo;
+    TestInfo m_testInfo;
     bool m_isRunning;
     boost::filesystem::path m_currentTestFileName;
     std::vector<std::string> m_errors; //flag errors for triggering boost erros after all thread finished

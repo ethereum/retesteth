@@ -16,7 +16,19 @@ DataObject scheme_stateTestBase::getGenesisForRPC(
     DataObject genesis = prepareGenesisParams(_network, _sealEngine);
     genesis["genesis"] = getEnv().getDataForRPC();
     for (auto const& acc : getPre().getData().getSubObjects())
-        genesis["accounts"].addSubObject(acc);
+    {
+        if (genesis["accounts"].count(acc.getKey()))
+        {
+            ETH_LOG("Test `pre` section interfere with genesis config pre state!", 2);
+            // Replace the balance field
+            genesis["accounts"].atKeyUnsafe(acc.getKey())["balance"] = acc.atKey("balance");
+            genesis["accounts"].atKeyUnsafe(acc.getKey())["nonce"] = acc.atKey("nonce");
+            genesis["accounts"].atKeyUnsafe(acc.getKey())["storage"] = acc.atKey("storage");
+            genesis["accounts"].atKeyUnsafe(acc.getKey())["code"] = acc.atKey("code");
+        }
+        else
+            genesis["accounts"].addSubObject(acc);
+    }
     return genesis;
 }
 
@@ -37,20 +49,11 @@ void scheme_stateTestBase::checkUnexecutedTransactions()
         if (tr.executed)
             atLeastOneExecuted = true;
         bool transactionExecutedOrSkipped = tr.executed == true || tr.skipped == true;
-        atLeastOneWithoutExpectSection =
-            !transactionExecutedOrSkipped || atLeastOneWithoutExpectSection;
-        if (!transactionExecutedOrSkipped)
-        {
-            string actualTrInfo = " (Errored TR: d: " + to_string(tr.dataInd) +
-                                  ", g: " + to_string(tr.gasInd) + ", v: " + to_string(tr.valueInd);
-            ETH_MARK_ERROR(
-                "A transaction was specified, but there is no execution results in a test! " +
-                TestOutputHelper::get().testInfo() + actualTrInfo);
-        }
+        atLeastOneWithoutExpectSection = !transactionExecutedOrSkipped || atLeastOneWithoutExpectSection;
+        if (!transactionExecutedOrSkipped || atLeastOneWithoutExpectSection)
+            ETH_MARK_ERROR("Test has transaction uncovered with expect section!");
     }
-    ETH_ERROR_REQUIRE_MESSAGE(atLeastOneExecuted, "Specified filter did not run a single transaction! " + TestOutputHelper::get().testInfo());
-    ETH_ERROR_REQUIRE_MESSAGE(
-        !atLeastOneWithoutExpectSection, "Test has transaction uncovered with expect sections! ");
+    ETH_ERROR_REQUIRE_MESSAGE(atLeastOneExecuted, "Specified filter did not run a single transaction! ");
 }
 
 scheme_stateTest::scheme_stateTest(DataObject const& _test)
