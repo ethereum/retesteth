@@ -2,7 +2,7 @@
 #pragma once
 
 #include <libdevcore/Exceptions.h>
-#include <retesteth/ClientConfig.h>
+#include <retesteth/configs/ClientConfig.h>
 #include <boost/filesystem.hpp>
 #include <boost/optional.hpp>
 #include <boost/program_options.hpp>
