@@ -257,7 +257,8 @@ void RunTest(DataObject const& _testFile)
     {
         bool networkSkip = false;
         string const& network = post.first;
-        if (!Options::get().singleTestNet.empty() && Options::get().singleTestNet != network)
+        if ((!Options::get().singleTestNet.empty() && Options::get().singleTestNet != network) ||
+            !inArray(Options::getDynamicOptions().getCurrentConfig().getNetworks(), network))
             networkSkip = true;
         else
             session.test_setChainParams(test.getGenesisForRPC(network, "NoReward").asJson());

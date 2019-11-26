@@ -94,7 +94,8 @@ public:
                 "\"path to .ipc socket\"], [tcp, \"address:port\"]");
     }
 
-    fs::path const& getConfigFilePath() const { return m_configCorrectMiningRewardFilePath; }
+    fs::path const& getConfigFilePath() const { return m_configFilePath; }
+    fs::path const& getCorrectMiningRewardConfigFilePath() const { return m_configCorrectMiningRewardFilePath; }
     fs::path const& getShellPath() const { return m_shellPath; }
     std::string const& getName() const { return m_data.atKey("name").asString(); }
     Socket::SocketType getSocketType() const { return m_socketType; }
@@ -124,11 +125,13 @@ public:
     {
         m_configCorrectMiningRewardFilePath = _path;
     }
+    void setConfigFilePath(fs::path const& _path) { m_configFilePath = _path; }
     DataObject const& getMiningRewardInfo() const { return m_correctReward; }
 
 private:
     Socket::SocketType m_socketType;  ///< Connection type
     fs::path m_shellPath;             ///< Script to start new instance of a client (for ipc)
+    fs::path m_configFilePath;        ///< Path to the client fork networks config
     fs::path m_configCorrectMiningRewardFilePath;    ///< Config correctMiningReward file path
     ClientConfigID m_id;                             ///< Internal id
     std::vector<string> m_networks;                  ///< Allowed forks as network name

@@ -259,7 +259,12 @@ void checkAllowedNetwork(string const& _network, vector<string> const& _networkO
     }
 
     if (!found)
-        ETH_ERROR_MESSAGE("Specified network not found: '" + _network + "'");
+    {
+        fs::path configFile = Options::getDynamicOptions().getCurrentConfig().getConfigFilePath();
+        ETH_WARNING(
+            "Specified network not found: '" + _network +
+            "', skipping the test. Enable the fork network in config file: " + configFile.string());
+    }
 }
 
 void parseJsonStrValueIntoSet(DataObject const& _json, set<string>& _out)

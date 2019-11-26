@@ -35,8 +35,9 @@ public:
     void correctMiningReward(std::string const& _net, std::string const& _coinbaseAddress)
     {
         ClientConfig const& cfg = Options::getDynamicOptions().getCurrentConfig();
-        ETH_ERROR_REQUIRE_MESSAGE(cfg.getMiningRewardInfo().count(_net), "Network '" + _net
-            + "' not found in correct mining info config (" + cfg.getConfigFilePath().string() + ") Client: " + cfg.getName());
+        ETH_ERROR_REQUIRE_MESSAGE(cfg.getMiningRewardInfo().count(_net),
+            "Network '" + _net + "' not found in correct mining info config (" +
+                cfg.getCorrectMiningRewardConfigFilePath().string() + ") Client: " + cfg.getName());
         u256 balance (cfg.getMiningRewardInfo().atKey(_net).asString());
         if (getExpectState().hasBalance(_coinbaseAddress))
         {
