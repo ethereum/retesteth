@@ -113,9 +113,8 @@ std::vector<ClientConfig> const& Options::DynamicOptions::getClientConfigs()
             ETH_FAIL_REQUIRE_MESSAGE(fs::exists(configFilePath),
                 string("Client config not found: ") + configFilePath.c_str());
 
-            ClientConfig cfg(test::readJsonData(configFilePath), ClientConfigID(),
+            ClientConfig cfg(configFilePath, test::readJsonData(configFilePath), ClientConfigID(),
                 configPath / string(clientName + ".sh"));
-            cfg.setConfigFilePath(configFilePath);
 
             // Load genesis templates
             fs::path genesisTemplatePath = configPath / "genesis";

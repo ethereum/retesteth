@@ -40,10 +40,12 @@ private:
 class ClientConfig : public object
 {
 public:
-    ClientConfig(DataObject const& _obj, ClientConfigID const& _id, fs::path _shell = fs::path())
+    ClientConfig(fs::path const& _clientConfigPath, DataObject const& _obj,
+        ClientConfigID const& _id, fs::path _shell = fs::path())
       : object(_obj), m_shellPath(_shell), m_id(_id)
     {
-        requireJsonFields(_obj, "ClientConfig ",
+        m_configFilePath = _clientConfigPath;
+        requireJsonFields(_obj, "ClientConfig (" + m_configFilePath.string() + ")",
             {
                 {"name", {DataType::String}},
                 {"socketType", {DataType::String}},
@@ -125,7 +127,6 @@ public:
     {
         m_configCorrectMiningRewardFilePath = _path;
     }
-    void setConfigFilePath(fs::path const& _path) { m_configFilePath = _path; }
     DataObject const& getMiningRewardInfo() const { return m_correctReward; }
 
 private:
