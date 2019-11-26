@@ -275,8 +275,7 @@ string TestSuite::checkFillerExistance(string const& _testFolder) const
         string exceptionStr;
         if (checkFillerWhenFilterIsSetButNoTestsFilled)
             exceptionStr = "Could not find a filler for provided --singletest filter: '" +
-                           file.filename().string() +
-                           "', or no tests were found in the test suite folder!";
+                           file.filename().string() + "'";
         else
             exceptionStr =
                 "Compiled test folder contains test without Filler: " + file.filename().string();
@@ -330,7 +329,17 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
     }
 
     // check that destination folder test files has according Filler file in src folder
-    string const filter = checkFillerExistance(_testFolder);
+    string filter;
+    try
+    {
+        filter = checkFillerExistance(_testFolder);
+    }
+    catch (std::exception const&)
+    {
+        TestOutputHelper::get().initTest(1);
+        TestOutputHelper::get().finishTest();
+        return;
+    }
 
     // run all tests
     AbsoluteFillerPath fillerPath = getFullPathFiller(_testFolder);
