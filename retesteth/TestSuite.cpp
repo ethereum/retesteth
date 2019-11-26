@@ -18,8 +18,6 @@
  * Base functions for all test suites
  */
 
-#include <dataObject/ConvertFile.h>
-#include <dataObject/ConvertYaml.h>
 #include <dataObject/DataObject.h>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/Log.h>
@@ -51,16 +49,10 @@ struct TestFileData
 TestFileData readTestFile(fs::path const& _testFileName)
 {
     TestFileData testData;
-
-    // Check that file is not empty
-    string const s = dev::contentsString(_testFileName);
-    ETH_ERROR_REQUIRE_MESSAGE(
-        s.length() > 0, "Contents of " + _testFileName.string() + " is empty.");
-
     if (_testFileName.extension() == ".json")
-        testData.data = dataobject::ConvertJsoncppStringToData(s, string(), true);
+        testData.data = test::readJsonData(_testFileName, string(), true);
     else if (_testFileName.extension() == ".yml")
-        testData.data = dataobject::ConvertYamlToData(YAML::Load(s));
+        testData.data = test::readYamlData(_testFileName);
     else
         ETH_ERROR_MESSAGE(
             "Unknown test format!" + test::TestOutputHelper::get().testFile().string());
@@ -142,8 +134,7 @@ void addClientInfo(
 
 void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
 {
-    dataobject::DataObject v =
-        dataobject::ConvertJsoncppStringToData(dev::contentsString(_compiledTest), "_info");
+    dataobject::DataObject v = test::readJsonData(_compiledTest, "_info");
     TestFileData fillerData = readTestFile(_sourceTest);
     for (auto const& i: v.getSubObjects())
     {
@@ -525,10 +516,7 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
 void TestSuite::executeFile(boost::filesystem::path const& _file) const
 {
     TestSuiteOptions opt;
-    std::string s = dev::contentsString(_file);
-    ETH_ERROR_REQUIRE_MESSAGE(
-        s.length() > 0, "Contents of " + _file.string() + " is empty. Have you filled the test?");
-    doTests(dataobject::ConvertJsoncppStringToData(s), opt);
+    doTests(test::readJsonData(_file), opt);
 }
 
 }

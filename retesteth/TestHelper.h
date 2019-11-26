@@ -20,6 +20,11 @@ namespace test {
 Json::Value readJson(fs::path const& _path);
 #endif
 
+/// Safely read the json file into DataObject
+DataObject readJsonData(
+    fs::path const& _file, string const& _stopper = string(), bool _autosort = false);
+DataObject readYamlData(fs::path const& _file);
+
 /// Get files from directory
 std::vector<boost::filesystem::path> getFiles(boost::filesystem::path const& _dirPath, std::set<std::string> _extentionMask, std::string const& _particularFile = {});
 

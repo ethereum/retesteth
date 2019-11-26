@@ -1,6 +1,6 @@
 #pragma once
 #include <retesteth/Socket.h>
-#include <retesteth/dataObject/ConvertFile.h>
+#include <retesteth/TestHelper.h>
 #include <retesteth/ethObjects/object.h>
 #include <boost/asio.hpp>
 #include <mutex>
@@ -111,8 +111,7 @@ public:
     std::vector<string> const& getAdditionalNetworks() const { return m_additional_networks; }
     void addGenesisTemplate(string const& _network, fs::path const& _pathToJson)
     {
-        string s = dev::contentsString(_pathToJson);
-        m_genesisTemplate[_network] = dataobject::ConvertJsoncppStringToData(s);
+        m_genesisTemplate[_network] = test::readJsonData(_pathToJson);
     }
     DataObject const& getGenesisTemplate(string const& _network) const
     {

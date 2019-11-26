@@ -10,9 +10,11 @@
 #include <csignal>
 #include <mutex>
 
+#include <retesteth/Options.h>
 #include <retesteth/TestHelper.h>
 #include <retesteth/TestOutputHelper.h>
-#include <retesteth/Options.h>
+#include <retesteth/dataObject/ConvertFile.h>
+#include <retesteth/dataObject/ConvertYaml.h>
 
 using namespace std;
 namespace fs = boost::filesystem;
@@ -36,6 +38,42 @@ Json::Value readJson(fs::path const& _file)
     return v;
 }
 #endif
+
+/// Safely read the json file into DataObject
+DataObject readJsonData(fs::path const& _file, string const& _stopper, bool _autosort)
+{
+    try
+    {
+        string s = dev::contentsString(_file);
+        ETH_ERROR_REQUIRE_MESSAGE(s.length() > 0,
+            "Contents of " + _file.string() + " is empty. Trying to parse empty file.");
+        return dataobject::ConvertJsoncppStringToData(s, _stopper, _autosort);
+    }
+    catch (std::exception const& _ex)
+    {
+        ETH_ERROR_MESSAGE(
+            string("\nError when parsing file (") + _file.c_str() + ") " + _ex.what());
+        return DataObject();
+    }
+}
+
+/// Safely read the yaml file into DataObject
+DataObject readYamlData(fs::path const& _file)
+{
+    try
+    {
+        string s = dev::contentsString(_file);
+        ETH_ERROR_REQUIRE_MESSAGE(s.length() > 0,
+            "Contents of " + _file.string() + " is empty. Trying to parse empty file.");
+        return dataobject::ConvertYamlToData(YAML::Load(s));
+    }
+    catch (std::exception const& _ex)
+    {
+        ETH_ERROR_MESSAGE(
+            string("\nError when parsing file (") + _file.c_str() + ") " + _ex.what());
+        return DataObject();
+    }
+}
 
 vector<fs::path> getFiles(
 	fs::path const& _dirPath, set<string> const _extentionMask, string const& _particularFile)

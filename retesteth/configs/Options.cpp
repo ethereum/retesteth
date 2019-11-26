@@ -18,7 +18,6 @@ void deployFirstRunConfigs()
         if (!fs::exists(homeDir / "version"))
             return;
         string version = dev::contentsString(homeDir / "version");
-        version = version.substr(0, version.length() - 1);  // new line char
         if (version != string(ETH_PROJECT_VERSION))
             ETH_WARNING("Retesteth configs version is different (running: '" +
                         string(ETH_PROJECT_VERSION) + "' vs config '" + version +
@@ -113,8 +112,8 @@ std::vector<ClientConfig> const& Options::DynamicOptions::getClientConfigs()
             fs::path configFilePath = configPath / "config";
             ETH_FAIL_REQUIRE_MESSAGE(fs::exists(configFilePath),
                 string("Client config not found: ") + configFilePath.c_str());
-            string s = dev::contentsString(configFilePath);
-            ClientConfig cfg(dataobject::ConvertJsoncppStringToData(s), ClientConfigID(),
+
+            ClientConfig cfg(test::readJsonData(configFilePath), ClientConfigID(),
                 configPath / string(clientName + ".sh"));
 
             // Load genesis templates
@@ -129,8 +128,7 @@ std::vector<ClientConfig> const& Options::DynamicOptions::getClientConfigs()
             fs::path correctMiningRewardPath = genesisTemplatePath / "correctMiningReward.json";
             ETH_FAIL_REQUIRE_MESSAGE(fs::exists(correctMiningRewardPath),
                 "correctMiningReward.json client config not found!");
-            s = dev::contentsString(correctMiningRewardPath);
-            cfg.setMiningRewardInfo(dataobject::ConvertJsoncppStringToData(s));
+            cfg.setMiningRewardInfo(test::readJsonData(correctMiningRewardPath));
             cfg.setCorrectMiningRewardFilePath(correctMiningRewardPath);
 
             auto registerGenesisTemplate = [&cfg, &genesisTemplatePath, &clientName](
