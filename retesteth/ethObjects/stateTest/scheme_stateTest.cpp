@@ -53,6 +53,13 @@ void scheme_stateTestBase::checkUnexecutedTransactions()
         if (!transactionExecutedOrSkipped || atLeastOneWithoutExpectSection)
             ETH_MARK_ERROR("Test has transaction uncovered with expect section!");
     }
+    if (!atLeastOneExecuted)
+    {
+        Options const& opt = Options::get();
+        TestInfo errorInfo(opt.singleTestNet.empty() ? "N/A" : opt.singleTestNet, opt.trDataIndex,
+            opt.trGasIndex, opt.trValueIndex);
+        TestOutputHelper::get().setCurrentTestInfo(errorInfo);
+    }
     ETH_ERROR_REQUIRE_MESSAGE(atLeastOneExecuted, "Specified filter did not run a single transaction! ");
 }
 

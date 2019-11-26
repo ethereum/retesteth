@@ -28,8 +28,8 @@ namespace test
 
 struct TestInfo
 {
-    TestInfo(std::string const&  _fork, size_t _trD, size_t _trG, size_t _trV)
-        : m_sFork(_fork), m_trD(_trD), m_trG(_trG), m_trV(_trV)
+    TestInfo(std::string const& _fork, int _trD, int _trG, int _trV)
+      : m_sFork(_fork), m_trD(_trD), m_trG(_trG), m_trV(_trV)
     {
         m_isStateTransactionInfo = true;
     }
@@ -45,7 +45,7 @@ struct TestInfo
 
 private:
     std::string m_sFork;
-    size_t m_trD, m_trG, m_trV;
+    int m_trD, m_trG, m_trV;
     size_t m_blockNumber;
     bool m_isStateTransactionInfo = false;
     bool m_isBlockchainTestInfo = false;
