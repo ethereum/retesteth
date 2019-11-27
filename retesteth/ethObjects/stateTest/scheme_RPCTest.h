@@ -23,7 +23,7 @@ public:
         if (_test.count("pre") || _test.count("sealEngine") || _test.count("genesis"))
         {
             if (!_test.count("pre") && !_test.count("sealEngine") && !_test.count("genesis"))
-                ETH_STDERROR_MESSAGE(TestOutputHelper::get().caseName() +
+                ETH_STDERROR_MESSAGE(TestInfo::caseName() +
                                      " A genesis information require 'pre', 'sealEngine' and "
                                      "'genesis' sections to be defined!");
 

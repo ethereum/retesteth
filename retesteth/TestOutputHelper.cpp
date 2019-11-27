@@ -73,11 +73,10 @@ void TestOutputHelper::initTest(size_t _maxTests)
     m_currentTestName = string();
     m_currentTestFileName = string();
     m_timer = Timer();
-    m_currentTestCaseName = boost::unit_test::framework::current_test_case().p_name;
     m_isRunning = false;
     if (!Options::get().createRandomTest && _maxTests != 0)
     {
-        std::cout << "Test Case \"" + m_currentTestCaseName + "\": \n";
+        std::cout << "Test Case \"" + TestInfo::caseName() + "\": \n";
         std::lock_guard<std::mutex> lock(g_numberOfRunningTests);
         numberOfRunningTests++;
         m_timer.restart();
@@ -120,8 +119,8 @@ void TestOutputHelper::finishTest()
 	{
 		execTimeName res;
 		res.first = m_timer.elapsed();
-		res.second = caseName();
-		std::cout << res.second + " time: " + toString(res.first) << "\n";
+        res.second = TestInfo::caseName();
+        std::cout << res.second + " time: " + toString(res.first) << "\n";
         std::lock_guard<std::mutex> lock(g_resultsUpdate_mutex);
         execTimeResults.push_back(res);
 	}
@@ -285,7 +284,8 @@ std::string TestInfo::getMessage() const
 {
     if (m_sFork.empty())
         return "";
-    string message = " (" + TestOutputHelper::get().caseName() + "/" + TestOutputHelper::get().testName() + ", fork: " + m_sFork;
+    string message = " (" + m_currentTestCaseName + "/" + TestOutputHelper::get().testName() +
+                     ", fork: " + m_sFork;
     if (m_isBlockchainTestInfo)
         message += ", block: " + to_string(m_blockNumber);
     if (m_isStateTransactionInfo)

@@ -19,8 +19,9 @@
  */
 
 #pragma once
-#include <boost/filesystem.hpp>
 #include <libdevcore/CommonData.h>
+#include <boost/filesystem.hpp>
+#include <boost/test/unit_test.hpp>
 #include <vector>
 
 namespace test
@@ -32,6 +33,7 @@ struct TestInfo
       : m_sFork(_fork), m_trD(_trD), m_trG(_trG), m_trV(_trV)
     {
         m_isStateTransactionInfo = true;
+        m_currentTestCaseName = boost::unit_test::framework::current_test_case().p_name;
     }
 
     TestInfo(std::string const&  _fork, size_t _block)
@@ -42,9 +44,14 @@ struct TestInfo
 
     TestInfo(): m_isStateTransactionInfo(false), m_isBlockchainTestInfo(false) {}
     std::string getMessage() const;
+    static std::string caseName()
+    {
+        return boost::unit_test::framework::current_test_case().p_name;
+    }
 
 private:
     std::string m_sFork;
+    std::string m_currentTestCaseName;
     int m_trD, m_trG, m_trV;
     size_t m_blockNumber;
     bool m_isStateTransactionInfo = false;
@@ -78,7 +85,6 @@ public:
     void setCurrentTestInfo(TestInfo const& _info) { m_testInfo = _info; }
     TestInfo const& testInfo() const { return m_testInfo; }
     std::string const& testName() const { return m_currentTestName; }
-    std::string const& caseName() const { return m_currentTestCaseName; }
     boost::filesystem::path const& testFile() const { return m_currentTestFileName; }
     static void printTestExecStats();
     static bool isAllTestsFinished();
@@ -99,7 +105,6 @@ private:
     size_t m_currTest;
     size_t m_maxTests;
     std::string m_currentTestName;
-    std::string m_currentTestCaseName;
     TestInfo m_testInfo;
     bool m_isRunning;
     boost::filesystem::path m_currentTestFileName;

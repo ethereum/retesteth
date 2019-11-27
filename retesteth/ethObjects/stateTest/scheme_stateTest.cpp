@@ -79,8 +79,7 @@ scheme_stateTest::fieldChecker::fieldChecker(DataObject const& _test)
 
     // Check that `data` in compiled test is not just a string but a binary string
     ETH_ERROR_REQUIRE_MESSAGE(_test.atKey("transaction").count("data"),
-        "Field `data` not found in `transaction` section (" + TestOutputHelper::get().caseName() +
-            ")");
+        "Field `data` not found in `transaction` section (" + TestInfo::caseName() + ")");
     ETH_ERROR_REQUIRE_MESSAGE(_test.atKey("transaction").atKey("data").type() == DataType::Array,
         "Field `data` in `transaction` section is expected to be Array! (" +
             TestOutputHelper::get().testName() + ")");
