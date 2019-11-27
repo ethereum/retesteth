@@ -32,6 +32,7 @@ using namespace std;
 using namespace test;
 namespace fs = boost::filesystem;
 Options::DynamicOptions Options::m_dynamicOptions;
+void displayTestSuites();
 
 void printHelp()
 {
@@ -47,6 +48,7 @@ void printHelp()
          << "Use following configurations from the testpath/Retesteth\n";
     cout << setw(40) << "--help" << setw(25) << "Display list of command arguments\n";
     cout << setw(40) << "--version" << setw(25) << "Display build information\n";
+    cout << setw(40) << "--list" << setw(25) << "Display available test suites\n";
 
     cout << "\nSetting test suite\n";
     cout << setw(40) << "--testpath <PathToTheTestRepo>" << setw(25)
@@ -58,7 +60,7 @@ void printHelp()
     cout << setw(30) << "-d <index>" << setw(25) << "Set the transaction data array index when running GeneralStateTests\n";
     cout << setw(30) << "-g <index>" << setw(25) << "Set the transaction gas array index when running GeneralStateTests\n";
     cout << setw(30) << "-v <index>" << setw(25) << "Set the transaction value array index when running GeneralStateTests\n";
-    cout << setw(30) << "--singletest <TestName>" << setw(0) << "Run on a single test\n";
+    cout << setw(30) << "--singletest <TestName>" << setw(0) << "Run on a single test (filename without Filler.json)\n";
     cout << setw(30) << "--verbosity <level>" << setw(25) << "Set logs verbosity. 0 - silent, 1 - only errors, 2 - informative, >2 - detailed\n";
     cout << setw(30) << "--exectimelog" << setw(25) << "Output execution time for each test suite\n";
     cout << setw(30) << "--statediff" << setw(25) << "Trace state difference for state tests\n";
@@ -348,6 +350,11 @@ Options::Options(int argc, const char** argv)
                     clients.push_back(it);
             }
         }
+        else if (arg == "--list")
+        {
+            displayTestSuites();
+            exit(0);
+        }
         else if (seenSeparator)
 		{
 			cerr << "Unknown option: " + arg << "\n";
@@ -382,5 +389,33 @@ Options const& Options::get(int argc, const char** argv)
 {
 	static Options instance(argc, argv);
 	return instance;
+}
+
+void displayTestSuites()
+{
+    cout << "List of available test suites: \n";
+    cout << std::left;
+    cout << setw(40) << "-t GeneralStateTests" << setw(0) << "Basic state transition tests\n";
+    cout << setw(40) << "-t BCGeneralStateTests" << setw(0) << "Basic state transition tests in blockchain form\n";
+    cout << setw(40) << "-t BlockchainTests" << setw(0) << "All Blockchain tests\n";
+    cout << setw(40) << "-t BlockchainTests/ValidBlocks" << setw(0) << "Subset of correct blocks\n";
+    cout << setw(40) << "-t BlockchainTests/InvalidBlocks" << setw(0) << "Subset of malicious blocks\n";
+    cout << setw(40) << "-t BlockchainTests/TransitionTests" << setw(0) << "Subset of fork transition tests\n";
+    cout << "(Use --filltests to generate the tests, --fillchain to generate BCGeneralStateTests)\n";
+
+    cout << "\nLegacy test suites (Frontier .. ConstantinopleFix):\n";
+    cout << setw(55) << "-t LegacyTests" << setw(0) << "All Legacy tests\n";
+    cout << setw(55) << "-t LegacyTests/Constantinople" << setw(0) << "Subset of Frontier .. Constantinople tests\n";
+    cout << setw(55) << "-t LegacyTests/Constantinople/GeneralStateTests" << setw(0) << "Old state tests\n";
+    cout << setw(55) << "-t LegacyTests/Constantinople/BCGeneralStateTests" << setw(0) << "Old state tests in blockchain form\n";
+    cout << setw(55) << "-t LegacyTests/Constantinople/BlockchainTests" << setw(0) << "Old blockchain tests\n";
+
+    cout << "\nRetesteth unit tests:\n";
+    cout << setw(30) << "-t DataObjectTestSuite" << setw(0) << "Unit tests for json parsing\n";
+    cout << setw(30) << "-t EthObjectsSuite" << setw(0) << "Unit tests for test data objects\n";
+    cout << setw(30) << "-t LLLCSuite" << setw(0) << "Unit tests for external solidity compiler\n";
+    cout << setw(30) << "-t OptionsSuite" << setw(0) << "Unit tests for this cmd menu\n";
+    cout << setw(30) << "-t TestHelperSuite" << setw(0) << "Unit tests for retesteth logic\n";
+    cout << "\n";
 }
 
