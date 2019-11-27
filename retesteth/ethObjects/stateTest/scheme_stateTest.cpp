@@ -16,19 +16,7 @@ DataObject scheme_stateTestBase::getGenesisForRPC(
     DataObject genesis = prepareGenesisParams(_network, _sealEngine);
     genesis["genesis"] = getEnv().getDataForRPC();
     for (auto const& acc : getPre().getData().getSubObjects())
-    {
-        if (genesis["accounts"].count(acc.getKey()))
-        {
-            ETH_LOG("Test `pre` section interfere with genesis config pre state!", 2);
-            // Replace the balance field
-            genesis["accounts"].atKeyUnsafe(acc.getKey())["balance"] = acc.atKey("balance");
-            genesis["accounts"].atKeyUnsafe(acc.getKey())["nonce"] = acc.atKey("nonce");
-            genesis["accounts"].atKeyUnsafe(acc.getKey())["storage"] = acc.atKey("storage");
-            genesis["accounts"].atKeyUnsafe(acc.getKey())["code"] = acc.atKey("code");
-        }
-        else
-            genesis["accounts"].addSubObject(acc);
-    }
+        genesis["accounts"].addSubObject(acc);
     return genesis;
 }
 
