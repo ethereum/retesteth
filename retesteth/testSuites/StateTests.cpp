@@ -367,6 +367,7 @@ DataObject StateTestSuite::doTests(DataObject const& _input, TestSuiteOptions& _
         else
             RunTest(inputTest);
     }
+    TestOutputHelper::get().registerTestRunSuccess();
     return filledTest;
 }
 }// Namespace Close

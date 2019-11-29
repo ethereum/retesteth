@@ -161,7 +161,7 @@ DataObject DoTests(DataObject const& _input, TestSuite::TestSuiteOptions& _opt)
             RunTest(i, _opt);
         }
     }
-
+    TestOutputHelper::get().registerTestRunSuccess();
     return tests;
 }
 

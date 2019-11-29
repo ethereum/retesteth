@@ -86,6 +86,7 @@ public:
     boost::filesystem::path const& testFile() const { return m_currentTestFileName; }
     static void printTestExecStats();
     static bool isAllTestsFinished();
+    static void registerTestRunSuccess();
 
     /// get string representation of current threadID
     static std::string getThreadID();

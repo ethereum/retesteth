@@ -105,13 +105,15 @@ bool TestOutputHelper::checkTest(std::string const& _testName)
 	return true;
 }
 
+void TestOutputHelper::registerTestRunSuccess()
+{
+    std::lock_guard<std::mutex> lock(g_totalTestsRun);
+    totalTestsRun++;
+}
+
 void TestOutputHelper::showProgress()
 {
     m_currTest++;
-    {
-        std::lock_guard<std::mutex> lock(g_totalTestsRun);
-        totalTestsRun++;
-    }
     int m_testsPerProgs = std::max(1, (int)(m_maxTests / 4));
     if (!test::Options::get().createRandomTest && (m_currTest % m_testsPerProgs == 0 || m_currTest ==  m_maxTests))
     {
@@ -185,11 +187,18 @@ void TestOutputHelper::printTestExecStats()
         for (size_t i = 0; i < execTimeResults.size(); i++)
             totalTime += execTimeResults[i].first;
         std::cout << std::endl << "*** Execution time stats" << std::endl;
-        std::cout << setw(45) << "Total Tests: " << setw(25) << "     : " + toString(totalTestsRun)
-                  << "\n";
+        std::cout << setw(45) << "Total Tests: " << setw(25) << "     : " + toString(totalTestsRun) << "\n";
         std::cout << setw(45) << "Total Time: " << setw(25) << "     : " + toString(totalTime) << "\n";
         for (size_t i = 0; i < execTimeResults.size(); i++)
             std::cout << setw(45) << execTimeResults[i].second << setw(25) << " time: " + toString(execTimeResults[i].first) << "\n";
+    }
+    else
+    {
+        string message = "*** Total Tests Run: " + toString(totalTestsRun) + "\n";
+        if (totalTestsRun > 0)
+            ETH_STDOUT_MESSAGE(message);
+        else
+            ETH_STDERROR_MESSAGE(message);
     }
 
     if (execTotalErrors)
