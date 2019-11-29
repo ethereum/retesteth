@@ -42,8 +42,11 @@ typedef std::pair<double, std::string> execTimeName;
 static std::vector<execTimeName> execTimeResults;
 static int execTotalErrors = 0;
 static std::map<std::string, TestOutputHelper> helperThreadMap; // threadID => outputHelper
-static int numberOfRunningTests = 0;
 mutex g_numberOfRunningTests;
+mutex g_totalTestsRun;
+static int numberOfRunningTests = 0;
+static int totalTestsRun = 0;
+static std::map<std::string, std::string> s_failedTestsMap;
 
 mutex g_helperThreadMapMutex;
 TestOutputHelper& TestOutputHelper::get()
@@ -58,6 +61,13 @@ TestOutputHelper& TestOutputHelper::get()
         helperThreadMap.at(getThreadID()).initTest(0);
     }
     return helperThreadMap.at(getThreadID());
+}
+
+void TestOutputHelper::markError(std::string const& _message)
+{
+    m_errors.push_back(_message + m_testInfo.getMessage());
+    std::lock_guard<std::mutex> lock(g_totalTestsRun);
+    s_failedTestsMap[TestOutputHelper::get().testName()] = m_testInfo.getMessage();
 }
 
 void TestOutputHelper::finisAllTestsManually()
@@ -97,16 +107,20 @@ bool TestOutputHelper::checkTest(std::string const& _testName)
 
 void TestOutputHelper::showProgress()
 {
-	m_currTest++;
-	int m_testsPerProgs = std::max(1, (int)(m_maxTests / 4));
-	if (!test::Options::get().createRandomTest && (m_currTest % m_testsPerProgs == 0 || m_currTest ==  m_maxTests))
-	{
-		int percent = int(m_currTest*100/m_maxTests);
-		std::cout << percent << "%";
-		if (percent != 100)
-			std::cout << "...";
-		std::cout << "\n";
-	}
+    m_currTest++;
+    {
+        std::lock_guard<std::mutex> lock(g_totalTestsRun);
+        totalTestsRun++;
+    }
+    int m_testsPerProgs = std::max(1, (int)(m_maxTests / 4));
+    if (!test::Options::get().createRandomTest && (m_currTest % m_testsPerProgs == 0 || m_currTest ==  m_maxTests))
+    {
+        int percent = int(m_currTest*100/m_maxTests);
+        std::cout << percent << "%";
+        if (percent != 100)
+            std::cout << "...";
+        std::cout << "\n";
+    }
 }
 
 std::mutex g_resultsUpdate_mutex;
@@ -116,14 +130,15 @@ void TestOutputHelper::finishTest()
         return;
     m_isRunning = false;
     if (Options::get().exectimelog)
-	{
-		execTimeName res;
-		res.first = m_timer.elapsed();
+    {
+        std::cout << "Tests run: " << m_currTest << std::endl;
+        execTimeName res;
+        res.first = m_timer.elapsed();
         res.second = TestInfo::caseName();
         std::cout << res.second + " time: " + toString(res.first) << "\n";
         std::lock_guard<std::mutex> lock(g_resultsUpdate_mutex);
         execTimeResults.push_back(res);
-	}
+    }
     printBoostError();  // !! could delete instance of TestOutputHelper !!
     std::lock_guard<std::mutex> lock(g_numberOfRunningTests);
     numberOfRunningTests--;
@@ -170,6 +185,8 @@ void TestOutputHelper::printTestExecStats()
         for (size_t i = 0; i < execTimeResults.size(); i++)
             totalTime += execTimeResults[i].first;
         std::cout << std::endl << "*** Execution time stats" << std::endl;
+        std::cout << setw(45) << "Total Tests: " << setw(25) << "     : " + toString(totalTestsRun)
+                  << "\n";
         std::cout << setw(45) << "Total Time: " << setw(25) << "     : " + toString(totalTime) << "\n";
         for (size_t i = 0; i < execTimeResults.size(); i++)
             std::cout << setw(45) << execTimeResults[i].second << setw(25) << " time: " + toString(execTimeResults[i].first) << "\n";
@@ -181,6 +198,10 @@ void TestOutputHelper::printTestExecStats()
         ETH_STDERROR_MESSAGE("*** TOTAL ERRORS DETECTED: " + toString(execTotalErrors) +
                              " errors during all test execution!");
         ETH_STDERROR_MESSAGE("--------");
+
+        std::lock_guard<std::mutex> lock(g_totalTestsRun);
+        for (auto const& error : s_failedTestsMap)
+            std::cout << error.second << std::endl;
     }
     execTimeResults.clear();
     execTotalErrors = 0;

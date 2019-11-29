@@ -40,6 +40,7 @@ struct TestInfo
         : m_sFork(_fork), m_blockNumber(_block), m_isStateTransactionInfo(false)
     {
         m_isBlockchainTestInfo = true;
+        m_currentTestCaseName = boost::unit_test::framework::current_test_case().p_name;
     }
 
     TestInfo(): m_isStateTransactionInfo(false), m_isBlockchainTestInfo(false) {}
@@ -74,10 +75,7 @@ public:
 
     //void setMaxTests(int _count) { m_maxTests = _count; }
     bool checkTest(std::string const& _testName);
-    void markError(std::string const& _message)
-    {
-        m_errors.push_back(_message + m_testInfo.getMessage());
-    }
+    void markError(std::string const& _message);
     std::vector<std::string> const& getErrors() const { return m_errors;}
     void resetErrors() { m_errors.clear(); }
     void setCurrentTestFile(boost::filesystem::path const& _name) { m_currentTestFileName = _name; }
