@@ -84,7 +84,7 @@ void TestOutputHelper::initTest(size_t _maxTests)
     m_currentTestFileName = string();
     m_timer = Timer();
     m_isRunning = false;
-    if (!Options::get().createRandomTest && _maxTests != 0)
+    if (!Options::get().createRandomTest && _maxTests != 0 && !Options::get().singleTestFile)
     {
         std::cout << "Test Case \"" + TestInfo::caseName() + "\": \n";
         std::lock_guard<std::mutex> lock(g_numberOfRunningTests);

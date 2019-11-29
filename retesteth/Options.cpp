@@ -50,17 +50,15 @@ void printHelp()
     cout << setw(40) << "--version" << setw(25) << "Display build information\n";
     cout << setw(40) << "--list" << setw(25) << "Display available test suites\n";
 
-    cout << "\nSetting test suite\n";
-    cout << setw(40) << "--testpath <PathToTheTestRepo>" << setw(25)
-         << "Set path to the test repo\n";
-    cout << setw(40) << "--singletest <TestFile> <TestName>" << setw(0)
-         << "Run test from a custom file\n";
+    cout << "\nSetting test suite and test\n";
+    cout << setw(40) << "--testpath <PathToTheTestRepo>" << setw(25) << "Set path to the test repo\n";
+    cout << setw(40) << "--testfile <TestFile>" << setw(0) << "Run tests from a file. Requires -t <TestSuite>\n";
+    cout << setw(40) << "--singletest <TestName>/<Subtest>" << setw(0) << "Run on a single test (Testname is filename without Filler.json, Subtest is a test name inside the file)\n";
 
     cout << "\nDebugging\n";
     cout << setw(30) << "-d <index>" << setw(25) << "Set the transaction data array index when running GeneralStateTests\n";
     cout << setw(30) << "-g <index>" << setw(25) << "Set the transaction gas array index when running GeneralStateTests\n";
     cout << setw(30) << "-v <index>" << setw(25) << "Set the transaction value array index when running GeneralStateTests\n";
-    cout << setw(30) << "--singletest <TestName>" << setw(0) << "Run on a single test (filename without Filler.json)\n";
     cout << setw(30) << "--verbosity <level>" << setw(25) << "Set logs verbosity. 0 - silent, 1 - only errors, 2 - informative, >2 - detailed\n";
     cout << setw(30) << "--exectimelog" << setw(25) << "Output execution time for each test suite\n";
     cout << setw(30) << "--statediff" << setw(25) << "Trace state difference for state tests\n";
@@ -197,35 +195,22 @@ Options::Options(int argc, const char** argv)
 		{
 			throwIfNoArgumentFollows();
 			singleTest = true;
-			auto name1 = std::string{argv[++i]};
-			if (i + 1 < argc) // two params
-			{
-				auto name2 = std::string{argv[++i]};
-				if (name2[0] == '-') // not param, another option
-				{
-					singleTestName = std::move(name1);
-                    i--;
-                }
-				else
-				{
-					singleTestFile = std::move(name1);
-                    singleTestName = std::move(name2);
-                    if (!fs::exists(singleTestFile.get()))
-                    {
-                        ETH_STDERROR_MESSAGE(
-                            "Could not locate custom test file: '" + singleTestFile.get() + "'");
-                        exit(-1);
-                    }
-                }
-            }
-			else
-				singleTestName = std::move(name1);
-
+            singleTestName = std::string{argv[++i]};
             size_t pos = singleTestName.find_last_of('/');
             if (pos != string::npos)
             {
                 singleSubTestName = singleTestName.substr(pos + 1);
                 singleTestName = singleTestName.substr(0, pos);
+            }
+        }
+        else if (arg == "--testfile")
+        {
+            throwIfNoArgumentFollows();
+            singleTestFile = std::string{argv[++i]};
+            if (!boost::filesystem::exists(singleTestFile.get()))
+            {
+                ETH_STDERROR_MESSAGE("Could not locate custom test file: '" + singleTestFile.get() + "'");
+                exit(1);
             }
         }
         else if (arg == "--singlenet")

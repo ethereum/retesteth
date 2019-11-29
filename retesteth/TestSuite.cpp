@@ -210,11 +210,24 @@ string const c_copierPostf = "Copier";
 
 void TestSuite::runTestWithoutFiller(boost::filesystem::path const& _file) const
 {
-    // Allow to execute a custom test .json file on any test suite
-    auto& testOutput = test::TestOutputHelper::get();
-    testOutput.initTest(1);
-    executeFile(_file);
-    testOutput.finishTest();
+    for (auto const& config : Options::getDynamicOptions().getClientConfigs())
+    {
+        Options::getDynamicOptions().setCurrentConfig(config);
+
+        std::cout << "Running tests for config '" << config.getName() << "' " << config.getId().id()
+                  << std::endl;
+        ETH_LOG("Running " + _file.filename().string() + ": ", 3);
+
+        // Allow to execute a custom test .json file on any test suite
+        auto& testOutput = test::TestOutputHelper::get();
+        testOutput.initTest(1);
+        executeFile(_file);
+        testOutput.finishTest();
+
+        // Disconnect threads from the client
+        if (Options::getDynamicOptions().getClientConfigs().size() > 1)
+            RPCSession::clear();
+    }
 }
 
 string TestSuite::checkFillerExistance(string const& _testFolder) const
