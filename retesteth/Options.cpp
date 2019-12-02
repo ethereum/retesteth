@@ -59,6 +59,7 @@ void printHelp()
     cout << setw(30) << "-d <index>" << setw(25) << "Set the transaction data array index when running GeneralStateTests\n";
     cout << setw(30) << "-g <index>" << setw(25) << "Set the transaction gas array index when running GeneralStateTests\n";
     cout << setw(30) << "-v <index>" << setw(25) << "Set the transaction value array index when running GeneralStateTests\n";
+    cout << setw(30) << "--vmtrace" << setw(25) << "Trace transaction execution\n";
     cout << setw(30) << "--verbosity <level>" << setw(25) << "Set logs verbosity. 0 - silent, 1 - only errors, 2 - informative, >2 - detailed\n";
     cout << setw(30) << "--exectimelog" << setw(25) << "Output execution time for each test suite\n";
     cout << setw(30) << "--statediff" << setw(25) << "Trace state difference for state tests\n";
@@ -154,16 +155,10 @@ Options::Options(int argc, const char** argv)
 			++i;
 		}
 		else if (arg == "--vmtrace")
-		{
-#if ETH_VMTRACE
-			vmtrace = true;
-			g_logVerbosity = 13;
-#else
-			cerr << "--vmtrace option requires a build with cmake -DVMTRACE=1\n";
-			exit(1);
-#endif
-		}
-		else if (arg == "--jsontrace")
+        {
+            vmtrace = true;
+        }
+        else if (arg == "--jsontrace")
 		{
 			throwIfNoArgumentFollows();
 			jsontrace = true;

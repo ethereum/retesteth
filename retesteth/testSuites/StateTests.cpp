@@ -208,7 +208,8 @@ DataObject FillTest(DataObject const& _testFile)
                     string latestBlockNumber = session.test_mineBlocks(1);
                     tr.executed = true;
 
-                    scheme_block blockInfo = session.eth_getBlockByNumber(latestBlockNumber, false);
+                    scheme_block blockInfo =
+                        session.eth_getBlockByNumber(latestBlockNumber, Options::get().vmtrace);
                     if (Options::get().fullstate)
                     {
                         scheme_state remoteState = getRemoteState(session, blockInfo);
@@ -219,6 +220,12 @@ DataObject FillTest(DataObject const& _testFile)
                         if (Options::get().poststate)
                             ETH_STDOUT_MESSAGE("PostState " + TestOutputHelper::get().testInfo().getMessage() +  " : \n" + blockInfo.getStateHash());
                         compareStates(expect.getExpectState(), session, blockInfo);
+                    }
+
+                    if (Options::get().vmtrace)
+                    {
+                        DataObject ret = session.debug_traceTransaction(trHash);
+                        std::cerr << ret.asJson() << std::endl;
                     }
 
                     DataObject indexes;

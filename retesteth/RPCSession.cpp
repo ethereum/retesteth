@@ -256,9 +256,9 @@ DataObject RPCSession::debug_storageRangeAt(std::string const& _blockHashOrNumbe
             quote(_address), quote(_begin), to_string(_maxResults)});
 }
 
-DataObject RPCSession::debug_traceBlock(std::string const&)
+DataObject RPCSession::debug_traceTransaction(std::string const& _trHash)
 {
-    return rpcCall("debug_traceTransaction", {});
+    return rpcCall("debug_traceTransaction", {quote(_trHash), "{}"});
 }
 
 string RPCSession::web3_clientVersion()
