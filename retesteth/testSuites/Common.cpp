@@ -148,4 +148,15 @@ scheme_state getRemoteState(RPCSession& _session, scheme_block const& _latestInf
     return scheme_state(accountsObj);
 }
 
+void printVmTrace(RPCSession& _session, string const& _trHash, string const& _stateRoot)
+{
+    scheme_debugTraceTransaction ret = _session.debug_traceTransaction(_trHash);
+    for (auto const& entry : ret.getEntries())
+        ETH_LOG(entry.getData().asJson(0, false), 0);
+    ETH_LOG(ret.getFinal(), 0);
+    DataObject state;
+    state["stateRoot"] = _stateRoot;
+    ETH_LOG(state.asJson(0, false), 0);
+}
+
 }  // namespace

@@ -144,7 +144,7 @@ string aleth_config = R"({
     ]
 })";
 
-string aleth_config_sh = R"({
+string aleth_config_sh = R"(
 #!/bin/bash
 onexit()
 {

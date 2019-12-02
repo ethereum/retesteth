@@ -56,4 +56,7 @@ scheme_account remoteGetAccount(RPCSession& _session, string const& _account,
 
 // Get list of account from remote client
 DataObject getRemoteAccountList(RPCSession& _session, scheme_block const& _latestInfo);
+
+// json trace vm
+void printVmTrace(RPCSession& _session, std::string const& _trHash, string const& _stateRoot);
 }

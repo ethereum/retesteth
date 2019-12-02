@@ -223,10 +223,7 @@ DataObject FillTest(DataObject const& _testFile)
                     }
 
                     if (Options::get().vmtrace)
-                    {
-                        DataObject ret = session.debug_traceTransaction(trHash);
-                        std::cerr << ret.asJson() << std::endl;
-                    }
+                        printVmTrace(session, trHash, blockInfo.getStateHash());
 
                     DataObject indexes;
                     DataObject transactionResults;
@@ -307,6 +304,8 @@ void RunTest(DataObject const& _testFile)
                         session.eth_getBlockByNumber(latestBlockNumber, false);
                     ETH_ERROR_REQUIRE_MESSAGE(remoteBlockInfo.getTransactionCount() == 1,
                         "Failed to execute transaction on remote client! State test transaction must be valid!");
+                    if (Options::get().vmtrace && !Options::get().filltests)
+                        printVmTrace(session, trHash, postHash);
                     validatePostHash(session, postHash, remoteBlockInfo);
 
                     // Validate log hash

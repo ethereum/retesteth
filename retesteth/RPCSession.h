@@ -45,7 +45,7 @@ public:
         std::string const& _address, int _maxResults);
     DataObject debug_storageRangeAt(std::string const& _blockHashOrNumber, int _txIndex,
         std::string const& _address, std::string const& _begin, int _maxResults);
-    DataObject debug_traceTransaction(std::string const& _trHash);
+    scheme_debugTraceTransaction debug_traceTransaction(std::string const& _trHash);
 
     std::string test_getBlockStatus(std::string const& _blockHash);
     std::string test_getLogHash(std::string const& _txHash);
