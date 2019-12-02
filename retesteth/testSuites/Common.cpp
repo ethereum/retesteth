@@ -103,15 +103,15 @@ scheme_state getRemoteState(RPCSession& _session, scheme_block const& _latestInf
     DataObject accountList;
     if (!Options::get().fullstate)
     {
-        DataObject res = _session.debug_accountRange(_latestInfo.getNumber(),
+        scheme_debugAccountRange res = _session.debug_accountRange(_latestInfo.getNumber(),
             _latestInfo.getTransactionCount(), "", c_accountLimitBeforeHash);
-        if (res.atKey("nextKey").asString() !=
-            "0x0000000000000000000000000000000000000000000000000000000000000000")
+
+        if (res.isNextKey())
             isHugeState = true;
         else
         {
             // looks like the state is small
-            for (auto const& element : res.atKey("addressMap").getSubObjects())
+            for (auto const& element : res.getAccountMap().getSubObjects())
                 accountList.addSubObject(element.asString(), DataObject(DataType::Null));
         }
     }

@@ -41,10 +41,11 @@ public:
 
 	std::string personal_newAccount(std::string const& _password);
 	void personal_unlockAccount(std::string const& _address, std::string const& _password, int _duration);
-    DataObject debug_accountRange(std::string const& _blockHashOrNumber, int _txIndex,
+    scheme_debugAccountRange debug_accountRange(std::string const& _blockHashOrNumber, int _txIndex,
         std::string const& _address, int _maxResults);
     DataObject debug_storageRangeAt(std::string const& _blockHashOrNumber, int _txIndex,
         std::string const& _address, std::string const& _begin, int _maxResults);
+    DataObject debug_traceBlock(std::string const& _blockRLP);
 
     std::string test_getBlockStatus(std::string const& _blockHash);
     std::string test_getLogHash(std::string const& _txHash);

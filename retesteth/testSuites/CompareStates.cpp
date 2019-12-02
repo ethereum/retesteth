@@ -90,16 +90,15 @@ DataObject getRemoteAccountList(RPCSession& _session, scheme_block const& _lates
     size_t cycles = 0;
     while (cycles++ <= cycles_max)
     {
-        DataObject res = _session.debug_accountRange(
+        scheme_debugAccountRange res = _session.debug_accountRange(
             _latestInfo.getNumber(), _latestInfo.getTransactionCount(), startHash, cmaxRows);
-        auto const& subObjects = res.atKey("addressMap").getSubObjects();
-        for (auto const& element : subObjects)
+        auto const& subObjects = res.getAccountMap();
+        for (auto const& element : subObjects.getSubObjects())
             accountList.addSubObject(element.asString(), DataObject(DataType::Null));
-        if (res.atKey("nextKey").asString() ==
-            "0x0000000000000000000000000000000000000000000000000000000000000000")
+        if (!res.isNextKey())
             break;
-        if (subObjects.size() > 0)
-            startHash = subObjects.at(subObjects.size() - 1).getKey();
+        if (subObjects.getSubObjects().size() > 0)
+            startHash = subObjects.at(subObjects.getSubObjects().size() - 1).getKey();
     }
     ETH_ERROR_REQUIRE_MESSAGE(cycles <= cycles_max,
         "Remote state has too many accounts! (>" + to_string(cycles_max * cmaxRows) + ")");

@@ -240,17 +240,25 @@ void RPCSession::clear()
     closingThreads.clear();
 }
 
-DataObject RPCSession::debug_accountRange(
+scheme_debugAccountRange RPCSession::debug_accountRange(
     std::string const& _blockHashOrNumber, int _txIndex, string const& _address, int _maxResults)
 {
-    return rpcCall("debug_accountRange",
-        {quote(_blockHashOrNumber), to_string(_txIndex), quote(_address), to_string(_maxResults)});
+    return scheme_debugAccountRange(rpcCall(
+        "debug_accountRange", {quote(toString(u256(dev::fromHex(_blockHashOrNumber)))),
+                                  to_string(_txIndex), quote(_address), to_string(_maxResults)}));
 }
 
 DataObject RPCSession::debug_storageRangeAt(std::string const& _blockHashOrNumber, int _txIndex,
     string const& _address, string const& _begin, int _maxResults)
 {
-    return rpcCall("debug_storageRangeAt", { quote(_blockHashOrNumber), to_string(_txIndex), quote(_address) , quote(_begin), to_string(_maxResults) });
+    return rpcCall("debug_storageRangeAt",
+        {quote(toString(u256(dev::fromHex(_blockHashOrNumber)))), to_string(_txIndex),
+            quote(_address), quote(_begin), to_string(_maxResults)});
+}
+
+DataObject RPCSession::debug_traceBlock(std::string const&)
+{
+    return rpcCall("debug_traceTransaction", {});
 }
 
 string RPCSession::web3_clientVersion()
@@ -304,7 +312,7 @@ int RPCSession::eth_getTransactionCount(
     std::string const& _address, std::string const& _blockNumber)
 {
     DataObject res = rpcCall("eth_getTransactionCount", {quote(_address), quote(_blockNumber)});
-    return (res.type() == DataType::String) ? atoi(res.asString().c_str()) : res.asInt();
+    return (res.type() == DataType::String) ? (int)u256(dev::fromHex(res.asString())) : res.asInt();
 }
 
 string RPCSession::eth_getBalance(string const& _address, string const& _blockNumber)
@@ -446,7 +454,7 @@ DataObject RPCSession::rpcCall(
     DataObject result = ConvertJsoncppStringToData(reply, string(), true);
     if (result.count("error"))
         result["result"] = "";
-    requireJsonFields(result, "rpcCall_response",
+    requireJsonFields(result, "rpcCall_response ('" + request.substr(0, 70) + "')",
         {{"jsonrpc", {{DataType::String}, jsonField::Required}},
             {"id", {{DataType::Integer}, jsonField::Required}},
             {"result", {{DataType::String, DataType::Integer, DataType::Bool, DataType::Object,
