@@ -103,15 +103,15 @@ scheme_state getRemoteState(RPCSession& _session, scheme_block const& _latestInf
     DataObject accountList;
     if (!Options::get().fullstate)
     {
-        DataObject res = _session.debug_accountRange(_latestInfo.getNumber(),
+        scheme_debugAccountRange res = _session.debug_accountRange(_latestInfo.getNumber(),
             _latestInfo.getTransactionCount(), "", c_accountLimitBeforeHash);
-        if (res.atKey("nextKey").asString() !=
-            "0x0000000000000000000000000000000000000000000000000000000000000000")
+
+        if (res.isNextKey())
             isHugeState = true;
         else
         {
             // looks like the state is small
-            for (auto const& element : res.atKey("addressMap").getSubObjects())
+            for (auto const& element : res.getAccountMap().getSubObjects())
                 accountList.addSubObject(element.asString(), DataObject(DataType::Null));
         }
     }
@@ -146,6 +146,17 @@ scheme_state getRemoteState(RPCSession& _session, scheme_block const& _latestInf
                            + accountsObj.asJson());
 
     return scheme_state(accountsObj);
+}
+
+void printVmTrace(RPCSession& _session, string const& _trHash, string const& _stateRoot)
+{
+    scheme_debugTraceTransaction ret = _session.debug_traceTransaction(_trHash);
+    for (auto const& entry : ret.getEntries())
+        ETH_LOG(entry.getData().asJson(0, false), 0);
+    ETH_LOG(ret.getFinal(), 0);
+    DataObject state;
+    state["stateRoot"] = _stateRoot;
+    ETH_LOG(state.asJson(0, false), 0);
 }
 
 }  // namespace

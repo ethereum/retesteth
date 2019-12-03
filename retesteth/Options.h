@@ -2,7 +2,7 @@
 #pragma once
 
 #include <libdevcore/Exceptions.h>
-#include <retesteth/ClientConfig.h>
+#include <retesteth/configs/ClientConfig.h>
 #include <boost/filesystem.hpp>
 #include <boost/optional.hpp>
 #include <boost/program_options.hpp>
@@ -61,10 +61,10 @@ public:
     std::string singleTestName;     // A test name (usually a file.json test)
     std::string singleSubTestName;  // A test name inside a file.json (for blockchain tests)
     std::string singleTestNet;
-    int trDataIndex;	///< GeneralState data
-    int trGasIndex;		///< GeneralState gas
-    int trValueIndex;	///< GeneralState value
-	bool all = false;	///< Running every test, including time consuming ones.
+    int trDataIndex;    ///< GeneralState data
+    int trGasIndex;     ///< GeneralState gas
+    int trValueIndex;   ///< GeneralState value
+    bool all = false;	///< Running every test, including time consuming ones.
 	bool nonetwork = false;///< For libp2p
 	/// @}
 

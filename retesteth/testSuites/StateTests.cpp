@@ -208,7 +208,8 @@ DataObject FillTest(DataObject const& _testFile)
                     string latestBlockNumber = session.test_mineBlocks(1);
                     tr.executed = true;
 
-                    scheme_block blockInfo = session.eth_getBlockByNumber(latestBlockNumber, false);
+                    scheme_block blockInfo =
+                        session.eth_getBlockByNumber(latestBlockNumber, Options::get().vmtrace);
                     if (Options::get().fullstate)
                     {
                         scheme_state remoteState = getRemoteState(session, blockInfo);
@@ -220,6 +221,9 @@ DataObject FillTest(DataObject const& _testFile)
                             ETH_STDOUT_MESSAGE("PostState " + TestOutputHelper::get().testInfo().getMessage() +  " : \n" + blockInfo.getStateHash());
                         compareStates(expect.getExpectState(), session, blockInfo);
                     }
+
+                    if (Options::get().vmtrace)
+                        printVmTrace(session, trHash, blockInfo.getStateHash());
 
                     DataObject indexes;
                     DataObject transactionResults;
@@ -257,7 +261,8 @@ void RunTest(DataObject const& _testFile)
     {
         bool networkSkip = false;
         string const& network = post.first;
-        if (!Options::get().singleTestNet.empty() && Options::get().singleTestNet != network)
+        if ((!Options::get().singleTestNet.empty() && Options::get().singleTestNet != network) ||
+            !inArray(Options::getDynamicOptions().getCurrentConfig().getNetworks(), network))
             networkSkip = true;
         else
             session.test_setChainParams(test.getGenesisForRPC(network, "NoReward").asJson());
@@ -299,6 +304,8 @@ void RunTest(DataObject const& _testFile)
                         session.eth_getBlockByNumber(latestBlockNumber, false);
                     ETH_ERROR_REQUIRE_MESSAGE(remoteBlockInfo.getTransactionCount() == 1,
                         "Failed to execute transaction on remote client! State test transaction must be valid!");
+                    if (Options::get().vmtrace && !Options::get().filltests)
+                        printVmTrace(session, trHash, postHash);
                     validatePostHash(session, postHash, remoteBlockInfo);
 
                     // Validate log hash
@@ -366,6 +373,7 @@ DataObject StateTestSuite::doTests(DataObject const& _input, TestSuiteOptions& _
         else
             RunTest(inputTest);
     }
+    TestOutputHelper::get().registerTestRunSuccess();
     return filledTest;
 }
 }// Namespace Close

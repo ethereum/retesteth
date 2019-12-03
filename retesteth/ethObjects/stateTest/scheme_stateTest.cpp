@@ -16,19 +16,7 @@ DataObject scheme_stateTestBase::getGenesisForRPC(
     DataObject genesis = prepareGenesisParams(_network, _sealEngine);
     genesis["genesis"] = getEnv().getDataForRPC();
     for (auto const& acc : getPre().getData().getSubObjects())
-    {
-        if (genesis["accounts"].count(acc.getKey()))
-        {
-            ETH_LOG("Test `pre` section interfere with genesis config pre state!", 2);
-            // Replace the balance field
-            genesis["accounts"].atKeyUnsafe(acc.getKey())["balance"] = acc.atKey("balance");
-            genesis["accounts"].atKeyUnsafe(acc.getKey())["nonce"] = acc.atKey("nonce");
-            genesis["accounts"].atKeyUnsafe(acc.getKey())["storage"] = acc.atKey("storage");
-            genesis["accounts"].atKeyUnsafe(acc.getKey())["code"] = acc.atKey("code");
-        }
-        else
-            genesis["accounts"].addSubObject(acc);
-    }
+        genesis["accounts"].addSubObject(acc);
     return genesis;
 }
 
@@ -52,6 +40,13 @@ void scheme_stateTestBase::checkUnexecutedTransactions()
         atLeastOneWithoutExpectSection = !transactionExecutedOrSkipped || atLeastOneWithoutExpectSection;
         if (!transactionExecutedOrSkipped || atLeastOneWithoutExpectSection)
             ETH_MARK_ERROR("Test has transaction uncovered with expect section!");
+    }
+    if (!atLeastOneExecuted)
+    {
+        Options const& opt = Options::get();
+        TestInfo errorInfo(opt.singleTestNet.empty() ? "N/A" : opt.singleTestNet, opt.trDataIndex,
+            opt.trGasIndex, opt.trValueIndex);
+        TestOutputHelper::get().setCurrentTestInfo(errorInfo);
     }
     ETH_ERROR_REQUIRE_MESSAGE(atLeastOneExecuted, "Specified filter did not run a single transaction! ");
 }
@@ -84,8 +79,7 @@ scheme_stateTest::fieldChecker::fieldChecker(DataObject const& _test)
 
     // Check that `data` in compiled test is not just a string but a binary string
     ETH_ERROR_REQUIRE_MESSAGE(_test.atKey("transaction").count("data"),
-        "Field `data` not found in `transaction` section (" + TestOutputHelper::get().caseName() +
-            ")");
+        "Field `data` not found in `transaction` section (" + TestInfo::caseName() + ")");
     ETH_ERROR_REQUIRE_MESSAGE(_test.atKey("transaction").atKey("data").type() == DataType::Array,
         "Field `data` in `transaction` section is expected to be Array! (" +
             TestOutputHelper::get().testName() + ")");

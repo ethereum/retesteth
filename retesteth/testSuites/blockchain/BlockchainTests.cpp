@@ -105,47 +105,6 @@ TestSuite::FillerPath LegacyConstantinopleBCGeneralStateTestsSuite::suiteFillerF
 
 }  // Namespace Close
 
-class BlockchainTestInvalidFixture
-{
-public:
-    BlockchainTestInvalidFixture()
-    {
-        test::BlockchainTestInvalidSuite suite;
-        string casename = boost::unit_test::framework::current_test_case().p_name;
-        boost::filesystem::path suiteFillerPath = suite.getFullPathFiller(casename).parent_path();
-
-        if (casename == "stQuadraticComplexityTest" && !test::Options::get().all)
-        {
-            std::cout << "Skipping " << casename << " because --all option is not specified.\n";
-            test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
-            return;
-        }
-
-        suite.runAllTestsInFolder(casename);
-        test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
-    }
-};
-
-class BlockchainTestValidFixture
-{
-public:
-    BlockchainTestValidFixture()
-    {
-        test::BlockchainTestValidSuite suite;
-        string casename = boost::unit_test::framework::current_test_case().p_name;
-        boost::filesystem::path suiteFillerPath = suite.getFullPathFiller(casename).parent_path();
-
-        if (casename == "bcExploitTest" && !test::Options::get().all)
-        {
-            std::cout << "Skipping " << casename << " because --all option is not specified.\n";
-            test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
-            return;
-        }
-
-        suite.runAllTestsInFolder(casename);
-        test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
-    }
-};
 
 class BlockchainTestTransitionFixture
 {

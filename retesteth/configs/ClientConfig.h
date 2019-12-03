@@ -1,7 +1,7 @@
 #pragma once
 #include <retesteth/Socket.h>
+#include <retesteth/TestHelper.h>
 #include <retesteth/ethObjects/object.h>
-#include <retesteth/dataObject/ConvertFile.h>
 #include <boost/asio.hpp>
 #include <mutex>
 #include <string>
@@ -20,19 +20,19 @@ bool validateIP(std::string const& _ip)
         return false;
     return true;
 }
-}
+}  // namespace
 
 namespace test
 {
-
 struct ClientConfigID
 {
-    /// ClientConfigID handles the unique id logic so not to store it inside int and accedentially change
-    /// or mistake with some other value. ???possibly a class for unique object ids???
+    /// ClientConfigID handles the unique id logic so not to store it inside int and accedentially
+    /// change or mistake with some other value. ???possibly a class for unique object ids???
     ClientConfigID();
-    bool operator == (ClientConfigID const& _right) const { return m_id == _right.id(); }
-    bool operator != (ClientConfigID const& _right) const { return m_id != _right.id(); }
+    bool operator==(ClientConfigID const& _right) const { return m_id == _right.id(); }
+    bool operator!=(ClientConfigID const& _right) const { return m_id != _right.id(); }
     unsigned id() const { return m_id; }
+
 private:
     unsigned m_id;
 };
@@ -40,19 +40,24 @@ private:
 class ClientConfig : public object
 {
 public:
-    ClientConfig(DataObject const& _obj, ClientConfigID const& _id, fs::path _shell = fs::path())
+    ClientConfig(fs::path const& _clientConfigPath, DataObject const& _obj,
+        ClientConfigID const& _id, fs::path _shell = fs::path())
       : object(_obj), m_shellPath(_shell), m_id(_id)
     {
-        requireJsonFields(_obj, "ClientConfig ",
-            {{"name", {DataType::String}}, {"socketType", {DataType::String}},
+        m_configFilePath = _clientConfigPath;
+        requireJsonFields(_obj, "ClientConfig (" + m_configFilePath.string() + ")",
+            {
+                {"name", {DataType::String}},
+                {"socketType", {DataType::String}},
                 {"socketAddress", {DataType::String, DataType::Array}},
                 {"forks", {DataType::Array}},
-                {"additonalForks", {DataType::Array}},
-            }, true);
+                {"additionalForks", {DataType::Array}},
+            },
+            true);
 
         for (auto const& name : m_data.atKey("forks").getSubObjects())
             m_networks.push_back(name.asString());
-        for (auto const& name : m_data.atKey("additonalForks").getSubObjects())
+        for (auto const& name : m_data.atKey("additionalForks").getSubObjects())
             m_additional_networks.push_back(name.asString());
 
         std::string const& socketTypeStr = _obj.atKey("socketType").asString();
@@ -91,7 +96,8 @@ public:
                 "\"path to .ipc socket\"], [tcp, \"address:port\"]");
     }
 
-    fs::path const& getConfigFilePath() const { return m_configCorrectMiningRewardFilePath; }
+    fs::path const& getConfigFilePath() const { return m_configFilePath; }
+    fs::path const& getCorrectMiningRewardConfigFilePath() const { return m_configCorrectMiningRewardFilePath; }
     fs::path const& getShellPath() const { return m_shellPath; }
     std::string const& getName() const { return m_data.atKey("name").asString(); }
     Socket::SocketType getSocketType() const { return m_socketType; }
@@ -106,26 +112,32 @@ public:
     ClientConfigID const& getId() const { return m_id; }
     std::vector<string> const& getNetworks() const { return m_networks; }
     std::vector<string> const& getAdditionalNetworks() const { return m_additional_networks; }
-    void addGenesisTemplate(string const& _network, fs::path const& _pathToJson) {
-        string s = dev::contentsString(_pathToJson);
-        m_genesisTemplate[_network] = dataobject::ConvertJsoncppStringToData(s);
+    void addGenesisTemplate(string const& _network, fs::path const& _pathToJson)
+    {
+        m_genesisTemplate[_network] = test::readJsonData(_pathToJson);
     }
-    DataObject const& getGenesisTemplate(string const& _network) const {
-        ETH_FAIL_REQUIRE_MESSAGE(m_genesisTemplate.count(_network), "Genesis template for network '" + _network + "' not found!");
+    DataObject const& getGenesisTemplate(string const& _network) const
+    {
+        ETH_FAIL_REQUIRE_MESSAGE(m_genesisTemplate.count(_network),
+            "Genesis template for network '" + _network + "' not found!");
         return m_genesisTemplate.at(_network);
     }
     void setMiningRewardInfo(DataObject const& _info) { m_correctReward = _info; }
-    void setCorrectMiningRewardFilePath(fs::path const& _path) { m_configCorrectMiningRewardFilePath = _path; }
+    void setCorrectMiningRewardFilePath(fs::path const& _path)
+    {
+        m_configCorrectMiningRewardFilePath = _path;
+    }
     DataObject const& getMiningRewardInfo() const { return m_correctReward; }
 
 private:
     Socket::SocketType m_socketType;  ///< Connection type
     fs::path m_shellPath;             ///< Script to start new instance of a client (for ipc)
-    fs::path m_configCorrectMiningRewardFilePath;        ///< Config correctMiningReward file path
-    ClientConfigID m_id;              ///< Internal id
-    std::vector<string> m_networks;   ///< Allowed forks as network name
-    std::vector<string> m_additional_networks;   ///< Allowed forks as network name
-    std::map<string, DataObject> m_genesisTemplate; ///< Template For test_setChainParams
-    DataObject m_correctReward;       ///< Correct mining reward info for StateTests->BlockchainTests
+    fs::path m_configFilePath;        ///< Path to the client fork networks config
+    fs::path m_configCorrectMiningRewardFilePath;    ///< Config correctMiningReward file path
+    ClientConfigID m_id;                             ///< Internal id
+    std::vector<string> m_networks;                  ///< Allowed forks as network name
+    std::vector<string> m_additional_networks;       ///< Allowed forks as network name
+    std::map<string, DataObject> m_genesisTemplate;  ///< Template For test_setChainParams
+    DataObject m_correctReward;  ///< Correct mining reward info for StateTests->BlockchainTests
 };
-}
+}  // namespace test

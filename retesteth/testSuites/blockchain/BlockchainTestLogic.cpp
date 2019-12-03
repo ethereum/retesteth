@@ -74,14 +74,18 @@ void RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _
         std::cout << "Running " << TestOutputHelper::get().testName() << std::endl;
     scheme_blockchainTest inputTest(_testObject);
     RPCSession& session = RPCSession::instance(TestOutputHelper::getThreadID());
+
+    // Info for genesis
     TestInfo errorInfo (inputTest.getNetwork(), 0);
     TestOutputHelper::get().setCurrentTestInfo(errorInfo);
-
     session.test_setChainParams(inputTest.getGenesisForRPC(inputTest.getNetwork()).asJson());
 
     // for all blocks
+    size_t blockNumber = 0;
     for (auto const& brlp : inputTest.getBlockRlps())
     {
+        TestInfo errorInfo(inputTest.getNetwork(), blockNumber++);
+        TestOutputHelper::get().setCurrentTestInfo(errorInfo);
         session.test_importRawBlock(brlp);
         if (session.getLastRPCError().type() != DataType::Null)
         {
@@ -157,7 +161,7 @@ DataObject DoTests(DataObject const& _input, TestSuite::TestSuiteOptions& _opt)
             RunTest(i, _opt);
         }
     }
-
+    TestOutputHelper::get().registerTestRunSuccess();
     return tests;
 }
 

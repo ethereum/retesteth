@@ -10,6 +10,8 @@
 #include <cstdlib>
 #include <iostream>
 #include <thread>
+#include <retesteth/testSuites/StateTests.h>
+#include <retesteth/testSuites/blockchain/BlockchainTests.h>
 
 using namespace boost::unit_test;
 static std::ostringstream strCout;
@@ -32,21 +34,21 @@ void customTestSuite()
 				"Create random test error! See std::error for more details.");
 	}*/
 
-	// if running a singletest
-	if (opt.singleTestFile.is_initialized())
-	{
-		boost::filesystem::path file(opt.singleTestFile.get());
-		if (opt.rCurrentTestSuite.find_first_of("GeneralStateTests") != std::string::npos)
-		{
-			//dev::test::StateTestSuite suite;
-			//suite.runTestWithoutFiller(file);
-		}
-		else if (opt.rCurrentTestSuite.find_first_of("BlockchainTests") != std::string::npos)
-		{
-			//dev::test::BlockchainTestSuite suite;
-			//suite.runTestWithoutFiller(file);
-		}
-		else if (opt.rCurrentTestSuite.find_first_of("TransitionTests") != std::string::npos)
+    // if running a testfile
+    if (opt.singleTestFile.is_initialized())
+    {
+        boost::filesystem::path file(opt.singleTestFile.get());
+        if (opt.rCurrentTestSuite.find_first_of("GeneralStateTests") != std::string::npos)
+        {
+            test::StateTestSuite suite;
+            suite.runTestWithoutFiller(file);
+        }
+        else if (opt.rCurrentTestSuite.find_first_of("BlockchainTests") != std::string::npos)
+        {
+            test::BlockchainTestValidSuite suite;
+            suite.runTestWithoutFiller(file);
+        }
+        else if (opt.rCurrentTestSuite.find_first_of("TransitionTests") != std::string::npos)
 		{
 			//dev::test::TransitionTestsSuite suite;
 			//suite.runTestWithoutFiller(file);
@@ -145,16 +147,15 @@ int main(int argc, const char* argv[])
 		}
 		if (!testSuiteFound && opt.singleTestFile.is_initialized())
 		{
-			std::cerr
-				<< "singletest <file> <testname>  requires a test suite to be set -t <TestSuite>\n";
+            std::cerr << "testfile <file>  requires a test suite to be set -t <TestSuite>\n";
 			return -1;
 		}
 
 		// Disable initial output as the random test will output valid json to std
-		oldCoutStreamBuf = std::cout.rdbuf();
-		oldCerrStreamBuf = std::cerr.rdbuf();
-		std::cout.rdbuf(strCout.rdbuf());
-		std::cerr.rdbuf(strCout.rdbuf());
+        oldCoutStreamBuf = std::cout.rdbuf();
+        oldCerrStreamBuf = std::cerr.rdbuf();
+        std::cout.rdbuf(strCout.rdbuf());
+        std::cerr.rdbuf(strCout.rdbuf());
 
 		// add custom test suite
 		test_suite* ts1 = BOOST_TEST_SUITE("customTestSuite");
@@ -175,7 +176,7 @@ int main(int argc, const char* argv[])
     }
 
     // Print suggestions of a test case if test suite not found
-    if (!sMinusTArg.empty() && !test::inArray(c_allTestNames, sMinusTArg))
+    if (!sMinusTArg.empty() && !test::inArray(c_allTestNames, sMinusTArg) && sMinusTArg != "customTestSuite")
     {
         std::cerr << "Error: '" + sMinusTArg + "' suite not found! \n";
         printTestSuiteSuggestions(sMinusTArg);

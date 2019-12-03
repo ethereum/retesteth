@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.9.3)
 set(CMAKE_TOOLCHAIN_FILE ${CMAKE_SOURCE_DIR}/toolchain.cmake)
 
-cmake_policy(SET CMP0054 OLD)
-cmake_policy(SET CMP0045 OLD)
 include("./cmake/Hunter/HunterGate.cmake")
 
 set(HUNTER_CONFIGURATION_TYPES Release)
