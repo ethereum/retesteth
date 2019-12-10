@@ -43,7 +43,11 @@ string default_config = R"({
         "EIP158ToByzantiumAt5",
         "HomesteadToDaoAt5",
         "ByzantiumToConstantinopleFixAt5"
-    ]
+    ],
+    "exceptions" : {
+        "ExtraDataTooBig" : "extra-data too long",
+        "InvalidDifficulty" : "invalid difficulty"
+    }
 })";
 
 string besu_config = R"({
@@ -68,7 +72,11 @@ string besu_config = R"({
         "EIP158ToByzantiumAt5",
         "HomesteadToDaoAt5",
         "ByzantiumToConstantinopleFixAt5"
-    ]
+    ],
+    "exceptions" : {
+        "ExtraDataTooBig" : "extra-data too long",
+        "InvalidDifficulty" : "invalid difficulty"
+    }
 })";
 
 string alethTCP_config = R"({
@@ -94,7 +102,11 @@ string alethTCP_config = R"({
         "EIP158ToByzantiumAt5",
         "HomesteadToDaoAt5",
         "ByzantiumToConstantinopleFixAt5"
-    ]
+    ],
+    "exceptions" : {
+        "ExtraDataTooBig" : "extra-data too long",
+        "InvalidDifficulty" : "invalid difficulty"
+    }
 })";
 
 string alethIPCDebug_config = R"({
@@ -117,7 +129,11 @@ string alethIPCDebug_config = R"({
         "EIP158ToByzantiumAt5",
         "HomesteadToDaoAt5",
         "ByzantiumToConstantinopleFixAt5"
-    ]
+    ],
+    "exceptions" : {
+        "ExtraDataTooBig" : "extra-data too long",
+        "InvalidDifficulty" : "invalid difficulty"
+    }
 })";
 
 
@@ -141,7 +157,11 @@ string aleth_config = R"({
         "EIP158ToByzantiumAt5",
         "HomesteadToDaoAt5",
         "ByzantiumToConstantinopleFixAt5"
-    ]
+    ],
+    "exceptions" : {
+        "ExtraDataTooBig" : "extra-data too long",
+        "InvalidDifficulty" : "invalid difficulty"
+    }
 })";
 
 string aleth_config_sh = R"(

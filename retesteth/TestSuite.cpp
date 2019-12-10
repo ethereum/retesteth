@@ -507,7 +507,7 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
             }
             catch (std::exception const& _ex)
             {
-                ETH_STDERROR_MESSAGE("ERROR OCCURED FILLING TESTS: " + string(_ex.what()));
+                ETH_MARK_ERROR("ERROR OCCURED FILLING TESTS: " + string(_ex.what()));
                 RPCSession::sessionEnd(TestOutputHelper::getThreadID(), RPCSession::SessionStatus::HasFinished);
                 wasErrors = true;
             }

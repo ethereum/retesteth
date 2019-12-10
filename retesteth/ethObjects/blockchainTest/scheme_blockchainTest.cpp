@@ -4,7 +4,7 @@ using namespace test;
 
 scheme_blockchainTestBase::fieldChecker::fieldChecker(DataObject const& _test)
 {
-    requireJsonFields(_test, "blockchainTest " + _test.getKey(),
+    requireJsonFields(_test, "blockchainTestBase " + _test.getKey(),
         {{"_info", {{DataType::Object}, jsonField::Optional}},
             {"blocks", {{DataType::Array}, jsonField::Required}},
             {"expect", {{DataType::Array}, jsonField::Optional}},
@@ -17,13 +17,12 @@ scheme_blockchainTestBase::fieldChecker::fieldChecker(DataObject const& _test)
             {"postState", {{DataType::Object}, jsonField::Optional}},
             {"postStateHash", {{DataType::String}, jsonField::Optional}},
             {"pre", {{DataType::Object}, jsonField::Required}},
-            {"sealEngine", {{DataType::String}, jsonField::Optional}}
-                      });
+            {"sealEngine", {{DataType::String}, jsonField::Optional}}});
 }
 
 scheme_blockchainTest::fieldChecker::fieldChecker(DataObject const& _test)
 {
-    requireJsonFields(_test, "blockchainTest " + _test.getKey(),
+    requireJsonFields(_test, "blockchainTest" + _test.getKey(),
         {{"_info", {{DataType::Object}, jsonField::Required}},
             {"blocks", {{DataType::Array}, jsonField::Required}},
             {"genesisBlockHeader", {{DataType::Object}, jsonField::Required}},
@@ -33,8 +32,7 @@ scheme_blockchainTest::fieldChecker::fieldChecker(DataObject const& _test)
             {"postState", {{DataType::Object}, jsonField::Optional}},
             {"postStateHash", {{DataType::String}, jsonField::Optional}},
             {"pre", {{DataType::Object}, jsonField::Required}},
-            {"sealEngine", {{DataType::String}, jsonField::Optional}}
-                      });
+            {"sealEngine", {{DataType::String}, jsonField::Optional}}});
 }
 
 scheme_blockchainTestBase::scheme_blockchainTestBase(DataObject const& _test)
@@ -59,15 +57,14 @@ scheme_blockchainTest::scheme_blockchainTest(DataObject const& _test)
         // Valid block json description
         if (blockSection.count("blockHeader"))
         {
-            requireJsonFields(blockSection, "blockchainTest " + _test.getKey(),
-                {   {"blockHeader", {{DataType::Object}, jsonField::Required}},
+            requireJsonFields(blockSection, "blockchainTestValidblock " + _test.getKey(),
+                {{"blockHeader", {{DataType::Object}, jsonField::Required}},
                     {"rlp", {{DataType::String}, jsonField::Required}},
                     {"transactions", {{DataType::Array}, jsonField::Required}},
                     {"uncleHeaders", {{DataType::Array}, jsonField::Optional}},
                     {"blocknumber", {{DataType::String}, jsonField::Optional}},
                     {"chainname", {{DataType::String}, jsonField::Optional}},
-                    {"chainnetwork", {{DataType::String}, jsonField::Optional}}
-                              });
+                    {"chainnetwork", {{DataType::String}, jsonField::Optional}}});
             scheme_blockHeader(blockSection.atKey("blockHeader"));
             for (auto const& trSection: blockSection.atKey("transactions").getSubObjects())
                 m_transactions.push_back(scheme_transaction(trSection));
@@ -75,24 +72,15 @@ scheme_blockchainTest::scheme_blockchainTest(DataObject const& _test)
         else
         {
             // Invalid block json description
-            requireJsonFields(blockSection, "blockchainTest " + _test.getKey(),
-                {   {"blockHeader", {{DataType::Object}, jsonField::Optional}},
+            requireJsonFields(blockSection, "blockchainTestInvalidblock " + _test.getKey(),
+                {{"blockHeader", {{DataType::Object}, jsonField::Optional}},
                     {"rlp", {{DataType::String}, jsonField::Required}},
                     {"transactions", {{DataType::Array}, jsonField::Optional}},
                     {"uncleHeaders", {{DataType::Array}, jsonField::Optional}},
                     {"blocknumber", {{DataType::String}, jsonField::Optional}},
                     {"chainname", {{DataType::String}, jsonField::Optional}},
-                    {"chainnetwork", {{DataType::String}, jsonField::Optional}},
-                    {"expectExceptionByzantium", {{DataType::String}, jsonField::Optional}},
-                    {"expectExceptionConstantinople", {{DataType::String}, jsonField::Optional}},
-                    {"expectExceptionConstantinopleFix", {{DataType::String}, jsonField::Optional}},
-                    {"expectExceptionEIP150", {{DataType::String}, jsonField::Optional}},
-                    {"expectExceptionEIP158", {{DataType::String}, jsonField::Optional}},
-                    {"expectExceptionFrontier", {{DataType::String}, jsonField::Optional}},
-                    {"expectExceptionHomestead", {{DataType::String}, jsonField::Optional}},
-                    {"expectExceptionIstanbul", {{DataType::String}, jsonField::Optional}},
-                    {"expectExceptionALL", {{DataType::String}, jsonField::Optional}}
-                              });
+                    {"expectException", {{DataType::String}, jsonField::Optional}},
+                    {"chainnetwork", {{DataType::String}, jsonField::Optional}}});
        }
 
         m_blockRLPs.push_back(blockSection.atKey("rlp").asString());

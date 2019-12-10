@@ -65,6 +65,13 @@ public:
 
     /// Returns empty string if last RPC call had no errors, error string if there was an error
     DataObject const& getLastRPCError() const { return m_lastRPCError; }
+    string const& getLastRPCErrorMessage() const
+    {
+        if (m_lastRPCError.type() != DataType::Null)
+            return m_lastRPCError.atKey("error").asString();
+        static const string empty;
+        return empty;
+    }
     Socket::SocketType getSocketType() const { return m_socket.type(); }
     std::string const& getSocketPath() const { return m_socket.path(); }
 
