@@ -5,6 +5,25 @@
 using namespace dev;
 
 namespace test {
+struct BlockNumber
+{
+    BlockNumber(string const& _number) : m_blockNumber(_number) {}
+    int getBlockNumberAsInt() const { return hexStringToInt(m_blockNumber); }
+    string getBlockNumberAsString() const { return m_blockNumber; }
+    void applyShift(int _shift)
+    {
+        m_blockNumber = toCompactHexPrefixed(getBlockNumberAsInt() + _shift);
+    }
+    void applyShift(string const& _shift)
+    {
+        m_blockNumber = toCompactHexPrefixed(getBlockNumberAsInt() + hexStringToInt(_shift));
+    }
+
+private:
+    string m_blockNumber;
+    int hexStringToInt(string const& _str) const { return (int)u256(fromHex(_str)); }
+};
+
 class scheme_block : public object
 {
 public:

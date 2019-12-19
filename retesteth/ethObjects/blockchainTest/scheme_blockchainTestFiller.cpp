@@ -41,7 +41,17 @@ scheme_blockchainTestFiller::blockSection::blockSection(DataObject const& _data)
                 {"gasLimit", {{DataType::String}, jsonField::Optional}},
                 {"number", {{DataType::String}, jsonField::Optional}},
                 {"bloom", {{DataType::String}, jsonField::Optional}},
+                {"coinbase", {{DataType::String}, jsonField::Optional}},
+                {"gasUsed", {{DataType::String}, jsonField::Optional}},
+                {"mixHash", {{DataType::String}, jsonField::Optional}},
                 {"timestamp", {{DataType::String}, jsonField::Optional}},
+                {"nonce", {{DataType::String}, jsonField::Optional}},
+                {"parentHash", {{DataType::String}, jsonField::Optional}},
+                {"receiptTrie", {{DataType::String}, jsonField::Optional}},
+                {"stateRoot", {{DataType::String}, jsonField::Optional}},
+                {"transactionsTrie", {{DataType::String}, jsonField::Optional}},
+                {"uncleHash", {{DataType::String}, jsonField::Optional}},
+                {"RelTimestamp", {{DataType::String}, jsonField::Optional}},
                 {"updatePoW", {{DataType::String}, jsonField::Optional}},
                 {"expectException", {{DataType::Object}, jsonField::Required}}});
 

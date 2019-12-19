@@ -46,7 +46,21 @@ string default_config = R"({
     ],
     "exceptions" : {
         "ExtraDataTooBig" : "extra-data too long",
-        "InvalidDifficulty" : "invalid difficulty"
+        "InvalidDifficulty" : "invalid difficulty",
+        "InvalidGasLimit" : "invalid gasLimit:",
+        "TooMuchGasUsed" : "invalid gasUsed:",
+        "InvalidNumber" : "invalid block number",
+        "InvalidTimestamp" : "timestamp equals parent's",
+        "InvalidLogBloom" : "invalid bloom (remote:",
+        "InvalidStateRoot" : "invalid merkle root (remote:",
+        "InvalidGasLimit2" : "invalid gas limit:",
+        "InvalidGasUsed" : "invalid gas used (remote:",
+        "InvalidBlockMixHash" : "invalid mix digest",
+        "InvalidBlockNonce" : "",
+        "UnknownParent" : "unknown ancestor",
+        "InvalidReceiptsStateRoot" : "invalid receipt root hash (remote:",
+        "InvalidTransactionsRoot" : "transaction root hash mismatch: have",
+        "InvalidUnclesHash" : "uncle root hash mismatch: have"
     }
 })";
 
@@ -104,8 +118,15 @@ string alethTCP_config = R"({
         "ByzantiumToConstantinopleFixAt5"
     ],
     "exceptions" : {
-        "ExtraDataTooBig" : "extra-data too long",
-        "InvalidDifficulty" : "invalid difficulty"
+        "ExtraDataTooBig" : "ExtraData too big",
+        "InvalidDifficulty" : "Invalid Difficulty",
+        "InvalidGasLimit" : "Invalid Block GasLimit",
+        "TooMuchGasUsed" : "Too much gas used",
+        "InvalidNumber" : "Invalid number",
+        "InvalidTimestamp" : "Invalid timestamp",
+        "InvalidLogBloom" : "Invalid log bloom",
+        "InvalidBlockMixHash" : "Invalid block nonce",
+        "InvalidBlockNonce" : "Invalid block nonce"
     }
 })";
 

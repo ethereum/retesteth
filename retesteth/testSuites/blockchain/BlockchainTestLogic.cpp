@@ -6,7 +6,7 @@
 void premineBlockHeader(
     RPCSession& _session, scheme_blockchainTestFiller::blockSection const& _block);
 test::scheme_block postmineBlockHeader(RPCSession& _session,
-    scheme_blockchainTestFiller::blockSection const& _block, string const& _latestBlockNumber,
+    scheme_blockchainTestFiller::blockSection const& _block, BlockNumber const& _latestBlockNumber,
     string const& _network);
 
 namespace test
@@ -26,7 +26,7 @@ void FillTest(scheme_blockchainTestFiller const& _testObject, string const& _net
     DataObject genesisObject = _testObject.getGenesisForRPC(_network);
     session.test_setChainParams(genesisObject.asJson());
 
-    test::scheme_block latestBlock = session.eth_getBlockByNumber("0", false);
+    test::scheme_block latestBlock = session.eth_getBlockByNumber(BlockNumber("0"), false);
     _testOut["genesisBlockHeader"] = latestBlock.getBlockHeader();
     _testOut["genesisBlockHeader"].removeKey("transactions");
     _testOut["genesisBlockHeader"].removeKey("uncles");
@@ -198,7 +198,7 @@ DataObject DoTests(DataObject const& _input, TestSuite::TestSuiteOptions& _opt)
 void premineBlockHeader(RPCSession&, scheme_blockchainTestFiller::blockSection const&) {}
 
 test::scheme_block postmineBlockHeader(RPCSession& _session,
-    scheme_blockchainTestFiller::blockSection const& _block, string const& _latestBlockNumber,
+    scheme_blockchainTestFiller::blockSection const& _block, BlockNumber const& _latestBlockNumber,
     string const& _network)
 {
     // if blockHeader is defined in test Filler, rewrite the last block header fields with info from
@@ -210,6 +210,20 @@ test::scheme_block postmineBlockHeader(RPCSession& _session,
     {
         if (replace.getKey() == "updatePoW" || replace.getKey() == "expectException")
             continue;
+        if (replace.getKey() == "RelTimestamp")
+        {
+            BlockNumber previousBlockNumber(_latestBlockNumber);
+            previousBlockNumber.applyShift(-1);
+
+            test::scheme_block previousBlock =
+                _session.eth_getBlockByNumber(previousBlockNumber, false);
+            string previousBlockTimestampString =
+                previousBlock.getBlockHeader().atKey("timestamp").asString();
+            BlockNumber previousBlockTimestamp(previousBlockTimestampString);
+            previousBlockTimestamp.applyShift(replace.asString());
+            header["timestamp"] = previousBlockTimestamp.getBlockNumberAsString();
+            continue;
+        }
         if (header.count(replace.getKey()))
             header[replace.getKey()] = replace.asString();
         else
@@ -221,7 +235,7 @@ test::scheme_block postmineBlockHeader(RPCSession& _session,
 
     // replace block with overwritten header
     remoteBlock.overwriteBlockHeader(header);
-    _session.test_rewindToBlock((int)u256(fromHex(_latestBlockNumber)) - 1);
+    _session.test_rewindToBlock(_latestBlockNumber.getBlockNumberAsInt() - 1);
     _session.test_importRawBlock(remoteBlock.getBlockRLP());
 
     // check malicious block import exception

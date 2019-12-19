@@ -34,8 +34,8 @@ public:
     test::scheme_transactionReceipt eth_getTransactionReceipt(std::string const& _transactionHash);
     int eth_getTransactionCount(std::string const& _address, std::string const& _blockNumber);
     std::string eth_getCode(std::string const& _address, std::string const& _blockNumber);
-	test::scheme_block eth_getBlockByNumber(std::string const& _blockNumber, bool _fullObjects);
-	std::string eth_getBalance(std::string const& _address, std::string const& _blockNumber);
+    test::scheme_block eth_getBlockByNumber(BlockNumber const& _blockNumber, bool _fullObjects);
+    std::string eth_getBalance(std::string const& _address, std::string const& _blockNumber);
 	std::string eth_getStorageRoot(std::string const& _address, std::string const& _blockNumber);
 	std::string eth_getStorageAt(std::string const& _address, std::string const& _position, std::string const& _blockNumber);
 
@@ -52,7 +52,7 @@ public:
 	void test_setChainParams(std::string const& _config);
 	void test_rewindToBlock(size_t _blockNr);
     void test_modifyTimestamp(unsigned long long _timestamp);
-    string test_mineBlocks(int _number);
+    string test_mineBlocks(int _number, bool _canFail = false);
     void test_importRawBlock(std::string const& _blockRLP);
 
     std::string sendRawRequest(std::string const& _request);
@@ -74,6 +74,8 @@ public:
     }
     Socket::SocketType getSocketType() const { return m_socket.type(); }
     std::string const& getSocketPath() const { return m_socket.path(); }
+
+    static string const c_errorMiningString;
 
 private:
     explicit RPCSession(Socket::SocketType _type, std::string const& _path);
