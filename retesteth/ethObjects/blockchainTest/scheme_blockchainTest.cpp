@@ -88,7 +88,8 @@ scheme_blockchainTest::scheme_blockchainTest(DataObject const& _test)
     makeAllFieldsHex(m_data);
 }
 
-DataObject scheme_blockchainTestBase::getGenesisForRPC(string const& _network) const
+DataObject scheme_blockchainTestBase::getGenesisForRPC(
+    string const& _network, string const& _sealEngine) const
 {
     string net = (_network.empty() ? getData().atKey("network").asString() : _network);
     DataObject genesis = prepareGenesisParams(net, m_sealEngine);
@@ -97,10 +98,14 @@ DataObject scheme_blockchainTestBase::getGenesisForRPC(string const& _network) c
     data["author"] = m_genesisHeader.getData().atKey("coinbase");
     data["difficulty"] = m_genesisHeader.getData().atKey("difficulty");
     data["gasLimit"] = m_genesisHeader.getData().atKey("gasLimit");
-    data["nonce"] = m_genesisHeader.getData().atKey("nonce");
+    data["nonce"] = (_sealEngine == "NoProof") ? DataObject("0x0000000000000000") :
+                                                 m_genesisHeader.getData().atKey("nonce");
     data["extraData"] = m_genesisHeader.getData().atKey("extraData");
     data["timestamp"] = m_genesisHeader.getData().atKey("timestamp");
-    data["mixHash"] = m_genesisHeader.getData().atKey("mixHash");
+    data["mixHash"] =
+        (_sealEngine == "NoProof") ?
+            DataObject("0x0000000000000000000000000000000000000000000000000000000000000000") :
+            m_genesisHeader.getData().atKey("mixHash");
     object::makeAllFieldsHex(data);
 
     genesis["genesis"] = data;

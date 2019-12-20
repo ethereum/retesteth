@@ -23,7 +23,7 @@ void FillTest(scheme_blockchainTestFiller const& _testObject, string const& _net
         _testOut["_info"] = _testObject.getData().atKey("_info");
 
     RPCSession& session = RPCSession::instance(TestOutputHelper::getThreadID());
-    DataObject genesisObject = _testObject.getGenesisForRPC(_network);
+    DataObject genesisObject = _testObject.getGenesisForRPC(_network, _testObject.getSealEngine());
     session.test_setChainParams(genesisObject.asJson());
 
     test::scheme_block latestBlock = session.eth_getBlockByNumber(BlockNumber("0"), false);
@@ -49,6 +49,10 @@ void FillTest(scheme_blockchainTestFiller const& _testObject, string const& _net
         }
 
         string latestBlockNumber = session.test_mineBlocks(1);
+
+        // if (latestBlockNumber == RPCSession::c_errorMiningString)
+        //    ETH_ERROR_REQUIRE_MESSAGE(block.getData().count("blockHeader"), "Invalid block
+        //    expected to have `blockHeader` section defined!");
         if (block.getData().count("blockHeader"))
         {
             latestBlock = postmineBlockHeader(session, block, latestBlockNumber, _network);
@@ -120,8 +124,6 @@ void RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _
         {
             if (!_opt.allowInvalidBlocks)
                 ETH_ERROR_MESSAGE("Running blockchain test: " + session.getLastRPCError().atKey("message").asString());
-            else
-                std::cerr << session.getLastRPCError().atKey("error").asString() << std::endl;
         }
     }
 

@@ -99,8 +99,9 @@ public:
     {
         if (m_exceptions.count(_exceptionName))
             return m_exceptions.at(_exceptionName);
-        ETH_ERROR_MESSAGE(
-            "Config::getExceptionString '" + _exceptionName + "' not found in client config!");
+        ETH_ERROR_MESSAGE("Config::getExceptionString '" + _exceptionName +
+                          "' not found in client config `exceptions` section! (" +
+                          getConfigFilePath().c_str() + ")");
         static string const notfound = "";
         return notfound;
     }
