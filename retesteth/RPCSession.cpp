@@ -59,6 +59,7 @@ struct sessionInfo
 };
 
 void closeSession(const string& _threadID);
+string const RPCSession::c_errorMiningString = "remote test_mineBlocks = false";
 
 std::mutex g_socketMapMutex;
 static std::map<std::string, sessionInfo> socketMap;
@@ -271,10 +272,11 @@ string RPCSession::eth_getCode(string const& _address, string const& _blockNumbe
 	return rpcCall("eth_getCode", { quote(_address), quote(_blockNumber) }).asString();
 }
 
-test::scheme_block RPCSession::eth_getBlockByNumber(string const& _blockNumber, bool _fullObjects)
+test::scheme_block RPCSession::eth_getBlockByNumber(
+    BlockNumber const& _blockNumber, bool _fullObjects)
 {
-    return test::scheme_block(
-        rpcCall("eth_getBlockByNumber", {quote(_blockNumber), _fullObjects ? "true" : "false"}));
+    return test::scheme_block(rpcCall("eth_getBlockByNumber",
+        {quote(_blockNumber.getBlockNumberAsString()), _fullObjects ? "true" : "false"}));
 }
 
 test::scheme_transactionReceipt RPCSession::eth_getTransactionReceipt(string const& _transactionHash)
@@ -369,12 +371,16 @@ void RPCSession::test_rewindToBlock(size_t _blockNr)
     ETH_FAIL_REQUIRE_MESSAGE(rpcCall("test_rewindToBlock", { to_string(_blockNr) }) == true, "remote test_rewintToBlock = false");
 }
 
-string RPCSession::test_mineBlocks(int _number)
+string RPCSession::test_mineBlocks(int _number, bool _canFail)
 {
     DataObject blockNumber = rpcCall("eth_blockNumber");
     u256 startBlock = (blockNumber.type() == DataType::String) ? u256(blockNumber.asString()) :
                                                                  blockNumber.asInt();
-    ETH_ERROR_REQUIRE_MESSAGE(rpcCall("test_mineBlocks", { to_string(_number) }, true) == true, "remote test_mineBlocks = false");
+
+    if (!_canFail)
+        ETH_ERROR_REQUIRE_MESSAGE(rpcCall("test_mineBlocks", { to_string(_number) }, true) == true, c_errorMiningString);
+    else
+        return c_errorMiningString;
 
     // We auto-calibrate the time it takes to mine the transaction.
     // It would be better to go without polling, but that would probably need a change to the test

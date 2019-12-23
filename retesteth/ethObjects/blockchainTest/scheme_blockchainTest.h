@@ -15,7 +15,8 @@ class scheme_blockchainTestBase : public object
 {
 public:
     scheme_blockchainTestBase(DataObject const& _test);
-    DataObject getGenesisForRPC(string const& _network = string()) const;
+    DataObject getGenesisForRPC(
+        string const& _network = string(), string const& _sealEngine = "NoProof") const;
     scheme_state const& getPre() const { return m_pre; };
 
 private:

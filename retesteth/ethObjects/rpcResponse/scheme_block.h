@@ -5,6 +5,25 @@
 using namespace dev;
 
 namespace test {
+struct BlockNumber
+{
+    BlockNumber(string const& _number) : m_blockNumber(_number) {}
+    int getBlockNumberAsInt() const { return hexStringToInt(m_blockNumber); }
+    string getBlockNumberAsString() const { return m_blockNumber; }
+    void applyShift(int _shift)
+    {
+        m_blockNumber = toCompactHexPrefixed(getBlockNumberAsInt() + _shift);
+    }
+    void applyShift(string const& _shift)
+    {
+        m_blockNumber = toCompactHexPrefixed(getBlockNumberAsInt() + hexStringToInt(_shift));
+    }
+
+private:
+    string m_blockNumber;
+    int hexStringToInt(string const& _str) const { return (int)u256(fromHex(_str)); }
+};
+
 class scheme_block : public object
 {
 public:
@@ -44,6 +63,7 @@ public:
             return;
         }
 
+        m_isValid = true;
         if (m_isFullTransactions)
             for (auto const& trObj : m_data.atKey("transactions").getSubObjects())
                 requireJsonFields(trObj, "block rpc transaction element",
@@ -59,6 +79,10 @@ public:
                 ETH_ERROR_REQUIRE_MESSAGE(trObj.type() == DataType::String,
                     "block rpc transaction element is expected to be hash string!");
     }
+
+    void setValid(bool _isValid) { m_isValid = _isValid; }
+
+    bool isValid() const { return m_isValid; }
 
     string const& getStateHash() const { return m_data.atKey("stateRoot").asString(); }
 
@@ -100,6 +124,27 @@ public:
         header["transactionsTrie"] = m_data.atKey("transactionsRoot");
         header["uncleHash"] = m_data.atKey("sha3Uncles");
         return header;
+    }
+
+    void overwriteBlockHeader(DataObject const& _header)
+    {
+        m_data["logsBloom"] = _header.atKey("bloom").asString();
+        m_data["author"] = _header.atKey("coinbase").asString();
+        m_data["difficulty"] = _header.atKey("difficulty");
+        m_data["extraData"] = _header.atKey("extraData");
+        m_data["gasLimit"] = _header.atKey("gasLimit");
+        m_data["gasUsed"] = _header.atKey("gasUsed");
+        m_data["hash"] = _header.atKey("hash");
+        m_data["mixHash"] = _header.atKey("mixHash");
+        m_data["nonce"] = _header.atKey("nonce");
+
+        m_data["number"] = _header.atKey("number");
+        m_data["parentHash"] = _header.atKey("parentHash");
+        m_data["receiptsRoot"] = _header.atKey("receiptTrie").asString();
+        m_data["stateRoot"] = _header.atKey("stateRoot");
+        m_data["timestamp"] = _header.atKey("timestamp");
+        m_data["transactionsRoot"] = _header.atKey("transactionsTrie").asString();
+        m_data["sha3Uncles"] = _header.atKey("uncleHash").asString();
     }
 
     // Get Block RLP for state tests
@@ -172,6 +217,7 @@ public:
 
 private:
     bool m_isFullTransactions = false;
+    bool m_isValid = true;
 };
 }
 

@@ -15,14 +15,22 @@ namespace test
 class scheme_blockchainTestFiller : public scheme_blockchainTestBase
 {
 public:
-    class blockSection
+    class blockSection : public object
     {
     public:
         blockSection(DataObject const& _data);
         std::vector<scheme_transaction> const& getTransactions() const { return m_transactons; }
+        string const& getException(string const& _network) const
+        {
+            if (m_expectException.count(_network))
+                return m_expectException.at(_network);
+            return m_noExceptionString;
+        }
 
     private:
         std::vector<scheme_transaction> m_transactons;
+        std::map<string, string> m_expectException;
+        string m_noExceptionString;
     };
 
 public:
