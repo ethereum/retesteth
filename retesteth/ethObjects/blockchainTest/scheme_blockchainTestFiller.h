@@ -5,6 +5,7 @@
 #include "../stateTest/scheme_transaction.h"
 #include "scheme_blockHeader.h"
 #include "scheme_blockchainTest.h"
+#include "scheme_uncleHeader.h"
 #include <retesteth/Options.h>
 #include <retesteth/TestHelper.h>
 
@@ -20,6 +21,7 @@ public:
     public:
         blockSection(DataObject const& _data);
         std::vector<scheme_transaction> const& getTransactions() const { return m_transactons; }
+        std::vector<scheme_uncleHeader> const& getUncles() const { return m_uncles; }
         string const& getException(string const& _network) const
         {
             if (m_expectException.count(_network))
@@ -29,6 +31,7 @@ public:
 
     private:
         std::vector<scheme_transaction> m_transactons;
+        std::vector<scheme_uncleHeader> m_uncles;
         std::map<string, string> m_expectException;
         string m_noExceptionString;
     };

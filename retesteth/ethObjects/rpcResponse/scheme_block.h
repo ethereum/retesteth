@@ -145,6 +145,7 @@ public:
         m_data["timestamp"] = _header.atKey("timestamp");
         m_data["transactionsRoot"] = _header.atKey("transactionsTrie").asString();
         m_data["sha3Uncles"] = _header.atKey("uncleHash").asString();
+        makeAllFieldsHex(m_data);
     }
 
     // Get Block RLP for state tests
@@ -210,7 +211,18 @@ public:
             transactionList.appendRaw(transactionRLP.out());
         }
         stream.appendRaw(transactionList.out());
+
         stream.appendRaw(RLPStream(0).out());  // empty uncle list
+        /*
+            RLPStream uncleStream;
+            uncleStream.appendList(m_uncles.size());
+            for (unsigned i = 0; i < m_uncles.size(); ++i)
+            {
+                RLPStream uncleRlp;
+                m_uncles[i].blockHeader().streamRLP(uncleRlp);
+                uncleStream.appendRaw(uncleRlp.out());
+            }
+        */
 
         return dev::toHexPrefixed(stream.out());
     }

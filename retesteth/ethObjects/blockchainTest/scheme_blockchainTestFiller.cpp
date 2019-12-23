@@ -59,6 +59,9 @@ scheme_blockchainTestFiller::blockSection::blockSection(DataObject const& _data)
             _data.atKey("blockHeader").atKey("expectException").getSubObjects())
             m_expectException[expect.getKey()] = expect.asString();
     }
+
+    for (auto const& uncle : _data.atKey("uncleHeaders").getSubObjects())
+        m_uncles.push_back(uncle);
 }
 
 string scheme_blockchainTestFiller::getSealEngine() const
