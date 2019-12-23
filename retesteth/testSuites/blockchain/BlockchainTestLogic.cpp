@@ -73,6 +73,7 @@ void FillTest(scheme_blockchainTestFiller const& _testObject, string const& _net
         latestBlockNumber = session.test_mineBlocks(1);
         if (block.getData().count("blockHeader") || block.getData().count("uncleHeaders"))
         {
+            ETH_LOG("Postmine blockheader: (" + sBlockNumber + ")", 6);
             latestBlock = postmineBlockHeader(session, block, latestBlockNumber, _network);
             if (!latestBlock.isValid())
             {

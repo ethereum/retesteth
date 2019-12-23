@@ -27,33 +27,72 @@ private:
 class scheme_block : public object
 {
 public:
-    scheme_block(DataObject const& _block) : object(_block)
+    class scheme_block_header : public object
     {
-        requireJsonFields(_block, "blockRPC",
-            {{"author", {{DataType::String}, jsonField::Required}},
-                {"extraData", {{DataType::String}, jsonField::Required}},
-                {"gasLimit", {{DataType::String}, jsonField::Required}},
-                {"gasUsed", {{DataType::String}, jsonField::Required}},
-                {"hash", {{DataType::String}, jsonField::Required}},
-                {"logsBloom", {{DataType::String}, jsonField::Required}},
-                {"miner", {{DataType::String}, jsonField::Required}},
-                {"number", {{DataType::String}, jsonField::Required}},
-                {"parentHash", {{DataType::String}, jsonField::Required}},
-                {"receiptsRoot", {{DataType::String}, jsonField::Required}},
-                {"sha3Uncles", {{DataType::String}, jsonField::Required}},
-                {"size", {{DataType::String}, jsonField::Required}},
-                {"stateRoot", {{DataType::String}, jsonField::Required}},
-                {"timestamp", {{DataType::String}, jsonField::Required}},
-                {"totalDifficulty", {{DataType::String}, jsonField::Required}},
-                {"transactions", {{DataType::Array}, jsonField::Required}},
-                {"transactionsRoot", {{DataType::String}, jsonField::Required}},
-                {"uncles", {{DataType::Array}, jsonField::Required}},
-                {"boundary", {{DataType::String}, jsonField::Optional}},
-                {"difficulty", {{DataType::String}, jsonField::Optional}},
-                {"seedHash", {{DataType::String}, jsonField::Optional}},
-                {"nonce", {{DataType::String}, jsonField::Optional}},
-                {"mixHash", {{DataType::String}, jsonField::Optional}}});
+    public:
+        // assume that _header was already verified by scheme_block
+        scheme_block_header(DataObject const& _header) : object(_header)
+        {
+            // translate rpc response of block header into standard block header
+            DataObject mappedHeader = mapBlockHeader();
+            requireJsonFields(mappedHeader, "scheme_block_header",
+                {{"coinbase", {{DataType::String}, jsonField::Required}},
+                    {"extraData", {{DataType::String}, jsonField::Required}},
+                    {"gasLimit", {{DataType::String}, jsonField::Required}},
+                    {"gasUsed", {{DataType::String}, jsonField::Required}},
+                    {"hash", {{DataType::String}, jsonField::Required}},
+                    {"bloom", {{DataType::String}, jsonField::Required}},
+                    {"number", {{DataType::String}, jsonField::Required}},
+                    {"parentHash", {{DataType::String}, jsonField::Required}},
+                    {"receiptTrie", {{DataType::String}, jsonField::Required}},
+                    {"uncleHash", {{DataType::String}, jsonField::Required}},
+                    {"stateRoot", {{DataType::String}, jsonField::Required}},
+                    {"timestamp", {{DataType::String}, jsonField::Required}},
+                    {"transactionsTrie", {{DataType::String}, jsonField::Required}},
+                    {"difficulty", {{DataType::String}, jsonField::Required}},
+                    {"nonce", {{DataType::String}, jsonField::Optional}},
+                    {"mixHash", {{DataType::String}, jsonField::Optional}}});
+            m_data.clear();
+            m_data = mappedHeader;
+        }
 
+    private:
+        DataObject mapBlockHeader() const
+        {
+            // Map Block Header
+            DataObject header;
+            header["bloom"] = m_data.atKey("logsBloom");
+            header["coinbase"] = m_data.atKey("author");
+            header["difficulty"] = m_data.atKey("difficulty");
+            header["extraData"] = m_data.atKey("extraData");
+            header["gasLimit"] = m_data.atKey("gasLimit");
+            header["gasUsed"] = m_data.atKey("gasUsed");
+            header["hash"] = m_data.atKey("hash");
+            if (m_data.count("mixHash"))
+            {
+                header["mixHash"] = m_data.atKey("mixHash");
+                header["nonce"] = m_data.atKey("nonce");
+            }
+            else
+            {
+                header["mixHash"] =
+                    "0x0000000000000000000000000000000000000000000000000000000000000000";
+                header["nonce"] = "0x0000000000000000";
+            }
+            header["number"] = m_data.atKey("number");
+            header["parentHash"] = m_data.atKey("parentHash");
+            header["receiptTrie"] = m_data.atKey("receiptsRoot");
+            header["stateRoot"] = m_data.atKey("stateRoot");
+            header["timestamp"] = m_data.atKey("timestamp");
+            header["transactionsTrie"] = m_data.atKey("transactionsRoot");
+            header["uncleHash"] = m_data.atKey("sha3Uncles");
+            return header;
+        }
+    };
+
+    scheme_block(DataObject const& _block)
+      : object(_block), m_validator(_block), m_blockHeader(_block)
+    {
         if (m_data.atKey("transactions").getSubObjects().size())
             m_isFullTransactions =
                 m_data.atKey("transactions").getSubObjects().at(0).count("blockHash");
@@ -94,37 +133,7 @@ public:
     }
     std::string const& getBlockHash() const { return m_data.atKey("hash").asString(); }
 
-    DataObject getBlockHeader() const
-    {
-        // Map Block Header
-        DataObject header;
-        header["bloom"] = m_data.atKey("logsBloom");
-        header["coinbase"] = m_data.atKey("author");
-        header["difficulty"] = m_data.atKey("difficulty");
-        header["extraData"] = m_data.atKey("extraData");
-        header["gasLimit"] = m_data.atKey("gasLimit");
-        header["gasUsed"] = m_data.atKey("gasUsed");
-        header["hash"] = m_data.atKey("hash");
-        if (m_data.count("mixHash"))
-        {
-            header["mixHash"] = m_data.atKey("mixHash");
-            header["nonce"] = m_data.atKey("nonce");
-        }
-        else
-        {
-            header["mixHash"] =
-                "0x0000000000000000000000000000000000000000000000000000000000000000";
-            header["nonce"] = "0x0000000000000000";
-        }
-        header["number"] = m_data.atKey("number");
-        header["parentHash"] = m_data.atKey("parentHash");
-        header["receiptTrie"] = m_data.atKey("receiptsRoot");
-        header["stateRoot"] = m_data.atKey("stateRoot");
-        header["timestamp"] = m_data.atKey("timestamp");
-        header["transactionsTrie"] = m_data.atKey("transactionsRoot");
-        header["uncleHash"] = m_data.atKey("sha3Uncles");
-        return header;
-    }
+    DataObject getBlockHeader() const { return m_blockHeader.getData(); }
 
     void overwriteBlockHeader(DataObject const& _header)
     {
@@ -145,7 +154,7 @@ public:
         m_data["timestamp"] = _header.atKey("timestamp");
         m_data["transactionsRoot"] = _header.atKey("transactionsTrie").asString();
         m_data["sha3Uncles"] = _header.atKey("uncleHash").asString();
-        makeAllFieldsHex(m_data);
+        // makeAllFieldsHex(m_data);
     }
 
     // Get Block RLP for state tests
@@ -228,8 +237,43 @@ public:
     }
 
 private:
+    struct validator
+    {
+        validator(DataObject const& _data)
+        {
+            // validate rpc response on eth_getBlock()
+            requireJsonFields(_data, "blockRPC",
+                {{"author", {{DataType::String}, jsonField::Required}},
+                    {"extraData", {{DataType::String}, jsonField::Required}},
+                    {"gasLimit", {{DataType::String}, jsonField::Required}},
+                    {"gasUsed", {{DataType::String}, jsonField::Required}},
+                    {"hash", {{DataType::String}, jsonField::Required}},
+                    {"logsBloom", {{DataType::String}, jsonField::Required}},
+                    {"miner", {{DataType::String}, jsonField::Required}},
+                    {"number", {{DataType::String}, jsonField::Required}},
+                    {"parentHash", {{DataType::String}, jsonField::Required}},
+                    {"receiptsRoot", {{DataType::String}, jsonField::Required}},
+                    {"sha3Uncles", {{DataType::String}, jsonField::Required}},
+                    {"size", {{DataType::String}, jsonField::Required}},
+                    {"stateRoot", {{DataType::String}, jsonField::Required}},
+                    {"timestamp", {{DataType::String}, jsonField::Required}},
+                    {"totalDifficulty", {{DataType::String}, jsonField::Required}},
+                    {"transactions", {{DataType::Array}, jsonField::Required}},
+                    {"transactionsRoot", {{DataType::String}, jsonField::Required}},
+                    {"uncles", {{DataType::Array}, jsonField::Required}},
+                    {"boundary", {{DataType::String}, jsonField::Optional}},
+                    {"difficulty", {{DataType::String}, jsonField::Required}},
+                    {"seedHash", {{DataType::String}, jsonField::Optional}},
+                    {"nonce", {{DataType::String}, jsonField::Optional}},
+                    {"mixHash", {{DataType::String}, jsonField::Optional}}});
+        }
+    };
+
+private:
     bool m_isFullTransactions = false;
     bool m_isValid = true;
+    validator m_validator;
+    scheme_block_header m_blockHeader;
 };
 }
 
