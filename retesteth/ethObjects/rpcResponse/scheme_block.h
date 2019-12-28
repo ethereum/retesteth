@@ -35,7 +35,15 @@ public:
         {
             // translate rpc response of block header into standard block header
             DataObject mappedHeader = mapBlockHeader();
-            requireJsonFields(mappedHeader, "scheme_block_header",
+            resetHeader(mappedHeader);
+        }
+
+        void overwriteBlockHeader(DataObject const& _header) { resetHeader(_header); }
+
+    private:
+        void resetHeader(DataObject const& _header)
+        {
+            requireJsonFields(_header, "scheme_block_header",
                 {{"coinbase", {{DataType::String}, jsonField::Required}},
                     {"extraData", {{DataType::String}, jsonField::Required}},
                     {"gasLimit", {{DataType::String}, jsonField::Required}},
@@ -53,10 +61,10 @@ public:
                     {"nonce", {{DataType::String}, jsonField::Optional}},
                     {"mixHash", {{DataType::String}, jsonField::Optional}}});
             m_data.clear();
-            m_data = mappedHeader;
+            m_data = _header;
+            makeAllFieldsHex(m_data);
         }
 
-    private:
         DataObject mapBlockHeader() const
         {
             // Map Block Header
@@ -119,6 +127,8 @@ public:
                     "block rpc transaction element is expected to be hash string!");
     }
 
+    void addUncle(scheme_block const& _block) { m_uncles.push_back(_block); }
+
     void setValid(bool _isValid) { m_isValid = _isValid; }
 
     bool isValid() const { return m_isValid; }
@@ -137,24 +147,7 @@ public:
 
     void overwriteBlockHeader(DataObject const& _header)
     {
-        m_data["logsBloom"] = _header.atKey("bloom").asString();
-        m_data["author"] = _header.atKey("coinbase").asString();
-        m_data["difficulty"] = _header.atKey("difficulty");
-        m_data["extraData"] = _header.atKey("extraData");
-        m_data["gasLimit"] = _header.atKey("gasLimit");
-        m_data["gasUsed"] = _header.atKey("gasUsed");
-        m_data["hash"] = _header.atKey("hash");
-        m_data["mixHash"] = _header.atKey("mixHash");
-        m_data["nonce"] = _header.atKey("nonce");
-
-        m_data["number"] = _header.atKey("number");
-        m_data["parentHash"] = _header.atKey("parentHash");
-        m_data["receiptsRoot"] = _header.atKey("receiptTrie").asString();
-        m_data["stateRoot"] = _header.atKey("stateRoot");
-        m_data["timestamp"] = _header.atKey("timestamp");
-        m_data["transactionsRoot"] = _header.atKey("transactionsTrie").asString();
-        m_data["sha3Uncles"] = _header.atKey("uncleHash").asString();
-        // makeAllFieldsHex(m_data);
+        m_blockHeader.overwriteBlockHeader(_header);
     }
 
     // Get Block RLP for state tests
@@ -165,32 +158,8 @@ public:
         // RLP of a block
         // rlpHead .. blockinfo transactions uncles
         RLPStream stream(3);
-        RLPStream header;
-        header.appendList(15);
-        header << h256(m_data.atKey("parentHash").asString());
-        header << h256(m_data.atKey("sha3Uncles").asString());
-        header << dev::Address(m_data.atKey("author").asString());
-        header << h256(m_data.atKey("stateRoot").asString());
-        header << h256(m_data.atKey("transactionsRoot").asString());
-        header << h256(m_data.atKey("receiptsRoot").asString());
-        header << h2048(m_data.atKey("logsBloom").asString());
-        header << u256(m_data.atKey("difficulty").asString());
-        header << u256(m_data.atKey("number").asString());
-        header << u256(m_data.atKey("gasLimit").asString());
-        header << u256(m_data.atKey("gasUsed").asString());
-        header << u256(m_data.atKey("timestamp").asString());
-        header << dev::fromHex(m_data.atKey("extraData").asString());
-        if (m_data.count("mixHash"))
-        {
-            header << h256(m_data.atKey("mixHash").asString());
-            header << h64(m_data.atKey("nonce").asString());
-        }
-        else
-        {
-            header << h256(0);
-            header << h64(0);
-        }
-        stream.appendRaw(header.out());
+        DataObject const& headerData = m_blockHeader.getData();
+        stream.appendRaw(streamBlockHeader(headerData).out());
 
         size_t trCount = m_data.atKey("transactions").getSubObjects().size();
         RLPStream transactionList(trCount);
@@ -221,7 +190,12 @@ public:
         }
         stream.appendRaw(transactionList.out());
 
-        stream.appendRaw(RLPStream(0).out());  // empty uncle list
+        RLPStream uncleStream;
+        uncleStream.appendList(m_uncles.size());
+        for (auto const& bl : m_uncles)
+            uncleStream.appendRaw(streamBlockHeader(bl.getBlockHeader()).out());
+        stream.appendRaw(uncleStream.out());  // uncle list
+
         /*
             RLPStream uncleStream;
             uncleStream.appendList(m_uncles.size());
@@ -274,6 +248,38 @@ private:
     bool m_isValid = true;
     validator m_validator;
     scheme_block_header m_blockHeader;
+    std::vector<scheme_block> m_uncles;
+    RLPStream streamBlockHeader(DataObject const& _headerData) const
+    {
+        RLPStream header;
+        header.appendList(15);
+
+        // Map Block Header
+        header << h256(_headerData.atKey("parentHash").asString());
+        header << h256(_headerData.atKey("uncleHash").asString());
+        header << dev::Address(_headerData.atKey("coinbase").asString());
+        header << h256(_headerData.atKey("stateRoot").asString());
+        header << h256(_headerData.atKey("transactionsTrie").asString());
+        header << h256(_headerData.atKey("receiptTrie").asString());
+        header << h2048(_headerData.atKey("bloom").asString());
+        header << u256(_headerData.atKey("difficulty").asString());
+        header << u256(_headerData.atKey("number").asString());
+        header << u256(_headerData.atKey("gasLimit").asString());
+        header << u256(_headerData.atKey("gasUsed").asString());
+        header << u256(_headerData.atKey("timestamp").asString());
+        header << dev::fromHex(_headerData.atKey("extraData").asString());
+        if (_headerData.count("mixHash"))
+        {
+            header << h256(_headerData.atKey("mixHash").asString());
+            header << h64(_headerData.atKey("nonce").asString());
+        }
+        else
+        {
+            header << h256(0);
+            header << h64(0);
+        }
+        return header;
+    }
 };
 }
 

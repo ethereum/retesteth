@@ -7,7 +7,7 @@ void premineBlockHeader(
     RPCSession& _session, scheme_blockchainTestFiller::blockSection const& _block);
 test::scheme_block postmineBlockHeader(RPCSession& _session,
     scheme_blockchainTestFiller::blockSection const& _block, BlockNumber const& _latestBlockNumber,
-    string const& _network);
+    string const& _network, std::vector<scheme_block> const& _uncles);
 
 test::scheme_block prepareUncle(
     scheme_uncleHeader _uncleOverwrite, std::vector<test::scheme_block> const& _existingUncles);
@@ -63,10 +63,12 @@ void FillTest(scheme_blockchainTestFiller const& _testObject, string const& _net
         }
 
         ETH_LOG("Fetching uncles: (" + sBlockNumber + ")", 6);
+        std::vector<scheme_block> preparedUncleBlocks;
         for (auto const& uncle : block.getUncles())
         {
             scheme_block uncleBlock =
                 prepareUncle(uncle, uncles);  // return block using uncle overwrite on uncles array
+            preparedUncleBlocks.push_back(uncleBlock);
             blockSection["uncleHeaders"].addArrayObject(uncleBlock.getBlockHeader());
         }
 
@@ -74,7 +76,8 @@ void FillTest(scheme_blockchainTestFiller const& _testObject, string const& _net
         if (block.getData().count("blockHeader") || block.getData().count("uncleHeaders"))
         {
             ETH_LOG("Postmine blockheader: (" + sBlockNumber + ")", 6);
-            latestBlock = postmineBlockHeader(session, block, latestBlockNumber, _network);
+            latestBlock = postmineBlockHeader(
+                session, block, latestBlockNumber, _network, preparedUncleBlocks);
             if (!latestBlock.isValid())
             {
                 blockSection.removeKey("transactions");
@@ -223,7 +226,7 @@ void premineBlockHeader(RPCSession&, scheme_blockchainTestFiller::blockSection c
 
 test::scheme_block postmineBlockHeader(RPCSession& _session,
     scheme_blockchainTestFiller::blockSection const& _block, BlockNumber const& _latestBlockNumber,
-    string const& _network)
+    string const& _network, std::vector<scheme_block> const& _uncles)
 {
     // if blockHeader is defined in test Filler, rewrite the last block header fields with info from
     // test and reimport it to the client in order to trigger an exception in the client
@@ -265,6 +268,8 @@ test::scheme_block postmineBlockHeader(RPCSession& _session,
     // Attach test-generated uncle to a block and reimport it again
     if (_block.getData().count("uncleHeaders"))
     {
+        for (auto const& bl : _uncles)
+            remoteBlock.addUncle(bl);
     }
 
     // replace block with overwritten header

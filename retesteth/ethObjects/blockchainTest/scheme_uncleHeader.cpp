@@ -5,7 +5,6 @@ scheme_uncleHeader::scheme_uncleHeader(DataObject const& _data) : object(_data)
 {
     requireJsonFields(_data, "blockchainTest::uncleblockHeader",
         {{"populateFromBlock", {{DataType::String}, jsonField::Required}},
-            {"coinbase", {{DataType::String}, jsonField::Required}},
             {"overwriteAndRedoPoW", {{DataType::String}, jsonField::Required}},
             {"bloom", {{DataType::String}, jsonField::Optional}},
             {"coinbase", {{DataType::String}, jsonField::Optional}},
