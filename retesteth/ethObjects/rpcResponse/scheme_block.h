@@ -195,18 +195,6 @@ public:
         for (auto const& bl : m_uncles)
             uncleStream.appendRaw(streamBlockHeader(bl.getBlockHeader()).out());
         stream.appendRaw(uncleStream.out());  // uncle list
-
-        /*
-            RLPStream uncleStream;
-            uncleStream.appendList(m_uncles.size());
-            for (unsigned i = 0; i < m_uncles.size(); ++i)
-            {
-                RLPStream uncleRlp;
-                m_uncles[i].blockHeader().streamRLP(uncleRlp);
-                uncleStream.appendRaw(uncleRlp.out());
-            }
-        */
-
         return dev::toHexPrefixed(stream.out());
     }
 
