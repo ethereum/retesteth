@@ -7,7 +7,10 @@ void premineBlockHeader(
     RPCSession& _session, scheme_blockchainTestFiller::blockSection const& _block);
 test::scheme_block postmineBlockHeader(RPCSession& _session,
     scheme_blockchainTestFiller::blockSection const& _block, BlockNumber const& _latestBlockNumber,
-    string const& _network);
+    string const& _network, std::vector<scheme_block> const& _uncles);
+
+test::scheme_block prepareUncle(RPCSession& _session, scheme_uncleHeader _uncleOverwrite,
+    std::vector<test::scheme_block> const& _existingUncles);
 
 namespace test
 {
@@ -30,16 +33,27 @@ void FillTest(scheme_blockchainTestFiller const& _testObject, string const& _net
     _testOut["genesisBlockHeader"] = latestBlock.getBlockHeader();
     _testOut["genesisBlockHeader"].removeKey("transactions");
     _testOut["genesisBlockHeader"].removeKey("uncles");
-    // u256 genesisTimestamp =
-    // std::time(0);//u256(genesisObject.atKey("genesis").atKey("timestamp").asString());
+    std::vector<test::scheme_block> uncles;
 
     size_t number = 0;
     for (auto const& block : _testObject.getBlocks())
     {
         session.test_modifyTimestamp(1000);  // Shift block timestamp relative to previous block
         TestInfo errorInfo (_network, number++);
-        TestOutputHelper::get().setCurrentTestInfo(errorInfo);
 
+        string sBlockNumber;
+        if (Options::get().logVerbosity >= 6)
+            sBlockNumber = toString(number);  // very heavy
+        TestOutputHelper::get().setCurrentTestInfo(errorInfo);
+        ETH_LOG("Generating a test block: (" + sBlockNumber + ")", 6);
+
+        ETH_LOG("Saving populated uncle: (" + sBlockNumber + ")", 6);
+        string latestBlockNumber = session.test_mineBlocks(1);  // populate uncle block from genesis
+        uncles.push_back(session.eth_getBlockByNumber(latestBlockNumber, false));
+        session.test_rewindToBlock(number - 1);
+        session.test_modifyTimestamp(1000);  // Shift block timestamp relative to previous block
+
+        ETH_LOG("Import transactions: (" + sBlockNumber + ")", 6);
         // premineBlockHeader(session, block);
         DataObject blockSection;
         for (auto const& tr : block.getTransactions())
@@ -48,16 +62,27 @@ void FillTest(scheme_blockchainTestFiller const& _testObject, string const& _net
             blockSection["transactions"].addArrayObject(tr.getDataForBCTest());
         }
 
-        string latestBlockNumber = session.test_mineBlocks(1);
-
-        // if (latestBlockNumber == RPCSession::c_errorMiningString)
-        //    ETH_ERROR_REQUIRE_MESSAGE(block.getData().count("blockHeader"), "Invalid block
-        //    expected to have `blockHeader` section defined!");
-        if (block.getData().count("blockHeader"))
+        ETH_LOG("Fetching uncles: (" + sBlockNumber + ")", 6);
+        std::vector<scheme_block> preparedUncleBlocks;
+        for (auto const& uncle : block.getUncles())
         {
-            latestBlock = postmineBlockHeader(session, block, latestBlockNumber, _network);
+            scheme_block uncleBlock = prepareUncle(
+                session, uncle, uncles);  // return block using uncle overwrite on uncles array
+            preparedUncleBlocks.push_back(uncleBlock);
+            blockSection["uncleHeaders"].addArrayObject(uncleBlock.getBlockHeader());
+        }
+
+        latestBlockNumber = session.test_mineBlocks(1);
+        if (block.getData().count("blockHeader") || block.getData().count("uncleHeaders"))
+        {
+            ETH_LOG("Postmine blockheader: (" + sBlockNumber + ")", 6);
+            latestBlock = postmineBlockHeader(
+                session, block, latestBlockNumber, _network, preparedUncleBlocks);
             if (!latestBlock.isValid())
+            {
                 blockSection.removeKey("transactions");
+                blockSection.removeKey("uncleHeaders");
+            }
         }
         else
         {
@@ -148,6 +173,10 @@ DataObject DoTests(DataObject const& _input, TestSuite::TestSuiteOptions& _opt)
     {
         string const& testname = i.getKey();
         TestOutputHelper::get().setCurrentTestName(testname);
+        {
+            TestInfo errorInfo("TestFillerInit", 0);
+            TestOutputHelper::get().setCurrentTestInfo(errorInfo);
+        }
 
         if (_opt.doFilling)
         {
@@ -201,38 +230,50 @@ void premineBlockHeader(RPCSession&, scheme_blockchainTestFiller::blockSection c
 
 test::scheme_block postmineBlockHeader(RPCSession& _session,
     scheme_blockchainTestFiller::blockSection const& _block, BlockNumber const& _latestBlockNumber,
-    string const& _network)
+    string const& _network, std::vector<scheme_block> const& _uncles)
 {
     // if blockHeader is defined in test Filler, rewrite the last block header fields with info from
     // test and reimport it to the client in order to trigger an exception in the client
     test::scheme_block remoteBlock = _session.eth_getBlockByNumber(_latestBlockNumber, true);
     DataObject header = remoteBlock.getBlockHeader();
 
-    for (auto const& replace : _block.getData().atKey("blockHeader").getSubObjects())
+    // Overwrite blockheader if defined in the test filler
+    if (_block.getData().count("blockHeader"))
     {
-        if (replace.getKey() == "updatePoW" || replace.getKey() == "expectException")
-            continue;
-        if (replace.getKey() == "RelTimestamp")
+        for (auto const& replace : _block.getData().atKey("blockHeader").getSubObjects())
         {
-            BlockNumber previousBlockNumber(_latestBlockNumber);
-            previousBlockNumber.applyShift(-1);
+            if (replace.getKey() == "updatePoW" || replace.getKey() == "expectException")
+                continue;
+            if (replace.getKey() == "RelTimestamp")
+            {
+                BlockNumber previousBlockNumber(_latestBlockNumber);
+                previousBlockNumber.applyShift(-1);
 
-            test::scheme_block previousBlock =
-                _session.eth_getBlockByNumber(previousBlockNumber, false);
-            string previousBlockTimestampString =
-                previousBlock.getBlockHeader().atKey("timestamp").asString();
-            BlockNumber previousBlockTimestamp(previousBlockTimestampString);
-            previousBlockTimestamp.applyShift(replace.asString());
-            header["timestamp"] = previousBlockTimestamp.getBlockNumberAsString();
-            continue;
+                test::scheme_block previousBlock =
+                    _session.eth_getBlockByNumber(previousBlockNumber, false);
+                string previousBlockTimestampString =
+                    previousBlock.getBlockHeader().atKey("timestamp").asString();
+                BlockNumber previousBlockTimestamp(previousBlockTimestampString);
+                previousBlockTimestamp.applyShift(replace.asString());
+                header["timestamp"] = previousBlockTimestamp.getBlockNumberAsString();
+                continue;
+            }
+            if (header.count(replace.getKey()))
+                header[replace.getKey()] = replace.asString();
+            else
+                ETH_STDERROR_MESSAGE(
+                    "blockHeader field in test filler tries to overwrite field that is not found "
+                    "in "
+                    "blockheader: '" +
+                    replace.getKey() + "'");
         }
-        if (header.count(replace.getKey()))
-            header[replace.getKey()] = replace.asString();
-        else
-            ETH_STDERROR_MESSAGE(
-                "blockHeader field in test filler tries to overwrite field that is not found in "
-                "blockheader: '" +
-                replace.getKey() + "'");
+    }
+
+    // Attach test-generated uncle to a block and reimport it again
+    if (_block.getData().count("uncleHeaders"))
+    {
+        for (auto const& bl : _uncles)
+            remoteBlock.addUncle(bl);
     }
 
     // replace block with overwritten header
@@ -262,4 +303,43 @@ test::scheme_block postmineBlockHeader(RPCSession& _session,
         remoteBlock.setValid(false);
     }
     return remoteBlock;  // malicious block must be written to the filled test
+}
+
+// _uncleOverwrite is read from the test filler
+// _existingUncles is asked from the client
+// return a blockHeader infor for _existingUncle overwritten by _uncleOverwrite
+test::scheme_block prepareUncle(RPCSession& _session, scheme_uncleHeader _uncleOverwrite,
+    std::vector<test::scheme_block> const& _existingUncles)
+{
+    // _existingUncles (ind 0 - from genesis, ind 1 - form first block)
+    size_t origIndex = _uncleOverwrite.getPopulateFrom();
+    ETH_ERROR_REQUIRE_MESSAGE(_existingUncles.size() > origIndex,
+        "Trying to populate uncle from future block that has not been generated yet!");
+
+    test::scheme_block uncleBlock = _existingUncles.at(origIndex);
+    DataObject headerOrig = uncleBlock.getBlockHeader();
+
+    string const& overwriteField = _uncleOverwrite.getOverwrite();
+    if (!overwriteField.empty())
+        headerOrig.atKeyUnsafe(overwriteField) =
+            _uncleOverwrite.getData().atKey(overwriteField).asString();
+
+    string const& shift = _uncleOverwrite.getRelTimestampFromPopulateBlock();
+    if (!shift.empty())
+    {
+        BlockNumber populateFromBlockNumber(origIndex);
+        test::scheme_block populateFromBlock =
+            _session.eth_getBlockByNumber(populateFromBlockNumber, false);
+
+        //  std::cerr << populateFromBlockNumber.getBlockNumberAsString() << " tmstmp: " <<
+        //  populateFromBlock.getBlockHeader().atKey("timestamp").asString() << std::endl;
+        BlockNumber timestamp(populateFromBlock.getBlockHeader().atKey("timestamp").asString());
+        timestamp.applyShift(shift);
+        //  std::cerr << headerOrig.asJson() << std::endl;
+        headerOrig.atKeyUnsafe("timestamp") = timestamp.getBlockNumberAsString();
+        //  std::cerr << headerOrig.asJson() << std::endl;
+    }
+
+    uncleBlock.overwriteBlockHeader(headerOrig);
+    return uncleBlock;
 }

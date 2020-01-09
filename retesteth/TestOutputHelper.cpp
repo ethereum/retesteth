@@ -210,7 +210,7 @@ void TestOutputHelper::printTestExecStats()
 
         std::lock_guard<std::mutex> lock(g_totalTestsRun);
         for (auto const& error : s_failedTestsMap)
-            std::cout << error.second << std::endl;
+            std::cout << "info: " << error.second << std::endl;
     }
     execTimeResults.clear();
     execTotalErrors = 0;

@@ -53,12 +53,22 @@ scheme_blockchainTestFiller::blockSection::blockSection(DataObject const& _data)
                 {"uncleHash", {{DataType::String}, jsonField::Optional}},
                 {"RelTimestamp", {{DataType::String}, jsonField::Optional}},
                 {"updatePoW", {{DataType::String}, jsonField::Optional}},
-                {"expectException", {{DataType::Object}, jsonField::Required}}});
+                {"expectException", {{DataType::Object}, jsonField::Optional}}});
 
-        for (auto const& expect :
-            _data.atKey("blockHeader").atKey("expectException").getSubObjects())
-            m_expectException[expect.getKey()] = expect.asString();
+        if (_data.atKey("blockHeader").count("expectException"))
+        {
+            for (auto const& expect :
+                _data.atKey("blockHeader").atKey("expectException").getSubObjects())
+            {
+                checkAllowedNetwork(
+                    expect.getKey(), Options::getDynamicOptions().getCurrentConfig().getNetworks());
+                m_expectException[expect.getKey()] = expect.asString();
+            }
+        }
     }
+
+    for (auto const& uncle : _data.atKey("uncleHeaders").getSubObjects())
+        m_uncles.push_back(uncle);
 }
 
 string scheme_blockchainTestFiller::getSealEngine() const

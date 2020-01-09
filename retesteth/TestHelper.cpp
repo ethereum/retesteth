@@ -264,6 +264,7 @@ void checkAllowedNetwork(string const& _network, vector<string> const& _networkO
         ETH_WARNING(
             "Specified network not found: '" + _network +
             "', skipping the test. Enable the fork network in config file: " + configFile.string());
+        ETH_ERROR_MESSAGE("Specified network not found: '" + _network + "'");
     }
 }
 
