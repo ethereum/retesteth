@@ -1,11 +1,12 @@
 #include "scheme_uncleHeader.h"
 using namespace test;
 
+string const emptyString;
 scheme_uncleHeader::scheme_uncleHeader(DataObject const& _data) : object(_data)
 {
     requireJsonFields(_data, "blockchainTest::uncleblockHeader",
         {{"populateFromBlock", {{DataType::String}, jsonField::Required}},
-            {"overwriteAndRedoPoW", {{DataType::String}, jsonField::Required}},
+            {"overwriteAndRedoPoW", {{DataType::String}, jsonField::Optional}},
             {"bloom", {{DataType::String}, jsonField::Optional}},
             {"coinbase", {{DataType::String}, jsonField::Optional}},
             {"difficulty", {{DataType::String}, jsonField::Optional}},
@@ -21,7 +22,15 @@ scheme_uncleHeader::scheme_uncleHeader(DataObject const& _data) : object(_data)
             {"stateRoot", {{DataType::String}, jsonField::Optional}},
             {"timestamp", {{DataType::String}, jsonField::Optional}},
             {"transactionsTrie", {{DataType::String}, jsonField::Optional}},
+            {"RelTimestampFromPopulateBlock", {{DataType::String}, jsonField::Optional}},
             {"uncleHash", {{DataType::String}, jsonField::Optional}}});
+}
+
+string const& scheme_uncleHeader::getRelTimestampFromPopulateBlock() const
+{
+    if (m_data.count("RelTimestampFromPopulateBlock"))
+        return m_data.atKey("RelTimestampFromPopulateBlock").asString();
+    return emptyString;
 }
 
 size_t scheme_uncleHeader::getPopulateFrom() const
@@ -31,5 +40,7 @@ size_t scheme_uncleHeader::getPopulateFrom() const
 
 string const& scheme_uncleHeader::getOverwrite() const
 {
-    return m_data.atKey("overwriteAndRedoPoW").asString();
+    if (m_data.count("overwriteAndRedoPoW"))
+        return m_data.atKey("overwriteAndRedoPoW").asString();
+    return emptyString;
 }

@@ -56,9 +56,15 @@ scheme_blockchainTestFiller::blockSection::blockSection(DataObject const& _data)
                 {"expectException", {{DataType::Object}, jsonField::Optional}}});
 
         if (_data.atKey("blockHeader").count("expectException"))
+        {
             for (auto const& expect :
                 _data.atKey("blockHeader").atKey("expectException").getSubObjects())
+            {
+                checkAllowedNetwork(
+                    expect.getKey(), Options::getDynamicOptions().getCurrentConfig().getNetworks());
                 m_expectException[expect.getKey()] = expect.asString();
+            }
+        }
     }
 
     for (auto const& uncle : _data.atKey("uncleHeaders").getSubObjects())

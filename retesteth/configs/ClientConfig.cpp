@@ -50,7 +50,8 @@ string default_config = R"({
         "InvalidGasLimit" : "invalid gasLimit:",
         "TooMuchGasUsed" : "invalid gasUsed:",
         "InvalidNumber" : "invalid block number",
-        "InvalidTimestamp" : "timestamp equals parent's",
+        "InvalidTimestampEqualParent" : "timestamp equals parent's",
+        "InvalidTimestampOlderParent" : "timestamp older than parent",
         "InvalidLogBloom" : "invalid bloom (remote:",
         "InvalidStateRoot" : "invalid merkle root (remote:",
         "InvalidGasLimit2" : "invalid gas limit:",
@@ -61,7 +62,8 @@ string default_config = R"({
         "UnknownParent2" : "unknown ancestor",
         "InvalidReceiptsStateRoot" : "invalid receipt root hash (remote:",
         "InvalidTransactionsRoot" : "transaction root hash mismatch: have",
-        "InvalidUnclesHash" : "uncle root hash mismatch: have"
+        "InvalidUnclesHash" : "uncle root hash mismatch: have",
+        "InvalidUncleParentHash" : "uncle's parent is not ancestor"
     }
 })";
 

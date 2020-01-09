@@ -14,6 +14,7 @@ public:
     scheme_uncleHeader(DataObject const& _test);
     size_t getPopulateFrom() const;
     string const& getOverwrite() const;
+    string const& getRelTimestampFromPopulateBlock() const;
 
 private:
 };

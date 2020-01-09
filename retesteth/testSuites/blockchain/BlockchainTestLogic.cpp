@@ -9,8 +9,8 @@ test::scheme_block postmineBlockHeader(RPCSession& _session,
     scheme_blockchainTestFiller::blockSection const& _block, BlockNumber const& _latestBlockNumber,
     string const& _network, std::vector<scheme_block> const& _uncles);
 
-test::scheme_block prepareUncle(
-    scheme_uncleHeader _uncleOverwrite, std::vector<test::scheme_block> const& _existingUncles);
+test::scheme_block prepareUncle(RPCSession& _session, scheme_uncleHeader _uncleOverwrite,
+    std::vector<test::scheme_block> const& _existingUncles);
 
 namespace test
 {
@@ -66,8 +66,8 @@ void FillTest(scheme_blockchainTestFiller const& _testObject, string const& _net
         std::vector<scheme_block> preparedUncleBlocks;
         for (auto const& uncle : block.getUncles())
         {
-            scheme_block uncleBlock =
-                prepareUncle(uncle, uncles);  // return block using uncle overwrite on uncles array
+            scheme_block uncleBlock = prepareUncle(
+                session, uncle, uncles);  // return block using uncle overwrite on uncles array
             preparedUncleBlocks.push_back(uncleBlock);
             blockSection["uncleHeaders"].addArrayObject(uncleBlock.getBlockHeader());
         }
@@ -173,6 +173,10 @@ DataObject DoTests(DataObject const& _input, TestSuite::TestSuiteOptions& _opt)
     {
         string const& testname = i.getKey();
         TestOutputHelper::get().setCurrentTestName(testname);
+        {
+            TestInfo errorInfo("TestFillerInit", 0);
+            TestOutputHelper::get().setCurrentTestInfo(errorInfo);
+        }
 
         if (_opt.doFilling)
         {
@@ -304,8 +308,8 @@ test::scheme_block postmineBlockHeader(RPCSession& _session,
 // _uncleOverwrite is read from the test filler
 // _existingUncles is asked from the client
 // return a blockHeader infor for _existingUncle overwritten by _uncleOverwrite
-test::scheme_block prepareUncle(
-    scheme_uncleHeader _uncleOverwrite, std::vector<test::scheme_block> const& _existingUncles)
+test::scheme_block prepareUncle(RPCSession& _session, scheme_uncleHeader _uncleOverwrite,
+    std::vector<test::scheme_block> const& _existingUncles)
 {
     // _existingUncles (ind 0 - from genesis, ind 1 - form first block)
     size_t origIndex = _uncleOverwrite.getPopulateFrom();
@@ -314,9 +318,28 @@ test::scheme_block prepareUncle(
 
     test::scheme_block uncleBlock = _existingUncles.at(origIndex);
     DataObject headerOrig = uncleBlock.getBlockHeader();
-    headerOrig.atKeyUnsafe(_uncleOverwrite.getOverwrite()) =
-        _uncleOverwrite.getData().atKey(_uncleOverwrite.getOverwrite()).asString();
-    uncleBlock.overwriteBlockHeader(headerOrig);
 
+    string const& overwriteField = _uncleOverwrite.getOverwrite();
+    if (!overwriteField.empty())
+        headerOrig.atKeyUnsafe(overwriteField) =
+            _uncleOverwrite.getData().atKey(overwriteField).asString();
+
+    string const& shift = _uncleOverwrite.getRelTimestampFromPopulateBlock();
+    if (!shift.empty())
+    {
+        BlockNumber populateFromBlockNumber(origIndex);
+        test::scheme_block populateFromBlock =
+            _session.eth_getBlockByNumber(populateFromBlockNumber, false);
+
+        //  std::cerr << populateFromBlockNumber.getBlockNumberAsString() << " tmstmp: " <<
+        //  populateFromBlock.getBlockHeader().atKey("timestamp").asString() << std::endl;
+        BlockNumber timestamp(populateFromBlock.getBlockHeader().atKey("timestamp").asString());
+        timestamp.applyShift(shift);
+        //  std::cerr << headerOrig.asJson() << std::endl;
+        headerOrig.atKeyUnsafe("timestamp") = timestamp.getBlockNumberAsString();
+        //  std::cerr << headerOrig.asJson() << std::endl;
+    }
+
+    uncleBlock.overwriteBlockHeader(headerOrig);
     return uncleBlock;
 }

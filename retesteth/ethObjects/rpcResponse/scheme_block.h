@@ -8,6 +8,7 @@ namespace test {
 struct BlockNumber
 {
     BlockNumber(string const& _number) : m_blockNumber(_number) {}
+    BlockNumber(size_t _number) : m_blockNumber("") { m_blockNumber = toString(_number); }
     int getBlockNumberAsInt() const { return hexStringToInt(m_blockNumber); }
     string getBlockNumberAsString() const { return m_blockNumber; }
     void applyShift(int _shift)
@@ -16,7 +17,14 @@ struct BlockNumber
     }
     void applyShift(string const& _shift)
     {
-        m_blockNumber = toCompactHexPrefixed(getBlockNumberAsInt() + hexStringToInt(_shift));
+        int shift;
+        test::object::DigitsType dtype = test::object::stringIntegerType(_shift);
+        if (dtype == test::object::DigitsType::HexPrefixed ||
+            dtype == test::object::DigitsType::UnEvenHexPrefixed)
+            shift = hexStringToInt(_shift);
+        else
+            shift = atoi(_shift.c_str());
+        m_blockNumber = toCompactHexPrefixed(getBlockNumberAsInt() + shift);
     }
 
 private:
