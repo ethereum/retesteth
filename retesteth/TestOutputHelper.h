@@ -26,7 +26,7 @@
 
 namespace test
 {
-
+class TestOutputHelper;
 struct TestInfo
 {
     TestInfo(std::string const& _fork, int _trD, int _trG, int _trV)
@@ -43,6 +43,8 @@ struct TestInfo
         m_currentTestCaseName = boost::unit_test::framework::current_test_case().p_name;
     }
 
+    TestInfo(std::string const& _info, std::string const& _testName = std::string());
+
     TestInfo(): m_isStateTransactionInfo(false), m_isBlockchainTestInfo(false) {}
     std::string getMessage() const;
     static std::string caseName()
@@ -57,6 +59,7 @@ private:
     size_t m_blockNumber;
     bool m_isStateTransactionInfo = false;
     bool m_isBlockchainTestInfo = false;
+    bool m_isGeneralTestInfo = false;
 };
 
 class TestOutputHelper

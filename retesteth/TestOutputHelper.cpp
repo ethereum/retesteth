@@ -310,15 +310,28 @@ void TestOutputHelper::markTestFolderAsFinished(
 }
 
 
+TestInfo::TestInfo(std::string const& _info, std::string const& _testName) : m_sFork(_info)
+{
+    m_isGeneralTestInfo = true;
+    m_currentTestCaseName = boost::unit_test::framework::current_test_case().p_name;
+    if (!_testName.empty())
+        TestOutputHelper::get().setCurrentTestName(_testName);
+}
+
 std::string TestInfo::getMessage() const
 {
     if (m_sFork.empty())
         return "";
-    string message = " (" + m_currentTestCaseName + "/" + TestOutputHelper::get().testName() +
-                     ", fork: " + m_sFork;
+    string message = " (" + m_currentTestCaseName + "/" + TestOutputHelper::get().testName();
+
+    if (!m_isGeneralTestInfo)
+        message += ", fork: " + m_sFork;
+    else
+        message += ", step: " + m_sFork;
+
     if (m_isBlockchainTestInfo)
         message += ", block: " + to_string(m_blockNumber);
-    if (m_isStateTransactionInfo)
+    else if (m_isStateTransactionInfo)
         message += ", TrInfo: d: " + to_string(m_trD) + ", g: " + to_string(m_trG) + ", v: " + to_string(m_trV);
     return message + ")";
 }

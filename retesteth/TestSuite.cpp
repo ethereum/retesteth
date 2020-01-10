@@ -292,6 +292,10 @@ string TestSuite::checkFillerExistance(string const& _testFolder) const
         else
             exceptionStr =
                 "Compiled test folder contains test without Filler: " + file.filename().string();
+        {
+            TestInfo errorInfo("CheckFillers", file.stem().string());
+            TestOutputHelper::get().setCurrentTestInfo(errorInfo);
+        }
         ETH_ERROR_REQUIRE_MESSAGE(fs::exists(expectedFillerName) ||
                                       fs::exists(expectedFillerName2) ||
                                       fs::exists(expectedCopierName),

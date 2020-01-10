@@ -128,6 +128,10 @@ void FillTest(scheme_blockchainTestFiller const& _testObject, string const& _net
 /// Read and execute the test from the file
 void RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _opt)
 {
+    {
+        TestInfo errorInfo("RunTestInit");
+        TestOutputHelper::get().setCurrentTestInfo(errorInfo);
+    }
     if (Options::get().logVerbosity > 1)
         std::cout << "Running " << TestOutputHelper::get().testName() << std::endl;
     scheme_blockchainTest inputTest(_testObject);
@@ -173,13 +177,13 @@ DataObject DoTests(DataObject const& _input, TestSuite::TestSuiteOptions& _opt)
     {
         string const& testname = i.getKey();
         TestOutputHelper::get().setCurrentTestName(testname);
-        {
-            TestInfo errorInfo("TestFillerInit", 0);
-            TestOutputHelper::get().setCurrentTestInfo(errorInfo);
-        }
 
         if (_opt.doFilling)
         {
+            {
+                TestInfo errorInfo("TestFillerInit");
+                TestOutputHelper::get().setCurrentTestInfo(errorInfo);
+            }
             scheme_blockchainTestFiller testFiller(i);
             // Create a blockchain test for each network described in expect section
             for (auto& network : testFiller.getExpectSection().getAllNetworksFromExpectSection())
