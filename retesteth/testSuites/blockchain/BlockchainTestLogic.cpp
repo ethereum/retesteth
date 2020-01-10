@@ -9,8 +9,11 @@ test::scheme_block postmineBlockHeader(RPCSession& _session,
     scheme_blockchainTestFiller::blockSection const& _block, BlockNumber const& _latestBlockNumber,
     string const& _network, std::vector<scheme_block> const& _uncles);
 
+typedef std::vector<test::scheme_block> vectorOfSchemeBlock;
 test::scheme_block prepareUncle(RPCSession& _session, scheme_uncleHeader _uncleOverwrite,
-    std::vector<test::scheme_block> const& _existingUncles);
+    std::vector<test::scheme_block> const& _existingUncles,
+    std::map<size_t, vectorOfSchemeBlock> const& _preparedUncles,
+    vectorOfSchemeBlock const& _currentBlockPreparedUncles);
 
 namespace test
 {
@@ -33,7 +36,10 @@ void FillTest(scheme_blockchainTestFiller const& _testObject, string const& _net
     _testOut["genesisBlockHeader"] = latestBlock.getBlockHeader();
     _testOut["genesisBlockHeader"].removeKey("transactions");
     _testOut["genesisBlockHeader"].removeKey("uncles");
-    std::vector<test::scheme_block> uncles;
+
+    vectorOfSchemeBlock uncles;  // unprepared uncles mined in paralel from the blocks
+    std::map<size_t, vectorOfSchemeBlock> mapBlocksToPreparedUncles;  // prepared uncles for each
+                                                                      // block
 
     size_t number = 0;
     for (auto const& block : _testObject.getBlocks())
@@ -63,14 +69,16 @@ void FillTest(scheme_blockchainTestFiller const& _testObject, string const& _net
         }
 
         ETH_LOG("Fetching uncles: (" + sBlockNumber + ")", 6);
-        std::vector<scheme_block> preparedUncleBlocks;
+        vectorOfSchemeBlock preparedUncleBlocks;
         for (auto const& uncle : block.getUncles())
         {
+            // return block using uncle overwrite on uncles array
             scheme_block uncleBlock = prepareUncle(
-                session, uncle, uncles);  // return block using uncle overwrite on uncles array
+                session, uncle, uncles, mapBlocksToPreparedUncles, preparedUncleBlocks);
             preparedUncleBlocks.push_back(uncleBlock);
             blockSection["uncleHeaders"].addArrayObject(uncleBlock.getBlockHeader());
         }
+        mapBlocksToPreparedUncles.emplace(number, preparedUncleBlocks);
 
         latestBlockNumber = session.test_mineBlocks(1);
         if (block.getData().count("blockHeader") || block.getData().count("uncleHeaders"))
@@ -309,25 +317,69 @@ test::scheme_block postmineBlockHeader(RPCSession& _session,
     return remoteBlock;  // malicious block must be written to the filled test
 }
 
+// _session is RPC connection to the client
 // _uncleOverwrite is read from the test filler
-// _existingUncles is asked from the client
-// return a blockHeader infor for _existingUncle overwritten by _uncleOverwrite
+// _existingUncles are blocks mined normally from the client as if it were uncles
+// _preparedUncles is a map blNumber -> uncleHeaders where blNumber are existing blocks
+// return a blockHeader info for _existingUncle overwritten by _uncleOverwrite
 test::scheme_block prepareUncle(RPCSession& _session, scheme_uncleHeader _uncleOverwrite,
-    std::vector<test::scheme_block> const& _existingUncles)
+    std::vector<test::scheme_block> const& _existingUncles,
+    std::map<size_t, vectorOfSchemeBlock> const& _preparedUncles,
+    vectorOfSchemeBlock const& _currentBlockPreparedUncles)
 {
-    // _existingUncles (ind 0 - from genesis, ind 1 - form first block)
-    size_t origIndex = _uncleOverwrite.getPopulateFrom();
-    ETH_ERROR_REQUIRE_MESSAGE(_existingUncles.size() > origIndex,
-        "Trying to populate uncle from future block that has not been generated yet!");
+    size_t origIndex = 0;
+    test::scheme_block const* tmpRefToSchemeBlock = NULL;
+    scheme_uncleHeader::typeOfUncleSection typeOfSection = _uncleOverwrite.getTypeOfUncleSection();
+    switch (typeOfSection)
+    {
+    case scheme_uncleHeader::typeOfUncleSection::SameAsPreviousBlockUncle:
+    {
+        std::cerr << "get sameAsPrev" << std::endl;
+        size_t sameAsPreviuousBlockUncle = _uncleOverwrite.getSameAsPreviousBlockUncle();
+        ETH_ERROR_REQUIRE_MESSAGE(_preparedUncles.count(sameAsPreviuousBlockUncle),
+            "Trying to copy uncle from unregistered block with sameAsPreviuousBlockUncle!");
+        tmpRefToSchemeBlock = &_preparedUncles.at(sameAsPreviuousBlockUncle).at(0);
+        break;
+    }
+    case scheme_uncleHeader::typeOfUncleSection::PopulateFromBlock:
+    {
+        // _existingUncles (ind 0 - from genesis, ind 1 - form first block)
+        origIndex = _uncleOverwrite.getPopulateFrom();
+        ETH_ERROR_REQUIRE_MESSAGE(_existingUncles.size() > origIndex,
+            "Trying to populate uncle from future block that has not been generated yet!");
+        tmpRefToSchemeBlock = &_existingUncles.at(origIndex);
+        break;
+    }
+    case scheme_uncleHeader::typeOfUncleSection::SameAsBlock:
+    {
+        BlockNumber sameAsBlockNumber(_uncleOverwrite.getSameAsBlock());
+        return _session.eth_getBlockByNumber(sameAsBlockNumber, false);
+    }
+    case scheme_uncleHeader::typeOfUncleSection::SameAsPreviousSibling:
+    {
+        origIndex = _uncleOverwrite.getSameAsPreviousSibling() - 1;
+        ETH_ERROR_REQUIRE_MESSAGE(_currentBlockPreparedUncles.size() > origIndex,
+            "Trying to get uncle from current block that has not been generated yet!");
+        tmpRefToSchemeBlock = &_currentBlockPreparedUncles.at(origIndex);
+        break;
+    }
+    default:
+        ETH_ERROR_MESSAGE("Unhandled typeOfUncleSection!");
+        break;
+    }
 
-    test::scheme_block uncleBlock = _existingUncles.at(origIndex);
+    if (tmpRefToSchemeBlock == NULL)
+        ETH_ERROR_MESSAGE("tmpRefToSchemeBlock is NULL!");
+    test::scheme_block uncleBlock = *tmpRefToSchemeBlock;
     DataObject headerOrig = uncleBlock.getBlockHeader();
 
+    // If there is a field that is being overwritten in the uncle header
     string const& overwriteField = _uncleOverwrite.getOverwrite();
     if (!overwriteField.empty())
         headerOrig.atKeyUnsafe(overwriteField) =
             _uncleOverwrite.getData().atKey(overwriteField).asString();
 
+    // If uncle timestamp is shifted relative to the block that it's populated from
     string const& shift = _uncleOverwrite.getRelTimestampFromPopulateBlock();
     if (!shift.empty())
     {
