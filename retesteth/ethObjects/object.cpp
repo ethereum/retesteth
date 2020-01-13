@@ -4,6 +4,7 @@
 #include <mutex>
 
 namespace test {
+string object::emptyString;
 
 std::mutex g_strFindMutex;
 object::DigitsType object::stringIntegerType(std::string const& _string)

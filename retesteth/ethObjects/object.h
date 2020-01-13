@@ -22,6 +22,7 @@ namespace test {
                 String
             };
 
+            static std::string emptyString;
             static DigitsType stringIntegerType(std::string const& _string);
             static std::string makeHexAddress(std::string const& _address);
             static DataObject prepareGenesisParams(

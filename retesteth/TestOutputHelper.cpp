@@ -325,7 +325,11 @@ std::string TestInfo::getMessage() const
     string message = " (" + m_currentTestCaseName + "/" + TestOutputHelper::get().testName();
 
     if (!m_isGeneralTestInfo)
+    {
         message += ", fork: " + m_sFork;
+        if (!m_sChainName.empty())
+            message += ", chain: " + m_sChainName;
+    }
     else
         message += ", step: " + m_sFork;
 

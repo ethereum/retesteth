@@ -25,6 +25,7 @@ scheme_blockchainTestFiller::blockSection::blockSection(DataObject const& _data)
         {{"blockHeader", {{DataType::Object}, jsonField::Optional}},
             {"blockHeaderPremine", {{DataType::Object}, jsonField::Optional}},
             {"blocknumber", {{DataType::String}, jsonField::Optional}},
+            {"chainname", {{DataType::String}, jsonField::Optional}},
             {"transactions", {{DataType::Array}, jsonField::Required}},
             {"uncleHeaders", {{DataType::Array}, jsonField::Required}}});
 

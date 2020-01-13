@@ -21,8 +21,9 @@ public:
     scheme_uncleHeader(DataObject const& _test);
     size_t getPopulateFrom() const;
     size_t getSameAsBlock() const;
-    string const& getOverwrite() const;
-    string const& getRelTimestampFromPopulateBlock() const;
+    std::string const& getChainName() const;
+    std::string const& getOverwrite() const;
+    std::string const& getRelTimestampFromPopulateBlock() const;
     size_t getSameAsPreviousBlockUncle() const;
     size_t getSameAsPreviousSibling() const;
     typeOfUncleSection getTypeOfUncleSection() const { return m_typeOfUncleSection; }

@@ -22,18 +22,30 @@ public:
         blockSection(DataObject const& _data);
         std::vector<scheme_transaction> const& getTransactions() const { return m_transactons; }
         std::vector<scheme_uncleHeader> const& getUncles() const { return m_uncles; }
-        string const& getException(string const& _network) const
+        std::string const& getException(string const& _network) const
         {
             if (m_expectException.count(_network))
                 return m_expectException.at(_network);
             return m_noExceptionString;
+        }
+        std::string const& getChainName() const
+        {
+            if (m_data.count("chainname"))
+                return m_data.atKey("chainname").asString();
+            return object::emptyString;
+        }
+        size_t getNumber() const
+        {
+            if (m_data.count("blocknumber"))
+                return (size_t)atoi(m_data.atKey("blocknumber").asString().c_str());
+            return 0;
         }
 
     private:
         std::vector<scheme_transaction> m_transactons;
         std::vector<scheme_uncleHeader> m_uncles;
         std::map<string, string> m_expectException;
-        string m_noExceptionString;
+        std::string m_noExceptionString;
     };
 
 public:

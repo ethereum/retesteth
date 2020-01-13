@@ -36,8 +36,11 @@ struct TestInfo
         m_currentTestCaseName = boost::unit_test::framework::current_test_case().p_name;
     }
 
-    TestInfo(std::string const&  _fork, size_t _block)
-        : m_sFork(_fork), m_blockNumber(_block), m_isStateTransactionInfo(false)
+    TestInfo(std::string const& _fork, size_t _block, std::string const& _chainName = std::string())
+      : m_sFork(_fork),
+        m_sChainName(_chainName),
+        m_blockNumber(_block),
+        m_isStateTransactionInfo(false)
     {
         m_isBlockchainTestInfo = true;
         m_currentTestCaseName = boost::unit_test::framework::current_test_case().p_name;
@@ -53,7 +56,7 @@ struct TestInfo
     }
 
 private:
-    std::string m_sFork;
+    std::string m_sFork, m_sChainName;
     std::string m_currentTestCaseName;
     int m_trD, m_trG, m_trV;
     size_t m_blockNumber;

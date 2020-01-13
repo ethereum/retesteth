@@ -73,10 +73,7 @@ scheme_blockchainTest::scheme_blockchainTest(DataObject const& _test)
         {
             // Invalid block json description
             requireJsonFields(blockSection, "blockchainTestInvalidblock " + _test.getKey(),
-                {{"blockHeader", {{DataType::Object}, jsonField::Optional}},
-                    {"rlp", {{DataType::String}, jsonField::Required}},
-                    {"transactions", {{DataType::Array}, jsonField::Optional}},
-                    {"uncleHeaders", {{DataType::Array}, jsonField::Optional}},
+                {{"rlp", {{DataType::String}, jsonField::Required}},
                     {"blocknumber", {{DataType::String}, jsonField::Optional}},
                     {"chainname", {{DataType::String}, jsonField::Optional}},
                     {"expectException", {{DataType::String}, jsonField::Optional}},
