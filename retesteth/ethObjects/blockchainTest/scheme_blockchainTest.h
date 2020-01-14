@@ -38,6 +38,13 @@ public:
     std::vector<std::string> const& getBlockRlps() const { return m_blockRLPs; }
     scheme_state const& getPost() const { return m_post; }
     string const& getNetwork() const { return m_data.atKey("network").asString(); }
+    string const& getEngine() const
+    {
+        if (m_data.count("sealEngine"))
+            return m_data.atKey("sealEngine").asString();
+        return m_sNoProof;
+    }
+    string const& getLastBlockHash() const { return m_data.atKey("lastblockhash").asString(); }
 
 private:
     class fieldChecker
@@ -49,5 +56,6 @@ private:
     scheme_state m_post;
     std::vector<std::string> m_blockRLPs;
     std::vector<scheme_transaction> m_transactions;
+    static const string m_sNoProof;
 };
 }

@@ -1,6 +1,7 @@
 #include "scheme_blockchainTest.h"
 using namespace test;
 
+string const scheme_blockchainTest::m_sNoProof = "NoPfoof";
 
 scheme_blockchainTestBase::fieldChecker::fieldChecker(DataObject const& _test)
 {

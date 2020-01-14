@@ -87,17 +87,20 @@ void FillTest(scheme_blockchainTestFiller const& _testObject, string const& _net
     mapOfKnownChain.emplace(s_currentChainName, ChainNameBlocks());
     for (auto const& block : _testObject.getBlocks())
     {
+        ETH_LOGC("STARTING A NEW BLOCK: ", 6, LogColor::LIME);
+        string const sChainName = block.getChainName().empty() ? "default" : block.getChainName();
         {
             // restore chain on remote client
-            string const sChainName =
-                block.getChainName().empty() ? "default" : block.getChainName();
             if (!mapOfKnownChain.count(sChainName))
                 mapOfKnownChain.emplace(sChainName, ChainNameBlocks());
 
             // if we switch the chain or have to remine one of blocknumbers
-            if (s_currentChainName != sChainName ||
-                mapOfKnownChain.at(sChainName).getBlockRlps().size() >= block.getNumber())
+            bool remineOneOfThePreviousBlocksOnTheSameChain =
+                (block.getNumber() != 0 &&
+                    mapOfKnownChain.at(sChainName).getBlockRlps().size() >= block.getNumber());
+            if (s_currentChainName != sChainName || remineOneOfThePreviousBlocksOnTheSameChain)
             {
+                ETH_LOGC("PERFORM REWIND HISTORY: ", 6, LogColor::YELLOW);
                 ChainNameBlocks& chain = mapOfKnownChain.at(sChainName);
                 chain.restoreOnRemoteClient(session, block.getNumber());
                 s_currentChainName = sChainName;
@@ -111,11 +114,11 @@ void FillTest(scheme_blockchainTestFiller const& _testObject, string const& _net
         {
             // Debug information
             string sBlockNumber;
-            TestInfo errorInfo(_network, ++number, block.getChainName());
+            TestInfo errorInfo(_network, ++number, sChainName);
             if (Options::get().logVerbosity >= 6)
                 sBlockNumber = toString(number);  // very heavy
             TestOutputHelper::get().setCurrentTestInfo(errorInfo);
-            sBlockDebugInfo = "(bl: " + sBlockNumber + ", ch: " + block.getChainName() + ")";
+            sBlockDebugInfo = "(bl: " + sBlockNumber + ", ch: " + sChainName + ")";
             ETH_LOGC("Generating a test block: " + sBlockDebugInfo, 6, LogColor::YELLOW);
         }
 
@@ -127,6 +130,7 @@ void FillTest(scheme_blockchainTestFiller const& _testObject, string const& _net
                 session.eth_getBlockByNumber(latestBlockNumber, false));
             session.test_rewindToBlock(number - 1);
             session.test_modifyTimestamp(1000);  // Shift block timestamp relative to previous block
+            ETH_LOGC("Finish populate clean uncle from: " + sBlockDebugInfo, 6, LogColor::YELLOW);
         }
 
         ETH_LOGC("Import transactions: " + sBlockDebugInfo, 6, LogColor::YELLOW);
@@ -201,6 +205,7 @@ void FillTest(scheme_blockchainTestFiller const& _testObject, string const& _net
         }
     }
 
+    latestBlock = session.eth_getBlockByNumber(session.eth_blockNumber(), false);
     scheme_state remoteState = getRemoteState(session, latestBlock);
     if (remoteState.isHash())
         compareStates(_testObject.getExpectSection().getExpectSectionFor(_network).getExpectState(),
@@ -231,7 +236,8 @@ void RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _
     // Info for genesis
     TestInfo errorInfo (inputTest.getNetwork(), 0);
     TestOutputHelper::get().setCurrentTestInfo(errorInfo);
-    session.test_setChainParams(inputTest.getGenesisForRPC(inputTest.getNetwork()).asJson());
+    session.test_setChainParams(
+        inputTest.getGenesisForRPC(inputTest.getNetwork(), inputTest.getEngine()).asJson());
 
     // for all blocks
     size_t blockNumber = 0;
@@ -255,6 +261,10 @@ void RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _
         validatePostHash(session, inputTest.getPost().getHash(), latestBlock);
     else
         compareStates(scheme_expectState(inputTest.getPost().getData()), session, latestBlock);
+
+    if (inputTest.getLastBlockHash() != latestBlock.getBlockHash())
+        ETH_ERROR_MESSAGE("lastblockhash does not match! remote: " + latestBlock.getBlockHash() +
+                          ", test: " + inputTest.getLastBlockHash());
 }
 
 DataObject DoTests(DataObject const& _input, TestSuite::TestSuiteOptions& _opt)
