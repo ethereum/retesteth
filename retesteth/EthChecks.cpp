@@ -32,6 +32,9 @@ void eth_log_message(std::string const& _message, unsigned _verbosity, LogColor 
         case LogColor::YELLOW:
             s_pre = "\x1b[33m";
             break;
+        case LogColor::LIME:
+            s_pre = "\x1b[32m";
+            break;
         case LogColor::DEFAULT:
             break;
         default:

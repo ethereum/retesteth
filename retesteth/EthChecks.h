@@ -5,7 +5,8 @@ namespace  test {
 enum class LogColor
 {
     DEFAULT,
-    YELLOW
+    YELLOW,
+    LIME
 };
 
 void eth_warning_message(std::string const& _message);

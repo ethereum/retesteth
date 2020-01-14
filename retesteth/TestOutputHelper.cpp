@@ -117,6 +117,9 @@ void TestOutputHelper::showProgress()
     int m_testsPerProgs = std::max(1, (int)(m_maxTests / 4));
     if (!test::Options::get().createRandomTest && (m_currTest % m_testsPerProgs == 0 || m_currTest ==  m_maxTests))
     {
+        ETH_FAIL_REQUIRE_MESSAGE(m_maxTests > 0, "TestHelper has 0 or negative m_maxTests!");
+        ETH_FAIL_REQUIRE_MESSAGE(
+            m_currTest <= m_maxTests, "TestHelper has m_currTest > m_maxTests!");
         int percent = int(m_currTest*100/m_maxTests);
         std::cout << percent << "%";
         if (percent != 100)
