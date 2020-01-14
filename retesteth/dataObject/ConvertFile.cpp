@@ -6,13 +6,19 @@
 namespace dataobject
 {
 string const errorPrefix = "Error parsing json: ";
+bool isEmptyChar(char const& _char)
+{
+    if (_char == ' ' || _char == '\n' || _char == '\r' || _char == '\t')
+        return true;
+    return false;
+}
 
 size_t stripSpaces(string const& _input, size_t _i)
 {
     size_t i = _i;
     for (; i < _input.length(); i++)
     {
-        if (_input[i] == ' ' || _input[i] == '\n' || _input[i] == '\r' || _input[i] == '\t')
+        if (isEmptyChar(_input[i]))
             continue;
         else
             return i;
@@ -105,6 +111,16 @@ bool readDigit(string const& _input, size_t& _i, int& _result)
     return false;
 }
 
+bool checkExcessiveComa(string const& _input, size_t _i)
+{
+    size_t reader = _i - 1;
+    while (isEmptyChar(_input[reader]))  // double work!!!
+        reader--;
+    if (_input[reader] == ',')
+        return true;
+    return false;
+}
+
 /// Convert Json object represented as string to DataObject
 DataObject ConvertJsoncppStringToData(
     std::string const& _input, string const& _stopper, bool _autosort)
@@ -127,7 +143,7 @@ DataObject ConvertJsoncppStringToData(
                 << errorPrefix + "unexpected end of json! around: " + printDebug(debug);
 
         if (i > c_debugSize)
-            debug = _input.substr(i - c_debugSize, c_debugSize / 2);
+            debug = _input.substr(i - c_debugSize, c_debugSize);
 
         if (_input[i] == '"')
         {
@@ -222,6 +238,10 @@ DataObject ConvertJsoncppStringToData(
 
         if (_input[i] == ']' || _input[i] == '}')
         {
+            if (checkExcessiveComa(_input, i))
+                throw DataObjectException()
+                    << "unexpected ',' before end of the array/object! around: " +
+                           printDebug(debug);
             if (actualRoot->type() == DataType::Array && _input.at(i) != ']')
                 throw DataObjectException()
                     << "expected ']' closing the array! around: " + printDebug(debug);
