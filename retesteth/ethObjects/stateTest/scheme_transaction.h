@@ -31,6 +31,7 @@ public:
                     {"to", {DataType::String}}, {"value", {DataType::String}}});
         }
 
+        m_data["data"] = test::replaceCode(m_data["data"].asString());
         if (!m_data.atKey("to").asString().empty())
             m_data["to"] = scheme_account::makeHexAddress(m_data.atKey("to").asString());
 
