@@ -22,7 +22,7 @@ public:
     size_t getPopulateFrom() const;
     size_t getSameAsBlock() const;
     std::string const& getChainName() const;
-    std::string const& getOverwrite() const;
+    std::vector<std::string> const& getOverwrite() const { return m_overwriteAndRedoPow; }
     std::string const& getRelTimestampFromPopulateBlock() const;
     size_t getSameAsPreviousBlockUncle() const;
     size_t getSameAsPreviousSibling() const;
@@ -30,5 +30,6 @@ public:
 
 private:
     typeOfUncleSection m_typeOfUncleSection;
+    std::vector<std::string> m_overwriteAndRedoPow;
 };
 }  // namespace test

@@ -27,7 +27,7 @@ scheme_blockchainTest::fieldChecker::fieldChecker(DataObject const& _test)
         {{"_info", {{DataType::Object}, jsonField::Required}},
             {"blocks", {{DataType::Array}, jsonField::Required}},
             {"genesisBlockHeader", {{DataType::Object}, jsonField::Required}},
-            {"genesisRLP", {{DataType::String}, jsonField::Optional}},
+            {"genesisRLP", {{DataType::String}, jsonField::Required}},
             {"lastblockhash", {{DataType::String}, jsonField::Required}},
             {"network", {{DataType::String}, jsonField::Required}},
             {"postState", {{DataType::Object}, jsonField::Optional}},

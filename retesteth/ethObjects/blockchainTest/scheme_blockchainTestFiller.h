@@ -40,6 +40,12 @@ public:
                 return (size_t)atoi(m_data.atKey("blocknumber").asString().c_str());
             return 0;
         }
+        size_t getInvalidTransactionCount() const
+        {
+            if (m_data.count("invalidTransactionsCount"))
+                return (size_t)atoi(m_data.atKey("invalidTransactionsCount").asString().c_str());
+            return 0;
+        }
 
     private:
         std::vector<scheme_transaction> m_transactons;

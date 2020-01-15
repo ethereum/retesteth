@@ -79,6 +79,7 @@ void FillTest(scheme_blockchainTestFiller const& _testObject, string const& _net
     _testOut["genesisBlockHeader"] = latestBlock.getBlockHeader();
     _testOut["genesisBlockHeader"].removeKey("transactions");
     _testOut["genesisBlockHeader"].removeKey("uncles");
+    _testOut["genesisRLP"] = latestBlock.getBlockRLP();
 
     size_t number = 0;
     std::map<std::string, ChainNameBlocks> mapOfKnownChain;  // Memory of test chains
@@ -184,7 +185,8 @@ void FillTest(scheme_blockchainTestFiller const& _testObject, string const& _net
         }
 
         ETH_ERROR_REQUIRE_MESSAGE(
-            latestBlock.getTransactionCount() == block.getTransactions().size(),
+            latestBlock.getTransactionCount() ==
+                block.getTransactions().size() - block.getInvalidTransactionCount(),
             "BlockchainTest transaction execution failed! (remote " +
                 toString(latestBlock.getTransactionCount()) + " != test " +
                 toString(block.getTransactions().size()) + ")");
@@ -479,10 +481,12 @@ test::scheme_block prepareUncle(RPCSession& _session, scheme_uncleHeader _uncleO
     DataObject headerOrig = uncleBlock.getBlockHeader();
 
     // If there is a field that is being overwritten in the uncle header
-    string const& overwriteField = _uncleOverwrite.getOverwrite();
-    if (!overwriteField.empty())
-        headerOrig.atKeyUnsafe(overwriteField) =
-            _uncleOverwrite.getData().atKey(overwriteField).asString();
+    if (_uncleOverwrite.getOverwrite().size())
+    {
+        for (auto const& overwriteField : _uncleOverwrite.getOverwrite())
+            headerOrig.atKeyUnsafe(overwriteField) =
+                _uncleOverwrite.getData().atKey(overwriteField).asString();
+    }
 
     // If uncle timestamp is shifted relative to the block that it's populated from
     string const& shift = _uncleOverwrite.getRelTimestampFromPopulateBlock();

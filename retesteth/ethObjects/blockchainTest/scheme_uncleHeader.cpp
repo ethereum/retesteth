@@ -35,7 +35,7 @@ scheme_uncleHeader::scheme_uncleHeader(DataObject const& _data) : object(_data)
             {"RelTimestampFromPopulateBlock", {{DataType::String}, jsonField::Optional}},
             {"sameAsPreviousBlockUncle", {{DataType::String}, isSameAsPreviousBlockUncleRequired}},
             {"sameAsPreviousSibling", {{DataType::String}, jsonField::Optional}},
-            {"overwriteAndRedoPoW", {{DataType::String}, jsonField::Optional}},
+            {"overwriteAndRedoPoW", {{DataType::String, DataType::Array}, jsonField::Optional}},
             {"sameAsBlock", {{DataType::String}, jsonField::Optional}},
             {"chainname", {{DataType::String}, jsonField::Optional}},
             {"bloom", {{DataType::String}, jsonField::Optional}},
@@ -54,6 +54,15 @@ scheme_uncleHeader::scheme_uncleHeader(DataObject const& _data) : object(_data)
             {"timestamp", {{DataType::String}, jsonField::Optional}},
             {"transactionsTrie", {{DataType::String}, jsonField::Optional}},
             {"uncleHash", {{DataType::String}, jsonField::Optional}}});
+
+    if (_data.count("overwriteAndRedoPoW"))
+    {
+        if (_data.atKey("overwriteAndRedoPoW").type() == DataType::Array)
+            for (auto const& overObj : _data.atKey("overwriteAndRedoPoW").getSubObjects())
+                m_overwriteAndRedoPow.push_back(overObj.asString());
+        else
+            m_overwriteAndRedoPow.push_back(_data.atKey("overwriteAndRedoPoW").asString());
+    }
 }
 
 string const& scheme_uncleHeader::getRelTimestampFromPopulateBlock() const
@@ -81,13 +90,6 @@ size_t scheme_uncleHeader::getSameAsPreviousBlockUncle() const
 size_t scheme_uncleHeader::getSameAsPreviousSibling() const
 {
     return (size_t)atoi(m_data.atKey("sameAsPreviousSibling").asString().c_str());
-}
-
-string const& scheme_uncleHeader::getOverwrite() const
-{
-    if (m_data.count("overwriteAndRedoPoW"))
-        return m_data.atKey("overwriteAndRedoPoW").asString();
-    return object::emptyString;
 }
 
 string const& scheme_uncleHeader::getChainName() const
