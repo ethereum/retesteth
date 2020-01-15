@@ -137,6 +137,7 @@ DataObject ConvertJsoncppStringToData(
     for (size_t i = 0; i < _input.length(); i++)
     {
         // std::cerr << root.asJson() << std::endl;
+        bool isSeenCommaBefore = checkExcessiveComa(_input, i);
         i = stripSpaces(_input, i);
         if (i == _input.length())
             throw DataObjectException()
@@ -238,7 +239,7 @@ DataObject ConvertJsoncppStringToData(
 
         if (_input[i] == ']' || _input[i] == '}')
         {
-            if (checkExcessiveComa(_input, i))
+            if (isSeenCommaBefore)
                 throw DataObjectException()
                     << "unexpected ',' before end of the array/object! around: " +
                            printDebug(debug);
