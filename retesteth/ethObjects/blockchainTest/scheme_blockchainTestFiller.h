@@ -32,7 +32,7 @@ public:
         {
             if (m_data.count("chainname"))
                 return m_data.atKey("chainname").asString();
-            return object::emptyString;
+            return "default";
         }
         size_t getNumber() const
         {

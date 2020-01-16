@@ -28,7 +28,7 @@ public:
 
 	std::string web3_clientVersion();
 	std::string eth_sendTransaction(std::string const& _transaction);
-	std::string eth_sendRawTransaction(std::string const& _rlp);
+    std::string eth_sendRawTransaction(std::string const& _rlp);
 
     std::string eth_blockNumber();
     test::scheme_transactionReceipt eth_getTransactionReceipt(std::string const& _transactionHash);
