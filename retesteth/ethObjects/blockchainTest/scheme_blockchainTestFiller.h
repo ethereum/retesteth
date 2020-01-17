@@ -32,7 +32,7 @@ public:
         {
             if (m_data.count("chainname"))
                 return m_data.atKey("chainname").asString();
-            return "default";
+            return m_defaultChainName;
         }
         size_t getNumber() const
         {
@@ -52,6 +52,7 @@ public:
         std::vector<scheme_uncleHeader> m_uncles;
         std::map<string, string> m_expectException;
         std::string m_noExceptionString;
+        std::string m_defaultChainName = "default";
     };
 
 public:

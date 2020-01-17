@@ -59,9 +59,18 @@ scheme_uncleHeader::scheme_uncleHeader(DataObject const& _data) : object(_data)
     {
         if (_data.atKey("overwriteAndRedoPoW").type() == DataType::Array)
             for (auto const& overObj : _data.atKey("overwriteAndRedoPoW").getSubObjects())
+            {
+                ETH_ERROR_REQUIRE_MESSAGE(m_data.count(overObj.asString()),
+                    "Missing overwrite field in uncle object: `" + overObj.asString() + "`");
                 m_overwriteAndRedoPow.push_back(overObj.asString());
+            }
         else
-            m_overwriteAndRedoPow.push_back(_data.atKey("overwriteAndRedoPoW").asString());
+        {
+            string const& overString = _data.atKey("overwriteAndRedoPoW").asString();
+            ETH_ERROR_REQUIRE_MESSAGE(m_data.count(overString),
+                "Missing overwrite field in uncle object: `" + overString + "`");
+            m_overwriteAndRedoPow.push_back(overString);
+        }
     }
 }
 
@@ -89,7 +98,8 @@ size_t scheme_uncleHeader::getSameAsPreviousBlockUncle() const
 
 size_t scheme_uncleHeader::getSameAsPreviousSibling() const
 {
-    return (size_t)atoi(m_data.atKey("sameAsPreviousSibling").asString().c_str());
+    size_t sibling = (size_t)atoi(m_data.atKey("sameAsPreviousSibling").asString().c_str());
+    return std::max<size_t>(sibling, 1);
 }
 
 string const& scheme_uncleHeader::getChainName() const

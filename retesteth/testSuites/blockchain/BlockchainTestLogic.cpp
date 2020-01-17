@@ -52,6 +52,12 @@ void RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _
     if (inputTest.getLastBlockHash() != latestBlock.getBlockHash())
         ETH_ERROR_MESSAGE("lastblockhash does not match! remote: " + latestBlock.getBlockHash() +
                           ", test: " + inputTest.getLastBlockHash());
+
+    string const& genesisRLP = inputTest.getData().atKey("genesisRLP").asString();
+    latestBlock = session.eth_getBlockByNumber(BlockNumber("0"), false);
+    if (latestBlock.getBlockRLP() != genesisRLP)
+        ETH_ERROR_MESSAGE("genesisRLP in test != genesisRLP on remote client! (" + genesisRLP +
+                          "' != '" + latestBlock.getBlockRLP() + "'");
 }
 
 DataObject DoTests(DataObject const& _input, TestSuite::TestSuiteOptions& _opt)

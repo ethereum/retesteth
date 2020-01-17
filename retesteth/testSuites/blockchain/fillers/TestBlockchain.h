@@ -13,51 +13,46 @@ class TestBlockchain
 public:
     TestBlockchain(RPCSession& _session, std::string const& _network)
       : m_session(_session), m_network(_network)
-    {}
+    {
+        TestBlock genesisBlock;
+        genesisBlock.setNextBlockForked(mineNextBlockAndRewert());
+        m_blocks.push_back(genesisBlock);  // Empty genesis
+    }
 
     void generateBlock(blockSection const& _block, vectorOfSchemeBlock const& _uncles);
 
-    // Remember new block
-    void registerBlockRLP(std::string const& _blockRLP) { m_blockRlps.push_back(_blockRLP); }
-
     // Restore this chain on remote client up to < _number block
     // Restore chain up to _number of blocks. if _number is 0 restore the whole chain
-    void restoreUpToNumber(RPCSession& _session, size_t _number, bool _samechain = false);
+    void restoreUpToNumber(RPCSession& _session, size_t _number, bool _samechain);
 
-    void importKnownBlocks(RPCSession& _session) const;
-    std::vector<std::string> const& getBlockRlps() const { return m_blockRlps; }
-    vectorOfSchemeBlock const& getUnpreparedUncles() const { return m_uncles; }
-    vectorOfSchemeBlock& getUnpreparedUnclesUnsafe() { return m_uncles; }
-    std::map<size_t, vectorOfSchemeBlock> const& getMapBlocksToPreparedUncles() const
-    {
-        return m_mapBlocksToPreparedUncles;
-    }
-    std::map<size_t, vectorOfSchemeBlock>& getMapBlocksToPreparedUnclesUnsafe()
-    {
-        return m_mapBlocksToPreparedUncles;
-    }
+    std::vector<TestBlock> const& getBlocks() const { return m_blocks; }
+
     std::string const& getChainName() const { return m_chainName; }
 
     // Prepare errorinfo about block number and chain name
-    string prepareDebugInfoString(std::string const& _newBlockChainName) const;
+    string prepareDebugInfoString(std::string const& _newBlockChainName);
 
 private:
     // Ask remote client to generate a blockheader that will later used for uncles
-    test::scheme_block prepareUnclePopulate();
+    test::scheme_block mineNextBlockAndRewert();
 
     // Import transactions on remote client, return prepared json data for test
     DataObject importTransactions(blockSection const& _block);
 
-    void mineBlock(blockSection const& _block);
+    // Mine the test block on remote client.
+    // if blockheader is tweaked or there are uncles, postmine tweak this and reimport
+    test::scheme_block mineBlock(
+        blockSection const& _block, vectorOfSchemeBlock const& _preparedUncleBlocks);
+
+    // After test_mineBlock we can change the blockheader or add uncles. that will require to tweak
+    // the block And reimport it again, then check exceptions
+    test::scheme_block postmineBlockHeader(blockSection const& _block,
+        BlockNumber const& _latestBlockNumber, std::vector<scheme_block> const& _uncles);
 
     RPCSession& m_session;
     std::string m_sDebugString;       // Debug info of block numbers
     std::string m_chainName;          // Name of this chain
     std::vector<TestBlock> m_blocks;  // List of blocks
-
-    std::vector<std::string> m_blockRlps;       // List of Imported block RLPs
-    std::vector<std::string> m_knownBlockRlps;  // List of fork block RLPs
+    // std::vector<TestBlock> m_knownBlocks;       // List of fork block RLPs
     std::string m_network;                      // Forkname in genesis
-    std::map<size_t, vectorOfSchemeBlock> m_mapBlocksToPreparedUncles;  // prepared uncles for each
-                                                                        // block
 };

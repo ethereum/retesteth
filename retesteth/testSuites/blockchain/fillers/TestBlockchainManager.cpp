@@ -3,8 +3,7 @@
 using namespace std;
 
 // Generate block using a client from the filler information
-TestBlockchainManager::parseBlockFromJson(
-    test::scheme_blockchainTestFiller::blockSection const& _block)
+void TestBlockchainManager::parseBlockFromJson(blockSection const& _block)
 {
     reorgChains(_block.getChainName(), _block.getNumber());
 
@@ -13,8 +12,11 @@ TestBlockchainManager::parseBlockFromJson(
     // Prepare uncles using all chains and current debug info
     string sDebug = currentChainMining.prepareDebugInfoString(_block.getChainName());
     vectorOfSchemeBlock unclesPrepared = prepareUncles(_block, sDebug);
-
     currentChainMining.generateBlock(_block, unclesPrepared);
+
+    // Remeber the generated block in exact order as in the test
+    TestBlock const& lastBlock = getLastBlock();
+    m_testBlockRLPs.push_back(lastBlock.getRLP());
 }
 
 vectorOfSchemeBlock TestBlockchainManager::prepareUncles(
@@ -28,102 +30,33 @@ vectorOfSchemeBlock TestBlockchainManager::prepareUncles(
     return preparedUncleBlocks;
 }
 
-
-struct TestBlockchainManager::TestBlockchain
-{
-    // Remember new block
-    void registerBlockRLP(std::string const& _blockRLP) { m_blockRlps.push_back(_blockRLP); }
-
-    // Restore this chain on remote client up to < _number block
-    // Restore chain up to _number of blocks. if _number is 0 restore the whole chain
-    void restoreUpToNumber(RPCSession& _session, size_t _number, bool _samechain = false)
-    {
-        if (_samechain && _number == 0)
-            return;
-
-        size_t firstBlock = _samechain ? _number - 1 : 0;
-        _session.test_rewindToBlock(firstBlock);  // Rewind to the begining
-
-        if (_number == 0)
-        {
-            // we are not on the same chain. restore the whole history
-            for (auto const& rlp : m_blockRlps)
-                _session.test_importRawBlock(rlp);
-            return;
-        }
-
-        size_t actNumber = 0;
-        size_t popUpCount = 0;
-        for (auto const& rlp : m_blockRlps)
-        {
-            if (actNumber++ < firstBlock)  // we are on the same chain. lets move to the rewind
-                                           // point
-                continue;
-
-            if (actNumber < _number)
-                _session.test_importRawBlock(rlp);
-            else
-            {
-                m_knownBlockRlps.push_back(rlp);  // Remember the fork
-                popUpCount++;
-                std::cerr << "popup " << std::endl;
-            }
-        }
-
-        // Restore blocks up to `number` forgetting the rest of history
-        for (size_t i = 0; i < popUpCount; i++)
-            m_blockRlps.pop_back();
-    }
-
-    void importKnownBlocks(RPCSession& _session) const
-    {
-        // import previously generated blocks that been rewind
-        for (auto const& rlp : m_knownBlockRlps)
-            _session.test_importRawBlock(rlp);
-    }
-    std::vector<std::string> const& getBlockRlps() const { return m_blockRlps; }
-    vectorOfSchemeBlock const& getUnpreparedUncles() const { return m_uncles; }
-    vectorOfSchemeBlock& getUnpreparedUnclesUnsafe() { return m_uncles; }
-    std::map<size_t, vectorOfSchemeBlock> const& getMapBlocksToPreparedUncles() const
-    {
-        return m_mapBlocksToPreparedUncles;
-    }
-    std::map<size_t, vectorOfSchemeBlock>& getMapBlocksToPreparedUnclesUnsafe()
-    {
-        return m_mapBlocksToPreparedUncles;
-    }
-
-private:
-    std::vector<std::string> m_blockRlps;       // List of Imported block RLPs
-    std::vector<std::string> m_knownBlockRlps;  // List of fork block RLPs
-    vectorOfSchemeBlock m_uncles;  // unprepared uncles mined in paralel from the blocks
-    std::map<size_t, vectorOfSchemeBlock> m_mapBlocksToPreparedUncles;  // prepared uncles for each
-                                                                        // block
-};
-
-TestBlockchainManager::reorgChains(string const& _newBlockChainName, size_t _newBLockNumber)
+void TestBlockchainManager::reorgChains(string const& _newBlockChainName, size_t _newBlockNumber)
 {
     // if a new chain, initialize
     if (!mapOfKnownChain.count(_newBlockChainName))
-        mapOfKnownChain.emplace(_newBlockChainName, TestBlockchain());
+        mapOfKnownChain.emplace(_newBlockChainName, TestBlockchain(m_session, m_defaultNetwork));
 
     // Chain reorg conditions
     bool blockNumberHasDecreased =
-        (_newBLockNumber != 0 &&
-            mapOfKnownChain.at(_newBlockChainName).getBlockRlps().size() >= _newBLockNumber);
+        (_newBlockNumber != 0 &&
+            mapOfKnownChain.at(_newBlockChainName).getBlocks().size() - 1 >= _newBlockNumber);
     bool sameChain = (m_sCurrentChainName == _newBlockChainName);
 
-    if (!blockNumberHasDecreased && sameChain && _newBLockNumber != 0)
+    if (!blockNumberHasDecreased && sameChain && _newBlockNumber != 0)
         ETH_ERROR_REQUIRE_MESSAGE(
-            mapOfKnownChain.at(_newBlockChainName).getBlockRlps().size() == _newBLockNumber,
-            "Require a blocknumber = previous blocknumber + 1");
+            _newBlockNumber ==
+                mapOfKnownChain.at(_newBlockChainName).getBlocks().size(),  // 0 is genesis
+            "Require a `new blocknumber` = `previous blocknumber` + 1 has (" +
+                toString(_newBlockNumber) + " vs " +
+                toString(mapOfKnownChain.at(_newBlockChainName).getBlocks().size()) + ")");
 
     // if we switch the chain or have to remine one of blocknumbers
     if (m_sCurrentChainName != _newBlockChainName || blockNumberHasDecreased)
     {
+        m_wasAtLeastOneFork = true;
         ETH_LOGC("PERFORM REWIND HISTORY: ", 6, LogColor::YELLOW);
         TestBlockchain& chain = mapOfKnownChain.at(_newBlockChainName);
-        chain.restoreUpToNumber(m_session, _newBLockNumber, sameChain && blockNumberHasDecreased);
+        chain.restoreUpToNumber(m_session, _newBlockNumber, sameChain && blockNumberHasDecreased);
         m_sCurrentChainName = _newBlockChainName;
     }
 
@@ -149,32 +82,36 @@ test::scheme_block TestBlockchainManager::prepareUncle(
     case scheme_uncleHeader::typeOfUncleSection::SameAsPreviousBlockUncle:
     {
         size_t sameAsPreviuousBlockUncle = _uncleOverwrite.getSameAsPreviousBlockUncle();
-        ETH_ERROR_REQUIRE_MESSAGE(
-            currentChainMining.getMapBlocksToPreparedUncles().count(sameAsPreviuousBlockUncle),
+        ETH_ERROR_REQUIRE_MESSAGE(currentChainMining.getBlocks().size() > sameAsPreviuousBlockUncle,
             "Trying to copy uncle from unregistered block with sameAsPreviuousBlockUncle!");
+        ETH_ERROR_REQUIRE_MESSAGE(
+            currentChainMining.getBlocks().at(sameAsPreviuousBlockUncle).getUncles().size() > 0,
+            "Previous block has no uncles!");
         tmpRefToSchemeBlock =
-            &currentChainMining.getMapBlocksToPreparedUncles().at(sameAsPreviuousBlockUncle).at(0);
+            &currentChainMining.getBlocks().at(sameAsPreviuousBlockUncle).getUncles().at(0);
         break;
     }
     case scheme_uncleHeader::typeOfUncleSection::PopulateFromBlock:
     {
-        // _existingUncles (ind 0 - from genesis, ind 1 - form first block)
+        // _existingUncles (chain.getBlocks() ind 0 genesis, ind 1 - first block, ind 2 - second
+        // block) uncle populated from origIndex is stored at the next block as ForkBlock
         origIndex = _uncleOverwrite.getPopulateFrom();
         if (!_uncleOverwrite.getChainName().empty())
         {
             ETH_ERROR_REQUIRE_MESSAGE(mapOfKnownChain.count(_uncleOverwrite.getChainName()),
                 "Uncle is populating from non-existent chain!");
             TestBlockchain const& chain = mapOfKnownChain.at(_uncleOverwrite.getChainName());
-            ETH_ERROR_REQUIRE_MESSAGE(chain.getUnpreparedUncles().size() > origIndex,
+            ETH_ERROR_REQUIRE_MESSAGE(chain.getBlocks().size() > origIndex,
                 "Trying to populate uncle from future block in another chain that has not been "
                 "generated yet!");
-            tmpRefToSchemeBlock = &chain.getUnpreparedUncles().at(origIndex);
+            tmpRefToSchemeBlock = &chain.getBlocks().at(origIndex).getNextBlockForked();
         }
         else
         {
-            ETH_ERROR_REQUIRE_MESSAGE(currentChainMining.getUnpreparedUncles().size() > origIndex,
+            ETH_ERROR_REQUIRE_MESSAGE(currentChainMining.getBlocks().size() > origIndex,
                 "Trying to populate uncle from future block that has not been generated yet!");
-            tmpRefToSchemeBlock = &currentChainMining.getUnpreparedUncles().at(origIndex);
+            tmpRefToSchemeBlock =
+                &currentChainMining.getBlocks().at(origIndex).getNextBlockForked();
         }
         break;
     }
@@ -185,10 +122,11 @@ test::scheme_block TestBlockchainManager::prepareUncle(
     }
     case scheme_uncleHeader::typeOfUncleSection::SameAsPreviousSibling:
     {
-        origIndex = _uncleOverwrite.getSameAsPreviousSibling() - 1;
-        ETH_ERROR_REQUIRE_MESSAGE(_currentBlockPreparedUncles.size() > origIndex,
+        size_t siblingNumber =
+            _uncleOverwrite.getSameAsPreviousSibling() - 1;  // 1 is first sib, 2 is next,...
+        ETH_ERROR_REQUIRE_MESSAGE(siblingNumber < _currentBlockPreparedUncles.size(),
             "Trying to get uncle from current block that has not been generated yet!");
-        tmpRefToSchemeBlock = &_currentBlockPreparedUncles.at(origIndex);
+        tmpRefToSchemeBlock = &_currentBlockPreparedUncles.at(siblingNumber);
         break;
     }
     default:
@@ -210,23 +148,23 @@ test::scheme_block TestBlockchainManager::prepareUncle(
     }
 
     // If uncle timestamp is shifted relative to the block that it's populated from
-    string const& shift = _uncleOverwrite.getRelTimestampFromPopulateBlock();
-    if (!shift.empty())
+    if (typeOfSection == scheme_uncleHeader::typeOfUncleSection::PopulateFromBlock)
     {
-        BlockNumber populateFromBlockNumber(origIndex);
-        test::scheme_block populateFromBlock =
-            m_session.eth_getBlockByNumber(populateFromBlockNumber, false);
+        string const& shift = _uncleOverwrite.getRelTimestampFromPopulateBlock();
+        if (!shift.empty())
+        {
+            DataObject const& blockDataForTest =
+                currentChainMining.getBlocks().at(origIndex).getDataForTest();
+            BlockNumber timestamp(
+                blockDataForTest.atKey("blockHeader").atKey("timestamp").asString());
 
-        //  std::cerr << populateFromBlockNumber.getBlockNumberAsString() << " tmstmp: " <<
-        //  populateFromBlock.getBlockHeader().atKey("timestamp").asString() << std::endl;
-        BlockNumber timestamp(populateFromBlock.getBlockHeader().atKey("timestamp").asString());
-        timestamp.applyShift(shift);
-        //  std::cerr << headerOrig.asJson() << std::endl;
-        headerOrig.atKeyUnsafe("timestamp") = timestamp.getBlockNumberAsString();
-        //  std::cerr << headerOrig.asJson() << std::endl;
+            timestamp.applyShift(shift);
+            headerOrig.atKeyUnsafe("timestamp") = timestamp.getBlockNumberAsString();
+            //  std::cerr << headerOrig.asJson() << std::endl;
+        }
     }
 
     uncleBlock.overwriteBlockHeader(headerOrig);
-    std::cerr << uncleBlock.getBlockHeader().asJson() << std::endl;
+    // std::cerr << uncleBlock.getBlockHeader().asJson() << std::endl;
     return uncleBlock;
 }
