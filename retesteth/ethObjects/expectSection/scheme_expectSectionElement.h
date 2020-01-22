@@ -23,7 +23,18 @@ public:
         // get allowed networks for this expect section
         parseJsonStrValueIntoSet(_expect.atKey("network"), m_networks);
         ClientConfig const& cfg = Options::get().getDynamicOptions().getCurrentConfig();
-        m_networks = translateNetworks(m_networks, cfg.getNetworks());
+
+        // Transition tests network
+        bool isTransitionTest = false;
+        if (m_networks.size() == 1)
+        {
+            for (auto const& net : m_networks)
+                if (inArray(cfg.getAdditionalNetworks(), net))
+                    isTransitionTest = true;
+        }
+
+        if (!isTransitionTest)
+            m_networks = translateNetworks(m_networks, cfg.getNetworks());
     }
     std::set<std::string> const& getNetworks() const { return m_networks; }
     scheme_expectState const& getExpectState() const { return m_expectState; }

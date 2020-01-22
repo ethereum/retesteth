@@ -66,6 +66,16 @@ public:
             object::makeKeyHex(m_data.atKeyUnsafe("uncleHash"));
         }
 
+        // Change coinbase in blockheader
+        void randomizeCoinbase()
+        {
+            // m_data.atKeyUnsafe("coinbase") = toString(Address(h160::random()));
+            // if we randomize coinbase retesteth will be unable to calculate stateRoot
+            // state root is applied manually in test as expect section
+            m_data.atKeyUnsafe("coinbase") =
+                toString(Address("0xb94f5374fce5ed0000000097c15331677e6ebf0b"));
+        }
+
     private:
         void resetHeader(DataObject const& _header);
 
@@ -102,6 +112,9 @@ public:
 
     // Get Block RLP for state tests
     std::string getBlockRLP() const;
+
+    // Change coinbase in blockheader
+    void randomizeCoinbase();
 
 private:
     struct validator

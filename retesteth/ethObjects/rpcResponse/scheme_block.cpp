@@ -122,6 +122,11 @@ void scheme_block::recalculateUncleHash()
     m_blockHeader.replaceUncleHash(toString(dev::sha3(streamUncles().out())));
 }
 
+void scheme_block::randomizeCoinbase()
+{
+    m_blockHeader.randomizeCoinbase();
+}
+
 // Subclass of blockheader
 void scheme_block::scheme_block_header::resetHeader(DataObject const& _header)
 {

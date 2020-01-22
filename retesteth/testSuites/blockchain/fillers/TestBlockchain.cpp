@@ -93,13 +93,17 @@ DataObject TestBlockchain::importTransactions(blockSection const& _block)
 // Ask remote client to generate a blockheader that will later used for uncles
 test::scheme_block TestBlockchain::mineNextBlockAndRewert()
 {
-    ETH_LOGC("Mine next block and revert: " + m_sDebugString, 6, LogColor::YELLOW);
+    ETH_LOGC("Mine uncle block (next block) and revert: " + m_sDebugString, 6, LogColor::YELLOW);
     BlockNumber latestBlockNumber(m_session.test_mineBlocks(1));
     test::scheme_block next = m_session.eth_getBlockByNumber(latestBlockNumber, false);
     latestBlockNumber.applyShift(-1);
     m_session.test_rewindToBlock(latestBlockNumber.getBlockNumberAsInt());  // rewind to the
                                                                             // previous block
     m_session.test_modifyTimestamp(1000);  // Shift block timestamp relative to previous block
+
+    // assign a random coinbase for an uncle block to avoid UncleIsAncestor exception
+    // otherwise this uncle would be similar to a block mined
+    next.randomizeCoinbase();
     return next;
 }
 
