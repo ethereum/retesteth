@@ -35,7 +35,7 @@ void FillTest(scheme_blockchainTestFiller const& _testObject, string const& _net
         ETH_LOGC("STARTING A NEW BLOCK: ", 6, LogColor::LIME);
         // Generate a test block from test block section
         // With all the information about sidechains and uncles
-        testchain.parseBlockFromJson(block);
+        testchain.parseBlockFromJson(block, _testObject.getTotalUncleCount() > 0);
         _testOut["blocks"].addArrayObject(testchain.getLastBlock().getDataForTest());
     }
 

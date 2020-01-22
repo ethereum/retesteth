@@ -6,11 +6,19 @@
 using namespace dev;
 
 namespace test {
+// TODO (unify the blocknumber conversion througout the codebase and remove this class !!! )
+// Represent int value taken from either size_t or string
+// And perform additive operations on it with another (int or string representing integers)
 struct BlockNumber
 {
     BlockNumber(string const& _number) : m_blockNumber(_number) {}
     BlockNumber(size_t _number) : m_blockNumber("") { m_blockNumber = toString(_number); }
-    int getBlockNumberAsInt() const { return hexStringToInt(m_blockNumber); }
+    int getBlockNumberAsInt() const
+    {
+        if (isHexDigitsType(test::object::stringIntegerType(m_blockNumber)))
+            return hexStringToInt(m_blockNumber);
+        return atoi(m_blockNumber.c_str());
+    }
     string getBlockNumberAsString() const { return m_blockNumber; }
     void applyShift(int _shift)
     {
@@ -19,9 +27,7 @@ struct BlockNumber
     void applyShift(string const& _shift)
     {
         int shift;
-        test::object::DigitsType dtype = test::object::stringIntegerType(_shift);
-        if (dtype == test::object::DigitsType::HexPrefixed ||
-            dtype == test::object::DigitsType::UnEvenHexPrefixed)
+        if (isHexDigitsType(test::object::stringIntegerType(m_blockNumber)))
             shift = hexStringToInt(_shift);
         else
             shift = atoi(_shift.c_str());
@@ -31,6 +37,11 @@ struct BlockNumber
 private:
     string m_blockNumber;
     int hexStringToInt(string const& _str) const { return (int)u256(fromHex(_str)); }
+    bool isHexDigitsType(test::object::DigitsType _dtype) const
+    {
+        return (_dtype == test::object::DigitsType::HexPrefixed ||
+                _dtype == test::object::DigitsType::UnEvenHexPrefixed);
+    }
 };
 
 class scheme_block : public object

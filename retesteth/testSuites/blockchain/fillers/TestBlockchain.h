@@ -19,7 +19,8 @@ public:
         m_blocks.push_back(genesisBlock);  // Empty genesis
     }
 
-    void generateBlock(blockSection const& _block, vectorOfSchemeBlock const& _uncles);
+    void generateBlock(
+        blockSection const& _block, vectorOfSchemeBlock const& _uncles, bool _generateUncles);
 
     // Restore this chain on remote client up to < _number block
     // Restore chain up to _number of blocks. if _number is 0 restore the whole chain

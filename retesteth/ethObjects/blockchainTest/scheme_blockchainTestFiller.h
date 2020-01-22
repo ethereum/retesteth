@@ -47,6 +47,8 @@ public:
             return 0;
         }
 
+        size_t uncleCount() const { return m_uncles.size(); }
+
     private:
         std::vector<scheme_transaction> m_transactons;
         std::vector<scheme_uncleHeader> m_uncles;
@@ -60,6 +62,7 @@ public:
     scheme_expectSection const& getExpectSection() const { return m_expectSection; }
     std::vector<blockSection> const& getBlocks() const { return m_blocks; }
     string getSealEngine() const;
+    size_t getTotalUncleCount() const { return m_totalUncleCount; }
 
 private:
     class fieldChecker
@@ -70,5 +73,6 @@ private:
     fieldChecker m_checker;
     scheme_expectSection m_expectSection;
     std::vector<blockSection> m_blocks;
+    size_t m_totalUncleCount;
 };
 }

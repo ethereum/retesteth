@@ -1,12 +1,13 @@
 #include "TestBlockchain.h"
 
-void TestBlockchain::generateBlock(blockSection const& _block, vectorOfSchemeBlock const& _uncles)
+void TestBlockchain::generateBlock(
+    blockSection const& _block, vectorOfSchemeBlock const& _uncles, bool _generateUncles)
 {
     TestBlock newBlock;
     DataObject& blockJson = newBlock.getDataForTestUnsafe();
 
     blockJson["chainname"] = _block.getChainName();
-    blockJson["blocknumber"] = toString(m_blocks.size() + 1);
+    blockJson["blocknumber"] = toString(m_blocks.size());
 
     // Prepare transactions for the block
     blockJson["transactions"] = importTransactions(_block);
@@ -32,8 +33,11 @@ void TestBlockchain::generateBlock(blockSection const& _block, vectorOfSchemeBlo
         blockJson["blockHeader"] = latestBlock.getBlockHeader();
     blockJson["rlp"] = latestBlock.getBlockRLP();
 
-    // Ask remote client to generate a parallel blockheader that will later be used for uncles
-    newBlock.setNextBlockForked(mineNextBlockAndRewert());
+    if (_generateUncles)
+    {
+        // Ask remote client to generate a parallel blockheader that will later be used for uncles
+        newBlock.setNextBlockForked(mineNextBlockAndRewert());
+    }
 
     m_blocks.push_back(newBlock);
 }
@@ -117,11 +121,20 @@ string TestBlockchain::prepareDebugInfoString(string const& _newBlockChainName)
 // Restore chain up to _number of blocks. if _number is 0 restore the whole chain
 void TestBlockchain::restoreUpToNumber(RPCSession& _session, size_t _number, bool _samechain)
 {
-    if (_samechain && _number == 0)
-        return;
-
-    size_t firstBlock = _samechain ? _number : 0;
-    _session.test_rewindToBlock(firstBlock);  // Rewind to the begining
+    size_t firstBlock;
+    if (_samechain)
+    {
+        if (_number == 0)
+            return;
+        firstBlock = _number;
+        assert(firstBlock > 0);
+        _session.test_rewindToBlock(firstBlock - 1);
+    }
+    else
+    {
+        firstBlock = 0;
+        _session.test_rewindToBlock(0);  // Rewind to the begining
+    }
 
     if (_number == 0)
     {
@@ -157,7 +170,7 @@ void TestBlockchain::restoreUpToNumber(RPCSession& _session, size_t _number, boo
         else
         {
             popUpCount++;
-            std::cerr << "popup " << std::endl;
+            // std::cerr << "popup " << std::endl;
         }
         actNumber++;
     }

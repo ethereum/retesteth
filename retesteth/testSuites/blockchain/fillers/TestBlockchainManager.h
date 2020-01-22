@@ -16,7 +16,7 @@ public:
     }
 
     // Perform block generation logic by parsing the filler file section
-    void parseBlockFromJson(test::scheme_blockchainTestFiller::blockSection const& _block);
+    void parseBlockFromJson(blockSection const& _block, bool _generateUncles);
 
     // Return the last block from the current chain (not the top of all chains)
     TestBlock const& getLastBlock()

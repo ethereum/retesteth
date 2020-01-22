@@ -3,7 +3,7 @@
 using namespace std;
 
 // Generate block using a client from the filler information
-void TestBlockchainManager::parseBlockFromJson(blockSection const& _block)
+void TestBlockchainManager::parseBlockFromJson(blockSection const& _block, bool _generateUncles)
 {
     reorgChains(_block.getChainName(), _block.getNumber());
 
@@ -11,8 +11,9 @@ void TestBlockchainManager::parseBlockFromJson(blockSection const& _block)
 
     // Prepare uncles using all chains and current debug info
     string sDebug = currentChainMining.prepareDebugInfoString(_block.getChainName());
-    vectorOfSchemeBlock unclesPrepared = prepareUncles(_block, sDebug);
-    currentChainMining.generateBlock(_block, unclesPrepared);
+    vectorOfSchemeBlock unclesPrepared =
+        _generateUncles ? prepareUncles(_block, sDebug) : vectorOfSchemeBlock();
+    currentChainMining.generateBlock(_block, unclesPrepared, _generateUncles);
 
     // Remeber the generated block in exact order as in the test
     TestBlock const& lastBlock = getLastBlock();

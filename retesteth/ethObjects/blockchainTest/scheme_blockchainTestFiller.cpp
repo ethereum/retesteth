@@ -15,8 +15,13 @@ scheme_blockchainTestFiller::fieldChecker::fieldChecker(DataObject const& _test)
 scheme_blockchainTestFiller::scheme_blockchainTestFiller(DataObject const& _test)
   : scheme_blockchainTestBase(_test), m_checker(_test), m_expectSection(_test.atKey("expect"))
 {
+    m_totalUncleCount = 0;
     for (auto const& bl : m_data.atKey("blocks").getSubObjects())
-        m_blocks.push_back(blockSection(bl));
+    {
+        blockSection block = blockSection(bl);
+        m_blocks.push_back(block);
+        m_totalUncleCount += block.getUncles().size();
+    }
 }
 
 scheme_blockchainTestFiller::blockSection::blockSection(DataObject const& _data) : object(_data)
