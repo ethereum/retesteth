@@ -5,7 +5,10 @@ using namespace std;
 // Generate block using a client from the filler information
 void TestBlockchainManager::parseBlockFromJson(blockSection const& _block, bool _generateUncles)
 {
-    reorgChains(_block.getChainName(), _block.getNumber());
+    ETH_LOGC("STARTING A NEW BLOCK: ", 6, LogColor::LIME);
+
+    // See if chain reorg is needed. ex: new fork, or remine block
+    reorgChains(_block);
 
     TestBlockchain& currentChainMining = mapOfKnownChain.at(m_sCurrentChainName);
 
@@ -31,34 +34,46 @@ vectorOfSchemeBlock TestBlockchainManager::prepareUncles(
     return preparedUncleBlocks;
 }
 
-void TestBlockchainManager::reorgChains(string const& _newBlockChainName, size_t _newBlockNumber)
+void TestBlockchainManager::reorgChains(blockSection const& _block)
 {
     // if a new chain, initialize
-    if (!mapOfKnownChain.count(_newBlockChainName))
-        mapOfKnownChain.emplace(_newBlockChainName, TestBlockchain(m_session, m_defaultNetwork));
+    size_t newBlockNumber = _block.getNumber();
+    string const& newBlockChainName = _block.getChainName();
+    string const& newBlockChainNet = _block.getChainNetwork();
+    if (!mapOfKnownChain.count(newBlockChainName))
+    {
+        // check the current chain network
+        string const& currentChainNet = mapOfKnownChain.at(m_sCurrentChainName).getNetwork();
+
+        // regenerate genesis only if the chain fork has changed
+        mapOfKnownChain.emplace(
+            newBlockChainName, TestBlockchain(m_session, m_testObject,
+                                   newBlockChainNet.empty() ? currentChainNet : newBlockChainNet,
+                                   currentChainNet != newBlockChainNet));
+    }
 
     // Chain reorg conditions
     bool blockNumberHasDecreased =
-        (_newBlockNumber != 0 &&
-            mapOfKnownChain.at(_newBlockChainName).getBlocks().size() - 1 >= _newBlockNumber);
-    bool sameChain = (m_sCurrentChainName == _newBlockChainName);
+        (newBlockNumber != 0 &&
+            mapOfKnownChain.at(newBlockChainName).getBlocks().size() - 1 >= newBlockNumber);
+    bool sameChain = (m_sCurrentChainName == newBlockChainName);
 
-    if (!blockNumberHasDecreased && sameChain && _newBlockNumber != 0)
+    if (!blockNumberHasDecreased && sameChain && newBlockNumber != 0)
         ETH_ERROR_REQUIRE_MESSAGE(
-            _newBlockNumber ==
-                mapOfKnownChain.at(_newBlockChainName).getBlocks().size(),  // 0 is genesis
+            newBlockNumber == mapOfKnownChain.at(newBlockChainName).getBlocks().size(),  // 0 is
+                                                                                         // genesis
             "Require a `new blocknumber` = `previous blocknumber` + 1 has (" +
-                toString(_newBlockNumber) + " vs " +
-                toString(mapOfKnownChain.at(_newBlockChainName).getBlocks().size()) + ")");
+                toString(newBlockNumber) + " vs " +
+                toString(mapOfKnownChain.at(newBlockChainName).getBlocks().size()) + ")");
 
     // if we switch the chain or have to remine one of blocknumbers
-    if (m_sCurrentChainName != _newBlockChainName || blockNumberHasDecreased)
+    if (m_sCurrentChainName != newBlockChainName || blockNumberHasDecreased)
     {
         m_wasAtLeastOneFork = true;
         ETH_LOGC("PERFORM REWIND HISTORY: ", 6, LogColor::YELLOW);
-        TestBlockchain& chain = mapOfKnownChain.at(_newBlockChainName);
-        chain.restoreUpToNumber(m_session, _newBlockNumber, sameChain && blockNumberHasDecreased);
-        m_sCurrentChainName = _newBlockChainName;
+        TestBlockchain& chain = mapOfKnownChain.at(newBlockChainName);
+        chain.restoreUpToNumber(m_session, newBlockNumber, sameChain && blockNumberHasDecreased);
+        m_sCurrentChainName = newBlockChainName;
     }
 
     m_session.test_modifyTimestamp(1000);  // Shift block timestamp relative to previous block

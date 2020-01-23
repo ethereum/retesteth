@@ -424,6 +424,8 @@ string RPCSession::test_mineBlocks(int _number, bool _canFail)
             }
         }
     }
+
+    // Better keep it int everywhere in codebase. !!!
     return toString(startBlock);
 }
 
@@ -472,8 +474,8 @@ DataObject RPCSession::rpcCall(
     {
         test::TestOutputHelper const& helper = test::TestOutputHelper::get();
         m_lastRPCError["message"] = "Error on JSON-RPC call (" + helper.testInfo().getMessage() +
-                                "): " + result["error"]["message"].asString() +
-                               " Request: " + request;
+                                    "):\nRequest: '" + request + "'" + "\nResult '" +
+                                    result["error"]["message"].asString() + "'\n";
         m_lastRPCError["error"] = result["error"]["message"].asString();
         if (_canFail)
             return DataObject(DataType::Null);

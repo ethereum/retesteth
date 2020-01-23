@@ -31,7 +31,15 @@ string parseKeyValue(string const& _input, size_t& _i)
     if (_i + 1 > _input.size())
         throw DataObjectException() << errorPrefix + "reached EOF before reading char: `\"`";
 
+    bool escapeChar = true;
     size_t endPos = _input.find('"', _i + 1);
+    while (escapeChar)
+    {
+        escapeChar = (_input[endPos - 1] == '\\');
+        if (escapeChar)
+            endPos = _input.find('"', endPos + 1);
+    }
+
     if (endPos != string::npos)
     {
         string key = _input.substr(_i + 1, endPos - _i - 1);
@@ -146,7 +154,8 @@ DataObject ConvertJsoncppStringToData(
         if (i > c_debugSize)
             debug = _input.substr(i - c_debugSize, c_debugSize);
 
-        if (_input[i] == '"')
+        bool escapeChar = (i > 0 && _input[i - 1] == '\\');
+        if (_input[i] == '"' && !escapeChar)
         {
             DataObject obj;
             string key = parseKeyValue(_input, i);

@@ -24,6 +24,7 @@ scheme_blockchainTestFiller::scheme_blockchainTestFiller(DataObject const& _test
     }
 }
 
+string scheme_blockchainTestFiller::blockSection::m_defaultChainName = "default";
 scheme_blockchainTestFiller::blockSection::blockSection(DataObject const& _data) : object(_data)
 {
     requireJsonFields(_data, "blockchainTestFiller::blocks section",
@@ -31,9 +32,21 @@ scheme_blockchainTestFiller::blockSection::blockSection(DataObject const& _data)
             {"blockHeaderPremine", {{DataType::Object}, jsonField::Optional}},
             {"blocknumber", {{DataType::String}, jsonField::Optional}},
             {"chainname", {{DataType::String}, jsonField::Optional}},
+            {"chainnetwork", {{DataType::String}, jsonField::Optional}},
             {"invalidTransactionsCount", {{DataType::String}, jsonField::Optional}},
             {"transactions", {{DataType::Array}, jsonField::Required}},
             {"uncleHeaders", {{DataType::Array}, jsonField::Required}}});
+
+    if (m_data.count("chainnetwork"))
+    {
+        // Chain network can be any of Forknames + additional Forks
+        ClientConfig const& cfg = Options::get().getDynamicOptions().getCurrentConfig();
+        m_chainNetwork = m_data.atKey("chainnetwork").asString();
+        std::vector<string> allowedNets = cfg.getNetworks();
+        for (auto const& addNet : cfg.getAdditionalNetworks())
+            allowedNets.push_back(addNet);
+        test::checkAllowedNetwork(m_chainNetwork, allowedNets);
+    }
 
     for (auto const& tr : _data.atKey("transactions").getSubObjects())
         m_transactons.push_back(tr);

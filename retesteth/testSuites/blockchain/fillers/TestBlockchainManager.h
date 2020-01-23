@@ -9,10 +9,16 @@
 class TestBlockchainManager
 {
 public:
-    TestBlockchainManager(RPCSession& _session, std::string const& _network)
-      : m_session(_session), m_defaultNetwork(_network)
+    TestBlockchainManager(RPCSession& _session, scheme_blockchainTestFiller const& _testObject,
+        std::string const& _network)
+      : m_session(_session), m_testObject(_testObject)
     {
         m_wasAtLeastOneFork = false;
+        // m_sCurrentChainName is unknown at this point. the first block of the test defines it
+        // but we want genesis to be generated anyway before that
+        m_sCurrentChainName = scheme_blockchainTestFiller::blockSection::getDefaultChainName();
+        mapOfKnownChain.emplace(
+            m_sCurrentChainName, TestBlockchain(m_session, _testObject, _network, true));
     }
 
     // Perform block generation logic by parsing the filler file section
@@ -35,22 +41,15 @@ public:
         ETH_LOGC("IMPORT KNOWN BLOCKS ", 6, LogColor::LIME);
         if (m_wasAtLeastOneFork)
         {
-            m_session.test_rewindToBlock(0);
+            m_session.test_rewindToBlock(0);  // the genesis stays
             for (auto const& rlp : m_testBlockRLPs)
                 m_session.test_importRawBlock(rlp);
         }
     }
 
-    // When mining the first block, set the current chain name
-    void attemptToSetCurrentChainName(std::string const& _defaultChainName)
-    {
-        if (m_sCurrentChainName.empty())
-            m_sCurrentChainName = _defaultChainName;
-    }
-
 private:
     // Reorg chains on the client if needed (for new block generation)
-    void reorgChains(std::string const& _newBlockChainName, size_t _newBLockNumber);
+    void reorgChains(blockSection const& _block);
 
     // Prepare uncles
     vectorOfSchemeBlock prepareUncles(blockSection const& _block, string const& _debug);
@@ -59,8 +58,9 @@ private:
     test::scheme_block prepareUncle(
         scheme_uncleHeader _uncleOverwrite, vectorOfSchemeBlock const& _currentBlockPreparedUncles);
 
-    RPCSession& m_session;
-    std::string m_defaultNetwork;                           // Chain network (fork)
+    RPCSession& m_session;                            // session with the client
+    scheme_blockchainTestFiller const& m_testObject;  // testData to generate genesis
+
     std::string m_sCurrentChainName;                        // Chain name that is mining blocks
     bool m_wasAtLeastOneFork;                               // Wether we swithced chains on remote
     std::vector<std::string> m_testBlockRLPs;  // List of prepared blocks as they are in test

@@ -15,27 +15,26 @@ void FillTest(scheme_blockchainTestFiller const& _testObject, string const& _net
         _testOut["_info"] = _testObject.getData().atKey("_info");
 
     RPCSession& session = RPCSession::instance(TestOutputHelper::getThreadID());
-    DataObject genesisObject = _testObject.getGenesisForRPC(_network, _testObject.getSealEngine());
-    session.test_setChainParams(genesisObject.asJson());
 
+    // Initialise chain manager
     ETH_LOGC("FILL GENESIS INFO: ", 6, LogColor::LIME);
-    test::scheme_block latestBlock = session.eth_getBlockByNumber(BlockNumber("0"), false);
-    _testOut["genesisBlockHeader"] = latestBlock.getBlockHeader();
-    _testOut["genesisBlockHeader"].removeKey("transactions");
-    _testOut["genesisBlockHeader"].removeKey("uncles");
-    _testOut["genesisRLP"] = latestBlock.getBlockRLP();
+    TestBlockchainManager testchain(session, _testObject, _network);
+    TestBlock const& genesis = testchain.getLastBlock();
+    _testOut["genesisBlockHeader"] = genesis.getDataForTest().atKey("blockHeader");
+    _testOut["genesisRLP"] = genesis.getDataForTest().atKey("rlp");
 
     size_t blocks = 0;
-    TestBlockchainManager testchain(session, _network);
     for (auto const& block : _testObject.getBlocks())
     {
+        // Debug
         if (Options::get().blockLimit != 0 && blocks++ >= Options::get().blockLimit)
             break;
-        testchain.attemptToSetCurrentChainName(block.getChainName());
-        ETH_LOGC("STARTING A NEW BLOCK: ", 6, LogColor::LIME);
+
         // Generate a test block from test block section
         // With all the information about sidechains and uncles
         testchain.parseBlockFromJson(block, _testObject.getTotalUncleCount() > 0);
+
+        // Get the json output of a constructed block for the test (includes rlp)
         _testOut["blocks"].addArrayObject(testchain.getLastBlock().getDataForTest());
     }
 
@@ -43,7 +42,7 @@ void FillTest(scheme_blockchainTestFiller const& _testObject, string const& _net
     testchain.syncOnRemoteClient();
 
     // Fill info about the lastblockhash
-    latestBlock = session.eth_getBlockByNumber(session.eth_blockNumber(), false);
+    scheme_block latestBlock = session.eth_getBlockByNumber(session.eth_blockNumber(), false);
     scheme_state remoteState = getRemoteState(session, latestBlock);
     if (remoteState.isHash())
         compareStates(_testObject.getExpectSection().getExpectSectionFor(_network).getExpectState(),

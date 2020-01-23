@@ -46,7 +46,7 @@ test::scheme_block TestBlockchain::mineBlock(
     blockSection const& _block, vectorOfSchemeBlock const& _preparedUncleBlocks)
 {
     ETH_LOGC("MINE BLOCK: " + m_sDebugString, 6, LogColor::YELLOW);
-    string latestBlockNumber = m_session.test_mineBlocks(1);
+    BlockNumber latestBlockNumber(m_session.test_mineBlocks(1));
     bool isUnclesInTest = _block.getData().count("uncleHeaders") ?
                               _block.getData().atKey("uncleHeaders").getSubObjects().size() > 0 :
                               false;

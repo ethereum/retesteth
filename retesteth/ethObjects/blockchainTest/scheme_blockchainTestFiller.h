@@ -34,6 +34,7 @@ public:
                 return m_data.atKey("chainname").asString();
             return m_defaultChainName;
         }
+        std::string const& getChainNetwork() const { return m_chainNetwork; }
         size_t getNumber() const
         {
             if (m_data.count("blocknumber"))
@@ -48,13 +49,15 @@ public:
         }
 
         size_t uncleCount() const { return m_uncles.size(); }
+        static std::string const& getDefaultChainName() { return m_defaultChainName; }
 
     private:
         std::vector<scheme_transaction> m_transactons;
         std::vector<scheme_uncleHeader> m_uncles;
         std::map<string, string> m_expectException;
         std::string m_noExceptionString;
-        std::string m_defaultChainName = "default";
+        static std::string m_defaultChainName;
+        std::string m_chainNetwork;
     };
 
 public:

@@ -22,7 +22,7 @@ struct BlockNumber
     string getBlockNumberAsString() const { return m_blockNumber; }
     void applyShift(int _shift)
     {
-        m_blockNumber = toCompactHexPrefixed(getBlockNumberAsInt() + _shift);
+        m_blockNumber = toCompactHexPrefixed(getBlockNumberAsInt() + _shift, 1);
     }
     void applyShift(string const& _shift)
     {
@@ -31,7 +31,7 @@ struct BlockNumber
             shift = hexStringToInt(_shift);
         else
             shift = atoi(_shift.c_str());
-        m_blockNumber = toCompactHexPrefixed(getBlockNumberAsInt() + shift);
+        m_blockNumber = toCompactHexPrefixed(getBlockNumberAsInt() + shift, 1);
     }
 
 private:
