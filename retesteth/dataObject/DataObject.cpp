@@ -209,6 +209,12 @@ DataObject const& DataObject::at(size_t _pos) const
     return m_subObjects[_pos];
 }
 
+DataObject& DataObject::atUnsafe(size_t _pos)
+{
+    _assert((size_t)_pos < m_subObjects.size(), "DataObject::atUnsafe(int) out of range!");
+    return m_subObjects[_pos];
+}
+
 void DataObject::addArrayObject(DataObject const& _obj)
 {
     _assert(m_type == DataType::Null || m_type == DataType::Array,

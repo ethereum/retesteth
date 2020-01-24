@@ -39,14 +39,17 @@ void FillTest(scheme_blockchainTestFiller const& _testObject, string const& _net
     }
 
     // Import blocks that have been rewinded with the chain switch
-    testchain.syncOnRemoteClient();
+    // Now makes some block invalid. Because block can be mined as valid on side chain
+    testchain.syncOnRemoteClient(_testOut["blocks"]);
 
     // Fill info about the lastblockhash
     scheme_block latestBlock = session.eth_getBlockByNumber(session.eth_blockNumber(), false);
     scheme_state remoteState = getRemoteState(session, latestBlock);
     if (remoteState.isHash())
+    {
         compareStates(_testObject.getExpectSection().getExpectSectionFor(_network).getExpectState(),
             session, latestBlock);
+    }
     else
         compareStates(_testObject.getExpectSection().getExpectSectionFor(_network).getExpectState(),
             remoteState);

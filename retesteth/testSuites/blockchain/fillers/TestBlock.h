@@ -18,8 +18,9 @@ public:
     std::vector<test::scheme_block> const& getUncles() const { return m_uncles; }
 
 private:
-    // a block mined in paralel representing an uncle (it has the same blocknumber)
     DataObject m_dataForTest;
+
+    // A block mined in paralel representing an uncle (it has the same blocknumber)
     std::vector<test::scheme_block> m_nextBlockForked;  // Hypothetical next block for uncles
     std::vector<test::scheme_block> m_uncles;
 };

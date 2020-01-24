@@ -186,6 +186,7 @@ public:
     DataObject const& atKey(std::string const& _key) const;
     DataObject& atKeyUnsafe(std::string const& _key);
     DataObject const& at(size_t _pos) const;
+    DataObject& atUnsafe(size_t _pos);
 
     void addArrayObject(DataObject const& _obj);
 

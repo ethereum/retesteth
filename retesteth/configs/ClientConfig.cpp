@@ -67,7 +67,8 @@ string default_config = R"({
         "UncleInChain" : "duplicate uncle",
         "UncleIsAncestor" : "uncle is ancestor",
         "UncleParentIsNotAncestor" : "uncle's parent is not ancestor",
-        "TooManyUncles" : "too many uncles"
+        "TooManyUncles" : "too many uncles",
+        "OutOfGas" : "out of gas"
     }
 })";
 

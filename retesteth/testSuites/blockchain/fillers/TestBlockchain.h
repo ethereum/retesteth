@@ -11,17 +11,19 @@ typedef test::scheme_blockchainTestFiller::blockSection blockSection;
 class TestBlockchain
 {
 public:
+    enum class RegenerateGenesis
+    {
+        TRUE,
+        FALSE
+    };
     TestBlockchain(RPCSession& _session, scheme_blockchainTestFiller const& _testObject,
-        std::string const& _network, bool _regenerateGenesis)
+        std::string const& _network, RegenerateGenesis _regenerateGenesis)
       : m_session(_session), m_testObject(_testObject), m_network(_network)
     {
         TestBlock genesisBlock;
-        if (_regenerateGenesis)
+        if (_regenerateGenesis == RegenerateGenesis::TRUE)
         {
-            DataObject genesisObject =
-                m_testObject.getGenesisForRPC(_network, m_testObject.getSealEngine());
-            _session.test_setChainParams(genesisObject.asJson());
-
+            resetChainParams();
             test::scheme_block latestBlock = _session.eth_getBlockByNumber(BlockNumber("0"), false);
             DataObject& blockTestData = genesisBlock.getDataForTestUnsafe();
             blockTestData["blockHeader"] = latestBlock.getBlockHeader();
@@ -32,6 +34,13 @@ public:
 
         genesisBlock.setNextBlockForked(mineNextBlockAndRewert());
         m_blocks.push_back(genesisBlock);
+    }
+
+    void resetChainParams() const
+    {
+        DataObject genesisObject =
+            m_testObject.getGenesisForRPC(m_network, m_testObject.getSealEngine());
+        m_session.test_setChainParams(genesisObject.asJson());
     }
 
     void generateBlock(
@@ -49,6 +58,10 @@ public:
     string prepareDebugInfoString(std::string const& _newBlockChainName);
 
     string const& getNetwork() const { return m_network; }
+
+    // Verify post-import exceptin according to expectException section in test
+    // Return true if block is valid, false if block is not valid
+    bool checkBlockException(string const& _sBlockException) const;
 
 private:
     // Ask remote client to generate a blockheader that will later used for uncles

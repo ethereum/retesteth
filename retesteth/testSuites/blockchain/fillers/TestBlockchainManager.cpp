@@ -10,17 +10,63 @@ void TestBlockchainManager::parseBlockFromJson(blockSection const& _block, bool 
     // See if chain reorg is needed. ex: new fork, or remine block
     reorgChains(_block);
 
-    TestBlockchain& currentChainMining = mapOfKnownChain.at(m_sCurrentChainName);
+    TestBlockchain& currentChainMining = m_mapOfKnownChain.at(m_sCurrentChainName);
 
     // Prepare uncles using all chains and current debug info
     string sDebug = currentChainMining.prepareDebugInfoString(_block.getChainName());
+
+    // Check that we don't shift the chain after the initialization
+    if (!_block.getChainNetwork().empty())
+    {
+        ETH_ERROR_REQUIRE_MESSAGE(currentChainMining.getNetwork() == _block.getChainNetwork(),
+            "Trying to switch chainname with the following block! (chain: " +
+                currentChainMining.getNetwork() + ", block: " + _block.getChainNetwork() + ")");
+    }
+
     vectorOfSchemeBlock unclesPrepared =
         _generateUncles ? prepareUncles(_block, sDebug) : vectorOfSchemeBlock();
     currentChainMining.generateBlock(_block, unclesPrepared, _generateUncles);
 
     // Remeber the generated block in exact order as in the test
     TestBlock const& lastBlock = getLastBlock();
-    m_testBlockRLPs.push_back(lastBlock.getRLP());
+
+    // Get this block exception on canon chain to later verify it
+    string const& canonNet = m_mapOfKnownChain.at(m_sDefaultChainName).getNetwork();
+    m_testBlockRLPs.push_back(std::make_tuple(lastBlock.getRLP(), _block.getException(canonNet)));
+}
+
+// Import all generated blocks at the same order as they are in tests
+void TestBlockchainManager::syncOnRemoteClient(DataObject& _exportBlocksSection) const
+{
+    if (m_wasAtLeastOneFork)
+    {
+        // !!! RELY ON _exportBlocksSection has the same block order as m_testBlockRLPs
+        ETH_LOGC("IMPORT KNOWN BLOCKS ", 6, LogColor::LIME);
+        TestBlockchain const& chain = m_mapOfKnownChain.at(m_sDefaultChainName);
+        chain.resetChainParams();  // restore canon chain of the test
+        size_t ind = 0;
+        for (auto const& rlpAndException : m_testBlockRLPs)
+        {
+            TestInfo errorInfo(m_sDefaultChainNet, ind + 1, "AllKnown");
+            TestOutputHelper::get().setCurrentTestInfo(errorInfo);
+
+            m_session.test_importRawBlock(std::get<0>(rlpAndException));
+            string const& canonExcept = std::get<1>(rlpAndException);
+            bool isValid = chain.checkBlockException(canonExcept);  // Check on canon exception
+            if (!isValid)
+            {
+                DataObject& testObj = _exportBlocksSection.atUnsafe(ind);
+                if (testObj.count("transactions"))
+                    testObj.removeKey("transactions");
+                if (testObj.count("uncleHeaders"))
+                    testObj.removeKey("uncleHeaders");
+                if (testObj.count("blockHeader"))
+                    testObj.removeKey("blockHeader");
+                testObj["expectException"] = canonExcept;
+            }
+            ind++;
+        }
+    }
 }
 
 vectorOfSchemeBlock TestBlockchainManager::prepareUncles(
@@ -40,38 +86,37 @@ void TestBlockchainManager::reorgChains(blockSection const& _block)
     size_t newBlockNumber = _block.getNumber();
     string const& newBlockChainName = _block.getChainName();
     string const& newBlockChainNet = _block.getChainNetwork();
-    if (!mapOfKnownChain.count(newBlockChainName))
+    if (!m_mapOfKnownChain.count(newBlockChainName))
     {
-        // check the current chain network
-        string const& currentChainNet = mapOfKnownChain.at(m_sCurrentChainName).getNetwork();
-
         // regenerate genesis only if the chain fork has changed
-        mapOfKnownChain.emplace(
-            newBlockChainName, TestBlockchain(m_session, m_testObject,
-                                   newBlockChainNet.empty() ? currentChainNet : newBlockChainNet,
-                                   currentChainNet != newBlockChainNet));
+        m_mapOfKnownChain.emplace(newBlockChainName,
+            TestBlockchain(m_session, m_testObject,
+                newBlockChainNet.empty() ? m_sDefaultChainNet : newBlockChainNet,
+                m_sDefaultChainNet != newBlockChainNet ? TestBlockchain::RegenerateGenesis::TRUE :
+                                                         TestBlockchain::RegenerateGenesis::FALSE));
     }
 
     // Chain reorg conditions
     bool blockNumberHasDecreased =
         (newBlockNumber != 0 &&
-            mapOfKnownChain.at(newBlockChainName).getBlocks().size() - 1 >= newBlockNumber);
+            m_mapOfKnownChain.at(newBlockChainName).getBlocks().size() - 1 >= newBlockNumber);
     bool sameChain = (m_sCurrentChainName == newBlockChainName);
 
     if (!blockNumberHasDecreased && sameChain && newBlockNumber != 0)
         ETH_ERROR_REQUIRE_MESSAGE(
-            newBlockNumber == mapOfKnownChain.at(newBlockChainName).getBlocks().size(),  // 0 is
-                                                                                         // genesis
+            newBlockNumber ==
+                m_mapOfKnownChain.at(newBlockChainName).getBlocks().size(),  // 0 is
+                                                                             // genesis
             "Require a `new blocknumber` = `previous blocknumber` + 1 has (" +
                 toString(newBlockNumber) + " vs " +
-                toString(mapOfKnownChain.at(newBlockChainName).getBlocks().size()) + ")");
+                toString(m_mapOfKnownChain.at(newBlockChainName).getBlocks().size()) + ")");
 
     // if we switch the chain or have to remine one of blocknumbers
     if (m_sCurrentChainName != newBlockChainName || blockNumberHasDecreased)
     {
         m_wasAtLeastOneFork = true;
         ETH_LOGC("PERFORM REWIND HISTORY: ", 6, LogColor::YELLOW);
-        TestBlockchain& chain = mapOfKnownChain.at(newBlockChainName);
+        TestBlockchain& chain = m_mapOfKnownChain.at(newBlockChainName);
         chain.restoreUpToNumber(m_session, newBlockNumber, sameChain && blockNumberHasDecreased);
         m_sCurrentChainName = newBlockChainName;
     }
@@ -90,7 +135,7 @@ test::scheme_block TestBlockchainManager::prepareUncle(
 {
     size_t origIndex = 0;
     test::scheme_block const* tmpRefToSchemeBlock = NULL;
-    TestBlockchain const& currentChainMining = mapOfKnownChain.at(m_sCurrentChainName);
+    TestBlockchain const& currentChainMining = m_mapOfKnownChain.at(m_sCurrentChainName);
 
     scheme_uncleHeader::typeOfUncleSection typeOfSection = _uncleOverwrite.getTypeOfUncleSection();
     switch (typeOfSection)
@@ -114,9 +159,9 @@ test::scheme_block TestBlockchainManager::prepareUncle(
         origIndex = _uncleOverwrite.getPopulateFrom();
         if (!_uncleOverwrite.getChainName().empty())
         {
-            ETH_ERROR_REQUIRE_MESSAGE(mapOfKnownChain.count(_uncleOverwrite.getChainName()),
+            ETH_ERROR_REQUIRE_MESSAGE(m_mapOfKnownChain.count(_uncleOverwrite.getChainName()),
                 "Uncle is populating from non-existent chain!");
-            TestBlockchain const& chain = mapOfKnownChain.at(_uncleOverwrite.getChainName());
+            TestBlockchain const& chain = m_mapOfKnownChain.at(_uncleOverwrite.getChainName());
             ETH_ERROR_REQUIRE_MESSAGE(chain.getBlocks().size() > origIndex,
                 "Trying to populate uncle from future block in another chain that has not been "
                 "generated yet!");

@@ -11,14 +11,18 @@ class TestBlockchainManager
 public:
     TestBlockchainManager(RPCSession& _session, scheme_blockchainTestFiller const& _testObject,
         std::string const& _network)
-      : m_session(_session), m_testObject(_testObject)
+      : m_session(_session),
+        m_testObject(_testObject),
+        m_sDefaultChainName(scheme_blockchainTestFiller::blockSection::getDefaultChainName()),
+        m_sDefaultChainNet(_network)
     {
         m_wasAtLeastOneFork = false;
         // m_sCurrentChainName is unknown at this point. the first block of the test defines it
         // but we want genesis to be generated anyway before that
-        m_sCurrentChainName = scheme_blockchainTestFiller::blockSection::getDefaultChainName();
-        mapOfKnownChain.emplace(
-            m_sCurrentChainName, TestBlockchain(m_session, _testObject, _network, true));
+        m_sCurrentChainName = m_sDefaultChainName;
+        m_mapOfKnownChain.emplace(
+            m_sCurrentChainName, TestBlockchain(m_session, _testObject, _network,
+                                     TestBlockchain::RegenerateGenesis::TRUE));
     }
 
     // Perform block generation logic by parsing the filler file section
@@ -27,25 +31,13 @@ public:
     // Return the last block from the current chain (not the top of all chains)
     TestBlock const& getLastBlock()
     {
-        TestBlockchain const& chain = mapOfKnownChain.at(m_sCurrentChainName);
+        TestBlockchain const& chain = m_mapOfKnownChain.at(m_sCurrentChainName);
         assert(chain.getBlocks().size() > 0);
         return chain.getBlocks().at(chain.getBlocks().size() - 1);
     }
 
-    // Add a generated block from the tests block array
-    void registerTestBlockRLP(std::string const& _rlp) { m_testBlockRLPs.push_back(_rlp); }
-
     // Import all generated blocks at the same order as they are in tests
-    void syncOnRemoteClient() const
-    {
-        ETH_LOGC("IMPORT KNOWN BLOCKS ", 6, LogColor::LIME);
-        if (m_wasAtLeastOneFork)
-        {
-            m_session.test_rewindToBlock(0);  // the genesis stays
-            for (auto const& rlp : m_testBlockRLPs)
-                m_session.test_importRawBlock(rlp);
-        }
-    }
+    void syncOnRemoteClient(DataObject& _exportBlocksSection) const;
 
 private:
     // Reorg chains on the client if needed (for new block generation)
@@ -61,8 +53,13 @@ private:
     RPCSession& m_session;                            // session with the client
     scheme_blockchainTestFiller const& m_testObject;  // testData to generate genesis
 
-    std::string m_sCurrentChainName;                        // Chain name that is mining blocks
-    bool m_wasAtLeastOneFork;                               // Wether we swithced chains on remote
-    std::vector<std::string> m_testBlockRLPs;  // List of prepared blocks as they are in test
-    std::map<std::string, TestBlockchain> mapOfKnownChain;  // Memory of test chains
+    std::string m_sCurrentChainName;        // Chain name that is mining blocks
+    std::string const m_sDefaultChainName;  // Default chain name to restore genesis
+    std::string const m_sDefaultChainNet;   // First defined blockchain network
+    bool m_wasAtLeastOneFork;               // Wether we swithced chains on remote
+
+    typedef std::tuple<std::string, std::string> RLPAndException;
+    std::vector<RLPAndException> m_testBlockRLPs;  // List of prepared blocks exactly as they are
+                                                   // defined in test (order)
+    std::map<std::string, TestBlockchain> m_mapOfKnownChain;  // Memory of test chains
 };

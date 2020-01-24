@@ -27,7 +27,9 @@ void TestBlockchain::generateBlock(
     {
         blockJson.removeKey("transactions");
         blockJson.removeKey("uncleHeaders");
-        blockJson["expectException"] = _block.getException(m_network);
+        blockJson["expectException"] =
+            _block.getException(m_network);  // must be checked on canon chain as well
+        // but we can only check on canon chain after the whole chains are imported
     }
     else
         blockJson["blockHeader"] = latestBlock.getBlockHeader();
@@ -115,7 +117,8 @@ string TestBlockchain::prepareDebugInfoString(string const& _newBlockChainName)
     if (Options::get().logVerbosity >= 6)
         sBlockNumber = toString(newBlockNumber);  // very heavy
     TestOutputHelper::get().setCurrentTestInfo(errorInfo);
-    m_sDebugString = "(bl: " + sBlockNumber + ", ch: " + _newBlockChainName + ")";
+    m_sDebugString =
+        "(bl: " + sBlockNumber + ", ch: " + _newBlockChainName + ", net: " + m_network + ")";
     ETH_LOGC("Generating a test block: " + m_sDebugString, 6, LogColor::YELLOW);
     return m_sDebugString;
 }
@@ -191,14 +194,18 @@ test::scheme_block TestBlockchain::postmineBlockHeader(blockSection const& _bloc
     // if blockHeader is defined in test Filler, rewrite the last block header fields with info from
     // test and reimport it to the client in order to trigger an exception in the client
     test::scheme_block remoteBlock = m_session.eth_getBlockByNumber(_latestBlockNumber, true);
+    bool changeDoneToTheBlock = false;
 
-    // Attach test-generated uncle to a block and reimport it again
-    if (_blockInTest.getData().count("uncleHeaders"))
+    // Attach test-generated uncle to a block and then reimport it again
+    if (_blockInTest.getData().count("uncleHeaders") &&
+        _blockInTest.getData().atKey("uncleHeaders").getSubObjects().size() > 0)
     {
         for (auto const& bl : _uncles)
             remoteBlock.addUncle(bl);
+        remoteBlock.recalculateUncleHash();
+        changeDoneToTheBlock = true;
     }
-    remoteBlock.recalculateUncleHash();
+
     DataObject header = remoteBlock.getBlockHeader();
 
     // Overwrite blockheader if defined in the test filler
@@ -220,10 +227,14 @@ test::scheme_block TestBlockchain::postmineBlockHeader(blockSection const& _bloc
                 BlockNumber previousBlockTimestamp(previousBlockTimestampString);
                 previousBlockTimestamp.applyShift(replace.asString());
                 header["timestamp"] = previousBlockTimestamp.getBlockNumberAsString();
+                changeDoneToTheBlock = true;
                 continue;
             }
             if (header.count(replace.getKey()))
+            {
                 header[replace.getKey()] = replace.asString();
+                changeDoneToTheBlock = true;
+            }
             else
                 ETH_STDERROR_MESSAGE(
                     "blockHeader field in test filler tries to overwrite field that is not found "
@@ -234,12 +245,25 @@ test::scheme_block TestBlockchain::postmineBlockHeader(blockSection const& _bloc
     }
 
     // replace block with overwritten header
-    remoteBlock.overwriteBlockHeader(header);
-    m_session.test_rewindToBlock(_latestBlockNumber.getBlockNumberAsInt() - 1);
-    m_session.test_importRawBlock(remoteBlock.getBlockRLP());
+    if (changeDoneToTheBlock)
+    {
+        remoteBlock.overwriteBlockHeader(header);
+        m_session.test_rewindToBlock(_latestBlockNumber.getBlockNumberAsInt() - 1);
+        m_session.test_importRawBlock(remoteBlock.getBlockRLP());
+    }
 
-    // check malicious block import exception
-    if (_blockInTest.getException(m_network) == "NoException")
+    string const& sBlockException = _blockInTest.getException(m_network);
+    bool blockIsValid = checkBlockException(sBlockException);
+    remoteBlock.setValid(blockIsValid);
+    return remoteBlock;  // malicious block must be written to the filled test
+}
+
+// Returns true if the block is valid
+bool TestBlockchain::checkBlockException(string const& _sBlockException) const
+{
+    // Check malicious block import exception
+    // Relies on that previous block import was exactly this block !!!
+    if (_sBlockException == "NoException")
         ETH_ERROR_REQUIRE_MESSAGE(m_session.getLastRPCErrorMessage().empty(),
             "Postmine block tweak expected no exception! Client errors with: '" +
                 m_session.getLastRPCErrorMessage() + "'");
@@ -247,17 +271,17 @@ test::scheme_block TestBlockchain::postmineBlockHeader(blockSection const& _bloc
     {
         std::string const& clientExceptionString =
             Options::get().getDynamicOptions().getCurrentConfig().getExceptionString(
-                _blockInTest.getException(m_network));
+                _sBlockException);
         size_t pos = m_session.getLastRPCErrorMessage().find(clientExceptionString);
         if (clientExceptionString.empty())
             pos = string::npos;
         ETH_ERROR_REQUIRE_MESSAGE(pos != string::npos,
-            "'" + clientExceptionString + "' (" + _blockInTest.getException(m_network) +
+            "'" + clientExceptionString + "' (" + _sBlockException +
                 ") not found in client response to postmine block tweak! Import result of postmine "
                 "block: '" +
                 m_session.getLastRPCErrorMessage() + "', Test Expected: '" + clientExceptionString +
                 "'");
-        remoteBlock.setValid(false);
+        return false;  // block is not valid
     }
-    return remoteBlock;  // malicious block must be written to the filled test
+    return true;  // block is valid
 }
