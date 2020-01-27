@@ -103,22 +103,36 @@ void TestBlockchainManager::reorgChains(blockSection const& _block)
     bool sameChain = (m_sCurrentChainName == newBlockChainName);
 
     if (!blockNumberHasDecreased && sameChain && newBlockNumber != 0)
+    {
+        // 0 is genesis. Check the block order
         ETH_ERROR_REQUIRE_MESSAGE(
-            newBlockNumber ==
-                m_mapOfKnownChain.at(newBlockChainName).getBlocks().size(),  // 0 is
-                                                                             // genesis
+            newBlockNumber == m_mapOfKnownChain.at(newBlockChainName).getBlocks().size(),
             "Require a `new blocknumber` = `previous blocknumber` + 1 has (" +
                 toString(newBlockNumber) + " vs " +
                 toString(m_mapOfKnownChain.at(newBlockChainName).getBlocks().size()) + ")");
+        BlockNumber actualNumberOnTheClient = m_session.eth_blockNumber();
+        actualNumberOnTheClient.applyShift(1);  // next block number to be mined
+        if (newBlockNumber != (size_t)actualNumberOnTheClient.getBlockNumberAsInt())
+            ETH_WARNING("Test mining blocknumber `" + to_string(newBlockNumber) +
+                        "`, but client actually mine number: `" +
+                        actualNumberOnTheClient.getBlockNumberAsString() + "`");
+    }
 
     // if we switch the chain or have to remine one of blocknumbers
-    if (m_sCurrentChainName != newBlockChainName || blockNumberHasDecreased)
+    if (!sameChain || blockNumberHasDecreased)
     {
         m_wasAtLeastOneFork = true;
-        ETH_LOGC("PERFORM REWIND HISTORY: ", 6, LogColor::YELLOW);
+        ETH_LOGC("PERFORM REWIND HISTORY:  (current: " + m_sCurrentChainName +
+                     ", new: " + newBlockChainName + ")",
+            6, LogColor::YELLOW);
         TestBlockchain& chain = m_mapOfKnownChain.at(newBlockChainName);
+        if (!sameChain)
+        {
+            if (m_mapOfKnownChain.at(m_sCurrentChainName).getNetwork() != chain.getNetwork())
+                chain.resetChainParams();  // Reset genesis because chains have different config
+            m_sCurrentChainName = newBlockChainName;
+        }
         chain.restoreUpToNumber(m_session, newBlockNumber, sameChain && blockNumberHasDecreased);
-        m_sCurrentChainName = newBlockChainName;
     }
 
     m_session.test_modifyTimestamp(1000);  // Shift block timestamp relative to previous block

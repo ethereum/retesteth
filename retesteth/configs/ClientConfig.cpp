@@ -68,7 +68,8 @@ string default_config = R"({
         "UncleIsAncestor" : "uncle is ancestor",
         "UncleParentIsNotAncestor" : "uncle's parent is not ancestor",
         "TooManyUncles" : "too many uncles",
-        "OutOfGas" : "out of gas"
+        "OutOfGas" : "out of gas",
+        "ExtraDataIncorrectDAO" : "bad DAO pro-fork extra-data"
     }
 })";
 

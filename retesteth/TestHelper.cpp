@@ -115,7 +115,7 @@ boost::filesystem::path getTestPath()
     const char* ptestPath = getenv("ETHEREUM_TEST_PATH");
     if (ptestPath == nullptr)
     {
-        ETH_WARNING("WARNING: Could not find environment variable `ETHEREUM_TEST_PATH`");
+        ETH_WARNING("Could not find environment variable `ETHEREUM_TEST_PATH`");
         ETH_STDERROR_MESSAGE("Use the --testpath <path> option to set the test path!");
         throw EthError() << "Error getting the test path!";
     }
@@ -327,7 +327,7 @@ string prepareLLLCVersionString()
             return result.substr(pos, result.length());
     }
     string const res = "Error getting LLLC Version";
-    ETH_WARNING("WARNING: " + res);
+    ETH_WARNING(res);
     return res;
 }
 
@@ -351,7 +351,7 @@ string executeCmd(string const& _command)
     if (fp == NULL)
         ETH_FAIL_MESSAGE("Failed to run " + _command);
     if (fgets(output, sizeof(output) - 1, fp) == NULL)
-        ETH_WARNING("WARNING: Reading empty result for " + _command);
+        ETH_WARNING("Reading empty result for " + _command);
     else
     {
         while (true)

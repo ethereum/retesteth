@@ -9,7 +9,8 @@
 namespace test {
 void eth_warning_message(std::string const& _message)
 {
-    std::cout << "\x1b[33m" << _message << "\x1b[0m" << std::endl;
+    std::cout << "\x1b[33m"
+              << "WARNING: " << _message << "\x1b[0m" << std::endl;
 }
 
 void eth_stdout_message(std::string const& _message)
