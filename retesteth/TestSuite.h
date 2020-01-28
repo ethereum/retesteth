@@ -49,10 +49,16 @@ public:
 
     struct TestSuiteOptions
     {
-        TestSuiteOptions() : doFilling(false), disableSecondRun(false), allowInvalidBlocks(false) {}
+        TestSuiteOptions()
+          : doFilling(false),
+            disableSecondRun(false),
+            allowInvalidBlocks(false),
+            isLegacyTests(false)
+        {}
         bool doFilling;           // pass the filling flag to doTest function
         bool disableSecondRun;    // disable running the test after filling is done
         bool allowInvalidBlocks;  // allow and check malicious blocks
+        bool isLegacyTests;       // running old generated tests
     };
 
     // Structures so not to mistake the paths and prevent bugs

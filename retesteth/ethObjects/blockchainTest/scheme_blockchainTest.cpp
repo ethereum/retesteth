@@ -21,13 +21,14 @@ scheme_blockchainTestBase::fieldChecker::fieldChecker(DataObject const& _test)
             {"sealEngine", {{DataType::String}, jsonField::Optional}}});
 }
 
-scheme_blockchainTest::fieldChecker::fieldChecker(DataObject const& _test)
+scheme_blockchainTest::fieldChecker::fieldChecker(DataObject const& _test, bool _isLegacyTest)
 {
     requireJsonFields(_test, "blockchainTest" + _test.getKey(),
         {{"_info", {{DataType::Object}, jsonField::Required}},
             {"blocks", {{DataType::Array}, jsonField::Required}},
             {"genesisBlockHeader", {{DataType::Object}, jsonField::Required}},
-            {"genesisRLP", {{DataType::String}, jsonField::Required}},
+            {"genesisRLP",
+                {{DataType::String}, _isLegacyTest ? jsonField::Optional : jsonField::Required}},
             {"lastblockhash", {{DataType::String}, jsonField::Required}},
             {"network", {{DataType::String}, jsonField::Required}},
             {"postState", {{DataType::Object}, jsonField::Optional}},
@@ -36,11 +37,12 @@ scheme_blockchainTest::fieldChecker::fieldChecker(DataObject const& _test)
             {"sealEngine", {{DataType::String}, jsonField::Optional}}});
 }
 
-scheme_blockchainTestBase::scheme_blockchainTestBase(DataObject const& _test)
+scheme_blockchainTestBase::scheme_blockchainTestBase(DataObject const& _test, bool _isLegacyTest)
   : object(_test),
     m_checker(_test),
     m_pre(_test.atKey("pre")),
-    m_genesisHeader(_test.atKey("genesisBlockHeader"))
+    m_genesisHeader(_test.atKey("genesisBlockHeader")),
+    m_isLegacyTest(_isLegacyTest)
 {
     if (_test.count("sealEngine"))
         m_sealEngine = _test.atKey("sealEngine").asString();
@@ -48,8 +50,9 @@ scheme_blockchainTestBase::scheme_blockchainTestBase(DataObject const& _test)
         m_sealEngine = "NoProof";
 }
 
-scheme_blockchainTest::scheme_blockchainTest(DataObject const& _test)
-  : scheme_blockchainTestBase(_test), m_checker(_test),
+scheme_blockchainTest::scheme_blockchainTest(DataObject const& _test, bool _isLegacyTest)
+  : scheme_blockchainTestBase(_test, _isLegacyTest),
+    m_checker(_test, _isLegacyTest),
     m_post(_test.count("postState") ? _test.atKey("postState") : _test.atKey("postStateHash"))
 {
     // Validate blocks section at the filled blockchain test
@@ -73,12 +76,32 @@ scheme_blockchainTest::scheme_blockchainTest(DataObject const& _test)
         else
         {
             // Invalid block json description
-            requireJsonFields(blockSection, "blockchainTestInvalidblock " + _test.getKey(),
-                {{"rlp", {{DataType::String}, jsonField::Required}},
-                    {"blocknumber", {{DataType::String}, jsonField::Optional}},
-                    {"chainname", {{DataType::String}, jsonField::Optional}},
-                    {"expectException", {{DataType::String}, jsonField::Optional}},
-                    {"chainnetwork", {{DataType::String}, jsonField::Optional}}});
+            if (_isLegacyTest)
+                requireJsonFields(blockSection,
+                    "blockchainTestInvalidblock Legacy " + _test.getKey(),
+                    {{"rlp", {{DataType::String}, jsonField::Required}},
+                        {"blocknumber", {{DataType::String}, jsonField::Optional}},
+                        {"chainname", {{DataType::String}, jsonField::Optional}},
+                        {"expectException", {{DataType::String}, jsonField::Optional}},
+                        {"chainnetwork", {{DataType::String}, jsonField::Optional}},
+                        {"expectExceptionALL", {{DataType::String}, jsonField::Optional}},
+                        {"expectExceptionByzantium", {{DataType::String}, jsonField::Optional}},
+                        {"expectExceptionHomestead", {{DataType::String}, jsonField::Optional}},
+                        {"expectExceptionEIP150", {{DataType::String}, jsonField::Optional}},
+                        {"expectExceptionEIP158", {{DataType::String}, jsonField::Optional}},
+                        {"expectExceptionFrontier", {{DataType::String}, jsonField::Optional}},
+                        {"expectExceptionConstantinople",
+                            {{DataType::String}, jsonField::Optional}},
+                        {"expectExceptionConstantinopleFix",
+                            {{DataType::String}, jsonField::Optional}},
+                        {"expectExceptionIstanbul", {{DataType::String}, jsonField::Optional}}});
+            else
+                requireJsonFields(blockSection, "blockchainTestInvalidblock " + _test.getKey(),
+                    {{"rlp", {{DataType::String}, jsonField::Required}},
+                        {"blocknumber", {{DataType::String}, jsonField::Optional}},
+                        {"chainname", {{DataType::String}, jsonField::Optional}},
+                        {"expectException", {{DataType::String}, jsonField::Optional}},
+                        {"chainnetwork", {{DataType::String}, jsonField::Optional}}});
        }
 
         m_blockRLPs.push_back(blockSection.atKey("rlp").asString());
@@ -96,16 +119,25 @@ DataObject scheme_blockchainTestBase::getGenesisForRPC(
     data["author"] = m_genesisHeader.getData().atKey("coinbase");
     data["difficulty"] = m_genesisHeader.getData().atKey("difficulty");
     data["gasLimit"] = m_genesisHeader.getData().atKey("gasLimit");
-    data["nonce"] = (_sealEngine == "NoProof") ? DataObject("0x0000000000000000") :
-                                                 m_genesisHeader.getData().atKey("nonce");
     data["extraData"] = m_genesisHeader.getData().atKey("extraData");
     data["timestamp"] = m_genesisHeader.getData().atKey("timestamp");
-    data["mixHash"] =
-        (_sealEngine == "NoProof") ?
-            DataObject("0x0000000000000000000000000000000000000000000000000000000000000000") :
-            m_genesisHeader.getData().atKey("mixHash");
-    object::makeAllFieldsHex(data);
 
+    if (m_isLegacyTest)
+    {
+        data["nonce"] = m_genesisHeader.getData().atKey("nonce");
+        data["mixHash"] = m_genesisHeader.getData().atKey("mixHash");
+    }
+    else
+    {
+        data["nonce"] = (_sealEngine == "NoProof") ? DataObject("0x0000000000000000") :
+                                                     m_genesisHeader.getData().atKey("nonce");
+        data["mixHash"] =
+            (_sealEngine == "NoProof") ?
+                DataObject("0x0000000000000000000000000000000000000000000000000000000000000000") :
+                m_genesisHeader.getData().atKey("mixHash");
+    }
+
+    object::makeAllFieldsHex(data);
     genesis["genesis"] = data;
     for (auto const& acc : m_pre.getData().getSubObjects())
         genesis["accounts"].addSubObject(acc);

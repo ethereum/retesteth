@@ -51,6 +51,29 @@ DataObject BlockchainTestValidSuite::doTests(DataObject const& _input, TestSuite
     return DoTests(_input, _opt);
 }
 
+DataObject LegacyConstantinopleBlockchainInvalidTestSuite::doTests(
+    DataObject const& _input, TestSuiteOptions& _opt) const
+{
+    _opt.allowInvalidBlocks = true;
+    _opt.isLegacyTests = true;
+    return DoTests(_input, _opt);
+}
+
+DataObject LegacyConstantinopleBlockchainValidTestSuite::doTests(
+    DataObject const& _input, TestSuiteOptions& _opt) const
+{
+    _opt.allowInvalidBlocks = false;
+    _opt.isLegacyTests = true;
+    return DoTests(_input, _opt);
+}
+
+DataObject LegacyConstantinopleBCGeneralStateTestsSuite::doTests(
+    DataObject const& _input, TestSuiteOptions& _opt) const
+{
+    _opt.isLegacyTests = true;
+    return DoTests(_input, _opt);
+}
+
 TestSuite::TestPath BlockchainTestValidSuite::suiteFolder() const
 {
     return TestSuite::TestPath(fs::path("BlockchainTests") / "ValidBlocks");

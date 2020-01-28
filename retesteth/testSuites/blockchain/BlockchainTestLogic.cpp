@@ -17,7 +17,7 @@ void RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _
     }
     if (Options::get().logVerbosity > 1)
         std::cout << "Running " << TestOutputHelper::get().testName() << std::endl;
-    scheme_blockchainTest inputTest(_testObject);
+    scheme_blockchainTest inputTest(_testObject, _opt.isLegacyTests);
     RPCSession& session = RPCSession::instance(TestOutputHelper::getThreadID());
 
     // Info for genesis
@@ -53,11 +53,14 @@ void RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _
         ETH_ERROR_MESSAGE("lastblockhash does not match! remote: " + latestBlock.getBlockHash() +
                           ", test: " + inputTest.getLastBlockHash());
 
-    string const& genesisRLP = inputTest.getData().atKey("genesisRLP").asString();
-    latestBlock = session.eth_getBlockByNumber(BlockNumber("0"), false);
-    if (latestBlock.getBlockRLP() != genesisRLP)
-        ETH_ERROR_MESSAGE("genesisRLP in test != genesisRLP on remote client! (" + genesisRLP +
-                          "' != '" + latestBlock.getBlockRLP() + "'");
+    if (inputTest.getData().count("genesisRLP"))
+    {
+        string const& genesisRLP = inputTest.getData().atKey("genesisRLP").asString();
+        latestBlock = session.eth_getBlockByNumber(BlockNumber("0"), false);
+        if (latestBlock.getBlockRLP() != genesisRLP)
+            ETH_ERROR_MESSAGE("genesisRLP in test != genesisRLP on remote client! (" + genesisRLP +
+                              "' != '" + latestBlock.getBlockRLP() + "'");
+    }
 }
 
 DataObject DoTests(DataObject const& _input, TestSuite::TestSuiteOptions& _opt)
