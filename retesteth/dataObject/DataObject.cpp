@@ -506,6 +506,7 @@ void DataObject::_assert(bool _flag, std::string const& _comment) const
         std::cerr << " key: '" << m_strKey << "'";
         std::cerr << " type: '" << dataTypeAsString(m_type) << "'" << std::endl;
         std::cerr << " assert: " << _comment << std::endl;
+        std::cerr << asJson() << std::endl;
         assert(_flag);
     }
 }

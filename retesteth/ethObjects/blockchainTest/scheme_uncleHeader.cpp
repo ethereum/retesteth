@@ -83,22 +83,22 @@ string const& scheme_uncleHeader::getRelTimestampFromPopulateBlock() const
 
 size_t scheme_uncleHeader::getPopulateFrom() const
 {
-    return (size_t)atoi(m_data.atKey("populateFromBlock").asString().c_str());
+    return (size_t)hexOrDecStringToInt(m_data.atKey("populateFromBlock").asString());
 }
 
 size_t scheme_uncleHeader::getSameAsBlock() const
 {
-    return (size_t)atoi(m_data.atKey("sameAsBlock").asString().c_str());
+    return (size_t)hexOrDecStringToInt(m_data.atKey("sameAsBlock").asString());
 }
 
 size_t scheme_uncleHeader::getSameAsPreviousBlockUncle() const
 {
-    return (size_t)atoi(m_data.atKey("sameAsPreviousBlockUncle").asString().c_str());
+    return (size_t)hexOrDecStringToInt(m_data.atKey("sameAsPreviousBlockUncle").asString());
 }
 
 size_t scheme_uncleHeader::getSameAsPreviousSibling() const
 {
-    size_t sibling = (size_t)atoi(m_data.atKey("sameAsPreviousSibling").asString().c_str());
+    size_t sibling = (size_t)hexOrDecStringToInt(m_data.atKey("sameAsPreviousSibling").asString());
     return std::max<size_t>(sibling, 1);
 }
 

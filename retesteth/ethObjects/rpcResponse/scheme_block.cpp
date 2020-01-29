@@ -85,7 +85,7 @@ RLPStream scheme_block::streamUncles() const
     return uncleStream;
 }
 
-RLPStream scheme_block::streamBlockHeader(DataObject const& _headerData) const
+RLPStream scheme_block::streamBlockHeader(DataObject const& _headerData)
 {
     RLPStream header;
     header.appendList(15);
@@ -150,6 +150,7 @@ void scheme_block::scheme_block_header::resetHeader(DataObject const& _header)
     m_data.clear();
     m_data = _header;
     makeAllFieldsHex(m_data);
+    m_data["hash"] = "0x" + toString(dev::sha3(scheme_block::streamBlockHeader(m_data).out()));
 }
 
 DataObject scheme_block::scheme_block_header::mapBlockHeader() const

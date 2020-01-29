@@ -6,6 +6,21 @@
 namespace test {
 string object::emptyString;
 
+bool isHexDigitsType(test::object::DigitsType _dtype)
+{
+    return (_dtype == test::object::DigitsType::HexPrefixed ||
+            _dtype == test::object::DigitsType::UnEvenHexPrefixed);
+}
+
+int hexOrDecStringToInt(string const& _str)
+{
+    if (isHexDigitsType(test::object::stringIntegerType(_str)))
+        return (int)dev::u256(dev::fromHex(_str));
+    else
+        return atoi(_str.c_str());
+}
+
+
 std::mutex g_strFindMutex;
 object::DigitsType object::stringIntegerType(std::string const& _string)
 {

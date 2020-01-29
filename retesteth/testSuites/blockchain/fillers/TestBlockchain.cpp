@@ -32,7 +32,12 @@ void TestBlockchain::generateBlock(
         // but we can only check on canon chain after the whole chains are imported
     }
     else
+    {
         blockJson["blockHeader"] = latestBlock.getBlockHeader();
+        if (_block.getData().count("invalidTransactionsCount"))
+            blockJson["invalidTransactionsCount"] =
+                _block.getData().atKey("invalidTransactionsCount").asString();
+    }
     blockJson["rlp"] = latestBlock.getBlockRLP();
 
     if (_generateUncles)
@@ -250,6 +255,8 @@ test::scheme_block TestBlockchain::postmineBlockHeader(blockSection const& _bloc
         remoteBlock.overwriteBlockHeader(header);
         m_session.test_rewindToBlock(_latestBlockNumber.getBlockNumberAsInt() - 1);
         m_session.test_importRawBlock(remoteBlock.getBlockRLP());
+        // remoteBlock = m_session.eth_getBlockByHash(hash, true); // get the exact block info after
+        // postmine operations
     }
 
     string const& sBlockException = _blockInTest.getException(m_network);

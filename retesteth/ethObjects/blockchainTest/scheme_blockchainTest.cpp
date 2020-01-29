@@ -64,6 +64,7 @@ scheme_blockchainTest::scheme_blockchainTest(DataObject const& _test, bool _isLe
             requireJsonFields(blockSection, "blockchainTestValidblock " + _test.getKey(),
                 {{"blockHeader", {{DataType::Object}, jsonField::Required}},
                     {"rlp", {{DataType::String}, jsonField::Required}},
+                    {"invalidTransactionsCount", {{DataType::String}, jsonField::Optional}},
                     {"transactions", {{DataType::Array}, jsonField::Required}},
                     {"uncleHeaders", {{DataType::Array}, jsonField::Optional}},
                     {"blocknumber", {{DataType::String}, jsonField::Optional}},
@@ -103,8 +104,6 @@ scheme_blockchainTest::scheme_blockchainTest(DataObject const& _test, bool _isLe
                         {"expectException", {{DataType::String}, jsonField::Optional}},
                         {"chainnetwork", {{DataType::String}, jsonField::Optional}}});
        }
-
-        m_blockRLPs.push_back(blockSection.atKey("rlp").asString());
     }
     makeAllFieldsHex(m_data);
 }

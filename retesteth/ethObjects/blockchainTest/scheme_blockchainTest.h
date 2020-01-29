@@ -36,7 +36,10 @@ class scheme_blockchainTest : public scheme_blockchainTestBase
 {
 public:
     scheme_blockchainTest(DataObject const& _test, bool _isLegacyTest);
-    std::vector<std::string> const& getBlockRlps() const { return m_blockRLPs; }
+    std::vector<DataObject> const& getBlocks() const
+    {
+        return m_data.atKey("blocks").getSubObjects();
+    }
     scheme_state const& getPost() const { return m_post; }
     string const& getNetwork() const { return m_data.atKey("network").asString(); }
     string const& getEngine() const
@@ -55,7 +58,6 @@ private:
     };
     fieldChecker m_checker;
     scheme_state m_post;
-    std::vector<std::string> m_blockRLPs;
     std::vector<scheme_transaction> m_transactions;
     static const string m_sNoProof;
 };

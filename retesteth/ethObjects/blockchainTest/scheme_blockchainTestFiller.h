@@ -38,13 +38,14 @@ public:
         size_t getNumber() const
         {
             if (m_data.count("blocknumber"))
-                return (size_t)atoi(m_data.atKey("blocknumber").asString().c_str());
+                return (size_t)hexOrDecStringToInt(m_data.atKey("blocknumber").asString());
             return 0;
         }
         size_t getInvalidTransactionCount() const
         {
             if (m_data.count("invalidTransactionsCount"))
-                return (size_t)atoi(m_data.atKey("invalidTransactionsCount").asString().c_str());
+                return (size_t)hexOrDecStringToInt(
+                    m_data.atKey("invalidTransactionsCount").asString());
             return 0;
         }
 

@@ -279,6 +279,12 @@ test::scheme_block RPCSession::eth_getBlockByNumber(
         {quote(_blockNumber.getBlockNumberAsString()), _fullObjects ? "true" : "false"}));
 }
 
+test::scheme_block RPCSession::eth_getBlockByHash(string const& _blockHash, bool _fullObjects)
+{
+    return test::scheme_block(
+        rpcCall("eth_getBlockByHash", {quote(_blockHash), _fullObjects ? "true" : "false"}));
+}
+
 test::scheme_transactionReceipt RPCSession::eth_getTransactionReceipt(string const& _transactionHash)
 {
     return test::scheme_transactionReceipt(
@@ -356,9 +362,12 @@ string RPCSession::test_getLogHash(std::string const& _txHash)
 	return rpcCall("test_getLogHash", { quote(_txHash) }).asString();
 }
 
-void RPCSession::test_importRawBlock(std::string const& _blockRLP)
+string RPCSession::test_importRawBlock(std::string const& _blockRLP)
 {
-    rpcCall("test_importRawBlock", {quote(_blockRLP)}, true);
+    DataObject res = rpcCall("test_importRawBlock", {quote(_blockRLP)}, true);
+    if (res.type() != DataType::Null)
+        return res.asString();
+    return string();
 }
 
 void RPCSession::test_setChainParams(string const& _config)

@@ -3,6 +3,7 @@
 #include <libdevcore/Address.h>
 #include <libdevcore/RLP.h>
 #include <libdevcore/SHA3.h>
+
 using namespace dev;
 
 namespace test {
@@ -13,12 +14,7 @@ struct BlockNumber
 {
     BlockNumber(string const& _number) : m_blockNumber(_number) {}
     BlockNumber(size_t _number) : m_blockNumber("") { m_blockNumber = toString(_number); }
-    int getBlockNumberAsInt() const
-    {
-        if (isHexDigitsType(test::object::stringIntegerType(m_blockNumber)))
-            return hexStringToInt(m_blockNumber);
-        return atoi(m_blockNumber.c_str());
-    }
+    int getBlockNumberAsInt() const { return hexOrDecStringToInt(m_blockNumber); }
     string getBlockNumberAsString() const { return m_blockNumber; }
     void applyShift(int _shift)
     {
@@ -26,22 +22,12 @@ struct BlockNumber
     }
     void applyShift(string const& _shift)
     {
-        int shift;
-        if (isHexDigitsType(test::object::stringIntegerType(m_blockNumber)))
-            shift = hexStringToInt(_shift);
-        else
-            shift = atoi(_shift.c_str());
+        int shift = hexOrDecStringToInt(_shift);
         m_blockNumber = toCompactHexPrefixed(getBlockNumberAsInt() + shift, 1);
     }
 
 private:
     string m_blockNumber;
-    int hexStringToInt(string const& _str) const { return (int)u256(fromHex(_str)); }
-    bool isHexDigitsType(test::object::DigitsType _dtype) const
-    {
-        return (_dtype == test::object::DigitsType::HexPrefixed ||
-                _dtype == test::object::DigitsType::UnEvenHexPrefixed);
-    }
 };
 
 class scheme_block : public object
@@ -101,6 +87,9 @@ public:
     {
         return m_data.atKey("transactions").getSubObjects().size();
     }
+
+    size_t getUncleCount() const { return m_data.atKey("uncles").getSubObjects().size(); }
+
     std::string const& getBlockHash() const { return m_data.atKey("hash").asString(); }
 
     DataObject getBlockHeader() const { return m_blockHeader.getData(); }
@@ -149,6 +138,8 @@ private:
         }
     };
 
+    static RLPStream streamBlockHeader(DataObject const& _headerData);
+
 private:
     bool m_isFullTransactions = false;
     bool m_isValid = true;
@@ -156,7 +147,6 @@ private:
     scheme_block_header m_blockHeader;
     std::vector<scheme_block> m_uncles;
     RLPStream streamUncles() const;
-    RLPStream streamBlockHeader(DataObject const& _headerData) const;
 };
 }
 

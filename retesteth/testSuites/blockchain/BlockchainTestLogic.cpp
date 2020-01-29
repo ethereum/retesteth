@@ -28,15 +28,60 @@ void RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _
 
     // for all blocks
     size_t blockNumber = 0;
-    for (auto const& brlp : inputTest.getBlockRlps())
+    for (auto const& bdata : inputTest.getBlocks())
     {
         TestInfo errorInfo(inputTest.getNetwork(), blockNumber++);
         TestOutputHelper::get().setCurrentTestInfo(errorInfo);
-        session.test_importRawBlock(brlp);
+        string const blHash = session.test_importRawBlock(bdata.atKey("rlp").asString());
         if (session.getLastRPCError().type() != DataType::Null)
         {
             if (!_opt.allowInvalidBlocks)
                 ETH_ERROR_MESSAGE("Running blockchain test: " + session.getLastRPCError().atKey("message").asString());
+        }
+
+        // Check imported block against the fields in test
+        if (bdata.count("blockHeader"))
+        {
+            // Check Blockheader
+            test::scheme_block latestBlock = session.eth_getBlockByHash(blHash, false);
+            string message = "Client return HEADER: " + latestBlock.getBlockHeader().asJson() +
+                             "\n vs \n" + "Test HEADER: " + bdata.atKey("blockHeader").asJson();
+            ETH_ERROR_REQUIRE_MESSAGE(latestBlock.getBlockHeader() == bdata.atKey("blockHeader"),
+                "Client report different blockheader after importing the rlp than expected by "
+                "test! \n" +
+                    message);
+
+            // Check Transaction count
+            message =
+                "Client return TRANSACTIONS: " + to_string(latestBlock.getTransactionCount()) +
+                " vs " + "Test TRANSACTIONS: " +
+                to_string(bdata.atKey("transactions").getSubObjects().size()) + " and " +
+                "Test AllowedToFail: ";
+            size_t invalidTrCount = 0;
+            if (bdata.count("invalidTransactionsCount"))
+            {
+                message += bdata.atKey("invalidTransactionsCount").asString();
+                invalidTrCount =
+                    test::hexOrDecStringToInt(bdata.atKey("invalidTransactionsCount").asString());
+            }
+            else
+                message += "0";
+            ETH_ERROR_REQUIRE_MESSAGE(
+                latestBlock.getTransactionCount() ==
+                    bdata.atKey("transactions").getSubObjects().size() - invalidTrCount,
+                "Client report different transaction count after importing the rlp than expected "
+                "by test! \n" +
+                    message);
+
+            // Check uncles count
+            message =
+                "Client return UNCLES: " + to_string(latestBlock.getUncleCount()) + " vs " +
+                "Test UNCLES: " + to_string(bdata.atKey("uncleHeaders").getSubObjects().size());
+            ETH_ERROR_REQUIRE_MESSAGE(
+                latestBlock.getUncleCount() == bdata.atKey("uncleHeaders").getSubObjects().size(),
+                "Client report different uncle count after importing the rlp than expected by "
+                "test! \n" +
+                    message);
         }
     }
 
