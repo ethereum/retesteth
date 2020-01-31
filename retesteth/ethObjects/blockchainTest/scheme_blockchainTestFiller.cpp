@@ -33,7 +33,6 @@ scheme_blockchainTestFiller::blockSection::blockSection(DataObject const& _data)
             {"blocknumber", {{DataType::String}, jsonField::Optional}},
             {"chainname", {{DataType::String}, jsonField::Optional}},
             {"chainnetwork", {{DataType::String}, jsonField::Optional}},
-            {"invalidTransactionsCount", {{DataType::String}, jsonField::Optional}},
             {"transactions", {{DataType::Array}, jsonField::Required}},
             {"uncleHeaders", {{DataType::Array}, jsonField::Required}}});
 
@@ -47,9 +46,6 @@ scheme_blockchainTestFiller::blockSection::blockSection(DataObject const& _data)
             allowedNets.push_back(addNet);
         test::checkAllowedNetwork(m_chainNetwork, allowedNets);
     }
-
-    for (auto const& tr : _data.atKey("transactions").getSubObjects())
-        m_transactons.push_back(tr);
 
     m_noExceptionString = "NoException";
     if (_data.count("blockHeader"))
@@ -90,6 +86,9 @@ scheme_blockchainTestFiller::blockSection::blockSection(DataObject const& _data)
             }
         }
     }
+
+    for (auto const& tr : _data.atKey("transactions").getSubObjects())
+        m_transactons.push_back(tr);
 
     for (auto const& uncle : _data.atKey("uncleHeaders").getSubObjects())
         m_uncles.push_back(uncle);

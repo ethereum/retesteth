@@ -88,6 +88,8 @@ public:
         return m_data.atKey("transactions").getSubObjects().size();
     }
 
+    DataObject const& getTransactions() const { return m_data.atKey("transactions"); }
+
     size_t getUncleCount() const { return m_data.atKey("uncles").getSubObjects().size(); }
 
     std::string const& getBlockHash() const { return m_data.atKey("hash").asString(); }

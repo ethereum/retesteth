@@ -43,7 +43,7 @@ void RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _
         if (bdata.count("blockHeader"))
         {
             // Check Blockheader
-            test::scheme_block latestBlock = session.eth_getBlockByHash(blHash, false);
+            test::scheme_block latestBlock = session.eth_getBlockByHash(blHash, true);
             string message = "Client return HEADER: " + latestBlock.getBlockHeader().asJson() +
                              "\n vs \n" + "Test HEADER: " + bdata.atKey("blockHeader").asJson();
             ETH_ERROR_REQUIRE_MESSAGE(latestBlock.getBlockHeader() == bdata.atKey("blockHeader"),
@@ -55,23 +55,22 @@ void RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _
             message =
                 "Client return TRANSACTIONS: " + to_string(latestBlock.getTransactionCount()) +
                 " vs " + "Test TRANSACTIONS: " +
-                to_string(bdata.atKey("transactions").getSubObjects().size()) + " and " +
-                "Test AllowedToFail: ";
-            size_t invalidTrCount = 0;
-            if (bdata.count("invalidTransactionsCount"))
-            {
-                message += bdata.atKey("invalidTransactionsCount").asString();
-                invalidTrCount =
-                    test::hexOrDecStringToInt(bdata.atKey("invalidTransactionsCount").asString());
-            }
-            else
-                message += "0";
-            ETH_ERROR_REQUIRE_MESSAGE(
-                latestBlock.getTransactionCount() ==
-                    bdata.atKey("transactions").getSubObjects().size() - invalidTrCount,
+                to_string(bdata.atKey("transactions").getSubObjects().size());
+            ETH_ERROR_REQUIRE_MESSAGE(latestBlock.getTransactionCount() ==
+                                          bdata.atKey("transactions").getSubObjects().size(),
                 "Client report different transaction count after importing the rlp than expected "
                 "by test! \n" +
                     message);
+
+            // Verify transactions to one described in the fields
+            for (auto const& tr : latestBlock.getTransactions())
+            {
+                ETH_ERROR_REQUIRE_MESSAGE(tr.atKey("blockHash") == blHash,
+                    "Error checking remote transaction, tr blockHash is different to requested "
+                    "block!");
+                std::cerr << latestBlock.getTransactions().asJson() << std::endl;
+                std::cerr << bdata.atKey("transactions").asJson() << std::endl;
+            }
 
             // Check uncles count
             message =

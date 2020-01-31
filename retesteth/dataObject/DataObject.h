@@ -193,6 +193,8 @@ public:
     DataObject& atKeyUnsafe(std::string const& _key);
     DataObject const& at(size_t _pos) const;
     DataObject& atUnsafe(size_t _pos);
+    DataObject const& atLastElement() const;
+    DataObject& atLastElementUnsafe();
 
     void addArrayObject(DataObject const& _obj);
 

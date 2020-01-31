@@ -215,6 +215,18 @@ DataObject& DataObject::atUnsafe(size_t _pos)
     return m_subObjects[_pos];
 }
 
+DataObject const& DataObject::atLastElement() const
+{
+    _assert(m_subObjects.size() > 0, "atLastElement()");
+    return m_subObjects.at(m_subObjects.size() - 1);
+}
+
+DataObject& DataObject::atLastElementUnsafe()
+{
+    _assert(m_subObjects.size() > 0, "atLastElementUnsafe()");
+    return m_subObjects.at(m_subObjects.size() - 1);
+}
+
 void DataObject::addArrayObject(DataObject const& _obj)
 {
     _assert(m_type == DataType::Null || m_type == DataType::Array,

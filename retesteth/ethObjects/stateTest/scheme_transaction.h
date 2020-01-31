@@ -17,29 +17,41 @@ public:
         if (_transaction.count("secretKey") > 0)
         {
             test::requireJsonFields(_transaction, "transaction",
-                {{"data", {DataType::String}}, {"gasLimit", {DataType::String}},
-                    {"gasPrice", {DataType::String}}, {"nonce", {DataType::String}},
-                    {"secretKey", {DataType::String}}, {"to", {DataType::String}},
-                    {"value", {DataType::String}}});
+                {{"data", {{DataType::String}, jsonField::Required}},
+                    {"gasLimit", {{DataType::String}, jsonField::Required}},
+                    {"gasPrice", {{DataType::String}, jsonField::Required}},
+                    {"nonce", {{DataType::String}, jsonField::Required}},
+                    {"secretKey", {{DataType::String}, jsonField::Required}},
+                    {"to", {{DataType::String}, jsonField::Required}},
+                    {"value", {{DataType::String}, jsonField::Required}},
+                    {"invalid", {{DataType::String}, jsonField::Optional}}});
         }
         else
         {
             test::requireJsonFields(_transaction, "transaction",
-                {{"data", {DataType::String}}, {"gasLimit", {DataType::String}},
-                    {"gasPrice", {DataType::String}}, {"nonce", {DataType::String}},
-                    {"v", {DataType::String}}, {"r", {DataType::String}}, {"s", {DataType::String}},
-                    {"to", {DataType::String}}, {"value", {DataType::String}}});
+                {{"data", {{DataType::String}, jsonField::Required}},
+                    {"gasLimit", {{DataType::String}, jsonField::Required}},
+                    {"gasPrice", {{DataType::String}, jsonField::Required}},
+                    {"nonce", {{DataType::String}, jsonField::Required}},
+                    {"v", {{DataType::String}, jsonField::Required}},
+                    {"r", {{DataType::String}, jsonField::Required}},
+                    {"s", {{DataType::String}, jsonField::Required}},
+                    {"to", {{DataType::String}, jsonField::Required}},
+                    {"value", {{DataType::String}, jsonField::Required}},
+                    {"invalid", {{DataType::String}, jsonField::Optional}}});
         }
 
-        m_data["data"] = test::replaceCode(m_data["data"].asString());
+        m_data["data"] = test::replaceCode(m_data.atKey("data").asString());
         if (!m_data.atKey("to").asString().empty())
             m_data["to"] = scheme_account::makeHexAddress(m_data.atKey("to").asString());
 
         // convert into rpc format. RPC return transaction with this fields
         // m_data["version"] = "0x01";
-        m_data["gas"] = m_data["gasLimit"].asString();
+        // m_data.atKeyUnsafe("gasLimit").setKey("gas");
         makeAllFieldsHex(m_data);
     }
+
+    bool isMarkedInvalid() const { return m_data.count("invalid"); }
 
     DataObject getDataForBCTest() const
     {

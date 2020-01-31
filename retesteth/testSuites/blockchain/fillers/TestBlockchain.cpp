@@ -32,14 +32,9 @@ void TestBlockchain::generateBlock(
         // but we can only check on canon chain after the whole chains are imported
     }
     else
-    {
         blockJson["blockHeader"] = latestBlock.getBlockHeader();
-        if (_block.getData().count("invalidTransactionsCount"))
-            blockJson["invalidTransactionsCount"] =
-                _block.getData().atKey("invalidTransactionsCount").asString();
-    }
-    blockJson["rlp"] = latestBlock.getBlockRLP();
 
+    blockJson["rlp"] = latestBlock.getBlockRLP();
     if (_generateUncles)
     {
         // Ask remote client to generate a parallel blockheader that will later be used for uncles
@@ -92,7 +87,8 @@ DataObject TestBlockchain::importTransactions(blockSection const& _block)
     for (auto const& tr : _block.getTransactions())
     {
         m_session.eth_sendRawTransaction(tr.getSignedRLP());
-        transactionsArray.addArrayObject(tr.getDataForBCTest());
+        if (!tr.isMarkedInvalid())
+            transactionsArray.addArrayObject(tr.getDataForBCTest());
     }
     return transactionsArray;
 }

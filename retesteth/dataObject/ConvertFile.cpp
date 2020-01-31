@@ -121,8 +121,10 @@ bool readDigit(string const& _input, size_t& _i, int& _result)
 
 bool checkExcessiveComa(string const& _input, size_t _i)
 {
+    if (_i < 1)
+        return false;
     size_t reader = _i - 1;
-    while (isEmptyChar(_input[reader]))  // double work!!!
+    while (isEmptyChar(_input[reader]) && reader != 0)
         reader--;
     if (_input[reader] == ',')
         return true;
@@ -224,7 +226,7 @@ DataObject ConvertJsoncppStringToData(
                 DataObject newObj(DataType::Object);
                 applyDepth.push_back(actualRoot);
                 actualRoot = &actualRoot->addSubObject(newObj);
-                actualRoot->setAutosort(_autosort);
+                // actualRoot->setAutosort(_autosort);
                 continue;
             }
 

@@ -43,6 +43,7 @@ std::string scheme_block::getBlockRLP() const
     stream.appendRaw(streamBlockHeader(headerData).out());
 
     size_t trCount = m_data.atKey("transactions").getSubObjects().size();
+    // std::cerr << m_data.atKey("transactions").asJson() << std::endl;
     RLPStream transactionList(trCount);
     for (size_t i = 0; i < trCount; i++)
     {

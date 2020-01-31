@@ -43,10 +43,10 @@ public:
         }
         size_t getInvalidTransactionCount() const
         {
-            if (m_data.count("invalidTransactionsCount"))
-                return (size_t)hexOrDecStringToInt(
-                    m_data.atKey("invalidTransactionsCount").asString());
-            return 0;
+            size_t count = 0;
+            for (auto const& tr : m_transactons)
+                count += tr.isMarkedInvalid() ? 1 : 0;
+            return count;
         }
 
         size_t uncleCount() const { return m_uncles.size(); }
