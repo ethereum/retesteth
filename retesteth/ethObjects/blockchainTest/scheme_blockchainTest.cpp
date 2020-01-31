@@ -71,7 +71,7 @@ scheme_blockchainTest::scheme_blockchainTest(DataObject const& _test, bool _isLe
                     {"chainnetwork", {{DataType::String}, jsonField::Optional}}});
             scheme_blockHeader(blockSection.atKey("blockHeader"));
             for (auto const& trSection: blockSection.atKey("transactions").getSubObjects())
-                m_transactions.push_back(trSection);
+                (void)scheme_transaction(trSection);
         }
         else
         {

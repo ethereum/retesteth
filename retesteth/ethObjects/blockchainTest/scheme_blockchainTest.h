@@ -58,7 +58,7 @@ private:
     };
     fieldChecker m_checker;
     scheme_state m_post;
-    std::vector<scheme_transaction> m_transactions;
+    // std::vector<scheme_transaction> m_transactions;
     static const string m_sNoProof;
 };
 }

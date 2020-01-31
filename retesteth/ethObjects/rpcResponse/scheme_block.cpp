@@ -17,6 +17,7 @@ scheme_block::scheme_block(DataObject const& _block)
     m_isValid = true;
     if (m_isFullTransactions)
         for (auto const& trObj : m_data.atKey("transactions").getSubObjects())
+        {
             requireJsonFields(trObj, "block rpc transaction element",
                 {{"blockHash", {DataType::String}}, {"blockNumber", {DataType::String}},
                     {"from", {DataType::String}}, {"gas", {DataType::String}},
@@ -25,6 +26,7 @@ scheme_block::scheme_block(DataObject const& _block)
                     {"to", {DataType::String, DataType::Null}}, {"v", {DataType::String}},
                     {"r", {DataType::String}}, {"s", {DataType::String}},
                     {"transactionIndex", {DataType::String}}, {"value", {DataType::String}}});
+        }
     else
         for (auto const& trObj : m_data.atKey("transactions").getSubObjects())
             ETH_ERROR_REQUIRE_MESSAGE(trObj.type() == DataType::String,

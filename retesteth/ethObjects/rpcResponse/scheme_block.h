@@ -88,7 +88,10 @@ public:
         return m_data.atKey("transactions").getSubObjects().size();
     }
 
-    DataObject const& getTransactions() const { return m_data.atKey("transactions"); }
+    std::vector<DataObject> const& getTransactions() const
+    {
+        return m_data.atKey("transactions").getSubObjects();
+    }
 
     size_t getUncleCount() const { return m_data.atKey("uncles").getSubObjects().size(); }
 

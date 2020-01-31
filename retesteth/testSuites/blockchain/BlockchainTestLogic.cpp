@@ -63,13 +63,55 @@ void RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _
                     message);
 
             // Verify transactions to one described in the fields
+            size_t ind = 0;
+            auto const& testTrList = bdata.atKey("transactions").getSubObjects();
+
             for (auto const& tr : latestBlock.getTransactions())
             {
+                DataObject const& testTr = testTrList.at(ind++);
                 ETH_ERROR_REQUIRE_MESSAGE(tr.atKey("blockHash") == blHash,
-                    "Error checking remote transaction, tr blockHash is different to requested "
-                    "block!");
-                std::cerr << latestBlock.getTransactions().asJson() << std::endl;
-                std::cerr << bdata.atKey("transactions").asJson() << std::endl;
+                    "Error checking remote transaction, remote tr `blockHash` is different to "
+                    "requested "
+                    "block! (" +
+                        tr.atKey("blockHash").asString() + " != " + blHash + ")");
+
+                /*0x1 != 0x01 issue*/
+                ETH_ERROR_REQUIRE_MESSAGE(
+                    dev::toCompactHexPrefixed(dev::u256(tr.atKey("blockNumber").asString()), 1) ==
+                        latestBlock.getBlockHeader().atKey("number").asString(),
+                    "Error checking remote transaction, remote tr `blockNumber` is different to "
+                    "requested "
+                    "block! (" +
+                        tr.atKey("blockNumber").asString() +
+                        " != " + latestBlock.getBlockHeader().atKey("number").asString() + ")");
+
+                /*0x11 != 0x0011 issue*/
+                auto verifyTr = [&tr, &testTr](
+                                    string const& aField, string const& bField, size_t length = 1) {
+                    bool condition = true;
+                    if (length == 0)  // skip conversion
+                        condition = tr.atKey(aField).asString() == testTr.atKey(bField).asString();
+                    else
+                        condition =
+                            dev::toCompactHexPrefixed(dev::u256(tr.atKey(aField).asString()),
+                                length) == testTr.atKey(bField).asString();
+                    ETH_ERROR_REQUIRE_MESSAGE(
+                        condition, "Error checking remote transaction, remote tr `" + aField +
+                                       "` is different to test tr `" + bField + "` (" +
+                                       tr.atKey(aField).asString() +
+                                       " != " + testTr.atKey(bField).asString() + ")");
+                };
+
+                verifyTr("input", "data", 0);
+                verifyTr("gas", "gasLimit");
+                verifyTr("gasPrice", "gasPrice");
+                verifyTr("nonce", "nonce");
+                verifyTr("v", "v");
+                verifyTr("r", "r", 32);
+                verifyTr("s", "s", 32);
+                verifyTr("value", "value");
+                if (tr.atKey("to").type() != DataType::Null)
+                    verifyTr("to", "to", 20);
             }
 
             // Check uncles count
