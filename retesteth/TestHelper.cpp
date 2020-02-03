@@ -159,27 +159,28 @@ size_t levenshteinDistance(char const* _s, size_t _n, char const* _t, size_t _m)
     return r;
 }
 
-std::vector<std::string> testSuggestions(
-    vector<string> const& _testList, std::string const& _sMinusTArg)
+vector<string> levenshteinDistance(
+    std::string const& _needle, std::vector<std::string> const& _sVec, size_t _max)
 {
+    // <index in availableTests, compared distance>
     vector<string> ret;
     size_t allTestsElementIndex = 0;
-    // <index in availableTests, compared distance>
-    typedef std::pair<size_t, size_t> NameDistance;
     // Use `vector` here because `set` does not work with sort
+    typedef std::pair<size_t, size_t> NameDistance;
     std::vector<NameDistance> distanceMap;
-    for (auto& it : _testList)
+    for (auto const& it : _sVec)
     {
-        int const dist = test::levenshteinDistance(
-            _sMinusTArg.c_str(), _sMinusTArg.size(), it.c_str(), it.size());
+        int const dist =
+            levenshteinDistance(_needle.c_str(), _needle.size(), it.c_str(), it.size());
         distanceMap.emplace_back(allTestsElementIndex++, dist);
     }
     std::sort(distanceMap.begin(), distanceMap.end(),
         [](NameDistance const& _a, NameDistance const& _b) { return _a.second < _b.second; });
-    for (size_t i = 0; i < 3 && i < distanceMap.size(); i++)
-        ret.push_back(_testList[distanceMap[i].first]);
+    for (size_t i = 0; i < _max && i < distanceMap.size(); i++)
+        ret.push_back(_sVec[distanceMap[i].first]);
     return ret;
 }
+
 
 /// translate network names in expect section field
 /// >Homestead to EIP150, EIP158, Byzantium, ...

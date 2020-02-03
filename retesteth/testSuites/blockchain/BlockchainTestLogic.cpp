@@ -51,6 +51,20 @@ void RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _
                 "test! \n" +
                     message);
 
+            // Verify uncles to one described in the fields
+            size_t ind = 0;
+            auto const& testUncleList = bdata.atKey("uncleHeaders").getSubObjects();
+            for (auto const& uncle : latestBlock.getUncles())
+            {
+                message = "(" + uncle.asString() +
+                          " != " + testUncleList.at(ind).atKey("hash").asString() + ")";
+                if (uncle.asString() != testUncleList.at(ind++).atKey("hash").asString())
+                    ETH_ERROR_MESSAGE(
+                        "Remote client returned block with unclehash that is not expected by "
+                        "test! " +
+                        message);
+            }
+
             // Check Transaction count
             message =
                 "Client return TRANSACTIONS: " + to_string(latestBlock.getTransactionCount()) +
@@ -63,7 +77,7 @@ void RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _
                     message);
 
             // Verify transactions to one described in the fields
-            size_t ind = 0;
+            ind = 0;
             auto const& testTrList = bdata.atKey("transactions").getSubObjects();
 
             for (auto const& tr : latestBlock.getTransactions())
@@ -116,10 +130,10 @@ void RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _
 
             // Check uncles count
             message =
-                "Client return UNCLES: " + to_string(latestBlock.getUncleCount()) + " vs " +
+                "Client return UNCLES: " + to_string(latestBlock.getUncles().size()) + " vs " +
                 "Test UNCLES: " + to_string(bdata.atKey("uncleHeaders").getSubObjects().size());
-            ETH_ERROR_REQUIRE_MESSAGE(
-                latestBlock.getUncleCount() == bdata.atKey("uncleHeaders").getSubObjects().size(),
+            ETH_ERROR_REQUIRE_MESSAGE(latestBlock.getUncles().size() ==
+                                          bdata.atKey("uncleHeaders").getSubObjects().size(),
                 "Client report different uncle count after importing the rlp than expected by "
                 "test! \n" +
                     message);

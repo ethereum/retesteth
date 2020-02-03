@@ -49,6 +49,7 @@ public:
             return count;
         }
 
+        bool doNotExport() const { return m_data.count("donotimportonclient"); }
         size_t uncleCount() const { return m_uncles.size(); }
         static std::string const& getDefaultChainName() { return m_defaultChainName; }
 

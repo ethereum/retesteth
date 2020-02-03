@@ -35,7 +35,8 @@ void FillTest(scheme_blockchainTestFiller const& _testObject, string const& _net
         testchain.parseBlockFromJson(block, _testObject.getTotalUncleCount() > 0);
 
         // Get the json output of a constructed block for the test (includes rlp)
-        _testOut["blocks"].addArrayObject(testchain.getLastBlock().getDataForTest());
+        if (!testchain.getLastBlock().isDoNotExport())
+            _testOut["blocks"].addArrayObject(testchain.getLastBlock().getDataForTest());
     }
 
     // Import blocks that have been rewinded with the chain switch

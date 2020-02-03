@@ -33,6 +33,7 @@ scheme_blockchainTestFiller::blockSection::blockSection(DataObject const& _data)
             {"blocknumber", {{DataType::String}, jsonField::Optional}},
             {"chainname", {{DataType::String}, jsonField::Optional}},
             {"chainnetwork", {{DataType::String}, jsonField::Optional}},
+            {"donotimportonclient", {{DataType::String}, jsonField::Optional}},
             {"transactions", {{DataType::Array}, jsonField::Required}},
             {"uncleHeaders", {{DataType::Array}, jsonField::Required}}});
 

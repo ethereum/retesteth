@@ -62,6 +62,11 @@ std::string executeCmd(std::string const& _command);
 /// compile LLL / wasm or other src code into bytecode
 std::string replaceCode(std::string const& _code);
 
+// Return the vector of most looking like as _needles strings from the vector
+std::vector<std::string> levenshteinDistance(
+    std::string const& _needle, std::vector<std::string> const& _sVec, size_t _max = 3);
+
+
 /// find element in array
 template <class T>
 bool inArray(std::vector<T> const& _array, const T& _val)
@@ -87,7 +92,4 @@ int pclose2(FILE* _fp, pid_t _pid);
 /// return path to the unique tmp directory
 fs::path createUniqueTmpDirectory();
 
-/// return strings from _testList most matching _sMinusTArg
-std::vector<std::string> testSuggestions(
-    std::vector<std::string> const& _testList, std::string const& _sMinusTArg);
-}
+}  // namespace test

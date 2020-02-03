@@ -32,15 +32,46 @@ void TestBlockchain::generateBlock(
         // but we can only check on canon chain after the whole chains are imported
     }
     else
+    {
         blockJson["blockHeader"] = latestBlock.getBlockHeader();
 
+        // Order transactions in test the same way they are ordered in the block by remote client
+        DataObject orderedTransactions(DataType::Array);
+        for (auto const& remTr : latestBlock.getTransactions())
+        {
+            bool found = false;
+            std::vector<DataObject>& originalTrList =
+                blockJson.atKeyUnsafe("transactions").getSubObjectsUnsafe();
+            std::vector<DataObject>::const_iterator ind = originalTrList.begin();
+            for (auto const& tr : blockJson.atKey("transactions").getSubObjects())
+            {
+                if (tr.atKey("hash").asString() == remTr.atKey("hash").asString())
+                {
+                    found = true;
+                    orderedTransactions.addArrayObject(tr);
+                    orderedTransactions.atLastElementUnsafe().removeKey("hash");
+                    break;
+                }
+                ind++;
+            }
+            if (found && ind != originalTrList.end())
+                originalTrList.erase(ind);
+            else
+                ETH_ERROR_MESSAGE(
+                    "Remote client returned block without expected transaction hash!");
+        }
+        blockJson.removeKey("transactions");
+        blockJson["transactions"] = orderedTransactions;
+    }
+
     blockJson["rlp"] = latestBlock.getBlockRLP();
+    newBlock.setDoNotExport(_block.doNotExport());
+
     if (_generateUncles)
     {
         // Ask remote client to generate a parallel blockheader that will later be used for uncles
         newBlock.setNextBlockForked(mineNextBlockAndRewert());
     }
-
     m_blocks.push_back(newBlock);
 }
 
@@ -86,9 +117,12 @@ DataObject TestBlockchain::importTransactions(blockSection const& _block)
     ETH_LOGC("Import transactions: " + m_sDebugString, 6, LogColor::YELLOW);
     for (auto const& tr : _block.getTransactions())
     {
-        m_session.eth_sendRawTransaction(tr.getSignedRLP());
+        string const trHash = m_session.eth_sendRawTransaction(tr.getSignedRLP());
         if (!tr.isMarkedInvalid())
+        {
             transactionsArray.addArrayObject(tr.getDataForBCTest());
+            transactionsArray.atLastElementUnsafe()["hash"] = trHash;
+        }
     }
     return transactionsArray;
 }
