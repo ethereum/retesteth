@@ -153,12 +153,18 @@ void scheme_block::scheme_block_header::resetHeader(DataObject const& _header)
     m_data.clear();
     m_data = _header;
 
+    // make sure bloom is prefixed with 0x as hash
     object::DigitsType bloomType = object::stringIntegerType(m_data.atKey("bloom").asString());
     if (bloomType != DigitsType::HexPrefixed && bloomType != DigitsType::UnEvenHexPrefixed)
         m_data["bloom"] = "0x" + m_data.atKey("bloom").asString();
+
     makeAllFieldsHex(m_data);
+
+    // make sure coinbase is 20 bytes address
     m_data["coinbase"] = toString(Address(m_data["coinbase"].asString()));
     m_data["coinbase"] = makeHexAddress(m_data.atKey("coinbase").asString());
+
+    // recalculate the hash
     m_data["hash"] = "0x" + toString(dev::sha3(scheme_block::streamBlockHeader(m_data).out()));
 }
 

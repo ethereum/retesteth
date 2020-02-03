@@ -43,10 +43,21 @@ void RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _
         if (bdata.count("blockHeader"))
         {
             // Check Blockheader
+            DataObject inTestHeader;
             test::scheme_block latestBlock = session.eth_getBlockByHash(blHash, true);
+            bool condition = latestBlock.getBlockHeader() == bdata.atKey("blockHeader");
+            if (_opt.isLegacyTests)
+            {
+                inTestHeader = bdata.atKey("blockHeader");  // copy!!!
+                if (bdata.atKey("blockHeader").atKey("extraData").asString() == "0x00")
+                    inTestHeader["extraData"] = "0x";  // old style
+
+                condition = latestBlock.getBlockHeader() == inTestHeader;
+            }
+
             string message = "Client return HEADER: " + latestBlock.getBlockHeader().asJson() +
                              "\n vs \n" + "Test HEADER: " + bdata.atKey("blockHeader").asJson();
-            ETH_ERROR_REQUIRE_MESSAGE(latestBlock.getBlockHeader() == bdata.atKey("blockHeader"),
+            ETH_ERROR_REQUIRE_MESSAGE(condition,
                 "Client report different blockheader after importing the rlp than expected by "
                 "test! \n" +
                     message);
@@ -121,8 +132,8 @@ void RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _
                 verifyTr("gasPrice", "gasPrice");
                 verifyTr("nonce", "nonce");
                 verifyTr("v", "v");
-                verifyTr("r", "r", 32);
-                verifyTr("s", "s", 32);
+                verifyTr("r", "r", _opt.isLegacyTests ? 1 : 32);
+                verifyTr("s", "s", _opt.isLegacyTests ? 1 : 32);
                 verifyTr("value", "value");
                 if (tr.atKey("to").type() != DataType::Null)
                     verifyTr("to", "to", 20);
