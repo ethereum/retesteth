@@ -320,7 +320,8 @@ int RPCSession::eth_getTransactionCount(
     std::string const& _address, std::string const& _blockNumber)
 {
     DataObject res = rpcCall("eth_getTransactionCount", {quote(_address), quote(_blockNumber)});
-    return (res.type() == DataType::String) ? (int)u256(dev::fromHex(res.asString())) : res.asInt();
+    return (res.type() == DataType::String) ? test::hexOrDecStringToInt(res.asString()) :
+                                              res.asInt();
 }
 
 string RPCSession::eth_getBalance(string const& _address, string const& _blockNumber)

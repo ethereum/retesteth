@@ -115,7 +115,13 @@ void RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _
                                     string const& aField, string const& bField, size_t length = 1) {
                     bool condition = true;
                     if (length == 0)  // skip conversion
+                    {
                         condition = tr.atKey(aField).asString() == testTr.atKey(bField).asString();
+                        // transaction data returned by aleth is "" instead of "0x" in blockchain
+                        // tests
+                        condition = condition || "0x" + tr.atKey(aField).asString() ==
+                                                     testTr.atKey(bField).asString();
+                    }
                     else
                         condition =
                             dev::toCompactHexPrefixed(dev::u256(tr.atKey(aField).asString()),
