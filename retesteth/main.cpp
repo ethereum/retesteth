@@ -214,7 +214,7 @@ int main(int argc, const char* argv[])
 
 void printTestSuiteSuggestions(string const& _sMinusTArg)
 {
-    auto const testList = test::testSuggestions(c_allTestNames, _sMinusTArg);
+    auto const testList = test::levenshteinDistance(_sMinusTArg, c_allTestNames);
     std::cerr << "Did you mean: \n";
     for (auto const& element : testList)
         std::cerr << "-t " << element << "\n";

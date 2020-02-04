@@ -292,6 +292,10 @@ string TestSuite::checkFillerExistance(string const& _testFolder) const
         else
             exceptionStr =
                 "Compiled test folder contains test without Filler: " + file.filename().string();
+        {
+            TestInfo errorInfo("CheckFillers", file.stem().string());
+            TestOutputHelper::get().setCurrentTestInfo(errorInfo);
+        }
         ETH_ERROR_REQUIRE_MESSAGE(fs::exists(expectedFillerName) ||
                                       fs::exists(expectedFillerName2) ||
                                       fs::exists(expectedCopierName),
@@ -469,26 +473,19 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
     TestSuiteOptions opt;
     if (Options::get().filltests)
     {
+        TestFileData testData = readTestFile(_testFileName);
         if (isCopySource)
         {
-            clog << "Copying " << _testFileName.string() << "\n";
-            clog << " TO " << boostTestPath.path().string() << "\n";
+            ETH_LOG("Copying " + _testFileName.string(), 0);
+            ETH_LOG(" TO " + boostTestPath.path().string(), 0);
             assert(_testFileName.string() != boostTestPath.path().string());
-            TestOutputHelper::get().showProgress();
-            test::copyFile(_testFileName, boostTestPath.path());
+            addClientInfo(testData.data, boostRelativeTestPath, testData.hash);
+            writeFile(boostTestPath.path(), asBytes(testData.data.asJson()));
             ETH_FAIL_REQUIRE_MESSAGE(boost::filesystem::exists(boostTestPath.path().string()),
                 "Error when copying the test file!");
-
-            // Update _info and build information of the copied test
-            /*Json::Value v;
-            string const s = asString(dev::contents(boostTestPath));
-            json_spirit::read_string(s, v);
-            addClientInfo(v, boostRelativeTestPath, sha3(dev::contents(_testFileName)));
-            writeFile(boostTestPath, asBytes(json_spirit::write_string(v, true)));*/
         }
         else
         {
-            TestFileData testData = readTestFile(_testFileName);
             removeComments(testData.data);
             opt.doFilling = true;
 

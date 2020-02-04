@@ -63,7 +63,13 @@ string default_config = R"({
         "InvalidReceiptsStateRoot" : "invalid receipt root hash (remote:",
         "InvalidTransactionsRoot" : "transaction root hash mismatch: have",
         "InvalidUnclesHash" : "uncle root hash mismatch: have",
-        "InvalidUncleParentHash" : "uncle's parent is not ancestor"
+        "InvalidUncleParentHash" : "uncle's parent is not ancestor",
+        "UncleInChain" : "duplicate uncle",
+        "UncleIsAncestor" : "uncle is ancestor",
+        "UncleParentIsNotAncestor" : "uncle's parent is not ancestor",
+        "TooManyUncles" : "too many uncles",
+        "OutOfGas" : "out of gas",
+        "ExtraDataIncorrectDAO" : "bad DAO pro-fork extra-data"
     }
 })";
 

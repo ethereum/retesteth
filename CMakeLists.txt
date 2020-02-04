@@ -13,7 +13,7 @@ HunterGate(
 	LOCAL
 )
 
-project(retesteth VERSION 0.0.1)
+project(retesteth VERSION 0.0.2)
 
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)

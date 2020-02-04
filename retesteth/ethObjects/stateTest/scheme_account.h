@@ -48,10 +48,13 @@ public:
         {
             string message = "account `" + _accountObject.getKey() + ":storage` record ";
             ETH_ERROR_REQUIRE_MESSAGE(record.type() == DataType::String, message + "is expected to be of string type!");
-            message +=  "`" + record.asString() + "` ";
+            message += "`" + record.getKey() + "` : `" + record.asString() + "` ";
             DigitsType recordType = stringIntegerType(record.asString());
             if (recordType != DigitsType::Decimal && recordType != DigitsType::HexPrefixed)
                 ETH_ERROR_MESSAGE(message + "is expected to be 0x prefixed hex string or decimal string representation!");
+            recordType = stringIntegerType(record.getKey());
+            if (recordType != DigitsType::HexPrefixed)
+                ETH_ERROR_MESSAGE(message + "key is expected to be 0x hex!");
         }
     }
 };

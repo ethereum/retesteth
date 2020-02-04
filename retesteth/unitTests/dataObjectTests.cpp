@@ -30,6 +30,31 @@ using namespace dataobject;
 
 BOOST_FIXTURE_TEST_SUITE(DataObjectTestSuite, TestOutputHelperFixture)
 
+BOOST_AUTO_TEST_CASE(dataobject_EscapeChars)
+{
+    string data = R"(
+        {
+                  "jsonrpc":"2.0",
+                  "id":14,
+                  "error":{
+                    "code":-32602,
+                    "message":"invalid argument 0: invalid hex or decimal integer \"0x\""
+                  }
+        }
+    )";
+    try
+    {
+        DataObject a = ConvertJsoncppStringToData(data);
+        BOOST_REQUIRE(a.atKey("error").atKey("message").asString() ==
+                      "invalid argument 0: invalid hex or decimal integer \\\"0x\\\"");
+    }
+    catch (DataObjectException const&)
+    {
+        BOOST_ERROR("Unexpected DataObject exception when parsing json!");
+    }
+}
+
+
 BOOST_AUTO_TEST_CASE(dataobject_invalidJson1)
 {
     string data = R"(

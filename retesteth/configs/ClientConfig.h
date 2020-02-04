@@ -99,9 +99,18 @@ public:
     {
         if (m_exceptions.count(_exceptionName))
             return m_exceptions.at(_exceptionName);
+        vector<string> exceptions;
+        for (auto const& el : m_exceptions)
+            exceptions.push_back(el.first);
+
+        auto const suggestions = test::levenshteinDistance(_exceptionName, exceptions, 5);
+        string message = " (Suggestions: ";
+        for (auto const& el : suggestions)
+            message += el + ", ";
+        message += " ...)";
         ETH_ERROR_MESSAGE("Config::getExceptionString '" + _exceptionName +
                           "' not found in client config `exceptions` section! (" +
-                          getConfigFilePath().c_str() + ")");
+                          getConfigFilePath().c_str() + ")" + message);
         static string const notfound = "";
         return notfound;
     }

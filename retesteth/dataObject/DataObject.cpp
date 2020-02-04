@@ -209,6 +209,24 @@ DataObject const& DataObject::at(size_t _pos) const
     return m_subObjects[_pos];
 }
 
+DataObject& DataObject::atUnsafe(size_t _pos)
+{
+    _assert((size_t)_pos < m_subObjects.size(), "DataObject::atUnsafe(int) out of range!");
+    return m_subObjects[_pos];
+}
+
+DataObject const& DataObject::atLastElement() const
+{
+    _assert(m_subObjects.size() > 0, "atLastElement()");
+    return m_subObjects.at(m_subObjects.size() - 1);
+}
+
+DataObject& DataObject::atLastElementUnsafe()
+{
+    _assert(m_subObjects.size() > 0, "atLastElementUnsafe()");
+    return m_subObjects.at(m_subObjects.size() - 1);
+}
+
 void DataObject::addArrayObject(DataObject const& _obj)
 {
     _assert(m_type == DataType::Null || m_type == DataType::Array,
@@ -500,6 +518,7 @@ void DataObject::_assert(bool _flag, std::string const& _comment) const
         std::cerr << " key: '" << m_strKey << "'";
         std::cerr << " type: '" << dataTypeAsString(m_type) << "'" << std::endl;
         std::cerr << " assert: " << _comment << std::endl;
+        std::cerr << asJson() << std::endl;
         assert(_flag);
     }
 }

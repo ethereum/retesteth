@@ -26,7 +26,7 @@
 
 namespace test
 {
-
+class TestOutputHelper;
 struct TestInfo
 {
     TestInfo(std::string const& _fork, int _trD, int _trG, int _trV)
@@ -36,12 +36,17 @@ struct TestInfo
         m_currentTestCaseName = boost::unit_test::framework::current_test_case().p_name;
     }
 
-    TestInfo(std::string const&  _fork, size_t _block)
-        : m_sFork(_fork), m_blockNumber(_block), m_isStateTransactionInfo(false)
+    TestInfo(std::string const& _fork, size_t _block, std::string const& _chainName = std::string())
+      : m_sFork(_fork),
+        m_sChainName(_chainName),
+        m_blockNumber(_block),
+        m_isStateTransactionInfo(false)
     {
         m_isBlockchainTestInfo = true;
         m_currentTestCaseName = boost::unit_test::framework::current_test_case().p_name;
     }
+
+    TestInfo(std::string const& _info, std::string const& _testName = std::string());
 
     TestInfo(): m_isStateTransactionInfo(false), m_isBlockchainTestInfo(false) {}
     std::string getMessage() const;
@@ -51,12 +56,13 @@ struct TestInfo
     }
 
 private:
-    std::string m_sFork;
+    std::string m_sFork, m_sChainName;
     std::string m_currentTestCaseName;
     int m_trD, m_trG, m_trV;
     size_t m_blockNumber;
     bool m_isStateTransactionInfo = false;
     bool m_isBlockchainTestInfo = false;
+    bool m_isGeneralTestInfo = false;
 };
 
 class TestOutputHelper

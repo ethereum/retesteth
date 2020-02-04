@@ -15,21 +15,38 @@ scheme_blockchainTestFiller::fieldChecker::fieldChecker(DataObject const& _test)
 scheme_blockchainTestFiller::scheme_blockchainTestFiller(DataObject const& _test)
   : scheme_blockchainTestBase(_test), m_checker(_test), m_expectSection(_test.atKey("expect"))
 {
+    m_totalUncleCount = 0;
     for (auto const& bl : m_data.atKey("blocks").getSubObjects())
-        m_blocks.push_back(blockSection(bl));
+    {
+        blockSection block = blockSection(bl);
+        m_blocks.push_back(block);
+        m_totalUncleCount += block.getUncles().size();
+    }
 }
 
+string scheme_blockchainTestFiller::blockSection::m_defaultChainName = "default";
 scheme_blockchainTestFiller::blockSection::blockSection(DataObject const& _data) : object(_data)
 {
     requireJsonFields(_data, "blockchainTestFiller::blocks section",
         {{"blockHeader", {{DataType::Object}, jsonField::Optional}},
             {"blockHeaderPremine", {{DataType::Object}, jsonField::Optional}},
             {"blocknumber", {{DataType::String}, jsonField::Optional}},
+            {"chainname", {{DataType::String}, jsonField::Optional}},
+            {"chainnetwork", {{DataType::String}, jsonField::Optional}},
+            {"donotimportonclient", {{DataType::String}, jsonField::Optional}},
             {"transactions", {{DataType::Array}, jsonField::Required}},
             {"uncleHeaders", {{DataType::Array}, jsonField::Required}}});
 
-    for (auto const& tr : _data.atKey("transactions").getSubObjects())
-        m_transactons.push_back(tr);
+    if (m_data.count("chainnetwork"))
+    {
+        // Chain network can be any of Forknames + additional Forks
+        ClientConfig const& cfg = Options::get().getDynamicOptions().getCurrentConfig();
+        m_chainNetwork = m_data.atKey("chainnetwork").asString();
+        std::vector<string> allowedNets = cfg.getNetworks();
+        for (auto const& addNet : cfg.getAdditionalNetworks())
+            allowedNets.push_back(addNet);
+        test::checkAllowedNetwork(m_chainNetwork, allowedNets);
+    }
 
     m_noExceptionString = "NoException";
     if (_data.count("blockHeader"))
@@ -60,12 +77,19 @@ scheme_blockchainTestFiller::blockSection::blockSection(DataObject const& _data)
             for (auto const& expect :
                 _data.atKey("blockHeader").atKey("expectException").getSubObjects())
             {
-                checkAllowedNetwork(
-                    expect.getKey(), Options::getDynamicOptions().getCurrentConfig().getNetworks());
+                ClientConfig const& cfg = Options::get().getDynamicOptions().getCurrentConfig();
+                if (!inArray(cfg.getAdditionalNetworks(), expect.getKey()))
+                {
+                    checkAllowedNetwork(expect.getKey(),
+                        Options::getDynamicOptions().getCurrentConfig().getNetworks());
+                }
                 m_expectException[expect.getKey()] = expect.asString();
             }
         }
     }
+
+    for (auto const& tr : _data.atKey("transactions").getSubObjects())
+        m_transactons.push_back(tr);
 
     for (auto const& uncle : _data.atKey("uncleHeaders").getSubObjects())
         m_uncles.push_back(uncle);

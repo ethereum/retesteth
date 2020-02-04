@@ -44,6 +44,8 @@ static int execTotalErrors = 0;
 static std::map<std::string, TestOutputHelper> helperThreadMap; // threadID => outputHelper
 mutex g_numberOfRunningTests;
 mutex g_totalTestsRun;
+mutex g_failedTestsMap;
+mutex g_execTotalErrors;
 static int numberOfRunningTests = 0;
 static int totalTestsRun = 0;
 static std::map<std::string, std::string> s_failedTestsMap;
@@ -66,13 +68,14 @@ TestOutputHelper& TestOutputHelper::get()
 void TestOutputHelper::markError(std::string const& _message)
 {
     m_errors.push_back(_message + m_testInfo.getMessage());
-    std::lock_guard<std::mutex> lock(g_totalTestsRun);
+    std::lock_guard<std::mutex> lock(g_failedTestsMap);
     s_failedTestsMap[TestOutputHelper::get().testName()] = m_testInfo.getMessage();
 }
 
 void TestOutputHelper::finisAllTestsManually()
 {
     // thread safe?
+    std::lock_guard<std::mutex> lock(g_helperThreadMapMutex);
     for (auto& helper : helperThreadMap)
         helper.second.finishTest();
 }
@@ -117,6 +120,9 @@ void TestOutputHelper::showProgress()
     int m_testsPerProgs = std::max(1, (int)(m_maxTests / 4));
     if (!test::Options::get().createRandomTest && (m_currTest % m_testsPerProgs == 0 || m_currTest ==  m_maxTests))
     {
+        ETH_FAIL_REQUIRE_MESSAGE(m_maxTests > 0, "TestHelper has 0 or negative m_maxTests!");
+        ETH_FAIL_REQUIRE_MESSAGE(
+            m_currTest <= m_maxTests, "TestHelper has m_currTest > m_maxTests!");
         int percent = int(m_currTest*100/m_maxTests);
         std::cout << percent << "%";
         if (percent != 100)
@@ -125,7 +131,7 @@ void TestOutputHelper::showProgress()
     }
 }
 
-std::mutex g_resultsUpdate_mutex;
+std::mutex g_execTimeResults;
 void TestOutputHelper::finishTest()
 {
     if (!m_isRunning)
@@ -138,7 +144,7 @@ void TestOutputHelper::finishTest()
         res.first = m_timer.elapsed();
         res.second = TestInfo::caseName();
         std::cout << res.second + " time: " + toString(res.first) << "\n";
-        std::lock_guard<std::mutex> lock(g_resultsUpdate_mutex);
+        std::lock_guard<std::mutex> lock(g_execTimeResults);
         execTimeResults.push_back(res);
     }
     printBoostError();  // !! could delete instance of TestOutputHelper !!
@@ -162,7 +168,7 @@ void TestOutputHelper::printBoostError()
         ETH_STDERROR_MESSAGE("\n--------");
         ETH_STDERROR_MESSAGE(
             "TestOutputHelper detected " + toString(errorCount) + " errors during test execution!");
-        std::lock_guard<std::mutex> lock(g_resultsUpdate_mutex);
+        std::lock_guard<std::mutex> lock(g_execTotalErrors);
         BOOST_ERROR("");  // NOT THREAD SAFE !!!
         execTotalErrors += errorCount;
     }
@@ -178,22 +184,27 @@ bool TestOutputHelper::isAllTestsFinished()
 void TestOutputHelper::printTestExecStats()
 {
     checkUnfinishedTestFolders();
-    std::lock_guard<std::mutex> lock(g_resultsUpdate_mutex);
     if (Options::get().exectimelog)
     {
+        std::lock_guard<std::mutex> lock(g_execTimeResults);
         int totalTime = 0;
         std::cout << std::left;
         std::sort(execTimeResults.begin(), execTimeResults.end(), [](execTimeName _a, execTimeName _b) { return (_b.first < _a.first); });
         for (size_t i = 0; i < execTimeResults.size(); i++)
             totalTime += execTimeResults[i].first;
         std::cout << std::endl << "*** Execution time stats" << std::endl;
-        std::cout << setw(45) << "Total Tests: " << setw(25) << "     : " + toString(totalTestsRun) << "\n";
+        {
+            std::lock_guard<std::mutex> lock2(g_totalTestsRun);
+            std::cout << setw(45) << "Total Tests: " << setw(25)
+                      << "     : " + toString(totalTestsRun) << "\n";
+        }
         std::cout << setw(45) << "Total Time: " << setw(25) << "     : " + toString(totalTime) << "\n";
         for (size_t i = 0; i < execTimeResults.size(); i++)
             std::cout << setw(45) << execTimeResults[i].second << setw(25) << " time: " + toString(execTimeResults[i].first) << "\n";
     }
     else
     {
+        std::lock_guard<std::mutex> lock(g_totalTestsRun);
         string message = "*** Total Tests Run: " + toString(totalTestsRun) + "\n";
         if (totalTestsRun > 0)
             ETH_STDOUT_MESSAGE(message);
@@ -201,19 +212,35 @@ void TestOutputHelper::printTestExecStats()
             ETH_STDERROR_MESSAGE(message);
     }
 
-    if (execTotalErrors)
+    bool wereExecErrors = false;
     {
-        ETH_STDERROR_MESSAGE("\n--------");
-        ETH_STDERROR_MESSAGE("*** TOTAL ERRORS DETECTED: " + toString(execTotalErrors) +
-                             " errors during all test execution!");
-        ETH_STDERROR_MESSAGE("--------");
-
-        std::lock_guard<std::mutex> lock(g_totalTestsRun);
-        for (auto const& error : s_failedTestsMap)
-            std::cout << "info: " << error.second << std::endl;
+        std::lock_guard<std::mutex> lock(g_execTotalErrors);
+        if (execTotalErrors)
+        {
+            wereExecErrors = true;
+            ETH_STDERROR_MESSAGE("\n--------");
+            ETH_STDERROR_MESSAGE("*** TOTAL ERRORS DETECTED: " + toString(execTotalErrors) +
+                                 " errors during all test execution!");
+            ETH_STDERROR_MESSAGE("--------");
+        }
     }
-    execTimeResults.clear();
-    execTotalErrors = 0;
+
+    if (wereExecErrors)
+    {
+        std::lock_guard<std::mutex> lock(g_failedTestsMap);
+        for (auto const& error : s_failedTestsMap)
+            std::cout << "info:" << error.second << std::endl;
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(g_execTimeResults);
+        execTimeResults.clear();
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(g_execTotalErrors);
+        execTotalErrors = 0;
+    }
 }
 
 std::string TestOutputHelper::getThreadID()
@@ -267,7 +294,7 @@ void checkUnfinishedTestFolders()
         }
 
         if (!pathHasTests(singleTest->first / filter))
-            ETH_WARNING(string("WARNING: Test folder ") + (singleTest->first / filter).c_str() +
+            ETH_WARNING(string("Test folder ") + (singleTest->first / filter).c_str() +
                         " appears to have no tests!");
     }
     else
@@ -284,7 +311,7 @@ void checkUnfinishedTestFolders()
                     string const folderName = it->path().filename().string();
                     allFolders.insert(folderName);
                     if (!pathHasTests(it->path()))
-                        ETH_WARNING(string("WARNING: Test folder ") + it->path().c_str() +
+                        ETH_WARNING(string("Test folder ") + it->path().c_str() +
                                     " appears to have no tests!");
                 }
             }
@@ -294,8 +321,8 @@ void checkUnfinishedTestFolders()
             std::set_difference(allFolders.begin(), allFolders.end(), finishedFolders.begin(),
                 finishedFolders.end(), std::back_inserter(diff));
             for (auto const& it : diff)
-                ETH_WARNING(string("WARNING: Test folder ") + (path / it).c_str() +
-                            " appears to be unused!");
+                ETH_WARNING(
+                    string("Test folder ") + (path / it).c_str() + " appears to be unused!");
         }
     }
 }
@@ -310,15 +337,32 @@ void TestOutputHelper::markTestFolderAsFinished(
 }
 
 
+TestInfo::TestInfo(std::string const& _info, std::string const& _testName) : m_sFork(_info)
+{
+    m_isGeneralTestInfo = true;
+    m_currentTestCaseName = boost::unit_test::framework::current_test_case().p_name;
+    if (!_testName.empty())
+        TestOutputHelper::get().setCurrentTestName(_testName);
+}
+
 std::string TestInfo::getMessage() const
 {
     if (m_sFork.empty())
         return "";
-    string message = " (" + m_currentTestCaseName + "/" + TestOutputHelper::get().testName() +
-                     ", fork: " + m_sFork;
+    string message = " (" + m_currentTestCaseName + "/" + TestOutputHelper::get().testName();
+
+    if (!m_isGeneralTestInfo)
+    {
+        message += ", fork: " + m_sFork;
+        if (!m_sChainName.empty())
+            message += ", chain: " + m_sChainName;
+    }
+    else
+        message += ", step: " + m_sFork;
+
     if (m_isBlockchainTestInfo)
         message += ", block: " + to_string(m_blockNumber);
-    if (m_isStateTransactionInfo)
+    else if (m_isStateTransactionInfo)
         message += ", TrInfo: d: " + to_string(m_trD) + ", g: " + to_string(m_trG) + ", v: " + to_string(m_trV);
     return message + ")";
 }

@@ -28,13 +28,14 @@ public:
 
 	std::string web3_clientVersion();
 	std::string eth_sendTransaction(std::string const& _transaction);
-	std::string eth_sendRawTransaction(std::string const& _rlp);
+    std::string eth_sendRawTransaction(std::string const& _rlp);
 
     std::string eth_blockNumber();
     test::scheme_transactionReceipt eth_getTransactionReceipt(std::string const& _transactionHash);
     int eth_getTransactionCount(std::string const& _address, std::string const& _blockNumber);
     std::string eth_getCode(std::string const& _address, std::string const& _blockNumber);
     test::scheme_block eth_getBlockByNumber(BlockNumber const& _blockNumber, bool _fullObjects);
+    test::scheme_block eth_getBlockByHash(string const& _hash, bool _fullObjects);
     std::string eth_getBalance(std::string const& _address, std::string const& _blockNumber);
 	std::string eth_getStorageRoot(std::string const& _address, std::string const& _blockNumber);
 	std::string eth_getStorageAt(std::string const& _address, std::string const& _position, std::string const& _blockNumber);
@@ -53,7 +54,7 @@ public:
 	void test_rewindToBlock(size_t _blockNr);
     void test_modifyTimestamp(unsigned long long _timestamp);
     string test_mineBlocks(int _number, bool _canFail = false);
-    void test_importRawBlock(std::string const& _blockRLP);
+    string test_importRawBlock(std::string const& _blockRLP);
 
     std::string sendRawRequest(std::string const& _request);
     DataObject rpcCall(std::string const& _methodName,

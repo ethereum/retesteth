@@ -36,7 +36,8 @@ public:
 	bool vmtrace = false;	///< Create EVM execution tracer
 	bool filltests = false; ///< Create JSON test files from execution results
     bool showhash = false;  ///< Show filler hash for debug information
-	bool fillchain = false; ///< Fill tests as a blockchain tests if possible
+    size_t blockLimit = 0;  ///< Perform blockchain blocks till this limit
+    bool fillchain = false; ///< Fill tests as a blockchain tests if possible
 	bool stats = false;		///< Execution time and stats for state tests
     bool poststate = false;
     std::string statsOutFile; ///< Stats output file. "out" for standard output
