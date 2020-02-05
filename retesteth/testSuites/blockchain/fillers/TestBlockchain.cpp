@@ -79,7 +79,21 @@ test::scheme_block TestBlockchain::mineBlock(
     blockSection const& _block, vectorOfSchemeBlock const& _preparedUncleBlocks)
 {
     ETH_LOGC("MINE BLOCK: " + m_sDebugString, 6, LogColor::YELLOW);
-    BlockNumber latestBlockNumber(m_session.test_mineBlocks(1));
+
+    BlockNumber latestBlockNumber("0");
+    if (_block.isRawRLP())
+    {
+        string const blHash = m_session.test_importRawBlock(_block.getRawRLP());
+        string const& sBlockException = _block.getException(m_network);
+        bool const blockIsValid = checkBlockException(sBlockException);
+        if (blockIsValid)
+            return m_session.eth_getBlockByHash(blHash, true);
+        else
+            return test::scheme_block(_block.getRawRLP());
+    }
+    else
+        latestBlockNumber = BlockNumber(m_session.test_mineBlocks(1));
+
     bool isUnclesInTest = _block.getData().count("uncleHeaders") ?
                               _block.getData().atKey("uncleHeaders").getSubObjects().size() > 0 :
                               false;
@@ -290,7 +304,7 @@ test::scheme_block TestBlockchain::postmineBlockHeader(blockSection const& _bloc
     }
 
     string const& sBlockException = _blockInTest.getException(m_network);
-    bool blockIsValid = checkBlockException(sBlockException);
+    bool const blockIsValid = checkBlockException(sBlockException);
     remoteBlock.setValid(blockIsValid);
     return remoteBlock;  // malicious block must be written to the filled test
 }

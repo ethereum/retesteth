@@ -130,6 +130,16 @@ public:
     ClientConfigID const& getId() const { return m_id; }
     std::vector<string> const& getNetworks() const { return m_networks; }
     std::vector<string> const& getAdditionalNetworks() const { return m_additional_networks; }
+    std::vector<string> const& getNetworksPlusAdditional() const
+    {
+        static std::vector<std::string> allNets = m_networks;
+        if (allNets.size() == m_networks.size())
+        {
+            for (auto const& net : m_additional_networks)
+                allNets.push_back(net);
+        }
+        return allNets;
+    }
     void addGenesisTemplate(string const& _network, fs::path const& _pathToJson)
     {
         m_genesisTemplate[_network] = test::readJsonData(_pathToJson);

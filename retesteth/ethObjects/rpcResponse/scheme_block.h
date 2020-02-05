@@ -62,6 +62,15 @@ public:
                 toString(Address("0xb94f5374fce5ed0000000097c15331677e6ebf0b"));
         }
 
+        //
+        void removeNonceAndMixhash()
+        {
+            if (m_data.count("nonce"))
+                m_data.removeKey("nonce");
+            if (m_data.count("mixHash"))
+                m_data.removeKey("mixHash");
+        }
+
     private:
         void resetHeader(DataObject const& _header);
 
@@ -69,6 +78,7 @@ public:
         DataObject mapBlockHeader() const;
     };
 
+    scheme_block(std::string const& _RLP);
     scheme_block(DataObject const& _block);
 
     void addUncle(scheme_block const& _block) { m_uncles.push_back(_block); }
@@ -100,7 +110,8 @@ public:
 
     std::string const& getBlockHash() const { return m_data.atKey("hash").asString(); }
 
-    DataObject getBlockHeader() const { return m_blockHeader.getData(); }
+    DataObject const& getBlockHeader() const { return m_blockHeader.getData(); }
+    void removeNonceAndMixhash() { m_blockHeader.removeNonceAndMixhash(); }
 
     void overwriteBlockHeader(DataObject const& _header)
     {
@@ -149,12 +160,14 @@ private:
     static RLPStream streamBlockHeader(DataObject const& _headerData);
 
 private:
+    RLPStream streamUncles() const;
+
     bool m_isFullTransactions = false;
     bool m_isValid = true;
     validator m_validator;
     scheme_block_header m_blockHeader;
     std::vector<scheme_block> m_uncles;
-    RLPStream streamUncles() const;
+    std::string m_rlpOverride;
 };
 }
 

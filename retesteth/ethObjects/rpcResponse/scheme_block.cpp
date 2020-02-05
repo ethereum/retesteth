@@ -1,7 +1,45 @@
 #include "scheme_block.h"
 
+DataObject const& getEmptySchemeBlockData()
+{
+    static DataObject emptySchemeBlockData(DataType::Null);
+    if (emptySchemeBlockData.type() == DataType::Null)
+    {
+        emptySchemeBlockData["author"] = "";
+        emptySchemeBlockData["miner"] = "";
+        emptySchemeBlockData["extraData"] = "";
+        emptySchemeBlockData["gasLimit"] = "";
+        emptySchemeBlockData["gasUsed"] = "";
+        emptySchemeBlockData["hash"] = "";
+        emptySchemeBlockData["logsBloom"] = "";
+        emptySchemeBlockData["number"] = "";
+        emptySchemeBlockData["parentHash"] = "";
+        emptySchemeBlockData["receiptsRoot"] = "";
+        emptySchemeBlockData["sha3Uncles"] = "";
+        emptySchemeBlockData["size"] = "";
+        emptySchemeBlockData["stateRoot"] = "";
+        emptySchemeBlockData["timestamp"] = "";
+        emptySchemeBlockData["totalDifficulty"] = "";
+        emptySchemeBlockData["transactions"] = DataObject(DataType::Array);
+        emptySchemeBlockData["transactionsRoot"] = "";
+        emptySchemeBlockData["uncles"] = DataObject(DataType::Array);
+        emptySchemeBlockData["difficulty"] = "";
+    }
+    return emptySchemeBlockData;
+}
+
+
 namespace test
 {
+scheme_block::scheme_block(std::string const& _rlp)
+  : object(getEmptySchemeBlockData()),
+    m_validator(getEmptySchemeBlockData()),
+    m_blockHeader(getEmptySchemeBlockData())
+{
+    m_isValid = false;
+    m_rlpOverride = _rlp;
+}
+
 scheme_block::scheme_block(DataObject const& _block)
   : object(_block), m_validator(_block), m_blockHeader(_block)
 {
@@ -36,6 +74,9 @@ scheme_block::scheme_block(DataObject const& _block)
 // Get Block RLP for state tests
 std::string scheme_block::getBlockRLP() const
 {
+    if (!m_rlpOverride.empty())
+        return m_rlpOverride;
+
     ETH_ERROR_REQUIRE_MESSAGE(m_isFullTransactions,
         "Attempt to get blockRLP of a block received without full transactions!");
     // RLP of a block
@@ -93,7 +134,6 @@ RLPStream scheme_block::streamBlockHeader(DataObject const& _headerData)
     RLPStream header;
     header.appendList(15);
 
-    // Map Block Header
     header << h256(_headerData.atKey("parentHash").asString());
     header << h256(_headerData.atKey("uncleHash").asString());
     header << dev::Address(_headerData.atKey("coinbase").asString());

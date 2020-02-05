@@ -52,8 +52,11 @@ public:
         bool doNotExport() const { return m_data.count("donotimportonclient"); }
         size_t uncleCount() const { return m_uncles.size(); }
         static std::string const& getDefaultChainName() { return m_defaultChainName; }
+        bool isRawRLP() const { return m_data.count("rlp"); }
+        string const& getRawRLP() const { return m_data.atKey("rlp").asString(); }
 
     private:
+        void parseBlockHeaderException(DataObject const& _data);
         std::vector<scheme_transaction> m_transactons;
         std::vector<scheme_uncleHeader> m_uncles;
         std::map<string, string> m_expectException;
