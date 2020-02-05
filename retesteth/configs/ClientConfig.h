@@ -46,19 +46,18 @@ public:
     {
         m_configFilePath = _clientConfigPath;
         requireJsonFields(_obj, "ClientConfig (" + m_configFilePath.string() + ")",
-            {
-                {"name", {DataType::String}},
-                {"socketType", {DataType::String}},
+            {{"name", {DataType::String}}, {"socketType", {DataType::String}},
                 {"socketAddress", {DataType::String, DataType::Array}},
-                {"forks", {DataType::Array}},
-                {"additionalForks", {DataType::Array}},
-            },
+                {"forks", {DataType::Array}}, {"additionalForks", {DataType::Array}},
+                {"exceptions", {DataType::Object}}},
             true);
 
         for (auto const& name : m_data.atKey("forks").getSubObjects())
             m_networks.push_back(name.asString());
         for (auto const& name : m_data.atKey("additionalForks").getSubObjects())
             m_additional_networks.push_back(name.asString());
+        for (auto const& except : m_data.atKey("exceptions").getSubObjects())
+            m_exceptions[except.getKey()] = except.asString();
 
         std::string const& socketTypeStr = _obj.atKey("socketType").asString();
         if (socketTypeStr == "ipc")
@@ -96,6 +95,25 @@ public:
                 "\"path to .ipc socket\"], [tcp, \"address:port\"]");
     }
 
+    std::string const& getExceptionString(string const& _exceptionName) const
+    {
+        if (m_exceptions.count(_exceptionName))
+            return m_exceptions.at(_exceptionName);
+        vector<string> exceptions;
+        for (auto const& el : m_exceptions)
+            exceptions.push_back(el.first);
+
+        auto const suggestions = test::levenshteinDistance(_exceptionName, exceptions, 5);
+        string message = " (Suggestions: ";
+        for (auto const& el : suggestions)
+            message += el + ", ";
+        message += " ...)";
+        ETH_ERROR_MESSAGE("Config::getExceptionString '" + _exceptionName +
+                          "' not found in client config `exceptions` section! (" +
+                          getConfigFilePath().c_str() + ")" + message);
+        static string const notfound = "";
+        return notfound;
+    }
     fs::path const& getConfigFilePath() const { return m_configFilePath; }
     fs::path const& getCorrectMiningRewardConfigFilePath() const { return m_configCorrectMiningRewardFilePath; }
     fs::path const& getShellPath() const { return m_shellPath; }
@@ -138,6 +156,7 @@ private:
     std::vector<string> m_networks;                  ///< Allowed forks as network name
     std::vector<string> m_additional_networks;       ///< Allowed forks as network name
     std::map<string, DataObject> m_genesisTemplate;  ///< Template For test_setChainParams
+    std::map<string, string> m_exceptions;           ///< Exception Translation
     DataObject m_correctReward;  ///< Correct mining reward info for StateTests->BlockchainTests
 };
 }  // namespace test

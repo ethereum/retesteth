@@ -34,6 +34,7 @@ namespace test
 DataObject BlockchainTestTransitionSuite::doTests(
     DataObject const& _input, TestSuiteOptions& _opt) const
 {
+    _opt.allowInvalidBlocks = true;
     return DoTests(_input, _opt);
 }
 
@@ -46,6 +47,30 @@ DataObject BlockchainTestInvalidSuite::doTests(
 
 DataObject BlockchainTestValidSuite::doTests(DataObject const& _input, TestSuiteOptions& _opt) const
 {
+    _opt.allowInvalidBlocks = false;
+    return DoTests(_input, _opt);
+}
+
+DataObject LegacyConstantinopleBlockchainInvalidTestSuite::doTests(
+    DataObject const& _input, TestSuiteOptions& _opt) const
+{
+    _opt.allowInvalidBlocks = true;
+    _opt.isLegacyTests = true;
+    return DoTests(_input, _opt);
+}
+
+DataObject LegacyConstantinopleBlockchainValidTestSuite::doTests(
+    DataObject const& _input, TestSuiteOptions& _opt) const
+{
+    _opt.allowInvalidBlocks = false;
+    _opt.isLegacyTests = true;
+    return DoTests(_input, _opt);
+}
+
+DataObject LegacyConstantinopleBCGeneralStateTestsSuite::doTests(
+    DataObject const& _input, TestSuiteOptions& _opt) const
+{
+    _opt.isLegacyTests = true;
     return DoTests(_input, _opt);
 }
 

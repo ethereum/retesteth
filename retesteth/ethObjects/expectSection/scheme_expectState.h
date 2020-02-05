@@ -11,9 +11,9 @@ class scheme_expectState : public object
 public:
     scheme_expectState(DataObject const& _state) : object(_state)
     {
-        ETH_ERROR_REQUIRE_MESSAGE(_state.getSubObjects().size() < 100,
+        ETH_ERROR_REQUIRE_MESSAGE(_state.getSubObjects().size() <= 125,
             "Expect section has too many accounts! (" + to_string(_state.getSubObjects().size()) +
-                " > 100)");
+                " > 125)");
         for (auto const& accountObj : _state.getSubObjects())
             m_accounts.push_back(scheme_expectAccount(accountObj));
         refreshData();  // needed?

@@ -59,6 +59,7 @@ struct sessionInfo
 };
 
 void closeSession(const string& _threadID);
+string const RPCSession::c_errorMiningString = "remote test_mineBlocks = false";
 
 std::mutex g_socketMapMutex;
 static std::map<std::string, sessionInfo> socketMap;
@@ -271,10 +272,17 @@ string RPCSession::eth_getCode(string const& _address, string const& _blockNumbe
 	return rpcCall("eth_getCode", { quote(_address), quote(_blockNumber) }).asString();
 }
 
-test::scheme_block RPCSession::eth_getBlockByNumber(string const& _blockNumber, bool _fullObjects)
+test::scheme_block RPCSession::eth_getBlockByNumber(
+    BlockNumber const& _blockNumber, bool _fullObjects)
+{
+    return test::scheme_block(rpcCall("eth_getBlockByNumber",
+        {quote(_blockNumber.getBlockNumberAsString()), _fullObjects ? "true" : "false"}));
+}
+
+test::scheme_block RPCSession::eth_getBlockByHash(string const& _blockHash, bool _fullObjects)
 {
     return test::scheme_block(
-        rpcCall("eth_getBlockByNumber", {quote(_blockNumber), _fullObjects ? "true" : "false"}));
+        rpcCall("eth_getBlockByHash", {quote(_blockHash), _fullObjects ? "true" : "false"}));
 }
 
 test::scheme_transactionReceipt RPCSession::eth_getTransactionReceipt(string const& _transactionHash)
@@ -312,7 +320,8 @@ int RPCSession::eth_getTransactionCount(
     std::string const& _address, std::string const& _blockNumber)
 {
     DataObject res = rpcCall("eth_getTransactionCount", {quote(_address), quote(_blockNumber)});
-    return (res.type() == DataType::String) ? (int)u256(dev::fromHex(res.asString())) : res.asInt();
+    return (res.type() == DataType::String) ? test::hexOrDecStringToInt(res.asString()) :
+                                              res.asInt();
 }
 
 string RPCSession::eth_getBalance(string const& _address, string const& _blockNumber)
@@ -354,9 +363,12 @@ string RPCSession::test_getLogHash(std::string const& _txHash)
 	return rpcCall("test_getLogHash", { quote(_txHash) }).asString();
 }
 
-void RPCSession::test_importRawBlock(std::string const& _blockRLP)
+string RPCSession::test_importRawBlock(std::string const& _blockRLP)
 {
-    rpcCall("test_importRawBlock", {quote(_blockRLP)}, true);
+    DataObject res = rpcCall("test_importRawBlock", {quote(_blockRLP)}, true);
+    if (res.type() != DataType::Null)
+        return res.asString();
+    return string();
 }
 
 void RPCSession::test_setChainParams(string const& _config)
@@ -369,12 +381,16 @@ void RPCSession::test_rewindToBlock(size_t _blockNr)
     ETH_FAIL_REQUIRE_MESSAGE(rpcCall("test_rewindToBlock", { to_string(_blockNr) }) == true, "remote test_rewintToBlock = false");
 }
 
-string RPCSession::test_mineBlocks(int _number)
+string RPCSession::test_mineBlocks(int _number, bool _canFail)
 {
     DataObject blockNumber = rpcCall("eth_blockNumber");
     u256 startBlock = (blockNumber.type() == DataType::String) ? u256(blockNumber.asString()) :
                                                                  blockNumber.asInt();
-    ETH_ERROR_REQUIRE_MESSAGE(rpcCall("test_mineBlocks", { to_string(_number) }, true) == true, "remote test_mineBlocks = false");
+
+    if (!_canFail)
+        ETH_ERROR_REQUIRE_MESSAGE(rpcCall("test_mineBlocks", { to_string(_number) }, true) == true, c_errorMiningString);
+    else
+        return c_errorMiningString;
 
     // We auto-calibrate the time it takes to mine the transaction.
     // It would be better to go without polling, but that would probably need a change to the test
@@ -418,6 +434,8 @@ string RPCSession::test_mineBlocks(int _number)
             }
         }
     }
+
+    // Better keep it int everywhere in codebase. !!!
     return toString(startBlock);
 }
 
@@ -466,8 +484,8 @@ DataObject RPCSession::rpcCall(
     {
         test::TestOutputHelper const& helper = test::TestOutputHelper::get();
         m_lastRPCError["message"] = "Error on JSON-RPC call (" + helper.testInfo().getMessage() +
-                                "): " + result["error"]["message"].asString() +
-                               " Request: " + request;
+                                    "):\nRequest: '" + request + "'" + "\nResult: '" +
+                                    result["error"]["message"].asString() + "'\n";
         m_lastRPCError["error"] = result["error"]["message"].asString();
         if (_canFail)
             return DataObject(DataType::Null);

@@ -126,12 +126,18 @@ public:
             }
             break;
         case DataType::Object:
-            _assert(getSubObjects().size() == 1,
-                "in DataObject::==(Object)  Type Object must have only 1 object!");
-            _assert(_value.getSubObjects().size() == 1,
-                "in DataObject::==(Object)  Type Object must have only 1 object!");
+            //_assert(getSubObjects().size() == 1,
+            //    "in DataObject::==(Object)  LType Object must have only 1 object!");
+            //_assert(_value.getSubObjects().size() == 1,
+            //    "in DataObject::==(Object)  RType Object must have only 1 object!");
             equal = getSubObjects().size() == _value.getSubObjects().size();
-            equal = getSubObjects().at(0) == _value.getSubObjects().at(0);
+            // equal = getSubObjects().at(0) == _value.getSubObjects().at(0);
+            for (size_t i = 0; i < getSubObjects().size(); i++)
+            {
+                equal = getSubObjects().at(i) == _value.getSubObjects().at(i);
+                if (!equal)
+                    break;
+            }
             break;
         default:
             _assert(false, "in DataObject::== unknown object type!");
@@ -186,6 +192,9 @@ public:
     DataObject const& atKey(std::string const& _key) const;
     DataObject& atKeyUnsafe(std::string const& _key);
     DataObject const& at(size_t _pos) const;
+    DataObject& atUnsafe(size_t _pos);
+    DataObject const& atLastElement() const;
+    DataObject& atLastElementUnsafe();
 
     void addArrayObject(DataObject const& _obj);
 

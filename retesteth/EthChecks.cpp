@@ -9,7 +9,8 @@
 namespace test {
 void eth_warning_message(std::string const& _message)
 {
-    std::cout << "\x1b[33m" << _message << "\x1b[0m" << std::endl;
+    std::cout << "\x1b[33m"
+              << "WARNING: " << _message << "\x1b[0m" << std::endl;
 }
 
 void eth_stdout_message(std::string const& _message)
@@ -22,10 +23,26 @@ void eth_stderror_message(std::string const& _message)
     std::cerr << "\x1b[31m" << _message << "\x1b[0m" << std::endl;
 }
 
-void eth_log_message(std::string const& _message, unsigned _verbosity)
+void eth_log_message(std::string const& _message, unsigned _verbosity, LogColor _color)
 {
     if (Options::get().logVerbosity >= _verbosity)
-        std::cout << _message << std::endl;
+    {
+        string s_pre;
+        switch (_color)
+        {
+        case LogColor::YELLOW:
+            s_pre = "\x1b[33m";
+            break;
+        case LogColor::LIME:
+            s_pre = "\x1b[32m";
+            break;
+        case LogColor::DEFAULT:
+            break;
+        default:
+            break;
+        }
+        std::cout << s_pre << _message << "\x1b[0m" << std::endl;
+    }
 }
 
 void eth_error(std::string const& _message)

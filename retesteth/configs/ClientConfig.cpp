@@ -43,7 +43,34 @@ string default_config = R"({
         "EIP158ToByzantiumAt5",
         "HomesteadToDaoAt5",
         "ByzantiumToConstantinopleFixAt5"
-    ]
+    ],
+    "exceptions" : {
+        "ExtraDataTooBig" : "extra-data too long",
+        "InvalidDifficulty" : "invalid difficulty",
+        "InvalidGasLimit" : "invalid gasLimit:",
+        "TooMuchGasUsed" : "invalid gasUsed:",
+        "InvalidNumber" : "invalid block number",
+        "InvalidTimestampEqualParent" : "timestamp equals parent's",
+        "InvalidTimestampOlderParent" : "timestamp older than parent",
+        "InvalidLogBloom" : "invalid bloom (remote:",
+        "InvalidStateRoot" : "invalid merkle root (remote:",
+        "InvalidGasLimit2" : "invalid gas limit:",
+        "InvalidGasUsed" : "invalid gas used (remote:",
+        "InvalidBlockMixHash" : "invalid mix digest",
+        "InvalidBlockNonce" : "",
+        "UnknownParent" : "unknown ancestor",
+        "UnknownParent2" : "unknown ancestor",
+        "InvalidReceiptsStateRoot" : "invalid receipt root hash (remote:",
+        "InvalidTransactionsRoot" : "transaction root hash mismatch: have",
+        "InvalidUnclesHash" : "uncle root hash mismatch: have",
+        "InvalidUncleParentHash" : "uncle's parent is not ancestor",
+        "UncleInChain" : "duplicate uncle",
+        "UncleIsAncestor" : "uncle is ancestor",
+        "UncleParentIsNotAncestor" : "uncle's parent is not ancestor",
+        "TooManyUncles" : "too many uncles",
+        "OutOfGas" : "out of gas",
+        "ExtraDataIncorrectDAO" : "bad DAO pro-fork extra-data"
+    }
 })";
 
 string besu_config = R"({
@@ -68,7 +95,11 @@ string besu_config = R"({
         "EIP158ToByzantiumAt5",
         "HomesteadToDaoAt5",
         "ByzantiumToConstantinopleFixAt5"
-    ]
+    ],
+    "exceptions" : {
+        "ExtraDataTooBig" : "extra-data too long",
+        "InvalidDifficulty" : "invalid difficulty"
+    }
 })";
 
 string alethTCP_config = R"({
@@ -94,7 +125,26 @@ string alethTCP_config = R"({
         "EIP158ToByzantiumAt5",
         "HomesteadToDaoAt5",
         "ByzantiumToConstantinopleFixAt5"
-    ]
+    ],
+    "exceptions" : {
+        "ExtraDataTooBig" : "ExtraData too big",
+        "InvalidDifficulty" : "Invalid Difficulty",
+        "InvalidGasLimit" : "Invalid Block GasLimit",
+        "TooMuchGasUsed" : "Too much gas used",
+        "InvalidNumber" : "Invalid number",
+        "InvalidTimestamp" : "Invalid timestamp",
+        "InvalidLogBloom" : "Invalid log bloom",
+        "InvalidStateRoot" : "Invalid state root",
+        "InvalidGasLimit2" : "Invalid Block GasLimit",
+        "InvalidGasUsed" : "Invalid gas used",
+        "InvalidBlockMixHash" : "Invalid block nonce",
+        "InvalidBlockNonce" : "Invalid block nonce"
+        "UnknownParent" : "UnknownParent",
+        "UnknownParent2" : "Invalid parent hash",
+        "InvalidReceiptsStateRoot" : "Invalid receipts state root",
+        "InvalidTransactionsRoot" : "Invalid transactions root",
+        "InvalidUnclesHash" : "Invalid uncles hash"
+    }
 })";
 
 string alethIPCDebug_config = R"({
@@ -117,7 +167,26 @@ string alethIPCDebug_config = R"({
         "EIP158ToByzantiumAt5",
         "HomesteadToDaoAt5",
         "ByzantiumToConstantinopleFixAt5"
-    ]
+    ],
+    "exceptions" : {
+        "ExtraDataTooBig" : "ExtraData too big",
+        "InvalidDifficulty" : "Invalid Difficulty",
+        "InvalidGasLimit" : "Invalid Block GasLimit",
+        "TooMuchGasUsed" : "Too much gas used",
+        "InvalidNumber" : "Invalid number",
+        "InvalidTimestamp" : "Invalid timestamp",
+        "InvalidLogBloom" : "Invalid log bloom",
+        "InvalidStateRoot" : "Invalid state root",
+        "InvalidGasLimit2" : "Invalid Block GasLimit",
+        "InvalidGasUsed" : "Invalid gas used",
+        "InvalidBlockMixHash" : "Invalid block nonce",
+        "InvalidBlockNonce" : "Invalid block nonce"
+        "UnknownParent" : "UnknownParent",
+        "UnknownParent2" : "Invalid parent hash",
+        "InvalidReceiptsStateRoot" : "Invalid receipts state root",
+        "InvalidTransactionsRoot" : "Invalid transactions root",
+        "InvalidUnclesHash" : "Invalid uncles hash"
+    }
 })";
 
 
@@ -141,7 +210,26 @@ string aleth_config = R"({
         "EIP158ToByzantiumAt5",
         "HomesteadToDaoAt5",
         "ByzantiumToConstantinopleFixAt5"
-    ]
+    ],
+    "exceptions" : {
+        "ExtraDataTooBig" : "ExtraData too big",
+        "InvalidDifficulty" : "Invalid Difficulty",
+        "InvalidGasLimit" : "Invalid Block GasLimit",
+        "TooMuchGasUsed" : "Too much gas used",
+        "InvalidNumber" : "Invalid number",
+        "InvalidTimestamp" : "Invalid timestamp",
+        "InvalidLogBloom" : "Invalid log bloom",
+        "InvalidStateRoot" : "Invalid state root",
+        "InvalidGasLimit2" : "Invalid Block GasLimit",
+        "InvalidGasUsed" : "Invalid gas used",
+        "InvalidBlockMixHash" : "Invalid block nonce",
+        "InvalidBlockNonce" : "Invalid block nonce"
+        "UnknownParent" : "UnknownParent",
+        "UnknownParent2" : "Invalid parent hash",
+        "InvalidReceiptsStateRoot" : "Invalid receipts state root",
+        "InvalidTransactionsRoot" : "Invalid transactions root",
+        "InvalidUnclesHash" : "Invalid uncles hash"
+    }
 })";
 
 string aleth_config_sh = R"(

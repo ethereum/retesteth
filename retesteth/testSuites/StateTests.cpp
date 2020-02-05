@@ -118,7 +118,8 @@ DataObject FillTestAsBlockchain(DataObject const& _testFile)
                     if (test.getData().count("_info"))
                         aBlockchainTest["_info"] = test.getData().atKey("_info");
 
-                    test::scheme_block latestBlock = session.eth_getBlockByNumber("0", false);
+                    test::scheme_block latestBlock =
+                        session.eth_getBlockByNumber(BlockNumber("0"), false);
                     aBlockchainTest["genesisBlockHeader"] = latestBlock.getBlockHeader();
                     aBlockchainTest["genesisBlockHeader"].removeKey("transactions");
                     aBlockchainTest["genesisBlockHeader"].removeKey("uncles");
@@ -132,7 +133,8 @@ DataObject FillTestAsBlockchain(DataObject const& _testFile)
                     aBlockchainTest["sealEngine"] = sEngine;
                     aBlockchainTest["lastblockhash"] = remoteBlock.getBlockHash();
 
-                    test::scheme_block genesisBlock = session.eth_getBlockByNumber("0", true);
+                    test::scheme_block genesisBlock =
+                        session.eth_getBlockByNumber(BlockNumber("0"), true);
                     aBlockchainTest["genesisRLP"] = genesisBlock.getBlockRLP();
 
                     DataObject block;
