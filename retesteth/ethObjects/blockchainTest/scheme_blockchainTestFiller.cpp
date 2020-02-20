@@ -58,7 +58,7 @@ string scheme_blockchainTestFiller::blockSection::m_defaultChainName = "default"
 scheme_blockchainTestFiller::blockSection::blockSection(DataObject const& _data)
   : object(_data), m_noExceptionString("NoException")
 {
-    if (_data.getSubObjects().size() <= 2)
+    if (_data.getSubObjects().size() <= 2 && _data.count("rlp"))
     {
         requireJsonFields(_data, "blockchainTestFiller::blocks section",
             {{"rlp", {{DataType::String}, jsonField::Required}},
