@@ -7,19 +7,11 @@
 #include <retesteth/Options.h>
 #include <retesteth/TestHelper.h>
 #include <retesteth/TestSuite.h>
+#include <retesteth/testSuites/TestFixtures.h>
 #include <boost/filesystem/path.hpp>
 
 namespace test
 {
-enum class TestExecution
-{
-    RequireOptionAll,
-    NotRefillable
-};
-
-static std::vector<std::string> const c_timeConsumingTestSuites{std::string{"stTimeConsuming"},
-    std::string{"stQuadraticComplexityTest"}, std::string{"bcExploitTest"},
-    std::string{"bcWalletTest"}, std::string{"stQuadraticComplexityTest"}};
 
 /// Suite run and check blockchain tests with valid blocks only
 class BlockchainTestValidSuite : public TestSuite
@@ -65,35 +57,6 @@ class LegacyConstantinopleBCGeneralStateTestsSuite : public BlockchainTestValidS
 };
 
 
-template <class T>
-class bcTestFixture
-{
-public:
-    bcTestFixture(std::set<TestExecution> const& _execFlags = {})
-    {
-        T suite;
-        if (_execFlags.count(TestExecution::NotRefillable) &&
-            (Options::get().fillchain || Options::get().filltests))
-            ETH_ERROR_MESSAGE("Tests are sealed and not refillable!");
-
-        string const casename = boost::unit_test::framework::current_test_case().p_name;
-        boost::filesystem::path const suiteFillerPath =
-            suite.getFullPathFiller(casename).parent_path();
-
-        // skip wallet test as it takes too much time (250 blocks) run it with --all flag
-        if (inArray(c_timeConsumingTestSuites, casename) && !test::Options::get().all)
-        {
-            std::cout << "Skipping " << casename << " because --all option is not specified.\n";
-            test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
-            return;
-        }
-
-        suite.runAllTestsInFolder(casename);
-        test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
-    }
-};
-
-
 class LegacyConstantinopleBlockchainInvalidTestSuite : public BlockchainTestInvalidSuite
 {
     DataObject doTests(DataObject const& _input, TestSuiteOptions& _opt) const override;
@@ -124,45 +87,29 @@ class LegacyConstantinopleBlockchainValidTestSuite : public BlockchainTestValidS
     }
 };
 
-// Fixture for BlockchainTests/InvalidBlocks
-class BlockchainTestInvalidFixture
-  : public bcTestFixture<BlockchainTestInvalidSuite>
-{
-public:
-    BlockchainTestInvalidFixture() : bcTestFixture() {}
-};
-
-
-// Fixture for BlockchainTests/ValidBlocks
-class BlockchainTestValidFixture
-  : public bcTestFixture<BlockchainTestValidSuite>
-{
-public:
-    BlockchainTestValidFixture() : bcTestFixture() {}
-};
-
 
 // Fixture for Legacy/BCGeneralStateTest
 class LegacyConstantinopleBCGeneralStateTestFixture
+  : public TestFixture<LegacyConstantinopleBCGeneralStateTestsSuite>
 {
 public:
-    LegacyConstantinopleBCGeneralStateTestFixture();
+    LegacyConstantinopleBCGeneralStateTestFixture() : TestFixture({TestExecution::NotRefillable}) {}
 };
 
 // Fixture for Legacy/BlockchainTests/InvalidBlocks
 class LegacyConstantinoplebcInvalidTestFixture
-  : public bcTestFixture<LegacyConstantinopleBlockchainInvalidTestSuite>
+  : public TestFixture<LegacyConstantinopleBlockchainInvalidTestSuite>
 {
 public:
-    LegacyConstantinoplebcInvalidTestFixture() : bcTestFixture({TestExecution::NotRefillable}) {}
+    LegacyConstantinoplebcInvalidTestFixture() : TestFixture({TestExecution::NotRefillable}) {}
 };
 
 // Fixture for Legacy/BlockchainTests/ValidBlocks
 class LegacyConstantinoplebcValidTestFixture
-  : public bcTestFixture<LegacyConstantinopleBlockchainValidTestSuite>
+  : public TestFixture<LegacyConstantinopleBlockchainValidTestSuite>
 {
 public:
-    LegacyConstantinoplebcValidTestFixture() : bcTestFixture({TestExecution::NotRefillable}) {}
+    LegacyConstantinoplebcValidTestFixture() : TestFixture({TestExecution::NotRefillable}) {}
 };
 
 

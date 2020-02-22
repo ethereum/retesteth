@@ -77,6 +77,8 @@ BOOST_AUTO_TEST_SUITE(LegacyTests)
             BOOST_AUTO_TEST_CASE(stTimeConsuming) {}
         BOOST_AUTO_TEST_SUITE_END()  // GeneralStateTests Constantinople Legacy
 
+        // BOOST_FIXTURE_TEST_SUITE(BCGeneralStateTests,
+        // TestFixture<LegacyConstantinopleBCGeneralStateTestsSuite, NotRefillable>)
         BOOST_FIXTURE_TEST_SUITE(BCGeneralStateTests, LegacyConstantinopleBCGeneralStateTestFixture)
             // Frontier Tests
             BOOST_AUTO_TEST_CASE(stCallCodes) {}
