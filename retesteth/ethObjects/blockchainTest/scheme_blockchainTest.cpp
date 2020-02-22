@@ -1,8 +1,7 @@
 #include "scheme_blockchainTest.h"
 using namespace test;
 
-string const scheme_blockchainTest::m_sNoProof = "NoPfoof";
-
+string const scheme_blockchainTestBase::m_sNoProof = "NoProof";
 scheme_blockchainTestBase::fieldChecker::fieldChecker(DataObject const& _test)
 {
     requireJsonFields(_test, "blockchainTestBase " + _test.getKey(),
@@ -47,7 +46,10 @@ scheme_blockchainTestBase::scheme_blockchainTestBase(DataObject const& _test, bo
     if (_test.count("sealEngine"))
         m_sealEngine = _test.atKey("sealEngine").asString();
     else
-        m_sealEngine = "NoProof";
+        m_sealEngine = scheme_blockchainTestBase::m_sNoProof;
+    std::vector<string> const allowedEngines = {"NoProof", "Ethash"};
+    ETH_ERROR_REQUIRE_MESSAGE(
+        test::inArray(allowedEngines, m_sealEngine), "Seal engine is not allowed: " + m_sealEngine);
 }
 
 scheme_blockchainTest::scheme_blockchainTest(DataObject const& _test, bool _isLegacyTest)
@@ -127,10 +129,11 @@ DataObject scheme_blockchainTestBase::getGenesisForRPC(
     }
     else
     {
-        data["nonce"] = (_sealEngine == "NoProof") ? DataObject("0x0000000000000000") :
-                                                     m_genesisHeader.getData().atKey("nonce");
+        bool isNoProof = _sealEngine == scheme_blockchainTestBase::m_sNoProof;
+        data["nonce"] =
+            isNoProof ? DataObject("0x0000000000000000") : m_genesisHeader.getData().atKey("nonce");
         data["mixHash"] =
-            (_sealEngine == "NoProof") ?
+            isNoProof ?
                 DataObject("0x0000000000000000000000000000000000000000000000000000000000000000") :
                 m_genesisHeader.getData().atKey("mixHash");
     }

@@ -16,8 +16,9 @@ class scheme_blockchainTestBase : public object
 public:
     scheme_blockchainTestBase(DataObject const& _test, bool _isLegacyTest = false);
     DataObject getGenesisForRPC(
-        string const& _network = string(), string const& _sealEngine = "NoProof") const;
+        string const& _network = string(), string const& _sealEngine = m_sNoProof) const;
     scheme_state const& getPre() const { return m_pre; };
+    static const string m_sNoProof;
 
 private:
     class fieldChecker
@@ -58,7 +59,5 @@ private:
     };
     fieldChecker m_checker;
     scheme_state m_post;
-    // std::vector<scheme_transaction> m_transactions;
-    static const string m_sNoProof;
 };
 }

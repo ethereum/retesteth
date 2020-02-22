@@ -139,9 +139,7 @@ std::vector<ClientConfig> const& Options::DynamicOptions::getClientConfigs()
                         configGenesisTemplatePath.c_str() + "') in configs!");
                 cfg.addGenesisTemplate(_net, configGenesisTemplatePath);
             };
-            for (auto const& net : cfg.getNetworks())
-                registerGenesisTemplate(net);
-            for (auto const& net : cfg.getAdditionalNetworks())
+            for (auto const& net : cfg.getNetworksPlusAdditional())
                 registerGenesisTemplate(net);
 
             //*/ Load genesis templates

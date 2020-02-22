@@ -91,7 +91,7 @@ DataObject FillTestAsBlockchain(DataObject const& _testFile)
                     scheme_expectSectionElement mexpect = expect;
                     mexpect.correctMiningReward(net, test.getEnv().getCoinbase());
 
-                    string sEngine = "NoProof";
+                    string sEngine = scheme_blockchainTestBase::m_sNoProof;
                     session.test_setChainParams(test.getGenesisForRPC(net, sEngine).asJson());
                     u256 a(test.getEnv().getData().atKey("currentTimestamp").asString());
                     session.test_modifyTimestamp(a.convert_to<size_t>());

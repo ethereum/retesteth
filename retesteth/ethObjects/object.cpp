@@ -252,10 +252,7 @@ void requireJsonFields(DataObject const& _o, std::string const& _config,
 DataObject object::prepareGenesisParams(std::string const& _network, std::string const& _engine)
 {
     ClientConfig const& cfg = Options::get().getDynamicOptions().getCurrentConfig();
-    std::vector<string> allowedNets = cfg.getNetworks();
-    for (auto const& addNet : cfg.getAdditionalNetworks())
-        allowedNets.push_back(addNet);
-    test::checkAllowedNetwork(_network, allowedNets);
+    test::checkAllowedNetwork(_network, cfg.getNetworksPlusAdditional());
 
     DataObject genesis;
     genesis = cfg.getGenesisTemplate(_network);
