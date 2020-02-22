@@ -20,8 +20,8 @@ Building instruction for beginners: [retesteth + solidity build](https://github.
 * done: PoC Running Blockchain tests using geth client
 * done: Implement a set of PoC methods in other client then aleth
 * done: Refactoring and stability when generating GeneralStateTests
+* done: Blockchain test generation support
 * now: Use retesteth to produce fork tests with geth/pantheon/aleth
-* soon: Blockchain test generation support
 
 # Building instructions
 ```
