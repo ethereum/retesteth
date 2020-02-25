@@ -87,30 +87,4 @@ class LegacyConstantinopleBlockchainValidTestSuite : public BlockchainTestValidS
     }
 };
 
-
-// Fixture for Legacy/BCGeneralStateTest
-class LegacyConstantinopleBCGeneralStateTestFixture
-  : public TestFixture<LegacyConstantinopleBCGeneralStateTestsSuite>
-{
-public:
-    LegacyConstantinopleBCGeneralStateTestFixture() : TestFixture({TestExecution::NotRefillable}) {}
-};
-
-// Fixture for Legacy/BlockchainTests/InvalidBlocks
-class LegacyConstantinoplebcInvalidTestFixture
-  : public TestFixture<LegacyConstantinopleBlockchainInvalidTestSuite>
-{
-public:
-    LegacyConstantinoplebcInvalidTestFixture() : TestFixture({TestExecution::NotRefillable}) {}
-};
-
-// Fixture for Legacy/BlockchainTests/ValidBlocks
-class LegacyConstantinoplebcValidTestFixture
-  : public TestFixture<LegacyConstantinopleBlockchainValidTestSuite>
-{
-public:
-    LegacyConstantinoplebcValidTestFixture() : TestFixture({TestExecution::NotRefillable}) {}
-};
-
-
 }  // test

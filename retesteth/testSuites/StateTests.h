@@ -34,25 +34,13 @@ public:
     TestSuite::FillerPath suiteFillerFolder() const override;
 };
 
-class GeneralStateTestFixture
+class LegacyConstantinopleStateTestSuite : public StateTestSuite
 {
 public:
-    GeneralStateTestFixture();
-};
-
-class LegacyConstantinopleStateTestSuite : public TestSuite
-{
-public:
-    DataObject doTests(DataObject const& _input, TestSuiteOptions& _opt) const override;
     TestSuite::TestPath suiteFolder() const override;
     TestSuite::FillerPath suiteFillerFolder() const override;
 };
 
-class LegacyConstantinopleGeneralStateTestFixture
-{
-public:
-    LegacyConstantinopleGeneralStateTestFixture();
-};
 }
 
 
