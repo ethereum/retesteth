@@ -156,6 +156,8 @@ public:
         m_configCorrectMiningRewardFilePath = _path;
     }
     DataObject const& getMiningRewardInfo() const { return m_correctReward; }
+    void setFolderName(std::string const& _folderName) { m_folderName = _folderName; }
+    std::string const& getFolderName() const { return m_folderName; }
 
 private:
     Socket::SocketType m_socketType;  ///< Connection type
@@ -167,6 +169,7 @@ private:
     std::vector<string> m_additional_networks;       ///< Allowed forks as network name
     std::map<string, DataObject> m_genesisTemplate;  ///< Template For test_setChainParams
     std::map<string, string> m_exceptions;           ///< Exception Translation
+    std::string m_folderName;                        ///< Config folder name
     DataObject m_correctReward;  ///< Correct mining reward info for StateTests->BlockchainTests
 };
 }  // namespace test

@@ -43,20 +43,37 @@ void RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _
         if (bdata.count("blockHeader"))
         {
             // Check Blockheader
-            DataObject inTestHeader;
+            DataObject inTestHeader(DataType::Null);
             test::scheme_block latestBlock = session.eth_getBlockByHash(blHash, true);
             bool condition = latestBlock.getBlockHeader() == bdata.atKey("blockHeader");
             if (_opt.isLegacyTests)
             {
                 inTestHeader = bdata.atKey("blockHeader");  // copy!!!
-                if (bdata.atKey("blockHeader").atKey("extraData").asString() == "0x00")
-                    inTestHeader["extraData"] = "0x";  // old style
-
+                string const extraDataInTest =
+                    bdata.atKey("blockHeader").atKey("extraData").asString();
+                if ((extraDataInTest == "0x00" || extraDataInTest == "0x") &&
+                    (latestBlock.getBlockHeader().atKey("extraData").asString() == "0x00" ||
+                        latestBlock.getBlockHeader().atKey("extraData").asString() == "0x"))
+                {
+                    inTestHeader["extraData"] = latestBlock.getBlockHeader().atKey("extraData");
+                }
+                if (latestBlock.getBlockHeader().atKey("nonce").asString() == "0x0000000000000000")
+                {
+                    // because on NoProof mixHash is returned as 0x00 by other client, even if block
+                    // imported with mixHash/nonce
+                    inTestHeader["mixHash"] =
+                        "0x0000000000000000000000000000000000000000000000000000000000000000";
+                    inTestHeader["nonce"] = "0x0000000000000000";
+                }
+                inTestHeader["hash"] = latestBlock.getBlockHeader().atKey("hash");
                 condition = latestBlock.getBlockHeader() == inTestHeader;
             }
 
+            string const jsonHeader = inTestHeader.type() == DataType::Null ?
+                                          bdata.atKey("blockHeader").asJson() :
+                                          "(adjusted)" + inTestHeader.asJson();
             string message = "Client return HEADER: " + latestBlock.getBlockHeader().asJson() +
-                             "\n vs \n" + "Test HEADER: " + bdata.atKey("blockHeader").asJson();
+                             "\n vs \n" + "Test HEADER: " + jsonHeader;
             ETH_ERROR_REQUIRE_MESSAGE(condition,
                 "Client report different blockheader after importing the rlp than expected by "
                 "test! \n" +
@@ -178,11 +195,20 @@ void RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _
 
     if (inputTest.getData().count("genesisRLP"))
     {
-        string const& genesisRLP = inputTest.getData().atKey("genesisRLP").asString();
-        latestBlock = session.eth_getBlockByNumber(BlockNumber("0"), false);
-        if (latestBlock.getBlockRLP() != genesisRLP)
-            ETH_ERROR_MESSAGE("genesisRLP in test != genesisRLP on remote client! (" + genesisRLP +
-                              "' != '" + latestBlock.getBlockRLP() + "'");
+        if (_opt.isLegacyTests &&
+            Options::getDynamicOptions().getCurrentConfig().getFolderName() == "aleth")
+        {
+            // skip old generated tests (Legacy) genesis check on aleth
+            // because mixHash and nonce return is different to geth
+        }
+        else
+        {
+            string const& genesisRLP = inputTest.getData().atKey("genesisRLP").asString();
+            latestBlock = session.eth_getBlockByNumber(BlockNumber("0"), false);
+            if (latestBlock.getBlockRLP() != genesisRLP)
+                ETH_ERROR_MESSAGE("genesisRLP in test != genesisRLP on remote client! (" +
+                                  genesisRLP + "' != '" + latestBlock.getBlockRLP() + "'");
+        }
     }
 }
 
