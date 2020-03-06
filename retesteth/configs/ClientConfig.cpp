@@ -206,7 +206,9 @@ string alethTCP_config = R"({
         "UnknownParent2" : "Invalid parent hash",
         "InvalidReceiptsStateRoot" : "Invalid receipts state root",
         "InvalidTransactionsRoot" : "Invalid transactions root",
-        "InvalidUnclesHash" : "Invalid uncles hash"
+        "InvalidUnclesHash" : "Invalid uncles hash",
+        "ExtraDataIncorrect" : "extradata incorrect",
+        "InvalidTransactionVRS" : "invalid transaction v, r, s values"
     }
 })";
 
