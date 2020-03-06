@@ -6,7 +6,8 @@ using namespace test;
 
 BOOST_AUTO_TEST_SUITE(LegacyTests)
     BOOST_AUTO_TEST_SUITE(Constantinople)
-        BOOST_FIXTURE_TEST_SUITE(GeneralStateTests, LegacyConstantinopleGeneralStateTestFixture)
+        using legacyConstGeneralStateTests = TestFixture<LegacyConstantinopleStateTestSuite, NotRefillable>;
+        BOOST_FIXTURE_TEST_SUITE(GeneralStateTests, legacyConstGeneralStateTests)
             // Frontier Tests
             BOOST_AUTO_TEST_CASE(stCallCodes) {}
             BOOST_AUTO_TEST_CASE(stCallCreateCallCodeTest) {}
@@ -77,7 +78,8 @@ BOOST_AUTO_TEST_SUITE(LegacyTests)
             BOOST_AUTO_TEST_CASE(stTimeConsuming) {}
         BOOST_AUTO_TEST_SUITE_END()  // GeneralStateTests Constantinople Legacy
 
-        BOOST_FIXTURE_TEST_SUITE(BCGeneralStateTests, LegacyConstantinopleBCGeneralStateTestFixture)
+        using legacyConstBCGeneralStateTests = TestFixture<LegacyConstantinopleBCGeneralStateTestsSuite, NotRefillable>;
+        BOOST_FIXTURE_TEST_SUITE(BCGeneralStateTests, legacyConstBCGeneralStateTests)
             // Frontier Tests
             BOOST_AUTO_TEST_CASE(stCallCodes) {}
             BOOST_AUTO_TEST_CASE(stCallCreateCallCodeTest) {}
@@ -149,7 +151,8 @@ BOOST_AUTO_TEST_SUITE(LegacyTests)
 
         BOOST_AUTO_TEST_SUITE(BlockchainTests)
             // Tests that contain only valid blocks and check that import is correct
-            BOOST_FIXTURE_TEST_SUITE(ValidBlocks, LegacyConstantinoplebcValidTestFixture)
+            using legacyConstBCValidTetsts = TestFixture<LegacyConstantinopleBlockchainValidTestSuite, NotRefillable>;
+            BOOST_FIXTURE_TEST_SUITE(ValidBlocks, legacyConstBCValidTetsts)
             BOOST_AUTO_TEST_CASE(bcBlockGasLimitTest) {}
             BOOST_AUTO_TEST_CASE(bcExploitTest) {}
             BOOST_AUTO_TEST_CASE(bcForkStressTest) {}
@@ -165,7 +168,8 @@ BOOST_AUTO_TEST_SUITE(LegacyTests)
             BOOST_AUTO_TEST_SUITE_END()
 
             // Tests that might have invalid blocks and check that those are rejected
-            BOOST_FIXTURE_TEST_SUITE(InvalidBlocks, LegacyConstantinoplebcInvalidTestFixture)
+            using legacyConstBCInvalidTetsts = TestFixture<LegacyConstantinopleBlockchainInvalidTestSuite, NotRefillable>;
+            BOOST_FIXTURE_TEST_SUITE(InvalidBlocks, legacyConstBCInvalidTetsts)
             BOOST_AUTO_TEST_CASE(bcBlockGasLimitTest) {}
             BOOST_AUTO_TEST_CASE(bcForgedTest) {}
             BOOST_AUTO_TEST_CASE(bcInvalidHeaderTest) {}

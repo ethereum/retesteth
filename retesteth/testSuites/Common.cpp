@@ -82,10 +82,10 @@ scheme_account remoteGetAccount(RPCSession& _session, string const& _account,
         _totalSize += subObjects.size() * 64;
         for (auto const& element : subObjects)
             storage[element.atKey("key").asString()] = element.atKey("value").asString();
-        if (debugStorageAt.atKey("complete").asBool())
+        if (debugStorageAt.count("nextKey"))
+            beginHash = debugStorageAt.atKey("nextKey").asString();
+        else
             break;
-        if (subObjects.size() > 0)
-            beginHash = subObjects.at(subObjects.size() - 1).getKey();
     }
     accountObj["storage"] = storage;
     ETH_ERROR_REQUIRE_MESSAGE(cycles > 0,

@@ -24,9 +24,49 @@ scheme_blockchainTestFiller::scheme_blockchainTestFiller(DataObject const& _test
     }
 }
 
-string scheme_blockchainTestFiller::blockSection::m_defaultChainName = "default";
-scheme_blockchainTestFiller::blockSection::blockSection(DataObject const& _data) : object(_data)
+void scheme_blockchainTestFiller::blockSection::parseBlockHeaderException(DataObject const& _data)
 {
+    if (!_data.count("blockHeader"))
+        return;
+    if (_data.atKey("blockHeader").count("expectException"))
+    {
+        ClientConfig const& cfg = Options::get().getDynamicOptions().getCurrentConfig();
+        std::map<std::string, std::string> translatedNetsExceptions;
+        for (auto const& expect :
+            _data.atKey("blockHeader").atKey("expectException").getSubObjects())
+        {
+            if (inArray(cfg.getAdditionalNetworks(), expect.getKey()))
+            {
+                translatedNetsExceptions.emplace(expect.getKey(), expect.asString());
+                continue;
+            }
+
+            std::set<string> const nets = translateNetworks({expect.getKey()}, cfg.getNetworks());
+            for (auto const& net : nets)
+                translatedNetsExceptions.emplace(net, expect.asString());
+        }
+
+        for (auto const& expect : translatedNetsExceptions)
+        {
+            checkAllowedNetwork(expect.first, cfg.getNetworksPlusAdditional());
+            m_expectException[expect.first] = expect.second;
+        }
+    }
+}
+
+string scheme_blockchainTestFiller::blockSection::m_defaultChainName = "default";
+scheme_blockchainTestFiller::blockSection::blockSection(DataObject const& _data)
+  : object(_data), m_noExceptionString("NoException")
+{
+    if (_data.getSubObjects().size() <= 2 && _data.count("rlp"))
+    {
+        requireJsonFields(_data, "blockchainTestFiller::blocks section",
+            {{"rlp", {{DataType::String}, jsonField::Required}},
+                {"blockHeader", {{DataType::Object}, jsonField::Optional}}});
+        parseBlockHeaderException(_data);
+        return;
+    }
+
     requireJsonFields(_data, "blockchainTestFiller::blocks section",
         {{"blockHeader", {{DataType::Object}, jsonField::Optional}},
             {"blockHeaderPremine", {{DataType::Object}, jsonField::Optional}},
@@ -42,13 +82,9 @@ scheme_blockchainTestFiller::blockSection::blockSection(DataObject const& _data)
         // Chain network can be any of Forknames + additional Forks
         ClientConfig const& cfg = Options::get().getDynamicOptions().getCurrentConfig();
         m_chainNetwork = m_data.atKey("chainnetwork").asString();
-        std::vector<string> allowedNets = cfg.getNetworks();
-        for (auto const& addNet : cfg.getAdditionalNetworks())
-            allowedNets.push_back(addNet);
-        test::checkAllowedNetwork(m_chainNetwork, allowedNets);
+        test::checkAllowedNetwork(m_chainNetwork, cfg.getNetworksPlusAdditional());
     }
 
-    m_noExceptionString = "NoException";
     if (_data.count("blockHeader"))
     {
         requireJsonFields(_data.atKey("blockHeader"),
@@ -72,20 +108,7 @@ scheme_blockchainTestFiller::blockSection::blockSection(DataObject const& _data)
                 {"updatePoW", {{DataType::String}, jsonField::Optional}},
                 {"expectException", {{DataType::Object}, jsonField::Optional}}});
 
-        if (_data.atKey("blockHeader").count("expectException"))
-        {
-            for (auto const& expect :
-                _data.atKey("blockHeader").atKey("expectException").getSubObjects())
-            {
-                ClientConfig const& cfg = Options::get().getDynamicOptions().getCurrentConfig();
-                if (!inArray(cfg.getAdditionalNetworks(), expect.getKey()))
-                {
-                    checkAllowedNetwork(expect.getKey(),
-                        Options::getDynamicOptions().getCurrentConfig().getNetworks());
-                }
-                m_expectException[expect.getKey()] = expect.asString();
-            }
-        }
+        parseBlockHeaderException(_data);
     }
 
     for (auto const& tr : _data.atKey("transactions").getSubObjects())
@@ -100,5 +123,5 @@ string scheme_blockchainTestFiller::getSealEngine() const
     if (m_data.count("sealEngine"))
         return m_data.atKey("sealEngine").asString();
     else
-        return "NoProof";
+        return scheme_blockchainTestBase::m_sNoProof;
 }

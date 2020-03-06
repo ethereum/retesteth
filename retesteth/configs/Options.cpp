@@ -115,6 +115,7 @@ std::vector<ClientConfig> const& Options::DynamicOptions::getClientConfigs()
 
             ClientConfig cfg(configFilePath, test::readJsonData(configFilePath), ClientConfigID(),
                 configPath / string(clientName + ".sh"));
+            cfg.setFolderName(clientName);
 
             // Load genesis templates
             fs::path genesisTemplatePath = configPath / "genesis";
@@ -139,9 +140,7 @@ std::vector<ClientConfig> const& Options::DynamicOptions::getClientConfigs()
                         configGenesisTemplatePath.c_str() + "') in configs!");
                 cfg.addGenesisTemplate(_net, configGenesisTemplatePath);
             };
-            for (auto const& net : cfg.getNetworks())
-                registerGenesisTemplate(net);
-            for (auto const& net : cfg.getAdditionalNetworks())
+            for (auto const& net : cfg.getNetworksPlusAdditional())
                 registerGenesisTemplate(net);
 
             //*/ Load genesis templates

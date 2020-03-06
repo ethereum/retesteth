@@ -1,30 +1,12 @@
 #include "retesteth/ExitHandler.h"
 #include "retesteth/TestOutputHelper.h"
 #include "retesteth/testSuites/StateTests.h"
+#include "retesteth/testSuites/TestFixtures.h"
 #include <boost/test/unit_test.hpp>
 
 using namespace std;
 using namespace dev;
 namespace fs = boost::filesystem;
-
-// Run Tests using test suite and StateTest execution logic from StateTests.cpp
-void runStateTests(test::TestSuite const& _suite)
-{
-    string casename = boost::unit_test::framework::current_test_case().p_name;
-    boost::filesystem::path suiteFillerPath = _suite.getFullPathFiller(casename).parent_path();
-
-    static vector<string> const timeConsumingTestSuites{
-        string{"stTimeConsuming"}, string{"stQuadraticComplexityTest"}};
-    if (test::inArray(timeConsumingTestSuites, casename) && !test::Options::get().all)
-    {
-        if (!ExitHandler::receivedExitSignal())
-            std::cout << "Skipping " << casename << " because --all option is not specified.\n";
-        test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
-        return;
-    }
-    _suite.runAllTestsInFolder(casename);
-    test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
-}
 
 // Most Recent StateTestSuite
 TestSuite::TestPath StateTestSuite::suiteFolder() const
@@ -39,18 +21,9 @@ TestSuite::FillerPath StateTestSuite::suiteFillerFolder() const
     return TestSuite::FillerPath(fs::path("src") / "GeneralStateTestsFiller");
 }
 
-test::GeneralStateTestFixture::GeneralStateTestFixture()
-{
-    test::StateTestSuite suite;
-    runStateTests(suite);
-}
-
-
 // Legacy Constantinople
 TestSuite::TestPath LegacyConstantinopleStateTestSuite::suiteFolder() const
 {
-    if (Options::get().fillchain || Options::get().filltests)
-        ETH_ERROR_MESSAGE("Legacy tests are sealed and not refillable!");
     return TestSuite::TestPath(fs::path("LegacyTests") / "Constantinople" / "GeneralStateTests");
 }
 
@@ -60,22 +33,9 @@ TestSuite::FillerPath LegacyConstantinopleStateTestSuite::suiteFillerFolder() co
         fs::path("src") / "LegacyTests" / "Constantinople" / "GeneralStateTestsFiller");
 }
 
-DataObject LegacyConstantinopleStateTestSuite::doTests(
-    DataObject const& _input, TestSuiteOptions& _opt) const
-{
-    test::StateTestSuite suite;
-    return suite.doTests(_input, _opt);
-}
-
-test::LegacyConstantinopleGeneralStateTestFixture::LegacyConstantinopleGeneralStateTestFixture()
-{
-    test::LegacyConstantinopleStateTestSuite suite;
-    runStateTests(suite);
-}
-
-
 // latest version StateTests
-BOOST_FIXTURE_TEST_SUITE(GeneralStateTests, GeneralStateTestFixture)
+using GeneralStateTestsFixture = TestFixture<StateTestSuite, DefaultFlags>;
+BOOST_FIXTURE_TEST_SUITE(GeneralStateTests, GeneralStateTestsFixture)
 
 // Frontier Tests
 BOOST_AUTO_TEST_CASE(stCallCodes) {}

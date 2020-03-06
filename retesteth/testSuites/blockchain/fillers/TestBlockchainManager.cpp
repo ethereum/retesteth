@@ -25,6 +25,8 @@ void TestBlockchainManager::parseBlockFromJson(blockSection const& _block, bool 
 
     vectorOfSchemeBlock unclesPrepared =
         _generateUncles ? prepareUncles(_block, sDebug) : vectorOfSchemeBlock();
+
+    // Generate the block
     currentChainMining.generateBlock(_block, unclesPrepared, _generateUncles);
 
     // Remeber the generated block in exact order as in the test

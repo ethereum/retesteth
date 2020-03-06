@@ -116,8 +116,6 @@ TestSuite::FillerPath BCGeneralStateTestsSuite::suiteFillerFolder() const
 
 TestSuite::TestPath LegacyConstantinopleBCGeneralStateTestsSuite::suiteFolder() const
 {
-    if (Options::get().filltests)
-        ETH_ERROR_MESSAGE("Legacy tests are sealed and not refillable!");
     return TestSuite::TestPath(
         fs::path("LegacyTests") / "Constantinople" / "BlockchainTests" / "GeneralStateTests");
 }
@@ -131,55 +129,11 @@ TestSuite::FillerPath LegacyConstantinopleBCGeneralStateTestsSuite::suiteFillerF
 }  // Namespace Close
 
 
-class BlockchainTestTransitionFixture
-{
-public:
-    BlockchainTestTransitionFixture()
-    {
-        test::BlockchainTestTransitionSuite suite;
-        string casename = boost::unit_test::framework::current_test_case().p_name;
-        boost::filesystem::path suiteFillerPath = suite.getFullPathFiller(casename).parent_path();
-        suite.runAllTestsInFolder(casename);
-        test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
-    }
-};
-
-void RunBCGeneralStateTests(test::TestSuite const& _testSuite)
-{
-    string const& casename = boost::unit_test::framework::current_test_case().p_name;
-    boost::filesystem::path suiteFillerPath = _testSuite.getFullPathFiller(casename).parent_path();
-
-    // skip this test suite if not run with --all flag (cases are already tested in state tests)
-    if (!test::Options::get().all)
-    {
-        std::cout << "Skipping hive test " << casename << ". Use --all to run it.\n";
-        test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
-        return;
-    }
-    _testSuite.runAllTestsInFolder(casename);
-    test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
-}
-
-class BCGeneralTestsFixture
-{
-public:
-    BCGeneralTestsFixture()
-    {
-        BCGeneralStateTestsSuite suite;
-        RunBCGeneralStateTests(suite);
-    }
-};
-
-test::LegacyConstantinopleBCGeneralStateTestFixture::LegacyConstantinopleBCGeneralStateTestFixture()
-{
-    LegacyConstantinopleBCGeneralStateTestsSuite suite;
-    RunBCGeneralStateTests(suite);
-}
-
 BOOST_AUTO_TEST_SUITE(BlockchainTests)
 
 // Tests that contain only valid blocks and check that import is correct
-BOOST_FIXTURE_TEST_SUITE(ValidBlocks, BlockchainTestValidFixture)
+using BCValidSuiteFixture = TestFixture<BlockchainTestValidSuite, DefaultFlags>;
+BOOST_FIXTURE_TEST_SUITE(ValidBlocks, BCValidSuiteFixture)
 BOOST_AUTO_TEST_CASE(bcBlockGasLimitTest) {}
 BOOST_AUTO_TEST_CASE(bcExploitTest) {}
 BOOST_AUTO_TEST_CASE(bcForkStressTest) {}
@@ -195,7 +149,8 @@ BOOST_AUTO_TEST_CASE(bcWalletTest) {}
 BOOST_AUTO_TEST_SUITE_END()
 
 // Tests that might have invalid blocks and check that those are rejected
-BOOST_FIXTURE_TEST_SUITE(InvalidBlocks, BlockchainTestInvalidFixture)
+using BCInValidSuiteFixture = TestFixture<BlockchainTestInvalidSuite, DefaultFlags>;
+BOOST_FIXTURE_TEST_SUITE(InvalidBlocks, BCInValidSuiteFixture)
 BOOST_AUTO_TEST_CASE(bcBlockGasLimitTest) {}
 BOOST_AUTO_TEST_CASE(bcForgedTest) {}
 BOOST_AUTO_TEST_CASE(bcInvalidHeaderTest) {}
@@ -206,7 +161,8 @@ BOOST_AUTO_TEST_CASE(bcUncleTest) {}
 BOOST_AUTO_TEST_SUITE_END()
 
 // Transition from fork to fork tests
-BOOST_FIXTURE_TEST_SUITE(TransitionTests, BlockchainTestTransitionFixture)
+using BCTransitionFixture = TestFixture<BlockchainTestTransitionSuite, DefaultFlags>;
+BOOST_FIXTURE_TEST_SUITE(TransitionTests, BCTransitionFixture)
 BOOST_AUTO_TEST_CASE(bcByzantiumToConstantinopleFix) {}
 BOOST_AUTO_TEST_CASE(bcEIP158ToByzantium) {}
 BOOST_AUTO_TEST_CASE(bcFrontierToHomestead) {}
@@ -217,7 +173,8 @@ BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
 
 // General tests in form of blockchain tests
-BOOST_FIXTURE_TEST_SUITE(BCGeneralStateTests, BCGeneralTestsFixture)
+using BCGeneralsStateSuiteFixture = TestFixture<BCGeneralStateTestsSuite, RequireOptionAll>;
+BOOST_FIXTURE_TEST_SUITE(BCGeneralStateTests, BCGeneralsStateSuiteFixture)
 
 // Frontier Tests
 BOOST_AUTO_TEST_CASE(stCallCodes) {}

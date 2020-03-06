@@ -43,37 +43,57 @@ void RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _
         if (bdata.count("blockHeader"))
         {
             // Check Blockheader
-            DataObject inTestHeader;
+            DataObject inTestHeader(DataType::Null);
             test::scheme_block latestBlock = session.eth_getBlockByHash(blHash, true);
             bool condition = latestBlock.getBlockHeader() == bdata.atKey("blockHeader");
             if (_opt.isLegacyTests)
             {
                 inTestHeader = bdata.atKey("blockHeader");  // copy!!!
-                if (bdata.atKey("blockHeader").atKey("extraData").asString() == "0x00")
-                    inTestHeader["extraData"] = "0x";  // old style
-
+                string const extraDataInTest =
+                    bdata.atKey("blockHeader").atKey("extraData").asString();
+                if ((extraDataInTest == "0x00" || extraDataInTest == "0x") &&
+                    (latestBlock.getBlockHeader().atKey("extraData").asString() == "0x00" ||
+                        latestBlock.getBlockHeader().atKey("extraData").asString() == "0x"))
+                {
+                    inTestHeader["extraData"] = latestBlock.getBlockHeader().atKey("extraData");
+                }
+                if (latestBlock.getBlockHeader().atKey("nonce").asString() == "0x0000000000000000")
+                {
+                    // because on NoProof mixHash is returned as 0x00 by other client, even if block
+                    // imported with mixHash/nonce
+                    inTestHeader["mixHash"] =
+                        "0x0000000000000000000000000000000000000000000000000000000000000000";
+                    inTestHeader["nonce"] = "0x0000000000000000";
+                }
+                inTestHeader["hash"] = latestBlock.getBlockHeader().atKey("hash");
                 condition = latestBlock.getBlockHeader() == inTestHeader;
             }
 
+            string const jsonHeader = inTestHeader.type() == DataType::Null ?
+                                          bdata.atKey("blockHeader").asJson() :
+                                          "(adjusted)" + inTestHeader.asJson();
             string message = "Client return HEADER: " + latestBlock.getBlockHeader().asJson() +
-                             "\n vs \n" + "Test HEADER: " + bdata.atKey("blockHeader").asJson();
+                             "\n vs \n" + "Test HEADER: " + jsonHeader;
             ETH_ERROR_REQUIRE_MESSAGE(condition,
                 "Client report different blockheader after importing the rlp than expected by "
                 "test! \n" +
                     message);
 
             // Verify uncles to one described in the fields
-            size_t ind = 0;
-            auto const& testUncleList = bdata.atKey("uncleHeaders").getSubObjects();
-            for (auto const& uncle : latestBlock.getUncles())
+            if (bdata.count("uncleHeaders"))
             {
-                message = "(" + uncle.asString() +
-                          " != " + testUncleList.at(ind).atKey("hash").asString() + ")";
-                if (uncle.asString() != testUncleList.at(ind++).atKey("hash").asString())
-                    ETH_ERROR_MESSAGE(
-                        "Remote client returned block with unclehash that is not expected by "
-                        "test! " +
-                        message);
+                size_t ind = 0;
+                auto const& testUncleList = bdata.atKey("uncleHeaders").getSubObjects();
+                for (auto const& uncle : latestBlock.getUncles())
+                {
+                    message = "(" + uncle.asString() +
+                              " != " + testUncleList.at(ind).atKey("hash").asString() + ")";
+                    if (uncle.asString() != testUncleList.at(ind++).atKey("hash").asString())
+                        ETH_ERROR_MESSAGE(
+                            "Remote client returned block with unclehash that is not expected by "
+                            "test! " +
+                            message);
+                }
             }
 
             // Check Transaction count
@@ -88,7 +108,7 @@ void RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _
                     message);
 
             // Verify transactions to one described in the fields
-            ind = 0;
+            size_t ind = 0;
             auto const& testTrList = bdata.atKey("transactions").getSubObjects();
 
             for (auto const& tr : latestBlock.getTransactions())
@@ -146,14 +166,17 @@ void RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _
             }
 
             // Check uncles count
-            message =
-                "Client return UNCLES: " + to_string(latestBlock.getUncles().size()) + " vs " +
-                "Test UNCLES: " + to_string(bdata.atKey("uncleHeaders").getSubObjects().size());
-            ETH_ERROR_REQUIRE_MESSAGE(latestBlock.getUncles().size() ==
-                                          bdata.atKey("uncleHeaders").getSubObjects().size(),
-                "Client report different uncle count after importing the rlp than expected by "
-                "test! \n" +
-                    message);
+            if (bdata.count("uncleHeaders"))
+            {
+                message =
+                    "Client return UNCLES: " + to_string(latestBlock.getUncles().size()) + " vs " +
+                    "Test UNCLES: " + to_string(bdata.atKey("uncleHeaders").getSubObjects().size());
+                ETH_ERROR_REQUIRE_MESSAGE(latestBlock.getUncles().size() ==
+                                              bdata.atKey("uncleHeaders").getSubObjects().size(),
+                    "Client report different uncle count after importing the rlp than expected by "
+                    "test! \n" +
+                        message);
+            }
         }
     }
 
@@ -172,11 +195,20 @@ void RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _
 
     if (inputTest.getData().count("genesisRLP"))
     {
-        string const& genesisRLP = inputTest.getData().atKey("genesisRLP").asString();
-        latestBlock = session.eth_getBlockByNumber(BlockNumber("0"), false);
-        if (latestBlock.getBlockRLP() != genesisRLP)
-            ETH_ERROR_MESSAGE("genesisRLP in test != genesisRLP on remote client! (" + genesisRLP +
-                              "' != '" + latestBlock.getBlockRLP() + "'");
+        if (_opt.isLegacyTests &&
+            Options::getDynamicOptions().getCurrentConfig().getFolderName() == "aleth")
+        {
+            // skip old generated tests (Legacy) genesis check on aleth
+            // because mixHash and nonce return is different to geth
+        }
+        else
+        {
+            string const& genesisRLP = inputTest.getData().atKey("genesisRLP").asString();
+            latestBlock = session.eth_getBlockByNumber(BlockNumber("0"), false);
+            if (latestBlock.getBlockRLP() != genesisRLP)
+                ETH_ERROR_MESSAGE("genesisRLP in test != genesisRLP on remote client! (" +
+                                  genesisRLP + "' != '" + latestBlock.getBlockRLP() + "'");
+        }
     }
 }
 
