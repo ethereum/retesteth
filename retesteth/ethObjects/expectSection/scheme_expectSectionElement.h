@@ -77,7 +77,8 @@ private:
             requireJsonFields(_expect, "expect",
                 {{"indexes", {{DataType::Object}, jsonField::Optional}},
                     {"network", {{DataType::Array, DataType::String}, jsonField::Required}},
-                    {"result", {{DataType::Object}, jsonField::Required}}});
+                    {"result", {{DataType::Object}, jsonField::Required}}
+                              });
 
             if (_expect.count("indexes"))
             {

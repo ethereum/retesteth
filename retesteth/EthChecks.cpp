@@ -47,8 +47,8 @@ void eth_log_message(std::string const& _message, unsigned _verbosity, LogColor 
 
 void eth_error(std::string const& _message)
 {
-    TestOutputHelper::get().markError(_message);
-    throw EthError() << _message;
+    if (TestOutputHelper::get().markError(_message)) // if the exception is not allowed, then throw an exception
+        throw EthError() << _message;
 }
 
 void eth_mark_error(std::string const& _message)

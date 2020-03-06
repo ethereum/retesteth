@@ -9,7 +9,8 @@ scheme_blockchainTestFiller::fieldChecker::fieldChecker(DataObject const& _test)
             {"expect", {{DataType::Array}, jsonField::Required}},
             {"genesisBlockHeader", {{DataType::Object}, jsonField::Required}},
             {"pre", {{DataType::Object}, jsonField::Required}},
-            {"sealEngine", {{DataType::String}, jsonField::Optional}}});
+            {"sealEngine", {{DataType::String}, jsonField::Optional}},
+            {"exceptions", {{DataType::Array}, jsonField::Optional}}});
 }
 
 scheme_blockchainTestFiller::scheme_blockchainTestFiller(DataObject const& _test)

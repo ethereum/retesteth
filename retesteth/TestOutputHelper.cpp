@@ -65,11 +65,28 @@ TestOutputHelper& TestOutputHelper::get()
     return helperThreadMap.at(getThreadID());
 }
 
-void TestOutputHelper::markError(std::string const& _message)
+bool TestOutputHelper::markError(std::string const& _message)
 {
+    if (m_unitTestExceptions.size() > 0)
+    {
+        string const& allowedException = m_unitTestExceptions.at(m_unitTestExceptions.size() - 1);
+        if (allowedException == _message)
+        {
+            m_unitTestExceptions.pop_back();
+            return false;
+        }
+        else
+            ETH_STDERROR_MESSAGE("Occured error: '" + _message + "' vs Expected error: '" + allowedException + "'");
+    }
     m_errors.push_back(_message + m_testInfo.getMessage());
     std::lock_guard<std::mutex> lock(g_failedTestsMap);
     s_failedTestsMap[TestOutputHelper::get().testName()] = m_testInfo.getMessage();
+    return true;
+}
+
+void TestOutputHelper::setUnitTestExceptions(std::vector<std::string> const& _messages)
+{
+    m_unitTestExceptions = _messages;
 }
 
 void TestOutputHelper::finisAllTestsManually()
@@ -97,6 +114,7 @@ void TestOutputHelper::initTest(size_t _maxTests)
     }
     m_maxTests = _maxTests;
     m_currTest = 0;
+    m_unitTestExceptions.clear();
 }
 
 bool TestOutputHelper::checkTest(std::string const& _testName)

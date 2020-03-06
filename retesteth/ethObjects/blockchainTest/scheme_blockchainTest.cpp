@@ -17,7 +17,8 @@ scheme_blockchainTestBase::fieldChecker::fieldChecker(DataObject const& _test)
             {"postState", {{DataType::Object}, jsonField::Optional}},
             {"postStateHash", {{DataType::String}, jsonField::Optional}},
             {"pre", {{DataType::Object}, jsonField::Required}},
-            {"sealEngine", {{DataType::String}, jsonField::Optional}}});
+            {"sealEngine", {{DataType::String}, jsonField::Optional}},
+            {"exceptions", {{DataType::Array}, jsonField::Optional}}});
 }
 
 scheme_blockchainTest::fieldChecker::fieldChecker(DataObject const& _test, bool _isLegacyTest)
@@ -33,7 +34,8 @@ scheme_blockchainTest::fieldChecker::fieldChecker(DataObject const& _test, bool 
             {"postState", {{DataType::Object}, jsonField::Optional}},
             {"postStateHash", {{DataType::String}, jsonField::Optional}},
             {"pre", {{DataType::Object}, jsonField::Required}},
-            {"sealEngine", {{DataType::String}, jsonField::Optional}}});
+            {"sealEngine", {{DataType::String}, jsonField::Optional}},
+            {"exceptions", {{DataType::Array}, jsonField::Optional}}});
 }
 
 scheme_blockchainTestBase::scheme_blockchainTestBase(DataObject const& _test, bool _isLegacyTest)
@@ -143,4 +145,18 @@ DataObject scheme_blockchainTestBase::getGenesisForRPC(
     for (auto const& acc : m_pre.getData().getSubObjects())
         genesis["accounts"].addSubObject(acc);
     return genesis;
+}
+
+std::vector<std::string> scheme_blockchainTestBase::getUnitTestExceptions() const
+{
+    std::vector<std::string> exceptions;
+    if (m_data.count("exceptions"))
+    {
+        //            for (auto const& el: m_data.atKey("exceptions").getSubObjects())
+        //                exceptions.push_back(el.asString());
+        for (size_t i = m_data.atKey("exceptions").getSubObjects().size(); i > 0; i--)
+            exceptions.push_back(m_data.atKey("exceptions").getSubObjects().at(i - 1).asString());
+    }
+
+    return exceptions;
 }
