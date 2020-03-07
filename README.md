@@ -109,6 +109,7 @@ cd ~
 cd Ethereum
 git clone https://github.com/ethereum/solidity.git
 cd solidity
+git checkout 8f2595957bfc0f3cd18ca29240dabcd6b2122dfd
 mkdir build
 cd build
 cmake .. -DLLL=1
