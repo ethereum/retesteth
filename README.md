@@ -1,5 +1,6 @@
 # retesteth
 testeth via RPC (wiki: https://github.com/ethereum/retesteth/wiki)
+or any other protocol RLPx ?? (https://github.com/ethereum/retesteth/issues/79)
 
 A test generaion tool for the test fillers https://github.com/ethereum/tests/tree/develop/src  
 Building instruction for beginners: [retesteth + solidity build](https://github.com/ethereum/retesteth#building-instructions-for-beginners)
