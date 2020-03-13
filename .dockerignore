@@ -1,0 +1,5 @@
+.circle.yml
+*.md
+.git
+Dockerfile
+test-docker.sh
