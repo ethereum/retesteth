@@ -18,6 +18,7 @@ void RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _
     if (Options::get().logVerbosity > 1)
         std::cout << "Running " << TestOutputHelper::get().testName() << std::endl;
     scheme_blockchainTest inputTest(_testObject, _opt.isLegacyTests);
+    TestOutputHelper::get().setUnitTestExceptions(inputTest.getUnitTestExceptions());
     RPCSession& session = RPCSession::instance(TestOutputHelper::getThreadID());
 
     // Info for genesis

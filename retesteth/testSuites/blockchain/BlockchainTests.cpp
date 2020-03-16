@@ -158,6 +158,7 @@ BOOST_AUTO_TEST_CASE(bcMultiChainTest) {}
 BOOST_AUTO_TEST_CASE(bcUncleHeaderValidity) {}
 BOOST_AUTO_TEST_CASE(bcUncleSpecialTests) {}
 BOOST_AUTO_TEST_CASE(bcUncleTest) {}
+BOOST_AUTO_TEST_CASE(bcExpectSection) {}
 BOOST_AUTO_TEST_SUITE_END()
 
 // Transition from fork to fork tests

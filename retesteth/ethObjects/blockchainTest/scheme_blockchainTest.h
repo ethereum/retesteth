@@ -18,6 +18,7 @@ public:
     DataObject getGenesisForRPC(
         string const& _network = string(), string const& _sealEngine = m_sNoProof) const;
     scheme_state const& getPre() const { return m_pre; };
+    std::vector<std::string> getUnitTestExceptions() const;
     static const string m_sNoProof;
 
 private:

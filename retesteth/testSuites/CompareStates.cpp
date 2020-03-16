@@ -11,16 +11,15 @@ CompareResult checkExistance(scheme_expectAccount const& _expectAccount, bool _a
     // if should not exist but actually exists
     if (_expectAccount.shouldNotExist() && _actualExistance)
     {
-        ETH_MARK_ERROR(TestOutputHelper::get().testName() + "' Compare States: " +
-                       _expectAccount.address() + "' address not expected to exist!");
+        ETH_MARK_ERROR(
+            "Compare States: '" + _expectAccount.address() + "' address not expected to exist!");
         return CompareResult::AccountShouldNotExist;
     }
     // if expected to exist but actually not exists
     if (!_expectAccount.shouldNotExist() && !_actualExistance)
     {
-        ETH_MARK_ERROR(TestOutputHelper::get().testName() +
-                       " Compare States: Missing expected address: '" + _expectAccount.address() +
-                       "'");
+        ETH_MARK_ERROR(
+            "Compare States: Missing expected address: '" + _expectAccount.address() + "'");
         return CompareResult::MissingExpectedAccount;
     }
     return CompareResult::Success;

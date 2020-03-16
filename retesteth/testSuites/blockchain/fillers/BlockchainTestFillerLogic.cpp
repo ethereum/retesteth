@@ -7,6 +7,8 @@ namespace test
 void FillTest(scheme_blockchainTestFiller const& _testObject, string const& _network,
     TestSuite::TestSuiteOptions const&, DataObject& _testOut)
 {
+    TestOutputHelper::get().setUnitTestExceptions(_testObject.getUnitTestExceptions());
+
     // Construct filled blockchain test
     _testOut["sealEngine"] = _testObject.getSealEngine();
     _testOut["network"] = _network;
@@ -52,8 +54,10 @@ void FillTest(scheme_blockchainTestFiller const& _testObject, string const& _net
             session, latestBlock);
     }
     else
+    {
         compareStates(_testObject.getExpectSection().getExpectSectionFor(_network).getExpectState(),
             remoteState);
+    }
 
     if (remoteState.isHash())
         _testOut["postStateHash"] = remoteState.getData();
