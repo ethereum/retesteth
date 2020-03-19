@@ -247,6 +247,7 @@ void testCompareResult(
     try
     {
         test::compareStates(scheme_expectState(_exp), scheme_state(_post));
+        ETH_FAIL_REQUIRE(_expResult == CompareResult::Success);
     }
     catch (test::BaseEthException const& _ex)
     {
@@ -461,6 +462,63 @@ BOOST_AUTO_TEST_CASE(compareStates_storageMissingOnExpect)
     postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
     postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["storage"] = postStorage;
     testCompareResult(expectData, postData, CompareResult::IncorrectStorage, 4);
+}
+
+void ExpectVsPost(string const& _expectKey, string const& _expectVal, string const& _postKey,
+    string const& _postVal, CompareResult _res, string const& _doubleVal = "0x02")
+{
+    ETH_LOG("Exp(" + _expectKey + ":" + _expectVal + ") vs Post(" + _postKey + "," + _postVal + ")",
+        _doubleVal == "0x02" ? 0 : 3);
+    DataObject expectStorage(DataType::Object);
+    if (_expectKey != "--")
+        expectStorage[_expectKey] = _expectVal;
+    expectStorage["0x02"] = "0x02";
+    DataObject expectData;
+    expectData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["storage"] = expectStorage;
+    DataObject postStorage(DataType::Object);
+    if (_postKey != "--")
+        postStorage[_postKey] = _postVal;
+    postStorage["0x02"] = _doubleVal;
+
+    DataObject postData;
+    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x082124";
+    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
+    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
+    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["storage"] = postStorage;
+    testCompareResult(expectData, postData, _res);
+}
+
+BOOST_AUTO_TEST_CASE(compareStates_storageCombinations)
+{
+    // Empty Post
+    ExpectVsPost("0x", "0x", "--", "--", CompareResult::Success);
+    ExpectVsPost("0x", "0x00", "--", "--", CompareResult::Success);
+    ExpectVsPost("0x00", "0x", "--", "--", CompareResult::Success);
+    ExpectVsPost("0x00", "0x00", "--", "--", CompareResult::Success);
+    ExpectVsPost("0x01", "0x", "--", "--", CompareResult::Success);
+    ExpectVsPost("0x01", "0x00", "--", "--", CompareResult::Success);
+    ExpectVsPost("0x", "0x01", "--", "--", CompareResult::IncorrectStorage);
+    ExpectVsPost("0x00", "0x01", "--", "--", CompareResult::IncorrectStorage);
+    ExpectVsPost("0x01", "0x01", "--", "--", CompareResult::IncorrectStorage);
+    ExpectVsPost("0x", "0x01", "0x", "0x01", CompareResult::Success);
+    ExpectVsPost("0x00", "0x01", "0x", "0x01", CompareResult::Success);
+    ExpectVsPost("0x", "0x01", "0x00", "0x01", CompareResult::Success);
+    ExpectVsPost("0x00", "0x01", "0x00", "0x01", CompareResult::Success);
+
+    // Double layer
+    ExpectVsPost("0x", "0x", "--", "--", CompareResult::IncorrectStorage, "0x03");
+    ExpectVsPost("0x", "0x00", "--", "--", CompareResult::IncorrectStorage, "0x03");
+    ExpectVsPost("0x00", "0x", "--", "--", CompareResult::IncorrectStorage, "0x03");
+    ExpectVsPost("0x00", "0x00", "--", "--", CompareResult::IncorrectStorage, "0x03");
+    ExpectVsPost("0x01", "0x", "--", "--", CompareResult::IncorrectStorage, "0x03");
+    ExpectVsPost("0x01", "0x00", "--", "--", CompareResult::IncorrectStorage, "0x03");
+    ExpectVsPost("0x", "0x01", "--", "--", CompareResult::IncorrectStorage, "0x03");
+    ExpectVsPost("0x00", "0x01", "--", "--", CompareResult::IncorrectStorage, "0x03");
+    ExpectVsPost("0x01", "0x01", "--", "--", CompareResult::IncorrectStorage, "0x03");
+    ExpectVsPost("0x", "0x01", "0x", "0x01", CompareResult::IncorrectStorage, "0x03");
+    ExpectVsPost("0x00", "0x01", "0x", "0x01", CompareResult::IncorrectStorage, "0x03");
+    ExpectVsPost("0x", "0x01", "0x00", "0x01", CompareResult::IncorrectStorage, "0x03");
+    ExpectVsPost("0x00", "0x01", "0x00", "0x01", CompareResult::IncorrectStorage, "0x03");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
