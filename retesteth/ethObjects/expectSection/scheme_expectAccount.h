@@ -62,7 +62,10 @@ public:
             {
                 // treat zeroes as empty (elements might not be set in storage)
                 if (!_storage.count(element.getKey()))
-                    return CompareResult::Success;
+                {
+                    result = CompareResult::Success;
+                    continue;
+                }
             }
 
             // Check that storage element is set

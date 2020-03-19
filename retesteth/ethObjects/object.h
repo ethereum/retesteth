@@ -22,6 +22,27 @@ public:
         String
     };
 
+    static string DigitsTypeToString(DigitsType _t)
+    {
+        switch (_t)
+        {
+        case DigitsType::Decimal:
+            return "Decimal";
+        case DigitsType::Hex:
+            return "Hex";
+        case DigitsType::UnEvenHex:
+            return "UnEvenHex";
+        case DigitsType::HexPrefixed:
+            return "HexPrefixed";
+        case DigitsType::UnEvenHexPrefixed:
+            return "UnEvenHexPrefixed";
+        case DigitsType::String:
+            return "String";
+        default:
+            return "Unrecognized type";
+        }
+    }
+
     static std::string emptyString;
     static DigitsType stringIntegerType(std::string const& _string);
     static std::string makeHexAddress(std::string const& _address);
