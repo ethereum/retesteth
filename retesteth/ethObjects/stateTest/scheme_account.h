@@ -54,7 +54,8 @@ public:
                 ETH_ERROR_MESSAGE(message + "is expected to be 0x prefixed hex string or decimal string representation!");
             recordType = stringIntegerType(record.getKey());
             if (recordType != DigitsType::HexPrefixed)
-                ETH_ERROR_MESSAGE(message + "key is expected to be 0x hex!");
+                ETH_ERROR_MESSAGE(message + "key is expected to be 0x hex! Got: " +
+                                  DigitsTypeToString(recordType));
         }
     }
 };

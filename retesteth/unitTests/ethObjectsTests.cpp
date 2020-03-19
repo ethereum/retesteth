@@ -383,4 +383,84 @@ BOOST_AUTO_TEST_CASE(compareStates_prefixedZeros2)
     testCompareResult(expectData, postData, CompareResult::Success);
 }
 
+BOOST_AUTO_TEST_CASE(compareStates_storageEmpty)
+{
+    DataObject expectStorage;
+    expectStorage["0x01"] = "0x00";
+    DataObject expectData;
+    expectData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["storage"] = expectStorage;
+    DataObject postData;
+    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x082124";
+    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
+    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
+    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["storage"] =
+        DataObject(DataType::Object);
+    testCompareResult(expectData, postData, CompareResult::Success);
+}
+
+BOOST_AUTO_TEST_CASE(compareStates_storageIncorrect)
+{
+    DataObject expectStorage;
+    expectStorage["0x01"] = "0x01";
+    DataObject expectData;
+    expectData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["storage"] = expectStorage;
+    DataObject postData;
+    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x082124";
+    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
+    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
+    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["storage"] =
+        DataObject(DataType::Object);
+    testCompareResult(expectData, postData, CompareResult::IncorrectStorage);
+}
+
+BOOST_AUTO_TEST_CASE(compareStates_storageCorrect)
+{
+    DataObject expectStorage;
+    expectStorage["0x01"] = "0x01";
+    DataObject expectData;
+    expectData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["storage"] = expectStorage;
+    DataObject postStorage;
+    postStorage["0x01"] = "0x01";
+    DataObject postData;
+    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x082124";
+    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
+    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
+    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["storage"] = postStorage;
+    testCompareResult(expectData, postData, CompareResult::Success);
+}
+
+BOOST_AUTO_TEST_CASE(compareStates_storageMissingOnPost)
+{
+    DataObject expectStorage;
+    expectStorage["0x01"] = "0x01";
+    expectStorage["0x02"] = "0x01";
+    DataObject expectData;
+    expectData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["storage"] = expectStorage;
+    DataObject postStorage;
+    postStorage["0x01"] = "0x01";
+    DataObject postData;
+    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x082124";
+    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
+    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
+    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["storage"] = postStorage;
+    testCompareResult(expectData, postData, CompareResult::IncorrectStorage);
+}
+
+BOOST_AUTO_TEST_CASE(compareStates_storageMissingOnExpect)
+{
+    DataObject expectStorage;
+    expectStorage["0x01"] = "0x01";
+    DataObject expectData;
+    expectData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["storage"] = expectStorage;
+    DataObject postStorage;
+    postStorage["0x01"] = "0x01";
+    postStorage["0x02"] = "0x01";
+    DataObject postData;
+    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x082124";
+    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
+    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
+    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["storage"] = postStorage;
+    testCompareResult(expectData, postData, CompareResult::IncorrectStorage, 4);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
