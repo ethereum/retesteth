@@ -1,6 +1,6 @@
 # retesteth
 testeth via RPC (wiki: https://github.com/ethereum/retesteth/wiki)  
-or any other protocol RLPx ?? (https://github.com/ethereum/retesteth/issues/79)
+(Execution stats: http://retesteth.ethdevops.io/)
 
 A test generaion tool for the test fillers https://github.com/ethereum/tests/tree/develop/src  
 Building instruction for beginners: [retesteth + solidity build](https://github.com/ethereum/retesteth#building-instructions-for-beginners)
@@ -22,7 +22,7 @@ Building instruction for beginners: [retesteth + solidity build](https://github.
 * done: Implement a set of PoC methods in other client then aleth
 * done: Refactoring and stability when generating GeneralStateTests
 * done: Blockchain test generation support
-* now: Use retesteth to produce fork tests with geth/pantheon/aleth
+* now: Use retesteth to produce fork tests with geth/besu/aleth
 * now: Refactor the code, impove stability
 
 # Building instructions
