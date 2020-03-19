@@ -52,7 +52,7 @@ See: https://github.com/ethereum/retesteth/wiki/Docker-instructions
 See: https://github.com/ethereum/retesteth/wiki/RPC-Methods
 
 # Contact
-Skype: wins_vega
+Telegram: @wdimitry
 
 # Building instructions for beginners
 ## Dependencies
