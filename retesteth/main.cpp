@@ -103,6 +103,15 @@ void setDefaultOrCLocale()
 #endif
 }
 
+std::vector<std::string> explode(std::string const& s, char delim)
+{
+    std::vector<std::string> result;
+    std::istringstream iss(s);
+    for (std::string token; std::getline(iss, token, delim);)
+        result.push_back(std::move(token));
+    return result;
+}
+
 // Custom Boost Unit Test Main
 int main(int argc, const char* argv[])
 {
@@ -175,12 +184,27 @@ int main(int argc, const char* argv[])
         }
     }
 
-    // Print suggestions of a test case if test suite not found
-    if (!sMinusTArg.empty() && !test::inArray(c_allTestNames, sMinusTArg) && sMinusTArg != "customTestSuite")
+    if (!sMinusTArg.empty())
     {
-        std::cerr << "Error: '" + sMinusTArg + "' suite not found! \n";
-        printTestSuiteSuggestions(sMinusTArg);
-        return -1;
+        bool requestSuiteNotFound = false;
+        std::vector<std::string> requestedSuites = explode(sMinusTArg, ',');
+        for (auto const& suite : requestedSuites)
+        {
+            if (!test::inArray(c_allTestNames, suite))
+            {
+                requestSuiteNotFound = true;
+                sMinusTArg = suite;
+                break;
+            }
+        }
+
+        // Print suggestions of a test case if test suite not found
+        if (requestSuiteNotFound && sMinusTArg != "customTestSuite")
+        {
+            std::cerr << "Error: '" + sMinusTArg + "' suite not found! \n";
+            printTestSuiteSuggestions(sMinusTArg);
+            return -1;
+        }
     }
 
     int result = 0;
