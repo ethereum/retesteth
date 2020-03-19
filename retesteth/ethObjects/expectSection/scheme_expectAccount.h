@@ -58,16 +58,6 @@ public:
         DataObject const& expectStorage = m_data.atKey("storage");
         for (auto const& element : expectStorage.getSubObjects())
         {
-            if (element.asString() == "0x00")
-            {
-                // treat zeroes as empty (elements might not be set in storage)
-                if (!_storage.count(element.getKey()))
-                {
-                    result = CompareResult::Success;
-                    continue;
-                }
-            }
-
             // Check that storage element is set
             string key = element.getKey();
             if (key == "0x" && _storage.count("0x00"))
@@ -76,9 +66,10 @@ public:
                 key = "0x";
 
             string const message = "Check State: Remote account '" + address() + "'";
-            if (element.asString() == "0x")
+            if (element.asString() == "0x" || element.asString() == "0x00")
             {
                 // check that empty element is not set
+                // if a post state has the value of 'key' as zero, such 'key' does not listed
                 checkMessage(!_storage.count(key), CompareResult::IncorrectStorage,
                     message + " has storage key '" + element.getKey() +
                         "'. Test expected storage key: '" + element.getKey() +
