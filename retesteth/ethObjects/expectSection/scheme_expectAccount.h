@@ -70,9 +70,10 @@ public:
             {
                 // check that empty element is not set
                 // if a post state has the value of 'key' as zero, such 'key' does not listed
+                string const& val = _storage.count(key) ? _storage.atKey(key).asString() : "";
                 checkMessage(!_storage.count(key), CompareResult::IncorrectStorage,
                     message + " has storage key '" + element.getKey() +
-                        "'. Test expected storage key: '" + element.getKey() +
+                        "' : '" + val + "'. Test expected storage key: '" + element.getKey() +
                         "' to be set to zero");
             }
             else
