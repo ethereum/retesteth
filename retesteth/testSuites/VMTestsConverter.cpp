@@ -38,8 +38,8 @@
 #include <retesteth/ethObjects/common.h>
 #include <retesteth/testSuites/Common.h>
 #include <retesteth/testSuites/StateTests.h>
+#include <retesteth/testSuites/TestFixtures.h>
 #include <retesteth/testSuites/VMTestsConverter.h>
-#include <retesteth/testSuites/blockchain/BlockchainTests.h>
 
 using namespace std;
 using namespace dev;
@@ -50,7 +50,7 @@ namespace test
 // Most Recent StateTestSuite
 TestSuite::TestPath VMTestConverterSuite::suiteFolder() const
 {
-    return TestSuite::TestPath(fs::path("VMTestsAsStateFillers"));
+    return TestSuite::TestPath(fs::path("GeneralStateTests/VMTests"));
 }
 
 TestSuite::FillerPath VMTestConverterSuite::suiteFillerFolder() const
@@ -66,10 +66,14 @@ DataObject VMTestConverterSuite::doTests(DataObject const& _input, TestSuiteOpti
     if (_opt.doFilling)  // convert vmTestFiller into StateTestFiller
     {
         DataObject stateFiller;
+
         DataObject const& vmFiller = _input.getSubObjects().at(0);
         string const& testname = vmFiller.getKey();
-        TestOutputHelper::get().setCurrentTestInfo(TestInfo(testname));
+        TestOutputHelper::get().setCurrentTestName(testname);
+        TestOutputHelper::get().setCurrentTestInfo(TestInfo("Filler init"));
 
+        scheme_vmTestFiller vmTestFiller(vmFiller);
+        TestOutputHelper::get().setCurrentTestInfo(TestInfo("Converting to StateFiller"));
         string comment;
         if (vmFiller.count("_info"))
             stateFiller["_info"] = vmFiller.atKey("_info");
@@ -80,24 +84,19 @@ DataObject VMTestConverterSuite::doTests(DataObject const& _input, TestSuiteOpti
         stateFiller["env"] = vmFiller.atKey("env");
         stateFiller["pre"] = vmFiller.atKey("pre");
 
+        // Insert sender account
         string const sender = "a94f5374fce5edbc8e2a8697c15331677e6ebf0b";
-        stateFiller["pre"][sender]["balance"] = "0x7ffffffffffffff0";
-        stateFiller["pre"][sender]["nonce"] = "0";
-        stateFiller["pre"][sender]["code"] = "";
-        stateFiller["pre"][sender]["storage"] = DataObject(DataType::Object);
+        if (!stateFiller["pre"].count(sender))
+        {
+            stateFiller["pre"][sender]["balance"] = "0x7ffffffffffffff0";
+            stateFiller["pre"][sender]["nonce"] = "0";
+            stateFiller["pre"][sender]["code"] = "";
+            stateFiller["pre"][sender]["storage"] = DataObject(DataType::Object);
+        }
 
-        stateFiller["transaction"]["data"].addArrayObject(
-            DataObject(vmFiller.atKey("exec").atKey("data").asString()));
-        stateFiller["transaction"]["gasLimit"].addArrayObject(
-            DataObject(vmFiller.atKey("exec").atKey("gas").asString()));
-        stateFiller["transaction"]["gasPrice"] = vmFiller.atKey("exec").atKey("gasPrice");
-        stateFiller["transaction"]["nonce"] = "0";
-        stateFiller["transaction"]["secretKey"] =
-            "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8";
-        stateFiller["transaction"]["to"] = vmFiller.atKey("exec").atKey("address");
-        stateFiller["transaction"]["value"].addArrayObject(
-            DataObject(vmFiller.atKey("exec").atKey("value").asString()));
+        stateFiller["transaction"] = vmTestFiller.getTransaction().getData();
 
+        // Construct state-like expect section
         DataObject expectSection;
         expectSection["indexes"]["data"] = -1;
         expectSection["indexes"]["gas"] = -1;
@@ -107,7 +106,8 @@ DataObject VMTestConverterSuite::doTests(DataObject const& _input, TestSuiteOpti
             expectSection["result"] = vmFiller.atKey("expect");
         else
         {
-            ETH_LOG("VmTest fillere missing expect section! (" + testname + ")", 0);
+            ETH_WARNING("VMTest filler missing expect section! Empty section will be used. " +
+                        TestOutputHelper::get().testInfo().getMessage());
             expectSection["result"] = DataObject(DataType::Object);
         }
         stateFiller["expect"].addArrayObject(expectSection);
@@ -118,12 +118,18 @@ DataObject VMTestConverterSuite::doTests(DataObject const& _input, TestSuiteOpti
             StateTestSuite stateSuite;
             TestSuiteOptions stateOpt;
             stateOpt.doFilling = true;
-            stateSuite.doTests(obj, stateOpt);
+            return stateSuite.doTests(obj, stateOpt);
         }
         catch (std::exception const& _ex)
         {
             ETH_LOG("Error when filling the state test! (" + testname + "): \n" + _ex.what(), 0);
         }
+    }
+    else  // run tests
+    {
+        // Execute state tests filled from VMTests
+        StateTestSuite stateSuite;
+        stateSuite.doTests(_input, _opt);
     }
     return obj;
 }
@@ -132,7 +138,7 @@ DataObject VMTestConverterSuite::doTests(DataObject const& _input, TestSuiteOpti
 
 
 using VMTestsConverterFixture = TestFixture<VMTestConverterSuite, DefaultFlags>;
-BOOST_FIXTURE_TEST_SUITE(VMTestConverter, VMTestsConverterFixture)
+BOOST_FIXTURE_TEST_SUITE(VMTests, VMTestsConverterFixture)
 
 BOOST_AUTO_TEST_CASE(vmArithmeticTest) {}
 BOOST_AUTO_TEST_CASE(vmBitwiseLogicOperation) {}

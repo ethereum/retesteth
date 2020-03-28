@@ -97,15 +97,18 @@ public:
         checkMessage(expectStorage.getSubObjects().size() >= _storage.getSubObjects().size(),
             CompareResult::IncorrectStorage,
             TestOutputHelper::get().testName() + " Remote account '" + address() +
-                "' storage has more storage records then expected!");
+                "' storage has more storage records than expected!");
 
         if (expectStorage.getSubObjects().size() < _storage.getSubObjects().size())
         {
             for (auto const& element : _storage.getSubObjects())
             {
+                string expected = "0";
+                if (expectStorage.count(element.getKey()))
+                    expected = expectStorage.atKey(element.getKey()).asString();
                 string const message = "incorrect remote storage [" + element.getKey() +
                                        "] = " + element.asString() + ", test expected [" +
-                                       element.getKey() + "] = 0";
+                                       element.getKey() + "] = " + expected;
                 ETH_MARK_ERROR(message);
             }
         }

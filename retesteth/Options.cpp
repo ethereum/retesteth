@@ -75,8 +75,7 @@ void printHelp()
     cout << setw(30) << "--filltests" << setw(0) << "Run test fillers\n";
     cout << setw(30) << "--fillchain" << setw(25) << "When filling the state tests, fill tests as blockchain instead\n";
     cout << setw(30) << "--showhash" << setw(25) << "Show filler hash debug information\n";
-    cout << setw(30) << "--poststate" << setw(25)
-         << "Show post state hash or fullstate if --fullstate defined\n";
+    cout << setw(30) << "--poststate" << setw(25) << "Show post state hash or fullstate\n";
     cout << setw(30) << "--fullstate" << setw(25) << "Do not compress large states to hash\n";
     //	cout << setw(30) << "--randomcode <MaxOpcodeNum>" << setw(25) << "Generate smart random EVM
     //code\n"; 	cout << setw(30) << "--createRandomTest" << setw(25) << "Create random test and
@@ -225,7 +224,10 @@ Options::Options(int argc, const char** argv)
         else if (arg == "--fullstate")
             fullstate = true;
         else if (arg == "--poststate")
+        {
             poststate = true;
+            fullstate = true;
+        }
         else if (arg == "--verbosity")
 		{
 			throwIfNoArgumentFollows();

@@ -212,6 +212,10 @@ DataObject FillTest(DataObject const& _testFile)
 
                     scheme_block blockInfo =
                         session.eth_getBlockByNumber(latestBlockNumber, Options::get().vmtrace);
+                    if (Options::get().poststate)
+                        ETH_STDOUT_MESSAGE("PostState " +
+                                           TestOutputHelper::get().testInfo().getMessage() +
+                                           " : \n" + blockInfo.getStateHash());
                     if (Options::get().vmtrace)
                         printVmTrace(session, trHash, blockInfo.getStateHash());
                     if (Options::get().fullstate)
@@ -220,11 +224,7 @@ DataObject FillTest(DataObject const& _testFile)
                         compareStates(expect.getExpectState(), remoteState);
                     }
                     else
-                    {
-                        if (Options::get().poststate)
-                            ETH_STDOUT_MESSAGE("PostState " + TestOutputHelper::get().testInfo().getMessage() +  " : \n" + blockInfo.getStateHash());
                         compareStates(expect.getExpectState(), session, blockInfo);
-                    }
 
                     DataObject indexes;
                     DataObject transactionResults;

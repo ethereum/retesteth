@@ -9,4 +9,5 @@
 #include "rpcResponse/scheme_debugTraceTransaction.h"
 #include "stateTest/scheme_env.h"
 #include "stateTest/scheme_stateTest.h"
+#include "vmTest/scheme_vmTest.h"
 #include "stateTest/scheme_RPCTest.h"
