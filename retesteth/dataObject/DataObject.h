@@ -155,35 +155,16 @@ public:
             _assert(m_type == DataType::Null,
                 "m_type == DataType::Null (DataObject& operator=). Overwriting dataobject that is "
                 "not NULL");
+
+        if (m_type != DataType::Null)
+            replace(_value);         // overwrite value and key
         else
         {
-            // overwrite value and key
-            if (m_type != DataType::Null)
-            {
-                replace(_value);
-                return *this;
-            }
+            // keep the key "newkey" for object["newkey"] = object2;  declarations when object["newkey"] is null;
+            string const currentKey = m_strKey;
+            replace(_value);
+            m_strKey = currentKey;
         }
-
-        // initialize new element if it was null before, but keep the key; DataObject[key] =
-        m_type = _value.type();
-        switch (_value.type())
-        {
-        case DataType::Integer:
-            m_intVal = _value.asInt();
-            break;
-        case DataType::String:
-            m_strVal = _value.asString();
-            break;
-        case DataType::Bool:
-            m_boolVal = _value.asBool();
-            break;
-        default:
-            break;
-        }
-        m_allowOverwrite = _value.isOverwritable();
-        setAutosort(_value.isAutosort());
-        m_subObjects = _value.getSubObjects();
         return *this;
     }
 

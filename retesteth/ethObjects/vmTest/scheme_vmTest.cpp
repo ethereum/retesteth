@@ -85,7 +85,6 @@ DataObject translateExecToTransaction(DataObject const& _exec)
     gtransaction["secretKey"] = "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8";
     gtransaction["to"] = _exec.atKey("address");
     gtransaction["value"].addArrayObject(DataObject(_exec.atKey("value").asString()));
-
     return gtransaction;
 }
 

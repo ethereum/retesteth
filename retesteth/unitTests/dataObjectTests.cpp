@@ -762,4 +762,21 @@ BOOST_AUTO_TEST_CASE(dataobject_jsonOrder)
                 "\"7\",\"aa70\":\"7\",\"aa8\":\"8\"}");
 }
 
+BOOST_AUTO_TEST_CASE(dataobject_replace)
+{
+    DataObject data(DataType::Null);
+    DataObject data2(DataType::Null);
+    DataObject data3(DataType::Null);
+    data2.setKey("key2");
+    data2.setString("value2");
+    data3.setKey("key3");
+    data3.setString("value3");
+
+    data["field1"] = data3; // null object with key "field1" keep the key "field1"
+    BOOST_CHECK(data.asJson(0,false) == "{\"field1\":\"value3\"}");
+
+    data["field1"] = data2; // not null object with key "field1" replaces the key "field1" to data2's key
+    BOOST_CHECK(data.asJson(0,false) == "{\"key2\":\"value2\"}");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
