@@ -38,9 +38,9 @@
 #include <retesteth/ethObjects/common.h>
 #include <retesteth/testSuites/Common.h>
 #include <retesteth/testSuites/StateTests.h>
-#include <retesteth/testSuites/blockchain/BlockchainTests.h>
 #include <retesteth/testSuites/TestFixtures.h>
 #include <retesteth/testSuites/VMTestsConverter.h>
+#include <retesteth/testSuites/blockchain/BlockchainTests.h>
 
 using namespace std;
 using namespace dev;
@@ -48,26 +48,37 @@ namespace fs = boost::filesystem;
 
 namespace
 {
-
 DataObject getGenesisTemplate()
 {
     // Blockchain Test Template
     DataObject genesisBlockHeader;
     genesisBlockHeader["number"] = "0";
-    genesisBlockHeader["parentHash"] = "0x0000000000000000000000000000000000000000000000000000000000000000";
-    genesisBlockHeader["bloom"] = "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
+    genesisBlockHeader["parentHash"] =
+        "0x0000000000000000000000000000000000000000000000000000000000000000";
+    genesisBlockHeader["bloom"] =
+        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        "00000000000000000000000000000000000000000000000000000000000000";
     genesisBlockHeader["extraData"] = "0x42";
     genesisBlockHeader["gasUsed"] = "0";
-    genesisBlockHeader["mixHash"] = "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421";
+    genesisBlockHeader["mixHash"] =
+        "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421";
     genesisBlockHeader["nonce"] = "0x0102030405060708";
-    genesisBlockHeader["receiptTrie"] = "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421";
-    genesisBlockHeader["stateRoot"] = "0xf99eb1626cfa6db435c0836235942d7ccaa935f1ae247d3f1c21e495685f903a";
-    genesisBlockHeader["transactionsTrie"] = "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421";
-    genesisBlockHeader["uncleHash"] = "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347";
+    genesisBlockHeader["receiptTrie"] =
+        "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421";
+    genesisBlockHeader["stateRoot"] =
+        "0xf99eb1626cfa6db435c0836235942d7ccaa935f1ae247d3f1c21e495685f903a";
+    genesisBlockHeader["transactionsTrie"] =
+        "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421";
+    genesisBlockHeader["uncleHash"] =
+        "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347";
     return genesisBlockHeader;
 }
 
-}
+}  // namespace
 
 namespace test
 {
@@ -108,11 +119,14 @@ DataObject VMTestConverterSuite::doTests(DataObject const& _input, TestSuiteOpti
 
         // Prepare genesisBlockHeader
         blockFiller["genesisBlockHeader"] = getGenesisTemplate();
-        blockFiller["genesisBlockHeader"]["coinbase"] = vmFiller.atKey("env").atKey("currentCoinbase");
-        blockFiller["genesisBlockHeader"]["difficulty"] = vmFiller.atKey("env").atKey("currentDifficulty");
-        blockFiller["genesisBlockHeader"]["gasLimit"] = vmFiller.atKey("env").atKey("currentGasLimit");
+        blockFiller["genesisBlockHeader"]["coinbase"] =
+            vmFiller.atKey("env").atKey("currentCoinbase");
+        blockFiller["genesisBlockHeader"]["difficulty"] =
+            vmFiller.atKey("env").atKey("currentDifficulty");
+        blockFiller["genesisBlockHeader"]["gasLimit"] =
+            vmFiller.atKey("env").atKey("currentGasLimit");
         blockFiller["genesisBlockHeader"]["timestamp"] = "0";
-        blockFiller["sealEngine"] = "NoProof"; // Disable mining
+        blockFiller["sealEngine"] = "NoProof";  // Disable mining
 
         // Prepare pre section
         blockFiller["pre"] = vmFiller.atKey("pre");
@@ -132,7 +146,8 @@ DataObject VMTestConverterSuite::doTests(DataObject const& _input, TestSuiteOpti
         blockInfo["blockHeader"]["difficulty"] = vmFiller.atKey("env").atKey("currentDifficulty");
         blockInfo["blockHeader"]["gasLimit"] = vmFiller.atKey("env").atKey("currentGasLimit");
 
-        scheme_transaction const& trInTest = vmTestFiller.getTransaction().getTransactions().at(0).transaction;
+        scheme_transaction const& trInTest =
+            vmTestFiller.getTransaction().getTransactions().at(0).transaction;
         blockInfo["transactions"].addArrayObject(trInTest.getData());
         blockInfo["uncleHeaders"] = DataObject(DataType::Array);
         blockFiller["blocks"].addArrayObject(blockInfo);
@@ -170,6 +185,6 @@ DataObject VMTestConverterSuite::doTests(DataObject const& _input, TestSuiteOpti
         blockSuite.doTests(_input, _opt);
     }
     return obj;
-}
+    }
 
-}  // namespace test
+    }  // namespace test
