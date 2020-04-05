@@ -44,8 +44,11 @@ void printHelp()
     cout << "\nAll options below must be followed by `--`\n";
     cout << "\nRetesteth options\n";
     cout << setw(40) << "-j <ThreadNumber>" << setw(0) << "Run test execution using threads\n";
-    cout << setw(40) << "--clients `<client1, client2>`" << setw(0)
-         << "Use following configurations from the testpath/Retesteth\n";
+    cout << setw(40) << "--clients `client1, client2`" << setw(0)
+         << "Use following configurations from datadir path (default: ~/.retesteth)\n";
+    cout << setw(40) << "--datadir" << setw(0) << "Path to configs (default: ~/.retesteth)\n";
+    cout << setw(40) << "--nodes" << setw(0) << "List of client tcp ports (\"addr:ip, addr:ip\")\n";
+    cout << setw(42) << " " << setw(0) << "Overrides the config file \"socketAddress\" section \n";
     cout << setw(40) << "--help" << setw(25) << "Display list of command arguments\n";
     cout << setw(40) << "--version" << setw(25) << "Display build information\n";
     cout << setw(40) << "--list" << setw(25) << "Display available test suites\n";
@@ -53,7 +56,9 @@ void printHelp()
     cout << "\nSetting test suite and test\n";
     cout << setw(40) << "--testpath <PathToTheTestRepo>" << setw(25) << "Set path to the test repo\n";
     cout << setw(40) << "--testfile <TestFile>" << setw(0) << "Run tests from a file. Requires -t <TestSuite>\n";
-    cout << setw(40) << "--singletest <TestName>/<Subtest>" << setw(0) << "Run on a single test (Testname is filename without Filler.json, Subtest is a test name inside the file)\n";
+    cout << setw(40) << "--singletest <TestName>" << setw(0)
+         << "Run on a single test. `Testname` is filename without Filler.json\n";
+    cout << setw(40) << "--singletest <TestName>/<Subtest>" << setw(0) << "`Subtest` is a test name inside the file\n";
 
     cout << "\nDebugging\n";
     cout << setw(30) << "-d <index>" << setw(25) << "Set the transaction data array index when running GeneralStateTests\n";
@@ -77,9 +82,6 @@ void printHelp()
     cout << setw(30) << "--showhash" << setw(25) << "Show filler hash debug information\n";
     cout << setw(30) << "--poststate" << setw(25) << "Show post state hash or fullstate\n";
     cout << setw(30) << "--fullstate" << setw(25) << "Do not compress large states to hash\n";
-
-    cout << "\nRetesteth Options\n";
-    cout << setw(30) << "--datadir" << setw(0) << "Path to configs (default: ~/.retesteth)\n";
 
     //	cout << setw(30) << "--randomcode <MaxOpcodeNum>" << setw(25) << "Generate smart random EVM
     //code\n"; 	cout << setw(30) << "--createRandomTest" << setw(25) << "Create random test and
@@ -251,6 +253,12 @@ Options::Options(int argc, const char** argv)
         {
             throwIfNoArgumentFollows();
             datadir = fs::path(std::string{argv[++i]});
+        }
+        else if (arg == "--nodes")
+        {
+            throwIfNoArgumentFollows();
+            for (auto const& el : explode(std::string{argv[++i]}, ','))
+                nodesoverride.addArrayObject(el);
         }
         else if (arg == "--options")
 		{
