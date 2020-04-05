@@ -77,6 +77,10 @@ void printHelp()
     cout << setw(30) << "--showhash" << setw(25) << "Show filler hash debug information\n";
     cout << setw(30) << "--poststate" << setw(25) << "Show post state hash or fullstate\n";
     cout << setw(30) << "--fullstate" << setw(25) << "Do not compress large states to hash\n";
+
+    cout << "\nRetesteth Options\n";
+    cout << setw(30) << "--datadir" << setw(0) << "Path to configs (default: ~/.retesteth)\n";
+
     //	cout << setw(30) << "--randomcode <MaxOpcodeNum>" << setw(25) << "Generate smart random EVM
     //code\n"; 	cout << setw(30) << "--createRandomTest" << setw(25) << "Create random test and
     //output it to the console\n"; 	cout << setw(30) << "--createRandomTest <PathToOptions.json>" <<
@@ -243,7 +247,12 @@ Options::Options(int argc, const char** argv)
             if (logVerbosity > (size_t)g_logVerbosity)
                 g_logVerbosity = logVerbosity;
 		}
-		else if (arg == "--options")
+        else if (arg == "--datadir")
+        {
+            throwIfNoArgumentFollows();
+            datadir = fs::path(std::string{argv[++i]});
+        }
+        else if (arg == "--options")
 		{
 			throwIfNoArgumentFollows();
 			boost::filesystem::path file(std::string{argv[++i]});
@@ -392,6 +401,8 @@ void displayTestSuites()
     cout << setw(40) << "-t BlockchainTests/ValidBlocks" << setw(0) << "Subset of correct blocks\n";
     cout << setw(40) << "-t BlockchainTests/InvalidBlocks" << setw(0) << "Subset of malicious blocks\n";
     cout << setw(40) << "-t BlockchainTests/TransitionTests" << setw(0) << "Subset of fork transition tests\n";
+    cout << setw(40) << "-t BlockchainTests/ValidBlocks/VMTests" << setw(0)
+         << "VMTests converted\n";
     cout << "(Use --filltests to generate the tests, --fillchain to generate BCGeneralStateTests)\n";
 
     cout << "\nLegacy test suites (Frontier .. ConstantinopleFix):\n";
