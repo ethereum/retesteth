@@ -4,7 +4,5 @@ using namespace std;
 
 string default_Frontier_config = R"({
     "params" : {
-    },
-    "accounts" : {
     }
 })";

@@ -32,10 +32,12 @@ public:
             scheme_state pre(_test.atKey("pre"));
             string network = "Frontier";
 
-            m_genesis = prepareGenesisParams(network, sealEngine);
+            m_genesis.clear();
+            m_genesis["sealEngine"] = sealEngine;
             m_genesis["genesis"] = env.getDataForRPC();
             for (auto const& acc : pre.getData().getSubObjects())
-                m_genesis["accounts"].addSubObject(acc);
+                m_genesis["alloc"].addSubObject(acc);
+            m_genesis["Config"] = prepareGenesisParams(network);
         }
     }
 

@@ -12,10 +12,14 @@ namespace test {
 // And perform additive operations on it with another (int or string representing integers)
 struct BlockNumber
 {
-    BlockNumber(string const& _number) : m_blockNumber(_number) {}
-    BlockNumber(size_t _number) : m_blockNumber("") { m_blockNumber = toString(_number); }
+    BlockNumber(string const& _number) : m_blockNumber(_number) { applyShift(0); }
+    BlockNumber(size_t _number) : m_blockNumber("") {m_blockNumber = toCompactHexPrefixed(_number, 1); }
     int getBlockNumberAsInt() const { return hexOrDecStringToInt(m_blockNumber); }
-    string getBlockNumberAsString() const { return m_blockNumber; }
+    string getBlockNumberAsString() const {
+        if (m_blockNumber[2] == '0') // 0x0..
+            return "0x" + m_blockNumber.substr(3);
+        return  m_blockNumber;
+    }
     void applyShift(int _shift)
     {
         m_blockNumber = toCompactHexPrefixed(getBlockNumberAsInt() + _shift, 1);
@@ -131,7 +135,7 @@ private:
         {
             // validate rpc response on eth_getBlock()
             requireJsonFields(_data, "blockRPC",
-                {{"author", {{DataType::String}, jsonField::Required}},
+                {{"author", {{DataType::String}, jsonField::Optional}},
                     {"extraData", {{DataType::String}, jsonField::Required}},
                     {"gasLimit", {{DataType::String}, jsonField::Required}},
                     {"gasUsed", {{DataType::String}, jsonField::Required}},

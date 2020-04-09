@@ -13,10 +13,13 @@ scheme_stateTestBase::scheme_stateTestBase(DataObject const& _test)
 DataObject scheme_stateTestBase::getGenesisForRPC(
     const string& _network, const string& _sealEngine) const
 {
-    DataObject genesis = prepareGenesisParams(_network, _sealEngine);
+    //!!! MAKE A GLOBAL FUNCTION (USED IN 3 PLACES)
+    DataObject genesis;
     genesis["genesis"] = getEnv().getDataForRPC();
+    genesis["sealEngine"] = _sealEngine;
     for (auto const& acc : getPre().getData().getSubObjects())
-        genesis["accounts"].addSubObject(acc);
+        genesis["genesis"]["alloc"].addSubObject(acc);
+    genesis["genesis"]["Config"] = prepareGenesisParams(_network);
     return genesis;
 }
 

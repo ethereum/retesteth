@@ -10,7 +10,5 @@ string default_ConstantinopleFix_config = R"({
        "byzantiumForkBlock" : "0x00",
        "constantinopleForkBlock" : "0x00",
        "constantinopleFixForkBlock" : "0x00"
-    },
-    "accounts" : {
     }
 })";

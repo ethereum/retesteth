@@ -28,15 +28,15 @@ namespace test {
         DataObject getDataForRPC() const
         {
             DataObject data;
-            data["author"] = m_data.atKey("currentCoinbase");
-            data["difficulty"] = m_data.atKey("currentDifficulty");
-            data["gasLimit"] = m_data.atKey("currentGasLimit");
-            data["nonce"] = "0x00";
-            data["extraData"] = "0x00";
+            data["Coinbase"] = m_data.atKey("currentCoinbase");
+            data["Difficulty"] = m_data.atKey("currentDifficulty");
+            data["GasLimit"] = m_data.atKey("currentGasLimit");
+            data["Nonce"] = "0x0000000000000000";
+            data["ExtraData"] = "0x00";
             // this is genesis block timestamp
             // the actual timestamp of a block is set in the env section
-            data["timestamp"] = "0x00";
-            data["mixHash"] = "0x00";
+            data["Timestamp"] = "0x00";
+            data["Mixhash"] = "0x0000000000000000000000000000000000000000000000000000000000000000";
             return data;
         }
     };

@@ -8,7 +8,5 @@ string default_Byzantium_config = R"({
         "EIP150ForkBlock" : "0x00",
         "EIP158ForkBlock" : "0x00",
         "byzantiumForkBlock" : "0x00"
-    },
-    "accounts" : {
     }
 })";

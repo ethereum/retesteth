@@ -249,7 +249,7 @@ scheme_debugAccountRange RPCSession::debug_accountRange(
     std::string const& _blockHashOrNumber, int _txIndex, string const& _address, int _maxResults)
 {
     return scheme_debugAccountRange(rpcCall(
-        "debug_accountRange", {quote(toString(u256(dev::fromHex(_blockHashOrNumber)))),
+        "debug_accountRange", {quote(toCompactHexPrefixed(u256(dev::fromHex(_blockHashOrNumber)), 1)),
                                   to_string(_txIndex), quote(_address), to_string(_maxResults)}));
 }
 

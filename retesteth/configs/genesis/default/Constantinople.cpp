@@ -9,7 +9,5 @@ string default_Constantinople_config = R"({
        "EIP158ForkBlock" : "0x00",
        "byzantiumForkBlock" : "0x00",
        "constantinopleForkBlock" : "0x00"
-    },
-    "accounts" : {
     }
 })";

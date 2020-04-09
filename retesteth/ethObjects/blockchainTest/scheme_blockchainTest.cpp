@@ -115,35 +115,38 @@ DataObject scheme_blockchainTestBase::getGenesisForRPC(
     string const& _network, string const& _sealEngine) const
 {
     string net = (_network.empty() ? getData().atKey("network").asString() : _network);
-    DataObject genesis = prepareGenesisParams(net, m_sealEngine);
+    DataObject genesis;
+    genesis["sealEngine"] = _sealEngine;
 
     DataObject data;
-    data["author"] = m_genesisHeader.getData().atKey("coinbase");
-    data["difficulty"] = m_genesisHeader.getData().atKey("difficulty");
-    data["gasLimit"] = m_genesisHeader.getData().atKey("gasLimit");
-    data["extraData"] = m_genesisHeader.getData().atKey("extraData");
-    data["timestamp"] = m_genesisHeader.getData().atKey("timestamp");
+    data["Coinbase"] = m_genesisHeader.getData().atKey("coinbase");
+    data["Difficulty"] = m_genesisHeader.getData().atKey("difficulty");
+    data["GasLimit"] = m_genesisHeader.getData().atKey("gasLimit");
+    data["ExtraData"] = m_genesisHeader.getData().atKey("extraData");
+    data["Timestamp"] = m_genesisHeader.getData().atKey("timestamp").asString();
 
     if (m_isLegacyTest)
     {
-        data["nonce"] = m_genesisHeader.getData().atKey("nonce");
-        data["mixHash"] = m_genesisHeader.getData().atKey("mixHash");
+        data["Nonce"] = m_genesisHeader.getData().atKey("nonce");
+        data["Mixhash"] = m_genesisHeader.getData().atKey("mixHash");
     }
     else
     {
         bool isNoProof = _sealEngine == scheme_blockchainTestBase::m_sNoProof;
-        data["nonce"] =
+        data["Nonce"] =
             isNoProof ? DataObject("0x0000000000000000") : m_genesisHeader.getData().atKey("nonce");
-        data["mixHash"] =
+        data["Mixhash"] =
             isNoProof ?
                 DataObject("0x0000000000000000000000000000000000000000000000000000000000000000") :
                 m_genesisHeader.getData().atKey("mixHash");
     }
 
-    object::makeAllFieldsHex(data);
-    genesis["genesis"] = data;
     for (auto const& acc : m_pre.getData().getSubObjects())
-        genesis["accounts"].addSubObject(acc);
+        data["alloc"].addSubObject(acc);
+
+    object::makeAllFieldsHex(data);
+    data["Config"] = prepareGenesisParams(net);
+    genesis["genesis"] = data;
     return genesis;
 }
 

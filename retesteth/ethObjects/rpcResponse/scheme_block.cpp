@@ -213,7 +213,7 @@ DataObject scheme_block::scheme_block_header::mapBlockHeader() const
     // Map Block Header
     DataObject header;
     header["bloom"] = m_data.atKey("logsBloom");
-    header["coinbase"] = m_data.atKey("author");
+    header["coinbase"] = m_data.atKey("miner");
     header["difficulty"] = m_data.atKey("difficulty");
     header["extraData"] = m_data.atKey("extraData");
     header["gasLimit"] = m_data.atKey("gasLimit");

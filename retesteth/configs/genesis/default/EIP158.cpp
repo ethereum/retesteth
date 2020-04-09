@@ -7,7 +7,5 @@ string default_EIP158_config = R"({
        "homesteadForkBlock" : "0x00",
        "EIP150ForkBlock" : "0x00",
        "EIP158ForkBlock" : "0x00"
-    },
-    "accounts" : {
     }
 })";

@@ -249,14 +249,14 @@ void requireJsonFields(DataObject const& _o, std::string const& _config,
 }
 
 
-DataObject object::prepareGenesisParams(std::string const& _network, std::string const& _engine)
+DataObject object::prepareGenesisParams(std::string const& _network)
 {
     ClientConfig const& cfg = Options::get().getDynamicOptions().getCurrentConfig();
     test::checkAllowedNetwork(_network, cfg.getNetworksPlusAdditional());
 
     DataObject genesis;
-    genesis = cfg.getGenesisTemplate(_network);
-    genesis["sealEngine"] = _engine;
+    genesis = cfg.getGenesisTemplate(_network).atKey("params");
+
     return genesis;
 }
 }

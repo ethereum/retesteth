@@ -46,7 +46,7 @@ public:
     static std::string emptyString;
     static DigitsType stringIntegerType(std::string const& _string);
     static std::string makeHexAddress(std::string const& _address);
-    static DataObject prepareGenesisParams(std::string const& _network, std::string const& _engine);
+    static DataObject prepareGenesisParams(std::string const& _network);
 
 protected:
     static void makeKeyHex(DataObject& _key);
