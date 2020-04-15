@@ -248,17 +248,20 @@ void RPCSession::clear()
 scheme_debugAccountRange RPCSession::debug_accountRange(
     std::string const& _blockHashOrNumber, int _txIndex, string const& _address, int _maxResults)
 {
-    return scheme_debugAccountRange(rpcCall(
-        "debug_accountRange", {quote(toCompactHexPrefixed(u256(dev::fromHex(_blockHashOrNumber)), 1)),
-                                  to_string(_txIndex), quote(_address), to_string(_maxResults)}));
+    (void)_blockHashOrNumber;
+    (void)_txIndex;
+    (void)_address;
+    return scheme_debugAccountRange(rpcCall("debug_accountRange",
+        {quote("0x0000000000000000000000000000000000000000000000000000000000000000"),
+            to_string(_maxResults)}));
 }
 
 DataObject RPCSession::debug_storageRangeAt(std::string const& _blockHashOrNumber, int _txIndex,
     string const& _address, string const& _begin, int _maxResults)
 {
     return rpcCall("debug_storageRangeAt",
-        {quote(toString(u256(dev::fromHex(_blockHashOrNumber)))), to_string(_txIndex),
-            quote(_address), quote(_begin), to_string(_maxResults)});
+        {quote(_blockHashOrNumber), to_string(_txIndex - 1), quote(_address), quote("0x0" + _begin),
+            to_string(_maxResults)});
 }
 
 scheme_debugTraceTransaction RPCSession::debug_traceTransaction(std::string const& _trHash)

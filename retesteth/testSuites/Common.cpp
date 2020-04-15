@@ -76,13 +76,14 @@ scheme_account remoteGetAccount(RPCSession& _session, string const& _account,
     size_t cycles = cycles_max;
     while (--cycles)
     {
-        DataObject debugStorageAt = _session.debug_storageRangeAt(_latestInfo.getNumber(),
+        DataObject debugStorageAt = _session.debug_storageRangeAt(_latestInfo.getBlockHash(),
             _latestInfo.getTransactionCount(), _account, beginHash, cmaxRows);
         auto const& subObjects = debugStorageAt["storage"].getSubObjects();
         _totalSize += subObjects.size() * 64;
         for (auto const& element : subObjects)
             storage[element.atKey("key").asString()] = element.atKey("value").asString();
-        if (debugStorageAt.count("nextKey"))
+        if (debugStorageAt.count("nextKey") &&
+            debugStorageAt.atKey("nextKey").type() != DataType::Null)
             beginHash = debugStorageAt.atKey("nextKey").asString();
         else
             break;

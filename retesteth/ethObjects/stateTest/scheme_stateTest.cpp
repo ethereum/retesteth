@@ -18,7 +18,7 @@ DataObject scheme_stateTestBase::getGenesisForRPC(
     genesis["genesis"] = getEnv().getDataForRPC();
     genesis["sealEngine"] = _sealEngine;
     for (auto const& acc : getPre().getData().getSubObjects())
-        genesis["genesis"]["alloc"].addSubObject(acc);
+        genesis["genesis"]["Alloc"].addSubObject(acc);
     genesis["genesis"]["Config"] = prepareGenesisParams(_network);
     return genesis;
 }

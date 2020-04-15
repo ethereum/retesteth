@@ -14,10 +14,10 @@ public:
     scheme_debugAccountRange(DataObject const& _receipt) : object(_receipt)
     {
         requireJsonFields(_receipt, "debug_accountRange_rpc_response",
-            {{"addressMap", {DataType::Object}}, {"nextKey", {DataType::String}}});
+            {{c_accounts, {DataType::Object}}, {c_next, {DataType::String}}});
         makeAllFieldsHex(m_data);
 
-        for (auto const& element : m_data.atKey("addressMap").getSubObjects())
+        for (auto const& element : m_data.atKey(c_accounts).getSubObjects())
             m_accountMap.addSubObject(element.getKey(), element.asString());
     }
 
@@ -25,12 +25,16 @@ public:
 
     bool isNextKey() const
     {
-        if (m_data.atKey("nextKey").asString() == "0x00" || m_data.atKey("nextKey").asString() == "0x0000000000000000000000000000000000000000000000000000000000000000")
+        if (m_data.atKey(c_next).asString() == "0x00" ||
+            m_data.atKey(c_next).asString() ==
+                "0x0000000000000000000000000000000000000000000000000000000000000000")
             return false;
         return true;
     }
 
 private:
+    const string c_next = "next";
+    const string c_accounts = "accounts";
     DataObject m_accountMap;
 };
 }  // namespace test
