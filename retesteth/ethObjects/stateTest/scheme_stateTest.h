@@ -37,6 +37,7 @@ namespace test {
         public:
         scheme_stateTestFiller(DataObject const& _test);
         scheme_expectSection const& getExpectSection() const { return m_expectSection; }
+        scheme_expectSection& getExpectSectionUnsafe() { return m_expectSection; }
 
     private:
         class fieldChecker

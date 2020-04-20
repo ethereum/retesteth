@@ -184,7 +184,7 @@ DataObject FillTest(DataObject const& _testFile)
         session.test_setChainParams(test.getGenesisForRPC(net, "NoReward").asJson());
 
         // run transactions for defined expect sections only
-        for (auto const& expect : test.getExpectSection().getExpectSections())
+        for (auto& expect : test.getExpectSectionUnsafe().getExpectSectionsUnsafe())
         {
             // if expect section for this networks
             if (expect.getNetworks().count(net))
@@ -218,6 +218,8 @@ DataObject FillTest(DataObject const& _testFile)
                                            " : \n" + blockInfo.getStateHash());
                     if (Options::get().vmtrace)
                         printVmTrace(session, trHash, blockInfo.getStateHash());
+
+                    expect.correctMiningReward(net, test.getEnv().getCoinbase());
                     if (Options::get().fullstate)
                     {
                         scheme_state remoteState = getRemoteState(session, blockInfo);

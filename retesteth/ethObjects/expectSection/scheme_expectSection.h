@@ -37,6 +37,7 @@ public:
     {
         return m_expectSections;
     }
+    std::vector<scheme_expectSectionElement>& getExpectSectionsUnsafe() { return m_expectSections; }
     scheme_expectSectionElement const& getExpectSectionFor(string const& _network) const
     {
         for (auto const& expElement : m_expectSections)

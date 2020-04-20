@@ -259,9 +259,9 @@ scheme_debugAccountRange RPCSession::debug_accountRange(
 DataObject RPCSession::debug_storageRangeAt(std::string const& _blockHashOrNumber, int _txIndex,
     string const& _address, string const& _begin, int _maxResults)
 {
-    return rpcCall("debug_storageRangeAt",
-        {quote(_blockHashOrNumber), to_string(_txIndex - 1), quote(_address), quote("0x0" + _begin),
-            to_string(_maxResults)});
+    return rpcCall(
+        "debug_storageRangeAt2", {quote(_blockHashOrNumber), to_string(_txIndex), quote(_address),
+                                     quote(_begin), to_string(_maxResults)});
 }
 
 scheme_debugTraceTransaction RPCSession::debug_traceTransaction(std::string const& _trHash)
