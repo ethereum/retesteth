@@ -4,14 +4,15 @@
 #include <retesteth/ExitHandler.h>
 #include <retesteth/Options.h>
 #include <retesteth/RPCSession.h>
+#include <retesteth/TestHelper.h>
 #include <retesteth/TestOutputHelper.h>
+#include <retesteth/testSuites/StateTests.h>
+#include <retesteth/testSuites/blockchain/BlockchainTests.h>
 #include <boost/test/included/unit_test.hpp>
 #include <clocale>
 #include <cstdlib>
 #include <iostream>
 #include <thread>
-#include <retesteth/testSuites/StateTests.h>
-#include <retesteth/testSuites/blockchain/BlockchainTests.h>
 
 using namespace boost::unit_test;
 static std::ostringstream strCout;
@@ -101,15 +102,6 @@ void setDefaultOrCLocale()
 		setenv("LC_ALL", "C", 1);
 	}
 #endif
-}
-
-std::vector<std::string> explode(std::string const& s, char delim)
-{
-    std::vector<std::string> result;
-    std::istringstream iss(s);
-    for (std::string token; std::getline(iss, token, delim);)
-        result.push_back(std::move(token));
-    return result;
 }
 
 // Custom Boost Unit Test Main

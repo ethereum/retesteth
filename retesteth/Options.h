@@ -41,7 +41,9 @@ public:
 	bool stats = false;		///< Execution time and stats for state tests
     bool poststate = false;
     std::string statsOutFile; ///< Stats output file. "out" for standard output
-	bool exectimelog = false; ///< Print execution time for each test suite
+    fs::path datadir;         ///< Path to datadir (~/.retesteth)
+    DataObject nodesoverride;  ///< ["IP:port", ""IP:port""] array
+    bool exectimelog = false; ///< Print execution time for each test suite
 	std::string rCurrentTestSuite; ///< Remember test suite before boost overwrite (for random tests)
     bool statediff = false;        ///< Fill full post state in General tests
     bool fullstate = false;        ///< Replace large state output to it's hash

@@ -107,8 +107,12 @@ void RPCSession::runNewInstanceOfAClient(string const& _threadID, ClientConfig c
     {
         std::lock_guard<std::mutex> lock(g_socketMapMutex);  // function must be called from lock
 
+        DataObject const& ports = (Options::get().nodesoverride.getSubObjects().size() > 0 ?
+                                       Options::get().nodesoverride :
+                                       _config.getAddressObject());
+
         // Create sessionInfo for a tcp address that is still not present in socketMap
-        for (auto const& addr : _config.getAddressObject().getSubObjects())
+        for (auto const& addr : ports.getSubObjects())
         {
             bool unused = true;
             for (auto const& socket : socketMap)

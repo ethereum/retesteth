@@ -77,6 +77,8 @@ bool inArray(std::vector<T> const& _array, const T& _val)
     return false;
 }
 
+/// Explode string into array of strings by `delim`
+std::vector<std::string> explode(std::string const& s, char delim);
 
 /// popen with pid at return
 enum popenOutput

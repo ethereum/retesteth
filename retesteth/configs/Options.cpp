@@ -9,9 +9,23 @@ using namespace std;
 using namespace test;
 namespace fs = boost::filesystem;
 
+namespace
+{
+fs::path getRetestethDataDir()
+{
+    fs::path const& dir = Options::get().datadir;
+    bool optionsEmpty = dir.empty();
+    if (!optionsEmpty && !fs::exists(dir))
+        ETH_LOG(
+            "Options path `" + dir.string() + "` doesn't exist, attempt to create a new directory",
+            3);
+    return optionsEmpty ? getDataDir("retesteth") : dir;
+}
+}  // namespace
+
 void deployFirstRunConfigs()
 {
-    fs::path homeDir = getDataDir("retesteth");
+    fs::path homeDir = getRetestethDataDir();
 
     if (fs::exists(homeDir))
     {
@@ -105,7 +119,7 @@ std::vector<ClientConfig> const& Options::DynamicOptions::getClientConfigs()
 
         for (auto const& clientName : cfgs)
         {
-            fs::path configDirectory = getDataDir("retesteth");  // getTestPath();
+            fs::path configDirectory = getRetestethDataDir();
             ETH_FAIL_REQUIRE_MESSAGE(fs::exists(configDirectory),
                 "Could not locate provided testpath: " + string(configDirectory.c_str()));
             fs::path configPath = configDirectory / clientName;
