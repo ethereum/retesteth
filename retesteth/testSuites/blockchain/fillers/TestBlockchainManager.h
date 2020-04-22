@@ -1,7 +1,7 @@
 #pragma once
 #include "TestBlockchain.h"
 #include <ethObjects/common.h>
-#include <retesteth/RPCSession.h>
+#include <retesteth/session/RPCSession.h>
 #include <string>
 #include <vector>
 
@@ -9,8 +9,8 @@
 class TestBlockchainManager
 {
 public:
-    TestBlockchainManager(RPCSession& _session, scheme_blockchainTestFiller const& _testObject,
-        std::string const& _network)
+    TestBlockchainManager(SessionInterface& _session,
+        scheme_blockchainTestFiller const& _testObject, std::string const& _network)
       : m_session(_session),
         m_testObject(_testObject),
         m_sDefaultChainName(scheme_blockchainTestFiller::blockSection::getDefaultChainName()),
@@ -50,7 +50,7 @@ private:
     test::scheme_block prepareUncle(
         scheme_uncleHeader _uncleOverwrite, vectorOfSchemeBlock const& _currentBlockPreparedUncles);
 
-    RPCSession& m_session;                            // session with the client
+    SessionInterface& m_session;                      // session with the client
     scheme_blockchainTestFiller const& m_testObject;  // testData to generate genesis
 
     std::string m_sCurrentChainName;        // Chain name that is mining blocks

@@ -31,11 +31,11 @@
 #include <libdevcore/CommonIO.h>
 #include <retesteth/ExitHandler.h>
 #include <retesteth/Options.h>
-#include <retesteth/RPCSession.h>
 #include <retesteth/TestHelper.h>
 #include <retesteth/TestOutputHelper.h>
 #include <retesteth/TestSuite.h>
 #include <retesteth/ethObjects/common.h>
+#include <retesteth/session/RPCSession.h>
 #include <retesteth/testSuites/Common.h>
 #include <retesteth/testSuites/StateTests.h>
 #include <retesteth/testSuites/TestFixtures.h>

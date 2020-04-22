@@ -3,15 +3,15 @@
 #if defined(_WIN32)
 #include <windows.h>
 #else
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/un.h>
-#include <netinet/in.h>
 #include <arpa/inet.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <sys/un.h>
 #endif
 
-#include <string>
 #include <boost/noncopyable.hpp>
+#include <string>
 
 class SocketResponseValidator
 {
@@ -51,14 +51,15 @@ private:
     TCHAR m_readBuf[512000];
 };
 #else
-class Socket: public boost::noncopyable
+class Socket : public boost::noncopyable
 {
 public:
     enum SocketType
     {
         IPC,
         TCP,
-        IPCDebug
+        IPCDebug,
+        TransitionTool
     };
     explicit Socket(SocketType _type, std::string const& _path);
     std::string sendRequest(std::string const& _req, SocketResponseValidator& _responseValidator);
@@ -68,7 +69,6 @@ public:
     SocketType type() const { return m_socketType; }
 
 private:
-
     std::string m_path;
     int m_socket;
     SocketType m_socketType;

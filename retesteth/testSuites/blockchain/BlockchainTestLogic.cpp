@@ -1,7 +1,7 @@
 #include "BlockchainTestLogic.h"
 #include "fillers/BlockchainTestFillerLogic.h"
 #include <retesteth/EthChecks.h>
-#include <retesteth/RPCSession.h>
+#include <retesteth/session/RPCSession.h>
 #include <retesteth/testSuites/Common.h>
 
 
@@ -19,7 +19,7 @@ void RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _
         std::cout << "Running " << TestOutputHelper::get().testName() << std::endl;
     scheme_blockchainTest inputTest(_testObject, _opt.isLegacyTests);
     TestOutputHelper::get().setUnitTestExceptions(inputTest.getUnitTestExceptions());
-    RPCSession& session = RPCSession::instance(TestOutputHelper::getThreadID());
+    SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
 
     // Info for genesis
     TestInfo errorInfo (inputTest.getNetwork(), 0);

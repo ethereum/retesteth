@@ -19,18 +19,18 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #pragma once
-#include <retesteth/RPCSession.h>
+#include <retesteth/session/RPCSession.h>
 #include <boost/filesystem/path.hpp>
 
 namespace test
 {
 // Check post condition on a client
-// void checkExpectSection(RPCSession& _session, LatestInfo const& _expectedInfo);
+// void checkExpectSection(SessionInterface& _session, LatestInfo const& _expectedInfo);
 void validatePostHash(
-    RPCSession& _session, string const& _postHash, scheme_block const& _latestInfo);
+    SessionInterface& _session, string const& _postHash, scheme_block const& _latestInfo);
 
 // Get Remote State From Client
-scheme_state getRemoteState(RPCSession& _session, scheme_block const& _latestInfo);
+scheme_state getRemoteState(SessionInterface& _session, scheme_block const& _latestInfo);
 
 // Check that test has data object
 void checkDataObject(DataObject const& _input);
@@ -45,18 +45,18 @@ void checkAtLeastOneTest(DataObject const& _input);
 void checkTestNameIsEqualToFileName(DataObject const& _input);
 
 // Compare states with session asking post state data on the fly
-void compareStates(
-    scheme_expectState const& _stateExpect, RPCSession& _session, scheme_block const& _latestInfo);
+void compareStates(scheme_expectState const& _stateExpect, SessionInterface& _session,
+    scheme_block const& _latestInfo);
 void compareStates(scheme_expectState const& _stateExpect, scheme_state const& _statePost);
 string CompareResultToString(CompareResult res);
 
 // Get account from remote state. inline function
-scheme_account remoteGetAccount(RPCSession& _session, string const& _account,
+scheme_account remoteGetAccount(SessionInterface& _session, string const& _account,
     scheme_block const& _latestInfo, size_t& _totalSize);
 
 // Get list of account from remote client
-DataObject getRemoteAccountList(RPCSession& _session, scheme_block const& _latestInfo);
+DataObject getRemoteAccountList(SessionInterface& _session, scheme_block const& _latestInfo);
 
 // json trace vm
-void printVmTrace(RPCSession& _session, std::string const& _trHash, string const& _stateRoot);
+void printVmTrace(SessionInterface& _session, std::string const& _trHash, string const& _stateRoot);
 }

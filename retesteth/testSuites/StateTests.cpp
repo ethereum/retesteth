@@ -31,11 +31,11 @@
 #include <libdevcore/CommonIO.h>
 #include <retesteth/ExitHandler.h>
 #include <retesteth/Options.h>
-#include <retesteth/RPCSession.h>
 #include <retesteth/TestHelper.h>
 #include <retesteth/TestOutputHelper.h>
 #include <retesteth/TestSuite.h>
 #include <retesteth/ethObjects/common.h>
+#include <retesteth/session/RPCSession.h>
 #include <retesteth/testSuites/Common.h>
 #include <retesteth/testSuites/StateTests.h>
 #include <retesteth/testSuites/blockchain/BlockchainTests.h>
@@ -62,7 +62,7 @@ DataObject FillTestAsBlockchain(DataObject const& _testFile)
     DataObject filledTest;
     test::scheme_stateTestFiller test(_testFile);
 
-    RPCSession& session = RPCSession::instance(TestOutputHelper::getThreadID());
+    SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
     // run transactions on all networks that we need
     for (auto const& net : test.getExpectSection().getAllNetworksFromExpectSection())
     {
@@ -169,7 +169,7 @@ DataObject FillTest(DataObject const& _testFile)
     filledTest.setAutosort(true);
     test::scheme_stateTestFiller test(_testFile);
 
-    RPCSession& session = RPCSession::instance(TestOutputHelper::getThreadID());
+    SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
     if (test.getData().count("_info"))
         filledTest["_info"] = test.getData().atKey("_info");
     filledTest["env"] = test.getEnv().getData();
@@ -255,7 +255,7 @@ DataObject FillTest(DataObject const& _testFile)
 void RunTest(DataObject const& _testFile)
 {
     test::scheme_stateTest test(_testFile);
-    RPCSession& session = RPCSession::instance(TestOutputHelper::getThreadID());
+    SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
 
     // read post state results
     for (auto const& post: test.getPost().getResults())

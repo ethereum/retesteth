@@ -23,10 +23,10 @@
 #include <dataObject/DataObjectScheme.h>
 #include <dataObject/DataObjectValidator.h>
 #include <retesteth/Options.h>
-#include <retesteth/RPCSession.h>
 #include <retesteth/TestHelper.h>
 #include <retesteth/TestOutputHelper.h>
 #include <retesteth/ethObjects/common.h>
+#include <retesteth/session/RPCSession.h>
 #include <retesteth/testSuites/Common.h>
 #include <retesteth/testSuites/RPCTests.h>
 #include <boost/test/unit_test.hpp>
@@ -41,7 +41,7 @@ DataObject FillTest(DataObject const& _testFile, TestSuite::TestSuiteOptions& _o
     DataObject filledTest;
     scheme_RPCTestFiller rpcTestFiller(_testFile);
 
-    RPCSession& session = RPCSession::instance(TestOutputHelper::getThreadID());
+    SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
 
     if (rpcTestFiller.hasGenesis())
         session.test_setChainParams(rpcTestFiller.getGenesisForRPC().asJson());

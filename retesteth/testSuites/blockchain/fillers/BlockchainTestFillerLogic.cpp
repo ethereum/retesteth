@@ -16,7 +16,7 @@ void FillTest(scheme_blockchainTestFiller const& _testObject, string const& _net
     if (_testObject.getData().count("_info"))
         _testOut["_info"] = _testObject.getData().atKey("_info");
 
-    RPCSession& session = RPCSession::instance(TestOutputHelper::getThreadID());
+    SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
 
     // Initialise chain manager
     ETH_LOGC("FILL GENESIS INFO: ", 6, LogColor::LIME);

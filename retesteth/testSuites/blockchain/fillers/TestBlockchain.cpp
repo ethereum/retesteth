@@ -175,7 +175,7 @@ string TestBlockchain::prepareDebugInfoString(string const& _newBlockChainName)
 
 // Restore this chain on remote client up to < _number block
 // Restore chain up to _number of blocks. if _number is 0 restore the whole chain
-void TestBlockchain::restoreUpToNumber(RPCSession& _session, size_t _number, bool _samechain)
+void TestBlockchain::restoreUpToNumber(SessionInterface& _session, size_t _number, bool _samechain)
 {
     size_t firstBlock;
     if (_samechain)

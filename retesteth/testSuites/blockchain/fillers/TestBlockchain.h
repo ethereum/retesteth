@@ -1,7 +1,7 @@
 #pragma once
 #include "TestBlock.h"
 #include <ethObjects/common.h>
-#include <retesteth/RPCSession.h>
+#include <retesteth/session/RPCSession.h>
 #include <string>
 #include <vector>
 
@@ -16,7 +16,7 @@ public:
         TRUE,
         FALSE
     };
-    TestBlockchain(RPCSession& _session, scheme_blockchainTestFiller const& _testObject,
+    TestBlockchain(SessionInterface& _session, scheme_blockchainTestFiller const& _testObject,
         std::string const& _network, RegenerateGenesis _regenerateGenesis)
       : m_session(_session), m_testObject(_testObject), m_network(_network)
     {
@@ -48,7 +48,7 @@ public:
 
     // Restore this chain on remote client up to < _number block
     // Restore chain up to _number of blocks. if _number is 0 restore the whole chain
-    void restoreUpToNumber(RPCSession& _session, size_t _number, bool _samechain);
+    void restoreUpToNumber(SessionInterface& _session, size_t _number, bool _samechain);
 
     std::vector<TestBlock> const& getBlocks() const { return m_blocks; }
 
@@ -80,7 +80,7 @@ private:
     test::scheme_block postmineBlockHeader(blockSection const& _block,
         BlockNumber const& _latestBlockNumber, std::vector<scheme_block> const& _uncles);
 
-    RPCSession& m_session;                            // Session with the client
+    SessionInterface& m_session;                      // Session with the client
     scheme_blockchainTestFiller const& m_testObject;  // Test data information
     std::string m_network;                            // Forkname in genesis
 
