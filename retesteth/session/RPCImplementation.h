@@ -42,19 +42,7 @@ public:
     void test_modifyTimestamp(unsigned long long _timestamp) override;
     string test_mineBlocks(int _number, bool _canFail = false) override;
     string test_importRawBlock(std::string const& _blockRLP) override;
-
-    // ?? Deprecated ??
-    std::string test_getBlockStatus(std::string const& _blockHash) override;
     std::string test_getLogHash(std::string const& _txHash) override;
-
-    // ?? Deprecated ??
-    std::string eth_getStorageRoot(
-        std::string const& _address, std::string const& _blockNumber) override;
-    std::string eth_getStorageAt(std::string const& _address, std::string const& _position,
-        std::string const& _blockNumber) override;
-    std::string personal_newAccount(std::string const& _password) override;
-    void personal_unlockAccount(
-        std::string const& _address, std::string const& _password, int _duration) override;
 
     // Internal
     std::string sendRawRequest(std::string const& _request) override;

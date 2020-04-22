@@ -19,7 +19,6 @@ public:
     virtual test::scheme_block eth_getBlockByHash(string const& _hash, bool _fullObjects) = 0;
     virtual test::scheme_block eth_getBlockByNumber(
         BlockNumber const& _blockNumber, bool _fullObjects) = 0;
-
     virtual std::string eth_getCode(
         std::string const& _address, std::string const& _blockNumber) = 0;
     virtual std::string eth_getBalance(
@@ -38,19 +37,7 @@ public:
     virtual void test_modifyTimestamp(unsigned long long _timestamp) = 0;
     virtual string test_mineBlocks(int _number, bool _canFail = false) = 0;
     virtual string test_importRawBlock(std::string const& _blockRLP) = 0;
-
-    // ?? Deprecated ??
-    virtual std::string test_getBlockStatus(std::string const& _blockHash) = 0;
     virtual std::string test_getLogHash(std::string const& _txHash) = 0;
-
-    // ?? Deprecated ??
-    virtual std::string eth_getStorageRoot(
-        std::string const& _address, std::string const& _blockNumber) = 0;
-    virtual std::string eth_getStorageAt(std::string const& _address, std::string const& _position,
-        std::string const& _blockNumber) = 0;
-    virtual std::string personal_newAccount(std::string const& _password) = 0;
-    virtual void personal_unlockAccount(
-        std::string const& _address, std::string const& _password, int _duration) = 0;
 
     // Internal
     virtual std::string sendRawRequest(std::string const& _request) = 0;

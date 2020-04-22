@@ -187,44 +187,11 @@ string RPCImpl::test_importRawBlock(std::string const& _blockRLP)
     return string();
 }
 
-// ?? Deprecated ??
-std::string RPCImpl::test_getBlockStatus(std::string const& _blockHash)
-{
-    return rpcCall("test_getBlockStatus", {quote(_blockHash)}).asString();
-}
-
 std::string RPCImpl::test_getLogHash(std::string const& _txHash)
 {
     return rpcCall("test_getLogHash", {quote(_txHash)}).asString();
 }
 
-// ?? Deprecated ??
-std::string RPCImpl::eth_getStorageRoot(
-    std::string const& _address, std::string const& _blockNumber)
-{
-    string address = (_address.length() == 20) ? "0x" + _address : _address;
-    return rpcCall("eth_getStorageRoot", {quote(address), quote(_blockNumber)}).asString();
-}
-
-std::string RPCImpl::eth_getStorageAt(
-    std::string const& _address, std::string const& _position, std::string const& _blockNumber)
-{
-    return rpcCall("eth_getStorageAt", {quote(_address), quote(_position), quote(_blockNumber)})
-        .asString();
-}
-
-std::string RPCImpl::personal_newAccount(std::string const& _password)
-{
-    string addr = rpcCall("personal_newAccount", {quote(_password)}).asString();
-    ETH_TEST_MESSAGE("Created account " + addr);
-    return addr;
-}
-
-void RPCImpl::personal_unlockAccount(
-    std::string const& _address, std::string const& _password, int _duration)
-{
-    rpcCall("personal_unlockAccount", {quote(_address), quote(_password), to_string(_duration)});
-}
 
 // Internal
 std::string RPCImpl::sendRawRequest(std::string const& _request)
