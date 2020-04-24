@@ -92,11 +92,10 @@ DataObject FillTestAsBlockchain(DataObject const& _testFile)
                     mexpect.correctMiningReward(net, test.getEnv().getCoinbase());
 
                     string sEngine = scheme_blockchainTestBase::m_sNoProof;
-                    session.test_setChainParams(test.getGenesisForRPC(net, sEngine).asJson());
+                    session.test_setChainParams(test.getGenesisForRPC(net, sEngine));
                     u256 a(test.getEnv().getData().atKey("currentTimestamp").asString());
                     session.test_modifyTimestamp(a.convert_to<size_t>());
-                    string signedTransactionRLP = tr.transaction.getSignedRLP();
-                    string trHash = session.eth_sendRawTransaction(signedTransactionRLP);
+                    string trHash = session.eth_sendRawTransaction(tr.transaction);
 
                     if (session.getLastRPCError().type() != DataType::Null)
                         ETH_ERROR_MESSAGE(session.getLastRPCError().atKey("message").asString());
@@ -181,7 +180,7 @@ DataObject FillTest(DataObject const& _testFile)
     {
         DataObject forkResults;
         forkResults.setKey(net);
-        session.test_setChainParams(test.getGenesisForRPC(net, "NoReward").asJson());
+        session.test_setChainParams(test.getGenesisForRPC(net, "NoReward"));
 
         // run transactions for defined expect sections only
         for (auto const& expect : test.getExpectSection().getExpectSections())
@@ -206,7 +205,7 @@ DataObject FillTest(DataObject const& _testFile)
 
                     u256 a(test.getEnv().getData().atKey("currentTimestamp").asString());
                     session.test_modifyTimestamp(a.convert_to<size_t>());
-                    string trHash = session.eth_sendRawTransaction(tr.transaction.getSignedRLP());
+                    string trHash = session.eth_sendRawTransaction(tr.transaction);
                     string latestBlockNumber = session.test_mineBlocks(1);
                     tr.executed = true;
 
@@ -266,7 +265,7 @@ void RunTest(DataObject const& _testFile)
             !inArray(Options::getDynamicOptions().getCurrentConfig().getNetworks(), network))
             networkSkip = true;
         else
-            session.test_setChainParams(test.getGenesisForRPC(network, "NoReward").asJson());
+            session.test_setChainParams(test.getGenesisForRPC(network, "NoReward"));
 
         // One test could have many transactions on same chainParams
         // It is expected that for a setted chainParams there going to be a transaction
@@ -295,7 +294,7 @@ void RunTest(DataObject const& _testFile)
                 {
                     u256 a(test.getEnv().getData().atKey("currentTimestamp").asString());
                     session.test_modifyTimestamp(a.convert_to<size_t>());
-                    string trHash = session.eth_sendRawTransaction(tr.transaction.getSignedRLP());
+                    string trHash = session.eth_sendRawTransaction(tr.transaction);
                     string latestBlockNumber = session.test_mineBlocks(1);
                     tr.executed = true;
 

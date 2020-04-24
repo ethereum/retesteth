@@ -32,7 +32,8 @@
 #include <retesteth/ExitHandler.h>
 #include <retesteth/TestHelper.h>
 #include <retesteth/TestOutputHelper.h>
-#include <retesteth/session/RPCImplementation.h>
+#include <retesteth/session/RPCImpl.h>
+#include <retesteth/session/ToolImpl.h>
 
 using namespace std;
 using namespace dev;
@@ -146,6 +147,15 @@ void RPCSession::runNewInstanceOfAClient(string const& _threadID, ClientConfig c
                                                                  // lock
             socketMap.insert(std::pair<string, sessionInfo>(_threadID, std::move(info)));
         }
+    }
+    else if (_config.getSocketType() == Socket::TransitionTool)
+    {
+        sessionInfo info(NULL,
+            new RPCSession(new ToolImpl(Socket::SocketType::TCP, _config.getAddress())), "", 0,
+            _config.getId());
+        std::lock_guard<std::mutex> lock(g_socketMapMutex);  // function must be called from lock
+        socketMap.insert(std::pair<string, sessionInfo>(_threadID, std::move(info)));
+        return;
     }
     else
         ETH_FAIL_MESSAGE("Unknown Socket Type in runNewInstanceOfAClient");

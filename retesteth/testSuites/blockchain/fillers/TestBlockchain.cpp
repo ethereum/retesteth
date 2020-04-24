@@ -131,7 +131,7 @@ DataObject TestBlockchain::importTransactions(blockSection const& _block)
     ETH_LOGC("Import transactions: " + m_sDebugString, 6, LogColor::YELLOW);
     for (auto const& tr : _block.getTransactions())
     {
-        string const trHash = m_session.eth_sendRawTransaction(tr.getSignedRLP());
+        string const trHash = m_session.eth_sendRawTransaction(tr);
         if (!tr.isMarkedInvalid())
         {
             transactionsArray.addArrayObject(tr.getDataForBCTest());

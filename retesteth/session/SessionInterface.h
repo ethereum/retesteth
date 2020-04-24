@@ -8,12 +8,9 @@ public:
     virtual std::string web3_clientVersion() = 0;
 
     // ETH Methods
-    virtual std::string eth_sendRawTransaction(std::string const& _rlp) = 0;
-    virtual std::string eth_sendTransaction(std::string const& _transaction) = 0;
+    virtual std::string eth_sendRawTransaction(scheme_transaction const& _transaction) = 0;
     virtual int eth_getTransactionCount(
         std::string const& _address, std::string const& _blockNumber) = 0;
-    virtual test::scheme_transactionReceipt eth_getTransactionReceipt(
-        std::string const& _transactionHash) = 0;
 
     virtual std::string eth_blockNumber() = 0;
     virtual test::scheme_block eth_getBlockByHash(string const& _hash, bool _fullObjects) = 0;
@@ -32,7 +29,7 @@ public:
     virtual scheme_debugTraceTransaction debug_traceTransaction(std::string const& _trHash) = 0;
 
     // Test
-    virtual void test_setChainParams(std::string const& _config) = 0;
+    virtual void test_setChainParams(DataObject const& _config) = 0;
     virtual void test_rewindToBlock(size_t _blockNr) = 0;
     virtual void test_modifyTimestamp(unsigned long long _timestamp) = 0;
     virtual string test_mineBlocks(int _number, bool _canFail = false) = 0;
@@ -40,11 +37,9 @@ public:
     virtual std::string test_getLogHash(std::string const& _txHash) = 0;
 
     // Internal
-    virtual std::string sendRawRequest(std::string const& _request) = 0;
     virtual DataObject rpcCall(std::string const& _methodName,
         std::vector<std::string> const& _args = std::vector<std::string>(),
         bool _canFail = false) = 0;
-
     virtual Socket::SocketType getSocketType() const = 0;
     virtual std::string const& getSocketPath() const = 0;
 

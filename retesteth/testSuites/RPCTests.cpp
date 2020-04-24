@@ -44,7 +44,7 @@ DataObject FillTest(DataObject const& _testFile, TestSuite::TestSuiteOptions& _o
     SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
 
     if (rpcTestFiller.hasGenesis())
-        session.test_setChainParams(rpcTestFiller.getGenesisForRPC().asJson());
+        session.test_setChainParams(rpcTestFiller.getGenesisForRPC());
 
     DataObject returnedData =
         session.rpcCall(rpcTestFiller.get_method(), rpcTestFiller.get_params());

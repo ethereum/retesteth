@@ -25,7 +25,7 @@ void RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _
     TestInfo errorInfo (inputTest.getNetwork(), 0);
     TestOutputHelper::get().setCurrentTestInfo(errorInfo);
     session.test_setChainParams(
-        inputTest.getGenesisForRPC(inputTest.getNetwork(), inputTest.getEngine()).asJson());
+        inputTest.getGenesisForRPC(inputTest.getNetwork(), inputTest.getEngine()));
 
     // for all blocks
     size_t blockNumber = 0;

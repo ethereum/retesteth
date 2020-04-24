@@ -5,7 +5,7 @@
 
 #include <dataObject/ConvertFile.h>
 #include <retesteth/ethObjects/common.h>
-#include <retesteth/session/RPCImplementation.h>
+#include <retesteth/session/RPCImpl.h>
 
 std::string RPCImpl::web3_clientVersion()
 {
@@ -13,9 +13,10 @@ std::string RPCImpl::web3_clientVersion()
 }
 
 // ETH Methods
-std::string RPCImpl::eth_sendRawTransaction(std::string const& _rlp)
+std::string RPCImpl::eth_sendRawTransaction(scheme_transaction const& _transaction)
 {
-    DataObject result = rpcCall("eth_sendRawTransaction", {quote(_rlp)}, true);
+    DataObject result =
+        rpcCall("eth_sendRawTransaction", {quote(_transaction.getSignedRLP())}, true);
 
     DataObject const& lastError = getLastRPCError();
     if (lastError.type() != DataType::Null)
@@ -28,23 +29,11 @@ std::string RPCImpl::eth_sendRawTransaction(std::string const& _rlp)
     return result.asString();
 }
 
-std::string RPCImpl::eth_sendTransaction(std::string const& _transaction)
-{
-    return rpcCall("eth_sendTransaction", {_transaction}).asString();
-}
-
 int RPCImpl::eth_getTransactionCount(std::string const& _address, std::string const& _blockNumber)
 {
     DataObject res = rpcCall("eth_getTransactionCount", {quote(_address), quote(_blockNumber)});
     return (res.type() == DataType::String) ? test::hexOrDecStringToInt(res.asString()) :
                                               res.asInt();
-}
-
-test::scheme_transactionReceipt RPCImpl::eth_getTransactionReceipt(
-    std::string const& _transactionHash)
-{
-    return test::scheme_transactionReceipt(
-        rpcCall("eth_getTransactionReceipt", {quote(_transactionHash)}));
 }
 
 std::string RPCImpl::eth_blockNumber()
@@ -101,10 +90,10 @@ scheme_debugTraceTransaction RPCImpl::debug_traceTransaction(std::string const& 
 }
 
 // Test
-void RPCImpl::test_setChainParams(std::string const& _config)
+void RPCImpl::test_setChainParams(DataObject const& _config)
 {
-    ETH_FAIL_REQUIRE_MESSAGE(
-        rpcCall("test_setChainParams", {_config}) == true, "remote test_setChainParams = false");
+    ETH_FAIL_REQUIRE_MESSAGE(rpcCall("test_setChainParams", {_config.asJson()}) == true,
+        "remote test_setChainParams = false");
 }
 
 void RPCImpl::test_rewindToBlock(size_t _blockNr)

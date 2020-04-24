@@ -40,7 +40,7 @@ public:
     {
         DataObject genesisObject =
             m_testObject.getGenesisForRPC(m_network, m_testObject.getSealEngine());
-        m_session.test_setChainParams(genesisObject.asJson());
+        m_session.test_setChainParams(genesisObject);
     }
 
     void generateBlock(
