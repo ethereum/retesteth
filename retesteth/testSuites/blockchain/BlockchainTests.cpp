@@ -252,6 +252,9 @@ BOOST_AUTO_TEST_CASE(stCreate2) {}
 BOOST_AUTO_TEST_CASE(stExtCodeHash) {}
 BOOST_AUTO_TEST_CASE(stSStoreTest) {}
 
+//Berlin Tests
+BOOST_AUTO_TEST_CASE(stSubroutine) {}
+
 // Stress Tests
 BOOST_AUTO_TEST_CASE(stAttackTest) {}
 BOOST_AUTO_TEST_CASE(stMemoryStressTest) {}

@@ -10,6 +10,7 @@ extern std::string default_Byzantium_config;
 extern std::string default_Constantinople_config;
 extern std::string default_ConstantinopleFix_config;
 extern std::string default_Istanbul_config;
+extern std::string default_Berlin_config;
 
 // Transition test configs
 extern std::string default_FrontierToHomesteadAt5_config;

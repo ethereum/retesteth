@@ -63,6 +63,7 @@ void deployFirstRunConfigs()
     writeFile(genesisDir / "Constantinople.json", default_Constantinople_config);
     writeFile(genesisDir / "ConstantinopleFix.json", default_ConstantinopleFix_config);
     writeFile(genesisDir / "Istanbul.json", default_Istanbul_config);
+    writeFile(genesisDir / "Berlin.json", default_Berlin_config);
 
     writeFile(genesisDir / "FrontierToHomesteadAt5.json", default_FrontierToHomesteadAt5_config);
     writeFile(genesisDir / "HomesteadToDaoAt5.json", default_HomesteadToDaoAt5_config);

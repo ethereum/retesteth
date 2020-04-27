@@ -154,7 +154,7 @@ DataObject VMTestConverterSuite::doTests(DataObject const& _input, TestSuiteOpti
 
         // Construct expect section
         DataObject expectSection;
-        expectSection["network"].addArrayObject(DataObject(">=Istanbul"));
+        expectSection["network"].addArrayObject(DataObject(">=Berlin"));
         if (vmFiller.count("expect"))
             expectSection["result"] = vmFiller.atKey("expect");
         else
