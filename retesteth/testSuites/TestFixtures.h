@@ -11,7 +11,7 @@ using namespace std;
 namespace test
 {
 static std::vector<std::string> const c_timeConsumingTestSuites{std::string{"stTimeConsuming"},
-    std::string{"stQuadraticComplexityTest"}, std::string{"bcExploitTest"},
+    std::string{"stQuadraticComplexityTest"}, std::string{"bcExploitTest"}, std::string{"bcExpectSection"},
     std::string{"bcWalletTest"}, std::string{"stQuadraticComplexityTest"}};
 
 enum class TestExecution

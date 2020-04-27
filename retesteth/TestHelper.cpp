@@ -46,7 +46,7 @@ DataObject readJsonData(fs::path const& _file, string const& _stopper, bool _aut
     {
         string s = dev::contentsString(_file);
         ETH_ERROR_REQUIRE_MESSAGE(s.length() > 0,
-            "Contents of " + _file.string() + " is empty. Trying to parse empty file.");
+            "Contents of " + _file.string() + " is empty. Trying to parse empty file. (forgot --filltests?)");
         return dataobject::ConvertJsoncppStringToData(s, _stopper, _autosort);
     }
     catch (std::exception const& _ex)
@@ -64,7 +64,7 @@ DataObject readYamlData(fs::path const& _file)
     {
         string s = dev::contentsString(_file);
         ETH_ERROR_REQUIRE_MESSAGE(s.length() > 0,
-            "Contents of " + _file.string() + " is empty. Trying to parse empty file.");
+            "Contents of " + _file.string() + " is empty. Trying to parse empty file. (forgot --filltests?)");
         return dataobject::ConvertYamlToData(YAML::Load(s));
     }
     catch (std::exception const& _ex)
