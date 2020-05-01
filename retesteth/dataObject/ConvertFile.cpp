@@ -72,7 +72,7 @@ bool readBoolOrNull(string const& _input, size_t& _i, bool& _result, bool& _read
     }
     else if (text == "fals")
     {
-        if (_i + 5 < _input.size() && (_input[_i + 5] == 'e'))
+        if (_input.substr(_i, 5) == "false")
         {
             _i += 5;
             _result = false;
@@ -250,6 +250,9 @@ DataObject ConvertJsoncppStringToData(
 
         if (_input[i] == ']' || _input[i] == '}')
         {
+            // if (actualRoot->type() == DataType::Null)
+            //    throw DataObjectException()
+            //        << "lost actual root pointer around: " + printDebug(debug);
             if (isSeenCommaBefore)
                 throw DataObjectException()
                     << "unexpected ',' before end of the array/object! around: " +
@@ -259,7 +262,8 @@ DataObject ConvertJsoncppStringToData(
                     << "expected ']' closing the array! around: " + printDebug(debug);
             if (actualRoot->type() == DataType::Object && _input.at(i) != '}')
                 throw DataObjectException()
-                    << "expected '}' closing the object! around: " + printDebug(debug);
+                    << "expected '}' closing the object! around: " + printDebug(debug) +
+                           ", got: `" + _input.at(i) + "'";
 
             if (!_stopper.empty() && actualRoot->getKey() == _stopper)
                 return root;
@@ -276,10 +280,14 @@ DataObject ConvertJsoncppStringToData(
             {
                 actualRoot = applyDepth.at(applyDepth.size() - 1);
                 applyDepth.pop_back();
+
                 if (i + 1 < _input.length())
                 {
                     if (_input[i + 1] == ',')
+                    {
                         i++;
+                        continue;
+                    }
                     if (_input[i + 1] == ':')
                         throw DataObjectException()
                             << errorPrefix +

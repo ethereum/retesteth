@@ -30,6 +30,36 @@ using namespace dataobject;
 
 BOOST_FIXTURE_TEST_SUITE(DataObjectTestSuite, TestOutputHelperFixture)
 
+BOOST_AUTO_TEST_CASE(dataobject_bracers)
+{
+    string data = R"(
+      {
+      "logs": [
+          {
+           "address": "0x0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6",
+           "topics": [
+            "0x000000000000000000000000095e7baea6a6c7c4c2dfeb977efac326af552d87"
+           ],
+           "logIndex": "0x0",
+           "removed": false
+          }
+         ]
+      }
+    )";
+
+    try
+    {
+        DataObject a = ConvertJsoncppStringToData(data);
+        BOOST_REQUIRE(a.atKey("logs").at(0).atKey("removed").asBool() == false);
+    }
+    catch (DataObjectException const& _ex)
+    {
+        BOOST_ERROR(
+            "Unexpected DataObject exception when parsing json: " + std::string(_ex.what()));
+    }
+}
+
+
 BOOST_AUTO_TEST_CASE(dataobject_EscapeChars)
 {
     string data = R"(
