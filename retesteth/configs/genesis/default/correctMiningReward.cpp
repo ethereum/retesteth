@@ -2,7 +2,7 @@
 #include <string>
 using namespace std;
 
-string default_correctMiningReward_config = R"({
+const string default_correctMiningReward_config = R"({
     "//comment" : "State Tests does not calculate mining reward in post conditions, so when filling a blockchain test out of it, the mining reward must be set",
     "Frontier":          "5000000000000000000",
     "Homestead":         "5000000000000000000",

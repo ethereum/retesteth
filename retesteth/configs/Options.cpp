@@ -46,6 +46,7 @@ void deployFirstRunConfigs()
 
     writeFile(homeDir / "version", string(ETH_PROJECT_VERSION));
     writeFile(homeDir / "default" / "config", default_config);
+    writeFile(homeDir / "t8ntool" / "config", t8ntool_config);
     writeFile(homeDir / "gethTCP" / "config", default_config);
     writeFile(homeDir / "besu" / "config", besu_config);
     writeFile(homeDir / "alethTCP" / "config", alethTCP_config);
@@ -53,8 +54,8 @@ void deployFirstRunConfigs()
     writeFile(homeDir / "aleth" / "config", aleth_config);
     writeFile(homeDir / "aleth" / "aleth.sh", aleth_config_sh);
 
+    // Default geth configs
     fs::path genesisDir = homeDir / "default" / "genesis";
-
     writeFile(genesisDir / "Frontier.json", default_Frontier_config);
     writeFile(genesisDir / "Homestead.json", default_Homestead_config);
     writeFile(genesisDir / "EIP150.json", default_EIP150_config);
@@ -70,6 +71,25 @@ void deployFirstRunConfigs()
     writeFile(genesisDir / "EIP158ToByzantiumAt5.json", default_EIP158ToByzantiumAt5_config);
     writeFile(genesisDir / "ByzantiumToConstantinopleFixAt5.json",
         default_ByzantiumToConstantinopleFixAt5_config);
+    writeFile(genesisDir / "correctMiningReward.json", default_correctMiningReward_config);
+
+    // Default geth t8ntool configs
+    genesisDir = homeDir / "t8ntool" / "genesis";
+    writeFile(genesisDir / "Frontier.json", t8ntool_Frontier_config);
+    writeFile(genesisDir / "Homestead.json", t8ntool_Homestead_config);
+    writeFile(genesisDir / "EIP150.json", t8ntool_EIP150_config);
+    writeFile(genesisDir / "EIP158.json", t8ntool_EIP158_config);
+    writeFile(genesisDir / "Byzantium.json", t8ntool_Byzantium_config);
+    writeFile(genesisDir / "Constantinople.json", t8ntool_Constantinople_config);
+    writeFile(genesisDir / "ConstantinopleFix.json", t8ntool_ConstantinopleFix_config);
+    writeFile(genesisDir / "Istanbul.json", t8ntool_Istanbul_config);
+
+    writeFile(genesisDir / "FrontierToHomesteadAt5.json", t8ntool_FrontierToHomesteadAt5_config);
+    writeFile(genesisDir / "HomesteadToDaoAt5.json", t8ntool_HomesteadToDaoAt5_config);
+    writeFile(genesisDir / "HomesteadToEIP150At5.json", t8ntool_HomesteadToEIP150At5_config);
+    writeFile(genesisDir / "EIP158ToByzantiumAt5.json", t8ntool_EIP158ToByzantiumAt5_config);
+    writeFile(genesisDir / "ByzantiumToConstantinopleFixAt5.json",
+        t8ntool_ByzantiumToConstantinopleFixAt5_config);
     writeFile(genesisDir / "correctMiningReward.json", default_correctMiningReward_config);
 }
 

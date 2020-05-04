@@ -2,7 +2,7 @@
 #include <string>
 using namespace std;
 
-string default_ConstantinopleFix_config = R"({
+const string default_ConstantinopleFix_config = R"({
     "params" : {
        "homesteadForkBlock" : "0x00",
        "EIP150ForkBlock" : "0x00",
@@ -10,6 +10,14 @@ string default_ConstantinopleFix_config = R"({
        "byzantiumForkBlock" : "0x00",
        "constantinopleForkBlock" : "0x00",
        "constantinopleFixForkBlock" : "0x00"
+    },
+    "accounts" : {
+    }
+})";
+
+const string t8ntool_ConstantinopleFix_config = R"({
+    "params" : {
+        "fork" : "ConstantinopleFix"
     },
     "accounts" : {
     }

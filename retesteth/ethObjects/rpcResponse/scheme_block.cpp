@@ -1,4 +1,5 @@
 #include "scheme_block.h"
+#include "TestHelper.h"
 
 DataObject const& getEmptySchemeBlockData()
 {
@@ -101,7 +102,7 @@ std::string scheme_block::getBlockRLP() const
         else
             transactionRLP << Address(transaction.atKey("to").asString());
         transactionRLP << u256(transaction.atKey("value").asString());
-        transactionRLP << fromHex(transaction.atKey("input").asString());
+        transactionRLP << test::sfromHex(transaction.atKey("input").asString());
 
         byte v = (int)u256(transaction.atKey("v").asString().c_str());
         if (v <= 1)
@@ -146,7 +147,7 @@ RLPStream scheme_block::streamBlockHeader(DataObject const& _headerData)
     header << u256(_headerData.atKey("gasLimit").asString());
     header << u256(_headerData.atKey("gasUsed").asString());
     header << u256(_headerData.atKey("timestamp").asString());
-    header << dev::fromHex(_headerData.atKey("extraData").asString());
+    header << test::sfromHex(_headerData.atKey("extraData").asString());
     if (_headerData.count("mixHash"))
     {
         header << h256(_headerData.atKey("mixHash").asString());
@@ -198,14 +199,21 @@ void scheme_block::scheme_block_header::resetHeader(DataObject const& _header)
     if (bloomType != DigitsType::HexPrefixed && bloomType != DigitsType::UnEvenHexPrefixed)
         m_data["bloom"] = "0x" + m_data.atKey("bloom").asString();
 
-    makeAllFieldsHex(m_data);
+    try
+    {
+        makeAllFieldsHex(m_data);
 
-    // make sure coinbase is 20 bytes address
-    m_data["coinbase"] = toString(Address(m_data["coinbase"].asString()));
-    m_data["coinbase"] = makeHexAddress(m_data.atKey("coinbase").asString());
+        // make sure coinbase is 20 bytes address
+        m_data["coinbase"] = toString(Address(m_data["coinbase"].asString()));
+        m_data["coinbase"] = makeHexAddress(m_data.atKey("coinbase").asString());
 
-    // recalculate the hash
-    m_data["hash"] = "0x" + toString(dev::sha3(scheme_block::streamBlockHeader(m_data).out()));
+        // recalculate the hash
+        m_data["hash"] = "0x" + toString(dev::sha3(scheme_block::streamBlockHeader(m_data).out()));
+    }
+    catch (BadHexCharacter const&)
+    {
+        ETH_ERROR_MESSAGE("Bad hex character around: " + m_data.asJson());
+    }
 }
 
 DataObject scheme_block::scheme_block_header::mapBlockHeader() const
@@ -213,7 +221,7 @@ DataObject scheme_block::scheme_block_header::mapBlockHeader() const
     // Map Block Header
     DataObject header;
     header["bloom"] = m_data.atKey("logsBloom");
-    header["coinbase"] = m_data.atKey("author");
+    header["coinbase"] = m_data.atKey("miner");
     header["difficulty"] = m_data.atKey("difficulty");
     header["extraData"] = m_data.atKey("extraData");
     header["gasLimit"] = m_data.atKey("gasLimit");

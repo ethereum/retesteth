@@ -69,6 +69,11 @@ public:
         return newData;
     }
 
+    std::string getHash() const
+    {
+        return dev::toHexPrefixed(dev::sha3(dev::fromHex(getSignedRLP())));
+    }
+
     std::string getSignedRLP(SignatureStruct* _returnSig = 0) const
     {
         u256 nonce = u256(m_data.atKey("nonce").asString());
@@ -76,7 +81,7 @@ public:
         u256 gasLimit = u256(m_data.atKey("gasLimit").asString());
         Address trTo = Address(m_data.atKey("to").asString());
         u256 value = u256(m_data.atKey("value").asString());
-        bytes data = fromHex(m_data.atKey("data").asString());
+        bytes data = sfromHex(m_data.atKey("data").asString());
 
         dev::RLPStream s;
         s.appendList(6);

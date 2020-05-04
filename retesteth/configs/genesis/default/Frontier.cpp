@@ -2,8 +2,16 @@
 #include <string>
 using namespace std;
 
-string default_Frontier_config = R"({
+const string default_Frontier_config = R"({
     "params" : {
+    },
+    "accounts" : {
+    }
+})";
+
+const string t8ntool_Frontier_config = R"({
+    "params" : {
+        "fork" : "Frontier"
     },
     "accounts" : {
     }

@@ -71,7 +71,7 @@ scheme_debugAccountRange RPCImpl::debug_accountRange(std::string const& _blockHa
     int _txIndex, std::string const& _address, int _maxResults)
 {
     return scheme_debugAccountRange(rpcCall(
-        "debug_accountRange", {quote(toString(u256(dev::fromHex(_blockHashOrNumber)))),
+        "debug_accountRange", {quote(toString(u256(test::sfromHex(_blockHashOrNumber)))),
                                   to_string(_txIndex), quote(_address), to_string(_maxResults)}));
 }
 
@@ -80,7 +80,7 @@ DataObject RPCImpl::debug_storageRangeAt(std::string const& _blockHashOrNumber, 
     std::string const& _address, std::string const& _begin, int _maxResults)
 {
     return rpcCall("debug_storageRangeAt",
-        {quote(toString(u256(dev::fromHex(_blockHashOrNumber)))), to_string(_txIndex),
+        {quote(toString(u256(test::sfromHex(_blockHashOrNumber)))), to_string(_txIndex),
             quote(_address), quote(_begin), to_string(_maxResults)});
 }
 

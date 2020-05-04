@@ -16,6 +16,10 @@ struct BlockNumber
     BlockNumber(size_t _number) : m_blockNumber("") { m_blockNumber = toString(_number); }
     int getBlockNumberAsInt() const { return hexOrDecStringToInt(m_blockNumber); }
     string getBlockNumberAsString() const { return m_blockNumber; }
+    string getBlockNumberAsHexPrefixed() const
+    {
+        return toCompactHexPrefixed(getBlockNumberAsInt(), 1);
+    }
     void applyShift(int _shift)
     {
         m_blockNumber = toCompactHexPrefixed(getBlockNumberAsInt() + _shift, 1);
@@ -131,7 +135,7 @@ private:
         {
             // validate rpc response on eth_getBlock()
             requireJsonFields(_data, "blockRPC",
-                {{"author", {{DataType::String}, jsonField::Required}},
+                {{"author", {{DataType::String}, jsonField::Optional}},  // Aleth property
                     {"extraData", {{DataType::String}, jsonField::Required}},
                     {"gasLimit", {{DataType::String}, jsonField::Required}},
                     {"gasUsed", {{DataType::String}, jsonField::Required}},
@@ -145,7 +149,8 @@ private:
                     {"size", {{DataType::String}, jsonField::Required}},
                     {"stateRoot", {{DataType::String}, jsonField::Required}},
                     {"timestamp", {{DataType::String}, jsonField::Required}},
-                    {"totalDifficulty", {{DataType::String}, jsonField::Required}},
+                    {"totalDifficulty", {{DataType::String}, jsonField::Optional}},  // Aleth
+                                                                                     // property
                     {"transactions", {{DataType::Array}, jsonField::Required}},
                     {"transactionsRoot", {{DataType::String}, jsonField::Required}},
                     {"uncles", {{DataType::Array}, jsonField::Required}},

@@ -332,6 +332,20 @@ string prepareLLLCVersionString()
     return res;
 }
 
+/// Safe dev::fromHex
+dev::bytes sfromHex(string const& _hexStr)
+{
+    try
+    {
+        return dev::fromHex(_hexStr);
+    }
+    catch (BadHexCharacter const&)
+    {
+        ETH_ERROR_MESSAGE("Bad hex character around: " + _hexStr);
+        return dev::bytes();
+    }
+}
+
 bool checkCmdExist(std::string const& _command)
 {
     string checkCmd = string("which " + _command + " > /dev/null 2>&1");
@@ -340,7 +354,7 @@ bool checkCmdExist(std::string const& _command)
     return true;
 }
 
-string executeCmd(string const& _command)
+string executeCmd(string const& _command, bool _warningOnEmpty)
 {
 #if defined(_WIN32)
     BOOST_ERROR("executeCmd() has not been implemented for Windows.");
@@ -352,7 +366,10 @@ string executeCmd(string const& _command)
     if (fp == NULL)
         ETH_FAIL_MESSAGE("Failed to run " + _command);
     if (fgets(output, sizeof(output) - 1, fp) == NULL)
-        ETH_WARNING("Reading empty result for " + _command);
+    {
+        if (_warningOnEmpty)
+            ETH_WARNING("Reading empty result for " + _command);
+    }
     else
     {
         while (true)

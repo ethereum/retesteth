@@ -15,7 +15,7 @@ bool isHexDigitsType(test::object::DigitsType _dtype)
 int hexOrDecStringToInt(string const& _str)
 {
     if (isHexDigitsType(test::object::stringIntegerType(_str)))
-        return (int)dev::u256(dev::fromHex(_str));
+        return (int)dev::u256(test::sfromHex(_str));
     else
         return atoi(_str.c_str());
 }

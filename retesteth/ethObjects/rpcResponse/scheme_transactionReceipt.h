@@ -72,7 +72,7 @@ namespace test {
                     topics.push_back(dev::h256(topic.asString()));
 
                 _rlp.appendList(3) << dev::Address(m_data.atKey("address").asString()) << topics
-                                   << dev::fromHex(m_data.atKey("data").asString());
+                                   << test::sfromHex(m_data.atKey("data").asString());
             }
 		};
 

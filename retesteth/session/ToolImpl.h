@@ -52,6 +52,25 @@ public:
     std::string const& getSocketPath() const override;
 
 private:
+    class ToolBlock
+    {
+    public:
+        ToolBlock(DataObject const& _toolResponse, DataObject const& _chainParams,
+            DataObject const& _pstate)
+          : m_toolresponse(_toolResponse), m_env(_chainParams), m_postState(_pstate)
+        {}
+        DataObject const& getToolResponse() const { return m_toolresponse.getData(); }
+        DataObject const& getEnv() const { return m_env; }
+        DataObject const& getPostState() const { return m_postState; }
+
+    private:
+        scheme_toolResponse m_toolresponse;
+        DataObject m_env;
+        DataObject m_postState;
+    };
+    ToolBlock const& getBlockByHashOrNumber(string const& _hashOrNumber) const;
+
+private:
     Socket::SocketType m_sockType;
     string m_toolPath;
 
@@ -64,7 +83,8 @@ private:
     DataObject m_chainParams;
     unsigned long long m_timestamp;
     std::list<scheme_transaction> m_transactions;
-    void executeTool();
     string getGenesisForTool(DataObject const& _genesis) const;
     string getTxsForTool() const;
+
+    std::vector<ToolBlock> m_blockchain;
 };

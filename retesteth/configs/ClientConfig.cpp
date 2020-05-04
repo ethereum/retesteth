@@ -1,4 +1,5 @@
 #include <retesteth/configs/ClientConfig.h>
+#include <retesteth/configs/Genesis.h>
 #include <mutex>
 std::mutex g_staticDeclaration_clientConfigID;
 namespace test
@@ -14,36 +15,27 @@ ClientConfigID::ClientConfigID()
 }  // namespace test
 
 using namespace std;
-string default_config = R"({
-    "name" : "Ethereum GO on TCP",
-    "socketType" : "tcp",
-    "socketAddress" : [
-        "127.0.0.1:8545",
-        "127.0.0.1:8546",
-        "127.0.0.1:8547",
-        "127.0.0.1:8548",
-        "127.0.0.1:8549",
-        "127.0.0.1:8550",
-        "127.0.0.1:8551",
-        "127.0.0.1:8552"
-    ],
+
+string const defaultForks = R"(
     "forks" : [
-        "Frontier",
-        "Homestead",
-        "EIP150",
-        "EIP158",
-        "Byzantium",
-        "Constantinople",
-        "ConstantinopleFix",
-        "Istanbul"
+      "Frontier",
+      "Homestead",
+      "EIP150",
+      "EIP158",
+      "Byzantium",
+      "Constantinople",
+      "ConstantinopleFix",
+      "Istanbul"
     ],
     "additionalForks" : [
-        "FrontierToHomesteadAt5",
-        "HomesteadToEIP150At5",
-        "EIP158ToByzantiumAt5",
-        "HomesteadToDaoAt5",
-        "ByzantiumToConstantinopleFixAt5"
-    ],
+      "FrontierToHomesteadAt5",
+      "HomesteadToEIP150At5",
+      "EIP158ToByzantiumAt5",
+      "HomesteadToDaoAt5",
+      "ByzantiumToConstantinopleFixAt5"
+    ],)";
+
+string const defaultGethExceptions = R"(
     "exceptions" : {
         "ExtraDataTooBig" : "extra-data too long",
         "InvalidDifficulty" : "invalid difficulty",
@@ -133,10 +125,30 @@ string default_config = R"({
         "RLP_ExpectedInputList_TRANSACTION_DECODEINTO_BLOCK_EXTBLOCK_TXS" : "rlp: expected input list for []*types.Transaction, decoding into (types.Block)(types.extblock).Txs",
         "RLP_ExpectedInputList_HEADER_DECODEINTO_BLOCK_EXTBLOCK_UNCLES" : "rlp: expected input list for []*types.Header, decoding into (types.Block)(types.extblock).Uncles",
         "RLP_ExpectedInputList_TXDATA_DECODEINTO_BLOCK_EXTBLOCK_TXS0" : "rlp: expected input list for types.txdata, decoding into (types.Block)(types.extblock).Txs[0]"
-    }
-})";
+    })";
 
-string besu_config = R"({
+string const default_config = R"({
+    "name" : "Ethereum GO on TCP",
+    "socketType" : "tcp",
+    "socketAddress" : [
+        "127.0.0.1:8545",
+        "127.0.0.1:8546",
+        "127.0.0.1:8547",
+        "127.0.0.1:8548",
+        "127.0.0.1:8549",
+        "127.0.0.1:8550",
+        "127.0.0.1:8551",
+        "127.0.0.1:8552"
+    ],)" + defaultForks + defaultGethExceptions +
+                              "\n}";
+
+string const t8ntool_config = R"({
+    "name" : "Ethereum GO on StateTool",
+    "socketType" : "tranition-tool",
+    "socketAddress" : "/home/wins/Ethereum/go-ethereum/build/bin/statet8n",)" +
+                              defaultForks + defaultGethExceptions + "\n}";
+
+string const besu_config = R"({
     "name" : "Hyperledger Besu on TCP",
     "socketType" : "tcp",
     "socketAddress" : [
@@ -165,7 +177,7 @@ string besu_config = R"({
     }
 })";
 
-string alethTCP_config = R"({
+string const alethTCP_config = R"({
     "name" : "Ethereum aleth on TCP",
     "socketType" : "tcp",
     "socketAddress" : [
@@ -212,7 +224,7 @@ string alethTCP_config = R"({
     }
 })";
 
-string alethIPCDebug_config = R"({
+string const alethIPCDebug_config = R"({
     "name" : "Ethereum aleth on IPC Debug",
     "socketType" : "ipc-debug",
     "socketAddress" : "/home/username/.ethereum/geth.ipc",
@@ -255,7 +267,7 @@ string alethIPCDebug_config = R"({
 })";
 
 
-string aleth_config = R"({
+string const aleth_config = R"({
     "name" : "Ethereum cpp-client",
     "socketType" : "ipc",
     "socketAddress" : "local",
@@ -297,7 +309,7 @@ string aleth_config = R"({
     }
 })";
 
-string aleth_config_sh = R"(
+string const aleth_config_sh = R"(
 #!/bin/bash
 onexit()
 {
