@@ -62,13 +62,21 @@ private:
         DataObject const& getToolResponse() const { return m_toolresponse.getData(); }
         DataObject const& getEnv() const { return m_env; }
         DataObject const& getPostState() const { return m_postState; }
+        string const& getHash() const { return m_hash; }
+        size_t getNumber() const { return m_number; }
+        void setHashNumber(string const& _hash, size_t _number)
+        {
+            m_hash = _hash;
+            m_number = _number;
+        }
 
     private:
         scheme_toolResponse m_toolresponse;
         DataObject m_env;
         DataObject m_postState;
+        string m_hash;
+        size_t m_number;
     };
-    ToolBlock const& getBlockByHashOrNumber(string const& _hashOrNumber) const;
 
 private:
     Socket::SocketType m_sockType;
@@ -79,12 +87,16 @@ private:
     unsigned m_successfulMineRuns = 0;
     unsigned m_maxMiningTime = 250000;  // should be instant with --test (1 sec)
 
+    // Helper functions
+    string getTxsForTool() const;
+    string getGenesisForTool(DataObject const& _genesis) const;
+    ToolBlock const& getBlockByHashOrNumber(string const& _hashOrNumber) const;
+    DataObject internalConstructResponseGetBlockByHashOrNumber(string const& _hashOrNum) const;
+
+    // Core blockchain logic
     fs::path m_tmpDir;
     DataObject m_chainParams;
     unsigned long long m_timestamp;
-    std::list<scheme_transaction> m_transactions;
-    string getGenesisForTool(DataObject const& _genesis) const;
-    string getTxsForTool() const;
-
     std::vector<ToolBlock> m_blockchain;
+    std::list<scheme_transaction> m_transactions;
 };

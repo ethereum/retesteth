@@ -9,11 +9,12 @@
 
 std::string ToolImpl::web3_clientVersion()
 {
-    ETH_TEST_MESSAGE("Request: web3_clientVersion");
+    ETH_FAIL_MESSAGE("Request: web3_clientVersion");
     return "";
 }
 
 // ETH Methods
+// perhaps take raw rlp instead ??
 std::string ToolImpl::eth_sendRawTransaction(scheme_transaction const& _transaction)
 {
     ETH_TEST_MESSAGE("Request: eth_sendRawTransaction \n" + _transaction.getData().asJson());
@@ -39,34 +40,40 @@ int ToolImpl::eth_getTransactionCount(std::string const& _address, std::string c
 
 std::string ToolImpl::eth_blockNumber()
 {
-    ETH_TEST_MESSAGE("Request: eth_blockNumber");
+    ETH_FAIL_MESSAGE("Request: eth_blockNumber");
     return "";
 }
 
 test::scheme_block ToolImpl::eth_getBlockByHash(string const& _hash, bool _fullObjects)
 {
-    ETH_TEST_MESSAGE("Request: eth_getBlockByHash");
+    ETH_TEST_MESSAGE("Request: eth_getBlockByHash `" + _hash + "`");
     (void)_fullObjects;
-    return test::scheme_block(DataObject(_hash));
+    return test::scheme_block(internalConstructResponseGetBlockByHashOrNumber(_hash));
 }
 
 ToolImpl::ToolBlock const& ToolImpl::getBlockByHashOrNumber(string const& _hashOrNumber) const
 {
-    // no hash yet
-    int bNumber = hexOrDecStringToInt(_hashOrNumber) - 1;
-    if (bNumber >= 0 && (size_t)bNumber < m_blockchain.size())
-        return m_blockchain[bNumber];
+    if (_hashOrNumber.size() == 66)
+    {
+        for (size_t i = 0; i < m_blockchain.size(); i++)
+            if (m_blockchain.at(i).getHash() == _hashOrNumber)
+                return m_blockchain.at(i);
+    }
+    else
+    {
+        int bNumber = hexOrDecStringToInt(_hashOrNumber) - 1;
+        if (bNumber >= 0 && (size_t)bNumber < m_blockchain.size())
+            return m_blockchain.at(bNumber);
+    }
     ETH_ERROR_MESSAGE("Wrong block hash or number! " + _hashOrNumber);
     return m_blockchain.at(0);
 }
 
-test::scheme_block ToolImpl::eth_getBlockByNumber(
-    BlockNumber const& _blockNumber, bool _fullObjects)
+DataObject ToolImpl::internalConstructResponseGetBlockByHashOrNumber(
+    string const& _blockHashOrNumber) const
 {
-    (void)_fullObjects;
     DataObject constructResponse;
-
-    ToolBlock const& toolBlock = getBlockByHashOrNumber(_blockNumber.getBlockNumberAsString());
+    ToolBlock const& toolBlock = getBlockByHashOrNumber(_blockHashOrNumber);
     DataObject const& rdata = toolBlock.getToolResponse();
     DataObject const& env = toolBlock.getEnv().atKey("genesis");
     size_t receiptSize = rdata.atKey("receipts").getSubObjects().size();
@@ -81,7 +88,7 @@ test::scheme_block ToolImpl::eth_getBlockByNumber(
         constructResponse["hash"] = dev::toHexPrefixed(h256(0));  // calculate";
         constructResponse["logsBloom"] = lastReceipt.atKey("logsBloom");
         constructResponse["miner"] = env.atKey("author");
-        constructResponse["number"] = _blockNumber.getBlockNumberAsHexPrefixed();
+        constructResponse["number"] = dev::toCompactHexPrefixed(toolBlock.getNumber(), 1);
         constructResponse["parentHash"] = rdata.atKey("receiptRoot");
         constructResponse["receiptsRoot"] = rdata.atKey("receiptRoot");
         constructResponse["sha3Uncles"] = dev::toHexPrefixed(h256(0));  // calculate";
@@ -94,7 +101,15 @@ test::scheme_block ToolImpl::eth_getBlockByNumber(
         constructResponse["transactionsRoot"] = dev::toHexPrefixed(h256(0));  // calculate";
         constructResponse["difficulty"] = env.atKey("difficulty");
     }
-    return test::scheme_block(constructResponse);
+    return constructResponse;
+}
+test::scheme_block ToolImpl::eth_getBlockByNumber(
+    BlockNumber const& _blockNumber, bool _fullObjects)
+{
+    ETH_TEST_MESSAGE("Request: eth_getBlockByNumber " + _blockNumber.getBlockNumberAsString());
+    (void)_fullObjects;
+    return test::scheme_block(
+        internalConstructResponseGetBlockByHashOrNumber(_blockNumber.getBlockNumberAsString()));
 }
 
 std::string ToolImpl::eth_getCode(std::string const& _address, std::string const& _blockNumber)
@@ -187,7 +202,7 @@ DataObject ToolImpl::debug_storageRangeAt(std::string const& _blockHashOrNumber,
 
 scheme_debugTraceTransaction ToolImpl::debug_traceTransaction(std::string const& _trHash)
 {
-    ETH_TEST_MESSAGE("Request: debug_traceTransaction");
+    ETH_FAIL_MESSAGE("Request: debug_traceTransaction");
     return scheme_debugTraceTransaction(DataObject(_trHash));
 }
 
@@ -212,7 +227,7 @@ void ToolImpl::test_rewindToBlock(size_t _blockNr)
 
 void ToolImpl::test_modifyTimestamp(unsigned long long _timestamp)
 {
-    ETH_TEST_MESSAGE("Request: test_modifyTimestamp \n{" + DataObject(_timestamp).asJson() + "}");
+    ETH_TEST_MESSAGE("Request: test_modifyTimestamp " + DataObject(_timestamp).asJson());
     m_timestamp = _timestamp;
 }
 
@@ -311,17 +326,86 @@ string ToolImpl::test_mineBlocks(int _number, bool _canFail)
         m_chainParams,                                                    // Env, alloc info
         ConvertJsoncppStringToData(contentsString(outAllocPath))          // Result state
     );
+    block.setHashNumber("0x0bad", m_blockchain.size());
 
     m_blockchain.push_back(block);
     fs::remove_all(m_tmpDir);
     return toString(m_blockchain.size());
 }
 
+string rlpToString(dev::RLP const& _rlp, bool _corretHexOdd = false)
+{
+    std::ostringstream stream;
+    stream << _rlp;
+    string ret = stream.str();
+    if (ret.size() > 0 && ret[0] == '"')
+    {
+        string retFormated;
+        ret = ret.substr(1);
+        while (ret[0] == '\\' && ret[1] == 'x')
+        {
+            retFormated += ret.substr(2, 2);
+            ret = ret.substr(4);
+        }
+        return "0x" + retFormated;
+    }
+    if (_corretHexOdd && ret.substr(2).size() % 2 == 1)
+        return "0x0" + ret.substr(2);
+    return stream.str();
+}
+
 string ToolImpl::test_importRawBlock(std::string const& _blockRLP)
 {
-    ETH_TEST_MESSAGE("Request: test_importRawBlock");
-    (void)_blockRLP;
-    return string();
+    ETH_TEST_MESSAGE("Request: test_importRawBlock, following transaction import are internal");
+    bytes blockBytes = dev::fromHex(_blockRLP);
+    dev::RLP blockRLP(blockBytes);
+
+    dev::RLP header = blockRLP[0];  // block header
+    // 0 - parentHash           // 8 - number
+    // 1 - uncleHash            // 9 - gasLimit
+    // 2 - coinbase             // 10 - gasUsed
+    // 3 - stateRoot            // 11 - timestamp
+    // 4 - transactionTrie      // 12 - extraData
+    // 5 - receiptTrie          // 13 - mixHash
+    // 6 - bloom                // 14 - nonce
+    // 7 - difficulty
+
+    // Information about current blockheader from ToolImpl prespective
+    m_chainParams["genesis"]["author"] = rlpToString(header[2]);
+    m_chainParams["genesis"]["difficulty"] = rlpToString(header[7]);
+    m_chainParams["genesis"]["gasLimit"] = rlpToString(header[9]);
+    m_chainParams["genesis"]["extraData"] = rlpToString(header[12]);
+    m_chainParams["genesis"]["timestamp"] = rlpToString(header[11]);
+    m_chainParams["genesis"]["nonce"] = rlpToString(header[14]);
+    m_chainParams["genesis"]["mixHash"] = rlpToString(header[13]);
+
+    // block transactions
+    m_transactions.clear();
+    for (auto const& tr : blockRLP[1])
+    {
+        DataObject trInfo;
+        // 0 - nonce        3 - to      6 - v
+        // 1 - gasPrice     4 - value   7 - r
+        // 2 - gasLimit     5 - data    8 - s
+        std::ostringstream stream;
+        stream << tr[5];
+        trInfo["data"] = stream.str() == "0x0" ? "0x" : rlpToString(tr[5], true);
+        trInfo["gasLimit"] = rlpToString(tr[2], true);
+        trInfo["gasPrice"] = rlpToString(tr[1], true);
+        trInfo["nonce"] = rlpToString(tr[0], true);
+        trInfo["to"] = rlpToString(tr[3], true);
+        trInfo["value"] = rlpToString(tr[4], true);
+        trInfo["v"] = rlpToString(tr[6], true);
+        trInfo["r"] = rlpToString(tr[7], true);
+        trInfo["s"] = rlpToString(tr[8], true);
+        eth_sendRawTransaction(scheme_transaction(trInfo));
+    }
+    test_mineBlocks(1);
+    string blockHash = dev::toHexPrefixed(dev::sha3(header.data()));
+    ToolBlock& lastMinedBlock = m_blockchain[m_blockchain.size() - 1];
+    lastMinedBlock.setHashNumber(blockHash, test::hexOrDecStringToInt(rlpToString(header[8])));
+    ETH_TEST_MESSAGE("Response: " + blockHash);
+    return blockHash;
 }
 
 std::string ToolImpl::test_getLogHash(std::string const& _txHash)
@@ -344,7 +428,7 @@ std::string ToolImpl::test_getLogHash(std::string const& _txHash)
 DataObject ToolImpl::rpcCall(
     std::string const& _methodName, std::vector<std::string> const& _args, bool _canFail)
 {
-    ETH_TEST_MESSAGE("Request: rpcCall");
+    ETH_FAIL_MESSAGE("Request: rpcCall");
     (void)_methodName;
     (void)_args;
     (void)_canFail;
