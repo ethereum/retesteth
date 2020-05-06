@@ -80,7 +80,7 @@ CompareResult compareAccounts(
     return result;
 }
 
-DataObject getRemoteAccountList(SessionInterface& _session, scheme_block const& _latestInfo)
+DataObject getRemoteAccountList(SessionInterface& _session, scheme_RPCBlock const& _latestInfo)
 {
     DataObject accountList;
     string startHash = "0";
@@ -114,7 +114,7 @@ DataObject getRemoteAccountList(SessionInterface& _session, scheme_block const& 
 
 // compare states with session asking post state data on the fly
 void compareStates(scheme_expectState const& _stateExpect, SessionInterface& _session,
-    scheme_block const& _latestInfo)
+    scheme_RPCBlock const& _latestInfo)
 {
     CompareResult result = CompareResult::Success;
     DataObject accountList = getRemoteAccountList(_session, _latestInfo);

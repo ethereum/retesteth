@@ -47,7 +47,7 @@ private:
     vectorOfSchemeBlock prepareUncles(blockSection const& _block, string const& _debug);
 
     // Parse uncle section in block and generate uncles from all the chain information
-    test::scheme_block prepareUncle(
+    test::scheme_RPCBlock prepareUncle(
         scheme_uncleHeader _uncleOverwrite, vectorOfSchemeBlock const& _currentBlockPreparedUncles);
 
     SessionInterface& m_session;                      // session with the client

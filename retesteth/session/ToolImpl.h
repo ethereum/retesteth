@@ -21,8 +21,8 @@ public:
     int eth_getTransactionCount(
         std::string const& _address, std::string const& _blockNumber) override;
     std::string eth_blockNumber() override;
-    test::scheme_block eth_getBlockByHash(string const& _hash, bool _fullObjects) override;
-    test::scheme_block eth_getBlockByNumber(
+    test::scheme_RPCBlock eth_getBlockByHash(string const& _hash, bool _fullObjects) override;
+    test::scheme_RPCBlock eth_getBlockByNumber(
         BlockNumber const& _blockNumber, bool _fullObjects) override;
 
     std::string eth_getCode(std::string const& _address, std::string const& _blockNumber) override;
@@ -55,27 +55,20 @@ private:
     class ToolBlock
     {
     public:
-        ToolBlock(DataObject const& _toolResponse, DataObject const& _chainParams,
+        ToolBlock(scheme_RPCBlock const& _rpcBlockResponse, DataObject const& _chainParams,
             DataObject const& _pstate)
-          : m_toolresponse(_toolResponse), m_env(_chainParams), m_postState(_pstate)
+          : m_blockResponse(_rpcBlockResponse), m_env(_chainParams), m_postState(_pstate)
         {}
-        DataObject const& getToolResponse() const { return m_toolresponse.getData(); }
+        scheme_RPCBlock const& getRPCResponse() const { return m_blockResponse; }
         DataObject const& getEnv() const { return m_env; }
         DataObject const& getPostState() const { return m_postState; }
-        string const& getHash() const { return m_hash; }
-        size_t getNumber() const { return m_number; }
-        void setHashNumber(string const& _hash, size_t _number)
-        {
-            m_hash = _hash;
-            m_number = _number;
-        }
+        string const& getHash() const { return m_blockResponse.getBlockHash(); }
+        int getNumber() const { return test::hexOrDecStringToInt(m_blockResponse.getNumber()); }
 
     private:
-        scheme_toolResponse m_toolresponse;
+        scheme_RPCBlock m_blockResponse;
         DataObject m_env;
         DataObject m_postState;
-        string m_hash;
-        size_t m_number;
     };
 
 private:
@@ -91,12 +84,36 @@ private:
     string getTxsForTool() const;
     string getGenesisForTool(DataObject const& _genesis) const;
     ToolBlock const& getBlockByHashOrNumber(string const& _hashOrNumber) const;
-    DataObject internalConstructResponseGetBlockByHashOrNumber(string const& _hashOrNum) const;
+
+    // Construct RPC like block response
+    struct BlockHeaderOverride;
+    static scheme_RPCBlock internalConstructResponseGetBlockByHashOrNumber(
+        DataObject const& _chainParams, DataObject const& _toolResponse,
+        BlockHeaderOverride const& _bhOParams);
 
     // Core blockchain logic
+    size_t m_totalCalls = 0;
     fs::path m_tmpDir;
     DataObject m_chainParams;
+    std::vector<scheme_RPCBlock> m_chainGenesis;
     unsigned long long m_timestamp;
     std::vector<ToolBlock> m_blockchain;
     std::list<scheme_transaction> m_transactions;
+
+    // Internal hack-logic to tell test_mineBlocks which block number is mined without passing the
+    // params because test_mineBlocks is interface function. if expectedBlockNumber == -1 then use
+    // default logic
+    struct BlockHeaderOverride
+    {
+        bool isGenesis = false;
+        int expectedBlockNumber = -1;
+        string parentHash = "0x0000000000000000000000000000000000000000000000000000000000000000";
+        void reset()
+        {
+            expectedBlockNumber = -1;
+            parentHash = string();
+            isGenesis = false;
+        }
+    };
+    BlockHeaderOverride m_blockHeaderOverride;
 };

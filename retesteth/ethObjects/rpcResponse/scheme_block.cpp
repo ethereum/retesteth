@@ -32,7 +32,7 @@ DataObject const& getEmptySchemeBlockData()
 
 namespace test
 {
-scheme_block::scheme_block(std::string const& _rlp)
+scheme_RPCBlock::scheme_RPCBlock(std::string const& _rlp)
   : object(getEmptySchemeBlockData()),
     m_validator(getEmptySchemeBlockData()),
     m_blockHeader(getEmptySchemeBlockData())
@@ -41,7 +41,7 @@ scheme_block::scheme_block(std::string const& _rlp)
     m_rlpOverride = _rlp;
 }
 
-scheme_block::scheme_block(DataObject const& _block)
+scheme_RPCBlock::scheme_RPCBlock(DataObject const& _block)
   : object(_block), m_validator(_block), m_blockHeader(_block)
 {
     if (m_data.atKey("transactions").getSubObjects().size())
@@ -73,7 +73,7 @@ scheme_block::scheme_block(DataObject const& _block)
 }
 
 // Get Block RLP for state tests
-std::string scheme_block::getBlockRLP() const
+std::string scheme_RPCBlock::getBlockRLP() const
 {
     if (!m_rlpOverride.empty())
         return m_rlpOverride;
@@ -121,7 +121,7 @@ std::string scheme_block::getBlockRLP() const
     return dev::toHexPrefixed(stream.out());
 }
 
-RLPStream scheme_block::streamUncles() const
+RLPStream scheme_RPCBlock::streamUncles() const
 {
     RLPStream uncleStream;
     uncleStream.appendList(m_uncles.size());
@@ -130,7 +130,7 @@ RLPStream scheme_block::streamUncles() const
     return uncleStream;
 }
 
-RLPStream scheme_block::streamBlockHeader(DataObject const& _headerData)
+RLPStream scheme_RPCBlock::streamBlockHeader(DataObject const& _headerData)
 {
     RLPStream header;
     header.appendList(15);
@@ -161,18 +161,18 @@ RLPStream scheme_block::streamBlockHeader(DataObject const& _headerData)
     return header;
 }
 
-void scheme_block::recalculateUncleHash()
+void scheme_RPCBlock::recalculateUncleHash()
 {
     m_blockHeader.replaceUncleHash(toString(dev::sha3(streamUncles().out())));
 }
 
-void scheme_block::randomizeCoinbase()
+void scheme_RPCBlock::randomizeCoinbase()
 {
     m_blockHeader.randomizeCoinbase();
 }
 
 // Subclass of blockheader
-void scheme_block::scheme_block_header::resetHeader(DataObject const& _header)
+void scheme_RPCBlock::scheme_block_header::resetHeader(DataObject const& _header)
 {
     requireJsonFields(_header, "scheme_block_header",
         {{"coinbase", {{DataType::String}, jsonField::Required}},
@@ -191,8 +191,12 @@ void scheme_block::scheme_block_header::resetHeader(DataObject const& _header)
             {"difficulty", {{DataType::String}, jsonField::Required}},
             {"nonce", {{DataType::String}, jsonField::Optional}},
             {"mixHash", {{DataType::String}, jsonField::Optional}}});
-    m_data.clear();
-    m_data = _header;
+
+    if (&_header != &m_data)
+    {
+        m_data.clear();
+        m_data = _header;
+    }
 
     // make sure bloom is prefixed with 0x as hash
     object::DigitsType bloomType = object::stringIntegerType(m_data.atKey("bloom").asString());
@@ -206,9 +210,8 @@ void scheme_block::scheme_block_header::resetHeader(DataObject const& _header)
         // make sure coinbase is 20 bytes address
         m_data["coinbase"] = toString(Address(m_data["coinbase"].asString()));
         m_data["coinbase"] = makeHexAddress(m_data.atKey("coinbase").asString());
-
         // recalculate the hash
-        m_data["hash"] = "0x" + toString(dev::sha3(scheme_block::streamBlockHeader(m_data).out()));
+        m_data["hash"] = "0x" + toString(dev::sha3(scheme_RPCBlock::streamBlockHeader(m_data).out()));
     }
     catch (BadHexCharacter const&)
     {
@@ -216,7 +219,7 @@ void scheme_block::scheme_block_header::resetHeader(DataObject const& _header)
     }
 }
 
-DataObject scheme_block::scheme_block_header::mapBlockHeader() const
+DataObject scheme_RPCBlock::scheme_block_header::mapBlockHeader() const
 {
     // Map Block Header
     DataObject header;

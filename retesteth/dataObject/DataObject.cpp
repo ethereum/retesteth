@@ -303,6 +303,11 @@ void DataObject::performModifier(void (*f)(DataObject&))
     f(*this);
 }
 
+std::string DataObject::asJsonNoFirstKey() const
+{
+    return asJson(0, true, true);
+}
+
 std::string DataObject::asJson(int level, bool pretty, bool nokey) const
 {
     std::ostringstream out;

@@ -105,7 +105,7 @@ DataObject FillTestAsBlockchain(DataObject const& _testFile)
                     string latestBlockNumber = session.test_mineBlocks(1);
                     tr.executed = true;
 
-                    scheme_block remoteBlock =
+                    scheme_RPCBlock remoteBlock =
                         session.eth_getBlockByNumber(latestBlockNumber, true);
                     scheme_state remoteState = getRemoteState(session, remoteBlock);
                     if (remoteState.isHash())
@@ -117,7 +117,7 @@ DataObject FillTestAsBlockchain(DataObject const& _testFile)
                     if (test.getData().count("_info"))
                         aBlockchainTest["_info"] = test.getData().atKey("_info");
 
-                    test::scheme_block latestBlock =
+                    test::scheme_RPCBlock latestBlock =
                         session.eth_getBlockByNumber(BlockNumber("0"), false);
                     aBlockchainTest["genesisBlockHeader"] = latestBlock.getBlockHeader();
                     aBlockchainTest["genesisBlockHeader"].removeKey("transactions");
@@ -132,7 +132,7 @@ DataObject FillTestAsBlockchain(DataObject const& _testFile)
                     aBlockchainTest["sealEngine"] = sEngine;
                     aBlockchainTest["lastblockhash"] = remoteBlock.getBlockHash();
 
-                    test::scheme_block genesisBlock =
+                    test::scheme_RPCBlock genesisBlock =
                         session.eth_getBlockByNumber(BlockNumber("0"), true);
                     aBlockchainTest["genesisRLP"] = genesisBlock.getBlockRLP();
 
@@ -209,7 +209,7 @@ DataObject FillTest(DataObject const& _testFile)
                     string latestBlockNumber = session.test_mineBlocks(1);
                     tr.executed = true;
 
-                    scheme_block blockInfo =
+                    scheme_RPCBlock blockInfo =
                         session.eth_getBlockByNumber(latestBlockNumber, Options::get().vmtrace);
                     if (Options::get().poststate)
                         ETH_STDOUT_MESSAGE("PostState " +
@@ -300,7 +300,7 @@ void RunTest(DataObject const& _testFile)
 
                     // Validate post state
                     string postHash = result.getData().atKey("hash").asString();
-                    scheme_block remoteBlockInfo =
+                    scheme_RPCBlock remoteBlockInfo =
                         session.eth_getBlockByNumber(latestBlockNumber, false);
                     ETH_ERROR_REQUIRE_MESSAGE(remoteBlockInfo.getTransactionCount() == 1,
                         "Failed to execute transaction on remote client! State test transaction must be valid!");

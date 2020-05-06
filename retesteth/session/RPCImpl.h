@@ -17,8 +17,8 @@ public:
     int eth_getTransactionCount(
         std::string const& _address, std::string const& _blockNumber) override;
     std::string eth_blockNumber() override;
-    test::scheme_block eth_getBlockByHash(string const& _hash, bool _fullObjects) override;
-    test::scheme_block eth_getBlockByNumber(
+    test::scheme_RPCBlock eth_getBlockByHash(string const& _hash, bool _fullObjects) override;
+    test::scheme_RPCBlock eth_getBlockByNumber(
         BlockNumber const& _blockNumber, bool _fullObjects) override;
 
     std::string eth_getCode(std::string const& _address, std::string const& _blockNumber) override;

@@ -45,7 +45,7 @@ void RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _
         {
             // Check Blockheader
             DataObject inTestHeader(DataType::Null);
-            test::scheme_block latestBlock = session.eth_getBlockByHash(blHash, true);
+            test::scheme_RPCBlock latestBlock = session.eth_getBlockByHash(blHash, true);
             bool condition = latestBlock.getBlockHeader() == bdata.atKey("blockHeader");
             if (_opt.isLegacyTests)
             {
@@ -184,7 +184,7 @@ void RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _
     // wait for blocks to process
     // std::this_thread::sleep_for(std::chrono::seconds(10));
 
-    scheme_block latestBlock = session.eth_getBlockByNumber(session.eth_blockNumber(), false);
+    scheme_RPCBlock latestBlock = session.eth_getBlockByNumber(session.eth_blockNumber(), false);
     if (inputTest.getPost().isHash())
         validatePostHash(session, inputTest.getPost().getHash(), latestBlock);
     else

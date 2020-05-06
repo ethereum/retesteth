@@ -46,7 +46,7 @@ void FillTest(scheme_blockchainTestFiller const& _testObject, string const& _net
     testchain.syncOnRemoteClient(_testOut["blocks"]);
 
     // Fill info about the lastblockhash
-    scheme_block latestBlock = session.eth_getBlockByNumber(session.eth_blockNumber(), false);
+    scheme_RPCBlock latestBlock = session.eth_getBlockByNumber(session.eth_blockNumber(), false);
     scheme_state remoteState = getRemoteState(session, latestBlock);
     if (remoteState.isHash())
     {

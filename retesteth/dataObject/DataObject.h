@@ -187,6 +187,7 @@ public:
 
     void clear(DataType _type = DataType::Null);
 
+    std::string asJsonNoFirstKey() const;
     std::string asJson(int level = 0, bool pretty = true, bool nokey = false) const;
     static std::string dataTypeAsString(DataType _type);
 

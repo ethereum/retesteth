@@ -24,7 +24,8 @@ public:
         if (_regenerateGenesis == RegenerateGenesis::TRUE)
         {
             resetChainParams();
-            test::scheme_block latestBlock = _session.eth_getBlockByNumber(BlockNumber("0"), false);
+            test::scheme_RPCBlock latestBlock =
+                _session.eth_getBlockByNumber(BlockNumber("0"), false);
             DataObject& blockTestData = genesisBlock.getDataForTestUnsafe();
             blockTestData["blockHeader"] = latestBlock.getBlockHeader();
             blockTestData["blockHeader"].removeKey("transactions");
@@ -65,20 +66,20 @@ public:
 
 private:
     // Ask remote client to generate a blockheader that will later used for uncles
-    test::scheme_block mineNextBlockAndRewert();
+    test::scheme_RPCBlock mineNextBlockAndRewert();
 
     // Import transactions on remote client, return prepared json data for test
     DataObject importTransactions(blockSection const& _block);
 
     // Mine the test block on remote client.
     // if blockheader is tweaked or there are uncles, postmine tweak this and reimport
-    test::scheme_block mineBlock(
+    test::scheme_RPCBlock mineBlock(
         blockSection const& _block, vectorOfSchemeBlock const& _preparedUncleBlocks);
 
     // After test_mineBlock we can change the blockheader or add uncles. that will require to tweak
     // the block And reimport it again, then check exceptions
-    test::scheme_block postmineBlockHeader(blockSection const& _block,
-        BlockNumber const& _latestBlockNumber, std::vector<scheme_block> const& _uncles);
+    test::scheme_RPCBlock postmineBlockHeader(blockSection const& _block,
+        BlockNumber const& _latestBlockNumber, std::vector<scheme_RPCBlock> const& _uncles);
 
     SessionInterface& m_session;                      // Session with the client
     scheme_blockchainTestFiller const& m_testObject;  // Test data information

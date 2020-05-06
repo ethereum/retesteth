@@ -6,7 +6,7 @@ using namespace std;
 namespace test
 {
 void validatePostHash(
-    SessionInterface& _session, string const& _postHash, scheme_block const& _latestInfo)
+    SessionInterface& _session, string const& _postHash, scheme_RPCBlock const& _latestInfo)
 {
     string actualHash = _latestInfo.getStateHash();
     if (actualHash != _postHash)
@@ -58,7 +58,7 @@ void checkTestNameIsEqualToFileName(DataObject const& _input)
 }
 
 scheme_account remoteGetAccount(SessionInterface& _session, string const& _account,
-    scheme_block const& _latestInfo, size_t& _totalSize)
+    scheme_RPCBlock const& _latestInfo, size_t& _totalSize)
 {
     DataObject accountObj;
     accountObj.setKey(_account);
@@ -93,7 +93,7 @@ scheme_account remoteGetAccount(SessionInterface& _session, string const& _accou
     return scheme_account(accountObj);
 }
 
-scheme_state getRemoteState(SessionInterface& _session, scheme_block const& _latestInfo)
+scheme_state getRemoteState(SessionInterface& _session, scheme_RPCBlock const& _latestInfo)
 {
     const int c_accountLimitBeforeHash = 20;
     DataObject accountsObj;

@@ -42,15 +42,16 @@ std::string RPCImpl::eth_blockNumber()
     return res.type() == DataType::String ? res.asString() : toString(res.asInt());
 }
 
-test::scheme_block RPCImpl::eth_getBlockByHash(string const& _hash, bool _fullObjects)
+test::scheme_RPCBlock RPCImpl::eth_getBlockByHash(string const& _hash, bool _fullObjects)
 {
-    return test::scheme_block(
+    return test::scheme_RPCBlock(
         rpcCall("eth_getBlockByHash", {quote(_hash), _fullObjects ? "true" : "false"}));
 }
 
-test::scheme_block RPCImpl::eth_getBlockByNumber(BlockNumber const& _blockNumber, bool _fullObjects)
+test::scheme_RPCBlock RPCImpl::eth_getBlockByNumber(
+    BlockNumber const& _blockNumber, bool _fullObjects)
 {
-    return test::scheme_block(rpcCall("eth_getBlockByNumber",
+    return test::scheme_RPCBlock(rpcCall("eth_getBlockByNumber",
         {quote(_blockNumber.getBlockNumberAsString()), _fullObjects ? "true" : "false"}));
 }
 

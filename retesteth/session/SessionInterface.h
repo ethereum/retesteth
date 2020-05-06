@@ -13,8 +13,8 @@ public:
         std::string const& _address, std::string const& _blockNumber) = 0;
 
     virtual std::string eth_blockNumber() = 0;
-    virtual test::scheme_block eth_getBlockByHash(string const& _hash, bool _fullObjects) = 0;
-    virtual test::scheme_block eth_getBlockByNumber(
+    virtual test::scheme_RPCBlock eth_getBlockByHash(string const& _hash, bool _fullObjects) = 0;
+    virtual test::scheme_RPCBlock eth_getBlockByNumber(
         BlockNumber const& _blockNumber, bool _fullObjects) = 0;
     virtual std::string eth_getCode(
         std::string const& _address, std::string const& _blockNumber) = 0;
