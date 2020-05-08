@@ -171,6 +171,16 @@ void scheme_RPCBlock::randomizeCoinbase()
     m_blockHeader.randomizeCoinbase();
 }
 
+// Update Transaction info in unsafe mode with ToolImpl
+void scheme_RPCBlock::tool_updateTransactionInfo()
+{
+    string const& hash = m_data.atKey("hash").asString();
+    for (auto& tr : m_data.atKeyUnsafe("transactions").getSubObjectsUnsafe())
+    {
+        tr.atKeyUnsafe("blockHash") = hash;
+    }
+}
+
 // Subclass of blockheader
 void scheme_RPCBlock::scheme_block_header::resetHeader(DataObject const& _header)
 {

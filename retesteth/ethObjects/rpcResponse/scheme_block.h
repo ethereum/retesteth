@@ -109,6 +109,9 @@ public:
         return m_data.atKey("transactions").getSubObjects().size();
     }
 
+    // Update Transaction info in unsafe mode with ToolImpl
+    void tool_updateTransactionInfo();
+
     std::vector<DataObject> const& getTransactions() const
     {
         return m_data.atKey("transactions").getSubObjects();

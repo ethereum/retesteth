@@ -81,15 +81,15 @@ private:
     unsigned m_maxMiningTime = 250000;  // should be instant with --test (1 sec)
 
     // Helper functions
-    string getTxsForTool() const;
-    string getGenesisForTool(DataObject const& _genesis) const;
+    string prepareAllocForTool() const;
+    string prepareTxsForTool() const;
+    string prepareEnvForTool() const;
     ToolBlock const& getBlockByHashOrNumber(string const& _hashOrNumber) const;
 
     // Construct RPC like block response
     struct BlockHeaderOverride;
-    static scheme_RPCBlock internalConstructResponseGetBlockByHashOrNumber(
-        DataObject const& _chainParams, DataObject const& _toolResponse,
-        BlockHeaderOverride const& _bhOParams);
+    scheme_RPCBlock internalConstructResponseGetBlockByHashOrNumber(DataObject const& _chainParams,
+        DataObject const& _toolResponse, BlockHeaderOverride const& _bhOParams);
 
     // Core blockchain logic
     size_t m_totalCalls = 0;

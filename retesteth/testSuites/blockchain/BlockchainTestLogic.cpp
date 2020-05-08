@@ -31,6 +31,8 @@ void RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _
     size_t blockNumber = 0;
     for (auto const& bdata : inputTest.getBlocks())
     {
+        if (Options::get().blockLimit != 0 && blockNumber + 1 >= Options::get().blockLimit)
+            break;
         TestInfo errorInfo(inputTest.getNetwork(), blockNumber++);
         TestOutputHelper::get().setCurrentTestInfo(errorInfo);
         string const blHash = session.test_importRawBlock(bdata.atKey("rlp").asString());
@@ -205,7 +207,7 @@ void RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _
         else
         {
             string const& genesisRLP = inputTest.getData().atKey("genesisRLP").asString();
-            latestBlock = session.eth_getBlockByNumber(BlockNumber("0"), false);
+            scheme_RPCBlock latestBlock = session.eth_getBlockByNumber(BlockNumber("0"), false);
             if (latestBlock.getBlockRLP() != genesisRLP)
                 ETH_ERROR_MESSAGE("genesisRLP in test != genesisRLP on remote client! (" +
                                   genesisRLP + "' != '" + latestBlock.getBlockRLP() + "'");

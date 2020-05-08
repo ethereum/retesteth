@@ -75,8 +75,12 @@ int ToolImpl::eth_getTransactionCount(std::string const& _address, std::string c
 std::string ToolImpl::eth_blockNumber()
 {
     rpcCall("", {});
-    ETH_FAIL_MESSAGE("Request: eth_blockNumber");
-    return "";
+    string blNumber = "0x00";
+    ETH_TEST_MESSAGE("Request: eth_blockNumber");
+    if (m_blockchain.size() > 0)
+        blNumber = dev::toCompactHexPrefixed(m_blockchain.size(), 1);
+    ETH_TEST_MESSAGE("Response: eth_blockNumber {" + blNumber + "}");
+    return blNumber;
 }
 
 test::scheme_RPCBlock ToolImpl::eth_getBlockByHash(string const& _hash, bool _fullObjects)
@@ -143,44 +147,36 @@ scheme_RPCBlock ToolImpl::internalConstructResponseGetBlockByHashOrNumber(
         dev::u256 maxCommGasUsed = 0;
         for (auto const& receipt : rdata.atKey("receipts").getSubObjects())
         {
-            constructResponse["transactions"].addArrayObject(
-                receipt.atKey("transactionHash").asString());
+            // Find transaction that was sent
+            scheme_transaction const* trScheme = 0;
+            for (auto const& tr : m_transactions)
+            {
+                if (tr.getHash() == receipt.atKey("transactionHash").asString())
+                    trScheme = &tr;
+            }
+            ETH_ERROR_REQUIRE_MESSAGE(trScheme != 0, "Not found transaction in m_transactions");
 
-
-            /*"transactions":[
-                {
-                    "blockHash":"0x9ec505ca8ee9bf1d24733bead08ca0eac2f11524319c456518b2551fe6f48e31",
-                    "blockNumber":"0x1",
-                    "from":"0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b",
-                    "gas":"0x61a80",
-                    "gasPrice":"0x1",
-                    "hash":"0x5363f287fccaad86a0ce8d2c5b15b4b917afe6ebac6a87e61884bf18fc7af58a",
-                    "input":"0x","nonce":"0x0","to":"0x095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                    "transactionIndex":"0x0",
-                    "value":"0x186a0",
-                    "v":"0x1c",
-                    "r":"0xe94818d1f3b0c69eb37720145a5ead7fbf6f8d80139dd53953b4a782301050a3",
-                    "s":"0x1fcf46908c01576715411be0857e30027d6be3250a3653f049b3ff8d74d2540c"
-                }
-            ]*/
-
-            /*
-             * tool result
-                   "root": "0x",
-                   "status": "0x1",
-                   "cumulativeGasUsed": "0x15072",
-                   "logsBloom":
-             "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-                   "logs": null,
-                   "transactionHash":
-             "0xd74a3b58b325fb3ff316e395508877698129687083d5c008b637ad41f00d9082",
-                   "contractAddress": "0x0000000000000000000000000000000000000000",
-                   "gasUsed": "0x15072",
-                   "blockHash":
-             "0x0000000000000000000000000000000000000000000000000000000000000000",
-                   "transactionIndex": "0x0"
-            */
-
+            // Fill full transaction object from all the info we know (rpc style)
+            // m_transactions is raw info about transactions that was requested to be setn
+            // receipts are the valid transaction that were executed by tool
+            DataObject fullTransaction;
+            fullTransaction["blockHash"] =
+                dev::toHexPrefixed(h256(0));  // update when we know the hash
+            fullTransaction["blockNumber"] =
+                dev::toCompactHexPrefixed(_bhOParams.expectedBlockNumber, 1);
+            fullTransaction["from"] = "0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b";  // recover vrs
+            fullTransaction["gas"] = trScheme->getData().atKey("gasLimit").asString();
+            fullTransaction["gasPrice"] = trScheme->getData().atKey("gasPrice").asString();
+            fullTransaction["hash"] = receipt.atKey("transactionHash").asString();
+            fullTransaction["input"] = trScheme->getData().atKey("data").asString();
+            fullTransaction["nonce"] = trScheme->getData().atKey("nonce").asString();
+            fullTransaction["to"] = trScheme->getData().atKey("to").asString();
+            fullTransaction["transactionIndex"] = receipt.atKey("transactionIndex").asString();
+            fullTransaction["value"] = trScheme->getData().atKey("value").asString();
+            fullTransaction["v"] = trScheme->getData().atKey("v").asString();
+            fullTransaction["r"] = trScheme->getData().atKey("r").asString();
+            fullTransaction["s"] = trScheme->getData().atKey("s").asString();
+            constructResponse["transactions"].addArrayObject(fullTransaction);
 
             u256 commGasUsed = u256(receipt.atKey("cumulativeGasUsed").asString());
             maxCommGasUsed = (commGasUsed > maxCommGasUsed) ? commGasUsed : maxCommGasUsed;
@@ -227,6 +223,10 @@ scheme_RPCBlock ToolImpl::internalConstructResponseGetBlockByHashOrNumber(
     rpcBlock.recalculateUncleHash();
     rpcBlock.overwriteBlockHeader(rpcBlock.getBlockHeader());
     rpcBlock.setLogsHash(rdata.atKey("logsHash").asString());
+
+    // Update transaction info in block rpc response
+    rpcBlock.tool_updateTransactionInfo();
+
     return rpcBlock;
 }
 
@@ -242,6 +242,11 @@ test::scheme_RPCBlock ToolImpl::eth_getBlockByNumber(
         ETH_TEST_MESSAGE("Response: eth_getBlockByNumber " +
                          m_blockchain.at(bNumber - 1).getRPCResponse().getData().asJson());
         return m_blockchain.at(bNumber - 1).getRPCResponse();
+    }
+    else if (bNumber == 0)
+    {
+        test::scheme_RPCBlock const& genesis = m_chainGenesis.at(0);
+        return genesis;
     }
     return scheme_RPCBlock(DataObject());
 }
@@ -327,7 +332,7 @@ DataObject ToolImpl::debug_storageRangeAt(std::string const& _blockHashOrNumber,
                 record["key"] = dev::toCompactHexPrefixed(hexOrDecStringToInt(el.getKey()), 1);
                 record["value"] = dev::toCompactHexPrefixed(hexOrDecStringToInt(el.asString()), 1);
                 constructResponse["storage"][toString(iStore)] = record;
-                if (iStore == _maxResults)
+                if (iStore++ == _maxResults)
                     break;
             }
         }
@@ -431,12 +436,20 @@ void ToolImpl::test_modifyTimestamp(unsigned long long _timestamp)
     m_timestamp = _timestamp;
 }
 
-string ToolImpl::getGenesisForTool(DataObject const& _genesis) const
+string ToolImpl::prepareAllocForTool() const
+{
+    if (m_blockHeaderOverride.expectedBlockNumber > 1)
+        return m_blockchain.at(m_blockchain.size() - 1).getPostState().asJsonNoFirstKey();
+    else
+        return m_chainParams.atKey("accounts").asJsonNoFirstKey();
+}
+
+string ToolImpl::prepareEnvForTool() const
 {
     DataObject env;
-    env["currentCoinbase"] = _genesis.atKey("author");
-    env["currentDifficulty"] = _genesis.atKey("difficulty");
-    env["currentGasLimit"] = _genesis.atKey("gasLimit");
+    env["currentCoinbase"] = m_chainParams.atKey("genesis").atKey("author");
+    env["currentDifficulty"] = m_chainParams.atKey("genesis").atKey("difficulty");
+    env["currentGasLimit"] = m_chainParams.atKey("genesis").atKey("gasLimit");
     env["currentNumber"] = dev::toCompactHexPrefixed(m_blockHeaderOverride.expectedBlockNumber, 1);
     env["currentTimestamp"] = dev::toCompactHexPrefixed(m_timestamp, 1);
     env["previousHash"] = m_blockHeaderOverride.parentHash;
@@ -444,7 +457,7 @@ string ToolImpl::getGenesisForTool(DataObject const& _genesis) const
     return env.asJson();
 }
 
-string ToolImpl::getTxsForTool() const
+string ToolImpl::prepareTxsForTool() const
 {
     DataObject txs(DataType::Array);
     for (auto const& tx : m_transactions)
@@ -477,15 +490,15 @@ string ToolImpl::test_mineBlocks(int _number, bool _canFail)
     if (m_blockHeaderOverride.expectedBlockNumber == -1)
         m_blockHeaderOverride.expectedBlockNumber = m_blockchain.size();
     fs::path envPath = m_tmpDir / "env.json";
-    writeFile(envPath.string(), getGenesisForTool(m_chainParams["genesis"]));
+    writeFile(envPath.string(), prepareEnvForTool());
 
     // txs.json file
     fs::path txsPath = m_tmpDir / "txs.json";
-    writeFile(txsPath.string(), getTxsForTool());
+    writeFile(txsPath.string(), prepareTxsForTool());
 
     // alloc.json file
     fs::path allocPath = m_tmpDir / "alloc.json";
-    writeFile(allocPath.string(), m_chainParams.atKey("accounts").asJsonNoFirstKey());
+    writeFile(allocPath.string(), prepareAllocForTool());
 
     // output file
     fs::path outPath = m_tmpDir / "out.json";
@@ -531,6 +544,8 @@ string ToolImpl::test_mineBlocks(int _number, bool _canFail)
 
     m_transactions.clear();  // comment to trigger transaction rejection
     m_blockHeaderOverride.reset();
+
+
     // TODO:: verify tx from our list and from tool response
 
     m_blockchain.push_back(block);
@@ -596,7 +611,7 @@ string ToolImpl::test_importRawBlock(std::string const& _blockRLP)
         // 1 - gasPrice     4 - value   7 - r
         // 2 - gasLimit     5 - data    8 - s
         std::ostringstream stream;
-        stream << tr[5];
+        stream << tr[5];  // doesnt work for data > 32 bytes
         trInfo["data"] = stream.str() == "0x0" ? "0x" : rlpToString(tr[5], true);
         trInfo["gasLimit"] = rlpToString(tr[2], true);
         trInfo["gasPrice"] = rlpToString(tr[1], true);
