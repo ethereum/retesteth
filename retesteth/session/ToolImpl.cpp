@@ -7,7 +7,7 @@
 #include <retesteth/session/ToolImpl.h>
 
 // DataObject modifiers
-void valuesToLowerCase(DataObject& _obj)
+void mod_valuesToLowerCase(DataObject& _obj)
 {
     if (_obj.type() == DataType::String)
     {
@@ -18,7 +18,8 @@ void valuesToLowerCase(DataObject& _obj)
     }
 }
 
-void removeLeadingZerosFromHexValues(DataObject& _obj)
+// Remove leading zeros from hex values leaving 0x0004 - > 0x4
+void mod_removeLeadingZerosFromHexValues(DataObject& _obj)
 {
     static std::vector<std::string> const c_hashes{std::string{"to"}, std::string{"data"}};
     if (_obj.type() == DataType::String && !inArray(c_hashes, _obj.getKey()))
@@ -34,6 +35,19 @@ void removeLeadingZerosFromHexValues(DataObject& _obj)
             }
             replacePossible = false;
         }
+    }
+}
+
+// Remove leading zeros from hex values leaving 0x0004 - > 0x04
+void mod_removeLeadingZerosFromHexValuesEVEN(DataObject& _obj)
+{
+    mod_removeLeadingZerosFromHexValues(_obj);
+    static std::vector<std::string> const c_hashes{std::string{"to"}, std::string{"data"}};
+    if (_obj.type() == DataType::String && !inArray(c_hashes, _obj.getKey()))
+    {
+        object::DigitsType t = object::stringIntegerType(_obj.asString());
+        if (t == object::DigitsType::UnEvenHexPrefixed)
+            _obj.setString("0x0" + _obj.asString().substr(2));
     }
 }
 
@@ -121,13 +135,12 @@ ToolImpl::ToolBlock const& ToolImpl::getBlockByHashOrNumber(string const& _hashO
 
 // Make an RPC like response using data that we know from tool
 scheme_RPCBlock ToolImpl::internalConstructResponseGetBlockByHashOrNumber(
-    DataObject const& _chainParams, DataObject const& _toolResponse,
-    BlockHeaderOverride const& _bhOParams)
+    DataObject const& _toolResponse)
 {
     DataObject constructResponse(DataType::Null);
     scheme_toolResponse toolResponse(_toolResponse);
     DataObject const& rdata = toolResponse.getData();
-    DataObject const& env = _chainParams.atKey("genesis");
+    DataObject const& currentHeader = m_currentBlockHeader.header;
     size_t receiptSize = rdata.atKey("receipts").getSubObjects().size();
 
     DataObject lastReceipt;
@@ -163,7 +176,7 @@ scheme_RPCBlock ToolImpl::internalConstructResponseGetBlockByHashOrNumber(
             fullTransaction["blockHash"] =
                 dev::toHexPrefixed(h256(0));  // update when we know the hash
             fullTransaction["blockNumber"] =
-                dev::toCompactHexPrefixed(_bhOParams.expectedBlockNumber, 1);
+                dev::toCompactHexPrefixed(m_currentBlockHeader.currentBlockNumber, 1);
             fullTransaction["from"] = "0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b";  // recover vrs
             fullTransaction["gas"] = trScheme->getData().atKey("gasLimit").asString();
             fullTransaction["gasPrice"] = trScheme->getData().atKey("gasPrice").asString();
@@ -173,9 +186,18 @@ scheme_RPCBlock ToolImpl::internalConstructResponseGetBlockByHashOrNumber(
             fullTransaction["to"] = trScheme->getData().atKey("to").asString();
             fullTransaction["transactionIndex"] = receipt.atKey("transactionIndex").asString();
             fullTransaction["value"] = trScheme->getData().atKey("value").asString();
-            fullTransaction["v"] = trScheme->getData().atKey("v").asString();
-            fullTransaction["r"] = trScheme->getData().atKey("r").asString();
-            fullTransaction["s"] = trScheme->getData().atKey("s").asString();
+            if (trScheme->getData().count("v"))
+            {
+                fullTransaction["v"] = trScheme->getData().atKey("v").asString();
+                fullTransaction["r"] = trScheme->getData().atKey("r").asString();
+                fullTransaction["s"] = trScheme->getData().atKey("s").asString();
+            }
+            else
+            {
+                fullTransaction["v"] = "0x00";
+                fullTransaction["r"] = "0x00";
+                fullTransaction["s"] = "0x00";
+            }
             constructResponse["transactions"].addArrayObject(fullTransaction);
 
             u256 commGasUsed = u256(receipt.atKey("cumulativeGasUsed").asString());
@@ -197,27 +219,28 @@ scheme_RPCBlock ToolImpl::internalConstructResponseGetBlockByHashOrNumber(
         constructResponse["transactions"] = DataObject(DataType::Array);
     }
 
-    constructResponse["extraData"] = env.atKey("extraData");
-    constructResponse["gasLimit"] = env.atKey("gasLimit");
+    constructResponse["extraData"] = currentHeader.atKey("extraData");
+    constructResponse["gasLimit"] = currentHeader.atKey("gasLimit");
     constructResponse["gasUsed"] =
-        dev::toCompactHexPrefixed(lastReceipt.atKey("maxCommGasUsed").asInt());
+        dev::toCompactHexPrefixed(lastReceipt.atKey("maxCommGasUsed").asInt(), 1);
     constructResponse["logsBloom"] = lastReceipt.atKey("logsBloom");
-    constructResponse["miner"] = env.atKey("author");
-    constructResponse["number"] = dev::toCompactHexPrefixed(_bhOParams.expectedBlockNumber, 1);
+    constructResponse["miner"] = currentHeader.atKey("author");
+    constructResponse["number"] =
+        dev::toCompactHexPrefixed(m_currentBlockHeader.currentBlockNumber, 1);
     constructResponse["receiptsRoot"] = rdata.atKey("receiptRoot");
     constructResponse["stateRoot"] = rdata.atKey("stateRoot");
-    constructResponse["timestamp"] = env.atKey("timestamp");
+    constructResponse["timestamp"] = dev::toCompactHexPrefixed(m_currentBlockHeader.timestamp, 1);
     constructResponse["uncles"] = DataObject(DataType::Array);
     constructResponse["transactionsRoot"] = rdata.atKey("txRoot");
-    constructResponse["difficulty"] = env.atKey("difficulty");
+    constructResponse["difficulty"] = currentHeader.atKey("difficulty");
 
     constructResponse["hash"] =
         dev::toHexPrefixed(h256(0));  // Recalculate after with overwriteBlockHeader
     constructResponse["sha3Uncles"] =
         dev::toHexPrefixed(h256(0));  // Recalculate after with overwriteBlockHeader
-    constructResponse["parentHash"] = _bhOParams.parentHash;
+    constructResponse["parentHash"] = m_currentBlockHeader.header.atKey("parentHash");
     constructResponse["size"] = "0x00";  // Not Needed";
-    constructResponse.performModifier(valuesToLowerCase);
+    constructResponse.performModifier(mod_valuesToLowerCase);
 
     scheme_RPCBlock rpcBlock(constructResponse);
     rpcBlock.recalculateUncleHash();
@@ -289,7 +312,7 @@ scheme_debugAccountRange ToolImpl::debug_accountRange(std::string const& _blockH
     int _txIndex, std::string const& _address, int _maxResults)
 {
     rpcCall("", {});
-    ETH_TEST_MESSAGE("Request: debug_accountRange");
+    ETH_TEST_MESSAGE("Request: debug_accountRange " + _blockHashOrNumber);
     (void)_txIndex;
     (void)_address;
 
@@ -329,8 +352,9 @@ DataObject ToolImpl::debug_storageRangeAt(std::string const& _blockHashOrNumber,
                 block.getPostState().atKey(_address).atKey("storage").getSubObjects())
             {
                 DataObject record;
-                record["key"] = dev::toCompactHexPrefixed(hexOrDecStringToInt(el.getKey()), 1);
-                record["value"] = dev::toCompactHexPrefixed(hexOrDecStringToInt(el.asString()), 1);
+                record["key"] = el.getKey();
+                record["value"] = el.asString();
+                record.performModifier(mod_removeLeadingZerosFromHexValuesEVEN);
                 constructResponse["storage"][toString(iStore)] = record;
                 if (iStore++ == _maxResults)
                     break;
@@ -353,9 +377,16 @@ scheme_debugTraceTransaction ToolImpl::debug_traceTransaction(std::string const&
 // Test
 void ToolImpl::test_setChainParams(DataObject const& _config)
 {
+    m_chainGenesis.clear();
+    m_blockchain.clear();
+    m_chainParams.clear();
+    m_transactions.clear();
+    m_currentBlockHeader.reset();
+
     rpcCall("", {});
     ETH_TEST_MESSAGE("Request: test_setChainParams \n" + _config.asJson());
     m_chainParams = _config;
+    m_chainParams.performModifier(mod_removeLeadingZerosFromHexValuesEVEN);
 
     DataObject genesisHeader;
     DataObject const& env = m_chainParams.atKey("genesis");
@@ -395,12 +426,17 @@ void ToolImpl::test_setChainParams(DataObject const& _config)
         "0x0000000000000000000000000000000000000000000000000000000000000000";
 
     // PrepareGenesis hashes using tool
-    m_blockHeaderOverride.isGenesis = true;
-    m_blockHeaderOverride.expectedBlockNumber = 0;
-    m_blockHeaderOverride.parentHash =
+    m_currentBlockHeader.isMiningGenesis = true;
+    m_currentBlockHeader.currentBlockNumber = 0;
+    m_currentBlockHeader.header["author"] = env.atKey("author");
+    m_currentBlockHeader.header["difficulty"] = env.atKey("difficulty");
+    m_currentBlockHeader.header["gasLimit"] = env.atKey("gasLimit");
+    m_currentBlockHeader.header["extraData"] = env.atKey("extraData");
+    m_currentBlockHeader.header["parentHash"] =
         "0x0000000000000000000000000000000000000000000000000000000000000000";
     test_mineBlocks(1);  // use tool to calculate the hash of genesis pre state (must work, fail on
                          // error)
+    m_currentBlockHeader.isMiningGenesis = false;
 
     genesisHeader["stateRoot"] = m_blockchain.at(m_blockchain.size() - 1)
                                      .getRPCResponse()
@@ -427,18 +463,42 @@ void ToolImpl::test_rewindToBlock(size_t _blockNr)
         for (size_t i = _blockNr; i < m_blockchain.size(); i++)
             m_blockchain.pop_back();
     }
+
+    m_currentBlockHeader.reset();
+
+    scheme_RPCBlock const* currentBlock;
+    if (_blockNr == 0)
+        currentBlock = &m_chainGenesis.at(0);
+    else
+        currentBlock = &m_blockchain.at(m_blockchain.size() - 1).getRPCResponse();
+
+    DataObject const& env = currentBlock->getBlockHeader();
+    m_currentBlockHeader.timestamp = test::hexOrDecStringToInt(env.atKey("timestamp").asString());
+    m_currentBlockHeader.currentBlockNumber = test::hexOrDecStringToInt(currentBlock->getNumber());
+    m_currentBlockHeader.header["author"] = env.atKey("coinbase");
+    m_currentBlockHeader.header["difficulty"] = env.atKey("difficulty");
+    m_currentBlockHeader.header["gasLimit"] = env.atKey("gasLimit");
+    m_currentBlockHeader.header["extraData"] = env.atKey("extraData");
+    if (_blockNr == 0)
+        m_currentBlockHeader.header["parentHash"] =
+            "0x0000000000000000000000000000000000000000000000000000000000000000";
+    else if (_blockNr == 1)
+        m_currentBlockHeader.header["parentHash"] = m_chainGenesis.at(0).getBlockHash();
+    else
+        m_currentBlockHeader.header["parentHash"] =
+            m_blockchain.at(m_blockchain.size() - 2).getHash();
 }
 
 void ToolImpl::test_modifyTimestamp(unsigned long long _timestamp)
 {
     rpcCall("", {});
     ETH_TEST_MESSAGE("Request: test_modifyTimestamp " + DataObject(_timestamp).asJson());
-    m_timestamp = _timestamp;
+    m_currentBlockHeader.timestamp = _timestamp;
 }
 
 string ToolImpl::prepareAllocForTool() const
 {
-    if (m_blockHeaderOverride.expectedBlockNumber > 1)
+    if (m_currentBlockHeader.currentBlockNumber > 1)
         return m_blockchain.at(m_blockchain.size() - 1).getPostState().asJsonNoFirstKey();
     else
         return m_chainParams.atKey("accounts").asJsonNoFirstKey();
@@ -447,13 +507,21 @@ string ToolImpl::prepareAllocForTool() const
 string ToolImpl::prepareEnvForTool() const
 {
     DataObject env;
-    env["currentCoinbase"] = m_chainParams.atKey("genesis").atKey("author");
-    env["currentDifficulty"] = m_chainParams.atKey("genesis").atKey("difficulty");
-    env["currentGasLimit"] = m_chainParams.atKey("genesis").atKey("gasLimit");
-    env["currentNumber"] = dev::toCompactHexPrefixed(m_blockHeaderOverride.expectedBlockNumber, 1);
-    env["currentTimestamp"] = dev::toCompactHexPrefixed(m_timestamp, 1);
-    env["previousHash"] = m_blockHeaderOverride.parentHash;
-    env["blockHashes"]["0"] = m_blockHeaderOverride.parentHash;
+    env["currentCoinbase"] = m_currentBlockHeader.header.atKey("author");
+    env["currentDifficulty"] = m_currentBlockHeader.header.atKey("difficulty");
+    env["currentGasLimit"] = m_currentBlockHeader.header.atKey("gasLimit");
+    env["currentNumber"] = dev::toCompactHexPrefixed(m_currentBlockHeader.currentBlockNumber, 1);
+    env["currentTimestamp"] = dev::toCompactHexPrefixed(m_currentBlockHeader.timestamp, 1);
+    env["previousHash"] = m_currentBlockHeader.header.atKey("parentHash");
+
+    if (!m_currentBlockHeader.isMiningGenesis)
+    {
+        int k = 0;
+        env["blockHashes"][toString(k++)] = m_chainGenesis.at(0).getBlockHash();
+        for (auto const& bl : m_blockchain)
+            env["blockHashes"][toString(k++)] = bl.getHash();
+    }
+
     return env.asJson();
 }
 
@@ -463,7 +531,7 @@ string ToolImpl::prepareTxsForTool() const
     for (auto const& tx : m_transactions)
     {
         DataObject txToolFormat = tx.getDataForBCTest();
-        txToolFormat.performModifier(removeLeadingZerosFromHexValues);
+        txToolFormat.performModifier(mod_removeLeadingZerosFromHexValues);
         txToolFormat.renameKey("data", "input");
         txToolFormat.renameKey("gasLimit", "gas");
         if (txToolFormat.atKey("value").asString() == "0x" ||
@@ -486,9 +554,19 @@ string ToolImpl::test_mineBlocks(int _number, bool _canFail)
     ETH_ERROR_REQUIRE_MESSAGE(_number == 1, "Make sure test_mineBlocks mine 1 block");
 
     // env.json file
-    // If no override then mine next block on top of current (the number)
-    if (m_blockHeaderOverride.expectedBlockNumber == -1)
-        m_blockHeaderOverride.expectedBlockNumber = m_blockchain.size();
+    // if mining a new block (not from importRawBlock)
+    if (!m_currentBlockHeader.isImportRawBlock && !m_currentBlockHeader.isMiningGenesis)
+    {
+        // Information about the block that currently mined
+        // if m_blockchain.size == 0 then we mine [1] first block
+        // if m_blockchain.size == 1 then we mine [2] second block
+        m_currentBlockHeader.currentBlockNumber = m_blockchain.size() + 1;  // future block
+        size_t const _blockNr = m_currentBlockHeader.currentBlockNumber;
+        if (_blockNr == 1)
+            m_currentBlockHeader.header["parentHash"] = m_chainGenesis.at(0).getBlockHash();
+        else if (_blockNr >= 2)
+            m_currentBlockHeader.header["parentHash"] = m_blockchain.at(_blockNr - 2).getHash();
+    }
     fs::path envPath = m_tmpDir / "env.json";
     writeFile(envPath.string(), prepareEnvForTool());
 
@@ -511,10 +589,9 @@ string ToolImpl::test_mineBlocks(int _number, bool _canFail)
     cmd += " --output.result " + outPath.string();
     cmd += " --output.alloc " + outAllocPath.string();
     cmd += " --state.fork " + m_chainParams.atKey("params").atKey("fork").asString();
-    std::cerr << m_chainParams.asJson() << std::endl;
 
-    if (!m_blockHeaderOverride.isGenesis)  // If calculating geneis block disable rewards. so to see
-                                           // the state root hash
+    if (!m_currentBlockHeader.isMiningGenesis)  // If calculating geneis block disable rewards. so
+                                                // to see the state root hash
         if (m_chainParams.atKey("sealEngine").asString() == "NoProof")
         {
             // Setup mining rewards
@@ -535,16 +612,15 @@ string ToolImpl::test_mineBlocks(int _number, bool _canFail)
 
     // Construct block rpc response
     scheme_RPCBlock blockRPC = internalConstructResponseGetBlockByHashOrNumber(
-        m_chainParams,                                        // All that we know about the block
-        ConvertJsoncppStringToData(contentsString(outPath)),  // All that tool calculated
-        m_blockHeaderOverride);
+        ConvertJsoncppStringToData(contentsString(outPath)));  // All that tool calculated
 
     ToolBlock block(blockRPC, m_chainParams,                        // Env, alloc info
         ConvertJsoncppStringToData(contentsString(outAllocPath)));  // Result state
 
     m_transactions.clear();  // comment to trigger transaction rejection
-    m_blockHeaderOverride.reset();
 
+    if (!m_currentBlockHeader.isMiningGenesis)
+        m_currentBlockHeader.reset();
 
     // TODO:: verify tx from our list and from tool response
 
@@ -558,22 +634,30 @@ string ToolImpl::test_mineBlocks(int _number, bool _canFail)
 string rlpToString(dev::RLP const& _rlp, bool _corretHexOdd = false)
 {
     std::ostringstream stream;
-    stream << _rlp;
-    string ret = stream.str();
-    if (ret.size() > 0 && ret[0] == '"')
-    {
-        string retFormated;
-        ret = ret.substr(1);
-        while (ret[0] == '\\' && ret[1] == 'x')
-        {
-            retFormated += ret.substr(2, 2);
-            ret = ret.substr(4);
-        }
-        return "0x" + retFormated;
-    }
-    if (_corretHexOdd && ret.substr(2).size() % 2 == 1)
-        return "0x0" + ret.substr(2);
+    stream << _rlp.toBytes();
+    if (stream.str() == "0x")
+        return (_corretHexOdd) ? "0x00" : "0x0";
     return stream.str();
+
+    /*
+        std::ostringstream stream;
+        stream << _rlp;
+        string ret = stream.str();
+        if (ret.size() > 0 && ret[0] == '"')
+        {
+            string retFormated;
+            ret = ret.substr(1);
+            while (ret[0] == '\\' && ret[1] == 'x')  // parse `\x00`
+            {
+                retFormated += ret.substr(2, 2);
+                ret = ret.substr(4);
+            }
+            return "0x" + retFormated;
+        }
+        if (_corretHexOdd && ret.substr(2).size() % 2 == 1)
+            return "0x0" + ret.substr(2);
+        return stream.str();
+        */
 }
 
 string ToolImpl::test_importRawBlock(std::string const& _blockRLP)
@@ -594,13 +678,17 @@ string ToolImpl::test_importRawBlock(std::string const& _blockRLP)
     // 7 - difficulty
 
     // Information about current blockheader from ToolImpl prespective
-    m_chainParams["genesis"]["author"] = rlpToString(header[2]);
-    m_chainParams["genesis"]["difficulty"] = rlpToString(header[7]);
-    m_chainParams["genesis"]["gasLimit"] = rlpToString(header[9]);
-    m_chainParams["genesis"]["extraData"] = rlpToString(header[12]);
-    m_chainParams["genesis"]["timestamp"] = rlpToString(header[11]);
-    m_chainParams["genesis"]["nonce"] = rlpToString(header[14]);
-    m_chainParams["genesis"]["mixHash"] = rlpToString(header[13]);
+    m_currentBlockHeader.header["author"] = rlpToString(header[2]);
+    m_currentBlockHeader.header["difficulty"] = rlpToString(header[7]);
+    m_currentBlockHeader.header["gasLimit"] = rlpToString(header[9]);
+    m_currentBlockHeader.header["extraData"] = rlpToString(header[12]);
+    m_currentBlockHeader.header["timestamp"] = rlpToString(header[11]);
+    m_currentBlockHeader.timestamp = test::hexOrDecStringToInt(rlpToString(header[11]));
+    m_currentBlockHeader.header["nonce"] = rlpToString(header[14]);
+    m_currentBlockHeader.header["mixHash"] = rlpToString(header[13]);
+    m_currentBlockHeader.header.performModifier(mod_valuesToLowerCase);
+    m_currentBlockHeader.header.performModifier(mod_removeLeadingZerosFromHexValuesEVEN);
+    m_currentBlockHeader.isImportRawBlock = true;
 
     // block transactions
     m_transactions.clear();
@@ -611,12 +699,14 @@ string ToolImpl::test_importRawBlock(std::string const& _blockRLP)
         // 1 - gasPrice     4 - value   7 - r
         // 2 - gasLimit     5 - data    8 - s
         std::ostringstream stream;
-        stream << tr[5];  // doesnt work for data > 32 bytes
-        trInfo["data"] = stream.str() == "0x0" ? "0x" : rlpToString(tr[5], true);
+        stream << tr[5];  // !!! doesnt work for data > 32 bytes
+
+        trInfo["data"] = stream.str() == "0x0" ? "" : rlpToString(tr[5], true);
         trInfo["gasLimit"] = rlpToString(tr[2], true);
         trInfo["gasPrice"] = rlpToString(tr[1], true);
         trInfo["nonce"] = rlpToString(tr[0], true);
-        trInfo["to"] = rlpToString(tr[3], true);
+        string const to = rlpToString(tr[3], true);
+        trInfo["to"] = (to == "0x00") ? string() : to;
         trInfo["value"] = rlpToString(tr[4], true);
         trInfo["v"] = rlpToString(tr[6], true);
         trInfo["r"] = rlpToString(tr[7], true);
@@ -626,9 +716,10 @@ string ToolImpl::test_importRawBlock(std::string const& _blockRLP)
 
     // Execute Raw Block
     DataObject rawImportedBlockParentHash(rlpToString(header[0]));
-    valuesToLowerCase(rawImportedBlockParentHash);
-    m_blockHeaderOverride.expectedBlockNumber = test::hexOrDecStringToInt(rlpToString(header[8]));
-    m_blockHeaderOverride.parentHash = rawImportedBlockParentHash.asString();
+    mod_valuesToLowerCase(rawImportedBlockParentHash);
+    rawImportedBlockParentHash.performModifier(mod_removeLeadingZerosFromHexValuesEVEN);
+    m_currentBlockHeader.currentBlockNumber = test::hexOrDecStringToInt(rlpToString(header[8]));
+    m_currentBlockHeader.header["parentHash"] = rawImportedBlockParentHash.asString();
     test_mineBlocks(1);
 
     string blockHash = dev::toHexPrefixed(dev::sha3(header.data()));
@@ -658,7 +749,7 @@ std::string ToolImpl::test_getLogHash(std::string const& _txHash)
     {
         for (auto const& receipt : bl.getRPCResponse().getTransactions())
         {
-            if (receipt.asString() == _txHash)  // Not full transactions. just hashes
+            if (receipt.atKey("hash").asString() == _txHash)
                 return bl.getRPCResponse().getLogsHash();
         }
     }

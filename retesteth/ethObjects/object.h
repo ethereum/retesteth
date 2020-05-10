@@ -82,6 +82,6 @@ void requireJsonFields(DataObject const& _o, std::string const& _configName,
 
 /// Convert hex/dec string to int
 bool isHexDigitsType(test::object::DigitsType _dtype);
-int hexOrDecStringToInt(string const& _str);
+long int hexOrDecStringToInt(string const& _str);
 }
 

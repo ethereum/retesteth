@@ -88,15 +88,14 @@ private:
 
     // Construct RPC like block response
     struct BlockHeaderOverride;
-    scheme_RPCBlock internalConstructResponseGetBlockByHashOrNumber(DataObject const& _chainParams,
-        DataObject const& _toolResponse, BlockHeaderOverride const& _bhOParams);
+    scheme_RPCBlock internalConstructResponseGetBlockByHashOrNumber(
+        DataObject const& _toolResponse);
 
     // Core blockchain logic
     size_t m_totalCalls = 0;
     fs::path m_tmpDir;
     DataObject m_chainParams;
     std::vector<scheme_RPCBlock> m_chainGenesis;
-    unsigned long long m_timestamp;
     std::vector<ToolBlock> m_blockchain;
     std::list<scheme_transaction> m_transactions;
 
@@ -105,15 +104,18 @@ private:
     // default logic
     struct BlockHeaderOverride
     {
-        bool isGenesis = false;
-        int expectedBlockNumber = -1;
-        string parentHash = "0x0000000000000000000000000000000000000000000000000000000000000000";
+        bool isMiningGenesis = false;  // Is asking tool to calculate genesis hashes
+        bool isImportRawBlock = false;
+        DataObject header;
+        int currentBlockNumber = -1;   // The number of cuurent block
+        unsigned long long timestamp;  // Timestamp distance between blocks
         void reset()
         {
-            expectedBlockNumber = -1;
-            parentHash = string();
-            isGenesis = false;
+            header.clear();
+            currentBlockNumber = -1;
+            isMiningGenesis = false;
+            isImportRawBlock = false;
         }
     };
-    BlockHeaderOverride m_blockHeaderOverride;
+    BlockHeaderOverride m_currentBlockHeader;
 };

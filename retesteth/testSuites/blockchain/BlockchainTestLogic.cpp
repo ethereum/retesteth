@@ -151,9 +151,9 @@ void RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _
                                 length) == testTr.atKey(bField).asString();
                     ETH_ERROR_REQUIRE_MESSAGE(
                         condition, "Error checking remote transaction, remote tr `" + aField +
-                                       "` is different to test tr `" + bField + "` (" +
-                                       tr.atKey(aField).asString() +
-                                       " != " + testTr.atKey(bField).asString() + ")");
+                                       "` is different to test tr `" + bField + "` (`" +
+                                       tr.atKey(aField).asString() + "` != `" +
+                                       testTr.atKey(bField).asString() + "`)");
                 };
 
                 verifyTr("input", "data", 0);
@@ -164,8 +164,11 @@ void RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _
                 verifyTr("r", "r", _opt.isLegacyTests ? 1 : 32);
                 verifyTr("s", "s", _opt.isLegacyTests ? 1 : 32);
                 verifyTr("value", "value");
-                if (tr.atKey("to").type() != DataType::Null)
+                if (tr.atKey("to").type() != DataType::Null &&
+                    tr.atKey("to").asString().length() > 2)
                     verifyTr("to", "to", 20);
+                else
+                    verifyTr("to", "to", 0);
             }
 
             // Check uncles count
