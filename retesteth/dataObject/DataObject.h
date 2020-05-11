@@ -177,6 +177,7 @@ public:
     DataObject const& atLastElement() const;
     DataObject& atLastElementUnsafe();
     void performModifier(void (*f)(DataObject&));
+    void performVerifier(void (*f)(DataObject const&)) const;
 
     void addArrayObject(DataObject const& _obj);
 

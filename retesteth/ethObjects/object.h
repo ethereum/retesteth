@@ -6,6 +6,8 @@
 
 using namespace dataobject;
 namespace test {
+void ver_checkHash32Fields(DataObject const&);
+
 class object
 {
 public:
@@ -47,10 +49,11 @@ public:
     static DigitsType stringIntegerType(std::string const& _string);
     static std::string makeHexAddress(std::string const& _address);
     static DataObject prepareGenesisParams(std::string const& _network, std::string const& _engine);
+    static bool validateHash32(std::string const&);
 
 protected:
-    static void makeKeyHex(DataObject& _key);
-    static void makeAllFieldsHex(DataObject& _data);
+    static void makeKeyHex(DataObject&);
+    static void makeAllFieldsHex(DataObject&);
     DataObject m_data;
 
 private:

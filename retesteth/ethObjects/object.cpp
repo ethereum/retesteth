@@ -6,6 +6,28 @@
 namespace test {
 string object::emptyString;
 
+void ver_checkHash32Fields(DataObject const& _data)
+{
+    static vector<string> c_fieldsThatAreHashes32{
+        "transactionsRoot", "stateRoot", "sha3Uncles", "receiptsRoot", "parentHash", "hash"};
+    if (_data.type() == DataType::String)
+    {
+        if (test::inArray(c_fieldsThatAreHashes32, _data.getKey()) &&
+            !object::validateHash32(_data.asString()))
+            ETH_ERROR_MESSAGE(
+                "Key `" + _data.getKey() + "` is not hash32 `" + _data.asString() + "`");
+    }
+}
+
+bool object::validateHash32(std::string const& _hash)
+{
+    // validate 0x...... 32  bytes hash
+    if (_hash.size() != 66 || stringIntegerType(_hash) != DigitsType::HexPrefixed)
+        return false;
+    return true;
+}
+
+
 bool isHexDigitsType(test::object::DigitsType _dtype)
 {
     return (_dtype == test::object::DigitsType::HexPrefixed ||

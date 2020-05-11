@@ -303,6 +303,13 @@ void DataObject::performModifier(void (*f)(DataObject&))
     f(*this);
 }
 
+void DataObject::performVerifier(void (*f)(DataObject const&)) const
+{
+    for (auto const& el : m_subObjects)
+        el.performVerifier(f);
+    f(*this);
+}
+
 std::string DataObject::asJsonNoFirstKey() const
 {
     return asJson(0, true, true);
