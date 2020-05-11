@@ -95,8 +95,23 @@ private:
     size_t m_totalCalls = 0;
     fs::path m_tmpDir;
     DataObject m_chainParams;
-    std::vector<scheme_RPCBlock> m_chainGenesis;
-    std::vector<ToolBlock> m_blockchain;
+    std::vector<ToolBlock> m_chainGenesis;  // vector so not to init ToolBlock
+
+    typedef std::vector<ToolBlock> ToolChain;  // tool blockchain of tool blocks
+    ToolChain const& getCurrChain() const { return m_blockchainMap.at(m_current_chain_ind); }
+
+    ToolBlock const& getLastBlock(size_t _stepsBack = 1) const
+    {
+        // 1 - last block  2 - previous block
+        ToolChain const& tch = m_blockchainMap.at(m_current_chain_ind);
+        if (tch.size() >= _stepsBack)
+            return tch.at(tch.size() - _stepsBack);
+        return m_chainGenesis.at(0);
+    }
+    std::map<size_t, ToolChain> m_blockchainMap;  // all blockchains we know
+    size_t m_current_chain_ind = 0;               // max total difficulty blockchain
+
+    // std::vector<ToolBlock> m_blockchain;
     std::list<scheme_transaction> m_transactions;
 
     // Internal hack-logic to tell test_mineBlocks which block number is mined without passing the
