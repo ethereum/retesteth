@@ -168,7 +168,12 @@ void RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _
                     tr.atKey("to").asString().length() > 2)
                     verifyTr("to", "to", 20);
                 else
-                    verifyTr("to", "to", 0);
+                {
+                    ETH_ERROR_REQUIRE_MESSAGE(testTr.atKey("to").asString() == "0x" ||
+                                                  testTr.atKey("to").asString().empty(),
+                        "Remote transaction `to` is empty, test expected destination address: `" +
+                            testTr.atKey("to").asString());
+                }
             }
 
             // Check uncles count

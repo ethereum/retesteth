@@ -100,17 +100,22 @@ std::string ToolImpl::eth_blockNumber()
 test::scheme_RPCBlock ToolImpl::eth_getBlockByHash(string const& _hash, bool _fullObjects)
 {
     rpcCall("", {});
-    (void)_fullObjects;
+    (void)_fullObjects;  // always full objects
     ETH_TEST_MESSAGE("Request: eth_getBlockByHash `" + _hash + "`");
-    for (auto const& bl : getCurrChain())
+    for (auto const& chain : m_blockchainMap)
     {
-        if (bl.getRPCResponse().getBlockHeader().atKey("hash") == _hash)
+        ToolChain const& tch = chain.second;
+        for (auto const& bl : tch)
         {
-            ETH_TEST_MESSAGE(
-                "Response: eth_getBlockByHash " + bl.getRPCResponse().getData().asJson());
-            return bl.getRPCResponse();
+            if (bl.getRPCResponse().getBlockHeader().atKey("hash") == _hash)
+            {
+                ETH_TEST_MESSAGE(
+                    "Response: eth_getBlockByHash " + bl.getRPCResponse().getData().asJson());
+                return bl.getRPCResponse();
+            }
         }
     }
+
     ETH_TEST_MESSAGE("Response: eth_getBlockByHash (hash not found: " + _hash + ")");
     return scheme_RPCBlock(DataObject());
 }
@@ -204,7 +209,7 @@ scheme_RPCBlock ToolImpl::internalConstructResponseGetBlockByHashOrNumber(
             u256 commGasUsed = u256(receipt.atKey("cumulativeGasUsed").asString());
             maxCommGasUsed = (commGasUsed > maxCommGasUsed) ? commGasUsed : maxCommGasUsed;
         }
-        lastReceipt["maxCommGasUsed"] = (int)maxCommGasUsed;
+        lastReceipt["maxCommGasUsed"] = dev::toCompactHexPrefixed(maxCommGasUsed, 1);
     }
     else
     {
@@ -216,14 +221,13 @@ scheme_RPCBlock ToolImpl::internalConstructResponseGetBlockByHashOrNumber(
             "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
             "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
             "000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
-        lastReceipt["maxCommGasUsed"] = (int)0;
+        lastReceipt["maxCommGasUsed"] = "0x00";
         constructResponse["transactions"] = DataObject(DataType::Array);
     }
 
     constructResponse["extraData"] = currentHeader.atKey("extraData");
     constructResponse["gasLimit"] = currentHeader.atKey("gasLimit");
-    constructResponse["gasUsed"] =
-        dev::toCompactHexPrefixed(lastReceipt.atKey("maxCommGasUsed").asInt(), 1);
+    constructResponse["gasUsed"] = lastReceipt.atKey("maxCommGasUsed").asString();
     constructResponse["logsBloom"] = lastReceipt.atKey("logsBloom");
     constructResponse["miner"] = currentHeader.atKey("author");
     constructResponse["number"] =
@@ -268,10 +272,7 @@ test::scheme_RPCBlock ToolImpl::eth_getBlockByNumber(
         return getCurrChain().at(bNumber - 1).getRPCResponse();
     }
     else if (bNumber == 0)
-    {
-        test::scheme_RPCBlock const& genesis = m_chainGenesis.at(0).getRPCResponse();
-        return genesis;
-    }
+        return getGenesis().getRPCResponse();
     return scheme_RPCBlock(DataObject());
 }
 
@@ -384,6 +385,7 @@ void ToolImpl::test_setChainParams(DataObject const& _config)
     m_currentBlockHeader.reset();
     m_blockchainMap.clear();
     m_current_chain_ind = 0;
+    m_maxChainID = 0;
 
     rpcCall("", {});
     ETH_TEST_MESSAGE("Request: test_setChainParams \n" + _config.asJson());
@@ -492,10 +494,10 @@ void ToolImpl::test_rewindToBlock(size_t _blockNr)
         m_currentBlockHeader.header["parentHash"] =
             "0x0000000000000000000000000000000000000000000000000000000000000000";
     else if (_blockNr == 1)
-        m_currentBlockHeader.header["parentHash"] =
-            m_chainGenesis.at(0).getRPCResponse().getBlockHash();
+        m_currentBlockHeader.header["parentHash"] = getGenesis().getHash();
     else
         m_currentBlockHeader.header["parentHash"] = getLastBlock(2).getHash();
+    m_currentBlockHeader.header.performVerifier(test::ver_checkHash32Fields);
 }
 
 void ToolImpl::test_modifyTimestamp(unsigned long long _timestamp)
@@ -526,7 +528,7 @@ string ToolImpl::prepareEnvForTool() const
     if (!m_currentBlockHeader.isMiningGenesis)
     {
         int k = 0;
-        env["blockHashes"][toString(k++)] = m_chainGenesis.at(0).getRPCResponse().getBlockHash();
+        env["blockHashes"][toString(k++)] = getGenesis().getHash();
         for (auto const& bl : getCurrChain())
             env["blockHashes"][toString(k++)] = bl.getHash();
     }
@@ -563,7 +565,7 @@ string ToolImpl::test_mineBlocks(int _number, bool _canFail)
     ETH_ERROR_REQUIRE_MESSAGE(_number == 1, "Make sure test_mineBlocks mine 1 block");
 
     // env.json file
-    // if mining a new block (not from importRawBlock)
+    // if mining a new block (not from import RawBlock)
     if (!m_currentBlockHeader.isImportRawBlock && !m_currentBlockHeader.isMiningGenesis)
     {
         // Information about the block that currently mined
@@ -571,15 +573,12 @@ string ToolImpl::test_mineBlocks(int _number, bool _canFail)
         // if m_blockchain.size == 1 then we mine [2] second block
         m_currentBlockHeader.currentBlockNumber = getCurrChain().size() + 1;  // future block
         size_t const _blockNr = m_currentBlockHeader.currentBlockNumber;
-        if (_blockNr == 1)
-            m_currentBlockHeader.header["parentHash"] =
-                m_chainGenesis.at(0).getRPCResponse().getBlockHash();
-        else if (_blockNr >= 2)
-        {
-            ETH_ERROR_REQUIRE_MESSAGE(
-                getCurrChain().size() > _blockNr - 2, "Current chain missing a block");
-            m_currentBlockHeader.header["parentHash"] = getCurrChain().at(_blockNr - 2).getHash();
-        }
+        string const* pHash;
+        if (_blockNr == 1)  // if we are mining blockN = 1
+            pHash = &getGenesis().getHash();
+        else
+            pHash = &getLastBlock().getHash();
+        m_currentBlockHeader.header["parentHash"] = *pHash;
     }
     fs::path envPath = m_tmpDir / "env.json";
     writeFile(envPath.string(), prepareEnvForTool());
@@ -654,6 +653,72 @@ string rlpToString(dev::RLP const& _rlp, bool _corretHexOdd = false)
     return stream.str();
 }
 
+void ToolImpl::doChainReorg()
+{
+    // Select highest total difficulty chain
+    dev::u256 maxTotalDiff = 0;
+    for (auto const& chain : m_blockchainMap)
+    {
+        dev::u256 tch_d = 0;
+        ToolChain const& tch = chain.second;
+        for (auto const& bl : tch)
+            tch_d += u256(bl.getRPCResponse().getBlockHeader().atKey("difficulty").asString());
+
+        if (tch_d > maxTotalDiff)
+        {
+            m_current_chain_ind = chain.first;
+            maxTotalDiff = tch_d;
+        }
+    }
+}
+
+void ToolImpl::makeForkForBlockWithPHash(string const& _parentHash)
+{
+    // Look for _parentHash in chain database
+    // if hash is found make that chain current
+    // if hash is below top head of found chain, make a new chain and make that chain current
+    bool found = false;
+    if (getGenesis().getHash() == _parentHash)
+    {
+        // Parent is genesis, make new fork starting from genesis
+        m_current_chain_ind = ++m_maxChainID;
+        m_blockchainMap[m_current_chain_ind].size();
+        return;
+    }
+
+    for (auto const& chain : m_blockchainMap)
+    {
+        ToolChain const& tch = chain.second;
+        for (auto const& bl : tch)
+        {
+            if (bl.getHash() == _parentHash)
+            {
+                found = true;
+
+                // if it is last block in chain
+                if (tch.size() == (size_t)bl.getNumber())
+                    m_current_chain_ind = chain.first;
+                else
+                {
+                    // make a new fork
+                    m_current_chain_ind = ++m_maxChainID;
+                    ETH_ERROR_REQUIRE_MESSAGE((size_t)bl.getNumber() <= tch.size(),
+                        "bl in chain number must be <= chain size");
+                    // Copy up to fork block
+                    for (size_t i = 0; i < (size_t)bl.getNumber(); i++)
+                        m_blockchainMap[m_current_chain_ind].push_back(tch.at(i));
+                }
+                break;
+            }
+        }
+        if (found)
+            break;
+    }
+
+    if (!found)
+        ETH_ERROR_MESSAGE("ParentHash not found: " + _parentHash);
+}
+
 string ToolImpl::test_importRawBlock(std::string const& _blockRLP)
 {
     rpcCall("", {});
@@ -671,7 +736,14 @@ string ToolImpl::test_importRawBlock(std::string const& _blockRLP)
     // 6 - bloom                // 14 - nonce
     // 7 - difficulty
 
-    // rlpToString(header[0]); //check if we know parent hash
+    // Check if we know parent hash and do chain reorg
+    string const pHash = rlpToString(header[0]);
+    string const bNumber = rlpToString(header[8]);
+
+    ETH_TEST_MESSAGE("Attempt to import number `" + toString(bNumber) + "` on top of chain size `" +
+                     toString(getCurrChain().size()));
+    ETH_TEST_MESSAGE("ParentHash: " + pHash);
+    makeForkForBlockWithPHash(pHash);
 
     // Information about current blockheader from ToolImpl prespective
     m_currentBlockHeader.header["author"] = rlpToString(header[2]);
@@ -714,18 +786,27 @@ string ToolImpl::test_importRawBlock(std::string const& _blockRLP)
         eth_sendRawTransaction(scheme_transaction(trInfo));
     }
 
+    // for (auto const& uncl : blockRLP[2])
+    {
+        // std::cerr << dev::sha3(uncl.getData()) << std::endl;
+        // need to put hash here
+        // construct scheme_RPCBlock from this header to calculate hash?
+    }
+
     // Execute Raw Block
     DataObject rawImportedBlockParentHash(rlpToString(header[0]));
     mod_valuesToLowerCase(rawImportedBlockParentHash);
-    rawImportedBlockParentHash.performModifier(mod_removeLeadingZerosFromHexValuesEVEN);
+    // rawImportedBlockParentHash.performModifier(mod_removeLeadingZerosFromHexValuesEVEN);
     m_currentBlockHeader.currentBlockNumber = test::hexOrDecStringToInt(rlpToString(header[8]));
     m_currentBlockHeader.header["parentHash"] = rawImportedBlockParentHash.asString();
+    m_currentBlockHeader.header.performVerifier(test::ver_checkHash32Fields);
     test_mineBlocks(1);
 
     string blockHash = dev::toHexPrefixed(dev::sha3(header.data()));
     ToolBlock const& cbl = getLastBlock();
-    ETH_ERROR_REQUIRE_MESSAGE(
-        blockHash == cbl.getHash(), "RAW import hash != test_mineBlocks imitating rawblock. \n");
+    ETH_ERROR_REQUIRE_MESSAGE(blockHash == cbl.getHash(),
+        string("RAW import hash != test_mineBlocks imitating rawblock. \n") + "RAW: " + blockHash +
+            " vs " + cbl.getHash());
 
     size_t rawImportedBlockNumber = test::hexOrDecStringToInt(rlpToString(header[8]));
     ETH_ERROR_REQUIRE_MESSAGE(
@@ -738,8 +819,7 @@ string ToolImpl::test_importRawBlock(std::string const& _blockRLP)
     // Check that parent hash of rawImportedBlock is equal to previous block known
     if (rawImportedBlockNumber == 1)
     {
-        ETH_ERROR_REQUIRE_MESSAGE(m_chainGenesis.at(0).getRPCResponse().getBlockHash() ==
-                                      rawImportedBlockParentHash.asString(),
+        ETH_ERROR_REQUIRE_MESSAGE(getGenesis().getHash() == rawImportedBlockParentHash.asString(),
             "Unknown genesis: " + rawImportedBlockParentHash.asString());
     }
     else
@@ -753,6 +833,7 @@ string ToolImpl::test_importRawBlock(std::string const& _blockRLP)
     }
 
     ETH_TEST_MESSAGE("Response test_importRawBlock: " + blockHash);
+    doChainReorg();
     return blockHash;
 }
 

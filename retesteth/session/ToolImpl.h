@@ -99,7 +99,10 @@ private:
 
     typedef std::vector<ToolBlock> ToolChain;  // tool blockchain of tool blocks
     ToolChain const& getCurrChain() const { return m_blockchainMap.at(m_current_chain_ind); }
+    void makeForkForBlockWithPHash(string const& _parentHash);
+    void doChainReorg();
 
+    ToolBlock const& getGenesis() const { return m_chainGenesis.at(0); }
     ToolBlock const& getLastBlock(size_t _stepsBack = 1) const
     {
         // 1 - last block  2 - previous block
@@ -110,6 +113,7 @@ private:
     }
     std::map<size_t, ToolChain> m_blockchainMap;  // all blockchains we know
     size_t m_current_chain_ind = 0;               // max total difficulty blockchain
+    size_t m_maxChainID = 0;
 
     // std::vector<ToolBlock> m_blockchain;
     std::list<scheme_transaction> m_transactions;
