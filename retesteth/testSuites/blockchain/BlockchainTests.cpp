@@ -261,6 +261,7 @@ BOOST_AUTO_TEST_CASE(stQuadraticComplexityTest) {}
 BOOST_AUTO_TEST_CASE(stBadOpcode) {}
 
 // New Tests
+BOOST_AUTO_TEST_CASE(stSubroutine) {}
 BOOST_AUTO_TEST_CASE(stArgsZeroOneBalance) {}
 BOOST_AUTO_TEST_CASE(stTimeConsuming) {}
 BOOST_AUTO_TEST_CASE(stChainId) {}
