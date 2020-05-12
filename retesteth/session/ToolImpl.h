@@ -60,15 +60,22 @@ private:
           : m_blockResponse(_rpcBlockResponse), m_env(_chainParams), m_postState(_pstate)
         {}
         scheme_RPCBlock const& getRPCResponse() const { return m_blockResponse; }
+        void overwriteBlockHeader(DataObject const& _header)
+        {
+            m_blockResponse.overwriteBlockHeader(_header);
+        }
         DataObject const& getEnv() const { return m_env; }
         DataObject const& getPostState() const { return m_postState; }
         string const& getHash() const { return m_blockResponse.getBlockHash(); }
         int getNumber() const { return test::hexOrDecStringToInt(m_blockResponse.getNumber()); }
+        void markInvalidTransactions() { m_wereInvalidTr = true; }
+        bool wereInvalidTransactions() const { return m_wereInvalidTr; }
 
     private:
         scheme_RPCBlock m_blockResponse;
         DataObject m_env;
         DataObject m_postState;
+        bool m_wereInvalidTr = false;
     };
 
 private:

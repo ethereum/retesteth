@@ -14,13 +14,12 @@ public:
     scheme_toolResponse(DataObject const& _toolResponse) : object(_toolResponse)
     {
         requireJsonFields(_toolResponse, "toolResponse",
-            {
-                {"stateRoot", {{DataType::String}, jsonField::Required}},
+            {{"stateRoot", {{DataType::String}, jsonField::Required}},
                 {"txRoot", {{DataType::String}, jsonField::Required}},
                 {"receiptRoot", {{DataType::String}, jsonField::Required}},
                 {"logsHash", {{DataType::String}, jsonField::Required}},
-                {"receipts", {{DataType::Array}, jsonField::Optional}},
-            });
+                {"receipts", {{DataType::Array}, jsonField::Required}},
+                {"rejected", {{DataType::Array}, jsonField::Optional}}});
         if (!_toolResponse.count("receipts"))
             m_data["receipts"] = DataObject(DataType::Array);
         else

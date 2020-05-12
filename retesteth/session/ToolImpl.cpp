@@ -131,7 +131,12 @@ ToolImpl::ToolBlock const& ToolImpl::getBlockByHashOrNumber(string const& _hashO
     }
     else
     {
-        int bNumber = hexOrDecStringToInt(_hashOrNumber) - 1;
+        int bNumber = hexOrDecStringToInt(_hashOrNumber);
+        ETH_ERROR_REQUIRE_MESSAGE(
+            bNumber >= 0 && bNumber < 10000, "getBlockByHashOrNumber sanitize block number!");
+        if (bNumber == 0)
+            return getGenesis();
+        bNumber--;  // chain vector starts with 0
         if (bNumber >= 0 && (size_t)bNumber < getCurrChain().size())
             return getCurrChain().at(bNumber);
     }
@@ -400,14 +405,14 @@ void ToolImpl::test_setChainParams(DataObject const& _config)
     DataObject const& env = m_chainParams.atKey("genesis");
 
     // Values from ENV section
-    genesisHeader["miner"] = env.atKey("author");
+    genesisHeader["coinbase"] = env.atKey("author");
     genesisHeader["difficulty"] = env.atKey("difficulty");
     genesisHeader["gasLimit"] = env.atKey("gasLimit");
     genesisHeader["extraData"] = env.atKey("extraData");
     genesisHeader["timestamp"] = env.atKey("timestamp");
 
     // Default Genesis Values
-    genesisHeader["logsBloom"] =
+    genesisHeader["bloom"] =
         "0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
         "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
         "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
@@ -418,14 +423,11 @@ void ToolImpl::test_setChainParams(DataObject const& _config)
     genesisHeader["number"] = "0x00";
     genesisHeader["parentHash"] =
         "0x0000000000000000000000000000000000000000000000000000000000000000";
-    genesisHeader["receiptsRoot"] =
+    genesisHeader["receiptTrie"] =
         "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421";
-    genesisHeader["transactionsRoot"] =
+    genesisHeader["transactionsTrie"] =
         "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421";
-    genesisHeader["uncles"] = DataObject(DataType::Array);
-    genesisHeader["transactions"] = DataObject(DataType::Array);
-    genesisHeader["size"] = "0x00";  // Not Needed";
-    genesisHeader["sha3Uncles"] =
+    genesisHeader["uncleHash"] =
         "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347";
 
     // Values need to calculate
@@ -458,12 +460,11 @@ void ToolImpl::test_setChainParams(DataObject const& _config)
     genesisHeader["stateRoot"] =
         getLastBlock().getRPCResponse().getBlockHeader().atKey("stateRoot");
 
-    m_blockchainMap.at(m_current_chain_ind).pop_back();  // remove fake block which is actually
-                                                         // genesis
-    DataObject emptyData(DataType::Null);
-    ToolBlock genesis(
-        scheme_RPCBlock(genesisHeader), emptyData, emptyData);
+    ToolBlock genesis = getLastBlock();
+    genesis.overwriteBlockHeader(genesisHeader);
     m_chainGenesis.push_back(genesis);
+    // remove fake block which is actually genesis
+    m_blockchainMap.at(m_current_chain_ind).pop_back();
 
     ETH_TEST_MESSAGE("Response test_setChainParams: {true}");
     ETH_TEST_MESSAGE(genesis.getRPCResponse().getBlockHeader().asJson());
@@ -638,11 +639,13 @@ string ToolImpl::test_mineBlocks(int _number, bool _canFail)
     ETH_TEST_MESSAGE("RAlloc:\n" + contentsString(outAllocPath.string()));
 
     // Construct block rpc response
-    scheme_RPCBlock blockRPC = internalConstructResponseGetBlockByHashOrNumber(
-        ConvertJsoncppStringToData(contentsString(outPath)));  // All that tool calculated
+    DataObject const toolResponse = ConvertJsoncppStringToData(contentsString(outPath));
+    scheme_RPCBlock blockRPC = internalConstructResponseGetBlockByHashOrNumber(toolResponse);
 
     ToolBlock block(blockRPC, m_chainParams,                        // Env, alloc info
         ConvertJsoncppStringToData(contentsString(outAllocPath)));  // Result state
+    if (toolResponse.count("rejected"))
+        block.markInvalidTransactions();
 
     m_transactions.clear();  // comment to trigger transaction rejection
 
@@ -733,76 +736,27 @@ void ToolImpl::makeForkForBlockWithPHash(string const& _parentHash)
         ETH_ERROR_MESSAGE("ParentHash not found: " + _parentHash);
 }
 
+// Import block from RAW rlp and validate it according to ethereum rules
+// Very logic heavy function. Must be on the client side. Its a clien logic.
 string ToolImpl::test_importRawBlock(std::string const& _blockRLP)
 {
     rpcCall("", {});
     ETH_TEST_MESSAGE("Request: test_importRawBlock, following transaction import are internal");
     bytes blockBytes = dev::fromHex(_blockRLP);
-    dev::RLP blockRLP(blockBytes);
 
-    dev::RLP header = blockRLP[0];  // block header
-    // 0 - parentHash           // 8 - number
-    // 1 - uncleHash            // 9 - gasLimit
-    // 2 - coinbase             // 10 - gasUsed
-    // 3 - stateRoot            // 11 - timestamp
-    // 4 - transactionTrie      // 12 - extraData
-    // 5 - receiptTrie          // 13 - mixHash
-    // 6 - bloom                // 14 - nonce
-    // 7 - difficulty
+    string rawBlockHash = "";
+    size_t rawImportedBlockNumber = 100000;
+    DataObject rawImportedBlockParentHash("");
 
-    // Check if we know parent hash and do chain reorg
-    string const pHash = rlpToString(header[0]);
-    string const bNumber = rlpToString(header[8]);
-
-    ETH_TEST_MESSAGE("Attempt to import number `" + toString(bNumber) + "` on top of chain size `" +
-                     toString(getCurrChain().size()));
-    ETH_TEST_MESSAGE("ParentHash: " + pHash);
-    makeForkForBlockWithPHash(pHash);
-
-    // Information about current blockheader from ToolImpl prespective
-    m_currentBlockHeader.header["author"] = rlpToString(header[2]);
-    m_currentBlockHeader.header["difficulty"] = rlpToString(header[7]);
-    m_currentBlockHeader.header["gasLimit"] = rlpToString(header[9]);
-    m_currentBlockHeader.header["extraData"] = rlpToString(header[12]);
-    m_currentBlockHeader.header["timestamp"] = rlpToString(header[11]);
-    m_currentBlockHeader.timestamp = test::hexOrDecStringToInt(rlpToString(header[11]));
-    m_currentBlockHeader.header["nonce"] = rlpToString(header[14]);
-    m_currentBlockHeader.header["mixHash"] = rlpToString(header[13]);
-    m_currentBlockHeader.header.performModifier(mod_valuesToLowerCase);
-    m_currentBlockHeader.header.performModifier(mod_removeLeadingZerosFromHexValuesEVEN);
-    m_currentBlockHeader.isImportRawBlock = true;
-
-    // block transactions
-    m_transactions.clear();
-    for (auto const& tr : blockRLP[1])
+    try
     {
-        DataObject trInfo;
-        // 0 - nonce        3 - to      6 - v
-        // 1 - gasPrice     4 - value   7 - r
-        // 2 - gasLimit     5 - data    8 - s
-        std::ostringstream stream;
-        stream << tr[5];  // !!! doesnt work for data > 32 bytes
+        dev::RLP blockRLP(blockBytes);
+        if (!blockRLP.isList())
+            throw dev::RLPException("Block RLP is expected to be list");
+        dev::RLP header = blockRLP[0];  // block header
+        if (!header.isList())
+            throw dev::RLPException("RLP blockHeader is expected to be list");
 
-        trInfo["data"] = stream.str() == "0x0" ? "" : rlpToString(tr[5], true);
-        trInfo["gasLimit"] = rlpToString(tr[2], true);
-        trInfo["gasPrice"] = rlpToString(tr[1], true);
-        trInfo["nonce"] = rlpToString(tr[0], true);
-        string const to = rlpToString(tr[3], true);
-        trInfo["to"] = (to == "0x00") ? string() : to;
-        trInfo["value"] = rlpToString(tr[4], true);
-        trInfo["v"] = rlpToString(tr[6], true);
-        trInfo["r"] = rlpToString(tr[7], true);
-        trInfo["s"] = rlpToString(tr[8], true);
-        if (trInfo["r"].asString().length() == 64)  // leading zeros removed. return it back
-            trInfo["r"] = string(trInfo["r"].asString()).insert(2, "00");
-        if (trInfo["s"].asString().length() == 64)  // leading zeros removed. return it back
-            trInfo["s"] = string(trInfo["s"].asString()).insert(2, "00");
-        eth_sendRawTransaction(scheme_transaction(trInfo));
-    }
-
-    // Caclulate uncle hash
-    for (auto const& uncl : blockRLP[2])
-    {
         // 0 - parentHash           // 8 - number
         // 1 - uncleHash            // 9 - gasLimit
         // 2 - coinbase             // 10 - gasUsed
@@ -811,48 +765,182 @@ string ToolImpl::test_importRawBlock(std::string const& _blockRLP)
         // 5 - receiptTrie          // 13 - mixHash
         // 6 - bloom                // 14 - nonce
         // 7 - difficulty
+        rawBlockHash = dev::toHexPrefixed(dev::sha3(header.data()));
+        rawImportedBlockNumber = test::hexOrDecStringToInt(rlpToString(header[8]));
+        rawImportedBlockParentHash = rlpToString(header[0]);
 
-        DataObject uncleData;
-        uncleData["extraData"] = rlpToString(uncl[12]);
-        uncleData["gasLimit"] = rlpToString(uncl[9]);
-        uncleData["gasUsed"] = rlpToString(uncl[10]);
-        uncleData["logsBloom"] = rlpToString(uncl[6]);
-        uncleData["miner"] = rlpToString(uncl[2]);
-        uncleData["number"] = rlpToString(uncl[8]);
-        uncleData["parentHash"] = rlpToString(uncl[0]);
-        uncleData["receiptsRoot"] = rlpToString(uncl[5]);
-        uncleData["sha3Uncles"] = rlpToString(uncl[1]);
-        uncleData["stateRoot"] = rlpToString(uncl[3]);
-        uncleData["timestamp"] = rlpToString(uncl[11]);
-        uncleData["transactionsRoot"] = rlpToString(uncl[4]);
-        uncleData["difficulty"] = rlpToString(uncl[7]);
+        // Check if we know parent hash and do chain reorg
+        string const pHash = rlpToString(header[0]);
+        string const bNumber = rlpToString(header[8]);
 
-        uncleData["hash"] = dev::toHexPrefixed(h256(0));
-        uncleData["size"] = "0x00";
-        uncleData["transactions"] = DataObject(DataType::Array);
-        uncleData["uncles"] = DataObject(DataType::Array);
-        scheme_RPCBlock uncleBlock(uncleData);
-        uncleBlock.overwriteBlockHeader(uncleBlock.getBlockHeader());  // recalculate hash from
-                                                                       // fields
-        m_currentBlockHeader.uncles.push_back(uncleBlock);
+        ETH_TEST_MESSAGE("Attempt to import number `" + toString(bNumber) +
+                         "` on top of chain size `" + toString(getCurrChain().size()));
+        ETH_TEST_MESSAGE("ParentHash: " + pHash);
+        if (!object::validateHash32(pHash))
+            throw dev::RLPException("Parent has is not hash32");
+        makeForkForBlockWithPHash(pHash);
+
+        // Information about current blockheader from ToolImpl prespective
+        m_currentBlockHeader.reset();
+        m_currentBlockHeader.header["author"] = rlpToString(header[2]);
+        m_currentBlockHeader.header["difficulty"] = rlpToString(header[7]);
+        m_currentBlockHeader.header["gasLimit"] = rlpToString(header[9]);
+        m_currentBlockHeader.header["extraData"] = rlpToString(header[12]);
+        m_currentBlockHeader.header["timestamp"] = rlpToString(header[11]);
+        m_currentBlockHeader.timestamp = test::hexOrDecStringToInt(rlpToString(header[11]));
+        m_currentBlockHeader.header["nonce"] = rlpToString(header[14]);
+        m_currentBlockHeader.header["mixHash"] = rlpToString(header[13]);
+        m_currentBlockHeader.header.performModifier(mod_valuesToLowerCase);
+        m_currentBlockHeader.header.performModifier(mod_removeLeadingZerosFromHexValuesEVEN);
+        m_currentBlockHeader.isImportRawBlock = true;
+
+        if (m_currentBlockHeader.header.atKey("extraData").asString().size() > 66)  // 0x + 32 bytes
+            throw dev::RLPException("extraData is too long");
+
+        // block transactions
+        m_transactions.clear();
+        if (!blockRLP[1].isList())
+            throw dev::RLPException("Transactions RLP is expected to be list");
+
+        for (auto const& tr : blockRLP[1])
+        {
+            if (!tr.isList())
+                throw dev::RLPException("Transaction RLP is expected to be list");
+
+            DataObject trInfo;
+            // 0 - nonce        3 - to      6 - v
+            // 1 - gasPrice     4 - value   7 - r
+            // 2 - gasLimit     5 - data    8 - s
+            std::ostringstream stream;
+            stream << tr[5];  // !!! doesnt work for data > 32 bytes
+
+            trInfo["data"] = stream.str() == "0x0" ? "" : rlpToString(tr[5], true);
+            trInfo["gasLimit"] = rlpToString(tr[2], true);
+            trInfo["gasPrice"] = rlpToString(tr[1], true);
+            trInfo["nonce"] = rlpToString(tr[0], true);
+            string const to = rlpToString(tr[3], true);
+            trInfo["to"] = (to == "0x00") ? string() : to;
+            trInfo["value"] = rlpToString(tr[4], true);
+            trInfo["v"] = rlpToString(tr[6], true);
+            trInfo["r"] = rlpToString(tr[7], true);
+            trInfo["s"] = rlpToString(tr[8], true);
+            if (trInfo["r"].asString().length() == 64)  // leading zeros removed. return it back
+                trInfo["r"] = string(trInfo["r"].asString()).insert(2, "00");
+            if (trInfo["s"].asString().length() == 64)  // leading zeros removed. return it back
+                trInfo["s"] = string(trInfo["s"].asString()).insert(2, "00");
+            eth_sendRawTransaction(scheme_transaction(trInfo));
+        }
+
+        // Caclulate uncle hash
+        if (!blockRLP[2].isList())
+            throw dev::RLPException("Uncles expected to be list");
+
+        for (auto const& uncl : blockRLP[2])
+        {
+            // 0 - parentHash           // 8 - number
+            // 1 - uncleHash            // 9 - gasLimit
+            // 2 - coinbase             // 10 - gasUsed
+            // 3 - stateRoot            // 11 - timestamp
+            // 4 - transactionTrie      // 12 - extraData
+            // 5 - receiptTrie          // 13 - mixHash
+            // 6 - bloom                // 14 - nonce
+            // 7 - difficulty
+
+            DataObject uncleData;
+            uncleData["extraData"] = rlpToString(uncl[12]);
+            uncleData["gasLimit"] = rlpToString(uncl[9]);
+            uncleData["gasUsed"] = rlpToString(uncl[10]);
+            uncleData["logsBloom"] = rlpToString(uncl[6]);
+            uncleData["miner"] = rlpToString(uncl[2]);
+            uncleData["number"] = rlpToString(uncl[8]);
+            uncleData["parentHash"] = rlpToString(uncl[0]);
+            uncleData["receiptsRoot"] = rlpToString(uncl[5]);
+            uncleData["sha3Uncles"] = rlpToString(uncl[1]);
+            uncleData["stateRoot"] = rlpToString(uncl[3]);
+            uncleData["timestamp"] = rlpToString(uncl[11]);
+            uncleData["transactionsRoot"] = rlpToString(uncl[4]);
+            uncleData["difficulty"] = rlpToString(uncl[7]);
+
+            uncleData["hash"] = dev::toHexPrefixed(h256(0));
+            uncleData["size"] = "0x00";
+            uncleData["transactions"] = DataObject(DataType::Array);
+            uncleData["uncles"] = DataObject(DataType::Array);
+            scheme_RPCBlock uncleBlock(uncleData);
+
+            // recalculate hash from fields
+            uncleBlock.overwriteBlockHeader(uncleBlock.getBlockHeader());
+
+            string const& unclePHash = uncleBlock.getBlockHeader().atKey("parentHash").asString();
+            if (unclePHash == rawImportedBlockParentHash.asString())
+                throw dev::RLPException("Uncle is brother (deried from the same block)");
+            bool foundUncestor = false;
+            for (auto const& bl : getCurrChain())
+            {
+                if (bl.getHash() == unclePHash)
+                {
+                    foundUncestor = true;
+                    break;
+                }
+            }
+            if (!foundUncestor)
+                throw dev::RLPException("Uncle is derived from unknown block!");
+
+            // check dublicated uncles
+            for (auto const& bl : getCurrChain())
+            {
+                if (bl.getHash() == uncleBlock.getBlockHash())
+                    throw dev::RLPException("Uncle is one of the blocks imported to chain!");
+
+                for (auto const& un : bl.getRPCResponse().getUncles())
+                {
+                    if (un.asString() == uncleBlock.getBlockHash())
+                        throw dev::RLPException("Dublicate uncles in chain");
+                }
+            }
+            for (auto const& uncleRPC : m_currentBlockHeader.uncles)
+            {
+                if (uncleRPC.getBlockHash() == uncleBlock.getBlockHash())
+                    throw dev::RLPException("Uncle already been attached to this block!");
+            }
+            m_currentBlockHeader.uncles.push_back(uncleBlock);
+        }
+
+        // Execute Raw Block
+        mod_valuesToLowerCase(rawImportedBlockParentHash);
+        // rawImportedBlockParentHash.performModifier(mod_removeLeadingZerosFromHexValuesEVEN);
+        m_currentBlockHeader.currentBlockNumber = test::hexOrDecStringToInt(rlpToString(header[8]));
+        m_currentBlockHeader.header["parentHash"] = rawImportedBlockParentHash.asString();
+        m_currentBlockHeader.header.performVerifier(test::ver_checkHash32Fields);
+    }
+    catch (RLPException const& _ex)
+    {
+        // invalid rlp exception
+        doChainReorg();
+        m_lastInterfaceError["message"] = "Import raw block failed";
+        m_lastInterfaceError["error"] = string("Error parsing block rlp: ") + _ex.what();
+        ETH_TEST_MESSAGE(m_lastInterfaceError.asJson());
+        ETH_TEST_MESSAGE("Response test_importRawBlock: " + rawBlockHash);
+        return string();
     }
 
-    // Execute Raw Block
-    DataObject rawImportedBlockParentHash(rlpToString(header[0]));
-    mod_valuesToLowerCase(rawImportedBlockParentHash);
-    // rawImportedBlockParentHash.performModifier(mod_removeLeadingZerosFromHexValuesEVEN);
-    m_currentBlockHeader.currentBlockNumber = test::hexOrDecStringToInt(rlpToString(header[8]));
-    m_currentBlockHeader.header["parentHash"] = rawImportedBlockParentHash.asString();
-    m_currentBlockHeader.header.performVerifier(test::ver_checkHash32Fields);
     test_mineBlocks(1);
-
-    string blockHash = dev::toHexPrefixed(dev::sha3(header.data()));
     ToolBlock const& cbl = getLastBlock();
-    ETH_ERROR_REQUIRE_MESSAGE(blockHash == cbl.getHash(),
-        string("RAW import hash != test_mineBlocks imitating rawblock. \n") + "RAW: " + blockHash +
-            " vs " + cbl.getHash());
+    if (cbl.wereInvalidTransactions())  // when import from raw block. no invalid transactions
+                                        // (tool::rejected) allowed
+    {
+        m_blockchainMap.at(m_current_chain_ind).pop_back();
+        doChainReorg();
+        m_lastInterfaceError["message"] = "Import raw block failed";
+        m_lastInterfaceError["error"] = "Raw block transaction execution failed!";
+        ETH_TEST_MESSAGE(m_lastInterfaceError.asJson());
+        ETH_TEST_MESSAGE("Response test_importRawBlock: " + rawBlockHash);
+        return string();
+    }
 
-    size_t rawImportedBlockNumber = test::hexOrDecStringToInt(rlpToString(header[8]));
+    ETH_ERROR_REQUIRE_MESSAGE(rawBlockHash == cbl.getHash(),
+        string("RAW import hash != test_mineBlocks imitating rawblock. \n") +
+            "RAW: " + rawBlockHash + " vs " + cbl.getHash());
+
     ETH_ERROR_REQUIRE_MESSAGE(
         rawImportedBlockNumber < 10000, "Sanitize blocknumber convertion error!");
     ETH_ERROR_REQUIRE_MESSAGE(getCurrChain().size() == rawImportedBlockNumber,
@@ -876,9 +964,9 @@ string ToolImpl::test_importRawBlock(std::string const& _blockRLP)
             "ImportRaw block require previous block hash == block.parentHash");
     }
 
-    ETH_TEST_MESSAGE("Response test_importRawBlock: " + blockHash);
+    ETH_TEST_MESSAGE("Response test_importRawBlock: " + rawBlockHash);
     doChainReorg();
-    return blockHash;
+    return rawBlockHash;
 }
 
 std::string ToolImpl::test_getLogHash(std::string const& _txHash)
@@ -903,6 +991,7 @@ std::string ToolImpl::test_getLogHash(std::string const& _txHash)
 DataObject ToolImpl::rpcCall(
     std::string const& _methodName, std::vector<std::string> const& _args, bool _canFail)
 {
+    m_lastInterfaceError.clear();
     if (Options::get().rpcLimit != 0 && Options::get().rpcLimit < m_totalCalls++)
         ETH_FAIL_MESSAGE("Request: rpcCall of test limit");
     (void)_methodName;
