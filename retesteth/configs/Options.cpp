@@ -23,6 +23,12 @@ fs::path getRetestethDataDir()
 }
 }  // namespace
 
+string prepareRetestethVersion()
+{
+    static const string version = string(ETH_PROJECT_VERSION) + "-" + string(ETH_VERSION_SUFFIX);
+    return version;
+}
+
 void deployFirstRunConfigs()
 {
     fs::path homeDir = getRetestethDataDir();
@@ -32,9 +38,9 @@ void deployFirstRunConfigs()
         if (!fs::exists(homeDir / "version"))
             return;
         string version = dev::contentsString(homeDir / "version");
-        if (version != string(ETH_PROJECT_VERSION))
+        if (version != prepareRetestethVersion())
             ETH_WARNING("Retesteth configs version is different (running: '" +
-                        string(ETH_PROJECT_VERSION) + "' vs config '" + version +
+                        prepareRetestethVersion() + "' vs config '" + version +
                         "')! Redeploy the configs by deleting the folder ~/.retesteth!");
         return;
     }
@@ -44,7 +50,7 @@ void deployFirstRunConfigs()
     fs::create_directory(homeDir / "default");
     fs::create_directory(homeDir / "default" / "genesis");
 
-    writeFile(homeDir / "version", string(ETH_PROJECT_VERSION));
+    writeFile(homeDir / "version", prepareRetestethVersion());
     writeFile(homeDir / "default" / "config", default_config);
     writeFile(homeDir / "t8ntool" / "config", t8ntool_config);
     writeFile(homeDir / "gethTCP" / "config", default_config);

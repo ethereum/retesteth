@@ -460,8 +460,9 @@ void ToolImpl::test_setChainParams(DataObject const& _config)
 
     m_blockchainMap.at(m_current_chain_ind).pop_back();  // remove fake block which is actually
                                                          // genesis
+    DataObject emptyData(DataType::Null);
     ToolBlock genesis(
-        scheme_RPCBlock(genesisHeader), DataObject(DataType::Null), DataObject(DataType::Null));
+        scheme_RPCBlock(genesisHeader), emptyData, emptyData);
     m_chainGenesis.push_back(genesis);
 
     ETH_TEST_MESSAGE("Response test_setChainParams: {true}");

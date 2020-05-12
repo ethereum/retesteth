@@ -75,11 +75,6 @@ private:
     Socket::SocketType m_sockType;
     string m_toolPath;
 
-    size_t m_rpcSequence = 1;
-    unsigned m_sleepTime = 10;  // 10 milliseconds
-    unsigned m_successfulMineRuns = 0;
-    unsigned m_maxMiningTime = 250000;  // should be instant with --test (1 sec)
-
     // Helper functions
     string prepareAllocForTool() const;
     string prepareTxsForTool() const;
