@@ -35,7 +35,8 @@ string default_config = R"({
         "Byzantium",
         "Constantinople",
         "ConstantinopleFix",
-        "Istanbul"
+        "Istanbul",
+        "Berlin"
     ],
     "additionalForks" : [
         "FrontierToHomesteadAt5",
@@ -150,7 +151,8 @@ string besu_config = R"({
         "Byzantium",
         "Constantinople",
         "ConstantinopleFix",
-        "Istanbul"
+        "Istanbul",
+        "Berlin"
     ],
     "additionalForks" : [
         "FrontierToHomesteadAt5",
@@ -180,7 +182,8 @@ string alethTCP_config = R"({
         "Byzantium",
         "Constantinople",
         "ConstantinopleFix",
-        "Istanbul"
+        "Istanbul",
+        "Berlin"
     ],
     "additionalForks" : [
         "FrontierToHomesteadAt5",
@@ -224,7 +227,8 @@ string alethIPCDebug_config = R"({
         "Byzantium",
         "Constantinople",
         "ConstantinopleFix",
-        "Istanbul"
+        "Istanbul",
+        "Berlin"
     ],
     "additionalForks" : [
         "FrontierToHomesteadAt5",
@@ -267,7 +271,8 @@ string aleth_config = R"({
         "Byzantium",
         "Constantinople",
         "ConstantinopleFix",
-        "Istanbul"
+        "Istanbul",
+        "Berlin"
     ],
     "additionalForks" : [
         "FrontierToHomesteadAt5",

@@ -11,5 +11,6 @@ string default_correctMiningReward_config = R"({
     "Byzantium":         "3000000000000000000",
     "Constantinople":    "2000000000000000000",
     "ConstantinopleFix": "2000000000000000000",
-    "Istanbul":          "2000000000000000000"
+    "Istanbul":          "2000000000000000000",
+    "Berlin":            "2000000000000000000"
 })";
