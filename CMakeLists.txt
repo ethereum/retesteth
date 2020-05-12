@@ -13,7 +13,8 @@ HunterGate(
 	LOCAL
 )
 
-project(retesteth VERSION 0.0.2)
+project(retesteth VERSION 0.0.3)
+set(VERSION_SUFFIX "t8n_tool-s/b-exec")
 
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)
