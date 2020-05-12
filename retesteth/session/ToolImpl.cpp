@@ -236,6 +236,8 @@ scheme_RPCBlock ToolImpl::internalConstructResponseGetBlockByHashOrNumber(
     constructResponse["stateRoot"] = rdata.atKey("stateRoot");
     constructResponse["timestamp"] = dev::toCompactHexPrefixed(m_currentBlockHeader.timestamp, 1);
     constructResponse["uncles"] = DataObject(DataType::Array);
+    for (auto const& un : m_currentBlockHeader.uncles)
+        constructResponse["uncles"].addArrayObject(un.getBlockHash());
     constructResponse["transactionsRoot"] = rdata.atKey("txRoot");
     constructResponse["difficulty"] = currentHeader.atKey("difficulty");
 
@@ -248,6 +250,8 @@ scheme_RPCBlock ToolImpl::internalConstructResponseGetBlockByHashOrNumber(
     constructResponse.performModifier(mod_valuesToLowerCase);
 
     scheme_RPCBlock rpcBlock(constructResponse);
+    for (auto const& un : m_currentBlockHeader.uncles)
+        rpcBlock.addUncle(un);
     rpcBlock.recalculateUncleHash();
     rpcBlock.overwriteBlockHeader(rpcBlock.getBlockHeader());
     rpcBlock.setLogsHash(rdata.atKey("logsHash").asString());
@@ -531,6 +535,15 @@ string ToolImpl::prepareEnvForTool() const
         env["blockHashes"][toString(k++)] = getGenesis().getHash();
         for (auto const& bl : getCurrChain())
             env["blockHashes"][toString(k++)] = bl.getHash();
+
+        for (auto const& un : m_currentBlockHeader.uncles)
+        {
+            DataObject uncle;
+            uncle["delta"] =
+                m_currentBlockHeader.currentBlockNumber - test::hexOrDecStringToInt(un.getNumber());
+            uncle["address"] = un.getBlockHeader().atKey("coinbase");
+            env["ommers"].addArrayObject(uncle);
+        }
     }
 
     return env.asJson();
@@ -786,11 +799,41 @@ string ToolImpl::test_importRawBlock(std::string const& _blockRLP)
         eth_sendRawTransaction(scheme_transaction(trInfo));
     }
 
-    // for (auto const& uncl : blockRLP[2])
+    // Caclulate uncle hash
+    for (auto const& uncl : blockRLP[2])
     {
-        // std::cerr << dev::sha3(uncl.getData()) << std::endl;
-        // need to put hash here
-        // construct scheme_RPCBlock from this header to calculate hash?
+        // 0 - parentHash           // 8 - number
+        // 1 - uncleHash            // 9 - gasLimit
+        // 2 - coinbase             // 10 - gasUsed
+        // 3 - stateRoot            // 11 - timestamp
+        // 4 - transactionTrie      // 12 - extraData
+        // 5 - receiptTrie          // 13 - mixHash
+        // 6 - bloom                // 14 - nonce
+        // 7 - difficulty
+
+        DataObject uncleData;
+        uncleData["extraData"] = rlpToString(uncl[12]);
+        uncleData["gasLimit"] = rlpToString(uncl[9]);
+        uncleData["gasUsed"] = rlpToString(uncl[10]);
+        uncleData["logsBloom"] = rlpToString(uncl[6]);
+        uncleData["miner"] = rlpToString(uncl[2]);
+        uncleData["number"] = rlpToString(uncl[8]);
+        uncleData["parentHash"] = rlpToString(uncl[0]);
+        uncleData["receiptsRoot"] = rlpToString(uncl[5]);
+        uncleData["sha3Uncles"] = rlpToString(uncl[1]);
+        uncleData["stateRoot"] = rlpToString(uncl[3]);
+        uncleData["timestamp"] = rlpToString(uncl[11]);
+        uncleData["transactionsRoot"] = rlpToString(uncl[4]);
+        uncleData["difficulty"] = rlpToString(uncl[7]);
+
+        uncleData["hash"] = dev::toHexPrefixed(h256(0));
+        uncleData["size"] = "0x00";
+        uncleData["transactions"] = DataObject(DataType::Array);
+        uncleData["uncles"] = DataObject(DataType::Array);
+        scheme_RPCBlock uncleBlock(uncleData);
+        uncleBlock.overwriteBlockHeader(uncleBlock.getBlockHeader());  // recalculate hash from
+                                                                       // fields
+        m_currentBlockHeader.uncles.push_back(uncleBlock);
     }
 
     // Execute Raw Block

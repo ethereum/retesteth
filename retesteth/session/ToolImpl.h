@@ -128,8 +128,10 @@ private:
         DataObject header;
         int currentBlockNumber = -1;   // The number of cuurent block
         unsigned long long timestamp;  // Timestamp distance between blocks
+        std::vector<scheme_RPCBlock> uncles;
         void reset()
         {
+            uncles.clear();
             header.clear();
             currentBlockNumber = -1;
             isMiningGenesis = false;

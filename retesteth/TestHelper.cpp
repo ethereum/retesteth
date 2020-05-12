@@ -362,6 +362,7 @@ string executeCmd(string const& _command, bool _warningOnEmpty)
 #else
     string out;
     char output[1024];
+    ETH_FAIL_REQUIRE_MESSAGE(!_command.empty(), "executeCmd: empty argument!");
     FILE* fp = popen(_command.c_str(), "r");
     if (fp == NULL)
         ETH_FAIL_MESSAGE("Failed to run " + _command);
