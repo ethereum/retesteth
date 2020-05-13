@@ -87,6 +87,7 @@ private:
     string prepareTxsForTool() const;
     string prepareEnvForTool() const;
     ToolBlock const& getBlockByHashOrNumber(string const& _hashOrNumber) const;
+    void verifyRawBlock(dev::RLP const& _blockRLP);
 
     // Construct RPC like block response
     struct BlockHeaderOverride;
@@ -130,7 +131,8 @@ private:
         DataObject header;
         int currentBlockNumber = -1;   // The number of cuurent block
         unsigned long long timestamp;  // Timestamp distance between blocks
-        std::vector<scheme_RPCBlock> uncles;
+        std::vector<scheme_RPCBlock> uncles;  // Full RPCBlock because we need to calculate host
+                                              // block unclehash
         void reset()
         {
             uncles.clear();

@@ -26,6 +26,19 @@ void mod_removeLeadingZerosFromHexValues(DataObject& _obj)
     }
 }
 
+// Remove leading zeros from hex values leaving 0x0004 - > 0x04
+void mod_removeLeadingZerosFromHexValuesEVEN(DataObject& _obj)
+{
+    mod_removeLeadingZerosFromHexValues(_obj);
+    static std::vector<std::string> const c_hashes{std::string{"to"}, std::string{"data"}};
+    if (_obj.type() == DataType::String && !inArray(c_hashes, _obj.getKey()))
+    {
+        object::DigitsType t = object::stringIntegerType(_obj.asString());
+        if (t == object::DigitsType::UnEvenHexPrefixed)
+            _obj.setString("0x0" + _obj.asString().substr(2));
+    }
+}
+
 // Check the validity of ethereum json representation
 // !!! TODO:: implement structures and don't work with text?
 // Initially retesteth was supposed not to know about Address, h256, h20, h32 types...
@@ -36,7 +49,7 @@ void ver_ethereumfields(DataObject const& _data)
     static vector<string> c_fieldsThatAreHashes32{"parentHash", "uncleHash", "sha3Uncles",
         "stateRoot", "transactionsRoot", "transactionsTrie", "receiptTrie", "mixHash", "hash"};
     static vector<string> c_fieldsThatAreValues{"difficulty", "number", "gasLimit", "gasUsed",
-        "timestamp", "value", "gasPrice", "v", "r", "s", "nonce"};
+        "timestamp", "value", "gasPrice", "v", "nonce"};
 
     // Special fields
     // `nonce` in block, `nonce` in tr/account
@@ -54,13 +67,15 @@ void ver_ethereumfields(DataObject const& _data)
 
     // Transaction
     // 0 - nonce        3 - to      6 - v
-    // 1 - gasPrice     4 - value   7 - r
-    // 2 - gasLimit     5 - data    8 - s
+    // 1 - gasPrice     4 - value   7 - r  // very weird. can be <32 but can start with 00
+    // 2 - gasLimit     5 - data    8 - s  // very weird. can be <32 but can start with 00
 
     if (_data.type() == DataType::String)
     {
         string const& k = _data.getKey();
         string const& v = _data.asString();
+        if ((k == "s" || k == "r") && v.size() > 32 * 2 + 2)
+            ETH_ERROR_MESSAGE("Key `" + k + "` is larger than 32bits `" + v + "`");
         if (k == "extraData" && v.size() > 256 * 2 + 2)  // extraData, (up to) 256 bits
             ETH_ERROR_MESSAGE("Key `" + k + "` is larger than 256bits `" + v + "`");
         if (test::inArray(c_fieldsThatAreHashes32, k) && !object::validateHash(v, 32))

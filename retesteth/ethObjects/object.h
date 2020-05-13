@@ -8,6 +8,7 @@ using namespace dataobject;
 namespace test {
 void ver_ethereumfields(DataObject const&);
 void mod_removeLeadingZerosFromHexValues(DataObject&);
+void mod_removeLeadingZerosFromHexValuesEVEN(DataObject&);
 
 class object
 {

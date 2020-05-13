@@ -9,16 +9,16 @@ namespace toolimpl
 {
 // DataObject modifiers
 void mod_valuesToLowerCase(DataObject&);
-void mod_removeLeadingZerosFromHexValuesEVEN(DataObject& _obj);
 
 // Reading dev::RLP into string
 std::string rlpToString(dev::RLP const&, bool _corretHexOdd = false);
 
-// Sanitize ethereum objects from RLP
+// Sanitize ethereum structures / objects from RLP
 class BlockHeadFromRLP
 {
 public:
     BlockHeadFromRLP(dev::RLP const&);
+    scheme_RPCBlock getRPCResponse() const;
 
 private:
     class validator
@@ -27,7 +27,7 @@ private:
         validator(dev::RLP const&);
     };
     validator m_validator;
-    DataObject rlpToData(dev::RLP const&);
+    DataObject rlpToData(dev::RLP const&) const;
 
 public:
     scheme_blockHeader header;
@@ -50,4 +50,5 @@ private:
 public:
     scheme_transaction transaction;
 };
+
 }  // namespace toolimpl

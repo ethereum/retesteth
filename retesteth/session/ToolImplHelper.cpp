@@ -15,19 +15,6 @@ void mod_valuesToLowerCase(DataObject& _obj)
     }
 }
 
-// Remove leading zeros from hex values leaving 0x0004 - > 0x04
-void mod_removeLeadingZerosFromHexValuesEVEN(DataObject& _obj)
-{
-    mod_removeLeadingZerosFromHexValues(_obj);
-    static std::vector<std::string> const c_hashes{std::string{"to"}, std::string{"data"}};
-    if (_obj.type() == DataType::String && !inArray(c_hashes, _obj.getKey()))
-    {
-        object::DigitsType t = object::stringIntegerType(_obj.asString());
-        if (t == object::DigitsType::UnEvenHexPrefixed)
-            _obj.setString("0x0" + _obj.asString().substr(2));
-    }
-}
-
 string rlpToString(dev::RLP const& _rlp, bool _corretHexOdd)
 {
     std::ostringstream stream;
@@ -40,7 +27,10 @@ string rlpToString(dev::RLP const& _rlp, bool _corretHexOdd)
 // Block Header Sanitizer when parsing RLP
 BlockHeadFromRLP::BlockHeadFromRLP(dev::RLP const& _rlp)
   : m_validator(_rlp), header(rlpToData(_rlp))
-{}
+{
+    ETH_ERROR_REQUIRE_MESSAGE(header.getData().atKey("hash").asString() == header.hash(),
+        "Hash calculated from raw RLP != hash calculated from fields! ");
+}
 /*
 if (!object::validateHash(parentHash, 32))
     throw dev::RLPException("parentHash is not hash32");
@@ -81,7 +71,23 @@ TransactionFromRLP::validator::validator(dev::RLP const& _rlp)
     }
 }
 
-DataObject BlockHeadFromRLP::rlpToData(RLP const& _rlp)
+scheme_RPCBlock BlockHeadFromRLP::getRPCResponse() const
+{
+    DataObject response;
+    response.replace(header.getData());
+    response.renameKey("bloom", "logsBloom");
+    response.renameKey("coinbase", "author");
+    response["miner"] = response.atKey("author").asString();
+    response.renameKey("receiptTrie", "receiptsRoot");
+    response.renameKey("transactionsTrie", "transactionsRoot");
+    response.renameKey("uncleHash", "sha3Uncles");
+    response["size"] = "";
+    response["transactions"] = DataObject(DataType::Array);
+    response["uncles"] = DataObject(DataType::Array);
+    return scheme_RPCBlock(response);
+}
+
+DataObject BlockHeadFromRLP::rlpToData(RLP const& _rlp) const
 {
     // 0 - parentHash           // 8 - number
     // 1 - uncleHash            // 9 - gasLimit
@@ -126,22 +132,163 @@ DataObject TransactionFromRLP::rlpToData(RLP const& _rlp)
     bData["gasPrice"] = rlpToString(_rlp[i++]);
     bData["gasLimit"] = rlpToString(_rlp[i++]);
     bData["to"] = rlpToString(_rlp[i++]);
+    bData["to"] = bData["to"].asString() == "0x0" ? "" : bData["to"].asString();
     bData["value"] = rlpToString(_rlp[i++]);
+    i++;
     std::ostringstream stream;
     stream << _rlp[5];
-    i++;
     bData["data"] = stream.str() == "0x0" ? "" : rlpToString(_rlp[5], true);
     bData["v"] = rlpToString(_rlp[i++]);
     bData["r"] = rlpToString(_rlp[i++]);
     bData["s"] = rlpToString(_rlp[i++]);
+
+    // transaction r/s value is confusing weird (for hash calculation)
+    string ss = bData.atKey("s").asString();
+    if (bData.atKey("s").asString().size() == 64)
+        bData["s"] = ss.insert(2, "00");
+    string rr = bData.atKey("r").asString();
+    if (bData.atKey("r").asString().size() == 64)
+        bData["r"] = rr.insert(2, "00");
+
     bData.performModifier(mod_valuesToLowerCase);
     return bData;
 }
-
 }  // namespace toolimpl
 
 using namespace toolimpl;
 // Heavy ToolImpl functions
+
+// Verify blockchain logic of a raw block rlp
+void ToolImpl::verifyRawBlock(dev::RLP const& _blockRLP)
+{
+    if (!_blockRLP.isList())
+        throw dev::RLPException("Block RLP is expected to be list");
+
+    // Take Hash directly from RLP data to be safe
+    BlockHeadFromRLP sanHeader(_blockRLP[0]);
+    int rawImportNumber = test::hexOrDecStringToInt(sanHeader.header.number());
+    ETH_ERROR_REQUIRE_MESSAGE(rawImportNumber < 10000, "Sanitize blocknumber convertion error!");
+
+    // Check if we know parent hash and do chain reorg
+    ETH_TEST_MESSAGE("Attempt to import number `" + sanHeader.header.number() +
+                     "` on top of chain size `" + toString(getCurrChain().size()));
+    ETH_TEST_MESSAGE("ParentHash: " + sanHeader.header.parentHash());
+
+    // Construct information about current blockheader from ToolImpl prespective
+    m_currentBlockHeader.reset();
+    m_currentBlockHeader.header["parentHash"] = sanHeader.header.parentHash();
+    m_currentBlockHeader.header["author"] = sanHeader.header.coinbase();
+    m_currentBlockHeader.header["difficulty"] = sanHeader.header.difficulty();
+    m_currentBlockHeader.header["gasLimit"] = sanHeader.header.gasLimit();
+    m_currentBlockHeader.header["extraData"] = sanHeader.header.extraData();
+    m_currentBlockHeader.header["timestamp"] = sanHeader.header.timestamp();
+    m_currentBlockHeader.header["nonce"] = sanHeader.header.nonce();
+    m_currentBlockHeader.header["mixHash"] = sanHeader.header.mixHash();
+    m_currentBlockHeader.isImportRawBlock = true;
+
+    m_currentBlockHeader.currentBlockNumber = test::hexOrDecStringToInt(sanHeader.header.number());
+    m_currentBlockHeader.timestamp = test::hexOrDecStringToInt(sanHeader.header.timestamp());
+
+    // block transactions
+    m_transactions.clear();
+    if (!_blockRLP[1].isList())
+        throw dev::RLPException("Transactions RLP is expected to be list!");
+
+    // Caclulate uncle hash
+    if (!_blockRLP[2].isList())
+        throw dev::RLPException("Uncles expected to be list");
+
+    for (auto const& uncl : _blockRLP[2])
+    {
+        if (m_currentBlockHeader.uncles.size() == 2)
+            throw dev::RLPException("Too many uncles in the block!");
+
+        BlockHeadFromRLP sanUncleHeader(uncl);
+
+        if (test::hexOrDecStringToInt(sanUncleHeader.header.number()) == rawImportNumber)
+            throw dev::RLPException("Uncle has the same number as the block being imported!");
+
+        string const& unclePHash = sanUncleHeader.header.parentHash();
+        string const& uncleHash = sanUncleHeader.header.hash();
+        if (unclePHash == sanHeader.header.parentHash())
+            throw dev::RLPException("Uncle is brother (derived from the same block)");
+        bool foundUncestor = false;
+        size_t uncestorNumber = 0;
+        // search in current chain
+        if (getGenesis().getHash() == unclePHash)
+        {
+            foundUncestor = true;  // check genesis
+            uncestorNumber = getGenesis().getNumber();
+        }
+        else
+        {
+            for (auto const& bl : getCurrChain())
+            {
+                if (bl.getHash() == unclePHash)
+                {
+                    foundUncestor = true;
+                    uncestorNumber = bl.getNumber();
+                    break;
+                }
+            }
+        }
+        if (test::hexOrDecStringToInt(sanUncleHeader.header.number()) > rawImportNumber)
+            throw dev::RLPException(
+                "Uncle number is in the future: " + sanUncleHeader.header.number());
+        if (rawImportNumber - uncestorNumber > 7)
+            throw dev::RLPException("Uncle is too old (derived from old block)! HostBlockN: `" +
+                                    toString(rawImportNumber) + "` , UncleUncestorN: `" +
+                                    toString(uncestorNumber) + "`");
+        if (!foundUncestor)
+            throw dev::RLPException("Uncle is derived from unknown block!");
+
+        // check dublicated uncles
+        for (auto const& bl : getCurrChain())
+        {
+            if (bl.getHash() == uncleHash)
+                throw dev::RLPException("Uncle is one of the blocks imported to chain!");
+
+            for (auto const& un : bl.getRPCResponse().getUncles())
+            {
+                if (un.asString() == uncleHash)
+                    throw dev::RLPException("Dublicate uncles in chain");
+            }
+        }
+        for (auto const& uncle : m_currentBlockHeader.uncles)
+        {
+            if (uncle.getBlockHash() == uncleHash)
+                throw dev::RLPException("Uncle already been attached to this block!");
+        }
+        m_currentBlockHeader.uncles.push_back(sanUncleHeader.getRPCResponse());
+    }
+
+    // if block is valid
+    // if block is from fork. make a new chain
+    makeForkForBlockWithPHash(sanHeader.header.parentHash());
+    ETH_ERROR_REQUIRE_MESSAGE((int)getCurrChain().size() + 1 == rawImportNumber,
+        string("If we import Rawblock with number >= 1, blockchain must have `number` blocks! /n") +
+            "Blockchain size: " + to_string(getCurrChain().size()) +
+            " BlockImportN: " + sanHeader.header.number());
+
+    // Check that parent hash of rawImportedBlock is equal to previous block known
+    if (rawImportNumber == 1)
+    {
+        ETH_ERROR_REQUIRE_MESSAGE(getGenesis().getHash() == sanHeader.header.parentHash(),
+            "Unknown genesis: " + sanHeader.header.parentHash());
+    }
+    else
+    {
+        ETH_ERROR_REQUIRE_MESSAGE(rawImportNumber > 1, "ImportRaw block require number >= 1");
+        ToolBlock const& pbl = getLastBlock();  // previous block
+        ETH_ERROR_REQUIRE_MESSAGE(pbl.getHash() == sanHeader.header.parentHash(),
+            "ImportRaw block require previous block hash == block.parentHash");
+    }
+
+    for (auto const& tr : _blockRLP[1])
+        eth_sendRawTransaction(TransactionFromRLP(tr).transaction);
+}
+
+
 // Make an RPC like response using data that we know from tool
 scheme_RPCBlock ToolImpl::internalConstructResponseGetBlockByHashOrNumber(
     DataObject const& _toolResponse)
@@ -176,7 +323,8 @@ scheme_RPCBlock ToolImpl::internalConstructResponseGetBlockByHashOrNumber(
                 if (tr.getHash() == receipt.atKey("transactionHash").asString())
                     trScheme = &tr;
             }
-            ETH_ERROR_REQUIRE_MESSAGE(trScheme != 0, "Not found transaction in m_transactions");
+            ETH_ERROR_REQUIRE_MESSAGE(
+                trScheme != 0, "Tool return transaction hash that is missing in m_transactions");
 
             // Fill full transaction object from all the info we know (rpc style)
             // m_transactions is raw info about transactions that was requested to be setn

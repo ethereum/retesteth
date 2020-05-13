@@ -80,10 +80,11 @@ public:
 
         // Convert between rpc response field names and standard fields
         DataObject mapBlockHeader() const;
-    };
+    };  // class
 
     scheme_RPCBlock(std::string const& _RLP);
     scheme_RPCBlock(DataObject const& _block);
+    static RLPStream streamBlockHeader(DataObject const& _headerData);
 
     void addUncle(scheme_RPCBlock const& _block) { m_uncles.push_back(_block); }
 
@@ -189,8 +190,6 @@ private:
             _data.performVerifier(ver_ethereumfields);
         }
     };
-
-    static RLPStream streamBlockHeader(DataObject const& _headerData);
 
 private:
     RLPStream streamUncles() const;
