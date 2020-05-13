@@ -3,7 +3,7 @@
 #include <retesteth/EthChecks.h>
 #include <retesteth/RPCSession.h>
 #include <retesteth/testSuites/Common.h>
-
+#include <boost/algorithm/string/predicate.hpp>
 
 namespace test
 {
@@ -137,16 +137,18 @@ void RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _
                     bool condition = true;
                     if (length == 0)  // skip conversion
                     {
-                        condition = tr.atKey(aField).asString() == testTr.atKey(bField).asString();
+                        condition = boost::iequals(
+                            tr.atKey(aField).asString(), testTr.atKey(bField).asString());
                         // transaction data returned by aleth is "" instead of "0x" in blockchain
                         // tests
-                        condition = condition || "0x" + tr.atKey(aField).asString() ==
-                                                     testTr.atKey(bField).asString();
+                        condition = condition || boost::iequals("0x" + tr.atKey(aField).asString(),
+                                                     testTr.atKey(bField).asString());
                     }
                     else
                         condition =
-                            dev::toCompactHexPrefixed(dev::u256(tr.atKey(aField).asString()),
-                                length) == testTr.atKey(bField).asString();
+                            boost::iequals(dev::toCompactHexPrefixed(
+                                               dev::u256(tr.atKey(aField).asString()), length),
+                                testTr.atKey(bField).asString());
                     ETH_ERROR_REQUIRE_MESSAGE(
                         condition, "Error checking remote transaction, remote tr `" + aField +
                                        "` is different to test tr `" + bField + "` (" +
