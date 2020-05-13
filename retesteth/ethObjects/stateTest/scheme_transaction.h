@@ -12,6 +12,16 @@ namespace test {
 class scheme_transaction : public object
 {
 public:
+    std::string const& nonce() { return m_data.atKey("nonce").asString(); }
+    std::string const& gasPrice() { return m_data.atKey("gasPrice").asString(); }
+    std::string const& gasLimit() { return m_data.atKey("gasLimit").asString(); }
+    std::string const& to() { return m_data.atKey("to").asString(); }
+    std::string const& value() { return m_data.atKey("value").asString(); }
+    std::string const& data() { return m_data.atKey("data").asString(); }
+    std::string const& v() { return m_data.atKey("v").asString(); }
+    std::string const& r() { return m_data.atKey("r").asString(); }
+    std::string const& s() { return m_data.atKey("s").asString(); }
+
     scheme_transaction(DataObject const& _transaction) : object(_transaction)
     {
         if (_transaction.count("secretKey") > 0)
@@ -39,6 +49,10 @@ public:
                     {"to", {{DataType::String}, jsonField::Required}},
                     {"value", {{DataType::String}, jsonField::Required}},
                     {"invalid", {{DataType::String}, jsonField::Optional}}});
+            // the geth retesteth tool return this fields in a strange format
+            // it return it in size less than hash32 but still come cases have leading zeros
+            m_data.atKeyUnsafe("r").performModifier(mod_removeLeadingZerosFromHexValues);
+            m_data.atKeyUnsafe("s").performModifier(mod_removeLeadingZerosFromHexValues);
         }
 
         m_data["data"] = test::replaceCode(m_data.atKey("data").asString());
@@ -49,6 +63,7 @@ public:
         // m_data["version"] = "0x01";
         // m_data.atKeyUnsafe("gasLimit").setKey("gas");
         makeAllFieldsHex(m_data);
+        m_data.performVerifier(ver_ethereumfields);
     }
 
     bool isMarkedInvalid() const { return m_data.count("invalid"); }

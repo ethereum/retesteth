@@ -82,9 +82,14 @@ public:
     //void setMaxTests(int _count) { m_maxTests = _count; }
     bool checkTest(std::string const& _testName);
     bool markError(std::string const& _message);
+    void unmarkLastError();
+    const std::string c_exception_any = "ANY EXCEPTION";
     void setUnitTestExceptions(std::vector<std::string> const& _messages);  // Do not treat next
                                                                             // error as error.
-    std::vector<std::string> const& getUnitTestExceptions() const { return m_unitTestExceptions; }
+    std::vector<std::string> const& getUnitTestExceptions() const
+    {
+        return m_expected_UnitTestExceptions;
+    }
 
     std::vector<std::string> const& getErrors() const { return m_errors;}
     void resetErrors() { m_errors.clear(); }
@@ -118,7 +123,7 @@ private:
     bool m_isRunning;
     boost::filesystem::path m_currentTestFileName;
     std::vector<std::string> m_errors; //flag errors for triggering boost erros after all thread finished
-    std::vector<std::string> m_unitTestExceptions;  // expect following errors
+    std::vector<std::string> m_expected_UnitTestExceptions;  // expect following errors
 };
 
 class TestOutputHelperFixture

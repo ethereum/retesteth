@@ -6,23 +6,90 @@
 namespace test {
 string object::emptyString;
 
-void ver_checkHash32Fields(DataObject const& _data)
+// Remove leading zeros from hex values leaving 0x0004 - > 0x4
+void mod_removeLeadingZerosFromHexValues(DataObject& _obj)
 {
-    static vector<string> c_fieldsThatAreHashes32{
-        "transactionsRoot", "stateRoot", "sha3Uncles", "receiptsRoot", "parentHash", "hash"};
-    if (_data.type() == DataType::String)
+    static std::vector<std::string> const c_hashes{std::string{"to"}, std::string{"data"}};
+    if (_obj.type() == DataType::String && !inArray(c_hashes, _obj.getKey()))
     {
-        if (test::inArray(c_fieldsThatAreHashes32, _data.getKey()) &&
-            !object::validateHash32(_data.asString()))
-            ETH_ERROR_MESSAGE(
-                "Key `" + _data.getKey() + "` is not hash32 `" + _data.asString() + "`");
+        string const& origVal = _obj.asString();
+        bool replacePossible = true;
+        while (replacePossible)
+        {
+            if (origVal[0] == '0' && origVal[1] == 'x' && origVal[2] == '0' && origVal.size() >= 4)
+            {
+                _obj.setString("0x" + origVal.substr(3));
+                continue;
+            }
+            replacePossible = false;
+        }
     }
 }
 
-bool object::validateHash32(std::string const& _hash)
+// Check the validity of ethereum json representation
+// !!! TODO:: implement structures and don't work with text?
+// Initially retesteth was supposed not to know about Address, h256, h20, h32 types...
+void ver_ethereumfields(DataObject const& _data)
 {
-    // validate 0x...... 32  bytes hash
-    if (_hash.size() != 66 || stringIntegerType(_hash) != DigitsType::HexPrefixed)
+    static vector<string> c_fieldsThatAreHashes256{"bloom"};
+    static vector<string> c_fieldsThatAreHashes20{"coinbase"};
+    static vector<string> c_fieldsThatAreHashes32{"parentHash", "uncleHash", "sha3Uncles",
+        "stateRoot", "transactionsRoot", "transactionsTrie", "receiptTrie", "mixHash", "hash"};
+    static vector<string> c_fieldsThatAreValues{"difficulty", "number", "gasLimit", "gasUsed",
+        "timestamp", "value", "gasPrice", "v", "r", "s", "nonce"};
+
+    // Special fields
+    // `nonce` in block, `nonce` in tr/account
+    // transaction `to`, `data` field
+
+    // BlockHeader
+    // 0 - parentHash           // 8 - number
+    // 1 - uncleHash            // 9 - gasLimit
+    // 2 - coinbase             // 10 - gasUsed
+    // 3 - stateRoot            // 11 - timestamp
+    // 4 - transactionsTrie     // 12 - extraData
+    // 5 - receiptTrie          // 13 - mixHash
+    // 6 - bloom                // 14 - nonce
+    // 7 - difficulty
+
+    // Transaction
+    // 0 - nonce        3 - to      6 - v
+    // 1 - gasPrice     4 - value   7 - r
+    // 2 - gasLimit     5 - data    8 - s
+
+    if (_data.type() == DataType::String)
+    {
+        string const& k = _data.getKey();
+        string const& v = _data.asString();
+        if (k == "extraData" && v.size() > 256 * 2 + 2)  // extraData, (up to) 256 bits
+            ETH_ERROR_MESSAGE("Key `" + k + "` is larger than 256bits `" + v + "`");
+        if (test::inArray(c_fieldsThatAreHashes32, k) && !object::validateHash(v, 32))
+            ETH_ERROR_MESSAGE("Key `" + k + "` is not hash32 `" + v + "`");
+        if (test::inArray(c_fieldsThatAreHashes20, k) && !object::validateHash(v, 20))
+            ETH_ERROR_MESSAGE("Key `" + k + "` is not hash20 `" + v + "`");
+        if (test::inArray(c_fieldsThatAreHashes256, k) && !object::validateHash(v, 256))
+            ETH_ERROR_MESSAGE("Key `" + k + "` is not hash256 `" + v + "`");
+        if (test::inArray(c_fieldsThatAreValues, k))
+        {
+            if (k == "nonce" && v.size() == 18)  // allow nonce as hash8
+                return;
+            if (v[0] == '0' && v[1] == 'x')
+            {
+                // don't allow 0x001, but allow 0x0, 0x00
+                if ((v[2] == '0' && v.size() % 2 == 1 && v.size() != 3) ||
+                    (v[2] == '0' && v[3] == '0' && v.size() % 2 == 0 && v.size() > 4))
+                    ETH_ERROR_MESSAGE("Key `" + k + "` has leading 0 `" + v + "`");
+            }
+            if (v.size() > 64 + 2)
+                ETH_ERROR_MESSAGE("Key `" + k + "` >u256 `" + v + "`");
+        }
+    }
+}
+
+bool object::validateHash(std::string const& _hash, size_t _size)
+{
+    // validate 0x...... _size bytes hash
+    if (_hash.size() != _size * 2 + 2 || stringIntegerType(_hash) != DigitsType::HexPrefixed)
         return false;
     return true;
 }

@@ -186,7 +186,7 @@ private:
                     {"seedHash", {{DataType::String}, jsonField::Optional}},
                     {"nonce", {{DataType::String}, jsonField::Optional}},
                     {"mixHash", {{DataType::String}, jsonField::Optional}}});
-            _data.performVerifier(ver_checkHash32Fields);
+            _data.performVerifier(ver_ethereumfields);
         }
     };
 

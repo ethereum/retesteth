@@ -67,26 +67,42 @@ TestOutputHelper& TestOutputHelper::get()
 
 bool TestOutputHelper::markError(std::string const& _message)
 {
-    if (m_unitTestExceptions.size() > 0)
+    // We might have an expected exceptions to happen. See if it is like that
+    if (m_expected_UnitTestExceptions.size() > 0)
     {
-        string const& allowedException = m_unitTestExceptions.at(m_unitTestExceptions.size() - 1);
-        if (allowedException == _message)
+        string const& allowedException =
+            m_expected_UnitTestExceptions.at(m_expected_UnitTestExceptions.size() - 1);
+        if (allowedException == _message || allowedException == c_exception_any)
         {
-            m_unitTestExceptions.pop_back();
+            m_expected_UnitTestExceptions.pop_back();
             return false;
         }
         else
             ETH_STDERROR_MESSAGE("Occured error: '" + _message + "' vs Expected error: '" + allowedException + "'");
     }
+
+    // Mark the error
     m_errors.push_back(_message + m_testInfo.getMessage());
     std::lock_guard<std::mutex> lock(g_failedTestsMap);
     s_failedTestsMap[TestOutputHelper::get().testName()] = m_testInfo.getMessage();
     return true;
 }
 
+// When ToolImpl imitate the client side, it uses retesteth logic. but the error is not a failure on
+// retesteth side
+void TestOutputHelper::unmarkLastError()
+{
+    if (m_errors.size())
+        m_errors.pop_back();
+    std::lock_guard<std::mutex> lock(g_failedTestsMap);
+    string const& tname = TestOutputHelper::get().testName();
+    if (s_failedTestsMap.count(tname))
+        s_failedTestsMap.erase(tname);
+}
+
 void TestOutputHelper::setUnitTestExceptions(std::vector<std::string> const& _messages)
 {
-    m_unitTestExceptions = _messages;
+    m_expected_UnitTestExceptions = _messages;
 }
 
 void TestOutputHelper::finisAllTestsManually()
@@ -114,7 +130,7 @@ void TestOutputHelper::initTest(size_t _maxTests)
     }
     m_maxTests = _maxTests;
     m_currTest = 0;
-    m_unitTestExceptions.clear();
+    m_expected_UnitTestExceptions.clear();
 }
 
 bool TestOutputHelper::checkTest(std::string const& _testName)

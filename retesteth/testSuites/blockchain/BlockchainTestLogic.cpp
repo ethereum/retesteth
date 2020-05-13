@@ -38,7 +38,7 @@ void RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _
         string const blHash = session.test_importRawBlock(bdata.atKey("rlp").asString());
         if (session.getLastRPCError().type() != DataType::Null)
         {
-            if (!_opt.allowInvalidBlocks)
+            if (!_opt.allowInvalidBlocks || bdata.count("blockHeader"))
                 ETH_ERROR_MESSAGE("Running blockchain test: " + session.getLastRPCError().atKey("message").asString());
         }
 

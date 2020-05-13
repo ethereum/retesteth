@@ -6,7 +6,8 @@
 
 using namespace dataobject;
 namespace test {
-void ver_checkHash32Fields(DataObject const&);
+void ver_ethereumfields(DataObject const&);
+void mod_removeLeadingZerosFromHexValues(DataObject&);
 
 class object
 {
@@ -49,7 +50,7 @@ public:
     static DigitsType stringIntegerType(std::string const& _string);
     static std::string makeHexAddress(std::string const& _address);
     static DataObject prepareGenesisParams(std::string const& _network, std::string const& _engine);
-    static bool validateHash32(std::string const&);
+    static bool validateHash(std::string const&, size_t);
 
 protected:
     static void makeKeyHex(DataObject&);
