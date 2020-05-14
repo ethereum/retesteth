@@ -61,6 +61,7 @@ string const defaultGethExceptions = R"(
         "UncleParentIsNotAncestor" : "uncle's parent is not ancestor",
         "TooManyUncles" : "too many uncles",
         "OutOfGas" : "out of gas",
+        "IntrinsicGas" : "intrinsic gas too low",
         "ExtraDataIncorrectDAO" : "bad DAO pro-fork extra-data",
         "InvalidTransactionVRS" : "invalid transaction v, r, s values",
         "RLP_InputContainsMoreThanOneValue" : "rlp: input contains more than one value",

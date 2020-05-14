@@ -3,17 +3,6 @@
 
 namespace toolimpl
 {
-// DataObject modifiers
-void mod_valuesToLowerCase(DataObject& _obj)
-{
-    if (_obj.type() == DataType::String)
-    {
-        string value = _obj.asString();
-        std::transform(value.begin(), value.end(), value.begin(),
-            [](unsigned char c) { return std::tolower(c); });
-        _obj = value;
-    }
-}
 
 string rlpToString(dev::RLP const& _rlp, bool _corretHexOdd)
 {

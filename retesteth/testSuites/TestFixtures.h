@@ -63,8 +63,8 @@ public:
             suite.getFullPathFiller(casename).parent_path();
 
         // skip wallet test as it takes too much time (250 blocks) run it with --all flag
-        if ((inArray(c_timeConsumingTestSuites, casename) && !test::Options::get().all) ||
-            allFlags.count(TestExecution::RequireOptionAll))
+        if ((inArray(c_timeConsumingTestSuites, casename) || allFlags.count(TestExecution::RequireOptionAll))
+             && !test::Options::get().all)
         {
             std::cout << "Skipping " << casename << " because --all option is not specified.\n";
             test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);

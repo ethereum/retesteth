@@ -6,25 +6,37 @@ DataObject const& getEmptySchemeBlockData()
     static DataObject emptySchemeBlockData(DataType::Null);
     if (emptySchemeBlockData.type() == DataType::Null)
     {
-        emptySchemeBlockData["author"] = "";
-        emptySchemeBlockData["miner"] = "";
-        emptySchemeBlockData["extraData"] = "";
-        emptySchemeBlockData["gasLimit"] = "";
-        emptySchemeBlockData["gasUsed"] = "";
-        emptySchemeBlockData["hash"] = "";
-        emptySchemeBlockData["logsBloom"] = "";
-        emptySchemeBlockData["number"] = "";
-        emptySchemeBlockData["parentHash"] = "";
-        emptySchemeBlockData["receiptsRoot"] = "";
-        emptySchemeBlockData["sha3Uncles"] = "";
-        emptySchemeBlockData["size"] = "";
-        emptySchemeBlockData["stateRoot"] = "";
-        emptySchemeBlockData["timestamp"] = "";
-        emptySchemeBlockData["totalDifficulty"] = "";
+        emptySchemeBlockData["author"] = "0x0000000000000000000000000000000000000000";
+        emptySchemeBlockData["miner"] = "0x0000000000000000000000000000000000000000";
+        emptySchemeBlockData["extraData"] = "0x00";
+        emptySchemeBlockData["gasLimit"] = "0x00";
+        emptySchemeBlockData["gasUsed"] = "0x00";
+        emptySchemeBlockData["hash"] =
+            "0x0000000000000000000000000000000000000000000000000000000000000000";
+        emptySchemeBlockData["logsBloom"] =
+            "0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            "000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
+        emptySchemeBlockData["number"] = "0x00";
+        emptySchemeBlockData["parentHash"] =
+            "0x0000000000000000000000000000000000000000000000000000000000000000";
+        emptySchemeBlockData["receiptsRoot"] =
+            "0x0000000000000000000000000000000000000000000000000000000000000000";
+        emptySchemeBlockData["sha3Uncles"] =
+            "0x0000000000000000000000000000000000000000000000000000000000000000";
+        emptySchemeBlockData["size"] = "0x00";
+        emptySchemeBlockData["stateRoot"] =
+            "0x0000000000000000000000000000000000000000000000000000000000000000";
+        emptySchemeBlockData["timestamp"] = "0x00";
+        emptySchemeBlockData["totalDifficulty"] = "0x00";
         emptySchemeBlockData["transactions"] = DataObject(DataType::Array);
-        emptySchemeBlockData["transactionsRoot"] = "";
+        emptySchemeBlockData["transactionsRoot"] =
+            "0x0000000000000000000000000000000000000000000000000000000000000000";
         emptySchemeBlockData["uncles"] = DataObject(DataType::Array);
-        emptySchemeBlockData["difficulty"] = "";
+        emptySchemeBlockData["difficulty"] = "0x00";
     }
     return emptySchemeBlockData;
 }
@@ -87,7 +99,6 @@ std::string scheme_RPCBlock::getBlockRLP() const
     stream.appendRaw(streamBlockHeader(headerData).out());
 
     size_t trCount = m_data.atKey("transactions").getSubObjects().size();
-    // std::cerr << m_data.atKey("transactions").asJson() << std::endl;
     RLPStream transactionList(trCount);
     for (size_t i = 0; i < trCount; i++)
     {

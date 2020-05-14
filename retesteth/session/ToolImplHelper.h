@@ -7,9 +7,6 @@
 using namespace dataobject;
 namespace toolimpl
 {
-// DataObject modifiers
-void mod_valuesToLowerCase(DataObject&);
-
 // Reading dev::RLP into string
 std::string rlpToString(dev::RLP const&, bool _corretHexOdd = false);
 

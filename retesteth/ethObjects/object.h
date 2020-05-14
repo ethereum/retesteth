@@ -9,6 +9,7 @@ namespace test {
 void ver_ethereumfields(DataObject const&);
 void mod_removeLeadingZerosFromHexValues(DataObject&);
 void mod_removeLeadingZerosFromHexValuesEVEN(DataObject&);
+void mod_valuesToLowerCase(DataObject&);
 
 class object
 {

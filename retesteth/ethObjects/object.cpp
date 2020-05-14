@@ -6,6 +6,18 @@
 namespace test {
 string object::emptyString;
 
+// DataObject modifiers
+void mod_valuesToLowerCase(DataObject& _obj)
+{
+    if (_obj.type() == DataType::String)
+    {
+        string value = _obj.asString();
+        std::transform(value.begin(), value.end(), value.begin(),
+            [](unsigned char c) { return std::tolower(c); });
+        _obj = value;
+    }
+}
+
 // Remove leading zeros from hex values leaving 0x0004 - > 0x4
 void mod_removeLeadingZerosFromHexValues(DataObject& _obj)
 {
@@ -88,6 +100,8 @@ void ver_ethereumfields(DataObject const& _data)
                 return;
             if (v[0] == '0' && v[1] == 'x')
             {
+                if (v.size() == 2)
+                    ETH_ERROR_MESSAGE("Key `" + k + "` is value, but set as empty byte string: `" + v + "`");
                 // don't allow 0x001, but allow 0x0, 0x00
                 if ((v[2] == '0' && v.size() % 2 == 1 && v.size() != 3) ||
                     (v[2] == '0' && v[3] == '0' && v.size() % 2 == 0 && v.size() > 4))

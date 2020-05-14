@@ -49,10 +49,6 @@ public:
                     {"to", {{DataType::String}, jsonField::Required}},
                     {"value", {{DataType::String}, jsonField::Required}},
                     {"invalid", {{DataType::String}, jsonField::Optional}}});
-            // the geth retesteth tool return this fields in a strange format
-            // it return it in size less than hash32 but still some cases have leading zeros
-            // m_data.atKeyUnsafe("r").performModifier(mod_removeLeadingZerosFromHexValues);
-            // m_data.atKeyUnsafe("s").performModifier(mod_removeLeadingZerosFromHexValues);
         }
 
         m_data["data"] = test::replaceCode(m_data.atKey("data").asString());
@@ -62,6 +58,7 @@ public:
         // convert into rpc format. RPC return transaction with this fields
         // m_data["version"] = "0x01";
         // m_data.atKeyUnsafe("gasLimit").setKey("gas");
+        m_data.performModifier(mod_valuesToLowerCase);
         makeAllFieldsHex(m_data);
         m_data.performVerifier(ver_ethereumfields);
     }
