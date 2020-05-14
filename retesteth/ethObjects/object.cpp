@@ -49,7 +49,7 @@ void ver_ethereumfields(DataObject const& _data)
     static vector<string> c_fieldsThatAreHashes32{"parentHash", "uncleHash", "sha3Uncles",
         "stateRoot", "transactionsRoot", "transactionsTrie", "receiptTrie", "mixHash", "hash"};
     static vector<string> c_fieldsThatAreValues{"difficulty", "number", "gasLimit", "gasUsed",
-        "timestamp", "value", "gasPrice", "v", "nonce"};
+        "timestamp", "value", "gasPrice", "v", "r", "S", "nonce"};
 
     // Special fields
     // `nonce` in block, `nonce` in tr/account
@@ -67,15 +67,13 @@ void ver_ethereumfields(DataObject const& _data)
 
     // Transaction
     // 0 - nonce        3 - to      6 - v
-    // 1 - gasPrice     4 - value   7 - r  // very weird. can be <32 but can start with 00
-    // 2 - gasLimit     5 - data    8 - s  // very weird. can be <32 but can start with 00
+    // 1 - gasPrice     4 - value   7 - r
+    // 2 - gasLimit     5 - data    8 - s
 
     if (_data.type() == DataType::String)
     {
         string const& k = _data.getKey();
         string const& v = _data.asString();
-        if ((k == "s" || k == "r") && v.size() > 32 * 2 + 2)
-            ETH_ERROR_MESSAGE("Key `" + k + "` is larger than 32bits `" + v + "`");
         if (k == "extraData" && v.size() > 256 * 2 + 2)  // extraData, (up to) 256 bits
             ETH_ERROR_MESSAGE("Key `" + k + "` is larger than 256bits `" + v + "`");
         if (test::inArray(c_fieldsThatAreHashes32, k) && !object::validateHash(v, 32))

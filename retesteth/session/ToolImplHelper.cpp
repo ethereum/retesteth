@@ -142,14 +142,6 @@ DataObject TransactionFromRLP::rlpToData(RLP const& _rlp)
     bData["r"] = rlpToString(_rlp[i++]);
     bData["s"] = rlpToString(_rlp[i++]);
 
-    // transaction r/s value is confusing weird (for hash calculation)
-    string ss = bData.atKey("s").asString();
-    if (bData.atKey("s").asString().size() == 64)
-        bData["s"] = ss.insert(2, "00");
-    string rr = bData.atKey("r").asString();
-    if (bData.atKey("r").asString().size() == 64)
-        bData["r"] = rr.insert(2, "00");
-
     bData.performModifier(mod_valuesToLowerCase);
     return bData;
 }

@@ -78,8 +78,8 @@ public:
             getSignedRLP(&sig);
             newData.removeKey("secretKey");
             newData["v"] = toCompactHexPrefixed(27 + int(sig.v));
-            newData["r"] = toHexPrefixed(sig.r);
-            newData["s"] = toHexPrefixed(sig.s);
+            newData["r"] = toCompactHexPrefixed(sig.r);
+            newData["s"] = toCompactHexPrefixed(sig.s);
         }
         return newData;
     }
@@ -122,8 +122,8 @@ public:
         else
         {
             u256 vValue(m_data.atKey("v").asString());
-            sigStruct = SignatureStruct(h256(m_data.atKey("r").asString()),
-                h256(m_data.atKey("s").asString()), vValue.convert_to<byte>());
+            sigStruct = SignatureStruct(u256(m_data.atKey("r").asString()),
+                u256(m_data.atKey("s").asString()), vValue.convert_to<byte>());
         }
 
         if (_returnSig != 0)
