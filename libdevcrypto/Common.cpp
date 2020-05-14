@@ -56,10 +56,10 @@ secp256k1_context const* getCtx()
 
 bool dev::SignatureStruct::isValid() const noexcept
 {
-	static const h256 s_max{"0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141"};
-	static const h256 s_zero;
+    static const u256 s_max{"0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141"};
+    static const u256 s_zero;
 
-	return (v <= 1 && r > s_zero && s > s_zero && r < s_max && s < s_max);
+    return (v <= 1 && r > s_zero && s > s_zero && r < s_max && s < s_max);
 }
 
 Public dev::toPublic(Secret const& _secret)
@@ -244,8 +244,8 @@ Signature dev::sign(Secret const& _k, h256 const& _hash)
 	if (ss.s > c_secp256k1n / 2)
 	{
 		ss.v = static_cast<byte>(ss.v ^ 1);
-		ss.s = h256(c_secp256k1n - u256(ss.s));
-	}
+        ss.s = u256(c_secp256k1n - u256(ss.s));
+    }
 	assert(ss.s <= c_secp256k1n / 2);
 	return s;
 }
