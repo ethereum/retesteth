@@ -393,6 +393,14 @@ string ToolImpl::prepareTxsForTool() const
     return txs.asJson();
 }
 
+static std::map<string, string> RewardMapForToolBefore5 = {{"FrontierToHomesteadAt5", "Frontier"},
+    {"HomesteadToEIP150At5", "Homestead"}, {"EIP158ToByzantiumAt5", "EIP158"},
+    {"HomesteadToDaoAt5", "Homestead"}, {"ByzantiumToConstantinopleFixAt5", "Byzantium"}};
+static std::map<string, string> RewardMapForToolAfter5 = {{"FrontierToHomesteadAt5", "Homestead"},
+    {"HomesteadToEIP150At5", "EIP150"}, {"EIP158ToByzantiumAt5", "Byzantium"},
+    {"HomesteadToDaoAt5", "Homestead"}, {"ByzantiumToConstantinopleFixAt5", "ConstantinopleFix"}};
+
+
 string ToolImpl::test_mineBlocks(int _number, bool _canFail)
 {
     (void)_canFail;
@@ -446,9 +454,26 @@ string ToolImpl::test_mineBlocks(int _number, bool _canFail)
             // Setup mining rewards
             DataObject const& rewards =
                 Options::get().getDynamicOptions().getCurrentConfig().getMiningRewardInfo();
-            string const& reward =
-                rewards.atKey(m_chainParams.atKey("params").atKey("fork").asString()).asString();
-            cmd += " --state.reward " + reward;
+            string const& fork = m_chainParams.atKey("params").atKey("fork").asString();
+            if (rewards.count(fork))
+            {
+                string const reward = rewards.atKey(fork).asString();
+                cmd += " --state.reward " + reward;
+            }
+            else
+            {
+                if (m_currentBlockHeader.currentBlockNumber < 5)
+                {
+                    string const reward =
+                        rewards.atKey(RewardMapForToolBefore5.at(fork)).asString();
+                    cmd += " --state.reward " + reward;
+                }
+                else
+                {
+                    string const reward = rewards.atKey(RewardMapForToolAfter5.at(fork)).asString();
+                    cmd += " --state.reward " + reward;
+                }
+            }
         }
 
     ETH_TEST_MESSAGE("Alloc:\n" + contentsString(allocPath.string()));

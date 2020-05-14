@@ -30,8 +30,8 @@ void mod_removeLeadingZerosFromHexValues(DataObject& _obj)
 void mod_removeLeadingZerosFromHexValuesEVEN(DataObject& _obj)
 {
     mod_removeLeadingZerosFromHexValues(_obj);
-    static std::vector<std::string> const c_hashes{std::string{"to"}, std::string{"data"}};
-    if (_obj.type() == DataType::String && !inArray(c_hashes, _obj.getKey()))
+    static std::vector<std::string> const c_bytes{std::string{"to"}, std::string{"data"}};
+    if (_obj.type() == DataType::String && !inArray(c_bytes, _obj.getKey()))
     {
         object::DigitsType t = object::stringIntegerType(_obj.asString());
         if (t == object::DigitsType::UnEvenHexPrefixed)

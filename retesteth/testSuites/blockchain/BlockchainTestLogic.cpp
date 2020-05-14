@@ -137,6 +137,7 @@ void RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _
                 auto verifyTr = [&tr, &testTr](
                                     string const& aField, string const& bField, size_t length = 1) {
                     bool condition = true;
+                    string convertedKey;
                     if (length == 0)  // skip conversion
                     {
                         condition = tr.atKey(aField).asString() == testTr.atKey(bField).asString();
@@ -146,13 +147,20 @@ void RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _
                                                      testTr.atKey(bField).asString();
                     }
                     else
-                        condition =
-                            dev::toCompactHexPrefixed(dev::u256(tr.atKey(aField).asString()),
-                                length) == testTr.atKey(bField).asString();
+                    {
+                        // RLP removes leading zeros. test format is even hex.
+                        DataObject rlpField(tr.atKey(aField).asString());
+                        if (length == 1)
+                            rlpField.performModifier(mod_removeLeadingZerosFromHexValuesEVEN);
+                        else
+                            rlpField = dev::toCompactHexPrefixed(u256(rlpField.asString()), length);
+                        convertedKey = rlpField.asString();
+                        condition = rlpField.asString() == testTr.atKey(bField).asString();
+                    }
                     ETH_ERROR_REQUIRE_MESSAGE(
                         condition, "Error checking remote transaction, remote tr `" + aField +
-                                       "` is different to test tr `" + bField + "` (`" +
-                                       tr.atKey(aField).asString() + "` != `" +
+                                       "` (conv: " + convertedKey + ") is different to test tr `" +
+                                       bField + "` (`" + tr.atKey(aField).asString() + "` != `" +
                                        testTr.atKey(bField).asString() + "`)");
                 };
 
@@ -161,8 +169,8 @@ void RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _
                 verifyTr("gasPrice", "gasPrice");
                 verifyTr("nonce", "nonce");
                 verifyTr("v", "v");
-                verifyTr("r", "r", _opt.isLegacyTests ? 1 : 32);
-                verifyTr("s", "s", _opt.isLegacyTests ? 1 : 32);
+                verifyTr("r", "r");
+                verifyTr("s", "s");
                 verifyTr("value", "value");
                 if (tr.atKey("to").type() != DataType::Null &&
                     tr.atKey("to").asString().length() > 2)
