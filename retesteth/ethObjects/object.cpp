@@ -74,7 +74,7 @@ void ver_ethereumfields(DataObject const& _data)
     {
         string const& k = _data.getKey();
         string const& v = _data.asString();
-        if (k == "extraData" && v.size() > 256 * 2 + 2)  // extraData, (up to) 256 bits
+        if (k == "extraData" && v.size() > 32 * 2 + 2)  // extraData, (up to) 32 bytes
             ETH_ERROR_MESSAGE("Key `" + k + "` is larger than 256bits `" + v + "`");
         if (test::inArray(c_fieldsThatAreHashes32, k) && !object::validateHash(v, 32))
             ETH_ERROR_MESSAGE("Key `" + k + "` is not hash32 `" + v + "`");

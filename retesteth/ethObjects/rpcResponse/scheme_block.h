@@ -1,4 +1,5 @@
 #pragma once
+#include "../blockchainTest/scheme_blockHeader.h"
 #include "../object.h"
 #include <libdevcore/Address.h>
 #include <libdevcore/RLP.h>
@@ -128,6 +129,16 @@ public:
         return m_blockHeader.getData().atKey("hash").asString();
     }
 
+    // sanitize output via structure (messy temp function)
+    scheme_blockHeader getBlockHeader2() const
+    {
+        DataObject tmp = m_blockHeader.getData();
+        if (!tmp.count("nonce"))
+            tmp["nonce"] = "0x0000000000000000";
+        if (!tmp.count("mixHash"))
+            tmp["mixHash"] = "0x0000000000000000000000000000000000000000000000000000000000000000";
+        return scheme_blockHeader(tmp);
+    }
     DataObject const& getBlockHeader() const { return m_blockHeader.getData(); }
     void removeNonceAndMixhash() { m_blockHeader.removeNonceAndMixhash(); }
 

@@ -3,6 +3,7 @@
 #include <retesteth/ethObjects/common.h>
 #include <retesteth/session/SessionInterface.h>
 #include <retesteth/session/Socket.h>
+#include <retesteth/session/ToolImplHelper.h>
 #include <string>
 
 class ToolImpl : public SessionInterface
@@ -86,8 +87,8 @@ private:
     string prepareAllocForTool() const;
     string prepareTxsForTool() const;
     string prepareEnvForTool() const;
-    ToolBlock const& getBlockByHashOrNumber(string const& _hashOrNumber) const;
-    void verifyRawBlock(dev::RLP const& _blockRLP);
+    ToolBlock const& getBlockByHashOrNumber(string const&) const;
+    void verifyRawBlock(toolimpl::BlockHeadFromRLP const&, dev::RLP const&);
 
     // Construct RPC like block response
     struct BlockHeaderOverride;

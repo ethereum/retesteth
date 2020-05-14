@@ -30,18 +30,14 @@ BlockHeadFromRLP::BlockHeadFromRLP(dev::RLP const& _rlp)
 {
     ETH_ERROR_REQUIRE_MESSAGE(header.getData().atKey("hash").asString() == header.hash(),
         "Hash calculated from raw RLP != hash calculated from fields! ");
+
+    static const u256 minDiff = u256("0x20000");
+    static const u256 maxGasLimit = u256("0x7fffffffffffffff");  // 2**63-1
+    ETH_ERROR_REQUIRE_MESSAGE(u256(header.difficulty()) >= minDiff,
+        "Block difficulty is too low! ~" + header.difficulty());
+    ETH_ERROR_REQUIRE_MESSAGE(
+        u256(header.gasLimit()) <= maxGasLimit, "Block gasLimit is too high!");
 }
-/*
-if (!object::validateHash(parentHash, 32))
-    throw dev::RLPException("parentHash is not hash32");
-
-if (bloom.size() != 256*2+2)
-    throw dev::RLPException("Bloom is wrong size! (" + toString(bloom.size()) + ")");
-
-if (extraData.size() > 66)  // 0x + 32 bytes
-    throw dev::RLPException("extraData is too long");
-*/
-//}
 
 TransactionFromRLP::TransactionFromRLP(dev::RLP const& _rlp)
   : m_validator(_rlp), transaction(rlpToData(_rlp))
@@ -151,35 +147,32 @@ using namespace toolimpl;
 // Heavy ToolImpl functions
 
 // Verify blockchain logic of a raw block rlp
-void ToolImpl::verifyRawBlock(dev::RLP const& _blockRLP)
+void ToolImpl::verifyRawBlock(BlockHeadFromRLP const& _sanHeader, dev::RLP const& _blockRLP)
 {
-    if (!_blockRLP.isList())
-        throw dev::RLPException("Block RLP is expected to be list");
-
     // Take Hash directly from RLP data to be safe
-    BlockHeadFromRLP sanHeader(_blockRLP[0]);
-    int rawImportNumber = test::hexOrDecStringToInt(sanHeader.header.number());
+    int rawImportNumber = test::hexOrDecStringToInt(_sanHeader.header.number());
     ETH_ERROR_REQUIRE_MESSAGE(rawImportNumber < 10000, "Sanitize blocknumber convertion error!");
 
     // Check if we know parent hash and do chain reorg
-    ETH_TEST_MESSAGE("Attempt to import number `" + sanHeader.header.number() +
+    ETH_TEST_MESSAGE("Attempt to import number `" + _sanHeader.header.number() +
                      "` on top of chain size `" + toString(getCurrChain().size()));
-    ETH_TEST_MESSAGE("ParentHash: " + sanHeader.header.parentHash());
+    ETH_TEST_MESSAGE("ParentHash: " + _sanHeader.header.parentHash());
 
     // Construct information about current blockheader from ToolImpl prespective
     m_currentBlockHeader.reset();
-    m_currentBlockHeader.header["parentHash"] = sanHeader.header.parentHash();
-    m_currentBlockHeader.header["author"] = sanHeader.header.coinbase();
-    m_currentBlockHeader.header["difficulty"] = sanHeader.header.difficulty();
-    m_currentBlockHeader.header["gasLimit"] = sanHeader.header.gasLimit();
-    m_currentBlockHeader.header["extraData"] = sanHeader.header.extraData();
-    m_currentBlockHeader.header["timestamp"] = sanHeader.header.timestamp();
-    m_currentBlockHeader.header["nonce"] = sanHeader.header.nonce();
-    m_currentBlockHeader.header["mixHash"] = sanHeader.header.mixHash();
+    m_currentBlockHeader.header["bloom"] = _sanHeader.header.bloom();
+    m_currentBlockHeader.header["parentHash"] = _sanHeader.header.parentHash();
+    m_currentBlockHeader.header["author"] = _sanHeader.header.coinbase();
+    m_currentBlockHeader.header["difficulty"] = _sanHeader.header.difficulty();
+    m_currentBlockHeader.header["gasLimit"] = _sanHeader.header.gasLimit();
+    m_currentBlockHeader.header["extraData"] = _sanHeader.header.extraData();
+    m_currentBlockHeader.header["timestamp"] = _sanHeader.header.timestamp();
+    m_currentBlockHeader.header["nonce"] = _sanHeader.header.nonce();
+    m_currentBlockHeader.header["mixHash"] = _sanHeader.header.mixHash();
     m_currentBlockHeader.isImportRawBlock = true;
 
-    m_currentBlockHeader.currentBlockNumber = test::hexOrDecStringToInt(sanHeader.header.number());
-    m_currentBlockHeader.timestamp = test::hexOrDecStringToInt(sanHeader.header.timestamp());
+    m_currentBlockHeader.currentBlockNumber = test::hexOrDecStringToInt(_sanHeader.header.number());
+    m_currentBlockHeader.timestamp = test::hexOrDecStringToInt(_sanHeader.header.timestamp());
 
     // block transactions
     m_transactions.clear();
@@ -202,7 +195,7 @@ void ToolImpl::verifyRawBlock(dev::RLP const& _blockRLP)
 
         string const& unclePHash = sanUncleHeader.header.parentHash();
         string const& uncleHash = sanUncleHeader.header.hash();
-        if (unclePHash == sanHeader.header.parentHash())
+        if (unclePHash == _sanHeader.header.parentHash())
             throw dev::RLPException("Uncle is brother (derived from the same block)");
         bool foundUncestor = false;
         size_t uncestorNumber = 0;
@@ -256,23 +249,34 @@ void ToolImpl::verifyRawBlock(dev::RLP const& _blockRLP)
 
     // if block is valid
     // if block is from fork. make a new chain
-    makeForkForBlockWithPHash(sanHeader.header.parentHash());
+    makeForkForBlockWithPHash(_sanHeader.header.parentHash());
+
+    // Chek header values sanity
+    const scheme_blockHeader lastBlock = getLastBlock().getRPCResponse().getBlockHeader2();
+    u256 timeDiff = u256(_sanHeader.header.timestamp()) - u256(lastBlock.timestamp());
+    ETH_ERROR_REQUIRE_MESSAGE(timeDiff > 0,
+        "Rawblock timestamp is too fast compared to its parent! ~" + toString(timeDiff));
+    // u256 gasLimitDiff = u256(_sanHeader.header.gasLimit()) - u256(lastBlock.gasLimit());
+    // ETH_ERROR_REQUIRE_MESSAGE(gasLimitDiff <= 1000, "Rawblock gasLimit change wrong compared to
+    // its parent! ~" + toString(gasLimitDiff));
+
+
     ETH_ERROR_REQUIRE_MESSAGE((int)getCurrChain().size() + 1 == rawImportNumber,
         string("If we import Rawblock with number >= 1, blockchain must have `number` blocks! /n") +
             "Blockchain size: " + to_string(getCurrChain().size()) +
-            " BlockImportN: " + sanHeader.header.number());
+            " BlockImportN: " + _sanHeader.header.number());
 
     // Check that parent hash of rawImportedBlock is equal to previous block known
     if (rawImportNumber == 1)
     {
-        ETH_ERROR_REQUIRE_MESSAGE(getGenesis().getHash() == sanHeader.header.parentHash(),
-            "Unknown genesis: " + sanHeader.header.parentHash());
+        ETH_ERROR_REQUIRE_MESSAGE(getGenesis().getHash() == _sanHeader.header.parentHash(),
+            "Unknown genesis: " + _sanHeader.header.parentHash());
     }
     else
     {
         ETH_ERROR_REQUIRE_MESSAGE(rawImportNumber > 1, "ImportRaw block require number >= 1");
         ToolBlock const& pbl = getLastBlock();  // previous block
-        ETH_ERROR_REQUIRE_MESSAGE(pbl.getHash() == sanHeader.header.parentHash(),
+        ETH_ERROR_REQUIRE_MESSAGE(pbl.getHash() == _sanHeader.header.parentHash(),
             "ImportRaw block require previous block hash == block.parentHash");
     }
 
@@ -414,7 +418,7 @@ void ToolImpl::doChainReorg()
         dev::u256 tch_d = 0;
         ToolChain const& tch = chain.second;
         for (auto const& bl : tch)
-            tch_d += u256(bl.getRPCResponse().getBlockHeader().atKey("difficulty").asString());
+            tch_d += u256(bl.getRPCResponse().getBlockHeader2().difficulty());
 
         if (tch_d > maxTotalDiff)
         {
@@ -469,4 +473,28 @@ void ToolImpl::makeForkForBlockWithPHash(string const& _parentHash)
 
     if (!found)
         ETH_ERROR_MESSAGE("ParentHash not found: " + _parentHash);
+}
+
+ToolImpl::ToolBlock const& ToolImpl::getBlockByHashOrNumber(string const& _hashOrNumber) const
+{
+    if (_hashOrNumber.size() == 66)
+    {
+        // need to look up all chains !!!
+        for (size_t i = 0; i < getCurrChain().size(); i++)
+            if (getCurrChain().at(i).getHash() == _hashOrNumber)
+                return getCurrChain().at(i);
+    }
+    else
+    {
+        int bNumber = hexOrDecStringToInt(_hashOrNumber);
+        ETH_ERROR_REQUIRE_MESSAGE(
+            bNumber >= 0 && bNumber < 10000, "getBlockByHashOrNumber sanitize block number!");
+        if (bNumber == 0)
+            return getGenesis();
+        bNumber--;  // chain vector starts with 0
+        if (bNumber >= 0 && (size_t)bNumber < getCurrChain().size())
+            return getCurrChain().at(bNumber);
+    }
+    ETH_ERROR_MESSAGE("Wrong block hash or number! " + _hashOrNumber);
+    return getCurrChain().at(0);
 }

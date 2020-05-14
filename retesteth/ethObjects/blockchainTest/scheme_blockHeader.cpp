@@ -1,5 +1,6 @@
 #include "scheme_blockHeader.h"
-//#include "retesteth/ethObjects/object.h"
+#include "../rpcResponse/scheme_block.h"
+
 using namespace test;
 
 scheme_blockHeader::scheme_blockHeader(DataObject const& _data) : object(_data)
@@ -38,4 +39,10 @@ scheme_blockHeader::scheme_blockHeader(DataObject const& _data) : object(_data)
     }
     if (!object::validateHash(m_data.atKey("nonce").asString(), 8))
         ETH_ERROR_MESSAGE("Key `nonce` is not hash8 `" + m_data.atKey("nonce").asString() + "`");
+}
+
+std::string scheme_blockHeader::hash() const
+{
+    /// !!! todo solve this. streamBlockHeader rely on m_data contents
+    return "0x" + toString(dev::sha3(scheme_RPCBlock::streamBlockHeader(m_data).out()));
 }

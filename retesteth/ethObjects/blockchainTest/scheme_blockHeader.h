@@ -1,6 +1,5 @@
 #pragma once
 #include "../object.h"
-#include "../rpcResponse/scheme_block.h"
 #include "../stateTest/scheme_state.h"
 #include <retesteth/Options.h>
 #include <retesteth/TestHelper.h>
@@ -19,12 +18,7 @@ public:
     std::string const& extraData() const { return m_data.atKey("extraData").asString(); }
     std::string const& gasLimit() const { return m_data.atKey("gasLimit").asString(); }
     std::string const& gasUsed() const { return m_data.atKey("gasUsed").asString(); }
-    std::string hash() const
-    {
-        /// !!! todo solve this. streamBlockHeader rely on m_data contents
-        return "0x" + toString(dev::sha3(scheme_RPCBlock::streamBlockHeader(m_data).out()));
-        ;
-    }
+    std::string hash() const;
     std::string const& mixHash() const { return m_data.atKey("mixHash").asString(); }
     std::string const& nonce() const { return m_data.atKey("nonce").asString(); }
     std::string const& number() const { return m_data.atKey("number").asString(); }

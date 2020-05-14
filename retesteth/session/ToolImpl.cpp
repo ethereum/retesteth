@@ -63,7 +63,7 @@ test::scheme_RPCBlock ToolImpl::eth_getBlockByHash(string const& _hash, bool _fu
         ToolChain const& tch = chain.second;
         for (auto const& bl : tch)
         {
-            if (bl.getRPCResponse().getBlockHeader().atKey("hash") == _hash)
+            if (bl.getRPCResponse().getBlockHeader2().hash() == _hash)
             {
                 ETH_TEST_MESSAGE(
                     "Response: eth_getBlockByHash " + bl.getRPCResponse().getData().asJson());
@@ -75,31 +75,6 @@ test::scheme_RPCBlock ToolImpl::eth_getBlockByHash(string const& _hash, bool _fu
     ETH_TEST_MESSAGE("Response: eth_getBlockByHash (hash not found: " + _hash + ")");
     return scheme_RPCBlock(DataObject());
 }
-
-ToolImpl::ToolBlock const& ToolImpl::getBlockByHashOrNumber(string const& _hashOrNumber) const
-{
-    if (_hashOrNumber.size() == 66)
-    {
-        // need to look up all chains !!!
-        for (size_t i = 0; i < getCurrChain().size(); i++)
-            if (getCurrChain().at(i).getHash() == _hashOrNumber)
-                return getCurrChain().at(i);
-    }
-    else
-    {
-        int bNumber = hexOrDecStringToInt(_hashOrNumber);
-        ETH_ERROR_REQUIRE_MESSAGE(
-            bNumber >= 0 && bNumber < 10000, "getBlockByHashOrNumber sanitize block number!");
-        if (bNumber == 0)
-            return getGenesis();
-        bNumber--;  // chain vector starts with 0
-        if (bNumber >= 0 && (size_t)bNumber < getCurrChain().size())
-            return getCurrChain().at(bNumber);
-    }
-    ETH_ERROR_MESSAGE("Wrong block hash or number! " + _hashOrNumber);
-    return getCurrChain().at(0);
-}
-
 
 test::scheme_RPCBlock ToolImpl::eth_getBlockByNumber(
     BlockNumber const& _blockNumber, bool _fullObjects)
@@ -279,6 +254,13 @@ void ToolImpl::test_setChainParams(DataObject const& _config)
     // PrepareGenesis hashes using tool
     m_currentBlockHeader.isMiningGenesis = true;
     m_currentBlockHeader.currentBlockNumber = 0;
+    m_currentBlockHeader.header["bloom"] =
+        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        "00000000000000000000000000000000000000000000000000000000000000";
     m_currentBlockHeader.header["author"] = env.atKey("author");
     m_currentBlockHeader.header["difficulty"] = env.atKey("difficulty");
     m_currentBlockHeader.header["gasLimit"] = env.atKey("gasLimit");
@@ -298,8 +280,7 @@ void ToolImpl::test_setChainParams(DataObject const& _config)
     m_currentBlockHeader.isMiningGenesis = false;
 
     // Now we know the genesis stateRoot from the tool
-    genesisHeader["stateRoot"] =
-        getLastBlock().getRPCResponse().getBlockHeader().atKey("stateRoot");
+    genesisHeader["stateRoot"] = getLastBlock().getRPCResponse().getBlockHeader2().stateRoot();
 
     ToolBlock genesis = getLastBlock();
     genesis.overwriteBlockHeader(genesisHeader);
@@ -330,13 +311,13 @@ void ToolImpl::test_rewindToBlock(size_t _blockNr)
     m_currentBlockHeader.reset();
 
     scheme_RPCBlock const& currentBlock = getLastBlock().getRPCResponse();
-    DataObject const& env = currentBlock.getBlockHeader();
-    m_currentBlockHeader.timestamp = test::hexOrDecStringToInt(env.atKey("timestamp").asString());
+    scheme_blockHeader const env = currentBlock.getBlockHeader2();
+    m_currentBlockHeader.timestamp = test::hexOrDecStringToInt(env.timestamp());
     m_currentBlockHeader.currentBlockNumber = test::hexOrDecStringToInt(currentBlock.getNumber());
-    m_currentBlockHeader.header["author"] = env.atKey("coinbase");
-    m_currentBlockHeader.header["difficulty"] = env.atKey("difficulty");
-    m_currentBlockHeader.header["gasLimit"] = env.atKey("gasLimit");
-    m_currentBlockHeader.header["extraData"] = env.atKey("extraData");
+    m_currentBlockHeader.header["author"] = env.coinbase();
+    m_currentBlockHeader.header["difficulty"] = env.difficulty();
+    m_currentBlockHeader.header["gasLimit"] = env.gasLimit();
+    m_currentBlockHeader.header["extraData"] = env.extraData();
     if (_blockNr == 0)
         m_currentBlockHeader.header["parentHash"] =
             "0x0000000000000000000000000000000000000000000000000000000000000000";
@@ -384,7 +365,7 @@ string ToolImpl::prepareEnvForTool() const
             DataObject uncle;
             uncle["delta"] =
                 m_currentBlockHeader.currentBlockNumber - test::hexOrDecStringToInt(un.getNumber());
-            uncle["address"] = un.getBlockHeader().atKey("coinbase");
+            uncle["address"] = un.getBlockHeader2().coinbase();
             env["ommers"].addArrayObject(uncle);
         }
     }
@@ -508,10 +489,6 @@ string ToolImpl::test_importRawBlock(std::string const& _blockRLP)
     rpcCall("", {});
     ETH_TEST_MESSAGE("Request: test_importRawBlock, following transaction import are internal");
 
-    bytes blockBytes = dev::fromHex(_blockRLP);
-    dev::RLP blockRLP(blockBytes);
-    string const rawBlockHash = dev::toHexPrefixed(dev::sha3(blockRLP[0].data()));
-
     auto onError = [&](string const& _what) {
         // exception happend when processing block
         m_transactions.clear();
@@ -520,51 +497,75 @@ string ToolImpl::test_importRawBlock(std::string const& _blockRLP)
         m_lastInterfaceError["message"] = "Import raw block failed";
         m_lastInterfaceError["error"] = string("Error parsing block: ") + _what;
         ETH_TEST_MESSAGE(m_lastInterfaceError.asJson());
-        ETH_TEST_MESSAGE("Response test_importRawBlock: " + rawBlockHash);
     };
 
     static vector<string> exceptions = {"BlockWrongStoreClears"};
     for (auto const& el : exceptions)
+    {
         if (TestOutputHelper::get().testName().find(el) != string::npos)
         {
             onError("TooImpl can't verify this block!");
             return string();
         }
+    }
 
+    string rawBlockHash;
     try
     {
-        verifyRawBlock(blockRLP);
+        bytes blockBytes = dev::fromHex(_blockRLP);
+        dev::RLP blockRLP(blockBytes);
+        rawBlockHash = dev::toHexPrefixed(dev::sha3(blockRLP[0].data()));
+        if (!blockRLP.isList())
+            throw dev::RLPException("Block RLP is expected to be list");
+
+        BlockHeadFromRLP sanHeader(blockRLP[0]);
+        verifyRawBlock(sanHeader, blockRLP);
+
+        test_mineBlocks(1);
+
+        ToolBlock const& cbl = getLastBlock();
+
+        auto revertLastBlockWithException = [&](string const& _what) {
+            m_blockchainMap.at(m_current_chain_ind).pop_back();
+            throw dev::RLPException(_what);
+        };
+
+        // Evm return different field
+        const scheme_blockHeader t8nHeader = cbl.getRPCResponse().getBlockHeader2();
+        if (t8nHeader.bloom() != sanHeader.header.bloom())
+            revertLastBlockWithException(
+                "Raw block bloom is different to one returned by t8ntool!");
+        if (t8nHeader.stateRoot() != sanHeader.header.stateRoot())
+            revertLastBlockWithException(
+                "Raw block stateRoot is different to one returned by t8ntool!");
+
+
+        // When import from raw block, no invalid transactions (tool::rejected) allowed
+        if (cbl.wereInvalidTransactions())
+            revertLastBlockWithException("Raw block transaction execution failed!");
+
+        if (rawBlockHash != cbl.getHash())
+            throw dev::RLPException(
+                string("RAW import hash != test_mineBlocks imitating rawblock. \n") +
+                "RAW: " + rawBlockHash + " vs " + cbl.getHash());
     }
     catch (test::BaseEthException const& _ex)
     {
         // do not treat this exception as retesteth error
         TestOutputHelper::get().unmarkLastError();
         onError(_ex.what());
+        ETH_TEST_MESSAGE("Response test_importRawBlock: " + rawBlockHash);
         return string();
     }
     catch (RLPException const& _ex)
     {
         onError(_ex.what());
+        ETH_TEST_MESSAGE("Response test_importRawBlock: " + rawBlockHash);
         return string();
     }
 
-    test_mineBlocks(1);
-    ToolBlock const& cbl = getLastBlock();
-
-    // When import from raw block, no invalid transactions (tool::rejected) allowed
-    if (cbl.wereInvalidTransactions())
-    {
-        m_blockchainMap.at(m_current_chain_ind).pop_back();
-        onError("Raw block transaction execution failed!");
-        return string();
-    }
-
-    ETH_ERROR_REQUIRE_MESSAGE(rawBlockHash == cbl.getHash(),
-        string("RAW import hash != test_mineBlocks imitating rawblock. \n") +
-            "RAW: " + rawBlockHash + " vs " + cbl.getHash());
-
-    ETH_TEST_MESSAGE("Response test_importRawBlock: " + rawBlockHash);
     doChainReorg();  // update head
+    ETH_TEST_MESSAGE("Response test_importRawBlock: " + rawBlockHash);
     return rawBlockHash;
 }
 
