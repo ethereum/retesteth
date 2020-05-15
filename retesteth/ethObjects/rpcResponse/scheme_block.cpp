@@ -8,7 +8,7 @@ DataObject const& getEmptySchemeBlockData()
     {
         emptySchemeBlockData["author"] = "0x0000000000000000000000000000000000000000";
         emptySchemeBlockData["miner"] = "0x0000000000000000000000000000000000000000";
-        emptySchemeBlockData["extraData"] = "0x00";
+        emptySchemeBlockData["extraData"] = "0x";
         emptySchemeBlockData["gasLimit"] = "0x00";
         emptySchemeBlockData["gasUsed"] = "0x00";
         emptySchemeBlockData["hash"] =

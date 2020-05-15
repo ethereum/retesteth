@@ -105,6 +105,7 @@ private:
     ToolChain const& getCurrChain() const { return m_blockchainMap.at(m_current_chain_ind); }
     void makeForkForBlockWithPHash(string const& _parentHash);
     void doChainReorg();
+    void onError(string const&, string const&);
 
     ToolBlock const& getGenesis() const { return m_chainGenesis.at(0); }
     ToolBlock const& getLastBlock(size_t _stepsBack = 1) const

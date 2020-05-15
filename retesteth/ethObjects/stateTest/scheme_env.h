@@ -31,12 +31,12 @@ namespace test {
             data["author"] = m_data.atKey("currentCoinbase");
             data["difficulty"] = m_data.atKey("currentDifficulty");
             data["gasLimit"] = m_data.atKey("currentGasLimit");
-            data["nonce"] = "0x00";
-            data["extraData"] = "0x00";
+            data["nonce"] = "0x0000000000000000";
+            data["extraData"] = "0x";
             // this is genesis block timestamp
             // the actual timestamp of a block is set in the env section
             data["timestamp"] = "0x00";
-            data["mixHash"] = "0x00";
+            data["mixHash"] = "0x0000000000000000000000000000000000000000000000000000000000000000";
             return data;
         }
     };

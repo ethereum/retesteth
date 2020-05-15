@@ -3,13 +3,12 @@
 
 namespace toolimpl
 {
-
-string rlpToString(dev::RLP const& _rlp, bool _corretHexOdd)
+string rlpToString(dev::RLP const& _rlp)
 {
     std::ostringstream stream;
     stream << _rlp.toBytes();
     if (stream.str() == "0x")
-        return (_corretHexOdd) ? "0x00" : "0x0";
+        return "0x0";
     return stream.str();
 }
 
@@ -17,8 +16,10 @@ string rlpToString(dev::RLP const& _rlp, bool _corretHexOdd)
 BlockHeadFromRLP::BlockHeadFromRLP(dev::RLP const& _rlp)
   : m_validator(_rlp), header(rlpToData(_rlp))
 {
+    // string headerInfo = header.getData().asJson() + " vs ";
+    // std::cerr << _rlp << std::endl;
     ETH_ERROR_REQUIRE_MESSAGE(header.getData().atKey("hash").asString() == header.hash(),
-        "Hash calculated from raw RLP != hash calculated from fields! ");
+        "Hash calculated from raw RLP != hash calculated from fields! ");  //(" + headerInfo + ")");
 
     static const u256 minDiff = u256("0x20000");
     static const u256 maxGasLimit = u256("0x7fffffffffffffff");  // 2**63-1
@@ -96,7 +97,9 @@ DataObject BlockHeadFromRLP::rlpToData(RLP const& _rlp) const
     bData["gasLimit"] = rlpToString(_rlp[i++]);
     bData["gasUsed"] = rlpToString(_rlp[i++]);
     bData["timestamp"] = rlpToString(_rlp[i++]);
-    bData["extraData"] = rlpToString(_rlp[i++]);
+
+    string const exData = rlpToString(_rlp[i++]);
+    bData["extraData"] = (exData == "0x0") ? "" : exData;
     bData["mixHash"] = rlpToString(_rlp[i++]);
     bData["nonce"] = rlpToString(_rlp[i++]);
     bData["hash"] = dev::toHexPrefixed(dev::sha3(_rlp.data()));
@@ -119,10 +122,8 @@ DataObject TransactionFromRLP::rlpToData(RLP const& _rlp)
     bData["to"] = rlpToString(_rlp[i++]);
     bData["to"] = bData["to"].asString() == "0x0" ? "" : bData["to"].asString();
     bData["value"] = rlpToString(_rlp[i++]);
-    i++;
-    std::ostringstream stream;
-    stream << _rlp[5];
-    bData["data"] = stream.str() == "0x0" ? "" : rlpToString(_rlp[5], true);
+    string const data = rlpToString(_rlp[i++]);
+    bData["data"] = data == "0x0" ? "" : data;
     bData["v"] = rlpToString(_rlp[i++]);
     bData["r"] = rlpToString(_rlp[i++]);
     bData["s"] = rlpToString(_rlp[i++]);
@@ -238,7 +239,10 @@ void ToolImpl::verifyRawBlock(BlockHeadFromRLP const& _sanHeader, dev::RLP const
 
     // if block is valid
     // if block is from fork. make a new chain
-    makeForkForBlockWithPHash(_sanHeader.header.parentHash());
+    if (test::hexOrDecStringToInt(_sanHeader.header.number()) == 1)
+        makeForkForBlockWithPHash(getGenesis().getHash());
+    else
+        makeForkForBlockWithPHash(_sanHeader.header.parentHash());
 
     // Chek header values sanity
     const scheme_blockHeader lastBlock = getLastBlock().getRPCResponse().getBlockHeader2();
@@ -361,7 +365,8 @@ scheme_RPCBlock ToolImpl::internalConstructResponseGetBlockByHashOrNumber(
         constructResponse["transactions"] = DataObject(DataType::Array);
     }
 
-    constructResponse["extraData"] = currentHeader.atKey("extraData");
+    string const exData = currentHeader.atKey("extraData").asString();
+    constructResponse["extraData"] = exData.empty() ? "0x" : exData;
     constructResponse["gasLimit"] = currentHeader.atKey("gasLimit");
     constructResponse["gasUsed"] = lastReceipt.atKey("maxCommGasUsed").asString();
     constructResponse["logsBloom"] = lastReceipt.atKey("logsBloom");
@@ -376,6 +381,8 @@ scheme_RPCBlock ToolImpl::internalConstructResponseGetBlockByHashOrNumber(
         constructResponse["uncles"].addArrayObject(un.getBlockHash());
     constructResponse["transactionsRoot"] = rdata.atKey("txRoot");
     constructResponse["difficulty"] = currentHeader.atKey("difficulty");
+    constructResponse["nonce"] = currentHeader.atKey("nonce");
+    constructResponse["mixHash"] = currentHeader.atKey("mixHash");
 
     constructResponse["hash"] =
         dev::toHexPrefixed(h256(0));  // Recalculate after with overwriteBlockHeader
@@ -486,4 +493,15 @@ ToolImpl::ToolBlock const& ToolImpl::getBlockByHashOrNumber(string const& _hashO
     }
     ETH_ERROR_MESSAGE("Wrong block hash or number! " + _hashOrNumber);
     return getCurrChain().at(0);
+}
+
+void ToolImpl::onError(string const& _what, string const& _message)
+{
+    // exception happend when processing block
+    m_transactions.clear();
+    m_currentBlockHeader.reset();
+    doChainReorg();  // to stay safe
+    m_lastInterfaceError["message"] = _message;
+    m_lastInterfaceError["error"] = string("Error parsing block: ") + _what;
+    ETH_TEST_MESSAGE(m_lastInterfaceError.asJson());
 }

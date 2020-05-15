@@ -8,7 +8,7 @@ using namespace dataobject;
 namespace toolimpl
 {
 // Reading dev::RLP into string
-std::string rlpToString(dev::RLP const&, bool _corretHexOdd = false);
+std::string rlpToString(dev::RLP const&);
 
 // Sanitize ethereum structures / objects from RLP
 class BlockHeadFromRLP

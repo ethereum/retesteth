@@ -21,8 +21,7 @@ void mod_valuesToLowerCase(DataObject& _obj)
 // Remove leading zeros from hex values leaving 0x0004 - > 0x4
 void mod_removeLeadingZerosFromHexValues(DataObject& _obj)
 {
-    static std::vector<std::string> const c_hashes{std::string{"to"}, std::string{"data"}};
-    if (_obj.type() == DataType::String && !inArray(c_hashes, _obj.getKey()))
+    if (_obj.type() == DataType::String)
     {
         string const& origVal = _obj.asString();
         bool replacePossible = true;
@@ -42,8 +41,7 @@ void mod_removeLeadingZerosFromHexValues(DataObject& _obj)
 void mod_removeLeadingZerosFromHexValuesEVEN(DataObject& _obj)
 {
     mod_removeLeadingZerosFromHexValues(_obj);
-    static std::vector<std::string> const c_bytes{std::string{"to"}, std::string{"data"}};
-    if (_obj.type() == DataType::String && !inArray(c_bytes, _obj.getKey()))
+    if (_obj.type() == DataType::String)
     {
         object::DigitsType t = object::stringIntegerType(_obj.asString());
         if (t == object::DigitsType::UnEvenHexPrefixed)
@@ -61,7 +59,7 @@ void ver_ethereumfields(DataObject const& _data)
     static vector<string> c_fieldsThatAreHashes32{"parentHash", "uncleHash", "sha3Uncles",
         "stateRoot", "transactionsRoot", "transactionsTrie", "receiptTrie", "mixHash", "hash"};
     static vector<string> c_fieldsThatAreValues{"difficulty", "number", "gasLimit", "gasUsed",
-        "timestamp", "value", "gasPrice", "v", "r", "S", "nonce"};
+        "timestamp", "value", "gasPrice", "v", "r", "s", "nonce"};
 
     // Special fields
     // `nonce` in block, `nonce` in tr/account
@@ -231,7 +229,7 @@ std::string object::convertStringToHexPrefixed(string const& _input, short _mini
 void object::makeKeyHex(DataObject& _key)
 {
     // If transaction to field is empty its ok.
-    if (_key.getKey() == "to" && _key.asString().empty())
+    if ((_key.getKey() == "to" || _key.getKey() == "extraData") && _key.asString().empty())
         return;
 
     // make empty data and code fields as "0x", others as "0x00" if 0

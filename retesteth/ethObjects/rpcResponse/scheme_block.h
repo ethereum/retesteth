@@ -159,6 +159,11 @@ public:
         m_data["gasUsed"] = m_blockHeader.getData().atKey("gasUsed");
         m_data["timestamp"] = m_blockHeader.getData().atKey("timestamp");
         m_data["extraData"] = m_blockHeader.getData().atKey("extraData");
+        if (m_blockHeader.getData().count("nonce"))
+        {
+            m_data["nonce"] = m_blockHeader.getData().atKey("nonce");
+            m_data["mixHash"] = m_blockHeader.getData().atKey("mixHash");
+        }
     }
 
     // Get Block RLP for state tests

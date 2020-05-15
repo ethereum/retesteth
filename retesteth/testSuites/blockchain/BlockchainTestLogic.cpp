@@ -52,18 +52,10 @@ void RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _
             if (_opt.isLegacyTests)
             {
                 inTestHeader = bdata.atKey("blockHeader");  // copy!!!
-                string const extraDataInTest =
-                    bdata.atKey("blockHeader").atKey("extraData").asString();
-                if ((extraDataInTest == "0x00" || extraDataInTest == "0x") &&
-                    (latestBlock.getBlockHeader().atKey("extraData").asString() == "0x00" ||
-                        latestBlock.getBlockHeader().atKey("extraData").asString() == "0x"))
-                {
-                    inTestHeader["extraData"] = latestBlock.getBlockHeader().atKey("extraData");
-                }
                 if (latestBlock.getBlockHeader().atKey("nonce").asString() == "0x0000000000000000")
                 {
                     // because on NoProof mixHash is returned as 0x00 by other client, even if block
-                    // imported with mixHash/nonce
+                    // imported with mixHash/nonce ??? who returned 0x00 as mixHash??? wtf
                     inTestHeader["mixHash"] =
                         "0x0000000000000000000000000000000000000000000000000000000000000000";
                     inTestHeader["nonce"] = "0x0000000000000000";

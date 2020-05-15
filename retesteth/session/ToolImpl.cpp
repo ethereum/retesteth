@@ -215,7 +215,7 @@ void ToolImpl::test_setChainParams(DataObject const& _config)
     rpcCall("", {});
     ETH_TEST_MESSAGE("Request: test_setChainParams \n" + _config.asJson());
     m_chainParams = _config;
-    m_chainParams.performModifier(mod_removeLeadingZerosFromHexValuesEVEN);
+    // m_chainParams.performModifier(mod_removeLeadingZerosFromHexValuesEVEN);
 
     DataObject genesisHeader;
     DataObject const& env = m_chainParams.atKey("genesis");
@@ -226,6 +226,14 @@ void ToolImpl::test_setChainParams(DataObject const& _config)
     genesisHeader["gasLimit"] = env.atKey("gasLimit");
     genesisHeader["extraData"] = env.atKey("extraData");
     genesisHeader["timestamp"] = env.atKey("timestamp");
+    genesisHeader["nonce"] = env.atKey("nonce");
+    genesisHeader["mixHash"] = env.atKey("mixHash");
+    if (env.atKey("nonce").asString() == "0x00")  // GeneralStateTests
+    {
+        genesisHeader["nonce"] = "0x0000000000000000";
+        genesisHeader["mixHash"] =
+            "0x0000000000000000000000000000000000000000000000000000000000000000";
+    }
 
     // Default Genesis Values
     genesisHeader["bloom"] =
@@ -251,22 +259,31 @@ void ToolImpl::test_setChainParams(DataObject const& _config)
     genesisHeader["stateRoot"] =
         "0x0000000000000000000000000000000000000000000000000000000000000000";
 
+    try
+    {
+        scheme_blockHeader genesisSanitizer(genesisHeader);
+        (void)genesisSanitizer;
+    }
+    catch (test::BaseEthException const& _ex)
+    {
+        TestOutputHelper::get().unmarkLastError();
+        onError(_ex.what(), "Wrong genesis header!");
+        return;
+    }
+
+
     // PrepareGenesis hashes using tool
     m_currentBlockHeader.isMiningGenesis = true;
     m_currentBlockHeader.currentBlockNumber = 0;
-    m_currentBlockHeader.header["bloom"] =
-        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-        "00000000000000000000000000000000000000000000000000000000000000";
+    m_currentBlockHeader.header["bloom"] = genesisHeader.atKey("bloom").asString();
     m_currentBlockHeader.header["author"] = env.atKey("author");
     m_currentBlockHeader.header["difficulty"] = env.atKey("difficulty");
     m_currentBlockHeader.header["gasLimit"] = env.atKey("gasLimit");
     m_currentBlockHeader.header["extraData"] = env.atKey("extraData");
     m_currentBlockHeader.header["parentHash"] =
         "0x0000000000000000000000000000000000000000000000000000000000000000";
+    m_currentBlockHeader.header["nonce"] = genesisHeader.atKey("nonce");
+    m_currentBlockHeader.header["mixHash"] = genesisHeader.atKey("mixHash");
 
     size_t const cchID = m_current_chain_ind;
     size_t const beginSize = m_blockchainMap[m_current_chain_ind].size();
@@ -378,15 +395,24 @@ string ToolImpl::prepareTxsForTool() const
     for (auto const& tx : m_transactions)
     {
         DataObject txToolFormat = tx.getDataForBCTest();
+
+        // Tool Require no leading zeros in transaction.
+        string const to = txToolFormat.atKey("to").asString();
+        string const data = txToolFormat.atKey("data").asString();
         txToolFormat.performModifier(test::mod_removeLeadingZerosFromHexValues);
+        txToolFormat["to"] = to;
+        txToolFormat["data"] = data;
+
         txToolFormat.renameKey("data", "input");
         txToolFormat.renameKey("gasLimit", "gas");
-        if (txToolFormat.atKey("value").asString() == "0x" ||
-            txToolFormat.atKey("value").asString().empty())
+
+        string const& value = txToolFormat.atKey("value").asString();
+        if (value == "0x" || value.empty())
             txToolFormat.atKeyUnsafe("value") = "0x0";
-        if (txToolFormat.atKey("to").asString().empty() ||
-            txToolFormat.atKey("to").asString() == "0x")
+        string const& toAddr = txToolFormat.atKey("to").asString();
+        if (toAddr.empty() || toAddr == "0x")
             txToolFormat.removeKey("to");
+
         txToolFormat["hash"] = tx.getHash();
         txs.addArrayObject(txToolFormat);
     }
@@ -447,34 +473,37 @@ string ToolImpl::test_mineBlocks(int _number, bool _canFail)
     cmd += " --output.alloc " + outAllocPath.string();
     cmd += " --state.fork " + m_chainParams.atKey("params").atKey("fork").asString();
 
-    if (!m_currentBlockHeader.isMiningGenesis)  // If calculating geneis block disable rewards. so
-                                                // to see the state root hash
-        if (m_chainParams.atKey("sealEngine").asString() == "NoProof")
+    // If calculating geneis block, disable rewards so to see the state root hash
+
+    string const engine = m_chainParams.atKey("sealEngine").asString();
+    if (!m_currentBlockHeader.isMiningGenesis && engine != "NoReward")
+    {
+        if (engine == "Ethash")
+            ETH_WARNING_TEST("t8ntool backend treat Ethash as NoProof!", 6);
+
+        // Setup mining rewards
+        DataObject const& rewards =
+            Options::get().getDynamicOptions().getCurrentConfig().getMiningRewardInfo();
+        string const& fork = m_chainParams.atKey("params").atKey("fork").asString();
+        if (rewards.count(fork))
         {
-            // Setup mining rewards
-            DataObject const& rewards =
-                Options::get().getDynamicOptions().getCurrentConfig().getMiningRewardInfo();
-            string const& fork = m_chainParams.atKey("params").atKey("fork").asString();
-            if (rewards.count(fork))
+            string const reward = rewards.atKey(fork).asString();
+            cmd += " --state.reward " + reward;
+        }
+        else
+        {
+            if (m_currentBlockHeader.currentBlockNumber < 5)
             {
-                string const reward = rewards.atKey(fork).asString();
+                string const reward = rewards.atKey(RewardMapForToolBefore5.at(fork)).asString();
                 cmd += " --state.reward " + reward;
             }
             else
             {
-                if (m_currentBlockHeader.currentBlockNumber < 5)
-                {
-                    string const reward =
-                        rewards.atKey(RewardMapForToolBefore5.at(fork)).asString();
-                    cmd += " --state.reward " + reward;
-                }
-                else
-                {
-                    string const reward = rewards.atKey(RewardMapForToolAfter5.at(fork)).asString();
-                    cmd += " --state.reward " + reward;
-                }
+                string const reward = rewards.atKey(RewardMapForToolAfter5.at(fork)).asString();
+                cmd += " --state.reward " + reward;
             }
         }
+    }
 
     ETH_TEST_MESSAGE("Alloc:\n" + contentsString(allocPath.string()));
     if (m_transactions.size())
@@ -483,6 +512,7 @@ string ToolImpl::test_mineBlocks(int _number, bool _canFail)
     test::executeCmd(cmd, false);
     ETH_TEST_MESSAGE("Res:\n" + contentsString(outPath.string()));
     ETH_TEST_MESSAGE("RAlloc:\n" + contentsString(outAllocPath.string()));
+    ETH_TEST_MESSAGE(cmd);
 
     // Construct block rpc response
     DataObject const toolResponse = ConvertJsoncppStringToData(contentsString(outPath));
@@ -514,22 +544,13 @@ string ToolImpl::test_importRawBlock(std::string const& _blockRLP)
     rpcCall("", {});
     ETH_TEST_MESSAGE("Request: test_importRawBlock, following transaction import are internal");
 
-    auto onError = [&](string const& _what) {
-        // exception happend when processing block
-        m_transactions.clear();
-        m_currentBlockHeader.reset();
-        doChainReorg();  // to stay safe
-        m_lastInterfaceError["message"] = "Import raw block failed";
-        m_lastInterfaceError["error"] = string("Error parsing block: ") + _what;
-        ETH_TEST_MESSAGE(m_lastInterfaceError.asJson());
-    };
-
     static vector<string> exceptions = {"BlockWrongStoreClears"};
     for (auto const& el : exceptions)
     {
         if (TestOutputHelper::get().testName().find(el) != string::npos)
         {
-            onError("TooImpl can't verify this block!");
+            ETH_WARNING("t8ntool backend can't verify this block!");
+            onError("TooImpl can't verify this block!", "Test exception");
             return string();
         }
     }
@@ -539,6 +560,9 @@ string ToolImpl::test_importRawBlock(std::string const& _blockRLP)
     {
         bytes blockBytes = dev::fromHex(_blockRLP);
         dev::RLP blockRLP(blockBytes);
+        ostringstream out;
+        out << blockRLP;
+        ETH_TEST_MESSAGE(out.str());
         rawBlockHash = dev::toHexPrefixed(dev::sha3(blockRLP[0].data()));
         if (!blockRLP.isList())
             throw dev::RLPException("Block RLP is expected to be list");
@@ -571,20 +595,20 @@ string ToolImpl::test_importRawBlock(std::string const& _blockRLP)
 
         if (rawBlockHash != cbl.getHash())
             throw dev::RLPException(
-                string("RAW import hash != test_mineBlocks imitating rawblock. \n") +
+                string("RAW import hash != test_mineBlocks imitating rawblock. ") +
                 "RAW: " + rawBlockHash + " vs " + cbl.getHash());
     }
     catch (test::BaseEthException const& _ex)
     {
         // do not treat this exception as retesteth error
         TestOutputHelper::get().unmarkLastError();
-        onError(_ex.what());
+        onError(_ex.what(), "Import raw block failed");
         ETH_TEST_MESSAGE("Response test_importRawBlock: " + rawBlockHash);
         return string();
     }
     catch (RLPException const& _ex)
     {
-        onError(_ex.what());
+        onError(_ex.what(), "Import raw block failed");
         ETH_TEST_MESSAGE("Response test_importRawBlock: " + rawBlockHash);
         return string();
     }
