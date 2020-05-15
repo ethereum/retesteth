@@ -223,7 +223,7 @@ DataObject RPCImpl::rpcCall(
     {
         test::TestOutputHelper const& helper = test::TestOutputHelper::get();
         m_lastInterfaceError["message"] =
-            "Error on JSON-RPC call (" + helper.testInfo().getMessage() + "):\nRequest: '" +
+            "Error on JSON-RPC call (" + helper.testInfo().errorDebug() + "):\nRequest: '" +
             request + "'" + "\nResult: '" + result["error"]["message"].asString() + "'\n";
         m_lastInterfaceError["error"] = result["error"]["message"].asString();
         if (_canFail)

@@ -9,7 +9,7 @@ enum class LogColor
     LIME
 };
 
-void eth_warning_message(std::string const& _message);
+void eth_warning_message(std::string const& _message, unsigned _verbosity = 1);
 void eth_stdout_message(std::string const& _message);
 void eth_stderror_message(std::string const& _message);
 void eth_log_message(
@@ -24,6 +24,7 @@ void eth_mark_error(std::string const& _message);
 
 // Prints output to stderr/cout (depending on --verbosity option)
 #define ETH_WARNING(message) test::eth_warning_message(message)
+#define ETH_WARNING_TEST(message, verbosity) test::eth_warning_message(message, verbosity)
 
 #define ETH_STDOUT_MESSAGE(message) test::eth_stdout_message(message)
 #define ETH_STDERROR_MESSAGE(message) test::eth_stderror_message(message)

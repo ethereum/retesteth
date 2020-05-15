@@ -82,9 +82,14 @@ bool TestOutputHelper::markError(std::string const& _message)
     }
 
     // Mark the error
-    m_errors.push_back(_message + m_testInfo.getMessage());
+    string const testDebugInfo = m_testInfo.errorDebug();
+    m_errors.push_back(_message + testDebugInfo);
+    if (testDebugInfo.empty())
+        ETH_WARNING(TestOutputHelper::get().testName() + ", Message: " + _message +
+                    ", has empty debugInfo! Missing debug Tesinfo for test step.");
     std::lock_guard<std::mutex> lock(g_failedTestsMap);
-    s_failedTestsMap[TestOutputHelper::get().testName()] = m_testInfo.getMessage();
+    if (!s_failedTestsMap.count(TestOutputHelper::get().testName()))
+        s_failedTestsMap[TestOutputHelper::get().testName()] = testDebugInfo;
     return true;
 }
 
@@ -192,10 +197,11 @@ void TestOutputHelper::printBoostError()
     std::lock_guard<std::mutex> lock(g_helperThreadMapMutex);
     for (auto& test : helperThreadMap)
     {
-        errorCount += test.second.getErrors().size();
-        for (auto const& a : test.second.getErrors())
-            ETH_STDERROR_MESSAGE("Error: " + a);
-        test.second.resetErrors();
+        TestOutputHelper& threadLocalHelper = test.second;
+        errorCount += threadLocalHelper.getErrors().size();
+        for (auto const& err : threadLocalHelper.getErrors())
+            ETH_STDERROR_MESSAGE("Error: " + err);
+        threadLocalHelper.resetErrors();
     }
     if (errorCount)
     {
@@ -379,7 +385,7 @@ TestInfo::TestInfo(std::string const& _info, std::string const& _testName) : m_s
         TestOutputHelper::get().setCurrentTestName(_testName);
 }
 
-std::string TestInfo::getMessage() const
+std::string TestInfo::errorDebug() const
 {
     if (m_sFork.empty())
         return "";

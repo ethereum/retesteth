@@ -142,8 +142,8 @@ scheme_state getRemoteState(SessionInterface& _session, scheme_RPCBlock const& _
     }
 
     if (Options::get().poststate)
-        ETH_STDOUT_MESSAGE("PostState " + TestOutputHelper::get().testInfo().getMessage() +  " : \n"
-                           + accountsObj.asJson());
+        ETH_STDOUT_MESSAGE("PostState " + TestOutputHelper::get().testInfo().errorDebug() +
+                           " : \n" + accountsObj.asJson());
 
     return scheme_state(accountsObj);
 }

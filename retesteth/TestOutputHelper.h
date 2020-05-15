@@ -49,7 +49,7 @@ struct TestInfo
     TestInfo(std::string const& _info, std::string const& _testName = std::string());
 
     TestInfo(): m_isStateTransactionInfo(false), m_isBlockchainTestInfo(false) {}
-    std::string getMessage() const;
+    std::string errorDebug() const;
     static std::string caseName()
     {
         return boost::unit_test::framework::current_test_case().p_name;

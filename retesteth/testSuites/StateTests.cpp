@@ -213,7 +213,7 @@ DataObject FillTest(DataObject const& _testFile)
                         session.eth_getBlockByNumber(latestBlockNumber, Options::get().vmtrace);
                     if (Options::get().poststate)
                         ETH_STDOUT_MESSAGE("PostState " +
-                                           TestOutputHelper::get().testInfo().getMessage() +
+                                           TestOutputHelper::get().testInfo().errorDebug() +
                                            " : \n" + blockInfo.getStateHash());
                     if (Options::get().vmtrace)
                         printVmTrace(session, trHash, blockInfo.getStateHash());
