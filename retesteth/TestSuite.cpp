@@ -25,10 +25,10 @@
 #include <retesteth/EthChecks.h>
 #include <retesteth/ExitHandler.h>
 #include <retesteth/Options.h>
-#include <retesteth/RPCSession.h>
 #include <retesteth/TestHelper.h>
 #include <retesteth/TestOutputHelper.h>
 #include <retesteth/TestSuite.h>
+#include <retesteth/session/RPCSession.h>
 #include <boost/test/unit_test.hpp>
 #include <string>
 #include <thread>
@@ -107,28 +107,28 @@ void removeComments(dataobject::DataObject& _obj)
 void addClientInfo(
     dataobject::DataObject& _v, fs::path const& _testSource, h256 const& _testSourceHash)
 {
-  RPCSession &session = RPCSession::instance(TestOutputHelper::getThreadID());
-  for (auto& o : _v.getSubObjectsUnsafe())
-  {
-      string comment;
-      dataobject::DataObject clientinfo;
-      if (o.count("_info"))
-      {
-          dataobject::DataObject const& existingInfo = o.atKey("_info");
-          if (existingInfo.count("comment"))
-              comment = existingInfo.atKey("comment").asString();
-      }
+    SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
+    for (auto& o : _v.getSubObjectsUnsafe())
+    {
+        string comment;
+        dataobject::DataObject clientinfo;
+        if (o.count("_info"))
+        {
+            dataobject::DataObject const& existingInfo = o.atKey("_info");
+            if (existingInfo.count("comment"))
+                comment = existingInfo.atKey("comment").asString();
+        }
 
-      clientinfo.setKey("_info");
-      clientinfo["comment"] = comment;
-      clientinfo["filling-rpc-server"] = session.web3_clientVersion();
-      clientinfo["filling-tool-version"] = test::prepareVersionString();
-      clientinfo["lllcversion"] = test::prepareLLLCVersionString();
-      clientinfo["source"] = _testSource.string();
-      clientinfo["sourceHash"] = toString(_testSourceHash);
+        clientinfo.setKey("_info");
+        clientinfo["comment"] = comment;
+        clientinfo["filling-rpc-server"] = session.web3_clientVersion();
+        clientinfo["filling-tool-version"] = test::prepareVersionString();
+        clientinfo["lllcversion"] = test::prepareLLLCVersionString();
+        clientinfo["source"] = _testSource.string();
+        clientinfo["sourceHash"] = toString(_testSourceHash);
 
-      o["_info"].replace(clientinfo);
-      o.setKeyPos("_info", 0);
+        o["_info"].replace(clientinfo);
+        o.setKeyPos("_info", 0);
     }
 }
 

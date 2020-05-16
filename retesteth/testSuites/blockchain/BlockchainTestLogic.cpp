@@ -1,7 +1,7 @@
 #include "BlockchainTestLogic.h"
 #include "fillers/BlockchainTestFillerLogic.h"
 #include <retesteth/EthChecks.h>
-#include <retesteth/RPCSession.h>
+#include <retesteth/session/RPCSession.h>
 #include <retesteth/testSuites/Common.h>
 
 
@@ -19,24 +19,26 @@ void RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _
         std::cout << "Running " << TestOutputHelper::get().testName() << std::endl;
     scheme_blockchainTest inputTest(_testObject, _opt.isLegacyTests);
     TestOutputHelper::get().setUnitTestExceptions(inputTest.getUnitTestExceptions());
-    RPCSession& session = RPCSession::instance(TestOutputHelper::getThreadID());
+    SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
 
     // Info for genesis
     TestInfo errorInfo (inputTest.getNetwork(), 0);
     TestOutputHelper::get().setCurrentTestInfo(errorInfo);
     session.test_setChainParams(
-        inputTest.getGenesisForRPC(inputTest.getNetwork(), inputTest.getEngine()).asJson());
+        inputTest.getGenesisForRPC(inputTest.getNetwork(), inputTest.getEngine()));
 
     // for all blocks
     size_t blockNumber = 0;
     for (auto const& bdata : inputTest.getBlocks())
     {
+        if (Options::get().blockLimit != 0 && blockNumber + 1 >= Options::get().blockLimit)
+            break;
         TestInfo errorInfo(inputTest.getNetwork(), blockNumber++);
         TestOutputHelper::get().setCurrentTestInfo(errorInfo);
         string const blHash = session.test_importRawBlock(bdata.atKey("rlp").asString());
         if (session.getLastRPCError().type() != DataType::Null)
         {
-            if (!_opt.allowInvalidBlocks)
+            if (!_opt.allowInvalidBlocks || bdata.count("blockHeader"))
                 ETH_ERROR_MESSAGE("Running blockchain test: " + session.getLastRPCError().atKey("message").asString());
         }
 
@@ -45,7 +47,7 @@ void RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _
         {
             // Check Blockheader
             DataObject inTestHeader(DataType::Null);
-            test::scheme_block latestBlock = session.eth_getBlockByHash(blHash, true);
+            test::scheme_RPCBlock latestBlock = session.eth_getBlockByHash(blHash, true);
             bool condition = latestBlock.getBlockHeader() == bdata.atKey("blockHeader");
             if (_opt.isLegacyTests)
             {
@@ -135,6 +137,7 @@ void RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _
                 auto verifyTr = [&tr, &testTr](
                                     string const& aField, string const& bField, size_t length = 1) {
                     bool condition = true;
+                    string convertedKey;
                     if (length == 0)  // skip conversion
                     {
                         condition = tr.atKey(aField).asString() == testTr.atKey(bField).asString();
@@ -144,14 +147,21 @@ void RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _
                                                      testTr.atKey(bField).asString();
                     }
                     else
-                        condition =
-                            dev::toCompactHexPrefixed(dev::u256(tr.atKey(aField).asString()),
-                                length) == testTr.atKey(bField).asString();
+                    {
+                        // RLP removes leading zeros. test format is even hex.
+                        DataObject rlpField(tr.atKey(aField).asString());
+                        if (length == 1)
+                            rlpField.performModifier(mod_removeLeadingZerosFromHexValuesEVEN);
+                        else
+                            rlpField = dev::toCompactHexPrefixed(u256(rlpField.asString()), length);
+                        convertedKey = rlpField.asString();
+                        condition = rlpField.asString() == testTr.atKey(bField).asString();
+                    }
                     ETH_ERROR_REQUIRE_MESSAGE(
                         condition, "Error checking remote transaction, remote tr `" + aField +
-                                       "` is different to test tr `" + bField + "` (" +
-                                       tr.atKey(aField).asString() +
-                                       " != " + testTr.atKey(bField).asString() + ")");
+                                       "` (conv: " + convertedKey + ") is different to test tr `" +
+                                       bField + "` (`" + tr.atKey(aField).asString() + "` != `" +
+                                       testTr.atKey(bField).asString() + "`)");
                 };
 
                 verifyTr("input", "data", 0);
@@ -159,11 +169,19 @@ void RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _
                 verifyTr("gasPrice", "gasPrice");
                 verifyTr("nonce", "nonce");
                 verifyTr("v", "v");
-                verifyTr("r", "r", _opt.isLegacyTests ? 1 : 32);
-                verifyTr("s", "s", _opt.isLegacyTests ? 1 : 32);
+                verifyTr("r", "r");
+                verifyTr("s", "s");
                 verifyTr("value", "value");
-                if (tr.atKey("to").type() != DataType::Null)
+                if (tr.atKey("to").type() != DataType::Null &&
+                    tr.atKey("to").asString().length() > 2)
                     verifyTr("to", "to", 20);
+                else
+                {
+                    ETH_ERROR_REQUIRE_MESSAGE(testTr.atKey("to").asString() == "0x" ||
+                                                  testTr.atKey("to").asString().empty(),
+                        "Remote transaction `to` is empty, test expected destination address: `" +
+                            testTr.atKey("to").asString());
+                }
             }
 
             // Check uncles count
@@ -184,7 +202,7 @@ void RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _
     // wait for blocks to process
     // std::this_thread::sleep_for(std::chrono::seconds(10));
 
-    scheme_block latestBlock = session.eth_getBlockByNumber(session.eth_blockNumber(), false);
+    scheme_RPCBlock latestBlock = session.eth_getBlockByNumber(session.eth_blockNumber(), false);
     if (inputTest.getPost().isHash())
         validatePostHash(session, inputTest.getPost().getHash(), latestBlock);
     else
@@ -205,7 +223,7 @@ void RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _
         else
         {
             string const& genesisRLP = inputTest.getData().atKey("genesisRLP").asString();
-            latestBlock = session.eth_getBlockByNumber(BlockNumber("0"), false);
+            scheme_RPCBlock latestBlock = session.eth_getBlockByNumber(BlockNumber("0"), false);
             if (latestBlock.getBlockRLP() != genesisRLP)
                 ETH_ERROR_MESSAGE("genesisRLP in test != genesisRLP on remote client! (" +
                                   genesisRLP + "' != '" + latestBlock.getBlockRLP() + "'");

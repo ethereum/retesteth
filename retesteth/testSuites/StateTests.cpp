@@ -31,11 +31,11 @@
 #include <libdevcore/CommonIO.h>
 #include <retesteth/ExitHandler.h>
 #include <retesteth/Options.h>
-#include <retesteth/RPCSession.h>
 #include <retesteth/TestHelper.h>
 #include <retesteth/TestOutputHelper.h>
 #include <retesteth/TestSuite.h>
 #include <retesteth/ethObjects/common.h>
+#include <retesteth/session/RPCSession.h>
 #include <retesteth/testSuites/Common.h>
 #include <retesteth/testSuites/StateTests.h>
 #include <retesteth/testSuites/blockchain/BlockchainTests.h>
@@ -62,7 +62,7 @@ DataObject FillTestAsBlockchain(DataObject const& _testFile)
     DataObject filledTest;
     test::scheme_stateTestFiller test(_testFile);
 
-    RPCSession& session = RPCSession::instance(TestOutputHelper::getThreadID());
+    SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
     // run transactions on all networks that we need
     for (auto const& net : test.getExpectSection().getAllNetworksFromExpectSection())
     {
@@ -92,11 +92,10 @@ DataObject FillTestAsBlockchain(DataObject const& _testFile)
                     mexpect.correctMiningReward(net, test.getEnv().getCoinbase());
 
                     string sEngine = scheme_blockchainTestBase::m_sNoProof;
-                    session.test_setChainParams(test.getGenesisForRPC(net, sEngine).asJson());
+                    session.test_setChainParams(test.getGenesisForRPC(net, sEngine));
                     u256 a(test.getEnv().getData().atKey("currentTimestamp").asString());
                     session.test_modifyTimestamp(a.convert_to<size_t>());
-                    string signedTransactionRLP = tr.transaction.getSignedRLP();
-                    string trHash = session.eth_sendRawTransaction(signedTransactionRLP);
+                    string trHash = session.eth_sendRawTransaction(tr.transaction);
 
                     if (session.getLastRPCError().type() != DataType::Null)
                         ETH_ERROR_MESSAGE(session.getLastRPCError().atKey("message").asString());
@@ -106,7 +105,7 @@ DataObject FillTestAsBlockchain(DataObject const& _testFile)
                     string latestBlockNumber = session.test_mineBlocks(1);
                     tr.executed = true;
 
-                    scheme_block remoteBlock =
+                    scheme_RPCBlock remoteBlock =
                         session.eth_getBlockByNumber(latestBlockNumber, true);
                     scheme_state remoteState = getRemoteState(session, remoteBlock);
                     if (remoteState.isHash())
@@ -118,7 +117,7 @@ DataObject FillTestAsBlockchain(DataObject const& _testFile)
                     if (test.getData().count("_info"))
                         aBlockchainTest["_info"] = test.getData().atKey("_info");
 
-                    test::scheme_block latestBlock =
+                    test::scheme_RPCBlock latestBlock =
                         session.eth_getBlockByNumber(BlockNumber("0"), false);
                     aBlockchainTest["genesisBlockHeader"] = latestBlock.getBlockHeader();
                     aBlockchainTest["genesisBlockHeader"].removeKey("transactions");
@@ -133,7 +132,7 @@ DataObject FillTestAsBlockchain(DataObject const& _testFile)
                     aBlockchainTest["sealEngine"] = sEngine;
                     aBlockchainTest["lastblockhash"] = remoteBlock.getBlockHash();
 
-                    test::scheme_block genesisBlock =
+                    test::scheme_RPCBlock genesisBlock =
                         session.eth_getBlockByNumber(BlockNumber("0"), true);
                     aBlockchainTest["genesisRLP"] = genesisBlock.getBlockRLP();
 
@@ -169,7 +168,7 @@ DataObject FillTest(DataObject const& _testFile)
     filledTest.setAutosort(true);
     test::scheme_stateTestFiller test(_testFile);
 
-    RPCSession& session = RPCSession::instance(TestOutputHelper::getThreadID());
+    SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
     if (test.getData().count("_info"))
         filledTest["_info"] = test.getData().atKey("_info");
     filledTest["env"] = test.getEnv().getData();
@@ -181,7 +180,7 @@ DataObject FillTest(DataObject const& _testFile)
     {
         DataObject forkResults;
         forkResults.setKey(net);
-        session.test_setChainParams(test.getGenesisForRPC(net, "NoReward").asJson());
+        session.test_setChainParams(test.getGenesisForRPC(net, "NoReward"));
 
         // run transactions for defined expect sections only
         for (auto const& expect : test.getExpectSection().getExpectSections())
@@ -206,15 +205,15 @@ DataObject FillTest(DataObject const& _testFile)
 
                     u256 a(test.getEnv().getData().atKey("currentTimestamp").asString());
                     session.test_modifyTimestamp(a.convert_to<size_t>());
-                    string trHash = session.eth_sendRawTransaction(tr.transaction.getSignedRLP());
+                    string trHash = session.eth_sendRawTransaction(tr.transaction);
                     string latestBlockNumber = session.test_mineBlocks(1);
                     tr.executed = true;
 
-                    scheme_block blockInfo =
+                    scheme_RPCBlock blockInfo =
                         session.eth_getBlockByNumber(latestBlockNumber, Options::get().vmtrace);
                     if (Options::get().poststate)
                         ETH_STDOUT_MESSAGE("PostState " +
-                                           TestOutputHelper::get().testInfo().getMessage() +
+                                           TestOutputHelper::get().testInfo().errorDebug() +
                                            " : \n" + blockInfo.getStateHash());
                     if (Options::get().vmtrace)
                         printVmTrace(session, trHash, blockInfo.getStateHash());
@@ -255,7 +254,7 @@ DataObject FillTest(DataObject const& _testFile)
 void RunTest(DataObject const& _testFile)
 {
     test::scheme_stateTest test(_testFile);
-    RPCSession& session = RPCSession::instance(TestOutputHelper::getThreadID());
+    SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
 
     // read post state results
     for (auto const& post: test.getPost().getResults())
@@ -266,7 +265,7 @@ void RunTest(DataObject const& _testFile)
             !inArray(Options::getDynamicOptions().getCurrentConfig().getNetworks(), network))
             networkSkip = true;
         else
-            session.test_setChainParams(test.getGenesisForRPC(network, "NoReward").asJson());
+            session.test_setChainParams(test.getGenesisForRPC(network, "NoReward"));
 
         // One test could have many transactions on same chainParams
         // It is expected that for a setted chainParams there going to be a transaction
@@ -295,13 +294,13 @@ void RunTest(DataObject const& _testFile)
                 {
                     u256 a(test.getEnv().getData().atKey("currentTimestamp").asString());
                     session.test_modifyTimestamp(a.convert_to<size_t>());
-                    string trHash = session.eth_sendRawTransaction(tr.transaction.getSignedRLP());
+                    string trHash = session.eth_sendRawTransaction(tr.transaction);
                     string latestBlockNumber = session.test_mineBlocks(1);
                     tr.executed = true;
 
                     // Validate post state
                     string postHash = result.getData().atKey("hash").asString();
-                    scheme_block remoteBlockInfo =
+                    scheme_RPCBlock remoteBlockInfo =
                         session.eth_getBlockByNumber(latestBlockNumber, false);
                     ETH_ERROR_REQUIRE_MESSAGE(remoteBlockInfo.getTransactionCount() == 1,
                         "Failed to execute transaction on remote client! State test transaction must be valid!");

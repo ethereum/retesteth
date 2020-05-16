@@ -46,7 +46,7 @@ DataObject readJsonData(fs::path const& _file, string const& _stopper, bool _aut
     {
         string s = dev::contentsString(_file);
         ETH_ERROR_REQUIRE_MESSAGE(s.length() > 0,
-            "Contents of " + _file.string() + " is empty. Trying to parse empty file.");
+            "Contents of " + _file.string() + " is empty. Trying to parse empty file. (forgot --filltests?)");
         return dataobject::ConvertJsoncppStringToData(s, _stopper, _autosort);
     }
     catch (std::exception const& _ex)
@@ -64,7 +64,7 @@ DataObject readYamlData(fs::path const& _file)
     {
         string s = dev::contentsString(_file);
         ETH_ERROR_REQUIRE_MESSAGE(s.length() > 0,
-            "Contents of " + _file.string() + " is empty. Trying to parse empty file.");
+            "Contents of " + _file.string() + " is empty. Trying to parse empty file. (forgot --filltests?)");
         return dataobject::ConvertYamlToData(YAML::Load(s));
     }
     catch (std::exception const& _ex)
@@ -332,6 +332,20 @@ string prepareLLLCVersionString()
     return res;
 }
 
+/// Safe dev::fromHex
+dev::bytes sfromHex(string const& _hexStr)
+{
+    try
+    {
+        return dev::fromHex(_hexStr);
+    }
+    catch (BadHexCharacter const&)
+    {
+        ETH_ERROR_MESSAGE("Bad hex character around: " + _hexStr);
+        return dev::bytes();
+    }
+}
+
 bool checkCmdExist(std::string const& _command)
 {
     string checkCmd = string("which " + _command + " > /dev/null 2>&1");
@@ -340,7 +354,7 @@ bool checkCmdExist(std::string const& _command)
     return true;
 }
 
-string executeCmd(string const& _command)
+string executeCmd(string const& _command, bool _warningOnEmpty)
 {
 #if defined(_WIN32)
     BOOST_ERROR("executeCmd() has not been implemented for Windows.");
@@ -348,11 +362,15 @@ string executeCmd(string const& _command)
 #else
     string out;
     char output[1024];
+    ETH_FAIL_REQUIRE_MESSAGE(!_command.empty(), "executeCmd: empty argument!");
     FILE* fp = popen(_command.c_str(), "r");
-    if (fp == NULL)
+    if (fp == NULL || fp == 0)
         ETH_FAIL_MESSAGE("Failed to run " + _command);
     if (fgets(output, sizeof(output) - 1, fp) == NULL)
-        ETH_WARNING("Reading empty result for " + _command);
+    {
+        if (_warningOnEmpty)
+            ETH_WARNING("Reading empty result for " + _command);
+    }
     else
     {
         while (true)
@@ -541,6 +559,8 @@ fs::path createUniqueTmpDirectory() {
   std::lock_guard<std::mutex> lock(g_createUniqueTmpDirectory);
   boost::uuids::uuid uuid = boost::uuids::random_generator()();
   string uuidStr = boost::lexical_cast<string>(uuid);
+  if (fs::exists(fs::temp_directory_path() / uuidStr))
+      ETH_FAIL_MESSAGE("boost create tmp directory which already exist!");
   boost::filesystem::create_directory(fs::temp_directory_path() / uuidStr);
   return fs::temp_directory_path() / uuidStr;
 }

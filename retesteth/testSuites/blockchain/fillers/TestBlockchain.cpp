@@ -22,7 +22,7 @@ void TestBlockchain::generateBlock(
 
     // Remote client generate block with transactions
     // An if it has uncles or blockheader overwrite, then perform postmine
-    test::scheme_block latestBlock = mineBlock(_block, _uncles);
+    test::scheme_RPCBlock latestBlock = mineBlock(_block, _uncles);
     if (!latestBlock.isValid())
     {
         blockJson.removeKey("transactions");
@@ -75,7 +75,7 @@ void TestBlockchain::generateBlock(
     m_blocks.push_back(newBlock);
 }
 
-test::scheme_block TestBlockchain::mineBlock(
+test::scheme_RPCBlock TestBlockchain::mineBlock(
     blockSection const& _block, vectorOfSchemeBlock const& _preparedUncleBlocks)
 {
     ETH_LOGC("MINE BLOCK: " + m_sDebugString, 6, LogColor::YELLOW);
@@ -89,7 +89,7 @@ test::scheme_block TestBlockchain::mineBlock(
         if (blockIsValid)
             return m_session.eth_getBlockByHash(blHash, true);
         else
-            return test::scheme_block(_block.getRawRLP());
+            return test::scheme_RPCBlock(_block.getRawRLP());
     }
     else
         latestBlockNumber = BlockNumber(m_session.test_mineBlocks(1));
@@ -109,7 +109,7 @@ test::scheme_block TestBlockchain::mineBlock(
     if (_block.getData().count("blockHeader") || isUnclesInTest)
     {
         ETH_LOG("Postmine blockheader: " + m_sDebugString, 6);
-        scheme_block latestBlock =
+        scheme_RPCBlock latestBlock =
             postmineBlockHeader(_block, latestBlockNumber, _preparedUncleBlocks);
         checkTransactions(latestBlock.getTransactionCount(), _block.getTransactions().size(),
             _block.getInvalidTransactionCount());
@@ -117,7 +117,7 @@ test::scheme_block TestBlockchain::mineBlock(
     }
     else
     {
-        scheme_block latestBlock = m_session.eth_getBlockByNumber(latestBlockNumber, true);
+        scheme_RPCBlock latestBlock = m_session.eth_getBlockByNumber(latestBlockNumber, true);
         checkTransactions(latestBlock.getTransactionCount(), _block.getTransactions().size(),
             _block.getInvalidTransactionCount());
         return latestBlock;
@@ -131,7 +131,7 @@ DataObject TestBlockchain::importTransactions(blockSection const& _block)
     ETH_LOGC("Import transactions: " + m_sDebugString, 6, LogColor::YELLOW);
     for (auto const& tr : _block.getTransactions())
     {
-        string const trHash = m_session.eth_sendRawTransaction(tr.getSignedRLP());
+        string const trHash = m_session.eth_sendRawTransaction(tr);
         if (!tr.isMarkedInvalid())
         {
             transactionsArray.addArrayObject(tr.getDataForBCTest());
@@ -142,11 +142,11 @@ DataObject TestBlockchain::importTransactions(blockSection const& _block)
 }
 
 // Ask remote client to generate a blockheader that will later used for uncles
-test::scheme_block TestBlockchain::mineNextBlockAndRewert()
+test::scheme_RPCBlock TestBlockchain::mineNextBlockAndRewert()
 {
     ETH_LOGC("Mine uncle block (next block) and revert: " + m_sDebugString, 6, LogColor::YELLOW);
     BlockNumber latestBlockNumber(m_session.test_mineBlocks(1));
-    test::scheme_block next = m_session.eth_getBlockByNumber(latestBlockNumber, false);
+    test::scheme_RPCBlock next = m_session.eth_getBlockByNumber(latestBlockNumber, false);
     latestBlockNumber.applyShift(-1);
     m_session.test_rewindToBlock(latestBlockNumber.getBlockNumberAsInt());  // rewind to the
                                                                             // previous block
@@ -175,7 +175,7 @@ string TestBlockchain::prepareDebugInfoString(string const& _newBlockChainName)
 
 // Restore this chain on remote client up to < _number block
 // Restore chain up to _number of blocks. if _number is 0 restore the whole chain
-void TestBlockchain::restoreUpToNumber(RPCSession& _session, size_t _number, bool _samechain)
+void TestBlockchain::restoreUpToNumber(SessionInterface& _session, size_t _number, bool _samechain)
 {
     size_t firstBlock;
     if (_samechain)
@@ -237,12 +237,12 @@ void TestBlockchain::restoreUpToNumber(RPCSession& _session, size_t _number, boo
 }
 
 
-test::scheme_block TestBlockchain::postmineBlockHeader(blockSection const& _blockInTest,
-    BlockNumber const& _latestBlockNumber, std::vector<scheme_block> const& _uncles)
+test::scheme_RPCBlock TestBlockchain::postmineBlockHeader(blockSection const& _blockInTest,
+    BlockNumber const& _latestBlockNumber, std::vector<scheme_RPCBlock> const& _uncles)
 {
     // if blockHeader is defined in test Filler, rewrite the last block header fields with info from
     // test and reimport it to the client in order to trigger an exception in the client
-    test::scheme_block remoteBlock = m_session.eth_getBlockByNumber(_latestBlockNumber, true);
+    test::scheme_RPCBlock remoteBlock = m_session.eth_getBlockByNumber(_latestBlockNumber, true);
     bool changeDoneToTheBlock = false;
 
     // Attach test-generated uncle to a block and then reimport it again
@@ -269,7 +269,7 @@ test::scheme_block TestBlockchain::postmineBlockHeader(blockSection const& _bloc
                 BlockNumber previousBlockNumber(_latestBlockNumber);
                 previousBlockNumber.applyShift(-1);
 
-                test::scheme_block previousBlock =
+                test::scheme_RPCBlock previousBlock =
                     m_session.eth_getBlockByNumber(previousBlockNumber, false);
                 string previousBlockTimestampString =
                     previousBlock.getBlockHeader().atKey("timestamp").asString();

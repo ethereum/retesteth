@@ -1,7 +1,7 @@
 #include "Common.h"
 #include <dataObject/DataObject.h>
 #include <retesteth/Options.h>
-#include <retesteth/RPCSession.h>
+#include <retesteth/session/RPCSession.h>
 using namespace std;
 namespace test
 {
@@ -80,7 +80,7 @@ CompareResult compareAccounts(
     return result;
 }
 
-DataObject getRemoteAccountList(RPCSession& _session, scheme_block const& _latestInfo)
+DataObject getRemoteAccountList(SessionInterface& _session, scheme_RPCBlock const& _latestInfo)
 {
     DataObject accountList;
     string startHash = "0";
@@ -113,8 +113,8 @@ DataObject getRemoteAccountList(RPCSession& _session, scheme_block const& _lates
 //}
 
 // compare states with session asking post state data on the fly
-void compareStates(
-    scheme_expectState const& _stateExpect, RPCSession& _session, scheme_block const& _latestInfo)
+void compareStates(scheme_expectState const& _stateExpect, SessionInterface& _session,
+    scheme_RPCBlock const& _latestInfo)
 {
     CompareResult result = CompareResult::Success;
     DataObject accountList = getRemoteAccountList(_session, _latestInfo);

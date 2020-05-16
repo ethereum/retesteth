@@ -1,7 +1,7 @@
 #pragma once
-#include <retesteth/Socket.h>
 #include <retesteth/TestHelper.h>
 #include <retesteth/ethObjects/object.h>
+#include <retesteth/session/Socket.h>
 #include <boost/asio.hpp>
 #include <mutex>
 #include <string>
@@ -86,6 +86,14 @@ public:
             m_socketType = Socket::SocketType::IPCDebug;
             ETH_FAIL_REQUIRE_MESSAGE(fs::exists(getAddress()),
                 std::string("Client IPC socket file not found: ") + getAddress());
+        }
+        else if (socketTypeStr == "tranition-tool")
+        {
+            m_socketType = Socket::SocketType::TransitionTool;
+            ETH_FAIL_REQUIRE_MESSAGE(
+                fs::exists(getAddress()), std::string("Client `socketAddress` should contain a "
+                                                      "path to transition tool executable: ") +
+                                              getAddress());
         }
         else
             ETH_FAIL_MESSAGE(

@@ -6,6 +6,11 @@
 
 using namespace dataobject;
 namespace test {
+void ver_ethereumfields(DataObject const&);
+void mod_removeLeadingZerosFromHexValues(DataObject&);
+void mod_removeLeadingZerosFromHexValuesEVEN(DataObject&);
+void mod_valuesToLowerCase(DataObject&);
+
 class object
 {
 public:
@@ -47,10 +52,11 @@ public:
     static DigitsType stringIntegerType(std::string const& _string);
     static std::string makeHexAddress(std::string const& _address);
     static DataObject prepareGenesisParams(std::string const& _network, std::string const& _engine);
+    static bool validateHash(std::string const&, size_t);
 
 protected:
-    static void makeKeyHex(DataObject& _key);
-    static void makeAllFieldsHex(DataObject& _data);
+    static void makeKeyHex(DataObject&);
+    static void makeAllFieldsHex(DataObject&);
     DataObject m_data;
 
 private:
@@ -82,6 +88,6 @@ void requireJsonFields(DataObject const& _o, std::string const& _configName,
 
 /// Convert hex/dec string to int
 bool isHexDigitsType(test::object::DigitsType _dtype);
-int hexOrDecStringToInt(string const& _str);
+long int hexOrDecStringToInt(string const& _str);
 }
 

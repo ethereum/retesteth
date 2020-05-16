@@ -1,7 +1,7 @@
 #pragma once
 #include "TestBlock.h"
 #include <ethObjects/common.h>
-#include <retesteth/RPCSession.h>
+#include <retesteth/session/RPCSession.h>
 #include <string>
 #include <vector>
 
@@ -16,7 +16,7 @@ public:
         TRUE,
         FALSE
     };
-    TestBlockchain(RPCSession& _session, scheme_blockchainTestFiller const& _testObject,
+    TestBlockchain(SessionInterface& _session, scheme_blockchainTestFiller const& _testObject,
         std::string const& _network, RegenerateGenesis _regenerateGenesis)
       : m_session(_session), m_testObject(_testObject), m_network(_network)
     {
@@ -24,7 +24,8 @@ public:
         if (_regenerateGenesis == RegenerateGenesis::TRUE)
         {
             resetChainParams();
-            test::scheme_block latestBlock = _session.eth_getBlockByNumber(BlockNumber("0"), false);
+            test::scheme_RPCBlock latestBlock =
+                _session.eth_getBlockByNumber(BlockNumber("0"), false);
             DataObject& blockTestData = genesisBlock.getDataForTestUnsafe();
             blockTestData["blockHeader"] = latestBlock.getBlockHeader();
             blockTestData["blockHeader"].removeKey("transactions");
@@ -40,7 +41,7 @@ public:
     {
         DataObject genesisObject =
             m_testObject.getGenesisForRPC(m_network, m_testObject.getSealEngine());
-        m_session.test_setChainParams(genesisObject.asJson());
+        m_session.test_setChainParams(genesisObject);
     }
 
     void generateBlock(
@@ -48,7 +49,7 @@ public:
 
     // Restore this chain on remote client up to < _number block
     // Restore chain up to _number of blocks. if _number is 0 restore the whole chain
-    void restoreUpToNumber(RPCSession& _session, size_t _number, bool _samechain);
+    void restoreUpToNumber(SessionInterface& _session, size_t _number, bool _samechain);
 
     std::vector<TestBlock> const& getBlocks() const { return m_blocks; }
 
@@ -65,22 +66,22 @@ public:
 
 private:
     // Ask remote client to generate a blockheader that will later used for uncles
-    test::scheme_block mineNextBlockAndRewert();
+    test::scheme_RPCBlock mineNextBlockAndRewert();
 
     // Import transactions on remote client, return prepared json data for test
     DataObject importTransactions(blockSection const& _block);
 
     // Mine the test block on remote client.
     // if blockheader is tweaked or there are uncles, postmine tweak this and reimport
-    test::scheme_block mineBlock(
+    test::scheme_RPCBlock mineBlock(
         blockSection const& _block, vectorOfSchemeBlock const& _preparedUncleBlocks);
 
     // After test_mineBlock we can change the blockheader or add uncles. that will require to tweak
     // the block And reimport it again, then check exceptions
-    test::scheme_block postmineBlockHeader(blockSection const& _block,
-        BlockNumber const& _latestBlockNumber, std::vector<scheme_block> const& _uncles);
+    test::scheme_RPCBlock postmineBlockHeader(blockSection const& _block,
+        BlockNumber const& _latestBlockNumber, std::vector<scheme_RPCBlock> const& _uncles);
 
-    RPCSession& m_session;                            // Session with the client
+    SessionInterface& m_session;                      // Session with the client
     scheme_blockchainTestFiller const& m_testObject;  // Test data information
     std::string m_network;                            // Forkname in genesis
 

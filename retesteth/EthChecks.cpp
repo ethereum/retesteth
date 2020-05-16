@@ -7,10 +7,10 @@
 #include <thread>
 
 namespace test {
-void eth_warning_message(std::string const& _message)
+void eth_warning_message(std::string const& _message, unsigned _verbosity)
 {
-    std::cout << "\x1b[33m"
-              << "WARNING: " << _message << "\x1b[0m" << std::endl;
+    if (Options::get().logVerbosity >= _verbosity)
+        std::cout << "\x1b[33m" << "WARNING: " << _message << "\x1b[0m" << std::endl;
 }
 
 void eth_stdout_message(std::string const& _message)

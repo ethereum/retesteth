@@ -47,6 +47,9 @@ void parseJsonStrValueIntoSet(DataObject const& _json, std::set<std::string>& _o
 /// Read a single int object or an Array of int objects into set<int>
 void parseJsonIntValueIntoSet(DataObject const& _json, std::set<int>& _out);
 
+/// Safe dev::fromHex
+dev::bytes sfromHex(string const& _hexStr);
+
 /// retesteth version string
 std::string prepareVersionString();
 
@@ -57,7 +60,7 @@ std::string prepareLLLCVersionString();
 bool checkCmdExist(std::string const& _command);
 
 /// run system command
-std::string executeCmd(std::string const& _command);
+std::string executeCmd(std::string const& _command, bool _warningOnEmpty = true);
 
 /// compile LLL / wasm or other src code into bytecode
 std::string replaceCode(std::string const& _code);

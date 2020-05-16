@@ -26,9 +26,9 @@ defaults:
       command: |
         cmake ../project -G "$GENERATOR" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCOVERAGE=ON $CMAKE_OPTIONS
 
-  configure: &configureMac
+  configureMac: &configureMac
     run:
-      name: "Configure"
+      name: "ConfigureMac"
       working_directory: ~/build
       command: |
         cmake ../project -G "$GENERATOR" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCOVERAGE=ON $CMAKE_OPTIONS -DCMAKE_TOOLCHAIN_FILE=~/project/toolchain.cmake
@@ -68,7 +68,7 @@ defaults:
         $GCOV --version
         codecov --required --gcov-exec "$GCOV" --gcov-root ~/build
 
-  install-deps: &install-solidity-mac
+  install-solidity-mac: &install-solidity-mac
     run:
       name: "Install solidity"
       command: |
@@ -86,7 +86,7 @@ defaults:
         cd build
         cmake .. -DLLL=1 -DUSE_Z3=0
         sudo make install lllc -j $BUILD_PARALLEL_JOBS
-  install-deps: &install-solidity
+  install-solidity: &install-solidity
     run:
       name: "Install solidity"
       command: |

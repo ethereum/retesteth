@@ -1,12 +1,12 @@
 #include "Common.h"
 #include <dataObject/DataObject.h>
 #include <retesteth/Options.h>
-#include <retesteth/RPCSession.h>
+#include <retesteth/session/RPCSession.h>
 using namespace std;
 namespace test
 {
 void validatePostHash(
-    RPCSession& _session, string const& _postHash, scheme_block const& _latestInfo)
+    SessionInterface& _session, string const& _postHash, scheme_RPCBlock const& _latestInfo)
 {
     string actualHash = _latestInfo.getStateHash();
     if (actualHash != _postHash)
@@ -57,8 +57,8 @@ void checkTestNameIsEqualToFileName(DataObject const& _input)
                 "'");
 }
 
-scheme_account remoteGetAccount(RPCSession& _session, string const& _account,
-    scheme_block const& _latestInfo, size_t& _totalSize)
+scheme_account remoteGetAccount(SessionInterface& _session, string const& _account,
+    scheme_RPCBlock const& _latestInfo, size_t& _totalSize)
 {
     DataObject accountObj;
     accountObj.setKey(_account);
@@ -93,7 +93,7 @@ scheme_account remoteGetAccount(RPCSession& _session, string const& _account,
     return scheme_account(accountObj);
 }
 
-scheme_state getRemoteState(RPCSession& _session, scheme_block const& _latestInfo)
+scheme_state getRemoteState(SessionInterface& _session, scheme_RPCBlock const& _latestInfo)
 {
     const int c_accountLimitBeforeHash = 20;
     DataObject accountsObj;
@@ -142,13 +142,13 @@ scheme_state getRemoteState(RPCSession& _session, scheme_block const& _latestInf
     }
 
     if (Options::get().poststate)
-        ETH_STDOUT_MESSAGE("PostState " + TestOutputHelper::get().testInfo().getMessage() +  " : \n"
-                           + accountsObj.asJson());
+        ETH_STDOUT_MESSAGE("PostState " + TestOutputHelper::get().testInfo().errorDebug() +
+                           " : \n" + accountsObj.asJson());
 
     return scheme_state(accountsObj);
 }
 
-void printVmTrace(RPCSession& _session, string const& _trHash, string const& _stateRoot)
+void printVmTrace(SessionInterface& _session, string const& _trHash, string const& _stateRoot)
 {
     scheme_debugTraceTransaction ret = _session.debug_traceTransaction(_trHash);
     for (auto const& entry : ret.getEntries())

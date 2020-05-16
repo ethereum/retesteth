@@ -176,6 +176,8 @@ public:
     DataObject& atUnsafe(size_t _pos);
     DataObject const& atLastElement() const;
     DataObject& atLastElementUnsafe();
+    void performModifier(void (*f)(DataObject&));
+    void performVerifier(void (*f)(DataObject const&)) const;
 
     void addArrayObject(DataObject const& _obj);
 
@@ -186,7 +188,8 @@ public:
 
     void clear(DataType _type = DataType::Null);
 
-    std::string asJson(int level = 0, bool pretty = true) const;
+    std::string asJsonNoFirstKey() const;
+    std::string asJson(int level = 0, bool pretty = true, bool nokey = false) const;
     static std::string dataTypeAsString(DataType _type);
 
     void setOverwrite(bool _overwrite) { m_allowOverwrite = _overwrite; }

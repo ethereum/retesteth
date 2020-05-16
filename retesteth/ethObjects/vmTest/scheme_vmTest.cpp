@@ -63,7 +63,7 @@ scheme_vmTestFiller::fieldChecker::fieldChecker(DataObject const& _test)
             {"expectOut", {{DataType::String}, jsonField::Optional}}});
     if (_test.count("expectOut"))
         ETH_WARNING("Unable to verify `expectOut` when creating a stateTest from VMTest " +
-                    TestOutputHelper::get().testInfo().getMessage());
+                    TestOutputHelper::get().testInfo().errorDebug());
 }
 
 DataObject translateExecToTransaction(DataObject const& _exec)

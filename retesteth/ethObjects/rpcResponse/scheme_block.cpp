@@ -1,29 +1,42 @@
 #include "scheme_block.h"
+#include "TestHelper.h"
 
 DataObject const& getEmptySchemeBlockData()
 {
     static DataObject emptySchemeBlockData(DataType::Null);
     if (emptySchemeBlockData.type() == DataType::Null)
     {
-        emptySchemeBlockData["author"] = "";
-        emptySchemeBlockData["miner"] = "";
-        emptySchemeBlockData["extraData"] = "";
-        emptySchemeBlockData["gasLimit"] = "";
-        emptySchemeBlockData["gasUsed"] = "";
-        emptySchemeBlockData["hash"] = "";
-        emptySchemeBlockData["logsBloom"] = "";
-        emptySchemeBlockData["number"] = "";
-        emptySchemeBlockData["parentHash"] = "";
-        emptySchemeBlockData["receiptsRoot"] = "";
-        emptySchemeBlockData["sha3Uncles"] = "";
-        emptySchemeBlockData["size"] = "";
-        emptySchemeBlockData["stateRoot"] = "";
-        emptySchemeBlockData["timestamp"] = "";
-        emptySchemeBlockData["totalDifficulty"] = "";
+        emptySchemeBlockData["author"] = "0x0000000000000000000000000000000000000000";
+        emptySchemeBlockData["miner"] = "0x0000000000000000000000000000000000000000";
+        emptySchemeBlockData["extraData"] = "0x00";
+        emptySchemeBlockData["gasLimit"] = "0x00";
+        emptySchemeBlockData["gasUsed"] = "0x00";
+        emptySchemeBlockData["hash"] =
+            "0x0000000000000000000000000000000000000000000000000000000000000000";
+        emptySchemeBlockData["logsBloom"] =
+            "0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            "000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
+        emptySchemeBlockData["number"] = "0x00";
+        emptySchemeBlockData["parentHash"] =
+            "0x0000000000000000000000000000000000000000000000000000000000000000";
+        emptySchemeBlockData["receiptsRoot"] =
+            "0x0000000000000000000000000000000000000000000000000000000000000000";
+        emptySchemeBlockData["sha3Uncles"] =
+            "0x0000000000000000000000000000000000000000000000000000000000000000";
+        emptySchemeBlockData["size"] = "0x00";
+        emptySchemeBlockData["stateRoot"] =
+            "0x0000000000000000000000000000000000000000000000000000000000000000";
+        emptySchemeBlockData["timestamp"] = "0x00";
+        emptySchemeBlockData["totalDifficulty"] = "0x00";
         emptySchemeBlockData["transactions"] = DataObject(DataType::Array);
-        emptySchemeBlockData["transactionsRoot"] = "";
+        emptySchemeBlockData["transactionsRoot"] =
+            "0x0000000000000000000000000000000000000000000000000000000000000000";
         emptySchemeBlockData["uncles"] = DataObject(DataType::Array);
-        emptySchemeBlockData["difficulty"] = "";
+        emptySchemeBlockData["difficulty"] = "0x00";
     }
     return emptySchemeBlockData;
 }
@@ -31,7 +44,7 @@ DataObject const& getEmptySchemeBlockData()
 
 namespace test
 {
-scheme_block::scheme_block(std::string const& _rlp)
+scheme_RPCBlock::scheme_RPCBlock(std::string const& _rlp)
   : object(getEmptySchemeBlockData()),
     m_validator(getEmptySchemeBlockData()),
     m_blockHeader(getEmptySchemeBlockData())
@@ -40,7 +53,7 @@ scheme_block::scheme_block(std::string const& _rlp)
     m_rlpOverride = _rlp;
 }
 
-scheme_block::scheme_block(DataObject const& _block)
+scheme_RPCBlock::scheme_RPCBlock(DataObject const& _block)
   : object(_block), m_validator(_block), m_blockHeader(_block)
 {
     if (m_data.atKey("transactions").getSubObjects().size())
@@ -72,7 +85,7 @@ scheme_block::scheme_block(DataObject const& _block)
 }
 
 // Get Block RLP for state tests
-std::string scheme_block::getBlockRLP() const
+std::string scheme_RPCBlock::getBlockRLP() const
 {
     if (!m_rlpOverride.empty())
         return m_rlpOverride;
@@ -86,7 +99,6 @@ std::string scheme_block::getBlockRLP() const
     stream.appendRaw(streamBlockHeader(headerData).out());
 
     size_t trCount = m_data.atKey("transactions").getSubObjects().size();
-    // std::cerr << m_data.atKey("transactions").asJson() << std::endl;
     RLPStream transactionList(trCount);
     for (size_t i = 0; i < trCount; i++)
     {
@@ -101,7 +113,7 @@ std::string scheme_block::getBlockRLP() const
         else
             transactionRLP << Address(transaction.atKey("to").asString());
         transactionRLP << u256(transaction.atKey("value").asString());
-        transactionRLP << fromHex(transaction.atKey("input").asString());
+        transactionRLP << test::sfromHex(transaction.atKey("input").asString());
 
         byte v = (int)u256(transaction.atKey("v").asString().c_str());
         if (v <= 1)
@@ -120,7 +132,7 @@ std::string scheme_block::getBlockRLP() const
     return dev::toHexPrefixed(stream.out());
 }
 
-RLPStream scheme_block::streamUncles() const
+RLPStream scheme_RPCBlock::streamUncles() const
 {
     RLPStream uncleStream;
     uncleStream.appendList(m_uncles.size());
@@ -129,7 +141,7 @@ RLPStream scheme_block::streamUncles() const
     return uncleStream;
 }
 
-RLPStream scheme_block::streamBlockHeader(DataObject const& _headerData)
+RLPStream scheme_RPCBlock::streamBlockHeader(DataObject const& _headerData)
 {
     RLPStream header;
     header.appendList(15);
@@ -146,7 +158,7 @@ RLPStream scheme_block::streamBlockHeader(DataObject const& _headerData)
     header << u256(_headerData.atKey("gasLimit").asString());
     header << u256(_headerData.atKey("gasUsed").asString());
     header << u256(_headerData.atKey("timestamp").asString());
-    header << dev::fromHex(_headerData.atKey("extraData").asString());
+    header << test::sfromHex(_headerData.atKey("extraData").asString());
     if (_headerData.count("mixHash"))
     {
         header << h256(_headerData.atKey("mixHash").asString());
@@ -160,18 +172,28 @@ RLPStream scheme_block::streamBlockHeader(DataObject const& _headerData)
     return header;
 }
 
-void scheme_block::recalculateUncleHash()
+void scheme_RPCBlock::recalculateUncleHash()
 {
     m_blockHeader.replaceUncleHash(toString(dev::sha3(streamUncles().out())));
 }
 
-void scheme_block::randomizeCoinbase()
+void scheme_RPCBlock::randomizeCoinbase()
 {
     m_blockHeader.randomizeCoinbase();
 }
 
+// Update Transaction info in unsafe mode with ToolImpl
+void scheme_RPCBlock::tool_updateTransactionInfo()
+{
+    string const& hash = m_data.atKey("hash").asString();
+    for (auto& tr : m_data.atKeyUnsafe("transactions").getSubObjectsUnsafe())
+    {
+        tr.atKeyUnsafe("blockHash") = hash;
+    }
+}
+
 // Subclass of blockheader
-void scheme_block::scheme_block_header::resetHeader(DataObject const& _header)
+void scheme_RPCBlock::scheme_block_header::resetHeader(DataObject const& _header)
 {
     requireJsonFields(_header, "scheme_block_header",
         {{"coinbase", {{DataType::String}, jsonField::Required}},
@@ -190,30 +212,40 @@ void scheme_block::scheme_block_header::resetHeader(DataObject const& _header)
             {"difficulty", {{DataType::String}, jsonField::Required}},
             {"nonce", {{DataType::String}, jsonField::Optional}},
             {"mixHash", {{DataType::String}, jsonField::Optional}}});
-    m_data.clear();
-    m_data = _header;
+
+    if (&_header != &m_data)
+    {
+        m_data.clear();
+        m_data = _header;
+    }
 
     // make sure bloom is prefixed with 0x as hash
     object::DigitsType bloomType = object::stringIntegerType(m_data.atKey("bloom").asString());
     if (bloomType != DigitsType::HexPrefixed && bloomType != DigitsType::UnEvenHexPrefixed)
         m_data["bloom"] = "0x" + m_data.atKey("bloom").asString();
 
-    makeAllFieldsHex(m_data);
+    try
+    {
+        makeAllFieldsHex(m_data);
 
-    // make sure coinbase is 20 bytes address
-    m_data["coinbase"] = toString(Address(m_data["coinbase"].asString()));
-    m_data["coinbase"] = makeHexAddress(m_data.atKey("coinbase").asString());
-
-    // recalculate the hash
-    m_data["hash"] = "0x" + toString(dev::sha3(scheme_block::streamBlockHeader(m_data).out()));
+        // make sure coinbase is 20 bytes address
+        m_data["coinbase"] = toString(Address(m_data["coinbase"].asString()));
+        m_data["coinbase"] = makeHexAddress(m_data.atKey("coinbase").asString());
+        // recalculate the hash
+        m_data["hash"] = "0x" + toString(dev::sha3(scheme_RPCBlock::streamBlockHeader(m_data).out()));
+    }
+    catch (BadHexCharacter const&)
+    {
+        ETH_ERROR_MESSAGE("Bad hex character around: " + m_data.asJson());
+    }
 }
 
-DataObject scheme_block::scheme_block_header::mapBlockHeader() const
+DataObject scheme_RPCBlock::scheme_block_header::mapBlockHeader() const
 {
     // Map Block Header
     DataObject header;
     header["bloom"] = m_data.atKey("logsBloom");
-    header["coinbase"] = m_data.atKey("author");
+    header["coinbase"] = m_data.atKey("miner");
     header["difficulty"] = m_data.atKey("difficulty");
     header["extraData"] = m_data.atKey("extraData");
     header["gasLimit"] = m_data.atKey("gasLimit");

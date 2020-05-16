@@ -12,6 +12,16 @@ namespace test {
 class scheme_transaction : public object
 {
 public:
+    std::string const& nonce() const { return m_data.atKey("nonce").asString(); }
+    std::string const& gasPrice() const { return m_data.atKey("gasPrice").asString(); }
+    std::string const& gasLimit() const { return m_data.atKey("gasLimit").asString(); }
+    std::string const& to() const { return m_data.atKey("to").asString(); }
+    std::string const& value() const { return m_data.atKey("value").asString(); }
+    std::string const& data() const { return m_data.atKey("data").asString(); }
+    std::string const& v() const { return m_data.atKey("v").asString(); }
+    std::string const& r() const { return m_data.atKey("r").asString(); }
+    std::string const& s() const { return m_data.atKey("s").asString(); }
+
     scheme_transaction(DataObject const& _transaction) : object(_transaction)
     {
         if (_transaction.count("secretKey") > 0)
@@ -48,7 +58,9 @@ public:
         // convert into rpc format. RPC return transaction with this fields
         // m_data["version"] = "0x01";
         // m_data.atKeyUnsafe("gasLimit").setKey("gas");
+        m_data.performModifier(mod_valuesToLowerCase);
         makeAllFieldsHex(m_data);
+        m_data.performVerifier(ver_ethereumfields);
     }
 
     bool isMarkedInvalid() const { return m_data.count("invalid"); }
@@ -63,10 +75,15 @@ public:
             getSignedRLP(&sig);
             newData.removeKey("secretKey");
             newData["v"] = toCompactHexPrefixed(27 + int(sig.v));
-            newData["r"] = toHexPrefixed(sig.r);
-            newData["s"] = toHexPrefixed(sig.s);
+            newData["r"] = toCompactHexPrefixed(sig.r);
+            newData["s"] = toCompactHexPrefixed(sig.s);
         }
         return newData;
+    }
+
+    std::string getHash() const
+    {
+        return dev::toHexPrefixed(dev::sha3(dev::fromHex(getSignedRLP())));
     }
 
     std::string getSignedRLP(SignatureStruct* _returnSig = 0) const
@@ -76,7 +93,7 @@ public:
         u256 gasLimit = u256(m_data.atKey("gasLimit").asString());
         Address trTo = Address(m_data.atKey("to").asString());
         u256 value = u256(m_data.atKey("value").asString());
-        bytes data = fromHex(m_data.atKey("data").asString());
+        bytes data = sfromHex(m_data.atKey("data").asString());
 
         dev::RLPStream s;
         s.appendList(6);
@@ -102,8 +119,8 @@ public:
         else
         {
             u256 vValue(m_data.atKey("v").asString());
-            sigStruct = SignatureStruct(h256(m_data.atKey("r").asString()),
-                h256(m_data.atKey("s").asString()), vValue.convert_to<byte>());
+            sigStruct = SignatureStruct(u256(m_data.atKey("r").asString()),
+                u256(m_data.atKey("s").asString()), vValue.convert_to<byte>());
         }
 
         if (_returnSig != 0)

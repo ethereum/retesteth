@@ -1,5 +1,5 @@
 #pragma once
-#include <retesteth/RPCSession.h>
+#include <retesteth/session/RPCSession.h>
 
 class ExitHandler
 {

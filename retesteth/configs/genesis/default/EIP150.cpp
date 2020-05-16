@@ -2,10 +2,18 @@
 #include <string>
 using namespace std;
 
-string default_EIP150_config = R"({
+const string default_EIP150_config = R"({
     "params" : {
        "homesteadForkBlock" : "0x00",
        "EIP150ForkBlock" : "0x00"
+    },
+    "accounts" : {
+    }
+})";
+
+const string t8ntool_EIP150_config = R"({
+    "params" : {
+        "fork" : "EIP150"
     },
     "accounts" : {
     }

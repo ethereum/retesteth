@@ -37,6 +37,7 @@ public:
 	bool filltests = false; ///< Create JSON test files from execution results
     bool showhash = false;  ///< Show filler hash for debug information
     size_t blockLimit = 0;  ///< Perform blockchain blocks till this limit
+    size_t rpcLimit = 0;    ///< Perform rpcRequests till this limit
     bool fillchain = false; ///< Fill tests as a blockchain tests if possible
 	bool stats = false;		///< Execution time and stats for state tests
     bool poststate = false;

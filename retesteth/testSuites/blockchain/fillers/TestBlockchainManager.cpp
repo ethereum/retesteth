@@ -146,11 +146,11 @@ void TestBlockchainManager::reorgChains(blockSection const& _block)
 // _preparedUncles is a map blNumber -> uncleHeaders where blNumber are existing blocks
 // return a blockHeader info for _existingUncle overwritten by _uncleOverwrite
 // prepareUncle(uncle, preparedUncleBlocks);
-test::scheme_block TestBlockchainManager::prepareUncle(
+test::scheme_RPCBlock TestBlockchainManager::prepareUncle(
     scheme_uncleHeader _uncleOverwrite, vectorOfSchemeBlock const& _currentBlockPreparedUncles)
 {
     size_t origIndex = 0;
-    test::scheme_block const* tmpRefToSchemeBlock = NULL;
+    test::scheme_RPCBlock const* tmpRefToSchemeBlock = NULL;
     TestBlockchain const& currentChainMining = m_mapOfKnownChain.at(m_sCurrentChainName);
 
     scheme_uncleHeader::typeOfUncleSection typeOfSection = _uncleOverwrite.getTypeOfUncleSection();
@@ -213,7 +213,7 @@ test::scheme_block TestBlockchainManager::prepareUncle(
 
     if (tmpRefToSchemeBlock == NULL)
         ETH_ERROR_MESSAGE("tmpRefToSchemeBlock is NULL!");
-    test::scheme_block uncleBlock = *tmpRefToSchemeBlock;
+    test::scheme_RPCBlock uncleBlock = *tmpRefToSchemeBlock;
     DataObject headerOrig = uncleBlock.getBlockHeader();
 
     // If there is a field that is being overwritten in the uncle header

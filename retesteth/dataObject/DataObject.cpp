@@ -296,7 +296,26 @@ void DataObject::clear(DataType _type)
     m_type = _type;
 }
 
-std::string DataObject::asJson(int level, bool pretty) const
+void DataObject::performModifier(void (*f)(DataObject&))
+{
+    for (auto& el : m_subObjects)
+        el.performModifier(f);
+    f(*this);
+}
+
+void DataObject::performVerifier(void (*f)(DataObject const&)) const
+{
+    for (auto const& el : m_subObjects)
+        el.performVerifier(f);
+    f(*this);
+}
+
+std::string DataObject::asJsonNoFirstKey() const
+{
+    return asJson(0, true, true);
+}
+
+std::string DataObject::asJson(int level, bool pretty, bool nokey) const
 {
     std::ostringstream out;
     auto printLevel = [level, pretty, &out]() -> void {
@@ -322,7 +341,7 @@ std::string DataObject::asJson(int level, bool pretty) const
     {
     case DataType::Null:
         printLevel();
-        if (!m_strKey.empty())
+        if (!m_strKey.empty() && !nokey)
         {
             if (pretty)
                 out << "\"" << m_strKey << "\" : ";
@@ -333,7 +352,7 @@ std::string DataObject::asJson(int level, bool pretty) const
         out << "{}";
         break;
     case DataType::Object:
-        if (!m_strKey.empty())
+        if (!m_strKey.empty() && !nokey)
         {
             printLevel();
             if (pretty)
@@ -353,7 +372,7 @@ std::string DataObject::asJson(int level, bool pretty) const
         out << "}";
         break;
     case DataType::Array:
-        if (!m_strKey.empty())
+        if (!m_strKey.empty() && !nokey)
         {
             printLevel();
             if (pretty)
@@ -376,12 +395,12 @@ std::string DataObject::asJson(int level, bool pretty) const
         printLevel();
         if (pretty)
         {
-            if (!m_strKey.empty())
+            if (!m_strKey.empty() && !nokey)
                 out << "\"" << m_strKey << "\" : ";
         }
         else
         {
-            if (!m_strKey.empty())
+            if (!m_strKey.empty() && !nokey)
                 out << "\"" << m_strKey << "\":";
         }
 
@@ -399,7 +418,7 @@ std::string DataObject::asJson(int level, bool pretty) const
         break;
     case DataType::Integer:
         printLevel();
-        if (!m_strKey.empty())
+        if (!m_strKey.empty() && !nokey)
         {
             if (pretty)
                 out << "\"" << m_strKey << "\" : ";
@@ -410,7 +429,7 @@ std::string DataObject::asJson(int level, bool pretty) const
         break;
     case DataType::Bool:
         printLevel();
-        if (!m_strKey.empty())
+        if (!m_strKey.empty() && !nokey)
         {
             if (pretty)
                 out << "\"" << m_strKey << "\" : ";

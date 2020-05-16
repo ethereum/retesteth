@@ -67,26 +67,47 @@ TestOutputHelper& TestOutputHelper::get()
 
 bool TestOutputHelper::markError(std::string const& _message)
 {
-    if (m_unitTestExceptions.size() > 0)
+    // We might have an expected exceptions to happen. See if it is like that
+    if (m_expected_UnitTestExceptions.size() > 0)
     {
-        string const& allowedException = m_unitTestExceptions.at(m_unitTestExceptions.size() - 1);
-        if (allowedException == _message)
+        string const& allowedException =
+            m_expected_UnitTestExceptions.at(m_expected_UnitTestExceptions.size() - 1);
+        if (allowedException == _message || allowedException == c_exception_any)
         {
-            m_unitTestExceptions.pop_back();
+            m_expected_UnitTestExceptions.pop_back();
             return false;
         }
         else
             ETH_STDERROR_MESSAGE("Occured error: '" + _message + "' vs Expected error: '" + allowedException + "'");
     }
-    m_errors.push_back(_message + m_testInfo.getMessage());
+
+    // Mark the error
+    string const testDebugInfo = m_testInfo.errorDebug();
+    m_errors.push_back(_message + testDebugInfo);
+    if (testDebugInfo.empty())
+        ETH_WARNING(TestOutputHelper::get().testName() + ", Message: " + _message +
+                    ", has empty debugInfo! Missing debug Tesinfo for test step.");
     std::lock_guard<std::mutex> lock(g_failedTestsMap);
-    s_failedTestsMap[TestOutputHelper::get().testName()] = m_testInfo.getMessage();
+    if (!s_failedTestsMap.count(TestOutputHelper::get().testName()))
+        s_failedTestsMap[TestOutputHelper::get().testName()] = testDebugInfo;
     return true;
+}
+
+// When ToolImpl imitate the client side, it uses retesteth logic. but the error is not a failure on
+// retesteth side
+void TestOutputHelper::unmarkLastError()
+{
+    if (m_errors.size())
+        m_errors.pop_back();
+    std::lock_guard<std::mutex> lock(g_failedTestsMap);
+    string const& tname = TestOutputHelper::get().testName();
+    if (s_failedTestsMap.count(tname))
+        s_failedTestsMap.erase(tname);
 }
 
 void TestOutputHelper::setUnitTestExceptions(std::vector<std::string> const& _messages)
 {
-    m_unitTestExceptions = _messages;
+    m_expected_UnitTestExceptions = _messages;
 }
 
 void TestOutputHelper::finisAllTestsManually()
@@ -114,7 +135,7 @@ void TestOutputHelper::initTest(size_t _maxTests)
     }
     m_maxTests = _maxTests;
     m_currTest = 0;
-    m_unitTestExceptions.clear();
+    m_expected_UnitTestExceptions.clear();
 }
 
 bool TestOutputHelper::checkTest(std::string const& _testName)
@@ -176,10 +197,11 @@ void TestOutputHelper::printBoostError()
     std::lock_guard<std::mutex> lock(g_helperThreadMapMutex);
     for (auto& test : helperThreadMap)
     {
-        errorCount += test.second.getErrors().size();
-        for (auto const& a : test.second.getErrors())
-            ETH_STDERROR_MESSAGE("Error: " + a);
-        test.second.resetErrors();
+        TestOutputHelper& threadLocalHelper = test.second;
+        errorCount += threadLocalHelper.getErrors().size();
+        for (auto const& err : threadLocalHelper.getErrors())
+            ETH_STDERROR_MESSAGE("Error: " + err);
+        threadLocalHelper.resetErrors();
     }
     if (errorCount)
     {
@@ -363,7 +385,7 @@ TestInfo::TestInfo(std::string const& _info, std::string const& _testName) : m_s
         TestOutputHelper::get().setCurrentTestName(_testName);
 }
 
-std::string TestInfo::getMessage() const
+std::string TestInfo::errorDebug() const
 {
     if (m_sFork.empty())
         return "";
