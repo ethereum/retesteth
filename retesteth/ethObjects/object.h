@@ -3,8 +3,11 @@
 #include <retesteth/EthChecks.h>
 #include <retesteth/TestOutputHelper.h>
 #include <boost/test/unit_test.hpp>
+//#include "ethtypes.h"
 
+//using namespace test::ethtypes;
 using namespace dataobject;
+
 namespace test {
 void ver_ethereumfields(DataObject const&);
 void mod_removeLeadingZerosFromHexValues(DataObject&);

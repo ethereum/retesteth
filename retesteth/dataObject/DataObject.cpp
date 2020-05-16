@@ -296,6 +296,12 @@ void DataObject::clear(DataType _type)
     m_type = _type;
 }
 
+void DataObject::setVerifier(void (*f)(DataObject&))
+{
+    m_verifier = f;
+    m_verifier(*this);
+}
+
 void DataObject::performModifier(void (*f)(DataObject&))
 {
     for (auto& el : m_subObjects)

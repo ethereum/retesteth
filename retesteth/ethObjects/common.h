@@ -30,3 +30,4 @@
 #include "stateTest/scheme_stateTest.h"
 #include "vmTest/scheme_vmTest.h"
 #include "stateTest/scheme_RPCTest.h"
+#include "ethtypes.h"

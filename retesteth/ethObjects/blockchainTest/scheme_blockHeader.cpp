@@ -9,7 +9,8 @@ scheme_blockHeader::scheme_blockHeader(DataObject const& _data) : object(_data)
     if (_data.count("bloom"))
     {
         requireJsonFields(_data, "blockchainTest::scheme_blockHeader filled " + _data.getKey(),
-            {{"bloom", {{DataType::String}, jsonField::Required}},
+            {
+                {"bloom", {{DataType::String}, jsonField::Required}},
                 {"coinbase", {{DataType::String}, jsonField::Required}},
                 {"difficulty", {{DataType::String}, jsonField::Required}},
                 {"extraData", {{DataType::String}, jsonField::Required}},
