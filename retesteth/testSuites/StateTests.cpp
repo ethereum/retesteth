@@ -330,19 +330,18 @@ void RunTest(DataObject const& _testFile)
 }
 }  // namespace closed
 
-void verifier (DataObject& _obj)
-{
-    if (_obj.type() != DataType::String || _obj.asString() != "sss")
-        ETH_ERROR_MESSAGE("verifier failed");
-}
+#include <retesteth/testStructures/Common.h>
+using namespace test::teststruct;
 
 namespace test
 {
 DataObject StateTestSuite::doTests(DataObject const& _input, TestSuiteOptions& _opt) const
 {
-    DataObject testtt;
-    testtt = "sss";
-    testtt.setVerifier(verifier);
+    if (_opt.doFilling)
+    {
+        GeneralStateTestFiller newfill(_input);
+        (void)newfill;
+    }
 
     checkDataObject(_input);
 
