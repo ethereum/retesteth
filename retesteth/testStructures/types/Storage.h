@@ -10,15 +10,18 @@ namespace test
 {
 namespace teststruct
 {
+// Account Storage  "0x11" -> "0x1122334455..32"
 struct Storage : GCP_SPointerBase
 {
     Storage(DataObject const&);
-    std::list<VALUE> getKeys() const;
-    VALUE getValue(VALUE const& _key) const;
+    typedef std::tuple<GCP_SPointer<VALUE>, GCP_SPointer<VALUE>> StorageRecord;
+    std::map<string, StorageRecord> const& getKeys() const { return m_map; }
+    DataObject asDataObject() const;
 
 private:
-    DataObject m_map;
+    std::map<string, StorageRecord> m_map;
 };
+
 
 }  // namespace teststruct
 }  // namespace test

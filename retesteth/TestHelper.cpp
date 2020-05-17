@@ -185,18 +185,18 @@ vector<string> levenshteinDistance(
 /// translate network names in expect section field
 /// >Homestead to EIP150, EIP158, Byzantium, ...
 /// <=Homestead to Frontier, Homestead
-set<string> translateNetworks(set<string> const& _networks, vector<string> const& _networkOrder)
+set<string> translateNetworks(set<string> const& _networks, list<string> const& _networkOrder)
 {
     // construct vector with test network names in a right order
     // (from Frontier to Homestead ... to Constantinople)
-    vector<string> const& forks = _networkOrder;
+    list<string> const& forks = _networkOrder;
 
     set<string> out;
     for (auto const& net : _networks)
     {
         bool isNetworkTranslated = false;
         string possibleNet = net.substr(1, net.length() - 1);
-        vector<string>::const_iterator it = std::find(forks.begin(), forks.end(), possibleNet);
+        list<string>::const_iterator it = std::find(forks.begin(), forks.end(), possibleNet);
 
         if (it != forks.end() && net.size() > 1)
         {
@@ -250,7 +250,7 @@ set<string> translateNetworks(set<string> const& _networks, vector<string> const
 }
 
 
-void checkAllowedNetwork(string const& _network, vector<string> const& _networkOrder)
+void checkAllowedNetwork(string const& _network, list<string> const& _networkOrder)
 {
     bool found = false;
     for (auto const& net : _networkOrder)

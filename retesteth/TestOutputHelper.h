@@ -129,7 +129,11 @@ private:
 class TestOutputHelperFixture
 {
 public:
-    TestOutputHelperFixture() { TestOutputHelper::get().initTest(); }
+    TestOutputHelperFixture()
+    {
+        TestOutputHelper::get().setCurrentTestInfo(TestInfo("unit test"));
+        TestOutputHelper::get().initTest();
+    }
     ~TestOutputHelperFixture() { TestOutputHelper::get().finishTest(); }
 };
 

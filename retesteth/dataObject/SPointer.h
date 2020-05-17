@@ -66,12 +66,15 @@ public:
         }
     }
 
-    T* getPointer() const { return _pointee; }  //������ �������� ��������� ������!
+    // !!! Unsafe function
+    T* getPointer() const { return _pointee; }
+    const T* getCPtr() const { return _pointee; }
 
-    GCP_SPointer& operator=(GCP_SPointer const& rhs)  //����������� ���� ��������� �������
+    // Replace one pointer with another
+    GCP_SPointer& operator=(GCP_SPointer const& rhs)
     {
-        if (_pointee != rhs.getPointer())  //������ ���������. ��������� ��� ���������. ������
-                                           //��������� ������.
+        // If pointers are different. release our current pointer and add ref to another (rhs)
+        if (_pointee != rhs.getCPtr())
         {
             release();
             _pointee = rhs.getPointer();
@@ -88,11 +91,10 @@ public:
 
     ~GCP_SPointer() { release(); };
 
-    ///
+    // !!! Really strange function
     void setEmpty(bool empty)
     {
-        //��������� ��� ��������� � ��� ������������� ������, ��� ����� ������ (����� �����
-        //���������)
+        // Mark pointer as a ghost. Everyone will think that it is deleted, but it is not
         if (_pointee != nullptr)
         {
             if (_pointee->_nRef > 0)
@@ -109,7 +111,7 @@ public:
     }
 
     ///
-    bool isEmpty()
+    bool isEmpty() const
     {
         if (_pointee != nullptr)
             return _pointee->_isEmpty;
@@ -118,9 +120,10 @@ public:
     }
 
 
-    T& operator*() const { return *_pointee; }  //�������� *
-    T* operator->() const { return _pointee; }  //�������� ->
-    operator T*() { return _pointee; }          //���������� � ���� T*
+    // Types convertion
+    T& operator*() const { return *_pointee; }
+    T* operator->() const { return _pointee; }
+    operator T*() { return _pointee; }
     // operator GCP_SPointer<T>() { return GCP_SPointer<T>(this); }
 
     /*template <class D>
@@ -130,6 +133,7 @@ public:
       return sliced;
       }*/
 
+    // Pointers address (pointer's pointer)
     // T** operator& () {	return &_pointee;	}
 
     bool operator!() const { return _pointee == 0; }

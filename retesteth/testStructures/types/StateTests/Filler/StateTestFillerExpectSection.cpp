@@ -15,7 +15,6 @@ StateTestFillerExpectSection::StateTestFillerExpectSection(DataObject const& _da
     // get allowed networks for this expect section
     parseJsonStrValueIntoSet(_data.atKey("network"), m_forks);
 
-    // ------------- non structure logic
     // Parse >=Frontier into  Frontier, Homestead, ... Constantinople according to current config
     ClientConfig const& cfg = Options::get().getDynamicOptions().getCurrentConfig();
     bool isTransitionTest = false;
@@ -27,9 +26,14 @@ StateTestFillerExpectSection::StateTestFillerExpectSection(DataObject const& _da
     }
     if (!isTransitionTest)
         m_forks = translateNetworks(m_forks, cfg.getNetworks());
-    // ------------- non structure logic
 
-    m_result = GCP_SPointer<StateIncomplete>(new StateIncomplete(_data.atKey("result")));
+    // Convert Expect Section IncompletePostState fields to hex
+    DataObject tmpD = _data.atKey("result");
+    if (tmpD.count("storage"))
+        tmpD.atKeyUnsafe("storage").performModifier(mod_keyToCompactEvenHexPrefixed);
+    tmpD.performModifier(mod_valueToCompactEvenHexPrefixed);
+
+    m_result = GCP_SPointer<StateIncomplete>(new StateIncomplete(tmpD));
 }
 
 }  // namespace teststruct

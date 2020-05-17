@@ -4,19 +4,28 @@ namespace test
 {
 namespace teststruct
 {
-Storage::Storage(DataObject const& _data) : m_map(_data) {}
-
-std::list<VALUE> Storage::getKeys() const
+Storage::Storage(DataObject const& _data)
 {
-    std::list<VALUE> keys;
-    for (auto const& el : m_map.getSubObjects())
-        keys.push_back(VALUE(el));
-    return keys;
+    for (auto const& el : _data.getSubObjects())
+    {
+        DataObject tmpKey;
+        tmpKey.setKey("Storage record in storage");  // Hint
+        tmpKey.setString(el.getKey());
+        GCP_SPointer<VALUE> key = GCP_SPointer<VALUE>(new VALUE(tmpKey));
+        GCP_SPointer<VALUE> val = GCP_SPointer<VALUE>(new VALUE(el));
+        m_map[key.getCPtr()->asString()] = {key, val};
+    }
 }
 
-VALUE Storage::getValue(VALUE const& _key) const
+DataObject Storage::asDataObject() const
 {
-    return VALUE(m_map.atKey(_key.asString()));
+    DataObject out;
+    for (auto const& el : m_map)
+    {
+        StorageRecord const& record = el.second;
+        out[std::get<0>(record).getCPtr()->asString()] = std::get<1>(record).getCPtr()->asString();
+    }
+    return out;
 }
 
 

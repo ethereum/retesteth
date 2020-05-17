@@ -43,6 +43,7 @@ void checkAtLeastOneTest(DataObject const& _input);
 
 // Check test name in the file is equal to the test name of the file
 void checkTestNameIsEqualToFileName(DataObject const& _input);
+void checkTestNameIsEqualToFileName(string const& _testName);
 
 // Compare states with session asking post state data on the fly
 void compareStates(scheme_expectState const& _stateExpect, SessionInterface& _session,

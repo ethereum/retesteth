@@ -1,5 +1,5 @@
 #pragma once
-#include "../StateIncomplete.h"
+#include "../../StateIncomplete.h"
 #include <retesteth/dataObject/DataObject.h>
 #include <retesteth/dataObject/SPointer.h>
 using namespace dataobject;
@@ -12,7 +12,8 @@ namespace teststruct
 struct StateTestFillerExpectSection
 {
     StateTestFillerExpectSection(DataObject const&);
-    StateIncomplete const& result() const { return *m_result.getPointer(); }
+    StateIncomplete const& result() const { return *m_result.getCPtr(); }
+    std::set<string> const& forks() const { return m_forks; }
 
 private:
     std::set<int> m_dataInd;

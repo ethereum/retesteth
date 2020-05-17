@@ -18,6 +18,17 @@ void mod_valuesToLowerCase(DataObject& _obj)
     }
 }
 
+void mod_valueToCompactEvenHexPrefixed(DataObject& _obj)
+{
+    if (_obj.type() == DataType::String)
+        _obj.setString(dev::toCompactHexPrefixed(u256(_obj.asString()), 1));
+}
+
+void mod_keyToCompactEvenHexPrefixed(DataObject& _obj)
+{
+    _obj.setKey(dev::toCompactHexPrefixed(u256(_obj.getKey()), 1));
+}
+
 // Remove leading zeros from hex values leaving 0x0004 - > 0x4
 void mod_removeLeadingZerosFromHexValues(DataObject& _obj)
 {

@@ -12,6 +12,7 @@ FH32::FH32(DataObject const& _data) : m_data(_data)
 {
     if (!object::validateHash(_data.asString(), 32))
         ETH_ERROR_MESSAGE("Key `" + _data.getKey() + "` is not hash32 `" + _data.asString() + "`");
+    m_data.performModifier(mod_valuesToLowerCase);
 }
 
 }  // namespace teststruct

@@ -36,10 +36,10 @@ void copyFile(fs::path const& _source, fs::path const& _destination);
 
 /// Translate smart network names into network names ( `<=Homestead` to `Frontier, Homestead`)
 std::set<std::string> translateNetworks(
-    std::set<std::string> const& _networks, vector<string> const& _networkOrder);
+    std::set<std::string> const& _networks, list<string> const& _networkOrder);
 
 /// Check string to be a valid network name
-void checkAllowedNetwork(std::string const& _network, vector<string> const& _networkOrder);
+void checkAllowedNetwork(std::string const& _network, list<string> const& _networkOrder);
 
 /// Read a single string object or an Array of string objects into set<string>
 void parseJsonStrValueIntoSet(DataObject const& _json, std::set<std::string>& _out);
@@ -70,14 +70,22 @@ std::vector<std::string> levenshteinDistance(
     std::string const& _needle, std::vector<std::string> const& _sVec, size_t _max = 3);
 
 
-/// find element in array
+/// Find element in array as vector
 template <class T>
 bool inArray(std::vector<T> const& _array, const T& _val)
 {
-    for (auto const& obj : _array)
-        if (obj == _val)
-            return true;
-    return false;
+    if (std::find(_array.begin(), _array.end(), _val) == _array.end())
+        return false;
+    return true;
+}
+
+/// Find element in array as list
+template <class T>
+bool inArray(std::list<T> const& _array, const T& _val)
+{
+    if (std::find(_array.begin(), _array.end(), _val) == _array.end())
+        return false;
+    return true;
 }
 
 /// Explode string into array of strings by `delim`

@@ -13,13 +13,13 @@ namespace teststruct
 
 struct VALUE : GCP_SPointerBase
 {
-    VALUE() {}
     VALUE(DataObject const&,
         dev::u256 _limit = dev::u256(
             "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
     string asString() const { return m_data.asString(); }
 
 private:
+    VALUE() {}
     DataObject m_data;
 };
 

@@ -19,7 +19,9 @@
  */
 
 #include <retesteth/TestOutputHelper.h>
+#include <retesteth/dataObject/ConvertFile.h>
 #include <retesteth/ethObjects/common.h>
+#include <retesteth/testStructures/configs/ClientConfigFile.h>
 #include <retesteth/testSuites/Common.h>
 #include <boost/test/unit_test.hpp>
 #include <thread>
@@ -519,6 +521,43 @@ BOOST_AUTO_TEST_CASE(compareStates_storageCombinations)
     ExpectVsPost("0x00", "0x01", "0x", "0x01", CompareResult::IncorrectStorage, "0x03");
     ExpectVsPost("0x", "0x01", "0x00", "0x01", CompareResult::IncorrectStorage, "0x03");
     ExpectVsPost("0x00", "0x01", "0x00", "0x01", CompareResult::IncorrectStorage, "0x03");
+}
+
+BOOST_AUTO_TEST_CASE(clientconfigTest)
+{
+    string data = R"(
+    {
+        "name" : "Ethereum GO on TCP",
+        "socketType" : "tcp",
+        "socketAddress" : [
+            "127.0.0.1:8545",
+            "127.0.0.1:8546"
+        ],
+        "forks" : [
+          "Frontier",
+          "Homestead",
+          "EIP150"
+        ],
+        "additionalForks" : [
+          "FrontierToHomesteadAt5",
+          "HomesteadToEIP150At5"
+        ],
+        "exceptions" : {
+            "ExtraDataTooBig" : "extra-data too long",
+            "InvalidDifficulty" : "invalid difficulty"
+        }
+    })";
+
+    test::teststruct::ClientConfigFile cfg(ConvertJsoncppStringToData(data));
+
+    // Check Fork Order
+    BOOST_CHECK(cfg.forks().at(0).asString() == "Frontier");
+    BOOST_CHECK(cfg.forks().at(1).asString() == "Homestead");
+    BOOST_CHECK(cfg.forks().at(2).asString() == "EIP150");
+
+    // Check address Order
+    BOOST_CHECK(cfg.socketAdresses().at(0).asString() == "127.0.0.1:8545");
+    BOOST_CHECK(cfg.socketAdresses().at(1).asString() == "127.0.0.1:8546");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

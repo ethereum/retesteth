@@ -15,7 +15,6 @@
 
 // StateTest Types
 #include "types/StateTests/GeneralStateTestsFiller.h"
-#include "types/StateTests/StateTestFillerTransaction.h"
 
 using namespace dataobject;
 using namespace test::teststruct;
@@ -24,8 +23,11 @@ namespace test
 {
 namespace teststruct
 {
-// Cueck that _input contains exactly 1 subobject
-void checkOnlyOneTest(DataObject const& _input);
+// CHeck that DataObject is of type Object
+void checkDataObject(DataObject const& _input);
+
+// Prepare chain params rpc request
+string prepareChainParams();
 
 
 }  // namespace teststruct

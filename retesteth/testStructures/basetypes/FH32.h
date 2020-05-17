@@ -11,10 +11,11 @@ namespace teststruct
 // Deserialized from string of "0x1122...32" exact length
 struct FH32 : GCP_SPointerBase
 {
-    FH32() {}
     FH32(DataObject const&);
+    string const& asString() const { return m_data.asString(); }
 
 private:
+    FH32() {}
     DataObject m_data;
 };
 

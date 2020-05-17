@@ -1,6 +1,9 @@
 #pragma once
 #include "../../Common.h"
-#include "StateTestFillerExpectSection.h"
+#include "../InfoIncomplete.h"
+#include "Filler/StateTestFillerEnv.h"
+#include "Filler/StateTestFillerExpectSection.h"
+#include "Filler/StateTestFillerTransaction.h"
 #include <retesteth/dataObject/DataObject.h>
 #include <retesteth/dataObject/SPointer.h>
 
@@ -11,35 +14,28 @@ namespace test
 {
 namespace teststruct
 {
-struct StateTestFillerEnv : GCP_SPointerBase
-{
-    StateTestFillerEnv(DataObject const& _data);
-    FH20 const& currentCoinbase() const { return m_currentCoinbase; }
-    VALUE const& currentDifficulty() const { return m_currentDifficulty; }
-    VALUE const& currentGasLimit() const { return m_currentGasLimit; }
-    VALUE const& currentNumber() const { return m_currentNumber; }
-    VALUE const& currentTimestamp() const { return m_currentTimestamp; }
-    FH32 const& previousHash() const { return m_previousHash; }
-
-private:
-    FH20 m_currentCoinbase;
-    VALUE m_currentDifficulty;
-    VALUE m_currentGasLimit;
-    VALUE m_currentNumber;
-    VALUE m_currentTimestamp;
-    FH32 m_previousHash;
-};
 
 struct StateTestInFiller : GCP_SPointerBase
 {
     StateTestInFiller(DataObject const&);
 
-    StateTestFillerEnv const& Env() const { return *m_env.getPointer(); }
-    State const& Pre() const { return *m_pre.getPointer(); }
-    StateTestFillerTransaction const& GTr() const { return *m_transaction.getPointer(); }
+    string const& testName() const { return m_name; }
+    bool hasInfo() const { return m_info.isEmpty(); }
+    InfoIncomplete const& Info() const
+    {
+        assert(hasInfo());
+        return *m_info.getCPtr();
+    }
+    StateTestFillerEnv const& Env() const { return *m_env.getCPtr(); }
+    State const& Pre() const { return *m_pre.getCPtr(); }
+    StateTestFillerTransaction const& GTr() const { return *m_transaction.getCPtr(); }
     std::vector<StateTestFillerExpectSection> const& Expects() const { return m_expectSections; }
+    std::list<string> getAllNetworksFromExpectSections() const;
 
 private:
+    StateTestInFiller() {}
+    string m_name;
+    GCP_SPointer<InfoIncomplete> m_info;
     GCP_SPointer<StateTestFillerEnv> m_env;
     GCP_SPointer<State> m_pre;
     GCP_SPointer<StateTestFillerTransaction> m_transaction;
@@ -49,10 +45,10 @@ private:
 struct GeneralStateTestFiller
 {
     GeneralStateTestFiller(DataObject const&);
-    StateTestInFiller const& test() const { return *m_test.getPointer(); }
+    std::vector<StateTestInFiller> const& tests() const { return m_tests; }
 
 private:
-    GCP_SPointer<StateTestInFiller> m_test;
+    std::vector<StateTestInFiller> m_tests;
 };
 
 

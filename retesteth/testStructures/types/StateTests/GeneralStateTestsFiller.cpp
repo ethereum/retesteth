@@ -1,46 +1,59 @@
 #include "GeneralStateTestsFiller.h"
 #include "../../Common.h"
 #include <retesteth/EthChecks.h>
+#include <retesteth/Options.h>
 
 using namespace test::teststruct;
 GeneralStateTestFiller::GeneralStateTestFiller(DataObject const& _data)
 {
-    checkOnlyOneTest(_data);
-    m_test = GCP_SPointer<StateTestInFiller>(new StateTestInFiller(_data.at(0)));
+    try
+    {
+        checkDataObject(_data);
+        for (auto const& el : _data.getSubObjects())
+        {
+            TestOutputHelper::get().setCurrentTestInfo(
+                TestInfo("GeneralStateTestFiller", el.getKey()));
+            m_tests.push_back(StateTestInFiller(el));
+        }
+    }
+    catch (DataObjectException const& _ex)
+    {
+        ETH_ERROR_MESSAGE(_ex.what());
+    }
 }
 
 StateTestInFiller::StateTestInFiller(DataObject const& _data)
 {
-    (void)_data;
-    try
+    if (_data.count("_info"))
+        m_info = GCP_SPointer<InfoIncomplete>(new InfoIncomplete(_data.atKey("_info")));
+    m_env = GCP_SPointer<StateTestFillerEnv>(new StateTestFillerEnv(_data.atKey("env")));
+
+    // -- Compile LLL in pre state into byte code if not already
+    // -- Convert State::Storage keys/values into hex
+    DataObject tmpD = _data.atKey("pre");
+    for (auto& acc : tmpD.getSubObjectsUnsafe())
     {
-        m_env = GCP_SPointer<StateTestFillerEnv>(new StateTestFillerEnv(_data.atKey("env")));
-        m_pre = GCP_SPointer<State>(new State(_data.atKey("pre")));
-        m_transaction = GCP_SPointer<StateTestFillerTransaction>(
-            new StateTestFillerTransaction(_data.atKey("transaction")));
-        for (auto const& el : _data.atKey("expect").getSubObjects())
-            m_expectSections.push_back(StateTestFillerExpectSection(el));
+        acc["code"].setString(test::replaceCode(acc.atKey("code").asString()));
+        acc.performModifier(mod_valueToCompactEvenHexPrefixed);
+        for (auto& rec : acc["storage"].getSubObjectsUnsafe())
+            rec.performModifier(mod_keyToCompactEvenHexPrefixed);
     }
-    catch (DataObjectException const& _ex)
-    {
-        ETH_ERROR_MESSAGE(_ex.what());
-    }
+    // ---
+
+    m_pre = GCP_SPointer<State>(new State(tmpD));
+    m_transaction = GCP_SPointer<StateTestFillerTransaction>(
+        new StateTestFillerTransaction(_data.atKey("transaction")));
+    for (auto const& el : _data.atKey("expect").getSubObjects())
+        m_expectSections.push_back(StateTestFillerExpectSection(el));
+    m_name = _data.getKey();
 }
 
-StateTestFillerEnv::StateTestFillerEnv(DataObject const& _data)
+// Gather all networks from all the expect sections
+std::list<string> StateTestInFiller::getAllNetworksFromExpectSections() const
 {
-    try
-    {
-        m_currentCoinbase = FH20(_data.atKey("currentCoinbase"));
-        m_currentDifficulty = VALUE(_data.atKey("currentDifficulty"));
-        m_currentGasLimit = VALUE(_data.atKey("currentGasLimit"), dev::u256("0x7fffffffffffffff"));
-        m_currentNumber = VALUE(_data.atKey("currentNumber"));
-        m_currentTimestamp = VALUE(_data.atKey("currentTimestamp"));
-        ;
-        m_previousHash = FH32(_data.atKey("previousHash"));
-    }
-    catch (DataObjectException const& _ex)
-    {
-        ETH_ERROR_MESSAGE(_ex.what());
-    }
+    std::list<string> out;
+    for (auto const& ex : m_expectSections)
+        for (auto const& el : ex.forks())
+            out.push_back(el);
+    return out;
 }

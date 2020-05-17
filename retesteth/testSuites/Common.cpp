@@ -47,6 +47,17 @@ void checkOnlyOneTest(DataObject const& _input)
             " should contain an object under a test name.");
 }
 
+void checkTestNameIsEqualToFileName(string const& _testName)
+{
+    if (!TestOutputHelper::get().testFile().empty())
+    {
+        string const& tFileName = TestOutputHelper::get().testFile().stem().string();
+        ETH_ERROR_REQUIRE_MESSAGE(_testName + "Filler" == tFileName,
+            TestOutputHelper::get().testFile().string() +
+                " contains a test with a different name '" + _testName + "'");
+    }
+}
+
 void checkTestNameIsEqualToFileName(DataObject const& _input)
 {
     if (!TestOutputHelper::get().testFile().empty())

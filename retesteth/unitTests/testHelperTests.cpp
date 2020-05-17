@@ -25,11 +25,14 @@
 using namespace std;
 using namespace dev;
 using namespace test;
-
+/*
 static vector<string> exampleNets = {"Frontier", "Homestead", "EIP150", "EIP158", "Byzantium",
     "Constantinople", "ConstantinopleFix"};
 
 BOOST_FIXTURE_TEST_SUITE(TestHelperSuite, TestOutputHelperFixture)
+
+
+
 
 BOOST_AUTO_TEST_CASE(translateNetworks_gtHomestead)
 {
@@ -119,4 +122,4 @@ BOOST_AUTO_TEST_CASE(getTestSuggestions2)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
+*/

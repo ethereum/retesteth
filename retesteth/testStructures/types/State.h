@@ -13,6 +13,7 @@ struct State : GCP_SPointerBase
 {
     State(DataObject const&);
     std::vector<Account> const& accounts() const { return m_accounts; }
+    DataObject asDataObject() const;
 
 private:
     std::vector<Account> m_accounts;

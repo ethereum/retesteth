@@ -11,5 +11,13 @@ State::State(DataObject const& _data)
         m_accounts.push_back(Account(el));
 }
 
+DataObject State::asDataObject() const
+{
+    DataObject out;
+    for (Account const& el : m_accounts)
+        out[el.address().asString()] = el.asDataObject();
+    return out;
+}
+
 }  // namespace teststruct
 }  // namespace test

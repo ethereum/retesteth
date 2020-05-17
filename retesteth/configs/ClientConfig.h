@@ -45,7 +45,8 @@ public:
       : object(_obj), m_shellPath(_shell), m_id(_id)
     {
         m_configFilePath = _clientConfigPath;
-        requireJsonFields(_obj, "ClientConfig (" + m_configFilePath.string() + ")",
+        string const sErrorPath = "ClientConfig (" + m_configFilePath.string() + ") ";
+        requireJsonFields(_obj, sErrorPath,
             {{"name", {DataType::String}}, {"socketType", {DataType::String}},
                 {"socketAddress", {DataType::String, DataType::Array}},
                 {"forks", {DataType::Array}}, {"additionalForks", {DataType::Array}},
@@ -53,11 +54,27 @@ public:
             true);
 
         for (auto const& name : m_data.atKey("forks").getSubObjects())
-            m_networks.push_back(name.asString());
+        {
+            string const& n = name.asString();
+            if (test::inArray(m_networks, n))
+                ETH_ERROR_MESSAGE(sErrorPath + "`forks` section contain dublicate element: " + n);
+            m_networks.push_back(n);
+        }
         for (auto const& name : m_data.atKey("additionalForks").getSubObjects())
-            m_additional_networks.push_back(name.asString());
+        {
+            string const& n = name.asString();
+            if (test::inArray(m_additional_networks, n))
+                ETH_ERROR_MESSAGE(
+                    sErrorPath + "`additionalForks` section contain dublicate element: " + n);
+            m_additional_networks.push_back(n);
+        }
         for (auto const& except : m_data.atKey("exceptions").getSubObjects())
+        {
+            if (m_exceptions.count(except.getKey()))
+                ETH_ERROR_MESSAGE(sErrorPath + "`exceptions` section contain dublicate element: " +
+                                  except.getKey());
             m_exceptions[except.getKey()] = except.asString();
+        }
 
         std::string const& socketTypeStr = _obj.atKey("socketType").asString();
         if (socketTypeStr == "ipc")
@@ -136,17 +153,16 @@ public:
     }
     DataObject const& getAddressObject() const { return m_data.atKey("socketAddress"); }
     ClientConfigID const& getId() const { return m_id; }
-    std::vector<string> const& getNetworks() const { return m_networks; }
-    std::vector<string> const& getAdditionalNetworks() const { return m_additional_networks; }
-    std::vector<string> const& getNetworksPlusAdditional() const
+    std::list<string> const& getNetworks() const { return m_networks; }
+    std::list<string> const& getAdditionalNetworks() const { return m_additional_networks; }
+    std::list<string> getNetworksPlusAdditional() const
     {
-        static std::vector<std::string> allNets = m_networks;
-        if (allNets.size() == m_networks.size())
-        {
-            for (auto const& net : m_additional_networks)
-                allNets.push_back(net);
-        }
-        return allNets;
+        std::list<string> allnets;
+        for (auto const& el : m_networks)
+            allnets.push_back(el);
+        for (auto const& el : m_additional_networks)
+            allnets.push_back(el);
+        return allnets;
     }
     void addGenesisTemplate(string const& _network, fs::path const& _pathToJson)
     {
@@ -173,8 +189,8 @@ private:
     fs::path m_configFilePath;        ///< Path to the client fork networks config
     fs::path m_configCorrectMiningRewardFilePath;    ///< Config correctMiningReward file path
     ClientConfigID m_id;                             ///< Internal id
-    std::vector<string> m_networks;                  ///< Allowed forks as network name
-    std::vector<string> m_additional_networks;       ///< Allowed forks as network name
+    std::list<string> m_networks;                    ///< Allowed forks as network name
+    std::list<string> m_additional_networks;         ///< Allowed forks as network name
     std::map<string, DataObject> m_genesisTemplate;  ///< Template For test_setChainParams
     std::map<string, string> m_exceptions;           ///< Exception Translation
     std::string m_folderName;                        ///< Config folder name
