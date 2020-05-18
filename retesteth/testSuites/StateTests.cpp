@@ -183,7 +183,7 @@ DataObject FillTest(StateTestInFiller const& _test)
     for (auto const& net : _test.getAllNetworksFromExpectSections())
     {
         DataObject forkResults;
-        forkResults.setKey(net);
+        forkResults.setKey(net.asString());
         // session.test_setChainParams(test.getGenesisForRPC(net, "NoReward"));
     }
     /*
@@ -258,6 +258,8 @@ DataObject FillTest(StateTestInFiller const& _test)
 /// Read and execute the test file
 void RunTest(DataObject const& _testFile)
 {
+    (void)_testFile;
+    /*
     test::scheme_stateTest test(_testFile);
     SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
 
@@ -308,16 +310,16 @@ void RunTest(DataObject const& _testFile)
                     scheme_RPCBlock remoteBlockInfo =
                         session.eth_getBlockByNumber(latestBlockNumber, false);
                     ETH_ERROR_REQUIRE_MESSAGE(remoteBlockInfo.getTransactionCount() == 1,
-                        "Failed to execute transaction on remote client! State test transaction must be valid!");
-                    if (Options::get().vmtrace && !Options::get().filltests)
-                        printVmTrace(session, trHash, postHash);
-                    validatePostHash(session, postHash, remoteBlockInfo);
+                        "Failed to execute transaction on remote client! State test transaction must
+    be valid!"); if (Options::get().vmtrace && !Options::get().filltests) printVmTrace(session,
+    trHash, postHash); validatePostHash(session, postHash, remoteBlockInfo);
 
                     // Validate log hash
                     string postLogHash = result.getData().atKey("logs").asString();
                     string remoteLogHash = session.test_getLogHash(trHash);
                     if (!remoteLogHash.empty() && remoteLogHash != postLogHash)
-                        ETH_ERROR_MESSAGE("Logs hash mismatch: '" + remoteLogHash + "', expected: '" + postLogHash + "'");
+                        ETH_ERROR_MESSAGE("Logs hash mismatch: '" + remoteLogHash + "', expected: '"
+    + postLogHash + "'");
 
                     session.test_rewindToBlock(0);
                     if (Options::get().logVerbosity >= 5)
@@ -327,11 +329,13 @@ void RunTest(DataObject const& _testFile)
                 }
             } //ForTransactions
             ETH_ERROR_REQUIRE_MESSAGE(resultHaveCorrespondingTransaction,
-                         "Test `post` section has expect section without corresponding transaction! " + result.getData().asJson());
+                         "Test `post` section has expect section without corresponding transaction!
+    " + result.getData().asJson());
         }
     }
 
     test.checkUnexecutedTransactions();
+    */
 }
 }  // namespace closed
 

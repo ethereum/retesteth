@@ -11,8 +11,8 @@ namespace teststruct
 {
 Account::Account(DataObject const& _data)
 {
-    m_balance = GCP_SPointer<VALUE>(new VALUE(_data.atKey("balance")));
-    m_nonce = GCP_SPointer<VALUE>(new VALUE(_data.atKey("nonce")));
+    m_balance = spVALUE(new VALUE(_data.atKey("balance")));
+    m_nonce = spVALUE(new VALUE(_data.atKey("nonce")));
     m_code = GCP_SPointer<BYTES>(new BYTES(_data.atKey("code")));
     m_address = GCP_SPointer<FH20>(new FH20(_data.getKey()));
     m_storage = GCP_SPointer<Storage>(new Storage(_data.atKey("storage")));

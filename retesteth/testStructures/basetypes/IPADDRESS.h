@@ -24,6 +24,7 @@ private:
     DataObject m_data;
 };
 
+typedef GCP_SPointer<IPADDRESS> spIPADDRESS;
 
 }  // namespace teststruct
 }  // namespace test

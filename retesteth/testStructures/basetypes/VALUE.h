@@ -23,6 +23,8 @@ private:
     DataObject m_data;
 };
 
+typedef GCP_SPointer<VALUE> spVALUE;
+
 
 }  // namespace teststruct
 }  // namespace test

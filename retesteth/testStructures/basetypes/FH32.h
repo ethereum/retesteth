@@ -19,5 +19,7 @@ private:
     DataObject m_data;
 };
 
+typedef GCP_SPointer<FH32> spFH32;
+
 }  // namespace teststruct
 }  // namespace test

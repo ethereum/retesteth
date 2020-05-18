@@ -206,7 +206,7 @@ void RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _
 
     if (inputTest.getData().count("genesisRLP"))
     {
-        if (_opt.isLegacyTests &&
+        /*if (_opt.isLegacyTests &&
             Options::getDynamicOptions().getCurrentConfig().getFolderName() == "aleth")
         {
             // skip old generated tests (Legacy) genesis check on aleth
@@ -219,7 +219,7 @@ void RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _
             if (latestBlock.getBlockRLP() != genesisRLP)
                 ETH_ERROR_MESSAGE("genesisRLP in test != genesisRLP on remote client! (" +
                                   genesisRLP + "' != '" + latestBlock.getBlockRLP() + "'");
-        }
+        }*/
     }
 }
 

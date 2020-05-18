@@ -1,4 +1,5 @@
 #pragma once
+#include "Socket.h"
 #include <retesteth/ethObjects/common.h>
 #include <string>
 

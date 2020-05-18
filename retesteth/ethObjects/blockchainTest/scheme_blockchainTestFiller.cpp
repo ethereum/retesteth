@@ -27,6 +27,8 @@ scheme_blockchainTestFiller::scheme_blockchainTestFiller(DataObject const& _test
 
 void scheme_blockchainTestFiller::blockSection::parseBlockHeaderException(DataObject const& _data)
 {
+    (void)_data;
+    /*
     if (!_data.count("blockHeader"))
         return;
     if (_data.atKey("blockHeader").count("expectException"))
@@ -52,13 +54,14 @@ void scheme_blockchainTestFiller::blockSection::parseBlockHeaderException(DataOb
             checkAllowedNetwork(expect.first, cfg.getNetworksPlusAdditional());
             m_expectException[expect.first] = expect.second;
         }
-    }
+    }*/
 }
 
 string scheme_blockchainTestFiller::blockSection::m_defaultChainName = "default";
 scheme_blockchainTestFiller::blockSection::blockSection(DataObject const& _data)
   : object(_data), m_noExceptionString("NoException")
 {
+    /*
     if (_data.getSubObjects().size() <= 2 && _data.count("rlp"))
     {
         requireJsonFields(_data, "blockchainTestFiller::blocks section",
@@ -117,6 +120,7 @@ scheme_blockchainTestFiller::blockSection::blockSection(DataObject const& _data)
 
     for (auto const& uncle : _data.atKey("uncleHeaders").getSubObjects())
         m_uncles.push_back(uncle);
+        */
 }
 
 string scheme_blockchainTestFiller::getSealEngine() const

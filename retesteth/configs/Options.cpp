@@ -13,13 +13,22 @@ namespace
 {
 fs::path getRetestethDataDir()
 {
-    fs::path const& dir = Options::get().datadir;
-    bool optionsEmpty = dir.empty();
-    if (!optionsEmpty && !fs::exists(dir))
-        ETH_LOG(
-            "Options path `" + dir.string() + "` doesn't exist, attempt to create a new directory",
+    fs::path const& OptionsDir = Options::get().datadir;
+
+    // If --dir flag is set but that folder doesn't exist
+    if (!OptionsDir.empty() && !fs::exists(OptionsDir))
+    {
+        ETH_LOG("Options path `" + OptionsDir.string() +
+                    "` doesn't exist, attempt to create a new directory",
             3);
-    return optionsEmpty ? getDataDir("retesteth") : dir;
+        return OptionsDir;
+    }
+
+    // Validate that
+    fs::path const& defaultDir = getDataDir("retesteth");
+    ETH_FAIL_REQUIRE_MESSAGE(fs::exists(defaultDir),
+        "Could not locate provided testpath: " + string(defaultDir.c_str()));
+    return defaultDir;
 }
 }  // namespace
 
@@ -29,39 +38,25 @@ string prepareRetestethVersion()
     return version;
 }
 
-void deployFirstRunConfigs()
+void deployFirstRunConfigs(fs::path const& _dir)
 {
-    fs::path homeDir = getRetestethDataDir();
-
-    if (fs::exists(homeDir))
-    {
-        if (!fs::exists(homeDir / "version"))
-            return;
-        string version = dev::contentsString(homeDir / "version");
-        if (version != prepareRetestethVersion())
-            ETH_WARNING("Retesteth configs version is different (running: '" +
-                        prepareRetestethVersion() + "' vs config '" + version +
-                        "')! Redeploy the configs by deleting the folder ~/.retesteth!");
-        return;
-    }
-
     // Deploy default configs
-    fs::create_directory(homeDir);
-    fs::create_directory(homeDir / "default");
-    fs::create_directory(homeDir / "default" / "genesis");
+    fs::create_directory(_dir);
+    fs::create_directory(_dir / "default");
+    fs::create_directory(_dir / "default" / "genesis");
 
-    writeFile(homeDir / "version", prepareRetestethVersion());
-    writeFile(homeDir / "default" / "config", default_config);
-    writeFile(homeDir / "t8ntool" / "config", t8ntool_config);
-    writeFile(homeDir / "gethTCP" / "config", default_config);
-    writeFile(homeDir / "besu" / "config", besu_config);
-    writeFile(homeDir / "alethTCP" / "config", alethTCP_config);
-    writeFile(homeDir / "alethIPCDebug" / "config", alethIPCDebug_config);
-    writeFile(homeDir / "aleth" / "config", aleth_config);
-    writeFile(homeDir / "aleth" / "aleth.sh", aleth_config_sh);
+    writeFile(_dir / "version", prepareRetestethVersion());
+    writeFile(_dir / "default" / "config", default_config);
+    writeFile(_dir / "t8ntool" / "config", t8ntool_config);
+    writeFile(_dir / "gethTCP" / "config", default_config);
+    writeFile(_dir / "besu" / "config", besu_config);
+    writeFile(_dir / "alethTCP" / "config", alethTCP_config);
+    writeFile(_dir / "alethIPCDebug" / "config", alethIPCDebug_config);
+    writeFile(_dir / "aleth" / "config", aleth_config);
+    writeFile(_dir / "aleth" / "aleth.sh", aleth_config_sh);
 
     // Default geth configs
-    fs::path genesisDir = homeDir / "default" / "genesis";
+    fs::path genesisDir = _dir / "default" / "genesis";
     writeFile(genesisDir / "Frontier.json", default_Frontier_config);
     writeFile(genesisDir / "Homestead.json", default_Homestead_config);
     writeFile(genesisDir / "EIP150.json", default_EIP150_config);
@@ -80,7 +75,7 @@ void deployFirstRunConfigs()
     writeFile(genesisDir / "correctMiningReward.json", default_correctMiningReward_config);
 
     // Default geth t8ntool configs
-    genesisDir = homeDir / "t8ntool" / "genesis";
+    genesisDir = _dir / "t8ntool" / "genesis";
     writeFile(genesisDir / "Frontier.json", t8ntool_Frontier_config);
     writeFile(genesisDir / "Homestead.json", t8ntool_Homestead_config);
     writeFile(genesisDir / "EIP150.json", t8ntool_EIP150_config);
@@ -115,7 +110,7 @@ void Options::DynamicOptions::setCurrentConfig(ClientConfig const& _config)
     ETH_FAIL_REQUIRE_MESSAGE(getClientConfigs().size() > 0, "No client configs provided!");
     bool found = false;
     for (auto const& cfg : getClientConfigs())
-        if (cfg.getId() == _config.getId() && cfg.getName() == _config.getName())
+        if (cfg.getId() == _config.getId() && cfg.cfgFile().name() == _config.cfgFile().name())
             found = true;
     ETH_FAIL_REQUIRE_MESSAGE(
         found, "_config not found in loaded options! (DynamicOptions::setCurrentConfig)");
@@ -124,16 +119,31 @@ void Options::DynamicOptions::setCurrentConfig(ClientConfig const& _config)
     // Verify singleTestNet for the current config
     string const& net = Options::get().singleTestNet;
     if (!net.empty())
-        test::checkAllowedNetwork(net, _config.getNetworks());
+        _config.checkForkAllowed(FORK(net));
 }
 
 std::vector<ClientConfig> const& Options::DynamicOptions::getClientConfigs()
 {
+    // if no Configs initialized, initialize the configs
+    // Because can not initialize the configs while loading Options up
     if (m_clientConfigs.size() == 0)
     {
-        deployFirstRunConfigs();
+        fs::path homeDir = getRetestethDataDir();
+        if (fs::exists(homeDir))
+        {
+            if (!fs::exists(homeDir / "version"))
+                ETH_ERROR_MESSAGE("Missing version file in retesteth configs! " + homeDir.string());
 
-        // load the configs from options file
+            string version = dev::contentsString(homeDir / "version");
+            if (version != prepareRetestethVersion())
+                ETH_WARNING("Retesteth configs version is different (running: '" +
+                            prepareRetestethVersion() + "' vs config '" + version +
+                            "')! Redeploy the configs by deleting the folder ~/.retesteth!");
+        }
+        else
+            deployFirstRunConfigs(homeDir);
+
+        // Load the configs from options file
         std::vector<string> cfgs = Options::get().clients;
         if (cfgs.empty())
             cfgs.push_back("default");
@@ -144,48 +154,7 @@ std::vector<ClientConfig> const& Options::DynamicOptions::getClientConfigs()
         std::cout << "'" << std::endl;
 
         for (auto const& clientName : cfgs)
-        {
-            fs::path configDirectory = getRetestethDataDir();
-            ETH_FAIL_REQUIRE_MESSAGE(fs::exists(configDirectory),
-                "Could not locate provided testpath: " + string(configDirectory.c_str()));
-            fs::path configPath = configDirectory / clientName;
-            fs::path configFilePath = configPath / "config";
-            ETH_FAIL_REQUIRE_MESSAGE(fs::exists(configFilePath),
-                string("Client config not found: ") + configFilePath.c_str());
-
-            ClientConfig cfg(configFilePath, test::readJsonData(configFilePath), ClientConfigID(),
-                configPath / string(clientName + ".sh"));
-            cfg.setFolderName(clientName);
-
-            // Load genesis templates
-            fs::path genesisTemplatePath = configPath / "genesis";
-            if (!fs::exists(genesisTemplatePath))
-            {
-                genesisTemplatePath = configPath.parent_path() / "default" / "genesis";
-                ETH_FAIL_REQUIRE_MESSAGE(
-                    fs::exists(genesisTemplatePath), "default/genesis client config not found!");
-            }
-
-            fs::path correctMiningRewardPath = genesisTemplatePath / "correctMiningReward.json";
-            ETH_FAIL_REQUIRE_MESSAGE(fs::exists(correctMiningRewardPath),
-                "correctMiningReward.json client config not found!");
-            cfg.setMiningRewardInfo(test::readJsonData(correctMiningRewardPath));
-            cfg.setCorrectMiningRewardFilePath(correctMiningRewardPath);
-
-            auto registerGenesisTemplate = [&cfg, &genesisTemplatePath, &clientName](
-                                               string const& _net) {
-                fs::path configGenesisTemplatePath = genesisTemplatePath / (_net + ".json");
-                ETH_FAIL_REQUIRE_MESSAGE(fs::exists(configGenesisTemplatePath),
-                    "\ntemplate '" + _net + ".json' for client '" + clientName + "' not found ('" +
-                        configGenesisTemplatePath.c_str() + "') in configs!");
-                cfg.addGenesisTemplate(_net, configGenesisTemplatePath);
-            };
-            for (auto const& net : cfg.getNetworksPlusAdditional())
-                registerGenesisTemplate(net);
-
-            //*/ Load genesis templates
-            m_clientConfigs.push_back(cfg);
-        }
+            m_clientConfigs.push_back(ClientConfig(homeDir / clientName));
     }
     return m_clientConfigs;
 }

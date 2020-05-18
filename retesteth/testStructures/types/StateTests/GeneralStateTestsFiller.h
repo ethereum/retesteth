@@ -30,7 +30,7 @@ struct StateTestInFiller : GCP_SPointerBase
     State const& Pre() const { return *m_pre.getCPtr(); }
     StateTestFillerTransaction const& GTr() const { return *m_transaction.getCPtr(); }
     std::vector<StateTestFillerExpectSection> const& Expects() const { return m_expectSections; }
-    std::list<string> getAllNetworksFromExpectSections() const;
+    std::list<FORK> getAllNetworksFromExpectSections() const;
 
 private:
     StateTestInFiller() {}

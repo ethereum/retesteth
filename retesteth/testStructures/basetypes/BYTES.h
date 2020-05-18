@@ -19,6 +19,7 @@ private:
     DataObject m_data;
 };
 
+typedef GCP_SPointer<BYTES> spBYTES;
 
 }  // namespace teststruct
 }  // namespace test

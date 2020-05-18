@@ -214,8 +214,8 @@ void TestSuite::runTestWithoutFiller(boost::filesystem::path const& _file) const
     {
         Options::getDynamicOptions().setCurrentConfig(config);
 
-        std::cout << "Running tests for config '" << config.getName() << "' " << config.getId().id()
-                  << std::endl;
+        std::cout << "Running tests for config '" << config.cfgFile().name() << "' "
+                  << config.getId().id() << std::endl;
         ETH_LOG("Running " + _file.filename().string() + ": ", 3);
 
         // Allow to execute a custom test .json file on any test suite
@@ -380,12 +380,13 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
             // Only one thread allowed to connect to it;
             size_t maxAllowedThreads = Options::get().threadCount;
             ClientConfig const& currConfig = Options::get().getDynamicOptions().getCurrentConfig();
-            Socket::SocketType socType = currConfig.getSocketType();
-            if (socType == Socket::SocketType::IPCDebug)
+            ClientConfgSocketType socType = currConfig.cfgFile().socketType();
+            if (socType == ClientConfgSocketType::IPCDebug)
                 maxAllowedThreads = 1;
             // If connecting to TCP sockets. Max threads are limited with tcp ports provided
-            if (socType == Socket::SocketType::TCP)
-                maxAllowedThreads = min(maxAllowedThreads, currConfig.getAddressObject().getSubObjects().size());
+            if (socType == ClientConfgSocketType::TCP)
+                maxAllowedThreads =
+                    min(maxAllowedThreads, currConfig.cfgFile().socketAdresses().size());
 
             if (threadVector.size() == maxAllowedThreads)
                 joinThreads(threadVector, false);
@@ -404,8 +405,8 @@ void TestSuite::runFunctionForAllClients(std::function<void()> _func)
     for (auto const& config : Options::getDynamicOptions().getClientConfigs())
     {
         Options::getDynamicOptions().setCurrentConfig(config);
-        std::cout << "Running tests for config '" << config.getName() << "' " << config.getId().id()
-                  << std::endl;
+        std::cout << "Running tests for config '" << config.cfgFile().name() << "' "
+                  << config.getId().id() << std::endl;
         _func();
 
         // Disconnect threads from the client

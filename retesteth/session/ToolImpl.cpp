@@ -429,6 +429,10 @@ static std::map<string, string> RewardMapForToolAfter5 = {{"FrontierToHomesteadA
 
 string ToolImpl::test_mineBlocks(int _number, bool _canFail)
 {
+    (void)_number;
+    (void)_canFail;
+    return string();
+    /*
     (void)_canFail;
     rpcCall("", {});
     ETH_TEST_MESSAGE("Request: test_mineBlocks");
@@ -535,6 +539,7 @@ string ToolImpl::test_mineBlocks(int _number, bool _canFail)
     ETH_TEST_MESSAGE("Response test_mineBlocks {" + toString(getCurrChain().size()) + "}");
     ETH_TEST_MESSAGE(blockRPC.getData().asJson());
     return toString(getCurrChain().size());
+    */
 }
 
 // Import block from RAW rlp and validate it according to ethereum rules

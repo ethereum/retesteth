@@ -1,18 +1,18 @@
 /*
-	This file is part of cpp-ethereum.
+    This file is part of cpp-ethereum.
 
-	cpp-ethereum is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
+    cpp-ethereum is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
-	cpp-ethereum is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
+    cpp-ethereum is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
 
-	You should have received a copy of the GNU General Public License
-	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
+    You should have received a copy of the GNU General Public License
+    along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
 /** @file
  * Class for handling testeth custom options
@@ -100,84 +100,84 @@ void printVersion()
 
 Options::Options(int argc, const char** argv)
 {
-	trDataIndex = -1;
-	trGasIndex = -1;
-	trValueIndex = -1;
-	bool seenSeparator = false; // true if "--" has been seen.
-	for (auto i = 0; i < argc; ++i)
-	{
-		auto arg = std::string{argv[i]};
-		auto throwIfNoArgumentFollows = [&i, &argc, &arg]()
-		{
-			if (i + 1 >= argc)
-				BOOST_THROW_EXCEPTION(InvalidOption(arg + " option is missing an argument."));
-		};
-		auto throwIfAfterSeparator = [&seenSeparator, &arg]()
-		{
-			if (seenSeparator)
-				BOOST_THROW_EXCEPTION(InvalidOption(arg + " option appears after the separator --."));
-		};
-		if (arg == "--")
-		{
-			if (seenSeparator)
-				BOOST_THROW_EXCEPTION(InvalidOption("The separator -- appears more than once in the command line."));
-			seenSeparator = true;
-			continue;
-		}
-		if (arg == "--help")
-		{
-			printHelp();
-			exit(0);
-		}
-		else if (arg == "--version")
-		{
-			printVersion();
-			exit(0);
-		}
-		else if (arg.substr(0,2) == "-j")
-		{
-			if (arg.length() != 2)
-			{
-				string threadDigits = arg.substr(2, arg.length());
-				threadCount = max(1, atoi(threadDigits.c_str()));
-			}
-			else
-			{
-				throwIfNoArgumentFollows();
-				string nextArg = argv[++i];
-				if (nextArg.substr(0,1) != "-")
-					threadCount = max(1, atoi(nextArg.c_str()));
-			}
-		}
-		else if (arg == "--stderr")
-		{
-			enableClientsOutput = true;
-		}
+    trDataIndex = -1;
+    trGasIndex = -1;
+    trValueIndex = -1;
+    bool seenSeparator = false;  // true if "--" has been seen.
+    for (auto i = 0; i < argc; ++i)
+    {
+        auto arg = std::string{argv[i]};
+        auto throwIfNoArgumentFollows = [&i, &argc, &arg]() {
+            if (i + 1 >= argc)
+                BOOST_THROW_EXCEPTION(InvalidOption(arg + " option is missing an argument."));
+        };
+        auto throwIfAfterSeparator = [&seenSeparator, &arg]() {
+            if (seenSeparator)
+                BOOST_THROW_EXCEPTION(
+                    InvalidOption(arg + " option appears after the separator --."));
+        };
+        if (arg == "--")
+        {
+            if (seenSeparator)
+                BOOST_THROW_EXCEPTION(
+                    InvalidOption("The separator -- appears more than once in the command line."));
+            seenSeparator = true;
+            continue;
+        }
+        if (arg == "--help")
+        {
+            printHelp();
+            exit(0);
+        }
+        else if (arg == "--version")
+        {
+            printVersion();
+            exit(0);
+        }
+        else if (arg.substr(0, 2) == "-j")
+        {
+            if (arg.length() != 2)
+            {
+                string threadDigits = arg.substr(2, arg.length());
+                threadCount = max(1, atoi(threadDigits.c_str()));
+            }
+            else
+            {
+                throwIfNoArgumentFollows();
+                string nextArg = argv[++i];
+                if (nextArg.substr(0, 1) != "-")
+                    threadCount = max(1, atoi(nextArg.c_str()));
+            }
+        }
+        else if (arg == "--stderr")
+        {
+            enableClientsOutput = true;
+        }
         else if (arg == "--travisout")
         {
             travisOutThread = true;
         }
         else if (arg == "--vm" || arg == "--evmc")
-		{
-			// Skip VM options because they are handled by vmProgramOptions().
-			throwIfNoArgumentFollows();
-			++i;
-		}
-		else if (arg == "--vmtrace")
+        {
+            // Skip VM options because they are handled by vmProgramOptions().
+            throwIfNoArgumentFollows();
+            ++i;
+        }
+        else if (arg == "--vmtrace")
         {
             vmtrace = true;
         }
         else if (arg == "--jsontrace")
-		{
-			throwIfNoArgumentFollows();
-			jsontrace = true;
-			auto arg = std::string{argv[++i]};
-			//Json::Value value;
-			//Json::Reader().parse(arg, value);
-			//jsontraceOptions = debugOptions(value);
-		}
-		else if (arg == "--filltests")
-			filltests = true;
+        {
+            throwIfNoArgumentFollows();
+            jsontrace = true;
+            auto arg = std::string{argv[++i]};
+            // Json::Value value;
+            // Json::Reader().parse(arg, value);
+            // jsontraceOptions = debugOptions(value);
+        }
+        else if (arg == "--filltests")
+            filltests = true;
         else if (arg == "--limitblocks")
         {
             throwIfNoArgumentFollows();
@@ -195,20 +195,20 @@ Options::Options(int argc, const char** argv)
         }
         else if (arg == "--showhash")
             showhash = true;
-		else if (arg == "--stats")
-		{
-			throwIfNoArgumentFollows();
-			stats = true;
-			statsOutFile = argv[++i];
-		}
-		else if (arg == "--exectimelog")
-			exectimelog = true;
-		else if (arg == "--all")
-			all = true;
-		else if (arg == "--singletest")
-		{
-			throwIfNoArgumentFollows();
-			singleTest = true;
+        else if (arg == "--stats")
+        {
+            throwIfNoArgumentFollows();
+            stats = true;
+            statsOutFile = argv[++i];
+        }
+        else if (arg == "--exectimelog")
+            exectimelog = true;
+        else if (arg == "--all")
+            all = true;
+        else if (arg == "--singletest")
+        {
+            throwIfNoArgumentFollows();
+            singleTest = true;
             singleTestName = std::string{argv[++i]};
             size_t pos = singleTestName.find_last_of('/');
             if (pos != string::npos)
@@ -223,7 +223,8 @@ Options::Options(int argc, const char** argv)
             singleTestFile = std::string{argv[++i]};
             if (!boost::filesystem::exists(singleTestFile.get()))
             {
-                ETH_STDERROR_MESSAGE("Could not locate custom test file: '" + singleTestFile.get() + "'");
+                ETH_STDERROR_MESSAGE(
+                    "Could not locate custom test file: '" + singleTestFile.get() + "'");
                 exit(1);
             }
         }
@@ -240,9 +241,9 @@ Options::Options(int argc, const char** argv)
             fullstate = true;
         }
         else if (arg == "--verbosity")
-		{
-			throwIfNoArgumentFollows();
-			static std::ostringstream strCout; //static string to redirect logs to
+        {
+            throwIfNoArgumentFollows();
+            static std::ostringstream strCout;  // static string to redirect logs to
             logVerbosity = atoi(argv[++i]);
             if (logVerbosity == 0)
             {
@@ -253,7 +254,7 @@ Options::Options(int argc, const char** argv)
             }
             if (logVerbosity > (size_t)g_logVerbosity)
                 g_logVerbosity = logVerbosity;
-		}
+        }
         else if (arg == "--datadir")
         {
             throwIfNoArgumentFollows();
@@ -263,93 +264,96 @@ Options::Options(int argc, const char** argv)
         {
             throwIfNoArgumentFollows();
             for (auto const& el : explode(std::string{argv[++i]}, ','))
-                nodesoverride.addArrayObject(el);
+                nodesoverride.push_back(IPADDRESS(el));
         }
         else if (arg == "--options")
-		{
-			throwIfNoArgumentFollows();
-			boost::filesystem::path file(std::string{argv[++i]});
-			if (boost::filesystem::exists(file))
-				randomCodeOptionsPath = file;
-			else
-			{
+        {
+            throwIfNoArgumentFollows();
+            boost::filesystem::path file(std::string{argv[++i]});
+            if (boost::filesystem::exists(file))
+                randomCodeOptionsPath = file;
+            else
+            {
                 ETH_STDERROR_MESSAGE(
                     "Options file not found! Default options at: "
                     "tests/src/randomCodeOptions.json\n");
                 exit(0);
-			}
-		}
-		else if (arg == "-t")
-		{
-			throwIfAfterSeparator();
-			throwIfNoArgumentFollows();
-			rCurrentTestSuite = std::string{argv[++i]};
-		}
-		else if (arg == "--nonetwork")
-			nonetwork = true;
-		else if (arg == "-d")
-		{
-			throwIfNoArgumentFollows();
-			trDataIndex = atoi(argv[++i]);
-		}
-		else if (arg == "-g")
-		{
-			throwIfNoArgumentFollows();
-			trGasIndex = atoi(argv[++i]);
-		}
-		else if (arg == "-v")
-		{
-			throwIfNoArgumentFollows();
-			trValueIndex = atoi(argv[++i]);
-		}
-		else if (arg == "--testpath")
-		{
-			throwIfNoArgumentFollows();
+            }
+        }
+        else if (arg == "-t")
+        {
+            throwIfAfterSeparator();
+            throwIfNoArgumentFollows();
+            rCurrentTestSuite = std::string{argv[++i]};
+        }
+        else if (arg == "--nonetwork")
+            nonetwork = true;
+        else if (arg == "-d")
+        {
+            throwIfNoArgumentFollows();
+            trDataIndex = atoi(argv[++i]);
+        }
+        else if (arg == "-g")
+        {
+            throwIfNoArgumentFollows();
+            trGasIndex = atoi(argv[++i]);
+        }
+        else if (arg == "-v")
+        {
+            throwIfNoArgumentFollows();
+            trValueIndex = atoi(argv[++i]);
+        }
+        else if (arg == "--testpath")
+        {
+            throwIfNoArgumentFollows();
             ETH_FAIL_REQUIRE_MESSAGE(testpath.empty(),
                 "testpath is already set! Make sure that testpath is provided as a first option.");
             testpath = std::string{argv[++i]};
         }
-		else if (arg == "--statediff")
-			statediff = true;
-		else if (arg == "--randomcode")
-		{
-			throwIfNoArgumentFollows();
-			int maxCodes = atoi(argv[++i]);
-			if (maxCodes > 1000 || maxCodes <= 0)
-			{
-				cerr << "Argument for the option is invalid! (use range: 1...1000)\n";
-				exit(1);
-			}
-			//test::RandomCodeOptions options;
-			//cout << test::RandomCode::get().generate(maxCodes, options) << "\n";
-			exit(0);
-		}
-		else if (arg == "--createRandomTest")
-		{
-			createRandomTest = true;
-			if (i + 1 < argc) // two params
-			{
-				auto options = std::string{argv[++i]};
-				if (options[0] == '-') // not param, another option
-					i--;
-				else
-				{
-					boost::filesystem::path file(options);
-					if (boost::filesystem::exists(file))
-						randomCodeOptionsPath = file;
-					else
-						BOOST_THROW_EXCEPTION(InvalidOption("Options file not found! Default options at: tests/src/randomCodeOptions.json\n"));
-				}
-			}
-		}
-		else if (arg == "--seed")
-		{
-			throwIfNoArgumentFollows();
-			/*u256 input = toInt(argv[++i]);
-			if (input > std::numeric_limits<uint64_t>::max())
-				BOOST_WARN("Seed is > u64. Using u64_max instead.");
-			randomTestSeed = static_cast<uint64_t>(min<u256>(std::numeric_limits<uint64_t>::max(), input));*/
-		}
+        else if (arg == "--statediff")
+            statediff = true;
+        else if (arg == "--randomcode")
+        {
+            throwIfNoArgumentFollows();
+            int maxCodes = atoi(argv[++i]);
+            if (maxCodes > 1000 || maxCodes <= 0)
+            {
+                cerr << "Argument for the option is invalid! (use range: 1...1000)\n";
+                exit(1);
+            }
+            // test::RandomCodeOptions options;
+            // cout << test::RandomCode::get().generate(maxCodes, options) << "\n";
+            exit(0);
+        }
+        else if (arg == "--createRandomTest")
+        {
+            createRandomTest = true;
+            if (i + 1 < argc)  // two params
+            {
+                auto options = std::string{argv[++i]};
+                if (options[0] == '-')  // not param, another option
+                    i--;
+                else
+                {
+                    boost::filesystem::path file(options);
+                    if (boost::filesystem::exists(file))
+                        randomCodeOptionsPath = file;
+                    else
+                        BOOST_THROW_EXCEPTION(
+                            InvalidOption("Options file not found! Default options at: "
+                                          "tests/src/randomCodeOptions.json\n"));
+                }
+            }
+        }
+        else if (arg == "--seed")
+        {
+            throwIfNoArgumentFollows();
+            /*u256 input = toInt(argv[++i]);
+                    if (input > std::numeric_limits<uint64_t>::max())
+                        BOOST_WARN("Seed is > u64. Using u64_max instead.");
+                    randomTestSeed =
+               static_cast<uint64_t>(min<u256>(std::numeric_limits<uint64_t>::max(), input));*/
+        }
         else if (arg == "--clients")
         {
             throwIfNoArgumentFollows();
@@ -369,39 +373,40 @@ Options::Options(int argc, const char** argv)
             exit(0);
         }
         else if (seenSeparator)
-		{
-			cerr << "Unknown option: " + arg << "\n";
-			exit(1);
-		}
-	}
+        {
+            cerr << "Unknown option: " + arg << "\n";
+            exit(1);
+        }
+    }
 
-	//check restrickted options
-	if (createRandomTest)
-	{
-		if (trValueIndex >= 0 || trGasIndex >= 0 || trDataIndex >= 0 || nonetwork || singleTest
-			|| all || stats || filltests || fillchain)
-		{
-			cerr << "--createRandomTest cannot be used with any of the options: " <<
-					"trValueIndex, trGasIndex, trDataIndex, nonetwork, singleTest, all, " <<
-					"stats, filltests, fillchain \n";
-			exit(1);
-		}
-	}
-	else
-	{
-		if (randomTestSeed.is_initialized())
-			BOOST_THROW_EXCEPTION(InvalidOption("--seed <uint> could be used only with --createRandomTest \n"));
-	}
+    // check restrickted options
+    if (createRandomTest)
+    {
+        if (trValueIndex >= 0 || trGasIndex >= 0 || trDataIndex >= 0 || nonetwork || singleTest ||
+            all || stats || filltests || fillchain)
+        {
+            cerr << "--createRandomTest cannot be used with any of the options: "
+                 << "trValueIndex, trGasIndex, trDataIndex, nonetwork, singleTest, all, "
+                 << "stats, filltests, fillchain \n";
+            exit(1);
+        }
+    }
+    else
+    {
+        if (randomTestSeed.is_initialized())
+            BOOST_THROW_EXCEPTION(
+                InvalidOption("--seed <uint> could be used only with --createRandomTest \n"));
+    }
 
-	//Default option
+    // Default option
     if (logVerbosity == 1)
         g_logVerbosity = -1;  // disable cnote but leave cerr and cout
 }
 
 Options const& Options::get(int argc, const char** argv)
 {
-	static Options instance(argc, argv);
-	return instance;
+    static Options instance(argc, argv);
+    return instance;
 }
 
 void displayTestSuites()

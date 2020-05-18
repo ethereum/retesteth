@@ -64,7 +64,9 @@ std::mutex g_socketMapMutex;
 static std::map<std::string, sessionInfo> socketMap;  // ! make inside a class static
 void RPCSession::runNewInstanceOfAClient(string const& _threadID, ClientConfig const& _config)
 {
-    if (_config.getSocketType() == Socket::IPC)
+    switch (_config.cfgFile().socketType())
+    {
+    case ClientConfgSocketType::IPC:
     {
         fs::path tmpDir = test::createUniqueTmpDirectory();
         string ipcPath = tmpDir.string() + "/geth.ipc";
@@ -101,17 +103,20 @@ void RPCSession::runNewInstanceOfAClient(string const& _threadID, ClientConfig c
                                                                  // lock
             socketMap.insert(std::pair<string, sessionInfo>(_threadID, std::move(info)));
         }
-    }
-    else if (_config.getSocketType() == Socket::TCP)
-    {
-        std::lock_guard<std::mutex> lock(g_socketMapMutex);  // function must be called from lock
 
-        DataObject const& ports = (Options::get().nodesoverride.getSubObjects().size() > 0 ?
-                                       Options::get().nodesoverride :
-                                       _config.getAddressObject());
+        break;
+    }
+    case ClientConfgSocketType::TCP:
+    {
+        // function must be called from lock
+        std::lock_guard<std::mutex> lock(g_socketMapMutex);
+
+        std::vector<IPADDRESS> const& ports =
+            (Options::get().nodesoverride.size() > 0 ? Options::get().nodesoverride :
+                                                       _config.cfgFile().socketAdresses());
 
         // Create sessionInfo for a tcp address that is still not present in socketMap
-        for (auto const& addr : ports.getSubObjects())
+        for (auto const& addr : ports)
         {
             bool unused = true;
             for (auto const& socket : socketMap)
@@ -132,33 +137,39 @@ void RPCSession::runNewInstanceOfAClient(string const& _threadID, ClientConfig c
                 return;
             }
         }
+        break;
     }
-    else if (_config.getSocketType() == Socket::IPCDebug)
+    case ClientConfgSocketType::IPCDebug:
     {
         // connect to already opend .ipc socket
         fs::path tmpDir = test::createUniqueTmpDirectory();
-        string ipcPath = _config.getAddress();
+        fs::path const& ipcPath = _config.cfgFile().path();
         int pid = 0;
         FILE* fp = NULL;
-        sessionInfo info(fp, new RPCSession(new RPCImpl(Socket::SocketType::IPC, ipcPath)),
+        sessionInfo info(fp, new RPCSession(new RPCImpl(Socket::SocketType::IPC, ipcPath.string())),
             tmpDir.string(), pid, _config.getId());
         {
             std::lock_guard<std::mutex> lock(g_socketMapMutex);  // function must be called from
                                                                  // lock
             socketMap.insert(std::pair<string, sessionInfo>(_threadID, std::move(info)));
         }
+
+        break;
     }
-    else if (_config.getSocketType() == Socket::TransitionTool)
+    case ClientConfgSocketType::TransitionTool:
     {
         sessionInfo info(NULL,
-            new RPCSession(new ToolImpl(Socket::SocketType::TCP, _config.getAddress())), "", 0,
-            _config.getId());
+            new RPCSession(
+                new ToolImpl(Socket::SocketType::TCP, _config.cfgFile().path().string())),
+            "", 0, _config.getId());
         std::lock_guard<std::mutex> lock(g_socketMapMutex);  // function must be called from lock
         socketMap.insert(std::pair<string, sessionInfo>(_threadID, std::move(info)));
         return;
+        break;
     }
-    else
+    default:
         ETH_FAIL_MESSAGE("Unknown Socket Type in runNewInstanceOfAClient");
+    }
 }
 
 SessionInterface& RPCSession::instance(const string& _threadID)

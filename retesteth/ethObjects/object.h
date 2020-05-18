@@ -12,6 +12,7 @@ namespace test {
 void ver_ethereumfields(DataObject const&);
 void mod_removeLeadingZerosFromHexValues(DataObject&);
 void mod_removeLeadingZerosFromHexValuesEVEN(DataObject&);
+void mod_removeComments(DataObject& _obj);
 void mod_valuesToLowerCase(DataObject&);
 void mod_valueToCompactEvenHexPrefixed(DataObject&);
 void mod_keyToCompactEvenHexPrefixed(DataObject&);

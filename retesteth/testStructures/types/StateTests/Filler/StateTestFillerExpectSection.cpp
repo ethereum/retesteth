@@ -1,5 +1,6 @@
 #include "StateTestFillerExpectSection.h"
 #include <TestHelper.h>
+#include <retesteth/ethObjects/object.h>
 
 #include <retesteth/Options.h>
 namespace test
@@ -13,19 +14,12 @@ StateTestFillerExpectSection::StateTestFillerExpectSection(DataObject const& _da
     parseJsonIntValueIntoSet(_data.atKey("indexes").atKey("value"), m_valInd);
 
     // get allowed networks for this expect section
-    parseJsonStrValueIntoSet(_data.atKey("network"), m_forks);
+    std::set<string> forks;
+    parseJsonStrValueIntoSet(_data.atKey("network"), forks);
 
     // Parse >=Frontier into  Frontier, Homestead, ... Constantinople according to current config
     ClientConfig const& cfg = Options::get().getDynamicOptions().getCurrentConfig();
-    bool isTransitionTest = false;
-    if (m_forks.size() == 1)
-    {
-        for (auto const& net : m_forks)
-            if (inArray(cfg.getAdditionalNetworks(), net))
-                isTransitionTest = true;
-    }
-    if (!isTransitionTest)
-        m_forks = translateNetworks(m_forks, cfg.getNetworks());
+    m_forks = cfg.translateNetworks(forks);
 
     // Convert Expect Section IncompletePostState fields to hex
     DataObject tmpD = _data.atKey("result");

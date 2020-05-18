@@ -1,5 +1,6 @@
 #include <retesteth/configs/ClientConfig.h>
 #include <retesteth/configs/Genesis.h>
+#include <retesteth/ethObjects/object.h>
 #include <mutex>
 std::mutex g_staticDeclaration_clientConfigID;
 namespace test
@@ -12,320 +13,170 @@ ClientConfigID::ClientConfigID()
     m_id = uniqueID;
 }
 
-}  // namespace test
-
-using namespace std;
-
-string const defaultForks = R"(
-    "forks" : [
-      "Frontier",
-      "Homestead",
-      "EIP150",
-      "EIP158",
-      "Byzantium",
-      "Constantinople",
-      "ConstantinopleFix",
-      "Istanbul"
-    ],
-    "additionalForks" : [
-      "FrontierToHomesteadAt5",
-      "HomesteadToEIP150At5",
-      "EIP158ToByzantiumAt5",
-      "HomesteadToDaoAt5",
-      "ByzantiumToConstantinopleFixAt5"
-    ],)";
-
-string const defaultGethExceptions = R"(
-    "exceptions" : {
-        "ExtraDataTooBig" : "extra-data too long",
-        "InvalidDifficulty" : "invalid difficulty",
-        "InvalidGasLimit" : "invalid gasLimit:",
-        "TooMuchGasUsed" : "invalid gasUsed:",
-        "InvalidNumber" : "invalid block number",
-        "InvalidTimestampEqualParent" : "timestamp equals parent's",
-        "InvalidTimestampOlderParent" : "timestamp older than parent",
-        "InvalidLogBloom" : "invalid bloom (remote:",
-        "InvalidStateRoot" : "invalid merkle root (remote:",
-        "InvalidGasLimit2" : "invalid gas limit:",
-        "InvalidGasUsed" : "invalid gas used (remote:",
-        "InvalidBlockMixHash" : "invalid mix digest",
-        "InvalidBlockNonce" : "",
-        "UnknownParent" : "unknown ancestor",
-        "UnknownParent2" : "unknown ancestor",
-        "InvalidReceiptsStateRoot" : "invalid receipt root hash (remote:",
-        "InvalidTransactionsRoot" : "transaction root hash mismatch: have",
-        "InvalidUnclesHash" : "uncle root hash mismatch: have",
-        "InvalidUncleParentHash" : "uncle's parent is not ancestor",
-        "UncleInChain" : "duplicate uncle",
-        "UncleIsAncestor" : "uncle is ancestor",
-        "UncleParentIsNotAncestor" : "uncle's parent is not ancestor",
-        "TooManyUncles" : "too many uncles",
-        "OutOfGas" : "out of gas",
-        "IntrinsicGas" : "intrinsic gas too low",
-        "ExtraDataIncorrectDAO" : "bad DAO pro-fork extra-data",
-        "InvalidTransactionVRS" : "invalid transaction v, r, s values",
-        "RLP_InputContainsMoreThanOneValue" : "rlp: input contains more than one value",
-        "RLP_VALUESIZE_MORE_AVAILABLEINPUTLENGTH" : "rlp: value size exceeds available input length",
-        "RLP_ELEMENT_LARGER_CONTAININGLIST" : "rlp: element is larger than containing list",
-        "RLP_ExpectedInputList_EXTBLOCK" : "rlp: expected input list for types.extblock",
-        "RLP_InvalidArg0_UNMARSHAL_BYTES" : "invalid argument 0: json: cannot unmarshal invalid hex string into Go value of type hexutil.Bytes",
-        "RLP_ExpectedInputList_HEADER_DECODEINTO_BLOCK_EXTBLOCK" : "rlp: expected input list for types.Header, decoding into (types.Block)(types.extblock).Header",
-        "RLP_InputList_TooManyElements_HEADER_DECODEINTO_BLOCK_EXTBLOCK_HEADER" : "rlp: input list has too many elements for types.Header, decoding into (types.Block)(types.extblock).Header",
-        "RLP_InputList_TooManyElements_TXDATA_DECODEINTO_BLOCK_EXTBLOCK_TXS0" : "rlp: input list has too many elements for types.txdata, decoding into (types.Block)(types.extblock).Txs[0]",
-        "RLP_InputString_TooShort_ADDRESS_DECODEINTO_BLOCK_EXTBLOCK_HEADER_COINBASE" : "rlp: input string too short for common.Address, decoding into (types.Block)(types.extblock).Header.Coinbase",
-        "RLP_InputString_TooShort_ADDRESS_DECODEINTO_BLOCK_EXTBLOCK_TXS0_RECIPIENT" : "rlp: input string too short for common.Address, decoding into (types.Block)(types.extblock).Txs[0](types.txdata).Recipient",
-        "RLP_InputString_TooLong_HASH_DECODEINTO_BLOCK_EXTBLOCK_HEADER_ROOT" : "rlp: input string too long for common.Hash, decoding into (types.Block)(types.extblock).Header.Root",
-        "RLP_InputString_TooLong_HASH_DECODEINTO_BLOCK_EXTBLOCK_HEADER_MIXDIGEST" : "rlp: input string too long for common.Hash, decoding into (types.Block)(types.extblock).Header.MixDigest",
-        "RLP_InputString_TooLong_HASH_DECODEINTO_BLOCK_EXTBLOCK_HEADER_PARENTHASH" : "rlp: input string too long for common.Hash, decoding into (types.Block)(types.extblock).Header.ParentHash",
-        "RLP_InputString_TooLong_HASH_DECODEINTO_BLOCK_EXTBLOCK_HEADER_RECEIPTHASH" : "rlp: input string too long for common.Hash, decoding into (types.Block)(types.extblock).Header.ReceiptHash",
-        "RLP_InputString_TooLong_HASH_DECODEINTO_BLOCK_EXTBLOCK_HEADER_TXHASH" : "rlp: input string too long for common.Hash, decoding into (types.Block)(types.extblock).Header.TxHash",
-        "RLP_InputString_TooLong_HASH_DECODEINTO_BLOCK_EXTBLOCK_HEADER_UNCLEHASH" : "rlp: input string too long for common.Hash, decoding into (types.Block)(types.extblock).Header.UncleHash",
-        "RLP_InputString_TooLong_UINT64_DECODEINTO_BLOCK_EXTBLOCK_HEADER_GASLIMIT" : "rlp: input string too long for uint64, decoding into (types.Block)(types.extblock).Header.GasLimit",
-        "RLP_InputString_TooLong_UINT64_DECODEINTO_BLOCK_EXTBLOCK_HEADER_GASUSED" : "rlp: input string too long for uint64, decoding into (types.Block)(types.extblock).Header.GasUsed",
-        "RLP_InputString_TooLong_UINT64_DECODEINTO_BLOCK_EXTBLOCK_HEADER_TIME" : "rlp: input string too long for uint64, decoding into (types.Block)(types.extblock).Header.Time",
-        "RLP_InputString_TooLong_UINT64_DECODEINTO_BLOCK_EXTBLOCK_TXS0_GASLIMIT" : "rlp: input string too long for uint64, decoding into (types.Block)(types.extblock).Txs[0](types.txdata).GasLimit",
-        "RLP_InputString_TooShort_HASH_DECODEINTO_BLOCK_EXTBLOCK_HEADER_TXHASH" : "rlp: input string too short for common.Hash, decoding into (types.Block)(types.extblock).Header.TxHash",
-        "RLP_InputString_TooShort_HASH_DECODEINTO_BLOCK_EXTBLOCK_HEADER_RECEIPTHASH" : "rlp: input string too short for common.Hash, decoding into (types.Block)(types.extblock).Header.ReceiptHash",
-        "RLP_InputString_TooShort_HASH_DECODEINTO_BLOCK_EXTBLOCK_HEADER_ROOT" : "rlp: input string too short for common.Hash, decoding into (types.Block)(types.extblock).Header.Root",
-        "RLP_InputString_TooShort_HASH_DECODEINTO_BLOCK_EXTBLOCK_HEADER_MIXDIGEST" : "rlp: input string too short for common.Hash, decoding into (types.Block)(types.extblock).Header.MixDigest",
-        "RLP_InputString_TooShort_HASH_DECODEINTO_BLOCK_EXTBLOCK_HEADER_PARENTHASH" : "rlp: input string too short for common.Hash, decoding into (types.Block)(types.extblock).Header.ParentHash",
-        "RLP_InputString_TooShort_HASH_DECODEINTO_BLOCK_EXTBLOCK_HEADER_UNCLEHASH" : "rlp: input string too short for common.Hash, decoding into (types.Block)(types.extblock).Header.UncleHash",
-        "RLP_InputString_TooShort_HASH_DECODEINTO_BLOCK_EXTBLOCK_HEADER_TXHASH" : "rlp: input string too short for common.Hash, decoding into (types.Block)(types.extblock).Header.TxHash",
-        "RLP_InputString_TooShort_BLOOM_DECODEINTO_BLOCK_EXTBLOCK_HEADER_BLOOM" : "rlp: input string too short for types.Bloom, decoding into (types.Block)(types.extblock).Header.Bloom",
-        "RLP_NonCanonicalINT_LeadingZeros_BIGINT_DECODEINTO_BLOCK_EXTBLOCK_HEADER_DIFFICULTY" : "rlp: non-canonical integer (leading zero bytes) for *big.Int, decoding into (types.Block)(types.extblock).Header.Difficulty",
-        "RLP_NonCanonicalINT_LeadingZeros_UINT64_DECODEINTO_BLOCK_EXTBLOCK_HEADER_GASLIMIT" : "rlp: non-canonical integer (leading zero bytes) for uint64, decoding into (types.Block)(types.extblock).Header.GasLimit",
-        "RLP_NonCanonicalINT_LeadingZeros_UINT64_DECODEINTO_BLOCK_EXTBLOCK_HEADER_GASUSED" : "rlp: non-canonical integer (leading zero bytes) for uint64, decoding into (types.Block)(types.extblock).Header.GasUsed",
-        "RLP_NonCanonicalINT_LeadingZeros_UINT64_DECODEINTO_BLOCK_EXTBLOCK_HEADER_TIME" : "rlp: non-canonical integer (leading zero bytes) for uint64, decoding into (types.Block)(types.extblock).Header.Time",
-        "RLP_NonCanonicalINT_LeadingZeros_UINT64_DECODEINTO_BLOCK_EXTBLOCK_TXS0_GASLIMIT" : "rlp: non-canonical integer (leading zero bytes) for uint64, decoding into (types.Block)(types.extblock).Txs[0](types.txdata).GasLimit",
-        "RLP_NonCanonicalINT_LeadingZeros_BIGINT_DECODEINTO_BLOCK_EXTBLOCK_HEADER_NUMBER" : "rlp: non-canonical integer (leading zero bytes) for *big.Int, decoding into (types.Block)(types.extblock).Header.Number",
-        "RLP_NonCanonicalINT_LeadingZeros_BIGINT_DECODEINTO_BLOCK_EXTBLOCK_TXS0_TXDATA_PRICE" : "rlp: non-canonical integer (leading zero bytes) for *big.Int, decoding into (types.Block)(types.extblock).Txs[0](types.txdata).Price",
-        "RLP_NonCanonicalINT_LeadingZeros_BIGINT_DECODEINTO_BLOCK_EXTBLOCK_TXS0_TXDATA_R" : "rlp: non-canonical integer (leading zero bytes) for *big.Int, decoding into (types.Block)(types.extblock).Txs[0](types.txdata).R",
-        "RLP_NonCanonicalINT_LeadingZeros_BIGINT_DECODEINTO_BLOCK_EXTBLOCK_TXS0_TXDATA_S" : "rlp: non-canonical integer (leading zero bytes) for *big.Int, decoding into (types.Block)(types.extblock).Txs[0](types.txdata).S",
-        "RLP_InputString_TooLong_BLOOM_DECODEINTO_BLOCK_EXTBLOCK_HEADER_BLOOM" : "rlp: input string too long for types.Bloom, decoding into (types.Block)(types.extblock).Header.Bloom",
-        "RLP_ExpectedInputString_HASH_DECODEINTO_BLOCK_EXTBLOCK_HEADER_PARENTHASH" : "rlp: expected input string or byte for common.Hash, decoding into (types.Block)(types.extblock).Header.ParentHash",
-        "RLP_ExpectedInputString_HASH_DECODEINTO_BLOCK_EXTBLOCK_HEADER_RECEIPTHASH" : "rlp: expected input string or byte for common.Hash, decoding into (types.Block)(types.extblock).Header.ReceiptHash",
-        "RLP_ExpectedInputString_HASH_DECODEINTO_BLOCK_EXTBLOCK_HEADER_ROOT" : "rlp: expected input string or byte for common.Hash, decoding into (types.Block)(types.extblock).Header.Root",
-        "RLP_ExpectedInputString_HASH_DECODEINTO_BLOCK_EXTBLOCK_HEADER_MIXDIGEST" : "rlp: expected input string or byte for common.Hash, decoding into (types.Block)(types.extblock).Header.MixDigest",
-        "RLP_ExpectedInputString_HASH_DECODEINTO_BLOCK_EXTBLOCK_HEADER_TXHASH" : "rlp: expected input string or byte for common.Hash, decoding into (types.Block)(types.extblock).Header.TxHash",
-        "RLP_ExpectedInputString_HASH_DECODEINTO_BLOCK_EXTBLOCK_HEADER_UNCLEHASH" : "rlp: expected input string or byte for common.Hash, decoding into (types.Block)(types.extblock).Header.UncleHash",
-        "RLP_ExpectedInputString_ADDRESS_DECODEINTO_BLOCK_EXTBLOCK_HEADER_COINBASE" : "rlp: expected input string or byte for common.Address, decoding into (types.Block)(types.extblock).Header.Coinbase",
-        "RLP_ExpectedInputString_ADDRESS_DECODEINTO_BLOCK_EXTBLOCK_TX0_RECIPIENT" : "rlp: expected input string or byte for common.Address, decoding into (types.Block)(types.extblock).Txs[0](types.txdata).Recipient",
-        "RLP_InputString_TooLong_ADDRESS_DECODEINTO_BLOCK_EXTBLOCK_HEADER_COINBASE" : "rlp: input string too long for common.Address, decoding into (types.Block)(types.extblock).Header.Coinbase",
-        "RLP_InputString_TooLong_ADDRESS_DECODEINTO_BLOCK_EXTBLOCK_TXS0_RECIPIENT" : "rlp: input string too long for common.Address, decoding into (types.Block)(types.extblock).Txs[0](types.txdata).Recipient",
-        "RLP_ExpectedInputString_BIGINT_DECODEINTO_BLOCK_EXTBLOCK_HEADER_DIFFICULTY" : "rlp: expected input string or byte for *big.Int, decoding into (types.Block)(types.extblock).Header.Difficulty",
-        "RLP_ExpectedInputString_BIGINT_DECODEINTO_BLOCK_EXTBLOCK_TXS0_TXR" : "rlp: expected input string or byte for *big.Int, decoding into (types.Block)(types.extblock).Txs[0](types.txdata).R",
-        "RLP_ExpectedInputString_BIGINT_DECODEINTO_BLOCK_EXTBLOCK_TXS0_TXS" : "rlp: expected input string or byte for *big.Int, decoding into (types.Block)(types.extblock).Txs[0](types.txdata).S",
-        "RLP_ExpectedInputString_UINT64_DECODEINTO_BLOCK_EXTBLOCK_HEADER_GASLIMIT" : "rlp: expected input string or byte for uint64, decoding into (types.Block)(types.extblock).Header.GasLimit",
-        "RLP_ExpectedInputString_UINT64_DECODEINTO_BLOCK_EXTBLOCK_HEADER_GASUSED" : "rlp: expected input string or byte for uint64, decoding into (types.Block)(types.extblock).Header.GasUsed",
-        "RLP_ExpectedInputString_UINT64_DECODEINTO_BLOCK_EXTBLOCK_HEADER_TIME" : "rlp: expected input string or byte for uint64, decoding into (types.Block)(types.extblock).Header.Time",
-        "RLP_ExpectedInputString_UINT64_DECODEINTO_BLOCK_EXTBLOCK_TXS0_GASLIMIT" : "rlp: expected input string or byte for uint64, decoding into (types.Block)(types.extblock).Txs[0](types.txdata).GasLimit",
-        "RLP_ExpectedInputString_NONCE_DECODEINTO_BLOCK_EXTBLOCK_HEADER_NONCE" : "rlp: expected input string or byte for types.BlockNonce, decoding into (types.Block)(types.extblock).Header.Nonce",
-        "RLP_ExpectedInputString_UINT8_DECODEINTO_BLOCK_EXTBLOCK_TXS0_PAYLOAD" : "rlp: expected input string or byte for []uint8, decoding into (types.Block)(types.extblock).Txs[0](types.txdata).Payload",
-        "RLP_InputString_TooLong_BLOCKNONCE_DECODEINTO_BLOCK_EXTBLOCK_HEADER_NONCE" : "rlp: input string too long for types.BlockNonce, decoding into (types.Block)(types.extblock).Header.Nonce",
-        "RLP_NonCanonical_SizeInfo_EXTBLOCK" : "rlp: non-canonical size information for types.extblock",
-        "RLP_ExpectedInputList_TRANSACTION_DECODEINTO_BLOCK_EXTBLOCK_TXS" : "rlp: expected input list for []*types.Transaction, decoding into (types.Block)(types.extblock).Txs",
-        "RLP_ExpectedInputList_HEADER_DECODEINTO_BLOCK_EXTBLOCK_UNCLES" : "rlp: expected input list for []*types.Header, decoding into (types.Block)(types.extblock).Uncles",
-        "RLP_ExpectedInputList_TXDATA_DECODEINTO_BLOCK_EXTBLOCK_TXS0" : "rlp: expected input list for types.txdata, decoding into (types.Block)(types.extblock).Txs[0]"
-    })";
-
-string const default_config = R"({
-    "name" : "Ethereum GO on TCP",
-    "socketType" : "tcp",
-    "socketAddress" : [
-        "127.0.0.1:8545",
-        "127.0.0.1:8546",
-        "127.0.0.1:8547",
-        "127.0.0.1:8548",
-        "127.0.0.1:8549",
-        "127.0.0.1:8550",
-        "127.0.0.1:8551",
-        "127.0.0.1:8552"
-    ],)" + defaultForks + defaultGethExceptions +
-                              "\n}";
-
-string const t8ntool_config = R"({
-    "name" : "Ethereum GO on StateTool",
-    "socketType" : "tranition-tool",
-    "socketAddress" : "/home/wins/Ethereum/go-ethereum/build/bin/statet8n",)" +
-                              defaultForks + defaultGethExceptions + "\n}";
-
-string const besu_config = R"({
-    "name" : "Hyperledger Besu on TCP",
-    "socketType" : "tcp",
-    "socketAddress" : [
-        "127.0.0.1:47710"
-    ],
-    "forks" : [
-        "Frontier",
-        "Homestead",
-        "EIP150",
-        "EIP158",
-        "Byzantium",
-        "Constantinople",
-        "ConstantinopleFix",
-        "Istanbul"
-    ],
-    "additionalForks" : [
-        "FrontierToHomesteadAt5",
-        "HomesteadToEIP150At5",
-        "EIP158ToByzantiumAt5",
-        "HomesteadToDaoAt5",
-        "ByzantiumToConstantinopleFixAt5"
-    ],
-    "exceptions" : {
-        "ExtraDataTooBig" : "extra-data too long",
-        "InvalidDifficulty" : "invalid difficulty"
-    }
-})";
-
-string const alethTCP_config = R"({
-    "name" : "Ethereum aleth on TCP",
-    "socketType" : "tcp",
-    "socketAddress" : [
-        "127.0.0.1:8545",
-        "127.0.0.1:8546"
-    ],
-    "forks" : [
-        "Frontier",
-        "Homestead",
-        "EIP150",
-        "EIP158",
-        "Byzantium",
-        "Constantinople",
-        "ConstantinopleFix",
-        "Istanbul"
-    ],
-    "additionalForks" : [
-        "FrontierToHomesteadAt5",
-        "HomesteadToEIP150At5",
-        "EIP158ToByzantiumAt5",
-        "HomesteadToDaoAt5",
-        "ByzantiumToConstantinopleFixAt5"
-    ],
-    "exceptions" : {
-        "ExtraDataTooBig" : "ExtraData too big",
-        "InvalidDifficulty" : "Invalid Difficulty",
-        "InvalidGasLimit" : "Invalid Block GasLimit",
-        "TooMuchGasUsed" : "Too much gas used",
-        "InvalidNumber" : "Invalid number",
-        "InvalidTimestamp" : "Invalid timestamp",
-        "InvalidLogBloom" : "Invalid log bloom",
-        "InvalidStateRoot" : "Invalid state root",
-        "InvalidGasLimit2" : "Invalid Block GasLimit",
-        "InvalidGasUsed" : "Invalid gas used",
-        "InvalidBlockMixHash" : "Invalid block nonce",
-        "InvalidBlockNonce" : "Invalid block nonce"
-        "UnknownParent" : "UnknownParent",
-        "UnknownParent2" : "Invalid parent hash",
-        "InvalidReceiptsStateRoot" : "Invalid receipts state root",
-        "InvalidTransactionsRoot" : "Invalid transactions root",
-        "InvalidUnclesHash" : "Invalid uncles hash",
-        "ExtraDataIncorrect" : "extradata incorrect",
-        "InvalidTransactionVRS" : "invalid transaction v, r, s values"
-    }
-})";
-
-string const alethIPCDebug_config = R"({
-    "name" : "Ethereum aleth on IPC Debug",
-    "socketType" : "ipc-debug",
-    "socketAddress" : "/home/username/.ethereum/geth.ipc",
-    "forks" : [
-        "Frontier",
-        "Homestead",
-        "EIP150",
-        "EIP158",
-        "Byzantium",
-        "Constantinople",
-        "ConstantinopleFix",
-        "Istanbul"
-    ],
-    "additionalForks" : [
-        "FrontierToHomesteadAt5",
-        "HomesteadToEIP150At5",
-        "EIP158ToByzantiumAt5",
-        "HomesteadToDaoAt5",
-        "ByzantiumToConstantinopleFixAt5"
-    ],
-    "exceptions" : {
-        "ExtraDataTooBig" : "ExtraData too big",
-        "InvalidDifficulty" : "Invalid Difficulty",
-        "InvalidGasLimit" : "Invalid Block GasLimit",
-        "TooMuchGasUsed" : "Too much gas used",
-        "InvalidNumber" : "Invalid number",
-        "InvalidTimestamp" : "Invalid timestamp",
-        "InvalidLogBloom" : "Invalid log bloom",
-        "InvalidStateRoot" : "Invalid state root",
-        "InvalidGasLimit2" : "Invalid Block GasLimit",
-        "InvalidGasUsed" : "Invalid gas used",
-        "InvalidBlockMixHash" : "Invalid block nonce",
-        "InvalidBlockNonce" : "Invalid block nonce"
-        "UnknownParent" : "UnknownParent",
-        "UnknownParent2" : "Invalid parent hash",
-        "InvalidReceiptsStateRoot" : "Invalid receipts state root",
-        "InvalidTransactionsRoot" : "Invalid transactions root",
-        "InvalidUnclesHash" : "Invalid uncles hash"
-    }
-})";
-
-
-string const aleth_config = R"({
-    "name" : "Ethereum cpp-client",
-    "socketType" : "ipc",
-    "socketAddress" : "local",
-    "forks" : [
-        "Frontier",
-        "Homestead",
-        "EIP150",
-        "EIP158",
-        "Byzantium",
-        "Constantinople",
-        "ConstantinopleFix",
-        "Istanbul"
-    ],
-    "additionalForks" : [
-        "FrontierToHomesteadAt5",
-        "HomesteadToEIP150At5",
-        "EIP158ToByzantiumAt5",
-        "HomesteadToDaoAt5",
-        "ByzantiumToConstantinopleFixAt5"
-    ],
-    "exceptions" : {
-        "ExtraDataTooBig" : "ExtraData too big",
-        "InvalidDifficulty" : "Invalid Difficulty",
-        "InvalidGasLimit" : "Invalid Block GasLimit",
-        "TooMuchGasUsed" : "Too much gas used",
-        "InvalidNumber" : "Invalid number",
-        "InvalidTimestamp" : "Invalid timestamp",
-        "InvalidLogBloom" : "Invalid log bloom",
-        "InvalidStateRoot" : "Invalid state root",
-        "InvalidGasLimit2" : "Invalid Block GasLimit",
-        "InvalidGasUsed" : "Invalid gas used",
-        "InvalidBlockMixHash" : "Invalid block nonce",
-        "InvalidBlockNonce" : "Invalid block nonce"
-        "UnknownParent" : "UnknownParent",
-        "UnknownParent2" : "Invalid parent hash",
-        "InvalidReceiptsStateRoot" : "Invalid receipts state root",
-        "InvalidTransactionsRoot" : "Invalid transactions root",
-        "InvalidUnclesHash" : "Invalid uncles hash"
-    }
-})";
-
-string const aleth_config_sh = R"(
-#!/bin/bash
-onexit()
+ClientConfig::ClientConfig(fs::path const& _clientConfigPath) : m_id(ClientConfigID())
 {
-    kill $child
+    try
+    {
+        TestOutputHelper::get().setCurrentTestInfo(TestInfo("Client Config init"));
+        fs::path configFile = _clientConfigPath / "config";
+        ETH_FAIL_REQUIRE_MESSAGE(fs::exists(configFile), string("Client config not found: ") + configFile.c_str());
+
+        // Load client config file
+        m_clientConfigFile = GCP_SPointer<ClientConfigFile>(new ClientConfigFile(configFile));
+
+        // Load genesis templates from default dir if not set in this folder
+        fs::path genesisTemplatePath = _clientConfigPath / "genesis";
+        if (!fs::exists(genesisTemplatePath))
+        {
+            genesisTemplatePath = _clientConfigPath.parent_path() / "default" / "genesis";
+            ETH_FAIL_REQUIRE_MESSAGE(fs::exists(genesisTemplatePath), "default/genesis client config not found!");
+        }
+
+        // Load genesis templates
+        for (auto const& net : cfgFile().allowedForks())
+        {
+            fs::path configGenesisTemplatePath = genesisTemplatePath / (net.asString() + ".json");
+            ETH_FAIL_REQUIRE_MESSAGE(fs::exists(configGenesisTemplatePath),
+                "\ntemplate '" + net.asString() + ".json' for client '" +
+                    _clientConfigPath.stem().string() + "' not found ('" +
+                    configGenesisTemplatePath.c_str() + "') in configs!");
+            m_genesisTemplate[net] = test::readJsonData(configGenesisTemplatePath);
+        }
+
+        // Load correctmining Reward
+        fs::path correctMiningRewardPath = genesisTemplatePath / "correctMiningReward.json";
+        ETH_FAIL_REQUIRE_MESSAGE(fs::exists(correctMiningRewardPath),
+            "correctMiningReward.json client config not found!");
+        DataObject correctMiningReward = test::readJsonData(correctMiningRewardPath);
+        correctMiningReward.performModifier(mod_removeComments);
+        correctMiningReward.performModifier(mod_valueToCompactEvenHexPrefixed);
+        for (auto const& el : cfgFile().forks())
+        {
+            if (!correctMiningReward.count(el.asString()))
+                ETH_FAIL_MESSAGE("Correct mining reward missing block reward record for fork: `" +
+                                 el.asString() + "` (" + correctMiningRewardPath.string() + ")");
+            m_correctReward[el] = spVALUE(new VALUE(correctMiningReward.atKey(el.asString())));
+        }
+    }
+    catch (std::exception const& _ex)
+    {
+        ETH_STDERROR_MESSAGE(string("Error initializing configs: ") + _ex.what());
+    }
 }
-trap onexit SIGTERM
-trap onexit SIGABRT
 
-##ARGUMENTS PASSED BY RETESTETH
-##
-## $1  <db-path> 		A path to database directory that a client should use
-## $2  <ipcpath>		A path to the ipc socket file (has /geth.ipc at the end)
-#####
+// Get shell script that runs an instance of a client from options folder
+fs::path const ClientConfig::getShellPath() const
+{
+    fs::path parentFromConfigFile = cfgFile().path().parent_path();
+    fs::path shellScript = parentFromConfigFile.stem().string() + ".sh";
+    ETH_FAIL_REQUIRE_MESSAGE(fs::exists(shellScript), "Shell script does not exist: " + shellScript.string());
+    return shellScript;
+}
 
-aleth --test --db-path $1 --ipcpath $2 --log-verbosity 5 &
-child=$!
-wait "$child"
-)";
+void ClientConfig::checkForkAllowed(FORK const& _net) const
+{
+    if (!cfgFile().allowedForks().count(_net))
+    {
+        ETH_WARNING("Specified network not found: '" + _net.asString() +
+                    "', skipping the test. Enable the fork network in config file: " +
+                    cfgFile().path().string());
+        ETH_ERROR_MESSAGE("Specified network not found: '" + _net.asString() + "'");
+    }
+}
+
+/// translate network names in expect section field
+/// >Homestead to EIP150, EIP158, Byzantium, ...
+/// <=Homestead to Frontier, Homestead
+set<FORK> ClientConfig::translateNetworks(set<string> const& _networks) const
+{
+    // Construct vector with test network names in a right order
+    // (from Frontier to Homestead ... to Constantinople)
+    // According to fork order in config file
+    set<FORK> out;
+    for (auto const& net : _networks)
+    {
+        std::vector<FORK> const& forkOrder = cfgFile().forks();
+
+        bool isNetworkTranslated = false;
+        string possibleNet = net.substr(1, net.length() - 1);
+        vector<FORK>::const_iterator it =
+            std::find(forkOrder.begin(), forkOrder.end(), possibleNet);
+
+        if (it != forkOrder.end() && net.size() > 1)
+        {
+            if (net[0] == '>')
+            {
+                while (++it != forkOrder.end())
+                {
+                    out.emplace(*it);
+                    isNetworkTranslated = true;
+                }
+            }
+            else if (net[0] == '<')
+            {
+                while (it != forkOrder.begin())
+                {
+                    out.emplace(*(--it));
+                    isNetworkTranslated = true;
+                }
+            }
+        }
+
+        possibleNet = net.substr(2, net.length() - 2);
+        it = std::find(forkOrder.begin(), forkOrder.end(), possibleNet);
+        if (it != forkOrder.end() && net.size() > 2)
+        {
+            if (net[0] == '>' && net[1] == '=')
+            {
+                while (it != forkOrder.end())
+                {
+                    out.emplace(*(it++));
+                    isNetworkTranslated = true;
+                }
+            }
+            else if (net[0] == '<' && net[1] == '=')
+            {
+                out.emplace(*it);
+                isNetworkTranslated = true;
+                while (it != forkOrder.begin())
+                    out.emplace(*(--it));
+            }
+        }
+
+        // if nothing has been inserted, just push the untranslated network as is
+        if (!isNetworkTranslated)
+        {
+            checkForkAllowed(FORK(net));
+            out.emplace(FORK(net));
+        }
+    }
+    return out;
+}
+
+std::string const& ClientConfig::translateException(string const& _exceptionName) const
+{
+    ClientConfigFile const& cfg = *m_clientConfigFile.getCPtr();
+    if (cfg.exceptions().count(_exceptionName))
+        return cfg.exceptions().at(_exceptionName);
+
+    // --- Correct typos
+    // Puth known exceptions into vector
+    vector<string> exceptions;
+    for (auto const& el : cfg.exceptions())
+        exceptions.push_back(el.first);
+
+    auto const suggestions = test::levenshteinDistance(_exceptionName, exceptions, 5);
+    string message = " (Suggestions: ";
+    for (auto const& el : suggestions)
+        message += el + ", ";
+    message += " ...)";
+    ETH_ERROR_MESSAGE("Config::getExceptionString '" + _exceptionName +
+                      "' not found in client config `exceptions` section! (" + cfg.path().c_str() +
+                      ")" + message);
+    // ---
+    static string const notfound = string();
+    return notfound;
+}
+
+
+}  // namespace test

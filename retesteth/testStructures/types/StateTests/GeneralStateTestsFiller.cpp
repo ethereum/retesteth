@@ -2,6 +2,7 @@
 #include "../../Common.h"
 #include <retesteth/EthChecks.h>
 #include <retesteth/Options.h>
+#include <retesteth/ethObjects/object.h>
 
 using namespace test::teststruct;
 GeneralStateTestFiller::GeneralStateTestFiller(DataObject const& _data)
@@ -49,9 +50,9 @@ StateTestInFiller::StateTestInFiller(DataObject const& _data)
 }
 
 // Gather all networks from all the expect sections
-std::list<string> StateTestInFiller::getAllNetworksFromExpectSections() const
+std::list<FORK> StateTestInFiller::getAllNetworksFromExpectSections() const
 {
-    std::list<string> out;
+    std::list<FORK> out;
     for (auto const& ex : m_expectSections)
         for (auto const& el : ex.forks())
             out.push_back(el);

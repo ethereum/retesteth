@@ -18,8 +18,8 @@ public:
             _post.type() == DataType::Object, "State tests post section must be json object!");
         for (auto const& element : _post.getSubObjects())
         {
-            ClientConfig const& cfg = Options::get().getDynamicOptions().getCurrentConfig();
-            test::checkAllowedNetwork(element.getKey(), cfg.getNetworks());
+            // ClientConfig const& cfg = Options::get().getDynamicOptions().getCurrentConfig();
+            // test::checkAllowedNetwork(element.getKey(), cfg.getNetworks());
             ETH_ERROR_REQUIRE_MESSAGE(element.type() == DataType::Array,
                 "State tests post section value at fork results must be json array!");
             postSectionElements results;

@@ -18,6 +18,18 @@ void mod_valuesToLowerCase(DataObject& _obj)
     }
 }
 
+void mod_removeComments(DataObject& _obj)
+{
+    std::list<string> keysToRemove;
+    for (auto& el : _obj.getSubObjectsUnsafe())
+    {
+        if (el.getKey()[0] == '/' && el.getKey()[1] == '/')
+            keysToRemove.push_back(el.getKey());
+    }
+    for (auto const& key : keysToRemove)
+        _obj.removeKey(key);
+}
+
 void mod_valueToCompactEvenHexPrefixed(DataObject& _obj)
 {
     if (_obj.type() == DataType::String)
@@ -377,7 +389,7 @@ void requireJsonFields(DataObject const& _o, std::string const& _config,
 DataObject object::prepareGenesisParams(std::string const& _network, std::string const& _engine)
 {
     ClientConfig const& cfg = Options::get().getDynamicOptions().getCurrentConfig();
-    test::checkAllowedNetwork(_network, cfg.getNetworksPlusAdditional());
+    cfg.checkForkAllowed(FORK(_network));
 
     DataObject genesis;
     genesis = cfg.getGenesisTemplate(_network);
