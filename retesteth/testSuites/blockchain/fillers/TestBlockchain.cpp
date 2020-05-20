@@ -126,7 +126,8 @@ test::scheme_RPCBlock TestBlockchain::mineBlock(
 
 // Import transactions on remote client
 DataObject TestBlockchain::importTransactions(blockSection const& _block)
-{
+{(void)_block; return DataObject();
+    /*
     DataObject transactionsArray = DataObject(DataType::Array);
     ETH_LOGC("Import transactions: " + m_sDebugString, 6, LogColor::YELLOW);
     for (auto const& tr : _block.getTransactions())
@@ -139,6 +140,7 @@ DataObject TestBlockchain::importTransactions(blockSection const& _block)
         }
     }
     return transactionsArray;
+    */
 }
 
 // Ask remote client to generate a blockheader that will later used for uncles
@@ -150,7 +152,7 @@ test::scheme_RPCBlock TestBlockchain::mineNextBlockAndRewert()
     latestBlockNumber.applyShift(-1);
     m_session.test_rewindToBlock(latestBlockNumber.getBlockNumberAsInt());  // rewind to the
                                                                             // previous block
-    m_session.test_modifyTimestamp(1000);  // Shift block timestamp relative to previous block
+    //m_session.test_modifyTimestamp(1000);  // Shift block timestamp relative to previous block
 
     // assign a random coinbase for an uncle block to avoid UncleIsAncestor exception
     // otherwise this uncle would be similar to a block mined

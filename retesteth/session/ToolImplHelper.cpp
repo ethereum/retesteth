@@ -273,8 +273,8 @@ void ToolImpl::verifyRawBlock(BlockHeadFromRLP const& _sanHeader, dev::RLP const
             "ImportRaw block require previous block hash == block.parentHash");
     }
 
-    for (auto const& tr : _blockRLP[1])
-        eth_sendRawTransaction(TransactionFromRLP(tr).transaction);
+    //for (auto const& tr : _blockRLP[1])
+    //    eth_sendRawTransaction(TransactionFromRLP(tr).transaction);
 }
 
 

@@ -17,13 +17,15 @@ std::string ToolImpl::web3_clientVersion()
 
 // ETH Methods
 // perhaps take raw rlp instead ??
-std::string ToolImpl::eth_sendRawTransaction(scheme_transaction const& _transaction)
-{
+std::string ToolImpl::eth_sendRawTransaction(string const& _rlp)
+{(void)_rlp;
+    /*
     rpcCall("", {});
     ETH_TEST_MESSAGE("Request: eth_sendRawTransaction \n" + _transaction.getData().asJson());
     m_transactions.push_back(_transaction);
     ETH_TEST_MESSAGE("Response: " + _transaction.getHash());
-    return _transaction.getHash();
+    return _transaction.getHash();*/
+    return "";
 }
 
 int ToolImpl::eth_getTransactionCount(std::string const& _address, std::string const& _blockNumber)
@@ -345,11 +347,11 @@ void ToolImpl::test_rewindToBlock(size_t _blockNr)
     m_currentBlockHeader.header.performVerifier(test::ver_ethereumfields);
 }
 
-void ToolImpl::test_modifyTimestamp(unsigned long long _timestamp)
-{
+void ToolImpl::test_modifyTimestamp(string const& _timestamp)
+{(void)_timestamp;
     rpcCall("", {});
-    ETH_TEST_MESSAGE("Request: test_modifyTimestamp " + DataObject(_timestamp).asJson());
-    m_currentBlockHeader.timestamp = _timestamp;
+    //ETH_TEST_MESSAGE("Request: test_modifyTimestamp " + DataObject(_timestamp).asJson());
+    //m_currentBlockHeader.timestamp = _timestamp;
 }
 
 string ToolImpl::prepareAllocForTool() const

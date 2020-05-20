@@ -29,20 +29,13 @@ private:
 class ClientConfig
 {
 public:
-    // ???
-    DataObject const& getGenesisTemplate(string const& _network) const
-    {
-        ETH_FAIL_REQUIRE_MESSAGE(m_genesisTemplate.count(FORK(_network)),
-            "Genesis template for network '" + _network + "' not found!");
-        return m_genesisTemplate.at(FORK(_network));
-    }
-
-
     ClientConfig(fs::path const& _clientConfigPath);
-
-    // Refactoring
-    ClientConfigFile const& cfgFile() const { return *m_clientConfigFile.getCPtr(); }
     ClientConfigID const& getId() const { return m_id; }
+
+    // Main config file
+    ClientConfigFile const& cfgFile() const { return *m_clientConfigFile.getCPtr(); }
+
+    // Path to name.sh file for IPC client initialization
     fs::path const getShellPath() const;
 
     // Functionality
@@ -56,6 +49,8 @@ public:
     // Print suggestions if no match found
     std::string const& translateException(string const& _exceptionName) const;
 
+    // Get Contents of genesis template for specified FORK
+    DataObject const& getGenesisTemplate(FORK const& _fork) const;
 
 private:
     ClientConfigID m_id;                                ///< Internal id

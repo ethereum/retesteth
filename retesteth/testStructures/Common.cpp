@@ -33,22 +33,28 @@ not found: '" + _network +
     }
 }*/
 
-string prepareChainParams()
+DataObject prepareChainParams(FORK const& _net, SealEngine _engine, State const& _state, StateTestFillerEnv const& _env)
 {
-    /*
     ClientConfig const& cfg = Options::get().getDynamicOptions().getCurrentConfig();
-    test::checkAllowedNetwork(_network, cfg.getNetworksPlusAdditional());
+    cfg.checkForkAllowed(_net);
 
     DataObject genesis;
-    genesis = cfg.getGenesisTemplate(_network);
-    genesis["sealEngine"] = _engine;
-    return genesis;
+    genesis = cfg.getGenesisTemplate(_net);
+    genesis["sealEngine"] = sealEngineToStr(_engine);
 
-    genesis["genesis"] = getEnv().getDataForRPC();
-    for (auto const& acc : getPre().getData().getSubObjects())
-        genesis["accounts"].addSubObject(acc);
-    return genesis;*/
-    return "";
+    StateTestFillerEnv const& env = _env;
+    genesis["genesis"]["author"] = env.currentCoinbase().asString();
+    genesis["genesis"]["difficulty"] = env.currentDifficulty().asString();
+    genesis["genesis"]["gasLimit"] = env.currentGasLimit().asString();
+    genesis["genesis"]["extraData"] = "0x";
+    genesis["genesis"]["timestamp"] = env.currentTimestamp().asString();
+    genesis["genesis"]["nonce"] = "0x0000000000000000";
+    genesis["genesis"]["mixHash"] = "0x0000000000000000000000000000000000000000000000000000000000000000";
+
+    // Because of template might contain preset accounts
+    for (auto const& el : _state.accounts())
+        genesis["accounts"].addSubObject(el.asDataObject());
+    return genesis;
 }
 
 

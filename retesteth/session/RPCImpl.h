@@ -13,7 +13,7 @@ public:
     std::string web3_clientVersion() override;
 
     // ETH Methods
-    std::string eth_sendRawTransaction(scheme_transaction const& _rlp) override;
+    std::string eth_sendRawTransaction(std::string const& _rlp) override;
     int eth_getTransactionCount(
         std::string const& _address, std::string const& _blockNumber) override;
     std::string eth_blockNumber() override;
@@ -35,7 +35,7 @@ public:
     // Test
     void test_setChainParams(DataObject const& _config) override;
     void test_rewindToBlock(size_t _blockNr) override;
-    void test_modifyTimestamp(unsigned long long _timestamp) override;
+    void test_modifyTimestamp(string const& _timestamp) override;
     string test_mineBlocks(int _number, bool _canFail = false) override;
     string test_importRawBlock(std::string const& _blockRLP) override;
     std::string test_getLogHash(std::string const& _txHash) override;

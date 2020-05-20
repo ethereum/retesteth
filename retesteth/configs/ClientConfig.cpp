@@ -178,5 +178,12 @@ std::string const& ClientConfig::translateException(string const& _exceptionName
     return notfound;
 }
 
+// Get Contents of genesis template for specified FORK
+DataObject const& ClientConfig::getGenesisTemplate(FORK const& _fork) const
+{
+    ETH_FAIL_REQUIRE_MESSAGE(m_genesisTemplate.count(FORK(_fork)),
+        "Genesis template for network '" + _fork.asString() + "' not found!");
+    return m_genesisTemplate.at(_fork);
+}
 
 }  // namespace test

@@ -28,16 +28,16 @@ struct StateTestInFiller : GCP_SPointerBase
     }
     StateTestFillerEnv const& Env() const { return *m_env.getCPtr(); }
     State const& Pre() const { return *m_pre.getCPtr(); }
-    StateTestFillerTransaction const& GTr() const { return *m_transaction.getCPtr(); }
+    StateTestFillerTransaction const& GeneralTr() const { return *m_transaction.getCPtr(); }
     std::vector<StateTestFillerExpectSection> const& Expects() const { return m_expectSections; }
-    std::list<FORK> getAllNetworksFromExpectSections() const;
+    std::list<FORK> getAllForksFromExpectSections() const;
 
 private:
     StateTestInFiller() {}
     string m_name;
     GCP_SPointer<InfoIncomplete> m_info;
     GCP_SPointer<StateTestFillerEnv> m_env;
-    GCP_SPointer<State> m_pre;
+    spState m_pre;
     GCP_SPointer<StateTestFillerTransaction> m_transaction;
     std::vector<StateTestFillerExpectSection> m_expectSections;
 };

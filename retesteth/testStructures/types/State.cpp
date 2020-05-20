@@ -15,7 +15,7 @@ DataObject State::asDataObject() const
 {
     DataObject out;
     for (Account const& el : m_accounts)
-        out[el.address().asString()] = el.asDataObject();
+        out.addSubObject(el.asDataObject());
     return out;
 }
 

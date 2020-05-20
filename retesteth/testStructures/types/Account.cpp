@@ -22,10 +22,11 @@ DataObject Account::asDataObject() const
 {
     DataObject out;
     string const& addr = m_address.getCPtr()->asString();
-    out[addr]["balance"] = m_balance.getCPtr()->asString();
-    out[addr]["nonce"] = m_nonce.getCPtr()->asString();
-    out[addr]["code"] = m_code.getCPtr()->asString();
-    out[addr]["storage"] = m_storage.getCPtr()->asDataObject();
+    out["balance"] = m_balance.getCPtr()->asString();
+    out["nonce"] = m_nonce.getCPtr()->asString();
+    out["code"] = m_code.getCPtr()->asString();
+    out["storage"] = m_storage.getCPtr()->asDataObject();
+    out.setKey(addr);
     return out;
 }
 

@@ -13,10 +13,10 @@ std::string RPCImpl::web3_clientVersion()
 }
 
 // ETH Methods
-std::string RPCImpl::eth_sendRawTransaction(scheme_transaction const& _transaction)
+std::string RPCImpl::eth_sendRawTransaction(string const& _rlp)
 {
     DataObject result =
-        rpcCall("eth_sendRawTransaction", {quote(_transaction.getSignedRLP())}, true);
+        rpcCall("eth_sendRawTransaction", {quote(_rlp)}, true);
 
     DataObject const& lastError = getLastRPCError();
     if (lastError.type() != DataType::Null)
@@ -103,9 +103,9 @@ void RPCImpl::test_rewindToBlock(size_t _blockNr)
         "remote test_rewintToBlock = false");
 }
 
-void RPCImpl::test_modifyTimestamp(unsigned long long _timestamp)
+void RPCImpl::test_modifyTimestamp(string const& _timestamp)
 {
-    ETH_FAIL_REQUIRE_MESSAGE(rpcCall("test_modifyTimestamp", {to_string(_timestamp)}) == true,
+    ETH_FAIL_REQUIRE_MESSAGE(rpcCall("test_modifyTimestamp", { _timestamp }) == true,
         "test_modifyTimestamp was not successfull");
 }
 

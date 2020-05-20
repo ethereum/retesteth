@@ -1,6 +1,7 @@
 #include "VALUE.h"
 #include <retesteth/EthChecks.h>
 #include <retesteth/ethObjects/object.h>
+#include <retesteth/TestHelper.h>
 using namespace test::teststruct;
 
 namespace test
@@ -31,6 +32,11 @@ VALUE::VALUE(DataObject const& _data, dev::u256 _limit) : m_data(_data)
             "Key `" + k + "` > limit `" + dev::toString(_limit) + "`, key = `" + v + "`");
 
     m_data.performModifier(mod_valuesToLowerCase);
+}
+
+string VALUE::asDecString() const
+{
+    return to_string(test::hexOrDecStringToInt(m_data.asString()));
 }
 
 }  // namespace teststruct

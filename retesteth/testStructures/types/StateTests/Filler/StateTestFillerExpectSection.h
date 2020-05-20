@@ -16,6 +16,9 @@ struct StateTestFillerExpectSection
     StateIncomplete const& result() const { return *m_result.getCPtr(); }
     std::set<FORK> const& forks() const { return m_forks; }
 
+    // Check that this indexes are present in this expect section
+    bool checkIndexes(size_t _dInd, size_t _gInd, size_t _vInd) const;
+
 private:
     std::set<int> m_dataInd;
     std::set<int> m_gasInd;

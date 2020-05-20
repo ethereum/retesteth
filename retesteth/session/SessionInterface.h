@@ -9,7 +9,7 @@ public:
     virtual std::string web3_clientVersion() = 0;
 
     // ETH Methods
-    virtual std::string eth_sendRawTransaction(scheme_transaction const& _transaction) = 0;
+    virtual std::string eth_sendRawTransaction(std::string const& _rlp) = 0;
     virtual int eth_getTransactionCount(
         std::string const& _address, std::string const& _blockNumber) = 0;
 
@@ -32,7 +32,7 @@ public:
     // Test
     virtual void test_setChainParams(DataObject const& _config) = 0;
     virtual void test_rewindToBlock(size_t _blockNr) = 0;
-    virtual void test_modifyTimestamp(unsigned long long _timestamp) = 0;
+    virtual void test_modifyTimestamp(string const& _timestamp) = 0;
     virtual string test_mineBlocks(int _number, bool _canFail = false) = 0;
     virtual string test_importRawBlock(std::string const& _blockRLP) = 0;
     virtual std::string test_getLogHash(std::string const& _txHash) = 0;

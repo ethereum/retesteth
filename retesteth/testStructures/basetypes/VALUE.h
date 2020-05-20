@@ -17,6 +17,8 @@ struct VALUE : GCP_SPointerBase
         dev::u256 _limit = dev::u256(
             "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
     string asString() const { return m_data.asString(); }
+    string asDecString() const;
+    dev::u256 asU256() const { return dev::u256(m_data.asString()); }
 
 private:
     VALUE() {}

@@ -19,5 +19,7 @@ private:
     std::vector<Account> m_accounts;
 };
 
+typedef GCP_SPointer<State> spState;
+
 }  // namespace teststruct
 }  // namespace test

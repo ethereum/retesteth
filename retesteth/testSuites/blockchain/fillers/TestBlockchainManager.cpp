@@ -137,7 +137,7 @@ void TestBlockchainManager::reorgChains(blockSection const& _block)
         chain.restoreUpToNumber(m_session, newBlockNumber, sameChain && blockNumberHasDecreased);
     }
 
-    m_session.test_modifyTimestamp(1000);  // Shift block timestamp relative to previous block
+    //m_session.test_modifyTimestamp(1000);  // Shift block timestamp relative to previous block
 }
 
 // _session is RPC connection to the client
