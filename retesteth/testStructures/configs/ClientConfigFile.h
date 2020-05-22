@@ -40,6 +40,7 @@ struct ClientConfigFile : GCP_SPointerBase
     }
     std::map<string, string> const& exceptions() const { return m_exceptions; }
     fs::path const& path() const { return m_configFilePath; }
+    fs::path const& shell() const { return m_pathToExecFile; }
 
 
 private:

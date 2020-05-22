@@ -13,22 +13,13 @@ namespace
 {
 fs::path getRetestethDataDir()
 {
-    fs::path const& OptionsDir = Options::get().datadir;
+    fs::path dataDir = Options::get().datadir;
+    if (dataDir.empty())
+        dataDir = getDataDir("retesteth");
 
-    // If --dir flag is set but that folder doesn't exist
-    if (!OptionsDir.empty() && !fs::exists(OptionsDir))
-    {
-        ETH_LOG("Options path `" + OptionsDir.string() +
-                    "` doesn't exist, attempt to create a new directory",
-            3);
-        return OptionsDir;
-    }
-
-    // Validate that
-    fs::path const& defaultDir = getDataDir("retesteth");
-    ETH_FAIL_REQUIRE_MESSAGE(fs::exists(defaultDir),
-        "Could not locate provided testpath: " + string(defaultDir.c_str()));
-    return defaultDir;
+    if (!fs::exists(dataDir))
+        ETH_LOG("Options path `" + dataDir.string() + "` doesn't exist, attempt to create a new directory", 3);
+    return dataDir;
 }
 }  // namespace
 

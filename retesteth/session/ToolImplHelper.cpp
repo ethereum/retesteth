@@ -1,6 +1,7 @@
 #include <retesteth/session/ToolImpl.h>
 #include <retesteth/session/ToolImplHelper.h>
 
+/*
 namespace toolimpl
 {
 string rlpToString(dev::RLP const& _rlp)
@@ -505,3 +506,5 @@ void ToolImpl::onError(string const& _what, string const& _message)
     m_lastInterfaceError["error"] = string("Error parsing block: ") + _what;
     ETH_TEST_MESSAGE(m_lastInterfaceError.asJson());
 }
+
+*/

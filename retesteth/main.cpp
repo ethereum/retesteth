@@ -179,7 +179,7 @@ int main(int argc, const char* argv[])
     if (!sMinusTArg.empty())
     {
         bool requestSuiteNotFound = false;
-        std::vector<std::string> requestedSuites = explode(sMinusTArg, ',');
+        std::vector<std::string> requestedSuites = test::explode(sMinusTArg, ',');
         for (auto const& suite : requestedSuites)
         {
             if (!test::inArray(c_allTestNames, suite))
@@ -219,7 +219,7 @@ int main(int argc, const char* argv[])
             outputThread.join();
         }
     }
-    catch (BaseEthException const& _ex)
+    catch (test::BaseEthException const& _ex)
     {
         ETH_STDERROR_MESSAGE(string("Error: ") + _ex.what());
     }

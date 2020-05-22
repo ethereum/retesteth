@@ -10,35 +10,36 @@ public:
     RPCImpl(Socket::SocketType _type, const string& _path) : m_socket(_type, _path) {}
 
 public:
-    std::string web3_clientVersion() override;
+    DataObject web3_clientVersion() override;
 
     // ETH Methods
-    std::string eth_sendRawTransaction(std::string const& _rlp) override;
-    int eth_getTransactionCount(
-        std::string const& _address, std::string const& _blockNumber) override;
-    std::string eth_blockNumber() override;
-    test::scheme_RPCBlock eth_getBlockByHash(string const& _hash, bool _fullObjects) override;
-    test::scheme_RPCBlock eth_getBlockByNumber(
-        BlockNumber const& _blockNumber, bool _fullObjects) override;
+    DataObject eth_sendRawTransaction(BYTES const& _rlp) override;
+    int eth_getTransactionCount(FH20 const& _address, VALUE const& _blockNumber) override;
+    VALUE eth_blockNumber() override;
+    EthGetBlockBy eth_getBlockByHash(FH32 const& _hash, Request _fullObjects) override;
+    EthGetBlockBy eth_getBlockByNumber(VALUE const& _blockNumber, Request _fullObjects) override;
 
-    std::string eth_getCode(std::string const& _address, std::string const& _blockNumber) override;
-    std::string eth_getBalance(
-        std::string const& _address, std::string const& _blockNumber) override;
+    BYTES eth_getCode(FH20 const& _address, VALUE const& _blockNumber) override;
+    VALUE eth_getBalance(FH20 const& _address, VALUE const& _blockNumber) override;
 
     // Debug
-    scheme_debugAccountRange debug_accountRange(std::string const& _blockHashOrNumber, int _txIndex,
-        std::string const& _address, int _maxResults) override;
-    DataObject debug_storageRangeAt(std::string const& _blockHashOrNumber, int _txIndex,
-        std::string const& _address, std::string const& _begin, int _maxResults) override;
-    scheme_debugTraceTransaction debug_traceTransaction(std::string const& _trHash) override;
+    DebugAccountRange debug_accountRange(
+        VALUE const& _blockNumber, VALUE const& _txIndex, FH32 const& _addrHash, int _maxResults) override;
+    DebugAccountRange debug_accountRange(
+        FH32 const& _blockHash, VALUE const& _txIndex, FH32 const& _address, int _maxResults) override;
+    DebugStorageRangeAt debug_storageRangeAt(
+        VALUE const& _blockNumber, VALUE const& _txIndex, FH20 const& _addrHash, FH32 const& _begin, int _maxResults) override;
+    DebugStorageRangeAt debug_storageRangeAt(
+        FH32 const& _blockHash, VALUE const& _txIndex, FH20 const& _address, FH32 const& _begin, int _maxResults) override;
+    DebugTraceTransaction debug_traceTransaction(FH32 const& _trHash) override;
 
     // Test
     void test_setChainParams(DataObject const& _config) override;
-    void test_rewindToBlock(size_t _blockNr) override;
-    void test_modifyTimestamp(string const& _timestamp) override;
-    string test_mineBlocks(int _number, bool _canFail = false) override;
-    string test_importRawBlock(std::string const& _blockRLP) override;
-    std::string test_getLogHash(std::string const& _txHash) override;
+    void test_rewindToBlock(VALUE const& _blockNr) override;
+    void test_modifyTimestamp(VALUE const& _timestamp) override;
+    void test_mineBlocks(int _number) override;
+    DataObject test_importRawBlock(BYTES const& _blockRLP) override;
+    FH32 test_getLogHash(FH32 const& _txHash) override;
 
     // Internal
     std::string sendRawRequest(std::string const& _request);

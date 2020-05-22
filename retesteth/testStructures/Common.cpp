@@ -13,12 +13,12 @@ namespace test
 {
 namespace teststruct
 {
-void checkDataObject(DataObject const& _input)
+/*void checkDataObject(DataObject const& _input)
 {
     ETH_ERROR_REQUIRE_MESSAGE(_input.type() == DataType::Object,
         TestOutputHelper::get().get().testFile().string() +
             " A test file must contain an object value (json/yaml).");
-}
+}*/
 
 /*
 void checkAllowedNetwork(string const& _network, vector<string> const& _networkOrder)
@@ -53,8 +53,10 @@ DataObject prepareChainParams(FORK const& _net, SealEngine _engine, State const&
 
     // Because of template might contain preset accounts
     for (auto const& el : _state.accounts())
-        genesis["accounts"].addSubObject(el.asDataObject());
+        genesis["accounts"].addSubObject(el.second.getCContent().asDataObject());
     return genesis;
+
+    // CHAIN PARAMS AS A STRUCTURE ???
 }
 
 

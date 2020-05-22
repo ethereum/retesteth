@@ -1,5 +1,5 @@
 #pragma once
-#include "Account.h"
+#include "AccountIncomplete.h"
 #include <retesteth/dataObject/DataObject.h>
 #include <retesteth/dataObject/SPointer.h>
 using namespace dataobject;
@@ -9,17 +9,15 @@ namespace test
 {
 namespace teststruct
 {
-struct State : GCP_SPointerBase
+struct StateIncomplete : GCP_SPointerBase
 {
-    State(DataObject const&);
-    std::vector<Account> const& accounts() const { return m_accounts; }
+    StateIncomplete(DataObject const&);
+    std::map<FH20, spAccountIncomplete> const& accounts() const { return m_accounts; }
     DataObject asDataObject() const;
 
 private:
-    std::vector<Account> m_accounts;
+    std::map<FH20, spAccountIncomplete> m_accounts;
 };
-
-typedef GCP_SPointer<State> spState;
 
 }  // namespace teststruct
 }  // namespace test

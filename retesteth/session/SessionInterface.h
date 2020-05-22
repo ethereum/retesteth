@@ -1,41 +1,54 @@
 #pragma once
 #include "Socket.h"
-#include <retesteth/ethObjects/common.h>
+#include <retesteth/dataObject/DataObject.h>
+#include <retesteth/testStructures/basetypes.h>
+#include <retesteth/testStructures/types/rpc.h>
+
 #include <string>
+
+using namespace dataobject;
+using namespace test::teststruct;
+
+enum class Request
+{
+    FULLOBJECTS,
+    LESSOBJECTS
+};
 
 class SessionInterface
 {
 public:
-    virtual std::string web3_clientVersion() = 0;
+    // DataObject represents json output
+    virtual DataObject web3_clientVersion() = 0;
 
     // ETH Methods
-    virtual std::string eth_sendRawTransaction(std::string const& _rlp) = 0;
-    virtual int eth_getTransactionCount(
-        std::string const& _address, std::string const& _blockNumber) = 0;
+    virtual DataObject eth_sendRawTransaction(BYTES const& _rlp) = 0;
+    virtual int eth_getTransactionCount(FH20 const& _address, VALUE const& _blockNumber) = 0;
 
-    virtual std::string eth_blockNumber() = 0;
-    virtual test::scheme_RPCBlock eth_getBlockByHash(string const& _hash, bool _fullObjects) = 0;
-    virtual test::scheme_RPCBlock eth_getBlockByNumber(
-        BlockNumber const& _blockNumber, bool _fullObjects) = 0;
-    virtual std::string eth_getCode(
-        std::string const& _address, std::string const& _blockNumber) = 0;
-    virtual std::string eth_getBalance(
-        std::string const& _address, std::string const& _blockNumber) = 0;
+    virtual VALUE eth_blockNumber() = 0;
+    virtual EthGetBlockBy eth_getBlockByHash(FH32 const& _blockHash, Request _fullObjects) = 0;
+    virtual EthGetBlockBy eth_getBlockByNumber(VALUE const& _blockNumber, Request _fullObjects) = 0;
+    virtual BYTES eth_getCode(FH20 const& _address, VALUE const& _blockNumber) = 0;
+    virtual VALUE eth_getBalance(FH20 const& _address, VALUE const& _blockNumber) = 0;
 
     // Debug
-    virtual scheme_debugAccountRange debug_accountRange(std::string const& _blockHashOrNumber,
-        int _txIndex, std::string const& _address, int _maxResults) = 0;
-    virtual DataObject debug_storageRangeAt(std::string const& _blockHashOrNumber, int _txIndex,
-        std::string const& _address, std::string const& _begin, int _maxResults) = 0;
-    virtual scheme_debugTraceTransaction debug_traceTransaction(std::string const& _trHash) = 0;
+    virtual DebugAccountRange debug_accountRange(
+        VALUE const& _blockNumber, VALUE const& _txIndex, FH32 const& _addrHash, int _maxResults) = 0;
+    virtual DebugAccountRange debug_accountRange(
+        FH32 const& _blockHash, VALUE const& _txIndex, FH32 const& _addrHash, int _maxResults) = 0;
+    virtual DebugStorageRangeAt debug_storageRangeAt(
+        VALUE const& _blockNumber, VALUE const& _txIndex, FH20 const& _addrHash, FH32 const& _begin, int _maxResults) = 0;
+    virtual DebugStorageRangeAt debug_storageRangeAt(
+        FH32 const& _blockHash, VALUE const& _txIndex, FH20 const& _addrHash, FH32 const& _begin, int _maxResults) = 0;
+    virtual DebugTraceTransaction debug_traceTransaction(FH32 const& _trHash) = 0;
 
     // Test
     virtual void test_setChainParams(DataObject const& _config) = 0;
-    virtual void test_rewindToBlock(size_t _blockNr) = 0;
-    virtual void test_modifyTimestamp(string const& _timestamp) = 0;
-    virtual string test_mineBlocks(int _number, bool _canFail = false) = 0;
-    virtual string test_importRawBlock(std::string const& _blockRLP) = 0;
-    virtual std::string test_getLogHash(std::string const& _txHash) = 0;
+    virtual void test_rewindToBlock(VALUE const& _blockNr) = 0;
+    virtual void test_modifyTimestamp(VALUE const& _timestamp) = 0;
+    virtual void test_mineBlocks(int _number) = 0;
+    virtual DataObject test_importRawBlock(BYTES const& _blockRLP) = 0;
+    virtual FH32 test_getLogHash(FH32 const& _txHash) = 0;
 
     // Internal
     virtual DataObject rpcCall(std::string const& _methodName,

@@ -64,15 +64,6 @@ ClientConfig::ClientConfig(fs::path const& _clientConfigPath) : m_id(ClientConfi
     }
 }
 
-// Get shell script that runs an instance of a client from options folder
-fs::path const ClientConfig::getShellPath() const
-{
-    fs::path parentFromConfigFile = cfgFile().path().parent_path();
-    fs::path shellScript = parentFromConfigFile.stem().string() + ".sh";
-    ETH_FAIL_REQUIRE_MESSAGE(fs::exists(shellScript), "Shell script does not exist: " + shellScript.string());
-    return shellScript;
-}
-
 void ClientConfig::checkForkAllowed(FORK const& _net) const
 {
     if (!cfgFile().allowedForks().count(_net))
@@ -155,12 +146,12 @@ set<FORK> ClientConfig::translateNetworks(set<string> const& _networks) const
 
 std::string const& ClientConfig::translateException(string const& _exceptionName) const
 {
-    ClientConfigFile const& cfg = *m_clientConfigFile.getCPtr();
+    ClientConfigFile const& cfg = m_clientConfigFile.getCContent();
     if (cfg.exceptions().count(_exceptionName))
         return cfg.exceptions().at(_exceptionName);
 
     // --- Correct typos
-    // Puth known exceptions into vector
+    // Put known exceptions into vector
     vector<string> exceptions;
     for (auto const& el : cfg.exceptions())
         exceptions.push_back(el.first);
@@ -170,9 +161,8 @@ std::string const& ClientConfig::translateException(string const& _exceptionName
     for (auto const& el : suggestions)
         message += el + ", ";
     message += " ...)";
-    ETH_ERROR_MESSAGE("Config::getExceptionString '" + _exceptionName +
-                      "' not found in client config `exceptions` section! (" + cfg.path().c_str() +
-                      ")" + message);
+    ETH_ERROR_MESSAGE("Config::getExceptionString '" + _exceptionName + "' not found in client config `exceptions` section! (" +
+                      cfg.path().c_str() + ")" + message);
     // ---
     static string const notfound = string();
     return notfound;

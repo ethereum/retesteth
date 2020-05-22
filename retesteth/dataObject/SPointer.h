@@ -56,7 +56,7 @@ public:
     GCP_SPointer(GCP_SPointer const& pnt) : _pointee(nullptr)
     {
         release();
-        _pointee = pnt.getPointer();
+        _pointee = pnt.getPointerUnsafe();
         if (_pointee != nullptr)
         {
             if (!(_pointee->_isEmpty))
@@ -66,28 +66,24 @@ public:
         }
     }
 
-    // !!! Unsafe function
-    T* getPointer() const { return _pointee; }
-    const T* getCPtr() const { return _pointee; }
-
     // Replace one pointer with another
     GCP_SPointer& operator=(GCP_SPointer const& rhs)
     {
         // If pointers are different. release our current pointer and add ref to another (rhs)
-        if (_pointee != rhs.getCPtr())
+        if (_pointee != rhs.getPointerUnsafe())
         {
             release();
-            _pointee = rhs.getPointer();
+            _pointee = rhs.getPointerUnsafe();
             _pointee->AddRef();
         }
         return *this;
     }
 
-    GCP_SPointer& operator=(const int rhs)
+    /*GCP_SPointer& operator=(const int rhs)
     {
         _pointee = nullptr;
         return *this;
-    }
+    }*/
 
     ~GCP_SPointer() { release(); };
 
@@ -121,9 +117,29 @@ public:
 
 
     // Types convertion
-    T& operator*() const { return *_pointee; }
-    T* operator->() const { return _pointee; }
-    operator T*() { return _pointee; }
+private:
+    T* getPointerUnsafe() const { return _pointee; }
+    const T* getCPtr() const { return _pointee; }
+
+public:
+    T& operator*()
+    {
+        assert(!isEmpty());
+        return *getPointerUnsafe();
+    }
+    T& getContent()
+    {
+        assert(!isEmpty());
+        return *getPointerUnsafe();
+    }
+    T const& getCContent() const
+    {
+        assert(!isEmpty());
+        return *getCPtr();
+    }
+
+    // T* operator->() const { return _pointee; }
+    // operator T*() { return _pointee; }
     // operator GCP_SPointer<T>() { return GCP_SPointer<T>(this); }
 
     /*template <class D>

@@ -1,6 +1,6 @@
 #pragma once
 #include "../../../configs/FORK.h"
-#include "../../StateIncomplete.h"
+#include "../../../types/Ethereum/StateIncomplete.h"
 #include <retesteth/dataObject/DataObject.h>
 #include <retesteth/dataObject/SPointer.h>
 using namespace dataobject;
@@ -13,7 +13,7 @@ namespace teststruct
 struct StateTestFillerExpectSection
 {
     StateTestFillerExpectSection(DataObject const&);
-    StateIncomplete const& result() const { return *m_result.getCPtr(); }
+    StateIncomplete const& result() const { return m_result.getCContent(); }
     std::set<FORK> const& forks() const { return m_forks; }
 
     // Check that this indexes are present in this expect section

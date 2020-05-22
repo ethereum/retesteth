@@ -1,4 +1,4 @@
-#include "GeneralStateTestsFiller.h"
+#include "GeneralStateTestFiller.h"
 #include "../../Common.h"
 #include <retesteth/EthChecks.h>
 #include <retesteth/Options.h>
@@ -9,11 +9,11 @@ GeneralStateTestFiller::GeneralStateTestFiller(DataObject const& _data)
 {
     try
     {
-        checkDataObject(_data);
+        ETH_ERROR_REQUIRE_MESSAGE(_data.type() == DataType::Object,
+            TestOutputHelper::get().get().testFile().string() + " A test file must contain an object value (json/yaml).");
         for (auto const& el : _data.getSubObjects())
         {
-            TestOutputHelper::get().setCurrentTestInfo(
-                TestInfo("GeneralStateTestFiller", el.getKey()));
+            TestOutputHelper::get().setCurrentTestInfo(TestInfo("GeneralStateTestFiller", el.getKey()));
             m_tests.push_back(StateTestInFiller(el));
         }
     }
@@ -41,9 +41,8 @@ StateTestInFiller::StateTestInFiller(DataObject const& _data)
     }
     // ---
 
-    m_pre = GCP_SPointer<State>(new State(tmpD));
-    m_transaction = GCP_SPointer<StateTestFillerTransaction>(
-        new StateTestFillerTransaction(_data.atKey("transaction")));
+    m_pre = spState(new State(tmpD));
+    m_transaction = GCP_SPointer<StateTestFillerTransaction>(new StateTestFillerTransaction(_data.atKey("transaction")));
     for (auto const& el : _data.atKey("expect").getSubObjects())
         m_expectSections.push_back(StateTestFillerExpectSection(el));
     m_name = _data.getKey();

@@ -1,11 +1,11 @@
 #pragma once
 #include <retesteth/TestHelper.h>
-#include <retesteth/ethObjects/common.h>
 #include <retesteth/session/SessionInterface.h>
 #include <retesteth/session/Socket.h>
 #include <retesteth/session/ToolImplHelper.h>
 #include <string>
 
+/*
 class ToolImpl : public SessionInterface
 {
 public:
@@ -22,20 +22,18 @@ public:
     int eth_getTransactionCount(
         std::string const& _address, std::string const& _blockNumber) override;
     std::string eth_blockNumber() override;
-    test::scheme_RPCBlock eth_getBlockByHash(string const& _hash, bool _fullObjects) override;
-    test::scheme_RPCBlock eth_getBlockByNumber(
-        BlockNumber const& _blockNumber, bool _fullObjects) override;
+    DataObject eth_getBlockByHash(string const& _hash, bool _fullObjects) override;
+    DataObject eth_getBlockByNumber(string const& _blockNumber, bool _fullObjects) override;
 
     std::string eth_getCode(std::string const& _address, std::string const& _blockNumber) override;
-    std::string eth_getBalance(
-        std::string const& _address, std::string const& _blockNumber) override;
+    std::string eth_getBalance(std::string const& _address, std::string const& _blockNumber) override;
 
     // Debug
-    scheme_debugAccountRange debug_accountRange(std::string const& _blockHashOrNumber, int _txIndex,
+    DataObject debug_accountRange(std::string const& _blockHashOrNumber, int _txIndex,
         std::string const& _address, int _maxResults) override;
     DataObject debug_storageRangeAt(std::string const& _blockHashOrNumber, int _txIndex,
         std::string const& _address, std::string const& _begin, int _maxResults) override;
-    scheme_debugTraceTransaction debug_traceTransaction(std::string const& _trHash) override;
+    DataObject debug_traceTransaction(std::string const& _trHash) override;
 
     // Test
     void test_setChainParams(DataObject const& _config) override;
@@ -146,3 +144,4 @@ private:
     };
     BlockHeaderOverride m_currentBlockHeader;
 };
+*/

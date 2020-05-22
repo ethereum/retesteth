@@ -40,6 +40,8 @@ void TestBlockchainManager::parseBlockFromJson(blockSection const& _block, bool 
 // Import all generated blocks at the same order as they are in tests
 void TestBlockchainManager::syncOnRemoteClient(DataObject& _exportBlocksSection) const
 {
+    (void)_exportBlocksSection;
+    /*
     if (m_wasAtLeastOneFork)
     {
         // !!! RELY ON _exportBlocksSection has the same block order as m_testBlockRLPs
@@ -69,6 +71,7 @@ void TestBlockchainManager::syncOnRemoteClient(DataObject& _exportBlocksSection)
             ind++;
         }
     }
+    */
 }
 
 vectorOfSchemeBlock TestBlockchainManager::prepareUncles(
@@ -84,6 +87,8 @@ vectorOfSchemeBlock TestBlockchainManager::prepareUncles(
 
 void TestBlockchainManager::reorgChains(blockSection const& _block)
 {
+    (void)_block;
+    /*
     // if a new chain, initialize
     size_t newBlockNumber = _block.getNumber();
     string const& newBlockChainName = _block.getChainName();
@@ -138,6 +143,7 @@ void TestBlockchainManager::reorgChains(blockSection const& _block)
     }
 
     //m_session.test_modifyTimestamp(1000);  // Shift block timestamp relative to previous block
+    */
 }
 
 // _session is RPC connection to the client
@@ -194,8 +200,9 @@ test::scheme_RPCBlock TestBlockchainManager::prepareUncle(
     }
     case scheme_uncleHeader::typeOfUncleSection::SameAsBlock:
     {
-        BlockNumber sameAsBlockNumber(_uncleOverwrite.getSameAsBlock());
-        return m_session.eth_getBlockByNumber(sameAsBlockNumber, false);
+        // BlockNumber sameAsBlockNumber(_uncleOverwrite.getSameAsBlock());
+        // return test::scheme_RPCBlock(m_session.eth_getBlockByNumber(sameAsBlockNumber, false));
+        return scheme_RPCBlock("");
     }
     case scheme_uncleHeader::typeOfUncleSection::SameAsPreviousSibling:
     {

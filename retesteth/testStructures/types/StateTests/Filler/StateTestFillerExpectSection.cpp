@@ -26,11 +26,18 @@ StateTestFillerExpectSection::StateTestFillerExpectSection(DataObject const& _da
     ClientConfig const& cfg = Options::get().getDynamicOptions().getCurrentConfig();
     m_forks = cfg.translateNetworks(forks);
 
-    // Convert Expect Section IncompletePostState fields to hex
+    // Convert Expect Section IncompletePostState fields to hex, account keys add `0x` prefix
     DataObject tmpD = _data.atKey("result");
     if (tmpD.count("storage"))
         tmpD.atKeyUnsafe("storage").performModifier(mod_keyToCompactEvenHexPrefixed);
+    for (auto& acc : tmpD.getSubObjectsUnsafe())
+    {
+        string const& key = acc.getKey();
+        if (key.size() > 2 && (key[0] != '0' || key[1] != 'x'))
+            acc.setKey("0x" + acc.getKey());
+    }
     tmpD.performModifier(mod_valueToCompactEvenHexPrefixed);
+
 
     m_result = GCP_SPointer<StateIncomplete>(new StateIncomplete(tmpD));
 }

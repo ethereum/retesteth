@@ -258,6 +258,11 @@ dev::bytes sfromHex(string const& _hexStr)
     }
 }
 
+void strToLower(string& _input)
+{
+    std::transform(_input.begin(), _input.end(), _input.begin(), [](unsigned char c) { return std::tolower(c); });
+}
+
 bool checkCmdExist(std::string const& _command)
 {
     string checkCmd = string("which " + _command + " > /dev/null 2>&1");

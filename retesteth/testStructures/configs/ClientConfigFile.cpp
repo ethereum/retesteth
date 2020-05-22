@@ -60,10 +60,12 @@ void ClientConfigFile::initWithData(DataObject const& _data)
             ETH_FAIL_MESSAGE(sErrorPath + "`socketAddress` must be string for this socketType!");
         m_pathToExecFile = fs::path(_data.atKey("socketAddress").asString());
         if (!fs::exists(m_pathToExecFile))
+            m_pathToExecFile = m_configFilePath.parent_path() / m_pathToExecFile;  // try relative path
+        if (!fs::exists(m_pathToExecFile))
             ETH_FAIL_MESSAGE(sErrorPath +
                              "`socketAddress` for socketType::ipc must point to a shell script, "
-                             "that runs a client instance!" +
-                             " But file not found (" + m_pathToExecFile.string() + ")");
+                             "that runs a client instance! " +
+                             "But file `" + m_pathToExecFile.string() + "` not found!");
     }
     // IPCDebug would connect to already running unix socket
     else if (m_socketType == ClientConfgSocketType::IPCDebug)
@@ -72,10 +74,8 @@ void ClientConfigFile::initWithData(DataObject const& _data)
             ETH_FAIL_MESSAGE(sErrorPath + "`socketAddress` must be string for this socketType!");
         m_pathToExecFile = fs::path(_data.atKey("socketAddress").asString());
         if (!fs::exists(m_pathToExecFile))
-            ETH_FAIL_MESSAGE(
-                sErrorPath +
-                "`socketAddress` for socketType::ipc-debug must point to a running unix socket!" +
-                " But file not founs (" + m_pathToExecFile.string() + ")");
+            ETH_FAIL_MESSAGE(sErrorPath + "`socketAddress` for socketType::ipc-debug must point to a running unix socket!" +
+                             " But socket file not found (" + m_pathToExecFile.string() + ")");
     }
     // Transition tool would not use Socket class and run tool file instead.
     else if (m_socketType == ClientConfgSocketType::TransitionTool)

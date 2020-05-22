@@ -256,7 +256,7 @@ string const alethIPCDebug_config = R"({
 string const aleth_config = R"({
     "name" : "Ethereum cpp-client",
     "socketType" : "ipc",
-    "socketAddress" : "local",
+    "socketAddress" : "aleth.sh",
     "forks" : [
         "Frontier",
         "Homestead",

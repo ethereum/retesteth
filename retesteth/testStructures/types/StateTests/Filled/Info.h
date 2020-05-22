@@ -18,6 +18,7 @@ struct Info : GCP_SPointerBase
     string const& sourceHash() const { return m_sourceHash; }
 
 private:
+    Info() {}
     string m_comment;
     string m_filling_rpc_server;
     string m_filling_tool_version;

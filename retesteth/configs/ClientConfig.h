@@ -33,10 +33,10 @@ public:
     ClientConfigID const& getId() const { return m_id; }
 
     // Main config file
-    ClientConfigFile const& cfgFile() const { return *m_clientConfigFile.getCPtr(); }
+    ClientConfigFile const& cfgFile() const { return m_clientConfigFile.getCContent(); }
 
     // Path to name.sh file for IPC client initialization
-    fs::path const getShellPath() const;
+    fs::path const getShellPath() const { return cfgFile().shell(); };
 
     // Functionality
     // Verify FORK is allowed by Fork + AdditionalForks and throw an error if not
@@ -55,8 +55,7 @@ public:
 private:
     ClientConfigID m_id;                                ///< Internal id
     GCP_SPointer<ClientConfigFile> m_clientConfigFile;  ///< <clientname>/config file
-    std::map<FORK, spVALUE> m_correctReward;            ///< Correct mining reward info for
-                                                        ///< StateTests->BlockchainTests
+    std::map<FORK, spVALUE> m_correctReward;            ///< Correct mining reward info for StateTests->BlockchainTests
     std::map<FORK, DataObject> m_genesisTemplate;       ///< Template For test_setChainParams
 };
 

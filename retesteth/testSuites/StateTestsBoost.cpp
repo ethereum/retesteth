@@ -2,10 +2,12 @@
 #include "retesteth/TestOutputHelper.h"
 #include "retesteth/testSuites/StateTests.h"
 #include "retesteth/testSuites/TestFixtures.h"
+#include <retesteth/TestSuite.h>
 #include <boost/test/unit_test.hpp>
 
 using namespace std;
 using namespace dev;
+using namespace test;
 namespace fs = boost::filesystem;
 
 // Most Recent StateTestSuite

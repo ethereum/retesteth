@@ -8,7 +8,6 @@ namespace test
 {
 namespace teststruct
 {
-
 Transaction::Transaction(DataObject const& _data)
 {
     m_data = spBYTES(new BYTES(_data.atKey("data").asString()));
@@ -46,8 +45,8 @@ void Transaction::buildVRS(VALUE const& _secret)
     dev::h256 hash(dev::sha3(stream.out()));
     dev::Signature sig = dev::sign(dev::Secret(_secret.asString()), hash);
     dev::SignatureStruct sigStruct = *(dev::SignatureStruct const*)&sig;
-    ETH_FAIL_REQUIRE_MESSAGE(sigStruct.isValid(),
-        TestOutputHelper::get().testName() + " Could not construct transaction signature!");
+    ETH_FAIL_REQUIRE_MESSAGE(
+        sigStruct.isValid(), TestOutputHelper::get().testName() + " Could not construct transaction signature!");
 
     // 27 because devcrypto signing donesn't count chain id
     DataObject v = DataObject(dev::toCompactHexPrefixed(dev::u256(sigStruct.v + 27)));
@@ -64,7 +63,7 @@ DataObject Transaction::asDataObject() const
     return out;
 }
 
-std::string const Transaction::getSignedRLP() const
+BYTES const Transaction::getSignedRLP() const
 {
     dev::RLPStream sWithSignature;
     sWithSignature.appendList(9);
@@ -72,7 +71,7 @@ std::string const Transaction::getSignedRLP() const
     sWithSignature << v().asU256().convert_to<dev::byte>();
     sWithSignature << r().asU256();
     sWithSignature << s().asU256();
-    return dev::toHexPrefixed(sWithSignature.out());
+    return BYTES(dev::toHexPrefixed(sWithSignature.out()));
 }
 
 }  // namespace teststruct

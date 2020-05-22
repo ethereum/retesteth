@@ -6,7 +6,7 @@ using namespace std;
 namespace test
 {
 // inline function, because _actualExistance could be asked via remote RPC request
-CompareResult checkExistance(scheme_expectAccount const& _expectAccount, bool _actualExistance)
+/*CompareResult checkExistance(scheme_expectAccount const& _expectAccount, bool _actualExistance)
 {
     // if should not exist but actually exists
     if (_expectAccount.shouldNotExist() && _actualExistance)
@@ -23,141 +23,227 @@ CompareResult checkExistance(scheme_expectAccount const& _expectAccount, bool _a
         return CompareResult::MissingExpectedAccount;
     }
     return CompareResult::Success;
-}
+}*/
 
-// inline function
-CompareResult compareAccounts(
-    scheme_account const& _inState, scheme_expectAccount const& _expectAccount)
+CompareResult compareAccounts(AccountIncomplete const& _expectAccount, Account const& _remoteAccount);
+
+Account remoteGetAccount(SessionInterface& _session, VALUE const& _bNumber, VALUE const& _trIndex, FH20 const& _account)
 {
-    // report all errors, but return the last error as a compare result
-    CompareResult result = CompareResult::Success;
-    auto checkMessage = [&result](bool _flag, CompareResult _type, string const& _error) -> void {
-        ETH_MARK_ERROR_FLAG(_flag, _error);
-        if (!_flag)
-            result = _type;
-    };
+    VALUE balance(_session.eth_getBalance(_account, _bNumber));
+    VALUE nonce(_session.eth_getTransactionCount(_account, _bNumber));
+    BYTES code(_session.eth_getCode(_account, _bNumber));
 
-    if (_expectAccount.hasBalance())
+    bool hasStorage = true;
+    FH32 beginHash = FH32::zero();
+    Storage tmpStorage = Storage(DataObject(DataType::Object));
+    size_t safety = 100;
+    while (hasStorage && safety--)
     {
-        u256 inStateB = u256(_inState.getData().atKey("balance").asString());
-        checkMessage(_expectAccount.getData().atKey("balance").asString() ==
-                         _inState.getData().atKey("balance").asString(),
-            CompareResult::IncorrectBalance,
-            "Check State: Remote account '" +
-                _expectAccount.address() + "': has incorrect balance " + toString(inStateB) +
-                ", test expected " +
-                toString(u256(_expectAccount.getData().atKey("balance").asString())) + " (" +
-                _expectAccount.getData().atKey("balance").asString() +
-                " != " + _inState.getData().atKey("balance").asString() + ")");
+        // Read storage from remote account by 10 records at a time
+        DebugStorageRangeAt res(_session.debug_storageRangeAt(_bNumber, _trIndex, _account, beginHash, 10));
+        if (res.nextKey().isZero())
+            hasStorage = false;
+        else
+            beginHash = res.nextKey();
+        tmpStorage.merge(res.storage());
     }
-
-    if (_expectAccount.hasNonce())
-        checkMessage(_expectAccount.getData().atKey("nonce").asString() ==
-                         _inState.getData().atKey("nonce").asString(),
-            CompareResult::IncorrectNonce,
-            "Check State: Remote account '" +
-                _expectAccount.address() + "': has incorrect nonce " +
-                _inState.getData().atKey("nonce").asString() + ", test expected " +
-                _expectAccount.getData().atKey("nonce").asString());
-
-    // Check that state post has values from expected storage
-    if (_expectAccount.hasStorage())
-    {
-        CompareResult res = _expectAccount.compareStorage(_inState.getData().atKey("storage"));
-        if (result == CompareResult::Success)
-            result = res;  // Only override success result with potential error
-    }
-
-    if (_expectAccount.hasCode())
-        checkMessage(_expectAccount.getData().atKey("code").asString() ==
-                         _inState.getData().atKey("code").asString(),
-            CompareResult::IncorrectCode,
-            "Check State: Remote account '" +
-                _expectAccount.address() + "': has incorrect code '" +
-                _inState.getData().atKey("code").asString() + "', test expected '" +
-                _expectAccount.getData().atKey("code").asString() + "'");
-
-    return result;
+    if (safety == 0)
+        ETH_WARNING_TEST("getRemoteAccount while exceed safety switch!", 6);
+    return Account(_account, balance, nonce, code, tmpStorage);
 }
 
-DataObject getRemoteAccountList(SessionInterface& _session, scheme_RPCBlock const& _latestInfo)
+// Get full remote state from the client
+State getRemoteState(SessionInterface& _session)
 {
-    DataObject accountList;
-    string startHash = "0";
-    const int cmaxRows = 100;
-    const size_t cycles_max = 100;
-    size_t cycles = 0;
-    while (cycles++ <= cycles_max)
+    VALUE recentBNumber(_session.eth_blockNumber());
+    EthGetBlockBy recentBlock(_session.eth_getBlockByNumber(recentBNumber, Request::LESSOBJECTS));
+    VALUE trIndex(recentBlock.transactions().size());
+
+    // Construct accountList by asking packs of 10th of accounts from remote client
+    std::set<FH20> accountList;
+    FH32 nextKey("0x0000000000000000000000000000000000000000000000000000000000000001");
+    while (!nextKey.isZero())
     {
-        scheme_debugAccountRange res = _session.debug_accountRange(
-            _latestInfo.getNumber(), _latestInfo.getTransactionCount(), startHash, cmaxRows);
-        auto const& subObjects = res.getAccountMap();
-        for (auto const& element : subObjects.getSubObjects())
-            accountList.addSubObject(element.asString(), DataObject(DataType::Null));
-        if (!res.isNextKey())
-            break;
-        if (subObjects.getSubObjects().size() > 0)
-            startHash = subObjects.at(subObjects.getSubObjects().size() - 1).getKey();
+        DebugAccountRange range(_session.debug_accountRange(recentBNumber, trIndex, nextKey, 10));
+        for (auto const& el : range.addresses())
+            accountList.insert(el);
+        nextKey = range.nextKey();
     }
-    ETH_ERROR_REQUIRE_MESSAGE(cycles <= cycles_max,
-        "Remote state has too many accounts! (>" + to_string(cycles_max * cmaxRows) + ")");
-    return accountList;
+
+    // Use recentBNumber and trIndex once to request account information in loop
+    auto getRemoteAccount = [&_session, &recentBNumber, &trIndex](
+                                FH20 const& _account) { return remoteGetAccount(_session, recentBNumber, trIndex, _account); };
+
+    std::map<FH20, spAccount> stateAccountMap;
+    for (auto const& acc : accountList)
+        stateAccountMap[acc] = spAccount(new Account(getRemoteAccount(acc)));
+
+    return State(stateAccountMap);
 }
 
-// compare states with full post information
-// CompareResult compareStates(scheme_expectState const& _stateExpect, scheme_state const&
-// _statePost);  CompareResult compareStates(scheme_state const& _stateExpect, scheme_state const&
-// _statePost)
-//{
-//    return compareStates(scheme_expectState(_stateExpect.getData()), _statePost);
-//}
-
-// compare states with session asking post state data on the fly
-void compareStates(scheme_expectState const& _stateExpect, SessionInterface& _session,
-    scheme_RPCBlock const& _latestInfo)
+// Compare expected state with session asking post state data on the fly
+void compareStates(StateIncomplete const& _stateExpect, SessionInterface& _session)
 {
     CompareResult result = CompareResult::Success;
-    DataObject accountList = getRemoteAccountList(_session, _latestInfo);
-    for (auto const& a : _stateExpect.getAccounts())
+
+    VALUE recentBNumber(_session.eth_blockNumber());
+    EthGetBlockBy recentBlock(_session.eth_getBlockByNumber(recentBNumber, Request::LESSOBJECTS));
+    VALUE trIndex(recentBlock.transactions().size());
+
+    // Use recentBNumber and trIndex once to request account information in loop
+    auto getRemoteAccount = [&_session, &recentBNumber, &trIndex](
+                                FH20 const& _account) { return remoteGetAccount(_session, recentBNumber, trIndex, _account); };
+
+
+    // Construct accountList by asking packs of 10th of accounts from remote client
+    std::set<FH20> remoteAccountList;
+    FH32 nextKey("0x0000000000000000000000000000000000000000000000000000000000000001");
+    while (!nextKey.isZero())
     {
-        bool hasAccount = accountList.count(a.address());
-        CompareResult existanceResult = checkExistance(a, hasAccount);
-        if (existanceResult != CompareResult::Success)
+        DebugAccountRange range(_session.debug_accountRange(recentBNumber, trIndex, nextKey, 10));
+        for (auto const& el : range.addresses())
+            remoteAccountList.insert(el);
+        nextKey = range.nextKey();
+    }
+
+    for (auto const& ael : _stateExpect.accounts())
+    {
+        AccountIncomplete const& a = ael.second.getCContent();
+        bool remoteHasAccount = remoteAccountList.count(a.address());
+        if (a.shouldNotExist() && remoteHasAccount)
         {
-            result = existanceResult;
+            ETH_MARK_ERROR("Compare States: '" + a.address().asString() + "' address not expected to exist!");
+            result = CompareResult::AccountShouldNotExist;
             continue;
         }
-        if (!hasAccount)
+        else if (!a.shouldNotExist() && !remoteHasAccount)
+        {
+            ETH_MARK_ERROR("Compare States: Missing expected address: '" + a.address().asString() + "'");
+            result = CompareResult::MissingExpectedAccount;
+            continue;
+        }
+        else if (a.shouldNotExist() && !remoteHasAccount)
             continue;
 
         // Compare account in postState with expect section account
-        size_t totalSize = 0;
-        CompareResult accountCompareResult =
-            compareAccounts(remoteGetAccount(_session, a.address(), _latestInfo, totalSize), a);
+        CompareResult accountCompareResult = compareAccounts(a, getRemoteAccount(a.address()));
         if (accountCompareResult != CompareResult::Success)
             result = accountCompareResult;
     }
+
     if (result != CompareResult::Success)
         ETH_ERROR_MESSAGE("CompareStates failed with errors: " + CompareResultToString(result));
 }
 
-void compareStates(scheme_expectState const& _stateExpect, scheme_state const& _statePost)
+// Compare one storage against another
+CompareResult compareStorage(Storage const& _expectStorage, Storage const& _remoteStorage, FH20 const& _remoteAccount)
 {
     CompareResult result = CompareResult::Success;
-    for (auto const& a : _stateExpect.getAccounts())
+    string const message = "Check State: Remote account '" + _remoteAccount.asString() + "' ";
+
+    for (auto const& element : _expectStorage.getKeys())
     {
-        bool hasAccount = _statePost.hasAccount(a.address());
-        CompareResult existanceResult = checkExistance(a, hasAccount);
-        if (existanceResult != CompareResult::Success)
+        VALUE const& expKey = std::get<0>(element.second).getCContent();
+        VALUE const& expVal = std::get<1>(element.second).getCContent();
+
+        // If remote storage doesn't exist and expected is not 00 (zeros omited)
+        if (!_remoteStorage.hasKey(expKey) && expVal.asU256() != 0)
         {
-            result = existanceResult;
+            ETH_MARK_ERROR(message + "was expected storage key `" + expKey.asString() + "` to be set to `" + expVal.asString() +
+                           "`, but remote key doesn't exist!");
+            result = CompareResult::IncorrectStorage;
+        }
+        else if (_remoteStorage.hasKey(expKey))
+        {
+            VALUE const& remoteVal = _remoteStorage.atKey(expKey);
+            if (remoteVal != expVal)
+            {
+                ETH_MARK_ERROR(message + "has incorrect storage [" + expKey.asString() + "] = `" + remoteVal.asString() +
+                               "`, test expected [" + expKey.asString() + "] = `" + expVal.asString() + "`");
+                result = CompareResult::IncorrectStorage;
+            }
+        }
+    }
+
+    if (_expectStorage.getKeys().size() < _remoteStorage.getKeys().size())
+    {
+        ETH_MARK_ERROR(message + " has more storage records than expected!");
+        result = CompareResult::IncorrectStorage;
+    }
+
+    return result;
+}
+
+// Compare Expected Account agains Account
+CompareResult compareAccounts(AccountIncomplete const& _expectAccount, Account const& _remoteAccount)
+{
+    // report all errors, but return the last error as a compare result
+    CompareResult result = CompareResult::Success;
+    auto checkEqual = [&_remoteAccount](VALUE const& _expect, VALUE const& _remote, string const& _what) -> bool {
+        if (_expect != _remote)
+        {
+            ETH_MARK_ERROR("Check State: Remote account '" + _remoteAccount.address().asString() + "': has incorrect " + _what +
+                           "`" + _remote.asDecString() + "`, test expected `" + _expect.asDecString() + "` (" +
+                           _remote.asString() + " != " + _expect.asString() + ")");
+            return false;
+        }
+        return true;
+    };
+
+    if (_expectAccount.hasBalance())
+        if (!checkEqual(_expectAccount.balance(), _remoteAccount.balance(), "balance"))
+            result = CompareResult::IncorrectBalance;
+
+    if (_expectAccount.hasNonce())
+        if (!checkEqual(_expectAccount.nonce(), _remoteAccount.nonce(), "nonce"))
+            result = CompareResult::IncorrectNonce;
+
+    if (_expectAccount.hasCode())
+    {
+        if (_expectAccount.code() != _remoteAccount.code())
+        {
+            ETH_MARK_ERROR("Check State: Remote account '" + _remoteAccount.address().asString() + "': has incorrect code `" +
+                           _remoteAccount.code().asString() + "`, test expected `" + _expectAccount.code().asString() + "`");
+            result = CompareResult::IncorrectCode;
+        }
+    }
+
+    // Check that state post has values from expected storage
+    if (_expectAccount.hasStorage())
+    {
+        CompareResult res = compareStorage(_expectAccount.storage(), _remoteAccount.storage(), _remoteAccount.address());
+        if (res != CompareResult::Success)
+            result = res;
+    }
+
+    return result;
+}
+
+// Compare expected state again post state
+void compareStates(StateIncomplete const& _stateExpect, State const& _statePost)
+{
+    CompareResult result = CompareResult::Success;
+    for (auto const& ael : _stateExpect.accounts())
+    {
+        AccountIncomplete const& a = ael.second.getCContent();
+        bool remoteHasAccount = _statePost.hasAccount(a.address());
+        if (a.shouldNotExist() && remoteHasAccount)
+        {
+            ETH_MARK_ERROR("Compare States: '" + a.address().asString() + "' address not expected to exist!");
+            result = CompareResult::AccountShouldNotExist;
             continue;
         }
-        if (!hasAccount)
+        else if (!a.shouldNotExist() && !remoteHasAccount)
+        {
+            ETH_MARK_ERROR("Compare States: Missing expected address: '" + a.address().asString() + "'");
+            result = CompareResult::MissingExpectedAccount;
+            continue;
+        }
+        else if (a.shouldNotExist() && !remoteHasAccount)
             continue;
 
         // Compare account in postState with expect section account
-        CompareResult accountCompareResult = compareAccounts(_statePost.getAccount(a.address()), a);
+        CompareResult accountCompareResult = compareAccounts(a, _statePost.getAccount(a.address()));
         if (accountCompareResult != CompareResult::Success)
             result = accountCompareResult;
     }

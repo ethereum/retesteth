@@ -23,14 +23,15 @@ public:
         TestBlock genesisBlock;
         if (_regenerateGenesis == RegenerateGenesis::TRUE)
         {
+            /*
             resetChainParams();
-            test::scheme_RPCBlock latestBlock =
-                _session.eth_getBlockByNumber(BlockNumber("0"), false);
+            test::scheme_RPCBlock latestBlock =_session.eth_getBlockByNumber(BlockNumber("0"), false);
             DataObject& blockTestData = genesisBlock.getDataForTestUnsafe();
             blockTestData["blockHeader"] = latestBlock.getBlockHeader();
             blockTestData["blockHeader"].removeKey("transactions");
             blockTestData["blockHeader"].removeKey("uncles");
             blockTestData["rlp"] = latestBlock.getBlockRLP();
+            */
         }
 
         genesisBlock.setNextBlockForked(mineNextBlockAndRewert());

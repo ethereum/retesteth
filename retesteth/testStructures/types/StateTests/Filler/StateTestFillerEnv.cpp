@@ -12,15 +12,14 @@ StateTestFillerEnv::StateTestFillerEnv(DataObject const& _data)
     {
         DataObject tmpData = _data;
         tmpData.performModifier(mod_valueToCompactEvenHexPrefixed);
-        m_currentCoinbase = GCP_SPointer<FH20>(new FH20(tmpData.atKey("currentCoinbase")));
-        m_currentDifficulty = GCP_SPointer<VALUE>(new VALUE(tmpData.atKey("currentDifficulty")));
-        m_currentGasLimit = GCP_SPointer<VALUE>(
-            new VALUE(tmpData.atKey("currentGasLimit"), dev::u256("0x7fffffffffffffff")));
-        m_currentNumber = GCP_SPointer<VALUE>(new VALUE(tmpData.atKey("currentNumber")));
-        m_currentTimestamp = GCP_SPointer<VALUE>(new VALUE(tmpData.atKey("currentTimestamp")));
+        m_currentCoinbase = spFH20(new FH20(tmpData.atKey("currentCoinbase")));
+        m_currentDifficulty = spVALUE(new VALUE(tmpData.atKey("currentDifficulty")));
+        m_currentGasLimit = spVALUE(new VALUE(tmpData.atKey("currentGasLimit"), dev::u256("0x7fffffffffffffff")));
+        m_currentNumber = spVALUE(new VALUE(tmpData.atKey("currentNumber")));
+        m_currentTimestamp = spVALUE(new VALUE(tmpData.atKey("currentTimestamp")));
 
         // Do not allow hash without 0x
-        m_previousHash = GCP_SPointer<FH32>(new FH32(_data.atKey("previousHash")));
+        m_previousHash = spFH32(new FH32(_data.atKey("previousHash")));
     }
     catch (DataObjectException const& _ex)
     {
@@ -32,12 +31,12 @@ StateTestFillerEnv::StateTestFillerEnv(DataObject const& _data)
 DataObject StateTestFillerEnv::asDataObject() const
 {
     DataObject out;
-    out["currentCoinbase"] = m_currentCoinbase.getPointer()->asString();
-    out["currentDifficulty"] = m_currentDifficulty.getPointer()->asString();
-    out["currentGasLimit"] = m_currentGasLimit.getPointer()->asString();
-    out["currentNumber"] = m_currentNumber.getPointer()->asString();
-    out["currentTimestamp"] = m_currentTimestamp.getPointer()->asString();
-    out["previousHash"] = m_previousHash.getPointer()->asString();
+    out["currentCoinbase"] = m_currentCoinbase.getCContent().asString();
+    out["currentDifficulty"] = m_currentDifficulty.getCContent().asString();
+    out["currentGasLimit"] = m_currentGasLimit.getCContent().asString();
+    out["currentNumber"] = m_currentNumber.getCContent().asString();
+    out["currentTimestamp"] = m_currentTimestamp.getCContent().asString();
+    out["previousHash"] = m_previousHash.getCContent().asString();
     return out;
 }
 

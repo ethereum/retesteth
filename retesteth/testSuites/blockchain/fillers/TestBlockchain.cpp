@@ -78,6 +78,9 @@ void TestBlockchain::generateBlock(
 test::scheme_RPCBlock TestBlockchain::mineBlock(
     blockSection const& _block, vectorOfSchemeBlock const& _preparedUncleBlocks)
 {
+    (void)_block;
+    (void)_preparedUncleBlocks;
+    /*
     ETH_LOGC("MINE BLOCK: " + m_sDebugString, 6, LogColor::YELLOW);
 
     BlockNumber latestBlockNumber("0");
@@ -104,7 +107,8 @@ test::scheme_RPCBlock TestBlockchain::mineBlock(
                 " != test " + toString(_trInTest) +
                 ", allowedToFail = " + toString(_trAllowedToFail) + " )");
     };
-
+*/
+    /*
     // Need to overwrite the blockheader of a mined block
     if (_block.getData().count("blockHeader") || isUnclesInTest)
     {
@@ -121,7 +125,8 @@ test::scheme_RPCBlock TestBlockchain::mineBlock(
         checkTransactions(latestBlock.getTransactionCount(), _block.getTransactions().size(),
             _block.getInvalidTransactionCount());
         return latestBlock;
-    }
+    }*/
+    return scheme_RPCBlock("");
 }
 
 // Import transactions on remote client
@@ -146,6 +151,7 @@ DataObject TestBlockchain::importTransactions(blockSection const& _block)
 // Ask remote client to generate a blockheader that will later used for uncles
 test::scheme_RPCBlock TestBlockchain::mineNextBlockAndRewert()
 {
+    /*
     ETH_LOGC("Mine uncle block (next block) and revert: " + m_sDebugString, 6, LogColor::YELLOW);
     BlockNumber latestBlockNumber(m_session.test_mineBlocks(1));
     test::scheme_RPCBlock next = m_session.eth_getBlockByNumber(latestBlockNumber, false);
@@ -158,6 +164,8 @@ test::scheme_RPCBlock TestBlockchain::mineNextBlockAndRewert()
     // otherwise this uncle would be similar to a block mined
     next.randomizeCoinbase();
     return next;
+    */
+    return scheme_RPCBlock("");
 }
 
 string TestBlockchain::prepareDebugInfoString(string const& _newBlockChainName)
@@ -179,6 +187,10 @@ string TestBlockchain::prepareDebugInfoString(string const& _newBlockChainName)
 // Restore chain up to _number of blocks. if _number is 0 restore the whole chain
 void TestBlockchain::restoreUpToNumber(SessionInterface& _session, size_t _number, bool _samechain)
 {
+    (void)_session;
+    (void)_number;
+    (void)_samechain;
+    /*
     size_t firstBlock;
     if (_samechain)
     {
@@ -236,12 +248,18 @@ void TestBlockchain::restoreUpToNumber(SessionInterface& _session, size_t _numbe
     // Restore blocks up to `number` forgetting the rest of history
     for (size_t i = 0; i < popUpCount; i++)
         m_blocks.pop_back();  // blocks are now at m_knownBlocks
+        */
 }
 
 
 test::scheme_RPCBlock TestBlockchain::postmineBlockHeader(blockSection const& _blockInTest,
     BlockNumber const& _latestBlockNumber, std::vector<scheme_RPCBlock> const& _uncles)
 {
+    (void)_latestBlockNumber;
+    (void)_blockInTest;
+    (void)_uncles;
+    return scheme_RPCBlock("");
+    /*
     // if blockHeader is defined in test Filler, rewrite the last block header fields with info from
     // test and reimport it to the client in order to trigger an exception in the client
     test::scheme_RPCBlock remoteBlock = m_session.eth_getBlockByNumber(_latestBlockNumber, true);
@@ -309,6 +327,7 @@ test::scheme_RPCBlock TestBlockchain::postmineBlockHeader(blockSection const& _b
     bool const blockIsValid = checkBlockException(sBlockException);
     remoteBlock.setValid(blockIsValid);
     return remoteBlock;  // malicious block must be written to the filled test
+    */
 }
 
 // Returns true if the block is valid

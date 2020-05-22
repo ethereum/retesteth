@@ -1,6 +1,5 @@
 #pragma once
-#include "../../Common.h"
-#include "../InfoIncomplete.h"
+#include "Filler/InfoIncomplete.h"
 #include "Filler/StateTestFillerEnv.h"
 #include "Filler/StateTestFillerExpectSection.h"
 #include "Filler/StateTestFillerTransaction.h"
@@ -9,26 +8,24 @@
 
 using namespace dataobject;
 using namespace test::teststruct;
-
 namespace test
 {
 namespace teststruct
 {
-
 struct StateTestInFiller : GCP_SPointerBase
 {
     StateTestInFiller(DataObject const&);
 
     string const& testName() const { return m_name; }
-    bool hasInfo() const { return m_info.isEmpty(); }
+    bool hasInfo() const { return !m_info.isEmpty(); }
     InfoIncomplete const& Info() const
     {
         assert(hasInfo());
-        return *m_info.getCPtr();
+        return m_info.getCContent();
     }
-    StateTestFillerEnv const& Env() const { return *m_env.getCPtr(); }
-    State const& Pre() const { return *m_pre.getCPtr(); }
-    StateTestFillerTransaction const& GeneralTr() const { return *m_transaction.getCPtr(); }
+    StateTestFillerEnv const& Env() const { return m_env.getCContent(); }
+    State const& Pre() const { return m_pre.getCContent(); }
+    StateTestFillerTransaction const& GeneralTr() const { return m_transaction.getCContent(); }
     std::vector<StateTestFillerExpectSection> const& Expects() const { return m_expectSections; }
     std::list<FORK> getAllForksFromExpectSections() const;
 
@@ -48,6 +45,7 @@ struct GeneralStateTestFiller
     std::vector<StateTestInFiller> const& tests() const { return m_tests; }
 
 private:
+    GeneralStateTestFiller() {}
     std::vector<StateTestInFiller> m_tests;
 };
 

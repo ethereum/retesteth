@@ -1,18 +1,18 @@
 /*
-	This file is part of cpp-ethereum.
+    This file is part of cpp-ethereum.
 
-	cpp-ethereum is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
+    cpp-ethereum is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
-	cpp-ethereum is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
+    cpp-ethereum is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
 
-	You should have received a copy of the GNU General Public License
-	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
+    You should have received a copy of the GNU General Public License
+    along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 /** @file StateTests.cpp
@@ -168,6 +168,33 @@ DataObject FillTestAsBlockchain(DataObject const& _testFile)
     return filledTest;
 }
 
+void checkUnexecutedTransactions(std::vector<TransactionInGeneralSection> const& _txs)
+{
+    bool atLeastOneExecuted = false;
+    bool atLeastOneWithoutExpectSection = false;
+    for (auto const& tr : _txs)
+    {
+        if (tr.getExecuted())
+            atLeastOneExecuted = true;
+        bool transactionExecutedOrSkipped = tr.getExecuted() || tr.getSkipped();
+        atLeastOneWithoutExpectSection = !transactionExecutedOrSkipped || atLeastOneWithoutExpectSection;
+        if (!transactionExecutedOrSkipped || atLeastOneWithoutExpectSection)
+        {
+            TestInfo errorInfo("all", (int)tr.dataInd(), (int)tr.gasInd(), (int)tr.valueInd());
+            TestOutputHelper::get().setCurrentTestInfo(errorInfo);
+            ETH_MARK_ERROR("Test has transaction uncovered with expect section!");
+        }
+    }
+    if (!atLeastOneExecuted)
+    {
+        Options const& opt = Options::get();
+        TestInfo errorInfo(
+            opt.singleTestNet.empty() ? "N/A" : opt.singleTestNet, opt.trDataIndex, opt.trGasIndex, opt.trValueIndex);
+        TestOutputHelper::get().setCurrentTestInfo(errorInfo);
+    }
+    ETH_ERROR_REQUIRE_MESSAGE(atLeastOneExecuted, "Specified filter did not run a single transaction! ");
+}
+
 /// Rewrite the test file. Fill General State Test
 DataObject FillTest(StateTestInFiller const& _test)
 {
@@ -175,7 +202,7 @@ DataObject FillTest(StateTestInFiller const& _test)
     filledTest.setAutosort(true);
 
     SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
-    (void)session;
+
     if (_test.hasInfo())
         filledTest["_info"]["comment"] = _test.Info().comment();
 
@@ -217,52 +244,49 @@ DataObject FillTest(StateTestInFiller const& _test)
                         continue;
 
                     session.test_modifyTimestamp(_test.Env().currentTimestamp().asDecString());
-                    string trHash = session.eth_sendRawTransaction(tr.transaction().getSignedRLP());
-                    string latestBlockNumber = session.test_mineBlocks(1);
-                    tr.markExecuted();
-(void)trHash;
+                    FH32 trHash(session.eth_sendRawTransaction(tr.transaction().getSignedRLP()));
+                    session.test_mineBlocks(1);
+                    VALUE latestBlockN(session.eth_blockNumber());
 
-                    scheme_RPCBlock blockInfo =
-                        session.eth_getBlockByNumber(latestBlockNumber, Options::get().vmtrace);
-                    /*if (Options::get().poststate)
-                        ETH_STDOUT_MESSAGE("PostState " +
-                                           TestOutputHelper::get().testInfo().errorDebug() +
-                                           " : \n" + blockInfo.getStateHash());
+                    EthGetBlockBy blockInfo(session.eth_getBlockByNumber(latestBlockN.asDecString(), Request::LESSOBJECTS));
+                    ETH_ERROR_REQUIRE_MESSAGE(
+                        blockInfo.hasTransaction(trHash), "StateTest::FillTest: TR hash not found in mined block!");
+                    tr.markExecuted();
+
+                    if (Options::get().poststate)
+                        ETH_STDOUT_MESSAGE("PostState " + TestOutputHelper::get().testInfo().errorDebug() + " : \n" +
+                                           blockInfo.stateRoot().asString());
+
                     if (Options::get().vmtrace)
-                        printVmTrace(session, trHash, blockInfo.getStateHash());
+                        printVmTrace(session, trHash, blockInfo.stateRoot());
                     if (Options::get().fullstate)
-                    {
-                        scheme_state remoteState = getRemoteState(session, blockInfo);
-                        compareStates(expect.getExpectState(), remoteState);
-                    }
+                        compareStates(expect.result(), getRemoteState(session));
                     else
-                        compareStates(expect.getExpectState(), session, blockInfo);
+                        compareStates(expect.result(), session);
 
                     DataObject indexes;
                     DataObject transactionResults;
-                    indexes["data"] = tr.dataInd;
-                    indexes["gas"] = tr.gasInd;
-                    indexes["value"] = tr.valueInd;
+                    indexes["data"] = tr.dataInd();
+                    indexes["gas"] = tr.gasInd();
+                    indexes["value"] = tr.valueInd();
 
                     transactionResults["indexes"] = indexes;
-                    transactionResults["hash"] = blockInfo.getStateHash();
+                    transactionResults["hash"] = blockInfo.stateRoot().asString();
 
                     // Fill up the loghash (optional)
-                    string logHash = session.test_getLogHash(trHash);
-                    if (!logHash.empty())
-                        transactionResults["logs"] = logHash;
+                    FH32 logHash(session.test_getLogHash(trHash));
+                    if (!logHash.isZero())
+                        transactionResults["logs"] = logHash.asString();
 
                     forkResults.addArrayObject(transactionResults);
-                    session.test_rewindToBlock(0);
-*/
+                    session.test_rewindToBlock(VALUE(0));
                 }
             }
         }
+        filledTest["post"].addSubObject(forkResults);
     }
 
-
-   // test.checkUnexecutedTransactions();
-   // filledTest["post"].addSubObject(forkResults);
+    checkUnexecutedTransactions(txs);
     return filledTest;
 }
 
@@ -363,19 +387,20 @@ DataObject StateTestSuite::doTests(DataObject const& _input, TestSuiteOptions& _
         DataObject filledTest;
         GeneralStateTestFiller filler(_input);
 
-        ETH_ERROR_REQUIRE_MESSAGE(
-            filler.tests().size() == 1, "StateTest filler must have only one test: " +
-                                            TestOutputHelper::get().testFile().string());
+        ETH_ERROR_REQUIRE_MESSAGE(filler.tests().size() == 1,
+            "StateTest filler must have only one test: " + TestOutputHelper::get().testFile().string());
 
         StateTestInFiller const& test = filler.tests().at(0);
         checkTestNameIsEqualToFileName(test.testName());
         if (!Options::get().fillchain)
             filledTest.addSubObject(test.testName(), FillTest(test));
-        ETH_LOGC(filledTest.asJson(), 6, test::LogColor::LIME);
 
         TestOutputHelper::get().registerTestRunSuccess();
         return filledTest;
-    }  // Do Filling
+    }
+    else
+    {
+    }
 
     DataObject tt(DataType::Null);
     FillTestAsBlockchain(tt);

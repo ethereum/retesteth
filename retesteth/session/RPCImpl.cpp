@@ -1,93 +1,101 @@
-
 #include <chrono>
 #include <cstdio>
 #include <thread>
 
 #include <dataObject/ConvertFile.h>
-#include <retesteth/ethObjects/common.h>
 #include <retesteth/session/RPCImpl.h>
 
-std::string RPCImpl::web3_clientVersion()
+DataObject RPCImpl::web3_clientVersion()
 {
-    return rpcCall("web3_clientVersion", {}).asString();
+    return rpcCall("web3_clientVersion", {});
 }
 
 // ETH Methods
-std::string RPCImpl::eth_sendRawTransaction(string const& _rlp)
+DataObject RPCImpl::eth_sendRawTransaction(BYTES const& _rlp)
 {
-    DataObject result =
-        rpcCall("eth_sendRawTransaction", {quote(_rlp)}, true);
-
+    DataObject result = rpcCall("eth_sendRawTransaction", {quote(_rlp.asString())}, true);
     DataObject const& lastError = getLastRPCError();
     if (lastError.type() != DataType::Null)
         ETH_ERROR_MESSAGE(lastError.atKey("message").asString());
     if (!isHash<h256>(result.asString()))
-        ETH_ERROR_MESSAGE(
-            "eth_sendRawTransaction return invalid hash: '" + result.asString() + "'");
-    if (result.type() == DataType::Null)  // if the method failed
-        return "";
-    return result.asString();
+        ETH_ERROR_MESSAGE("eth_sendRawTransaction return invalid hash: '" + result.asString() + "'");
+    return result;
 }
 
-int RPCImpl::eth_getTransactionCount(std::string const& _address, std::string const& _blockNumber)
+int RPCImpl::eth_getTransactionCount(FH20 const& _address, VALUE const& _blockNumber)
 {
-    DataObject res = rpcCall("eth_getTransactionCount", {quote(_address), quote(_blockNumber)});
-    return (res.type() == DataType::String) ? test::hexOrDecStringToInt(res.asString()) :
-                                              res.asInt();
+    DataObject response = rpcCall("eth_getTransactionCount", {quote(_address.asString()), quote(_blockNumber.asString())});
+    if (response.type() == DataType::String)
+        return test::hexOrDecStringToInt(response.asString());
+    return response.asInt();
 }
 
-std::string RPCImpl::eth_blockNumber()
+VALUE RPCImpl::eth_blockNumber()
 {
-    DataObject res = rpcCall("eth_blockNumber", {});
-    return res.type() == DataType::String ? res.asString() : toString(res.asInt());
+    return VALUE(rpcCall("eth_blockNumber", {}));
 }
 
-test::scheme_RPCBlock RPCImpl::eth_getBlockByHash(string const& _hash, bool _fullObjects)
+EthGetBlockBy RPCImpl::eth_getBlockByHash(FH32 const& _hash, Request _fullObjects)
 {
-    return test::scheme_RPCBlock(
-        rpcCall("eth_getBlockByHash", {quote(_hash), _fullObjects ? "true" : "false"}));
+    return EthGetBlockBy(
+        rpcCall("eth_getBlockByHash", {quote(_hash.asString()), _fullObjects == Request::FULLOBJECTS ? "true" : "false"}));
 }
 
-test::scheme_RPCBlock RPCImpl::eth_getBlockByNumber(
-    BlockNumber const& _blockNumber, bool _fullObjects)
+EthGetBlockBy RPCImpl::eth_getBlockByNumber(VALUE const& _blockNumber, Request _fullObjects)
 {
-    return test::scheme_RPCBlock(rpcCall("eth_getBlockByNumber",
-        {quote(_blockNumber.getBlockNumberAsString()), _fullObjects ? "true" : "false"}));
+    return EthGetBlockBy(rpcCall(
+        "eth_getBlockByNumber", {quote(_blockNumber.asString()), _fullObjects == Request::FULLOBJECTS ? "true" : "false"}));
 }
 
-std::string RPCImpl::eth_getCode(std::string const& _address, std::string const& _blockNumber)
+BYTES RPCImpl::eth_getCode(FH20 const& _address, VALUE const& _blockNumber)
 {
-    return rpcCall("eth_getCode", {quote(_address), quote(_blockNumber)}).asString();
+    DataObject res(rpcCall("eth_getCode", {quote(_address.asString()), quote(_blockNumber.asString())}));
+    if (res.asString().empty())
+    {
+        ETH_WARNING_TEST("eth_getCode return `` empty string, correct to `0x` empty bytes ", 6);
+        res = "0x";
+    }
+    return BYTES(res);
 }
 
-std::string RPCImpl::eth_getBalance(std::string const& _address, std::string const& _blockNumber)
+VALUE RPCImpl::eth_getBalance(FH20 const& _address, VALUE const& _blockNumber)
 {
-    string address = (_address.length() == 20) ? "0x" + _address : _address;
-    return rpcCall("eth_getBalance", {quote(address), quote(_blockNumber)}).asString();
+    return VALUE(rpcCall("eth_getBalance", {quote(_address.asString()), quote(_blockNumber.asString())}));
 }
 
 
 // Debug
-scheme_debugAccountRange RPCImpl::debug_accountRange(std::string const& _blockHashOrNumber,
-    int _txIndex, std::string const& _address, int _maxResults)
+DebugAccountRange RPCImpl::debug_accountRange(
+    VALUE const& _blockNumber, VALUE const& _txIndex, FH32 const& _address, int _maxResults)
 {
-    return scheme_debugAccountRange(rpcCall(
-        "debug_accountRange", {quote(toString(u256(test::sfromHex(_blockHashOrNumber)))),
-                                  to_string(_txIndex), quote(_address), to_string(_maxResults)}));
+    return rpcCall("debug_accountRange",
+        {quote(_blockNumber.asDecString()), _txIndex.asDecString(), quote(_address.asString()), to_string(_maxResults)});
 }
 
-
-DataObject RPCImpl::debug_storageRangeAt(std::string const& _blockHashOrNumber, int _txIndex,
-    std::string const& _address, std::string const& _begin, int _maxResults)
+DebugAccountRange RPCImpl::debug_accountRange(
+    FH32 const& _blockHash, VALUE const& _txIndex, FH32 const& _address, int _maxResults)
 {
-    return rpcCall("debug_storageRangeAt",
-        {quote(toString(u256(test::sfromHex(_blockHashOrNumber)))), to_string(_txIndex),
-            quote(_address), quote(_begin), to_string(_maxResults)});
+    return rpcCall("debug_accountRange",
+        {quote(_blockHash.asString()), _txIndex.asDecString(), quote(_address.asString()), to_string(_maxResults)});
 }
 
-scheme_debugTraceTransaction RPCImpl::debug_traceTransaction(std::string const& _trHash)
+DebugStorageRangeAt RPCImpl::debug_storageRangeAt(
+    VALUE const& _blockNumber, VALUE const& _txIndex, FH20 const& _address, FH32 const& _begin, int _maxResults)
 {
-    return scheme_debugTraceTransaction(rpcCall("debug_traceTransaction", {quote(_trHash), "{}"}));
+    return rpcCall("debug_storageRangeAt", {quote(_blockNumber.asDecString()), _txIndex.asDecString(),
+                                               quote(_address.asString()), quote(_begin.asString()), to_string(_maxResults)});
+}
+
+DebugStorageRangeAt RPCImpl::debug_storageRangeAt(
+    FH32 const& _blockHash, VALUE const& _txIndex, FH20 const& _address, FH32 const& _begin, int _maxResults)
+{
+    return rpcCall("debug_storageRangeAt", {quote(_blockHash.asString()), _txIndex.asDecString(), quote(_address.asString()),
+                                               quote(_begin.asString()), to_string(_maxResults)});
+}
+
+DebugTraceTransaction RPCImpl::debug_traceTransaction(FH32 const& _trHash)
+{
+    return DebugTraceTransaction(rpcCall("debug_traceTransaction", {quote(_trHash.asString()), "{}"}));
 }
 
 // Test
@@ -97,35 +105,30 @@ void RPCImpl::test_setChainParams(DataObject const& _config)
         "remote test_setChainParams = false");
 }
 
-void RPCImpl::test_rewindToBlock(size_t _blockNr)
+void RPCImpl::test_rewindToBlock(VALUE const& _blockNr)
 {
-    ETH_FAIL_REQUIRE_MESSAGE(rpcCall("test_rewindToBlock", {to_string(_blockNr)}) == true,
-        "remote test_rewintToBlock = false");
+    ETH_FAIL_REQUIRE_MESSAGE(
+        rpcCall("test_rewindToBlock", {_blockNr.asDecString()}) == true, "remote test_rewintToBlock = false");
 }
 
-void RPCImpl::test_modifyTimestamp(string const& _timestamp)
+void RPCImpl::test_modifyTimestamp(VALUE const& _timestamp)
 {
-    ETH_FAIL_REQUIRE_MESSAGE(rpcCall("test_modifyTimestamp", { _timestamp }) == true,
-        "test_modifyTimestamp was not successfull");
+    ETH_FAIL_REQUIRE_MESSAGE(
+        rpcCall("test_modifyTimestamp", {_timestamp.asDecString()}) == true, "test_modifyTimestamp was not successfull");
 }
 
-string RPCImpl::test_mineBlocks(int _number, bool _canFail)
+void RPCImpl::test_mineBlocks(int _number)
 {
-    DataObject blockNumber = rpcCall("eth_blockNumber");
-    u256 startBlock = (blockNumber.type() == DataType::String) ? u256(blockNumber.asString()) :
-                                                                 blockNumber.asInt();
+    // VALUE startBlock = rpcCall("eth_blockNumber");
 
-    static const string c_error = "remote test_mineBLocks = false";
-    if (!_canFail)
-        ETH_ERROR_REQUIRE_MESSAGE(
-            rpcCall("test_mineBlocks", {to_string(_number)}, true) == true, c_error);
-    else
-        return c_error;
+    DataObject res = rpcCall("test_mineBlocks", {to_string(_number)}, true);
+    ETH_ERROR_REQUIRE_MESSAGE(res.asBool() == true, "remote test_mineBLocks = false");
+    // CAN DO GUARD HERE THAT BLOCK NUMBER HAS REALLY CHANGED
 
+    /*
     // We auto-calibrate the time it takes to mine the transaction.
     // It would be better to go without polling, but that would probably need a change to the test
     // client
-
     auto startTime = std::chrono::steady_clock::now();
     unsigned sleepTime = m_sleepTime;
     size_t tries = 0;
@@ -166,22 +169,22 @@ string RPCImpl::test_mineBlocks(int _number, bool _canFail)
     }
 
     // Better keep it int everywhere in codebase. !!!
-    return toString(startBlock);
+    return DataObject(toString(startBlock));
+    */
 }
 
-string RPCImpl::test_importRawBlock(std::string const& _blockRLP)
+DataObject RPCImpl::test_importRawBlock(BYTES const& _blockRLP)
 {
-    DataObject res = rpcCall("test_importRawBlock", {quote(_blockRLP)}, true);
+    DataObject res = rpcCall("test_importRawBlock", {quote(_blockRLP.asString())}, true);
     if (res.type() != DataType::Null)
         return res.asString();
     return string();
 }
 
-std::string RPCImpl::test_getLogHash(std::string const& _txHash)
+FH32 RPCImpl::test_getLogHash(FH32 const& _txHash)
 {
-    return rpcCall("test_getLogHash", {quote(_txHash)}).asString();
+    return FH32(rpcCall("test_getLogHash", {quote(_txHash.asString())}));
 }
-
 
 // Internal
 std::string RPCImpl::sendRawRequest(std::string const& _request)
@@ -231,7 +234,7 @@ DataObject RPCImpl::rpcCall(
         ETH_FAIL_MESSAGE(m_lastInterfaceError.atKey("message").asString());
     }
     m_lastInterfaceError.clear();  // null the error as last RPC call was success.
-    return result["result"];
+    return result.atKey("result");
 }
 
 Socket::SocketType RPCImpl::getSocketType() const

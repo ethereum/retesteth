@@ -36,6 +36,7 @@
 
 using namespace std;
 using namespace dev;
+using namespace test;
 namespace fs = boost::filesystem;
 
 //Helper functions for test proccessing

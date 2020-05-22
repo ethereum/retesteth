@@ -3,10 +3,11 @@
 #include <thread>
 
 #include <dataObject/ConvertFile.h>
-#include <retesteth/ethObjects/common.h>
 #include <retesteth/session/ToolImpl.h>
 #include <retesteth/session/ToolImplHelper.h>
-using namespace toolimpl;
+// using namespace toolimpl;
+
+/*
 
 std::string ToolImpl::web3_clientVersion()
 {
@@ -18,13 +19,13 @@ std::string ToolImpl::web3_clientVersion()
 // ETH Methods
 // perhaps take raw rlp instead ??
 std::string ToolImpl::eth_sendRawTransaction(string const& _rlp)
-{(void)_rlp;
-    /*
+{
+
     rpcCall("", {});
     ETH_TEST_MESSAGE("Request: eth_sendRawTransaction \n" + _transaction.getData().asJson());
     m_transactions.push_back(_transaction);
     ETH_TEST_MESSAGE("Response: " + _transaction.getHash());
-    return _transaction.getHash();*/
+    return _transaction.getHash();
     return "";
 }
 
@@ -55,7 +56,7 @@ std::string ToolImpl::eth_blockNumber()
     return blNumber;
 }
 
-test::scheme_RPCBlock ToolImpl::eth_getBlockByHash(string const& _hash, bool _fullObjects)
+DataObject ToolImpl::eth_getBlockByHash(string const& _hash, bool _fullObjects)
 {
     rpcCall("", {});
     (void)_fullObjects;  // always full objects
@@ -75,11 +76,9 @@ test::scheme_RPCBlock ToolImpl::eth_getBlockByHash(string const& _hash, bool _fu
     }
 
     ETH_TEST_MESSAGE("Response: eth_getBlockByHash (hash not found: " + _hash + ")");
-    return scheme_RPCBlock(DataObject());
 }
 
-test::scheme_RPCBlock ToolImpl::eth_getBlockByNumber(
-    BlockNumber const& _blockNumber, bool _fullObjects)
+DataObject ToolImpl::eth_getBlockByNumber(string const& _blockNumber, bool _fullObjects)
 {
     rpcCall("", {});
     (void)_fullObjects;
@@ -130,8 +129,8 @@ std::string ToolImpl::eth_getBalance(std::string const& _address, std::string co
 }
 
 // Debug
-scheme_debugAccountRange ToolImpl::debug_accountRange(std::string const& _blockHashOrNumber,
-    int _txIndex, std::string const& _address, int _maxResults)
+DataObject ToolImpl::debug_accountRange(
+    std::string const& _blockHashOrNumber, int _txIndex, std::string const& _address, int _maxResults)
 {
     rpcCall("", {});
     ETH_TEST_MESSAGE("Request: debug_accountRange " + _blockHashOrNumber);
@@ -150,7 +149,7 @@ scheme_debugAccountRange ToolImpl::debug_accountRange(std::string const& _blockH
     constructResponse["nextKey"] =
         "0x0000000000000000000000000000000000000000000000000000000000000000";
     ETH_TEST_MESSAGE(constructResponse.asJson());
-    return scheme_debugAccountRange(constructResponse);
+    return constructResponse;
 }
 
 
@@ -196,11 +195,11 @@ DataObject ToolImpl::debug_storageRangeAt(std::string const& _blockHashOrNumber,
     return constructResponse;
 }
 
-scheme_debugTraceTransaction ToolImpl::debug_traceTransaction(std::string const& _trHash)
+DataObject ToolImpl::debug_traceTransaction(std::string const& _trHash)
 {
     rpcCall("", {});
     ETH_FAIL_MESSAGE("Request: debug_traceTransaction");
-    return scheme_debugTraceTransaction(DataObject(_trHash));
+    return DataObject(_trHash);
 }
 
 // Test
@@ -233,8 +232,7 @@ void ToolImpl::test_setChainParams(DataObject const& _config)
     if (env.atKey("nonce").asString() == "0x00")  // GeneralStateTests
     {
         genesisHeader["nonce"] = "0x0000000000000000";
-        genesisHeader["mixHash"] =
-            "0x0000000000000000000000000000000000000000000000000000000000000000";
+        genesisHeader["mixHash"] = "0x0000000000000000000000000000000000000000000000000000000000000000";
     }
 
     // Default Genesis Values
@@ -431,10 +429,6 @@ static std::map<string, string> RewardMapForToolAfter5 = {{"FrontierToHomesteadA
 
 string ToolImpl::test_mineBlocks(int _number, bool _canFail)
 {
-    (void)_number;
-    (void)_canFail;
-    return string();
-    /*
     (void)_canFail;
     rpcCall("", {});
     ETH_TEST_MESSAGE("Request: test_mineBlocks");
@@ -541,7 +535,6 @@ string ToolImpl::test_mineBlocks(int _number, bool _canFail)
     ETH_TEST_MESSAGE("Response test_mineBlocks {" + toString(getCurrChain().size()) + "}");
     ETH_TEST_MESSAGE(blockRPC.getData().asJson());
     return toString(getCurrChain().size());
-    */
 }
 
 // Import block from RAW rlp and validate it according to ethereum rules
@@ -665,3 +658,4 @@ std::string const& ToolImpl::getSocketPath() const
 {
     return m_toolPath;
 }
+*/

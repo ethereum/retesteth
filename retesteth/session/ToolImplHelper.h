@@ -4,6 +4,7 @@
 #include <retesteth/ethObjects/common.h>
 #include <string>
 
+/*
 using namespace dataobject;
 namespace toolimpl
 {
@@ -49,3 +50,5 @@ public:
 };
 
 }  // namespace toolimpl
+
+*/

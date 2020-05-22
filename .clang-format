@@ -36,7 +36,7 @@ BraceWrapping:
   SplitEmptyFunction: false
 BreakBeforeTernaryOperators: false
 BreakConstructorInitializers: BeforeColon
-ColumnLimit:     100
+ColumnLimit:     128
 CommentPragmas:  '^ IWYU pragma:'
 ConstructorInitializerAllOnOneLineOrOnePerLine: true
 ConstructorInitializerIndentWidth: 2
@@ -47,16 +47,37 @@ DisableFormat:   false
 ExperimentalAutoDetectBinPacking: false
 ForEachMacros:   [ foreach, Q_FOREACH, BOOST_FOREACH ]
 IncludeCategories:
+
+  # Local includes "":
   - Regex:           '^".*'
     Priority:        1
-  - Regex:           '^<boost.*'
-    Priority:        98
-  - Regex:           '^<.*\.h>'
+
+  # Third party libraries:
+  - Regex:           '^<cryptopp/.*'
+    Priority:        70
+
+  # Standard library extensions / common generic purpose libraries:
+  - Regex:           '^<boost/.*'
+    Priority:        80
+
+  # Testing libraries:
+  - Regex:           '^<benchmark/.*'
+    Priority:        90
+  - Regex:           '^<gtest/.*'
+    Priority:        90
+
+  # Public includes <>:
+  - Regex:           '^<.*\.h|hpp>'
     Priority:        2
+
+  # Standard library:
   - Regex:           '^<.*'
-    Priority:        99
+    Priority:        100
+
+  # Anything else:
   - Regex:           '.*'
     Priority:        4
+
 IndentCaseLabels: false
 IndentWidth:     4
 IndentWrappedFunctionNames: false

@@ -8,6 +8,10 @@ namespace test
 void validatePostHash(
     SessionInterface& _session, string const& _postHash, scheme_RPCBlock const& _latestInfo)
 {
+    (void)_session;
+    (void)_postHash;
+    (void)_latestInfo;
+    /*
     string actualHash = _latestInfo.getStateHash();
     if (actualHash != _postHash)
     {
@@ -15,6 +19,7 @@ void validatePostHash(
             ETH_LOG("\nState Dump: \n" + getRemoteState(_session, _latestInfo).getData().asJson(), 5);
         ETH_ERROR_MESSAGE("Post hash mismatch remote: " + actualHash + ", expected: " + _postHash);
     }
+    */
 }
 
 void checkDataObject(DataObject const& _input)
@@ -68,105 +73,14 @@ void checkTestNameIsEqualToFileName(DataObject const& _input)
                 "'");
 }
 
-scheme_account remoteGetAccount(SessionInterface& _session, string const& _account,
-    scheme_RPCBlock const& _latestInfo, size_t& _totalSize)
+void printVmTrace(SessionInterface& _session, FH32 const& _trHash, FH32 const& _stateRoot)
 {
-    DataObject accountObj;
-    accountObj.setKey(_account);
-    accountObj["code"] = _session.eth_getCode(_account, _latestInfo.getNumber());
-    _totalSize += accountObj["code"].asString().size();
-    accountObj["nonce"] =
-        to_string(_session.eth_getTransactionCount(_account, _latestInfo.getNumber()));
-    accountObj["balance"] = _session.eth_getBalance(_account, _latestInfo.getNumber());
-
-    // Storage
-    const size_t cycles_max = 100;
-    const int cmaxRows = 100;
-    DataObject storage(DataType::Object);
-    string beginHash = "0";
-    size_t cycles = cycles_max;
-    while (--cycles)
-    {
-        DataObject debugStorageAt = _session.debug_storageRangeAt(_latestInfo.getNumber(),
-            _latestInfo.getTransactionCount(), _account, beginHash, cmaxRows);
-        auto const& subObjects = debugStorageAt["storage"].getSubObjects();
-        _totalSize += subObjects.size() * 64;
-        for (auto const& element : subObjects)
-            storage[element.atKey("key").asString()] = element.atKey("value").asString();
-        if (debugStorageAt.count("nextKey"))
-            beginHash = debugStorageAt.atKey("nextKey").asString();
-        else
-            break;
-    }
-    accountObj["storage"] = storage;
-    ETH_ERROR_REQUIRE_MESSAGE(cycles > 0,
-        "Remote state has too many storage records! (" + to_string(cycles_max * cmaxRows) + ")");
-    return scheme_account(accountObj);
-}
-
-scheme_state getRemoteState(SessionInterface& _session, scheme_RPCBlock const& _latestInfo)
-{
-    const int c_accountLimitBeforeHash = 20;
-    DataObject accountsObj;
-
-    // Probe for a huge state so not to call entire list of accounts if there are more then Limited
-    bool isHugeState = false;
-    DataObject accountList;
-    if (!Options::get().fullstate)
-    {
-        scheme_debugAccountRange res = _session.debug_accountRange(_latestInfo.getNumber(),
-            _latestInfo.getTransactionCount(), "", c_accountLimitBeforeHash);
-
-        if (res.isNextKey())
-            isHugeState = true;
-        else
-        {
-            // looks like the state is small
-            for (auto const& element : res.getAccountMap().getSubObjects())
-                accountList.addSubObject(element.asString(), DataObject(DataType::Null));
-        }
-    }
-    else
-        accountList =
-            getRemoteAccountList(_session, _latestInfo);  // get the whole list of accounts
-
-    if (!isHugeState || Options::get().fullstate)
-    {
-        size_t stateTotalSize = 0;
-        for (auto acc : accountList.getSubObjects())
-        {
-            scheme_account accountScheme =
-                remoteGetAccount(_session, acc.getKey(), _latestInfo, stateTotalSize);
-            if (stateTotalSize > 1024000 && !Options::get().fullstate)  // > 1MB
-            {
-                isHugeState = true;
-                break;
-            }
-            accountsObj.addSubObject(accountScheme.getData());
-        }
-    }
-
-    if (isHugeState)
-    {
-        accountsObj.clear();
-        accountsObj = _latestInfo.getStateHash();
-    }
-
-    if (Options::get().poststate)
-        ETH_STDOUT_MESSAGE("PostState " + TestOutputHelper::get().testInfo().errorDebug() +
-                           " : \n" + accountsObj.asJson());
-
-    return scheme_state(accountsObj);
-}
-
-void printVmTrace(SessionInterface& _session, string const& _trHash, string const& _stateRoot)
-{
-    scheme_debugTraceTransaction ret = _session.debug_traceTransaction(_trHash);
+    DebugTraceTransaction ret(_session.debug_traceTransaction(_trHash));
     for (auto const& entry : ret.getEntries())
         ETH_LOG(entry.getData().asJson(0, false), 0);
     ETH_LOG(ret.getFinal(), 0);
     DataObject state;
-    state["stateRoot"] = _stateRoot;
+    state["stateRoot"] = _stateRoot.asString();
     ETH_LOG(state.asJson(0, false), 0);
 }
 

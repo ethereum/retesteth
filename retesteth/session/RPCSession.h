@@ -1,13 +1,16 @@
 #pragma once
 
+#include <stdio.h>
 #include <boost/noncopyable.hpp>
 #include <boost/test/unit_test.hpp>
-
-#include <retesteth/ethObjects/common.h>
-#include <retesteth/session/SessionInterface.h>
-#include <stdio.h>
 #include <map>
 #include <string>
+
+#include <retesteth/configs/ClientConfig.h>
+#include <retesteth/dataObject/DataObject.h>
+#include <retesteth/session/SessionInterface.h>
+
+using namespace dataobject;
 
 // Session connections to an instance of a client
 class RPCSession : public boost::noncopyable
@@ -32,9 +35,6 @@ public:
 
 private:
     explicit RPCSession(SessionInterface* _impl);
-    static void runNewInstanceOfAClient(std::string const& _threadID, ClientConfig const& _config);
+    static void runNewInstanceOfAClient(std::string const& _threadID, test::ClientConfig const& _config);
     SessionInterface* m_implementation;
-
-    /// Parse std::string replacing keywords to values
-    // void parseString(std::string& _string, std::map<std::string, std::string> const& _varMap);
 };

@@ -8,35 +8,68 @@ namespace test
 {
 namespace teststruct
 {
-VALUE::VALUE(DataObject const& _data, dev::u256 _limit) : m_data(_data)
+// if int  make u256(int)
+// if sring
+//     if string is dec  make string hex
+//     if string is hex  check hexvalue 0x00000 leading zeros etc
+// check limit
+
+VALUE::VALUE(dev::u256 _data, dev::u256 const& _limit) : m_data(_data)
 {
-    string const& k = _data.getKey();
-    string const& v = _data.asString();
-    if (v[0] == '0' && v[1] == 'x')
-    {
-        if (v.size() == 2)
-            ETH_ERROR_MESSAGE(
-                "Key `" + k + "` is VALUE, but set as empty byte string: `" + v + "`");
-        // don't allow 0x001, but allow 0x0, 0x00
-        if ((v[2] == '0' && v.size() % 2 == 1 && v.size() != 3) ||
-            (v[2] == '0' && v[3] == '0' && v.size() % 2 == 0 && v.size() > 4))
-            ETH_ERROR_MESSAGE("Key `" + k + "` is VALUE and has leading 0 `" + v + "`");
-    }
+    checkLimit(_limit);
+}
+
+VALUE::VALUE(int _data, dev::u256 const& _limit)
+{
+    m_data = dev::u256(_data);
+    checkLimit(_limit);
+}
+
+VALUE::VALUE(string const& _data, dev::u256 const& _limit)
+{
+    verifyHexString(_data);
+    m_data = dev::u256(_data);
+    checkLimit(_limit);
+}
+
+VALUE::VALUE(DataObject const& _data, dev::u256 const& _limit)
+{
+    if (_data.type() == DataType::Integer)
+        m_data = _data.asInt();
     else
-        ETH_ERROR_MESSAGE("Key `" + k + "` is VALUE but not prefixed hex: `" + v + "`");
+    {
+        verifyHexString(_data.asString());
+        m_data = dev::u256(_data.asString());
+    }
+    checkLimit(_limit);
+}
 
-    if (v.size() > 64 + 2)
-        ETH_ERROR_MESSAGE("Key `" + k + "` >u256 `" + v + "`");
-    if (dev::u256(v) > _limit)
+void VALUE::verifyHexString(std::string const& _s) const
+{
+    if (_s[0] == '0' && _s[1] == 'x')
+    {
+        if (_s.size() == 2)
+            ETH_ERROR_MESSAGE("VALUE set as empty byte string: `" + _s + "`");
+        // don't allow 0x001, but allow 0x0, 0x00
+        if ((_s[2] == '0' && _s.size() % 2 == 1 && _s.size() != 3) ||
+            (_s[2] == '0' && _s[3] == '0' && _s.size() % 2 == 0 && _s.size() > 4))
+            ETH_ERROR_MESSAGE("VALUE has leading 0 `" + _s + "`");
+
+        if (_s.size() > 64 + 2)
+            ETH_ERROR_MESSAGE("VALUE  >u256 `" + _s + "`");
+    }
+}
+
+void VALUE::checkLimit(dev::u256 const& _limit) const
+{
+    if (m_data > _limit)
         ETH_ERROR_MESSAGE(
-            "Key `" + k + "` > limit `" + dev::toString(_limit) + "`, key = `" + v + "`");
-
-    m_data.performModifier(mod_valuesToLowerCase);
+            "VALUE `" + dev::toCompactHexPrefixed(m_data, 1) + "`  >limit `" + dev::toCompactHexPrefixed(_limit, 1) + "`");
 }
 
 string VALUE::asDecString() const
 {
-    return to_string(test::hexOrDecStringToInt(m_data.asString()));
+    return m_data.str(0, std::ios_base::dec);
 }
 
 }  // namespace teststruct
