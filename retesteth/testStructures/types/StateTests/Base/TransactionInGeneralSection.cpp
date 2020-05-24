@@ -1,5 +1,4 @@
 #include "TransactionInGeneralSection.h"
-#include "../../Common.h"
 #include <retesteth/EthChecks.h>
 
 using namespace test::teststruct;

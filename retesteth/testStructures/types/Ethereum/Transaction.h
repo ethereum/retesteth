@@ -17,14 +17,17 @@ struct Transaction : GCP_SPointerBase
     VALUE const& gasPrice() const { return m_gasPrice.getCContent(); }
     VALUE const& nonce() const { return m_nonce.getCContent(); }
     VALUE const& value() const { return m_value.getCContent(); }
-    FH20 const& to() const { return m_to.getCContent(); }
+    FH20 const& to() const
+    {
+        assert(!m_creation);
+        return m_to.getCContent();
+    }
 
     VALUE const& v() const { return m_v.getCContent(); }
     VALUE const& r() const { return m_r.getCContent(); }
     VALUE const& s() const { return m_s.getCContent(); }
 
     BYTES const getSignedRLP() const;
-    DataObject asDataObject() const;
 
 private:
     Transaction() {}
@@ -34,6 +37,7 @@ private:
     spVALUE m_nonce;
     spVALUE m_value;
     spFH20 m_to;
+    bool m_creation;
 
     void buildVRS(VALUE const& _secret);
     void streamHeader(dev::RLPStream& _stream) const;

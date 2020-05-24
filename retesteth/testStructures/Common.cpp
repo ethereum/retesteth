@@ -33,21 +33,20 @@ not found: '" + _network +
     }
 }*/
 
-DataObject prepareChainParams(FORK const& _net, SealEngine _engine, State const& _state, StateTestFillerEnv const& _env)
+DataObject prepareChainParams(FORK const& _net, SealEngine _engine, State const& _state, StateTestEnvBase const& _env)
 {
     ClientConfig const& cfg = Options::get().getDynamicOptions().getCurrentConfig();
-    cfg.checkForkAllowed(_net);
+    cfg.validateForkAllowed(_net);
 
     DataObject genesis;
     genesis = cfg.getGenesisTemplate(_net);
     genesis["sealEngine"] = sealEngineToStr(_engine);
 
-    StateTestFillerEnv const& env = _env;
-    genesis["genesis"]["author"] = env.currentCoinbase().asString();
-    genesis["genesis"]["difficulty"] = env.currentDifficulty().asString();
-    genesis["genesis"]["gasLimit"] = env.currentGasLimit().asString();
-    genesis["genesis"]["extraData"] = "0x";
-    genesis["genesis"]["timestamp"] = env.currentTimestamp().asString();
+    genesis["genesis"]["author"] = _env.currentCoinbase().asString();
+    genesis["genesis"]["difficulty"] = _env.currentDifficulty().asString();
+    genesis["genesis"]["gasLimit"] = _env.currentGasLimit().asString();
+    genesis["genesis"]["extraData"] = "0x00";
+    genesis["genesis"]["timestamp"] = "0x00";  //_env.currentTimestamp().asString();
     genesis["genesis"]["nonce"] = "0x0000000000000000";
     genesis["genesis"]["mixHash"] = "0x0000000000000000000000000000000000000000000000000000000000000000";
 

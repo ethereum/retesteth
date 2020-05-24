@@ -64,7 +64,7 @@ ClientConfig::ClientConfig(fs::path const& _clientConfigPath) : m_id(ClientConfi
     }
 }
 
-void ClientConfig::checkForkAllowed(FORK const& _net) const
+void ClientConfig::validateForkAllowed(FORK const& _net) const
 {
     if (!cfgFile().allowedForks().count(_net))
     {
@@ -73,6 +73,11 @@ void ClientConfig::checkForkAllowed(FORK const& _net) const
                     cfgFile().path().string());
         ETH_ERROR_MESSAGE("Specified network not found: '" + _net.asString() + "'");
     }
+}
+
+bool ClientConfig::checkForkAllowed(FORK const& _net) const
+{
+    return cfgFile().allowedForks().count(_net);
 }
 
 /// translate network names in expect section field
@@ -137,7 +142,7 @@ set<FORK> ClientConfig::translateNetworks(set<string> const& _networks) const
         // if nothing has been inserted, just push the untranslated network as is
         if (!isNetworkTranslated)
         {
-            checkForkAllowed(FORK(net));
+            validateForkAllowed(FORK(net));
             out.emplace(FORK(net));
         }
     }

@@ -2,6 +2,7 @@
 #include "../../Common.h"
 #include <retesteth/EthChecks.h>
 #include <retesteth/Options.h>
+#include <retesteth/ethObjects/object.h>
 
 using namespace test::teststruct;
 GeneralStateTest::GeneralStateTest(DataObject const& _data)
@@ -26,9 +27,27 @@ StateTestInFilled::StateTestInFilled(DataObject const& _data)
 {
     m_info = GCP_SPointer<Info>(new Info(_data.atKey("_info")));
     m_env = GCP_SPointer<StateTestEnv>(new StateTestEnv(_data.atKey("env")));
-    m_pre = spState(new State(_data.atKey("pre")));
+
+    // -- Some tests has storage keys/values with leading zeros. Convert it to hex value
+    DataObject tmpD = _data.atKey("pre");
+    for (auto& acc : tmpD.getSubObjectsUnsafe())
+    {
+        for (auto& rec : acc["storage"].getSubObjectsUnsafe())
+        {
+            rec.performModifier(mod_keyToCompactEvenHexPrefixed);
+            rec.performModifier(mod_valueToCompactEvenHexPrefixed);
+        }
+    }
+    // -- REMOVE THIS, FIX THE TESTS
+    m_pre = spState(new State(tmpD));
+
     m_transaction = GCP_SPointer<StateTestTransaction>(new StateTestTransaction(_data.atKey("transaction")));
-    // for (auto const& el : _data.atKey("expect").getSubObjects())
-    //    m_expectSections.push_back(StateTestFillerExpectSection(el));
+    for (auto const& elFork : _data.atKey("post").getSubObjects())
+    {
+        StateTestPostResults res;
+        for (auto const& elForkResults : elFork.getSubObjects())
+            res.push_back(StateTestPostResult(elForkResults));
+        m_post[FORK(elFork.getKey())] = res;
+    }
     m_name = _data.getKey();
 }

@@ -13,6 +13,7 @@ struct FH : GCP_SPointerBase
     FH(DataObject const&, size_t _scale);
     string const& asString() const { return m_data; }
     bool operator==(FH const& rhs) const { return asString() == rhs.asString(); }
+    bool operator!=(FH const& rhs) const { return asString() != rhs.asString(); }
     bool operator<(FH const& rhs) const { return asString() < rhs.asString(); }
 
 private:

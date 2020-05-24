@@ -1,6 +1,7 @@
 #pragma once
 #include "Filled/Info.h"
 #include "Filled/StateTestEnv.h"
+#include "Filled/StateTestPostResult.h"
 #include "Filled/StateTestTransaction.h"
 #include <retesteth/dataObject/DataObject.h>
 #include <retesteth/dataObject/SPointer.h>
@@ -19,9 +20,8 @@ struct StateTestInFilled : GCP_SPointerBase
     Info const& testInfo() const { return m_info.getCContent(); }
     StateTestEnv const& Env() const { return m_env.getCContent(); }
     State const& Pre() const { return m_pre.getCContent(); }
-    StateTestTransaction const& Tr() const { return m_transaction.getCContent(); }
-    // std::vector<StateTestExpectSection> const& Expects() const { return m_expectSections; }
-    // std::list<FORK> getAllForksFromExpectSections() const;
+    StateTestTransaction const& GeneralTr() const { return m_transaction.getCContent(); }
+    std::map<FORK, StateTestPostResults> const& Post() const { return m_post; }
 
 private:
     StateTestInFilled() {}
@@ -30,7 +30,7 @@ private:
     GCP_SPointer<StateTestEnv> m_env;
     spState m_pre;
     GCP_SPointer<StateTestTransaction> m_transaction;
-    // std::vector<StateTestExpectSection> m_expectSections;
+    std::map<FORK, StateTestPostResults> m_post;
 };
 
 struct GeneralStateTest

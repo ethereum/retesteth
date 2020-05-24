@@ -11,7 +11,7 @@
 #include "types/ethereum.h"
 
 // StateTest Types
-#include "types/StateTests/Filler/StateTestFillerEnv.h"
+#include "types/StateTests/Base/StateTestEnvBase.h"
 #include "types/StateTests/GeneralStateTest.h"
 #include "types/StateTests/GeneralStateTestFiller.h"
 
@@ -25,11 +25,9 @@ namespace test
 {
 namespace teststruct
 {
-// CHeck that DataObject is of type Object
-// void checkDataObject(DataObject const& _input);
 
 // Prepare chain params rpc request
-DataObject prepareChainParams(FORK const&, SealEngine, State const&, StateTestFillerEnv const&);
+DataObject prepareChainParams(FORK const&, SealEngine, State const&, StateTestEnvBase const&);
 
 }  // namespace teststruct
 }  // namespace test

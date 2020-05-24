@@ -110,7 +110,7 @@ void Options::DynamicOptions::setCurrentConfig(ClientConfig const& _config)
     // Verify singleTestNet for the current config
     string const& net = Options::get().singleTestNet;
     if (!net.empty())
-        _config.checkForkAllowed(FORK(net));
+        _config.validateForkAllowed(FORK(net));
 }
 
 std::vector<ClientConfig> const& Options::DynamicOptions::getClientConfigs()

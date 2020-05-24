@@ -36,6 +36,13 @@ struct TestInfo
         m_currentTestCaseName = boost::unit_test::framework::current_test_case().p_name;
     }
 
+    TestInfo(std::string const& _fork, size_t _trD, size_t _trG, size_t _trV)
+      : m_sFork(_fork), m_trD(_trD), m_trG(_trG), m_trV(_trV)
+    {
+        m_isStateTransactionInfo = true;
+        m_currentTestCaseName = boost::unit_test::framework::current_test_case().p_name;
+    }
+
     TestInfo(std::string const& _fork, size_t _block, std::string const& _chainName = std::string())
       : m_sFork(_fork),
         m_sChainName(_chainName),

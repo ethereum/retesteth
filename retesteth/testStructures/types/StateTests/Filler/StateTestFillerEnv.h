@@ -3,6 +3,7 @@
 #include "../../../basetypes/FH20.h"
 #include "../../../basetypes/FH32.h"
 #include "../../../basetypes/VALUE.h"
+#include "../Base/StateTestEnvBase.h"
 #include <retesteth/dataObject/DataObject.h>
 #include <retesteth/dataObject/SPointer.h>
 using namespace dataobject;
@@ -12,25 +13,11 @@ namespace test
 {
 namespace teststruct
 {
-struct StateTestFillerEnv : GCP_SPointerBase
+// Marks that Env is taken from StateTest filler
+// Filler constructor of env converts all dec fields to hex
+struct StateTestFillerEnv : StateTestEnvBase
 {
     StateTestFillerEnv(DataObject const& _data);
-    FH20 const& currentCoinbase() const { return m_currentCoinbase.getCContent(); }
-    VALUE const& currentDifficulty() const { return m_currentDifficulty.getCContent(); }
-    VALUE const& currentGasLimit() const { return m_currentGasLimit.getCContent(); }
-    VALUE const& currentNumber() const { return m_currentNumber.getCContent(); }
-    VALUE const& currentTimestamp() const { return m_currentTimestamp.getCContent(); }
-    FH32 const& previousHash() const { return m_previousHash.getCContent(); }
-    DataObject asDataObject() const;
-
-private:
-    StateTestFillerEnv() {}
-    spFH20 m_currentCoinbase;
-    spVALUE m_currentDifficulty;
-    spVALUE m_currentGasLimit;
-    spVALUE m_currentNumber;
-    spVALUE m_currentTimestamp;
-    spFH32 m_previousHash;
 };
 
 

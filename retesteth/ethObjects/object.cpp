@@ -389,7 +389,7 @@ void requireJsonFields(DataObject const& _o, std::string const& _config,
 DataObject object::prepareGenesisParams(std::string const& _network, std::string const& _engine)
 {
     ClientConfig const& cfg = Options::get().getDynamicOptions().getCurrentConfig();
-    cfg.checkForkAllowed(FORK(_network));
+    cfg.validateForkAllowed(FORK(_network));
 
     DataObject genesis;
     genesis = cfg.getGenesisTemplate(_network);

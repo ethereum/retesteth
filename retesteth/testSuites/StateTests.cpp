@@ -61,8 +61,9 @@ bool OptionsAllowTransaction(test::teststruct::TransactionInGeneralSection const
 }
 
 /// Generate a blockchain test from state test filler
-DataObject FillTestAsBlockchain(DataObject const& _testFile)
-{(void)_testFile;
+DataObject FillTestAsBlockchain(StateTestInFiller const& _test)
+{
+    (void)_test;
     DataObject filledTest;
     /*
     test::scheme_stateTestFiller test(_testFile);
@@ -216,6 +217,13 @@ DataObject FillTest(StateTestInFiller const& _test)
     // run transactions on all networks that we need
     for (auto const& fork : _test.getAllForksFromExpectSections())  // object constructed!!!
     {
+        // Skip by --singlenet option
+        bool networkSkip = false;
+        Options const& opt = Options::get();
+        if ((!opt.singleTestNet.empty() && FORK(opt.singleTestNet) != fork) ||
+            !Options::getDynamicOptions().getCurrentConfig().checkForkAllowed(fork))
+            networkSkip = true;
+
         DataObject forkResults;
         forkResults.setKey(fork.asString());
 
@@ -230,10 +238,10 @@ DataObject FillTest(StateTestInFiller const& _test)
             {
                 for (auto& tr : txs)
                 {
-                    TestInfo errorInfo (fork.asString(), (int)tr.dataInd(), (int)tr.gasInd(), (int)tr.valueInd());
+                    TestInfo errorInfo(fork.asString(), tr.dataInd(), tr.gasInd(), tr.valueInd());
                     TestOutputHelper::get().setCurrentTestInfo(errorInfo);
 
-                    if (!OptionsAllowTransaction(tr))
+                    if (!OptionsAllowTransaction(tr) || networkSkip)
                     {
                         tr.markSkipped();
                         continue;
@@ -286,91 +294,105 @@ DataObject FillTest(StateTestInFiller const& _test)
         filledTest["post"].addSubObject(forkResults);
     }
 
+    FillTestAsBlockchain(DataObject());
     checkUnexecutedTransactions(txs);
     return filledTest;
 }
 
 /// Read and execute the test file
-void RunTest(DataObject const& _testFile)
+void RunTest(StateTestInFilled const& _test)
 {
-    (void)_testFile;
-    /*
-    test::scheme_stateTest test(_testFile);
     SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
 
-    // read post state results
-    for (auto const& post: test.getPost().getResults())
+    // Gather Transactions from general transaction section
+    std::vector<TransactionInGeneralSection> txs = _test.GeneralTr().buildTransactions();
+
+    for (auto const& post : _test.Post())
     {
         bool networkSkip = false;
-        string const& network = post.first;
-        if ((!Options::get().singleTestNet.empty() && Options::get().singleTestNet != network) ||
-            !inArray(Options::getDynamicOptions().getCurrentConfig().getNetworks(), network))
+        FORK const& network = post.first;
+        Options const& opt = Options::get();
+
+        // If options singlenet select different network or test has network that is not allowed by clinet configs
+        if ((!opt.singleTestNet.empty() && FORK(opt.singleTestNet) != network) ||
+            !Options::getDynamicOptions().getCurrentConfig().checkForkAllowed(network))
             networkSkip = true;
         else
-            session.test_setChainParams(test.getGenesisForRPC(network, "NoReward"));
+        {
+            DataObject request = prepareChainParams(network, SealEngine::NoReward, _test.Pre(), _test.Env());
+            session.test_setChainParams(request);
+        }
 
         // One test could have many transactions on same chainParams
         // It is expected that for a setted chainParams there going to be a transaction
         // Rather then all transactions would be filtered out and not executed at all
 
         // read all results for a specific fork
-        for (auto const& result: post.second)
+        for (StateTestPostResult const& result : post.second)
         {
             bool resultHaveCorrespondingTransaction = false;
             // look for a transaction with this indexes and execute it on a client
-            for (auto& tr: test.getTransactionsUnsafe())
+            for (TransactionInGeneralSection& tr : txs)
             {
-                TestInfo errorInfo (network, tr.dataInd, tr.gasInd, tr.valueInd);
+                TestInfo errorInfo(network.asString(), tr.dataInd(), tr.gasInd(), tr.valueInd());
                 TestOutputHelper::get().setCurrentTestInfo(errorInfo);
-                bool checkIndexes = result.checkIndexes(tr.dataInd, tr.gasInd, tr.valueInd);
+                bool checkIndexes = result.checkIndexes(tr.dataInd(), tr.gasInd(), tr.valueInd());
                 if (checkIndexes)
                     resultHaveCorrespondingTransaction = true;
 
                 if (!OptionsAllowTransaction(tr) || networkSkip)
                 {
-                    tr.skipped = true;
+                    tr.markSkipped();
                     continue;
                 }
 
                 if (checkIndexes)
                 {
-                    u256 a(test.getEnv().getData().atKey("currentTimestamp").asString());
-                    session.test_modifyTimestamp(a.convert_to<size_t>());
-                    string trHash = session.eth_sendRawTransaction(tr.transaction);
-                    string latestBlockNumber = session.test_mineBlocks(1);
-                    tr.executed = true;
+                    session.test_modifyTimestamp(_test.Env().currentTimestamp().asDecString());
+                    FH32 trHash(session.eth_sendRawTransaction(tr.transaction().getSignedRLP()));
+                    session.test_mineBlocks(1);
+
+                    VALUE latestBlockN(session.eth_blockNumber());
+                    EthGetBlockBy blockInfo(session.eth_getBlockByNumber(latestBlockN.asDecString(), Request::LESSOBJECTS));
+                    ETH_ERROR_REQUIRE_MESSAGE(
+                        blockInfo.hasTransaction(trHash), "StateTest::RunTest: TR hash not found in mined block!");
+                    tr.markExecuted();
 
                     // Validate post state
-                    string postHash = result.getData().atKey("hash").asString();
-                    scheme_RPCBlock remoteBlockInfo =
-                        session.eth_getBlockByNumber(latestBlockNumber, false);
-                    ETH_ERROR_REQUIRE_MESSAGE(remoteBlockInfo.getTransactionCount() == 1,
-                        "Failed to execute transaction on remote client! State test transaction must
-    be valid!"); if (Options::get().vmtrace && !Options::get().filltests) printVmTrace(session,
-    trHash, postHash); validatePostHash(session, postHash, remoteBlockInfo);
+                    FH32 const& expectedPostHash = result.hash();
+                    if (Options::get().vmtrace && !Options::get().filltests)
+                        printVmTrace(session, trHash, blockInfo.stateRoot());
+
+                    FH32 const& actualHash = blockInfo.stateRoot();
+                    if (actualHash != expectedPostHash)
+                    {
+                        if (Options::get().logVerbosity >= 5)
+                            ETH_LOG("\nState Dump: \n" + getRemoteState(session).asDataObject().asJson(), 5);
+                        ETH_ERROR_MESSAGE("Post hash mismatch remote: " + actualHash.asString() +
+                                          ", expected: " + expectedPostHash.asString());
+                    }
 
                     // Validate log hash
-                    string postLogHash = result.getData().atKey("logs").asString();
-                    string remoteLogHash = session.test_getLogHash(trHash);
-                    if (!remoteLogHash.empty() && remoteLogHash != postLogHash)
-                        ETH_ERROR_MESSAGE("Logs hash mismatch: '" + remoteLogHash + "', expected: '"
-    + postLogHash + "'");
+                    FH32 const& expectedLogHash = result.logs();
+                    FH32 remoteLogHash(session.test_getLogHash(trHash));
+                    if (remoteLogHash != expectedLogHash)
+                        ETH_ERROR_MESSAGE("Logs hash mismatch: '" + remoteLogHash.asString() + "', expected: '" +
+                                          expectedLogHash.asString() + "'");
 
                     session.test_rewindToBlock(0);
                     if (Options::get().logVerbosity >= 5)
-                        ETH_LOG("Executed: d: " + to_string(tr.dataInd) +
-                                    ", g: " + to_string(tr.gasInd) +
-                                    ", v: " + to_string(tr.valueInd) + ", fork: " + network, 5);
+                        ETH_LOG("Executed: d: " + to_string(tr.dataInd()) + ", g: " + to_string(tr.gasInd()) +
+                                    ", v: " + to_string(tr.valueInd()) + ", fork: " + network.asString(),
+                            5);
                 }
             } //ForTransactions
+
             ETH_ERROR_REQUIRE_MESSAGE(resultHaveCorrespondingTransaction,
-                         "Test `post` section has expect section without corresponding transaction!
-    " + result.getData().asJson());
+                "Test `post` section has expect section without corresponding transaction!" + result.asDataObject().asJson());
         }
     }
 
-    test.checkUnexecutedTransactions();
-    */
+    checkUnexecutedTransactions(txs);
 }
 }  // namespace closed
 
@@ -392,23 +414,14 @@ DataObject StateTestSuite::doTests(DataObject const& _input, TestSuiteOptions& _
 
         StateTestInFiller const& test = filler.tests().at(0);
         checkTestNameIsEqualToFileName(test.testName());
-        if (!Options::get().fillchain)
+        if (Options::get().fillchain)
+            filledTest.addSubObject(test.testName(), FillTestAsBlockchain(test));
+        else
             filledTest.addSubObject(test.testName(), FillTest(test));
 
         TestOutputHelper::get().registerTestRunSuccess();
         return filledTest;
     }
-    else
-    {
-    }
-
-    DataObject tt(DataType::Null);
-    FillTestAsBlockchain(tt);
-    RunTest(tt);
-    return DataObject();
-
-    // Not doing filling
-    /*
     else
     {
         if (Options::get().fillchain)
@@ -417,8 +430,13 @@ DataObject StateTestSuite::doTests(DataObject const& _input, TestSuiteOptions& _
             bcTestSuite.doTests(_input, _opt);
         }
         else
-            RunTest(inputTest);
+        {
+            GeneralStateTest filledTest(_input);
+            for (auto const& test : filledTest.tests())
+                RunTest(test);
+        }
+        TestOutputHelper::get().registerTestRunSuccess();
     }
-    */
+    return DataObject();
 }
 }// Namespace Close

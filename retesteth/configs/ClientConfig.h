@@ -40,7 +40,8 @@ public:
 
     // Functionality
     // Verify FORK is allowed by Fork + AdditionalForks and throw an error if not
-    void checkForkAllowed(FORK const& _net) const;
+    void validateForkAllowed(FORK const& _net) const;
+    bool checkForkAllowed(FORK const& _net) const;
 
     // Translate smart network names into network names ( `<=Homestead` to `Frontier, Homestead`)
     set<FORK> translateNetworks(set<string> const& _networks) const;

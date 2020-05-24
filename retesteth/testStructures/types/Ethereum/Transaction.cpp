@@ -14,8 +14,16 @@ Transaction::Transaction(DataObject const& _data)
     m_gasLimit = spVALUE(new VALUE(_data.atKey("gasLimit")));
     m_gasPrice = spVALUE(new VALUE(_data.atKey("gasPrice")));
     m_nonce = spVALUE(new VALUE(_data.atKey("nonce")));
-    m_to = spFH20(new FH20(_data.atKey("to")));
     m_value = spVALUE(new VALUE(_data.atKey("value")));
+
+    if (_data.atKey("to").asString().empty())
+        m_creation = true;
+    else
+    {
+        m_creation = false;
+        m_to = spFH20(new FH20(_data.atKey("to")));
+    }
+
 
     if (_data.count("secretKey"))
         buildVRS(VALUE(_data.atKey("secretKey")));
@@ -32,7 +40,10 @@ void Transaction::streamHeader(dev::RLPStream& _s) const
     _s << nonce().asU256();
     _s << gasPrice().asU256();
     _s << gasLimit().asU256();
-    _s << dev::Address(to().asString());  //  s << "";  if empty
+    if (m_creation)
+        _s << "";
+    else
+        _s << dev::Address(to().asString());
     _s << value().asU256();
     _s << dev::fromHex(data().asString());
 }
@@ -57,11 +68,6 @@ void Transaction::buildVRS(VALUE const& _secret)
     m_s = spVALUE(new VALUE(s));
 }
 
-DataObject Transaction::asDataObject() const
-{
-    DataObject out;
-    return out;
-}
 
 BYTES const Transaction::getSignedRLP() const
 {

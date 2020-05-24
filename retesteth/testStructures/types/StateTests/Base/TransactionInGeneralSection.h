@@ -1,13 +1,17 @@
 #pragma once
-#include "../Ethereum/Transaction.h"
+#include "../../Ethereum/Transaction.h"
 #include <retesteth/dataObject/DataObject.h>
 #include <retesteth/dataObject/SPointer.h>
 
 using namespace dataobject;
+using namespace test::teststruct;
 namespace test
 {
 namespace teststruct
 {
+// Single transaction construct from GeneralTransaction section in state tests
+// State tests GeneralTransaction section define multiple transactions
+// This is a single transaction representation
 struct TransactionInGeneralSection
 {
     TransactionInGeneralSection(DataObject const&, size_t _dInd, size_t _gInd, size_t _vInd);

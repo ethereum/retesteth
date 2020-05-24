@@ -1,7 +1,7 @@
 #pragma once
 #include "../../../basetypes.h"
 #include "../../../types/ethereum.h"
-#include "../TransactionInGeneralSection.h"
+#include "../Base/StateTestTransactionBase.h"
 #include <retesteth/dataObject/DataObject.h>
 #include <retesteth/dataObject/SPointer.h>
 using namespace dataobject;
@@ -12,20 +12,12 @@ namespace test
 namespace teststruct
 {
 // Sructure to store JSON data from test
-struct StateTestTransaction : GCP_SPointerBase
+// Indicates that Transaction is read from filled StateTest
+// Constructor expect all fields hex, and don't compile data into bytecode
+// Bytecode is required to be already compiled
+struct StateTestTransaction : StateTestTransactionBase
 {
     StateTestTransaction(DataObject const&);
-    DataObject asDataObject() const;
-    std::vector<TransactionInGeneralSection> buildTransactions() const;
-
-private:
-    std::vector<BYTES> m_data;
-    std::vector<VALUE> m_gasLimit;
-    std::vector<VALUE> m_value;
-    spVALUE m_gasPrice;
-    spVALUE m_nonce;
-    spFH32 m_secretKey;
-    spFH20 m_to;
 };
 
 }  // namespace teststruct
