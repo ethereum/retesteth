@@ -11,6 +11,7 @@
 #include "types/ethereum.h"
 
 // StateTest Types
+#include "types/BlockchainTests/BlockchainTest.h"
 #include "types/StateTests/Base/StateTestEnvBase.h"
 #include "types/StateTests/GeneralStateTest.h"
 #include "types/StateTests/GeneralStateTestFiller.h"

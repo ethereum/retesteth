@@ -13,7 +13,7 @@ namespace teststruct
 // Base logic for State Test Transaction section
 struct StateTestTransactionBase : GCP_SPointerBase
 {
-    DataObject asDataObject() const;
+    DataObject const asDataObject() const;
     std::vector<TransactionInGeneralSection> buildTransactions() const;
 
 protected:

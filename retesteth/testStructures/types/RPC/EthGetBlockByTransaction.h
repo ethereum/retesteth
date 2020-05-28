@@ -1,5 +1,6 @@
 #pragma once
 #include "../../basetypes.h"
+#include "../Ethereum/Transaction.h"
 #include <retesteth/dataObject/DataObject.h>
 
 using namespace dataobject;
@@ -13,22 +14,31 @@ struct EthGetBlockByTransaction
 {
     EthGetBlockByTransaction(DataObject const&);
     FH32 const& hash() const { return m_hash.getCContent(); }
+    Transaction const& transaction() const
+    {
+        assert(isFullTransaction());
+        return m_transaction.getCContent();
+    }
+    bool isFullTransaction() const { return !m_transaction.isEmpty(); }
+    FH32 const& blockHash() const
+    {
+        assert(isFullTransaction());
+        return m_blockHash.getCContent();
+    }
+    VALUE const& blockNumber() const
+    {
+        assert(isFullTransaction());
+        return m_blockNumber.getCContent();
+    }
 
 private:
+    spTransaction m_transaction;
+
     spFH32 m_blockHash;
     spVALUE m_blockNumber;
     spFH20 m_from;
-    spVALUE m_gas;
-    spVALUE m_gasPrice;
     spFH32 m_hash;
-    spBYTES m_input;
-    spVALUE m_nonce;
-    spFH20 m_to;
     spVALUE m_transactionIndex;
-    spVALUE m_value;
-    spVALUE m_v;
-    spVALUE m_r;
-    spVALUE m_s;
 };
 
 }  // namespace teststruct

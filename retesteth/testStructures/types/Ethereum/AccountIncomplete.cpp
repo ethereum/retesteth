@@ -20,7 +20,7 @@ AccountIncomplete::AccountIncomplete(DataObject const& _data)
         m_code = spBYTES(new BYTES(_data.atKey("code")));
 }
 
-DataObject AccountIncomplete::asDataObject() const
+const DataObject AccountIncomplete::asDataObject() const
 {
     DataObject out;
     string const& addr = m_address.getCContent().asString();
@@ -32,6 +32,8 @@ DataObject AccountIncomplete::asDataObject() const
         out["code"] = m_code.getCContent().asString();
     if (!m_storage.isEmpty())
         out["storage"] = m_storage.getCContent().asDataObject();
+    if (m_shouldNotExist)
+        out["shouldnotexist"] = "1";
     out.setKey(addr);
     return out;
 }

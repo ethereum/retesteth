@@ -52,10 +52,10 @@ void checkTestNameIsEqualToFileName(string const& _testName);
 string CompareResultToString(CompareResult res);
 
 // Compafre expected StateIncomplete against remote client (get post state data on the fly with session)
-void compareStates(StateIncomplete const& _stateExpect, SessionInterface& _session);
+void compareStates(StateBase const& _stateExpect, SessionInterface& _session);
 
 // Compare expected StateIncomplete against post state State
-void compareStates(StateIncomplete const& _stateExpect, State const& _statePost);
+void compareStates(StateBase const& _stateExpect, State const& _statePost);
 
 // json trace vm
 void printVmTrace(SessionInterface& _session, FH32 const& _trHash, FH32 const& _stateRoot);

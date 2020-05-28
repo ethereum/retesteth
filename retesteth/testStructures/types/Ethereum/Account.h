@@ -1,6 +1,5 @@
 #pragma once
-#include "../../basetypes.h"
-#include "Storage.h"
+#include "Base/AccountBase.h"
 #include <retesteth/dataObject/DataObject.h>
 #include <retesteth/dataObject/SPointer.h>
 using namespace dataobject;
@@ -11,24 +10,16 @@ namespace test
 namespace teststruct
 {
 // Ethereum account description
-struct Account : GCP_SPointerBase
+// Describe the strict account defenition
+// Constructor require all fields to be set
+struct Account : AccountBase
 {
     Account(DataObject const&);
     Account(FH20 const& _addr, VALUE const& _balance, VALUE const& _nonce, BYTES const& _code, Storage const& _storage);
-    VALUE const& balance() const { return m_balance.getCContent(); }
-    VALUE const& nonce() const { return m_nonce.getCContent(); }
-    Storage const& storage() const { return m_storage.getCContent(); }
-    BYTES const& code() const { return m_code.getCContent(); }
-    FH20 const& address() const { return m_address.getCContent(); }
-    DataObject asDataObject() const;
+    DataObject const asDataObject() const override;
 
 private:
     Account() {}
-    spFH20 m_address;
-    spVALUE m_balance;
-    spVALUE m_nonce;
-    spBYTES m_code;
-    spStorage m_storage;
 };
 
 typedef GCP_SPointer<Account> spAccount;

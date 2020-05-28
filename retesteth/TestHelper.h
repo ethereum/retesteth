@@ -43,6 +43,9 @@ void parseJsonIntValueIntoSet(DataObject const& _json, std::set<int>& _out);
 /// Safe dev::fromHex
 dev::bytes sfromHex(string const& _hexStr);
 
+/// Informatice exception dev::toCompactHexPrefixed
+std::string stoCompactHexPrefixed(dev::u256 const& _val, int _minsize = 0);
+
 /// Convert string letters to lowercase
 void strToLower(string& _input);
 

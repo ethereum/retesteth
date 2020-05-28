@@ -336,23 +336,21 @@ bool TestBlockchain::checkBlockException(string const& _sBlockException) const
     // Check malicious block import exception
     // Relies on that previous block import was exactly this block !!!
     if (_sBlockException == "NoException")
-        ETH_ERROR_REQUIRE_MESSAGE(m_session.getLastRPCErrorMessage().empty(),
-            "Postmine block tweak expected no exception! Client errors with: '" +
-                m_session.getLastRPCErrorMessage() + "'");
+        ETH_ERROR_REQUIRE_MESSAGE(m_session.getLastRPCError().empty(),
+            "Postmine block tweak expected no exception! Client errors with: '" + m_session.getLastRPCError().message() + "'");
     else
     {
         std::string const& clientExceptionString =
             Options::get().getDynamicOptions().getCurrentConfig().translateException(
                 _sBlockException);
-        size_t pos = m_session.getLastRPCErrorMessage().find(clientExceptionString);
+        size_t pos = m_session.getLastRPCError().message().find(clientExceptionString);
         if (clientExceptionString.empty())
             pos = string::npos;
         ETH_ERROR_REQUIRE_MESSAGE(pos != string::npos,
             "'" + clientExceptionString + "' (" + _sBlockException +
                 ") not found in client response to postmine block tweak! Import result of postmine "
                 "block: '" +
-                m_session.getLastRPCErrorMessage() + "', Test Expected: '" + clientExceptionString +
-                "'");
+                m_session.getLastRPCError().message() + "', Test Expected: '" + clientExceptionString + "'");
         return false;  // block is not valid
     }
     return true;  // block is valid

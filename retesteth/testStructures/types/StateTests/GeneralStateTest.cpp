@@ -1,5 +1,4 @@
 #include "GeneralStateTest.h"
-#include "../../Common.h"
 #include <retesteth/EthChecks.h>
 #include <retesteth/Options.h>
 #include <retesteth/ethObjects/object.h>
@@ -11,6 +10,8 @@ GeneralStateTest::GeneralStateTest(DataObject const& _data)
     {
         ETH_ERROR_REQUIRE_MESSAGE(_data.type() == DataType::Object,
             TestOutputHelper::get().get().testFile().string() + " A test file must contain an object value (json/yaml).");
+        ETH_ERROR_REQUIRE_MESSAGE(_data.getSubObjects().size() == 1,
+            TestOutputHelper::get().get().testFile().string() + " A test file must contain exactly one test!");
         for (auto const& el : _data.getSubObjects())
         {
             TestOutputHelper::get().setCurrentTestInfo(TestInfo("GeneralStateTest", el.getKey()));

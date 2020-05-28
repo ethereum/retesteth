@@ -24,9 +24,9 @@ void Storage::merge(Storage const& _storage)
         m_map[record.first] = record.second;
 }
 
-DataObject Storage::asDataObject() const
+const DataObject Storage::asDataObject() const
 {
-    DataObject out;
+    DataObject out(DataType::Object);
     for (auto const& el : m_map)
     {
         StorageRecord const& record = el.second;

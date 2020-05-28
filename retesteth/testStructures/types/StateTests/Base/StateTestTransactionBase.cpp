@@ -3,7 +3,7 @@
 using namespace dataobject;
 using namespace test::teststruct;
 
-DataObject StateTestTransactionBase::asDataObject() const
+const DataObject StateTestTransactionBase::asDataObject() const
 {
     // Serialize data back to JSON
     DataObject out;
@@ -11,15 +11,16 @@ DataObject StateTestTransactionBase::asDataObject() const
         out["data"].addArrayObject(el.asString());
     for (VALUE const& el : m_gasLimit)
         out["gasLimit"].addArrayObject(el.asString());
-    for (VALUE const& el : m_value)
-        out["value"].addArrayObject(el.asString());
     out["gasPrice"] = m_gasPrice.getCContent().asString();
     out["nonce"] = m_nonce.getCContent().asString();
+    out["secretKey"] = m_secretKey.getCContent().asString();
     if (m_creation)
         out["to"] = "";
     else
         out["to"] = m_to.getCContent().asString();
-    out["secretKey"] = m_secretKey.getCContent().asString();
+    for (VALUE const& el : m_value)
+        out["value"].addArrayObject(el.asString());
+
     return out;
 }
 

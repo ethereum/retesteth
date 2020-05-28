@@ -24,5 +24,7 @@ private:
     DataObject m_data;
 };
 
+typedef GCP_SPointer<FORK> spFORK;
+
 }  // namespace teststruct
 }  // namespace test

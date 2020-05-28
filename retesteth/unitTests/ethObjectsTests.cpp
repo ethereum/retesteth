@@ -249,8 +249,6 @@ void testCompareResult(DataObject const& _exp, DataObject const& _post, CompareR
     try
     {
         test::compareStates(StateIncomplete(_exp), State(_post));
-        // std::cerr << State(_post).asDataObject().asJson() << std::endl;
-        // std::cerr << StateIncomplete(_exp).asDataObject().asJson() << std::endl;
         ETH_FAIL_REQUIRE(_expResult == CompareResult::Success);
     }
     catch (test::BaseEthException const& _ex)

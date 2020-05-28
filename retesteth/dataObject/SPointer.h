@@ -42,7 +42,7 @@ private:
 
 public:
     explicit GCP_SPointer() : _pointee(nullptr) {}
-    GCP_SPointer(int n) : _pointee(nullptr) {}
+    GCP_SPointer(int) : _pointee(nullptr) {}
     explicit GCP_SPointer(T* pointee) : _pointee(pointee)
     {
         if (pointee != nullptr)

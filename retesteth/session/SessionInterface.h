@@ -15,6 +15,21 @@ enum class Request
     LESSOBJECTS
 };
 
+struct RPCError
+{
+    RPCError() : m_empty(true){};
+    RPCError(string const& _error, string const& _message) : m_error(_error), m_message(_message), m_empty(false){};
+    string const& error() const { return m_error; }
+    string const& message() const { return m_message; }
+    bool empty() const { return m_empty; }
+    void clear() { m_empty = true; }
+
+private:
+    string m_error;
+    string m_message;
+    bool m_empty;
+};
+
 class SessionInterface
 {
 public:
@@ -22,7 +37,7 @@ public:
     virtual DataObject web3_clientVersion() = 0;
 
     // ETH Methods
-    virtual DataObject eth_sendRawTransaction(BYTES const& _rlp) = 0;
+    virtual FH32 eth_sendRawTransaction(BYTES const& _rlp) = 0;
     virtual int eth_getTransactionCount(FH20 const& _address, VALUE const& _blockNumber) = 0;
 
     virtual VALUE eth_blockNumber() = 0;
@@ -47,7 +62,7 @@ public:
     virtual void test_rewindToBlock(VALUE const& _blockNr) = 0;
     virtual void test_modifyTimestamp(VALUE const& _timestamp) = 0;
     virtual void test_mineBlocks(int _number) = 0;
-    virtual DataObject test_importRawBlock(BYTES const& _blockRLP) = 0;
+    virtual FH32 test_importRawBlock(BYTES const& _blockRLP) = 0;
     virtual FH32 test_getLogHash(FH32 const& _txHash) = 0;
 
     // Internal
@@ -57,18 +72,10 @@ public:
     virtual Socket::SocketType getSocketType() const = 0;
     virtual std::string const& getSocketPath() const = 0;
 
-    string const& getLastRPCErrorMessage() const
-    {
-        /// Returns empty string if last RPC call had no errors, error string if there was an error
-        static string const empty;
-        return (m_lastInterfaceError.type() != DataType::Null) ?
-                   m_lastInterfaceError.atKey("error").asString() :
-                   empty;
-    }
-    DataObject const& getLastRPCError() const { return m_lastInterfaceError; }
+    RPCError const& getLastRPCError() const { return m_lastInterfaceError; }
     virtual ~SessionInterface() {}
 
 protected:
     inline std::string quote(std::string const& _arg) { return "\"" + _arg + "\""; }
-    DataObject m_lastInterfaceError;  // last RPC error info
+    RPCError m_lastInterfaceError;
 };

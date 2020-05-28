@@ -1,6 +1,4 @@
 #include "Account.h"
-#include "../../basetypes.h"
-#include "Storage.h"
 #include <retesteth/TestHelper.h>
 #include <retesteth/ethObjects/object.h>
 
@@ -9,12 +7,13 @@ namespace test
 namespace teststruct
 {
 Account::Account(FH20 const& _addr, VALUE const& _balance, VALUE const& _nonce, BYTES const& _code, Storage const& _storage)
-  : m_address(new FH20(_addr)),
-    m_balance(new VALUE(_balance)),
-    m_nonce(new VALUE(_nonce)),
-    m_code(new BYTES(_code)),
-    m_storage(new Storage(_storage))
-{}
+{
+    m_address = spFH20(new FH20(_addr));
+    m_balance = spVALUE(new VALUE(_balance));
+    m_nonce = spVALUE(new VALUE(_nonce));
+    m_code = spBYTES(new BYTES(_code));
+    m_storage = spStorage(new Storage(_storage));
+}
 
 Account::Account(DataObject const& _data)
 {
@@ -25,13 +24,13 @@ Account::Account(DataObject const& _data)
     m_storage = spStorage(new Storage(_data.atKey("storage")));
 }
 
-DataObject Account::asDataObject() const
+const DataObject Account::asDataObject() const
 {
     DataObject out;
     string const& addr = m_address.getCContent().asString();
     out["balance"] = m_balance.getCContent().asString();
-    out["nonce"] = m_nonce.getCContent().asString();
     out["code"] = m_code.getCContent().asString();
+    out["nonce"] = m_nonce.getCContent().asString();
     out["storage"] = m_storage.getCContent().asDataObject();
     out.setKey(addr);
     return out;

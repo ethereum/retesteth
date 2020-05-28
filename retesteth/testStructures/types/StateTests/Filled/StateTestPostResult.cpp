@@ -13,7 +13,7 @@ StateTestPostResult::StateTestPostResult(DataObject const& _data)
     m_log = spFH32(new FH32(_data.atKey("logs").asString()));
 }
 
-DataObject StateTestPostResult::asDataObject() const
+const DataObject StateTestPostResult::asDataObject() const
 {
     DataObject res;
     res["hash"] = m_hash.getCContent().asString();

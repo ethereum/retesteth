@@ -18,6 +18,7 @@ struct StateTestFillerExpectSection
 
     // Check that this indexes are present in this expect section
     bool checkIndexes(size_t _dInd, size_t _gInd, size_t _vInd) const;
+    void correctMiningReward(FH20 const& _coinbase, VALUE const& _reward);
 
 private:
     std::set<int> m_dataInd;

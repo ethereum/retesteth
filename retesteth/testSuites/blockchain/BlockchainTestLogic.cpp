@@ -2,237 +2,167 @@
 #include "fillers/BlockchainTestFillerLogic.h"
 #include <retesteth/EthChecks.h>
 #include <retesteth/session/RPCSession.h>
+#include <retesteth/testStructures/Common.h>
 #include <retesteth/testSuites/Common.h>
-
 
 namespace test
 {
 
 /// Read and execute the test from the file
-void RunTest(DataObject const& _testObject, TestSuite::TestSuiteOptions const& _opt)
+void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions const& _opt)
 {
-    (void)_testObject;
     (void)_opt;
-    /*
-    {
-        TestInfo errorInfo("RunTestInit");
-        TestOutputHelper::get().setCurrentTestInfo(errorInfo);
-    }
     if (Options::get().logVerbosity > 1)
-        std::cout << "Running " << TestOutputHelper::get().testName() << std::endl;
-    scheme_blockchainTest inputTest(_testObject, _opt.isLegacyTests);
-    TestOutputHelper::get().setUnitTestExceptions(inputTest.getUnitTestExceptions());
+        ETH_STDOUT_MESSAGE("Running" + _test.testName());
+
+    TestOutputHelper::get().setUnitTestExceptions(_test.unitTestExceptions());
     SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
 
-    // Info for genesis
-    TestInfo errorInfo (inputTest.getNetwork(), 0);
-    TestOutputHelper::get().setCurrentTestInfo(errorInfo);
-    session.test_setChainParams(
-        inputTest.getGenesisForRPC(inputTest.getNetwork(), inputTest.getEngine()));
+    TestOutputHelper::get().setCurrentTestInfo(TestInfo(_test.network().asString(), 0));
+    DataObject request = prepareChainParams(_test.network(), _test.sealEngine(), _test.Pre(), _test.Env());
+    session.test_setChainParams(request);
 
     // for all blocks
     size_t blockNumber = 0;
-    for (auto const& bdata : inputTest.getBlocks())
+    for (BlockchainTestBlock const& tblock : _test.blocks())
     {
         if (Options::get().blockLimit != 0 && blockNumber + 1 >= Options::get().blockLimit)
             break;
-        TestInfo errorInfo(inputTest.getNetwork(), blockNumber++);
-        TestOutputHelper::get().setCurrentTestInfo(errorInfo);
-        string const blHash = session.test_importRawBlock(bdata.atKey("rlp").asString());
-        if (session.getLastRPCError().type() != DataType::Null)
+
+        TestOutputHelper::get().setCurrentTestInfo(TestInfo(_test.network().asString(), blockNumber++));
+        FH32 const blHash(session.test_importRawBlock(tblock.rlp()));
+
+        if (!session.getLastRPCError().empty())
         {
-            if (!_opt.allowInvalidBlocks || bdata.count("blockHeader"))
-                ETH_ERROR_MESSAGE("Running blockchain test: " +
-    session.getLastRPCError().atKey("message").asString());
+            // If there was an error on block rlp import
+            // and options does NOT allow invalid blocks or this block was expected to be valid
+            if (!_opt.allowInvalidBlocks || !tblock.expectedInvalid())
+                ETH_ERROR_MESSAGE("Running blockchain test: " + session.getLastRPCError().message());
         }
 
         // Check imported block against the fields in test
-        if (bdata.count("blockHeader"))
+        // Check Blockheader
+        EthGetBlockBy latestBlock(session.eth_getBlockByHash(blHash, Request::FULLOBJECTS));
+        bool condition = latestBlock.header() == tblock.header();
+        /*if (_opt.isLegacyTests)
         {
-            // Check Blockheader
-            DataObject inTestHeader(DataType::Null);
-            test::scheme_RPCBlock latestBlock = session.eth_getBlockByHash(blHash, true);
-            bool condition = latestBlock.getBlockHeader() == bdata.atKey("blockHeader");
-            if (_opt.isLegacyTests)
+            inTestHeader = bdata.atKey("blockHeader");  // copy!!!
+            if (latestBlock.getBlockHeader().atKey("nonce").asString() == "0x0000000000000000")
             {
-                inTestHeader = bdata.atKey("blockHeader");  // copy!!!
-                if (latestBlock.getBlockHeader().atKey("nonce").asString() == "0x0000000000000000")
-                {
-                    // because on NoProof mixHash is returned as 0x00 by other client, even if block
-                    // imported with mixHash/nonce ??? who returned 0x00 as mixHash??? wtf
-                    inTestHeader["mixHash"] =
-                        "0x0000000000000000000000000000000000000000000000000000000000000000";
-                    inTestHeader["nonce"] = "0x0000000000000000";
-                }
-                inTestHeader["hash"] = latestBlock.getBlockHeader().atKey("hash");
-                condition = latestBlock.getBlockHeader() == inTestHeader;
+                // because on NoProof mixHash is returned as 0x00 by other client, even if block
+                // imported with mixHash/nonce ??? who returned 0x00 as mixHash??? wtf
+                inTestHeader["mixHash"] =
+                    "0x0000000000000000000000000000000000000000000000000000000000000000";
+                inTestHeader["nonce"] = "0x0000000000000000";
             }
+            inTestHeader["hash"] = latestBlock.getBlockHeader().atKey("hash");
+            condition = latestBlock.getBlockHeader() == inTestHeader;
+        }*/
 
-            string const jsonHeader = inTestHeader.type() == DataType::Null ?
-                                          bdata.atKey("blockHeader").asJson() :
-                                          "(adjusted)" + inTestHeader.asJson();
-            string message = "Client return HEADER: " + latestBlock.getBlockHeader().asJson() +
-                             "\n vs \n" + "Test HEADER: " + jsonHeader;
-            ETH_ERROR_REQUIRE_MESSAGE(condition,
-                "Client report different blockheader after importing the rlp than expected by "
-                "test! \n" +
-                    message);
+        // string const jsonHeader = inTestHeader.type() == DataType::Null ?
+        //                              bdata.atKey("blockHeader").asJson() :
+        //                              "(adjusted)" + inTestHeader.asJson();
+        string message = "Client return HEADER: " + latestBlock.header().asDataObject().asJson() + "\n vs \n" +
+                         "Test HEADER: " + tblock.header().asDataObject().asJson();
+        ETH_ERROR_REQUIRE_MESSAGE(
+            condition, "Client report different blockheader after importing the rlp than expected by test! \n" + message);
 
-            // Verify uncles to one described in the fields
-            if (bdata.count("uncleHeaders"))
-            {
-                size_t ind = 0;
-                auto const& testUncleList = bdata.atKey("uncleHeaders").getSubObjects();
-                for (auto const& uncle : latestBlock.getUncles())
-                {
-                    message = "(" + uncle.asString() +
-                              " != " + testUncleList.at(ind).atKey("hash").asString() + ")";
-                    if (uncle.asString() != testUncleList.at(ind++).atKey("hash").asString())
-                        ETH_ERROR_MESSAGE(
-                            "Remote client returned block with unclehash that is not expected by "
-                            "test! " +
-                            message);
-                }
-            }
+        // Verify uncles to one described in the fields
+        size_t ind = 0;
+        message = "Client return UNCLES: " + to_string(latestBlock.uncles().size()) + " vs " +
+                  "Test UNCLES: " + to_string(tblock.uncles().size());
+        ETH_ERROR_REQUIRE_MESSAGE(latestBlock.uncles().size() == tblock.uncles().size(),
+            "Client report different uncle count after importing the rlp than expected by test! \n" + message);
+        for (BlockHeader const& tuncle : tblock.uncles())
+        {
+            FH32 clientUncleHash = latestBlock.uncles().at(ind++);  // EthGetBlockBy return only hashes
+            message = "(" + clientUncleHash.asString() + " != " + tuncle.hash().asString() + ")";
+            if (clientUncleHash != tuncle.hash())
+                ETH_ERROR_MESSAGE("Remote client returned block with unclehash that is not expected by test! " + message);
+        }
 
-            // Check Transaction count
-            message =
-                "Client return TRANSACTIONS: " + to_string(latestBlock.getTransactionCount()) +
-                " vs " + "Test TRANSACTIONS: " +
-                to_string(bdata.atKey("transactions").getSubObjects().size());
-            ETH_ERROR_REQUIRE_MESSAGE(latestBlock.getTransactionCount() ==
-                                          bdata.atKey("transactions").getSubObjects().size(),
-                "Client report different transaction count after importing the rlp than expected "
-                "by test! \n" +
-                    message);
+        // Check Transaction count
+        message = "Client return TRANSACTIONS: " + to_string(latestBlock.transactions().size()) + " vs " +
+                  "Test TRANSACTIONS: " + to_string(tblock.transactions().size());
+        ETH_ERROR_REQUIRE_MESSAGE(latestBlock.transactions().size() == tblock.transactions().size(),
+            "Client report different transaction count after importing the rlp than expected by test! \n" + message);
 
-            // Verify transactions to one described in the fields
-            size_t ind = 0;
-            auto const& testTrList = bdata.atKey("transactions").getSubObjects();
+        // Verify transactions to one described in the fields
+        ind = 0;
+        for (Transaction const& tr : tblock.transactions())
+        {
+            EthGetBlockByTransaction const& clientTr = latestBlock.transactions().at(ind++);
+            ETH_ERROR_REQUIRE_MESSAGE(clientTr.blockHash() == tblock.header().hash(),
+                "Error checking remote transaction, remote tr `blockHash` is different to one described in test block!"
+                "(" +
+                    clientTr.blockHash().asString() + " != " + tblock.header().hash().asString() + ")");
 
-            for (auto const& tr : latestBlock.getTransactions())
-            {
-                DataObject const& testTr = testTrList.at(ind++);
-                ETH_ERROR_REQUIRE_MESSAGE(tr.atKey("blockHash") == blHash,
-                    "Error checking remote transaction, remote tr `blockHash` is different to "
-                    "requested "
-                    "block! (" +
-                        tr.atKey("blockHash").asString() + " != " + blHash + ")");
+            ETH_ERROR_REQUIRE_MESSAGE(clientTr.blockNumber() == tblock.header().number(),
+                "Error checking remote transaction, remote tr `blockNumber` is different to one described in test block!"
+                "(" +
+                    clientTr.blockNumber().asDecString() + " != " + tblock.header().number().asDecString() + ")");
 
-                //0x1 != 0x01 issue
-                ETH_ERROR_REQUIRE_MESSAGE(
-                    dev::toCompactHexPrefixed(dev::u256(tr.atKey("blockNumber").asString()), 1) ==
-                        latestBlock.getBlockHeader().atKey("number").asString(),
-                    "Error checking remote transaction, remote tr `blockNumber` is different to "
-                    "requested "
-                    "block! (" +
-                        tr.atKey("blockNumber").asString() +
-                        " != " + latestBlock.getBlockHeader().atKey("number").asString() + ")");
-
-                //0x11 != 0x0011 issue
-                auto verifyTr = [&tr, &testTr](
-                                    string const& aField, string const& bField, size_t length = 1) {
-                    bool condition = true;
-                    string convertedKey;
-                    if (length == 0)  // skip conversion
-                    {
-                        condition = tr.atKey(aField).asString() == testTr.atKey(bField).asString();
-                        // transaction data returned by aleth is "" instead of "0x" in blockchain
-                        // tests
-                        condition = condition || "0x" + tr.atKey(aField).asString() ==
-                                                     testTr.atKey(bField).asString();
-                    }
-                    else
-                    {
-                        // RLP removes leading zeros. test format is even hex.
-                        DataObject rlpField(tr.atKey(aField).asString());
-                        if (length == 1)
-                            rlpField.performModifier(mod_removeLeadingZerosFromHexValuesEVEN);
-                        else
-                            rlpField = dev::toCompactHexPrefixed(u256(rlpField.asString()), length);
-                        convertedKey = rlpField.asString();
-                        condition = rlpField.asString() == testTr.atKey(bField).asString();
-                    }
-                    ETH_ERROR_REQUIRE_MESSAGE(
-                        condition, "Error checking remote transaction, remote tr `" + aField +
-                                       "` (conv: " + convertedKey + ") is different to test tr `" +
-                                       bField + "` (`" + tr.atKey(aField).asString() + "` != `" +
-                                       testTr.atKey(bField).asString() + "`)");
-                };
-
-                verifyTr("input", "data", 0);
-                verifyTr("gas", "gasLimit");
-                verifyTr("gasPrice", "gasPrice");
-                verifyTr("nonce", "nonce");
-                verifyTr("v", "v");
-                verifyTr("r", "r");
-                verifyTr("s", "s");
-                verifyTr("value", "value");
-                if (tr.atKey("to").type() != DataType::Null &&
-                    tr.atKey("to").asString().length() > 2)
-                    verifyTr("to", "to", 20);
-                else
-                {
-                    ETH_ERROR_REQUIRE_MESSAGE(testTr.atKey("to").asString() == "0x" ||
-                                                  testTr.atKey("to").asString().empty(),
-                        "Remote transaction `to` is empty, test expected destination address: `" +
-                            testTr.atKey("to").asString());
-                }
-            }
-
-            // Check uncles count
-            if (bdata.count("uncleHeaders"))
-            {
-                message =
-                    "Client return UNCLES: " + to_string(latestBlock.getUncles().size()) + " vs " +
-                    "Test UNCLES: " + to_string(bdata.atKey("uncleHeaders").getSubObjects().size());
-                ETH_ERROR_REQUIRE_MESSAGE(latestBlock.getUncles().size() ==
-                                              bdata.atKey("uncleHeaders").getSubObjects().size(),
-                    "Client report different uncle count after importing the rlp than expected by "
-                    "test! \n" +
-                        message);
-            }
+            DataObject const testTr = tr.asDataObject();
+            DataObject const remoteTr = clientTr.transaction().asDataObject();
+            ETH_ERROR_REQUIRE_MESSAGE(remoteTr == testTr, "Error checking remote transaction, remote tr `" + remoteTr.asJson() +
+                                                              "` is different to test tr `" + testTr.asJson() + "`)");
         }
     }
 
-    // wait for blocks to process
-    // std::this_thread::sleep_for(std::chrono::seconds(10));
+    EthGetBlockBy latestBlock(session.eth_getBlockByNumber(session.eth_blockNumber(), Request::LESSOBJECTS));
+    compareStates(_test.Post(), session);
 
-    scheme_RPCBlock latestBlock = session.eth_getBlockByNumber(session.eth_blockNumber(), false);
-    if (inputTest.getPost().isHash())
-        validatePostHash(session, inputTest.getPost().getHash(), latestBlock);
-    else
-        compareStates(scheme_expectState(inputTest.getPost().getData()), session, latestBlock);
+    if (_test.lastBlockHash() != latestBlock.header().hash())
+        ETH_ERROR_MESSAGE("lastblockhash does not match! remote: " + latestBlock.header().hash().asString() +
+                          ", test: " + _test.lastBlockHash().asString());
 
-    if (inputTest.getLastBlockHash() != latestBlock.getBlockHash())
-        ETH_ERROR_MESSAGE("lastblockhash does not match! remote: " + latestBlock.getBlockHash() +
-                          ", test: " + inputTest.getLastBlockHash());
-
-    if (inputTest.getData().count("genesisRLP"))
+    // if (_test.genesisRLP())
+    //{
+    //    if (_opt.isLegacyTests &&
+    //        Options::getDynamicOptions().getCurrentConfig().getFolderName() == "aleth")
+    //    {
+    // skip old generated tests (Legacy) genesis check on aleth
+    // because mixHash and nonce return is different to geth
+    //    }
+    //    else
     {
-        if (_opt.isLegacyTests &&
-            Options::getDynamicOptions().getCurrentConfig().getFolderName() == "aleth")
-        {
-            // skip old generated tests (Legacy) genesis check on aleth
-            // because mixHash and nonce return is different to geth
+        EthGetBlockBy genesis(session.eth_getBlockByNumber(0, Request::LESSOBJECTS));
+        if (_test.genesisRLP() != genesis.fakeRLP())
+            ETH_ERROR_MESSAGE("genesisRLP in test != genesisRLP on remote client! (" + _test.genesisRLP().asString() +
+                              "' != '" + genesis.fakeRLP().asString() + "'");
         }
-        else
-        {
-            string const& genesisRLP = inputTest.getData().atKey("genesisRLP").asString();
-            scheme_RPCBlock latestBlock = session.eth_getBlockByNumber(BlockNumber("0"), false);
-            if (latestBlock.getBlockRLP() != genesisRLP)
-                ETH_ERROR_MESSAGE("genesisRLP in test != genesisRLP on remote client! (" +
-                                  genesisRLP + "' != '" + latestBlock.getBlockRLP() + "'");
-        }
-    }
-    */
+        //}
 }
 
 DataObject DoTests(DataObject const& _input, TestSuite::TestSuiteOptions& _opt)
 {
-    checkDataObject(_input);
-    checkAtLeastOneTest(_input);
+    DataObject tests;
+    if (_opt.doFilling)
+    {
+    }
+    else
+    {
+        BlockchainTest test(_input);
+        for (BlockchainTestInFilled const& bcTest : test.tests())
+        {
+            // Select test by name if --singletest and --singlenet is set
+            if (Options::get().singleTest)
+            {
+                if (!Options::get().singleSubTestName.empty() && bcTest.testName() != Options::get().singleSubTestName)
+                    continue;
+            }
 
+            if (!Options::get().singleTestNet.empty())
+            {
+                if (bcTest.network().asString() != Options::get().singleTestNet)
+                    continue;
+            }
+            RunTest(bcTest, _opt);
+            TestOutputHelper::get().registerTestRunSuccess();
+        }
+    }
+
+    /*
     DataObject tests;
     // A blockchain test file contains many tests in one .json file
     for (auto const& i : _input.getSubObjects())
@@ -269,25 +199,12 @@ DataObject DoTests(DataObject const& _input, TestSuite::TestSuiteOptions& _opt)
         }
         else
         {
-            // Select test by name if --singletest and --singlenet is set
-            if (Options::get().singleTest)
-            {
-                if (!Options::get().singleSubTestName.empty() &&
-                    testname != Options::get().singleSubTestName)
-                    continue;
-            }
-
-            if (!Options::get().singleTestNet.empty())
-            {
-                if (i.count("network") &&
-                    i.atKey("network").asString() != Options::get().singleTestNet)
-                    continue;
-            }
 
             RunTest(i, _opt);
         }
     }
-    TestOutputHelper::get().registerTestRunSuccess();
+    */
+
     return tests;
 }
 }  // namespace test

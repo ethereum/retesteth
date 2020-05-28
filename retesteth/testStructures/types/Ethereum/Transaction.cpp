@@ -80,5 +80,34 @@ BYTES const Transaction::getSignedRLP() const
     return BYTES(dev::toHexPrefixed(sWithSignature.out()));
 }
 
+dev::RLPStream const Transaction::asRLPStream() const
+{
+    dev::RLPStream out;
+    out.appendList(9);
+    streamHeader(out);
+    out << v().asU256().convert_to<dev::byte>();
+    out << r().asU256();
+    out << s().asU256();
+    return out;
+}
+
+const DataObject Transaction::asDataObject() const
+{
+    DataObject out;
+    out["data"] = m_data.getCContent().asString();
+    out["gasLimit"] = m_gasLimit.getCContent().asString();
+    out["gasPrice"] = m_gasPrice.getCContent().asString();
+    out["nonce"] = m_nonce.getCContent().asString();
+    if (m_creation)
+        out["to"] = "";
+    else
+        out["to"] = m_to.getCContent().asString();
+    out["value"] = m_value.getCContent().asString();
+    out["v"] = m_v.getCContent().asString();
+    out["r"] = m_r.getCContent().asString();
+    out["s"] = m_s.getCContent().asString();
+    return out;
+}
+
 }  // namespace teststruct
 }  // namespace test

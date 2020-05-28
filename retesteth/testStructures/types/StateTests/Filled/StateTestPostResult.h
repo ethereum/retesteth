@@ -18,7 +18,7 @@ struct StateTestPostResult : GCP_SPointerBase
     }
     FH32 const& hash() const { return m_hash.getCContent(); }
     FH32 const& logs() const { return m_log.getCContent(); }
-    DataObject asDataObject() const;
+    DataObject const asDataObject() const;
 
 private:
     StateTestPostResult() {}

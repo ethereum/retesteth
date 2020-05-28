@@ -1,5 +1,6 @@
 #pragma once
 #include "Account.h"
+#include "Base/StateBase.h"
 #include <retesteth/dataObject/DataObject.h>
 #include <retesteth/dataObject/SPointer.h>
 using namespace dataobject;
@@ -9,22 +10,21 @@ namespace test
 {
 namespace teststruct
 {
-struct State : GCP_SPointerBase
+// Marks that State is made of full account objects
+struct State : StateBase
 {
     State(DataObject const&);
-    State(std::map<FH20, spAccount> const&);
+    State(std::map<FH20, spAccount>&);
 
-    std::map<FH20, spAccount> const& accounts() const { return m_accounts; }
+    std::map<FH20, spAccountBase> const& accounts() const { return m_accounts; }
     Account const& getAccount(FH20 const& _address) const;
     bool hasAccount(Account const& _account) const;
     bool hasAccount(FH20 const& _address) const;
 
-    DataObject asDataObject() const;
+    DataObject const asDataObject() const override;
 
 private:
-    State(){};
-    // Map require spAccount() constructor
-    std::map<FH20, spAccount> m_accounts;
+    State() {}
 };
 
 typedef GCP_SPointer<State> spState;

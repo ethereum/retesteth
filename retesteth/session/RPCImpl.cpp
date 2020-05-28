@@ -11,20 +11,18 @@ DataObject RPCImpl::web3_clientVersion()
 }
 
 // ETH Methods
-DataObject RPCImpl::eth_sendRawTransaction(BYTES const& _rlp)
+FH32 RPCImpl::eth_sendRawTransaction(BYTES const& _rlp)
 {
-    DataObject result = rpcCall("eth_sendRawTransaction", {quote(_rlp.asString())}, true);
-    DataObject const& lastError = getLastRPCError();
-    if (lastError.type() != DataType::Null)
-        ETH_ERROR_MESSAGE(lastError.atKey("message").asString());
-    if (!isHash<h256>(result.asString()))
-        ETH_ERROR_MESSAGE("eth_sendRawTransaction return invalid hash: '" + result.asString() + "'");
-    return result;
+    DataObject const result = rpcCall("eth_sendRawTransaction", {quote(_rlp.asString())}, true);
+    if (!m_lastInterfaceError.empty())
+        ETH_ERROR_MESSAGE(m_lastInterfaceError.message());
+    return FH32(result);
 }
 
 int RPCImpl::eth_getTransactionCount(FH20 const& _address, VALUE const& _blockNumber)
 {
-    DataObject response = rpcCall("eth_getTransactionCount", {quote(_address.asString()), quote(_blockNumber.asString())});
+    DataObject const response =
+        rpcCall("eth_getTransactionCount", {quote(_address.asString()), quote(_blockNumber.asString())});
     if (response.type() == DataType::String)
         return test::hexOrDecStringToInt(response.asString());
     return response.asInt();
@@ -49,11 +47,11 @@ EthGetBlockBy RPCImpl::eth_getBlockByNumber(VALUE const& _blockNumber, Request _
 
 BYTES RPCImpl::eth_getCode(FH20 const& _address, VALUE const& _blockNumber)
 {
-    DataObject res(rpcCall("eth_getCode", {quote(_address.asString()), quote(_blockNumber.asString())}));
+    DataObject const res(rpcCall("eth_getCode", {quote(_address.asString()), quote(_blockNumber.asString())}));
     if (res.asString().empty())
     {
         ETH_WARNING_TEST("eth_getCode return `` empty string, correct to `0x` empty bytes ", 6);
-        res = "0x";
+        return BYTES(DataObject("0x"));
     }
     return BYTES(res);
 }
@@ -121,7 +119,7 @@ void RPCImpl::test_mineBlocks(int _number)
 {
     // VALUE startBlock = rpcCall("eth_blockNumber");
 
-    DataObject res = rpcCall("test_mineBlocks", {to_string(_number)}, true);
+    DataObject const res = rpcCall("test_mineBlocks", {to_string(_number)}, true);
     ETH_ERROR_REQUIRE_MESSAGE(res.asBool() == true, "remote test_mineBLocks = false");
     // CAN DO GUARD HERE THAT BLOCK NUMBER HAS REALLY CHANGED
 
@@ -173,12 +171,12 @@ void RPCImpl::test_mineBlocks(int _number)
     */
 }
 
-DataObject RPCImpl::test_importRawBlock(BYTES const& _blockRLP)
+FH32 RPCImpl::test_importRawBlock(BYTES const& _blockRLP)
 {
-    DataObject res = rpcCall("test_importRawBlock", {quote(_blockRLP.asString())}, true);
+    DataObject const res = rpcCall("test_importRawBlock", {quote(_blockRLP.asString())}, true);
     if (res.type() != DataType::Null)
-        return res.asString();
-    return string();
+        return FH32(res.asString());
+    return FH32(FH32::zero());
 }
 
 FH32 RPCImpl::test_getLogHash(FH32 const& _txHash)
@@ -225,13 +223,13 @@ DataObject RPCImpl::rpcCall(
     if (result.count("error"))
     {
         test::TestOutputHelper const& helper = test::TestOutputHelper::get();
-        m_lastInterfaceError["message"] =
-            "Error on JSON-RPC call (" + helper.testInfo().errorDebug() + "):\nRequest: '" +
-            request + "'" + "\nResult: '" + result["error"]["message"].asString() + "'\n";
-        m_lastInterfaceError["error"] = result["error"]["message"].asString();
+        string const message = "Error on JSON-RPC call (" + helper.testInfo().errorDebug() + "):\nRequest: '" + request + "'" +
+                               "\nResult: '" + result["error"]["message"].asString() + "'\n";
+        m_lastInterfaceError = RPCError(result["error"]["message"].asString(), message);
+
         if (_canFail)
             return DataObject(DataType::Null);
-        ETH_FAIL_MESSAGE(m_lastInterfaceError.atKey("message").asString());
+        ETH_FAIL_MESSAGE(m_lastInterfaceError.message());
     }
     m_lastInterfaceError.clear();  // null the error as last RPC call was success.
     return result.atKey("result");

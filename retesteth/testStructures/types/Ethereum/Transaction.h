@@ -28,6 +28,8 @@ struct Transaction : GCP_SPointerBase
     VALUE const& s() const { return m_s.getCContent(); }
 
     BYTES const getSignedRLP() const;
+    dev::RLPStream const asRLPStream() const;
+    DataObject const asDataObject() const;
 
 private:
     Transaction() {}

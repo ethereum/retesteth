@@ -25,7 +25,7 @@ namespace test
     return CompareResult::Success;
 }*/
 
-CompareResult compareAccounts(AccountIncomplete const& _expectAccount, Account const& _remoteAccount);
+CompareResult compareAccounts(AccountBase const& _expectAccount, Account const& _remoteAccount);
 
 Account remoteGetAccount(SessionInterface& _session, VALUE const& _bNumber, VALUE const& _trIndex, FH20 const& _account)
 {
@@ -82,7 +82,7 @@ State getRemoteState(SessionInterface& _session)
 }
 
 // Compare expected state with session asking post state data on the fly
-void compareStates(StateIncomplete const& _stateExpect, SessionInterface& _session)
+void compareStates(StateBase const& _stateExpect, SessionInterface& _session)
 {
     CompareResult result = CompareResult::Success;
 
@@ -108,7 +108,7 @@ void compareStates(StateIncomplete const& _stateExpect, SessionInterface& _sessi
 
     for (auto const& ael : _stateExpect.accounts())
     {
-        AccountIncomplete const& a = ael.second.getCContent();
+        AccountBase const& a = ael.second.getCContent();
         bool remoteHasAccount = remoteAccountList.count(a.address());
         if (a.shouldNotExist() && remoteHasAccount)
         {
@@ -175,7 +175,7 @@ CompareResult compareStorage(Storage const& _expectStorage, Storage const& _remo
 }
 
 // Compare Expected Account agains Account
-CompareResult compareAccounts(AccountIncomplete const& _expectAccount, Account const& _remoteAccount)
+CompareResult compareAccounts(AccountBase const& _expectAccount, Account const& _remoteAccount)
 {
     // report all errors, but return the last error as a compare result
     CompareResult result = CompareResult::Success;
@@ -220,12 +220,12 @@ CompareResult compareAccounts(AccountIncomplete const& _expectAccount, Account c
 }
 
 // Compare expected state again post state
-void compareStates(StateIncomplete const& _stateExpect, State const& _statePost)
+void compareStates(StateBase const& _stateExpect, State const& _statePost)
 {
     CompareResult result = CompareResult::Success;
     for (auto const& ael : _stateExpect.accounts())
     {
-        AccountIncomplete const& a = ael.second.getCContent();
+        AccountBase const& a = ael.second.getCContent();
         bool remoteHasAccount = _statePost.hasAccount(a.address());
         if (a.shouldNotExist() && remoteHasAccount)
         {

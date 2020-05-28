@@ -33,12 +33,29 @@ void mod_removeComments(DataObject& _obj)
 void mod_valueToCompactEvenHexPrefixed(DataObject& _obj)
 {
     if (_obj.type() == DataType::String)
-        _obj.setString(dev::toCompactHexPrefixed(u256(_obj.asString()), 1));
+    {
+        try
+        {
+            _obj.setString(dev::toCompactHexPrefixed(u256(_obj.asString()), 1));
+        }
+        catch (std::exception const& _ex)
+        {
+            throw BaseEthException(string(_ex.what()) + " Trying to convert to hex from `" + _obj.asString() + "`");
+        }
+    }
 }
 
 void mod_keyToCompactEvenHexPrefixed(DataObject& _obj)
 {
-    _obj.setKey(dev::toCompactHexPrefixed(u256(_obj.getKey()), 1));
+    try
+    {
+        _obj.setKey(dev::toCompactHexPrefixed(u256(_obj.getKey()), 1));
+    }
+    catch (std::exception const& _ex)
+    {
+        throw BaseEthException(
+            string("keyToCompactEvenHexPrefixed error trying to convert string `" + _obj.getKey() + "` ") + _ex.what());
+    }
 }
 
 // Remove leading zeros from hex values leaving 0x0004 - > 0x4

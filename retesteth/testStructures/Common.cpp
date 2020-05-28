@@ -45,10 +45,10 @@ DataObject prepareChainParams(FORK const& _net, SealEngine _engine, State const&
     genesis["genesis"]["author"] = _env.currentCoinbase().asString();
     genesis["genesis"]["difficulty"] = _env.currentDifficulty().asString();
     genesis["genesis"]["gasLimit"] = _env.currentGasLimit().asString();
-    genesis["genesis"]["extraData"] = "0x00";
-    genesis["genesis"]["timestamp"] = "0x00";  //_env.currentTimestamp().asString();
-    genesis["genesis"]["nonce"] = "0x0000000000000000";
-    genesis["genesis"]["mixHash"] = "0x0000000000000000000000000000000000000000000000000000000000000000";
+    genesis["genesis"]["extraData"] = _env.currentExtraData().asString();
+    genesis["genesis"]["timestamp"] = _env.currentTimestamp().asString();
+    genesis["genesis"]["nonce"] = _env.currentNonce().asString();
+    genesis["genesis"]["mixHash"] = _env.currentMixHash().asString();
 
     // Because of template might contain preset accounts
     for (auto const& el : _state.accounts())

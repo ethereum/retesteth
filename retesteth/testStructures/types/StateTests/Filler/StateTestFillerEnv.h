@@ -1,11 +1,6 @@
 #pragma once
-#include "../../../basetypes/BYTES.h"
-#include "../../../basetypes/FH20.h"
-#include "../../../basetypes/FH32.h"
-#include "../../../basetypes/VALUE.h"
 #include "../Base/StateTestEnvBase.h"
 #include <retesteth/dataObject/DataObject.h>
-#include <retesteth/dataObject/SPointer.h>
 using namespace dataobject;
 using namespace test::teststruct;
 
@@ -18,6 +13,10 @@ namespace teststruct
 struct StateTestFillerEnv : StateTestEnvBase
 {
     StateTestFillerEnv(DataObject const& _data);
+    VALUE const& currentTimestamp() const override { return m_genesisTimestamp.getCContent(); }
+
+private:
+    spVALUE m_genesisTimestamp;
 };
 
 

@@ -18,7 +18,7 @@ struct Storage : GCP_SPointerBase
     std::map<string, StorageRecord> const& getKeys() const { return m_map; }
     bool hasKey(VALUE const& _key) const { return m_map.count(_key.asString()); }
     VALUE const& atKey(VALUE const& _key) const { return std::get<1>(m_map.at(_key.asString())).getCContent(); }
-    DataObject asDataObject() const;
+    DataObject const asDataObject() const;
     void merge(Storage const& _storage);
 
 private:

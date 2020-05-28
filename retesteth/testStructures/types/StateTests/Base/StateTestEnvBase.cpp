@@ -6,7 +6,7 @@ namespace test
 namespace teststruct
 {
 // Export Env Function Some formatters might be performed here
-DataObject StateTestEnvBase::asDataObject() const
+const DataObject StateTestEnvBase::asDataObject() const
 {
     DataObject out;
     out["currentCoinbase"] = m_currentCoinbase.getCContent().asString();
