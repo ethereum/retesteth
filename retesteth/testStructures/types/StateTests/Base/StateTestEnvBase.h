@@ -18,6 +18,7 @@ struct StateTestEnvBase : GCP_SPointerBase
     VALUE const& currentNumber() const { return m_currentNumber.getCContent(); }
 
     // In StateTests timestamp for genesis block should be overrided with 0x00
+    // In BlockchainTests currentTimestamp is m_currentTimestamp constructed from genesis blockHeader
     virtual VALUE const& currentTimestamp() const { return m_currentTimestamp.getCContent(); }
 
     BYTES const& currentExtraData() const { return m_currentExtraData.getCContent(); }

@@ -14,6 +14,7 @@ struct StateTestFillerEnv : StateTestEnvBase
 {
     StateTestFillerEnv(DataObject const& _data);
     VALUE const& currentTimestamp() const override { return m_genesisTimestamp.getCContent(); }
+    VALUE const& firstBlockTimestamp() const { return m_currentTimestamp.getCContent(); }
 
 private:
     spVALUE m_genesisTimestamp;

@@ -1,105 +1,126 @@
 #include "TestBlockchain.h"
+#include <retesteth/Options.h>
 
-void TestBlockchain::generateBlock(
-    blockSection const& _block, vectorOfSchemeBlock const& _uncles, bool _generateUncles)
+namespace test
 {
-    TestBlock newBlock;
-    DataObject& blockJson = newBlock.getDataForTestUnsafe();
+namespace blockchainfiller
+{
+TestBlockchain::TestBlockchain(BlockchainTestFillerEnv const& _testEnv, State const& _genesisState, SealEngine _engine,
+    FORK const& _network, RegenerateGenesis _regenerateGenesis)
+  : m_session(RPCSession::instance(TestOutputHelper::getThreadID())),
+    m_network(_network),
+    m_sealEngine(_engine),
+    m_testEnv(_testEnv),
+    m_genesisState(_genesisState)
+{
+    if (_regenerateGenesis == RegenerateGenesis::TRUE)
+        resetChainParams();
 
-    blockJson["chainname"] = _block.getChainName();
-    blockJson["blocknumber"] = toString(m_blocks.size());
-
-    // Prepare transactions for the block
-    blockJson["transactions"] = importTransactions(_block);
-
-    // Put prepared uncles into dataobject
-    blockJson["uncleHeaders"] = DataObject(DataType::Array);
-    for (auto const& uncle : _uncles)
-    {
-        blockJson["uncleHeaders"].addArrayObject(uncle.getBlockHeader());
-        newBlock.addUncle(uncle);
-    }
-
-    // Remote client generate block with transactions
-    // An if it has uncles or blockheader overwrite, then perform postmine
-    test::scheme_RPCBlock latestBlock = mineBlock(_block, _uncles);
-    if (!latestBlock.isValid())
-    {
-        blockJson.removeKey("transactions");
-        blockJson.removeKey("uncleHeaders");
-        blockJson["expectException"] =
-            _block.getException(m_network);  // must be checked on canon chain as well
-        // but we can only check on canon chain after the whole chains are imported
-    }
-    else
-    {
-        blockJson["blockHeader"] = latestBlock.getBlockHeader();
-
-        // Order transactions in test the same way they are ordered in the block by remote client
-        DataObject orderedTransactions(DataType::Array);
-        for (auto const& remTr : latestBlock.getTransactions())
-        {
-            bool found = false;
-            std::vector<DataObject>& originalTrList =
-                blockJson.atKeyUnsafe("transactions").getSubObjectsUnsafe();
-            std::vector<DataObject>::const_iterator ind = originalTrList.begin();
-            for (auto const& tr : blockJson.atKey("transactions").getSubObjects())
-            {
-                if (tr.atKey("hash").asString() == remTr.atKey("hash").asString())
-                {
-                    found = true;
-                    orderedTransactions.addArrayObject(tr);
-                    orderedTransactions.atLastElementUnsafe().removeKey("hash");
-                    break;
-                }
-                ind++;
-            }
-            if (found && ind != originalTrList.end())
-                originalTrList.erase(ind);
-            else
-                ETH_ERROR_MESSAGE(
-                    "Remote client returned block without expected transaction hash!");
-        }
-        blockJson.removeKey("transactions");
-        blockJson["transactions"] = orderedTransactions;
-    }
-
-    blockJson["rlp"] = latestBlock.getBlockRLP();
-    newBlock.setDoNotExport(_block.doNotExport());
-
-    if (_generateUncles)
-    {
-        // Ask remote client to generate a parallel blockheader that will later be used for uncles
-        newBlock.setNextBlockForked(mineNextBlockAndRewert());
-    }
-    m_blocks.push_back(newBlock);
+    EthGetBlockBy latestBlock(m_session.eth_getBlockByNumber(0, Request::LESSOBJECTS));
+    TestBlock genesisBlock(latestBlock.header(), "genesis", m_network, 0, string());
+    genesisBlock.setNextBlockForked(mineNextBlockAndRewert());
+    m_blocks.push_back(genesisBlock);
 }
 
-test::scheme_RPCBlock TestBlockchain::mineBlock(
-    blockSection const& _block, vectorOfSchemeBlock const& _preparedUncleBlocks)
+void TestBlockchain::generateBlock(
+    BlockchainTestFillerBlock const& _block, vectorOfSchemeBlock const& _uncles, bool _generateUncles)
 {
-    (void)_block;
-    (void)_preparedUncleBlocks;
-    /*
-    ETH_LOGC("MINE BLOCK: " + m_sDebugString, 6, LogColor::YELLOW);
-
-    BlockNumber latestBlockNumber("0");
+    // If block is raw RLP block
     if (_block.isRawRLP())
     {
-        string const blHash = m_session.test_importRawBlock(_block.getRawRLP());
-        string const& sBlockException = _block.getException(m_network);
-        bool const blockIsValid = checkBlockException(sBlockException);
-        if (blockIsValid)
-            return m_session.eth_getBlockByHash(blHash, true);
+        FH32 const blHash(m_session.test_importRawBlock(_block.rawRLP()));
+        checkBlockException(_block.getExpectException(m_network));
+        if (!blHash.isZero())
+            ETH_ERROR_MESSAGE("rawBlock rlp appered to be valid. Unable to contruct objects from RLP!");
         else
-            return test::scheme_RPCBlock(_block.getRawRLP());
+        {
+            TestBlock newBlock(
+                _block.rawRLP(), m_chainName, m_network, m_blocks.size() + 1, _block.getExpectException(m_network));
+            m_blocks.push_back(newBlock);
+        }
+        return;
+    }
+
+    // Import known transactions to remote client
+    ETH_LOGC("Import transactions: " + m_sDebugString, 6, LogColor::YELLOW);
+    for (auto const& tr : _block.transactions())
+        m_session.eth_sendRawTransaction(tr.tr().getSignedRLP());
+
+    // Remote client generate block with transactions
+    // An if it has uncles or blockheader overwrite we perform manual overwrite and reimport block again
+    BYTES rawRLP(DataObject("0x"));  // if block mining failed this will be the rawRLP of import
+    GCP_SPointer<EthGetBlockBy> latestBlock = mineBlock(_block, _uncles, rawRLP);
+
+    if (latestBlock.isEmpty())
+    {
+        // if block mining failed, the block is invalid
+        TestBlock newBlock(rawRLP, _block.chainName(), _block.chainNet(), m_blocks.size() + 1,
+            _block.getExpectException(m_network), _block.isDoNotImportOnClient());
+        m_blocks.push_back(newBlock);
     }
     else
-        latestBlockNumber = BlockNumber(m_session.test_mineBlocks(1));
+    {
+        // if block mining succeed. the block is valid.
+        TestBlock newBlock(latestBlock.getCContent().header(), _block.chainName(), _block.chainNet(), m_blocks.size() + 1,
+            _block.getExpectException(m_network), _block.isDoNotImportOnClient());
 
-    bool isUnclesInTest = _block.getData().count("uncleHeaders") ?
-                              _block.getData().atKey("uncleHeaders").getSubObjects().size() > 0 :
-                              false;
+        // Register all test transactions
+        for (auto const& tr : _block.transactions())
+            newBlock.addTransaction(tr.tr());
+
+        // Register all test uncles
+        for (auto const& uncle : _uncles)
+            newBlock.addUncle(uncle);
+
+        // Ask remote client to generate a parallel blockheader that will later be used for uncles
+        if (_generateUncles)
+            newBlock.setNextBlockForked(mineNextBlockAndRewert());
+
+        m_blocks.push_back(newBlock);
+    }
+
+
+    /*
+        {
+            blockJson["blockHeader"] = latestBlock.header().asDataObject();
+
+            // Order transactions in test the same way they are ordered in the block by remote client
+            DataObject orderedTransactions(DataType::Array);
+            for (auto const& remTr : latestBlock.transactions())
+            {
+                bool found = false;
+                std::vector<DataObject>& originalTrList =
+                    blockJson.atKeyUnsafe("transactions").getSubObjectsUnsafe();
+                std::vector<DataObject>::const_iterator ind = originalTrList.begin();
+                for (auto const& tr : blockJson.atKey("transactions").getSubObjects())
+                {
+                    if (tr.atKey("hash").asString() == remTr.hash().asString())
+                    {
+                        found = true;
+                        orderedTransactions.addArrayObject(tr);
+                        orderedTransactions.atLastElementUnsafe().removeKey("hash");
+                        break;
+                    }
+                    ind++;
+                }
+                if (found && ind != originalTrList.end())
+                    originalTrList.erase(ind);
+                else
+                    ETH_ERROR_MESSAGE(
+                        "Remote client returned block without expected transaction hash!");
+            }
+            blockJson.removeKey("transactions");
+            blockJson["transactions"] = orderedTransactions;
+        }
+        */
+}
+
+GCP_SPointer<EthGetBlockBy> TestBlockchain::mineBlock(
+    BlockchainTestFillerBlock const& _blockInTest, vectorOfSchemeBlock const& _preparedUncleBlocks, BYTES& _rawRLP)
+{
+    ETH_LOGC("MINE BLOCK: " + m_sDebugString, 6, LogColor::YELLOW);
+    m_session.test_mineBlocks(1);
+    VALUE latestBlockNumber(m_session.eth_blockNumber());
 
     auto checkTransactions = [](size_t _trInBlocks, size_t _trInTest, size_t _trAllowedToFail) {
         ETH_ERROR_REQUIRE_MESSAGE(_trInBlocks == _trInTest - _trAllowedToFail,
@@ -107,77 +128,74 @@ test::scheme_RPCBlock TestBlockchain::mineBlock(
                 " != test " + toString(_trInTest) +
                 ", allowedToFail = " + toString(_trAllowedToFail) + " )");
     };
-*/
-    /*
-    // Need to overwrite the blockheader of a mined block
-    if (_block.getData().count("blockHeader") || isUnclesInTest)
+
+    spFH32 minedBlockHash;
+    if (_blockInTest.hasBlockHeader() || _blockInTest.uncles().size() > 0)
     {
+        // Need to overwrite the blockheader of a mined block with either blockHeader or uncles
+        // Then import it again and see what client says, because mining with uncles not supported
+        // And because blockchain test filler can override blockheader for testing purposes
         ETH_LOG("Postmine blockheader: " + m_sDebugString, 6);
-        scheme_RPCBlock latestBlock =
-            postmineBlockHeader(_block, latestBlockNumber, _preparedUncleBlocks);
-        checkTransactions(latestBlock.getTransactionCount(), _block.getTransactions().size(),
-            _block.getInvalidTransactionCount());
-        return latestBlock;
+        minedBlockHash = spFH32(new FH32(postmineBlockHeader(_blockInTest, latestBlockNumber, _preparedUncleBlocks, _rawRLP)));
+    }
+
+    // Expected exception for this block
+    string const& sBlockException = _blockInTest.getExpectException(m_network);
+    checkBlockException(sBlockException);  // Check any impoprt failure exceptions here
+
+    GCP_SPointer<EthGetBlockBy> remoteBlock;
+    if (!minedBlockHash.isEmpty())
+    {
+        if (minedBlockHash.getCContent() != FH32::zero())
+        {
+            // If after modifications block import succeed
+            remoteBlock = GCP_SPointer<EthGetBlockBy>(
+                new EthGetBlockBy((m_session.eth_getBlockByHash(minedBlockHash.getContent(), Request::FULLOBJECTS))));
+        }
+        else
+            return remoteBlock;  // after modifications block import failed. but that was expected.
     }
     else
     {
-        scheme_RPCBlock latestBlock = m_session.eth_getBlockByNumber(latestBlockNumber, true);
-        checkTransactions(latestBlock.getTransactionCount(), _block.getTransactions().size(),
-            _block.getInvalidTransactionCount());
-        return latestBlock;
-    }*/
-    return scheme_RPCBlock("");
-}
-
-// Import transactions on remote client
-DataObject TestBlockchain::importTransactions(blockSection const& _block)
-{(void)_block; return DataObject();
-    /*
-    DataObject transactionsArray = DataObject(DataType::Array);
-    ETH_LOGC("Import transactions: " + m_sDebugString, 6, LogColor::YELLOW);
-    for (auto const& tr : _block.getTransactions())
-    {
-        string const trHash = m_session.eth_sendRawTransaction(tr);
-        if (!tr.isMarkedInvalid())
-        {
-            transactionsArray.addArrayObject(tr.getDataForBCTest());
-            transactionsArray.atLastElementUnsafe()["hash"] = trHash;
-        }
+        // There was no block modifications, it is just a regular mining
+        remoteBlock = GCP_SPointer<EthGetBlockBy>(
+            new EthGetBlockBy((m_session.eth_getBlockByNumber(latestBlockNumber, Request::FULLOBJECTS))));
+        _rawRLP = remoteBlock.getCContent().getRLPHeaderTransactions();
     }
-    return transactionsArray;
-    */
+
+    checkTransactions(remoteBlock.getContent().transactions().size(), _blockInTest.transactions().size(),
+        _blockInTest.invalidTransactionCount());
+    return remoteBlock;
 }
 
 // Ask remote client to generate a blockheader that will later used for uncles
-test::scheme_RPCBlock TestBlockchain::mineNextBlockAndRewert()
+BlockHeader TestBlockchain::mineNextBlockAndRewert()
 {
-    /*
     ETH_LOGC("Mine uncle block (next block) and revert: " + m_sDebugString, 6, LogColor::YELLOW);
-    BlockNumber latestBlockNumber(m_session.test_mineBlocks(1));
-    test::scheme_RPCBlock next = m_session.eth_getBlockByNumber(latestBlockNumber, false);
-    latestBlockNumber.applyShift(-1);
-    m_session.test_rewindToBlock(latestBlockNumber.getBlockNumberAsInt());  // rewind to the
-                                                                            // previous block
+    m_session.test_mineBlocks(1);
+    VALUE latestBlockNumber(m_session.eth_blockNumber());
+    EthGetBlockBy nextBlock(m_session.eth_getBlockByNumber(latestBlockNumber, Request::LESSOBJECTS));
+    m_session.test_rewindToBlock(nextBlock.header().number().asU256() - 1);  // rewind to the previous block
+
     //m_session.test_modifyTimestamp(1000);  // Shift block timestamp relative to previous block
 
     // assign a random coinbase for an uncle block to avoid UncleIsAncestor exception
     // otherwise this uncle would be similar to a block mined
-    next.randomizeCoinbase();
-    return next;
-    */
-    return scheme_RPCBlock("");
+    BlockHeader ret(nextBlock.header());
+    FH20& coinbase = const_cast<FH20&>(ret.author());
+    coinbase = FH20::random();
+    return ret;
 }
 
 string TestBlockchain::prepareDebugInfoString(string const& _newBlockChainName)
 {
-    string sBlockNumber;
+    string sBlockNumber = string();
     size_t newBlockNumber = m_blocks.size();
-    TestInfo errorInfo(m_network, newBlockNumber, _newBlockChainName);
+    TestInfo errorInfo(m_network.asString(), newBlockNumber, _newBlockChainName);
     if (Options::get().logVerbosity >= 6)
         sBlockNumber = toString(newBlockNumber);  // very heavy
     TestOutputHelper::get().setCurrentTestInfo(errorInfo);
-    m_sDebugString =
-        "(bl: " + sBlockNumber + ", ch: " + _newBlockChainName + ", net: " + m_network + ")";
+    m_sDebugString = "(bl: " + sBlockNumber + ", ch: " + _newBlockChainName + ", net: " + m_network.asString() + ")";
     ETH_LOGC("Generating a test block: " + m_sDebugString, 6, LogColor::YELLOW);
     return m_sDebugString;
 }
@@ -185,18 +203,14 @@ string TestBlockchain::prepareDebugInfoString(string const& _newBlockChainName)
 
 // Restore this chain on remote client up to < _number block
 // Restore chain up to _number of blocks. if _number is 0 restore the whole chain
-void TestBlockchain::restoreUpToNumber(SessionInterface& _session, size_t _number, bool _samechain)
+void TestBlockchain::restoreUpToNumber(SessionInterface& _session, VALUE const& _number, bool _samechain)
 {
-    (void)_session;
-    (void)_number;
-    (void)_samechain;
-    /*
     size_t firstBlock;
     if (_samechain)
     {
         if (_number == 0)
             return;
-        firstBlock = _number;
+        firstBlock = (size_t)_number.asU256();
         assert(firstBlock > 0);
         _session.test_rewindToBlock(firstBlock - 1);
     }
@@ -235,7 +249,7 @@ void TestBlockchain::restoreUpToNumber(SessionInterface& _session, size_t _numbe
             continue;
         }
 
-        if (actNumber < _number)
+        if (actNumber < _number.asU256())
             _session.test_importRawBlock(block.getRLP());
         else
         {
@@ -248,86 +262,45 @@ void TestBlockchain::restoreUpToNumber(SessionInterface& _session, size_t _numbe
     // Restore blocks up to `number` forgetting the rest of history
     for (size_t i = 0; i < popUpCount; i++)
         m_blocks.pop_back();  // blocks are now at m_knownBlocks
-        */
 }
 
 
-test::scheme_RPCBlock TestBlockchain::postmineBlockHeader(blockSection const& _blockInTest,
-    BlockNumber const& _latestBlockNumber, std::vector<scheme_RPCBlock> const& _uncles)
+// Because remote client does not work with uncles, manipulate the response record with uncle information
+// Manually here imitating a block with retesteth manipulations
+FH32 TestBlockchain::postmineBlockHeader(BlockchainTestFillerBlock const& _blockInTest, VALUE const& _latestBlockNumber,
+    std::vector<BlockHeader> const& _uncles, BYTES& _rawRLP)
 {
-    (void)_latestBlockNumber;
-    (void)_blockInTest;
-    (void)_uncles;
-    return scheme_RPCBlock("");
-    /*
     // if blockHeader is defined in test Filler, rewrite the last block header fields with info from
     // test and reimport it to the client in order to trigger an exception in the client
-    test::scheme_RPCBlock remoteBlock = m_session.eth_getBlockByNumber(_latestBlockNumber, true);
-    bool changeDoneToTheBlock = false;
+    EthGetBlockBy remoteBlock(m_session.eth_getBlockByNumber(_latestBlockNumber, Request::FULLOBJECTS));
+    EthereumBlock managedBlock(remoteBlock.header());
+    for (auto const& tr : remoteBlock.transactions())
+        managedBlock.addTransaction(tr.transaction());
 
     // Attach test-generated uncle to a block and then reimport it again
-    if (_blockInTest.getData().count("uncleHeaders") &&
-        _blockInTest.getData().atKey("uncleHeaders").getSubObjects().size() > 0)
-    {
-        for (auto const& bl : _uncles)
-            remoteBlock.addUncle(bl);
-        remoteBlock.recalculateUncleHash();
-        changeDoneToTheBlock = true;
-    }
-
-    DataObject header = remoteBlock.getBlockHeader();
+    for (auto const& un : _uncles)
+        managedBlock.addUncle(un);
 
     // Overwrite blockheader if defined in the test filler
-    if (_blockInTest.getData().count("blockHeader"))
+    if (_blockInTest.hasBlockHeader())
     {
-        for (auto const& replace : _blockInTest.getData().atKey("blockHeader").getSubObjects())
+        if (_blockInTest.hasRelTimeStamp())
         {
-            if (replace.getKey() == "updatePoW" || replace.getKey() == "expectException")
-                continue;
-            if (replace.getKey() == "RelTimestamp")
-            {
-                BlockNumber previousBlockNumber(_latestBlockNumber);
-                previousBlockNumber.applyShift(-1);
-
-                test::scheme_RPCBlock previousBlock =
-                    m_session.eth_getBlockByNumber(previousBlockNumber, false);
-                string previousBlockTimestampString =
-                    previousBlock.getBlockHeader().atKey("timestamp").asString();
-                BlockNumber previousBlockTimestamp(previousBlockTimestampString);
-                previousBlockTimestamp.applyShift(replace.asString());
-                header["timestamp"] = previousBlockTimestamp.getBlockNumberAsString();
-                changeDoneToTheBlock = true;
-                continue;
-            }
-            if (header.count(replace.getKey()))
-            {
-                header[replace.getKey()] = replace.asString();
-                changeDoneToTheBlock = true;
-            }
-            else
-                ETH_STDERROR_MESSAGE(
-                    "blockHeader field in test filler tries to overwrite field that is not found "
-                    "in "
-                    "blockheader: '" +
-                    replace.getKey() + "'");
+            EthGetBlockBy previousBlock(m_session.eth_getBlockByNumber(_latestBlockNumber - 1, Request::LESSOBJECTS));
+            VALUE const& val = managedBlock.header().timestamp();
+            VALUE& valRef = const_cast<VALUE&>(val);
+            valRef = previousBlock.header().timestamp() + _blockInTest.relTimeStamp();
         }
+
+        if (_blockInTest.blockHeader().hasAtLeastOneField())
+            managedBlock.replaceHeader(_blockInTest.blockHeader().overwriteBlockHeader(managedBlock.header()));
     }
 
     // replace block with overwritten header
-    if (changeDoneToTheBlock)
-    {
-        remoteBlock.overwriteBlockHeader(header);
-        m_session.test_rewindToBlock(_latestBlockNumber.getBlockNumberAsInt() - 1);
-        m_session.test_importRawBlock(remoteBlock.getBlockRLP());
-        // remoteBlock = m_session.eth_getBlockByHash(hash, true); // get the exact block info after
-        // postmine operations
-    }
-
-    string const& sBlockException = _blockInTest.getException(m_network);
-    bool const blockIsValid = checkBlockException(sBlockException);
-    remoteBlock.setValid(blockIsValid);
-    return remoteBlock;  // malicious block must be written to the filled test
-    */
+    managedBlock.recalculateHash();
+    m_session.test_rewindToBlock(_latestBlockNumber - 1);
+    _rawRLP = managedBlock.getRLP();
+    return FH32(m_session.test_importRawBlock(_rawRLP));
 }
 
 // Returns true if the block is valid
@@ -335,23 +308,24 @@ bool TestBlockchain::checkBlockException(string const& _sBlockException) const
 {
     // Check malicious block import exception
     // Relies on that previous block import was exactly this block !!!
-    if (_sBlockException == "NoException")
+    if (_sBlockException.empty())
         ETH_ERROR_REQUIRE_MESSAGE(m_session.getLastRPCError().empty(),
             "Postmine block tweak expected no exception! Client errors with: '" + m_session.getLastRPCError().message() + "'");
     else
     {
         std::string const& clientExceptionString =
-            Options::get().getDynamicOptions().getCurrentConfig().translateException(
-                _sBlockException);
+            Options::get().getDynamicOptions().getCurrentConfig().translateException(_sBlockException);
         size_t pos = m_session.getLastRPCError().message().find(clientExceptionString);
         if (clientExceptionString.empty())
             pos = string::npos;
         ETH_ERROR_REQUIRE_MESSAGE(pos != string::npos,
-            "'" + clientExceptionString + "' (" + _sBlockException +
-                ") not found in client response to postmine block tweak! Import result of postmine "
-                "block: '" +
+            "'" + clientExceptionString + "' (" + _sBlockException + ") " +
+                "not found in client response to postmine block tweak! Import result of postmine block: '" +
                 m_session.getLastRPCError().message() + "', Test Expected: '" + clientExceptionString + "'");
         return false;  // block is not valid
     }
     return true;  // block is valid
 }
+
+}  // namespace blockchainfiller
+}  // namespace test

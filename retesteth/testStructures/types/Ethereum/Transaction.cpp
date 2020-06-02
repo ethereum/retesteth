@@ -16,7 +16,8 @@ Transaction::Transaction(DataObject const& _data)
     m_nonce = spVALUE(new VALUE(_data.atKey("nonce")));
     m_value = spVALUE(new VALUE(_data.atKey("value")));
 
-    if (_data.atKey("to").asString().empty())
+    // geth retesteth return to as null in some bc tests
+    if (_data.atKey("to").type() == DataType::Null || _data.atKey("to").asString().empty())
         m_creation = true;
     else
     {

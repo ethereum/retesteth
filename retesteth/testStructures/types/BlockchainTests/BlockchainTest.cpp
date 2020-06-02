@@ -28,16 +28,20 @@ BlockchainTestInFilled::BlockchainTestInFilled(DataObject const& _data)
 {
     m_name = _data.getKey();
     m_info = GCP_SPointer<Info>(new Info(_data.atKey("_info")));
-    m_env = GCP_SPointer<BlockchainTestEnv>(new BlockchainTestEnv(_data.atKey("genesisBlockHeader")));
+    m_env = spBlockchainTestEnv(new BlockchainTestEnv(_data.atKey("genesisBlockHeader")));
 
     m_genesisRLP = spBYTES(new BYTES(_data.atKey("genesisRLP")));
     m_pre = spState(new State(_data.atKey("pre")));
     m_fork = spFORK(new FORK(_data.atKey("network")));
     m_sealEngine = SealEngine::NoProof;
-    if (_data.count("sealEngine") && _data.atKey("sealEngine") == "Ethash")
+    if (_data.count("sealEngine") && _data.atKey("sealEngine").asString() == "Ethash")
         m_sealEngine = SealEngine::Ethash;
 
-    m_post = spState(new State(_data.atKey("postState")));
+    if (_data.count("postState"))
+        m_post = spState(new State(_data.atKey("postState")));
+    else
+        m_postHash = spFH32(new FH32(_data.atKey("postStateHash")));
+
     for (auto const& el : _data.atKey("blocks").getSubObjects())
         m_blocks.push_back(BlockchainTestBlock(el));
     m_lastBlockHash = spFH32(new FH32(_data.atKey("lastblockhash")));

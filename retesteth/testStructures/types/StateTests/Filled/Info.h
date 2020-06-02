@@ -27,5 +27,7 @@ private:
     string m_sourceHash;
 };
 
+typedef GCP_SPointer<Info> spInfo;
+
 }  // namespace teststruct
 }  // namespace test

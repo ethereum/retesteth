@@ -10,10 +10,15 @@ namespace test
 {
 namespace teststruct
 {
+enum class DataRequier
+{
+    ALLOWDEC,
+    ONLYHEX
+};
 // Marks that State is made of AccountIncomplete
 struct StateIncomplete : StateBase
 {
-    StateIncomplete(DataObject const&);
+    StateIncomplete(DataObject const&, DataRequier req = DataRequier::ONLYHEX);
     void correctMiningReward(FH20 const& _coinbase, VALUE const& _reward);
     DataObject const asDataObject() const override;
 

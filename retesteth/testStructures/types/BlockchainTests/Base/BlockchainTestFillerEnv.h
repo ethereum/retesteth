@@ -10,12 +10,13 @@ namespace teststruct
 {
 // Blockchain test does not have Env section
 // This represent env section consructed from blockchain test genesis header
-struct BlockchainTestEnv : StateTestEnvBase
+// Filler marks that fields are converted from dec to hex explicitly
+struct BlockchainTestFillerEnv : StateTestEnvBase
 {
-    BlockchainTestEnv(DataObject const& _data);
+    BlockchainTestFillerEnv(DataObject const& _data);
 };
 
-typedef GCP_SPointer<BlockchainTestEnv> spBlockchainTestEnv;
+typedef GCP_SPointer<BlockchainTestFillerEnv> spBlockchainTestFillerEnv;
 
 
 }  // namespace teststruct

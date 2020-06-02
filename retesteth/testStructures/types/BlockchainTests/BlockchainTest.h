@@ -20,29 +20,34 @@ struct BlockchainTestInFilled : GCP_SPointerBase
     BlockchainTestInFilled(DataObject const&);
     string const& testName() const { return m_name; }
     Info const& testInfo() const { return m_info.getCContent(); }
+    BlockchainTestEnv const& Env() const { return m_env.getCContent(); }
+    BYTES const& genesisRLP() const { return m_genesisRLP.getCContent(); }
+
     SealEngine sealEngine() const { return m_sealEngine; }
     FORK const& network() const { return m_fork.getCContent(); }
     State const& Pre() const { return m_pre.getCContent(); }
-    State const& Post() const { return m_post.getCContent(); }
-    FH32 const& lastBlockHash() const { return m_lastBlockHash.getCContent(); }
-    BlockchainTestEnv const& Env() const { return m_env.getCContent(); }
-    BYTES const& genesisRLP() const { return m_genesisRLP.getCContent(); }
-    std::vector<BlockchainTestBlock> const& blocks() const { return m_blocks; }
 
+    bool isFullState() const { return !m_post.isEmpty(); }
+    State const& Post() const { return m_post.getCContent(); }
+    FH32 const& PostHash() const { return m_postHash.getCContent(); }
+    FH32 const& lastBlockHash() const { return m_lastBlockHash.getCContent(); }
+
+    std::vector<BlockchainTestBlock> const& blocks() const { return m_blocks; }
     std::vector<string> const& unitTestExceptions() const { return m_exceptions; }
 
 private:
     BlockchainTestInFilled() {}
     string m_name;
-    GCP_SPointer<Info> m_info;
+    spInfo m_info;
     SealEngine m_sealEngine;
     spFORK m_fork;
     spState m_pre;
-    GCP_SPointer<BlockchainTestEnv> m_env;
+    spBlockchainTestEnv m_env;
     // Genesis block header
     spBYTES m_genesisRLP;
     std::vector<BlockchainTestBlock> m_blocks;
     spState m_post;
+    spFH32 m_postHash;
     spFH32 m_lastBlockHash;
 
     std::vector<string> m_exceptions;

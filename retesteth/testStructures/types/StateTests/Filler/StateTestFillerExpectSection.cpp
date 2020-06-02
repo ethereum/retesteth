@@ -27,21 +27,7 @@ StateTestFillerExpectSection::StateTestFillerExpectSection(DataObject const& _da
         // Parse >=Frontier into  Frontier, Homestead, ... Constantinople according to current config
         ClientConfig const& cfg = Options::get().getDynamicOptions().getCurrentConfig();
         m_forks = cfg.translateNetworks(forks);
-
-        // Convert Expect Section IncompletePostState fields to hex, account keys add `0x` prefix
-        DataObject tmpD = _data.atKey("result");
-        for (auto& acc : tmpD.getSubObjectsUnsafe())
-        {
-            string const& key = acc.getKey();
-            if (key.size() > 2 && (key[0] != '0' || key[1] != 'x'))
-                acc.setKey("0x" + acc.getKey());
-            if (acc.count("balance"))
-                acc["balance"].performModifier(mod_valueToCompactEvenHexPrefixed);
-            if (acc.count("nonce"))
-                acc["nonce"].performModifier(mod_valueToCompactEvenHexPrefixed);
-        }
-
-        m_result = GCP_SPointer<StateIncomplete>(new StateIncomplete(tmpD));
+        m_result = GCP_SPointer<StateIncomplete>(new StateIncomplete(_data.atKey("result"), DataRequier::ALLOWDEC));
     }
     catch (std::exception const& _ex)
     {

@@ -49,6 +49,7 @@ StateTestInFiller::StateTestInFiller(DataObject const& _data)
         m_transaction = GCP_SPointer<StateTestFillerTransaction>(new StateTestFillerTransaction(_data.atKey("transaction")));
         for (auto const& el : _data.atKey("expect").getSubObjects())
             m_expectSections.push_back(StateTestFillerExpectSection(el));
+        ETH_ERROR_REQUIRE_MESSAGE(m_expectSections.size() > 0, "StateTestFiller require expect sections!");
         m_name = _data.getKey();
     }
     catch (std::exception const& _ex)

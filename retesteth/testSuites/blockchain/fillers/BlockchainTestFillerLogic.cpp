@@ -1,74 +1,84 @@
-#include "BlockchainTestFillerLogic.h"
 #include "TestBlockchainManager.h"
+#include <retesteth/TestSuite.h>
+#include <retesteth/testStructures/types/BlockchainTests/BlockchainTestFiller.h>
+#include <retesteth/testSuites/Common.h>
 
+using namespace blockchainfiller;
 namespace test
 {
 /// Generate blockchain test from filler
-void FillTest(scheme_blockchainTestFiller const& _testObject, string const& _network,
-    TestSuite::TestSuiteOptions const&, DataObject& _testOut)
+DataObject FillTest(BlockchainTestInFiller const& _test, TestSuite::TestSuiteOptions const& _opt)
 {
-    (void)_testObject;
-    (void)_network;
-    (void)_testOut;
-    /*
-    TestOutputHelper::get().setUnitTestExceptions(_testObject.getUnitTestExceptions());
-
-    // Construct filled blockchain test
-    _testOut["sealEngine"] = _testObject.getSealEngine();
-    _testOut["network"] = _network;
-    _testOut["pre"] = _testObject.getPre().getData();
-    if (_testObject.getData().count("_info"))
-        _testOut["_info"] = _testObject.getData().atKey("_info");
-
+    (void)_opt;
+    DataObject result;
     SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
-
-    // Initialise chain manager
-    ETH_LOGC("FILL GENESIS INFO: ", 6, LogColor::LIME);
-    TestBlockchainManager testchain(session, _testObject, _network);
-    TestBlock const& genesis = testchain.getLastBlock();
-    _testOut["genesisBlockHeader"] = genesis.getDataForTest().atKey("blockHeader");
-    _testOut["genesisRLP"] = genesis.getDataForTest().atKey("rlp");
-
-    size_t blocks = 0;
-    for (auto const& block : _testObject.getBlocks())
+    for (FORK const& net : _test.getAllForksFromExpectSections())
     {
-        // Debug
-        if (Options::get().blockLimit != 0 && blocks++ >= Options::get().blockLimit)
-            break;
+        for (auto const& expect : _test.expects())
+        {
+            // if expect is for this network, generate the test
+            if (expect.forks().count(net))
+            {
+                // Construct filled blockchain test
+                DataObject filledTest;
+                string const newtestname = _test.testName() + "_" + net.asString();
+                TestOutputHelper::get().setCurrentTestName(newtestname);
+                filledTest.setKey(newtestname);
+                if (_test.hasInfo())
+                    filledTest["_info"]["comment"] = _test.Info().comment();
+                filledTest["pre"] = _test.Pre().asDataObject();
+                filledTest["sealEngine"] = sealEngineToStr(_test.sealEngine());
+                filledTest["network"] = net.asString();
 
-        // Generate a test block from test block section
-        // With all the information about sidechains and uncles
-        testchain.parseBlockFromJson(block, _testObject.getTotalUncleCount() > 0);
+                // Initialise chain manager
+                ETH_LOGC("FILL GENESIS INFO: ", 6, LogColor::LIME);
+                TestBlockchainManager testchain(_test.Env(), _test.Pre(), _test.sealEngine(), net);
+                TestBlock const& genesis = testchain.getLastBlock();
+                filledTest["genesisBlockHeader"] = genesis.ethBlock().header().asDataObject();
+                filledTest["genesisRLP"] = genesis.ethBlock().getRLP().asString();
 
-        // Get the json output of a constructed block for the test (includes rlp)
-        if (!testchain.getLastBlock().isDoNotExport())
-            _testOut["blocks"].addArrayObject(testchain.getLastBlock().getDataForTest());
+                TestOutputHelper::get().setUnitTestExceptions(_test.unitTestExceptions());
+
+                size_t blocks = 0;
+                for (auto const& block : _test.blocks())
+                {
+                    // Debug
+                    if (Options::get().blockLimit != 0 && blocks++ >= Options::get().blockLimit)
+                        break;
+
+                    // Generate a test block from filler block section
+                    // Asks remote client to generate all the uncles and hashes for it
+                    testchain.parseBlockFromFiller(block, _test.hasUnclesInTest());
+
+                    // If block is not disabled for testing purposes
+                    // Get the json output of a constructed block for the test (includes rlp)
+                    if (!testchain.getLastBlock().isDoNotExport())
+                        filledTest["blocks"].addArrayObject(testchain.getLastBlock().asDataObject());
+                }
+
+                // Import blocks that have been rewinded with the chain switch
+                // This makes some block invalid. Because block can be mined as valid on side chain
+                // So just import all block ever generated with test filler
+                testchain.syncOnRemoteClient(filledTest["blocks"]);
+
+                // Fill info about the lastblockhash
+                EthGetBlockBy finalBlock(session.eth_getBlockByNumber(session.eth_blockNumber(), Request::LESSOBJECTS));
+
+                State remoteState = getRemoteState(session);
+                if (Options::get().fullstate)
+                    compareStates(expect.result(), remoteState);
+                else
+                    compareStates(expect.result(), session);
+
+                //_testOut["postStateHash"] = remoteState.getData();
+                filledTest["postState"] = remoteState.asDataObject();
+                filledTest["lastblockhash"] = finalBlock.header().hash().asString();
+                result.addSubObject(filledTest);
+
+            }  // expects count net
+        }
     }
-
-    // Import blocks that have been rewinded with the chain switch
-    // Now makes some block invalid. Because block can be mined as valid on side chain
-    testchain.syncOnRemoteClient(_testOut["blocks"]);
-
-    // Fill info about the lastblockhash
-    scheme_RPCBlock latestBlock = session.eth_getBlockByNumber(session.eth_blockNumber(), false);
-    scheme_state remoteState = getRemoteState(session, latestBlock);
-    if (remoteState.isHash())
-    {
-        compareStates(_testObject.getExpectSection().getExpectSectionFor(_network).getExpectState(),
-            session, latestBlock);
-    }
-    else
-    {
-        compareStates(_testObject.getExpectSection().getExpectSectionFor(_network).getExpectState(),
-            remoteState);
-    }
-
-    if (remoteState.isHash())
-        _testOut["postStateHash"] = remoteState.getData();
-    else
-        _testOut["postState"] = remoteState.getData();
-    _testOut["lastblockhash"] = latestBlock.getBlockHash();
-    */
+    return result;
 }
 
 }  // namespace test

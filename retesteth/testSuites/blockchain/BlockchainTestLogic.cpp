@@ -1,5 +1,4 @@
 #include "BlockchainTestLogic.h"
-#include "fillers/BlockchainTestFillerLogic.h"
 #include <retesteth/EthChecks.h>
 #include <retesteth/session/RPCSession.h>
 #include <retesteth/testStructures/Common.h>
@@ -11,10 +10,10 @@ namespace test
 /// Read and execute the test from the file
 void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions const& _opt)
 {
-    (void)_opt;
     if (Options::get().logVerbosity > 1)
         ETH_STDOUT_MESSAGE("Running" + _test.testName());
 
+    TestOutputHelper::get().setCurrentTestName(_test.testName());
     TestOutputHelper::get().setUnitTestExceptions(_test.unitTestExceptions());
     SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
 
@@ -38,7 +37,11 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
             // and options does NOT allow invalid blocks or this block was expected to be valid
             if (!_opt.allowInvalidBlocks || !tblock.expectedInvalid())
                 ETH_ERROR_MESSAGE("Running blockchain test: " + session.getLastRPCError().message());
+            continue;
         }
+        else
+            ETH_ERROR_REQUIRE_MESSAGE(!tblock.expectedInvalid(),
+                "Running blockchain test: Block #" + to_string(blockNumber) + " expected to be invalid!");
 
         // Check imported block against the fields in test
         // Check Blockheader
@@ -110,7 +113,12 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
     }
 
     EthGetBlockBy latestBlock(session.eth_getBlockByNumber(session.eth_blockNumber(), Request::LESSOBJECTS));
-    compareStates(_test.Post(), session);
+    if (_test.isFullState())
+        compareStates(_test.Post(), session);
+    else
+        ETH_ERROR_REQUIRE_MESSAGE(_test.PostHash() == latestBlock.header().stateRoot(),
+            "postStateHash mismatch! remote: " + latestBlock.header().stateRoot().asString() + " != test " =
+                _test.PostHash().asString());
 
     if (_test.lastBlockHash() != latestBlock.header().hash())
         ETH_ERROR_MESSAGE("lastblockhash does not match! remote: " + latestBlock.header().hash().asString() +
@@ -127,9 +135,9 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
     //    else
     {
         EthGetBlockBy genesis(session.eth_getBlockByNumber(0, Request::LESSOBJECTS));
-        if (_test.genesisRLP() != genesis.fakeRLP())
+        if (_test.genesisRLP() != genesis.getRLPHeaderTransactions())
             ETH_ERROR_MESSAGE("genesisRLP in test != genesisRLP on remote client! (" + _test.genesisRLP().asString() +
-                              "' != '" + genesis.fakeRLP().asString() + "'");
+                              "' != '" + genesis.getRLPHeaderTransactions().asString() + "'");
         }
         //}
 }
@@ -139,6 +147,27 @@ DataObject DoTests(DataObject const& _input, TestSuite::TestSuiteOptions& _opt)
     DataObject tests;
     if (_opt.doFilling)
     {
+        BlockchainTestFiller testFiller(_input);
+        for (BlockchainTestInFiller const& bcTest : testFiller.tests())
+        {
+            // Select test by name if --singletest and --singlenet is set
+            if (Options::get().singleTest)
+            {
+                if (!Options::get().singleSubTestName.empty() && bcTest.testName() != Options::get().singleSubTestName)
+                    continue;
+            }
+            if (!Options::get().singleTestNet.empty())
+            {
+                if (!bcTest.hasExpectForNetwork(FORK(Options::get().singleTestNet)))
+                    continue;
+            }
+
+            // One blockchain test generate many tests for each network
+            DataObject filledTests = FillTest(bcTest, _opt);
+            for (auto const& t : filledTests.getSubObjects())
+                tests.addSubObject(t);
+            TestOutputHelper::get().registerTestRunSuccess();
+        }
     }
     else
     {
@@ -161,50 +190,6 @@ DataObject DoTests(DataObject const& _input, TestSuite::TestSuiteOptions& _opt)
             TestOutputHelper::get().registerTestRunSuccess();
         }
     }
-
-    /*
-    DataObject tests;
-    // A blockchain test file contains many tests in one .json file
-    for (auto const& i : _input.getSubObjects())
-    {
-        string const& testname = i.getKey();
-        TestOutputHelper::get().setCurrentTestName(testname);
-
-        if (_opt.doFilling)
-        {
-            {
-                TestInfo errorInfo("TestFillerInit");
-                TestOutputHelper::get().setCurrentTestInfo(errorInfo);
-            }
-            scheme_blockchainTestFiller testFiller(i);
-            // Create a blockchain test for each network described in expect section
-            for (auto& network : testFiller.getExpectSection().getAllNetworksFromExpectSection())
-            {
-                // select expect section corresponding to the network (if any)
-                for (auto const& expect : testFiller.getExpectSection().getExpectSections())
-                {
-                    if (expect.getNetworks().count(network))
-                    {
-                        string const newtestname = testname + "_" + network;
-                        TestOutputHelper::get().setCurrentTestName(newtestname);
-
-                        DataObject testOutput;
-                        FillTest(testFiller, network, _opt, testOutput);
-                        if (testFiller.getData().count("_info"))
-                            testOutput["_info"] = testFiller.getData().atKey("_info");
-                        tests[newtestname] = testOutput;
-                    }
-                }
-            }
-        }
-        else
-        {
-
-            RunTest(i, _opt);
-        }
-    }
-    */
-
     return tests;
 }
 }  // namespace test

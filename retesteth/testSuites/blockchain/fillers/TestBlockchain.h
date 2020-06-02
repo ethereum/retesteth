@@ -1,56 +1,43 @@
 #pragma once
 #include "TestBlock.h"
-#include <ethObjects/common.h>
+#include <retesteth/TestOutputHelper.h>
 #include <retesteth/session/RPCSession.h>
+#include <retesteth/testStructures/Common.h>
 #include <string>
 #include <vector>
 
-typedef test::scheme_blockchainTestFiller::blockSection blockSection;
+namespace test
+{
+namespace blockchainfiller
+{
+// Used to tell remote client to reset chain params on another network
+enum class RegenerateGenesis
+{
+    TRUE,
+    FALSE
+};
 
-// Single blockchain with block rlps
+
 class TestBlockchain
 {
 public:
-    enum class RegenerateGenesis
-    {
-        TRUE,
-        FALSE
-    };
-    TestBlockchain(SessionInterface& _session, scheme_blockchainTestFiller const& _testObject,
-        std::string const& _network, RegenerateGenesis _regenerateGenesis)
-      : m_session(_session), m_testObject(_testObject), m_network(_network)
-    {
-        TestBlock genesisBlock;
-        if (_regenerateGenesis == RegenerateGenesis::TRUE)
-        {
-            /*
-            resetChainParams();
-            test::scheme_RPCBlock latestBlock =_session.eth_getBlockByNumber(BlockNumber("0"), false);
-            DataObject& blockTestData = genesisBlock.getDataForTestUnsafe();
-            blockTestData["blockHeader"] = latestBlock.getBlockHeader();
-            blockTestData["blockHeader"].removeKey("transactions");
-            blockTestData["blockHeader"].removeKey("uncles");
-            blockTestData["rlp"] = latestBlock.getBlockRLP();
-            */
-        }
+    // Single blockchain with block rlps, keep track of a blockchain information
+    // Using _env, _pre, _engine, _network settings
+    TestBlockchain(BlockchainTestFillerEnv const& _testEnv, State const& _genesisState, SealEngine _engine,
+        FORK const& _network, RegenerateGenesis _regenerateGenesis);
 
-        genesisBlock.setNextBlockForked(mineNextBlockAndRewert());
-        m_blocks.push_back(genesisBlock);
-    }
-
+    // Need to call resetChainParams because TestBLockchainManager could have chains with different networks
     void resetChainParams() const
     {
-        DataObject genesisObject =
-            m_testObject.getGenesisForRPC(m_network, m_testObject.getSealEngine());
-        m_session.test_setChainParams(genesisObject);
+        DataObject request = prepareChainParams(m_network, m_sealEngine, m_genesisState, m_testEnv);
+        m_session.test_setChainParams(request);
     }
 
-    void generateBlock(
-        blockSection const& _block, vectorOfSchemeBlock const& _uncles, bool _generateUncles);
+    void generateBlock(BlockchainTestFillerBlock const& _block, vectorOfSchemeBlock const& _uncles, bool _generateUncles);
 
     // Restore this chain on remote client up to < _number block
     // Restore chain up to _number of blocks. if _number is 0 restore the whole chain
-    void restoreUpToNumber(SessionInterface& _session, size_t _number, bool _samechain);
+    void restoreUpToNumber(SessionInterface& _session, VALUE const& _number, bool _samechain);
 
     std::vector<TestBlock> const& getBlocks() const { return m_blocks; }
 
@@ -59,7 +46,7 @@ public:
     // Prepare errorinfo about block number and chain name
     string prepareDebugInfoString(std::string const& _newBlockChainName);
 
-    string const& getNetwork() const { return m_network; }
+    FORK const& getNetwork() const { return m_network; }
 
     // Verify post-import exceptin according to expectException section in test
     // Return true if block is valid, false if block is not valid
@@ -67,27 +54,30 @@ public:
 
 private:
     // Ask remote client to generate a blockheader that will later used for uncles
-    test::scheme_RPCBlock mineNextBlockAndRewert();
-
-    // Import transactions on remote client, return prepared json data for test
-    DataObject importTransactions(blockSection const& _block);
+    BlockHeader mineNextBlockAndRewert();
 
     // Mine the test block on remote client.
     // if blockheader is tweaked or there are uncles, postmine tweak this and reimport
-    test::scheme_RPCBlock mineBlock(
-        blockSection const& _block, vectorOfSchemeBlock const& _preparedUncleBlocks);
+    GCP_SPointer<EthGetBlockBy> mineBlock(
+        BlockchainTestFillerBlock const& _block, vectorOfSchemeBlock const& _preparedUncleBlocks, BYTES& _rawRLP);
 
     // After test_mineBlock we can change the blockheader or add uncles. that will require to tweak
     // the block And reimport it again, then check exceptions
-    test::scheme_RPCBlock postmineBlockHeader(blockSection const& _block,
-        BlockNumber const& _latestBlockNumber, std::vector<scheme_RPCBlock> const& _uncles);
+    FH32 postmineBlockHeader(BlockchainTestFillerBlock const& _block, VALUE const& _latestBlockNumber,
+        std::vector<BlockHeader> const& _uncles, BYTES& _rawRLP);
 
     SessionInterface& m_session;                      // Session with the client
-    scheme_blockchainTestFiller const& m_testObject;  // Test data information
-    std::string m_network;                            // Forkname in genesis
+    FORK m_network;                                   // Forkname in genesis
+    SealEngine m_sealEngine;                          // Chain seal engine information
+    BlockchainTestFillerEnv const& m_testEnv;         // Chain genesis data information
+    State const& m_genesisState;                      // PreState of genesis block
+
 
     std::string m_sDebugString;       // Debug info of block numbers
     std::string m_chainName;          // Name of this chain
     std::vector<TestBlock> m_blocks;  // List of blocks
     // std::vector<TestBlock> m_knownBlocks;       // List of fork block RLPs
 };
+
+}  // namespace blockchainfiller
+}  // namespace test

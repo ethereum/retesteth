@@ -10,7 +10,7 @@ namespace test
 {
 namespace teststruct
 {
-// Ethereum account description
+// Ethereum blockheader description
 struct BlockHeader : GCP_SPointerBase
 {
     BlockHeader(DataObject const&);
@@ -19,9 +19,12 @@ struct BlockHeader : GCP_SPointerBase
     bool operator==(BlockHeader const& _rhs) const;
 
     FH32 const& stateRoot() const { return m_stateRoot.getCContent(); }
+    FH32 const& transactionRoot() const { return m_transactionsRoot.getCContent(); }
+    FH32 const& uncleHash() const { return m_sha3Uncles.getCContent(); }
     FH32 const& hash() const { return m_hash.getCContent(); }
     VALUE const& number() const { return m_number.getCContent(); }
-
+    VALUE const& timestamp() const { return m_timestamp.getCContent(); }
+    FH20 const& author() const { return m_author.getCContent(); }
 
 private:
     BlockHeader() {}
@@ -32,17 +35,14 @@ private:
     spVALUE m_gasUsed;
     spFH32 m_hash;
     spFH256 m_logsBloom;
-    spFH20 m_miner;
     spFH32 m_mixHash;
     spFH8 m_nonce;
     spVALUE m_number;
     spFH32 m_parentHash;
     spFH32 m_receiptsRoot;
     spFH32 m_sha3Uncles;
-    spVALUE m_size;
     spFH32 m_stateRoot;
     spVALUE m_timestamp;
-    spVALUE m_totalDifficulty;
     spFH32 m_transactionsRoot;
 };
 

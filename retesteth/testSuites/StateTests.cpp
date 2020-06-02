@@ -119,7 +119,7 @@ DataObject FillTestAsBlockchain(StateTestInFiller const& _test)
 
                     DataObject request = prepareChainParams(fork, SealEngine::NoProof, _test.Pre(), _test.Env());
                     session.test_setChainParams(request);
-                    session.test_modifyTimestamp(_test.Env().currentTimestamp().asDecString());
+                    session.test_modifyTimestamp(_test.Env().firstBlockTimestamp().asDecString());
                     FH32 trHash(session.eth_sendRawTransaction(tr.transaction().getSignedRLP()));
 
                     // Mine a block, execute transaction
@@ -154,14 +154,15 @@ DataObject FillTestAsBlockchain(StateTestInFiller const& _test)
                     aBlockchainTest["pre"] = _test.Pre().asDataObject();
                     aBlockchainTest["postState"] = postState.asDataObject();
                     aBlockchainTest["network"] = fork.asString();
-                    aBlockchainTest["sealEngine"] = "NoProof";
+                    aBlockchainTest["sealEngine"] = sealEngineToStr(SealEngine::NoProof);
                     aBlockchainTest["lastblockhash"] = remoteBlock.header().hash().asString();
-                    aBlockchainTest["genesisRLP"] = genesisBlock.getRLP().asString();
+                    aBlockchainTest["genesisRLP"] = genesisBlock.getRLPHeaderTransactions().asString();
 
                     DataObject block;
-                    block["rlp"] = remoteBlock.getRLP().asString();
+                    block["rlp"] = remoteBlock.getRLPHeaderTransactions().asString();
                     block["blockHeader"] = remoteBlock.header().asDataObject();
                     block["transactions"].addArrayObject(tr.transaction().asDataObject());
+                    block["uncleHeaders"] = DataObject(DataType::Array);
                     aBlockchainTest["blocks"].addArrayObject(block);
 
                     string dataPostfix =
@@ -236,7 +237,7 @@ DataObject FillTest(StateTestInFiller const& _test)
                     if (!expect.checkIndexes(tr.dataInd(), tr.gasInd(), tr.valueInd()))
                         continue;
 
-                    session.test_modifyTimestamp(_test.Env().currentTimestamp().asDecString());
+                    session.test_modifyTimestamp(_test.Env().firstBlockTimestamp().asDecString());
                     FH32 trHash(session.eth_sendRawTransaction(tr.transaction().getSignedRLP()));
                     session.test_mineBlocks(1);
                     VALUE latestBlockN(session.eth_blockNumber());
@@ -332,7 +333,7 @@ void RunTest(StateTestInFilled const& _test)
 
                 if (checkIndexes)
                 {
-                    session.test_modifyTimestamp(_test.Env().currentTimestamp().asDecString());
+                    session.test_modifyTimestamp(_test.Env().firstBlockTimestamp().asDecString());
                     FH32 trHash(session.eth_sendRawTransaction(tr.transaction().getSignedRLP()));
                     session.test_mineBlocks(1);
 
@@ -409,6 +410,14 @@ DataObject StateTestSuite::doTests(DataObject const& _input, TestSuiteOptions& _
         }
         else
         {
+            if (_opt.isLegacyTests)
+            {
+                // Change the tests instead??
+                DataObject& _inputRef = const_cast<DataObject&>(_input);
+                DataObject& _infoRef = _inputRef.getSubObjectsUnsafe().at(0).atKeyUnsafe("_info");
+                _infoRef.renameKey("filledwith", "filling-rpc-server");
+                _infoRef["filling-tool-version"] = "testeth";
+            }
             GeneralStateTest filledTest(_input);
             for (auto const& test : filledTest.tests())
             {

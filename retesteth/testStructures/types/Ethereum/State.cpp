@@ -7,6 +7,9 @@ namespace teststruct
 {
 State::State(std::map<FH20, spAccount>& _accList)
 {
+    // Here spAccountBase will take control of spAccount content and increase its refCount
+    // AccountBase will handle all the logic for Account, but with this constructor
+    // We certain that account provided for the state is full and not incomplete
     for (auto& el : _accList)
         m_accounts[el.first] = spAccountBase(&el.second.getContent());
 }

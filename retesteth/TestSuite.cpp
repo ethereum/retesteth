@@ -537,6 +537,7 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
 void TestSuite::executeFile(boost::filesystem::path const& _file) const
 {
     TestSuiteOptions opt;
+    opt.isLegacyTests = Options::get().rCurrentTestSuite.find("LegacyTests") != string::npos;
     doTests(test::readJsonData(_file), opt);
 }
 

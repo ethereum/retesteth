@@ -1,4 +1,5 @@
 #include "EthGetBlockBy.h"
+#include "../Ethereum/EthereumBlock.h"
 #include "EthGetBlockByTransaction.h"
 #include <libdevcore/RLP.h>
 #include <retesteth/EthChecks.h>
@@ -50,57 +51,14 @@ bool EthGetBlockBy::hasTransaction(FH32 const& _hash) const
     return false;
 }
 
-BYTES const EthGetBlockBy::getRLP() const
+// Because EthGetBlockBy does not return uncle headers
+BYTES EthGetBlockBy::getRLPHeaderTransactions() const
 {
-    ETH_ERROR_REQUIRE_MESSAGE(false, "EthGetBlockBy unable to construct RLP because remote does not provide uncles");
-    ETH_ERROR_REQUIRE_MESSAGE(!m_lessobjects, "EthGetBlockBy::getRLP() of a block received without full transactions!");
-    try
-    {
-        // RLP of a block
-        RLPStream stream(3);
-        stream.appendRaw(m_header.getCContent().asRLPStream().out());
-
-        // Transaction list
-        RLPStream transactionList(m_transactions.size());
-        for (auto const& tr : m_transactions)
-            transactionList.appendRaw(tr.transaction().asRLPStream().out());
-        stream.appendRaw(transactionList.out());
-
-        // Uncle list
-        RLPStream uncleList(0);  // Unable to construct uncle list
-                                 //        RLPStream uncleList(m_uncles.size());
-                                 //        for (auto const& un : m_uncles)
-                                 //            uncleList.appendRaw(un.asRLPStream().out());
-                                 //        stream.appendRaw(uncleList.out());
-        return BYTES(dev::toHexPrefixed(stream.out()));
-    }
-    catch (std::exception const& _ex)
-    {
-        ETH_ERROR_MESSAGE(string("EthGetBlockBy::getRLP() ") + _ex.what());
-    }
-    return BYTES(DataObject());
+    EthereumBlock block(m_header.getCContent());
+    for (auto const& tr : m_transactions)
+        block.addTransaction(tr.transaction());
+    return block.getRLP();
 }
-
-// Return fake RLP always setting transactions and uncles as empty
-BYTES const EthGetBlockBy::fakeRLP() const
-{
-    try
-    {
-        RLPStream stream(3);
-        stream.appendRaw(m_header.getCContent().asRLPStream().out());
-        RLPStream transactionList(0);
-        stream.appendRaw(transactionList.out());
-        RLPStream uncleList(0);
-        stream.appendRaw(uncleList.out());
-        return BYTES(dev::toHexPrefixed(stream.out()));
-    }
-    catch (std::exception const& _ex)
-    {
-        ETH_ERROR_MESSAGE(string("EthGetBlockBy::fakeRLP() ") + _ex.what());
-    }
-    return BYTES(DataObject());
-}
-
 
 }  // namespace teststruct
 }  // namespace test

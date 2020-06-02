@@ -16,5 +16,7 @@ private:
     string m_comment;
 };
 
+typedef GCP_SPointer<InfoIncomplete> spInfoIncomplete;
+
 }  // namespace teststruct
 }  // namespace test
