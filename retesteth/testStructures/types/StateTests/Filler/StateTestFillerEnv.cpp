@@ -1,6 +1,6 @@
 #include "StateTestFillerEnv.h"
 #include <retesteth/EthChecks.h>
-#include <retesteth/ethObjects/object.h>
+#include <retesteth/testStructures/Common.h>
 namespace test
 {
 namespace teststruct
@@ -30,10 +30,18 @@ StateTestFillerEnv::StateTestFillerEnv(DataObject const& _data)
         m_currentExtraData = spBYTES(new BYTES(tmpD));
         m_currentNonce = spFH8(new FH8(FH8::zero()));
         m_currentMixHash = spFH32(new FH32(FH32::zero()));
+
+        requireJsonFields(_data, "StateTestFillerEnv " + _data.getKey(),
+            {{"currentCoinbase", {{DataType::String}, jsonField::Required}},
+             {"currentDifficulty", {{DataType::String}, jsonField::Required}},
+             {"currentGasLimit", {{DataType::String}, jsonField::Required}},
+             {"currentNumber", {{DataType::String}, jsonField::Required}},
+             {"currentTimestamp", {{DataType::String}, jsonField::Required}},
+             {"previousHash", {{DataType::String}, jsonField::Required}}});
     }
     catch (std::exception const& _ex)
     {
-        throw BaseEthException(string("StateTestFillerEnv parse error: ") + _ex.what());
+        throw BaseEthException(string("StateTestFillerEnv parse error: ") + _ex.what() + _data.asJson());
     }
 }
 

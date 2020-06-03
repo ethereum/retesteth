@@ -1,7 +1,7 @@
 #include "StateTestFillerTransaction.h"
 #include <retesteth/EthChecks.h>
 #include <retesteth/TestHelper.h>
-#include <retesteth/ethObjects/object.h>
+#include <retesteth/testStructures/Common.h>
 
 namespace test
 {
@@ -48,10 +48,19 @@ StateTestFillerTransaction::StateTestFillerTransaction(DataObject const& _data)
             m_gasLimit.push_back(el);
         for (auto const& el : tmpD.atKey("value").getSubObjects())
             m_value.push_back(el);
+
+        requireJsonFields(_data, "StateTestFillerTransaction " + _data.getKey(),
+            {{"data", {{DataType::Array}, jsonField::Required}},
+             {"gasLimit", {{DataType::Array}, jsonField::Required}},
+             {"gasPrice", {{DataType::String}, jsonField::Required}},
+             {"nonce", {{DataType::String}, jsonField::Required}},
+             {"value", {{DataType::Array}, jsonField::Required}},
+             {"to", {{DataType::String}, jsonField::Required}},
+             {"secretKey", {{DataType::String}, jsonField::Required}}});
     }
     catch (std::exception const& _ex)
     {
-        throw BaseEthException(string("StateTestFillerTransaction parse error: ") + _ex.what());
+        throw BaseEthException(string("StateTestFillerTransaction parse error: ") + _ex.what() + _data.asJson());
     }
 }
 

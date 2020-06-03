@@ -1,6 +1,6 @@
 #include "StateTestFillerExpectSection.h"
 #include <TestHelper.h>
-#include <retesteth/ethObjects/object.h>
+#include <retesteth/testStructures/Common.h>
 
 #include <retesteth/Options.h>
 namespace test
@@ -28,10 +28,15 @@ StateTestFillerExpectSection::StateTestFillerExpectSection(DataObject const& _da
         ClientConfig const& cfg = Options::get().getDynamicOptions().getCurrentConfig();
         m_forks = cfg.translateNetworks(forks);
         m_result = GCP_SPointer<StateIncomplete>(new StateIncomplete(_data.atKey("result"), DataRequier::ALLOWDEC));
+
+        requireJsonFields(_data, "StateTestFillerExpectSection " + _data.getKey(),
+            {{"indexes", {{DataType::Object}, jsonField::Required}},
+             {"network", {{DataType::Array}, jsonField::Required}},
+             {"result", {{DataType::Object}, jsonField::Required}}});
     }
     catch (std::exception const& _ex)
     {
-        throw BaseEthException(string("StateTestFillerExpectSection parse error: ") + _ex.what());
+        throw BaseEthException(string("StateTestFillerExpectSection parse error: ") + _ex.what() + _data.asJson());
     }
 }
 

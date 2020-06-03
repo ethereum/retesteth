@@ -35,10 +35,11 @@
 #include <retesteth/TestOutputHelper.h>
 #include <retesteth/TestSuite.h>
 #include <retesteth/session/RPCSession.h>
+#include <retesteth/testStructures/Common.h>
+#include <retesteth/testStructures/structures.h>
 #include <retesteth/testSuites/Common.h>
 #include <retesteth/testSuites/StateTests.h>
 #include <retesteth/testSuites/blockchain/BlockchainTests.h>
-#include <retesteth/testStructures/Common.h>
 
 using namespace std;
 using namespace dev;

@@ -1,6 +1,7 @@
 #include "StateIncomplete.h"
 #include "AccountIncomplete.h"
-#include <retesteth/ethObjects/object.h>
+#include <retesteth/EthChecks.h>
+#include <retesteth/testStructures/Common.h>
 
 namespace test
 {

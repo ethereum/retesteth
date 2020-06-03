@@ -1,7 +1,7 @@
 #include "GeneralStateTest.h"
 #include <retesteth/EthChecks.h>
 #include <retesteth/Options.h>
-#include <retesteth/ethObjects/object.h>
+#include <retesteth/testStructures/Common.h>
 
 using namespace test::teststruct;
 GeneralStateTest::GeneralStateTest(DataObject const& _data)
@@ -51,4 +51,11 @@ StateTestInFilled::StateTestInFilled(DataObject const& _data)
         m_post[FORK(elFork.getKey())] = res;
     }
     m_name = _data.getKey();
+
+    requireJsonFields(_data, "StateTestInFilled " + _data.getKey(),
+        {{"_info", {{DataType::Object}, jsonField::Required}},
+         {"env", {{DataType::Object}, jsonField::Required}},
+         {"post", {{DataType::Object}, jsonField::Required}},
+         {"pre", {{DataType::Object}, jsonField::Required}},
+         {"transaction", {{DataType::Object}, jsonField::Required}}});
 }

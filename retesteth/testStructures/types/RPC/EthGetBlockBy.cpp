@@ -13,7 +13,7 @@ EthGetBlockBy::EthGetBlockBy(DataObject const& _data)
 {
     try
     {
-        m_header = spBlockHeader(new BlockHeader(_data));
+        m_header = spBlockHeader(new BlockHeader(_data));  // BlockHeader verify _data fields
 
         m_miner = spFH20(new FH20(_data.atKey("miner")));
         m_size = spVALUE(new VALUE(_data.atKey("size")));

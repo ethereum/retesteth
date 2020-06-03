@@ -1,6 +1,6 @@
 #include "BlockchainTestFillerEnv.h"
 #include <retesteth/EthChecks.h>
-#include <retesteth/ethObjects/object.h>
+#include <retesteth/testStructures/Common.h>
 namespace test
 {
 namespace teststruct

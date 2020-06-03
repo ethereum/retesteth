@@ -1,6 +1,6 @@
 #include <retesteth/configs/ClientConfig.h>
 #include <retesteth/configs/Genesis.h>
-#include <retesteth/ethObjects/object.h>
+#include <retesteth/testStructures/Common.h>
 #include <mutex>
 std::mutex g_staticDeclaration_clientConfigID;
 namespace test

@@ -4,6 +4,7 @@
 #include <libdevcore/Address.h>
 #include <libdevcore/RLP.h>
 #include <libdevcore/SHA3.h>
+#include <retesteth/testStructures/Common.h>
 
 using namespace dev;
 

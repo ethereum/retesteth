@@ -1,6 +1,7 @@
 #pragma once
 #include "../object.h"
 #include <retesteth/TestHelper.h>
+#include <retesteth/testStructures/Common.h>
 
 using namespace dev;
 namespace  test {

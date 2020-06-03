@@ -2,7 +2,7 @@
 #include "../../basetypes.h"
 #include "Storage.h"
 #include <retesteth/EthChecks.h>
-#include <retesteth/ethObjects/object.h>
+#include <retesteth/testStructures/Common.h>
 
 namespace test
 {
@@ -22,9 +22,9 @@ AccountIncomplete::AccountIncomplete(DataObject const& _data)
         m_code = spBYTES(new BYTES(_data.atKey("code")));
     requireJsonFields(_data, "AccountIncomplete " + _data.getKey(),
         {{"shouldnotexist", {{DataType::String}, jsonField::Optional}},
-         {"storage", {{DataType::Array}, jsonField::Optional}},
-         {"balance", {{DataType::Array}, jsonField::Optional}},
-         {"nonce", {{DataType::Object}, jsonField::Optional}},
+         {"storage", {{DataType::Object}, jsonField::Optional}},
+         {"balance", {{DataType::String}, jsonField::Optional}},
+         {"nonce", {{DataType::String}, jsonField::Optional}},
          {"code", {{DataType::String}, jsonField::Optional}}});
     ETH_ERROR_REQUIRE_MESSAGE(_data.getSubObjects().size() > 0, "AccountIncomplete must have at least one object!");
 }

@@ -1,5 +1,7 @@
 #pragma once
 #include "../object.h"
+#include <retesteth/testStructures/Common.h>
+using namespace test::teststruct;
 
 using namespace  test;
 namespace test {
@@ -9,14 +11,15 @@ namespace test {
         scheme_env(DataObject const& _env):
                 object(_env)
         {
-            test::requireJsonFields(_env, _env.getKey(), {
-                {"currentCoinbase", {DataType::String} },
-                {"currentDifficulty", {DataType::String} },
-                {"currentGasLimit", {DataType::String} },
-                {"currentNumber", {DataType::String} },
-                {"currentTimestamp", {DataType::String} },
-                {"previousHash", {DataType::String} },
-            });
+            requireJsonFields(_env, _env.getKey(),
+                {
+                    {"currentCoinbase", {DataType::String}},
+                    {"currentDifficulty", {DataType::String}},
+                    {"currentGasLimit", {DataType::String}},
+                    {"currentNumber", {DataType::String}},
+                    {"currentTimestamp", {DataType::String}},
+                    {"previousHash", {DataType::String}},
+                });
 
             ETH_ERROR_REQUIRE_MESSAGE(dev::u256(_env.atKey("currentGasLimit").asString()) <=
                                           dev::u256("0x7fffffffffffffff"),

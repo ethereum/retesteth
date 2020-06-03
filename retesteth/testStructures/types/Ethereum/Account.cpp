@@ -1,6 +1,6 @@
 #include "Account.h"
 #include <retesteth/TestHelper.h>
-#include <retesteth/ethObjects/object.h>
+#include <retesteth/testStructures/Common.h>
 
 namespace test
 {

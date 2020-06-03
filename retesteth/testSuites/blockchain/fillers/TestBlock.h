@@ -1,5 +1,5 @@
 #pragma once
-#include <testStructures/Common.h>
+#include <testStructures/structures.h>
 
 typedef std::vector<BlockHeader> vectorOfSchemeBlock;
 class TestBlock

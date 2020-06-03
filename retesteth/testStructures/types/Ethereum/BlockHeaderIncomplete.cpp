@@ -2,7 +2,7 @@
 #include "../../basetypes.h"
 #include <libdevcore/Address.h>
 #include <retesteth/TestHelper.h>
-#include <retesteth/ethObjects/object.h>
+#include <retesteth/testStructures/Common.h>
 
 using namespace dev;
 

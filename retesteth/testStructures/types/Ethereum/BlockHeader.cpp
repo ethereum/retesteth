@@ -2,7 +2,7 @@
 #include "../../basetypes.h"
 #include <libdevcore/Address.h>
 #include <retesteth/TestHelper.h>
-#include <retesteth/ethObjects/object.h>
+#include <retesteth/testStructures/Common.h>
 
 using namespace dev;
 
@@ -45,9 +45,13 @@ BlockHeader::BlockHeader(DataObject const& _data)
     string const tkey = _data.count("transactionsRoot") ? "transactionsRoot" : "transactionsTrie";
     m_transactionsRoot = spFH32(new FH32(_data.atKey(tkey)));
 
+    // Allowed fields for this structure
     requireJsonFields(_data, "BlockHeader " + _data.getKey(),
         {{"bloom", {{DataType::String}, jsonField::Optional}},
+         {"logsBloom", {{DataType::String}, jsonField::Optional}},
          {"coinbase", {{DataType::String}, jsonField::Optional}},
+         {"author", {{DataType::String}, jsonField::Optional}},
+         {"miner", {{DataType::String}, jsonField::Optional}},
          {"difficulty", {{DataType::String}, jsonField::Required}},
          {"extraData", {{DataType::String}, jsonField::Required}},
          {"gasLimit", {{DataType::String}, jsonField::Required}},
@@ -58,10 +62,19 @@ BlockHeader::BlockHeader(DataObject const& _data)
          {"number", {{DataType::String}, jsonField::Required}},
          {"parentHash", {{DataType::String}, jsonField::Required}},
          {"receiptTrie", {{DataType::String}, jsonField::Optional}},
+         {"receiptsRoot", {{DataType::String}, jsonField::Optional}},
          {"stateRoot", {{DataType::String}, jsonField::Required}},
          {"timestamp", {{DataType::String}, jsonField::Required}},
          {"transactionsTrie", {{DataType::String}, jsonField::Optional}},
-         {"uncleHash", {{DataType::String}, jsonField::Optional}}});
+         {"transactionsRoot", {{DataType::String}, jsonField::Optional}},
+         {"sha3Uncles", {{DataType::String}, jsonField::Optional}},
+         {"uncleHash", {{DataType::String}, jsonField::Optional}},
+         {"size", {{DataType::String}, jsonField::Optional}},               // EthGetBlockBy field
+         {"totalDifficulty", {{DataType::String}, jsonField::Optional}},    // EthGetBlockBy field
+         {"transactions", {{DataType::Array}, jsonField::Optional}},        // EthGetBlockBy field
+         {"uncles", {{DataType::Array}, jsonField::Optional}}               // EthGetBlockBy field
+
+                      });
 }
 
 const DataObject BlockHeader::asDataObject() const

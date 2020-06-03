@@ -1,11 +1,13 @@
 #pragma once
 #include "../object.h"
 #include "scheme_account.h"
+#include <retesteth/testStructures/Common.h>
 
 #include <retesteth/TestHelper.h>
 #include <libdevcore/RLP.h>
 #include <libdevcore/SHA3.h>
 #include <libdevcrypto/Common.h>
+#include <retesteth/testStructures/Common.h>
 using namespace dev;
 
 namespace test {
@@ -26,7 +28,7 @@ public:
     {
         if (_transaction.count("secretKey") > 0)
         {
-            test::requireJsonFields(_transaction, "transaction",
+            requireJsonFields(_transaction, "transaction",
                 {{"data", {{DataType::String}, jsonField::Required}},
                     {"gasLimit", {{DataType::String}, jsonField::Required}},
                     {"gasPrice", {{DataType::String}, jsonField::Required}},
@@ -38,7 +40,7 @@ public:
         }
         else
         {
-            test::requireJsonFields(_transaction, "transaction",
+            requireJsonFields(_transaction, "transaction",
                 {{"data", {{DataType::String}, jsonField::Required}},
                     {"gasLimit", {{DataType::String}, jsonField::Required}},
                     {"gasPrice", {{DataType::String}, jsonField::Required}},
@@ -168,7 +170,7 @@ public:
         scheme_generalTransaction(DataObject const& _transaction):
             object(_transaction)
         {
-            test::requireJsonFields(_transaction, "transaction", {
+            requireJsonFields(_transaction, "transaction", {
                 {"data", {DataType::Array} },
                 {"gasLimit", {DataType::Array} },
                 {"gasPrice", {DataType::String} },

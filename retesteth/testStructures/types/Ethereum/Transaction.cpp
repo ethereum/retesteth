@@ -4,6 +4,7 @@
 #include <libdevcrypto/Common.h>
 #include <retesteth/EthChecks.h>
 #include <retesteth/TestHelper.h>
+#include <retesteth/testStructures/Common.h>
 
 namespace test
 {
@@ -39,6 +40,23 @@ Transaction::Transaction(DataObject const& _data)
             m_r = spVALUE(new VALUE(_data.atKey("r")));
             m_s = spVALUE(new VALUE(_data.atKey("s")));
         }
+        requireJsonFields(_data, "Transaction " + _data.getKey(),
+            {{"data", {{DataType::String}, jsonField::Required}},
+             {"gasLimit", {{DataType::String}, jsonField::Required}},
+             {"gasPrice", {{DataType::String}, jsonField::Required}},
+             {"nonce", {{DataType::String}, jsonField::Required}},
+             {"value", {{DataType::String}, jsonField::Required}},
+             {"to", {{DataType::String}, jsonField::Required}},
+             {"secretKey", {{DataType::String}, jsonField::Optional}},
+             {"v", {{DataType::String}, jsonField::Optional}},
+             {"r", {{DataType::String}, jsonField::Optional}},
+             {"s", {{DataType::String}, jsonField::Optional}},
+             {"blockHash", {{DataType::String}, jsonField::Optional}},           // EthGetBlockBy transaction
+             {"blockNumber", {{DataType::String}, jsonField::Optional}},         // EthGetBlockBy transaction
+             {"from", {{DataType::String}, jsonField::Optional}},                // EthGetBlockBy transaction
+             {"hash", {{DataType::String}, jsonField::Optional}},                // EthGetBlockBy transaction
+             {"transactionIndex", {{DataType::String}, jsonField::Optional}},    // EthGetBlockBy transaction
+                          });
     }
     catch (std::exception const& _ex)
     {

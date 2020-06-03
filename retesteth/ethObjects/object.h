@@ -10,12 +10,6 @@ using namespace dataobject;
 
 namespace test {
 void ver_ethereumfields(DataObject const&);
-void mod_removeLeadingZerosFromHexValues(DataObject&);
-void mod_removeLeadingZerosFromHexValuesEVEN(DataObject&);
-void mod_removeComments(DataObject& _obj);
-void mod_valuesToLowerCase(DataObject&);
-void mod_valueToCompactEvenHexPrefixed(DataObject&);
-void mod_keyToCompactEvenHexPrefixed(DataObject&);
 
 class object
 {
@@ -69,28 +63,6 @@ private:
     static std::string convertStringToHexPrefixed(string const& _input, short _minimumBytes);
 };
 
-/// check the presents of fields in a DataObject with a validation map
-typedef std::set<DataType> possibleType;
-void requireJsonFields(DataObject const& _o, std::string const& _section,
-    std::map<std::string, possibleType> const& _validationMap, bool _fail = false);
-
-enum jsonField
-{
-    Required,
-    Optional
-};
-using jsonTypeSet = std::set<DataType>;
-using jsonType = std::pair<jsonTypeSet, jsonField>;
-//! Check the json object with validation map that reuires certain field of certain type to be
-//! present in json
-/*!
-  \param _o a json object to check
-  \param _configName a string with json object name. Will apper in error message.
-  \param _validationMap a map with json objects that would be checked. "objName" ->
-  {js::str_type, jsonField::Required}
-*/
-void requireJsonFields(DataObject const& _o, std::string const& _configName,
-    std::map<std::string, jsonType> const& _validationMap);
 
 /// Convert hex/dec string to int
 bool isHexDigitsType(test::object::DigitsType _dtype);

@@ -1,7 +1,7 @@
 #include "GeneralStateTestFiller.h"
 #include <retesteth/EthChecks.h>
 #include <retesteth/Options.h>
-#include <retesteth/ethObjects/object.h>
+#include <retesteth/testStructures/Common.h>
 
 using namespace test::teststruct;
 GeneralStateTestFiller::GeneralStateTestFiller(DataObject const& _data)
@@ -56,6 +56,14 @@ StateTestInFiller::StateTestInFiller(DataObject const& _data)
             m_expectSections.push_back(StateTestFillerExpectSection(el));
         ETH_ERROR_REQUIRE_MESSAGE(m_expectSections.size() > 0, "StateTestFiller require expect sections!");
         m_name = _data.getKey();
+
+        requireJsonFields(_data, "StateTestInFiller " + _data.getKey(),
+            {{"_info", {{DataType::Object}, jsonField::Optional}},
+             {"env", {{DataType::Object}, jsonField::Required}},
+             {"expect", {{DataType::Array}, jsonField::Required}},
+             {"pre", {{DataType::Object}, jsonField::Required}},
+             {"transaction", {{DataType::Object}, jsonField::Required}}});
+
     }
     catch (std::exception const& _ex)
     {
