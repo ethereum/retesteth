@@ -17,15 +17,15 @@ BlockchainTestFillerEnv::BlockchainTestFillerEnv(DataObject const& _data)
         m_currentGasLimit = spVALUE(new VALUE(tmpData.atKey("gasLimit"), dev::u256("0x7fffffffffffffff")));
         m_currentNumber = spVALUE(new VALUE(tmpData.atKey("number")));
         m_currentTimestamp = spVALUE(new VALUE(tmpData.atKey("timestamp")));
-        m_previousHash = spFH32(new FH32(tmpData.atKey("parentHash")));
+        m_previousHash = spFH32(new FH32(_data.atKey("parentHash")));
 
-        m_currentExtraData = spBYTES(new BYTES(tmpData.atKey("extraData")));
-        m_currentNonce = spFH8(new FH8(tmpData.atKey("nonce")));
-        m_currentMixHash = spFH32(new FH32(tmpData.atKey("mixHash")));
+        m_currentExtraData = spBYTES(new BYTES(_data.atKey("extraData")));
+        m_currentNonce = spFH8(new FH8(_data.atKey("nonce")));
+        m_currentMixHash = spFH32(new FH32(_data.atKey("mixHash")));
     }
-    catch (DataObjectException const& _ex)
+    catch (std::exception const& _ex)
     {
-        ETH_ERROR_MESSAGE(_ex.what());
+        throw BaseEthException(string("BlockchainTestFillerEnv convertion error: ") + _ex.what());
     }
 }
 

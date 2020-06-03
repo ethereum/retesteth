@@ -56,7 +56,7 @@ void checkTestNameIsEqualToFileName(string const& _testName)
 {
     if (!TestOutputHelper::get().testFile().empty())
     {
-        string const& tFileName = TestOutputHelper::get().testFile().stem().string();
+        string const tFileName = TestOutputHelper::get().testFile().stem().string();
         ETH_ERROR_REQUIRE_MESSAGE(_testName + "Filler" == tFileName,
             TestOutputHelper::get().testFile().string() +
                 " contains a test with a different name '" + _testName + "'");

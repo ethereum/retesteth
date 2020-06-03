@@ -1,5 +1,6 @@
 #include "State.h"
 #include "Account.h"
+#include <retesteth/EthChecks.h>
 
 namespace test
 {
@@ -16,8 +17,15 @@ State::State(std::map<FH20, spAccount>& _accList)
 
 State::State(DataObject const& _data)
 {
-    for (auto const& el : _data.getSubObjects())
-        m_accounts[FH20(el.getKey())] = spAccountBase(new Account(el));
+    try
+    {
+        for (auto const& el : _data.getSubObjects())
+            m_accounts[FH20(el.getKey())] = spAccountBase(new Account(el));
+    }
+    catch (std::exception const& _ex)
+    {
+        throw BaseEthException(string("State parse error: ") + _ex.what() + _data.asJson());
+    }
 }
 
 Account const& State::getAccount(FH20 const& _address) const

@@ -61,6 +61,25 @@ BlockHeaderIncomplete::BlockHeaderIncomplete(DataObject const& _data)
                            !m_nonce.isEmpty() || !m_number.isEmpty() || !m_parentHash.isEmpty() || !m_receiptsRoot.isEmpty() ||
                            !m_sha3Uncles.isEmpty() || !m_stateRoot.isEmpty() || !m_timestamp.isEmpty() ||
                            !m_transactionsRoot.isEmpty();
+
+    requireJsonFields(_data, "BlockHeader " + _data.getKey(),
+        {{"bloom", {{DataType::String}, jsonField::Optional}},
+         {"coinbase", {{DataType::String}, jsonField::Optional}},
+         {"difficulty", {{DataType::String}, jsonField::Optional}},
+         {"extraData", {{DataType::String}, jsonField::Optional}},
+         {"gasLimit", {{DataType::String}, jsonField::Optional}},
+         {"gasUsed", {{DataType::String}, jsonField::Optional}},
+         {"hash", {{DataType::String}, jsonField::Optional}},
+         {"mixHash", {{DataType::String}, jsonField::Optional}},
+         {"nonce", {{DataType::String}, jsonField::Optional}},
+         {"number", {{DataType::String}, jsonField::Optional}},
+         {"parentHash", {{DataType::String}, jsonField::Optional}},
+         {"receiptTrie", {{DataType::String}, jsonField::Optional}},
+         {"stateRoot", {{DataType::String}, jsonField::Optional}},
+         {"timestamp", {{DataType::String}, jsonField::Optional}},
+         {"transactionsTrie", {{DataType::String}, jsonField::Optional}},
+         {"uncleHash", {{DataType::String}, jsonField::Optional}}});
+    ETH_ERROR_REQUIRE_MESSAGE(m_hasAtLeastOneField, "BlockHeaderIncomplete must have at least one field!");
 }
 
 BlockHeader BlockHeaderIncomplete::overwriteBlockHeader(BlockHeader const& _header) const

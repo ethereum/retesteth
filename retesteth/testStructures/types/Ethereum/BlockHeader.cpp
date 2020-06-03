@@ -44,6 +44,24 @@ BlockHeader::BlockHeader(DataObject const& _data)
     m_timestamp = spVALUE(new VALUE(_data.atKey("timestamp")));
     string const tkey = _data.count("transactionsRoot") ? "transactionsRoot" : "transactionsTrie";
     m_transactionsRoot = spFH32(new FH32(_data.atKey(tkey)));
+
+    requireJsonFields(_data, "BlockHeader " + _data.getKey(),
+        {{"bloom", {{DataType::String}, jsonField::Optional}},
+         {"coinbase", {{DataType::String}, jsonField::Optional}},
+         {"difficulty", {{DataType::String}, jsonField::Required}},
+         {"extraData", {{DataType::String}, jsonField::Required}},
+         {"gasLimit", {{DataType::String}, jsonField::Required}},
+         {"gasUsed", {{DataType::String}, jsonField::Required}},
+         {"hash", {{DataType::String}, jsonField::Optional}},
+         {"mixHash", {{DataType::String}, jsonField::Optional}},
+         {"nonce", {{DataType::String}, jsonField::Optional}},
+         {"number", {{DataType::String}, jsonField::Required}},
+         {"parentHash", {{DataType::String}, jsonField::Required}},
+         {"receiptTrie", {{DataType::String}, jsonField::Optional}},
+         {"stateRoot", {{DataType::String}, jsonField::Required}},
+         {"timestamp", {{DataType::String}, jsonField::Required}},
+         {"transactionsTrie", {{DataType::String}, jsonField::Optional}},
+         {"uncleHash", {{DataType::String}, jsonField::Optional}}});
 }
 
 const DataObject BlockHeader::asDataObject() const

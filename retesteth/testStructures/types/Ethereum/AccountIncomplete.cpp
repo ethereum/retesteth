@@ -1,6 +1,8 @@
 #include "AccountIncomplete.h"
 #include "../../basetypes.h"
 #include "Storage.h"
+#include <retesteth/EthChecks.h>
+#include <retesteth/ethObjects/object.h>
 
 namespace test
 {
@@ -18,6 +20,13 @@ AccountIncomplete::AccountIncomplete(DataObject const& _data)
         m_nonce = spVALUE(new VALUE(_data.atKey("nonce")));
     if (_data.count("code"))
         m_code = spBYTES(new BYTES(_data.atKey("code")));
+    requireJsonFields(_data, "AccountIncomplete " + _data.getKey(),
+        {{"shouldnotexist", {{DataType::String}, jsonField::Optional}},
+         {"storage", {{DataType::Array}, jsonField::Optional}},
+         {"balance", {{DataType::Array}, jsonField::Optional}},
+         {"nonce", {{DataType::Object}, jsonField::Optional}},
+         {"code", {{DataType::String}, jsonField::Optional}}});
+    ETH_ERROR_REQUIRE_MESSAGE(_data.getSubObjects().size() > 0, "AccountIncomplete must have at least one object!");
 }
 
 const DataObject AccountIncomplete::asDataObject() const

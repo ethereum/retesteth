@@ -23,7 +23,7 @@ StateTestFillerEnv::StateTestFillerEnv(DataObject const& _data)
         m_genesisTimestamp = spVALUE(new VALUE(0));
 
         // Do not allow hash without 0x
-        m_previousHash = spFH32(new FH32(_data.atKey("previousHash")));
+        m_previousHash = spFH32(new FH32(tmpData.atKey("previousHash")));
 
         DataObject tmpD;
         tmpD = "0x00";  // State Tests extra data is 0x00

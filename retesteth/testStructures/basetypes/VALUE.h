@@ -15,8 +15,6 @@ struct VALUE : GCP_SPointerBase
 {
     VALUE(dev::u256, dev::u256 const& _limit = dev::u256("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
     VALUE(int, dev::u256 const& _limit = dev::u256("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
-    VALUE(string const&,
-        dev::u256 const& _limit = dev::u256("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
     VALUE(DataObject const&,
         dev::u256 const& _limit = dev::u256("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
     bool operator!=(VALUE const& _rhs) const { return m_data != _rhs.asU256(); }
@@ -30,7 +28,7 @@ struct VALUE : GCP_SPointerBase
 
 private:
     VALUE() {}
-    void verifyHexString(std::string const& _s) const;
+    void verifyHexString(std::string const& _s, std::string const& _k = string()) const;
     void checkLimit(dev::u256 const& _limit) const;
     dev::u256 m_data;
 };

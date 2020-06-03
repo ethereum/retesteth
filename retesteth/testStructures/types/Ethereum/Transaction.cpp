@@ -3,6 +3,7 @@
 #include <libdevcore/SHA3.h>
 #include <libdevcrypto/Common.h>
 #include <retesteth/EthChecks.h>
+#include <retesteth/TestHelper.h>
 
 namespace test
 {
@@ -10,29 +11,38 @@ namespace teststruct
 {
 Transaction::Transaction(DataObject const& _data)
 {
-    m_data = spBYTES(new BYTES(_data.atKey("data").asString()));
-    m_gasLimit = spVALUE(new VALUE(_data.atKey("gasLimit")));
-    m_gasPrice = spVALUE(new VALUE(_data.atKey("gasPrice")));
-    m_nonce = spVALUE(new VALUE(_data.atKey("nonce")));
-    m_value = spVALUE(new VALUE(_data.atKey("value")));
-
-    // geth retesteth return to as null in some bc tests
-    if (_data.atKey("to").type() == DataType::Null || _data.atKey("to").asString().empty())
-        m_creation = true;
-    else
+    try
     {
-        m_creation = false;
-        m_to = spFH20(new FH20(_data.atKey("to")));
+        m_data = spBYTES(new BYTES(_data.atKey("data")));
+        m_gasLimit = spVALUE(new VALUE(_data.atKey("gasLimit")));
+        m_gasPrice = spVALUE(new VALUE(_data.atKey("gasPrice")));
+        m_nonce = spVALUE(new VALUE(_data.atKey("nonce")));
+        m_value = spVALUE(new VALUE(_data.atKey("value")));
+
+        // geth retesteth return to as null in some bc tests
+        if (_data.atKey("to").type() == DataType::Null || _data.atKey("to").asString().empty())
+            m_creation = true;
+        else
+        {
+            m_creation = false;
+            m_to = spFH20(new FH20(_data.atKey("to")));
+        }
+
+        if (_data.count("secretKey"))
+        {
+            VALUE a(_data.atKey("secretKey"));
+            buildVRS(VALUE(_data.atKey("secretKey")));
+        }
+        else
+        {
+            m_v = spVALUE(new VALUE(_data.atKey("v"), dev::u256("0xff")));
+            m_r = spVALUE(new VALUE(_data.atKey("r")));
+            m_s = spVALUE(new VALUE(_data.atKey("s")));
+        }
     }
-
-
-    if (_data.count("secretKey"))
-        buildVRS(VALUE(_data.atKey("secretKey")));
-    else
+    catch (std::exception const& _ex)
     {
-        m_v = spVALUE(new VALUE(_data.atKey("v"), dev::u256("0xff")));
-        m_r = spVALUE(new VALUE(_data.atKey("r")));
-        m_s = spVALUE(new VALUE(_data.atKey("s")));
+        throw BaseEthException(string("Transaction convertion error: ") + _ex.what() + _data.asJson());
     }
 }
 
@@ -46,7 +56,7 @@ void Transaction::streamHeader(dev::RLPStream& _s) const
     else
         _s << dev::Address(to().asString());
     _s << value().asU256();
-    _s << dev::fromHex(data().asString());
+    _s << test::sfromHex(data().asString());
 }
 
 void Transaction::buildVRS(VALUE const& _secret)

@@ -30,13 +30,26 @@ void mod_removeComments(DataObject& _obj)
         _obj.removeKey(key);
 }
 
+namespace
+{
+string toCompactHexPrefixed(string const& _str, size_t _minSize)
+{
+    string prefix = string();
+    object::DigitsType t = object::stringIntegerType(_str);
+    if (t == object::DigitsType::Hex || t == object::UnEvenHex)
+        prefix = "0x";
+    return dev::toCompactHexPrefixed(u256(prefix + _str), _minSize);
+}
+
+}  // namespace
+
 void mod_valueToCompactEvenHexPrefixed(DataObject& _obj)
 {
     if (_obj.type() == DataType::String)
     {
         try
         {
-            _obj.setString(dev::toCompactHexPrefixed(u256(_obj.asString()), 1));
+            _obj.setString(toCompactHexPrefixed(_obj.asString(), 1));
         }
         catch (std::exception const& _ex)
         {
@@ -49,7 +62,7 @@ void mod_keyToCompactEvenHexPrefixed(DataObject& _obj)
 {
     try
     {
-        _obj.setKey(dev::toCompactHexPrefixed(u256(_obj.getKey()), 1));
+        _obj.setKey(toCompactHexPrefixed(_obj.getKey(), 1));
     }
     catch (std::exception const& _ex)
     {

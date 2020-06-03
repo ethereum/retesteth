@@ -223,7 +223,7 @@ string prepareVersionString()
 {
     // cpp-1.3.0+commit.6be76b64.Linux.g++
     string commit(DEV_QUOTED(ETH_COMMIT_HASH));
-	string version = "retesteth-" + string(ETH_PROJECT_VERSION);
+    string version = "retesteth-" + string(ETH_PROJECT_VERSION) + "-" + string(ETH_VERSION_SUFFIX);
     version += "+commit." + commit.substr(0, 8);
     version +=
         "." + string(DEV_QUOTED(ETH_BUILD_OS)) + "." + string(DEV_QUOTED(ETH_BUILD_COMPILER));

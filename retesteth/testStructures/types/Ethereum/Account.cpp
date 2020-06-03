@@ -17,11 +17,16 @@ Account::Account(FH20 const& _addr, VALUE const& _balance, VALUE const& _nonce, 
 
 Account::Account(DataObject const& _data)
 {
+    m_address = spFH20(new FH20(_data.getKey()));
     m_balance = spVALUE(new VALUE(_data.atKey("balance")));
     m_nonce = spVALUE(new VALUE(_data.atKey("nonce")));
     m_code = spBYTES(new BYTES(_data.atKey("code")));
-    m_address = spFH20(new FH20(_data.getKey()));
     m_storage = spStorage(new Storage(_data.atKey("storage")));
+    requireJsonFields(_data, "Account " + _data.getKey(),
+        {{"balance", {DataType::String}},
+         {"code", {DataType::String}},
+         {"nonce", {DataType::String}},
+         {"storage", {DataType::Object}}});
 }
 
 const DataObject Account::asDataObject() const

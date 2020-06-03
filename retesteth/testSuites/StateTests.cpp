@@ -119,13 +119,13 @@ DataObject FillTestAsBlockchain(StateTestInFiller const& _test)
 
                     DataObject request = prepareChainParams(fork, SealEngine::NoProof, _test.Pre(), _test.Env());
                     session.test_setChainParams(request);
-                    session.test_modifyTimestamp(_test.Env().firstBlockTimestamp().asDecString());
+                    session.test_modifyTimestamp(_test.Env().firstBlockTimestamp());
                     FH32 trHash(session.eth_sendRawTransaction(tr.transaction().getSignedRLP()));
 
                     // Mine a block, execute transaction
                     session.test_mineBlocks(1);
                     VALUE latestBlockN(session.eth_blockNumber());
-                    EthGetBlockBy remoteBlock(session.eth_getBlockByNumber(latestBlockN.asDecString(), Request::FULLOBJECTS));
+                    EthGetBlockBy remoteBlock(session.eth_getBlockByNumber(latestBlockN, Request::FULLOBJECTS));
                     ETH_ERROR_REQUIRE_MESSAGE(
                         remoteBlock.hasTransaction(trHash), "StateTest::FillTest: TR hash not found in mined block!");
                     tr.markExecuted();
@@ -237,12 +237,12 @@ DataObject FillTest(StateTestInFiller const& _test)
                     if (!expect.checkIndexes(tr.dataInd(), tr.gasInd(), tr.valueInd()))
                         continue;
 
-                    session.test_modifyTimestamp(_test.Env().firstBlockTimestamp().asDecString());
+                    session.test_modifyTimestamp(_test.Env().firstBlockTimestamp());
                     FH32 trHash(session.eth_sendRawTransaction(tr.transaction().getSignedRLP()));
                     session.test_mineBlocks(1);
                     VALUE latestBlockN(session.eth_blockNumber());
 
-                    EthGetBlockBy blockInfo(session.eth_getBlockByNumber(latestBlockN.asDecString(), Request::LESSOBJECTS));
+                    EthGetBlockBy blockInfo(session.eth_getBlockByNumber(latestBlockN, Request::LESSOBJECTS));
                     ETH_ERROR_REQUIRE_MESSAGE(
                         blockInfo.hasTransaction(trHash), "StateTest::FillTest: TR hash not found in mined block!");
                     tr.markExecuted();
@@ -333,12 +333,12 @@ void RunTest(StateTestInFilled const& _test)
 
                 if (checkIndexes)
                 {
-                    session.test_modifyTimestamp(_test.Env().firstBlockTimestamp().asDecString());
+                    session.test_modifyTimestamp(_test.Env().firstBlockTimestamp());
                     FH32 trHash(session.eth_sendRawTransaction(tr.transaction().getSignedRLP()));
                     session.test_mineBlocks(1);
 
                     VALUE latestBlockN(session.eth_blockNumber());
-                    EthGetBlockBy blockInfo(session.eth_getBlockByNumber(latestBlockN.asDecString(), Request::LESSOBJECTS));
+                    EthGetBlockBy blockInfo(session.eth_getBlockByNumber(latestBlockN, Request::LESSOBJECTS));
                     ETH_ERROR_REQUIRE_MESSAGE(
                         blockInfo.hasTransaction(trHash), "StateTest::RunTest: TR hash not found in mined block!");
                     tr.markExecuted();

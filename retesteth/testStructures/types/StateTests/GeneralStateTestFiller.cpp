@@ -37,11 +37,16 @@ StateTestInFiller::StateTestInFiller(DataObject const& _data)
         DataObject tmpD = _data.atKey("pre");
         for (auto& acc : tmpD.getSubObjectsUnsafe())
         {
+            if (acc.getKey()[1] != 'x')
+                acc.setKey("0x" + acc.getKey());
             acc["code"].setString(test::replaceCode(acc.atKey("code").asString()));
             acc["nonce"].performModifier(mod_valueToCompactEvenHexPrefixed);
             acc["balance"].performModifier(mod_valueToCompactEvenHexPrefixed);
             for (auto& rec : acc["storage"].getSubObjectsUnsafe())
+            {
                 rec.performModifier(mod_keyToCompactEvenHexPrefixed);
+                rec.performModifier(mod_valueToCompactEvenHexPrefixed);
+            }
         }
         m_pre = spState(new State(tmpD));
         // ---

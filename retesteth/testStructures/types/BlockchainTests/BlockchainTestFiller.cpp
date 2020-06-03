@@ -7,46 +7,54 @@ using namespace test::teststruct;
 
 BlockchainTestInFiller::BlockchainTestInFiller(DataObject const& _data)
 {
-    m_hasAtLeastOneUncle = false;
-    m_name = _data.getKey();
-    m_info = spInfoIncomplete(new InfoIncomplete(_data.atKey("_info")));
-    m_env = spBlockchainTestFillerEnv(new BlockchainTestFillerEnv(_data.atKey("genesisBlockHeader")));
-
-    string const sEngine = _data.atKey("sealEngine").asString();
-    if (sEngine == "Ethash")
-        m_sealEngine = SealEngine::Ethash;
-    else if (sEngine == "NoProof")
-        m_sealEngine = SealEngine::NoProof;
-    else
-        ETH_ERROR_MESSAGE("BlockchainTestInFiller: Unknown sealEngine: " + sEngine);
-
-    // Process expect section
-    std::set<FORK> knownForks;
-    for (auto const& el : _data.atKey("expect").getSubObjects())
+    try
     {
-        m_expects.push_back(el);
-        BlockchainTestFillerExpectSection const& expect = m_expects.at(m_expects.size() - 1);
-        for (auto const& fork : expect.forks())
+        m_hasAtLeastOneUncle = false;
+        m_name = _data.getKey();
+        if (_data.count("_info"))
+            m_info = spInfoIncomplete(new InfoIncomplete(_data.atKey("_info")));
+        m_env = spBlockchainTestFillerEnv(new BlockchainTestFillerEnv(_data.atKey("genesisBlockHeader")));
+
+        string const sEngine = _data.atKey("sealEngine").asString();
+        if (sEngine == "Ethash")
+            m_sealEngine = SealEngine::Ethash;
+        else if (sEngine == "NoProof")
+            m_sealEngine = SealEngine::NoProof;
+        else
+            ETH_ERROR_MESSAGE("BlockchainTestInFiller: Unknown sealEngine: " + sEngine);
+
+        // Process expect section
+        std::set<FORK> knownForks;
+        for (auto const& el : _data.atKey("expect").getSubObjects())
         {
-            if (knownForks.count(fork))
-                ETH_ERROR_MESSAGE("Blockchain test filler expect section contains multiple records of the same fork");
-            knownForks.insert(fork);
+            m_expects.push_back(el);
+            BlockchainTestFillerExpectSection const& expect = m_expects.at(m_expects.size() - 1);
+            for (auto const& fork : expect.forks())
+            {
+                if (knownForks.count(fork))
+                    ETH_ERROR_MESSAGE("Blockchain test filler expect section contains multiple records of the same fork");
+                knownForks.insert(fork);
+            }
+        }
+
+        ETH_ERROR_REQUIRE_MESSAGE(m_expects.size() > 0, "BlockchainTestFiller require expect section!");
+
+        if (_data.count("exceptions"))
+        {
+            for (size_t i = _data.atKey("exceptions").getSubObjects().size(); i > 0; i--)
+                m_exceptions.push_back(_data.atKey("exceptions").getSubObjects().at(i - 1).asString());
+        }
+
+        for (auto const& el : _data.atKey("blocks").getSubObjects())
+        {
+            m_blocks.push_back(BlockchainTestFillerBlock(el));
+            if (m_blocks.at(m_blocks.size() - 1).uncles().size() > 0)
+                m_hasAtLeastOneUncle = true;
         }
     }
-
-    ETH_ERROR_REQUIRE_MESSAGE(m_expects.size() > 0, "BlockchainTestFiller require expect section!");
-
-    if (_data.count("exceptions"))
+    catch (std::exception const& _ex)
     {
-        for (size_t i = _data.atKey("exceptions").getSubObjects().size(); i > 0; i--)
-            m_exceptions.push_back(_data.atKey("exceptions").getSubObjects().at(i - 1).asString());
-    }
-
-    for (auto const& el : _data.atKey("blocks").getSubObjects())
-    {
-        m_blocks.push_back(BlockchainTestFillerBlock(el));
-        if (m_blocks.at(m_blocks.size() - 1).uncles().size() > 0)
-            m_hasAtLeastOneUncle = true;
+        ETH_ERROR_MESSAGE(string("BlockchainTestInFiller convertion error: ") + _ex.what());
     }
 }
 

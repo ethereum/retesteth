@@ -25,39 +25,35 @@ VALUE::VALUE(int _data, dev::u256 const& _limit)
     checkLimit(_limit);
 }
 
-VALUE::VALUE(string const& _data, dev::u256 const& _limit)
-{
-    verifyHexString(_data);
-    m_data = dev::u256(_data);
-    checkLimit(_limit);
-}
-
 VALUE::VALUE(DataObject const& _data, dev::u256 const& _limit)
 {
     if (_data.type() == DataType::Integer)
         m_data = _data.asInt();
     else
     {
-        verifyHexString(_data.asString());
+        verifyHexString(_data.asString(), _data.getKey());
         m_data = dev::u256(_data.asString());
     }
     checkLimit(_limit);
 }
 
-void VALUE::verifyHexString(std::string const& _s) const
+void VALUE::verifyHexString(std::string const& _s, std::string const& _k) const
 {
+    string const suffix = _k.empty() ? _k : " (key: " + _k + " )";
     if (_s[0] == '0' && _s[1] == 'x')
     {
         if (_s.size() == 2)
-            ETH_ERROR_MESSAGE("VALUE set as empty byte string: `" + _s + "`");
+            ETH_ERROR_MESSAGE("VALUE set as empty byte string: `" + _s + "`" + suffix);
         // don't allow 0x001, but allow 0x0, 0x00
         if ((_s[2] == '0' && _s.size() % 2 == 1 && _s.size() != 3) ||
             (_s[2] == '0' && _s[3] == '0' && _s.size() % 2 == 0 && _s.size() > 4))
-            ETH_ERROR_MESSAGE("VALUE has leading 0 `" + _s + "`");
+            ETH_ERROR_MESSAGE("VALUE has leading 0 `" + _s + "`" + suffix);
 
         if (_s.size() > 64 + 2)
-            ETH_ERROR_MESSAGE("VALUE  >u256 `" + _s + "`");
+            ETH_ERROR_MESSAGE("VALUE  >u256 `" + _s + "`" + suffix);
     }
+    else
+        ETH_ERROR_MESSAGE("VALUE is not prefixed hex `" + _s + "`" + suffix);
 }
 
 void VALUE::checkLimit(dev::u256 const& _limit) const
