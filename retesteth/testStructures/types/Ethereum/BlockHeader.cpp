@@ -1,6 +1,7 @@
 #include "BlockHeader.h"
 #include "../../basetypes.h"
 #include <libdevcore/Address.h>
+#include <libdevcore/SHA3.h>
 #include <retesteth/TestHelper.h>
 #include <retesteth/testStructures/Common.h>
 
@@ -73,7 +74,6 @@ BlockHeader::BlockHeader(DataObject const& _data)
          {"totalDifficulty", {{DataType::String}, jsonField::Optional}},    // EthGetBlockBy field
          {"transactions", {{DataType::Array}, jsonField::Optional}},        // EthGetBlockBy field
          {"uncles", {{DataType::Array}, jsonField::Optional}}               // EthGetBlockBy field
-
                       });
 }
 
@@ -125,6 +125,11 @@ const RLPStream BlockHeader::asRLPStream() const
 bool BlockHeader::operator==(BlockHeader const& _rhs) const
 {
     return asDataObject() == _rhs.asDataObject();
+}
+
+void BlockHeader::recalculateHash()
+{
+    m_hash = spFH32(new FH32("0x" + toString(dev::sha3(asRLPStream().out()))));
 }
 
 }  // namespace teststruct

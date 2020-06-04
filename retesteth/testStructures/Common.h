@@ -18,6 +18,7 @@ void mod_removeComments(DataObject& _obj);
 void mod_valuesToLowerCase(DataObject&);
 void mod_valueToCompactEvenHexPrefixed(DataObject&);
 void mod_keyToCompactEvenHexPrefixed(DataObject&);
+long int hexOrDecStringToInt(string const& _str);
 
 
 // Prepare chain params rpc request
@@ -43,6 +44,12 @@ using jsonType = std::pair<jsonTypeSet, jsonField>;
 void requireJsonFields(
     DataObject const& _o, std::string const& _configName, std::map<std::string, jsonType> const& _validationMap);
 
+// Compile LLL in code
+// Convert dec fields to hex, add 0x prefix to accounts and storage keys
+DataObject convertDecStateToHex(DataObject const& _data);
+
+// Convert dec fields to hex, add 0x prefix to accounts and storage keys
+DataObject convertDecBlockheaderIncompleteToHex(DataObject const& _data);
 
 }  // namespace teststruct
 }  // namespace test

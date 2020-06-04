@@ -20,8 +20,8 @@ BlockchainTestFillerEnv::BlockchainTestFillerEnv(DataObject const& _data)
         m_previousHash = spFH32(new FH32(_data.atKey("parentHash")));
 
         m_currentExtraData = spBYTES(new BYTES(_data.atKey("extraData")));
-        m_currentNonce = spFH8(new FH8(_data.atKey("nonce")));
-        m_currentMixHash = spFH32(new FH32(_data.atKey("mixHash")));
+        m_currentNonce = spFH8(new FH8(FH8::zero()));       // spFH8(new FH8(_data.atKey("nonce")));
+        m_currentMixHash = spFH32(new FH32(FH32::zero()));  // spFH32(new FH32(_data.atKey("mixHash")));
     }
     catch (std::exception const& _ex)
     {

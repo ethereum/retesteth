@@ -1,7 +1,7 @@
 #include "BlockchainTestFiller.h"
 #include <retesteth/EthChecks.h>
 #include <retesteth/Options.h>
-#include <retesteth/ethObjects/object.h>
+#include <retesteth/testStructures/Common.h>
 
 using namespace test::teststruct;
 
@@ -14,6 +14,7 @@ BlockchainTestInFiller::BlockchainTestInFiller(DataObject const& _data)
         if (_data.count("_info"))
             m_info = spInfoIncomplete(new InfoIncomplete(_data.atKey("_info")));
         m_env = spBlockchainTestFillerEnv(new BlockchainTestFillerEnv(_data.atKey("genesisBlockHeader")));
+        m_pre = spState(new State(convertDecStateToHex(_data.atKey("pre"))));
 
         string const sEngine = _data.atKey("sealEngine").asString();
         if (sEngine == "Ethash")
@@ -51,6 +52,15 @@ BlockchainTestInFiller::BlockchainTestInFiller(DataObject const& _data)
             if (m_blocks.at(m_blocks.size() - 1).uncles().size() > 0)
                 m_hasAtLeastOneUncle = true;
         }
+
+        requireJsonFields(_data, "BlockchainTestInFiller " + _data.getKey(),
+            {{"_info", {{DataType::Object}, jsonField::Optional}},
+             {"sealEngine", {{DataType::String}, jsonField::Required}},
+             {"genesisBlockHeader", {{DataType::Object}, jsonField::Required}},
+             {"expect", {{DataType::Array}, jsonField::Required}},
+             {"exceptions", {{DataType::Array}, jsonField::Optional}},
+             {"pre", {{DataType::Object}, jsonField::Required}},
+             {"blocks", {{DataType::Array}, jsonField::Required}}});
     }
     catch (std::exception const& _ex)
     {

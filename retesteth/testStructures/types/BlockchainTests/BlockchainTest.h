@@ -4,8 +4,8 @@
 #include "../Ethereum/State.h"
 #include "../StateTests/Filled/Info.h"
 
-#include "Base/BlockchainTestEnv.h"
 #include "Filled/BlockchainTestBlock.h"
+#include "Filled/BlockchainTestEnv.h"
 #include <retesteth/dataObject/DataObject.h>
 #include <retesteth/dataObject/SPointer.h>
 

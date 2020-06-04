@@ -64,8 +64,5 @@ private:
 };
 
 
-/// Convert hex/dec string to int
-bool isHexDigitsType(test::object::DigitsType _dtype);
-long int hexOrDecStringToInt(string const& _str);
 }
 

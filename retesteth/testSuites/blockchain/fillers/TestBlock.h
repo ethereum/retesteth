@@ -33,33 +33,43 @@ public:
     void setNextBlockForked(BlockHeader const& _next) { m_nextBlockForked = spBlockHeader(new BlockHeader(_next)); }
     BlockHeader const& getNextBlockForked() const { return m_nextBlockForked.getCContent(); }
 
-    BYTES const getRLP() const { return m_block.getCContent().getRLP(); }
+    BYTES const getRLP() const
+    {
+        if (!m_block.isEmpty())
+            return m_block.getCContent().getRLP();
+        return m_rawRLP.getCContent();
+    }
 
-    // Attach Uncle header to EthereumBlock
+    // Attach Uncle header to EthereumBlock (the one described in tests)
     void addUncle(BlockHeader const& _uncle) { m_block.getContent().addUncle(_uncle); }
     std::vector<BlockHeader> const& getUncles() const { return m_block.getCContent().uncles(); }
 
-    // Attach Transaction header to EthereumBlock
+    // Attach Transaction header to EthereumBlock (the one described in tests)
     void addTransaction(Transaction const& _tr) { m_block.getContent().addTransaction(_tr); }
+
+    // Attach actual RLP of a block that been imported
+    void addActualRLP(BYTES const& _rlp) { m_actualRLP = spBYTES(new BYTES(_rlp)); }
 
 
     DataObject asDataObject() const
     {
         DataObject res;
         res["chainname"] = m_chainName;
-        res["chainnet"] = m_chainNet.getCContent().asString();
-        res["blocknumber"] = m_blockNumber.getCContent().asDecString();
+        // res["chainnetwork"] = m_chainNet.getCContent().asString();
+        res["blocknumber"] = m_blockNumber.getCContent().asString();
         if (!m_expectException.empty())
             res["expectException"] = m_expectException;
 
         if (m_rawRLP.isEmpty())
         {
-            res["blockHeader"] = m_block.getCContent().header().asDataObject();
-            for (auto const& tr : m_block.getCContent().transactions())
-                res["transactions"].addArrayObject(tr.asDataObject());
+            res["uncleHeaders"] = DataObject(DataType::Array);
             for (auto const& un : m_block.getCContent().uncles())
                 res["uncleHeaders"].addArrayObject(un.asDataObject());
-            res["rlp"] = m_block.getCContent().getRLP().asString();
+            res["blockHeader"] = m_block.getCContent().header().asDataObject();
+            res["transactions"] = DataObject(DataType::Array);
+            for (auto const& tr : m_block.getCContent().transactions())
+                res["transactions"].addArrayObject(tr.asDataObject());
+            res["rlp"] = m_actualRLP.getCContent().asString();
         }
         else
             res["rlp"] = m_rawRLP.getCContent().asString();
@@ -75,6 +85,7 @@ private:
     string m_expectException;
     spVALUE m_blockNumber;
     spBYTES m_rawRLP;
+    spBYTES m_actualRLP;
     bool m_doNotExport;
 
     // A block mined in paralel representing an uncle (it has the same blocknumber)

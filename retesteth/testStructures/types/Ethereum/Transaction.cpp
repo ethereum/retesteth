@@ -46,7 +46,7 @@ Transaction::Transaction(DataObject const& _data)
              {"gasPrice", {{DataType::String}, jsonField::Required}},
              {"nonce", {{DataType::String}, jsonField::Required}},
              {"value", {{DataType::String}, jsonField::Required}},
-             {"to", {{DataType::String}, jsonField::Required}},
+             {"to", {{DataType::String, DataType::Null}, jsonField::Required}},
              {"secretKey", {{DataType::String}, jsonField::Optional}},
              {"v", {{DataType::String}, jsonField::Optional}},
              {"r", {{DataType::String}, jsonField::Optional}},
@@ -56,6 +56,7 @@ Transaction::Transaction(DataObject const& _data)
              {"from", {{DataType::String}, jsonField::Optional}},                // EthGetBlockBy transaction
              {"hash", {{DataType::String}, jsonField::Optional}},                // EthGetBlockBy transaction
              {"transactionIndex", {{DataType::String}, jsonField::Optional}},    // EthGetBlockBy transaction
+             {"invalid", {{DataType::String}, jsonField::Optional}},             // BlockchainTest filling
                           });
     }
     catch (std::exception const& _ex)

@@ -15,7 +15,6 @@ namespace teststruct
 struct BlockHeaderIncomplete : GCP_SPointerBase
 {
     BlockHeaderIncomplete(DataObject const&);
-    bool hasAtLeastOneField() const { return m_hasAtLeastOneField; }
     BlockHeader overwriteBlockHeader(BlockHeader const& _header) const;
 
 private:
@@ -36,7 +35,6 @@ private:
     spFH32 m_stateRoot;
     spVALUE m_timestamp;
     spFH32 m_transactionsRoot;
-    bool m_hasAtLeastOneField = false;
 };
 
 typedef GCP_SPointer<BlockHeaderIncomplete> spBlockHeaderIncomplete;

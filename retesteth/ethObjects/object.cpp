@@ -78,21 +78,6 @@ bool object::validateHash(std::string const& _hash, size_t _size)
 }
 
 
-bool isHexDigitsType(test::object::DigitsType _dtype)
-{
-    return (_dtype == test::object::DigitsType::HexPrefixed ||
-            _dtype == test::object::DigitsType::UnEvenHexPrefixed);
-}
-
-long int hexOrDecStringToInt(string const& _str)
-{
-    if (isHexDigitsType(test::object::stringIntegerType(_str)))
-        return (long int)dev::u256(_str);
-    else
-        return atoi(_str.c_str());
-}
-
-
 std::mutex g_strFindMutex;
 object::DigitsType object::stringIntegerType(std::string const& _string)
 {

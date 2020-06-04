@@ -47,34 +47,44 @@ void TestBlockchain::generateBlock(
         m_session.eth_sendRawTransaction(tr.tr().getSignedRLP());
 
     // Remote client generate block with transactions
-    // An if it has uncles or blockheader overwrite we perform manual overwrite and reimport block again
-    BYTES rawRLP(DataObject("0x"));  // if block mining failed this will be the rawRLP of import
+    // And if it has uncles or blockheader overwrite we perform manual overwrite and reimport block again
+    // Then construct this RLP of a modifed block (with new header and uncles)
+    // if block mining failed this will be the rawRLP of import
+    BYTES rawRLP(DataObject("0x"));
     GCP_SPointer<EthGetBlockBy> latestBlock = mineBlock(_block, _uncles, rawRLP);
 
     if (latestBlock.isEmpty())
     {
         // if block mining failed, the block is invalid
-        TestBlock newBlock(rawRLP, _block.chainName(), _block.chainNet(), m_blocks.size() + 1,
-            _block.getExpectException(m_network), _block.isDoNotImportOnClient());
+        FORK const& newBlockNet = _block.hasChainNet() ? _block.chainNet() : m_network;
+        TestBlock newBlock(rawRLP, _block.chainName(), newBlockNet, m_blocks.size(), _block.getExpectException(m_network),
+            _block.isDoNotImportOnClient());
         m_blocks.push_back(newBlock);
     }
     else
     {
         // if block mining succeed. the block is valid.
-        TestBlock newBlock(latestBlock.getCContent().header(), _block.chainName(), _block.chainNet(), m_blocks.size() + 1,
+        FORK const& newBlockNet = _block.hasChainNet() ? _block.chainNet() : m_network;
+        TestBlock newBlock(latestBlock.getCContent().header(), _block.chainName(), newBlockNet, m_blocks.size(),
             _block.getExpectException(m_network), _block.isDoNotImportOnClient());
 
-        // Register all test transactions
+        // Register all test transactions (the one described in test)
         for (auto const& tr : _block.transactions())
-            newBlock.addTransaction(tr.tr());
+        {
+            if (!tr.isMarkedInvalid())  // some transactions in fillers might be expected to fail
+                newBlock.addTransaction(tr.tr());
+        }
 
-        // Register all test uncles
+        // Register all test uncles (the one described in test)
         for (auto const& uncle : _uncles)
             newBlock.addUncle(uncle);
 
         // Ask remote client to generate a parallel blockheader that will later be used for uncles
         if (_generateUncles)
             newBlock.setNextBlockForked(mineNextBlockAndRewert());
+
+        // The test BlockchainTest::Block::RLP field. the one that actually would be imported in hive
+        newBlock.addActualRLP(rawRLP);
 
         m_blocks.push_back(newBlock);
     }
@@ -181,10 +191,9 @@ BlockHeader TestBlockchain::mineNextBlockAndRewert()
 
     // assign a random coinbase for an uncle block to avoid UncleIsAncestor exception
     // otherwise this uncle would be similar to a block mined
-    BlockHeader ret(nextBlock.header());
-    FH20& coinbase = const_cast<FH20&>(ret.author());
-    coinbase = FH20::random();
-    return ret;
+    DataObject head = nextBlock.header().asDataObject();
+    head["coinbase"] = FH20::random().asString();
+    return BlockHeader(head);
 }
 
 string TestBlockchain::prepareDebugInfoString(string const& _newBlockChainName)
@@ -287,19 +296,17 @@ FH32 TestBlockchain::postmineBlockHeader(BlockchainTestFillerBlock const& _block
         if (_blockInTest.hasRelTimeStamp())
         {
             EthGetBlockBy previousBlock(m_session.eth_getBlockByNumber(_latestBlockNumber - 1, Request::LESSOBJECTS));
-            VALUE const& val = managedBlock.header().timestamp();
-            VALUE& valRef = const_cast<VALUE&>(val);
-            valRef = previousBlock.header().timestamp() + _blockInTest.relTimeStamp();
+            managedBlock.headerUnsafe().setTimestamp(previousBlock.header().timestamp() + _blockInTest.relTimeStamp());
         }
 
-        if (_blockInTest.blockHeader().hasAtLeastOneField())
+        if (_blockInTest.hasBlockHeader())
             managedBlock.replaceHeader(_blockInTest.blockHeader().overwriteBlockHeader(managedBlock.header()));
     }
 
     // replace block with overwritten header
     managedBlock.recalculateHash();
     m_session.test_rewindToBlock(_latestBlockNumber - 1);
-    _rawRLP = managedBlock.getRLP();
+    _rawRLP = BYTES(managedBlock.getRLP().asString());
     return FH32(m_session.test_importRawBlock(_rawRLP));
 }
 

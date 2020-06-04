@@ -1,4 +1,6 @@
 #include "BlockchainTestBlock.h"
+#include <retesteth/testStructures/Common.h>
+#include <retesteth/EthChecks.h>
 
 namespace test
 {
@@ -6,21 +8,41 @@ namespace teststruct
 {
 BlockchainTestBlock::BlockchainTestBlock(DataObject const& _data)
 {
-    if (_data.count("chainname"))
-        m_chainName = _data.atKey("chainname").asString();
-    if (_data.count("blocknumber"))
-        m_blockNumber = spVALUE(new VALUE(_data.atKey("blocknumber").asString()));
-    if (_data.count("blockHeader"))
+    try
     {
-        m_blockHeader = spBlockHeader(new BlockHeader(_data.atKey("blockHeader")));
+        if (_data.count("chainname"))
+            m_chainName = _data.atKey("chainname").asString();
+        if (_data.count("blocknumber"))
+        {
+            DataObject tmpD = _data.atKey("blocknumber");
+            tmpD.performModifier(mod_valueToCompactEvenHexPrefixed);
+            m_blockNumber = spVALUE(new VALUE(tmpD));
+        }
+        if (_data.count("blockHeader"))
+        {
+            m_blockHeader = spBlockHeader(new BlockHeader(_data.atKey("blockHeader")));
 
-        for (auto const& tr : _data.atKey("transactions").getSubObjects())
-            m_transactions.push_back(Transaction(tr));
+            for (auto const& tr : _data.atKey("transactions").getSubObjects())
+                m_transactions.push_back(Transaction(tr));
 
-        for (auto const& un : _data.atKey("uncleHeaders").getSubObjects())
-            m_uncles.push_back(BlockHeader(un));
+            for (auto const& un : _data.atKey("uncleHeaders").getSubObjects())
+                m_uncles.push_back(BlockHeader(un));
+        }
+        m_rlp = spBYTES(new BYTES(_data.atKey("rlp").asString()));
+
+        requireJsonFields(_data, "BlockchainTestBlock " + _data.getKey(),
+            {{"rlp", {{DataType::String}, jsonField::Required}},
+             {"chainname", {{DataType::String}, jsonField::Optional}},         // User information
+             {"blocknumber", {{DataType::String}, jsonField::Optional}},       // User information
+             {"transactions", {{DataType::Array}, jsonField::Optional}},
+             {"uncleHeaders", {{DataType::Array}, jsonField::Optional}},
+             {"expectException", {{DataType::String}, jsonField::Optional}},   // User information
+             {"blockHeader", {{DataType::Object}, jsonField::Optional}}});
     }
-    m_rlp = spBYTES(new BYTES(_data.atKey("rlp").asString()));
+    catch (std::exception const& _ex)
+    {
+        throw BaseEthException(string("BlockchainTestBlock convertion error: ") + _ex.what() + _data.asJson());
+    }
 }
 
 }  // namespace teststruct

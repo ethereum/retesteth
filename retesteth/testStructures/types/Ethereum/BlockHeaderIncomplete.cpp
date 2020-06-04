@@ -34,7 +34,7 @@ BlockHeaderIncomplete::BlockHeaderIncomplete(DataObject const& _data)
         m_mixHash = spFH32(new FH32(_data.atKey("mixHash")));
     if (_data.count("nonce"))
         m_nonce = spFH8(new FH8(_data.atKey("nonce")));
-    if (_data.count("nonce"))
+    if (_data.count("number"))
         m_number = spVALUE(new VALUE(_data.atKey("number")));
     if (_data.count("parentHash"))
         m_parentHash = spFH32(new FH32(_data.atKey("parentHash")));
@@ -56,13 +56,13 @@ BlockHeaderIncomplete::BlockHeaderIncomplete(DataObject const& _data)
     if (_data.count(tkey))
         m_transactionsRoot = spFH32(new FH32(_data.atKey(tkey)));
 
-    m_hasAtLeastOneField = !m_author.isEmpty() || !m_difficulty.isEmpty() || !m_extraData.isEmpty() || !m_gasLimit.isEmpty() ||
-                           !m_gasUsed.isEmpty() || !m_hash.isEmpty() || !m_logsBloom.isEmpty() || !m_mixHash.isEmpty() ||
-                           !m_nonce.isEmpty() || !m_number.isEmpty() || !m_parentHash.isEmpty() || !m_receiptsRoot.isEmpty() ||
-                           !m_sha3Uncles.isEmpty() || !m_stateRoot.isEmpty() || !m_timestamp.isEmpty() ||
-                           !m_transactionsRoot.isEmpty();
+    bool hasAtLeastOneField = !m_author.isEmpty() || !m_difficulty.isEmpty() || !m_extraData.isEmpty()
+            || !m_gasLimit.isEmpty() || !m_gasUsed.isEmpty() || !m_hash.isEmpty() || !m_logsBloom.isEmpty()
+            || !m_mixHash.isEmpty() || !m_nonce.isEmpty() || !m_number.isEmpty() || !m_parentHash.isEmpty()
+            || !m_receiptsRoot.isEmpty() || !m_sha3Uncles.isEmpty() || !m_stateRoot.isEmpty()
+            || !m_timestamp.isEmpty() || !m_transactionsRoot.isEmpty();
 
-    requireJsonFields(_data, "BlockHeader " + _data.getKey(),
+    requireJsonFields(_data, "BlockHeaderIncomplete " + _data.getKey(),
         {{"bloom", {{DataType::String}, jsonField::Optional}},
          {"coinbase", {{DataType::String}, jsonField::Optional}},
          {"difficulty", {{DataType::String}, jsonField::Optional}},
@@ -79,7 +79,7 @@ BlockHeaderIncomplete::BlockHeaderIncomplete(DataObject const& _data)
          {"timestamp", {{DataType::String}, jsonField::Optional}},
          {"transactionsTrie", {{DataType::String}, jsonField::Optional}},
          {"uncleHash", {{DataType::String}, jsonField::Optional}}});
-    ETH_ERROR_REQUIRE_MESSAGE(m_hasAtLeastOneField, "BlockHeaderIncomplete must have at least one field!");
+    ETH_ERROR_REQUIRE_MESSAGE(hasAtLeastOneField, "BlockHeaderIncomplete must have at least one field!");
 }
 
 BlockHeader BlockHeaderIncomplete::overwriteBlockHeader(BlockHeader const& _header) const
@@ -117,6 +117,7 @@ BlockHeader BlockHeaderIncomplete::overwriteBlockHeader(BlockHeader const& _head
         overwrite["transactionsRoot"] = m_transactionsRoot.getCContent().asString();
     if (!m_hash.isEmpty())
         overwrite["hash"] = m_hash.getCContent().asString();
+    overwrite.removeKey("updatePoW"); // deprecated key
     return BlockHeader(overwrite);
 }
 

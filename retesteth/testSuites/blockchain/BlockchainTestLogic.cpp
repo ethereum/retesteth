@@ -11,7 +11,7 @@ namespace test
 void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions const& _opt)
 {
     if (Options::get().logVerbosity > 1)
-        ETH_STDOUT_MESSAGE("Running" + _test.testName());
+        ETH_STDOUT_MESSAGE("Running " + _test.testName());
 
     TestOutputHelper::get().setCurrentTestName(_test.testName());
     TestOutputHelper::get().setUnitTestExceptions(_test.unitTestExceptions());

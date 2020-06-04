@@ -1,5 +1,6 @@
 #include "BlockchainTestFillerBlock.h"
 #include <retesteth/EthChecks.h>
+#include <retesteth/testStructures/Common.h>
 
 namespace test
 {
@@ -25,7 +26,11 @@ BlockchainTestFillerBlock::BlockchainTestFillerBlock(DataObject const& _data)
         m_doNotImportOnClient = _data.count("donotimportonclient");
 
         if (_data.count("blocknumber"))
-            m_blockNumber = spVALUE(new VALUE(_data.atKey("blocknumber").asString()));
+        {
+            DataObject tmpD = _data.atKey("blocknumber");
+            tmpD.performModifier(mod_valueToCompactEvenHexPrefixed);
+            m_blockNumber = spVALUE(new VALUE(tmpD));
+        }
 
         if (_data.count("chainnetwork"))
             m_network = spFORK(new FORK(_data.atKey("chainnetwork")));
@@ -38,19 +43,35 @@ BlockchainTestFillerBlock::BlockchainTestFillerBlock(DataObject const& _data)
 
         if (_data.count("blockHeader"))
         {
-            m_blockHeaderIncomplete = spBlockHeaderIncomplete(new BlockHeaderIncomplete(_data.atKey("blockHeader")));
+            DataObject tmpD = convertDecBlockheaderIncompleteToHex(_data.atKey("blockHeader"));
+            if (tmpD.getSubObjects().size() > 0)
+                m_blockHeaderIncomplete = spBlockHeaderIncomplete(new BlockHeaderIncomplete(tmpD));
+
             if (_data.atKey("blockHeader").count("expectException"))
             {
                 for (auto const& rec : _data.atKey("blockHeader").atKey("expectException").getSubObjects())
                     m_expectExceptions.emplace(FORK(rec.getKey()), rec.asString());
             }
             if (_data.atKey("blockHeader").count("RelTimestamp"))
-                m_relTimeStamp = spVALUE(new VALUE(_data.atKey("blockHeader").atKey("RelTimestamp")));
+            {
+                DataObject tmpD = _data.atKey("blockHeader").atKey("RelTimestamp");
+                tmpD.performModifier(mod_valueToCompactEvenHexPrefixed);
+                m_relTimeStamp = spVALUE(new VALUE(tmpD));
+            }
         }
+        requireJsonFields(_data, "BlockchainTestFillerBlock " + _data.getKey(),
+            {{"rlp", {{DataType::String}, jsonField::Optional}},
+             {"chainname", {{DataType::String}, jsonField::Optional}},
+             {"donotimportonclient", {{DataType::String}, jsonField::Optional}},
+             {"blocknumber", {{DataType::String}, jsonField::Optional}},
+             {"chainnetwork", {{DataType::String}, jsonField::Optional}},
+             {"transactions", {{DataType::Array}, jsonField::Required}},
+             {"uncleHeaders", {{DataType::Array}, jsonField::Required}},
+             {"blockHeader", {{DataType::Object}, jsonField::Optional}}});
     }
     catch (std::exception const& _ex)
     {
-        throw BaseEthException(string("BlockchainTestFillerBlock convertion error: ") + _ex.what());
+        throw BaseEthException(string("BlockchainTestFillerBlock convertion error: ") + _ex.what() + _data.asJson());
     }
 }
 

@@ -4,6 +4,7 @@
 
 #include <dataObject/ConvertFile.h>
 #include <retesteth/session/RPCImpl.h>
+#include <retesteth/testStructures/Common.h>
 
 DataObject RPCImpl::web3_clientVersion()
 {
@@ -24,7 +25,7 @@ int RPCImpl::eth_getTransactionCount(FH20 const& _address, VALUE const& _blockNu
     DataObject const response =
         rpcCall("eth_getTransactionCount", {quote(_address.asString()), quote(_blockNumber.asString())});
     if (response.type() == DataType::String)
-        return test::hexOrDecStringToInt(response.asString());
+        return hexOrDecStringToInt(response.asString());
     return response.asInt();
 }
 

@@ -19,14 +19,13 @@ StateTestFillerTransaction::StateTestFillerTransaction(DataObject const& _data)
         // The VALUE fields can be decimal -> convert it to hex
         // The data field can be LLL or other code -> compile it to BYTES
         if (_data.atKey("to").asString().empty())
-        {
             m_creation = true;
-        }
         else
         {
             m_creation = false;
             DataObject dTo = _data.atKey("to");
-            if (_data.atKey("to").asString()[1] != 'x')
+            string const& to = _data.atKey("to").asString();
+            if (to.size() > 1 && to[1] != 'x')
                 dTo = "0x" + _data.atKey("to").asString();
             m_to = spFH20(new FH20(dTo));
         }
@@ -41,7 +40,6 @@ StateTestFillerTransaction::StateTestFillerTransaction(DataObject const& _data)
             dataInKey.setKey("`data` array element in General Transaction Section");  // Hint
             dataInKey.setString(test::replaceCode(dataInKey.asString()));
             // ---
-
             m_data.push_back(dataInKey);
         }
         for (auto const& el : tmpD.atKey("gasLimit").getSubObjects())

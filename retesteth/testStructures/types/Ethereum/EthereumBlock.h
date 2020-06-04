@@ -17,14 +17,15 @@ namespace teststruct
 // Ethereum Block for RLP managment
 struct EthereumBlock : GCP_SPointerBase
 {
-    EthereumBlock(BlockHeader const& _header) { m_header = spBlockHeader(new BlockHeader(_header)); }
-    void addTransaction(Transaction const& _tr) { m_transactions.push_back(_tr); }
-    void addUncle(BlockHeader const& _header) { m_uncles.push_back(_header); }
-    void replaceHeader(BlockHeader const& _header) { m_header = spBlockHeader(new BlockHeader(_header)); }
+    EthereumBlock(BlockHeader const& _header) { m_header = spBlockHeader(new BlockHeader(_header.asDataObject())); }
+    void addTransaction(Transaction const& _tr) { m_transactions.push_back(Transaction(_tr.asDataObject())); }
+    void addUncle(BlockHeader const& _header) { m_uncles.push_back(BlockHeader(_header.asDataObject())); }
+    void replaceHeader(BlockHeader const& _header) { m_header = spBlockHeader(new BlockHeader(_header.asDataObject())); }
     void recalculateHash();
     BYTES const getRLP() const;
 
     BlockHeader const& header() const { return m_header.getCContent(); }
+    BlockHeader& headerUnsafe() { return m_header.getContent(); }
     std::vector<BlockHeader> const& uncles() const { return m_uncles; }
     std::vector<Transaction> const& transactions() const { return m_transactions; }
 

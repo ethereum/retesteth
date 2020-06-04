@@ -19,6 +19,12 @@ string toCompactHexPrefixed(string const& _str, size_t _minSize)
         prefix = "0x";
     return dev::toCompactHexPrefixed(u256(prefix + _str), _minSize);
 }
+
+bool isHexDigitsType(test::object::DigitsType _dtype)
+{
+    return (_dtype == test::object::DigitsType::HexPrefixed || _dtype == test::object::DigitsType::UnEvenHexPrefixed);
+}
+
 }  // namespace
 
 
@@ -107,6 +113,14 @@ void mod_removeLeadingZerosFromHexValuesEVEN(DataObject& _obj)
         if (t == object::DigitsType::UnEvenHexPrefixed)
             _obj.setString("0x0" + _obj.asString().substr(2));
     }
+}
+
+long int hexOrDecStringToInt(string const& _str)
+{
+    if (isHexDigitsType(test::object::stringIntegerType(_str)))
+        return (long int)dev::u256(_str);
+    else
+        return atoi(_str.c_str());
 }
 
 
@@ -230,6 +244,51 @@ void requireJsonFields(DataObject const& _o, std::string const& _config, std::ma
     }
 }
 
+// Compile LLL in code
+// Convert dec fields to hex, add 0x prefix to accounts and storage keys
+DataObject convertDecStateToHex(DataObject const& _data)
+{
+    // -- Compile LLL in pre state into byte code if not already
+    // -- Convert State::Storage keys/values into hex
+    DataObject tmpD = _data;
+    for (auto& acc : tmpD.getSubObjectsUnsafe())
+    {
+        if (acc.getKey()[1] != 'x')
+            acc.setKey("0x" + acc.getKey());
+        acc["code"].setString(test::replaceCode(acc.atKey("code").asString()));
+        acc["nonce"].performModifier(mod_valueToCompactEvenHexPrefixed);
+        acc["balance"].performModifier(mod_valueToCompactEvenHexPrefixed);
+        for (auto& rec : acc["storage"].getSubObjectsUnsafe())
+        {
+            rec.performModifier(mod_keyToCompactEvenHexPrefixed);
+            rec.performModifier(mod_valueToCompactEvenHexPrefixed);
+        }
+    }
+    return tmpD;
+}
+
+// Convert dec fields to hex, add 0x prefix to accounts and storage keys
+DataObject convertDecBlockheaderIncompleteToHex(DataObject const& _data)
+{
+    // Convert to HEX
+    DataObject tmpD = _data;
+    tmpD.removeKey("updatePoW");            // BlockchainTestFiller fields
+    tmpD.removeKey("RelTimestamp");         // BlockchainTestFiller fields
+    tmpD.removeKey("expectException");      // BlockchainTestFiller fields
+    tmpD.removeKey("overwriteAndRedoPoW");  // BlockchainTestFiller fields
+    tmpD.removeKey("populateFromBlock");    // BlockchainTestFiller fields
+
+    tmpD.removeKey("coinbase");
+    tmpD.performModifier(mod_valueToCompactEvenHexPrefixed);
+    if (_data.count("coinbase"))
+    {
+        DataObject coinbase = _data.atKey("coinbase");
+        if (coinbase.asString().size() > 1 && coinbase.asString()[1] != 'x')
+            coinbase = "0x" + coinbase.asString();
+        tmpD["coinbase"] = coinbase;
+    }
+    return tmpD;
+}
 
 }  // namespace teststruct
 }  // namespace test

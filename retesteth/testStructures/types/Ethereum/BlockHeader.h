@@ -26,6 +26,12 @@ struct BlockHeader : GCP_SPointerBase
     VALUE const& timestamp() const { return m_timestamp.getCContent(); }
     FH20 const& author() const { return m_author.getCContent(); }
 
+    void setTimestamp(VALUE const& _value) { m_timestamp = spVALUE(new VALUE(_value.asU256())); }
+    void setTransactionHash(FH32 const& _hash) { m_transactionsRoot = spFH32(new FH32(_hash)); }
+    void setUnclesHash(FH32 const& _hash) { m_sha3Uncles = spFH32(new FH32(_hash)); }
+    void setHeaderHash(FH32 const& _hash) { m_hash = spFH32(new FH32(_hash)); }
+    void recalculateHash();
+
 private:
     BlockHeader() {}
     spFH20 m_author;

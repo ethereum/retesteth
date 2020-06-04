@@ -22,7 +22,12 @@ struct RPCError
     string const& error() const { return m_error; }
     string const& message() const { return m_message; }
     bool empty() const { return m_empty; }
-    void clear() { m_empty = true; }
+    void clear()
+    {
+        m_empty = true;
+        m_message = "No message";
+        m_error = "No error";
+    }
 
 private:
     string m_error;

@@ -26,9 +26,9 @@ DataObject FillTest(BlockchainTestInFiller const& _test, TestSuite::TestSuiteOpt
                 filledTest.setKey(newtestname);
                 if (_test.hasInfo())
                     filledTest["_info"]["comment"] = _test.Info().comment();
-                filledTest["pre"] = _test.Pre().asDataObject();
                 filledTest["sealEngine"] = sealEngineToStr(_test.sealEngine());
                 filledTest["network"] = net.asString();
+                filledTest["pre"] = _test.Pre().asDataObject();
 
                 // Initialise chain manager
                 ETH_LOGC("FILL GENESIS INFO: ", 6, LogColor::LIME);

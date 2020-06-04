@@ -11,8 +11,14 @@ StateTestFillerEnv::StateTestFillerEnv(DataObject const& _data)
     try
     {
         DataObject tmpData = _data;
+        tmpData.removeKey("currentCoinbase");
         tmpData.performModifier(mod_valueToCompactEvenHexPrefixed);
-        m_currentCoinbase = spFH20(new FH20(tmpData.atKey("currentCoinbase")));
+
+        DataObject coinbase = _data.atKey("currentCoinbase");
+        if (coinbase.asString().size() > 1 && coinbase.asString()[1] != 'x')
+            coinbase = "0x" + coinbase.asString();
+        m_currentCoinbase = spFH20(new FH20(coinbase));
+
         m_currentDifficulty = spVALUE(new VALUE(tmpData.atKey("currentDifficulty")));
         m_currentGasLimit = spVALUE(new VALUE(tmpData.atKey("currentGasLimit"), dev::u256("0x7fffffffffffffff")));
         m_currentNumber = spVALUE(new VALUE(tmpData.atKey("currentNumber")));

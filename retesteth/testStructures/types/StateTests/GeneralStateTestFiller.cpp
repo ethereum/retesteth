@@ -31,26 +31,7 @@ StateTestInFiller::StateTestInFiller(DataObject const& _data)
         if (_data.count("_info"))
             m_info = GCP_SPointer<InfoIncomplete>(new InfoIncomplete(_data.atKey("_info")));
         m_env = GCP_SPointer<StateTestFillerEnv>(new StateTestFillerEnv(_data.atKey("env")));
-
-        // -- Compile LLL in pre state into byte code if not already
-        // -- Convert State::Storage keys/values into hex
-        DataObject tmpD = _data.atKey("pre");
-        for (auto& acc : tmpD.getSubObjectsUnsafe())
-        {
-            if (acc.getKey()[1] != 'x')
-                acc.setKey("0x" + acc.getKey());
-            acc["code"].setString(test::replaceCode(acc.atKey("code").asString()));
-            acc["nonce"].performModifier(mod_valueToCompactEvenHexPrefixed);
-            acc["balance"].performModifier(mod_valueToCompactEvenHexPrefixed);
-            for (auto& rec : acc["storage"].getSubObjectsUnsafe())
-            {
-                rec.performModifier(mod_keyToCompactEvenHexPrefixed);
-                rec.performModifier(mod_valueToCompactEvenHexPrefixed);
-            }
-        }
-        m_pre = spState(new State(tmpD));
-        // ---
-
+        m_pre = spState(new State(convertDecStateToHex(_data.atKey("pre"))));
         m_transaction = GCP_SPointer<StateTestFillerTransaction>(new StateTestFillerTransaction(_data.atKey("transaction")));
         for (auto const& el : _data.atKey("expect").getSubObjects())
             m_expectSections.push_back(StateTestFillerExpectSection(el));

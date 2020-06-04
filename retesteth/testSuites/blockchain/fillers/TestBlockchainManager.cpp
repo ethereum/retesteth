@@ -39,7 +39,7 @@ void TestBlockchainManager::parseBlockFromFiller(BlockchainTestFillerBlock const
     string sDebug = currentChainMining.prepareDebugInfoString(_block.chainName());
 
     // Check that we don't shift the chain after the initialization
-    if (!_block.chainNet().asString().empty())
+    if (_block.hasChainNet())
     {
         ETH_ERROR_REQUIRE_MESSAGE(currentChainMining.getNetwork() == _block.chainNet(),
             "Trying to switch chainname with the following block! (chain: " + currentChainMining.getNetwork().asString() +
@@ -63,7 +63,6 @@ void TestBlockchainManager::parseBlockFromFiller(BlockchainTestFillerBlock const
 // Import all generated blocks at the same order as they are in tests
 void TestBlockchainManager::syncOnRemoteClient(DataObject& _exportBlocksSection) const
 {
-    (void)_exportBlocksSection;
     if (m_wasAtLeastOneFork)
     {
         // !!! RELY ON _exportBlocksSection has the same block order as m_testBlockRLPs
@@ -107,15 +106,15 @@ vectorOfSchemeBlock TestBlockchainManager::prepareUncles(BlockchainTestFillerBlo
 void TestBlockchainManager::reorgChains(BlockchainTestFillerBlock const& _block)
 {
     // if a new chain, initialize
-    FORK const& newBlockChainNet = _block.chainNet();
-    VALUE const& newBlockNumber = _block.number();
+    FORK const& newBlockChainNet = _block.hasChainNet() ? _block.chainNet() : m_sDefaultChainNet;
+    VALUE const& newBlockNumber =
+        _block.hasNumber() ? _block.number() : m_mapOfKnownChain.at(m_sCurrentChainName).getBlocks().size();
     string const& newBlockChainName = _block.chainName();
     if (!m_mapOfKnownChain.count(newBlockChainName))
     {
         // Regenerate genesis only if the chain fork has changed
         m_mapOfKnownChain.emplace(newBlockChainName,
-            TestBlockchain(m_genesisEnv, m_genesisPre, m_sealEngine,
-                newBlockChainNet.asString().empty() ? m_sDefaultChainNet : newBlockChainNet,
+            TestBlockchain(m_genesisEnv, m_genesisPre, m_sealEngine, newBlockChainNet,
                 m_sDefaultChainNet != newBlockChainNet ? RegenerateGenesis::TRUE : RegenerateGenesis::FALSE));
     }
 
@@ -228,7 +227,10 @@ BlockHeader TestBlockchainManager::prepareUncle(
     // Perform uncle header modifications according to the uncle section in blockchain test filler block
     // If there is a field that is being overwritten in the uncle header
     if (_uncleSectionInTest.hasOverwriteHeader())
+    {
         uncleBlockHeader = _uncleSectionInTest.overwriteHeader().overwriteBlockHeader(uncleBlockHeader);
+        uncleBlockHeader.recalculateHash();
+    }
 
     // If uncle timestamp is shifted relative to the block that it's populated from
     if (typeOfSection == UncleType::PopulateFromBlock)
@@ -237,14 +239,13 @@ BlockHeader TestBlockchainManager::prepareUncle(
         {
             // Geth the Timestamp of that block (which uncle is populated from)
             VALUE timestamp(currentChainMining.getBlocks().at(origIndex).ethBlock().header().timestamp());
-            timestamp = timestamp + _uncleSectionInTest.relTimestampFromPopulateBlock();
-            VALUE const& headerTime = uncleBlockHeader.timestamp();
-            VALUE& headerTimeRef = const_cast<VALUE&>(headerTime);
-            headerTimeRef = VALUE(timestamp);
+            uncleBlockHeader.setTimestamp(timestamp + _uncleSectionInTest.relTimestampFromPopulateBlock());
+            uncleBlockHeader.recalculateHash();
             //  std::cerr << headerOrig.asJson() << std::endl;
         }
     }
 
+    // Recalculate uncleHash because we will be checking which uncle hash will be returned by the client
     return uncleBlockHeader;
 }
 
