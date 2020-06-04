@@ -11,6 +11,7 @@ StateIncomplete::StateIncomplete(DataObject const& _data, DataRequier _req)
 {
     try
     {
+        // The difference to Common.h::ConvertDecStateToHex is that here we don't compile code
         if (_req == DataRequier::ALLOWDEC)
         {
             // Convertion is here so not to repeat convertion in State and Blockchain tests

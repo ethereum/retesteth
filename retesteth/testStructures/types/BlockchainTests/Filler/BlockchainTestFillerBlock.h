@@ -40,8 +40,7 @@ struct BlockchainTestFillerBlock : GCP_SPointerBase
     BlockHeaderIncomplete const& blockHeader() const { return m_blockHeaderIncomplete.getCContent(); }
 
     // Blockheader oerwrite can define timestamp shift from previous block
-    bool hasRelTimeStamp() const { return !m_relTimeStamp.isEmpty(); }
-    VALUE const& relTimeStamp() const { return m_relTimeStamp.getCContent(); }
+    int relTimeStamp() const { return m_relTimeStamp; }
 
     // Transaction in block filler. Can be marked invalid (expected to fail)
     std::vector<BlockchainTestFillerTransaction> const& transactions() const { return m_transactions; }
@@ -82,7 +81,7 @@ private:
     spVALUE m_blockNumber;
     spFORK m_network;
     bool m_doNotImportOnClient = false;
-    spVALUE m_relTimeStamp;
+    int m_relTimeStamp;
 
     std::vector<BlockchainTestFillerUncle> m_uncles;
     std::vector<BlockchainTestFillerTransaction> m_transactions;

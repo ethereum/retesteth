@@ -26,6 +26,7 @@ struct Transaction : GCP_SPointerBase
     VALUE const& v() const { return m_v.getCContent(); }
     VALUE const& r() const { return m_r.getCContent(); }
     VALUE const& s() const { return m_s.getCContent(); }
+    FH32 hash() const;
 
     BYTES const getSignedRLP() const;
     dev::RLPStream const asRLPStream() const;

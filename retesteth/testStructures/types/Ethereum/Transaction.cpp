@@ -145,5 +145,10 @@ const DataObject Transaction::asDataObject(ExportOrder _order) const
     return out;
 }
 
+FH32 Transaction::hash() const
+{
+    return FH32("0x" + toString(dev::sha3(asRLPStream().out())));
+}
+
 }  // namespace teststruct
 }  // namespace test

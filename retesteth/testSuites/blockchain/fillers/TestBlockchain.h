@@ -24,7 +24,7 @@ public:
     // Single blockchain with block rlps, keep track of a blockchain information
     // Using _env, _pre, _engine, _network settings
     TestBlockchain(BlockchainTestFillerEnv const& _testEnv, State const& _genesisState, SealEngine _engine,
-        FORK const& _network, RegenerateGenesis _regenerateGenesis);
+        FORK const& _network, string const& _chainName, RegenerateGenesis _regenerateGenesis);
 
     // Need to call resetChainParams because TestBLockchainManager could have chains with different networks
     void resetChainParams() const

@@ -13,7 +13,7 @@ BlockchainTestFillerEnv::BlockchainTestFillerEnv(DataObject const& _data)
         DataObject tmpData = _data;
         tmpData.performModifier(mod_valueToCompactEvenHexPrefixed);
 
-        DataObject coinbase = _data.atKey("currentCoinbase");
+        DataObject coinbase = _data.atKey("coinbase");
         if (coinbase.asString().size() > 1 && coinbase.asString()[1] != 'x')
             coinbase = "0x" + coinbase.asString();
         m_currentCoinbase = spFH20(new FH20(coinbase));

@@ -16,13 +16,17 @@ BlockchainTestInFiller::BlockchainTestInFiller(DataObject const& _data)
         m_env = spBlockchainTestFillerEnv(new BlockchainTestFillerEnv(_data.atKey("genesisBlockHeader")));
         m_pre = spState(new State(convertDecStateToHex(_data.atKey("pre"))));
 
-        string const sEngine = _data.atKey("sealEngine").asString();
-        if (sEngine == "Ethash")
-            m_sealEngine = SealEngine::Ethash;
-        else if (sEngine == "NoProof")
-            m_sealEngine = SealEngine::NoProof;
-        else
-            ETH_ERROR_MESSAGE("BlockchainTestInFiller: Unknown sealEngine: " + sEngine);
+        m_sealEngine = SealEngine::NoProof;
+        if (_data.count("sealEngine"))
+        {
+            string const sEngine = _data.atKey("sealEngine").asString();
+            if (sEngine == "Ethash")
+                m_sealEngine = SealEngine::Ethash;
+            else if (sEngine == "NoProof")
+                m_sealEngine = SealEngine::NoProof;
+            else
+                ETH_ERROR_MESSAGE("BlockchainTestInFiller: Unknown sealEngine: " + sEngine);
+        }
 
         // Process expect section
         std::set<FORK> knownForks;
@@ -54,10 +58,13 @@ BlockchainTestInFiller::BlockchainTestInFiller(DataObject const& _data)
         }
 
         requireJsonFields(_data, "BlockchainTestInFiller " + _data.getKey(),
-            {{"_info", {{DataType::Object}, jsonField::Optional}}, {"sealEngine", {{DataType::String}, jsonField::Required}},
+            {{"_info", {{DataType::Object}, jsonField::Optional}},
+                {"sealEngine", {{DataType::String}, jsonField::Optional}},
                 {"genesisBlockHeader", {{DataType::Object}, jsonField::Required}},
-                {"expect", {{DataType::Array}, jsonField::Required}}, {"exceptions", {{DataType::Array}, jsonField::Optional}},
-                {"pre", {{DataType::Object}, jsonField::Required}}, {"blocks", {{DataType::Array}, jsonField::Required}}});
+                {"expect", {{DataType::Array}, jsonField::Required}},
+                {"exceptions", {{DataType::Array}, jsonField::Optional}},
+                {"pre", {{DataType::Object}, jsonField::Required}},
+                {"blocks", {{DataType::Array}, jsonField::Required}}});
     }
     catch (std::exception const& _ex)
     {

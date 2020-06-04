@@ -277,16 +277,22 @@ DataObject convertDecBlockheaderIncompleteToHex(DataObject const& _data)
     tmpD.removeKey("expectException");      // BlockchainTestFiller fields
     tmpD.removeKey("overwriteAndRedoPoW");  // BlockchainTestFiller fields
     tmpD.removeKey("populateFromBlock");    // BlockchainTestFiller fields
+    tmpD.removeKey("chainname");            // BlockchainTestFiller fields
+    tmpD.removeKey("RelTimestampFromPopulateBlock");
 
-    tmpD.removeKey("coinbase");
-    tmpD.performModifier(mod_valueToCompactEvenHexPrefixed);
-    if (_data.count("coinbase"))
-    {
-        DataObject coinbase = _data.atKey("coinbase");
-        if (coinbase.asString().size() > 1 && coinbase.asString()[1] != 'x')
-            coinbase = "0x" + coinbase.asString();
-        tmpD["coinbase"] = coinbase;
-    }
+    std::vector<string> hashKeys = {"parentHash", "coinbase"};
+    for (auto const& key : hashKeys)
+        if (_data.count(key))
+        {
+            if (_data.atKey(key).asString().size() > 1 && _data.atKey(key).asString()[1] != 'x')
+                tmpD[key] = "0x" + _data.atKey(key).asString();
+            tmpD[key].performModifier(mod_valueToCompactEvenHexPrefixed);
+        }
+
+    std::vector<string> valueKeys = {"difficulty", "gasLimit", "gasUsed", "nonce", "number", "timestamp"};
+    for (auto const& key : valueKeys)
+        if (_data.count(key))
+            tmpD[key].performModifier(mod_valueToCompactEvenHexPrefixed);
     return tmpD;
 }
 

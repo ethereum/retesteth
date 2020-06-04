@@ -28,8 +28,6 @@ struct BlockchainTestFillerUncle : GCP_SPointerBase
     size_t sameAsPreviousSibling() const { return m_sameAsPreviousSibling; }
 
     string const& chainname() const { return m_chainName; }
-
-    bool hasRelTimestampFromPopulateBlock() const { return m_relTimestampFromPopulateBlock != 0; }
     int relTimestampFromPopulateBlock() const { return m_relTimestampFromPopulateBlock; }
 
     bool hasOverwriteHeader() const { return !m_headerIncomplete.isEmpty(); }

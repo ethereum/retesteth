@@ -44,6 +44,7 @@ BlockchainTestFillerUncle::BlockchainTestFillerUncle(DataObject const& _data)
                 ETH_ERROR_MESSAGE("m_sameAsPreviousSibling sanity error!");
         }
 
+        m_chainName = string();
         if (_data.count("chainname"))
             m_chainName = _data.atKey("chainname").asString();
 

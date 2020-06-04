@@ -1,6 +1,8 @@
 #include "BlockchainTestFillerBlock.h"
 #include <retesteth/EthChecks.h>
 #include <retesteth/testStructures/Common.h>
+#include <retesteth/configs/ClientConfig.h>
+#include <retesteth/Options.h>
 
 namespace test
 {
@@ -35,11 +37,13 @@ BlockchainTestFillerBlock::BlockchainTestFillerBlock(DataObject const& _data)
         if (_data.count("chainnetwork"))
             m_network = spFORK(new FORK(_data.atKey("chainnetwork")));
 
-        for (auto const& tr : _data.atKey("transactions").getSubObjects())
-            m_transactions.push_back(BlockchainTestFillerTransaction(tr));
+        if (_data.count("transactions"))
+            for (auto const& tr : _data.atKey("transactions").getSubObjects())
+                m_transactions.push_back(BlockchainTestFillerTransaction(tr));
 
-        for (auto const& un : _data.atKey("uncleHeaders").getSubObjects())
-            m_uncles.push_back(BlockchainTestFillerUncle(un));
+        if (_data.count("uncleHeaders"))
+            for (auto const& un : _data.atKey("uncleHeaders").getSubObjects())
+                m_uncles.push_back(BlockchainTestFillerUncle(un));
 
         if (_data.count("blockHeader"))
         {
@@ -50,14 +54,18 @@ BlockchainTestFillerBlock::BlockchainTestFillerBlock(DataObject const& _data)
             if (_data.atKey("blockHeader").count("expectException"))
             {
                 for (auto const& rec : _data.atKey("blockHeader").atKey("expectException").getSubObjects())
-                    m_expectExceptions.emplace(FORK(rec.getKey()), rec.asString());
+                {
+                    // Parse ">=Frontier" : "EXCEPTION"
+                    ClientConfig const& cfg = Options::get().getDynamicOptions().getCurrentConfig();
+                    std::set<string> forksString = { rec.getKey() };
+                    std::set<FORK> parsedForks = cfg.translateNetworks(forksString);
+                    for (auto const& el : parsedForks)
+                        m_expectExceptions.emplace(el, rec.asString());
+                }
             }
+            m_relTimeStamp = 0;
             if (_data.atKey("blockHeader").count("RelTimestamp"))
-            {
-                DataObject tmpD = _data.atKey("blockHeader").atKey("RelTimestamp");
-                tmpD.performModifier(mod_valueToCompactEvenHexPrefixed);
-                m_relTimeStamp = spVALUE(new VALUE(tmpD));
-            }
+                m_relTimeStamp = hexOrDecStringToInt(_data.atKey("blockHeader").atKey("RelTimestamp").asString());
         }
         requireJsonFields(_data, "BlockchainTestFillerBlock " + _data.getKey(),
             {{"rlp", {{DataType::String}, jsonField::Optional}},
@@ -65,8 +73,8 @@ BlockchainTestFillerBlock::BlockchainTestFillerBlock(DataObject const& _data)
                 {"donotimportonclient", {{DataType::String}, jsonField::Optional}},
                 {"blocknumber", {{DataType::String}, jsonField::Optional}},
                 {"chainnetwork", {{DataType::String}, jsonField::Optional}},
-                {"transactions", {{DataType::Array}, jsonField::Required}},
-                {"uncleHeaders", {{DataType::Array}, jsonField::Required}},
+                {"transactions", {{DataType::Array}, jsonField::Optional}},
+                {"uncleHeaders", {{DataType::Array}, jsonField::Optional}},
                 {"blockHeader", {{DataType::Object}, jsonField::Optional}}});
     }
     catch (std::exception const& _ex)

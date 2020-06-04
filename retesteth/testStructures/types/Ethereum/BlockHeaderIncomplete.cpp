@@ -63,14 +63,20 @@ BlockHeaderIncomplete::BlockHeaderIncomplete(DataObject const& _data)
                               !m_timestamp.isEmpty() || !m_transactionsRoot.isEmpty();
 
     requireJsonFields(_data, "BlockHeaderIncomplete " + _data.getKey(),
-        {{"bloom", {{DataType::String}, jsonField::Optional}}, {"coinbase", {{DataType::String}, jsonField::Optional}},
-            {"difficulty", {{DataType::String}, jsonField::Optional}}, {"extraData", {{DataType::String}, jsonField::Optional}},
-            {"gasLimit", {{DataType::String}, jsonField::Optional}}, {"gasUsed", {{DataType::String}, jsonField::Optional}},
-            {"hash", {{DataType::String}, jsonField::Optional}}, {"mixHash", {{DataType::String}, jsonField::Optional}},
-            {"nonce", {{DataType::String}, jsonField::Optional}}, {"number", {{DataType::String}, jsonField::Optional}},
+        {{"bloom", {{DataType::String}, jsonField::Optional}},
+            {"coinbase", {{DataType::String}, jsonField::Optional}},
+            {"difficulty", {{DataType::String}, jsonField::Optional}},
+            {"extraData", {{DataType::String}, jsonField::Optional}},
+            {"gasLimit", {{DataType::String}, jsonField::Optional}},
+            {"gasUsed", {{DataType::String}, jsonField::Optional}},
+            {"hash", {{DataType::String}, jsonField::Optional}},
+            {"mixHash", {{DataType::String}, jsonField::Optional}},
+            {"nonce", {{DataType::String}, jsonField::Optional}},
+            {"number", {{DataType::String}, jsonField::Optional}},
             {"parentHash", {{DataType::String}, jsonField::Optional}},
             {"receiptTrie", {{DataType::String}, jsonField::Optional}},
-            {"stateRoot", {{DataType::String}, jsonField::Optional}}, {"timestamp", {{DataType::String}, jsonField::Optional}},
+            {"stateRoot", {{DataType::String}, jsonField::Optional}},
+            {"timestamp", {{DataType::String}, jsonField::Optional}},
             {"transactionsTrie", {{DataType::String}, jsonField::Optional}},
             {"uncleHash", {{DataType::String}, jsonField::Optional}}});
     ETH_ERROR_REQUIRE_MESSAGE(hasAtLeastOneField, "BlockHeaderIncomplete must have at least one field!");

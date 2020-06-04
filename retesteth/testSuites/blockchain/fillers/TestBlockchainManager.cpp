@@ -21,8 +21,8 @@ TestBlockchainManager::TestBlockchainManager(
     // m_sCurrentChainName is unknown at this point. the first block of the test defines it
     // but we want genesis to be generated anyway before that
     m_sCurrentChainName = m_sDefaultChainName;
-    m_mapOfKnownChain.emplace(
-        m_sCurrentChainName, TestBlockchain(_genesisEnv, _genesisPre, _engine, _network, RegenerateGenesis::TRUE));
+    m_mapOfKnownChain.emplace(m_sCurrentChainName,
+        TestBlockchain(_genesisEnv, _genesisPre, _engine, _network, m_sCurrentChainName, RegenerateGenesis::TRUE));
 }
 
 // Generate block using a client from the filler information
@@ -114,7 +114,7 @@ void TestBlockchainManager::reorgChains(BlockchainTestFillerBlock const& _block)
     {
         // Regenerate genesis only if the chain fork has changed
         m_mapOfKnownChain.emplace(newBlockChainName,
-            TestBlockchain(m_genesisEnv, m_genesisPre, m_sealEngine, newBlockChainNet,
+            TestBlockchain(m_genesisEnv, m_genesisPre, m_sealEngine, newBlockChainNet, newBlockChainName,
                 m_sDefaultChainNet != newBlockChainNet ? RegenerateGenesis::TRUE : RegenerateGenesis::FALSE));
     }
 
@@ -235,13 +235,12 @@ BlockHeader TestBlockchainManager::prepareUncle(
     // If uncle timestamp is shifted relative to the block that it's populated from
     if (typeOfSection == UncleType::PopulateFromBlock)
     {
-        if (_uncleSectionInTest.hasRelTimestampFromPopulateBlock())
+        if (_uncleSectionInTest.relTimestampFromPopulateBlock() != 0)
         {
             // Geth the Timestamp of that block (which uncle is populated from)
             VALUE timestamp(currentChainMining.getBlocks().at(origIndex).getTestHeader().timestamp());
-            uncleBlockHeader.setTimestamp(timestamp + _uncleSectionInTest.relTimestampFromPopulateBlock());
+            uncleBlockHeader.setTimestamp(timestamp.asU256() + _uncleSectionInTest.relTimestampFromPopulateBlock());
             uncleBlockHeader.recalculateHash();
-            //  std::cerr << headerOrig.asJson() << std::endl;
         }
     }
 
