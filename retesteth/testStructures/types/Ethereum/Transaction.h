@@ -29,7 +29,7 @@ struct Transaction : GCP_SPointerBase
 
     BYTES const getSignedRLP() const;
     dev::RLPStream const asRLPStream() const;
-    DataObject const asDataObject() const;
+    DataObject const asDataObject(ExportOrder _order = ExportOrder::Default) const;
 
 private:
     Transaction() {}

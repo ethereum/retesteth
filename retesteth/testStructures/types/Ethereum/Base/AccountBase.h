@@ -10,6 +10,7 @@ namespace test
 {
 namespace teststruct
 {
+
 // Ethereum account description
 struct AccountBase : GCP_SPointerBase
 {
@@ -25,7 +26,7 @@ struct AccountBase : GCP_SPointerBase
     BYTES const& code() const { return m_code.getCContent(); }
     FH20 const& address() const { return m_address.getCContent(); }
 
-    virtual DataObject const asDataObject() const = 0;
+    virtual DataObject const asDataObject(ExportOrder order = ExportOrder::Default) const = 0;
     virtual ~AccountBase() {}
 
 protected:

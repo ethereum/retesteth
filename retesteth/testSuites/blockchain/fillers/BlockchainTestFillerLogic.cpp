@@ -34,8 +34,8 @@ DataObject FillTest(BlockchainTestInFiller const& _test, TestSuite::TestSuiteOpt
                 ETH_LOGC("FILL GENESIS INFO: ", 6, LogColor::LIME);
                 TestBlockchainManager testchain(_test.Env(), _test.Pre(), _test.sealEngine(), net);
                 TestBlock const& genesis = testchain.getLastBlock();
-                filledTest["genesisBlockHeader"] = genesis.ethBlock().header().asDataObject();
-                filledTest["genesisRLP"] = genesis.ethBlock().getRLP().asString();
+                filledTest["genesisBlockHeader"] = genesis.getTestHeader().asDataObject();
+                filledTest["genesisRLP"] = genesis.getRawRLP().asString();
 
                 TestOutputHelper::get().setUnitTestExceptions(_test.unitTestExceptions());
 
@@ -63,18 +63,20 @@ DataObject FillTest(BlockchainTestInFiller const& _test, TestSuite::TestSuiteOpt
 
                 // Fill info about the lastblockhash
                 EthGetBlockBy finalBlock(session.eth_getBlockByNumber(session.eth_blockNumber(), Request::LESSOBJECTS));
-
-                State remoteState = getRemoteState(session);
-                if (Options::get().fullstate)
+                try
+                {
+                    State remoteState(getRemoteState(session));
                     compareStates(expect.result(), remoteState);
-                else
+                    filledTest["postState"] = remoteState.asDataObject(ExportOrder::OldStyle);
+                }
+                catch (StateTooBig const&)
+                {
                     compareStates(expect.result(), session);
+                    filledTest["postStateHash"] = finalBlock.header().stateRoot().asString();
+                }
 
-                //_testOut["postStateHash"] = remoteState.getData();
-                filledTest["postState"] = remoteState.asDataObject();
                 filledTest["lastblockhash"] = finalBlock.header().hash().asString();
                 result.addSubObject(filledTest);
-
             }  // expects count net
         }
     }

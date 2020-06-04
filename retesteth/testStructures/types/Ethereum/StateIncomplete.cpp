@@ -50,7 +50,7 @@ StateIncomplete::StateIncomplete(DataObject const& _data, DataRequier _req)
     }
 }
 
-const DataObject StateIncomplete::asDataObject() const
+const DataObject StateIncomplete::asDataObject(ExportOrder) const
 {
     DataObject out;
     for (auto const& el : m_accounts)

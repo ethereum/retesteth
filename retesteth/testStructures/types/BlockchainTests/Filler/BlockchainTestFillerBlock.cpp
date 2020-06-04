@@ -60,7 +60,8 @@ BlockchainTestFillerBlock::BlockchainTestFillerBlock(DataObject const& _data)
             }
         }
         requireJsonFields(_data, "BlockchainTestFillerBlock " + _data.getKey(),
-            {{"rlp", {{DataType::String}, jsonField::Optional}}, {"chainname", {{DataType::String}, jsonField::Optional}},
+            {{"rlp", {{DataType::String}, jsonField::Optional}},
+                {"chainname", {{DataType::String}, jsonField::Optional}},
                 {"donotimportonclient", {{DataType::String}, jsonField::Optional}},
                 {"blocknumber", {{DataType::String}, jsonField::Optional}},
                 {"chainnetwork", {{DataType::String}, jsonField::Optional}},

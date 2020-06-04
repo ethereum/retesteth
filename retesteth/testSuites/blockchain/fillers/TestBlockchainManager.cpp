@@ -57,7 +57,7 @@ void TestBlockchainManager::parseBlockFromFiller(BlockchainTestFillerBlock const
 
     // Get this block exception on canon chain to later verify it
     FORK const& canonNet = m_mapOfKnownChain.at(m_sDefaultChainName).getNetwork();
-    m_testBlockRLPs.push_back(std::make_tuple(lastBlock.getRLP(), _block.getExpectException(canonNet)));
+    m_testBlockRLPs.push_back(std::make_tuple(lastBlock.getRawRLP(), _block.getExpectException(canonNet)));
 }
 
 // Import all generated blocks at the same order as they are in tests
@@ -238,7 +238,7 @@ BlockHeader TestBlockchainManager::prepareUncle(
         if (_uncleSectionInTest.hasRelTimestampFromPopulateBlock())
         {
             // Geth the Timestamp of that block (which uncle is populated from)
-            VALUE timestamp(currentChainMining.getBlocks().at(origIndex).ethBlock().header().timestamp());
+            VALUE timestamp(currentChainMining.getBlocks().at(origIndex).getTestHeader().timestamp());
             uncleBlockHeader.setTimestamp(timestamp + _uncleSectionInTest.relTimestampFromPopulateBlock());
             uncleBlockHeader.recalculateHash();
             //  std::cerr << headerOrig.asJson() << std::endl;

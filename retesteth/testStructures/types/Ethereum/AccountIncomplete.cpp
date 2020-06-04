@@ -29,7 +29,7 @@ AccountIncomplete::AccountIncomplete(DataObject const& _data)
     ETH_ERROR_REQUIRE_MESSAGE(_data.getSubObjects().size() > 0, "AccountIncomplete must have at least one object!");
 }
 
-const DataObject AccountIncomplete::asDataObject() const
+const DataObject AccountIncomplete::asDataObject(ExportOrder) const
 {
     DataObject out;
     string const& addr = m_address.getCContent().asString();

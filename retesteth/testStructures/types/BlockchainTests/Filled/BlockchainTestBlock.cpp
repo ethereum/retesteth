@@ -32,11 +32,11 @@ BlockchainTestBlock::BlockchainTestBlock(DataObject const& _data)
 
         requireJsonFields(_data, "BlockchainTestBlock " + _data.getKey(),
             {{"rlp", {{DataType::String}, jsonField::Required}},
-                {"chainname", {{DataType::String}, jsonField::Optional}},    // User information
-                {"blocknumber", {{DataType::String}, jsonField::Optional}},  // User information
+                {"chainname", {{DataType::String}, jsonField::Optional}},          // User information
+                {"blocknumber", {{DataType::String}, jsonField::Optional}},        // User information
                 {"transactions", {{DataType::Array}, jsonField::Optional}},
                 {"uncleHeaders", {{DataType::Array}, jsonField::Optional}},
-                {"expectException", {{DataType::String}, jsonField::Optional}},  // User information
+                {"expectException", {{DataType::String}, jsonField::Optional}},    // User information
                 {"blockHeader", {{DataType::Object}, jsonField::Optional}}});
     }
     catch (std::exception const& _ex)

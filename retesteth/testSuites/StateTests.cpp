@@ -140,20 +140,26 @@ DataObject FillTestAsBlockchain(StateTestInFiller const& _test)
                     VALUE balanceCorrection = cfg.getRewardMap().at(fork).getCContent();
                     mexpect.correctMiningReward(_test.Env().currentCoinbase(), balanceCorrection);
 
-                    State postState(getRemoteState(session));
-                    if (Options::get().fullstate)
-                        compareStates(mexpect, postState);
-                    else
-                        compareStates(mexpect, session);
-
                     DataObject aBlockchainTest;
+                    try
+                    {
+                        State postState(getRemoteState(session));
+                        compareStates(mexpect, postState);
+                        aBlockchainTest["postState"] = postState.asDataObject();
+                    }
+                    catch(StateTooBig const&)
+                    {
+                        compareStates(mexpect, session);
+                        aBlockchainTest["postStateHash"] = remoteBlock.header().stateRoot().asString();
+                    }
+
                     if (_test.hasInfo())
                         aBlockchainTest["_info"]["comment"] = _test.Info().comment();
 
                     EthGetBlockBy genesisBlock(session.eth_getBlockByNumber(0, Request::FULLOBJECTS));
                     aBlockchainTest["genesisBlockHeader"] = genesisBlock.header().asDataObject();
                     aBlockchainTest["pre"] = _test.Pre().asDataObject();
-                    aBlockchainTest["postState"] = postState.asDataObject();
+
                     aBlockchainTest["network"] = fork.asString();
                     aBlockchainTest["sealEngine"] = sealEngineToStr(SealEngine::NoProof);
                     aBlockchainTest["lastblockhash"] = remoteBlock.header().hash().asString();
@@ -254,10 +260,14 @@ DataObject FillTest(StateTestInFiller const& _test)
 
                     if (Options::get().vmtrace)
                         printVmTrace(session, trHash, blockInfo.header().stateRoot());
-                    if (Options::get().fullstate)
+                    try
+                    {
                         compareStates(expect.result(), getRemoteState(session));
-                    else
+                    }
+                    catch(StateTooBig const&)
+                    {
                         compareStates(expect.result(), session);
+                    }
 
                     DataObject indexes;
                     DataObject transactionResults;

@@ -41,20 +41,23 @@ Transaction::Transaction(DataObject const& _data)
             m_s = spVALUE(new VALUE(_data.atKey("s")));
         }
         requireJsonFields(_data, "Transaction " + _data.getKey(),
-            {
-                {"data", {{DataType::String}, jsonField::Required}}, {"gasLimit", {{DataType::String}, jsonField::Required}},
-                {"gasPrice", {{DataType::String}, jsonField::Required}}, {"nonce", {{DataType::String}, jsonField::Required}},
-                {"value", {{DataType::String}, jsonField::Required}},
-                {"to", {{DataType::String, DataType::Null}, jsonField::Required}},
-                {"secretKey", {{DataType::String}, jsonField::Optional}}, {"v", {{DataType::String}, jsonField::Optional}},
-                {"r", {{DataType::String}, jsonField::Optional}}, {"s", {{DataType::String}, jsonField::Optional}},
-                {"blockHash", {{DataType::String}, jsonField::Optional}},         // EthGetBlockBy transaction
-                {"blockNumber", {{DataType::String}, jsonField::Optional}},       // EthGetBlockBy transaction
-                {"from", {{DataType::String}, jsonField::Optional}},              // EthGetBlockBy transaction
-                {"hash", {{DataType::String}, jsonField::Optional}},              // EthGetBlockBy transaction
-                {"transactionIndex", {{DataType::String}, jsonField::Optional}},  // EthGetBlockBy transaction
-                {"invalid", {{DataType::String}, jsonField::Optional}},           // BlockchainTest filling
-            });
+            {{"data", {{DataType::String}, jsonField::Required}},
+             {"gasLimit", {{DataType::String}, jsonField::Required}},
+             {"gasPrice", {{DataType::String}, jsonField::Required}},
+             {"nonce", {{DataType::String}, jsonField::Required}},
+             {"value", {{DataType::String}, jsonField::Required}},
+             {"to", {{DataType::String, DataType::Null}, jsonField::Required}},
+             {"secretKey", {{DataType::String}, jsonField::Optional}},
+             {"v", {{DataType::String}, jsonField::Optional}},
+             {"r", {{DataType::String}, jsonField::Optional}},
+             {"s", {{DataType::String}, jsonField::Optional}},
+             {"blockHash", {{DataType::String}, jsonField::Optional}},           // EthGetBlockBy transaction
+             {"blockNumber", {{DataType::String}, jsonField::Optional}},         // EthGetBlockBy transaction
+             {"from", {{DataType::String}, jsonField::Optional}},                // EthGetBlockBy transaction
+             {"hash", {{DataType::String}, jsonField::Optional}},                // EthGetBlockBy transaction
+             {"transactionIndex", {{DataType::String}, jsonField::Optional}},    // EthGetBlockBy transaction
+             {"invalid", {{DataType::String}, jsonField::Optional}},             // BlockchainTest filling
+                          });
     }
     catch (std::exception const& _ex)
     {
@@ -118,7 +121,7 @@ dev::RLPStream const Transaction::asRLPStream() const
     return out;
 }
 
-const DataObject Transaction::asDataObject() const
+const DataObject Transaction::asDataObject(ExportOrder _order) const
 {
     DataObject out;
     out["data"] = m_data.getCContent().asString();
@@ -133,6 +136,12 @@ const DataObject Transaction::asDataObject() const
     out["v"] = m_v.getCContent().asString();
     out["r"] = m_r.getCContent().asString();
     out["s"] = m_s.getCContent().asString();
+    if (_order == ExportOrder::OldStyle)
+    {
+        out.setKeyPos("r", 4);
+        out.setKeyPos("s", 5);
+        out.setKeyPos("v", 7);
+    }
     return out;
 }
 

@@ -16,7 +16,7 @@ struct AccountIncomplete : AccountBase
 {
     AccountIncomplete(DataObject const&);
     void setBalance(VALUE const& _balance) { m_balance = spVALUE(new VALUE(_balance)); }
-    DataObject const asDataObject() const override;
+    DataObject const asDataObject(ExportOrder) const override;
 };
 
 typedef GCP_SPointer<AccountIncomplete> spAccountIncomplete;

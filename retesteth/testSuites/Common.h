@@ -33,6 +33,10 @@ void validatePostHash(
     SessionInterface& _session, string const& _postHash, scheme_RPCBlock const& _latestInfo);
 
 // Get Remote State From Client
+struct StateTooBig : BaseEthException
+{
+    StateTooBig(){}
+};
 State getRemoteState(SessionInterface& _session);
 
 // Check that test has data object

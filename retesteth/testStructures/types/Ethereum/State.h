@@ -14,16 +14,17 @@ namespace teststruct
 struct State : StateBase
 {
     State(DataObject const&);
-    State(std::map<FH20, spAccount>&);
+    State(std::vector<spAccount>&);
 
     std::map<FH20, spAccountBase> const& accounts() const { return m_accounts; }
     Account const& getAccount(FH20 const& _address) const;
     bool hasAccount(Account const& _account) const;
     bool hasAccount(FH20 const& _address) const;
 
-    DataObject const asDataObject() const override;
+    DataObject const asDataObject(ExportOrder order = ExportOrder::Default) const override;
 
 private:
+    std::vector<FH20> m_order;
     State() {}
 };
 

@@ -6,13 +6,16 @@ namespace test
 {
 namespace teststruct
 {
-State::State(std::map<FH20, spAccount>& _accList)
+State::State(std::vector<spAccount>& _accList)
 {
     // Here spAccountBase will take control of spAccount content and increase its refCount
     // AccountBase will handle all the logic for Account, but with this constructor
     // We certain that account provided for the state is full and not incomplete
     for (auto& el : _accList)
-        m_accounts[el.first] = spAccountBase(&el.second.getContent());
+    {
+        m_order.push_back(el.getCContent().address());
+        m_accounts[el.getCContent().address()] = spAccountBase(&el.getContent());
+    }
 }
 
 State::State(DataObject const& _data)
@@ -20,7 +23,11 @@ State::State(DataObject const& _data)
     try
     {
         for (auto const& el : _data.getSubObjects())
-            m_accounts[FH20(el.getKey())] = spAccountBase(new Account(el));
+        {
+            FH20 key(el.getKey());
+            m_order.push_back(key);
+            m_accounts[key] = spAccountBase(new Account(el));
+        }
     }
     catch (std::exception const& _ex)
     {
@@ -44,11 +51,19 @@ bool State::hasAccount(FH20 const& _address) const
     return m_accounts.count(_address);
 }
 
-const DataObject State::asDataObject() const
+const DataObject State::asDataObject(ExportOrder _order) const
 {
     DataObject out;
-    for (auto const& el : m_accounts)
-        out.addSubObject(el.second.getCContent().asDataObject());
+    if (_order == ExportOrder::OldStyle)
+    {
+        for (auto const& el : m_order)
+            out.addSubObject(m_accounts.at(el).getCContent().asDataObject(_order));
+    }
+    else
+    {
+        for (auto const& el : m_accounts)
+            out.addSubObject(el.second.getCContent().asDataObject());
+    }
     return out;
 }
 

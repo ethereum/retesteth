@@ -17,7 +17,8 @@ TestBlockchain::TestBlockchain(BlockchainTestFillerEnv const& _testEnv, State co
         resetChainParams();
 
     EthGetBlockBy latestBlock(m_session.eth_getBlockByNumber(0, Request::LESSOBJECTS));
-    TestBlock genesisBlock(latestBlock.header(), "genesis", m_network, 0, string());
+    TestBlock genesisBlock(latestBlock.getRLPHeaderTransactions(), "genesis", m_network, 0);
+    genesisBlock.registerTestHeader(latestBlock.header());
     genesisBlock.setNextBlockForked(mineNextBlockAndRewert());
     m_blocks.push_back(genesisBlock);
 }
@@ -34,8 +35,8 @@ void TestBlockchain::generateBlock(
             ETH_ERROR_MESSAGE("rawBlock rlp appered to be valid. Unable to contruct objects from RLP!");
         else
         {
-            TestBlock newBlock(
-                _block.rawRLP(), m_chainName, m_network, m_blocks.size() + 1, _block.getExpectException(m_network));
+            TestBlock newBlock(_block.rawRLP(), m_chainName, m_network, m_blocks.size());
+            newBlock.registerTestExceptios(_block.getExpectException(m_network));
             m_blocks.push_back(newBlock);
         }
         return;
@@ -57,34 +58,34 @@ void TestBlockchain::generateBlock(
     {
         // if block mining failed, the block is invalid
         FORK const& newBlockNet = _block.hasChainNet() ? _block.chainNet() : m_network;
-        TestBlock newBlock(rawRLP, _block.chainName(), newBlockNet, m_blocks.size(), _block.getExpectException(m_network),
-            _block.isDoNotImportOnClient());
+        TestBlock newBlock(rawRLP, _block.chainName(), newBlockNet, m_blocks.size());
+        newBlock.registerTestExceptios(_block.getExpectException(m_network));
+        newBlock.setDoNotExport(_block.isDoNotImportOnClient());
         m_blocks.push_back(newBlock);
     }
     else
     {
         // if block mining succeed. the block is valid.
         FORK const& newBlockNet = _block.hasChainNet() ? _block.chainNet() : m_network;
-        TestBlock newBlock(latestBlock.getCContent().header(), _block.chainName(), newBlockNet, m_blocks.size(),
-            _block.getExpectException(m_network), _block.isDoNotImportOnClient());
+        TestBlock newBlock(rawRLP, _block.chainName(), newBlockNet, m_blocks.size());
+        newBlock.registerTestExceptios(_block.getExpectException(m_network));
+        newBlock.registerTestHeader(latestBlock.getCContent().header());
+        newBlock.setDoNotExport(_block.isDoNotImportOnClient());
 
         // Register all test transactions (the one described in test)
         for (auto const& tr : _block.transactions())
         {
             if (!tr.isMarkedInvalid())  // some transactions in fillers might be expected to fail
-                newBlock.addTransaction(tr.tr());
+                newBlock.registerTestTransaction(tr.tr());
         }
 
         // Register all test uncles (the one described in test)
         for (auto const& uncle : _uncles)
-            newBlock.addUncle(uncle);
+            newBlock.registerTestUncle(uncle);
 
         // Ask remote client to generate a parallel blockheader that will later be used for uncles
         if (_generateUncles)
             newBlock.setNextBlockForked(mineNextBlockAndRewert());
-
-        // The test BlockchainTest::Block::RLP field. the one that actually would be imported in hive
-        newBlock.addActualRLP(rawRLP);
 
         m_blocks.push_back(newBlock);
     }
@@ -237,7 +238,7 @@ void TestBlockchain::restoreUpToNumber(SessionInterface& _session, VALUE const& 
         {
             if (actNumber++ == 0)  // Skip Genesis
                 continue;
-            _session.test_importRawBlock(block.getRLP());
+            _session.test_importRawBlock(block.getRawRLP());
         }
         return;
     }
@@ -259,7 +260,7 @@ void TestBlockchain::restoreUpToNumber(SessionInterface& _session, VALUE const& 
         }
 
         if (actNumber < _number.asU256())
-            _session.test_importRawBlock(block.getRLP());
+            _session.test_importRawBlock(block.getRawRLP());
         else
         {
             popUpCount++;

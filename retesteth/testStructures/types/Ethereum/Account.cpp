@@ -29,7 +29,7 @@ Account::Account(DataObject const& _data)
          {"storage", {DataType::Object}}});
 }
 
-const DataObject Account::asDataObject() const
+const DataObject Account::asDataObject(ExportOrder _order) const
 {
     DataObject out;
     string const& addr = m_address.getCContent().asString();
@@ -38,6 +38,13 @@ const DataObject Account::asDataObject() const
     out["nonce"] = m_nonce.getCContent().asString();
     out["storage"] = m_storage.getCContent().asDataObject();
     out.setKey(addr);
+
+    if (_order == ExportOrder::OldStyle)
+    {
+        out.setKeyPos("code", 0);
+        out.setKeyPos("nonce", 1);
+        out.setKeyPos("balance", 2);
+    }
     return out;
 }
 

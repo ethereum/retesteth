@@ -60,13 +60,17 @@ State getRemoteState(SessionInterface& _session)
     VALUE trIndex(recentBlock.transactions().size());
 
     // Construct accountList by asking packs of 10th of accounts from remote client
-    std::set<FH20> accountList;
+    std::vector<FH20> accountList;
     FH32 nextKey("0x0000000000000000000000000000000000000000000000000000000000000001");
     while (!nextKey.isZero())
     {
         DebugAccountRange range(_session.debug_accountRange(recentBNumber, trIndex, nextKey, 10));
         for (auto const& el : range.addresses())
-            accountList.insert(el);
+        {
+            accountList.push_back(el);
+            if (!Options::get().fullstate && accountList.size() > 50)
+                throw StateTooBig();
+        }
         nextKey = range.nextKey();
     }
 
@@ -74,10 +78,20 @@ State getRemoteState(SessionInterface& _session)
     auto getRemoteAccount = [&_session, &recentBNumber, &trIndex](
                                 FH20 const& _account) { return remoteGetAccount(_session, recentBNumber, trIndex, _account); };
 
-    std::map<FH20, spAccount> stateAccountMap;
+    size_t byteSize = 0;
+    std::vector<spAccount> stateAccountMap;
     for (auto const& acc : accountList)
-        stateAccountMap[acc] = spAccount(new Account(getRemoteAccount(acc)));
-
+    {
+        spAccount remAccount(new Account(getRemoteAccount(acc)));
+        stateAccountMap.push_back(remAccount);
+        if (!Options::get().fullstate)
+        {
+            byteSize += remAccount.getCContent().storage().getKeys().size() * 64;
+            byteSize += remAccount.getCContent().code().asString().size() / 2;
+            if (byteSize > 1048510) // 1MB
+                throw StateTooBig();
+        }
+    }
     return State(stateAccountMap);
 }
 
