@@ -34,17 +34,15 @@ BlockchainTestInFilled::BlockchainTestInFilled(DataObject const& _data)
                 m_exceptions.push_back(_data.atKey("exceptions").getSubObjects().at(i - 1).asString());
         }
         requireJsonFields(_data, "BlockchainTestInFilled " + _data.getKey(),
-            {{"_info", {{DataType::Object}, jsonField::Required}},
-             {"sealEngine", {{DataType::String}, jsonField::Required}},
-             {"genesisBlockHeader", {{DataType::Object}, jsonField::Required}},
-             {"postState", {{DataType::Object}, jsonField::Optional}},
-             {"postStateHash", {{DataType::String}, jsonField::Optional}},
-             {"exceptions", {{DataType::Array}, jsonField::Optional}},
-             {"genesisRLP", {{DataType::String}, jsonField::Required}},
-             {"lastblockhash", {{DataType::String}, jsonField::Required}},
-             {"network", {{DataType::String}, jsonField::Required}},
-             {"pre", {{DataType::Object}, jsonField::Required}},
-             {"blocks", {{DataType::Array}, jsonField::Required}}});
+            {{"_info", {{DataType::Object}, jsonField::Required}}, {"sealEngine", {{DataType::String}, jsonField::Required}},
+                {"genesisBlockHeader", {{DataType::Object}, jsonField::Required}},
+                {"postState", {{DataType::Object}, jsonField::Optional}},
+                {"postStateHash", {{DataType::String}, jsonField::Optional}},
+                {"exceptions", {{DataType::Array}, jsonField::Optional}},
+                {"genesisRLP", {{DataType::String}, jsonField::Required}},
+                {"lastblockhash", {{DataType::String}, jsonField::Required}},
+                {"network", {{DataType::String}, jsonField::Required}}, {"pre", {{DataType::Object}, jsonField::Required}},
+                {"blocks", {{DataType::Array}, jsonField::Required}}});
     }
     catch (std::exception const& _ex)
     {

@@ -54,13 +54,10 @@ BlockchainTestInFiller::BlockchainTestInFiller(DataObject const& _data)
         }
 
         requireJsonFields(_data, "BlockchainTestInFiller " + _data.getKey(),
-            {{"_info", {{DataType::Object}, jsonField::Optional}},
-             {"sealEngine", {{DataType::String}, jsonField::Required}},
-             {"genesisBlockHeader", {{DataType::Object}, jsonField::Required}},
-             {"expect", {{DataType::Array}, jsonField::Required}},
-             {"exceptions", {{DataType::Array}, jsonField::Optional}},
-             {"pre", {{DataType::Object}, jsonField::Required}},
-             {"blocks", {{DataType::Array}, jsonField::Required}}});
+            {{"_info", {{DataType::Object}, jsonField::Optional}}, {"sealEngine", {{DataType::String}, jsonField::Required}},
+                {"genesisBlockHeader", {{DataType::Object}, jsonField::Required}},
+                {"expect", {{DataType::Array}, jsonField::Required}}, {"exceptions", {{DataType::Array}, jsonField::Optional}},
+                {"pre", {{DataType::Object}, jsonField::Required}}, {"blocks", {{DataType::Array}, jsonField::Required}}});
     }
     catch (std::exception const& _ex)
     {

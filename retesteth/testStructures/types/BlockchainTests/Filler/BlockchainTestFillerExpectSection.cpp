@@ -21,8 +21,7 @@ BlockchainTestFillerExpectSection::BlockchainTestFillerExpectSection(DataObject 
         m_forks = cfg.translateNetworks(forks);
         m_result = GCP_SPointer<StateIncomplete>(new StateIncomplete(_data.atKey("result"), DataRequier::ALLOWDEC));
         requireJsonFields(_data, "BlockchainTestFillerExpectSection " + _data.getKey(),
-            {{"network", {{DataType::Array}, jsonField::Required}},
-             {"result", {{DataType::Object}, jsonField::Required}}});
+            {{"network", {{DataType::Array}, jsonField::Required}}, {"result", {{DataType::Object}, jsonField::Required}}});
     }
     catch (std::exception const& _ex)
     {
