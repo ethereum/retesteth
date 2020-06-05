@@ -19,7 +19,6 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #pragma once
-#include <retesteth/ethObjects/common.h>
 #include <retesteth/session/RPCSession.h>
 #include <boost/filesystem/path.hpp>
 
@@ -27,10 +26,6 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace test
 {
-// Check post condition on a client
-// void checkExpectSection(SessionInterface& _session, LatestInfo const& _expectedInfo);
-void validatePostHash(
-    SessionInterface& _session, string const& _postHash, scheme_RPCBlock const& _latestInfo);
 
 // Get Remote State From Client
 struct StateTooBig : BaseEthException
@@ -53,6 +48,17 @@ void checkTestNameIsEqualToFileName(DataObject const& _input);
 void checkTestNameIsEqualToFileName(string const& _testName);
 
 
+enum CompareResult
+{
+    Success,
+    AccountShouldNotExist,
+    MissingExpectedAccount,
+    IncorrectBalance,
+    IncorrectNonce,
+    IncorrectCode,
+    IncorrectStorage,
+    None
+};
 string CompareResultToString(CompareResult res);
 
 // Compafre expected StateIncomplete against remote client (get post state data on the fly with session)

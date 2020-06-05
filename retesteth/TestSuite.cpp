@@ -81,9 +81,9 @@ TestFileData readTestFile(fs::path const& _testFileName)
     return testData;
 }
 
-void removeComments(dataobject::DataObject& _obj)
+void removeComments(DataObject& _obj)
 {
-    if (_obj.type() == dataobject::DataType::Object)
+    if (_obj.type() == DataType::Object)
     {
 		list<string> removeList;
         for (auto& i: _obj.getSubObjectsUnsafe())
@@ -98,24 +98,23 @@ void removeComments(dataobject::DataObject& _obj)
         for (auto const& i: removeList)
             _obj.removeKey(i);
 	}
-    else if (_obj.type() == dataobject::DataType::Array)
+    else if (_obj.type() == DataType::Array)
     {
         for (auto& i: _obj.getSubObjectsUnsafe())
 			removeComments(i);
     }
 }
 
-void addClientInfo(
-    dataobject::DataObject& _v, fs::path const& _testSource, h256 const& _testSourceHash)
+void addClientInfo(DataObject& _v, fs::path const& _testSource, h256 const& _testSourceHash)
 {
     SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
     for (auto& o : _v.getSubObjectsUnsafe())
     {
         string comment;
-        dataobject::DataObject clientinfo;
+        DataObject clientinfo;
         if (o.count("_info"))
         {
-            dataobject::DataObject const& existingInfo = o.atKey("_info");
+            DataObject const& existingInfo = o.atKey("_info");
             if (existingInfo.count("comment"))
                 comment = existingInfo.atKey("comment").asString();
         }
@@ -135,18 +134,18 @@ void addClientInfo(
 
 void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
 {
-    dataobject::DataObject v = test::readJsonData(_compiledTest, "_info");
+    DataObject v = test::readJsonData(_compiledTest, "_info");
     TestFileData fillerData = readTestFile(_sourceTest);
     for (auto const& i: v.getSubObjects())
     {
         try
         {
             // use eth object _info section class here !!!!!
-            ETH_ERROR_REQUIRE_MESSAGE(i.type() == dataobject::DataType::Object,
-                i.getKey() + " should contain an object under a test name.");
+            ETH_ERROR_REQUIRE_MESSAGE(
+                i.type() == DataType::Object, i.getKey() + " should contain an object under a test name.");
             ETH_ERROR_REQUIRE_MESSAGE(
                 i.count("_info") > 0, "_info section not set! " + _compiledTest.string());
-            dataobject::DataObject const& info = i.atKey("_info");
+            DataObject const& info = i.atKey("_info");
             ETH_ERROR_REQUIRE_MESSAGE(info.count("sourceHash") > 0,
                 "sourceHash not found in " + _compiledTest.string() + " in " + i.getKey());
             h256 const sourceHash = h256(info.atKey("sourceHash").asString());

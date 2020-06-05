@@ -5,22 +5,6 @@
 using namespace std;
 namespace test
 {
-void validatePostHash(
-    SessionInterface& _session, string const& _postHash, scheme_RPCBlock const& _latestInfo)
-{
-    (void)_session;
-    (void)_postHash;
-    (void)_latestInfo;
-    /*
-    string actualHash = _latestInfo.getStateHash();
-    if (actualHash != _postHash)
-    {
-        if (Options::get().logVerbosity >= 5)
-            ETH_LOG("\nState Dump: \n" + getRemoteState(_session, _latestInfo).getData().asJson(), 5);
-        ETH_ERROR_MESSAGE("Post hash mismatch remote: " + actualHash + ", expected: " + _postHash);
-    }
-    */
-}
 
 void checkDataObject(DataObject const& _input)
 {

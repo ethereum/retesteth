@@ -1,6 +1,5 @@
 #include "VALUE.h"
 #include <retesteth/EthChecks.h>
-#include <retesteth/ethObjects/object.h>
 #include <retesteth/TestHelper.h>
 using namespace test::teststruct;
 

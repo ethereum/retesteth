@@ -43,6 +43,7 @@
 
 using namespace std;
 using namespace dev;
+using namespace test;
 using namespace test::teststruct;
 namespace fs = boost::filesystem;
 

@@ -1,7 +1,6 @@
 #pragma once
 #include <libdevcore/RLP.h>
 #include <retesteth/dataObject/DataObject.h>
-#include <retesteth/ethObjects/common.h>
 #include <string>
 
 /*

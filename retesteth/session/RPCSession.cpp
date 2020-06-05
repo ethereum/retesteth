@@ -30,18 +30,20 @@
 
 #include <retesteth/EthChecks.h>
 #include <retesteth/ExitHandler.h>
+#include <retesteth/Options.h>
 #include <retesteth/TestHelper.h>
 #include <retesteth/TestOutputHelper.h>
+#include <retesteth/configs/ClientConfig.h>
 #include <retesteth/session/RPCImpl.h>
 #include <retesteth/session/ToolImpl.h>
 
 using namespace std;
 using namespace dev;
+using namespace test;
 
 struct sessionInfo
 {
-    sessionInfo(FILE* _pipe, RPCSession* _session, std::string const& _tmpDir, int _pid,
-        test::ClientConfigID const& _configId)
+    sessionInfo(FILE* _pipe, RPCSession* _session, std::string const& _tmpDir, int _pid, ClientConfigID const& _configId)
     {
         session.reset(_session);
         filePipe.reset(_pipe);

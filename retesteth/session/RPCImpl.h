@@ -1,5 +1,4 @@
 #pragma once
-#include <retesteth/ethObjects/common.h>
 #include <retesteth/session/SessionInterface.h>
 #include <retesteth/session/Socket.h>
 #include <string>

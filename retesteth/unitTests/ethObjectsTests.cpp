@@ -20,7 +20,7 @@
 
 #include <retesteth/TestOutputHelper.h>
 #include <retesteth/dataObject/ConvertFile.h>
-#include <retesteth/ethObjects/common.h>
+#include <retesteth/testStructures/Common.h>
 #include <retesteth/testStructures/configs/ClientConfigFile.h>
 #include <retesteth/testStructures/types/ethereum.h>
 #include <retesteth/testSuites/Common.h>
@@ -30,6 +30,7 @@
 using namespace std;
 using namespace dev;
 using namespace test;
+using namespace test::teststruct;
 
 BOOST_FIXTURE_TEST_SUITE(EthObjectsSuite, TestOutputHelperFixture)
 
@@ -206,41 +207,39 @@ BOOST_AUTO_TEST_CASE(dataobject_setKeyPos_firstToLast)
 
 BOOST_AUTO_TEST_CASE(object_stringIntegerType_correctHex)
 {
-	BOOST_CHECK(object::stringIntegerType("0x11223344") == object::DigitsType::HexPrefixed);
-    BOOST_CHECK(object::stringIntegerType("0x1122334") == object::DigitsType::UnEvenHexPrefixed);
-    BOOST_CHECK(
-        object::stringIntegerType("0x01234567890") == object::DigitsType::UnEvenHexPrefixed);
-    BOOST_CHECK(object::stringIntegerType("0x11223344abcdef") == object::DigitsType::HexPrefixed);
-	BOOST_CHECK(object::stringIntegerType("0xabcdef") == object::DigitsType::HexPrefixed);
-    BOOST_CHECK(
-        object::stringIntegerType("0x11223344abcdeff") == object::DigitsType::UnEvenHexPrefixed);
+    BOOST_CHECK(stringIntegerType("0x11223344") == DigitsType::HexPrefixed);
+    BOOST_CHECK(stringIntegerType("0x1122334") == DigitsType::UnEvenHexPrefixed);
+    BOOST_CHECK(stringIntegerType("0x01234567890") == DigitsType::UnEvenHexPrefixed);
+    BOOST_CHECK(stringIntegerType("0x11223344abcdef") == DigitsType::HexPrefixed);
+    BOOST_CHECK(stringIntegerType("0xabcdef") == DigitsType::HexPrefixed);
+    BOOST_CHECK(stringIntegerType("0x11223344abcdeff") == DigitsType::UnEvenHexPrefixed);
 
-    BOOST_CHECK(object::stringIntegerType("11223344abcdef") == object::DigitsType::Hex);
-	BOOST_CHECK(object::stringIntegerType("abcdef") == object::DigitsType::Hex);
-    BOOST_CHECK(object::stringIntegerType("11223344abcdeff") == object::DigitsType::UnEvenHex);
+    BOOST_CHECK(stringIntegerType("11223344abcdef") == DigitsType::Hex);
+    BOOST_CHECK(stringIntegerType("abcdef") == DigitsType::Hex);
+    BOOST_CHECK(stringIntegerType("11223344abcdeff") == DigitsType::UnEvenHex);
 }
 
 BOOST_AUTO_TEST_CASE(object_stringIntegerType_correctDecimal)
 {
-	BOOST_CHECK(object::stringIntegerType("11223344") == object::DigitsType::Decimal);
-	BOOST_CHECK(object::stringIntegerType("1122334") == object::DigitsType::Decimal);
-	BOOST_CHECK(object::stringIntegerType("01234567890") == object::DigitsType::Decimal);
-	BOOST_CHECK(object::stringIntegerType("0000000000000000000000000000000000000000") == object::DigitsType::Decimal);
-	BOOST_CHECK(object::stringIntegerType("3535353535353535353535353535353535353535") == object::DigitsType::Decimal);
+    BOOST_CHECK(stringIntegerType("11223344") == DigitsType::Decimal);
+    BOOST_CHECK(stringIntegerType("1122334") == DigitsType::Decimal);
+    BOOST_CHECK(stringIntegerType("01234567890") == DigitsType::Decimal);
+    BOOST_CHECK(stringIntegerType("0000000000000000000000000000000000000000") == DigitsType::Decimal);
+    BOOST_CHECK(stringIntegerType("3535353535353535353535353535353535353535") == DigitsType::Decimal);
 }
 
 BOOST_AUTO_TEST_CASE(object_stringIntegerType_otherTypes)
 {
-	BOOST_CHECK(object::stringIntegerType("0x11223344z") == object::DigitsType::String);
-	BOOST_CHECK(object::stringIntegerType("0x1122334s") == object::DigitsType::String);
-	BOOST_CHECK(object::stringIntegerType("0x01234567890r") == object::DigitsType::String);
-	BOOST_CHECK(object::stringIntegerType("0x11223344abttcdef") == object::DigitsType::String);
-	BOOST_CHECK(object::stringIntegerType("0xabcdefk") == object::DigitsType::String);
-	BOOST_CHECK(object::stringIntegerType("0xll11223344abcdeff") == object::DigitsType::String);
+    BOOST_CHECK(stringIntegerType("0x11223344z") == DigitsType::String);
+    BOOST_CHECK(stringIntegerType("0x1122334s") == DigitsType::String);
+    BOOST_CHECK(stringIntegerType("0x01234567890r") == DigitsType::String);
+    BOOST_CHECK(stringIntegerType("0x11223344abttcdef") == DigitsType::String);
+    BOOST_CHECK(stringIntegerType("0xabcdefk") == DigitsType::String);
+    BOOST_CHECK(stringIntegerType("0xll11223344abcdeff") == DigitsType::String);
 
-	BOOST_CHECK(object::stringIntegerType("11223r344abcdef") == object::DigitsType::String);
-	BOOST_CHECK(object::stringIntegerType("abcdefrr") == object::DigitsType::String);
-	BOOST_CHECK(object::stringIntegerType("11223344abcdeffzz") == object::DigitsType::String);
+    BOOST_CHECK(stringIntegerType("11223r344abcdef") == DigitsType::String);
+    BOOST_CHECK(stringIntegerType("abcdefrr") == DigitsType::String);
+    BOOST_CHECK(stringIntegerType("11223344abcdeffzz") == DigitsType::String);
 }
 
 

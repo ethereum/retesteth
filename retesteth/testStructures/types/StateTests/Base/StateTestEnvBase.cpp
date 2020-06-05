@@ -1,6 +1,5 @@
 #include "StateTestEnvBase.h"
 #include <retesteth/EthChecks.h>
-#include <retesteth/ethObjects/object.h>
 namespace test
 {
 namespace teststruct

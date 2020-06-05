@@ -4,7 +4,7 @@
 #include "TestOutputHelper.h"
 #include <retesteth/Options.h>
 #include <retesteth/configs/ClientConfig.h>
-#include <retesteth/ethObjects/object.h>
+#include <mutex>
 
 using namespace test;
 using namespace test::teststruct;
@@ -14,15 +14,15 @@ namespace
 string toCompactHexPrefixed(string const& _str, size_t _minSize)
 {
     string prefix = string();
-    object::DigitsType t = object::stringIntegerType(_str);
-    if (t == object::DigitsType::Hex || t == object::UnEvenHex)
+    DigitsType t = stringIntegerType(_str);
+    if (t == DigitsType::Hex || t == DigitsType::UnEvenHex)
         prefix = "0x";
     return dev::toCompactHexPrefixed(u256(prefix + _str), _minSize);
 }
 
-bool isHexDigitsType(test::object::DigitsType _dtype)
+bool isHexDigitsType(DigitsType _dtype)
 {
-    return (_dtype == test::object::DigitsType::HexPrefixed || _dtype == test::object::DigitsType::UnEvenHexPrefixed);
+    return (_dtype == DigitsType::HexPrefixed || _dtype == DigitsType::UnEvenHexPrefixed);
 }
 
 }  // namespace
@@ -109,15 +109,15 @@ void mod_removeLeadingZerosFromHexValuesEVEN(DataObject& _obj)
     mod_removeLeadingZerosFromHexValues(_obj);
     if (_obj.type() == DataType::String)
     {
-        object::DigitsType t = object::stringIntegerType(_obj.asString());
-        if (t == object::DigitsType::UnEvenHexPrefixed)
+        DigitsType t = stringIntegerType(_obj.asString());
+        if (t == DigitsType::UnEvenHexPrefixed)
             _obj.setString("0x0" + _obj.asString().substr(2));
     }
 }
 
 long int hexOrDecStringToInt(string const& _str)
 {
-    if (isHexDigitsType(test::object::stringIntegerType(_str)))
+    if (isHexDigitsType(stringIntegerType(_str)))
         return (long int)dev::u256(_str);
     else
         return atoi(_str.c_str());
@@ -294,6 +294,50 @@ DataObject convertDecBlockheaderIncompleteToHex(DataObject const& _data)
         if (_data.count(key))
             tmpD[key].performModifier(mod_valueToCompactEvenHexPrefixed);
     return tmpD;
+}
+
+std::mutex g_strFindMutex;
+DigitsType stringIntegerType(std::string const& _string)
+{
+    if (_string[0] == '0' && _string[1] == 'x')
+    {
+        string substring = _string.substr(2);
+        DigitsType substringType = stringIntegerType(substring);
+        if (substringType == DigitsType::Hex)
+            return DigitsType::HexPrefixed;
+
+        if (substringType == DigitsType::Decimal)
+        {
+            if (substring.size() % 2 == 0)
+                return DigitsType::HexPrefixed;
+            else
+                return DigitsType::UnEvenHexPrefixed;
+        }
+
+        if (substringType == DigitsType::UnEvenHex)
+            return DigitsType::UnEvenHexPrefixed;
+    }
+
+    bool isDecimalOnly = true;
+    std::lock_guard<std::mutex> lock(g_strFindMutex);  // string.find is not thread safe + static
+    static std::string hexAlphabet = "0123456789abcdefABCDEF";
+    static std::string decimalAlphabet = "0123456789";
+    for (size_t i = 0; i < _string.length(); i++)
+    {
+        if (hexAlphabet.find(_string[i]) == std::string::npos)
+            return DigitsType::String;
+
+        if (decimalAlphabet.find(_string[i]) == std::string::npos)
+            isDecimalOnly = false;
+    }
+
+    if (isDecimalOnly)
+        return DigitsType::Decimal;
+
+    if (_string.size() % 2 == 0)
+        return DigitsType::Hex;
+
+    return DigitsType::UnEvenHex;
 }
 
 }  // namespace teststruct

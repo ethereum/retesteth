@@ -1,9 +1,10 @@
 #include "TestBlockchainManager.h"
+#include <retesteth/Options.h>
 #include <retesteth/TestSuite.h>
 #include <retesteth/testStructures/types/BlockchainTests/BlockchainTestFiller.h>
 #include <retesteth/testSuites/Common.h>
 
-using namespace blockchainfiller;
+using namespace test::blockchainfiller;
 namespace test
 {
 /// Generate blockchain test from filler

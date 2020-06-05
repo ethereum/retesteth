@@ -3,6 +3,7 @@
 #include <thread>
 
 #include <dataObject/ConvertFile.h>
+#include <retesteth/EthChecks.h>
 #include <retesteth/session/RPCImpl.h>
 #include <retesteth/testStructures/Common.h>
 

@@ -1,5 +1,6 @@
 #include "BlockchainTestLogic.h"
 #include <retesteth/EthChecks.h>
+#include <retesteth/Options.h>
 #include <retesteth/session/RPCSession.h>
 #include <retesteth/testStructures/Common.h>
 #include <retesteth/testSuites/Common.h>

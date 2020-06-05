@@ -20,6 +20,17 @@ void mod_valueToCompactEvenHexPrefixed(DataObject&);
 void mod_keyToCompactEvenHexPrefixed(DataObject&);
 long int hexOrDecStringToInt(string const& _str);
 
+// See what kind of a string is str
+enum class DigitsType
+{
+    Decimal,
+    Hex,
+    UnEvenHex,
+    HexPrefixed,
+    UnEvenHexPrefixed,
+    String
+};
+DigitsType stringIntegerType(std::string const& _string);
 
 // Prepare chain params rpc request
 DataObject prepareChainParams(FORK const&, SealEngine, State const&, StateTestEnvBase const&);
