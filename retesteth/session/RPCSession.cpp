@@ -158,9 +158,10 @@ void RPCSession::runNewInstanceOfAClient(string const& _threadID, ClientConfig c
 
         break;
     }
+        /*
     case ClientConfgSocketType::TransitionTool:
     {
-        /*
+
         sessionInfo info(NULL,
             new RPCSession(
                 new ToolImpl(Socket::SocketType::TCP, _config.cfgFile().path().string())),
@@ -169,8 +170,8 @@ void RPCSession::runNewInstanceOfAClient(string const& _threadID, ClientConfig c
         socketMap.insert(std::pair<string, sessionInfo>(_threadID, std::move(info)));
         return;
         break;
-        */
-    }
+
+    }*/
     default:
         ETH_FAIL_MESSAGE("Unknown Socket Type in runNewInstanceOfAClient");
     }
