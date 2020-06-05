@@ -141,7 +141,11 @@ public:
         TestOutputHelper::get().setCurrentTestInfo(TestInfo("unit test"));
         TestOutputHelper::get().initTest();
     }
-    ~TestOutputHelperFixture() { TestOutputHelper::get().finishTest(); }
+    ~TestOutputHelperFixture()
+    {
+        TestOutputHelper::get().finishTest();
+        TestOutputHelper::get().registerTestRunSuccess();
+    }
 };
 
 template <class T>

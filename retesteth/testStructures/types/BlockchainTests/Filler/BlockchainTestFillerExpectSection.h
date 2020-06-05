@@ -14,10 +14,17 @@ struct BlockchainTestFillerExpectSection
 {
     BlockchainTestFillerExpectSection(DataObject const&);
     StateIncomplete const& result() const { return m_result.getCContent(); }
-    std::set<FORK> const& forks() const { return m_forks; }
+    std::vector<FORK> const& forks() const { return m_forks; }
+    bool hasFork(FORK const& _fork) const
+    {
+        for (auto const& el : m_forks)
+            if (el == _fork)
+                return true;
+        return false;
+    }
 
 private:
-    std::set<FORK> m_forks;
+    std::vector<FORK> m_forks;
     GCP_SPointer<StateIncomplete> m_result;
 };
 

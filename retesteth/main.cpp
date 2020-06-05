@@ -125,7 +125,20 @@ int main(int argc, const char* argv[])
 	}
 
 	test::Options const& opt = test::Options::get();
-	if (opt.createRandomTest || opt.singleTestFile.is_initialized())
+
+    // Special UnitTest
+    for (int i = 0; i < argc; i++)
+    {
+        // replace test suite to custom tests
+        std::string arg = std::string{argv[i]};
+        if (arg == "-t" && i + 1 < argc && string(argv[i + 1]) == "UnitTests")
+        {
+            argv[i + 1] = "LLLCSuite,DataObjectTestSuite,EthObjectsSuite,OptionsSuite,TestHelperSuite";
+            break;
+        }
+    }
+
+    if (opt.createRandomTest || opt.singleTestFile.is_initialized())
 	{
 		bool testSuiteFound = false;
 		for (int i = 0; i < argc; i++)

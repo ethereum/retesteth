@@ -47,6 +47,7 @@ BOOST_AUTO_TEST_CASE(dataobject_setKeyPos_lastToFirst)
 	BOOST_CHECK(data.getSubObjects().at(1).asString() == "data1");
 	BOOST_CHECK(data.getSubObjects().at(2).getKey() == "key2");
 	BOOST_CHECK(data.getSubObjects().at(2).asString() == "data2");
+    TestOutputHelper::registerTestRunSuccess();
 }
 
 BOOST_AUTO_TEST_CASE(dataobject_setKeyPos_lastToMid)

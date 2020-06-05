@@ -58,7 +58,7 @@ BlockchainTestFillerBlock::BlockchainTestFillerBlock(DataObject const& _data)
                     // Parse ">=Frontier" : "EXCEPTION"
                     ClientConfig const& cfg = Options::get().getDynamicOptions().getCurrentConfig();
                     std::set<string> forksString = { rec.getKey() };
-                    std::set<FORK> parsedForks = cfg.translateNetworks(forksString);
+                    std::vector<FORK> parsedForks = cfg.translateNetworks(forksString);
                     for (auto const& el : parsedForks)
                         m_expectExceptions.emplace(el, rec.asString());
                 }

@@ -44,7 +44,8 @@ public:
     bool checkForkAllowed(FORK const& _net) const;
 
     // Translate smart network names into network names ( `<=Homestead` to `Frontier, Homestead`)
-    set<FORK> translateNetworks(set<string> const& _networks) const;
+    std::vector<FORK> translateNetworks(set<string> const& _networks) const;
+    static std::vector<FORK> translateNetworks(set<string> const& _networks, std::vector<FORK> const& _netOrder);
 
     // Translate exceptionID from tests into client error string from configs
     // Print suggestions if no match found

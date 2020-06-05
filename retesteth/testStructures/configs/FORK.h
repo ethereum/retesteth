@@ -17,6 +17,8 @@ struct FORK : GCP_SPointerBase
     // std container operations
     inline bool operator==(FORK const& rhs) const { return asString() == rhs.asString(); }
     inline bool operator!=(FORK const& rhs) const { return !(*this == rhs); }
+    inline bool operator!=(string const& rhs) const { return !(this->asString() == rhs); }
+    inline bool operator!=(const char* rhs) const { return !(this->asString() == string(rhs)); }
     inline bool operator<(FORK const& rhs) const { return asString() < rhs.asString(); }
 
 private:

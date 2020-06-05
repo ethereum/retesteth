@@ -83,28 +83,26 @@ bool ClientConfig::checkForkAllowed(FORK const& _net) const
 /// translate network names in expect section field
 /// >Homestead to EIP150, EIP158, Byzantium, ...
 /// <=Homestead to Frontier, Homestead
-set<FORK> ClientConfig::translateNetworks(set<string> const& _networks) const
+std::vector<FORK> ClientConfig::translateNetworks(set<string> const& _networks, std::vector<FORK> const& _netOrder)
 {
     // Construct vector with test network names in a right order
     // (from Frontier to Homestead ... to Constantinople)
     // According to fork order in config file
-    set<FORK> out;
+    std::vector<FORK> out;
     for (auto const& net : _networks)
     {
-        std::vector<FORK> const& forkOrder = cfgFile().forks();
+        std::vector<FORK> const& forkOrder = _netOrder;
+        string possibleNet = net.substr(1, net.length() - 1);
+        vector<FORK>::const_iterator it = std::find(forkOrder.begin(), forkOrder.end(), possibleNet);
 
         bool isNetworkTranslated = false;
-        string possibleNet = net.substr(1, net.length() - 1);
-        vector<FORK>::const_iterator it =
-            std::find(forkOrder.begin(), forkOrder.end(), possibleNet);
-
         if (it != forkOrder.end() && net.size() > 1)
         {
             if (net[0] == '>')
             {
                 while (++it != forkOrder.end())
                 {
-                    out.emplace(*it);
+                    out.push_back(*it);
                     isNetworkTranslated = true;
                 }
             }
@@ -112,7 +110,7 @@ set<FORK> ClientConfig::translateNetworks(set<string> const& _networks) const
             {
                 while (it != forkOrder.begin())
                 {
-                    out.emplace(*(--it));
+                    out.push_back(*(--it));
                     isNetworkTranslated = true;
                 }
             }
@@ -126,27 +124,34 @@ set<FORK> ClientConfig::translateNetworks(set<string> const& _networks) const
             {
                 while (it != forkOrder.end())
                 {
-                    out.emplace(*(it++));
+                    out.push_back(*(it++));
                     isNetworkTranslated = true;
                 }
             }
             else if (net[0] == '<' && net[1] == '=')
             {
-                out.emplace(*it);
-                isNetworkTranslated = true;
+                out.push_back(*it);
                 while (it != forkOrder.begin())
-                    out.emplace(*(--it));
+                {
+                    out.push_back(*(--it));
+                    isNetworkTranslated = true;
+                }
             }
         }
 
         // if nothing has been inserted, just push the untranslated network as is
         if (!isNetworkTranslated)
-        {
-            validateForkAllowed(FORK(net));
-            out.emplace(FORK(net));
-        }
+            out.push_back(net);
     }
     return out;
+}
+
+std::vector<FORK> ClientConfig::translateNetworks(set<string> const& _networks) const
+{
+    std::vector<FORK> nets = ClientConfig::translateNetworks(_networks, cfgFile().forks());
+    for (auto const& net : nets)
+        validateForkAllowed(net);
+    return nets;
 }
 
 std::string const& ClientConfig::translateException(string const& _exceptionName) const

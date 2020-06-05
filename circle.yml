@@ -50,6 +50,7 @@ defaults:
         ./retesteth -t TestHelperSuite
         ./retesteth -t EthObjectsSuite
         ./retesteth -t DataObjectTestSuite
+        ./retesteth -t OptionsSuite
 #        ./retesteth -t LLLCSuite
 #        git clone --depth 1 https://github.com/ethereum/tests.git
 #        export ETHEREUM_TEST_PATH=~/build/testeth/tests

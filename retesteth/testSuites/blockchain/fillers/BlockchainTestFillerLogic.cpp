@@ -18,7 +18,7 @@ DataObject FillTest(BlockchainTestInFiller const& _test, TestSuite::TestSuiteOpt
         for (auto const& expect : _test.expects())
         {
             // if expect is for this network, generate the test
-            if (expect.forks().count(net))
+            if (expect.hasFork(net))
             {
                 // Construct filled blockchain test
                 DataObject filledTest;

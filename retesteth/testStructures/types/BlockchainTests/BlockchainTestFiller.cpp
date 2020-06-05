@@ -99,8 +99,9 @@ bool BlockchainTestInFiller::hasExpectForNetwork(FORK const& _net) const
 {
     for (auto const& el : m_expects)
     {
-        if (el.forks().count(_net))
-            return true;
+        for (auto const& el : el.forks())
+            if (el == _net)
+                return true;
     }
     return false;
 }

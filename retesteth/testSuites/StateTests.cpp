@@ -102,7 +102,7 @@ DataObject FillTestAsBlockchain(StateTestInFiller const& _test)
         for (auto const& expect : _test.Expects())
         {
             // if expect section for this networks
-            if (expect.forks().count(fork))
+            if (expect.hasFork(fork))
             {
                 for (auto& tr : txs)
                 {
@@ -229,7 +229,7 @@ DataObject FillTest(StateTestInFiller const& _test)
         for (auto const& expect : _test.Expects())
         {
             // if expect section for this networks
-            if (expect.forks().count(fork))
+            if (expect.hasFork(fork))
             {
                 for (auto& tr : txs)
                 {

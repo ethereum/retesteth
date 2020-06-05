@@ -20,86 +20,94 @@
 
 #include <retesteth/TestHelper.h>
 #include <retesteth/TestOutputHelper.h>
+#include <retesteth/configs/ClientConfig.h>
 #include <boost/test/unit_test.hpp>
 
 using namespace std;
 using namespace dev;
 using namespace test;
-/*
-static vector<string> exampleNets = {"Frontier", "Homestead", "EIP150", "EIP158", "Byzantium",
-    "Constantinople", "ConstantinopleFix"};
+
+namespace
+{
+bool hasNetwork(std::vector<FORK> const& _container, FORK const& _net)
+{
+    for (auto const& el : _container)
+        if (el == _net)
+            return true;
+    return false;
+}
+static vector<FORK> exampleNets = {FORK("Frontier"), FORK("Homestead"), FORK("EIP150"), FORK("EIP158"), FORK("Byzantium"),
+    FORK("Constantinople"), FORK("ConstantinopleFix")};
+}  // namespace
 
 BOOST_FIXTURE_TEST_SUITE(TestHelperSuite, TestOutputHelperFixture)
 
-
-
-
 BOOST_AUTO_TEST_CASE(translateNetworks_gtHomestead)
 {
-    set<string> networks = {"Frontier", ">Homestead"};
-    networks = test::translateNetworks(networks, exampleNets);
-    ETH_FAIL_REQUIRE(networks.count("Frontier") > 0);
-    ETH_FAIL_REQUIRE(networks.count("Homestead") == 0);
+    set<string> rawnetworks = {"Frontier", ">Homestead"};
+    std::vector<FORK> networks = ClientConfig::translateNetworks(rawnetworks, exampleNets);
+    ETH_FAIL_REQUIRE(hasNetwork(networks, FORK("Frontier")));
+    ETH_FAIL_REQUIRE(hasNetwork(networks, FORK("Homestead")) == false);
     for (auto const& net : exampleNets)
     {
         if (net != "Frontier" && net != "Homestead")
-            ETH_FAIL_REQUIRE(networks.count(net) > 0);
+            ETH_FAIL_REQUIRE(hasNetwork(networks, net));
     }
 }
 
 BOOST_AUTO_TEST_CASE(translateNetworks_geHomestead)
 {
-    set<string> networks = {"Frontier", ">=Homestead"};
-    networks = test::translateNetworks(networks, exampleNets);
+    set<string> rawnetworks = {"Frontier", ">=Homestead"};
+    std::vector<FORK> networks = ClientConfig::translateNetworks(rawnetworks, exampleNets);
     for (auto const& net : exampleNets)
-        ETH_FAIL_REQUIRE(networks.count(net) > 0);
+        ETH_FAIL_REQUIRE(hasNetwork(networks, net));
 }
 
 BOOST_AUTO_TEST_CASE(translateNetworks_ltHomestead)
 {
-    set<string> networks = {"<Homestead"};
-    networks = test::translateNetworks(networks, exampleNets);
-    ETH_FAIL_REQUIRE(networks.count("Frontier") > 0);
+    set<string> rawnetworks = {"<Homestead"};
+    std::vector<FORK> networks = ClientConfig::translateNetworks(rawnetworks, exampleNets);
+    ETH_FAIL_REQUIRE(hasNetwork(networks, FORK("Frontier")));
     for (auto const& net : exampleNets)
     {
         if (net != "Frontier")
-            ETH_FAIL_REQUIRE(networks.count(net) == 0);
+            ETH_FAIL_REQUIRE(hasNetwork(networks, net) == false);
     }
 }
 
 BOOST_AUTO_TEST_CASE(translateNetworks_ltTest)
 {
-    set<string> networks = {"<=EIP150", "<EIP158"};
-    networks = test::translateNetworks(networks, exampleNets);
-    ETH_FAIL_REQUIRE(networks.count("Frontier") > 0);
-    ETH_FAIL_REQUIRE(networks.count("Homestead") > 0);
-    ETH_FAIL_REQUIRE(networks.count("EIP150") > 0);
-    ETH_FAIL_REQUIRE(networks.count("EIP158") == 0);
-    ETH_FAIL_REQUIRE(networks.count("Byzantium") == 0);
+    set<string> rawnetworks = {"<=EIP150", "<EIP158"};
+    std::vector<FORK> networks = ClientConfig::translateNetworks(rawnetworks, exampleNets);
+    ETH_FAIL_REQUIRE(hasNetwork(networks, FORK("Frontier")));
+    ETH_FAIL_REQUIRE(hasNetwork(networks, FORK("Homestead")));
+    ETH_FAIL_REQUIRE(hasNetwork(networks, FORK("EIP150")));
+    ETH_FAIL_REQUIRE(hasNetwork(networks, FORK("EIP158")) == false);
+    ETH_FAIL_REQUIRE(hasNetwork(networks, FORK("Byzantium")) == false);
 }
 
 BOOST_AUTO_TEST_CASE(translateNetworks_leHomestead)
 {
-    set<string> networks = {"<=Homestead"};
-    networks = test::translateNetworks(networks, exampleNets);
-    ETH_FAIL_REQUIRE(networks.count("Frontier") > 0);
-    ETH_FAIL_REQUIRE(networks.count("Homestead") > 0);
+    set<string> rawnetworks = {"<=Homestead"};
+    std::vector<FORK> networks = ClientConfig::translateNetworks(rawnetworks, exampleNets);
+    ETH_FAIL_REQUIRE(hasNetwork(networks, FORK("Frontier")));
+    ETH_FAIL_REQUIRE(hasNetwork(networks, FORK("Homestead")));
     for (auto const& net : exampleNets)
     {
         if (net != "Frontier" && net != "Homestead")
-            ETH_FAIL_REQUIRE(networks.count(net) == 0);
+            ETH_FAIL_REQUIRE(hasNetwork(networks, net) == false);
     }
 }
 
 BOOST_AUTO_TEST_CASE(translateNetworks_leFrontier)
 {
-    set<string> networks = {"<=Frontier"};
-    networks = test::translateNetworks(networks, exampleNets);
-    ETH_FAIL_REQUIRE(networks.count("Frontier") > 0);
+    set<string> rawnetworks = {"<=Frontier"};
+    std::vector<FORK> networks = ClientConfig::translateNetworks(rawnetworks, exampleNets);
+    ETH_FAIL_REQUIRE(hasNetwork(networks, FORK("Frontier")));
     for (auto const& net : exampleNets)
     {
         if (net != "Frontier")
-            ETH_FAIL_REQUIRE(networks.count(net) == 0);
+            ETH_FAIL_REQUIRE(hasNetwork(networks, net) == false);
     }
 }
 
@@ -122,4 +130,3 @@ BOOST_AUTO_TEST_CASE(getTestSuggestions2)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-*/
