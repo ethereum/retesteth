@@ -10,7 +10,7 @@ GeneralStateTestFiller::GeneralStateTestFiller(DataObject const& _data)
     {
         ETH_ERROR_REQUIRE_MESSAGE(_data.type() == DataType::Object,
             TestOutputHelper::get().get().testFile().string() + " A test file must contain an object value (json/yaml).");
-        ETH_ERROR_REQUIRE_MESSAGE(_data.getSubObjects().size() >= 1,
+        ETH_ERROR_REQUIRE_MESSAGE(_data.getSubObjects().size() == 1,
             TestOutputHelper::get().get().testFile().string() + " A test file must contain exactly one test!");
         for (auto const& el : _data.getSubObjects())
         {

@@ -19,7 +19,8 @@ BlockHeader::BlockHeader(DataObject const& _data)
     m_extraData = spBYTES(new BYTES(_data.atKey("extraData")));
     m_gasLimit = spVALUE(new VALUE(_data.atKey("gasLimit")));
     m_gasUsed = spVALUE(new VALUE(_data.atKey("gasUsed")));
-    m_hash = spFH32(new FH32(_data.atKey("hash")));
+    if (_data.count("hash"))
+        m_hash = spFH32(new FH32(_data.atKey("hash")));
     string const bkey = _data.count("logsBloom") ? "logsBloom" : "bloom";
     m_logsBloom = spFH256(new FH256(_data.atKey(bkey)));
 
@@ -45,6 +46,10 @@ BlockHeader::BlockHeader(DataObject const& _data)
     m_timestamp = spVALUE(new VALUE(_data.atKey("timestamp")));
     string const tkey = _data.count("transactionsRoot") ? "transactionsRoot" : "transactionsTrie";
     m_transactionsRoot = spFH32(new FH32(_data.atKey(tkey)));
+
+    // Manual hash calculation
+    if (m_hash.isEmpty())
+        recalculateHash();
 
     // Allowed fields for this structure
     requireJsonFields(_data, "BlockHeader " + _data.getKey(),

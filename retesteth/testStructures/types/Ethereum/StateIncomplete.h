@@ -26,5 +26,7 @@ private:
     StateIncomplete(){};
 };
 
+typedef GCP_SPointer<StateIncomplete> spStateIncomplete;
+
 }  // namespace teststruct
 }  // namespace test

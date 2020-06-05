@@ -194,6 +194,7 @@ DataObject FillTest(StateTestInFiller const& _test)
 {
     DataObject filledTest;
     filledTest.setAutosort(true);
+    TestOutputHelper::get().setCurrentTestName(_test.testName());
 
     SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
 
@@ -298,6 +299,7 @@ DataObject FillTest(StateTestInFiller const& _test)
 /// Read and execute the test file
 void RunTest(StateTestInFilled const& _test)
 {
+    TestOutputHelper::get().setCurrentTestName(_test.testName());
     SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
 
     // Gather Transactions from general transaction section

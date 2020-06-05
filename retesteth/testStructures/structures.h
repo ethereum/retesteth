@@ -15,6 +15,7 @@
 #include "types/StateTests/Base/StateTestEnvBase.h"
 #include "types/StateTests/GeneralStateTest.h"
 #include "types/StateTests/GeneralStateTestFiller.h"
+#include "types/VMTests/VMTestFiller.h"
 
 // RPC response Types
 #include "types/rpc.h"
