@@ -134,7 +134,7 @@ GCP_SPointer<EthGetBlockBy> TestBlockchain::mineBlock(
     };
 
     spFH32 minedBlockHash;
-    if (_blockInTest.hasBlockHeader() || _blockInTest.uncles().size() > 0)
+    if (_blockInTest.hasBlockHeader() || _blockInTest.hasRelTimeStamp() || _blockInTest.uncles().size() > 0)
     {
         // Need to overwrite the blockheader of a mined block with either blockHeader or uncles
         // Then import it again and see what client says, because mining with uncles not supported
@@ -284,20 +284,27 @@ FH32 TestBlockchain::postmineBlockHeader(BlockchainTestFillerBlock const& _block
     for (auto const& un : _uncles)
         managedBlock.addUncle(un);
 
-    // Overwrite blockheader if defined in the test filler
     if (_blockInTest.hasBlockHeader())
-    {
-        if (_blockInTest.relTimeStamp() != 0)
-        {
-            EthGetBlockBy previousBlock(m_session.eth_getBlockByNumber(_latestBlockNumber - 1, Request::LESSOBJECTS));
-            managedBlock.headerUnsafe().setTimestamp(previousBlock.header().timestamp().asU256() + _blockInTest.relTimeStamp());
-        }
-
         managedBlock.replaceHeader(_blockInTest.blockHeader().overwriteBlockHeader(managedBlock.header()));
+
+    // Overwrite blockheader if defined in the test filler
+    if (_blockInTest.hasRelTimeStamp())
+    {
+        EthGetBlockBy previousBlock(m_session.eth_getBlockByNumber(_latestBlockNumber - 1, Request::LESSOBJECTS));
+        managedBlock.headerUnsafe().setTimestamp(previousBlock.header().timestamp().asU256() + _blockInTest.relTimeStamp());
     }
 
     // replace block with overwritten header
-    managedBlock.recalculateHash();
+    bool weOverwriteHashFields = false;
+    if (_blockInTest.hasBlockHeader())
+    {
+        if (_blockInTest.blockHeader().hasUncleHash() || _blockInTest.blockHeader().hasTransactionHash())
+            weOverwriteHashFields = true;
+    }
+
+    if (!weOverwriteHashFields)
+        managedBlock.recalculateHash();
+
     m_session.test_rewindToBlock(_latestBlockNumber - 1);
     _rawRLP = BYTES(managedBlock.getRLP().asString());
     return FH32(m_session.test_importRawBlock(_rawRLP));

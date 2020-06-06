@@ -14,6 +14,14 @@ EthGetBlockByTransaction::EthGetBlockByTransaction(DataObject const& _data)
             m_hash = spFH32(new FH32(_data));
         else
         {
+            // Aleth return data field as "" instead of "0x"
+            if (_data.atKey("data").asString().empty())
+            {
+                DataObject& _dataRef = const_cast<DataObject&>(_data);
+                DataObject& _dataFieldRef = _dataRef.atKeyUnsafe("data");
+                _dataFieldRef = "0x";
+            }
+
             m_transaction = spTransaction(new Transaction(_data));
             m_blockHash = spFH32(new FH32(_data.atKey("blockHash")));
             m_blockNumber = spVALUE(new VALUE(_data.atKey("blockNumber")));

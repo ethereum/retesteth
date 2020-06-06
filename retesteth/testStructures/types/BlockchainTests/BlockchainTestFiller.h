@@ -29,7 +29,7 @@ struct BlockchainTestInFiller : GCP_SPointerBase
     std::vector<BlockchainTestFillerExpectSection> const& expects() const { return m_expects; }
 
     bool hasExpectForNetwork(FORK const& _net) const;
-    std::list<FORK> getAllForksFromExpectSections() const;
+    std::set<FORK> getAllForksFromExpectSections() const;
     std::vector<string> const& unitTestExceptions() const { return m_exceptions; }
     bool hasUnclesInTest() const { return m_hasAtLeastOneUncle; }
 

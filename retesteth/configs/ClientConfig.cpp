@@ -88,7 +88,17 @@ std::vector<FORK> ClientConfig::translateNetworks(set<string> const& _networks, 
     // Construct vector with test network names in a right order
     // (from Frontier to Homestead ... to Constantinople)
     // According to fork order in config file
+
+    // Protection from putting double networks.
+    // Use vector instead of set to keep the fork order
     std::vector<FORK> out;
+    auto addNet = [&out](FORK const& _el) {
+        for (auto const& fork : out)
+            if (fork == _el)
+                return;
+        out.push_back(_el);
+    };
+
     for (auto const& net : _networks)
     {
         std::vector<FORK> const& forkOrder = _netOrder;
@@ -102,7 +112,7 @@ std::vector<FORK> ClientConfig::translateNetworks(set<string> const& _networks, 
             {
                 while (++it != forkOrder.end())
                 {
-                    out.push_back(*it);
+                    addNet(*it);
                     isNetworkTranslated = true;
                 }
             }
@@ -110,7 +120,7 @@ std::vector<FORK> ClientConfig::translateNetworks(set<string> const& _networks, 
             {
                 while (it != forkOrder.begin())
                 {
-                    out.push_back(*(--it));
+                    addNet(*(--it));
                     isNetworkTranslated = true;
                 }
             }
@@ -124,7 +134,7 @@ std::vector<FORK> ClientConfig::translateNetworks(set<string> const& _networks, 
             {
                 while (it != forkOrder.end())
                 {
-                    out.push_back(*(it++));
+                    addNet(*(it++));
                     isNetworkTranslated = true;
                 }
             }
@@ -133,7 +143,7 @@ std::vector<FORK> ClientConfig::translateNetworks(set<string> const& _networks, 
                 out.push_back(*it);
                 while (it != forkOrder.begin())
                 {
-                    out.push_back(*(--it));
+                    addNet(*(--it));
                     isNetworkTranslated = true;
                 }
             }
@@ -141,7 +151,7 @@ std::vector<FORK> ClientConfig::translateNetworks(set<string> const& _networks, 
 
         // if nothing has been inserted, just push the untranslated network as is
         if (!isNetworkTranslated)
-            out.push_back(net);
+            addNet(net);
     }
     return out;
 }

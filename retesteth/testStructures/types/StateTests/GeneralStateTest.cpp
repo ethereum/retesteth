@@ -48,6 +48,8 @@ StateTestInFilled::StateTestInFilled(DataObject const& _data)
         StateTestPostResults res;
         for (auto const& elForkResults : elFork.getSubObjects())
             res.push_back(StateTestPostResult(elForkResults));
+        if (m_post.count(FORK(elFork.getKey())))
+            ETH_ERROR_MESSAGE("StateTest post section has multiple results for the same fork!");
         m_post[FORK(elFork.getKey())] = res;
     }
     m_name = _data.getKey();

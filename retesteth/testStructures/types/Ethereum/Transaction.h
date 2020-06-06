@@ -32,6 +32,8 @@ struct Transaction : GCP_SPointerBase
     dev::RLPStream const asRLPStream() const;
     DataObject const asDataObject(ExportOrder _order = ExportOrder::Default) const;
 
+    bool operator==(Transaction const& _rhs) const;
+
 private:
     Transaction() {}
     spBYTES m_data;

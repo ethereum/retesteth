@@ -16,6 +16,8 @@ struct BlockHeaderIncomplete : GCP_SPointerBase
 {
     BlockHeaderIncomplete(DataObject const&);
     BlockHeader overwriteBlockHeader(BlockHeader const& _header) const;
+    bool hasUncleHash() const { return !m_sha3Uncles.isEmpty(); }
+    bool hasTransactionHash() const { return !m_transactionsRoot.isEmpty(); }
 
 private:
     BlockHeaderIncomplete() {}

@@ -53,11 +53,11 @@ StateTestInFiller::StateTestInFiller(DataObject const& _data)
 }
 
 // Gather all networks from all the expect sections
-std::list<FORK> StateTestInFiller::getAllForksFromExpectSections() const
+std::set<FORK> StateTestInFiller::getAllForksFromExpectSections() const
 {
-    std::list<FORK> out;
+    std::set<FORK> out;
     for (auto const& ex : m_expectSections)
         for (auto const& el : ex.forks())
-            out.push_back(el);
+            out.emplace(el);
     return out;
 }

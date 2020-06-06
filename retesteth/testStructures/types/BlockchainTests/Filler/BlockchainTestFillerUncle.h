@@ -28,7 +28,8 @@ struct BlockchainTestFillerUncle : GCP_SPointerBase
     size_t sameAsPreviousSibling() const { return m_sameAsPreviousSibling; }
 
     string const& chainname() const { return m_chainName; }
-    int relTimestampFromPopulateBlock() const { return m_relTimestampFromPopulateBlock; }
+    bool hasRelTimestampFromPopulateBlock() const { return m_hasRelTimestampFromPopulateBlock; }
+    long long int relTimestampFromPopulateBlock() const { return m_relTimestampFromPopulateBlock; }
 
     bool hasOverwriteHeader() const { return !m_headerIncomplete.isEmpty(); }
     BlockHeaderIncomplete const& overwriteHeader() const { return m_headerIncomplete.getCContent(); }
@@ -42,8 +43,8 @@ private:
     size_t m_sameAsBlock;
     size_t m_sameAsPreviousSibling;
 
-    int m_relTimestampFromPopulateBlock = 0;
-
+    bool m_hasRelTimestampFromPopulateBlock = false;
+    long long int m_relTimestampFromPopulateBlock;
     string m_chainName;
 
     // Header incomplete that maps which fields to overwrite in uncle header

@@ -75,6 +75,8 @@ BlockHeader::BlockHeader(DataObject const& _data)
          {"transactionsRoot", {{DataType::String}, jsonField::Optional}},
          {"sha3Uncles", {{DataType::String}, jsonField::Optional}},
          {"uncleHash", {{DataType::String}, jsonField::Optional}},
+         {"seedHash", {{DataType::String}, jsonField::Optional}},            // EthGetBlockBy aleth field
+         {"boundary", {{DataType::String}, jsonField::Optional}},            // EthGetBlockBy aleth field
          {"size", {{DataType::String}, jsonField::Optional}},               // EthGetBlockBy field
          {"totalDifficulty", {{DataType::String}, jsonField::Optional}},    // EthGetBlockBy field
          {"transactions", {{DataType::Array}, jsonField::Optional}},        // EthGetBlockBy field

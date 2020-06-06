@@ -65,7 +65,10 @@ BlockchainTestFillerBlock::BlockchainTestFillerBlock(DataObject const& _data)
             }
             m_relTimeStamp = 0;
             if (_data.atKey("blockHeader").count("RelTimestamp"))
+            {
+                m_hasRelTimeStamp = true;
                 m_relTimeStamp = hexOrDecStringToInt(_data.atKey("blockHeader").atKey("RelTimestamp").asString());
+            }
         }
         requireJsonFields(_data, "BlockchainTestFillerBlock " + _data.getKey(),
             {{"rlp", {{DataType::String}, jsonField::Optional}},

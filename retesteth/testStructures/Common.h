@@ -18,7 +18,7 @@ void mod_removeComments(DataObject& _obj);
 void mod_valuesToLowerCase(DataObject&);
 void mod_valueToCompactEvenHexPrefixed(DataObject&);
 void mod_keyToCompactEvenHexPrefixed(DataObject&);
-long int hexOrDecStringToInt(string const& _str);
+long long int hexOrDecStringToInt(string const& _str);
 
 // See what kind of a string is str
 enum class DigitsType

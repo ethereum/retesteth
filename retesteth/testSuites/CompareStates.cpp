@@ -197,7 +197,7 @@ CompareResult compareAccounts(AccountBase const& _expectAccount, Account const& 
         if (_expect != _remote)
         {
             ETH_MARK_ERROR("Check State: Remote account '" + _remoteAccount.address().asString() + "': has incorrect " + _what +
-                           "`" + _remote.asDecString() + "`, test expected `" + _expect.asDecString() + "` (" +
+                           " '" + _remote.asDecString() + "', test expected '" + _expect.asDecString() + "' (" +
                            _remote.asString() + " != " + _expect.asString() + ")");
             return false;
         }
@@ -216,8 +216,8 @@ CompareResult compareAccounts(AccountBase const& _expectAccount, Account const& 
     {
         if (_expectAccount.code() != _remoteAccount.code())
         {
-            ETH_MARK_ERROR("Check State: Remote account '" + _remoteAccount.address().asString() + "': has incorrect code `" +
-                           _remoteAccount.code().asString() + "`, test expected `" + _expectAccount.code().asString() + "`");
+            ETH_MARK_ERROR("Check State: Remote account '" + _remoteAccount.address().asString() + "': has incorrect code '" +
+                           _remoteAccount.code().asString() + "', test expected '" + _expectAccount.code().asString() + "'");
             result = CompareResult::IncorrectCode;
         }
     }

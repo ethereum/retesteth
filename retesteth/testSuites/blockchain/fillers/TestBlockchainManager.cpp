@@ -190,8 +190,7 @@ BlockHeader TestBlockchainManager::prepareUncle(
                 m_mapOfKnownChain.count(_uncleSectionInTest.chainname()), "Uncle is populating from non-existent chain!");
             TestBlockchain const& chain = m_mapOfKnownChain.at(_uncleSectionInTest.chainname());
             ETH_ERROR_REQUIRE_MESSAGE(chain.getBlocks().size() > origIndex,
-                "Trying to populate uncle from future block in another chain that has not been "
-                "generated yet!");
+                "Trying to populate uncle from future block in another chain that has not been generated yet!");
             tmpRefToSchemeBlock = &chain.getBlocks().at(origIndex).getNextBlockForked();
         }
         else
@@ -227,24 +226,21 @@ BlockHeader TestBlockchainManager::prepareUncle(
     // Perform uncle header modifications according to the uncle section in blockchain test filler block
     // If there is a field that is being overwritten in the uncle header
     if (_uncleSectionInTest.hasOverwriteHeader())
-    {
         uncleBlockHeader = _uncleSectionInTest.overwriteHeader().overwriteBlockHeader(uncleBlockHeader);
-        uncleBlockHeader.recalculateHash();
-    }
 
     // If uncle timestamp is shifted relative to the block that it's populated from
     if (typeOfSection == UncleType::PopulateFromBlock)
     {
-        if (_uncleSectionInTest.relTimestampFromPopulateBlock() != 0)
+        if (_uncleSectionInTest.hasRelTimestampFromPopulateBlock())
         {
-            // Geth the Timestamp of that block (which uncle is populated from)
+            // Get the Timestamp of that block (which uncle is populated from)
             VALUE timestamp(currentChainMining.getBlocks().at(origIndex).getTestHeader().timestamp());
             uncleBlockHeader.setTimestamp(timestamp.asU256() + _uncleSectionInTest.relTimestampFromPopulateBlock());
-            uncleBlockHeader.recalculateHash();
         }
     }
 
     // Recalculate uncleHash because we will be checking which uncle hash will be returned by the client
+    uncleBlockHeader.recalculateHash();
     return uncleBlockHeader;
 }
 

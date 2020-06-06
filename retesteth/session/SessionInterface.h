@@ -17,7 +17,7 @@ enum class Request
 
 struct RPCError
 {
-    RPCError() : m_empty(true){};
+    RPCError() : m_empty(true) { clear(); };
     RPCError(string const& _error, string const& _message) : m_error(_error), m_message(_message), m_empty(false){};
     string const& error() const { return m_error; }
     string const& message() const { return m_message; }
@@ -25,7 +25,7 @@ struct RPCError
     void clear()
     {
         m_empty = true;
-        m_message = "No message";
+        m_message = "No error message";
         m_error = "No error";
     }
 

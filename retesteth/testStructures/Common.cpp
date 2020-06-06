@@ -115,12 +115,17 @@ void mod_removeLeadingZerosFromHexValuesEVEN(DataObject& _obj)
     }
 }
 
-long int hexOrDecStringToInt(string const& _str)
+long long int hexOrDecStringToInt(string const& _str)
 {
+    long long int res;
     if (isHexDigitsType(stringIntegerType(_str)))
-        return (long int)dev::u256(_str);
+        res = (long long int)dev::u256(_str);
     else
-        return atoi(_str.c_str());
+        res = atoll(_str.c_str());
+    string const converted = toString(res);
+    if (converted < _str)
+        ETH_WARNING("Error converting `hexOrDecStringToInt`, decoded:  '" + converted + "' from '" + _str + "'");
+    return res;
 }
 
 
@@ -272,21 +277,17 @@ DataObject convertDecBlockheaderIncompleteToHex(DataObject const& _data)
 {
     // Convert to HEX
     DataObject tmpD = _data;
-    tmpD.removeKey("updatePoW");            // BlockchainTestFiller fields
-    tmpD.removeKey("RelTimestamp");         // BlockchainTestFiller fields
-    tmpD.removeKey("expectException");      // BlockchainTestFiller fields
-    tmpD.removeKey("overwriteAndRedoPoW");  // BlockchainTestFiller fields
-    tmpD.removeKey("populateFromBlock");    // BlockchainTestFiller fields
-    tmpD.removeKey("chainname");            // BlockchainTestFiller fields
-    tmpD.removeKey("RelTimestampFromPopulateBlock");
+    tmpD.removeKey("updatePoW");        // BlockchainTestFiller fields
+    tmpD.removeKey("RelTimestamp");     // BlockchainTestFiller fields
+    tmpD.removeKey("expectException");  // BlockchainTestFiller fields
+    tmpD.removeKey("chainname");        // BlockchainTestFiller fields
 
-    std::vector<string> hashKeys = {"parentHash", "coinbase"};
+    std::vector<string> hashKeys = {"parentHash", "coinbase", "bloom"};
     for (auto const& key : hashKeys)
         if (_data.count(key))
         {
             if (_data.atKey(key).asString().size() > 1 && _data.atKey(key).asString()[1] != 'x')
                 tmpD[key] = "0x" + _data.atKey(key).asString();
-            tmpD[key].performModifier(mod_valueToCompactEvenHexPrefixed);
         }
 
     std::vector<string> valueKeys = {"difficulty", "gasLimit", "gasUsed", "nonce", "number", "timestamp"};

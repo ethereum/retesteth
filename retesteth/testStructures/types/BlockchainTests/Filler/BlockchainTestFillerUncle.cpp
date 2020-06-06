@@ -17,7 +17,10 @@ BlockchainTestFillerUncle::BlockchainTestFillerUncle(DataObject const& _data)
             m_populateFromBlock = hexOrDecStringToInt(_data.atKey("populateFromBlock").asString());
 
             if (_data.count("RelTimestampFromPopulateBlock"))
+            {
+                m_hasRelTimestampFromPopulateBlock = true;
                 m_relTimestampFromPopulateBlock = hexOrDecStringToInt(_data.atKey("RelTimestampFromPopulateBlock").asString());
+            }
             else
                 m_relTimestampFromPopulateBlock = 0;
         }
@@ -48,14 +51,17 @@ BlockchainTestFillerUncle::BlockchainTestFillerUncle(DataObject const& _data)
         if (_data.count("chainname"))
             m_chainName = _data.atKey("chainname").asString();
 
-
         // Fields that are to overwrite in uncle's header that will be constructed by test
         // map 'fieldName' -> 'field new value'
-        if (_data.count("overwriteAndRedoPoW"))
-        {
-            DataObject tmpD = convertDecBlockheaderIncompleteToHex(_data);
+        DataObject tmpD = convertDecBlockheaderIncompleteToHex(_data);
+        tmpD.removeKey("populateFromBlock");                // BlockchainTestFiller fields
+        tmpD.removeKey("sameAsPreviousBlockUncle");         // BlockchainTestFiller fields
+        tmpD.removeKey("sameAsBlock");                      // BlockchainTestFiller fields
+        tmpD.removeKey("RelTimestampFromPopulateBlock");    // BlockchainTestFiller fields
+        tmpD.removeKey("sameAsPreviousSibling");            // BlockchainTestFiller fields
+
+        if (tmpD.getSubObjects().size() > 0)
             m_headerIncomplete = spBlockHeaderIncomplete(new BlockHeaderIncomplete(tmpD));
-        }
 
         requireJsonFields(_data, "BlockchainTestFillerUncle " + _data.getKey(),
             {{"populateFromBlock", {{DataType::String}, jsonField::Optional}},
@@ -64,9 +70,8 @@ BlockchainTestFillerUncle::BlockchainTestFillerUncle(DataObject const& _data)
                 {"sameAsPreviousSibling", {{DataType::String}, jsonField::Optional}},
                 {"RelTimestampFromPopulateBlock", {{DataType::String}, jsonField::Optional}},
                 {"chainname", {{DataType::String}, jsonField::Optional}},
-                {"overwriteAndRedoPoW", {{DataType::Array, DataType::String}, jsonField::Optional}},
-                //{"bloom", {{DataType::String}, jsonField::Optional}},
-                {"logsBloom", {{DataType::String}, jsonField::Optional}},
+                {"bloom", {{DataType::String}, jsonField::Optional}},
+                //{"logsBloom", {{DataType::String}, jsonField::Optional}},
                 {"coinbase", {{DataType::String}, jsonField::Optional}},
                 //{"author", {{DataType::String}, jsonField::Optional}},
                 //{"miner", {{DataType::String}, jsonField::Optional}},

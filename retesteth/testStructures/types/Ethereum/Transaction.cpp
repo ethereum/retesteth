@@ -150,5 +150,12 @@ FH32 Transaction::hash() const
     return FH32("0x" + toString(dev::sha3(asRLPStream().out())));
 }
 
+bool Transaction::operator==(Transaction const& _rhs) const
+{
+    return data() == _rhs.data() && gasLimit() == _rhs.gasLimit() && gasPrice() == _rhs.gasPrice()
+             && nonce() == _rhs.nonce() && value() == _rhs.value() && to() == _rhs.to()
+             && v() == _rhs.v() && r() == _rhs.r() && s() == _rhs.s();
+}
+
 }  // namespace teststruct
 }  // namespace test

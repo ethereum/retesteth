@@ -108,8 +108,9 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
 
             DataObject const testTr = tr.asDataObject();
             DataObject const remoteTr = clientTr.transaction().asDataObject();
-            ETH_ERROR_REQUIRE_MESSAGE(remoteTr == testTr, "Error checking remote transaction, remote tr `" + remoteTr.asJson() +
-                                                              "` is different to test tr `" + testTr.asJson() + "`)");
+            ETH_ERROR_REQUIRE_MESSAGE(clientTr.transaction() == tr,
+                                      "Error checking remote transaction, remote tr `" + remoteTr.asJson() +
+                                      "` is different to test tr `" + testTr.asJson() + "`)");
         }
     }
 
@@ -122,8 +123,8 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
                 _test.PostHash().asString());
 
     if (_test.lastBlockHash() != latestBlock.header().hash())
-        ETH_ERROR_MESSAGE("lastblockhash does not match! remote: " + latestBlock.header().hash().asString() +
-                          ", test: " + _test.lastBlockHash().asString());
+        ETH_ERROR_MESSAGE("lastblockhash does not match! remote: '" + latestBlock.header().hash().asString() + "', test: '" +
+                          _test.lastBlockHash().asString() + "'");
 
     // if (_test.genesisRLP())
     //{
@@ -134,13 +135,17 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
     // because mixHash and nonce return is different to geth
     //    }
     //    else
+    bool skipGenesisCheck = false;
+    if (_opt.isLegacyTests && _test.genesisRLP().asString() == "0x00")
+        skipGenesisCheck = true;
+
+    if (!skipGenesisCheck)
     {
         EthGetBlockBy genesis(session.eth_getBlockByNumber(0, Request::LESSOBJECTS));
         if (_test.genesisRLP() != genesis.getRLPHeaderTransactions())
             ETH_ERROR_MESSAGE("genesisRLP in test != genesisRLP on remote client! (" + _test.genesisRLP().asString() +
                               "' != '" + genesis.getRLPHeaderTransactions().asString() + "'");
-        }
-        //}
+    }
 }
 
 DataObject DoTests(DataObject const& _input, TestSuite::TestSuiteOptions& _opt)
@@ -149,6 +154,14 @@ DataObject DoTests(DataObject const& _input, TestSuite::TestSuiteOptions& _opt)
     if (_opt.doFilling)
     {
         BlockchainTestFiller testFiller(_input);
+
+        // Test Name Warning
+        string const tFileName = TestOutputHelper::get().testFile().stem().string();
+        string const tObjectName = testFiller.tests().at(0).testName() + "Filler";
+        if (tObjectName != tFileName)
+            ETH_WARNING("Blockchain test filler first test name is not equal test filename! (" + tObjectName +
+                        " != " + tFileName + ")");
+
         for (BlockchainTestInFiller const& bcTest : testFiller.tests())
         {
             // Select test by name if --singletest and --singlenet is set
@@ -172,6 +185,19 @@ DataObject DoTests(DataObject const& _input, TestSuite::TestSuiteOptions& _opt)
     }
     else
     {
+        if (_opt.isLegacyTests)
+        {
+            // Change the tests instead??
+            DataObject& _inputRef = const_cast<DataObject&>(_input);
+            for (auto& el : _inputRef.getSubObjectsUnsafe())
+            {
+                DataObject& _infoRef = el.atKeyUnsafe("_info");
+                _infoRef.renameKey("filledwith", "filling-rpc-server");
+                _infoRef["filling-tool-version"] = "testeth";
+                if (!el.count("genesisRLP"))
+                    el["genesisRLP"] = "0x00";
+            }
+        }
         BlockchainTest test(_input);
         for (BlockchainTestInFilled const& bcTest : test.tests())
         {

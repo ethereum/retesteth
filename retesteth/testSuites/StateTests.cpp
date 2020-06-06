@@ -142,11 +142,17 @@ DataObject FillTestAsBlockchain(StateTestInFiller const& _test)
                     mexpect.correctMiningReward(_test.Env().currentCoinbase(), balanceCorrection);
 
                     DataObject aBlockchainTest;
+                    if (_test.hasInfo())
+                        aBlockchainTest["_info"]["comment"] = _test.Info().comment();
+                    EthGetBlockBy genesisBlock(session.eth_getBlockByNumber(0, Request::FULLOBJECTS));
+                    aBlockchainTest["genesisBlockHeader"] = genesisBlock.header().asDataObject();
+                    aBlockchainTest["pre"] = _test.Pre().asDataObject();
+
                     try
                     {
                         State postState(getRemoteState(session));
                         compareStates(mexpect, postState);
-                        aBlockchainTest["postState"] = postState.asDataObject();
+                        aBlockchainTest["postState"] = postState.asDataObject(ExportOrder::OldStyle);
                     }
                     catch(StateTooBig const&)
                     {
@@ -154,12 +160,7 @@ DataObject FillTestAsBlockchain(StateTestInFiller const& _test)
                         aBlockchainTest["postStateHash"] = remoteBlock.header().stateRoot().asString();
                     }
 
-                    if (_test.hasInfo())
-                        aBlockchainTest["_info"]["comment"] = _test.Info().comment();
 
-                    EthGetBlockBy genesisBlock(session.eth_getBlockByNumber(0, Request::FULLOBJECTS));
-                    aBlockchainTest["genesisBlockHeader"] = genesisBlock.header().asDataObject();
-                    aBlockchainTest["pre"] = _test.Pre().asDataObject();
 
                     aBlockchainTest["network"] = fork.asString();
                     aBlockchainTest["sealEngine"] = sealEngineToStr(SealEngine::NoProof);

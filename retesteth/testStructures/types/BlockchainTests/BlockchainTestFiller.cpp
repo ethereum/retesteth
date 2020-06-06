@@ -13,7 +13,6 @@ BlockchainTestInFiller::BlockchainTestInFiller(DataObject const& _data)
         m_name = _data.getKey();
         if (_data.count("_info"))
             m_info = spInfoIncomplete(new InfoIncomplete(_data.atKey("_info")));
-        m_env = spBlockchainTestFillerEnv(new BlockchainTestFillerEnv(_data.atKey("genesisBlockHeader")));
         m_pre = spState(new State(convertDecStateToHex(_data.atKey("pre"))));
 
         m_sealEngine = SealEngine::NoProof;
@@ -27,6 +26,7 @@ BlockchainTestInFiller::BlockchainTestInFiller(DataObject const& _data)
             else
                 ETH_ERROR_MESSAGE("BlockchainTestInFiller: Unknown sealEngine: " + sEngine);
         }
+        m_env = spBlockchainTestFillerEnv(new BlockchainTestFillerEnv(_data.atKey("genesisBlockHeader"), m_sealEngine));
 
         // Process expect section
         std::set<FORK> knownForks;
@@ -107,11 +107,11 @@ bool BlockchainTestInFiller::hasExpectForNetwork(FORK const& _net) const
 }
 
 // Gather all networks from all the expect sections
-std::list<FORK> BlockchainTestInFiller::getAllForksFromExpectSections() const
+std::set<FORK> BlockchainTestInFiller::getAllForksFromExpectSections() const
 {
-    std::list<FORK> out;
+    std::set<FORK> out;
     for (auto const& ex : m_expects)
         for (auto const& el : ex.forks())
-            out.push_back(el);
+            out.emplace(el);
     return out;
 }

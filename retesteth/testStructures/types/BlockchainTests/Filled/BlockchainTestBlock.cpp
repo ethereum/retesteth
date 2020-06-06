@@ -32,11 +32,20 @@ BlockchainTestBlock::BlockchainTestBlock(DataObject const& _data)
 
         requireJsonFields(_data, "BlockchainTestBlock " + _data.getKey(),
             {{"rlp", {{DataType::String}, jsonField::Required}},
-                {"chainname", {{DataType::String}, jsonField::Optional}},          // User information
-                {"blocknumber", {{DataType::String}, jsonField::Optional}},        // User information
+                {"chainname", {{DataType::String}, jsonField::Optional}},    // User information
+                {"blocknumber", {{DataType::String}, jsonField::Optional}},  // User information
                 {"transactions", {{DataType::Array}, jsonField::Optional}},
                 {"uncleHeaders", {{DataType::Array}, jsonField::Optional}},
-                {"expectException", {{DataType::String}, jsonField::Optional}},    // User information
+                {"expectException", {{DataType::String}, jsonField::Optional}},                   // User information
+                {"expectExceptionALL", {{DataType::String}, jsonField::Optional}},                // Legacy field
+                {"expectExceptionByzantium", {{DataType::String}, jsonField::Optional}},          // Legacy field
+                {"expectExceptionHomestead", {{DataType::String}, jsonField::Optional}},          // Legacy field
+                {"expectExceptionEIP150", {{DataType::String}, jsonField::Optional}},             // Legacy field
+                {"expectExceptionEIP158", {{DataType::String}, jsonField::Optional}},             // Legacy field
+                {"expectExceptionFrontier", {{DataType::String}, jsonField::Optional}},           // Legacy field
+                {"expectExceptionConstantinople", {{DataType::String}, jsonField::Optional}},     // Legacy field
+                {"expectExceptionConstantinopleFix", {{DataType::String}, jsonField::Optional}},  // Legacy field
+                {"expectExceptionIstanbul", {{DataType::String}, jsonField::Optional}},           // Legacy field
                 {"blockHeader", {{DataType::Object}, jsonField::Optional}}});
     }
     catch (std::exception const& _ex)

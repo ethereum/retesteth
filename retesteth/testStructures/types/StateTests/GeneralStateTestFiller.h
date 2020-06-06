@@ -27,7 +27,7 @@ struct StateTestInFiller : GCP_SPointerBase
     State const& Pre() const { return m_pre.getCContent(); }
     StateTestFillerTransaction const& GeneralTr() const { return m_transaction.getCContent(); }
     std::vector<StateTestFillerExpectSection> const& Expects() const { return m_expectSections; }
-    std::list<FORK> getAllForksFromExpectSections() const;
+    std::set<FORK> getAllForksFromExpectSections() const;
 
 private:
     StateTestInFiller() {}

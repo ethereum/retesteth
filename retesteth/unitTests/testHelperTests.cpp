@@ -42,6 +42,15 @@ static vector<FORK> exampleNets = {FORK("Frontier"), FORK("Homestead"), FORK("EI
 
 BOOST_FIXTURE_TEST_SUITE(TestHelperSuite, TestOutputHelperFixture)
 
+BOOST_AUTO_TEST_CASE(translateNetworks_doubleNet)
+{
+    set<string> rawnetworks = {"Frontier", "<Homestead"};
+    std::vector<FORK> networks = ClientConfig::translateNetworks(rawnetworks, exampleNets);
+    ETH_FAIL_REQUIRE(hasNetwork(networks, FORK("Frontier")));
+    ETH_FAIL_REQUIRE(hasNetwork(networks, FORK("Homestead")) == false);
+    ETH_FAIL_REQUIRE(networks.size() == 1);
+}
+
 BOOST_AUTO_TEST_CASE(translateNetworks_gtHomestead)
 {
     set<string> rawnetworks = {"Frontier", ">Homestead"};
