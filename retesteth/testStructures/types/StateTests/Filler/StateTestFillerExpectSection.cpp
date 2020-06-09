@@ -36,7 +36,7 @@ StateTestFillerExpectSection::StateTestFillerExpectSection(DataObject const& _da
     }
     catch (std::exception const& _ex)
     {
-        throw BaseEthException(string("StateTestFillerExpectSection parse error: ") + _ex.what() + _data.asJson());
+        throw UpwardsException(string("StateTestFillerExpectSection parse error: ") + _ex.what() + _data.asJson());
     }
 }
 

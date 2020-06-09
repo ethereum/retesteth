@@ -1,7 +1,7 @@
 #include "Common.h"
 #include <dataObject/DataObject.h>
 #include <retesteth/Options.h>
-#include <retesteth/session/RPCSession.h>
+#include <retesteth/session/Session.h>
 using namespace std;
 namespace test
 {

@@ -8,8 +8,10 @@ namespace test
 namespace teststruct
 {
 // FORK network configuration (string wrapper)
+// Keep Fork names in this structure to distinguish string variable from strings that represent forks
 struct FORK : GCP_SPointerBase
 {
+    FORK(char const* _s) : m_data(string(_s)) {}
     FORK(std::string const& _s) : m_data(_s) {}
     FORK(DataObject const&);
     string const& asString() const { return m_data.asString(); }

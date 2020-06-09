@@ -251,7 +251,7 @@ void testCompareResult(DataObject const& _exp, DataObject const& _post, CompareR
         test::compareStates(StateIncomplete(_exp), State(_post));
         ETH_FAIL_REQUIRE(_expResult == CompareResult::Success);
     }
-    catch (test::BaseEthException const& _ex)
+    catch (test::UpwardsException const& _ex)
     {
         ETH_FAIL_REQUIRE(string(_ex.what()).rfind(CompareResultToString(_expResult)) != string::npos);
         ETH_FAIL_REQUIRE(TestOutputHelper::get().getErrors().size() == _errCount);

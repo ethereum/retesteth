@@ -1,6 +1,6 @@
 #pragma once
 #include "TestBlockchain.h"
-#include <retesteth/session/RPCSession.h>
+#include <retesteth/session/Session.h>
 #include <retesteth/testStructures/types/BlockchainTests/BlockchainTestFiller.h>
 #include <string>
 #include <vector>

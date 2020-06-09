@@ -49,7 +49,7 @@ BlockchainTestEnv::BlockchainTestEnv(DataObject const& _data)
     }
     catch (std::exception const& _ex)
     {
-        throw BaseEthException(string("BlockchainTestEnv convertion error: ") + _ex.what() + _data.asJson());
+        throw UpwardsException(string("BlockchainTestEnv convertion error: ") + _ex.what() + _data.asJson());
     }
 }
 

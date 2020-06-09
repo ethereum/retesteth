@@ -1,7 +1,7 @@
 #pragma once
 #include "TestBlock.h"
 #include <retesteth/TestOutputHelper.h>
-#include <retesteth/session/RPCSession.h>
+#include <retesteth/session/Session.h>
 #include <retesteth/testStructures/Common.h>
 #include <string>
 #include <vector>
@@ -29,8 +29,7 @@ public:
     // Need to call resetChainParams because TestBLockchainManager could have chains with different networks
     void resetChainParams() const
     {
-        DataObject request = prepareChainParams(m_network, m_sealEngine, m_genesisState, m_testEnv);
-        m_session.test_setChainParams(request);
+        m_session.test_setChainParams(prepareChainParams(m_network, m_sealEngine, m_genesisState, m_testEnv));
     }
 
     void generateBlock(BlockchainTestFillerBlock const& _block, vectorOfSchemeBlock const& _uncles, bool _generateUncles);

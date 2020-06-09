@@ -266,7 +266,7 @@ std::string stoCompactHexPrefixed(dev::u256 const& _val, int _minsize)
     }
     catch (std::exception const& _ex)
     {
-        throw BaseEthException(
+        throw UpwardsException(
             string("toCompactHexPrefixed error converting `" + _val.str() + "` to compact hex prefixed") + _ex.what());
     }
     return string();
@@ -285,7 +285,7 @@ bool checkCmdExist(std::string const& _command)
     return true;
 }
 
-string executeCmd(string const& _command, bool _warningOnEmpty)
+string executeCmd(string const& _command, ExecCMDWarning _warningOnEmpty)
 {
 #if defined(_WIN32)
     BOOST_ERROR("executeCmd() has not been implemented for Windows.");
@@ -299,7 +299,7 @@ string executeCmd(string const& _command, bool _warningOnEmpty)
         ETH_FAIL_MESSAGE("Failed to run " + _command);
     if (fgets(output, sizeof(output) - 1, fp) == NULL)
     {
-        if (_warningOnEmpty)
+        if (_warningOnEmpty == ExecCMDWarning::WarningOnEmptyResult)
             ETH_WARNING("Reading empty result for " + _command);
     }
     else

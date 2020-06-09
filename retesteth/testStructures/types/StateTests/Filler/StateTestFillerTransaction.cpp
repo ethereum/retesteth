@@ -58,7 +58,7 @@ StateTestFillerTransaction::StateTestFillerTransaction(DataObject const& _data)
     }
     catch (std::exception const& _ex)
     {
-        throw BaseEthException(string("StateTestFillerTransaction parse error: ") + _ex.what() + _data.asJson());
+        throw UpwardsException(string("StateTestFillerTransaction parse error: ") + _ex.what() + _data.asJson());
     }
 }
 

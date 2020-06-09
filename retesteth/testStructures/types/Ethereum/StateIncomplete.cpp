@@ -47,7 +47,7 @@ StateIncomplete::StateIncomplete(DataObject const& _data, DataRequier _req)
     }
     catch (std::exception const& _ex)
     {
-        throw BaseEthException(string("StateIncomplete parse error: ") + _ex.what() + _data.asJson());
+        throw UpwardsException(string("StateIncomplete parse error: ") + _ex.what() + _data.asJson());
     }
 }
 

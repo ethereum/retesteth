@@ -23,10 +23,8 @@ Account::Account(DataObject const& _data)
     m_code = spBYTES(new BYTES(_data.atKey("code")));
     m_storage = spStorage(new Storage(_data.atKey("storage")));
     requireJsonFields(_data, "Account " + _data.getKey(),
-        {{"balance", {DataType::String}},
-         {"code", {DataType::String}},
-         {"nonce", {DataType::String}},
-         {"storage", {DataType::Object}}});
+        {{"balance", {{DataType::String}, jsonField::Required}}, {"code", {{DataType::String}, jsonField::Required}},
+            {"nonce", {{DataType::String}, jsonField::Required}}, {"storage", {{DataType::Object}, jsonField::Required}}});
 }
 
 const DataObject Account::asDataObject(ExportOrder _order) const

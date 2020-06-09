@@ -1,55 +1,66 @@
 #pragma once
+#include "ToolBackend/ToolChainManager.h"
 #include <retesteth/TestHelper.h>
 #include <retesteth/session/SessionInterface.h>
 #include <retesteth/session/Socket.h>
-#include <retesteth/session/ToolImplHelper.h>
 #include <string>
+using namespace toolimpl;
 
-/*
 class ToolImpl : public SessionInterface
 {
 public:
-    ToolImpl(Socket::SocketType _type, const string& _path) : m_sockType(_type), m_toolPath(_path)
-    {
-        m_tmpDir = test::createUniqueTmpDirectory();
-    }
+    ToolImpl(Socket::SocketType _type, fs::path const& _path) : m_sockType(_type), m_toolPath(_path) {}
 
 public:
-    std::string web3_clientVersion() override;
+    DataObject web3_clientVersion() override;
 
     // ETH Methods
-    std::string eth_sendRawTransaction(std::string const& _transaction) override;
-    int eth_getTransactionCount(
-        std::string const& _address, std::string const& _blockNumber) override;
-    std::string eth_blockNumber() override;
-    DataObject eth_getBlockByHash(string const& _hash, bool _fullObjects) override;
-    DataObject eth_getBlockByNumber(string const& _blockNumber, bool _fullObjects) override;
+    FH32 eth_sendRawTransaction(BYTES const& _rlp) override;
+    int eth_getTransactionCount(FH20 const& _address, VALUE const& _blockNumber) override;
+    VALUE eth_blockNumber() override;
+    EthGetBlockBy eth_getBlockByHash(FH32 const& _hash, Request _fullObjects) override;
+    EthGetBlockBy eth_getBlockByNumber(VALUE const& _blockNumber, Request _fullObjects) override;
 
-    std::string eth_getCode(std::string const& _address, std::string const& _blockNumber) override;
-    std::string eth_getBalance(std::string const& _address, std::string const& _blockNumber) override;
+    BYTES eth_getCode(FH20 const& _address, VALUE const& _blockNumber) override;
+    VALUE eth_getBalance(FH20 const& _address, VALUE const& _blockNumber) override;
 
     // Debug
-    DataObject debug_accountRange(std::string const& _blockHashOrNumber, int _txIndex,
-        std::string const& _address, int _maxResults) override;
-    DataObject debug_storageRangeAt(std::string const& _blockHashOrNumber, int _txIndex,
-        std::string const& _address, std::string const& _begin, int _maxResults) override;
-    DataObject debug_traceTransaction(std::string const& _trHash) override;
+    DebugAccountRange debug_accountRange(
+        VALUE const& _blockNumber, VALUE const& _txIndex, FH32 const& _addrHash, int _maxResults) override;
+    DebugAccountRange debug_accountRange(
+        FH32 const& _blockHash, VALUE const& _txIndex, FH32 const& _address, int _maxResults) override;
+    DebugStorageRangeAt debug_storageRangeAt(
+        VALUE const& _blockNumber, VALUE const& _txIndex, FH20 const& _addrHash, FH32 const& _begin, int _maxResults) override;
+    DebugStorageRangeAt debug_storageRangeAt(
+        FH32 const& _blockHash, VALUE const& _txIndex, FH20 const& _address, FH32 const& _begin, int _maxResults) override;
+    DebugTraceTransaction debug_traceTransaction(FH32 const& _trHash) override;
 
     // Test
-    void test_setChainParams(DataObject const& _config) override;
-    void test_rewindToBlock(size_t _blockNr) override;
-    void test_modifyTimestamp(string const& _timestamp) override;
-    string test_mineBlocks(int _number, bool _canFail = false) override;
-    string test_importRawBlock(std::string const& _blockRLP) override;
-    std::string test_getLogHash(std::string const& _txHash) override;
+    void test_setChainParams(SetChainParamsArgs const& _config) override;
+    void test_rewindToBlock(VALUE const& _blockNr) override;
+    void test_modifyTimestamp(VALUE const& _timestamp) override;
+    void test_mineBlocks(int _number) override;
+    FH32 test_importRawBlock(BYTES const& _blockRLP) override;
+    FH32 test_getLogHash(FH32 const& _txHash) override;
 
     // Internal
+    std::string sendRawRequest(std::string const& _request);
     DataObject rpcCall(std::string const& _methodName,
         std::vector<std::string> const& _args = std::vector<std::string>(),
         bool _canFail = false) override;
     Socket::SocketType getSocketType() const override;
     std::string const& getSocketPath() const override;
 
+private:
+    Socket::SocketType m_sockType;
+    fs::path m_toolPath;
+    size_t m_totalCalls = 0;
+
+    // Manage blockchains as ethereum client backend
+    GCP_SPointer<ToolChainManager> m_toolChainManager;
+
+private:
+    /*
 private:
     class ToolBlock
     {
@@ -94,7 +105,6 @@ private:
         DataObject const& _toolResponse);
 
     // Core blockchain logic
-    size_t m_totalCalls = 0;
     fs::path m_tmpDir;
     DataObject m_chainParams;
     std::vector<ToolBlock> m_chainGenesis;  // vector so not to init ToolBlock
@@ -142,6 +152,5 @@ private:
             isImportRawBlock = false;
         }
     };
-    BlockHeaderOverride m_currentBlockHeader;
+    BlockHeaderOverride m_currentBlockHeader;*/
 };
-*/

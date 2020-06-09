@@ -59,7 +59,12 @@ std::string prepareLLLCVersionString();
 bool checkCmdExist(std::string const& _command);
 
 /// run system command
-std::string executeCmd(std::string const& _command, bool _warningOnEmpty = true);
+enum class ExecCMDWarning
+{
+    WarningOnEmptyResult,
+    NoWarning
+};
+std::string executeCmd(std::string const& _command, ExecCMDWarning _warningOnEmpty = ExecCMDWarning::WarningOnEmptyResult);
 
 /// compile LLL / wasm or other src code into bytecode
 std::string replaceCode(std::string const& _code);

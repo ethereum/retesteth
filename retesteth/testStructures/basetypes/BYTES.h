@@ -1,4 +1,5 @@
 #pragma once
+#include <libdevcore/RLP.h>
 #include <retesteth/dataObject/DataObject.h>
 #include <retesteth/dataObject/SPointer.h>
 using namespace dataobject;
@@ -21,6 +22,7 @@ private:
     string m_data;
 };
 
+string rlpToString(dev::RLP const& _rlp, size_t _minFieldSize = 1);
 typedef GCP_SPointer<BYTES> spBYTES;
 
 }  // namespace teststruct

@@ -16,7 +16,7 @@ BlockchainTestInFilled::BlockchainTestInFilled(DataObject const& _data)
         m_pre = spState(new State(_data.atKey("pre")));
         m_fork = spFORK(new FORK(_data.atKey("network")));
         m_sealEngine = SealEngine::NoProof;
-        if (_data.count("sealEngine") && _data.atKey("sealEngine").asString() == "Ethash")
+        if (_data.count("sealEngine") && _data.atKey("sealEngine").asString() == sealEngineToStr(SealEngine::Ethash))
             m_sealEngine = SealEngine::Ethash;
 
         if (_data.count("postState"))

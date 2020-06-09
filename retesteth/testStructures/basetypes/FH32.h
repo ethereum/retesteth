@@ -14,7 +14,7 @@ struct FH32 : FH
 {
     FH32(DataObject const& _data) : FH(_data, 32) {}
     FH32(string const& _data) : FH(_data, 32) {}
-    bool isZero() const { return m_data == "0x0000000000000000000000000000000000000000000000000000000000000000"; }
+    bool isZero() const { return m_data == zero().asString(); }
     static FH32 zero() { return FH32("0x0000000000000000000000000000000000000000000000000000000000000000"); }
 };
 

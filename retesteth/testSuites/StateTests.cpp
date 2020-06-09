@@ -34,7 +34,7 @@
 #include <retesteth/TestHelper.h>
 #include <retesteth/TestOutputHelper.h>
 #include <retesteth/TestSuite.h>
-#include <retesteth/session/RPCSession.h>
+#include <retesteth/session/Session.h>
 #include <retesteth/testStructures/Common.h>
 #include <retesteth/testStructures/structures.h>
 #include <retesteth/testSuites/Common.h>
@@ -119,8 +119,7 @@ DataObject FillTestAsBlockchain(StateTestInFiller const& _test)
                     if (!expect.checkIndexes(tr.dataInd(), tr.gasInd(), tr.valueInd()))
                         continue;
 
-                    DataObject request = prepareChainParams(fork, SealEngine::NoProof, _test.Pre(), _test.Env());
-                    session.test_setChainParams(request);
+                    session.test_setChainParams(prepareChainParams(fork, SealEngine::NoProof, _test.Pre(), _test.Env()));
                     session.test_modifyTimestamp(_test.Env().firstBlockTimestamp());
                     FH32 trHash(session.eth_sendRawTransaction(tr.transaction().getSignedRLP()));
 
@@ -223,8 +222,7 @@ DataObject FillTest(StateTestInFiller const& _test)
         DataObject forkResults;
         forkResults.setKey(fork.asString());
 
-        DataObject request = prepareChainParams(fork, SealEngine::NoReward, _test.Pre(), _test.Env());
-        session.test_setChainParams(request);
+        session.test_setChainParams(prepareChainParams(fork, SealEngine::NoReward, _test.Pre(), _test.Env()));
 
         // Run transactions for defined expect sections only
         for (auto const& expect : _test.Expects())
@@ -318,10 +316,7 @@ void RunTest(StateTestInFilled const& _test)
             !Options::getDynamicOptions().getCurrentConfig().checkForkAllowed(network))
             networkSkip = true;
         else
-        {
-            DataObject request = prepareChainParams(network, SealEngine::NoReward, _test.Pre(), _test.Env());
-            session.test_setChainParams(request);
-        }
+            session.test_setChainParams(prepareChainParams(network, SealEngine::NoReward, _test.Pre(), _test.Env()));
 
         // One test could have many transactions on same chainParams
         // It is expected that for a setted chainParams there going to be a transaction

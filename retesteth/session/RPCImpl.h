@@ -33,7 +33,7 @@ public:
     DebugTraceTransaction debug_traceTransaction(FH32 const& _trHash) override;
 
     // Test
-    void test_setChainParams(DataObject const& _config) override;
+    void test_setChainParams(SetChainParamsArgs const& _config) override;
     void test_rewindToBlock(VALUE const& _blockNr) override;
     void test_modifyTimestamp(VALUE const& _timestamp) override;
     void test_mineBlocks(int _number) override;

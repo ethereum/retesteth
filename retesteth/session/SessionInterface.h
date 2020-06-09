@@ -63,7 +63,7 @@ public:
     virtual DebugTraceTransaction debug_traceTransaction(FH32 const& _trHash) = 0;
 
     // Test
-    virtual void test_setChainParams(DataObject const& _config) = 0;
+    virtual void test_setChainParams(SetChainParamsArgs const& _config) = 0;
     virtual void test_rewindToBlock(VALUE const& _blockNr) = 0;
     virtual void test_modifyTimestamp(VALUE const& _timestamp) = 0;
     virtual void test_mineBlocks(int _number) = 0;

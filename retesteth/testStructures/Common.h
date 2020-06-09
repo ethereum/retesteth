@@ -4,6 +4,7 @@
 #include "types/Ethereum/State.h"
 #include "types/StateTests/Base/StateTestEnvBase.h"
 #include <retesteth/dataObject/DataObject.h>
+#include <retesteth/testStructures/types/RPC/SetChainParamsArgs.h>
 
 using namespace dataobject;
 
@@ -33,7 +34,7 @@ enum class DigitsType
 DigitsType stringIntegerType(std::string const& _string);
 
 // Prepare chain params rpc request
-DataObject prepareChainParams(FORK const&, SealEngine, State const&, StateTestEnvBase const&);
+SetChainParamsArgs prepareChainParams(FORK const&, SealEngine, State const&, StateTestEnvBase const&);
 
 // Check the presents of fields in a DataObject with a validation map
 typedef std::set<DataType> possibleType;

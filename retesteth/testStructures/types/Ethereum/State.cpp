@@ -28,10 +28,12 @@ State::State(DataObject const& _data)
             m_order.push_back(key);
             m_accounts[key] = spAccountBase(new Account(el));
         }
+        if (m_accounts.size() == 0)
+            ETH_ERROR_MESSAGE("State must have at least one record!");
     }
     catch (std::exception const& _ex)
     {
-        throw BaseEthException(string("State parse error: ") + _ex.what() + _data.asJson());
+        throw UpwardsException(string("State parse error: ") + _ex.what() + _data.asJson());
     }
 }
 

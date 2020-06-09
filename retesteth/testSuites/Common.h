@@ -19,7 +19,7 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #pragma once
-#include <retesteth/session/RPCSession.h>
+#include <retesteth/session/Session.h>
 #include <boost/filesystem/path.hpp>
 
 #include <retesteth/testStructures/types/ethereum.h>
@@ -28,7 +28,7 @@ namespace test
 {
 
 // Get Remote State From Client
-struct StateTooBig : BaseEthException
+struct StateTooBig : UpwardsException
 {
     StateTooBig(){}
 };

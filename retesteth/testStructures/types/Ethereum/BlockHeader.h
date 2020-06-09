@@ -25,9 +25,15 @@ struct BlockHeader : GCP_SPointerBase
     VALUE const& number() const { return m_number.getCContent(); }
     VALUE const& timestamp() const { return m_timestamp.getCContent(); }
     FH20 const& author() const { return m_author.getCContent(); }
+    VALUE const& difficulty() const { return m_difficulty.getCContent(); }
+    VALUE const& gasLimit() const { return m_gasLimit.getCContent(); }
+    BYTES const& extraData() const { return m_extraData.getCContent(); }
+    FH8 const& nonce() const { return m_nonce.getCContent(); }
+    FH32 const& mixHash() const { return m_mixHash.getCContent(); }
 
     void setTimestamp(VALUE const& _value) { m_timestamp = spVALUE(new VALUE(_value.asU256())); }
     void setTransactionHash(FH32 const& _hash) { m_transactionsRoot = spFH32(new FH32(_hash)); }
+    void setStateHash(FH32 const& _hash) { m_stateRoot = spFH32(new FH32(_hash)); }
     void setUnclesHash(FH32 const& _hash) { m_sha3Uncles = spFH32(new FH32(_hash)); }
     void setHeaderHash(FH32 const& _hash) { m_hash = spFH32(new FH32(_hash)); }
     void recalculateHash();

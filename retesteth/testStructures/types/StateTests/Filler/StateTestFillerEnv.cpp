@@ -47,7 +47,7 @@ StateTestFillerEnv::StateTestFillerEnv(DataObject const& _data)
     }
     catch (std::exception const& _ex)
     {
-        throw BaseEthException(string("StateTestFillerEnv parse error: ") + _ex.what() + _data.asJson());
+        throw UpwardsException(string("StateTestFillerEnv parse error: ") + _ex.what() + _data.asJson());
     }
 }
 

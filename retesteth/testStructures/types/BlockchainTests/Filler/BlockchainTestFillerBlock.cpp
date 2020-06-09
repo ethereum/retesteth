@@ -82,7 +82,7 @@ BlockchainTestFillerBlock::BlockchainTestFillerBlock(DataObject const& _data)
     }
     catch (std::exception const& _ex)
     {
-        throw BaseEthException(string("BlockchainTestFillerBlock convertion error: ") + _ex.what() + _data.asJson());
+        throw UpwardsException(string("BlockchainTestFillerBlock convertion error: ") + _ex.what() + _data.asJson());
     }
 }
 

@@ -19,9 +19,9 @@ BlockchainTestInFiller::BlockchainTestInFiller(DataObject const& _data)
         if (_data.count("sealEngine"))
         {
             string const sEngine = _data.atKey("sealEngine").asString();
-            if (sEngine == "Ethash")
+            if (sEngine == sealEngineToStr(SealEngine::Ethash))
                 m_sealEngine = SealEngine::Ethash;
-            else if (sEngine == "NoProof")
+            else if (sEngine == sealEngineToStr(SealEngine::NoProof))
                 m_sealEngine = SealEngine::NoProof;
             else
                 ETH_ERROR_MESSAGE("BlockchainTestInFiller: Unknown sealEngine: " + sEngine);
@@ -71,7 +71,6 @@ BlockchainTestInFiller::BlockchainTestInFiller(DataObject const& _data)
         ETH_ERROR_MESSAGE(string("BlockchainTestInFiller convertion error: ") + _ex.what());
     }
 }
-
 
 BlockchainTestFiller::BlockchainTestFiller(DataObject const& _data)
 {

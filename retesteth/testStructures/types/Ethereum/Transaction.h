@@ -12,11 +12,13 @@ namespace teststruct
 struct Transaction : GCP_SPointerBase
 {
     Transaction(DataObject const&);
+    Transaction(BYTES const&);
     BYTES const& data() const { return m_data.getCContent(); }
     VALUE const& gasLimit() const { return m_gasLimit.getCContent(); }
     VALUE const& gasPrice() const { return m_gasPrice.getCContent(); }
     VALUE const& nonce() const { return m_nonce.getCContent(); }
     VALUE const& value() const { return m_value.getCContent(); }
+    bool isCreation() const { return m_creation; }
     FH20 const& to() const
     {
         assert(!m_creation);
@@ -36,6 +38,7 @@ struct Transaction : GCP_SPointerBase
 
 private:
     Transaction() {}
+    void fromDataObject(DataObject const&);
     spBYTES m_data;
     spVALUE m_gasLimit;
     spVALUE m_gasPrice;

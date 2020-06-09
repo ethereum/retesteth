@@ -64,6 +64,7 @@ DataObject FillTest(BlockchainTestInFiller const& _test, TestSuite::TestSuiteOpt
 
                 // Fill info about the lastblockhash
                 EthGetBlockBy finalBlock(session.eth_getBlockByNumber(session.eth_blockNumber(), Request::LESSOBJECTS));
+
                 try
                 {
                     State remoteState(getRemoteState(session));

@@ -1,7 +1,7 @@
 #include "BlockchainTestLogic.h"
 #include <retesteth/EthChecks.h>
 #include <retesteth/Options.h>
-#include <retesteth/session/RPCSession.h>
+#include <retesteth/session/Session.h>
 #include <retesteth/testStructures/Common.h>
 #include <retesteth/testSuites/Common.h>
 
@@ -19,8 +19,7 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
     SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
 
     TestOutputHelper::get().setCurrentTestInfo(TestInfo(_test.network().asString(), 0));
-    DataObject request = prepareChainParams(_test.network(), _test.sealEngine(), _test.Pre(), _test.Env());
-    session.test_setChainParams(request);
+    session.test_setChainParams(prepareChainParams(_test.network(), _test.sealEngine(), _test.Pre(), _test.Env()));
 
     // for all blocks
     size_t blockNumber = 0;

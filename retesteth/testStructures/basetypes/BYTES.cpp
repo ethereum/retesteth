@@ -2,7 +2,7 @@
 #include <retesteth/EthChecks.h>
 #include <retesteth/TestHelper.h>
 using namespace test::teststruct;
-
+using namespace dev;
 
 namespace
 {
@@ -28,6 +28,13 @@ BYTES::BYTES(DataObject const& _data)
     m_data = v.substr(2);
     toLowerHexStr(m_data);
     m_data = "0x" + m_data;
+}
+
+string rlpToString(dev::RLP const& _rlp, size_t _minFieldSize)
+{
+    std::ostringstream stream;
+    stream << _rlp.toBytes();
+    return stream.str() == "0x" && _minFieldSize == 1 ? "0x00" : stream.str();
 }
 
 }  // namespace teststruct

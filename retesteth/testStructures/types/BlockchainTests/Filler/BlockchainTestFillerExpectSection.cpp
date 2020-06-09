@@ -26,7 +26,7 @@ BlockchainTestFillerExpectSection::BlockchainTestFillerExpectSection(DataObject 
     }
     catch (std::exception const& _ex)
     {
-        throw BaseEthException(string("BlockchainTestFillerExpectSection parse error: ") + _ex.what());
+        throw UpwardsException(string("BlockchainTestFillerExpectSection parse error: ") + _ex.what());
     }
 }
 

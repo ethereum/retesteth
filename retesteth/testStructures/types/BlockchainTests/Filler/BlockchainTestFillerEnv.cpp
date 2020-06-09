@@ -66,7 +66,7 @@ BlockchainTestFillerEnv::BlockchainTestFillerEnv(DataObject const& _data, SealEn
     }
     catch (std::exception const& _ex)
     {
-        throw BaseEthException(string("BlockchainTestFillerEnv convertion error: ") + _ex.what());
+        throw UpwardsException(string("BlockchainTestFillerEnv convertion error: ") + _ex.what());
     }
 }
 

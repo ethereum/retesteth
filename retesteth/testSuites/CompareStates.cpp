@@ -1,7 +1,7 @@
 #include "Common.h"
 #include <dataObject/DataObject.h>
 #include <retesteth/Options.h>
-#include <retesteth/session/RPCSession.h>
+#include <retesteth/session/Session.h>
 using namespace std;
 namespace test
 {
@@ -107,7 +107,6 @@ void compareStates(StateBase const& _stateExpect, SessionInterface& _session)
     // Use recentBNumber and trIndex once to request account information in loop
     auto getRemoteAccount = [&_session, &recentBNumber, &trIndex](
                                 FH20 const& _account) { return remoteGetAccount(_session, recentBNumber, trIndex, _account); };
-
 
     // Construct accountList by asking packs of 10th of accounts from remote client
     std::set<FH20> remoteAccountList;

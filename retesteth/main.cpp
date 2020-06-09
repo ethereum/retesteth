@@ -5,7 +5,7 @@
 #include <retesteth/Options.h>
 #include <retesteth/TestHelper.h>
 #include <retesteth/TestOutputHelper.h>
-#include <retesteth/session/RPCSession.h>
+#include <retesteth/session/Session.h>
 #include <retesteth/testSuites/StateTests.h>
 #include <retesteth/testSuites/blockchain/BlockchainTests.h>
 #include <boost/test/included/unit_test.hpp>
@@ -232,7 +232,7 @@ int main(int argc, const char* argv[])
             outputThread.join();
         }
     }
-    catch (test::BaseEthException const& _ex)
+    catch (test::UpwardsException const& _ex)
     {
         ETH_STDERROR_MESSAGE(string("Error: ") + _ex.what());
     }

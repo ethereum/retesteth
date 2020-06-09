@@ -95,7 +95,7 @@ BlockchainTestFillerUncle::BlockchainTestFillerUncle(DataObject const& _data)
     }
     catch (std::exception const& _ex)
     {
-        throw BaseEthException(string("BlockchainTestFillerUncle convertion error: ") + _ex.what() + _data.asJson());
+        throw UpwardsException(string("BlockchainTestFillerUncle convertion error: ") + _ex.what() + _data.asJson());
     }
 }
 

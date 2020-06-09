@@ -66,7 +66,7 @@ void mod_valueToCompactEvenHexPrefixed(DataObject& _obj)
         }
         catch (std::exception const& _ex)
         {
-            throw BaseEthException(string(_ex.what()) + " Trying to convert to hex from `" + _obj.asString() + "`");
+            throw UpwardsException(string(_ex.what()) + " Trying to convert to hex from `" + _obj.asString() + "`");
         }
     }
 }
@@ -79,7 +79,7 @@ void mod_keyToCompactEvenHexPrefixed(DataObject& _obj)
     }
     catch (std::exception const& _ex)
     {
-        throw BaseEthException(
+        throw UpwardsException(
             string("keyToCompactEvenHexPrefixed error trying to convert string `" + _obj.getKey() + "` ") + _ex.what());
     }
 }
@@ -128,8 +128,7 @@ long long int hexOrDecStringToInt(string const& _str)
     return res;
 }
 
-
-DataObject prepareChainParams(FORK const& _net, SealEngine _engine, State const& _state, StateTestEnvBase const& _env)
+SetChainParamsArgs prepareChainParams(FORK const& _net, SealEngine _engine, State const& _state, StateTestEnvBase const& _env)
 {
     ClientConfig const& cfg = Options::get().getDynamicOptions().getCurrentConfig();
     cfg.validateForkAllowed(_net);
@@ -149,9 +148,7 @@ DataObject prepareChainParams(FORK const& _net, SealEngine _engine, State const&
     // Because of template might contain preset accounts
     for (auto const& el : _state.accounts())
         genesis["accounts"].addSubObject(el.second.getCContent().asDataObject());
-    return genesis;
-
-    // CHAIN PARAMS AS A STRUCTURE ???
+    return SetChainParamsArgs(genesis);
 }
 
 

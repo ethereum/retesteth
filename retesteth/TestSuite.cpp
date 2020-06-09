@@ -28,7 +28,7 @@
 #include <retesteth/TestHelper.h>
 #include <retesteth/TestOutputHelper.h>
 #include <retesteth/TestSuite.h>
-#include <retesteth/session/RPCSession.h>
+#include <retesteth/session/Session.h>
 #include <boost/test/unit_test.hpp>
 #include <string>
 #include <thread>
@@ -154,7 +154,7 @@ void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
                     " is outdated. Filler hash is different! ('" + sourceHash.hex().substr(0, 4) +
                     "' != '" + fillerData.hash.hex().substr(0, 4) + "') ");
         }
-        catch (test::BaseEthException const&)
+        catch (test::UpwardsException const&)
         {
             continue;
         }
@@ -497,14 +497,22 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
                 addClientInfo(output, boostRelativeTestPath, testData.hash);
                 writeFile(boostTestPath.path(), asBytes(output.asJson()));
             }
-            catch (test::BaseEthException const&)
+            catch (test::EthError const& _ex)
             {
-                // Something went wrong inside the test. skip it.
-                // (error message is stored at TestOutputHelper)
+                // Something went wrong inside the test. skip the test.
+                // (error message is stored at TestOutputHelper. EthError is via ETH_ERROR_())
+                wasErrors = true;
+            }
+            catch (test::UpwardsException const& _ex)
+            {
+                // UpwardsException is thrown upwards in tests for debug info
+                // And it should be catched on upper level for report till this point
+                ETH_ERROR_MESSAGE(string("Unhandled UpwardsException: ") + _ex.what());
                 wasErrors = true;
             }
             catch (std::exception const& _ex)
             {
+                // Low level error occured in tests
                 ETH_MARK_ERROR("ERROR OCCURED FILLING TESTS: " + string(_ex.what()));
                 RPCSession::sessionEnd(TestOutputHelper::getThreadID(), RPCSession::SessionStatus::HasFinished);
                 wasErrors = true;
@@ -519,10 +527,16 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
             TestOutputHelper::get().setCurrentTestFile(boostTestPath.path());
             executeFile(boostTestPath.path());
         }
-        catch (test::BaseEthException const&)
+        catch (test::EthError const& _ex)
         {
-            // Something went wrong inside the test. skip it.
-            // (error message is stored at TestOutputHelper)
+            // Something went wrong inside the test. skip the test.
+            // (error message is stored at TestOutputHelper. EthError is via ETH_ERROR_())
+        }
+        catch (test::UpwardsException const& _ex)
+        {
+            // UpwardsException is thrown upwards in tests for debug info
+            // And it should be catched on upper level for report till this point
+            ETH_ERROR_MESSAGE(string("Unhandled UpwardsException: ") + _ex.what());
         }
         catch (std::exception const& _ex)
         {

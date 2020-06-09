@@ -20,7 +20,7 @@
 /// @file RPCSession.cpp
 /// Low-level IPC communication between the test framework and the Ethereum node.
 
-#include "RPCSession.h"
+#include "Session.h"
 
 #include <stdio.h>
 #include <csignal>
@@ -80,9 +80,8 @@ void RPCSession::runNewInstanceOfAClient(string const& _threadID, ClientConfig c
         args.push_back(ipcPath);
 
         int pid = 0;
-        test::popenOutput mode = (Options::get().enableClientsOutput) ?
-                                     test::popenOutput::EnableALL :
-                                     test::popenOutput::DisableAll;
+        test::popenOutput mode =
+            (Options::get().enableClientsOutput) ? test::popenOutput::EnableALL : test::popenOutput::DisableAll;
         FILE* fp = test::popen2(command, args, "r", pid, mode);
         if (!fp)
         {
@@ -98,11 +97,10 @@ void RPCSession::runNewInstanceOfAClient(string const& _threadID, ClientConfig c
             // Client has opened ipc socket. wait for it to initialize
             std::this_thread::sleep_for(std::chrono::seconds(4));
         }
-        sessionInfo info(fp, new RPCSession(new RPCImpl(Socket::SocketType::IPC, ipcPath)),
-            tmpDir.string(), pid, _config.getId());
+        sessionInfo info(
+            fp, new RPCSession(new RPCImpl(Socket::SocketType::IPC, ipcPath)), tmpDir.string(), pid, _config.getId());
         {
-            std::lock_guard<std::mutex> lock(g_socketMapMutex);  // function must be called from
-                                                                 // lock
+            std::lock_guard<std::mutex> lock(g_socketMapMutex);  // function must be called from lock
             socketMap.insert(std::pair<string, sessionInfo>(_threadID, std::move(info)));
         }
 
@@ -114,8 +112,7 @@ void RPCSession::runNewInstanceOfAClient(string const& _threadID, ClientConfig c
         std::lock_guard<std::mutex> lock(g_socketMapMutex);
 
         std::vector<IPADDRESS> const& ports =
-            (Options::get().nodesoverride.size() > 0 ? Options::get().nodesoverride :
-                                                       _config.cfgFile().socketAdresses());
+            (Options::get().nodesoverride.size() > 0 ? Options::get().nodesoverride : _config.cfgFile().socketAdresses());
 
         // Create sessionInfo for a tcp address that is still not present in socketMap
         for (auto const& addr : ports)
@@ -132,9 +129,8 @@ void RPCSession::runNewInstanceOfAClient(string const& _threadID, ClientConfig c
             }
             if (unused)
             {
-                sessionInfo info(NULL,
-                    new RPCSession(new RPCImpl(Socket::SocketType::TCP, addr.asString())), "", 0,
-                    _config.getId());
+                sessionInfo info(
+                    NULL, new RPCSession(new RPCImpl(Socket::SocketType::TCP, addr.asString())), "", 0, _config.getId());
                 socketMap.insert(std::pair<string, sessionInfo>(_threadID, std::move(info)));
                 return;
             }
@@ -148,30 +144,25 @@ void RPCSession::runNewInstanceOfAClient(string const& _threadID, ClientConfig c
         fs::path const& ipcPath = _config.cfgFile().path();
         int pid = 0;
         FILE* fp = NULL;
-        sessionInfo info(fp, new RPCSession(new RPCImpl(Socket::SocketType::IPC, ipcPath.string())),
-            tmpDir.string(), pid, _config.getId());
+        sessionInfo info(
+            fp, new RPCSession(new RPCImpl(Socket::SocketType::IPC, ipcPath.string())), tmpDir.string(), pid, _config.getId());
         {
-            std::lock_guard<std::mutex> lock(g_socketMapMutex);  // function must be called from
-                                                                 // lock
+            std::lock_guard<std::mutex> lock(g_socketMapMutex);  // function must be called from lock
             socketMap.insert(std::pair<string, sessionInfo>(_threadID, std::move(info)));
         }
 
         break;
     }
-        /*
+
     case ClientConfgSocketType::TransitionTool:
     {
-
-        sessionInfo info(NULL,
-            new RPCSession(
-                new ToolImpl(Socket::SocketType::TCP, _config.cfgFile().path().string())),
-            "", 0, _config.getId());
+        sessionInfo info(
+            NULL, new RPCSession(new ToolImpl(Socket::SocketType::TCP, _config.cfgFile().shell())), "", 0, _config.getId());
         std::lock_guard<std::mutex> lock(g_socketMapMutex);  // function must be called from lock
         socketMap.insert(std::pair<string, sessionInfo>(_threadID, std::move(info)));
         return;
         break;
-
-    }*/
+    }
     default:
         ETH_FAIL_MESSAGE("Unknown Socket Type in runNewInstanceOfAClient");
     }
@@ -182,8 +173,7 @@ SessionInterface& RPCSession::instance(const string& _threadID)
     bool needToCreateNew = false;
     {
         std::lock_guard<std::mutex> lock(g_socketMapMutex);
-        test::ClientConfigID currentConfigId =
-            Options::getDynamicOptions().getCurrentConfig().getId();
+        test::ClientConfigID currentConfigId = Options::getDynamicOptions().getCurrentConfig().getId();
         if (socketMap.count(_threadID) && socketMap.at(_threadID).configId != currentConfigId)
         {
             // For this thread a session is opened but it is opened not for current tested client
@@ -199,10 +189,8 @@ SessionInterface& RPCSession::instance(const string& _threadID)
                     if (socket.second.configId == currentConfigId)
                     {
                         socket.second.isUsed = SessionStatus::Working;
-                        socketMap.insert(
-                            std::pair<string, sessionInfo>(_threadID, std::move(socket.second)));
-                        socketMap.erase(socketMap.find(socket.first));  // remove previous threadID
-                                                                        // assigment to this socket
+                        socketMap.insert(std::pair<string, sessionInfo>(_threadID, std::move(socket.second)));
+                        socketMap.erase(socketMap.find(socket.first));  // remove previous threadID assigment to this socket
                         return socketMap.at(_threadID).session.get()->getImplementation();
                     }
             }
@@ -215,8 +203,7 @@ SessionInterface& RPCSession::instance(const string& _threadID)
     std::lock_guard<std::mutex> lock(g_socketMapMutex);
     ETH_FAIL_REQUIRE_MESSAGE(socketMap.size() <= Options::get().threadCount,
         "Something went wrong. Retesteth connect to more instances than needed!");
-    ETH_FAIL_REQUIRE_MESSAGE(socketMap.size() != 0,
-        "Something went wrong. Retesteth failed to create socket connection!");
+    ETH_FAIL_REQUIRE_MESSAGE(socketMap.size() != 0, "Something went wrong. Retesteth failed to create socket connection!");
     return socketMap.at(_threadID).session.get()->getImplementation();
 }
 

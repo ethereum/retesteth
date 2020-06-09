@@ -32,7 +32,7 @@ BlockchainTestFillerTransaction::BlockchainTestFillerTransaction(DataObject cons
     }
     catch (std::exception const& _ex)
     {
-        throw BaseEthException(string("BlockchainTestFillerTransaction convertion error: ") + _ex.what() + _data.asJson());
+        throw UpwardsException(string("BlockchainTestFillerTransaction convertion error: ") + _ex.what() + _data.asJson());
     }
 }
 

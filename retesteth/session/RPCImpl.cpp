@@ -99,10 +99,10 @@ DebugTraceTransaction RPCImpl::debug_traceTransaction(FH32 const& _trHash)
 }
 
 // Test
-void RPCImpl::test_setChainParams(DataObject const& _config)
+void RPCImpl::test_setChainParams(SetChainParamsArgs const& _config)
 {
-    ETH_FAIL_REQUIRE_MESSAGE(rpcCall("test_setChainParams", {_config.asJson()}) == true,
-        "remote test_setChainParams = false");
+    ETH_FAIL_REQUIRE_MESSAGE(
+        rpcCall("test_setChainParams", {_config.asDataObject().asJson()}) == true, "remote test_setChainParams = false");
 }
 
 void RPCImpl::test_rewindToBlock(VALUE const& _blockNr)

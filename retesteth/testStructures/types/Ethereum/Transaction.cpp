@@ -12,6 +12,11 @@ namespace teststruct
 {
 Transaction::Transaction(DataObject const& _data)
 {
+    fromDataObject(_data);
+}
+
+void Transaction::fromDataObject(DataObject const& _data)
+{
     try
     {
         m_data = spBYTES(new BYTES(_data.atKey("data")));
@@ -61,9 +66,31 @@ Transaction::Transaction(DataObject const& _data)
     }
     catch (std::exception const& _ex)
     {
-        throw BaseEthException(string("Transaction convertion error: ") + _ex.what() + _data.asJson());
+        throw UpwardsException(string("Transaction convertion error: ") + _ex.what() + _data.asJson());
     }
 }
+
+Transaction::Transaction(BYTES const& _rlp)
+{
+    dev::bytes decodeRLP = sfromHex(_rlp.asString());
+    dev::RLP rlp(decodeRLP, dev::RLP::VeryStrict);
+    // 0 - nonce        3 - to      6 - v
+    // 1 - gasPrice     4 - value   7 - r
+    // 2 - gasLimit     5 - data    8 - s
+    DataObject trData;
+    size_t i = 0;
+    trData["nonce"] = rlpToString(rlp[i++]);
+    trData["gasPrice"] = rlpToString(rlp[i++]);
+    trData["gasLimit"] = rlpToString(rlp[i++]);
+    trData["to"] = rlpToString(rlp[i++], 0);
+    trData["value"] = rlpToString(rlp[i++]);
+    trData["data"] = rlpToString(rlp[i++], 0);
+    trData["v"] = rlpToString(rlp[i++]);
+    trData["r"] = rlpToString(rlp[i++]);
+    trData["s"] = rlpToString(rlp[i++]);
+    fromDataObject(trData);
+}
+
 
 void Transaction::streamHeader(dev::RLPStream& _s) const
 {
@@ -152,9 +179,17 @@ FH32 Transaction::hash() const
 
 bool Transaction::operator==(Transaction const& _rhs) const
 {
-    return data() == _rhs.data() && gasLimit() == _rhs.gasLimit() && gasPrice() == _rhs.gasPrice()
-             && nonce() == _rhs.nonce() && value() == _rhs.value() && to() == _rhs.to()
-             && v() == _rhs.v() && r() == _rhs.r() && s() == _rhs.s();
+    bool creationCondition = false;
+    if (m_creation && _rhs.isCreation())
+        creationCondition = true;
+    else if (m_creation && !_rhs.isCreation())
+        creationCondition = false;
+    else if (!m_creation && _rhs.isCreation())
+        creationCondition = false;
+    else if (!m_creation && !_rhs.isCreation())
+        creationCondition = to() == _rhs.to();
+    return creationCondition && data() == _rhs.data() && gasLimit() == _rhs.gasLimit() && gasPrice() == _rhs.gasPrice() &&
+           nonce() == _rhs.nonce() && value() == _rhs.value() && v() == _rhs.v() && r() == _rhs.r() && s() == _rhs.s();
 }
 
 }  // namespace teststruct
