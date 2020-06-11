@@ -36,7 +36,7 @@ DataObject constructEthGetBlockBy(EthereumBlockState const& _block)
     for (auto const& tr : _block.transactions())
     {
         DataObject fullTransaction = tr.asDataObject();
-        fullTransaction["blockHash"] = FH32::zero().asString();  // We don't know the hash its in tool response
+        fullTransaction["blockHash"] = _block.header().hash().asString();  // We don't know the hash its in tool response
         fullTransaction["blockNumber"] = _block.header().number().asString();
         fullTransaction["from"] = FH20::zero().asString();  // Can be recovered from vrs
         fullTransaction["transactionIndex"] = "0x00";       // Its in tool response
@@ -67,6 +67,7 @@ DataObject constructStorageRangeAt(
     {
         constructResponse["complete"].setBool(true);
         constructResponse["storage"] = DataObject(DataType::Object);
+        constructResponse["nextKey"] = FH32::zero().asString();
         if (_block.state().getAccount(_address).hasStorage())
         {
             size_t iStore = 0;
@@ -89,10 +90,7 @@ DataObject constructStorageRangeAt(
             }
         }
         else
-        {
             constructResponse["storage"] = DataObject();
-            constructResponse["nextKey"] = FH32::zero().asString();
-        }
     }
     ETH_LOG(constructResponse.asJson(), 7);
     return constructResponse;

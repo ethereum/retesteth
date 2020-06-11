@@ -109,7 +109,11 @@ int pclose2(FILE* _fp, pid_t _pid);
 /// return path to the unique tmp directory
 fs::path createUniqueTmpDirectory();
 
-/// to
-string fto_string(size_t);
+///
+template <class t>
+string fto_string(t _val)
+{
+    return std::to_string(_val);
+}
 
 }  // namespace test

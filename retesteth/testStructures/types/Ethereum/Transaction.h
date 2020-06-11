@@ -13,6 +13,7 @@ struct Transaction : GCP_SPointerBase
 {
     Transaction(DataObject const&);
     Transaction(BYTES const&);
+    Transaction(dev::RLP const&);
     BYTES const& data() const { return m_data.getCContent(); }
     VALUE const& gasLimit() const { return m_gasLimit.getCContent(); }
     VALUE const& gasPrice() const { return m_gasPrice.getCContent(); }
@@ -39,6 +40,7 @@ struct Transaction : GCP_SPointerBase
 private:
     Transaction() {}
     void fromDataObject(DataObject const&);
+    void fromRLP(dev::RLP const&);
     spBYTES m_data;
     spVALUE m_gasLimit;
     spVALUE m_gasPrice;

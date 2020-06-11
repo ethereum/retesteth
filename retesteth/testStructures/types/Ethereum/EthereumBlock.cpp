@@ -10,10 +10,13 @@ namespace teststruct
 {
 void EthereumBlock::recalculateHeaderHash()
 {
+    // Transaction has is calculated from transaction trie, not from list
     // Transaction List
-    // RLPStream transactionList(m_transactions.size());
-    // for (auto const& tr : m_transactions)
-    //    transactionList.appendRaw(tr.asRLPStream().out());
+    /*
+    RLPStream transactionList(m_transactions.size());
+    for (auto const& tr : m_transactions)
+        transactionList.appendRaw(tr.asRLPStream().out());
+    */
 
     // Uncle List
     RLPStream uncleList(m_uncles.size());
@@ -25,6 +28,7 @@ void EthereumBlock::recalculateHeaderHash()
 
     FH32 newUnHash("0x" + toString(dev::sha3(uncleList.out())));
     m_header.getContent().setUnclesHash(newUnHash);
+
     FH32 newHeaderHash("0x" + toString(dev::sha3(m_header.getCContent().asRLPStream().out())));
     m_header.getContent().setHeaderHash(newHeaderHash);
 }

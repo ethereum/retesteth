@@ -18,7 +18,7 @@ DataObject ToolImpl::web3_clientVersion()
     ETH_TEST_MESSAGE("\nRequest: web3_clientVersion");
     string const cmd = m_toolPath.string() + " -v";
     DataObject res(test::executeCmd(cmd));
-    ETH_TEST_MESSAGE("\nResponse: web3_clientVersion " + res.asString());
+    ETH_TEST_MESSAGE("Response: web3_clientVersion " + res.asString());
     return res;
 }
 
@@ -179,17 +179,16 @@ void ToolImpl::test_modifyTimestamp(VALUE const& _timestamp)
     rpcCall("", {});
     ETH_TEST_MESSAGE("\nRequest: test_modifyTimestamp " + _timestamp.asDecString());
     blockchain().modifyTimestamp(_timestamp);
-    ETH_TEST_MESSAGE("\nResponse: test_modifyTimestamp " + _timestamp.asDecString());
+    ETH_TEST_MESSAGE("Response: test_modifyTimestamp " + _timestamp.asDecString());
 }
 
 void ToolImpl::test_mineBlocks(size_t _number)
 {
     rpcCall("", {});
     ETH_TEST_MESSAGE("\nRequest: test_mineBlocks");
-    m_toolChainManager.getContent().mineBlocks(_number);
+    blockchain().mineBlocks(_number);
 
-    ETH_TEST_MESSAGE("Response test_mineBlocks {" +
-                     toString(m_toolChainManager.getContent().lastBlock().header().number().asDecString()) + "}");
+    ETH_TEST_MESSAGE("Response test_mineBlocks {" + blockchain().lastBlock().header().number().asDecString() + "}");
 
     /*
     ETH_ERROR_REQUIRE_MESSAGE(_number == 1, "Make sure test_mineBlocks mine 1 block");
@@ -249,83 +248,9 @@ FH32 ToolImpl::test_importRawBlock(BYTES const& _blockRLP)
 {
     rpcCall("", {});
     ETH_TEST_MESSAGE("\nRequest: test_importRawBlock, following transaction import are internal");
-    (void)_blockRLP;
-
-    /*
-    static vector<string> exceptions = {"BlockWrongStoreClears"};
-    for (auto const& el : exceptions)
-    {
-        if (TestOutputHelper::get().testName().find(el) != string::npos)
-        {
-            ETH_WARNING("t8ntool backend can't verify this block!");
-            onError("TooImpl can't verify this block!", "Test exception");
-            return string();
-        }
-    }
-
-    string rawBlockHash;
-    try
-    {
-        bytes blockBytes = dev::fromHex(_blockRLP);
-        dev::RLP blockRLP(blockBytes);
-        ostringstream out;
-        out << blockRLP;
-        ETH_TEST_MESSAGE(out.str());
-        rawBlockHash = dev::toHexPrefixed(dev::sha3(blockRLP[0].data()));
-        if (!blockRLP.isList())
-            throw dev::RLPException("Block RLP is expected to be list");
-
-        BlockHeadFromRLP sanHeader(blockRLP[0]);
-        verifyRawBlock(sanHeader, blockRLP);
-
-        test_mineBlocks(1);
-
-        ToolBlock const& cbl = getLastBlock();
-
-        auto revertLastBlockWithException = [&](string const& _what) {
-            m_blockchainMap.at(m_current_chain_ind).pop_back();
-            throw dev::RLPException(_what);
-        };
-
-        // Evm return different field
-        const scheme_blockHeader t8nHeader = cbl.getRPCResponse().getBlockHeader2();
-        if (t8nHeader.bloom() != sanHeader.header.bloom())
-            revertLastBlockWithException(
-                "Raw block bloom is different to one returned by t8ntool!");
-        if (t8nHeader.stateRoot() != sanHeader.header.stateRoot())
-            revertLastBlockWithException(
-                "Raw block stateRoot is different to one returned by t8ntool!");
-
-
-        // When import from raw block, no invalid transactions (tool::rejected) allowed
-        if (cbl.wereInvalidTransactions())
-            revertLastBlockWithException("Raw block transaction execution failed!");
-
-        if (rawBlockHash != cbl.getHash())
-            throw dev::RLPException(
-                string("RAW import hash != test_mineBlocks imitating rawblock. ") +
-                "RAW: " + rawBlockHash + " vs " + cbl.getHash());
-    }
-    catch (test::BaseEthException const& _ex)
-    {
-        // do not treat this exception as retesteth error
-        TestOutputHelper::get().unmarkLastError();
-        onError(_ex.what(), "Import raw block failed");
-        ETH_TEST_MESSAGE("Response test_importRawBlock: " + rawBlockHash);
-        return string();
-    }
-    catch (RLPException const& _ex)
-    {
-        onError(_ex.what(), "Import raw block failed");
-        ETH_TEST_MESSAGE("Response test_importRawBlock: " + rawBlockHash);
-        return string();
-    }
-
-    doChainReorg();  // update head
-    ETH_TEST_MESSAGE("Response test_importRawBlock: " + rawBlockHash);
-    return rawBlockHash;
-    */
-    return FH32::zero();
+    FH32 const hash = blockchain().importRawBlock(_blockRLP);
+    ETH_TEST_MESSAGE("Response test_importRawBlock: " + hash.asString());
+    return hash;
 }
 
 FH32 ToolImpl::test_getLogHash(FH32 const& _txHash)
@@ -337,7 +262,6 @@ FH32 ToolImpl::test_getLogHash(FH32 const& _txHash)
     ETH_TEST_MESSAGE("Response: test_getLogHash " + res.asString());
     return res;
 }
-
 
 // Internal
 DataObject ToolImpl::rpcCall(

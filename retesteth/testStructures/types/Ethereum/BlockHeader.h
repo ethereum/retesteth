@@ -14,6 +14,8 @@ namespace teststruct
 struct BlockHeader : GCP_SPointerBase
 {
     BlockHeader(DataObject const&);
+    BlockHeader(dev::RLP const&);
+
     DataObject const asDataObject() const;
     dev::RLPStream const asRLPStream() const;
     bool operator==(BlockHeader const& _rhs) const;
@@ -39,10 +41,12 @@ struct BlockHeader : GCP_SPointerBase
     void setParentHash(FH32 const& _hash) { m_parentHash = spFH32(new FH32(_hash)); }
     void setUnclesHash(FH32 const& _hash) { m_sha3Uncles = spFH32(new FH32(_hash)); }
     void setHeaderHash(FH32 const& _hash) { m_hash = spFH32(new FH32(_hash)); }
+    void setGasUsed(VALUE const& _gasUsed) { m_gasUsed = spVALUE(new VALUE(_gasUsed)); }
     void recalculateHash();
 
 private:
     BlockHeader() {}
+    void fromData(DataObject const&);
     spFH20 m_author;
     spVALUE m_difficulty;
     spBYTES m_extraData;

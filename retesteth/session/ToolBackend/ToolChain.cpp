@@ -75,6 +75,7 @@ ToolChain::ToolChain(EthereumBlockState const& _genesis, SealEngine _sealEngine,
 
     EthereumBlockState genesisFixed(_genesis.header().asDataObject(), _genesis.state(), FH32::zero());
     genesisFixed.headerUnsafe().setStateHash(res.stateRoot());
+    genesisFixed.headerUnsafe().recalculateHash();
     m_blocks.push_back(genesisFixed);
 }
 
@@ -88,6 +89,7 @@ void ToolChain::mineBlock(EthereumBlockState const& _pendingBlock)
 
     // Tool calculated transactions and state
     pendingFixed.headerUnsafe().setStateHash(res.stateRoot());
+    pendingFixed.headerUnsafe().setGasUsed(res.totalGasUsed());
     pendingFixed.headerUnsafe().setTransactionHash(res.txRoot());
     pendingFixed.headerUnsafe().setTrReceiptsHash(res.receiptRoot());
 
@@ -109,6 +111,13 @@ void ToolChain::mineBlock(EthereumBlockState const& _pendingBlock)
             ETH_WARNING_TEST("t8ntool didn't return a transaction with hash: " + trHash.asString(), 6);
     }
 
+    pendingFixed.recalculateHeaderHash();
+    if (pendingFixed.header().transactionRoot() != res.txRoot())
+        ETH_ERROR_MESSAGE(string("ToolChain::mineBlock txRootHash is different to one ruturned by tool \n") +
+                          "constructedBlockHash: " + pendingFixed.header().transactionRoot().asString() +
+                          "\n"
+                          "toolTransactionRoot: " +
+                          res.txRoot().asString());
     m_blocks.push_back(pendingFixed);
 }
 

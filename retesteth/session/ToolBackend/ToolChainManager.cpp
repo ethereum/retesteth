@@ -57,5 +57,29 @@ void ToolChainManager::modifyTimestamp(VALUE const& _time)
     m_pendingBlock.getContent().headerUnsafe().setTimestamp(_time);
 }
 
+// Import Raw Block via t8ntool
+FH32 ToolChainManager::importRawBlock(BYTES const& _rlp)
+{
+    dev::bytes decodeRLP = sfromHex(_rlp.asString());
+    dev::RLP rlp(decodeRLP, dev::RLP::VeryStrict);
+
+    BlockHeader header(rlp[0]);
+    m_pendingBlock = spEthereumBlockState(new EthereumBlockState(header, lastBlock().state(), FH32::zero()));
+    for (auto const& trRLP : rlp[1].toList())
+    {
+        Transaction tr(trRLP);
+        addPendingTransaction(tr);
+    }
+    for (auto const& unRLP : rlp[2].toList())
+    {
+        BlockHeader un(unRLP);
+        m_pendingBlock.getContent().addUncle(un);
+    }
+    m_pendingBlock.getContent().recalculateHeaderHash();
+    ETH_TEST_MESSAGE(header.asDataObject().asJson());
+    mineBlocks(1);
+    return lastBlock().header().hash();
+}
+
 
 }  // namespace toolimpl

@@ -139,7 +139,7 @@ long long int hexOrDecStringToInt(string const& _str)
     else
     {
         res = atoll(_str.c_str());
-        string const converted = toString(res);
+        string const converted = fto_string(res);
         if (converted < _str)
             ETH_WARNING("Error converting `hexOrDecStringToInt`, decoded:  '" + converted + "' from '" + _str + "'");
     }

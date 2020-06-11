@@ -174,7 +174,7 @@ DataObject FillTestAsBlockchain(StateTestInFiller const& _test)
                     aBlockchainTest["blocks"].addArrayObject(block);
 
                     string dataPostfix =
-                        "_d" + toString(tr.dataInd()) + "g" + toString(tr.gasInd()) + "v" + toString(tr.valueInd());
+                        "_d" + fto_string(tr.dataInd()) + "g" + fto_string(tr.gasInd()) + "v" + fto_string(tr.valueInd());
                     dataPostfix += "_" + fork.asString();
 
                     if (filledTest.count(_test.testName() + dataPostfix))

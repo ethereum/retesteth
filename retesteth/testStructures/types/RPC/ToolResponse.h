@@ -17,6 +17,13 @@ struct ToolResponse
     FH32 const& txRoot() const { return m_txRoot.getCContent(); }
     FH32 const& receiptRoot() const { return m_receiptRoot.getCContent(); }
     FH32 const& logsHash() const { return m_logsHash.getCContent(); }
+    VALUE totalGasUsed() const
+    {
+        VALUE totalGasUsed = 0;
+        for (auto const& rec : m_receipts)
+            totalGasUsed = totalGasUsed + rec.gasUsed();
+        return totalGasUsed;
+    }
     State const& state() const { return m_stateResponse.getCContent(); }
     std::vector<ToolResponseReceipt> const& receipts() const { return m_receipts; }
 

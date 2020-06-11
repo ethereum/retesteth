@@ -182,7 +182,7 @@ void TestOutputHelper::finishTest()
         execTimeName res;
         res.first = m_timer.elapsed();
         res.second = TestInfo::caseName();
-        std::cout << res.second + " time: " + toString(res.first) << "\n";
+        std::cout << res.second + " time: " + fto_string(res.first) << "\n";
         std::lock_guard<std::mutex> lock(g_execTimeResults);
         execTimeResults.push_back(res);
     }
@@ -206,8 +206,7 @@ void TestOutputHelper::printBoostError()
     if (errorCount)
     {
         ETH_STDERROR_MESSAGE("\n--------");
-        ETH_STDERROR_MESSAGE(
-            "TestOutputHelper detected " + toString(errorCount) + " errors during test execution!");
+        ETH_STDERROR_MESSAGE("TestOutputHelper detected " + fto_string(errorCount) + " errors during test execution!");
         std::lock_guard<std::mutex> lock(g_execTotalErrors);
         BOOST_ERROR("");  // NOT THREAD SAFE !!!
         execTotalErrors += errorCount;
@@ -235,17 +234,17 @@ void TestOutputHelper::printTestExecStats()
         std::cout << std::endl << "*** Execution time stats" << std::endl;
         {
             std::lock_guard<std::mutex> lock2(g_totalTestsRun);
-            std::cout << setw(45) << "Total Tests: " << setw(25)
-                      << "     : " + toString(totalTestsRun) << "\n";
+            std::cout << setw(45) << "Total Tests: " << setw(25) << "     : " + fto_string(totalTestsRun) << "\n";
         }
-        std::cout << setw(45) << "Total Time: " << setw(25) << "     : " + toString(totalTime) << "\n";
+        std::cout << setw(45) << "Total Time: " << setw(25) << "     : " + fto_string(totalTime) << "\n";
         for (size_t i = 0; i < execTimeResults.size(); i++)
-            std::cout << setw(45) << execTimeResults[i].second << setw(25) << " time: " + toString(execTimeResults[i].first) << "\n";
+            std::cout << setw(45) << execTimeResults[i].second << setw(25) << " time: " + fto_string(execTimeResults[i].first)
+                      << "\n";
     }
     else
     {
         std::lock_guard<std::mutex> lock(g_totalTestsRun);
-        string message = "*** Total Tests Run: " + toString(totalTestsRun) + "\n";
+        string message = "*** Total Tests Run: " + fto_string(totalTestsRun) + "\n";
         if (totalTestsRun > 0)
             ETH_STDOUT_MESSAGE(message);
         else

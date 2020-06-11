@@ -65,8 +65,25 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
         // string const jsonHeader = inTestHeader.type() == DataType::Null ?
         //                              bdata.atKey("blockHeader").asJson() :
         //                              "(adjusted)" + inTestHeader.asJson();
-        string message = "Client return HEADER: " + latestBlock.header().asDataObject().asJson() + "\n vs \n" +
-                         "Test HEADER: " + tblock.header().asDataObject().asJson();
+        string message;
+        if (!condition)
+        {
+            message = "Client return HEADER vs Test HEADER: \n";
+            DataObject clientHeader = latestBlock.header().asDataObject();
+            DataObject testHeader = tblock.header().asDataObject();
+            size_t k = 0;
+            for (auto const& el : clientHeader.getSubObjects())
+            {
+                static string const cYellow = "\x1b[33m";
+                static string const cRed = "\x1b[31m";
+                string const testHeaderField = testHeader.getSubObjects().at(k++).asString();
+                message += cYellow + el.getKey() + cRed + " ";
+                if (el.asString() != testHeaderField)
+                    message += el.asString() + " vs " + cYellow + testHeaderField + cRed + "\n";
+                else
+                    message += el.asString() + " vs " + testHeaderField + "\n";
+            }
+        }
         ETH_ERROR_REQUIRE_MESSAGE(
             condition, "Client report different blockheader after importing the rlp than expected by test! \n" + message);
 
@@ -95,12 +112,12 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
         {
             EthGetBlockByTransaction const& clientTr = latestBlock.transactions().at(ind++);
             ETH_ERROR_REQUIRE_MESSAGE(clientTr.blockHash() == tblock.header().hash(),
-                "Error checking remote transaction, remote tr `blockHash` is different to one described in test block!"
+                "Error checking remote transaction, remote tr `blockHash` is different to one described in test block! "
                 "(" +
                     clientTr.blockHash().asString() + " != " + tblock.header().hash().asString() + ")");
 
             ETH_ERROR_REQUIRE_MESSAGE(clientTr.blockNumber() == tblock.header().number(),
-                "Error checking remote transaction, remote tr `blockNumber` is different to one described in test block!"
+                "Error checking remote transaction, remote tr `blockNumber` is different to one described in test block! "
                 "(" +
                     clientTr.blockNumber().asDecString() + " != " + tblock.header().number().asDecString() + ")");
 

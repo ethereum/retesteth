@@ -70,26 +70,36 @@ void Transaction::fromDataObject(DataObject const& _data)
     }
 }
 
-Transaction::Transaction(BYTES const& _rlp)
+void Transaction::fromRLP(dev::RLP const& _rlp)
 {
-    dev::bytes decodeRLP = sfromHex(_rlp.asString());
-    dev::RLP rlp(decodeRLP, dev::RLP::VeryStrict);
     // 0 - nonce        3 - to      6 - v
     // 1 - gasPrice     4 - value   7 - r
     // 2 - gasLimit     5 - data    8 - s
     DataObject trData;
     size_t i = 0;
-    trData["nonce"] = rlpToString(rlp[i++]);
-    trData["gasPrice"] = rlpToString(rlp[i++]);
-    trData["gasLimit"] = rlpToString(rlp[i++]);
-    string const to = rlpToString(rlp[i++], 0);
+    trData["nonce"] = rlpToString(_rlp[i++]);
+    trData["gasPrice"] = rlpToString(_rlp[i++]);
+    trData["gasLimit"] = rlpToString(_rlp[i++]);
+    string const to = rlpToString(_rlp[i++], 0);
     trData["to"] = to == "0x" ? "" : to;
-    trData["value"] = rlpToString(rlp[i++]);
-    trData["data"] = rlpToString(rlp[i++], 0);
-    trData["v"] = rlpToString(rlp[i++]);
-    trData["r"] = rlpToString(rlp[i++]);
-    trData["s"] = rlpToString(rlp[i++]);
+    trData["value"] = rlpToString(_rlp[i++]);
+    trData["data"] = rlpToString(_rlp[i++], 0);
+    trData["v"] = rlpToString(_rlp[i++]);
+    trData["r"] = rlpToString(_rlp[i++]);
+    trData["s"] = rlpToString(_rlp[i++]);
     fromDataObject(trData);
+}
+
+Transaction::Transaction(dev::RLP const& _rlp)
+{
+    fromRLP(_rlp);
+}
+
+Transaction::Transaction(BYTES const& _rlp)
+{
+    dev::bytes decodeRLP = sfromHex(_rlp.asString());
+    dev::RLP rlp(decodeRLP, dev::RLP::VeryStrict);
+    fromRLP(rlp);
 }
 
 

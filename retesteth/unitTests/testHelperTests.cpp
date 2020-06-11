@@ -42,6 +42,18 @@ static vector<FORK> exampleNets = {FORK("Frontier"), FORK("Homestead"), FORK("EI
 
 BOOST_FIXTURE_TEST_SUITE(TestHelperSuite, TestOutputHelperFixture)
 
+BOOST_AUTO_TEST_CASE(tostr_std)
+{
+    for (size_t i = 0; i < 1000000; i++)
+        to_string(i);
+}
+
+BOOST_AUTO_TEST_CASE(tostr_dev)
+{
+    for (size_t i = 0; i < 1000000; i++)
+        toString(i);
+}
+
 BOOST_AUTO_TEST_CASE(translateNetworks_doubleNet)
 {
     set<string> rawnetworks = {"Frontier", "<Homestead"};

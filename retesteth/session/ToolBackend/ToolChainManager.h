@@ -16,8 +16,10 @@ class ToolChainManager : public GCP_SPointerBase
 public:
     ToolChainManager(SetChainParamsArgs const& _config, fs::path const& _toolPath);
     void addPendingTransaction(Transaction const& _tr) { m_pendingBlock.getContent().addTransaction(_tr); }
+
     ToolChain const& currentChain() const { return m_chains.at(m_currentChain).getCContent(); }
     void mineBlocks(size_t _number);
+    FH32 importRawBlock(BYTES const& _rlp);
 
     EthereumBlockState const& lastBlock() const { return currentChain().lastBlock(); }
     EthereumBlockState const& blockByNumber(VALUE const& _number) const;
