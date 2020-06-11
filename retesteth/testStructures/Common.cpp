@@ -137,10 +137,12 @@ long long int hexOrDecStringToInt(string const& _str)
     if (isHexDigitsType(stringIntegerType(_str)))
         res = (long long int)dev::u256(_str);
     else
+    {
         res = atoll(_str.c_str());
-    string const converted = toString(res);
-    if (converted < _str)
-        ETH_WARNING("Error converting `hexOrDecStringToInt`, decoded:  '" + converted + "' from '" + _str + "'");
+        string const converted = toString(res);
+        if (converted < _str)
+            ETH_WARNING("Error converting `hexOrDecStringToInt`, decoded:  '" + converted + "' from '" + _str + "'");
+    }
     return res;
 }
 

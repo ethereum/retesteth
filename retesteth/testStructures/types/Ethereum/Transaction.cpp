@@ -82,7 +82,8 @@ Transaction::Transaction(BYTES const& _rlp)
     trData["nonce"] = rlpToString(rlp[i++]);
     trData["gasPrice"] = rlpToString(rlp[i++]);
     trData["gasLimit"] = rlpToString(rlp[i++]);
-    trData["to"] = rlpToString(rlp[i++], 0);
+    string const to = rlpToString(rlp[i++], 0);
+    trData["to"] = to == "0x" ? "" : to;
     trData["value"] = rlpToString(rlp[i++]);
     trData["data"] = rlpToString(rlp[i++], 0);
     trData["v"] = rlpToString(rlp[i++]);
@@ -156,7 +157,10 @@ const DataObject Transaction::asDataObject(ExportOrder _order) const
     out["gasPrice"] = m_gasPrice.getCContent().asString();
     out["nonce"] = m_nonce.getCContent().asString();
     if (m_creation)
-        out["to"] = "";
+    {
+        if (_order != ExportOrder::ToolStyle)
+            out["to"] = "";
+    }
     else
         out["to"] = m_to.getCContent().asString();
     out["value"] = m_value.getCContent().asString();

@@ -79,7 +79,6 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
         for (BlockHeader const& tuncle : tblock.uncles())
         {
             FH32 clientUncleHash = latestBlock.uncles().at(ind++);  // EthGetBlockBy return only hashes
-            message = "(" + clientUncleHash.asString() + " != " + tuncle.hash().asString() + ")";
             if (clientUncleHash != tuncle.hash())
                 ETH_ERROR_MESSAGE("Remote client returned block with unclehash that is not expected by test! " + message);
         }

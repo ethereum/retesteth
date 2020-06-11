@@ -40,31 +40,48 @@ VALUE prepareReward(SealEngine _engine, FORK const& _fork, VALUE const& _blockNu
             return rewards.at(RewardMapForToolAfter5.at(_fork)).getCContent();
     }
 }
+
+// Because tool report incomplete state. restore missing fields with zeros
+// Also remove leading zeros in storage
+State restoreFullState(DataObject const& _toolState)
+{
+    DataObject fullState;
+    for (auto const& accTool : _toolState.getSubObjects())
+    {
+        DataObject acc;
+        acc["balance"] = accTool.count("balance") ? accTool.atKey("balance").asString() : "0x00";
+        acc["nonce"] = accTool.count("nonce") ? accTool.atKey("nonce").asString() : "0x00";
+        acc["code"] = accTool.count("code") ? accTool.atKey("code").asString() : "0x";
+        acc["storage"] = accTool.count("storage") ? accTool.atKey("storage") : DataObject(DataType::Object);
+        for (auto& storageRecord : acc.atKeyUnsafe("storage").getSubObjectsUnsafe())
+        {
+            storageRecord.performModifier(mod_removeLeadingZerosFromHexValuesEVEN);
+            storageRecord.performModifier(mod_removeLeadingZerosFromHexKeysEVEN);
+        }
+        fullState[accTool.getKey()] = acc;
+    }
+    return State(fullState);
+}
 }  // namespace
 
 
 namespace toolimpl
 {
-ToolChain::ToolChain(EthereumBlock const& _genesis, State const& _genesisState, SealEngine _sealEngine, FORK const& _fork,
-    fs::path const& _toolPath)
-  : m_genesisState(new State(_genesisState.asDataObject())),
-    m_engine(_sealEngine),
-    m_fork(new FORK(_fork)),
-    m_toolPath(_toolPath)
+ToolChain::ToolChain(EthereumBlockState const& _genesis, SealEngine _sealEngine, FORK const& _fork, fs::path const& _toolPath)
+  : m_engine(_sealEngine), m_fork(new FORK(_fork)), m_toolPath(_toolPath)
 {
     // We yet don't know the state root. ask the tool to calculate it
-    ToolResponse res = mineBlock(_genesis, _genesisState);
+    ToolResponse res = mineBlockOnTool(_genesis, SealEngine::NoReward);
 
-    EthereumBlock genesisFixed(_genesis.header().asDataObject());
+    EthereumBlockState genesisFixed(_genesis.header().asDataObject(), _genesis.state(), FH32::zero());
     genesisFixed.headerUnsafe().setStateHash(res.stateRoot());
-    genesisFixed.addState(_genesisState);
     m_blocks.push_back(genesisFixed);
 }
 
-void ToolChain::mineBlock(EthereumBlock const& _pendingBlock)
+void ToolChain::mineBlock(EthereumBlockState const& _pendingBlock)
 {
-    ToolResponse const res = mineBlock(_pendingBlock, _pendingBlock.state());
-    EthereumBlock pendingFixed(_pendingBlock.header().asDataObject());
+    ToolResponse const res = mineBlockOnTool(_pendingBlock, m_engine);
+    EthereumBlockState pendingFixed(_pendingBlock.header().asDataObject(), res.state(), res.logsHash());
 
     // Construct a block header with information that we have and what we get from t8ntool
     pendingFixed.headerUnsafe().setNumber(m_blocks.size());
@@ -95,18 +112,32 @@ void ToolChain::mineBlock(EthereumBlock const& _pendingBlock)
     m_blocks.push_back(pendingFixed);
 }
 
-ToolResponse ToolChain::mineBlock(EthereumBlock const& _block, State const& _state)
+ToolResponse ToolChain::mineBlockOnTool(EthereumBlockState const& _block, SealEngine _engine)
 {
     fs::path tmpDir = test::createUniqueTmpDirectory();
 
     // env.json file
     fs::path envPath = tmpDir / "env.json";
     BlockchainTestFillerEnv env(_block.header().asDataObject(), m_engine);
-    writeFile(envPath.string(), env.asDataObject().asJson());
+    DataObject envData = env.asDataObject();
+
+    // BlockHeader hash information for tool mining
+    size_t k = 0;
+    for (auto const& bl : m_blocks)
+        envData["blockHashes"][fto_string(k++)] = bl.header().hash().asString();
+    for (auto const& un : _block.uncles())
+    {
+        DataObject uncle;
+        uncle["delta"] = (_block.header().number() - un.number()).asString();
+        uncle["address"] = un.author().asString();
+        envData["ommers"].addArrayObject(uncle);
+    }
+
+    writeFile(envPath.string(), envData.asJson());
 
     // alloc.json file
     fs::path allocPath = tmpDir / "alloc.json";
-    writeFile(allocPath.string(), _state.asDataObject().asJsonNoFirstKey());
+    writeFile(allocPath.string(), _block.state().asDataObject().asJsonNoFirstKey());
 
     // txs.json file
     fs::path txsPath = tmpDir / "txs.json";
@@ -126,7 +157,8 @@ ToolResponse ToolChain::mineBlock(EthereumBlock const& _block, State const& _sta
     cmd += " --state.fork " + m_fork.getContent().asString();
     cmd += " --output.result " + outPath.string();
     cmd += " --output.alloc " + outAllocPath.string();
-    cmd += " --state.reward " + prepareReward(m_engine, m_fork.getContent(), _block.header().number()).asDecString();
+    if (_engine != SealEngine::NoReward)
+        cmd += " --state.reward " + prepareReward(_engine, m_fork.getContent(), _block.header().number()).asDecString();
 
     ETH_TEST_MESSAGE("Alloc:\n" + contentsString(allocPath.string()));
     if (_block.transactions().size())
@@ -140,21 +172,14 @@ ToolResponse ToolChain::mineBlock(EthereumBlock const& _block, State const& _sta
     // Construct block rpc response
     ToolResponse toolResponse(ConvertJsoncppStringToData(contentsString(outPath)));
     DataObject returnState = ConvertJsoncppStringToData(contentsString(outAllocPath));
-    for (auto& acc : returnState.getSubObjectsUnsafe())
-    {
-        if (acc.count("storage"))
-        {
-            for (auto& storageRecord : acc.atKeyUnsafe("storage").getSubObjectsUnsafe())
-            {
-                storageRecord.performModifier(mod_removeLeadingZerosFromHexValuesEVEN);
-                storageRecord.performModifier(mod_removeLeadingZerosFromHexKeysEVEN);
-            }
-        }
-    }
-
-    spStateIncomplete const toolState(new StateIncomplete(returnState));
-    toolResponse.attachState(toolState.getCContent());
+    toolResponse.attachState(restoreFullState(returnState));
     return toolResponse;
+}
+
+void ToolChain::rewindToBlock(size_t _number)
+{
+    while (m_blocks.size() > _number + 1)
+        m_blocks.pop_back();
 }
 
 }  // namespace toolimpl

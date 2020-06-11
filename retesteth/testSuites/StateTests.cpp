@@ -366,6 +366,9 @@ void RunTest(StateTestInFilled const& _test)
                         ETH_ERROR_MESSAGE("Post hash mismatch remote: " + actualHash.asString() +
                                           ", expected: " + expectedPostHash.asString());
                     }
+                    if (Options::get().poststate)
+                        ETH_LOG("\nState Dump: \n" + getRemoteState(session).asDataObject().asJson(), 1);
+
 
                     // Validate log hash
                     FH32 const& expectedLogHash = result.logs();

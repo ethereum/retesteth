@@ -1,68 +1,61 @@
 #include "ToolChainManager.h"
 #include <retesteth/EthChecks.h>
+#include <retesteth/TestHelper.h>
+using namespace test;
 
 namespace toolimpl
 {
 ToolChainManager::ToolChainManager(SetChainParamsArgs const& _config, fs::path const& _toolPath)
 {
     m_currentChain = 0;
-    m_chains[m_currentChain] =
-        spToolChain(new ToolChain(_config.genesis(), _config.state(), _config.sealEngine(), _config.fork(), _toolPath));
-    m_pendingBlock = spEthereumBlock(new EthereumBlock(currentChain().lastBlock().header()));
-    m_pendingBlock.getContent().addState(_config.state());
+    EthereumBlockState genesis(_config.genesis(), _config.state(), FH32::zero());
+    m_chains[m_currentChain] = spToolChain(new ToolChain(genesis, _config.sealEngine(), _config.fork(), _toolPath));
+    m_pendingBlock =
+        spEthereumBlockState(new EthereumBlockState(currentChain().lastBlock().header(), _config.state(), FH32::zero()));
+    m_pendingBlock.getContent().headerUnsafe().setNumber(1);
+    m_pendingBlock.getContent().headerUnsafe().setParentHash(currentChain().lastBlock().header().hash());
 }
 
 void ToolChainManager::mineBlocks(size_t _number)
 {
-    assert(_number < 2 && _number > 0);
-    latestChain().mineBlock(m_pendingBlock.getCContent());
+    if (_number > 1)
+        throw test::UpwardsException("ToolChainManager::mineBlocks number arg invalid: " + fto_string(_number));
+    currentChainUnsafe().mineBlock(m_pendingBlock.getCContent());
+    EthereumBlockState const& bl = currentChain().lastBlock();
+    m_pendingBlock = spEthereumBlockState(new EthereumBlockState(bl.header(), bl.state(), FH32::zero()));
 }
 
-
-EthGetBlockBy ToolChainManager::getBlockByNumber(VALUE const& _blockNumber) const
+void ToolChainManager::rewindToBlock(VALUE const& _number)
 {
-    auto const& blocks = currentChain().blocks();
-    if (_blockNumber < blocks.size())
-    {
-        EthereumBlock const& block = blocks.at((size_t)_blockNumber.asU256());
-        return internalConstructResponseBlock(block);
-    }
-    ETH_ERROR_MESSAGE("ToolChainManager::getBlockByNumber block not found: " + _blockNumber.asDecString());
-    return EthGetBlockBy(DataObject());
+    size_t number = (size_t)_number.asU256();
+    assert(_number.asU256() >= 0 && _number < currentChainUnsafe().blocks().size());
+    currentChainUnsafe().rewindToBlock(number);
+    EthereumBlockState const& bl = currentChain().lastBlock();
+    m_pendingBlock = spEthereumBlockState(new EthereumBlockState(bl.header(), bl.state(), bl.logHash()));
 }
 
-
-// Construct RPC style response
-EthGetBlockBy ToolChainManager::internalConstructResponseBlock(EthereumBlock const& _block) const
+EthereumBlockState const& ToolChainManager::blockByNumber(VALUE const& _number) const
 {
-    DataObject constructResponse = _block.header().asDataObject();
-
-    constructResponse["transactions"] = DataObject(DataType::Array);
-    for (auto const& tr : _block.transactions())
-    {
-        DataObject fullTransaction = tr.asDataObject();
-        fullTransaction["blockHash"] = FH32::zero().asString();  // We don't know the hash its in tool response
-        fullTransaction["blockNumber"] = _block.header().number().asString();
-        fullTransaction["from"] = FH20::zero().asString();  // Can be recovered from vrs
-        fullTransaction["transactionIndex"] = "0x00";       // Its in tool response
-        fullTransaction["hash"] = tr.hash().asString();
-        constructResponse["transactions"].addArrayObject(fullTransaction);
-    }
-
-    constructResponse["uncles"] = DataObject(DataType::Array);
-    for (auto const& un : _block.uncles())
-        constructResponse["uncles"].addArrayObject(un.hash().asString());
-
-    constructResponse["size"] = "0x00";
-    constructResponse["totalDifficulty"] = "0x00";
-    constructResponse.renameKey("bloom", "logsBloom");
-    constructResponse.renameKey("coinbase", "miner");
-    constructResponse.renameKey("receiptTrie", "receiptsRoot");
-    constructResponse.renameKey("transactionsTrie", "transactionsRoot");
-    constructResponse.renameKey("uncleHash", "sha3Uncles");
-
-    ETH_TEST_MESSAGE("Response: eth_getBlockByNumber " + constructResponse.asJson());
-    return EthGetBlockBy(constructResponse);
+    if ((size_t)_number.asU256() >= currentChain().blocks().size())
+        throw UpwardsException(string("ToolChainManager::blockByNumer block number not found: " + _number.asDecString()));
+    return currentChain().blocks().at((size_t)_number.asU256());
 }
+
+EthereumBlockState const& ToolChainManager::blockByHash(FH32 const& _hash) const
+{
+    for (auto const& chain : m_chains)
+    {
+        for (auto const& block : chain.second.getCContent().blocks())
+            if (block.header().hash() == _hash)
+                return block;
+    }
+    throw UpwardsException(string("ToolChainManager::blockByHash block hash not found: " + _hash.asString()));
+}
+
+void ToolChainManager::modifyTimestamp(VALUE const& _time)
+{
+    m_pendingBlock.getContent().headerUnsafe().setTimestamp(_time);
+}
+
 
 }  // namespace toolimpl

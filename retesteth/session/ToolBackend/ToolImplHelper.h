@@ -1,7 +1,23 @@
 #pragma once
-#include <libdevcore/RLP.h>
 #include <retesteth/dataObject/DataObject.h>
-#include <string>
+#include <retesteth/testStructures/types/Ethereum/EthereumBlock.h>
+using namespace dataobject;
+
+namespace toolimpl
+{
+// Construct accountRange RPC style
+DataObject constructAccountRange(EthereumBlockState const& _block, FH32 const& _addrHash, size_t _maxResult);
+
+// Construct storageRange RPC style
+DataObject constructStorageRangeAt(
+    EthereumBlockState const& _block, FH20 const& _address, FH32 const& _begin, size_t _maxResult);
+
+// Construct RPC style response
+DataObject constructEthGetBlockBy(EthereumBlockState const& _block);
+
+
+}  // namespace toolimpl
+
 
 /*
 using namespace dataobject;

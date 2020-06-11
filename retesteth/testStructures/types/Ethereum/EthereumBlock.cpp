@@ -58,5 +58,6 @@ BYTES const EthereumBlock::getRLP() const
     return BYTES(DataObject());
 }
 
+
 }  // namespace teststruct
 }  // namespace test
