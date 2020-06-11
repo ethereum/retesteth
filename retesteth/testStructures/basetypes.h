@@ -15,6 +15,7 @@
 // Maps do autosort. To see minimum changes in the tests use this export order
 enum class ExportOrder
 {
-    Default,
-    OldStyle
+    Default,   // Field order is sorted
+    OldStyle,  // Field order as created by tests (was used not to produce many changes in old tests)
+    ToolStyle  // Remove leading zeroes from values as required by t8ntool
 };

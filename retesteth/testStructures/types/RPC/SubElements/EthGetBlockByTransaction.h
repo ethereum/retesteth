@@ -1,6 +1,6 @@
 #pragma once
-#include "../../basetypes.h"
-#include "../Ethereum/Transaction.h"
+#include "../../../basetypes.h"
+#include "../../Ethereum/Transaction.h"
 #include <retesteth/dataObject/DataObject.h>
 
 using namespace dataobject;

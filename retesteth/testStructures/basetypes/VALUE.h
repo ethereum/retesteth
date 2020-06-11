@@ -23,7 +23,7 @@ struct VALUE : GCP_SPointerBase
     VALUE operator-(VALUE const& _rhs) const { return VALUE(m_data - _rhs.asU256()); }
     VALUE operator+(VALUE const& _rhs) const { return VALUE(m_data + _rhs.asU256()); }
 
-    string asString() const { return dev::toCompactHexPrefixed(m_data, 1); }
+    string asString(size_t _roundBytes = 1) const { return dev::toCompactHexPrefixed(m_data, _roundBytes); }
     string asDecString() const;
     dev::u256 asU256() const { return m_data; }
 

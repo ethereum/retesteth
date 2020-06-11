@@ -1,7 +1,7 @@
 #pragma once
 #include "../../basetypes.h"
 #include "../Ethereum/BlockHeader.h"
-#include "EthGetBlockByTransaction.h"
+#include "SubElements/EthGetBlockByTransaction.h"
 #include <retesteth/dataObject/DataObject.h>
 
 using namespace dataobject;
@@ -29,7 +29,6 @@ private:
     std::vector<EthGetBlockByTransaction> m_transactions;
     std::vector<FH32> m_uncles;
 
-    spFH20 m_miner;
     spVALUE m_size;
     spVALUE m_totalDifficulty;
 };

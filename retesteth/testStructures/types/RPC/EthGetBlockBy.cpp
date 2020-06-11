@@ -1,10 +1,12 @@
 #include "EthGetBlockBy.h"
 #include "../Ethereum/EthereumBlock.h"
-#include "EthGetBlockByTransaction.h"
+#include "SubElements/EthGetBlockByTransaction.h"
 #include <libdevcore/RLP.h>
 #include <retesteth/EthChecks.h>
+#include <retesteth/testStructures/Common.h>
 
 using namespace dev;
+
 namespace test
 {
 namespace teststruct
@@ -15,7 +17,6 @@ EthGetBlockBy::EthGetBlockBy(DataObject const& _data)
     {
         m_header = spBlockHeader(new BlockHeader(_data));  // BlockHeader verify _data fields
 
-        m_miner = spFH20(new FH20(_data.atKey("miner")));
         m_size = spVALUE(new VALUE(_data.atKey("size")));
         m_totalDifficulty = spVALUE(new VALUE(_data.atKey("totalDifficulty")));
 
@@ -34,6 +35,32 @@ EthGetBlockBy::EthGetBlockBy(DataObject const& _data)
         // Remote eth_getBlockBy* always return uncles as hashes.
         for (auto const& un : _data.atKey("uncles").getSubObjects())
             m_uncles.push_back(FH32(un));
+
+        requireJsonFields(_data, "EthGetBlockBy " + _data.getKey(),
+            {{"logsBloom", {{DataType::String}, jsonField::Required}},
+             {"author", {{DataType::String}, jsonField::Optional}},                 //Geth return field
+             {"miner", {{DataType::String}, jsonField::Required}},
+             {"difficulty", {{DataType::String}, jsonField::Required}},
+             {"extraData", {{DataType::String}, jsonField::Required}},
+             {"gasLimit", {{DataType::String}, jsonField::Required}},
+             {"gasUsed", {{DataType::String}, jsonField::Required}},
+             {"hash", {{DataType::String}, jsonField::Required}},
+             {"mixHash", {{DataType::String}, jsonField::Required}},
+             {"nonce", {{DataType::String}, jsonField::Required}},
+             {"number", {{DataType::String}, jsonField::Required}},
+             {"parentHash", {{DataType::String}, jsonField::Required}},
+             {"receiptsRoot", {{DataType::String}, jsonField::Required}},
+             {"stateRoot", {{DataType::String}, jsonField::Required}},
+             {"timestamp", {{DataType::String}, jsonField::Required}},
+             {"transactionsRoot", {{DataType::String}, jsonField::Required}},
+             {"sha3Uncles", {{DataType::String}, jsonField::Required}},
+             {"seedHash", {{DataType::String}, jsonField::Optional}},               //Aleth field
+             {"boundary", {{DataType::String}, jsonField::Optional}},               //Aleth field
+             {"miner", {{DataType::String}, jsonField::Required}},
+             {"size", {{DataType::String}, jsonField::Required}},
+             {"totalDifficulty", {{DataType::String}, jsonField::Required}},
+             {"uncles", {{DataType::Array}, jsonField::Required}},
+             {"transactions", {{DataType::Array}, jsonField::Required}}});
     }
     catch (std::exception const& _ex)
     {

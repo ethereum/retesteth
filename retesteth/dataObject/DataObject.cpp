@@ -302,11 +302,12 @@ void DataObject::setVerifier(void (*f)(DataObject&))
     m_verifier(*this);
 }
 
-void DataObject::performModifier(void (*f)(DataObject&))
+void DataObject::performModifier(void (*f)(DataObject&), std::set<string> const& _exceptionKeys)
 {
     for (auto& el : m_subObjects)
-        el.performModifier(f);
-    f(*this);
+        el.performModifier(f, _exceptionKeys);
+    if (!_exceptionKeys.count(getKey()))
+        f(*this);
 }
 
 void DataObject::performVerifier(void (*f)(DataObject const&)) const

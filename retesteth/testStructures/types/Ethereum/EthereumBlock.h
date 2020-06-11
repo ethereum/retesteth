@@ -23,7 +23,7 @@ struct EthereumBlock : GCP_SPointerBase
     void addUncle(BlockHeader const& _header) { m_uncles.push_back(BlockHeader(_header.asDataObject())); }
     void addState(State const& _state) { m_state = spState(new State(_state.asDataObject())); }
     void replaceHeader(BlockHeader const& _header) { m_header = spBlockHeader(new BlockHeader(_header.asDataObject())); }
-    void recalculateHash();
+    void recalculateHeaderHash();
     BYTES const getRLP() const;
 
     BlockHeader const& header() const { return m_header.getCContent(); }

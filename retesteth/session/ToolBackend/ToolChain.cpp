@@ -4,10 +4,12 @@
 #include <retesteth/TestHelper.h>
 #include <retesteth/dataObject/ConvertFile.h>
 #include <retesteth/dataObject/DataObject.h>
+#include <retesteth/testStructures/Common.h>
 #include <retesteth/testStructures/types/BlockchainTests/Filler/BlockchainTestFillerEnv.h>
 #include <retesteth/testStructures/types/RPC/ToolResponse.h>
 using namespace dev;
 using namespace test;
+using namespace teststruct;
 using namespace dataobject;
 
 namespace
@@ -59,6 +61,40 @@ ToolChain::ToolChain(EthereumBlock const& _genesis, State const& _genesisState, 
     m_blocks.push_back(genesisFixed);
 }
 
+void ToolChain::mineBlock(EthereumBlock const& _pendingBlock)
+{
+    ToolResponse const res = mineBlock(_pendingBlock, _pendingBlock.state());
+    EthereumBlock pendingFixed(_pendingBlock.header().asDataObject());
+
+    // Construct a block header with information that we have and what we get from t8ntool
+    pendingFixed.headerUnsafe().setNumber(m_blocks.size());
+
+    // Tool calculated transactions and state
+    pendingFixed.headerUnsafe().setStateHash(res.stateRoot());
+    pendingFixed.headerUnsafe().setTransactionHash(res.txRoot());
+    pendingFixed.headerUnsafe().setTrReceiptsHash(res.receiptRoot());
+
+    // Add only those transactions which tool returned a receipt for
+    // Some transactions are expected to fail. That should be detected by tests
+    for (auto const& tr : _pendingBlock.transactions())
+    {
+        bool found = false;
+        FH32 const trHash = tr.hash();
+        for (auto const& trReceipt : res.receipts())
+        {
+            if (trReceipt.trHash() == trHash)
+            {
+                found = true;
+                pendingFixed.addTransaction(tr);
+            }
+        }
+        if (!found)
+            ETH_WARNING_TEST("t8ntool didn't return a transaction with hash: " + trHash.asString(), 6);
+    }
+
+    m_blocks.push_back(pendingFixed);
+}
+
 ToolResponse ToolChain::mineBlock(EthereumBlock const& _block, State const& _state)
 {
     fs::path tmpDir = test::createUniqueTmpDirectory();
@@ -76,7 +112,7 @@ ToolResponse ToolChain::mineBlock(EthereumBlock const& _block, State const& _sta
     fs::path txsPath = tmpDir / "txs.json";
     DataObject txs(DataType::Array);
     for (auto const& tr : _block.transactions())
-        txs.addArrayObject(tr.asDataObject());
+        txs.addArrayObject(tr.asDataObject(ExportOrder::ToolStyle));
     writeFile(txsPath.string(), txs.asJson());
 
     // output file
@@ -103,7 +139,20 @@ ToolResponse ToolChain::mineBlock(EthereumBlock const& _block, State const& _sta
 
     // Construct block rpc response
     ToolResponse toolResponse(ConvertJsoncppStringToData(contentsString(outPath)));
-    spStateIncomplete const toolState(new StateIncomplete(ConvertJsoncppStringToData(contentsString(outAllocPath))));
+    DataObject returnState = ConvertJsoncppStringToData(contentsString(outAllocPath));
+    for (auto& acc : returnState.getSubObjectsUnsafe())
+    {
+        if (acc.count("storage"))
+        {
+            for (auto& storageRecord : acc.atKeyUnsafe("storage").getSubObjectsUnsafe())
+            {
+                storageRecord.performModifier(mod_removeLeadingZerosFromHexValuesEVEN);
+                storageRecord.performModifier(mod_removeLeadingZerosFromHexKeysEVEN);
+            }
+        }
+    }
+
+    spStateIncomplete const toolState(new StateIncomplete(returnState));
     toolResponse.attachState(toolState.getCContent());
     return toolResponse;
 }

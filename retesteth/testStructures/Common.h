@@ -15,6 +15,7 @@ namespace teststruct
 // DataObject converters. Mostly Dec -> Hex, json data convertation
 void mod_removeLeadingZerosFromHexValues(DataObject&);
 void mod_removeLeadingZerosFromHexValuesEVEN(DataObject&);
+void mod_removeLeadingZerosFromHexKeysEVEN(DataObject&);
 void mod_removeComments(DataObject& _obj);
 void mod_valuesToLowerCase(DataObject&);
 void mod_valueToCompactEvenHexPrefixed(DataObject&);

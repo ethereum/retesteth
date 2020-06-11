@@ -177,7 +177,7 @@ public:
     DataObject const& atLastElement() const;
     DataObject& atLastElementUnsafe();
     void setVerifier(void (*f)(DataObject&));
-    void performModifier(void (*f)(DataObject&));
+    void performModifier(void (*f)(DataObject&), std::set<string> const& _exceptionKeys = {});
     void performVerifier(void (*f)(DataObject const&)) const;
 
     void addArrayObject(DataObject const& _obj);

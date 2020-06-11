@@ -8,7 +8,7 @@ namespace test
 {
 namespace teststruct
 {
-void EthereumBlock::recalculateHash()
+void EthereumBlock::recalculateHeaderHash()
 {
     // Transaction List
     // RLPStream transactionList(m_transactions.size());

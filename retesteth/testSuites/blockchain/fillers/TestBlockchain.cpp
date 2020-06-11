@@ -303,7 +303,7 @@ FH32 TestBlockchain::postmineBlockHeader(BlockchainTestFillerBlock const& _block
     }
 
     if (!weOverwriteHashFields)
-        managedBlock.recalculateHash();
+        managedBlock.recalculateHeaderHash();
 
     m_session.test_rewindToBlock(_latestBlockNumber - 1);
     _rawRLP = BYTES(managedBlock.getRLP().asString());

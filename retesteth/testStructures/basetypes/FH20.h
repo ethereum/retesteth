@@ -15,6 +15,7 @@ namespace teststruct
 struct FH20 : FH
 {
     FH20(DataObject const& _data) : FH(_data, 20){};
+    FH20(string const& _data) : FH(_data, 20) {}
     static FH20 random()
     {
         string initStr = "0x";
@@ -27,6 +28,7 @@ struct FH20 : FH
         }
         return FH20(DataObject(initStr));
     }
+    static FH20 zero() { return FH20("0x0000000000000000000000000000000000000000"); }
 };
 
 typedef GCP_SPointer<FH20> spFH20;

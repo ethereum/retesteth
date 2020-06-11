@@ -25,6 +25,20 @@ bool isHexDigitsType(DigitsType _dtype)
     return (_dtype == DigitsType::HexPrefixed || _dtype == DigitsType::UnEvenHexPrefixed);
 }
 
+void removeLeadingZeroes(string& _hexStr)
+{
+    bool replacePossible = true;
+    while (replacePossible)
+    {
+        if (_hexStr[0] == '0' && _hexStr[1] == 'x' && _hexStr[2] == '0' && _hexStr.size() >= 4)
+        {
+            _hexStr = "0x" + _hexStr.substr(3);
+            continue;
+        }
+        replacePossible = false;
+    }
+}
+
 }  // namespace
 
 
@@ -89,17 +103,9 @@ void mod_removeLeadingZerosFromHexValues(DataObject& _obj)
 {
     if (_obj.type() == DataType::String)
     {
-        string const& origVal = _obj.asString();
-        bool replacePossible = true;
-        while (replacePossible)
-        {
-            if (origVal[0] == '0' && origVal[1] == 'x' && origVal[2] == '0' && origVal.size() >= 4)
-            {
-                _obj.setString("0x" + origVal.substr(3));
-                continue;
-            }
-            replacePossible = false;
-        }
+        string str = _obj.asString();
+        removeLeadingZeroes(str);
+        _obj.setString(str);
     }
 }
 
@@ -113,6 +119,16 @@ void mod_removeLeadingZerosFromHexValuesEVEN(DataObject& _obj)
         if (t == DigitsType::UnEvenHexPrefixed)
             _obj.setString("0x0" + _obj.asString().substr(2));
     }
+}
+
+void mod_removeLeadingZerosFromHexKeysEVEN(DataObject& _obj)
+{
+    string str = _obj.getKey();
+    removeLeadingZeroes(str);
+    DigitsType t = stringIntegerType(str);
+    if (t == DigitsType::UnEvenHexPrefixed)
+        str = "0x0" + str.substr(2);
+    _obj.setKey(str);
 }
 
 long long int hexOrDecStringToInt(string const& _str)

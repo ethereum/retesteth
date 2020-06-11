@@ -117,7 +117,7 @@ void RPCImpl::test_modifyTimestamp(VALUE const& _timestamp)
         rpcCall("test_modifyTimestamp", {_timestamp.asDecString()}) == true, "test_modifyTimestamp was not successfull");
 }
 
-void RPCImpl::test_mineBlocks(int _number)
+void RPCImpl::test_mineBlocks(size_t _number)
 {
     DataObject const res = rpcCall("test_mineBlocks", {to_string(_number)}, true);
     ETH_ERROR_REQUIRE_MESSAGE(res.asBool() == true, "remote test_mineBLocks = false");

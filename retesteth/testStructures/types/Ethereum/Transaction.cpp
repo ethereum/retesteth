@@ -163,6 +163,12 @@ const DataObject Transaction::asDataObject(ExportOrder _order) const
     out["v"] = m_v.getCContent().asString();
     out["r"] = m_r.getCContent().asString();
     out["s"] = m_s.getCContent().asString();
+    if (_order == ExportOrder::ToolStyle)
+    {
+        out.performModifier(mod_removeLeadingZerosFromHexValues, {"data", "to"});
+        out.renameKey("gasLimit", "gas");
+        out.renameKey("data", "input");
+    }
     if (_order == ExportOrder::OldStyle)
     {
         out.setKeyPos("r", 4);

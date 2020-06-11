@@ -36,7 +36,7 @@ public:
     void test_setChainParams(SetChainParamsArgs const& _config) override;
     void test_rewindToBlock(VALUE const& _blockNr) override;
     void test_modifyTimestamp(VALUE const& _timestamp) override;
-    void test_mineBlocks(int _number) override;
+    void test_mineBlocks(size_t _number) override;
     FH32 test_importRawBlock(BYTES const& _blockRLP) override;
     FH32 test_getLogHash(FH32 const& _txHash) override;
 

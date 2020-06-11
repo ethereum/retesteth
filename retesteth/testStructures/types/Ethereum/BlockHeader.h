@@ -33,7 +33,9 @@ struct BlockHeader : GCP_SPointerBase
 
     void setTimestamp(VALUE const& _value) { m_timestamp = spVALUE(new VALUE(_value.asU256())); }
     void setTransactionHash(FH32 const& _hash) { m_transactionsRoot = spFH32(new FH32(_hash)); }
+    void setTrReceiptsHash(FH32 const& _hash) { m_receiptsRoot = spFH32(new FH32(_hash)); }
     void setStateHash(FH32 const& _hash) { m_stateRoot = spFH32(new FH32(_hash)); }
+    void setNumber(VALUE const& _number) { m_number = spVALUE(new VALUE(_number)); }
     void setUnclesHash(FH32 const& _hash) { m_sha3Uncles = spFH32(new FH32(_hash)); }
     void setHeaderHash(FH32 const& _hash) { m_hash = spFH32(new FH32(_hash)); }
     void recalculateHash();
