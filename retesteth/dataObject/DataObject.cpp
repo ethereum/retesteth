@@ -296,11 +296,18 @@ void DataObject::clear(DataType _type)
     m_type = _type;
 }
 
-void DataObject::performModifier(void (*f)(DataObject&))
+void DataObject::setVerifier(void (*f)(DataObject&))
+{
+    m_verifier = f;
+    m_verifier(*this);
+}
+
+void DataObject::performModifier(void (*f)(DataObject&), std::set<string> const& _exceptionKeys)
 {
     for (auto& el : m_subObjects)
-        el.performModifier(f);
-    f(*this);
+        el.performModifier(f, _exceptionKeys);
+    if (!_exceptionKeys.count(getKey()))
+        f(*this);
 }
 
 void DataObject::performVerifier(void (*f)(DataObject const&)) const
@@ -532,12 +539,12 @@ void DataObject::_assert(bool _flag, std::string const& _comment) const
 {
     if (!_flag)
     {
-        // Make it an exception!
-        std::cerr << "Error in DataObject: " << std::endl;
-        std::cerr << " key: '" << m_strKey << "'";
-        std::cerr << " type: '" << dataTypeAsString(m_type) << "'" << std::endl;
-        std::cerr << " assert: " << _comment << std::endl;
-        std::cerr << asJson() << std::endl;
-        assert(_flag);
+        std::ostringstream out;
+        out << "Error in DataObject: " << std::endl;
+        out << " key: '" << m_strKey << "'";
+        out << " type: '" << dataTypeAsString(m_type) << "'" << std::endl;
+        out << " assert: " << _comment << std::endl;
+        out << asJson() << std::endl;
+        throw DataObjectException(out.str());
     }
 }

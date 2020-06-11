@@ -34,8 +34,9 @@
 #include <retesteth/TestHelper.h>
 #include <retesteth/TestOutputHelper.h>
 #include <retesteth/TestSuite.h>
-#include <retesteth/ethObjects/common.h>
-#include <retesteth/session/RPCSession.h>
+#include <retesteth/session/Session.h>
+#include <retesteth/testStructures/Common.h>
+#include <retesteth/testStructures/types/VMTests/VMTestFiller.h>
 #include <retesteth/testSuites/Common.h>
 #include <retesteth/testSuites/StateTests.h>
 #include <retesteth/testSuites/TestFixtures.h>
@@ -48,13 +49,16 @@ namespace fs = boost::filesystem;
 
 namespace
 {
-DataObject getGenesisTemplate()
+// Use this genesis to generate a blockchain test
+BlockHeader getGenesisTemplate()
 {
-    // Blockchain Test Template
     DataObject genesisBlockHeader;
-    genesisBlockHeader["number"] = "0";
-    genesisBlockHeader["parentHash"] =
-        "0x0000000000000000000000000000000000000000000000000000000000000000";
+    genesisBlockHeader["coinbase"] = "0x1122334455667788991011121314151617181920";
+    genesisBlockHeader["difficulty"] = "0x11223344";
+    genesisBlockHeader["gasLimit"] = "0x11223344";
+    genesisBlockHeader["timestamp"] = "0x11223344";
+    genesisBlockHeader["number"] = "0x00";
+    genesisBlockHeader["parentHash"] = "0x0000000000000000000000000000000000000000000000000000000000000000";
     genesisBlockHeader["bloom"] =
         "0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
         "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
@@ -63,19 +67,14 @@ DataObject getGenesisTemplate()
         "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
         "00000000000000000000000000000000000000000000000000000000000000";
     genesisBlockHeader["extraData"] = "0x42";
-    genesisBlockHeader["gasUsed"] = "0";
-    genesisBlockHeader["mixHash"] =
-        "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421";
+    genesisBlockHeader["gasUsed"] = "0x00";
+    genesisBlockHeader["mixHash"] = "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421";
     genesisBlockHeader["nonce"] = "0x0102030405060708";
-    genesisBlockHeader["receiptTrie"] =
-        "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421";
-    genesisBlockHeader["stateRoot"] =
-        "0xf99eb1626cfa6db435c0836235942d7ccaa935f1ae247d3f1c21e495685f903a";
-    genesisBlockHeader["transactionsTrie"] =
-        "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421";
-    genesisBlockHeader["uncleHash"] =
-        "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347";
-    return genesisBlockHeader;
+    genesisBlockHeader["receiptTrie"] = "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421";
+    genesisBlockHeader["stateRoot"] = "0xf99eb1626cfa6db435c0836235942d7ccaa935f1ae247d3f1c21e495685f903a";
+    genesisBlockHeader["transactionsTrie"] = "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421";
+    genesisBlockHeader["uncleHash"] = "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347";
+    return BlockHeader(genesisBlockHeader);
 }
 
 }  // namespace
@@ -95,96 +94,88 @@ TestSuite::FillerPath VMTestConverterSuite::suiteFillerFolder() const
 
 DataObject VMTestConverterSuite::doTests(DataObject const& _input, TestSuiteOptions& _opt) const
 {
-    DataObject obj;
-    checkAtLeastOneTest(_input);
+    DataObject res;
     if (_opt.doFilling)  // convert vmTestFiller into StateTestFiller
     {
-        DataObject blockFiller;
-
-        DataObject const& vmFiller = _input.getSubObjects().at(0);
-        string const& testname = vmFiller.getKey();
-        TestOutputHelper::get().setCurrentTestName(testname);
-        TestOutputHelper::get().setCurrentTestInfo(TestInfo("Filler init"));
-
-        scheme_vmTestFiller vmTestFiller(vmFiller);
-        TestOutputHelper::get().setCurrentTestInfo(TestInfo("Converting to BlockchainTestFiller"));
-
-        // Prepare _info comment
-        string comment;
-        if (vmFiller.count("_info"))
-            blockFiller["_info"] = vmFiller.atKey("_info");
-        if (blockFiller["_info"].count("comment"))
-            comment = blockFiller["_info"]["comment"].asString();
-        blockFiller["_info"]["comment"] = "Converted from VMTest source. " + comment;
-
-        // Prepare genesisBlockHeader
-        blockFiller["genesisBlockHeader"] = getGenesisTemplate();
-        blockFiller["genesisBlockHeader"]["coinbase"] =
-            vmFiller.atKey("env").atKey("currentCoinbase");
-        blockFiller["genesisBlockHeader"]["difficulty"] =
-            vmFiller.atKey("env").atKey("currentDifficulty");
-        blockFiller["genesisBlockHeader"]["gasLimit"] =
-            vmFiller.atKey("env").atKey("currentGasLimit");
-        blockFiller["genesisBlockHeader"]["timestamp"] = "0";
-        blockFiller["sealEngine"] = "NoProof";  // Disable mining
-
-        // Prepare pre section
-        blockFiller["pre"] = vmFiller.atKey("pre");
-        // Insert sender account
-        string const sender = "a94f5374fce5edbc8e2a8697c15331677e6ebf0b";
-        if (!blockFiller["pre"].count(sender))
+        VMTestFiller vmtest(_input);
+        for (VMTestInFiller const& test : vmtest.tests())
         {
-            blockFiller["pre"][sender]["balance"] = "0x7ffffffffffffff0";
-            blockFiller["pre"][sender]["nonce"] = "0";
-            blockFiller["pre"][sender]["code"] = "";
-            blockFiller["pre"][sender]["storage"] = DataObject(DataType::Object);
-        }
+            TestOutputHelper::get().setCurrentTestName(test.testName());
+            TestOutputHelper::get().setCurrentTestInfo(TestInfo("Converting to BlockchainTestFiller"));
 
-        // Prepare block with transaction
-        DataObject blockInfo;
-        blockInfo["blockHeader"]["timestamp"] = vmFiller.atKey("env").atKey("currentTimestamp");
-        blockInfo["blockHeader"]["difficulty"] = vmFiller.atKey("env").atKey("currentDifficulty");
-        blockInfo["blockHeader"]["gasLimit"] = vmFiller.atKey("env").atKey("currentGasLimit");
+            DataObject bcTestFiller;
+            string const comment = "Converted from VMTest source. ";
+            if (test.hasInfo())
+                bcTestFiller["_info"]["comment"] = comment + test.Info().comment();
+            else
+                bcTestFiller["_info"]["comment"] = comment;
 
-        scheme_transaction const& trInTest =
-            vmTestFiller.getTransaction().getTransactions().at(0).transaction;
-        blockInfo["transactions"].addArrayObject(trInTest.getData());
-        blockInfo["uncleHeaders"] = DataObject(DataType::Array);
-        blockFiller["blocks"].addArrayObject(blockInfo);
+            // Prepare genesisBlockHeader
+            bcTestFiller["genesisBlockHeader"] = getGenesisTemplate().asDataObject();
+            bcTestFiller["genesisBlockHeader"]["coinbase"] = test.Env().currentCoinbase().asString();
+            bcTestFiller["genesisBlockHeader"]["difficulty"] = test.Env().currentDifficulty().asString();
+            bcTestFiller["genesisBlockHeader"]["gasLimit"] = test.Env().currentGasLimit().asString();
+            bcTestFiller["genesisBlockHeader"]["timestamp"] = VALUE(0).asString();
 
-        // Construct expect section
-        DataObject expectSection;
-        expectSection["network"].addArrayObject(DataObject(">=Istanbul"));
-        if (vmFiller.count("expect"))
-            expectSection["result"] = vmFiller.atKey("expect");
-        else
-        {
-            ETH_WARNING("VMTest filler missing expect section! Empty section will be used. " +
-                        TestOutputHelper::get().testInfo().errorDebug());
-            expectSection["result"] = DataObject(DataType::Object);
-        }
-        blockFiller["expect"].addArrayObject(expectSection);
-        obj[testname] = blockFiller;
+            // Disable mining
+            bcTestFiller["sealEngine"] = sealEngineToStr(SealEngine::NoProof);
 
-        try
-        {
-            BlockchainTestValidSuite blockSuite;
-            TestSuiteOptions stateOpt;
-            stateOpt.doFilling = true;
-            return blockSuite.doTests(obj, stateOpt);
-        }
-        catch (std::exception const& _ex)
-        {
-            ETH_LOG("Error when filling the bc test! (" + testname + "): \n" + _ex.what(), 0);
+            // Pre state
+            bcTestFiller["pre"] = test.Pre().asDataObject();
+
+            // Insert sender account
+            FH20 const sender(DataObject("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"));
+            if (!test.Pre().hasAccount(sender))
+            {
+                bcTestFiller["pre"][sender.asString()]["balance"] = "0x7ffffffffffffff0";
+                bcTestFiller["pre"][sender.asString()]["nonce"] = "0";
+                bcTestFiller["pre"][sender.asString()]["code"] = "";
+                bcTestFiller["pre"][sender.asString()]["storage"] = DataObject(DataType::Object);
+            }
+
+            // Prepare block with transaction
+            DataObject blockInfo;
+            blockInfo["blockHeader"]["timestamp"] = test.Env().firstBlockTimestamp().asString();
+            blockInfo["blockHeader"]["difficulty"] = test.Env().currentDifficulty().asString();
+            blockInfo["blockHeader"]["gasLimit"] = test.Env().currentGasLimit().asString();
+            blockInfo["transactions"].addArrayObject(test.Tr().asDataObject());
+            blockInfo["uncleHeaders"] = DataObject(DataType::Array);
+            bcTestFiller["blocks"].addArrayObject(blockInfo);
+
+            // Construct expect section
+            DataObject expectSection;
+            expectSection["network"].addArrayObject(DataObject(">=Istanbul"));
+            if (test.hasExpect())
+                expectSection["result"] = test.Expect().asDataObject();
+            else
+            {
+                ETH_WARNING("VMTest filler missing expect section! Empty section will be used. " +
+                            TestOutputHelper::get().testInfo().errorDebug());
+                expectSection["result"] = DataObject(DataType::Object);
+            }
+            bcTestFiller["expect"].addArrayObject(expectSection);
+            res[test.testName()] = bcTestFiller;
+
+            try
+            {
+                BlockchainTestValidSuite blockSuite;
+                TestSuiteOptions stateOpt;
+                stateOpt.doFilling = true;
+                return blockSuite.doTests(res, stateOpt);
+            }
+            catch (std::exception const& _ex)
+            {
+                ETH_LOG("Error when filling the bc test! (" + test.testName() + "): \n" + _ex.what(), 0);
+            }
         }
     }
     else  // run tests
     {
-        // Execute block tests filled from VMTests
+        // Execute block tests filled from VMTests as blockchain
         BlockchainTestValidSuite blockSuite;
         blockSuite.doTests(_input, _opt);
     }
-    return obj;
-    }
+    return res;
+}
 
-    }  // namespace test
+}  // namespace test

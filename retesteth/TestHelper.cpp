@@ -181,94 +181,6 @@ vector<string> levenshteinDistance(
     return ret;
 }
 
-
-/// translate network names in expect section field
-/// >Homestead to EIP150, EIP158, Byzantium, ...
-/// <=Homestead to Frontier, Homestead
-set<string> translateNetworks(set<string> const& _networks, vector<string> const& _networkOrder)
-{
-    // construct vector with test network names in a right order
-    // (from Frontier to Homestead ... to Constantinople)
-    vector<string> const& forks = _networkOrder;
-
-    set<string> out;
-    for (auto const& net : _networks)
-    {
-        bool isNetworkTranslated = false;
-        string possibleNet = net.substr(1, net.length() - 1);
-        vector<string>::const_iterator it = std::find(forks.begin(), forks.end(), possibleNet);
-
-        if (it != forks.end() && net.size() > 1)
-        {
-            if (net[0] == '>')
-            {
-                while (++it != forks.end())
-                {
-                    out.emplace(*it);
-                    isNetworkTranslated = true;
-                }
-            }
-            else if (net[0] == '<')
-            {
-                while (it != forks.begin())
-                {
-                    out.emplace(*(--it));
-                    isNetworkTranslated = true;
-                }
-            }
-        }
-
-        possibleNet = net.substr(2, net.length() - 2);
-        it = std::find(forks.begin(), forks.end(), possibleNet);
-        if (it != forks.end() && net.size() > 2)
-        {
-            if (net[0] == '>' && net[1] == '=')
-            {
-                while (it != forks.end())
-                {
-                    out.emplace(*(it++));
-                    isNetworkTranslated = true;
-                }
-            }
-            else if (net[0] == '<' && net[1] == '=')
-            {
-                out.emplace(*it);
-                isNetworkTranslated = true;
-                while (it != forks.begin())
-                    out.emplace(*(--it));
-            }
-        }
-
-        // if nothing has been inserted, just push the untranslated network as is
-        if (!isNetworkTranslated)
-        {
-            checkAllowedNetwork(net, _networkOrder);
-            out.emplace(net);
-        }
-    }
-    return out;
-}
-
-
-void checkAllowedNetwork(string const& _network, vector<string> const& _networkOrder)
-{
-    bool found = false;
-    for (auto const& net : _networkOrder)
-    {
-        if (net == _network)
-            found = true;
-    }
-
-    if (!found)
-    {
-        fs::path configFile = Options::getDynamicOptions().getCurrentConfig().getConfigFilePath();
-        ETH_WARNING(
-            "Specified network not found: '" + _network +
-            "', skipping the test. Enable the fork network in config file: " + configFile.string());
-        ETH_ERROR_MESSAGE("Specified network not found: '" + _network + "'");
-    }
-}
-
 void parseJsonStrValueIntoSet(DataObject const& _json, set<string>& _out)
 {
     if (_json.type() == DataType::Array)
@@ -311,7 +223,7 @@ string prepareVersionString()
 {
     // cpp-1.3.0+commit.6be76b64.Linux.g++
     string commit(DEV_QUOTED(ETH_COMMIT_HASH));
-	string version = "retesteth-" + string(ETH_PROJECT_VERSION);
+    string version = "retesteth-" + string(ETH_PROJECT_VERSION) + "-" + string(ETH_VERSION_SUFFIX);
     version += "+commit." + commit.substr(0, 8);
     version +=
         "." + string(DEV_QUOTED(ETH_BUILD_OS)) + "." + string(DEV_QUOTED(ETH_BUILD_COMPILER));
@@ -346,6 +258,25 @@ dev::bytes sfromHex(string const& _hexStr)
     }
 }
 
+std::string stoCompactHexPrefixed(dev::u256 const& _val, int _minsize)
+{
+    try
+    {
+        return dev::toCompactHexPrefixed(_val, _minsize);
+    }
+    catch (std::exception const& _ex)
+    {
+        throw UpwardsException(
+            string("toCompactHexPrefixed error converting `" + _val.str() + "` to compact hex prefixed") + _ex.what());
+    }
+    return string();
+}
+
+void strToLower(string& _input)
+{
+    std::transform(_input.begin(), _input.end(), _input.begin(), [](unsigned char c) { return std::tolower(c); });
+}
+
 bool checkCmdExist(std::string const& _command)
 {
     string checkCmd = string("which " + _command + " > /dev/null 2>&1");
@@ -354,7 +285,7 @@ bool checkCmdExist(std::string const& _command)
     return true;
 }
 
-string executeCmd(string const& _command, bool _warningOnEmpty)
+string executeCmd(string const& _command, ExecCMDWarning _warningOnEmpty)
 {
 #if defined(_WIN32)
     BOOST_ERROR("executeCmd() has not been implemented for Windows.");
@@ -368,7 +299,7 @@ string executeCmd(string const& _command, bool _warningOnEmpty)
         ETH_FAIL_MESSAGE("Failed to run " + _command);
     if (fgets(output, sizeof(output) - 1, fp) == NULL)
     {
-        if (_warningOnEmpty)
+        if (_warningOnEmpty == ExecCMDWarning::WarningOnEmptyResult)
             ETH_WARNING("Reading empty result for " + _command);
     }
     else

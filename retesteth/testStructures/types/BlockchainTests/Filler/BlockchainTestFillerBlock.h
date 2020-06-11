@@ -1,0 +1,95 @@
+#pragma once
+#include "../../../basetypes.h"
+#include "../../../configs/FORK.h"
+#include "../../Ethereum/BlockHeaderIncomplete.h"
+#include "../../Ethereum/Transaction.h"
+#include "BlockchainTestFillerTransaction.h"
+#include "BlockchainTestFillerUncle.h"
+#include <retesteth/dataObject/DataObject.h>
+#include <retesteth/dataObject/SPointer.h>
+using namespace dataobject;
+
+namespace test
+{
+namespace teststruct
+{
+// BlockchainTestFiller block instructions
+struct BlockchainTestFillerBlock : GCP_SPointerBase
+{
+    BlockchainTestFillerBlock(DataObject const&);
+
+    // Block can be represented as raw RLP without any of other fields
+    // other then BlockHeader with expected exceptions
+    bool isRawRLP() const { return !m_rlp.isEmpty(); }
+    BYTES const& rawRLP() const { return m_rlp.getCContent(); }
+
+    // Block can have chainName explicitly defined
+    string const& chainName() const { return m_chainName; }
+
+    // Block can have chainNext explicitly defined to generate blocks on different networks
+    bool hasChainNet() const { return !m_network.isEmpty(); }
+    FORK const& chainNet() const { return m_network.getCContent(); }
+
+    // Block can be marked with number. If number sequence changes, a fork chain can be created
+    bool hasNumber() const { return !m_blockNumber.isEmpty(); }
+    VALUE const& number() const { return m_blockNumber.getCContent(); }
+
+    // BlockHeader overwrite section to replace some fields in the header for testing purposes
+    // Also BlockHeader contain expected exceptions for this block
+    bool hasBlockHeader() const { return !m_blockHeaderIncomplete.isEmpty(); }
+    BlockHeaderIncomplete const& blockHeader() const { return m_blockHeaderIncomplete.getCContent(); }
+
+    // Blockheader oerwrite can define timestamp shift from previous block
+    bool hasRelTimeStamp() const { return m_hasRelTimeStamp; }
+    long long int relTimeStamp() const { return m_relTimeStamp; }
+
+    // Transaction in block filler. Can be marked invalid (expected to fail)
+    std::vector<BlockchainTestFillerTransaction> const& transactions() const { return m_transactions; }
+    size_t invalidTransactionCount() const
+    {
+        size_t count = 0;
+        for (auto const& el : m_transactions)
+            count += el.isMarkedInvalid() ? 1 : 0;
+        return count;
+    }
+
+    // Uncle generate instruction section
+    std::vector<BlockchainTestFillerUncle> const& uncles() const { return m_uncles; }
+
+    // Test Functions
+    // Block can have exceptions expected to thrown by the client upon generation of the block
+    string const& getExpectException(FORK const& _net) const
+    {
+        static string emptyString = string();  // mutex ??
+        if (m_expectExceptions.count(_net))
+            return m_expectExceptions.at(_net);
+        return emptyString;
+    }
+
+    static string const& defaultChainName()
+    {
+        // Mutex lock static defenition?
+        static string defaultChainName = "default";
+        return defaultChainName;
+    }
+
+    bool isDoNotImportOnClient() const { return m_doNotImportOnClient; }
+
+private:
+    BlockchainTestFillerBlock() {}
+    string m_chainName;
+    spBYTES m_rlp;
+    spVALUE m_blockNumber;
+    spFORK m_network;
+    bool m_doNotImportOnClient = false;
+    bool m_hasRelTimeStamp = false;
+    long long int m_relTimeStamp;
+
+    std::vector<BlockchainTestFillerUncle> m_uncles;
+    std::vector<BlockchainTestFillerTransaction> m_transactions;
+    std::map<FORK, string> m_expectExceptions;
+    spBlockHeaderIncomplete m_blockHeaderIncomplete;
+};
+
+}  // namespace teststruct
+}  // namespace test

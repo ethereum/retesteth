@@ -56,30 +56,23 @@ void eth_check_equal(T a, T b, std::string const& _message)
 #define ETH_CHECK_EQUAL(val1, val2, message) test::eth_check_equal(val1, val2, message)
 
 /// Base class for all exceptions.
-struct BaseEthException : virtual std::exception
-{
-    BaseEthException(std::string _message = std::string()) : m_message(std::move(_message)) {}
-    const char* what() const noexcept override
-    {
-        return m_message.empty() ? std::exception::what() : m_message.c_str();
-    }
-    BaseEthException& operator<<(std::string const& _what)
-    {
-        m_message = _what;
-        return *this;
-    }
-
-private:
-    std::string m_message;
-};
-
-#define ETH_SIMPLE_EXCEPTION(X)                                   \
-    struct X : virtual BaseEthException                           \
-    {                                                             \
-        const char* what() const noexcept override { return #X; } \
+#define ETHEXCEPTION(X)                                                                                                       \
+    struct X : virtual std::exception                                                                                         \
+    {                                                                                                                         \
+        X(std::string _message = std::string()) : m_message(std::move(_message)) {}                                           \
+        const char* what() const noexcept override { return m_message.empty() ? std::exception::what() : m_message.c_str(); } \
+        X& operator<<(std::string const& _what)                                                                               \
+        {                                                                                                                     \
+            m_message = _what;                                                                                                \
+            return *this;                                                                                                     \
+        }                                                                                                                     \
+                                                                                                                              \
+    private:                                                                                                                  \
+        std::string m_message;                                                                                                \
     }
 
-ETH_SIMPLE_EXCEPTION(EthError);
+ETHEXCEPTION(UpwardsException);
+ETHEXCEPTION(EthError);
 
 
 }  // namespace

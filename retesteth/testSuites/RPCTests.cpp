@@ -25,72 +25,22 @@
 #include <retesteth/Options.h>
 #include <retesteth/TestHelper.h>
 #include <retesteth/TestOutputHelper.h>
-#include <retesteth/ethObjects/common.h>
-#include <retesteth/session/RPCSession.h>
+#include <retesteth/TestSuite.h>
+#include <retesteth/session/Session.h>
 #include <retesteth/testSuites/Common.h>
 #include <retesteth/testSuites/RPCTests.h>
 #include <boost/test/unit_test.hpp>
 
 using namespace std;
-
-namespace local
-{
-/// Rewrite the test file. Fill RPC Test
-DataObject FillTest(DataObject const& _testFile, TestSuite::TestSuiteOptions& _opt)
-{
-    DataObject filledTest;
-    scheme_RPCTestFiller rpcTestFiller(_testFile);
-
-    SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
-
-    if (rpcTestFiller.hasGenesis())
-        session.test_setChainParams(rpcTestFiller.getGenesisForRPC());
-
-    DataObject returnedData =
-        session.rpcCall(rpcTestFiller.get_method(), rpcTestFiller.get_params());
-
-    DataObjectScheme scheme(rpcTestFiller.get_expectReturn());
-    DataObjectValidator validator(scheme);
-    ETH_ERROR_REQUIRE_MESSAGE(validator.validatie(returnedData), validator.getError());
-
-    filledTest = _testFile;  // Just copy the test filler because the way RPC tests are.
-    _opt.disableSecondRun = true;
-    return filledTest;
-}
-
-void RunTest(DataObject const& _testFile)
-{
-    // Run Test logic works the same as filler. It is here to keep the test structure (fill / run
-    // the test)
-    TestSuite::TestSuiteOptions opt;
-    opt.doFilling = false;
-    FillTest(_testFile, opt);
-}
-}
+using namespace test;
 
 namespace test
 {
 DataObject RPCTestSuite::doTests(DataObject const& _input, TestSuiteOptions& _opt) const
 {
-    checkDataObject(_input);
-    checkOnlyOneTest(_input);
-
-    DataObject filledTest;
-    DataObject const& inputTest = _input.getSubObjects().at(0);
-    string const testname = inputTest.getKey();
-    if (!TestOutputHelper::get().checkTest(testname))
-        return filledTest;
-
-    if (_opt.doFilling)
-    {
-        checkTestNameIsEqualToFileName(_input);
-        DataObject outputTest;
-        outputTest[testname] = local::FillTest(inputTest, _opt);
-        filledTest = outputTest;
-    }
-    else
-        local::RunTest(inputTest);
-    return filledTest;
+    (void)_input;
+    (void)_opt;
+    return DataObject();
 }
 
 TestSuite::TestPath RPCTestSuite::suiteFolder() const
@@ -117,9 +67,7 @@ public:
     }
 };
 
-BOOST_FIXTURE_TEST_SUITE(RPCTests, RPCTestFixture)
 
-BOOST_AUTO_TEST_CASE(AvailabilityTests) {}
-
-BOOST_AUTO_TEST_SUITE_END()
-
+// FIXTURE_TEST_SUITE(RPCTests, RPCTestFixture)
+// AUTO_TEST_CASE(AvailabilityTests) {}
+// AUTO_TEST_SUITE_END()

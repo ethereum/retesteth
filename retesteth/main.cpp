@@ -5,7 +5,7 @@
 #include <retesteth/Options.h>
 #include <retesteth/TestHelper.h>
 #include <retesteth/TestOutputHelper.h>
-#include <retesteth/session/RPCSession.h>
+#include <retesteth/session/Session.h>
 #include <retesteth/testSuites/StateTests.h>
 #include <retesteth/testSuites/blockchain/BlockchainTests.h>
 #include <boost/test/included/unit_test.hpp>
@@ -125,7 +125,20 @@ int main(int argc, const char* argv[])
 	}
 
 	test::Options const& opt = test::Options::get();
-	if (opt.createRandomTest || opt.singleTestFile.is_initialized())
+
+    // Special UnitTest
+    for (int i = 0; i < argc; i++)
+    {
+        // replace test suite to custom tests
+        std::string arg = std::string{argv[i]};
+        if (arg == "-t" && i + 1 < argc && string(argv[i + 1]) == "UnitTests")
+        {
+            argv[i + 1] = "LLLCSuite,DataObjectTestSuite,EthObjectsSuite,OptionsSuite,TestHelperSuite";
+            break;
+        }
+    }
+
+    if (opt.createRandomTest || opt.singleTestFile.is_initialized())
 	{
 		bool testSuiteFound = false;
 		for (int i = 0; i < argc; i++)
@@ -179,7 +192,7 @@ int main(int argc, const char* argv[])
     if (!sMinusTArg.empty())
     {
         bool requestSuiteNotFound = false;
-        std::vector<std::string> requestedSuites = explode(sMinusTArg, ',');
+        std::vector<std::string> requestedSuites = test::explode(sMinusTArg, ',');
         for (auto const& suite : requestedSuites)
         {
             if (!test::inArray(c_allTestNames, suite))
@@ -219,7 +232,7 @@ int main(int argc, const char* argv[])
             outputThread.join();
         }
     }
-    catch (BaseEthException const& _ex)
+    catch (test::UpwardsException const& _ex)
     {
         ETH_STDERROR_MESSAGE(string("Error: ") + _ex.what());
     }

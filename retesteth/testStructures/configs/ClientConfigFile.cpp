@@ -1,0 +1,131 @@
+#include "ClientConfigFile.h"
+#include "../basetypes/IPADDRESS.h"
+#include <retesteth/EthChecks.h>
+#include <retesteth/TestHelper.h>
+using namespace test::teststruct;
+
+namespace test
+{
+namespace teststruct
+{
+ClientConfigFile::ClientConfigFile(DataObject const& _data)
+{
+    initWithData(_data);
+}
+
+ClientConfigFile::ClientConfigFile(fs::path const& _clientConfigPath)
+{
+    m_configFilePath = _clientConfigPath;
+    initWithData(test::readJsonData(m_configFilePath));
+}
+
+void ClientConfigFile::initWithData(DataObject const& _data)
+{
+    string const sErrorPath = "ClientConfig (" + m_configFilePath.string() + ") ";
+    m_name = _data.atKey("name").asString();
+
+    // SocketTypes for client connection
+    std::string const& socketTypeStr = _data.atKey("socketType").asString();
+    if (socketTypeStr == "ipc")
+        m_socketType = ClientConfgSocketType::IPC;
+    else if (socketTypeStr == "tcp")
+        m_socketType = ClientConfgSocketType::TCP;
+    else if (socketTypeStr == "ipc-debug")
+        m_socketType = ClientConfgSocketType::IPCDebug;
+    else if (socketTypeStr == "tranition-tool")
+        m_socketType = ClientConfgSocketType::TransitionTool;
+    else
+        ETH_FAIL_MESSAGE(sErrorPath + "Unknown `socketType` : " + socketTypeStr +
+                         ", Allowed: ['ipc', 'tcp', 'ipc-debug', 'transition-tool']");
+
+    // SocketAddress is an array of ipaddresses or path to a socket file
+    if (m_socketType == ClientConfgSocketType::TCP)
+    {
+        if (_data.atKey("socketAddress").getSubObjects().size() == 0)
+            ETH_FAIL_MESSAGE(sErrorPath + "socketAddress must be non empty array!");
+        for (auto const& el : _data.atKey("socketAddress").getSubObjects())
+        {
+            IPADDRESS addr(el);
+            if (test::inArray(m_socketAddress, addr))
+                ETH_ERROR_MESSAGE(
+                    sErrorPath +
+                    "`socketAddress` section contain dublicate element: " + el.asString());
+            m_socketAddress.push_back(addr);
+        }
+    }
+    // IPC would connect to a client using shell script
+    else if (m_socketType == ClientConfgSocketType::IPC)
+    {
+        if (_data.atKey("socketAddress").type() != DataType::String)
+            ETH_FAIL_MESSAGE(sErrorPath + "`socketAddress` must be string for this socketType!");
+        m_pathToExecFile = fs::path(_data.atKey("socketAddress").asString());
+        if (!fs::exists(m_pathToExecFile))
+            m_pathToExecFile = m_configFilePath.parent_path() / m_pathToExecFile;  // try relative path
+        if (!fs::exists(m_pathToExecFile))
+            ETH_FAIL_MESSAGE(sErrorPath +
+                             "`socketAddress` for socketType::ipc must point to a shell script, "
+                             "that runs a client instance! " +
+                             "But file `" + m_pathToExecFile.string() + "` not found!");
+    }
+    // IPCDebug would connect to already running unix socket
+    else if (m_socketType == ClientConfgSocketType::IPCDebug)
+    {
+        if (_data.atKey("socketAddress").type() != DataType::String)
+            ETH_FAIL_MESSAGE(sErrorPath + "`socketAddress` must be string for this socketType!");
+        m_pathToExecFile = fs::path(_data.atKey("socketAddress").asString());
+        if (!fs::exists(m_pathToExecFile))
+            ETH_FAIL_MESSAGE(sErrorPath + "`socketAddress` for socketType::ipc-debug must point to a running unix socket!" +
+                             " But socket file not found (" + m_pathToExecFile.string() + ")");
+    }
+    // Transition tool would not use Socket class and run tool file instead.
+    else if (m_socketType == ClientConfgSocketType::TransitionTool)
+    {
+        if (_data.atKey("socketAddress").type() != DataType::String)
+            ETH_FAIL_MESSAGE(sErrorPath + "`socketAddress` must be string for this socketType!");
+
+        m_pathToExecFile = fs::path(_data.atKey("socketAddress").asString());
+        ETH_FAIL_REQUIRE_MESSAGE(fs::exists(m_pathToExecFile),
+            sErrorPath + "`socketAddress` for socketType::transition-tool must point to a tool cmd!" + " But file not found (" +
+                m_pathToExecFile.string() + ")");
+    }
+
+    // Read forks as fork order. Order is required for translation (`>=Frontier` -> `Frontier,
+    // Homestead`) According to this order:
+    for (auto const& el : _data.atKey("forks").getSubObjects())
+    {
+        if (test::inArray(m_forks, FORK(el)))
+            ETH_ERROR_MESSAGE(
+                sErrorPath + "`forks` section contain dublicate element: " + el.asString());
+        m_forks.push_back(FORK(el));
+    }
+
+    // Read additionalForks are allowed fork names to run on this client, but not used in
+    // translation
+    for (auto const& el : _data.atKey("additionalForks").getSubObjects())
+    {
+        if (test::inArray(m_additionalForks, FORK(el)))
+            ETH_ERROR_MESSAGE(sErrorPath + "`additionalForks` section contain dublicate element: " +
+                              el.asString());
+        m_additionalForks.push_back(FORK(el));
+    }
+
+    // When client used to fill up tests this map translate exceptionsID in test to exception string
+    // returned from client
+    for (auto const& el : _data.atKey("exceptions").getSubObjects())
+    {
+        if (m_exceptions.count(el.getKey()))
+            ETH_ERROR_MESSAGE(
+                sErrorPath + "`exceptions` section contain dublicate element: " + el.getKey());
+        m_exceptions[el.getKey()] = el.asString();
+    }
+}
+
+std::vector<IPADDRESS> const& ClientConfigFile::socketAdresses() const
+{
+    if (m_socketType != ClientConfgSocketType::TCP)
+        ETH_FAIL_MESSAGE("Attempt to geth addresses of ClientConfig which is not TCP socket type!");
+    return m_socketAddress;
+}
+
+}  // namespace teststruct
+}  // namespace test

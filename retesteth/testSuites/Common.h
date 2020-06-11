@@ -19,18 +19,20 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #pragma once
-#include <retesteth/session/RPCSession.h>
+#include <retesteth/session/Session.h>
 #include <boost/filesystem/path.hpp>
+
+#include <retesteth/testStructures/types/ethereum.h>
 
 namespace test
 {
-// Check post condition on a client
-// void checkExpectSection(SessionInterface& _session, LatestInfo const& _expectedInfo);
-void validatePostHash(
-    SessionInterface& _session, string const& _postHash, scheme_RPCBlock const& _latestInfo);
 
 // Get Remote State From Client
-scheme_state getRemoteState(SessionInterface& _session, scheme_RPCBlock const& _latestInfo);
+struct StateTooBig : UpwardsException
+{
+    StateTooBig(){}
+};
+State getRemoteState(SessionInterface& _session);
 
 // Check that test has data object
 void checkDataObject(DataObject const& _input);
@@ -43,20 +45,28 @@ void checkAtLeastOneTest(DataObject const& _input);
 
 // Check test name in the file is equal to the test name of the file
 void checkTestNameIsEqualToFileName(DataObject const& _input);
+void checkTestNameIsEqualToFileName(string const& _testName);
 
-// Compare states with session asking post state data on the fly
-void compareStates(scheme_expectState const& _stateExpect, SessionInterface& _session,
-    scheme_RPCBlock const& _latestInfo);
-void compareStates(scheme_expectState const& _stateExpect, scheme_state const& _statePost);
+
+enum CompareResult
+{
+    Success,
+    AccountShouldNotExist,
+    MissingExpectedAccount,
+    IncorrectBalance,
+    IncorrectNonce,
+    IncorrectCode,
+    IncorrectStorage,
+    None
+};
 string CompareResultToString(CompareResult res);
 
-// Get account from remote state. inline function
-scheme_account remoteGetAccount(SessionInterface& _session, string const& _account,
-    scheme_RPCBlock const& _latestInfo, size_t& _totalSize);
+// Compafre expected StateIncomplete against remote client (get post state data on the fly with session)
+void compareStates(StateBase const& _stateExpect, SessionInterface& _session);
 
-// Get list of account from remote client
-DataObject getRemoteAccountList(SessionInterface& _session, scheme_RPCBlock const& _latestInfo);
+// Compare expected StateIncomplete against post state State
+void compareStates(StateBase const& _stateExpect, State const& _statePost);
 
 // json trace vm
-void printVmTrace(SessionInterface& _session, std::string const& _trHash, string const& _stateRoot);
+void printVmTrace(SessionInterface& _session, FH32 const& _trHash, FH32 const& _stateRoot);
 }

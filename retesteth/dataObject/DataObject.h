@@ -176,7 +176,8 @@ public:
     DataObject& atUnsafe(size_t _pos);
     DataObject const& atLastElement() const;
     DataObject& atLastElementUnsafe();
-    void performModifier(void (*f)(DataObject&));
+    void setVerifier(void (*f)(DataObject&));
+    void performModifier(void (*f)(DataObject&), std::set<string> const& _exceptionKeys = {});
     void performVerifier(void (*f)(DataObject const&)) const;
 
     void addArrayObject(DataObject const& _obj);
@@ -218,6 +219,7 @@ private:
     bool m_autosort = false;
     bool m_boolVal;
     int m_intVal;
+    void (*m_verifier)(DataObject&) = 0;
 };
 
 // Find index that _key should take place in when being added to ordered _objects by key

@@ -28,7 +28,7 @@
 #include <retesteth/TestHelper.h>
 #include <retesteth/TestOutputHelper.h>
 #include <retesteth/TestSuite.h>
-#include <retesteth/session/RPCSession.h>
+#include <retesteth/session/Session.h>
 #include <boost/test/unit_test.hpp>
 #include <string>
 #include <thread>
@@ -36,6 +36,7 @@
 
 using namespace std;
 using namespace dev;
+using namespace test;
 namespace fs = boost::filesystem;
 
 //Helper functions for test proccessing
@@ -80,9 +81,9 @@ TestFileData readTestFile(fs::path const& _testFileName)
     return testData;
 }
 
-void removeComments(dataobject::DataObject& _obj)
+void removeComments(DataObject& _obj)
 {
-    if (_obj.type() == dataobject::DataType::Object)
+    if (_obj.type() == DataType::Object)
     {
 		list<string> removeList;
         for (auto& i: _obj.getSubObjectsUnsafe())
@@ -97,24 +98,23 @@ void removeComments(dataobject::DataObject& _obj)
         for (auto const& i: removeList)
             _obj.removeKey(i);
 	}
-    else if (_obj.type() == dataobject::DataType::Array)
+    else if (_obj.type() == DataType::Array)
     {
         for (auto& i: _obj.getSubObjectsUnsafe())
 			removeComments(i);
     }
 }
 
-void addClientInfo(
-    dataobject::DataObject& _v, fs::path const& _testSource, h256 const& _testSourceHash)
+void addClientInfo(DataObject& _v, fs::path const& _testSource, h256 const& _testSourceHash)
 {
     SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
     for (auto& o : _v.getSubObjectsUnsafe())
     {
         string comment;
-        dataobject::DataObject clientinfo;
+        DataObject clientinfo;
         if (o.count("_info"))
         {
-            dataobject::DataObject const& existingInfo = o.atKey("_info");
+            DataObject const& existingInfo = o.atKey("_info");
             if (existingInfo.count("comment"))
                 comment = existingInfo.atKey("comment").asString();
         }
@@ -134,18 +134,18 @@ void addClientInfo(
 
 void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
 {
-    dataobject::DataObject v = test::readJsonData(_compiledTest, "_info");
+    DataObject v = test::readJsonData(_compiledTest, "_info");
     TestFileData fillerData = readTestFile(_sourceTest);
     for (auto const& i: v.getSubObjects())
     {
         try
         {
             // use eth object _info section class here !!!!!
-            ETH_ERROR_REQUIRE_MESSAGE(i.type() == dataobject::DataType::Object,
-                i.getKey() + " should contain an object under a test name.");
+            ETH_ERROR_REQUIRE_MESSAGE(
+                i.type() == DataType::Object, i.getKey() + " should contain an object under a test name.");
             ETH_ERROR_REQUIRE_MESSAGE(
                 i.count("_info") > 0, "_info section not set! " + _compiledTest.string());
-            dataobject::DataObject const& info = i.atKey("_info");
+            DataObject const& info = i.atKey("_info");
             ETH_ERROR_REQUIRE_MESSAGE(info.count("sourceHash") > 0,
                 "sourceHash not found in " + _compiledTest.string() + " in " + i.getKey());
             h256 const sourceHash = h256(info.atKey("sourceHash").asString());
@@ -154,7 +154,7 @@ void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
                     " is outdated. Filler hash is different! ('" + sourceHash.hex().substr(0, 4) +
                     "' != '" + fillerData.hash.hex().substr(0, 4) + "') ");
         }
-        catch (test::BaseEthException const&)
+        catch (test::UpwardsException const&)
         {
             continue;
         }
@@ -214,8 +214,8 @@ void TestSuite::runTestWithoutFiller(boost::filesystem::path const& _file) const
     {
         Options::getDynamicOptions().setCurrentConfig(config);
 
-        std::cout << "Running tests for config '" << config.getName() << "' " << config.getId().id()
-                  << std::endl;
+        std::cout << "Running tests for config '" << config.cfgFile().name() << "' "
+                  << config.getId().id() << std::endl;
         ETH_LOG("Running " + _file.filename().string() + ": ", 3);
 
         // Allow to execute a custom test .json file on any test suite
@@ -380,12 +380,13 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
             // Only one thread allowed to connect to it;
             size_t maxAllowedThreads = Options::get().threadCount;
             ClientConfig const& currConfig = Options::get().getDynamicOptions().getCurrentConfig();
-            Socket::SocketType socType = currConfig.getSocketType();
-            if (socType == Socket::SocketType::IPCDebug)
+            ClientConfgSocketType socType = currConfig.cfgFile().socketType();
+            if (socType == ClientConfgSocketType::IPCDebug)
                 maxAllowedThreads = 1;
             // If connecting to TCP sockets. Max threads are limited with tcp ports provided
-            if (socType == Socket::SocketType::TCP)
-                maxAllowedThreads = min(maxAllowedThreads, currConfig.getAddressObject().getSubObjects().size());
+            if (socType == ClientConfgSocketType::TCP)
+                maxAllowedThreads =
+                    min(maxAllowedThreads, currConfig.cfgFile().socketAdresses().size());
 
             if (threadVector.size() == maxAllowedThreads)
                 joinThreads(threadVector, false);
@@ -404,8 +405,8 @@ void TestSuite::runFunctionForAllClients(std::function<void()> _func)
     for (auto const& config : Options::getDynamicOptions().getClientConfigs())
     {
         Options::getDynamicOptions().setCurrentConfig(config);
-        std::cout << "Running tests for config '" << config.getName() << "' " << config.getId().id()
-                  << std::endl;
+        std::cout << "Running tests for config '" << config.cfgFile().name() << "' "
+                  << config.getId().id() << std::endl;
         _func();
 
         // Disconnect threads from the client
@@ -496,14 +497,22 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
                 addClientInfo(output, boostRelativeTestPath, testData.hash);
                 writeFile(boostTestPath.path(), asBytes(output.asJson()));
             }
-            catch (test::BaseEthException const&)
+            catch (test::EthError const& _ex)
             {
-                // Something went wrong inside the test. skip it.
-                // (error message is stored at TestOutputHelper)
+                // Something went wrong inside the test. skip the test.
+                // (error message is stored at TestOutputHelper. EthError is via ETH_ERROR_())
+                wasErrors = true;
+            }
+            catch (test::UpwardsException const& _ex)
+            {
+                // UpwardsException is thrown upwards in tests for debug info
+                // And it should be catched on upper level for report till this point
+                ETH_ERROR_MESSAGE(string("Unhandled UpwardsException: ") + _ex.what());
                 wasErrors = true;
             }
             catch (std::exception const& _ex)
             {
+                // Low level error occured in tests
                 ETH_MARK_ERROR("ERROR OCCURED FILLING TESTS: " + string(_ex.what()));
                 RPCSession::sessionEnd(TestOutputHelper::getThreadID(), RPCSession::SessionStatus::HasFinished);
                 wasErrors = true;
@@ -518,10 +527,16 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
             TestOutputHelper::get().setCurrentTestFile(boostTestPath.path());
             executeFile(boostTestPath.path());
         }
-        catch (test::BaseEthException const&)
+        catch (test::EthError const& _ex)
         {
-            // Something went wrong inside the test. skip it.
-            // (error message is stored at TestOutputHelper)
+            // Something went wrong inside the test. skip the test.
+            // (error message is stored at TestOutputHelper. EthError is via ETH_ERROR_())
+        }
+        catch (test::UpwardsException const& _ex)
+        {
+            // UpwardsException is thrown upwards in tests for debug info
+            // And it should be catched on upper level for report till this point
+            ETH_ERROR_MESSAGE(string("Unhandled UpwardsException: ") + _ex.what());
         }
         catch (std::exception const& _ex)
         {
@@ -535,6 +550,7 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
 void TestSuite::executeFile(boost::filesystem::path const& _file) const
 {
     TestSuiteOptions opt;
+    opt.isLegacyTests = Options::get().rCurrentTestSuite.find("LegacyTests") != string::npos;
     doTests(test::readJsonData(_file), opt);
 }
 

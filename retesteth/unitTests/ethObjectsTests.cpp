@@ -19,7 +19,10 @@
  */
 
 #include <retesteth/TestOutputHelper.h>
-#include <retesteth/ethObjects/common.h>
+#include <retesteth/dataObject/ConvertFile.h>
+#include <retesteth/testStructures/Common.h>
+#include <retesteth/testStructures/configs/ClientConfigFile.h>
+#include <retesteth/testStructures/types/ethereum.h>
 #include <retesteth/testSuites/Common.h>
 #include <boost/test/unit_test.hpp>
 #include <thread>
@@ -27,6 +30,7 @@
 using namespace std;
 using namespace dev;
 using namespace test;
+using namespace test::teststruct;
 
 BOOST_FIXTURE_TEST_SUITE(EthObjectsSuite, TestOutputHelperFixture)
 
@@ -43,6 +47,7 @@ BOOST_AUTO_TEST_CASE(dataobject_setKeyPos_lastToFirst)
 	BOOST_CHECK(data.getSubObjects().at(1).asString() == "data1");
 	BOOST_CHECK(data.getSubObjects().at(2).getKey() == "key2");
 	BOOST_CHECK(data.getSubObjects().at(2).asString() == "data2");
+    TestOutputHelper::registerTestRunSuccess();
 }
 
 BOOST_AUTO_TEST_CASE(dataobject_setKeyPos_lastToMid)
@@ -203,57 +208,53 @@ BOOST_AUTO_TEST_CASE(dataobject_setKeyPos_firstToLast)
 
 BOOST_AUTO_TEST_CASE(object_stringIntegerType_correctHex)
 {
-	BOOST_CHECK(object::stringIntegerType("0x11223344") == object::DigitsType::HexPrefixed);
-    BOOST_CHECK(object::stringIntegerType("0x1122334") == object::DigitsType::UnEvenHexPrefixed);
-    BOOST_CHECK(
-        object::stringIntegerType("0x01234567890") == object::DigitsType::UnEvenHexPrefixed);
-    BOOST_CHECK(object::stringIntegerType("0x11223344abcdef") == object::DigitsType::HexPrefixed);
-	BOOST_CHECK(object::stringIntegerType("0xabcdef") == object::DigitsType::HexPrefixed);
-    BOOST_CHECK(
-        object::stringIntegerType("0x11223344abcdeff") == object::DigitsType::UnEvenHexPrefixed);
+    BOOST_CHECK(stringIntegerType("0x11223344") == DigitsType::HexPrefixed);
+    BOOST_CHECK(stringIntegerType("0x1122334") == DigitsType::UnEvenHexPrefixed);
+    BOOST_CHECK(stringIntegerType("0x01234567890") == DigitsType::UnEvenHexPrefixed);
+    BOOST_CHECK(stringIntegerType("0x11223344abcdef") == DigitsType::HexPrefixed);
+    BOOST_CHECK(stringIntegerType("0xabcdef") == DigitsType::HexPrefixed);
+    BOOST_CHECK(stringIntegerType("0x11223344abcdeff") == DigitsType::UnEvenHexPrefixed);
 
-    BOOST_CHECK(object::stringIntegerType("11223344abcdef") == object::DigitsType::Hex);
-	BOOST_CHECK(object::stringIntegerType("abcdef") == object::DigitsType::Hex);
-    BOOST_CHECK(object::stringIntegerType("11223344abcdeff") == object::DigitsType::UnEvenHex);
+    BOOST_CHECK(stringIntegerType("11223344abcdef") == DigitsType::Hex);
+    BOOST_CHECK(stringIntegerType("abcdef") == DigitsType::Hex);
+    BOOST_CHECK(stringIntegerType("11223344abcdeff") == DigitsType::UnEvenHex);
 }
 
 BOOST_AUTO_TEST_CASE(object_stringIntegerType_correctDecimal)
 {
-	BOOST_CHECK(object::stringIntegerType("11223344") == object::DigitsType::Decimal);
-	BOOST_CHECK(object::stringIntegerType("1122334") == object::DigitsType::Decimal);
-	BOOST_CHECK(object::stringIntegerType("01234567890") == object::DigitsType::Decimal);
-	BOOST_CHECK(object::stringIntegerType("0000000000000000000000000000000000000000") == object::DigitsType::Decimal);
-	BOOST_CHECK(object::stringIntegerType("3535353535353535353535353535353535353535") == object::DigitsType::Decimal);
+    BOOST_CHECK(stringIntegerType("11223344") == DigitsType::Decimal);
+    BOOST_CHECK(stringIntegerType("1122334") == DigitsType::Decimal);
+    BOOST_CHECK(stringIntegerType("01234567890") == DigitsType::Decimal);
+    BOOST_CHECK(stringIntegerType("0000000000000000000000000000000000000000") == DigitsType::Decimal);
+    BOOST_CHECK(stringIntegerType("3535353535353535353535353535353535353535") == DigitsType::Decimal);
 }
 
 BOOST_AUTO_TEST_CASE(object_stringIntegerType_otherTypes)
 {
-	BOOST_CHECK(object::stringIntegerType("0x11223344z") == object::DigitsType::String);
-	BOOST_CHECK(object::stringIntegerType("0x1122334s") == object::DigitsType::String);
-	BOOST_CHECK(object::stringIntegerType("0x01234567890r") == object::DigitsType::String);
-	BOOST_CHECK(object::stringIntegerType("0x11223344abttcdef") == object::DigitsType::String);
-	BOOST_CHECK(object::stringIntegerType("0xabcdefk") == object::DigitsType::String);
-	BOOST_CHECK(object::stringIntegerType("0xll11223344abcdeff") == object::DigitsType::String);
+    BOOST_CHECK(stringIntegerType("0x11223344z") == DigitsType::String);
+    BOOST_CHECK(stringIntegerType("0x1122334s") == DigitsType::String);
+    BOOST_CHECK(stringIntegerType("0x01234567890r") == DigitsType::String);
+    BOOST_CHECK(stringIntegerType("0x11223344abttcdef") == DigitsType::String);
+    BOOST_CHECK(stringIntegerType("0xabcdefk") == DigitsType::String);
+    BOOST_CHECK(stringIntegerType("0xll11223344abcdeff") == DigitsType::String);
 
-	BOOST_CHECK(object::stringIntegerType("11223r344abcdef") == object::DigitsType::String);
-	BOOST_CHECK(object::stringIntegerType("abcdefrr") == object::DigitsType::String);
-	BOOST_CHECK(object::stringIntegerType("11223344abcdeffzz") == object::DigitsType::String);
+    BOOST_CHECK(stringIntegerType("11223r344abcdef") == DigitsType::String);
+    BOOST_CHECK(stringIntegerType("abcdefrr") == DigitsType::String);
+    BOOST_CHECK(stringIntegerType("11223344abcdeffzz") == DigitsType::String);
 }
 
 
-void testCompareResult(
-    DataObject const& _exp, DataObject const& _post, CompareResult _expResult, size_t errCount = 2)
+void testCompareResult(DataObject const& _exp, DataObject const& _post, CompareResult _expResult, size_t _errCount = 2)
 {
     try
     {
-        test::compareStates(scheme_expectState(_exp), scheme_state(_post));
+        test::compareStates(StateIncomplete(_exp), State(_post));
         ETH_FAIL_REQUIRE(_expResult == CompareResult::Success);
     }
-    catch (test::BaseEthException const& _ex)
+    catch (test::EthError const& _ex)
     {
-        ETH_FAIL_REQUIRE(
-            string(_ex.what()).rfind(CompareResultToString(_expResult)) != string::npos);
-        ETH_FAIL_REQUIRE(TestOutputHelper::get().getErrors().size() == errCount);
+        ETH_FAIL_REQUIRE(string(_ex.what()).rfind(CompareResultToString(_expResult)) != string::npos);
+        ETH_FAIL_REQUIRE(TestOutputHelper::get().getErrors().size() == _errCount);
     }
     TestOutputHelper::get().resetErrors();
 }
@@ -461,14 +462,13 @@ BOOST_AUTO_TEST_CASE(compareStates_storageMissingOnExpect)
     postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
     postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
     postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["storage"] = postStorage;
-    testCompareResult(expectData, postData, CompareResult::IncorrectStorage, 4);
+    testCompareResult(expectData, postData, CompareResult::IncorrectStorage, 2);
 }
 
-void ExpectVsPost(string const& _expectKey, string const& _expectVal, string const& _postKey,
-    string const& _postVal, CompareResult _res, string const& _doubleVal = "0x02")
+void ExpectVsPost(string const& _expectKey, string const& _expectVal, string const& _postKey, string const& _postVal,
+    CompareResult _res, string const& _doubleVal = "0x02", size_t _errCount = 2)
 {
-    ETH_LOG("Exp(" + _expectKey + ":" + _expectVal + ") vs Post(" + _postKey + "," + _postVal + ")",
-        _doubleVal == "0x02" ? 0 : 3);
+    ETH_LOG("Exp(" + _expectKey + ":" + _expectVal + ") vs Post(" + _postKey + "," + _postVal + ") dd: " + _doubleVal, 0);
     DataObject expectStorage(DataType::Object);
     if (_expectKey != "--")
         expectStorage[_expectKey] = _expectVal;
@@ -485,40 +485,78 @@ void ExpectVsPost(string const& _expectKey, string const& _expectVal, string con
     postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
     postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
     postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["storage"] = postStorage;
-    testCompareResult(expectData, postData, _res);
+    testCompareResult(expectData, postData, _res, _errCount);
 }
 
 BOOST_AUTO_TEST_CASE(compareStates_storageCombinations)
 {
-    // Empty Post
-    ExpectVsPost("0x", "0x", "--", "--", CompareResult::Success);
-    ExpectVsPost("0x", "0x00", "--", "--", CompareResult::Success);
-    ExpectVsPost("0x00", "0x", "--", "--", CompareResult::Success);
+    // Do not allow 0x  as VALUE cases are commented
+    // ExpectVsPost("0x", "0x", "--", "--", CompareResult::Success);
+    // ExpectVsPost("0x", "0x00", "--", "--", CompareResult::Success);
+    // ExpectVsPost("0x00", "0x", "--", "--", CompareResult::Success);
     ExpectVsPost("0x00", "0x00", "--", "--", CompareResult::Success);
-    ExpectVsPost("0x01", "0x", "--", "--", CompareResult::Success);
+    // ExpectVsPost("0x01", "0x", "--", "--", CompareResult::Success);
     ExpectVsPost("0x01", "0x00", "--", "--", CompareResult::Success);
-    ExpectVsPost("0x", "0x01", "--", "--", CompareResult::IncorrectStorage);
+    // ExpectVsPost("0x", "0x01", "--", "--", CompareResult::IncorrectStorage);
     ExpectVsPost("0x00", "0x01", "--", "--", CompareResult::IncorrectStorage);
     ExpectVsPost("0x01", "0x01", "--", "--", CompareResult::IncorrectStorage);
-    ExpectVsPost("0x", "0x01", "0x", "0x01", CompareResult::Success);
-    ExpectVsPost("0x00", "0x01", "0x", "0x01", CompareResult::Success);
-    ExpectVsPost("0x", "0x01", "0x00", "0x01", CompareResult::Success);
+    // ExpectVsPost("0x", "0x01", "0x", "0x01", CompareResult::Success);
+    // ExpectVsPost("0x00", "0x01", "0x", "0x01", CompareResult::Success);
+    // ExpectVsPost("0x", "0x01", "0x00", "0x01", CompareResult::Success);
     ExpectVsPost("0x00", "0x01", "0x00", "0x01", CompareResult::Success);
 
     // Double layer
-    ExpectVsPost("0x", "0x", "--", "--", CompareResult::IncorrectStorage, "0x03");
-    ExpectVsPost("0x", "0x00", "--", "--", CompareResult::IncorrectStorage, "0x03");
-    ExpectVsPost("0x00", "0x", "--", "--", CompareResult::IncorrectStorage, "0x03");
+    // ExpectVsPost("0x", "0x", "--", "--", CompareResult::IncorrectStorage, "0x03");
+    // ExpectVsPost("0x", "0x00", "--", "--", CompareResult::IncorrectStorage, "0x03");
+    // ExpectVsPost("0x00", "0x", "--", "--", CompareResult::IncorrectStorage, "0x03");
     ExpectVsPost("0x00", "0x00", "--", "--", CompareResult::IncorrectStorage, "0x03");
-    ExpectVsPost("0x01", "0x", "--", "--", CompareResult::IncorrectStorage, "0x03");
+    // ExpectVsPost("0x01", "0x", "--", "--", CompareResult::IncorrectStorage, "0x03");
     ExpectVsPost("0x01", "0x00", "--", "--", CompareResult::IncorrectStorage, "0x03");
-    ExpectVsPost("0x", "0x01", "--", "--", CompareResult::IncorrectStorage, "0x03");
-    ExpectVsPost("0x00", "0x01", "--", "--", CompareResult::IncorrectStorage, "0x03");
-    ExpectVsPost("0x01", "0x01", "--", "--", CompareResult::IncorrectStorage, "0x03");
-    ExpectVsPost("0x", "0x01", "0x", "0x01", CompareResult::IncorrectStorage, "0x03");
-    ExpectVsPost("0x00", "0x01", "0x", "0x01", CompareResult::IncorrectStorage, "0x03");
-    ExpectVsPost("0x", "0x01", "0x00", "0x01", CompareResult::IncorrectStorage, "0x03");
+    // ExpectVsPost("0x", "0x01", "--", "--", CompareResult::IncorrectStorage, "0x03");
+    ExpectVsPost("0x00", "0x01", "--", "--", CompareResult::IncorrectStorage, "0x03", 3);
+    ExpectVsPost("0x01", "0x01", "--", "--", CompareResult::IncorrectStorage, "0x03", 3);
+
+    // ExpectVsPost("0x", "0x01", "0x", "0x01", CompareResult::IncorrectStorage, "0x03");
+    // ExpectVsPost("0x00", "0x01", "0x", "0x01", CompareResult::IncorrectStorage, "0x03");
+    // ExpectVsPost("0x", "0x01", "0x00", "0x01", CompareResult::IncorrectStorage, "0x03");
     ExpectVsPost("0x00", "0x01", "0x00", "0x01", CompareResult::IncorrectStorage, "0x03");
+}
+
+BOOST_AUTO_TEST_CASE(clientconfigTest)
+{
+    string data = R"(
+    {
+        "name" : "Ethereum GO on TCP",
+        "socketType" : "tcp",
+        "socketAddress" : [
+            "127.0.0.1:8545",
+            "127.0.0.1:8546"
+        ],
+        "forks" : [
+          "Frontier",
+          "Homestead",
+          "EIP150"
+        ],
+        "additionalForks" : [
+          "FrontierToHomesteadAt5",
+          "HomesteadToEIP150At5"
+        ],
+        "exceptions" : {
+            "ExtraDataTooBig" : "extra-data too long",
+            "InvalidDifficulty" : "invalid difficulty"
+        }
+    })";
+
+    test::teststruct::ClientConfigFile cfg(ConvertJsoncppStringToData(data));
+
+    // Check Fork Order
+    BOOST_CHECK(cfg.forks().at(0).asString() == "Frontier");
+    BOOST_CHECK(cfg.forks().at(1).asString() == "Homestead");
+    BOOST_CHECK(cfg.forks().at(2).asString() == "EIP150");
+
+    // Check address Order
+    BOOST_CHECK(cfg.socketAdresses().at(0).asString() == "127.0.0.1:8545");
+    BOOST_CHECK(cfg.socketAdresses().at(1).asString() == "127.0.0.1:8546");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
