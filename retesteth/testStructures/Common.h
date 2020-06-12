@@ -1,11 +1,5 @@
 #pragma once
-#include "basetypes.h"
-#include "configs/SealEngine.h"
-#include "types/Ethereum/State.h"
-#include "types/StateTests/Base/StateTestEnvBase.h"
 #include <retesteth/dataObject/DataObject.h>
-#include <retesteth/testStructures/types/RPC/SetChainParamsArgs.h>
-
 using namespace dataobject;
 
 namespace test
@@ -34,9 +28,6 @@ enum class DigitsType
 };
 DigitsType stringIntegerType(std::string const& _string);
 
-// Prepare chain params rpc request
-SetChainParamsArgs prepareChainParams(FORK const&, SealEngine, State const&, StateTestEnvBase const&);
-
 // Check the presents of fields in a DataObject with a validation map
 typedef std::set<DataType> possibleType;
 void requireJsonFields(DataObject const& _o, std::string const& _section,
@@ -63,6 +54,9 @@ DataObject convertDecStateToHex(DataObject const& _data);
 
 // Convert dec fields to hex, add 0x prefix to accounts and storage keys
 DataObject convertDecBlockheaderIncompleteToHex(DataObject const& _data);
+
+// Make a nice compare result string
+string compareBlockHeaders(DataObject const& _blockA, DataObject const& _blockB);
 
 }  // namespace teststruct
 }  // namespace test

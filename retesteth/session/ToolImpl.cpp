@@ -1,4 +1,3 @@
-#include <chrono>
 #include <cstdio>
 #include <thread>
 
@@ -247,10 +246,19 @@ void ToolImpl::test_mineBlocks(size_t _number)
 FH32 ToolImpl::test_importRawBlock(BYTES const& _blockRLP)
 {
     rpcCall("", {});
-    ETH_TEST_MESSAGE("\nRequest: test_importRawBlock, following transaction import are internal");
-    FH32 const hash = blockchain().importRawBlock(_blockRLP);
-    ETH_TEST_MESSAGE("Response test_importRawBlock: " + hash.asString());
-    return hash;
+    try
+    {
+        ETH_TEST_MESSAGE("\nRequest: test_importRawBlock, following transaction import are internal");
+        FH32 const hash = blockchain().importRawBlock(_blockRLP);
+        ETH_TEST_MESSAGE("Response test_importRawBlock: " + hash.asString());
+        return hash;
+    }
+    catch (std::exception const& _ex)
+    {
+        makeRPCError(_ex.what());
+        ETH_TEST_MESSAGE(string("Response test_importRawBlock: ") + _ex.what());
+        return FH32::zero();
+    }
 }
 
 FH32 ToolImpl::test_getLogHash(FH32 const& _txHash)
@@ -284,4 +292,10 @@ Socket::SocketType ToolImpl::getSocketType() const
 std::string const& ToolImpl::getSocketPath() const
 {
     return m_toolPath.string();
+}
+
+void ToolImpl::makeRPCError(string const& _error)
+{
+    ETH_LOG("makeRPCError " + _error, 5);
+    m_lastInterfaceError = RPCError("", _error);
 }

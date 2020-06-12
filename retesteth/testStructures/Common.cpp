@@ -2,11 +2,10 @@
 #include "EthChecks.h"
 #include "TestHelper.h"
 #include "TestOutputHelper.h"
-#include <retesteth/Options.h>
-#include <retesteth/configs/ClientConfig.h>
 #include <mutex>
 
 using namespace test;
+using namespace dev;
 using namespace test::teststruct;
 
 namespace
@@ -145,30 +144,6 @@ long long int hexOrDecStringToInt(string const& _str)
     }
     return res;
 }
-
-SetChainParamsArgs prepareChainParams(FORK const& _net, SealEngine _engine, State const& _state, StateTestEnvBase const& _env)
-{
-    ClientConfig const& cfg = Options::get().getDynamicOptions().getCurrentConfig();
-    cfg.validateForkAllowed(_net);
-
-    DataObject genesis;
-    genesis = cfg.getGenesisTemplate(_net);
-    genesis["sealEngine"] = sealEngineToStr(_engine);
-
-    genesis["genesis"]["author"] = _env.currentCoinbase().asString();
-    genesis["genesis"]["difficulty"] = _env.currentDifficulty().asString();
-    genesis["genesis"]["gasLimit"] = _env.currentGasLimit().asString();
-    genesis["genesis"]["extraData"] = _env.currentExtraData().asString();
-    genesis["genesis"]["timestamp"] = _env.currentTimestamp().asString();
-    genesis["genesis"]["nonce"] = _env.currentNonce().asString();
-    genesis["genesis"]["mixHash"] = _env.currentMixHash().asString();
-
-    // Because of template might contain preset accounts
-    for (auto const& el : _state.accounts())
-        genesis["accounts"].addSubObject(el.second.getCContent().asDataObject());
-    return SetChainParamsArgs(genesis);
-}
-
 
 void requireJsonFields(
     DataObject const& _o, std::string const& _section, std::map<std::string, possibleType> const& _validationMap, bool _fail)
@@ -354,6 +329,25 @@ DigitsType stringIntegerType(std::string const& _string)
         return DigitsType::Hex;
 
     return DigitsType::UnEvenHex;
+}
+
+// Construct comapasion string
+string compareBlockHeaders(DataObject const& _blockA, DataObject const& _blockB)
+{
+    size_t k = 0;
+    string message;
+    for (auto const& el : _blockA.getSubObjects())
+    {
+        static string const cYellow = "\x1b[33m";
+        static string const cRed = "\x1b[31m";
+        string const testHeaderField = _blockB.getSubObjects().at(k++).asString();
+        message += cYellow + el.getKey() + cRed + " ";
+        if (el.asString() != testHeaderField)
+            message += el.asString() + " vs " + cYellow + testHeaderField + cRed + "\n";
+        else
+            message += el.asString() + " vs " + testHeaderField + "\n";
+    }
+    return message;
 }
 
 }  // namespace teststruct

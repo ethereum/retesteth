@@ -1,8 +1,10 @@
 #include "BlockchainTestLogic.h"
 #include <retesteth/EthChecks.h>
+#include <retesteth/ExitHandler.h>
 #include <retesteth/Options.h>
 #include <retesteth/session/Session.h>
 #include <retesteth/testStructures/Common.h>
+#include <retesteth/testStructures/PrepareChainParams.h>
 #include <retesteth/testSuites/Common.h>
 
 namespace test
@@ -13,7 +15,6 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
 {
     if (Options::get().logVerbosity > 1)
         ETH_STDOUT_MESSAGE("Running " + _test.testName());
-
     TestOutputHelper::get().setCurrentTestName(_test.testName());
     TestOutputHelper::get().setUnitTestExceptions(_test.unitTestExceptions());
     SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
@@ -25,6 +26,8 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
     size_t blockNumber = 0;
     for (BlockchainTestBlock const& tblock : _test.blocks())
     {
+        if (ExitHandler::receivedExitSignal())
+            return;
         if (Options::get().blockLimit != 0 && blockNumber + 1 >= Options::get().blockLimit)
             break;
 
@@ -36,7 +39,8 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
             // If there was an error on block rlp import
             // and options does NOT allow invalid blocks or this block was expected to be valid
             if (!_opt.allowInvalidBlocks || !tblock.expectedInvalid())
-                ETH_ERROR_MESSAGE("Running blockchain test: " + session.getLastRPCError().message());
+                ETH_ERROR_MESSAGE(
+                    "Importing raw RLP block, block was expected to be valid! " + session.getLastRPCError().message());
             continue;
         }
         else
@@ -69,20 +73,7 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
         if (!condition)
         {
             message = "Client return HEADER vs Test HEADER: \n";
-            DataObject clientHeader = latestBlock.header().asDataObject();
-            DataObject testHeader = tblock.header().asDataObject();
-            size_t k = 0;
-            for (auto const& el : clientHeader.getSubObjects())
-            {
-                static string const cYellow = "\x1b[33m";
-                static string const cRed = "\x1b[31m";
-                string const testHeaderField = testHeader.getSubObjects().at(k++).asString();
-                message += cYellow + el.getKey() + cRed + " ";
-                if (el.asString() != testHeaderField)
-                    message += el.asString() + " vs " + cYellow + testHeaderField + cRed + "\n";
-                else
-                    message += el.asString() + " vs " + testHeaderField + "\n";
-            }
+            message += compareBlockHeaders(latestBlock.header().asDataObject(), tblock.header().asDataObject());
         }
         ETH_ERROR_REQUIRE_MESSAGE(
             condition, "Client report different blockheader after importing the rlp than expected by test! \n" + message);
@@ -213,9 +204,18 @@ DataObject DoTests(DataObject const& _input, TestSuite::TestSuiteOptions& _opt)
                     el["genesisRLP"] = "0x00";
             }
         }
+        ETH_LOG("Parse test", 5);
         BlockchainTest test(_input);
+        ETH_LOG("Parse test done", 5);
         for (BlockchainTestInFilled const& bcTest : test.tests())
         {
+            /*
+            if (Options::getDynamicOptions().getCurrentConfig().cfgFile().name() == "t8ntool")
+            {
+                if (bcTest.testName().find("BlockWrongStoreClears") != std::string::npos)
+                    ETH_WARNING("Skipping BlockWrongStoreClears test as it is unsupported by tool");
+            }*/
+
             // Select test by name if --singletest and --singlenet is set
             if (Options::get().singleTest)
             {

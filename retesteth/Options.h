@@ -14,10 +14,10 @@ class TestOptions;
 class Options
 {
 public:
-	struct InvalidOption: public Exception
-	{
-		InvalidOption(std::string _message = std::string()): Exception(_message) {}
-	};
+    struct InvalidOption : public Exception
+    {
+        InvalidOption(std::string _message = std::string()) : Exception(_message) {}
+    };
 
     struct DynamicOptions
     {

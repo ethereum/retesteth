@@ -24,8 +24,15 @@ public:
     FORK const& fork() const { return m_fork.getCContent(); }
     fs::path const& toolPath() const { return m_toolPath; }
 
-    void mineBlock(EthereumBlockState const& _pendingBlock);
+    enum class Mining
+    {
+        RequireValid,
+        AllowFailTransactions
+    };
+    void mineBlock(EthereumBlockState const& _pendingBlock, Mining _req = Mining::AllowFailTransactions);
     void rewindToBlock(size_t _number);
+
+    // Used for chain reorg
     void insertBlock(EthereumBlockState const& _block) { m_blocks.push_back(_block); }
 
 private:

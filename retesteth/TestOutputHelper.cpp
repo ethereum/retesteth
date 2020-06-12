@@ -178,7 +178,7 @@ void TestOutputHelper::finishTest()
     m_isRunning = false;
     if (Options::get().exectimelog)
     {
-        std::cout << "Tests run: " << m_currTest << std::endl;
+        std::cout << "Tests finished: " << m_currTest << std::endl;
         execTimeName res;
         res.first = m_timer.elapsed();
         res.second = TestInfo::caseName();
@@ -234,7 +234,10 @@ void TestOutputHelper::printTestExecStats()
         std::cout << std::endl << "*** Execution time stats" << std::endl;
         {
             std::lock_guard<std::mutex> lock2(g_totalTestsRun);
-            std::cout << setw(45) << "Total Tests: " << setw(25) << "     : " + fto_string(totalTestsRun) << "\n";
+            if (totalTestsRun > 0)
+                std::cout << setw(45) << "Total Tests: " << setw(25) << "     : " + fto_string(totalTestsRun) << "\n";
+            else
+                ETH_STDERROR_MESSAGE("*** Total Tests Run: " + fto_string(totalTestsRun) + "\n");
         }
         std::cout << setw(45) << "Total Time: " << setw(25) << "     : " + fto_string(totalTime) << "\n";
         for (size_t i = 0; i < execTimeResults.size(); i++)

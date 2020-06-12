@@ -56,6 +56,7 @@ private:
     fs::path m_toolPath;
     size_t m_totalCalls = 0;
     ToolChainManager& blockchain() { return m_toolChainManager.getContent(); }
+    void makeRPCError(string const& _error);
 
     // Manage blockchains as ethereum client backend
     GCP_SPointer<ToolChainManager> m_toolChainManager;

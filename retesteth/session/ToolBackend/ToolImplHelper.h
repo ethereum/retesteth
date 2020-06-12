@@ -15,6 +15,9 @@ DataObject constructStorageRangeAt(
 // Construct RPC style response
 DataObject constructEthGetBlockBy(EthereumBlockState const& _block);
 
+// RLP Validators
+void verifyBlockRLP(dev::RLP const& _rlp);
+void verifyEthereumBlockHeader(BlockHeader const& _header);
 
 }  // namespace toolimpl
 

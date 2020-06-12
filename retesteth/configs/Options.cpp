@@ -1,7 +1,6 @@
 #include <BuildInfo.h>
 #include <libdevcore/FileSystem.h>
 #include <retesteth/Options.h>
-#include <retesteth/TestHelper.h>
 #include <retesteth/configs/Genesis.h>
 #include <boost/filesystem.hpp>
 

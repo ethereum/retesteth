@@ -19,8 +19,10 @@ struct BlockHeader : GCP_SPointerBase
     DataObject const asDataObject() const;
     dev::RLPStream const asRLPStream() const;
     bool operator==(BlockHeader const& _rhs) const;
+    bool operator!=(BlockHeader const& _rhs) const { return !(*this == _rhs); };
 
     FH32 const& stateRoot() const { return m_stateRoot.getCContent(); }
+    FH32 const& receiptTrie() const { return m_receiptsRoot.getCContent(); }
     FH32 const& transactionRoot() const { return m_transactionsRoot.getCContent(); }
     FH32 const& uncleHash() const { return m_sha3Uncles.getCContent(); }
     FH32 const& hash() const { return m_hash.getCContent(); }
@@ -29,6 +31,7 @@ struct BlockHeader : GCP_SPointerBase
     FH20 const& author() const { return m_author.getCContent(); }
     VALUE const& difficulty() const { return m_difficulty.getCContent(); }
     VALUE const& gasLimit() const { return m_gasLimit.getCContent(); }
+    VALUE const& gasUsed() const { return m_gasUsed.getCContent(); }
     BYTES const& extraData() const { return m_extraData.getCContent(); }
     FH8 const& nonce() const { return m_nonce.getCContent(); }
     FH32 const& mixHash() const { return m_mixHash.getCContent(); }
@@ -37,8 +40,9 @@ struct BlockHeader : GCP_SPointerBase
     void setTimestamp(VALUE const& _value) { m_timestamp = spVALUE(new VALUE(_value.asU256())); }
     void setTransactionHash(FH32 const& _hash) { m_transactionsRoot = spFH32(new FH32(_hash)); }
     void setTrReceiptsHash(FH32 const& _hash) { m_receiptsRoot = spFH32(new FH32(_hash)); }
-    void setStateHash(FH32 const& _hash) { m_stateRoot = spFH32(new FH32(_hash)); }
+    void setStateRoot(FH32 const& _hash) { m_stateRoot = spFH32(new FH32(_hash)); }
     void setNumber(VALUE const& _number) { m_number = spVALUE(new VALUE(_number)); }
+    void setExtraData(BYTES const& _extraData) { m_extraData = spBYTES(new BYTES(_extraData)); }
     void setParentHash(FH32 const& _hash) { m_parentHash = spFH32(new FH32(_hash)); }
     void setUnclesHash(FH32 const& _hash) { m_sha3Uncles = spFH32(new FH32(_hash)); }
     void setHeaderHash(FH32 const& _hash) { m_hash = spFH32(new FH32(_hash)); }

@@ -41,7 +41,9 @@ void Transaction::fromDataObject(DataObject const& _data)
         }
         else
         {
-            m_v = spVALUE(new VALUE(_data.atKey("v"), dev::u256("0xff")));
+            m_v = spVALUE(new VALUE(_data.atKey("v")));
+            if (m_v.getCContent() > dev::u256("0xff"))
+                throw test::UpwardsException("Incorrect transaction `v` value: " + m_v.getCContent().asString());
             m_r = spVALUE(new VALUE(_data.atKey("r")));
             m_s = spVALUE(new VALUE(_data.atKey("s")));
         }
@@ -131,7 +133,7 @@ void Transaction::buildVRS(VALUE const& _secret)
     DataObject v = DataObject(dev::toCompactHexPrefixed(dev::u256(sigStruct.v + 27)));
     DataObject r = DataObject(dev::toCompactHexPrefixed(dev::u256(sigStruct.r)));
     DataObject s = DataObject(dev::toCompactHexPrefixed(dev::u256(sigStruct.s)));
-    m_v = spVALUE(new VALUE(v, dev::u256("0xff")));
+    m_v = spVALUE(new VALUE(v));
     m_r = spVALUE(new VALUE(r));
     m_s = spVALUE(new VALUE(s));
 }

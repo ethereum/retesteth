@@ -12,7 +12,7 @@ BlockchainTestEnv::BlockchainTestEnv(DataObject const& _data)
     {
         m_currentCoinbase = spFH20(new FH20(_data.atKey("coinbase")));
         m_currentDifficulty = spVALUE(new VALUE(_data.atKey("difficulty")));
-        m_currentGasLimit = spVALUE(new VALUE(_data.atKey("gasLimit"), dev::u256("0x7fffffffffffffff")));
+        m_currentGasLimit = spVALUE(new VALUE(_data.atKey("gasLimit")));
         m_currentNumber = spVALUE(new VALUE(_data.atKey("number")));
         m_currentTimestamp = spVALUE(new VALUE(_data.atKey("timestamp")));
         m_previousHash = spFH32(new FH32(_data.atKey("parentHash")));

@@ -31,7 +31,7 @@ FH::FH(DataObject const& _data, size_t _scale) : m_scale(_scale)
 {
     string const scale = to_string(_scale);
     if (!validateHash(_data.asString(), m_scale))
-        ETH_ERROR_MESSAGE("Key `" + _data.getKey() + "` is not hash" + scale + " `" + _data.asString() + "`");
+        throw test::UpwardsException("Key `" + _data.getKey() + "` is not hash" + scale + " `" + _data.asString() + "`");
     m_data = _data.asString();
     strToLower(m_data);
 }
