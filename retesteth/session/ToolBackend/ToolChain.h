@@ -20,9 +20,13 @@ public:
     }
 
     std::vector<EthereumBlockState> const& blocks() const { return m_blocks; }
+    SealEngine engine() const { return m_engine; }
+    FORK const& fork() const { return m_fork.getCContent(); }
+    fs::path const& toolPath() const { return m_toolPath; }
 
     void mineBlock(EthereumBlockState const& _pendingBlock);
     void rewindToBlock(size_t _number);
+    void insertBlock(EthereumBlockState const& _block) { m_blocks.push_back(_block); }
 
 private:
     ToolChain(){};

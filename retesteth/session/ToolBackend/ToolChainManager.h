@@ -32,9 +32,12 @@ private:
     ToolChainManager() {}
     ToolChain& currentChainUnsafe() { return m_chains.at(m_currentChain).getContent(); }
     EthGetBlockBy internalConstructResponseBlock(EthereumBlock const& _block) const;
+    void reorganizeChainForParent(FH32 const& _parentHash);
+    void reorganizeChainForTotalDifficulty();
 
     std::map<size_t, spToolChain> m_chains;
     size_t m_currentChain;
+    size_t m_maxChains;
     spEthereumBlockState m_pendingBlock;
 };
 

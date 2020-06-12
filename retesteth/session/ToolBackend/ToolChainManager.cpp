@@ -8,6 +8,7 @@ namespace toolimpl
 ToolChainManager::ToolChainManager(SetChainParamsArgs const& _config, fs::path const& _toolPath)
 {
     m_currentChain = 0;
+    m_maxChains = 0;
     EthereumBlockState genesis(_config.genesis(), _config.state(), FH32::zero());
     m_chains[m_currentChain] = spToolChain(new ToolChain(genesis, _config.sealEngine(), _config.fork(), _toolPath));
     m_pendingBlock =
@@ -64,6 +65,10 @@ FH32 ToolChainManager::importRawBlock(BYTES const& _rlp)
     dev::RLP rlp(decodeRLP, dev::RLP::VeryStrict);
 
     BlockHeader header(rlp[0]);
+
+    // Check that we know the parent and prepare head to be the parentHeader of _rlp block
+    reorganizeChainForParent(header.parentHash());
+
     m_pendingBlock = spEthereumBlockState(new EthereumBlockState(header, lastBlock().state(), FH32::zero()));
     for (auto const& trRLP : rlp[1].toList())
     {
@@ -78,7 +83,56 @@ FH32 ToolChainManager::importRawBlock(BYTES const& _rlp)
     m_pendingBlock.getContent().recalculateHeaderHash();
     ETH_TEST_MESSAGE(header.asDataObject().asJson());
     mineBlocks(1);
-    return lastBlock().header().hash();
+    FH32 const& importedHash = lastBlock().header().hash();
+
+    reorganizeChainForTotalDifficulty();
+    return importedHash;
+}
+
+void ToolChainManager::reorganizeChainForParent(FH32 const& _parentHash)
+{
+    for (auto const& chain : m_chains)
+    {
+        auto const& rchain = chain.second.getCContent();
+        auto const& blocks = chain.second.getCContent().blocks();
+        for (size_t i = 0; i < blocks.size(); i++)
+        {
+            if (blocks.at(i).header().hash() == _parentHash)
+            {
+                if (i + 1 == blocks.size())  // last known block
+                {                            // stay on this chain
+                    m_currentChain = chain.first;
+                    return;
+                }
+                else
+                {
+                    // clone existing chain up to this block
+                    m_chains[++m_maxChains] =
+                        spToolChain(new ToolChain(blocks.at(0), rchain.engine(), rchain.fork(), rchain.toolPath()));
+                    m_currentChain = m_maxChains;
+                    for (size_t j = 1; j <= i; j++)
+                        m_chains[m_currentChain].getContent().insertBlock(blocks.at(j));
+                    return;
+                }
+            }
+        }
+    }
+    throw test::UpwardsException(string("ToolChainManager:: unknown parent hash ") + _parentHash.asString());
+}
+
+void ToolChainManager::reorganizeChainForTotalDifficulty()
+{
+    VALUE maxTotalDifficulty(0);
+    for (auto const& chain : m_chains)
+    {
+        auto const& blocks = chain.second.getCContent().blocks();
+        auto const& lastBlock = blocks.at(blocks.size() - 1);
+        if (lastBlock.totalDifficulty() > maxTotalDifficulty)
+        {
+            maxTotalDifficulty = lastBlock.totalDifficulty();
+            m_currentChain = chain.first;
+        }
+    }
 }
 
 

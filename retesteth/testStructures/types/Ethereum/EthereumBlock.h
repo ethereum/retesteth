@@ -45,6 +45,9 @@ struct EthereumBlockState : EthereumBlock
         m_header = spBlockHeader(new BlockHeader(_header.asDataObject()));
     }
 
+    void addTotalDifficulty(VALUE const& _totalDifficulty) { m_totalDifficulty = spVALUE(new VALUE(_totalDifficulty)); }
+    VALUE const& totalDifficulty() const { return m_totalDifficulty.getCContent(); }
+
     State const& state() const { return m_state; }
     FH32 const& logHash() const { return m_logHash; }
 
@@ -52,6 +55,7 @@ private:
     /// EthereumBlockState(){}
     State m_state;
     FH32 m_logHash;
+    spVALUE m_totalDifficulty;
     std::map<FH32, spFH32> m_transactionsLog;
 };
 

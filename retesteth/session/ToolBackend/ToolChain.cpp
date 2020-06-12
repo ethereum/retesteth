@@ -76,6 +76,7 @@ ToolChain::ToolChain(EthereumBlockState const& _genesis, SealEngine _sealEngine,
     EthereumBlockState genesisFixed(_genesis.header().asDataObject(), _genesis.state(), FH32::zero());
     genesisFixed.headerUnsafe().setStateHash(res.stateRoot());
     genesisFixed.headerUnsafe().recalculateHash();
+    genesisFixed.addTotalDifficulty(genesisFixed.header().difficulty());
     m_blocks.push_back(genesisFixed);
 }
 
@@ -118,6 +119,12 @@ void ToolChain::mineBlock(EthereumBlockState const& _pendingBlock)
                           "\n"
                           "toolTransactionRoot: " +
                           res.txRoot().asString());
+
+    VALUE totalDifficulty(0);
+    if (m_blocks.size() > 0)
+        totalDifficulty = m_blocks.at(m_blocks.size() - 1).totalDifficulty();
+
+    pendingFixed.addTotalDifficulty(totalDifficulty + pendingFixed.header().difficulty());
     m_blocks.push_back(pendingFixed);
 }
 

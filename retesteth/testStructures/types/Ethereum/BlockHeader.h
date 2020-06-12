@@ -32,6 +32,7 @@ struct BlockHeader : GCP_SPointerBase
     BYTES const& extraData() const { return m_extraData.getCContent(); }
     FH8 const& nonce() const { return m_nonce.getCContent(); }
     FH32 const& mixHash() const { return m_mixHash.getCContent(); }
+    FH32 const& parentHash() const { return m_parentHash.getCContent(); }
 
     void setTimestamp(VALUE const& _value) { m_timestamp = spVALUE(new VALUE(_value.asU256())); }
     void setTransactionHash(FH32 const& _hash) { m_transactionsRoot = spFH32(new FH32(_hash)); }
