@@ -6,7 +6,6 @@
 #include <retesteth/testStructures/Common.h>
 #include <retesteth/testStructures/PrepareChainParams.h>
 #include <retesteth/testSuites/Common.h>
-
 namespace test
 {
 
@@ -101,6 +100,8 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
         ind = 0;
         for (Transaction const& tr : tblock.transactions())
         {
+            if (ExitHandler::receivedExitSignal())
+                return;
             EthGetBlockByTransaction const& clientTr = latestBlock.transactions().at(ind++);
             ETH_ERROR_REQUIRE_MESSAGE(clientTr.blockHash() == tblock.header().hash(),
                 "Error checking remote transaction, remote tr `blockHash` is different to one described in test block! "

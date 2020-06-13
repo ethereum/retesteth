@@ -1,4 +1,5 @@
 #include <dataObject/DataObject.h>
+#include <sstream>
 using namespace dataobject;
 
 /// Default dataobject is null

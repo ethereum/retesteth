@@ -1,4 +1,5 @@
 #include "StateTestTransactionBase.h"
+#include <retesteth/ExitHandler.h>
 
 using namespace dataobject;
 using namespace test::teststruct;
@@ -35,6 +36,8 @@ std::vector<TransactionInGeneralSection> StateTestTransactionBase::buildTransact
         {
             for (size_t vIND = 0; vIND < m_value.size(); vIND++)
             {
+                if (ExitHandler::receivedExitSignal())
+                    return out;
                 DataObject trData;
                 trData["data"] = m_data.at(dIND).asString();
                 trData["gasLimit"] = m_gasLimit.at(gIND).asString();

@@ -1,4 +1,5 @@
 #include "ToolChainManager.h"
+#include <libdevcore/CommonIO.h>
 #include <retesteth/Options.h>
 #include <retesteth/dataObject/ConvertFile.h>
 #include <retesteth/testStructures/Common.h>

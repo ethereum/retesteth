@@ -1,6 +1,7 @@
 #include "BlockHeader.h"
 #include "../../basetypes.h"
 #include <libdevcore/Address.h>
+#include <libdevcore/CommonIO.h>
 #include <libdevcore/RLP.h>
 #include <libdevcore/SHA3.h>
 #include <retesteth/TestHelper.h>

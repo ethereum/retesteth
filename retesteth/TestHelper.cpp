@@ -10,6 +10,7 @@
 #include <csignal>
 #include <mutex>
 
+#include <libdevcore/CommonIO.h>
 #include <retesteth/Options.h>
 #include <retesteth/TestHelper.h>
 #include <retesteth/TestOutputHelper.h>

@@ -1,7 +1,8 @@
 #pragma once
 #include <dataObject/Exception.h>
-#include <libdevcore/CommonIO.h>
 #include <memory>
+#include <set>
+#include <variant>
 #include <vector>
 
 namespace dataobject
@@ -214,11 +215,13 @@ private:
     std::vector<DataObject> m_subObjects;
     DataType m_type;
     std::string m_strKey;
-    std::string m_strVal;
     bool m_allowOverwrite = false;  // allow overwrite elements
     bool m_autosort = false;
+
+    std::string m_strVal;
     bool m_boolVal;
     int m_intVal;
+
     void (*m_verifier)(DataObject&) = 0;
 };
 

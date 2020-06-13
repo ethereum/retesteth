@@ -3,6 +3,7 @@
 #include <retesteth/TestSuite.h>
 #include <retesteth/testStructures/types/BlockchainTests/BlockchainTestFiller.h>
 #include <retesteth/testSuites/Common.h>
+#include <retesteth/ExitHandler.h>
 
 using namespace test::blockchainfiller;
 namespace test
@@ -15,6 +16,8 @@ DataObject FillTest(BlockchainTestInFiller const& _test, TestSuite::TestSuiteOpt
         ETH_STDOUT_MESSAGE("Filling " + _test.testName());
 
     DataObject result;
+    if (ExitHandler::receivedExitSignal())
+        return result;
     SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
     for (FORK const& net : _test.getAllForksFromExpectSections())
     {
@@ -46,6 +49,8 @@ DataObject FillTest(BlockchainTestInFiller const& _test, TestSuite::TestSuiteOpt
                 size_t blocks = 0;
                 for (auto const& block : _test.blocks())
                 {
+                    if (ExitHandler::receivedExitSignal())
+                        return filledTest;
                     // Debug
                     if (Options::get().blockLimit != 0 && blocks++ >= Options::get().blockLimit)
                         break;
