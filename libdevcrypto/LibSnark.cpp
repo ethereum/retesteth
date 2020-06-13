@@ -24,7 +24,6 @@
 #include <common/profiling.hpp>
 
 #include <libdevcore/Exceptions.h>
-#include <libdevcore/Log.h>
 
 using namespace std;
 using namespace dev;

@@ -25,7 +25,6 @@
 #include <retesteth/TestOutputHelper.h>
 #include <retesteth/Options.h>
 #include <retesteth/ExitHandler.h>
-#include <libdevcore/Log.h>
 
 using namespace std;
 using namespace dev;

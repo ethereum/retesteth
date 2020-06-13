@@ -22,7 +22,6 @@
 #include <iomanip>
 
 #include <dataObject/ConvertFile.h>
-#include <libdevcore/Log.h>
 #include <retesteth/Options.h>
 #include <retesteth/TestHelper.h>
 #include <boost/algorithm/string.hpp>
@@ -252,8 +251,6 @@ Options::Options(int argc, const char** argv)
                 std::cerr.rdbuf(strCout.rdbuf());
                 break;
             }
-            if (logVerbosity > (size_t)g_logVerbosity)
-                g_logVerbosity = logVerbosity;
         }
         else if (arg == "--datadir")
         {
@@ -397,10 +394,6 @@ Options::Options(int argc, const char** argv)
             BOOST_THROW_EXCEPTION(
                 InvalidOption("--seed <uint> could be used only with --createRandomTest \n"));
     }
-
-    // Default option
-    if (logVerbosity == 1)
-        g_logVerbosity = -1;  // disable cnote but leave cerr and cout
 }
 
 Options const& Options::get(int argc, const char** argv)
