@@ -2,7 +2,6 @@
 #include <dataObject/Exception.h>
 #include <memory>
 #include <set>
-#include <variant>
 #include <vector>
 
 namespace dataobject
