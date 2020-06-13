@@ -209,13 +209,6 @@ DataObject DoTests(DataObject const& _input, TestSuite::TestSuiteOptions& _opt)
         ETH_LOG("Parse test done", 5);
         for (BlockchainTestInFilled const& bcTest : test.tests())
         {
-            /*
-            if (Options::getDynamicOptions().getCurrentConfig().cfgFile().name() == "t8ntool")
-            {
-                if (bcTest.testName().find("BlockWrongStoreClears") != std::string::npos)
-                    ETH_WARNING("Skipping BlockWrongStoreClears test as it is unsupported by tool");
-            }*/
-
             // Select test by name if --singletest and --singlenet is set
             if (Options::get().singleTest)
             {

@@ -11,6 +11,9 @@ namespace test
 DataObject FillTest(BlockchainTestInFiller const& _test, TestSuite::TestSuiteOptions const& _opt)
 {
     (void)_opt;
+    if (Options::get().logVerbosity > 1)
+        ETH_STDOUT_MESSAGE("Filling " + _test.testName());
+
     DataObject result;
     SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
     for (FORK const& net : _test.getAllForksFromExpectSections())
