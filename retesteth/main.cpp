@@ -3,15 +3,9 @@
 #include <AllTestNames.h>
 #include <retesteth/ExitHandler.h>
 #include <retesteth/Options.h>
-#include <retesteth/TestHelper.h>
-#include <retesteth/TestOutputHelper.h>
-#include <retesteth/session/Session.h>
 #include <retesteth/testSuites/StateTests.h>
 #include <retesteth/testSuites/blockchain/BlockchainTests.h>
 #include <boost/test/included/unit_test.hpp>
-#include <clocale>
-#include <cstdlib>
-#include <iostream>
 #include <thread>
 
 using namespace boost::unit_test;

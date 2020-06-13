@@ -128,7 +128,7 @@ void TestBlockchainManager::reorgChains(BlockchainTestFillerBlock const& _block)
         // 0 is genesis. Check the block order:
         ETH_ERROR_REQUIRE_MESSAGE(newBlockNumber == blocksInChain + 1,
             "Require a `new blocknumber` == `previous blocknumber` + 1 has (" + newBlockNumber.asDecString() + " vs " +
-                dev::toString(blocksInChain + 1) + ")");
+                fto_string(blocksInChain + 1) + ")");
 
         VALUE actualNumberOnTheClient(m_session.eth_blockNumber());
         if (newBlockNumber != actualNumberOnTheClient + 1)

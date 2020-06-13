@@ -5,26 +5,6 @@
 using namespace std;
 namespace test
 {
-// inline function, because _actualExistance could be asked via remote RPC request
-/*CompareResult checkExistance(scheme_expectAccount const& _expectAccount, bool _actualExistance)
-{
-    // if should not exist but actually exists
-    if (_expectAccount.shouldNotExist() && _actualExistance)
-    {
-        ETH_MARK_ERROR(
-            "Compare States: '" + _expectAccount.address() + "' address not expected to exist!");
-        return CompareResult::AccountShouldNotExist;
-    }
-    // if expected to exist but actually not exists
-    if (!_expectAccount.shouldNotExist() && !_actualExistance)
-    {
-        ETH_MARK_ERROR(
-            "Compare States: Missing expected address: '" + _expectAccount.address() + "'");
-        return CompareResult::MissingExpectedAccount;
-    }
-    return CompareResult::Success;
-}*/
-
 CompareResult compareAccounts(AccountBase const& _expectAccount, Account const& _remoteAccount);
 
 Account remoteGetAccount(SessionInterface& _session, VALUE const& _bNumber, VALUE const& _trIndex, FH20 const& _account)
@@ -37,10 +17,10 @@ Account remoteGetAccount(SessionInterface& _session, VALUE const& _bNumber, VALU
     FH32 beginHash = FH32::zero();
     Storage tmpStorage = Storage(DataObject(DataType::Object));
     size_t safety = 100;
-    while (hasStorage && safety--)
+    while (hasStorage && --safety)
     {
-        // Read storage from remote account by 10 records at a time
-        DebugStorageRangeAt res(_session.debug_storageRangeAt(_bNumber, _trIndex, _account, beginHash, 10));
+        // Read storage from remote account by 20 records at a time
+        DebugStorageRangeAt res(_session.debug_storageRangeAt(_bNumber, _trIndex, _account, beginHash, 20));
         if (res.nextKey().isZero())
             hasStorage = false;
         else
@@ -48,7 +28,7 @@ Account remoteGetAccount(SessionInterface& _session, VALUE const& _bNumber, VALU
         tmpStorage.merge(res.storage());
     }
     if (safety == 0)
-        ETH_WARNING_TEST("getRemoteAccount while exceed safety switch!", 6);
+        ETH_ERROR_MESSAGE("remoteGetAccount::DebugStorageRangeAt seems like an endless loop!");
     return Account(_account, balance, nonce, code, tmpStorage);
 }
 

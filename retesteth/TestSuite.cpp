@@ -366,6 +366,18 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
     auto thisPart = [this, &files, &_testFolder]() {
         auto& testOutput = test::TestOutputHelper::get();
         vector<thread> threadVector;
+
+        // If debugging, already there is an open instance of a client.
+        // Only one thread allowed to connect to it;
+        size_t maxAllowedThreads = Options::get().threadCount;
+        ClientConfig const& currConfig = Options::get().getDynamicOptions().getCurrentConfig();
+        ClientConfgSocketType socType = currConfig.cfgFile().socketType();
+        if (socType == ClientConfgSocketType::IPCDebug)
+            maxAllowedThreads = 1;
+        // If connecting to TCP sockets. Max threads are limited with tcp ports provided
+        if (socType == ClientConfgSocketType::TCP)
+            maxAllowedThreads = min(maxAllowedThreads, currConfig.cfgFile().socketAdresses().size());
+
         testOutput.initTest(files.size());
         for (auto const& file : files)
         {
@@ -375,19 +387,6 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
                 break;
             }
             testOutput.showProgress();
-
-            // If debugging, already there is an open instance of a client.
-            // Only one thread allowed to connect to it;
-            size_t maxAllowedThreads = Options::get().threadCount;
-            ClientConfig const& currConfig = Options::get().getDynamicOptions().getCurrentConfig();
-            ClientConfgSocketType socType = currConfig.cfgFile().socketType();
-            if (socType == ClientConfgSocketType::IPCDebug)
-                maxAllowedThreads = 1;
-            // If connecting to TCP sockets. Max threads are limited with tcp ports provided
-            if (socType == ClientConfgSocketType::TCP)
-                maxAllowedThreads =
-                    min(maxAllowedThreads, currConfig.cfgFile().socketAdresses().size());
-
             if (threadVector.size() == maxAllowedThreads)
                 joinThreads(threadVector, false);
             thread testThread(&TestSuite::executeTest, this, _testFolder, file);

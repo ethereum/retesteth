@@ -1,11 +1,13 @@
-#include <chrono>
 #include <cstdio>
 #include <thread>
 
 #include <dataObject/ConvertFile.h>
 #include <retesteth/EthChecks.h>
+#include <retesteth/TestHelper.h>
 #include <retesteth/session/RPCImpl.h>
 #include <retesteth/testStructures/Common.h>
+
+using namespace test;
 
 DataObject RPCImpl::web3_clientVersion()
 {
@@ -21,7 +23,7 @@ FH32 RPCImpl::eth_sendRawTransaction(BYTES const& _rlp)
     return FH32(result);
 }
 
-int RPCImpl::eth_getTransactionCount(FH20 const& _address, VALUE const& _blockNumber)
+size_t RPCImpl::eth_getTransactionCount(FH20 const& _address, VALUE const& _blockNumber)
 {
     DataObject const response =
         rpcCall("eth_getTransactionCount", {quote(_address.asString()), quote(_blockNumber.asString())});
@@ -66,31 +68,31 @@ VALUE RPCImpl::eth_getBalance(FH20 const& _address, VALUE const& _blockNumber)
 
 // Debug
 DebugAccountRange RPCImpl::debug_accountRange(
-    VALUE const& _blockNumber, VALUE const& _txIndex, FH32 const& _address, int _maxResults)
+    VALUE const& _blockNumber, VALUE const& _txIndex, FH32 const& _address, size_t _maxResults)
 {
     return rpcCall("debug_accountRange",
-        {quote(_blockNumber.asDecString()), _txIndex.asDecString(), quote(_address.asString()), to_string(_maxResults)});
+        {quote(_blockNumber.asDecString()), _txIndex.asDecString(), quote(_address.asString()), fto_string(_maxResults)});
 }
 
 DebugAccountRange RPCImpl::debug_accountRange(
-    FH32 const& _blockHash, VALUE const& _txIndex, FH32 const& _address, int _maxResults)
+    FH32 const& _blockHash, VALUE const& _txIndex, FH32 const& _address, size_t _maxResults)
 {
     return rpcCall("debug_accountRange",
-        {quote(_blockHash.asString()), _txIndex.asDecString(), quote(_address.asString()), to_string(_maxResults)});
+        {quote(_blockHash.asString()), _txIndex.asDecString(), quote(_address.asString()), fto_string(_maxResults)});
 }
 
 DebugStorageRangeAt RPCImpl::debug_storageRangeAt(
     VALUE const& _blockNumber, VALUE const& _txIndex, FH20 const& _address, FH32 const& _begin, int _maxResults)
 {
     return rpcCall("debug_storageRangeAt", {quote(_blockNumber.asDecString()), _txIndex.asDecString(),
-                                               quote(_address.asString()), quote(_begin.asString()), to_string(_maxResults)});
+                                               quote(_address.asString()), quote(_begin.asString()), fto_string(_maxResults)});
 }
 
 DebugStorageRangeAt RPCImpl::debug_storageRangeAt(
     FH32 const& _blockHash, VALUE const& _txIndex, FH20 const& _address, FH32 const& _begin, int _maxResults)
 {
     return rpcCall("debug_storageRangeAt", {quote(_blockHash.asString()), _txIndex.asDecString(), quote(_address.asString()),
-                                               quote(_begin.asString()), to_string(_maxResults)});
+                                               quote(_begin.asString()), fto_string(_maxResults)});
 }
 
 DebugTraceTransaction RPCImpl::debug_traceTransaction(FH32 const& _trHash)

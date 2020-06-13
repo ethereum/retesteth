@@ -1,6 +1,7 @@
 #include "BlockHeader.h"
 #include "../../basetypes.h"
 #include <libdevcore/Address.h>
+#include <libdevcore/RLP.h>
 #include <libdevcore/SHA3.h>
 #include <retesteth/TestHelper.h>
 #include <retesteth/testStructures/Common.h>
@@ -11,7 +12,7 @@ namespace test
 {
 namespace teststruct
 {
-BlockHeader::BlockHeader(DataObject const& _data)
+void BlockHeader::fromData(DataObject const& _data)
 {
     try
     {
@@ -90,6 +91,41 @@ BlockHeader::BlockHeader(DataObject const& _data)
     {
         throw test::UpwardsException(string("Blockheader parse error: ") + _ex.what());
     }
+}
+
+BlockHeader::BlockHeader(DataObject const& _data)
+{
+    fromData(_data);
+}
+
+BlockHeader::BlockHeader(dev::RLP const& _rlp)
+{
+    DataObject init;
+    // 0 - parentHash           // 8 - number
+    // 1 - uncleHash            // 9 - gasLimit
+    // 2 - coinbase             // 10 - gasUsed
+    // 3 - stateRoot            // 11 - timestamp
+    // 4 - transactionTrie      // 12 - extraData
+    // 5 - receiptTrie          // 13 - mixHash
+    // 6 - bloom                // 14 - nonce
+    // 7 - difficulty
+    size_t i = 0;
+    init["parentHash"] = rlpToString(_rlp[i++]);
+    init["uncleHash"] = rlpToString(_rlp[i++]);
+    init["coinbase"] = rlpToString(_rlp[i++]);
+    init["stateRoot"] = rlpToString(_rlp[i++]);
+    init["transactionsTrie"] = rlpToString(_rlp[i++]);
+    init["receiptTrie"] = rlpToString(_rlp[i++]);
+    init["bloom"] = rlpToString(_rlp[i++]);
+    init["difficulty"] = rlpToString(_rlp[i++]);
+    init["number"] = rlpToString(_rlp[i++]);
+    init["gasLimit"] = rlpToString(_rlp[i++]);
+    init["gasUsed"] = rlpToString(_rlp[i++]);
+    init["timestamp"] = rlpToString(_rlp[i++]);
+    init["extraData"] = rlpToString(_rlp[i++], 0);
+    init["mixHash"] = rlpToString(_rlp[i++]);
+    init["nonce"] = rlpToString(_rlp[i++]);
+    fromData(init);
 }
 
 const DataObject BlockHeader::asDataObject() const

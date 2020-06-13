@@ -19,7 +19,9 @@ BlockchainTestFillerEnv::BlockchainTestFillerEnv(DataObject const& _data, SealEn
         m_currentCoinbase = spFH20(new FH20(coinbase));
 
         m_currentDifficulty = spVALUE(new VALUE(tmpData.atKey("difficulty")));
-        m_currentGasLimit = spVALUE(new VALUE(tmpData.atKey("gasLimit"), dev::u256("0x7fffffffffffffff")));
+        m_currentGasLimit = spVALUE(new VALUE(tmpData.atKey("gasLimit")));
+        if (m_currentGasLimit.getCContent() > dev::u256("0x7fffffffffffffff"))
+            throw test::UpwardsException("currentGasLimit must be < 0x7fffffffffffffff");
         m_currentNumber = spVALUE(new VALUE(tmpData.atKey("number")));
         m_currentTimestamp = spVALUE(new VALUE(tmpData.atKey("timestamp")));
         m_previousHash = spFH32(new FH32(_data.atKey("parentHash")));

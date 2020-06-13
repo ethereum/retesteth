@@ -1,4 +1,3 @@
-#include <chrono>
 #include <cstdio>
 #include <thread>
 
@@ -7,14 +6,19 @@
 #include <retesteth/session/ToolImpl.h>
 #include <retesteth/testStructures/types/BlockchainTests/Filler/BlockchainTestFillerEnv.h>
 
+#include "ToolBackend/ToolImplHelper.h"
+
 using namespace test;
 using namespace toolimpl;
 
 DataObject ToolImpl::web3_clientVersion()
 {
     rpcCall("", {});
-    ETH_FAIL_MESSAGE("\nRequest: web3_clientVersion");
-    return DataObject();
+    ETH_TEST_MESSAGE("\nRequest: web3_clientVersion");
+    string const cmd = m_toolPath.string() + " -v";
+    DataObject res(test::executeCmd(cmd));
+    ETH_TEST_MESSAGE("Response: web3_clientVersion " + res.asString());
+    return res;
 }
 
 // ETH Methods
@@ -29,21 +33,13 @@ FH32 ToolImpl::eth_sendRawTransaction(BYTES const& _rlp)
     return trHash;
 }
 
-int ToolImpl::eth_getTransactionCount(FH20 const& _address, VALUE const& _blockNumber)
+size_t ToolImpl::eth_getTransactionCount(FH20 const& _address, VALUE const& _blockNumber)
 {
     rpcCall("", {});
-    ETH_TEST_MESSAGE("\nRequest: eth_getTransactionCount b:" + _blockNumber.asString() + " a:" + _address.asString());
-    /*
-    ToolBlock const& block = getBlockByHashOrNumber(_blockNumber);
-    if (block.getPostState().count(_address) && block.getPostState().atKey(_address).count("nonce"))
-    {
-        string const& nonce = block.getPostState().atKey(_address).atKey("nonce").asString();
-        ETH_TEST_MESSAGE("Response: " + nonce);
-        return test::hexOrDecStringToInt(nonce);
-    }
-    */
-    ETH_TEST_MESSAGE("0");
-    return 0;
+    ETH_TEST_MESSAGE("\nRequest: eth_getTransactionCount " + _blockNumber.asString() + " " + _address.asString());
+    VALUE const& nonce = blockchain().blockByNumber(_blockNumber).state().getAccount(_address).nonce();
+    ETH_TEST_MESSAGE("Response: eth_getTransactionCount " + nonce.asDecString());
+    return (size_t)nonce.asU256();
 }
 
 VALUE ToolImpl::eth_blockNumber()
@@ -59,106 +55,66 @@ VALUE ToolImpl::eth_blockNumber()
 EthGetBlockBy ToolImpl::eth_getBlockByHash(FH32 const& _hash, Request _fullObjects)
 {
     rpcCall("", {});
-    ETH_TEST_MESSAGE("\nRequest: eth_getBlockByHash `" + _hash.asString() + "`");
-    (void)_fullObjects;  // always full objects
-    /*
-    for (auto const& chain : m_blockchainMap)
-    {
-        ToolChain const& tch = chain.second;
-        for (auto const& bl : tch)
-        {
-            if (bl.getRPCResponse().getBlockHeader2().hash() == _hash)
-            {
-                ETH_TEST_MESSAGE(
-                    "Response: eth_getBlockByHash " + bl.getRPCResponse().getData().asJson());
-                return bl.getRPCResponse();
-            }
-        }
-    }
-
-    ETH_TEST_MESSAGE("Response: eth_getBlockByHash (hash not found: " + _hash + ")");*/
-    return EthGetBlockBy(DataObject());
+    (void)_fullObjects;
+    ETH_TEST_MESSAGE("\nRequest: eth_getBlockByHash `" + _hash.asString());
+    DataObject res = constructEthGetBlockBy(blockchain().blockByHash(_hash));
+    ETH_LOG("Response: eth_getBlockByHash `" + res.asJson(), 7);
+    return EthGetBlockBy(res);
 }
 
 EthGetBlockBy ToolImpl::eth_getBlockByNumber(VALUE const& _blockNumber, Request _fullObjects)
 {
     rpcCall("", {});
     (void)_fullObjects;
-    ETH_TEST_MESSAGE("\nRequest: eth_getBlockByNumber " + _blockNumber.asDecString());
-    return m_toolChainManager.getContent().getBlockByNumber(_blockNumber);
+    ETH_TEST_MESSAGE("\nRequest: eth_getBlockByNumber `" + _blockNumber.asDecString());
+    DataObject res = constructEthGetBlockBy(blockchain().blockByNumber(_blockNumber));
+    ETH_LOG("Response: eth_getBlockByNumber `" + res.asJson(), 7);
+    return EthGetBlockBy(res);
 }
 
 BYTES ToolImpl::eth_getCode(FH20 const& _address, VALUE const& _blockNumber)
 {
     rpcCall("", {});
     ETH_TEST_MESSAGE("\nRequest: eth_getCode " + _blockNumber.asString() + " " + _address.asString());
-
-    /*
-    ToolBlock const& block = getBlockByHashOrNumber(_blockNumber);
-    if (block.getPostState().count(_address) && block.getPostState().atKey(_address).count("code"))
-    {
-        string const& code = block.getPostState().atKey(_address).atKey("code").asString();
-        ETH_TEST_MESSAGE(code);
-        return code;
-    }
-    */
-    ETH_TEST_MESSAGE("0x");
-    return BYTES(DataObject("0x"));
+    BYTES const& code = blockchain().blockByNumber(_blockNumber).state().getAccount(_address).code();
+    ETH_TEST_MESSAGE("Response: eth_getCode " + code.asString());
+    return code;
 }
 
 VALUE ToolImpl::eth_getBalance(FH20 const& _address, VALUE const& _blockNumber)
 {
     rpcCall("", {});
     ETH_TEST_MESSAGE("\nRequest: eth_getBalance " + _blockNumber.asString() + " " + _address.asString());
-    /*
-        ToolBlock const& block = getBlockByHashOrNumber(_blockNumber);
-        if (block.getPostState().count(_address) &&
-            block.getPostState().atKey(_address).count("balance"))
-        {
-            string const& balance = block.getPostState().atKey(_address).atKey("balance").asString();
-            ETH_TEST_MESSAGE(balance);
-            return balance;
-        }
-        */
-    ETH_TEST_MESSAGE("0x");
-    return VALUE(DataObject("0x"));
+    VALUE const& balance = blockchain().blockByNumber(_blockNumber).state().getAccount(_address).balance();
+    ETH_TEST_MESSAGE("Response: eth_getBalance " + balance.asDecString());
+    return balance;
 }
 
 // Debug
 DebugAccountRange ToolImpl::debug_accountRange(
-    VALUE const& _blockNumber, VALUE const& _txIndex, FH32 const& _address, int _maxResults)
+    VALUE const& _blockNumber, VALUE const& _txIndex, FH32 const& _addressHash, size_t _maxResults)
 {
     rpcCall("", {});
-    ETH_TEST_MESSAGE("\nRequest: debug_accountRange " + _blockNumber.asString());
+    ETH_TEST_MESSAGE("\nRequest: debug_accountRange `" + _blockNumber.asDecString() + " " + _addressHash.asString());
 
     (void)_txIndex;
-    (void)_address;
-    (void)_maxResults;
-    /*
-        int iAcc = 0;
-        DataObject constructResponse;
-        ToolBlock const& block = getBlockByHashOrNumber(_blockHashOrNumber);
-        for (auto const& el : block.getPostState().getSubObjects())
-        {
-            constructResponse["addressMap"].addSubObject(toString(iAcc++), DataObject(el.getKey()));
-            if (iAcc == _maxResults)
-                break;
-        }
-        constructResponse["nextKey"] =
-            "0x0000000000000000000000000000000000000000000000000000000000000000";
-        ETH_TEST_MESSAGE(constructResponse.asJson());
-        return constructResponse;*/
-    return DebugAccountRange(DataObject());
+    (void)_addressHash;
+    DataObject constructResponse = constructAccountRange(blockchain().blockByNumber(_blockNumber), _addressHash, _maxResults);
+    ETH_TEST_MESSAGE("Response: debug_accountRange " + constructResponse.asJson());
+    return DebugAccountRange(constructResponse);
 }
 
 DebugAccountRange ToolImpl::debug_accountRange(
-    FH32 const& _blockHash, VALUE const& _txIndex, FH32 const& _address, int _maxResults)
+    FH32 const& _blockHash, VALUE const& _txIndex, FH32 const& _addressHash, size_t _maxResults)
 {
-    (void)_blockHash;
+    rpcCall("", {});
+    ETH_TEST_MESSAGE("\nRequest: debug_accountRange " + _blockHash.asString() + " " + _addressHash.asString());
+
     (void)_txIndex;
-    (void)_address;
-    (void)_maxResults;
-    return DebugAccountRange(DataObject());
+    (void)_addressHash;
+    DataObject constructResponse = constructAccountRange(blockchain().blockByHash(_blockHash), _addressHash, _maxResults);
+    ETH_TEST_MESSAGE("Response: debug_accountRange " + constructResponse.asJson());
+    return DebugAccountRange(constructResponse);
 }
 
 DebugStorageRangeAt ToolImpl::debug_storageRangeAt(
@@ -167,55 +123,25 @@ DebugStorageRangeAt ToolImpl::debug_storageRangeAt(
     rpcCall("", {});
     ETH_TEST_MESSAGE("\nRequest: debug_storageRangeAt bl:" + _blockNumber.asDecString() + " ind:" + _begin.asString() +
                      " addr:" + _address.asString());
+    DataObject constructResponse =
+        constructStorageRangeAt(blockchain().blockByNumber(_blockNumber), _address, _begin, _maxResults);
     (void)_txIndex;
     (void)_maxResults;
-
-    /*
-    DataObject constructResponse;
-    ToolBlock const& block = getBlockByHashOrNumber(_blockHashOrNumber);
-    if (block.getPostState().count(_address))
-    {
-        constructResponse["complete"].setBool(true);
-        if (block.getPostState().atKey(_address).count("storage"))
-        {
-            int iStore = 0;
-            int iBegin = test::hexOrDecStringToInt(_begin);
-            for (auto const& el :
-                block.getPostState().atKey(_address).atKey("storage").getSubObjects())
-            {
-                if (iStore++ < iBegin)
-                    continue;
-                DataObject record;
-                record["key"] = el.getKey();
-                record["value"] = el.asString();
-                record.performModifier(mod_removeLeadingZerosFromHexValuesEVEN);
-                constructResponse["storage"][toString(iStore)] = record;
-                if (iStore + 1 == _maxResults)
-                {
-                    constructResponse["complete"].setBool(false);
-                    constructResponse["nextKey"] = toString(iStore);
-                    break;
-                }
-            }
-        }
-        else
-            constructResponse["storage"] = DataObject();
-    }
-    ETH_TEST_MESSAGE(constructResponse.asJson());
-    return constructResponse;
-    */
-    return DebugStorageRangeAt(DataObject());
+    ETH_TEST_MESSAGE("Response: debug_storageRangeAt " + constructResponse.asJson());
+    return DebugStorageRangeAt(constructResponse);
 }
 
 DebugStorageRangeAt ToolImpl::debug_storageRangeAt(
     FH32 const& _blockHash, VALUE const& _txIndex, FH20 const& _address, FH32 const& _begin, int _maxResults)
 {
-    (void)_blockHash;
+    rpcCall("", {});
+    ETH_TEST_MESSAGE("\nRequest: debug_storageRangeAt bl:" + _blockHash.asString() + " ind:" + _begin.asString() +
+                     " addr:" + _address.asString());
+    DataObject constructResponse = constructStorageRangeAt(blockchain().blockByHash(_blockHash), _address, _begin, _maxResults);
     (void)_txIndex;
-    (void)_address;
-    (void)_begin;
     (void)_maxResults;
-    return DebugStorageRangeAt(DataObject());
+    ETH_TEST_MESSAGE("Response: debug_storageRangeAt " + constructResponse.asJson());
+    return DebugStorageRangeAt(constructResponse);
 }
 
 DebugTraceTransaction ToolImpl::debug_traceTransaction(FH32 const& _trHash)
@@ -242,128 +168,26 @@ void ToolImpl::test_setChainParams(SetChainParamsArgs const& _config)
 void ToolImpl::test_rewindToBlock(VALUE const& _blockNr)
 {
     rpcCall("", {});
-    ETH_TEST_MESSAGE("\nRequest: test_rewindToBlock");
-    (void)_blockNr;
-    /*
-    if (_blockNr == 0)
-    {
-        m_blockchainMap.clear();
-        m_blockchainMap[m_current_chain_ind].size();  // initialize defualt chain
-    }
-    else
-    {
-        size_t const cchSize = m_blockchainMap.at(m_current_chain_ind).size();
-        for (size_t i = _blockNr; i < cchSize; i++)
-            m_blockchainMap.at(m_current_chain_ind).pop_back();
-    }
-
-    m_currentBlockHeader.reset();
-
-    scheme_RPCBlock const& currentBlock = getLastBlock().getRPCResponse();
-    scheme_blockHeader const env = currentBlock.getBlockHeader2();
-    m_currentBlockHeader.timestamp = test::hexOrDecStringToInt(env.timestamp());
-    m_currentBlockHeader.currentBlockNumber = test::hexOrDecStringToInt(currentBlock.getNumber());
-    m_currentBlockHeader.header["author"] = env.coinbase();
-    m_currentBlockHeader.header["difficulty"] = env.difficulty();
-    m_currentBlockHeader.header["gasLimit"] = env.gasLimit();
-    m_currentBlockHeader.header["extraData"] = env.extraData();
-    if (_blockNr == 0)
-        m_currentBlockHeader.header["parentHash"] =
-            "0x0000000000000000000000000000000000000000000000000000000000000000";
-    else if (_blockNr == 1)
-        m_currentBlockHeader.header["parentHash"] = getGenesis().getHash();
-    else
-        m_currentBlockHeader.header["parentHash"] = getLastBlock(2).getHash();
-    m_currentBlockHeader.header.performVerifier(test::ver_ethereumfields);
-    */
+    ETH_TEST_MESSAGE("\nRequest: test_rewindToBlock " + _blockNr.asDecString());
+    blockchain().rewindToBlock(_blockNr);
+    ETH_TEST_MESSAGE("Response: test_rewindToBlock: " + blockchain().lastBlock().header().number().asDecString());
 }
 
 void ToolImpl::test_modifyTimestamp(VALUE const& _timestamp)
-{(void)_timestamp;
+{
     rpcCall("", {});
-    // ETH_TEST_MESSAGE("\nRequest: test_modifyTimestamp " + DataObject(_timestamp).asJson());
-    // m_currentBlockHeader.timestamp = _timestamp;
+    ETH_TEST_MESSAGE("\nRequest: test_modifyTimestamp " + _timestamp.asDecString());
+    blockchain().modifyTimestamp(_timestamp);
+    ETH_TEST_MESSAGE("Response: test_modifyTimestamp " + _timestamp.asDecString());
 }
-
-/*
-string ToolImpl::prepareAllocForTool() const
-{
-    if (m_currentBlockHeader.currentBlockNumber > 1)
-        return getLastBlock().getPostState().asJsonNoFirstKey();
-    else
-        return m_chainParams.atKey("accounts").asJsonNoFirstKey();
-}
-
-string ToolImpl::prepareEnvForTool() const
-{
-    DataObject env;
-    env["currentCoinbase"] = m_currentBlockHeader.header.atKey("author");
-    env["currentDifficulty"] = m_currentBlockHeader.header.atKey("difficulty");
-    env["currentGasLimit"] = m_currentBlockHeader.header.atKey("gasLimit");
-    env["currentNumber"] = dev::toCompactHexPrefixed(m_currentBlockHeader.currentBlockNumber, 1);
-    env["currentTimestamp"] = dev::toCompactHexPrefixed(m_currentBlockHeader.timestamp, 1);
-    env["previousHash"] = m_currentBlockHeader.header.atKey("parentHash");
-
-    if (!m_currentBlockHeader.isMiningGenesis)
-    {
-        int k = 0;
-        env["blockHashes"][toString(k++)] = getGenesis().getHash();
-        for (auto const& bl : getCurrChain())
-            env["blockHashes"][toString(k++)] = bl.getHash();
-
-        for (auto const& un : m_currentBlockHeader.uncles)
-        {
-            DataObject uncle;
-            uncle["delta"] =
-                m_currentBlockHeader.currentBlockNumber - test::hexOrDecStringToInt(un.getNumber());
-            uncle["address"] = un.getBlockHeader2().coinbase();
-            env["ommers"].addArrayObject(uncle);
-        }
-    }
-
-    return env.asJson();
-}
-string ToolImpl::prepareTxsForTool() const
-{
-    DataObject txs(DataType::Array);
-    for (auto const& tx : m_transactions)
-    {
-        DataObject txToolFormat = tx.getDataForBCTest();
-
-        // Tool Require no leading zeros in transaction.
-        string const to = txToolFormat.atKey("to").asString();
-        string const data = txToolFormat.atKey("data").asString();
-        txToolFormat.performModifier(test::mod_removeLeadingZerosFromHexValues);
-        txToolFormat["to"] = to;
-        txToolFormat["data"] = data;
-
-        txToolFormat.renameKey("data", "input");
-        txToolFormat.renameKey("gasLimit", "gas");
-
-        string const& value = txToolFormat.atKey("value").asString();
-        if (value == "0x" || value.empty())
-            txToolFormat.atKeyUnsafe("value") = "0x0";
-        string const& toAddr = txToolFormat.atKey("to").asString();
-        if (toAddr.empty() || toAddr == "0x")
-            txToolFormat.removeKey("to");
-
-        txToolFormat["hash"] = tx.getHash();
-        txs.addArrayObject(txToolFormat);
-    }
-    return txs.asJson();
-}
-
-
-*/
 
 void ToolImpl::test_mineBlocks(size_t _number)
 {
     rpcCall("", {});
     ETH_TEST_MESSAGE("\nRequest: test_mineBlocks");
-    m_toolChainManager.getContent().mineBlocks(_number);
+    blockchain().mineBlocks(_number);
 
-    ETH_TEST_MESSAGE("Response test_mineBlocks {" +
-                     toString(m_toolChainManager.getContent().lastBlock().header().number().asDecString()) + "}");
+    ETH_TEST_MESSAGE("Response test_mineBlocks {" + blockchain().lastBlock().header().number().asDecString() + "}");
 
     /*
     ETH_ERROR_REQUIRE_MESSAGE(_number == 1, "Make sure test_mineBlocks mine 1 block");
@@ -391,54 +215,7 @@ void ToolImpl::test_mineBlocks(size_t _number)
     fs::path outPath = m_tmpDir / "out.json";
     fs::path outAllocPath = m_tmpDir / "outAlloc.json";
 
-    string cmd = string(m_toolPath);
-    cmd += " --input.alloc " + allocPath.string();
-    cmd += " --input.txs " + txsPath.string();
-    cmd += " --input.env " + envPath.string();
-    cmd += " --output.result " + outPath.string();
-    cmd += " --output.alloc " + outAllocPath.string();
-    cmd += " --state.fork " + m_chainParams.atKey("params").atKey("fork").asString();
-
     // If calculating geneis block, disable rewards so to see the state root hash
-
-    string const engine = m_chainParams.atKey("sealEngine").asString();
-    if (!m_currentBlockHeader.isMiningGenesis && engine != "NoReward")
-    {
-        if (engine == "Ethash")
-            ETH_WARNING_TEST("t8ntool backend treat Ethash as NoProof!", 6);
-
-        // Setup mining rewards
-        DataObject const& rewards =
-            Options::get().getDynamicOptions().getCurrentConfig().getMiningRewardInfo();
-        string const& fork = m_chainParams.atKey("params").atKey("fork").asString();
-        if (rewards.count(fork))
-        {
-            string const reward = rewards.atKey(fork).asString();
-            cmd += " --state.reward " + reward;
-        }
-        else
-        {
-            if (m_currentBlockHeader.currentBlockNumber < 5)
-            {
-                string const reward = rewards.atKey(RewardMapForToolBefore5.at(fork)).asString();
-                cmd += " --state.reward " + reward;
-            }
-            else
-            {
-                string const reward = rewards.atKey(RewardMapForToolAfter5.at(fork)).asString();
-                cmd += " --state.reward " + reward;
-            }
-        }
-    }
-
-    ETH_TEST_MESSAGE("Alloc:\n" + contentsString(allocPath.string()));
-    if (m_transactions.size())
-        ETH_TEST_MESSAGE("Txs:\n" + contentsString(txsPath.string()));
-    ETH_TEST_MESSAGE("Env:\n" + contentsString(envPath.string()));
-    test::executeCmd(cmd, false);
-    ETH_TEST_MESSAGE("Res:\n" + contentsString(outPath.string()));
-    ETH_TEST_MESSAGE("RAlloc:\n" + contentsString(outAllocPath.string()));
-    ETH_TEST_MESSAGE(cmd);
 
     // Construct block rpc response
     DataObject const toolResponse = ConvertJsoncppStringToData(contentsString(outPath));
@@ -469,106 +246,30 @@ void ToolImpl::test_mineBlocks(size_t _number)
 FH32 ToolImpl::test_importRawBlock(BYTES const& _blockRLP)
 {
     rpcCall("", {});
-    ETH_TEST_MESSAGE("\nRequest: test_importRawBlock, following transaction import are internal");
-    (void)_blockRLP;
-
-    /*
-    static vector<string> exceptions = {"BlockWrongStoreClears"};
-    for (auto const& el : exceptions)
-    {
-        if (TestOutputHelper::get().testName().find(el) != string::npos)
-        {
-            ETH_WARNING("t8ntool backend can't verify this block!");
-            onError("TooImpl can't verify this block!", "Test exception");
-            return string();
-        }
-    }
-
-    string rawBlockHash;
     try
     {
-        bytes blockBytes = dev::fromHex(_blockRLP);
-        dev::RLP blockRLP(blockBytes);
-        ostringstream out;
-        out << blockRLP;
-        ETH_TEST_MESSAGE(out.str());
-        rawBlockHash = dev::toHexPrefixed(dev::sha3(blockRLP[0].data()));
-        if (!blockRLP.isList())
-            throw dev::RLPException("Block RLP is expected to be list");
-
-        BlockHeadFromRLP sanHeader(blockRLP[0]);
-        verifyRawBlock(sanHeader, blockRLP);
-
-        test_mineBlocks(1);
-
-        ToolBlock const& cbl = getLastBlock();
-
-        auto revertLastBlockWithException = [&](string const& _what) {
-            m_blockchainMap.at(m_current_chain_ind).pop_back();
-            throw dev::RLPException(_what);
-        };
-
-        // Evm return different field
-        const scheme_blockHeader t8nHeader = cbl.getRPCResponse().getBlockHeader2();
-        if (t8nHeader.bloom() != sanHeader.header.bloom())
-            revertLastBlockWithException(
-                "Raw block bloom is different to one returned by t8ntool!");
-        if (t8nHeader.stateRoot() != sanHeader.header.stateRoot())
-            revertLastBlockWithException(
-                "Raw block stateRoot is different to one returned by t8ntool!");
-
-
-        // When import from raw block, no invalid transactions (tool::rejected) allowed
-        if (cbl.wereInvalidTransactions())
-            revertLastBlockWithException("Raw block transaction execution failed!");
-
-        if (rawBlockHash != cbl.getHash())
-            throw dev::RLPException(
-                string("RAW import hash != test_mineBlocks imitating rawblock. ") +
-                "RAW: " + rawBlockHash + " vs " + cbl.getHash());
+        ETH_TEST_MESSAGE("\nRequest: test_importRawBlock, following transaction import are internal");
+        FH32 const hash = blockchain().importRawBlock(_blockRLP);
+        ETH_TEST_MESSAGE("Response test_importRawBlock: " + hash.asString());
+        return hash;
     }
-    catch (test::BaseEthException const& _ex)
+    catch (std::exception const& _ex)
     {
-        // do not treat this exception as retesteth error
-        TestOutputHelper::get().unmarkLastError();
-        onError(_ex.what(), "Import raw block failed");
-        ETH_TEST_MESSAGE("Response test_importRawBlock: " + rawBlockHash);
-        return string();
+        makeRPCError(_ex.what());
+        ETH_TEST_MESSAGE(string("Response test_importRawBlock: ") + _ex.what());
+        return FH32::zero();
     }
-    catch (RLPException const& _ex)
-    {
-        onError(_ex.what(), "Import raw block failed");
-        ETH_TEST_MESSAGE("Response test_importRawBlock: " + rawBlockHash);
-        return string();
-    }
-
-    doChainReorg();  // update head
-    ETH_TEST_MESSAGE("Response test_importRawBlock: " + rawBlockHash);
-    return rawBlockHash;
-    */
-    return FH32::zero();
 }
 
 FH32 ToolImpl::test_getLogHash(FH32 const& _txHash)
 {
     rpcCall("", {});
+    (void)_txHash;
     ETH_TEST_MESSAGE("\nRequest: test_getLogHash " + _txHash.asString());
-    /*
-    for (auto const& bl : getCurrChain())  // acutally need to look up all chains. but not needed.
-                                           // cause only in state tests
-    {
-        for (auto const& receipt : bl.getRPCResponse().getTransactions())
-        {
-            if (receipt.atKey("hash").asString() == _txHash)
-                return bl.getRPCResponse().getLogsHash();
-        }
-    }
-    ETH_WARNING("test_getLogHash _txHash `" + _txHash + "' not found!");
-    return "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347";
-    */
-    return FH32::zero();
+    FH32 const& res = blockchain().lastBlock().logHash();
+    ETH_TEST_MESSAGE("Response: test_getLogHash " + res.asString());
+    return res;
 }
-
 
 // Internal
 DataObject ToolImpl::rpcCall(
@@ -591,4 +292,10 @@ Socket::SocketType ToolImpl::getSocketType() const
 std::string const& ToolImpl::getSocketPath() const
 {
     return m_toolPath.string();
+}
+
+void ToolImpl::makeRPCError(string const& _error)
+{
+    ETH_LOG("makeRPCError " + _error, 5);
+    m_lastInterfaceError = RPCError("", _error);
 }

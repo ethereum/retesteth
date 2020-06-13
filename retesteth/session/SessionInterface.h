@@ -43,7 +43,7 @@ public:
 
     // ETH Methods
     virtual FH32 eth_sendRawTransaction(BYTES const& _rlp) = 0;
-    virtual int eth_getTransactionCount(FH20 const& _address, VALUE const& _blockNumber) = 0;
+    virtual size_t eth_getTransactionCount(FH20 const& _address, VALUE const& _blockNumber) = 0;
 
     virtual VALUE eth_blockNumber() = 0;
     virtual EthGetBlockBy eth_getBlockByHash(FH32 const& _blockHash, Request _fullObjects) = 0;
@@ -53,9 +53,9 @@ public:
 
     // Debug
     virtual DebugAccountRange debug_accountRange(
-        VALUE const& _blockNumber, VALUE const& _txIndex, FH32 const& _addrHash, int _maxResults) = 0;
+        VALUE const& _blockNumber, VALUE const& _txIndex, FH32 const& _addrHash, size_t _maxResults) = 0;
     virtual DebugAccountRange debug_accountRange(
-        FH32 const& _blockHash, VALUE const& _txIndex, FH32 const& _addrHash, int _maxResults) = 0;
+        FH32 const& _blockHash, VALUE const& _txIndex, FH32 const& _addrHash, size_t _maxResults) = 0;
     virtual DebugStorageRangeAt debug_storageRangeAt(
         VALUE const& _blockNumber, VALUE const& _txIndex, FH20 const& _addrHash, FH32 const& _begin, int _maxResults) = 0;
     virtual DebugStorageRangeAt debug_storageRangeAt(

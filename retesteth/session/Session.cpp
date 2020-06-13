@@ -22,17 +22,10 @@
 
 #include "Session.h"
 
-#include <stdio.h>
-#include <csignal>
-#include <mutex>
-#include <string>
 #include <thread>
-
 #include <retesteth/EthChecks.h>
-#include <retesteth/ExitHandler.h>
 #include <retesteth/Options.h>
 #include <retesteth/TestHelper.h>
-#include <retesteth/TestOutputHelper.h>
 #include <retesteth/configs/ClientConfig.h>
 #include <retesteth/session/RPCImpl.h>
 #include <retesteth/session/ToolImpl.h>

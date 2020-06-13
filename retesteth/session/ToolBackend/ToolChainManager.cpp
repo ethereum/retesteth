@@ -1,68 +1,166 @@
 #include "ToolChainManager.h"
+#include "ToolImplHelper.h"
 #include <retesteth/EthChecks.h>
+#include <retesteth/TestHelper.h>
+#include <retesteth/testStructures/Common.h>
+using namespace test;
 
 namespace toolimpl
 {
 ToolChainManager::ToolChainManager(SetChainParamsArgs const& _config, fs::path const& _toolPath)
 {
     m_currentChain = 0;
-    m_chains[m_currentChain] =
-        spToolChain(new ToolChain(_config.genesis(), _config.state(), _config.sealEngine(), _config.fork(), _toolPath));
-    m_pendingBlock = spEthereumBlock(new EthereumBlock(currentChain().lastBlock().header()));
-    m_pendingBlock.getContent().addState(_config.state());
+    m_maxChains = 0;
+    EthereumBlockState genesis(_config.genesis(), _config.state(), FH32::zero());
+    m_chains[m_currentChain] = spToolChain(new ToolChain(genesis, _config.sealEngine(), _config.fork(), _toolPath));
+    m_pendingBlock =
+        spEthereumBlockState(new EthereumBlockState(currentChain().lastBlock().header(), _config.state(), FH32::zero()));
+    reorganizePendingBlock();
 }
 
-void ToolChainManager::mineBlocks(size_t _number)
+void ToolChainManager::mineBlocks(size_t _number, ToolChain::Mining _req)
 {
-    assert(_number < 2 && _number > 0);
-    latestChain().mineBlock(m_pendingBlock.getCContent());
+    if (_number > 1)
+        throw test::UpwardsException("ToolChainManager::mineBlocks number arg invalid: " + fto_string(_number));
+    currentChainUnsafe().mineBlock(m_pendingBlock.getCContent(), _req);
+    EthereumBlockState const& bl = currentChain().lastBlock();
+    m_pendingBlock = spEthereumBlockState(new EthereumBlockState(bl.header(), bl.state(), FH32::zero()));
 }
 
-
-EthGetBlockBy ToolChainManager::getBlockByNumber(VALUE const& _blockNumber) const
+void ToolChainManager::rewindToBlock(VALUE const& _number)
 {
-    auto const& blocks = currentChain().blocks();
-    if (_blockNumber < blocks.size())
+    size_t number = (size_t)_number.asU256();
+    assert(_number.asU256() >= 0 && _number < currentChainUnsafe().blocks().size());
+    currentChainUnsafe().rewindToBlock(number);
+    reorganizePendingBlock();
+}
+
+void ToolChainManager::reorganizePendingBlock()
+{
+    EthereumBlockState const& bl = currentChain().lastBlock();
+    m_pendingBlock = spEthereumBlockState(new EthereumBlockState(bl.header(), bl.state(), bl.logHash()));
+    m_pendingBlock.getContent().headerUnsafe().setNumber(1);
+    m_pendingBlock.getContent().headerUnsafe().setExtraData(DataObject("0x"));
+    m_pendingBlock.getContent().headerUnsafe().setParentHash(currentChain().lastBlock().header().hash());
+}
+
+EthereumBlockState const& ToolChainManager::blockByNumber(VALUE const& _number) const
+{
+    if ((size_t)_number.asU256() >= currentChain().blocks().size())
+        throw UpwardsException(string("ToolChainManager::blockByNumer block number not found: " + _number.asDecString()));
+    return currentChain().blocks().at((size_t)_number.asU256());
+}
+
+EthereumBlockState const& ToolChainManager::blockByHash(FH32 const& _hash) const
+{
+    for (auto const& chain : m_chains)
     {
-        EthereumBlock const& block = blocks.at((size_t)_blockNumber.asU256());
-        return internalConstructResponseBlock(block);
+        for (auto const& block : chain.second.getCContent().blocks())
+            if (block.header().hash() == _hash)
+                return block;
     }
-    ETH_ERROR_MESSAGE("ToolChainManager::getBlockByNumber block not found: " + _blockNumber.asDecString());
-    return EthGetBlockBy(DataObject());
+    throw UpwardsException(string("ToolChainManager::blockByHash block hash not found: " + _hash.asString()));
 }
 
-
-// Construct RPC style response
-EthGetBlockBy ToolChainManager::internalConstructResponseBlock(EthereumBlock const& _block) const
+void ToolChainManager::modifyTimestamp(VALUE const& _time)
 {
-    DataObject constructResponse = _block.header().asDataObject();
-
-    constructResponse["transactions"] = DataObject(DataType::Array);
-    for (auto const& tr : _block.transactions())
-    {
-        DataObject fullTransaction = tr.asDataObject();
-        fullTransaction["blockHash"] = FH32::zero().asString();  // We don't know the hash its in tool response
-        fullTransaction["blockNumber"] = _block.header().number().asString();
-        fullTransaction["from"] = FH20::zero().asString();  // Can be recovered from vrs
-        fullTransaction["transactionIndex"] = "0x00";       // Its in tool response
-        fullTransaction["hash"] = tr.hash().asString();
-        constructResponse["transactions"].addArrayObject(fullTransaction);
-    }
-
-    constructResponse["uncles"] = DataObject(DataType::Array);
-    for (auto const& un : _block.uncles())
-        constructResponse["uncles"].addArrayObject(un.hash().asString());
-
-    constructResponse["size"] = "0x00";
-    constructResponse["totalDifficulty"] = "0x00";
-    constructResponse.renameKey("bloom", "logsBloom");
-    constructResponse.renameKey("coinbase", "miner");
-    constructResponse.renameKey("receiptTrie", "receiptsRoot");
-    constructResponse.renameKey("transactionsTrie", "transactionsRoot");
-    constructResponse.renameKey("uncleHash", "sha3Uncles");
-
-    ETH_TEST_MESSAGE("Response: eth_getBlockByNumber " + constructResponse.asJson());
-    return EthGetBlockBy(constructResponse);
+    m_pendingBlock.getContent().headerUnsafe().setTimestamp(_time);
 }
+
+// Import Raw Block via t8ntool
+FH32 ToolChainManager::importRawBlock(BYTES const& _rlp)
+{
+    try
+    {
+        dev::bytes decodeRLP = sfromHex(_rlp.asString());
+        dev::RLP rlp(decodeRLP, dev::RLP::VeryStrict);
+        toolimpl::verifyBlockRLP(rlp);
+
+        BlockHeader header(rlp[0]);
+        toolimpl::verifyEthereumBlockHeader(header);
+
+        // Check that we know the parent and prepare head to be the parentHeader of _rlp block
+        reorganizeChainForParent(header.parentHash());
+
+        m_pendingBlock = spEthereumBlockState(new EthereumBlockState(header, lastBlock().state(), FH32::zero()));
+        for (auto const& trRLP : rlp[1].toList())
+        {
+            Transaction tr(trRLP);
+            addPendingTransaction(tr);
+        }
+        for (auto const& unRLP : rlp[2].toList())
+        {
+            BlockHeader un(unRLP);
+            m_pendingBlock.getContent().addUncle(un);
+        }
+
+        ETH_TEST_MESSAGE(header.asDataObject().asJson());
+        mineBlocks(1, ToolChain::Mining::RequireValid);
+        FH32 const& importedHash = lastBlock().header().hash();
+        if (importedHash != header.hash())
+        {
+            string message = "t8ntool constructed HEADER vs rawRLP HEADER: \n";
+            message += compareBlockHeaders(lastBlock().header().asDataObject(), header.asDataObject());
+            ETH_ERROR_MESSAGE(string("Imported block hash != rawRLP hash ") + "(" + importedHash.asString() +
+                              " != " + header.hash().asString() + ")" + "\n " + message);
+        }
+
+        reorganizeChainForTotalDifficulty();
+        return importedHash;
+    }
+    catch (std::exception const& _ex)
+    {
+        reorganizeChainForTotalDifficulty();
+        throw test::UpwardsException(string("Error importing raw rlp block: ") + _ex.what());
+    }
+}
+
+void ToolChainManager::reorganizeChainForParent(FH32 const& _parentHash)
+{
+    for (auto const& chain : m_chains)
+    {
+        auto const& rchain = chain.second.getCContent();
+        auto const& blocks = chain.second.getCContent().blocks();
+        for (size_t i = 0; i < blocks.size(); i++)
+        {
+            if (blocks.at(i).header().hash() == _parentHash)
+            {
+                if (i + 1 == blocks.size())  // last known block
+                {                            // stay on this chain
+                    m_currentChain = chain.first;
+                    return;
+                }
+                else
+                {
+                    // clone existing chain up to this block
+                    m_chains[++m_maxChains] =
+                        spToolChain(new ToolChain(blocks.at(0), rchain.engine(), rchain.fork(), rchain.toolPath()));
+                    m_currentChain = m_maxChains;
+                    for (size_t j = 1; j <= i; j++)
+                        m_chains[m_currentChain].getContent().insertBlock(blocks.at(j));
+                    return;
+                }
+            }
+        }
+    }
+    throw test::UpwardsException(string("ToolChainManager:: unknown parent hash ") + _parentHash.asString());
+}
+
+void ToolChainManager::reorganizeChainForTotalDifficulty()
+{
+    VALUE maxTotalDifficulty(0);
+    for (auto const& chain : m_chains)
+    {
+        auto const& blocks = chain.second.getCContent().blocks();
+        auto const& lastBlock = blocks.at(blocks.size() - 1);
+
+        if (lastBlock.totalDifficulty() > maxTotalDifficulty)
+        {
+            maxTotalDifficulty = lastBlock.totalDifficulty();
+            m_currentChain = chain.first;
+        }
+    }
+}
+
 
 }  // namespace toolimpl

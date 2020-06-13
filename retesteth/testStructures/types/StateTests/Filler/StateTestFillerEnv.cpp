@@ -20,7 +20,9 @@ StateTestFillerEnv::StateTestFillerEnv(DataObject const& _data)
         m_currentCoinbase = spFH20(new FH20(coinbase));
 
         m_currentDifficulty = spVALUE(new VALUE(tmpData.atKey("currentDifficulty")));
-        m_currentGasLimit = spVALUE(new VALUE(tmpData.atKey("currentGasLimit"), dev::u256("0x7fffffffffffffff")));
+        m_currentGasLimit = spVALUE(new VALUE(tmpData.atKey("currentGasLimit")));
+        if (m_currentGasLimit.getCContent() > dev::u256("0x7fffffffffffffff"))
+            throw test::UpwardsException("currentGasLimit > 0x7fffffffffffffff");
         m_currentNumber = spVALUE(new VALUE(tmpData.atKey("currentNumber")));
 
         // Indicates first block timestamp in StateTests

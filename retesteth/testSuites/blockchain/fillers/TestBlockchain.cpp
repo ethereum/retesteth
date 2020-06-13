@@ -1,5 +1,6 @@
 #include "TestBlockchain.h"
 #include <retesteth/Options.h>
+#include <retesteth/testStructures/PrepareChainParams.h>
 
 namespace test
 {
@@ -128,9 +129,8 @@ GCP_SPointer<EthGetBlockBy> TestBlockchain::mineBlock(
 
     auto checkTransactions = [](size_t _trInBlocks, size_t _trInTest, size_t _trAllowedToFail) {
         ETH_ERROR_REQUIRE_MESSAGE(_trInBlocks == _trInTest - _trAllowedToFail,
-            "BlockchainTest transaction execution failed! (remote " + toString(_trInBlocks) +
-                " != test " + toString(_trInTest) +
-                ", allowedToFail = " + toString(_trAllowedToFail) + " )");
+            "BlockchainTest transaction execution failed! (remote " + fto_string(_trInBlocks) + " != test " +
+                fto_string(_trInTest) + ", allowedToFail = " + fto_string(_trAllowedToFail) + " )");
     };
 
     spFH32 minedBlockHash;
@@ -196,7 +196,7 @@ string TestBlockchain::prepareDebugInfoString(string const& _newBlockChainName)
     size_t newBlockNumber = m_blocks.size();
     TestInfo errorInfo(m_network.asString(), newBlockNumber, _newBlockChainName);
     if (Options::get().logVerbosity >= 6)
-        sBlockNumber = toString(newBlockNumber);  // very heavy
+        sBlockNumber = fto_string(newBlockNumber);  // very heavy
     TestOutputHelper::get().setCurrentTestInfo(errorInfo);
     m_sDebugString = "(bl: " + sBlockNumber + ", ch: " + _newBlockChainName + ", net: " + m_network.asString() + ")";
     ETH_LOGC("Generating a test block: " + m_sDebugString, 6, LogColor::YELLOW);
@@ -332,6 +332,12 @@ bool TestBlockchain::checkBlockException(string const& _sBlockException) const
         return false;  // block is not valid
     }
     return true;  // block is valid
+}
+
+// Need to call resetChainParams because TestBLockchainManager could have chains with different networks
+void TestBlockchain::resetChainParams() const
+{
+    m_session.test_setChainParams(prepareChainParams(m_network, m_sealEngine, m_genesisState, m_testEnv));
 }
 
 }  // namespace blockchainfiller

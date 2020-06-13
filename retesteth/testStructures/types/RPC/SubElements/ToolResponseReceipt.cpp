@@ -9,12 +9,15 @@ namespace teststruct
 ToolResponseReceipt::ToolResponseReceipt(DataObject const& _data)
 {
     m_trHash = spFH32(new FH32(_data.atKey("transactionHash")));
+    m_blockHash = spFH32(new FH32(_data.atKey("blockHash")));
+    m_trGasUsed = spVALUE(new VALUE(_data.atKey("gasUsed")));
+
     requireJsonFields(_data, "ToolResponseReceipt " + _data.getKey(),
         {{"root", {{DataType::String}, jsonField::Required}},
          {"status", {{DataType::String}, jsonField::Required}},
          {"cumulativeGasUsed", {{DataType::String}, jsonField::Required}},
          {"logsBloom", {{DataType::String}, jsonField::Required}},
-         {"logs", {{DataType::Null}, jsonField::Required}},
+         {"logs", {{DataType::Null, DataType::Array}, jsonField::Required}},
          {"transactionHash", {{DataType::String}, jsonField::Required}},
          {"contractAddress", {{DataType::String}, jsonField::Required}},
          {"gasUsed", {{DataType::String}, jsonField::Required}},

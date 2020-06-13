@@ -36,6 +36,7 @@
 #include <retesteth/TestSuite.h>
 #include <retesteth/session/Session.h>
 #include <retesteth/testStructures/Common.h>
+#include <retesteth/testStructures/PrepareChainParams.h>
 #include <retesteth/testStructures/structures.h>
 #include <retesteth/testSuites/Common.h>
 #include <retesteth/testSuites/StateTests.h>
@@ -174,7 +175,7 @@ DataObject FillTestAsBlockchain(StateTestInFiller const& _test)
                     aBlockchainTest["blocks"].addArrayObject(block);
 
                     string dataPostfix =
-                        "_d" + toString(tr.dataInd()) + "g" + toString(tr.gasInd()) + "v" + toString(tr.valueInd());
+                        "_d" + fto_string(tr.dataInd()) + "g" + fto_string(tr.gasInd()) + "v" + fto_string(tr.valueInd());
                     dataPostfix += "_" + fork.asString();
 
                     if (filledTest.count(_test.testName() + dataPostfix))
@@ -366,6 +367,9 @@ void RunTest(StateTestInFilled const& _test)
                         ETH_ERROR_MESSAGE("Post hash mismatch remote: " + actualHash.asString() +
                                           ", expected: " + expectedPostHash.asString());
                     }
+                    if (Options::get().poststate)
+                        ETH_LOG("\nState Dump: \n" + getRemoteState(session).asDataObject().asJson(), 1);
+
 
                     // Validate log hash
                     FH32 const& expectedLogHash = result.logs();

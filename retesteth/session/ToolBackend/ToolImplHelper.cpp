@@ -1,141 +1,155 @@
-#include <retesteth/session/ToolImpl.h>
-//#include <retesteth/session/ToolImplHelper.h>
+#include "ToolImplHelper.h"
+#include <retesteth/TestHelper.h>
+#include <retesteth/testStructures/Common.h>
+using namespace test;
 
-/*
 namespace toolimpl
 {
-string rlpToString(dev::RLP const& _rlp)
+DataObject constructAccountRange(EthereumBlockState const& _block, FH32 const& _addrHash, size_t _maxResult)
 {
-    std::ostringstream stream;
-    stream << _rlp.toBytes();
-    if (stream.str() == "0x")
-        return "0x0";
-    return stream.str();
+    size_t k = 0;
+    size_t iAcc = hexOrDecStringToInt(_addrHash.asString());
+    DataObject constructResponse;
+    constructResponse["addressMap"] = DataObject(DataType::Object);
+    for (auto const& acc : _block.state().accounts())
+    {
+        if (k++ + 1 < iAcc)  // The first key is 1 must be included
+            continue;
+
+        constructResponse["addressMap"].addSubObject(fto_string(iAcc++), DataObject(acc.first.asString()));
+        if (constructResponse.atKey("addressMap").getSubObjects().size() == _maxResult)
+            break;
+    }
+    if (constructResponse.atKey("addressMap").getSubObjects().size() == 0)
+        constructResponse["nextKey"] = test::stoCompactHexPrefixed(0, 32);
+    else
+        constructResponse["nextKey"] = test::stoCompactHexPrefixed(k + 1, 32);  // because we rely on empty structure +1
+    return constructResponse;
 }
 
-// Block Header Sanitizer when parsing RLP
-BlockHeadFromRLP::BlockHeadFromRLP(dev::RLP const& _rlp)
-  : m_validator(_rlp), header(rlpToData(_rlp))
+DataObject constructEthGetBlockBy(EthereumBlockState const& _block)
 {
-    // string headerInfo = header.getData().asJson() + " vs ";
-    // std::cerr << _rlp << std::endl;
-    ETH_ERROR_REQUIRE_MESSAGE(header.getData().atKey("hash").asString() == header.hash(),
-        "Hash calculated from raw RLP != hash calculated from fields! ");  //(" + headerInfo + ")");
+    DataObject constructResponse = _block.header().asDataObject();
 
-    static const u256 minDiff = u256("0x20000");
-    static const u256 maxGasLimit = u256("0x7fffffffffffffff");  // 2**63-1
-    ETH_ERROR_REQUIRE_MESSAGE(u256(header.difficulty()) >= minDiff,
-        "Block difficulty is too low! ~" + header.difficulty());
-    ETH_ERROR_REQUIRE_MESSAGE(
-        u256(header.gasLimit()) <= maxGasLimit, "Block gasLimit is too high!");
+    constructResponse["transactions"] = DataObject(DataType::Array);
+    for (auto const& tr : _block.transactions())
+    {
+        DataObject fullTransaction = tr.asDataObject();
+        fullTransaction["blockHash"] = _block.header().hash().asString();  // We don't know the hash its in tool response
+        fullTransaction["blockNumber"] = _block.header().number().asString();
+        fullTransaction["from"] = FH20::zero().asString();  // Can be recovered from vrs
+        fullTransaction["transactionIndex"] = "0x00";       // Its in tool response
+        fullTransaction["hash"] = tr.hash().asString();
+        constructResponse["transactions"].addArrayObject(fullTransaction);
+    }
+
+    constructResponse["uncles"] = DataObject(DataType::Array);
+    for (auto const& un : _block.uncles())
+        constructResponse["uncles"].addArrayObject(un.hash().asString());
+
+    constructResponse["size"] = "0x00";
+    constructResponse["totalDifficulty"] = "0x00";
+    constructResponse.renameKey("bloom", "logsBloom");
+    constructResponse.renameKey("coinbase", "miner");
+    constructResponse.renameKey("receiptTrie", "receiptsRoot");
+    constructResponse.renameKey("transactionsTrie", "transactionsRoot");
+    constructResponse.renameKey("uncleHash", "sha3Uncles");
+
+    return constructResponse;
 }
 
-TransactionFromRLP::TransactionFromRLP(dev::RLP const& _rlp)
-  : m_validator(_rlp), transaction(rlpToData(_rlp))
-{}
+DataObject constructStorageRangeAt(
+    EthereumBlockState const& _block, FH20 const& _address, FH32 const& _begin, size_t _maxResult)
+{
+    DataObject constructResponse;
+    if (_block.state().hasAccount(_address))
+    {
+        constructResponse["complete"].setBool(true);
+        constructResponse["storage"] = DataObject(DataType::Object);
+        constructResponse["nextKey"] = FH32::zero().asString();
+        if (_block.state().getAccount(_address).hasStorage())
+        {
+            size_t iStore = 0;
+            size_t iBegin = hexOrDecStringToInt(_begin.asString());
+            for (auto const& el : _block.state().getAccount(_address).storage().getKeys())
+            {
+                if (iStore++ + 1 < iBegin)
+                    continue;
+                DataObject record;
+                record["key"] = std::get<0>(el.second).getCContent().asString();
+                record["value"] = std::get<1>(el.second).getCContent().asString();
+                record.performModifier(mod_removeLeadingZerosFromHexValuesEVEN);
+                constructResponse["storage"][fto_string(iStore)] = record;
+                if (constructResponse.atKey("storage").getSubObjects().size() == _maxResult)
+                {
+                    constructResponse["complete"].setBool(false);
+                    constructResponse["nextKey"] = dev::toCompactHexPrefixed(iStore + 1, 32);
+                    break;
+                }
+            }
+        }
+        else
+            constructResponse["storage"] = DataObject();
+    }
+    ETH_LOG(constructResponse.asJson(), 7);
+    return constructResponse;
+}
 
-BlockHeadFromRLP::validator::validator(dev::RLP const& _rlp)
+// RLP Validators
+void verifyBlockRLP(dev::RLP const& _rlp)
 {
     if (!_rlp.isList())
-        throw dev::RLPException("RLP blockHeader is expected to be list");
+        throw dev::RLPException("RLP is expected to be list");
+
+    if (!_rlp[0].isList())
+        throw dev::RLPException("BlockHeader RLP is expected to be list");
 
     for (size_t i = 0; i < 15; i++)
     {
-        if (!_rlp[i].isData())
-            throw dev::RLPException("Blockheader field is not data!");
+        if (!_rlp[0][i].isData())
+            throw dev::RLPException("Blockheader RLP field is not data!");
     }
-}
 
-TransactionFromRLP::validator::validator(dev::RLP const& _rlp)
-{
-    if (!_rlp.isList())
-        throw dev::RLPException("Transaction RLP is expected to be list");
-
-    for (size_t i = 0; i < 9; i++)
+    for (auto const& tr : _rlp[1])
     {
-        if (!_rlp[i].isData())
-            throw dev::RLPException("Transaction rlp field is not data!");
+        if (!tr.isList())
+            throw dev::RLPException("Transaction RLP is expected to be list");
+
+        for (size_t i = 0; i < 9; i++)
+        {
+            if (!tr[i].isData())
+                throw dev::RLPException("Transaction RLP field is not data!");
+        }
+    }
+
+    for (auto const& un : _rlp[2])
+    {
+        if (!un.isList())
+            throw dev::RLPException("Uncleheader RLP is expected to be list");
+
+        for (size_t i = 0; i < 15; i++)
+        {
+            if (!un[i].isData())
+                throw dev::RLPException("Uncleheader RLP field is not data!");
+        }
     }
 }
 
-scheme_RPCBlock BlockHeadFromRLP::getRPCResponse() const
+void verifyEthereumBlockHeader(BlockHeader const& _header)
 {
-    DataObject response;
-    response.replace(header.getData());
-    response.renameKey("bloom", "logsBloom");
-    response.renameKey("coinbase", "author");
-    response["miner"] = response.atKey("author").asString();
-    response.renameKey("receiptTrie", "receiptsRoot");
-    response.renameKey("transactionsTrie", "transactionsRoot");
-    response.renameKey("uncleHash", "sha3Uncles");
-    response["size"] = "";
-    response["transactions"] = DataObject(DataType::Array);
-    response["uncles"] = DataObject(DataType::Array);
-    return scheme_RPCBlock(response);
+    // Check ethereum rules
+    if (_header.gasLimit() > dev::u256("0x7fffffffffffffff"))
+        throw test::UpwardsException("Header gasLimit > 0x7fffffffffffffff");
+    if (_header.difficulty() < dev::u256("0x20000"))
+        throw test::UpwardsException("Header difficulty < 0x20000");
+    if (_header.extraData().asString().size() > 32 * 2 + 2)
+        throw test::UpwardsException("Header extraData > 32 bytes");
 }
 
-DataObject BlockHeadFromRLP::rlpToData(RLP const& _rlp) const
-{
-    // 0 - parentHash           // 8 - number
-    // 1 - uncleHash            // 9 - gasLimit
-    // 2 - coinbase             // 10 - gasUsed
-    // 3 - stateRoot            // 11 - timestamp
-    // 4 - transactionTrie      // 12 - extraData
-    // 5 - receiptTrie          // 13 - mixHash
-    // 6 - bloom                // 14 - nonce
-    // 7 - difficulty
-    DataObject bData;
-    size_t i = 0;
-    bData["parentHash"] = rlpToString(_rlp[i++]);
-    bData["uncleHash"] = rlpToString(_rlp[i++]);
-    bData["coinbase"] = rlpToString(_rlp[i++]);
-    bData["stateRoot"] = rlpToString(_rlp[i++]);
-    bData["transactionsTrie"] = rlpToString(_rlp[i++]);
-    bData["receiptTrie"] = rlpToString(_rlp[i++]);
-    bData["bloom"] = rlpToString(_rlp[i++]);
-    bData["difficulty"] = rlpToString(_rlp[i++]);
-    bData["number"] = rlpToString(_rlp[i++]);
-    bData["gasLimit"] = rlpToString(_rlp[i++]);
-    bData["gasUsed"] = rlpToString(_rlp[i++]);
-    bData["timestamp"] = rlpToString(_rlp[i++]);
-
-    string const exData = rlpToString(_rlp[i++]);
-    bData["extraData"] = (exData == "0x0") ? "" : exData;
-    bData["mixHash"] = rlpToString(_rlp[i++]);
-    bData["nonce"] = rlpToString(_rlp[i++]);
-    bData["hash"] = dev::toHexPrefixed(dev::sha3(_rlp.data()));
-    bData.performModifier(mod_valuesToLowerCase);
-    // m_currentBlockHeader.header.performModifier(mod_removeLeadingZerosFromHexValuesEVEN);
-    // m_currentBlockHeader.header.performVerifier(test::ver_checkHash32Fields);
-    return bData;
-}
-
-DataObject TransactionFromRLP::rlpToData(RLP const& _rlp)
-{
-    // 0 - nonce        3 - to      6 - v
-    // 1 - gasPrice     4 - value   7 - r
-    // 2 - gasLimit     5 - data    8 - s
-    DataObject bData;
-    size_t i = 0;
-    bData["nonce"] = rlpToString(_rlp[i++]);
-    bData["gasPrice"] = rlpToString(_rlp[i++]);
-    bData["gasLimit"] = rlpToString(_rlp[i++]);
-    bData["to"] = rlpToString(_rlp[i++]);
-    bData["to"] = bData["to"].asString() == "0x0" ? "" : bData["to"].asString();
-    bData["value"] = rlpToString(_rlp[i++]);
-    string const data = rlpToString(_rlp[i++]);
-    bData["data"] = data == "0x0" ? "" : data;
-    bData["v"] = rlpToString(_rlp[i++]);
-    bData["r"] = rlpToString(_rlp[i++]);
-    bData["s"] = rlpToString(_rlp[i++]);
-
-    bData.performModifier(mod_valuesToLowerCase);
-    return bData;
-}
 }  // namespace toolimpl
+/*
 
-using namespace toolimpl;
-// Heavy ToolImpl functions
+
 
 // Verify blockchain logic of a raw block rlp
 void ToolImpl::verifyRawBlock(BlockHeadFromRLP const& _sanHeader, dev::RLP const& _blockRLP)

@@ -13,7 +13,7 @@ public:
 
     // ETH Methods
     FH32 eth_sendRawTransaction(BYTES const& _rlp) override;
-    int eth_getTransactionCount(FH20 const& _address, VALUE const& _blockNumber) override;
+    size_t eth_getTransactionCount(FH20 const& _address, VALUE const& _blockNumber) override;
     VALUE eth_blockNumber() override;
     EthGetBlockBy eth_getBlockByHash(FH32 const& _hash, Request _fullObjects) override;
     EthGetBlockBy eth_getBlockByNumber(VALUE const& _blockNumber, Request _fullObjects) override;
@@ -23,9 +23,9 @@ public:
 
     // Debug
     DebugAccountRange debug_accountRange(
-        VALUE const& _blockNumber, VALUE const& _txIndex, FH32 const& _addrHash, int _maxResults) override;
+        VALUE const& _blockNumber, VALUE const& _txIndex, FH32 const& _addrHash, size_t _maxResults) override;
     DebugAccountRange debug_accountRange(
-        FH32 const& _blockHash, VALUE const& _txIndex, FH32 const& _address, int _maxResults) override;
+        FH32 const& _blockHash, VALUE const& _txIndex, FH32 const& _address, size_t _maxResults) override;
     DebugStorageRangeAt debug_storageRangeAt(
         VALUE const& _blockNumber, VALUE const& _txIndex, FH20 const& _addrHash, FH32 const& _begin, int _maxResults) override;
     DebugStorageRangeAt debug_storageRangeAt(

@@ -12,7 +12,7 @@ StateTestEnv::StateTestEnv(DataObject const& _data)
     {
         m_currentCoinbase = spFH20(new FH20(_data.atKey("currentCoinbase")));
         m_currentDifficulty = spVALUE(new VALUE(_data.atKey("currentDifficulty")));
-        m_currentGasLimit = spVALUE(new VALUE(_data.atKey("currentGasLimit"), dev::u256("0x7fffffffffffffff")));
+        m_currentGasLimit = spVALUE(new VALUE(_data.atKey("currentGasLimit")));
         m_currentNumber = spVALUE(new VALUE(_data.atKey("currentNumber")));
 
         // Indicates first block timestamp in StateTests

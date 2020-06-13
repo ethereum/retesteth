@@ -27,10 +27,7 @@ public:
         FORK const& _network, string const& _chainName, RegenerateGenesis _regenerateGenesis);
 
     // Need to call resetChainParams because TestBLockchainManager could have chains with different networks
-    void resetChainParams() const
-    {
-        m_session.test_setChainParams(prepareChainParams(m_network, m_sealEngine, m_genesisState, m_testEnv));
-    }
+    void resetChainParams() const;
 
     void generateBlock(BlockchainTestFillerBlock const& _block, vectorOfSchemeBlock const& _uncles, bool _generateUncles);
 

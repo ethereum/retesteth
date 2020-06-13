@@ -234,7 +234,8 @@ string prepareLLLCVersionString()
 {
     if (test::checkCmdExist("lllc"))
     {
-        string result = test::executeCmd("lllc --version");
+        string const cmd = "lllc --version";
+        string result = test::executeCmd(cmd);
         string::size_type pos = result.rfind("Version");
         if (pos != string::npos)
             return result.substr(pos, result.length());
@@ -285,6 +286,7 @@ bool checkCmdExist(std::string const& _command)
     return true;
 }
 
+mutex g_popenmutex;
 string executeCmd(string const& _command, ExecCMDWarning _warningOnEmpty)
 {
 #if defined(_WIN32)
@@ -294,7 +296,11 @@ string executeCmd(string const& _command, ExecCMDWarning _warningOnEmpty)
     string out;
     char output[1024];
     ETH_FAIL_REQUIRE_MESSAGE(!_command.empty(), "executeCmd: empty argument!");
-    FILE* fp = popen(_command.c_str(), "r");
+    FILE* fp;
+    {
+        std::lock_guard<std::mutex> lock(g_popenmutex);
+        fp = popen(_command.c_str(), "r");
+    }
     if (fp == NULL || fp == 0)
         ETH_FAIL_MESSAGE("Failed to run " + _command);
     if (fgets(output, sizeof(output) - 1, fp) == NULL)

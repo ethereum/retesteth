@@ -41,7 +41,9 @@ void Transaction::fromDataObject(DataObject const& _data)
         }
         else
         {
-            m_v = spVALUE(new VALUE(_data.atKey("v"), dev::u256("0xff")));
+            m_v = spVALUE(new VALUE(_data.atKey("v")));
+            if (m_v.getCContent() > dev::u256("0xff"))
+                throw test::UpwardsException("Incorrect transaction `v` value: " + m_v.getCContent().asString());
             m_r = spVALUE(new VALUE(_data.atKey("r")));
             m_s = spVALUE(new VALUE(_data.atKey("s")));
         }
@@ -70,25 +72,36 @@ void Transaction::fromDataObject(DataObject const& _data)
     }
 }
 
-Transaction::Transaction(BYTES const& _rlp)
+void Transaction::fromRLP(dev::RLP const& _rlp)
 {
-    dev::bytes decodeRLP = sfromHex(_rlp.asString());
-    dev::RLP rlp(decodeRLP, dev::RLP::VeryStrict);
     // 0 - nonce        3 - to      6 - v
     // 1 - gasPrice     4 - value   7 - r
     // 2 - gasLimit     5 - data    8 - s
     DataObject trData;
     size_t i = 0;
-    trData["nonce"] = rlpToString(rlp[i++]);
-    trData["gasPrice"] = rlpToString(rlp[i++]);
-    trData["gasLimit"] = rlpToString(rlp[i++]);
-    trData["to"] = rlpToString(rlp[i++], 0);
-    trData["value"] = rlpToString(rlp[i++]);
-    trData["data"] = rlpToString(rlp[i++], 0);
-    trData["v"] = rlpToString(rlp[i++]);
-    trData["r"] = rlpToString(rlp[i++]);
-    trData["s"] = rlpToString(rlp[i++]);
+    trData["nonce"] = rlpToString(_rlp[i++]);
+    trData["gasPrice"] = rlpToString(_rlp[i++]);
+    trData["gasLimit"] = rlpToString(_rlp[i++]);
+    string const to = rlpToString(_rlp[i++], 0);
+    trData["to"] = to == "0x" ? "" : to;
+    trData["value"] = rlpToString(_rlp[i++]);
+    trData["data"] = rlpToString(_rlp[i++], 0);
+    trData["v"] = rlpToString(_rlp[i++]);
+    trData["r"] = rlpToString(_rlp[i++]);
+    trData["s"] = rlpToString(_rlp[i++]);
     fromDataObject(trData);
+}
+
+Transaction::Transaction(dev::RLP const& _rlp)
+{
+    fromRLP(_rlp);
+}
+
+Transaction::Transaction(BYTES const& _rlp)
+{
+    dev::bytes decodeRLP = sfromHex(_rlp.asString());
+    dev::RLP rlp(decodeRLP, dev::RLP::VeryStrict);
+    fromRLP(rlp);
 }
 
 
@@ -120,7 +133,7 @@ void Transaction::buildVRS(VALUE const& _secret)
     DataObject v = DataObject(dev::toCompactHexPrefixed(dev::u256(sigStruct.v + 27)));
     DataObject r = DataObject(dev::toCompactHexPrefixed(dev::u256(sigStruct.r)));
     DataObject s = DataObject(dev::toCompactHexPrefixed(dev::u256(sigStruct.s)));
-    m_v = spVALUE(new VALUE(v, dev::u256("0xff")));
+    m_v = spVALUE(new VALUE(v));
     m_r = spVALUE(new VALUE(r));
     m_s = spVALUE(new VALUE(s));
 }
@@ -156,7 +169,10 @@ const DataObject Transaction::asDataObject(ExportOrder _order) const
     out["gasPrice"] = m_gasPrice.getCContent().asString();
     out["nonce"] = m_nonce.getCContent().asString();
     if (m_creation)
-        out["to"] = "";
+    {
+        if (_order != ExportOrder::ToolStyle)
+            out["to"] = "";
+    }
     else
         out["to"] = m_to.getCContent().asString();
     out["value"] = m_value.getCContent().asString();
