@@ -1,4 +1,6 @@
 #pragma once
+#include <libdevcore/Common.h>
+#include <libdevcore/CommonData.h>
 #include <retesteth/dataObject/DataObject.h>
 #include <retesteth/dataObject/SPointer.h>
 using namespace dataobject;

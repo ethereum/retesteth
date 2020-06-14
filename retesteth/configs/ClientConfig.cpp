@@ -59,7 +59,7 @@ ClientConfig::ClientConfig(fs::path const& _clientConfigPath) : m_id(ClientConfi
     }
     catch (std::exception const& _ex)
     {
-        ETH_STDERROR_MESSAGE(string("Error initializing configs: ") + _ex.what());
+        ETH_ERROR_MESSAGE(string("Error initializing configs: ") + _ex.what());
     }
 }
 

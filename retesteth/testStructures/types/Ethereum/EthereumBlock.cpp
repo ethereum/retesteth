@@ -1,4 +1,5 @@
 #include "EthereumBlock.h"
+#include <libdevcore/CommonIO.h>
 #include <libdevcore/RLP.h>
 #include <libdevcore/SHA3.h>
 #include <retesteth/EthChecks.h>
@@ -26,10 +27,10 @@ void EthereumBlock::recalculateHeaderHash()
     // FH32 newTxHash("0x" + toString(dev::sha3(transactionList.out())));
     // m_header.getContent().setTransactionHash(newTxHash);
 
-    FH32 newUnHash("0x" + toString(dev::sha3(uncleList.out())));
+    FH32 newUnHash("0x" + dev::toString(dev::sha3(uncleList.out())));
     m_header.getContent().setUnclesHash(newUnHash);
 
-    FH32 newHeaderHash("0x" + toString(dev::sha3(m_header.getCContent().asRLPStream().out())));
+    FH32 newHeaderHash("0x" + dev::toString(dev::sha3(m_header.getCContent().asRLPStream().out())));
     m_header.getContent().setHeaderHash(newHeaderHash);
 }
 

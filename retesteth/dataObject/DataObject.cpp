@@ -1,4 +1,5 @@
 #include <dataObject/DataObject.h>
+#include <sstream>
 using namespace dataobject;
 
 /// Default dataobject is null
@@ -547,4 +548,127 @@ void DataObject::_assert(bool _flag, std::string const& _comment) const
         out << asJson() << std::endl;
         throw DataObjectException(out.str());
     }
+}
+
+void DataObject::setString(string const& _value)
+{
+    _assert(
+        m_type == DataType::String || m_type == DataType::Null, "In DataObject=(string) DataObject must be string or Null!");
+    m_type = DataType::String;
+    m_strVal = _value;
+}
+
+void DataObject::setInt(int _value)
+{
+    _assert(m_type == DataType::Integer || m_type == DataType::Null, "In DataObject=(int) DataObject must be int or Null!");
+    m_type = DataType::Integer;
+    m_intVal = _value;
+}
+
+void DataObject::setBool(bool _value)
+{
+    _assert(
+        m_type == DataType::Bool || m_type == DataType::Null, "In DataObject:setBool(bool) DataObject must be bool or Null!");
+    m_type = DataType::Bool;
+    m_boolVal = _value;
+}
+
+DataObject& DataObject::operator=(DataObject const& _value)
+{
+    // So not to overwrite the existing data
+    // Do not replace the key. Assuming that key is set upon calling DataObject[key] =
+    if (!m_allowOverwrite && !m_autosort)
+        _assert(m_type == DataType::Null,
+            "m_type == DataType::Null (DataObject& operator=). Overwriting dataobject that is "
+            "not NULL");
+
+    if (m_type != DataType::Null)
+        replace(_value);  // overwrite value and key
+    else
+    {
+        // keep the key "newkey" for object["newkey"] = object2;  declarations when object["newkey"] is null;
+        string const currentKey = m_strKey;
+        replace(_value);
+        m_strKey = currentKey;
+    }
+    return *this;
+}
+
+bool DataObject::operator==(DataObject const& _value) const
+{
+    if (type() != _value.type() || getSubObjects().size() != _value.getSubObjects().size())
+        return false;
+    bool equal = true;
+    equal = m_type == _value.type();
+    equal = getKey() == _value.getKey();
+    switch (m_type)
+    {
+    case DataType::Bool:
+        equal = asBool() == _value.asBool();
+        break;
+    case DataType::Integer:
+        equal = asInt() == _value.asInt();
+        break;
+    case DataType::String:
+        equal = asString() == _value.asString();
+        break;
+    case DataType::Array:
+        equal = getSubObjects().size() == _value.getSubObjects().size();
+        for (size_t i = 0; i < getSubObjects().size(); i++)
+        {
+            equal = getSubObjects().at(i) == _value.getSubObjects().at(i);
+            if (!equal)
+                break;
+        }
+        break;
+    case DataType::Object:
+        //_assert(getSubObjects().size() == 1,
+        //    "in DataObject::==(Object)  LType Object must have only 1 object!");
+        //_assert(_value.getSubObjects().size() == 1,
+        //    "in DataObject::==(Object)  RType Object must have only 1 object!");
+        equal = getSubObjects().size() == _value.getSubObjects().size();
+        // equal = getSubObjects().at(0) == _value.getSubObjects().at(0);
+        for (size_t i = 0; i < getSubObjects().size(); i++)
+        {
+            equal = getSubObjects().at(i) == _value.getSubObjects().at(i);
+            if (!equal)
+                break;
+        }
+        break;
+    default:
+        _assert(false, "in DataObject::== unknown object type!");
+        equal = false;
+        break;
+    }
+    return equal;
+}
+
+bool DataObject::operator==(bool _value) const
+{
+    DataObject tmp(DataType::Bool, _value);
+    return *this == tmp;
+}
+
+DataObject& DataObject::operator=(int _value)
+{
+    setInt(_value);
+    return *this;
+}
+
+DataObject& DataObject::operator[](std::string const& _key)
+{
+    _assert(m_type == DataType::Null || m_type == DataType::Object,
+        "m_type == DataType::Null || m_type == DataType::Object (DataObject& operator[])");
+    for (auto& i : m_subObjects)
+        if (i.getKey() == _key)
+            return i;
+    DataObject newObj(DataType::Null);
+    newObj.setKey(_key);
+    return _addSubObject(newObj);  // !could change the item order!
+}
+
+DataObject& DataObject::operator=(std::string const& _value)
+{
+    setString(_value);
+    return *this;
 }

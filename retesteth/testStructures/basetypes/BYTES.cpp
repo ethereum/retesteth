@@ -1,6 +1,8 @@
 #include "BYTES.h"
+#include <libdevcore/CommonIO.h>
 #include <retesteth/EthChecks.h>
 #include <retesteth/TestHelper.h>
+#include <sstream>
 using namespace test::teststruct;
 using namespace dev;
 

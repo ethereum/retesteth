@@ -20,7 +20,6 @@
 
 #include <dataObject/DataObject.h>
 #include <libdevcore/CommonIO.h>
-#include <libdevcore/Log.h>
 #include <libdevcore/SHA3.h>
 #include <retesteth/EthChecks.h>
 #include <retesteth/ExitHandler.h>

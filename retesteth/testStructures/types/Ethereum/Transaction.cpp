@@ -1,5 +1,6 @@
 #include "Transaction.h"
 #include <libdevcore/Address.h>
+#include <libdevcore/CommonIO.h>
 #include <libdevcore/SHA3.h>
 #include <libdevcrypto/Common.h>
 #include <retesteth/EthChecks.h>
@@ -196,7 +197,7 @@ const DataObject Transaction::asDataObject(ExportOrder _order) const
 
 FH32 Transaction::hash() const
 {
-    return FH32("0x" + toString(dev::sha3(asRLPStream().out())));
+    return FH32("0x" + dev::toString(dev::sha3(asRLPStream().out())));
 }
 
 bool Transaction::operator==(Transaction const& _rhs) const

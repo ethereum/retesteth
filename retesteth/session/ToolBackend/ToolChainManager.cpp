@@ -64,7 +64,8 @@ EthereumBlockState const& ToolChainManager::blockByHash(FH32 const& _hash) const
 
 void ToolChainManager::modifyTimestamp(VALUE const& _time)
 {
-    m_pendingBlock.getContent().headerUnsafe().setTimestamp(_time);
+    dev::u256 prevTime = lastBlock().header().timestamp().asU256();
+    m_pendingBlock.getContent().headerUnsafe().setTimestamp(prevTime + _time.asU256());
 }
 
 // Import Raw Block via t8ntool

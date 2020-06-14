@@ -1,7 +1,28 @@
 #pragma once
-#include <cassert>
+#include <exception>
+#include <string>
 namespace dataobject
 {
+struct SPointerException : virtual std::exception
+{
+    SPointerException(std::string _message = std::string()) : m_message(std::move(_message)) {}
+    const char* what() const noexcept override { return m_message.empty() ? std::exception::what() : m_message.c_str(); }
+    void setMessage(std::string const& _text) { m_message = _text; }
+    SPointerException& operator<<(const char* _t)
+    {
+        setMessage(_t);
+        return *this;
+    }
+    SPointerException& operator<<(std::string const& _t)
+    {
+        setMessage(_t);
+        return *this;
+    }
+
+private:
+    std::string m_message;
+};
+
 template <class T>
 class GCP_SPointer;
 class GCP_SPointerBase
@@ -27,16 +48,21 @@ class GCP_SPointer
 {
 private:
     T* _pointee;
+    bool m_pointerSet = false;
     void release()
     {
         if (_pointee != nullptr)
         {
-            assert(_pointee->_nRef > 0);
-            if (_pointee->DelRef() == 0)
+            if (_pointee->_nRef > 0)
             {
-                delete _pointee;
-                _pointee = nullptr;
+                if (_pointee->DelRef() == 0)
+                {
+                    delete _pointee;
+                    _pointee = nullptr;
+                }
             }
+            else
+                throw SPointerException("SPointer delete more times than counter increased!");
         }
     }
 
@@ -125,17 +151,20 @@ private:
 public:
     T& operator*()
     {
-        assert(!isEmpty());
+        if (isEmpty())
+            throw SPointerException("GCP_SPointer:: T& operator*():: smart pointer is empty!");
         return *getPointerUnsafe();
     }
     T& getContent()
     {
-        assert(!isEmpty());
+        if (isEmpty())
+            throw SPointerException("GCP_SPointer:: T& getContent():: smart pointer is empty!");
         return *getPointerUnsafe();
     }
     T const& getCContent() const
     {
-        assert(!isEmpty());
+        if (isEmpty())
+            throw SPointerException("GCP_SPointer:: T const& getCContent() const:: smart pointer is empty!");
         return *getCPtr();
     }
 

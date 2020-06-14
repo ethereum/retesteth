@@ -6,7 +6,6 @@
 #include <retesteth/testStructures/Common.h>
 #include <retesteth/testStructures/PrepareChainParams.h>
 #include <retesteth/testSuites/Common.h>
-
 namespace test
 {
 
@@ -101,6 +100,8 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
         ind = 0;
         for (Transaction const& tr : tblock.transactions())
         {
+            if (ExitHandler::receivedExitSignal())
+                return;
             EthGetBlockByTransaction const& clientTr = latestBlock.transactions().at(ind++);
             ETH_ERROR_REQUIRE_MESSAGE(clientTr.blockHash() == tblock.header().hash(),
                 "Error checking remote transaction, remote tr `blockHash` is different to one described in test block! "
@@ -209,13 +210,6 @@ DataObject DoTests(DataObject const& _input, TestSuite::TestSuiteOptions& _opt)
         ETH_LOG("Parse test done", 5);
         for (BlockchainTestInFilled const& bcTest : test.tests())
         {
-            /*
-            if (Options::getDynamicOptions().getCurrentConfig().cfgFile().name() == "t8ntool")
-            {
-                if (bcTest.testName().find("BlockWrongStoreClears") != std::string::npos)
-                    ETH_WARNING("Skipping BlockWrongStoreClears test as it is unsupported by tool");
-            }*/
-
             // Select test by name if --singletest and --singlenet is set
             if (Options::get().singleTest)
             {
