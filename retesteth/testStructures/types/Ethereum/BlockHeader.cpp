@@ -29,7 +29,7 @@ void BlockHeader::fromData(DataObject const& _data)
         string const bkey = _data.count("logsBloom") ? "logsBloom" : "bloom";
         m_logsBloom = spFH256(new FH256(_data.atKey(bkey)));
 
-        if (_data.count("mixHash"))
+        if (_data.count("nonce"))
         {
             m_mixHash = spFH32(new FH32(_data.atKey("mixHash")));
             m_nonce = spFH8(new FH8(_data.atKey("nonce")));
