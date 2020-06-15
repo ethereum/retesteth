@@ -12,7 +12,7 @@ namespace test
 {
 static std::vector<std::string> const c_timeConsumingTestSuites{std::string{"stTimeConsuming"},
     std::string{"stQuadraticComplexityTest"}, std::string{"bcExploitTest"}, std::string{"bcExpectSection"},
-    std::string{"bcWalletTest"}, std::string{"stQuadraticComplexityTest"}};
+    std::string{"bcWalletTest"}, std::string{"stQuadraticComplexityTest"}, std::string{"vmPerformance"} };
 
 enum class TestExecution
 {

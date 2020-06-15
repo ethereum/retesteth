@@ -22,12 +22,7 @@ public:
     void parseBlockFromFiller(BlockchainTestFillerBlock const& _block, bool _generateUncles);
 
     // Return the last block from the current chain (not the top of all chains)
-    TestBlock const& getLastBlock()
-    {
-        TestBlockchain const& chain = m_mapOfKnownChain.at(m_sCurrentChainName);
-        assert(chain.getBlocks().size() > 0);
-        return chain.getBlocks().at(chain.getBlocks().size() - 1);
-    }
+    TestBlock const& getLastBlock();
 
     // Import all generated blocks at the same order as they are in tests
     void syncOnRemoteClient(DataObject& _exportBlocksSection) const;
@@ -58,6 +53,9 @@ private:
     typedef std::tuple<BYTES, std::string> RLPAndException;
     std::vector<RLPAndException> m_testBlockRLPs;  // List of prepared blocks exactly as they are
                                                    // defined in test (order)
+
+    TestBlockchain& getDefaultChain();
+    TestBlockchain& getCurrentChain();
     std::map<std::string, TestBlockchain> m_mapOfKnownChain;  // Memory of test chains
 };
 

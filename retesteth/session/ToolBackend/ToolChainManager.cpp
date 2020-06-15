@@ -46,9 +46,10 @@ void ToolChainManager::reorganizePendingBlock()
 
 EthereumBlockState const& ToolChainManager::blockByNumber(VALUE const& _number) const
 {
-    if ((size_t)_number.asU256() >= currentChain().blocks().size())
+    size_t blockN = (size_t)_number.asU256();
+    if (blockN >= currentChain().blocks().size())
         throw UpwardsException(string("ToolChainManager::blockByNumer block number not found: " + _number.asDecString()));
-    return currentChain().blocks().at((size_t)_number.asU256());
+    return currentChain().blocks().at(blockN);
 }
 
 EthereumBlockState const& ToolChainManager::blockByHash(FH32 const& _hash) const

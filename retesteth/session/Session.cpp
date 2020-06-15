@@ -151,9 +151,10 @@ void RPCSession::runNewInstanceOfAClient(string const& _threadID, ClientConfig c
     {
         sessionInfo info(
             NULL, new RPCSession(new ToolImpl(Socket::SocketType::TCP, _config.cfgFile().shell())), "", 0, _config.getId());
-        std::lock_guard<std::mutex> lock(g_socketMapMutex);  // function must be called from lock
-        socketMap.insert(std::pair<string, sessionInfo>(_threadID, std::move(info)));
-        return;
+        {
+            std::lock_guard<std::mutex> lock(g_socketMapMutex);  // function must be called from lock
+            socketMap.insert(std::pair<string, sessionInfo>(_threadID, std::move(info)));
+        }
         break;
     }
     default:
@@ -197,6 +198,7 @@ SessionInterface& RPCSession::instance(const string& _threadID)
     ETH_FAIL_REQUIRE_MESSAGE(socketMap.size() <= Options::get().threadCount,
         "Something went wrong. Retesteth connect to more instances than needed!");
     ETH_FAIL_REQUIRE_MESSAGE(socketMap.size() != 0, "Something went wrong. Retesteth failed to create socket connection!");
+    assert(socketMap.count(_threadID));
     return socketMap.at(_threadID).session.get()->getImplementation();
 }
 

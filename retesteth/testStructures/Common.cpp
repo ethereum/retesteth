@@ -336,6 +336,8 @@ string compareBlockHeaders(DataObject const& _blockA, DataObject const& _blockB)
 {
     size_t k = 0;
     string message;
+    ETH_ERROR_REQUIRE_MESSAGE(_blockA.getSubObjects().size() == _blockB.getSubObjects().size(),
+        "compareBlockHeaders  _blockA.size() != _blockB.size()");
     for (auto const& el : _blockA.getSubObjects())
     {
         static string const cYellow = "\x1b[33m";

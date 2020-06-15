@@ -17,7 +17,11 @@ public:
     ToolChainManager(SetChainParamsArgs const& _config, fs::path const& _toolPath);
     void addPendingTransaction(Transaction const& _tr) { m_pendingBlock.getContent().addTransaction(_tr); }
 
-    ToolChain const& currentChain() const { return m_chains.at(m_currentChain).getCContent(); }
+    ToolChain const& currentChain() const
+    {
+        assert(m_chains.count(m_currentChain));
+        return m_chains.at(m_currentChain).getCContent();
+    }
     void mineBlocks(size_t _number, ToolChain::Mining _req = ToolChain::Mining::AllowFailTransactions);
     FH32 importRawBlock(BYTES const& _rlp);
 
@@ -30,7 +34,11 @@ public:
 
 private:
     ToolChainManager() {}
-    ToolChain& currentChainUnsafe() { return m_chains.at(m_currentChain).getContent(); }
+    ToolChain& currentChainUnsafe()
+    {
+        assert(m_chains.count(m_currentChain));
+        return m_chains.at(m_currentChain).getContent();
+    }
     EthGetBlockBy internalConstructResponseBlock(EthereumBlock const& _block) const;
     void reorganizeChainForParent(FH32 const& _parentHash);
     void reorganizeChainForTotalDifficulty();

@@ -17,6 +17,7 @@ struct ToolResponse
     FH32 const& txRoot() const { return m_txRoot.getCContent(); }
     FH32 const& receiptRoot() const { return m_receiptRoot.getCContent(); }
     FH32 const& logsHash() const { return m_logsHash.getCContent(); }
+    FH256 const& logsBloom() const { return m_logsBloom.getCContent(); }
     VALUE totalGasUsed() const
     {
         VALUE totalGasUsed = 0;
@@ -36,6 +37,7 @@ private:
     spFH32 m_txRoot;
     spFH32 m_receiptRoot;
     spFH32 m_logsHash;
+    spFH256 m_logsBloom;
     std::vector<ToolResponseReceipt> m_receipts;
     spState m_stateResponse;
 };

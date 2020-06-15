@@ -33,9 +33,19 @@ std::tuple<VALUE, FORK> prepareReward(SealEngine _engine, FORK const& _fork, VAL
     else
     {
         if (_blockNumber < 5)
-            return {rewards.at(RewardMapForToolBefore5.at(_fork)).getCContent(), RewardMapForToolBefore5.at(_fork)};
+        {
+            assert(RewardMapForToolBefore5.count(_fork));
+            auto const& trFork = RewardMapForToolBefore5.at(_fork);
+            assert(rewards.count(trFork));
+            return {rewards.at(trFork).getCContent(), trFork};
+        }
         else
-            return {rewards.at(RewardMapForToolAfter5.at(_fork)).getCContent(), RewardMapForToolAfter5.at(_fork)};
+        {
+            assert(RewardMapForToolAfter5.count(_fork));
+            auto const& trFork = RewardMapForToolAfter5.at(_fork);
+            assert(rewards.count(trFork));
+            return {rewards.at(trFork).getCContent(), trFork};
+        }
     }
 }
 
@@ -95,6 +105,8 @@ void ToolChain::mineBlock(EthereumBlockState const& _pendingBlock, Mining _req)
     pendingFixed.headerUnsafe().setGasUsed(res.totalGasUsed());        // Assign GasUsed from the tool
     pendingFixed.headerUnsafe().setTransactionHash(res.txRoot());      // Assign TxRoot from the tool
     pendingFixed.headerUnsafe().setTrReceiptsHash(res.receiptRoot());  // Assign TxReceipt from the tool
+    pendingFixed.headerUnsafe().setLogsBloom(res.logsBloom());         // Assign LogsBloom from the
+    pendingFixed.headerUnsafe().setStateRoot(res.stateRoot());         // Assign StateHash from the tool
 
     // Add only those transactions which tool returned a receipt for
     // Some transactions are expected to fail. That should be detected by tests
