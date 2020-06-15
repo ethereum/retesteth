@@ -4,6 +4,7 @@
 #include <retesteth/dataObject/DataObject.h>
 #include <retesteth/dataObject/SPointer.h>
 #include <boost/filesystem.hpp>
+#include <map>
 using namespace dataobject;
 namespace fs = boost::filesystem;
 

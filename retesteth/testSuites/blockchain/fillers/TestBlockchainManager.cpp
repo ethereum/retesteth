@@ -33,7 +33,7 @@ void TestBlockchainManager::parseBlockFromFiller(BlockchainTestFillerBlock const
     // See if chain reorg is needed. ex: new fork, or remine block
     reorgChains(_block);
 
-    TestBlockchain& currentChainMining = m_mapOfKnownChain.at(m_sCurrentChainName);
+    TestBlockchain& currentChainMining = getCurrentChain();
 
     // Prepare uncles using all chains and current debug info
     string sDebug = currentChainMining.prepareDebugInfoString(_block.chainName());
@@ -56,8 +56,28 @@ void TestBlockchainManager::parseBlockFromFiller(BlockchainTestFillerBlock const
     TestBlock const& lastBlock = getLastBlock();
 
     // Get this block exception on canon chain to later verify it
-    FORK const& canonNet = m_mapOfKnownChain.at(m_sDefaultChainName).getNetwork();
+    FORK const& canonNet = getDefaultChain().getNetwork();
     m_testBlockRLPs.push_back(std::make_tuple(lastBlock.getRawRLP(), _block.getExpectException(canonNet)));
+}
+
+TestBlockchain& TestBlockchainManager::getDefaultChain()
+{
+    assert(m_mapOfKnownChain.count(m_sDefaultChainName));
+    return m_mapOfKnownChain.at(m_sDefaultChainName);
+}
+
+TestBlockchain& TestBlockchainManager::getCurrentChain()
+{
+    assert(m_mapOfKnownChain.count(m_sCurrentChainName));
+    return m_mapOfKnownChain.at(m_sCurrentChainName);
+}
+
+TestBlock const& TestBlockchainManager::getLastBlock()
+{
+    assert(m_mapOfKnownChain.count(m_sCurrentChainName));
+    TestBlockchain const& chain = m_mapOfKnownChain.at(m_sCurrentChainName);
+    assert(chain.getBlocks().size() > 0);
+    return chain.getBlocks().at(chain.getBlocks().size() - 1);
 }
 
 // Import all generated blocks at the same order as they are in tests
@@ -107,8 +127,7 @@ void TestBlockchainManager::reorgChains(BlockchainTestFillerBlock const& _block)
 {
     // if a new chain, initialize
     FORK const& newBlockChainNet = _block.hasChainNet() ? _block.chainNet() : m_sDefaultChainNet;
-    VALUE const& newBlockNumber =
-        _block.hasNumber() ? _block.number() : m_mapOfKnownChain.at(m_sCurrentChainName).getBlocks().size();
+    VALUE const& newBlockNumber = _block.hasNumber() ? _block.number() : getCurrentChain().getBlocks().size();
     string const& newBlockChainName = _block.chainName();
     if (!m_mapOfKnownChain.count(newBlockChainName))
     {
@@ -119,6 +138,7 @@ void TestBlockchainManager::reorgChains(BlockchainTestFillerBlock const& _block)
     }
 
     // Chain reorg conditions
+    assert(m_mapOfKnownChain.count(newBlockChainName));
     const int blocksInChain = m_mapOfKnownChain.at(newBlockChainName).getBlocks().size() - 1;
     bool blockNumberHasDecreased = (newBlockNumber.asU256() != 0 && blocksInChain >= newBlockNumber.asU256());
     bool sameChain = (m_sCurrentChainName == newBlockChainName);
@@ -146,7 +166,7 @@ void TestBlockchainManager::reorgChains(BlockchainTestFillerBlock const& _block)
         TestBlockchain& chain = m_mapOfKnownChain.at(newBlockChainName);
         if (!sameChain)
         {
-            if (m_mapOfKnownChain.at(m_sCurrentChainName).getNetwork() != chain.getNetwork())
+            if (getCurrentChain().getNetwork() != chain.getNetwork())
                 chain.resetChainParams();  // Reset genesis because chains have different config
             m_sCurrentChainName = newBlockChainName;
         }
@@ -162,7 +182,7 @@ BlockHeader TestBlockchainManager::prepareUncle(
 {
     size_t origIndex = 0;
     BlockHeader const* tmpRefToSchemeBlock = NULL;
-    TestBlockchain const& currentChainMining = m_mapOfKnownChain.at(m_sCurrentChainName);
+    TestBlockchain const& currentChainMining = getCurrentChain();
 
     UncleType typeOfSection = _uncleSectionInTest.uncleType();
     switch (typeOfSection)
@@ -234,6 +254,7 @@ BlockHeader TestBlockchainManager::prepareUncle(
         if (_uncleSectionInTest.hasRelTimestampFromPopulateBlock())
         {
             // Get the Timestamp of that block (which uncle is populated from)
+            assert(currentChainMining.getBlocks().size() > origIndex);
             VALUE timestamp(currentChainMining.getBlocks().at(origIndex).getTestHeader().timestamp());
             uncleBlockHeader.setTimestamp(timestamp.asU256() + _uncleSectionInTest.relTimestampFromPopulateBlock());
         }

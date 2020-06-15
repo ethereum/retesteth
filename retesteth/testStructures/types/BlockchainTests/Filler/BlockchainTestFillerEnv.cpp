@@ -25,7 +25,6 @@ BlockchainTestFillerEnv::BlockchainTestFillerEnv(DataObject const& _data, SealEn
         m_currentNumber = spVALUE(new VALUE(tmpData.atKey("number")));
         m_currentTimestamp = spVALUE(new VALUE(tmpData.atKey("timestamp")));
         m_previousHash = spFH32(new FH32(_data.atKey("parentHash")));
-
         m_currentExtraData = spBYTES(new BYTES(_data.atKey("extraData")));
 
         if (_sEngine == SealEngine::NoProof)

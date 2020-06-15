@@ -25,7 +25,6 @@
 #include <retesteth/TestOutputHelper.h>
 #include <retesteth/Options.h>
 #include <retesteth/ExitHandler.h>
-#include <libdevcore/Log.h>
 
 using namespace std;
 using namespace dev;
@@ -162,6 +161,7 @@ void TestOutputHelper::showProgress()
         ETH_FAIL_REQUIRE_MESSAGE(m_maxTests > 0, "TestHelper has 0 or negative m_maxTests!");
         ETH_FAIL_REQUIRE_MESSAGE(
             m_currTest <= m_maxTests, "TestHelper has m_currTest > m_maxTests!");
+        assert(m_maxTests > 0);
         int percent = int(m_currTest*100/m_maxTests);
         std::cout << percent << "%";
         if (percent != 100)

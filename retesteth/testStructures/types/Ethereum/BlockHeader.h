@@ -37,6 +37,7 @@ struct BlockHeader : GCP_SPointerBase
     FH32 const& mixHash() const { return m_mixHash.getCContent(); }
     FH32 const& parentHash() const { return m_parentHash.getCContent(); }
 
+    void setLogsBloom(FH256 const& _logs) { m_logsBloom = spFH256(new FH256(_logs)); }
     void setTimestamp(VALUE const& _value) { m_timestamp = spVALUE(new VALUE(_value.asU256())); }
     void setTransactionHash(FH32 const& _hash) { m_transactionsRoot = spFH32(new FH32(_hash)); }
     void setTrReceiptsHash(FH32 const& _hash) { m_receiptsRoot = spFH32(new FH32(_hash)); }

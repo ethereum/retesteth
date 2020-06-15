@@ -135,8 +135,7 @@ bool checkExcessiveComa(string const& _input, size_t _i)
 DataObject ConvertJsoncppStringToData(
     std::string const& _input, string const& _stopper, bool _autosort)
 {
-    std::vector<DataObject*> applyDepth;  // indexes at root array of objects that we are reading
-                                          // into
+    std::vector<DataObject*> applyDepth;  // indexes at root array of objects that we are reading into
     DataObject root;
     root.setAutosort(_autosort);
     DataObject* actualRoot = &root;

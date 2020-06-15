@@ -149,7 +149,7 @@ void requireJsonFields(
     DataObject const& _o, std::string const& _section, std::map<std::string, possibleType> const& _validationMap, bool _fail)
 {
     // check for unexpected fiedls
-    for (auto const field : _o.getSubObjects())
+    for (auto const& field : _o.getSubObjects())
     {
         string message = "'" + field.getKey() + "' should not be declared in '" + _section + "' section!";
         if (_fail)
@@ -159,7 +159,7 @@ void requireJsonFields(
     }
 
     // check field types with validation map
-    for (auto const vmap : _validationMap)
+    for (auto const& vmap : _validationMap)
     {
         string message = vmap.first + " not found in " + _section + " section! " + TestOutputHelper::get().testName();
         if (_fail)
@@ -202,7 +202,7 @@ void requireJsonFields(DataObject const& _o, std::string const& _config, std::ma
     }
 
     // check field types with validation map
-    for (auto const vmap : _validationMap)
+    for (auto const& vmap : _validationMap)
     {
         // check that all required fields are in the object
         if (!_o.count(vmap.first))
@@ -336,6 +336,8 @@ string compareBlockHeaders(DataObject const& _blockA, DataObject const& _blockB)
 {
     size_t k = 0;
     string message;
+    ETH_ERROR_REQUIRE_MESSAGE(_blockA.getSubObjects().size() == _blockB.getSubObjects().size(),
+        "compareBlockHeaders  _blockA.size() != _blockB.size()");
     for (auto const& el : _blockA.getSubObjects())
     {
         static string const cYellow = "\x1b[33m";

@@ -1,5 +1,6 @@
 #pragma once
 #include <retesteth/dataObject/DataObject.h>
+#include <map>
 using namespace dataobject;
 
 namespace test

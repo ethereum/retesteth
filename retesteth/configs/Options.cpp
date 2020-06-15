@@ -1,4 +1,5 @@
 #include <BuildInfo.h>
+#include <libdevcore/CommonIO.h>
 #include <libdevcore/FileSystem.h>
 #include <retesteth/Options.h>
 #include <retesteth/configs/Genesis.h>

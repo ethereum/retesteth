@@ -67,6 +67,8 @@ void checkUnexecutedTransactions(std::vector<TransactionInGeneralSection> const&
     bool atLeastOneWithoutExpectSection = false;
     for (auto const& tr : _txs)
     {
+        if (ExitHandler::receivedExitSignal())
+            return;
         if (tr.getExecuted())
             atLeastOneExecuted = true;
         bool transactionExecutedOrSkipped = tr.getExecuted() || tr.getSkipped();
@@ -300,6 +302,9 @@ DataObject FillTest(StateTestInFiller const& _test)
 /// Read and execute the test file
 void RunTest(StateTestInFilled const& _test)
 {
+    if (ExitHandler::receivedExitSignal())
+        return;
+
     TestOutputHelper::get().setCurrentTestName(_test.testName());
     SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
 
@@ -330,6 +335,9 @@ void RunTest(StateTestInFilled const& _test)
             // look for a transaction with this indexes and execute it on a client
             for (TransactionInGeneralSection& tr : txs)
             {
+                if (ExitHandler::receivedExitSignal())
+                    return;
+
                 TestInfo errorInfo(network.asString(), tr.dataInd(), tr.gasInd(), tr.valueInd());
                 TestOutputHelper::get().setCurrentTestInfo(errorInfo);
                 bool checkIndexes = result.checkIndexes(tr.dataInd(), tr.gasInd(), tr.valueInd());
