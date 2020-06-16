@@ -30,7 +30,7 @@ namespace test
 // Get Remote State From Client
 struct StateTooBig : UpwardsException
 {
-    StateTooBig(){}
+    StateTooBig() : UpwardsException("StateTooBig") {}
 };
 State getRemoteState(SessionInterface& _session);
 

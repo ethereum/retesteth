@@ -21,7 +21,7 @@ TestBlockchain::TestBlockchain(BlockchainTestFillerEnv const& _testEnv, State co
     EthGetBlockBy latestBlock(m_session.eth_getBlockByNumber(0, Request::LESSOBJECTS));
     TestBlock genesisBlock(latestBlock.getRLPHeaderTransactions(), "genesis", m_network, 0);
     genesisBlock.registerTestHeader(latestBlock.header());
-    genesisBlock.setNextBlockForked(mineNextBlockAndRewert());
+    genesisBlock.setNextBlockForked(mineNextBlockAndRevert());
     m_blocks.push_back(genesisBlock);
 }
 
@@ -114,7 +114,7 @@ void TestBlockchain::generateBlock(
 
         // Ask remote client to generate a parallel blockheader that will later be used for uncles
         if (_generateUncles)
-            newBlock.setNextBlockForked(mineNextBlockAndRewert());
+            newBlock.setNextBlockForked(mineNextBlockAndRevert());
 
         m_blocks.push_back(newBlock);
     }
@@ -173,9 +173,10 @@ GCP_SPointer<EthGetBlockBy> TestBlockchain::mineBlock(
 }
 
 // Ask remote client to generate a blockheader that will later used for uncles
-BlockHeader TestBlockchain::mineNextBlockAndRewert()
+BlockHeader TestBlockchain::mineNextBlockAndRevert()
 {
     ETH_LOGC("Mine uncle block (next block) and revert: " + m_sDebugString, 6, LogColor::YELLOW);
+    m_session.test_modifyTimestamp(1000);
     m_session.test_mineBlocks(1);
     VALUE latestBlockNumber(m_session.eth_blockNumber());
     EthGetBlockBy nextBlock(m_session.eth_getBlockByNumber(latestBlockNumber, Request::LESSOBJECTS));

@@ -16,7 +16,7 @@ Account remoteGetAccount(SessionInterface& _session, VALUE const& _bNumber, VALU
     bool hasStorage = true;
     FH32 beginHash = FH32::zero();
     Storage tmpStorage = Storage(DataObject(DataType::Object));
-    size_t safety = 100;
+    size_t safety = 500;
     while (hasStorage && --safety)
     {
         // Read storage from remote account by 20 records at a time

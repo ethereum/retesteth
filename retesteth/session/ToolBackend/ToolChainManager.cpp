@@ -23,8 +23,7 @@ void ToolChainManager::mineBlocks(size_t _number, ToolChain::Mining _req)
     if (_number > 1)
         throw test::UpwardsException("ToolChainManager::mineBlocks number arg invalid: " + fto_string(_number));
     currentChainUnsafe().mineBlock(m_pendingBlock.getCContent(), _req);
-    EthereumBlockState const& bl = currentChain().lastBlock();
-    m_pendingBlock = spEthereumBlockState(new EthereumBlockState(bl.header(), bl.state(), FH32::zero()));
+    reorganizePendingBlock();
 }
 
 void ToolChainManager::rewindToBlock(VALUE const& _number)
@@ -39,8 +38,8 @@ void ToolChainManager::reorganizePendingBlock()
 {
     EthereumBlockState const& bl = currentChain().lastBlock();
     m_pendingBlock = spEthereumBlockState(new EthereumBlockState(bl.header(), bl.state(), bl.logHash()));
-    m_pendingBlock.getContent().headerUnsafe().setNumber(1);
-    m_pendingBlock.getContent().headerUnsafe().setExtraData(DataObject("0x"));
+    m_pendingBlock.getContent().headerUnsafe().setNumber(bl.header().number() + 1);
+    m_pendingBlock.getContent().headerUnsafe().setExtraData(bl.header().extraData());
     m_pendingBlock.getContent().headerUnsafe().setParentHash(currentChain().lastBlock().header().hash());
 }
 
@@ -79,15 +78,16 @@ FH32 ToolChainManager::importRawBlock(BYTES const& _rlp)
         toolimpl::verifyBlockRLP(rlp);
 
         BlockHeader header(rlp[0]);
+        ETH_TEST_MESSAGE(header.asDataObject().asJson());
         toolimpl::verifyEthereumBlockHeader(header);
 
         // Check that we know the parent and prepare head to be the parentHeader of _rlp block
         reorganizeChainForParent(header.parentHash());
-
         m_pendingBlock = spEthereumBlockState(new EthereumBlockState(header, lastBlock().state(), FH32::zero()));
         for (auto const& trRLP : rlp[1].toList())
         {
             Transaction tr(trRLP);
+            ETH_TEST_MESSAGE(tr.asDataObject().asJson());
             addPendingTransaction(tr);
         }
         for (auto const& unRLP : rlp[2].toList())
@@ -96,7 +96,6 @@ FH32 ToolChainManager::importRawBlock(BYTES const& _rlp)
             m_pendingBlock.getContent().addUncle(un);
         }
 
-        ETH_TEST_MESSAGE(header.asDataObject().asJson());
         mineBlocks(1, ToolChain::Mining::RequireValid);
         FH32 const& importedHash = lastBlock().header().hash();
         if (importedHash != header.hash())
