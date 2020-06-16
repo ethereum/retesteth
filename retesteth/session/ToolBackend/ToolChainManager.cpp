@@ -39,7 +39,10 @@ void ToolChainManager::reorganizePendingBlock()
     EthereumBlockState const& bl = currentChain().lastBlock();
     m_pendingBlock = spEthereumBlockState(new EthereumBlockState(bl.header(), bl.state(), bl.logHash()));
     m_pendingBlock.getContent().headerUnsafe().setNumber(bl.header().number() + 1);
+
+    // Because aleth and geth+retesteth does this, but better be empty extraData
     m_pendingBlock.getContent().headerUnsafe().setExtraData(bl.header().extraData());
+
     m_pendingBlock.getContent().headerUnsafe().setParentHash(currentChain().lastBlock().header().hash());
 }
 

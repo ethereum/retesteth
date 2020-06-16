@@ -24,10 +24,10 @@ public:
         NotExist      // socket yet not initialized
     };
 
-    static SessionInterface& instance(std::string const& _threadID);
-    static void sessionStart(std::string const& _threadID);
-    static void sessionEnd(std::string const& _threadID, SessionStatus _status);
-    static SessionStatus sessionStatus(std::string const& _threadID);
+    static SessionInterface& instance(std::string const _threadID);
+    static void sessionStart(std::string const _threadID);
+    static void sessionEnd(std::string const _threadID, SessionStatus _status);
+    static SessionStatus sessionStatus(std::string const _threadID);
     static void clear();
 
     SessionInterface& getImplementation() { return *m_implementation; }

@@ -53,15 +53,16 @@ mutex g_helperThreadMapMutex;
 TestOutputHelper& TestOutputHelper::get()
 {
     std::lock_guard<std::mutex> lock(g_helperThreadMapMutex);
-    if (helperThreadMap.count(getThreadID()))
-        return helperThreadMap.at(getThreadID());
+    string tID = getThreadID();
+    if (helperThreadMap.count(tID))
+        return helperThreadMap.at(tID);
     else
     {
         TestOutputHelper instance;
-        helperThreadMap.emplace(std::make_pair(getThreadID(), std::move(instance)));
-        helperThreadMap.at(getThreadID()).initTest(0);
+        helperThreadMap.emplace(std::make_pair(tID, std::move(instance)));
+        helperThreadMap.at(tID).initTest(0);
     }
-    return helperThreadMap.at(getThreadID());
+    return helperThreadMap.at(tID);
 }
 
 bool TestOutputHelper::markError(std::string const& _message)
