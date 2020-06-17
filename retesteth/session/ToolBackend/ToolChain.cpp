@@ -61,7 +61,7 @@ int)-99)
     if (block_diff < minDiff)
         return minDiff;
     return block_diff;
-}
+}*/
 
 VALUE calculateGasLimit(VALUE const& _parentGasLimit, VALUE const& _parentGasUsed)
 {
@@ -73,7 +73,7 @@ VALUE calculateGasLimit(VALUE const& _parentGasLimit, VALUE const& _parentGasUse
     else
         return max<u256>(gasFloorTarget,
             gasLimit - gasLimit / boundDivisor + 1 + (_parentGasUsed.asU256() * 6 / 5) / boundDivisor);
-}*/
+}
 
 // Because tool report incomplete state. restore missing fields with zeros
 // Also remove leading zeros in storage
@@ -149,6 +149,7 @@ void ToolChain::mineBlock(EthereumBlockState const& _pendingBlock, Mining _req)
     // calculateGasLimit(lastHeader.gasLimit(), lastHeader.gasUsed()); pendingFixed.headerUnsafe().setGasLimit(newGas);
     //}
 
+
     pendingFixed.headerUnsafe().recalculateHash();
 
     // Add only those transactions which tool returned a receipt for
@@ -179,11 +180,22 @@ void ToolChain::mineBlock(EthereumBlockState const& _pendingBlock, Mining _req)
     // Uncle header validity as well as RLP logic is checked before
     for (auto const& un : _pendingBlock.uncles())
         pendingFixed.addUncle(un);
+    pendingFixed.recalculateUncleHash(); // Rely that only uncle hash is recalculated (simulate t8ntool unclehash)
 
     // Calculate header hash from header fields (do not recalc tx, un hashes)
     pendingFixed.headerUnsafe().recalculateHash();
 
     // Blockchain rules
+
+    // Validate block gasLimit delta
+    BlockHeader const& lastHeader = lastBlock().header();
+    VALUE newGAS = calculateGasLimit(lastHeader.gasLimit(), lastHeader.gasUsed());
+    VALUE deltaGas = newGAS.asU256()/1024;
+    if (pendingFixed.header().gasLimit().asU256() > lastHeader.gasLimit().asU256() + deltaGas.asU256()
+        || pendingFixed.header().gasLimit().asU256() < lastHeader.gasLimit().asU256() - deltaGas.asU256() )
+        throw test::UpwardsException("Invalid gas limit: " + pendingFixed.header().gasLimit().asDecString() +
+                                     ", want " + lastHeader.gasLimit().asDecString() + " +/- " + deltaGas.asDecString());
+
     // Require number from pending block to be equal to actual block number that is imported
     if (_pendingBlock.header().number() != pendingFixed.header().number().asU256())
         throw test::UpwardsException(string("Block Number from pending block != actual chain height! (") +
@@ -191,8 +203,8 @@ void ToolChain::mineBlock(EthereumBlockState const& _pendingBlock, Mining _req)
                                      " != " + pendingFixed.header().number().asString() + ")");
 
     // Require new block timestamp to be > than the previous block timestamp
-    if (lastBlock().header().timestamp() > pendingFixed.header().timestamp())
-        throw test::UpwardsException("Block Timestamp from pending block < previous block timestamp!");
+    if (lastBlock().header().timestamp().asU256() >= pendingFixed.header().timestamp().asU256())
+        throw test::UpwardsException("Block Timestamp from pending block <= previous block timestamp!");
 
     if (_req == Mining::RequireValid)  // called on rawRLP import
     {
@@ -203,10 +215,12 @@ void ToolChain::mineBlock(EthereumBlockState const& _pendingBlock, Mining _req)
 
         if (_pendingBlock.header() != pendingFixed.header())
         {
+            string errField;
             DataObject const pendingH = _pendingBlock.header().asDataObject();
             DataObject const pendingFixedH = pendingFixed.header().asDataObject();
-            string const compare = compareBlockHeaders(pendingH, pendingFixedH);
+            string const compare = compareBlockHeaders(pendingH, pendingFixedH, errField);
             throw test::UpwardsException(string("Block from pending block != t8ntool constructed block!\n") +
+                                         "Error in field: " + errField + "\n" +
                                          "rawRLP/Pending header  vs  t8ntool header \n" + compare);
         }
     }

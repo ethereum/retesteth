@@ -71,8 +71,9 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
         string message;
         if (!condition)
         {
+            string errField;
             message = "Client return HEADER vs Test HEADER: \n";
-            message += compareBlockHeaders(latestBlock.header().asDataObject(), tblock.header().asDataObject());
+            message += compareBlockHeaders(latestBlock.header().asDataObject(), tblock.header().asDataObject(), errField);
         }
         ETH_ERROR_REQUIRE_MESSAGE(
             condition, "Client report different blockheader after importing the rlp than expected by test! \n" + message);

@@ -332,10 +332,12 @@ DigitsType stringIntegerType(std::string const& _string)
 }
 
 // Construct comapasion string
-string compareBlockHeaders(DataObject const& _blockA, DataObject const& _blockB)
+string compareBlockHeaders(DataObject const& _blockA, DataObject const& _blockB, string& _whatField)
 {
     size_t k = 0;
     string message;
+    bool errorInHashField = false;
+    _whatField = string();
     ETH_ERROR_REQUIRE_MESSAGE(_blockA.getSubObjects().size() == _blockB.getSubObjects().size(),
         "compareBlockHeaders  _blockA.size() != _blockB.size()");
     for (auto const& el : _blockA.getSubObjects())
@@ -345,10 +347,18 @@ string compareBlockHeaders(DataObject const& _blockA, DataObject const& _blockB)
         string const testHeaderField = _blockB.getSubObjects().at(k++).asString();
         message += cYellow + el.getKey() + cRed + " ";
         if (el.asString() != testHeaderField)
+        {
+            if (el.getKey() != "hash")
+                _whatField = el.getKey();
+            else
+                errorInHashField = true;
             message += el.asString() + " vs " + cYellow + testHeaderField + cRed + "\n";
+        }
         else
             message += el.asString() + " vs " + testHeaderField + "\n";
     }
+    if (_whatField.empty() && errorInHashField)
+        _whatField = "hash";
     return message;
 }
 

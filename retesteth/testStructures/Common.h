@@ -57,7 +57,7 @@ DataObject convertDecStateToHex(DataObject const& _data);
 DataObject convertDecBlockheaderIncompleteToHex(DataObject const& _data);
 
 // Make a nice compare result string
-string compareBlockHeaders(DataObject const& _blockA, DataObject const& _blockB);
+string compareBlockHeaders(DataObject const& _blockA, DataObject const& _blockB, string& _whatField);
 
 }  // namespace teststruct
 }  // namespace test

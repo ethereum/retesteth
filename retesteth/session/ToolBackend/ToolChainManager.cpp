@@ -103,8 +103,9 @@ FH32 ToolChainManager::importRawBlock(BYTES const& _rlp)
         FH32 const& importedHash = lastBlock().header().hash();
         if (importedHash != header.hash())
         {
+            string errField;
             string message = "t8ntool constructed HEADER vs rawRLP HEADER: \n";
-            message += compareBlockHeaders(lastBlock().header().asDataObject(), header.asDataObject());
+            message += compareBlockHeaders(lastBlock().header().asDataObject(), header.asDataObject(), errField);
             ETH_ERROR_MESSAGE(string("Imported block hash != rawRLP hash ") + "(" + importedHash.asString() +
                               " != " + header.hash().asString() + ")" + "\n " + message);
         }
