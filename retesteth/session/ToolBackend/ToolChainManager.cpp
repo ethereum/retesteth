@@ -12,7 +12,7 @@ ToolChainManager::ToolChainManager(SetChainParamsArgs const& _config, fs::path c
     m_currentChain = 0;
     m_maxChains = 0;
     EthereumBlockState genesis(_config.genesis(), _config.state(), FH32::zero());
-    m_chains[m_currentChain] = spToolChain(new ToolChain(genesis, _config.sealEngine(), _config.fork(), _toolPath));
+    m_chains[m_currentChain] = spToolChain(new ToolChain(genesis, _config, _toolPath));
     m_pendingBlock =
         spEthereumBlockState(new EthereumBlockState(currentChain().lastBlock().header(), _config.state(), FH32::zero()));
     reorganizePendingBlock();
@@ -82,7 +82,6 @@ FH32 ToolChainManager::importRawBlock(BYTES const& _rlp)
 
         BlockHeader header(rlp[0]);
         ETH_TEST_MESSAGE(header.asDataObject().asJson());
-        toolimpl::verifyEthereumBlockHeader(header);
 
         // Check that we know the parent and prepare head to be the parentHeader of _rlp block
         reorganizeChainForParent(header.parentHash());
@@ -138,8 +137,7 @@ void ToolChainManager::reorganizeChainForParent(FH32 const& _parentHash)
                 else
                 {
                     // clone existing chain up to this block
-                    m_chains[++m_maxChains] =
-                        spToolChain(new ToolChain(blocks.at(0), rchain.engine(), rchain.fork(), rchain.toolPath()));
+                    m_chains[++m_maxChains] = spToolChain(new ToolChain(blocks.at(0), rchain.params(), rchain.toolPath()));
                     m_currentChain = m_maxChains;
                     for (size_t j = 1; j <= i; j++)
                         m_chains[m_currentChain].getContent().insertBlock(blocks.at(j));

@@ -184,5 +184,10 @@ void BlockHeader::recalculateHash()
     m_hash = spFH32(new FH32("0x" + toString(dev::sha3(asRLPStream().out()))));
 }
 
+bool BlockHeader::hasUncles() const
+{
+    return m_sha3Uncles.getCContent().asString() != "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347";
+}
+
 }  // namespace teststruct
 }  // namespace test

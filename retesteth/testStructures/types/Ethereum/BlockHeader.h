@@ -20,6 +20,7 @@ struct BlockHeader : GCP_SPointerBase
     dev::RLPStream const asRLPStream() const;
     bool operator==(BlockHeader const& _rhs) const;
     bool operator!=(BlockHeader const& _rhs) const { return !(*this == _rhs); };
+    bool hasUncles() const;
 
     FH32 const& stateRoot() const { return m_stateRoot.getCContent(); }
     FH32 const& receiptTrie() const { return m_receiptsRoot.getCContent(); }

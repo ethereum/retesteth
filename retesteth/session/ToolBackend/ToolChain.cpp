@@ -1,3 +1,4 @@
+#include "ToolChainHelper.h"
 #include "ToolChainManager.h"
 #include <libdevcore/CommonIO.h>
 #include <retesteth/Options.h>
@@ -10,100 +11,14 @@ using namespace test;
 using namespace teststruct;
 using namespace dataobject;
 
-namespace
-{
-// We simulate the client backend side here, so thats why number5 is hardcoded
-// Map rewards from non standard forks into standard
-static std::map<FORK, FORK> RewardMapForToolBefore5 = {{"FrontierToHomesteadAt5", "Frontier"},
-    {"HomesteadToEIP150At5", "Homestead"}, {"EIP158ToByzantiumAt5", "EIP158"}, {"HomesteadToDaoAt5", "Homestead"},
-    {"ByzantiumToConstantinopleFixAt5", "Byzantium"}};
-static std::map<FORK, FORK> RewardMapForToolAfter5 = {{"FrontierToHomesteadAt5", "Homestead"},
-    {"HomesteadToEIP150At5", "EIP150"}, {"EIP158ToByzantiumAt5", "Byzantium"}, {"HomesteadToDaoAt5", "Homestead"},
-    {"ByzantiumToConstantinopleFixAt5", "ConstantinopleFix"}};
-
-std::tuple<VALUE, FORK> prepareReward(SealEngine _engine, FORK const& _fork, VALUE const& _blockNumber = VALUE(0))
-{
-    if (_engine == SealEngine::Ethash)
-        ETH_WARNING_TEST("t8ntool backend treat Ethash as NoProof!", 6);
-
-    // Setup mining rewards
-    std::map<FORK, spVALUE> const& rewards = Options::get().getDynamicOptions().getCurrentConfig().getRewardMap();
-    if (rewards.count(_fork))
-        return {rewards.at(_fork).getCContent(), _fork};
-    else
-    {
-        if (_blockNumber < 5)
-        {
-            assert(RewardMapForToolBefore5.count(_fork));
-            auto const& trFork = RewardMapForToolBefore5.at(_fork);
-            assert(rewards.count(trFork));
-            return {rewards.at(trFork).getCContent(), trFork};
-        }
-        else
-        {
-            assert(RewardMapForToolAfter5.count(_fork));
-            auto const& trFork = RewardMapForToolAfter5.at(_fork);
-            assert(rewards.count(trFork));
-            return {rewards.at(trFork).getCContent(), trFork};
-        }
-    }
-}
-
-// Calculate difficulty because tool does not do that
-/*VALUE calculateDifficulty(VALUE const& _parent_diff, VALUE const& _parent_timestamp, VALUE const& _current_timestamp, VALUE
-const& _currentNumber)
-{
-    static const VALUE minDiff(dev::u256("0x020000"));
-    VALUE block_diff = _parent_diff.asU256() + _parent_diff.asU256()
-            / 2048 * std::max(1 - (long long int)(_current_timestamp.asU256() - _parent_timestamp.asU256()) / 10, (long long
-int)-99)
-            + (long long int)(std::pow(2, int(_currentNumber.asU256() / 100000) - 2));
-    if (block_diff < minDiff)
-        return minDiff;
-    return block_diff;
-}*/
-
-VALUE calculateGasLimit(VALUE const& _parentGasLimit, VALUE const& _parentGasUsed)
-{
-    static u256 gasFloorTarget = 3141562; //_gasFloorTarget == Invalid256 ? 3141562 : _gasFloorTarget;
-    u256 gasLimit = _parentGasLimit.asU256();
-    static u256 boundDivisor = u256("0x0400");
-    if (gasLimit < gasFloorTarget)
-        return min<u256>(gasFloorTarget, gasLimit + gasLimit / boundDivisor - 1);
-    else
-        return max<u256>(gasFloorTarget,
-            gasLimit - gasLimit / boundDivisor + 1 + (_parentGasUsed.asU256() * 6 / 5) / boundDivisor);
-}
-
-// Because tool report incomplete state. restore missing fields with zeros
-// Also remove leading zeros in storage
-State restoreFullState(DataObject const& _toolState)
-{
-    DataObject fullState;
-    for (auto const& accTool : _toolState.getSubObjects())
-    {
-        DataObject acc;
-        acc["balance"] = accTool.count("balance") ? accTool.atKey("balance").asString() : "0x00";
-        acc["nonce"] = accTool.count("nonce") ? accTool.atKey("nonce").asString() : "0x00";
-        acc["code"] = accTool.count("code") ? accTool.atKey("code").asString() : "0x";
-        acc["storage"] = accTool.count("storage") ? accTool.atKey("storage") : DataObject(DataType::Object);
-        for (auto& storageRecord : acc.atKeyUnsafe("storage").getSubObjectsUnsafe())
-        {
-            storageRecord.performModifier(mod_removeLeadingZerosFromHexValuesEVEN);
-            storageRecord.performModifier(mod_removeLeadingZerosFromHexKeysEVEN);
-        }
-        fullState[accTool.getKey()] = acc;
-    }
-    return State(fullState);
-}
-}  // namespace
-
-
 namespace toolimpl
 {
-ToolChain::ToolChain(EthereumBlockState const& _genesis, SealEngine _sealEngine, FORK const& _fork, fs::path const& _toolPath)
-  : m_engine(_sealEngine), m_fork(new FORK(_fork)), m_toolPath(_toolPath)
+ToolChain::ToolChain(EthereumBlockState const& _genesis, SetChainParamsArgs const& _config, fs::path const& _toolPath)
+  : m_engine(_config.sealEngine()), m_fork(new FORK(_config.params().atKey("fork"))), m_toolPath(_toolPath)
 {
+    m_initialParams = GCP_SPointer<SetChainParamsArgs>(new SetChainParamsArgs(_config));
+    m_toolParams = GCP_SPointer<ToolParams>(new ToolParams(_config.params()));
+
     // We yet don't know the state root. ask the tool to calculate it
     ToolResponse res = mineBlockOnTool(_genesis, SealEngine::NoReward);
 
@@ -134,6 +49,11 @@ void ToolChain::mineBlock(EthereumBlockState const& _pendingBlock, Mining _req)
     pendingFixed.headerUnsafe().setLogsBloom(res.logsBloom());         // Assign LogsBloom from the
     pendingFixed.headerUnsafe().setStateRoot(res.stateRoot());         // Assign StateHash from the tool
 
+    // Calculate difficulty for tool (tool does not calculate difficulty)
+    ChainOperationParams params = ChainOperationParams::defaultParams(toolParams());
+    u256 toolDifficulty = calculateEthashDifficulty(params, pendingFixed.header(), lastBlock().header());
+    pendingFixed.headerUnsafe().setDifficulty(toolDifficulty);
+
     // No reason to calculate gasLimit and Difficulty on Retesteth side
     // if (_req == Mining::AllowFailTransactions)
     //{
@@ -148,9 +68,6 @@ void ToolChain::mineBlock(EthereumBlockState const& _pendingBlock, Mining _req)
     // m_blocks.size()); pendingFixed.headerUnsafe().setDifficulty(newDiff); VALUE newGas =
     // calculateGasLimit(lastHeader.gasLimit(), lastHeader.gasUsed()); pendingFixed.headerUnsafe().setGasLimit(newGas);
     //}
-
-
-    pendingFixed.headerUnsafe().recalculateHash();
 
     // Add only those transactions which tool returned a receipt for
     // Some transactions are expected to fail. That should be detected by tests
@@ -179,22 +96,17 @@ void ToolChain::mineBlock(EthereumBlockState const& _pendingBlock, Mining _req)
     // Treat all uncles as valid as t8ntool does not calculate uncles
     // Uncle header validity as well as RLP logic is checked before
     for (auto const& un : _pendingBlock.uncles())
+    {
+        verifyEthereumBlockHeader(un, *this);
         pendingFixed.addUncle(un);
+    }
     pendingFixed.recalculateUncleHash(); // Rely that only uncle hash is recalculated (simulate t8ntool unclehash)
 
     // Calculate header hash from header fields (do not recalc tx, un hashes)
     pendingFixed.headerUnsafe().recalculateHash();
 
     // Blockchain rules
-
-    // Validate block gasLimit delta
-    BlockHeader const& lastHeader = lastBlock().header();
-    VALUE newGAS = calculateGasLimit(lastHeader.gasLimit(), lastHeader.gasUsed());
-    VALUE deltaGas = newGAS.asU256()/1024;
-    if (pendingFixed.header().gasLimit().asU256() > lastHeader.gasLimit().asU256() + deltaGas.asU256()
-        || pendingFixed.header().gasLimit().asU256() < lastHeader.gasLimit().asU256() - deltaGas.asU256() )
-        throw test::UpwardsException("Invalid gas limit: " + pendingFixed.header().gasLimit().asDecString() +
-                                     ", want " + lastHeader.gasLimit().asDecString() + " +/- " + deltaGas.asDecString());
+    verifyEthereumBlockHeader(pendingFixed.header(), *this);
 
     // Require number from pending block to be equal to actual block number that is imported
     if (_pendingBlock.header().number() != pendingFixed.header().number().asU256())
@@ -241,7 +153,6 @@ void ToolChain::mineBlock(EthereumBlockState const& _pendingBlock, Mining _req)
     ETH_LOG("New block TD: " + totalDifficulty.asDecString() + " + " + pendingFixed.header().difficulty().asDecString() +
                 " = " + pendingFixed.totalDifficulty().asDecString(),
         6);
-
 
     m_blocks.push_back(pendingFixed);
 }
@@ -339,73 +250,4 @@ void ToolChain::rewindToBlock(size_t _number)
     while (m_blocks.size() > _number + 1)
         m_blocks.pop_back();
 }
-
 }  // namespace toolimpl
-
-/*
- * u256 calculateEthashDifficulty(
-    ChainOperationParams const& _chainParams, BlockHeader const& _bi, BlockHeader const& _parent)
-{
-    const unsigned c_expDiffPeriod = 100000;
-
-    if (!_bi.number())
-        throw GenesisBlockCannotBeCalculated();
-    auto const& minimumDifficulty = _chainParams.minimumDifficulty;
-    auto const& difficultyBoundDivisor = _chainParams.difficultyBoundDivisor;
-    auto const& durationLimit = _chainParams.durationLimit;
-
-    bigint target;  // stick to a bigint for the target. Don't want to risk going negative.
-    if (_bi.number() < _chainParams.homesteadForkBlock)
-        // Frontier-era difficulty adjustment
-        target = _bi.timestamp() >= _parent.timestamp() + durationLimit ?
-                     _parent.difficulty() - (_parent.difficulty() / difficultyBoundDivisor) :
-                     (_parent.difficulty() + (_parent.difficulty() / difficultyBoundDivisor));
-    else
-    {
-        bigint const timestampDiff = bigint(_bi.timestamp()) - _parent.timestamp();
-        bigint const adjFactor =
-            _bi.number() < _chainParams.byzantiumForkBlock ?
-                max<bigint>(1 - timestampDiff / 10, -99) :  // Homestead-era difficulty adjustment
-                max<bigint>((_parent.hasUncles() ? 2 : 1) - timestampDiff / 9,
-                    -99);  // Byzantium-era difficulty adjustment
-
-        target = _parent.difficulty() + _parent.difficulty() / 2048 * adjFactor;
-    }
-
-    bigint o = target;
-    unsigned exponentialIceAgeBlockNumber = unsigned(_parent.number() + 1);
-
-    // EIP-2384 Istanbul/Berlin Difficulty Bomb Delay
-    if (_bi.number() >= _chainParams.muirGlacierForkBlock)
-    {
-        if (exponentialIceAgeBlockNumber >= 9000000)
-            exponentialIceAgeBlockNumber -= 9000000;
-        else
-            exponentialIceAgeBlockNumber = 0;
-    }
-    // EIP-1234 Constantinople Ice Age delay
-    else if (_bi.number() >= _chainParams.constantinopleForkBlock)
-    {
-        if (exponentialIceAgeBlockNumber >= 5000000)
-            exponentialIceAgeBlockNumber -= 5000000;
-        else
-            exponentialIceAgeBlockNumber = 0;
-    }
-    // EIP-649 Byzantium Ice Age delay
-    else if (_bi.number() >= _chainParams.byzantiumForkBlock)
-    {
-        if (exponentialIceAgeBlockNumber >= 3000000)
-            exponentialIceAgeBlockNumber -= 3000000;
-        else
-            exponentialIceAgeBlockNumber = 0;
-    }
-
-    unsigned periodCount = exponentialIceAgeBlockNumber / c_expDiffPeriod;
-    if (periodCount > 1)
-        o += (bigint(1) << (periodCount - 2));  // latter will eventually become huge, so ensure
-                                                // it's a bigint.
-
-    o = max<bigint>(minimumDifficulty, o);
-    return u256(min<bigint>(o, std::numeric_limits<u256>::max()));
-}
-*/

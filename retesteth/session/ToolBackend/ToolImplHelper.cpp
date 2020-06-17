@@ -134,16 +134,4 @@ void verifyBlockRLP(dev::RLP const& _rlp)
         }
     }
 }
-
-void verifyEthereumBlockHeader(BlockHeader const& _header)
-{
-    // Check ethereum rules
-    if (_header.gasLimit() > dev::u256("0x7fffffffffffffff"))
-        throw test::UpwardsException("Header gasLimit > 0x7fffffffffffffff");
-    if (_header.difficulty() < dev::u256("0x20000"))
-        throw test::UpwardsException("Header difficulty < 0x20000");
-    if (_header.extraData().asString().size() > 32 * 2 + 2)
-        throw test::UpwardsException("Header extraData > 32 bytes");
-}
-
 }  // namespace toolimpl

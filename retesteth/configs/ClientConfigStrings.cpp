@@ -118,7 +118,7 @@ string const defaultToolExceptions = R"(
         "exceptions" : {
             "InvalidStateRoot" : "",
             "ExtraDataTooBig" : "Error importing raw rlp block: Header extraData > 32 bytes",
-            "InvalidDifficulty" : "Error importing raw rlp block: Header difficulty < 0x20000",
+            "InvalidDifficulty" : "Invalid difficulty:",
             "InvalidGasLimit" : "Error importing raw rlp block: Header gasLimit > 0x7fffffffffffffff",
             "TooMuchGasUsed" : "Error importing raw rlp block: t8ntool didn't return a transaction with hash",
             "InvalidNumber" : " Number from pending block != actual chain height",

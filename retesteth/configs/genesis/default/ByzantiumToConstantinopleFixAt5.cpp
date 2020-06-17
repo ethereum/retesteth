@@ -17,7 +17,10 @@ const string default_ByzantiumToConstantinopleFixAt5_config = R"({
 
 const string t8ntool_ByzantiumToConstantinopleFixAt5_config = R"({
     "params" : {
-        "fork" : "ByzantiumToConstantinopleFixAt5"
+        "fork" : "ByzantiumToConstantinopleFixAt5",
+        "constantinopleForkBlock" : "0x05",
+        "byzantiumForkBlock" : "0x00",
+        "homesteadForkBlock" : "0x00"
     },
     "accounts" : {
     }

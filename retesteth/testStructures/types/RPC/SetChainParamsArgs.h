@@ -9,16 +9,16 @@ namespace test
 {
 namespace teststruct
 {
-struct SetChainParamsArgs
+struct SetChainParamsArgs : GCP_SPointerBase
 {
     SetChainParamsArgs(DataObject const& _data);
     DataObject asDataObject() const;
     BlockHeader const& genesis() const { return m_genesis.getCContent(); }
     State const& state() const { return m_preState.getCContent(); }
     SealEngine sealEngine() const { return m_sealEngine; }
-    FORK fork() const { return FORK(m_params.atKey("fork").asString()); }
+    DataObject const& params() const { return m_params; }
 
-private:
+protected:
     SetChainParamsArgs() {}
     spState m_preState;
     SealEngine m_sealEngine;
