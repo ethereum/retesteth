@@ -342,8 +342,6 @@ string compareBlockHeaders(DataObject const& _blockA, DataObject const& _blockB,
         "compareBlockHeaders  _blockA.size() != _blockB.size()");
     for (auto const& el : _blockA.getSubObjects())
     {
-        static string const cYellow = "\x1b[33m";
-        static string const cRed = "\x1b[31m";
         string const testHeaderField = _blockB.getSubObjects().at(k++).asString();
         message += cYellow + el.getKey() + cRed + " ";
         if (el.asString() != testHeaderField)

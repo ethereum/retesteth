@@ -326,8 +326,6 @@ bool TestBlockchain::checkBlockException(string const& _sBlockException) const
         size_t pos = m_session.getLastRPCError().message().find(clientExceptionString);
         if (clientExceptionString.empty())
             pos = string::npos;
-        static string const cYellow = "\x1b[33m";
-        static string const cRed = "\x1b[31m";
         ETH_ERROR_REQUIRE_MESSAGE(pos != string::npos,
             cYellow + _sBlockException + cRed + " Not found in client response to postmine block tweak!" +
                 "\nImport result of postmine block: \n'" + cYellow + m_session.getLastRPCError().message() + cRed +

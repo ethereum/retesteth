@@ -8,7 +8,8 @@ enum class LogColor
     YELLOW,
     LIME
 };
-
+std::string const cYellow = "\x1b[33m";
+std::string const cRed = "\x1b[31m";
 void eth_warning_message(std::string const& _message, unsigned _verbosity = 1);
 void eth_stdout_message(std::string const& _message);
 void eth_stderror_message(std::string const& _message);

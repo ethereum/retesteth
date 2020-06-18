@@ -43,7 +43,8 @@ void ToolChainManager::reorganizePendingBlock()
 
     // Because aleth and geth+retesteth does this, but better be empty extraData
     m_pendingBlock.getContent().headerUnsafe().setExtraData(bl.header().extraData());
-
+    if (currentChain().fork() == "HomesteadToDaoAt5" && m_pendingBlock.getContent().header().number() == 5)
+        m_pendingBlock.getContent().headerUnsafe().setExtraData(BYTES(DataObject("0x64616f2d686172642d666f726b")));
     m_pendingBlock.getContent().headerUnsafe().setParentHash(currentChain().lastBlock().header().hash());
 }
 
@@ -86,7 +87,7 @@ FH32 ToolChainManager::importRawBlock(BYTES const& _rlp)
         for (auto const& chain : m_chains)
             for (auto const& bl : chain.second.getCContent().blocks())
                 if (bl.header().hash() == header.hash())
-                    throw test::UpwardsException("Block with hash: `" + header.hash().asString() + "` already in chain!");
+                    ETH_WARNING("Block with hash: `" + header.hash().asString() + "` already in chain!");
 
         // Check that we know the parent and prepare head to be the parentHeader of _rlp block
         reorganizeChainForParent(header.parentHash());
