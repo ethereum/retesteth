@@ -200,6 +200,8 @@ DataObject DoTests(DataObject const& _input, TestSuite::TestSuiteOptions& _opt)
     }
     else
     {
+        TestOutputHelper::get().setCurrentTestInfo(TestInfo("Parsing blockchain test"));
+        TestOutputHelper::get().setCurrentTestName("----");
         if (_opt.isLegacyTests)
         {
             // Change the tests instead??
