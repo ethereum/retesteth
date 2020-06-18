@@ -1,4 +1,5 @@
 #include "ToolChainManager.h"
+#include "ToolChainHelper.h"
 #include "ToolImplHelper.h"
 #include <retesteth/EthChecks.h>
 #include <retesteth/TestHelper.h>
@@ -82,9 +83,15 @@ FH32 ToolChainManager::importRawBlock(BYTES const& _rlp)
 
         BlockHeader header(rlp[0]);
         ETH_TEST_MESSAGE(header.asDataObject().asJson());
+        for (auto const& chain : m_chains)
+            for (auto const& bl : chain.second.getCContent().blocks())
+                if (bl.header().hash() == header.hash())
+                    throw test::UpwardsException("Block with hash: `" + header.hash().asString() + "` already in chain!");
 
         // Check that we know the parent and prepare head to be the parentHeader of _rlp block
         reorganizeChainForParent(header.parentHash());
+        verifyEthereumBlockHeader(header, currentChain());
+
         m_pendingBlock = spEthereumBlockState(new EthereumBlockState(header, lastBlock().state(), FH32::zero()));
         for (auto const& trRLP : rlp[1].toList())
         {
@@ -92,9 +99,19 @@ FH32 ToolChainManager::importRawBlock(BYTES const& _rlp)
             ETH_TEST_MESSAGE(tr.asDataObject().asJson());
             addPendingTransaction(tr);
         }
+
+        if (rlp[2].toList().size() > 2)
+            throw test::UpwardsException("Too many uncles!");
+
         for (auto const& unRLP : rlp[2].toList())
         {
             BlockHeader un(unRLP);
+            verifyEthereumBlockHeader(un, currentChain());
+            if (un.number() >= header.number() || un.number() + 7 <= header.number())
+                throw test::UpwardsException("Uncle number is wrong!");
+            for (auto const& pun : m_pendingBlock.getCContent().uncles())
+                if (pun.hash() == un.hash())
+                    throw test::UpwardsException("Uncle is brother!");
             m_pendingBlock.getContent().addUncle(un);
         }
 

@@ -326,10 +326,12 @@ bool TestBlockchain::checkBlockException(string const& _sBlockException) const
         size_t pos = m_session.getLastRPCError().message().find(clientExceptionString);
         if (clientExceptionString.empty())
             pos = string::npos;
+        static string const cYellow = "\x1b[33m";
+        static string const cRed = "\x1b[31m";
         ETH_ERROR_REQUIRE_MESSAGE(pos != string::npos,
-            "'" + clientExceptionString + "' (" + _sBlockException + ") " +
-                "not found in client response to postmine block tweak! Import result of postmine block: '" +
-                m_session.getLastRPCError().message() + "', Test Expected: '" + clientExceptionString + "'");
+            cYellow + _sBlockException + cRed + " Not found in client response to postmine block tweak!" +
+                "\nImport result of postmine block: \n'" + cYellow + m_session.getLastRPCError().message() + cRed +
+                "',\n Test Expected: \n'" + cYellow + clientExceptionString + cRed + "'\n");
         return false;  // block is not valid
     }
     return true;  // block is valid

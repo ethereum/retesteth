@@ -349,7 +349,10 @@ string compareBlockHeaders(DataObject const& _blockA, DataObject const& _blockB,
         if (el.asString() != testHeaderField)
         {
             if (el.getKey() != "hash")
-                _whatField = el.getKey();
+            {
+                if (_whatField.empty())
+                    _whatField = el.getKey();
+            }
             else
                 errorInHashField = true;
             message += el.asString() + " vs " + cYellow + testHeaderField + cRed + "\n";

@@ -125,6 +125,7 @@ ChainOperationParams ChainOperationParams::defaultParams(ToolParams const& _para
     return aleth;
 }
 
+// Aleth calculate difficulty formula
 u256 calculateEthashDifficulty(ChainOperationParams const& _chainParams, BlockHeader const& _bi, BlockHeader const& _parent)
 {
     const unsigned c_expDiffPeriod = 100000;
@@ -197,31 +198,51 @@ void verifyEthereumBlockHeader(BlockHeader const& _header, ToolChain const& _cha
     if (_header.gasLimit() > dev::u256("0x7fffffffffffffff"))
         throw test::UpwardsException("Header gasLimit > 0x7fffffffffffffff");
     if (_header.difficulty() < dev::u256("0x20000"))
-        throw test::UpwardsException("Header difficulty < 0x20000");
+        throw test::UpwardsException("Invalid difficulty: header.difficulty < 0x20000");
+    if (_header.gasUsed() > _header.gasLimit())
+        throw test::UpwardsException("Invalid gasUsed: header.gasUsed > header.gasLimit");
     if (_header.extraData().asString().size() > 32 * 2 + 2)
         throw test::UpwardsException("Header extraData > 32 bytes");
 
-    // Validate block gasLimit delta
-    BlockHeader const& lastHeader = _chain.lastBlock().header();
-    VALUE newGAS = calculateGasLimit(lastHeader.gasLimit(), lastHeader.gasUsed());
-    VALUE deltaGas = newGAS.asU256() / 1024;
-    if (_header.gasLimit().asU256() > lastHeader.gasLimit().asU256() + deltaGas.asU256() ||
-        _header.gasLimit().asU256() < lastHeader.gasLimit().asU256() - deltaGas.asU256())
-        throw test::UpwardsException("Invalid gas limit: " + _header.gasLimit().asDecString() + ", want " +
-                                     lastHeader.gasLimit().asDecString() + " +/- " + deltaGas.asDecString());
+    // Check DAO extraData
+    if (_chain.fork().asString() == "HomesteadToDaoAt5" && _header.number() > 4 && _header.number() < 19 &&
+        _header.extraData().asString() != "0x64616f2d686172642d666f726b")
+        throw test::UpwardsException("BlockHeader require Dao ExtraData! (0x64616f2d686172642d666f726b)");
 
     bool found = false;
     for (auto const& block : _chain.blocks())
     {
+        // See if uncles not already in chain
+        if (block.header().hash() == _header.hash())
+            throw test::UpwardsException("Block is already in chain!");
+        for (auto const& un : block.uncles())
+            if (un.hash() == _header.hash())
+                throw test::UpwardsException("Block is already in chain!");
+
         if (block.header().hash() == _header.parentHash())
         {
             found = true;
+
+            if (_header.number() != block.header().number() + 1)
+                throw test::UpwardsException("BlockHeader number != parent.number + 1 (" + _header.number().asDecString() +
+                                             " != " + block.header().number().asDecString() + ")");
+
+            if (block.header().timestamp() >= _header.timestamp())
+                throw test::UpwardsException("BlockHeader timestamp is less then it's parent block!");
+
+            // Validate block gasLimit delta
+            VALUE deltaGas = block.header().gasLimit().asU256() / 1024;
+            if (_header.gasLimit().asU256() >= block.header().gasLimit().asU256() + deltaGas.asU256() ||
+                _header.gasLimit().asU256() <= block.header().gasLimit().asU256() - deltaGas.asU256())
+                throw test::UpwardsException("Invalid gaslimit: " + _header.gasLimit().asDecString() + ", want " +
+                                             block.header().gasLimit().asDecString() + " +/- " + deltaGas.asDecString());
+
+            // Validate block difficulty delta
             ChainOperationParams params = ChainOperationParams::defaultParams(_chain.toolParams());
             u256 newDiff = calculateEthashDifficulty(params, _header, block.header());
             if (_header.difficulty().asU256() != newDiff)
                 throw test::UpwardsException(
                     "Invalid difficulty: " + _header.difficulty().asDecString() + ", want: " + VALUE(newDiff).asDecString());
-            return;
         }
     }
     if (!found)

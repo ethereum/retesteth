@@ -172,23 +172,30 @@ DataObject DoTests(DataObject const& _input, TestSuite::TestSuiteOptions& _opt)
 
         for (BlockchainTestInFiller const& bcTest : testFiller.tests())
         {
-            // Select test by name if --singletest and --singlenet is set
-            if (Options::get().singleTest)
+            try
             {
-                if (!Options::get().singleSubTestName.empty() && bcTest.testName() != Options::get().singleSubTestName)
-                    continue;
-            }
-            if (!Options::get().singleTestNet.empty())
-            {
-                if (!bcTest.hasExpectForNetwork(FORK(Options::get().singleTestNet)))
-                    continue;
-            }
+                // Select test by name if --singletest and --singlenet is set
+                if (Options::get().singleTest)
+                {
+                    if (!Options::get().singleSubTestName.empty() && bcTest.testName() != Options::get().singleSubTestName)
+                        continue;
+                }
+                if (!Options::get().singleTestNet.empty())
+                {
+                    if (!bcTest.hasExpectForNetwork(FORK(Options::get().singleTestNet)))
+                        continue;
+                }
 
-            // One blockchain test generate many tests for each network
-            DataObject filledTests = FillTest(bcTest, _opt);
-            for (auto const& t : filledTests.getSubObjects())
-                tests.addSubObject(t);
-            TestOutputHelper::get().registerTestRunSuccess();
+                // One blockchain test generate many tests for each network
+                DataObject filledTests = FillTest(bcTest, _opt);
+                for (auto const& t : filledTests.getSubObjects())
+                    tests.addSubObject(t);
+                TestOutputHelper::get().registerTestRunSuccess();
+            }
+            catch (EthError const& _ex)
+            {
+                continue;
+            }
         }
     }
     else

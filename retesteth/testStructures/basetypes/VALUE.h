@@ -20,7 +20,9 @@ struct VALUE : GCP_SPointerBase
     VALUE(DataObject const&);
     bool operator<(int _rhs) const { return m_data < _rhs; }
     bool operator>(VALUE const& _rhs) const { return m_data > _rhs.asU256(); }
+    bool operator>=(VALUE const& _rhs) const { return m_data >= _rhs.asU256(); }
     bool operator<(VALUE const& _rhs) const { return m_data < _rhs.asU256(); }
+    bool operator<=(VALUE const& _rhs) const { return m_data <= _rhs.asU256(); }
     bool operator!=(VALUE const& _rhs) const { return m_data != _rhs.asU256(); }
     bool operator==(VALUE const& _rhs) const { return m_data == _rhs.asU256(); }
     VALUE operator-(VALUE const& _rhs) const { return VALUE(m_data - _rhs.asU256()); }

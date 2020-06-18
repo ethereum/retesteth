@@ -54,21 +54,6 @@ void ToolChain::mineBlock(EthereumBlockState const& _pendingBlock, Mining _req)
     u256 toolDifficulty = calculateEthashDifficulty(params, pendingFixed.header(), lastBlock().header());
     pendingFixed.headerUnsafe().setDifficulty(toolDifficulty);
 
-    // No reason to calculate gasLimit and Difficulty on Retesteth side
-    // if (_req == Mining::AllowFailTransactions)
-    //{
-    // With this some tests depend on clint's gasLimit and gasUsed calculation
-    // Also header extradata
-
-    // Tool mining. Txs expected to fail. difficulty is calculated by tool
-    // Set pending difficulty from tool. (calculate on retesteth side)
-    // But if import is happening from rawRLP do not overwrite difficulty
-    // BlockHeader const& lastHeader = lastBlock().header();
-    // VALUE newDiff = calculateDifficulty(lastHeader.difficulty(), lastHeader.timestamp(), pendingFixed.header().timestamp(),
-    // m_blocks.size()); pendingFixed.headerUnsafe().setDifficulty(newDiff); VALUE newGas =
-    // calculateGasLimit(lastHeader.gasLimit(), lastHeader.gasUsed()); pendingFixed.headerUnsafe().setGasLimit(newGas);
-    //}
-
     // Add only those transactions which tool returned a receipt for
     // Some transactions are expected to fail. That should be detected by tests
     for (auto const& tr : _pendingBlock.transactions())
@@ -173,21 +158,9 @@ ToolResponse ToolChain::mineBlockOnTool(EthereumBlockState const& _block, SealEn
     for (auto const& un : _block.uncles())
     {
         DataObject uncle;
-
-        // -- validate uncle header
         int delta = (int)(_block.header().number() - un.number()).asU256();
         if (delta < 1)
             throw test::UpwardsException("Uncle header delta is < 1");
-        if (un.number().asU256() == 0 || un.number().asU256() >= m_blocks.size())
-            throw test::UpwardsException("Uncle number is too old or 0!");
-        size_t uncleParent = (size_t)un.number().asU256() - 1;
-        if (m_blocks.at(uncleParent).header().timestamp().asU256() >= un.timestamp().asU256())
-            throw test::UpwardsException("Uncle timestamp is less then its parent block!");
-        if (m_fork.getContent().asString() == "HomesteadToDaoAt5" && un.number() > 4 && un.number() < 19 &&
-            un.extraData().asString() != "0x64616f2d686172642d666f726b")
-            throw test::UpwardsException("Uncle Dao Extra Data required!");
-
-        // ---
         uncle["delta"] = delta;
         uncle["address"] = un.author().asString();
         envData["ommers"].addArrayObject(uncle);
