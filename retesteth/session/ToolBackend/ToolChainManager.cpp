@@ -1,4 +1,5 @@
 #include "ToolChainManager.h"
+#include "ToolChainHelper.h"
 #include "ToolImplHelper.h"
 #include <retesteth/EthChecks.h>
 #include <retesteth/TestHelper.h>
@@ -12,7 +13,7 @@ ToolChainManager::ToolChainManager(SetChainParamsArgs const& _config, fs::path c
     m_currentChain = 0;
     m_maxChains = 0;
     EthereumBlockState genesis(_config.genesis(), _config.state(), FH32::zero());
-    m_chains[m_currentChain] = spToolChain(new ToolChain(genesis, _config.sealEngine(), _config.fork(), _toolPath));
+    m_chains[m_currentChain] = spToolChain(new ToolChain(genesis, _config, _toolPath));
     m_pendingBlock =
         spEthereumBlockState(new EthereumBlockState(currentChain().lastBlock().header(), _config.state(), FH32::zero()));
     reorganizePendingBlock();
@@ -23,8 +24,7 @@ void ToolChainManager::mineBlocks(size_t _number, ToolChain::Mining _req)
     if (_number > 1)
         throw test::UpwardsException("ToolChainManager::mineBlocks number arg invalid: " + fto_string(_number));
     currentChainUnsafe().mineBlock(m_pendingBlock.getCContent(), _req);
-    EthereumBlockState const& bl = currentChain().lastBlock();
-    m_pendingBlock = spEthereumBlockState(new EthereumBlockState(bl.header(), bl.state(), FH32::zero()));
+    reorganizePendingBlock();
 }
 
 void ToolChainManager::rewindToBlock(VALUE const& _number)
@@ -39,8 +39,12 @@ void ToolChainManager::reorganizePendingBlock()
 {
     EthereumBlockState const& bl = currentChain().lastBlock();
     m_pendingBlock = spEthereumBlockState(new EthereumBlockState(bl.header(), bl.state(), bl.logHash()));
-    m_pendingBlock.getContent().headerUnsafe().setNumber(1);
-    m_pendingBlock.getContent().headerUnsafe().setExtraData(DataObject("0x"));
+    m_pendingBlock.getContent().headerUnsafe().setNumber(bl.header().number() + 1);
+
+    // Because aleth and geth+retesteth does this, but better be empty extraData
+    m_pendingBlock.getContent().headerUnsafe().setExtraData(bl.header().extraData());
+    if (currentChain().fork() == "HomesteadToDaoAt5" && m_pendingBlock.getContent().header().number() == 5)
+        m_pendingBlock.getContent().headerUnsafe().setExtraData(BYTES(DataObject("0x64616f2d686172642d666f726b")));
     m_pendingBlock.getContent().headerUnsafe().setParentHash(currentChain().lastBlock().header().hash());
 }
 
@@ -79,30 +83,46 @@ FH32 ToolChainManager::importRawBlock(BYTES const& _rlp)
         toolimpl::verifyBlockRLP(rlp);
 
         BlockHeader header(rlp[0]);
-        toolimpl::verifyEthereumBlockHeader(header);
+        ETH_TEST_MESSAGE(header.asDataObject().asJson());
+        for (auto const& chain : m_chains)
+            for (auto const& bl : chain.second.getCContent().blocks())
+                if (bl.header().hash() == header.hash())
+                    ETH_WARNING("Block with hash: `" + header.hash().asString() + "` already in chain!");
 
         // Check that we know the parent and prepare head to be the parentHeader of _rlp block
         reorganizeChainForParent(header.parentHash());
+        verifyEthereumBlockHeader(header, currentChain());
 
         m_pendingBlock = spEthereumBlockState(new EthereumBlockState(header, lastBlock().state(), FH32::zero()));
         for (auto const& trRLP : rlp[1].toList())
         {
             Transaction tr(trRLP);
+            ETH_TEST_MESSAGE(tr.asDataObject().asJson());
             addPendingTransaction(tr);
         }
+
+        if (rlp[2].toList().size() > 2)
+            throw test::UpwardsException("Too many uncles!");
+
         for (auto const& unRLP : rlp[2].toList())
         {
             BlockHeader un(unRLP);
+            verifyEthereumBlockHeader(un, currentChain());
+            if (un.number() >= header.number() || un.number() + 7 <= header.number())
+                throw test::UpwardsException("Uncle number is wrong!");
+            for (auto const& pun : m_pendingBlock.getCContent().uncles())
+                if (pun.hash() == un.hash())
+                    throw test::UpwardsException("Uncle is brother!");
             m_pendingBlock.getContent().addUncle(un);
         }
 
-        ETH_TEST_MESSAGE(header.asDataObject().asJson());
         mineBlocks(1, ToolChain::Mining::RequireValid);
         FH32 const& importedHash = lastBlock().header().hash();
         if (importedHash != header.hash())
         {
+            string errField;
             string message = "t8ntool constructed HEADER vs rawRLP HEADER: \n";
-            message += compareBlockHeaders(lastBlock().header().asDataObject(), header.asDataObject());
+            message += compareBlockHeaders(lastBlock().header().asDataObject(), header.asDataObject(), errField);
             ETH_ERROR_MESSAGE(string("Imported block hash != rawRLP hash ") + "(" + importedHash.asString() +
                               " != " + header.hash().asString() + ")" + "\n " + message);
         }
@@ -135,8 +155,7 @@ void ToolChainManager::reorganizeChainForParent(FH32 const& _parentHash)
                 else
                 {
                     // clone existing chain up to this block
-                    m_chains[++m_maxChains] =
-                        spToolChain(new ToolChain(blocks.at(0), rchain.engine(), rchain.fork(), rchain.toolPath()));
+                    m_chains[++m_maxChains] = spToolChain(new ToolChain(blocks.at(0), rchain.params(), rchain.toolPath()));
                     m_currentChain = m_maxChains;
                     for (size_t j = 1; j <= i; j++)
                         m_chains[m_currentChain].getContent().insertBlock(blocks.at(j));

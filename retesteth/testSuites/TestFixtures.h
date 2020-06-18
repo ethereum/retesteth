@@ -16,6 +16,7 @@ static std::vector<std::string> const c_timeConsumingTestSuites{std::string{"stT
 
 enum class TestExecution
 {
+    RequireOptionFill,
     RequireOptionAll,
     NotRefillable
 };
@@ -32,6 +33,13 @@ class RequireOptionAll
 public:
     RequireOptionAll() {}
     std::set<TestExecution> getFlags() { return {TestExecution::RequireOptionAll}; }
+};
+
+class RequireOptionFill
+{
+public:
+    RequireOptionFill() {}
+    std::set<TestExecution> getFlags() { return {TestExecution::RequireOptionFill}; }
 };
 
 class DefaultFlags
@@ -67,6 +75,13 @@ public:
              && !test::Options::get().all)
         {
             std::cout << "Skipping " << casename << " because --all option is not specified.\n";
+            test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
+            return;
+        }
+
+        if (allFlags.count(TestExecution::RequireOptionFill) && !Options::get().filltests)
+        {
+            std::cout << "Skipping " << casename << " because --filltests option is not specified.\n";
             test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
             return;
         }

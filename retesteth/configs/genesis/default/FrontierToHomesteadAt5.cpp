@@ -12,7 +12,8 @@ const string default_FrontierToHomesteadAt5_config = R"({
 
 const string t8ntool_FrontierToHomesteadAt5_config = R"({
     "params" : {
-        "fork" : "FrontierToHomesteadAt5"
+        "fork" : "FrontierToHomesteadAt5",
+        "homesteadForkBlock" : "0x05"
     },
     "accounts" : {
     }

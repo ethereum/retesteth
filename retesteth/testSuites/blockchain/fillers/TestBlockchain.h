@@ -50,7 +50,7 @@ public:
 
 private:
     // Ask remote client to generate a blockheader that will later used for uncles
-    BlockHeader mineNextBlockAndRewert();
+    BlockHeader mineNextBlockAndRevert();
 
     // Mine the test block on remote client.
     // if blockheader is tweaked or there are uncles, postmine tweak this and reimport

@@ -185,60 +185,16 @@ void ToolImpl::test_mineBlocks(size_t _number)
 {
     rpcCall("", {});
     ETH_TEST_MESSAGE("\nRequest: test_mineBlocks");
-    blockchain().mineBlocks(_number);
+    try
+    {
+        blockchain().mineBlocks(_number);
+    }
+    catch (std::exception const& _ex)
+    {
+        ETH_ERROR_MESSAGE(_ex.what());
+    }
 
     ETH_TEST_MESSAGE("Response test_mineBlocks {" + blockchain().lastBlock().header().number().asDecString() + "}");
-
-    /*
-    ETH_ERROR_REQUIRE_MESSAGE(_number == 1, "Make sure test_mineBlocks mine 1 block");
-
-    // env.json file
-    // if mining a new block (not from import RawBlock)
-    if (!m_currentBlockHeader.isImportRawBlock && !m_currentBlockHeader.isMiningGenesis)
-    {
-        // Information about the block that currently mined
-        // if m_blockchain.size == 0 then we mine [1] first block
-        // if m_blockchain.size == 1 then we mine [2] second block
-        m_currentBlockHeader.currentBlockNumber = getCurrChain().size() + 1;  // future block
-        size_t const _blockNr = m_currentBlockHeader.currentBlockNumber;
-        string const* pHash;
-        if (_blockNr == 1)  // if we are mining blockN = 1
-            pHash = &getGenesis().getHash();
-        else
-            pHash = &getLastBlock().getHash();
-        m_currentBlockHeader.header["parentHash"] = *pHash;
-    }
-    fs::path envPath = m_tmpDir / "env.json";
-    writeFile(envPath.string(), prepareEnvForTool());
-
-    // output file
-    fs::path outPath = m_tmpDir / "out.json";
-    fs::path outAllocPath = m_tmpDir / "outAlloc.json";
-
-    // If calculating geneis block, disable rewards so to see the state root hash
-
-    // Construct block rpc response
-    DataObject const toolResponse = ConvertJsoncppStringToData(contentsString(outPath));
-    scheme_RPCBlock blockRPC = internalConstructResponseGetBlockByHashOrNumber(toolResponse);
-
-    ToolBlock block(blockRPC, m_chainParams,                        // Env, alloc info
-        ConvertJsoncppStringToData(contentsString(outAllocPath)));  // Result state
-    if (toolResponse.count("rejected"))
-        block.markInvalidTransactions();
-
-    m_transactions.clear();  // comment to trigger transaction rejection
-
-    if (!m_currentBlockHeader.isMiningGenesis)
-        m_currentBlockHeader.reset();
-
-    // TODO:: verify tx from our list and from tool response
-
-    m_blockchainMap[m_current_chain_ind].push_back(block);
-    fs::remove_all(m_tmpDir);
-    ETH_TEST_MESSAGE("Response test_mineBlocks {" + toString(getCurrChain().size()) + "}");
-    ETH_TEST_MESSAGE(blockRPC.getData().asJson());
-    return toString(getCurrChain().size());
-    */
 }
 
 // Import block from RAW rlp and validate it according to ethereum rules

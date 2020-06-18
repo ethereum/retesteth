@@ -20,6 +20,7 @@ struct BlockHeader : GCP_SPointerBase
     dev::RLPStream const asRLPStream() const;
     bool operator==(BlockHeader const& _rhs) const;
     bool operator!=(BlockHeader const& _rhs) const { return !(*this == _rhs); };
+    bool hasUncles() const;
 
     FH32 const& stateRoot() const { return m_stateRoot.getCContent(); }
     FH32 const& receiptTrie() const { return m_receiptsRoot.getCContent(); }
@@ -39,6 +40,7 @@ struct BlockHeader : GCP_SPointerBase
 
     void setLogsBloom(FH256 const& _logs) { m_logsBloom = spFH256(new FH256(_logs)); }
     void setTimestamp(VALUE const& _value) { m_timestamp = spVALUE(new VALUE(_value.asU256())); }
+    void setDifficulty(VALUE const& _value) { m_difficulty = spVALUE(new VALUE(_value.asU256())); }
     void setTransactionHash(FH32 const& _hash) { m_transactionsRoot = spFH32(new FH32(_hash)); }
     void setTrReceiptsHash(FH32 const& _hash) { m_receiptsRoot = spFH32(new FH32(_hash)); }
     void setStateRoot(FH32 const& _hash) { m_stateRoot = spFH32(new FH32(_hash)); }
@@ -48,6 +50,7 @@ struct BlockHeader : GCP_SPointerBase
     void setUnclesHash(FH32 const& _hash) { m_sha3Uncles = spFH32(new FH32(_hash)); }
     void setHeaderHash(FH32 const& _hash) { m_hash = spFH32(new FH32(_hash)); }
     void setGasUsed(VALUE const& _gasUsed) { m_gasUsed = spVALUE(new VALUE(_gasUsed)); }
+    void setGasLimit(VALUE const& _gasLimit) { m_gasLimit = spVALUE(new VALUE(_gasLimit)); }
     void recalculateHash();
 
 private:

@@ -432,6 +432,8 @@ DataObject StateTestSuite::doTests(DataObject const& _input, TestSuiteOptions& _
         }
         else
         {
+            TestOutputHelper::get().setCurrentTestInfo(TestInfo("Parsing generalstate test"));
+            TestOutputHelper::get().setCurrentTestName("----");
             if (_opt.isLegacyTests)
             {
                 // Change the tests instead??

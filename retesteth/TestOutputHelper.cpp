@@ -53,15 +53,16 @@ mutex g_helperThreadMapMutex;
 TestOutputHelper& TestOutputHelper::get()
 {
     std::lock_guard<std::mutex> lock(g_helperThreadMapMutex);
-    if (helperThreadMap.count(getThreadID()))
-        return helperThreadMap.at(getThreadID());
+    string tID = getThreadID();
+    if (helperThreadMap.count(tID))
+        return helperThreadMap.at(tID);
     else
     {
         TestOutputHelper instance;
-        helperThreadMap.emplace(std::make_pair(getThreadID(), std::move(instance)));
-        helperThreadMap.at(getThreadID()).initTest(0);
+        helperThreadMap.emplace(std::make_pair(tID, std::move(instance)));
+        helperThreadMap.at(tID).initTest(0);
     }
-    return helperThreadMap.at(getThreadID());
+    return helperThreadMap.at(tID);
 }
 
 bool TestOutputHelper::markError(std::string const& _message)
@@ -69,15 +70,37 @@ bool TestOutputHelper::markError(std::string const& _message)
     // We might have an expected exceptions to happen. See if it is like that
     if (m_expected_UnitTestExceptions.size() > 0)
     {
+        // STRING SIMPLIFICATION
+        string rmessage = _message;
+        auto cond = [](int el) { return (el == ' ' || el == '\n' || el == '\t'); };
+        rmessage.erase(std::remove_if(rmessage.begin(), rmessage.end(), cond), rmessage.end());
+
+        auto eraseAllSubStr = [](std::string& mainStr, const std::string& toErase) {
+            size_t pos = std::string::npos;
+            while ((pos = mainStr.find(toErase)) != std::string::npos)
+                mainStr.erase(pos, toErase.length());
+        };
+        auto eraseSubStrings = [&](std::string& mainStr, const std::vector<std::string>& strList) {
+            std::for_each(strList.begin(), strList.end(), std::bind(eraseAllSubStr, std::ref(mainStr), std::placeholders::_1));
+        };
+        eraseSubStrings(rmessage, {cRed, cYellow});
+        // ------------------------
+
         string const& allowedException =
             m_expected_UnitTestExceptions.at(m_expected_UnitTestExceptions.size() - 1);
-        if (allowedException == _message || allowedException == c_exception_any)
+        if (allowedException == _message || allowedException == rmessage || allowedException == c_exception_any)
         {
             m_expected_UnitTestExceptions.pop_back();
             return false;
         }
         else
-            ETH_STDERROR_MESSAGE("Occured error: '" + _message + "' vs Expected error: '" + allowedException + "'");
+        {
+            string printMessage = _message;
+            if (_message.find(cYellow) != std::string::npos)
+                printMessage = rmessage;
+            ETH_STDERROR_MESSAGE("Occured error: \n--------\n" + printMessage + "\n--------\n vs Expected error: \n--------\n" +
+                                 allowedException + "\n--------\n");
+        }
     }
 
     // Mark the error

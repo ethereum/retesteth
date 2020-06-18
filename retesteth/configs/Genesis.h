@@ -37,6 +37,8 @@ extern const std::string t8ntool_ByzantiumToConstantinopleFixAt5_config;
 extern const std::string default_correctMiningReward_config;
 
 // Clients Config
+extern const std::string defaultForks;
+extern const std::string defaultGethExceptions;
 extern const std::string default_config;        // Default geth retesteth
 extern const std::string t8ntool_config;        // geth state_t8n tool
 extern const std::string besu_config;           // besu config

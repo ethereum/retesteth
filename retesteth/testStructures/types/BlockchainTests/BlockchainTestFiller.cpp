@@ -50,6 +50,7 @@ BlockchainTestInFiller::BlockchainTestInFiller(DataObject const& _data)
                 m_exceptions.push_back(_data.atKey("exceptions").getSubObjects().at(i - 1).asString());
         }
 
+        m_hasAtLeastOneUncle = false;
         for (auto const& el : _data.atKey("blocks").getSubObjects())
         {
             m_blocks.push_back(BlockchainTestFillerBlock(el));

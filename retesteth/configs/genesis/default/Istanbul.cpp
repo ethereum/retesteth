@@ -19,7 +19,10 @@ const string default_Istanbul_config = R"({
 
 const string t8ntool_Istanbul_config = R"({
     "params" : {
-        "fork" : "Istanbul"
+        "fork" : "Istanbul",
+        "constantinopleForkBlock" : "0x00",
+        "byzantiumForkBlock" : "0x00",
+        "homesteadForkBlock" : "0x00"
     },
     "accounts" : {
     }

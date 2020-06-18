@@ -21,7 +21,7 @@ TestBlockchain::TestBlockchain(BlockchainTestFillerEnv const& _testEnv, State co
     EthGetBlockBy latestBlock(m_session.eth_getBlockByNumber(0, Request::LESSOBJECTS));
     TestBlock genesisBlock(latestBlock.getRLPHeaderTransactions(), "genesis", m_network, 0);
     genesisBlock.registerTestHeader(latestBlock.header());
-    genesisBlock.setNextBlockForked(mineNextBlockAndRewert());
+    genesisBlock.setNextBlockForked(mineNextBlockAndRevert());
     m_blocks.push_back(genesisBlock);
 }
 
@@ -114,7 +114,7 @@ void TestBlockchain::generateBlock(
 
         // Ask remote client to generate a parallel blockheader that will later be used for uncles
         if (_generateUncles)
-            newBlock.setNextBlockForked(mineNextBlockAndRewert());
+            newBlock.setNextBlockForked(mineNextBlockAndRevert());
 
         m_blocks.push_back(newBlock);
     }
@@ -173,9 +173,10 @@ GCP_SPointer<EthGetBlockBy> TestBlockchain::mineBlock(
 }
 
 // Ask remote client to generate a blockheader that will later used for uncles
-BlockHeader TestBlockchain::mineNextBlockAndRewert()
+BlockHeader TestBlockchain::mineNextBlockAndRevert()
 {
     ETH_LOGC("Mine uncle block (next block) and revert: " + m_sDebugString, 6, LogColor::YELLOW);
+    m_session.test_modifyTimestamp(1000);
     m_session.test_mineBlocks(1);
     VALUE latestBlockNumber(m_session.eth_blockNumber());
     EthGetBlockBy nextBlock(m_session.eth_getBlockByNumber(latestBlockNumber, Request::LESSOBJECTS));
@@ -303,7 +304,7 @@ FH32 TestBlockchain::postmineBlockHeader(BlockchainTestFillerBlock const& _block
     }
 
     if (!weOverwriteHashFields)
-        managedBlock.recalculateHeaderHash();
+        managedBlock.recalculateUncleHash();
 
     m_session.test_rewindToBlock(_latestBlockNumber - 1);
     _rawRLP = BYTES(managedBlock.getRLP().asString());
@@ -326,9 +327,9 @@ bool TestBlockchain::checkBlockException(string const& _sBlockException) const
         if (clientExceptionString.empty())
             pos = string::npos;
         ETH_ERROR_REQUIRE_MESSAGE(pos != string::npos,
-            "'" + clientExceptionString + "' (" + _sBlockException + ") " +
-                "not found in client response to postmine block tweak! Import result of postmine block: '" +
-                m_session.getLastRPCError().message() + "', Test Expected: '" + clientExceptionString + "'");
+            cYellow + _sBlockException + cRed + " Not found in client response to postmine block tweak!" +
+                "\nImport result of postmine block: \n'" + cYellow + m_session.getLastRPCError().message() + cRed +
+                "',\n Test Expected: \n'" + cYellow + clientExceptionString + cRed + "'\n");
         return false;  // block is not valid
     }
     return true;  // block is valid

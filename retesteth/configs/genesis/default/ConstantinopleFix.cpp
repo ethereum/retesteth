@@ -17,7 +17,10 @@ const string default_ConstantinopleFix_config = R"({
 
 const string t8ntool_ConstantinopleFix_config = R"({
     "params" : {
-        "fork" : "ConstantinopleFix"
+        "fork" : "ConstantinopleFix",
+        "constantinopleForkBlock" : "0x00",
+        "byzantiumForkBlock" : "0x00",
+        "homesteadForkBlock" : "0x00"
     },
     "accounts" : {
     }

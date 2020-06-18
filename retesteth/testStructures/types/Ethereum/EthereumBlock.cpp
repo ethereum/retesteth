@@ -9,7 +9,7 @@ namespace test
 {
 namespace teststruct
 {
-void EthereumBlock::recalculateHeaderHash()
+void EthereumBlock::recalculateUncleHash()
 {
     // Transaction has is calculated from transaction trie, not from list
     // Transaction List

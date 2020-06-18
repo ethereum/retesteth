@@ -1,3 +1,4 @@
+#include "ToolChainHelper.h"
 #include "ToolChainManager.h"
 #include <libdevcore/CommonIO.h>
 #include <retesteth/Options.h>
@@ -10,74 +11,14 @@ using namespace test;
 using namespace teststruct;
 using namespace dataobject;
 
-namespace
-{
-// We simulate the client backend side here, so thats why number5 is hardcoded
-// Map rewards from non standard forks into standard
-static std::map<FORK, FORK> RewardMapForToolBefore5 = {{"FrontierToHomesteadAt5", "Frontier"},
-    {"HomesteadToEIP150At5", "Homestead"}, {"EIP158ToByzantiumAt5", "EIP158"}, {"HomesteadToDaoAt5", "Homestead"},
-    {"ByzantiumToConstantinopleFixAt5", "Byzantium"}};
-static std::map<FORK, FORK> RewardMapForToolAfter5 = {{"FrontierToHomesteadAt5", "Homestead"},
-    {"HomesteadToEIP150At5", "EIP150"}, {"EIP158ToByzantiumAt5", "Byzantium"}, {"HomesteadToDaoAt5", "Homestead"},
-    {"ByzantiumToConstantinopleFixAt5", "ConstantinopleFix"}};
-
-std::tuple<VALUE, FORK> prepareReward(SealEngine _engine, FORK const& _fork, VALUE const& _blockNumber = VALUE(0))
-{
-    if (_engine == SealEngine::Ethash)
-        ETH_WARNING_TEST("t8ntool backend treat Ethash as NoProof!", 6);
-
-    // Setup mining rewards
-    std::map<FORK, spVALUE> const& rewards = Options::get().getDynamicOptions().getCurrentConfig().getRewardMap();
-    if (rewards.count(_fork))
-        return {rewards.at(_fork).getCContent(), _fork};
-    else
-    {
-        if (_blockNumber < 5)
-        {
-            assert(RewardMapForToolBefore5.count(_fork));
-            auto const& trFork = RewardMapForToolBefore5.at(_fork);
-            assert(rewards.count(trFork));
-            return {rewards.at(trFork).getCContent(), trFork};
-        }
-        else
-        {
-            assert(RewardMapForToolAfter5.count(_fork));
-            auto const& trFork = RewardMapForToolAfter5.at(_fork);
-            assert(rewards.count(trFork));
-            return {rewards.at(trFork).getCContent(), trFork};
-        }
-    }
-}
-
-// Because tool report incomplete state. restore missing fields with zeros
-// Also remove leading zeros in storage
-State restoreFullState(DataObject const& _toolState)
-{
-    DataObject fullState;
-    for (auto const& accTool : _toolState.getSubObjects())
-    {
-        DataObject acc;
-        acc["balance"] = accTool.count("balance") ? accTool.atKey("balance").asString() : "0x00";
-        acc["nonce"] = accTool.count("nonce") ? accTool.atKey("nonce").asString() : "0x00";
-        acc["code"] = accTool.count("code") ? accTool.atKey("code").asString() : "0x";
-        acc["storage"] = accTool.count("storage") ? accTool.atKey("storage") : DataObject(DataType::Object);
-        for (auto& storageRecord : acc.atKeyUnsafe("storage").getSubObjectsUnsafe())
-        {
-            storageRecord.performModifier(mod_removeLeadingZerosFromHexValuesEVEN);
-            storageRecord.performModifier(mod_removeLeadingZerosFromHexKeysEVEN);
-        }
-        fullState[accTool.getKey()] = acc;
-    }
-    return State(fullState);
-}
-}  // namespace
-
-
 namespace toolimpl
 {
-ToolChain::ToolChain(EthereumBlockState const& _genesis, SealEngine _sealEngine, FORK const& _fork, fs::path const& _toolPath)
-  : m_engine(_sealEngine), m_fork(new FORK(_fork)), m_toolPath(_toolPath)
+ToolChain::ToolChain(EthereumBlockState const& _genesis, SetChainParamsArgs const& _config, fs::path const& _toolPath)
+  : m_engine(_config.sealEngine()), m_fork(new FORK(_config.params().atKey("fork"))), m_toolPath(_toolPath)
 {
+    m_initialParams = GCP_SPointer<SetChainParamsArgs>(new SetChainParamsArgs(_config));
+    m_toolParams = GCP_SPointer<ToolParams>(new ToolParams(_config.params()));
+
     // We yet don't know the state root. ask the tool to calculate it
     ToolResponse res = mineBlockOnTool(_genesis, SealEngine::NoReward);
 
@@ -108,6 +49,11 @@ void ToolChain::mineBlock(EthereumBlockState const& _pendingBlock, Mining _req)
     pendingFixed.headerUnsafe().setLogsBloom(res.logsBloom());         // Assign LogsBloom from the
     pendingFixed.headerUnsafe().setStateRoot(res.stateRoot());         // Assign StateHash from the tool
 
+    // Calculate difficulty for tool (tool does not calculate difficulty)
+    ChainOperationParams params = ChainOperationParams::defaultParams(toolParams());
+    u256 toolDifficulty = calculateEthashDifficulty(params, pendingFixed.header(), lastBlock().header());
+    pendingFixed.headerUnsafe().setDifficulty(toolDifficulty);
+
     // Add only those transactions which tool returned a receipt for
     // Some transactions are expected to fail. That should be detected by tests
     for (auto const& tr : _pendingBlock.transactions())
@@ -135,21 +81,29 @@ void ToolChain::mineBlock(EthereumBlockState const& _pendingBlock, Mining _req)
     // Treat all uncles as valid as t8ntool does not calculate uncles
     // Uncle header validity as well as RLP logic is checked before
     for (auto const& un : _pendingBlock.uncles())
+    {
+        verifyEthereumBlockHeader(un, *this);
         pendingFixed.addUncle(un);
+    }
+    pendingFixed.recalculateUncleHash(); // Rely that only uncle hash is recalculated (simulate t8ntool unclehash)
 
     // Calculate header hash from header fields (do not recalc tx, un hashes)
     pendingFixed.headerUnsafe().recalculateHash();
 
     // Blockchain rules
+    verifyEthereumBlockHeader(pendingFixed.header(), *this);
+
     // Require number from pending block to be equal to actual block number that is imported
     if (_pendingBlock.header().number() != pendingFixed.header().number().asU256())
-        throw test::UpwardsException("Block Number from pending block != actual chain height!");
+        throw test::UpwardsException(string("Block Number from pending block != actual chain height! (") +
+                                     _pendingBlock.header().number().asString() +
+                                     " != " + pendingFixed.header().number().asString() + ")");
 
     // Require new block timestamp to be > than the previous block timestamp
-    if (lastBlock().header().timestamp() > pendingFixed.header().timestamp())
-        throw test::UpwardsException("Block Timestamp from pending block < previous block timestamp!");
+    if (lastBlock().header().timestamp().asU256() >= pendingFixed.header().timestamp().asU256())
+        throw test::UpwardsException("Block Timestamp from pending block <= previous block timestamp!");
 
-    if (_req == Mining::RequireValid)
+    if (_req == Mining::RequireValid)  // called on rawRLP import
     {
         if (m_fork.getContent().asString() == "HomesteadToDaoAt5" && pendingFixed.header().number() > 4 &&
             pendingFixed.header().number() < 19 &&
@@ -158,10 +112,12 @@ void ToolChain::mineBlock(EthereumBlockState const& _pendingBlock, Mining _req)
 
         if (_pendingBlock.header() != pendingFixed.header())
         {
+            string errField;
             DataObject const pendingH = _pendingBlock.header().asDataObject();
             DataObject const pendingFixedH = pendingFixed.header().asDataObject();
-            string const compare = compareBlockHeaders(pendingH, pendingFixedH);
+            string const compare = compareBlockHeaders(pendingH, pendingFixedH, errField);
             throw test::UpwardsException(string("Block from pending block != t8ntool constructed block!\n") +
+                                         "Error in field: " + errField + "\n" +
                                          "rawRLP/Pending header  vs  t8ntool header \n" + compare);
         }
     }
@@ -176,8 +132,13 @@ void ToolChain::mineBlock(EthereumBlockState const& _pendingBlock, Mining _req)
     VALUE totalDifficulty(0);
     if (m_blocks.size() > 0)
         totalDifficulty = m_blocks.at(m_blocks.size() - 1).totalDifficulty();
-
     pendingFixed.addTotalDifficulty(totalDifficulty + pendingFixed.header().difficulty());
+
+    ETH_LOG("New block N: " + to_string(m_blocks.size()), 6);
+    ETH_LOG("New block TD: " + totalDifficulty.asDecString() + " + " + pendingFixed.header().difficulty().asDecString() +
+                " = " + pendingFixed.totalDifficulty().asDecString(),
+        6);
+
     m_blocks.push_back(pendingFixed);
 }
 
@@ -197,21 +158,9 @@ ToolResponse ToolChain::mineBlockOnTool(EthereumBlockState const& _block, SealEn
     for (auto const& un : _block.uncles())
     {
         DataObject uncle;
-
-        // -- validate uncle header
         int delta = (int)(_block.header().number() - un.number()).asU256();
         if (delta < 1)
             throw test::UpwardsException("Uncle header delta is < 1");
-        if (un.number().asU256() == 0 || un.number().asU256() >= m_blocks.size())
-            throw test::UpwardsException("Uncle number is too old or 0!");
-        size_t uncleParent = (size_t)un.number().asU256() - 1;
-        if (m_blocks.at(uncleParent).header().timestamp().asU256() >= un.timestamp().asU256())
-            throw test::UpwardsException("Uncle timestamp is less then its parent block!");
-        if (m_fork.getContent().asString() == "HomesteadToDaoAt5" && un.number() > 4 && un.number() < 19 &&
-            un.extraData().asString() != "0x64616f2d686172642d666f726b")
-            throw test::UpwardsException("Uncle Dao Extra Data required!");
-
-        // ---
         uncle["delta"] = delta;
         uncle["address"] = un.author().asString();
         envData["ommers"].addArrayObject(uncle);
@@ -226,8 +175,14 @@ ToolResponse ToolChain::mineBlockOnTool(EthereumBlockState const& _block, SealEn
     // txs.json file
     fs::path txsPath = tmpDir / "txs.json";
     DataObject txs(DataType::Array);
+    static u256 c_maxGasLimit = u256("0xffffffffffffffff");
     for (auto const& tr : _block.transactions())
-        txs.addArrayObject(tr.asDataObject(ExportOrder::ToolStyle));
+    {
+        if (tr.gasLimit().asU256() <= c_maxGasLimit)  // tool fails on limits here.
+            txs.addArrayObject(tr.asDataObject(ExportOrder::ToolStyle));
+        else
+            ETH_WARNING("Retesteth rejecting tx with gasLimit > 64 bits for tool");
+    }
     writeFile(txsPath.string(), txs.asJson());
 
     // output file
@@ -268,5 +223,4 @@ void ToolChain::rewindToBlock(size_t _number)
     while (m_blocks.size() > _number + 1)
         m_blocks.pop_back();
 }
-
 }  // namespace toolimpl
