@@ -88,7 +88,9 @@ bool TestOutputHelper::markError(std::string const& _message)
 
         string const& allowedException =
             m_expected_UnitTestExceptions.at(m_expected_UnitTestExceptions.size() - 1);
-        if (allowedException == _message || allowedException == rmessage || allowedException == c_exception_any)
+
+        if (_message.find(allowedException) != string::npos || allowedException == c_exception_any ||
+            rmessage.find(allowedException) != string::npos)
         {
             m_expected_UnitTestExceptions.pop_back();
             return false;
