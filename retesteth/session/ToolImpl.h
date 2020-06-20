@@ -9,7 +9,9 @@ using namespace toolimpl;
 class ToolImpl : public SessionInterface
 {
 public:
-    ToolImpl(Socket::SocketType _type, fs::path const& _path) : m_sockType(_type), m_toolPath(_path) {}
+    ToolImpl(Socket::SocketType _type, fs::path const& _path, fs::path const& _tmpDir)
+      : m_sockType(_type), m_toolPath(_path), m_tmpDir(_tmpDir)
+    {}
 
 public:
     DataObject web3_clientVersion() override;
@@ -54,6 +56,7 @@ public:
 private:
     Socket::SocketType m_sockType;
     fs::path m_toolPath;
+    fs::path m_tmpDir;
     size_t m_totalCalls = 0;
     ToolChainManager& blockchain() { return m_toolChainManager.getContent(); }
     void makeRPCError(string const& _error);

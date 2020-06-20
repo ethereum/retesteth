@@ -40,7 +40,7 @@ void checkUnfinishedTestFolders();  // Checkup that all test folders are active 
 typedef std::pair<double, std::string> execTimeName;
 static std::vector<execTimeName> execTimeResults;
 static int execTotalErrors = 0;
-static std::map<std::string, TestOutputHelper> helperThreadMap; // threadID => outputHelper
+static std::map<thread::id, TestOutputHelper> helperThreadMap;  // threadID => outputHelper
 mutex g_numberOfRunningTests;
 mutex g_totalTestsRun;
 mutex g_failedTestsMap;
@@ -53,7 +53,7 @@ mutex g_helperThreadMapMutex;
 TestOutputHelper& TestOutputHelper::get()
 {
     std::lock_guard<std::mutex> lock(g_helperThreadMapMutex);
-    string tID = getThreadID();
+    thread::id const tID = getThreadID();
     if (helperThreadMap.count(tID))
         return helperThreadMap.at(tID);
     else
@@ -308,9 +308,9 @@ void TestOutputHelper::printTestExecStats()
     }
 }
 
-std::string TestOutputHelper::getThreadID()
+thread::id TestOutputHelper::getThreadID()
 {
-    return toString(std::this_thread::get_id());
+    return std::this_thread::get_id();
 }
 
 // check if a boost path contain no test files

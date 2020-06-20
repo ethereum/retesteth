@@ -5,6 +5,7 @@
 #include <boost/test/unit_test.hpp>
 #include <map>
 #include <string>
+#include <thread>
 
 #include <retesteth/configs/ClientConfig.h>
 #include <retesteth/dataObject/DataObject.h>
@@ -24,10 +25,10 @@ public:
         NotExist      // socket yet not initialized
     };
 
-    static SessionInterface& instance(std::string const _threadID);
-    static void sessionStart(std::string const _threadID);
-    static void sessionEnd(std::string const _threadID, SessionStatus _status);
-    static SessionStatus sessionStatus(std::string const _threadID);
+    static SessionInterface& instance(thread::id const& _threadID);
+    static void sessionStart(thread::id const& _threadID);
+    static void sessionEnd(thread::id const& _threadID, SessionStatus _status);
+    static SessionStatus sessionStatus(thread::id const& _threadID);
     static void clear();
 
     SessionInterface& getImplementation() { return *m_implementation; }
@@ -35,6 +36,6 @@ public:
 
 private:
     explicit RPCSession(SessionInterface* _impl);
-    static void runNewInstanceOfAClient(std::string const& _threadID, test::ClientConfig const& _config);
+    static void runNewInstanceOfAClient(thread::id const& _threadID, test::ClientConfig const& _config);
     SessionInterface* m_implementation;
 };

@@ -14,7 +14,7 @@ namespace toolimpl
 class ToolChainManager : public GCP_SPointerBase
 {
 public:
-    ToolChainManager(SetChainParamsArgs const& _config, fs::path const& _toolPath);
+    ToolChainManager(SetChainParamsArgs const& _config, fs::path const& _toolPath, fs::path const& _tmpDir);
     void addPendingTransaction(Transaction const& _tr) { m_pendingBlock.getContent().addTransaction(_tr); }
 
     ToolChain const& currentChain() const

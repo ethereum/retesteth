@@ -166,7 +166,7 @@ void joinThreads(vector<thread>& _threadVector, bool _all)
     {
         for (auto& th : _threadVector)
         {
-            string id = toString(th.get_id());
+            thread::id const id = th.get_id();
             th.join();
             // A thread with exception thrown still being joined here!
             RPCSession::sessionEnd(id, RPCSession::SessionStatus::Available);
@@ -187,17 +187,17 @@ void joinThreads(vector<thread>& _threadVector, bool _all)
     {
         for (vector<thread>::iterator it = _threadVector.begin(); it != _threadVector.end(); it++)
         {
-            finished =
-                (RPCSession::sessionStatus(toString((*it).get_id())) == RPCSession::HasFinished);
+            finished = (RPCSession::sessionStatus((*it).get_id()) == RPCSession::HasFinished);
             if (finished)
             {
-                string id = toString((*it).get_id());
+                thread::id const id = (*it).get_id();
                 (*it).join();
                 RPCSession::sessionEnd(id, RPCSession::SessionStatus::Available);
                 _threadVector.erase(it);
                 return;
             }
         }
+        std::this_thread::sleep_for(1s);
     }
 }
 }
