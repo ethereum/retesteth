@@ -197,7 +197,6 @@ void joinThreads(vector<thread>& _threadVector, bool _all)
                 return;
             }
         }
-        std::this_thread::sleep_for(1s);
     }
 }
 }

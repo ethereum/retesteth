@@ -89,6 +89,8 @@ public:
 private:
     DataObject& _addSubObject(DataObject const& _obj, string const& _keyOverwrite = string());
     void _assert(bool _flag, std::string const& _comment = "") const;
+    vector<DataObject>::const_iterator subByKey(string const& _key) const;
+    vector<DataObject>::iterator subByKeyU(string const& _key);
 
     std::vector<DataObject> m_subObjects;
     DataType m_type;
