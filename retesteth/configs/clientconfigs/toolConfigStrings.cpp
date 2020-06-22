@@ -126,5 +126,4 @@ string const defaultToolExceptions = R"(
 string const t8ntool_config = R"({
     "name" : "Ethereum GO on StateTool",
     "socketType" : "tranition-tool",
-    "socketAddress" : "/home/wins/Ethereum/go-ethereum/build/bin/statet8n",)" +
-                              defaultForks + defaultToolExceptions + "\n}";
+    "socketAddress" : "/bin/statet8n",)" + defaultForks + defaultToolExceptions + "\n}";

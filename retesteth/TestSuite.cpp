@@ -359,6 +359,8 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
     // run all tests
     AbsoluteFillerPath fillerPath = getFullPathFiller(_testFolder);
     vector<fs::path> const files = test::getFiles(fillerPath.path(), {".json", ".yml"}, filter);
+    if (files.size() == 0)
+        ETH_WARNING(_testFolder + " no tests detected in folder!");
 
     // repeat this part for all connected clients
     auto thisPart = [this, &files, &_testFolder]() {

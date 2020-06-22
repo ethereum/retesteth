@@ -13,6 +13,7 @@ namespace test
 {
 namespace teststruct
 {
+
 void BlockHeader::fromData(DataObject const& _data)
 {
     try

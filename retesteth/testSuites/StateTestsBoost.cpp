@@ -105,7 +105,6 @@ BOOST_AUTO_TEST_CASE(stBadOpcode) {}
 
 // New Tests
 BOOST_AUTO_TEST_CASE(stArgsZeroOneBalance) {}
-BOOST_AUTO_TEST_CASE(stEWASMTests) {}
 BOOST_AUTO_TEST_CASE(stSLoadTest) {}
 BOOST_AUTO_TEST_CASE(stChainId) {}
 BOOST_AUTO_TEST_CASE(stSelfBalance) {}
