@@ -40,7 +40,7 @@ public:
 
     // Functionality
     // Verify FORK is allowed by Fork + AdditionalForks and throw an error if not
-    void validateForkAllowed(FORK const& _net) const;
+    bool validateForkAllowed(FORK const& _net, bool _bail = true) const;
     bool checkForkAllowed(FORK const& _net) const;
 
     // Translate smart network names into network names ( `<=Homestead` to `Frontier, Homestead`)

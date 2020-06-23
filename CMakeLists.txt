@@ -14,7 +14,7 @@ HunterGate(
 )
 
 project(retesteth VERSION 0.0.6)
-set(VERSION_SUFFIX "profiling")
+set(VERSION_SUFFIX "profiling-berlin")
 
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)

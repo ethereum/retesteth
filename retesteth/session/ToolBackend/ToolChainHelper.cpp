@@ -63,14 +63,16 @@ std::tuple<VALUE, FORK> prepareReward(SealEngine _engine, FORK const& _fork, VAL
     {
         if (_blockNumber < 5)
         {
-            assert(RewardMapForToolBefore5.count(_fork));
+            if (!RewardMapForToolBefore5.count(_fork))
+                ETH_ERROR_MESSAGE("ToolBackend error getting reward for fork: " + _fork.asString());
             auto const& trFork = RewardMapForToolBefore5.at(_fork);
             assert(rewards.count(trFork));
             return {rewards.at(trFork).getCContent(), trFork};
         }
         else
         {
-            assert(RewardMapForToolAfter5.count(_fork));
+            if (!RewardMapForToolAfter5.count(_fork))
+                ETH_ERROR_MESSAGE("ToolBackend error getting reward for fork: " + _fork.asString());
             auto const& trFork = RewardMapForToolAfter5.at(_fork);
             assert(rewards.count(trFork));
             return {rewards.at(trFork).getCContent(), trFork};

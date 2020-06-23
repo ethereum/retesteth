@@ -18,7 +18,8 @@ string const defaultForks = R"(
       "EIP158ToByzantiumAt5",
       "HomesteadToDaoAt5",
       "ByzantiumToConstantinopleFixAt5"
-    ],)";
+    ],
+)";
 
 string const besu_config = R"({
     "name" : "Hyperledger Besu on TCP",
@@ -41,7 +42,8 @@ string const besu_config = R"({
         "HomesteadToEIP150At5",
         "EIP158ToByzantiumAt5",
         "HomesteadToDaoAt5",
-        "ByzantiumToConstantinopleFixAt5"
+        "ByzantiumToConstantinopleFixAt5",
+        "Berlin"
     ],
     "exceptions" : {
         "ExtraDataTooBig" : "extra-data too long",

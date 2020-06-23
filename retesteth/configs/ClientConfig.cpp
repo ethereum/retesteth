@@ -54,8 +54,9 @@ ClientConfig::ClientConfig(fs::path const& _clientConfigPath) : m_id(ClientConfi
             if (!correctMiningReward.count(el.asString()))
                 ETH_FAIL_MESSAGE("Correct mining reward missing block reward record for fork: `" +
                                  el.asString() + "` (" + correctMiningRewardPath.string() + ")");
-            m_correctReward[el] = spVALUE(new VALUE(correctMiningReward.atKey(el.asString())));
         }
+        for (auto const& el : correctMiningReward.getSubObjects())
+            m_correctReward[el.getKey()] = spVALUE(new VALUE(correctMiningReward.atKey(el.getKey())));
     }
     catch (std::exception const& _ex)
     {
@@ -63,15 +64,18 @@ ClientConfig::ClientConfig(fs::path const& _clientConfigPath) : m_id(ClientConfi
     }
 }
 
-void ClientConfig::validateForkAllowed(FORK const& _net) const
+bool ClientConfig::validateForkAllowed(FORK const& _net, bool _bail) const
 {
     if (!cfgFile().allowedForks().count(_net))
     {
         ETH_WARNING("Specified network not found: '" + _net.asString() +
                     "', skipping the test. Enable the fork network in config file: " +
                     cfgFile().path().string());
-        ETH_ERROR_MESSAGE("Specified network not found: '" + _net.asString() + "'");
+        if (_bail)
+            ETH_ERROR_MESSAGE("Specified network not found: '" + _net.asString() + "'");
+        return false;
     }
+    return true;
 }
 
 bool ClientConfig::checkForkAllowed(FORK const& _net) const

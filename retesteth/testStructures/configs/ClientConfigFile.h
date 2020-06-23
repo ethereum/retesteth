@@ -30,15 +30,8 @@ struct ClientConfigFile : GCP_SPointerBase
     std::vector<IPADDRESS> const& socketAdresses() const;
     std::vector<FORK> const& forks() const { return m_forks; }
     std::vector<FORK> const& additionalForks() const { return m_additionalForks; }
-    std::set<FORK> allowedForks() const
-    {
-        std::set<FORK> out;
-        for (auto const& el : m_forks)
-            out.insert(el);
-        for (auto const& el : m_additionalForks)
-            out.insert(el);
-        return out;
-    }
+    std::set<FORK> allowedForks() const;
+
     std::map<string, string> const& exceptions() const { return m_exceptions; }
     fs::path const& path() const { return m_configFilePath; }
     fs::path const& shell() const { return m_pathToExecFile; }
