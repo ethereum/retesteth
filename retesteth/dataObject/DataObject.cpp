@@ -70,55 +70,69 @@ std::string const& DataObject::getKey() const
 }
 
 /// Get vector of subobjects
-std::vector<DataObject> const& DataObject::getSubObjects() const
+std::vector<DataObject> const& DataObject::getArraySubObjects() const
 {
-    return m_subObjects;
+    _assert(m_type == DataType::Array);
+    return m_arraySubObjects;
 }
 
 /// Get ref vector of subobjects
-std::vector<DataObject>& DataObject::getSubObjectsUnsafe()
+std::vector<DataObject>& DataObject::getArraySubObjectsUnsafe()
 {
-    return m_subObjects;
+    _assert(m_type == DataType::Array);
+    return m_arraySubObjects;
 }
 
+/// Get vector of subobjects
+std::map<string, DataObjectInfo> const& DataObject::getMapSubObjects() const
+{
+    _assert(m_type == DataType::Object);
+    return m_mapSubObjects;
+}
+
+/// Get ref vector of subobjects
+std::map<string, DataObjectInfo>& DataObject::getMapSubObjectsUnsafe()
+{
+    _assert(m_type == DataType::Object);
+    return m_mapSubObjects;
+}
+
+/*
 /// Add new subobject
 DataObject& DataObject::addSubObject(DataObject const& _obj)
 {
     return _addSubObject(_obj);
-}
+}*/
 
 /// Add new subobject and set it's key
-DataObject& DataObject::addSubObject(std::string const& _key, DataObject const& _obj)
+DataObject& DataObject::addMapObject(std::string const& _key, DataObject const& _obj)
 {
-    return _addSubObject(_obj, _key);
+    return _addMapSubObject(_obj, _key);
 }
 
 /// Set key for subobject _index
-void DataObject::setSubObjectKey(size_t _index, std::string const& _key)
+/*void DataObject::setSubObjectKey(size_t _index, std::string const& _key)
 {
     _assert(_index < m_subObjects.size(), "_index < m_subObjects.size() (DataObject::setSubObjectKey)");
     if (m_subObjects.size() > _index)
         m_subObjects.at(_index).setKey(_key);
-}
+}*/
 
 // Helpers for fast subObject lookup
 // Subobjects are in vector because double/empty keys and order in the vector
-vector<DataObject>::const_iterator DataObject::subByKey(string const& _key) const
+/*vector<DataObject>::const_iterator DataObject::subByKey(string const& _key) const
 {
     return std::find_if(m_subObjects.begin(), m_subObjects.end(), [&_key](DataObject const& x) { return x.getKey() == _key; });
 }
 vector<DataObject>::iterator DataObject::subByKeyU(string const& _key)
 {
     return std::find_if(m_subObjects.begin(), m_subObjects.end(), [&_key](DataObject const& x) { return x.getKey() == _key; });
-}
+}*/
 
 /// look if there is a subobject with _key
 bool DataObject::count(std::string const& _key) const
 {
-    vector<DataObject>::const_iterator it = subByKey(_key);
-    if (it != m_subObjects.end())
-        return true;
-    return false;
+    return m_mapSubObjects.count(_key);
 }
 
 /// Get string value
@@ -145,28 +159,12 @@ bool DataObject::asBool() const
 /// Set position in vector of the subobject with _key
 void DataObject::setKeyPos(std::string const& _key, size_t _pos)
 {
-    _assert(_pos < m_subObjects.size(), "_pos < m_subObjects.size()");
+    _assert(_pos < m_mapSubObjects.size(), "_pos < m_mapSubObjects.size()");
     _assert(count(_key), "count(_key) _key = " + _key + " (DataObject::setKeyPos)");
     _assert(!_key.empty(), "!_key.empty() (DataObject::setKeyPos)");
 
-    size_t elementPos = 0;
-    for (size_t i = 0; i < m_subObjects.size(); i++)
-        if (m_subObjects.at(i).getKey() == _key)
-        {
-            if (i == _pos)
-                return;  // item already at _pos;
-            else
-            {
-                elementPos = i;
-                break;
-            }
-        }
-
-    setOverwrite(true);
-    DataObject data = m_subObjects.at(elementPos);
-    m_subObjects.erase(m_subObjects.begin() + elementPos);
-    m_subObjects.insert(m_subObjects.begin() + _pos, 1, data);
-    setOverwrite(false);
+    DataObjectInfo& info = m_mapSubObjects.at(_key);
+    info.pos = _pos;
 }
 
 
@@ -174,6 +172,7 @@ void DataObject::setKeyPos(std::string const& _key, size_t _pos)
 void DataObject::replace(DataObject const& _value)
 {
     m_strKey = _value.getKey();
+    clearSubobjects();
     switch (_value.type())
     {
     case DataType::String:
@@ -185,57 +184,61 @@ void DataObject::replace(DataObject const& _value)
     case DataType::Bool:
         m_boolVal = _value.asBool();
         break;
+    case DataType::Array:
+        m_arraySubObjects = _value.getArraySubObjects();
+    case DataType::Object:
+        m_mapSubObjects = _value.getMapSubObjects();
     default:
         break;
     }
 
     m_type = _value.type();
-    m_subObjects.clear();
-    m_subObjects = _value.getSubObjects();
     m_allowOverwrite = _value.isOverwritable();
     setAutosort(_value.isAutosort());
 }
 
 DataObject const& DataObject::atKey(std::string const& _key) const
 {
-    vector<DataObject>::const_iterator it = subByKey(_key);
-    if (it != m_subObjects.end())
-        return *it;
-    _assert(false, "count(_key) _key=" + _key + " (DataObject::at)");
-    return m_subObjects.at(0);
+    _assert(m_mapSubObjects.count(_key), "count(_key) _key=" + _key + " (DataObject::at)");
+    return m_mapSubObjects.at(_key).obj;
 }
 
 DataObject& DataObject::atKeyUnsafe(std::string const& _key)
 {
-    vector<DataObject>::iterator it = subByKeyU(_key);
-    if (it != m_subObjects.end())
-        return *it;
-    _assert(false, "count(_key) _key=" + _key + " (DataObject::atKeyUnsafe)");
-    return m_subObjects.at(0);
+    _assert(m_mapSubObjects.count(_key), "count(_key) _key=" + _key + " (DataObject::at)");
+    return m_mapSubObjects.at(_key).obj;
 }
 
 DataObject const& DataObject::at(size_t _pos) const
 {
-    _assert((size_t)_pos < m_subObjects.size(), "DataObject::at(int) out of range!");
-    return m_subObjects[_pos];
+    if (m_type == DataType::Array)
+    {
+        _assert((size_t)_pos < m_arraySubObjects.size(), "DataObject::at(int) out of range!");
+        return m_arraySubObjects[_pos];
+    }
+    _assert(m_type == DataType::Object, "DataObject::at(size_t _pos) must be of type Object!");
+    auto const& it = std::find(m_mapSubObjects.begin(), m_mapSubObjects.end(),
+                               [&_pos](auto const& x) { return x.second.pos == _pos; });
+    if (it != m_mapSubObjects.end())
+        return it->second.obj;
+    _assert(false, "DataObject::at(size_t _pos) element in map not found!");
+    return m_arraySubObjects.at(0);
 }
 
 DataObject& DataObject::atUnsafe(size_t _pos)
 {
-    _assert((size_t)_pos < m_subObjects.size(), "DataObject::atUnsafe(int) out of range!");
-    return m_subObjects[_pos];
-}
-
-DataObject const& DataObject::atLastElement() const
-{
-    _assert(m_subObjects.size() > 0, "atLastElement()");
-    return m_subObjects.at(m_subObjects.size() - 1);
-}
-
-DataObject& DataObject::atLastElementUnsafe()
-{
-    _assert(m_subObjects.size() > 0, "atLastElementUnsafe()");
-    return m_subObjects.at(m_subObjects.size() - 1);
+    if (m_type == DataType::Array)
+    {
+        _assert((size_t)_pos < m_arraySubObjects.size(), "DataObject::atUnsafe(int) out of range!");
+        return m_arraySubObjects[_pos];
+    }
+    _assert(m_type == DataType::Object, "DataObject::atUnsafe(size_t _pos) must be of type Object!");
+    auto const& it = std::find(m_mapSubObjects.begin(), m_mapSubObjects.end(),
+                               [&_pos](auto const& x) { return x.second.pos == _pos; });
+    if (it != m_mapSubObjects.end())
+        return it->second.obj;
+    _assert(false, "DataObject::atUnsafe(size_t _pos) element in map not found!");
+    return m_arraySubObjects.at(0);
 }
 
 void DataObject::addArrayObject(DataObject const& _obj)
@@ -243,54 +246,27 @@ void DataObject::addArrayObject(DataObject const& _obj)
     _assert(m_type == DataType::Null || m_type == DataType::Array,
         "m_type == DataType::Null || m_type == DataType::Array (DataObject::addArrayObject)");
     m_type = DataType::Array;
-    m_subObjects.push_back(_obj);
-    m_subObjects.at(m_subObjects.size() - 1).setAutosort(m_autosort);
+    m_arraySubObjects.push_back(_obj);
+    m_arraySubObjects.at(m_arraySubObjects.size() - 1).setAutosort(m_autosort);
 }
 
 void DataObject::renameKey(std::string const& _currentKey, std::string const& _newKey)
 {
+    _assert(m_type == DataType::Object, "DataObject::renameKey must be map object!");
     if (m_strKey == _currentKey)
         m_strKey = _newKey;
-    vector<DataObject>::iterator it = subByKeyU(_currentKey);
-    if (it != m_subObjects.end())
-        (*it).setKey(_newKey);
+    _assert(m_mapSubObjects.count(_currentKey), "DataObject::renameKey key not found!");
+    m_mapSubObjects.at(_currentKey).obj.setKey(_newKey);
+    m_mapSubObjects[_newKey] = std::move(m_mapSubObjects.at(_currentKey));
+    m_mapSubObjects.erase(_currentKey);
 }
 
 /// vector<element> erase method with `replace()` function
 void DataObject::removeKey(std::string const& _key)
 {
     _assert(type() == DataType::Object, "type() == DataType::Object");
-    for (std::vector<DataObject>::const_iterator it = m_subObjects.begin();
-         it != m_subObjects.end(); it++)
-    {
-        if ((*it).getKey() == _key)
-        {
-            setOverwrite(true);
-            m_subObjects.erase(it);
-            setOverwrite(false);
-            break;
-        }
-    }
-
-    /*
-    bool startReplace = false;
-    for (std::vector<DataObject>::iterator it = m_subObjects.begin(); it != m_subObjects.end();
-         it++)
-    {
-        if ((*it).getKey() == _key)
-            startReplace = true;
-        std::vector<DataObject>::iterator next = it + 1;
-        if (startReplace)
-        {
-            if (next != m_subObjects.end())
-                (*it).replace(*next);
-            else
-            {
-                m_subObjects.erase(it);
-                break;
-            }
-        }
-    }*/
+    _assert(m_mapSubObjects.count(_key), "DataObject::removeKey key" + _key + " not found!");
+    m_mapSubObjects.erase(_key);
 }
 
 void DataObject::clear(DataType _type)
@@ -298,7 +274,7 @@ void DataObject::clear(DataType _type)
     m_intVal = 0;
     m_strKey = "";
     m_strVal = "";
-    m_subObjects.clear();
+    clearSubobjects();
     m_type = _type;
 }
 
@@ -310,16 +286,24 @@ void DataObject::setVerifier(void (*f)(DataObject&))
 
 void DataObject::performModifier(void (*f)(DataObject&), std::set<string> const& _exceptionKeys)
 {
-    for (auto& el : m_subObjects)
-        el.performModifier(f, _exceptionKeys);
+    if (m_type == DataType::Array)
+        for (auto& el : m_arraySubObjects)
+            el.performModifier(f, _exceptionKeys);
+    else if (m_type == DataType::Object)
+        for (auto& el : m_mapSubObjects)
+            el.second.obj.performModifier(f, _exceptionKeys);
     if (!_exceptionKeys.count(getKey()))
         f(*this);
 }
 
 void DataObject::performVerifier(void (*f)(DataObject const&)) const
 {
-    for (auto const& el : m_subObjects)
-        el.performVerifier(f);
+    if (m_type == DataType::Array)
+        for (auto const& el : m_arraySubObjects)
+            el.performVerifier(f);
+    else if (m_type == DataType::Object)
+            for (auto const& el : m_mapSubObjects)
+                el.second.obj.performVerifier(f);
     f(*this);
 }
 
@@ -338,14 +322,35 @@ std::string DataObject::asJson(int level, bool pretty, bool nokey) const
     };
 
     auto printElements = [this, &out, level, pretty]() -> void {
-        for (std::vector<DataObject>::const_iterator it = this->m_subObjects.begin();
-             it < this->m_subObjects.end(); it++)
+        if (m_type == DataType::Array)
         {
-            out << (*it).asJson(level + 1, pretty);
-            if (it + 1 != this->m_subObjects.end())
-                out << ",";
-            if (pretty)
-                out << std::endl;
+            for (std::vector<DataObject>::const_iterator it = this->m_arraySubObjects.begin();
+                 it < this->m_arraySubObjects.end(); it++)
+            {
+                out << (*it).asJson(level + 1, pretty);
+                if (it + 1 != this->m_arraySubObjects.end())
+                    out << ",";
+                if (pretty)
+                    out << std::endl;
+            }
+        }
+        else if (m_type == DataType::Object)
+        {
+            for (size_t pos = 0; pos < m_mapSubObjects.size(); pos++)
+            {
+                auto it = std::find(m_mapSubObjects.begin(), m_mapSubObjects.end(), [&pos](auto const& x){
+                    return (x.second.pos == pos);
+                });
+                _assert(it != m_mapSubObjects.end(), "DataObject::asJson map pos element missing!");
+                out << (*it).second.obj.asJson(level + 1, pretty);
+                auto it2 = std::find(m_mapSubObjects.begin(), m_mapSubObjects.end(), [&pos](auto const& x){
+                    return (x.second.pos == pos + 1);
+                });
+                if (it2 != this->m_mapSubObjects.end())
+                    out << ",";
+                if (pretty)
+                    out << std::endl;
+            }
         }
     };
 

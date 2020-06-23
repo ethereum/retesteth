@@ -2,6 +2,7 @@
 #include <dataObject/Exception.h>
 #include <memory>
 #include <set>
+#include <map>
 #include <vector>
 
 namespace dataobject
@@ -15,6 +16,7 @@ enum DataType
     Object,
     Null
 };
+struct DataObjectInfo;
 
 /// DataObject
 /// An data sturcture to manage data from json, yml
@@ -34,13 +36,17 @@ public:
     void setKey(std::string const& _key);
     std::string const& getKey() const;
 
-    std::vector<DataObject> const& getSubObjects() const;
-    std::vector<DataObject>& getSubObjectsUnsafe();
+    //std::vector<DataObject> const& getSubObjects() const;
+    //std::vector<DataObject>& getSubObjectsUnsafe();
+    std::vector<DataObject> const& getArraySubObjects() const;
+    std::vector<DataObject>& getArraySubObjectsUnsafe();
+    std::map<string, DataObjectInfo> const& getMapSubObjects() const;
+    std::map<string, DataObjectInfo>& getMapSubObjectsUnsafe();
 
     void addArrayObject(DataObject const& _obj);
-    DataObject& addSubObject(DataObject const& _obj);
-    DataObject& addSubObject(std::string const& _key, DataObject const& _obj);
-    void setSubObjectKey(size_t _index, std::string const& _key);
+    //DataObject& addSubObject(DataObject const& _obj);
+    DataObject& addMapObject(std::string const& _key, DataObject const& _obj);
+    //void setSubObjectKey(size_t _index, std::string const& _key);
     void setKeyPos(std::string const& _key, size_t _pos);
 
     bool count(std::string const& _key) const;
@@ -67,8 +73,6 @@ public:
     DataObject& atKeyUnsafe(std::string const& _key);
     DataObject const& at(size_t _pos) const;
     DataObject& atUnsafe(size_t _pos);
-    DataObject const& atLastElement() const;
-    DataObject& atLastElementUnsafe();
 
     void setVerifier(void (*f)(DataObject&));
     void performModifier(void (*f)(DataObject&), std::set<string> const& _exceptionKeys = {});
@@ -84,15 +88,16 @@ public:
     void setAutosort(bool _sort) { m_autosort = _sort; m_allowOverwrite = true; }
     bool isOverwritable() const { return m_allowOverwrite; }
     bool isAutosort() const { return m_autosort; }
-    void clearSubobjects() { m_subObjects.clear(); m_type = DataType::Null; }
+    void clearSubobjects() { m_arraySubObjects.clear(); m_mapSubObjects.clear(); m_type = DataType::Null; }
 
 private:
-    DataObject& _addSubObject(DataObject const& _obj, string const& _keyOverwrite = string());
+    DataObject& _addMapSubObject(DataObject const& _obj, string const& _keyOverwrite = string());
     void _assert(bool _flag, std::string const& _comment = "") const;
-    vector<DataObject>::const_iterator subByKey(string const& _key) const;
-    vector<DataObject>::iterator subByKeyU(string const& _key);
+    //vector<DataObject>::const_iterator subByKey(string const& _key) const;
+    //vector<DataObject>::iterator subByKeyU(string const& _key);
 
-    std::vector<DataObject> m_subObjects;
+    std::vector<DataObject> m_arraySubObjects;
+    std::map<string, DataObjectInfo> m_mapSubObjects;
     DataType m_type;
     std::string m_strKey;
     bool m_allowOverwrite = false;  // allow overwrite elements
@@ -103,6 +108,13 @@ private:
     int m_intVal;
 
     void (*m_verifier)(DataObject&) = 0;
+};
+
+struct DataObjectInfo
+{
+    DataObjectInfo(DataObject const& _obj, size_t _pos) : obj(_obj), pos(_pos) {}
+    DataObject obj;
+    size_t pos;
 };
 
 // Find index that _key should take place in when being added to ordered _objects by key
