@@ -75,7 +75,7 @@ std::tuple<VALUE, FORK> prepareReward(SealEngine _engine, FORK const& _fork, VAL
                 ETH_ERROR_MESSAGE("ToolBackend error getting reward for fork: " + _fork.asString());
             auto const& trFork = RewardMapForToolAfter5.at(_fork);
             assert(rewards.count(trFork));
-            return {rewards.at(trFork).getCContent(), trFork};
+            return {rewards.at(trFork).getCContent(), _fork == "HomesteadToDaoAt5" ? "HomesteadToDaoAt5" : trFork};
         }
     }
 }
