@@ -416,7 +416,7 @@ std::string TestInfo::errorDebug() const
 {
     if (m_sFork.empty())
         return "";
-    string message = " (" + m_currentTestCaseName + "/" + TestOutputHelper::get().testName();
+    string message = cYellow + " (" + m_currentTestCaseName + "/" + TestOutputHelper::get().testName();
 
     if (!m_isGeneralTestInfo)
     {
@@ -431,5 +431,5 @@ std::string TestInfo::errorDebug() const
         message += ", block: " + to_string(m_blockNumber);
     else if (m_isStateTransactionInfo)
         message += ", TrInfo: d: " + to_string(m_trD) + ", g: " + to_string(m_trG) + ", v: " + to_string(m_trV);
-    return message + ")";
+    return message + ")" + cRed;
 }
