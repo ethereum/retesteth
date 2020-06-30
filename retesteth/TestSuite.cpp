@@ -25,6 +25,7 @@
 #include <retesteth/ExitHandler.h>
 #include <retesteth/Options.h>
 #include <retesteth/TestHelper.h>
+#include <retesteth/testSuites/TestFixtures.h>
 #include <retesteth/TestOutputHelper.h>
 #include <retesteth/TestSuite.h>
 #include <retesteth/session/Session.h>
@@ -386,6 +387,12 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
                 testOutput.finishTest();
                 break;
             }
+            if (Options::get().lowcpu && test::inArray(test::c_cpuIntenseTests, file.stem().string()))
+            {
+                ETH_WARNING("Skipping " + file.stem().string() + " because --lowcpu option was specified.\n");
+                continue;
+            }
+
             testOutput.showProgress();
             if (threadVector.size() == maxAllowedThreads)
                 joinThreads(threadVector, false);
