@@ -207,7 +207,7 @@ void verifyEthereumBlockHeader(BlockHeader const& _header, ToolChain const& _cha
         throw test::UpwardsException("Header extraData > 32 bytes");
 
     // Check DAO extraData
-    if (_chain.fork().asString() == "HomesteadToDaoAt5" && _header.number() > 4 && _header.number() < 19 &&
+    if (_chain.fork().asString() == "HomesteadToDaoAt5" && _header.number() > 4 && _header.number() <= 5+9 &&
         _header.extraData().asString() != "0x64616f2d686172642d666f726b")
         throw test::UpwardsException("BlockHeader require Dao ExtraData! (0x64616f2d686172642d666f726b)");
 
