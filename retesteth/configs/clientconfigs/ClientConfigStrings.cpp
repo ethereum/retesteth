@@ -35,15 +35,15 @@ string const besu_config = R"({
         "Byzantium",
         "Constantinople",
         "ConstantinopleFix",
-        "Istanbul"
+        "Istanbul",
+        "Berlin"
     ],
     "additionalForks" : [
         "FrontierToHomesteadAt5",
         "HomesteadToEIP150At5",
         "EIP158ToByzantiumAt5",
         "HomesteadToDaoAt5",
-        "ByzantiumToConstantinopleFixAt5",
-        "Berlin"
+        "ByzantiumToConstantinopleFixAt5"
     ],
     "exceptions" : {
         "ExtraDataTooBig" : "extra-data too long",
