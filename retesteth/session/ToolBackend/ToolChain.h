@@ -29,7 +29,8 @@ private:
 class ToolChain : public GCP_SPointerBase
 {
 public:
-    ToolChain(EthereumBlockState const& _genesis, SetChainParamsArgs const& _params, fs::path const& _toolPath);
+    ToolChain(EthereumBlockState const& _genesis, SetChainParamsArgs const& _params, fs::path const& _toolPath,
+        fs::path const& _tmpDir);
 
     EthereumBlockState const& lastBlock() const
     {
@@ -54,6 +55,7 @@ public:
 
     // Used for chain reorg
     void insertBlock(EthereumBlockState const& _block) { m_blocks.push_back(_block); }
+    fs::path const& tmpDir() const { return m_tmpDir; }
 
 private:
     ToolChain(){};
@@ -67,6 +69,7 @@ private:
     SealEngine m_engine;
     spFORK m_fork;
     fs::path m_toolPath;
+    fs::path m_tmpDir;
 };
 
 typedef GCP_SPointer<ToolChain> spToolChain;

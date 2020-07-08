@@ -56,6 +56,7 @@ void deployFirstRunConfigs(fs::path const& _dir)
     writeFile(genesisDir / "Constantinople.json", default_Constantinople_config);
     writeFile(genesisDir / "ConstantinopleFix.json", default_ConstantinopleFix_config);
     writeFile(genesisDir / "Istanbul.json", default_Istanbul_config);
+    writeFile(genesisDir / "Berlin.json", default_Berlin_config);
 
     writeFile(genesisDir / "FrontierToHomesteadAt5.json", default_FrontierToHomesteadAt5_config);
     writeFile(genesisDir / "HomesteadToDaoAt5.json", default_HomesteadToDaoAt5_config);
@@ -75,6 +76,7 @@ void deployFirstRunConfigs(fs::path const& _dir)
     writeFile(genesisDir / "Constantinople.json", t8ntool_Constantinople_config);
     writeFile(genesisDir / "ConstantinopleFix.json", t8ntool_ConstantinopleFix_config);
     writeFile(genesisDir / "Istanbul.json", t8ntool_Istanbul_config);
+    writeFile(genesisDir / "Berlin.json", t8ntool_Berlin_config);
 
     writeFile(genesisDir / "FrontierToHomesteadAt5.json", t8ntool_FrontierToHomesteadAt5_config);
     writeFile(genesisDir / "HomesteadToDaoAt5.json", t8ntool_HomesteadToDaoAt5_config);
@@ -82,7 +84,7 @@ void deployFirstRunConfigs(fs::path const& _dir)
     writeFile(genesisDir / "EIP158ToByzantiumAt5.json", t8ntool_EIP158ToByzantiumAt5_config);
     writeFile(genesisDir / "ByzantiumToConstantinopleFixAt5.json",
         t8ntool_ByzantiumToConstantinopleFixAt5_config);
-    writeFile(genesisDir / "correctMiningReward.json", default_correctMiningReward_config);
+    writeFile(genesisDir / "correctMiningReward.json", t8ntool_correctMiningReward_config);
 }
 
 ClientConfig const& Options::DynamicOptions::getCurrentConfig() const

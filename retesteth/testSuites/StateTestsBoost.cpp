@@ -105,9 +105,12 @@ BOOST_AUTO_TEST_CASE(stBadOpcode) {}
 
 // New Tests
 BOOST_AUTO_TEST_CASE(stArgsZeroOneBalance) {}
-BOOST_AUTO_TEST_CASE(stEWASMTests) {}
-BOOST_AUTO_TEST_CASE(stTimeConsuming) {}
 BOOST_AUTO_TEST_CASE(stSLoadTest) {}
 BOOST_AUTO_TEST_CASE(stChainId) {}
 BOOST_AUTO_TEST_CASE(stSelfBalance) {}
+BOOST_AUTO_TEST_CASE(stStaticFlagEnabled) {}
+BOOST_AUTO_TEST_CASE(stSubroutine) {}
+
+// Heavy
+BOOST_AUTO_TEST_CASE(stTimeConsuming) {}
 BOOST_AUTO_TEST_SUITE_END()

@@ -11,7 +11,8 @@ namespace
 void toLowerHexStr(string& _input)
 {
     std::transform(_input.begin(), _input.end(), _input.begin(), [](unsigned char c) {
-        ETH_ERROR_REQUIRE_MESSAGE(isxdigit(c), "BYTES string has char which is not hex: `" + string(1, c) + "`");
+        if (!isxdigit(c))
+            ETH_ERROR_MESSAGE("BYTES string has char which is not hex: `" + string(1, c) + "`\n");
         return std::tolower(c);
     });
 }

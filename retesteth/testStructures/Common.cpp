@@ -288,18 +288,17 @@ DataObject convertDecBlockheaderIncompleteToHex(DataObject const& _data)
 }
 
 std::mutex g_strFindMutex;
-DigitsType stringIntegerType(std::string const& _string)
+DigitsType stringIntegerType(std::string const& _string, bool _wasPrefix)
 {
-    if (_string[0] == '0' && _string[1] == 'x')
+    if (_string[0] == '0' && _string[1] == 'x' && !_wasPrefix)
     {
-        string substring = _string.substr(2);
-        DigitsType substringType = stringIntegerType(substring);
+        DigitsType substringType = stringIntegerType(_string, true);
         if (substringType == DigitsType::Hex)
             return DigitsType::HexPrefixed;
 
         if (substringType == DigitsType::Decimal)
         {
-            if (substring.size() % 2 == 0)
+            if (_string.size() % 2 == 0)
                 return DigitsType::HexPrefixed;
             else
                 return DigitsType::UnEvenHexPrefixed;
@@ -311,14 +310,12 @@ DigitsType stringIntegerType(std::string const& _string)
 
     bool isDecimalOnly = true;
     std::lock_guard<std::mutex> lock(g_strFindMutex);  // string.find is not thread safe + static
-    static std::string hexAlphabet = "0123456789abcdefABCDEF";
-    static std::string decimalAlphabet = "0123456789";
-    for (size_t i = 0; i < _string.length(); i++)
+    for (size_t i = _wasPrefix ? 2 : 0; i < _string.length(); i++)
     {
-        if (hexAlphabet.find(_string[i]) == std::string::npos)
+        if (!isxdigit(_string[i]))
             return DigitsType::String;
 
-        if (decimalAlphabet.find(_string[i]) == std::string::npos)
+        if (isDecimalOnly && !isdigit(_string[i]))
             isDecimalOnly = false;
     }
 

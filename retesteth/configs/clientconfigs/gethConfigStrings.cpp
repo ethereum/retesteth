@@ -133,5 +133,6 @@ string const default_config = R"({
         "127.0.0.1:8550",
         "127.0.0.1:8551",
         "127.0.0.1:8552"
-    ],)" + defaultForks + defaultGethExceptions +
-                              "\n}";
+    ],)" +
+    defaultForks +
+    defaultGethExceptions + "\n}";

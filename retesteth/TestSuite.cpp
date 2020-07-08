@@ -25,6 +25,7 @@
 #include <retesteth/ExitHandler.h>
 #include <retesteth/Options.h>
 #include <retesteth/TestHelper.h>
+#include <retesteth/testSuites/TestFixtures.h>
 #include <retesteth/TestOutputHelper.h>
 #include <retesteth/TestSuite.h>
 #include <retesteth/session/Session.h>
@@ -166,7 +167,7 @@ void joinThreads(vector<thread>& _threadVector, bool _all)
     {
         for (auto& th : _threadVector)
         {
-            string id = toString(th.get_id());
+            thread::id const id = th.get_id();
             th.join();
             // A thread with exception thrown still being joined here!
             RPCSession::sessionEnd(id, RPCSession::SessionStatus::Available);
@@ -187,11 +188,10 @@ void joinThreads(vector<thread>& _threadVector, bool _all)
     {
         for (vector<thread>::iterator it = _threadVector.begin(); it != _threadVector.end(); it++)
         {
-            finished =
-                (RPCSession::sessionStatus(toString((*it).get_id())) == RPCSession::HasFinished);
+            finished = (RPCSession::sessionStatus((*it).get_id()) == RPCSession::HasFinished);
             if (finished)
             {
-                string id = toString((*it).get_id());
+                thread::id const id = (*it).get_id();
                 (*it).join();
                 RPCSession::sessionEnd(id, RPCSession::SessionStatus::Available);
                 _threadVector.erase(it);
@@ -360,6 +360,8 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
     // run all tests
     AbsoluteFillerPath fillerPath = getFullPathFiller(_testFolder);
     vector<fs::path> const files = test::getFiles(fillerPath.path(), {".json", ".yml"}, filter);
+    if (files.size() == 0)
+        ETH_WARNING(_testFolder + " no tests detected in folder!");
 
     // repeat this part for all connected clients
     auto thisPart = [this, &files, &_testFolder]() {
@@ -385,6 +387,12 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
                 testOutput.finishTest();
                 break;
             }
+            if (Options::get().lowcpu && test::inArray(test::c_cpuIntenseTests, file.stem().string()))
+            {
+                ETH_WARNING("Skipping " + file.stem().string() + " because --lowcpu option was specified.\n");
+                continue;
+            }
+
             testOutput.showProgress();
             if (threadVector.size() == maxAllowedThreads)
                 joinThreads(threadVector, false);

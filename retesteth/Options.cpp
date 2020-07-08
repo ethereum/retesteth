@@ -74,6 +74,7 @@ void printHelp()
 
     cout << "\nAdditional Tests\n";
     cout << setw(30) << "--all" << setw(25) << "Enable all tests\n";
+    cout << setw(30) << "--lowcpu" << setw(25) << "Disable cpu intense tests\n";
 
     cout << "\nTest Generation\n";
     cout << setw(30) << "--filltests" << setw(0) << "Run test fillers\n";
@@ -204,6 +205,8 @@ Options::Options(int argc, const char** argv)
             exectimelog = true;
         else if (arg == "--all")
             all = true;
+        else if (arg == "--lowcpu")
+            lowcpu = true;
         else if (arg == "--singletest")
         {
             throwIfNoArgumentFollows();

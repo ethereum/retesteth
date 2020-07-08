@@ -310,6 +310,7 @@ void RunTest(StateTestInFilled const& _test)
 
     // Gather Transactions from general transaction section
     std::vector<TransactionInGeneralSection> txs = _test.GeneralTr().buildTransactions();
+    bool forkNotAllowed = false;
 
     for (auto const& post : _test.Post())
     {
@@ -318,9 +319,14 @@ void RunTest(StateTestInFilled const& _test)
         Options const& opt = Options::get();
 
         // If options singlenet select different network or test has network that is not allowed by clinet configs
-        if ((!opt.singleTestNet.empty() && FORK(opt.singleTestNet) != network) ||
-            !Options::getDynamicOptions().getCurrentConfig().checkForkAllowed(network))
+        if (!opt.singleTestNet.empty() && FORK(opt.singleTestNet) != network)
             networkSkip = true;
+        else if (!Options::getDynamicOptions().getCurrentConfig().checkForkAllowed(network))
+        {
+            networkSkip = true;
+            forkNotAllowed = true;
+            ETH_WARNING("Skipping unsupported fork: " + network.asString() + " in " + _test.testName());
+        }
         else
             session.test_setChainParams(prepareChainParams(network, SealEngine::NoReward, _test.Pre(), _test.Env()));
 
@@ -399,7 +405,8 @@ void RunTest(StateTestInFilled const& _test)
         }
     }
 
-    checkUnexecutedTransactions(txs);
+    if (!forkNotAllowed)
+        checkUnexecutedTransactions(txs);
 }
 }  // namespace closed
 

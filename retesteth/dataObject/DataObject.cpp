@@ -1,4 +1,5 @@
 #include <dataObject/DataObject.h>
+#include <algorithm>
 #include <sstream>
 using namespace dataobject;
 
@@ -100,12 +101,23 @@ void DataObject::setSubObjectKey(size_t _index, std::string const& _key)
         m_subObjects.at(_index).setKey(_key);
 }
 
+// Helpers for fast subObject lookup
+// Subobjects are in vector because double/empty keys and order in the vector
+vector<DataObject>::const_iterator DataObject::subByKey(string const& _key) const
+{
+    return std::find_if(m_subObjects.begin(), m_subObjects.end(), [&_key](DataObject const& x) { return x.getKey() == _key; });
+}
+vector<DataObject>::iterator DataObject::subByKeyU(string const& _key)
+{
+    return std::find_if(m_subObjects.begin(), m_subObjects.end(), [&_key](DataObject const& x) { return x.getKey() == _key; });
+}
+
 /// look if there is a subobject with _key
 bool DataObject::count(std::string const& _key) const
 {
-    for (auto const& i : m_subObjects)
-        if (i.getKey() == _key)
-            return true;
+    vector<DataObject>::const_iterator it = subByKey(_key);
+    if (it != m_subObjects.end())
+        return true;
     return false;
 }
 
@@ -186,21 +198,19 @@ void DataObject::replace(DataObject const& _value)
 
 DataObject const& DataObject::atKey(std::string const& _key) const
 {
-    _assert(count(_key), "count(_key) _key=" + _key + " (DataObject::at)");
-    for (auto const& i : m_subObjects)
-        if (i.getKey() == _key)
-            return i;
-    _assert(false, "item not found! (DataObject::at)");
+    vector<DataObject>::const_iterator it = subByKey(_key);
+    if (it != m_subObjects.end())
+        return *it;
+    _assert(false, "count(_key) _key=" + _key + " (DataObject::at)");
     return m_subObjects.at(0);
 }
 
 DataObject& DataObject::atKeyUnsafe(std::string const& _key)
 {
-    _assert(count(_key), "count(_key) _key=" + _key + " (DataObject::at)");
-    for (auto& i : m_subObjects)
-        if (i.getKey() == _key)
-            return i;
-    _assert(false, "item not found! (DataObject::at)");
+    vector<DataObject>::iterator it = subByKeyU(_key);
+    if (it != m_subObjects.end())
+        return *it;
+    _assert(false, "count(_key) _key=" + _key + " (DataObject::atKeyUnsafe)");
     return m_subObjects.at(0);
 }
 
@@ -241,14 +251,9 @@ void DataObject::renameKey(std::string const& _currentKey, std::string const& _n
 {
     if (m_strKey == _currentKey)
         m_strKey = _newKey;
-    for (auto& obj : m_subObjects)
-    {
-        if (!obj.getKey().empty() && obj.getKey() == _currentKey)
-        {
-            obj.setKey(_newKey);
-            break;
-        }
-    }
+    vector<DataObject>::iterator it = subByKeyU(_currentKey);
+    if (it != m_subObjects.end())
+        (*it).setKey(_newKey);
 }
 
 /// vector<element> erase method with `replace()` function

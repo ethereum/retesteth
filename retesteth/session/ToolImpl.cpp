@@ -160,7 +160,7 @@ void ToolImpl::test_setChainParams(SetChainParamsArgs const& _config)
 
     // Ask tool to calculate genesis header stateRoot for genesisHeader
     EthereumBlock genesis(BlockHeader(_config.genesis()));
-    m_toolChainManager = GCP_SPointer<ToolChainManager>(new ToolChainManager(_config, m_toolPath));
+    m_toolChainManager = GCP_SPointer<ToolChainManager>(new ToolChainManager(_config, m_toolPath, m_tmpDir));
 
     ETH_TEST_MESSAGE("Response test_setChainParams: {true}");
 }

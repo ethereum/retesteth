@@ -1,5 +1,6 @@
 #include "ClientConfigFile.h"
 #include "../basetypes/IPADDRESS.h"
+#include <testStructures/Common.h>
 #include <retesteth/EthChecks.h>
 #include <retesteth/TestHelper.h>
 using namespace test::teststruct;
@@ -47,9 +48,7 @@ void ClientConfigFile::initWithData(DataObject const& _data)
         {
             IPADDRESS addr(el);
             if (test::inArray(m_socketAddress, addr))
-                ETH_ERROR_MESSAGE(
-                    sErrorPath +
-                    "`socketAddress` section contain dublicate element: " + el.asString());
+                ETH_ERROR_MESSAGE(sErrorPath + "`socketAddress` section contain dublicate element: " + el.asString());
             m_socketAddress.push_back(addr);
         }
     }
@@ -93,19 +92,20 @@ void ClientConfigFile::initWithData(DataObject const& _data)
     // Homestead`) According to this order:
     for (auto const& el : _data.atKey("forks").getSubObjects())
     {
+        if (el.asString()[0] == '/' && el.asString()[1] == '/')
+            continue;
         if (test::inArray(m_forks, FORK(el)))
-            ETH_ERROR_MESSAGE(
-                sErrorPath + "`forks` section contain dublicate element: " + el.asString());
+            ETH_ERROR_MESSAGE(sErrorPath + "`forks` section contain dublicate element: " + el.asString());
         m_forks.push_back(FORK(el));
     }
 
-    // Read additionalForks are allowed fork names to run on this client, but not used in
-    // translation
+    // Read additionalForks are allowed fork names to run on this client, but not used in translation
     for (auto const& el : _data.atKey("additionalForks").getSubObjects())
     {
+        if (el.asString()[0] == '/' && el.asString()[1] == '/')
+            continue;
         if (test::inArray(m_additionalForks, FORK(el)))
-            ETH_ERROR_MESSAGE(sErrorPath + "`additionalForks` section contain dublicate element: " +
-                              el.asString());
+            ETH_ERROR_MESSAGE(sErrorPath + "`additionalForks` section contain dublicate element: " + el.asString());
         m_additionalForks.push_back(FORK(el));
     }
 
@@ -114,10 +114,19 @@ void ClientConfigFile::initWithData(DataObject const& _data)
     for (auto const& el : _data.atKey("exceptions").getSubObjects())
     {
         if (m_exceptions.count(el.getKey()))
-            ETH_ERROR_MESSAGE(
-                sErrorPath + "`exceptions` section contain dublicate element: " + el.getKey());
+            ETH_ERROR_MESSAGE(sErrorPath + "`exceptions` section contain dublicate element: " + el.getKey());
         m_exceptions[el.getKey()] = el.asString();
     }
+
+    // Limit sections in the file
+    requireJsonFields(_data, "ClientConfigFile " + _data.getKey(),
+        {{"name", {{DataType::String}, jsonField::Required}},
+         {"socketType", {{DataType::String}, jsonField::Required}},
+         {"socketAddress", {{DataType::String, DataType::Array}, jsonField::Required}},
+         {"forks", {{DataType::Array}, jsonField::Required}},
+         {"additionalForks", {{DataType::Array}, jsonField::Required}},
+         {"exceptions", {{DataType::Object}, jsonField::Required}}
+                      });
 }
 
 std::vector<IPADDRESS> const& ClientConfigFile::socketAdresses() const
@@ -125,6 +134,19 @@ std::vector<IPADDRESS> const& ClientConfigFile::socketAdresses() const
     if (m_socketType != ClientConfgSocketType::TCP)
         ETH_FAIL_MESSAGE("Attempt to geth addresses of ClientConfig which is not TCP socket type!");
     return m_socketAddress;
+}
+
+std::set<FORK> ClientConfigFile::allowedForks() const
+{
+    static std::set<FORK> out;
+    if (out.size() == 0)
+    {
+        for (auto const& el : m_forks)
+            out.insert(el);
+        for (auto const& el : m_additionalForks)
+            out.insert(el);
+    }
+    return out;
 }
 
 }  // namespace teststruct

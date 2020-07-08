@@ -40,7 +40,7 @@ void checkUnfinishedTestFolders();  // Checkup that all test folders are active 
 typedef std::pair<double, std::string> execTimeName;
 static std::vector<execTimeName> execTimeResults;
 static int execTotalErrors = 0;
-static std::map<std::string, TestOutputHelper> helperThreadMap; // threadID => outputHelper
+static std::map<thread::id, TestOutputHelper> helperThreadMap;  // threadID => outputHelper
 mutex g_numberOfRunningTests;
 mutex g_totalTestsRun;
 mutex g_failedTestsMap;
@@ -53,7 +53,7 @@ mutex g_helperThreadMapMutex;
 TestOutputHelper& TestOutputHelper::get()
 {
     std::lock_guard<std::mutex> lock(g_helperThreadMapMutex);
-    string tID = getThreadID();
+    thread::id const tID = getThreadID();
     if (helperThreadMap.count(tID))
         return helperThreadMap.at(tID);
     else
@@ -88,7 +88,9 @@ bool TestOutputHelper::markError(std::string const& _message)
 
         string const& allowedException =
             m_expected_UnitTestExceptions.at(m_expected_UnitTestExceptions.size() - 1);
-        if (allowedException == _message || allowedException == rmessage || allowedException == c_exception_any)
+
+        if (_message.find(allowedException) != string::npos || allowedException == c_exception_any ||
+            rmessage.find(allowedException) != string::npos)
         {
             m_expected_UnitTestExceptions.pop_back();
             return false;
@@ -308,9 +310,9 @@ void TestOutputHelper::printTestExecStats()
     }
 }
 
-std::string TestOutputHelper::getThreadID()
+thread::id TestOutputHelper::getThreadID()
 {
-    return toString(std::this_thread::get_id());
+    return std::this_thread::get_id();
 }
 
 // check if a boost path contain no test files
@@ -414,7 +416,7 @@ std::string TestInfo::errorDebug() const
 {
     if (m_sFork.empty())
         return "";
-    string message = " (" + m_currentTestCaseName + "/" + TestOutputHelper::get().testName();
+    string message = cYellow + " (" + m_currentTestCaseName + "/" + TestOutputHelper::get().testName();
 
     if (!m_isGeneralTestInfo)
     {
@@ -429,5 +431,5 @@ std::string TestInfo::errorDebug() const
         message += ", block: " + to_string(m_blockNumber);
     else if (m_isStateTransactionInfo)
         message += ", TrInfo: d: " + to_string(m_trD) + ", g: " + to_string(m_trG) + ", v: " + to_string(m_trV);
-    return message + ")";
+    return message + ")" + cRed;
 }

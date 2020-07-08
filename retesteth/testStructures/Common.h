@@ -27,7 +27,7 @@ enum class DigitsType
     UnEvenHexPrefixed,
     String
 };
-DigitsType stringIntegerType(std::string const& _string);
+DigitsType stringIntegerType(std::string const& _string, bool _wasPrefix = false);
 
 // Check the presents of fields in a DataObject with a validation map
 typedef std::set<DataType> possibleType;

@@ -18,7 +18,8 @@ string const defaultForks = R"(
       "EIP158ToByzantiumAt5",
       "HomesteadToDaoAt5",
       "ByzantiumToConstantinopleFixAt5"
-    ],)";
+    ],
+)";
 
 string const besu_config = R"({
     "name" : "Hyperledger Besu on TCP",
@@ -34,7 +35,8 @@ string const besu_config = R"({
         "Byzantium",
         "Constantinople",
         "ConstantinopleFix",
-        "Istanbul"
+        "Istanbul",
+        "Berlin"
     ],
     "additionalForks" : [
         "FrontierToHomesteadAt5",

@@ -69,6 +69,7 @@ public:
     int trGasIndex;     ///< GeneralState gas
     int trValueIndex;   ///< GeneralState value
     bool all = false;	///< Running every test, including time consuming ones.
+    bool lowcpu = false; ///< Disable cpu-intense tests
 	bool nonetwork = false;///< For libp2p
 	/// @}
 

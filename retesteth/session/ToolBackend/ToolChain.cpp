@@ -13,8 +13,9 @@ using namespace dataobject;
 
 namespace toolimpl
 {
-ToolChain::ToolChain(EthereumBlockState const& _genesis, SetChainParamsArgs const& _config, fs::path const& _toolPath)
-  : m_engine(_config.sealEngine()), m_fork(new FORK(_config.params().atKey("fork"))), m_toolPath(_toolPath)
+ToolChain::ToolChain(
+    EthereumBlockState const& _genesis, SetChainParamsArgs const& _config, fs::path const& _toolPath, fs::path const& _tmpDir)
+  : m_engine(_config.sealEngine()), m_fork(new FORK(_config.params().atKey("fork"))), m_toolPath(_toolPath), m_tmpDir(_tmpDir)
 {
     m_initialParams = GCP_SPointer<SetChainParamsArgs>(new SetChainParamsArgs(_config));
     m_toolParams = GCP_SPointer<ToolParams>(new ToolParams(_config.params()));
@@ -144,10 +145,8 @@ void ToolChain::mineBlock(EthereumBlockState const& _pendingBlock, Mining _req)
 
 ToolResponse ToolChain::mineBlockOnTool(EthereumBlockState const& _block, SealEngine _engine)
 {
-    fs::path tmpDir = test::createUniqueTmpDirectory();
-
     // env.json file
-    fs::path envPath = tmpDir / "env.json";
+    fs::path envPath = m_tmpDir / "env.json";
     BlockchainTestFillerEnv env(_block.header().asDataObject(), m_engine);
     DataObject envData = env.asDataObject();
 
@@ -169,11 +168,11 @@ ToolResponse ToolChain::mineBlockOnTool(EthereumBlockState const& _block, SealEn
     writeFile(envPath.string(), envData.asJson());
 
     // alloc.json file
-    fs::path allocPath = tmpDir / "alloc.json";
+    fs::path allocPath = m_tmpDir / "alloc.json";
     writeFile(allocPath.string(), _block.state().asDataObject().asJsonNoFirstKey());
 
     // txs.json file
-    fs::path txsPath = tmpDir / "txs.json";
+    fs::path txsPath = m_tmpDir / "txs.json";
     DataObject txs(DataType::Array);
     static u256 c_maxGasLimit = u256("0xffffffffffffffff");
     for (auto const& tr : _block.transactions())
@@ -186,8 +185,8 @@ ToolResponse ToolChain::mineBlockOnTool(EthereumBlockState const& _block, SealEn
     writeFile(txsPath.string(), txs.asJson());
 
     // output file
-    fs::path outPath = tmpDir / "out.json";
-    fs::path outAllocPath = tmpDir / "outAlloc.json";
+    fs::path outPath = m_tmpDir / "out.json";
+    fs::path outAllocPath = m_tmpDir / "outAlloc.json";
 
     // Convert FrontierToHomesteadAt5 -> Homestead if block > 5, and get reward
     auto tupleRewardFork = prepareReward(_engine, m_fork.getContent(), _block.header().number());
@@ -215,6 +214,12 @@ ToolResponse ToolChain::mineBlockOnTool(EthereumBlockState const& _block, SealEn
     ToolResponse toolResponse(ConvertJsoncppStringToData(contentsString(outPath)));
     DataObject returnState = ConvertJsoncppStringToData(contentsString(outAllocPath));
     toolResponse.attachState(restoreFullState(returnState));
+
+    fs::remove(envPath);
+    fs::remove(allocPath);
+    fs::remove(txsPath);
+    fs::remove(outPath);
+    fs::remove(outAllocPath);
     return toolResponse;
 }
 

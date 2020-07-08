@@ -63,17 +63,19 @@ std::tuple<VALUE, FORK> prepareReward(SealEngine _engine, FORK const& _fork, VAL
     {
         if (_blockNumber < 5)
         {
-            assert(RewardMapForToolBefore5.count(_fork));
+            if (!RewardMapForToolBefore5.count(_fork))
+                ETH_ERROR_MESSAGE("ToolBackend error getting reward for fork: " + _fork.asString());
             auto const& trFork = RewardMapForToolBefore5.at(_fork);
             assert(rewards.count(trFork));
             return {rewards.at(trFork).getCContent(), trFork};
         }
         else
         {
-            assert(RewardMapForToolAfter5.count(_fork));
+            if (!RewardMapForToolAfter5.count(_fork))
+                ETH_ERROR_MESSAGE("ToolBackend error getting reward for fork: " + _fork.asString());
             auto const& trFork = RewardMapForToolAfter5.at(_fork);
             assert(rewards.count(trFork));
-            return {rewards.at(trFork).getCContent(), trFork};
+            return {rewards.at(trFork).getCContent(), _fork == "HomesteadToDaoAt5" ? "HomesteadToDaoAt5" : trFork};
         }
     }
 }
@@ -205,7 +207,7 @@ void verifyEthereumBlockHeader(BlockHeader const& _header, ToolChain const& _cha
         throw test::UpwardsException("Header extraData > 32 bytes");
 
     // Check DAO extraData
-    if (_chain.fork().asString() == "HomesteadToDaoAt5" && _header.number() > 4 && _header.number() < 19 &&
+    if (_chain.fork().asString() == "HomesteadToDaoAt5" && _header.number() > 4 && _header.number() <= 5+9 &&
         _header.extraData().asString() != "0x64616f2d686172642d666f726b")
         throw test::UpwardsException("BlockHeader require Dao ExtraData! (0x64616f2d686172642d666f726b)");
 

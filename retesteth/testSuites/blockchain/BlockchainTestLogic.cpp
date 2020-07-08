@@ -14,6 +14,11 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
 {
     if (Options::get().logVerbosity > 1)
         ETH_STDOUT_MESSAGE("Running " + _test.testName());
+
+    ClientConfig const& cfg = Options::get().getDynamicOptions().getCurrentConfig();
+    if (!cfg.validateForkAllowed(_test.network(), false))
+        return;
+
     TestOutputHelper::get().setCurrentTestName(_test.testName());
     TestOutputHelper::get().setUnitTestExceptions(_test.unitTestExceptions());
     SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
@@ -134,18 +139,17 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
         ETH_ERROR_MESSAGE("lastblockhash does not match! remote: '" + latestBlock.header().hash().asString() + "', test: '" +
                           _test.lastBlockHash().asString() + "'");
 
-    // if (_test.genesisRLP())
-    //{
-    //    if (_opt.isLegacyTests &&
-    //        Options::getDynamicOptions().getCurrentConfig().getFolderName() == "aleth")
-    //    {
-    // skip old generated tests (Legacy) genesis check on aleth
-    // because mixHash and nonce return is different to geth
-    //    }
-    //    else
     bool skipGenesisCheck = false;
-    if (_opt.isLegacyTests && _test.genesisRLP().asString() == "0x00")
-        skipGenesisCheck = true;
+    if (_opt.isLegacyTests)
+    {
+        // Skip old generated tests (Legacy) genesis check on aleth
+        // because mixHash and nonce return is different to geth
+        if (Options::getDynamicOptions().getCurrentConfig().cfgFile().path().parent_path().filename() == "aleth")
+            skipGenesisCheck = true;
+
+        if (_test.genesisRLP().asString() == "0x00")
+            skipGenesisCheck = true;
+    }
 
     if (!skipGenesisCheck)
     {

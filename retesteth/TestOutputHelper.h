@@ -22,6 +22,7 @@
 #include <libdevcore/CommonData.h>
 #include <boost/filesystem.hpp>
 #include <boost/test/unit_test.hpp>
+#include <thread>
 #include <vector>
 
 namespace test
@@ -111,7 +112,7 @@ public:
     static void registerTestRunSuccess();
 
     /// get string representation of current threadID
-    static std::string getThreadID();
+    static std::thread::id getThreadID();
 
     // Mark the _folderName as executed for a given _suitePath (to filler files)
     static void markTestFolderAsFinished(

@@ -34,15 +34,13 @@ namespace fs = boost::filesystem;
 namespace test
 {
 /// !!! DataObject return without reference!!! must be SP!!!
-DataObject BlockchainTestTransitionSuite::doTests(
-    DataObject const& _input, TestSuiteOptions& _opt) const
+DataObject BlockchainTestTransitionSuite::doTests(DataObject const& _input, TestSuiteOptions& _opt) const
 {
     _opt.allowInvalidBlocks = true;
     return DoTests(_input, _opt);
 }
 
-DataObject BlockchainTestInvalidSuite::doTests(
-    DataObject const& _input, TestSuiteOptions& _opt) const
+DataObject BlockchainTestInvalidSuite::doTests(DataObject const& _input, TestSuiteOptions& _opt) const
 {
     _opt.allowInvalidBlocks = true;
     return DoTests(_input, _opt);
@@ -268,9 +266,12 @@ BOOST_AUTO_TEST_CASE(stBadOpcode) {}
 
 // New Tests
 BOOST_AUTO_TEST_CASE(stArgsZeroOneBalance) {}
-BOOST_AUTO_TEST_CASE(stTimeConsuming) {}
 BOOST_AUTO_TEST_CASE(stChainId) {}
 BOOST_AUTO_TEST_CASE(stSLoadTest) {}
 BOOST_AUTO_TEST_CASE(stSelfBalance) {}
+BOOST_AUTO_TEST_CASE(stStaticFlagEnabled) {}
+BOOST_AUTO_TEST_CASE(stSubroutine) {}
 
+// Heavy
+BOOST_AUTO_TEST_CASE(stTimeConsuming) {}
 BOOST_AUTO_TEST_SUITE_END()

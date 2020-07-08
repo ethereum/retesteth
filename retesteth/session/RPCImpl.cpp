@@ -122,13 +122,16 @@ void RPCImpl::test_modifyTimestamp(VALUE const& _timestamp)
 void RPCImpl::test_mineBlocks(size_t _number)
 {
     DataObject const res = rpcCall("test_mineBlocks", {to_string(_number)}, true);
-    ETH_ERROR_REQUIRE_MESSAGE(res.asBool() == true, "remote test_mineBLocks = false");
+    if (res.type() == DataType::Bool)
+        ETH_ERROR_REQUIRE_MESSAGE(res.asBool() == true, "remote test_mineBLocks = false");
+    else
+        ETH_ERROR_MESSAGE("remote test_mineBLocks = " + res.asJson());
 }
 
 FH32 RPCImpl::test_importRawBlock(BYTES const& _blockRLP)
 {
     DataObject const res = rpcCall("test_importRawBlock", {quote(_blockRLP.asString())}, true);
-    if (res.type() != DataType::Null)
+    if (res.type() == DataType::String && res.asString().size() > 2)
         return FH32(res.asString());
     return FH32(FH32::zero());
 }
@@ -166,11 +169,10 @@ DataObject RPCImpl::rpcCall(
     DataObject result = ConvertJsoncppStringToData(reply, string(), true);
     if (result.count("error"))
         result["result"] = "";
-    requireJsonFields(result, "rpcCall_response ('" + request.substr(0, 70) + "')",
+    requireJsonFields(result, "rpcCall_response (req: '" + request.substr(0, 70) + "')",
         {{"jsonrpc", {{DataType::String}, jsonField::Required}},
             {"id", {{DataType::Integer}, jsonField::Required}},
-            {"result", {{DataType::String, DataType::Integer, DataType::Bool, DataType::Object,
-                            DataType::Array},
+            {"result", {{DataType::String, DataType::Integer, DataType::Bool, DataType::Object, DataType::Array},
                            jsonField::Required}},
             {"error", {{DataType::String, DataType::Object}, jsonField::Optional}}});
 
