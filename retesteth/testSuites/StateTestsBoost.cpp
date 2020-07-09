@@ -110,6 +110,7 @@ BOOST_AUTO_TEST_CASE(stChainId) {}
 BOOST_AUTO_TEST_CASE(stSelfBalance) {}
 BOOST_AUTO_TEST_CASE(stStaticFlagEnabled) {}
 BOOST_AUTO_TEST_CASE(stSubroutine) {}
+BOOST_AUTO_TEST_CASE(stEIP2537) {}
 
 // Heavy
 BOOST_AUTO_TEST_CASE(stTimeConsuming) {}
