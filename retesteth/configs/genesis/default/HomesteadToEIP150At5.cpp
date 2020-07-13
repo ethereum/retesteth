@@ -1,6 +1,7 @@
-#include <retesteth/configs/Genesis.h>
+#include <retesteth/configs/Options.h>
 #include <string>
 using namespace std;
+using namespace dataobject;
 
 const string default_HomesteadToEIP150At5_config = R"({
     "params" : {
@@ -19,3 +20,16 @@ const string t8ntool_HomesteadToEIP150At5_config = R"({
     "accounts" : {
     }
 })";
+
+genHomesteadToEIP150Cfg::genHomesteadToEIP150Cfg()
+{
+    DataObject obj;
+    obj["path"] = "default/genesis/HomesteadToEIP150At5.json";
+    obj["content"] = default_HomesteadToEIP150At5_config;
+    map_configs.addArrayObject(obj);
+
+    DataObject obj2;
+    obj2["path"] = "t8ntool/genesis/HomesteadToEIP150At5.json";
+    obj2["content"] = t8ntool_HomesteadToEIP150At5_config;
+    map_configs.addArrayObject(obj2);
+}

@@ -1,6 +1,7 @@
-#include <retesteth/configs/Genesis.h>
+#include <retesteth/configs/Options.h>
 #include <string>
 using namespace std;
+using namespace dataobject;
 
 const string default_Istanbul_config = R"({
     "params" : {
@@ -27,3 +28,16 @@ const string t8ntool_Istanbul_config = R"({
     "accounts" : {
     }
 })";
+
+genIstanbulCfg::genIstanbulCfg()
+{
+    DataObject obj;
+    obj["path"] = "default/genesis/Istanbul.json";
+    obj["content"] = default_Istanbul_config;
+    map_configs.addArrayObject(obj);
+
+    DataObject obj2;
+    obj2["path"] = "t8ntool/genesis/Istanbul.json";
+    obj2["content"] = t8ntool_Istanbul_config;
+    map_configs.addArrayObject(obj2);
+}

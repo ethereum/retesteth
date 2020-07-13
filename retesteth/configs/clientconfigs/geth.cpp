@@ -1,7 +1,38 @@
-#include <retesteth/configs/Genesis.h>
+#include <retesteth/configs/Options.h>
 using namespace std;
+using namespace dataobject;
 
-string const defaultGethExceptions = R"(
+string const geth_config = R"({
+    "name" : "Ethereum GO on TCP",
+    "socketType" : "tcp",
+    "socketAddress" : [
+        "127.0.0.1:8545",
+        "127.0.0.1:8546",
+        "127.0.0.1:8547",
+        "127.0.0.1:8548",
+        "127.0.0.1:8549",
+        "127.0.0.1:8550",
+        "127.0.0.1:8551",
+        "127.0.0.1:8552"
+    ],
+    "forks" : [
+      "Frontier",
+      "Homestead",
+      "EIP150",
+      "EIP158",
+      "Byzantium",
+      "Constantinople",
+      "ConstantinopleFix",
+      "Istanbul",
+      "Berlin"
+    ],
+    "additionalForks" : [
+      "FrontierToHomesteadAt5",
+      "HomesteadToEIP150At5",
+      "EIP158ToByzantiumAt5",
+      "HomesteadToDaoAt5",
+      "ByzantiumToConstantinopleFixAt5"
+    ],
     "exceptions" : {
         "ExtraDataTooBig" : "extra-data too long",
         "InvalidDifficulty" : "invalid difficulty",
@@ -119,20 +150,18 @@ string const defaultGethExceptions = R"(
         "RLP_ExpectedInputList_TRANSACTION_DECODEINTO_BLOCK_EXTBLOCK_TXS" : "rlp: expected input list for []*types.Transaction, decoding into (types.Block)(types.extblock).Txs",
         "RLP_ExpectedInputList_HEADER_DECODEINTO_BLOCK_EXTBLOCK_UNCLES" : "rlp: expected input list for []*types.Header, decoding into (types.Block)(types.extblock).Uncles",
         "RLP_ExpectedInputList_TXDATA_DECODEINTO_BLOCK_EXTBLOCK_TXS0" : "rlp: expected input list for types.txdata, decoding into (types.Block)(types.extblock).Txs[0]"
-    })";
+    }
+})";
 
-string const default_config = R"({
-    "name" : "Ethereum GO on TCP",
-    "socketType" : "tcp",
-    "socketAddress" : [
-        "127.0.0.1:8545",
-        "127.0.0.1:8546",
-        "127.0.0.1:8547",
-        "127.0.0.1:8548",
-        "127.0.0.1:8549",
-        "127.0.0.1:8550",
-        "127.0.0.1:8551",
-        "127.0.0.1:8552"
-    ],)" +
-    defaultForks +
-    defaultGethExceptions + "\n}";
+gethcfg::gethcfg()
+{
+    DataObject obj;
+    obj["path"] = "geth/config";
+    obj["content"] = geth_config;
+    map_configs.addArrayObject(obj);
+
+    DataObject obj2;
+    obj2["path"] = "default/config";
+    obj2["content"] = geth_config;
+    map_configs.addArrayObject(obj2);
+}

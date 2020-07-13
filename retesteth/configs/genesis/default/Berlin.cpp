@@ -1,6 +1,7 @@
-#include <retesteth/configs/Genesis.h>
+#include <retesteth/configs/Options.h>
 #include <string>
 using namespace std;
+using namespace dataobject;
 
 const string default_Berlin_config = R"({
     "params" : {
@@ -28,3 +29,16 @@ const string t8ntool_Berlin_config = R"({
     "accounts" : {
     }
 })";
+
+genBerlinCfg::genBerlinCfg()
+{
+    DataObject obj;
+    obj["path"] = "default/genesis/Berlin.json";
+    obj["content"] = default_Berlin_config;
+    map_configs.addArrayObject(obj);
+
+    DataObject obj2;
+    obj2["path"] = "t8ntool/genesis/Berlin.json";
+    obj2["content"] = t8ntool_Berlin_config;
+    map_configs.addArrayObject(obj2);
+}

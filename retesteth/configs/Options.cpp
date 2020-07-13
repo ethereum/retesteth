@@ -2,7 +2,7 @@
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/FileSystem.h>
 #include <retesteth/Options.h>
-#include <retesteth/configs/Genesis.h>
+#include <retesteth/configs/Options.h>
 #include <boost/filesystem.hpp>
 
 using namespace std;
@@ -29,62 +29,14 @@ string prepareRetestethVersion()
     return version;
 }
 
+DataObject map_configs;
 void deployFirstRunConfigs(fs::path const& _dir)
 {
     // Deploy default configs
-    fs::create_directory(_dir);
-    fs::create_directory(_dir / "default");
-    fs::create_directory(_dir / "default" / "genesis");
-
+    OptionsInit init;
     writeFile(_dir / "version", prepareRetestethVersion());
-    writeFile(_dir / "default" / "config", default_config);
-    writeFile(_dir / "t8ntool" / "config", t8ntool_config);
-    writeFile(_dir / "gethTCP" / "config", default_config);
-    writeFile(_dir / "besu" / "config", besu_config);
-    writeFile(_dir / "alethTCP" / "config", alethTCP_config);
-    writeFile(_dir / "alethIPCDebug" / "config", alethIPCDebug_config);
-    writeFile(_dir / "aleth" / "config", aleth_config);
-    writeFile(_dir / "aleth" / "aleth.sh", aleth_config_sh);
-
-    // Default geth configs
-    fs::path genesisDir = _dir / "default" / "genesis";
-    writeFile(genesisDir / "Frontier.json", default_Frontier_config);
-    writeFile(genesisDir / "Homestead.json", default_Homestead_config);
-    writeFile(genesisDir / "EIP150.json", default_EIP150_config);
-    writeFile(genesisDir / "EIP158.json", default_EIP158_config);
-    writeFile(genesisDir / "Byzantium.json", default_Byzantium_config);
-    writeFile(genesisDir / "Constantinople.json", default_Constantinople_config);
-    writeFile(genesisDir / "ConstantinopleFix.json", default_ConstantinopleFix_config);
-    writeFile(genesisDir / "Istanbul.json", default_Istanbul_config);
-    writeFile(genesisDir / "Berlin.json", default_Berlin_config);
-
-    writeFile(genesisDir / "FrontierToHomesteadAt5.json", default_FrontierToHomesteadAt5_config);
-    writeFile(genesisDir / "HomesteadToDaoAt5.json", default_HomesteadToDaoAt5_config);
-    writeFile(genesisDir / "HomesteadToEIP150At5.json", default_HomesteadToEIP150At5_config);
-    writeFile(genesisDir / "EIP158ToByzantiumAt5.json", default_EIP158ToByzantiumAt5_config);
-    writeFile(genesisDir / "ByzantiumToConstantinopleFixAt5.json",
-        default_ByzantiumToConstantinopleFixAt5_config);
-    writeFile(genesisDir / "correctMiningReward.json", default_correctMiningReward_config);
-
-    // Default geth t8ntool configs
-    genesisDir = _dir / "t8ntool" / "genesis";
-    writeFile(genesisDir / "Frontier.json", t8ntool_Frontier_config);
-    writeFile(genesisDir / "Homestead.json", t8ntool_Homestead_config);
-    writeFile(genesisDir / "EIP150.json", t8ntool_EIP150_config);
-    writeFile(genesisDir / "EIP158.json", t8ntool_EIP158_config);
-    writeFile(genesisDir / "Byzantium.json", t8ntool_Byzantium_config);
-    writeFile(genesisDir / "Constantinople.json", t8ntool_Constantinople_config);
-    writeFile(genesisDir / "ConstantinopleFix.json", t8ntool_ConstantinopleFix_config);
-    writeFile(genesisDir / "Istanbul.json", t8ntool_Istanbul_config);
-    writeFile(genesisDir / "Berlin.json", t8ntool_Berlin_config);
-
-    writeFile(genesisDir / "FrontierToHomesteadAt5.json", t8ntool_FrontierToHomesteadAt5_config);
-    writeFile(genesisDir / "HomesteadToDaoAt5.json", t8ntool_HomesteadToDaoAt5_config);
-    writeFile(genesisDir / "HomesteadToEIP150At5.json", t8ntool_HomesteadToEIP150At5_config);
-    writeFile(genesisDir / "EIP158ToByzantiumAt5.json", t8ntool_EIP158ToByzantiumAt5_config);
-    writeFile(genesisDir / "ByzantiumToConstantinopleFixAt5.json",
-        t8ntool_ByzantiumToConstantinopleFixAt5_config);
-    writeFile(genesisDir / "correctMiningReward.json", t8ntool_correctMiningReward_config);
+    for (DataObject const& cfg : map_configs.getSubObjects())
+        writeFile(_dir / fs::path(cfg.atKey("path").asString()), cfg.atKey("content").asString());
 }
 
 ClientConfig const& Options::DynamicOptions::getCurrentConfig() const
