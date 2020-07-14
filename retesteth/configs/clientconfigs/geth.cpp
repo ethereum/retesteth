@@ -23,8 +23,7 @@ string const geth_config = R"({
       "Byzantium",
       "Constantinople",
       "ConstantinopleFix",
-      "Istanbul",
-      "Berlin"
+      "Istanbul"
     ],
     "additionalForks" : [
       "FrontierToHomesteadAt5",
