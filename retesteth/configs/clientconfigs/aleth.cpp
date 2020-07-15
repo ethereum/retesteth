@@ -67,13 +67,16 @@ wait "$child"
 
 alethcfg::alethcfg()
 {
-    DataObject obj;
-    obj["path"] = "aleth/config";
-    obj["content"] = aleth_config;
-    map_configs.addArrayObject(obj);
-
-    DataObject obj2;
-    obj2["path"] = "aleth/aleth.sh";
-    obj2["content"] = aleth_config_sh;
-    map_configs.addArrayObject(obj2);
+    {
+        DataObject obj;
+        obj["path"] = "aleth/config";
+        obj["content"] = aleth_config;
+        map_configs.addArrayObject(obj);
+    }
+    {
+        DataObject obj;
+        obj["path"] = "aleth/aleth.sh";
+        obj["content"] = aleth_config_sh;
+        map_configs.addArrayObject(obj);
+    }
 }

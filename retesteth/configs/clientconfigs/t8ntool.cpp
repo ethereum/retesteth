@@ -5,7 +5,7 @@ using namespace dataobject;
 string const t8ntool_config = R"({
     "name" : "Ethereum GO on StateTool",
     "socketType" : "tranition-tool",
-    "socketAddress" : "/bin/statet8n",
+    "socketAddress" : "start.sh",
     "forks" : [
         "Frontier",
         "Homestead",
@@ -145,10 +145,27 @@ string const t8ntool_config = R"({
     }
 })";
 
+string const t8ntool_start = R"(#!/bin/sh
+if [ $1 = "-v" ]; then
+    /bin/evm -v
+else
+    /bin/evm t8n $1 $2 $3 $4 $5 $6 $7 $8 $9 $10 $11 $12 $13 $14 $15 $16 $17 $18 $19 $20
+fi
+)";
+
 t8ntoolcfg::t8ntoolcfg()
 {
-    DataObject obj;
-    obj["path"] = "t8ntool/config";
-    obj["content"] = t8ntool_config;
-    map_configs.addArrayObject(obj);
+    {
+        DataObject obj;
+        obj["path"] = "t8ntool/config";
+        obj["content"] = t8ntool_config;
+        map_configs.addArrayObject(obj);
+    }
+    {
+        DataObject obj;
+        obj["exec"] = true;
+        obj["path"] = "t8ntool/start.sh";
+        obj["content"] = t8ntool_start;
+        map_configs.addArrayObject(obj);
+    }
 }

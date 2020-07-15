@@ -56,7 +56,9 @@ struct sessionInfo
 void closeSession(thread::id const& _threadID);
 
 std::mutex g_socketMapMutex;
+std::mutex g_cfg_totalruns;
 static std::map<thread::id, sessionInfo> socketMap;
+std::map<unsigned int, size_t> cfg_totalruns;
 void RPCSession::runNewInstanceOfAClient(thread::id const& _threadID, ClientConfig const& _config)
 {
     switch (_config.cfgFile().socketType())
@@ -97,8 +99,9 @@ void RPCSession::runNewInstanceOfAClient(thread::id const& _threadID, ClientConf
     }
     case ClientConfgSocketType::TCP:
     {
+        Options const& opt = Options::get();
         std::vector<IPADDRESS> const& ports =
-            (Options::get().nodesoverride.size() > 0 ? Options::get().nodesoverride : _config.cfgFile().socketAdresses());
+            (opt.nodesoverride.size() > 0 ? opt.nodesoverride : _config.cfgFile().socketAdresses());
 
         // Create sessionInfo for a tcp address that is still not present in socketMap
         for (auto const& addr : ports)
@@ -149,6 +152,71 @@ void RPCSession::runNewInstanceOfAClient(thread::id const& _threadID, ClientConf
     }
 }
 
+void RPCSession::currentCfgCountTestRun()
+{
+    std::lock_guard<std::mutex> lock(g_cfg_totalruns);
+    ClientConfig const& curCFG = Options::getDynamicOptions().getCurrentConfig();
+    if (cfg_totalruns.count(curCFG.getId().id()))
+        cfg_totalruns[curCFG.getId().id()] += 1;
+}
+
+bool RPCSession::isRunningTooLong()
+{
+    static const size_t c_maxTestBeforeFlush = 1000;
+    std::lock_guard<std::mutex> lock(g_cfg_totalruns);
+    ClientConfig const& curCFG = Options::getDynamicOptions().getCurrentConfig();
+    if (cfg_totalruns.count(curCFG.getId().id()))
+        return cfg_totalruns.at(curCFG.getId().id()) > c_maxTestBeforeFlush;
+    return false;
+}
+
+void RPCSession::restartScripts(bool _stop)
+{
+    std::lock_guard<std::mutex> lock(g_cfg_totalruns);
+    ClientConfig const& curCFG = Options::getDynamicOptions().getCurrentConfig();
+
+    if (_stop && cfg_totalruns.count(curCFG.getId().id()))
+    {
+        // Stop is called from TestSuite.cpp before the execution of new test Suite
+        // Stop all the clients to flush the memory errors accumulated by the test runs
+        // Then restart all connections again (from ::instance call)
+        if (fs::exists(curCFG.getStopperScript()))
+            test::executeCmd(curCFG.getStopperScript().c_str(), ExecCMDWarning::NoWarningNoError);
+        cfg_totalruns.erase(curCFG.getId().id());
+        ETH_STDOUT_MESSAGE("Restart Client Scripts");
+        this_thread::sleep_for(chrono::seconds(5));
+        return;
+    }
+
+    // If there are no clients started with this configuration, run the start script
+    if (!cfg_totalruns.count(curCFG.getId().id()))
+    {
+        cfg_totalruns[curCFG.getId().id()] = 0;
+        if (!fs::exists(curCFG.getStartScript()))
+            return;
+
+        size_t const threads = Options::get().threadCount;
+        string const start = curCFG.getStartScript().c_str();
+        auto cmd = [](string const& _cmd, string const& _args) {
+            test::executeCmd(_cmd + " " + _args, ExecCMDWarning::NoWarning);
+        };
+        switch (curCFG.cfgFile().socketType())
+        {
+        case ClientConfgSocketType::TCP:
+        {
+            thread task(cmd, start, test::fto_string(threads) + " 2>/dev/null");
+            ETH_STDOUT_MESSAGE(start);
+            task.detach();
+            this_thread::sleep_for(chrono::seconds(2));
+        }
+        break;
+        default:
+            break;
+        }
+    }
+}
+
+
 SessionInterface& RPCSession::instance(thread::id const& _threadID)
 {
     std::lock_guard<std::mutex> lock(g_socketMapMutex);
@@ -159,6 +227,8 @@ SessionInterface& RPCSession::instance(thread::id const& _threadID)
         // For this thread a session is opened but it is opened not for current tested client
         ETH_FAIL_MESSAGE("A session opened for another client id!");
     }
+
+    restartScripts();
 
     if (!socketMap.count(_threadID))
     {
@@ -229,6 +299,19 @@ void closeSession(thread::id const& _threadID)
 
 void RPCSession::clear()
 {
+    {
+        // Run stop scripts for all executed configurations
+        std::lock_guard<std::mutex> lock(g_cfg_totalruns);
+        for (auto const& el : cfg_totalruns)
+        {
+            for (auto cfg : Options::getDynamicOptions().getClientConfigs())
+                if (cfg.getId().id() == el.first && !cfg.getStopperScript().empty())
+                    executeCmd(cfg.getStopperScript().c_str(), ExecCMDWarning::NoWarning);
+        }
+        cfg_totalruns.clear();
+    }
+
+    // Close all active connection listeners
     std::lock_guard<std::mutex> lock(g_socketMapMutex);
     std::vector<thread> closingThreads;
     for (auto& element : socketMap)

@@ -3,8 +3,10 @@
 
 #include <dataObject/ConvertFile.h>
 #include <retesteth/EthChecks.h>
+#include <retesteth/ExitHandler.h>
 #include <retesteth/TestHelper.h>
 #include <retesteth/session/RPCImpl.h>
+#include <retesteth/session/Session.h>
 #include <retesteth/testStructures/Common.h>
 
 using namespace test;
@@ -103,6 +105,7 @@ DebugTraceTransaction RPCImpl::debug_traceTransaction(FH32 const& _trHash)
 // Test
 void RPCImpl::test_setChainParams(SetChainParamsArgs const& _config)
 {
+    RPCSession::currentCfgCountTestRun();
     ETH_FAIL_REQUIRE_MESSAGE(
         rpcCall("test_setChainParams", {_config.asDataObject().asJson()}) == true, "remote test_setChainParams = false");
 }
@@ -169,12 +172,20 @@ DataObject RPCImpl::rpcCall(
     DataObject result = ConvertJsoncppStringToData(reply, string(), true);
     if (result.count("error"))
         result["result"] = "";
-    requireJsonFields(result, "rpcCall_response (req: '" + request.substr(0, 70) + "')",
-        {{"jsonrpc", {{DataType::String}, jsonField::Required}},
-            {"id", {{DataType::Integer}, jsonField::Required}},
-            {"result", {{DataType::String, DataType::Integer, DataType::Bool, DataType::Object, DataType::Array},
-                           jsonField::Required}},
-            {"error", {{DataType::String, DataType::Object}, jsonField::Optional}}});
+
+    if (!ExitHandler::receivedExitSignal())
+    {
+        requireJsonFields(result, "rpcCall_response (req: '" + request.substr(0, 70) + "')",
+            {{"jsonrpc", {{DataType::String}, jsonField::Required}}, {"id", {{DataType::Integer}, jsonField::Required}},
+                {"result", {{DataType::String, DataType::Integer, DataType::Bool, DataType::Object, DataType::Array},
+                               jsonField::Required}},
+                {"error", {{DataType::String, DataType::Object}, jsonField::Optional}}});
+    }
+    else
+    {
+        result.clear();
+        result["error"]["message"] = "Received Exit Signal";
+    }
 
     if (result.count("error"))
     {
@@ -185,7 +196,9 @@ DataObject RPCImpl::rpcCall(
 
         if (_canFail)
             return DataObject(DataType::Null);
-        ETH_FAIL_MESSAGE(m_lastInterfaceError.message());
+
+        if (!ExitHandler::receivedExitSignal())
+            ETH_FAIL_MESSAGE(m_lastInterfaceError.message());
     }
     m_lastInterfaceError.clear();  // null the error as last RPC call was success.
     return result.atKey("result");

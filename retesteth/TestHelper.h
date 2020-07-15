@@ -62,7 +62,8 @@ bool checkCmdExist(std::string const& _command);
 enum class ExecCMDWarning
 {
     WarningOnEmptyResult,
-    NoWarning
+    NoWarning,
+    NoWarningNoError
 };
 std::string executeCmd(std::string const& _command, ExecCMDWarning _warningOnEmpty = ExecCMDWarning::WarningOnEmptyResult);
 

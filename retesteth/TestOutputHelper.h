@@ -81,19 +81,20 @@ public:
     void operator=(TestOutputHelper const&) = delete;
 
     void initTest(size_t _maxTests = 1);
-    // Display percantage of completed tests to std::out. Has to be called before execution of every
-    // test.
+
+    // Display percantage of completed tests to std::out.
+    // Has to be called before execution of every test.
     void showProgress();
     void finishTest();
     static void finisAllTestsManually();
 
-    //void setMaxTests(int _count) { m_maxTests = _count; }
-    bool checkTest(std::string const& _testName);
     bool markError(std::string const& _message);
     void unmarkLastError();
     const std::string c_exception_any = "ANY EXCEPTION";
-    void setUnitTestExceptions(std::vector<std::string> const& _messages);  // Do not treat next
-                                                                            // error as error.
+
+    // Do not treat next error as error.
+    void setUnitTestExceptions(std::vector<std::string> const& _messages);
+
     std::vector<std::string> const& getUnitTestExceptions() const
     {
         return m_expected_UnitTestExceptions;

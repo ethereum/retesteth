@@ -83,9 +83,12 @@ void ClientConfigFile::initWithData(DataObject const& _data)
             ETH_FAIL_MESSAGE(sErrorPath + "`socketAddress` must be string for this socketType!");
 
         m_pathToExecFile = fs::path(_data.atKey("socketAddress").asString());
-        ETH_FAIL_REQUIRE_MESSAGE(fs::exists(m_pathToExecFile),
+        fs::path const cfgPath = m_configFilePath.parent_path();
+        ETH_FAIL_REQUIRE_MESSAGE(fs::exists(m_pathToExecFile) || fs::exists(cfgPath / m_pathToExecFile),
             sErrorPath + "`socketAddress` for socketType::transition-tool must point to a tool cmd!" + " But file not found (" +
                 m_pathToExecFile.string() + ")");
+        if (fs::exists(cfgPath / m_pathToExecFile))
+            m_pathToExecFile = cfgPath / m_pathToExecFile;
     }
 
     // Read forks as fork order. Order is required for translation (`>=Frontier` -> `Frontier,

@@ -36,7 +36,12 @@ void deployFirstRunConfigs(fs::path const& _dir)
     OptionsInit init;
     writeFile(_dir / "version", prepareRetestethVersion());
     for (DataObject const& cfg : map_configs.getSubObjects())
-        writeFile(_dir / fs::path(cfg.atKey("path").asString()), cfg.atKey("content").asString());
+    {
+        if (cfg.count("exec"))
+            writeFileExec(_dir / fs::path(cfg.atKey("path").asString()), cfg.atKey("content").asString());
+        else
+            writeFile(_dir / fs::path(cfg.atKey("path").asString()), cfg.atKey("content").asString());
+    }
 }
 
 ClientConfig const& Options::DynamicOptions::getCurrentConfig() const

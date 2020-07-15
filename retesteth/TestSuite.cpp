@@ -375,9 +375,18 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
         ClientConfgSocketType socType = currConfig.cfgFile().socketType();
         if (socType == ClientConfgSocketType::IPCDebug)
             maxAllowedThreads = 1;
+
         // If connecting to TCP sockets. Max threads are limited with tcp ports provided
         if (socType == ClientConfgSocketType::TCP)
+        {
             maxAllowedThreads = min(maxAllowedThreads, currConfig.cfgFile().socketAdresses().size());
+            if (maxAllowedThreads != Options::get().threadCount)
+                ETH_WARNING(
+                    "Correct -j option to `" + test::fto_string(maxAllowedThreads) + "` (or provide socket ports in config)!");
+        }
+
+        if (RPCSession::isRunningTooLong())
+            RPCSession::restartScripts(true);
 
         testOutput.initTest(files.size());
         for (auto const& file : files)
@@ -546,7 +555,8 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
         }
         catch (std::exception const& _ex)
         {
-            ETH_ERROR_MESSAGE("ERROR OCCURED RUNNING TESTS: " + string(_ex.what()));
+            if (!ExitHandler::receivedExitSignal())
+                ETH_ERROR_MESSAGE("ERROR OCCURED RUNNING TESTS: " + string(_ex.what()));
             RPCSession::sessionEnd(TestOutputHelper::getThreadID(), RPCSession::SessionStatus::HasFinished);
         }
     }

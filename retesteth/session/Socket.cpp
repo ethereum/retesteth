@@ -1,6 +1,7 @@
 #include "Socket.h"
 #include <curl/curl.h>
 #include <retesteth/EthChecks.h>
+#include <retesteth/ExitHandler.h>
 
 using namespace std;
 
@@ -174,7 +175,7 @@ string sendRequestTCP(string const& _req, string const& _address)
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, header);
         curl_easy_setopt(curl, CURLOPT_TIMEOUT, 500L);
         res = curl_easy_perform(curl);
-        if (res != CURLE_OK)
+        if (res != CURLE_OK && !ExitHandler::receivedExitSignal())
             ETH_FAIL_MESSAGE("curl_easy_perform() failed " + string(curl_easy_strerror(res)));
         curl_slist_free_all(header);
         curl_easy_cleanup(curl);

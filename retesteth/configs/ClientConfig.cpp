@@ -20,6 +20,16 @@ ClientConfig::ClientConfig(fs::path const& _clientConfigPath) : m_id(ClientConfi
         fs::path configFile = _clientConfigPath / "config";
         ETH_FAIL_REQUIRE_MESSAGE(fs::exists(configFile), string("Client config not found: ") + configFile.c_str());
 
+        // Script to start the instance
+        fs::path startScript = _clientConfigPath / "start.sh";
+        if (fs::exists(startScript))
+            m_starterScriptPath = startScript;
+
+        // Script to stop the instance
+        fs::path stopScript = _clientConfigPath / "stop.sh";
+        if (fs::exists(stopScript))
+            m_stopperScriptPath = stopScript;
+
         // Load client config file
         m_clientConfigFile = GCP_SPointer<ClientConfigFile>(new ClientConfigFile(configFile));
 

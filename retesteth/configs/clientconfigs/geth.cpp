@@ -152,15 +152,65 @@ string const geth_config = R"({
     }
 })";
 
+string const geth_start = R"(#!/bin/sh
+threads=1
+if [ "${1:-0}" -gt 1 ]
+then
+  threads=$1
+fi
+
+i=0
+while [ "$i" -lt $threads ]; do
+    geth retesteth --rpcport $((8545+$i)) &
+    i=$(( i + 1 ))
+done
+)";
+
+string const geth_stop = R"(#!/bin/sh
+killall geth
+)";
+
 gethcfg::gethcfg()
 {
-    DataObject obj;
-    obj["path"] = "geth/config";
-    obj["content"] = geth_config;
-    map_configs.addArrayObject(obj);
+    {
+        DataObject obj;
+        obj["path"] = "default/config";
+        obj["content"] = geth_config;
+        map_configs.addArrayObject(obj);
+    }
+    {
+        DataObject obj;
+        obj["exec"] = true;
+        obj["path"] = "default/start.sh";
+        obj["content"] = geth_start;
+        map_configs.addArrayObject(obj);
+    }
+    {
+        DataObject obj;
+        obj["exec"] = true;
+        obj["path"] = "default/stop.sh";
+        obj["content"] = geth_stop;
+        map_configs.addArrayObject(obj);
+    }
 
-    DataObject obj2;
-    obj2["path"] = "default/config";
-    obj2["content"] = geth_config;
-    map_configs.addArrayObject(obj2);
+    {
+        DataObject obj;
+        obj["path"] = "geth/config";
+        obj["content"] = geth_config;
+        map_configs.addArrayObject(obj);
+    }
+    {
+        DataObject obj;
+        obj["exec"] = true;
+        obj["path"] = "geth/start.sh";
+        obj["content"] = geth_start;
+        map_configs.addArrayObject(obj);
+    }
+    {
+        DataObject obj;
+        obj["exec"] = true;
+        obj["path"] = "geth/stop.sh";
+        obj["content"] = geth_stop;
+        map_configs.addArrayObject(obj);
+    }
 }

@@ -162,15 +162,6 @@ void TestOutputHelper::initTest(size_t _maxTests)
     m_expected_UnitTestExceptions.clear();
 }
 
-bool TestOutputHelper::checkTest(std::string const& _testName)
-{
-	if (test::Options::get().singleTest && test::Options::get().singleTestName != _testName)
-		return false;
-
-    m_currentTestName = _testName;
-	return true;
-}
-
 void TestOutputHelper::registerTestRunSuccess()
 {
     std::lock_guard<std::mutex> lock(g_totalTestsRun);

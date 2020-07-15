@@ -308,7 +308,7 @@ string executeCmd(string const& _command, ExecCMDWarning _warningOnEmpty)
     }
 
     int exitCode = pclose(fp);
-    if (exitCode != 0)
+    if (exitCode != 0 && _warningOnEmpty != ExecCMDWarning::NoWarningNoError)
         ETH_FAIL_MESSAGE("The command '" + _command + "' exited with " + toString(exitCode) + " code.");
     return boost::trim_copy(out);
 #endif

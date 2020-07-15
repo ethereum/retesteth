@@ -122,6 +122,27 @@ string contentsString(boost::filesystem::path const& _file)
 	return contentsGeneric<string>(_file);
 }
 
+void writeFileInternal(boost::filesystem::path const& _file, bytesConstRef _data, bool _exec = false)
+{
+    createDirectoryIfNotExistent(_file.parent_path());
+
+    boost::filesystem::ofstream s(_file, ios::trunc | ios::binary);
+    s.write(reinterpret_cast<char const*>(_data.data()), _data.size());
+    if (!s)
+        BOOST_THROW_EXCEPTION(FileError() << errinfo_comment("Could not write to file: " + _file.string()));
+    if (_exec)
+    {
+        DEV_IGNORE_EXCEPTIONS(fs::permissions(_file, fs::owner_read | fs::owner_write | fs::owner_exe));
+    }
+    else
+        DEV_IGNORE_EXCEPTIONS(fs::permissions(_file, fs::owner_read | fs::owner_write));
+}
+
+void writeFileExec(boost::filesystem::path const& _file, bytesConstRef _data)
+{
+    writeFileInternal(_file, _data, true);
+}
+
 void writeFile(boost::filesystem::path const& _file, bytesConstRef _data, bool _writeDeleteRename)
 {
 	if (_writeDeleteRename)
@@ -131,16 +152,8 @@ void writeFile(boost::filesystem::path const& _file, bytesConstRef _data, bool _
 		// will delete _file if it exists
 		fs::rename(tempPath, _file);
 	}
-	else
-	{
-        createDirectoryIfNotExistent(_file.parent_path());
-
-        boost::filesystem::ofstream s(_file, ios::trunc | ios::binary);
-		s.write(reinterpret_cast<char const*>(_data.data()), _data.size());
-		if (!s)
-			BOOST_THROW_EXCEPTION(FileError() << errinfo_comment("Could not write to file: " + _file.string()));
-        DEV_IGNORE_EXCEPTIONS(fs::permissions(_file, fs::owner_read | fs::owner_write));
-    }
+    else
+        writeFileInternal(_file, _data);
 }
 
 void copyDirectory(boost::filesystem::path const& _srcDir, boost::filesystem::path const& _dstDir)
