@@ -44,14 +44,13 @@ string const aleth_config = R"({
     }
 })";
 
-string const aleth_config_sh = R"(
-#!/bin/bash
-onexit()
-{
-    kill $child
-}
-trap onexit SIGTERM
-trap onexit SIGABRT
+string const aleth_config_sh = R"(#!/bin/bash
+##onexit()
+##{
+##    kill $child
+##}
+##trap onexit SIGTERM
+##trap onexit SIGABRT
 
 ##ARGUMENTS PASSED BY RETESTETH
 ##
@@ -60,8 +59,14 @@ trap onexit SIGABRT
 #####
 
 aleth --test --db-path $1 --ipcpath $2 --log-verbosity 5 &
-child=$!
-wait "$child"
+##child=$!
+##wait "$child"
+)";
+
+string const aleth_stop_sh = R"(#!/bin/bash
+killall aleth
+sleep 5
+killall aleth
 )";
 
 
@@ -77,6 +82,19 @@ alethcfg::alethcfg()
         DataObject obj;
         obj["path"] = "aleth/aleth.sh";
         obj["content"] = aleth_config_sh;
+        map_configs.addArrayObject(obj);
+    }
+    /*{
+        DataObject obj;
+        obj["path"] = "aleth/start.sh";
+        obj["content"] = aleth_config_sh;
+        map_configs.addArrayObject(obj);
+    }*/
+    {
+        DataObject obj;
+        obj["exec"] = true;
+        obj["path"] = "aleth/stop.sh";
+        obj["content"] = aleth_stop_sh;
         map_configs.addArrayObject(obj);
     }
 }

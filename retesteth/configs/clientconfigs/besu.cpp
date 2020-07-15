@@ -55,6 +55,8 @@ done
 
 string const besu_stop = R"(#!/bin/sh
 killall java
+sleep 5
+killall java
 )";
 
 besucfg::besucfg()

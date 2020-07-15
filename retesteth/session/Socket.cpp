@@ -243,19 +243,25 @@ JsonObjectValidator::JsonObjectValidator()
 {
     m_status = false;
     m_bracersCount = 0;
+    m_response = string();
 }
 void JsonObjectValidator::acceptResponse(std::string const& _response)
 {
-    m_response += _response;
     for (size_t i = 0; i < _response.size(); i++)
     {
+        m_response += _response[i];
         if (_response[i] == '{')
             m_bracersCount++;
         else if (_response[i] == '}')
+        {
             m_bracersCount--;
+            if (m_bracersCount == 0)
+            {
+                m_status = true;
+                break;
+            }
+        }
     }
-    if (m_bracersCount == 0)
-        m_status = true;
 }
 
 bool JsonObjectValidator::completeResponse() const
@@ -263,7 +269,7 @@ bool JsonObjectValidator::completeResponse() const
     return m_status;
 }
 
-std::string JsonObjectValidator::getResponse() const
+std::string const& JsonObjectValidator::getResponse() const
 {
     return m_response;
 }

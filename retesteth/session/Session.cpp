@@ -29,6 +29,7 @@
 #include <retesteth/configs/ClientConfig.h>
 #include <retesteth/session/RPCImpl.h>
 #include <retesteth/session/ToolImpl.h>
+#include <retesteth/ExitHandler.h>
 
 using namespace std;
 using namespace dev;
@@ -44,6 +45,7 @@ struct sessionInfo
         pipePid = _pid;
         isUsed = RPCSession::NotExist;
         configId = _configId;
+        totalRuns = 0;
     }
     std::unique_ptr<RPCSession> session;
     std::unique_ptr<FILE> filePipe;
@@ -51,14 +53,14 @@ struct sessionInfo
     RPCSession::SessionStatus isUsed;
     std::string tmpDir;
     test::ClientConfigID configId;
+    size_t totalRuns;
 };
 
 void closeSession(thread::id const& _threadID);
 
 std::mutex g_socketMapMutex;
-std::mutex g_cfg_totalruns;
 static std::map<thread::id, sessionInfo> socketMap;
-std::map<unsigned int, size_t> cfg_totalruns;
+
 void RPCSession::runNewInstanceOfAClient(thread::id const& _threadID, ClientConfig const& _config)
 {
     switch (_config.cfgFile().socketType())
@@ -120,6 +122,7 @@ void RPCSession::runNewInstanceOfAClient(thread::id const& _threadID, ClientConf
             {
                 sessionInfo info(
                     NULL, new RPCSession(new RPCImpl(Socket::SocketType::TCP, addr.asString())), "", 0, _config.getId());
+                ETH_LOG("addr: " + addr.asString(), 2);
                 socketMap.insert(std::pair<thread::id, sessionInfo>(_threadID, std::move(info)));
                 return;
             }
@@ -154,44 +157,59 @@ void RPCSession::runNewInstanceOfAClient(thread::id const& _threadID, ClientConf
 
 void RPCSession::currentCfgCountTestRun()
 {
-    std::lock_guard<std::mutex> lock(g_cfg_totalruns);
+    std::lock_guard<std::mutex> lock(g_socketMapMutex);
     ClientConfig const& curCFG = Options::getDynamicOptions().getCurrentConfig();
-    if (cfg_totalruns.count(curCFG.getId().id()))
-        cfg_totalruns[curCFG.getId().id()] += 1;
+    for (auto& el : socketMap)
+    {
+        sessionInfo& info = el.second;
+        if (info.configId.id() == curCFG.getId().id())
+            info.totalRuns++;
+    }
 }
 
 bool RPCSession::isRunningTooLong()
 {
     static const size_t c_maxTestBeforeFlush = 1000;
-    std::lock_guard<std::mutex> lock(g_cfg_totalruns);
+    std::lock_guard<std::mutex> lock(g_socketMapMutex);
     ClientConfig const& curCFG = Options::getDynamicOptions().getCurrentConfig();
-    if (cfg_totalruns.count(curCFG.getId().id()))
-        return cfg_totalruns.at(curCFG.getId().id()) > c_maxTestBeforeFlush;
+    for (auto const& el : socketMap)
+    {
+        sessionInfo const& info = el.second;
+         if (info.configId.id() == curCFG.getId().id() && info.totalRuns > c_maxTestBeforeFlush)
+             return true;
+    }
     return false;
 }
 
 void RPCSession::restartScripts(bool _stop)
 {
-    std::lock_guard<std::mutex> lock(g_cfg_totalruns);
     ClientConfig const& curCFG = Options::getDynamicOptions().getCurrentConfig();
 
-    if (_stop && cfg_totalruns.count(curCFG.getId().id()))
+    if (_stop)
     {
-        // Stop is called from TestSuite.cpp before the execution of new test Suite
-        // Stop all the clients to flush the memory errors accumulated by the test runs
-        // Then restart all connections again (from ::instance call)
-        if (fs::exists(curCFG.getStopperScript()))
-            test::executeCmd(curCFG.getStopperScript().c_str(), ExecCMDWarning::NoWarningNoError);
-        cfg_totalruns.erase(curCFG.getId().id());
-        ETH_STDOUT_MESSAGE("Restart Client Scripts");
-        this_thread::sleep_for(chrono::seconds(5));
+        switch (curCFG.cfgFile().socketType())
+        {
+        case ClientConfgSocketType::IPC:
+        case ClientConfgSocketType::TCP:
+        {
+            if (fs::exists(curCFG.getStopperScript().c_str()))
+            {
+                ETH_LOG("Restart Client Scripts...", 1);
+                // Close all active connection listeners
+                // Flush cfg_totalruns
+                RPCSession::clear();
+                return;
+                break;
+            }
+        }
+        default: break;
+        }
         return;
     }
 
     // If there are no clients started with this configuration, run the start script
-    if (!cfg_totalruns.count(curCFG.getId().id()))
+    if (socketMap.empty())
     {
-        cfg_totalruns[curCFG.getId().id()] = 0;
         if (!fs::exists(curCFG.getStartScript()))
             return;
 
@@ -205,9 +223,10 @@ void RPCSession::restartScripts(bool _stop)
         case ClientConfgSocketType::TCP:
         {
             thread task(cmd, start, test::fto_string(threads) + " 2>/dev/null");
-            ETH_STDOUT_MESSAGE(start);
+            ETH_LOG(start, 1);
             task.detach();
-            this_thread::sleep_for(chrono::seconds(2));
+            size_t const seconds = Options::get().lowcpu ? 16 : 6;
+            this_thread::sleep_for(chrono::seconds(seconds));
         }
         break;
         default:
@@ -215,7 +234,6 @@ void RPCSession::restartScripts(bool _stop)
         }
     }
 }
-
 
 SessionInterface& RPCSession::instance(thread::id const& _threadID)
 {
@@ -248,7 +266,12 @@ SessionInterface& RPCSession::instance(thread::id const& _threadID)
         needToCreateNew = true;
     }
     if (needToCreateNew)
+    {
+        size_t const threadID = std::hash<std::thread::id>()(_threadID);
+        ETH_LOG("Run new connection session for `" + test::fto_string(threadID) + "`", 2);
         runNewInstanceOfAClient(_threadID, Options::getDynamicOptions().getCurrentConfig());
+        ETH_LOG("New instance started", 2);
+    }
 
     ETH_FAIL_REQUIRE_MESSAGE(socketMap.size() <= Options::get().threadCount,
         "Something went wrong. Retesteth connect to more instances than needed!");
@@ -299,18 +322,6 @@ void closeSession(thread::id const& _threadID)
 
 void RPCSession::clear()
 {
-    {
-        // Run stop scripts for all executed configurations
-        std::lock_guard<std::mutex> lock(g_cfg_totalruns);
-        for (auto const& el : cfg_totalruns)
-        {
-            for (auto cfg : Options::getDynamicOptions().getClientConfigs())
-                if (cfg.getId().id() == el.first && !cfg.getStopperScript().empty())
-                    executeCmd(cfg.getStopperScript().c_str(), ExecCMDWarning::NoWarning);
-        }
-        cfg_totalruns.clear();
-    }
-
     // Close all active connection listeners
     std::lock_guard<std::mutex> lock(g_socketMapMutex);
     std::vector<thread> closingThreads;
@@ -324,6 +335,17 @@ void RPCSession::clear()
 
     socketMap.clear();
     closingThreads.clear();
+
+    ClientConfig const& curCFG = Options::getDynamicOptions().getCurrentConfig();
+    if (!curCFG.getStopperScript().empty())
+    {
+        executeCmd(curCFG.getStopperScript().c_str(), ExecCMDWarning::NoWarningNoError);
+        if (!ExitHandler::receivedExitSignal())
+        {
+            size_t const seconds = Options::get().lowcpu ? 12 : 6;
+            this_thread::sleep_for(chrono::seconds(seconds));
+        }
+    }
 }
 
 RPCSession::RPCSession(SessionInterface* _impl) : m_implementation(_impl) {}

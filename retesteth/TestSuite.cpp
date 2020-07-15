@@ -480,7 +480,11 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
         }
     }
 
-    ETH_LOG("Running " + testname + ": ", 3);
+    if (Options::get().logVerbosity >= 3)
+    {
+        size_t const threadID = std::hash<std::thread::id>()(TestOutputHelper::getThreadID());
+        ETH_LOG("Running " + testname + ": " + "(" + test::fto_string(threadID) + ")", 3);
+    }
     // Filename of the test that would be generated
     AbsoluteTestPath const boostTestPath =
         getFullPath(_testFolder).path() / fs::path(testname + ".json");

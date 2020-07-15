@@ -18,7 +18,7 @@ class SocketResponseValidator
 public:
     virtual void acceptResponse(std::string const& _response) = 0;
     virtual bool completeResponse() const = 0;
-    virtual std::string getResponse() const = 0;
+    virtual std::string const& getResponse() const = 0;
 };
 
 class JsonObjectValidator : public SocketResponseValidator
@@ -27,7 +27,7 @@ public:
     JsonObjectValidator();
     void acceptResponse(std::string const& _response) override;
     bool completeResponse() const override;
-    std::string getResponse() const override;
+    std::string const& getResponse() const override;
 
 private:
     std::string m_response;
