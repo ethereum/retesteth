@@ -44,6 +44,11 @@ void deployFirstRunConfigs(fs::path const& _dir)
     }
 }
 
+size_t Options::DynamicOptions::activeConfigs() const
+{
+    return m_clientConfigs.size();
+}
+
 ClientConfig const& Options::DynamicOptions::getCurrentConfig() const
 {
     for (auto const& cfg : m_clientConfigs)

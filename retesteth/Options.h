@@ -25,6 +25,7 @@ public:
         std::vector<ClientConfig> const& getClientConfigs();
         ClientConfig const& getCurrentConfig() const;
         void setCurrentConfig(ClientConfig const& _config);
+        size_t activeConfigs() const;
 
     private:
         std::vector<ClientConfig> m_clientConfigs;

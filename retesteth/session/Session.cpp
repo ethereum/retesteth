@@ -336,14 +336,18 @@ void RPCSession::clear()
     socketMap.clear();
     closingThreads.clear();
 
-    ClientConfig const& curCFG = Options::getDynamicOptions().getCurrentConfig();
-    if (!curCFG.getStopperScript().empty())
+    // If not running UnitTests or smth
+    if (Options::getDynamicOptions().activeConfigs() > 0)
     {
-        executeCmd(curCFG.getStopperScript().c_str(), ExecCMDWarning::NoWarningNoError);
-        if (!ExitHandler::receivedExitSignal())
+        ClientConfig const& curCFG = Options::getDynamicOptions().getCurrentConfig();
+        if (!curCFG.getStopperScript().empty())
         {
-            size_t const seconds = Options::get().lowcpu ? 12 : 6;
-            this_thread::sleep_for(chrono::seconds(seconds));
+            executeCmd(curCFG.getStopperScript().c_str(), ExecCMDWarning::NoWarningNoError);
+            if (!ExitHandler::receivedExitSignal())
+            {
+                size_t const seconds = Options::get().lowcpu ? 12 : 6;
+                this_thread::sleep_for(chrono::seconds(seconds));
+            }
         }
     }
 }
