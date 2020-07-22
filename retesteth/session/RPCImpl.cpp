@@ -167,7 +167,7 @@ DataObject RPCImpl::rpcCall(
     ETH_TEST_MESSAGE("Request: " + request);
     JsonObjectValidator validator;  // read response while counting `{}`
     string reply = m_socket.sendRequest(request, validator);
-    ETH_TEST_MESSAGE("Reply: " + reply);
+    ETH_TEST_MESSAGE("Reply: `" + reply + "`");
 
     DataObject result = ConvertJsoncppStringToData(reply, string(), true);
     if (result.count("error"))

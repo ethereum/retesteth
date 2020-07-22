@@ -187,21 +187,18 @@ void RPCSession::restartScripts(bool _stop)
 
     if (_stop)
     {
-        switch (curCFG.cfgFile().socketType())
-        {
-        case ClientConfgSocketType::IPC:
-        case ClientConfgSocketType::TCP:
-        {
+        auto stop = [&curCFG](){
             if (fs::exists(curCFG.getStopperScript().c_str()))
             {
-                ETH_LOG("Restart Client Scripts...", 1);
                 // Close all active connection listeners
-                // Flush cfg_totalruns
+                ETH_LOG("Restart Client Scripts...", 1);
                 RPCSession::clear();
-                return;
-                break;
             }
-        }
+        };
+        switch (curCFG.cfgFile().socketType())
+        {
+        case ClientConfgSocketType::IPC: stop(); return;
+        case ClientConfgSocketType::TCP: stop(); return;
         default: break;
         }
         return;
@@ -343,9 +340,10 @@ void RPCSession::clear()
         if (!curCFG.getStopperScript().empty())
         {
             executeCmd(curCFG.getStopperScript().c_str(), ExecCMDWarning::NoWarningNoError);
+            ETH_LOG(curCFG.getStopperScript().c_str(), 1);
             if (!ExitHandler::receivedExitSignal())
             {
-                size_t const seconds = Options::get().lowcpu ? 12 : 6;
+                size_t const seconds = Options::get().lowcpu ? 130 : 6;
                 this_thread::sleep_for(chrono::seconds(seconds));
             }
         }

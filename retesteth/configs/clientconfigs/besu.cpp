@@ -48,15 +48,15 @@ fi
 
 i=0
 while [ "$i" -lt $threads ]; do
-    besu --Xberlin-enabled true retesteth --rpc-http-port $((47710+$i)) &
+    tmpdir=$(mktemp -d -t ci-XXXXXXXXXX)
+    besu --Xberlin-enabled true retesteth --rpc-http-port $((47710+$i)) --data-path=$tmpdir &
     i=$(( i + 1 ))
 done
 )";
 
 string const besu_stop = R"(#!/bin/sh
-killall java
+killall -9 java
 sleep 5
-killall java
 )";
 
 besucfg::besucfg()
