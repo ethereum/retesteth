@@ -21,6 +21,8 @@ void ExitHandler::doExit()
     if (!runOnce)
     {
         // must be run after all TestOutputHelper::finishTest methods are called;
+        // keep an eye on std::lock_guard<std::mutex> lock(g_numberOfRunningTests);
+        // numberOfRunningTests--; variable might be wrong.
         while (!TestOutputHelper::isAllTestsFinished())
         {
             static int totaltime = 0;

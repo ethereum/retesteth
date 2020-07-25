@@ -148,14 +148,12 @@ void TestOutputHelper::initTest(size_t _maxTests)
     m_currentTestName = string();
     m_currentTestFileName = string();
     m_timer = Timer();
-    m_isRunning = false;
     if (!Options::get().createRandomTest && _maxTests != 0 && !Options::get().singleTestFile)
     {
         std::cout << "Test Case \"" + TestInfo::caseName() + "\": \n";
         std::lock_guard<std::mutex> lock(g_numberOfRunningTests);
         numberOfRunningTests++;
         m_timer.restart();
-        m_isRunning = true;
     }
     m_maxTests = _maxTests;
     m_currTest = 0;
@@ -189,9 +187,6 @@ void TestOutputHelper::showProgress()
 std::mutex g_execTimeResults;
 void TestOutputHelper::finishTest()
 {
-    if (!m_isRunning)
-        return;
-    m_isRunning = false;
     if (Options::get().exectimelog)
     {
         std::cout << "Tests finished: " << m_currTest << std::endl;
