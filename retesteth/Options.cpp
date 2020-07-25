@@ -73,7 +73,7 @@ void printHelp()
     cout << setw(30) << "--travisout" << setw(25) << "Output `.` to stdout\n";
 
     cout << "\nAdditional Tests\n";
-    cout << setw(30) << "--all" << setw(25) << "Enable all tests\n";
+    cout << setw(30) << "--all" << setw(0) << "Enable all tests\n";
     cout << setw(30) << "--lowcpu" << setw(25) << "Disable cpu intense tests\n";
 
     cout << "\nTest Generation\n";
