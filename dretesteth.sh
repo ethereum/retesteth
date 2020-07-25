@@ -9,11 +9,13 @@ case $1 in
         ;;
 esac
 
+
 # Parse arguments and intercept --testpath argument for docker
 separator=0
 testpaths=0
 testpath="notfound"
 argstring=""
+clientsopt=0
 for var in "$@"
 do
     if [ "$var" = "--" ]; then
@@ -30,7 +32,15 @@ do
         testpath=$var
         continue
     fi
+    if [ "$var" = "--clients" ] && [ "$separator" -eq "1" ]; then
+        clientsopt=1
+    fi
     argstring=$argstring" "$var
 done
 
-docker run -v $testpath:/tests retesteth $argstring --testpath /tests --clients "t8ntool"
+defaultclient="--clients t8ntool"
+if [ "$clientsopt" -eq "1" ]; then
+   defaultclient=""
+fi
+
+docker run -v $testpath:/tests retesteth $argstring --testpath /tests $defaultclient
