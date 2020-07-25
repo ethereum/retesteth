@@ -129,7 +129,6 @@ private:
     size_t m_maxTests;
     std::string m_currentTestName;
     TestInfo m_testInfo;
-    bool m_isRunning;
     boost::filesystem::path m_currentTestFileName;
     std::vector<std::string> m_errors; //flag errors for triggering boost erros after all thread finished
     std::vector<std::string> m_expected_UnitTestExceptions;  // expect following errors
