@@ -92,7 +92,9 @@ void RPCSession::runNewInstanceOfAClient(thread::id const& _threadID, ClientConf
                 std::this_thread::sleep_for(std::chrono::seconds(1));
             ETH_FAIL_REQUIRE_MESSAGE(maxSeconds > 0, "Client took too long to start ipc!");
             // Client has opened ipc socket. wait for it to initialize
-            std::this_thread::sleep_for(std::chrono::seconds(4));
+            ClientConfig const& curCFG = Options::getDynamicOptions().getCurrentConfig();
+            size_t const initTime = curCFG.cfgFile().initializeTime();
+            std::this_thread::sleep_for(std::chrono::seconds(initTime));
         }
         sessionInfo info(
             fp, new RPCSession(new RPCImpl(Socket::SocketType::IPC, ipcPath)), tmpDir.string(), pid, _config.getId());
@@ -222,7 +224,8 @@ void RPCSession::restartScripts(bool _stop)
             thread task(cmd, start, test::fto_string(threads) + " 2>/dev/null");
             ETH_LOG(start, 1);
             task.detach();
-            size_t const seconds = Options::get().lowcpu ? 16 : 6;
+            size_t const initTime = curCFG.cfgFile().initializeTime();
+            size_t const seconds = Options::get().lowcpu ? initTime * 5 : initTime;
             this_thread::sleep_for(chrono::seconds(seconds));
         }
         break;
@@ -343,7 +346,8 @@ void RPCSession::clear()
             ETH_LOG(curCFG.getStopperScript().c_str(), 1);
             if (!ExitHandler::receivedExitSignal())
             {
-                size_t const seconds = Options::get().lowcpu ? 130 : 6;
+                size_t const initTime = curCFG.cfgFile().initializeTime();
+                size_t const seconds = Options::get().lowcpu ? initTime + 10 : initTime;
                 this_thread::sleep_for(chrono::seconds(seconds));
             }
         }

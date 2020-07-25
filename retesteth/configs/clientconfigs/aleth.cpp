@@ -6,6 +6,7 @@ string const aleth_config = R"({
     "name" : "Ethereum cpp-client",
     "socketType" : "ipc",
     "socketAddress" : "aleth.sh",
+    "initializeTime" : "5",
     "forks" : [
         "Frontier",
         "Homestead",
@@ -64,8 +65,6 @@ aleth --test --db-path $1 --ipcpath $2 --log-verbosity 5 &
 )";
 
 string const aleth_stop_sh = R"(#!/bin/bash
-killall aleth
-sleep 5
 killall aleth
 )";
 

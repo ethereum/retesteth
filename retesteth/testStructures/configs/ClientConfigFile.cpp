@@ -91,6 +91,10 @@ void ClientConfigFile::initWithData(DataObject const& _data)
             m_pathToExecFile = cfgPath / m_pathToExecFile;
     }
 
+    m_initializeTime = 0;
+    if (_data.count("initializeTime"))
+        m_initializeTime = atoi(_data.atKey("initializeTime").asString().c_str());
+
     // Read forks as fork order. Order is required for translation (`>=Frontier` -> `Frontier,
     // Homestead`) According to this order:
     for (auto const& el : _data.atKey("forks").getSubObjects())
@@ -126,6 +130,7 @@ void ClientConfigFile::initWithData(DataObject const& _data)
         {{"name", {{DataType::String}, jsonField::Required}},
          {"socketType", {{DataType::String}, jsonField::Required}},
          {"socketAddress", {{DataType::String, DataType::Array}, jsonField::Required}},
+         {"initializeTime", {{DataType::String}, jsonField::Optional}},
          {"forks", {{DataType::Array}, jsonField::Required}},
          {"additionalForks", {{DataType::Array}, jsonField::Required}},
          {"exceptions", {{DataType::Object}, jsonField::Required}}

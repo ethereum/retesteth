@@ -15,6 +15,7 @@ string const geth_config = R"({
         "127.0.0.1:8551",
         "127.0.0.1:8552"
     ],
+    "initializeTime" : "1",
     "forks" : [
       "Frontier",
       "Homestead",

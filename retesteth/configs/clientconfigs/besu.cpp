@@ -15,6 +15,7 @@ string const besu_config = R"({
         "127.0.0.1:47716",
         "127.0.0.1:47717"
     ],
+    "initializeTime" : "5",
     "forks" : [
         "Frontier",
         "Homestead",
@@ -56,7 +57,6 @@ done
 
 string const besu_stop = R"(#!/bin/sh
 killall -9 java
-sleep 5
 )";
 
 besucfg::besucfg()
