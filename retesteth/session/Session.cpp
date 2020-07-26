@@ -171,7 +171,7 @@ void RPCSession::currentCfgCountTestRun()
 
 bool RPCSession::isRunningTooLong()
 {
-    static const size_t c_maxTestBeforeFlush = 1000;
+    static const size_t c_maxTestBeforeFlush = 1500;
     std::lock_guard<std::mutex> lock(g_socketMapMutex);
     ClientConfig const& curCFG = Options::getDynamicOptions().getCurrentConfig();
     for (auto const& el : socketMap)
@@ -207,6 +207,7 @@ void RPCSession::restartScripts(bool _stop)
     }
 
     // If there are no clients started with this configuration, run the start script
+    // Assume here that socketMap is open for single configuration at a time only
     if (socketMap.empty())
     {
         if (!fs::exists(curCFG.getStartScript()))
@@ -246,6 +247,7 @@ SessionInterface& RPCSession::instance(thread::id const& _threadID)
         ETH_FAIL_MESSAGE("A session opened for another client id!");
     }
 
+    // If there are no clients running, instantiate them with starter scripts
     restartScripts();
 
     if (!socketMap.count(_threadID))

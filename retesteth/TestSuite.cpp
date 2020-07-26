@@ -385,7 +385,7 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
                     "Correct -j option to `" + test::fto_string(maxAllowedThreads) + "` (or provide socket ports in config)!");
         }
 
-        if (RPCSession::isRunningTooLong())
+        if (RPCSession::isRunningTooLong() || TestChecker::isTimeConsumingTest(_testFolder.c_str()))
             RPCSession::restartScripts(true);
 
         testOutput.initTest(files.size());
@@ -396,7 +396,7 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
                 testOutput.finishTest();
                 break;
             }
-            if (Options::get().lowcpu && test::inArray(test::c_cpuIntenseTests, file.stem().string()))
+            if (Options::get().lowcpu && TestChecker::isCPUIntenseTest(file.stem().string()))
             {
                 ETH_WARNING("Skipping " + file.stem().string() + " because --lowcpu option was specified.\n");
                 continue;

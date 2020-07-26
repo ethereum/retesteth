@@ -16,6 +16,18 @@ static std::vector<std::string> const c_timeConsumingTestSuites{std::string{"stT
 
 static std::vector<std::string> const c_cpuIntenseTests{std::string{"CALLBlake2f_MaxRoundsFiller"}};
 
+class TestChecker
+{
+public:
+    static bool isCPUIntenseTest(string const& _testSuite) {
+        return test::inArray(c_cpuIntenseTests, _testSuite);
+    }
+
+    static bool isTimeConsumingTest(string const& _testName) {
+        return test::inArray(c_timeConsumingTestSuites, _testName);
+    }
+};
+
 enum class TestExecution
 {
     RequireOptionFill,
