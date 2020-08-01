@@ -13,7 +13,10 @@ sudo apt install -y git
 ~~~
 sudo apt-get install -y apt-transport-https ca-certificates curl gnupg-agent software-properties-common
 ~~~
-3. Clone the source repository:
+3. Download the `dretesteth.sh` script:
 ~~~
-git clone https://github.com/ethereum/retesteth.git
+wget https://raw.githubusercontent.com/ethereum/retesteth/develop/dretesteth.sh
 ~~~
+> **Note:** At present it is necessary to use the `develop` branch. Eventually `dretesteth.sh` will be added to `master`.
+> When that happens, it the path here would change.
+4. 
