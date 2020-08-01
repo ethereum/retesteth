@@ -18,5 +18,14 @@ sudo apt-get install -y apt-transport-https ca-certificates curl gnupg-agent sof
 wget https://raw.githubusercontent.com/ethereum/retesteth/develop/dretesteth.sh
 ~~~
 > **Note:** At present it is necessary to use the `develop` branch. Eventually `dretesteth.sh` will be added to `master`.
-> When that happens, it the path here would change.
-4. 
+> When that happens, it will be possible to remove this step.
+4. Clone the `retesteth` repository
+~~~
+git clone https://github.com/ethereum/retesteth.git
+~~~
+5. Run the script:
+~~~
+chmod +x dretesteth.sh
+sudo ./dretesteth.sh
+~~~
+
