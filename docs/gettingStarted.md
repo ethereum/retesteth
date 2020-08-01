@@ -42,6 +42,6 @@ mkdir etherTests
 ~~~
 cd retesteth
 chmod +x ../dretesteth.sh
-sudo ../dretesteth.sh build build --testpath ~/etherTests
+sudo ../dretesteth.sh build --testpath ~/etherTests
 ~~~
 
