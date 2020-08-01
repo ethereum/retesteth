@@ -32,7 +32,7 @@ cd build
 cmake ..
 make
 ~~~
-> **Note:** This is a slow process. On my `g1-small` GCP instance it took about an hour, mostly . 
+> **Note:** This is a slow process. On my `g1-small` GCP instance it took about an hour,  mostly in the last two commands. 
 6. Create the directory for the tests:
 ~~~
 cd ~
