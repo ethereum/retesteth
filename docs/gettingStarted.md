@@ -33,10 +33,15 @@ cmake ..
 make
 ~~~
 > **Note:** This is a slow process. On my `g1-small` GCP instance it took about an hour, mostly . 
-
-6. Run the script:
+6. Create the directory for the tests:
 ~~~
-chmod +x dretesteth.sh
-sudo ./dretesteth.sh
+cd ~
+mkdir etherTests
+~~~
+7. Create the docker image. When asked, enter your geographic area. Note that the US is on the top level menu as a different entity than America.
+~~~
+cd retesteth
+chmod +x ../dretesteth.sh
+sudo ../dretesteth.sh build build --testpath ~/etherTests
 ~~~
 
