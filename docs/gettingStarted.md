@@ -30,8 +30,9 @@ cd retesteth
 mkdir build
 cd build
 cmake ..
+make
 ~~~
-> **Note:** This is a slow process. On my `g1-small` GCP instance it took about  
+> **Note:** This is a slow process. On my `g1-small` GCP instance it took about an hour, mostly . 
 
 6. Run the script:
 ~~~
