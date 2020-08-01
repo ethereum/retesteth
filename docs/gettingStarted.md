@@ -52,3 +52,7 @@ make
 
 --->
 
+
+
+g1-small (1.7 GB RAM) failed
+n1-standard-1 (3.75 GB RAM)
