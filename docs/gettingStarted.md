@@ -5,6 +5,8 @@
 The easiest way to start running tests on Ethereum node software (a.k.a. Ethereum clients) is to run `retesteth` inside a Docker container. 
 These directions are written using [Ubuntu Linux](https://ubuntu.com/), but should work with minor changes on other versions of Linux.
 
+A lot of disk space is required. 10 GB isn't enough.
+
 <!--
 1. Install developer tools:
 ~~~
@@ -53,6 +55,3 @@ make
 --->
 
 
-
-g1-small (1.7 GB RAM) failed
-n1-standard-1 (3.75 GB RAM)
