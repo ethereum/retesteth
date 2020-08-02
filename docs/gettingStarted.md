@@ -30,9 +30,11 @@ wget https://raw.githubusercontent.com/ethereum/retesteth/develop/dretesteth.sh
 ~~~
 git clone https://github.com/ethereum/tests.git
 ~~~
-6. Run a test as a sanity check:
+6. Run a test. This has two purposes:
+   A. Create the `retesteth` configuration directories in `~/tests/config`, where we can modify them.
+   A. A sanity check (that we can run tests).
 ~~~
-sudo ./dretesteth.sh -t GeneralStateTests/stBadOpcode -- --testpath ~/tests
+sudo ./dretesteth.sh -t GeneralStateTests/stBadOpcode -- --testpath ~/tests --datafile /tests/config
 ~~~
 The output should be similar to:
 ~~~
