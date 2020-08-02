@@ -32,7 +32,7 @@ git clone https://github.com/ethereum/tests.git
 ~~~
 sudo ./dretesteth.sh -t GeneralStateTests/stBadOpcode -- --testpath ~/tests
 ~~~
-The output should be similar to:
+> The output should be similar to:
 ~~~
 Running 1 test case...
 Running tests using path: /tests
