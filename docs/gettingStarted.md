@@ -32,3 +32,15 @@ git clone https://github.com/ethereum/tests.git
 ~~~
 sudo ./dretesteth.sh -t GeneralStateTests/stBadOpcode -- --testpath ~/tests
 ~~~
+The output should be similar to:
+~~~
+Running 1 test case...
+Running tests using path: /tests
+Active client configurations: 't8ntool '
+Running tests for config 'Ethereum GO on StateTool' 2
+Test Case "stBadOpcode": 
+100%
+
+*** No errors detected
+*** Total Tests Run: 1
+~~~
