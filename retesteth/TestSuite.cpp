@@ -177,7 +177,6 @@ void joinThreads(vector<thread>& _threadVector, bool _all)
         {
             // if one of the tests threads failed with fatal exception
             // stop retesteth execution
-            TestOutputHelper::get().finishTest();
             ExitHandler::doExit();
         }
         return;  // otherwise continue test execution
@@ -338,11 +337,7 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
 {
     Options::getDynamicOptions().getClientConfigs();
     if (ExitHandler::receivedExitSignal())
-    {
-        auto& testOutput = test::TestOutputHelper::get();
-        testOutput.finishTest();
         return;
-    }
 
     // check that destination folder test files has according Filler file in src folder
     string filter;
@@ -392,10 +387,7 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
         for (auto const& file : files)
         {
             if (ExitHandler::receivedExitSignal())
-            {
-                testOutput.finishTest();
                 break;
-            }
             if (Options::get().lowcpu && TestChecker::isCPUIntenseTest(file.stem().string()))
             {
                 ETH_WARNING("Skipping " + file.stem().string() + " because --lowcpu option was specified.\n");
@@ -409,7 +401,8 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
             threadVector.push_back(std::move(testThread));
         }
         joinThreads(threadVector, true);
-        testOutput.finishTest();
+        if (!ExitHandler::receivedExitSignal())
+            testOutput.finishTest();
     };
     runFunctionForAllClients(thisPart);
 }

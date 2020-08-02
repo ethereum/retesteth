@@ -86,7 +86,6 @@ public:
     // Has to be called before execution of every test.
     void showProgress();
     void finishTest();
-    static void finisAllTestsManually();
 
     bool markError(std::string const& _message);
     void unmarkLastError();
@@ -109,7 +108,6 @@ public:
     std::string const& testName() const { return m_currentTestName; }
     boost::filesystem::path const& testFile() const { return m_currentTestFileName; }
     static void printTestExecStats();
-    static bool isAllTestsFinished();
     static void registerTestRunSuccess();
 
     /// get string representation of current threadID
