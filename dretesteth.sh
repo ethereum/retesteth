@@ -43,4 +43,9 @@ if [ "$clientsopt" -eq "1" ]; then
    defaultclient=""
 fi
 
+if [ "$testpath" = "notfound" ]; then
+   echo "Please set up the --testpath option! (ex: './dretesteth.sh -t GeneralStateTests/stExample -- --testpath /data/tests')"
+   exit 1
+fi
+
 docker run -v $testpath:/tests retesteth $argstring --testpath /tests $defaultclient

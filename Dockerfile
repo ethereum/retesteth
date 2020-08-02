@@ -1,4 +1,8 @@
-FROM ubuntu:18.04 as retesteth-build
+FROM ubuntu:18.04 as retesteth
+
+ENV TZ=Etc/UTC
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
 RUN apt-get update \
     && apt-get install --yes git cmake g++ make perl psmisc  \
     && rm -rf /var/lib/apt/lists/*
