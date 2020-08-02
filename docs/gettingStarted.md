@@ -1,6 +1,8 @@
 # Getting Started
 
-## Ori Pomerantz, qbzzt1@gmail.com
+### Ori Pomerantz, qbzzt1@gmail.com
+
+## Configure the Tests on Docker
 
 The easiest way to start running tests on Ethereum node software (a.k.a. Ethereum clients) is to run `retesteth` inside a Docker container. 
 These directions are written using Debian Linux on Google Cloud Platform, but should work with minor changes on any other version of Linux
@@ -32,7 +34,7 @@ git clone https://github.com/ethereum/tests.git
 ~~~
 sudo ./dretesteth.sh -t GeneralStateTests/stBadOpcode -- --testpath ~/tests
 ~~~
-> The output should be similar to:
+The output should be similar to:
 ~~~
 Running 1 test case...
 Running tests using path: /tests
@@ -44,3 +46,5 @@ Test Case "stBadOpcode":
 *** No errors detected
 *** Total Tests Run: 1
 ~~~
+
+## Test Against Your Client
