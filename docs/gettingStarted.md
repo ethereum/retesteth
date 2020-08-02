@@ -50,3 +50,14 @@ Test Case "stBadOpcode":
 ~~~
 
 ## Test Against Your Client
+
+### Your Client Runs Inside the Docker
+
+1. Move the client into `~/tests`
+2. Modify the appropriate configuration
+3. Run tests
+
+### Your Client Runs Outside the Docker
+
+1. In the configuration remove the `start.sh` and `stop.sh`
+2. Modify the host in the `socketAddress` to the appropriate remote address
