@@ -30,36 +30,5 @@ git clone https://github.com/ethereum/tests.git
 ~~~
 6. Run a test as a sanity check:
 ~~~
-sudo docker run -v ~/tests:/tests retesteth -t GeneralStateTests/stExample -- --testpath /tests
+sudo ./dretesteth.sh -t GeneralStateTests/stBadOpcode -- --testpath ~/tests
 ~~~
-
-<!-- 
-3. Download the `Dockerfile`:
-~~~
-wget https://raw.githubusercontent.com/ethereum/retesteth/master/Dockerfile
-~~~
-4. Create the directory for the tests:
-~~~
-
-~~~
-
--->
-
-<!--
-4. Clone the `retesteth` repository:
-~~~
-git clone https://github.com/ethereum/retesteth.git
-~~~
-5. Compile `retesteth`:
-~~~
-cd retesteth
-mkdir build
-cd build
-cmake ..
-make
-~~~
-**Note:** This is a slow process. On my `g1-small` GCP instance it took about an hour,  mostly in the last two commands. 
-
---->
-
-
