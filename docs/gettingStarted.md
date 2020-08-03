@@ -23,6 +23,7 @@ sudo docker load -i dretesteth.tar
 4. Download the `dretesteth.sh` script:
 ~~~
 wget https://raw.githubusercontent.com/ethereum/retesteth/develop/dretesteth.sh
+chmod +x dretesteth.sh
 ~~~
 > **Note:** At present it is necessary to download it from the `develop` branch. Eventually 
 > `dretesteth.sh` will be added to `master`.
@@ -32,9 +33,9 @@ git clone https://github.com/ethereum/tests.git
 ~~~
 6. Run a test. This has two purposes:
    - Create the `retesteth` configuration directories in `~/tests/config`, where we can modify them.
-   - A sanity check (that we can run tests).
+   - A sanity check (that you can run tests successfully).
 ~~~
-sudo ./dretesteth.sh -t GeneralStateTests/stBadOpcode -- --testpath ~/tests --datafile /tests/config
+sudo ./dretesteth.sh -t GeneralStateTests/stBadOpcode -- --testpath ~/tests --datadir /tests/config
 ~~~
 The output should be similar to:
 ~~~
@@ -50,6 +51,21 @@ Test Case "stBadOpcode":
 ~~~
 
 ## Test Against Your Client
+
+There is an instance of `geth` inside the docker container that you can run tests
+against. However, unless you are specifically developing tests what you want is to
+test your client. There are two ways to do this:
+
+1. Put your client, and any prerequisites, inside the docker
+1. Keep your client on the outside and connect to it through the network
+
+In either case you need to edit the `retesteth` configuration files. When we ran
+the test in the previous section we also created those configuration files in 
+`~/tests/config`, but they were created as being owned by root. To change the
+configuration files to your own user, run this command:
+~~~
+sudo find ~/tests/config -exec chown $USER {} \; -print
+~~~
 
 ### Your Client Runs Inside the Docker
 
