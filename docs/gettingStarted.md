@@ -67,6 +67,8 @@ configuration files to your own user, run this command:
 sudo find ~/tests/config -exec chown $USER {} \; -print
 ~~~
 
+If you look inside `~/tests/config`, you'll see 
+
 ### Your Client Runs Inside the Docker
 
 1. Move the client into `~/tests`
