@@ -295,7 +295,6 @@ void RPCSession::sessionStart(thread::id const& _threadID)
 void RPCSession::sessionEnd(thread::id const& _threadID, SessionStatus _status)
 {
     std::lock_guard<std::mutex> lock(g_socketMapMutex);
-    assert(socketMap.count(_threadID));
     if (socketMap.count(_threadID))
         socketMap.at(_threadID).isUsed = _status;
 }

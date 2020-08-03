@@ -87,14 +87,14 @@ public:
         if ((inArray(c_timeConsumingTestSuites, casename) || allFlags.count(TestExecution::RequireOptionAll))
              && !test::Options::get().all)
         {
-            std::cout << "Skipping " << casename << " because --all option is not specified.\n";
+            ETH_STDOUT_MESSAGE("Skipping " + casename + " because --all option is not specified.");
             test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
             return;
         }
 
         if (allFlags.count(TestExecution::RequireOptionFill) && !Options::get().filltests)
         {
-            std::cout << "Skipping " << casename << " because --filltests option is not specified.\n";
+            ETH_STDOUT_MESSAGE("Skipping " + casename + " because --filltests option is not specified.");
             test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
             return;
         }

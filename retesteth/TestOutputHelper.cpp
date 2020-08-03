@@ -217,7 +217,7 @@ void TestOutputHelper::printTestExecStats()
     if (Options::get().exectimelog)
     {
         std::lock_guard<std::mutex> lock(g_execTimeResults);
-        int totalTime = 0;
+        double totalTime = 0;
         std::cout << std::left;
         std::sort(execTimeResults.begin(), execTimeResults.end(), [](execTimeName _a, execTimeName _b) { return (_b.first < _a.first); });
         for (size_t i = 0; i < execTimeResults.size(); i++)
