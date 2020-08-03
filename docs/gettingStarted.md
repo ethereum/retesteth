@@ -50,6 +50,12 @@ Test Case "stBadOpcode":
 *** Total Tests Run: 1
 ~~~
 
+### How Does This Work?
+
+A [docker](https://www.docker.com/resources/what-container) container is similar to a virtual machine, except that it doesn't run a separate instance of
+the operating system inside itself so it takes less resources. 
+
+
 ## Test Against Your Client
 
 There is an instance of `geth` inside the docker container that you can run tests
