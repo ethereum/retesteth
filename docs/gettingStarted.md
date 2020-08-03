@@ -53,8 +53,9 @@ Test Case "stBadOpcode":
 ### How Does This Work?
 
 A [docker](https://www.docker.com/resources/what-container) container is similar to a virtual machine, except that it doesn't run a separate instance of
-the operating system inside itself so it takes less resources. 
-
+the operating system inside itself so it takes far less resources. One of the features of docker is that it can mount a directory of the host computer
+inside its own file system. The `--testpath` parameter to `dretesteth.sh` tells it what directory to mount, in this case `~/tests` which you just cloned
+from github. It mounts 
 
 ## Test Against Your Client
 
