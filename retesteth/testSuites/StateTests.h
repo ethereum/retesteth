@@ -36,6 +36,8 @@ public:
 
 class LegacyConstantinopleStateTestSuite : public StateTestSuite
 {
+protected:
+    bool legacyTestSuiteFlag() const override { return  true; }
 public:
     TestSuite::TestPath suiteFolder() const override;
     TestSuite::FillerPath suiteFillerFolder() const override;

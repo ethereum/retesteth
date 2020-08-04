@@ -51,6 +51,9 @@ class BCGeneralStateTestsSuite : public BlockchainTestValidSuite
 /// Suite run/check stateTests converted into blockchain by testeth
 class LegacyConstantinopleBCGeneralStateTestsSuite : public BlockchainTestValidSuite
 {
+protected:
+    bool legacyTestSuiteFlag() const override { return  true; }
+public:
     DataObject doTests(DataObject const& _input, TestSuiteOptions& _opt) const override;
     test::TestSuite::TestPath suiteFolder() const override;
     test::TestSuite::FillerPath suiteFillerFolder() const override;
@@ -59,6 +62,9 @@ class LegacyConstantinopleBCGeneralStateTestsSuite : public BlockchainTestValidS
 
 class LegacyConstantinopleBlockchainInvalidTestSuite : public BlockchainTestInvalidSuite
 {
+protected:
+    bool legacyTestSuiteFlag() const override { return  true; }
+public:
     DataObject doTests(DataObject const& _input, TestSuiteOptions& _opt) const override;
     TestPath suiteFolder() const override
     {
@@ -74,6 +80,9 @@ class LegacyConstantinopleBlockchainInvalidTestSuite : public BlockchainTestInva
 
 class LegacyConstantinopleBlockchainValidTestSuite : public BlockchainTestValidSuite
 {
+protected:
+    bool legacyTestSuiteFlag() const override { return  true; }
+public:
     DataObject doTests(DataObject const& _input, TestSuiteOptions& _opt) const override;
     TestPath suiteFolder() const override
     {
