@@ -101,12 +101,12 @@ If you want to run your client inside the docker, follow these steps:
 1. Modify the appropriate `start.sh` to run your version of the client instead. For example, you might
    edit `~/tests/config/geth/start.sh` to replace `geth` with `/tests/geth` in line ten if you put your version of `geth`
    in `~/tests`.
-1. Run the tests. 
+1. Run the tests, adding the `--clients <name of client>` parameter to ensure you're using the correct configuration. For
+   example, run this command to run most of the tests (except for the time consuming ones) on `geth`:
+   ~~~
+   sudo ./dretesteth.sh -- --testpath ~/tests --datadir /tests/config --clients geth
+   ~~~
 
-
-1. Move the client into `~/tests`
-2. Modify the appropriate configuration
-3. Run tests
 
 ### Your Client Runs Outside the Docker
 
