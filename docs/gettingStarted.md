@@ -77,9 +77,32 @@ configuration files to your own user, run this command:
 sudo find ~/tests/config -exec chown $USER {} \; -print
 ~~~
 
-If you look inside `~/tests/config`, you'll see 
+If you look inside `~/tests/config`, you'll see a directory for each configured client. 
+Typically this directory has these files:
+
+- `config`, which contains the configuration for the client:
+  - The communication protocol to use with the client (typically TCP) with the addresses
+  - The address(es) to use with that protocol
+  - The forks the client supports
+  - The exceptions the client can throw, and how `retesteth` should interpret them
+- `start.sh`, which starts the client inside the docker image
+- `stop.sh` , which stops the client instance(s)
+- `genesis`, a directory which includes the genesis blocks for various forks the client 
+  supports. If this directory does not exist for a client, it uses the genesis blocks for
+  the default client.
+  
 
 ### Your Client Runs Inside the Docker
+
+If you want to run your client inside the docker, follow these steps:
+
+1. Move the client into `~/tests`, along with any required infrastructure (virtual machine software, etc). 
+   If you just want to test the directions right now, [you can download `geth` here](https://geth.ethereum.org/downloads/).
+1. Modify the appropriate `start.sh` to run your version of the client instead. For example, you might
+   edit `~/tests/config/geth/start.sh` to replace `geth` with `/tests/geth` in line ten if you put your version of `geth`
+   in `~/tests`.
+1. Run the tests. 
+
 
 1. Move the client into `~/tests`
 2. Modify the appropriate configuration
