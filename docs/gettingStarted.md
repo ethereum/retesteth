@@ -4,6 +4,9 @@
 
 ## Configure the Tests on Docker
 
+> **Note:** This document is a tutorial. For reference on the `retesteth` options, 
+> [look here](https://github.com/ethereum/retesteth/wiki/Retesteth-commands)
+
 The easiest way to start running tests on Ethereum node software (a.k.a. Ethereum clients) is to run `retesteth` inside a Docker container. 
 These directions are written using Debian Linux on Google Cloud Platform, but should work with minor changes on any other version of Linux
 running anywhere else with an Internet connection.
@@ -151,3 +154,12 @@ In most cases people don't start their own client from scratch, but modify an ex
 `retesteth`, you should now be able to run tests on a modified version to ensure it still conforms to Ethereum specifications. If you are writing a 
 completely new client, you still need to implement the RPC calls that `retesteth` uses and to write the appropriate configuration (`config`, `start.sh`, 
 and `stop.sh`) for it.
+
+There are several actions you might want to do with `retesteth` beyond testing a new version of an existing client. Here are links to documentation. Note
+that it hasn't been updated in a while, so it may not be accurate.
+
+* **Add configuration for a new client**. To do this you need to 
+  [add retesteth support to the client itself](https://github.com/ethereum/retesteth/wiki/RPC-Methods)
+  and [create a new config for it](https://github.com/ethereum/retesteth/wiki/Add-client-configuration-to-Retesteth)
+* **[Create a state test](https://github.com/ethereum/retesteth/wiki/Creating-a-State-Test-with-retesteth)**
+* **Test with a new fork of Ethererum**. This requires a docker with a new version of [lllc](https://lll-docs.readthedocs.io/en/latest/lll_compiler.html).
