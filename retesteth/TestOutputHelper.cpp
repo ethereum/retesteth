@@ -41,11 +41,9 @@ typedef std::pair<double, std::string> execTimeName;
 static std::vector<execTimeName> execTimeResults;
 static int execTotalErrors = 0;
 static std::map<thread::id, TestOutputHelper> helperThreadMap;  // threadID => outputHelper
-mutex g_numberOfRunningTests;
 mutex g_totalTestsRun;
 mutex g_failedTestsMap;
 mutex g_execTotalErrors;
-static int numberOfRunningTests = 0;
 static int totalTestsRun = 0;
 static std::map<std::string, std::string> s_failedTestsMap;
 
@@ -134,41 +132,20 @@ void TestOutputHelper::setUnitTestExceptions(std::vector<std::string> const& _me
     m_expected_UnitTestExceptions = _messages;
 }
 
-void TestOutputHelper::finisAllTestsManually()
-{
-    // thread safe?
-    std::lock_guard<std::mutex> lock(g_helperThreadMapMutex);
-    for (auto& helper : helperThreadMap)
-        helper.second.finishTest();
-}
-
 void TestOutputHelper::initTest(size_t _maxTests)
 {
     //_maxTests = 0 means this function is called from testing thread
     m_currentTestName = string();
     m_currentTestFileName = string();
     m_timer = Timer();
-    m_isRunning = false;
     if (!Options::get().createRandomTest && _maxTests != 0 && !Options::get().singleTestFile)
     {
         std::cout << "Test Case \"" + TestInfo::caseName() + "\": \n";
-        std::lock_guard<std::mutex> lock(g_numberOfRunningTests);
-        numberOfRunningTests++;
         m_timer.restart();
-        m_isRunning = true;
     }
     m_maxTests = _maxTests;
     m_currTest = 0;
     m_expected_UnitTestExceptions.clear();
-}
-
-bool TestOutputHelper::checkTest(std::string const& _testName)
-{
-	if (test::Options::get().singleTest && test::Options::get().singleTestName != _testName)
-		return false;
-
-    m_currentTestName = _testName;
-	return true;
 }
 
 void TestOutputHelper::registerTestRunSuccess()
@@ -198,9 +175,6 @@ void TestOutputHelper::showProgress()
 std::mutex g_execTimeResults;
 void TestOutputHelper::finishTest()
 {
-    if (!m_isRunning)
-        return;
-    m_isRunning = false;
     if (Options::get().exectimelog)
     {
         std::cout << "Tests finished: " << m_currTest << std::endl;
@@ -212,8 +186,6 @@ void TestOutputHelper::finishTest()
         execTimeResults.push_back(res);
     }
     printBoostError();  // !! could delete instance of TestOutputHelper !!
-    std::lock_guard<std::mutex> lock(g_numberOfRunningTests);
-    numberOfRunningTests--;
 }
 
 void TestOutputHelper::printBoostError()
@@ -239,19 +211,13 @@ void TestOutputHelper::printBoostError()
     // helperThreadMap.clear(); !!! could not delete TestHelper from TestHelper destructor !!!
 }
 
-bool TestOutputHelper::isAllTestsFinished()
-{
-    std::lock_guard<std::mutex> lock(g_numberOfRunningTests);
-    return numberOfRunningTests <= 0;
-}
-
 void TestOutputHelper::printTestExecStats()
 {
     checkUnfinishedTestFolders();
     if (Options::get().exectimelog)
     {
         std::lock_guard<std::mutex> lock(g_execTimeResults);
-        int totalTime = 0;
+        double totalTime = 0;
         std::cout << std::left;
         std::sort(execTimeResults.begin(), execTimeResults.end(), [](execTimeName _a, execTimeName _b) { return (_b.first < _a.first); });
         for (size_t i = 0; i < execTimeResults.size(); i++)
@@ -266,8 +232,8 @@ void TestOutputHelper::printTestExecStats()
         }
         std::cout << setw(45) << "Total Time: " << setw(25) << "     : " + fto_string(totalTime) << "\n";
         for (size_t i = 0; i < execTimeResults.size(); i++)
-            std::cout << setw(45) << execTimeResults[i].second << setw(25) << " time: " + fto_string(execTimeResults[i].first)
-                      << "\n";
+            std::cout << setw(45) << execTimeResults[i].second << setw(25) << " time: " + fto_string(execTimeResults[i].first) << "\n";
+        std::cout << "\n";
     }
     else
     {

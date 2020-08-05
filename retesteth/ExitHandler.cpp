@@ -20,18 +20,6 @@ void ExitHandler::doExit()
     static bool runOnce = false;
     if (!runOnce)
     {
-        // must be run after all TestOutputHelper::finishTest methods are called;
-        while (!TestOutputHelper::isAllTestsFinished())
-        {
-            static int totaltime = 0;
-            totaltime++;
-            if (totaltime > 50)
-            {
-                ETH_STDERROR_MESSAGE("Waiting for TestOutputHelper::finishTest()");
-                // attempt to close unfinished tests manually ???
-            }
-            std::this_thread::sleep_for(std::chrono::milliseconds(300));
-        }
         RPCSession::clear();
         test::TestOutputHelper::printTestExecStats();
         runOnce = true;

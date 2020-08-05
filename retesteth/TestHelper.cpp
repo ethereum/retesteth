@@ -28,14 +28,12 @@ Json::Value readJson(fs::path const& _file)
     Json::Reader reader;
     string s = dev::contentsString(_file);
     string const& fname = _file.filename().c_str();
-    ETH_ERROR_REQUIRE_MESSAGE(
-        s.length() > 0, "Contents of " + fname +
-                            " is empty. Have you cloned the 'tests' repo branch "
-                            "develop and set ETHEREUM_TEST_PATH to its path?");
+    ETH_ERROR_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + fname +
+                                                  " is empty. Have you cloned the 'tests' repo branch "
+                                                  "develop and set ETHEREUM_TEST_PATH to its path?");
     bool parsingSuccessful = reader.parse(s, v);
     if (!parsingSuccessful)
-        ETH_ERROR_MESSAGE(
-            "Failed to parse json file\n" + reader.getFormattedErrorMessages() + "(" + fname + ")");
+        ETH_ERROR_MESSAGE("Failed to parse json file\n" + reader.getFormattedErrorMessages() + "(" + fname + ")");
     return v;
 }
 #endif
@@ -46,14 +44,13 @@ DataObject readJsonData(fs::path const& _file, string const& _stopper, bool _aut
     try
     {
         string s = dev::contentsString(_file);
-        ETH_ERROR_REQUIRE_MESSAGE(s.length() > 0,
-            "Contents of " + _file.string() + " is empty. Trying to parse empty file. (forgot --filltests?)");
+        ETH_ERROR_REQUIRE_MESSAGE(
+            s.length() > 0, "Contents of " + _file.string() + " is empty. Trying to parse empty file. (forgot --filltests?)");
         return dataobject::ConvertJsoncppStringToData(s, _stopper, _autosort);
     }
     catch (std::exception const& _ex)
     {
-        ETH_ERROR_MESSAGE(
-            string("\nError when parsing file (") + _file.c_str() + ") " + _ex.what());
+        ETH_ERROR_MESSAGE(string("\nError when parsing file (") + _file.c_str() + ") " + _ex.what());
         return DataObject();
     }
 }
@@ -64,32 +61,30 @@ DataObject readYamlData(fs::path const& _file)
     try
     {
         string s = dev::contentsString(_file);
-        ETH_ERROR_REQUIRE_MESSAGE(s.length() > 0,
-            "Contents of " + _file.string() + " is empty. Trying to parse empty file. (forgot --filltests?)");
+        ETH_ERROR_REQUIRE_MESSAGE(
+            s.length() > 0, "Contents of " + _file.string() + " is empty. Trying to parse empty file. (forgot --filltests?)");
         return dataobject::ConvertYamlToData(YAML::Load(s));
     }
     catch (std::exception const& _ex)
     {
-        ETH_ERROR_MESSAGE(
-            string("\nError when parsing file (") + _file.c_str() + ") " + _ex.what());
+        ETH_ERROR_MESSAGE(string("\nError when parsing file (") + _file.c_str() + ") " + _ex.what());
         return DataObject();
     }
 }
 
-vector<fs::path> getFiles(
-	fs::path const& _dirPath, set<string> const _extentionMask, string const& _particularFile)
+vector<fs::path> getFiles(fs::path const& _dirPath, set<string> const _extentionMask, string const& _particularFile)
 {
-	vector<fs::path> files;
-	for (auto const& ext : _extentionMask)
-	{
-		if (!_particularFile.empty())
-		{
-			fs::path file = _dirPath / (_particularFile + ext);
-			if (fs::exists(file))
-				files.push_back(file);
-		}
-		else
-		{
+    vector<fs::path> files;
+    for (auto const& ext : _extentionMask)
+    {
+        if (!_particularFile.empty())
+        {
+            fs::path file = _dirPath / (_particularFile + ext);
+            if (fs::exists(file))
+                files.push_back(file);
+        }
+        else
+        {
             if (fs::exists(_dirPath))
             {
                 using fsIterator = fs::directory_iterator;
@@ -100,8 +95,8 @@ vector<fs::path> getFiles(
                 }
             }
         }
-	}
-	return files;
+    }
+    return files;
 }
 
 boost::filesystem::path getTestPath()
@@ -126,9 +121,9 @@ boost::filesystem::path getTestPath()
 
 void copyFile(fs::path const& _source, fs::path const& _destination)
 {
-	fs::ifstream src(_source, ios::binary);
-	fs::ofstream dst(_destination, ios::binary);
-	dst << src.rdbuf();
+    fs::ifstream src(_source, ios::binary);
+    fs::ofstream dst(_destination, ios::binary);
+    dst << src.rdbuf();
 }
 
 // A simple C++ implementation of the Levenshtein distance algorithm to measure the amount of
@@ -160,8 +155,7 @@ size_t levenshteinDistance(char const* _s, size_t _n, char const* _t, size_t _m)
     return r;
 }
 
-vector<string> levenshteinDistance(
-    std::string const& _needle, std::vector<std::string> const& _sVec, size_t _max)
+vector<string> levenshteinDistance(std::string const& _needle, std::vector<std::string> const& _sVec, size_t _max)
 {
     // <index in availableTests, compared distance>
     vector<string> ret;
@@ -171,8 +165,7 @@ vector<string> levenshteinDistance(
     std::vector<NameDistance> distanceMap;
     for (auto const& it : _sVec)
     {
-        int const dist =
-            levenshteinDistance(_needle.c_str(), _needle.size(), it.c_str(), it.size());
+        int const dist = levenshteinDistance(_needle.c_str(), _needle.size(), it.c_str(), it.size());
         distanceMap.emplace_back(allTestsElementIndex++, dist);
     }
     std::sort(distanceMap.begin(), distanceMap.end(),
@@ -188,15 +181,13 @@ void parseJsonStrValueIntoSet(DataObject const& _json, set<string>& _out)
     {
         for (auto const& val: _json.getSubObjects())
         {
-            ETH_ERROR_REQUIRE_MESSAGE(val.type() == DataType::String,
-                "parseJsonStrValueIntoSet expected value type = string!");
+            ETH_ERROR_REQUIRE_MESSAGE(val.type() == DataType::String, "parseJsonStrValueIntoSet expected value type = string!");
             _out.emplace(val.asString());
         }
     }
     else
     {
-        ETH_ERROR_REQUIRE_MESSAGE(_json.type() == DataType::String,
-            "parseJsonStrValueIntoSet expected json type = string!");
+        ETH_ERROR_REQUIRE_MESSAGE(_json.type() == DataType::String, "parseJsonStrValueIntoSet expected json type = string!");
         _out.emplace(_json.asString());
     }
 }
@@ -207,15 +198,13 @@ void parseJsonIntValueIntoSet(DataObject const& _json, set<int>& _out)
     {
         for (auto const& val: _json.getSubObjects())
         {
-            ETH_ERROR_REQUIRE_MESSAGE(val.type() == DataType::Integer,
-                "parseJsonIntValueIntoSet expected value type = int!");
+            ETH_ERROR_REQUIRE_MESSAGE(val.type() == DataType::Integer, "parseJsonIntValueIntoSet expected value type = int!");
             _out.emplace(val.asInt());
         }
     }
     else if (_json.type() == DataType::Integer)
     {
-        ETH_ERROR_REQUIRE_MESSAGE(_json.type() == DataType::Integer,
-            "parseJsonIntValueIntoSet expected json type = int!");
+        ETH_ERROR_REQUIRE_MESSAGE(_json.type() == DataType::Integer, "parseJsonIntValueIntoSet expected json type = int!");
         _out.emplace(_json.asInt());
     }
 }
@@ -226,8 +215,7 @@ string prepareVersionString()
     string commit(DEV_QUOTED(ETH_COMMIT_HASH));
     string version = "retesteth-" + string(ETH_PROJECT_VERSION) + "-" + string(ETH_VERSION_SUFFIX);
     version += "+commit." + commit.substr(0, 8);
-    version +=
-        "." + string(DEV_QUOTED(ETH_BUILD_OS)) + "." + string(DEV_QUOTED(ETH_BUILD_COMPILER));
+    version += "." + string(DEV_QUOTED(ETH_BUILD_OS)) + "." + string(DEV_QUOTED(ETH_BUILD_COMPILER));
     return version;
 }
 
@@ -320,57 +308,58 @@ string executeCmd(string const& _command, ExecCMDWarning _warningOnEmpty)
     }
 
     int exitCode = pclose(fp);
-    if (exitCode != 0)
-        ETH_FAIL_MESSAGE(
-            "The command '" + _command + "' exited with " + toString(exitCode) + " code.");
+    if (exitCode != 0 && _warningOnEmpty != ExecCMDWarning::NoWarningNoError)
+        ETH_ERROR_MESSAGE("The command '" + _command + "' exited with " + toString(exitCode) + " code.");
     return boost::trim_copy(out);
 #endif
 }
 
 void checkHexHasEvenLength(string const& _hex)
 {
-    ETH_ERROR_REQUIRE_MESSAGE(
-        _hex.length() % 2 == 0, TestOutputHelper::get().testName() +
-                                    ": Hex field is expected to be of odd length: '" + _hex + "'");
+    ETH_ERROR_REQUIRE_MESSAGE(_hex.length() % 2 == 0,
+        TestOutputHelper::get().testName() + ": Hex field is expected to be of odd length: '" + _hex + "'");
 }
 
 string compileLLL(string const& _code)
 {
 #if defined(_WIN32)
-	BOOST_ERROR("LLL compilation only supported on posix systems.");
-	return "";
+    BOOST_ERROR("LLL compilation only supported on posix systems.");
+    return "";
 #else
-	fs::path path(fs::temp_directory_path() / fs::unique_path());
-	string cmd = string("lllc ") + path.string();
-	writeFile(path.string(), _code);
-	string result = executeCmd(cmd);
-	fs::remove_all(path);
-	result = "0x" + result;
-	checkHexHasEvenLength(result);
-	return result;
+    fs::path path(fs::temp_directory_path() / fs::unique_path());
+    string cmd = string("lllc ") + path.string();
+    writeFile(path.string(), _code);
+    string result = executeCmd(cmd);
+    fs::remove_all(path);
+    result = "0x" + result;
+    checkHexHasEvenLength(result);
+    return result;
 #endif
 }
 
 string replaceCode(string const& _code)
 {
-	if (_code == "")
-		return "0x";
+    if (_code == "")
+        return "0x";
 
-	if (_code.substr(0, 2) == "0x" && _code.size() >= 2)
-	{
-		checkHexHasEvenLength(_code);
-		return _code;
-	}
+    if (_code.substr(0, 2) == "0x" && _code.size() >= 2)
+    {
+        checkHexHasEvenLength(_code);
+        if (Options::get().filltests && _code.size() > 2)
+            ETH_WARNING("Filling raw bytecode, please provide the source!"
+                        + TestOutputHelper::get().testInfo().errorDebug());
+        return _code;
+    }
 
-	//wasm support
-	//if (_code.find("(module") == 0)
-	//	return wast2wasm(_code);
+    // wasm support
+    // if (_code.find("(module") == 0)
+    //	return wast2wasm(_code);
 
-	string compiledCode = compileLLL(_code);
-	if (_code.size() > 0)
-        ETH_FAIL_REQUIRE_MESSAGE(compiledCode.size() > 0,
-			"Bytecode is missing! '" + _code + "' " + TestOutputHelper::get().testName());
-	return compiledCode;
+    string compiledCode = compileLLL(_code);
+    if (_code.size() > 0)
+        ETH_FAIL_REQUIRE_MESSAGE(
+            compiledCode.size() > 0, "Bytecode is missing! '" + _code + "' " + TestOutputHelper::get().testName());
+    return compiledCode;
 }
 
 /// Explode string into array of strings by `delim`
@@ -408,8 +397,8 @@ FILE* popen2(string const& _command, vector<string> const& _args, string const& 
     int fd[2];
     if (pipe(fd) == -1)
     {
-         perror("pipe");
-         exit(EXIT_FAILURE);
+        perror("pipe");
+        exit(EXIT_FAILURE);
     }
 
     if((child_pid = fork()) == -1)
@@ -451,17 +440,38 @@ FILE* popen2(string const& _command, vector<string> const& _args, string const& 
         string cmd("/bin/" + _command);
         switch(_args.size())
         {
-            case 0: EXECLARG0(cmd.c_str()); break;
-            case 1: EXECLARG1(cmd.c_str(), _args[0].c_str()); break;
-            case 2: EXECLARG2(cmd.c_str(), _args[0].c_str(), _args[1].c_str()); break;
-            case 3: EXECLARG3(cmd.c_str(), _args[0].c_str(), _args[1].c_str(), _args[2].c_str()); break;
-            case 4: EXECLARG4(cmd.c_str(), _args[0].c_str(), _args[1].c_str(), _args[2].c_str(), _args[3].c_str()); break;
-            case 5: EXECLARG5(cmd.c_str(), _args[0].c_str(), _args[1].c_str(), _args[2].c_str(), _args[3].c_str(), _args[4].c_str()); break;
-            case 6: EXECLARG6(cmd.c_str(), _args[0].c_str(), _args[1].c_str(), _args[2].c_str(), _args[3].c_str(), _args[4].c_str(), _args[5].c_str()); break;
-            case 7: EXECLARG7(cmd.c_str(), _args[0].c_str(), _args[1].c_str(), _args[2].c_str(), _args[3].c_str(), _args[4].c_str(), _args[5].c_str(), _args[6].c_str()); break;
-            case 8: EXECLARG8(cmd.c_str(), _args[0].c_str(), _args[1].c_str(), _args[2].c_str(), _args[3].c_str(), _args[4].c_str(), _args[5].c_str(), _args[6].c_str(), _args[7].c_str()); break;
-            default:
-                ETH_STDERROR_MESSAGE("Wrong number of arguments provided in popen2!");
+        case 0:
+            EXECLARG0(cmd.c_str());
+            break;
+        case 1:
+            EXECLARG1(cmd.c_str(), _args[0].c_str());
+            break;
+        case 2:
+            EXECLARG2(cmd.c_str(), _args[0].c_str(), _args[1].c_str());
+            break;
+        case 3:
+            EXECLARG3(cmd.c_str(), _args[0].c_str(), _args[1].c_str(), _args[2].c_str());
+            break;
+        case 4:
+            EXECLARG4(cmd.c_str(), _args[0].c_str(), _args[1].c_str(), _args[2].c_str(), _args[3].c_str());
+            break;
+        case 5:
+            EXECLARG5(cmd.c_str(), _args[0].c_str(), _args[1].c_str(), _args[2].c_str(), _args[3].c_str(), _args[4].c_str());
+            break;
+        case 6:
+            EXECLARG6(cmd.c_str(), _args[0].c_str(), _args[1].c_str(), _args[2].c_str(), _args[3].c_str(), _args[4].c_str(),
+                _args[5].c_str());
+            break;
+        case 7:
+            EXECLARG7(cmd.c_str(), _args[0].c_str(), _args[1].c_str(), _args[2].c_str(), _args[3].c_str(), _args[4].c_str(),
+                _args[5].c_str(), _args[6].c_str());
+            break;
+        case 8:
+            EXECLARG8(cmd.c_str(), _args[0].c_str(), _args[1].c_str(), _args[2].c_str(), _args[3].c_str(), _args[4].c_str(),
+                _args[5].c_str(), _args[6].c_str(), _args[7].c_str());
+            break;
+        default:
+            ETH_STDERROR_MESSAGE("Wrong number of arguments provided in popen2!");
         }
         exit(0);
     }
@@ -494,13 +504,13 @@ int pclose2(FILE* _fp, pid_t _pid)
 
 std::mutex g_createUniqueTmpDirectory;
 fs::path createUniqueTmpDirectory() {
-  std::lock_guard<std::mutex> lock(g_createUniqueTmpDirectory);
-  boost::uuids::uuid uuid = boost::uuids::random_generator()();
-  string uuidStr = boost::lexical_cast<string>(uuid);
-  if (fs::exists(fs::temp_directory_path() / uuidStr))
-      ETH_FAIL_MESSAGE("boost create tmp directory which already exist!");
-  boost::filesystem::create_directory(fs::temp_directory_path() / uuidStr);
-  return fs::temp_directory_path() / uuidStr;
+    std::lock_guard<std::mutex> lock(g_createUniqueTmpDirectory);
+    boost::uuids::uuid uuid = boost::uuids::random_generator()();
+    string uuidStr = boost::lexical_cast<string>(uuid);
+    if (fs::exists(fs::temp_directory_path() / uuidStr))
+        ETH_FAIL_MESSAGE("boost create tmp directory which already exist!");
+    boost::filesystem::create_directory(fs::temp_directory_path() / uuidStr);
+    return fs::temp_directory_path() / uuidStr;
 }
 
 }//namespace

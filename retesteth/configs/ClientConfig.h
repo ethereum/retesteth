@@ -60,12 +60,19 @@ public:
     // Get path to correct mining reward info file
     fs::path const& getRewardMapPath() const { return m_correctMiningRewardPath; }
 
+    // Get path to scripts
+    fs::path const& getStartScript() const { return m_starterScriptPath; }
+    fs::path const& getStopperScript() const { return m_stopperScriptPath; }
+
 private:
     ClientConfigID m_id;                                ///< Internal id
     GCP_SPointer<ClientConfigFile> m_clientConfigFile;  ///< <clientname>/config file
     std::map<FORK, spVALUE> m_correctReward;            ///< Correct mining reward info for StateTests->BlockchainTests
     std::map<FORK, DataObject> m_genesisTemplate;       ///< Template For test_setChainParams
     fs::path m_correctMiningRewardPath;                 ///< Path to correct mining reward info file
+
+    fs::path m_starterScriptPath;  ///< Path to starter script
+    fs::path m_stopperScriptPath;  ///< Path to stopper script
 };
 
 }  // namespace test

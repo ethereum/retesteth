@@ -31,6 +31,11 @@ public:
     static SessionStatus sessionStatus(thread::id const& _threadID);
     static void clear();
 
+    // Flush the memory by restarting the clients with configuration scripts
+    static void currentCfgCountTestRun();            // Increase test run counter
+    static bool isRunningTooLong();                  // True if running connection for tool long
+    static void restartScripts(bool _stop = false);  // Stop all connections (flush)
+
     SessionInterface& getImplementation() { return *m_implementation; }
     ~RPCSession() { delete m_implementation; }
 

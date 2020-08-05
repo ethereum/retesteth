@@ -28,6 +28,7 @@ struct ClientConfigFile : GCP_SPointerBase
     string const& name() const { return m_name; }
     ClientConfgSocketType socketType() const { return m_socketType; }
     std::vector<IPADDRESS> const& socketAdresses() const;
+    size_t initializeTime() const { return  m_initializeTime; }
     std::vector<FORK> const& forks() const { return m_forks; }
     std::vector<FORK> const& additionalForks() const { return m_additionalForks; }
     std::set<FORK> allowedForks() const;
@@ -45,6 +46,7 @@ private:
     string m_name;                           ///< Client name
     ClientConfgSocketType m_socketType;      ///< Connection type
     std::vector<IPADDRESS> m_socketAddress;  ///< List of IP to connect to (IP::PORT)
+    size_t m_initializeTime;                 ///< Time to start the instance
     std::vector<FORK> m_forks;               ///< Allowed forks as network name
     std::vector<FORK> m_additionalForks;     ///< Allowed forks as network name
     std::map<string, string> m_exceptions;   ///< Exception Translation

@@ -13,8 +13,8 @@ HunterGate(
 	LOCAL
 )
 
-project(retesteth VERSION 0.0.6)
-set(VERSION_SUFFIX "profiling-berlin")
+project(retesteth VERSION 0.0.7)
+set(VERSION_SUFFIX "bashstarters")
 
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)

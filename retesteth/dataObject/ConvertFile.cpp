@@ -272,7 +272,7 @@ DataObject ConvertJsoncppStringToData(
                 i++;
                 i = stripSpaces(_input, i);
                 if (i != _input.length())
-                    throw DataObjectException() << errorPrefix + "expected end of json!";
+                    throw DataObjectException() << errorPrefix + "expected end of json! " + _input;
                 return root;
             }
             else

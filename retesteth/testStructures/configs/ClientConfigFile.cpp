@@ -83,10 +83,17 @@ void ClientConfigFile::initWithData(DataObject const& _data)
             ETH_FAIL_MESSAGE(sErrorPath + "`socketAddress` must be string for this socketType!");
 
         m_pathToExecFile = fs::path(_data.atKey("socketAddress").asString());
-        ETH_FAIL_REQUIRE_MESSAGE(fs::exists(m_pathToExecFile),
+        fs::path const cfgPath = m_configFilePath.parent_path();
+        ETH_FAIL_REQUIRE_MESSAGE(fs::exists(m_pathToExecFile) || fs::exists(cfgPath / m_pathToExecFile),
             sErrorPath + "`socketAddress` for socketType::transition-tool must point to a tool cmd!" + " But file not found (" +
                 m_pathToExecFile.string() + ")");
+        if (fs::exists(cfgPath / m_pathToExecFile))
+            m_pathToExecFile = cfgPath / m_pathToExecFile;
     }
+
+    m_initializeTime = 0;
+    if (_data.count("initializeTime"))
+        m_initializeTime = atoi(_data.atKey("initializeTime").asString().c_str());
 
     // Read forks as fork order. Order is required for translation (`>=Frontier` -> `Frontier,
     // Homestead`) According to this order:
@@ -123,6 +130,7 @@ void ClientConfigFile::initWithData(DataObject const& _data)
         {{"name", {{DataType::String}, jsonField::Required}},
          {"socketType", {{DataType::String}, jsonField::Required}},
          {"socketAddress", {{DataType::String, DataType::Array}, jsonField::Required}},
+         {"initializeTime", {{DataType::String}, jsonField::Optional}},
          {"forks", {{DataType::Array}, jsonField::Required}},
          {"additionalForks", {{DataType::Array}, jsonField::Required}},
          {"exceptions", {{DataType::Object}, jsonField::Required}}

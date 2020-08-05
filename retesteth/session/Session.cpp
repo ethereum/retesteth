@@ -29,6 +29,7 @@
 #include <retesteth/configs/ClientConfig.h>
 #include <retesteth/session/RPCImpl.h>
 #include <retesteth/session/ToolImpl.h>
+#include <retesteth/ExitHandler.h>
 
 using namespace std;
 using namespace dev;
@@ -44,6 +45,7 @@ struct sessionInfo
         pipePid = _pid;
         isUsed = RPCSession::NotExist;
         configId = _configId;
+        totalRuns = 0;
     }
     std::unique_ptr<RPCSession> session;
     std::unique_ptr<FILE> filePipe;
@@ -51,12 +53,14 @@ struct sessionInfo
     RPCSession::SessionStatus isUsed;
     std::string tmpDir;
     test::ClientConfigID configId;
+    size_t totalRuns;
 };
 
 void closeSession(thread::id const& _threadID);
 
 std::mutex g_socketMapMutex;
 static std::map<thread::id, sessionInfo> socketMap;
+
 void RPCSession::runNewInstanceOfAClient(thread::id const& _threadID, ClientConfig const& _config)
 {
     switch (_config.cfgFile().socketType())
@@ -88,7 +92,9 @@ void RPCSession::runNewInstanceOfAClient(thread::id const& _threadID, ClientConf
                 std::this_thread::sleep_for(std::chrono::seconds(1));
             ETH_FAIL_REQUIRE_MESSAGE(maxSeconds > 0, "Client took too long to start ipc!");
             // Client has opened ipc socket. wait for it to initialize
-            std::this_thread::sleep_for(std::chrono::seconds(4));
+            ClientConfig const& curCFG = Options::getDynamicOptions().getCurrentConfig();
+            size_t const initTime = curCFG.cfgFile().initializeTime();
+            std::this_thread::sleep_for(std::chrono::seconds(initTime));
         }
         sessionInfo info(
             fp, new RPCSession(new RPCImpl(Socket::SocketType::IPC, ipcPath)), tmpDir.string(), pid, _config.getId());
@@ -97,8 +103,9 @@ void RPCSession::runNewInstanceOfAClient(thread::id const& _threadID, ClientConf
     }
     case ClientConfgSocketType::TCP:
     {
+        Options const& opt = Options::get();
         std::vector<IPADDRESS> const& ports =
-            (Options::get().nodesoverride.size() > 0 ? Options::get().nodesoverride : _config.cfgFile().socketAdresses());
+            (opt.nodesoverride.size() > 0 ? opt.nodesoverride : _config.cfgFile().socketAdresses());
 
         // Create sessionInfo for a tcp address that is still not present in socketMap
         for (auto const& addr : ports)
@@ -117,6 +124,7 @@ void RPCSession::runNewInstanceOfAClient(thread::id const& _threadID, ClientConf
             {
                 sessionInfo info(
                     NULL, new RPCSession(new RPCImpl(Socket::SocketType::TCP, addr.asString())), "", 0, _config.getId());
+                ETH_LOG("addr: " + addr.asString(), 2);
                 socketMap.insert(std::pair<thread::id, sessionInfo>(_threadID, std::move(info)));
                 return;
             }
@@ -149,6 +157,85 @@ void RPCSession::runNewInstanceOfAClient(thread::id const& _threadID, ClientConf
     }
 }
 
+void RPCSession::currentCfgCountTestRun()
+{
+    std::lock_guard<std::mutex> lock(g_socketMapMutex);
+    ClientConfig const& curCFG = Options::getDynamicOptions().getCurrentConfig();
+    for (auto& el : socketMap)
+    {
+        sessionInfo& info = el.second;
+        if (info.configId.id() == curCFG.getId().id())
+            info.totalRuns++;
+    }
+}
+
+bool RPCSession::isRunningTooLong()
+{
+    static const size_t c_maxTestBeforeFlush = 1500;
+    std::lock_guard<std::mutex> lock(g_socketMapMutex);
+    ClientConfig const& curCFG = Options::getDynamicOptions().getCurrentConfig();
+    for (auto const& el : socketMap)
+    {
+        sessionInfo const& info = el.second;
+         if (info.configId.id() == curCFG.getId().id() && info.totalRuns > c_maxTestBeforeFlush)
+             return true;
+    }
+    return false;
+}
+
+void RPCSession::restartScripts(bool _stop)
+{
+    ClientConfig const& curCFG = Options::getDynamicOptions().getCurrentConfig();
+
+    if (_stop)
+    {
+        auto stop = [&curCFG](){
+            if (fs::exists(curCFG.getStopperScript().c_str()))
+            {
+                // Close all active connection listeners
+                ETH_LOG("Restart Client Scripts...", 1);
+                RPCSession::clear();
+            }
+        };
+        switch (curCFG.cfgFile().socketType())
+        {
+        case ClientConfgSocketType::IPC: stop(); return;
+        case ClientConfgSocketType::TCP: stop(); return;
+        default: break;
+        }
+        return;
+    }
+
+    // If there are no clients started with this configuration, run the start script
+    // Assume here that socketMap is open for single configuration at a time only
+    if (socketMap.empty())
+    {
+        if (!fs::exists(curCFG.getStartScript()))
+            return;
+
+        size_t const threads = Options::get().threadCount;
+        string const start = curCFG.getStartScript().c_str();
+        auto cmd = [](string const& _cmd, string const& _args) {
+            test::executeCmd(_cmd + " " + _args, ExecCMDWarning::NoWarning);
+        };
+        switch (curCFG.cfgFile().socketType())
+        {
+        case ClientConfgSocketType::TCP:
+        {
+            thread task(cmd, start, test::fto_string(threads) + " 2>/dev/null");
+            ETH_LOG(start, 1);
+            task.detach();
+            size_t const initTime = curCFG.cfgFile().initializeTime();
+            size_t const seconds = Options::get().lowcpu ? initTime * 5 : initTime;
+            this_thread::sleep_for(chrono::seconds(seconds));
+        }
+        break;
+        default:
+            break;
+        }
+    }
+}
+
 SessionInterface& RPCSession::instance(thread::id const& _threadID)
 {
     std::lock_guard<std::mutex> lock(g_socketMapMutex);
@@ -159,6 +246,9 @@ SessionInterface& RPCSession::instance(thread::id const& _threadID)
         // For this thread a session is opened but it is opened not for current tested client
         ETH_FAIL_MESSAGE("A session opened for another client id!");
     }
+
+    // If there are no clients running, instantiate them with starter scripts
+    restartScripts();
 
     if (!socketMap.count(_threadID))
     {
@@ -178,7 +268,12 @@ SessionInterface& RPCSession::instance(thread::id const& _threadID)
         needToCreateNew = true;
     }
     if (needToCreateNew)
+    {
+        size_t const threadID = std::hash<std::thread::id>()(_threadID);
+        ETH_LOG("Run new connection session for `" + test::fto_string(threadID) + "`", 2);
         runNewInstanceOfAClient(_threadID, Options::getDynamicOptions().getCurrentConfig());
+        ETH_LOG("New instance started", 2);
+    }
 
     ETH_FAIL_REQUIRE_MESSAGE(socketMap.size() <= Options::get().threadCount,
         "Something went wrong. Retesteth connect to more instances than needed!");
@@ -200,7 +295,6 @@ void RPCSession::sessionStart(thread::id const& _threadID)
 void RPCSession::sessionEnd(thread::id const& _threadID, SessionStatus _status)
 {
     std::lock_guard<std::mutex> lock(g_socketMapMutex);
-    assert(socketMap.count(_threadID));
     if (socketMap.count(_threadID))
         socketMap.at(_threadID).isUsed = _status;
 }
@@ -229,6 +323,7 @@ void closeSession(thread::id const& _threadID)
 
 void RPCSession::clear()
 {
+    // Close all active connection listeners
     std::lock_guard<std::mutex> lock(g_socketMapMutex);
     std::vector<thread> closingThreads;
     for (auto& element : socketMap)
@@ -241,6 +336,23 @@ void RPCSession::clear()
 
     socketMap.clear();
     closingThreads.clear();
+
+    // If not running UnitTests or smth
+    if (Options::getDynamicOptions().activeConfigs() > 0)
+    {
+        ClientConfig const& curCFG = Options::getDynamicOptions().getCurrentConfig();
+        if (!curCFG.getStopperScript().empty())
+        {
+            executeCmd(curCFG.getStopperScript().c_str(), ExecCMDWarning::NoWarningNoError);
+            ETH_LOG(curCFG.getStopperScript().c_str(), 1);
+            if (!ExitHandler::receivedExitSignal())
+            {
+                size_t const initTime = curCFG.cfgFile().initializeTime();
+                size_t const seconds = Options::get().lowcpu ? initTime + 10 : initTime;
+                this_thread::sleep_for(chrono::seconds(seconds));
+            }
+        }
+    }
 }
 
 RPCSession::RPCSession(SessionInterface* _impl) : m_implementation(_impl) {}

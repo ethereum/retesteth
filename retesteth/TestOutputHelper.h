@@ -81,19 +81,19 @@ public:
     void operator=(TestOutputHelper const&) = delete;
 
     void initTest(size_t _maxTests = 1);
-    // Display percantage of completed tests to std::out. Has to be called before execution of every
-    // test.
+
+    // Display percantage of completed tests to std::out.
+    // Has to be called before execution of every test.
     void showProgress();
     void finishTest();
-    static void finisAllTestsManually();
 
-    //void setMaxTests(int _count) { m_maxTests = _count; }
-    bool checkTest(std::string const& _testName);
     bool markError(std::string const& _message);
     void unmarkLastError();
     const std::string c_exception_any = "ANY EXCEPTION";
-    void setUnitTestExceptions(std::vector<std::string> const& _messages);  // Do not treat next
-                                                                            // error as error.
+
+    // Do not treat next error as error.
+    void setUnitTestExceptions(std::vector<std::string> const& _messages);
+
     std::vector<std::string> const& getUnitTestExceptions() const
     {
         return m_expected_UnitTestExceptions;
@@ -108,7 +108,6 @@ public:
     std::string const& testName() const { return m_currentTestName; }
     boost::filesystem::path const& testFile() const { return m_currentTestFileName; }
     static void printTestExecStats();
-    static bool isAllTestsFinished();
     static void registerTestRunSuccess();
 
     /// get string representation of current threadID
@@ -128,7 +127,6 @@ private:
     size_t m_maxTests;
     std::string m_currentTestName;
     TestInfo m_testInfo;
-    bool m_isRunning;
     boost::filesystem::path m_currentTestFileName;
     std::vector<std::string> m_errors; //flag errors for triggering boost erros after all thread finished
     std::vector<std::string> m_expected_UnitTestExceptions;  // expect following errors
