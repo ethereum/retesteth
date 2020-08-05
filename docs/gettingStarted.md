@@ -140,3 +140,10 @@ If you want to run your client outside the docker, these are the steps to follow
    ~~~
    sudo ./dretesteth.sh -t BlockchainTests/ValidBlocks/VMTests -- --testpath ~/tests --datadir /tests/config --clients gethOutside
    ~~~
+
+## Conclusion
+
+In most cases people don't start their own client from scratch, but modify an existing client. If the existing client is already configured to support
+`retesteth`, you should now be able to run tests on a modified version to ensure it still conforms to Ethereum specifications. If you are writing a 
+completely new client, you still need to implement the RPC calls that `retesteth` uses and to write the appropriate configuration (`config`, `start.sh`, 
+and `stop.sh`) for it.
