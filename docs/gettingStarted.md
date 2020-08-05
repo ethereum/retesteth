@@ -102,13 +102,41 @@ If you want to run your client inside the docker, follow these steps:
    edit `~/tests/config/geth/start.sh` to replace `geth` with `/tests/geth` in line ten if you put your version of `geth`
    in `~/tests`.
 1. Run the tests, adding the `--clients <name of client>` parameter to ensure you're using the correct configuration. For
-   example, run this command to run most of the tests (except for the time consuming ones) on `geth`:
+   example, run this command to run the virtual machine tests on `geth`:
    ~~~
-   sudo ./dretesteth.sh -- --testpath ~/tests --datadir /tests/config --clients geth
+   sudo ./dretesteth.sh -t BlockchainTests/ValidBlocks/VMTests -- --testpath ~/tests --datadir /tests/config --clients geth
    ~~~
+   > **Note:** You can't just run all the tests on a client for some reason. Just select the tests for whatever 
+   > you have changed.
 
 
 ### Your Client Runs Outside the Docker
 
-1. In the configuration remove the `start.sh` and `stop.sh`
-2. Modify the host in the `socketAddress` to the appropriate remote address
+If you want to run your client outside the docker, these are the steps to follow:
+
+1. Create a client in `~/tests/config` that doesn't have `start.sh` and `stop.sh`. Typically you would do this by copying an
+   existing client, for example:
+   ~~~
+   mkdir ~/tests/config/gethOutside
+   cp ~/tests/config/geth/config ~/tests/config/gethOutside
+   ~~~
+1. Edit the `config` file for the new client. Replace the `socketAddress` value with the IP address and port for the client.
+1. Modify the host in the `socketAddress` to the appropriate remote address. For example,
+   ~~~
+   {
+    "name" : "Ethereum GO on TCP",
+    "socketType" : "tcp",
+    "socketAddress" : [
+        "10.128.0.14:8545"
+    ],
+    ~~~
+1. Make sure that the routing works in both directions (from the docker to the client and from the client back to the docker).
+   You may need to configure [network address translation](https://www.slashroot.in/linux-nat-network-address-translation-router-explained).
+1. Run your client. Make sure that the client accepts requests that don't come from `localhost`. For example, to run `geth` use:
+   ~~~
+   geth retesteth --http --http.addr 0.0.0.0 retesteth
+   ~~~
+1. Run the test the same way you would for a client that runs inside docker:
+   ~~~
+   sudo ./dretesteth.sh -t BlockchainTests/ValidBlocks/VMTests -- --testpath ~/tests --datadir /tests/config --clients gethOutside
+   ~~~
