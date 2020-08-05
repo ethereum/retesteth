@@ -92,6 +92,9 @@ Typically this directory has these files:
   supports. If this directory does not exist for a client, it uses the genesis blocks for
   the default client.
   
+[Click here for additional documentation. Warning: Some things have changed 
+since it was written](https://github.com/ethereum/retesteth/wiki/Add-client-configuration-to-Retesteth)
+  
 
 ### Your Client Runs Inside the Docker
 
