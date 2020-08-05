@@ -162,4 +162,5 @@ that it hasn't been updated in a while, so it may not be accurate.
   [add retesteth support to the client itself](https://github.com/ethereum/retesteth/wiki/RPC-Methods)
   and [create a new config for it](https://github.com/ethereum/retesteth/wiki/Add-client-configuration-to-Retesteth)
 * **[Create a state test](https://github.com/ethereum/retesteth/wiki/Creating-a-State-Test-with-retesteth)**
-* **Test with a new fork of Ethererum**. This requires a docker with a new version of [lllc](https://lll-docs.readthedocs.io/en/latest/lll_compiler.html).
+* **Test with a new fork of Ethererum**. New forks usually mean new opcodes. Therefore, you will need a docker with a new 
+  version of [lllc](https://lll-docs.readthedocs.io/en/latest/lll_compiler.html).
