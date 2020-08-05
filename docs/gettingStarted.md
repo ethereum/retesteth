@@ -1,4 +1,4 @@
-# Getting Started
+# Getting Started with Retesteth
 
 ### Ori Pomerantz, qbzzt1@gmail.com
 
