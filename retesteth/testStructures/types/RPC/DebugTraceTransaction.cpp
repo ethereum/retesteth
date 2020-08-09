@@ -29,6 +29,8 @@ DebugTraceTransactionLog::DebugTraceTransactionLog(DataObject const& _data) : m_
 
 string DebugTraceTransaction::getFinal() const
 {
+    if (m_entries.size() == 0)
+        return "";
     DebugTraceTransactionLog const& lastLog = m_entries.at(m_entries.size() - 1);
     DataObject final;
     final["output"] = m_return.getCContent().asString();

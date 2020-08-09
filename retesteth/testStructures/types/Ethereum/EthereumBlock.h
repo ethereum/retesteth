@@ -51,12 +51,25 @@ struct EthereumBlockState : EthereumBlock
     State const& state() const { return m_state; }
     FH32 const& logHash() const { return m_logHash; }
 
+    string const& getTrTrace(FH32 const& _hash) const
+    {
+        static string empty;
+        static string emptyOrig = "Transaction trace not found!";
+        if (m_transactionsTrace.count(_hash))
+            return m_transactionsTrace.at(_hash);
+        empty = emptyOrig + "(" + _hash.asString() + ")";
+        return empty;
+    }
+    void setTrsTrace(std::map<FH32, string> const& _map) { m_transactionsTrace = _map; }
+
+
 private:
     /// EthereumBlockState(){}
     State m_state;
     FH32 m_logHash;
     spVALUE m_totalDifficulty;
     std::map<FH32, spFH32> m_transactionsLog;
+    std::map<FH32, string> m_transactionsTrace;
 };
 
 typedef GCP_SPointer<EthereumBlock> spEthereumBlock;

@@ -30,6 +30,8 @@ struct ToolResponse
 
     // Tool export the state separately
     void attachState(State const& _state) { m_stateResponse = spState(new State(_state)); }
+    void attachDebugTrace(FH32 const& _trHash, string const& _debug) { m_debugTrace[_trHash] = _debug; }
+    std::map<FH32, string> const& debugTrace() const { return m_debugTrace; }
 
 private:
     ToolResponse() {}
@@ -40,6 +42,7 @@ private:
     spFH256 m_logsBloom;
     std::vector<ToolResponseReceipt> m_receipts;
     spState m_stateResponse;
+    std::map<FH32, string> m_debugTrace;
 };
 
 }  // namespace teststruct

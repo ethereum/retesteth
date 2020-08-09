@@ -147,9 +147,19 @@ DebugStorageRangeAt ToolImpl::debug_storageRangeAt(
 DebugTraceTransaction ToolImpl::debug_traceTransaction(FH32 const& _trHash)
 {
     rpcCall("", {});
-    (void)_trHash;
-    ETH_FAIL_MESSAGE("\nRequest: debug_traceTransaction");
-    return DebugTraceTransaction(DataObject());
+    ETH_TEST_MESSAGE("\nRequest: debug_traceTransaction: " + _trHash.asString());
+    ETH_LOG(blockchain().lastBlock().getTrTrace(_trHash), 1);
+
+    // Dull return
+    static string const tmpl = R"(
+            {
+                "gas" : "0x00",
+                "return" : "0x",
+                "structLogs" : {}
+            }
+    )";
+    static DataObject ret = ConvertJsoncppStringToData(tmpl);
+    return DebugTraceTransaction(ret);
 }
 
 // Test
