@@ -26,10 +26,11 @@ public:
         ClientConfig const& getCurrentConfig() const;
         void setCurrentConfig(ClientConfig const& _config);
         size_t activeConfigs() const;
+        bool currentConfigIsSet() const;
 
     private:
         std::vector<ClientConfig> m_clientConfigs;
-        test::ClientConfigID m_currentConfigID;
+        test::ClientConfigID m_currentConfigID = test::ClientConfigID::null();
     };
 
     size_t threadCount = 1;	///< Execute tests on threads

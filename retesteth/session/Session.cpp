@@ -338,7 +338,7 @@ void RPCSession::clear()
     closingThreads.clear();
 
     // If not running UnitTests or smth
-    if (Options::getDynamicOptions().activeConfigs() > 0)
+    if (Options::getDynamicOptions().activeConfigs() > 0 && Options::getDynamicOptions().currentConfigIsSet())
     {
         ClientConfig const& curCFG = Options::getDynamicOptions().getCurrentConfig();
         if (!curCFG.getStopperScript().empty())
