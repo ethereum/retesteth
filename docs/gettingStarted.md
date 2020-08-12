@@ -115,7 +115,8 @@ If you want to run your client inside the docker, follow these steps:
 
 ### Your Client Runs Outside the Docker
 
-If you want to run your client outside the docker, these are the steps to follow:
+If you want to run your client outside the docker, these are the steps to follow. Note that you can either configure the 
+client's IP address and port in the `config` file, or specify them as parameters to `dretesteth.sh`.
 
 1. Create a client in `~/tests/config` that doesn't have `start.sh` and `stop.sh`. Typically you would do this by copying an
    existing client, for example:
@@ -123,8 +124,8 @@ If you want to run your client outside the docker, these are the steps to follow
    mkdir ~/tests/config/gethOutside
    cp ~/tests/config/geth/config ~/tests/config/gethOutside
    ~~~
-1. Edit the `config` file for the new client. Replace the `socketAddress` value with the IP address and port for the client.
-1. Modify the host in the `socketAddress` to the appropriate remote address. For example,
+1. If you want to specify the IP address and port in the `config` file, modify the host in the `socketAddress` to 
+   the appropriate remote address. For example,
    ~~~
    {
     "name" : "Ethereum GO on TCP",
@@ -137,12 +138,16 @@ If you want to run your client outside the docker, these are the steps to follow
    You may need to configure [network address translation](https://www.slashroot.in/linux-nat-network-address-translation-router-explained).
 1. Run your client. Make sure that the client accepts requests that don't come from `localhost`. For example, to run `geth` use:
    ~~~
-   geth retesteth --http --http.addr 0.0.0.0 retesteth
+   geth --http --http.addr 0.0.0.0 retesteth
    ~~~
-1. Run the test the same way you would for a client that runs inside docker:
+1. If you specified the IP address and port in the `config` file, run the test the same way you would for a client that runs inside docker:
    ~~~
    sudo ./dretesteth.sh -t BlockchainTests/ValidBlocks/VMTests -- --testpath ~/tests --datadir /tests/config --clients gethOutside
    ~~~
+   If you did not, specify those values here:
+   ~~~
+   sudo ./dretesteth.sh -t BlockchainTests/ValidBlocks/VMTests -- --testpath ~/tests --datadir /tests/config --clients gethOutside --nodes <ip>:<port, 8545 by default>
+   ~~~   
 
 ## Conclusion
 
