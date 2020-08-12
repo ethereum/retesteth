@@ -50,7 +50,8 @@ running anywhere else with an Internet connection.
    *** No errors detected
    *** Total Tests Run: 1
    ~~~
-   > **Note:** The `/tests` directory is referenced inside the docker container. It is the same as the `~/tests` directory outside it.   
+   > **Note:** The `/tests` directory is referenced inside the docker container. It is the same as the `~/tests` directory outside it. 
+   
 ### How Does This Work?
 
 A [docker](https://www.docker.com/resources/what-container) container is similar to a virtual machine, except that it doesn't run a separate instance of
@@ -65,15 +66,16 @@ use `--datadir /tests/config` to tell it to use (or create) the configuration in
 
 There is an instance of `geth` inside the docker container that you can run tests
 against. However, unless you are specifically developing tests what you want is to
-test your client. There are two ways to do this:
+test your client. There are several ways to do this:
 
-1. Put your client, and any prerequisites, inside the docker
-1. Keep your client on the outside and connect to it through the network
+1. Keep the client on the outside and keep the configuration files intact
+1. Put your client, and any prerequisites, inside the docker and change the configuration files
+1. Keep your client on the outside and connect to it through the network and change the configuration files
 
-In either case you need to edit the `retesteth` configuration files. When we ran
-the test in the previous section we also created those configuration files in 
-`~/tests/config`, but they were created as being owned by root. To change the
-configuration files to your own user, run this command:
+When we ran the test in the previous section we also created those configuration files in 
+`~/tests/config`, but they were created as being owned by root. If you need to edit them, change 
+the permissions of the config files. To change the configuration files to your 
+own user, run this command:
 ~~~
 sudo find ~/tests/config -exec chown $USER {} \; -print
 ~~~
@@ -96,7 +98,23 @@ Typically this directory has these files:
 since it was written](https://github.com/ethereum/retesteth/wiki/Add-client-configuration-to-Retesteth)
 
 
-### Your Client Runs Inside the Docker
+### Client Outside the Docker, Keep Configuration Files Intact
+
+If you want to run your client outside the docker without changing the configuration, these are the steps to follow. 
+
+1. Make sure that the routing works in both directions (from the docker to the client and from the client back to the docker).
+   You may need to configure [network address translation](https://www.slashroot.in/linux-nat-network-address-translation-router-explained).
+1. Run your client. Make sure that the client accepts requests that don't come from `localhost`. For example, to run `geth` use:
+   ~~~
+   geth --http --http.addr 0.0.0.0 retesteth
+   ~~~
+1. Run the test the same way you would for a client that runs inside docker, but with the addition of the `--nodes` parameter.
+   Also, make sure the `--clients` parameter is set to the client you're testing.
+   ~~~
+   sudo ./dretesteth.sh -t BlockchainTests/ValidBlocks/VMTests -- --testpath ~/tests --datadir /tests/config --clients geth --nodes <ip>:<port, 8545 by default>
+   ~~~   
+
+### Client Inside the Docker, Modify Configuration Files
 
 If you want to run your client inside the docker, follow these steps:
 
@@ -113,10 +131,9 @@ If you want to run your client inside the docker, follow these steps:
    > **Note:** You can't just run all the tests on a client for some reason. Just select the tests for whatever 
    > you have changed.
 
-### Your Client Runs Outside the Docker
+### Client Outside the Docker, Modify Configuration Files
 
-If you want to run your client outside the docker, these are the steps to follow. Note that you can either configure the 
-client's IP address and port in the `config` file, or specify them as parameters to `dretesteth.sh`.
+If you want to run your client outside the docker and specify the connectivity in the configuration files, these are the steps to follow:
 
 1. Create a client in `~/tests/config` that doesn't have `start.sh` and `stop.sh`. Typically you would do this by copying an
    existing client, for example:
@@ -128,26 +145,32 @@ client's IP address and port in the `config` file, or specify them as parameters
    the appropriate remote address. For example,
    ~~~
    {
-    "name" : "Ethereum GO on TCP",
-    "socketType" : "tcp",
-    "socketAddress" : [
-        "10.128.0.14:8545"
-    ],
-    ~~~
+   "name" : "Ethereum GO on TCP",
+   "socketType" : "tcp",
+   "socketAddress" : [
+       "10.128.0.14:8545"
+   ], 
+   ...
+   ~~~
 1. Make sure that the routing works in both directions (from the docker to the client and from the client back to the docker).
    You may need to configure [network address translation](https://www.slashroot.in/linux-nat-network-address-translation-router-explained).
 1. Run your client. Make sure that the client accepts requests that don't come from `localhost`. For example, to run `geth` use:
    ~~~
    geth --http --http.addr 0.0.0.0 retesteth
    ~~~
-1. If you specified the IP address and port in the `config` file, run the test the same way you would for a client that runs inside docker:
+1. Run the test the same way you would for a client that runs inside docker:
    ~~~
    sudo ./dretesteth.sh -t BlockchainTests/ValidBlocks/VMTests -- --testpath ~/tests --datadir /tests/config --clients gethOutside
    ~~~
-   If you did not, specify those values here:
-   ~~~
-   sudo ./dretesteth.sh -t BlockchainTests/ValidBlocks/VMTests -- --testpath ~/tests --datadir /tests/config --clients gethOutside --nodes <ip>:<port, 8545 by default>
-   ~~~   
+   
+## Running Multiple Threats
+
+To improve performance you can run tests across multiple threats. To do this:
+1. If you are using `start.sh` start multiple nodes with different ports
+1. Provide the IP addresses and ports of the nodes, either in the `config` file or the `--nodes` parameter
+1. Run with the parameters `-j <number of threads>`.
+
+   
 
 ## Conclusion
 
