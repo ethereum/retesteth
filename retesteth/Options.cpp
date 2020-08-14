@@ -212,7 +212,15 @@ Options::Options(int argc, const char** argv)
             throwIfNoArgumentFollows();
             singleTest = true;
             singleTestName = std::string{argv[++i]};
-            size_t pos = singleTestName.find_last_of('/');
+
+            size_t pos = singleTestName.find("Filler");
+            if (pos != string::npos)
+            {
+                singleTestName = singleTestName.substr(0, pos);
+                ETH_STDOUT_MESSAGEC("WARNING: Correcting filter to: `" + singleTestName + "`", cYellow);
+            }
+
+            pos = singleTestName.find_last_of('/');
             if (pos != string::npos)
             {
                 singleSubTestName = singleTestName.substr(pos + 1);

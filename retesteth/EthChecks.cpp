@@ -13,9 +13,12 @@ void eth_warning_message(std::string const& _message, unsigned _verbosity)
         std::cout << cYellow << "WARNING: " << _message << "\x1b[0m" << std::endl;
 }
 
-void eth_stdout_message(std::string const& _message)
+void eth_stdout_message(std::string const& _message, std::string const& _color)
 {
-    std::cout << _message << std::endl;
+    if (_color.empty())
+        std::cout <<  _message << std::endl;
+    else
+        std::cout << _color << _message << "\x1b[0m" << std::endl;
 }
 
 void eth_stderror_message(std::string const& _message)
