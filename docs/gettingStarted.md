@@ -5,9 +5,10 @@
 ## Configure the Tests on Docker
 
 > **Note:** This document is a tutorial. For reference on the `retesteth` options, 
-> [look here](https://github.com/ethereum/retesteth/wiki/Retesteth-commands)
+> [look here](https://github.com/ethereum/retesteth/wiki/Retesteth-commands).
+
 The easiest way to start running tests on Ethereum node software (a.k.a. Ethereum clients) is to run `retesteth` inside a Docker container. 
-These directions are written using Debian Linux on Google Cloud Platform, but should work with minor changes on any other version of Linux
+These directions are written using Debian Linux 10 on Google Cloud Platform, but should work with minor changes on any other version of Linux
 running anywhere else with an Internet connection.
 
 1. Install Docker. You may need to reboot afterwards to get the latest kernel version.
@@ -37,7 +38,7 @@ running anywhere else with an Internet connection.
    - Create the `retesteth` configuration directories in `~/tests/config`, where we can modify them.
    - A sanity check (that you can run tests successfully).
    ~~~
-   sudo ./dretesteth.sh -t GeneralStateTests/stExample -- --testpath ~/tests --datadir /tests/config
+   sudo ./dretesteth.sh -t GeneralStateTests/stExample -- --testpath ~/tests --datadir /tests/config --clients geth
    ~~~
    The output should be similar to:
    ~~~
