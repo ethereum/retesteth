@@ -18,7 +18,7 @@ RUN mkdir /build && cd /build \
 
 #RUN git clone --depth 1 -b master https://github.com/ethereum/tests /tests
 
-# Solidity
+# Solidity LLLC
 RUN git clone --depth 1 -b master https://github.com/winsvega/solidity.git /solidity
 RUN mkdir /build && cd /build \
     && apt-get update \
@@ -27,6 +27,12 @@ RUN mkdir /build && cd /build \
     && cp /build/lllc/lllc /bin/lllc \
     && rm -rf /build /solidity /var/cache/* /root/.hunter/*
 
+# Solidity solc
+RUN git clone https://github.com/ethereum/solidity.git /solidity
+RUN mkdir /build && cd /build \
+    && cmake /solidity -DCMAKE_BUILD_TYPE=Release && make solc \
+    && cp /build/solc/solc /bin/solc \
+    && rm -rf /build /solidity /var/cache/* /root/.hunter/*
 
 # Geth
 RUN git clone --depth 1 -b master https://github.com/ethereum/go-ethereum.git /geth

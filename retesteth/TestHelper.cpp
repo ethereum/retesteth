@@ -269,8 +269,16 @@ void strToLower(string& _input)
 
 bool checkCmdExist(std::string const& _command)
 {
-    string checkCmd = string("which " + _command + " > /dev/null 2>&1");
-    if (system(checkCmd.c_str()))
+    string cmd;
+    size_t pos = _command.find_first_of(" ");
+    if (pos != string::npos)
+        cmd = _command.substr(0, pos);
+    else
+        cmd = _command;
+
+    string const checkCmd = string("which " + cmd + " > /dev/null 2>&1");
+    bool const checkBoost = fs::exists(cmd);
+    if (system(checkCmd.c_str()) && !checkBoost)
         return false;
     return true;
 }
@@ -285,6 +293,9 @@ string executeCmd(string const& _command, ExecCMDWarning _warningOnEmpty)
     string out;
     char output[1024];
     ETH_FAIL_REQUIRE_MESSAGE(!_command.empty(), "executeCmd: empty argument!");
+    if (!test::checkCmdExist(_command))
+        ETH_FAIL_MESSAGE("Command `" + _command + "` does not found!");
+
     FILE* fp;
     {
         std::lock_guard<std::mutex> lock(g_popenmutex);
@@ -337,6 +348,64 @@ string compileLLL(string const& _code)
 #endif
 }
 
+DataObject compileSolidity(string const& _code)
+{
+#if defined(_WIN32)
+    BOOST_ERROR("Solidity compilation only supported on posix systems.");
+    return "";
+#else
+    fs::path const path(fs::temp_directory_path() / fs::unique_path());
+    string const cmd = string("solc --bin-runtime ") + path.string();
+    writeFile(path.string(), _code);
+    string result = executeCmd(cmd);
+
+    DataObject contracts;
+    string const codeNamePrefix = "=======";
+    string const codeBytePrefix = "Binary of the runtime part:";
+
+    size_t pos = result.find(codeNamePrefix);
+    while (pos != string::npos)
+    {
+        // Contract name ======= /tmp/ad01-b64d-321b-c636:TokenCreator =======
+        size_t const nameBegin = result.find(':', pos);
+        if (nameBegin == string::npos)
+            ETH_ERROR_MESSAGE("compileSolidity: error parsing contract name, `:` not found!");
+        size_t const nameEnd = result.find(' ', nameBegin);
+        if (nameEnd == string::npos)
+            ETH_ERROR_MESSAGE("compileSolidity: error parsing contract name, ` ` not found!");
+        string const name = result.substr(nameBegin + 1, nameEnd - nameBegin - 1);
+        // std::cerr << "Name: `" << name << "`" << std::endl;
+
+        // Contract code
+        pos = result.find(codeBytePrefix, pos);
+        size_t const codeStart = pos + codeBytePrefix.length() + 1;  // + 1 is \n at the end
+        if (codeStart == string::npos)
+            ETH_ERROR_MESSAGE("compileSolidity: error parsing contract code, `" + codeBytePrefix + "` not found!");
+        size_t const codeEnd = result.find_first_of("\n ", codeStart);
+        string code;
+        if (codeEnd == string::npos)
+        {
+            // last contract description
+            code = result.substr(pos + codeBytePrefix.length() + 1);
+            contracts[name] = "0x" + code;
+            checkHexHasEvenLength(contracts.atKey(name).asString());
+            break;
+        }
+
+        // std::cerr << "Code `" << code << "`" << std::endl;
+        code = result.substr(pos + codeBytePrefix.length() + 1, codeEnd - codeStart);
+        contracts[name] = "0x" + code;
+        result = result.substr(codeEnd);
+        pos = result.find(codeNamePrefix);
+    }
+
+    if (contracts.getSubObjects().size() == 0)
+        ETH_ERROR_MESSAGE("Compiling solc: bytecode prefix `" + codeNamePrefix + "` not found in the result output!");
+    fs::remove_all(path);
+    return contracts;
+#endif
+}
+
 string replaceCode(string const& _code)
 {
     if (_code == "")
@@ -351,11 +420,17 @@ string replaceCode(string const& _code)
         return _code;
     }
 
-    // wasm support
-    // if (_code.find("(module") == 0)
-    //	return wast2wasm(_code);
+    string compiledCode;
+    if (_code.find("pragma solidity") != string::npos)
+    {
+        DataObject const contracts = compileSolidity(_code);
+        if (contracts.getSubObjects().size() > 1)
+            ETH_ERROR_MESSAGE("Compiling solc: Only one solidity contract is allowed per address!");
+        compiledCode = contracts.at(0).asString();
+    }
+    else
+        compiledCode = compileLLL(_code);
 
-    string compiledCode = compileLLL(_code);
     if (_code.size() > 0)
         ETH_FAIL_REQUIRE_MESSAGE(
             compiledCode.size() > 0, "Bytecode is missing! '" + _code + "' " + TestOutputHelper::get().testName());

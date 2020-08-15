@@ -24,6 +24,13 @@ GeneralStateTestFiller::GeneralStateTestFiller(DataObject const& _data)
     }
 }
 
+
+/*DataObject compileSolidityContracts(std::string const& _code)
+{
+    DataObject contracts;
+    string solcret = test::executeCmd("solc --")
+}*/
+
 StateTestInFiller::StateTestInFiller(DataObject const& _data)
 {
     try
@@ -31,6 +38,12 @@ StateTestInFiller::StateTestInFiller(DataObject const& _data)
         if (_data.count("_info"))
             m_info = GCP_SPointer<InfoIncomplete>(new InfoIncomplete(_data.atKey("_info")));
         m_env = GCP_SPointer<StateTestFillerEnv>(new StateTestFillerEnv(_data.atKey("env")));
+
+//        DataObject solidityCode;
+        // Compile solidity contracts from separate field
+//        if (_data.count("solidity"))
+//            solidityCode = compileSolidityContracts(_data.atKey("solidity").asString());
+
         m_pre = spState(new State(convertDecStateToHex(_data.atKey("pre"))));
         m_transaction = GCP_SPointer<StateTestFillerTransaction>(new StateTestFillerTransaction(_data.atKey("transaction")));
         for (auto const& el : _data.atKey("expect").getSubObjects())
@@ -43,6 +56,7 @@ StateTestInFiller::StateTestInFiller(DataObject const& _data)
              {"env", {{DataType::Object}, jsonField::Required}},
              {"expect", {{DataType::Array}, jsonField::Required}},
              {"pre", {{DataType::Object}, jsonField::Required}},
+             {"solidity", {{DataType::String}, jsonField::Optional}},
              {"transaction", {{DataType::Object}, jsonField::Required}}});
 
     }

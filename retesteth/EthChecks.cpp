@@ -50,7 +50,10 @@ void eth_log_message(std::string const& _message, unsigned _verbosity, LogColor 
 
 void eth_error(std::string const& _message)
 {
-    if (!ExitHandler::receivedExitSignal())
+    // Do not mark errors if exiting the program by emergency
+    if (ExitHandler::receivedExitSignal())
+        throw EthError() << _message;
+    else
     {
         // if the exception is not allowed, then throw an exception
         if (TestOutputHelper::get().markError(_message))
