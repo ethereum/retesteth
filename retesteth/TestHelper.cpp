@@ -269,8 +269,16 @@ void strToLower(string& _input)
 
 bool checkCmdExist(std::string const& _command)
 {
-    string checkCmd = string("which " + _command + " > /dev/null 2>&1");
-    if (system(checkCmd.c_str()))
+    string cmd;
+    size_t pos = _command.find_first_of(" ");
+    if (pos != string::npos)
+        cmd = _command.substr(0, pos);
+    else
+        cmd = _command;
+
+    string const checkCmd = string("which " + cmd + " > /dev/null 2>&1");
+    bool const checkBoost = fs::exists(cmd);
+    if (system(checkCmd.c_str()) && !checkBoost)
         return false;
     return true;
 }
@@ -285,6 +293,9 @@ string executeCmd(string const& _command, ExecCMDWarning _warningOnEmpty)
     string out;
     char output[1024];
     ETH_FAIL_REQUIRE_MESSAGE(!_command.empty(), "executeCmd: empty argument!");
+    if (!test::checkCmdExist(_command))
+        ETH_FAIL_MESSAGE("Command `" + _command + "` does not found!");
+
     FILE* fp;
     {
         std::lock_guard<std::mutex> lock(g_popenmutex);
@@ -337,6 +348,34 @@ string compileLLL(string const& _code)
 #endif
 }
 
+string compileSolidity(string const& _code)
+{
+#if defined(_WIN32)
+    BOOST_ERROR("Solidity compilation only supported on posix systems.");
+    return "";
+#else
+    fs::path path(fs::temp_directory_path() / fs::unique_path());
+    string cmd = string("solc --bin-runtime ") + path.string();
+    writeFile(path.string(), _code);
+    string result = executeCmd(cmd);
+    string const codePrefix = "Binary of the runtime part:";
+    size_t pos = result.find(codePrefix);
+    if (pos != string::npos)
+    {
+        result = result.substr(pos + codePrefix.length() + 1);  // + \n at the end
+        size_t pos = result.find(codePrefix);
+        if (pos != string::npos)
+            ETH_ERROR_MESSAGE("Compiling solc: Only one solidity contract is allowed per address!");
+    }
+    else
+        ETH_ERROR_MESSAGE("Compiling solc: bytecode prefix `" + codePrefix + "` not found in the result output!");
+    fs::remove_all(path);
+    result = "0x" + result;
+    checkHexHasEvenLength(result);
+    return result;
+#endif
+}
+
 string replaceCode(string const& _code)
 {
     if (_code == "")
@@ -351,11 +390,12 @@ string replaceCode(string const& _code)
         return _code;
     }
 
-    // wasm support
-    // if (_code.find("(module") == 0)
-    //	return wast2wasm(_code);
+    string compiledCode;
+    if (_code.find("pragma solidity") != string::npos)
+        compiledCode = compileSolidity(_code);
+    else
+        compiledCode = compileLLL(_code);
 
-    string compiledCode = compileLLL(_code);
     if (_code.size() > 0)
         ETH_FAIL_REQUIRE_MESSAGE(
             compiledCode.size() > 0, "Bytecode is missing! '" + _code + "' " + TestOutputHelper::get().testName());
