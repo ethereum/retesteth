@@ -38,7 +38,7 @@ running anywhere else with an Internet connection.
    - Create the `retesteth` configuration directories in `~/tests/config`, where we can modify them.
    - A sanity check (that you can run tests successfully).
    ~~~
-   sudo ./dretesteth.sh -t GeneralStateTests/stExample -- --testpath ~/tests --datadir /tests/config --clients geth
+   sudo ./dretesteth.sh -t GeneralStateTests/stExample -- --testpath ~/tests --datadir /tests/config
    ~~~
    The output should be similar to:
    ~~~
@@ -74,9 +74,9 @@ There is an instance of `geth` inside the docker container that you can run test
 against. However, unless you are specifically developing tests what you want is to
 test your client. There are several ways to do this:
 
-1. Keep the client on the outside and keep the configuration files intact
-1. Put your client, and any prerequisites, inside the docker and change the configuration files
-1. Keep your client on the outside and connect to it through the network and change the configuration files
+* Keep the client on the outside and keep the configuration files intact
+* Put your client, and any prerequisites, inside the docker and change the configuration files
+* Keep your client on the outside and connect to it through the network and change the configuration files
 
 When we ran the test in the previous section we also created those configuration files in 
 `~/tests/config`, but they were created as being owned by root. If you need to edit them, change 
@@ -134,8 +134,6 @@ If you want to run your client inside the docker, follow these steps:
    ~~~
    ./dretesteth.sh -t BlockchainTests/ValidBlocks/VMTests -- --testpath ~/tests --datadir /tests/config --clients geth
    ~~~
-   > **Note:** You can't just run all the tests on a client for some reason. Just select the tests for whatever 
-   > you have changed.
 
 ### Client Outside the Docker, Modify Configuration Files
 
