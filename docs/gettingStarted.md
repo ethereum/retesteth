@@ -5,9 +5,10 @@
 ## Configure the Tests on Docker
 
 > **Note:** This document is a tutorial. For reference on the `retesteth` options, 
-> [look here](https://github.com/ethereum/retesteth/wiki/Retesteth-commands)
+> [look here](https://github.com/ethereum/retesteth/wiki/Retesteth-commands).
+
 The easiest way to start running tests on Ethereum node software (a.k.a. Ethereum clients) is to run `retesteth` inside a Docker container. 
-These directions are written using Debian Linux on Google Cloud Platform, but should work with minor changes on any other version of Linux
+These directions are written using Debian Linux 10 on Google Cloud Platform, but should work with minor changes on any other version of Linux
 running anywhere else with an Internet connection.
 
 1. Install Docker. You may need to reboot afterwards to get the latest kernel version.
@@ -22,7 +23,7 @@ running anywhere else with an Internet connection.
    ~~~
    sudo docker load -i dretesteth.tar 
    ~~~
-1. Download the `dretesteth.sh` script:
+1. Download the `dretesteth.sh` script.
    ~~~
    wget https://raw.githubusercontent.com/ethereum/retesteth/develop/dretesteth.sh
    chmod +x dretesteth.sh
@@ -31,7 +32,7 @@ running anywhere else with an Internet connection.
    > `dretesteth.sh` will be added to `master`.
 1. Download the tests:
    ~~~
-   git clone --depth 1 --branch develop https://github.com/ethereum/tests.git
+   git clone --branch develop https://github.com/ethereum/tests.git
    ~~~
 1. Run a test. This has two purposes:
    - Create the `retesteth` configuration directories in `~/tests/config`, where we can modify them.
@@ -50,7 +51,13 @@ running anywhere else with an Internet connection.
    *** No errors detected
    *** Total Tests Run: 1
    ~~~
-   > **Note:** The `/tests` directory is referenced inside the docker container. It is the same as the `~/tests` directory outside it.   
+   > **Note:** The `/tests` directory is referenced inside the docker container. It is the same as the `~/tests` directory outside it. 
+1. To avoid having to run with `sudo` all the time, add [SUID](https://en.wikipedia.org/wiki/Setuid) permissions to the `docker` 
+   executable. Note that this open potential security risks - don't do it on a VM used by multiple people.
+   ~~~
+   sudo chmod +s /usr/bin/docker-lin* `which docker`
+   ~~~
+   
 ### How Does This Work?
 
 A [docker](https://www.docker.com/resources/what-container) container is similar to a virtual machine, except that it doesn't run a separate instance of
@@ -65,15 +72,16 @@ use `--datadir /tests/config` to tell it to use (or create) the configuration in
 
 There is an instance of `geth` inside the docker container that you can run tests
 against. However, unless you are specifically developing tests what you want is to
-test your client. There are two ways to do this:
+test your client. There are several ways to do this:
 
-1. Put your client, and any prerequisites, inside the docker
-1. Keep your client on the outside and connect to it through the network
+* Keep the client on the outside and keep the configuration files intact
+* Put your client, and any prerequisites, inside the docker and change the configuration files
+* Keep your client on the outside and connect to it through the network and change the configuration files
 
-In either case you need to edit the `retesteth` configuration files. When we ran
-the test in the previous section we also created those configuration files in 
-`~/tests/config`, but they were created as being owned by root. To change the
-configuration files to your own user, run this command:
+When we ran the test in the previous section we also created those configuration files in 
+`~/tests/config`, but they were created as being owned by root. If you need to edit them, change 
+the permissions of the config files. To change the configuration files to your 
+own user, run this command:
 ~~~
 sudo find ~/tests/config -exec chown $USER {} \; -print
 ~~~
@@ -96,7 +104,23 @@ Typically this directory has these files:
 since it was written](https://github.com/ethereum/retesteth/wiki/Add-client-configuration-to-Retesteth)
 
 
-### Your Client Runs Inside the Docker
+### Client Outside the Docker, Keep Configuration Files Intact
+
+If you want to run your client outside the docker without changing the configuration, these are the steps to follow. 
+
+1. Make sure that the routing works in both directions (from the docker to the client and from the client back to the docker).
+   You may need to configure [network address translation](https://www.slashroot.in/linux-nat-network-address-translation-router-explained).
+1. Run your client. Make sure that the client accepts requests that don't come from `localhost`. For example, to run `geth` use:
+   ~~~
+   geth --http --http.addr 0.0.0.0 retesteth
+   ~~~
+1. Run the test the same way you would for a client that runs inside docker, but with the addition of the `--nodes` parameter.
+   Also, make sure the `--clients` parameter is set to the client you're testing.
+   ~~~
+   ./dretesteth.sh -t BlockchainTests/ValidBlocks/VMTests -- --testpath ~/tests --datadir /tests/config --clients geth --nodes <ip>:<port, 8545 by default>
+   ~~~   
+
+### Client Inside the Docker, Modify Configuration Files
 
 If you want to run your client inside the docker, follow these steps:
 
@@ -108,14 +132,12 @@ If you want to run your client inside the docker, follow these steps:
 1. Run the tests, adding the `--clients <name of client>` parameter to ensure you're using the correct configuration. For
    example, run this command to run the virtual machine tests on `geth`:
    ~~~
-   sudo ./dretesteth.sh -t BlockchainTests/ValidBlocks/VMTests -- --testpath ~/tests --datadir /tests/config --clients geth
+   ./dretesteth.sh -t BlockchainTests/ValidBlocks/VMTests -- --testpath ~/tests --datadir /tests/config --clients geth
    ~~~
-   > **Note:** You can't just run all the tests on a client for some reason. Just select the tests for whatever 
-   > you have changed.
 
-### Your Client Runs Outside the Docker
+### Client Outside the Docker, Modify Configuration Files
 
-If you want to run your client outside the docker, these are the steps to follow:
+If you want to run your client outside the docker and specify the connectivity in the configuration files, these are the steps to follow:
 
 1. Create a client in `~/tests/config` that doesn't have `start.sh` and `stop.sh`. Typically you would do this by copying an
    existing client, for example:
@@ -123,26 +145,36 @@ If you want to run your client outside the docker, these are the steps to follow
    mkdir ~/tests/config/gethOutside
    cp ~/tests/config/geth/config ~/tests/config/gethOutside
    ~~~
-1. Edit the `config` file for the new client. Replace the `socketAddress` value with the IP address and port for the client.
-1. Modify the host in the `socketAddress` to the appropriate remote address. For example,
+1. If you want to specify the IP address and port in the `config` file, modify the host in the `socketAddress` to 
+   the appropriate remote address. For example,
    ~~~
    {
-    "name" : "Ethereum GO on TCP",
-    "socketType" : "tcp",
-    "socketAddress" : [
-        "10.128.0.14:8545"
-    ],
-    ~~~
+     "name" : "Ethereum GO on TCP",
+     "socketType" : "tcp",
+     "socketAddress" : [
+       "10.128.0.14:8545"
+     ], 
+   ...
+   ~~~
 1. Make sure that the routing works in both directions (from the docker to the client and from the client back to the docker).
    You may need to configure [network address translation](https://www.slashroot.in/linux-nat-network-address-translation-router-explained).
 1. Run your client. Make sure that the client accepts requests that don't come from `localhost`. For example, to run `geth` use:
    ~~~
-   geth retesteth --http --http.addr 0.0.0.0 retesteth
+   geth --http --http.addr 0.0.0.0 retesteth
    ~~~
 1. Run the test the same way you would for a client that runs inside docker:
    ~~~
-   sudo ./dretesteth.sh -t BlockchainTests/ValidBlocks/VMTests -- --testpath ~/tests --datadir /tests/config --clients gethOutside
+   ./dretesteth.sh -t BlockchainTests/ValidBlocks/VMTests -- --testpath ~/tests --datadir /tests/config --clients gethOutside
    ~~~
+   
+## Running Multiple Threads
+
+To improve performance you can run tests across multiple threats. To do this:
+1. If you are using `start.sh` start multiple nodes with different ports
+1. Provide the IP addresses and ports of the nodes, either in the `config` file or the `--nodes` parameter
+1. Run with the parameters `-j <number of threads>`.
+
+   
 
 ## Conclusion
 
