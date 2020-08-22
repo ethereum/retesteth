@@ -28,11 +28,14 @@ RUN mkdir /build && cd /build \
     && rm -rf /build /solidity /var/cache/* /root/.hunter/*
 
 # Solidity solc
-RUN git clone https://github.com/ethereum/solidity.git /solidity
-RUN mkdir /build && cd /build \
-    && cmake /solidity -DCMAKE_BUILD_TYPE=Release && make solc \
-    && cp /build/solc/solc /bin/solc \
-    && rm -rf /build /solidity /var/cache/* /root/.hunter/*
+# RUN git clone https://github.com/ethereum/solidity.git /solidity
+# RUN mkdir /build && cd /build \
+#    && cmake /solidity -DCMAKE_BUILD_TYPE=Release && make solc \
+#    && cp /build/solc/solc /bin/solc \
+#    && rm -rf /build /solidity /var/cache/* /root/.hunter/*
+RUN apt-get install wget && wget https://github.com/ethereum/solidity/releases/download/v0.7.0/solc-static-linux \
+   && cp solc-static-linux /bin/solc \
+   && chmod +x /bin/solc
 
 # Geth
 RUN git clone --depth 1 -b master https://github.com/ethereum/go-ethereum.git /geth
