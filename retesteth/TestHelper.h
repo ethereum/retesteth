@@ -6,6 +6,7 @@
 #ifdef JSONCPP
 #include <json/json.h>
 #endif
+#include "Compiler.h"
 #include <dataObject/DataObject.h>
 #include <retesteth/EthChecks.h>
 
@@ -67,13 +68,9 @@ enum class ExecCMDWarning
 };
 std::string executeCmd(std::string const& _command, ExecCMDWarning _warningOnEmpty = ExecCMDWarning::WarningOnEmptyResult);
 
-/// compile LLL / wasm or other src code into bytecode
-std::string replaceCode(std::string const& _code);
-
 // Return the vector of most looking like as _needles strings from the vector
 std::vector<std::string> levenshteinDistance(
     std::string const& _needle, std::vector<std::string> const& _sVec, size_t _max = 3);
-
 
 /// Find element in array as vector
 template <class T>
