@@ -2,6 +2,8 @@
 #include "Options.h"
 #include "TestHelper.h"
 #include <libdevcore/CommonIO.h>
+#include <libdevcore/SHA3.h>
+#include <retesteth/testStructures/Common.h>
 #include <boost/filesystem.hpp>
 using namespace dev;
 using namespace test;
@@ -31,6 +33,30 @@ string compileLLL(string const& _code)
     checkHexHasEvenLength(result);
     return result;
 #endif
+}
+
+// Encode Solidity abi
+string encodeAbi(string const& _code)
+{
+    string abi;
+    std::vector<string> args = test::explode(_code, ' ');
+    if (args.size() == 0)
+        ETH_ERROR_MESSAGE("encodeAbi expected at least 1 argument!");
+
+    for (size_t i = 0; i < args.size(); i++)
+    {
+        if (i == 0)
+        {
+            // hash of the function call arg
+            abi += dev::sha3(args.at(0)).hex().substr(0, 8);
+            continue;
+        }
+
+        // convert argument to int to be sure of input values
+        u256 val = test::teststruct::hexOrDecStringToInt(args.at(i));
+        abi += test::stoCompactHex(val, 32);
+    }
+    return "0x" + abi;
 }
 
 }  // namespace
@@ -89,7 +115,6 @@ solContracts compileSolidity(string const& _code)
             break;
         }
 
-        // std::cerr << "Code `" << code << "`" << std::endl;
         code = result.substr(pos + codeBytePrefix.length() + 1, codeEnd - codeStart);
         contracts.insertCode(name, "0x" + code);
         result = result.substr(codeEnd);
@@ -121,6 +146,7 @@ string replaceCode(string const& _code, solContracts const& _preSolidity)
 
     string compiledCode;
     string const c_rawPrefix = ":raw";
+    string const c_abiPrefix = ":abi";
     string const c_solidityPrefix = ":solidity";
     if (_code.find("pragma solidity") != string::npos)
     {
@@ -139,6 +165,13 @@ string replaceCode(string const& _code, solContracts const& _preSolidity)
     {
         size_t const pos = _code.find(c_rawPrefix);
         compiledCode = _code.substr(pos + c_rawPrefix.length() + 1);
+        checkHexHasEvenLength(compiledCode);
+    }
+    else if (_code.find(c_abiPrefix) != string::npos)
+    {
+        size_t const pos = _code.find(c_abiPrefix);
+        string const abiCode = _code.substr(pos + c_abiPrefix.length() + 1);
+        compiledCode = encodeAbi(abiCode);
         checkHexHasEvenLength(compiledCode);
     }
     else

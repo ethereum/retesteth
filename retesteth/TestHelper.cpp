@@ -262,6 +262,19 @@ std::string stoCompactHexPrefixed(dev::u256 const& _val, int _minsize)
     return string();
 }
 
+std::string stoCompactHex(dev::u256 const& _val, int _minsize)
+{
+    try
+    {
+        return dev::toCompactHex(_val, _minsize);
+    }
+    catch (std::exception const& _ex)
+    {
+        throw UpwardsException(string("toCompactHex error converting `" + _val.str() + "` to compact hex") + _ex.what());
+    }
+    return string();
+}
+
 void strToLower(string& _input)
 {
     std::transform(_input.begin(), _input.end(), _input.begin(), [](unsigned char c) { return std::tolower(c); });
