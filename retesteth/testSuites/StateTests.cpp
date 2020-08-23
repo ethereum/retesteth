@@ -260,7 +260,7 @@ DataObject FillTest(StateTestInFiller const& _test)
 
                     if (Options::get().poststate)
                         ETH_STDOUT_MESSAGE("PostState " + TestOutputHelper::get().testInfo().errorDebug() + " : \n" +
-                                           blockInfo.header().stateRoot().asString());
+                                           "Hash: " + blockInfo.header().stateRoot().asString());
 
                     if (Options::get().vmtrace)
                         printVmTrace(session, trHash, blockInfo.header().stateRoot());

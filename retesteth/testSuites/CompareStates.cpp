@@ -241,7 +241,11 @@ void compareStates(StateBase const& _stateExpect, State const& _statePost)
             result = accountCompareResult;
     }
     if (result != CompareResult::Success)
+    {
+        if (Options::get().poststate)
+            ETH_STDOUT_MESSAGE("State Dump: \n" + _statePost.asDataObject().asJson());
         ETH_ERROR_MESSAGE("CompareStates failed with errors: " + CompareResultToString(result));
+    }
 }
 
 string CompareResultToString(CompareResult res)
