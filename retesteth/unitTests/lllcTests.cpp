@@ -5,7 +5,7 @@
 using namespace std;
 using namespace dev;
 using namespace test;
-
+using namespace test::compiler;
 
 BOOST_FIXTURE_TEST_SUITE(LLLCSuite, TestOutputHelperFixture)
 
@@ -109,6 +109,26 @@ BOOST_AUTO_TEST_CASE(lllcCompile_f0_ff)
     string lllccode = string() + "{ (CREATE 1 2 3) (CALL 1 2 3 4 5 6 7) (CALLCODE 1 2 3 4 5 6 7) (RETURN 1 2) (DELEGATECALL 1 2 3 4 5 6) (STATICCALL 1 2 3 4 5 6) (REVERT 1 2) (SELFDESTRUCT 1) }";
     lllccode = replaceCode(lllccode);
     ETH_FAIL_REQUIRE(lllccode == "0x600360026001f0506007600660056004600360026001f1506007600660056004600360026001f25060026001f3600660056004600360026001f450600660056004600360026001fa5060026001fd6001ff00");
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_FIXTURE_TEST_SUITE(SOLCSuite, TestOutputHelperFixture)
+
+BOOST_AUTO_TEST_CASE(solc_abi_example1)
+{
+    string abicode = test::compiler::utiles::encodeAbi("baz(uint32,bool) 69 1");
+    ETH_FAIL_REQUIRE(abicode ==
+                     "0xcdcd77c000000000000000000000000000000000000000000000000000000000000000450000000000000000000000000000000"
+                     "000000000000000000000000000000001");
+}
+
+BOOST_AUTO_TEST_CASE(solc_abi_example2)
+{
+    string abicode = test::compiler::utiles::encodeAbi("bar(bytes3[2]) [\"abc\",\"def\"]");
+    ETH_FAIL_REQUIRE(abicode ==
+                     "0xfce353f661626300000000000000000000000000000000000000000000000000000000006465660000000000000000000000000"
+                     "000000000000000000000000000000000");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

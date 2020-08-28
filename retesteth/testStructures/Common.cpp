@@ -250,7 +250,7 @@ DataObject convertDecStateToHex(DataObject const& _data, solContracts const& _pr
     {
         if (acc.getKey()[1] != 'x')
             acc.setKey("0x" + acc.getKey());
-        acc["code"].setString(test::replaceCode(acc.atKey("code").asString(), _preSolidity));
+        acc["code"].setString(test::compiler::replaceCode(acc.atKey("code").asString(), _preSolidity));
         acc["nonce"].performModifier(mod_valueToCompactEvenHexPrefixed);
         acc["balance"].performModifier(mod_valueToCompactEvenHexPrefixed);
         for (auto& rec : acc["storage"].getSubObjectsUnsafe())

@@ -1,8 +1,9 @@
 #pragma once
-#include <Compiler.h>
+#include <retesteth/compiler/Compiler.h>
 #include <retesteth/dataObject/DataObject.h>
 #include <map>
 using namespace dataobject;
+using namespace test::compiler;
 
 namespace test
 {

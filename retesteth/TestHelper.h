@@ -6,9 +6,9 @@
 #ifdef JSONCPP
 #include <json/json.h>
 #endif
-#include "Compiler.h"
 #include <dataObject/DataObject.h>
 #include <retesteth/EthChecks.h>
+#include <retesteth/compiler/Compiler.h>
 
 using namespace dataobject;
 namespace fs = boost::filesystem;

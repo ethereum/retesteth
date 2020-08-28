@@ -5,7 +5,19 @@ using namespace dataobject;
 
 namespace test
 {
-// Compile solidity source code into solidity information
+namespace compiler
+{
+namespace utiles
+{
+/// verify compiled code length
+void checkHexHasEvenLength(string const& _hex);
+
+/// ecnode abi options into bytecode
+string encodeAbi(string const& _code);
+
+}  // namespace utiles
+
+/// Compile solidity source code into solidity information
 class solContracts
 {
 public:
@@ -18,10 +30,11 @@ private:
     DataObject m_solContracts;
 };
 
+/// get solContracts information from solidity source code
 solContracts compileSolidity(string const& _code);
 
 /// compile LLL / wasm or other src code into bytecode
 std::string replaceCode(std::string const& _code, solContracts const& _preSolidity = solContracts());
 
-
+}  // namespace compiler
 }  // namespace test

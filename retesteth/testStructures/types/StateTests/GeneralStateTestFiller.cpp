@@ -36,7 +36,7 @@ StateTestInFiller::StateTestInFiller(DataObject const& _data)
         // Because one solidity contract may depend on another during the compilation
         solContracts solidityCode;
         if (_data.count("solidity"))
-            solidityCode = test::compileSolidity(_data.atKey("solidity").asString());
+            solidityCode = test::compiler::compileSolidity(_data.atKey("solidity").asString());
 
         m_pre = spState(new State(convertDecStateToHex(_data.atKey("pre"), solidityCode)));
         m_transaction = GCP_SPointer<StateTestFillerTransaction>(new StateTestFillerTransaction(_data.atKey("transaction")));
