@@ -6,10 +6,85 @@ using namespace dev;
 using namespace test;
 using namespace dataobject;
 
+namespace
+{
+// parse array info in abi
+struct arrayLengths
+{
+    size_t typeSize;
+    size_t elementsCount;
+};
+
+arrayLengths parseArray(string const& _input, size_t _maxElementSize)
+{
+    arrayLengths info;
+
+    // staff like bytes3[2] into  typeSize: `3` and  elementsSize: `2`
+    size_t const arrayBracer = _input.find("[");
+    size_t const arrayBracerEND = _input.find("]");
+    if (arrayBracerEND == string::npos)
+        ETH_ERROR_MESSAGE("encodeAbi: expected `]` bracer in header encoding!");
+
+    size_t arrayElementSize = atoi(_input.substr(0, arrayBracer).c_str());
+    string const arrayElements = _input.substr(arrayBracer + 1, arrayBracerEND - arrayBracer - 1);
+    size_t arrayLength = arrayElements.size() > 0 ? atoi(arrayElements.c_str()) : 0;
+    if (arrayElementSize > _maxElementSize)
+        ETH_ERROR_MESSAGE("encodeAbi: Array header argument can not be > " + test::fto_string(_maxElementSize) + " bytes!");
+
+    info.typeSize = arrayElementSize;
+    info.elementsCount = arrayLength;
+    return info;
+}
+
+std::vector<string> parseArgumentArray(string const& _input)
+{
+    // Format check ["abc", "def"]
+    if (_input.find('[') == string::npos)
+        ETH_ERROR_MESSAGE("encodeAbi: expected `[` bracer in array argument");
+    if (_input.find(']') == string::npos)
+        ETH_ERROR_MESSAGE("encodeAbi: expected `]` bracer in array argument");
+
+    string const argumentsStr = _input.substr(1, _input.length() - 2);  // remove `[]`
+    return test::explode(argumentsStr, ',');
+}
+
+// Encode "dave" into bytestring padded32
+string encodeByteString(string const& _input, size_t _expectedSize = 0)
+{
+    if (_input.find('"') == string::npos)
+        ETH_ERROR_MESSAGE("encodeAbi:encodeByteString: expected `\"` quote in argument");
+    string const dequotedArg = _input.substr(1, _input.length() - 2);
+
+    // Check the argument with the provided header
+    if (dequotedArg.length() > 32)
+        ETH_ERROR_MESSAGE("encodeAbi: Array argument can not be > 32 bytes!");
+    if (dequotedArg.length() != _expectedSize && _expectedSize != 0)
+        ETH_ERROR_MESSAGE("encodeAbi: Array argument size is different from the one described in the header!");
+
+    string encodedArg;
+    for (size_t i = 0; i < 32; i++)
+    {
+        if (i < dequotedArg.size())
+            encodedArg += dev::toCompactHex(dev::u256(dequotedArg.at(i)));
+        else
+            encodedArg += "00";
+    }
+    return encodedArg;
+}
+}  // namespace
+
+string const& test::compiler::solContracts::getCode(string const& _contractName) const
+{
+    if (!m_solContracts.count(_contractName))
+        ETH_ERROR_MESSAGE("solContracts::getCode: error contract name: `" + _contractName +
+                          "` not found! (Specify contract in \"solidity\": section of the test filler)");
+    return m_solContracts.atKey(_contractName).asString();
+}
+
 // Encode Solidity abi
 string test::compiler::utiles::encodeAbi(string const& _code)
 {
-    string abi;
+    string abi, abiSuffix;
     std::vector<string> args = test::explode(_code, ' ');
     if (args.size() == 0)
         ETH_ERROR_MESSAGE("encodeAbi expected at least 1 argument!");
@@ -49,54 +124,45 @@ string test::compiler::utiles::encodeAbi(string const& _code)
             u256 val(args.at(i));
             abi += test::stoCompactHex(val, 32);
         }
+        else if (argType.find("uint256[") != string::npos)
+        {
+            // uint array
+            string const SBytes = argType.substr(argType.find("uint256") + 4);
+            arrayLengths arrayHeader = parseArray(SBytes, 256);
+            std::vector<string> arguments = parseArgumentArray(args.at(i));
+
+            // Put the pointer
+            abi += dev::toCompactHex(dev::u256(types.size() * 32 + (i - 1) * 32), 32);
+            abiSuffix += dev::toCompactHex(dev::u256(arguments.size()), 32);
+            for (auto const& el : arguments)
+                abiSuffix += dev::toCompactHex(dev::u256(el), 32);
+            (void)arrayHeader;
+        }
         else if (argType.find("bytes") != string::npos)
         {
             string const SBytes = argType.substr(argType.find("bytes") + 5);
-            size_t const arrayBracer = SBytes.find("[");
-            size_t const arrayBracerEND = SBytes.find("]");
 
-            if (arrayBracerEND == string::npos)
-                ETH_ERROR_MESSAGE("encodeAbi: expected `]` bracer in encoding!");
-            if (arrayBracer != string::npos)  // bytes array here
+            if (SBytes.find("[") != string::npos)  // bytes array here
             {
-                int arrayElementSize = atoi(SBytes.substr(0, arrayBracer).c_str());
-                string const arrayElements = SBytes.substr(arrayBracer + 1, arrayBracerEND - arrayBracer - 1);
-                size_t arrayLength = atoi(arrayElements.c_str());
-                if (arrayElementSize > 32)
-                    ETH_ERROR_MESSAGE("encodeAbi: Array argument can not be > 32 bytes!");
+                arrayLengths arrayHeader = parseArray(SBytes, 32);
+                std::vector<string> arguments = parseArgumentArray(args.at(i));
 
-                // Format check ["abc", "def"]
-                if (args.at(i).find('[') == string::npos)
-                    ETH_ERROR_MESSAGE("encodeAbi: expected `[` bracer in array argument");
-                if (args.at(i).find(']') == string::npos)
-                    ETH_ERROR_MESSAGE("encodeAbi: expected `]` bracer in array argument");
-
-                string const argumentsStr = args.at(i).substr(1, args.at(i).length() - 2);  // remove `[]`
-                std::vector<string> arguments = test::explode(argumentsStr, ',');
-                if (arguments.size() != arrayLength)
+                if (arguments.size() != arrayHeader.elementsCount)
                     ETH_ERROR_MESSAGE("encodeAbi: arguments provided to the array do not match ");
                 for (auto const& el : arguments)
-                {
-                    if (args.at(i).find('"') == string::npos)
-                        ETH_ERROR_MESSAGE("encodeAbi: expected `\"` quote in array argument");
-                    string dequotedArg = el.substr(1, el.length() - 2);
-                    if (dequotedArg.length() > 32)
-                        ETH_ERROR_MESSAGE("encodeAbi: Array argument can not be > 32 bytes!");
-                    string encodedArg;
-                    for (size_t j = 0; j < 32; j++)
-                    {
-                        if (j < dequotedArg.size())
-                            encodedArg += dev::toCompactHex(dev::u256(dequotedArg.at(j)));
-                        else
-                            encodedArg += "00";
-                    }
-                    abi += encodedArg;
-                }
+                    abi += encodeByteString(el, arrayHeader.typeSize);
+            }
+            else
+            {
+                // Dynamic bytes array, need to put a pointer
+                abi += dev::toCompactHex(dev::u256(types.size() * 32 + (i - 1) * 32), 32);
+                size_t encodingSize = args.at(i).size() - 2;
+                abiSuffix += dev::toCompactHex(dev::u256(encodingSize), 32) + encodeByteString(args.at(i));
             }
         }
     }
-    ETH_LOG(abi, 7);
-    return "0x" + abi;
+    ETH_LOG("0x" + abi + abiSuffix, 7);
+    return "0x" + abi + abiSuffix;
 }
 
 namespace test

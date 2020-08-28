@@ -27,8 +27,6 @@ string compileLLL(string const& _code)
     return result;
 #endif
 }
-
-
 }  // namespace
 
 namespace test
@@ -44,14 +42,6 @@ void checkHexHasEvenLength(string const& _hex)
 }
 
 }  // namespace utiles
-
-string const& test::compiler::solContracts::getCode(string const& _contractName) const
-{
-    if (!m_solContracts.count(_contractName))
-        ETH_ERROR_MESSAGE("solContracts::getCode: error contract name: `" + _contractName +
-                          "` not found! (Specify contract in \"solidity\": section of the test filler)");
-    return m_solContracts.atKey(_contractName).asString();
-}
 
 /// This function is called for every account "code" : field in Fillers
 /// And transaction "data" filed in Fillers
