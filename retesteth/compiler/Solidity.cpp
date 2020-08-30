@@ -36,7 +36,7 @@ arrayLengths parseArray(string const& _input, size_t _maxElementSize)
     return info;
 }
 
-std::vector<string> parseArgumentArray(string const& _input)
+std::vector<string> parseArgumentArray(arrayLengths const& _header, string const& _input)
 {
     // Format check ["abc", "def"]
     if (_input.find('[') == string::npos)
@@ -45,7 +45,11 @@ std::vector<string> parseArgumentArray(string const& _input)
         ETH_ERROR_MESSAGE("encodeAbi: expected `]` bracer in array argument");
 
     string const argumentsStr = _input.substr(1, _input.length() - 2);  // remove `[]`
-    return test::explode(argumentsStr, ',');
+    std::vector<string> arr = test::explode(argumentsStr, ',');
+    if (arr.size() != _header.elementsCount && _header.elementsCount != 0)
+        ETH_ERROR_MESSAGE("encodeAbi: arguments provided to the array do not match (");
+
+    return arr;
 }
 
 // Encode "dave" into bytestring padded32
@@ -71,6 +75,46 @@ string encodeByteString(string const& _input, size_t _expectedSize = 0)
     }
     return encodedArg;
 }
+
+std::vector<string> parseAbiArgumentList(string const& _input)
+{
+    string arg;
+    bool readingString = false;
+    int openBracerCount = 0;
+    std::vector<string> args;
+    for (size_t i = 0; i < _input.length(); i++)
+    {
+        if (_input[i] == ' ' && !readingString)
+        {
+            if (openBracerCount > 0)  // ignore spaces inside [] block
+                continue;
+            args.push_back(arg);
+            arg = string();
+            continue;
+        }
+        if (_input[i] == '"')
+            readingString = 1 - readingString;
+        if (_input[i] == '[')
+            openBracerCount++;
+        if (_input[i] == ']')
+            openBracerCount--;
+        arg += _input[i];
+        if (i + 1 == _input.length())
+            args.push_back(arg);
+    }
+
+    if (openBracerCount != 0)
+        ETH_ERROR_MESSAGE("encodeAbi unclosed [] in argument list!");
+
+    if (readingString)
+        ETH_ERROR_MESSAGE("encodeAbi unclosed \" in argument list!");
+
+    if (args.size() == 0)
+        ETH_ERROR_MESSAGE("encodeAbi expected at least 1 argument!");
+
+    return args;
+}
+
 }  // namespace
 
 string const& test::compiler::solContracts::getCode(string const& _contractName) const
@@ -84,12 +128,11 @@ string const& test::compiler::solContracts::getCode(string const& _contractName)
 // Encode Solidity abi
 string test::compiler::utiles::encodeAbi(string const& _code)
 {
+    ETH_LOG(_code, 7);
     string abi, abiSuffix;
-    std::vector<string> args = test::explode(_code, ' ');
-    if (args.size() == 0)
-        ETH_ERROR_MESSAGE("encodeAbi expected at least 1 argument!");
+    std::vector<string> args = parseAbiArgumentList(_code);
 
-    std::vector<string> types;
+    std::vector<string> argsSignature;
     for (size_t i = 0; i < args.size(); i++)
     {
         if (i == 0)
@@ -103,15 +146,14 @@ string test::compiler::utiles::encodeAbi(string const& _code)
                 ETH_ERROR_MESSAGE("encodeAbi: `(` not found in function name!");
             string argTypes = args.at(0).substr(pos + 1);
             argTypes = argTypes.substr(0, argTypes.length() - 1);
-            types = test::explode(argTypes, ',');
-
-            if (types.size() != args.size() - 1)
+            argsSignature = test::explode(argTypes, ',');
+            if (argsSignature.size() != args.size() - 1)
                 ETH_ERROR_MESSAGE("encodeAbi: wrong number of function arguments provided!");
             continue;
         }
 
-        string const& argType = types.at(i - 1);
-        if (argType == "bool")
+        string const& argSignature = argsSignature.at(i - 1);
+        if (argSignature == "bool")
         {
             // convert argument to int to be sure of input values
             u256 val(args.at(i));
@@ -119,45 +161,59 @@ string test::compiler::utiles::encodeAbi(string const& _code)
                 ETH_ERROR_MESSAGE("encodeAbi: bool argument must be `0` or `1`, provided: `" + args.at(i) + "`");
             abi += test::stoCompactHex(val, 32);
         }
-        else if (argType == "uint32" || argType == "uint256")
+        else if (argSignature.find("uint") != string::npos)
         {
-            u256 val(args.at(i));
-            abi += test::stoCompactHex(val, 32);
-        }
-        else if (argType.find("uint256[") != string::npos)
-        {
-            // uint array
-            string const SBytes = argType.substr(argType.find("uint256") + 4);
-            arrayLengths arrayHeader = parseArray(SBytes, 256);
-            std::vector<string> arguments = parseArgumentArray(args.at(i));
-
-            // Put the pointer
-            abi += dev::toCompactHex(dev::u256(types.size() * 32 + (i - 1) * 32), 32);
-            abiSuffix += dev::toCompactHex(dev::u256(arguments.size()), 32);
-            for (auto const& el : arguments)
-                abiSuffix += dev::toCompactHex(dev::u256(el), 32);
-            (void)arrayHeader;
-        }
-        else if (argType.find("bytes") != string::npos)
-        {
-            string const SBytes = argType.substr(argType.find("bytes") + 5);
-
-            if (SBytes.find("[") != string::npos)  // bytes array here
+            string const SBytes = argSignature.substr(argSignature.find("uint") + 4);
+            if (SBytes.find("[") != string::npos)
             {
-                arrayLengths arrayHeader = parseArray(SBytes, 32);
-                std::vector<string> arguments = parseArgumentArray(args.at(i));
+                // Fixed Array of uint here like "uint4[5]"
+                arrayLengths arrayHeader = parseArray(SBytes, 256);
+                std::vector<string> arguments = parseArgumentArray(arrayHeader, args.at(i));
 
-                if (arguments.size() != arrayHeader.elementsCount)
-                    ETH_ERROR_MESSAGE("encodeAbi: arguments provided to the array do not match ");
+                // Put the pointer
+                abi += dev::toCompactHex(dev::u256(argsSignature.size() * 32 + abiSuffix.length() / 2), 32);
+
+                abiSuffix += dev::toCompactHex(dev::u256(arguments.size()), 32);
+                for (auto const& el : arguments)
+                {
+                    u256 val(el);
+                    abiSuffix += test::stoCompactHex(val, 32);
+                }
+            }
+            else
+            {
+                u256 val(args.at(i));
+                abi += test::stoCompactHex(val, 32);
+            }
+        }
+        else if (argSignature.find("bytes") != string::npos)
+        {
+            string const SBytes = argSignature.substr(argSignature.find("bytes") + 5);
+            if (SBytes.find("[") != string::npos)
+            {
+                // Fixed Array of Bytes here like "bytes4[5]"
+                arrayLengths arrayHeader = parseArray(SBytes, 32);
+                std::vector<string> arguments = parseArgumentArray(arrayHeader, args.at(i));
                 for (auto const& el : arguments)
                     abi += encodeByteString(el, arrayHeader.typeSize);
             }
             else
             {
-                // Dynamic bytes array, need to put a pointer
-                abi += dev::toCompactHex(dev::u256(types.size() * 32 + (i - 1) * 32), 32);
-                size_t encodingSize = args.at(i).size() - 2;
-                abiSuffix += dev::toCompactHex(dev::u256(encodingSize), 32) + encodeByteString(args.at(i));
+                if (argSignature.length() > 5)
+                {
+                    // Static bytes like "bytes10"
+                    dev::u256 size = dev::u256(argSignature.substr(5));
+                    if (size > 32)
+                        ETH_ERROR_MESSAGE("encodeAbi: static type bytes can't be > 32");
+                    abi += encodeByteString(args.at(i));
+                }
+                else
+                {
+                    // Dynamic bytes array, need to put a pointer (like `bytes`)
+                    abi += dev::toCompactHex(dev::u256(argsSignature.size() * 32 + abiSuffix.length() / 2), 32);
+                    size_t encodingSize = args.at(i).size() - 2;
+                    abiSuffix += dev::toCompactHex(dev::u256(encodingSize), 32) + encodeByteString(args.at(i));
+                }
             }
         }
     }
