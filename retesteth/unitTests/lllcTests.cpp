@@ -196,11 +196,10 @@ BOOST_AUTO_TEST_CASE(solc_abi_example4)
     ETH_FAIL_REQUIRE(abicode == exp);
 }
 
-/*
+
 BOOST_AUTO_TEST_CASE(solc_abi_example5)
 {
-    string abicode = test::compiler::utiles::encodeAbi(
-        "g(uint[][],string[]) [[1,2],[3]] [\"one\",\"two\",\"three\"]");
+    string abicode = test::compiler::utiles::encodeAbi("g(uint256[][],string[]) [[1,2],[3]] [\"one\",\"two\",\"three\"]");
     ETH_FAIL_REQUIRE(abicode ==
                      "0x2289b18c"
                       "0000000000000000000000000000000000000000000000000000000000000040"
@@ -224,6 +223,5 @@ BOOST_AUTO_TEST_CASE(solc_abi_example5)
                       "0000000000000000000000000000000000000000000000000000000000000005"
                       "7468726565000000000000000000000000000000000000000000000000000000");
 }
-*/
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -25,12 +25,14 @@ struct ArgumentSignature
     {
         typeSize = 0;
         dynamicArray = false;
+        dynamicArray2 = false;
         elementsCount = 0;
         elementsCount2 = 0;
         type = ArgSignatureType::UNKNOWN;
     }
     size_t typeSize;
     bool dynamicArray;
+    bool dynamicArray2;
     size_t elementsCount;
     size_t elementsCount2;
     ArgSignatureType type;
@@ -40,6 +42,7 @@ struct ArgumentSignature
 ArgumentSignature parseArgumentSignature(string const& _input)
 {
     ArgumentSignature info;
+    info.type = ArgSignatureType::UNKNOWN;
     if (_input.find("bytes") != string::npos)
         info.type = ArgSignatureType::BYTES;
     else if (_input.find("uint") != string::npos)
@@ -95,13 +98,21 @@ ArgumentSignature parseArgumentSignature(string const& _input)
     if (info.elementsCount == 0 && _input.find("[") != string::npos)
         info.dynamicArray = true;
 
+    if (info.elementsCount2 == 0 && openBracerCount == 2)
+        info.dynamicArray2 = true;
+
     // `bytes` is treated as dynamic array
     if (info.type == ArgSignatureType::BYTES && info.typeSize == 0)
         info.dynamicArray = true;
 
+    // `string[]` is treated as dynamic array 2
+    if (info.type == ArgSignatureType::STRING && info.typeSize == 0)
+        info.dynamicArray2 = true;
+
     return info;
 }
 
+/// Parse arguments into array
 std::vector<string> parseArgumentArray(ArgumentSignature const& _header, string const& _input)
 {
     // Format check ["abc", "def"]
@@ -113,9 +124,50 @@ std::vector<string> parseArgumentArray(ArgumentSignature const& _header, string 
     string const argumentsStr = _input.substr(1, _input.length() - 2);  // remove `[]`
     std::vector<string> arr = test::explode(argumentsStr, ',');
     if (arr.size() != _header.elementsCount && _header.elementsCount != 0)
-        ETH_ERROR_MESSAGE("encodeAbi: arguments provided to the array do not match (");
+        ETH_ERROR_MESSAGE("encodeAbi: arguments provided to the array do not match signature");
 
     return arr;
+}
+
+/// Parse arguments into array of arrays
+typedef std::vector<string> ARGS;
+std::vector<ARGS> parseArgumentArray2(ArgumentSignature const& _header, string const& _input)
+{
+    // Format check [[1,2],[3]]
+    std::vector<ARGS> args;
+    size_t openBracerCount = std::count(_input.begin(), _input.end(), '[');
+    size_t closeBracerCount = std::count(_input.begin(), _input.end(), ']');
+    if (openBracerCount != closeBracerCount)
+        ETH_ERROR_MESSAGE("encodeAbi unclosed `[]` in argument signature!");
+    if (openBracerCount == 0)
+        ETH_ERROR_MESSAGE("encodeAbi array argument must have `[]`! ");
+    string const argumentsStr = _input.substr(1, _input.length() - 2);  // remove `[]`
+
+    bool wasQuote = false;
+    bool wasBracer = true;
+    string subArray;
+    for (size_t i = 0; i < argumentsStr.size(); i++)
+    {
+        char const ch = argumentsStr.at(i);
+        if (ch == '"')
+            wasQuote = 1 - wasQuote;
+        if ((ch == ' ' || ch == ',') && !wasBracer)
+            continue;
+
+        subArray += ch;
+        if (ch == ']' && !wasQuote)
+        {
+            wasBracer = 1 - wasBracer;
+            ArgumentSignature header = _header;
+            header.elementsCount = _header.elementsCount2;
+            ARGS subArgs = parseArgumentArray(header, subArray);
+            args.push_back(subArgs);
+            subArray = string();
+        }
+    }
+    if (args.size() != _header.elementsCount && _header.elementsCount != 0)
+        ETH_ERROR_MESSAGE("encodeAbi: arguments provided to the array do not match signature");
+    return args;
 }
 
 // Encode "dave" into bytestring padded32
@@ -202,6 +254,10 @@ string EncodeArgument(string const& _element, ArgumentSignature const& _sig)
     {
         return encodeByteString(_element, _sig.typeSize);
     }
+    case ArgSignatureType::STRING:
+    {
+        return encodeByteString(_element, _sig.typeSize);
+    }
     break;
     default:
         ETH_ERROR_MESSAGE("EncodeArgument: unhandled ArgSignatureType!");
@@ -224,64 +280,117 @@ string test::compiler::utiles::encodeAbi(string const& _code)
 {
     ETH_LOG(_code, 7);
     string abi, abiSuffix;
-    std::vector<string> args = parseAbiArgumentList(_code);
 
-    std::vector<string> argsSignature;
-    for (size_t i = 0; i < args.size(); i++)
+    try
     {
-        if (i == 0)
+        std::vector<string> args = parseAbiArgumentList(_code);
+        std::vector<string> argsSignature;
+        for (size_t i = 0; i < args.size(); i++)
         {
-            // Hash of the function call arg
-            abi += dev::sha3(args.at(0)).hex().substr(0, 8);
-
-            // Read the function arg types
-            size_t pos = args.at(0).find("(");
-            if (pos == string::npos)
-                ETH_ERROR_MESSAGE("encodeAbi: `(` not found in function name!");
-            string argTypes = args.at(0).substr(pos + 1);
-            argTypes = argTypes.substr(0, argTypes.length() - 1);
-            argsSignature = test::explode(argTypes, ',');
-            if (argsSignature.size() != args.size() - 1)
-                ETH_ERROR_MESSAGE("encodeAbi: wrong number of function arguments provided!");
-            continue;
-        }
-
-        string const& argData = args.at(i);
-        ArgumentSignature const argSignature = parseArgumentSignature(argsSignature.at(i - 1));
-
-        // Encode the argument
-        if (argSignature.elementsCount || argSignature.dynamicArray)
-        {
-            // bytes are also an array but argument is just a "quoted string"
-            if (argSignature.type == ArgSignatureType::BYTES && argSignature.typeSize == 0 && argSignature.elementsCount == 0)
+            if (i == 0)
             {
+                // Hash of the function call arg
+                abi += dev::sha3(args.at(0)).hex().substr(0, 8);
+
+                // Read the function arg types
+                size_t pos = args.at(0).find("(");
+                if (pos == string::npos)
+                    ETH_ERROR_MESSAGE("encodeAbi: `(` not found in function name!");
+                string argTypes = args.at(0).substr(pos + 1);
+                argTypes = argTypes.substr(0, argTypes.length() - 1);
+                argsSignature = test::explode(argTypes, ',');
+                if (argsSignature.size() != args.size() - 1)
+                    ETH_ERROR_MESSAGE("encodeAbi: wrong number of function arguments provided!");
+                continue;
+            }
+
+            string const& argData = args.at(i);
+            ArgumentSignature const argSignature = parseArgumentSignature(argsSignature.at(i - 1));
+
+            // Encode the argument
+            if (argSignature.elementsCount2 || argSignature.dynamicArray2)
+            {
+                if (argSignature.type == ArgSignatureType::STRING)
+                {
+                    // string is array2
+                    std::vector<string> arguments = parseArgumentArray(argSignature, argData);
+                    if (argsSignature.size() != 1)
+                    {
+                        abi += dev::toCompactHex(dev::u256(argsSignature.size() * 32 + abiSuffix.length() / 2), 32);
+                        abiSuffix += dev::toCompactHex(dev::u256(arguments.size()), 32);
+                    }
+                    string subSuffix;
+                    for (size_t i = 0; i < arguments.size(); i++)
+                    {
+                        abiSuffix += dev::toCompactHex(dev::u256(arguments.size() * 32 + subSuffix.length() / 2), 32);
+                        subSuffix += dev::toCompactHex(dev::u256(arguments.at(i).size() - 2), 32);
+                        subSuffix += EncodeArgument(arguments.at(i), argSignature);
+                    }
+                    abiSuffix += subSuffix;
+                    continue;
+                }
+
+                std::vector<ARGS> arguments = parseArgumentArray2(argSignature, argData);
                 if (argsSignature.size() != 1)
                 {
                     // If not the last element, put a pointer and write to suffix
                     abi += dev::toCompactHex(dev::u256(argsSignature.size() * 32 + abiSuffix.length() / 2), 32);
-                    if (argData.size() < 2)
-                        ETH_ERROR_MESSAGE("encodeAbi: argument for bytes must be a \"quoted string\"!");
-                    abiSuffix += dev::toCompactHex(dev::u256(argData.size() - 2), 32);
+                    abiSuffix += dev::toCompactHex(dev::u256(arguments.size()), 32);
                 }
-                abiSuffix += EncodeArgument(argData, argSignature);
-                continue;
+
+                // put offsets of the subArrays to encoding
+                string subSuffix;
+                for (size_t i = 0; i < arguments.size(); i++)
+                {
+                    abiSuffix += dev::toCompactHex(dev::u256(arguments.size() * 32 + subSuffix.length() / 2), 32);
+
+                    // bytes/char sub arrays???
+
+                    // Size of subArray
+                    subSuffix += dev::toCompactHex(dev::u256(arguments.at(i).size()), 32);
+                    for (auto const& el : arguments.at(i))
+                        subSuffix += EncodeArgument(el, argSignature);
+                }
+                abiSuffix += subSuffix;
             }
-
-            // Encode a dynamic Array or a static Array
-            std::vector<string> arguments = parseArgumentArray(argSignature, argData);
-
-            // Put the pointer
-            if (argsSignature.size() != 1)
+            else if (argSignature.elementsCount || argSignature.dynamicArray)
             {
-                // If not the last element, put a pointer and write to suffix
-                abi += dev::toCompactHex(dev::u256(argsSignature.size() * 32 + abiSuffix.length() / 2), 32);
-                abiSuffix += dev::toCompactHex(dev::u256(arguments.size()), 32);
+                // bytes are also an array but argument is just a "quoted string"
+                if (argSignature.type == ArgSignatureType::BYTES && argSignature.typeSize == 0 &&
+                    argSignature.elementsCount == 0)
+                {
+                    if (argsSignature.size() != 1)
+                    {
+                        // If not the last element, put a pointer and write to suffix
+                        abi += dev::toCompactHex(dev::u256(argsSignature.size() * 32 + abiSuffix.length() / 2), 32);
+                        if (argData.size() < 2)
+                            ETH_ERROR_MESSAGE("encodeAbi: argument for bytes must be a \"quoted string\"!");
+                        abiSuffix += dev::toCompactHex(dev::u256(argData.size() - 2), 32);
+                    }
+                    abiSuffix += EncodeArgument(argData, argSignature);
+                    continue;
+                }
+
+                // Encode a dynamic Array or a static Array
+                std::vector<string> arguments = parseArgumentArray(argSignature, argData);
+
+                // Put the pointer
+                if (argsSignature.size() != 1)
+                {
+                    // If not the last element, put a pointer and write to suffix
+                    abi += dev::toCompactHex(dev::u256(argsSignature.size() * 32 + abiSuffix.length() / 2), 32);
+                    abiSuffix += dev::toCompactHex(dev::u256(arguments.size()), 32);
+                }
+                for (auto const& el : arguments)
+                    abiSuffix += EncodeArgument(el, argSignature);
             }
-            for (auto const& el : arguments)
-                abiSuffix += EncodeArgument(el, argSignature);
+            else
+                abi += EncodeArgument(argData, argSignature);
         }
-        else
-            abi += EncodeArgument(argData, argSignature);
+    }
+    catch (std::exception const& _ex)
+    {
+        throw test::UpwardsException(string("encodeAbi error: ") + _ex.what());
     }
     ETH_LOG("0x" + abi + abiSuffix, 7);
     return "0x" + abi + abiSuffix;
