@@ -2,8 +2,9 @@
 testeth via RPC (wiki: https://github.com/ethereum/retesteth/wiki)  
 (Execution stats: http://retesteth.ethdevops.io/)
 
-A test generaion tool for the test fillers https://github.com/ethereum/tests/tree/develop/src  
-Building instruction for beginners: [retesteth + solidity build](https://github.com/ethereum/retesteth#building-instructions-for-beginners)
+* A test generaion tool for the test fillers https://github.com/ethereum/tests/tree/develop/src  
+* Building instruction for beginners: [retesteth + solidity build](https://github.com/ethereum/retesteth#building-instructions-for-beginners)
+* [Usage tutorial](https://ethereum-tests.readthedocs.io/en/latest/retesteth-tutorial.html)
 
 # The Goal
 
