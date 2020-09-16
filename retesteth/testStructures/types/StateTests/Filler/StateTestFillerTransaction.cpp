@@ -38,7 +38,7 @@ StateTestFillerTransaction::StateTestFillerTransaction(DataObject const& _data)
             // -- Compile LLL in transaction data into byte code if not already
             DataObject dataInKey = el;
             dataInKey.setKey("`data` array element in General Transaction Section");  // Hint
-            dataInKey.setString(test::replaceCode(dataInKey.asString()));
+            dataInKey.setString(test::compiler::replaceCode(dataInKey.asString()));
             // ---
             m_data.push_back(dataInKey);
         }
@@ -58,7 +58,7 @@ StateTestFillerTransaction::StateTestFillerTransaction(DataObject const& _data)
     }
     catch (std::exception const& _ex)
     {
-        throw UpwardsException(string("StateTestFillerTransaction parse error: ") + _ex.what() + _data.asJson());
+        throw UpwardsException(string("StateTestFillerTransaction parse error: ") + _ex.what() + "\n" + _data.asJson());
     }
 }
 

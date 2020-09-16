@@ -29,6 +29,8 @@ namespace test
 
 class TestSuite
 {
+protected:
+    virtual bool legacyTestSuiteFlag() const { return false; }
 private:
     // Execute Test.json file
     void executeFile(boost::filesystem::path const& _file) const;

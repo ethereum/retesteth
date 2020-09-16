@@ -1,3 +1,4 @@
+
 cmake_minimum_required(VERSION 3.9.3)
 set(CMAKE_TOOLCHAIN_FILE ${CMAKE_SOURCE_DIR}/toolchain.cmake)
 
@@ -13,8 +14,8 @@ HunterGate(
 	LOCAL
 )
 
-project(retesteth VERSION 0.0.7)
-set(VERSION_SUFFIX "bashstarters")
+project(retesteth VERSION 0.0.8)
+set(VERSION_SUFFIX "docker")
 
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)

@@ -23,6 +23,11 @@ do
         argstring=$argstring" "$var
         continue
     fi
+    if [ "$var" = "--help" ]; then
+        argstring=$argstring" "$var
+        testpath=""
+        break;
+    fi
     if [ "$var" = "--testpath" ] && [ "$separator" -eq "1" ]; then
         testpaths=1
         continue

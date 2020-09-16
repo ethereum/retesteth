@@ -49,6 +49,11 @@ size_t Options::DynamicOptions::activeConfigs() const
     return m_clientConfigs.size();
 }
 
+bool Options::DynamicOptions::currentConfigIsSet() const
+{
+    return m_currentConfigID.id() != ClientConfigID::null().id();
+}
+
 ClientConfig const& Options::DynamicOptions::getCurrentConfig() const
 {
     for (auto const& cfg : m_clientConfigs)

@@ -10,8 +10,9 @@ enum class LogColor
 };
 std::string const cYellow = "\x1b[33m";
 std::string const cRed = "\x1b[31m";
+std::string const cDefault = "\x1b[0m";
 void eth_warning_message(std::string const& _message, unsigned _verbosity = 1);
-void eth_stdout_message(std::string const& _message);
+void eth_stdout_message(std::string const& _message, std::string const& _color = std::string());
 void eth_stderror_message(std::string const& _message);
 void eth_log_message(
     std::string const& _message, unsigned _verbosity, LogColor _logColor = LogColor::DEFAULT);
@@ -28,6 +29,7 @@ void eth_mark_error(std::string const& _message);
 #define ETH_WARNING_TEST(message, verbosity) test::eth_warning_message(message, verbosity)
 
 #define ETH_STDOUT_MESSAGE(message) test::eth_stdout_message(message)
+#define ETH_STDOUT_MESSAGEC(message, color) test::eth_stdout_message(message, color)
 #define ETH_STDERROR_MESSAGE(message) test::eth_stderror_message(message)
 #define ETH_TEST_MESSAGE(message) test::eth_log_message(message, 6)
 #define ETH_LOG(message, verbosity) test::eth_log_message(message, verbosity)

@@ -187,6 +187,13 @@ void RPCSession::restartScripts(bool _stop)
 {
     ClientConfig const& curCFG = Options::getDynamicOptions().getCurrentConfig();
 
+    if (curCFG.cfgFile().socketType() == ClientConfgSocketType::TCP)
+    {
+        // if --nodes are set to connect, ignore restart scripts
+        if (Options::get().nodesoverride.size() > 0)
+            return;
+    }
+
     if (_stop)
     {
         auto stop = [&curCFG](){
@@ -338,10 +345,10 @@ void RPCSession::clear()
     closingThreads.clear();
 
     // If not running UnitTests or smth
-    if (Options::getDynamicOptions().activeConfigs() > 0)
+    if (Options::getDynamicOptions().activeConfigs() > 0 && Options::getDynamicOptions().currentConfigIsSet())
     {
         ClientConfig const& curCFG = Options::getDynamicOptions().getCurrentConfig();
-        if (!curCFG.getStopperScript().empty())
+        if (!curCFG.getStopperScript().empty() && Options::get().nodesoverride.size() == 0)
         {
             executeCmd(curCFG.getStopperScript().c_str(), ExecCMDWarning::NoWarningNoError);
             ETH_LOG(curCFG.getStopperScript().c_str(), 1);

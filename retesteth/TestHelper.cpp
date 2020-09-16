@@ -262,6 +262,19 @@ std::string stoCompactHexPrefixed(dev::u256 const& _val, int _minsize)
     return string();
 }
 
+std::string stoCompactHex(dev::u256 const& _val, int _minsize)
+{
+    try
+    {
+        return dev::toCompactHex(_val, _minsize);
+    }
+    catch (std::exception const& _ex)
+    {
+        throw UpwardsException(string("toCompactHex error converting `" + _val.str() + "` to compact hex") + _ex.what());
+    }
+    return string();
+}
+
 void strToLower(string& _input)
 {
     std::transform(_input.begin(), _input.end(), _input.begin(), [](unsigned char c) { return std::tolower(c); });
@@ -269,8 +282,16 @@ void strToLower(string& _input)
 
 bool checkCmdExist(std::string const& _command)
 {
-    string checkCmd = string("which " + _command + " > /dev/null 2>&1");
-    if (system(checkCmd.c_str()))
+    string cmd;
+    size_t pos = _command.find_first_of(" ");
+    if (pos != string::npos)
+        cmd = _command.substr(0, pos);
+    else
+        cmd = _command;
+
+    string const checkCmd = string("which " + cmd + " > /dev/null 2>&1");
+    bool const checkBoost = fs::exists(cmd);
+    if (system(checkCmd.c_str()) && !checkBoost)
         return false;
     return true;
 }
@@ -285,6 +306,9 @@ string executeCmd(string const& _command, ExecCMDWarning _warningOnEmpty)
     string out;
     char output[1024];
     ETH_FAIL_REQUIRE_MESSAGE(!_command.empty(), "executeCmd: empty argument!");
+    if (!test::checkCmdExist(_command))
+        ETH_FAIL_MESSAGE("Command `" + _command + "` does not found!");
+
     FILE* fp;
     {
         std::lock_guard<std::mutex> lock(g_popenmutex);
@@ -314,54 +338,6 @@ string executeCmd(string const& _command, ExecCMDWarning _warningOnEmpty)
 #endif
 }
 
-void checkHexHasEvenLength(string const& _hex)
-{
-    ETH_ERROR_REQUIRE_MESSAGE(_hex.length() % 2 == 0,
-        TestOutputHelper::get().testName() + ": Hex field is expected to be of odd length: '" + _hex + "'");
-}
-
-string compileLLL(string const& _code)
-{
-#if defined(_WIN32)
-    BOOST_ERROR("LLL compilation only supported on posix systems.");
-    return "";
-#else
-    fs::path path(fs::temp_directory_path() / fs::unique_path());
-    string cmd = string("lllc ") + path.string();
-    writeFile(path.string(), _code);
-    string result = executeCmd(cmd);
-    fs::remove_all(path);
-    result = "0x" + result;
-    checkHexHasEvenLength(result);
-    return result;
-#endif
-}
-
-string replaceCode(string const& _code)
-{
-    if (_code == "")
-        return "0x";
-
-    if (_code.substr(0, 2) == "0x" && _code.size() >= 2)
-    {
-        checkHexHasEvenLength(_code);
-        if (Options::get().filltests && _code.size() > 2)
-            ETH_WARNING("Filling raw bytecode, please provide the source!"
-                        + TestOutputHelper::get().testInfo().errorDebug());
-        return _code;
-    }
-
-    // wasm support
-    // if (_code.find("(module") == 0)
-    //	return wast2wasm(_code);
-
-    string compiledCode = compileLLL(_code);
-    if (_code.size() > 0)
-        ETH_FAIL_REQUIRE_MESSAGE(
-            compiledCode.size() > 0, "Bytecode is missing! '" + _code + "' " + TestOutputHelper::get().testName());
-    return compiledCode;
-}
-
 /// Explode string into array of strings by `delim`
 std::vector<std::string> explode(std::string const& s, char delim)
 {
@@ -371,7 +347,6 @@ std::vector<std::string> explode(std::string const& s, char delim)
         result.push_back(std::move(token));
     return result;
 }
-
 
 #include <sys/wait.h>
 #define READ   0

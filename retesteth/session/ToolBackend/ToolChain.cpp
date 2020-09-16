@@ -140,6 +140,7 @@ void ToolChain::mineBlock(EthereumBlockState const& _pendingBlock, Mining _req)
                 " = " + pendingFixed.totalDifficulty().asDecString(),
         6);
 
+    pendingFixed.setTrsTrace(res.debugTrace());
     m_blocks.push_back(pendingFixed);
 }
 
@@ -196,24 +197,52 @@ ToolResponse ToolChain::mineBlockOnTool(EthereumBlockState const& _block, SealEn
     cmd += " --input.txs " + txsPath.string();
     cmd += " --input.env " + envPath.string();
     cmd += " --state.fork " + std::get<1>(tupleRewardFork).asString();
-    cmd += " --output.result " + outPath.string();
-    cmd += " --output.alloc " + outAllocPath.string();
+    cmd += " --output.basedir " + m_tmpDir.string();
+    cmd += " --output.result " + outPath.filename().string();
+    cmd += " --output.alloc " + outAllocPath.filename().string();
     if (_engine != SealEngine::NoReward)
         cmd += " --state.reward " + std::get<0>(tupleRewardFork).asDecString();
+
+    bool traceCondition = Options::get().vmtrace && _block.header().number() != 0;
+    if (traceCondition)
+        cmd += " --trace";
 
     ETH_TEST_MESSAGE("Alloc:\n" + contentsString(allocPath.string()));
     if (_block.transactions().size())
         ETH_TEST_MESSAGE("Txs:\n" + contentsString(txsPath.string()));
     ETH_TEST_MESSAGE("Env:\n" + contentsString(envPath.string()));
-    test::executeCmd(cmd, ExecCMDWarning::NoWarning);
+
+    string out = test::executeCmd(cmd, ExecCMDWarning::NoWarning);
+
     ETH_TEST_MESSAGE("Res:\n" + contentsString(outPath.string()));
     ETH_TEST_MESSAGE("RAlloc:\n" + contentsString(outAllocPath.string()));
     ETH_TEST_MESSAGE(cmd);
+    ETH_TEST_MESSAGE(out);
 
     // Construct block rpc response
     ToolResponse toolResponse(ConvertJsoncppStringToData(contentsString(outPath)));
     DataObject returnState = ConvertJsoncppStringToData(contentsString(outAllocPath));
     toolResponse.attachState(restoreFullState(returnState));
+
+    if (traceCondition)
+    {
+        size_t i = 0;
+        for (auto const& tr : _block.transactions())
+        {
+            fs::path txTraceFile;
+            string const trNumber = test::fto_string(i++);
+            txTraceFile = m_tmpDir / string("trace-" + trNumber + "-" + tr.hash().asString() + ".jsonl");
+            if (fs::exists(txTraceFile))
+            {
+                string const preinfo = "\nTransaction number: " + trNumber + ", hash: " + tr.hash().asString() + "\n";
+                string const info = TestOutputHelper::get().testInfo().errorDebug();
+                toolResponse.attachDebugTrace(
+                    tr.hash(), "\nVMTrace:" + info + cDefault + preinfo + contentsString(txTraceFile));
+            }
+            else
+                ETH_LOG("Trace file `" + txTraceFile.string() + "` not found!", 1);
+        }
+    }
 
     fs::remove(envPath);
     fs::remove(allocPath);

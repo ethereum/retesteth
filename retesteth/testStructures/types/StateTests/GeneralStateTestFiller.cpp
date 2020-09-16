@@ -31,7 +31,14 @@ StateTestInFiller::StateTestInFiller(DataObject const& _data)
         if (_data.count("_info"))
             m_info = GCP_SPointer<InfoIncomplete>(new InfoIncomplete(_data.atKey("_info")));
         m_env = GCP_SPointer<StateTestFillerEnv>(new StateTestFillerEnv(_data.atKey("env")));
-        m_pre = spState(new State(convertDecStateToHex(_data.atKey("pre"))));
+
+        // Compile solidity contracts from separate field
+        // Because one solidity contract may depend on another during the compilation
+        solContracts solidityCode;
+        if (_data.count("solidity"))
+            solidityCode = test::compiler::compileSolidity(_data.atKey("solidity").asString());
+
+        m_pre = spState(new State(convertDecStateToHex(_data.atKey("pre"), solidityCode)));
         m_transaction = GCP_SPointer<StateTestFillerTransaction>(new StateTestFillerTransaction(_data.atKey("transaction")));
         for (auto const& el : _data.atKey("expect").getSubObjects())
             m_expectSections.push_back(StateTestFillerExpectSection(el));
@@ -39,12 +46,10 @@ StateTestInFiller::StateTestInFiller(DataObject const& _data)
         m_name = _data.getKey();
 
         requireJsonFields(_data, "StateTestInFiller " + _data.getKey(),
-            {{"_info", {{DataType::Object}, jsonField::Optional}},
-             {"env", {{DataType::Object}, jsonField::Required}},
-             {"expect", {{DataType::Array}, jsonField::Required}},
-             {"pre", {{DataType::Object}, jsonField::Required}},
-             {"transaction", {{DataType::Object}, jsonField::Required}}});
-
+            {{"_info", {{DataType::Object}, jsonField::Optional}}, {"env", {{DataType::Object}, jsonField::Required}},
+                {"expect", {{DataType::Array}, jsonField::Required}}, {"pre", {{DataType::Object}, jsonField::Required}},
+                {"solidity", {{DataType::String}, jsonField::Optional}},
+                {"transaction", {{DataType::Object}, jsonField::Required}}});
     }
     catch (std::exception const& _ex)
     {

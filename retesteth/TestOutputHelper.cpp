@@ -309,6 +309,9 @@ void checkUnfinishedTestFolders()
     if (finishedTestFoldersMap.size() == 0)
         return;
 
+    if (Options::get().rCurrentTestSuite.empty())
+        ETH_WARNING("Options rCurrentTestSuite is empty!");
+
     // -t SuiteName/SubSuiteName/caseName   parse caseName as filter
     // rCurrentTestSuite is empty if run without -t argument
     string filter;
@@ -354,8 +357,7 @@ void checkUnfinishedTestFolders()
             std::set_difference(allFolders.begin(), allFolders.end(), finishedFolders.begin(),
                 finishedFolders.end(), std::back_inserter(diff));
             for (auto const& it : diff)
-                ETH_WARNING(
-                    string("Test folder ") + (path / it).c_str() + " appears to be unused!");
+                ETH_WARNING(string("Test folder ") + (path / it).c_str() + " appears to be unused!");
         }
     }
 }

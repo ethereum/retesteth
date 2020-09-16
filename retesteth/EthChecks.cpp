@@ -13,9 +13,12 @@ void eth_warning_message(std::string const& _message, unsigned _verbosity)
         std::cout << cYellow << "WARNING: " << _message << "\x1b[0m" << std::endl;
 }
 
-void eth_stdout_message(std::string const& _message)
+void eth_stdout_message(std::string const& _message, std::string const& _color)
 {
-    std::cout << _message << std::endl;
+    if (_color.empty())
+        std::cout <<  _message << std::endl;
+    else
+        std::cout << _color << _message << "\x1b[0m" << std::endl;
 }
 
 void eth_stderror_message(std::string const& _message)
@@ -47,7 +50,10 @@ void eth_log_message(std::string const& _message, unsigned _verbosity, LogColor 
 
 void eth_error(std::string const& _message)
 {
-    if (!ExitHandler::receivedExitSignal())
+    // Do not mark errors if exiting the program by emergency
+    if (ExitHandler::receivedExitSignal())
+        throw EthError() << _message;
+    else
     {
         // if the exception is not allowed, then throw an exception
         if (TestOutputHelper::get().markError(_message))

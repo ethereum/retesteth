@@ -241,7 +241,7 @@ void requireJsonFields(DataObject const& _o, std::string const& _config, std::ma
 
 // Compile LLL in code
 // Convert dec fields to hex, add 0x prefix to accounts and storage keys
-DataObject convertDecStateToHex(DataObject const& _data)
+DataObject convertDecStateToHex(DataObject const& _data, solContracts const& _preSolidity)
 {
     // -- Compile LLL in pre state into byte code if not already
     // -- Convert State::Storage keys/values into hex
@@ -250,7 +250,7 @@ DataObject convertDecStateToHex(DataObject const& _data)
     {
         if (acc.getKey()[1] != 'x')
             acc.setKey("0x" + acc.getKey());
-        acc["code"].setString(test::replaceCode(acc.atKey("code").asString()));
+        acc["code"].setString(test::compiler::replaceCode(acc.atKey("code").asString(), _preSolidity));
         acc["nonce"].performModifier(mod_valueToCompactEvenHexPrefixed);
         acc["balance"].performModifier(mod_valueToCompactEvenHexPrefixed);
         for (auto& rec : acc["storage"].getSubObjectsUnsafe())

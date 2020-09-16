@@ -24,15 +24,15 @@ BOOST_FIXTURE_TEST_SUITE(OptionsSuite, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(options_singletestA)
 {
-    const char* argv[] = {"--singletest", "filename"};
-    TestOptions opt(2, argv);
+    const char* argv[] = {"./retesteth", "--", "--singletest", "filename"};
+    TestOptions opt(4, argv);
     BOOST_CHECK(opt.get().singleTestName == "filename");
 }
 
 BOOST_AUTO_TEST_CASE(options_singletestAsB)
 {
-    const char* argv[] = {"--singletest", "filename/testname"};
-    TestOptions opt(2, argv);
+    const char* argv[] = {"./retesteth", "--", "--singletest", "filename/testname"};
+    TestOptions opt(4, argv);
     BOOST_CHECK(opt.get().singleTestName == "filename");
     BOOST_CHECK(opt.get().singleSubTestName == "testname");
 }

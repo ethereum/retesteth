@@ -1,7 +1,9 @@
 #pragma once
+#include <retesteth/compiler/Compiler.h>
 #include <retesteth/dataObject/DataObject.h>
 #include <map>
 using namespace dataobject;
+using namespace test::compiler;
 
 namespace test
 {
@@ -49,9 +51,9 @@ using jsonType = std::pair<jsonTypeSet, jsonField>;
 void requireJsonFields(
     DataObject const& _o, std::string const& _configName, std::map<std::string, jsonType> const& _validationMap);
 
-// Compile LLL in code
+// Compile LLL in code, solidity in code
 // Convert dec fields to hex, add 0x prefix to accounts and storage keys
-DataObject convertDecStateToHex(DataObject const& _data);
+DataObject convertDecStateToHex(DataObject const& _data, solContracts const& _preSolidity = solContracts());
 
 // Convert dec fields to hex, add 0x prefix to accounts and storage keys
 DataObject convertDecBlockheaderIncompleteToHex(DataObject const& _data);

@@ -1,5 +1,6 @@
 #include "TestBlockchain.h"
 #include <retesteth/Options.h>
+#include <retesteth/testSuites/Common.h>
 #include <retesteth/testStructures/PrepareChainParams.h>
 
 namespace test
@@ -84,6 +85,9 @@ void TestBlockchain::generateBlock(
 
         for (auto const& remoteTr : minedBlock.getCContent().transactions())
         {
+            if (Options::get().vmtrace)
+                printVmTrace(m_session, remoteTr.hash(), minedBlock.getCContent().header().stateRoot());
+
             if (testTransactionMap.count(remoteTr.hash()))
             {
                 bool isMarkedInvalid = std::get<1>(testTransactionMap.at(remoteTr.hash()));

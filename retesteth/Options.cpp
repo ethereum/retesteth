@@ -33,8 +33,14 @@ namespace fs = boost::filesystem;
 Options::DynamicOptions Options::m_dynamicOptions;
 void displayTestSuites();
 
+void printVersion()
+{
+    cout << prepareVersionString() << "\n";
+}
+
 void printHelp()
 {
+    printVersion();
     cout << "Usage: \n";
     cout << std::left;
     cout << "\nSetting test suite\n";
@@ -48,8 +54,8 @@ void printHelp()
     cout << setw(40) << "--datadir" << setw(0) << "Path to configs (default: ~/.retesteth)\n";
     cout << setw(40) << "--nodes" << setw(0) << "List of client tcp ports (\"addr:ip, addr:ip\")\n";
     cout << setw(42) << " " << setw(0) << "Overrides the config file \"socketAddress\" section \n";
-    cout << setw(40) << "--help" << setw(25) << "Display list of command arguments\n";
-    cout << setw(40) << "--version" << setw(25) << "Display build information\n";
+    cout << setw(40) << "--help -h" << setw(25) << "Display list of command arguments\n";
+    cout << setw(40) << "--version -v" << setw(25) << "Display build information\n";
     cout << setw(40) << "--list" << setw(25) << "Display available test suites\n";
 
     cout << "\nSetting test suite and test\n";
@@ -93,11 +99,6 @@ void printHelp()
     // in the output field\n";
 }
 
-void printVersion()
-{
-    cout << prepareVersionString() << "\n";
-}
-
 Options::Options(int argc, const char** argv)
 {
     trDataIndex = -1;
@@ -114,27 +115,49 @@ Options::Options(int argc, const char** argv)
         auto throwIfAfterSeparator = [&seenSeparator, &arg]() {
             if (seenSeparator)
                 BOOST_THROW_EXCEPTION(
-                    InvalidOption(arg + " option appears after the separator --."));
+                    InvalidOption(arg + " option appears after the separator `--`."));
         };
+        auto throwIfBeforeSeparator = [&seenSeparator, &arg]() {
+            if (!seenSeparator)
+                BOOST_THROW_EXCEPTION(
+                    InvalidOption(arg + " option appears before the separator `--`"));
+        };
+
         if (arg == "--")
         {
             if (seenSeparator)
                 BOOST_THROW_EXCEPTION(
-                    InvalidOption("The separator -- appears more than once in the command line."));
+                    InvalidOption("The separator `--` appears more than once in the command line."));
             seenSeparator = true;
             continue;
         }
-        if (arg == "--help")
+        else if (arg == "-t")
+        {
+            throwIfAfterSeparator();
+            throwIfNoArgumentFollows();
+            rCurrentTestSuite = std::string{argv[++i]};
+            continue;
+        }
+        else if (i == 0)
+        {
+            // Skip './retesteth'
+            continue;
+        }
+
+        if (arg == "--help" || arg == "-h")
         {
             printHelp();
             exit(0);
         }
-        else if (arg == "--version")
+        else if (arg == "--version" || arg == "-v")
         {
             printVersion();
             exit(0);
         }
-        else if (arg.substr(0, 2) == "-j")
+
+        // Options below are not allowed before -- separator
+        throwIfBeforeSeparator();
+        if (arg.substr(0, 2) == "-j")
         {
             if (arg.length() != 2)
             {
@@ -212,7 +235,15 @@ Options::Options(int argc, const char** argv)
             throwIfNoArgumentFollows();
             singleTest = true;
             singleTestName = std::string{argv[++i]};
-            size_t pos = singleTestName.find_last_of('/');
+
+            size_t pos = singleTestName.find("Filler");
+            if (pos != string::npos)
+            {
+                singleTestName = singleTestName.substr(0, pos);
+                ETH_STDOUT_MESSAGEC("WARNING: Correcting filter to: `" + singleTestName + "`", cYellow);
+            }
+
+            pos = singleTestName.find_last_of('/');
             if (pos != string::npos)
             {
                 singleSubTestName = singleTestName.substr(pos + 1);
@@ -279,12 +310,6 @@ Options::Options(int argc, const char** argv)
                     "tests/src/randomCodeOptions.json\n");
                 exit(0);
             }
-        }
-        else if (arg == "-t")
-        {
-            throwIfAfterSeparator();
-            throwIfNoArgumentFollows();
-            rCurrentTestSuite = std::string{argv[++i]};
         }
         else if (arg == "--nonetwork")
             nonetwork = true;

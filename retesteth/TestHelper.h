@@ -8,6 +8,7 @@
 #endif
 #include <dataObject/DataObject.h>
 #include <retesteth/EthChecks.h>
+#include <retesteth/compiler/Compiler.h>
 
 using namespace dataobject;
 namespace fs = boost::filesystem;
@@ -44,6 +45,7 @@ void parseJsonIntValueIntoSet(DataObject const& _json, std::set<int>& _out);
 dev::bytes sfromHex(string const& _hexStr);
 
 /// Informatice exception dev::toCompactHexPrefixed
+std::string stoCompactHex(dev::u256 const& _val, int _minsize = 0);
 std::string stoCompactHexPrefixed(dev::u256 const& _val, int _minsize = 0);
 
 /// Convert string letters to lowercase
@@ -67,13 +69,9 @@ enum class ExecCMDWarning
 };
 std::string executeCmd(std::string const& _command, ExecCMDWarning _warningOnEmpty = ExecCMDWarning::WarningOnEmptyResult);
 
-/// compile LLL / wasm or other src code into bytecode
-std::string replaceCode(std::string const& _code);
-
 // Return the vector of most looking like as _needles strings from the vector
 std::vector<std::string> levenshteinDistance(
     std::string const& _needle, std::vector<std::string> const& _sVec, size_t _max = 3);
-
 
 /// Find element in array as vector
 template <class T>

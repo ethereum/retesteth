@@ -26,7 +26,7 @@ BlockchainTestFillerTransaction::BlockchainTestFillerTransaction(DataObject cons
         tmpD["to"] = dTo;
 
         // Compile LLL in transaction data into byte code if not already
-        tmpD["data"] = test::replaceCode(_data.atKey("data").asString());
+        tmpD["data"] = test::compiler::replaceCode(_data.atKey("data").asString());
 
         m_transaction = spTransaction(new Transaction(tmpD));
     }

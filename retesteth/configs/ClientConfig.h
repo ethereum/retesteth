@@ -21,6 +21,11 @@ struct ClientConfigID
     bool operator==(ClientConfigID const& _right) const { return m_id == _right.id(); }
     bool operator!=(ClientConfigID const& _right) const { return m_id != _right.id(); }
     unsigned id() const { return m_id; }
+    static ClientConfigID null()
+    {
+        static ClientConfigID id;
+        return id;
+    }
 
 private:
     unsigned m_id;

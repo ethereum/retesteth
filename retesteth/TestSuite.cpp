@@ -33,7 +33,6 @@
 #include <string>
 #include <thread>
 
-
 using namespace std;
 using namespace dev;
 using namespace test;
@@ -576,8 +575,7 @@ void TestSuite::executeFile(boost::filesystem::path const& _file) const
 {
     TestSuiteOptions opt;
     opt.isLegacyTests = Options::get().rCurrentTestSuite.find("LegacyTests") != string::npos;
+    opt.isLegacyTests = opt.isLegacyTests || legacyTestSuiteFlag();
     doTests(test::readJsonData(_file), opt);
 }
-
 }
-

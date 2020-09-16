@@ -9,7 +9,7 @@ RUN apt-get update \
 
 # Retesteth
 # ADD . /retesteth
-RUN git clone --depth 1 -b develop https://github.com/ethereum/retesteth.git /retesteth
+RUN git clone --depth 1 -b master https://github.com/ethereum/retesteth.git /retesteth
 RUN mkdir /build && cd /build \
     && cmake /retesteth -DCMAKE_BUILD_TYPE=Release \
     && make -j8 \
@@ -18,7 +18,7 @@ RUN mkdir /build && cd /build \
 
 #RUN git clone --depth 1 -b master https://github.com/ethereum/tests /tests
 
-# Solidity
+# Solidity LLLC
 RUN git clone --depth 1 -b master https://github.com/winsvega/solidity.git /solidity
 RUN mkdir /build && cd /build \
     && apt-get update \
@@ -27,6 +27,15 @@ RUN mkdir /build && cd /build \
     && cp /build/lllc/lllc /bin/lllc \
     && rm -rf /build /solidity /var/cache/* /root/.hunter/*
 
+# Solidity solc
+# RUN git clone https://github.com/ethereum/solidity.git /solidity
+# RUN mkdir /build && cd /build \
+#    && cmake /solidity -DCMAKE_BUILD_TYPE=Release && make solc \
+#    && cp /build/solc/solc /bin/solc \
+#    && rm -rf /build /solidity /var/cache/* /root/.hunter/*
+RUN apt-get install wget && wget https://github.com/ethereum/solidity/releases/download/v0.7.0/solc-static-linux \
+   && cp solc-static-linux /bin/solc \
+   && chmod +x /bin/solc
 
 # Geth
 RUN git clone --depth 1 -b master https://github.com/ethereum/go-ethereum.git /geth

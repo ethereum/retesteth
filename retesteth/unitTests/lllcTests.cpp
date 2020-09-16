@@ -5,7 +5,7 @@
 using namespace std;
 using namespace dev;
 using namespace test;
-
+using namespace test::compiler;
 
 BOOST_FIXTURE_TEST_SUITE(LLLCSuite, TestOutputHelperFixture)
 
@@ -112,3 +112,4 @@ BOOST_AUTO_TEST_CASE(lllcCompile_f0_ff)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
