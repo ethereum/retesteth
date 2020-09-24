@@ -150,7 +150,7 @@ Options::Options(int argc, const char** argv)
             printHelp();
             exit(0);
         }
-        else if (arg == "--version" || arg == "-v")
+        else if (arg == "--version" || (arg == "-v" && !seenSeparator))
         {
             printVersion();
             exit(0);
