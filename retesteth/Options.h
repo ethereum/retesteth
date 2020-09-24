@@ -63,7 +63,8 @@ public:
     /// Test selection
 	/// @{
 	bool singleTest = false;
-	boost::optional<std::string> singleTestFile;
+    boost::optional<std::string> singleTestFile;    // --testfile run a single file
+    boost::optional<std::string> singleTestOutFile; // --testfile run a single file filler output
     std::string singleTestName;     // A test name (usually a file.json test)
     std::string singleSubTestName;  // A test name inside a file.json (for blockchain tests)
     std::string singleTestNet;

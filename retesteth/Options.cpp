@@ -46,7 +46,7 @@ void printHelp()
     cout << "\nSetting test suite\n";
     cout << setw(30) << "-t <TestSuite>" << setw(0) << "Execute test operations\n";
     cout << setw(30) << "-t <TestSuite>/<TestCase>" << setw(0) << "\n";
-    cout << "\nAll options below must be followed by `--`\n";
+    cout << "\nAll options below must follow after `--`\n";
     cout << "\nRetesteth options\n";
     cout << setw(40) << "-j <ThreadNumber>" << setw(0) << "Run test execution using threads\n";
     cout << setw(40) << "--clients `client1, client2`" << setw(0)
@@ -61,6 +61,7 @@ void printHelp()
     cout << "\nSetting test suite and test\n";
     cout << setw(40) << "--testpath <PathToTheTestRepo>" << setw(25) << "Set path to the test repo\n";
     cout << setw(40) << "--testfile <TestFile>" << setw(0) << "Run tests from a file. Requires -t <TestSuite>\n";
+    cout << setw(40) << "--outfile <TestFile>" << setw(0) << "When using `--testfile` with `--filltests` output to this file\n";
     cout << setw(40) << "--singletest <TestName>" << setw(0)
          << "Run on a single test. `Testname` is filename without Filler.json\n";
     cout << setw(40) << "--singletest <TestName>/<Subtest>" << setw(0) << "`Subtest` is a test name inside the file\n";
@@ -261,6 +262,11 @@ Options::Options(int argc, const char** argv)
                 exit(1);
             }
         }
+        else if (arg == "--outfile")
+        {
+            throwIfNoArgumentFollows();
+            singleTestOutFile = std::string{argv[++i]};
+        }
         else if (arg == "--singlenet")
         {
             throwIfNoArgumentFollows();
@@ -454,7 +460,8 @@ void displayTestSuites()
     cout << "\nRetesteth unit tests:\n";
     cout << setw(30) << "-t DataObjectTestSuite" << setw(0) << "Unit tests for json parsing\n";
     cout << setw(30) << "-t EthObjectsSuite" << setw(0) << "Unit tests for test data objects\n";
-    cout << setw(30) << "-t LLLCSuite" << setw(0) << "Unit tests for external solidity compiler\n";
+    cout << setw(30) << "-t LLLCSuite" << setw(0) << "Unit tests for external lllc compiler\n";
+    cout << setw(30) << "-t SOLCSuite" << setw(0) << "Unit tests for solidity support\n";
     cout << setw(30) << "-t OptionsSuite" << setw(0) << "Unit tests for this cmd menu\n";
     cout << setw(30) << "-t TestHelperSuite" << setw(0) << "Unit tests for retesteth logic\n";
     cout << "\n";
