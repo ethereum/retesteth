@@ -5,9 +5,11 @@
 #include "../Ethereum/Transaction.h"
 
 
+#include <EthChecks.h>
+#include <dataObject/DataObject.h>
+#include <dataObject/SPointer.h>
 #include <libdevcore/RLP.h>
-#include <retesteth/dataObject/DataObject.h>
-#include <retesteth/dataObject/SPointer.h>
+#include <testStructures/types/RPC/DebugVMTrace.h>
 using namespace dataobject;
 using namespace test::teststruct;
 
@@ -51,17 +53,17 @@ struct EthereumBlockState : EthereumBlock
     State const& state() const { return m_state; }
     FH32 const& logHash() const { return m_logHash; }
 
-    string const& getTrTrace(FH32 const& _hash) const
+    DebugVMTrace const& getTrTrace(FH32 const& _hash) const
     {
-        static string empty;
-        static string emptyOrig = "Transaction trace not found!";
         if (m_transactionsTrace.count(_hash))
             return m_transactionsTrace.at(_hash);
-        empty = emptyOrig + "(" + _hash.asString() + ")";
+        else
+            ETH_ERROR_MESSAGE("Transaction trace not found! (" + _hash.asString() + ")");
+        static DebugVMTrace empty("", "", FH32::zero(), "");
         return empty;
     }
-    void setTrsTrace(std::map<FH32, string> const& _map) { m_transactionsTrace = _map; }
 
+    void setTrsTrace(std::map<FH32, DebugVMTrace> const& _map) { m_transactionsTrace = _map; }
 
 private:
     /// EthereumBlockState(){}
@@ -69,7 +71,7 @@ private:
     FH32 m_logHash;
     spVALUE m_totalDifficulty;
     std::map<FH32, spFH32> m_transactionsLog;
-    std::map<FH32, string> m_transactionsTrace;
+    std::map<FH32, DebugVMTrace> m_transactionsTrace;
 };
 
 typedef GCP_SPointer<EthereumBlock> spEthereumBlock;

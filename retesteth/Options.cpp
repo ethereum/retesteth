@@ -71,6 +71,7 @@ void printHelp()
     cout << setw(30) << "-g <index>" << setw(25) << "Set the transaction gas array index when running GeneralStateTests\n";
     cout << setw(30) << "-v <index>" << setw(25) << "Set the transaction value array index when running GeneralStateTests\n";
     cout << setw(30) << "--vmtrace" << setw(25) << "Trace transaction execution\n";
+    cout << setw(30) << "--vmtraceraw" << setw(25) << "Trace transaction execution raw format\n";
     cout << setw(30) << "--limitblocks" << setw(25) << "Limit the block exectuion in blockchain tests for debug\n";
     cout << setw(30) << "--limitrpc" << setw(25) << "Limit the rpc exectuion in tests for debug\n";
     cout << setw(30) << "--verbosity <level>" << setw(25) << "Set logs verbosity. 0 - silent, 1 - only errors, 2 - informative, >2 - detailed\n";
@@ -190,6 +191,11 @@ Options::Options(int argc, const char** argv)
         else if (arg == "--vmtrace")
         {
             vmtrace = true;
+        }
+        else if (arg == "--vmtraceraw")
+        {
+            vmtrace = true;
+            vmtraceraw = true;
         }
         else if (arg == "--jsontrace")
         {

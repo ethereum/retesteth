@@ -60,7 +60,7 @@ public:
         VALUE const& _blockNumber, VALUE const& _txIndex, FH20 const& _addrHash, FH32 const& _begin, int _maxResults) = 0;
     virtual DebugStorageRangeAt debug_storageRangeAt(
         FH32 const& _blockHash, VALUE const& _txIndex, FH20 const& _addrHash, FH32 const& _begin, int _maxResults) = 0;
-    virtual DebugTraceTransaction debug_traceTransaction(FH32 const& _trHash) = 0;
+    virtual DebugVMTrace debug_traceTransaction(FH32 const& _trHash) = 0;
 
     // Test
     virtual void test_setChainParams(SetChainParamsArgs const& _config) = 0;
