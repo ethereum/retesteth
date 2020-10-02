@@ -43,13 +43,16 @@ DebugVMTrace::DebugVMTrace(string const& _info, string const& _trNumber, FH32 co
         m_trHash = spFH32(new FH32(_trHash));
 
         auto logs = test::explode(_logs, '\n');
-        for (size_t i = 0; i < logs.size() - 1; i++)
-            m_log.push_back(VMLogRecord(ConvertJsoncppStringToData(logs.at(i))));
+        if (logs.size())
+        {
+            for (size_t i = 0; i < logs.size() - 1; i++)
+                m_log.push_back(VMLogRecord(ConvertJsoncppStringToData(logs.at(i))));
 
-        DataObject lastRecord(ConvertJsoncppStringToData(logs.at(logs.size() - 1)));
-        m_output = lastRecord.atKey("output").asString();
-        m_gasUsed = spVALUE(new VALUE(lastRecord.atKey("gasUsed")));
-        m_time = lastRecord.atKey("time").asInt();
+            DataObject lastRecord(ConvertJsoncppStringToData(logs.at(logs.size() - 1)));
+            m_output = lastRecord.atKey("output").asString();
+            m_gasUsed = spVALUE(new VALUE(lastRecord.atKey("gasUsed")));
+            m_time = lastRecord.atKey("time").asInt();
+        }
 
         m_rawUnparsedLogs = _logs;
     }
@@ -74,7 +77,7 @@ void DebugVMTrace::printNice()
     string s_comment = "";
     dev::u256 maxGas = m_log.at(0).gas.getCContent().asU256();
     size_t k = 0;
-    std::cout << test::cBYellowBlack << "N" << setw(10) << "OPNAME" << setw(10) << "GASCOST" << setw(10) << "TOTALGAS"
+    std::cout << test::cBYellowBlack << "N" << setw(15) << "OPNAME" << setw(10) << "GASCOST" << setw(10) << "TOTALGAS"
               << setw(10) << "REMAINGAS" << setw(20) << "ERROR" << test::cDefault << std::endl;
     for (VMLogRecord const& el : m_log)
     {
@@ -84,14 +87,21 @@ void DebugVMTrace::printNice()
             s_comment = string();
         }
         std::cout << setw(3 * (el.depth - 1));
-        std::cout << test::fto_string(k++) << setw(10) << el.opName << setw(10) << el.gasCost.getCContent().asDecString()
-                  << setw(10) << maxGas - el.gas.getCContent().asU256() << setw(10) << el.gas.getCContent().asDecString()
+        std::cout << test::fto_string(k++)
+                  << setw(15) << el.opName
+                  << setw(10) << el.gasCost.getCContent().asDecString()
+                  << setw(10) << maxGas - el.gas.getCContent().asU256()
+                  << setw(10) << el.gas.getCContent().asDecString()
                   << setw(20) << el.error << std::endl;
 
-        if (el.opName == "CALLCODE" && el.stack.size() > 1)
+        // Opcode highlight
+        static vector<string> callopcodes = { "CALLCODE", "CALL", "DELEGATECALL" };
+        if ( inArray(callopcodes, el.opName) && el.stack.size() > 1)
             s_comment = "SUBCALL: " + el.stack.at(el.stack.size() - 2);
         if (el.opName == "SSTORE" && el.stack.size() > 1)
             s_comment = "      SSTORE [" + el.stack.at(el.stack.size() - 1) + "] = " + el.stack.at(el.stack.size() - 2);
+        if (el.opName == "MSTORE" && el.stack.size() > 1)
+            s_comment = "      MSTORE [" + el.stack.at(el.stack.size() - 1) + "] = " + el.stack.at(el.stack.size() - 2);
     }
     std::cout << std::endl;
 }

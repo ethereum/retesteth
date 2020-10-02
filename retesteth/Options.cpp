@@ -88,6 +88,7 @@ void printHelp()
     cout << setw(30) << "--filltests" << setw(0) << "Run test fillers\n";
     cout << setw(30) << "--fillchain" << setw(25) << "When filling the state tests, fill tests as blockchain instead\n";
     cout << setw(30) << "--showhash" << setw(25) << "Show filler hash debug information\n";
+    cout << setw(30) << "--checkhash" << setw(25) << "Check that tests are updated from fillers\n";
     cout << setw(30) << "--poststate" << setw(25) << "Show post state hash or fullstate\n";
     cout << setw(30) << "--fullstate" << setw(25) << "Do not compress large states to hash\n";
 
@@ -225,6 +226,8 @@ Options::Options(int argc, const char** argv)
         }
         else if (arg == "--showhash")
             showhash = true;
+        else if (arg == "--checkhash")
+            checkhash = true;
         else if (arg == "--stats")
         {
             throwIfNoArgumentFollows();

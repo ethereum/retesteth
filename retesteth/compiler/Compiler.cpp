@@ -88,8 +88,10 @@ string replaceCode(string const& _code, solContracts const& _preSolidity)
         compiledCode = utiles::encodeAbi(abiCode);
         utiles::checkHexHasEvenLength(compiledCode);
     }
-    else
+    else if (_code.find('{') != string::npos)
         compiledCode = compileLLL(_code);
+    else
+        ETH_ERROR_MESSAGE("Trying to compile code of unknown type (missing 0x prefix?): `" + _code);
 
     if (_code.size() > 0)
         ETH_FAIL_REQUIRE_MESSAGE(

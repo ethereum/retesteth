@@ -39,6 +39,7 @@ public:
     bool vmtraceraw = false;           ///< Create EVM execution tracer. output raw info
     bool filltests = false;            ///< Create JSON test files from execution results
     bool showhash = false;  ///< Show filler hash for debug information
+    bool checkhash = false; ///< Check that tests are updated from fillers
     size_t blockLimit = 0;  ///< Perform blockchain blocks till this limit
     size_t rpcLimit = 0;    ///< Perform rpcRequests till this limit
     bool fillchain = false; ///< Fill tests as a blockchain tests if possible

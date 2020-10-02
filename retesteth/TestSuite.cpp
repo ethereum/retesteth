@@ -379,6 +379,10 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
         return;
     }
 
+    // Just check the filler existance if running with --checkhash
+    if (Options::get().checkhash)
+        return;
+
     // run all tests
     AbsoluteFillerPath fillerPath = getFullPathFiller(_testFolder);
     vector<fs::path> const files = test::getFiles(fillerPath.path(), {".json", ".yml"}, filter);
