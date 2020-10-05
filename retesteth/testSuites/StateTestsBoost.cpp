@@ -66,7 +66,6 @@ BOOST_AUTO_TEST_CASE(stHomesteadSpecific) {}
 BOOST_AUTO_TEST_CASE(stDelegatecallTestHomestead) {}
 
 // EIP150 Tests
-BOOST_AUTO_TEST_CASE(stChangedEIP150) {}
 BOOST_AUTO_TEST_CASE(stEIP150singleCodeGasPrices) {}
 BOOST_AUTO_TEST_CASE(stMemExpandingEIP150Calls) {}
 BOOST_AUTO_TEST_CASE(stEIP150Specific) {}
