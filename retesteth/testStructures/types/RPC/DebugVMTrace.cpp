@@ -77,17 +77,19 @@ void DebugVMTrace::printNice()
     string s_comment = "";
     dev::u256 maxGas = m_log.at(0).gas.getCContent().asU256();
     size_t k = 0;
+    size_t const step = 9;
+    string const stepw = "          ";
     std::cout << test::cBYellowBlack << "N" << setw(15) << "OPNAME" << setw(10) << "GASCOST" << setw(10) << "TOTALGAS"
               << setw(10) << "REMAINGAS" << setw(20) << "ERROR" << test::cDefault << std::endl;
     for (VMLogRecord const& el : m_log)
     {
         if (!s_comment.empty())
         {
-            std::cout << setw(3 * el.depth) << test::cYellow << s_comment << test::cDefault << std::endl;
+            std::cout << setw(step * el.depth) << test::cYellow << s_comment << test::cDefault << std::endl;
             s_comment = string();
         }
-        std::cout << setw(3 * (el.depth - 1));
-        std::cout << test::fto_string(k++)
+        std::cout << setw(step * (el.depth - 1));
+        std::cout << test::fto_string(k++) + "-" + test::fto_string(el.depth)
                   << setw(15) << el.opName
                   << setw(10) << el.gasCost.getCContent().asDecString()
                   << setw(10) << maxGas - el.gas.getCContent().asU256()
@@ -99,9 +101,11 @@ void DebugVMTrace::printNice()
         if ( inArray(callopcodes, el.opName) && el.stack.size() > 1)
             s_comment = "SUBCALL: " + el.stack.at(el.stack.size() - 2);
         if (el.opName == "SSTORE" && el.stack.size() > 1)
-            s_comment = "      SSTORE [" + el.stack.at(el.stack.size() - 1) + "] = " + el.stack.at(el.stack.size() - 2);
+            s_comment = stepw + "SSTORE [" + el.stack.at(el.stack.size() - 1) + "] = " + el.stack.at(el.stack.size() - 2);
         if (el.opName == "MSTORE" && el.stack.size() > 1)
-            s_comment = "      MSTORE [" + el.stack.at(el.stack.size() - 1) + "] = " + el.stack.at(el.stack.size() - 2);
+            s_comment = stepw + "MSTORE [" + el.stack.at(el.stack.size() - 1) + "] = " + el.stack.at(el.stack.size() - 2);
+        if (el.opName == "RETURN")
+            s_comment = stepw + "RETURN " + el.memory.getCContent().asString();
     }
     std::cout << std::endl;
 }
