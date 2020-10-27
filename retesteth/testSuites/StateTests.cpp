@@ -73,7 +73,7 @@ void checkUnexecutedTransactions(std::vector<TransactionInGeneralSection> const&
             atLeastOneExecuted = true;
         bool transactionExecutedOrSkipped = tr.getExecuted() || tr.getSkipped();
         atLeastOneWithoutExpectSection = !transactionExecutedOrSkipped || atLeastOneWithoutExpectSection;
-        if (!transactionExecutedOrSkipped || atLeastOneWithoutExpectSection)
+        if (!transactionExecutedOrSkipped)
         {
             TestInfo errorInfo("all", (int)tr.dataInd(), (int)tr.gasInd(), (int)tr.valueInd());
             TestOutputHelper::get().setCurrentTestInfo(errorInfo);
@@ -260,7 +260,7 @@ DataObject FillTest(StateTestInFiller const& _test)
 
                     if (Options::get().poststate)
                         ETH_STDOUT_MESSAGE("PostState " + TestOutputHelper::get().testInfo().errorDebug() + " : \n" +
-                                           "Hash: " + blockInfo.header().stateRoot().asString());
+                                           cDefault + "Hash: " + blockInfo.header().stateRoot().asString());
 
                     if (Options::get().vmtrace)
                         printVmTrace(session, trHash, blockInfo.header().stateRoot());
@@ -382,8 +382,7 @@ void RunTest(StateTestInFilled const& _test)
                                           ", expected: " + expectedPostHash.asString());
                     }
                     if (Options::get().poststate)
-                        ETH_LOG("\nState Dump: \n" + getRemoteState(session).asDataObject().asJson(), 1);
-
+                        ETH_LOG("\nState Dump:" + TestOutputHelper::get().testInfo().errorDebug() + cDefault + " \n" + getRemoteState(session).asDataObject().asJson(), 1);
 
                     // Validate log hash
                     FH32 const& expectedLogHash = result.logs();

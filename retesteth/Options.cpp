@@ -46,7 +46,7 @@ void printHelp()
     cout << "\nSetting test suite\n";
     cout << setw(30) << "-t <TestSuite>" << setw(0) << "Execute test operations\n";
     cout << setw(30) << "-t <TestSuite>/<TestCase>" << setw(0) << "\n";
-    cout << "\nAll options below must be followed by `--`\n";
+    cout << "\nAll options below must follow after `--`\n";
     cout << "\nRetesteth options\n";
     cout << setw(40) << "-j <ThreadNumber>" << setw(0) << "Run test execution using threads\n";
     cout << setw(40) << "--clients `client1, client2`" << setw(0)
@@ -61,6 +61,7 @@ void printHelp()
     cout << "\nSetting test suite and test\n";
     cout << setw(40) << "--testpath <PathToTheTestRepo>" << setw(25) << "Set path to the test repo\n";
     cout << setw(40) << "--testfile <TestFile>" << setw(0) << "Run tests from a file. Requires -t <TestSuite>\n";
+    cout << setw(40) << "--outfile <TestFile>" << setw(0) << "When using `--testfile` with `--filltests` output to this file\n";
     cout << setw(40) << "--singletest <TestName>" << setw(0)
          << "Run on a single test. `Testname` is filename without Filler.json\n";
     cout << setw(40) << "--singletest <TestName>/<Subtest>" << setw(0) << "`Subtest` is a test name inside the file\n";
@@ -70,6 +71,7 @@ void printHelp()
     cout << setw(30) << "-g <index>" << setw(25) << "Set the transaction gas array index when running GeneralStateTests\n";
     cout << setw(30) << "-v <index>" << setw(25) << "Set the transaction value array index when running GeneralStateTests\n";
     cout << setw(30) << "--vmtrace" << setw(25) << "Trace transaction execution\n";
+    cout << setw(30) << "--vmtraceraw" << setw(25) << "Trace transaction execution raw format\n";
     cout << setw(30) << "--limitblocks" << setw(25) << "Limit the block exectuion in blockchain tests for debug\n";
     cout << setw(30) << "--limitrpc" << setw(25) << "Limit the rpc exectuion in tests for debug\n";
     cout << setw(30) << "--verbosity <level>" << setw(25) << "Set logs verbosity. 0 - silent, 1 - only errors, 2 - informative, >2 - detailed\n";
@@ -86,6 +88,7 @@ void printHelp()
     cout << setw(30) << "--filltests" << setw(0) << "Run test fillers\n";
     cout << setw(30) << "--fillchain" << setw(25) << "When filling the state tests, fill tests as blockchain instead\n";
     cout << setw(30) << "--showhash" << setw(25) << "Show filler hash debug information\n";
+    cout << setw(30) << "--checkhash" << setw(25) << "Check that tests are updated from fillers\n";
     cout << setw(30) << "--poststate" << setw(25) << "Show post state hash or fullstate\n";
     cout << setw(30) << "--fullstate" << setw(25) << "Do not compress large states to hash\n";
 
@@ -149,7 +152,7 @@ Options::Options(int argc, const char** argv)
             printHelp();
             exit(0);
         }
-        else if (arg == "--version" || arg == "-v")
+        else if (arg == "--version" || (arg == "-v" && !seenSeparator))
         {
             printVersion();
             exit(0);
@@ -190,6 +193,11 @@ Options::Options(int argc, const char** argv)
         {
             vmtrace = true;
         }
+        else if (arg == "--vmtraceraw")
+        {
+            vmtrace = true;
+            vmtraceraw = true;
+        }
         else if (arg == "--jsontrace")
         {
             throwIfNoArgumentFollows();
@@ -218,6 +226,8 @@ Options::Options(int argc, const char** argv)
         }
         else if (arg == "--showhash")
             showhash = true;
+        else if (arg == "--checkhash")
+            checkhash = true;
         else if (arg == "--stats")
         {
             throwIfNoArgumentFollows();
@@ -260,6 +270,11 @@ Options::Options(int argc, const char** argv)
                     "Could not locate custom test file: '" + singleTestFile.get() + "'");
                 exit(1);
             }
+        }
+        else if (arg == "--outfile")
+        {
+            throwIfNoArgumentFollows();
+            singleTestOutFile = std::string{argv[++i]};
         }
         else if (arg == "--singlenet")
         {
@@ -454,7 +469,8 @@ void displayTestSuites()
     cout << "\nRetesteth unit tests:\n";
     cout << setw(30) << "-t DataObjectTestSuite" << setw(0) << "Unit tests for json parsing\n";
     cout << setw(30) << "-t EthObjectsSuite" << setw(0) << "Unit tests for test data objects\n";
-    cout << setw(30) << "-t LLLCSuite" << setw(0) << "Unit tests for external solidity compiler\n";
+    cout << setw(30) << "-t LLLCSuite" << setw(0) << "Unit tests for external lllc compiler\n";
+    cout << setw(30) << "-t SOLCSuite" << setw(0) << "Unit tests for solidity support\n";
     cout << setw(30) << "-t OptionsSuite" << setw(0) << "Unit tests for this cmd menu\n";
     cout << setw(30) << "-t TestHelperSuite" << setw(0) << "Unit tests for retesteth logic\n";
     cout << "\n";

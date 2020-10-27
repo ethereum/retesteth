@@ -1,11 +1,13 @@
 #include "ToolChainHelper.h"
 #include "ToolChainManager.h"
+#include <Options.h>
+#include <dataObject/ConvertFile.h>
 #include <libdevcore/CommonIO.h>
-#include <retesteth/Options.h>
-#include <retesteth/dataObject/ConvertFile.h>
-#include <retesteth/testStructures/Common.h>
-#include <retesteth/testStructures/types/BlockchainTests/Filler/BlockchainTestFillerEnv.h>
-#include <retesteth/testStructures/types/RPC/ToolResponse.h>
+#include <testStructures/Common.h>
+#include <testStructures/types/BlockchainTests/Filler/BlockchainTestFillerEnv.h>
+#include <testStructures/types/RPC/DebugVMTrace.h>
+#include <testStructures/types/RPC/ToolResponse.h>
+
 using namespace dev;
 using namespace test;
 using namespace teststruct;
@@ -236,8 +238,9 @@ ToolResponse ToolChain::mineBlockOnTool(EthereumBlockState const& _block, SealEn
             {
                 string const preinfo = "\nTransaction number: " + trNumber + ", hash: " + tr.hash().asString() + "\n";
                 string const info = TestOutputHelper::get().testInfo().errorDebug();
+                string const traceinfo = "\nVMTrace:" + info + cDefault + preinfo;
                 toolResponse.attachDebugTrace(
-                    tr.hash(), "\nVMTrace:" + info + cDefault + preinfo + contentsString(txTraceFile));
+                    tr.hash(), DebugVMTrace(traceinfo, trNumber, tr.hash(), contentsString(txTraceFile)));
             }
             else
                 ETH_LOG("Trace file `" + txTraceFile.string() + "` not found!", 1);

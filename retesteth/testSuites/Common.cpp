@@ -59,13 +59,18 @@ void checkTestNameIsEqualToFileName(DataObject const& _input)
 
 void printVmTrace(SessionInterface& _session, FH32 const& _trHash, FH32 const& _stateRoot)
 {
-    DebugTraceTransaction ret(_session.debug_traceTransaction(_trHash));
-    for (auto const& entry : ret.getEntries())
-        ETH_LOG(entry.getData().asJson(0, false), 0);
-    ETH_LOG(ret.getFinal(), 0);
+    DebugVMTrace ret(_session.debug_traceTransaction(_trHash));
+
+    ETH_STDOUT_MESSAGE("------------------------");
+    if (Options::get().vmtraceraw)
+        ret.print();
+    else
+        ret.printNice();
+
     DataObject state;
     state["stateRoot"] = _stateRoot.asString();
     ETH_LOG(state.asJson(0, false), 0);
+    ETH_STDOUT_MESSAGE("\n------------------------");
 }
 
 }  // namespace
