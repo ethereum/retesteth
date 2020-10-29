@@ -28,8 +28,9 @@ const string t8ntool_correctMiningReward_config = R"({
     "Istanbul":          "2000000000000000000",
     "Berlin" :           "2000000000000000000",
 
-    "//comment" : "Retesteth calculate rewards on behalf ot the tool when filling state tests",
-    "YOLOv1" :           "2000000000000000000"
+    "//comment" : "Retesteth calculate rewards on behalf of the tool when filling state tests",
+    "YOLOv1" :           "2000000000000000000",
+    "YOLOv2" :           "2000000000000000000"
 })";
 
 genRewardsCfg::genRewardsCfg()
