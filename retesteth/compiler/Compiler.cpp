@@ -54,7 +54,8 @@ string replaceCode(string const& _code, solContracts const& _preSolidity)
     {
         utiles::checkHexHasEvenLength(_code);
         if (Options::get().filltests && _code.size() > 2)
-            ETH_WARNING("Filling raw bytecode, please provide the source!" + TestOutputHelper::get().testInfo().errorDebug());
+            ETH_WARNING("Filling raw bytecode ('" + _code.substr(0, 10) + "..'), please provide the source!" +
+                        TestOutputHelper::get().testInfo().errorDebug());
         return _code;
     }
 

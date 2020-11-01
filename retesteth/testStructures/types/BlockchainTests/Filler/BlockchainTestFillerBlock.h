@@ -3,6 +3,7 @@
 #include "../../../configs/FORK.h"
 #include "../../Ethereum/BlockHeaderIncomplete.h"
 #include "../../Ethereum/Transaction.h"
+#include "BlockchainTestFillerBlockHeaderOverwrite.h"
 #include "BlockchainTestFillerTransaction.h"
 #include "BlockchainTestFillerUncle.h"
 #include <retesteth/dataObject/DataObject.h>
@@ -35,13 +36,11 @@ struct BlockchainTestFillerBlock : GCP_SPointerBase
     VALUE const& number() const { return m_blockNumber.getCContent(); }
 
     // BlockHeader overwrite section to replace some fields in the header for testing purposes
-    // Also BlockHeader contain expected exceptions for this block
-    bool hasBlockHeader() const { return !m_blockHeaderIncomplete.isEmpty(); }
-    BlockHeaderIncomplete const& blockHeader() const { return m_blockHeaderIncomplete.getCContent(); }
-
-    // Blockheader oerwrite can define timestamp shift from previous block
-    bool hasRelTimeStamp() const { return m_hasRelTimeStamp; }
-    long long int relTimeStamp() const { return m_relTimeStamp; }
+    bool hasBlockHeaderOverwrite(FORK const& _fork) const { return m_overwriteHeaderByForkMap.count(_fork); }
+    BlockHeaderOverwrite const& getHeaderOverwrite(FORK const& _fork) const
+    {
+        return m_overwriteHeaderByForkMap.at(_fork).getCContent();
+    }
 
     // Transaction in block filler. Can be marked invalid (expected to fail)
     std::vector<BlockchainTestFillerTransaction> const& transactions() const { return m_transactions; }
@@ -82,13 +81,12 @@ private:
     spVALUE m_blockNumber;
     spFORK m_network;
     bool m_doNotImportOnClient = false;
-    bool m_hasRelTimeStamp = false;
-    long long int m_relTimeStamp;
 
     std::vector<BlockchainTestFillerUncle> m_uncles;
     std::vector<BlockchainTestFillerTransaction> m_transactions;
     std::map<FORK, string> m_expectExceptions;
-    spBlockHeaderIncomplete m_blockHeaderIncomplete;
+
+    std::map<FORK, spBlockHeaderOverwrite> m_overwriteHeaderByForkMap;
 };
 
 }  // namespace teststruct

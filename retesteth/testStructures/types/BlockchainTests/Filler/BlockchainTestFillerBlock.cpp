@@ -45,31 +45,45 @@ BlockchainTestFillerBlock::BlockchainTestFillerBlock(DataObject const& _data)
             for (auto const& un : _data.atKey("uncleHeaders").getSubObjects())
                 m_uncles.push_back(BlockchainTestFillerUncle(un));
 
-        if (_data.count("blockHeader"))
+        if (_data.count("expectException"))
         {
-            DataObject tmpD = convertDecBlockheaderIncompleteToHex(_data.atKey("blockHeader"));
-            if (tmpD.getSubObjects().size() > 0)
-                m_blockHeaderIncomplete = spBlockHeaderIncomplete(new BlockHeaderIncomplete(tmpD));
-
-            if (_data.atKey("blockHeader").count("expectException"))
+            for (auto const& rec : _data.atKey("expectException").getSubObjects())
             {
-                for (auto const& rec : _data.atKey("blockHeader").atKey("expectException").getSubObjects())
-                {
-                    // Parse ">=Frontier" : "EXCEPTION"
-                    ClientConfig const& cfg = Options::get().getDynamicOptions().getCurrentConfig();
-                    std::set<string> forksString = { rec.getKey() };
-                    std::vector<FORK> parsedForks = cfg.translateNetworks(forksString);
-                    for (auto const& el : parsedForks)
-                        m_expectExceptions.emplace(el, rec.asString());
-                }
-            }
-            m_relTimeStamp = 0;
-            if (_data.atKey("blockHeader").count("RelTimestamp"))
-            {
-                m_hasRelTimeStamp = true;
-                m_relTimeStamp = hexOrDecStringToInt(_data.atKey("blockHeader").atKey("RelTimestamp").asString());
+                // Parse ">=Frontier" : "EXCEPTION"
+                ClientConfig const& cfg = Options::get().getDynamicOptions().getCurrentConfig();
+                std::set<string> forksString = {rec.getKey()};
+                std::vector<FORK> parsedForks = cfg.translateNetworks(forksString);
+                for (auto const& el : parsedForks)
+                    m_expectExceptions.emplace(el, rec.asString());
             }
         }
+
+        if (_data.count("blockHeader"))
+        {
+            if (_data.atKey("blockHeader").getSubObjects().size() &&
+                _data.atKey("blockHeader").getSubObjects().at(0).type() == DataType::Object)
+            {
+                // Read overwrite rules specific to fork
+                for (auto const& rec : _data.atKey("blockHeader").getSubObjects())
+                {
+                    // Parse ">=Frontier" : "BlockHeaderOverwrite"
+                    ClientConfig const& cfg = Options::get().getDynamicOptions().getCurrentConfig();
+                    std::set<string> forksString = {rec.getKey()};
+                    std::vector<FORK> parsedForks = cfg.translateNetworks(forksString);
+                    for (auto const& el : parsedForks)
+                        m_overwriteHeaderByForkMap.emplace(el, spBlockHeaderOverwrite(new BlockHeaderOverwrite(rec)));
+                }
+            }
+            else
+            {
+                // Treat the whole blockHeader section as the overwrite rule for all forks
+                ClientConfig const& cfg = Options::get().getDynamicOptions().getCurrentConfig();
+                spBlockHeaderOverwrite overwrite(new BlockHeaderOverwrite(_data.atKey("blockHeader")));
+                for (auto const& el : cfg.cfgFile().allowedForks())
+                    m_overwriteHeaderByForkMap.emplace(el, overwrite);
+            }
+        }
+
         requireJsonFields(_data, "BlockchainTestFillerBlock " + _data.getKey(),
             {{"rlp", {{DataType::String}, jsonField::Optional}},
                 {"chainname", {{DataType::String}, jsonField::Optional}},
@@ -78,6 +92,7 @@ BlockchainTestFillerBlock::BlockchainTestFillerBlock(DataObject const& _data)
                 {"chainnetwork", {{DataType::String}, jsonField::Optional}},
                 {"transactions", {{DataType::Array}, jsonField::Optional}},
                 {"uncleHeaders", {{DataType::Array}, jsonField::Optional}},
+                {"expectException", {{DataType::Object}, jsonField::Optional}},
                 {"blockHeader", {{DataType::Object}, jsonField::Optional}}});
     }
     catch (std::exception const& _ex)

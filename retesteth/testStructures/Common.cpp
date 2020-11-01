@@ -267,9 +267,7 @@ DataObject convertDecBlockheaderIncompleteToHex(DataObject const& _data)
 {
     // Convert to HEX
     DataObject tmpD = _data;
-    tmpD.removeKey("updatePoW");        // BlockchainTestFiller fields
     tmpD.removeKey("RelTimestamp");     // BlockchainTestFiller fields
-    tmpD.removeKey("expectException");  // BlockchainTestFiller fields
     tmpD.removeKey("chainname");        // BlockchainTestFiller fields
 
     std::vector<string> hashKeys = {"parentHash", "coinbase", "bloom"};

@@ -138,7 +138,7 @@ GCP_SPointer<EthGetBlockBy> TestBlockchain::mineBlock(
     };
 
     spFH32 minedBlockHash;
-    if (_blockInTest.hasBlockHeader() || _blockInTest.hasRelTimeStamp() || _blockInTest.uncles().size() > 0)
+    if (_blockInTest.hasBlockHeaderOverwrite(m_network) || _blockInTest.uncles().size() > 0)
     {
         // Need to overwrite the blockheader of a mined block with either blockHeader or uncles
         // Then import it again and see what client says, because mining with uncles not supported
@@ -289,22 +289,27 @@ FH32 TestBlockchain::postmineBlockHeader(BlockchainTestFillerBlock const& _block
     for (auto const& un : _uncles)
         managedBlock.addUncle(un);
 
-    if (_blockInTest.hasBlockHeader())
-        managedBlock.replaceHeader(_blockInTest.blockHeader().overwriteBlockHeader(managedBlock.header()));
-
-    // Overwrite blockheader if defined in the test filler
-    if (_blockInTest.hasRelTimeStamp())
-    {
-        EthGetBlockBy previousBlock(m_session.eth_getBlockByNumber(_latestBlockNumber - 1, Request::LESSOBJECTS));
-        managedBlock.headerUnsafe().setTimestamp(previousBlock.header().timestamp().asU256() + _blockInTest.relTimeStamp());
-    }
-
-    // replace block with overwritten header
     bool weOverwriteHashFields = false;
-    if (_blockInTest.hasBlockHeader())
+    if (_blockInTest.hasBlockHeaderOverwrite(m_network))
     {
-        if (_blockInTest.blockHeader().hasUncleHash() || _blockInTest.blockHeader().hasTransactionHash())
-            weOverwriteHashFields = true;
+        BlockHeaderOverwrite const& headerOverwrite = _blockInTest.getHeaderOverwrite(m_network);
+        if (headerOverwrite.hasBlockHeader())
+            managedBlock.replaceHeader(headerOverwrite.header().overwriteBlockHeader(managedBlock.header()));
+
+        // Overwrite blockheader if defined in the test filler
+        if (headerOverwrite.hasRelTimeStamp())
+        {
+            EthGetBlockBy previousBlock(m_session.eth_getBlockByNumber(_latestBlockNumber - 1, Request::LESSOBJECTS));
+            managedBlock.headerUnsafe().setTimestamp(
+                previousBlock.header().timestamp().asU256() + headerOverwrite.relTimeStamp());
+        }
+
+        // replace block with overwritten header
+        if (headerOverwrite.hasBlockHeader())
+        {
+            if (headerOverwrite.header().hasUncleHash() || headerOverwrite.header().hasTransactionHash())
+                weOverwriteHashFields = true;
+        }
     }
 
     if (!weOverwriteHashFields)
