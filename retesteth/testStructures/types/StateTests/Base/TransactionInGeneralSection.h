@@ -14,7 +14,7 @@ namespace teststruct
 // This is a single transaction representation
 struct TransactionInGeneralSection
 {
-    TransactionInGeneralSection(DataObject const&, size_t _dInd, size_t _gInd, size_t _vInd);
+    TransactionInGeneralSection(DataObject const&, size_t _dInd, size_t _gInd, size_t _vInd, string const& _dataRaw);
     size_t dataInd() const { return m_dInd; }
     size_t gasInd() const { return m_gInd; }
     size_t valueInd() const { return m_vInd; }

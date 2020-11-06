@@ -58,14 +58,15 @@ struct TestInfo
 
     TestInfo(): m_isStateTransactionInfo(false), m_isBlockchainTestInfo(false) {}
     std::string errorDebug() const;
-    static std::string caseName()
-    {
-        return boost::unit_test::framework::current_test_case().p_name;
-    }
+    static std::string caseName() { return boost::unit_test::framework::current_test_case().p_name; }
+
+    void setTrDataDebug(std::string const& _data) { m_sTransactionData = _data; }
 
 private:
     std::string m_sFork, m_sChainName;
     std::string m_currentTestCaseName;
+    std::string m_sTransactionData;
+
     int m_trD, m_trG, m_trV;
     size_t m_blockNumber;
     bool m_isStateTransactionInfo = false;

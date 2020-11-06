@@ -18,6 +18,7 @@ struct StateTestTransactionBase : GCP_SPointerBase
 
 protected:
     StateTestTransactionBase(){};
+    std::vector<string> m_dataRaw;
     std::vector<BYTES> m_data;
     std::vector<VALUE> m_gasLimit;
     std::vector<VALUE> m_value;

@@ -11,9 +11,10 @@ namespace teststruct
 {
 struct Transaction : GCP_SPointerBase
 {
-    Transaction(DataObject const&);
+    Transaction(DataObject const&, string const& _dataRaw = string());
     Transaction(BYTES const&);
     Transaction(dev::RLP const&);
+    string const& dataRaw() const { return m_dataRaw; }
     BYTES const& data() const { return m_data.getCContent(); }
     VALUE const& gasLimit() const { return m_gasLimit.getCContent(); }
     VALUE const& gasPrice() const { return m_gasPrice.getCContent(); }
@@ -41,6 +42,7 @@ private:
     Transaction() {}
     void fromDataObject(DataObject const&);
     void fromRLP(dev::RLP const&);
+    string m_dataRaw;
     spBYTES m_data;
     spVALUE m_gasLimit;
     spVALUE m_gasPrice;

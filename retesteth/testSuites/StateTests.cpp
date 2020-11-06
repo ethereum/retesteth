@@ -236,6 +236,9 @@ DataObject FillTest(StateTestInFiller const& _test)
                 for (auto& tr : txs)
                 {
                     TestInfo errorInfo(fork.asString(), tr.dataInd(), tr.gasInd(), tr.valueInd());
+                    if (!tr.transaction().dataRaw().empty())
+                        errorInfo.setTrDataDebug(tr.transaction().dataRaw().substr(0, 30));
+
                     TestOutputHelper::get().setCurrentTestInfo(errorInfo);
 
                     if (!OptionsAllowTransaction(tr) || networkSkip)

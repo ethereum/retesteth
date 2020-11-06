@@ -38,6 +38,7 @@ StateTestFillerTransaction::StateTestFillerTransaction(DataObject const& _data)
             // -- Compile LLL in transaction data into byte code if not already
             DataObject dataInKey = el;
             dataInKey.setKey("`data` array element in General Transaction Section");  // Hint
+            m_dataRaw.push_back(dataInKey.asString());
             dataInKey.setString(test::compiler::replaceCode(dataInKey.asString()));
             // ---
             m_data.push_back(dataInKey);

@@ -50,7 +50,9 @@ std::vector<TransactionInGeneralSection> StateTestTransactionBase::buildTransact
                 else
                     trData["to"] = m_to.getCContent().asString();
                 trData["secretKey"] = m_secretKey.getCContent().asString();
-                out.push_back(TransactionInGeneralSection(trData, dIND, gIND, vIND));
+
+                string const dataRaw = m_dataRaw.size() > dIND ? m_dataRaw.at(dIND) : string();
+                out.push_back(TransactionInGeneralSection(trData, dIND, gIND, vIND, dataRaw));
             }
         }
     }
