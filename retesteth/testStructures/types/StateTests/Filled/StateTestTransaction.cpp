@@ -22,7 +22,10 @@ StateTestTransaction::StateTestTransaction(DataObject const& _data)
         m_nonce = spVALUE(new VALUE(_data.atKey("nonce")));
 
         for (auto const& el : _data.atKey("data").getSubObjects())
+        {
             m_data.push_back(el);
+            m_dataRaw.push_back(el.asString());
+        }
         for (auto const& el : _data.atKey("gasLimit").getSubObjects())
             m_gasLimit.push_back(el);
         for (auto const& el : _data.atKey("value").getSubObjects())

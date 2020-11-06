@@ -24,6 +24,7 @@
 #include <dataObject/ConvertFile.h>
 #include <retesteth/Options.h>
 #include <retesteth/TestHelper.h>
+#include <testStructures/Common.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 
@@ -331,7 +332,22 @@ Options::Options(int argc, const char** argv)
         else if (arg == "-d")
         {
             throwIfNoArgumentFollows();
-            trDataIndex = atoi(argv[++i]);
+            string const& argValue = argv[++i];
+            DigitsType type = stringIntegerType(argValue);
+            switch (type)
+            {
+            case DigitsType::Decimal:
+                trDataIndex = atoi(argValue.c_str());
+                break;
+            case DigitsType::String:
+                trDataValue = argValue;
+                break;
+            default:
+            {
+                ETH_STDERROR_MESSAGE("Wrong argument format: " + argValue);
+                exit(0);
+            }
+            }
         }
         else if (arg == "-g")
         {

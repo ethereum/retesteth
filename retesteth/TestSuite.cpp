@@ -262,6 +262,7 @@ string TestSuite::checkFillerExistance(string const& _testFolder) const
     string filter = testNameFilter;
     filter += opt.singleTestNet.empty() ? string() : " " + opt.singleTestNet;
     filter += opt.trDataIndex == -1 ? string() : " dInd: " + to_string(opt.trDataIndex);
+    filter += opt.trDataValue.empty() ? string() : " dVal: " + opt.trDataValue;
     filter += opt.trGasIndex == -1 ? string() : " gInd: " + to_string(opt.trGasIndex);
     filter += opt.trValueIndex == -1 ? string() : " vInd: " + to_string(opt.trValueIndex);
     ETH_LOG("Checking test filler hashes for " + boost::unit_test::framework::current_test_case().full_name(), 4);

@@ -70,6 +70,7 @@ public:
     std::string singleTestName;     // A test name (usually a file.json test)
     std::string singleSubTestName;  // A test name inside a file.json (for blockchain tests)
     std::string singleTestNet;
+    std::string trDataValue;  ///< GeneralState data
     int trDataIndex;    ///< GeneralState data
     int trGasIndex;     ///< GeneralState gas
     int trValueIndex;   ///< GeneralState value

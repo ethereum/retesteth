@@ -160,7 +160,16 @@ CompareResult compareStorage(Storage const& _expectStorage, Storage const& _remo
 
     if (_expectStorage.getKeys().size() < _remoteStorage.getKeys().size())
     {
-        ETH_MARK_ERROR(message + " has more storage records than expected!");
+        string storage = message + " has more storage records than expected!";
+        std::vector<string> keys;
+        for (auto const& el : _remoteStorage.getKeys())
+        {
+            if (!_expectStorage.hasKey(VALUE(el.first)))
+                keys.push_back(el.first);
+        }
+        storage += "\n [" + keys.at(0) + "] = " + _remoteStorage.atKey(VALUE(keys.at(0))).asString();
+
+        ETH_MARK_ERROR(storage);
         result = CompareResult::IncorrectStorage;
     }
 
