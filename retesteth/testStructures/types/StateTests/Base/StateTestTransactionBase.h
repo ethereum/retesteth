@@ -15,6 +15,7 @@ struct StateTestTransactionBase : GCP_SPointerBase
 {
     DataObject const asDataObject() const;
     std::vector<TransactionInGeneralSection> buildTransactions() const;
+    std::vector<string> const& dataRawVector() const { return m_dataRaw; };
 
 protected:
     StateTestTransactionBase(){};

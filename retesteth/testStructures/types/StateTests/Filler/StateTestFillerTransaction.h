@@ -19,5 +19,7 @@ struct StateTestFillerTransaction : StateTestTransactionBase
     StateTestFillerTransaction(DataObject const&);
 };
 
+typedef GCP_SPointer<StateTestFillerTransaction> spStateTestFillerTransaction;
+
 }  // namespace teststruct
 }  // namespace test

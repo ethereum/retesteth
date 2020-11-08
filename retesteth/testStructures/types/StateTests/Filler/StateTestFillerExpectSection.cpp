@@ -7,11 +7,67 @@ namespace test
 {
 namespace teststruct
 {
-StateTestFillerExpectSection::StateTestFillerExpectSection(DataObject const& _data)
+DataObject ReplaceValueToIndexesInDataList(spStateTestFillerTransaction const& _gtr, DataObject const& _dataList)
+{
+    auto findIndexOfValueAndReplace = [&_gtr](DataObject& _data) {
+        if (_data.type() == DataType::String)
+        {
+            size_t i = 0;
+            std::vector<int> indexes;
+            const vector<string>& dVector = _gtr.getCContent().dataRawVector();
+            for (auto const& el : dVector)
+            {
+                if (el == _data.asString())
+                    indexes.push_back(i++);
+            }
+
+            if (indexes.size() == 1)
+            {
+                _data.clear();
+                _data.setInt(indexes.at(0));
+            }
+            if (indexes.size() > 1)
+            {
+                _data.clear();
+                for (auto const& el : indexes)
+                    _data.addArrayObject(el);
+            }
+        }
+    };
+    // Check if dataIndexes contain values of transaction data vector
+    // Find those values and vector and replace by indexes
+    DataObject dataIndexes = _dataList;
+    if (dataIndexes.type() == DataType::Array)
+    {
+        DataObject updatedDataIndexes;
+        for (auto& el : dataIndexes.getSubObjectsUnsafe())
+        {
+            DataObject elCopy = el;
+            findIndexOfValueAndReplace(elCopy);
+            if (elCopy.type() == DataType::Integer)
+            {
+                el = elCopy;
+                updatedDataIndexes.addArrayObject(el);
+            }
+            else if (elCopy.type() == DataType::Array)
+            {
+                for (auto const& el2 : elCopy.getSubObjects())
+                    updatedDataIndexes.addArrayObject(el2);
+            }
+        }
+        dataIndexes = updatedDataIndexes;
+    }
+    else if (dataIndexes.type() == DataType::String)
+        findIndexOfValueAndReplace(dataIndexes);
+    return dataIndexes;
+}
+
+StateTestFillerExpectSection::StateTestFillerExpectSection(DataObject const& _data, spStateTestFillerTransaction const& _gtr)
 {
     try
     {
-        parseJsonIntValueIntoSet(_data.atKey("indexes").atKey("data"), m_dataInd);
+        DataObject dataIndexes = ReplaceValueToIndexesInDataList(_gtr, _data.atKey("indexes").atKey("data"));
+        parseJsonIntValueIntoSet(dataIndexes, m_dataInd);
         parseJsonIntValueIntoSet(_data.atKey("indexes").atKey("gas"), m_gasInd);
         parseJsonIntValueIntoSet(_data.atKey("indexes").atKey("value"), m_valInd);
 
