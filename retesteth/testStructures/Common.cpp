@@ -285,47 +285,6 @@ DataObject convertDecBlockheaderIncompleteToHex(DataObject const& _data)
     return tmpD;
 }
 
-std::mutex g_strFindMutex;
-DigitsType stringIntegerType(std::string const& _string, bool _wasPrefix)
-{
-    if (_string[0] == '0' && _string[1] == 'x' && !_wasPrefix)
-    {
-        DigitsType substringType = stringIntegerType(_string, true);
-        if (substringType == DigitsType::Hex)
-            return DigitsType::HexPrefixed;
-
-        if (substringType == DigitsType::Decimal)
-        {
-            if (_string.size() % 2 == 0)
-                return DigitsType::HexPrefixed;
-            else
-                return DigitsType::UnEvenHexPrefixed;
-        }
-
-        if (substringType == DigitsType::UnEvenHex)
-            return DigitsType::UnEvenHexPrefixed;
-    }
-
-    bool isDecimalOnly = true;
-    std::lock_guard<std::mutex> lock(g_strFindMutex);  // string.find is not thread safe + static
-    for (size_t i = _wasPrefix ? 2 : 0; i < _string.length(); i++)
-    {
-        if (!isxdigit(_string[i]))
-            return DigitsType::String;
-
-        if (isDecimalOnly && !isdigit(_string[i]))
-            isDecimalOnly = false;
-    }
-
-    if (isDecimalOnly)
-        return DigitsType::Decimal;
-
-    if (_string.size() % 2 == 0)
-        return DigitsType::Hex;
-
-    return DigitsType::UnEvenHex;
-}
-
 // Construct comapasion string
 string compareBlockHeaders(DataObject const& _blockA, DataObject const& _blockB, string& _whatField)
 {

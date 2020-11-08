@@ -94,6 +94,18 @@ bool inArray(std::list<T> const& _array, const T& _val)
 /// Explode string into array of strings by `delim`
 std::vector<std::string> explode(std::string const& s, char delim);
 
+/// See what kind of a string is str
+enum class DigitsType
+{
+    Decimal,
+    Hex,
+    UnEvenHex,
+    HexPrefixed,
+    UnEvenHexPrefixed,
+    String
+};
+DigitsType stringIntegerType(std::string const& _string, bool _wasPrefix = false);
+
 /// popen with pid at return
 enum popenOutput
 {

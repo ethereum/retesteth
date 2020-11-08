@@ -19,18 +19,6 @@ void mod_valueToCompactEvenHexPrefixed(DataObject&);
 void mod_keyToCompactEvenHexPrefixed(DataObject&);
 long long int hexOrDecStringToInt(string const& _str);
 
-// See what kind of a string is str
-enum class DigitsType
-{
-    Decimal,
-    Hex,
-    UnEvenHex,
-    HexPrefixed,
-    UnEvenHexPrefixed,
-    String
-};
-DigitsType stringIntegerType(std::string const& _string, bool _wasPrefix = false);
-
 // Check the presents of fields in a DataObject with a validation map
 typedef std::set<DataType> possibleType;
 void requireJsonFields(DataObject const& _o, std::string const& _section,
