@@ -7,6 +7,8 @@ namespace test
 {
 namespace teststruct
 {
+// Look at expect section data indexes filter and try to replace string values
+// into indexes of transaction data array (searching by value assumig this string values are value in that array)
 DataObject ReplaceValueToIndexesInDataList(spStateTestFillerTransaction const& _gtr, DataObject const& _dataList)
 {
     auto findIndexOfValueAndReplace = [&_gtr](DataObject& _data) {
@@ -18,7 +20,8 @@ DataObject ReplaceValueToIndexesInDataList(spStateTestFillerTransaction const& _
             for (auto const& el : dVector)
             {
                 if (el == _data.asString())
-                    indexes.push_back(i++);
+                    indexes.push_back(i);
+                i++;
             }
 
             if (indexes.size() == 1)
@@ -42,23 +45,33 @@ DataObject ReplaceValueToIndexesInDataList(spStateTestFillerTransaction const& _
         DataObject updatedDataIndexes;
         for (auto& el : dataIndexes.getSubObjectsUnsafe())
         {
-            DataObject elCopy = el;
-            findIndexOfValueAndReplace(elCopy);
-            if (elCopy.type() == DataType::Integer)
+            // try to replace `el` with data indexes from transaction
+            // in case `el` provided is a transaction value in dataInd array
+            if (el.type() == DataType::String)
             {
-                el = elCopy;
+                DataObject elCopy = el;
+                findIndexOfValueAndReplace(elCopy);
+                if (elCopy.type() == DataType::Integer)
+                {
+                    el = elCopy;
+                    updatedDataIndexes.addArrayObject(el);
+                }
+                else if (elCopy.type() == DataType::Array)
+                {
+                    for (auto const& el2 : elCopy.getSubObjects())
+                        updatedDataIndexes.addArrayObject(el2);
+                }
+                else
+                    updatedDataIndexes.addArrayObject(el);
+            }
+            else
                 updatedDataIndexes.addArrayObject(el);
-            }
-            else if (elCopy.type() == DataType::Array)
-            {
-                for (auto const& el2 : elCopy.getSubObjects())
-                    updatedDataIndexes.addArrayObject(el2);
-            }
         }
         dataIndexes = updatedDataIndexes;
     }
     else if (dataIndexes.type() == DataType::String)
         findIndexOfValueAndReplace(dataIndexes);
+    dataIndexes.setKey(_dataList.getKey());
     return dataIndexes;
 }
 

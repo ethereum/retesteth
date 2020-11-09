@@ -127,7 +127,8 @@ int main(int argc, const char* argv[])
         std::string arg = std::string{argv[i]};
         if (arg == "-t" && i + 1 < argc && string(argv[i + 1]) == "UnitTests")
         {
-            argv[i + 1] = "LLLCSuite,SOLCSuite,DataObjectTestSuite,EthObjectsSuite,OptionsSuite,TestHelperSuite";
+            argv[i + 1] =
+                "LLLCSuite,SOLCSuite,DataObjectTestSuite,EthObjectsSuite,OptionsSuite,TestHelperSuite,ExpectSectionSuite";
             break;
         }
     }
