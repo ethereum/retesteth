@@ -51,8 +51,8 @@ BOOST_AUTO_TEST_CASE(expectIndexesM1)
     const string sTr = R"(
             {
                 "data" : [
-                    ":raw 0x11223344",
-                    ":raw 0x11223341"
+                    ":label firstData :raw 0x11223344",
+                    ":label secondData :raw 0x11223341"
                 ],
             )" + transactionCommon + " }";
 
@@ -121,14 +121,14 @@ BOOST_AUTO_TEST_CASE(expectIndexesSingleValue)
             {
                 "data" : [
                     ":raw 0x11223344",
-                    ":raw 0x11223341"
+                    ":label secondData :raw 0x11223341"
                 ],
             )" + transactionCommon + " }";
 
     const string sExp = R"(
         {
             "indexes" : {
-                "data" : ":raw 0x11223341",
+                "data" : ":label secondData",
                 "gas" : 0,
                 "value" : -1
             }, )" + expectSectionCommon + " }";
@@ -144,14 +144,14 @@ BOOST_AUTO_TEST_CASE(expectIndexesArrayValue)
             {
                 "data" : [
                     ":raw 0x11223344",
-                    ":raw 0x11223341"
+                    ":label second :raw 0x11223341"
                 ],
             )" + transactionCommon + " }";
 
     const string sExp = R"(
         {
             "indexes" : {
-                "data" : [0, ":raw 0x11223341"],
+                "data" : [0, ":label second"],
                 "gas" : 0,
                 "value" : -1
             }, )" + expectSectionCommon + " }";
@@ -166,7 +166,7 @@ BOOST_AUTO_TEST_CASE(expectIndexesArrayValueDouble)
     const string sTr = R"(
             {
                 "data" : [
-                    ":raw 0x11223344",
+                    ":label first :raw 0x11223344",
                     ":raw 0x11223341"
                 ],
             )" + transactionCommon + " }";
@@ -174,7 +174,7 @@ BOOST_AUTO_TEST_CASE(expectIndexesArrayValueDouble)
     const string sExp = R"(
         {
             "indexes" : {
-                "data" : [0, ":raw 0x11223344"],
+                "data" : [0, ":label first"],
                 "gas" : 0,
                 "value" : -1
             }, )" + expectSectionCommon + " }";
@@ -189,15 +189,15 @@ BOOST_AUTO_TEST_CASE(expectIndexesSingleValueMultiple)
     const string sTr = R"(
             {
                 "data" : [
-                    ":raw 0x11223344",
-                    ":raw 0x11223344"
+                    ":label second :raw 0x11223344",
+                    ":label second :raw 0x11223344"
                 ],
             )" + transactionCommon + " }";
 
     const string sExp = R"(
         {
             "indexes" : {
-                "data" : ":raw 0x11223344",
+                "data" : ":label second",
                 "gas" : 0,
                 "value" : -1
             }, )" + expectSectionCommon + " }";
@@ -213,15 +213,15 @@ BOOST_AUTO_TEST_CASE(expectIndexesArrayValueMultiple)
             {
                 "data" : [
                     ":raw 0x11223341"
-                    ":raw 0x11223344",
-                    ":raw 0x11223344"
+                    ":label second :raw 0x11223344",
+                    ":label second :raw 0x11223344"
                 ],
             )" + transactionCommon + " }";
 
     const string sExp = R"(
         {
             "indexes" : {
-                "data" : [":raw 0x11223344"],
+                "data" : [":label second"],
                 "gas" : 0,
                 "value" : -1
             }, )" + expectSectionCommon + " }";
@@ -349,7 +349,7 @@ BOOST_AUTO_TEST_CASE(expectIndexesArrayValueNotFound)
             {
                 "data" : [
                     ":raw 0x11223341"
-                    ":raw 0x11223344",
+                    ":label second :raw 0x11223344",
                     ":raw 0x11223344"
                 ],
             )" + transactionCommon + " }";
@@ -357,7 +357,7 @@ BOOST_AUTO_TEST_CASE(expectIndexesArrayValueNotFound)
     const string sExp = R"(
         {
             "indexes" : {
-                "data" : [0, ":raw 0x112233", 3],
+                "data" : [0, ":label 0x112233", 3],
                 "gas" : 0,
                 "value" : -1
             }, )" + expectSectionCommon + " }";

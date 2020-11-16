@@ -63,6 +63,7 @@ string replaceCode(string const& _code, solContracts const& _preSolidity)
     string const c_rawPrefix = ":raw";
     string const c_abiPrefix = ":abi";
     string const c_solidityPrefix = ":solidity";
+
     if (_code.find("pragma solidity") != string::npos)
     {
         solContracts const contracts = compileSolidity(_code);

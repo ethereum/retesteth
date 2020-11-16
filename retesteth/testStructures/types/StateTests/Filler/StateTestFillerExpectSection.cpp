@@ -16,7 +16,7 @@ DataObject ReplaceValueToIndexesInDataList(spStateTestFillerTransaction const& _
         {
             size_t i = 0;
             std::vector<int> indexes;
-            const vector<string>& dVector = _gtr.getCContent().dataRawVector();
+            const vector<string>& dVector = _gtr.getCContent().dataLabelVector();
             for (auto const& el : dVector)
             {
                 if (el == _data.asString())
@@ -35,6 +35,8 @@ DataObject ReplaceValueToIndexesInDataList(spStateTestFillerTransaction const& _
                 for (auto const& el : indexes)
                     _data.addArrayObject(el);
             }
+            if (indexes.size() == 0 && _data.asString().find(":label") != string::npos)
+                ETH_ERROR_MESSAGE("Label not found in tx data: `" + _data.asString() + "`");
         }
     };
     // Check if dataIndexes contain values of transaction data vector

@@ -15,11 +15,11 @@ struct StateTestTransactionBase : GCP_SPointerBase
 {
     DataObject const asDataObject() const;
     std::vector<TransactionInGeneralSection> buildTransactions() const;
-    std::vector<string> const& dataRawVector() const { return m_dataRaw; };
+    std::vector<string> const& dataLabelVector() const { return m_dataLabel; };
 
 protected:
     StateTestTransactionBase(){};
-    std::vector<string> m_dataRaw;
+    std::vector<string> m_dataLabel;
     std::vector<BYTES> m_data;
     std::vector<VALUE> m_gasLimit;
     std::vector<VALUE> m_value;

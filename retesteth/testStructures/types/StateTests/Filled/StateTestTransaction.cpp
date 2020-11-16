@@ -24,7 +24,7 @@ StateTestTransaction::StateTestTransaction(DataObject const& _data)
         for (auto const& el : _data.atKey("data").getSubObjects())
         {
             m_data.push_back(el);
-            m_dataRaw.push_back(el.asString());
+            m_dataLabel.push_back(el.asString());
         }
         for (auto const& el : _data.atKey("gasLimit").getSubObjects())
             m_gasLimit.push_back(el);

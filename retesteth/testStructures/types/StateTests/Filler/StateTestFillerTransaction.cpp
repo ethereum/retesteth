@@ -38,8 +38,19 @@ StateTestFillerTransaction::StateTestFillerTransaction(DataObject const& _data)
             // -- Compile LLL in transaction data into byte code if not already
             DataObject dataInKey = el;
             dataInKey.setKey("`data` array element in General Transaction Section");  // Hint
-            m_dataRaw.push_back(dataInKey.asString());
-            dataInKey.setString(test::compiler::replaceCode(dataInKey.asString()));
+
+            string label;
+            string rawData = dataInKey.asString();
+            std::string const c_labelPrefix = ":label";
+            if (rawData.find(c_labelPrefix) != string::npos)
+            {
+                size_t const pos = rawData.find(c_labelPrefix);
+                size_t const posEnd = rawData.find(' ', pos + c_labelPrefix.size() + 1);
+                label = rawData.substr(pos, posEnd - pos);
+                rawData = rawData.substr(posEnd + 1);  // remove label before code parsing
+            }
+            m_dataLabel.push_back(label);
+            dataInKey.setString(test::compiler::replaceCode(rawData));
             // ---
             m_data.push_back(dataInKey);
         }

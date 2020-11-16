@@ -51,8 +51,8 @@ std::vector<TransactionInGeneralSection> StateTestTransactionBase::buildTransact
                     trData["to"] = m_to.getCContent().asString();
                 trData["secretKey"] = m_secretKey.getCContent().asString();
 
-                string const dataRaw = m_dataRaw.size() > dIND ? m_dataRaw.at(dIND) : string();
-                out.push_back(TransactionInGeneralSection(trData, dIND, gIND, vIND, dataRaw));
+                string const dataLabel = m_dataLabel.size() > dIND ? m_dataLabel.at(dIND) : string();
+                out.push_back(TransactionInGeneralSection(trData, dIND, gIND, vIND, dataLabel));
             }
         }
     }
