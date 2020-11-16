@@ -14,7 +14,7 @@ namespace teststruct
 Transaction::Transaction(DataObject const& _data, string const& _dataRaw)
 {
     fromDataObject(_data);
-    m_dataRaw = _dataRaw;
+    m_dataLabel = _dataRaw;
 }
 
 void Transaction::fromDataObject(DataObject const& _data)

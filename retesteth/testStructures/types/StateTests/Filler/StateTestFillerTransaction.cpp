@@ -46,8 +46,16 @@ StateTestFillerTransaction::StateTestFillerTransaction(DataObject const& _data)
             {
                 size_t const pos = rawData.find(c_labelPrefix);
                 size_t const posEnd = rawData.find(' ', pos + c_labelPrefix.size() + 1);
-                label = rawData.substr(pos, posEnd - pos);
-                rawData = rawData.substr(posEnd + 1);  // remove label before code parsing
+                if (posEnd != string::npos)
+                {
+                    label = rawData.substr(pos, posEnd - pos);
+                    rawData = rawData.substr(posEnd + 1);  // remove label before code parsing
+                }
+                else
+                {
+                    label = rawData.substr(pos);
+                    rawData = "";
+                }
             }
             m_dataLabel.push_back(label);
             dataInKey.setString(test::compiler::replaceCode(rawData));

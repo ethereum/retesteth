@@ -1,4 +1,4 @@
-/*
+﻿/*
     This file is part of cpp-ethereum.
 
     cpp-ethereum is free software: you can redistribute it and/or modify
@@ -57,8 +57,7 @@ bool OptionsAllowTransaction(test::teststruct::TransactionInGeneralSection const
     if ((opt.trDataIndex == (int)_tr.dataInd() || opt.trDataIndex == -1) &&
         (opt.trGasIndex == (int)_tr.gasInd() || opt.trGasIndex == -1) &&
         (opt.trValueIndex == (int)_tr.valueInd() || opt.trValueIndex == -1) &&
-        (opt.trDataValue == _tr.transaction().dataRaw() ||
-            test::compiler::replaceCode(opt.trDataValue) == _tr.transaction().dataRaw() || opt.trDataValue.empty()))
+        (opt.trDataValue == _tr.transaction().dataLabel() || opt.trDataValue.empty()))
         return true;
     return false;
 }
@@ -238,8 +237,8 @@ DataObject FillTest(StateTestInFiller const& _test)
                 for (auto& tr : txs)
                 {
                     TestInfo errorInfo(fork.asString(), tr.dataInd(), tr.gasInd(), tr.valueInd());
-                    if (!tr.transaction().dataRaw().empty())
-                        errorInfo.setTrDataDebug(tr.transaction().dataRaw().substr(0, 30));
+                    if (!tr.transaction().dataLabel().empty())
+                        errorInfo.setTrDataDebug(tr.transaction().dataLabel());
 
                     TestOutputHelper::get().setCurrentTestInfo(errorInfo);
 
