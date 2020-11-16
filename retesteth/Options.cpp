@@ -340,7 +340,7 @@ Options::Options(int argc, const char** argv)
                 trDataIndex = atoi(argValue.c_str());
                 break;
             case DigitsType::String:
-                trDataValue = argValue;
+                trDataLabel = argValue;
                 break;
             default:
             {
@@ -492,3 +492,12 @@ void displayTestSuites()
     cout << "\n";
 }
 
+string Options::getGStateTransactionFilter() const
+{
+    string filter;
+    filter += trDataIndex == -1 ? string() : " dInd: " + to_string(trDataIndex);
+    filter += trDataLabel.empty() ? string() : " dLbl: " + trDataLabel;
+    filter += trGasIndex == -1 ? string() : " gInd: " + to_string(trGasIndex);
+    filter += trValueIndex == -1 ? string() : " vInd: " + to_string(trValueIndex);
+    return filter;
+}

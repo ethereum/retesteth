@@ -70,7 +70,7 @@ public:
     std::string singleTestName;     // A test name (usually a file.json test)
     std::string singleSubTestName;  // A test name inside a file.json (for blockchain tests)
     std::string singleTestNet;
-    std::string trDataValue;  ///< GeneralState data
+    std::string trDataLabel;  ///< GeneralState data
     int trDataIndex;    ///< GeneralState data
     int trGasIndex;     ///< GeneralState gas
     int trValueIndex;   ///< GeneralState value
@@ -83,6 +83,7 @@ public:
 	/// The first time used, options are parsed with argc, argv
 	static Options const& get(int argc = 0, const char** argv = 0);
     static DynamicOptions& getDynamicOptions() { return m_dynamicOptions; }
+    string getGStateTransactionFilter() const;
 
 private:
 	Options(int argc = 0, const char** argv = 0);

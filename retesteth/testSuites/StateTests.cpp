@@ -57,7 +57,7 @@ bool OptionsAllowTransaction(test::teststruct::TransactionInGeneralSection const
     if ((opt.trDataIndex == (int)_tr.dataInd() || opt.trDataIndex == -1) &&
         (opt.trGasIndex == (int)_tr.gasInd() || opt.trGasIndex == -1) &&
         (opt.trValueIndex == (int)_tr.valueInd() || opt.trValueIndex == -1) &&
-        (opt.trDataValue == _tr.transaction().dataLabel() || opt.trDataValue.empty()))
+        (opt.trDataLabel == _tr.transaction().dataLabel() || opt.trDataLabel.empty()))
         return true;
     return false;
 }

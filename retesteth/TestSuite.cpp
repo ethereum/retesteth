@@ -261,10 +261,7 @@ string TestSuite::checkFillerExistance(string const& _testFolder) const
     string const testNameFilter = opt.singleTestName.empty() ? string() : opt.singleTestName;
     string filter = testNameFilter;
     filter += opt.singleTestNet.empty() ? string() : " " + opt.singleTestNet;
-    filter += opt.trDataIndex == -1 ? string() : " dInd: " + to_string(opt.trDataIndex);
-    filter += opt.trDataValue.empty() ? string() : " dVal: " + opt.trDataValue;
-    filter += opt.trGasIndex == -1 ? string() : " gInd: " + to_string(opt.trGasIndex);
-    filter += opt.trValueIndex == -1 ? string() : " vInd: " + to_string(opt.trValueIndex);
+    filter += opt.getGStateTransactionFilter();
     ETH_LOG("Checking test filler hashes for " + boost::unit_test::framework::current_test_case().full_name(), 4);
     if (!filter.empty())
         ETH_LOG("Filter: '" + filter +  "'", 0);
@@ -545,6 +542,12 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
                     // Add client info for all of the tests in output
                     addClientInfo(output, boostRelativeTestPath, testData.hash);
                     writeFile(boostTestPath.path(), asBytes(output.asJson()));
+
+                    if (!Options::get().getGStateTransactionFilter().empty())
+                    {
+                        ETH_WARNING("GState transaction filter is set. Disabling generated test run!");
+                        opt.disableSecondRun = true;
+                    }
                 }
                 catch (test::EthError const& _ex)
                 {
