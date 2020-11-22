@@ -11,10 +11,11 @@ namespace test
 {
 namespace teststruct
 {
-Transaction::Transaction(DataObject const& _data, string const& _dataRaw)
+Transaction::Transaction(DataObject const& _data, string const& _dataRawPreview, string const& _dataLabel)
 {
     fromDataObject(_data);
-    m_dataLabel = _dataRaw;
+    m_dataRawPreview = _dataRawPreview;
+    m_dataLabel = _dataLabel;
 }
 
 void Transaction::fromDataObject(DataObject const& _data)

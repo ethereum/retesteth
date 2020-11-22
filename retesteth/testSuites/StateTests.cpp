@@ -237,8 +237,8 @@ DataObject FillTest(StateTestInFiller const& _test)
                 for (auto& tr : txs)
                 {
                     TestInfo errorInfo(fork.asString(), tr.dataInd(), tr.gasInd(), tr.valueInd());
-                    if (!tr.transaction().dataLabel().empty())
-                        errorInfo.setTrDataDebug(tr.transaction().dataLabel());
+                    if (!tr.transaction().dataLabel().empty() || !tr.transaction().dataRawPreview().empty())
+                        errorInfo.setTrDataDebug(tr.transaction().dataLabel() + " " + tr.transaction().dataRawPreview() + "..");
 
                     TestOutputHelper::get().setCurrentTestInfo(errorInfo);
 

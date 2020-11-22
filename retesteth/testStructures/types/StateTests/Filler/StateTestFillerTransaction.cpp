@@ -58,6 +58,7 @@ StateTestFillerTransaction::StateTestFillerTransaction(DataObject const& _data)
                 }
             }
             m_dataLabel.push_back(label);
+            m_dataRawPreview.push_back(rawData.substr(0, 20));
             dataInKey.setString(test::compiler::replaceCode(rawData));
             // ---
             m_data.push_back(dataInKey);
