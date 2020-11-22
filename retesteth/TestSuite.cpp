@@ -283,14 +283,18 @@ string TestSuite::checkFillerExistance(string const& _testFolder) const
             string message = "Tests are not generated: ";
             for (auto const& filler : fillerFiles)
             {
+                bool found = false;
                 for (auto const& filled : compiledFiles)
                 {
-                    if (filler.c_str() != filled.c_str())
+                    string const fillerName = filler.stem().string();
+                    if (fillerName.substr(0, fillerName.size() - 6) == filled.stem().string())
                     {
-                        message += "\n " + string(filler.c_str());
+                        found = true;
                         break;
                     }
                 }
+                if (!found)
+                    message += "\n " + string(filler.c_str());
             }
             ETH_ERROR_MESSAGE(message + "\n");
         }
@@ -390,6 +394,7 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
     string filter;
     try
     {
+        TestOutputHelper::get().setCurrentTestInfo(TestInfo("checkFillerExistance", _testFolder));
         filter = checkFillerExistance(_testFolder);
     }
     catch (std::exception const&)
