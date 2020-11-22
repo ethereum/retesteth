@@ -274,6 +274,28 @@ string TestSuite::checkFillerExistance(string const& _testFolder) const
     vector<fs::path> compiledFiles = test::getFiles(testsPath.path(), {".json", ".yml"}, testNameFilter);
     AbsoluteFillerPath fullPathToFillers = getFullPathFiller(_testFolder);
 
+    // Check unfilled tests
+    if (Options::get().checkhash)
+    {
+        vector<fs::path> fillerFiles = test::getFiles(fullPathToFillers.path(), {".json", ".yml"}, testNameFilter);
+        if (fillerFiles.size() > compiledFiles.size())
+        {
+            string message = "Tests are not generated: ";
+            for (auto const& filler : fillerFiles)
+            {
+                for (auto const& filled : compiledFiles)
+                {
+                    if (filler.c_str() != filled.c_str())
+                    {
+                        message += "\n " + string(filler.c_str());
+                        break;
+                    }
+                }
+            }
+            ETH_ERROR_MESSAGE(message + "\n");
+        }
+    }
+
     bool checkFillerWhenFilterIsSetButNoTestsFilled = false;
     if (compiledFiles.size() == 0)
     {
