@@ -8,7 +8,7 @@ namespace test
 {
 namespace teststruct
 {
-BlockchainTestFillerBlock::BlockchainTestFillerBlock(DataObject const& _data)
+BlockchainTestFillerBlock::BlockchainTestFillerBlock(DataObject const& _data, NonceMap& _nonceMap)
   : m_chainName(BlockchainTestFillerBlock::defaultChainName())
 {
     try
@@ -39,7 +39,7 @@ BlockchainTestFillerBlock::BlockchainTestFillerBlock(DataObject const& _data)
 
         if (_data.count("transactions"))
             for (auto const& tr : _data.atKey("transactions").getSubObjects())
-                m_transactions.push_back(BlockchainTestFillerTransaction(tr));
+                m_transactions.push_back(BlockchainTestFillerTransaction(tr, _nonceMap));
 
         if (_data.count("uncleHeaders"))
             for (auto const& un : _data.atKey("uncleHeaders").getSubObjects())

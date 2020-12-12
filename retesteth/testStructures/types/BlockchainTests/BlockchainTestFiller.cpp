@@ -15,6 +15,12 @@ BlockchainTestInFiller::BlockchainTestInFiller(DataObject const& _data)
             m_info = spInfoIncomplete(new InfoIncomplete(_data.atKey("_info")));
         m_pre = spState(new State(convertDecStateToHex(_data.atKey("pre"))));
 
+        // Prepare nonce map for transaction 'auto' nonce parsing
+        NonceMap nonceMap;
+        for (auto const& acc : m_pre.getCContent().accounts())
+            nonceMap.emplace(acc.first.asString(), acc.second.getCContent().nonce().asU256());
+        // nonce map
+
         m_sealEngine = SealEngine::NoProof;
         if (_data.count("sealEngine"))
         {
@@ -53,7 +59,7 @@ BlockchainTestInFiller::BlockchainTestInFiller(DataObject const& _data)
         m_hasAtLeastOneUncle = false;
         for (auto const& el : _data.atKey("blocks").getSubObjects())
         {
-            m_blocks.push_back(BlockchainTestFillerBlock(el));
+            m_blocks.push_back(BlockchainTestFillerBlock(el, nonceMap));
             if (m_blocks.at(m_blocks.size() - 1).uncles().size() > 0)
                 m_hasAtLeastOneUncle = true;
         }

@@ -3,14 +3,16 @@
 #include <retesteth/dataObject/DataObject.h>
 #include <retesteth/dataObject/SPointer.h>
 using namespace dataobject;
-
 namespace test
 {
 namespace teststruct
 {
+// NonceMap;
+typedef std::map<string, size_t> NonceMap;
+
 struct BlockchainTestFillerTransaction : GCP_SPointerBase
 {
-    BlockchainTestFillerTransaction(DataObject const&);
+    BlockchainTestFillerTransaction(DataObject const&, NonceMap& _nonceMap);
     Transaction const& tr() const { return m_transaction.getCContent(); }
     bool isMarkedInvalid() const { return m_expectInvalid; }
 

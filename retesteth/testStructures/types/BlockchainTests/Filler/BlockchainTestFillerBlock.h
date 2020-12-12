@@ -9,6 +9,7 @@
 #include <retesteth/dataObject/DataObject.h>
 #include <retesteth/dataObject/SPointer.h>
 using namespace dataobject;
+using namespace test::teststruct;
 
 namespace test
 {
@@ -17,7 +18,7 @@ namespace teststruct
 // BlockchainTestFiller block instructions
 struct BlockchainTestFillerBlock : GCP_SPointerBase
 {
-    BlockchainTestFillerBlock(DataObject const&);
+    BlockchainTestFillerBlock(DataObject const&, NonceMap&);
 
     // Block can be represented as raw RLP without any of other fields
     // other then BlockHeader with expected exceptions
