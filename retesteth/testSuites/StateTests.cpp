@@ -47,6 +47,7 @@ using namespace dev;
 using namespace test;
 using namespace test::teststruct;
 namespace fs = boost::filesystem;
+string const c_trHashNotFound = "TR hash not found in mined block! (Check that tr is properly mined and not oog)";
 
 namespace
 {
@@ -131,8 +132,8 @@ DataObject FillTestAsBlockchain(StateTestInFiller const& _test)
                     session.test_mineBlocks(1);
                     VALUE latestBlockN(session.eth_blockNumber());
                     EthGetBlockBy remoteBlock(session.eth_getBlockByNumber(latestBlockN, Request::FULLOBJECTS));
-                    ETH_ERROR_REQUIRE_MESSAGE(
-                        remoteBlock.hasTransaction(trHash), "StateTest::FillTest: TR hash not found in mined block!");
+                    if (!remoteBlock.hasTransaction(trHash))
+                        ETH_ERROR_MESSAGE("StateTest::FillTest: " + c_trHashNotFound);
                     tr.markExecuted();
 
                     // Mining reward
@@ -258,8 +259,8 @@ DataObject FillTest(StateTestInFiller const& _test)
                     VALUE latestBlockN(session.eth_blockNumber());
 
                     EthGetBlockBy blockInfo(session.eth_getBlockByNumber(latestBlockN, Request::LESSOBJECTS));
-                    ETH_ERROR_REQUIRE_MESSAGE(
-                        blockInfo.hasTransaction(trHash), "StateTest::FillTest: TR hash not found in mined block!");
+                    if (!blockInfo.hasTransaction(trHash))
+                        ETH_ERROR_MESSAGE("StateTest::FillTest: " + c_trHashNotFound);
                     tr.markExecuted();
 
                     if (Options::get().poststate)
@@ -368,8 +369,8 @@ void RunTest(StateTestInFilled const& _test)
 
                     VALUE latestBlockN(session.eth_blockNumber());
                     EthGetBlockBy blockInfo(session.eth_getBlockByNumber(latestBlockN, Request::LESSOBJECTS));
-                    ETH_ERROR_REQUIRE_MESSAGE(
-                        blockInfo.hasTransaction(trHash), "StateTest::RunTest: TR hash not found in mined block!");
+                    if (!blockInfo.hasTransaction(trHash))
+                        ETH_ERROR_MESSAGE("StateTest::RunTest: " + c_trHashNotFound);
                     tr.markExecuted();
 
                     // Validate post state
@@ -386,7 +387,7 @@ void RunTest(StateTestInFilled const& _test)
                                           ", expected: " + expectedPostHash.asString());
                     }
                     if (Options::get().poststate)
-                        ETH_LOG("\nState Dump:" + TestOutputHelper::get().testInfo().errorDebug() + cDefault + " \n" + getRemoteState(session).asDataObject().asJson(), 1);
+                        ETH_LOG("\nRunning test State Dump:" + TestOutputHelper::get().testInfo().errorDebug() + cDefault + " \n" + getRemoteState(session).asDataObject().asJson(), 1);
 
                     // Validate log hash
                     FH32 const& expectedLogHash = result.logs();
