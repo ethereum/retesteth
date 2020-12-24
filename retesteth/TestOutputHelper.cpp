@@ -403,5 +403,5 @@ std::string TestInfo::errorDebug() const
     if (!m_sTransactionData.empty())
         message += ", TrData: `" + m_sTransactionData + "`";
 
-    return message + ")" + cRed;
+    return message + ")" + cDefault;
 }

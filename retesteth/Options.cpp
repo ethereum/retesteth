@@ -66,6 +66,7 @@ void printHelp()
     cout << setw(40) << "--singletest <TestName>" << setw(0)
          << "Run on a single test. `Testname` is filename without Filler.json\n";
     cout << setw(40) << "--singletest <TestName>/<Subtest>" << setw(0) << "`Subtest` is a test name inside the file\n";
+    cout << setw(40) << "--singlenet <ForkName>" << setw(0) << "Run only specific fork configuration\n";
 
     cout << "\nDebugging\n";
     cout << setw(30) << "-d <index>" << setw(25) << "Set the transaction data array index when running GeneralStateTests\n";
