@@ -224,6 +224,8 @@ void TestSuite::runTestWithoutFiller(boost::filesystem::path const& _file) const
         if (Options::get().filltests)
         {
             TestFileData testData = readTestFile(_file);
+            removeComments(testData.data);
+
             string fileName = _file.stem().c_str();
             if (fileName.find("Filler") == string::npos)
                 ETH_ERROR_MESSAGE("Trying to fill `" + string(_file.c_str()) + "`, but file does not have Filler suffix!");
