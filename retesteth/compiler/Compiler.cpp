@@ -20,11 +20,20 @@ string compileLLL(string const& _code)
     fs::path path(fs::temp_directory_path() / fs::unique_path());
     string cmd = string("lllc ") + path.string();
     writeFile(path.string(), _code);
-    string result = executeCmd(cmd);
-    fs::remove_all(path);
-    result = "0x" + result;
-    test::compiler::utiles::checkHexHasEvenLength(result);
-    return result;
+    try
+    {
+        string result = executeCmd(cmd);
+        fs::remove_all(path);
+        result = "0x" + result;
+        test::compiler::utiles::checkHexHasEvenLength(result);
+        return result;
+    }
+    catch (EthError const& _ex)
+    {
+        fs::remove_all(path);
+        ETH_WARNING("Error compiling lll code: " + _code.substr(0, 50) + "..");
+        throw _ex;
+    }
 #endif
 }
 }  // namespace
