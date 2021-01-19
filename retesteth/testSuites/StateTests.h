@@ -43,6 +43,13 @@ public:
     TestSuite::FillerPath suiteFillerFolder() const override;
 };
 
+class StateTestVMSuite: public StateTestSuite
+{
+public:
+    TestSuite::TestPath suiteFolder() const override;
+    TestSuite::FillerPath suiteFillerFolder() const override;
+};
+
 }
 
 
