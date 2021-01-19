@@ -213,6 +213,13 @@ DataObject FillTest(StateTestInFiller const& _test)
 
     // Gather Transactions from general transaction section
     std::vector<TransactionInGeneralSection> txs = _test.GeneralTr().buildTransactions();
+    for (auto const& tx : txs)
+    {
+        // Fill up the label map to tx.data
+        if (!tx.transaction().dataLabel().empty())
+            filledTest["_info"]["labels"].addSubObject(
+                DataObject(test::fto_string(tx.dataInd()), tx.transaction().dataLabel()));
+    }
 
     // run transactions on all networks that we need
     for (auto const& fork : _test.getAllForksFromExpectSections())  // object constructed!!!
@@ -350,6 +357,13 @@ void RunTest(StateTestInFilled const& _test)
                     return;
 
                 TestInfo errorInfo(network.asString(), tr.dataInd(), tr.gasInd(), tr.valueInd());
+
+                string label;
+                string const labelK = test::fto_string(tr.dataInd());
+                if (_test.testInfo().labels().count(labelK))
+                    label = _test.testInfo().labels().at(labelK);
+                errorInfo.setTrDataDebug(label + " " + tr.transaction().dataLabel().substr(0, 8) + "..");
+
                 TestOutputHelper::get().setCurrentTestInfo(errorInfo);
                 bool checkIndexes = result.checkIndexes(tr.dataInd(), tr.gasInd(), tr.valueInd());
                 if (checkIndexes)
@@ -399,8 +413,7 @@ void RunTest(StateTestInFilled const& _test)
                     session.test_rewindToBlock(0);
                     if (Options::get().logVerbosity >= 5)
                         ETH_LOG("Executed: d: " + to_string(tr.dataInd()) + ", g: " + to_string(tr.gasInd()) +
-                                    ", v: " + to_string(tr.valueInd()) + ", fork: " + network.asString(),
-                            5);
+                                    ", v: " + to_string(tr.valueInd()) + ", fork: " + network.asString(), 5);
                 }
             } //ForTransactions
 

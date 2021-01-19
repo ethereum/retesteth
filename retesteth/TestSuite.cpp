@@ -111,20 +111,24 @@ void addClientInfo(DataObject& _v, fs::path const& _testSource, h256 const& _tes
     {
         string comment;
         DataObject clientinfo;
+        clientinfo.setKey("_info");
         if (o.count("_info"))
         {
             DataObject const& existingInfo = o.atKey("_info");
             if (existingInfo.count("comment"))
                 comment = existingInfo.atKey("comment").asString();
+            if (existingInfo.count("labels"))
+                clientinfo["labels"] = existingInfo.atKey("labels");
         }
 
-        clientinfo.setKey("_info");
         clientinfo["comment"] = comment;
         clientinfo["filling-rpc-server"] = session.web3_clientVersion();
         clientinfo["filling-tool-version"] = test::prepareVersionString();
         clientinfo["lllcversion"] = test::prepareLLLCVersionString();
         clientinfo["source"] = _testSource.string();
         clientinfo["sourceHash"] = toString(_testSourceHash);
+        if (clientinfo.count("labels"))
+            clientinfo.setKeyPos("labels", clientinfo.getSubObjects().size() - 1);
 
         o["_info"].replace(clientinfo);
         o.setKeyPos("_info", 0);
