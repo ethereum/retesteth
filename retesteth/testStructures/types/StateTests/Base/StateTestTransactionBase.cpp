@@ -52,6 +52,10 @@ std::vector<TransactionInGeneralSection> StateTestTransactionBase::buildTransact
                     trData["to"] = m_to.getCContent().asString();
                 trData["secretKey"] = m_secretKey.getCContent().asString();
 
+                // Export Access List
+                if (databox.m_accessList.list().size())
+                    trData["accessList"] = databox.m_accessList.asDataObject();
+
                 out.push_back(
                     TransactionInGeneralSection(trData, dIND, gIND, vIND, databox.m_dataRawPreview, databox.m_dataLabel));
             }

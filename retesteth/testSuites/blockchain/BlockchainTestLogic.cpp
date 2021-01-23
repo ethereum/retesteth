@@ -120,10 +120,10 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
                     clientTr.blockNumber().asDecString() + " != " + tblock.header().number().asDecString() + ")");
 
             DataObject const testTr = tr.asDataObject();
-            DataObject const remoteTr = clientTr.transaction().asDataObject();
-            ETH_ERROR_REQUIRE_MESSAGE(clientTr.transaction() == tr,
-                                      "Error checking remote transaction, remote tr `" + remoteTr.asJson() +
-                                      "` is different to test tr `" + testTr.asJson() + "`)");
+            DataObject const remoteTr = clientTr.transaction().getCContent().asDataObject();
+            ETH_ERROR_REQUIRE_MESSAGE(clientTr.transaction().getCContent() == tr,
+                "Error checking remote transaction, remote tr `" + remoteTr.asJson() + "` is different to test tr `" +
+                    testTr.asJson() + "`)");
         }
     }
 

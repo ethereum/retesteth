@@ -35,8 +35,20 @@ StateTestFillerTransaction::StateTestFillerTransaction(DataObject const& _data)
 
         for (auto const& el : _data.atKey("data").getSubObjects())
         {
+            DataObject dataInKey;
+            AccessList accessList;
+            if (el.type() == DataType::Object)
+            {
+                dataInKey = el.atKey("data");
+                accessList = AccessList(el.atKey("accessList"));
+                requireJsonFields(el, "StateTestFillerTransaction::dataWithList " + _data.getKey(),
+                    {{"data", {{DataType::String}, jsonField::Required}},
+                        {"accessList", {{DataType::Array}, jsonField::Required}}});
+            }
+            else
+                dataInKey = el;
+
             // -- Compile LLL in transaction data into byte code if not already
-            DataObject dataInKey = el;
             dataInKey.setKey("`data` array element in General Transaction Section");  // Hint
 
             string label;
@@ -59,7 +71,7 @@ StateTestFillerTransaction::StateTestFillerTransaction(DataObject const& _data)
             }
             dataInKey.setString(test::compiler::replaceCode(rawData));
             // ---
-            m_databox.push_back(Databox(dataInKey, label, rawData.substr(0, 20)));
+            m_databox.push_back(Databox(dataInKey, label, rawData.substr(0, 20), accessList));
         }
         for (auto const& el : tmpD.atKey("gasLimit").getSubObjects())
             m_gasLimit.push_back(el);

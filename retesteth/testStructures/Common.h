@@ -1,6 +1,7 @@
 #pragma once
 #include <retesteth/compiler/Compiler.h>
 #include <retesteth/dataObject/DataObject.h>
+#include <retesteth/testStructures/types/Ethereum/TransactionReader.h>
 #include <map>
 using namespace dataobject;
 using namespace test::compiler;

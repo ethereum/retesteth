@@ -1,5 +1,6 @@
 #pragma once
 #include "../../../basetypes.h"
+#include "AccessList.h"
 #include "TransactionInGeneralSection.h"
 #include <retesteth/dataObject/DataObject.h>
 #include <retesteth/dataObject/SPointer.h>
@@ -18,12 +19,14 @@ struct StateTestTransactionBase : GCP_SPointerBase
 
     struct Databox
     {
-        Databox(BYTES const& _data, string const& _label, string const& _rawPreview)
-          : m_data(_data), m_dataLabel(_label), m_dataRawPreview(_rawPreview)
+        Databox(
+            BYTES const& _data, string const& _label, string const& _rawPreview, AccessList const& _accessList = AccessList())
+          : m_data(_data), m_dataLabel(_label), m_dataRawPreview(_rawPreview), m_accessList(_accessList)
         {}
         BYTES m_data;
         string m_dataLabel;
         string m_dataRawPreview;  // The source code preview before code compilation
+        AccessList m_accessList;
     };
 
     std::vector<Databox> const& databoxVector() const { return m_databox; };

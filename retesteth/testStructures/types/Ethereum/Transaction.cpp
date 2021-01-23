@@ -61,6 +61,7 @@ void Transaction::fromDataObject(DataObject const& _data)
              {"v", {{DataType::String}, jsonField::Optional}},
              {"r", {{DataType::String}, jsonField::Optional}},
              {"s", {{DataType::String}, jsonField::Optional}},
+             {"accessList", {{DataType::Array}, jsonField::Optional}},
              {"blockHash", {{DataType::String}, jsonField::Optional}},           // EthGetBlockBy transaction
              {"blockNumber", {{DataType::String}, jsonField::Optional}},         // EthGetBlockBy transaction
              {"from", {{DataType::String}, jsonField::Optional}},                // EthGetBlockBy transaction
@@ -136,11 +137,14 @@ void Transaction::buildVRS(VALUE const& _secret)
     DataObject v = DataObject(dev::toCompactHexPrefixed(dev::u256(sigStruct.v + 27)));
     DataObject r = DataObject(dev::toCompactHexPrefixed(dev::u256(sigStruct.r)));
     DataObject s = DataObject(dev::toCompactHexPrefixed(dev::u256(sigStruct.s)));
-    m_v = spVALUE(new VALUE(v));
-    m_r = spVALUE(new VALUE(r));
-    m_s = spVALUE(new VALUE(s));
+    assignV(spVALUE(new VALUE(v)));
+    assignR(spVALUE(new VALUE(r)));
+    assignS(spVALUE(new VALUE(s)));
 }
 
+void Transaction::assignV(spVALUE const _v) { m_v = _v; }
+void Transaction::assignR(spVALUE const _r) { m_r = _r; }
+void Transaction::assignS(spVALUE const _s) { m_s = _s; }
 
 BYTES const Transaction::getSignedRLP() const
 {

@@ -34,12 +34,12 @@ DataObject constructEthGetBlockBy(EthereumBlockState const& _block)
     constructResponse["transactions"] = DataObject(DataType::Array);
     for (auto const& tr : _block.transactions())
     {
-        DataObject fullTransaction = tr.asDataObject();
+        DataObject fullTransaction = tr.getCContent().asDataObject();
         fullTransaction["blockHash"] = _block.header().hash().asString();  // We don't know the hash its in tool response
         fullTransaction["blockNumber"] = _block.header().number().asString();
         fullTransaction["from"] = FH20::zero().asString();  // Can be recovered from vrs
         fullTransaction["transactionIndex"] = "0x00";       // Its in tool response
-        fullTransaction["hash"] = tr.hash().asString();
+        fullTransaction["hash"] = tr.getCContent().hash().asString();
         constructResponse["transactions"].addArrayObject(fullTransaction);
     }
 

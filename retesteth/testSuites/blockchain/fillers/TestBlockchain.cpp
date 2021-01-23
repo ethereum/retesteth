@@ -93,8 +93,8 @@ void TestBlockchain::generateBlock(
                 bool isMarkedInvalid = std::get<1>(testTransactionMap.at(remoteTr.hash()));
                 if (!isMarkedInvalid)
                 {
-                    spTransaction const& tr = std::get<0>(testTransactionMap.at(remoteTr.hash()));
-                    newBlock.registerTestTransaction(tr.getCContent());
+                    spTransaction const& spTr = std::get<0>(testTransactionMap.at(remoteTr.hash()));
+                    newBlock.registerTestTransaction(spTr);
                 }
                 testTransactionMap.erase(remoteTr.hash());
             }
@@ -108,7 +108,7 @@ void TestBlockchain::generateBlock(
         {
             bool isMarkedInvalid = std::get<1>(leftoverTr.second);
             if (!isMarkedInvalid)
-                newBlock.registerTestTransaction(std::get<0>(leftoverTr.second).getCContent());
+                newBlock.registerTestTransaction(std::get<0>(leftoverTr.second));
         }
         // -------
 

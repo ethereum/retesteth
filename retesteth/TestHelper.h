@@ -9,6 +9,7 @@
 #include <dataObject/DataObject.h>
 #include <retesteth/EthChecks.h>
 #include <retesteth/compiler/Compiler.h>
+#include <retesteth/testStructures/basetypes/BYTES.h>
 
 using namespace dataobject;
 namespace fs = boost::filesystem;
@@ -126,5 +127,4 @@ string fto_string(t _val)
 {
     return std::to_string(_val);
 }
-
 }  // namespace test

@@ -2,6 +2,7 @@
 #include "../../basetypes.h"
 #include <libdevcore/RLP.h>
 #include <retesteth/dataObject/DataObject.h>
+#include <retesteth/testStructures/types/StateTests/Base/AccessList.h>
 using namespace dataobject;
 using namespace test::teststruct;
 
@@ -14,8 +15,6 @@ struct Transaction : GCP_SPointerBase
     Transaction(DataObject const&, string const& _dataRawPreview = string(), string const& _dataLabel = string());
     Transaction(BYTES const&);
     Transaction(dev::RLP const&);
-    string const& dataLabel() const { return m_dataLabel; }
-    string const& dataRawPreview() const { return m_dataRawPreview; }
     BYTES const& data() const { return m_data.getCContent(); }
     VALUE const& gasLimit() const { return m_gasLimit.getCContent(); }
     VALUE const& gasPrice() const { return m_gasPrice.getCContent(); }
@@ -31,20 +30,23 @@ struct Transaction : GCP_SPointerBase
     VALUE const& v() const { return m_v.getCContent(); }
     VALUE const& r() const { return m_r.getCContent(); }
     VALUE const& s() const { return m_s.getCContent(); }
-    FH32 hash() const;
+    virtual FH32 hash() const;
 
-    BYTES const getSignedRLP() const;
-    dev::RLPStream const asRLPStream() const;
-    DataObject const asDataObject(ExportOrder _order = ExportOrder::Default) const;
+    virtual BYTES const getSignedRLP() const;
+    virtual dev::RLPStream const asRLPStream() const;
+    virtual DataObject const asDataObject(ExportOrder _order = ExportOrder::Default) const;
 
     bool operator==(Transaction const& _rhs) const;
+    virtual ~Transaction(){};
+
+    /// Debug
+    string const& dataLabel() const { return m_dataLabel; }
+    string const& dataRawPreview() const { return m_dataRawPreview; }
+
 
 private:
-    Transaction() {}
-    void fromDataObject(DataObject const&);
-    void fromRLP(dev::RLP const&);
-    string m_dataRawPreview;
-    string m_dataLabel;
+    virtual void fromRLP(dev::RLP const&);
+
     spBYTES m_data;
     spVALUE m_gasLimit;
     spVALUE m_gasPrice;
@@ -53,11 +55,22 @@ private:
     spFH20 m_to;
     bool m_creation;
 
-    void buildVRS(VALUE const& _secret);
-    void streamHeader(dev::RLPStream& _stream) const;
+    virtual void buildVRS(VALUE const& _secret);
+    virtual void streamHeader(dev::RLPStream& _stream) const;
     spVALUE m_v;
     spVALUE m_r;
     spVALUE m_s;
+
+    // Debug
+    string m_dataRawPreview;  // Attached data raw preview before code compilation
+    string m_dataLabel;       // Attached data Label from filler
+
+protected:
+    Transaction() {}
+    virtual void fromDataObject(DataObject const&);
+    void assignV(spVALUE const);
+    void assignR(spVALUE const);
+    void assignS(spVALUE const);
 };
 
 typedef GCP_SPointer<Transaction> spTransaction;

@@ -62,7 +62,7 @@ void ToolChain::mineBlock(EthereumBlockState const& _pendingBlock, Mining _req)
     for (auto const& tr : _pendingBlock.transactions())
     {
         bool found = false;
-        FH32 const trHash = tr.hash();
+        FH32 const trHash = tr.getCContent().hash();
         for (auto const& trReceipt : res.receipts())
         {
             if (trReceipt.trHash() == trHash)
@@ -180,8 +180,8 @@ ToolResponse ToolChain::mineBlockOnTool(EthereumBlockState const& _block, SealEn
     static u256 c_maxGasLimit = u256("0xffffffffffffffff");
     for (auto const& tr : _block.transactions())
     {
-        if (tr.gasLimit().asU256() <= c_maxGasLimit)  // tool fails on limits here.
-            txs.addArrayObject(tr.asDataObject(ExportOrder::ToolStyle));
+        if (tr.getCContent().gasLimit().asU256() <= c_maxGasLimit)  // tool fails on limits here.
+            txs.addArrayObject(tr.getCContent().asDataObject(ExportOrder::ToolStyle));
         else
             ETH_WARNING("Retesteth rejecting tx with gasLimit > 64 bits for tool");
     }
@@ -233,14 +233,15 @@ ToolResponse ToolChain::mineBlockOnTool(EthereumBlockState const& _block, SealEn
         {
             fs::path txTraceFile;
             string const trNumber = test::fto_string(i++);
-            txTraceFile = m_tmpDir / string("trace-" + trNumber + "-" + tr.hash().asString() + ".jsonl");
+            txTraceFile = m_tmpDir / string("trace-" + trNumber + "-" + tr.getCContent().hash().asString() + ".jsonl");
             if (fs::exists(txTraceFile))
             {
-                string const preinfo = "\nTransaction number: " + trNumber + ", hash: " + tr.hash().asString() + "\n";
+                string const preinfo =
+                    "\nTransaction number: " + trNumber + ", hash: " + tr.getCContent().hash().asString() + "\n";
                 string const info = TestOutputHelper::get().testInfo().errorDebug();
                 string const traceinfo = "\nVMTrace:" + info + cDefault + preinfo;
-                toolResponse.attachDebugTrace(
-                    tr.hash(), DebugVMTrace(traceinfo, trNumber, tr.hash(), contentsString(txTraceFile)));
+                toolResponse.attachDebugTrace(tr.getCContent().hash(),
+                    DebugVMTrace(traceinfo, trNumber, tr.getCContent().hash(), contentsString(txTraceFile)));
             }
             else
                 ETH_LOG("Trace file `" + txTraceFile.string() + "` not found!", 1);
