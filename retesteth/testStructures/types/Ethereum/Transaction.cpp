@@ -51,24 +51,25 @@ void Transaction::fromDataObject(DataObject const& _data)
             m_s = spVALUE(new VALUE(_data.atKey("s")));
         }
         requireJsonFields(_data, "Transaction " + _data.getKey(),
-            {{"data", {{DataType::String}, jsonField::Required}},
-             {"gasLimit", {{DataType::String}, jsonField::Required}},
-             {"gasPrice", {{DataType::String}, jsonField::Required}},
-             {"nonce", {{DataType::String}, jsonField::Required}},
-             {"value", {{DataType::String}, jsonField::Required}},
-             {"to", {{DataType::String, DataType::Null}, jsonField::Required}},
-             {"secretKey", {{DataType::String}, jsonField::Optional}},
-             {"v", {{DataType::String}, jsonField::Optional}},
-             {"r", {{DataType::String}, jsonField::Optional}},
-             {"s", {{DataType::String}, jsonField::Optional}},
-             {"accessList", {{DataType::Array}, jsonField::Optional}},
-             {"blockHash", {{DataType::String}, jsonField::Optional}},           // EthGetBlockBy transaction
-             {"blockNumber", {{DataType::String}, jsonField::Optional}},         // EthGetBlockBy transaction
-             {"from", {{DataType::String}, jsonField::Optional}},                // EthGetBlockBy transaction
-             {"hash", {{DataType::String}, jsonField::Optional}},                // EthGetBlockBy transaction
-             {"transactionIndex", {{DataType::String}, jsonField::Optional}},    // EthGetBlockBy transaction
-             {"invalid", {{DataType::String}, jsonField::Optional}},             // BlockchainTest filling
-                          });
+            {
+                {"data", {{DataType::String}, jsonField::Required}}, {"gasLimit", {{DataType::String}, jsonField::Required}},
+                {"gasPrice", {{DataType::String}, jsonField::Required}}, {"nonce", {{DataType::String}, jsonField::Required}},
+                {"value", {{DataType::String}, jsonField::Required}},
+                {"to", {{DataType::String, DataType::Null}, jsonField::Required}},
+                {"secretKey", {{DataType::String}, jsonField::Optional}}, {"v", {{DataType::String}, jsonField::Optional}},
+                {"r", {{DataType::String}, jsonField::Optional}}, {"s", {{DataType::String}, jsonField::Optional}},
+
+                {"type", {{DataType::String}, jsonField::Optional}},       // Transaction Type 1
+                {"chainId", {{DataType::String}, jsonField::Optional}},    // Transaction Type 1
+                {"accessList", {{DataType::Array}, jsonField::Optional}},  // Transaction access list
+
+                {"blockHash", {{DataType::String}, jsonField::Optional}},         // EthGetBlockBy transaction
+                {"blockNumber", {{DataType::String}, jsonField::Optional}},       // EthGetBlockBy transaction
+                {"from", {{DataType::String}, jsonField::Optional}},              // EthGetBlockBy transaction
+                {"hash", {{DataType::String}, jsonField::Optional}},              // EthGetBlockBy transaction
+                {"transactionIndex", {{DataType::String}, jsonField::Optional}},  // EthGetBlockBy transaction
+                {"invalid", {{DataType::String}, jsonField::Optional}},           // BlockchainTest filling
+            });
     }
     catch (std::exception const& _ex)
     {

@@ -62,8 +62,9 @@ void TransactionAccessList::fromRLP(dev::RLP const& _rlp)
 void TransactionAccessList::buildVRS(VALUE const& _secret)
 {
     dev::RLPStream stream;
-    stream.appendList(8);
-    streamHeader(stream);
+    stream.appendList(9);
+    stream << VALUE(1).asU256();  // txType
+    TransactionAccessList::streamHeader(stream);
     dev::h256 hash(dev::sha3(stream.out()));
     dev::Signature sig = dev::sign(dev::Secret(_secret.asString()), hash);
     dev::SignatureStruct sigStruct = *(dev::SignatureStruct const*)&sig;
@@ -103,12 +104,12 @@ void TransactionAccessList::streamHeader(dev::RLPStream& _s) const
 BYTES const TransactionAccessList::getSignedRLP() const
 {
     dev::RLPStream sWithSignature;
-    sWithSignature.appendList(11);  // + chainID + accessList
+    sWithSignature.appendList(11);  // chainID + accessList
     streamHeader(sWithSignature);
     sWithSignature << v().asU256().convert_to<dev::byte>();
     sWithSignature << r().asU256();
     sWithSignature << s().asU256();
-    return BYTES(dev::toHexPrefixed(sWithSignature.out()));
+    return BYTES("0x01" + dev::toHex(sWithSignature.out()));
 }
 
 dev::RLPStream const TransactionAccessList::asRLPStream() const
@@ -126,17 +127,22 @@ DataObject const TransactionAccessList::asDataObject(ExportOrder _order) const
 {
     DataObject out = Transaction::asDataObject(_order);
 
-    out["chainId"] = "0x1";
+    out["chainId"] = "0x01";
     out["accessList"] = m_accessList.asDataObject();
+    out["type"] = "0x01";
     if (_order == ExportOrder::ToolStyle)
+    {
+        out["chainId"] = "0x1";
         out["type"] = "0x1";
-
+    }
     return out;
 }
 
 FH32 TransactionAccessList::hash() const
 {
-    return FH32("0x" + dev::toString(dev::sha3(asRLPStream().out())));
+    dev::bytes a = asRLPStream().out();
+    a.insert(a.begin(), dev::byte(1));
+    return FH32("0x" + dev::toString(dev::sha3(a)));
 }
 
 

@@ -9,7 +9,18 @@ const DataObject StateTestTransactionBase::asDataObject() const
     // Serialize data back to JSON
     DataObject out;
     for (Databox const& el : m_databox)
-        out["data"].addArrayObject(el.m_data.asString());
+    {
+        if (el.m_accessList.list().size() == 0)
+            out["data"].addArrayObject(el.m_data.asString());
+        else
+        {
+            // Export Access List
+            DataObject txAccessListData;
+            txAccessListData["data"] = el.m_data.asString();
+            txAccessListData["accessList"] = el.m_accessList.asDataObject();
+            out["data"].addArrayObject(txAccessListData);
+        }
+    }
     for (VALUE const& el : m_gasLimit)
         out["gasLimit"].addArrayObject(el.asString());
     out["gasPrice"] = m_gasPrice.getCContent().asString();

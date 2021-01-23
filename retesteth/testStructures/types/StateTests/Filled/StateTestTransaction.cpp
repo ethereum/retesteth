@@ -22,7 +22,24 @@ StateTestTransaction::StateTestTransaction(DataObject const& _data)
         m_nonce = spVALUE(new VALUE(_data.atKey("nonce")));
 
         for (auto const& el : _data.atKey("data").getSubObjects())
-            m_databox.push_back(Databox(el, el.asString(), string()));
+        {
+            DataObject dataInKey;
+            AccessList accessList;
+            if (el.type() == DataType::Object)
+            {
+                dataInKey = el.atKey("data");
+                accessList = AccessList(el.atKey("accessList"));
+                requireJsonFields(el, "StateTestTransaction::dataWithList " + _data.getKey(),
+                    {{"data", {{DataType::String}, jsonField::Required}},
+                        {"accessList", {{DataType::Array}, jsonField::Required}}});
+                m_databox.push_back(Databox(dataInKey, dataInKey.asString(), string(), accessList));
+            }
+            else
+            {
+                dataInKey = el;
+                m_databox.push_back(Databox(dataInKey, dataInKey.asString(), string()));
+            }
+        }
         for (auto const& el : _data.atKey("gasLimit").getSubObjects())
             m_gasLimit.push_back(el);
         for (auto const& el : _data.atKey("value").getSubObjects())
