@@ -8,7 +8,7 @@ namespace test
 namespace teststruct
 {
 // Look at expect section data indexes filter and try to replace string values
-// into indexes of transaction data array (searching by value assumig this string values are value in that array)
+// into indexes of transaction data array (searching by label)
 DataObject ReplaceValueToIndexesInDataList(spStateTestFillerTransaction const& _gtr, DataObject const& _dataList)
 {
     auto findIndexOfValueAndReplace = [&_gtr](DataObject& _data) {
@@ -16,10 +16,10 @@ DataObject ReplaceValueToIndexesInDataList(spStateTestFillerTransaction const& _
         {
             size_t i = 0;
             std::vector<int> indexes;
-            const vector<string>& dVector = _gtr.getCContent().dataLabelVector();
+            const vector<StateTestTransactionBase::Databox>& dVector = _gtr.getCContent().databoxVector();
             for (auto const& el : dVector)
             {
-                if (el == _data.asString())
+                if (el.m_dataLabel == _data.asString())
                     indexes.push_back(i);
                 i++;
             }

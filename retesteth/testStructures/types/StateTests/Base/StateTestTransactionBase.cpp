@@ -8,8 +8,8 @@ const DataObject StateTestTransactionBase::asDataObject() const
 {
     // Serialize data back to JSON
     DataObject out;
-    for (BYTES const& el : m_data)
-        out["data"].addArrayObject(el.asString());
+    for (Databox const& el : m_databox)
+        out["data"].addArrayObject(el.m_data.asString());
     for (VALUE const& el : m_gasLimit)
         out["gasLimit"].addArrayObject(el.asString());
     out["gasPrice"] = m_gasPrice.getCContent().asString();
@@ -30,16 +30,17 @@ std::vector<TransactionInGeneralSection> StateTestTransactionBase::buildTransact
 {
     // Construct vector of all transactions that are described int data
     std::vector<TransactionInGeneralSection> out;
-    for (size_t dIND = 0; dIND < m_data.size(); dIND++)
+    for (size_t dIND = 0; dIND < m_databox.size(); dIND++)
     {
         for (size_t gIND = 0; gIND < m_gasLimit.size(); gIND++)
         {
             for (size_t vIND = 0; vIND < m_value.size(); vIND++)
             {
+                Databox const& databox = m_databox.at(dIND);
                 if (ExitHandler::receivedExitSignal())
                     return out;
                 DataObject trData;
-                trData["data"] = m_data.at(dIND).asString();
+                trData["data"] = databox.m_data.asString();
                 trData["gasLimit"] = m_gasLimit.at(gIND).asString();
                 trData["value"] = m_value.at(vIND).asString();
 
@@ -51,9 +52,8 @@ std::vector<TransactionInGeneralSection> StateTestTransactionBase::buildTransact
                     trData["to"] = m_to.getCContent().asString();
                 trData["secretKey"] = m_secretKey.getCContent().asString();
 
-                string const dataLabel = m_dataLabel.size() > dIND ? m_dataLabel.at(dIND) : string();
-                string const dataRawPreview = m_dataRawPreview.size() > dIND ? m_dataRawPreview.at(dIND) : string();
-                out.push_back(TransactionInGeneralSection(trData, dIND, gIND, vIND, dataRawPreview, dataLabel));
+                out.push_back(
+                    TransactionInGeneralSection(trData, dIND, gIND, vIND, databox.m_dataRawPreview, databox.m_dataLabel));
             }
         }
     }

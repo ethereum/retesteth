@@ -57,11 +57,9 @@ StateTestFillerTransaction::StateTestFillerTransaction(DataObject const& _data)
                     rawData = "";
                 }
             }
-            m_dataLabel.push_back(label);
-            m_dataRawPreview.push_back(rawData.substr(0, 20));
             dataInKey.setString(test::compiler::replaceCode(rawData));
             // ---
-            m_data.push_back(dataInKey);
+            m_databox.push_back(Databox(dataInKey, label, rawData.substr(0, 20)));
         }
         for (auto const& el : tmpD.atKey("gasLimit").getSubObjects())
             m_gasLimit.push_back(el);
