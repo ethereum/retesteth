@@ -104,7 +104,7 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
 
         // Verify transactions to one described in the fields
         ind = 0;
-        for (Transaction const& tr : tblock.transactions())
+        for (spTransaction const& tr : tblock.transactions())
         {
             if (ExitHandler::receivedExitSignal())
                 return;
@@ -119,11 +119,12 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
                 "(" +
                     clientTr.blockNumber().asDecString() + " != " + tblock.header().number().asDecString() + ")");
 
-            DataObject const testTr = tr.asDataObject();
-            DataObject const remoteTr = clientTr.transaction().getCContent().asDataObject();
-            ETH_ERROR_REQUIRE_MESSAGE(clientTr.transaction().getCContent() == tr,
-                "Error checking remote transaction, remote tr `" + remoteTr.asJson() + "` is different to test tr `" +
-                    testTr.asJson() + "`)");
+            BYTES const testTr = tr.getCContent().getSignedRLP();
+            BYTES const remoteTr = clientTr.transaction().getCContent().getSignedRLP();
+
+            ETH_ERROR_REQUIRE_MESSAGE(remoteTr == testTr, "Error checking remote transaction, remote tr `" +
+                                                              remoteTr.asString() + "` is different to test tr `" +
+                                                              testTr.asString() + "`)");
         }
     }
 

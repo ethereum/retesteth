@@ -10,6 +10,12 @@ namespace test
 {
 namespace teststruct
 {
+enum class TransactionType
+{
+    LEGACY,
+    ACCESSLIST
+};
+
 struct Transaction : GCP_SPointerBase
 {
     Transaction(DataObject const&, string const& _dataRawPreview = string(), string const& _dataLabel = string());
@@ -31,18 +37,17 @@ struct Transaction : GCP_SPointerBase
     VALUE const& r() const { return m_r.getCContent(); }
     VALUE const& s() const { return m_s.getCContent(); }
     virtual FH32 hash() const;
+    virtual TransactionType type() const { return TransactionType::LEGACY; }
 
     virtual BYTES const getSignedRLP() const;
     virtual dev::RLPStream const asRLPStream() const;
     virtual DataObject const asDataObject(ExportOrder _order = ExportOrder::Default) const;
 
-    bool operator==(Transaction const& _rhs) const;
     virtual ~Transaction(){};
 
     /// Debug
     string const& dataLabel() const { return m_dataLabel; }
     string const& dataRawPreview() const { return m_dataRawPreview; }
-
 
 private:
     virtual void fromRLP(dev::RLP const&);

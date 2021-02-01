@@ -164,8 +164,6 @@ DataObject FillTestAsBlockchain(StateTestInFiller const& _test)
                         aBlockchainTest["postStateHash"] = remoteBlock.header().stateRoot().asString();
                     }
 
-
-
                     aBlockchainTest["network"] = fork.asString();
                     aBlockchainTest["sealEngine"] = sealEngineToStr(SealEngine::NoProof);
                     aBlockchainTest["lastblockhash"] = remoteBlock.header().hash().asString();

@@ -23,7 +23,7 @@ BlockchainTestBlock::BlockchainTestBlock(DataObject const& _data)
             m_blockHeader = spBlockHeader(new BlockHeader(_data.atKey("blockHeader")));
 
             for (auto const& tr : _data.atKey("transactions").getSubObjects())
-                m_transactions.push_back(Transaction(tr));
+                m_transactions.push_back(readTransaction(tr));
 
             for (auto const& un : _data.atKey("uncleHeaders").getSubObjects())
                 m_uncles.push_back(BlockHeader(un));

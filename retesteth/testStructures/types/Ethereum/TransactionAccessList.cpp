@@ -16,7 +16,8 @@ TransactionAccessList::TransactionAccessList(DataObject const& _data, string con
   : Transaction(_data, _dataRawPreview, _dataLabel)
 {
     m_accessList = AccessList(_data.atKey("accessList"));
-    buildVRS(VALUE(_data.atKey("secretKey")));  // Build without v + 27
+    if (_data.count("secretKey"))
+        buildVRS(VALUE(_data.atKey("secretKey")));  // Build without v + 27
 }
 
 TransactionAccessList::TransactionAccessList(dev::RLP const& _rlp)
@@ -103,24 +104,27 @@ void TransactionAccessList::streamHeader(dev::RLPStream& _s) const
 
 BYTES const TransactionAccessList::getSignedRLP() const
 {
-    dev::RLPStream sWithSignature;
-    sWithSignature.appendList(11);  // chainID + accessList
-    streamHeader(sWithSignature);
-    sWithSignature << v().asU256().convert_to<dev::byte>();
-    sWithSignature << r().asU256();
-    sWithSignature << s().asU256();
-    return BYTES("0x01" + dev::toHex(sWithSignature.out()));
+    return BYTES("0x" + dev::toHex(asRLPStream().out()));
 }
 
 dev::RLPStream const TransactionAccessList::asRLPStream() const
 {
+    // RLP(01 + tr.rlp)
+    dev::RLPStream wrapper;
     dev::RLPStream out;
     out.appendList(11);
     streamHeader(out);
     out << v().asU256().convert_to<dev::byte>();
     out << r().asU256();
     out << s().asU256();
-    return out;
+
+    // Alter output with prefixed 01 byte + tr.rlp
+    dev::bytes outa = out.out();
+    outa.insert(outa.begin(), dev::byte(1));
+
+    // Encode bytearray into rlp
+    wrapper << outa;
+    return wrapper;
 }
 
 DataObject const TransactionAccessList::asDataObject(ExportOrder _order) const
@@ -140,9 +144,17 @@ DataObject const TransactionAccessList::asDataObject(ExportOrder _order) const
 
 FH32 TransactionAccessList::hash() const
 {
-    dev::bytes a = asRLPStream().out();
-    a.insert(a.begin(), dev::byte(1));
-    return FH32("0x" + dev::toString(dev::sha3(a)));
+    // HASH (01 + tr.rlp)
+    dev::RLPStream out;
+    out.appendList(11);
+    streamHeader(out);
+    out << v().asU256().convert_to<dev::byte>();
+    out << r().asU256();
+    out << s().asU256();
+
+    dev::bytes trRLP = out.out();
+    trRLP.insert(trRLP.begin(), dev::byte(1));
+    return FH32("0x" + dev::toString(dev::sha3(trRLP)));
 }
 
 

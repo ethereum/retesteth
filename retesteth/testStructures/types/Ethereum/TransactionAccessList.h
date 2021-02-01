@@ -18,7 +18,7 @@ struct TransactionAccessList : Transaction
     DataObject const asDataObject(ExportOrder _order = ExportOrder::Default) const override;
 
     FH32 hash() const override;
-    // bool operator==(Transaction const& _rhs) const override;
+    TransactionType type() const override { return TransactionType::ACCESSLIST; }
 
 private:
     // void fromDataObject(DataObject const&) override;

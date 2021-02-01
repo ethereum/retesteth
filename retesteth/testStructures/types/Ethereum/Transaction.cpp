@@ -207,20 +207,5 @@ FH32 Transaction::hash() const
     return FH32("0x" + dev::toString(dev::sha3(asRLPStream().out())));
 }
 
-bool Transaction::operator==(Transaction const& _rhs) const
-{
-    bool creationCondition = false;
-    if (m_creation && _rhs.isCreation())
-        creationCondition = true;
-    else if (m_creation && !_rhs.isCreation())
-        creationCondition = false;
-    else if (!m_creation && _rhs.isCreation())
-        creationCondition = false;
-    else if (!m_creation && !_rhs.isCreation())
-        creationCondition = to() == _rhs.to();
-    return creationCondition && data() == _rhs.data() && gasLimit() == _rhs.gasLimit() && gasPrice() == _rhs.gasPrice() &&
-           nonce() == _rhs.nonce() && value() == _rhs.value() && v() == _rhs.v() && r() == _rhs.r() && s() == _rhs.s();
-}
-
 }  // namespace teststruct
 }  // namespace test

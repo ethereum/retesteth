@@ -112,14 +112,23 @@ void verifyBlockRLP(dev::RLP const& _rlp)
 
     for (auto const& tr : _rlp[1])
     {
-        if (!tr.isList())
-            throw dev::RLPException("Transaction RLP is expected to be list");
-
-        for (size_t i = 0; i < 9; i++)
+        if (tr.isList())
         {
-            if (!tr[i].isData())
-                throw dev::RLPException("Transaction RLP field is not data!");
+            // check legacy transaction. otherwise accept byte array
+            for (size_t i = 0; i < 9; i++)
+            {
+                if (!tr[i].isData())
+                    throw dev::RLPException("Transaction RLP field is not data!");
+            }
         }
+        else if (tr.isData())
+        {
+            // Transaction type 1 is allowed
+            if ((int)tr.payload()[0] != 1)
+                throw dev::RLPException("Transaction RLP is expected to be list");
+        }
+        else
+            throw dev::RLPException("Transaction RLP is expected to be list");
     }
 
     for (auto const& un : _rlp[2])

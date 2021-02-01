@@ -22,7 +22,9 @@ EthGetBlockByTransaction::EthGetBlockByTransaction(DataObject const& _data)
                 _dataFieldRef = "0x";
             }
 
-            m_transaction = spTransaction(new Transaction(_data));
+            // Construct transaction from json rpc request
+            m_transaction = readTransaction(_data);
+
             m_blockHash = spFH32(new FH32(_data.atKey("blockHash")));
             m_blockNumber = spVALUE(new VALUE(_data.atKey("blockNumber")));
             m_from = spFH20(new FH20(_data.atKey("from")));
