@@ -81,7 +81,7 @@ void TestBlockchain::generateBlock(
         typedef std::tuple<spTransaction, bool> testTrInfo;
         std::map<FH32, testTrInfo> testTransactionMap;
         for (auto const& tr : _block.transactions())
-            testTransactionMap[tr.tr().hash()] = {spTransaction(new Transaction(tr.tr())), tr.isMarkedInvalid()};
+            testTransactionMap[tr.tr().hash()] = {readTransaction(tr.tr().asDataObject()), tr.isMarkedInvalid()};
 
         for (auto const& remoteTr : minedBlock.getCContent().transactions())
         {

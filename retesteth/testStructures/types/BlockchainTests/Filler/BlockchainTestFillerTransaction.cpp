@@ -32,6 +32,8 @@ BlockchainTestFillerTransaction::BlockchainTestFillerTransaction(DataObject cons
 
         tmpD.removeKey("data");
         tmpD.removeKey("to");
+        if (tmpD.count("accessList"))
+            tmpD.removeKey("accessList");
         tmpD.performModifier(mod_valueToCompactEvenHexPrefixed);
 
         // fix 0x prefix on 'to' key
@@ -44,8 +46,10 @@ BlockchainTestFillerTransaction::BlockchainTestFillerTransaction(DataObject cons
         // Compile LLL in transaction data into byte code if not already
         tmpD["data"] = test::compiler::replaceCode(_data.atKey("data").asString());
 
+        if (_data.count("accessList"))
+            tmpD["accessList"] = _data.atKey("accessList");
 
-        m_transaction = spTransaction(new Transaction(tmpD));
+        m_transaction = readTransaction(tmpD);
     }
     catch (std::exception const& _ex)
     {
