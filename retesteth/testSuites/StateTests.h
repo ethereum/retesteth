@@ -46,6 +46,7 @@ public:
 class StateTestVMSuite: public StateTestSuite
 {
 public:
+    StateTestVMSuite();
     TestSuite::TestPath suiteFolder() const override;
     TestSuite::FillerPath suiteFillerFolder() const override;
 };

@@ -24,6 +24,11 @@ TestSuite::FillerPath StateTestSuite::suiteFillerFolder() const
 }
 
 // Converted VMTests
+StateTestVMSuite::StateTestVMSuite()
+{
+    test::TestOutputHelper::get().markTestFolderAsFinished(getFullPathFiller("VMTests").parent_path().parent_path(), "VMTests");
+}
+
 TestSuite::TestPath StateTestVMSuite::suiteFolder() const
 {
     if (Options::get().fillchain)
