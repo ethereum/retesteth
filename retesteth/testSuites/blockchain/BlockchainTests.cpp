@@ -115,6 +115,21 @@ TestSuite::FillerPath BCGeneralStateTestsSuite::suiteFillerFolder() const
     return TestSuite::FillerPath(fs::path("src") / fs::path("GeneralStateTestsFiller"));
 }
 
+BCGeneralStateTestsVMSuite::BCGeneralStateTestsVMSuite()
+{
+    test::TestOutputHelper::get().markTestFolderAsFinished(getFullPathFiller("VMTests").parent_path().parent_path(), "VMTests");
+}
+
+TestSuite::TestPath BCGeneralStateTestsVMSuite::suiteFolder() const
+{
+    return TestSuite::TestPath(fs::path("BlockchainTests") / "GeneralStateTests" / "VMTests");
+}
+
+TestSuite::FillerPath BCGeneralStateTestsVMSuite::suiteFillerFolder() const
+{
+    return TestSuite::FillerPath(fs::path("src") / fs::path("GeneralStateTestsFiller") / "VMTests");
+}
+
 TestSuite::TestPath LegacyConstantinopleBCGeneralStateTestsSuite::suiteFolder() const
 {
     return TestSuite::TestPath(
@@ -277,4 +292,22 @@ BOOST_AUTO_TEST_CASE(stEIP2930) {}
 
 // Heavy
 BOOST_AUTO_TEST_CASE(stTimeConsuming) {}
+
+// Converted VMTests
+using BCGeneralStateTestsVMFixture = TestFixture<BCGeneralStateTestsVMSuite, RequireOptionAll>;
+BOOST_FIXTURE_TEST_SUITE(VMTests, BCGeneralStateTestsVMFixture)
+BOOST_AUTO_TEST_CASE(vmArithmeticTest) {}
+BOOST_AUTO_TEST_CASE(vmBitwiseLogicOperation) {}
+BOOST_AUTO_TEST_CASE(vmBlockInfoTest) {}
+BOOST_AUTO_TEST_CASE(vmEnvironmentalInfo) {}
+BOOST_AUTO_TEST_CASE(vmIOandFlowOperations) {}
+BOOST_AUTO_TEST_CASE(vmLogTest) {}
+BOOST_AUTO_TEST_CASE(vmPerformance) {}
+BOOST_AUTO_TEST_CASE(vmPushDupSwapTest) {}
+BOOST_AUTO_TEST_CASE(vmRandomTest) {}
+BOOST_AUTO_TEST_CASE(vmSha3Test) {}
+BOOST_AUTO_TEST_CASE(vmSystemOperations) {}
+BOOST_AUTO_TEST_CASE(vmTests) {}
+BOOST_AUTO_TEST_SUITE_END()
+
 BOOST_AUTO_TEST_SUITE_END()
