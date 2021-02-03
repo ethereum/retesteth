@@ -168,4 +168,17 @@ t8ntoolcfg::t8ntoolcfg()
         obj["content"] = t8ntool_start;
         map_configs.addArrayObject(obj);
     }
+    {
+        DataObject obj;
+        obj["path"] = "default/config";
+        obj["content"] = t8ntool_config;
+        map_configs.addArrayObject(obj);
+    }
+    {
+        DataObject obj;
+        obj["exec"] = true;
+        obj["path"] = "default/start.sh";
+        obj["content"] = t8ntool_start;
+        map_configs.addArrayObject(obj);
+    }
 }

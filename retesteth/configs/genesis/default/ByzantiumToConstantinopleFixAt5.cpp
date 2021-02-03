@@ -30,12 +30,12 @@ const string t8ntool_ByzantiumToConstantinopleFixAt5_config = R"({
 genByzantiumToConstantinopleFixCfg::genByzantiumToConstantinopleFixCfg()
 {
     DataObject obj;
-    obj["path"] = "default/genesis/ByzantiumToConstantinopleFixAt5.json";
+    obj["path"] = "besu/genesis/ByzantiumToConstantinopleFixAt5.json";
     obj["content"] = default_ByzantiumToConstantinopleFixAt5_config;
     map_configs.addArrayObject(obj);
 
     DataObject obj2;
-    obj2["path"] = "t8ntool/genesis/ByzantiumToConstantinopleFixAt5.json";
+    obj2["path"] = "default/genesis/ByzantiumToConstantinopleFixAt5.json";
     obj2["content"] = t8ntool_ByzantiumToConstantinopleFixAt5_config;
     map_configs.addArrayObject(obj2);
 }

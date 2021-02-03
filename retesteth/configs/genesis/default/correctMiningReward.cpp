@@ -37,12 +37,12 @@ const string t8ntool_correctMiningReward_config = R"({
 genRewardsCfg::genRewardsCfg()
 {
     DataObject obj;
-    obj["path"] = "default/genesis/correctMiningReward.json";
+    obj["path"] = "besu/genesis/correctMiningReward.json";
     obj["content"] = default_correctMiningReward_config;
     map_configs.addArrayObject(obj);
 
     DataObject obj2;
-    obj2["path"] = "t8ntool/genesis/correctMiningReward.json";
+    obj2["path"] = "default/genesis/correctMiningReward.json";
     obj2["content"] = t8ntool_correctMiningReward_config;
     map_configs.addArrayObject(obj2);
 }

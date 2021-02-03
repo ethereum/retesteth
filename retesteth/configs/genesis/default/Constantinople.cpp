@@ -29,12 +29,12 @@ const string t8ntool_Constantinople_config = R"({
 genConstantinopleCfg::genConstantinopleCfg()
 {
     DataObject obj;
-    obj["path"] = "default/genesis/Constantinople.json";
+    obj["path"] = "besu/genesis/Constantinople.json";
     obj["content"] = default_Constantinople_config;
     map_configs.addArrayObject(obj);
 
     DataObject obj2;
-    obj2["path"] = "t8ntool/genesis/Constantinople.json";
+    obj2["path"] = "default/genesis/Constantinople.json";
     obj2["content"] = t8ntool_Constantinople_config;
     map_configs.addArrayObject(obj2);
 }

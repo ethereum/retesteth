@@ -23,12 +23,12 @@ const string t8ntool_Homestead_config = R"({
 genHomesteadCfg::genHomesteadCfg()
 {
     DataObject obj;
-    obj["path"] = "default/genesis/Homestead.json";
+    obj["path"] = "besu/genesis/Homestead.json";
     obj["content"] = default_Homestead_config;
     map_configs.addArrayObject(obj);
 
     DataObject obj2;
-    obj2["path"] = "t8ntool/genesis/Homestead.json";
+    obj2["path"] = "default/genesis/Homestead.json";
     obj2["content"] = t8ntool_Homestead_config;
     map_configs.addArrayObject(obj2);
 }
