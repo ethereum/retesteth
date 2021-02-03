@@ -75,7 +75,7 @@ void checkUnexecutedTransactions(std::vector<TransactionInGeneralSection> const&
             atLeastOneExecuted = true;
         bool transactionExecutedOrSkipped = tr.getExecuted() || tr.getSkipped();
         atLeastOneWithoutExpectSection = !transactionExecutedOrSkipped || atLeastOneWithoutExpectSection;
-        if (!transactionExecutedOrSkipped)
+        if (!transactionExecutedOrSkipped || atLeastOneWithoutExpectSection)
         {
             TestInfo errorInfo("all", (int)tr.dataInd(), (int)tr.gasInd(), (int)tr.valueInd());
             TestOutputHelper::get().setCurrentTestInfo(errorInfo);

@@ -26,16 +26,15 @@ bool isHexDigitsType(DigitsType _dtype)
 
 void removeLeadingZeroes(string& _hexStr)
 {
-    bool replacePossible = true;
-    while (replacePossible)
+    size_t i = 0;
+    for (i = 2; i < _hexStr.length() - 1; i++)
     {
-        if (_hexStr[0] == '0' && _hexStr[1] == 'x' && _hexStr[2] == '0' && _hexStr.size() >= 4)
-        {
-            _hexStr = "0x" + _hexStr.substr(3);
+        if (_hexStr.at(i) == '0')
             continue;
-        }
-        replacePossible = false;
+        else
+            break;
     }
+    _hexStr = "0x" + _hexStr.substr(i);
 }
 
 }  // namespace

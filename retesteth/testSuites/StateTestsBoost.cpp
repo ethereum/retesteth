@@ -23,10 +23,10 @@ TestSuite::FillerPath StateTestSuite::suiteFillerFolder() const
     return TestSuite::FillerPath(fs::path("src") / "GeneralStateTestsFiller");
 }
 
-// Converted VMTests
-StateTestVMSuite::StateTestVMSuite()
+StateTestSuite::StateTestSuite()
 {
-    test::TestOutputHelper::get().markTestFolderAsFinished(getFullPathFiller("VMTests").parent_path().parent_path(), "VMTests");
+    // Register subtest as finished test case. because each folder is treated as test case folder
+    test::TestOutputHelper::get().markTestFolderAsFinished(getFullPathFiller("VMTests").parent_path(), "VMTests");
 }
 
 TestSuite::TestPath StateTestVMSuite::suiteFolder() const
