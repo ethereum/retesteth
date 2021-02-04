@@ -36,11 +36,11 @@ StateTestFillerTransaction::StateTestFillerTransaction(DataObject const& _data)
         for (auto const& el : _data.atKey("data").getSubObjects())
         {
             DataObject dataInKey;
-            AccessList accessList;
+            spAccessList accessList;
             if (el.type() == DataType::Object)
             {
                 dataInKey = el.atKey("data");
-                accessList = AccessList(el.atKey("accessList"));
+                accessList = spAccessList(new AccessList(el.atKey("accessList")));
                 requireJsonFields(el, "StateTestFillerTransaction::dataWithList " + _data.getKey(),
                     {{"data", {{DataType::String}, jsonField::Required}},
                         {"accessList", {{DataType::Array}, jsonField::Required}}});

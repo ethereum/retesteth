@@ -8,19 +8,19 @@ const DataObject StateTestTransactionBase::asDataObject() const
 {
     // Serialize data back to JSON
     DataObject out;
+    size_t index = 0;
+    DataObject txAccessListData;
     for (Databox const& el : m_databox)
     {
-        if (el.m_accessList.list().size() == 0)
-            out["data"].addArrayObject(el.m_data.asString());
-        else
-        {
-            // Export Access List
-            DataObject txAccessListData;
-            txAccessListData["data"] = el.m_data.asString();
-            txAccessListData["accessList"] = el.m_accessList.asDataObject();
-            out["data"].addArrayObject(txAccessListData);
-        }
+        out["data"].addArrayObject(el.m_data.asString());
+        if (!el.m_accessList.isEmpty() && el.m_accessList.getCContent().list().size() != 0)
+            txAccessListData[test::fto_string(index)] = el.m_accessList.getCContent().asDataObject();
+        index++;
     }
+
+    if (txAccessListData.getSubObjects().size())
+        out["accessLists"] = txAccessListData;
+
     for (VALUE const& el : m_gasLimit)
         out["gasLimit"].addArrayObject(el.asString());
     out["gasPrice"] = m_gasPrice.getCContent().asString();
@@ -64,8 +64,8 @@ std::vector<TransactionInGeneralSection> StateTestTransactionBase::buildTransact
                 trData["secretKey"] = m_secretKey.getCContent().asString();
 
                 // Export Access List
-                if (databox.m_accessList.list().size())
-                    trData["accessList"] = databox.m_accessList.asDataObject();
+                if (!databox.m_accessList.isEmpty() && databox.m_accessList.getCContent().list().size())
+                    trData["accessList"] = databox.m_accessList.getCContent().asDataObject();
 
                 out.push_back(
                     TransactionInGeneralSection(trData, dIND, gIND, vIND, databox.m_dataRawPreview, databox.m_dataLabel));

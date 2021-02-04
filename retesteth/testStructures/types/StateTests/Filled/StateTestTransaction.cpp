@@ -21,24 +21,23 @@ StateTestTransaction::StateTestTransaction(DataObject const& _data)
         m_gasPrice = spVALUE(new VALUE(_data.atKey("gasPrice")));
         m_nonce = spVALUE(new VALUE(_data.atKey("nonce")));
 
+        std::map<string, spAccessList> accessLists;
+        if (_data.count("accessLists"))
+        {
+            for (auto const& el : _data.atKey("accessLists").getSubObjects())
+                accessLists.emplace(el.getKey(), spAccessList(new AccessList(el)));
+        }
+
+        size_t index = 0;
         for (auto const& el : _data.atKey("data").getSubObjects())
         {
-            DataObject dataInKey;
-            AccessList accessList;
-            if (el.type() == DataType::Object)
-            {
-                dataInKey = el.atKey("data");
-                accessList = AccessList(el.atKey("accessList"));
-                requireJsonFields(el, "StateTestTransaction::dataWithList " + _data.getKey(),
-                    {{"data", {{DataType::String}, jsonField::Required}},
-                        {"accessList", {{DataType::Array}, jsonField::Required}}});
-                m_databox.push_back(Databox(dataInKey, dataInKey.asString(), string(), accessList));
-            }
+            DataObject dataInKey = el;
+            string const indexs = test::fto_string(index);
+            if (accessLists.count(indexs))
+                m_databox.push_back(Databox(dataInKey, dataInKey.asString(), string(), accessLists.at(indexs)));
             else
-            {
-                dataInKey = el;
                 m_databox.push_back(Databox(dataInKey, dataInKey.asString(), string()));
-            }
+            index++;
         }
         for (auto const& el : _data.atKey("gasLimit").getSubObjects())
             m_gasLimit.push_back(el);
@@ -47,6 +46,7 @@ StateTestTransaction::StateTestTransaction(DataObject const& _data)
 
         requireJsonFields(_data, "StateTestTransaction " + _data.getKey(),
             {{"data", {{DataType::Array}, jsonField::Required}},
+             {"accessLists", {{DataType::Object}, jsonField::Optional}},
              {"gasLimit", {{DataType::Array}, jsonField::Required}},
              {"gasPrice", {{DataType::String}, jsonField::Required}},
              {"nonce", {{DataType::String}, jsonField::Required}},

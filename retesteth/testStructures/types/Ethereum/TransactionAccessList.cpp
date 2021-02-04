@@ -15,7 +15,7 @@ namespace teststruct
 TransactionAccessList::TransactionAccessList(DataObject const& _data, string const& _dataRawPreview, string const& _dataLabel)
   : Transaction(_data, _dataRawPreview, _dataLabel)
 {
-    m_accessList = AccessList(_data.atKey("accessList"));
+    m_accessList = spAccessList(new AccessList(_data.atKey("accessList")));
     if (_data.count("secretKey"))
         buildVRS(VALUE(_data.atKey("secretKey")));  // Build without v + 27
 }
@@ -50,8 +50,8 @@ void TransactionAccessList::fromRLP(dev::RLP const& _rlp)
     trData["data"] = rlpToString(_rlp[i++], 0);
 
     // read access list
-    AccessList list(_rlp[i++]);
-    trData["accessList"] = list.asDataObject();
+    spAccessList list = spAccessList(new AccessList(_rlp[i++]));
+    trData["accessList"] = list.getContent().asDataObject();
     m_accessList = list;
 
     trData["v"] = rlpToString(_rlp[i++]);
@@ -94,10 +94,10 @@ void TransactionAccessList::streamHeader(dev::RLPStream& _s) const
     _s << value().asU256();
     _s << test::sfromHex(data().asString());
 
-    // Access List
-    dev::RLPStream accessList(m_accessList.list().size());
-    for (auto const& el : m_accessList.list())
-        accessList.appendRaw(el.asRLPStream().out());
+    // Access Listist
+    dev::RLPStream accessList(m_accessList.getCContent().list().size());
+    for (auto const& el : m_accessList.getCContent().list())
+        accessList.appendRaw(el.getCContent().asRLPStream().out());
 
     _s.appendRaw(accessList.out());
 }
@@ -132,7 +132,7 @@ DataObject const TransactionAccessList::asDataObject(ExportOrder _order) const
     DataObject out = Transaction::asDataObject(_order);
 
     out["chainId"] = "0x01";
-    out["accessList"] = m_accessList.asDataObject();
+    out["accessList"] = m_accessList.getCContent().asDataObject();
     out["type"] = "0x01";
     if (_order == ExportOrder::ToolStyle)
     {

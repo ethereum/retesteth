@@ -26,7 +26,7 @@ private:
 
     void buildVRS(VALUE const& _secret) override;
     void streamHeader(dev::RLPStream& _stream) const override;
-    AccessList m_accessList;
+    spAccessList m_accessList;
 };
 
 typedef GCP_SPointer<TransactionAccessList> spTransactionAccessList;
