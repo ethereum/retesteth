@@ -809,4 +809,23 @@ BOOST_AUTO_TEST_CASE(dataobject_replace)
     BOOST_CHECK(data.asJson(0,false) == "{\"key2\":\"value2\"}");
 }
 
+BOOST_AUTO_TEST_CASE(dataobject_arrayhell)
+{
+    string const data = R"(
+    {
+        "array" : [
+                    [
+                        {
+                            "address" : "0x0000000000000000000000000000000000001337",
+                            "storageKeys" : [
+                                "0x0000000000000000000000000000000000000000000000000000000000000001",
+                                "0x0000000000000000000000000000000000000000000000000000000000000002"
+                            ]
+                        }
+                    ]
+                ]
+    })";
+    DataObject dObj = ConvertJsoncppStringToData(data, string(), true);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

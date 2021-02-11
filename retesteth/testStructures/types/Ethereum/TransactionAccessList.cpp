@@ -63,10 +63,14 @@ void TransactionAccessList::fromRLP(dev::RLP const& _rlp)
 void TransactionAccessList::buildVRS(VALUE const& _secret)
 {
     dev::RLPStream stream;
-    stream.appendList(9);
-    stream << VALUE(1).asU256();  // txType
+    stream.appendList(8);
     TransactionAccessList::streamHeader(stream);
-    dev::h256 hash(dev::sha3(stream.out()));
+
+    // Alter output with prefixed 01 byte + tr.rlp
+    dev::bytes outa = stream.out();
+    outa.insert(outa.begin(), dev::byte(1));  // txType
+
+    dev::h256 hash(dev::sha3(outa));
     dev::Signature sig = dev::sign(dev::Secret(_secret.asString()), hash);
     dev::SignatureStruct sigStruct = *(dev::SignatureStruct const*)&sig;
     ETH_FAIL_REQUIRE_MESSAGE(

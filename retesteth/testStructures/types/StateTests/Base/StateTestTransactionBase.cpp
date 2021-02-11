@@ -9,12 +9,14 @@ const DataObject StateTestTransactionBase::asDataObject() const
     // Serialize data back to JSON
     DataObject out;
     size_t index = 0;
-    DataObject txAccessListData;
+    DataObject txAccessListData(DataType::Array);
     for (Databox const& el : m_databox)
     {
         out["data"].addArrayObject(el.m_data.asString());
-        if (!el.m_accessList.isEmpty() && el.m_accessList.getCContent().list().size() != 0)
-            txAccessListData[test::fto_string(index)] = el.m_accessList.getCContent().asDataObject();
+        if (el.m_accessList.isEmpty())
+            txAccessListData.addArrayObject(DataObject(DataType::Null));
+        else
+            txAccessListData.addArrayObject(el.m_accessList.getCContent().asDataObject());
         index++;
     }
 
@@ -64,7 +66,7 @@ std::vector<TransactionInGeneralSection> StateTestTransactionBase::buildTransact
                 trData["secretKey"] = m_secretKey.getCContent().asString();
 
                 // Export Access List
-                if (!databox.m_accessList.isEmpty() && databox.m_accessList.getCContent().list().size())
+                if (!databox.m_accessList.isEmpty())
                     trData["accessList"] = databox.m_accessList.getCContent().asDataObject();
 
                 out.push_back(
