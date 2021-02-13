@@ -34,16 +34,23 @@ StateTestTransaction::StateTestTransaction(DataObject const& _data)
         }
 
         size_t index = 0;
-        if (accessLists.size() != _data.atKey("data").getSubObjects().size())
-            ETH_ERROR_MESSAGE("`AccessLists` array length must match `data` array length!");
+        if (_data.count("accessLists"))
+            if (accessLists.size() != _data.atKey("data").getSubObjects().size())
+                ETH_ERROR_MESSAGE("`AccessLists` array length must match `data` array length!");
 
         for (auto const& el : _data.atKey("data").getSubObjects())
         {
             DataObject dataInKey = el;
-            if (accessLists.at(index).isEmpty())
-                m_databox.push_back(Databox(dataInKey, dataInKey.asString(), string()));
+            if (accessLists.size())
+            {
+                if (accessLists.at(index).isEmpty())
+                    m_databox.push_back(Databox(dataInKey, dataInKey.asString(), string()));
+                else
+                    m_databox.push_back(Databox(dataInKey, dataInKey.asString(), string(), accessLists.at(index)));
+            }
             else
-                m_databox.push_back(Databox(dataInKey, dataInKey.asString(), string(), accessLists.at(index)));
+                m_databox.push_back(Databox(dataInKey, dataInKey.asString(), string()));
+
             index++;
         }
         for (auto const& el : _data.atKey("gasLimit").getSubObjects())
