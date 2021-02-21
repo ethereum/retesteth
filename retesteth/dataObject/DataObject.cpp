@@ -361,8 +361,8 @@ std::string DataObject::asJson(int level, bool pretty, bool nokey) const
             else
                 out << "\"" << m_strKey << "\":";
         }
-        //out << "\"" << "null" << "\"";
-        out << "{}";
+        out << "null";
+        //out << "{}";  // why???
         break;
     case DataType::Object:
         if (!m_strKey.empty() && !nokey)

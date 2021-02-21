@@ -9,6 +9,7 @@ const DataObject StateTestTransactionBase::asDataObject() const
     // Serialize data back to JSON
     DataObject out;
     size_t index = 0;
+    bool atLeastOneNonNullAccessList = false;
     DataObject txAccessListData(DataType::Array);
     for (Databox const& el : m_databox)
     {
@@ -16,11 +17,14 @@ const DataObject StateTestTransactionBase::asDataObject() const
         if (el.m_accessList.isEmpty())
             txAccessListData.addArrayObject(DataObject(DataType::Null));
         else
+        {
             txAccessListData.addArrayObject(el.m_accessList.getCContent().asDataObject());
+            atLeastOneNonNullAccessList = true;
+        }
         index++;
     }
 
-    if (txAccessListData.getSubObjects().size())
+    if (atLeastOneNonNullAccessList)
         out["accessLists"] = txAccessListData;
 
     for (VALUE const& el : m_gasLimit)
