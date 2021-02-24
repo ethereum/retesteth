@@ -503,7 +503,7 @@ BOOST_AUTO_TEST_CASE(dataobject_readJson15)
                 }
        )";
     DataObject dObj = ConvertJsoncppStringToData(data);
-    string res = R"({"array":[{}],"object":{}})";
+    string res = R"({"array":[null],"object":null})";
     BOOST_CHECK(dObj.asJson(0, false) == res);
 }
 

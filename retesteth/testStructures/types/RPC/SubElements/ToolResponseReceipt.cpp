@@ -13,7 +13,8 @@ ToolResponseReceipt::ToolResponseReceipt(DataObject const& _data)
     m_trGasUsed = spVALUE(new VALUE(_data.atKey("gasUsed")));
 
     requireJsonFields(_data, "ToolResponseReceipt " + _data.getKey(),
-        {{"root", {{DataType::String}, jsonField::Required}},
+        {{"type", {{DataType::String}, jsonField::Optional}},
+         {"root", {{DataType::String}, jsonField::Required}},
          {"status", {{DataType::String}, jsonField::Required}},
          {"cumulativeGasUsed", {{DataType::String}, jsonField::Required}},
          {"logsBloom", {{DataType::String}, jsonField::Required}},

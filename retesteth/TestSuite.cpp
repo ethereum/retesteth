@@ -646,6 +646,7 @@ void TestSuite::executeFile(boost::filesystem::path const& _file) const
 
     if (_file.extension() != ".json")
         ETH_ERROR_MESSAGE("The generated test must have `.json` format!");
+
     doTests(test::readJsonData(_file), opt);
 }
 }
