@@ -291,6 +291,7 @@ DataObject FillTest(StateTestInFiller const& _test)
 
                     transactionResults["indexes"] = indexes;
                     transactionResults["hash"] = blockInfo.header().stateRoot().asString();
+                    transactionResults["txbytes"] = tr.transaction().getSignedRLP().asString();
 
                     // Fill up the loghash (optional)
                     FH32 logHash(session.test_getLogHash(trHash));
@@ -400,6 +401,14 @@ void RunTest(StateTestInFilled const& _test)
                     }
                     if (Options::get().poststate)
                         ETH_LOG("\nRunning test State Dump:" + TestOutputHelper::get().testInfo().errorDebug() + cDefault + " \n" + getRemoteState(session).asDataObject().asJson(), 1);
+
+                    // Validate that txbytes field has the transaction data described in test `transaction` field.
+                    spBYTES const& expectedBytesPtr = result.bytesPtr();
+                    if (!expectedBytesPtr.isEmpty())
+                    {
+                        if (tr.transaction().getSignedRLP().asString() != expectedBytesPtr.getCContent().asString())
+                            ETH_ERROR_MESSAGE("TxBytes mismatch: test transaction section doest not match txbytes in post section!");
+                    }
 
                     // Validate log hash
                     FH32 const& expectedLogHash = result.logs();

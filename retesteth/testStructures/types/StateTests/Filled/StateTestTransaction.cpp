@@ -26,7 +26,7 @@ StateTestTransaction::StateTestTransaction(DataObject const& _data)
         {
             for (auto const& el : _data.atKey("accessLists").getSubObjects())
             {
-                if (el.type() == DataType::Object)
+                if (el.type() == DataType::Null)
                     accessLists.push_back(spAccessList(0));
                 else
                     accessLists.push_back(spAccessList(new AccessList(el)));
