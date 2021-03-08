@@ -33,6 +33,8 @@ enum jsonField
 using jsonTypeSet = std::set<DataType>;
 using jsonType = std::pair<jsonTypeSet, jsonField>;
 
+static VALUE c_maxNonce(DataObject("0xffffffffffffffff"));
+
 // Check the json object with validation map that reuires certain field of certain type to be present in json
 // _o a json object to check
 // _configName a string with json object name. Will apper in error message.

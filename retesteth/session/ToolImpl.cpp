@@ -35,13 +35,13 @@ FH32 ToolImpl::eth_sendRawTransaction(BYTES const& _rlp)
     return trHash;
 }
 
-size_t ToolImpl::eth_getTransactionCount(FH20 const& _address, VALUE const& _blockNumber)
+VALUE ToolImpl::eth_getTransactionCount(FH20 const& _address, VALUE const& _blockNumber)
 {
     rpcCall("", {});
     ETH_TEST_MESSAGE("\nRequest: eth_getTransactionCount " + _blockNumber.asString() + " " + _address.asString());
     VALUE const& nonce = blockchain().blockByNumber(_blockNumber).state().getAccount(_address).nonce();
     ETH_TEST_MESSAGE("Response: eth_getTransactionCount " + nonce.asDecString());
-    return (size_t)nonce.asU256();
+    return nonce;
 }
 
 VALUE ToolImpl::eth_blockNumber()

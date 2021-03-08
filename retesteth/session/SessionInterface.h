@@ -43,7 +43,7 @@ public:
 
     // ETH Methods
     virtual FH32 eth_sendRawTransaction(BYTES const& _rlp) = 0;
-    virtual size_t eth_getTransactionCount(FH20 const& _address, VALUE const& _blockNumber) = 0;
+    virtual VALUE eth_getTransactionCount(FH20 const& _address, VALUE const& _blockNumber) = 0;
 
     virtual VALUE eth_blockNumber() = 0;
     virtual EthGetBlockBy eth_getBlockByHash(FH32 const& _blockHash, Request _fullObjects) = 0;
