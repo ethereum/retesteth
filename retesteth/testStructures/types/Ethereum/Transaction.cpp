@@ -49,6 +49,7 @@ void Transaction::fromDataObject(DataObject const& _data)
                 throw test::UpwardsException("Incorrect transaction `v` value: " + m_v.getCContent().asString());
             m_r = spVALUE(new VALUE(_data.atKey("r")));
             m_s = spVALUE(new VALUE(_data.atKey("s")));
+            rebuildRLP();
         }
         requireJsonFields(_data, "Transaction " + _data.getKey(),
             {
@@ -109,7 +110,6 @@ Transaction::Transaction(BYTES const& _rlp)
     fromRLP(rlp);
 }
 
-
 void Transaction::streamHeader(dev::RLPStream& _s) const
 {
     _s << nonce().asU256();
@@ -141,32 +141,21 @@ void Transaction::buildVRS(VALUE const& _secret)
     assignV(spVALUE(new VALUE(v)));
     assignR(spVALUE(new VALUE(r)));
     assignS(spVALUE(new VALUE(s)));
+    rebuildRLP();
 }
 
 void Transaction::assignV(spVALUE const _v) { m_v = _v; }
 void Transaction::assignR(spVALUE const _r) { m_r = _r; }
 void Transaction::assignS(spVALUE const _s) { m_s = _s; }
 
-BYTES const Transaction::getSignedRLP() const
+BYTES const& Transaction::getSignedRLP() const
 {
-    dev::RLPStream sWithSignature;
-    sWithSignature.appendList(9);
-    streamHeader(sWithSignature);
-    sWithSignature << v().asU256().convert_to<dev::byte>();
-    sWithSignature << r().asU256();
-    sWithSignature << s().asU256();
-    return BYTES(dev::toHexPrefixed(sWithSignature.out()));
+    return m_signedRLPdata.getCContent();
 }
 
-dev::RLPStream const Transaction::asRLPStream() const
+dev::RLPStream const& Transaction::asRLPStream() const
 {
-    dev::RLPStream out;
-    out.appendList(9);
-    streamHeader(out);
-    out << v().asU256().convert_to<dev::byte>();
-    out << r().asU256();
-    out << s().asU256();
-    return out;
+    return m_outRlpStream;
 }
 
 const DataObject Transaction::asDataObject(ExportOrder _order) const
@@ -202,9 +191,22 @@ const DataObject Transaction::asDataObject(ExportOrder _order) const
     return out;
 }
 
-FH32 Transaction::hash() const
+FH32 const& Transaction::hash() const
 {
-    return FH32("0x" + dev::toString(dev::sha3(asRLPStream().out())));
+    return m_hash.getCContent();
+}
+
+void Transaction::rebuildRLP()
+{
+    dev::RLPStream out;
+    out.appendList(9);
+    streamHeader(out);
+    out << v().asU256().convert_to<dev::byte>();
+    out << r().asU256();
+    out << s().asU256();
+    m_outRlpStream = out;
+    m_signedRLPdata = spBYTES(new BYTES(dev::toHexPrefixed(out.out())));
+    m_hash = spFH32(new FH32("0x" + dev::toString(dev::sha3(out.out()))));
 }
 
 }  // namespace teststruct

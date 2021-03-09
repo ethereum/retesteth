@@ -183,7 +183,8 @@ ToolResponse ToolChain::mineBlockOnTool(EthereumBlockState const& _block, SealEn
         if (tr.getCContent().gasLimit().asU256() <= c_maxGasLimit)  // tool fails on limits here.
             txs.addArrayObject(tr.getCContent().asDataObject(ExportOrder::ToolStyle));
         else
-            ETH_WARNING("Retesteth rejecting tx with gasLimit > 64 bits for tool");
+            ETH_WARNING(
+                "Retesteth rejecting tx with gasLimit > 64 bits for tool" + TestOutputHelper::get().testInfo().errorDebug());
     }
     writeFile(txsPath.string(), txs.asJson());
 

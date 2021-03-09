@@ -18,6 +18,8 @@ TransactionAccessList::TransactionAccessList(DataObject const& _data, string con
     m_accessList = spAccessList(new AccessList(_data.atKey("accessList")));
     if (_data.count("secretKey"))
         buildVRS(VALUE(_data.atKey("secretKey")));  // Build without v + 27
+    else
+        rebuildRLP();
 }
 
 TransactionAccessList::TransactionAccessList(dev::RLP const& _rlp)
@@ -82,6 +84,7 @@ void TransactionAccessList::buildVRS(VALUE const& _secret)
     assignV(spVALUE(new VALUE(v)));
     assignR(spVALUE(new VALUE(r)));
     assignS(spVALUE(new VALUE(s)));
+    rebuildRLP();
 }
 
 void TransactionAccessList::streamHeader(dev::RLPStream& _s) const
@@ -106,12 +109,22 @@ void TransactionAccessList::streamHeader(dev::RLPStream& _s) const
     _s.appendRaw(accessList.out());
 }
 
-BYTES const TransactionAccessList::getSignedRLP() const
+DataObject const TransactionAccessList::asDataObject(ExportOrder _order) const
 {
-    return BYTES("0x" + dev::toHex(asRLPStream().out()));
+    DataObject out = Transaction::asDataObject(_order);
+
+    out["chainId"] = "0x01";
+    out["accessList"] = m_accessList.getCContent().asDataObject();
+    out["type"] = "0x01";
+    if (_order == ExportOrder::ToolStyle)
+    {
+        out["chainId"] = "0x1";
+        out["type"] = "0x1";
+    }
+    return out;
 }
 
-dev::RLPStream const TransactionAccessList::asRLPStream() const
+void TransactionAccessList::rebuildRLP()
 {
     // RLP(01 + tr.rlp)
     dev::RLPStream wrapper;
@@ -128,37 +141,9 @@ dev::RLPStream const TransactionAccessList::asRLPStream() const
 
     // Encode bytearray into rlp
     wrapper << outa;
-    return wrapper;
-}
-
-DataObject const TransactionAccessList::asDataObject(ExportOrder _order) const
-{
-    DataObject out = Transaction::asDataObject(_order);
-
-    out["chainId"] = "0x01";
-    out["accessList"] = m_accessList.getCContent().asDataObject();
-    out["type"] = "0x01";
-    if (_order == ExportOrder::ToolStyle)
-    {
-        out["chainId"] = "0x1";
-        out["type"] = "0x1";
-    }
-    return out;
-}
-
-FH32 TransactionAccessList::hash() const
-{
-    // HASH (01 + tr.rlp)
-    dev::RLPStream out;
-    out.appendList(11);
-    streamHeader(out);
-    out << v().asU256().convert_to<dev::byte>();
-    out << r().asU256();
-    out << s().asU256();
-
-    dev::bytes trRLP = out.out();
-    trRLP.insert(trRLP.begin(), dev::byte(1));
-    return FH32("0x" + dev::toString(dev::sha3(trRLP)));
+    m_outRlpStream = wrapper;
+    m_signedRLPdata = spBYTES(new BYTES(dev::toHexPrefixed(m_outRlpStream.out())));
+    m_hash = spFH32(new FH32("0x" + dev::toString(dev::sha3(outa))));
 }
 
 

@@ -13,19 +13,16 @@ struct TransactionAccessList : Transaction
     TransactionAccessList(BYTES const&);
     TransactionAccessList(dev::RLP const&);
 
-    BYTES const getSignedRLP() const override;
-    dev::RLPStream const asRLPStream() const override;
     DataObject const asDataObject(ExportOrder _order = ExportOrder::Default) const override;
-
-    FH32 hash() const override;
     TransactionType type() const override { return TransactionType::ACCESSLIST; }
 
 private:
-    // void fromDataObject(DataObject const&) override;
     void fromRLP(dev::RLP const&) override;
 
     void buildVRS(VALUE const& _secret) override;
     void streamHeader(dev::RLPStream& _stream) const override;
+
+    void rebuildRLP() override;
     spAccessList m_accessList;
 };
 

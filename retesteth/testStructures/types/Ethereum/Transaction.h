@@ -36,11 +36,11 @@ struct Transaction : GCP_SPointerBase
     VALUE const& v() const { return m_v.getCContent(); }
     VALUE const& r() const { return m_r.getCContent(); }
     VALUE const& s() const { return m_s.getCContent(); }
-    virtual FH32 hash() const;
+    FH32 const& hash() const;
     virtual TransactionType type() const { return TransactionType::LEGACY; }
 
-    virtual BYTES const getSignedRLP() const;
-    virtual dev::RLPStream const asRLPStream() const;
+    BYTES const& getSignedRLP() const;
+    dev::RLPStream const& asRLPStream() const;
     virtual DataObject const asDataObject(ExportOrder _order = ExportOrder::Default) const;
 
     virtual ~Transaction(){};
@@ -76,6 +76,12 @@ protected:
     void assignV(spVALUE const);
     void assignR(spVALUE const);
     void assignS(spVALUE const);
+
+    // Optimization
+    spFH32 m_hash;
+    dev::RLPStream m_outRlpStream;
+    spBYTES m_signedRLPdata;
+    virtual void rebuildRLP();
 };
 
 typedef GCP_SPointer<Transaction> spTransaction;
