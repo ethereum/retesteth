@@ -8,7 +8,7 @@ namespace test
 namespace teststruct
 {
 // NonceMap;
-typedef std::map<string, size_t> NonceMap;
+typedef std::map<string, spVALUE> NonceMap;
 
 struct BlockchainTestFillerTransaction : GCP_SPointerBase
 {

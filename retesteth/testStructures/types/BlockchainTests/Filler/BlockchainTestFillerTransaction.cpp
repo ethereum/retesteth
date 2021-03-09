@@ -23,8 +23,8 @@ BlockchainTestFillerTransaction::BlockchainTestFillerTransaction(DataObject cons
             dev::Address key = dev::toAddress(priv);
             if (_nonceMap.count("0x" + key.hex()))
             {
-                tmpD.atKeyUnsafe("nonce").setString(test::fto_string(_nonceMap.at("0x" + key.hex())));
-                _nonceMap["0x" + key.hex()]++;
+                tmpD.atKeyUnsafe("nonce").setString(_nonceMap.at("0x" + key.hex()).getCContent().asDecString());
+                _nonceMap["0x" + key.hex()].getContent()++;
             }
             else
                 ETH_ERROR_MESSAGE("Parsing tx.nonce `auto` can't find tx.origin in nonce map!");
