@@ -54,6 +54,13 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
         // Check imported block against the fields in test
         // Check Blockheader
         EthGetBlockBy latestBlock(session.eth_getBlockByHash(blHash, Request::FULLOBJECTS));
+
+        for (auto const& tr : tblock.transactions())
+        {
+            if (Options::get().vmtrace)
+                printVmTrace(session, tr.getCContent().hash(), latestBlock.header().stateRoot());
+        }
+
         bool condition = latestBlock.header() == tblock.header();
         /*if (_opt.isLegacyTests)
         {
