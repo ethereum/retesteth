@@ -18,7 +18,7 @@ public:
 
     // ETH Methods
     FH32 eth_sendRawTransaction(BYTES const& _rlp) override;
-    size_t eth_getTransactionCount(FH20 const& _address, VALUE const& _blockNumber) override;
+    VALUE eth_getTransactionCount(FH20 const& _address, VALUE const& _blockNumber) override;
     VALUE eth_blockNumber() override;
     EthGetBlockBy eth_getBlockByHash(FH32 const& _hash, Request _fullObjects) override;
     EthGetBlockBy eth_getBlockByNumber(VALUE const& _blockNumber, Request _fullObjects) override;

@@ -27,6 +27,7 @@ struct VALUE : GCP_SPointerBase
     bool operator==(VALUE const& _rhs) const { return m_data == _rhs.asU256(); }
     VALUE operator-(VALUE const& _rhs) const { return VALUE(m_data - _rhs.asU256()); }
     VALUE operator+(VALUE const& _rhs) const { return VALUE(m_data + _rhs.asU256()); }
+    VALUE operator++(int) { m_data++; return *this; }
 
     string asString(size_t _roundBytes = 1) const { return dev::toCompactHexPrefixed(m_data, _roundBytes); }
     string asDecString() const;

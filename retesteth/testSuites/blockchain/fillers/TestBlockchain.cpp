@@ -81,7 +81,7 @@ void TestBlockchain::generateBlock(
         typedef std::tuple<spTransaction, bool> testTrInfo;
         std::map<FH32, testTrInfo> testTransactionMap;
         for (auto const& tr : _block.transactions())
-            testTransactionMap[tr.tr().hash()] = {spTransaction(new Transaction(tr.tr())), tr.isMarkedInvalid()};
+            testTransactionMap[tr.tr().hash()] = {readTransaction(tr.tr().asDataObject()), tr.isMarkedInvalid()};
 
         for (auto const& remoteTr : minedBlock.getCContent().transactions())
         {
@@ -93,8 +93,8 @@ void TestBlockchain::generateBlock(
                 bool isMarkedInvalid = std::get<1>(testTransactionMap.at(remoteTr.hash()));
                 if (!isMarkedInvalid)
                 {
-                    spTransaction const& tr = std::get<0>(testTransactionMap.at(remoteTr.hash()));
-                    newBlock.registerTestTransaction(tr.getCContent());
+                    spTransaction const& spTr = std::get<0>(testTransactionMap.at(remoteTr.hash()));
+                    newBlock.registerTestTransaction(spTr);
                 }
                 testTransactionMap.erase(remoteTr.hash());
             }
@@ -108,7 +108,7 @@ void TestBlockchain::generateBlock(
         {
             bool isMarkedInvalid = std::get<1>(leftoverTr.second);
             if (!isMarkedInvalid)
-                newBlock.registerTestTransaction(std::get<0>(leftoverTr.second).getCContent());
+                newBlock.registerTestTransaction(std::get<0>(leftoverTr.second));
         }
         // -------
 
@@ -131,14 +131,8 @@ GCP_SPointer<EthGetBlockBy> TestBlockchain::mineBlock(
     m_session.test_mineBlocks(1);
     VALUE latestBlockNumber(m_session.eth_blockNumber());
 
-    auto checkTransactions = [](size_t _trInBlocks, size_t _trInTest, size_t _trAllowedToFail) {
-        ETH_ERROR_REQUIRE_MESSAGE(_trInBlocks == _trInTest - _trAllowedToFail,
-            "BlockchainTest transaction execution failed! (remote " + fto_string(_trInBlocks) + " != test " +
-                fto_string(_trInTest) + ", allowedToFail = " + fto_string(_trAllowedToFail) + " )");
-    };
-
     spFH32 minedBlockHash;
-    if (_blockInTest.hasBlockHeader() || _blockInTest.hasRelTimeStamp() || _blockInTest.uncles().size() > 0)
+    if (_blockInTest.hasBlockHeaderOverwrite(m_network) || _blockInTest.uncles().size() > 0)
     {
         // Need to overwrite the blockheader of a mined block with either blockHeader or uncles
         // Then import it again and see what client says, because mining with uncles not supported
@@ -171,8 +165,34 @@ GCP_SPointer<EthGetBlockBy> TestBlockchain::mineBlock(
         _rawRLP = remoteBlock.getCContent().getRLPHeaderTransactions();
     }
 
-    checkTransactions(remoteBlock.getContent().transactions().size(), _blockInTest.transactions().size(),
-        _blockInTest.invalidTransactionCount());
+    // check that transactions are good
+    for (auto const& trInTest : _blockInTest.transactions())
+    {
+        auto const& container = remoteBlock.getCContent().transactions();
+        auto result = std::find_if(container.begin(), container.end(),
+            [&trInTest](EthGetBlockByTransaction const& el) { return el.hash() == trInTest.tr().hash(); });
+        if (result == container.end())
+        {
+            if (!trInTest.isMarkedInvalid())
+                ETH_WARNING(
+                    "TestBlockchain::mineBlock transaction has unexpectedly failed to be mined (see logs --verbosity 6): \n" +
+                    trInTest.tr().asDataObject().asJson());
+        }
+        else
+        {
+            if (trInTest.isMarkedInvalid())
+                ETH_WARNING("TestBlockchain::mineBlock transaction expected to failed but mined good: \n" +
+                            trInTest.tr().asDataObject().asJson());
+        }
+    }
+
+    auto remoteTr = remoteBlock.getCContent().transactions().size();
+    auto testblTr = _blockInTest.transactions().size();
+    auto expectFails = _blockInTest.invalidTransactionCount();
+    if (remoteTr != testblTr - expectFails)
+        ETH_ERROR_MESSAGE("BlockchainTest transaction execution failed! (remote " + fto_string(remoteTr) + " != test " +
+                          fto_string(testblTr) + ", allowedToFail = " + fto_string(expectFails) + " )");
+
     return remoteBlock;
 }
 
@@ -289,22 +309,27 @@ FH32 TestBlockchain::postmineBlockHeader(BlockchainTestFillerBlock const& _block
     for (auto const& un : _uncles)
         managedBlock.addUncle(un);
 
-    if (_blockInTest.hasBlockHeader())
-        managedBlock.replaceHeader(_blockInTest.blockHeader().overwriteBlockHeader(managedBlock.header()));
-
-    // Overwrite blockheader if defined in the test filler
-    if (_blockInTest.hasRelTimeStamp())
-    {
-        EthGetBlockBy previousBlock(m_session.eth_getBlockByNumber(_latestBlockNumber - 1, Request::LESSOBJECTS));
-        managedBlock.headerUnsafe().setTimestamp(previousBlock.header().timestamp().asU256() + _blockInTest.relTimeStamp());
-    }
-
-    // replace block with overwritten header
     bool weOverwriteHashFields = false;
-    if (_blockInTest.hasBlockHeader())
+    if (_blockInTest.hasBlockHeaderOverwrite(m_network))
     {
-        if (_blockInTest.blockHeader().hasUncleHash() || _blockInTest.blockHeader().hasTransactionHash())
-            weOverwriteHashFields = true;
+        BlockHeaderOverwrite const& headerOverwrite = _blockInTest.getHeaderOverwrite(m_network);
+        if (headerOverwrite.hasBlockHeader())
+            managedBlock.replaceHeader(headerOverwrite.header().overwriteBlockHeader(managedBlock.header()));
+
+        // Overwrite blockheader if defined in the test filler
+        if (headerOverwrite.hasRelTimeStamp())
+        {
+            EthGetBlockBy previousBlock(m_session.eth_getBlockByNumber(_latestBlockNumber - 1, Request::LESSOBJECTS));
+            managedBlock.headerUnsafe().setTimestamp(
+                previousBlock.header().timestamp().asU256() + headerOverwrite.relTimeStamp());
+        }
+
+        // replace block with overwritten header
+        if (headerOverwrite.hasBlockHeader())
+        {
+            if (headerOverwrite.header().hasUncleHash() || headerOverwrite.header().hasTransactionHash())
+                weOverwriteHashFields = true;
+        }
     }
 
     if (!weOverwriteHashFields)

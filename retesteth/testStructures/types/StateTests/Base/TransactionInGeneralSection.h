@@ -1,5 +1,6 @@
 #pragma once
 #include "../../Ethereum/Transaction.h"
+#include "../../Ethereum/TransactionAccessList.h"
 #include <retesteth/dataObject/DataObject.h>
 #include <retesteth/dataObject/SPointer.h>
 
@@ -14,7 +15,8 @@ namespace teststruct
 // This is a single transaction representation
 struct TransactionInGeneralSection
 {
-    TransactionInGeneralSection(DataObject const&, size_t _dInd, size_t _gInd, size_t _vInd);
+    TransactionInGeneralSection(
+        DataObject const&, size_t _dInd, size_t _gInd, size_t _vInd, string const& _dataRawPreview, string const& _dataLabel);
     size_t dataInd() const { return m_dInd; }
     size_t gasInd() const { return m_gInd; }
     size_t valueInd() const { return m_vInd; }

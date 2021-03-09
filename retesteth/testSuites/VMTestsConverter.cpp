@@ -122,6 +122,12 @@ DataObject VMTestConverterSuite::doTests(DataObject const& _input, TestSuiteOpti
 
             // Pre state
             bcTestFiller["pre"] = test.Pre().asDataObject();
+            for (auto& acc : bcTestFiller["pre"].getSubObjectsUnsafe())
+            {
+                const string val = acc.atKey("code").asString();
+                if (val.size() > 2)
+                    acc.atKeyUnsafe("code").setString(":raw " + val);
+            }
 
             // Insert sender account
             FH20 const sender(DataObject("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"));

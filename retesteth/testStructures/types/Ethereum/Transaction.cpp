@@ -11,9 +11,11 @@ namespace test
 {
 namespace teststruct
 {
-Transaction::Transaction(DataObject const& _data)
+Transaction::Transaction(DataObject const& _data, string const& _dataRawPreview, string const& _dataLabel)
 {
     fromDataObject(_data);
+    m_dataRawPreview = _dataRawPreview;
+    m_dataLabel = _dataLabel;
 }
 
 void Transaction::fromDataObject(DataObject const& _data)
@@ -47,25 +49,28 @@ void Transaction::fromDataObject(DataObject const& _data)
                 throw test::UpwardsException("Incorrect transaction `v` value: " + m_v.getCContent().asString());
             m_r = spVALUE(new VALUE(_data.atKey("r")));
             m_s = spVALUE(new VALUE(_data.atKey("s")));
+            rebuildRLP();
         }
         requireJsonFields(_data, "Transaction " + _data.getKey(),
-            {{"data", {{DataType::String}, jsonField::Required}},
-             {"gasLimit", {{DataType::String}, jsonField::Required}},
-             {"gasPrice", {{DataType::String}, jsonField::Required}},
-             {"nonce", {{DataType::String}, jsonField::Required}},
-             {"value", {{DataType::String}, jsonField::Required}},
-             {"to", {{DataType::String, DataType::Null}, jsonField::Required}},
-             {"secretKey", {{DataType::String}, jsonField::Optional}},
-             {"v", {{DataType::String}, jsonField::Optional}},
-             {"r", {{DataType::String}, jsonField::Optional}},
-             {"s", {{DataType::String}, jsonField::Optional}},
-             {"blockHash", {{DataType::String}, jsonField::Optional}},           // EthGetBlockBy transaction
-             {"blockNumber", {{DataType::String}, jsonField::Optional}},         // EthGetBlockBy transaction
-             {"from", {{DataType::String}, jsonField::Optional}},                // EthGetBlockBy transaction
-             {"hash", {{DataType::String}, jsonField::Optional}},                // EthGetBlockBy transaction
-             {"transactionIndex", {{DataType::String}, jsonField::Optional}},    // EthGetBlockBy transaction
-             {"invalid", {{DataType::String}, jsonField::Optional}},             // BlockchainTest filling
-                          });
+            {
+                {"data", {{DataType::String}, jsonField::Required}}, {"gasLimit", {{DataType::String}, jsonField::Required}},
+                {"gasPrice", {{DataType::String}, jsonField::Required}}, {"nonce", {{DataType::String}, jsonField::Required}},
+                {"value", {{DataType::String}, jsonField::Required}},
+                {"to", {{DataType::String, DataType::Null}, jsonField::Required}},
+                {"secretKey", {{DataType::String}, jsonField::Optional}}, {"v", {{DataType::String}, jsonField::Optional}},
+                {"r", {{DataType::String}, jsonField::Optional}}, {"s", {{DataType::String}, jsonField::Optional}},
+
+                {"type", {{DataType::String}, jsonField::Optional}},       // Transaction Type 1
+                {"chainId", {{DataType::String}, jsonField::Optional}},    // Transaction Type 1
+                {"accessList", {{DataType::Array}, jsonField::Optional}},  // Transaction access list
+
+                {"blockHash", {{DataType::String}, jsonField::Optional}},         // EthGetBlockBy transaction
+                {"blockNumber", {{DataType::String}, jsonField::Optional}},       // EthGetBlockBy transaction
+                {"from", {{DataType::String}, jsonField::Optional}},              // EthGetBlockBy transaction
+                {"hash", {{DataType::String}, jsonField::Optional}},              // EthGetBlockBy transaction
+                {"transactionIndex", {{DataType::String}, jsonField::Optional}},  // EthGetBlockBy transaction
+                {"invalid", {{DataType::String}, jsonField::Optional}},           // BlockchainTest filling
+            });
     }
     catch (std::exception const& _ex)
     {
@@ -105,7 +110,6 @@ Transaction::Transaction(BYTES const& _rlp)
     fromRLP(rlp);
 }
 
-
 void Transaction::streamHeader(dev::RLPStream& _s) const
 {
     _s << nonce().asU256();
@@ -134,32 +138,24 @@ void Transaction::buildVRS(VALUE const& _secret)
     DataObject v = DataObject(dev::toCompactHexPrefixed(dev::u256(sigStruct.v + 27)));
     DataObject r = DataObject(dev::toCompactHexPrefixed(dev::u256(sigStruct.r)));
     DataObject s = DataObject(dev::toCompactHexPrefixed(dev::u256(sigStruct.s)));
-    m_v = spVALUE(new VALUE(v));
-    m_r = spVALUE(new VALUE(r));
-    m_s = spVALUE(new VALUE(s));
+    assignV(spVALUE(new VALUE(v)));
+    assignR(spVALUE(new VALUE(r)));
+    assignS(spVALUE(new VALUE(s)));
+    rebuildRLP();
 }
 
+void Transaction::assignV(spVALUE const _v) { m_v = _v; }
+void Transaction::assignR(spVALUE const _r) { m_r = _r; }
+void Transaction::assignS(spVALUE const _s) { m_s = _s; }
 
-BYTES const Transaction::getSignedRLP() const
+BYTES const& Transaction::getSignedRLP() const
 {
-    dev::RLPStream sWithSignature;
-    sWithSignature.appendList(9);
-    streamHeader(sWithSignature);
-    sWithSignature << v().asU256().convert_to<dev::byte>();
-    sWithSignature << r().asU256();
-    sWithSignature << s().asU256();
-    return BYTES(dev::toHexPrefixed(sWithSignature.out()));
+    return m_signedRLPdata.getCContent();
 }
 
-dev::RLPStream const Transaction::asRLPStream() const
+dev::RLPStream const& Transaction::asRLPStream() const
 {
-    dev::RLPStream out;
-    out.appendList(9);
-    streamHeader(out);
-    out << v().asU256().convert_to<dev::byte>();
-    out << r().asU256();
-    out << s().asU256();
-    return out;
+    return m_outRlpStream;
 }
 
 const DataObject Transaction::asDataObject(ExportOrder _order) const
@@ -195,24 +191,22 @@ const DataObject Transaction::asDataObject(ExportOrder _order) const
     return out;
 }
 
-FH32 Transaction::hash() const
+FH32 const& Transaction::hash() const
 {
-    return FH32("0x" + dev::toString(dev::sha3(asRLPStream().out())));
+    return m_hash.getCContent();
 }
 
-bool Transaction::operator==(Transaction const& _rhs) const
+void Transaction::rebuildRLP()
 {
-    bool creationCondition = false;
-    if (m_creation && _rhs.isCreation())
-        creationCondition = true;
-    else if (m_creation && !_rhs.isCreation())
-        creationCondition = false;
-    else if (!m_creation && _rhs.isCreation())
-        creationCondition = false;
-    else if (!m_creation && !_rhs.isCreation())
-        creationCondition = to() == _rhs.to();
-    return creationCondition && data() == _rhs.data() && gasLimit() == _rhs.gasLimit() && gasPrice() == _rhs.gasPrice() &&
-           nonce() == _rhs.nonce() && value() == _rhs.value() && v() == _rhs.v() && r() == _rhs.r() && s() == _rhs.s();
+    dev::RLPStream out;
+    out.appendList(9);
+    streamHeader(out);
+    out << v().asU256().convert_to<dev::byte>();
+    out << r().asU256();
+    out << s().asU256();
+    m_outRlpStream = out;
+    m_signedRLPdata = spBYTES(new BYTES(dev::toHexPrefixed(out.out())));
+    m_hash = spFH32(new FH32("0x" + dev::toString(dev::sha3(out.out()))));
 }
 
 }  // namespace teststruct

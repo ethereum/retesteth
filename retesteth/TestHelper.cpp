@@ -175,6 +175,47 @@ vector<string> levenshteinDistance(std::string const& _needle, std::vector<std::
     return ret;
 }
 
+std::mutex g_strFindMutex;
+DigitsType stringIntegerType(std::string const& _string, bool _wasPrefix)
+{
+    if (_string[0] == '0' && _string[1] == 'x' && !_wasPrefix)
+    {
+        DigitsType substringType = stringIntegerType(_string, true);
+        if (substringType == DigitsType::Hex)
+            return DigitsType::HexPrefixed;
+
+        if (substringType == DigitsType::Decimal)
+        {
+            if (_string.size() % 2 == 0)
+                return DigitsType::HexPrefixed;
+            else
+                return DigitsType::UnEvenHexPrefixed;
+        }
+
+        if (substringType == DigitsType::UnEvenHex)
+            return DigitsType::UnEvenHexPrefixed;
+    }
+
+    bool isDecimalOnly = true;
+    std::lock_guard<std::mutex> lock(g_strFindMutex);  // string.find is not thread safe + static
+    for (size_t i = _wasPrefix ? 2 : 0; i < _string.length(); i++)
+    {
+        if (!isxdigit(_string[i]))
+            return DigitsType::String;
+
+        if (isDecimalOnly && !isdigit(_string[i]))
+            isDecimalOnly = false;
+    }
+
+    if (isDecimalOnly)
+        return DigitsType::Decimal;
+
+    if (_string.size() % 2 == 0)
+        return DigitsType::Hex;
+
+    return DigitsType::UnEvenHex;
+}
+
 void parseJsonStrValueIntoSet(DataObject const& _json, set<string>& _out)
 {
     if (_json.type() == DataType::Array)
@@ -194,18 +235,51 @@ void parseJsonStrValueIntoSet(DataObject const& _json, set<string>& _out)
 
 void parseJsonIntValueIntoSet(DataObject const& _json, set<int>& _out)
 {
+    auto parseRange = [&_out](DataObject const& a) {
+        string const& s = a.asString();
+        size_t delimeter = s.find('-');
+        if (delimeter != string::npos)
+        {
+            string const firstPartString = s.substr(0, delimeter);
+            if (stringIntegerType(firstPartString) != DigitsType::Decimal)
+                ETH_ERROR_MESSAGE("parseJsonIntValueIntoSet require x to be decimal in `x-y` range! `" + firstPartString);
+
+            string const secondPartString = s.substr(delimeter + 1);
+            if (stringIntegerType(secondPartString) != DigitsType::Decimal)
+                ETH_ERROR_MESSAGE("parseJsonIntValueIntoSet require y to be decimal in `x-y` range! `" + secondPartString);
+
+            size_t const indexStart = atoi(firstPartString.c_str());
+            size_t const indexEnd = atoi(secondPartString.c_str());
+            for (size_t i = indexStart; i <= indexEnd; i++)
+                _out.emplace(i);
+        }
+        else
+            ETH_ERROR_MESSAGE("parseJsonIntValueIntoSet: Error parsing integer range string! format: \"x-y\", got: `" + s);
+    };
+
     if (_json.type() == DataType::Array)
     {
         for (auto const& val: _json.getSubObjects())
         {
-            ETH_ERROR_REQUIRE_MESSAGE(val.type() == DataType::Integer, "parseJsonIntValueIntoSet expected value type = int!");
-            _out.emplace(val.asInt());
+            if (val.type() == DataType::Integer)
+                _out.emplace(val.asInt());
+            else
+            {
+                ETH_ERROR_REQUIRE_MESSAGE(
+                    val.type() == DataType::String, "parseJsonIntValueIntoSet expected value type = int, \"int-int\" range!");
+                parseRange(val);
+            }
         }
     }
     else if (_json.type() == DataType::Integer)
     {
         ETH_ERROR_REQUIRE_MESSAGE(_json.type() == DataType::Integer, "parseJsonIntValueIntoSet expected json type = int!");
         _out.emplace(_json.asInt());
+    }
+    else if (_json.type() == DataType::String)
+    {
+        // Try to parse range into values "x-y"
+        parseRange(_json);
     }
 }
 

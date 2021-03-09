@@ -26,16 +26,15 @@ bool isHexDigitsType(DigitsType _dtype)
 
 void removeLeadingZeroes(string& _hexStr)
 {
-    bool replacePossible = true;
-    while (replacePossible)
+    size_t i = 0;
+    for (i = 2; i < _hexStr.length() - 1; i++)
     {
-        if (_hexStr[0] == '0' && _hexStr[1] == 'x' && _hexStr[2] == '0' && _hexStr.size() >= 4)
-        {
-            _hexStr = "0x" + _hexStr.substr(3);
+        if (_hexStr.at(i) == '0')
             continue;
-        }
-        replacePossible = false;
+        else
+            break;
     }
+    _hexStr = "0x" + _hexStr.substr(i);
 }
 
 }  // namespace
@@ -267,9 +266,7 @@ DataObject convertDecBlockheaderIncompleteToHex(DataObject const& _data)
 {
     // Convert to HEX
     DataObject tmpD = _data;
-    tmpD.removeKey("updatePoW");        // BlockchainTestFiller fields
     tmpD.removeKey("RelTimestamp");     // BlockchainTestFiller fields
-    tmpD.removeKey("expectException");  // BlockchainTestFiller fields
     tmpD.removeKey("chainname");        // BlockchainTestFiller fields
 
     std::vector<string> hashKeys = {"parentHash", "coinbase", "bloom"};
@@ -285,47 +282,6 @@ DataObject convertDecBlockheaderIncompleteToHex(DataObject const& _data)
         if (_data.count(key))
             tmpD[key].performModifier(mod_valueToCompactEvenHexPrefixed);
     return tmpD;
-}
-
-std::mutex g_strFindMutex;
-DigitsType stringIntegerType(std::string const& _string, bool _wasPrefix)
-{
-    if (_string[0] == '0' && _string[1] == 'x' && !_wasPrefix)
-    {
-        DigitsType substringType = stringIntegerType(_string, true);
-        if (substringType == DigitsType::Hex)
-            return DigitsType::HexPrefixed;
-
-        if (substringType == DigitsType::Decimal)
-        {
-            if (_string.size() % 2 == 0)
-                return DigitsType::HexPrefixed;
-            else
-                return DigitsType::UnEvenHexPrefixed;
-        }
-
-        if (substringType == DigitsType::UnEvenHex)
-            return DigitsType::UnEvenHexPrefixed;
-    }
-
-    bool isDecimalOnly = true;
-    std::lock_guard<std::mutex> lock(g_strFindMutex);  // string.find is not thread safe + static
-    for (size_t i = _wasPrefix ? 2 : 0; i < _string.length(); i++)
-    {
-        if (!isxdigit(_string[i]))
-            return DigitsType::String;
-
-        if (isDecimalOnly && !isdigit(_string[i]))
-            isDecimalOnly = false;
-    }
-
-    if (isDecimalOnly)
-        return DigitsType::Decimal;
-
-    if (_string.size() % 2 == 0)
-        return DigitsType::Hex;
-
-    return DigitsType::UnEvenHex;
 }
 
 // Construct comapasion string

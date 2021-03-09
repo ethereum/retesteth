@@ -5,6 +5,7 @@
 #include <retesteth/Options.h>
 #include <retesteth/session/ToolImpl.h>
 #include <retesteth/testStructures/types/BlockchainTests/Filler/BlockchainTestFillerEnv.h>
+#include <retesteth/testStructures/types/Ethereum/TransactionReader.h>
 
 #include "ToolBackend/ToolImplHelper.h"
 
@@ -26,20 +27,21 @@ FH32 ToolImpl::eth_sendRawTransaction(BYTES const& _rlp)
 {
     rpcCall("", {});
     ETH_TEST_MESSAGE("\nRequest: eth_sendRawTransaction \n" + _rlp.asString());
-    Transaction tr(_rlp);
-    m_toolChainManager.getContent().addPendingTransaction(tr);
-    FH32 trHash = tr.hash();
+
+    spTransaction spTr = readTransaction(_rlp);
+    m_toolChainManager.getContent().addPendingTransaction(spTr);
+    FH32 trHash = spTr.getContent().hash();
     ETH_TEST_MESSAGE("Response: " + trHash.asString());
     return trHash;
 }
 
-size_t ToolImpl::eth_getTransactionCount(FH20 const& _address, VALUE const& _blockNumber)
+VALUE ToolImpl::eth_getTransactionCount(FH20 const& _address, VALUE const& _blockNumber)
 {
     rpcCall("", {});
     ETH_TEST_MESSAGE("\nRequest: eth_getTransactionCount " + _blockNumber.asString() + " " + _address.asString());
     VALUE const& nonce = blockchain().blockByNumber(_blockNumber).state().getAccount(_address).nonce();
     ETH_TEST_MESSAGE("Response: eth_getTransactionCount " + nonce.asDecString());
-    return (size_t)nonce.asU256();
+    return nonce;
 }
 
 VALUE ToolImpl::eth_blockNumber()

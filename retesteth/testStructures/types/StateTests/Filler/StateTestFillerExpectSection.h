@@ -3,6 +3,7 @@
 #include "../../../types/Ethereum/StateIncomplete.h"
 #include <retesteth/dataObject/DataObject.h>
 #include <retesteth/dataObject/SPointer.h>
+#include <testStructures/types/StateTests/Filler/StateTestFillerTransaction.h>
 using namespace dataobject;
 using namespace test::teststruct;
 
@@ -12,7 +13,7 @@ namespace teststruct
 {
 struct StateTestFillerExpectSection
 {
-    StateTestFillerExpectSection(DataObject const&);
+    StateTestFillerExpectSection(DataObject const&, spStateTestFillerTransaction const&);
     StateIncomplete const& result() const { return m_result.getCContent(); }
     std::vector<FORK> const& forks() const { return m_forks; }
     bool hasFork(FORK const& _fork) const

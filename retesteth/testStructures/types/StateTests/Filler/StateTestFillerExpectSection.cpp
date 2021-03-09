@@ -7,11 +7,82 @@ namespace test
 {
 namespace teststruct
 {
-StateTestFillerExpectSection::StateTestFillerExpectSection(DataObject const& _data)
+// Look at expect section data indexes filter and try to replace string values
+// into indexes of transaction data array (searching by label)
+DataObject ReplaceValueToIndexesInDataList(spStateTestFillerTransaction const& _gtr, DataObject const& _dataList)
+{
+    auto findIndexOfValueAndReplace = [&_gtr](DataObject& _data) {
+        if (_data.type() == DataType::String)
+        {
+            size_t i = 0;
+            std::vector<int> indexes;
+            const vector<StateTestTransactionBase::Databox>& dVector = _gtr.getCContent().databoxVector();
+            for (auto const& el : dVector)
+            {
+                if (el.m_dataLabel == _data.asString())
+                    indexes.push_back(i);
+                i++;
+            }
+
+            if (indexes.size() == 1)
+            {
+                _data.clear();
+                _data.setInt(indexes.at(0));
+            }
+            if (indexes.size() > 1)
+            {
+                _data.clear();
+                for (auto const& el : indexes)
+                    _data.addArrayObject(el);
+            }
+            if (indexes.size() == 0 && _data.asString().find(":label") != string::npos)
+                ETH_ERROR_MESSAGE("Label not found in tx data: `" + _data.asString() + "`");
+        }
+    };
+    // Check if dataIndexes contain values of transaction data vector
+    // Find those values and vector and replace by indexes
+    DataObject dataIndexes = _dataList;
+    if (dataIndexes.type() == DataType::Array)
+    {
+        DataObject updatedDataIndexes;
+        for (auto& el : dataIndexes.getSubObjectsUnsafe())
+        {
+            // try to replace `el` with data indexes from transaction
+            // in case `el` provided is a transaction value in dataInd array
+            if (el.type() == DataType::String)
+            {
+                DataObject elCopy = el;
+                findIndexOfValueAndReplace(elCopy);
+                if (elCopy.type() == DataType::Integer)
+                {
+                    el = elCopy;
+                    updatedDataIndexes.addArrayObject(el);
+                }
+                else if (elCopy.type() == DataType::Array)
+                {
+                    for (auto const& el2 : elCopy.getSubObjects())
+                        updatedDataIndexes.addArrayObject(el2);
+                }
+                else
+                    updatedDataIndexes.addArrayObject(el);
+            }
+            else
+                updatedDataIndexes.addArrayObject(el);
+        }
+        dataIndexes = updatedDataIndexes;
+    }
+    else if (dataIndexes.type() == DataType::String)
+        findIndexOfValueAndReplace(dataIndexes);
+    dataIndexes.setKey(_dataList.getKey());
+    return dataIndexes;
+}
+
+StateTestFillerExpectSection::StateTestFillerExpectSection(DataObject const& _data, spStateTestFillerTransaction const& _gtr)
 {
     try
     {
-        parseJsonIntValueIntoSet(_data.atKey("indexes").atKey("data"), m_dataInd);
+        DataObject dataIndexes = ReplaceValueToIndexesInDataList(_gtr, _data.atKey("indexes").atKey("data"));
+        parseJsonIntValueIntoSet(dataIndexes, m_dataInd);
         parseJsonIntValueIntoSet(_data.atKey("indexes").atKey("gas"), m_gasInd);
         parseJsonIntValueIntoSet(_data.atKey("indexes").atKey("value"), m_valInd);
 
@@ -36,7 +107,7 @@ StateTestFillerExpectSection::StateTestFillerExpectSection(DataObject const& _da
     }
     catch (std::exception const& _ex)
     {
-        throw UpwardsException(string("StateTestFillerExpectSection parse error: ") + _ex.what() + _data.asJson());
+        throw UpwardsException(string("StateTestFillerExpectSection parse error: ") + _ex.what() + "\n" + _data.asJson());
     }
 }
 

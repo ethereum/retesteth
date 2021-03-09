@@ -23,6 +23,24 @@ TestSuite::FillerPath StateTestSuite::suiteFillerFolder() const
     return TestSuite::FillerPath(fs::path("src") / "GeneralStateTestsFiller");
 }
 
+StateTestSuite::StateTestSuite()
+{
+    // Register subtest as finished test case. because each folder is treated as test case folder
+    test::TestOutputHelper::get().markTestFolderAsFinished(getFullPathFiller("VMTests").parent_path(), "VMTests");
+}
+
+TestSuite::TestPath StateTestVMSuite::suiteFolder() const
+{
+    if (Options::get().fillchain)
+        return TestSuite::TestPath(fs::path("BlockchainTests") / "GeneralStateTests" / "VMTests");
+    return TestSuite::TestPath(fs::path("GeneralStateTests") / "VMTests");
+}
+
+TestSuite::FillerPath StateTestVMSuite::suiteFillerFolder() const
+{
+    return TestSuite::FillerPath(fs::path("src") / "GeneralStateTestsFiller" / "VMTests");
+}
+
 // Legacy Constantinople
 TestSuite::TestPath LegacyConstantinopleStateTestSuite::suiteFolder() const
 {
@@ -110,7 +128,26 @@ BOOST_AUTO_TEST_CASE(stSelfBalance) {}
 BOOST_AUTO_TEST_CASE(stStaticFlagEnabled) {}
 BOOST_AUTO_TEST_CASE(stSubroutine) {}
 BOOST_AUTO_TEST_CASE(stEIP2537) {}
+BOOST_AUTO_TEST_CASE(stEIP2930) {}
 
 // Heavy
 BOOST_AUTO_TEST_CASE(stTimeConsuming) {}
+
+// Converted VMTests
+using GeneralStateTestsVMFixture = TestFixture<StateTestVMSuite, DefaultFlags>;
+BOOST_FIXTURE_TEST_SUITE(VMTests, GeneralStateTestsVMFixture)
+BOOST_AUTO_TEST_CASE(vmArithmeticTest) {}
+BOOST_AUTO_TEST_CASE(vmBitwiseLogicOperation) {}
+BOOST_AUTO_TEST_CASE(vmBlockInfoTest) {}
+BOOST_AUTO_TEST_CASE(vmEnvironmentalInfo) {}
+BOOST_AUTO_TEST_CASE(vmIOandFlowOperations) {}
+BOOST_AUTO_TEST_CASE(vmLogTest) {}
+BOOST_AUTO_TEST_CASE(vmPerformance) {}
+BOOST_AUTO_TEST_CASE(vmPushDupSwapTest) {}
+BOOST_AUTO_TEST_CASE(vmRandomTest) {}
+BOOST_AUTO_TEST_CASE(vmSha3Test) {}
+BOOST_AUTO_TEST_CASE(vmSystemOperations) {}
+BOOST_AUTO_TEST_CASE(vmTests) {}
+BOOST_AUTO_TEST_SUITE_END()
+
 BOOST_AUTO_TEST_SUITE_END()

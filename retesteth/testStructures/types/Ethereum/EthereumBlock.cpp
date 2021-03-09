@@ -45,7 +45,7 @@ BYTES const EthereumBlock::getRLP() const
         // Transaction list
         RLPStream transactionList(m_transactions.size());
         for (auto const& tr : m_transactions)
-            transactionList.appendRaw(tr.asRLPStream().out());
+            transactionList.appendRaw(tr.getCContent().asRLPStream().out());
         stream.appendRaw(transactionList.out());
 
         // Uncle list

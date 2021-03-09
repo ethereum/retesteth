@@ -17,7 +17,11 @@ AccountIncomplete::AccountIncomplete(DataObject const& _data)
     if (_data.count("balance"))
         m_balance = spVALUE(new VALUE(_data.atKey("balance")));
     if (_data.count("nonce"))
+    {
         m_nonce = spVALUE(new VALUE(_data.atKey("nonce")));
+        if (m_nonce.getCContent() > c_maxNonce)
+            ETH_ERROR_MESSAGE("AccountIncomplete `" + m_address.getCContent().asString() +  "` requires nonce <= (2**64)-1");
+    }
     if (_data.count("code"))
         m_code = spBYTES(new BYTES(_data.atKey("code")));
     requireJsonFields(_data, "AccountIncomplete " + _data.getKey(),

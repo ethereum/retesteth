@@ -160,7 +160,16 @@ CompareResult compareStorage(Storage const& _expectStorage, Storage const& _remo
 
     if (_expectStorage.getKeys().size() < _remoteStorage.getKeys().size())
     {
-        ETH_MARK_ERROR(message + " has more storage records than expected!");
+        string storage = message + " has more storage records than expected!";
+        std::vector<string> keys;
+        for (auto const& el : _remoteStorage.getKeys())
+        {
+            if (!_expectStorage.hasKey(VALUE(el.first)))
+                keys.push_back(el.first);
+        }
+        storage += "\n [" + keys.at(0) + "] = " + _remoteStorage.atKey(VALUE(keys.at(0))).asString();
+
+        ETH_MARK_ERROR(storage);
         result = CompareResult::IncorrectStorage;
     }
 
@@ -240,12 +249,10 @@ void compareStates(StateBase const& _stateExpect, State const& _statePost)
         if (accountCompareResult != CompareResult::Success)
             result = accountCompareResult;
     }
+    if (Options::get().poststate)
+        ETH_STDOUT_MESSAGE("State Dump: \n" + _statePost.asDataObject().asJson());
     if (result != CompareResult::Success)
-    {
-        if (Options::get().poststate)
-            ETH_STDOUT_MESSAGE("State Dump: \n" + _statePost.asDataObject().asJson());
         ETH_ERROR_MESSAGE("CompareStates failed with errors: " + CompareResultToString(result));
-    }
 }
 
 string CompareResultToString(CompareResult res)

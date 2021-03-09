@@ -34,12 +34,12 @@ DataObject constructEthGetBlockBy(EthereumBlockState const& _block)
     constructResponse["transactions"] = DataObject(DataType::Array);
     for (auto const& tr : _block.transactions())
     {
-        DataObject fullTransaction = tr.asDataObject();
+        DataObject fullTransaction = tr.getCContent().asDataObject();
         fullTransaction["blockHash"] = _block.header().hash().asString();  // We don't know the hash its in tool response
         fullTransaction["blockNumber"] = _block.header().number().asString();
         fullTransaction["from"] = FH20::zero().asString();  // Can be recovered from vrs
         fullTransaction["transactionIndex"] = "0x00";       // Its in tool response
-        fullTransaction["hash"] = tr.hash().asString();
+        fullTransaction["hash"] = tr.getCContent().hash().asString();
         constructResponse["transactions"].addArrayObject(fullTransaction);
     }
 
@@ -112,14 +112,23 @@ void verifyBlockRLP(dev::RLP const& _rlp)
 
     for (auto const& tr : _rlp[1])
     {
-        if (!tr.isList())
-            throw dev::RLPException("Transaction RLP is expected to be list");
-
-        for (size_t i = 0; i < 9; i++)
+        if (tr.isList())
         {
-            if (!tr[i].isData())
-                throw dev::RLPException("Transaction RLP field is not data!");
+            // check legacy transaction. otherwise accept byte array
+            for (size_t i = 0; i < 9; i++)
+            {
+                if (!tr[i].isData())
+                    throw dev::RLPException("Transaction RLP field is not data!");
+            }
         }
+        else if (tr.isData())
+        {
+            // Transaction type 1 is allowed
+            if ((int)tr.payload()[0] != 1)
+                throw dev::RLPException("Transaction RLP is expected to be list");
+        }
+        else
+            throw dev::RLPException("Transaction RLP is expected to be list");
     }
 
     for (auto const& un : _rlp[2])

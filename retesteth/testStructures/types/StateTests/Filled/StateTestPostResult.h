@@ -18,6 +18,7 @@ struct StateTestPostResult : GCP_SPointerBase
     }
     FH32 const& hash() const { return m_hash.getCContent(); }
     FH32 const& logs() const { return m_log.getCContent(); }
+    spBYTES const& bytesPtr() const { return m_txbytes; }
     DataObject const asDataObject() const;
 
 private:
@@ -27,6 +28,7 @@ private:
     int m_valInd;
     spFH32 m_hash;
     spFH32 m_log;
+    spBYTES m_txbytes;
 };
 
 typedef std::vector<StateTestPostResult> StateTestPostResults;

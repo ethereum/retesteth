@@ -24,6 +24,7 @@
 #include <dataObject/ConvertFile.h>
 #include <retesteth/Options.h>
 #include <retesteth/TestHelper.h>
+#include <testStructures/Common.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 
@@ -65,6 +66,7 @@ void printHelp()
     cout << setw(40) << "--singletest <TestName>" << setw(0)
          << "Run on a single test. `Testname` is filename without Filler.json\n";
     cout << setw(40) << "--singletest <TestName>/<Subtest>" << setw(0) << "`Subtest` is a test name inside the file\n";
+    cout << setw(40) << "--singlenet <ForkName>" << setw(0) << "Run only specific fork configuration\n";
 
     cout << "\nDebugging\n";
     cout << setw(30) << "-d <index>" << setw(25) << "Set the transaction data array index when running GeneralStateTests\n";
@@ -331,7 +333,22 @@ Options::Options(int argc, const char** argv)
         else if (arg == "-d")
         {
             throwIfNoArgumentFollows();
-            trDataIndex = atoi(argv[++i]);
+            string const& argValue = argv[++i];
+            DigitsType type = stringIntegerType(argValue);
+            switch (type)
+            {
+            case DigitsType::Decimal:
+                trDataIndex = atoi(argValue.c_str());
+                break;
+            case DigitsType::String:
+                trDataLabel = argValue;
+                break;
+            default:
+            {
+                ETH_STDERROR_MESSAGE("Wrong argument format: " + argValue);
+                exit(0);
+            }
+            }
         }
         else if (arg == "-g")
         {
@@ -476,3 +493,12 @@ void displayTestSuites()
     cout << "\n";
 }
 
+string Options::getGStateTransactionFilter() const
+{
+    string filter;
+    filter += trDataIndex == -1 ? string() : " dInd: " + to_string(trDataIndex);
+    filter += trDataLabel.empty() ? string() : " dLbl: " + trDataLabel;
+    filter += trGasIndex == -1 ? string() : " gInd: " + to_string(trGasIndex);
+    filter += trValueIndex == -1 ? string() : " vInd: " + to_string(trValueIndex);
+    return filter;
+}

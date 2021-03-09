@@ -14,7 +14,7 @@ public:
     BlockHeader const& getTestHeader() const { return m_block.getCContent().header(); }
 
     // Attach Transaction header to EthereumBlock (the one described in tests)
-    void registerTestTransaction(Transaction const& _tr) { m_block.getContent().addTransaction(_tr); }
+    void registerTestTransaction(spTransaction const& _tr) { m_block.getContent().addTransaction(_tr); }
 
     // Attach Uncle header to EthereumBlock (the one described in tests)
     void registerTestUncle(BlockHeader const& _uncle) { m_block.getContent().addUncle(_uncle); }

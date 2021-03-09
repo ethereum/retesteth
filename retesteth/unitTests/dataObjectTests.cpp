@@ -503,7 +503,7 @@ BOOST_AUTO_TEST_CASE(dataobject_readJson15)
                 }
        )";
     DataObject dObj = ConvertJsoncppStringToData(data);
-    string res = R"({"array":[{}],"object":{}})";
+    string res = R"({"array":[null],"object":null})";
     BOOST_CHECK(dObj.asJson(0, false) == res);
 }
 
@@ -807,6 +807,25 @@ BOOST_AUTO_TEST_CASE(dataobject_replace)
 
     data["field1"] = data2; // not null object with key "field1" replaces the key "field1" to data2's key
     BOOST_CHECK(data.asJson(0,false) == "{\"key2\":\"value2\"}");
+}
+
+BOOST_AUTO_TEST_CASE(dataobject_arrayhell)
+{
+    string const data = R"(
+    {
+        "array" : [
+                    [
+                        {
+                            "address" : "0x0000000000000000000000000000000000001337",
+                            "storageKeys" : [
+                                "0x0000000000000000000000000000000000000000000000000000000000000001",
+                                "0x0000000000000000000000000000000000000000000000000000000000000002"
+                            ]
+                        }
+                    ]
+                ]
+    })";
+    DataObject dObj = ConvertJsoncppStringToData(data, string(), true);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

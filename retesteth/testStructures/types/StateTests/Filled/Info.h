@@ -1,6 +1,7 @@
 #pragma once
 #include <retesteth/dataObject/DataObject.h>
 #include <retesteth/dataObject/SPointer.h>
+#include <map>
 using namespace dataobject;
 
 namespace test
@@ -16,6 +17,7 @@ struct Info : GCP_SPointerBase
     string const& lllcversion() const { return m_lllcversion; }
     string const& source() const { return m_source; }
     string const& sourceHash() const { return m_sourceHash; }
+    std::map<string, string> const& labels() const { return m_labels; }
 
 private:
     Info() {}
@@ -25,6 +27,7 @@ private:
     string m_lllcversion;
     string m_source;
     string m_sourceHash;
+    std::map<string, string> m_labels;
 };
 
 typedef GCP_SPointer<Info> spInfo;

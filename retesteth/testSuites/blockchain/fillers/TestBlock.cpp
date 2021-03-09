@@ -27,7 +27,7 @@ DataObject TestBlock::asDataObject() const
         res["blockHeader"] = m_block.getCContent().header().asDataObject();
         res["transactions"] = DataObject(DataType::Array);
         for (auto const& tr : m_block.getCContent().transactions())
-            res["transactions"].addArrayObject(tr.asDataObject(ExportOrder::OldStyle));
+            res["transactions"].addArrayObject(tr.getCContent().asDataObject(ExportOrder::OldStyle));
     }
 
     res["rlp"] = m_rawRLP.getCContent().asString();

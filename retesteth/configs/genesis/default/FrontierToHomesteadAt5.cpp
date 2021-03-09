@@ -23,12 +23,12 @@ const string t8ntool_FrontierToHomesteadAt5_config = R"({
 genFrontierToHomesteadCfg::genFrontierToHomesteadCfg()
 {
     DataObject obj;
-    obj["path"] = "default/genesis/FrontierToHomesteadAt5.json";
+    obj["path"] = "besu/genesis/FrontierToHomesteadAt5.json";
     obj["content"] = default_FrontierToHomesteadAt5_config;
     map_configs.addArrayObject(obj);
 
     DataObject obj2;
-    obj2["path"] = "t8ntool/genesis/FrontierToHomesteadAt5.json";
+    obj2["path"] = "default/genesis/FrontierToHomesteadAt5.json";
     obj2["content"] = t8ntool_FrontierToHomesteadAt5_config;
     map_configs.addArrayObject(obj2);
 }

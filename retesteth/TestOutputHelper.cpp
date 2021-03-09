@@ -399,5 +399,9 @@ std::string TestInfo::errorDebug() const
         message += ", block: " + to_string(m_blockNumber);
     else if (m_isStateTransactionInfo)
         message += ", TrInfo: d: " + to_string(m_trD) + ", g: " + to_string(m_trG) + ", v: " + to_string(m_trV);
-    return message + ")" + cRed;
+
+    if (!m_sTransactionData.empty())
+        message += ", TrData: `" + m_sTransactionData + "`";
+
+    return message + ")" + cDefault;
 }

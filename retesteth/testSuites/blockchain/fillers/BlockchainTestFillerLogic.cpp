@@ -78,12 +78,20 @@ DataObject FillTest(BlockchainTestInFiller const& _test, TestSuite::TestSuiteOpt
                     State remoteState(getRemoteState(session));
                     compareStates(expect.result(), remoteState);
                     filledTest["postState"] = remoteState.asDataObject(ExportOrder::OldStyle);
+                    if (Options::get().poststate)
+                        ETH_STDOUT_MESSAGE("\nState Dump:" + TestOutputHelper::get().testInfo().errorDebug() + cDefault +
+                                           " \n" + filledTest.atKey("postState").asJson());
                 }
                 catch (StateTooBig const&)
                 {
                     compareStates(expect.result(), session);
                     filledTest["postStateHash"] = finalBlock.header().stateRoot().asString();
                 }
+
+                if (Options::get().poststate)
+                    ETH_STDOUT_MESSAGE("PostState " + TestOutputHelper::get().testInfo().errorDebug() + " : \n" + cDefault +
+                                       "Hash: " + finalBlock.header().stateRoot().asString());
+
 
                 filledTest["lastblockhash"] = finalBlock.header().hash().asString();
                 result.addSubObject(filledTest);

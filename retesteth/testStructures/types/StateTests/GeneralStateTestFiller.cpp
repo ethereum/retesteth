@@ -39,9 +39,9 @@ StateTestInFiller::StateTestInFiller(DataObject const& _data)
             solidityCode = test::compiler::compileSolidity(_data.atKey("solidity").asString());
 
         m_pre = spState(new State(convertDecStateToHex(_data.atKey("pre"), solidityCode)));
-        m_transaction = GCP_SPointer<StateTestFillerTransaction>(new StateTestFillerTransaction(_data.atKey("transaction")));
+        m_transaction = spStateTestFillerTransaction(new StateTestFillerTransaction(_data.atKey("transaction")));
         for (auto const& el : _data.atKey("expect").getSubObjects())
-            m_expectSections.push_back(StateTestFillerExpectSection(el));
+            m_expectSections.push_back(StateTestFillerExpectSection(el, m_transaction));
         ETH_ERROR_REQUIRE_MESSAGE(m_expectSections.size() > 0, "StateTestFiller require expect sections!");
         m_name = _data.getKey();
 

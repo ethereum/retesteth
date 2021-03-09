@@ -20,11 +20,20 @@ string compileLLL(string const& _code)
     fs::path path(fs::temp_directory_path() / fs::unique_path());
     string cmd = string("lllc ") + path.string();
     writeFile(path.string(), _code);
-    string result = executeCmd(cmd);
-    fs::remove_all(path);
-    result = "0x" + result;
-    test::compiler::utiles::checkHexHasEvenLength(result);
-    return result;
+    try
+    {
+        string result = executeCmd(cmd);
+        fs::remove_all(path);
+        result = "0x" + result;
+        test::compiler::utiles::checkHexHasEvenLength(result);
+        return result;
+    }
+    catch (EthError const& _ex)
+    {
+        fs::remove_all(path);
+        ETH_WARNING("Error compiling lll code: " + _code.substr(0, 50) + "..");
+        throw _ex;
+    }
 #endif
 }
 }  // namespace
@@ -54,7 +63,8 @@ string replaceCode(string const& _code, solContracts const& _preSolidity)
     {
         utiles::checkHexHasEvenLength(_code);
         if (Options::get().filltests && _code.size() > 2)
-            ETH_WARNING("Filling raw bytecode, please provide the source!" + TestOutputHelper::get().testInfo().errorDebug());
+            ETH_WARNING("Filling raw bytecode ('" + _code.substr(0, 10) + "..'), please provide the source!" +
+                        TestOutputHelper::get().testInfo().errorDebug());
         return _code;
     }
 
@@ -62,6 +72,7 @@ string replaceCode(string const& _code, solContracts const& _preSolidity)
     string const c_rawPrefix = ":raw";
     string const c_abiPrefix = ":abi";
     string const c_solidityPrefix = ":solidity";
+
     if (_code.find("pragma solidity") != string::npos)
     {
         solContracts const contracts = compileSolidity(_code);

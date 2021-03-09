@@ -1,4 +1,4 @@
-/*
+﻿/*
     This file is part of cpp-ethereum.
 
     cpp-ethereum is free software: you can redistribute it and/or modify
@@ -47,6 +47,7 @@ using namespace dev;
 using namespace test;
 using namespace test::teststruct;
 namespace fs = boost::filesystem;
+string const c_trHashNotFound = "TR hash not found in mined block! (Check that tr is properly mined and not oog)";
 
 namespace
 {
@@ -56,7 +57,8 @@ bool OptionsAllowTransaction(test::teststruct::TransactionInGeneralSection const
     Options const& opt = Options::get();
     if ((opt.trDataIndex == (int)_tr.dataInd() || opt.trDataIndex == -1) &&
         (opt.trGasIndex == (int)_tr.gasInd() || opt.trGasIndex == -1) &&
-        (opt.trValueIndex == (int)_tr.valueInd() || opt.trValueIndex == -1))
+        (opt.trValueIndex == (int)_tr.valueInd() || opt.trValueIndex == -1) &&
+        (opt.trDataLabel == _tr.transaction().dataLabel() || opt.trDataLabel.empty()))
         return true;
     return false;
 }
@@ -73,7 +75,7 @@ void checkUnexecutedTransactions(std::vector<TransactionInGeneralSection> const&
             atLeastOneExecuted = true;
         bool transactionExecutedOrSkipped = tr.getExecuted() || tr.getSkipped();
         atLeastOneWithoutExpectSection = !transactionExecutedOrSkipped || atLeastOneWithoutExpectSection;
-        if (!transactionExecutedOrSkipped)
+        if (!transactionExecutedOrSkipped || atLeastOneWithoutExpectSection)
         {
             TestInfo errorInfo("all", (int)tr.dataInd(), (int)tr.gasInd(), (int)tr.valueInd());
             TestOutputHelper::get().setCurrentTestInfo(errorInfo);
@@ -130,8 +132,8 @@ DataObject FillTestAsBlockchain(StateTestInFiller const& _test)
                     session.test_mineBlocks(1);
                     VALUE latestBlockN(session.eth_blockNumber());
                     EthGetBlockBy remoteBlock(session.eth_getBlockByNumber(latestBlockN, Request::FULLOBJECTS));
-                    ETH_ERROR_REQUIRE_MESSAGE(
-                        remoteBlock.hasTransaction(trHash), "StateTest::FillTest: TR hash not found in mined block!");
+                    if (!remoteBlock.hasTransaction(trHash))
+                        ETH_ERROR_MESSAGE("StateTest::FillTest: " + c_trHashNotFound);
                     tr.markExecuted();
 
                     // Mining reward
@@ -161,8 +163,6 @@ DataObject FillTestAsBlockchain(StateTestInFiller const& _test)
                         compareStates(mexpect, session);
                         aBlockchainTest["postStateHash"] = remoteBlock.header().stateRoot().asString();
                     }
-
-
 
                     aBlockchainTest["network"] = fork.asString();
                     aBlockchainTest["sealEngine"] = sealEngineToStr(SealEngine::NoProof);
@@ -211,6 +211,13 @@ DataObject FillTest(StateTestInFiller const& _test)
 
     // Gather Transactions from general transaction section
     std::vector<TransactionInGeneralSection> txs = _test.GeneralTr().buildTransactions();
+    for (auto const& tx : txs)
+    {
+        // Fill up the label map to tx.data
+        if (!tx.transaction().dataLabel().empty())
+            filledTest["_info"]["labels"].addSubObject(
+                DataObject(test::fto_string(tx.dataInd()), tx.transaction().dataLabel()));
+    }
 
     // run transactions on all networks that we need
     for (auto const& fork : _test.getAllForksFromExpectSections())  // object constructed!!!
@@ -236,6 +243,9 @@ DataObject FillTest(StateTestInFiller const& _test)
                 for (auto& tr : txs)
                 {
                     TestInfo errorInfo(fork.asString(), tr.dataInd(), tr.gasInd(), tr.valueInd());
+                    if (!tr.transaction().dataLabel().empty() || !tr.transaction().dataRawPreview().empty())
+                        errorInfo.setTrDataDebug(tr.transaction().dataLabel() + " " + tr.transaction().dataRawPreview() + "..");
+
                     TestOutputHelper::get().setCurrentTestInfo(errorInfo);
 
                     if (!OptionsAllowTransaction(tr) || networkSkip)
@@ -254,8 +264,8 @@ DataObject FillTest(StateTestInFiller const& _test)
                     VALUE latestBlockN(session.eth_blockNumber());
 
                     EthGetBlockBy blockInfo(session.eth_getBlockByNumber(latestBlockN, Request::LESSOBJECTS));
-                    ETH_ERROR_REQUIRE_MESSAGE(
-                        blockInfo.hasTransaction(trHash), "StateTest::FillTest: TR hash not found in mined block!");
+                    if (!blockInfo.hasTransaction(trHash))
+                        ETH_ERROR_MESSAGE("StateTest::FillTest: " + c_trHashNotFound);
                     tr.markExecuted();
 
                     if (Options::get().poststate)
@@ -281,6 +291,7 @@ DataObject FillTest(StateTestInFiller const& _test)
 
                     transactionResults["indexes"] = indexes;
                     transactionResults["hash"] = blockInfo.header().stateRoot().asString();
+                    transactionResults["txbytes"] = tr.transaction().getSignedRLP().asString();
 
                     // Fill up the loghash (optional)
                     FH32 logHash(session.test_getLogHash(trHash));
@@ -345,6 +356,13 @@ void RunTest(StateTestInFilled const& _test)
                     return;
 
                 TestInfo errorInfo(network.asString(), tr.dataInd(), tr.gasInd(), tr.valueInd());
+
+                string label;
+                string const labelK = test::fto_string(tr.dataInd());
+                if (_test.testInfo().labels().count(labelK))
+                    label = _test.testInfo().labels().at(labelK);
+                errorInfo.setTrDataDebug(label + " " + tr.transaction().dataLabel().substr(0, 8) + "..");
+
                 TestOutputHelper::get().setCurrentTestInfo(errorInfo);
                 bool checkIndexes = result.checkIndexes(tr.dataInd(), tr.gasInd(), tr.valueInd());
                 if (checkIndexes)
@@ -364,8 +382,8 @@ void RunTest(StateTestInFilled const& _test)
 
                     VALUE latestBlockN(session.eth_blockNumber());
                     EthGetBlockBy blockInfo(session.eth_getBlockByNumber(latestBlockN, Request::LESSOBJECTS));
-                    ETH_ERROR_REQUIRE_MESSAGE(
-                        blockInfo.hasTransaction(trHash), "StateTest::RunTest: TR hash not found in mined block!");
+                    if (!blockInfo.hasTransaction(trHash))
+                        ETH_ERROR_MESSAGE("StateTest::RunTest: " + c_trHashNotFound);
                     tr.markExecuted();
 
                     // Validate post state
@@ -382,7 +400,15 @@ void RunTest(StateTestInFilled const& _test)
                                           ", expected: " + expectedPostHash.asString());
                     }
                     if (Options::get().poststate)
-                        ETH_LOG("\nState Dump:" + TestOutputHelper::get().testInfo().errorDebug() + cDefault + " \n" + getRemoteState(session).asDataObject().asJson(), 1);
+                        ETH_LOG("\nRunning test State Dump:" + TestOutputHelper::get().testInfo().errorDebug() + cDefault + " \n" + getRemoteState(session).asDataObject().asJson(), 1);
+
+                    // Validate that txbytes field has the transaction data described in test `transaction` field.
+                    spBYTES const& expectedBytesPtr = result.bytesPtr();
+                    if (!expectedBytesPtr.isEmpty())
+                    {
+                        if (tr.transaction().getSignedRLP().asString() != expectedBytesPtr.getCContent().asString())
+                            ETH_ERROR_MESSAGE("TxBytes mismatch: test transaction section doest not match txbytes in post section!");
+                    }
 
                     // Validate log hash
                     FH32 const& expectedLogHash = result.logs();
@@ -394,8 +420,7 @@ void RunTest(StateTestInFilled const& _test)
                     session.test_rewindToBlock(0);
                     if (Options::get().logVerbosity >= 5)
                         ETH_LOG("Executed: d: " + to_string(tr.dataInd()) + ", g: " + to_string(tr.gasInd()) +
-                                    ", v: " + to_string(tr.valueInd()) + ", fork: " + network.asString(),
-                            5);
+                                    ", v: " + to_string(tr.valueInd()) + ", fork: " + network.asString(), 5);
                 }
             } //ForTransactions
 

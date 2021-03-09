@@ -111,20 +111,24 @@ void addClientInfo(DataObject& _v, fs::path const& _testSource, h256 const& _tes
     {
         string comment;
         DataObject clientinfo;
+        clientinfo.setKey("_info");
         if (o.count("_info"))
         {
             DataObject const& existingInfo = o.atKey("_info");
             if (existingInfo.count("comment"))
                 comment = existingInfo.atKey("comment").asString();
+            if (existingInfo.count("labels"))
+                clientinfo["labels"] = existingInfo.atKey("labels");
         }
 
-        clientinfo.setKey("_info");
         clientinfo["comment"] = comment;
         clientinfo["filling-rpc-server"] = session.web3_clientVersion();
         clientinfo["filling-tool-version"] = test::prepareVersionString();
         clientinfo["lllcversion"] = test::prepareLLLCVersionString();
         clientinfo["source"] = _testSource.string();
         clientinfo["sourceHash"] = toString(_testSourceHash);
+        if (clientinfo.count("labels"))
+            clientinfo.setKeyPos("labels", clientinfo.getSubObjects().size() - 1);
 
         o["_info"].replace(clientinfo);
         o.setKeyPos("_info", 0);
@@ -224,6 +228,8 @@ void TestSuite::runTestWithoutFiller(boost::filesystem::path const& _file) const
         if (Options::get().filltests)
         {
             TestFileData testData = readTestFile(_file);
+            removeComments(testData.data);
+
             string fileName = _file.stem().c_str();
             if (fileName.find("Filler") == string::npos)
                 ETH_ERROR_MESSAGE("Trying to fill `" + string(_file.c_str()) + "`, but file does not have Filler suffix!");
@@ -261,9 +267,7 @@ string TestSuite::checkFillerExistance(string const& _testFolder) const
     string const testNameFilter = opt.singleTestName.empty() ? string() : opt.singleTestName;
     string filter = testNameFilter;
     filter += opt.singleTestNet.empty() ? string() : " " + opt.singleTestNet;
-    filter += opt.trDataIndex == -1 ? string() : " dInd: " + to_string(opt.trDataIndex);
-    filter += opt.trGasIndex == -1 ? string() : " gInd: " + to_string(opt.trGasIndex);
-    filter += opt.trValueIndex == -1 ? string() : " vInd: " + to_string(opt.trValueIndex);
+    filter += opt.getGStateTransactionFilter();
     ETH_LOG("Checking test filler hashes for " + boost::unit_test::framework::current_test_case().full_name(), 4);
     if (!filter.empty())
         ETH_LOG("Filter: '" + filter +  "'", 0);
@@ -275,6 +279,32 @@ string TestSuite::checkFillerExistance(string const& _testFolder) const
     }
     vector<fs::path> compiledFiles = test::getFiles(testsPath.path(), {".json", ".yml"}, testNameFilter);
     AbsoluteFillerPath fullPathToFillers = getFullPathFiller(_testFolder);
+
+    // Check unfilled tests
+    if (Options::get().checkhash)
+    {
+        vector<fs::path> fillerFiles = test::getFiles(fullPathToFillers.path(), {".json", ".yml"}, testNameFilter);
+        if (fillerFiles.size() > compiledFiles.size())
+        {
+            string message = "Tests are not generated: ";
+            for (auto const& filler : fillerFiles)
+            {
+                bool found = false;
+                for (auto const& filled : compiledFiles)
+                {
+                    string const fillerName = filler.stem().string();
+                    if (fillerName.substr(0, fillerName.size() - 6) == filled.stem().string())
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
+                    message += "\n " + string(filler.c_str());
+            }
+            ETH_ERROR_MESSAGE(message + "\n");
+        }
+    }
 
     bool checkFillerWhenFilterIsSetButNoTestsFilled = false;
     if (compiledFiles.size() == 0)
@@ -370,6 +400,7 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
     string filter;
     try
     {
+        TestOutputHelper::get().setCurrentTestInfo(TestInfo("checkFillerExistance", _testFolder));
         filter = checkFillerExistance(_testFolder);
     }
     catch (std::exception const&)
@@ -544,6 +575,12 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
                     // Add client info for all of the tests in output
                     addClientInfo(output, boostRelativeTestPath, testData.hash);
                     writeFile(boostTestPath.path(), asBytes(output.asJson()));
+
+                    if (!Options::get().getGStateTransactionFilter().empty())
+                    {
+                        ETH_WARNING("GState transaction filter is set. Disabling generated test run!");
+                        opt.disableSecondRun = true;
+                    }
                 }
                 catch (test::EthError const& _ex)
                 {
@@ -606,6 +643,10 @@ void TestSuite::executeFile(boost::filesystem::path const& _file) const
     TestSuiteOptions opt;
     opt.isLegacyTests = Options::get().rCurrentTestSuite.find("LegacyTests") != string::npos;
     opt.isLegacyTests = opt.isLegacyTests || legacyTestSuiteFlag();
+
+    if (_file.extension() != ".json")
+        ETH_ERROR_MESSAGE("The generated test must have `.json` format!");
+
     doTests(test::readJsonData(_file), opt);
 }
 }

@@ -9,6 +9,7 @@
 #include <dataObject/DataObject.h>
 #include <retesteth/EthChecks.h>
 #include <retesteth/compiler/Compiler.h>
+#include <retesteth/testStructures/basetypes/BYTES.h>
 
 using namespace dataobject;
 namespace fs = boost::filesystem;
@@ -94,6 +95,18 @@ bool inArray(std::list<T> const& _array, const T& _val)
 /// Explode string into array of strings by `delim`
 std::vector<std::string> explode(std::string const& s, char delim);
 
+/// See what kind of a string is str
+enum class DigitsType
+{
+    Decimal,
+    Hex,
+    UnEvenHex,
+    HexPrefixed,
+    UnEvenHexPrefixed,
+    String
+};
+DigitsType stringIntegerType(std::string const& _string, bool _wasPrefix = false);
+
 /// popen with pid at return
 enum popenOutput
 {
@@ -114,5 +127,4 @@ string fto_string(t _val)
 {
     return std::to_string(_val);
 }
-
 }  // namespace test
