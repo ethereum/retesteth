@@ -304,6 +304,8 @@ bool pathHasTests(boost::filesystem::path const& _path)
 
 void checkUnfinishedTestFolders()
 {
+    if (Options::get().singleTestFile.is_initialized())
+        return;
     std::lock_guard<std::mutex> lock(g_finishedTestFoldersMapMutex);
     // Unit tests does not mark test folders
     if (finishedTestFoldersMap.size() == 0)
