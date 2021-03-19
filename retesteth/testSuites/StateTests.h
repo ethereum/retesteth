@@ -41,6 +41,7 @@ class LegacyConstantinopleStateTestSuite : public StateTestSuite
 protected:
     bool legacyTestSuiteFlag() const override { return  true; }
 public:
+    LegacyConstantinopleStateTestSuite() : StateTestSuite(0){};
     TestSuite::TestPath suiteFolder() const override;
     TestSuite::FillerPath suiteFillerFolder() const override;
 };
