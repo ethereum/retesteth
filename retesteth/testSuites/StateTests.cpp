@@ -176,8 +176,7 @@ DataObject FillTestAsBlockchain(StateTestInFiller const& _test)
                     block["uncleHeaders"] = DataObject(DataType::Array);
                     aBlockchainTest["blocks"].addArrayObject(block);
 
-                    string dataPostfix =
-                        "_d" + fto_string(tr.dataInd()) + "g" + fto_string(tr.gasInd()) + "v" + fto_string(tr.valueInd());
+                    string dataPostfix = "_d" + tr.dataIndS() + "g" + tr.gasIndS() + "v" + tr.valueIndS();
                     dataPostfix += "_" + fork.asString();
 
                     if (filledTest.count(_test.testName() + dataPostfix))
@@ -215,8 +214,7 @@ DataObject FillTest(StateTestInFiller const& _test)
     {
         // Fill up the label map to tx.data
         if (!tx.transaction().dataLabel().empty())
-            filledTest["_info"]["labels"].addSubObject(
-                DataObject(test::fto_string(tx.dataInd()), tx.transaction().dataLabel()));
+            filledTest["_info"]["labels"].addSubObject(DataObject(tx.dataIndS(), tx.transaction().dataLabel()));
     }
 
     // run transactions on all networks that we need
@@ -327,9 +325,8 @@ void RunTest(StateTestInFilled const& _test)
     {
         // find a transaction with such index
         // might make sense having el.dataIndString()
-        auto res = std::find_if(txs.begin(), txs.end(), [&_infoLabels](TransactionInGeneralSection const& el) {
-            return test::fto_string(el.dataInd()) == _infoLabels.first;
-        });
+        auto res = std::find_if(txs.begin(), txs.end(),
+            [&_infoLabels](TransactionInGeneralSection const& el) { return el.dataIndS() == _infoLabels.first; });
         if (res != txs.end())
             (*res).assignTransactionLabel(_infoLabels.second);
         else
