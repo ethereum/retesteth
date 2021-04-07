@@ -180,7 +180,7 @@ DataObject FillTestAsBlockchain(StateTestInFiller const& _test)
                     dataPostfix += "_" + fork.asString();
 
                     if (filledTest.count(_test.testName() + dataPostfix))
-                        ETH_ERROR_MESSAGE("The test filler contain redundunt expect section: ");
+                        ETH_ERROR_MESSAGE("The test filler contain redundunt expect section: " + _test.testName() + dataPostfix);
 
                     filledTest[_test.testName() + dataPostfix] = aBlockchainTest;
                     session.test_rewindToBlock(0);
@@ -238,6 +238,7 @@ DataObject FillTest(StateTestInFiller const& _test)
             // if expect section for this networks
             if (expect.hasFork(fork))
             {
+                bool expectFoundTransaction = false;
                 for (auto& tr : txs)
                 {
                     TestInfo errorInfo(fork.asString(), tr.dataInd(), tr.gasInd(), tr.valueInd());
@@ -246,16 +247,21 @@ DataObject FillTest(StateTestInFiller const& _test)
 
                     TestOutputHelper::get().setCurrentTestInfo(errorInfo);
 
+                    bool expectChekIndexes = expect.checkIndexes(tr.dataInd(), tr.gasInd(), tr.valueInd());
                     if (!OptionsAllowTransaction(tr) || networkSkip)
                     {
                         tr.markSkipped();
+
+                        if (expectChekIndexes)
+                            expectFoundTransaction = true;
                         continue;
                     }
 
                     // if expect section is not for this transaction
-                    if (!expect.checkIndexes(tr.dataInd(), tr.gasInd(), tr.valueInd()))
+                    if (!expectChekIndexes)
                         continue;
 
+                    expectFoundTransaction = true;
                     session.test_modifyTimestamp(_test.Env().firstBlockTimestamp());
                     FH32 trHash(session.eth_sendRawTransaction(tr.transaction().getRawBytes()));
                     session.test_mineBlocks(1);
@@ -298,6 +304,11 @@ DataObject FillTest(StateTestInFiller const& _test)
 
                     forkResults.addArrayObject(transactionResults);
                     session.test_rewindToBlock(VALUE(0));
+                }
+                if (expectFoundTransaction == false)
+                {
+                    ETH_ERROR_MESSAGE("Expect section does not cover any transaction: \n" + expect.initialData().asJson() +
+                                      "\n" + expect.result().asDataObject().asJson());
                 }
             }
         }

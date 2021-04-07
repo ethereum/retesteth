@@ -81,6 +81,8 @@ StateTestFillerExpectSection::StateTestFillerExpectSection(DataObject const& _da
 {
     try
     {
+        m_initialData["indexes"] = _data.atKey("indexes");
+        m_initialData["network"] = _data.atKey("network");
         DataObject dataIndexes = ReplaceValueToIndexesInDataList(_gtr, _data.atKey("indexes").atKey("data"));
         parseJsonIntValueIntoSet(dataIndexes, m_dataInd);
         parseJsonIntValueIntoSet(_data.atKey("indexes").atKey("gas"), m_gasInd);
