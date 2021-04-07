@@ -41,15 +41,16 @@ StateTestTransaction::StateTestTransaction(DataObject const& _data)
         for (auto const& el : _data.atKey("data").getSubObjects())
         {
             DataObject dataInKey = el;
+            string const sDataPreview = el.asString().substr(0, 8);
             if (accessLists.size())
             {
                 if (accessLists.at(index).isEmpty())
-                    m_databox.push_back(Databox(dataInKey, dataInKey.asString(), string()));
+                    m_databox.push_back(Databox(dataInKey, dataInKey.asString(), sDataPreview));
                 else
-                    m_databox.push_back(Databox(dataInKey, dataInKey.asString(), string(), accessLists.at(index)));
+                    m_databox.push_back(Databox(dataInKey, dataInKey.asString(), sDataPreview, accessLists.at(index)));
             }
             else
-                m_databox.push_back(Databox(dataInKey, dataInKey.asString(), string()));
+                m_databox.push_back(Databox(dataInKey, dataInKey.asString(), sDataPreview));
 
             index++;
         }

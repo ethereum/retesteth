@@ -47,6 +47,7 @@ struct Transaction : GCP_SPointerBase
 
     /// Debug
     string const& dataLabel() const { return m_dataLabel; }
+    void setDataLabel(string const& _label) { m_dataLabel = _label; }
     string const& dataRawPreview() const { return m_dataRawPreview; }
 
 private:

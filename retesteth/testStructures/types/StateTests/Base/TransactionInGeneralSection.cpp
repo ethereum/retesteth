@@ -12,3 +12,8 @@ TransactionInGeneralSection::TransactionInGeneralSection(
     else
         m_tr = spTransaction(new Transaction(_tr, _dataRawPreview, _dataLabel));
 }
+
+void TransactionInGeneralSection::assignTransactionLabel(string const& _label)
+{
+    m_tr.getContent().setDataLabel(_label);
+}

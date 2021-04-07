@@ -25,6 +25,7 @@ struct TransactionInGeneralSection
     void markExecuted() { m_executed = true; }
     void markSkipped() { m_skipped = true; }
     Transaction const& transaction() const { return m_tr.getCContent(); }
+    void assignTransactionLabel(string const& _label);
 
 private:
     spTransaction m_tr;

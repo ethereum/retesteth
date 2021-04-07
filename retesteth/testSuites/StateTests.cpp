@@ -321,6 +321,22 @@ void RunTest(StateTestInFilled const& _test)
 
     // Gather Transactions from general transaction section
     std::vector<TransactionInGeneralSection> txs = _test.GeneralTr().buildTransactions();
+
+    // Recover transaction labels from filled test _info section
+    for (auto const& _infoLabels : _test.testInfo().labels())
+    {
+        // find a transaction with such index
+        // might make sense having el.dataIndString()
+        auto res = std::find_if(txs.begin(), txs.end(), [&_infoLabels](TransactionInGeneralSection const& el) {
+            return test::fto_string(el.dataInd()) == _infoLabels.first;
+        });
+        if (res != txs.end())
+            (*res).assignTransactionLabel(_infoLabels.second);
+        else
+            ETH_WARNING("Test `_info` section has a label with tr.index that was not found!");
+    }
+
+
     bool forkNotAllowed = false;
 
     for (auto const& post : _test.Post())
@@ -356,12 +372,7 @@ void RunTest(StateTestInFilled const& _test)
                     return;
 
                 TestInfo errorInfo(network.asString(), tr.dataInd(), tr.gasInd(), tr.valueInd());
-
-                string label;
-                string const labelK = test::fto_string(tr.dataInd());
-                if (_test.testInfo().labels().count(labelK))
-                    label = _test.testInfo().labels().at(labelK);
-                errorInfo.setTrDataDebug(label + " " + tr.transaction().dataLabel().substr(0, 8) + "..");
+                errorInfo.setTrDataDebug(tr.transaction().dataLabel() + " " + tr.transaction().dataRawPreview() + "..");
 
                 TestOutputHelper::get().setCurrentTestInfo(errorInfo);
                 bool checkIndexes = result.checkIndexes(tr.dataInd(), tr.gasInd(), tr.valueInd());
