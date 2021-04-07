@@ -72,6 +72,7 @@ string replaceCode(string const& _code, solContracts const& _preSolidity)
     string const c_rawPrefix = ":raw";
     string const c_abiPrefix = ":abi";
     string const c_solidityPrefix = ":solidity";
+    string const c_yulPrefix = ":yul";
 
     if (_code.find("pragma solidity") != string::npos)
     {
@@ -97,6 +98,13 @@ string replaceCode(string const& _code, solContracts const& _preSolidity)
         size_t const pos = _code.find(c_abiPrefix);
         string const abiCode = _code.substr(pos + c_abiPrefix.length() + 1);
         compiledCode = utiles::encodeAbi(abiCode);
+        utiles::checkHexHasEvenLength(compiledCode);
+    }
+    else if (_code.find(c_yulPrefix) != string::npos)
+    {
+        size_t const pos = _code.find(c_yulPrefix);
+        string const yulCode = _code.substr(pos + c_yulPrefix.length() + 1);
+        compiledCode = compileYul(yulCode);
         utiles::checkHexHasEvenLength(compiledCode);
     }
     else if (_code.find('{') != string::npos || _code.find("(asm") != string::npos )
