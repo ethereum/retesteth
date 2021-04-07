@@ -142,7 +142,7 @@ void TransactionAccessList::rebuildRLP()
     // Encode bytearray into rlp
     wrapper << outa;
     m_outRlpStream = wrapper;
-    m_signedRLPdata = spBYTES(new BYTES(dev::toHexPrefixed(m_outRlpStream.out())));
+    m_rawRLPdata = spBYTES(new BYTES(dev::toHexPrefixed(outa)));
     m_hash = spFH32(new FH32("0x" + dev::toString(dev::sha3(outa))));
 }
 

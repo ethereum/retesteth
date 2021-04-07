@@ -39,7 +39,7 @@ struct Transaction : GCP_SPointerBase
     FH32 const& hash() const;
     virtual TransactionType type() const { return TransactionType::LEGACY; }
 
-    BYTES const& getSignedRLP() const;
+    BYTES const& getRawBytes() const;
     dev::RLPStream const& asRLPStream() const;
     virtual DataObject const asDataObject(ExportOrder _order = ExportOrder::Default) const;
 
@@ -80,7 +80,7 @@ protected:
     // Optimization
     spFH32 m_hash;
     dev::RLPStream m_outRlpStream;
-    spBYTES m_signedRLPdata;
+    spBYTES m_rawRLPdata;  // raw transaction data without rlp header (for typed transactions)
     virtual void rebuildRLP();
 };
 

@@ -28,11 +28,36 @@ namespace test
 {
 namespace teststruct
 {
+// The transaction here might be  01 + rlp (tx.data)
+// OR                             rlp (01 + rlp (tx.data))
+// Depends on where we decode it from (block or eth_sendRawTransaction)
+
 spTransaction readTransaction(BYTES const& _rlp)
 {
-    dev::bytes decodeRLP = test::sfromHex(_rlp.asString());
-    dev::RLP rlp(decodeRLP, dev::RLP::VeryStrict);
-    return readTransaction(rlp);
+    string const& sRLP = _rlp.asString();
+    dev::bytes decodeRLP = test::sfromHex(sRLP);
+    try
+    {
+        dev::RLP rlp(decodeRLP, dev::RLP::VeryStrict);
+        return readTransaction(rlp);
+    }
+    catch (...)
+    {
+        // Make an attempt to read as typedTransaction wrapped in RLP
+        dev::RLPStream str;
+        str << decodeRLP;
+        try
+        {
+            dev::RLP rlp(str.out(), dev::RLP::VeryStrict);
+            return readTransaction(rlp);
+        }
+        catch (std::exception const& _ex)
+        {
+            ETH_FAIL_MESSAGE(
+                string("readTransaction(BYTES const&) error building RLP: ") + _ex.what() + "\n" + _rlp.asString());
+        }
+    }
+    return spTransaction(0);
 }
 
 spTransaction readTransaction(dev::RLP const& _rlp)
@@ -41,6 +66,7 @@ spTransaction readTransaction(dev::RLP const& _rlp)
     {
         dev::bytesConstRef const& p = _rlp.payload();
         dev::RLP realRLP(p.cropped(1, p.size() - 1), dev::RLP::VeryStrict);
+        // PARSE TRANSACTION TYPES HERE
         return _readTransaction(TransactionType::ACCESSLIST, realRLP);
     }
     else
@@ -49,6 +75,7 @@ spTransaction readTransaction(dev::RLP const& _rlp)
 
 spTransaction readTransaction(DataObject const& _filledData)
 {
+    // PARSE TRANSACTION TYPES FROM JSON OBJECT
     if (_filledData.count("accessList"))
         return spTransaction(new TransactionAccessList(_filledData));
     return spTransaction(new Transaction(_filledData));

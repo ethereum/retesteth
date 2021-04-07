@@ -126,8 +126,8 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
                 "(" +
                     clientTr.blockNumber().asDecString() + " != " + tblock.header().number().asDecString() + ")");
 
-            BYTES const testTr = tr.getCContent().getSignedRLP();
-            BYTES const remoteTr = clientTr.transaction().getCContent().getSignedRLP();
+            BYTES const testTr = tr.getCContent().getRawBytes();
+            BYTES const remoteTr = clientTr.transaction().getCContent().getRawBytes();
 
             ETH_ERROR_REQUIRE_MESSAGE(remoteTr == testTr, "Error checking remote transaction, remote tr `" +
                                                               remoteTr.asString() + "` is different to test tr `" +

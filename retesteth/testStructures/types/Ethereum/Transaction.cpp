@@ -148,9 +148,9 @@ void Transaction::assignV(spVALUE const _v) { m_v = _v; }
 void Transaction::assignR(spVALUE const _r) { m_r = _r; }
 void Transaction::assignS(spVALUE const _s) { m_s = _s; }
 
-BYTES const& Transaction::getSignedRLP() const
+BYTES const& Transaction::getRawBytes() const
 {
-    return m_signedRLPdata.getCContent();
+    return m_rawRLPdata.getCContent();
 }
 
 dev::RLPStream const& Transaction::asRLPStream() const
@@ -205,7 +205,7 @@ void Transaction::rebuildRLP()
     out << r().asU256();
     out << s().asU256();
     m_outRlpStream = out;
-    m_signedRLPdata = spBYTES(new BYTES(dev::toHexPrefixed(out.out())));
+    m_rawRLPdata = spBYTES(new BYTES(dev::toHexPrefixed(out.out())));
     m_hash = spFH32(new FH32("0x" + dev::toString(dev::sha3(out.out()))));
 }
 
