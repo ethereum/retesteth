@@ -50,7 +50,7 @@ fi
 i=0
 while [ "$i" -lt $threads ]; do
     tmpdir=$(mktemp -d -t ci-XXXXXXXXXX)
-    besu --Xberlin-enabled true retesteth --rpc-http-port $((47710+$i)) --data-path=$tmpdir &
+    besu retesteth --rpc-http-port $((47710+$i)) --data-path=$tmpdir &
     i=$(( i + 1 ))
 done
 )";
