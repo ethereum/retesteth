@@ -24,6 +24,7 @@
 #include <dataObject/ConvertFile.h>
 #include <retesteth/Options.h>
 #include <retesteth/TestHelper.h>
+#include <testStructures/Common.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 
@@ -33,14 +34,20 @@ namespace fs = boost::filesystem;
 Options::DynamicOptions Options::m_dynamicOptions;
 void displayTestSuites();
 
+void printVersion()
+{
+    cout << prepareVersionString() << "\n";
+}
+
 void printHelp()
 {
+    printVersion();
     cout << "Usage: \n";
     cout << std::left;
     cout << "\nSetting test suite\n";
     cout << setw(30) << "-t <TestSuite>" << setw(0) << "Execute test operations\n";
     cout << setw(30) << "-t <TestSuite>/<TestCase>" << setw(0) << "\n";
-    cout << "\nAll options below must be followed by `--`\n";
+    cout << "\nAll options below must follow after `--`\n";
     cout << "\nRetesteth options\n";
     cout << setw(40) << "-j <ThreadNumber>" << setw(0) << "Run test execution using threads\n";
     cout << setw(40) << "--clients `client1, client2`" << setw(0)
@@ -48,22 +55,25 @@ void printHelp()
     cout << setw(40) << "--datadir" << setw(0) << "Path to configs (default: ~/.retesteth)\n";
     cout << setw(40) << "--nodes" << setw(0) << "List of client tcp ports (\"addr:ip, addr:ip\")\n";
     cout << setw(42) << " " << setw(0) << "Overrides the config file \"socketAddress\" section \n";
-    cout << setw(40) << "--help" << setw(25) << "Display list of command arguments\n";
-    cout << setw(40) << "--version" << setw(25) << "Display build information\n";
+    cout << setw(40) << "--help -h" << setw(25) << "Display list of command arguments\n";
+    cout << setw(40) << "--version -v" << setw(25) << "Display build information\n";
     cout << setw(40) << "--list" << setw(25) << "Display available test suites\n";
 
     cout << "\nSetting test suite and test\n";
     cout << setw(40) << "--testpath <PathToTheTestRepo>" << setw(25) << "Set path to the test repo\n";
     cout << setw(40) << "--testfile <TestFile>" << setw(0) << "Run tests from a file. Requires -t <TestSuite>\n";
+    cout << setw(40) << "--outfile <TestFile>" << setw(0) << "When using `--testfile` with `--filltests` output to this file\n";
     cout << setw(40) << "--singletest <TestName>" << setw(0)
          << "Run on a single test. `Testname` is filename without Filler.json\n";
     cout << setw(40) << "--singletest <TestName>/<Subtest>" << setw(0) << "`Subtest` is a test name inside the file\n";
+    cout << setw(40) << "--singlenet <ForkName>" << setw(0) << "Run only specific fork configuration\n";
 
     cout << "\nDebugging\n";
     cout << setw(30) << "-d <index>" << setw(25) << "Set the transaction data array index when running GeneralStateTests\n";
     cout << setw(30) << "-g <index>" << setw(25) << "Set the transaction gas array index when running GeneralStateTests\n";
     cout << setw(30) << "-v <index>" << setw(25) << "Set the transaction value array index when running GeneralStateTests\n";
     cout << setw(30) << "--vmtrace" << setw(25) << "Trace transaction execution\n";
+    cout << setw(30) << "--vmtraceraw" << setw(25) << "Trace transaction execution raw format\n";
     cout << setw(30) << "--limitblocks" << setw(25) << "Limit the block exectuion in blockchain tests for debug\n";
     cout << setw(30) << "--limitrpc" << setw(25) << "Limit the rpc exectuion in tests for debug\n";
     cout << setw(30) << "--verbosity <level>" << setw(25) << "Set logs verbosity. 0 - silent, 1 - only errors, 2 - informative, >2 - detailed\n";
@@ -80,6 +90,7 @@ void printHelp()
     cout << setw(30) << "--filltests" << setw(0) << "Run test fillers\n";
     cout << setw(30) << "--fillchain" << setw(25) << "When filling the state tests, fill tests as blockchain instead\n";
     cout << setw(30) << "--showhash" << setw(25) << "Show filler hash debug information\n";
+    cout << setw(30) << "--checkhash" << setw(25) << "Check that tests are updated from fillers\n";
     cout << setw(30) << "--poststate" << setw(25) << "Show post state hash or fullstate\n";
     cout << setw(30) << "--fullstate" << setw(25) << "Do not compress large states to hash\n";
 
@@ -91,11 +102,6 @@ void printHelp()
     //"--options <PathTo.json>" << setw(25) << "Use following options file for random code
     //generation\n";  cout << setw(30) << "--fulloutput" << setw(25) << "Disable address compression
     // in the output field\n";
-}
-
-void printVersion()
-{
-    cout << prepareVersionString() << "\n";
 }
 
 Options::Options(int argc, const char** argv)
@@ -114,27 +120,49 @@ Options::Options(int argc, const char** argv)
         auto throwIfAfterSeparator = [&seenSeparator, &arg]() {
             if (seenSeparator)
                 BOOST_THROW_EXCEPTION(
-                    InvalidOption(arg + " option appears after the separator --."));
+                    InvalidOption(arg + " option appears after the separator `--`."));
         };
+        auto throwIfBeforeSeparator = [&seenSeparator, &arg]() {
+            if (!seenSeparator)
+                BOOST_THROW_EXCEPTION(
+                    InvalidOption(arg + " option appears before the separator `--`"));
+        };
+
         if (arg == "--")
         {
             if (seenSeparator)
                 BOOST_THROW_EXCEPTION(
-                    InvalidOption("The separator -- appears more than once in the command line."));
+                    InvalidOption("The separator `--` appears more than once in the command line."));
             seenSeparator = true;
             continue;
         }
-        if (arg == "--help")
+        else if (arg == "-t")
+        {
+            throwIfAfterSeparator();
+            throwIfNoArgumentFollows();
+            rCurrentTestSuite = std::string{argv[++i]};
+            continue;
+        }
+        else if (i == 0)
+        {
+            // Skip './retesteth'
+            continue;
+        }
+
+        if (arg == "--help" || arg == "-h")
         {
             printHelp();
             exit(0);
         }
-        else if (arg == "--version")
+        else if (arg == "--version" || (arg == "-v" && !seenSeparator))
         {
             printVersion();
             exit(0);
         }
-        else if (arg.substr(0, 2) == "-j")
+
+        // Options below are not allowed before -- separator
+        throwIfBeforeSeparator();
+        if (arg.substr(0, 2) == "-j")
         {
             if (arg.length() != 2)
             {
@@ -167,6 +195,11 @@ Options::Options(int argc, const char** argv)
         {
             vmtrace = true;
         }
+        else if (arg == "--vmtraceraw")
+        {
+            vmtrace = true;
+            vmtraceraw = true;
+        }
         else if (arg == "--jsontrace")
         {
             throwIfNoArgumentFollows();
@@ -195,6 +228,8 @@ Options::Options(int argc, const char** argv)
         }
         else if (arg == "--showhash")
             showhash = true;
+        else if (arg == "--checkhash")
+            checkhash = true;
         else if (arg == "--stats")
         {
             throwIfNoArgumentFollows();
@@ -237,6 +272,11 @@ Options::Options(int argc, const char** argv)
                     "Could not locate custom test file: '" + singleTestFile.get() + "'");
                 exit(1);
             }
+        }
+        else if (arg == "--outfile")
+        {
+            throwIfNoArgumentFollows();
+            singleTestOutFile = std::string{argv[++i]};
         }
         else if (arg == "--singlenet")
         {
@@ -288,18 +328,27 @@ Options::Options(int argc, const char** argv)
                 exit(0);
             }
         }
-        else if (arg == "-t")
-        {
-            throwIfAfterSeparator();
-            throwIfNoArgumentFollows();
-            rCurrentTestSuite = std::string{argv[++i]};
-        }
         else if (arg == "--nonetwork")
             nonetwork = true;
         else if (arg == "-d")
         {
             throwIfNoArgumentFollows();
-            trDataIndex = atoi(argv[++i]);
+            string const& argValue = argv[++i];
+            DigitsType type = stringIntegerType(argValue);
+            switch (type)
+            {
+            case DigitsType::Decimal:
+                trDataIndex = atoi(argValue.c_str());
+                break;
+            case DigitsType::String:
+                trDataLabel = argValue;
+                break;
+            default:
+            {
+                ETH_STDERROR_MESSAGE("Wrong argument format: " + argValue);
+                exit(0);
+            }
+            }
         }
         else if (arg == "-g")
         {
@@ -437,9 +486,19 @@ void displayTestSuites()
     cout << "\nRetesteth unit tests:\n";
     cout << setw(30) << "-t DataObjectTestSuite" << setw(0) << "Unit tests for json parsing\n";
     cout << setw(30) << "-t EthObjectsSuite" << setw(0) << "Unit tests for test data objects\n";
-    cout << setw(30) << "-t LLLCSuite" << setw(0) << "Unit tests for external solidity compiler\n";
+    cout << setw(30) << "-t LLLCSuite" << setw(0) << "Unit tests for external lllc compiler\n";
+    cout << setw(30) << "-t SOLCSuite" << setw(0) << "Unit tests for solidity support\n";
     cout << setw(30) << "-t OptionsSuite" << setw(0) << "Unit tests for this cmd menu\n";
     cout << setw(30) << "-t TestHelperSuite" << setw(0) << "Unit tests for retesteth logic\n";
     cout << "\n";
 }
 
+string Options::getGStateTransactionFilter() const
+{
+    string filter;
+    filter += trDataIndex == -1 ? string() : " dInd: " + to_string(trDataIndex);
+    filter += trDataLabel.empty() ? string() : " dLbl: " + trDataLabel;
+    filter += trGasIndex == -1 ? string() : " gInd: " + to_string(trGasIndex);
+    filter += trValueIndex == -1 ? string() : " vInd: " + to_string(trValueIndex);
+    return filter;
+}

@@ -1,11 +1,13 @@
 #include "ToolChainHelper.h"
 #include "ToolChainManager.h"
+#include <Options.h>
+#include <dataObject/ConvertFile.h>
 #include <libdevcore/CommonIO.h>
-#include <retesteth/Options.h>
-#include <retesteth/dataObject/ConvertFile.h>
-#include <retesteth/testStructures/Common.h>
-#include <retesteth/testStructures/types/BlockchainTests/Filler/BlockchainTestFillerEnv.h>
-#include <retesteth/testStructures/types/RPC/ToolResponse.h>
+#include <testStructures/Common.h>
+#include <testStructures/types/BlockchainTests/Filler/BlockchainTestFillerEnv.h>
+#include <testStructures/types/RPC/DebugVMTrace.h>
+#include <testStructures/types/RPC/ToolResponse.h>
+
 using namespace dev;
 using namespace test;
 using namespace teststruct;
@@ -60,7 +62,7 @@ void ToolChain::mineBlock(EthereumBlockState const& _pendingBlock, Mining _req)
     for (auto const& tr : _pendingBlock.transactions())
     {
         bool found = false;
-        FH32 const trHash = tr.hash();
+        FH32 const trHash = tr.getCContent().hash();
         for (auto const& trReceipt : res.receipts())
         {
             if (trReceipt.trHash() == trHash)
@@ -178,10 +180,11 @@ ToolResponse ToolChain::mineBlockOnTool(EthereumBlockState const& _block, SealEn
     static u256 c_maxGasLimit = u256("0xffffffffffffffff");
     for (auto const& tr : _block.transactions())
     {
-        if (tr.gasLimit().asU256() <= c_maxGasLimit)  // tool fails on limits here.
-            txs.addArrayObject(tr.asDataObject(ExportOrder::ToolStyle));
+        if (tr.getCContent().gasLimit().asU256() <= c_maxGasLimit)  // tool fails on limits here.
+            txs.addArrayObject(tr.getCContent().asDataObject(ExportOrder::ToolStyle));
         else
-            ETH_WARNING("Retesteth rejecting tx with gasLimit > 64 bits for tool");
+            ETH_WARNING(
+                "Retesteth rejecting tx with gasLimit > 64 bits for tool" + TestOutputHelper::get().testInfo().errorDebug());
     }
     writeFile(txsPath.string(), txs.asJson());
 
@@ -231,13 +234,15 @@ ToolResponse ToolChain::mineBlockOnTool(EthereumBlockState const& _block, SealEn
         {
             fs::path txTraceFile;
             string const trNumber = test::fto_string(i++);
-            txTraceFile = m_tmpDir / string("trace-" + trNumber + "-" + tr.hash().asString() + ".jsonl");
+            txTraceFile = m_tmpDir / string("trace-" + trNumber + "-" + tr.getCContent().hash().asString() + ".jsonl");
             if (fs::exists(txTraceFile))
             {
-                string const preinfo = "\nTransaction number: " + trNumber + ", hash: " + tr.hash().asString() + "\n";
+                string const preinfo =
+                    "\nTransaction number: " + trNumber + ", hash: " + tr.getCContent().hash().asString() + "\n";
                 string const info = TestOutputHelper::get().testInfo().errorDebug();
-                toolResponse.attachDebugTrace(
-                    tr.hash(), "\nVMTrace:" + info + cDefault + preinfo + contentsString(txTraceFile));
+                string const traceinfo = "\nVMTrace:" + info + cDefault + preinfo;
+                toolResponse.attachDebugTrace(tr.getCContent().hash(),
+                    DebugVMTrace(traceinfo, trNumber, tr.getCContent().hash(), contentsString(txTraceFile)));
             }
             else
                 ETH_LOG("Trace file `" + txTraceFile.string() + "` not found!", 1);

@@ -96,9 +96,9 @@ FH32 ToolChainManager::importRawBlock(BYTES const& _rlp)
         m_pendingBlock = spEthereumBlockState(new EthereumBlockState(header, lastBlock().state(), FH32::zero()));
         for (auto const& trRLP : rlp[1].toList())
         {
-            Transaction tr(trRLP);
-            ETH_TEST_MESSAGE(tr.asDataObject().asJson());
-            addPendingTransaction(tr);
+            spTransaction spTr = readTransaction(trRLP);
+            ETH_TEST_MESSAGE(spTr.getCContent().asDataObject().asJson());
+            addPendingTransaction(spTr);
         }
 
         if (rlp[2].toList().size() > 2)

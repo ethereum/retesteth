@@ -35,12 +35,43 @@ StateTestFillerTransaction::StateTestFillerTransaction(DataObject const& _data)
 
         for (auto const& el : _data.atKey("data").getSubObjects())
         {
+            DataObject dataInKey;
+            spAccessList accessList;
+            if (el.type() == DataType::Object)
+            {
+                dataInKey = el.atKey("data");
+                accessList = spAccessList(new AccessList(el.atKey("accessList")));
+                requireJsonFields(el, "StateTestFillerTransaction::dataWithList " + _data.getKey(),
+                    {{"data", {{DataType::String}, jsonField::Required}},
+                        {"accessList", {{DataType::Array}, jsonField::Required}}});
+            }
+            else
+                dataInKey = el;
+
             // -- Compile LLL in transaction data into byte code if not already
-            DataObject dataInKey = el;
             dataInKey.setKey("`data` array element in General Transaction Section");  // Hint
-            dataInKey.setString(test::compiler::replaceCode(dataInKey.asString()));
+
+            string label;
+            string rawData = dataInKey.asString();
+            std::string const c_labelPrefix = ":label";
+            if (rawData.find(c_labelPrefix) != string::npos)
+            {
+                size_t const pos = rawData.find(c_labelPrefix);
+                size_t const posEnd = rawData.find(' ', pos + c_labelPrefix.size() + 1);
+                if (posEnd != string::npos)
+                {
+                    label = rawData.substr(pos, posEnd - pos);
+                    rawData = rawData.substr(posEnd + 1);  // remove label before code parsing
+                }
+                else
+                {
+                    label = rawData.substr(pos);
+                    rawData = "";
+                }
+            }
+            dataInKey.setString(test::compiler::replaceCode(rawData));
             // ---
-            m_data.push_back(dataInKey);
+            m_databox.push_back(Databox(dataInKey, label, rawData.substr(0, 20), accessList));
         }
         for (auto const& el : tmpD.atKey("gasLimit").getSubObjects())
             m_gasLimit.push_back(el);

@@ -36,8 +36,10 @@ public:
     size_t threadCount = 1;	///< Execute tests on threads
     bool enableClientsOutput = false;  ///< Enable stderr from clients
     bool vmtrace = false;              ///< Create EVM execution tracer
+    bool vmtraceraw = false;           ///< Create EVM execution tracer. output raw info
     bool filltests = false;            ///< Create JSON test files from execution results
     bool showhash = false;  ///< Show filler hash for debug information
+    bool checkhash = false; ///< Check that tests are updated from fillers
     size_t blockLimit = 0;  ///< Perform blockchain blocks till this limit
     size_t rpcLimit = 0;    ///< Perform rpcRequests till this limit
     bool fillchain = false; ///< Fill tests as a blockchain tests if possible
@@ -63,10 +65,12 @@ public:
     /// Test selection
 	/// @{
 	bool singleTest = false;
-	boost::optional<std::string> singleTestFile;
+    boost::optional<std::string> singleTestFile;    // --testfile run a single file
+    boost::optional<std::string> singleTestOutFile; // --testfile run a single file filler output
     std::string singleTestName;     // A test name (usually a file.json test)
     std::string singleSubTestName;  // A test name inside a file.json (for blockchain tests)
     std::string singleTestNet;
+    std::string trDataLabel;  ///< GeneralState data
     int trDataIndex;    ///< GeneralState data
     int trGasIndex;     ///< GeneralState gas
     int trValueIndex;   ///< GeneralState value
@@ -79,6 +83,7 @@ public:
 	/// The first time used, options are parsed with argc, argv
 	static Options const& get(int argc = 0, const char** argv = 0);
     static DynamicOptions& getDynamicOptions() { return m_dynamicOptions; }
+    string getGStateTransactionFilter() const;
 
 private:
 	Options(int argc = 0, const char** argv = 0);

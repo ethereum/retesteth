@@ -36,5 +36,8 @@ solContracts compileSolidity(string const& _code);
 /// compile LLL / wasm or other src code into bytecode
 std::string replaceCode(std::string const& _code, solContracts const& _preSolidity = solContracts());
 
+/// compile clean YUL
+std::string compileYul(string const& _code);
+
 }  // namespace compiler
 }  // namespace test

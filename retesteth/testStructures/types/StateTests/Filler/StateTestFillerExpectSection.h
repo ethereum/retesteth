@@ -3,6 +3,7 @@
 #include "../../../types/Ethereum/StateIncomplete.h"
 #include <retesteth/dataObject/DataObject.h>
 #include <retesteth/dataObject/SPointer.h>
+#include <testStructures/types/StateTests/Filler/StateTestFillerTransaction.h>
 using namespace dataobject;
 using namespace test::teststruct;
 
@@ -12,8 +13,9 @@ namespace teststruct
 {
 struct StateTestFillerExpectSection
 {
-    StateTestFillerExpectSection(DataObject const&);
+    StateTestFillerExpectSection(DataObject const&, spStateTestFillerTransaction const&);
     StateIncomplete const& result() const { return m_result.getCContent(); }
+    DataObject const& initialData() const { return m_initialData; }
     std::vector<FORK> const& forks() const { return m_forks; }
     bool hasFork(FORK const& _fork) const
     {
@@ -33,6 +35,7 @@ private:
     std::set<int> m_valInd;
     std::vector<FORK> m_forks;
     GCP_SPointer<StateIncomplete> m_result;
+    DataObject m_initialData;
 };
 
 

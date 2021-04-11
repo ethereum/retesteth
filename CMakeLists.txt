@@ -14,8 +14,8 @@ HunterGate(
 	LOCAL
 )
 
-project(retesteth VERSION 0.0.8)
-set(VERSION_SUFFIX "docker")
+project(retesteth VERSION 0.1.0)
+set(VERSION_SUFFIX "accesslist")
 
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)

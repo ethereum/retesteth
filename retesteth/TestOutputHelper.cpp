@@ -304,10 +304,15 @@ bool pathHasTests(boost::filesystem::path const& _path)
 
 void checkUnfinishedTestFolders()
 {
+    if (Options::get().singleTestFile.is_initialized())
+        return;
     std::lock_guard<std::mutex> lock(g_finishedTestFoldersMapMutex);
     // Unit tests does not mark test folders
     if (finishedTestFoldersMap.size() == 0)
         return;
+
+    if (Options::get().rCurrentTestSuite.empty())
+        ETH_WARNING("Options rCurrentTestSuite is empty!");
 
     // -t SuiteName/SubSuiteName/caseName   parse caseName as filter
     // rCurrentTestSuite is empty if run without -t argument
@@ -354,8 +359,7 @@ void checkUnfinishedTestFolders()
             std::set_difference(allFolders.begin(), allFolders.end(), finishedFolders.begin(),
                 finishedFolders.end(), std::back_inserter(diff));
             for (auto const& it : diff)
-                ETH_WARNING(
-                    string("Test folder ") + (path / it).c_str() + " appears to be unused!");
+                ETH_WARNING(string("Test folder ") + (path / it).c_str() + " appears to be unused!");
         }
     }
 }
@@ -397,5 +401,9 @@ std::string TestInfo::errorDebug() const
         message += ", block: " + to_string(m_blockNumber);
     else if (m_isStateTransactionInfo)
         message += ", TrInfo: d: " + to_string(m_trD) + ", g: " + to_string(m_trG) + ", v: " + to_string(m_trV);
-    return message + ")" + cRed;
+
+    if (!m_sTransactionData.empty())
+        message += ", TrData: `" + m_sTransactionData + "`";
+
+    return message + ")" + cDefault;
 }

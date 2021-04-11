@@ -237,8 +237,13 @@ DataObject ConvertJsoncppStringToData(
         {
             if (actualRoot->type() == DataType::Array || actualRoot->type() == DataType::Object)
             {
-                DataObject* newObj = &actualRoot->addSubObject(DataObject(DataType::Array));
-                newObj->setAutosort(_autosort);
+                DataObject newObj(DataType::Array);
+                newObj.setAutosort(_autosort);
+                applyDepth.push_back(actualRoot);
+                actualRoot = &actualRoot->addSubObject(newObj);
+
+                // DataObject* newObj = &actualRoot->addSubObject(DataObject(DataType::Array));
+                // newObj->setAutosort(_autosort);
                 continue;
             }
 

@@ -13,7 +13,7 @@ public:
 
     // ETH Methods
     FH32 eth_sendRawTransaction(BYTES const& _rlp) override;
-    size_t eth_getTransactionCount(FH20 const& _address, VALUE const& _blockNumber) override;
+    VALUE eth_getTransactionCount(FH20 const& _address, VALUE const& _blockNumber) override;
     VALUE eth_blockNumber() override;
     EthGetBlockBy eth_getBlockByHash(FH32 const& _hash, Request _fullObjects) override;
     EthGetBlockBy eth_getBlockByNumber(VALUE const& _blockNumber, Request _fullObjects) override;
@@ -30,7 +30,7 @@ public:
         VALUE const& _blockNumber, VALUE const& _txIndex, FH20 const& _addrHash, FH32 const& _begin, int _maxResults) override;
     DebugStorageRangeAt debug_storageRangeAt(
         FH32 const& _blockHash, VALUE const& _txIndex, FH20 const& _address, FH32 const& _begin, int _maxResults) override;
-    DebugTraceTransaction debug_traceTransaction(FH32 const& _trHash) override;
+    DebugVMTrace debug_traceTransaction(FH32 const& _trHash) override;
 
     // Test
     void test_setChainParams(SetChainParamsArgs const& _config) override;

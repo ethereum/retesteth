@@ -2,6 +2,7 @@
 #include "../Common.h"
 #include <retesteth/EthChecks.h>
 #include <retesteth/TestHelper.h>
+using namespace test;
 using namespace test::teststruct;
 
 namespace

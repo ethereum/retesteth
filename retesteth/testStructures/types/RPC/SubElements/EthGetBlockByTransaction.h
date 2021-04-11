@@ -14,10 +14,10 @@ struct EthGetBlockByTransaction
 {
     EthGetBlockByTransaction(DataObject const&);
     FH32 const& hash() const { return m_hash.getCContent(); }
-    Transaction const& transaction() const
+    spTransaction const& transaction() const
     {
         assert(isFullTransaction());
-        return m_transaction.getCContent();
+        return m_transaction;
     }
     bool isFullTransaction() const { return !m_transaction.isEmpty(); }
     FH32 const& blockHash() const

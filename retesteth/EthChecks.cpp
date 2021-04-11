@@ -7,6 +7,12 @@
 #include <thread>
 
 namespace test {
+std::string const cBYellowBlack = "\x1b[43m\x1b[30m";
+std::string const cYellow = "\x1b[33m";
+std::string const cLime = "\x1b[32m";
+std::string const cRed = "\x1b[0;31m";
+std::string const cDefault = "\x1b[0m";
+
 void eth_warning_message(std::string const& _message, unsigned _verbosity)
 {
     if (Options::get().logVerbosity >= _verbosity)

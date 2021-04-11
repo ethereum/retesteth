@@ -3,19 +3,37 @@
 #include <retesteth/TestHelper.h>
 #include <retesteth/testStructures/Common.h>
 
+#include <libdevcrypto/Common.h>
+
 namespace test
 {
 namespace teststruct
 {
-BlockchainTestFillerTransaction::BlockchainTestFillerTransaction(DataObject const& _data)
+BlockchainTestFillerTransaction::BlockchainTestFillerTransaction(DataObject const& _data, NonceMap& _nonceMap)
 {
     try
     {
         m_expectInvalid = _data.count("invalid");
 
         DataObject tmpD = _data;
+
+        if (tmpD.count("secretKey") && tmpD.atKey("nonce").asString() == "auto")
+        {
+            dev::Secret priv(tmpD.atKey("secretKey").asString());
+            dev::Address key = dev::toAddress(priv);
+            if (_nonceMap.count("0x" + key.hex()))
+            {
+                tmpD.atKeyUnsafe("nonce").setString(_nonceMap.at("0x" + key.hex()).getCContent().asDecString());
+                _nonceMap["0x" + key.hex()].getContent()++;
+            }
+            else
+                ETH_ERROR_MESSAGE("Parsing tx.nonce `auto` can't find tx.origin in nonce map!");
+        }
+
         tmpD.removeKey("data");
         tmpD.removeKey("to");
+        if (tmpD.count("accessList"))
+            tmpD.removeKey("accessList");
         tmpD.performModifier(mod_valueToCompactEvenHexPrefixed);
 
         // fix 0x prefix on 'to' key
@@ -28,7 +46,10 @@ BlockchainTestFillerTransaction::BlockchainTestFillerTransaction(DataObject cons
         // Compile LLL in transaction data into byte code if not already
         tmpD["data"] = test::compiler::replaceCode(_data.atKey("data").asString());
 
-        m_transaction = spTransaction(new Transaction(tmpD));
+        if (_data.count("accessList"))
+            tmpD["accessList"] = _data.atKey("accessList");
+
+        m_transaction = readTransaction(tmpD);
     }
     catch (std::exception const& _ex)
     {

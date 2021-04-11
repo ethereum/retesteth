@@ -15,6 +15,7 @@ enum class ArgSignatureType
     BYTES,
     BOOL,
     STRING,
+    ADDRESS,
     UNKNOWN
 };
 
@@ -51,6 +52,8 @@ ArgumentSignature parseArgumentSignature(string const& _input)
         info.type = ArgSignatureType::BOOL;
     else if (_input.find("string") != string::npos)
         info.type = ArgSignatureType::STRING;
+    else if (_input.find("address") != string::npos)
+        info.type = ArgSignatureType::ADDRESS;
 
     size_t openBracerCount = std::count(_input.begin(), _input.end(), '[');
     size_t closeBracerCount = std::count(_input.begin(), _input.end(), ']');
@@ -108,6 +111,9 @@ ArgumentSignature parseArgumentSignature(string const& _input)
     // `string[]` is treated as dynamic array 2
     if (info.type == ArgSignatureType::STRING && info.typeSize == 0)
         info.dynamicArray2 = true;
+
+    if (info.type == ArgSignatureType::ADDRESS)
+        info.typeSize = 40;
 
     return info;
 }
@@ -170,18 +176,31 @@ std::vector<ARGS> parseArgumentArray2(ArgumentSignature const& _header, string c
     return args;
 }
 
+string encodeAddress(string const& _input)
+{
+    if (_input.find('"') == string::npos || _input.find("0x") == string::npos)
+        ETH_ERROR_MESSAGE("encodeAbi:encodeAddress: expected `\"` quote and `0x` prefix in argument: " + _input);
+    string const dequotedArg = _input.substr(1, _input.length() - 2).substr(2);  // remove 0x
+    if (!dev::isHex(dequotedArg))
+        ETH_ERROR_MESSAGE("encodeAbi:encodeAddress: argument must be hex: " + dequotedArg);
+    if (dequotedArg.size() != 40)
+        ETH_ERROR_MESSAGE("encodeAbi:encodeAddress: argument must be 20byte address: " + dequotedArg);
+    static string c_prefix = "000000000000000000000000";
+    return c_prefix + dequotedArg;
+}
+
 // Encode "dave" into bytestring padded32
 string encodeByteString(string const& _input, size_t _expectedSize = 0)
 {
     if (_input.find('"') == string::npos)
-        ETH_ERROR_MESSAGE("encodeAbi:encodeByteString: expected `\"` quote in argument");
+        ETH_ERROR_MESSAGE("encodeAbi:encodeByteString: expected `\"` quote in argument: " + _input);
     string const dequotedArg = _input.substr(1, _input.length() - 2);
 
     // Check the argument with the provided header
     if (dequotedArg.length() > 32)
-        ETH_ERROR_MESSAGE("encodeAbi: Array argument can not be > 32 bytes!");
+        ETH_ERROR_MESSAGE("encodeByteString: Argument can not be > 32 bytes! `" + dequotedArg);
     if (dequotedArg.length() != _expectedSize && _expectedSize != 0)
-        ETH_ERROR_MESSAGE("encodeAbi: Array argument size is different from the one described in the header!");
+        ETH_ERROR_MESSAGE("encodeByteString: Argument size is different from the one described in the header! `" + dequotedArg);
 
     string encodedArg;
     for (size_t i = 0; i < 32; i++)
@@ -257,6 +276,10 @@ string EncodeArgument(string const& _element, ArgumentSignature const& _sig)
     case ArgSignatureType::STRING:
     {
         return encodeByteString(_element, _sig.typeSize);
+    }
+    case ArgSignatureType::ADDRESS:
+    {
+        return encodeAddress(_element);
     }
     break;
     default:

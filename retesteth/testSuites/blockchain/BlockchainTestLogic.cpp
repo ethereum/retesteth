@@ -54,6 +54,13 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
         // Check imported block against the fields in test
         // Check Blockheader
         EthGetBlockBy latestBlock(session.eth_getBlockByHash(blHash, Request::FULLOBJECTS));
+
+        for (auto const& tr : tblock.transactions())
+        {
+            if (Options::get().vmtrace)
+                printVmTrace(session, tr.getCContent().hash(), latestBlock.header().stateRoot());
+        }
+
         bool condition = latestBlock.header() == tblock.header();
         /*if (_opt.isLegacyTests)
         {
@@ -104,7 +111,7 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
 
         // Verify transactions to one described in the fields
         ind = 0;
-        for (Transaction const& tr : tblock.transactions())
+        for (spTransaction const& tr : tblock.transactions())
         {
             if (ExitHandler::receivedExitSignal())
                 return;
@@ -119,11 +126,12 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
                 "(" +
                     clientTr.blockNumber().asDecString() + " != " + tblock.header().number().asDecString() + ")");
 
-            DataObject const testTr = tr.asDataObject();
-            DataObject const remoteTr = clientTr.transaction().asDataObject();
-            ETH_ERROR_REQUIRE_MESSAGE(clientTr.transaction() == tr,
-                                      "Error checking remote transaction, remote tr `" + remoteTr.asJson() +
-                                      "` is different to test tr `" + testTr.asJson() + "`)");
+            BYTES const testTr = tr.getCContent().getRawBytes();
+            BYTES const remoteTr = clientTr.transaction().getCContent().getRawBytes();
+
+            ETH_ERROR_REQUIRE_MESSAGE(remoteTr == testTr, "Error checking remote transaction, remote tr `" +
+                                                              remoteTr.asString() + "` is different to test tr `" +
+                                                              testTr.asString() + "`)");
         }
     }
 

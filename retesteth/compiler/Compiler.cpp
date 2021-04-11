@@ -20,11 +20,20 @@ string compileLLL(string const& _code)
     fs::path path(fs::temp_directory_path() / fs::unique_path());
     string cmd = string("lllc ") + path.string();
     writeFile(path.string(), _code);
-    string result = executeCmd(cmd);
-    fs::remove_all(path);
-    result = "0x" + result;
-    test::compiler::utiles::checkHexHasEvenLength(result);
-    return result;
+    try
+    {
+        string result = executeCmd(cmd);
+        fs::remove_all(path);
+        result = "0x" + result;
+        test::compiler::utiles::checkHexHasEvenLength(result);
+        return result;
+    }
+    catch (EthError const& _ex)
+    {
+        fs::remove_all(path);
+        ETH_WARNING("Error compiling lll code: " + _code.substr(0, 50) + "..");
+        throw _ex;
+    }
 #endif
 }
 }  // namespace
@@ -54,7 +63,8 @@ string replaceCode(string const& _code, solContracts const& _preSolidity)
     {
         utiles::checkHexHasEvenLength(_code);
         if (Options::get().filltests && _code.size() > 2)
-            ETH_WARNING("Filling raw bytecode, please provide the source!" + TestOutputHelper::get().testInfo().errorDebug());
+            ETH_WARNING("Filling raw bytecode ('" + _code.substr(0, 10) + "..'), please provide the source!" +
+                        TestOutputHelper::get().testInfo().errorDebug());
         return _code;
     }
 
@@ -62,6 +72,8 @@ string replaceCode(string const& _code, solContracts const& _preSolidity)
     string const c_rawPrefix = ":raw";
     string const c_abiPrefix = ":abi";
     string const c_solidityPrefix = ":solidity";
+    string const c_yulPrefix = ":yul";
+
     if (_code.find("pragma solidity") != string::npos)
     {
         solContracts const contracts = compileSolidity(_code);
@@ -88,8 +100,17 @@ string replaceCode(string const& _code, solContracts const& _preSolidity)
         compiledCode = utiles::encodeAbi(abiCode);
         utiles::checkHexHasEvenLength(compiledCode);
     }
-    else
+    else if (_code.find(c_yulPrefix) != string::npos)
+    {
+        size_t const pos = _code.find(c_yulPrefix);
+        string const yulCode = _code.substr(pos + c_yulPrefix.length() + 1);
+        compiledCode = compileYul(yulCode);
+        utiles::checkHexHasEvenLength(compiledCode);
+    }
+    else if (_code.find('{') != string::npos || _code.find("(asm") != string::npos )
         compiledCode = compileLLL(_code);
+    else
+        ETH_ERROR_MESSAGE("Trying to compile code of unknown type (missing 0x prefix?): `" + _code);
 
     if (_code.size() > 0)
         ETH_FAIL_REQUIRE_MESSAGE(

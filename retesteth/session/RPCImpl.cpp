@@ -25,13 +25,13 @@ FH32 RPCImpl::eth_sendRawTransaction(BYTES const& _rlp)
     return FH32(result);
 }
 
-size_t RPCImpl::eth_getTransactionCount(FH20 const& _address, VALUE const& _blockNumber)
+VALUE RPCImpl::eth_getTransactionCount(FH20 const& _address, VALUE const& _blockNumber)
 {
     DataObject const response =
         rpcCall("eth_getTransactionCount", {quote(_address.asString()), quote(_blockNumber.asString())});
     if (response.type() == DataType::String)
-        return hexOrDecStringToInt(response.asString());
-    return response.asInt();
+        return VALUE(response);
+    return VALUE(response.asInt());
 }
 
 VALUE RPCImpl::eth_blockNumber()
@@ -97,9 +97,12 @@ DebugStorageRangeAt RPCImpl::debug_storageRangeAt(
                                                quote(_begin.asString()), fto_string(_maxResults)});
 }
 
-DebugTraceTransaction RPCImpl::debug_traceTransaction(FH32 const& _trHash)
+DebugVMTrace RPCImpl::debug_traceTransaction(FH32 const& _trHash)
 {
-    return DebugTraceTransaction(rpcCall("debug_traceTransaction", {quote(_trHash.asString()), "{}"}));
+    (void)_trHash;
+    ETH_ERROR_MESSAGE("RPCImpl::debug_traceTransaction is not implemented!");
+    static DebugVMTrace empty("", "", FH32::zero(), "");
+    return empty;
 }
 
 // Test

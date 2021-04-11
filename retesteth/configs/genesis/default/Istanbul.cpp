@@ -32,12 +32,12 @@ const string t8ntool_Istanbul_config = R"({
 genIstanbulCfg::genIstanbulCfg()
 {
     DataObject obj;
-    obj["path"] = "default/genesis/Istanbul.json";
+    obj["path"] = "besu/genesis/Istanbul.json";
     obj["content"] = default_Istanbul_config;
     map_configs.addArrayObject(obj);
 
     DataObject obj2;
-    obj2["path"] = "t8ntool/genesis/Istanbul.json";
+    obj2["path"] = "default/genesis/Istanbul.json";
     obj2["content"] = t8ntool_Istanbul_config;
     map_configs.addArrayObject(obj2);
 }

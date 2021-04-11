@@ -9,7 +9,6 @@ extern dataobject::DataObject map_configs;
 class alethcfg { public: alethcfg(); };
 class alethIpcDebugcfg { public: alethIpcDebugcfg(); };
 class besucfg { public: besucfg(); };
-class gethcfg { public: gethcfg(); };
 class t8ntoolcfg { public: t8ntoolcfg(); };
 
 // Genesis configs for clients
@@ -41,7 +40,6 @@ public:
         alethcfg aleth;
         alethIpcDebugcfg alethIpcDebug;
         besucfg besu;
-        gethcfg geth;
         t8ntoolcfg t8ntool;
 
         // Genesis configs for clients

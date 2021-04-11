@@ -18,7 +18,7 @@ struct BlockchainTestBlock : GCP_SPointerBase
     BlockHeader const& header() const { return m_blockHeader.getCContent(); }
 
     std::vector<BlockHeader> const& uncles() const { return m_uncles; }
-    std::vector<Transaction> const& transactions() const { return m_transactions; }
+    std::vector<spTransaction> const& transactions() const { return m_transactions; }
 
 private:
     BlockchainTestBlock() {}
@@ -26,7 +26,7 @@ private:
     spVALUE m_blockNumber;
     spBlockHeader m_blockHeader;
     std::vector<BlockHeader> m_uncles;
-    std::vector<Transaction> m_transactions;
+    std::vector<spTransaction> m_transactions;
     spBYTES m_rlp;
 };
 

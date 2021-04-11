@@ -40,8 +40,8 @@ RUN apt-get install wget && wget https://github.com/ethereum/solidity/releases/d
 # Geth
 RUN git clone --depth 1 -b master https://github.com/ethereum/go-ethereum.git /geth
 RUN cd /geth && apt-get install wget \
-    && wget https://dl.google.com/go/go1.13.3.linux-amd64.tar.gz \
-    && tar -xvf go1.13.3.linux-amd64.tar.gz \
+    && wget https://dl.google.com/go/go1.15.7.linux-amd64.tar.gz \
+    && tar -xvf go1.15.7.linux-amd64.tar.gz \
     && mv go /usr/local && ln -s /usr/local/go/bin/go /bin/go \
     && make all && cp /geth/build/bin/evm /bin/evm \
     && cp /geth/build/bin/geth /bin/geth \
