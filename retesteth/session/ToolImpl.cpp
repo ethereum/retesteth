@@ -23,12 +23,13 @@ DataObject ToolImpl::web3_clientVersion()
 }
 
 // ETH Methods
-FH32 ToolImpl::eth_sendRawTransaction(BYTES const& _rlp)
+FH32 ToolImpl::eth_sendRawTransaction(BYTES const& _rlp, VALUE const& _secret)
 {
     rpcCall("", {});
     ETH_TEST_MESSAGE("\nRequest: eth_sendRawTransaction \n" + _rlp.asString());
 
     spTransaction spTr = readTransaction(_rlp);
+    spTr.getContent().setSecret(_secret);
     m_toolChainManager.getContent().addPendingTransaction(spTr);
     FH32 trHash = spTr.getContent().hash();
     ETH_TEST_MESSAGE("Response: " + trHash.asString());

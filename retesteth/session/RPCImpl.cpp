@@ -17,8 +17,9 @@ DataObject RPCImpl::web3_clientVersion()
 }
 
 // ETH Methods
-FH32 RPCImpl::eth_sendRawTransaction(BYTES const& _rlp)
+FH32 RPCImpl::eth_sendRawTransaction(BYTES const& _rlp, VALUE const& _secret)
 {
+    (void)_secret;
     DataObject const result = rpcCall("eth_sendRawTransaction", {quote(_rlp.asString())}, true);
     if (!m_lastInterfaceError.empty())
         ETH_ERROR_MESSAGE(m_lastInterfaceError.message());

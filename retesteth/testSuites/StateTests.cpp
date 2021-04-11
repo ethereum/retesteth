@@ -126,7 +126,7 @@ DataObject FillTestAsBlockchain(StateTestInFiller const& _test)
 
                     session.test_setChainParams(prepareChainParams(fork, SealEngine::NoProof, _test.Pre(), _test.Env()));
                     session.test_modifyTimestamp(_test.Env().firstBlockTimestamp());
-                    FH32 trHash(session.eth_sendRawTransaction(tr.transaction().getRawBytes()));
+                    FH32 trHash(session.eth_sendRawTransaction(tr.transaction().getRawBytes(), tr.transaction().getSecret()));
 
                     // Mine a block, execute transaction
                     session.test_mineBlocks(1);
@@ -263,7 +263,7 @@ DataObject FillTest(StateTestInFiller const& _test)
 
                     expectFoundTransaction = true;
                     session.test_modifyTimestamp(_test.Env().firstBlockTimestamp());
-                    FH32 trHash(session.eth_sendRawTransaction(tr.transaction().getRawBytes()));
+                    FH32 trHash(session.eth_sendRawTransaction(tr.transaction().getRawBytes(), tr.transaction().getSecret()));
                     session.test_mineBlocks(1);
                     VALUE latestBlockN(session.eth_blockNumber());
 
@@ -396,7 +396,7 @@ void RunTest(StateTestInFilled const& _test)
                 if (checkIndexes)
                 {
                     session.test_modifyTimestamp(_test.Env().firstBlockTimestamp());
-                    FH32 trHash(session.eth_sendRawTransaction(tr.transaction().getRawBytes()));
+                    FH32 trHash(session.eth_sendRawTransaction(tr.transaction().getRawBytes(), tr.transaction().getSecret()));
                     session.test_mineBlocks(1);
 
                     VALUE latestBlockN(session.eth_blockNumber());

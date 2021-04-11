@@ -42,7 +42,7 @@ public:
     virtual DataObject web3_clientVersion() = 0;
 
     // ETH Methods
-    virtual FH32 eth_sendRawTransaction(BYTES const& _rlp) = 0;
+    virtual FH32 eth_sendRawTransaction(BYTES const& _rlp, VALUE const& _secret) = 0;
     virtual VALUE eth_getTransactionCount(FH20 const& _address, VALUE const& _blockNumber) = 0;
 
     virtual VALUE eth_blockNumber() = 0;

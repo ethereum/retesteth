@@ -15,6 +15,7 @@ namespace teststruct
 TransactionAccessList::TransactionAccessList(DataObject const& _data, string const& _dataRawPreview, string const& _dataLabel)
   : Transaction(_data, _dataRawPreview, _dataLabel)
 {
+    m_secretKey = spVALUE(new VALUE(0));
     m_accessList = spAccessList(new AccessList(_data.atKey("accessList")));
     if (_data.count("secretKey"))
         buildVRS(VALUE(_data.atKey("secretKey")));  // Build without v + 27
@@ -24,11 +25,13 @@ TransactionAccessList::TransactionAccessList(DataObject const& _data, string con
 
 TransactionAccessList::TransactionAccessList(dev::RLP const& _rlp)
 {
+    m_secretKey = spVALUE(new VALUE(0));
     fromRLP(_rlp);
 }
 
 TransactionAccessList::TransactionAccessList(BYTES const& _rlp)
 {
+    m_secretKey = spVALUE(new VALUE(0));
     dev::bytes decodeRLP = sfromHex(_rlp.asString());
     dev::RLP rlp(decodeRLP, dev::RLP::VeryStrict);
     fromRLP(rlp);
@@ -64,6 +67,7 @@ void TransactionAccessList::fromRLP(dev::RLP const& _rlp)
 
 void TransactionAccessList::buildVRS(VALUE const& _secret)
 {
+    setSecret(_secret);
     dev::RLPStream stream;
     stream.appendList(8);
     TransactionAccessList::streamHeader(stream);
@@ -120,6 +124,8 @@ DataObject const TransactionAccessList::asDataObject(ExportOrder _order) const
     {
         out["chainId"] = "0x1";
         out["type"] = "0x1";
+        if (!m_secretKey.isEmpty() && m_secretKey.getCContent() != 0)
+            out["secretKey"] = m_secretKey.getCContent().asString();
     }
     return out;
 }
