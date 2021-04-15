@@ -28,11 +28,19 @@ FH32 RPCImpl::eth_sendRawTransaction(BYTES const& _rlp, VALUE const& _secret)
 
 VALUE RPCImpl::eth_getTransactionCount(FH20 const& _address, VALUE const& _blockNumber)
 {
-    DataObject const response =
-        rpcCall("eth_getTransactionCount", {quote(_address.asString()), quote(_blockNumber.asString())});
-    if (response.type() == DataType::String)
-        return VALUE(response);
-    return VALUE(response.asInt());
+    try
+    {
+        DataObject const response =
+            rpcCall("eth_getTransactionCount", {quote(_address.asString()), quote(_blockNumber.asString())});
+        if (response.type() == DataType::String)
+            return VALUE(response);
+        return VALUE(response.asInt());
+    }
+    catch(std::exception const& _ex)
+    {
+        ETH_FAIL_MESSAGE(string("RPC eth_getTransactionCount Exception: ") + _ex.what());
+    }
+    return VALUE(0);
 }
 
 VALUE RPCImpl::eth_blockNumber()
@@ -173,7 +181,7 @@ DataObject RPCImpl::rpcCall(
     string reply = m_socket.sendRequest(request, validator);
     ETH_TEST_MESSAGE("Reply: `" + reply + "`");
 
-    DataObject result = ConvertJsoncppStringToData(reply, string(), true);
+    DataObject result = ConvertJsoncppStringToData(reply, string(), false);
     if (result.count("error"))
         result["result"] = "";
 

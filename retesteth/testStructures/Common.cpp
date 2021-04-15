@@ -231,8 +231,8 @@ void requireJsonFields(DataObject const& _o, std::string const& _config, std::ma
                     sTypes += ", or ";
                 sTypes += DataObject::dataTypeAsString(type);
             }
-            std::string const comment = "Field '" + vmap.first + "' expected to be " + sTypes + ", but set to " +
-                                        DataObject::dataTypeAsString(_o.atKey(vmap.first).type()) + " in " + _config;
+            std::string const comment = "Field '" + vmap.first + "' expected to be `" + sTypes + "`, but set to `" +
+                                        DataObject::dataTypeAsString(_o.atKey(vmap.first).type()) + "` in " + _config;
             ETH_ERROR_MESSAGE(comment + "\n" + _o.asJson());
         }
     }

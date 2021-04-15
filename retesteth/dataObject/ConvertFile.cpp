@@ -326,7 +326,7 @@ DataObject ConvertJsoncppStringToData(
                 else if (isReadBool)
                     actualRoot->addArrayObject(DataObject(DataType::Bool, resBool));
                 else
-                    actualRoot->addArrayObject(DataObject());
+                    actualRoot->addArrayObject(DataObject(DataType::Null));
             }
             else
             {
@@ -335,7 +335,7 @@ DataObject ConvertJsoncppStringToData(
                 else if (isReadBool)
                     actualRoot->setBool(resBool);
                 else
-                    actualRoot->clearSubobjects();
+                    actualRoot->clearSubobjects(DataType::Null);
                 actualRoot = applyDepth.at(applyDepth.size() - 1);
                 applyDepth.pop_back();
             }
