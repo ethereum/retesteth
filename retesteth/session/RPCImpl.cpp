@@ -109,7 +109,7 @@ DebugStorageRangeAt RPCImpl::debug_storageRangeAt(
 DebugVMTrace RPCImpl::debug_traceTransaction(FH32 const& _trHash)
 {
     (void)_trHash;
-    ETH_ERROR_MESSAGE("RPCImpl::debug_traceTransaction is not implemented!");
+    ETH_FAIL_MESSAGE("RPCImpl::debug_traceTransaction is not implemented!");
     static DebugVMTrace empty("", "", FH32::zero(), "");
     return empty;
 }
