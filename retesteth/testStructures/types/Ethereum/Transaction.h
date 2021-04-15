@@ -13,7 +13,8 @@ namespace teststruct
 enum class TransactionType
 {
     LEGACY,
-    ACCESSLIST
+    ACCESSLIST,
+    BASEFEE
 };
 
 struct Transaction : GCP_SPointerBase

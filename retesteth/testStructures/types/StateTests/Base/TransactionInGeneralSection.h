@@ -1,6 +1,7 @@
 #pragma once
 #include "../../Ethereum/Transaction.h"
 #include "../../Ethereum/TransactionAccessList.h"
+#include "../../Ethereum/TransactionBaseFee.h"
 #include <retesteth/dataObject/DataObject.h>
 #include <retesteth/dataObject/SPointer.h>
 

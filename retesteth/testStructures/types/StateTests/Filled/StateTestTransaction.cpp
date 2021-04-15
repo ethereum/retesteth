@@ -59,11 +59,23 @@ StateTestTransaction::StateTestTransaction(DataObject const& _data)
         for (auto const& el : _data.atKey("value").getSubObjects())
             m_value.push_back(el);
 
+        if (_data.count("maxFeePerGas") || _data.count("maxInclusionFeePerGas"))
+        {
+            m_maxFeePerGas = spVALUE(new VALUE(_data.atKey("maxFeePerGas")));
+            m_maxInclusionFeePerGas = spVALUE(new VALUE(_data.atKey("maxInclusionFeePerGas")));
+        }
+
         requireJsonFields(_data, "StateTestTransaction " + _data.getKey(),
-            {{"data", {{DataType::Array}, jsonField::Required}}, {"accessLists", {{DataType::Array}, jsonField::Optional}},
-                {"gasLimit", {{DataType::Array}, jsonField::Required}}, {"gasPrice", {{DataType::String}, jsonField::Required}},
-                {"nonce", {{DataType::String}, jsonField::Required}}, {"value", {{DataType::Array}, jsonField::Required}},
-                {"to", {{DataType::String}, jsonField::Required}}, {"secretKey", {{DataType::String}, jsonField::Required}}});
+            {{"data", {{DataType::Array}, jsonField::Required}},
+             {"accessLists", {{DataType::Array}, jsonField::Optional}},
+             {"gasLimit", {{DataType::Array}, jsonField::Required}},
+             {"gasPrice", {{DataType::String}, jsonField::Required}},
+             {"nonce", {{DataType::String}, jsonField::Required}},
+             {"value", {{DataType::Array}, jsonField::Required}},
+             {"to", {{DataType::String}, jsonField::Required}},
+             {"maxFeePerGas", {{DataType::String}, jsonField::Optional}},
+             {"maxInclusionFeePerGas", {{DataType::String}, jsonField::Optional}},
+             {"secretKey", {{DataType::String}, jsonField::Required}}});
     }
     catch (std::exception const& _ex)
     {
