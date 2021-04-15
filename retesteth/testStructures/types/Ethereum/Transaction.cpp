@@ -59,8 +59,11 @@ void Transaction::fromDataObject(DataObject const& _data)
                 {"r", {{DataType::String}, jsonField::Optional}}, {"s", {{DataType::String}, jsonField::Optional}},
 
                 {"type", {{DataType::String}, jsonField::Optional}},       // Transaction Type 1
-                {"chainId", {{DataType::String}, jsonField::Optional}},    // Transaction Type 1
+                {"chainId", {{DataType::String, DataType::Null}, jsonField::Optional}},    // Transaction Type 1
                 {"accessList", {{DataType::Array}, jsonField::Optional}},  // Transaction access list
+
+                {"publicKey", {{DataType::String}, jsonField::Optional}},         // Besu EthGetBlockBy transaction
+                {"raw", {{DataType::String}, jsonField::Optional}},               // Besu EthGetBlockBy transaction
 
                 {"blockHash", {{DataType::String}, jsonField::Optional}},         // EthGetBlockBy transaction
                 {"blockNumber", {{DataType::String}, jsonField::Optional}},       // EthGetBlockBy transaction
