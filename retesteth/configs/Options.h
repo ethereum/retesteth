@@ -10,6 +10,7 @@ class alethcfg { public: alethcfg(); };
 class alethIpcDebugcfg { public: alethIpcDebugcfg(); };
 class besucfg { public: besucfg(); };
 class t8ntoolcfg { public: t8ntoolcfg(); };
+class oewrapcfg { public: oewrapcfg(); };
 
 // Genesis configs for clients
 class genRewardsCfg { public: genRewardsCfg(); };
@@ -41,6 +42,7 @@ public:
         alethIpcDebugcfg alethIpcDebug;
         besucfg besu;
         t8ntoolcfg t8ntool;
+        oewrapcfg oewrap;
 
         // Genesis configs for clients
         genRewardsCfg rewards;
