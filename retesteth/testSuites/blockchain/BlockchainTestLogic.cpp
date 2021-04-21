@@ -58,10 +58,10 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
         for (auto const& tr : tblock.transactions())
         {
             if (Options::get().vmtrace)
-                printVmTrace(session, tr.getCContent().hash(), latestBlock.header().stateRoot());
+                printVmTrace(session, tr.getCContent().hash(), latestBlock.header().getCContent().stateRoot());
         }
 
-        bool condition = latestBlock.header() == tblock.header();
+        bool condition = latestBlock.header().getCContent() == tblock.header().getCContent();
         /*if (_opt.isLegacyTests)
         {
             inTestHeader = bdata.atKey("blockHeader");  // copy!!!
@@ -85,7 +85,8 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
         {
             string errField;
             message = "Client return HEADER vs Test HEADER: \n";
-            message += compareBlockHeaders(latestBlock.header().asDataObject(), tblock.header().asDataObject(), errField);
+            message += compareBlockHeaders(
+                latestBlock.header().getCContent().asDataObject(), tblock.header().getCContent().asDataObject(), errField);
         }
         ETH_ERROR_REQUIRE_MESSAGE(
             condition, "Client report different blockheader after importing the rlp than expected by test! \n" + message);
@@ -96,10 +97,10 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
                   "Test UNCLES: " + to_string(tblock.uncles().size());
         ETH_ERROR_REQUIRE_MESSAGE(latestBlock.uncles().size() == tblock.uncles().size(),
             "Client report different uncle count after importing the rlp than expected by test! \n" + message);
-        for (BlockHeader const& tuncle : tblock.uncles())
+        for (spBlockHeader const& tuncle : tblock.uncles())
         {
             FH32 clientUncleHash = latestBlock.uncles().at(ind++);  // EthGetBlockBy return only hashes
-            if (clientUncleHash != tuncle.hash())
+            if (clientUncleHash != tuncle.getCContent().hash())
                 ETH_ERROR_MESSAGE("Remote client returned block with unclehash that is not expected by test! " + message);
         }
 
@@ -116,15 +117,15 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
             if (ExitHandler::receivedExitSignal())
                 return;
             EthGetBlockByTransaction const& clientTr = latestBlock.transactions().at(ind++);
-            ETH_ERROR_REQUIRE_MESSAGE(clientTr.blockHash() == tblock.header().hash(),
+            ETH_ERROR_REQUIRE_MESSAGE(clientTr.blockHash() == tblock.header().getCContent().hash(),
                 "Error checking remote transaction, remote tr `blockHash` is different to one described in test block! "
                 "(" +
-                    clientTr.blockHash().asString() + " != " + tblock.header().hash().asString() + ")");
+                    clientTr.blockHash().asString() + " != " + tblock.header().getCContent().hash().asString() + ")");
 
-            ETH_ERROR_REQUIRE_MESSAGE(clientTr.blockNumber() == tblock.header().number(),
+            ETH_ERROR_REQUIRE_MESSAGE(clientTr.blockNumber() == tblock.header().getCContent().number(),
                 "Error checking remote transaction, remote tr `blockNumber` is different to one described in test block! "
                 "(" +
-                    clientTr.blockNumber().asDecString() + " != " + tblock.header().number().asDecString() + ")");
+                    clientTr.blockNumber().asDecString() + " != " + tblock.header().getCContent().number().asDecString() + ")");
 
             BYTES const testTr = tr.getCContent().getRawBytes();
             BYTES const remoteTr = clientTr.transaction().getCContent().getRawBytes();
@@ -139,13 +140,13 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
     if (_test.isFullState())
         compareStates(_test.Post(), session);
     else
-        ETH_ERROR_REQUIRE_MESSAGE(_test.PostHash() == latestBlock.header().stateRoot(),
-            "postStateHash mismatch! remote: " + latestBlock.header().stateRoot().asString() + " != test " =
+        ETH_ERROR_REQUIRE_MESSAGE(_test.PostHash() == latestBlock.header().getCContent().stateRoot(),
+            "postStateHash mismatch! remote: " + latestBlock.header().getCContent().stateRoot().asString() + " != test " =
                 _test.PostHash().asString());
 
-    if (_test.lastBlockHash() != latestBlock.header().hash())
-        ETH_ERROR_MESSAGE("lastblockhash does not match! remote: '" + latestBlock.header().hash().asString() + "', test: '" +
-                          _test.lastBlockHash().asString() + "'");
+    if (_test.lastBlockHash() != latestBlock.header().getCContent().hash())
+        ETH_ERROR_MESSAGE("lastblockhash does not match! remote: '" + latestBlock.header().getCContent().hash().asString() +
+                          "', test: '" + _test.lastBlockHash().asString() + "'");
 
     bool skipGenesisCheck = false;
     if (_opt.isLegacyTests)

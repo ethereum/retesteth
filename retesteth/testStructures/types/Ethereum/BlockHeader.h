@@ -10,14 +10,21 @@ namespace test
 {
 namespace teststruct
 {
+enum class BlockType
+{
+    BlockHeader,
+    BlockHeader1559
+};
+
 // Ethereum blockheader description
 struct BlockHeader : GCP_SPointerBase
 {
     BlockHeader(DataObject const&);
     BlockHeader(dev::RLP const&);
+    virtual ~BlockHeader(){/* all smart pointers */};
 
-    DataObject const asDataObject() const;
-    dev::RLPStream const asRLPStream() const;
+    virtual DataObject const asDataObject() const;
+    virtual dev::RLPStream const asRLPStream() const;
     bool operator==(BlockHeader const& _rhs) const;
     bool operator!=(BlockHeader const& _rhs) const { return !(*this == _rhs); };
     bool hasUncles() const;
@@ -31,7 +38,7 @@ struct BlockHeader : GCP_SPointerBase
     VALUE const& timestamp() const { return m_timestamp.getCContent(); }
     FH20 const& author() const { return m_author.getCContent(); }
     VALUE const& difficulty() const { return m_difficulty.getCContent(); }
-    VALUE const& gasLimit() const { return m_gasLimit.getCContent(); }
+    virtual VALUE const& gasLimit() const { return m_gasLimit.getCContent(); }
     VALUE const& gasUsed() const { return m_gasUsed.getCContent(); }
     BYTES const& extraData() const { return m_extraData.getCContent(); }
     FH8 const& nonce() const { return m_nonce.getCContent(); }
@@ -53,9 +60,11 @@ struct BlockHeader : GCP_SPointerBase
     void setGasLimit(VALUE const& _gasLimit) { m_gasLimit = spVALUE(new VALUE(_gasLimit)); }
     void recalculateHash();
 
-private:
+    virtual BlockType type() const { return BlockType::BlockHeader; }
+
+protected:
     BlockHeader() {}
-    void fromData(DataObject const&);
+    virtual void fromData(DataObject const&);
     spFH20 m_author;
     spVALUE m_difficulty;
     spBYTES m_extraData;

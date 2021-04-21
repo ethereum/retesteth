@@ -50,7 +50,7 @@ public:
 
 private:
     // Ask remote client to generate a blockheader that will later used for uncles
-    BlockHeader mineNextBlockAndRevert();
+    spBlockHeader mineNextBlockAndRevert();
 
     // Mine the test block on remote client.
     // if blockheader is tweaked or there are uncles, postmine tweak this and reimport
@@ -60,7 +60,7 @@ private:
     // After test_mineBlock we can change the blockheader or add uncles. that will require to tweak
     // the block And reimport it again, then check exceptions
     FH32 postmineBlockHeader(BlockchainTestFillerBlock const& _block, VALUE const& _latestBlockNumber,
-        std::vector<BlockHeader> const& _uncles, BYTES& _rawRLP);
+        std::vector<spBlockHeader> const& _uncles, BYTES& _rawRLP);
 
     SessionInterface& m_session;                      // Session with the client
     FORK m_network;                                   // Forkname in genesis

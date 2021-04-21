@@ -25,10 +25,10 @@ ToolChain::ToolChain(
     // We yet don't know the state root. ask the tool to calculate it
     ToolResponse res = mineBlockOnTool(_genesis, SealEngine::NoReward);
 
-    EthereumBlockState genesisFixed(_genesis.header().asDataObject(), _genesis.state(), FH32::zero());
-    genesisFixed.headerUnsafe().setStateRoot(res.stateRoot());
-    genesisFixed.headerUnsafe().recalculateHash();
-    genesisFixed.addTotalDifficulty(genesisFixed.header().difficulty());
+    EthereumBlockState genesisFixed(_genesis.header(), _genesis.state(), FH32::zero());
+    genesisFixed.headerUnsafe().getContent().setStateRoot(res.stateRoot());
+    genesisFixed.headerUnsafe().getContent().recalculateHash();
+    genesisFixed.addTotalDifficulty(genesisFixed.header().getCContent().difficulty());
     m_blocks.push_back(genesisFixed);
 }
 
@@ -38,24 +38,25 @@ void ToolChain::mineBlock(EthereumBlockState const& _pendingBlock, Mining _req)
 
     // Pending fixed is pending header corrected by the information returned by tool
     // The tool can reject transactions changing the stateHash, TxRoot, TxReceipts, HeaderHash, GasUsed
-    EthereumBlockState pendingFixed(_pendingBlock.header().asDataObject(), res.state(), res.logsHash());
+    EthereumBlockState pendingFixed(_pendingBlock.header(), res.state(), res.logsHash());
 
     // Construct a block header with information that we have and what we get from t8ntool
     // The block number is current max block + 1
-    pendingFixed.headerUnsafe().setNumber(m_blocks.size());
+    BlockHeader& pendingFixedHeader = pendingFixed.headerUnsafe().getContent();
+    pendingFixedHeader.setNumber(m_blocks.size());
 
     // Tool calculated transactions and state
-    pendingFixed.headerUnsafe().setStateRoot(res.stateRoot());         // Assign StateHash from the tool
-    pendingFixed.headerUnsafe().setGasUsed(res.totalGasUsed());        // Assign GasUsed from the tool
-    pendingFixed.headerUnsafe().setTransactionHash(res.txRoot());      // Assign TxRoot from the tool
-    pendingFixed.headerUnsafe().setTrReceiptsHash(res.receiptRoot());  // Assign TxReceipt from the tool
-    pendingFixed.headerUnsafe().setLogsBloom(res.logsBloom());         // Assign LogsBloom from the
-    pendingFixed.headerUnsafe().setStateRoot(res.stateRoot());         // Assign StateHash from the tool
+    pendingFixedHeader.setStateRoot(res.stateRoot());         // Assign StateHash from the tool
+    pendingFixedHeader.setGasUsed(res.totalGasUsed());        // Assign GasUsed from the tool
+    pendingFixedHeader.setTransactionHash(res.txRoot());      // Assign TxRoot from the tool
+    pendingFixedHeader.setTrReceiptsHash(res.receiptRoot());  // Assign TxReceipt from the tool
+    pendingFixedHeader.setLogsBloom(res.logsBloom());         // Assign LogsBloom from the
+    pendingFixedHeader.setStateRoot(res.stateRoot());         // Assign StateHash from the tool
 
     // Calculate difficulty for tool (tool does not calculate difficulty)
     ChainOperationParams params = ChainOperationParams::defaultParams(toolParams());
     u256 toolDifficulty = calculateEthashDifficulty(params, pendingFixed.header(), lastBlock().header());
-    pendingFixed.headerUnsafe().setDifficulty(toolDifficulty);
+    pendingFixedHeader.setDifficulty(toolDifficulty);
 
     // Add only those transactions which tool returned a receipt for
     // Some transactions are expected to fail. That should be detected by tests
@@ -91,33 +92,34 @@ void ToolChain::mineBlock(EthereumBlockState const& _pendingBlock, Mining _req)
     pendingFixed.recalculateUncleHash(); // Rely that only uncle hash is recalculated (simulate t8ntool unclehash)
 
     // Calculate header hash from header fields (do not recalc tx, un hashes)
-    pendingFixed.headerUnsafe().recalculateHash();
+    pendingFixed.headerUnsafe().getContent().recalculateHash();
 
     // Blockchain rules
     verifyEthereumBlockHeader(pendingFixed.header(), *this);
 
     // Require number from pending block to be equal to actual block number that is imported
-    if (_pendingBlock.header().number() != pendingFixed.header().number().asU256())
+    if (_pendingBlock.header().getCContent().number() != pendingFixed.header().getCContent().number().asU256())
         throw test::UpwardsException(string("Block Number from pending block != actual chain height! (") +
-                                     _pendingBlock.header().number().asString() +
-                                     " != " + pendingFixed.header().number().asString() + ")");
+                                     _pendingBlock.header().getCContent().number().asString() +
+                                     " != " + pendingFixed.header().getCContent().number().asString() + ")");
 
     // Require new block timestamp to be > than the previous block timestamp
-    if (lastBlock().header().timestamp().asU256() >= pendingFixed.header().timestamp().asU256())
+    if (lastBlock().header().getCContent().timestamp().asU256() >= pendingFixed.header().getCContent().timestamp().asU256())
         throw test::UpwardsException("Block Timestamp from pending block <= previous block timestamp!");
 
     if (_req == Mining::RequireValid)  // called on rawRLP import
     {
-        if (m_fork.getContent().asString() == "HomesteadToDaoAt5" && pendingFixed.header().number() > 4 &&
-            pendingFixed.header().number() < 19 &&
-            pendingFixed.header().extraData().asString() != "0x64616f2d686172642d666f726b")
+        if (m_fork.getContent().asString() == "HomesteadToDaoAt5" && pendingFixed.header().getCContent().number() > 4 &&
+            pendingFixed.header().getCContent().number() < 19 &&
+            pendingFixed.header().getCContent().extraData().asString() != "0x64616f2d686172642d666f726b")
             throw test::UpwardsException("Dao Extra Data required!");
 
-        if (_pendingBlock.header() != pendingFixed.header())
+        if (_pendingBlock.header().getCContent().asDataObject().asJson(0, false) !=
+            pendingFixed.header().getCContent().asDataObject().asJson(0, false))
         {
             string errField;
-            DataObject const pendingH = _pendingBlock.header().asDataObject();
-            DataObject const pendingFixedH = pendingFixed.header().asDataObject();
+            DataObject const pendingH = _pendingBlock.header().getCContent().asDataObject();
+            DataObject const pendingFixedH = pendingFixed.header().getCContent().asDataObject();
             string const compare = compareBlockHeaders(pendingH, pendingFixedH, errField);
             throw test::UpwardsException(string("Block from pending block != t8ntool constructed block!\n") +
                                          "Error in field: " + errField + "\n" +
@@ -125,21 +127,22 @@ void ToolChain::mineBlock(EthereumBlockState const& _pendingBlock, Mining _req)
         }
     }
 
-    if (pendingFixed.header().transactionRoot() != res.txRoot())
+    if (pendingFixed.header().getCContent().transactionRoot() != res.txRoot())
     {
         ETH_ERROR_MESSAGE(string("ToolChain::mineBlock txRootHash is different to one ruturned by tool \n") +
-                          "constructedBlockHash: " + pendingFixed.header().transactionRoot().asString() +
+                          "constructedBlockHash: " + pendingFixed.header().getCContent().transactionRoot().asString() +
                           "\n toolTransactionRoot: " + res.txRoot().asString());
     }
 
     VALUE totalDifficulty(0);
     if (m_blocks.size() > 0)
         totalDifficulty = m_blocks.at(m_blocks.size() - 1).totalDifficulty();
-    pendingFixed.addTotalDifficulty(totalDifficulty + pendingFixed.header().difficulty());
+    pendingFixed.addTotalDifficulty(totalDifficulty + pendingFixed.header().getCContent().difficulty());
 
     ETH_LOG("New block N: " + to_string(m_blocks.size()), 6);
-    ETH_LOG("New block TD: " + totalDifficulty.asDecString() + " + " + pendingFixed.header().difficulty().asDecString() +
-                " = " + pendingFixed.totalDifficulty().asDecString(),
+    ETH_LOG("New block TD: " + totalDifficulty.asDecString() + " + " +
+                pendingFixed.header().getCContent().difficulty().asDecString() + " = " +
+                pendingFixed.totalDifficulty().asDecString(),
         6);
 
     pendingFixed.setTrsTrace(res.debugTrace());
@@ -150,21 +153,21 @@ ToolResponse ToolChain::mineBlockOnTool(EthereumBlockState const& _block, SealEn
 {
     // env.json file
     fs::path envPath = m_tmpDir / "env.json";
-    BlockchainTestFillerEnv env(_block.header().asDataObject(), m_engine);
+    BlockchainTestFillerEnv env(_block.header().getCContent().asDataObject(), m_engine);
     DataObject envData = env.asDataObject();
 
     // BlockHeader hash information for tool mining
     size_t k = 0;
     for (auto const& bl : m_blocks)
-        envData["blockHashes"][fto_string(k++)] = bl.header().hash().asString();
+        envData["blockHashes"][fto_string(k++)] = bl.header().getCContent().hash().asString();
     for (auto const& un : _block.uncles())
     {
         DataObject uncle;
-        int delta = (int)(_block.header().number() - un.number()).asU256();
+        int delta = (int)(_block.header().getCContent().number() - un.getCContent().number()).asU256();
         if (delta < 1)
             throw test::UpwardsException("Uncle header delta is < 1");
         uncle["delta"] = delta;
-        uncle["address"] = un.author().asString();
+        uncle["address"] = un.getCContent().author().asString();
         envData["ommers"].addArrayObject(uncle);
     }
 
@@ -193,7 +196,7 @@ ToolResponse ToolChain::mineBlockOnTool(EthereumBlockState const& _block, SealEn
     fs::path outAllocPath = m_tmpDir / "outAlloc.json";
 
     // Convert FrontierToHomesteadAt5 -> Homestead if block > 5, and get reward
-    auto tupleRewardFork = prepareReward(_engine, m_fork.getContent(), _block.header().number());
+    auto tupleRewardFork = prepareReward(_engine, m_fork.getContent(), _block.header().getCContent().number());
 
     string cmd = m_toolPath.string();
     cmd += " --input.alloc " + allocPath.string();
@@ -206,7 +209,7 @@ ToolResponse ToolChain::mineBlockOnTool(EthereumBlockState const& _block, SealEn
     if (_engine != SealEngine::NoReward)
         cmd += " --state.reward " + std::get<0>(tupleRewardFork).asDecString();
 
-    bool traceCondition = Options::get().vmtrace && _block.header().number() != 0;
+    bool traceCondition = Options::get().vmtrace && _block.header().getCContent().number() != 0;
     if (traceCondition)
         cmd += " --trace";
 

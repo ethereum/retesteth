@@ -17,7 +17,13 @@ SetChainParamsArgs::SetChainParamsArgs(DataObject const& _data)
     DataObject fullBlockHeader;
     fullBlockHeader["author"] = genesis.atKey("author");
     fullBlockHeader["difficulty"] = genesis.atKey("difficulty");
-    fullBlockHeader["gasLimit"] = genesis.atKey("gasLimit");
+    if (genesis.count("gasLimit"))
+        fullBlockHeader["gasLimit"] = genesis.atKey("gasLimit");
+    else
+    {
+        fullBlockHeader["gasTarget"] = genesis.atKey("gasTarget");
+        fullBlockHeader["baseFeePerGas"] = genesis.atKey("baseFeePerGas");
+    }
     fullBlockHeader["extraData"] = genesis.atKey("extraData");
     fullBlockHeader["timestamp"] = genesis.atKey("timestamp");
     fullBlockHeader["nonce"] = genesis.atKey("nonce");
@@ -32,7 +38,12 @@ SetChainParamsArgs::SetChainParamsArgs(DataObject const& _data)
     fullBlockHeader["transactionsTrie"] = "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421";
     fullBlockHeader["uncleHash"] = "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347";
     fullBlockHeader["parentHash"] = FH32::zero().asString();
-    m_genesis = spBlockHeader(new BlockHeader(fullBlockHeader));
+
+    if (fullBlockHeader.count("gasLimit"))
+        m_genesis = spBlockHeader(new BlockHeader(fullBlockHeader));
+    else
+        m_genesis = spBlockHeader(new BlockHeader1559(fullBlockHeader));
+
 
     requireJsonFields(_data, "SetChainParamsArgs " + _data.getKey(),
         {{"params", {{DataType::Object}, jsonField::Required}}, {"accounts", {{DataType::Object}, jsonField::Required}},
@@ -47,7 +58,16 @@ DataObject SetChainParamsArgs::asDataObject() const
     out["sealEngine"] = sealEngineToStr(m_sealEngine);
     out["genesis"]["author"] = m_genesis.getCContent().author().asString();
     out["genesis"]["difficulty"] = m_genesis.getCContent().difficulty().asString();
-    out["genesis"]["gasLimit"] = m_genesis.getCContent().gasLimit().asString();
+
+    if (m_genesis.getCContent().type() == BlockType::BlockHeader)
+        out["genesis"]["gasLimit"] = m_genesis.getCContent().gasLimit().asString();
+    else
+    {
+        BlockHeader1559 const& newbl = dynamic_cast<BlockHeader1559 const&>(m_genesis.getCContent());
+        out["genesis"]["gasTarget"] = newbl.gasTarget().asString();
+        out["genesis"]["baseFeePerGas"] = newbl.baseFeePerGas().asString();
+    }
+
     out["genesis"]["extraData"] = m_genesis.getCContent().extraData().asString();
     out["genesis"]["timestamp"] = m_genesis.getCContent().timestamp().asString();
     out["genesis"]["nonce"] = m_genesis.getCContent().nonce().asString();

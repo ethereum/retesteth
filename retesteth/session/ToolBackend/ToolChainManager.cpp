@@ -39,13 +39,14 @@ void ToolChainManager::reorganizePendingBlock()
 {
     EthereumBlockState const& bl = currentChain().lastBlock();
     m_pendingBlock = spEthereumBlockState(new EthereumBlockState(bl.header(), bl.state(), bl.logHash()));
-    m_pendingBlock.getContent().headerUnsafe().setNumber(bl.header().number() + 1);
+    m_pendingBlock.getContent().headerUnsafe().getContent().setNumber(bl.header().getCContent().number() + 1);
 
     // Because aleth and geth+retesteth does this, but better be empty extraData
-    m_pendingBlock.getContent().headerUnsafe().setExtraData(bl.header().extraData());
-    if (currentChain().fork() == "HomesteadToDaoAt5" && m_pendingBlock.getContent().header().number() == 5)
-        m_pendingBlock.getContent().headerUnsafe().setExtraData(BYTES(DataObject("0x64616f2d686172642d666f726b")));
-    m_pendingBlock.getContent().headerUnsafe().setParentHash(currentChain().lastBlock().header().hash());
+    m_pendingBlock.getContent().headerUnsafe().getContent().setExtraData(bl.header().getCContent().extraData());
+    if (currentChain().fork() == "HomesteadToDaoAt5" && m_pendingBlock.getContent().header().getCContent().number() == 5)
+        m_pendingBlock.getContent().headerUnsafe().getContent().setExtraData(BYTES(DataObject("0x64616f2d686172642d666f726b")));
+    m_pendingBlock.getContent().headerUnsafe().getContent().setParentHash(
+        currentChain().lastBlock().header().getCContent().hash());
 }
 
 EthereumBlockState const& ToolChainManager::blockByNumber(VALUE const& _number) const
@@ -61,7 +62,7 @@ EthereumBlockState const& ToolChainManager::blockByHash(FH32 const& _hash) const
     for (auto const& chain : m_chains)
     {
         for (auto const& block : chain.second.getCContent().blocks())
-            if (block.header().hash() == _hash)
+            if (block.header().getCContent().hash() == _hash)
                 return block;
     }
     throw UpwardsException(string("ToolChainManager::blockByHash block hash not found: " + _hash.asString()));
@@ -69,8 +70,8 @@ EthereumBlockState const& ToolChainManager::blockByHash(FH32 const& _hash) const
 
 void ToolChainManager::modifyTimestamp(VALUE const& _time)
 {
-    dev::u256 prevTime = lastBlock().header().timestamp().asU256();
-    m_pendingBlock.getContent().headerUnsafe().setTimestamp(prevTime + _time.asU256());
+    dev::u256 prevTime = lastBlock().header().getCContent().timestamp().asU256();
+    m_pendingBlock.getContent().headerUnsafe().getContent().setTimestamp(prevTime + _time.asU256());
 }
 
 // Import Raw Block via t8ntool
@@ -82,15 +83,15 @@ FH32 ToolChainManager::importRawBlock(BYTES const& _rlp)
         dev::RLP rlp(decodeRLP, dev::RLP::VeryStrict);
         toolimpl::verifyBlockRLP(rlp);
 
-        BlockHeader header(rlp[0]);
-        ETH_TEST_MESSAGE(header.asDataObject().asJson());
+        spBlockHeader header = readBlockHeader(rlp[0]);
+        ETH_TEST_MESSAGE(header.getCContent().asDataObject().asJson());
         for (auto const& chain : m_chains)
             for (auto const& bl : chain.second.getCContent().blocks())
-                if (bl.header().hash() == header.hash())
-                    ETH_WARNING("Block with hash: `" + header.hash().asString() + "` already in chain!");
+                if (bl.header().getCContent().hash() == header.getCContent().hash())
+                    ETH_WARNING("Block with hash: `" + header.getCContent().hash().asString() + "` already in chain!");
 
         // Check that we know the parent and prepare head to be the parentHeader of _rlp block
-        reorganizeChainForParent(header.parentHash());
+        reorganizeChainForParent(header.getCContent().parentHash());
         verifyEthereumBlockHeader(header, currentChain());
 
         m_pendingBlock = spEthereumBlockState(new EthereumBlockState(header, lastBlock().state(), FH32::zero()));
@@ -106,25 +107,27 @@ FH32 ToolChainManager::importRawBlock(BYTES const& _rlp)
 
         for (auto const& unRLP : rlp[2].toList())
         {
-            BlockHeader un(unRLP);
+            spBlockHeader un = readBlockHeader(unRLP);
             verifyEthereumBlockHeader(un, currentChain());
-            if (un.number() >= header.number() || un.number() + 7 <= header.number())
+            if (un.getCContent().number() >= header.getCContent().number() ||
+                un.getCContent().number() + 7 <= header.getCContent().number())
                 throw test::UpwardsException("Uncle number is wrong!");
             for (auto const& pun : m_pendingBlock.getCContent().uncles())
-                if (pun.hash() == un.hash())
+                if (pun.getCContent().hash() == un.getCContent().hash())
                     throw test::UpwardsException("Uncle is brother!");
             m_pendingBlock.getContent().addUncle(un);
         }
 
         mineBlocks(1, ToolChain::Mining::RequireValid);
-        FH32 const& importedHash = lastBlock().header().hash();
-        if (importedHash != header.hash())
+        FH32 const& importedHash = lastBlock().header().getCContent().hash();
+        if (importedHash != header.getCContent().hash())
         {
             string errField;
             string message = "t8ntool constructed HEADER vs rawRLP HEADER: \n";
-            message += compareBlockHeaders(lastBlock().header().asDataObject(), header.asDataObject(), errField);
+            message += compareBlockHeaders(
+                lastBlock().header().getCContent().asDataObject(), header.getCContent().asDataObject(), errField);
             ETH_ERROR_MESSAGE(string("Imported block hash != rawRLP hash ") + "(" + importedHash.asString() +
-                              " != " + header.hash().asString() + ")" + "\n " + message);
+                              " != " + header.getCContent().hash().asString() + ")" + "\n " + message);
         }
 
         reorganizeChainForTotalDifficulty();
@@ -145,7 +148,7 @@ void ToolChainManager::reorganizeChainForParent(FH32 const& _parentHash)
         auto const& blocks = chain.second.getCContent().blocks();
         for (size_t i = 0; i < blocks.size(); i++)
         {
-            if (blocks.at(i).header().hash() == _parentHash)
+            if (blocks.at(i).header().getCContent().hash() == _parentHash)
             {
                 if (i + 1 == blocks.size())  // last known block
                 {                            // stay on this chain

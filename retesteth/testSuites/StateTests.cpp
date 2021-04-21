@@ -149,7 +149,7 @@ DataObject FillTestAsBlockchain(StateTestInFiller const& _test)
                     if (_test.hasInfo())
                         aBlockchainTest["_info"]["comment"] = _test.Info().comment();
                     EthGetBlockBy genesisBlock(session.eth_getBlockByNumber(0, Request::FULLOBJECTS));
-                    aBlockchainTest["genesisBlockHeader"] = genesisBlock.header().asDataObject();
+                    aBlockchainTest["genesisBlockHeader"] = genesisBlock.header().getCContent().asDataObject();
                     aBlockchainTest["pre"] = _test.Pre().asDataObject();
 
                     try
@@ -161,17 +161,17 @@ DataObject FillTestAsBlockchain(StateTestInFiller const& _test)
                     catch(StateTooBig const&)
                     {
                         compareStates(mexpect, session);
-                        aBlockchainTest["postStateHash"] = remoteBlock.header().stateRoot().asString();
+                        aBlockchainTest["postStateHash"] = remoteBlock.header().getCContent().stateRoot().asString();
                     }
 
                     aBlockchainTest["network"] = fork.asString();
                     aBlockchainTest["sealEngine"] = sealEngineToStr(SealEngine::NoProof);
-                    aBlockchainTest["lastblockhash"] = remoteBlock.header().hash().asString();
+                    aBlockchainTest["lastblockhash"] = remoteBlock.header().getCContent().hash().asString();
                     aBlockchainTest["genesisRLP"] = genesisBlock.getRLPHeaderTransactions().asString();
 
                     DataObject block;
                     block["rlp"] = remoteBlock.getRLPHeaderTransactions().asString();
-                    block["blockHeader"] = remoteBlock.header().asDataObject();
+                    block["blockHeader"] = remoteBlock.header().getCContent().asDataObject();
                     block["transactions"].addArrayObject(tr.transaction().asDataObject());
                     block["uncleHeaders"] = DataObject(DataType::Array);
                     aBlockchainTest["blocks"].addArrayObject(block);
@@ -273,11 +273,11 @@ DataObject FillTest(StateTestInFiller const& _test)
                     tr.markExecuted();
 
                     if (Options::get().poststate)
-                        ETH_STDOUT_MESSAGE("PostState " + TestOutputHelper::get().testInfo().errorDebug() + " : \n" +
-                                           cDefault + "Hash: " + blockInfo.header().stateRoot().asString());
+                        ETH_STDOUT_MESSAGE("PostState " + TestOutputHelper::get().testInfo().errorDebug() + " : \n" + cDefault +
+                                           "Hash: " + blockInfo.header().getCContent().stateRoot().asString());
 
                     if (Options::get().vmtrace)
-                        printVmTrace(session, trHash, blockInfo.header().stateRoot());
+                        printVmTrace(session, trHash, blockInfo.header().getCContent().stateRoot());
                     try
                     {
                         compareStates(expect.result(), getRemoteState(session));
@@ -294,7 +294,7 @@ DataObject FillTest(StateTestInFiller const& _test)
                     indexes["value"] = tr.valueInd();
 
                     transactionResults["indexes"] = indexes;
-                    transactionResults["hash"] = blockInfo.header().stateRoot().asString();
+                    transactionResults["hash"] = blockInfo.header().getCContent().stateRoot().asString();
                     transactionResults["txbytes"] = tr.transaction().getRawBytes().asString();
 
                     // Fill up the loghash (optional)
@@ -408,9 +408,9 @@ void RunTest(StateTestInFilled const& _test)
                     // Validate post state
                     FH32 const& expectedPostHash = result.hash();
                     if (Options::get().vmtrace && !Options::get().filltests)
-                        printVmTrace(session, trHash, blockInfo.header().stateRoot());
+                        printVmTrace(session, trHash, blockInfo.header().getCContent().stateRoot());
 
-                    FH32 const& actualHash = blockInfo.header().stateRoot();
+                    FH32 const& actualHash = blockInfo.header().getCContent().stateRoot();
                     if (actualHash != expectedPostHash)
                     {
                         if (Options::get().logVerbosity >= 5)

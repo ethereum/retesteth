@@ -177,7 +177,7 @@ void TestBlockchainManager::reorgChains(BlockchainTestFillerBlock const& _block)
 
 // Read test filler uncle section in block _uncleOverwrite
 // And make uncle header out of it using information of currentChain and _currentBlockPreparedUncles
-BlockHeader TestBlockchainManager::prepareUncle(
+spBlockHeader TestBlockchainManager::prepareUncle(
     BlockchainTestFillerUncle _uncleSectionInTest, vectorOfSchemeBlock const& _currentBlockPreparedUncles)
 {
     size_t origIndex = 0;
@@ -196,7 +196,7 @@ BlockHeader TestBlockchainManager::prepareUncle(
         ETH_ERROR_REQUIRE_MESSAGE(
             currentChainMining.getBlocks().at(sameAsPreviuousBlockUncle).getUncles().size() > 0,
             "Previous block has no uncles!");
-        tmpRefToSchemeBlock = &currentChainMining.getBlocks().at(sameAsPreviuousBlockUncle).getUncles().at(0);
+        tmpRefToSchemeBlock = &currentChainMining.getBlocks().at(sameAsPreviuousBlockUncle).getUncles().at(0).getCContent();
         break;
     }
     case UncleType::PopulateFromBlock:
@@ -211,13 +211,13 @@ BlockHeader TestBlockchainManager::prepareUncle(
             TestBlockchain const& chain = m_mapOfKnownChain.at(_uncleSectionInTest.chainname());
             ETH_ERROR_REQUIRE_MESSAGE(chain.getBlocks().size() > origIndex,
                 "Trying to populate uncle from future block in another chain that has not been generated yet!");
-            tmpRefToSchemeBlock = &chain.getBlocks().at(origIndex).getNextBlockForked();
+            tmpRefToSchemeBlock = &chain.getBlocks().at(origIndex).getNextBlockForked().getCContent();
         }
         else
         {
             ETH_ERROR_REQUIRE_MESSAGE(currentChainMining.getBlocks().size() > origIndex,
                 "Trying to populate uncle from future block that has not been generated yet!");
-            tmpRefToSchemeBlock = &currentChainMining.getBlocks().at(origIndex).getNextBlockForked();
+            tmpRefToSchemeBlock = &currentChainMining.getBlocks().at(origIndex).getNextBlockForked().getCContent();
         }
         break;
     }
@@ -231,7 +231,7 @@ BlockHeader TestBlockchainManager::prepareUncle(
         size_t siblingNumber = _uncleSectionInTest.sameAsPreviousSibling() - 1;  // 1 is first sib, 2 is next,...
         ETH_ERROR_REQUIRE_MESSAGE(siblingNumber < _currentBlockPreparedUncles.size(),
             "Trying to get uncle that has not been generated yet from current block!");
-        tmpRefToSchemeBlock = &_currentBlockPreparedUncles.at(siblingNumber);
+        tmpRefToSchemeBlock = &_currentBlockPreparedUncles.at(siblingNumber).getCContent();
         break;
     }
     default:
@@ -241,7 +241,7 @@ BlockHeader TestBlockchainManager::prepareUncle(
 
     if (tmpRefToSchemeBlock == NULL)
         ETH_ERROR_MESSAGE("tmpRefToSchemeBlock is NULL!");
-    BlockHeader uncleBlockHeader = *tmpRefToSchemeBlock;
+    spBlockHeader uncleBlockHeader = readBlockHeader((*tmpRefToSchemeBlock).asDataObject());
 
     // Perform uncle header modifications according to the uncle section in blockchain test filler block
     // If there is a field that is being overwritten in the uncle header
@@ -255,13 +255,14 @@ BlockHeader TestBlockchainManager::prepareUncle(
         {
             // Get the Timestamp of that block (which uncle is populated from)
             assert(currentChainMining.getBlocks().size() > origIndex);
-            VALUE timestamp(currentChainMining.getBlocks().at(origIndex).getTestHeader().timestamp());
-            uncleBlockHeader.setTimestamp(timestamp.asU256() + _uncleSectionInTest.relTimestampFromPopulateBlock());
+            VALUE timestamp(currentChainMining.getBlocks().at(origIndex).getTestHeader().getCContent().timestamp());
+            uncleBlockHeader.getContent().setTimestamp(
+                timestamp.asU256() + _uncleSectionInTest.relTimestampFromPopulateBlock());
         }
     }
 
     // Recalculate uncleHash because we will be checking which uncle hash will be returned by the client
-    uncleBlockHeader.recalculateHash();
+    uncleBlockHeader.getContent().recalculateHash();
     return uncleBlockHeader;
 }
 

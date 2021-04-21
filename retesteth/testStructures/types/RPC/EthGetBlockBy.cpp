@@ -81,7 +81,7 @@ bool EthGetBlockBy::hasTransaction(FH32 const& _hash) const
 // Because EthGetBlockBy does not return uncle headers
 BYTES EthGetBlockBy::getRLPHeaderTransactions() const
 {
-    EthereumBlock block(m_header.getCContent());
+    EthereumBlock block(m_header);
     for (auto const& tr : m_transactions)
         block.addTransaction(tr.transaction());
     return block.getRLP();

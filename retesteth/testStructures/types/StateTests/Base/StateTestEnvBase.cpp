@@ -14,6 +14,12 @@ const DataObject StateTestEnvBase::asDataObject() const
     out["currentNumber"] = m_currentNumber.getCContent().asString();
     out["currentTimestamp"] = m_currentTimestamp.getCContent().asString();
     out["previousHash"] = m_previousHash.getCContent().asString();
+
+    if (!m_gasTarget.isEmpty())
+    {
+        out["gasTarget"] = m_gasTarget.getCContent().asString();
+        out["baseFeePerGas"] = m_baseFeePerGas.getCContent().asString();
+    }
     return out;
 }
 

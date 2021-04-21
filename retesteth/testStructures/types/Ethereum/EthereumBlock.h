@@ -1,9 +1,9 @@
 #pragma once
 #include "../../basetypes.h"
 #include "../Ethereum/BlockHeader.h"
+#include "../Ethereum/BlockHeaderReader.h"
 #include "../Ethereum/State.h"
 #include "../Ethereum/Transaction.h"
-
 
 #include <EthChecks.h>
 #include <dataObject/DataObject.h>
@@ -20,31 +20,31 @@ namespace teststruct
 // Ethereum Block for RLP managment
 struct EthereumBlock : GCP_SPointerBase
 {
-    EthereumBlock(BlockHeader const& _header) { m_header = spBlockHeader(new BlockHeader(_header.asDataObject())); }
+    EthereumBlock(spBlockHeader const& _header) : m_header(_header) {}
     void addTransaction(spTransaction const& _tr) { m_transactions.push_back(_tr); }
-    void addUncle(BlockHeader const& _header) { m_uncles.push_back(BlockHeader(_header.asDataObject())); }
-    void replaceHeader(BlockHeader const& _header) { m_header = spBlockHeader(new BlockHeader(_header.asDataObject())); }
+    void addUncle(spBlockHeader const& _header) { m_uncles.push_back(_header); }
+    void replaceHeader(spBlockHeader const& _header) { m_header = readBlockHeader(_header.getCContent().asDataObject()); }
     void recalculateUncleHash();
     BYTES const getRLP() const;
 
-    BlockHeader const& header() const { return m_header.getCContent(); }
-    BlockHeader& headerUnsafe() { return m_header.getContent(); }
-    std::vector<BlockHeader> const& uncles() const { return m_uncles; }
+    spBlockHeader const& header() const { return m_header; }
+    spBlockHeader& headerUnsafe() { return m_header; }
+    std::vector<spBlockHeader> const& uncles() const { return m_uncles; }
     std::vector<spTransaction> const& transactions() const { return m_transactions; }
 
 protected:
     EthereumBlock() {}
     spBlockHeader m_header;
     std::vector<spTransaction> m_transactions;
-    std::vector<BlockHeader> m_uncles;
+    std::vector<spBlockHeader> m_uncles;
 };
 
 struct EthereumBlockState : EthereumBlock
 {
-    EthereumBlockState(BlockHeader const& _header, State const& _state, FH32 const& _logHash)
+    EthereumBlockState(spBlockHeader const& _header, State const& _state, FH32 const& _logHash)
       : m_state(_state.asDataObject()), m_logHash(_logHash)
     {
-        m_header = spBlockHeader(new BlockHeader(_header.asDataObject()));
+        m_header = readBlockHeader(_header.getCContent().asDataObject());
     }
 
     void addTotalDifficulty(VALUE const& _totalDifficulty) { m_totalDifficulty = spVALUE(new VALUE(_totalDifficulty)); }
