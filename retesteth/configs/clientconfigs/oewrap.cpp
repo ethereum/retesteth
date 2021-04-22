@@ -152,6 +152,7 @@ const fs = require('fs')
 const { exec } = require("child_process")
 const ethTx = require("ethereumjs-tx").Transaction
 const keccak256 = require("keccak256")
+const rlp = require('rlp')
 
 // Convert fork names from the t8ntool tool version to the openethereum
 // version
@@ -160,14 +161,23 @@ const convertFork = t8nName => {
   return t8nName
 }
 
-// These need to change so we can run multiple tests at the same time
-const testFile = "/tmp/test.json"
-const resFile = "/tmp/res.jsnol"
+const testFile = `/tmp/test${process.pid}.json`
+
+// For debugging this script
+const logFile = `/tmp/trace${process.pid}.trace`
+
+
+var logMsgNum = 1
+
+// Debug function
+const logMe = str => {
+  if (false)   // true to turn on logging, false to turn it off
+    fs.appendFileSync(logFile, `###### LOG MESSAGE ${logMsgNum++} ######\n${str}\n`)
+}
+
 
 
 const options = yargs.argv
-
-console.log(options)
 
 const alloc = JSON.parse(fs.readFileSync(options.input.alloc).toString())
 const txs = JSON.parse(fs.readFileSync(options.input.txs).toString())
@@ -189,17 +199,27 @@ if (txs.length == 0) {
     receipts: []
   }
 
-  fs.writeFileSync(`${options.output.basedir}/${options.output.result}`,
+  fs.appendFileSync(`${options.output.basedir}/${options.output.result}`,
         JSON.stringify(out, null, 2))
-  fs.writeFileSync(`${options.output.basedir}/${options.output.alloc}`,
+  fs.appendFileSync(`${options.output.basedir}/${options.output.alloc}`,
         JSON.stringify(outAlloc, null, 2))
 
   process.exit(0)
 }
 
+
+
+// Start the log here because we don't need to debug the
+// first call when we are just "mining" the genesis block
+logMe(`starting with ${testFile}\n`)
+logMe(`options: ${JSON.stringify(options)}\n\n`)
+
+
+
 // If we got here, this is the test block, the one with a transaction
 const tx = txs[0]
 const txHash = `0x${keccak256(new ethTx(tx).serialize()).toString('hex')}`
+
 
 // Some values need to be added programatically
 let test = {
@@ -225,11 +245,121 @@ test.t8ntoolTest.post[convertFork(options.state.fork)] = [{
    "hash": "0x0000000000000000000000000000000000000000000000000000000000000000"
 }]
 
+
 // Write the test file we created
 fs.writeFileSync(testFile, JSON.stringify(test, null, 2))
 
+
+// Give the value at depth n
+const stackDepth = (stack, depth) => stack[stack.length-depth]
+
+// Get the n'th byte of a BigInt
+const getByte = (val, n) => val >> BigInt(n*8) & 0xFFn
+
+
+// Turn memory (an array of bytes, possibly with undefined values)
+// into a hex string
+const mem2str = mem => {
+  var retVal = "0x"
+
+  // Can't use mem.map because we have empty values
+  for (var i=0; i<mem.length; i++)
+    if (mem[i] === undefined)
+       retVal += '00'
+    else
+       retVal += mem[i].toString(16).padStart(2, "0")
+
+  return retVal
+}  // mem2str
+
+// Process the trace. Necessary to:
+// Identify the log entries
+// Keep track of memory
+// Add fields required to be compliant with the EIP
+const processTrace = traceParam => {
+    var trace = traceParam
+    var mem = new Array()
+    var logs = []
+
+    for(var step=0; step<trace.length; step++) {
+        const current = trace[step]
+
+        // Add the missing trace fields. Note that
+        // the trace shows the situation BEFORE the current opcode
+        if (step == trace.length-1)
+             current.gasCost = "0x0"
+        else
+             current.gasCost = `0x${(current.gas-trace[step+1].gas).toString(16)}`
+
+        current.memory = mem2str(mem)
+
+        // memSize can also be increased by reading memory, but tracking
+        // that would be too cumbersome
+        current.memSize = mem.length
+        current.returnStack = []
+        current.refund = 0
+        current.error = ""
+
+        const stack = current.stack
+        var topics = [null, null, null, null]
+
+        // Special opcodes, either MSTORE[8] or LOG[0-4]
+        switch (current.opName) {
+            case "MSTORE":
+               const val = BigInt(stackDepth(stack,2))
+               for(byte=31; byte>=0; byte--)
+                 mem[parseInt(stackDepth(stack,1))+31-byte] =
+                      getByte(val, byte)
+
+               // Memory is allocated in 0x20 byte chunks
+               if (mem.length % 0x20 != 0)
+                 mem[0x20*Math.floor(mem.length/0x20)+0x1F] = 0n
+               break;
+            case "MSTORE8":
+               mem[parseInt(stackDepth(stack,1))] = stackDepth(stack,2) & 0xFF
+
+               // Memory is allocated in 0x20 byte chunks
+               if (mem.length % 0x20 != 0)
+                 mem[0x20*Math.floor(mem.length/0x20)+0x1F] = 0n
+               break;
+
+            // Get the appropriate topics. The fall through behavior
+            // of switch is ideal here
+            case "LOG4":
+               topics[3] = stackDepth(stack,6)
+            case "LOG3":
+               topics[2] = stackDepth(stack,5)
+            case "LOG2":
+               topics[1] = stackDepth(stack,4)
+            case "LOG1":
+               topics[0] = stackDepth(stack,3)
+            case "LOG0":
+               const offest = stackDepth(stack,1)
+               const length = stackDepth(stack,2)
+               const newEntry = [0x095e7baea6a6c7c4c2dfeb977efac326af552d87, [], ""]
+               break;
+
+        }  // switch current.opName
+    }   // for step
+
+    // The final line
+    trace[trace.length] = {
+       output: "",
+       time: -1,    /// clearly invalid value because we don't do this
+       gasUsed: `0x${(trace[0].gas-trace[trace.length-1].gas).toString(16)}`
+    }
+
+    logMe(`logs:${JSON.stringify(logs,null,2)}\n\n\n`)
+
+    return {
+       trace: trace,
+       logsHash: `0x${keccak256(rlp.encode(logs)).toString('hex')}`
+    }
+}   // processTrace
+
+
 // Process the test results
-const processResult = (root, outAlloc) => {
+const processResult = (root, outAlloc, logsHash) => {
 
   const out = {
     stateRoot:   root,
@@ -237,11 +367,11 @@ const processResult = (root, outAlloc) => {
     // These fields are required, but their values are ignored
     receiptRoot: "0xDEADBEEFdeadbeefDEADBEEFdeadbeefDEADBEEFdeadbeefDEADBEEFdeadbeef",
     txRoot: "0xDEADBEEFdeadbeefDEADBEEFdeadbeefDEADBEEFdeadbeefDEADBEEFdeadbeef",
-
-    // Hash and bloom for not having logs. This tool will fail on tests that produce
-    // event logs
-    logsHash:    "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
     logsBloom:   "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+
+    // Hash for not having logs. This tool will fail on tests that produce
+    // event logs
+    logsHash:    logsHash,
 
     receipts: [
       {
@@ -267,22 +397,53 @@ const processResult = (root, outAlloc) => {
   fs.writeFileSync(`${options.output.basedir}/${options.output.alloc}`,
         JSON.stringify(outAlloc, null, 2))
 
-  process.exit(0)
+  logMe(`out:\n${JSON.stringify(out, null, 2)}\n\n\n`)
+  logMe(`outAlloc:\n${JSON.stringify(outAlloc, null, 2)}\n\n\n`)
 }  // processResults
 
+
+cmd = `openethereum-evm state-test ${testFile} --std-dump-json`
+logMe(`running ${cmd}\n\n`)
+
+
+stderrContent = ""
+
 // Run the test file and interpret the results
-exec(`openethereum-evm state-test ${testFile} --std-dump-json`,
-         (err, stdout, stderr) => {
-           if (err) console.log(`error: ${err.message}`)
+exec(cmd, {maxBuffer:1024*1024*1024}, (err, stdout, stderr) => {
+  if (err) {
+    console.log(`error: ${err.message}`)
+    logMe(`error: ${err}\n`)
+  }
+    // The last line in stderr is the summary. The earlier lines
+    // are the trace
+  if (stderr) {
+    logMe(`stderr: ${stderr}\n`)
+    stderrContent += stderr
+  }
+  if (stdout) {
+    logMe(`stdout: ${stdout}\n`)
+  }
+}).on('close', code => { // execSync("openethereum-env ...
 
-           // The last line in stderr is the output we care about
-           if (stderr) {
-              const lines = stderr.split("\n")
-              const res = JSON.parse(lines[lines.length-2])
+  logMe(`openethereum-evm exited with ${code}\n`)
 
-              processResult(res.root, res.accounts)
-           }
-}) // exec("openethereum-env ...
+  const lines = stderrContent.split("\n")
+  const res = JSON.parse(lines[lines.length-2])
+
+  const evmTrace = processTrace(lines.slice(0,-2).map(x => JSON.parse(x)))
+  processResult(res.root, res.accounts, evmTrace.logsHash)
+
+  logMe(JSON.stringify(evmTrace,null,2))
+
+  if (options.trace)
+    fs.writeFileSync(`${options.output.basedir}/trace-0-${txHash}.jsonl`,
+         evmTrace.trace.map(x => JSON.stringify(x)).reduce((a,b)=> a+"\n"+b))
+
+
+  // At this point we're done
+  fs.unlinkSync(testFile)
+  logMe(`done\n`)
+})    // .on("close", ...
 )";
 
 string const oewrap_package = R"(

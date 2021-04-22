@@ -39,15 +39,13 @@ SetChainParamsArgs::SetChainParamsArgs(DataObject const& _data)
     fullBlockHeader["uncleHash"] = "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347";
     fullBlockHeader["parentHash"] = FH32::zero().asString();
 
-    if (fullBlockHeader.count("gasLimit"))
-        m_genesis = spBlockHeader(new BlockHeader(fullBlockHeader));
-    else
-        m_genesis = spBlockHeader(new BlockHeader1559(fullBlockHeader));
-
+    m_genesis = readBlockHeader(fullBlockHeader);
 
     requireJsonFields(_data, "SetChainParamsArgs " + _data.getKey(),
-        {{"params", {{DataType::Object}, jsonField::Required}}, {"accounts", {{DataType::Object}, jsonField::Required}},
-            {"genesis", {{DataType::Object}, jsonField::Required}}, {"sealEngine", {{DataType::String}, jsonField::Required}}});
+        {{"params", {{DataType::Object}, jsonField::Required}},
+         {"accounts", {{DataType::Object}, jsonField::Required}},
+         {"genesis", {{DataType::Object}, jsonField::Required}},
+         {"sealEngine", {{DataType::String}, jsonField::Required}}});
 }
 
 DataObject SetChainParamsArgs::asDataObject() const
