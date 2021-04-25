@@ -146,6 +146,7 @@ string const oewrap_config = R"({
 })";
 
 string const oewrap_wrapper = R"(#! /usr/bin/node
+#! /usr/bin/node
 
 const yargs = require("yargs")
 const fs = require('fs')
@@ -171,7 +172,7 @@ var logMsgNum = 1
 
 // Debug function
 const logMe = str => {
-  if (false)   // true to turn on logging, false to turn it off
+  if (true)   // true to turn on logging, false to turn it off
     fs.appendFileSync(logFile, `###### LOG MESSAGE ${logMsgNum++} ######\n${str}\n`)
 }
 
@@ -220,6 +221,9 @@ logMe(`options: ${JSON.stringify(options)}\n\n`)
 const tx = txs[0]
 const txHash = `0x${keccak256(new ethTx(tx).serialize()).toString('hex')}`
 
+logMe(`Transaction: ${JSON.stringify(tx)}\n\n`)
+
+tx.to = tx.to || "0x0000000000000000000000000000000000000000"
 
 // Some values need to be added programatically
 let test = {
@@ -280,6 +284,9 @@ const processTrace = traceParam => {
     var trace = traceParam
     var mem = new Array()
     var logs = []
+
+    logMe(`evm trace length:\n${trace.length}`)
+    logMe(`evm trace:\n${trace}\n\n\n`)
 
     for(var step=0; step<trace.length; step++) {
         const current = trace[step]
@@ -342,11 +349,11 @@ const processTrace = traceParam => {
         }  // switch current.opName
     }   // for step
 
-    // The final line
+    // When creating a new contract there may not be a trace
     trace[trace.length] = {
        output: "",
        time: -1,    /// clearly invalid value because we don't do this
-       gasUsed: `0x${(trace[0].gas-trace[trace.length-1].gas).toString(16)}`
+       gasUsed: trace.length === 0 ? "0x00" :`0x${(trace[0].gas-trace[trace.length-1].gas).toString(16)}`
     }
 
     logMe(`logs:${JSON.stringify(logs,null,2)}\n\n\n`)
@@ -431,6 +438,7 @@ exec(cmd, {maxBuffer:1024*1024*1024}, (err, stdout, stderr) => {
   const res = JSON.parse(lines[lines.length-2])
 
   const evmTrace = processTrace(lines.slice(0,-2).map(x => JSON.parse(x)))
+  logMe(`openethereum-evm gave us the state root: ${res.root}\n`)
   processResult(res.root, res.accounts, evmTrace.logsHash)
 
   logMe(JSON.stringify(evmTrace,null,2))
@@ -444,7 +452,8 @@ exec(cmd, {maxBuffer:1024*1024*1024}, (err, stdout, stderr) => {
   fs.unlinkSync(testFile)
   logMe(`done\n`)
 })    // .on("close", ...
-)";
+
+";
 
 string const oewrap_package = R"(
 {
