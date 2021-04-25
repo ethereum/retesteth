@@ -1,4 +1,4 @@
-#include "TransactionAccessList.h"
+#include "TransactionBaseFee.h"
 
 #include <libdevcore/Address.h>
 #include <libdevcore/CommonIO.h>
@@ -12,24 +12,28 @@ namespace test
 {
 namespace teststruct
 {
-TransactionAccessList::TransactionAccessList(DataObject const& _data, string const& _dataRawPreview, string const& _dataLabel)
-  : Transaction(_data, _dataRawPreview, _dataLabel)
+TransactionBaseFee::TransactionBaseFee(DataObject const& _data, string const& _dataRawPreview, string const& _dataLabel)
+  : TransactionAccessList(_data, _dataRawPreview, _dataLabel)
 {
-    m_secretKey = spVALUE(new VALUE(0));
-    m_accessList = spAccessList(new AccessList(_data.atKey("accessList")));
+    m_secretKey = spVALUE(new VALUE(0));  // t8ntool info
+
+    m_maxFeePerGas = spVALUE(new VALUE(_data.atKey("maxFeePerGas")));
+    m_maxInclusionFeePerGas = spVALUE(new VALUE(_data.atKey("maxInclusionFeePerGas")));
+
     if (_data.count("secretKey"))
         buildVRS(VALUE(_data.atKey("secretKey")));  // Build without v + 27
     else
         rebuildRLP();
 }
 
-TransactionAccessList::TransactionAccessList(dev::RLP const& _rlp)
+
+TransactionBaseFee::TransactionBaseFee(dev::RLP const& _rlp)
 {
     m_secretKey = spVALUE(new VALUE(0));
     fromRLP(_rlp);
 }
 
-TransactionAccessList::TransactionAccessList(BYTES const& _rlp)
+TransactionBaseFee::TransactionBaseFee(BYTES const& _rlp)
 {
     m_secretKey = spVALUE(new VALUE(0));
     dev::bytes decodeRLP = sfromHex(_rlp.asString());
@@ -37,17 +41,19 @@ TransactionAccessList::TransactionAccessList(BYTES const& _rlp)
     fromRLP(rlp);
 }
 
-void TransactionAccessList::fromRLP(dev::RLP const& _rlp)
+void TransactionBaseFee::fromRLP(dev::RLP const& _rlp)
 {
-    // 0 - chainID
-    // 1 - nonce        4 - to      7 - v
-    // 2 - gasPrice     5 - value   8 - r
-    // 3 - gasLimit     6 - data    9 - s
     DataObject trData;
     size_t i = 0;
     rlpToString(_rlp[i++]);  // chainID
     trData["nonce"] = rlpToString(_rlp[i++]);
-    trData["gasPrice"] = rlpToString(_rlp[i++]);
+
+    trData["gasPrice"] = "0x10";  // fake gasPrice
+    trData["maxInclusionFeePerGas"] = rlpToString(_rlp[i++]);
+    trData["maxFeePerGas"] = rlpToString(_rlp[i++]);
+    m_maxInclusionFeePerGas = spVALUE(new VALUE(trData["maxInclusionFeePerGas"]));
+    m_maxFeePerGas = spVALUE(new VALUE(trData["maxFeePerGas"]));
+
     trData["gasLimit"] = rlpToString(_rlp[i++]);
     string const to = rlpToString(_rlp[i++], 0);
     trData["to"] = to == "0x" ? "" : to;
@@ -65,16 +71,18 @@ void TransactionAccessList::fromRLP(dev::RLP const& _rlp)
     fromDataObject(trData);
 }
 
-void TransactionAccessList::buildVRS(VALUE const& _secret)
+
+void TransactionBaseFee::buildVRS(VALUE const& _secret)
 {
     setSecret(_secret);
-    dev::RLPStream stream;
-    stream.appendList(8);
-    TransactionAccessList::streamHeader(stream);
 
-    // Alter output with prefixed 01 byte + tr.rlp
+    dev::RLPStream stream;
+    stream.appendList(9);
+    streamHeader(stream);
+
+    // Alter output with prefixed 02 byte + tr.rlp
     dev::bytes outa = stream.out();
-    outa.insert(outa.begin(), dev::byte(1));  // txType
+    outa.insert(outa.begin(), dev::byte(2));  // txType
 
     dev::h256 hash(dev::sha3(outa));
     dev::Signature sig = dev::sign(dev::Secret(_secret.asString()), hash);
@@ -91,12 +99,16 @@ void TransactionAccessList::buildVRS(VALUE const& _secret)
     rebuildRLP();
 }
 
-void TransactionAccessList::streamHeader(dev::RLPStream& _s) const
+void TransactionBaseFee::streamHeader(dev::RLPStream& _s) const
 {
-    // rlp([chainId, nonce, gasPrice, gasLimit, to, value, data, access_list, yParity, senderR, senderS])
+    // rlp([chainId, nonce, maxInclusionFeePerGas, maxFeePerGas, gasLimit, to, value, data, access_list, signatureYParity,
+    // signatureR, signatureS])
     _s << VALUE(1).asU256();
     _s << nonce().asU256();
-    _s << gasPrice().asU256();
+
+    _s << maxInclusionFeePerGas().asU256();
+    _s << maxFeePerGas().asU256();
+
     _s << gasLimit().asU256();
     if (Transaction::isCreation())
         _s << "";
@@ -113,37 +125,46 @@ void TransactionAccessList::streamHeader(dev::RLPStream& _s) const
     _s.appendRaw(accessList.out());
 }
 
-DataObject const TransactionAccessList::asDataObject(ExportOrder _order) const
+DataObject const TransactionBaseFee::asDataObject(ExportOrder _order) const
 {
     DataObject out = Transaction::asDataObject(_order);
 
     out["chainId"] = "0x01";
-    out["accessList"] = m_accessList.getCContent().asDataObject();
-    out["type"] = "0x01";
+    out["type"] = "0x02";
+    out["maxFeePerGas"] = m_maxFeePerGas.getCContent().asString();
+    out["maxInclusionFeePerGas"] = m_maxInclusionFeePerGas.getCContent().asString();
     if (_order == ExportOrder::ToolStyle)
     {
         out["chainId"] = "0x1";
-        out["type"] = "0x1";
+        out["type"] = "0x2";
+
+        DataObject t8ntoolFields;
+        t8ntoolFields["maxFeePerGas"] = m_maxFeePerGas.getCContent().asString();
+        t8ntoolFields["maxInclusionFeePerGas"] = m_maxInclusionFeePerGas.getCContent().asString();
+        t8ntoolFields.performModifier(mod_removeLeadingZerosFromHexValues);
+        out["maxFeePerGas"] = t8ntoolFields["maxFeePerGas"];
+        out["maxInclusionFeePerGas"] = t8ntoolFields["maxInclusionFeePerGas"];
+
         if (!m_secretKey.isEmpty() && m_secretKey.getCContent() != 0)
             out["secretKey"] = m_secretKey.getCContent().asString();
     }
     return out;
 }
 
-void TransactionAccessList::rebuildRLP()
+void TransactionBaseFee::rebuildRLP()
 {
-    // RLP(01 + tr.rlp)
+    // RLP(02 + tr.rlp)
     dev::RLPStream wrapper;
     dev::RLPStream out;
-    out.appendList(11);
+    out.appendList(12);
     streamHeader(out);
     out << v().asU256().convert_to<dev::byte>();
     out << r().asU256();
     out << s().asU256();
 
-    // Alter output with prefixed 01 byte + tr.rlp
+    // Alter output with prefixed 02 byte + tr.rlp
     dev::bytes outa = out.out();
-    outa.insert(outa.begin(), dev::byte(1));
+    outa.insert(outa.begin(), dev::byte(2));
 
     // Encode bytearray into rlp
     wrapper << outa;

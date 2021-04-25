@@ -15,7 +15,7 @@ EthGetBlockBy::EthGetBlockBy(DataObject const& _data)
 {
     try
     {
-        m_header = spBlockHeader(new BlockHeader(_data));  // BlockHeader verify _data fields
+        m_header = readBlockHeader(_data); // BlockHeader verify _data fields
 
         m_size = spVALUE(new VALUE(_data.atKey("size")));
         m_totalDifficulty = spVALUE(new VALUE(_data.atKey("totalDifficulty")));
@@ -42,7 +42,9 @@ EthGetBlockBy::EthGetBlockBy(DataObject const& _data)
              {"miner", {{DataType::String}, jsonField::Required}},
              {"difficulty", {{DataType::String}, jsonField::Required}},
              {"extraData", {{DataType::String}, jsonField::Required}},
-             {"gasLimit", {{DataType::String}, jsonField::Required}},
+             {"gasLimit", {{DataType::String}, jsonField::Optional}},
+             {"gasTarget", {{DataType::String}, jsonField::Optional}},
+             {"baseFee", {{DataType::String}, jsonField::Optional}},
              {"gasUsed", {{DataType::String}, jsonField::Required}},
              {"hash", {{DataType::String}, jsonField::Required}},
              {"mixHash", {{DataType::String}, jsonField::Optional}},
@@ -81,7 +83,7 @@ bool EthGetBlockBy::hasTransaction(FH32 const& _hash) const
 // Because EthGetBlockBy does not return uncle headers
 BYTES EthGetBlockBy::getRLPHeaderTransactions() const
 {
-    EthereumBlock block(m_header.getCContent());
+    EthereumBlock block(m_header);
     for (auto const& tr : m_transactions)
         block.addTransaction(tr.transaction());
     return block.getRLP();

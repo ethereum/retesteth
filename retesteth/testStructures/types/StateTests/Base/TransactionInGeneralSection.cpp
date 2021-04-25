@@ -10,7 +10,9 @@ TransactionInGeneralSection::TransactionInGeneralSection(
     m_executed(false),
     m_skipped(false)
 {
-    if (_tr.count("accessList"))
+    if (_tr.count("maxFeePerGas"))
+        m_tr = spTransaction(new TransactionBaseFee(_tr, _dataRawPreview, _dataLabel));
+    else if (_tr.count("accessList"))
         m_tr = spTransaction(new TransactionAccessList(_tr, _dataRawPreview, _dataLabel));
     else
         m_tr = spTransaction(new Transaction(_tr, _dataRawPreview, _dataLabel));

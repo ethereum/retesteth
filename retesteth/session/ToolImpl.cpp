@@ -5,6 +5,7 @@
 #include <retesteth/Options.h>
 #include <retesteth/session/ToolImpl.h>
 #include <retesteth/testStructures/types/BlockchainTests/Filler/BlockchainTestFillerEnv.h>
+#include <retesteth/testStructures/types/Ethereum/BlockHeaderReader.h>
 #include <retesteth/testStructures/types/Ethereum/TransactionReader.h>
 
 #include "ToolBackend/ToolImplHelper.h"
@@ -23,12 +24,13 @@ DataObject ToolImpl::web3_clientVersion()
 }
 
 // ETH Methods
-FH32 ToolImpl::eth_sendRawTransaction(BYTES const& _rlp)
+FH32 ToolImpl::eth_sendRawTransaction(BYTES const& _rlp, VALUE const& _secret)
 {
     rpcCall("", {});
     ETH_TEST_MESSAGE("\nRequest: eth_sendRawTransaction \n" + _rlp.asString());
 
     spTransaction spTr = readTransaction(_rlp);
+    spTr.getContent().setSecret(_secret);
     m_toolChainManager.getContent().addPendingTransaction(spTr);
     FH32 trHash = spTr.getContent().hash();
     ETH_TEST_MESSAGE("Response: " + trHash.asString());
@@ -48,9 +50,10 @@ VALUE ToolImpl::eth_blockNumber()
 {
     rpcCall("", {});
     ETH_TEST_MESSAGE("\nRequest: eth_blockNumber");
-    string const snumber = m_toolChainManager.getContent().lastBlock().header().number().asDecString();
+    VALUE const& number = m_toolChainManager.getContent().lastBlock().header().getCContent().number();
+    string const snumber = number.asDecString();
     ETH_TEST_MESSAGE("Response: eth_blockNumber {" + snumber + "}");
-    return m_toolChainManager.getContent().lastBlock().header().number();
+    return number;
 }
 
 
@@ -160,7 +163,6 @@ void ToolImpl::test_setChainParams(SetChainParamsArgs const& _config)
     ETH_TEST_MESSAGE("\nRequest: test_setChainParams \n" + _config.asDataObject().asJson());
 
     // Ask tool to calculate genesis header stateRoot for genesisHeader
-    EthereumBlock genesis(BlockHeader(_config.genesis()));
     m_toolChainManager = GCP_SPointer<ToolChainManager>(new ToolChainManager(_config, m_toolPath, m_tmpDir));
 
     ETH_TEST_MESSAGE("Response test_setChainParams: {true}");
@@ -171,7 +173,7 @@ void ToolImpl::test_rewindToBlock(VALUE const& _blockNr)
     rpcCall("", {});
     ETH_TEST_MESSAGE("\nRequest: test_rewindToBlock " + _blockNr.asDecString());
     blockchain().rewindToBlock(_blockNr);
-    ETH_TEST_MESSAGE("Response: test_rewindToBlock: " + blockchain().lastBlock().header().number().asDecString());
+    ETH_TEST_MESSAGE("Response: test_rewindToBlock: " + blockchain().lastBlock().header().getCContent().number().asDecString());
 }
 
 void ToolImpl::test_modifyTimestamp(VALUE const& _timestamp)
@@ -195,7 +197,8 @@ void ToolImpl::test_mineBlocks(size_t _number)
         ETH_ERROR_MESSAGE(_ex.what());
     }
 
-    ETH_TEST_MESSAGE("Response test_mineBlocks {" + blockchain().lastBlock().header().number().asDecString() + "}");
+    ETH_TEST_MESSAGE(
+        "Response test_mineBlocks {" + blockchain().lastBlock().header().getCContent().number().asDecString() + "}");
 }
 
 // Import block from RAW rlp and validate it according to ethereum rules

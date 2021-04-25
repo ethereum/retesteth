@@ -1,7 +1,7 @@
 #pragma once
 #include <testStructures/structures.h>
 
-typedef std::vector<BlockHeader> vectorOfSchemeBlock;
+typedef std::vector<spBlockHeader> vectorOfSchemeBlock;
 class TestBlock
 {
 public:
@@ -10,22 +10,25 @@ public:
     TestBlock(BYTES const& _rlp, string const& _chainName, FORK const& _chainNet, VALUE const& _number);
 
     // Attach block header to the test block
-    void registerTestHeader(BlockHeader const& _header) { m_block = spEthereumBlock(new EthereumBlock(_header)); }
-    BlockHeader const& getTestHeader() const { return m_block.getCContent().header(); }
+    void registerTestHeader(spBlockHeader const& _header) { m_block = spEthereumBlock(new EthereumBlock(_header)); }
+    spBlockHeader const& getTestHeader() const { return m_block.getCContent().header(); }
 
     // Attach Transaction header to EthereumBlock (the one described in tests)
     void registerTestTransaction(spTransaction const& _tr) { m_block.getContent().addTransaction(_tr); }
 
     // Attach Uncle header to EthereumBlock (the one described in tests)
-    void registerTestUncle(BlockHeader const& _uncle) { m_block.getContent().addUncle(_uncle); }
-    std::vector<BlockHeader> const& getUncles() const { return m_block.getCContent().uncles(); }
+    void registerTestUncle(spBlockHeader const& _uncle) { m_block.getContent().addUncle(_uncle); }
+    std::vector<spBlockHeader> const& getUncles() const { return m_block.getCContent().uncles(); }
 
     // Attach test exception to the test block
     void registerTestExceptios(string const& _exception) { m_expectException = _exception; }
 
     // Attach uncle header of potential fork to this block. If test has no uncles this will not be called
-    void setNextBlockForked(BlockHeader const& _next) { m_nextBlockForked = spBlockHeader(new BlockHeader(_next)); }
-    BlockHeader const& getNextBlockForked() const { return m_nextBlockForked.getCContent(); }
+    void setNextBlockForked(spBlockHeader const& _next)
+    {
+        m_nextBlockForked = readBlockHeader(_next.getCContent().asDataObject());
+    }
+    spBlockHeader const& getNextBlockForked() const { return m_nextBlockForked; }
 
     // Actual RLP of a block that has been impoted on remote client
     BYTES const getRawRLP() const { return m_rawRLP.getCContent(); }

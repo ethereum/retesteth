@@ -13,7 +13,8 @@ namespace teststruct
 enum class TransactionType
 {
     LEGACY,
-    ACCESSLIST
+    ACCESSLIST,
+    BASEFEE
 };
 
 struct Transaction : GCP_SPointerBase
@@ -49,6 +50,8 @@ struct Transaction : GCP_SPointerBase
     string const& dataLabel() const { return m_dataLabel; }
     void setDataLabel(string const& _label) { m_dataLabel = _label; }
     string const& dataRawPreview() const { return m_dataRawPreview; }
+    void setSecret(VALUE const& _secret) { m_secretKey = spVALUE(new VALUE(_secret)); }
+    VALUE const& getSecret() const { return m_secretKey.getCContent(); }
 
 private:
     virtual void fromRLP(dev::RLP const&);
@@ -82,6 +85,8 @@ protected:
     spFH32 m_hash;
     dev::RLPStream m_outRlpStream;
     spBYTES m_rawRLPdata;  // raw transaction data without rlp header (for typed transactions)
+    spVALUE m_secretKey;   // Additional info for t8ntool transaction wrapper
+
     virtual void rebuildRLP();
 };
 

@@ -78,6 +78,12 @@ StateTestFillerTransaction::StateTestFillerTransaction(DataObject const& _data)
         for (auto const& el : tmpD.atKey("value").getSubObjects())
             m_value.push_back(el);
 
+        if (tmpD.count("maxFeePerGas") || tmpD.count("maxInclusionFeePerGas"))
+        {
+            m_maxFeePerGas = spVALUE(new VALUE(tmpD.atKey("maxFeePerGas")));
+            m_maxInclusionFeePerGas = spVALUE(new VALUE(tmpD.atKey("maxInclusionFeePerGas")));
+        }
+
         requireJsonFields(_data, "StateTestFillerTransaction " + _data.getKey(),
             {{"data", {{DataType::Array}, jsonField::Required}},
              {"gasLimit", {{DataType::Array}, jsonField::Required}},
@@ -85,6 +91,8 @@ StateTestFillerTransaction::StateTestFillerTransaction(DataObject const& _data)
              {"nonce", {{DataType::String}, jsonField::Required}},
              {"value", {{DataType::Array}, jsonField::Required}},
              {"to", {{DataType::String}, jsonField::Required}},
+             {"maxFeePerGas", {{DataType::String}, jsonField::Optional}},
+             {"maxInclusionFeePerGas", {{DataType::String}, jsonField::Optional}},
              {"secretKey", {{DataType::String}, jsonField::Required}}});
     }
     catch (std::exception const& _ex)

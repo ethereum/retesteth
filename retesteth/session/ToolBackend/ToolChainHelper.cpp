@@ -128,11 +128,11 @@ ChainOperationParams ChainOperationParams::defaultParams(ToolParams const& _para
 }
 
 // Aleth calculate difficulty formula
-u256 calculateEthashDifficulty(ChainOperationParams const& _chainParams, BlockHeader const& _bi, BlockHeader const& _parent)
+u256 calculateEthashDifficulty(ChainOperationParams const& _chainParams, spBlockHeader const& _bi, spBlockHeader const& _parent)
 {
     const unsigned c_expDiffPeriod = 100000;
 
-    if (_bi.number() == 0)
+    if (_bi.getCContent().number() == 0)
         throw test::UpwardsException("calculateEthashDifficulty was called for block with number == 0");
 
     auto const& minimumDifficulty = _chainParams.minimumDifficulty;
@@ -140,27 +140,29 @@ u256 calculateEthashDifficulty(ChainOperationParams const& _chainParams, BlockHe
     auto const& durationLimit = _chainParams.durationLimit;
 
     bigint target;  // stick to a bigint for the target. Don't want to risk going negative.
-    if (_bi.number() < _chainParams.homesteadForkBlock)
+    auto const& bi = _bi.getCContent();
+    auto const& parent = _parent.getCContent();
+    if (bi.number() < _chainParams.homesteadForkBlock)
         // Frontier-era difficulty adjustment
-        target = _bi.timestamp().asU256() >= _parent.timestamp().asU256() + durationLimit ?
-                     _parent.difficulty().asU256() - (_parent.difficulty().asU256() / difficultyBoundDivisor) :
-                     (_parent.difficulty().asU256() + (_parent.difficulty().asU256() / difficultyBoundDivisor));
+        target = bi.timestamp().asU256() >= parent.timestamp().asU256() + durationLimit ?
+                     parent.difficulty().asU256() - (parent.difficulty().asU256() / difficultyBoundDivisor) :
+                     (parent.difficulty().asU256() + (parent.difficulty().asU256() / difficultyBoundDivisor));
     else
     {
-        bigint const timestampDiff = bigint(_bi.timestamp().asU256()) - _parent.timestamp().asU256();
-        bigint const adjFactor = _bi.number() < _chainParams.byzantiumForkBlock ?
+        bigint const timestampDiff = bigint(bi.timestamp().asU256()) - parent.timestamp().asU256();
+        bigint const adjFactor = bi.number() < _chainParams.byzantiumForkBlock ?
                                      max<bigint>(1 - timestampDiff / 10, -99) :  // Homestead-era difficulty adjustment
-                                     max<bigint>((_parent.hasUncles() ? 2 : 1) - timestampDiff / 9,
+                                     max<bigint>((parent.hasUncles() ? 2 : 1) - timestampDiff / 9,
                                          -99);  // Byzantium-era difficulty adjustment
 
-        target = _parent.difficulty().asU256() + _parent.difficulty().asU256() / 2048 * adjFactor;
+        target = parent.difficulty().asU256() + parent.difficulty().asU256() / 2048 * adjFactor;
     }
 
     bigint o = target;
-    unsigned exponentialIceAgeBlockNumber = unsigned(_parent.number().asU256() + 1);
+    unsigned exponentialIceAgeBlockNumber = unsigned(parent.number().asU256() + 1);
 
     // EIP-2384 Istanbul/Berlin Difficulty Bomb Delay
-    if (_bi.number().asU256() >= _chainParams.muirGlacierForkBlock)
+    if (bi.number().asU256() >= _chainParams.muirGlacierForkBlock)
     {
         if (exponentialIceAgeBlockNumber >= 9000000)
             exponentialIceAgeBlockNumber -= 9000000;
@@ -168,7 +170,7 @@ u256 calculateEthashDifficulty(ChainOperationParams const& _chainParams, BlockHe
             exponentialIceAgeBlockNumber = 0;
     }
     // EIP-1234 Constantinople Ice Age delay
-    else if (_bi.number().asU256() >= _chainParams.constantinopleForkBlock)
+    else if (bi.number().asU256() >= _chainParams.constantinopleForkBlock)
     {
         if (exponentialIceAgeBlockNumber >= 5000000)
             exponentialIceAgeBlockNumber -= 5000000;
@@ -176,7 +178,7 @@ u256 calculateEthashDifficulty(ChainOperationParams const& _chainParams, BlockHe
             exponentialIceAgeBlockNumber = 0;
     }
     // EIP-649 Byzantium Ice Age delay
-    else if (_bi.number().asU256() >= _chainParams.byzantiumForkBlock)
+    else if (bi.number().asU256() >= _chainParams.byzantiumForkBlock)
     {
         if (exponentialIceAgeBlockNumber >= 3000000)
             exponentialIceAgeBlockNumber -= 3000000;
@@ -194,62 +196,64 @@ u256 calculateEthashDifficulty(ChainOperationParams const& _chainParams, BlockHe
 
 
 // Blockchain logic validator
-void verifyEthereumBlockHeader(BlockHeader const& _header, ToolChain const& _chain)
+void verifyEthereumBlockHeader(spBlockHeader const& _header, ToolChain const& _chain)
 {
     // Check ethereum rules
-    if (_header.gasLimit() > dev::u256("0x7fffffffffffffff"))
+    auto const& header = _header.getCContent();
+    if (header.gasLimit() > dev::u256("0x7fffffffffffffff"))
         throw test::UpwardsException("Header gasLimit > 0x7fffffffffffffff");
-    if (_header.difficulty() < dev::u256("0x20000"))
+    if (header.difficulty() < dev::u256("0x20000"))
         throw test::UpwardsException("Invalid difficulty: header.difficulty < 0x20000");
-    if (_header.gasUsed() > _header.gasLimit())
+    if (header.gasUsed() > header.gasLimit())
         throw test::UpwardsException("Invalid gasUsed: header.gasUsed > header.gasLimit");
-    if (_header.extraData().asString().size() > 32 * 2 + 2)
+    if (header.extraData().asString().size() > 32 * 2 + 2)
         throw test::UpwardsException("Header extraData > 32 bytes");
 
     // Check DAO extraData
-    if (_chain.fork().asString() == "HomesteadToDaoAt5" && _header.number() > 4 && _header.number() <= 5+9 &&
-        _header.extraData().asString() != "0x64616f2d686172642d666f726b")
+    if (_chain.fork().asString() == "HomesteadToDaoAt5" && header.number() > 4 && header.number() <= 5 + 9 &&
+        header.extraData().asString() != "0x64616f2d686172642d666f726b")
         throw test::UpwardsException("BlockHeader require Dao ExtraData! (0x64616f2d686172642d666f726b)");
 
     bool found = false;
     for (auto const& block : _chain.blocks())
     {
         // See if uncles not already in chain
-        if (block.header().hash() == _header.hash())
+        if (block.header().getCContent().hash() == header.hash())
             throw test::UpwardsException("Block is already in chain!");
         for (auto const& un : block.uncles())
-            if (un.hash() == _header.hash())
+            if (un.getCContent().hash() == header.hash())
                 throw test::UpwardsException("Block is already in chain!");
 
-        if (block.header().hash() == _header.parentHash())
+        if (block.header().getCContent().hash() == header.parentHash())
         {
             found = true;
 
-            if (_header.number() != block.header().number() + 1)
-                throw test::UpwardsException("BlockHeader number != parent.number + 1 (" + _header.number().asDecString() +
-                                             " != " + block.header().number().asDecString() + ")");
+            if (header.number() != block.header().getCContent().number() + 1)
+                throw test::UpwardsException("BlockHeader number != parent.number + 1 (" + header.number().asDecString() +
+                                             " != " + block.header().getCContent().number().asDecString() + ")");
 
-            if (block.header().timestamp() >= _header.timestamp())
+            if (block.header().getCContent().timestamp() >= header.timestamp())
                 throw test::UpwardsException("BlockHeader timestamp is less then it's parent block!");
 
             // Validate block gasLimit delta
-            VALUE deltaGas = block.header().gasLimit().asU256() / 1024;
-            if (_header.gasLimit().asU256() >= block.header().gasLimit().asU256() + deltaGas.asU256() ||
-                _header.gasLimit().asU256() <= block.header().gasLimit().asU256() - deltaGas.asU256())
-                throw test::UpwardsException("Invalid gaslimit: " + _header.gasLimit().asDecString() + ", want " +
-                                             block.header().gasLimit().asDecString() + " +/- " + deltaGas.asDecString());
+            VALUE deltaGas = block.header().getCContent().gasLimit().asU256() / 1024;
+            if (header.gasLimit().asU256() >= block.header().getCContent().gasLimit().asU256() + deltaGas.asU256() ||
+                header.gasLimit().asU256() <= block.header().getCContent().gasLimit().asU256() - deltaGas.asU256())
+                throw test::UpwardsException("Invalid gaslimit: " + header.gasLimit().asDecString() + ", want " +
+                                             block.header().getCContent().gasLimit().asDecString() + " +/- " +
+                                             deltaGas.asDecString());
 
             // Validate block difficulty delta
             ChainOperationParams params = ChainOperationParams::defaultParams(_chain.toolParams());
             u256 newDiff = calculateEthashDifficulty(params, _header, block.header());
-            if (_header.difficulty().asU256() != newDiff)
+            if (header.difficulty().asU256() != newDiff)
                 throw test::UpwardsException(
-                    "Invalid difficulty: " + _header.difficulty().asDecString() + ", want: " + VALUE(newDiff).asDecString());
+                    "Invalid difficulty: " + header.difficulty().asDecString() + ", want: " + VALUE(newDiff).asDecString());
         }
     }
     if (!found)
         throw test::UpwardsException(
-            "verifyEthereumBlockHeader:: Parent block hash not found: " + _header.parentHash().asString());
+            "verifyEthereumBlockHeader:: Parent block hash not found: " + _header.getCContent().parentHash().asString());
 }
 
 

@@ -25,7 +25,8 @@ string const besu_config = R"({
         "Constantinople",
         "ConstantinopleFix",
         "Istanbul",
-        "Berlin"
+        "Berlin",
+        "London"
     ],
     "additionalForks" : [
         "FrontierToHomesteadAt5",
@@ -50,7 +51,7 @@ fi
 i=0
 while [ "$i" -lt $threads ]; do
     tmpdir=$(mktemp -d -t ci-XXXXXXXXXX)
-    besu retesteth --rpc-http-port $((47710+$i)) --data-path=$tmpdir &
+    besu retesteth --Xeip1559-enabled true --rpc-http-port $((47710+$i)) --data-path=$tmpdir &
     i=$(( i + 1 ))
 done
 )";

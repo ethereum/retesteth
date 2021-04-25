@@ -23,8 +23,8 @@ DataObject TestBlock::asDataObject() const
     {
         res["uncleHeaders"] = DataObject(DataType::Array);
         for (auto const& un : m_block.getCContent().uncles())
-            res["uncleHeaders"].addArrayObject(un.asDataObject());
-        res["blockHeader"] = m_block.getCContent().header().asDataObject();
+            res["uncleHeaders"].addArrayObject(un.getCContent().asDataObject());
+        res["blockHeader"] = m_block.getCContent().header().getCContent().asDataObject();
         res["transactions"] = DataObject(DataType::Array);
         for (auto const& tr : m_block.getCContent().transactions())
             res["transactions"].addArrayObject(tr.getCContent().asDataObject(ExportOrder::OldStyle));

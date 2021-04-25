@@ -13,7 +13,8 @@ enum DataType
     Bool,
     Array,
     Object,
-    Null
+    Null,
+    NotInitialized
 };
 
 /// DataObject
@@ -74,7 +75,7 @@ public:
     void performModifier(void (*f)(DataObject&), std::set<string> const& _exceptionKeys = {});
     void performVerifier(void (*f)(DataObject const&)) const;
 
-    void clear(DataType _type = DataType::Null);
+    void clear(DataType _type = DataType::NotInitialized);
 
     std::string asJsonNoFirstKey() const;
     std::string asJson(int level = 0, bool pretty = true, bool nokey = false) const;
@@ -84,7 +85,11 @@ public:
     void setAutosort(bool _sort) { m_autosort = _sort; m_allowOverwrite = true; }
     bool isOverwritable() const { return m_allowOverwrite; }
     bool isAutosort() const { return m_autosort; }
-    void clearSubobjects() { m_subObjects.clear(); m_type = DataType::Null; }
+    void clearSubobjects(DataType _type = DataType::NotInitialized)
+    {
+        m_subObjects.clear();
+        m_type = _type;
+    }
 
 private:
     DataObject& _addSubObject(DataObject const& _obj, string const& _keyOverwrite = string());

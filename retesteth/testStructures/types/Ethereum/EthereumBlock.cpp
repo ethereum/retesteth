@@ -22,7 +22,7 @@ void EthereumBlock::recalculateUncleHash()
     // Uncle List
     RLPStream uncleList(m_uncles.size());
     for (auto const& un : m_uncles)
-        uncleList.appendRaw(un.asRLPStream().out());
+        uncleList.appendRaw(un.getCContent().asRLPStream().out());
 
     // FH32 newTxHash("0x" + toString(dev::sha3(transactionList.out())));
     // m_header.getContent().setTransactionHash(newTxHash);
@@ -51,7 +51,7 @@ BYTES const EthereumBlock::getRLP() const
         // Uncle list
         RLPStream uncleList(m_uncles.size());
         for (auto const& un : m_uncles)
-            uncleList.appendRaw(un.asRLPStream().out());
+            uncleList.appendRaw(un.getCContent().asRLPStream().out());
         stream.appendRaw(uncleList.out());
 
         return BYTES(dev::toHexPrefixed(stream.out()));

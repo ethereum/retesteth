@@ -13,6 +13,7 @@ namespace teststruct
 {
 Transaction::Transaction(DataObject const& _data, string const& _dataRawPreview, string const& _dataLabel)
 {
+    m_secretKey = spVALUE(new VALUE(0));
     fromDataObject(_data);
     m_dataRawPreview = _dataRawPreview;
     m_dataLabel = _dataLabel;
@@ -38,10 +39,7 @@ void Transaction::fromDataObject(DataObject const& _data)
         }
 
         if (_data.count("secretKey"))
-        {
-            VALUE a(_data.atKey("secretKey"));
-            buildVRS(VALUE(_data.atKey("secretKey")));
-        }
+            buildVRS(_data.atKey("secretKey"));
         else
         {
             m_v = spVALUE(new VALUE(_data.atKey("v")));
@@ -60,9 +58,17 @@ void Transaction::fromDataObject(DataObject const& _data)
                 {"secretKey", {{DataType::String}, jsonField::Optional}}, {"v", {{DataType::String}, jsonField::Optional}},
                 {"r", {{DataType::String}, jsonField::Optional}}, {"s", {{DataType::String}, jsonField::Optional}},
 
-                {"type", {{DataType::String}, jsonField::Optional}},       // Transaction Type 1
-                {"chainId", {{DataType::String}, jsonField::Optional}},    // Transaction Type 1
-                {"accessList", {{DataType::Array}, jsonField::Optional}},  // Transaction access list
+                // Transaction type 1
+                {"type", {{DataType::String}, jsonField::Optional}},
+                {"chainId", {{DataType::String, DataType::Null}, jsonField::Optional}},
+                {"accessList", {{DataType::Array}, jsonField::Optional}},
+
+                // Transaction type 2
+                {"maxFeePerGas", {{DataType::String}, jsonField::Optional}},
+                {"maxInclusionFeePerGas", {{DataType::String}, jsonField::Optional}},
+
+                {"publicKey", {{DataType::String}, jsonField::Optional}},  // Besu EthGetBlockBy transaction
+                {"raw", {{DataType::String}, jsonField::Optional}},        // Besu EthGetBlockBy transaction
 
                 {"blockHash", {{DataType::String}, jsonField::Optional}},         // EthGetBlockBy transaction
                 {"blockNumber", {{DataType::String}, jsonField::Optional}},       // EthGetBlockBy transaction
@@ -100,11 +106,13 @@ void Transaction::fromRLP(dev::RLP const& _rlp)
 
 Transaction::Transaction(dev::RLP const& _rlp)
 {
+    m_secretKey = spVALUE(new VALUE(0));
     fromRLP(_rlp);
 }
 
 Transaction::Transaction(BYTES const& _rlp)
 {
+    m_secretKey = spVALUE(new VALUE(0));
     dev::bytes decodeRLP = sfromHex(_rlp.asString());
     dev::RLP rlp(decodeRLP, dev::RLP::VeryStrict);
     fromRLP(rlp);
@@ -125,6 +133,7 @@ void Transaction::streamHeader(dev::RLPStream& _s) const
 
 void Transaction::buildVRS(VALUE const& _secret)
 {
+    m_secretKey = spVALUE(new VALUE(_secret));
     dev::RLPStream stream;
     stream.appendList(6);
     streamHeader(stream);
@@ -181,6 +190,8 @@ const DataObject Transaction::asDataObject(ExportOrder _order) const
         out.performModifier(mod_removeLeadingZerosFromHexValues, {"data", "to"});
         out.renameKey("gasLimit", "gas");
         out.renameKey("data", "input");
+        if (!m_secretKey.isEmpty() && m_secretKey.getCContent() != 0)
+            out["secretKey"] = m_secretKey.getCContent().asString();
     }
     if (_order == ExportOrder::OldStyle)
     {

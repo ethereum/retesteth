@@ -27,6 +27,16 @@ const DataObject StateTestTransactionBase::asDataObject() const
     if (atLeastOneNonNullAccessList)
         out["accessLists"] = txAccessListData;
 
+    if (!m_maxFeePerGas.isEmpty() || !m_maxInclusionFeePerGas.isEmpty())
+    {
+        if (m_maxFeePerGas.isEmpty() || m_maxInclusionFeePerGas.isEmpty())
+            ETH_FAIL_MESSAGE("Must be defined both m_maxFeePerGas and m_maxInclusionFeePerGas!");
+        if (!atLeastOneNonNullAccessList)
+            ETH_FAIL_MESSAGE("Basefee transaction must have accesslist!");
+        out["maxFeePerGas"] = m_maxFeePerGas.getCContent().asString();
+        out["maxInclusionFeePerGas"] = m_maxInclusionFeePerGas.getCContent().asString();
+    }
+
     for (VALUE const& el : m_gasLimit)
         out["gasLimit"].addArrayObject(el.asString());
     out["gasPrice"] = m_gasPrice.getCContent().asString();
@@ -68,6 +78,16 @@ std::vector<TransactionInGeneralSection> StateTestTransactionBase::buildTransact
                 else
                     trData["to"] = m_to.getCContent().asString();
                 trData["secretKey"] = m_secretKey.getCContent().asString();
+
+                if (!m_maxInclusionFeePerGas.isEmpty())
+                {
+                    // Type 0x02 transaction fields
+                    trData["maxInclusionFeePerGas"] = m_maxInclusionFeePerGas.getCContent().asString();
+                    trData["maxFeePerGas"] = m_maxFeePerGas.getCContent().asString();
+
+                    if (databox.m_accessList.isEmpty())
+                        ETH_FAIL_MESSAGE("BaseFeeTransaction must have access list!");
+                }
 
                 // Export Access List
                 if (!databox.m_accessList.isEmpty())

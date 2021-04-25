@@ -56,35 +56,43 @@ BlockHeaderIncomplete::BlockHeaderIncomplete(DataObject const& _data)
     if (_data.count(tkey))
         m_transactionsRoot = spFH32(new FH32(_data.atKey(tkey)));
 
+    if (_data.count("gasTarget"))
+    {
+        m_gasTarget = spVALUE(new VALUE(_data.atKey("gasTarget")));
+        m_gasLimit = spVALUE(0);
+    }
+
+    if (_data.count("baseFeePerGas"))
+    {
+        m_baseFeePerGas = spVALUE(new VALUE(_data.atKey("baseFeePerGas")));
+        m_gasLimit = spVALUE(0);
+    }
+
     bool hasAtLeastOneField = !m_author.isEmpty() || !m_difficulty.isEmpty() || !m_extraData.isEmpty() ||
                               !m_gasLimit.isEmpty() || !m_gasUsed.isEmpty() || !m_hash.isEmpty() || !m_logsBloom.isEmpty() ||
                               !m_mixHash.isEmpty() || !m_nonce.isEmpty() || !m_number.isEmpty() || !m_parentHash.isEmpty() ||
                               !m_receiptsRoot.isEmpty() || !m_sha3Uncles.isEmpty() || !m_stateRoot.isEmpty() ||
-                              !m_timestamp.isEmpty() || !m_transactionsRoot.isEmpty();
+                              !m_timestamp.isEmpty() || !m_transactionsRoot.isEmpty() || !m_gasTarget.isEmpty() ||
+                              !m_baseFeePerGas.isEmpty();
 
     requireJsonFields(_data, "BlockHeaderIncomplete " + _data.getKey(),
-        {{"bloom", {{DataType::String}, jsonField::Optional}},
-            {"coinbase", {{DataType::String}, jsonField::Optional}},
-            {"difficulty", {{DataType::String}, jsonField::Optional}},
-            {"extraData", {{DataType::String}, jsonField::Optional}},
-            {"gasLimit", {{DataType::String}, jsonField::Optional}},
-            {"gasUsed", {{DataType::String}, jsonField::Optional}},
-            {"hash", {{DataType::String}, jsonField::Optional}},
-            {"mixHash", {{DataType::String}, jsonField::Optional}},
-            {"nonce", {{DataType::String}, jsonField::Optional}},
-            {"number", {{DataType::String}, jsonField::Optional}},
-            {"parentHash", {{DataType::String}, jsonField::Optional}},
+        {{"bloom", {{DataType::String}, jsonField::Optional}}, {"coinbase", {{DataType::String}, jsonField::Optional}},
+            {"difficulty", {{DataType::String}, jsonField::Optional}}, {"extraData", {{DataType::String}, jsonField::Optional}},
+            {"gasLimit", {{DataType::String}, jsonField::Optional}}, {"gasTarget", {{DataType::String}, jsonField::Optional}},
+            {"baseFeePerGas", {{DataType::String}, jsonField::Optional}},
+            {"gasUsed", {{DataType::String}, jsonField::Optional}}, {"hash", {{DataType::String}, jsonField::Optional}},
+            {"mixHash", {{DataType::String}, jsonField::Optional}}, {"nonce", {{DataType::String}, jsonField::Optional}},
+            {"number", {{DataType::String}, jsonField::Optional}}, {"parentHash", {{DataType::String}, jsonField::Optional}},
             {"receiptTrie", {{DataType::String}, jsonField::Optional}},
-            {"stateRoot", {{DataType::String}, jsonField::Optional}},
-            {"timestamp", {{DataType::String}, jsonField::Optional}},
+            {"stateRoot", {{DataType::String}, jsonField::Optional}}, {"timestamp", {{DataType::String}, jsonField::Optional}},
             {"transactionsTrie", {{DataType::String}, jsonField::Optional}},
             {"uncleHash", {{DataType::String}, jsonField::Optional}}});
     ETH_ERROR_REQUIRE_MESSAGE(hasAtLeastOneField, "BlockHeaderIncomplete must have at least one field!");
 }
 
-BlockHeader BlockHeaderIncomplete::overwriteBlockHeader(BlockHeader const& _header) const
+spBlockHeader BlockHeaderIncomplete::overwriteBlockHeader(spBlockHeader const& _header) const
 {
-    DataObject overwrite = _header.asDataObject();
+    DataObject overwrite = _header.getCContent().asDataObject();
     if (!m_author.isEmpty())
         overwrite["author"] = m_author.getCContent().asString();
     if (!m_difficulty.isEmpty())
@@ -118,7 +126,7 @@ BlockHeader BlockHeaderIncomplete::overwriteBlockHeader(BlockHeader const& _head
     if (!m_hash.isEmpty())
         overwrite["hash"] = m_hash.getCContent().asString();
     overwrite.removeKey("updatePoW");  // deprecated key
-    return BlockHeader(overwrite);
+    return readBlockHeader(overwrite);
 }
 
 }  // namespace teststruct

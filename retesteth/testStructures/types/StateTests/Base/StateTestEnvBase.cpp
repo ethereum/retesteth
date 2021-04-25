@@ -10,10 +10,18 @@ const DataObject StateTestEnvBase::asDataObject() const
     DataObject out;
     out["currentCoinbase"] = m_currentCoinbase.getCContent().asString();
     out["currentDifficulty"] = m_currentDifficulty.getCContent().asString();
-    out["currentGasLimit"] = m_currentGasLimit.getCContent().asString();
+    if (!m_currentGasLimit.isEmpty())
+        out["currentGasLimit"] = m_currentGasLimit.getCContent().asString();
     out["currentNumber"] = m_currentNumber.getCContent().asString();
     out["currentTimestamp"] = m_currentTimestamp.getCContent().asString();
     out["previousHash"] = m_previousHash.getCContent().asString();
+
+    if (!m_gasTarget.isEmpty())
+    {
+        out["gasTarget"] = m_gasTarget.getCContent().asString();
+        out["baseFeePerGas"] = m_baseFeePerGas.getCContent().asString();
+    }
+
     return out;
 }
 

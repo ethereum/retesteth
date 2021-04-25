@@ -29,14 +29,15 @@ DataObject constructAccountRange(EthereumBlockState const& _block, FH32 const& _
 
 DataObject constructEthGetBlockBy(EthereumBlockState const& _block)
 {
-    DataObject constructResponse = _block.header().asDataObject();
+    DataObject constructResponse = _block.header().getCContent().asDataObject();
 
     constructResponse["transactions"] = DataObject(DataType::Array);
     for (auto const& tr : _block.transactions())
     {
         DataObject fullTransaction = tr.getCContent().asDataObject();
-        fullTransaction["blockHash"] = _block.header().hash().asString();  // We don't know the hash its in tool response
-        fullTransaction["blockNumber"] = _block.header().number().asString();
+        fullTransaction["blockHash"] =
+            _block.header().getCContent().hash().asString();  // We don't know the hash its in tool response
+        fullTransaction["blockNumber"] = _block.header().getCContent().number().asString();
         fullTransaction["from"] = FH20::zero().asString();  // Can be recovered from vrs
         fullTransaction["transactionIndex"] = "0x00";       // Its in tool response
         fullTransaction["hash"] = tr.getCContent().hash().asString();
@@ -45,7 +46,7 @@ DataObject constructEthGetBlockBy(EthereumBlockState const& _block)
 
     constructResponse["uncles"] = DataObject(DataType::Array);
     for (auto const& un : _block.uncles())
-        constructResponse["uncles"].addArrayObject(un.hash().asString());
+        constructResponse["uncles"].addArrayObject(un.getCContent().hash().asString());
 
     constructResponse["size"] = "0x00";
     constructResponse["totalDifficulty"] = "0x00";

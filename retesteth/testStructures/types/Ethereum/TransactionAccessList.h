@@ -16,7 +16,8 @@ struct TransactionAccessList : Transaction
     DataObject const asDataObject(ExportOrder _order = ExportOrder::Default) const override;
     TransactionType type() const override { return TransactionType::ACCESSLIST; }
 
-private:
+protected:
+    TransactionAccessList() {}
     void fromRLP(dev::RLP const&) override;
 
     void buildVRS(VALUE const& _secret) override;

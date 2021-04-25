@@ -20,7 +20,15 @@ SetChainParamsArgs prepareChainParams(FORK const& _net, SealEngine _engine, Stat
 
     genesis["genesis"]["author"] = _env.currentCoinbase().asString();
     genesis["genesis"]["difficulty"] = _env.currentDifficulty().asString();
-    genesis["genesis"]["gasLimit"] = _env.currentGasLimit().asString();
+
+    if (_env.gasTarget().isEmpty())
+        genesis["genesis"]["gasLimit"] = _env.currentGasLimit().asString();
+    else
+    {
+        genesis["genesis"]["gasTarget"] = _env.gasTarget().getCContent().asString();
+        genesis["genesis"]["baseFeePerGas"] = _env.baseFeePerGas().getCContent().asString();
+    }
+
     genesis["genesis"]["extraData"] = _env.currentExtraData().asString();
     genesis["genesis"]["timestamp"] = _env.currentTimestamp().asString();
     genesis["genesis"]["nonce"] = _env.currentNonce().asString();

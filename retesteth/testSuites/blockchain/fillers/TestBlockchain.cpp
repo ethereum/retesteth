@@ -48,7 +48,7 @@ void TestBlockchain::generateBlock(
     // Import known transactions to remote client
     ETH_LOGC("Import transactions: " + m_sDebugString, 6, LogColor::YELLOW);
     for (auto const& tr : _block.transactions())
-        m_session.eth_sendRawTransaction(tr.tr().getRawBytes());
+        m_session.eth_sendRawTransaction(tr.tr().getRawBytes(), tr.tr().getSecret());
 
     // Remote client generate block with transactions
     // And if it has uncles or blockheader overwrite we perform manual overwrite and reimport block again
@@ -86,7 +86,7 @@ void TestBlockchain::generateBlock(
         for (auto const& remoteTr : minedBlock.getCContent().transactions())
         {
             if (Options::get().vmtrace)
-                printVmTrace(m_session, remoteTr.hash(), minedBlock.getCContent().header().stateRoot());
+                printVmTrace(m_session, remoteTr.hash(), minedBlock.getCContent().header().getCContent().stateRoot());
 
             if (testTransactionMap.count(remoteTr.hash()))
             {
@@ -197,22 +197,22 @@ GCP_SPointer<EthGetBlockBy> TestBlockchain::mineBlock(
 }
 
 // Ask remote client to generate a blockheader that will later used for uncles
-BlockHeader TestBlockchain::mineNextBlockAndRevert()
+spBlockHeader TestBlockchain::mineNextBlockAndRevert()
 {
     ETH_LOGC("Mine uncle block (next block) and revert: " + m_sDebugString, 6, LogColor::YELLOW);
     m_session.test_modifyTimestamp(1000);
     m_session.test_mineBlocks(1);
     VALUE latestBlockNumber(m_session.eth_blockNumber());
     EthGetBlockBy nextBlock(m_session.eth_getBlockByNumber(latestBlockNumber, Request::LESSOBJECTS));
-    m_session.test_rewindToBlock(nextBlock.header().number().asU256() - 1);  // rewind to the previous block
+    m_session.test_rewindToBlock(nextBlock.header().getCContent().number().asU256() - 1);  // rewind to the previous block
 
     //m_session.test_modifyTimestamp(1000);  // Shift block timestamp relative to previous block
 
     // assign a random coinbase for an uncle block to avoid UncleIsAncestor exception
     // otherwise this uncle would be similar to a block mined
-    DataObject head = nextBlock.header().asDataObject();
+    DataObject head = nextBlock.header().getCContent().asDataObject();
     head["coinbase"] = "0xb94f5374fce5ed0000000097c15331677e6ebf0b";  // FH20::random().asString();
-    return BlockHeader(head);
+    return readBlockHeader(head);
 }
 
 string TestBlockchain::prepareDebugInfoString(string const& _newBlockChainName)
@@ -296,7 +296,7 @@ void TestBlockchain::restoreUpToNumber(SessionInterface& _session, VALUE const& 
 // Because remote client does not work with uncles, manipulate the response record with uncle information
 // Manually here imitating a block with retesteth manipulations
 FH32 TestBlockchain::postmineBlockHeader(BlockchainTestFillerBlock const& _blockInTest, VALUE const& _latestBlockNumber,
-    std::vector<BlockHeader> const& _uncles, BYTES& _rawRLP)
+    std::vector<spBlockHeader> const& _uncles, BYTES& _rawRLP)
 {
     // if blockHeader is defined in test Filler, rewrite the last block header fields with info from
     // test and reimport it to the client in order to trigger an exception in the client
@@ -320,8 +320,8 @@ FH32 TestBlockchain::postmineBlockHeader(BlockchainTestFillerBlock const& _block
         if (headerOverwrite.hasRelTimeStamp())
         {
             EthGetBlockBy previousBlock(m_session.eth_getBlockByNumber(_latestBlockNumber - 1, Request::LESSOBJECTS));
-            managedBlock.headerUnsafe().setTimestamp(
-                previousBlock.header().timestamp().asU256() + headerOverwrite.relTimeStamp());
+            managedBlock.headerUnsafe().getContent().setTimestamp(
+                previousBlock.header().getCContent().timestamp().asU256() + headerOverwrite.relTimeStamp());
         }
 
         // replace block with overwritten header

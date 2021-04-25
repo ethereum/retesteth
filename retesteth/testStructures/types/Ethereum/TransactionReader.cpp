@@ -1,5 +1,6 @@
 #include "TransactionReader.h"
 #include "TransactionAccessList.h"
+#include "TransactionBaseFee.h"
 #include <retesteth/TestHelper.h>
 
 using namespace dataobject;
@@ -18,6 +19,9 @@ spTransaction _readTransaction(TransactionType _t, dev::RLP const& _rlp)
         break;
     case TransactionType::ACCESSLIST:
         spTr = spTransaction(new TransactionAccessList(_rlp));
+        break;
+    case TransactionType::BASEFEE:
+        spTr = spTransaction(new TransactionBaseFee(_rlp));
         break;
     }
     return spTr;
@@ -66,8 +70,18 @@ spTransaction readTransaction(dev::RLP const& _rlp)
     {
         dev::bytesConstRef const& p = _rlp.payload();
         dev::RLP realRLP(p.cropped(1, p.size() - 1), dev::RLP::VeryStrict);
-        // PARSE TRANSACTION TYPES HERE
-        return _readTransaction(TransactionType::ACCESSLIST, realRLP);
+        dev::bytesConstRef const& type = p.cropped(0, 1);
+        const int itype = (int)type.toString()[0];
+        switch (itype)
+        {
+        case 1:
+            return _readTransaction(TransactionType::ACCESSLIST, realRLP);
+        case 2:
+            return _readTransaction(TransactionType::BASEFEE, realRLP);
+        default:
+            ETH_FAIL_MESSAGE("readTransaction(dev::RLP const& _rlp) unknown transaction type!");
+        }
+        return spTransaction(0);
     }
     else
         return _readTransaction(TransactionType::LEGACY, _rlp);
@@ -75,7 +89,8 @@ spTransaction readTransaction(dev::RLP const& _rlp)
 
 spTransaction readTransaction(DataObject const& _filledData)
 {
-    // PARSE TRANSACTION TYPES FROM JSON OBJECT
+    if (_filledData.count("maxInclusionFeePerGas"))
+        return spTransaction(new TransactionBaseFee(_filledData));
     if (_filledData.count("accessList"))
         return spTransaction(new TransactionAccessList(_filledData));
     return spTransaction(new Transaction(_filledData));

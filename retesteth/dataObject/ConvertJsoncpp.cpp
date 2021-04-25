@@ -68,7 +68,7 @@ DataObject ConvertJsoncppToData(Json::Value const& _input)
     // Make it an exception!
     std::cerr << "Error parsing JSON node. Element type not defined! " +
                      jsonTypeAsString(_input.type());
-    return DataObject(DataType::Null);
+    return DataObject(DataType::NotInitialized);
 }
 }
 #endif
