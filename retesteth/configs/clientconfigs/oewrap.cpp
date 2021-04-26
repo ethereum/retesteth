@@ -146,7 +146,6 @@ string const oewrap_config = R"({
 })";
 
 string const oewrap_wrapper = R"(#! /usr/bin/node
-#! /usr/bin/node
 
 const yargs = require("yargs")
 const fs = require('fs')
@@ -172,7 +171,7 @@ var logMsgNum = 1
 
 // Debug function
 const logMe = str => {
-  if (true)   // true to turn on logging, false to turn it off
+  if (false)   // true to turn on logging, false to turn it off
     fs.appendFileSync(logFile, `###### LOG MESSAGE ${logMsgNum++} ######\n${str}\n`)
 }
 
@@ -452,8 +451,7 @@ exec(cmd, {maxBuffer:1024*1024*1024}, (err, stdout, stderr) => {
   fs.unlinkSync(testFile)
   logMe(`done\n`)
 })    // .on("close", ...
-
-";
+)";
 
 string const oewrap_package = R"(
 {
@@ -471,7 +469,8 @@ string const oewrap_package = R"(
     "keccak256": "^1.0.2",
     "yargs": "^13.2.4"
   }
-})";
+})
+)";
 
 string const trickystr = "SCRIPTPATH=\"$( cd -- \"$(dirname \"$0\")\" >/dev/null 2>&1 ; pwd -P )\"";
 string const oewrap_start = R"(#!/bin/sh
