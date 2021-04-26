@@ -469,7 +469,7 @@ string const oewrap_package = R"(
     "keccak256": "^1.0.2",
     "yargs": "^13.2.4"
   }
-})
+}
 )";
 
 string const trickystr = "SCRIPTPATH=\"$( cd -- \"$(dirname \"$0\")\" >/dev/null 2>&1 ; pwd -P )\"";
