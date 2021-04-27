@@ -29,7 +29,6 @@ void Transaction::fromDataObject(DataObject const& _data)
         m_nonce = spVALUE(new VALUE(_data.atKey("nonce")));
         m_value = spVALUE(new VALUE(_data.atKey("value")));
 
-        // geth retesteth return to as null in some bc tests
         if (_data.atKey("to").type() == DataType::Null || _data.atKey("to").asString().empty())
             m_creation = true;
         else
@@ -51,21 +50,16 @@ void Transaction::fromDataObject(DataObject const& _data)
         }
         requireJsonFields(_data, "Transaction " + _data.getKey(),
             {
-                {"data", {{DataType::String}, jsonField::Required}}, {"gasLimit", {{DataType::String}, jsonField::Required}},
-                {"gasPrice", {{DataType::String}, jsonField::Required}}, {"nonce", {{DataType::String}, jsonField::Required}},
+                {"data", {{DataType::String}, jsonField::Required}},
+                {"gasLimit", {{DataType::String}, jsonField::Required}},
+                {"gasPrice", {{DataType::String}, jsonField::Required}},
+                {"nonce", {{DataType::String}, jsonField::Required}},
                 {"value", {{DataType::String}, jsonField::Required}},
                 {"to", {{DataType::String, DataType::Null}, jsonField::Required}},
-                {"secretKey", {{DataType::String}, jsonField::Optional}}, {"v", {{DataType::String}, jsonField::Optional}},
-                {"r", {{DataType::String}, jsonField::Optional}}, {"s", {{DataType::String}, jsonField::Optional}},
-
-                // Transaction type 1
-                {"type", {{DataType::String}, jsonField::Optional}},
-                {"chainId", {{DataType::String, DataType::Null}, jsonField::Optional}},
-                {"accessList", {{DataType::Array}, jsonField::Optional}},
-
-                // Transaction type 2
-                {"maxFeePerGas", {{DataType::String}, jsonField::Optional}},
-                {"maxInclusionFeePerGas", {{DataType::String}, jsonField::Optional}},
+                {"secretKey", {{DataType::String}, jsonField::Optional}},
+                {"v", {{DataType::String}, jsonField::Optional}},
+                {"r", {{DataType::String}, jsonField::Optional}},
+                {"s", {{DataType::String}, jsonField::Optional}},
 
                 {"publicKey", {{DataType::String}, jsonField::Optional}},  // Besu EthGetBlockBy transaction
                 {"raw", {{DataType::String}, jsonField::Optional}},        // Besu EthGetBlockBy transaction
