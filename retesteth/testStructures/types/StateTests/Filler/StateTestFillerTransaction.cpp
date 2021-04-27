@@ -30,7 +30,6 @@ StateTestFillerTransaction::StateTestFillerTransaction(DataObject const& _data)
             m_to = spFH20(new FH20(dTo));
         }
         m_secretKey = spFH32(new FH32(tmpD.atKey("secretKey")));
-        m_gasPrice = spVALUE(new VALUE(tmpD.atKey("gasPrice")));
         m_nonce = spVALUE(new VALUE(tmpD.atKey("nonce")));
 
         for (auto const& el : _data.atKey("data").getSubObjects())
@@ -80,20 +79,32 @@ StateTestFillerTransaction::StateTestFillerTransaction(DataObject const& _data)
 
         if (tmpD.count("maxFeePerGas") || tmpD.count("maxInclusionFeePerGas"))
         {
+            // EIP 1559 TRANSACTION TEMPLATE (gtest FILLER)
             m_maxFeePerGas = spVALUE(new VALUE(tmpD.atKey("maxFeePerGas")));
             m_maxInclusionFeePerGas = spVALUE(new VALUE(tmpD.atKey("maxInclusionFeePerGas")));
+            requireJsonFields(_data, "StateTestFillerTransaction " + _data.getKey(),
+                {{"data", {{DataType::Array}, jsonField::Required}},
+                 {"gasLimit", {{DataType::Array}, jsonField::Required}},
+                 {"nonce", {{DataType::String}, jsonField::Required}},
+                 {"value", {{DataType::Array}, jsonField::Required}},
+                 {"to", {{DataType::String}, jsonField::Required}},
+                 {"maxFeePerGas", {{DataType::String}, jsonField::Required}},
+                 {"maxInclusionFeePerGas", {{DataType::String}, jsonField::Required}},
+                 {"secretKey", {{DataType::String}, jsonField::Required}}});
         }
-
-        requireJsonFields(_data, "StateTestFillerTransaction " + _data.getKey(),
-            {{"data", {{DataType::Array}, jsonField::Required}},
-             {"gasLimit", {{DataType::Array}, jsonField::Required}},
-             {"gasPrice", {{DataType::String}, jsonField::Required}},
-             {"nonce", {{DataType::String}, jsonField::Required}},
-             {"value", {{DataType::Array}, jsonField::Required}},
-             {"to", {{DataType::String}, jsonField::Required}},
-             {"maxFeePerGas", {{DataType::String}, jsonField::Optional}},
-             {"maxInclusionFeePerGas", {{DataType::String}, jsonField::Optional}},
-             {"secretKey", {{DataType::String}, jsonField::Required}}});
+        else
+        {
+            // LEGACY TRANSACTION TEMPLATE (gtest FILLER)
+            m_gasPrice = spVALUE(new VALUE(tmpD.atKey("gasPrice")));
+            requireJsonFields(_data, "StateTestFillerTransaction " + _data.getKey(),
+                {{"data", {{DataType::Array}, jsonField::Required}},
+                 {"gasLimit", {{DataType::Array}, jsonField::Required}},
+                 {"gasPrice", {{DataType::String}, jsonField::Required}},
+                 {"nonce", {{DataType::String}, jsonField::Required}},
+                 {"value", {{DataType::Array}, jsonField::Required}},
+                 {"to", {{DataType::String}, jsonField::Required}},
+                 {"secretKey", {{DataType::String}, jsonField::Required}}});
+        }
     }
     catch (std::exception const& _ex)
     {
