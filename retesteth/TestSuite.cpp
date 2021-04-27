@@ -479,6 +479,8 @@ void TestSuite::runFunctionForAllClients(std::function<void()> _func)
         Options::getDynamicOptions().setCurrentConfig(config);
         std::cout << "Running tests for config '" << config.cfgFile().name() << "' "
                   << config.getId().id() << std::endl;
+
+        // Run tests
         _func();
 
         // Disconnect threads from the client

@@ -66,6 +66,8 @@ public:
     fs::path const& getRewardMapPath() const { return m_correctMiningRewardPath; }
 
     // Get path to scripts
+    void initializeFirstSetup();
+    fs::path const& getSetupScript() const { return m_setupScriptPath; }
     fs::path const& getStartScript() const { return m_starterScriptPath; }
     fs::path const& getStopperScript() const { return m_stopperScriptPath; }
 
@@ -76,6 +78,8 @@ private:
     std::map<FORK, DataObject> m_genesisTemplate;       ///< Template For test_setChainParams
     fs::path m_correctMiningRewardPath;                 ///< Path to correct mining reward info file
 
+    bool m_initialized = false;    ///< If setup script has run
+    fs::path m_setupScriptPath;    ///< Path to setup script (run once before thread exec)
     fs::path m_starterScriptPath;  ///< Path to starter script
     fs::path m_stopperScriptPath;  ///< Path to stopper script
 };

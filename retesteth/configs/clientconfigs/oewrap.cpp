@@ -473,13 +473,17 @@ string const oewrap_package = R"(
 )";
 
 string const trickystr = "SCRIPTPATH=\"$( cd -- \"$(dirname \"$0\")\" >/dev/null 2>&1 ; pwd -P )\"";
-string const oewrap_start = R"(#!/bin/sh
+string const oewrap_setup = R"(#!/bin/sh
 )" + trickystr + R"(
 cd $SCRIPTPATH
 if [ ! -d "node_modules" ]; then
     npm install
 fi
+)";
 
+string const oewrap_start = R"(#!/bin/sh
+)" + trickystr + R"(
+cd $SCRIPTPATH
 if [ $1 = "-v" ]; then
     ./t8n_oe.js -v
 else
@@ -493,6 +497,13 @@ oewrapcfg::oewrapcfg()
         DataObject obj;
         obj["path"] = "oewrap/config";
         obj["content"] = oewrap_config;
+        map_configs.addArrayObject(obj);
+    }
+    {
+        DataObject obj;
+        obj["exec"] = true;
+        obj["path"] = "oewrap/setup.sh";
+        obj["content"] = oewrap_setup;
         map_configs.addArrayObject(obj);
     }
     {

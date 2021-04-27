@@ -20,6 +20,11 @@ ClientConfig::ClientConfig(fs::path const& _clientConfigPath) : m_id(ClientConfi
         fs::path configFile = _clientConfigPath / "config";
         ETH_FAIL_REQUIRE_MESSAGE(fs::exists(configFile), string("Client config not found: ") + configFile.c_str());
 
+        // Script to setup the instance
+        fs::path setupScript = _clientConfigPath / "setup.sh";
+        if (fs::exists(setupScript))
+            m_setupScriptPath = setupScript;
+
         // Script to start the instance
         fs::path startScript = _clientConfigPath / "start.sh";
         if (fs::exists(startScript))
@@ -207,6 +212,20 @@ DataObject const& ClientConfig::getGenesisTemplate(FORK const& _fork) const
     ETH_FAIL_REQUIRE_MESSAGE(m_genesisTemplate.count(FORK(_fork)),
         "Genesis template for network '" + _fork.asString() + "' not found!");
     return m_genesisTemplate.at(_fork);
+}
+
+void ClientConfig::initializeFirstSetup()
+{
+    if (!m_initialized)
+    {
+        m_initialized = true;
+        if (fs::exists(getSetupScript()))
+        {
+            std::cout << "Initialize setup script.." << std::endl;
+            string const setup = getSetupScript().c_str();
+            test::executeCmd(setup, ExecCMDWarning::NoWarning);
+        }
+    }
 }
 
 }  // namespace test
