@@ -6,6 +6,7 @@ string const t8ntool_config = R"({
     "name" : "Ethereum GO on StateTool",
     "socketType" : "tranition-tool",
     "socketAddress" : "start.sh",
+    "checkLogsHash" : true,
     "forks" : [
         "Frontier",
         "Homestead",

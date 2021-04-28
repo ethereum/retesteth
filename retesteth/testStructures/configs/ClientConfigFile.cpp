@@ -95,6 +95,10 @@ void ClientConfigFile::initWithData(DataObject const& _data)
     if (_data.count("initializeTime"))
         m_initializeTime = atoi(_data.atKey("initializeTime").asString().c_str());
 
+    m_checkLogsHash = false;
+    if (_data.count("checkLogsHash"))
+        m_checkLogsHash = _data.atKey("checkLogsHash").asBool();
+
     // Read forks as fork order. Order is required for translation (`>=Frontier` -> `Frontier,
     // Homestead`) According to this order:
     for (auto const& el : _data.atKey("forks").getSubObjects())
@@ -131,6 +135,7 @@ void ClientConfigFile::initWithData(DataObject const& _data)
          {"socketType", {{DataType::String}, jsonField::Required}},
          {"socketAddress", {{DataType::String, DataType::Array}, jsonField::Required}},
          {"initializeTime", {{DataType::String}, jsonField::Optional}},
+         {"checkLogsHash", {{DataType::Bool}, jsonField::Optional}},
          {"forks", {{DataType::Array}, jsonField::Required}},
          {"additionalForks", {{DataType::Array}, jsonField::Required}},
          {"exceptions", {{DataType::Object}, jsonField::Required}}
