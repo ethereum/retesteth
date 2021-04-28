@@ -228,4 +228,34 @@ void ClientConfig::initializeFirstSetup()
     }
 }
 
+void ClientConfig::performFieldReplace(DataObject& _data, FieldReplaceDir const& _dir) const
+{
+    if (cfgFile().fieldreplace().size() == 0)
+        return;
+
+    for (auto const& el : cfgFile().fieldreplace())
+    {
+        std::string const& retestethNotice = el.first;
+        std::string const& clientNotice = el.second;
+
+        if (_dir == FieldReplaceDir::RetestethToClient)
+        {
+            if (!_data.getKey().empty() && _data.getKey() == retestethNotice)
+                _data.setKey(clientNotice);
+        }
+        else
+        {
+            if (!_data.getKey().empty() && _data.getKey() == clientNotice)
+                _data.setKey(retestethNotice);
+        }
+    }
+
+    if (_data.type() == DataType::Object || _data.type() == DataType::Array)
+    {
+        for (auto& obj : _data.getSubObjectsUnsafe())
+            performFieldReplace(obj, _dir);
+    }
+}
+
+
 }  // namespace test

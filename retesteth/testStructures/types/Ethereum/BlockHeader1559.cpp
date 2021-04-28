@@ -57,7 +57,7 @@ void BlockHeader1559::fromData(DataObject const& _data)
             recalculateHash();
 
         // Allowed fields for this structure
-        requireJsonFields(_data, "BlockHeader " + _data.getKey(),
+        requireJsonFields(_data, "BlockHeader1559 " + _data.getKey(),
             {
                 {"bloom", {{DataType::String}, jsonField::Optional}},
                 {"logsBloom", {{DataType::String}, jsonField::Optional}},

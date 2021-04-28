@@ -31,6 +31,13 @@ private:
     unsigned m_id;
 };
 
+// Replace fields according to the client configs if needed
+enum class FieldReplaceDir
+{
+    ClientToRetesteth,
+    RetestethToClient
+};
+
 class ClientConfig
 {
 public:
@@ -70,6 +77,9 @@ public:
     fs::path const& getSetupScript() const { return m_setupScriptPath; }
     fs::path const& getStartScript() const { return m_starterScriptPath; }
     fs::path const& getStopperScript() const { return m_stopperScriptPath; }
+
+    // Replace notations in requests if needed
+    void performFieldReplace(DataObject& _data, FieldReplaceDir const& _dir) const;
 
 private:
     ClientConfigID m_id;                                ///< Internal id

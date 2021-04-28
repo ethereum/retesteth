@@ -129,6 +129,18 @@ void ClientConfigFile::initWithData(DataObject const& _data)
         m_exceptions[el.getKey()] = el.asString();
     }
 
+    // When sending requests to the client, some of the parameters might be named differently
+    // To be flexible here is the replacement map that will change retesteth format field names to client format names
+    if (_data.count("fieldReplace"))
+    {
+        for (auto const& el : _data.atKey("fieldReplace").getSubObjects())
+        {
+            if (m_fieldRaplce.count(el.getKey()))
+                ETH_ERROR_MESSAGE(sErrorPath + "`fieldReplace` section contain dublicate element: " + el.getKey());
+            m_fieldRaplce[el.getKey()] = el.asString();
+        }
+    }
+
     // Limit sections in the file
     requireJsonFields(_data, "ClientConfigFile " + _data.getKey(),
         {{"name", {{DataType::String}, jsonField::Required}},
@@ -138,7 +150,8 @@ void ClientConfigFile::initWithData(DataObject const& _data)
          {"checkLogsHash", {{DataType::Bool}, jsonField::Optional}},
          {"forks", {{DataType::Array}, jsonField::Required}},
          {"additionalForks", {{DataType::Array}, jsonField::Required}},
-         {"exceptions", {{DataType::Object}, jsonField::Required}}
+         {"exceptions", {{DataType::Object}, jsonField::Required}},
+         {"fieldReplace", {{DataType::Object}, jsonField::Optional}}
                       });
 }
 
