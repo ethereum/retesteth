@@ -171,7 +171,7 @@ var logMsgNum = 1
 
 // Debug function
 const logMe = str => {
-  if (true)   // true to turn on logging, false to turn it off
+  if (false)   // true to turn on logging, false to turn it off
     fs.appendFileSync(logFile, `###### LOG MESSAGE ${logMsgNum++} ######\n${str}\n`)
 }
 
