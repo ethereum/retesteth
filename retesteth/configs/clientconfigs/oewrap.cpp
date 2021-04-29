@@ -171,7 +171,7 @@ var logMsgNum = 1
 
 // Debug function
 const logMe = str => {
-  if (false)   // true to turn on logging, false to turn it off
+  if (true)   // true to turn on logging, false to turn it off
     fs.appendFileSync(logFile, `###### LOG MESSAGE ${logMsgNum++} ######\n${str}\n`)
 }
 
@@ -275,17 +275,14 @@ const mem2str = mem => {
   return retVal
 }  // mem2str
 
-// Process the trace. Necessary to:
-// Identify the log entries
-// Keep track of memory
-// Add fields required to be compliant with the EIP
+// Currently unused, might add tracing in the future
 const processTrace = traceParam => {
     var trace = traceParam
     var mem = new Array()
     var logs = []
 
     logMe(`evm trace length:\n${trace.length}`)
-    logMe(`evm trace:\n${trace}\n\n\n`)
+    logMe(`evm trace:\n${JSON.stringify(trace, "", 2)}\n\n\n`)
 
     for(var step=0; step<trace.length; step++) {
         const current = trace[step]
@@ -297,11 +294,9 @@ const processTrace = traceParam => {
         else
              current.gasCost = `0x${(current.gas-trace[step+1].gas).toString(16)}`
 
-        current.memory = mem2str(mem)
-
-        // memSize can also be increased by reading memory, but tracking
-        // that would be too cumbersome
-        current.memSize = mem.length
+        // Don't worry about memory, just return values
+        current.memory = ""
+        current.memSize = 0
         current.returnStack = []
         current.refund = 0
         current.error = ""
@@ -309,6 +304,7 @@ const processTrace = traceParam => {
         const stack = current.stack
         var topics = [null, null, null, null]
 
+        /*
         // Special opcodes, either MSTORE[8] or LOG[0-4]
         switch (current.opName) {
             case "MSTORE":
@@ -344,8 +340,8 @@ const processTrace = traceParam => {
                const length = stackDepth(stack,2)
                const newEntry = [0x095e7baea6a6c7c4c2dfeb977efac326af552d87, [], ""]
                break;
-
         }  // switch current.opName
+         */
     }   // for step
 
     // When creating a new contract there may not be a trace
@@ -365,7 +361,7 @@ const processTrace = traceParam => {
 
 
 // Process the test results
-const processResult = (root, outAlloc, logsHash) => {
+const processResult = (root, outAlloc) => {
 
   const out = {
     stateRoot:   root,
@@ -373,11 +369,8 @@ const processResult = (root, outAlloc, logsHash) => {
     // These fields are required, but their values are ignored
     receiptRoot: "0xDEADBEEFdeadbeefDEADBEEFdeadbeefDEADBEEFdeadbeefDEADBEEFdeadbeef",
     txRoot: "0xDEADBEEFdeadbeefDEADBEEFdeadbeefDEADBEEFdeadbeefDEADBEEFdeadbeef",
+    logsHash:    "0xDEADBEEFdeadbeefDEADBEEFdeadbeefDEADBEEFdeadbeefDEADBEEFdeadbeef",    
     logsBloom:   "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-
-    // Hash for not having logs. This tool will fail on tests that produce
-    // event logs
-    logsHash:    logsHash,
 
     receipts: [
       {
@@ -412,7 +405,7 @@ cmd = `openethereum-evm state-test ${testFile} --std-dump-json`
 logMe(`running ${cmd}\n\n`)
 
 
-stderrContent = ""
+stderrLastLine = ""
 
 // Run the test file and interpret the results
 exec(cmd, {maxBuffer:1024*1024*1024}, (err, stdout, stderr) => {
@@ -420,11 +413,13 @@ exec(cmd, {maxBuffer:1024*1024*1024}, (err, stdout, stderr) => {
     console.log(`error: ${err.message}`)
     logMe(`error: ${err}\n`)
   }
-    // The last line in stderr is the summary. The earlier lines
-    // are the trace
+
+  // The last line in stderr is the summary. The earlier lines
+  // are the trace, which we ignore.
   if (stderr) {
-    logMe(`stderr: ${stderr}\n`)
-    stderrContent += stderr
+    logMe(`stderr Length: ${stderr.length}`)
+    stderrLastLine = stderr.match(/{"acc.*/)
+    logMe(`stderr, last line: ${stderrLastLine}\n`)
   }
   if (stdout) {
     logMe(`stdout: ${stdout}\n`)
@@ -433,18 +428,19 @@ exec(cmd, {maxBuffer:1024*1024*1024}, (err, stdout, stderr) => {
 
   logMe(`openethereum-evm exited with ${code}\n`)
 
-  const lines = stderrContent.split("\n")
-  const res = JSON.parse(lines[lines.length-2])
+  // const lines = stderrContent.split("\n")
+  // const res = JSON.parse(lines[lines.length-2])
+  res = JSON.parse(stderrLastLine)
 
-  const evmTrace = processTrace(lines.slice(0,-2).map(x => JSON.parse(x)))
+  // const evmTrace = processTrace(lines.slice(0,-2).map(x => JSON.parse(x)))
   logMe(`openethereum-evm gave us the state root: ${res.root}\n`)
-  processResult(res.root, res.accounts, evmTrace.logsHash)
+  processResult(res.root, res.accounts)
 
-  logMe(JSON.stringify(evmTrace,null,2))
+  // logMe(JSON.stringify(evmTrace,null,2))
 
-  if (options.trace)
-    fs.writeFileSync(`${options.output.basedir}/trace-0-${txHash}.jsonl`,
-         evmTrace.trace.map(x => JSON.stringify(x)).reduce((a,b)=> a+"\n"+b))
+  // if (options.trace)
+  //  fs.writeFileSync(`${options.output.basedir}/trace-0-${txHash}.jsonl`,
+  //       evmTrace.trace.map(x => JSON.stringify(x)).reduce((a,b)=> a+"\n"+b))
 
 
   // At this point we're done
