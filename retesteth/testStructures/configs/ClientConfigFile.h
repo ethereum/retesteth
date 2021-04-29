@@ -32,8 +32,10 @@ struct ClientConfigFile : GCP_SPointerBase
     std::vector<FORK> const& forks() const { return m_forks; }
     std::vector<FORK> const& additionalForks() const { return m_additionalForks; }
     std::set<FORK> allowedForks() const;
+    bool checkLogsHash() const { return m_checkLogsHash; }
 
     std::map<string, string> const& exceptions() const { return m_exceptions; }
+    std::map<string, string> const& fieldreplace() const { return m_fieldRaplce; }
     fs::path const& path() const { return m_configFilePath; }
     fs::path const& shell() const { return m_pathToExecFile; }
 
@@ -46,10 +48,13 @@ private:
     string m_name;                           ///< Client name
     ClientConfgSocketType m_socketType;      ///< Connection type
     std::vector<IPADDRESS> m_socketAddress;  ///< List of IP to connect to (IP::PORT)
+    bool m_checkLogsHash;                    ///< Enable logsHash verification
+
     size_t m_initializeTime;                 ///< Time to start the instance
     std::vector<FORK> m_forks;               ///< Allowed forks as network name
     std::vector<FORK> m_additionalForks;     ///< Allowed forks as network name
     std::map<string, string> m_exceptions;   ///< Exception Translation
+    std::map<string, string> m_fieldRaplce;  ///< Replace field names in requests map
 
     // Additional values
     fs::path m_configFilePath;  ///< Path to the config file

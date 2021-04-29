@@ -13,19 +13,83 @@ namespace test
 namespace teststruct
 {
 TransactionBaseFee::TransactionBaseFee(DataObject const& _data, string const& _dataRawPreview, string const& _dataLabel)
-  : TransactionAccessList(_data, _dataRawPreview, _dataLabel)
+  : TransactionAccessList()
 {
-    m_secretKey = spVALUE(new VALUE(0));  // t8ntool info
-
-    m_maxFeePerGas = spVALUE(new VALUE(_data.atKey("maxFeePerGas")));
-    m_maxInclusionFeePerGas = spVALUE(new VALUE(_data.atKey("maxInclusionFeePerGas")));
-
-    if (_data.count("secretKey"))
-        buildVRS(VALUE(_data.atKey("secretKey")));  // Build without v + 27
-    else
-        rebuildRLP();
+    fromDataObject(_data);
+    m_dataRawPreview = _dataRawPreview;
+    m_dataLabel = _dataLabel;
 }
 
+void TransactionBaseFee::fromDataObject(DataObject const& _data)
+{
+    m_secretKey = spVALUE(new VALUE(0));
+    try
+    {
+        m_accessList = spAccessList(new AccessList(_data.atKey("accessList")));
+        m_maxFeePerGas = spVALUE(new VALUE(_data.atKey("maxFeePerGas")));
+        m_maxInclusionFeePerGas = spVALUE(new VALUE(_data.atKey("maxInclusionFeePerGas")));
+
+        m_data = spBYTES(new BYTES(_data.atKey("data")));
+        m_gasLimit = spVALUE(new VALUE(_data.atKey("gasLimit")));
+        m_nonce = spVALUE(new VALUE(_data.atKey("nonce")));
+        m_value = spVALUE(new VALUE(_data.atKey("value")));
+
+        if (_data.atKey("to").type() == DataType::Null || _data.atKey("to").asString().empty())
+            m_creation = true;
+        else
+        {
+            m_creation = false;
+            m_to = spFH20(new FH20(_data.atKey("to")));
+        }
+
+        if (_data.count("secretKey"))
+            buildVRS(_data.atKey("secretKey"));
+        else
+        {
+            m_v = spVALUE(new VALUE(_data.atKey("v")));
+            if (m_v.getCContent() > dev::u256("0xff"))
+                throw test::UpwardsException("Incorrect transaction `v` value: " + m_v.getCContent().asString());
+            m_r = spVALUE(new VALUE(_data.atKey("r")));
+            m_s = spVALUE(new VALUE(_data.atKey("s")));
+            rebuildRLP();
+        }
+        requireJsonFields(_data, "TransactionBaseFee " + _data.getKey(),
+            {
+                {"data", {{DataType::String}, jsonField::Required}},
+                {"gasLimit", {{DataType::String}, jsonField::Required}},
+                {"nonce", {{DataType::String}, jsonField::Required}},
+                {"value", {{DataType::String}, jsonField::Required}},
+                {"to", {{DataType::String, DataType::Null}, jsonField::Required}},
+                {"secretKey", {{DataType::String}, jsonField::Optional}},
+                {"v", {{DataType::String}, jsonField::Optional}},
+                {"r", {{DataType::String}, jsonField::Optional}},
+                {"s", {{DataType::String}, jsonField::Optional}},
+
+                // Transaction type 1
+                {"type", {{DataType::String}, jsonField::Optional}},
+                {"chainId", {{DataType::String, DataType::Null}, jsonField::Optional}},
+                {"accessList", {{DataType::Array}, jsonField::Required}},
+
+                // Transaction type 2
+                {"maxFeePerGas", {{DataType::String}, jsonField::Required}},
+                {"maxInclusionFeePerGas", {{DataType::String, DataType::Null}, jsonField::Required}},
+
+                {"publicKey", {{DataType::String}, jsonField::Optional}},  // Besu EthGetBlockBy transaction
+                {"raw", {{DataType::String}, jsonField::Optional}},        // Besu EthGetBlockBy transaction
+
+                {"blockHash", {{DataType::String}, jsonField::Optional}},         // EthGetBlockBy transaction
+                {"blockNumber", {{DataType::String}, jsonField::Optional}},       // EthGetBlockBy transaction
+                {"from", {{DataType::String}, jsonField::Optional}},              // EthGetBlockBy transaction
+                {"hash", {{DataType::String}, jsonField::Optional}},              // EthGetBlockBy transaction
+                {"transactionIndex", {{DataType::String}, jsonField::Optional}},  // EthGetBlockBy transaction
+                {"invalid", {{DataType::String}, jsonField::Optional}},           // BlockchainTest filling
+            });
+    }
+    catch (std::exception const& _ex)
+    {
+        throw UpwardsException(string("TransactionBaseFee convertion error: ") + _ex.what() + _data.asJson());
+    }
+}
 
 TransactionBaseFee::TransactionBaseFee(dev::RLP const& _rlp)
 {

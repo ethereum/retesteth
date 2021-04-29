@@ -36,10 +36,14 @@ const DataObject StateTestTransactionBase::asDataObject() const
         out["maxFeePerGas"] = m_maxFeePerGas.getCContent().asString();
         out["maxInclusionFeePerGas"] = m_maxInclusionFeePerGas.getCContent().asString();
     }
+    else
+    {
+        // Legacy Transaction
+        out["gasPrice"] = m_gasPrice.getCContent().asString();
+    }
 
     for (VALUE const& el : m_gasLimit)
         out["gasLimit"].addArrayObject(el.asString());
-    out["gasPrice"] = m_gasPrice.getCContent().asString();
     out["nonce"] = m_nonce.getCContent().asString();
     out["secretKey"] = m_secretKey.getCContent().asString();
     if (m_creation)
@@ -52,7 +56,7 @@ const DataObject StateTestTransactionBase::asDataObject() const
     return out;
 }
 
-
+/// Construct individual transactions from gstate test transaction
 std::vector<TransactionInGeneralSection> StateTestTransactionBase::buildTransactions() const
 {
     // Construct vector of all transactions that are described int data
@@ -70,8 +74,6 @@ std::vector<TransactionInGeneralSection> StateTestTransactionBase::buildTransact
                 trData["data"] = databox.m_data.asString();
                 trData["gasLimit"] = m_gasLimit.at(gIND).asString();
                 trData["value"] = m_value.at(vIND).asString();
-
-                trData["gasPrice"] = m_gasPrice.getCContent().asString();
                 trData["nonce"] = m_nonce.getCContent().asString();
                 if (m_creation)
                     trData["to"] = "";
@@ -79,6 +81,7 @@ std::vector<TransactionInGeneralSection> StateTestTransactionBase::buildTransact
                     trData["to"] = m_to.getCContent().asString();
                 trData["secretKey"] = m_secretKey.getCContent().asString();
 
+                // EIP 1559
                 if (!m_maxInclusionFeePerGas.isEmpty())
                 {
                     // Type 0x02 transaction fields
@@ -87,6 +90,10 @@ std::vector<TransactionInGeneralSection> StateTestTransactionBase::buildTransact
 
                     if (databox.m_accessList.isEmpty())
                         ETH_FAIL_MESSAGE("BaseFeeTransaction must have access list!");
+                }
+                else
+                {
+                    trData["gasPrice"] = m_gasPrice.getCContent().asString();
                 }
 
                 // Export Access List

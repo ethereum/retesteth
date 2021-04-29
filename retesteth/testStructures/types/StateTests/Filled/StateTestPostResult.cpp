@@ -11,14 +11,15 @@ StateTestPostResult::StateTestPostResult(DataObject const& _data)
     m_gasInd = _data.atKey("indexes").atKey("gas").asInt();
     m_valInd = _data.atKey("indexes").atKey("value").asInt();
     m_hash = spFH32(new FH32(_data.atKey("hash").asString()));
-    m_log = spFH32(new FH32(_data.atKey("logs").asString()));
+    if (_data.count("logs"))
+        m_log = spFH32(new FH32(_data.atKey("logs").asString()));
     if (_data.count("txbytes"))
         m_txbytes = spBYTES(new BYTES(_data.atKey("txbytes").asString()));
     requireJsonFields(_data, "StateTestPostResult " + _data.getKey(),
         {{"indexes", {{DataType::Object}, jsonField::Required}},
          {"hash", {{DataType::String}, jsonField::Required}},
          {"txbytes", {{DataType::String}, jsonField::Optional}},
-         {"logs", {{DataType::String}, jsonField::Required}}});
+         {"logs", {{DataType::String}, jsonField::Optional}}});
 }
 
 const DataObject StateTestPostResult::asDataObject() const

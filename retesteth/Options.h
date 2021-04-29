@@ -83,6 +83,7 @@ public:
 	/// The first time used, options are parsed with argc, argv
 	static Options const& get(int argc = 0, const char** argv = 0);
     static DynamicOptions& getDynamicOptions() { return m_dynamicOptions; }
+    static ClientConfig const& getCurrentConfig() { return m_dynamicOptions.getCurrentConfig(); }
     string getGStateTransactionFilter() const;
 
 private:

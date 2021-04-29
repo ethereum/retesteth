@@ -53,7 +53,7 @@ struct Transaction : GCP_SPointerBase
     void setSecret(VALUE const& _secret) { m_secretKey = spVALUE(new VALUE(_secret)); }
     VALUE const& getSecret() const { return m_secretKey.getCContent(); }
 
-private:
+protected:
     virtual void fromRLP(dev::RLP const&);
 
     spBYTES m_data;

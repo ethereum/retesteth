@@ -8,6 +8,7 @@
 #include <retesteth/session/RPCImpl.h>
 #include <retesteth/session/Session.h>
 #include <retesteth/testStructures/Common.h>
+#include <retesteth/Options.h>
 
 using namespace test;
 
@@ -50,14 +51,18 @@ VALUE RPCImpl::eth_blockNumber()
 
 EthGetBlockBy RPCImpl::eth_getBlockByHash(FH32 const& _hash, Request _fullObjects)
 {
-    return EthGetBlockBy(
-        rpcCall("eth_getBlockByHash", {quote(_hash.asString()), _fullObjects == Request::FULLOBJECTS ? "true" : "false"}));
+    DataObject response = rpcCall("eth_getBlockByHash", {quote(_hash.asString()), _fullObjects == Request::FULLOBJECTS ? "true" : "false"});
+    ClientConfig const& cfg = Options::getCurrentConfig();
+    cfg.performFieldReplace(response, FieldReplaceDir::ClientToRetesteth);
+    return EthGetBlockBy(response);
 }
 
 EthGetBlockBy RPCImpl::eth_getBlockByNumber(VALUE const& _blockNumber, Request _fullObjects)
 {
-    return EthGetBlockBy(rpcCall(
-        "eth_getBlockByNumber", {quote(_blockNumber.asString()), _fullObjects == Request::FULLOBJECTS ? "true" : "false"}));
+    DataObject response = rpcCall("eth_getBlockByNumber", {quote(_blockNumber.asString()), _fullObjects == Request::FULLOBJECTS ? "true" : "false"});
+    ClientConfig const& cfg = Options::getCurrentConfig();
+    cfg.performFieldReplace(response, FieldReplaceDir::ClientToRetesteth);
+    return EthGetBlockBy(response);
 }
 
 BYTES RPCImpl::eth_getCode(FH20 const& _address, VALUE const& _blockNumber)
@@ -118,8 +123,13 @@ DebugVMTrace RPCImpl::debug_traceTransaction(FH32 const& _trHash)
 void RPCImpl::test_setChainParams(SetChainParamsArgs const& _config)
 {
     RPCSession::currentCfgCountTestRun();
-    ETH_FAIL_REQUIRE_MESSAGE(
-        rpcCall("test_setChainParams", {_config.asDataObject().asJson()}) == true, "remote test_setChainParams = false");
+
+    ClientConfig const& cfg = Options::getCurrentConfig();
+    DataObject data = _config.asDataObject();
+    cfg.performFieldReplace(data, FieldReplaceDir::RetestethToClient);
+
+    auto res =  rpcCall("test_setChainParams", {data.asJson()});
+    ETH_FAIL_REQUIRE_MESSAGE(res == true, "remote test_setChainParams = false");
 }
 
 void RPCImpl::test_rewindToBlock(VALUE const& _blockNr)

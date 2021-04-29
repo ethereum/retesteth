@@ -298,9 +298,12 @@ DataObject FillTest(StateTestInFiller const& _test)
                     transactionResults["txbytes"] = tr.transaction().getRawBytes().asString();
 
                     // Fill up the loghash (optional)
-                    FH32 logHash(session.test_getLogHash(trHash));
-                    if (!logHash.isZero())
-                        transactionResults["logs"] = logHash.asString();
+                    if (Options::getDynamicOptions().getCurrentConfig().cfgFile().checkLogsHash())
+                    {
+                        FH32 logHash(session.test_getLogHash(trHash));
+                        if (!logHash.isZero())
+                            transactionResults["logs"] = logHash.asString();
+                    }
 
                     forkResults.addArrayObject(transactionResults);
                     session.test_rewindToBlock(VALUE(0));
@@ -430,11 +433,14 @@ void RunTest(StateTestInFilled const& _test)
                     }
 
                     // Validate log hash
-                    FH32 const& expectedLogHash = result.logs();
-                    FH32 remoteLogHash(session.test_getLogHash(trHash));
-                    if (remoteLogHash != expectedLogHash)
-                        ETH_ERROR_MESSAGE("Logs hash mismatch: '" + remoteLogHash.asString() + "', expected: '" +
-                                          expectedLogHash.asString() + "'");
+                    if (Options::getDynamicOptions().getCurrentConfig().cfgFile().checkLogsHash())
+                    {
+                        FH32 const& expectedLogHash = result.logs();
+                        FH32 remoteLogHash(session.test_getLogHash(trHash));
+                        if (remoteLogHash != expectedLogHash)
+                            ETH_ERROR_MESSAGE("Logs hash mismatch: '" + remoteLogHash.asString() + "', expected: '" +
+                                              expectedLogHash.asString() + "'");
+                    }
 
                     session.test_rewindToBlock(0);
                     if (Options::get().logVerbosity >= 5)
