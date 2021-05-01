@@ -16,8 +16,8 @@ struct TransactionBaseFee : TransactionAccessList
     DataObject const asDataObject(ExportOrder _order = ExportOrder::Default) const override;
     TransactionType type() const override { return TransactionType::BASEFEE; }
 
-    VALUE const& maxFeePerGas() const { return m_maxFeePerGas.getCContent(); }
-    VALUE const& maxInclusionFeePerGas() const { return m_maxInclusionFeePerGas.getCContent(); }
+    VALUE const& feeCap() const { return m_feeCap.getCContent(); }
+    VALUE const& tip() const { return m_tip.getCContent(); }
 
 private:
     void fromRLP(dev::RLP const&) override;
@@ -27,8 +27,8 @@ private:
     void streamHeader(dev::RLPStream& _stream) const override;
 
     void rebuildRLP() override;
-    spVALUE m_maxFeePerGas;
-    spVALUE m_maxInclusionFeePerGas;
+    spVALUE m_feeCap;
+    spVALUE m_tip;
 };
 
 typedef GCP_SPointer<TransactionBaseFee> spTransactionBaseFee;

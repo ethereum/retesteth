@@ -27,8 +27,8 @@ BlockchainTestFillerEnv::BlockchainTestFillerEnv(DataObject const& _data, SealEn
         }
         else
         {
-            m_baseFeePerGas = spVALUE(new VALUE(tmpData.atKey("baseFeePerGas")));
-            m_gasTarget = spVALUE(new VALUE(tmpData.atKey("gasTarget")));
+            m_currentBaseFee = spVALUE(new VALUE(tmpData.atKey("baseFee")));
+            m_currentGasTarget = spVALUE(new VALUE(tmpData.atKey("gasTarget")));
         }
 
         m_currentNumber = spVALUE(new VALUE(tmpData.atKey("number")));
@@ -58,7 +58,7 @@ BlockchainTestFillerEnv::BlockchainTestFillerEnv(DataObject const& _data, SealEn
              {"extraData", {{DataType::String}, jsonField::Required}},
              {"gasLimit", {{DataType::String}, jsonField::Optional}},
              {"gasTarget", {{DataType::String}, jsonField::Optional}},
-             {"baseFeePerGas", {{DataType::String}, jsonField::Optional}},
+             {"baseFee", {{DataType::String}, jsonField::Optional}},
              {"gasUsed", {{DataType::String}, jsonField::Required}},
              {"hash", {{DataType::String}, jsonField::Optional}},
              {"mixHash", {{DataType::String}, jsonField::Optional}},

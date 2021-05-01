@@ -23,9 +23,9 @@ struct BlockHeader1559 : BlockHeader
 
     // Unique fields
     VALUE const& gasTarget() const { return m_gasTarget.getCContent(); }
-    VALUE const& baseFeePerGas() const { return m_baseFeePerGas.getCContent(); }
+    VALUE const& baseFee() const { return m_baseFee.getCContent(); }
     void setGasTarget(VALUE const& _gasTarget) { m_gasTarget = spVALUE(new VALUE(_gasTarget)); }
-    void setBaseFeePerGas(VALUE const& _baseFeePerGas) { m_baseFeePerGas = spVALUE(new VALUE(_baseFeePerGas)); }
+    void setBaseFee(VALUE const& _baseFee) { m_baseFee = spVALUE(new VALUE(_baseFee)); }
 
     // Static
     static BlockHeader1559 const& castFrom(spBlockHeader const& _from);
@@ -36,7 +36,7 @@ protected:
 
     // Ethereum eip1559 blockheader fields
     spVALUE m_gasTarget;
-    spVALUE m_baseFeePerGas;
+    spVALUE m_baseFee;
 };
 
 typedef GCP_SPointer<BlockHeader1559> spBlockHeader1559;

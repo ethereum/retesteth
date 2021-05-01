@@ -27,8 +27,8 @@ struct StateTestEnvBase : GCP_SPointerBase
     FH32 const& previousHash() const { return m_previousHash.getCContent(); }
     DataObject const asDataObject() const;
 
-    spVALUE const& gasTarget() const { return m_gasTarget; }
-    spVALUE const& baseFeePerGas() const { return m_baseFeePerGas; }
+    spVALUE const& currentGasTarget() const { return m_currentGasTarget; }
+    spVALUE const& currentBaseFee() const { return m_currentBaseFee; }
 
     virtual ~StateTestEnvBase() {}
 
@@ -44,8 +44,8 @@ protected:
     spFH8 m_currentNonce;
     spFH32 m_currentMixHash;
 
-    spVALUE m_gasTarget;
-    spVALUE m_baseFeePerGas;
+    spVALUE m_currentGasTarget;
+    spVALUE m_currentBaseFee;
 };
 
 

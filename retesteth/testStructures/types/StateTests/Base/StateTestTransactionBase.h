@@ -43,8 +43,8 @@ protected:
     bool m_creation;
 
     // type 0x02 transaction
-    spVALUE m_maxFeePerGas;
-    spVALUE m_maxInclusionFeePerGas;
+    spVALUE m_feeCap;
+    spVALUE m_tip;
 };
 
 

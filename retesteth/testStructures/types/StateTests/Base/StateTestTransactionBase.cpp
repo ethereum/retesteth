@@ -27,14 +27,14 @@ const DataObject StateTestTransactionBase::asDataObject() const
     if (atLeastOneNonNullAccessList)
         out["accessLists"] = txAccessListData;
 
-    if (!m_maxFeePerGas.isEmpty() || !m_maxInclusionFeePerGas.isEmpty())
+    if (!m_feeCap.isEmpty() || !m_tip.isEmpty())
     {
-        if (m_maxFeePerGas.isEmpty() || m_maxInclusionFeePerGas.isEmpty())
-            ETH_FAIL_MESSAGE("Must be defined both m_maxFeePerGas and m_maxInclusionFeePerGas!");
+        if (m_feeCap.isEmpty() || m_tip.isEmpty())
+            ETH_FAIL_MESSAGE("Must be defined both m_feeCap and m_tip!");
         if (!atLeastOneNonNullAccessList)
             ETH_FAIL_MESSAGE("Basefee transaction must have accesslist!");
-        out["maxFeePerGas"] = m_maxFeePerGas.getCContent().asString();
-        out["maxInclusionFeePerGas"] = m_maxInclusionFeePerGas.getCContent().asString();
+        out["feeCap"] = m_feeCap.getCContent().asString();
+        out["tip"] = m_tip.getCContent().asString();
     }
     else
     {
@@ -82,11 +82,11 @@ std::vector<TransactionInGeneralSection> StateTestTransactionBase::buildTransact
                 trData["secretKey"] = m_secretKey.getCContent().asString();
 
                 // EIP 1559
-                if (!m_maxInclusionFeePerGas.isEmpty())
+                if (!m_tip.isEmpty())
                 {
                     // Type 0x02 transaction fields
-                    trData["maxInclusionFeePerGas"] = m_maxInclusionFeePerGas.getCContent().asString();
-                    trData["maxFeePerGas"] = m_maxFeePerGas.getCContent().asString();
+                    trData["tip"] = m_tip.getCContent().asString();
+                    trData["feeCap"] = m_feeCap.getCContent().asString();
 
                     if (databox.m_accessList.isEmpty())
                         ETH_FAIL_MESSAGE("BaseFeeTransaction must have access list!");

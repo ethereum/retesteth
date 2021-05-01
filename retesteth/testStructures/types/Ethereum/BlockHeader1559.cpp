@@ -16,12 +16,13 @@ void BlockHeader1559::fromData(DataObject const& _data)
 {
     try
     {
-        string const akey = _data.count("author") ? "author" : _data.count("miner") ? "miner" : "coinbase";
+        string const akey = _data.count("author") ? "author" :
+                            _data.count("miner") ? "miner" : "coinbase";
         m_author = spFH20(new FH20(_data.atKey(akey)));
         m_difficulty = spVALUE(new VALUE(_data.atKey("difficulty")));
         m_extraData = spBYTES(new BYTES(_data.atKey("extraData")));
         m_gasTarget = spVALUE(new VALUE(_data.atKey("gasTarget")));
-        m_baseFeePerGas = spVALUE(new VALUE(_data.atKey("baseFeePerGas")));
+        m_baseFee = spVALUE(new VALUE(_data.atKey("baseFee")));
         m_gasUsed = spVALUE(new VALUE(_data.atKey("gasUsed")));
         if (_data.count("hash"))
             m_hash = spFH32(new FH32(_data.atKey("hash")));
@@ -66,7 +67,7 @@ void BlockHeader1559::fromData(DataObject const& _data)
                 {"difficulty", {{DataType::String}, jsonField::Required}},
                 {"extraData", {{DataType::String}, jsonField::Required}},
                 {"gasTarget", {{DataType::String}, jsonField::Required}},
-                {"baseFeePerGas", {{DataType::String}, jsonField::Required}},
+                {"baseFee", {{DataType::String}, jsonField::Required}},
                 {"gasUsed", {{DataType::String}, jsonField::Required}},
                 {"hash", {{DataType::String}, jsonField::Optional}},
                 {"mixHash", {{DataType::String}, jsonField::Optional}},
@@ -110,7 +111,7 @@ BlockHeader1559::BlockHeader1559(dev::RLP const& _rlp)
     // 4 - transactionTrie      // 12 - extraData
     // 5 - receiptTrie          // 13 - mixHash
     // 6 - bloom                // 14 - nonce
-    // 7 - difficulty           // 15 - baseFeePerGas
+    // 7 - difficulty           // 15 - baseFee
     size_t i = 0;
     init["parentHash"] = rlpToString(_rlp[i++]);
     init["uncleHash"] = rlpToString(_rlp[i++]);
@@ -127,7 +128,7 @@ BlockHeader1559::BlockHeader1559(dev::RLP const& _rlp)
     init["extraData"] = rlpToString(_rlp[i++], 0);
     init["mixHash"] = rlpToString(_rlp[i++]);
     init["nonce"] = rlpToString(_rlp[i++]);
-    init["baseFeePerGas"] = rlpToString(_rlp[i++]);
+    init["baseFee"] = rlpToString(_rlp[i++]);
     fromData(init);
 }
 
@@ -150,7 +151,7 @@ const DataObject BlockHeader1559::asDataObject() const
     out["timestamp"] = m_timestamp.getCContent().asString();
     out["transactionsTrie"] = m_transactionsRoot.getCContent().asString();
     out["uncleHash"] = m_sha3Uncles.getCContent().asString();
-    out["baseFeePerGas"] = m_baseFeePerGas.getCContent().asString();
+    out["baseFee"] = m_baseFee.getCContent().asString();
     return out;
 }
 
@@ -174,7 +175,7 @@ const RLPStream BlockHeader1559::asRLPStream() const
     header << test::sfromHex(m_extraData.getCContent().asString());
     header << h256(m_mixHash.getCContent().asString());
     header << h64(m_nonce.getCContent().asString());
-    header << m_baseFeePerGas.getCContent().asU256();
+    header << m_baseFee.getCContent().asU256();
     return header;
 }
 

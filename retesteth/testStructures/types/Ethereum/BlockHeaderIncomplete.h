@@ -40,7 +40,7 @@ private:
 
     // 1559 block
     spVALUE m_gasTarget;
-    spVALUE m_baseFeePerGas;
+    spVALUE m_baseFee;
 };
 
 typedef GCP_SPointer<BlockHeaderIncomplete> spBlockHeaderIncomplete;

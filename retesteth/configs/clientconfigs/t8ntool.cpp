@@ -146,8 +146,7 @@ string const t8ntool_config = R"({
       "RLP_ExpectedInputList_TXDATA_DECODEINTO_BLOCK_EXTBLOCK_TXS0" : "Error importing raw rlp block: Transaction RLP is expected to be list"
     },
     "fieldReplace" : {
-        "gasTarget" : "currentGasTarget",
-        "maxInclusionFeePerGas" : "maxPriorityFeePerGas"
+        "currentBaseFee" : "baseFeePerGas"
     }
 })";
 

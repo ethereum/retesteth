@@ -89,7 +89,7 @@ spTransaction readTransaction(dev::RLP const& _rlp)
 
 spTransaction readTransaction(DataObject const& _filledData)
 {
-    if (_filledData.count("maxInclusionFeePerGas"))
+    if (_filledData.count("tip"))
         return spTransaction(new TransactionBaseFee(_filledData));
     if (_filledData.count("accessList"))
         return spTransaction(new TransactionAccessList(_filledData));
