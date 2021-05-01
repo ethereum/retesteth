@@ -15,7 +15,7 @@ spTransaction _readTransaction(TransactionType _t, dev::RLP const& _rlp)
     switch (_t)
     {
     case TransactionType::LEGACY:
-        spTr = spTransaction(new Transaction(_rlp));
+        spTr = spTransaction(new TransactionLegacy(_rlp));
         break;
     case TransactionType::ACCESSLIST:
         spTr = spTransaction(new TransactionAccessList(_rlp));
@@ -93,7 +93,7 @@ spTransaction readTransaction(DataObject const& _filledData)
         return spTransaction(new TransactionBaseFee(_filledData));
     if (_filledData.count("accessList"))
         return spTransaction(new TransactionAccessList(_filledData));
-    return spTransaction(new Transaction(_filledData));
+    return spTransaction(new TransactionLegacy(_filledData));
 }
 
 }  // namespace teststruct

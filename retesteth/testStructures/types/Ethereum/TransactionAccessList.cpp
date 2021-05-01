@@ -1,5 +1,4 @@
 #include "TransactionAccessList.h"
-
 #include <libdevcore/Address.h>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/SHA3.h>
@@ -12,12 +11,10 @@ namespace test
 {
 namespace teststruct
 {
-TransactionAccessList::TransactionAccessList(DataObject const& _data, string const& _dataRawPreview, string const& _dataLabel)
-  : Transaction()
+TransactionAccessList::TransactionAccessList(DataObject const& _data)
+  : TransactionLegacy()
 {
     fromDataObject(_data);
-    m_dataRawPreview = _dataRawPreview;
-    m_dataLabel = _dataLabel;
 }
 
 void TransactionAccessList::fromDataObject(DataObject const& _data)
@@ -149,9 +146,9 @@ void TransactionAccessList::buildVRS(VALUE const& _secret)
     DataObject v = DataObject(dev::toCompactHexPrefixed(dev::u256(sigStruct.v), 1));
     DataObject r = DataObject(dev::toCompactHexPrefixed(dev::u256(sigStruct.r)));
     DataObject s = DataObject(dev::toCompactHexPrefixed(dev::u256(sigStruct.s)));
-    assignV(spVALUE(new VALUE(v)));
-    assignR(spVALUE(new VALUE(r)));
-    assignS(spVALUE(new VALUE(s)));
+    m_v = spVALUE(new VALUE(v));
+    m_r = spVALUE(new VALUE(r));
+    m_s = spVALUE(new VALUE(s));
     rebuildRLP();
 }
 
@@ -179,7 +176,7 @@ void TransactionAccessList::streamHeader(dev::RLPStream& _s) const
 
 DataObject const TransactionAccessList::asDataObject(ExportOrder _order) const
 {
-    DataObject out = Transaction::asDataObject(_order);
+    DataObject out = TransactionLegacy::asDataObject(_order);
 
     out["chainId"] = "0x01";
     out["accessList"] = m_accessList.getCContent().asDataObject();
@@ -215,7 +212,6 @@ void TransactionAccessList::rebuildRLP()
     m_rawRLPdata = spBYTES(new BYTES(dev::toHexPrefixed(outa)));
     m_hash = spFH32(new FH32("0x" + dev::toString(dev::sha3(outa))));
 }
-
 
 }  // namespace teststruct
 }  // namespace test

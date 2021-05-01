@@ -12,12 +12,10 @@ namespace test
 {
 namespace teststruct
 {
-TransactionBaseFee::TransactionBaseFee(DataObject const& _data, string const& _dataRawPreview, string const& _dataLabel)
-  : TransactionAccessList()
+TransactionBaseFee::TransactionBaseFee(DataObject const& _data)
+  : Transaction()
 {
     fromDataObject(_data);
-    m_dataRawPreview = _dataRawPreview;
-    m_dataLabel = _dataLabel;
 }
 
 void TransactionBaseFee::fromDataObject(DataObject const& _data)
@@ -156,9 +154,9 @@ void TransactionBaseFee::buildVRS(VALUE const& _secret)
     DataObject v = DataObject(dev::toCompactHexPrefixed(dev::u256(sigStruct.v), 1));
     DataObject r = DataObject(dev::toCompactHexPrefixed(dev::u256(sigStruct.r)));
     DataObject s = DataObject(dev::toCompactHexPrefixed(dev::u256(sigStruct.s)));
-    assignV(spVALUE(new VALUE(v)));
-    assignR(spVALUE(new VALUE(r)));
-    assignS(spVALUE(new VALUE(s)));
+    m_v = spVALUE(new VALUE(v));
+    m_r = spVALUE(new VALUE(r));
+    m_s = spVALUE(new VALUE(s));
     rebuildRLP();
 }
 
@@ -169,8 +167,8 @@ void TransactionBaseFee::streamHeader(dev::RLPStream& _s) const
     _s << VALUE(1).asU256();
     _s << nonce().asU256();
 
-    _s << tip().asU256();
-    _s << feeCap().asU256();
+    _s << m_tip.getCContent().asU256();
+    _s << m_feeCap.getCContent().asU256();
 
     _s << gasLimit().asU256();
     if (Transaction::isCreation())

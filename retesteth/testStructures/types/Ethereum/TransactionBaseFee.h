@@ -1,5 +1,5 @@
 #pragma once
-#include "TransactionAccessList.h"
+#include "Transaction.h"
 using namespace dataobject;
 using namespace test::teststruct;
 
@@ -7,17 +7,14 @@ namespace test
 {
 namespace teststruct
 {
-struct TransactionBaseFee : TransactionAccessList
+struct TransactionBaseFee : Transaction
 {
-    TransactionBaseFee(DataObject const&, string const& _dataRawPreview = string(), string const& _dataLabel = string());
+    TransactionBaseFee(DataObject const&);
     TransactionBaseFee(BYTES const&);
     TransactionBaseFee(dev::RLP const&);
 
     DataObject const asDataObject(ExportOrder _order = ExportOrder::Default) const override;
     TransactionType type() const override { return TransactionType::BASEFEE; }
-
-    VALUE const& feeCap() const { return m_feeCap.getCContent(); }
-    VALUE const& tip() const { return m_tip.getCContent(); }
 
 private:
     void fromRLP(dev::RLP const&) override;
@@ -27,6 +24,7 @@ private:
     void streamHeader(dev::RLPStream& _stream) const override;
 
     void rebuildRLP() override;
+    spAccessList m_accessList;
     spVALUE m_feeCap;
     spVALUE m_tip;
 };

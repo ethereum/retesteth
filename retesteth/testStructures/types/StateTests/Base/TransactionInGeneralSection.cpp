@@ -1,6 +1,7 @@
 #include "TransactionInGeneralSection.h"
 #include <retesteth/EthChecks.h>
 #include <retesteth/TestHelper.h>
+#include <retesteth/testStructures/types/Ethereum/TransactionReader.h>
 
 using namespace test::teststruct;
 
@@ -10,12 +11,9 @@ TransactionInGeneralSection::TransactionInGeneralSection(
     m_executed(false),
     m_skipped(false)
 {
-    if (_tr.count("feeCap"))
-        m_tr = spTransaction(new TransactionBaseFee(_tr, _dataRawPreview, _dataLabel));
-    else if (_tr.count("accessList"))
-        m_tr = spTransaction(new TransactionAccessList(_tr, _dataRawPreview, _dataLabel));
-    else
-        m_tr = spTransaction(new Transaction(_tr, _dataRawPreview, _dataLabel));
+    m_tr = readTransaction(_tr);
+    m_tr.getContent().setDataLabel(_dataLabel);
+    m_tr.getContent().setDataRawPreview(_dataRawPreview);
 }
 
 void TransactionInGeneralSection::assignTransactionLabel(string const& _label)

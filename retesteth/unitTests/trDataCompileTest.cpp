@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(compileRaw)
 BOOST_AUTO_TEST_CASE(compileRawLabel)
 {
     StateTestFillerTransaction tr = makeTransaction({":label sample :raw 0x1234"});
-    BOOST_CHECK(tr.buildTransactions().at(0).transaction().dataLabel() == ":label sample");
+    BOOST_CHECK(tr.buildTransactions().at(0).transaction().getCContent().dataLabel() == ":label sample");
     BOOST_CHECK(tr.asDataObject().atKey("data").at(0).asString() == "0x1234");
 }
 
@@ -56,8 +56,8 @@ BOOST_AUTO_TEST_CASE(compileRawArray)
 BOOST_AUTO_TEST_CASE(compileRawArrayLabel)
 {
     StateTestFillerTransaction tr = makeTransaction({":raw 0x1234", ":label sample :raw 0x2244"});
-    BOOST_CHECK(tr.buildTransactions().at(0).transaction().dataLabel().empty());
-    BOOST_CHECK(tr.buildTransactions().at(1).transaction().dataLabel() == ":label sample");
+    BOOST_CHECK(tr.buildTransactions().at(0).transaction().getCContent().dataLabel().empty());
+    BOOST_CHECK(tr.buildTransactions().at(1).transaction().getCContent().dataLabel() == ":label sample");
     BOOST_CHECK(tr.asDataObject().atKey("data").at(0).asString() == "0x1234");
     BOOST_CHECK(tr.asDataObject().atKey("data").at(1).asString() == "0x2244");
 }
@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(compileLLL)
 BOOST_AUTO_TEST_CASE(compileLLLLabel)
 {
     StateTestFillerTransaction tr = makeTransaction({":label sample { [[1]] 1 }"});
-    BOOST_CHECK(tr.buildTransactions().at(0).transaction().dataLabel() == ":label sample");
+    BOOST_CHECK(tr.buildTransactions().at(0).transaction().getCContent().dataLabel() == ":label sample");
     BOOST_CHECK(tr.asDataObject().atKey("data").at(0).asString() == "0x600160015500");
 }
 
@@ -85,8 +85,8 @@ BOOST_AUTO_TEST_CASE(compileLLLArray)
 BOOST_AUTO_TEST_CASE(compileLLLArrayLabel)
 {
     StateTestFillerTransaction tr = makeTransaction({"{ [[1]] 1 }", ":label sample { [[1]] 2 }"});
-    BOOST_CHECK(tr.buildTransactions().at(0).transaction().dataLabel().empty());
-    BOOST_CHECK(tr.buildTransactions().at(1).transaction().dataLabel() == ":label sample");
+    BOOST_CHECK(tr.buildTransactions().at(0).transaction().getCContent().dataLabel().empty());
+    BOOST_CHECK(tr.buildTransactions().at(1).transaction().getCContent().dataLabel() == ":label sample");
     BOOST_CHECK(tr.asDataObject().atKey("data").at(0).asString() == "0x600160015500");
     BOOST_CHECK(tr.asDataObject().atKey("data").at(1).asString() == "0x600260015500");
 }
@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(compileABI)
 BOOST_AUTO_TEST_CASE(compileABILabel)
 {
     StateTestFillerTransaction tr = makeTransaction({":label sample :abi f(uint) 12"});
-    BOOST_CHECK(tr.buildTransactions().at(0).transaction().dataLabel() == ":label sample");
+    BOOST_CHECK(tr.buildTransactions().at(0).transaction().getCContent().dataLabel() == ":label sample");
     BOOST_CHECK(tr.asDataObject().atKey("data").at(0).asString() ==
                 "0x693c6139000000000000000000000000000000000000000000000000000000000000000c");
 }
@@ -118,8 +118,8 @@ BOOST_AUTO_TEST_CASE(compileABIArray)
 BOOST_AUTO_TEST_CASE(compileABIArrayLabel)
 {
     StateTestFillerTransaction tr = makeTransaction({":abi f(uint) 13", ":label sample :abi f(uint) 12"});
-    BOOST_CHECK(tr.buildTransactions().at(0).transaction().dataLabel().empty());
-    BOOST_CHECK(tr.buildTransactions().at(1).transaction().dataLabel() == ":label sample");
+    BOOST_CHECK(tr.buildTransactions().at(0).transaction().getCContent().dataLabel().empty());
+    BOOST_CHECK(tr.buildTransactions().at(1).transaction().getCContent().dataLabel() == ":label sample");
     BOOST_CHECK(tr.asDataObject().atKey("data").at(0).asString() ==
                 "0x693c6139000000000000000000000000000000000000000000000000000000000000000d");
     BOOST_CHECK(tr.asDataObject().atKey("data").at(1).asString() ==
@@ -159,7 +159,7 @@ BOOST_AUTO_TEST_CASE(compileSOLC)
 BOOST_AUTO_TEST_CASE(compileSOLCLabel)
 {
     StateTestFillerTransaction tr = makeTransaction({":label sample " + solContract});
-    BOOST_CHECK(tr.buildTransactions().at(0).transaction().dataLabel() == ":label sample");
+    BOOST_CHECK(tr.buildTransactions().at(0).transaction().getCContent().dataLabel() == ":label sample");
     BOOST_CHECK(tr.asDataObject().atKey("data").at(0).asString().substr(0, 50) == solContractC.substr(0, 50));
 }
 
@@ -173,8 +173,8 @@ BOOST_AUTO_TEST_CASE(compileSOLCArray)
 BOOST_AUTO_TEST_CASE(compileSOLCArrayLabel)
 {
     StateTestFillerTransaction tr = makeTransaction({solContract, ":label sample " + solContract});
-    BOOST_CHECK(tr.buildTransactions().at(0).transaction().dataLabel().empty());
-    BOOST_CHECK(tr.buildTransactions().at(1).transaction().dataLabel() == ":label sample");
+    BOOST_CHECK(tr.buildTransactions().at(0).transaction().getCContent().dataLabel().empty());
+    BOOST_CHECK(tr.buildTransactions().at(1).transaction().getCContent().dataLabel() == ":label sample");
     BOOST_CHECK(tr.asDataObject().atKey("data").at(0).asString().substr(0, 50) == solContractC.substr(0, 50));
     BOOST_CHECK(tr.asDataObject().atKey("data").at(1).asString().substr(0, 50) == solContractC.substr(0, 50));
 }

@@ -44,12 +44,12 @@ StateTestTransaction::StateTestTransaction(DataObject const& _data)
             if (accessLists.size())
             {
                 if (accessLists.at(index).isEmpty())
-                    m_databox.push_back(Databox(dataInKey, dataInKey.asString(), sDataPreview));
+                    m_databox.push_back(Databox(dataInKey, string(), sDataPreview));
                 else
-                    m_databox.push_back(Databox(dataInKey, dataInKey.asString(), sDataPreview, accessLists.at(index)));
+                    m_databox.push_back(Databox(dataInKey, string(), sDataPreview, accessLists.at(index)));
             }
             else
-                m_databox.push_back(Databox(dataInKey, dataInKey.asString(), sDataPreview));
+                m_databox.push_back(Databox(dataInKey, string(), sDataPreview));
 
             index++;
         }

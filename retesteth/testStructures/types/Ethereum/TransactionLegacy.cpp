@@ -1,4 +1,4 @@
-#include "Transaction.h"
+#include "TransactionLegacy.h"
 #include <libdevcore/Address.h>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/SHA3.h>
@@ -11,15 +11,13 @@ namespace test
 {
 namespace teststruct
 {
-Transaction::Transaction(DataObject const& _data, string const& _dataRawPreview, string const& _dataLabel)
+TransactionLegacy::TransactionLegacy(DataObject const& _data)
 {
     m_secretKey = spVALUE(new VALUE(0));
     fromDataObject(_data);
-    m_dataRawPreview = _dataRawPreview;
-    m_dataLabel = _dataLabel;
 }
 
-void Transaction::fromDataObject(DataObject const& _data)
+void TransactionLegacy::fromDataObject(DataObject const& _data)
 {
     try
     {
@@ -48,7 +46,7 @@ void Transaction::fromDataObject(DataObject const& _data)
             m_s = spVALUE(new VALUE(_data.atKey("s")));
             rebuildRLP();
         }
-        requireJsonFields(_data, "Transaction " + _data.getKey(),
+        requireJsonFields(_data, "TransactionLegacy " + _data.getKey(),
             {
                 {"data", {{DataType::String}, jsonField::Required}},
                 {"gasLimit", {{DataType::String}, jsonField::Required}},
@@ -74,11 +72,11 @@ void Transaction::fromDataObject(DataObject const& _data)
     }
     catch (std::exception const& _ex)
     {
-        throw UpwardsException(string("Transaction convertion error: ") + _ex.what() + _data.asJson());
+        throw UpwardsException(string("TransactionLegacy convertion error: ") + _ex.what() + _data.asJson());
     }
 }
 
-void Transaction::fromRLP(dev::RLP const& _rlp)
+void TransactionLegacy::fromRLP(dev::RLP const& _rlp)
 {
     // 0 - nonce        3 - to      6 - v
     // 1 - gasPrice     4 - value   7 - r
@@ -98,13 +96,13 @@ void Transaction::fromRLP(dev::RLP const& _rlp)
     fromDataObject(trData);
 }
 
-Transaction::Transaction(dev::RLP const& _rlp)
+TransactionLegacy::TransactionLegacy(dev::RLP const& _rlp)
 {
     m_secretKey = spVALUE(new VALUE(0));
     fromRLP(_rlp);
 }
 
-Transaction::Transaction(BYTES const& _rlp)
+TransactionLegacy::TransactionLegacy(BYTES const& _rlp)
 {
     m_secretKey = spVALUE(new VALUE(0));
     dev::bytes decodeRLP = sfromHex(_rlp.asString());
@@ -112,7 +110,7 @@ Transaction::Transaction(BYTES const& _rlp)
     fromRLP(rlp);
 }
 
-void Transaction::streamHeader(dev::RLPStream& _s) const
+void TransactionLegacy::streamHeader(dev::RLPStream& _s) const
 {
     _s << nonce().asU256();
     _s << gasPrice().asU256();
@@ -125,7 +123,7 @@ void Transaction::streamHeader(dev::RLPStream& _s) const
     _s << test::sfromHex(data().asString());
 }
 
-void Transaction::buildVRS(VALUE const& _secret)
+void TransactionLegacy::buildVRS(VALUE const& _secret)
 {
     m_secretKey = spVALUE(new VALUE(_secret));
     dev::RLPStream stream;
@@ -141,27 +139,14 @@ void Transaction::buildVRS(VALUE const& _secret)
     DataObject v = DataObject(dev::toCompactHexPrefixed(dev::u256(sigStruct.v + 27)));
     DataObject r = DataObject(dev::toCompactHexPrefixed(dev::u256(sigStruct.r)));
     DataObject s = DataObject(dev::toCompactHexPrefixed(dev::u256(sigStruct.s)));
-    assignV(spVALUE(new VALUE(v)));
-    assignR(spVALUE(new VALUE(r)));
-    assignS(spVALUE(new VALUE(s)));
+    m_v = spVALUE(new VALUE(v));
+    m_r = spVALUE(new VALUE(r));
+    m_s = spVALUE(new VALUE(s));
     rebuildRLP();
 }
 
-void Transaction::assignV(spVALUE const _v) { m_v = _v; }
-void Transaction::assignR(spVALUE const _r) { m_r = _r; }
-void Transaction::assignS(spVALUE const _s) { m_s = _s; }
 
-BYTES const& Transaction::getRawBytes() const
-{
-    return m_rawRLPdata.getCContent();
-}
-
-dev::RLPStream const& Transaction::asRLPStream() const
-{
-    return m_outRlpStream;
-}
-
-const DataObject Transaction::asDataObject(ExportOrder _order) const
+const DataObject TransactionLegacy::asDataObject(ExportOrder _order) const
 {
     DataObject out;
     out["data"] = m_data.getCContent().asString();
@@ -196,12 +181,7 @@ const DataObject Transaction::asDataObject(ExportOrder _order) const
     return out;
 }
 
-FH32 const& Transaction::hash() const
-{
-    return m_hash.getCContent();
-}
-
-void Transaction::rebuildRLP()
+void TransactionLegacy::rebuildRLP()
 {
     dev::RLPStream out;
     out.appendList(9);
