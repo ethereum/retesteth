@@ -199,13 +199,22 @@ u256 calculateEthashDifficulty(ChainOperationParams const& _chainParams, spBlock
 void verifyEthereumBlockHeader(spBlockHeader const& _header, ToolChain const& _chain)
 {
     // Check ethereum rules
-    auto const& header = _header.getCContent();
-    if (header.gasLimit() > dev::u256("0x7fffffffffffffff"))
-        throw test::UpwardsException("Header gasLimit > 0x7fffffffffffffff");
+    bool isLegacy = true;
+    BlockHeader const& header = _header.getCContent();
+    if (header.type() == BlockType::BlockHeader1559)
+        isLegacy = false;
+
+    if (isLegacy)
+    {
+        BlockHeaderLegacy const& legacyHeader = BlockHeaderLegacy::castFrom(_header);
+        if (legacyHeader.gasLimit() > dev::u256("0x7fffffffffffffff"))
+            throw test::UpwardsException("Header gasLimit > 0x7fffffffffffffff");
+        if (legacyHeader.gasUsed() > legacyHeader.gasLimit())
+            throw test::UpwardsException("Invalid gasUsed: header.gasUsed > header.gasLimit");
+    }
+
     if (header.difficulty() < dev::u256("0x20000"))
         throw test::UpwardsException("Invalid difficulty: header.difficulty < 0x20000");
-    if (header.gasUsed() > header.gasLimit())
-        throw test::UpwardsException("Invalid gasUsed: header.gasUsed > header.gasLimit");
     if (header.extraData().asString().size() > 32 * 2 + 2)
         throw test::UpwardsException("Header extraData > 32 bytes");
 
@@ -236,12 +245,16 @@ void verifyEthereumBlockHeader(spBlockHeader const& _header, ToolChain const& _c
                 throw test::UpwardsException("BlockHeader timestamp is less then it's parent block!");
 
             // Validate block gasLimit delta
-            VALUE deltaGas = block.header().getCContent().gasLimit().asU256() / 1024;
-            if (header.gasLimit().asU256() >= block.header().getCContent().gasLimit().asU256() + deltaGas.asU256() ||
-                header.gasLimit().asU256() <= block.header().getCContent().gasLimit().asU256() - deltaGas.asU256())
-                throw test::UpwardsException("Invalid gaslimit: " + header.gasLimit().asDecString() + ", want " +
-                                             block.header().getCContent().gasLimit().asDecString() + " +/- " +
-                                             deltaGas.asDecString());
+            if (isLegacy && block.header().getCContent().type() == BlockType::BlockHeaderLegacy)
+            {
+                BlockHeaderLegacy const& legacyHeader = BlockHeaderLegacy::castFrom(_header);
+                BlockHeaderLegacy const& legacyPrevBlock = BlockHeaderLegacy::castFrom(block.header());
+                VALUE deltaGas = legacyPrevBlock.gasLimit().asU256() / 1024;
+                if (legacyHeader.gasLimit().asU256() >= legacyPrevBlock.gasLimit().asU256() + deltaGas.asU256() ||
+                    legacyHeader.gasLimit().asU256() <= legacyPrevBlock.gasLimit().asU256() - deltaGas.asU256())
+                    throw test::UpwardsException("Invalid gaslimit: " + legacyHeader.gasLimit().asDecString() + ", want " +
+                                                 legacyPrevBlock.gasLimit().asDecString() + " +/- " + deltaGas.asDecString());
+            }
 
             // Validate block difficulty delta
             ChainOperationParams params = ChainOperationParams::defaultParams(_chain.toolParams());

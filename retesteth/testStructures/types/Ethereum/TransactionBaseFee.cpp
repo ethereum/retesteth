@@ -112,7 +112,6 @@ void TransactionBaseFee::fromRLP(dev::RLP const& _rlp)
     rlpToString(_rlp[i++]);  // chainID
     trData["nonce"] = rlpToString(_rlp[i++]);
 
-    trData["gasPrice"] = "0x10";  // fake gasPrice
     trData["maxInclusionFeePerGas"] = rlpToString(_rlp[i++]);
     trData["maxFeePerGas"] = rlpToString(_rlp[i++]);
     m_maxInclusionFeePerGas = spVALUE(new VALUE(trData["maxInclusionFeePerGas"]));
@@ -132,7 +131,7 @@ void TransactionBaseFee::fromRLP(dev::RLP const& _rlp)
     trData["v"] = rlpToString(_rlp[i++]);
     trData["r"] = rlpToString(_rlp[i++]);
     trData["s"] = rlpToString(_rlp[i++]);
-    fromDataObject(trData);
+    TransactionBaseFee::fromDataObject(trData);
 }
 
 
@@ -160,6 +159,12 @@ void TransactionBaseFee::buildVRS(VALUE const& _secret)
     assignV(spVALUE(new VALUE(v)));
     assignR(spVALUE(new VALUE(r)));
     assignS(spVALUE(new VALUE(s)));
+
+    std::cerr << "sign data" << std::endl;
+    std::cerr << BYTES(dev::toHexPrefixed(outa)).asString() << std::endl;
+    std::cerr << r.asString() << std::endl;
+    std::cerr << s.asString() << std::endl;
+
     rebuildRLP();
 }
 
@@ -191,8 +196,40 @@ void TransactionBaseFee::streamHeader(dev::RLPStream& _s) const
 
 DataObject const TransactionBaseFee::asDataObject(ExportOrder _order) const
 {
-    DataObject out = Transaction::asDataObject(_order);
+    // Because we don't use gas_price field need to explicitly output
+    DataObject out;
+    out["data"] = m_data.getCContent().asString();
+    out["gasLimit"] = m_gasLimit.getCContent().asString();
+    out["nonce"] = m_nonce.getCContent().asString();
+    if (m_creation)
+    {
+        if (_order != ExportOrder::ToolStyle)
+            out["to"] = "";
+    }
+    else
+        out["to"] = m_to.getCContent().asString();
+    out["value"] = m_value.getCContent().asString();
+    out["v"] = m_v.getCContent().asString();
+    out["r"] = m_r.getCContent().asString();
+    out["s"] = m_s.getCContent().asString();
+    if (_order == ExportOrder::ToolStyle)
+    {
+        out.performModifier(mod_removeLeadingZerosFromHexValues, {"data", "to"});
+        out.renameKey("gasLimit", "gas");
+        out.renameKey("data", "input");
+        if (!m_secretKey.isEmpty() && m_secretKey.getCContent() != 0)
+            out["secretKey"] = m_secretKey.getCContent().asString();
+    }
+    if (_order == ExportOrder::OldStyle)
+    {
+        out.setKeyPos("r", 4);
+        out.setKeyPos("s", 5);
+        out.setKeyPos("v", 7);
+    }
 
+    // standard transaction output without gas_price end
+
+    // begin eip1559 transaction info
     out["chainId"] = "0x01";
     out["type"] = "0x02";
     out["maxFeePerGas"] = m_maxFeePerGas.getCContent().asString();
@@ -212,6 +249,7 @@ DataObject const TransactionBaseFee::asDataObject(ExportOrder _order) const
         if (!m_secretKey.isEmpty() && m_secretKey.getCContent() != 0)
             out["secretKey"] = m_secretKey.getCContent().asString();
     }
+    out["accessList"] = m_accessList.getCContent().asDataObject();
     return out;
 }
 
@@ -221,7 +259,7 @@ void TransactionBaseFee::rebuildRLP()
     dev::RLPStream wrapper;
     dev::RLPStream out;
     out.appendList(12);
-    streamHeader(out);
+    TransactionBaseFee::streamHeader(out);
     out << v().asU256().convert_to<dev::byte>();
     out << r().asU256();
     out << s().asU256();

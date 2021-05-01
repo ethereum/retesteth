@@ -3,7 +3,6 @@
 #include <libdevcore/Address.h>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/RLP.h>
-#include <libdevcore/SHA3.h>
 #include <retesteth/TestHelper.h>
 #include <retesteth/testStructures/Common.h>
 
@@ -105,13 +104,13 @@ BlockHeader1559::BlockHeader1559(dev::RLP const& _rlp)
 {
     DataObject init;
     // 0 - parentHash           // 8 - number
-    // 1 - uncleHash            // 9 - gasLimit
+    // 1 - uncleHash            // 9 - gasTarget
     // 2 - coinbase             // 10 - gasUsed
     // 3 - stateRoot            // 11 - timestamp
     // 4 - transactionTrie      // 12 - extraData
     // 5 - receiptTrie          // 13 - mixHash
     // 6 - bloom                // 14 - nonce
-    // 7 - difficulty
+    // 7 - difficulty           // 15 - baseFeePerGas
     size_t i = 0;
     init["parentHash"] = rlpToString(_rlp[i++]);
     init["uncleHash"] = rlpToString(_rlp[i++]);
@@ -179,15 +178,20 @@ const RLPStream BlockHeader1559::asRLPStream() const
     return header;
 }
 
-/*bool BlockHeader::operator==(BlockHeader const& _rhs) const
+BlockHeader1559 const& BlockHeader1559::castFrom(spBlockHeader const& _from)
 {
-    return asDataObject() == _rhs.asDataObject();
-}*/
-
-VALUE const& BlockHeader1559::gasLimit() const
-{
-    ETH_FAIL_MESSAGE("gasLimit function called from 1559 block!");
-    return m_gasLimit.getCContent();
+    try
+    {
+        if (_from.getCContent().type() != BlockType::BlockHeader1559)
+            ETH_FAIL_MESSAGE("BlockHeader1559::castFrom() got wrong block type!");
+        return dynamic_cast<BlockHeader1559 const&>(_from.getCContent());
+    }
+    catch (...)
+    {
+        ETH_FAIL_MESSAGE("BlockHeader1559::castFrom() failed!");
+    }
+    spBlockHeader1559 foo(new BlockHeader1559(DataObject()));
+    return foo.getCContent();
 }
 
 }  // namespace teststruct

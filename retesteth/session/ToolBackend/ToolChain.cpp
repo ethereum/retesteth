@@ -171,6 +171,9 @@ ToolResponse ToolChain::mineBlockOnTool(EthereumBlockState const& _block, SealEn
         envData["ommers"].addArrayObject(uncle);
     }
 
+    // Options Hook
+    Options::getCurrentConfig().performFieldReplace(envData, FieldReplaceDir::RetestethToClient);
+
     string const envPathContent = envData.asJson();
     writeFile(envPath.string(), envPathContent);
 
@@ -191,6 +194,7 @@ ToolResponse ToolChain::mineBlockOnTool(EthereumBlockState const& _block, SealEn
             ETH_WARNING(
                 "Retesteth rejecting tx with gasLimit > 64 bits for tool" + TestOutputHelper::get().testInfo().errorDebug());
     }
+    Options::getCurrentConfig().performFieldReplace(txs, FieldReplaceDir::RetestethToClient);
     string const txsPathContent = txs.asJson();
     writeFile(txsPath.string(), txsPathContent);
 

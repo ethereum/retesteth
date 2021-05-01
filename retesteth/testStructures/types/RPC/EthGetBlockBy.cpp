@@ -44,7 +44,7 @@ EthGetBlockBy::EthGetBlockBy(DataObject const& _data)
              {"extraData", {{DataType::String}, jsonField::Required}},
              {"gasLimit", {{DataType::String}, jsonField::Optional}},
              {"gasTarget", {{DataType::String}, jsonField::Optional}},
-             {"baseFee", {{DataType::String}, jsonField::Optional}},
+             {"baseFeePerGas", {{DataType::String}, jsonField::Optional}},
              {"gasUsed", {{DataType::String}, jsonField::Required}},
              {"hash", {{DataType::String}, jsonField::Required}},
              {"mixHash", {{DataType::String}, jsonField::Optional}},

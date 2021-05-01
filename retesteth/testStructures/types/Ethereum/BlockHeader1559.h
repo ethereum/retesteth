@@ -16,22 +16,25 @@ struct BlockHeader1559 : BlockHeader
 {
     BlockHeader1559(DataObject const&);
     BlockHeader1559(dev::RLP const&);
+
     DataObject const asDataObject() const override;
     dev::RLPStream const asRLPStream() const override;
+    BlockType type() const override { return BlockType::BlockHeader1559; }
 
-    // bool operator==(BlockHeader1559 const& _rhs) const;
-    // bool operator!=(BlockHeader1559 const& _rhs) const { return !(*this == _rhs); };
-
-    VALUE const& gasLimit() const override;
+    // Unique fields
     VALUE const& gasTarget() const { return m_gasTarget.getCContent(); }
     VALUE const& baseFeePerGas() const { return m_baseFeePerGas.getCContent(); }
+    void setGasTarget(VALUE const& _gasTarget) { m_gasTarget = spVALUE(new VALUE(_gasTarget)); }
+    void setBaseFeePerGas(VALUE const& _baseFeePerGas) { m_baseFeePerGas = spVALUE(new VALUE(_baseFeePerGas)); }
 
-    BlockType type() const override { return BlockType::BlockHeader1559; }
+    // Static
+    static BlockHeader1559 const& castFrom(spBlockHeader const& _from);
 
 protected:
     BlockHeader1559(){};
     void fromData(DataObject const&) override;
 
+    // Ethereum eip1559 blockheader fields
     spVALUE m_gasTarget;
     spVALUE m_baseFeePerGas;
 };

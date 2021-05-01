@@ -16,7 +16,8 @@ string const t8ntool_config = R"({
         "Constantinople",
         "ConstantinopleFix",
         "Istanbul",
-        "Berlin"
+        "Berlin",
+        "London"
     ],
     "additionalForks" : [
         "FrontierToHomesteadAt5",
@@ -143,6 +144,10 @@ string const t8ntool_config = R"({
       "RLP_ExpectedInputList_TRANSACTION_DECODEINTO_BLOCK_EXTBLOCK_TXS" : "Error importing raw rlp block: BadCast",
       "RLP_ExpectedInputList_HEADER_DECODEINTO_BLOCK_EXTBLOCK_UNCLES" : "Error importing raw rlp block: OversizeRLP",
       "RLP_ExpectedInputList_TXDATA_DECODEINTO_BLOCK_EXTBLOCK_TXS0" : "Error importing raw rlp block: Transaction RLP is expected to be list"
+    },
+    "fieldReplace" : {
+        "gasTarget" : "currentGasTarget",
+        "maxInclusionFeePerGas" : "maxPriorityFeePerGas"
     }
 })";
 
