@@ -9,7 +9,8 @@ namespace test
 {
 namespace teststruct
 {
-SetChainParamsArgs prepareChainParams(FORK const& _net, SealEngine _engine, State const& _state, StateTestEnvBase const& _env)
+SetChainParamsArgs prepareChainParams(
+    FORK const& _net, SealEngine _engine, State const& _state, StateTestEnvBase const& _env, ParamsContext _paramsContext)
 {
     ClientConfig const& cfg = Options::get().getDynamicOptions().getCurrentConfig();
     cfg.validateForkAllowed(_net);
@@ -26,7 +27,15 @@ SetChainParamsArgs prepareChainParams(FORK const& _net, SealEngine _engine, Stat
     else
     {
         genesis["genesis"]["gasTarget"] = _env.currentGasTarget().getCContent().asString();
-        genesis["genesis"]["baseFee"] = _env.currentBaseFee().getCContent().asString();
+        if (_paramsContext == ParamsContext::StateTests)
+        {
+            // Reverse back the baseFee calculation formula for genesis block
+            VALUE const& baseFee = _env.currentBaseFee().getCContent();
+            VALUE genesisBaseFee = baseFee * 8 / 7;
+            genesis["genesis"]["baseFee"] = genesisBaseFee.asString();
+        }
+        else
+            genesis["genesis"]["baseFee"] = _env.currentBaseFee().getCContent().asString();
     }
 
     genesis["genesis"]["extraData"] = _env.currentExtraData().asString();

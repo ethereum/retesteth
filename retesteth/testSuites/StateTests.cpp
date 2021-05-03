@@ -124,7 +124,8 @@ DataObject FillTestAsBlockchain(StateTestInFiller const& _test)
                     if (!expect.checkIndexes(tr.dataInd(), tr.gasInd(), tr.valueInd()))
                         continue;
 
-                    session.test_setChainParams(prepareChainParams(fork, SealEngine::NoProof, _test.Pre(), _test.Env()));
+                    session.test_setChainParams(
+                        prepareChainParams(fork, SealEngine::NoProof, _test.Pre(), _test.Env(), ParamsContext::StateTests));
                     session.test_modifyTimestamp(_test.Env().firstBlockTimestamp());
                     FH32 trHash(session.eth_sendRawTransaction(tr.transaction().getCContent().getRawBytes(), tr.transaction().getCContent().getSecret()));
 
@@ -230,7 +231,8 @@ DataObject FillTest(StateTestInFiller const& _test)
         DataObject forkResults;
         forkResults.setKey(fork.asString());
 
-        session.test_setChainParams(prepareChainParams(fork, SealEngine::NoReward, _test.Pre(), _test.Env()));
+        auto p = prepareChainParams(fork, SealEngine::NoReward, _test.Pre(), _test.Env(), ParamsContext::StateTests);
+        session.test_setChainParams(p);
 
         // Run transactions for defined expect sections only
         for (auto const& expect : _test.Expects())
@@ -366,7 +368,10 @@ void RunTest(StateTestInFilled const& _test)
             ETH_WARNING("Skipping unsupported fork: " + network.asString() + " in " + _test.testName());
         }
         else
-            session.test_setChainParams(prepareChainParams(network, SealEngine::NoReward, _test.Pre(), _test.Env()));
+        {
+            auto p = prepareChainParams(network, SealEngine::NoReward, _test.Pre(), _test.Env(), ParamsContext::StateTests);
+            session.test_setChainParams(p);
+        }
 
         // One test could have many transactions on same chainParams
         // It is expected that for a setted chainParams there going to be a transaction

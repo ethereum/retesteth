@@ -47,7 +47,7 @@ void verify1559Block(spBlockHeader const& _header, ToolChain const& _chain)
         throw test::UpwardsException() << "Invalid block1559: too much gas used!";
 }
 
-void verify1559Parent(spBlockHeader const& _header, spBlockHeader const& _parent)
+void verify1559Parent(spBlockHeader const& _header, spBlockHeader const& _parent, ToolChain const& _chain)
 {
     if (_header.getCContent().type() != BlockType::BlockHeader1559)
         ETH_FAIL_MESSAGE("verify1559Block got block of another type!");
@@ -63,28 +63,11 @@ void verify1559Parent(spBlockHeader const& _header, spBlockHeader const& _parent
         throw test::UpwardsException() << "Invalid block1559: gasTarget decreased too much!";
 
     // Check if the base fee is correct
-    spVALUE expectedBaseFee;
-    const size_t BASE_FEE_MAX_CHANGE_DENOMINATOR = 8;
-    if (parent.gasUsed() == parent.gasTarget())
-        expectedBaseFee = spVALUE(new VALUE(parent.baseFee()));
-    else if (parent.gasUsed() > parent.gasTarget())
-    {
-        VALUE gasUsedDelta = parent.gasUsed() - parent.gasTarget();
-        VALUE formula = parent.baseFee() * gasUsedDelta / parent.gasTarget() / BASE_FEE_MAX_CHANGE_DENOMINATOR;
-        VALUE baseFeePerGasDelta = max<dev::u256>(formula.asU256(), dev::u256(1));
-        expectedBaseFee = spVALUE(new VALUE(parent.baseFee() + baseFeePerGasDelta));
-    }
-    else
-    {
-        VALUE gasUsedDelta = parent.gasTarget() - parent.gasUsed();
-        VALUE baseFeePerGasDelta = parent.baseFee() * gasUsedDelta / parent.gasTarget() / BASE_FEE_MAX_CHANGE_DENOMINATOR;
-        VALUE formula = parent.baseFee() - baseFeePerGasDelta;
-        expectedBaseFee = spVALUE(new VALUE(max<dev::u256>(formula.asU256(), dev::u256(0))));
-    }
-    if (expectedBaseFee.getCContent() != header.baseFee())
-        throw test::UpwardsException() << "Invalid block1559: base fee not correct! Expected: `" +
-                                              expectedBaseFee.getCContent().asDecString() + "`, got: `" +
-                                              header.baseFee().asDecString() + "`";
+    ChainOperationParams params = ChainOperationParams::defaultParams(_chain.toolParams());
+    VALUE newBaseFee = calculateEIP1559BaseFee(params, _header, _parent);
+    if (header.baseFee() != newBaseFee)
+        throw test::UpwardsException() << "Invalid block1559: base fee not correct! Expected: `" + newBaseFee.asDecString() +
+                                              "`, got: `" + header.baseFee().asDecString() + "`";
 }
 
 void verifyCommonBlock(spBlockHeader const& _header, ToolChain const& _chain)
@@ -162,7 +145,7 @@ void verifyEthereumBlockHeader(spBlockHeader const& _header, ToolChain const& _c
                 verifyLegacyParent(_header, parentBlock.header());
                 break;
             case BlockType::BlockHeader1559:
-                verify1559Parent(_header, parentBlock.header());
+                verify1559Parent(_header, parentBlock.header(), _chain);
                 break;
             default:
                 throw test::UpwardsException("Unhandled block type check!");
