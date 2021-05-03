@@ -26,6 +26,8 @@ struct VALUE : GCP_SPointerBase
     bool operator!=(VALUE const& _rhs) const { return m_data != _rhs.asU256(); }
     bool operator==(VALUE const& _rhs) const { return m_data == _rhs.asU256(); }
     VALUE operator-(VALUE const& _rhs) const { return VALUE(m_data - _rhs.asU256()); }
+    VALUE operator/(VALUE const& _rhs) const { return VALUE(m_data / _rhs.asU256()); }
+    VALUE operator*(VALUE const& _rhs) const { return VALUE(m_data * _rhs.asU256()); }
     VALUE operator+(VALUE const& _rhs) const { return VALUE(m_data + _rhs.asU256()); }
     VALUE operator++(int) { m_data++; return *this; }
 

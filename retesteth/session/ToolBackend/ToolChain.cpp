@@ -58,6 +58,14 @@ void ToolChain::mineBlock(EthereumBlockState const& _pendingBlock, Mining _req)
     u256 toolDifficulty = calculateEthashDifficulty(params, pendingFixed.header(), lastBlock().header());
     pendingFixedHeader.setDifficulty(toolDifficulty);
 
+    // Calculate new baseFee
+    if (pendingFixedHeader.type() == BlockType::BlockHeader1559)
+    {
+        BlockHeader1559& pendingFixed1559Header = BlockHeader1559::castFrom(pendingFixedHeader);
+        u256 baseFee = calculateEIP1559BaseFee(params, pendingFixed.header(), lastBlock().header());
+        pendingFixed1559Header.setBaseFee(baseFee);
+    }
+
     // Add only those transactions which tool returned a receipt for
     // Some transactions are expected to fail. That should be detected by tests
     for (auto const& tr : _pendingBlock.transactions())

@@ -179,6 +179,21 @@ const RLPStream BlockHeader1559::asRLPStream() const
     return header;
 }
 
+BlockHeader1559& BlockHeader1559::castFrom(BlockHeader& _from)
+{
+    try
+    {
+        if (_from.type() != BlockType::BlockHeader1559)
+            ETH_FAIL_MESSAGE("BlockHeader1559::castFrom() got wrong block type!");
+        return dynamic_cast<BlockHeader1559&>(_from);
+    }
+    catch (...)
+    {
+        ETH_FAIL_MESSAGE("BlockHeader1559::castFrom() failed!");
+    }
+    return dynamic_cast<BlockHeader1559&>(_from);
+}
+
 BlockHeader1559 const& BlockHeader1559::castFrom(spBlockHeader const& _from)
 {
     try

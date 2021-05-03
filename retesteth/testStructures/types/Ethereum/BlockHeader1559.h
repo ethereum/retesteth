@@ -29,6 +29,7 @@ struct BlockHeader1559 : BlockHeader
 
     // Static
     static BlockHeader1559 const& castFrom(spBlockHeader const& _from);
+    static BlockHeader1559& castFrom(BlockHeader& _from);
 
 protected:
     BlockHeader1559(){};

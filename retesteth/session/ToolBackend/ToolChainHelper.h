@@ -1,13 +1,12 @@
 #pragma once
 #include "ToolChain.h"
+#include "Verification.h"
 #include <libdevcore/Common.h>
 #include <retesteth/testStructures/types/Ethereum/BlockHeader.h>
 
 using namespace dev;
 namespace toolimpl
 {
-// Blockchain logic validator
-void verifyEthereumBlockHeader(spBlockHeader const& _header, ToolChain const& _chain);
 
 // Tool Logic
 struct ChainOperationParams
@@ -25,6 +24,7 @@ std::tuple<VALUE, FORK> prepareReward(SealEngine _engine, FORK const& _fork, VAL
 VALUE calculateGasLimit(VALUE const& _parentGasLimit, VALUE const& _parentGasUsed);
 u256 calculateEthashDifficulty(
     ChainOperationParams const& _chainParams, spBlockHeader const& _bi, spBlockHeader const& _parent);
+u256 calculateEIP1559BaseFee(ChainOperationParams const& _chainParams, spBlockHeader const& _bi, spBlockHeader const& _parent);
 State restoreFullState(DataObject const& _toolState);
 
 }  // namespace toolimpl
