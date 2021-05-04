@@ -231,7 +231,7 @@ DataObject FillTest(StateTestInFiller const& _test)
         DataObject forkResults;
         forkResults.setKey(fork.asString());
 
-        auto p = prepareChainParams(fork, SealEngine::NoReward, _test.Pre(), _test.Env(), ParamsContext::StateTests);
+        auto const p = prepareChainParams(fork, SealEngine::NoReward, _test.Pre(), _test.Env(), ParamsContext::StateTests);
         session.test_setChainParams(p);
 
         // Run transactions for defined expect sections only

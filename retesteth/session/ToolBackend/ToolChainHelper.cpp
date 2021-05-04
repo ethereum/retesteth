@@ -43,12 +43,22 @@ ToolParams::ToolParams(DataObject const& _data)
 
 // We simulate the client backend side here, so thats why number5 is hardcoded
 // Map rewards from non standard forks into standard
-static std::map<FORK, FORK> RewardMapForToolBefore5 = {{"FrontierToHomesteadAt5", "Frontier"},
-    {"HomesteadToEIP150At5", "Homestead"}, {"EIP158ToByzantiumAt5", "EIP158"}, {"HomesteadToDaoAt5", "Homestead"},
-    {"ByzantiumToConstantinopleFixAt5", "Byzantium"}};
-static std::map<FORK, FORK> RewardMapForToolAfter5 = {{"FrontierToHomesteadAt5", "Homestead"},
-    {"HomesteadToEIP150At5", "EIP150"}, {"EIP158ToByzantiumAt5", "Byzantium"}, {"HomesteadToDaoAt5", "Homestead"},
-    {"ByzantiumToConstantinopleFixAt5", "ConstantinopleFix"}};
+static std::map<FORK, FORK> RewardMapForToolBefore5 = {
+    {"FrontierToHomesteadAt5", "Frontier"},
+    {"HomesteadToEIP150At5", "Homestead"},
+    {"EIP158ToByzantiumAt5", "EIP158"},
+    {"HomesteadToDaoAt5", "Homestead"},
+    {"ByzantiumToConstantinopleFixAt5", "Byzantium"},
+    {"BerlinToLondonAt5", "Berlin"}
+};
+static std::map<FORK, FORK> RewardMapForToolAfter5 = {
+    {"FrontierToHomesteadAt5", "Homestead"},
+    {"HomesteadToEIP150At5", "EIP150"},
+    {"EIP158ToByzantiumAt5", "Byzantium"},
+    {"HomesteadToDaoAt5", "Homestead"},
+    {"ByzantiumToConstantinopleFixAt5", "ConstantinopleFix"},
+    {"BerlinToLondonAt5", "Aleut"}
+};
 
 std::tuple<VALUE, FORK> prepareReward(SealEngine _engine, FORK const& _fork, VALUE const& _blockNumber)
 {

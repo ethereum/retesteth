@@ -38,7 +38,20 @@ void ToolChainManager::rewindToBlock(VALUE const& _number)
 void ToolChainManager::reorganizePendingBlock()
 {
     EthereumBlockState const& bl = currentChain().lastBlock();
-    m_pendingBlock = spEthereumBlockState(new EthereumBlockState(bl.header(), bl.state(), bl.logHash()));
+    if (currentChain().fork() == "BerlinToLondonAt5" && bl.header().getCContent().number() == 4)
+    {
+        // Switch default mining to 1559 blocks
+        DataObject parentData = bl.header().getCContent().asDataObject();
+
+        // First ever eip1559 block params after the transition
+        parentData.renameKey("gasLimit", "gasTarget");
+        parentData["gasTarget"].setString("0xbebc20");
+        parentData["baseFee"] = "0x3b9aca00";
+        spBlockHeader newPending(new BlockHeader1559(parentData));
+        m_pendingBlock = spEthereumBlockState(new EthereumBlockState(newPending, bl.state(), bl.logHash()));
+    }
+    else
+        m_pendingBlock = spEthereumBlockState(new EthereumBlockState(bl.header(), bl.state(), bl.logHash()));
 
     BlockHeader& header = m_pendingBlock.getContent().headerUnsafe().getContent();
     header.setNumber(bl.header().getCContent().number() + 1);
@@ -89,7 +102,7 @@ FH32 ToolChainManager::importRawBlock(BYTES const& _rlp)
 {
     try
     {
-        ETH_TEST_MESSAGE(_rlp.asString());
+        // ETH_TEST_MESSAGE(_rlp.asString());
         dev::bytes decodeRLP = sfromHex(_rlp.asString());
         dev::RLP rlp(decodeRLP, dev::RLP::VeryStrict);
         toolimpl::verifyBlockRLP(rlp);

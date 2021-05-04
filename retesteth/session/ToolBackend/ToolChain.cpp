@@ -59,7 +59,8 @@ void ToolChain::mineBlock(EthereumBlockState const& _pendingBlock, Mining _req)
     pendingFixedHeader.setDifficulty(toolDifficulty);
 
     // Calculate new baseFee
-    if (pendingFixedHeader.type() == BlockType::BlockHeader1559)
+    if (pendingFixedHeader.type() == BlockType::BlockHeader1559 &&
+        lastBlock().header().getCContent().type() == BlockType::BlockHeader1559)
     {
         BlockHeader1559& pendingFixed1559Header = BlockHeader1559::castFrom(pendingFixedHeader);
         u256 baseFee = calculateEIP1559BaseFee(params, pendingFixed.header(), lastBlock().header());

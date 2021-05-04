@@ -31,6 +31,7 @@ class genHomesteadToDaoCfg { public: genHomesteadToDaoCfg(); };
 class genHomesteadToEIP150Cfg { public: genHomesteadToEIP150Cfg(); };
 class genEIP158ToByzantiumCfg { public: genEIP158ToByzantiumCfg(); };
 class genByzantiumToConstantinopleFixCfg { public: genByzantiumToConstantinopleFixCfg(); };
+class genBerlinToLondonCfg { public: genBerlinToLondonCfg(); };
 
 // Initializer
 class OptionsInit
@@ -64,5 +65,6 @@ public:
         genHomesteadToEIP150Cfg genHomesteadToEIP150;
         genEIP158ToByzantiumCfg genEIP158ToByzantium;
         genByzantiumToConstantinopleFixCfg genBezantiumToConstantinopleFix;
+        genBerlinToLondonCfg genBerlinToLondon;
     }
 };

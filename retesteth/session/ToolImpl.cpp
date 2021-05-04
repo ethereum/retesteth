@@ -17,25 +17,42 @@ using namespace toolimpl;
 /// Execute its logic in try catch blocks. treating any std::exceptions as its failure
 /// And treating any Eth exceptions as a message to retesteth behaviour
 
+enum class CallType
+{
+    DONTFAILONUPWARDS,
+    FAILEVERYTHING
+};
+#define TRYCATCHCALL(X, method, ctype)                                                                     \
+    try {                                                                                                  \
+        X                                                                                                  \
+    }                                                                                                      \
+    catch (UpwardsException const& _ex)                                                                    \
+    {                                                                                                      \
+        makeRPCError(_ex.what());                                                                          \
+        ETH_TEST_MESSAGE(string("Response ") + method + ": " + _ex.what());                                \
+        if (ctype != CallType::DONTFAILONUPWARDS)                                                          \
+            ETH_FAIL_MESSAGE(_ex.what());                                                                  \
+    }                                                                                                      \
+    catch (EthError const& _ex)                                                                            \
+    {                                                                                                      \
+        throw EthError(_ex);                                                                               \
+    }                                                                                                      \
+    catch (std::exception const& _ex)                                                                      \
+    {                                                                                                      \
+        ETH_FAIL_MESSAGE(_ex.what());                                                                      \
+    }                                                                                                      \
+
+
 DataObject ToolImpl::web3_clientVersion()
 {
     rpcCall("", {});
     ETH_TEST_MESSAGE("\nRequest: web3_clientVersion");
     string const cmd = m_toolPath.string() + " -v";
-    try
-    {
-        DataObject res(test::executeCmd(cmd));
-        ETH_TEST_MESSAGE("Response: web3_clientVersion " + res.asString());
-        return res;
-    }
-    catch (EthError const& _ex)
-    {
-        throw EthError(_ex);
-    }
-    catch (std::exception const& _ex)
-    {
-        ETH_FAIL_MESSAGE(_ex.what());
-    }
+    TRYCATCHCALL(
+                DataObject res(test::executeCmd(cmd));
+                ETH_TEST_MESSAGE("Response: web3_clientVersion " + res.asString());
+                return res;
+                , "web3_clientVersion", CallType::FAILEVERYTHING)
     return DataObject();
 }
 
@@ -45,23 +62,14 @@ FH32 ToolImpl::eth_sendRawTransaction(BYTES const& _rlp, VALUE const& _secret)
     rpcCall("", {});
     ETH_TEST_MESSAGE("\nRequest: eth_sendRawTransaction \n" + _rlp.asString());
 
-    try
-    {
+    TRYCATCHCALL(
         spTransaction spTr = readTransaction(_rlp);
         spTr.getContent().setSecret(_secret);
         m_toolChainManager.getContent().addPendingTransaction(spTr);
         FH32 trHash = spTr.getContent().hash();
         ETH_TEST_MESSAGE("Response: " + trHash.asString());
         return trHash;
-    }
-    catch (EthError const& _ex)
-    {
-        throw EthError(_ex);
-    }
-    catch (std::exception const& _ex)
-    {
-        ETH_FAIL_MESSAGE(_ex.what());
-    }
+        , "eth_sendRawTransaction", CallType::FAILEVERYTHING)
     return FH32::zero();
 }
 
@@ -69,20 +77,11 @@ VALUE ToolImpl::eth_getTransactionCount(FH20 const& _address, VALUE const& _bloc
 {
     rpcCall("", {});
     ETH_TEST_MESSAGE("\nRequest: eth_getTransactionCount " + _blockNumber.asString() + " " + _address.asString());
-    try
-    {
+    TRYCATCHCALL(
         VALUE const& nonce = blockchain().blockByNumber(_blockNumber).state().getAccount(_address).nonce();
         ETH_TEST_MESSAGE("Response: eth_getTransactionCount " + nonce.asDecString());
         return nonce;
-    }
-    catch (EthError const& _ex)
-    {
-        throw EthError(_ex);
-    }
-    catch (std::exception const& _ex)
-    {
-        ETH_FAIL_MESSAGE(_ex.what());
-    }
+        , "eth_getTransactionCount", CallType::FAILEVERYTHING)
     return VALUE(0);
 }
 
@@ -90,21 +89,12 @@ VALUE ToolImpl::eth_blockNumber()
 {
     rpcCall("", {});
     ETH_TEST_MESSAGE("\nRequest: eth_blockNumber");
-    try
-    {
+    TRYCATCHCALL(
         VALUE const& number = m_toolChainManager.getContent().lastBlock().header().getCContent().number();
         string const snumber = number.asDecString();
         ETH_TEST_MESSAGE("Response: eth_blockNumber {" + snumber + "}");
         return number;
-    }
-    catch (EthError const& _ex)
-    {
-        throw EthError(_ex);
-    }
-    catch (std::exception const& _ex)
-    {
-        ETH_FAIL_MESSAGE(_ex.what());
-    }
+        , "eth_blockNumber", CallType::FAILEVERYTHING)
     return VALUE(0);
 }
 
@@ -114,20 +104,11 @@ EthGetBlockBy ToolImpl::eth_getBlockByHash(FH32 const& _hash, Request _fullObjec
     rpcCall("", {});
     (void)_fullObjects;
     ETH_TEST_MESSAGE("\nRequest: eth_getBlockByHash `" + _hash.asString());
-    try
-    {
+    TRYCATCHCALL(
         DataObject res = constructEthGetBlockBy(blockchain().blockByHash(_hash));
         ETH_LOG("Response: eth_getBlockByHash `" + res.asJson(), 7);
         return EthGetBlockBy(res);
-    }
-    catch (EthError const& _ex)
-    {
-        throw EthError(_ex);
-    }
-    catch (std::exception const& _ex)
-    {
-        ETH_FAIL_MESSAGE(_ex.what());
-    }
+        , "eth_getBlockByHash", CallType::FAILEVERYTHING)
     return EthGetBlockBy(DataObject());
 }
 
@@ -136,20 +117,11 @@ EthGetBlockBy ToolImpl::eth_getBlockByNumber(VALUE const& _blockNumber, Request 
     rpcCall("", {});
     (void)_fullObjects;
     ETH_TEST_MESSAGE("\nRequest: eth_getBlockByNumber `" + _blockNumber.asDecString());
-    try
-    {
+    TRYCATCHCALL(
         DataObject res = constructEthGetBlockBy(blockchain().blockByNumber(_blockNumber));
         ETH_LOG("Response: eth_getBlockByNumber `" + res.asJson(), 7);
         return EthGetBlockBy(res);
-    }
-    catch (EthError const& _ex)
-    {
-        throw EthError(_ex);
-    }
-    catch (std::exception const& _ex)
-    {
-        ETH_FAIL_MESSAGE(_ex.what());
-    }
+        , "eth_getBlockByNumber", CallType::FAILEVERYTHING)
     return EthGetBlockBy(DataObject());
 }
 
@@ -157,20 +129,11 @@ BYTES ToolImpl::eth_getCode(FH20 const& _address, VALUE const& _blockNumber)
 {
     rpcCall("", {});
     ETH_TEST_MESSAGE("\nRequest: eth_getCode " + _blockNumber.asString() + " " + _address.asString());
-    try
-    {
+    TRYCATCHCALL(
         BYTES const& code = blockchain().blockByNumber(_blockNumber).state().getAccount(_address).code();
         ETH_TEST_MESSAGE("Response: eth_getCode " + code.asString());
         return code;
-    }
-    catch (EthError const& _ex)
-    {
-        throw EthError(_ex);
-    }
-    catch (std::exception const& _ex)
-    {
-        ETH_FAIL_MESSAGE(_ex.what());
-    }
+        , "eth_getCode", CallType::FAILEVERYTHING)
     return BYTES(DataObject());
 }
 
@@ -178,20 +141,11 @@ VALUE ToolImpl::eth_getBalance(FH20 const& _address, VALUE const& _blockNumber)
 {
     rpcCall("", {});
     ETH_TEST_MESSAGE("\nRequest: eth_getBalance " + _blockNumber.asString() + " " + _address.asString());
-    try
-    {
+    TRYCATCHCALL(
         VALUE const& balance = blockchain().blockByNumber(_blockNumber).state().getAccount(_address).balance();
         ETH_TEST_MESSAGE("Response: eth_getBalance " + balance.asDecString());
         return balance;
-    }
-    catch (EthError const& _ex)
-    {
-        throw EthError(_ex);
-    }
-    catch (std::exception const& _ex)
-    {
-        ETH_FAIL_MESSAGE(_ex.what());
-    }
+        , "eth_getBalance", CallType::FAILEVERYTHING)
     return VALUE(0);
 }
 
@@ -201,25 +155,14 @@ DebugAccountRange ToolImpl::debug_accountRange(
 {
     rpcCall("", {});
     ETH_TEST_MESSAGE("\nRequest: debug_accountRange `" + _blockNumber.asDecString() + " " + _addressHash.asString());
+    (void) _txIndex;
 
-    (void)_txIndex;
-    (void)_addressHash;
-
-    try
-    {
+    TRYCATCHCALL(
         DataObject constructResponse =
             constructAccountRange(blockchain().blockByNumber(_blockNumber), _addressHash, _maxResults);
         ETH_TEST_MESSAGE("Response: debug_accountRange " + constructResponse.asJson());
         return DebugAccountRange(constructResponse);
-    }
-    catch (EthError const& _ex)
-    {
-        throw EthError(_ex);
-    }
-    catch (std::exception const& _ex)
-    {
-        ETH_FAIL_MESSAGE(_ex.what());
-    }
+        , "debug_accountRange", CallType::FAILEVERYTHING)
     return DebugAccountRange(DataObject());
 }
 
@@ -228,24 +171,13 @@ DebugAccountRange ToolImpl::debug_accountRange(
 {
     rpcCall("", {});
     ETH_TEST_MESSAGE("\nRequest: debug_accountRange " + _blockHash.asString() + " " + _addressHash.asString());
+    (void) _txIndex;
 
-    (void)_txIndex;
-    (void)_addressHash;
-
-    try
-    {
+    TRYCATCHCALL(
         DataObject constructResponse = constructAccountRange(blockchain().blockByHash(_blockHash), _addressHash, _maxResults);
         ETH_TEST_MESSAGE("Response: debug_accountRange " + constructResponse.asJson());
         return DebugAccountRange(constructResponse);
-    }
-    catch (EthError const& _ex)
-    {
-        throw EthError(_ex);
-    }
-    catch (std::exception const& _ex)
-    {
-        ETH_FAIL_MESSAGE(_ex.what());
-    }
+        , "debug_accountRange", CallType::FAILEVERYTHING)
     return DebugAccountRange(DataObject());
 }
 
@@ -255,24 +187,14 @@ DebugStorageRangeAt ToolImpl::debug_storageRangeAt(
     rpcCall("", {});
     ETH_TEST_MESSAGE("\nRequest: debug_storageRangeAt bl:" + _blockNumber.asDecString() + " ind:" + _begin.asString() +
                      " addr:" + _address.asString());
-    (void)_txIndex;
-    (void)_maxResults;
+    (void) _txIndex;
 
-    try
-    {
+    TRYCATCHCALL(
         DataObject constructResponse =
             constructStorageRangeAt(blockchain().blockByNumber(_blockNumber), _address, _begin, _maxResults);
         ETH_TEST_MESSAGE("Response: debug_storageRangeAt " + constructResponse.asJson());
         return DebugStorageRangeAt(constructResponse);
-    }
-    catch (EthError const& _ex)
-    {
-        throw EthError(_ex);
-    }
-    catch (std::exception const& _ex)
-    {
-        ETH_FAIL_MESSAGE(_ex.what());
-    }
+        , "debug_storageRangeAt", CallType::FAILEVERYTHING)
     return DebugStorageRangeAt(DataObject());
 }
 
@@ -282,24 +204,14 @@ DebugStorageRangeAt ToolImpl::debug_storageRangeAt(
     rpcCall("", {});
     ETH_TEST_MESSAGE("\nRequest: debug_storageRangeAt bl:" + _blockHash.asString() + " ind:" + _begin.asString() +
                      " addr:" + _address.asString());
-    (void)_txIndex;
-    (void)_maxResults;
+    (void) _txIndex;
 
-    try
-    {
+    TRYCATCHCALL(
         DataObject constructResponse =
             constructStorageRangeAt(blockchain().blockByHash(_blockHash), _address, _begin, _maxResults);
         ETH_TEST_MESSAGE("Response: debug_storageRangeAt " + constructResponse.asJson());
         return DebugStorageRangeAt(constructResponse);
-    }
-    catch (EthError const& _ex)
-    {
-        throw EthError(_ex);
-    }
-    catch (std::exception const& _ex)
-    {
-        ETH_FAIL_MESSAGE(_ex.what());
-    }
+        , "debug_storageRangeAt", CallType::FAILEVERYTHING)
     return DebugStorageRangeAt(DataObject());
 }
 
@@ -307,18 +219,9 @@ DebugVMTrace ToolImpl::debug_traceTransaction(FH32 const& _trHash)
 {
     rpcCall("", {});
     ETH_TEST_MESSAGE("\nRequest: debug_traceTransaction: " + _trHash.asString());
-    try
-    {
+    TRYCATCHCALL(
         return blockchain().lastBlock().getTrTrace(_trHash);
-    }
-    catch (EthError const& _ex)
-    {
-        throw EthError(_ex);
-    }
-    catch (std::exception const& _ex)
-    {
-        ETH_FAIL_MESSAGE(_ex.what());
-    }
+        , "debug_traceTransaction", CallType::FAILEVERYTHING)
     return DebugVMTrace();
 }
 
@@ -329,37 +232,20 @@ void ToolImpl::test_setChainParams(SetChainParamsArgs const& _config)
     ETH_TEST_MESSAGE("\nRequest: test_setChainParams \n" + _config.asDataObject().asJson());
 
     // Ask tool to calculate genesis header stateRoot for genesisHeader
-    try
-    {
+    TRYCATCHCALL(
         m_toolChainManager = GCP_SPointer<ToolChainManager>(new ToolChainManager(_config, m_toolPath, m_tmpDir));
-    }
-    catch (EthError const& _ex)
-    {
-        throw EthError(_ex);
-    }
-    catch (std::exception const& _ex)
-    {
-        ETH_FAIL_MESSAGE(_ex.what());
-    }
-    ETH_TEST_MESSAGE("Response test_setChainParams: {true}");
+        ETH_TEST_MESSAGE("Response test_setChainParams: {true}");
+        , "test_setChainParams", CallType::DONTFAILONUPWARDS)
+    ETH_TEST_MESSAGE("Response test_setChainParams: {false}");
 }
 
 void ToolImpl::test_rewindToBlock(VALUE const& _blockNr)
 {
     rpcCall("", {});
     ETH_TEST_MESSAGE("\nRequest: test_rewindToBlock " + _blockNr.asDecString());
-    try
-    {
+    TRYCATCHCALL(
         blockchain().rewindToBlock(_blockNr);
-    }
-    catch (EthError const& _ex)
-    {
-        throw EthError(_ex);
-    }
-    catch (std::exception const& _ex)
-    {
-        ETH_FAIL_MESSAGE(_ex.what());
-    }
+        , "test_rewindToBlock", CallType::DONTFAILONUPWARDS)
     ETH_TEST_MESSAGE("Response: test_rewindToBlock: " + blockchain().lastBlock().header().getCContent().number().asDecString());
 }
 
@@ -367,40 +253,20 @@ void ToolImpl::test_modifyTimestamp(VALUE const& _timestamp)
 {
     rpcCall("", {});
     ETH_TEST_MESSAGE("\nRequest: test_modifyTimestamp " + _timestamp.asDecString());
-    try
-    {
+    TRYCATCHCALL(
         blockchain().modifyTimestamp(_timestamp);
-    }
-    catch (EthError const& _ex)
-    {
-        throw EthError(_ex);
-    }
-    catch (std::exception const& _ex)
-    {
-        ETH_FAIL_MESSAGE(_ex.what());
-    }
-    ETH_TEST_MESSAGE("Response: test_modifyTimestamp " + _timestamp.asDecString());
+        ETH_TEST_MESSAGE("Response: test_modifyTimestamp " + _timestamp.asDecString());
+            , "test_modifyTimestamp", CallType::DONTFAILONUPWARDS)
 }
 
 void ToolImpl::test_mineBlocks(size_t _number)
 {
     rpcCall("", {});
     ETH_TEST_MESSAGE("\nRequest: test_mineBlocks");
-    try
-    {
+    TRYCATCHCALL(
         blockchain().mineBlocks(_number);
-    }
-    catch (EthError const& _ex)
-    {
-        throw EthError(_ex);
-    }
-    catch (std::exception const& _ex)
-    {
-        ETH_FAIL_MESSAGE(_ex.what());
-    }
-
-    ETH_TEST_MESSAGE(
-        "Response test_mineBlocks {" + blockchain().lastBlock().header().getCContent().number().asDecString() + "}");
+        ETH_TEST_MESSAGE("Response test_mineBlocks {" + blockchain().lastBlock().header().getCContent().number().asDecString() + "}");
+            , "test_mineBlocks", CallType::FAILEVERYTHING)
 }
 
 // Import block from RAW rlp and validate it according to ethereum rules
@@ -408,43 +274,24 @@ void ToolImpl::test_mineBlocks(size_t _number)
 FH32 ToolImpl::test_importRawBlock(BYTES const& _blockRLP)
 {
     rpcCall("", {});
-    try
-    {
+    TRYCATCHCALL(
         ETH_TEST_MESSAGE("\nRequest: test_importRawBlock, following transaction import are internal");
         FH32 const hash = blockchain().importRawBlock(_blockRLP);
         ETH_TEST_MESSAGE("Response test_importRawBlock: " + hash.asString());
         return hash;
-    }
-    catch (EthError const& _ex)
-    {
-        throw EthError(_ex);
-    }
-    catch (std::exception const& _ex)
-    {
-        makeRPCError(_ex.what());
-        ETH_TEST_MESSAGE(string("Response test_importRawBlock: ") + _ex.what());
-        return FH32::zero();
-    }
+        , "test_importRawBlock", CallType::FAILEVERYTHING)
+    return FH32::zero();
 }
 
 FH32 ToolImpl::test_getLogHash(FH32 const& _txHash)
 {
     rpcCall("", {});
-    try
-    {
+    TRYCATCHCALL(
         ETH_TEST_MESSAGE("\nRequest: test_getLogHash " + _txHash.asString());
         FH32 const& res = blockchain().lastBlock().logHash();
         ETH_TEST_MESSAGE("Response: test_getLogHash " + res.asString());
         return res;
-    }
-    catch (EthError const& _ex)
-    {
-        throw EthError(_ex);
-    }
-    catch (std::exception const& _ex)
-    {
-        ETH_FAIL_MESSAGE(_ex.what());
-    }
+        , "test_getLogHash", CallType::FAILEVERYTHING)
     return _txHash;
 }
 

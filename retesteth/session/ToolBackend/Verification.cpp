@@ -16,8 +16,11 @@ void verifyLegacyBlock(spBlockHeader const& _header, ToolChain const& _chain)
         throw test::UpwardsException("Invalid gasUsed: header.gasUsed > header.gasLimit");
 }
 
-void verifyLegacyParent(spBlockHeader const& _header, spBlockHeader const& _parent)
+void verifyLegacyParent(spBlockHeader const& _header, spBlockHeader const& _parent, ToolChain const& _chain)
 {
+    if (_chain.fork().asString() == "BerlinToLondonAt5" && _parent.getCContent().number() == 4)
+        throw test::UpwardsException("Legacy block import is impossible on BerlinToLondonAt5 after block#4!");
+
     if (_header.getCContent().type() != BlockType::BlockHeaderLegacy)
         ETH_FAIL_MESSAGE("verifyLegacyBlock got block of another type!");
 
@@ -50,24 +53,34 @@ void verify1559Block(spBlockHeader const& _header, ToolChain const& _chain)
 void verify1559Parent(spBlockHeader const& _header, spBlockHeader const& _parent, ToolChain const& _chain)
 {
     if (_header.getCContent().type() != BlockType::BlockHeader1559)
-        ETH_FAIL_MESSAGE("verify1559Block got block of another type!");
+        ETH_FAIL_MESSAGE("verify1559Parent got block of another type!");
 
     BlockHeader1559 const& header = BlockHeader1559::castFrom(_header);
-    BlockHeader1559 const& parent = BlockHeader1559::castFrom(_parent);
+    if (header.number() == 5 && _chain.fork() == "BerlinToLondonAt5")
+    {
+        if (_parent.getCContent().type() != BlockType::BlockHeaderLegacy)
+            ETH_FAIL_MESSAGE("verify1559Parent first 1559 block must be on top of legacy block!");
+    }
+    else
+    {
+        if (_parent.getCContent().type() != BlockType::BlockHeader1559)
+            ETH_FAIL_MESSAGE("verify1559Parent 1559 block must be on top of 1559 block!");
+        BlockHeader1559 const& parent = BlockHeader1559::castFrom(_parent);
 
-    // Check if the block changed the gas target too much
-    VALUE deltaGasT = parent.gasTarget().asU256() / 1024;
-    if (header.gasTarget().asU256() > parent.gasTarget().asU256() + deltaGasT.asU256())
-        throw test::UpwardsException() << "Invalid block1559: gasTarget increased too much!";
-    if (header.gasTarget().asU256() < parent.gasTarget().asU256() - deltaGasT.asU256())
-        throw test::UpwardsException() << "Invalid block1559: gasTarget decreased too much!";
+        // Check if the block changed the gas target too much
+        VALUE deltaGasT = parent.gasTarget().asU256() / 1024;
+        if (header.gasTarget().asU256() > parent.gasTarget().asU256() + deltaGasT.asU256())
+            throw test::UpwardsException() << "Invalid block1559: gasTarget increased too much!";
+        if (header.gasTarget().asU256() < parent.gasTarget().asU256() - deltaGasT.asU256())
+            throw test::UpwardsException() << "Invalid block1559: gasTarget decreased too much!";
 
-    // Check if the base fee is correct
-    ChainOperationParams params = ChainOperationParams::defaultParams(_chain.toolParams());
-    VALUE newBaseFee = calculateEIP1559BaseFee(params, _header, _parent);
-    if (header.baseFee() != newBaseFee)
-        throw test::UpwardsException() << "Invalid block1559: base fee not correct! Expected: `" + newBaseFee.asDecString() +
-                                              "`, got: `" + header.baseFee().asDecString() + "`";
+        // Check if the base fee is correct
+        ChainOperationParams params = ChainOperationParams::defaultParams(_chain.toolParams());
+        VALUE newBaseFee = calculateEIP1559BaseFee(params, _header, _parent);
+        if (header.baseFee() != newBaseFee)
+            throw test::UpwardsException() << "Invalid block1559: base fee not correct! Expected: `" +
+                                                  newBaseFee.asDecString() + "`, got: `" + header.baseFee().asDecString() + "`";
+    }
 }
 
 void verifyCommonBlock(spBlockHeader const& _header, ToolChain const& _chain)
@@ -142,7 +155,7 @@ void verifyEthereumBlockHeader(spBlockHeader const& _header, ToolChain const& _c
             switch (_header.getCContent().type())
             {
             case BlockType::BlockHeaderLegacy:
-                verifyLegacyParent(_header, parentBlock.header());
+                verifyLegacyParent(_header, parentBlock.header(), _chain);
                 break;
             case BlockType::BlockHeader1559:
                 verify1559Parent(_header, parentBlock.header(), _chain);
