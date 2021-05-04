@@ -150,8 +150,8 @@ void TestBlockchainManager::reorgChains(BlockchainTestFillerBlock const& _block)
             "Require a `new blocknumber` == `previous blocknumber` + 1 has (" + newBlockNumber.asDecString() + " vs " +
                 fto_string(blocksInChain + 1) + ")");
 
-        VALUE actualNumberOnTheClient(m_session.eth_blockNumber());
-        if (newBlockNumber != actualNumberOnTheClient + 1)
+        VALUE actualNumberOnTheClient(m_session.eth_blockNumber() + 1);
+        if (newBlockNumber != actualNumberOnTheClient)
             ETH_WARNING("Test mining blocknumber `" + newBlockNumber.asDecString() + "`, but client actually mine number: `" +
                         actualNumberOnTheClient.asDecString() + "`");
     }

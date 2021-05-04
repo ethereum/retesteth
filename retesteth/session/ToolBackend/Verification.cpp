@@ -64,7 +64,7 @@ void verify1559Parent(spBlockHeader const& _header, spBlockHeader const& _parent
     else
     {
         if (_parent.getCContent().type() != BlockType::BlockHeader1559)
-            ETH_FAIL_MESSAGE("verify1559Parent 1559 block must be on top of 1559 block!");
+            throw test::UpwardsException() << "verify1559Parent 1559 block must be on top of 1559 block!";
         BlockHeader1559 const& parent = BlockHeader1559::castFrom(_parent);
 
         // Check if the block changed the gas target too much

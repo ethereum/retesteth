@@ -41,6 +41,9 @@ private:
     // 1559 block
     spVALUE m_gasTarget;
     spVALUE m_baseFee;
+
+    // Overwrite fields
+    std::set<std::string> m_removeKeys;
 };
 
 typedef GCP_SPointer<BlockHeaderIncomplete> spBlockHeaderIncomplete;

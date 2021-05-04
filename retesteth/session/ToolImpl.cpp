@@ -279,7 +279,7 @@ FH32 ToolImpl::test_importRawBlock(BYTES const& _blockRLP)
         FH32 const hash = blockchain().importRawBlock(_blockRLP);
         ETH_TEST_MESSAGE("Response test_importRawBlock: " + hash.asString());
         return hash;
-        , "test_importRawBlock", CallType::FAILEVERYTHING)
+        , "test_importRawBlock", CallType::DONTFAILONUPWARDS)
     return FH32::zero();
 }
 
