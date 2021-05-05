@@ -21,7 +21,12 @@ void BlockHeader1559::fromData(DataObject const& _data)
         m_author = spFH20(new FH20(_data.atKey(akey)));
         m_difficulty = spVALUE(new VALUE(_data.atKey("difficulty")));
         m_extraData = spBYTES(new BYTES(_data.atKey("extraData")));
-        m_gasTarget = spVALUE(new VALUE(_data.atKey("gasTarget")));
+
+        if (_data.count("gasTarget"))
+            m_gasTarget = spVALUE(new VALUE(_data.atKey("gasTarget")));
+        else
+            m_gasTarget = spVALUE(new VALUE(_data.atKey("gasLimit")));
+
         m_baseFee = spVALUE(new VALUE(_data.atKey("baseFee")));
         m_gasUsed = spVALUE(new VALUE(_data.atKey("gasUsed")));
         if (_data.count("hash"))
@@ -66,7 +71,8 @@ void BlockHeader1559::fromData(DataObject const& _data)
                 {"miner", {{DataType::String}, jsonField::Optional}},
                 {"difficulty", {{DataType::String}, jsonField::Required}},
                 {"extraData", {{DataType::String}, jsonField::Required}},
-                {"gasTarget", {{DataType::String}, jsonField::Required}},
+                {"gasTarget", {{DataType::String}, jsonField::Optional}},
+                {"gasLimit", {{DataType::String}, jsonField::Optional}},
                 {"baseFee", {{DataType::String}, jsonField::Required}},
                 {"gasUsed", {{DataType::String}, jsonField::Required}},
                 {"hash", {{DataType::String}, jsonField::Optional}},

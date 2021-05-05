@@ -23,6 +23,8 @@ private:
     std::string m_message;
 };
 
+void throwException(std::string const& _ex);
+
 template <class T>
 class GCP_SPointer;
 class GCP_SPointerBase
@@ -152,19 +154,19 @@ public:
     T& operator*()
     {
         if (isEmpty())
-            throw SPointerException("GCP_SPointer:: T& operator*():: smart pointer is empty!");
+            throwException("GCP_SPointer:: T& operator*():: smart pointer is empty!");
         return *getPointerUnsafe();
     }
     T& getContent()
     {
         if (isEmpty())
-            throw SPointerException("GCP_SPointer:: T& getContent():: smart pointer is empty!");
+            throwException("GCP_SPointer:: T& getContent():: smart pointer is empty!");
         return *getPointerUnsafe();
     }
     T const& getCContent() const
     {
         if (isEmpty())
-            throw SPointerException("GCP_SPointer:: T const& getCContent() const:: smart pointer is empty!");
+            throwException("GCP_SPointer:: T const& getCContent() const:: smart pointer is empty!");
         return *getCPtr();
     }
 
