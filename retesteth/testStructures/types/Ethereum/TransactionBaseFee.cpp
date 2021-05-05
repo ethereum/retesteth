@@ -12,12 +12,10 @@ namespace test
 {
 namespace teststruct
 {
-TransactionBaseFee::TransactionBaseFee(DataObject const& _data, string const& _dataRawPreview, string const& _dataLabel)
-  : TransactionAccessList()
+TransactionBaseFee::TransactionBaseFee(DataObject const& _data)
+  : Transaction()
 {
     fromDataObject(_data);
-    m_dataRawPreview = _dataRawPreview;
-    m_dataLabel = _dataLabel;
 }
 
 void TransactionBaseFee::fromDataObject(DataObject const& _data)
@@ -26,8 +24,8 @@ void TransactionBaseFee::fromDataObject(DataObject const& _data)
     try
     {
         m_accessList = spAccessList(new AccessList(_data.atKey("accessList")));
-        m_maxFeePerGas = spVALUE(new VALUE(_data.atKey("maxFeePerGas")));
-        m_maxInclusionFeePerGas = spVALUE(new VALUE(_data.atKey("maxInclusionFeePerGas")));
+        m_feeCap = spVALUE(new VALUE(_data.atKey("feeCap")));
+        m_tip = spVALUE(new VALUE(_data.atKey("tip")));
 
         m_data = spBYTES(new BYTES(_data.atKey("data")));
         m_gasLimit = spVALUE(new VALUE(_data.atKey("gasLimit")));
@@ -71,8 +69,8 @@ void TransactionBaseFee::fromDataObject(DataObject const& _data)
                 {"accessList", {{DataType::Array}, jsonField::Required}},
 
                 // Transaction type 2
-                {"maxFeePerGas", {{DataType::String}, jsonField::Required}},
-                {"maxInclusionFeePerGas", {{DataType::String, DataType::Null}, jsonField::Required}},
+                {"feeCap", {{DataType::String}, jsonField::Required}},
+                {"tip", {{DataType::String}, jsonField::Required}},
 
                 {"publicKey", {{DataType::String}, jsonField::Optional}},  // Besu EthGetBlockBy transaction
                 {"raw", {{DataType::String}, jsonField::Optional}},        // Besu EthGetBlockBy transaction
@@ -112,11 +110,10 @@ void TransactionBaseFee::fromRLP(dev::RLP const& _rlp)
     rlpToString(_rlp[i++]);  // chainID
     trData["nonce"] = rlpToString(_rlp[i++]);
 
-    trData["gasPrice"] = "0x10";  // fake gasPrice
-    trData["maxInclusionFeePerGas"] = rlpToString(_rlp[i++]);
-    trData["maxFeePerGas"] = rlpToString(_rlp[i++]);
-    m_maxInclusionFeePerGas = spVALUE(new VALUE(trData["maxInclusionFeePerGas"]));
-    m_maxFeePerGas = spVALUE(new VALUE(trData["maxFeePerGas"]));
+    trData["tip"] = rlpToString(_rlp[i++]);
+    trData["feeCap"] = rlpToString(_rlp[i++]);
+    m_tip = spVALUE(new VALUE(trData["tip"]));
+    m_feeCap = spVALUE(new VALUE(trData["feeCap"]));
 
     trData["gasLimit"] = rlpToString(_rlp[i++]);
     string const to = rlpToString(_rlp[i++], 0);
@@ -132,7 +129,7 @@ void TransactionBaseFee::fromRLP(dev::RLP const& _rlp)
     trData["v"] = rlpToString(_rlp[i++]);
     trData["r"] = rlpToString(_rlp[i++]);
     trData["s"] = rlpToString(_rlp[i++]);
-    fromDataObject(trData);
+    TransactionBaseFee::fromDataObject(trData);
 }
 
 
@@ -157,21 +154,21 @@ void TransactionBaseFee::buildVRS(VALUE const& _secret)
     DataObject v = DataObject(dev::toCompactHexPrefixed(dev::u256(sigStruct.v), 1));
     DataObject r = DataObject(dev::toCompactHexPrefixed(dev::u256(sigStruct.r)));
     DataObject s = DataObject(dev::toCompactHexPrefixed(dev::u256(sigStruct.s)));
-    assignV(spVALUE(new VALUE(v)));
-    assignR(spVALUE(new VALUE(r)));
-    assignS(spVALUE(new VALUE(s)));
+    m_v = spVALUE(new VALUE(v));
+    m_r = spVALUE(new VALUE(r));
+    m_s = spVALUE(new VALUE(s));
     rebuildRLP();
 }
 
 void TransactionBaseFee::streamHeader(dev::RLPStream& _s) const
 {
-    // rlp([chainId, nonce, maxInclusionFeePerGas, maxFeePerGas, gasLimit, to, value, data, access_list, signatureYParity,
+    // rlp([chainId, nonce, tip, feeCap, gasLimit, to, value, data, access_list, signatureYParity,
     // signatureR, signatureS])
     _s << VALUE(1).asU256();
     _s << nonce().asU256();
 
-    _s << maxInclusionFeePerGas().asU256();
-    _s << maxFeePerGas().asU256();
+    _s << m_tip.getCContent().asU256();
+    _s << m_feeCap.getCContent().asU256();
 
     _s << gasLimit().asU256();
     if (Transaction::isCreation())
@@ -191,27 +188,60 @@ void TransactionBaseFee::streamHeader(dev::RLPStream& _s) const
 
 DataObject const TransactionBaseFee::asDataObject(ExportOrder _order) const
 {
-    DataObject out = Transaction::asDataObject(_order);
+    // Because we don't use gas_price field need to explicitly output
+    DataObject out;
+    out["data"] = m_data.getCContent().asString();
+    out["gasLimit"] = m_gasLimit.getCContent().asString();
+    out["nonce"] = m_nonce.getCContent().asString();
+    if (m_creation)
+    {
+        if (_order != ExportOrder::ToolStyle)
+            out["to"] = "";
+    }
+    else
+        out["to"] = m_to.getCContent().asString();
+    out["value"] = m_value.getCContent().asString();
+    out["v"] = m_v.getCContent().asString();
+    out["r"] = m_r.getCContent().asString();
+    out["s"] = m_s.getCContent().asString();
+    if (_order == ExportOrder::ToolStyle)
+    {
+        out.performModifier(mod_removeLeadingZerosFromHexValues, {"data", "to"});
+        out.renameKey("gasLimit", "gas");
+        out.renameKey("data", "input");
+        if (!m_secretKey.isEmpty() && m_secretKey.getCContent() != 0)
+            out["secretKey"] = m_secretKey.getCContent().asString();
+    }
+    if (_order == ExportOrder::OldStyle)
+    {
+        out.setKeyPos("r", 4);
+        out.setKeyPos("s", 5);
+        out.setKeyPos("v", 7);
+    }
 
+    // standard transaction output without gas_price end
+
+    // begin eip1559 transaction info
     out["chainId"] = "0x01";
     out["type"] = "0x02";
-    out["maxFeePerGas"] = m_maxFeePerGas.getCContent().asString();
-    out["maxInclusionFeePerGas"] = m_maxInclusionFeePerGas.getCContent().asString();
+    out["feeCap"] = m_feeCap.getCContent().asString();
+    out["tip"] = m_tip.getCContent().asString();
     if (_order == ExportOrder::ToolStyle)
     {
         out["chainId"] = "0x1";
         out["type"] = "0x2";
 
         DataObject t8ntoolFields;
-        t8ntoolFields["maxFeePerGas"] = m_maxFeePerGas.getCContent().asString();
-        t8ntoolFields["maxInclusionFeePerGas"] = m_maxInclusionFeePerGas.getCContent().asString();
+        t8ntoolFields["feeCap"] = m_feeCap.getCContent().asString();
+        t8ntoolFields["tip"] = m_tip.getCContent().asString();
         t8ntoolFields.performModifier(mod_removeLeadingZerosFromHexValues);
-        out["maxFeePerGas"] = t8ntoolFields["maxFeePerGas"];
-        out["maxInclusionFeePerGas"] = t8ntoolFields["maxInclusionFeePerGas"];
+        out["feeCap"] = t8ntoolFields["feeCap"];
+        out["tip"] = t8ntoolFields["tip"];
 
         if (!m_secretKey.isEmpty() && m_secretKey.getCContent() != 0)
             out["secretKey"] = m_secretKey.getCContent().asString();
     }
+    out["accessList"] = m_accessList.getCContent().asDataObject();
     return out;
 }
 
@@ -221,7 +251,7 @@ void TransactionBaseFee::rebuildRLP()
     dev::RLPStream wrapper;
     dev::RLPStream out;
     out.appendList(12);
-    streamHeader(out);
+    TransactionBaseFee::streamHeader(out);
     out << v().asU256().convert_to<dev::byte>();
     out << r().asU256();
     out << s().asU256();

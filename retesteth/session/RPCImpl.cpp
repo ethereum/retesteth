@@ -31,8 +31,8 @@ VALUE RPCImpl::eth_getTransactionCount(FH20 const& _address, VALUE const& _block
 {
     try
     {
-        DataObject const response =
-            rpcCall("eth_getTransactionCount", {quote(_address.asString()), quote(_blockNumber.asString())});
+        DataObject response = rpcCall("eth_getTransactionCount", {quote(_address.asString()), quote(_blockNumber.asString())});
+        response.performModifier(mod_valueToCompactEvenHexPrefixed);
         if (response.type() == DataType::String)
             return VALUE(response);
         return VALUE(response.asInt());

@@ -16,24 +16,28 @@ struct BlockHeader1559 : BlockHeader
 {
     BlockHeader1559(DataObject const&);
     BlockHeader1559(dev::RLP const&);
+
     DataObject const asDataObject() const override;
     dev::RLPStream const asRLPStream() const override;
-
-    // bool operator==(BlockHeader1559 const& _rhs) const;
-    // bool operator!=(BlockHeader1559 const& _rhs) const { return !(*this == _rhs); };
-
-    VALUE const& gasLimit() const override;
-    VALUE const& gasTarget() const { return m_gasTarget.getCContent(); }
-    VALUE const& baseFeePerGas() const { return m_baseFeePerGas.getCContent(); }
-
     BlockType type() const override { return BlockType::BlockHeader1559; }
+
+    // Unique fields
+    VALUE const& gasTarget() const { return m_gasTarget.getCContent(); }
+    VALUE const& baseFee() const { return m_baseFee.getCContent(); }
+    void setGasTarget(VALUE const& _gasTarget) { m_gasTarget = spVALUE(new VALUE(_gasTarget)); }
+    void setBaseFee(VALUE const& _baseFee) { m_baseFee = spVALUE(new VALUE(_baseFee)); }
+
+    // Static
+    static BlockHeader1559 const& castFrom(spBlockHeader const& _from);
+    static BlockHeader1559& castFrom(BlockHeader& _from);
 
 protected:
     BlockHeader1559(){};
     void fromData(DataObject const&) override;
 
+    // Ethereum eip1559 blockheader fields
     spVALUE m_gasTarget;
-    spVALUE m_baseFeePerGas;
+    spVALUE m_baseFee;
 };
 
 typedef GCP_SPointer<BlockHeader1559> spBlockHeader1559;

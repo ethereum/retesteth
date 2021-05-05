@@ -43,12 +43,22 @@ ToolParams::ToolParams(DataObject const& _data)
 
 // We simulate the client backend side here, so thats why number5 is hardcoded
 // Map rewards from non standard forks into standard
-static std::map<FORK, FORK> RewardMapForToolBefore5 = {{"FrontierToHomesteadAt5", "Frontier"},
-    {"HomesteadToEIP150At5", "Homestead"}, {"EIP158ToByzantiumAt5", "EIP158"}, {"HomesteadToDaoAt5", "Homestead"},
-    {"ByzantiumToConstantinopleFixAt5", "Byzantium"}};
-static std::map<FORK, FORK> RewardMapForToolAfter5 = {{"FrontierToHomesteadAt5", "Homestead"},
-    {"HomesteadToEIP150At5", "EIP150"}, {"EIP158ToByzantiumAt5", "Byzantium"}, {"HomesteadToDaoAt5", "Homestead"},
-    {"ByzantiumToConstantinopleFixAt5", "ConstantinopleFix"}};
+static std::map<FORK, FORK> RewardMapForToolBefore5 = {
+    {"FrontierToHomesteadAt5", "Frontier"},
+    {"HomesteadToEIP150At5", "Homestead"},
+    {"EIP158ToByzantiumAt5", "EIP158"},
+    {"HomesteadToDaoAt5", "Homestead"},
+    {"ByzantiumToConstantinopleFixAt5", "Byzantium"},
+    {"BerlinToLondonAt5", "Berlin"}
+};
+static std::map<FORK, FORK> RewardMapForToolAfter5 = {
+    {"FrontierToHomesteadAt5", "Homestead"},
+    {"HomesteadToEIP150At5", "EIP150"},
+    {"EIP158ToByzantiumAt5", "Byzantium"},
+    {"HomesteadToDaoAt5", "Homestead"},
+    {"ByzantiumToConstantinopleFixAt5", "ConstantinopleFix"},
+    {"BerlinToLondonAt5", "Aleut"}
+};
 
 std::tuple<VALUE, FORK> prepareReward(SealEngine _engine, FORK const& _fork, VALUE const& _blockNumber)
 {
@@ -195,66 +205,32 @@ u256 calculateEthashDifficulty(ChainOperationParams const& _chainParams, spBlock
 }
 
 
-// Blockchain logic validator
-void verifyEthereumBlockHeader(spBlockHeader const& _header, ToolChain const& _chain)
+u256 calculateEIP1559BaseFee(ChainOperationParams const& _chainParams, spBlockHeader const& _bi, spBlockHeader const& _parent)
 {
-    // Check ethereum rules
-    auto const& header = _header.getCContent();
-    if (header.gasLimit() > dev::u256("0x7fffffffffffffff"))
-        throw test::UpwardsException("Header gasLimit > 0x7fffffffffffffff");
-    if (header.difficulty() < dev::u256("0x20000"))
-        throw test::UpwardsException("Invalid difficulty: header.difficulty < 0x20000");
-    if (header.gasUsed() > header.gasLimit())
-        throw test::UpwardsException("Invalid gasUsed: header.gasUsed > header.gasLimit");
-    if (header.extraData().asString().size() > 32 * 2 + 2)
-        throw test::UpwardsException("Header extraData > 32 bytes");
+    (void)_chainParams;
+    (void)_bi;
 
-    // Check DAO extraData
-    if (_chain.fork().asString() == "HomesteadToDaoAt5" && header.number() > 4 && header.number() <= 5 + 9 &&
-        header.extraData().asString() != "0x64616f2d686172642d666f726b")
-        throw test::UpwardsException("BlockHeader require Dao ExtraData! (0x64616f2d686172642d666f726b)");
+    BlockHeader1559 const& parent = BlockHeader1559::castFrom(_parent);
 
-    bool found = false;
-    for (auto const& block : _chain.blocks())
+    u256 expectedBaseFee;
+    const size_t BASE_FEE_MAX_CHANGE_DENOMINATOR = 8;
+    if (parent.gasUsed() == parent.gasTarget())
+        expectedBaseFee = parent.baseFee().asU256();
+    else if (parent.gasUsed() > parent.gasTarget())
     {
-        // See if uncles not already in chain
-        if (block.header().getCContent().hash() == header.hash())
-            throw test::UpwardsException("Block is already in chain!");
-        for (auto const& un : block.uncles())
-            if (un.getCContent().hash() == header.hash())
-                throw test::UpwardsException("Block is already in chain!");
-
-        if (block.header().getCContent().hash() == header.parentHash())
-        {
-            found = true;
-
-            if (header.number() != block.header().getCContent().number() + 1)
-                throw test::UpwardsException("BlockHeader number != parent.number + 1 (" + header.number().asDecString() +
-                                             " != " + block.header().getCContent().number().asDecString() + ")");
-
-            if (block.header().getCContent().timestamp() >= header.timestamp())
-                throw test::UpwardsException("BlockHeader timestamp is less then it's parent block!");
-
-            // Validate block gasLimit delta
-            VALUE deltaGas = block.header().getCContent().gasLimit().asU256() / 1024;
-            if (header.gasLimit().asU256() >= block.header().getCContent().gasLimit().asU256() + deltaGas.asU256() ||
-                header.gasLimit().asU256() <= block.header().getCContent().gasLimit().asU256() - deltaGas.asU256())
-                throw test::UpwardsException("Invalid gaslimit: " + header.gasLimit().asDecString() + ", want " +
-                                             block.header().getCContent().gasLimit().asDecString() + " +/- " +
-                                             deltaGas.asDecString());
-
-            // Validate block difficulty delta
-            ChainOperationParams params = ChainOperationParams::defaultParams(_chain.toolParams());
-            u256 newDiff = calculateEthashDifficulty(params, _header, block.header());
-            if (header.difficulty().asU256() != newDiff)
-                throw test::UpwardsException(
-                    "Invalid difficulty: " + header.difficulty().asDecString() + ", want: " + VALUE(newDiff).asDecString());
-        }
+        VALUE gasUsedDelta = parent.gasUsed() - parent.gasTarget();
+        VALUE formula = parent.baseFee() * gasUsedDelta / parent.gasTarget() / BASE_FEE_MAX_CHANGE_DENOMINATOR;
+        VALUE baseFeePerGasDelta = max<dev::u256>(formula.asU256(), dev::u256(1));
+        expectedBaseFee = VALUE(parent.baseFee() + baseFeePerGasDelta).asU256();
     }
-    if (!found)
-        throw test::UpwardsException(
-            "verifyEthereumBlockHeader:: Parent block hash not found: " + _header.getCContent().parentHash().asString());
+    else
+    {
+        VALUE gasUsedDelta = parent.gasTarget() - parent.gasUsed();
+        VALUE baseFeePerGasDelta = parent.baseFee() * gasUsedDelta / parent.gasTarget() / BASE_FEE_MAX_CHANGE_DENOMINATOR;
+        VALUE formula = parent.baseFee() - baseFeePerGasDelta;
+        expectedBaseFee = VALUE(max<dev::u256>(formula.asU256(), dev::u256(0))).asU256();
+    }
+    return expectedBaseFee;
 }
-
 
 }  // namespace toolimpl

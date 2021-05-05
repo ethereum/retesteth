@@ -11,17 +11,17 @@ namespace teststruct
 spBlockHeader readBlockHeader(dev::RLP const& _rlp)
 {
     if (_rlp.itemCount() == 15)
-        return spBlockHeader(new BlockHeader(_rlp));
+        return spBlockHeader(new BlockHeaderLegacy(_rlp));
     else
         return spBlockHeader(new BlockHeader1559(_rlp));
 }
 
 spBlockHeader readBlockHeader(DataObject const& _filledData)
 {
-    if (_filledData.count("gasTarget"))
+    if (_filledData.count("baseFee"))
         return spBlockHeader(new BlockHeader1559(_filledData));
     else
-        return spBlockHeader(new BlockHeader(_filledData));
+        return spBlockHeader(new BlockHeaderLegacy(_filledData));
 }
 
 }  // namespace teststruct

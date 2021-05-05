@@ -11,8 +11,15 @@ namespace test
 {
 namespace teststruct
 {
+enum class ParamsContext
+{
+    StateTests,
+    BlockchainTests
+};
+
 // Prepare chain params rpc request
-SetChainParamsArgs prepareChainParams(FORK const&, SealEngine, State const&, StateTestEnvBase const&);
+SetChainParamsArgs prepareChainParams(FORK const&, SealEngine, State const&, StateTestEnvBase const&,
+    ParamsContext _paramsContext = ParamsContext::BlockchainTests);
 
 }  // namespace teststruct
 }  // namespace test

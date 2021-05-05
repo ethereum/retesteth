@@ -22,7 +22,7 @@ const string default_London_config = R"({
 
 const string t8ntool_London_config = R"({
     "params" : {
-        "fork" : "YOLOv3",
+        "fork" : "Aleut",
         "constantinopleForkBlock" : "0x00",
         "byzantiumForkBlock" : "0x00",
         "homesteadForkBlock" : "0x00"

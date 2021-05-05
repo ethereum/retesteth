@@ -33,7 +33,8 @@ const string t8ntool_correctMiningReward_config = R"({
     "//comment" : "Retesteth calculate rewards on behalf of the tool when filling state tests",
     "YOLOv1" :           "2000000000000000000",
     "YOLOv2" :           "2000000000000000000",
-    "YOLOv3" :           "2000000000000000000"
+    "YOLOv3" :           "2000000000000000000",
+    "Aleut"  :           "2000000000000000000"
 })";
 
 genRewardsCfg::genRewardsCfg()

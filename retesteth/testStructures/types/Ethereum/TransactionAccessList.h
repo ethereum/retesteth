@@ -1,5 +1,5 @@
 #pragma once
-#include "Transaction.h"
+#include "TransactionLegacy.h"
 using namespace dataobject;
 using namespace test::teststruct;
 
@@ -7,9 +7,10 @@ namespace test
 {
 namespace teststruct
 {
-struct TransactionAccessList : Transaction
+
+struct TransactionAccessList : TransactionLegacy
 {
-    TransactionAccessList(DataObject const&, string const& _dataRawPreview = string(), string const& _dataLabel = string());
+    TransactionAccessList(DataObject const&);
     TransactionAccessList(BYTES const&);
     TransactionAccessList(dev::RLP const&);
 
@@ -18,13 +19,15 @@ struct TransactionAccessList : Transaction
 
 protected:
     TransactionAccessList() {}
+
+    // Override protected interface
     void fromRLP(dev::RLP const&) override;
     void fromDataObject(DataObject const&) override;
-
     void buildVRS(VALUE const& _secret) override;
     void streamHeader(dev::RLPStream& _stream) const override;
-
     void rebuildRLP() override;
+
+    // Transaction access list specific field
     spAccessList m_accessList;
 };
 

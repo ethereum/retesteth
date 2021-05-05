@@ -38,15 +38,38 @@ void ToolChainManager::rewindToBlock(VALUE const& _number)
 void ToolChainManager::reorganizePendingBlock()
 {
     EthereumBlockState const& bl = currentChain().lastBlock();
-    m_pendingBlock = spEthereumBlockState(new EthereumBlockState(bl.header(), bl.state(), bl.logHash()));
-    m_pendingBlock.getContent().headerUnsafe().getContent().setNumber(bl.header().getCContent().number() + 1);
+    if (currentChain().fork() == "BerlinToLondonAt5" && bl.header().getCContent().number() == 4)
+    {
+        // Switch default mining to 1559 blocks
+        DataObject parentData = bl.header().getCContent().asDataObject();
+
+        // First ever eip1559 block params after the transition
+        parentData.renameKey("gasLimit", "gasTarget");
+        parentData["gasTarget"].setString("0xbebc20");
+        parentData["baseFee"] = "0x3b9aca00";
+        spBlockHeader newPending(new BlockHeader1559(parentData));
+        m_pendingBlock = spEthereumBlockState(new EthereumBlockState(newPending, bl.state(), bl.logHash()));
+    }
+    else
+        m_pendingBlock = spEthereumBlockState(new EthereumBlockState(bl.header(), bl.state(), bl.logHash()));
+
+    BlockHeader& header = m_pendingBlock.getContent().headerUnsafe().getContent();
+    header.setNumber(bl.header().getCContent().number() + 1);
 
     // Because aleth and geth+retesteth does this, but better be empty extraData
-    m_pendingBlock.getContent().headerUnsafe().getContent().setExtraData(bl.header().getCContent().extraData());
-    if (currentChain().fork() == "HomesteadToDaoAt5" && m_pendingBlock.getContent().header().getCContent().number() == 5)
-        m_pendingBlock.getContent().headerUnsafe().getContent().setExtraData(BYTES(DataObject("0x64616f2d686172642d666f726b")));
-    m_pendingBlock.getContent().headerUnsafe().getContent().setParentHash(
-        currentChain().lastBlock().header().getCContent().hash());
+    header.setExtraData(bl.header().getCContent().extraData());
+    if (currentChain().fork() == "HomesteadToDaoAt5" && header.number() == 5)
+        header.setExtraData(BYTES(DataObject("0x64616f2d686172642d666f726b")));
+    header.setParentHash(currentChain().lastBlock().header().getCContent().hash());
+
+    if (currentChain().lastBlock().header().getCContent().type() == BlockType::BlockHeader1559)
+    {
+        BlockHeader1559& header1559 = BlockHeader1559::castFrom(header);
+        ChainOperationParams params = ChainOperationParams::defaultParams(currentChain().toolParams());
+        u256 newFee =
+            calculateEIP1559BaseFee(params, m_pendingBlock.getCContent().header(), currentChain().lastBlock().header());
+        header1559.setBaseFee(VALUE(newFee));
+    }
 }
 
 EthereumBlockState const& ToolChainManager::blockByNumber(VALUE const& _number) const
@@ -79,6 +102,7 @@ FH32 ToolChainManager::importRawBlock(BYTES const& _rlp)
 {
     try
     {
+        // ETH_TEST_MESSAGE(_rlp.asString());
         dev::bytes decodeRLP = sfromHex(_rlp.asString());
         dev::RLP rlp(decodeRLP, dev::RLP::VeryStrict);
         toolimpl::verifyBlockRLP(rlp);

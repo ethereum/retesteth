@@ -22,7 +22,7 @@ SetChainParamsArgs::SetChainParamsArgs(DataObject const& _data)
     else
     {
         fullBlockHeader["gasTarget"] = genesis.atKey("gasTarget");
-        fullBlockHeader["baseFeePerGas"] = genesis.atKey("baseFeePerGas");
+        fullBlockHeader["baseFee"] = genesis.atKey("baseFee");
     }
     fullBlockHeader["extraData"] = genesis.atKey("extraData");
     fullBlockHeader["timestamp"] = genesis.atKey("timestamp");
@@ -57,13 +57,15 @@ DataObject SetChainParamsArgs::asDataObject() const
     out["genesis"]["author"] = m_genesis.getCContent().author().asString();
     out["genesis"]["difficulty"] = m_genesis.getCContent().difficulty().asString();
 
-    if (m_genesis.getCContent().type() == BlockType::BlockHeader)
-        out["genesis"]["gasLimit"] = m_genesis.getCContent().gasLimit().asString();
+    if (m_genesis.getCContent().type() == BlockType::BlockHeaderLegacy)
+    {
+        out["genesis"]["gasLimit"] = BlockHeaderLegacy::castFrom(m_genesis).gasLimit().asString();
+    }
     else
     {
-        BlockHeader1559 const& newbl = dynamic_cast<BlockHeader1559 const&>(m_genesis.getCContent());
+        BlockHeader1559 const& newbl = BlockHeader1559::castFrom(m_genesis);
         out["genesis"]["gasTarget"] = newbl.gasTarget().asString();
-        out["genesis"]["baseFeePerGas"] = newbl.baseFeePerGas().asString();
+        out["genesis"]["baseFee"] = newbl.baseFee().asString();
     }
 
     out["genesis"]["extraData"] = m_genesis.getCContent().extraData().asString();

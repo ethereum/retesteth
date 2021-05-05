@@ -1,7 +1,6 @@
-#include "BlockHeader.h"
+#include "BlockHeaderLegacy.h"
 #include "../../basetypes.h"
 #include <libdevcore/Address.h>
-#include <libdevcore/CommonIO.h>
 #include <libdevcore/RLP.h>
 #include <libdevcore/SHA3.h>
 #include <retesteth/TestHelper.h>
@@ -13,13 +12,11 @@ namespace test
 {
 namespace teststruct
 {
-
-void BlockHeader::fromData(DataObject const& _data)
+void BlockHeaderLegacy::fromData(DataObject const& _data)
 {
     try
     {
-        string const akey = _data.count("author") ? "author" :
-                            _data.count("miner") ? "miner" : "coinbase";
+        string const akey = _data.count("author") ? "author" : _data.count("miner") ? "miner" : "coinbase";
         m_author = spFH20(new FH20(_data.atKey(akey)));
         m_difficulty = spVALUE(new VALUE(_data.atKey("difficulty")));
         m_extraData = spBYTES(new BYTES(_data.atKey("extraData")));
@@ -59,35 +56,30 @@ void BlockHeader::fromData(DataObject const& _data)
 
         // Allowed fields for this structure
         requireJsonFields(_data, "BlockHeader " + _data.getKey(),
-            {{"bloom", {{DataType::String}, jsonField::Optional}},
-             {"logsBloom", {{DataType::String}, jsonField::Optional}},
-             {"coinbase", {{DataType::String}, jsonField::Optional}},
-             {"author", {{DataType::String}, jsonField::Optional}},
-             {"miner", {{DataType::String}, jsonField::Optional}},
-             {"difficulty", {{DataType::String}, jsonField::Required}},
-             {"extraData", {{DataType::String}, jsonField::Required}},
-             {"gasLimit", {{DataType::String}, jsonField::Required}},
-             {"gasUsed", {{DataType::String}, jsonField::Required}},
-             {"hash", {{DataType::String}, jsonField::Optional}},
-             {"mixHash", {{DataType::String}, jsonField::Optional}},
-             {"nonce", {{DataType::String}, jsonField::Optional}},
-             {"number", {{DataType::String}, jsonField::Required}},
-             {"parentHash", {{DataType::String}, jsonField::Required}},
-             {"receiptTrie", {{DataType::String}, jsonField::Optional}},
-             {"receiptsRoot", {{DataType::String}, jsonField::Optional}},
-             {"stateRoot", {{DataType::String}, jsonField::Required}},
-             {"timestamp", {{DataType::String}, jsonField::Required}},
-             {"transactionsTrie", {{DataType::String}, jsonField::Optional}},
-             {"transactionsRoot", {{DataType::String}, jsonField::Optional}},
-             {"sha3Uncles", {{DataType::String}, jsonField::Optional}},
-             {"uncleHash", {{DataType::String}, jsonField::Optional}},
-             {"seedHash", {{DataType::String}, jsonField::Optional}},            // EthGetBlockBy aleth field
-             {"boundary", {{DataType::String}, jsonField::Optional}},            // EthGetBlockBy aleth field
-             {"size", {{DataType::String}, jsonField::Optional}},               // EthGetBlockBy field
-             {"totalDifficulty", {{DataType::String}, jsonField::Optional}},    // EthGetBlockBy field
-             {"transactions", {{DataType::Array}, jsonField::Optional}},        // EthGetBlockBy field
-             {"uncles", {{DataType::Array}, jsonField::Optional}}               // EthGetBlockBy field
-                          });
+            {
+                {"bloom", {{DataType::String}, jsonField::Optional}}, {"logsBloom", {{DataType::String}, jsonField::Optional}},
+                {"coinbase", {{DataType::String}, jsonField::Optional}}, {"author", {{DataType::String}, jsonField::Optional}},
+                {"miner", {{DataType::String}, jsonField::Optional}}, {"difficulty", {{DataType::String}, jsonField::Required}},
+                {"extraData", {{DataType::String}, jsonField::Required}},
+                {"gasLimit", {{DataType::String}, jsonField::Required}}, {"gasUsed", {{DataType::String}, jsonField::Required}},
+                {"hash", {{DataType::String}, jsonField::Optional}}, {"mixHash", {{DataType::String}, jsonField::Optional}},
+                {"nonce", {{DataType::String}, jsonField::Optional}}, {"number", {{DataType::String}, jsonField::Required}},
+                {"parentHash", {{DataType::String}, jsonField::Required}},
+                {"receiptTrie", {{DataType::String}, jsonField::Optional}},
+                {"receiptsRoot", {{DataType::String}, jsonField::Optional}},
+                {"stateRoot", {{DataType::String}, jsonField::Required}},
+                {"timestamp", {{DataType::String}, jsonField::Required}},
+                {"transactionsTrie", {{DataType::String}, jsonField::Optional}},
+                {"transactionsRoot", {{DataType::String}, jsonField::Optional}},
+                {"sha3Uncles", {{DataType::String}, jsonField::Optional}},
+                {"uncleHash", {{DataType::String}, jsonField::Optional}},
+                {"seedHash", {{DataType::String}, jsonField::Optional}},         // EthGetBlockBy aleth field
+                {"boundary", {{DataType::String}, jsonField::Optional}},         // EthGetBlockBy aleth field
+                {"size", {{DataType::String}, jsonField::Optional}},             // EthGetBlockBy field
+                {"totalDifficulty", {{DataType::String}, jsonField::Optional}},  // EthGetBlockBy field
+                {"transactions", {{DataType::Array}, jsonField::Optional}},      // EthGetBlockBy field
+                {"uncles", {{DataType::Array}, jsonField::Optional}}             // EthGetBlockBy field
+            });
     }
     catch (std::exception const& _ex)
     {
@@ -95,12 +87,12 @@ void BlockHeader::fromData(DataObject const& _data)
     }
 }
 
-BlockHeader::BlockHeader(DataObject const& _data)
+BlockHeaderLegacy::BlockHeaderLegacy(DataObject const& _data)
 {
     fromData(_data);
 }
 
-BlockHeader::BlockHeader(dev::RLP const& _rlp)
+BlockHeaderLegacy::BlockHeaderLegacy(dev::RLP const& _rlp)
 {
     DataObject init;
     // 0 - parentHash           // 8 - number
@@ -130,7 +122,7 @@ BlockHeader::BlockHeader(dev::RLP const& _rlp)
     fromData(init);
 }
 
-const DataObject BlockHeader::asDataObject() const
+const DataObject BlockHeaderLegacy::asDataObject() const
 {
     DataObject out;
     out["bloom"] = m_logsBloom.getCContent().asString();
@@ -152,7 +144,7 @@ const DataObject BlockHeader::asDataObject() const
     return out;
 }
 
-const RLPStream BlockHeader::asRLPStream() const
+const RLPStream BlockHeaderLegacy::asRLPStream() const
 {
     RLPStream header;
     header.appendList(15);
@@ -175,19 +167,20 @@ const RLPStream BlockHeader::asRLPStream() const
     return header;
 }
 
-bool BlockHeader::operator==(BlockHeader const& _rhs) const
+BlockHeaderLegacy const& BlockHeaderLegacy::castFrom(spBlockHeader const& _from)
 {
-    return asDataObject() == _rhs.asDataObject();
-}
-
-void BlockHeader::recalculateHash()
-{
-    m_hash = spFH32(new FH32("0x" + toString(dev::sha3(asRLPStream().out()))));
-}
-
-bool BlockHeader::hasUncles() const
-{
-    return m_sha3Uncles.getCContent().asString() != "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347";
+    try
+    {
+        if (_from.getCContent().type() != BlockType::BlockHeaderLegacy)
+            ETH_FAIL_MESSAGE("BlockHeaderLegacy::castFrom() got wrong block type!");
+        return dynamic_cast<BlockHeaderLegacy const&>(_from.getCContent());
+    }
+    catch (...)
+    {
+        ETH_FAIL_MESSAGE("BlockHeaderLegacy::castFrom() failed!");
+    }
+    spBlockHeaderLegacy foo(new BlockHeaderLegacy(DataObject()));
+    return foo.getCContent();
 }
 
 }  // namespace teststruct

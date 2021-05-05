@@ -16,14 +16,16 @@ string const t8ntool_config = R"({
         "Constantinople",
         "ConstantinopleFix",
         "Istanbul",
-        "Berlin"
+        "Berlin",
+        "London"
     ],
     "additionalForks" : [
         "FrontierToHomesteadAt5",
         "HomesteadToEIP150At5",
         "EIP158ToByzantiumAt5",
         "HomesteadToDaoAt5",
-        "ByzantiumToConstantinopleFixAt5"
+        "ByzantiumToConstantinopleFixAt5",
+        "BerlinToLondonAt5"
     ],
     "exceptions" : {
       "InvalidStateRoot" : "",
@@ -142,7 +144,10 @@ string const t8ntool_config = R"({
       "RLP_NonCanonical_SizeInfo_EXTBLOCK" : "Error importing raw rlp block: BadRLP",
       "RLP_ExpectedInputList_TRANSACTION_DECODEINTO_BLOCK_EXTBLOCK_TXS" : "Error importing raw rlp block: BadCast",
       "RLP_ExpectedInputList_HEADER_DECODEINTO_BLOCK_EXTBLOCK_UNCLES" : "Error importing raw rlp block: OversizeRLP",
-      "RLP_ExpectedInputList_TXDATA_DECODEINTO_BLOCK_EXTBLOCK_TXS0" : "Error importing raw rlp block: Transaction RLP is expected to be list"
+      "RLP_ExpectedInputList_TXDATA_DECODEINTO_BLOCK_EXTBLOCK_TXS0" : "Error importing raw rlp block: Transaction RLP is expected to be list",
+      "LegacyBlockImportImpossible" : "Legacy block import is impossible",
+      "LegacyBlockBaseFeeTransaction" : "BaseFee transaction in a Legacy blcok",
+      "1559BlockImportImpossible_HeaderIsLegacy" : "1559 block must be on top of 1559"
     }
 })";
 

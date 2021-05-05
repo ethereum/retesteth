@@ -58,6 +58,15 @@ void ToolChain::mineBlock(EthereumBlockState const& _pendingBlock, Mining _req)
     u256 toolDifficulty = calculateEthashDifficulty(params, pendingFixed.header(), lastBlock().header());
     pendingFixedHeader.setDifficulty(toolDifficulty);
 
+    // Calculate new baseFee
+    if (pendingFixedHeader.type() == BlockType::BlockHeader1559 &&
+        lastBlock().header().getCContent().type() == BlockType::BlockHeader1559)
+    {
+        BlockHeader1559& pendingFixed1559Header = BlockHeader1559::castFrom(pendingFixedHeader);
+        u256 baseFee = calculateEIP1559BaseFee(params, pendingFixed.header(), lastBlock().header());
+        pendingFixed1559Header.setBaseFee(baseFee);
+    }
+
     // Add only those transactions which tool returned a receipt for
     // Some transactions are expected to fail. That should be detected by tests
     for (auto const& tr : _pendingBlock.transactions())
@@ -171,11 +180,16 @@ ToolResponse ToolChain::mineBlockOnTool(EthereumBlockState const& _block, SealEn
         envData["ommers"].addArrayObject(uncle);
     }
 
-    writeFile(envPath.string(), envData.asJson());
+    // Options Hook
+    Options::getCurrentConfig().performFieldReplace(envData, FieldReplaceDir::RetestethToClient);
+
+    string const envPathContent = envData.asJson();
+    writeFile(envPath.string(), envPathContent);
 
     // alloc.json file
     fs::path allocPath = m_tmpDir / "alloc.json";
-    writeFile(allocPath.string(), _block.state().asDataObject().asJsonNoFirstKey());
+    string const allocPathContent = _block.state().asDataObject().asJsonNoFirstKey();
+    writeFile(allocPath.string(), allocPathContent);
 
     // txs.json file
     fs::path txsPath = m_tmpDir / "txs.json";
@@ -189,7 +203,9 @@ ToolResponse ToolChain::mineBlockOnTool(EthereumBlockState const& _block, SealEn
             ETH_WARNING(
                 "Retesteth rejecting tx with gasLimit > 64 bits for tool" + TestOutputHelper::get().testInfo().errorDebug());
     }
-    writeFile(txsPath.string(), txs.asJson());
+    Options::getCurrentConfig().performFieldReplace(txs, FieldReplaceDir::RetestethToClient);
+    string const txsPathContent = txs.asJson();
+    writeFile(txsPath.string(), txsPathContent);
 
     // output file
     fs::path outPath = m_tmpDir / "out.json";
@@ -213,21 +229,28 @@ ToolResponse ToolChain::mineBlockOnTool(EthereumBlockState const& _block, SealEn
     if (traceCondition)
         cmd += " --trace";
 
-    ETH_TEST_MESSAGE("Alloc:\n" + contentsString(allocPath.string()));
+    ETH_TEST_MESSAGE("Alloc:\n" + allocPathContent);
     if (_block.transactions().size())
-        ETH_TEST_MESSAGE("Txs:\n" + contentsString(txsPath.string()));
-    ETH_TEST_MESSAGE("Env:\n" + contentsString(envPath.string()));
+        ETH_TEST_MESSAGE("Txs:\n" + txsPathContent);
+    ETH_TEST_MESSAGE("Env:\n" + envPathContent);
 
     string out = test::executeCmd(cmd, ExecCMDWarning::NoWarning);
 
-    ETH_TEST_MESSAGE("Res:\n" + contentsString(outPath.string()));
-    ETH_TEST_MESSAGE("RAlloc:\n" + contentsString(outAllocPath.string()));
+    string const outPathContent = contentsString(outPath.string());
+    string const outAllocPathContent = contentsString(outAllocPath.string());
+    ETH_TEST_MESSAGE("Res:\n" + outPathContent);
+    ETH_TEST_MESSAGE("RAlloc:\n" + outAllocPathContent);
     ETH_TEST_MESSAGE(cmd);
     ETH_TEST_MESSAGE(out);
 
+    if (outPathContent.empty())
+        ETH_ERROR_MESSAGE("Tool returned empty file: " + outPath.string());
+    if (outAllocPathContent.empty())
+        ETH_ERROR_MESSAGE("Tool returned empty file: " + outAllocPath.string());
+
     // Construct block rpc response
-    ToolResponse toolResponse(ConvertJsoncppStringToData(contentsString(outPath)));
-    DataObject returnState = ConvertJsoncppStringToData(contentsString(outAllocPath));
+    ToolResponse toolResponse(ConvertJsoncppStringToData(outPathContent));
+    DataObject returnState = ConvertJsoncppStringToData(outAllocPathContent);
     toolResponse.attachState(restoreFullState(returnState));
 
     if (traceCondition)

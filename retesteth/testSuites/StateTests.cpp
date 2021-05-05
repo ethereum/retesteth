@@ -58,7 +58,7 @@ bool OptionsAllowTransaction(test::teststruct::TransactionInGeneralSection const
     if ((opt.trDataIndex == (int)_tr.dataInd() || opt.trDataIndex == -1) &&
         (opt.trGasIndex == (int)_tr.gasInd() || opt.trGasIndex == -1) &&
         (opt.trValueIndex == (int)_tr.valueInd() || opt.trValueIndex == -1) &&
-        (opt.trDataLabel == _tr.transaction().dataLabel() || opt.trDataLabel.empty()))
+        (opt.trDataLabel == _tr.transaction().getCContent().dataLabel() || opt.trDataLabel.empty()))
         return true;
     return false;
 }
@@ -124,9 +124,10 @@ DataObject FillTestAsBlockchain(StateTestInFiller const& _test)
                     if (!expect.checkIndexes(tr.dataInd(), tr.gasInd(), tr.valueInd()))
                         continue;
 
-                    session.test_setChainParams(prepareChainParams(fork, SealEngine::NoProof, _test.Pre(), _test.Env()));
+                    session.test_setChainParams(
+                        prepareChainParams(fork, SealEngine::NoProof, _test.Pre(), _test.Env(), ParamsContext::StateTests));
                     session.test_modifyTimestamp(_test.Env().firstBlockTimestamp());
-                    FH32 trHash(session.eth_sendRawTransaction(tr.transaction().getRawBytes(), tr.transaction().getSecret()));
+                    FH32 trHash(session.eth_sendRawTransaction(tr.transaction().getCContent().getRawBytes(), tr.transaction().getCContent().getSecret()));
 
                     // Mine a block, execute transaction
                     session.test_mineBlocks(1);
@@ -172,7 +173,7 @@ DataObject FillTestAsBlockchain(StateTestInFiller const& _test)
                     DataObject block;
                     block["rlp"] = remoteBlock.getRLPHeaderTransactions().asString();
                     block["blockHeader"] = remoteBlock.header().getCContent().asDataObject();
-                    block["transactions"].addArrayObject(tr.transaction().asDataObject());
+                    block["transactions"].addArrayObject(tr.transaction().getCContent().asDataObject());
                     block["uncleHeaders"] = DataObject(DataType::Array);
                     aBlockchainTest["blocks"].addArrayObject(block);
 
@@ -213,8 +214,8 @@ DataObject FillTest(StateTestInFiller const& _test)
     for (auto const& tx : txs)
     {
         // Fill up the label map to tx.data
-        if (!tx.transaction().dataLabel().empty())
-            filledTest["_info"]["labels"].addSubObject(DataObject(tx.dataIndS(), tx.transaction().dataLabel()));
+        if (!tx.transaction().getCContent().dataLabel().empty())
+            filledTest["_info"]["labels"].addSubObject(DataObject(tx.dataIndS(), tx.transaction().getCContent().dataLabel()));
     }
 
     // run transactions on all networks that we need
@@ -230,7 +231,8 @@ DataObject FillTest(StateTestInFiller const& _test)
         DataObject forkResults;
         forkResults.setKey(fork.asString());
 
-        session.test_setChainParams(prepareChainParams(fork, SealEngine::NoReward, _test.Pre(), _test.Env()));
+        auto const p = prepareChainParams(fork, SealEngine::NoReward, _test.Pre(), _test.Env(), ParamsContext::StateTests);
+        session.test_setChainParams(p);
 
         // Run transactions for defined expect sections only
         for (auto const& expect : _test.Expects())
@@ -242,8 +244,8 @@ DataObject FillTest(StateTestInFiller const& _test)
                 for (auto& tr : txs)
                 {
                     TestInfo errorInfo(fork.asString(), tr.dataInd(), tr.gasInd(), tr.valueInd());
-                    if (!tr.transaction().dataLabel().empty() || !tr.transaction().dataRawPreview().empty())
-                        errorInfo.setTrDataDebug(tr.transaction().dataLabel() + " " + tr.transaction().dataRawPreview() + "..");
+                    if (!tr.transaction().getCContent().dataLabel().empty() || !tr.transaction().getCContent().dataRawPreview().empty())
+                        errorInfo.setTrDataDebug(tr.transaction().getCContent().dataLabel() + " " + tr.transaction().getCContent().dataRawPreview() + "..");
 
                     TestOutputHelper::get().setCurrentTestInfo(errorInfo);
 
@@ -263,7 +265,7 @@ DataObject FillTest(StateTestInFiller const& _test)
 
                     expectFoundTransaction = true;
                     session.test_modifyTimestamp(_test.Env().firstBlockTimestamp());
-                    FH32 trHash(session.eth_sendRawTransaction(tr.transaction().getRawBytes(), tr.transaction().getSecret()));
+                    FH32 trHash(session.eth_sendRawTransaction(tr.transaction().getCContent().getRawBytes(), tr.transaction().getCContent().getSecret()));
                     session.test_mineBlocks(1);
                     VALUE latestBlockN(session.eth_blockNumber());
 
@@ -295,7 +297,7 @@ DataObject FillTest(StateTestInFiller const& _test)
 
                     transactionResults["indexes"] = indexes;
                     transactionResults["hash"] = blockInfo.header().getCContent().stateRoot().asString();
-                    transactionResults["txbytes"] = tr.transaction().getRawBytes().asString();
+                    transactionResults["txbytes"] = tr.transaction().getCContent().getRawBytes().asString();
 
                     // Fill up the loghash (optional)
                     if (Options::getDynamicOptions().getCurrentConfig().cfgFile().checkLogsHash())
@@ -366,7 +368,10 @@ void RunTest(StateTestInFilled const& _test)
             ETH_WARNING("Skipping unsupported fork: " + network.asString() + " in " + _test.testName());
         }
         else
-            session.test_setChainParams(prepareChainParams(network, SealEngine::NoReward, _test.Pre(), _test.Env()));
+        {
+            auto p = prepareChainParams(network, SealEngine::NoReward, _test.Pre(), _test.Env(), ParamsContext::StateTests);
+            session.test_setChainParams(p);
+        }
 
         // One test could have many transactions on same chainParams
         // It is expected that for a setted chainParams there going to be a transaction
@@ -383,7 +388,7 @@ void RunTest(StateTestInFilled const& _test)
                     return;
 
                 TestInfo errorInfo(network.asString(), tr.dataInd(), tr.gasInd(), tr.valueInd());
-                errorInfo.setTrDataDebug(tr.transaction().dataLabel() + " " + tr.transaction().dataRawPreview() + "..");
+                errorInfo.setTrDataDebug(tr.transaction().getCContent().dataLabel() + " " + tr.transaction().getCContent().dataRawPreview() + "..");
 
                 TestOutputHelper::get().setCurrentTestInfo(errorInfo);
                 bool checkIndexes = result.checkIndexes(tr.dataInd(), tr.gasInd(), tr.valueInd());
@@ -399,7 +404,7 @@ void RunTest(StateTestInFilled const& _test)
                 if (checkIndexes)
                 {
                     session.test_modifyTimestamp(_test.Env().firstBlockTimestamp());
-                    FH32 trHash(session.eth_sendRawTransaction(tr.transaction().getRawBytes(), tr.transaction().getSecret()));
+                    FH32 trHash(session.eth_sendRawTransaction(tr.transaction().getCContent().getRawBytes(), tr.transaction().getCContent().getSecret()));
                     session.test_mineBlocks(1);
 
                     VALUE latestBlockN(session.eth_blockNumber());
@@ -428,7 +433,7 @@ void RunTest(StateTestInFilled const& _test)
                     spBYTES const& expectedBytesPtr = result.bytesPtr();
                     if (!expectedBytesPtr.isEmpty())
                     {
-                        if (tr.transaction().getRawBytes().asString() != expectedBytesPtr.getCContent().asString())
+                        if (tr.transaction().getCContent().getRawBytes().asString() != expectedBytesPtr.getCContent().asString())
                             ETH_ERROR_MESSAGE("TxBytes mismatch: test transaction section doest not match txbytes in post section!");
                     }
 
