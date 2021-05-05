@@ -277,7 +277,16 @@ DataObject convertDecBlockheaderIncompleteToHex(DataObject const& _data)
                 tmpD[key] = "0x" + _data.atKey(key).asString();
         }
 
-    std::vector<string> valueKeys = {"difficulty", "gasLimit", "gasUsed", "nonce", "number", "timestamp"};
+    std::vector<string> valueKeys = {
+        "difficulty",
+        "gasLimit",
+        "gasTarget",
+        "baseFee",
+        "gasUsed",
+        "nonce",
+        "number",
+        "timestamp"
+    };
     for (auto const& key : valueKeys)
         if (_data.count(key))
             tmpD[key].performModifier(mod_valueToCompactEvenHexPrefixed);

@@ -64,6 +64,15 @@ BOOST_AUTO_TEST_CASE(translateNetworks_doubleNet)
     ETH_FAIL_REQUIRE(networks.size() == 1);
 }
 
+BOOST_AUTO_TEST_CASE(translateNetworks_london)
+{
+    set<string> rawnetworks = {">=London"};
+    std::vector<FORK> exampleNets2 = {FORK("Frontier"), FORK("London")};
+    std::vector<FORK> networks = ClientConfig::translateNetworks(rawnetworks, exampleNets2);
+    ETH_FAIL_REQUIRE(hasNetwork(networks, FORK("London")));
+    ETH_FAIL_REQUIRE(networks.size() == 1);
+}
+
 BOOST_AUTO_TEST_CASE(translateNetworks_gtHomestead)
 {
     set<string> rawnetworks = {"Frontier", ">Homestead"};
