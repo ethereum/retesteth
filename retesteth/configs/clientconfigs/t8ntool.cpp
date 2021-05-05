@@ -147,7 +147,10 @@ string const t8ntool_config = R"({
       "RLP_ExpectedInputList_TXDATA_DECODEINTO_BLOCK_EXTBLOCK_TXS0" : "Error importing raw rlp block: Transaction RLP is expected to be list",
       "LegacyBlockImportImpossible" : "Legacy block import is impossible",
       "LegacyBlockBaseFeeTransaction" : "BaseFee transaction in a Legacy blcok",
-      "1559BlockImportImpossible_HeaderIsLegacy" : "1559 block must be on top of 1559"
+      "1559BlockImportImpossible_HeaderIsLegacy" : "1559 block must be on top of 1559",
+      "baseFeeWrong": "base fee not correct!",
+      "targetGasLow": "gasTarget decreased too much",
+      "targetGasHigh": "gasTarget increased too much"
     }
 })";
 
