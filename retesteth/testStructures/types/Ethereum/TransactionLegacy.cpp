@@ -61,6 +61,7 @@ void TransactionLegacy::fromDataObject(DataObject const& _data)
 
                 {"publicKey", {{DataType::String}, jsonField::Optional}},  // Besu EthGetBlockBy transaction
                 {"raw", {{DataType::String}, jsonField::Optional}},        // Besu EthGetBlockBy transaction
+                {"chainId", {{DataType::String}, jsonField::Optional}},    // Besu EthGetBlockBy transaction
 
                 {"blockHash", {{DataType::String}, jsonField::Optional}},         // EthGetBlockBy transaction
                 {"blockNumber", {{DataType::String}, jsonField::Optional}},       // EthGetBlockBy transaction
