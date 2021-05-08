@@ -61,6 +61,8 @@ struct BlockHeader : GCP_SPointerBase
     BYTES const& extraData() const { return m_extraData.getCContent(); }
     FH8 const& nonce() const { return m_nonce.getCContent(); }
     FH32 const& mixHash() const { return m_mixHash.getCContent(); }
+    VALUE const& gasLimit() const { return m_gasLimit.getCContent(); }
+
     void setLogsBloom(FH256 const& _logs) { m_logsBloom = spFH256(new FH256(_logs)); }
     void setTimestamp(VALUE const& _value) { m_timestamp = spVALUE(new VALUE(_value.asU256())); }
     void setTransactionHash(FH32 const& _hash) { m_transactionsRoot = spFH32(new FH32(_hash)); }
@@ -68,6 +70,7 @@ struct BlockHeader : GCP_SPointerBase
     void setExtraData(BYTES const& _extraData) { m_extraData = spBYTES(new BYTES(_extraData)); }
     void setUnclesHash(FH32 const& _hash) { m_sha3Uncles = spFH32(new FH32(_hash)); }
     void setGasUsed(VALUE const& _gasUsed) { m_gasUsed = spVALUE(new VALUE(_gasUsed)); }
+    void setGasLimit(VALUE const& _gasLimit) { m_gasLimit = spVALUE(new VALUE(_gasLimit)); }
 
 protected:
     BlockHeader() {}
@@ -86,6 +89,7 @@ protected:
     spFH20 m_author;
     spBYTES m_extraData;
     spVALUE m_gasUsed;
+    spVALUE m_gasLimit;
     spFH256 m_logsBloom;
     spFH32 m_mixHash;
     spFH8 m_nonce;

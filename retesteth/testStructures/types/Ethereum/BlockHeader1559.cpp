@@ -21,11 +21,7 @@ void BlockHeader1559::fromData(DataObject const& _data)
         m_author = spFH20(new FH20(_data.atKey(akey)));
         m_difficulty = spVALUE(new VALUE(_data.atKey("difficulty")));
         m_extraData = spBYTES(new BYTES(_data.atKey("extraData")));
-
-        if (_data.count("gasTarget"))
-            m_gasTarget = spVALUE(new VALUE(_data.atKey("gasTarget")));
-        else
-            m_gasTarget = spVALUE(new VALUE(_data.atKey("gasLimit")));
+        m_gasLimit = spVALUE(new VALUE(_data.atKey("gasLimit")));
 
         m_baseFee = spVALUE(new VALUE(_data.atKey("baseFee")));
         m_gasUsed = spVALUE(new VALUE(_data.atKey("gasUsed")));
@@ -71,8 +67,7 @@ void BlockHeader1559::fromData(DataObject const& _data)
                 {"miner", {{DataType::String}, jsonField::Optional}},
                 {"difficulty", {{DataType::String}, jsonField::Required}},
                 {"extraData", {{DataType::String}, jsonField::Required}},
-                {"gasTarget", {{DataType::String}, jsonField::Optional}},
-                {"gasLimit", {{DataType::String}, jsonField::Optional}},
+                {"gasLimit", {{DataType::String}, jsonField::Required}},
                 {"baseFee", {{DataType::String}, jsonField::Required}},
                 {"gasUsed", {{DataType::String}, jsonField::Required}},
                 {"hash", {{DataType::String}, jsonField::Optional}},
@@ -111,7 +106,7 @@ BlockHeader1559::BlockHeader1559(dev::RLP const& _rlp)
 {
     DataObject init;
     // 0 - parentHash           // 8 - number
-    // 1 - uncleHash            // 9 - gasTarget
+    // 1 - uncleHash            // 9 - gasLimit
     // 2 - coinbase             // 10 - gasUsed
     // 3 - stateRoot            // 11 - timestamp
     // 4 - transactionTrie      // 12 - extraData
@@ -128,7 +123,7 @@ BlockHeader1559::BlockHeader1559(dev::RLP const& _rlp)
     init["bloom"] = rlpToString(_rlp[i++]);
     init["difficulty"] = rlpToString(_rlp[i++]);
     init["number"] = rlpToString(_rlp[i++]);
-    init["gasTarget"] = rlpToString(_rlp[i++]);
+    init["gasLimit"] = rlpToString(_rlp[i++]);
     init["gasUsed"] = rlpToString(_rlp[i++]);
     init["timestamp"] = rlpToString(_rlp[i++]);
     init["extraData"] = rlpToString(_rlp[i++], 0);
@@ -145,7 +140,7 @@ const DataObject BlockHeader1559::asDataObject() const
     out["coinbase"] = m_author.getCContent().asString();
     out["difficulty"] = m_difficulty.getCContent().asString();
     out["extraData"] = m_extraData.getCContent().asString();
-    out["gasTarget"] = m_gasTarget.getCContent().asString();
+    out["gasLimit"] = m_gasLimit.getCContent().asString();
     out["gasUsed"] = m_gasUsed.getCContent().asString();
     out["hash"] = m_hash.getCContent().asString();
     out["mixHash"] = m_mixHash.getCContent().asString();
@@ -175,7 +170,7 @@ const RLPStream BlockHeader1559::asRLPStream() const
     header << h2048(m_logsBloom.getCContent().asString());
     header << m_difficulty.getCContent().asU256();
     header << m_number.getCContent().asU256();
-    header << m_gasTarget.getCContent().asU256();
+    header << m_gasLimit.getCContent().asU256();
     header << m_gasUsed.getCContent().asU256();
     header << m_timestamp.getCContent().asU256();
     header << test::sfromHex(m_extraData.getCContent().asString());

@@ -13,17 +13,12 @@ const DataObject StateTestEnvBase::asDataObject() const
     out["currentNumber"] = m_currentNumber.getCContent().asString();
     out["currentTimestamp"] = m_currentTimestamp.getCContent().asString();
     out["previousHash"] = m_previousHash.getCContent().asString();
+    out["currentGasLimit"] = m_currentGasLimit.getCContent().asString();
 
-    if (!m_currentGasTarget.isEmpty())
+    if (!m_currentBaseFee.isEmpty())
     {
         // EIP1559 env info
-        out["currentGasTarget"] = m_currentGasTarget.getCContent().asString();
         out["currentBaseFee"] = m_currentBaseFee.getCContent().asString();
-    }
-    else
-    {
-        // Legacy env info
-        out["currentGasLimit"] = m_currentGasLimit.getCContent().asString();
     }
     return out;
 }

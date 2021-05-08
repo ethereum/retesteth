@@ -44,8 +44,7 @@ void ToolChainManager::reorganizePendingBlock()
         DataObject parentData = bl.header().getCContent().asDataObject();
 
         // First ever eip1559 block params after the transition
-        parentData.renameKey("gasLimit", "gasTarget");
-        parentData["gasTarget"].setString("0xbebc20");
+        parentData.atKeyUnsafe("gasLimit").setString("0xbebc20");
         parentData["baseFee"] = "0x3b9aca00";
         spBlockHeader newPending(new BlockHeader1559(parentData));
         m_pendingBlock = spEthereumBlockState(new EthereumBlockState(newPending, bl.state(), bl.logHash()));

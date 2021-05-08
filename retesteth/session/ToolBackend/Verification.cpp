@@ -43,10 +43,8 @@ void verify1559Block(spBlockHeader const& _header, ToolChain const& _chain)
         ETH_FAIL_MESSAGE("verify1559Block got block of another type!");
     BlockHeader1559 const& header = BlockHeader1559::castFrom(_header);
 
-    const size_t ELASTICITY_MULTIPLIER = 2;
-
     // Check if the block used too much gas
-    if (header.gasUsed().asU256() > header.gasTarget().asU256() * ELASTICITY_MULTIPLIER)
+    if (header.gasUsed() > header.gasLimit())
         throw test::UpwardsException() << "Invalid block1559: too much gas used!";
 }
 
@@ -68,10 +66,14 @@ void verify1559Parent(spBlockHeader const& _header, spBlockHeader const& _parent
         BlockHeader1559 const& parent = BlockHeader1559::castFrom(_parent);
 
         // Check if the block changed the gas target too much
-        VALUE deltaGasT = parent.gasTarget().asU256() / 1024;
-        if (header.gasTarget().asU256() > parent.gasTarget().asU256() + deltaGasT.asU256())
+        const size_t ELASTICITY_MULTIPLIER = 2;
+        VALUE const parentGasTarget = parent.gasLimit() / ELASTICITY_MULTIPLIER;
+        VALUE const headerGasTarget = header.gasLimit() / ELASTICITY_MULTIPLIER;
+
+        VALUE deltaGasT = parentGasTarget / 1024;
+        if (headerGasTarget > parentGasTarget + deltaGasT)
             throw test::UpwardsException() << "Invalid block1559: gasTarget increased too much!";
-        if (header.gasTarget().asU256() < parent.gasTarget().asU256() - deltaGasT.asU256())
+        if (headerGasTarget < parentGasTarget - deltaGasT)
             throw test::UpwardsException() << "Invalid block1559: gasTarget decreased too much!";
 
         // Check if the base fee is correct

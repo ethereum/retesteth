@@ -210,23 +210,27 @@ u256 calculateEIP1559BaseFee(ChainOperationParams const& _chainParams, spBlockHe
     (void)_chainParams;
     (void)_bi;
 
+    u256 expectedBaseFee;
     BlockHeader1559 const& parent = BlockHeader1559::castFrom(_parent);
 
-    u256 expectedBaseFee;
     const size_t BASE_FEE_MAX_CHANGE_DENOMINATOR = 8;
-    if (parent.gasUsed() == parent.gasTarget())
+    const size_t ELASTICITY_MULTIPLIER = 2;
+
+    VALUE const parentGasTarget = parent.gasLimit() / ELASTICITY_MULTIPLIER;
+
+    if (parent.gasUsed() == parentGasTarget)
         expectedBaseFee = parent.baseFee().asU256();
-    else if (parent.gasUsed() > parent.gasTarget())
+    else if (parent.gasUsed() > parentGasTarget)
     {
-        VALUE gasUsedDelta = parent.gasUsed() - parent.gasTarget();
-        VALUE formula = parent.baseFee() * gasUsedDelta / parent.gasTarget() / BASE_FEE_MAX_CHANGE_DENOMINATOR;
+        VALUE gasUsedDelta = parent.gasUsed() - parentGasTarget;
+        VALUE formula = parent.baseFee() * gasUsedDelta / parentGasTarget / BASE_FEE_MAX_CHANGE_DENOMINATOR;
         VALUE baseFeePerGasDelta = max<dev::u256>(formula.asU256(), dev::u256(1));
         expectedBaseFee = VALUE(parent.baseFee() + baseFeePerGasDelta).asU256();
     }
     else
     {
-        VALUE gasUsedDelta = parent.gasTarget() - parent.gasUsed();
-        VALUE baseFeePerGasDelta = parent.baseFee() * gasUsedDelta / parent.gasTarget() / BASE_FEE_MAX_CHANGE_DENOMINATOR;
+        VALUE gasUsedDelta = parentGasTarget - parent.gasUsed();
+        VALUE baseFeePerGasDelta = parent.baseFee() * gasUsedDelta / parentGasTarget / BASE_FEE_MAX_CHANGE_DENOMINATOR;
         VALUE formula = parent.baseFee() - baseFeePerGasDelta;
         expectedBaseFee = VALUE(max<dev::u256>(formula.asU256(), dev::u256(0))).asU256();
     }

@@ -18,18 +18,12 @@ BlockchainTestFillerEnv::BlockchainTestFillerEnv(DataObject const& _data, SealEn
             coinbase = "0x" + coinbase.asString();
         m_currentCoinbase = spFH20(new FH20(coinbase));
         m_currentDifficulty = spVALUE(new VALUE(tmpData.atKey("difficulty")));
+        m_currentGasLimit = spVALUE(new VALUE(tmpData.atKey("gasLimit")));
+        if (m_currentGasLimit.getCContent() > dev::u256("0x7fffffffffffffff"))
+            throw test::UpwardsException("currentGasLimit must be < 0x7fffffffffffffff");
 
-        if (tmpData.count("gasLimit"))
-        {
-            m_currentGasLimit = spVALUE(new VALUE(tmpData.atKey("gasLimit")));
-            if (m_currentGasLimit.getCContent() > dev::u256("0x7fffffffffffffff"))
-                throw test::UpwardsException("currentGasLimit must be < 0x7fffffffffffffff");
-        }
-        else
-        {
+        if (tmpData.count("baseFee"))
             m_currentBaseFee = spVALUE(new VALUE(tmpData.atKey("baseFee")));
-            m_currentGasTarget = spVALUE(new VALUE(tmpData.atKey("gasTarget")));
-        }
 
         m_currentNumber = spVALUE(new VALUE(tmpData.atKey("number")));
         m_currentTimestamp = spVALUE(new VALUE(tmpData.atKey("timestamp")));
@@ -56,8 +50,7 @@ BlockchainTestFillerEnv::BlockchainTestFillerEnv(DataObject const& _data, SealEn
              {"miner", {{DataType::String}, jsonField::Optional}},
              {"difficulty", {{DataType::String}, jsonField::Required}},
              {"extraData", {{DataType::String}, jsonField::Required}},
-             {"gasLimit", {{DataType::String}, jsonField::Optional}},
-             {"gasTarget", {{DataType::String}, jsonField::Optional}},
+             {"gasLimit", {{DataType::String}, jsonField::Required}},
              {"baseFee", {{DataType::String}, jsonField::Optional}},
              {"gasUsed", {{DataType::String}, jsonField::Required}},
              {"hash", {{DataType::String}, jsonField::Optional}},

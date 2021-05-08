@@ -56,17 +56,8 @@ BlockHeaderIncomplete::BlockHeaderIncomplete(DataObject const& _data)
     if (_data.count(tkey))
         m_transactionsRoot = spFH32(new FH32(_data.atKey(tkey)));
 
-    if (_data.count("gasTarget"))
-    {
-        m_gasTarget = spVALUE(new VALUE(_data.atKey("gasTarget")));
-        m_gasLimit = spVALUE(0);
-    }
-
     if (_data.count("baseFee"))
-    {
         m_baseFee = spVALUE(new VALUE(_data.atKey("baseFee")));
-        m_gasLimit = spVALUE(0);
-    }
 
     if (_data.count("remove"))
         test::parseJsonStrValueIntoSet(_data.atKey("remove"), m_removeKeys);
@@ -75,8 +66,7 @@ BlockHeaderIncomplete::BlockHeaderIncomplete(DataObject const& _data)
                               !m_gasLimit.isEmpty() || !m_gasUsed.isEmpty() || !m_hash.isEmpty() || !m_logsBloom.isEmpty() ||
                               !m_mixHash.isEmpty() || !m_nonce.isEmpty() || !m_number.isEmpty() || !m_parentHash.isEmpty() ||
                               !m_receiptsRoot.isEmpty() || !m_sha3Uncles.isEmpty() || !m_stateRoot.isEmpty() ||
-                              !m_timestamp.isEmpty() || !m_transactionsRoot.isEmpty() || !m_gasTarget.isEmpty() ||
-                              !m_baseFee.isEmpty();
+                              !m_timestamp.isEmpty() || !m_transactionsRoot.isEmpty() || !m_baseFee.isEmpty();
 
     requireJsonFields(_data, "BlockHeaderIncomplete " + _data.getKey(),
         {{"bloom", {{DataType::String}, jsonField::Optional}},
@@ -84,7 +74,6 @@ BlockHeaderIncomplete::BlockHeaderIncomplete(DataObject const& _data)
          {"difficulty", {{DataType::String}, jsonField::Optional}},
          {"extraData", {{DataType::String}, jsonField::Optional}},
          {"gasLimit", {{DataType::String}, jsonField::Optional}},
-         {"gasTarget", {{DataType::String}, jsonField::Optional}},
          {"baseFee", {{DataType::String}, jsonField::Optional}},
          {"gasUsed", {{DataType::String}, jsonField::Optional}},
          {"hash", {{DataType::String}, jsonField::Optional}},
@@ -136,8 +125,6 @@ spBlockHeader BlockHeaderIncomplete::overwriteBlockHeader(spBlockHeader const& _
         overwrite["transactionsRoot"] = m_transactionsRoot.getCContent().asString();
     if (!m_hash.isEmpty())
         overwrite["hash"] = m_hash.getCContent().asString();
-    if (!m_gasTarget.isEmpty())
-        overwrite["gasTarget"] = m_gasTarget.getCContent().asString();
     if (!m_baseFee.isEmpty())
         overwrite["baseFee"] = m_baseFee.getCContent().asString();
     overwrite.removeKey("updatePoW");  // deprecated key

@@ -22,9 +22,7 @@ struct BlockHeader1559 : BlockHeader
     BlockType type() const override { return BlockType::BlockHeader1559; }
 
     // Unique fields
-    VALUE const& gasTarget() const { return m_gasTarget.getCContent(); }
     VALUE const& baseFee() const { return m_baseFee.getCContent(); }
-    void setGasTarget(VALUE const& _gasTarget) { m_gasTarget = spVALUE(new VALUE(_gasTarget)); }
     void setBaseFee(VALUE const& _baseFee) { m_baseFee = spVALUE(new VALUE(_baseFee)); }
 
     // Static
@@ -36,7 +34,6 @@ protected:
     void fromData(DataObject const&) override;
 
     // Ethereum eip1559 blockheader fields
-    spVALUE m_gasTarget;
     spVALUE m_baseFee;
 };
 

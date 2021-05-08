@@ -35,31 +35,27 @@ StateTestFillerEnv::StateTestFillerEnv(DataObject const& _data)
         m_currentExtraData = spBYTES(new BYTES(tmpD));
         m_currentNonce = spFH8(new FH8(FH8::zero()));
         m_currentMixHash = spFH32(new FH32(FH32::zero()));
+        m_currentGasLimit = spVALUE(new VALUE(tmpData.atKey("currentGasLimit")));
+        if (m_currentGasLimit.getCContent() > dev::u256("0x7fffffffffffffff"))
+            throw test::UpwardsException("currentGasLimit > 0x7fffffffffffffff");
 
-        if (_data.count("currentGasTarget"))
+        if (_data.count("currentBaseFee"))
         {
             // 1559 env info
-            m_currentGasTarget = spVALUE(new VALUE(tmpData.atKey("currentGasTarget")));
             m_currentBaseFee = spVALUE(new VALUE(tmpData.atKey("currentBaseFee")));
-            m_currentGasLimit = spVALUE(0);
             requireJsonFields(_data, "StateTestFillerEnv " + _data.getKey(),
                 {{"currentCoinbase", {{DataType::String}, jsonField::Required}},
                 {"currentDifficulty", {{DataType::String}, jsonField::Required}},
+                {"currentGasLimit", {{DataType::String}, jsonField::Required}},
                 {"currentNumber", {{DataType::String}, jsonField::Required}},
                 {"currentTimestamp", {{DataType::String}, jsonField::Required}},
-                {"currentGasTarget", {{DataType::String}, jsonField::Required}},
                 {"currentBaseFee", {{DataType::String}, jsonField::Required}},
                 {"previousHash", {{DataType::String}, jsonField::Required}}});
         }
         else
         {
             // legacy env info
-            m_currentGasLimit = spVALUE(new VALUE(tmpData.atKey("currentGasLimit")));
-            if (m_currentGasLimit.getCContent() > dev::u256("0x7fffffffffffffff"))
-                throw test::UpwardsException("currentGasLimit > 0x7fffffffffffffff");
-            m_currentGasTarget = spVALUE(0);
             m_currentBaseFee = spVALUE(0);
-
             requireJsonFields(_data, "StateTestFillerEnv " + _data.getKey(),
                 {{"currentCoinbase", {{DataType::String}, jsonField::Required}},
                 {"currentDifficulty", {{DataType::String}, jsonField::Required}},

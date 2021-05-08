@@ -21,12 +21,10 @@ SetChainParamsArgs prepareChainParams(
 
     genesis["genesis"]["author"] = _env.currentCoinbase().asString();
     genesis["genesis"]["difficulty"] = _env.currentDifficulty().asString();
+    genesis["genesis"]["gasLimit"] = _env.currentGasLimit().asString();
 
-    if (_env.currentGasTarget().isEmpty())
-        genesis["genesis"]["gasLimit"] = _env.currentGasLimit().asString();
-    else
+    if (!_env.currentBaseFee().isEmpty())
     {
-        genesis["genesis"]["gasTarget"] = _env.currentGasTarget().getCContent().asString();
         if (_paramsContext == ParamsContext::StateTests)
         {
             // Reverse back the baseFee calculation formula for genesis block

@@ -39,7 +39,6 @@ private:
     spFH32 m_transactionsRoot;
 
     // 1559 block
-    spVALUE m_gasTarget;
     spVALUE m_baseFee;
 
     // Overwrite fields
