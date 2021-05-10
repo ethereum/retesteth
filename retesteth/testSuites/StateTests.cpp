@@ -224,6 +224,7 @@ DataObject FillTest(StateTestInFiller const& _test)
         // Skip by --singlenet option
         bool networkSkip = false;
         Options const& opt = Options::get();
+
         if ((!opt.singleTestNet.empty() && FORK(opt.singleTestNet) != fork) ||
             !Options::getDynamicOptions().getCurrentConfig().checkForkAllowed(fork))
             networkSkip = true;
@@ -317,7 +318,9 @@ DataObject FillTest(StateTestInFiller const& _test)
                 }
             }
         }
-        filledTest["post"].addSubObject(forkResults);
+
+        if (forkResults.getSubObjects().size() > 0)
+            filledTest["post"].addSubObject(forkResults);
     }
 
     checkUnexecutedTransactions(txs);
