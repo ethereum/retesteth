@@ -148,9 +148,9 @@ string const t8ntool_config = R"({
       "LegacyBlockImportImpossible" : "Legacy block import is impossible",
       "LegacyBlockBaseFeeTransaction" : "BaseFee transaction in a Legacy blcok",
       "1559BlockImportImpossible_HeaderIsLegacy" : "1559 block must be on top of 1559",
-      "baseFeeWrong": "base fee not correct!",
-      "targetGasLow": "gasTarget decreased too much",
-      "targetGasHigh": "gasTarget increased too much"
+      "1559BlockImportImpossible_BaseFeeWrong": "base fee not correct!",
+      "1559BlockImportImpossible_TargetGasLow": "gasTarget decreased too much",
+      "1559BlockImportImpossible_TargetGasHigh": "gasTarget increased too much"
     }
 })";
 
