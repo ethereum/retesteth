@@ -49,6 +49,15 @@ public:
     std::set<TestExecution> getFlags() { return {TestExecution::RequireOptionAll}; }
 };
 
+class RequireOptionAllNotRefillable
+{
+public:
+    RequireOptionAllNotRefillable() {}
+    std::set<TestExecution> getFlags() {
+        return {TestExecution::RequireOptionAll, TestExecution::NotRefillable};
+    }
+};
+
 class RequireOptionFill
 {
 public:

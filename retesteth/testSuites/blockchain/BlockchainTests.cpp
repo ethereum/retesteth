@@ -199,7 +199,7 @@ BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
 
 // General tests in form of blockchain tests
-using BCGeneralsStateSuiteFixture = TestFixture<BCGeneralStateTestsSuite, RequireOptionAll>;
+using BCGeneralsStateSuiteFixture = TestFixture<BCGeneralStateTestsSuite, RequireOptionAllNotRefillable>;
 BOOST_FIXTURE_TEST_SUITE(BCGeneralStateTests, BCGeneralsStateSuiteFixture)
 
 // Frontier Tests

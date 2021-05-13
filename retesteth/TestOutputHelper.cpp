@@ -108,7 +108,7 @@ bool TestOutputHelper::markError(std::string const& _message)
     m_errors.push_back(_message + testDebugInfo);
     if (testDebugInfo.empty())
         ETH_WARNING(TestOutputHelper::get().testName() + ", Message: " + _message +
-                    ", has empty debugInfo! Missing debug Tesinfo for test step.");
+                    ", has empty debugInfo! Missing debug Testinfo for test step.");
     std::lock_guard<std::mutex> lock(g_failedTestsMap);
     if (!s_failedTestsMap.count(TestOutputHelper::get().testName()))
         s_failedTestsMap[TestOutputHelper::get().testName()] = testDebugInfo;
