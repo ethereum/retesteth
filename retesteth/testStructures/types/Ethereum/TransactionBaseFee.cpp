@@ -24,8 +24,8 @@ void TransactionBaseFee::fromDataObject(DataObject const& _data)
     try
     {
         m_accessList = spAccessList(new AccessList(_data.atKey("accessList")));
-        m_feeCap = spVALUE(new VALUE(_data.atKey("feeCap")));
-        m_tip = spVALUE(new VALUE(_data.atKey("tip")));
+        m_maxFeePerGas = spVALUE(new VALUE(_data.atKey("maxFeePerGas")));
+        m_maxPriorityFeePerGas = spVALUE(new VALUE(_data.atKey("maxPriorityFeePerGas")));
 
         m_data = spBYTES(new BYTES(_data.atKey("data")));
         m_gasLimit = spVALUE(new VALUE(_data.atKey("gasLimit")));
@@ -69,8 +69,8 @@ void TransactionBaseFee::fromDataObject(DataObject const& _data)
                 {"accessList", {{DataType::Array}, jsonField::Required}},
 
                 // Transaction type 2
-                {"feeCap", {{DataType::String}, jsonField::Required}},
-                {"tip", {{DataType::String}, jsonField::Required}},
+                {"maxFeePerGas", {{DataType::String}, jsonField::Required}},
+                {"maxPriorityFeePerGas", {{DataType::String}, jsonField::Required}},
 
                 {"publicKey", {{DataType::String}, jsonField::Optional}},  // Besu EthGetBlockBy transaction
                 {"raw", {{DataType::String}, jsonField::Optional}},        // Besu EthGetBlockBy transaction
@@ -110,10 +110,10 @@ void TransactionBaseFee::fromRLP(dev::RLP const& _rlp)
     rlpToString(_rlp[i++]);  // chainID
     trData["nonce"] = rlpToString(_rlp[i++]);
 
-    trData["tip"] = rlpToString(_rlp[i++]);
-    trData["feeCap"] = rlpToString(_rlp[i++]);
-    m_tip = spVALUE(new VALUE(trData["tip"]));
-    m_feeCap = spVALUE(new VALUE(trData["feeCap"]));
+    trData["maxPriorityFeePerGas"] = rlpToString(_rlp[i++]);
+    trData["maxFeePerGas"] = rlpToString(_rlp[i++]);
+    m_maxPriorityFeePerGas = spVALUE(new VALUE(trData["maxPriorityFeePerGas"]));
+    m_maxFeePerGas = spVALUE(new VALUE(trData["maxFeePerGas"]));
 
     trData["gasLimit"] = rlpToString(_rlp[i++]);
     string const to = rlpToString(_rlp[i++], 0);
@@ -162,13 +162,13 @@ void TransactionBaseFee::buildVRS(VALUE const& _secret)
 
 void TransactionBaseFee::streamHeader(dev::RLPStream& _s) const
 {
-    // rlp([chainId, nonce, tip, feeCap, gasLimit, to, value, data, access_list, signatureYParity,
+    // rlp([chainId, nonce, maxPriorityFeePerGas, maxFeePerGas, gasLimit, to, value, data, access_list, signatureYParity,
     // signatureR, signatureS])
     _s << VALUE(1).asU256();
     _s << nonce().asU256();
 
-    _s << m_tip.getCContent().asU256();
-    _s << m_feeCap.getCContent().asU256();
+    _s << m_maxPriorityFeePerGas.getCContent().asU256();
+    _s << m_maxFeePerGas.getCContent().asU256();
 
     _s << gasLimit().asU256();
     if (Transaction::isCreation())
@@ -224,19 +224,19 @@ DataObject const TransactionBaseFee::asDataObject(ExportOrder _order) const
     // begin eip1559 transaction info
     out["chainId"] = "0x01";
     out["type"] = "0x02";
-    out["feeCap"] = m_feeCap.getCContent().asString();
-    out["tip"] = m_tip.getCContent().asString();
+    out["maxFeePerGas"] = m_maxFeePerGas.getCContent().asString();
+    out["maxPriorityFeePerGas"] = m_maxPriorityFeePerGas.getCContent().asString();
     if (_order == ExportOrder::ToolStyle)
     {
         out["chainId"] = "0x1";
         out["type"] = "0x2";
 
         DataObject t8ntoolFields;
-        t8ntoolFields["feeCap"] = m_feeCap.getCContent().asString();
-        t8ntoolFields["tip"] = m_tip.getCContent().asString();
+        t8ntoolFields["maxFeePerGas"] = m_maxFeePerGas.getCContent().asString();
+        t8ntoolFields["maxPriorityFeePerGas"] = m_maxPriorityFeePerGas.getCContent().asString();
         t8ntoolFields.performModifier(mod_removeLeadingZerosFromHexValues);
-        out["feeCap"] = t8ntoolFields["feeCap"];
-        out["tip"] = t8ntoolFields["tip"];
+        out["maxFeePerGas"] = t8ntoolFields["maxFeePerGas"];
+        out["maxPriorityFeePerGas"] = t8ntoolFields["maxPriorityFeePerGas"];
 
         if (!m_secretKey.isEmpty() && m_secretKey.getCContent() != 0)
             out["secretKey"] = m_secretKey.getCContent().asString();

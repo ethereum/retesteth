@@ -25,8 +25,8 @@ private:
 
     void rebuildRLP() override;
     spAccessList m_accessList;
-    spVALUE m_feeCap;
-    spVALUE m_tip;
+    spVALUE m_maxFeePerGas;
+    spVALUE m_maxPriorityFeePerGas;
 };
 
 typedef GCP_SPointer<TransactionBaseFee> spTransactionBaseFee;

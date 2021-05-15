@@ -58,11 +58,11 @@ StateTestTransaction::StateTestTransaction(DataObject const& _data)
         for (auto const& el : _data.atKey("value").getSubObjects())
             m_value.push_back(el);
 
-        if (_data.count("feeCap") || _data.count("tip"))
+        if (_data.count("maxFeePerGas") || _data.count("maxPriorityFeePerGas"))
         {
             // EIP 1559 style transaction
-            m_feeCap = spVALUE(new VALUE(_data.atKey("feeCap")));
-            m_tip = spVALUE(new VALUE(_data.atKey("tip")));
+            m_maxFeePerGas = spVALUE(new VALUE(_data.atKey("maxFeePerGas")));
+            m_maxPriorityFeePerGas = spVALUE(new VALUE(_data.atKey("maxPriorityFeePerGas")));
             requireJsonFields(_data, "StateTestTransaction " + _data.getKey(),
                 {{"data", {{DataType::Array}, jsonField::Required}},
                  {"accessLists", {{DataType::Array}, jsonField::Required}},
@@ -70,8 +70,8 @@ StateTestTransaction::StateTestTransaction(DataObject const& _data)
                  {"nonce", {{DataType::String}, jsonField::Required}},
                  {"value", {{DataType::Array}, jsonField::Required}},
                  {"to", {{DataType::String}, jsonField::Required}},
-                 {"feeCap", {{DataType::String}, jsonField::Required}},
-                 {"tip", {{DataType::String}, jsonField::Required}},
+                 {"maxFeePerGas", {{DataType::String}, jsonField::Required}},
+                 {"maxPriorityFeePerGas", {{DataType::String}, jsonField::Required}},
                  {"secretKey", {{DataType::String}, jsonField::Required}}});
         }
         else

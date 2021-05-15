@@ -77,19 +77,19 @@ StateTestFillerTransaction::StateTestFillerTransaction(DataObject const& _data)
         for (auto const& el : tmpD.atKey("value").getSubObjects())
             m_value.push_back(el);
 
-        if (tmpD.count("feeCap") || tmpD.count("tip"))
+        if (tmpD.count("maxFeePerGas") || tmpD.count("maxPriorityFeePerGas"))
         {
             // EIP 1559 TRANSACTION TEMPLATE (gtest FILLER)
-            m_feeCap = spVALUE(new VALUE(tmpD.atKey("feeCap")));
-            m_tip = spVALUE(new VALUE(tmpD.atKey("tip")));
+            m_maxFeePerGas = spVALUE(new VALUE(tmpD.atKey("maxFeePerGas")));
+            m_maxPriorityFeePerGas = spVALUE(new VALUE(tmpD.atKey("maxPriorityFeePerGas")));
             requireJsonFields(_data, "StateTestFillerTransaction " + _data.getKey(),
                 {{"data", {{DataType::Array}, jsonField::Required}},
                  {"gasLimit", {{DataType::Array}, jsonField::Required}},
                  {"nonce", {{DataType::String}, jsonField::Required}},
                  {"value", {{DataType::Array}, jsonField::Required}},
                  {"to", {{DataType::String}, jsonField::Required}},
-                 {"feeCap", {{DataType::String}, jsonField::Required}},
-                 {"tip", {{DataType::String}, jsonField::Required}},
+                 {"maxFeePerGas", {{DataType::String}, jsonField::Required}},
+                 {"maxPriorityFeePerGas", {{DataType::String}, jsonField::Required}},
                  {"secretKey", {{DataType::String}, jsonField::Required}}});
         }
         else
