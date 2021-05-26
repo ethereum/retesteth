@@ -35,6 +35,16 @@ SetChainParamsArgs prepareChainParams(
         else
             genesis["genesis"]["baseFee"] = _env.currentBaseFee().getCContent().asString();
     }
+    else
+    {
+        // set baseFee for legacy headers running on 1559 upgrade
+        if (_net.asString() == "London")
+            genesis["genesis"]["baseFee"] = "0x10";
+    }
+
+    // Convert back 1559 genesis into legacy genesis, when filling 1559 tests
+    if (_net.asString() != "London")
+        genesis.atKeyUnsafe("genesis").removeKey("baseFee");
 
     genesis["genesis"]["extraData"] = _env.currentExtraData().asString();
     genesis["genesis"]["timestamp"] = _env.currentTimestamp().asString();
