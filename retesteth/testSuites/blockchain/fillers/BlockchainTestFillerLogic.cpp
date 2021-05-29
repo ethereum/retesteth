@@ -21,6 +21,9 @@ DataObject FillTest(BlockchainTestInFiller const& _test, TestSuite::TestSuiteOpt
     SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
     for (FORK const& net : _test.getAllForksFromExpectSections())
     {
+        if (!Options::get().singleTestNet.empty() && net.asString() != Options::get().singleTestNet)
+            continue;
+
         for (auto const& expect : _test.expects())
         {
             // if expect is for this network, generate the test

@@ -213,9 +213,6 @@ u256 calculateEIP1559BaseFee(ChainOperationParams const& _chainParams, spBlockHe
     u256 expectedBaseFee;
     BlockHeader1559 const& parent = BlockHeader1559::castFrom(_parent);
 
-    const size_t BASE_FEE_MAX_CHANGE_DENOMINATOR = 8;
-    const size_t ELASTICITY_MULTIPLIER = 2;
-
     VALUE const parentGasTarget = parent.gasLimit() / ELASTICITY_MULTIPLIER;
 
     if (parent.gasUsed() == parentGasTarget)

@@ -6,14 +6,10 @@ namespace
 void verifyLegacyBlock(spBlockHeader const& _header, ToolChain const& _chain)
 {
     (void)_chain;
-    if (_header.getCContent().type() != BlockType::BlockHeaderLegacy)
-        ETH_FAIL_MESSAGE("verifyLegacyBlock got block of another type!");
-    BlockHeaderLegacy const& header = BlockHeaderLegacy::castFrom(_header);
-
-    if (header.gasLimit() > dev::u256("0x7fffffffffffffff"))
-        throw test::UpwardsException("Header gasLimit > 0x7fffffffffffffff");
-    if (header.gasUsed() > header.gasLimit())
-        throw test::UpwardsException("Invalid gasUsed: header.gasUsed > header.gasLimit");
+    (void)_header;
+    //    if (_header.getCContent().type() != BlockType::BlockHeaderLegacy)
+    //        ETH_FAIL_MESSAGE("verifyLegacyBlock got block of another type!");
+    //    BlockHeaderLegacy const& header = BlockHeaderLegacy::castFrom(_header);
 }
 
 void verifyLegacyParent(spBlockHeader const& _header, spBlockHeader const& _parent, ToolChain const& _chain)
@@ -27,13 +23,15 @@ void verifyLegacyParent(spBlockHeader const& _header, spBlockHeader const& _pare
     if (_parent.getCContent().type() != BlockType::BlockHeaderLegacy)
         throw test::UpwardsException("Legacy block can only be on top of LegacyBlock!");
 
-    BlockHeaderLegacy const& header = BlockHeaderLegacy::castFrom(_header);
-    BlockHeaderLegacy const& parent = BlockHeaderLegacy::castFrom(_parent);
+    // Verify delta gas
+    BlockHeader const& parent = _parent.getCContent();
+    BlockHeader const& header = _header.getCContent();
     VALUE deltaGas = parent.gasLimit().asU256() / 1024;
     if (header.gasLimit().asU256() >= parent.gasLimit().asU256() + deltaGas.asU256() ||
         header.gasLimit().asU256() <= parent.gasLimit().asU256() - deltaGas.asU256())
         throw test::UpwardsException("Invalid gaslimit: " + header.gasLimit().asDecString() + ", want " +
                                      parent.gasLimit().asDecString() + " +/- " + deltaGas.asDecString());
+
 }
 
 void verify1559Block(spBlockHeader const& _header, ToolChain const& _chain)
@@ -45,7 +43,48 @@ void verify1559Block(spBlockHeader const& _header, ToolChain const& _chain)
 
     // Check if the block used too much gas
     if (header.gasUsed() > header.gasLimit())
-        throw test::UpwardsException() << "Invalid block1559: too much gas used!";
+        throw test::UpwardsException() << "Invalid block1559: Invalid gasUsed: too much gas used!";
+}
+
+void verify1559Parent_private(spBlockHeader const& _header, spBlockHeader const& _parent, ToolChain const& _chain)
+{
+    BlockHeader1559 const& header = BlockHeader1559::castFrom(_header);
+    if (_parent.getCContent().type() != BlockType::BlockHeader1559)
+        throw test::UpwardsException() << "verify1559Parent 1559 block must be on top of 1559 block!";
+    BlockHeader1559 const& parent = BlockHeader1559::castFrom(_parent);
+
+    // Check if the base fee is correct
+    ChainOperationParams params = ChainOperationParams::defaultParams(_chain.toolParams());
+    VALUE newBaseFee = calculateEIP1559BaseFee(params, _header, _parent);
+    if (header.baseFee() != newBaseFee)
+        throw test::UpwardsException() << "Invalid block1559: base fee not correct! Expected: `" + newBaseFee.asDecString() +
+                                              "`, got: `" + header.baseFee().asDecString() + "`";
+
+    // Check if the block changed the gas target too much
+    VALUE parentGasTarget = parent.gasLimit() / ELASTICITY_MULTIPLIER;
+    VALUE const headerGasTarget = header.gasLimit() / ELASTICITY_MULTIPLIER;
+
+    // Check first ever EIP1559 gasLimit
+    if (header.number() == 5 && _chain.fork() == "BerlinToLondonAt5")
+    {
+        /* https://eips.ethereum.org/EIPS/eip-1559
+            if INITIAL_FORK_BLOCK_NUMBER == block.number:
+            parent_gas_target = self.parent(block).gas_limit
+            parent_gas_limit = self.parent(block).gas_limit * ELASTICITY_MULTIPLIER
+        */
+
+        parentGasTarget = parent.gasLimit();
+        if (header.gasLimit() != parent.gasLimit() * ELASTICITY_MULTIPLIER)
+            throw test::UpwardsException(
+                "Invalid block1559: Initial gasLimit must be self.parent(block).gas_limit * ELASTICITY_MULTIPLIER");
+    }
+
+
+    VALUE deltaGasT = parentGasTarget / 1024;
+    if (headerGasTarget > parentGasTarget + deltaGasT)
+        throw test::UpwardsException() << "Invalid block1559: gasTarget increased too much!";
+    if (headerGasTarget < parentGasTarget - deltaGasT)
+        throw test::UpwardsException() << "Invalid block1559: gasTarget decreased too much!";
 }
 
 void verify1559Parent(spBlockHeader const& _header, spBlockHeader const& _parent, ToolChain const& _chain)
@@ -58,31 +97,20 @@ void verify1559Parent(spBlockHeader const& _header, spBlockHeader const& _parent
     {
         if (_parent.getCContent().type() != BlockType::BlockHeaderLegacy)
             ETH_FAIL_MESSAGE("verify1559Parent first 1559 block must be on top of legacy block!");
+
+        DataObject parentData = _parent.getCContent().asDataObject();
+
+        // https://eips.ethereum.org/EIPS/eip-1559
+        // INITIAL_BASE_FEE = 1000000000
+        VALUE baseFee(DataObject("0x3b9aca00"));
+        VALUE genesisBaseFee = baseFee * 8 / 7;
+        parentData["baseFee"] = genesisBaseFee.asString();
+
+        spBlockHeader fixedParent = spBlockHeader(new BlockHeader1559(parentData));
+        verify1559Parent_private(_header, fixedParent, _chain);
     }
     else
-    {
-        if (_parent.getCContent().type() != BlockType::BlockHeader1559)
-            throw test::UpwardsException() << "verify1559Parent 1559 block must be on top of 1559 block!";
-        BlockHeader1559 const& parent = BlockHeader1559::castFrom(_parent);
-
-        // Check if the block changed the gas target too much
-        const size_t ELASTICITY_MULTIPLIER = 2;
-        VALUE const parentGasTarget = parent.gasLimit() / ELASTICITY_MULTIPLIER;
-        VALUE const headerGasTarget = header.gasLimit() / ELASTICITY_MULTIPLIER;
-
-        VALUE deltaGasT = parentGasTarget / 1024;
-        if (headerGasTarget > parentGasTarget + deltaGasT)
-            throw test::UpwardsException() << "Invalid block1559: gasTarget increased too much!";
-        if (headerGasTarget < parentGasTarget - deltaGasT)
-            throw test::UpwardsException() << "Invalid block1559: gasTarget decreased too much!";
-
-        // Check if the base fee is correct
-        ChainOperationParams params = ChainOperationParams::defaultParams(_chain.toolParams());
-        VALUE newBaseFee = calculateEIP1559BaseFee(params, _header, _parent);
-        if (header.baseFee() != newBaseFee)
-            throw test::UpwardsException() << "Invalid block1559: base fee not correct! Expected: `" +
-                                                  newBaseFee.asDecString() + "`, got: `" + header.baseFee().asDecString() + "`";
-    }
+        verify1559Parent_private(_header, _parent, _chain);
 }
 
 void verifyCommonBlock(spBlockHeader const& _header, ToolChain const& _chain)
@@ -97,6 +125,12 @@ void verifyCommonBlock(spBlockHeader const& _header, ToolChain const& _chain)
     if (_chain.fork().asString() == "HomesteadToDaoAt5" && header.number() > 4 && header.number() <= 5 + 9 &&
         header.extraData().asString() != "0x64616f2d686172642d666f726b")
         throw test::UpwardsException("BlockHeader require Dao ExtraData! (0x64616f2d686172642d666f726b)");
+
+    // Check gasLimit
+    if (header.gasLimit() > dev::u256("0x7fffffffffffffff"))
+        throw test::UpwardsException("Header gasLimit > 0x7fffffffffffffff");
+    if (header.gasUsed() > header.gasLimit())
+        throw test::UpwardsException("Invalid gasUsed: header.gasUsed > header.gasLimit");
 }
 
 
@@ -117,6 +151,7 @@ void verifyCommonParent(spBlockHeader const& _header, spBlockHeader const& _pare
     if (header.difficulty().asU256() != newDiff)
         throw test::UpwardsException(
             "Invalid difficulty: " + header.difficulty().asDecString() + ", want: " + VALUE(newDiff).asDecString());
+
 }
 
 }  // namespace
@@ -139,7 +174,6 @@ void verifyEthereumBlockHeader(spBlockHeader const& _header, ToolChain const& _c
     default:
         throw test::UpwardsException("Unhandled block type check!");
     }
-
     bool found = false;
     for (auto const& parentBlock : _chain.blocks())
     {
@@ -147,8 +181,10 @@ void verifyEthereumBlockHeader(spBlockHeader const& _header, ToolChain const& _c
         if (parentBlock.header().getCContent().hash() == _header.getCContent().hash())
             throw test::UpwardsException("Block is already in chain!");
         for (auto const& un : parentBlock.uncles())
+        {
             if (un.getCContent().hash() == _header.getCContent().hash())
                 throw test::UpwardsException("Block is already in chain!");
+        }
 
         if (parentBlock.header().getCContent().hash() == _header.getCContent().parentHash())
         {
@@ -165,7 +201,6 @@ void verifyEthereumBlockHeader(spBlockHeader const& _header, ToolChain const& _c
             default:
                 throw test::UpwardsException("Unhandled block type check!");
             }
-            break;
         }
     }
     if (!found)

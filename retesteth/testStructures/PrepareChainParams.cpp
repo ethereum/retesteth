@@ -39,7 +39,15 @@ SetChainParamsArgs prepareChainParams(
     {
         // set baseFee for legacy headers running on 1559 upgrade
         if (_net.asString() == "London")
-            genesis["genesis"]["baseFee"] = "0x10";
+        {
+            if (_paramsContext == ParamsContext::StateTests)
+            {
+                VALUE genesisBaseFee = 10 * 8 / 7;
+                genesis["genesis"]["baseFee"] = genesisBaseFee.asString();
+            }
+            else
+                genesis["genesis"]["baseFee"] = "0x10";
+        }
     }
 
     // Convert back 1559 genesis into legacy genesis, when filling 1559 tests
