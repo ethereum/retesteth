@@ -38,9 +38,6 @@ string const besu_config = R"({
     "exceptions" : {
         "ExtraDataTooBig" : "extra-data too long",
         "InvalidDifficulty" : "invalid difficulty"
-    },
-    "fieldReplace" : {
-        "baseFeePerGas" : "baseFee"
     }
 })";
 
