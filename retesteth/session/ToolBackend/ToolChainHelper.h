@@ -19,6 +19,7 @@ struct ChainOperationParams
     u256 byzantiumForkBlock;
     u256 muirGlacierForkBlock;
     u256 constantinopleForkBlock;
+    u256 londonForkBlock;
 };
 std::tuple<VALUE, FORK> prepareReward(SealEngine _engine, FORK const& _fork, VALUE const& _blockNumber = VALUE(0));
 VALUE calculateGasLimit(VALUE const& _parentGasLimit, VALUE const& _parentGasUsed);

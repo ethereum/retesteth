@@ -33,11 +33,17 @@ ToolParams::ToolParams(DataObject const& _data)
     else
         m_muirGlacierForkBlock = spVALUE(new VALUE(unreachable));
 
+    if (_data.count("londonForkBlock"))
+        m_londonForkBlock = spVALUE(new VALUE(_data.atKey("londonForkBlock")));
+    else
+        m_londonForkBlock = spVALUE(new VALUE(unreachable));
+
     requireJsonFields(_data, "ToolParams " + _data.getKey(),
         {{"fork", {{DataType::String}, jsonField::Required}},
             {"muirGlacierForkBlock", {{DataType::String}, jsonField::Optional}},
             {"constantinopleForkBlock", {{DataType::String}, jsonField::Optional}},
             {"byzantiumForkBlock", {{DataType::String}, jsonField::Optional}},
+            {"londonForkBlock", {{DataType::String}, jsonField::Optional}},
             {"homesteadForkBlock", {{DataType::String}, jsonField::Optional}}});
 }
 
@@ -134,6 +140,7 @@ ChainOperationParams ChainOperationParams::defaultParams(ToolParams const& _para
     aleth.byzantiumForkBlock = _params.byzantiumForkBlock().asU256();
     aleth.constantinopleForkBlock = _params.constantinopleForkBlock().asU256();
     aleth.muirGlacierForkBlock = _params.muirGlacierForkBlock().asU256();
+    aleth.londonForkBlock = _params.londonForkBlock().asU256();
     return aleth;
 }
 
@@ -215,7 +222,9 @@ u256 calculateEIP1559BaseFee(ChainOperationParams const& _chainParams, spBlockHe
 
     VALUE const parentGasTarget = parent.gasLimit() / ELASTICITY_MULTIPLIER;
 
-    if (parent.gasUsed() == parentGasTarget)
+    if (_bi.getCContent().number().asU256() == _chainParams.londonForkBlock)
+        expectedBaseFee = INITIAL_BASE_FEE;
+    else if (parent.gasUsed() == parentGasTarget)
         expectedBaseFee = parent.baseFee().asU256();
     else if (parent.gasUsed() > parentGasTarget)
     {

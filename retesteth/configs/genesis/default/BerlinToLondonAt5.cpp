@@ -23,7 +23,8 @@ const string t8ntool_BerlinToLondonAt5_config = R"({
         "fork" : "BerlinToLondonAt5",
         "constantinopleForkBlock" : "0x00",
         "byzantiumForkBlock" : "0x00",
-        "homesteadForkBlock" : "0x00"
+        "homesteadForkBlock" : "0x00",
+        "londonForkBlock" : "0x05"
     },
     "accounts" : {
     }

@@ -16,6 +16,7 @@ struct ToolParams : GCP_SPointerBase
     VALUE const& byzantiumForkBlock() const { return m_byzantiumForkBlock.getCContent(); }
     VALUE const& constantinopleForkBlock() const { return m_constantinopleForkBlock.getCContent(); }
     VALUE const& muirGlacierForkBlock() const { return m_muirGlacierForkBlock.getCContent(); }
+    VALUE const& londonForkBlock() const { return m_londonForkBlock.getCContent(); }
 
 private:
     ToolParams();
@@ -23,6 +24,7 @@ private:
     spVALUE m_byzantiumForkBlock;
     spVALUE m_constantinopleForkBlock;
     spVALUE m_muirGlacierForkBlock;
+    spVALUE m_londonForkBlock;
 };
 
 // Manage test blockchains
