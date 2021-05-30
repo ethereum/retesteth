@@ -147,6 +147,7 @@ string const t8ntool_config = R"({
       "RLP_ExpectedInputList_HEADER_DECODEINTO_BLOCK_EXTBLOCK_UNCLES" : "Error importing raw rlp block: OversizeRLP",
       "RLP_ExpectedInputList_TXDATA_DECODEINTO_BLOCK_EXTBLOCK_TXS0" : "Error importing raw rlp block: Transaction RLP is expected to be list",
       "LegacyBlockImportImpossible" : "Legacy block import is impossible",
+      "LegacyBlockImportImpossible2" : "Legacy block can only be on top of LegacyBlock",
       "LegacyBlockBaseFeeTransaction" : "BaseFee transaction in a Legacy blcok",
       "1559BlockImportImpossible_HeaderIsLegacy" : "1559 block must be on top of 1559",
       "1559BlockImportImpossible_BaseFeeWrong": "base fee not correct!",
