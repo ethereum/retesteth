@@ -150,6 +150,7 @@ string const t8ntool_config = R"({
       "LegacyBlockBaseFeeTransaction" : "BaseFee transaction in a Legacy blcok",
       "1559BlockImportImpossible_HeaderIsLegacy" : "1559 block must be on top of 1559",
       "1559BlockImportImpossible_BaseFeeWrong": "base fee not correct!",
+      "1559BlockImportImpossible_InitialBaseFeeWrong": "Initial baseFee must be 1000000000",
       "1559BlockImportImpossible_TargetGasLow": "gasTarget decreased too much",
       "1559BlockImportImpossible_TargetGasHigh": "gasTarget increased too much",
       "1559BlockImportImpossible_InitialGasLimitInvalid": "Invalid block1559: Initial gasLimit must be"

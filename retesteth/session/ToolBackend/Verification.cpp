@@ -23,15 +23,15 @@ void verifyLegacyParent(spBlockHeader const& _header, spBlockHeader const& _pare
     if (_parent.getCContent().type() != BlockType::BlockHeaderLegacy)
         throw test::UpwardsException("Legacy block can only be on top of LegacyBlock!");
 
-    // Verify delta gas
-    BlockHeader const& parent = _parent.getCContent();
+    // Verify delta gas (legacy formula)
     BlockHeader const& header = _header.getCContent();
+    BlockHeader const& parent = _parent.getCContent();
+
     VALUE deltaGas = parent.gasLimit().asU256() / 1024;
-    if (header.gasLimit().asU256() >= parent.gasLimit().asU256() + deltaGas.asU256() ||
-        header.gasLimit().asU256() <= parent.gasLimit().asU256() - deltaGas.asU256())
+    if (header.gasLimit() >= parent.gasLimit() + deltaGas.asU256() ||
+        header.gasLimit() <= parent.gasLimit() - deltaGas.asU256())
         throw test::UpwardsException("Invalid gaslimit: " + header.gasLimit().asDecString() + ", want " +
                                      parent.gasLimit().asDecString() + " +/- " + deltaGas.asDecString());
-
 }
 
 void verify1559Block(spBlockHeader const& _header, ToolChain const& _chain)
@@ -44,6 +44,19 @@ void verify1559Block(spBlockHeader const& _header, ToolChain const& _chain)
     // Check if the block used too much gas
     if (header.gasUsed() > header.gasLimit())
         throw test::UpwardsException() << "Invalid block1559: Invalid gasUsed: too much gas used!";
+
+    // Check first ever EIP1559 gasLimit
+    if (header.number() == 5 && _chain.fork() == "BerlinToLondonAt5")
+    {
+        /* https://eips.ethereum.org/EIPS/eip-1559
+           if INITIAL_FORK_BLOCK_NUMBER == block.number:
+           expected_base_fee_per_gas = INITIAL_BASE_FEE
+        */
+
+        if (header.baseFee().asU256() != INITIAL_BASE_FEE)
+            throw test::UpwardsException(
+                "Invalid block1559: Initial baseFee must be 1000000000, got: " + header.baseFee().asDecString());
+    }
 }
 
 void verify1559Parent_private(spBlockHeader const& _header, spBlockHeader const& _parent, ToolChain const& _chain)
@@ -61,30 +74,14 @@ void verify1559Parent_private(spBlockHeader const& _header, spBlockHeader const&
                                               "`, got: `" + header.baseFee().asDecString() + "`";
 
     // Check if the block changed the gas target too much
-    VALUE parentGasTarget = parent.gasLimit() / ELASTICITY_MULTIPLIER;
-    VALUE const headerGasTarget = header.gasLimit() / ELASTICITY_MULTIPLIER;
+    //    VALUE const parentGasTarget = parent.gasLimit() / ELASTICITY_MULTIPLIER;
+    //    VALUE const headerGasTarget = header.gasLimit() / ELASTICITY_MULTIPLIER;
 
-    // Check first ever EIP1559 gasLimit
-    if (header.number() == 5 && _chain.fork() == "BerlinToLondonAt5")
-    {
-        /* https://eips.ethereum.org/EIPS/eip-1559
-            if INITIAL_FORK_BLOCK_NUMBER == block.number:
-            parent_gas_target = self.parent(block).gas_limit
-            parent_gas_limit = self.parent(block).gas_limit * ELASTICITY_MULTIPLIER
-        */
-
-        parentGasTarget = parent.gasLimit();
-        if (header.gasLimit() != parent.gasLimit() * ELASTICITY_MULTIPLIER)
-            throw test::UpwardsException(
-                "Invalid block1559: Initial gasLimit must be self.parent(block).gas_limit * ELASTICITY_MULTIPLIER");
-    }
-
-
-    VALUE deltaGasT = parentGasTarget / 1024;
-    if (headerGasTarget > parentGasTarget + deltaGasT)
-        throw test::UpwardsException() << "Invalid block1559: gasTarget increased too much!";
-    if (headerGasTarget < parentGasTarget - deltaGasT)
-        throw test::UpwardsException() << "Invalid block1559: gasTarget decreased too much!";
+    // Delta gas check new formula >=  changed to >
+    VALUE deltaGas = parent.gasLimit() / 1024;
+    if (header.gasLimit() > parent.gasLimit() + deltaGas || header.gasLimit() < parent.gasLimit() - deltaGas)
+        throw test::UpwardsException("Invalid gaslimit: " + header.gasLimit().asDecString() + ", want " +
+                                     parent.gasLimit().asDecString() + " +/- " + deltaGas.asDecString());
 }
 
 void verify1559Parent(spBlockHeader const& _header, spBlockHeader const& _parent, ToolChain const& _chain)
@@ -100,10 +97,17 @@ void verify1559Parent(spBlockHeader const& _header, spBlockHeader const& _parent
 
         DataObject parentData = _parent.getCContent().asDataObject();
 
+        // fake legacy block gasLimit for delta validation
+        // https://eips.ethereum.org/EIPS/eip-1559
+        // if INITIAL_FORK_BLOCK_NUMBER == block.number:
+        //            parent_gas_target = self.parent(block).gas_limit
+        //            parent_gas_limit = self.parent(block).gas_limit * ELASTICITY_MULTIPLIER
+        parentData["gasLimit"] = (_parent.getCContent().gasLimit() * ELASTICITY_MULTIPLIER).asString();
+
         // https://eips.ethereum.org/EIPS/eip-1559
         // INITIAL_BASE_FEE = 1000000000
-        VALUE baseFee(DataObject("0x3b9aca00"));
-        VALUE genesisBaseFee = baseFee * 8 / 7;
+        // fake legacy block baseFee for delta validation
+        VALUE genesisBaseFee = INITIAL_BASE_FEE * 8 / 7;
         parentData["baseFee"] = genesisBaseFee.asString();
 
         spBlockHeader fixedParent = spBlockHeader(new BlockHeader1559(parentData));

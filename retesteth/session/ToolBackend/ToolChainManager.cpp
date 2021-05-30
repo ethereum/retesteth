@@ -43,13 +43,12 @@ void ToolChainManager::reorganizePendingBlock()
         // Switch default mining to 1559 blocks
         DataObject parentData = bl.header().getCContent().asDataObject();
 
-        const size_t ELASTICITY_MULTIPLIER = 2;
         VALUE newGasLimit = bl.header().getCContent().gasLimit() * ELASTICITY_MULTIPLIER;
         parentData.atKeyUnsafe("gasLimit").setString(newGasLimit.asString());
 
         // https://eips.ethereum.org/EIPS/eip-1559
         // INITIAL_BASE_FEE = 1000000000
-        parentData["baseFee"] = "0x3b9aca00";
+        parentData["baseFee"] = VALUE(INITIAL_BASE_FEE).asString();
 
         spBlockHeader newPending(new BlockHeader1559(parentData));
         m_pendingBlock = spEthereumBlockState(new EthereumBlockState(newPending, bl.state(), bl.logHash()));
