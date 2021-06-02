@@ -51,7 +51,8 @@ SetChainParamsArgs prepareChainParams(
     }
 
     // Convert back 1559 genesis into legacy genesis, when filling 1559 tests
-    if (compareFork(_net, ForkCMPType::lt, FORK("London")))
+    auto const& additional = Options::getCurrentConfig().cfgFile().additionalForks();
+    if (!inArray(additional, _net) && compareFork(_net, ForkCMPType::lt, FORK("London")))
         genesis.atKeyUnsafe("genesis").removeKey("baseFee");
 
     genesis["genesis"]["extraData"] = _env.currentExtraData().asString();

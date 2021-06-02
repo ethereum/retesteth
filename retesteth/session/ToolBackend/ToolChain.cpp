@@ -22,8 +22,10 @@ ToolChain::ToolChain(
     m_initialParams = GCP_SPointer<SetChainParamsArgs>(new SetChainParamsArgs(_config));
     m_toolParams = GCP_SPointer<ToolParams>(new ToolParams(_config.params()));
 
-    if (compareFork(m_fork.getCContent(), ForkCMPType::lt, FORK("London")) &&
-        _genesis.header().getCContent().type() == BlockType::BlockHeader1559)
+    auto const& additional = Options::getCurrentConfig().cfgFile().additionalForks();
+    if (!inArray(additional, m_fork.getCContent())
+        && compareFork(m_fork.getCContent(), ForkCMPType::lt, FORK("London"))
+        && _genesis.header().getCContent().type() == BlockType::BlockHeader1559)
         throw test::UpwardsException("Constructing 1559 genesis on network which is lower London!");
 
     // We yet don't know the state root. ask the tool to calculate it
