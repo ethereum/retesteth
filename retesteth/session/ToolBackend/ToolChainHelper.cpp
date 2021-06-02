@@ -63,7 +63,7 @@ static std::map<FORK, FORK> RewardMapForToolAfter5 = {
     {"EIP158ToByzantiumAt5", "Byzantium"},
     {"HomesteadToDaoAt5", "Homestead"},
     {"ByzantiumToConstantinopleFixAt5", "ConstantinopleFix"},
-    {"BerlinToLondonAt5", "Aleut"}
+    {"BerlinToLondonAt5", "London"}
 };
 
 std::tuple<VALUE, FORK> prepareReward(SealEngine _engine, FORK const& _fork, VALUE const& _blockNumber)
