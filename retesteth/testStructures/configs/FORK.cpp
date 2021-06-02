@@ -1,13 +1,53 @@
 #include "FORK.h"
 #include <retesteth/EthChecks.h>
+#include <retesteth/Options.h>
+using namespace test;
 using namespace test::teststruct;
+
+namespace
+{
+size_t getForkIndex(test::teststruct::FORK const& _f)
+{
+    auto const& forks = Options::getCurrentConfig().cfgFile().forks();
+    for (size_t i = 0; i < forks.size(); i++)
+    {
+        if (forks.at(i) == _f)
+            return i;
+    }
+    ETH_FAIL_MESSAGE("Fork name `" + _f.asString() + "` not found in current config!");
+    return 0;
+}
+}  // namespace
 
 namespace test
 {
 namespace teststruct
 {
-// Can add a validation here so not to have inalid forks ever
+// If to not use FORK in currentConfig init code.
+// Would be possible to calculate the indexes at constructor time
+// Given the FORK array is small and usage of compares are single lines it shall be fine
 FORK::FORK(DataObject const& _data) : m_data(_data) {}
+
+bool compareFork(FORK const& _left, ForkCMPType _t, FORK const& _right)
+{
+    switch (_t)
+    {
+    case ForkCMPType::ge:
+        return getForkIndex(_left) >= getForkIndex(_right);
+        break;
+    case ForkCMPType::le:
+        return getForkIndex(_left) <= getForkIndex(_right);
+        break;
+    case ForkCMPType::gt:
+        return getForkIndex(_left) > getForkIndex(_right);
+        break;
+    case ForkCMPType::lt:
+        return getForkIndex(_left) < getForkIndex(_right);
+        break;
+    }
+    return 0;
+}
+
 
 }  // namespace teststruct
 }  // namespace test

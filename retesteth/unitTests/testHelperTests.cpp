@@ -23,6 +23,7 @@
 #include <retesteth/TestOutputHelper.h>
 #include <retesteth/configs/ClientConfig.h>
 #include <boost/test/unit_test.hpp>
+#include <retesteth/Options.h>
 
 using namespace std;
 using namespace dev;
@@ -39,9 +40,26 @@ bool hasNetwork(std::vector<FORK> const& _container, FORK const& _net)
 }
 static vector<FORK> exampleNets = {FORK("Frontier"), FORK("Homestead"), FORK("EIP150"), FORK("EIP158"), FORK("Byzantium"),
     FORK("Constantinople"), FORK("ConstantinopleFix")};
+
+class Initializer : public TestOutputHelperFixture
+{
+public:
+    Initializer()
+    {
+        for (auto const& config : Options::getDynamicOptions().getClientConfigs())
+        {
+            Options::getDynamicOptions().setCurrentConfig(config);
+            vector<FORK> const& forks = Options::getCurrentConfig().cfgFile().forks();
+            vector<FORK>& forksCheat = const_cast<vector<FORK>&>(forks);
+            forksCheat = exampleNets;
+            break;
+        }
+    }
+};
+
 }  // namespace
 
-BOOST_FIXTURE_TEST_SUITE(TestHelperSuite, TestOutputHelperFixture)
+BOOST_FIXTURE_TEST_SUITE(TestHelperSuite, Initializer)
 
 BOOST_AUTO_TEST_CASE(tostr_std)
 {
@@ -53,6 +71,81 @@ BOOST_AUTO_TEST_CASE(tostr_dev)
 {
     for (size_t i = 0; i < 1000000; i++)
         dev::toString(i);
+}
+
+BOOST_AUTO_TEST_CASE(comapreForks_lotsSteps_Bajo)
+{
+    ETH_FAIL_REQUIRE(
+    compareFork(FORK("Homestead"), ForkCMPType::lt, FORK("Constantinople")) == true);
+
+    ETH_FAIL_REQUIRE(
+    compareFork(FORK("Homestead"), ForkCMPType::gt, FORK("Constantinople")) == false);
+
+    ETH_FAIL_REQUIRE(
+    compareFork(FORK("Homestead"), ForkCMPType::le, FORK("Constantinople")) == true);
+
+    ETH_FAIL_REQUIRE(
+    compareFork(FORK("Homestead"), ForkCMPType::ge, FORK("Constantinople")) == false);
+}
+
+BOOST_AUTO_TEST_CASE(comapreForks_OneStep_Bajo)
+{
+    ETH_FAIL_REQUIRE(
+    compareFork(FORK("Homestead"), ForkCMPType::lt, FORK("EIP150")) == true);
+
+    ETH_FAIL_REQUIRE(
+    compareFork(FORK("Homestead"), ForkCMPType::gt, FORK("EIP150")) == false);
+
+    ETH_FAIL_REQUIRE(
+    compareFork(FORK("Homestead"), ForkCMPType::le, FORK("EIP150")) == true);
+
+    ETH_FAIL_REQUIRE(
+    compareFork(FORK("Homestead"), ForkCMPType::ge, FORK("EIP150")) == false);
+}
+
+BOOST_AUTO_TEST_CASE(comapreForks_lotsSteps_Arriba)
+{
+    ETH_FAIL_REQUIRE(
+    compareFork(FORK("Constantinople"), ForkCMPType::lt, FORK("Homestead")) == false);
+
+    ETH_FAIL_REQUIRE(
+    compareFork(FORK("Constantinople"), ForkCMPType::gt, FORK("Homestead")) == true);
+
+    ETH_FAIL_REQUIRE(
+    compareFork(FORK("Constantinople"), ForkCMPType::le, FORK("Homestead")) == false);
+
+    ETH_FAIL_REQUIRE(
+    compareFork(FORK("Constantinople"), ForkCMPType::ge, FORK("Homestead")) == true);
+}
+
+BOOST_AUTO_TEST_CASE(comapreForks_OneStep_Arriba)
+{
+    ETH_FAIL_REQUIRE(
+    compareFork(FORK("EIP150"), ForkCMPType::lt, FORK("Homestead")) == false);
+
+    ETH_FAIL_REQUIRE(
+    compareFork(FORK("EIP150"), ForkCMPType::gt, FORK("Homestead")) == true);
+
+    ETH_FAIL_REQUIRE(
+    compareFork(FORK("EIP150"), ForkCMPType::le, FORK("Homestead")) == false);
+
+    ETH_FAIL_REQUIRE(
+    compareFork(FORK("EIP150"), ForkCMPType::ge, FORK("Homestead")) == true);
+}
+
+BOOST_AUTO_TEST_CASE(comapreForks_ZeroStep)
+{
+    ETH_FAIL_REQUIRE(
+    compareFork(FORK("Homestead"), ForkCMPType::lt, FORK("Homestead")) == false);
+
+    ETH_FAIL_REQUIRE(
+    compareFork(FORK("Homestead"), ForkCMPType::gt, FORK("Homestead")) == false);
+
+    ETH_FAIL_REQUIRE(
+    compareFork(FORK("Homestead"), ForkCMPType::le, FORK("Homestead")) == true);
+
+    ETH_FAIL_REQUIRE(
+    compareFork(FORK("Homestead"), ForkCMPType::ge, FORK("Homestead")) == true);
 }
 
 BOOST_AUTO_TEST_CASE(translateNetworks_doubleNet)
