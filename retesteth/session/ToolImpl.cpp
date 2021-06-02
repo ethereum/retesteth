@@ -235,7 +235,7 @@ void ToolImpl::test_setChainParams(SetChainParamsArgs const& _config)
     TRYCATCHCALL(
         m_toolChainManager = GCP_SPointer<ToolChainManager>(new ToolChainManager(_config, m_toolPath, m_tmpDir));
         ETH_TEST_MESSAGE("Response test_setChainParams: {true}");
-        , "test_setChainParams", CallType::DONTFAILONUPWARDS)
+        , "test_setChainParams", CallType::FAILEVERYTHING)
     ETH_TEST_MESSAGE("Response test_setChainParams: {false}");
 }
 

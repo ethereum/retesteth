@@ -23,10 +23,15 @@ ToolChain::ToolChain(
     m_toolParams = GCP_SPointer<ToolParams>(new ToolParams(_config.params()));
 
     auto const& additional = Options::getCurrentConfig().cfgFile().additionalForks();
-    if (!inArray(additional, m_fork.getCContent())
-        && compareFork(m_fork.getCContent(), ForkCMPType::lt, FORK("London"))
-        && _genesis.header().getCContent().type() == BlockType::BlockHeader1559)
+    if (!inArray(additional, m_fork.getCContent()))
+    {
+        if (compareFork(m_fork.getCContent(), ForkCMPType::lt, FORK("London"))
+            && _genesis.header().getCContent().type() == BlockType::BlockHeader1559)
         throw test::UpwardsException("Constructing 1559 genesis on network which is lower London!");
+        if (compareFork(m_fork.getCContent(), ForkCMPType::ge, FORK("London"))
+            && _genesis.header().getCContent().type() != BlockType::BlockHeader1559)
+        throw test::UpwardsException("Constructing legacy genesis on network which is higher London!");
+    }
 
     // We yet don't know the state root. ask the tool to calculate it
     ToolResponse res = mineBlockOnTool(_genesis, SealEngine::NoReward);
