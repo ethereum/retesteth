@@ -22,16 +22,6 @@ void verifyLegacyParent(spBlockHeader const& _header, spBlockHeader const& _pare
 
     if (_parent.getCContent().type() != BlockType::BlockHeaderLegacy)
         throw test::UpwardsException("Legacy block can only be on top of LegacyBlock!");
-
-    // Verify delta gas (legacy formula)
-    BlockHeader const& header = _header.getCContent();
-    BlockHeader const& parent = _parent.getCContent();
-
-    VALUE deltaGas = parent.gasLimit().asU256() / 1024;
-    if (header.gasLimit() >= parent.gasLimit() + deltaGas.asU256() ||
-        header.gasLimit() <= parent.gasLimit() - deltaGas.asU256())
-        throw test::UpwardsException("Invalid gaslimit: " + header.gasLimit().asDecString() + ", want " +
-                                     parent.gasLimit().asDecString() + " +/- " + deltaGas.asDecString());
 }
 
 void verify1559Block(spBlockHeader const& _header, ToolChain const& _chain)
@@ -73,15 +63,21 @@ void verify1559Parent_private(spBlockHeader const& _header, spBlockHeader const&
         throw test::UpwardsException() << "Invalid block1559: base fee not correct! Expected: `" + newBaseFee.asDecString() +
                                               "`, got: `" + header.baseFee().asDecString() + "`";
 
+    (void) parent;
     // Check if the block changed the gas target too much
     //    VALUE const parentGasTarget = parent.gasLimit() / ELASTICITY_MULTIPLIER;
     //    VALUE const headerGasTarget = header.gasLimit() / ELASTICITY_MULTIPLIER;
 
-    // Delta gas check new formula >=  changed to >
-    VALUE deltaGas = parent.gasLimit() / 1024;
-    if (header.gasLimit() > parent.gasLimit() + deltaGas || header.gasLimit() < parent.gasLimit() - deltaGas)
-        throw test::UpwardsException("Invalid gaslimit: " + header.gasLimit().asDecString() + ", want " +
-                                     parent.gasLimit().asDecString() + " +/- " + deltaGas.asDecString());
+    //VALUE deltaGas = parent.gasLimit().asU256() / 1024;
+
+    // https://eips.ethereum.org/EIPS/eip-1559
+    // assert block.gas_limit < parent_gas_limit + parent_gas_limit // 1024, 'invalid block: gas limit increased too much'
+    // assert block.gas_limit > parent_gas_limit - parent_gas_limit // 1024, 'invalid block: gas limit decreased too much'
+
+    //if (header.gasLimit().asU256() >= parent.gasLimit().asU256() + deltaGas.asU256() ||
+    //    header.gasLimit().asU256() <= parent.gasLimit().asU256() - deltaGas.asU256())
+    //    throw test::UpwardsException("Invalid gaslimit: " + header.gasLimit().asDecString() + ", want " +
+    //                                 parent.gasLimit().asDecString() + " +/- " + deltaGas.asDecString());
 }
 
 void verify1559Parent(spBlockHeader const& _header, spBlockHeader const& _parent, ToolChain const& _chain)
@@ -156,6 +152,12 @@ void verifyCommonParent(spBlockHeader const& _header, spBlockHeader const& _pare
         throw test::UpwardsException(
             "Invalid difficulty: " + header.difficulty().asDecString() + ", want: " + VALUE(newDiff).asDecString());
 
+    // Verify delta gas (legacy formula)
+    VALUE deltaGas = parent.gasLimit().asU256() / 1024;
+    if (header.gasLimit().asU256() >= parent.gasLimit().asU256() + deltaGas.asU256() ||
+        header.gasLimit().asU256() <= parent.gasLimit().asU256() - deltaGas.asU256())
+        throw test::UpwardsException("Invalid gaslimit: " + header.gasLimit().asDecString() + ", want " +
+                                     parent.gasLimit().asDecString() + " +/- " + deltaGas.asDecString());
 }
 
 }  // namespace
