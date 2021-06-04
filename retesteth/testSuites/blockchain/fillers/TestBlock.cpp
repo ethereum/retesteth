@@ -28,6 +28,22 @@ DataObject TestBlock::asDataObject() const
         res["transactions"] = DataObject(DataType::Array);
         for (auto const& tr : m_block.getCContent().transactions())
             res["transactions"].addArrayObject(tr.getCContent().asDataObject(ExportOrder::OldStyle));
+
+        for (auto const& trSequence : m_transactionExecOrder)
+        {
+            DataObject trInfo;
+            BYTES const& b = std::get<0>(trSequence);
+            string const& v = std::get<1>(trSequence);
+            trInfo["rawBytes"] = b.asString();
+            if (v.empty())
+                trInfo["valid"] = "true";
+            else
+            {
+                trInfo["valid"] = "false";
+                trInfo["exception"] = v;
+            }
+            res["transactionSequence"].addArrayObject(trInfo);
+        }
     }
 
     res["rlp"] = m_rawRLP.getCContent().asString();

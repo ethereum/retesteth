@@ -2,6 +2,8 @@
 #include "EthChecks.h"
 #include "TestHelper.h"
 #include "TestOutputHelper.h"
+#include <retesteth/Options.h>
+#include <retesteth/configs/ClientConfig.h>
 #include <mutex>
 
 using namespace test;
@@ -322,6 +324,19 @@ string compareBlockHeaders(DataObject const& _blockA, DataObject const& _blockB,
     if (_whatField.empty() && errorInHashField)
         _whatField = "hash";
     return message;
+}
+
+void readExpectExceptions(DataObject const& _data, std::map<FORK, string>& _out)
+{
+    for (auto const& rec : _data.getSubObjects())
+    {
+        // Parse ">=Frontier" : "EXCEPTION"
+        ClientConfig const& cfg = Options::get().getDynamicOptions().getCurrentConfig();
+        std::set<string> forksString = {rec.getKey()};
+        std::vector<FORK> parsedForks = cfg.translateNetworks(forksString);
+        for (auto const& el : parsedForks)
+            _out.emplace(el, rec.asString());
+    }
 }
 
 }  // namespace teststruct

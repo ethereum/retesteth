@@ -154,7 +154,14 @@ string const t8ntool_config = R"({
       "1559BlockImportImpossible_InitialBaseFeeWrong": "Initial baseFee must be 1000000000",
       "1559BlockImportImpossible_TargetGasLow": "gasTarget decreased too much",
       "1559BlockImportImpossible_TargetGasHigh": "gasTarget increased too much",
-      "1559BlockImportImpossible_InitialGasLimitInvalid": "Invalid block1559: Initial gasLimit must be"
+      "1559BlockImportImpossible_InitialGasLimitInvalid": "Invalid block1559: Initial gasLimit must be",
+      "TR_IntrinsicGas" : "intrinsic gas too low:",
+      "TR_NoFunds" : "insufficient funds for gas * price + value",
+      "TR_NoFundsValue" : "insufficient funds for transfer",
+      "TR_FeeCapLessThanBlocks" : "fee cap less than block base fee",
+      "TR_GasLimitReached" : "gas limit reached",
+      "TR_NonceTooHigh" : "nonce too high",
+      "TR_NonceTooLow" : "nonce too low"
     }
 })";
 

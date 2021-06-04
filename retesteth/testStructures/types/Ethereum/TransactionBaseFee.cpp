@@ -80,7 +80,7 @@ void TransactionBaseFee::fromDataObject(DataObject const& _data)
                 {"from", {{DataType::String}, jsonField::Optional}},              // EthGetBlockBy transaction
                 {"hash", {{DataType::String}, jsonField::Optional}},              // EthGetBlockBy transaction
                 {"transactionIndex", {{DataType::String}, jsonField::Optional}},  // EthGetBlockBy transaction
-                {"invalid", {{DataType::String}, jsonField::Optional}},           // BlockchainTest filling
+                {"expectException", {{DataType::Object}, jsonField::Optional}}    // BlockchainTest filling
             });
     }
     catch (std::exception const& _ex)

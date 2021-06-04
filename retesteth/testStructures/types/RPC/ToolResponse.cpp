@@ -16,6 +16,12 @@ ToolResponse::ToolResponse(DataObject const& _data)
     for (auto const& el : _data.atKey("receipts").getSubObjects())
         m_receipts.push_back(ToolResponseReceipt(el));
 
+    if (_data.count("rejected"))
+    {
+        for (auto const& el : _data.atKey("rejected").getSubObjects())
+            m_rejectedTransactions.push_back(ToolResponseRejected(el));
+    }
+
     requireJsonFields(_data, "ToolResponse " + _data.getKey(),
         {{"stateRoot", {{DataType::String}, jsonField::Required}},
          {"txRoot", {{DataType::String}, jsonField::Required}},

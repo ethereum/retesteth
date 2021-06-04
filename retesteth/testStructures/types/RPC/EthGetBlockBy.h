@@ -21,6 +21,13 @@ struct EthGetBlockBy : GCP_SPointerBase
 
     // Check if response has a transaction
     bool hasTransaction(FH32 const& _hash) const;
+    std::string const& getTrException(FH32 const& _hash) const
+    {
+        static std::string empty;
+        if (m_rejectedTransactions.count(_hash))
+            return m_rejectedTransactions.at(_hash);
+        return empty;
+    }
 
 private:
     EthGetBlockBy() {}
@@ -28,6 +35,7 @@ private:
     spBlockHeader m_header;
     std::vector<EthGetBlockByTransaction> m_transactions;
     std::vector<FH32> m_uncles;
+    std::map<FH32, string> m_rejectedTransactions;
 
     spVALUE m_size;
     spVALUE m_totalDifficulty;

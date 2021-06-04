@@ -36,6 +36,15 @@ EthGetBlockBy::EthGetBlockBy(DataObject const& _data)
         for (auto const& un : _data.atKey("uncles").getSubObjects())
             m_uncles.push_back(FH32(un));
 
+        if (_data.count("rejectedTransactions"))
+        {
+            for (auto const& el : _data.atKey("rejectedTransactions").getSubObjects())
+            {
+                m_rejectedTransactions.emplace(FH32(el.atKey("hash").asString()),
+                                               el.atKey("error").asString());
+            }
+        }
+
         requireJsonFields(_data, "EthGetBlockBy " + _data.getKey(),
             {{"logsBloom", {{DataType::String}, jsonField::Required}},
              {"author", {{DataType::String}, jsonField::Optional}},                 //Geth return field
@@ -61,6 +70,7 @@ EthGetBlockBy::EthGetBlockBy(DataObject const& _data)
              {"size", {{DataType::String}, jsonField::Required}},
              {"totalDifficulty", {{DataType::String}, jsonField::Required}},
              {"uncles", {{DataType::Array}, jsonField::Required}},
+             {"rejectedTransactions", {{DataType::Array}, jsonField::Optional}},
              {"transactions", {{DataType::Array}, jsonField::Required}}});
     }
     catch (std::exception const& _ex)

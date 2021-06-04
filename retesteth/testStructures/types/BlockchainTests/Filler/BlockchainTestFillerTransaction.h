@@ -14,12 +14,20 @@ struct BlockchainTestFillerTransaction : GCP_SPointerBase
 {
     BlockchainTestFillerTransaction(DataObject const&, NonceMap& _nonceMap);
     Transaction const& tr() const { return m_transaction.getCContent(); }
-    bool isMarkedInvalid() const { return m_expectInvalid; }
+
+    // Test functions
+    string const& getExpectException(FORK const& _net) const
+    {
+        static string emptyString = string();  // mutex ??
+        if (m_expectExceptions.count(_net))
+            return m_expectExceptions.at(_net);
+        return emptyString;
+    }
 
 private:
     BlockchainTestFillerTransaction() {}
     spTransaction m_transaction;
-    bool m_expectInvalid;
+    std::map<FORK, string> m_expectExceptions;
 };
 
 }  // namespace teststruct

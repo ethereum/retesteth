@@ -13,7 +13,8 @@ BlockchainTestFillerTransaction::BlockchainTestFillerTransaction(DataObject cons
 {
     try
     {
-        m_expectInvalid = _data.count("invalid");
+        if (_data.count("expectException"))
+            readExpectExceptions(_data.atKey("expectException"), m_expectExceptions);
 
         DataObject tmpD = _data;
 
@@ -32,6 +33,7 @@ BlockchainTestFillerTransaction::BlockchainTestFillerTransaction(DataObject cons
 
         tmpD.removeKey("data");
         tmpD.removeKey("to");
+        tmpD.removeKey("expectException");
         if (tmpD.count("accessList"))
             tmpD.removeKey("accessList");
         tmpD.performModifier(mod_valueToCompactEvenHexPrefixed);

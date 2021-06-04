@@ -80,6 +80,8 @@ void ToolChain::mineBlock(EthereumBlockState const& _pendingBlock, Mining _req)
 
     // Add only those transactions which tool returned a receipt for
     // Some transactions are expected to fail. That should be detected by tests
+    size_t index = 0;
+    std::map<FH32, string> transactionErrors;
     for (auto const& tr : _pendingBlock.transactions())
     {
         bool found = false;
@@ -90,17 +92,35 @@ void ToolChain::mineBlock(EthereumBlockState const& _pendingBlock, Mining _req)
             {
                 found = true;
                 pendingFixed.addTransaction(tr);
+                break;
             }
         }
         if (!found)
         {
             string const message = "t8ntool didn't return a transaction with hash: " + trHash.asString();
+
+            // Find the rejected transaction information
+            bool rejectedInfoFound = false;
+            for (auto const& el : res.rejected())
+            {
+                if (el.index() == index)
+                {
+                    rejectedInfoFound = true;
+                    transactionErrors.emplace(trHash, el.error());
+                    break;
+                }
+            }
+            if (!rejectedInfoFound)
+                ETH_ERROR_MESSAGE("tool didn't provide information about rejected transaction");
             if (_req == Mining::AllowFailTransactions)
                 ETH_WARNING_TEST(message, 6);
             else
                 throw test::UpwardsException(message);
         }
+        index++;
     }
+    // All transactions are checked
+    pendingFixed.setTrsErrors(transactionErrors);
 
     // Treat all uncles as valid as t8ntool does not calculate uncles
     // Uncle header validity as well as RLP logic is checked before
@@ -162,8 +182,7 @@ void ToolChain::mineBlock(EthereumBlockState const& _pendingBlock, Mining _req)
     ETH_LOG("New block N: " + to_string(m_blocks.size()), 6);
     ETH_LOG("New block TD: " + totalDifficulty.asDecString() + " + " +
                 pendingFixed.header().getCContent().difficulty().asDecString() + " = " +
-                pendingFixed.totalDifficulty().asDecString(),
-        6);
+                pendingFixed.totalDifficulty().asDecString(), 6);
 
     pendingFixed.setTrsTrace(res.debugTrace());
     m_blocks.push_back(pendingFixed);

@@ -53,17 +53,11 @@ struct EthereumBlockState : EthereumBlock
     State const& state() const { return m_state; }
     FH32 const& logHash() const { return m_logHash; }
 
-    DebugVMTrace const& getTrTrace(FH32 const& _hash) const
-    {
-        if (m_transactionsTrace.count(_hash))
-            return m_transactionsTrace.at(_hash);
-        else
-            ETH_ERROR_MESSAGE("Transaction trace not found! (" + _hash.asString() + ")");
-        static DebugVMTrace empty("", "", FH32::zero(), "");
-        return empty;
-    }
-
+    // Debug
+    DebugVMTrace const& getTrTrace(FH32 const& _hash) const;
+    std::map<FH32, string> const& getTrErrors() const { return m_transactionErrors; }
     void setTrsTrace(std::map<FH32, DebugVMTrace> const& _map) { m_transactionsTrace = _map; }
+    void setTrsErrors(std::map<FH32, string> const& _map) { m_transactionErrors = _map; }
 
 private:
     /// EthereumBlockState(){}
@@ -72,6 +66,7 @@ private:
     spVALUE m_totalDifficulty;
     std::map<FH32, spFH32> m_transactionsLog;
     std::map<FH32, DebugVMTrace> m_transactionsTrace;
+    std::map<FH32, string> m_transactionErrors;
 };
 
 typedef GCP_SPointer<EthereumBlock> spEthereumBlock;

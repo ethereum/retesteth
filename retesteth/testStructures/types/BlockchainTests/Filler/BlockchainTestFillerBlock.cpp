@@ -46,17 +46,7 @@ BlockchainTestFillerBlock::BlockchainTestFillerBlock(DataObject const& _data, No
                 m_uncles.push_back(BlockchainTestFillerUncle(un));
 
         if (_data.count("expectException"))
-        {
-            for (auto const& rec : _data.atKey("expectException").getSubObjects())
-            {
-                // Parse ">=Frontier" : "EXCEPTION"
-                ClientConfig const& cfg = Options::get().getDynamicOptions().getCurrentConfig();
-                std::set<string> forksString = {rec.getKey()};
-                std::vector<FORK> parsedForks = cfg.translateNetworks(forksString);
-                for (auto const& el : parsedForks)
-                    m_expectExceptions.emplace(el, rec.asString());
-            }
-        }
+            readExpectExceptions(_data.atKey("expectException"), m_expectExceptions);
 
         if (_data.count("blockHeader"))
         {

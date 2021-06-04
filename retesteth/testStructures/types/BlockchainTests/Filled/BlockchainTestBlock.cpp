@@ -25,6 +25,11 @@ BlockchainTestBlock::BlockchainTestBlock(DataObject const& _data)
             for (auto const& tr : _data.atKey("transactions").getSubObjects())
                 m_transactions.push_back(readTransaction(tr));
 
+            // Can't really check that yet. the field is for custom test runners
+            if (_data.count("transactionSequence"))
+                for (auto const& tr : _data.atKey("transactionSequence").getSubObjects())
+                    m_transactionSequence.push_back(readTransaction(BYTES(tr.atKey("rawBytes"))));
+
             for (auto const& un : _data.atKey("uncleHeaders").getSubObjects())
                 m_uncles.push_back(readBlockHeader(un));
         }
@@ -35,6 +40,7 @@ BlockchainTestBlock::BlockchainTestBlock(DataObject const& _data)
                 {"chainname", {{DataType::String}, jsonField::Optional}},    // User information
                 {"blocknumber", {{DataType::String}, jsonField::Optional}},  // User information
                 {"transactions", {{DataType::Array}, jsonField::Optional}},
+                {"transactionSequence", {{DataType::Array}, jsonField::Optional}},
                 {"uncleHeaders", {{DataType::Array}, jsonField::Optional}},
                 {"expectException", {{DataType::String}, jsonField::Optional}},                   // User information
                 {"expectExceptionALL", {{DataType::String}, jsonField::Optional}},                // Legacy field

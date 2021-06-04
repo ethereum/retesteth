@@ -2,6 +2,7 @@
 #include <testStructures/structures.h>
 
 typedef std::vector<spBlockHeader> vectorOfSchemeBlock;
+typedef std::tuple<BYTES, string> TransactBytesException;
 class TestBlock
 {
 public:
@@ -15,6 +16,10 @@ public:
 
     // Attach Transaction header to EthereumBlock (the one described in tests)
     void registerTestTransaction(spTransaction const& _tr) { m_block.getContent().addTransaction(_tr); }
+
+    // Attach Transaction to transaction Execution Order section
+    void registerTransactionSequence(TransactBytesException const& _trTuple) { m_transactionExecOrder.push_back(_trTuple); }
+    void nullTransactionSequence() { m_transactionExecOrder.clear(); }
 
     // Attach Uncle header to EthereumBlock (the one described in tests)
     void registerTestUncle(spBlockHeader const& _uncle) { m_block.getContent().addUncle(_uncle); }
@@ -42,6 +47,9 @@ public:
 private:
     TestBlock() {}
     spEthereumBlock m_block;        // Container that stores header, transactions, uncleheaders
+
+    // Transaction Execution order for invalid transaction check
+    std::vector<TransactBytesException> m_transactionExecOrder;
 
     string m_chainName;
     spFORK m_chainNet;

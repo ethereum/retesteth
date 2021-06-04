@@ -2,6 +2,7 @@
 #include "../../basetypes.h"
 #include "../Ethereum/State.h"
 #include "SubElements/ToolResponseReceipt.h"
+#include "SubElements/ToolResponseRejected.h"
 #include <dataObject/DataObject.h>
 #include <testStructures/types/RPC/DebugVMTrace.h>
 
@@ -33,6 +34,7 @@ struct ToolResponse
     void attachState(State const& _state) { m_stateResponse = spState(new State(_state)); }
     void attachDebugTrace(FH32 const& _trHash, DebugVMTrace const& _debug) { m_debugTrace[_trHash] = _debug; }
     std::map<FH32, DebugVMTrace> const& debugTrace() const { return m_debugTrace; }
+    std::vector<ToolResponseRejected> const& rejected() const { return m_rejectedTransactions; }
 
 private:
     ToolResponse() {}
@@ -44,6 +46,8 @@ private:
     std::vector<ToolResponseReceipt> m_receipts;
     spState m_stateResponse;
     std::map<FH32, DebugVMTrace> m_debugTrace;
+
+    std::vector<ToolResponseRejected> m_rejectedTransactions;
 };
 
 }  // namespace teststruct

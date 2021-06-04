@@ -79,6 +79,7 @@ void BlockHeaderLegacy::fromData(DataObject const& _data)
                 {"transactionsRoot", {{DataType::String}, jsonField::Optional}},
                 {"sha3Uncles", {{DataType::String}, jsonField::Optional}},
                 {"uncleHash", {{DataType::String}, jsonField::Optional}},
+                {"rejectedTransactions", {{DataType::Array}, jsonField::Optional}},   // EthGetBlockBy test debug field
                 {"seedHash", {{DataType::String}, jsonField::Optional}},         // EthGetBlockBy aleth field
                 {"boundary", {{DataType::String}, jsonField::Optional}},         // EthGetBlockBy aleth field
                 {"size", {{DataType::String}, jsonField::Optional}},             // EthGetBlockBy field

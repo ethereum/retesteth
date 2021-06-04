@@ -80,8 +80,20 @@ void TestBlockchain::generateBlock(
         // In the same order as on remote block has returned after mining
         typedef std::tuple<spTransaction, bool> testTrInfo;
         std::map<FH32, testTrInfo> testTransactionMap;
+        bool hasAtLeastOneInvalid = false;
         for (auto const& tr : _block.transactions())
-            testTransactionMap[tr.tr().hash()] = {readTransaction(tr.tr().asDataObject()), tr.isMarkedInvalid()};
+        {
+            string const& exception = tr.getExpectException(m_network);
+            bool hasException = !exception.empty();
+            spTransaction spTr = readTransaction(tr.tr().asDataObject());
+            testTransactionMap[tr.tr().hash()] = {spTr, hasException};
+            hasAtLeastOneInvalid = hasAtLeastOneInvalid || hasException;
+            newBlock.registerTransactionSequence({spTr.getCContent().getRawBytes(), exception});
+        }
+
+        // Only export the order if we have rejected transactions. to save space in tests
+        if (!hasAtLeastOneInvalid)
+            newBlock.nullTransactionSequence();
 
         for (auto const& remoteTr : minedBlock.getCContent().transactions())
         {
@@ -91,11 +103,11 @@ void TestBlockchain::generateBlock(
             if (testTransactionMap.count(remoteTr.hash()))
             {
                 bool isMarkedInvalid = std::get<1>(testTransactionMap.at(remoteTr.hash()));
+                spTransaction const& spTr = std::get<0>(testTransactionMap.at(remoteTr.hash()));
+
                 if (!isMarkedInvalid)
-                {
-                    spTransaction const& spTr = std::get<0>(testTransactionMap.at(remoteTr.hash()));
                     newBlock.registerTestTransaction(spTr);
-                }
+
                 testTransactionMap.erase(remoteTr.hash());
             }
             else
@@ -107,8 +119,9 @@ void TestBlockchain::generateBlock(
         for (auto const& leftoverTr : testTransactionMap)
         {
             bool isMarkedInvalid = std::get<1>(leftoverTr.second);
+            spTransaction const& spTr = std::get<0>(leftoverTr.second);
             if (!isMarkedInvalid)
-                newBlock.registerTestTransaction(std::get<0>(leftoverTr.second));
+                newBlock.registerTestTransaction(spTr);
         }
         // -------
 
@@ -171,24 +184,39 @@ GCP_SPointer<EthGetBlockBy> TestBlockchain::mineBlock(
         auto const& container = remoteBlock.getCContent().transactions();
         auto result = std::find_if(container.begin(), container.end(),
             [&trInTest](EthGetBlockByTransaction const& el) { return el.hash() == trInTest.tr().hash(); });
+
+        string const& exception = trInTest.getExpectException(m_network);
         if (result == container.end())
         {
-            if (!trInTest.isMarkedInvalid())
+            string const& reason = remoteBlock.getCContent().getTrException(trInTest.tr().hash());
+            if (exception.empty())
                 ETH_WARNING(
                     "TestBlockchain::mineBlock transaction has unexpectedly failed to be mined (see logs --verbosity 6): \n" +
-                    trInTest.tr().asDataObject().asJson());
+                    trInTest.tr().asDataObject().asJson() + "\nReason: `" + reason + "`");
+            else
+            {
+               string const& expectedReason = Options::getCurrentConfig().translateException(exception);
+               if (reason.find(expectedReason) == string::npos)
+               {
+                   ETH_WARNING(trInTest.tr().asDataObject().asJson());
+                   ETH_ERROR_MESSAGE(string("Transaction rejecetd but due to a different reason: \n") +
+                      "Expected reason: `" + expectedReason + "` (" + exception + ")\n" +
+                      "Client reson: `" + reason
+                     );
+               }
+            }
         }
         else
         {
-            if (trInTest.isMarkedInvalid())
-                ETH_WARNING("TestBlockchain::mineBlock transaction expected to failed but mined good: \n" +
+            if (!exception.empty())
+                ETH_WARNING("TestBlockchain::mineBlock transaction expected to failed with `"+ exception +"` but mined good: \n" +
                             trInTest.tr().asDataObject().asJson());
         }
     }
 
     auto remoteTr = remoteBlock.getCContent().transactions().size();
     auto testblTr = _blockInTest.transactions().size();
-    auto expectFails = _blockInTest.invalidTransactionCount();
+    auto expectFails = _blockInTest.invalidTransactionCount(m_network);
     if (remoteTr != testblTr - expectFails)
         ETH_ERROR_MESSAGE("BlockchainTest transaction execution failed! (remote " + fto_string(remoteTr) + " != test " +
                           fto_string(testblTr) + ", allowedToFail = " + fto_string(expectFails) + " )");
@@ -302,7 +330,7 @@ FH32 TestBlockchain::postmineBlockHeader(BlockchainTestFillerBlock const& _block
     // test and reimport it to the client in order to trigger an exception in the client
     EthGetBlockBy remoteBlock(m_session.eth_getBlockByNumber(_latestBlockNumber, Request::FULLOBJECTS));
     EthereumBlock managedBlock(remoteBlock.header());
-    for (auto const& tr : remoteBlock.transactions())
+    for (auto const& tr : remoteBlock.transactions())  // + invalid transactions?
         managedBlock.addTransaction(tr.transaction());
 
     // Attach test-generated uncle to a block and then reimport it again

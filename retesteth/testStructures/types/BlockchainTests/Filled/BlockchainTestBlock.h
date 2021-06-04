@@ -27,6 +27,7 @@ private:
     spBlockHeader m_blockHeader;
     std::vector<spBlockHeader> m_uncles;
     std::vector<spTransaction> m_transactions;
+    std::vector<spTransaction> m_transactionSequence;
     spBYTES m_rlp;
 };
 

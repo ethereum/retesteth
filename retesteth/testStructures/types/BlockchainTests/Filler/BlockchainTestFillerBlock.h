@@ -45,11 +45,11 @@ struct BlockchainTestFillerBlock : GCP_SPointerBase
 
     // Transaction in block filler. Can be marked invalid (expected to fail)
     std::vector<BlockchainTestFillerTransaction> const& transactions() const { return m_transactions; }
-    size_t invalidTransactionCount() const
+    size_t invalidTransactionCount(FORK const& _net) const
     {
         size_t count = 0;
         for (auto const& el : m_transactions)
-            count += el.isMarkedInvalid() ? 1 : 0;
+            count += el.getExpectException(_net).empty() ? 0 : 1;
         return count;
     }
 
