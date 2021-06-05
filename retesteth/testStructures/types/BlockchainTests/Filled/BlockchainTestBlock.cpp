@@ -25,10 +25,15 @@ BlockchainTestBlock::BlockchainTestBlock(DataObject const& _data)
             for (auto const& tr : _data.atKey("transactions").getSubObjects())
                 m_transactions.push_back(readTransaction(tr));
 
-            // Can't really check that yet. the field is for custom test runners
             if (_data.count("transactionSequence"))
+            {
                 for (auto const& tr : _data.atKey("transactionSequence").getSubObjects())
-                    m_transactionSequence.push_back(readTransaction(BYTES(tr.atKey("rawBytes"))));
+                {
+                    string const sException = tr.count("exception") ? tr.atKey("exception").asString() : string();
+                    m_transactionSequence.push_back(
+                        {readTransaction(BYTES(tr.atKey("rawBytes"))), sException});
+                }
+            }
 
             for (auto const& un : _data.atKey("uncleHeaders").getSubObjects())
                 m_uncles.push_back(readBlockHeader(un));

@@ -10,6 +10,9 @@ namespace test
 {
 namespace teststruct
 {
+
+typedef std::tuple<spTransaction, string> TransactionException;
+
 struct BlockchainTestBlock : GCP_SPointerBase
 {
     BlockchainTestBlock(DataObject const&);
@@ -19,6 +22,7 @@ struct BlockchainTestBlock : GCP_SPointerBase
 
     std::vector<spBlockHeader> const& uncles() const { return m_uncles; }
     std::vector<spTransaction> const& transactions() const { return m_transactions; }
+    std::vector<TransactionException> const& transactionSequence() const { return m_transactionSequence; }
 
 private:
     BlockchainTestBlock() {}
@@ -27,7 +31,7 @@ private:
     spBlockHeader m_blockHeader;
     std::vector<spBlockHeader> m_uncles;
     std::vector<spTransaction> m_transactions;
-    std::vector<spTransaction> m_transactionSequence;
+    std::vector<TransactionException> m_transactionSequence;
     spBYTES m_rlp;
 };
 

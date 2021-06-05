@@ -36,6 +36,45 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
             break;
 
         TestOutputHelper::get().setCurrentTestInfo(TestInfo(_test.network().asString(), blockNumber++));
+
+        // Transaction sequence validation
+        ETH_LOGC("PERFORM TRANSACTION SEQUENCE VALIDATION...", 7, LogColor::YELLOW);
+        bool atLeastOnceSequence = false;
+        typedef std::tuple<spTransaction, string> SpTrException;
+        std::map<FH32, SpTrException> expectedExceptions;
+        if (tblock.transactionSequence().size())
+        {
+            atLeastOnceSequence = true;
+            session.test_modifyTimestamp(tblock.header().getCContent().timestamp());
+        }
+        for (auto const& el : tblock.transactionSequence())
+        {
+            spTransaction const& tr = std::get<0>(el);
+            string const& sException = std::get<1>(el);
+            session.eth_sendRawTransaction(tr.getCContent().getRawBytes(), tr.getCContent().getSecret());
+            SpTrException info = {tr, sException};
+            expectedExceptions.emplace(tr.getCContent().hash(), info);
+        }
+        if (atLeastOnceSequence)
+        {
+            VALUE const& origNumber = session.eth_blockNumber();
+            MineBlocksResult const miningRes = session.test_mineBlocks(1);
+            for (auto const& el : expectedExceptions)
+            {
+                FH32 const& hash = el.first;
+                SpTrException const& res = el.second;
+                spTransaction resTransaction = std::get<0>(res);
+                string const& testException = std::get<1>(res);
+                string const& remoteException = miningRes.getTrException(hash);
+                if (!testException.empty() && remoteException.empty())
+                    ETH_ERROR_MESSAGE("Client didn't reject transaction: (" + hash.asString() + ") \n" + resTransaction.getCContent().getRawBytes().asString());
+                if (testException.empty() && !remoteException.empty())
+                    ETH_ERROR_MESSAGE("Client reject transaction expected to be valid: (" + hash.asString() + ") \n" + resTransaction.getCContent().getRawBytes().asString());
+            }
+            session.test_rewindToBlock(origNumber);
+        }
+        // transaction sequence validation
+
         FH32 const blHash(session.test_importRawBlock(tblock.rlp()));
 
         if (!session.getLastRPCError().empty())

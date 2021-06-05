@@ -159,6 +159,7 @@ FH32 ToolChainManager::importRawBlock(BYTES const& _rlp)
         }
 
         reorganizeChainForTotalDifficulty();
+        reorganizePendingBlock();
         return importedHash;
     }
     catch (std::exception const& _ex)
