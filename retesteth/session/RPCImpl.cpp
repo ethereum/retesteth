@@ -152,10 +152,12 @@ MineBlocksResult RPCImpl::test_mineBlocks(size_t _number)
     {
         auto const& result = res.atKey("result");
         bool miningres = result.type() == DataType::Bool ? result.asBool() : result.asInt() == 1;
-        ETH_ERROR_REQUIRE_MESSAGE(miningres == true, "remote test_mineBLocks = false");
+        ETH_ERROR_REQUIRE_MESSAGE(miningres == true, "remote test_mineBlocks = false");
     }
+    else if (res.type() == DataType::Bool)
+        ETH_ERROR_REQUIRE_MESSAGE(res.asBool() == true, "remote test_mineBlocks = false");
     else
-        ETH_ERROR_MESSAGE("remote test_mineBLocks = " + res.asJson());
+        ETH_ERROR_MESSAGE("remote test_mineBlocks = " + res.asJson());
 
     return MineBlocksResult(res);
 }

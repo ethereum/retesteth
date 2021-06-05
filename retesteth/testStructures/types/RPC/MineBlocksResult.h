@@ -14,20 +14,25 @@ struct MineBlocksResult
 {
     MineBlocksResult(DataObject const& _data)
     {
-        if (_data.atKey("result").type() == DataType::Bool)
-            m_result = _data.atKey("result").asBool();
+        if (_data.type() == DataType::Bool)
+            m_result = _data.asBool();
         else
-            m_result = _data.atKey("result").asInt();
-        if (_data.count("rejectedTransactions"))
         {
-            for (auto const& el : _data.atKey("rejectedTransactions").getSubObjects())
-                m_rejectedTransactions.emplace(
-                            FH32(el.atKey("hash").asString()), el.atKey("error").asString());
+            if (_data.atKey("result").type() == DataType::Bool)
+                m_result = _data.atKey("result").asBool();
+            else
+                m_result = _data.atKey("result").asInt();
+            if (_data.count("rejectedTransactions"))
+            {
+                for (auto const& el : _data.atKey("rejectedTransactions").getSubObjects())
+                    m_rejectedTransactions.emplace(
+                                FH32(el.atKey("hash").asString()), el.atKey("error").asString());
+            }
+            requireJsonFields(_data, "test_mineBlocks::MineBlocksResult",
+                {{"result", {{DataType::Bool, DataType::Integer}, jsonField::Required}},
+                 {"rejectedTransactions", {{DataType::Array}, jsonField::Optional}}
+                });
         }
-        requireJsonFields(_data, "test_mineBlocks::MineBlocksResult",
-            {{"result", {{DataType::Bool, DataType::Integer}, jsonField::Required}},
-             {"rejectedTransactions", {{DataType::Array}, jsonField::Optional}}
-            });
     }
 
     std::string const& getTrException(FH32 const& _hash) const
