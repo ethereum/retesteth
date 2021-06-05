@@ -162,7 +162,8 @@ string const t8ntool_config = R"({
       "TR_GasLimitReached" : "gas limit reached",
       "TR_NonceTooHigh" : "nonce too high",
       "TR_NonceTooLow" : "nonce too low",
-      "TR_TypeNotSupported" : "transaction type not supported"
+      "TR_TypeNotSupported" : "transaction type not supported",
+      "TR_TipGtFeeCap": "tip higher than fee cap"
     }
 })";
 
