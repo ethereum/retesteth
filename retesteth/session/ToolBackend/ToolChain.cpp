@@ -43,7 +43,7 @@ ToolChain::ToolChain(
     m_blocks.push_back(genesisFixed);
 }
 
-void ToolChain::mineBlock(EthereumBlockState const& _pendingBlock, Mining _req)
+DataObject const ToolChain::mineBlock(EthereumBlockState const& _pendingBlock, Mining _req)
 {
     ToolResponse const res = mineBlockOnTool(_pendingBlock, m_engine);
 
@@ -81,7 +81,9 @@ void ToolChain::mineBlock(EthereumBlockState const& _pendingBlock, Mining _req)
     // Add only those transactions which tool returned a receipt for
     // Some transactions are expected to fail. That should be detected by tests
     size_t index = 0;
-    std::map<FH32, string> transactionErrors;
+    DataObject miningResult;
+    miningResult["result"] = true;
+
     for (auto const& tr : _pendingBlock.transactions())
     {
         bool found = false;
@@ -106,7 +108,10 @@ void ToolChain::mineBlock(EthereumBlockState const& _pendingBlock, Mining _req)
                 if (el.index() == index)
                 {
                     rejectedInfoFound = true;
-                    transactionErrors.emplace(trHash, el.error());
+                    DataObject rejectInfo;
+                    rejectInfo["hash"] = trHash.asString();
+                    rejectInfo["error"] = el.error();
+                    miningResult["rejectedTransactions"].addArrayObject(rejectInfo);
                     break;
                 }
             }
@@ -119,8 +124,7 @@ void ToolChain::mineBlock(EthereumBlockState const& _pendingBlock, Mining _req)
         }
         index++;
     }
-    // All transactions are checked
-    pendingFixed.setTrsErrors(transactionErrors);
+
 
     // Treat all uncles as valid as t8ntool does not calculate uncles
     // Uncle header validity as well as RLP logic is checked before
@@ -186,6 +190,8 @@ void ToolChain::mineBlock(EthereumBlockState const& _pendingBlock, Mining _req)
 
     pendingFixed.setTrsTrace(res.debugTrace());
     m_blocks.push_back(pendingFixed);
+
+    return miningResult;
 }
 
 ToolResponse ToolChain::mineBlockOnTool(EthereumBlockState const& _block, SealEngine _engine)

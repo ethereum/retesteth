@@ -161,7 +161,8 @@ string const t8ntool_config = R"({
       "TR_FeeCapLessThanBlocks" : "fee cap less than block base fee",
       "TR_GasLimitReached" : "gas limit reached",
       "TR_NonceTooHigh" : "nonce too high",
-      "TR_NonceTooLow" : "nonce too low"
+      "TR_NonceTooLow" : "nonce too low",
+      "TR_TypeNotSupported" : "transaction type not supported"
     }
 })";
 

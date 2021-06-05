@@ -141,7 +141,7 @@ GCP_SPointer<EthGetBlockBy> TestBlockchain::mineBlock(
     BlockchainTestFillerBlock const& _blockInTest, vectorOfSchemeBlock const& _preparedUncleBlocks, BYTES& _rawRLP)
 {
     ETH_LOGC("MINE BLOCK: " + m_sDebugString, 6, LogColor::YELLOW);
-    m_session.test_mineBlocks(1);
+    MineBlocksResult const miningRes = m_session.test_mineBlocks(1);
     VALUE latestBlockNumber(m_session.eth_blockNumber());
 
     spFH32 minedBlockHash;
@@ -188,7 +188,7 @@ GCP_SPointer<EthGetBlockBy> TestBlockchain::mineBlock(
         string const& exception = trInTest.getExpectException(m_network);
         if (result == container.end())
         {
-            string const& reason = remoteBlock.getCContent().getTrException(trInTest.tr().hash());
+            string const& reason = miningRes.getTrException(trInTest.tr().hash());
             if (exception.empty())
                 ETH_WARNING(
                     "TestBlockchain::mineBlock transaction has unexpectedly failed to be mined (see logs --verbosity 6): \n" +
@@ -201,7 +201,7 @@ GCP_SPointer<EthGetBlockBy> TestBlockchain::mineBlock(
                    ETH_WARNING(trInTest.tr().asDataObject().asJson());
                    ETH_ERROR_MESSAGE(string("Transaction rejecetd but due to a different reason: \n") +
                       "Expected reason: `" + expectedReason + "` (" + exception + ")\n" +
-                      "Client reson: `" + reason
+                      "Client reason: `" + reason
                      );
                }
             }

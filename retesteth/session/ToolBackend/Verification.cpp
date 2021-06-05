@@ -152,10 +152,15 @@ void verifyCommonParent(spBlockHeader const& _header, spBlockHeader const& _pare
         throw test::UpwardsException(
             "Invalid difficulty: " + header.difficulty().asDecString() + ", want: " + VALUE(newDiff).asDecString());
 
+
+    u256 parentGasLimit = parent.gasLimit().asU256();
+    if (header.number() == 5 && _chain.fork() == "BerlinToLondonAt5")
+        parentGasLimit = parentGasLimit * ELASTICITY_MULTIPLIER;
+
     // Verify delta gas (legacy formula)
     VALUE deltaGas = parent.gasLimit().asU256() / 1024;
-    if (header.gasLimit().asU256() >= parent.gasLimit().asU256() + deltaGas.asU256() ||
-        header.gasLimit().asU256() <= parent.gasLimit().asU256() - deltaGas.asU256())
+    if (header.gasLimit().asU256() >= parentGasLimit + deltaGas.asU256() ||
+        header.gasLimit().asU256() <= parentGasLimit - deltaGas.asU256())
         throw test::UpwardsException("Invalid gaslimit: " + header.gasLimit().asDecString() + ", want " +
                                      parent.gasLimit().asDecString() + " +/- " + deltaGas.asDecString());
 }

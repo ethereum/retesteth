@@ -144,13 +144,20 @@ void RPCImpl::test_modifyTimestamp(VALUE const& _timestamp)
         rpcCall("test_modifyTimestamp", {_timestamp.asDecString()}) == true, "test_modifyTimestamp was not successfull");
 }
 
-void RPCImpl::test_mineBlocks(size_t _number)
+MineBlocksResult RPCImpl::test_mineBlocks(size_t _number)
 {
     DataObject const res = rpcCall("test_mineBlocks", {to_string(_number)}, true);
-    if (res.type() == DataType::Bool)
-        ETH_ERROR_REQUIRE_MESSAGE(res.asBool() == true, "remote test_mineBLocks = false");
+
+    if (res.type() == DataType::Object)
+    {
+        auto const& result = res.atKey("result");
+        bool miningres = result.type() == DataType::Bool ? result.asBool() : result.asInt() == 1;
+        ETH_ERROR_REQUIRE_MESSAGE(miningres == true, "remote test_mineBLocks = false");
+    }
     else
         ETH_ERROR_MESSAGE("remote test_mineBLocks = " + res.asJson());
+
+    return MineBlocksResult(res);
 }
 
 FH32 RPCImpl::test_importRawBlock(BYTES const& _blockRLP)
@@ -198,10 +205,11 @@ DataObject RPCImpl::rpcCall(
     if (!ExitHandler::receivedExitSignal())
     {
         requireJsonFields(result, "rpcCall_response (req: '" + request.substr(0, 70) + "')",
-            {{"jsonrpc", {{DataType::String}, jsonField::Required}}, {"id", {{DataType::Integer}, jsonField::Required}},
-                {"result", {{DataType::String, DataType::Integer, DataType::Bool, DataType::Object, DataType::Array},
+            {{"jsonrpc", {{DataType::String}, jsonField::Required}},
+             {"id", {{DataType::Integer}, jsonField::Required}},
+             {"result", {{DataType::String, DataType::Integer, DataType::Bool, DataType::Object, DataType::Array},
                                jsonField::Required}},
-                {"error", {{DataType::String, DataType::Object}, jsonField::Optional}}});
+             {"error", {{DataType::String, DataType::Object}, jsonField::Optional}}});
     }
     else
     {

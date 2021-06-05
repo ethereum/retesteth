@@ -19,12 +19,13 @@ ToolChainManager::ToolChainManager(SetChainParamsArgs const& _config, fs::path c
     reorganizePendingBlock();
 }
 
-void ToolChainManager::mineBlocks(size_t _number, ToolChain::Mining _req)
+DataObject const ToolChainManager::mineBlocks(size_t _number, ToolChain::Mining _req)
 {
     if (_number > 1)
         throw test::UpwardsException("ToolChainManager::mineBlocks number arg invalid: " + fto_string(_number));
-    currentChainUnsafe().mineBlock(m_pendingBlock.getCContent(), _req);
+    DataObject const res = currentChainUnsafe().mineBlock(m_pendingBlock.getCContent(), _req);
     reorganizePendingBlock();
+    return res;
 }
 
 void ToolChainManager::rewindToBlock(VALUE const& _number)

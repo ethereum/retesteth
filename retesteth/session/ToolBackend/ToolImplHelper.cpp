@@ -55,15 +55,6 @@ DataObject constructEthGetBlockBy(EthereumBlockState const& _block)
     constructResponse.renameKey("receiptTrie", "receiptsRoot");
     constructResponse.renameKey("transactionsTrie", "transactionsRoot");
     constructResponse.renameKey("uncleHash", "sha3Uncles");
-
-    for (auto const& el : _block.getTrErrors())
-    {
-        DataObject obj;
-        obj["hash"] = el.first.asString();
-        obj["error"] = el.second;
-        constructResponse["rejectedTransactions"].addArrayObject(obj);
-    }
-
     return constructResponse;
 }
 

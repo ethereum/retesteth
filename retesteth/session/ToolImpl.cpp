@@ -259,14 +259,17 @@ void ToolImpl::test_modifyTimestamp(VALUE const& _timestamp)
             , "test_modifyTimestamp", CallType::DONTFAILONUPWARDS)
 }
 
-void ToolImpl::test_mineBlocks(size_t _number)
+MineBlocksResult ToolImpl::test_mineBlocks(size_t _number)
 {
     rpcCall("", {});
     ETH_TEST_MESSAGE("\nRequest: test_mineBlocks");
     TRYCATCHCALL(
-        blockchain().mineBlocks(_number);
+        DataObject const res = blockchain().mineBlocks(_number);
         ETH_TEST_MESSAGE("Response test_mineBlocks {" + blockchain().lastBlock().header().getCContent().number().asDecString() + "}");
+        ETH_TEST_MESSAGE(res.asJson());
+        return MineBlocksResult(res);
             , "test_mineBlocks", CallType::FAILEVERYTHING)
+    return MineBlocksResult(DataObject());
 }
 
 // Import block from RAW rlp and validate it according to ethereum rules
