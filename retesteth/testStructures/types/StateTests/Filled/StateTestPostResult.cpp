@@ -15,10 +15,13 @@ StateTestPostResult::StateTestPostResult(DataObject const& _data)
         m_log = spFH32(new FH32(_data.atKey("logs").asString()));
     if (_data.count("txbytes"))
         m_txbytes = spBYTES(new BYTES(_data.atKey("txbytes").asString()));
+    if (_data.count("expectException"))
+        m_expectException = _data.atKey("expectException").asString();
     requireJsonFields(_data, "StateTestPostResult " + _data.getKey(),
         {{"indexes", {{DataType::Object}, jsonField::Required}},
          {"hash", {{DataType::String}, jsonField::Required}},
          {"txbytes", {{DataType::String}, jsonField::Optional}},
+         {"expectException", {{DataType::String}, jsonField::Optional}},
          {"logs", {{DataType::String}, jsonField::Optional}}});
 }
 

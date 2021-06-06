@@ -130,10 +130,14 @@ DataObject FillTestAsBlockchain(StateTestInFiller const& _test)
                     FH32 trHash(session.eth_sendRawTransaction(tr.transaction().getCContent().getRawBytes(), tr.transaction().getCContent().getSecret()));
 
                     // Mine a block, execute transaction
-                    session.test_mineBlocks(1);
+                    MineBlocksResult const mRes = session.test_mineBlocks(1);
+                    string const& remoteException = mRes.getTrException(trHash);
+                    string const& testException = expect.getExpectException(fork);
+                    compareTransactionException(tr.transaction(), remoteException, testException);
+
                     VALUE latestBlockN(session.eth_blockNumber());
                     EthGetBlockBy remoteBlock(session.eth_getBlockByNumber(latestBlockN, Request::FULLOBJECTS));
-                    if (!remoteBlock.hasTransaction(trHash))
+                    if (!remoteBlock.hasTransaction(trHash) && testException.empty())
                         ETH_ERROR_MESSAGE("StateTest::FillTest: " + c_trHashNotFound);
                     tr.markExecuted();
 
@@ -173,8 +177,19 @@ DataObject FillTestAsBlockchain(StateTestInFiller const& _test)
                     DataObject block;
                     block["rlp"] = remoteBlock.getRLPHeaderTransactions().asString();
                     block["blockHeader"] = remoteBlock.header().getCContent().asDataObject();
-                    block["transactions"].addArrayObject(tr.transaction().getCContent().asDataObject());
+                    block["transactions"] = DataObject(DataType::Array);
+                    if (testException.empty())
+                        block["transactions"].addArrayObject(tr.transaction().getCContent().asDataObject());
                     block["uncleHeaders"] = DataObject(DataType::Array);
+
+                    if (!testException.empty())
+                    {
+                        DataObject trInfo;
+                        trInfo["valid"] = "false";
+                        trInfo["rawBytes"] = tr.transaction().getCContent().getRawBytes().asString();
+                        trInfo["exception"] = testException;
+                        block["transactionSequence"].addArrayObject(trInfo);
+                    }
                     aBlockchainTest["blocks"].addArrayObject(block);
 
                     string dataPostfix = "_d" + tr.dataIndS() + "g" + tr.gasIndS() + "v" + tr.valueIndS();
@@ -267,11 +282,15 @@ DataObject FillTest(StateTestInFiller const& _test)
                     expectFoundTransaction = true;
                     session.test_modifyTimestamp(_test.Env().firstBlockTimestamp());
                     FH32 trHash(session.eth_sendRawTransaction(tr.transaction().getCContent().getRawBytes(), tr.transaction().getCContent().getSecret()));
-                    session.test_mineBlocks(1);
-                    VALUE latestBlockN(session.eth_blockNumber());
 
+                    MineBlocksResult const mRes = session.test_mineBlocks(1);
+                    string const& remoteException = mRes.getTrException(trHash);
+                    string const& testException = expect.getExpectException(fork);
+                    compareTransactionException(tr.transaction(), remoteException, testException);
+
+                    VALUE latestBlockN(session.eth_blockNumber());
                     EthGetBlockBy blockInfo(session.eth_getBlockByNumber(latestBlockN, Request::LESSOBJECTS));
-                    if (!blockInfo.hasTransaction(trHash))
+                    if (!blockInfo.hasTransaction(trHash) && testException.empty())
                         ETH_ERROR_MESSAGE("StateTest::FillTest: " + c_trHashNotFound);
                     tr.markExecuted();
 
@@ -299,6 +318,8 @@ DataObject FillTest(StateTestInFiller const& _test)
                     transactionResults["indexes"] = indexes;
                     transactionResults["hash"] = blockInfo.header().getCContent().stateRoot().asString();
                     transactionResults["txbytes"] = tr.transaction().getCContent().getRawBytes().asString();
+                    if (!testException.empty())
+                        transactionResults["expectException"] = testException;
 
                     // Fill up the loghash (optional)
                     if (Options::getDynamicOptions().getCurrentConfig().cfgFile().checkLogsHash())
@@ -408,11 +429,15 @@ void RunTest(StateTestInFilled const& _test)
                 {
                     session.test_modifyTimestamp(_test.Env().firstBlockTimestamp());
                     FH32 trHash(session.eth_sendRawTransaction(tr.transaction().getCContent().getRawBytes(), tr.transaction().getCContent().getSecret()));
-                    session.test_mineBlocks(1);
+
+                    MineBlocksResult const mRes = session.test_mineBlocks(1);
+                    string const& remoteException = mRes.getTrException(trHash);
+                    string const& testException = result.expectException();
+                    compareTransactionException(tr.transaction(), remoteException, testException);
 
                     VALUE latestBlockN(session.eth_blockNumber());
                     EthGetBlockBy blockInfo(session.eth_getBlockByNumber(latestBlockN, Request::LESSOBJECTS));
-                    if (!blockInfo.hasTransaction(trHash))
+                    if (!blockInfo.hasTransaction(trHash) && testException.empty())
                         ETH_ERROR_MESSAGE("StateTest::RunTest: " + c_trHashNotFound);
                     tr.markExecuted();
 

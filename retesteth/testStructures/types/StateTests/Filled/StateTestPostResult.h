@@ -26,6 +26,7 @@ struct StateTestPostResult : GCP_SPointerBase
     }
     spBYTES const& bytesPtr() const { return m_txbytes; }
     DataObject const asDataObject() const;
+    string const& expectException() const { return m_expectException; }
 
 private:
     StateTestPostResult() {}
@@ -35,6 +36,7 @@ private:
     spFH32 m_hash;
     spFH32 m_log;
     spBYTES m_txbytes;
+    string m_expectException;
 };
 
 typedef std::vector<StateTestPostResult> StateTestPostResults;

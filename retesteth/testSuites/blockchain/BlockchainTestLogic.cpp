@@ -66,10 +66,7 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
                 spTransaction resTransaction = std::get<0>(res);
                 string const& testException = std::get<1>(res);
                 string const& remoteException = miningRes.getTrException(hash);
-                if (!testException.empty() && remoteException.empty())
-                    ETH_ERROR_MESSAGE("Client didn't reject transaction: (" + hash.asString() + ") \n" + resTransaction.getCContent().getRawBytes().asString());
-                if (testException.empty() && !remoteException.empty())
-                    ETH_ERROR_MESSAGE("Client reject transaction expected to be valid: (" + hash.asString() + ") \n" + resTransaction.getCContent().getRawBytes().asString());
+                compareTransactionException(resTransaction, remoteException, testException);
             }
             session.test_rewindToBlock(origNumber);
         }

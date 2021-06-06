@@ -231,7 +231,7 @@ spBlockHeader TestBlockchain::mineNextBlockAndRevert()
     m_session.test_modifyTimestamp(1000);
     m_session.test_mineBlocks(1);
     VALUE latestBlockNumber(m_session.eth_blockNumber());
-    EthGetBlockBy nextBlock(m_session.eth_getBlockByNumber(latestBlockNumber, Request::LESSOBJECTS));
+    EthGetBlockBy const nextBlock(m_session.eth_getBlockByNumber(latestBlockNumber, Request::LESSOBJECTS));
     m_session.test_rewindToBlock(nextBlock.header().getCContent().number().asU256() - 1);  // rewind to the previous block
 
     //m_session.test_modifyTimestamp(1000);  // Shift block timestamp relative to previous block

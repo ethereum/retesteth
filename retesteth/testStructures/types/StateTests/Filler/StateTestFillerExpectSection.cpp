@@ -102,9 +102,13 @@ StateTestFillerExpectSection::StateTestFillerExpectSection(DataObject const& _da
         m_forks = cfg.translateNetworks(forks);
         m_result = GCP_SPointer<StateIncomplete>(new StateIncomplete(_data.atKey("result"), DataRequier::ALLOWDEC));
 
+        if (_data.count("expectException"))
+            readExpectExceptions(_data.atKey("expectException"), m_expectExceptions);
+
         requireJsonFields(_data, "StateTestFillerExpectSection " + _data.getKey(),
             {{"indexes", {{DataType::Object}, jsonField::Required}},
              {"network", {{DataType::Array}, jsonField::Required}},
+             {"expectException", {{DataType::Object}, jsonField::Optional}},
              {"result", {{DataType::Object}, jsonField::Required}}});
     }
     catch (std::exception const& _ex)

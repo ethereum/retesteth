@@ -73,4 +73,27 @@ void printVmTrace(SessionInterface& _session, FH32 const& _trHash, FH32 const& _
     ETH_STDOUT_MESSAGE("\n------------------------");
 }
 
+void compareTransactionException(spTransaction const& _tr, string const& _remoteException, string const& _testException)
+{
+    // Mine a block, execute transaction
+    FH32 const& trHash = _tr.getCContent().hash();
+    if (!_testException.empty() && _remoteException.empty())
+        ETH_ERROR_MESSAGE("Client didn't reject transaction: (" + trHash.asString() + ") \n" + _tr.getCContent().getRawBytes().asString());
+    if (_testException.empty() && !_remoteException.empty())
+        ETH_ERROR_MESSAGE("Client reject transaction expected to be valid: (" + trHash.asString() + ") \n" + _tr.getCContent().getRawBytes().asString());
+
+    if (!_testException.empty() && !_remoteException.empty())
+    {
+        string const& expectedReason = Options::getCurrentConfig().translateException(_testException);
+        if (_remoteException.find(expectedReason) == string::npos)
+        {
+            ETH_WARNING(_tr.getCContent().asDataObject().asJson());
+            ETH_ERROR_MESSAGE(string("Transaction rejecetd but due to a different reason: \n") +
+               "Expected reason: `" + expectedReason + "` (" + _testException + ")\n" +
+               "Client reason: `" + _remoteException
+              );
+        }
+    }
+}
+
 }  // namespace
