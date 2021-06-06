@@ -90,7 +90,7 @@ VALUE ToolImpl::eth_blockNumber()
     rpcCall("", {});
     ETH_TEST_MESSAGE("\nRequest: eth_blockNumber");
     TRYCATCHCALL(
-        VALUE const& number = m_toolChainManager.getContent().lastBlock().header().getCContent().number();
+        VALUE const& number = m_toolChainManager.getContent().lastBlock().header()->number();
         string const snumber = number.asDecString();
         ETH_TEST_MESSAGE("Response: eth_blockNumber {" + snumber + "}");
         return number;
@@ -246,7 +246,7 @@ void ToolImpl::test_rewindToBlock(VALUE const& _blockNr)
     TRYCATCHCALL(
         blockchain().rewindToBlock(_blockNr);
         , "test_rewindToBlock", CallType::DONTFAILONUPWARDS)
-    ETH_TEST_MESSAGE("Response: test_rewindToBlock: " + blockchain().lastBlock().header().getCContent().number().asDecString());
+    ETH_TEST_MESSAGE("Response: test_rewindToBlock: " + blockchain().lastBlock().header()->number().asDecString());
 }
 
 void ToolImpl::test_modifyTimestamp(VALUE const& _timestamp)
@@ -265,7 +265,7 @@ MineBlocksResult ToolImpl::test_mineBlocks(size_t _number)
     ETH_TEST_MESSAGE("\nRequest: test_mineBlocks");
     TRYCATCHCALL(
         DataObject const res = blockchain().mineBlocks(_number);
-        ETH_TEST_MESSAGE("Response test_mineBlocks {" + blockchain().lastBlock().header().getCContent().number().asDecString() + "}");
+        ETH_TEST_MESSAGE("Response test_mineBlocks {" + blockchain().lastBlock().header()->number().asDecString() + "}");
         ETH_TEST_MESSAGE(res.asJson());
         return MineBlocksResult(res);
             , "test_mineBlocks", CallType::FAILEVERYTHING)

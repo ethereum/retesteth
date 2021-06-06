@@ -20,11 +20,11 @@ struct AccountBase : GCP_SPointerBase
     bool hasBalance() const { return !m_balance.isEmpty(); }
     bool shouldNotExist() const { return m_shouldNotExist; }
 
-    VALUE const& balance() const { return m_balance.getCContent(); }
-    VALUE const& nonce() const { return m_nonce.getCContent(); }
-    Storage const& storage() const { return m_storage.getCContent(); }
-    BYTES const& code() const { return m_code.getCContent(); }
-    FH20 const& address() const { return m_address.getCContent(); }
+    VALUE const& balance() const { return m_balance; }
+    VALUE const& nonce() const { return m_nonce; }
+    Storage const& storage() const { return m_storage; }
+    BYTES const& code() const { return m_code; }
+    FH20 const& address() const { return m_address; }
 
     virtual DataObject const asDataObject(ExportOrder order = ExportOrder::Default) const = 0;
     virtual ~AccountBase() {}

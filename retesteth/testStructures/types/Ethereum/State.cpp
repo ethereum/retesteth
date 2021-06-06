@@ -13,8 +13,8 @@ State::State(std::vector<spAccount>& _accList)
     // We certain that account provided for the state is full and not incomplete
     for (auto& el : _accList)
     {
-        m_order.push_back(el.getCContent().address());
-        m_accounts[el.getCContent().address()] = spAccountBase(&el.getContent());
+        m_order.push_back(el->address());
+        m_accounts[el->address()] = spAccountBase(&el.getContent());
     }
 }
 
@@ -59,12 +59,12 @@ const DataObject State::asDataObject(ExportOrder _order) const
     if (_order == ExportOrder::OldStyle)
     {
         for (auto const& el : m_order)
-            out.addSubObject(m_accounts.at(el).getCContent().asDataObject(_order));
+            out.addSubObject(m_accounts.at(el)->asDataObject(_order));
     }
     else
     {
         for (auto const& el : m_accounts)
-            out.addSubObject(el.second.getCContent().asDataObject());
+            out.addSubObject(el.second->asDataObject());
     }
     return out;
 }

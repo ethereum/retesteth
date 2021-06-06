@@ -76,76 +76,76 @@ BOOST_AUTO_TEST_CASE(tostr_dev)
 BOOST_AUTO_TEST_CASE(comapreForks_lotsSteps_Bajo)
 {
     ETH_FAIL_REQUIRE(
-    compareFork(FORK("Homestead"), ForkCMPType::lt, FORK("Constantinople")) == true);
+    compareFork(FORK("Homestead"), CMP::lt, FORK("Constantinople")) == true);
 
     ETH_FAIL_REQUIRE(
-    compareFork(FORK("Homestead"), ForkCMPType::gt, FORK("Constantinople")) == false);
+    compareFork(FORK("Homestead"), CMP::gt, FORK("Constantinople")) == false);
 
     ETH_FAIL_REQUIRE(
-    compareFork(FORK("Homestead"), ForkCMPType::le, FORK("Constantinople")) == true);
+    compareFork(FORK("Homestead"), CMP::le, FORK("Constantinople")) == true);
 
     ETH_FAIL_REQUIRE(
-    compareFork(FORK("Homestead"), ForkCMPType::ge, FORK("Constantinople")) == false);
+    compareFork(FORK("Homestead"), CMP::ge, FORK("Constantinople")) == false);
 }
 
 BOOST_AUTO_TEST_CASE(comapreForks_OneStep_Bajo)
 {
     ETH_FAIL_REQUIRE(
-    compareFork(FORK("Homestead"), ForkCMPType::lt, FORK("EIP150")) == true);
+    compareFork(FORK("Homestead"), CMP::lt, FORK("EIP150")) == true);
 
     ETH_FAIL_REQUIRE(
-    compareFork(FORK("Homestead"), ForkCMPType::gt, FORK("EIP150")) == false);
+    compareFork(FORK("Homestead"), CMP::gt, FORK("EIP150")) == false);
 
     ETH_FAIL_REQUIRE(
-    compareFork(FORK("Homestead"), ForkCMPType::le, FORK("EIP150")) == true);
+    compareFork(FORK("Homestead"), CMP::le, FORK("EIP150")) == true);
 
     ETH_FAIL_REQUIRE(
-    compareFork(FORK("Homestead"), ForkCMPType::ge, FORK("EIP150")) == false);
+    compareFork(FORK("Homestead"), CMP::ge, FORK("EIP150")) == false);
 }
 
 BOOST_AUTO_TEST_CASE(comapreForks_lotsSteps_Arriba)
 {
     ETH_FAIL_REQUIRE(
-    compareFork(FORK("Constantinople"), ForkCMPType::lt, FORK("Homestead")) == false);
+    compareFork(FORK("Constantinople"), CMP::lt, FORK("Homestead")) == false);
 
     ETH_FAIL_REQUIRE(
-    compareFork(FORK("Constantinople"), ForkCMPType::gt, FORK("Homestead")) == true);
+    compareFork(FORK("Constantinople"), CMP::gt, FORK("Homestead")) == true);
 
     ETH_FAIL_REQUIRE(
-    compareFork(FORK("Constantinople"), ForkCMPType::le, FORK("Homestead")) == false);
+    compareFork(FORK("Constantinople"), CMP::le, FORK("Homestead")) == false);
 
     ETH_FAIL_REQUIRE(
-    compareFork(FORK("Constantinople"), ForkCMPType::ge, FORK("Homestead")) == true);
+    compareFork(FORK("Constantinople"), CMP::ge, FORK("Homestead")) == true);
 }
 
 BOOST_AUTO_TEST_CASE(comapreForks_OneStep_Arriba)
 {
     ETH_FAIL_REQUIRE(
-    compareFork(FORK("EIP150"), ForkCMPType::lt, FORK("Homestead")) == false);
+    compareFork(FORK("EIP150"), CMP::lt, FORK("Homestead")) == false);
 
     ETH_FAIL_REQUIRE(
-    compareFork(FORK("EIP150"), ForkCMPType::gt, FORK("Homestead")) == true);
+    compareFork(FORK("EIP150"), CMP::gt, FORK("Homestead")) == true);
 
     ETH_FAIL_REQUIRE(
-    compareFork(FORK("EIP150"), ForkCMPType::le, FORK("Homestead")) == false);
+    compareFork(FORK("EIP150"), CMP::le, FORK("Homestead")) == false);
 
     ETH_FAIL_REQUIRE(
-    compareFork(FORK("EIP150"), ForkCMPType::ge, FORK("Homestead")) == true);
+    compareFork(FORK("EIP150"), CMP::ge, FORK("Homestead")) == true);
 }
 
 BOOST_AUTO_TEST_CASE(comapreForks_ZeroStep)
 {
     ETH_FAIL_REQUIRE(
-    compareFork(FORK("Homestead"), ForkCMPType::lt, FORK("Homestead")) == false);
+    compareFork(FORK("Homestead"), CMP::lt, FORK("Homestead")) == false);
 
     ETH_FAIL_REQUIRE(
-    compareFork(FORK("Homestead"), ForkCMPType::gt, FORK("Homestead")) == false);
+    compareFork(FORK("Homestead"), CMP::gt, FORK("Homestead")) == false);
 
     ETH_FAIL_REQUIRE(
-    compareFork(FORK("Homestead"), ForkCMPType::le, FORK("Homestead")) == true);
+    compareFork(FORK("Homestead"), CMP::le, FORK("Homestead")) == true);
 
     ETH_FAIL_REQUIRE(
-    compareFork(FORK("Homestead"), ForkCMPType::ge, FORK("Homestead")) == true);
+    compareFork(FORK("Homestead"), CMP::ge, FORK("Homestead")) == true);
 }
 
 BOOST_AUTO_TEST_CASE(translateNetworks_doubleNet)

@@ -12,7 +12,7 @@ public:
 
     // Attach block header to the test block
     void registerTestHeader(spBlockHeader const& _header) { m_block = spEthereumBlock(new EthereumBlock(_header)); }
-    spBlockHeader const& getTestHeader() const { return m_block.getCContent().header(); }
+    spBlockHeader const& getTestHeader() const { return m_block->header(); }
 
     // Attach Transaction header to EthereumBlock (the one described in tests)
     void registerTestTransaction(spTransaction const& _tr) { m_block.getContent().addTransaction(_tr); }
@@ -23,7 +23,7 @@ public:
 
     // Attach Uncle header to EthereumBlock (the one described in tests)
     void registerTestUncle(spBlockHeader const& _uncle) { m_block.getContent().addUncle(_uncle); }
-    std::vector<spBlockHeader> const& getUncles() const { return m_block.getCContent().uncles(); }
+    std::vector<spBlockHeader> const& getUncles() const { return m_block->uncles(); }
 
     // Attach test exception to the test block
     void registerTestExceptios(string const& _exception) { m_expectException = _exception; }
@@ -31,12 +31,12 @@ public:
     // Attach uncle header of potential fork to this block. If test has no uncles this will not be called
     void setNextBlockForked(spBlockHeader const& _next)
     {
-        m_nextBlockForked = readBlockHeader(_next.getCContent().asDataObject());
+        m_nextBlockForked = readBlockHeader(_next->asDataObject());
     }
     spBlockHeader const& getNextBlockForked() const { return m_nextBlockForked; }
 
     // Actual RLP of a block that has been impoted on remote client
-    BYTES const getRawRLP() const { return m_rawRLP.getCContent(); }
+    BYTES const getRawRLP() const { return m_rawRLP; }
 
     // Block might be flagged not to be exported to the final test
     void setDoNotExport(bool _flag) { m_doNotExport = _flag; }

@@ -92,41 +92,41 @@ BlockHeaderIncomplete::BlockHeaderIncomplete(DataObject const& _data)
 
 spBlockHeader BlockHeaderIncomplete::overwriteBlockHeader(spBlockHeader const& _header) const
 {
-    DataObject overwrite = _header.getCContent().asDataObject();
+    DataObject overwrite = _header->asDataObject();
     if (!m_author.isEmpty())
-        overwrite["author"] = m_author.getCContent().asString();
+        overwrite["author"] = m_author->asString();
     if (!m_difficulty.isEmpty())
-        overwrite["difficulty"] = m_difficulty.getCContent().asString();
+        overwrite["difficulty"] = m_difficulty->asString();
     if (!m_extraData.isEmpty())
-        overwrite["extraData"] = m_extraData.getCContent().asString();
+        overwrite["extraData"] = m_extraData->asString();
     if (!m_gasLimit.isEmpty())
-        overwrite["gasLimit"] = m_gasLimit.getCContent().asString();
+        overwrite["gasLimit"] = m_gasLimit->asString();
     if (!m_gasUsed.isEmpty())
-        overwrite["gasUsed"] = m_gasUsed.getCContent().asString();
+        overwrite["gasUsed"] = m_gasUsed->asString();
     if (!m_logsBloom.isEmpty())
-        overwrite["logsBloom"] = m_logsBloom.getCContent().asString();
+        overwrite["logsBloom"] = m_logsBloom->asString();
     if (!m_mixHash.isEmpty())
-        overwrite["mixHash"] = m_mixHash.getCContent().asString();
+        overwrite["mixHash"] = m_mixHash->asString();
     if (!m_nonce.isEmpty())
-        overwrite["nonce"] = m_nonce.getCContent().asString();
+        overwrite["nonce"] = m_nonce->asString();
     if (!m_number.isEmpty())
-        overwrite["number"] = m_number.getCContent().asString();
+        overwrite["number"] = m_number->asString();
     if (!m_parentHash.isEmpty())
-        overwrite["parentHash"] = m_parentHash.getCContent().asString();
+        overwrite["parentHash"] = m_parentHash->asString();
     if (!m_receiptsRoot.isEmpty())
-        overwrite["receiptsRoot"] = m_receiptsRoot.getCContent().asString();
+        overwrite["receiptsRoot"] = m_receiptsRoot->asString();
     if (!m_sha3Uncles.isEmpty())
-        overwrite["sha3Uncles"] = m_sha3Uncles.getCContent().asString();
+        overwrite["sha3Uncles"] = m_sha3Uncles->asString();
     if (!m_stateRoot.isEmpty())
-        overwrite["stateRoot"] = m_stateRoot.getCContent().asString();
+        overwrite["stateRoot"] = m_stateRoot->asString();
     if (!m_timestamp.isEmpty())
-        overwrite["timestamp"] = m_timestamp.getCContent().asString();
+        overwrite["timestamp"] = m_timestamp->asString();
     if (!m_transactionsRoot.isEmpty())
-        overwrite["transactionsRoot"] = m_transactionsRoot.getCContent().asString();
+        overwrite["transactionsRoot"] = m_transactionsRoot->asString();
     if (!m_hash.isEmpty())
-        overwrite["hash"] = m_hash.getCContent().asString();
+        overwrite["hash"] = m_hash->asString();
     if (!m_baseFee.isEmpty())
-        overwrite["baseFee"] = m_baseFee.getCContent().asString();
+        overwrite["baseFee"] = m_baseFee->asString();
     overwrite.removeKey("updatePoW");  // deprecated key
     for (auto const& el : m_removeKeys)
         overwrite.removeKey(el);

@@ -184,7 +184,7 @@ std::vector<FORK> ClientConfig::translateNetworks(set<string> const& _networks) 
 
 std::string const& ClientConfig::translateException(string const& _exceptionName) const
 {
-    ClientConfigFile const& cfg = m_clientConfigFile.getCContent();
+    ClientConfigFile const& cfg = m_clientConfigFile;
     if (cfg.exceptions().count(_exceptionName))
         return cfg.exceptions().at(_exceptionName);
 

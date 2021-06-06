@@ -14,7 +14,7 @@ namespace teststruct
 struct StateTestFillerExpectSection
 {
     StateTestFillerExpectSection(DataObject const&, spStateTestFillerTransaction const&);
-    StateIncomplete const& result() const { return m_result.getCContent(); }
+    StateIncomplete const& result() const { return m_result; }
     DataObject const& initialData() const { return m_initialData; }
     std::vector<FORK> const& forks() const { return m_forks; }
     bool hasFork(FORK const& _fork) const

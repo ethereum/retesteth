@@ -26,18 +26,18 @@ struct Transaction : GCP_SPointerBase
     virtual ~Transaction(){ /* all fields are smart pointers */ };
 
     // Common transaction data
-    BYTES const& data() const { return m_data.getCContent(); }
-    VALUE const& gasLimit() const { return m_gasLimit.getCContent(); }
-    VALUE const& nonce() const { return m_nonce.getCContent(); }
-    VALUE const& value() const { return m_value.getCContent(); }
+    BYTES const& data() const { return m_data; }
+    VALUE const& gasLimit() const { return m_gasLimit; }
+    VALUE const& nonce() const { return m_nonce; }
+    VALUE const& value() const { return m_value; }
     bool isCreation() const { return m_creation; }
-    FH20 const& to() const { assert(!m_creation); return m_to.getCContent(); }
-    VALUE const& v() const { return m_v.getCContent(); }
-    VALUE const& r() const { return m_r.getCContent(); }
-    VALUE const& s() const { return m_s.getCContent(); }
+    FH20 const& to() const { assert(!m_creation); return m_to; }
+    VALUE const& v() const { return m_v; }
+    VALUE const& r() const { return m_r; }
+    VALUE const& s() const { return m_s; }
 
-    FH32 const& hash() const { return m_hash.getCContent(); }
-    BYTES const& getRawBytes() const { return m_rawRLPdata.getCContent(); }
+    FH32 const& hash() const { return m_hash; }
+    BYTES const& getRawBytes() const { return m_rawRLPdata; }
     dev::RLPStream const& asRLPStream() const { return m_outRlpStream; }
 
     /// Debug transaction data for retesteth
@@ -48,7 +48,7 @@ struct Transaction : GCP_SPointerBase
 
     /// Debug transaction data for t8ntool wrapper
     void setSecret(VALUE const& _secret) { m_secretKey = spVALUE(new VALUE(_secret)); }
-    VALUE const& getSecret() const { return m_secretKey.getCContent(); }
+    VALUE const& getSecret() const { return m_secretKey; }
 
 protected:
     // Potected transaction interface

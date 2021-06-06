@@ -49,22 +49,22 @@ DataObject SetChainParamsArgs::asDataObject() const
 {
     DataObject out;
     out["params"] = m_params;
-    out["accounts"] = m_preState.getCContent().asDataObject();
+    out["accounts"] = m_preState->asDataObject();
     out["sealEngine"] = sealEngineToStr(m_sealEngine);
-    out["genesis"]["author"] = m_genesis.getCContent().author().asString();
-    out["genesis"]["difficulty"] = m_genesis.getCContent().difficulty().asString();
-    out["genesis"]["gasLimit"] = m_genesis.getCContent().gasLimit().asString();
+    out["genesis"]["author"] = m_genesis->author().asString();
+    out["genesis"]["difficulty"] = m_genesis->difficulty().asString();
+    out["genesis"]["gasLimit"] = m_genesis->gasLimit().asString();
 
-    if (m_genesis.getCContent().type() == BlockType::BlockHeader1559)
+    if (m_genesis->type() == BlockType::BlockHeader1559)
     {
         BlockHeader1559 const& newbl = BlockHeader1559::castFrom(m_genesis);
         out["genesis"]["baseFee"] = newbl.baseFee().asString();
     }
 
-    out["genesis"]["extraData"] = m_genesis.getCContent().extraData().asString();
-    out["genesis"]["timestamp"] = m_genesis.getCContent().timestamp().asString();
-    out["genesis"]["nonce"] = m_genesis.getCContent().nonce().asString();
-    out["genesis"]["mixHash"] = m_genesis.getCContent().mixHash().asString();
+    out["genesis"]["extraData"] = m_genesis->extraData().asString();
+    out["genesis"]["timestamp"] = m_genesis->timestamp().asString();
+    out["genesis"]["nonce"] = m_genesis->nonce().asString();
+    out["genesis"]["mixHash"] = m_genesis->mixHash().asString();
     return out;
 }
 

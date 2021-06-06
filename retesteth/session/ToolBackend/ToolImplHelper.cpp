@@ -29,24 +29,24 @@ DataObject constructAccountRange(EthereumBlockState const& _block, FH32 const& _
 
 DataObject constructEthGetBlockBy(EthereumBlockState const& _block)
 {
-    DataObject constructResponse = _block.header().getCContent().asDataObject();
+    DataObject constructResponse = _block.header()->asDataObject();
 
     constructResponse["transactions"] = DataObject(DataType::Array);
     for (auto const& tr : _block.transactions())
     {
-        DataObject fullTransaction = tr.getCContent().asDataObject();
+        DataObject fullTransaction = tr->asDataObject();
         fullTransaction["blockHash"] =
-            _block.header().getCContent().hash().asString();  // We don't know the hash its in tool response
-        fullTransaction["blockNumber"] = _block.header().getCContent().number().asString();
+            _block.header()->hash().asString();  // We don't know the hash its in tool response
+        fullTransaction["blockNumber"] = _block.header()->number().asString();
         fullTransaction["from"] = FH20::zero().asString();  // Can be recovered from vrs
         fullTransaction["transactionIndex"] = "0x00";       // Its in tool response
-        fullTransaction["hash"] = tr.getCContent().hash().asString();
+        fullTransaction["hash"] = tr->hash().asString();
         constructResponse["transactions"].addArrayObject(fullTransaction);
     }
 
     constructResponse["uncles"] = DataObject(DataType::Array);
     for (auto const& un : _block.uncles())
-        constructResponse["uncles"].addArrayObject(un.getCContent().hash().asString());
+        constructResponse["uncles"].addArrayObject(un->hash().asString());
 
     constructResponse["size"] = "0x00";
     constructResponse["totalDifficulty"] = "0x00";
@@ -76,8 +76,8 @@ DataObject constructStorageRangeAt(
                 if (iStore++ + 1 < iBegin)
                     continue;
                 DataObject record;
-                record["key"] = std::get<0>(el.second).getCContent().asString();
-                record["value"] = std::get<1>(el.second).getCContent().asString();
+                record["key"] = std::get<0>(el.second)->asString();
+                record["value"] = std::get<1>(el.second)->asString();
                 record.performModifier(mod_removeLeadingZerosFromHexValuesEVEN);
                 constructResponse["storage"][fto_string(iStore)] = record;
                 if (constructResponse.atKey("storage").getSubObjects().size() == _maxResult)

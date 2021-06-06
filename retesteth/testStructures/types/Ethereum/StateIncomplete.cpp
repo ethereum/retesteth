@@ -55,7 +55,7 @@ const DataObject StateIncomplete::asDataObject(ExportOrder) const
 {
     DataObject out;
     for (auto const& el : m_accounts)
-        out.addSubObject(el.second.getCContent().asDataObject());
+        out.addSubObject(el.second->asDataObject());
     return out;
 }
 

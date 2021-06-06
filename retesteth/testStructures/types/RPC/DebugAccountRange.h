@@ -12,7 +12,7 @@ namespace teststruct
 struct DebugAccountRange
 {
     DebugAccountRange(DataObject const&);
-    FH32 const& nextKey() const { return m_nextKey.getCContent(); }
+    FH32 const& nextKey() const { return m_nextKey; }
     std::vector<FH20> const& addresses() const { return m_addresses; }
 
 private:

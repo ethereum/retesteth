@@ -33,7 +33,7 @@ string DebugTraceTransaction::getFinal() const
         return "";
     DebugTraceTransactionLog const& lastLog = m_entries.at(m_entries.size() - 1);
     DataObject final;
-    final["output"] = m_return.getCContent().asString();
+    final["output"] = m_return->asString();
     final["gasUsed"] = (m_gas.getCContent() - lastLog.gas()).asDecString();
     return final.asJson(0, false);
 }

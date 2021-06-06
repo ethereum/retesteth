@@ -13,8 +13,8 @@ DataObject TestBlock::asDataObject() const
 {
     DataObject res;
     res["chainname"] = m_chainName;
-    // res["chainnetwork"] = m_chainNet.getCContent().asString();
-    res["blocknumber"] = m_blockNumber.getCContent().asDecString();
+    // res["chainnetwork"] = m_chainNet->asString();
+    res["blocknumber"] = m_blockNumber->asDecString();
     if (!m_expectException.empty())
         res["expectException"] = m_expectException;
 
@@ -22,12 +22,12 @@ DataObject TestBlock::asDataObject() const
     if (!m_block.isEmpty())
     {
         res["uncleHeaders"] = DataObject(DataType::Array);
-        for (auto const& un : m_block.getCContent().uncles())
-            res["uncleHeaders"].addArrayObject(un.getCContent().asDataObject());
-        res["blockHeader"] = m_block.getCContent().header().getCContent().asDataObject();
+        for (auto const& un : m_block->uncles())
+            res["uncleHeaders"].addArrayObject(un->asDataObject());
+        res["blockHeader"] = m_block->header()->asDataObject();
         res["transactions"] = DataObject(DataType::Array);
-        for (auto const& tr : m_block.getCContent().transactions())
-            res["transactions"].addArrayObject(tr.getCContent().asDataObject(ExportOrder::OldStyle));
+        for (auto const& tr : m_block->transactions())
+            res["transactions"].addArrayObject(tr->asDataObject(ExportOrder::OldStyle));
 
         for (auto const& trSequence : m_transactionExecOrder)
         {
@@ -46,6 +46,6 @@ DataObject TestBlock::asDataObject() const
         }
     }
 
-    res["rlp"] = m_rawRLP.getCContent().asString();
+    res["rlp"] = m_rawRLP->asString();
     return res;
 }

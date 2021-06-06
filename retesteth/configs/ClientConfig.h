@@ -45,10 +45,10 @@ public:
     ClientConfigID const& getId() const { return m_id; }
 
     // Main config file
-    ClientConfigFile const& cfgFile() const { return m_clientConfigFile.getCContent(); }
+    ClientConfigFile const& cfgFile() const { return m_clientConfigFile; }
 
     // Path to name.sh file for IPC client initialization
-    fs::path const getShellPath() const { return cfgFile().shell(); };
+    fs::path const getShellPath() const { return cfgFile().shell(); }
 
     // Functionality
     // Verify FORK is allowed by Fork + AdditionalForks and throw an error if not

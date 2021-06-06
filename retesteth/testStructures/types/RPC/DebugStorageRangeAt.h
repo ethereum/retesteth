@@ -13,8 +13,8 @@ namespace teststruct
 struct DebugStorageRangeAt
 {
     DebugStorageRangeAt(DataObject const&);
-    Storage const& storage() const { return m_storage.getCContent(); }
-    FH32 const& nextKey() const { return m_nextKey.getCContent(); }
+    Storage const& storage() const { return m_storage; }
+    FH32 const& nextKey() const { return m_nextKey; }
 
 private:
     spStorage m_storage;

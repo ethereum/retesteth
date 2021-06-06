@@ -18,7 +18,7 @@ const DataObject StateTestTransactionBase::asDataObject() const
             txAccessListData.addArrayObject(DataObject(DataType::Null));
         else
         {
-            txAccessListData.addArrayObject(el.m_accessList.getCContent().asDataObject());
+            txAccessListData.addArrayObject(el.m_accessList->asDataObject());
             atLeastOneNonNullAccessList = true;
         }
         index++;
@@ -33,23 +33,23 @@ const DataObject StateTestTransactionBase::asDataObject() const
             ETH_FAIL_MESSAGE("Must be defined both m_maxFeePerGas and m_maxPriorityFeePerGas!");
         if (!atLeastOneNonNullAccessList)
             ETH_FAIL_MESSAGE("Basefee transaction must have accesslist!");
-        out["maxFeePerGas"] = m_maxFeePerGas.getCContent().asString();
-        out["maxPriorityFeePerGas"] = m_maxPriorityFeePerGas.getCContent().asString();
+        out["maxFeePerGas"] = m_maxFeePerGas->asString();
+        out["maxPriorityFeePerGas"] = m_maxPriorityFeePerGas->asString();
     }
     else
     {
         // Legacy Transaction
-        out["gasPrice"] = m_gasPrice.getCContent().asString();
+        out["gasPrice"] = m_gasPrice->asString();
     }
 
     for (VALUE const& el : m_gasLimit)
         out["gasLimit"].addArrayObject(el.asString());
-    out["nonce"] = m_nonce.getCContent().asString();
-    out["secretKey"] = m_secretKey.getCContent().asString();
+    out["nonce"] = m_nonce->asString();
+    out["secretKey"] = m_secretKey->asString();
     if (m_creation)
         out["to"] = "";
     else
-        out["to"] = m_to.getCContent().asString();
+        out["to"] = m_to->asString();
     for (VALUE const& el : m_value)
         out["value"].addArrayObject(el.asString());
 
@@ -74,31 +74,31 @@ std::vector<TransactionInGeneralSection> StateTestTransactionBase::buildTransact
                 trData["data"] = databox.m_data.asString();
                 trData["gasLimit"] = m_gasLimit.at(gIND).asString();
                 trData["value"] = m_value.at(vIND).asString();
-                trData["nonce"] = m_nonce.getCContent().asString();
+                trData["nonce"] = m_nonce->asString();
                 if (m_creation)
                     trData["to"] = "";
                 else
-                    trData["to"] = m_to.getCContent().asString();
-                trData["secretKey"] = m_secretKey.getCContent().asString();
+                    trData["to"] = m_to->asString();
+                trData["secretKey"] = m_secretKey->asString();
 
                 // EIP 1559
                 if (!m_maxPriorityFeePerGas.isEmpty())
                 {
                     // Type 0x02 transaction fields
-                    trData["maxPriorityFeePerGas"] = m_maxPriorityFeePerGas.getCContent().asString();
-                    trData["maxFeePerGas"] = m_maxFeePerGas.getCContent().asString();
+                    trData["maxPriorityFeePerGas"] = m_maxPriorityFeePerGas->asString();
+                    trData["maxFeePerGas"] = m_maxFeePerGas->asString();
 
                     if (databox.m_accessList.isEmpty())
                         ETH_FAIL_MESSAGE("BaseFeeTransaction must have access list!");
                 }
                 else
                 {
-                    trData["gasPrice"] = m_gasPrice.getCContent().asString();
+                    trData["gasPrice"] = m_gasPrice->asString();
                 }
 
                 // Export Access List
                 if (!databox.m_accessList.isEmpty())
-                    trData["accessList"] = databox.m_accessList.getCContent().asDataObject();
+                    trData["accessList"] = databox.m_accessList->asDataObject();
 
                 out.push_back(
                     TransactionInGeneralSection(trData, dIND, gIND, vIND, databox.m_dataRawPreview, databox.m_dataLabel));

@@ -12,7 +12,7 @@ struct AccessListElement : GCP_SPointerBase
 {
     AccessListElement(DataObject const&);
     AccessListElement(dev::RLP const& _el);
-    FH20 const& address() const { return m_address.getCContent(); }
+    FH20 const& address() const { return m_address; }
     std::vector<spFH32> const& keys() const { return m_storageKeys; }
     const dev::RLPStream asRLPStream() const;
 

@@ -19,7 +19,7 @@ struct TransactionLegacy : Transaction
     TransactionLegacy(dev::RLP const&);
 
     // Transaction legacy fields
-    VALUE const& gasPrice() const { return m_gasPrice.getCContent(); }
+    VALUE const& gasPrice() const { return m_gasPrice; }
 
     virtual TransactionType type() const override { return TransactionType::LEGACY; }
     virtual DataObject const asDataObject(ExportOrder _order = ExportOrder::Default) const override;

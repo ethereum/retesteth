@@ -23,7 +23,7 @@ struct EthereumBlock : GCP_SPointerBase
     EthereumBlock(spBlockHeader const& _header) : m_header(_header) {}
     void addTransaction(spTransaction const& _tr) { m_transactions.push_back(_tr); }
     void addUncle(spBlockHeader const& _header) { m_uncles.push_back(_header); }
-    void replaceHeader(spBlockHeader const& _header) { m_header = readBlockHeader(_header.getCContent().asDataObject()); }
+    void replaceHeader(spBlockHeader const& _header) { m_header = readBlockHeader(_header->asDataObject()); }
     void recalculateUncleHash();
     BYTES const getRLP() const;
 
@@ -44,11 +44,11 @@ struct EthereumBlockState : EthereumBlock
     EthereumBlockState(spBlockHeader const& _header, State const& _state, FH32 const& _logHash)
       : m_state(_state.asDataObject()), m_logHash(_logHash)
     {
-        m_header = readBlockHeader(_header.getCContent().asDataObject());
+        m_header = readBlockHeader(_header->asDataObject());
     }
 
     void addTotalDifficulty(VALUE const& _totalDifficulty) { m_totalDifficulty = spVALUE(new VALUE(_totalDifficulty)); }
-    VALUE const& totalDifficulty() const { return m_totalDifficulty.getCContent(); }
+    VALUE const& totalDifficulty() const { return m_totalDifficulty; }
 
     State const& state() const { return m_state; }
     FH32 const& logHash() const { return m_logHash; }

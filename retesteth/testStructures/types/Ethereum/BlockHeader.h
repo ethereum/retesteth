@@ -33,14 +33,14 @@ struct BlockHeader : GCP_SPointerBase
     void recalculateHash() { m_hash = spFH32(new FH32("0x" + dev::toString(dev::sha3(asRLPStream().out())))); }
     bool hasUncles() const
     {
-        return m_sha3Uncles.getCContent().asString() != "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347";
+        return m_sha3Uncles->asString() != "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347";
     }
 
     // Common
-    FH32 const& stateRoot() const { return m_stateRoot.getCContent(); }
-    FH32 const& hash() const { return m_hash.getCContent(); }
-    FH32 const& parentHash() const { return m_parentHash.getCContent(); }
-    VALUE const& number() const { return m_number.getCContent(); }
+    FH32 const& stateRoot() const { return m_stateRoot; }
+    FH32 const& hash() const { return m_hash; }
+    FH32 const& parentHash() const { return m_parentHash; }
+    VALUE const& number() const { return m_number; }
 
     void setParentHash(FH32 const& _hash) { m_parentHash = spFH32(new FH32(_hash)); }
     void setHeaderHash(FH32 const& _hash) { m_hash = spFH32(new FH32(_hash)); }
@@ -48,20 +48,20 @@ struct BlockHeader : GCP_SPointerBase
     void setNumber(VALUE const& _number) { m_number = spVALUE(new VALUE(_number)); }
 
     // Would soon go uncommon
-    VALUE const& difficulty() const { return m_difficulty.getCContent(); }
+    VALUE const& difficulty() const { return m_difficulty; }
     void setDifficulty(VALUE const& _value) { m_difficulty = spVALUE(new VALUE(_value.asU256())); }
 
     // Classic Ethereum blockheader fields
-    FH32 const& receiptTrie() const { return m_receiptsRoot.getCContent(); }
-    FH32 const& transactionRoot() const { return m_transactionsRoot.getCContent(); }
-    FH32 const& uncleHash() const { return m_sha3Uncles.getCContent(); }
-    VALUE const& timestamp() const { return m_timestamp.getCContent(); }
-    FH20 const& author() const { return m_author.getCContent(); }
-    VALUE const& gasUsed() const { return m_gasUsed.getCContent(); }
-    BYTES const& extraData() const { return m_extraData.getCContent(); }
-    FH8 const& nonce() const { return m_nonce.getCContent(); }
-    FH32 const& mixHash() const { return m_mixHash.getCContent(); }
-    VALUE const& gasLimit() const { return m_gasLimit.getCContent(); }
+    FH32 const& receiptTrie() const { return m_receiptsRoot; }
+    FH32 const& transactionRoot() const { return m_transactionsRoot; }
+    FH32 const& uncleHash() const { return m_sha3Uncles; }
+    VALUE const& timestamp() const { return m_timestamp; }
+    FH20 const& author() const { return m_author; }
+    VALUE const& gasUsed() const { return m_gasUsed; }
+    BYTES const& extraData() const { return m_extraData; }
+    FH8 const& nonce() const { return m_nonce; }
+    FH32 const& mixHash() const { return m_mixHash; }
+    VALUE const& gasLimit() const { return m_gasLimit; }
 
     void setLogsBloom(FH256 const& _logs) { m_logsBloom = spFH256(new FH256(_logs)); }
     void setTimestamp(VALUE const& _value) { m_timestamp = spVALUE(new VALUE(_value.asU256())); }

@@ -137,23 +137,23 @@ BlockHeader1559::BlockHeader1559(dev::RLP const& _rlp)
 const DataObject BlockHeader1559::asDataObject() const
 {
     DataObject out;
-    out["bloom"] = m_logsBloom.getCContent().asString();
-    out["coinbase"] = m_author.getCContent().asString();
-    out["difficulty"] = m_difficulty.getCContent().asString();
-    out["extraData"] = m_extraData.getCContent().asString();
-    out["gasLimit"] = m_gasLimit.getCContent().asString();
-    out["gasUsed"] = m_gasUsed.getCContent().asString();
-    out["hash"] = m_hash.getCContent().asString();
-    out["mixHash"] = m_mixHash.getCContent().asString();
-    out["nonce"] = m_nonce.getCContent().asString();
-    out["number"] = m_number.getCContent().asString();
-    out["parentHash"] = m_parentHash.getCContent().asString();
-    out["receiptTrie"] = m_receiptsRoot.getCContent().asString();
-    out["stateRoot"] = m_stateRoot.getCContent().asString();
-    out["timestamp"] = m_timestamp.getCContent().asString();
-    out["transactionsTrie"] = m_transactionsRoot.getCContent().asString();
-    out["uncleHash"] = m_sha3Uncles.getCContent().asString();
-    out["baseFee"] = m_baseFee.getCContent().asString();
+    out["bloom"] = m_logsBloom->asString();
+    out["coinbase"] = m_author->asString();
+    out["difficulty"] = m_difficulty->asString();
+    out["extraData"] = m_extraData->asString();
+    out["gasLimit"] = m_gasLimit->asString();
+    out["gasUsed"] = m_gasUsed->asString();
+    out["hash"] = m_hash->asString();
+    out["mixHash"] = m_mixHash->asString();
+    out["nonce"] = m_nonce->asString();
+    out["number"] = m_number->asString();
+    out["parentHash"] = m_parentHash->asString();
+    out["receiptTrie"] = m_receiptsRoot->asString();
+    out["stateRoot"] = m_stateRoot->asString();
+    out["timestamp"] = m_timestamp->asString();
+    out["transactionsTrie"] = m_transactionsRoot->asString();
+    out["uncleHash"] = m_sha3Uncles->asString();
+    out["baseFee"] = m_baseFee->asString();
     return out;
 }
 
@@ -162,22 +162,22 @@ const RLPStream BlockHeader1559::asRLPStream() const
     RLPStream header;
     header.appendList(16);
 
-    header << h256(m_parentHash.getCContent().asString());
-    header << h256(m_sha3Uncles.getCContent().asString());
-    header << Address(m_author.getCContent().asString());
-    header << h256(m_stateRoot.getCContent().asString());
-    header << h256(m_transactionsRoot.getCContent().asString());
-    header << h256(m_receiptsRoot.getCContent().asString());
-    header << h2048(m_logsBloom.getCContent().asString());
-    header << m_difficulty.getCContent().asU256();
-    header << m_number.getCContent().asU256();
-    header << m_gasLimit.getCContent().asU256();
-    header << m_gasUsed.getCContent().asU256();
-    header << m_timestamp.getCContent().asU256();
-    header << test::sfromHex(m_extraData.getCContent().asString());
-    header << h256(m_mixHash.getCContent().asString());
-    header << h64(m_nonce.getCContent().asString());
-    header << m_baseFee.getCContent().asU256();
+    header << h256(m_parentHash->asString());
+    header << h256(m_sha3Uncles->asString());
+    header << Address(m_author->asString());
+    header << h256(m_stateRoot->asString());
+    header << h256(m_transactionsRoot->asString());
+    header << h256(m_receiptsRoot->asString());
+    header << h2048(m_logsBloom->asString());
+    header << m_difficulty->asU256();
+    header << m_number->asU256();
+    header << m_gasLimit->asU256();
+    header << m_gasUsed->asU256();
+    header << m_timestamp->asU256();
+    header << test::sfromHex(m_extraData->asString());
+    header << h256(m_mixHash->asString());
+    header << h64(m_nonce->asString());
+    header << m_baseFee->asU256();
     return header;
 }
 
@@ -200,7 +200,7 @@ BlockHeader1559 const& BlockHeader1559::castFrom(spBlockHeader const& _from)
 {
     try
     {
-        if (_from.getCContent().type() != BlockType::BlockHeader1559)
+        if (_from->type() != BlockType::BlockHeader1559)
             ETH_FAIL_MESSAGE("BlockHeader1559::castFrom() got wrong block type!");
         return dynamic_cast<BlockHeader1559 const&>(_from.getCContent());
     }

@@ -170,6 +170,17 @@ public:
         return *getCPtr();
     }
 
+    operator T const&() const {
+        if (isEmpty())
+            throwException("GCP_SPointer:: operator T const&() const :: smart pointer is empty!");
+        return getCContent();
+    }
+    T const* operator->() const {
+        if (isEmpty())
+            throwException("GCP_SPointer:: T const* operator->() const :: smart pointer is empty!");
+        return getCPtr();
+    }
+
     // T* operator->() const { return _pointee; }
     // operator T*() { return _pointee; }
     // operator GCP_SPointer<T>() { return GCP_SPointer<T>(this); }

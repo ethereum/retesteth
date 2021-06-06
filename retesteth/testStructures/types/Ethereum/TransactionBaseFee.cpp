@@ -46,7 +46,7 @@ void TransactionBaseFee::fromDataObject(DataObject const& _data)
         {
             m_v = spVALUE(new VALUE(_data.atKey("v")));
             if (m_v.getCContent() > dev::u256("0xff"))
-                throw test::UpwardsException("Incorrect transaction `v` value: " + m_v.getCContent().asString());
+                throw test::UpwardsException("Incorrect transaction `v` value: " + m_v->asString());
             m_r = spVALUE(new VALUE(_data.atKey("r")));
             m_s = spVALUE(new VALUE(_data.atKey("s")));
             rebuildRLP();
@@ -167,8 +167,8 @@ void TransactionBaseFee::streamHeader(dev::RLPStream& _s) const
     _s << VALUE(1).asU256();
     _s << nonce().asU256();
 
-    _s << m_maxPriorityFeePerGas.getCContent().asU256();
-    _s << m_maxFeePerGas.getCContent().asU256();
+    _s << m_maxPriorityFeePerGas->asU256();
+    _s << m_maxFeePerGas->asU256();
 
     _s << gasLimit().asU256();
     if (Transaction::isCreation())
@@ -179,9 +179,9 @@ void TransactionBaseFee::streamHeader(dev::RLPStream& _s) const
     _s << test::sfromHex(data().asString());
 
     // Access Listist
-    dev::RLPStream accessList(m_accessList.getCContent().list().size());
-    for (auto const& el : m_accessList.getCContent().list())
-        accessList.appendRaw(el.getCContent().asRLPStream().out());
+    dev::RLPStream accessList(m_accessList->list().size());
+    for (auto const& el : m_accessList->list())
+        accessList.appendRaw(el->asRLPStream().out());
 
     _s.appendRaw(accessList.out());
 }
@@ -190,27 +190,27 @@ DataObject const TransactionBaseFee::asDataObject(ExportOrder _order) const
 {
     // Because we don't use gas_price field need to explicitly output
     DataObject out;
-    out["data"] = m_data.getCContent().asString();
-    out["gasLimit"] = m_gasLimit.getCContent().asString();
-    out["nonce"] = m_nonce.getCContent().asString();
+    out["data"] = m_data->asString();
+    out["gasLimit"] = m_gasLimit->asString();
+    out["nonce"] = m_nonce->asString();
     if (m_creation)
     {
         if (_order != ExportOrder::ToolStyle)
             out["to"] = "";
     }
     else
-        out["to"] = m_to.getCContent().asString();
-    out["value"] = m_value.getCContent().asString();
-    out["v"] = m_v.getCContent().asString();
-    out["r"] = m_r.getCContent().asString();
-    out["s"] = m_s.getCContent().asString();
+        out["to"] = m_to->asString();
+    out["value"] = m_value->asString();
+    out["v"] = m_v->asString();
+    out["r"] = m_r->asString();
+    out["s"] = m_s->asString();
     if (_order == ExportOrder::ToolStyle)
     {
         out.performModifier(mod_removeLeadingZerosFromHexValues, {"data", "to"});
         out.renameKey("gasLimit", "gas");
         out.renameKey("data", "input");
         if (!m_secretKey.isEmpty() && m_secretKey.getCContent() != 0)
-            out["secretKey"] = m_secretKey.getCContent().asString();
+            out["secretKey"] = m_secretKey->asString();
     }
     if (_order == ExportOrder::OldStyle)
     {
@@ -224,24 +224,24 @@ DataObject const TransactionBaseFee::asDataObject(ExportOrder _order) const
     // begin eip1559 transaction info
     out["chainId"] = "0x01";
     out["type"] = "0x02";
-    out["maxFeePerGas"] = m_maxFeePerGas.getCContent().asString();
-    out["maxPriorityFeePerGas"] = m_maxPriorityFeePerGas.getCContent().asString();
+    out["maxFeePerGas"] = m_maxFeePerGas->asString();
+    out["maxPriorityFeePerGas"] = m_maxPriorityFeePerGas->asString();
     if (_order == ExportOrder::ToolStyle)
     {
         out["chainId"] = "0x1";
         out["type"] = "0x2";
 
         DataObject t8ntoolFields;
-        t8ntoolFields["maxFeePerGas"] = m_maxFeePerGas.getCContent().asString();
-        t8ntoolFields["maxPriorityFeePerGas"] = m_maxPriorityFeePerGas.getCContent().asString();
+        t8ntoolFields["maxFeePerGas"] = m_maxFeePerGas->asString();
+        t8ntoolFields["maxPriorityFeePerGas"] = m_maxPriorityFeePerGas->asString();
         t8ntoolFields.performModifier(mod_removeLeadingZerosFromHexValues);
         out["maxFeePerGas"] = t8ntoolFields["maxFeePerGas"];
         out["maxPriorityFeePerGas"] = t8ntoolFields["maxPriorityFeePerGas"];
 
         if (!m_secretKey.isEmpty() && m_secretKey.getCContent() != 0)
-            out["secretKey"] = m_secretKey.getCContent().asString();
+            out["secretKey"] = m_secretKey->asString();
     }
-    out["accessList"] = m_accessList.getCContent().asDataObject();
+    out["accessList"] = m_accessList->asDataObject();
     return out;
 }
 

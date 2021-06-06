@@ -7,27 +7,27 @@ void verifyLegacyBlock(spBlockHeader const& _header, ToolChain const& _chain)
 {
     (void)_chain;
     (void)_header;
-    //    if (_header.getCContent().type() != BlockType::BlockHeaderLegacy)
+    //    if (_header->type() != BlockType::BlockHeaderLegacy)
     //        ETH_FAIL_MESSAGE("verifyLegacyBlock got block of another type!");
     //    BlockHeaderLegacy const& header = BlockHeaderLegacy::castFrom(_header);
 }
 
 void verifyLegacyParent(spBlockHeader const& _header, spBlockHeader const& _parent, ToolChain const& _chain)
 {
-    if (_chain.fork().asString() == "BerlinToLondonAt5" && _parent.getCContent().number() == 4)
+    if (_chain.fork().asString() == "BerlinToLondonAt5" && _parent->number() == 4)
         throw test::UpwardsException("Legacy block import is impossible on BerlinToLondonAt5 after block#4!");
 
-    if (_header.getCContent().type() != BlockType::BlockHeaderLegacy)
+    if (_header->type() != BlockType::BlockHeaderLegacy)
         ETH_FAIL_MESSAGE("verifyLegacyBlock got block of another type!");
 
-    if (_parent.getCContent().type() != BlockType::BlockHeaderLegacy)
+    if (_parent->type() != BlockType::BlockHeaderLegacy)
         throw test::UpwardsException("Legacy block can only be on top of LegacyBlock!");
 }
 
 void verify1559Block(spBlockHeader const& _header, ToolChain const& _chain)
 {
     (void)_chain;
-    if (_header.getCContent().type() != BlockType::BlockHeader1559)
+    if (_header->type() != BlockType::BlockHeader1559)
         ETH_FAIL_MESSAGE("verify1559Block got block of another type!");
     BlockHeader1559 const& header = BlockHeader1559::castFrom(_header);
 
@@ -52,7 +52,7 @@ void verify1559Block(spBlockHeader const& _header, ToolChain const& _chain)
 void verify1559Parent_private(spBlockHeader const& _header, spBlockHeader const& _parent, ToolChain const& _chain)
 {
     BlockHeader1559 const& header = BlockHeader1559::castFrom(_header);
-    if (_parent.getCContent().type() != BlockType::BlockHeader1559)
+    if (_parent->type() != BlockType::BlockHeader1559)
         throw test::UpwardsException() << "verify1559Parent 1559 block must be on top of 1559 block!";
     BlockHeader1559 const& parent = BlockHeader1559::castFrom(_parent);
 
@@ -82,23 +82,23 @@ void verify1559Parent_private(spBlockHeader const& _header, spBlockHeader const&
 
 void verify1559Parent(spBlockHeader const& _header, spBlockHeader const& _parent, ToolChain const& _chain)
 {
-    if (_header.getCContent().type() != BlockType::BlockHeader1559)
+    if (_header->type() != BlockType::BlockHeader1559)
         ETH_FAIL_MESSAGE("verify1559Parent got block of another type!");
 
     BlockHeader1559 const& header = BlockHeader1559::castFrom(_header);
     if (header.number() == 5 && _chain.fork() == "BerlinToLondonAt5")
     {
-        if (_parent.getCContent().type() != BlockType::BlockHeaderLegacy)
+        if (_parent->type() != BlockType::BlockHeaderLegacy)
             ETH_FAIL_MESSAGE("verify1559Parent first 1559 block must be on top of legacy block!");
 
-        DataObject parentData = _parent.getCContent().asDataObject();
+        DataObject parentData = _parent->asDataObject();
 
         // fake legacy block gasLimit for delta validation
         // https://eips.ethereum.org/EIPS/eip-1559
         // if INITIAL_FORK_BLOCK_NUMBER == block.number:
         //            parent_gas_target = self.parent(block).gas_limit
         //            parent_gas_limit = self.parent(block).gas_limit * ELASTICITY_MULTIPLIER
-        parentData["gasLimit"] = (_parent.getCContent().gasLimit() * ELASTICITY_MULTIPLIER).asString();
+        parentData["gasLimit"] = (_parent->gasLimit() * ELASTICITY_MULTIPLIER).asString();
 
         // https://eips.ethereum.org/EIPS/eip-1559
         // INITIAL_BASE_FEE = 1000000000
@@ -174,7 +174,7 @@ void verifyEthereumBlockHeader(spBlockHeader const& _header, ToolChain const& _c
 {
     // Check Ethereum rules
     verifyCommonBlock(_header, _chain);
-    switch (_header.getCContent().type())
+    switch (_header->type())
     {
     case BlockType::BlockHeaderLegacy:
         verifyLegacyBlock(_header, _chain);
@@ -189,19 +189,19 @@ void verifyEthereumBlockHeader(spBlockHeader const& _header, ToolChain const& _c
     for (auto const& parentBlock : _chain.blocks())
     {
         // See if uncles not already in chain
-        if (parentBlock.header().getCContent().hash() == _header.getCContent().hash())
+        if (parentBlock.header()->hash() == _header->hash())
             throw test::UpwardsException("Block is already in chain!");
         for (auto const& un : parentBlock.uncles())
         {
-            if (un.getCContent().hash() == _header.getCContent().hash())
+            if (un->hash() == _header->hash())
                 throw test::UpwardsException("Block is already in chain!");
         }
 
-        if (parentBlock.header().getCContent().hash() == _header.getCContent().parentHash())
+        if (parentBlock.header()->hash() == _header->parentHash())
         {
             found = true;
             verifyCommonParent(_header, parentBlock.header(), _chain);
-            switch (_header.getCContent().type())
+            switch (_header->type())
             {
             case BlockType::BlockHeaderLegacy:
                 verifyLegacyParent(_header, parentBlock.header(), _chain);
@@ -216,7 +216,7 @@ void verifyEthereumBlockHeader(spBlockHeader const& _header, ToolChain const& _c
     }
     if (!found)
         throw test::UpwardsException(
-            "verifyEthereumBlockHeader:: Parent block hash not found: " + _header.getCContent().parentHash().asString());
+            "verifyEthereumBlockHeader:: Parent block hash not found: " + _header->parentHash().asString());
 }
 
 }  // namespace toolimpl

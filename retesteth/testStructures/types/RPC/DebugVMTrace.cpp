@@ -75,7 +75,7 @@ void DebugVMTrace::printNice()
         return;
 
     string s_comment = "";
-    dev::u256 maxGas = m_log.at(0).gas.getCContent().asU256();
+    dev::u256 maxGas = m_log.at(0).gas->asU256();
     size_t k = 0;
     size_t const step = 9;
     string const stepw = "          ";
@@ -91,9 +91,9 @@ void DebugVMTrace::printNice()
         std::cout << setw(step * (el.depth - 1));
         std::cout << test::fto_string(k++) + "-" + test::fto_string(el.depth)
                   << setw(15) << el.opName
-                  << setw(10) << el.gasCost.getCContent().asDecString()
-                  << setw(10) << maxGas - el.gas.getCContent().asU256()
-                  << setw(10) << el.gas.getCContent().asDecString()
+                  << setw(10) << el.gasCost->asDecString()
+                  << setw(10) << maxGas - el.gas->asU256()
+                  << setw(10) << el.gas->asDecString()
                   << setw(20) << el.error << std::endl;
 
         // Opcode highlight
@@ -105,7 +105,7 @@ void DebugVMTrace::printNice()
         if (el.opName == "MSTORE" && el.stack.size() > 1)
             s_comment = stepw + "MSTORE [" + el.stack.at(el.stack.size() - 1) + "] = " + el.stack.at(el.stack.size() - 2);
         if (el.opName == "RETURN")
-            s_comment = stepw + "RETURN " + el.memory.getCContent().asString();
+            s_comment = stepw + "RETURN " + el.memory->asString();
     }
     std::cout << std::endl;
 }

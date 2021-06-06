@@ -17,8 +17,8 @@ BlockchainTestInFiller::BlockchainTestInFiller(DataObject const& _data)
 
         // Prepare nonce map for transaction 'auto' nonce parsing
         NonceMap nonceMap;
-        for (auto const& acc : m_pre.getCContent().accounts())
-            nonceMap.emplace(acc.first.asString(), spVALUE(new VALUE(acc.second.getCContent().nonce().asU256())));
+        for (auto const& acc : m_pre->accounts())
+            nonceMap.emplace(acc.first.asString(), spVALUE(new VALUE(acc.second->nonce().asU256())));
         // nonce map
 
         m_sealEngine = SealEngine::NoProof;

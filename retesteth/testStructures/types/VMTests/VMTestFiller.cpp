@@ -59,7 +59,7 @@ VMTestInFiller::VMTestInFiller(DataObject const& _data)
         m_name = _data.getKey();
 
         StateTestFillerTransaction stateTx(translateExecToTransaction(_data.atKey("exec")));
-        m_transaction = spTransaction(new TransactionLegacy(stateTx.buildTransactions().at(0).transaction().getCContent().asDataObject()));
+        m_transaction = spTransaction(new TransactionLegacy(stateTx.buildTransactions().at(0).transaction()->asDataObject()));
         if (_data.count("expect"))
             m_expect = spStateIncomplete(new StateIncomplete(_data.atKey("expect"), DataRequier::ALLOWDEC));
 

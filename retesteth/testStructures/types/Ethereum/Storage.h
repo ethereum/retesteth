@@ -20,7 +20,7 @@ struct Storage : GCP_SPointerBase
     VALUE const& atKey(VALUE const& _key) const
     {
         assert(m_map.count(_key.asString()));
-        return std::get<1>(m_map.at(_key.asString())).getCContent();
+        return std::get<1>(m_map.at(_key.asString()));
     }
     DataObject const asDataObject() const;
     void merge(Storage const& _storage);

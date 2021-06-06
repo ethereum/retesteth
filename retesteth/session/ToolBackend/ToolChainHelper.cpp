@@ -149,7 +149,7 @@ u256 calculateEthashDifficulty(ChainOperationParams const& _chainParams, spBlock
 {
     const unsigned c_expDiffPeriod = 100000;
 
-    if (_bi.getCContent().number() == 0)
+    if (_bi->number() == 0)
         throw test::UpwardsException("calculateEthashDifficulty was called for block with number == 0");
 
     auto const& minimumDifficulty = _chainParams.minimumDifficulty;
@@ -157,29 +157,27 @@ u256 calculateEthashDifficulty(ChainOperationParams const& _chainParams, spBlock
     auto const& durationLimit = _chainParams.durationLimit;
 
     bigint target;  // stick to a bigint for the target. Don't want to risk going negative.
-    auto const& bi = _bi.getCContent();
-    auto const& parent = _parent.getCContent();
-    if (bi.number() < _chainParams.homesteadForkBlock)
+    if (_bi->number() < _chainParams.homesteadForkBlock)
         // Frontier-era difficulty adjustment
-        target = bi.timestamp().asU256() >= parent.timestamp().asU256() + durationLimit ?
-                     parent.difficulty().asU256() - (parent.difficulty().asU256() / difficultyBoundDivisor) :
-                     (parent.difficulty().asU256() + (parent.difficulty().asU256() / difficultyBoundDivisor));
+        target = _bi->timestamp().asU256() >= _parent->timestamp().asU256() + durationLimit ?
+                     _parent->difficulty().asU256() - (_parent->difficulty().asU256() / difficultyBoundDivisor) :
+                     (_parent->difficulty().asU256() + (_parent->difficulty().asU256() / difficultyBoundDivisor));
     else
     {
-        bigint const timestampDiff = bigint(bi.timestamp().asU256()) - parent.timestamp().asU256();
-        bigint const adjFactor = bi.number() < _chainParams.byzantiumForkBlock ?
+        bigint const timestampDiff = bigint(_bi->timestamp().asU256()) - _parent->timestamp().asU256();
+        bigint const adjFactor = _bi->number() < _chainParams.byzantiumForkBlock ?
                                      max<bigint>(1 - timestampDiff / 10, -99) :  // Homestead-era difficulty adjustment
-                                     max<bigint>((parent.hasUncles() ? 2 : 1) - timestampDiff / 9,
+                                     max<bigint>((_parent->hasUncles() ? 2 : 1) - timestampDiff / 9,
                                          -99);  // Byzantium-era difficulty adjustment
 
-        target = parent.difficulty().asU256() + parent.difficulty().asU256() / 2048 * adjFactor;
+        target = _parent->difficulty().asU256() + _parent->difficulty().asU256() / 2048 * adjFactor;
     }
 
     bigint o = target;
-    unsigned exponentialIceAgeBlockNumber = unsigned(parent.number().asU256() + 1);
+    unsigned exponentialIceAgeBlockNumber = unsigned(_parent->number().asU256() + 1);
 
     // EIP-2384 Istanbul/Berlin Difficulty Bomb Delay
-    if (bi.number().asU256() >= _chainParams.muirGlacierForkBlock)
+    if (_bi->number().asU256() >= _chainParams.muirGlacierForkBlock)
     {
         if (exponentialIceAgeBlockNumber >= 9000000)
             exponentialIceAgeBlockNumber -= 9000000;
@@ -187,7 +185,7 @@ u256 calculateEthashDifficulty(ChainOperationParams const& _chainParams, spBlock
             exponentialIceAgeBlockNumber = 0;
     }
     // EIP-1234 Constantinople Ice Age delay
-    else if (bi.number().asU256() >= _chainParams.constantinopleForkBlock)
+    else if (_bi->number().asU256() >= _chainParams.constantinopleForkBlock)
     {
         if (exponentialIceAgeBlockNumber >= 5000000)
             exponentialIceAgeBlockNumber -= 5000000;
@@ -195,7 +193,7 @@ u256 calculateEthashDifficulty(ChainOperationParams const& _chainParams, spBlock
             exponentialIceAgeBlockNumber = 0;
     }
     // EIP-649 Byzantium Ice Age delay
-    else if (bi.number().asU256() >= _chainParams.byzantiumForkBlock)
+    else if (_bi->number().asU256() >= _chainParams.byzantiumForkBlock)
     {
         if (exponentialIceAgeBlockNumber >= 3000000)
             exponentialIceAgeBlockNumber -= 3000000;
@@ -222,7 +220,7 @@ u256 calculateEIP1559BaseFee(ChainOperationParams const& _chainParams, spBlockHe
 
     VALUE const parentGasTarget = parent.gasLimit() / ELASTICITY_MULTIPLIER;
 
-    if (_bi.getCContent().number().asU256() == _chainParams.londonForkBlock)
+    if (_bi->number().asU256() == _chainParams.londonForkBlock)
         expectedBaseFee = INITIAL_BASE_FEE;
     else if (parent.gasUsed() == parentGasTarget)
         expectedBaseFee = parent.baseFee().asU256();

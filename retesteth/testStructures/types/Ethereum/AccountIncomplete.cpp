@@ -20,7 +20,7 @@ AccountIncomplete::AccountIncomplete(DataObject const& _data)
     {
         m_nonce = spVALUE(new VALUE(_data.atKey("nonce")));
         if (m_nonce.getCContent() > c_maxNonce)
-            ETH_ERROR_MESSAGE("AccountIncomplete `" + m_address.getCContent().asString() +  "` requires nonce <= (2**64)-1");
+            ETH_ERROR_MESSAGE("AccountIncomplete `" + m_address->asString() +  "` requires nonce <= (2**64)-1");
     }
     if (_data.count("code"))
         m_code = spBYTES(new BYTES(_data.atKey("code")));
@@ -36,15 +36,15 @@ AccountIncomplete::AccountIncomplete(DataObject const& _data)
 const DataObject AccountIncomplete::asDataObject(ExportOrder) const
 {
     DataObject out;
-    string const& addr = m_address.getCContent().asString();
+    string const& addr = m_address->asString();
     if (!m_balance.isEmpty())
-        out["balance"] = m_balance.getCContent().asString();
+        out["balance"] = m_balance->asString();
     if (!m_nonce.isEmpty())
-        out["nonce"] = m_nonce.getCContent().asString();
+        out["nonce"] = m_nonce->asString();
     if (!m_code.isEmpty())
-        out["code"] = m_code.getCContent().asString();
+        out["code"] = m_code->asString();
     if (!m_storage.isEmpty())
-        out["storage"] = m_storage.getCContent().asDataObject();
+        out["storage"] = m_storage->asDataObject();
     if (m_shouldNotExist)
         out["shouldnotexist"] = "1";
     out.setKey(addr);

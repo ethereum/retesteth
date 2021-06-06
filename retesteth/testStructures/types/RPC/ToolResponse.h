@@ -15,11 +15,11 @@ namespace teststruct
 struct ToolResponse
 {
     ToolResponse(DataObject const& _data);
-    FH32 const& stateRoot() const { return m_stateRoot.getCContent(); }
-    FH32 const& txRoot() const { return m_txRoot.getCContent(); }
-    FH32 const& receiptRoot() const { return m_receiptRoot.getCContent(); }
-    FH32 const& logsHash() const { return m_logsHash.getCContent(); }
-    FH256 const& logsBloom() const { return m_logsBloom.getCContent(); }
+    FH32 const& stateRoot() const { return m_stateRoot; }
+    FH32 const& txRoot() const { return m_txRoot; }
+    FH32 const& receiptRoot() const { return m_receiptRoot; }
+    FH32 const& logsHash() const { return m_logsHash; }
+    FH256 const& logsBloom() const { return m_logsBloom; }
     VALUE totalGasUsed() const
     {
         VALUE totalGasUsed = 0;
@@ -27,7 +27,7 @@ struct ToolResponse
             totalGasUsed = totalGasUsed + rec.gasUsed();
         return totalGasUsed;
     }
-    State const& state() const { return m_stateResponse.getCContent(); }
+    State const& state() const { return m_stateResponse; }
     std::vector<ToolResponseReceipt> const& receipts() const { return m_receipts; }
 
     // Tool export the state separately

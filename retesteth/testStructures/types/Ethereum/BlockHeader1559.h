@@ -22,7 +22,7 @@ struct BlockHeader1559 : BlockHeader
     BlockType type() const override { return BlockType::BlockHeader1559; }
 
     // Unique fields
-    VALUE const& baseFee() const { return m_baseFee.getCContent(); }
+    VALUE const& baseFee() const { return m_baseFee; }
     void setBaseFee(VALUE const& _baseFee) { m_baseFee = spVALUE(new VALUE(_baseFee)); }
 
     // Static

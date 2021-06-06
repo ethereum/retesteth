@@ -13,7 +13,7 @@ typedef std::map<string, spVALUE> NonceMap;
 struct BlockchainTestFillerTransaction : GCP_SPointerBase
 {
     BlockchainTestFillerTransaction(DataObject const&, NonceMap& _nonceMap);
-    Transaction const& tr() const { return m_transaction.getCContent(); }
+    Transaction const& tr() const { return m_transaction; }
 
     // Test functions
     string const& getExpectException(FORK const& _net) const

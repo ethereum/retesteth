@@ -28,9 +28,9 @@ StateTestPostResult::StateTestPostResult(DataObject const& _data)
 const DataObject StateTestPostResult::asDataObject() const
 {
     DataObject res;
-    res["hash"] = m_hash.getCContent().asString();
+    res["hash"] = m_hash->asString();
     if (!m_log.isEmpty())
-        res["logs"] = m_log.getCContent().asString();
+        res["logs"] = m_log->asString();
     res["indexes"]["data"] = m_dataInd;
     res["indexes"]["gas"] = m_gasInd;
     res["indexes"]["value"] = m_valInd;

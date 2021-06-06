@@ -44,7 +44,7 @@ void TransactionAccessList::fromDataObject(DataObject const& _data)
         {
             m_v = spVALUE(new VALUE(_data.atKey("v")));
             if (m_v.getCContent() > dev::u256("0xff"))
-                throw test::UpwardsException("Incorrect transaction `v` value: " + m_v.getCContent().asString());
+                throw test::UpwardsException("Incorrect transaction `v` value: " + m_v->asString());
             m_r = spVALUE(new VALUE(_data.atKey("r")));
             m_s = spVALUE(new VALUE(_data.atKey("s")));
             rebuildRLP();
@@ -167,9 +167,9 @@ void TransactionAccessList::streamHeader(dev::RLPStream& _s) const
     _s << test::sfromHex(data().asString());
 
     // Access Listist
-    dev::RLPStream accessList(m_accessList.getCContent().list().size());
-    for (auto const& el : m_accessList.getCContent().list())
-        accessList.appendRaw(el.getCContent().asRLPStream().out());
+    dev::RLPStream accessList(m_accessList->list().size());
+    for (auto const& el : m_accessList->list())
+        accessList.appendRaw(el->asRLPStream().out());
 
     _s.appendRaw(accessList.out());
 }
@@ -179,14 +179,14 @@ DataObject const TransactionAccessList::asDataObject(ExportOrder _order) const
     DataObject out = TransactionLegacy::asDataObject(_order);
 
     out["chainId"] = "0x01";
-    out["accessList"] = m_accessList.getCContent().asDataObject();
+    out["accessList"] = m_accessList->asDataObject();
     out["type"] = "0x01";
     if (_order == ExportOrder::ToolStyle)
     {
         out["chainId"] = "0x1";
         out["type"] = "0x1";
         if (!m_secretKey.isEmpty() && m_secretKey.getCContent() != 0)
-            out["secretKey"] = m_secretKey.getCContent().asString();
+            out["secretKey"] = m_secretKey->asString();
     }
     return out;
 }

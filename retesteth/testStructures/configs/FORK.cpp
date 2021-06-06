@@ -28,20 +28,20 @@ namespace teststruct
 // Given the FORK array is small and usage of compares are single lines it shall be fine
 FORK::FORK(DataObject const& _data) : m_data(_data) {}
 
-bool compareFork(FORK const& _left, ForkCMPType _t, FORK const& _right)
+bool compareFork(FORK const& _left, CMP _t, FORK const& _right)
 {
     switch (_t)
     {
-    case ForkCMPType::ge:
+    case CMP::ge:
         return getForkIndex(_left) >= getForkIndex(_right);
         break;
-    case ForkCMPType::le:
+    case CMP::le:
         return getForkIndex(_left) <= getForkIndex(_right);
         break;
-    case ForkCMPType::gt:
+    case CMP::gt:
         return getForkIndex(_left) > getForkIndex(_right);
         break;
-    case ForkCMPType::lt:
+    case CMP::lt:
         return getForkIndex(_left) < getForkIndex(_right);
         break;
     }

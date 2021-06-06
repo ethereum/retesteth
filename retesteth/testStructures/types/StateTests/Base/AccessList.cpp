@@ -28,10 +28,10 @@ DataObject AccessList::asDataObject() const
     for (auto const& el : m_list)
     {
         DataObject accessListElement;
-        accessListElement["address"] = el.getCContent().address().asString();
+        accessListElement["address"] = el->address().asString();
         DataObject keys(DataType::Array);
-        for (auto const& el2 : el.getCContent().keys())
-            keys.addArrayObject(el2.getCContent().asString());
+        for (auto const& el2 : el->keys())
+            keys.addArrayObject(el2->asString());
         accessListElement["storageKeys"] = keys;
         accessList.addArrayObject(accessListElement);
     }
@@ -41,11 +41,11 @@ DataObject AccessList::asDataObject() const
 const dev::RLPStream AccessListElement::asRLPStream() const
 {
     dev::RLPStream stream(2);
-    stream << dev::Address(m_address.getCContent().asString());
+    stream << dev::Address(m_address->asString());
 
     dev::RLPStream storages(m_storageKeys.size());
     for (auto const& key : m_storageKeys)
-        storages << dev::h256(key.getCContent().asString());
+        storages << dev::h256(key->asString());
     // storages << dev::u256(key.asString());
 
     stream.appendRaw(storages.out());

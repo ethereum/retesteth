@@ -22,13 +22,13 @@ struct VMTestInFiller : GCP_SPointerBase
     InfoIncomplete const& Info() const
     {
         assert(hasInfo());
-        return m_info.getCContent();
+        return m_info;
     }
-    StateTestFillerEnv const& Env() const { return m_env.getCContent(); }
-    State const& Pre() const { return m_pre.getCContent(); }
-    Transaction const& Tr() const { return m_transaction.getCContent(); }
+    StateTestFillerEnv const& Env() const { return m_env; }
+    State const& Pre() const { return m_pre; }
+    Transaction const& Tr() const { return m_transaction; }
     bool hasExpect() const { return !m_expect.isEmpty(); }
-    StateIncomplete const& Expect() const { return m_expect.getCContent(); }
+    StateIncomplete const& Expect() const { return m_expect; }
 
 private:
     VMTestInFiller() {}

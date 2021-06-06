@@ -23,7 +23,7 @@ DataObject const ToolChainManager::mineBlocks(size_t _number, ToolChain::Mining 
 {
     if (_number > 1)
         throw test::UpwardsException("ToolChainManager::mineBlocks number arg invalid: " + fto_string(_number));
-    DataObject const res = currentChainUnsafe().mineBlock(m_pendingBlock.getCContent(), _req);
+    DataObject const res = currentChainUnsafe().mineBlock(m_pendingBlock, _req);
     reorganizePendingBlock();
     return res;
 }
@@ -39,12 +39,12 @@ void ToolChainManager::rewindToBlock(VALUE const& _number)
 void ToolChainManager::reorganizePendingBlock()
 {
     EthereumBlockState const& bl = currentChain().lastBlock();
-    if (currentChain().fork() == "BerlinToLondonAt5" && bl.header().getCContent().number() == 4)
+    if (currentChain().fork() == "BerlinToLondonAt5" && bl.header()->number() == 4)
     {
         // Switch default mining to 1559 blocks
-        DataObject parentData = bl.header().getCContent().asDataObject();
+        DataObject parentData = bl.header()->asDataObject();
 
-        VALUE newGasLimit = bl.header().getCContent().gasLimit() * ELASTICITY_MULTIPLIER;
+        VALUE newGasLimit = bl.header()->gasLimit() * ELASTICITY_MULTIPLIER;
         parentData.atKeyUnsafe("gasLimit").setString(newGasLimit.asString());
 
         // https://eips.ethereum.org/EIPS/eip-1559
@@ -58,20 +58,20 @@ void ToolChainManager::reorganizePendingBlock()
         m_pendingBlock = spEthereumBlockState(new EthereumBlockState(bl.header(), bl.state(), bl.logHash()));
 
     BlockHeader& header = m_pendingBlock.getContent().headerUnsafe().getContent();
-    header.setNumber(bl.header().getCContent().number() + 1);
+    header.setNumber(bl.header()->number() + 1);
 
     // Because aleth and geth+retesteth does this, but better be empty extraData
-    header.setExtraData(bl.header().getCContent().extraData());
+    header.setExtraData(bl.header()->extraData());
     if (currentChain().fork() == "HomesteadToDaoAt5" && header.number() == 5)
         header.setExtraData(BYTES(DataObject("0x64616f2d686172642d666f726b")));
-    header.setParentHash(currentChain().lastBlock().header().getCContent().hash());
+    header.setParentHash(currentChain().lastBlock().header()->hash());
 
-    if (currentChain().lastBlock().header().getCContent().type() == BlockType::BlockHeader1559)
+    if (currentChain().lastBlock().header()->type() == BlockType::BlockHeader1559)
     {
         BlockHeader1559& header1559 = BlockHeader1559::castFrom(header);
         ChainOperationParams params = ChainOperationParams::defaultParams(currentChain().toolParams());
         u256 newFee =
-            calculateEIP1559BaseFee(params, m_pendingBlock.getCContent().header(), currentChain().lastBlock().header());
+            calculateEIP1559BaseFee(params, m_pendingBlock->header(), currentChain().lastBlock().header());
         header1559.setBaseFee(VALUE(newFee));
     }
 }
@@ -88,8 +88,8 @@ EthereumBlockState const& ToolChainManager::blockByHash(FH32 const& _hash) const
 {
     for (auto const& chain : m_chains)
     {
-        for (auto const& block : chain.second.getCContent().blocks())
-            if (block.header().getCContent().hash() == _hash)
+        for (auto const& block : chain.second->blocks())
+            if (block.header()->hash() == _hash)
                 return block;
     }
     throw UpwardsException(string("ToolChainManager::blockByHash block hash not found: " + _hash.asString()));
@@ -97,7 +97,7 @@ EthereumBlockState const& ToolChainManager::blockByHash(FH32 const& _hash) const
 
 void ToolChainManager::modifyTimestamp(VALUE const& _time)
 {
-    dev::u256 prevTime = lastBlock().header().getCContent().timestamp().asU256();
+    dev::u256 prevTime = lastBlock().header()->timestamp().asU256();
     m_pendingBlock.getContent().headerUnsafe().getContent().setTimestamp(prevTime + _time.asU256());
 }
 
@@ -112,21 +112,21 @@ FH32 ToolChainManager::importRawBlock(BYTES const& _rlp)
         toolimpl::verifyBlockRLP(rlp);
 
         spBlockHeader header = readBlockHeader(rlp[0]);
-        ETH_TEST_MESSAGE(header.getCContent().asDataObject().asJson());
+        ETH_TEST_MESSAGE(header->asDataObject().asJson());
         for (auto const& chain : m_chains)
-            for (auto const& bl : chain.second.getCContent().blocks())
-                if (bl.header().getCContent().hash() == header.getCContent().hash())
-                    ETH_WARNING("Block with hash: `" + header.getCContent().hash().asString() + "` already in chain!");
+            for (auto const& bl : chain.second->blocks())
+                if (bl.header()->hash() == header->hash())
+                    ETH_WARNING("Block with hash: `" + header->hash().asString() + "` already in chain!");
 
         // Check that we know the parent and prepare head to be the parentHeader of _rlp block
-        reorganizeChainForParent(header.getCContent().parentHash());
+        reorganizeChainForParent(header->parentHash());
         verifyEthereumBlockHeader(header, currentChain());
 
         m_pendingBlock = spEthereumBlockState(new EthereumBlockState(header, lastBlock().state(), FH32::zero()));
         for (auto const& trRLP : rlp[1].toList())
         {
             spTransaction spTr = readTransaction(trRLP);
-            ETH_TEST_MESSAGE(spTr.getCContent().asDataObject().asJson());
+            ETH_TEST_MESSAGE(spTr->asDataObject().asJson());
             addPendingTransaction(spTr);
         }
 
@@ -137,25 +137,25 @@ FH32 ToolChainManager::importRawBlock(BYTES const& _rlp)
         {
             spBlockHeader un = readBlockHeader(unRLP);
             verifyEthereumBlockHeader(un, currentChain());
-            if (un.getCContent().number() >= header.getCContent().number() ||
-                un.getCContent().number() + 7 <= header.getCContent().number())
+            if (un->number() >= header->number() ||
+                un->number() + 7 <= header->number())
                 throw test::UpwardsException("Uncle number is wrong!");
-            for (auto const& pun : m_pendingBlock.getCContent().uncles())
-                if (pun.getCContent().hash() == un.getCContent().hash())
+            for (auto const& pun : m_pendingBlock->uncles())
+                if (pun->hash() == un->hash())
                     throw test::UpwardsException("Uncle is brother!");
             m_pendingBlock.getContent().addUncle(un);
         }
 
         mineBlocks(1, ToolChain::Mining::RequireValid);
-        FH32 const& importedHash = lastBlock().header().getCContent().hash();
-        if (importedHash != header.getCContent().hash())
+        FH32 const& importedHash = lastBlock().header()->hash();
+        if (importedHash != header->hash())
         {
             string errField;
             string message = "t8ntool constructed HEADER vs rawRLP HEADER: \n";
             message += compareBlockHeaders(
-                lastBlock().header().getCContent().asDataObject(), header.getCContent().asDataObject(), errField);
+                lastBlock().header()->asDataObject(), header->asDataObject(), errField);
             ETH_ERROR_MESSAGE(string("Imported block hash != rawRLP hash ") + "(" + importedHash.asString() +
-                              " != " + header.getCContent().hash().asString() + ")" + "\n " + message);
+                              " != " + header->hash().asString() + ")" + "\n " + message);
         }
 
         reorganizeChainForTotalDifficulty();
@@ -174,10 +174,10 @@ void ToolChainManager::reorganizeChainForParent(FH32 const& _parentHash)
     for (auto const& chain : m_chains)
     {
         auto const& rchain = chain.second.getCContent();
-        auto const& blocks = chain.second.getCContent().blocks();
+        auto const& blocks = chain.second->blocks();
         for (size_t i = 0; i < blocks.size(); i++)
         {
-            if (blocks.at(i).header().getCContent().hash() == _parentHash)
+            if (blocks.at(i).header()->hash() == _parentHash)
             {
                 if (i + 1 == blocks.size())  // last known block
                 {                            // stay on this chain
@@ -205,7 +205,7 @@ void ToolChainManager::reorganizeChainForTotalDifficulty()
     VALUE maxTotalDifficulty(0);
     for (auto const& chain : m_chains)
     {
-        auto const& blocks = chain.second.getCContent().blocks();
+        auto const& blocks = chain.second->blocks();
         auto const& lastBlock = blocks.at(blocks.size() - 1);
 
         if (lastBlock.totalDifficulty() > maxTotalDifficulty)

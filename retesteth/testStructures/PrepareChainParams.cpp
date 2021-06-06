@@ -33,7 +33,7 @@ SetChainParamsArgs prepareChainParams(
             genesis["genesis"]["baseFee"] = genesisBaseFee.asString();
         }
         else
-            genesis["genesis"]["baseFee"] = _env.currentBaseFee().getCContent().asString();
+            genesis["genesis"]["baseFee"] = _env.currentBaseFee()->asString();
     }
     else
     {
@@ -52,7 +52,7 @@ SetChainParamsArgs prepareChainParams(
 
     // Convert back 1559 genesis into legacy genesis, when filling 1559 tests
     auto const& additional = Options::getCurrentConfig().cfgFile().additionalForks();
-    if (!inArray(additional, _net) && compareFork(_net, ForkCMPType::lt, FORK("London")))
+    if (!inArray(additional, _net) && compareFork(_net, CMP::lt, FORK("London")))
         genesis.atKeyUnsafe("genesis").removeKey("baseFee");
 
     genesis["genesis"]["extraData"] = _env.currentExtraData().asString();
@@ -62,7 +62,7 @@ SetChainParamsArgs prepareChainParams(
 
     // Because of template might contain preset accounts
     for (auto const& el : _state.accounts())
-        genesis["accounts"].addSubObject(el.second.getCContent().asDataObject());
+        genesis["accounts"].addSubObject(el.second->asDataObject());
     return SetChainParamsArgs(genesis);
 }
 

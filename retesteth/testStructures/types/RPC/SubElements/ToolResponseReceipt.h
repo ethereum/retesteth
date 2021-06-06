@@ -11,9 +11,9 @@ namespace teststruct
 struct ToolResponseReceipt
 {
     ToolResponseReceipt(DataObject const& _data);
-    FH32 const& trHash() const { return m_trHash.getCContent(); }
-    FH32 const& blockHash() const { return m_blockHash.getCContent(); }
-    VALUE const& gasUsed() const { return m_trGasUsed.getCContent(); }
+    FH32 const& trHash() const { return m_trHash; }
+    FH32 const& blockHash() const { return m_blockHash; }
+    VALUE const& gasUsed() const { return m_trGasUsed; }
 
 private:
     ToolResponseReceipt() {}

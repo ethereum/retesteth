@@ -41,7 +41,7 @@ void TransactionLegacy::fromDataObject(DataObject const& _data)
         {
             m_v = spVALUE(new VALUE(_data.atKey("v")));
             if (m_v.getCContent() > dev::u256("0xff"))
-                throw test::UpwardsException("Incorrect transaction `v` value: " + m_v.getCContent().asString());
+                throw test::UpwardsException("Incorrect transaction `v` value: " + m_v->asString());
             m_r = spVALUE(new VALUE(_data.atKey("r")));
             m_s = spVALUE(new VALUE(_data.atKey("s")));
             rebuildRLP();
@@ -150,28 +150,28 @@ void TransactionLegacy::buildVRS(VALUE const& _secret)
 const DataObject TransactionLegacy::asDataObject(ExportOrder _order) const
 {
     DataObject out;
-    out["data"] = m_data.getCContent().asString();
-    out["gasLimit"] = m_gasLimit.getCContent().asString();
-    out["gasPrice"] = m_gasPrice.getCContent().asString();
-    out["nonce"] = m_nonce.getCContent().asString();
+    out["data"] = m_data->asString();
+    out["gasLimit"] = m_gasLimit->asString();
+    out["gasPrice"] = m_gasPrice->asString();
+    out["nonce"] = m_nonce->asString();
     if (m_creation)
     {
         if (_order != ExportOrder::ToolStyle)
             out["to"] = "";
     }
     else
-        out["to"] = m_to.getCContent().asString();
-    out["value"] = m_value.getCContent().asString();
-    out["v"] = m_v.getCContent().asString();
-    out["r"] = m_r.getCContent().asString();
-    out["s"] = m_s.getCContent().asString();
+        out["to"] = m_to->asString();
+    out["value"] = m_value->asString();
+    out["v"] = m_v->asString();
+    out["r"] = m_r->asString();
+    out["s"] = m_s->asString();
     if (_order == ExportOrder::ToolStyle)
     {
         out.performModifier(mod_removeLeadingZerosFromHexValues, {"data", "to"});
         out.renameKey("gasLimit", "gas");
         out.renameKey("data", "input");
         if (!m_secretKey.isEmpty() && m_secretKey.getCContent() != 0)
-            out["secretKey"] = m_secretKey.getCContent().asString();
+            out["secretKey"] = m_secretKey->asString();
     }
     if (_order == ExportOrder::OldStyle)
     {

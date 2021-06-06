@@ -23,24 +23,24 @@ struct BlockchainTestFillerBlock : GCP_SPointerBase
     // Block can be represented as raw RLP without any of other fields
     // other then BlockHeader with expected exceptions
     bool isRawRLP() const { return !m_rlp.isEmpty(); }
-    BYTES const& rawRLP() const { return m_rlp.getCContent(); }
+    BYTES const& rawRLP() const { return m_rlp; }
 
     // Block can have chainName explicitly defined
     string const& chainName() const { return m_chainName; }
 
     // Block can have chainNext explicitly defined to generate blocks on different networks
     bool hasChainNet() const { return !m_network.isEmpty(); }
-    FORK const& chainNet() const { return m_network.getCContent(); }
+    FORK const& chainNet() const { return m_network; }
 
     // Block can be marked with number. If number sequence changes, a fork chain can be created
     bool hasNumber() const { return !m_blockNumber.isEmpty(); }
-    VALUE const& number() const { return m_blockNumber.getCContent(); }
+    VALUE const& number() const { return m_blockNumber; }
 
     // BlockHeader overwrite section to replace some fields in the header for testing purposes
     bool hasBlockHeaderOverwrite(FORK const& _fork) const { return m_overwriteHeaderByForkMap.count(_fork); }
     BlockHeaderOverwrite const& getHeaderOverwrite(FORK const& _fork) const
     {
-        return m_overwriteHeaderByForkMap.at(_fork).getCContent();
+        return m_overwriteHeaderByForkMap.at(_fork);
     }
 
     // Transaction in block filler. Can be marked invalid (expected to fail)

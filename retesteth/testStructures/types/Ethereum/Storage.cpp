@@ -13,7 +13,7 @@ Storage::Storage(DataObject const& _data)
         tmpKey.setString(el.getKey());
         spVALUE key(new VALUE(tmpKey));
         spVALUE val(new VALUE(el));
-        m_map[key.getCContent().asString()] = {key, val};
+        m_map[key->asString()] = {key, val};
     }
 }
 
@@ -30,7 +30,7 @@ const DataObject Storage::asDataObject() const
     for (auto const& el : m_map)
     {
         StorageRecord const& record = el.second;
-        out[std::get<0>(record).getCContent().asString()] = std::get<1>(record).getCContent().asString();
+        out[std::get<0>(record)->asString()] = std::get<1>(record)->asString();
     }
     return out;
 }

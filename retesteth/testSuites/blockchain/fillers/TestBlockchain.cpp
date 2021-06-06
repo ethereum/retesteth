@@ -72,7 +72,7 @@ void TestBlockchain::generateBlock(
         FORK const& newBlockNet = _block.hasChainNet() ? _block.chainNet() : m_network;
         TestBlock newBlock(rawRLP, _block.chainName(), newBlockNet, m_blocks.size());
         newBlock.registerTestExceptios(_block.getExpectException(m_network));
-        newBlock.registerTestHeader(minedBlock.getCContent().header());
+        newBlock.registerTestHeader(minedBlock->header());
         newBlock.setDoNotExport(_block.isDoNotImportOnClient());
 
         // -------
@@ -88,17 +88,17 @@ void TestBlockchain::generateBlock(
             spTransaction spTr = readTransaction(tr.tr().asDataObject());
             testTransactionMap[tr.tr().hash()] = {spTr, hasException};
             hasAtLeastOneInvalid = hasAtLeastOneInvalid || hasException;
-            newBlock.registerTransactionSequence({spTr.getCContent().getRawBytes(), exception});
+            newBlock.registerTransactionSequence({spTr->getRawBytes(), exception});
         }
 
         // Only export the order if we have rejected transactions. to save space in tests
         if (!hasAtLeastOneInvalid)
             newBlock.nullTransactionSequence();
 
-        for (auto const& remoteTr : minedBlock.getCContent().transactions())
+        for (auto const& remoteTr : minedBlock->transactions())
         {
             if (Options::get().vmtrace)
-                printVmTrace(m_session, remoteTr.hash(), minedBlock.getCContent().header().getCContent().stateRoot());
+                printVmTrace(m_session, remoteTr.hash(), minedBlock->header()->stateRoot());
 
             if (testTransactionMap.count(remoteTr.hash()))
             {
@@ -175,13 +175,13 @@ GCP_SPointer<EthGetBlockBy> TestBlockchain::mineBlock(
         // There was no block modifications, it is just a regular mining
         remoteBlock = GCP_SPointer<EthGetBlockBy>(
             new EthGetBlockBy((m_session.eth_getBlockByNumber(latestBlockNumber, Request::FULLOBJECTS))));
-        _rawRLP = remoteBlock.getCContent().getRLPHeaderTransactions();
+        _rawRLP = remoteBlock->getRLPHeaderTransactions();
     }
 
     // check that transactions are good
     for (auto const& trInTest : _blockInTest.transactions())
     {
-        auto const& container = remoteBlock.getCContent().transactions();
+        auto const& container = remoteBlock->transactions();
         auto result = std::find_if(container.begin(), container.end(),
             [&trInTest](EthGetBlockByTransaction const& el) { return el.hash() == trInTest.tr().hash(); });
 
@@ -214,7 +214,7 @@ GCP_SPointer<EthGetBlockBy> TestBlockchain::mineBlock(
         }
     }
 
-    auto remoteTr = remoteBlock.getCContent().transactions().size();
+    auto remoteTr = remoteBlock->transactions().size();
     auto testblTr = _blockInTest.transactions().size();
     auto expectFails = _blockInTest.invalidTransactionCount(m_network);
     if (remoteTr != testblTr - expectFails)
@@ -232,13 +232,13 @@ spBlockHeader TestBlockchain::mineNextBlockAndRevert()
     m_session.test_mineBlocks(1);
     VALUE latestBlockNumber(m_session.eth_blockNumber());
     EthGetBlockBy const nextBlock(m_session.eth_getBlockByNumber(latestBlockNumber, Request::LESSOBJECTS));
-    m_session.test_rewindToBlock(nextBlock.header().getCContent().number().asU256() - 1);  // rewind to the previous block
+    m_session.test_rewindToBlock(nextBlock.header()->number().asU256() - 1);  // rewind to the previous block
 
     //m_session.test_modifyTimestamp(1000);  // Shift block timestamp relative to previous block
 
     // assign a random coinbase for an uncle block to avoid UncleIsAncestor exception
     // otherwise this uncle would be similar to a block mined
-    DataObject head = nextBlock.header().getCContent().asDataObject();
+    DataObject head = nextBlock.header()->asDataObject();
     head["coinbase"] = "0xb94f5374fce5ed0000000097c15331677e6ebf0b";  // FH20::random().asString();
     return readBlockHeader(head);
 }
@@ -349,7 +349,7 @@ FH32 TestBlockchain::postmineBlockHeader(BlockchainTestFillerBlock const& _block
         {
             EthGetBlockBy previousBlock(m_session.eth_getBlockByNumber(_latestBlockNumber - 1, Request::LESSOBJECTS));
             managedBlock.headerUnsafe().getContent().setTimestamp(
-                previousBlock.header().getCContent().timestamp().asU256() + headerOverwrite.relTimeStamp());
+                previousBlock.header()->timestamp().asU256() + headerOverwrite.relTimeStamp());
         }
 
         // replace block with overwritten header

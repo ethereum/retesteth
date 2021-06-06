@@ -58,7 +58,7 @@ bool OptionsAllowTransaction(test::teststruct::TransactionInGeneralSection const
     if ((opt.trDataIndex == (int)_tr.dataInd() || opt.trDataIndex == -1) &&
         (opt.trGasIndex == (int)_tr.gasInd() || opt.trGasIndex == -1) &&
         (opt.trValueIndex == (int)_tr.valueInd() || opt.trValueIndex == -1) &&
-        (opt.trDataLabel == _tr.transaction().getCContent().dataLabel() || opt.trDataLabel.empty()))
+        (opt.trDataLabel == _tr.transaction()->dataLabel() || opt.trDataLabel.empty()))
         return true;
     return false;
 }
@@ -127,7 +127,7 @@ DataObject FillTestAsBlockchain(StateTestInFiller const& _test)
                     session.test_setChainParams(
                         prepareChainParams(fork, SealEngine::NoProof, _test.Pre(), _test.Env(), ParamsContext::StateTests));
                     session.test_modifyTimestamp(_test.Env().firstBlockTimestamp());
-                    FH32 trHash(session.eth_sendRawTransaction(tr.transaction().getCContent().getRawBytes(), tr.transaction().getCContent().getSecret()));
+                    FH32 trHash(session.eth_sendRawTransaction(tr.transaction()->getRawBytes(), tr.transaction()->getSecret()));
 
                     // Mine a block, execute transaction
                     MineBlocksResult const mRes = session.test_mineBlocks(1);
@@ -147,14 +147,14 @@ DataObject FillTestAsBlockchain(StateTestInFiller const& _test)
                     ETH_ERROR_REQUIRE_MESSAGE(cfg.getRewardMap().count(fork),
                         "Network '" + fork.asString() + "' not found in correct mining info config (" +
                             cfg.getRewardMapPath().string() + ") Client: " + cfg.cfgFile().name());
-                    VALUE balanceCorrection = cfg.getRewardMap().at(fork).getCContent();
+                    VALUE const& balanceCorrection = cfg.getRewardMap().at(fork).getCContent();
                     mexpect.correctMiningReward(_test.Env().currentCoinbase(), balanceCorrection);
 
                     DataObject aBlockchainTest;
                     if (_test.hasInfo())
                         aBlockchainTest["_info"]["comment"] = _test.Info().comment();
                     EthGetBlockBy genesisBlock(session.eth_getBlockByNumber(0, Request::FULLOBJECTS));
-                    aBlockchainTest["genesisBlockHeader"] = genesisBlock.header().getCContent().asDataObject();
+                    aBlockchainTest["genesisBlockHeader"] = genesisBlock.header()->asDataObject();
                     aBlockchainTest["pre"] = _test.Pre().asDataObject();
 
                     try
@@ -166,27 +166,27 @@ DataObject FillTestAsBlockchain(StateTestInFiller const& _test)
                     catch(StateTooBig const&)
                     {
                         compareStates(mexpect, session);
-                        aBlockchainTest["postStateHash"] = remoteBlock.header().getCContent().stateRoot().asString();
+                        aBlockchainTest["postStateHash"] = remoteBlock.header()->stateRoot().asString();
                     }
 
                     aBlockchainTest["network"] = fork.asString();
                     aBlockchainTest["sealEngine"] = sealEngineToStr(SealEngine::NoProof);
-                    aBlockchainTest["lastblockhash"] = remoteBlock.header().getCContent().hash().asString();
+                    aBlockchainTest["lastblockhash"] = remoteBlock.header()->hash().asString();
                     aBlockchainTest["genesisRLP"] = genesisBlock.getRLPHeaderTransactions().asString();
 
                     DataObject block;
                     block["rlp"] = remoteBlock.getRLPHeaderTransactions().asString();
-                    block["blockHeader"] = remoteBlock.header().getCContent().asDataObject();
+                    block["blockHeader"] = remoteBlock.header()->asDataObject();
                     block["transactions"] = DataObject(DataType::Array);
                     if (testException.empty())
-                        block["transactions"].addArrayObject(tr.transaction().getCContent().asDataObject());
+                        block["transactions"].addArrayObject(tr.transaction()->asDataObject());
                     block["uncleHeaders"] = DataObject(DataType::Array);
 
                     if (!testException.empty())
                     {
                         DataObject trInfo;
                         trInfo["valid"] = "false";
-                        trInfo["rawBytes"] = tr.transaction().getCContent().getRawBytes().asString();
+                        trInfo["rawBytes"] = tr.transaction()->getRawBytes().asString();
                         trInfo["exception"] = testException;
                         block["transactionSequence"].addArrayObject(trInfo);
                     }
@@ -229,8 +229,8 @@ DataObject FillTest(StateTestInFiller const& _test)
     for (auto const& tx : txs)
     {
         // Fill up the label map to tx.data
-        if (!tx.transaction().getCContent().dataLabel().empty())
-            filledTest["_info"]["labels"].addSubObject(DataObject(tx.dataIndS(), tx.transaction().getCContent().dataLabel()));
+        if (!tx.transaction()->dataLabel().empty())
+            filledTest["_info"]["labels"].addSubObject(DataObject(tx.dataIndS(), tx.transaction()->dataLabel()));
     }
 
     // run transactions on all networks that we need
@@ -260,8 +260,8 @@ DataObject FillTest(StateTestInFiller const& _test)
                 for (auto& tr : txs)
                 {
                     TestInfo errorInfo(fork.asString(), tr.dataInd(), tr.gasInd(), tr.valueInd());
-                    if (!tr.transaction().getCContent().dataLabel().empty() || !tr.transaction().getCContent().dataRawPreview().empty())
-                        errorInfo.setTrDataDebug(tr.transaction().getCContent().dataLabel() + " " + tr.transaction().getCContent().dataRawPreview() + "..");
+                    if (!tr.transaction()->dataLabel().empty() || !tr.transaction()->dataRawPreview().empty())
+                        errorInfo.setTrDataDebug(tr.transaction()->dataLabel() + " " + tr.transaction()->dataRawPreview() + "..");
 
                     TestOutputHelper::get().setCurrentTestInfo(errorInfo);
 
@@ -281,7 +281,7 @@ DataObject FillTest(StateTestInFiller const& _test)
 
                     expectFoundTransaction = true;
                     session.test_modifyTimestamp(_test.Env().firstBlockTimestamp());
-                    FH32 trHash(session.eth_sendRawTransaction(tr.transaction().getCContent().getRawBytes(), tr.transaction().getCContent().getSecret()));
+                    FH32 trHash(session.eth_sendRawTransaction(tr.transaction()->getRawBytes(), tr.transaction()->getSecret()));
 
                     MineBlocksResult const mRes = session.test_mineBlocks(1);
                     string const& remoteException = mRes.getTrException(trHash);
@@ -296,10 +296,10 @@ DataObject FillTest(StateTestInFiller const& _test)
 
                     if (Options::get().poststate)
                         ETH_STDOUT_MESSAGE("PostState " + TestOutputHelper::get().testInfo().errorDebug() + " : \n" + cDefault +
-                                           "Hash: " + blockInfo.header().getCContent().stateRoot().asString());
+                                           "Hash: " + blockInfo.header()->stateRoot().asString());
 
                     if (Options::get().vmtrace)
-                        printVmTrace(session, trHash, blockInfo.header().getCContent().stateRoot());
+                        printVmTrace(session, trHash, blockInfo.header()->stateRoot());
                     try
                     {
                         compareStates(expect.result(), getRemoteState(session));
@@ -316,8 +316,8 @@ DataObject FillTest(StateTestInFiller const& _test)
                     indexes["value"] = tr.valueInd();
 
                     transactionResults["indexes"] = indexes;
-                    transactionResults["hash"] = blockInfo.header().getCContent().stateRoot().asString();
-                    transactionResults["txbytes"] = tr.transaction().getCContent().getRawBytes().asString();
+                    transactionResults["hash"] = blockInfo.header()->stateRoot().asString();
+                    transactionResults["txbytes"] = tr.transaction()->getRawBytes().asString();
                     if (!testException.empty())
                         transactionResults["expectException"] = testException;
 
@@ -412,7 +412,7 @@ void RunTest(StateTestInFilled const& _test)
                     return;
 
                 TestInfo errorInfo(network.asString(), tr.dataInd(), tr.gasInd(), tr.valueInd());
-                errorInfo.setTrDataDebug(tr.transaction().getCContent().dataLabel() + " " + tr.transaction().getCContent().dataRawPreview() + "..");
+                errorInfo.setTrDataDebug(tr.transaction()->dataLabel() + " " + tr.transaction()->dataRawPreview() + "..");
 
                 TestOutputHelper::get().setCurrentTestInfo(errorInfo);
                 bool checkIndexes = result.checkIndexes(tr.dataInd(), tr.gasInd(), tr.valueInd());
@@ -428,7 +428,7 @@ void RunTest(StateTestInFilled const& _test)
                 if (checkIndexes)
                 {
                     session.test_modifyTimestamp(_test.Env().firstBlockTimestamp());
-                    FH32 trHash(session.eth_sendRawTransaction(tr.transaction().getCContent().getRawBytes(), tr.transaction().getCContent().getSecret()));
+                    FH32 trHash(session.eth_sendRawTransaction(tr.transaction()->getRawBytes(), tr.transaction()->getSecret()));
 
                     MineBlocksResult const mRes = session.test_mineBlocks(1);
                     string const& remoteException = mRes.getTrException(trHash);
@@ -444,9 +444,9 @@ void RunTest(StateTestInFilled const& _test)
                     // Validate post state
                     FH32 const& expectedPostHash = result.hash();
                     if (Options::get().vmtrace && !Options::get().filltests)
-                        printVmTrace(session, trHash, blockInfo.header().getCContent().stateRoot());
+                        printVmTrace(session, trHash, blockInfo.header()->stateRoot());
 
-                    FH32 const& actualHash = blockInfo.header().getCContent().stateRoot();
+                    FH32 const& actualHash = blockInfo.header()->stateRoot();
                     if (actualHash != expectedPostHash)
                     {
                         if (Options::get().logVerbosity >= 5)
@@ -461,7 +461,7 @@ void RunTest(StateTestInFilled const& _test)
                     spBYTES const& expectedBytesPtr = result.bytesPtr();
                     if (!expectedBytesPtr.isEmpty())
                     {
-                        if (tr.transaction().getCContent().getRawBytes().asString() != expectedBytesPtr.getCContent().asString())
+                        if (tr.transaction()->getRawBytes().asString() != expectedBytesPtr->asString())
                             ETH_ERROR_MESSAGE("TxBytes mismatch: test transaction section doest not match txbytes in post section!");
                     }
 

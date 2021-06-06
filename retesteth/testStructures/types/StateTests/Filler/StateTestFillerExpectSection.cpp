@@ -16,7 +16,7 @@ DataObject ReplaceValueToIndexesInDataList(spStateTestFillerTransaction const& _
         {
             size_t i = 0;
             std::vector<int> indexes;
-            const vector<StateTestTransactionBase::Databox>& dVector = _gtr.getCContent().databoxVector();
+            const vector<StateTestTransactionBase::Databox>& dVector = _gtr->databoxVector();
             for (auto const& el : dVector)
             {
                 if (el.m_dataLabel == _data.asString())
