@@ -221,6 +221,11 @@ DataObject FillTest(StateTestInFiller const& _test)
         filledTest["_info"]["comment"] = _test.Info().comment();
 
     filledTest["env"] = _test.Env().asDataObject();
+
+    // Explicitly print default basefee for filled state tests
+    if (!filledTest.atKey("env").count("currentBaseFee"))
+        filledTest["env"]["currentBaseFee"] = "0x0a";
+
     filledTest["pre"] = _test.Pre().asDataObject();
     filledTest["transaction"] = _test.GeneralTr().asDataObject();
 
