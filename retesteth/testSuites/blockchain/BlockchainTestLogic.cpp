@@ -67,12 +67,10 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
             MineBlocksResult const miningRes = session.test_mineBlocks(1);
             for (auto const& el : expectedExceptions)
             {
-                FH32 const& hash = el.first;
                 SpTrException const& res = el.second;
                 spTransaction resTransaction = std::get<0>(res);
                 string const& testException = std::get<1>(res);
-                string const& remoteException = miningRes.getTrException(hash);
-                compareTransactionException(resTransaction, remoteException, testException);
+                compareTransactionException(resTransaction, miningRes, testException);
             }
             session.test_rewindToBlock(origNumber);
         }

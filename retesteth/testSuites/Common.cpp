@@ -73,24 +73,30 @@ void printVmTrace(SessionInterface& _session, FH32 const& _trHash, FH32 const& _
     ETH_STDOUT_MESSAGE("\n------------------------");
 }
 
-void compareTransactionException(spTransaction const& _tr, string const& _remoteException, string const& _testException)
+void compareTransactionException(spTransaction const& _tr, MineBlocksResult const& _mRes, string const& _testException)
 {
+    if (!_mRes.isRejectData())
+    {
+        ETH_WARNING("Looks like client does not support rejected transaction information!");
+        return;
+    }
     // Mine a block, execute transaction
     FH32 const& trHash = _tr->hash();
-    if (!_testException.empty() && _remoteException.empty())
+    string const remoteException = _mRes.getTrException(trHash);
+    if (!_testException.empty() && remoteException.empty())
         ETH_ERROR_MESSAGE("Client didn't reject transaction: (" + trHash.asString() + ") \n" + _tr->getRawBytes().asString());
-    if (_testException.empty() && !_remoteException.empty())
+    if (_testException.empty() && !remoteException.empty())
         ETH_ERROR_MESSAGE("Client reject transaction expected to be valid: (" + trHash.asString() + ") \n" + _tr->getRawBytes().asString());
 
-    if (!_testException.empty() && !_remoteException.empty())
+    if (!_testException.empty() && !remoteException.empty())
     {
         string const& expectedReason = Options::getCurrentConfig().translateException(_testException);
-        if (_remoteException.find(expectedReason) == string::npos)
+        if (remoteException.find(expectedReason) == string::npos)
         {
             ETH_WARNING(_tr->asDataObject().asJson());
             ETH_ERROR_MESSAGE(string("Transaction rejecetd but due to a different reason: \n") +
                "Expected reason: `" + expectedReason + "` (" + _testException + ")\n" +
-               "Client reason: `" + _remoteException
+               "Client reason: `" + remoteException
               );
         }
     }

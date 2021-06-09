@@ -71,5 +71,5 @@ void compareStates(StateBase const& _stateExpect, State const& _statePost);
 void printVmTrace(SessionInterface& _session, FH32 const& _trHash, FH32 const& _stateRoot);
 
 // Validate transaction exception
-void compareTransactionException(spTransaction const& _tr, string const& _remoteException, string const& _testException);
+void compareTransactionException(spTransaction const& _tr, MineBlocksResult const& _mRes, string const& _testException);
 }

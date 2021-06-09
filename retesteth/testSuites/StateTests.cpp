@@ -131,9 +131,8 @@ DataObject FillTestAsBlockchain(StateTestInFiller const& _test)
 
                     // Mine a block, execute transaction
                     MineBlocksResult const mRes = session.test_mineBlocks(1);
-                    string const& remoteException = mRes.getTrException(trHash);
                     string const& testException = expect.getExpectException(fork);
-                    compareTransactionException(tr.transaction(), remoteException, testException);
+                    compareTransactionException(tr.transaction(), mRes, testException);
 
                     VALUE latestBlockN(session.eth_blockNumber());
                     EthGetBlockBy remoteBlock(session.eth_getBlockByNumber(latestBlockN, Request::FULLOBJECTS));
@@ -289,9 +288,8 @@ DataObject FillTest(StateTestInFiller const& _test)
                     FH32 trHash(session.eth_sendRawTransaction(tr.transaction()->getRawBytes(), tr.transaction()->getSecret()));
 
                     MineBlocksResult const mRes = session.test_mineBlocks(1);
-                    string const& remoteException = mRes.getTrException(trHash);
                     string const& testException = expect.getExpectException(fork);
-                    compareTransactionException(tr.transaction(), remoteException, testException);
+                    compareTransactionException(tr.transaction(), mRes, testException);
 
                     VALUE latestBlockN(session.eth_blockNumber());
                     EthGetBlockBy blockInfo(session.eth_getBlockByNumber(latestBlockN, Request::LESSOBJECTS));
@@ -436,9 +434,8 @@ void RunTest(StateTestInFilled const& _test)
                     FH32 trHash(session.eth_sendRawTransaction(tr.transaction()->getRawBytes(), tr.transaction()->getSecret()));
 
                     MineBlocksResult const mRes = session.test_mineBlocks(1);
-                    string const& remoteException = mRes.getTrException(trHash);
                     string const& testException = result.expectException();
-                    compareTransactionException(tr.transaction(), remoteException, testException);
+                    compareTransactionException(tr.transaction(), mRes, testException);
 
                     VALUE latestBlockN(session.eth_blockNumber());
                     EthGetBlockBy blockInfo(session.eth_getBlockByNumber(latestBlockN, Request::LESSOBJECTS));
