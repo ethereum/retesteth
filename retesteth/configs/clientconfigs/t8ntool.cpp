@@ -158,12 +158,12 @@ string const t8ntool_config = R"({
       "TR_IntrinsicGas" : "intrinsic gas too low:",
       "TR_NoFunds" : "insufficient funds for gas * price + value",
       "TR_NoFundsValue" : "insufficient funds for transfer",
-      "TR_FeeCapLessThanBlocks" : "fee cap less than block base fee",
+      "TR_FeeCapLessThanBlocks" : "max fee per gas less than block base fee",
       "TR_GasLimitReached" : "gas limit reached",
       "TR_NonceTooHigh" : "nonce too high",
       "TR_NonceTooLow" : "nonce too low",
       "TR_TypeNotSupported" : "transaction type not supported",
-      "TR_TipGtFeeCap": "tip higher than fee cap"
+      "TR_TipGtFeeCap": "max priority fee per gas higher than max fee per gas"
     }
 })";
 

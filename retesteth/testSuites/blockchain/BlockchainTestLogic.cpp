@@ -39,13 +39,19 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
 
         // Transaction sequence validation
         ETH_LOGC("PERFORM TRANSACTION SEQUENCE VALIDATION...", 7, LogColor::YELLOW);
+
         bool atLeastOnceSequence = false;
         typedef std::tuple<spTransaction, string> SpTrException;
         std::map<FH32, SpTrException> expectedExceptions;
         if (tblock.transactionSequence().size())
         {
-            atLeastOnceSequence = true;
-            session.test_modifyTimestamp(tblock.header()->timestamp());
+            if (tblock.header()->number() > session.eth_blockNumber())
+            {
+                atLeastOnceSequence = true;
+                session.test_modifyTimestamp(tblock.header()->timestamp());
+            }
+            else
+                ETH_WARNING("Skipping invalid transaction exception check in reorg block! (calling rewind not good when running the test, use filltests instead)");
         }
         for (auto const& el : tblock.transactionSequence())
         {
