@@ -163,7 +163,7 @@ string const t8ntool_config = R"({
       "TR_NonceTooHigh" : "nonce too high",
       "TR_NonceTooLow" : "nonce too low",
       "TR_TypeNotSupported" : "transaction type not supported",
-      "TR_TipGtFeeCap": "tip higher than fee cap"
+      "TR_TipGtFeeCap": "max priority fee per gas higher than max fee per gas"
     }
 })";
 
