@@ -282,7 +282,7 @@ DataObject convertDecBlockheaderIncompleteToHex(DataObject const& _data)
     std::vector<string> valueKeys = {
         "difficulty",
         "gasLimit",
-        "baseFee",
+        "baseFeePerGas",
         "gasUsed",
         "nonce",
         "number",

@@ -22,8 +22,8 @@ BlockchainTestFillerEnv::BlockchainTestFillerEnv(DataObject const& _data, SealEn
         if (m_currentGasLimit.getCContent() > dev::u256("0x7fffffffffffffff"))
             throw test::UpwardsException("currentGasLimit must be < 0x7fffffffffffffff");
 
-        if (tmpData.count("baseFee"))
-            m_currentBaseFee = spVALUE(new VALUE(tmpData.atKey("baseFee")));
+        if (tmpData.count("baseFeePerGas"))
+            m_currentBaseFee = spVALUE(new VALUE(tmpData.atKey("baseFeePerGas")));
 
         m_currentNumber = spVALUE(new VALUE(tmpData.atKey("number")));
         m_currentTimestamp = spVALUE(new VALUE(tmpData.atKey("timestamp")));
@@ -51,7 +51,7 @@ BlockchainTestFillerEnv::BlockchainTestFillerEnv(DataObject const& _data, SealEn
              {"difficulty", {{DataType::String}, jsonField::Required}},
              {"extraData", {{DataType::String}, jsonField::Required}},
              {"gasLimit", {{DataType::String}, jsonField::Required}},
-             {"baseFee", {{DataType::String}, jsonField::Optional}},
+             {"baseFeePerGas", {{DataType::String}, jsonField::Optional}},
              {"gasUsed", {{DataType::String}, jsonField::Required}},
              {"hash", {{DataType::String}, jsonField::Optional}},
              {"mixHash", {{DataType::String}, jsonField::Optional}},

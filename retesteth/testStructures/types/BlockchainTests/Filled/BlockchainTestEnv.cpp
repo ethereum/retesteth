@@ -20,7 +20,7 @@ BlockchainTestEnv::BlockchainTestEnv(DataObject const& _data)
         m_currentMixHash = spFH32(new FH32(_data.atKey("mixHash")));
         m_currentGasLimit = spVALUE(new VALUE(_data.atKey("gasLimit")));
 
-        if (!_data.count("baseFee"))
+        if (!_data.count("baseFeePerGas"))
         {
             // Legacy header Allowed fields for this structure
             requireJsonFields(_data, "GenesisBlockHeader(BlockchainTestEnv) " + _data.getKey(),
@@ -51,7 +51,7 @@ BlockchainTestEnv::BlockchainTestEnv(DataObject const& _data)
         else
         {
             // EIP1559 style
-            m_currentBaseFee = spVALUE(new VALUE(_data.atKey("baseFee")));
+            m_currentBaseFee = spVALUE(new VALUE(_data.atKey("baseFeePerGas")));
 
             // Allowed fields for this structure
             requireJsonFields(_data, "GenesisBlockHeader(BlockchainTestEnv) " + _data.getKey(),
@@ -63,7 +63,7 @@ BlockchainTestEnv::BlockchainTestEnv(DataObject const& _data)
                  {"difficulty", {{DataType::String}, jsonField::Required}},
                  {"extraData", {{DataType::String}, jsonField::Required}},
                  {"gasLimit", {{DataType::String}, jsonField::Required}},
-                 {"baseFee", {{DataType::String}, jsonField::Required}},
+                 {"baseFeePerGas", {{DataType::String}, jsonField::Required}},
                  {"gasUsed", {{DataType::String}, jsonField::Required}},
                  {"hash", {{DataType::String}, jsonField::Optional}},
                  {"mixHash", {{DataType::String}, jsonField::Optional}},

@@ -104,7 +104,7 @@ void verify1559Parent(spBlockHeader const& _header, spBlockHeader const& _parent
         // INITIAL_BASE_FEE = 1000000000
         // fake legacy block baseFee for delta validation
         VALUE genesisBaseFee = INITIAL_BASE_FEE * 8 / 7;
-        parentData["baseFee"] = genesisBaseFee.asString();
+        parentData["baseFeePerGas"] = genesisBaseFee.asString();
 
         spBlockHeader fixedParent = spBlockHeader(new BlockHeader1559(parentData));
         verify1559Parent_private(_header, fixedParent, _chain);

@@ -18,7 +18,7 @@ spBlockHeader readBlockHeader(dev::RLP const& _rlp)
 
 spBlockHeader readBlockHeader(DataObject const& _filledData)
 {
-    if (_filledData.count("baseFee"))
+    if (_filledData.count("baseFeePerGas"))
         return spBlockHeader(new BlockHeader1559(_filledData));
     else
         return spBlockHeader(new BlockHeaderLegacy(_filledData));

@@ -56,8 +56,8 @@ BlockHeaderIncomplete::BlockHeaderIncomplete(DataObject const& _data)
     if (_data.count(tkey))
         m_transactionsRoot = spFH32(new FH32(_data.atKey(tkey)));
 
-    if (_data.count("baseFee"))
-        m_baseFee = spVALUE(new VALUE(_data.atKey("baseFee")));
+    if (_data.count("baseFeePerGas"))
+        m_baseFee = spVALUE(new VALUE(_data.atKey("baseFeePerGas")));
 
     if (_data.count("remove"))
         test::parseJsonStrValueIntoSet(_data.atKey("remove"), m_removeKeys);
@@ -74,7 +74,7 @@ BlockHeaderIncomplete::BlockHeaderIncomplete(DataObject const& _data)
          {"difficulty", {{DataType::String}, jsonField::Optional}},
          {"extraData", {{DataType::String}, jsonField::Optional}},
          {"gasLimit", {{DataType::String}, jsonField::Optional}},
-         {"baseFee", {{DataType::String}, jsonField::Optional}},
+         {"baseFeePerGas", {{DataType::String}, jsonField::Optional}},
          {"gasUsed", {{DataType::String}, jsonField::Optional}},
          {"hash", {{DataType::String}, jsonField::Optional}},
          {"mixHash", {{DataType::String}, jsonField::Optional}},
@@ -126,7 +126,7 @@ spBlockHeader BlockHeaderIncomplete::overwriteBlockHeader(spBlockHeader const& _
     if (!m_hash.isEmpty())
         overwrite["hash"] = m_hash->asString();
     if (!m_baseFee.isEmpty())
-        overwrite["baseFee"] = m_baseFee->asString();
+        overwrite["baseFeePerGas"] = m_baseFee->asString();
     overwrite.removeKey("updatePoW");  // deprecated key
     for (auto const& el : m_removeKeys)
         overwrite.removeKey(el);

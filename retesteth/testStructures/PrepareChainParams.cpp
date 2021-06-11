@@ -30,10 +30,10 @@ SetChainParamsArgs prepareChainParams(
             // Reverse back the baseFee calculation formula for genesis block
             VALUE const& baseFee = _env.currentBaseFee().getCContent();
             VALUE genesisBaseFee = baseFee * 8 / 7;
-            genesis["genesis"]["baseFee"] = genesisBaseFee.asString();
+            genesis["genesis"]["baseFeePerGas"] = genesisBaseFee.asString();
         }
         else
-            genesis["genesis"]["baseFee"] = _env.currentBaseFee()->asString();
+            genesis["genesis"]["baseFeePerGas"] = _env.currentBaseFee()->asString();
     }
     else
     {
@@ -43,17 +43,17 @@ SetChainParamsArgs prepareChainParams(
             if (_paramsContext == ParamsContext::StateTests)
             {
                 VALUE genesisBaseFee = 10 * 8 / 7;
-                genesis["genesis"]["baseFee"] = genesisBaseFee.asString();
+                genesis["genesis"]["baseFeePerGas"] = genesisBaseFee.asString();
             }
             else
-                genesis["genesis"]["baseFee"] = "0x10";
+                genesis["genesis"]["baseFeePerGas"] = "0x10";
         }
     }
 
     // Convert back 1559 genesis into legacy genesis, when filling 1559 tests
     auto const& additional = Options::getCurrentConfig().cfgFile().additionalForks();
     if (!inArray(additional, _net) && compareFork(_net, CMP::lt, FORK("London")))
-        genesis.atKeyUnsafe("genesis").removeKey("baseFee");
+        genesis.atKeyUnsafe("genesis").removeKey("baseFeePerGas");
 
     genesis["genesis"]["extraData"] = _env.currentExtraData().asString();
     genesis["genesis"]["timestamp"] = _env.currentTimestamp().asString();

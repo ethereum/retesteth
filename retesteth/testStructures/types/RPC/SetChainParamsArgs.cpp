@@ -18,8 +18,8 @@ SetChainParamsArgs::SetChainParamsArgs(DataObject const& _data)
     fullBlockHeader["author"] = genesis.atKey("author");
     fullBlockHeader["difficulty"] = genesis.atKey("difficulty");
     fullBlockHeader["gasLimit"] = genesis.atKey("gasLimit");
-    if (genesis.count("baseFee"))
-        fullBlockHeader["baseFee"] = genesis.atKey("baseFee");
+    if (genesis.count("baseFeePerGas"))
+        fullBlockHeader["baseFeePerGas"] = genesis.atKey("baseFeePerGas");
 
     fullBlockHeader["extraData"] = genesis.atKey("extraData");
     fullBlockHeader["timestamp"] = genesis.atKey("timestamp");
@@ -58,7 +58,7 @@ DataObject SetChainParamsArgs::asDataObject() const
     if (m_genesis->type() == BlockType::BlockHeader1559)
     {
         BlockHeader1559 const& newbl = BlockHeader1559::castFrom(m_genesis);
-        out["genesis"]["baseFee"] = newbl.baseFee().asString();
+        out["genesis"]["baseFeePerGas"] = newbl.baseFee().asString();
     }
 
     out["genesis"]["extraData"] = m_genesis->extraData().asString();

@@ -75,7 +75,7 @@ void printVmTrace(SessionInterface& _session, FH32 const& _trHash, FH32 const& _
 
 void compareTransactionException(spTransaction const& _tr, MineBlocksResult const& _mRes, string const& _testException)
 {
-    if (!_mRes.isRejectData())
+    if (!_mRes.isRejectData() && !_testException.empty())
     {
         ETH_WARNING("Looks like client does not support rejected transaction information!");
         return;

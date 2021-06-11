@@ -49,7 +49,7 @@ void ToolChainManager::reorganizePendingBlock()
 
         // https://eips.ethereum.org/EIPS/eip-1559
         // INITIAL_BASE_FEE = 1000000000
-        parentData["baseFee"] = VALUE(INITIAL_BASE_FEE).asString();
+        parentData["baseFeePerGas"] = VALUE(INITIAL_BASE_FEE).asString();
 
         spBlockHeader newPending(new BlockHeader1559(parentData));
         m_pendingBlock = spEthereumBlockState(new EthereumBlockState(newPending, bl.state(), bl.logHash()));
