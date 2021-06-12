@@ -21,11 +21,11 @@ struct StateTestInFiller : GCP_SPointerBase
     InfoIncomplete const& Info() const
     {
         assert(hasInfo());
-        return m_info.getCContent();
+        return m_info;
     }
-    StateTestFillerEnv const& Env() const { return m_env.getCContent(); }
-    State const& Pre() const { return m_pre.getCContent(); }
-    StateTestFillerTransaction const& GeneralTr() const { return m_transaction.getCContent(); }
+    StateTestFillerEnv const& Env() const { return m_env; }
+    State const& Pre() const { return m_pre; }
+    StateTestFillerTransaction const& GeneralTr() const { return m_transaction; }
     std::vector<StateTestFillerExpectSection> const& Expects() const { return m_expectSections; }
     std::set<FORK> getAllForksFromExpectSections() const;
 

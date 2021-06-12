@@ -2,6 +2,8 @@
 #include "EthChecks.h"
 #include "TestHelper.h"
 #include "TestOutputHelper.h"
+#include <retesteth/Options.h>
+#include <retesteth/configs/ClientConfig.h>
 #include <mutex>
 
 using namespace test;
@@ -231,8 +233,8 @@ void requireJsonFields(DataObject const& _o, std::string const& _config, std::ma
                     sTypes += ", or ";
                 sTypes += DataObject::dataTypeAsString(type);
             }
-            std::string const comment = "Field '" + vmap.first + "' expected to be " + sTypes + ", but set to " +
-                                        DataObject::dataTypeAsString(_o.atKey(vmap.first).type()) + " in " + _config;
+            std::string const comment = "Field '" + vmap.first + "' expected to be `" + sTypes + "`, but set to `" +
+                                        DataObject::dataTypeAsString(_o.atKey(vmap.first).type()) + "` in " + _config;
             ETH_ERROR_MESSAGE(comment + "\n" + _o.asJson());
         }
     }
@@ -277,7 +279,15 @@ DataObject convertDecBlockheaderIncompleteToHex(DataObject const& _data)
                 tmpD[key] = "0x" + _data.atKey(key).asString();
         }
 
-    std::vector<string> valueKeys = {"difficulty", "gasLimit", "gasUsed", "nonce", "number", "timestamp"};
+    std::vector<string> valueKeys = {
+        "difficulty",
+        "gasLimit",
+        "baseFeePerGas",
+        "gasUsed",
+        "nonce",
+        "number",
+        "timestamp"
+    };
     for (auto const& key : valueKeys)
         if (_data.count(key))
             tmpD[key].performModifier(mod_valueToCompactEvenHexPrefixed);
@@ -314,6 +324,19 @@ string compareBlockHeaders(DataObject const& _blockA, DataObject const& _blockB,
     if (_whatField.empty() && errorInHashField)
         _whatField = "hash";
     return message;
+}
+
+void readExpectExceptions(DataObject const& _data, std::map<FORK, string>& _out)
+{
+    for (auto const& rec : _data.getSubObjects())
+    {
+        // Parse ">=Frontier" : "EXCEPTION"
+        ClientConfig const& cfg = Options::get().getDynamicOptions().getCurrentConfig();
+        std::set<string> forksString = {rec.getKey()};
+        std::vector<FORK> parsedForks = cfg.translateNetworks(forksString);
+        for (auto const& el : parsedForks)
+            _out.emplace(el, rec.asString());
+    }
 }
 
 }  // namespace teststruct

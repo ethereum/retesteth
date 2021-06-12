@@ -16,7 +16,7 @@ DataObject ReplaceValueToIndexesInDataList(spStateTestFillerTransaction const& _
         {
             size_t i = 0;
             std::vector<int> indexes;
-            const vector<StateTestTransactionBase::Databox>& dVector = _gtr.getCContent().databoxVector();
+            const vector<StateTestTransactionBase::Databox>& dVector = _gtr->databoxVector();
             for (auto const& el : dVector)
             {
                 if (el.m_dataLabel == _data.asString())
@@ -81,6 +81,8 @@ StateTestFillerExpectSection::StateTestFillerExpectSection(DataObject const& _da
 {
     try
     {
+        m_initialData["indexes"] = _data.atKey("indexes");
+        m_initialData["network"] = _data.atKey("network");
         DataObject dataIndexes = ReplaceValueToIndexesInDataList(_gtr, _data.atKey("indexes").atKey("data"));
         parseJsonIntValueIntoSet(dataIndexes, m_dataInd);
         parseJsonIntValueIntoSet(_data.atKey("indexes").atKey("gas"), m_gasInd);
@@ -100,9 +102,13 @@ StateTestFillerExpectSection::StateTestFillerExpectSection(DataObject const& _da
         m_forks = cfg.translateNetworks(forks);
         m_result = GCP_SPointer<StateIncomplete>(new StateIncomplete(_data.atKey("result"), DataRequier::ALLOWDEC));
 
+        if (_data.count("expectException"))
+            readExpectExceptions(_data.atKey("expectException"), m_expectExceptions);
+
         requireJsonFields(_data, "StateTestFillerExpectSection " + _data.getKey(),
             {{"indexes", {{DataType::Object}, jsonField::Required}},
              {"network", {{DataType::Array}, jsonField::Required}},
+             {"expectException", {{DataType::Object}, jsonField::Optional}},
              {"result", {{DataType::Object}, jsonField::Required}}});
     }
     catch (std::exception const& _ex)

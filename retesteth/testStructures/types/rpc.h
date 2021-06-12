@@ -5,3 +5,4 @@
 #include "RPC/DebugVMTrace.h"
 #include "RPC/EthGetBlockBy.h"
 #include "RPC/SetChainParamsArgs.h"
+#include "RPC/MineBlocksResult.h"

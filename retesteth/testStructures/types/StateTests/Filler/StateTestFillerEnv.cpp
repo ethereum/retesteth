@@ -20,9 +20,6 @@ StateTestFillerEnv::StateTestFillerEnv(DataObject const& _data)
         m_currentCoinbase = spFH20(new FH20(coinbase));
 
         m_currentDifficulty = spVALUE(new VALUE(tmpData.atKey("currentDifficulty")));
-        m_currentGasLimit = spVALUE(new VALUE(tmpData.atKey("currentGasLimit")));
-        if (m_currentGasLimit.getCContent() > dev::u256("0x7fffffffffffffff"))
-            throw test::UpwardsException("currentGasLimit > 0x7fffffffffffffff");
         m_currentNumber = spVALUE(new VALUE(tmpData.atKey("currentNumber")));
 
         // Indicates first block timestamp in StateTests
@@ -38,14 +35,35 @@ StateTestFillerEnv::StateTestFillerEnv(DataObject const& _data)
         m_currentExtraData = spBYTES(new BYTES(tmpD));
         m_currentNonce = spFH8(new FH8(FH8::zero()));
         m_currentMixHash = spFH32(new FH32(FH32::zero()));
+        m_currentGasLimit = spVALUE(new VALUE(tmpData.atKey("currentGasLimit")));
+        if (m_currentGasLimit.getCContent() > dev::u256("0x7fffffffffffffff"))
+            throw test::UpwardsException("currentGasLimit > 0x7fffffffffffffff");
 
-        requireJsonFields(_data, "StateTestFillerEnv " + _data.getKey(),
-            {{"currentCoinbase", {{DataType::String}, jsonField::Required}},
-             {"currentDifficulty", {{DataType::String}, jsonField::Required}},
-             {"currentGasLimit", {{DataType::String}, jsonField::Required}},
-             {"currentNumber", {{DataType::String}, jsonField::Required}},
-             {"currentTimestamp", {{DataType::String}, jsonField::Required}},
-             {"previousHash", {{DataType::String}, jsonField::Required}}});
+        if (_data.count("currentBaseFee"))
+        {
+            // 1559 env info
+            m_currentBaseFee = spVALUE(new VALUE(tmpData.atKey("currentBaseFee")));
+            requireJsonFields(_data, "StateTestFillerEnv " + _data.getKey(),
+                {{"currentCoinbase", {{DataType::String}, jsonField::Required}},
+                {"currentDifficulty", {{DataType::String}, jsonField::Required}},
+                {"currentGasLimit", {{DataType::String}, jsonField::Required}},
+                {"currentNumber", {{DataType::String}, jsonField::Required}},
+                {"currentTimestamp", {{DataType::String}, jsonField::Required}},
+                {"currentBaseFee", {{DataType::String}, jsonField::Required}},
+                {"previousHash", {{DataType::String}, jsonField::Required}}});
+        }
+        else
+        {
+            // legacy env info
+            m_currentBaseFee = spVALUE(0);
+            requireJsonFields(_data, "StateTestFillerEnv " + _data.getKey(),
+                {{"currentCoinbase", {{DataType::String}, jsonField::Required}},
+                {"currentDifficulty", {{DataType::String}, jsonField::Required}},
+                {"currentGasLimit", {{DataType::String}, jsonField::Required}},
+                {"currentNumber", {{DataType::String}, jsonField::Required}},
+                {"currentTimestamp", {{DataType::String}, jsonField::Required}},
+                {"previousHash", {{DataType::String}, jsonField::Required}}});
+        }
     }
     catch (std::exception const& _ex)
     {

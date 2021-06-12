@@ -19,7 +19,7 @@ struct BlockHeaderOverwrite : GCP_SPointerBase
     bool hasRelTimeStamp() const { return m_hasRelTimeStamp; }
     long long int relTimeStamp() const { return m_relTimeStamp; }
     bool hasBlockHeader() const { return !m_blockHeaderIncomplete.isEmpty(); }
-    BlockHeaderIncomplete const& header() const { return m_blockHeaderIncomplete.getCContent(); }
+    BlockHeaderIncomplete const& header() const { return m_blockHeaderIncomplete; }
 
 private:
     bool m_hasRelTimeStamp = false;

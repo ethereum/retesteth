@@ -20,13 +20,23 @@ BlockchainTestBlock::BlockchainTestBlock(DataObject const& _data)
         }
         if (_data.count("blockHeader"))
         {
-            m_blockHeader = spBlockHeader(new BlockHeader(_data.atKey("blockHeader")));
+            m_blockHeader = readBlockHeader(_data.atKey("blockHeader"));
 
             for (auto const& tr : _data.atKey("transactions").getSubObjects())
                 m_transactions.push_back(readTransaction(tr));
 
+            if (_data.count("transactionSequence"))
+            {
+                for (auto const& tr : _data.atKey("transactionSequence").getSubObjects())
+                {
+                    string const sException = tr.count("exception") ? tr.atKey("exception").asString() : string();
+                    m_transactionSequence.push_back(
+                        {readTransaction(BYTES(tr.atKey("rawBytes"))), sException});
+                }
+            }
+
             for (auto const& un : _data.atKey("uncleHeaders").getSubObjects())
-                m_uncles.push_back(BlockHeader(un));
+                m_uncles.push_back(readBlockHeader(un));
         }
         m_rlp = spBYTES(new BYTES(_data.atKey("rlp").asString()));
 
@@ -35,6 +45,7 @@ BlockchainTestBlock::BlockchainTestBlock(DataObject const& _data)
                 {"chainname", {{DataType::String}, jsonField::Optional}},    // User information
                 {"blocknumber", {{DataType::String}, jsonField::Optional}},  // User information
                 {"transactions", {{DataType::Array}, jsonField::Optional}},
+                {"transactionSequence", {{DataType::Array}, jsonField::Optional}},
                 {"uncleHeaders", {{DataType::Array}, jsonField::Optional}},
                 {"expectException", {{DataType::String}, jsonField::Optional}},                   // User information
                 {"expectExceptionALL", {{DataType::String}, jsonField::Optional}},                // Legacy field

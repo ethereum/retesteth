@@ -8,12 +8,18 @@ namespace teststruct
 const DataObject StateTestEnvBase::asDataObject() const
 {
     DataObject out;
-    out["currentCoinbase"] = m_currentCoinbase.getCContent().asString();
-    out["currentDifficulty"] = m_currentDifficulty.getCContent().asString();
-    out["currentGasLimit"] = m_currentGasLimit.getCContent().asString();
-    out["currentNumber"] = m_currentNumber.getCContent().asString();
-    out["currentTimestamp"] = m_currentTimestamp.getCContent().asString();
-    out["previousHash"] = m_previousHash.getCContent().asString();
+    out["currentCoinbase"] = m_currentCoinbase->asString();
+    out["currentDifficulty"] = m_currentDifficulty->asString();
+    out["currentNumber"] = m_currentNumber->asString();
+    out["currentTimestamp"] = m_currentTimestamp->asString();
+    out["previousHash"] = m_previousHash->asString();
+    out["currentGasLimit"] = m_currentGasLimit->asString();
+
+    if (!m_currentBaseFee.isEmpty())
+    {
+        // EIP1559 env info
+        out["currentBaseFee"] = m_currentBaseFee->asString();
+    }
     return out;
 }
 

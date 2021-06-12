@@ -149,7 +149,7 @@ jobs:
       - image: ethereum/cpp-build-env:7
     steps: *linux-steps
 
-  macOS-XCode10:
+  macOS-XCode11:
     environment:
       - CXX: clang++
       - GCOV: gcov
@@ -157,7 +157,7 @@ jobs:
       - BUILD_PARALLEL_JOBS: 8
       - TEST_PARALLEL_JOBS: 8
     macos:
-      xcode: "10.0"
+      xcode: "11.3.1"
     steps:
       - checkout
       - *environment-info
@@ -165,8 +165,7 @@ jobs:
           name: "Install macOS dependencies"
           # Python3 and requests are needed for Hunter upload.
           command: |
-            HOMEBREW_NO_AUTO_UPDATE=1 brew install -q cmake ninja python3
-            pip3 install -q requests gitpython
+            HOMEBREW_NO_AUTO_UPDATE=1 brew install -q cmake ninja
       - *configureMac
 #      - *upload-hunter-cache
 #      - *install-solidity-mac
@@ -182,6 +181,6 @@ workflows:
   version: 2
   cpp-ethereum:
     jobs:
-      - macOS-XCode10
+      - macOS-XCode11
       - Linux-Clang6
       - Linux-GCC6-Debug

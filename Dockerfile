@@ -33,7 +33,7 @@ RUN mkdir /build && cd /build \
 #    && cmake /solidity -DCMAKE_BUILD_TYPE=Release && make solc \
 #    && cp /build/solc/solc /bin/solc \
 #    && rm -rf /build /solidity /var/cache/* /root/.hunter/*
-RUN apt-get install wget && wget https://github.com/ethereum/solidity/releases/download/v0.7.0/solc-static-linux \
+RUN apt-get install wget && wget https://github.com/ethereum/solidity/releases/download/v0.8.5/solc-static-linux \
    && cp solc-static-linux /bin/solc \
    && chmod +x /bin/solc
 

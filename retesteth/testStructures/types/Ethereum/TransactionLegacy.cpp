@@ -1,4 +1,4 @@
-#include "Transaction.h"
+#include "TransactionLegacy.h"
 #include <libdevcore/Address.h>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/SHA3.h>
@@ -11,14 +11,13 @@ namespace test
 {
 namespace teststruct
 {
-Transaction::Transaction(DataObject const& _data, string const& _dataRawPreview, string const& _dataLabel)
+TransactionLegacy::TransactionLegacy(DataObject const& _data)
 {
+    m_secretKey = spVALUE(new VALUE(0));
     fromDataObject(_data);
-    m_dataRawPreview = _dataRawPreview;
-    m_dataLabel = _dataLabel;
 }
 
-void Transaction::fromDataObject(DataObject const& _data)
+void TransactionLegacy::fromDataObject(DataObject const& _data)
 {
     try
     {
@@ -28,7 +27,6 @@ void Transaction::fromDataObject(DataObject const& _data)
         m_nonce = spVALUE(new VALUE(_data.atKey("nonce")));
         m_value = spVALUE(new VALUE(_data.atKey("value")));
 
-        // geth retesteth return to as null in some bc tests
         if (_data.atKey("to").type() == DataType::Null || _data.atKey("to").asString().empty())
             m_creation = true;
         else
@@ -38,47 +36,48 @@ void Transaction::fromDataObject(DataObject const& _data)
         }
 
         if (_data.count("secretKey"))
-        {
-            VALUE a(_data.atKey("secretKey"));
-            buildVRS(VALUE(_data.atKey("secretKey")));
-        }
+            buildVRS(_data.atKey("secretKey"));
         else
         {
             m_v = spVALUE(new VALUE(_data.atKey("v")));
             if (m_v.getCContent() > dev::u256("0xff"))
-                throw test::UpwardsException("Incorrect transaction `v` value: " + m_v.getCContent().asString());
+                throw test::UpwardsException("Incorrect transaction `v` value: " + m_v->asString());
             m_r = spVALUE(new VALUE(_data.atKey("r")));
             m_s = spVALUE(new VALUE(_data.atKey("s")));
             rebuildRLP();
         }
-        requireJsonFields(_data, "Transaction " + _data.getKey(),
+        requireJsonFields(_data, "TransactionLegacy " + _data.getKey(),
             {
-                {"data", {{DataType::String}, jsonField::Required}}, {"gasLimit", {{DataType::String}, jsonField::Required}},
-                {"gasPrice", {{DataType::String}, jsonField::Required}}, {"nonce", {{DataType::String}, jsonField::Required}},
+                {"data", {{DataType::String}, jsonField::Required}},
+                {"gasLimit", {{DataType::String}, jsonField::Required}},
+                {"gasPrice", {{DataType::String}, jsonField::Required}},
+                {"nonce", {{DataType::String}, jsonField::Required}},
                 {"value", {{DataType::String}, jsonField::Required}},
                 {"to", {{DataType::String, DataType::Null}, jsonField::Required}},
-                {"secretKey", {{DataType::String}, jsonField::Optional}}, {"v", {{DataType::String}, jsonField::Optional}},
-                {"r", {{DataType::String}, jsonField::Optional}}, {"s", {{DataType::String}, jsonField::Optional}},
+                {"secretKey", {{DataType::String}, jsonField::Optional}},
+                {"v", {{DataType::String}, jsonField::Optional}},
+                {"r", {{DataType::String}, jsonField::Optional}},
+                {"s", {{DataType::String}, jsonField::Optional}},
 
-                {"type", {{DataType::String}, jsonField::Optional}},       // Transaction Type 1
-                {"chainId", {{DataType::String}, jsonField::Optional}},    // Transaction Type 1
-                {"accessList", {{DataType::Array}, jsonField::Optional}},  // Transaction access list
+                {"publicKey", {{DataType::String}, jsonField::Optional}},  // Besu EthGetBlockBy transaction
+                {"raw", {{DataType::String}, jsonField::Optional}},        // Besu EthGetBlockBy transaction
+                {"chainId", {{DataType::String}, jsonField::Optional}},    // Besu EthGetBlockBy transaction
 
                 {"blockHash", {{DataType::String}, jsonField::Optional}},         // EthGetBlockBy transaction
                 {"blockNumber", {{DataType::String}, jsonField::Optional}},       // EthGetBlockBy transaction
                 {"from", {{DataType::String}, jsonField::Optional}},              // EthGetBlockBy transaction
                 {"hash", {{DataType::String}, jsonField::Optional}},              // EthGetBlockBy transaction
                 {"transactionIndex", {{DataType::String}, jsonField::Optional}},  // EthGetBlockBy transaction
-                {"invalid", {{DataType::String}, jsonField::Optional}},           // BlockchainTest filling
+                {"expectException", {{DataType::Object}, jsonField::Optional}}    // BlockchainTest filling
             });
     }
     catch (std::exception const& _ex)
     {
-        throw UpwardsException(string("Transaction convertion error: ") + _ex.what() + _data.asJson());
+        throw UpwardsException(string("TransactionLegacy convertion error: ") + _ex.what() + _data.asJson());
     }
 }
 
-void Transaction::fromRLP(dev::RLP const& _rlp)
+void TransactionLegacy::fromRLP(dev::RLP const& _rlp)
 {
     // 0 - nonce        3 - to      6 - v
     // 1 - gasPrice     4 - value   7 - r
@@ -98,19 +97,21 @@ void Transaction::fromRLP(dev::RLP const& _rlp)
     fromDataObject(trData);
 }
 
-Transaction::Transaction(dev::RLP const& _rlp)
+TransactionLegacy::TransactionLegacy(dev::RLP const& _rlp)
 {
+    m_secretKey = spVALUE(new VALUE(0));
     fromRLP(_rlp);
 }
 
-Transaction::Transaction(BYTES const& _rlp)
+TransactionLegacy::TransactionLegacy(BYTES const& _rlp)
 {
+    m_secretKey = spVALUE(new VALUE(0));
     dev::bytes decodeRLP = sfromHex(_rlp.asString());
     dev::RLP rlp(decodeRLP, dev::RLP::VeryStrict);
     fromRLP(rlp);
 }
 
-void Transaction::streamHeader(dev::RLPStream& _s) const
+void TransactionLegacy::streamHeader(dev::RLPStream& _s) const
 {
     _s << nonce().asU256();
     _s << gasPrice().asU256();
@@ -123,8 +124,9 @@ void Transaction::streamHeader(dev::RLPStream& _s) const
     _s << test::sfromHex(data().asString());
 }
 
-void Transaction::buildVRS(VALUE const& _secret)
+void TransactionLegacy::buildVRS(VALUE const& _secret)
 {
+    m_secretKey = spVALUE(new VALUE(_secret));
     dev::RLPStream stream;
     stream.appendList(6);
     streamHeader(stream);
@@ -138,49 +140,38 @@ void Transaction::buildVRS(VALUE const& _secret)
     DataObject v = DataObject(dev::toCompactHexPrefixed(dev::u256(sigStruct.v + 27)));
     DataObject r = DataObject(dev::toCompactHexPrefixed(dev::u256(sigStruct.r)));
     DataObject s = DataObject(dev::toCompactHexPrefixed(dev::u256(sigStruct.s)));
-    assignV(spVALUE(new VALUE(v)));
-    assignR(spVALUE(new VALUE(r)));
-    assignS(spVALUE(new VALUE(s)));
+    m_v = spVALUE(new VALUE(v));
+    m_r = spVALUE(new VALUE(r));
+    m_s = spVALUE(new VALUE(s));
     rebuildRLP();
 }
 
-void Transaction::assignV(spVALUE const _v) { m_v = _v; }
-void Transaction::assignR(spVALUE const _r) { m_r = _r; }
-void Transaction::assignS(spVALUE const _s) { m_s = _s; }
 
-BYTES const& Transaction::getSignedRLP() const
-{
-    return m_signedRLPdata.getCContent();
-}
-
-dev::RLPStream const& Transaction::asRLPStream() const
-{
-    return m_outRlpStream;
-}
-
-const DataObject Transaction::asDataObject(ExportOrder _order) const
+const DataObject TransactionLegacy::asDataObject(ExportOrder _order) const
 {
     DataObject out;
-    out["data"] = m_data.getCContent().asString();
-    out["gasLimit"] = m_gasLimit.getCContent().asString();
-    out["gasPrice"] = m_gasPrice.getCContent().asString();
-    out["nonce"] = m_nonce.getCContent().asString();
+    out["data"] = m_data->asString();
+    out["gasLimit"] = m_gasLimit->asString();
+    out["gasPrice"] = m_gasPrice->asString();
+    out["nonce"] = m_nonce->asString();
     if (m_creation)
     {
         if (_order != ExportOrder::ToolStyle)
             out["to"] = "";
     }
     else
-        out["to"] = m_to.getCContent().asString();
-    out["value"] = m_value.getCContent().asString();
-    out["v"] = m_v.getCContent().asString();
-    out["r"] = m_r.getCContent().asString();
-    out["s"] = m_s.getCContent().asString();
+        out["to"] = m_to->asString();
+    out["value"] = m_value->asString();
+    out["v"] = m_v->asString();
+    out["r"] = m_r->asString();
+    out["s"] = m_s->asString();
     if (_order == ExportOrder::ToolStyle)
     {
         out.performModifier(mod_removeLeadingZerosFromHexValues, {"data", "to"});
         out.renameKey("gasLimit", "gas");
         out.renameKey("data", "input");
+        if (!m_secretKey.isEmpty() && m_secretKey.getCContent() != 0)
+            out["secretKey"] = m_secretKey->asString();
     }
     if (_order == ExportOrder::OldStyle)
     {
@@ -191,12 +182,7 @@ const DataObject Transaction::asDataObject(ExportOrder _order) const
     return out;
 }
 
-FH32 const& Transaction::hash() const
-{
-    return m_hash.getCContent();
-}
-
-void Transaction::rebuildRLP()
+void TransactionLegacy::rebuildRLP()
 {
     dev::RLPStream out;
     out.appendList(9);
@@ -205,7 +191,7 @@ void Transaction::rebuildRLP()
     out << r().asU256();
     out << s().asU256();
     m_outRlpStream = out;
-    m_signedRLPdata = spBYTES(new BYTES(dev::toHexPrefixed(out.out())));
+    m_rawRLPdata = spBYTES(new BYTES(dev::toHexPrefixed(out.out())));
     m_hash = spFH32(new FH32("0x" + dev::toString(dev::sha3(out.out()))));
 }
 

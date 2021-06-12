@@ -41,6 +41,10 @@ protected:
     spFH32 m_secretKey;
     spFH20 m_to;
     bool m_creation;
+
+    // type 0x02 transaction
+    spVALUE m_maxFeePerGas;
+    spVALUE m_maxPriorityFeePerGas;
 };
 
 

@@ -35,7 +35,8 @@ private:
     vectorOfSchemeBlock prepareUncles(BlockchainTestFillerBlock const& _block, string const& _debug);
 
     // Parse uncle section in block and generate uncles from all the chain information
-    BlockHeader prepareUncle(BlockchainTestFillerUncle _uncleOverwrite, vectorOfSchemeBlock const& _currentBlockPreparedUncles);
+    spBlockHeader prepareUncle(
+        BlockchainTestFillerUncle _uncleOverwrite, vectorOfSchemeBlock const& _currentBlockPreparedUncles);
 
     SessionInterface& m_session;  // session with the client
 

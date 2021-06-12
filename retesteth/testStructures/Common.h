@@ -1,6 +1,7 @@
 #pragma once
 #include <retesteth/compiler/Compiler.h>
 #include <retesteth/dataObject/DataObject.h>
+#include <retesteth/testStructures/types/Ethereum/BlockHeaderReader.h>
 #include <retesteth/testStructures/types/Ethereum/TransactionReader.h>
 #include <map>
 using namespace dataobject;
@@ -51,6 +52,9 @@ DataObject convertDecBlockheaderIncompleteToHex(DataObject const& _data);
 
 // Make a nice compare result string
 string compareBlockHeaders(DataObject const& _blockA, DataObject const& _blockB, string& _whatField);
+
+// Read expect Exceptions
+void readExpectExceptions(DataObject const& _data, std::map<FORK, string>& _out);
 
 }  // namespace teststruct
 }  // namespace test

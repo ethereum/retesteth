@@ -12,7 +12,7 @@ public:
     DataObject web3_clientVersion() override;
 
     // ETH Methods
-    FH32 eth_sendRawTransaction(BYTES const& _rlp) override;
+    FH32 eth_sendRawTransaction(BYTES const& _rlp, VALUE const& _secret) override;
     VALUE eth_getTransactionCount(FH20 const& _address, VALUE const& _blockNumber) override;
     VALUE eth_blockNumber() override;
     EthGetBlockBy eth_getBlockByHash(FH32 const& _hash, Request _fullObjects) override;
@@ -36,7 +36,7 @@ public:
     void test_setChainParams(SetChainParamsArgs const& _config) override;
     void test_rewindToBlock(VALUE const& _blockNr) override;
     void test_modifyTimestamp(VALUE const& _timestamp) override;
-    void test_mineBlocks(size_t _number) override;
+    MineBlocksResult test_mineBlocks(size_t _number) override;
     FH32 test_importRawBlock(BYTES const& _blockRLP) override;
     FH32 test_getLogHash(FH32 const& _txHash) override;
 

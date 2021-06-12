@@ -15,7 +15,7 @@ namespace teststruct
 struct BlockHeaderIncomplete : GCP_SPointerBase
 {
     BlockHeaderIncomplete(DataObject const&);
-    BlockHeader overwriteBlockHeader(BlockHeader const& _header) const;
+    spBlockHeader overwriteBlockHeader(spBlockHeader const& _header) const;
     bool hasUncleHash() const { return !m_sha3Uncles.isEmpty(); }
     bool hasTransactionHash() const { return !m_transactionsRoot.isEmpty(); }
 
@@ -37,6 +37,12 @@ private:
     spFH32 m_stateRoot;
     spVALUE m_timestamp;
     spFH32 m_transactionsRoot;
+
+    // 1559 block
+    spVALUE m_baseFee;
+
+    // Overwrite fields
+    std::set<std::string> m_removeKeys;
 };
 
 typedef GCP_SPointer<BlockHeaderIncomplete> spBlockHeaderIncomplete;

@@ -12,10 +12,11 @@ namespace toolimpl
 struct ToolParams : GCP_SPointerBase
 {
     ToolParams(DataObject const&);
-    VALUE const& homesteadForkBlock() const { return m_homesteadForkBlock.getCContent(); }
-    VALUE const& byzantiumForkBlock() const { return m_byzantiumForkBlock.getCContent(); }
-    VALUE const& constantinopleForkBlock() const { return m_constantinopleForkBlock.getCContent(); }
-    VALUE const& muirGlacierForkBlock() const { return m_muirGlacierForkBlock.getCContent(); }
+    VALUE const& homesteadForkBlock() const { return m_homesteadForkBlock; }
+    VALUE const& byzantiumForkBlock() const { return m_byzantiumForkBlock; }
+    VALUE const& constantinopleForkBlock() const { return m_constantinopleForkBlock; }
+    VALUE const& muirGlacierForkBlock() const { return m_muirGlacierForkBlock; }
+    VALUE const& londonForkBlock() const { return m_londonForkBlock; }
 
 private:
     ToolParams();
@@ -23,6 +24,7 @@ private:
     spVALUE m_byzantiumForkBlock;
     spVALUE m_constantinopleForkBlock;
     spVALUE m_muirGlacierForkBlock;
+    spVALUE m_londonForkBlock;
 };
 
 // Manage test blockchains
@@ -40,17 +42,17 @@ public:
 
     std::vector<EthereumBlockState> const& blocks() const { return m_blocks; }
     SealEngine engine() const { return m_engine; }
-    FORK const& fork() const { return m_fork.getCContent(); }
+    FORK const& fork() const { return m_fork; }
     fs::path const& toolPath() const { return m_toolPath; }
-    SetChainParamsArgs const& params() const { return m_initialParams.getCContent(); }
-    ToolParams const& toolParams() const { return m_toolParams.getCContent(); }
+    SetChainParamsArgs const& params() const { return m_initialParams; }
+    ToolParams const& toolParams() const { return m_toolParams; }
 
     enum class Mining
     {
         RequireValid,
         AllowFailTransactions
     };
-    void mineBlock(EthereumBlockState const& _pendingBlock, Mining _req = Mining::AllowFailTransactions);
+    DataObject const mineBlock(EthereumBlockState const& _pendingBlock, Mining _req = Mining::AllowFailTransactions);
     void rewindToBlock(size_t _number);
 
     // Used for chain reorg

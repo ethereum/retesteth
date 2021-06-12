@@ -66,8 +66,8 @@ State getRemoteState(SessionInterface& _session)
         stateAccountMap.push_back(remAccount);
         if (!Options::get().fullstate)
         {
-            byteSize += remAccount.getCContent().storage().getKeys().size() * 64;
-            byteSize += remAccount.getCContent().code().asString().size() / 2;
+            byteSize += remAccount->storage().getKeys().size() * 64;
+            byteSize += remAccount->code().asString().size() / 2;
             if (byteSize > 1048510) // 1MB
                 throw StateTooBig();
         }
@@ -136,8 +136,8 @@ CompareResult compareStorage(Storage const& _expectStorage, Storage const& _remo
 
     for (auto const& element : _expectStorage.getKeys())
     {
-        VALUE const& expKey = std::get<0>(element.second).getCContent();
-        VALUE const& expVal = std::get<1>(element.second).getCContent();
+        VALUE const& expKey = std::get<0>(element.second);
+        VALUE const& expVal = std::get<1>(element.second);
 
         // If remote storage doesn't exist and expected is not 00 (zeros omited)
         if (!_remoteStorage.hasKey(expKey) && expVal.asU256() != 0)

@@ -135,6 +135,9 @@ bool checkExcessiveComa(string const& _input, size_t _i)
 DataObject ConvertJsoncppStringToData(
     std::string const& _input, string const& _stopper, bool _autosort)
 {
+    if (_input.size() < 2 || _input.find("{") == string::npos || _input.find("}") == string::npos)
+        throw DataObjectException() << "ConvertJsoncppStringToData can't read json structure in file: `" + _input.substr(0, 50);
+
     std::vector<DataObject*> applyDepth;  // indexes at root array of objects that we are reading into
     DataObject root;
     root.setAutosort(_autosort);
@@ -326,7 +329,7 @@ DataObject ConvertJsoncppStringToData(
                 else if (isReadBool)
                     actualRoot->addArrayObject(DataObject(DataType::Bool, resBool));
                 else
-                    actualRoot->addArrayObject(DataObject());
+                    actualRoot->addArrayObject(DataObject(DataType::Null));
             }
             else
             {
@@ -335,7 +338,7 @@ DataObject ConvertJsoncppStringToData(
                 else if (isReadBool)
                     actualRoot->setBool(resBool);
                 else
-                    actualRoot->clearSubobjects();
+                    actualRoot->clearSubobjects(DataType::Null);
                 actualRoot = applyDepth.at(applyDepth.size() - 1);
                 applyDepth.pop_back();
             }

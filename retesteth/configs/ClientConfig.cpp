@@ -20,6 +20,11 @@ ClientConfig::ClientConfig(fs::path const& _clientConfigPath) : m_id(ClientConfi
         fs::path configFile = _clientConfigPath / "config";
         ETH_FAIL_REQUIRE_MESSAGE(fs::exists(configFile), string("Client config not found: ") + configFile.c_str());
 
+        // Script to setup the instance
+        fs::path setupScript = _clientConfigPath / "setup.sh";
+        if (fs::exists(setupScript))
+            m_setupScriptPath = setupScript;
+
         // Script to start the instance
         fs::path startScript = _clientConfigPath / "start.sh";
         if (fs::exists(startScript))
@@ -179,7 +184,7 @@ std::vector<FORK> ClientConfig::translateNetworks(set<string> const& _networks) 
 
 std::string const& ClientConfig::translateException(string const& _exceptionName) const
 {
-    ClientConfigFile const& cfg = m_clientConfigFile.getCContent();
+    ClientConfigFile const& cfg = m_clientConfigFile;
     if (cfg.exceptions().count(_exceptionName))
         return cfg.exceptions().at(_exceptionName);
 
@@ -208,5 +213,49 @@ DataObject const& ClientConfig::getGenesisTemplate(FORK const& _fork) const
         "Genesis template for network '" + _fork.asString() + "' not found!");
     return m_genesisTemplate.at(_fork);
 }
+
+void ClientConfig::initializeFirstSetup()
+{
+    if (!m_initialized)
+    {
+        m_initialized = true;
+        if (fs::exists(getSetupScript()))
+        {
+            std::cout << "Initialize setup script.." << std::endl;
+            string const setup = getSetupScript().c_str();
+            test::executeCmd(setup, ExecCMDWarning::NoWarning);
+        }
+    }
+}
+
+void ClientConfig::performFieldReplace(DataObject& _data, FieldReplaceDir const& _dir) const
+{
+    if (cfgFile().fieldreplace().size() == 0)
+        return;
+
+    for (auto const& el : cfgFile().fieldreplace())
+    {
+        std::string const& retestethNotice = el.first;
+        std::string const& clientNotice = el.second;
+
+        if (_dir == FieldReplaceDir::RetestethToClient)
+        {
+            if (!_data.getKey().empty() && _data.getKey() == retestethNotice)
+                _data.setKey(clientNotice);
+        }
+        else
+        {
+            if (!_data.getKey().empty() && _data.getKey() == clientNotice)
+                _data.setKey(retestethNotice);
+        }
+    }
+
+    if (_data.type() == DataType::Object || _data.type() == DataType::Array)
+    {
+        for (auto& obj : _data.getSubObjectsUnsafe())
+            performFieldReplace(obj, _dir);
+    }
+}
+
 
 }  // namespace test

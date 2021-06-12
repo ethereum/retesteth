@@ -213,51 +213,78 @@ string const c_copierPostf = "Copier";
 
 void TestSuite::runTestWithoutFiller(boost::filesystem::path const& _file) const
 {
-    for (auto const& config : Options::getDynamicOptions().getClientConfigs())
+    try
     {
-        Options::getDynamicOptions().setCurrentConfig(config);
-
-        std::cout << "Running tests for config '" << config.cfgFile().name() << "' "
-                  << config.getId().id() << std::endl;
-        ETH_LOG("Running " + _file.filename().string() + ": ", 3);
-
-        // Allow to execute a custom test .json file on any test suite
-        auto& testOutput = test::TestOutputHelper::get();
-        testOutput.initTest(1);
-
-        if (Options::get().filltests)
+        for (auto const& config : Options::getDynamicOptions().getClientConfigs())
         {
-            TestFileData testData = readTestFile(_file);
-            removeComments(testData.data);
+            Options::getDynamicOptions().setCurrentConfig(config);
 
-            string fileName = _file.stem().c_str();
-            if (fileName.find("Filler") == string::npos)
-                ETH_ERROR_MESSAGE("Trying to fill `" + string(_file.c_str()) + "`, but file does not have Filler suffix!");
+            std::cout << "Running tests for config '" << config.cfgFile().name() << "' " << config.getId().id() << std::endl;
+            ETH_LOG("Running " + _file.filename().string() + ": ", 3);
 
-            // output filename. substract Filler suffix
-            fileName = fileName.substr(0, fileName.length() - 6) + ".json";
+            // Allow to execute a custom test .json file on any test suite
+            auto& testOutput = test::TestOutputHelper::get();
+            testOutput.initTest(1);
 
-            fs::path outPath;
-            if (Options::get().singleTestOutFile.is_initialized())
-                outPath = fs::path(Options::get().singleTestOutFile.get());
-            else
-                outPath = _file.parent_path() / fileName;
+            try
+            {
+                if (Options::get().filltests)
+                {
+                    TestFileData testData = readTestFile(_file);
+                    removeComments(testData.data);
 
-            TestSuiteOptions opt;
-            opt.doFilling = true;
-            opt.allowInvalidBlocks = true;
-            DataObject output = doTests(testData.data, opt);
-            addClientInfo(output, _file, testData.hash);
-            writeFile(outPath, asBytes(output.asJson()));
+                    string fileName = _file.stem().c_str();
+                    if (fileName.find("Filler") == string::npos)
+                        ETH_ERROR_MESSAGE(
+                            "Trying to fill `" + string(_file.c_str()) + "`, but file does not have Filler suffix!");
+
+                    // output filename. substract Filler suffix
+                    fileName = fileName.substr(0, fileName.length() - 6) + ".json";
+
+                    fs::path outPath;
+                    if (Options::get().singleTestOutFile.is_initialized())
+                        outPath = fs::path(Options::get().singleTestOutFile.get());
+                    else
+                        outPath = _file.parent_path() / fileName;
+
+                    TestSuiteOptions opt;
+                    opt.doFilling = true;
+                    opt.allowInvalidBlocks = true;
+                    DataObject output = doTests(testData.data, opt);
+                    addClientInfo(output, _file, testData.hash);
+                    writeFile(outPath, asBytes(output.asJson()));
+                }
+                else
+                    executeFile(_file);
+            }
+            catch (test::EthError const& _ex)
+            {
+                // Something went wrong inside the test. skip the test.
+                // (error message is stored at TestOutputHelper. EthError is via ETH_ERROR_())
+            }
+            catch (test::UpwardsException const& _ex)
+            {
+                // UpwardsException is thrown upwards in tests for debug info
+                // And it should be catched on upper level for report till this point
+                ETH_ERROR_MESSAGE(string("Unhandled UpwardsException: ") + _ex.what());
+            }
+            catch (std::exception const& _ex)
+            {
+                if (!ExitHandler::receivedExitSignal())
+                    ETH_ERROR_MESSAGE("ERROR OCCURED TESTFILE RUN: " + string(_ex.what()));
+                RPCSession::sessionEnd(TestOutputHelper::getThreadID(), RPCSession::SessionStatus::HasFinished);
+            }
+
+            testOutput.finishTest();
+            // Disconnect threads from the client
+            if (Options::getDynamicOptions().getClientConfigs().size() > 1)
+                RPCSession::clear();
         }
-        else
-            executeFile(_file);
-
-        testOutput.finishTest();
-
-        // Disconnect threads from the client
-        if (Options::getDynamicOptions().getClientConfigs().size() > 1)
-            RPCSession::clear();
+    }
+    catch (std::exception const&)
+    {
+        test::TestOutputHelper::get().finishTest();
+        test::TestOutputHelper::printTestExecStats();
     }
 }
 
@@ -479,6 +506,8 @@ void TestSuite::runFunctionForAllClients(std::function<void()> _func)
         Options::getDynamicOptions().setCurrentConfig(config);
         std::cout << "Running tests for config '" << config.cfgFile().name() << "' "
                   << config.getId().id() << std::endl;
+
+        // Run tests
         _func();
 
         // Disconnect threads from the client

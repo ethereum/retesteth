@@ -21,6 +21,9 @@ DataObject FillTest(BlockchainTestInFiller const& _test, TestSuite::TestSuiteOpt
     SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
     for (FORK const& net : _test.getAllForksFromExpectSections())
     {
+        if (!Options::get().singleTestNet.empty() && net.asString() != Options::get().singleTestNet)
+            continue;
+
         for (auto const& expect : _test.expects())
         {
             // if expect is for this network, generate the test
@@ -41,7 +44,7 @@ DataObject FillTest(BlockchainTestInFiller const& _test, TestSuite::TestSuiteOpt
                 ETH_LOGC("FILL GENESIS INFO: ", 6, LogColor::LIME);
                 TestBlockchainManager testchain(_test.Env(), _test.Pre(), _test.sealEngine(), net);
                 TestBlock const& genesis = testchain.getLastBlock();
-                filledTest["genesisBlockHeader"] = genesis.getTestHeader().asDataObject();
+                filledTest["genesisBlockHeader"] = genesis.getTestHeader()->asDataObject();
                 filledTest["genesisRLP"] = genesis.getRawRLP().asString();
 
                 TestOutputHelper::get().setUnitTestExceptions(_test.unitTestExceptions());
@@ -85,15 +88,15 @@ DataObject FillTest(BlockchainTestInFiller const& _test, TestSuite::TestSuiteOpt
                 catch (StateTooBig const&)
                 {
                     compareStates(expect.result(), session);
-                    filledTest["postStateHash"] = finalBlock.header().stateRoot().asString();
+                    filledTest["postStateHash"] = finalBlock.header()->stateRoot().asString();
                 }
 
                 if (Options::get().poststate)
                     ETH_STDOUT_MESSAGE("PostState " + TestOutputHelper::get().testInfo().errorDebug() + " : \n" + cDefault +
-                                       "Hash: " + finalBlock.header().stateRoot().asString());
+                                       "Hash: " + finalBlock.header()->stateRoot().asString());
 
 
-                filledTest["lastblockhash"] = finalBlock.header().hash().asString();
+                filledTest["lastblockhash"] = finalBlock.header()->hash().asString();
                 result.addSubObject(filledTest);
             }  // expects count net
         }

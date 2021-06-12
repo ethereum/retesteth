@@ -17,10 +17,10 @@ struct StateTestInFilled : GCP_SPointerBase
     StateTestInFilled(DataObject const&);
 
     string const& testName() const { return m_name; }
-    Info const& testInfo() const { return m_info.getCContent(); }
-    StateTestEnv const& Env() const { return m_env.getCContent(); }
-    State const& Pre() const { return m_pre.getCContent(); }
-    StateTestTransaction const& GeneralTr() const { return m_transaction.getCContent(); }
+    Info const& testInfo() const { return m_info; }
+    StateTestEnv const& Env() const { return m_env; }
+    State const& Pre() const { return m_pre; }
+    StateTestTransaction const& GeneralTr() const { return m_transaction; }
     std::map<FORK, StateTestPostResults> const& Post() const { return m_post; }
 
 private:

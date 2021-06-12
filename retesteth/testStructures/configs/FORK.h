@@ -28,6 +28,15 @@ private:
     DataObject m_data;
 };
 
+enum class CMP
+{
+    lt,
+    gt,
+    le,
+    ge
+};
+bool compareFork(FORK const& _left, CMP _t, FORK const& _right);
+
 typedef GCP_SPointer<FORK> spFORK;
 
 }  // namespace teststruct

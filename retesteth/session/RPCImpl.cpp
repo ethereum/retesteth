@@ -8,6 +8,7 @@
 #include <retesteth/session/RPCImpl.h>
 #include <retesteth/session/Session.h>
 #include <retesteth/testStructures/Common.h>
+#include <retesteth/Options.h>
 
 using namespace test;
 
@@ -17,8 +18,9 @@ DataObject RPCImpl::web3_clientVersion()
 }
 
 // ETH Methods
-FH32 RPCImpl::eth_sendRawTransaction(BYTES const& _rlp)
+FH32 RPCImpl::eth_sendRawTransaction(BYTES const& _rlp, VALUE const& _secret)
 {
+    (void)_secret;
     DataObject const result = rpcCall("eth_sendRawTransaction", {quote(_rlp.asString())}, true);
     if (!m_lastInterfaceError.empty())
         ETH_ERROR_MESSAGE(m_lastInterfaceError.message());
@@ -27,11 +29,19 @@ FH32 RPCImpl::eth_sendRawTransaction(BYTES const& _rlp)
 
 VALUE RPCImpl::eth_getTransactionCount(FH20 const& _address, VALUE const& _blockNumber)
 {
-    DataObject const response =
-        rpcCall("eth_getTransactionCount", {quote(_address.asString()), quote(_blockNumber.asString())});
-    if (response.type() == DataType::String)
-        return VALUE(response);
-    return VALUE(response.asInt());
+    try
+    {
+        DataObject response = rpcCall("eth_getTransactionCount", {quote(_address.asString()), quote(_blockNumber.asString())});
+        response.performModifier(mod_valueToCompactEvenHexPrefixed);
+        if (response.type() == DataType::String)
+            return VALUE(response);
+        return VALUE(response.asInt());
+    }
+    catch(std::exception const& _ex)
+    {
+        ETH_FAIL_MESSAGE(string("RPC eth_getTransactionCount Exception: ") + _ex.what());
+    }
+    return VALUE(0);
 }
 
 VALUE RPCImpl::eth_blockNumber()
@@ -41,14 +51,18 @@ VALUE RPCImpl::eth_blockNumber()
 
 EthGetBlockBy RPCImpl::eth_getBlockByHash(FH32 const& _hash, Request _fullObjects)
 {
-    return EthGetBlockBy(
-        rpcCall("eth_getBlockByHash", {quote(_hash.asString()), _fullObjects == Request::FULLOBJECTS ? "true" : "false"}));
+    DataObject response = rpcCall("eth_getBlockByHash", {quote(_hash.asString()), _fullObjects == Request::FULLOBJECTS ? "true" : "false"});
+    ClientConfig const& cfg = Options::getCurrentConfig();
+    cfg.performFieldReplace(response, FieldReplaceDir::ClientToRetesteth);
+    return EthGetBlockBy(response);
 }
 
 EthGetBlockBy RPCImpl::eth_getBlockByNumber(VALUE const& _blockNumber, Request _fullObjects)
 {
-    return EthGetBlockBy(rpcCall(
-        "eth_getBlockByNumber", {quote(_blockNumber.asString()), _fullObjects == Request::FULLOBJECTS ? "true" : "false"}));
+    DataObject response = rpcCall("eth_getBlockByNumber", {quote(_blockNumber.asString()), _fullObjects == Request::FULLOBJECTS ? "true" : "false"});
+    ClientConfig const& cfg = Options::getCurrentConfig();
+    cfg.performFieldReplace(response, FieldReplaceDir::ClientToRetesteth);
+    return EthGetBlockBy(response);
 }
 
 BYTES RPCImpl::eth_getCode(FH20 const& _address, VALUE const& _blockNumber)
@@ -100,7 +114,7 @@ DebugStorageRangeAt RPCImpl::debug_storageRangeAt(
 DebugVMTrace RPCImpl::debug_traceTransaction(FH32 const& _trHash)
 {
     (void)_trHash;
-    ETH_ERROR_MESSAGE("RPCImpl::debug_traceTransaction is not implemented!");
+    ETH_FAIL_MESSAGE("RPCImpl::debug_traceTransaction is not implemented!");
     static DebugVMTrace empty("", "", FH32::zero(), "");
     return empty;
 }
@@ -109,8 +123,13 @@ DebugVMTrace RPCImpl::debug_traceTransaction(FH32 const& _trHash)
 void RPCImpl::test_setChainParams(SetChainParamsArgs const& _config)
 {
     RPCSession::currentCfgCountTestRun();
-    ETH_FAIL_REQUIRE_MESSAGE(
-        rpcCall("test_setChainParams", {_config.asDataObject().asJson()}) == true, "remote test_setChainParams = false");
+
+    ClientConfig const& cfg = Options::getCurrentConfig();
+    DataObject data = _config.asDataObject();
+    cfg.performFieldReplace(data, FieldReplaceDir::RetestethToClient);
+
+    auto res =  rpcCall("test_setChainParams", {data.asJson()});
+    ETH_FAIL_REQUIRE_MESSAGE(res == true, "remote test_setChainParams = false");
 }
 
 void RPCImpl::test_rewindToBlock(VALUE const& _blockNr)
@@ -125,13 +144,22 @@ void RPCImpl::test_modifyTimestamp(VALUE const& _timestamp)
         rpcCall("test_modifyTimestamp", {_timestamp.asDecString()}) == true, "test_modifyTimestamp was not successfull");
 }
 
-void RPCImpl::test_mineBlocks(size_t _number)
+MineBlocksResult RPCImpl::test_mineBlocks(size_t _number)
 {
     DataObject const res = rpcCall("test_mineBlocks", {to_string(_number)}, true);
-    if (res.type() == DataType::Bool)
-        ETH_ERROR_REQUIRE_MESSAGE(res.asBool() == true, "remote test_mineBLocks = false");
+
+    if (res.type() == DataType::Object)
+    {
+        auto const& result = res.atKey("result");
+        bool miningres = result.type() == DataType::Bool ? result.asBool() : result.asInt() == 1;
+        ETH_ERROR_REQUIRE_MESSAGE(miningres == true, "remote test_mineBlocks = false");
+    }
+    else if (res.type() == DataType::Bool)
+        ETH_ERROR_REQUIRE_MESSAGE(res.asBool() == true, "remote test_mineBlocks = false");
     else
-        ETH_ERROR_MESSAGE("remote test_mineBLocks = " + res.asJson());
+        ETH_ERROR_MESSAGE("remote test_mineBlocks = " + res.asJson());
+
+    return MineBlocksResult(res);
 }
 
 FH32 RPCImpl::test_importRawBlock(BYTES const& _blockRLP)
@@ -172,17 +200,18 @@ DataObject RPCImpl::rpcCall(
     string reply = m_socket.sendRequest(request, validator);
     ETH_TEST_MESSAGE("Reply: `" + reply + "`");
 
-    DataObject result = ConvertJsoncppStringToData(reply, string(), true);
+    DataObject result = ConvertJsoncppStringToData(reply, string(), false);
     if (result.count("error"))
         result["result"] = "";
 
     if (!ExitHandler::receivedExitSignal())
     {
         requireJsonFields(result, "rpcCall_response (req: '" + request.substr(0, 70) + "')",
-            {{"jsonrpc", {{DataType::String}, jsonField::Required}}, {"id", {{DataType::Integer}, jsonField::Required}},
-                {"result", {{DataType::String, DataType::Integer, DataType::Bool, DataType::Object, DataType::Array},
+            {{"jsonrpc", {{DataType::String}, jsonField::Required}},
+             {"id", {{DataType::Integer}, jsonField::Required}},
+             {"result", {{DataType::String, DataType::Integer, DataType::Bool, DataType::Object, DataType::Array},
                                jsonField::Required}},
-                {"error", {{DataType::String, DataType::Object}, jsonField::Optional}}});
+             {"error", {{DataType::String, DataType::Object}, jsonField::Optional}}});
     }
     else
     {

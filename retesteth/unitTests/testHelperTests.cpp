@@ -23,6 +23,7 @@
 #include <retesteth/TestOutputHelper.h>
 #include <retesteth/configs/ClientConfig.h>
 #include <boost/test/unit_test.hpp>
+#include <retesteth/Options.h>
 
 using namespace std;
 using namespace dev;
@@ -39,9 +40,26 @@ bool hasNetwork(std::vector<FORK> const& _container, FORK const& _net)
 }
 static vector<FORK> exampleNets = {FORK("Frontier"), FORK("Homestead"), FORK("EIP150"), FORK("EIP158"), FORK("Byzantium"),
     FORK("Constantinople"), FORK("ConstantinopleFix")};
+
+class Initializer : public TestOutputHelperFixture
+{
+public:
+    Initializer()
+    {
+        for (auto const& config : Options::getDynamicOptions().getClientConfigs())
+        {
+            Options::getDynamicOptions().setCurrentConfig(config);
+            vector<FORK> const& forks = Options::getCurrentConfig().cfgFile().forks();
+            vector<FORK>& forksCheat = const_cast<vector<FORK>&>(forks);
+            forksCheat = exampleNets;
+            break;
+        }
+    }
+};
+
 }  // namespace
 
-BOOST_FIXTURE_TEST_SUITE(TestHelperSuite, TestOutputHelperFixture)
+BOOST_FIXTURE_TEST_SUITE(TestHelperSuite, Initializer)
 
 BOOST_AUTO_TEST_CASE(tostr_std)
 {
@@ -55,12 +73,96 @@ BOOST_AUTO_TEST_CASE(tostr_dev)
         dev::toString(i);
 }
 
+BOOST_AUTO_TEST_CASE(comapreForks_lotsSteps_Bajo)
+{
+    ETH_FAIL_REQUIRE(
+    compareFork(FORK("Homestead"), CMP::lt, FORK("Constantinople")) == true);
+
+    ETH_FAIL_REQUIRE(
+    compareFork(FORK("Homestead"), CMP::gt, FORK("Constantinople")) == false);
+
+    ETH_FAIL_REQUIRE(
+    compareFork(FORK("Homestead"), CMP::le, FORK("Constantinople")) == true);
+
+    ETH_FAIL_REQUIRE(
+    compareFork(FORK("Homestead"), CMP::ge, FORK("Constantinople")) == false);
+}
+
+BOOST_AUTO_TEST_CASE(comapreForks_OneStep_Bajo)
+{
+    ETH_FAIL_REQUIRE(
+    compareFork(FORK("Homestead"), CMP::lt, FORK("EIP150")) == true);
+
+    ETH_FAIL_REQUIRE(
+    compareFork(FORK("Homestead"), CMP::gt, FORK("EIP150")) == false);
+
+    ETH_FAIL_REQUIRE(
+    compareFork(FORK("Homestead"), CMP::le, FORK("EIP150")) == true);
+
+    ETH_FAIL_REQUIRE(
+    compareFork(FORK("Homestead"), CMP::ge, FORK("EIP150")) == false);
+}
+
+BOOST_AUTO_TEST_CASE(comapreForks_lotsSteps_Arriba)
+{
+    ETH_FAIL_REQUIRE(
+    compareFork(FORK("Constantinople"), CMP::lt, FORK("Homestead")) == false);
+
+    ETH_FAIL_REQUIRE(
+    compareFork(FORK("Constantinople"), CMP::gt, FORK("Homestead")) == true);
+
+    ETH_FAIL_REQUIRE(
+    compareFork(FORK("Constantinople"), CMP::le, FORK("Homestead")) == false);
+
+    ETH_FAIL_REQUIRE(
+    compareFork(FORK("Constantinople"), CMP::ge, FORK("Homestead")) == true);
+}
+
+BOOST_AUTO_TEST_CASE(comapreForks_OneStep_Arriba)
+{
+    ETH_FAIL_REQUIRE(
+    compareFork(FORK("EIP150"), CMP::lt, FORK("Homestead")) == false);
+
+    ETH_FAIL_REQUIRE(
+    compareFork(FORK("EIP150"), CMP::gt, FORK("Homestead")) == true);
+
+    ETH_FAIL_REQUIRE(
+    compareFork(FORK("EIP150"), CMP::le, FORK("Homestead")) == false);
+
+    ETH_FAIL_REQUIRE(
+    compareFork(FORK("EIP150"), CMP::ge, FORK("Homestead")) == true);
+}
+
+BOOST_AUTO_TEST_CASE(comapreForks_ZeroStep)
+{
+    ETH_FAIL_REQUIRE(
+    compareFork(FORK("Homestead"), CMP::lt, FORK("Homestead")) == false);
+
+    ETH_FAIL_REQUIRE(
+    compareFork(FORK("Homestead"), CMP::gt, FORK("Homestead")) == false);
+
+    ETH_FAIL_REQUIRE(
+    compareFork(FORK("Homestead"), CMP::le, FORK("Homestead")) == true);
+
+    ETH_FAIL_REQUIRE(
+    compareFork(FORK("Homestead"), CMP::ge, FORK("Homestead")) == true);
+}
+
 BOOST_AUTO_TEST_CASE(translateNetworks_doubleNet)
 {
     set<string> rawnetworks = {"Frontier", "<Homestead"};
     std::vector<FORK> networks = ClientConfig::translateNetworks(rawnetworks, exampleNets);
     ETH_FAIL_REQUIRE(hasNetwork(networks, FORK("Frontier")));
     ETH_FAIL_REQUIRE(hasNetwork(networks, FORK("Homestead")) == false);
+    ETH_FAIL_REQUIRE(networks.size() == 1);
+}
+
+BOOST_AUTO_TEST_CASE(translateNetworks_london)
+{
+    set<string> rawnetworks = {">=London"};
+    std::vector<FORK> exampleNets2 = {FORK("Frontier"), FORK("London")};
+    std::vector<FORK> networks = ClientConfig::translateNetworks(rawnetworks, exampleNets2);
+    ETH_FAIL_REQUIRE(hasNetwork(networks, FORK("London")));
     ETH_FAIL_REQUIRE(networks.size() == 1);
 }
 

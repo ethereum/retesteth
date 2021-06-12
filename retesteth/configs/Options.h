@@ -10,6 +10,7 @@ class alethcfg { public: alethcfg(); };
 class alethIpcDebugcfg { public: alethIpcDebugcfg(); };
 class besucfg { public: besucfg(); };
 class t8ntoolcfg { public: t8ntoolcfg(); };
+class oewrapcfg { public: oewrapcfg(); };
 
 // Genesis configs for clients
 class genRewardsCfg { public: genRewardsCfg(); };
@@ -22,6 +23,7 @@ class genConstantinopleCfg { public: genConstantinopleCfg(); };
 class genConstantinopleFixCfg { public: genConstantinopleFixCfg(); };
 class genIstanbulCfg { public: genIstanbulCfg(); };
 class genBerlinCfg { public: genBerlinCfg(); };
+class genLondonCfg { public: genLondonCfg(); };
 
 // Transition genesis configs
 class genFrontierToHomesteadCfg { public: genFrontierToHomesteadCfg(); };
@@ -29,6 +31,7 @@ class genHomesteadToDaoCfg { public: genHomesteadToDaoCfg(); };
 class genHomesteadToEIP150Cfg { public: genHomesteadToEIP150Cfg(); };
 class genEIP158ToByzantiumCfg { public: genEIP158ToByzantiumCfg(); };
 class genByzantiumToConstantinopleFixCfg { public: genByzantiumToConstantinopleFixCfg(); };
+class genBerlinToLondonCfg { public: genBerlinToLondonCfg(); };
 
 // Initializer
 class OptionsInit
@@ -41,6 +44,7 @@ public:
         alethIpcDebugcfg alethIpcDebug;
         besucfg besu;
         t8ntoolcfg t8ntool;
+        oewrapcfg oewrap;
 
         // Genesis configs for clients
         genRewardsCfg rewards;
@@ -53,6 +57,7 @@ public:
         genConstantinopleFixCfg genConstantinopleFix;
         genIstanbulCfg genIstanbuil;
         genBerlinCfg genBerlin;
+        genLondonCfg genLondon;
 
         // Transition genesis configs
         genFrontierToHomesteadCfg genFrontierToHomestead;
@@ -60,5 +65,6 @@ public:
         genHomesteadToEIP150Cfg genHomesteadToEIP150;
         genEIP158ToByzantiumCfg genEIP158ToByzantium;
         genByzantiumToConstantinopleFixCfg genBezantiumToConstantinopleFix;
+        genBerlinToLondonCfg genBerlinToLondon;
     }
 };

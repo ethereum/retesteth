@@ -18,6 +18,9 @@ SetChainParamsArgs::SetChainParamsArgs(DataObject const& _data)
     fullBlockHeader["author"] = genesis.atKey("author");
     fullBlockHeader["difficulty"] = genesis.atKey("difficulty");
     fullBlockHeader["gasLimit"] = genesis.atKey("gasLimit");
+    if (genesis.count("baseFeePerGas"))
+        fullBlockHeader["baseFeePerGas"] = genesis.atKey("baseFeePerGas");
+
     fullBlockHeader["extraData"] = genesis.atKey("extraData");
     fullBlockHeader["timestamp"] = genesis.atKey("timestamp");
     fullBlockHeader["nonce"] = genesis.atKey("nonce");
@@ -32,26 +35,36 @@ SetChainParamsArgs::SetChainParamsArgs(DataObject const& _data)
     fullBlockHeader["transactionsTrie"] = "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421";
     fullBlockHeader["uncleHash"] = "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347";
     fullBlockHeader["parentHash"] = FH32::zero().asString();
-    m_genesis = spBlockHeader(new BlockHeader(fullBlockHeader));
+
+    m_genesis = readBlockHeader(fullBlockHeader);
 
     requireJsonFields(_data, "SetChainParamsArgs " + _data.getKey(),
-        {{"params", {{DataType::Object}, jsonField::Required}}, {"accounts", {{DataType::Object}, jsonField::Required}},
-            {"genesis", {{DataType::Object}, jsonField::Required}}, {"sealEngine", {{DataType::String}, jsonField::Required}}});
+        {{"params", {{DataType::Object}, jsonField::Required}},
+         {"accounts", {{DataType::Object}, jsonField::Required}},
+         {"genesis", {{DataType::Object}, jsonField::Required}},
+         {"sealEngine", {{DataType::String}, jsonField::Required}}});
 }
 
 DataObject SetChainParamsArgs::asDataObject() const
 {
     DataObject out;
     out["params"] = m_params;
-    out["accounts"] = m_preState.getCContent().asDataObject();
+    out["accounts"] = m_preState->asDataObject();
     out["sealEngine"] = sealEngineToStr(m_sealEngine);
-    out["genesis"]["author"] = m_genesis.getCContent().author().asString();
-    out["genesis"]["difficulty"] = m_genesis.getCContent().difficulty().asString();
-    out["genesis"]["gasLimit"] = m_genesis.getCContent().gasLimit().asString();
-    out["genesis"]["extraData"] = m_genesis.getCContent().extraData().asString();
-    out["genesis"]["timestamp"] = m_genesis.getCContent().timestamp().asString();
-    out["genesis"]["nonce"] = m_genesis.getCContent().nonce().asString();
-    out["genesis"]["mixHash"] = m_genesis.getCContent().mixHash().asString();
+    out["genesis"]["author"] = m_genesis->author().asString();
+    out["genesis"]["difficulty"] = m_genesis->difficulty().asString();
+    out["genesis"]["gasLimit"] = m_genesis->gasLimit().asString();
+
+    if (m_genesis->type() == BlockType::BlockHeader1559)
+    {
+        BlockHeader1559 const& newbl = BlockHeader1559::castFrom(m_genesis);
+        out["genesis"]["baseFeePerGas"] = newbl.baseFee().asString();
+    }
+
+    out["genesis"]["extraData"] = m_genesis->extraData().asString();
+    out["genesis"]["timestamp"] = m_genesis->timestamp().asString();
+    out["genesis"]["nonce"] = m_genesis->nonce().asString();
+    out["genesis"]["mixHash"] = m_genesis->mixHash().asString();
     return out;
 }
 

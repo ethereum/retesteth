@@ -21,7 +21,7 @@ const string default_Berlin_config = R"({
 
 const string t8ntool_Berlin_config = R"({
     "params" : {
-        "fork" : "YOLOv3",
+        "fork" : "Berlin",
         "constantinopleForkBlock" : "0x00",
         "byzantiumForkBlock" : "0x00",
         "homesteadForkBlock" : "0x00"

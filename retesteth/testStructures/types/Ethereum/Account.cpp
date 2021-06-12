@@ -14,7 +14,7 @@ Account::Account(FH20 const& _addr, VALUE const& _balance, VALUE const& _nonce, 
     m_code = spBYTES(new BYTES(_code));
     m_storage = spStorage(new Storage(_storage));
     if (m_nonce.getCContent() > c_maxNonce)
-        ETH_ERROR_MESSAGE("Account `" + m_address.getCContent().asString() + "` requires nonce <= (2**64)-1");
+        ETH_ERROR_MESSAGE("Account `" + m_address->asString() + "` requires nonce <= (2**64)-1");
 }
 
 Account::Account(DataObject const& _data)
@@ -25,7 +25,7 @@ Account::Account(DataObject const& _data)
     m_code = spBYTES(new BYTES(_data.atKey("code")));
     m_storage = spStorage(new Storage(_data.atKey("storage")));
     if (m_nonce.getCContent() > c_maxNonce)
-        ETH_ERROR_MESSAGE("Account `" + m_address.getCContent().asString() + "` requires nonce <= (2**64)-1");
+        ETH_ERROR_MESSAGE("Account `" + m_address->asString() + "` requires nonce <= (2**64)-1");
     requireJsonFields(_data, "Account " + _data.getKey(),
         {{"balance", {{DataType::String}, jsonField::Required}}, {"code", {{DataType::String}, jsonField::Required}},
             {"nonce", {{DataType::String}, jsonField::Required}}, {"storage", {{DataType::Object}, jsonField::Required}}});
@@ -34,11 +34,11 @@ Account::Account(DataObject const& _data)
 const DataObject Account::asDataObject(ExportOrder _order) const
 {
     DataObject out;
-    string const& addr = m_address.getCContent().asString();
-    out["balance"] = m_balance.getCContent().asString();
-    out["code"] = m_code.getCContent().asString();
-    out["nonce"] = m_nonce.getCContent().asString();
-    out["storage"] = m_storage.getCContent().asDataObject();
+    string const& addr = m_address->asString();
+    out["balance"] = m_balance->asString();
+    out["code"] = m_code->asString();
+    out["nonce"] = m_nonce->asString();
+    out["storage"] = m_storage->asDataObject();
     out.setKey(addr);
 
     if (_order == ExportOrder::OldStyle)

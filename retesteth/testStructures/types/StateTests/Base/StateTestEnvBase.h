@@ -12,20 +12,22 @@ namespace teststruct
 // Base logic for State Test Env section
 struct StateTestEnvBase : GCP_SPointerBase
 {
-    FH20 const& currentCoinbase() const { return m_currentCoinbase.getCContent(); }
-    VALUE const& currentDifficulty() const { return m_currentDifficulty.getCContent(); }
-    VALUE const& currentGasLimit() const { return m_currentGasLimit.getCContent(); }
-    VALUE const& currentNumber() const { return m_currentNumber.getCContent(); }
+    FH20 const& currentCoinbase() const { return m_currentCoinbase; }
+    VALUE const& currentDifficulty() const { return m_currentDifficulty; }
+    VALUE const& currentGasLimit() const { return m_currentGasLimit; }
+    VALUE const& currentNumber() const { return m_currentNumber; }
 
     // In StateTests timestamp for genesis block should be overrided with 0x00
     // In BlockchainTests currentTimestamp is m_currentTimestamp constructed from genesis blockHeader
-    virtual VALUE const& currentTimestamp() const { return m_currentTimestamp.getCContent(); }
+    virtual VALUE const& currentTimestamp() const { return m_currentTimestamp; }
 
-    BYTES const& currentExtraData() const { return m_currentExtraData.getCContent(); }
-    FH8 const& currentNonce() const { return m_currentNonce.getCContent(); }
-    FH32 const& currentMixHash() const { return m_currentMixHash.getCContent(); }
-    FH32 const& previousHash() const { return m_previousHash.getCContent(); }
+    BYTES const& currentExtraData() const { return m_currentExtraData; }
+    FH8 const& currentNonce() const { return m_currentNonce; }
+    FH32 const& currentMixHash() const { return m_currentMixHash; }
+    FH32 const& previousHash() const { return m_previousHash; }
     DataObject const asDataObject() const;
+
+    spVALUE const& currentBaseFee() const { return m_currentBaseFee; }
 
     virtual ~StateTestEnvBase() {}
 
@@ -40,6 +42,8 @@ protected:
     spBYTES m_currentExtraData;
     spFH8 m_currentNonce;
     spFH32 m_currentMixHash;
+
+    spVALUE m_currentBaseFee;
 };
 
 

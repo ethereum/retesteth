@@ -95,6 +95,10 @@ void ClientConfigFile::initWithData(DataObject const& _data)
     if (_data.count("initializeTime"))
         m_initializeTime = atoi(_data.atKey("initializeTime").asString().c_str());
 
+    m_checkLogsHash = false;
+    if (_data.count("checkLogsHash"))
+        m_checkLogsHash = _data.atKey("checkLogsHash").asBool();
+
     // Read forks as fork order. Order is required for translation (`>=Frontier` -> `Frontier,
     // Homestead`) According to this order:
     for (auto const& el : _data.atKey("forks").getSubObjects())
@@ -125,15 +129,29 @@ void ClientConfigFile::initWithData(DataObject const& _data)
         m_exceptions[el.getKey()] = el.asString();
     }
 
+    // When sending requests to the client, some of the parameters might be named differently
+    // To be flexible here is the replacement map that will change retesteth format field names to client format names
+    if (_data.count("fieldReplace"))
+    {
+        for (auto const& el : _data.atKey("fieldReplace").getSubObjects())
+        {
+            if (m_fieldRaplce.count(el.getKey()))
+                ETH_ERROR_MESSAGE(sErrorPath + "`fieldReplace` section contain dublicate element: " + el.getKey());
+            m_fieldRaplce[el.getKey()] = el.asString();
+        }
+    }
+
     // Limit sections in the file
     requireJsonFields(_data, "ClientConfigFile " + _data.getKey(),
         {{"name", {{DataType::String}, jsonField::Required}},
          {"socketType", {{DataType::String}, jsonField::Required}},
          {"socketAddress", {{DataType::String, DataType::Array}, jsonField::Required}},
          {"initializeTime", {{DataType::String}, jsonField::Optional}},
+         {"checkLogsHash", {{DataType::Bool}, jsonField::Optional}},
          {"forks", {{DataType::Array}, jsonField::Required}},
          {"additionalForks", {{DataType::Array}, jsonField::Required}},
-         {"exceptions", {{DataType::Object}, jsonField::Required}}
+         {"exceptions", {{DataType::Object}, jsonField::Required}},
+         {"fieldReplace", {{DataType::Object}, jsonField::Optional}}
                       });
 }
 

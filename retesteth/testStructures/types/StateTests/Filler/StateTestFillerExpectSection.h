@@ -14,7 +14,8 @@ namespace teststruct
 struct StateTestFillerExpectSection
 {
     StateTestFillerExpectSection(DataObject const&, spStateTestFillerTransaction const&);
-    StateIncomplete const& result() const { return m_result.getCContent(); }
+    StateIncomplete const& result() const { return m_result; }
+    DataObject const& initialData() const { return m_initialData; }
     std::vector<FORK> const& forks() const { return m_forks; }
     bool hasFork(FORK const& _fork) const
     {
@@ -28,12 +29,24 @@ struct StateTestFillerExpectSection
     bool checkIndexes(size_t _dInd, size_t _gInd, size_t _vInd) const;
     void correctMiningReward(FH20 const& _coinbase, VALUE const& _reward);
 
+    // Get expect exception for transaction
+    string const& getExpectException(FORK const& _net) const
+    {
+        static string emptyString = string();  // mutex ??
+        if (m_expectExceptions.count(_net))
+            return m_expectExceptions.at(_net);
+        return emptyString;
+    }
+
 private:
     std::set<int> m_dataInd;
     std::set<int> m_gasInd;
     std::set<int> m_valInd;
     std::vector<FORK> m_forks;
     GCP_SPointer<StateIncomplete> m_result;
+    DataObject m_initialData;
+
+    std::map<FORK, string> m_expectExceptions;
 };
 
 

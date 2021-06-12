@@ -10,58 +10,63 @@ namespace test
 {
 namespace teststruct
 {
+
 enum class TransactionType
 {
     LEGACY,
-    ACCESSLIST
+    ACCESSLIST,
+    BASEFEE
 };
 
 struct Transaction : GCP_SPointerBase
 {
-    Transaction(DataObject const&, string const& _dataRawPreview = string(), string const& _dataLabel = string());
-    Transaction(BYTES const&);
-    Transaction(dev::RLP const&);
-    BYTES const& data() const { return m_data.getCContent(); }
-    VALUE const& gasLimit() const { return m_gasLimit.getCContent(); }
-    VALUE const& gasPrice() const { return m_gasPrice.getCContent(); }
-    VALUE const& nonce() const { return m_nonce.getCContent(); }
-    VALUE const& value() const { return m_value.getCContent(); }
+    // Transaction Interface
+    virtual TransactionType type() const = 0;
+    virtual DataObject const asDataObject(ExportOrder _order = ExportOrder::Default) const = 0;
+    virtual ~Transaction(){ /* all fields are smart pointers */ };
+
+    // Common transaction data
+    BYTES const& data() const { return m_data; }
+    VALUE const& gasLimit() const { return m_gasLimit; }
+    VALUE const& nonce() const { return m_nonce; }
+    VALUE const& value() const { return m_value; }
     bool isCreation() const { return m_creation; }
-    FH20 const& to() const
-    {
-        assert(!m_creation);
-        return m_to.getCContent();
-    }
+    FH20 const& to() const { assert(!m_creation); return m_to; }
+    VALUE const& v() const { return m_v; }
+    VALUE const& r() const { return m_r; }
+    VALUE const& s() const { return m_s; }
 
-    VALUE const& v() const { return m_v.getCContent(); }
-    VALUE const& r() const { return m_r.getCContent(); }
-    VALUE const& s() const { return m_s.getCContent(); }
-    FH32 const& hash() const;
-    virtual TransactionType type() const { return TransactionType::LEGACY; }
+    FH32 const& hash() const { return m_hash; }
+    BYTES const& getRawBytes() const { return m_rawRLPdata; }
+    dev::RLPStream const& asRLPStream() const { return m_outRlpStream; }
 
-    BYTES const& getSignedRLP() const;
-    dev::RLPStream const& asRLPStream() const;
-    virtual DataObject const asDataObject(ExportOrder _order = ExportOrder::Default) const;
-
-    virtual ~Transaction(){};
-
-    /// Debug
+    /// Debug transaction data for retesteth
     string const& dataLabel() const { return m_dataLabel; }
     string const& dataRawPreview() const { return m_dataRawPreview; }
+    void setDataLabel(string const& _label) { m_dataLabel = _label; }
+    void setDataRawPreview(string const& _dataRawPreview) { m_dataRawPreview = _dataRawPreview; }
 
-private:
-    virtual void fromRLP(dev::RLP const&);
+    /// Debug transaction data for t8ntool wrapper
+    void setSecret(VALUE const& _secret) { m_secretKey = spVALUE(new VALUE(_secret)); }
+    VALUE const& getSecret() const { return m_secretKey; }
 
+protected:
+    // Potected transaction interface
+    virtual void fromDataObject(DataObject const&) = 0;
+    virtual void fromRLP(dev::RLP const&) = 0;
+    virtual void buildVRS(VALUE const& _secret) = 0;
+    virtual void streamHeader(dev::RLPStream& _stream) const = 0;
+    virtual void rebuildRLP() = 0;
+
+protected:
+    Transaction() {}
     spBYTES m_data;
     spVALUE m_gasLimit;
-    spVALUE m_gasPrice;
     spVALUE m_nonce;
     spVALUE m_value;
     spFH20 m_to;
     bool m_creation;
 
-    virtual void buildVRS(VALUE const& _secret);
-    virtual void streamHeader(dev::RLPStream& _stream) const;
     spVALUE m_v;
     spVALUE m_r;
     spVALUE m_s;
@@ -70,18 +75,11 @@ private:
     string m_dataRawPreview;  // Attached data raw preview before code compilation
     string m_dataLabel;       // Attached data Label from filler
 
-protected:
-    Transaction() {}
-    virtual void fromDataObject(DataObject const&);
-    void assignV(spVALUE const);
-    void assignR(spVALUE const);
-    void assignS(spVALUE const);
-
     // Optimization
     spFH32 m_hash;
     dev::RLPStream m_outRlpStream;
-    spBYTES m_signedRLPdata;
-    virtual void rebuildRLP();
+    spBYTES m_rawRLPdata;  // raw transaction data without rlp header (for typed transactions)
+    spVALUE m_secretKey;   // Additional info for t8ntool transaction wrapper
 };
 
 typedef GCP_SPointer<Transaction> spTransaction;

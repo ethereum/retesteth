@@ -21,10 +21,10 @@ struct BlockchainTestInFiller : GCP_SPointerBase
     BlockchainTestInFiller(DataObject const&);
     string const& testName() const { return m_name; }
     bool hasInfo() const { return !m_info.isEmpty(); }
-    InfoIncomplete const& Info() const { return m_info.getCContent(); }
+    InfoIncomplete const& Info() const { return m_info; }
     SealEngine sealEngine() const { return m_sealEngine; }
-    BlockchainTestFillerEnv const& Env() const { return m_env.getCContent(); }
-    State const& Pre() const { return m_pre.getCContent(); }
+    BlockchainTestFillerEnv const& Env() const { return m_env; }
+    State const& Pre() const { return m_pre; }
     std::vector<BlockchainTestFillerBlock> const& blocks() const { return m_blocks; }
     std::vector<BlockchainTestFillerExpectSection> const& expects() const { return m_expects; }
 

@@ -13,7 +13,8 @@ BlockchainTestFillerTransaction::BlockchainTestFillerTransaction(DataObject cons
 {
     try
     {
-        m_expectInvalid = _data.count("invalid");
+        if (_data.count("expectException"))
+            readExpectExceptions(_data.atKey("expectException"), m_expectExceptions);
 
         DataObject tmpD = _data;
 
@@ -23,7 +24,7 @@ BlockchainTestFillerTransaction::BlockchainTestFillerTransaction(DataObject cons
             dev::Address key = dev::toAddress(priv);
             if (_nonceMap.count("0x" + key.hex()))
             {
-                tmpD.atKeyUnsafe("nonce").setString(_nonceMap.at("0x" + key.hex()).getCContent().asDecString());
+                tmpD.atKeyUnsafe("nonce").setString(_nonceMap.at("0x" + key.hex())->asDecString());
                 _nonceMap["0x" + key.hex()].getContent()++;
             }
             else
@@ -32,6 +33,7 @@ BlockchainTestFillerTransaction::BlockchainTestFillerTransaction(DataObject cons
 
         tmpD.removeKey("data");
         tmpD.removeKey("to");
+        tmpD.removeKey("expectException");
         if (tmpD.count("accessList"))
             tmpD.removeKey("accessList");
         tmpD.performModifier(mod_valueToCompactEvenHexPrefixed);

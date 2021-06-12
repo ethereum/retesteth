@@ -224,6 +224,24 @@ Options::Options(int argc, const char** argv)
         else if (arg == "--fillchain")
         {
             fillchain = true;
+
+            bool noFilltests = !filltests;
+            if (noFilltests)
+            {
+                // Look ahead if this option ever provided
+                for (auto i = 0; i < argc; ++i)
+                {
+                    auto arg = std::string{argv[i]};
+                    if (arg == "--filltests")
+                    {
+                        noFilltests = false;
+                        break;
+                    }
+                }
+            }
+
+            if (noFilltests)
+                ETH_STDOUT_MESSAGEC("WARNING: `--fillchain` option provided without `--filltests`, activating `--filltests` (did you mean `--filltests`?)", cYellow);
             filltests = true;
         }
         else if (arg == "--showhash")

@@ -45,6 +45,11 @@ class BCGeneralStateTestsSuite : public BlockchainTestValidSuite
 {
     test::TestSuite::TestPath suiteFolder() const override;
     test::TestSuite::FillerPath suiteFillerFolder() const override;
+public:
+    BCGeneralStateTestsSuite() {
+        TestInfo errorInfo("Initialized ", "BCGeneralStateTestsSuite");
+        TestOutputHelper::get().setCurrentTestInfo(errorInfo);
+    }
 };
 
 class BCGeneralStateTestsVMSuite : public BCGeneralStateTestsSuite

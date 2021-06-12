@@ -32,7 +32,7 @@ struct BlockchainTestFillerUncle : GCP_SPointerBase
     long long int relTimestampFromPopulateBlock() const { return m_relTimestampFromPopulateBlock; }
 
     bool hasOverwriteHeader() const { return !m_headerIncomplete.isEmpty(); }
-    BlockHeaderIncomplete const& overwriteHeader() const { return m_headerIncomplete.getCContent(); }
+    BlockHeaderIncomplete const& overwriteHeader() const { return m_headerIncomplete; }
 
 private:
     BlockchainTestFillerUncle() {}

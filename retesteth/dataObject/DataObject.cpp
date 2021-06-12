@@ -6,7 +6,7 @@ using namespace dataobject;
 /// Default dataobject is null
 DataObject::DataObject()
 {
-    m_type = DataType::Null;
+    m_type = DataType::NotInitialized;
 }
 
 /// Define dataobject of _type, pass the value later (will check the value and _type)
@@ -240,8 +240,8 @@ DataObject& DataObject::atLastElementUnsafe()
 
 void DataObject::addArrayObject(DataObject const& _obj)
 {
-    _assert(m_type == DataType::Null || m_type == DataType::Array,
-        "m_type == DataType::Null || m_type == DataType::Array (DataObject::addArrayObject)");
+    _assert(m_type == DataType::NotInitialized || m_type == DataType::Array,
+        "m_type == DataType::NotInitialized || m_type == DataType::Array (DataObject::addArrayObject)");
     m_type = DataType::Array;
     m_subObjects.push_back(_obj);
     m_subObjects.at(m_subObjects.size() - 1).setAutosort(m_autosort);
@@ -352,6 +352,17 @@ std::string DataObject::asJson(int level, bool pretty, bool nokey) const
     string buffer;
     switch (m_type)
     {
+    case DataType::NotInitialized:
+        printLevel();
+        if (!m_strKey.empty() && !nokey)
+        {
+            if (pretty)
+                out << "\"" << m_strKey << "\" : ";
+            else
+                out << "\"" << m_strKey << "\":";
+        }
+        out << "notinit";
+        break;
     case DataType::Null:
         printLevel();
         if (!m_strKey.empty() && !nokey)
@@ -475,6 +486,8 @@ std::string DataObject::dataTypeAsString(DataType _type)
         return "bool";
     case Object:
         return "object";
+    case NotInitialized:
+        return "notinit";
     case Null:
         return "null";
     default:
@@ -507,7 +520,7 @@ size_t dataobject::findOrderedKeyPosition(string const& _key, vector<DataObject>
 
 DataObject& DataObject::_addSubObject(DataObject const& _obj, string const& _keyOverwrite)
 {
-    if (m_type == DataType::Null)
+    if (m_type == DataType::NotInitialized)
         m_type = DataType::Object;
 
     size_t pos;
@@ -557,23 +570,24 @@ void DataObject::_assert(bool _flag, std::string const& _comment) const
 
 void DataObject::setString(string const& _value)
 {
-    _assert(
-        m_type == DataType::String || m_type == DataType::Null, "In DataObject=(string) DataObject must be string or Null!");
+    _assert(m_type == DataType::String || m_type == DataType::NotInitialized,
+        "In DataObject=(string) DataObject must be string or NotInitialized!");
     m_type = DataType::String;
     m_strVal = _value;
 }
 
 void DataObject::setInt(int _value)
 {
-    _assert(m_type == DataType::Integer || m_type == DataType::Null, "In DataObject=(int) DataObject must be int or Null!");
+    _assert(m_type == DataType::Integer || m_type == DataType::NotInitialized,
+        "In DataObject=(int) DataObject must be int or NotInitialized!");
     m_type = DataType::Integer;
     m_intVal = _value;
 }
 
 void DataObject::setBool(bool _value)
 {
-    _assert(
-        m_type == DataType::Bool || m_type == DataType::Null, "In DataObject:setBool(bool) DataObject must be bool or Null!");
+    _assert(m_type == DataType::Bool || m_type == DataType::NotInitialized,
+        "In DataObject:setBool(bool) DataObject must be bool or NotInitialized!");
     m_type = DataType::Bool;
     m_boolVal = _value;
 }
@@ -583,15 +597,15 @@ DataObject& DataObject::operator=(DataObject const& _value)
     // So not to overwrite the existing data
     // Do not replace the key. Assuming that key is set upon calling DataObject[key] =
     if (!m_allowOverwrite && !m_autosort)
-        _assert(m_type == DataType::Null,
-            "m_type == DataType::Null (DataObject& operator=). Overwriting dataobject that is "
-            "not NULL");
+        _assert(m_type == DataType::NotInitialized,
+            "m_type == DataType::NotInitialized (DataObject& operator=). Overwriting dataobject that is "
+            "not NotInitialized");
 
-    if (m_type != DataType::Null)
+    if (m_type != DataType::NotInitialized)
         replace(_value);  // overwrite value and key
     else
     {
-        // keep the key "newkey" for object["newkey"] = object2;  declarations when object["newkey"] is null;
+        // keep the key "newkey" for object["newkey"] = object2;  declarations when object["newkey"] is NotInitialized;
         string const currentKey = m_strKey;
         replace(_value);
         m_strKey = currentKey;
@@ -662,12 +676,12 @@ DataObject& DataObject::operator=(int _value)
 
 DataObject& DataObject::operator[](std::string const& _key)
 {
-    _assert(m_type == DataType::Null || m_type == DataType::Object,
-        "m_type == DataType::Null || m_type == DataType::Object (DataObject& operator[])");
+    _assert(m_type == DataType::NotInitialized || m_type == DataType::Object,
+        "m_type == DataType::NotInitialized || m_type == DataType::Object (DataObject& operator[])");
     for (auto& i : m_subObjects)
         if (i.getKey() == _key)
             return i;
-    DataObject newObj(DataType::Null);
+    DataObject newObj(DataType::NotInitialized);
     newObj.setKey(_key);
     return _addSubObject(newObj);  // !could change the item order!
 }

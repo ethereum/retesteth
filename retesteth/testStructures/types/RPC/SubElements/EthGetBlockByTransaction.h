@@ -13,7 +13,7 @@ namespace teststruct
 struct EthGetBlockByTransaction
 {
     EthGetBlockByTransaction(DataObject const&);
-    FH32 const& hash() const { return m_hash.getCContent(); }
+    FH32 const& hash() const { return m_hash; }
     spTransaction const& transaction() const
     {
         assert(isFullTransaction());
@@ -23,12 +23,12 @@ struct EthGetBlockByTransaction
     FH32 const& blockHash() const
     {
         assert(isFullTransaction());
-        return m_blockHash.getCContent();
+        return m_blockHash;
     }
     VALUE const& blockNumber() const
     {
         assert(isFullTransaction());
-        return m_blockNumber.getCContent();
+        return m_blockNumber;
     }
 
 private:

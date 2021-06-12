@@ -14,7 +14,7 @@ namespace teststruct
 struct EthGetBlockBy : GCP_SPointerBase
 {
     EthGetBlockBy(DataObject const&);
-    BlockHeader const& header() const { return m_header.getCContent(); }
+    spBlockHeader const& header() const { return m_header; }
     std::vector<EthGetBlockByTransaction> const& transactions() const { return m_transactions; }
     std::vector<FH32> const& uncles() const { return m_uncles; }
     BYTES getRLPHeaderTransactions() const;

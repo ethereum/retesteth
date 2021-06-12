@@ -13,7 +13,8 @@ const string default_correctMiningReward_config = R"({
     "Constantinople":    "2000000000000000000",
     "ConstantinopleFix": "2000000000000000000",
     "Istanbul":          "2000000000000000000",
-    "Berlin" :           "2000000000000000000"
+    "Berlin" :           "2000000000000000000",
+    "London" :           "2000000000000000000"
 })";
 
 const string t8ntool_correctMiningReward_config = R"({
@@ -27,11 +28,13 @@ const string t8ntool_correctMiningReward_config = R"({
     "ConstantinopleFix": "2000000000000000000",
     "Istanbul":          "2000000000000000000",
     "Berlin" :           "2000000000000000000",
+    "London" :           "2000000000000000000",
 
     "//comment" : "Retesteth calculate rewards on behalf of the tool when filling state tests",
     "YOLOv1" :           "2000000000000000000",
     "YOLOv2" :           "2000000000000000000",
-    "YOLOv3" :           "2000000000000000000"
+    "YOLOv3" :           "2000000000000000000",
+    "Aleut"  :           "2000000000000000000"
 })";
 
 genRewardsCfg::genRewardsCfg()

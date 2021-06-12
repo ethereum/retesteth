@@ -22,7 +22,6 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 #include "BlockchainTestLogic.h"
 #include <retesteth/TestOutputHelper.h>
 #include <retesteth/testSuites/TestFixtures.h>
-#include <retesteth/testSuites/VMTestsConverter.h>
 #include <boost/filesystem/operations.hpp>
 #include <boost/test/unit_test.hpp>
 #include <thread>
@@ -163,25 +162,9 @@ BOOST_AUTO_TEST_CASE(bcUncleTest) {}
 BOOST_AUTO_TEST_CASE(bcValidBlockTest) {}
 BOOST_AUTO_TEST_CASE(bcWalletTest) {}
 BOOST_AUTO_TEST_CASE(bcExample) {}
-
-using VMTestsConverterFixture = TestFixture<VMTestConverterSuite, DefaultFlags>;
-BOOST_FIXTURE_TEST_SUITE(VMTests, VMTestsConverterFixture)
-BOOST_AUTO_TEST_CASE(vmArithmeticTest) {}
-BOOST_AUTO_TEST_CASE(vmBitwiseLogicOperation) {}
-BOOST_AUTO_TEST_CASE(vmBlockInfoTest) {}
-BOOST_AUTO_TEST_CASE(vmEnvironmentalInfo) {}
-BOOST_AUTO_TEST_CASE(vmIOandFlowOperations) {}
-BOOST_AUTO_TEST_CASE(vmLogTest) {}
-BOOST_AUTO_TEST_CASE(vmPerformance) {}
-BOOST_AUTO_TEST_CASE(vmPushDupSwapTest) {}
-BOOST_AUTO_TEST_CASE(vmRandomTest) {}
-BOOST_AUTO_TEST_CASE(vmSha3Test) {}
-BOOST_AUTO_TEST_CASE(vmSystemOperations) {}
-BOOST_AUTO_TEST_CASE(vmTests) {}
-BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_CASE(bcEIP1559) {}
 
 BOOST_AUTO_TEST_SUITE_END() // ValidBlocks
-
 
 // Tests that might have invalid blocks and check that those are rejected
 using BCInValidSuiteFixture = TestFixture<BlockchainTestInvalidSuite, DefaultFlags>;
@@ -194,6 +177,7 @@ BOOST_AUTO_TEST_CASE(bcUncleHeaderValidity) {}
 BOOST_AUTO_TEST_CASE(bcUncleSpecialTests) {}
 BOOST_AUTO_TEST_CASE(bcUncleTest) {}
 BOOST_AUTO_TEST_CASE(bcExample) {}
+BOOST_AUTO_TEST_CASE(bcEIP1559) {}
 BOOST_AUTO_TEST_SUITE_END()
 
 using BCInValidSuiteFixture2 = TestFixture<BlockchainTestInvalidSuite, RequireOptionFill>;
@@ -209,12 +193,13 @@ BOOST_AUTO_TEST_CASE(bcEIP158ToByzantium) {}
 BOOST_AUTO_TEST_CASE(bcFrontierToHomestead) {}
 BOOST_AUTO_TEST_CASE(bcHomesteadToDao) {}
 BOOST_AUTO_TEST_CASE(bcHomesteadToEIP150) {}
+BOOST_AUTO_TEST_CASE(bcBerlinToLondon) {}
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()
 
 // General tests in form of blockchain tests
-using BCGeneralsStateSuiteFixture = TestFixture<BCGeneralStateTestsSuite, RequireOptionAll>;
+using BCGeneralsStateSuiteFixture = TestFixture<BCGeneralStateTestsSuite, RequireOptionAllNotRefillable>;
 BOOST_FIXTURE_TEST_SUITE(BCGeneralStateTests, BCGeneralsStateSuiteFixture)
 
 // Frontier Tests
@@ -289,6 +274,7 @@ BOOST_AUTO_TEST_CASE(stStaticFlagEnabled) {}
 BOOST_AUTO_TEST_CASE(stSubroutine) {}
 BOOST_AUTO_TEST_CASE(stEIP2537) {}
 BOOST_AUTO_TEST_CASE(stEIP2930) {}
+BOOST_AUTO_TEST_CASE(stEIP1559) {}
 
 // Heavy
 BOOST_AUTO_TEST_CASE(stTimeConsuming) {}
@@ -298,15 +284,9 @@ using BCGeneralStateTestsVMFixture = TestFixture<BCGeneralStateTestsVMSuite, Req
 BOOST_FIXTURE_TEST_SUITE(VMTests, BCGeneralStateTestsVMFixture)
 BOOST_AUTO_TEST_CASE(vmArithmeticTest) {}
 BOOST_AUTO_TEST_CASE(vmBitwiseLogicOperation) {}
-BOOST_AUTO_TEST_CASE(vmBlockInfoTest) {}
-BOOST_AUTO_TEST_CASE(vmEnvironmentalInfo) {}
 BOOST_AUTO_TEST_CASE(vmIOandFlowOperations) {}
 BOOST_AUTO_TEST_CASE(vmLogTest) {}
 BOOST_AUTO_TEST_CASE(vmPerformance) {}
-BOOST_AUTO_TEST_CASE(vmPushDupSwapTest) {}
-BOOST_AUTO_TEST_CASE(vmRandomTest) {}
-BOOST_AUTO_TEST_CASE(vmSha3Test) {}
-BOOST_AUTO_TEST_CASE(vmSystemOperations) {}
 BOOST_AUTO_TEST_CASE(vmTests) {}
 BOOST_AUTO_TEST_SUITE_END()
 

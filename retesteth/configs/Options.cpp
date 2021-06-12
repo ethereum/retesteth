@@ -69,9 +69,15 @@ void Options::DynamicOptions::setCurrentConfig(ClientConfig const& _config)
 {
     ETH_FAIL_REQUIRE_MESSAGE(getClientConfigs().size() > 0, "No client configs provided!");
     bool found = false;
-    for (auto const& cfg : getClientConfigs())
+    for (auto& cfg : m_clientConfigs)
+    {
         if (cfg.getId() == _config.getId() && cfg.cfgFile().name() == _config.cfgFile().name())
+        {
             found = true;
+            cfg.initializeFirstSetup();
+            break;
+        }
+    }
     ETH_FAIL_REQUIRE_MESSAGE(
         found, "_config not found in loaded options! (DynamicOptions::setCurrentConfig)");
     m_currentConfigID = _config.getId();
@@ -92,13 +98,13 @@ std::vector<ClientConfig> const& Options::DynamicOptions::getClientConfigs()
         if (fs::exists(homeDir))
         {
             if (!fs::exists(homeDir / "version"))
-                ETH_ERROR_MESSAGE("Missing version file in retesteth configs! " + homeDir.string());
+                ETH_ERROR_MESSAGE("Missing version file in retesteth configs! `" + homeDir.string());
 
             string version = dev::contentsString(homeDir / "version");
             if (version != prepareRetestethVersion())
                 ETH_WARNING("Retesteth configs version is different (running: '" +
                             prepareRetestethVersion() + "' vs config '" + version +
-                            "')! Redeploy the configs by deleting the folder ~/.retesteth!");
+                            "')! Redeploy the configs by deleting the folder `" + homeDir.string() + "`!");
         }
         else
             deployFirstRunConfigs(homeDir);

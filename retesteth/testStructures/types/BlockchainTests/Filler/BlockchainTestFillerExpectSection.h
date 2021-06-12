@@ -13,7 +13,7 @@ namespace teststruct
 struct BlockchainTestFillerExpectSection
 {
     BlockchainTestFillerExpectSection(DataObject const&);
-    StateIncomplete const& result() const { return m_result.getCContent(); }
+    StateIncomplete const& result() const { return m_result; }
     std::vector<FORK> const& forks() const { return m_forks; }
     bool hasFork(FORK const& _fork) const
     {

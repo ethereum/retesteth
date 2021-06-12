@@ -3,7 +3,6 @@
 #include <retesteth/dataObject/DataObject.h>
 #include <retesteth/testStructures/basetypes.h>
 #include <retesteth/testStructures/types/rpc.h>
-
 #include <string>
 
 using namespace dataobject;
@@ -42,7 +41,7 @@ public:
     virtual DataObject web3_clientVersion() = 0;
 
     // ETH Methods
-    virtual FH32 eth_sendRawTransaction(BYTES const& _rlp) = 0;
+    virtual FH32 eth_sendRawTransaction(BYTES const& _rlp, VALUE const& _secret) = 0;
     virtual VALUE eth_getTransactionCount(FH20 const& _address, VALUE const& _blockNumber) = 0;
 
     virtual VALUE eth_blockNumber() = 0;
@@ -66,7 +65,7 @@ public:
     virtual void test_setChainParams(SetChainParamsArgs const& _config) = 0;
     virtual void test_rewindToBlock(VALUE const& _blockNr) = 0;
     virtual void test_modifyTimestamp(VALUE const& _timestamp) = 0;
-    virtual void test_mineBlocks(size_t _number) = 0;
+    virtual MineBlocksResult test_mineBlocks(size_t _number) = 0;
     virtual FH32 test_importRawBlock(BYTES const& _blockRLP) = 0;
     virtual FH32 test_getLogHash(FH32 const& _txHash) = 0;
 
