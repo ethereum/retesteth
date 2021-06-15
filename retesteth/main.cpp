@@ -75,6 +75,24 @@ void travisOut(std::atomic_bool* _stopTravisOut)
     }
 }
 
+void timeoutThread(std::atomic_bool* _stopTimeout)
+{
+    uint tickCounter = 0;
+    const uint C_MAX_TESTEXEC_TIMEOUT = 36000;
+    while (!*_stopTimeout)
+    {
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        ++tickCounter;
+        if (tickCounter > C_MAX_TESTEXEC_TIMEOUT)
+        {
+            test::TestOutputHelper::get().setCurrentTestInfo(test::TestInfo("Timeout"));
+            ETH_FAIL_MESSAGE("Test execution timeout reached! " + test::fto_string(C_MAX_TESTEXEC_TIMEOUT) + "sec");
+        }
+        if (ExitHandler::receivedExitSignal())
+            break;
+    }
+}
+
 /*
 The equivalent of setlocale(LC_ALL, “C”) is called before any user code is run.
 If the user has an invalid environment setting then it is possible for the call
@@ -214,8 +232,12 @@ int main(int argc, const char* argv[])
         auto fakeInit = [](int, char* []) -> boost::unit_test::test_suite* { return nullptr; };
         if (opt.jsontrace || opt.vmtrace || opt.statediff || opt.createRandomTest || !opt.travisOutThread)
         {
+            std::atomic_bool stopTimeout{false};
+            std::thread timeout(timeoutThread, &stopTimeout);
             // Do not use travis '.' output thread if debug is defined
             result = unit_test_main(fakeInit, argc, const_cast<char**>(argv));
+            stopTimeout = true;
+            timeout.join();
         }
         else
         {
