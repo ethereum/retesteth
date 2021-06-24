@@ -534,6 +534,11 @@ DataObject StateTestSuite::doTests(DataObject const& _input, TestSuiteOptions& _
                 _infoRef["filling-tool-version"] = "testeth";
             }
             GeneralStateTest filledTest(_input);
+
+            // Just check the test structure if running with --checkhash
+            if (Options::get().checkhash)
+                return DataObject();
+
             for (auto const& test : filledTest.tests())
             {
                 RunTest(test);

@@ -261,9 +261,14 @@ DataObject DoTests(DataObject const& _input, TestSuite::TestSuiteOptions& _opt)
                     el["genesisRLP"] = "0x00";
             }
         }
+
         ETH_LOG("Parse test", 5);
         BlockchainTest test(_input);
+        // Just check the test structure if running with --checkhash
+        if (Options::get().checkhash)
+            return tests;
         ETH_LOG("Parse test done", 5);
+
         for (BlockchainTestInFilled const& bcTest : test.tests())
         {
             // Select test by name if --singletest and --singlenet is set
