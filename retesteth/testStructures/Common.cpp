@@ -76,7 +76,8 @@ void mod_valueToCompactEvenHexPrefixed(DataObject& _obj)
     {
         try
         {
-            _obj.setString(toCompactHexPrefixed(_obj.asString(), 1));
+            if (!(_obj.asString()[0] == '0' && _obj.asString()[1] == 'x'))
+                _obj.setString(toCompactHexPrefixed(_obj.asString(), 1));
         }
         catch (std::exception const& _ex)
         {
@@ -89,7 +90,8 @@ void mod_keyToCompactEvenHexPrefixed(DataObject& _obj)
 {
     try
     {
-        _obj.setKey(toCompactHexPrefixed(_obj.getKey(), 1));
+        if (!(_obj.getKey()[0] == '0' && _obj.getKey()[1] == 'x'))
+            _obj.setKey(toCompactHexPrefixed(_obj.getKey(), 1));
     }
     catch (std::exception const& _ex)
     {

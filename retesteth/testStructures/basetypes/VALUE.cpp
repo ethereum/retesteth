@@ -1,6 +1,7 @@
 #include "VALUE.h"
 #include <retesteth/EthChecks.h>
 #include <retesteth/TestHelper.h>
+#include <locale>
 using namespace test::teststruct;
 
 namespace test
@@ -13,11 +14,11 @@ namespace teststruct
 //     if string is hex  check hexvalue 0x00000 leading zeros etc
 // check limit
 
-VALUE::VALUE(dev::u256 _data) : m_data(_data) {}
+VALUE::VALUE(dev::bigint const& _data) : m_data(_data) {}
 
 VALUE::VALUE(int _data)
 {
-    m_data = dev::u256(_data);
+    m_data = dev::bigint(_data);
 }
 
 VALUE::VALUE(DataObject const& _data)
@@ -27,7 +28,7 @@ VALUE::VALUE(DataObject const& _data)
     else
     {
         verifyHexString(_data.asString(), _data.getKey());
-        m_data = dev::u256(_data.asString());
+        m_data = dev::bigint(_data.asString());
     }
 }
 
@@ -53,6 +54,16 @@ void VALUE::verifyHexString(std::string const& _s, std::string const& _k) const
 string VALUE::asDecString() const
 {
     return m_data.str(0, std::ios_base::dec);
+}
+
+string VALUE::asString(size_t _roundBytes) const
+{
+    string ret = m_data.str(_roundBytes, std::ios_base::hex);
+    if (ret.size() % 2 != 0)
+        ret = "0" + ret;
+    test::strToLower(ret);
+    return "0x" + ret;
+    // return dev::toCompactHexPrefixed(m_data, _roundBytes);
 }
 
 }  // namespace teststruct

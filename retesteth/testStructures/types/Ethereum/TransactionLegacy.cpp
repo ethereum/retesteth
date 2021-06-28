@@ -40,7 +40,7 @@ void TransactionLegacy::fromDataObject(DataObject const& _data)
         else
         {
             m_v = spVALUE(new VALUE(_data.atKey("v")));
-            if (m_v.getCContent() > dev::u256("0xff"))
+            if (m_v.getCContent() > dev::bigint("0xff"))
                 throw test::UpwardsException("Incorrect transaction `v` value: " + m_v->asString());
             m_r = spVALUE(new VALUE(_data.atKey("r")));
             m_s = spVALUE(new VALUE(_data.atKey("s")));
@@ -113,14 +113,14 @@ TransactionLegacy::TransactionLegacy(BYTES const& _rlp)
 
 void TransactionLegacy::streamHeader(dev::RLPStream& _s) const
 {
-    _s << nonce().asU256();
-    _s << gasPrice().asU256();
-    _s << gasLimit().asU256();
+    _s << nonce().asBigInt();
+    _s << gasPrice().asBigInt();
+    _s << gasLimit().asBigInt();
     if (m_creation)
         _s << "";
     else
         _s << dev::Address(to().asString());
-    _s << value().asU256();
+    _s << value().asBigInt();
     _s << test::sfromHex(data().asString());
 }
 
@@ -187,9 +187,9 @@ void TransactionLegacy::rebuildRLP()
     dev::RLPStream out;
     out.appendList(9);
     streamHeader(out);
-    out << v().asU256().convert_to<dev::byte>();
-    out << r().asU256();
-    out << s().asU256();
+    out << v().asBigInt().convert_to<dev::byte>();
+    out << r().asBigInt();
+    out << s().asBigInt();
     m_outRlpStream = out;
     m_rawRLPdata = spBYTES(new BYTES(dev::toHexPrefixed(out.out())));
     m_hash = spFH32(new FH32("0x" + dev::toString(dev::sha3(out.out()))));

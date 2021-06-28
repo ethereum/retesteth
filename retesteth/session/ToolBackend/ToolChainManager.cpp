@@ -30,8 +30,8 @@ DataObject const ToolChainManager::mineBlocks(size_t _number, ToolChain::Mining 
 
 void ToolChainManager::rewindToBlock(VALUE const& _number)
 {
-    size_t number = (size_t)_number.asU256();
-    assert(_number.asU256() >= 0 && _number < currentChainUnsafe().blocks().size());
+    size_t number = (size_t)_number.asBigInt();
+    assert(_number.asBigInt() >= 0 && _number < currentChainUnsafe().blocks().size());
     currentChainUnsafe().rewindToBlock(number);
     reorganizePendingBlock();
 }
@@ -70,15 +70,14 @@ void ToolChainManager::reorganizePendingBlock()
     {
         BlockHeader1559& header1559 = BlockHeader1559::castFrom(header);
         ChainOperationParams params = ChainOperationParams::defaultParams(currentChain().toolParams());
-        u256 newFee =
-            calculateEIP1559BaseFee(params, m_pendingBlock->header(), currentChain().lastBlock().header());
+        VALUE newFee = calculateEIP1559BaseFee(params, m_pendingBlock->header(), currentChain().lastBlock().header());
         header1559.setBaseFee(VALUE(newFee));
     }
 }
 
 EthereumBlockState const& ToolChainManager::blockByNumber(VALUE const& _number) const
 {
-    size_t blockN = (size_t)_number.asU256();
+    size_t blockN = (size_t)_number.asBigInt();
     if (blockN >= currentChain().blocks().size())
         throw UpwardsException(string("ToolChainManager::blockByNumer block number not found: " + _number.asDecString()));
     return currentChain().blocks().at(blockN);
@@ -97,7 +96,8 @@ EthereumBlockState const& ToolChainManager::blockByHash(FH32 const& _hash) const
 
 void ToolChainManager::modifyTimestamp(VALUE const& _time)
 {
-    m_pendingBlock.getContent().headerUnsafe().getContent().setTimestamp(_time.asU256());
+    VALUE const& prevTime = lastBlock().header()->timestamp();
+    m_pendingBlock.getContent().headerUnsafe().getContent().setTimestamp(prevTime + _time);
 }
 
 // Import Raw Block via t8ntool

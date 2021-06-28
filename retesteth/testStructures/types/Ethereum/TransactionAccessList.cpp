@@ -43,7 +43,7 @@ void TransactionAccessList::fromDataObject(DataObject const& _data)
         else
         {
             m_v = spVALUE(new VALUE(_data.atKey("v")));
-            if (m_v.getCContent() > dev::u256("0xff"))
+            if (m_v.getCContent() > dev::bigint("0xff"))
                 throw test::UpwardsException("Incorrect transaction `v` value: " + m_v->asString());
             m_r = spVALUE(new VALUE(_data.atKey("r")));
             m_s = spVALUE(new VALUE(_data.atKey("s")));
@@ -155,15 +155,15 @@ void TransactionAccessList::buildVRS(VALUE const& _secret)
 void TransactionAccessList::streamHeader(dev::RLPStream& _s) const
 {
     // rlp([chainId, nonce, gasPrice, gasLimit, to, value, data, access_list, yParity, senderR, senderS])
-    _s << VALUE(1).asU256();
-    _s << nonce().asU256();
-    _s << gasPrice().asU256();
-    _s << gasLimit().asU256();
+    _s << VALUE(1).asBigInt();
+    _s << nonce().asBigInt();
+    _s << gasPrice().asBigInt();
+    _s << gasLimit().asBigInt();
     if (Transaction::isCreation())
         _s << "";
     else
         _s << dev::Address(to().asString());
-    _s << value().asU256();
+    _s << value().asBigInt();
     _s << test::sfromHex(data().asString());
 
     // Access Listist
@@ -198,9 +198,9 @@ void TransactionAccessList::rebuildRLP()
     dev::RLPStream out;
     out.appendList(11);
     streamHeader(out);
-    out << v().asU256().convert_to<dev::byte>();
-    out << r().asU256();
-    out << s().asU256();
+    out << v().asBigInt().convert_to<dev::byte>();
+    out << r().asBigInt();
+    out << s().asBigInt();
 
     // Alter output with prefixed 01 byte + tr.rlp
     dev::bytes outa = out.out();

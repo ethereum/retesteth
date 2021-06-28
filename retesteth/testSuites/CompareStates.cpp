@@ -140,7 +140,7 @@ CompareResult compareStorage(Storage const& _expectStorage, Storage const& _remo
         VALUE const& expVal = std::get<1>(element.second);
 
         // If remote storage doesn't exist and expected is not 00 (zeros omited)
-        if (!_remoteStorage.hasKey(expKey) && expVal.asU256() != 0)
+        if (!_remoteStorage.hasKey(expKey) && expVal.asBigInt() != 0)
         {
             ETH_MARK_ERROR(message + "test expected storage key: '" + expKey.asString() + "' to be set to: '" +
                            expVal.asString() + "', but remote key '" + expKey.asString() + "' does not exist!");

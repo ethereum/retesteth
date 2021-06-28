@@ -66,7 +66,7 @@ DataObject const ToolChain::mineBlock(EthereumBlockState const& _pendingBlock, M
 
     // Calculate difficulty for tool (tool does not calculate difficulty)
     ChainOperationParams params = ChainOperationParams::defaultParams(toolParams());
-    u256 toolDifficulty = calculateEthashDifficulty(params, pendingFixed.header(), lastBlock().header());
+    VALUE toolDifficulty = calculateEthashDifficulty(params, pendingFixed.header(), lastBlock().header());
     pendingFixedHeader.setDifficulty(toolDifficulty);
 
     // Calculate new baseFee
@@ -74,7 +74,7 @@ DataObject const ToolChain::mineBlock(EthereumBlockState const& _pendingBlock, M
         lastBlock().header()->type() == BlockType::BlockHeader1559)
     {
         BlockHeader1559& pendingFixed1559Header = BlockHeader1559::castFrom(pendingFixedHeader);
-        u256 baseFee = calculateEIP1559BaseFee(params, pendingFixed.header(), lastBlock().header());
+        VALUE baseFee = calculateEIP1559BaseFee(params, pendingFixed.header(), lastBlock().header());
         pendingFixed1559Header.setBaseFee(baseFee);
     }
 
@@ -142,13 +142,13 @@ DataObject const ToolChain::mineBlock(EthereumBlockState const& _pendingBlock, M
     verifyEthereumBlockHeader(pendingFixed.header(), *this);
 
     // Require number from pending block to be equal to actual block number that is imported
-    if (_pendingBlock.header()->number() != pendingFixed.header()->number().asU256())
+    if (_pendingBlock.header()->number() != pendingFixed.header()->number().asBigInt())
         throw test::UpwardsException(string("Block Number from pending block != actual chain height! (") +
                                      _pendingBlock.header()->number().asString() +
                                      " != " + pendingFixed.header()->number().asString() + ")");
 
     // Require new block timestamp to be > than the previous block timestamp
-    if (lastBlock().header()->timestamp().asU256() >= pendingFixed.header()->timestamp().asU256())
+    if (lastBlock().header()->timestamp().asBigInt() >= pendingFixed.header()->timestamp().asBigInt())
         throw test::UpwardsException("Block Timestamp from pending block <= previous block timestamp!");
 
     if (_req == Mining::RequireValid)  // called on rawRLP import
@@ -208,7 +208,7 @@ ToolResponse ToolChain::mineBlockOnTool(EthereumBlockState const& _block, SealEn
     for (auto const& un : _block.uncles())
     {
         DataObject uncle;
-        int delta = (int)(_block.header()->number() - un->number()).asU256();
+        int delta = (int)(_block.header()->number() - un->number()).asBigInt();
         if (delta < 1)
             throw test::UpwardsException("Uncle header delta is < 1");
         uncle["delta"] = delta;
@@ -233,7 +233,7 @@ ToolResponse ToolChain::mineBlockOnTool(EthereumBlockState const& _block, SealEn
     static u256 c_maxGasLimit = u256("0xffffffffffffffff");
     for (auto const& tr : _block.transactions())
     {
-        if (tr->gasLimit().asU256() <= c_maxGasLimit)  // tool fails on limits here.
+        if (tr->gasLimit().asBigInt() <= c_maxGasLimit)  // tool fails on limits here.
             txs.addArrayObject(tr->asDataObject(ExportOrder::ToolStyle));
         else
             ETH_WARNING(

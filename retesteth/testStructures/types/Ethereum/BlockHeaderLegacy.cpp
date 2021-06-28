@@ -163,11 +163,11 @@ const RLPStream BlockHeaderLegacy::asRLPStream() const
     header << h256(m_transactionsRoot->asString());
     header << h256(m_receiptsRoot->asString());
     header << h2048(m_logsBloom->asString());
-    header << m_difficulty->asU256();
-    header << m_number->asU256();
-    header << m_gasLimit->asU256();
-    header << m_gasUsed->asU256();
-    header << m_timestamp->asU256();
+    header << m_difficulty->asBigInt();
+    header << m_number->asBigInt();
+    header << m_gasLimit->asBigInt();
+    header << m_gasUsed->asBigInt();
+    header << m_timestamp->asBigInt();
     header << test::sfromHex(m_extraData->asString());
     header << h256(m_mixHash->asString());
     header << h64(m_nonce->asString());
