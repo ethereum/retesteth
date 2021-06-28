@@ -232,7 +232,7 @@ spBlockHeader TestBlockchain::mineNextBlockAndRevert()
     m_session.test_mineBlocks(1);
     VALUE latestBlockNumber(m_session.eth_blockNumber());
     EthGetBlockBy const nextBlock(m_session.eth_getBlockByNumber(latestBlockNumber, Request::LESSOBJECTS));
-    m_session.test_rewindToBlock(nextBlock.header()->number().asU256() - 1);  // rewind to the previous block
+    m_session.test_rewindToBlock(nextBlock.header()->number() - 1);  // rewind to the previous block
 
     //m_session.test_modifyTimestamp(1000);  // Shift block timestamp relative to previous block
 
@@ -266,7 +266,7 @@ void TestBlockchain::restoreUpToNumber(SessionInterface& _session, VALUE const& 
     {
         if (_number == 0)
             return;
-        firstBlock = (size_t)_number.asU256();
+        firstBlock = (size_t)_number.asBigInt();
         assert(firstBlock > 0);
         _session.test_rewindToBlock(firstBlock - 1);
     }
@@ -305,7 +305,7 @@ void TestBlockchain::restoreUpToNumber(SessionInterface& _session, VALUE const& 
             continue;
         }
 
-        if (actNumber < _number.asU256())
+        if (actNumber < _number.asBigInt())
             _session.test_importRawBlock(block.getRawRLP());
         else
         {
@@ -349,7 +349,7 @@ FH32 TestBlockchain::postmineBlockHeader(BlockchainTestFillerBlock const& _block
         {
             EthGetBlockBy previousBlock(m_session.eth_getBlockByNumber(_latestBlockNumber - 1, Request::LESSOBJECTS));
             managedBlock.headerUnsafe().getContent().setTimestamp(
-                previousBlock.header()->timestamp().asU256() + headerOverwrite.relTimeStamp());
+                previousBlock.header()->timestamp() + headerOverwrite.relTimeStamp());
         }
 
         // replace block with overwritten header

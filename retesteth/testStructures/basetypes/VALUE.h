@@ -15,30 +15,45 @@ namespace teststruct
 
 struct VALUE : GCP_SPointerBase
 {
-    VALUE(dev::u256);
+    VALUE(dev::bigint const&);
     VALUE(int);
     VALUE(DataObject const&);
     bool operator<(int _rhs) const { return m_data < _rhs; }
-    bool operator>(VALUE const& _rhs) const { return m_data > _rhs.asU256(); }
-    bool operator>=(VALUE const& _rhs) const { return m_data >= _rhs.asU256(); }
-    bool operator<(VALUE const& _rhs) const { return m_data < _rhs.asU256(); }
-    bool operator<=(VALUE const& _rhs) const { return m_data <= _rhs.asU256(); }
-    bool operator!=(VALUE const& _rhs) const { return m_data != _rhs.asU256(); }
-    bool operator==(VALUE const& _rhs) const { return m_data == _rhs.asU256(); }
-    VALUE operator-(VALUE const& _rhs) const { return VALUE(m_data - _rhs.asU256()); }
-    VALUE operator/(VALUE const& _rhs) const { return VALUE(m_data / _rhs.asU256()); }
-    VALUE operator*(VALUE const& _rhs) const { return VALUE(m_data * _rhs.asU256()); }
-    VALUE operator+(VALUE const& _rhs) const { return VALUE(m_data + _rhs.asU256()); }
+    bool operator>(VALUE const& _rhs) const { return m_data > _rhs.asBigInt(); }
+    bool operator>=(VALUE const& _rhs) const { return m_data >= _rhs.asBigInt(); }
+    bool operator<(VALUE const& _rhs) const { return m_data < _rhs.asBigInt(); }
+    bool operator<=(VALUE const& _rhs) const { return m_data <= _rhs.asBigInt(); }
+    bool operator!=(VALUE const& _rhs) const { return m_data != _rhs.asBigInt(); }
+    bool operator==(VALUE const& _rhs) const { return m_data == _rhs.asBigInt(); }
+
+    VALUE operator-(VALUE const& _rhs) const { return VALUE(m_data - _rhs.asBigInt()); }
+    VALUE operator-(int _rhs) const { return VALUE(m_data - _rhs); }
+    VALUE operator/(VALUE const& _rhs) const { return VALUE(m_data / _rhs.asBigInt()); }
+    VALUE operator/(int _rhs) const { return VALUE(m_data / _rhs); }
+    VALUE operator*(VALUE const& _rhs) const { return VALUE(m_data * _rhs.asBigInt()); }
+    VALUE operator*(int _rhs) const { return VALUE(m_data * _rhs); }
+    VALUE operator+(VALUE const& _rhs) const { return VALUE(m_data + _rhs.asBigInt()); }
+    VALUE operator+(int _rhs) const { return VALUE(m_data + _rhs); }
+
+    VALUE& operator+=(VALUE const& _rhs) { m_data += _rhs.asBigInt(); return *this; }
+    VALUE& operator+=(int _rhs) { m_data += _rhs; return *this; }
+    VALUE& operator-=(VALUE const& _rhs) { m_data -= _rhs.asBigInt(); return *this; }
+    VALUE& operator-=(int _rhs) { m_data -= _rhs; return *this; }
+    VALUE& operator/=(VALUE const& _rhs) { m_data /= _rhs.asBigInt(); return *this; }
+    VALUE& operator/=(int _rhs) { m_data /= _rhs; return *this; }
+    VALUE& operator*=(VALUE const& _rhs) { m_data *= _rhs.asBigInt(); return *this; }
+    VALUE& operator*=(int _rhs) { m_data *= _rhs; return *this; }
+
     VALUE operator++(int) { m_data++; return *this; }
 
-    string asString(size_t _roundBytes = 1) const { return dev::toCompactHexPrefixed(m_data, _roundBytes); }
+    string asString(size_t _roundBytes = 1) const;
     string asDecString() const;
-    dev::u256 asU256() const { return m_data; }
+    dev::bigint const& asBigInt() const { return m_data; }
 
 private:
     VALUE() {}
     void verifyHexString(std::string const& _s, std::string const& _k = string()) const;
-    dev::u256 m_data;
+    dev::bigint m_data;
 };
 
 typedef GCP_SPointer<VALUE> spVALUE;

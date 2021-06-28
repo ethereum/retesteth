@@ -12,7 +12,7 @@ namespace toolimpl
 {
 ToolParams::ToolParams(DataObject const& _data)
 {
-    const u256 unreachable = 10000000000;
+    const bigint unreachable = 10000000000;
     if (_data.count("homesteadForkBlock"))
         m_homesteadForkBlock = spVALUE(new VALUE(_data.atKey("homesteadForkBlock")));
     else
@@ -98,14 +98,14 @@ std::tuple<VALUE, FORK> prepareReward(SealEngine _engine, FORK const& _fork, VAL
 
 VALUE calculateGasLimit(VALUE const& _parentGasLimit, VALUE const& _parentGasUsed)
 {
-    static u256 gasFloorTarget = 3141562;  //_gasFloorTarget == Invalid256 ? 3141562 : _gasFloorTarget;
-    u256 gasLimit = _parentGasLimit.asU256();
-    static u256 boundDivisor = u256("0x0400");
+    static bigint gasFloorTarget = 3141562;  //_gasFloorTarget == Invalid256 ? 3141562 : _gasFloorTarget;
+    bigint gasLimit = _parentGasLimit.asBigInt();
+    static bigint boundDivisor = bigint("0x0400");
     if (gasLimit < gasFloorTarget)
-        return min<u256>(gasFloorTarget, gasLimit + gasLimit / boundDivisor - 1);
+        return min<bigint>(gasFloorTarget, gasLimit + gasLimit / boundDivisor - 1);
     else
-        return max<u256>(
-            gasFloorTarget, gasLimit - gasLimit / boundDivisor + 1 + (_parentGasUsed.asU256() * 6 / 5) / boundDivisor);
+        return max<bigint>(
+            gasFloorTarget, gasLimit - gasLimit / boundDivisor + 1 + (_parentGasUsed.asBigInt() * 6 / 5) / boundDivisor);
 }
 
 // Because tool report incomplete state. restore missing fields with zeros
@@ -136,16 +136,17 @@ ChainOperationParams ChainOperationParams::defaultParams(ToolParams const& _para
     aleth.durationLimit = u256("0x0d");
     aleth.minimumDifficulty = u256("0x20000");
     aleth.difficultyBoundDivisor = u256("0x0800");
-    aleth.homesteadForkBlock = _params.homesteadForkBlock().asU256();
-    aleth.byzantiumForkBlock = _params.byzantiumForkBlock().asU256();
-    aleth.constantinopleForkBlock = _params.constantinopleForkBlock().asU256();
-    aleth.muirGlacierForkBlock = _params.muirGlacierForkBlock().asU256();
-    aleth.londonForkBlock = _params.londonForkBlock().asU256();
+    aleth.homesteadForkBlock = _params.homesteadForkBlock().asBigInt();
+    aleth.byzantiumForkBlock = _params.byzantiumForkBlock().asBigInt();
+    aleth.constantinopleForkBlock = _params.constantinopleForkBlock().asBigInt();
+    aleth.muirGlacierForkBlock = _params.muirGlacierForkBlock().asBigInt();
+    aleth.londonForkBlock = _params.londonForkBlock().asBigInt();
     return aleth;
 }
 
 // Aleth calculate difficulty formula
-u256 calculateEthashDifficulty(ChainOperationParams const& _chainParams, spBlockHeader const& _bi, spBlockHeader const& _parent)
+VALUE calculateEthashDifficulty(
+    ChainOperationParams const& _chainParams, spBlockHeader const& _bi, spBlockHeader const& _parent)
 {
     const unsigned c_expDiffPeriod = 100000;
 
@@ -156,28 +157,31 @@ u256 calculateEthashDifficulty(ChainOperationParams const& _chainParams, spBlock
     auto const& difficultyBoundDivisor = _chainParams.difficultyBoundDivisor;
     auto const& durationLimit = _chainParams.durationLimit;
 
-    bigint target;  // stick to a bigint for the target. Don't want to risk going negative.
+    VALUE target(0);  // stick to a bigint for the target. Don't want to risk going negative.
     if (_bi->number() < _chainParams.homesteadForkBlock)
+    {
         // Frontier-era difficulty adjustment
-        target = _bi->timestamp().asU256() >= _parent->timestamp().asU256() + durationLimit ?
-                     _parent->difficulty().asU256() - (_parent->difficulty().asU256() / difficultyBoundDivisor) :
-                     (_parent->difficulty().asU256() + (_parent->difficulty().asU256() / difficultyBoundDivisor));
+        target = _bi->timestamp() >= _parent->timestamp() + durationLimit ?
+                     _parent->difficulty() - (_parent->difficulty() / difficultyBoundDivisor) :
+                     (_parent->difficulty() + (_parent->difficulty() / difficultyBoundDivisor));
+    }
     else
     {
-        bigint const timestampDiff = bigint(_bi->timestamp().asU256()) - _parent->timestamp().asU256();
-        bigint const adjFactor = _bi->number() < _chainParams.byzantiumForkBlock ?
-                                     max<bigint>(1 - timestampDiff / 10, -99) :  // Homestead-era difficulty adjustment
-                                     max<bigint>((_parent->hasUncles() ? 2 : 1) - timestampDiff / 9,
-                                         -99);  // Byzantium-era difficulty adjustment
+        VALUE const timestampDiff = _bi->timestamp() - _parent->timestamp();
+        VALUE const adjFactor =
+            _bi->number() < _chainParams.byzantiumForkBlock ?
+                max<bigint>(1 - timestampDiff.asBigInt() / 10, -99) :  // Homestead-era difficulty adjustment
+                max<bigint>((_parent->hasUncles() ? 2 : 1) - timestampDiff.asBigInt() / 9,
+                    -99);  // Byzantium-era difficulty adjustment
 
-        target = _parent->difficulty().asU256() + _parent->difficulty().asU256() / 2048 * adjFactor;
+        target = _parent->difficulty() + _parent->difficulty() / 2048 * adjFactor;
     }
 
-    bigint o = target;
-    unsigned exponentialIceAgeBlockNumber = unsigned(_parent->number().asU256() + 1);
+    VALUE o = target;
+    unsigned exponentialIceAgeBlockNumber = (unsigned)_parent->number().asBigInt() + 1;
 
     // EIP-2384 Istanbul/Berlin Difficulty Bomb Delay
-    if (_bi->number().asU256() >= _chainParams.muirGlacierForkBlock)
+    if (_bi->number().asBigInt() >= _chainParams.muirGlacierForkBlock)
     {
         if (exponentialIceAgeBlockNumber >= 9000000)
             exponentialIceAgeBlockNumber -= 9000000;
@@ -185,7 +189,7 @@ u256 calculateEthashDifficulty(ChainOperationParams const& _chainParams, spBlock
             exponentialIceAgeBlockNumber = 0;
     }
     // EIP-1234 Constantinople Ice Age delay
-    else if (_bi->number().asU256() >= _chainParams.constantinopleForkBlock)
+    else if (_bi->number().asBigInt() >= _chainParams.constantinopleForkBlock)
     {
         if (exponentialIceAgeBlockNumber >= 5000000)
             exponentialIceAgeBlockNumber -= 5000000;
@@ -193,7 +197,7 @@ u256 calculateEthashDifficulty(ChainOperationParams const& _chainParams, spBlock
             exponentialIceAgeBlockNumber = 0;
     }
     // EIP-649 Byzantium Ice Age delay
-    else if (_bi->number().asU256() >= _chainParams.byzantiumForkBlock)
+    else if (_bi->number().asBigInt() >= _chainParams.byzantiumForkBlock)
     {
         if (exponentialIceAgeBlockNumber >= 3000000)
             exponentialIceAgeBlockNumber -= 3000000;
@@ -202,41 +206,42 @@ u256 calculateEthashDifficulty(ChainOperationParams const& _chainParams, spBlock
     }
 
     unsigned periodCount = exponentialIceAgeBlockNumber / c_expDiffPeriod;
+    // latter will eventually become huge, so ensure it's a bigint.
     if (periodCount > 1)
-        o += (bigint(1) << (periodCount - 2));  // latter will eventually become huge, so ensure it's a bigint.
+        o += VALUE((bigint(1) << (periodCount - 2)));
 
-    o = max<bigint>(minimumDifficulty, o);
-    return u256(min<bigint>(o, std::numeric_limits<u256>::max()));
+    o = max<bigint>(minimumDifficulty, o.asBigInt());
+    return o;  // bigint(min<bigint>(o, std::numeric_limits<bigint>::max()));
 }
 
 
-u256 calculateEIP1559BaseFee(ChainOperationParams const& _chainParams, spBlockHeader const& _bi, spBlockHeader const& _parent)
+VALUE calculateEIP1559BaseFee(ChainOperationParams const& _chainParams, spBlockHeader const& _bi, spBlockHeader const& _parent)
 {
     (void)_chainParams;
     (void)_bi;
 
-    u256 expectedBaseFee;
+    VALUE expectedBaseFee(0);
     BlockHeader1559 const& parent = BlockHeader1559::castFrom(_parent);
 
     VALUE const parentGasTarget = parent.gasLimit() / ELASTICITY_MULTIPLIER;
 
-    if (_bi->number().asU256() == _chainParams.londonForkBlock)
+    if (_bi->number().asBigInt() == _chainParams.londonForkBlock)
         expectedBaseFee = INITIAL_BASE_FEE;
     else if (parent.gasUsed() == parentGasTarget)
-        expectedBaseFee = parent.baseFee().asU256();
+        expectedBaseFee = parent.baseFee().asBigInt();
     else if (parent.gasUsed() > parentGasTarget)
     {
         VALUE gasUsedDelta = parent.gasUsed() - parentGasTarget;
         VALUE formula = parent.baseFee() * gasUsedDelta / parentGasTarget / BASE_FEE_MAX_CHANGE_DENOMINATOR;
-        VALUE baseFeePerGasDelta = max<dev::u256>(formula.asU256(), dev::u256(1));
-        expectedBaseFee = VALUE(parent.baseFee() + baseFeePerGasDelta).asU256();
+        VALUE baseFeePerGasDelta = max<dev::bigint>(formula.asBigInt(), dev::bigint(1));
+        expectedBaseFee = parent.baseFee() + baseFeePerGasDelta;
     }
     else
     {
         VALUE gasUsedDelta = parentGasTarget - parent.gasUsed();
         VALUE baseFeePerGasDelta = parent.baseFee() * gasUsedDelta / parentGasTarget / BASE_FEE_MAX_CHANGE_DENOMINATOR;
         VALUE formula = parent.baseFee() - baseFeePerGasDelta;
-        expectedBaseFee = VALUE(max<dev::u256>(formula.asU256(), dev::u256(0))).asU256();
+        expectedBaseFee = VALUE(max<dev::bigint>(formula.asBigInt(), dev::bigint(0))).asBigInt();
     }
     return expectedBaseFee;
 }

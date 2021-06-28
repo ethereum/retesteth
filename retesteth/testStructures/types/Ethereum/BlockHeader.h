@@ -49,7 +49,7 @@ struct BlockHeader : GCP_SPointerBase
 
     // Would soon go uncommon
     VALUE const& difficulty() const { return m_difficulty; }
-    void setDifficulty(VALUE const& _value) { m_difficulty = spVALUE(new VALUE(_value.asU256())); }
+    void setDifficulty(VALUE const& _value) { m_difficulty = spVALUE(new VALUE(_value.asBigInt())); }
 
     // Classic Ethereum blockheader fields
     FH32 const& receiptTrie() const { return m_receiptsRoot; }
@@ -64,7 +64,7 @@ struct BlockHeader : GCP_SPointerBase
     VALUE const& gasLimit() const { return m_gasLimit; }
 
     void setLogsBloom(FH256 const& _logs) { m_logsBloom = spFH256(new FH256(_logs)); }
-    void setTimestamp(VALUE const& _value) { m_timestamp = spVALUE(new VALUE(_value.asU256())); }
+    void setTimestamp(VALUE const& _value) { m_timestamp = spVALUE(new VALUE(_value.asBigInt())); }
     void setTransactionHash(FH32 const& _hash) { m_transactionsRoot = spFH32(new FH32(_hash)); }
     void setTrReceiptsHash(FH32 const& _hash) { m_receiptsRoot = spFH32(new FH32(_hash)); }
     void setExtraData(BYTES const& _extraData) { m_extraData = spBYTES(new BYTES(_extraData)); }

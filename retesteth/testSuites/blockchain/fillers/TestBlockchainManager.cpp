@@ -140,7 +140,7 @@ void TestBlockchainManager::reorgChains(BlockchainTestFillerBlock const& _block)
     // Chain reorg conditions
     assert(m_mapOfKnownChain.count(newBlockChainName));
     const int blocksInChain = m_mapOfKnownChain.at(newBlockChainName).getBlocks().size() - 1;
-    bool blockNumberHasDecreased = (newBlockNumber.asU256() != 0 && blocksInChain >= newBlockNumber.asU256());
+    bool blockNumberHasDecreased = (newBlockNumber.asBigInt() != 0 && blocksInChain >= newBlockNumber.asBigInt());
     bool sameChain = (m_sCurrentChainName == newBlockChainName);
 
     if (!blockNumberHasDecreased && sameChain && newBlockNumber != 0)
@@ -256,8 +256,7 @@ spBlockHeader TestBlockchainManager::prepareUncle(
             // Get the Timestamp of that block (which uncle is populated from)
             assert(currentChainMining.getBlocks().size() > origIndex);
             VALUE timestamp(currentChainMining.getBlocks().at(origIndex).getTestHeader()->timestamp());
-            uncleBlockHeader.getContent().setTimestamp(
-                timestamp.asU256() + _uncleSectionInTest.relTimestampFromPopulateBlock());
+            uncleBlockHeader.getContent().setTimestamp(timestamp + _uncleSectionInTest.relTimestampFromPopulateBlock());
         }
     }
 
