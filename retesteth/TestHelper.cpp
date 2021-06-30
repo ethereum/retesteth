@@ -365,7 +365,7 @@ bool checkCmdExist(std::string const& _command)
 
     string const checkCmd = string("which " + cmd + " > /dev/null 2>&1");
     bool const checkBoost = fs::exists(cmd);
-    if (system(checkCmd.c_str()) && !checkBoost)
+    if (!checkBoost && system(checkCmd.c_str()))
         return false;
     return true;
 }
