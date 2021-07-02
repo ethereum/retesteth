@@ -47,7 +47,7 @@ struct Transaction : GCP_SPointerBase
     void setDataRawPreview(string const& _dataRawPreview) { m_dataRawPreview = _dataRawPreview; }
 
     /// Debug transaction data for t8ntool wrapper
-    void setSecret(VALUE const& _secret) { m_secretKey = spVALUE(new VALUE(_secret)); }
+    void setSecret(VALUE const& _secret) { m_secretKey = spVALUE(_secret.copy()); }
     VALUE const& getSecret() const { return m_secretKey; }
 
 protected:

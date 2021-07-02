@@ -27,8 +27,10 @@ Account::Account(DataObject const& _data)
     if (m_nonce.getCContent() > c_maxNonce)
         ETH_ERROR_MESSAGE("Account `" + m_address->asString() + "` requires nonce <= (2**64)-1");
     requireJsonFields(_data, "Account " + _data.getKey(),
-        {{"balance", {{DataType::String}, jsonField::Required}}, {"code", {{DataType::String}, jsonField::Required}},
-            {"nonce", {{DataType::String}, jsonField::Required}}, {"storage", {{DataType::Object}, jsonField::Required}}});
+        {{"balance", {{DataType::String}, jsonField::Required}},
+         {"code", {{DataType::String}, jsonField::Required}},
+         {"nonce", {{DataType::String}, jsonField::Required}},
+         {"storage", {{DataType::Object}, jsonField::Required}}});
 }
 
 const DataObject Account::asDataObject(ExportOrder _order) const

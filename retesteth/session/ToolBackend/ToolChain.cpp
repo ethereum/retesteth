@@ -19,7 +19,7 @@ ToolChain::ToolChain(
     EthereumBlockState const& _genesis, SetChainParamsArgs const& _config, fs::path const& _toolPath, fs::path const& _tmpDir)
   : m_engine(_config.sealEngine()), m_fork(new FORK(_config.params().atKey("fork"))), m_toolPath(_toolPath), m_tmpDir(_tmpDir)
 {
-    m_initialParams = GCP_SPointer<SetChainParamsArgs>(new SetChainParamsArgs(_config));
+    m_initialParams = GCP_SPointer<SetChainParamsArgs>(_config.copy());
     m_toolParams = GCP_SPointer<ToolParams>(new ToolParams(_config.params()));
 
     auto const& additional = Options::getCurrentConfig().cfgFile().additionalForks();
@@ -39,7 +39,7 @@ ToolChain::ToolChain(
     EthereumBlockState genesisFixed(_genesis.header(), _genesis.state(), FH32::zero());
     genesisFixed.headerUnsafe().getContent().setStateRoot(res.stateRoot());
     genesisFixed.headerUnsafe().getContent().recalculateHash();
-    genesisFixed.addTotalDifficulty(genesisFixed.header()->difficulty());
+    genesisFixed.setTotalDifficulty(genesisFixed.header()->difficulty());
     m_blocks.push_back(genesisFixed);
 }
 
@@ -181,7 +181,7 @@ DataObject const ToolChain::mineBlock(EthereumBlockState const& _pendingBlock, M
     VALUE totalDifficulty(0);
     if (m_blocks.size() > 0)
         totalDifficulty = m_blocks.at(m_blocks.size() - 1).totalDifficulty();
-    pendingFixed.addTotalDifficulty(totalDifficulty + pendingFixed.header()->difficulty());
+    pendingFixed.setTotalDifficulty(totalDifficulty + pendingFixed.header()->difficulty());
 
     ETH_LOG("New block N: " + to_string(m_blocks.size()), 6);
     ETH_LOG("New block TD: " + totalDifficulty.asDecString() + " + " +
