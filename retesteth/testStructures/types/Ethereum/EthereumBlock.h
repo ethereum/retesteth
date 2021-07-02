@@ -47,7 +47,7 @@ struct EthereumBlockState : EthereumBlock
         m_header = readBlockHeader(_header->asDataObject());
     }
 
-    void addTotalDifficulty(VALUE const& _totalDifficulty) { m_totalDifficulty = spVALUE(new VALUE(_totalDifficulty)); }
+    void setTotalDifficulty(VALUE const& _totalDifficulty) { m_totalDifficulty = spVALUE(_totalDifficulty.copy()); }
     VALUE const& totalDifficulty() const { return m_totalDifficulty; }
 
     State const& state() const { return m_state; }

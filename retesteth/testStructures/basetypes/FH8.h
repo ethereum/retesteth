@@ -12,7 +12,13 @@ struct FH8 : FH
 {
     FH8(string const& _data) : FH(_data, 8) {}
     FH8(DataObject const& _data) : FH(_data, 8) {}
-    static FH8 zero() { return FH8("0x0000000000000000"); }
+    FH8* copy() const { return new FH8(m_data); }
+
+    static FH8 const& zero()
+    {
+        static FH8 zero("0x0000000000000000");
+        return zero;
+    }
 };
 
 typedef GCP_SPointer<FH8> spFH8;

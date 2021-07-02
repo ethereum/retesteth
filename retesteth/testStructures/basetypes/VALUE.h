@@ -18,6 +18,8 @@ struct VALUE : GCP_SPointerBase
     VALUE(dev::bigint const&);
     VALUE(int);
     VALUE(DataObject const&);
+    VALUE* copy() const { return new VALUE(m_data); }
+
     bool operator<(int _rhs) const { return m_data < _rhs; }
     bool operator>(VALUE const& _rhs) const { return m_data > _rhs.asBigInt(); }
     bool operator>=(VALUE const& _rhs) const { return m_data >= _rhs.asBigInt(); }
