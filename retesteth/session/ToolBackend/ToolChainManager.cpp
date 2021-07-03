@@ -146,7 +146,7 @@ FH32 ToolChainManager::importRawBlock(BYTES const& _rlp)
         }
 
         mineBlocks(1, ToolChain::Mining::RequireValid);
-        FH32 const& importedHash = lastBlock().header()->hash();
+        FH32 const importedHash = lastBlock().header()->hash();
         if (importedHash != header->hash())
         {
             string errField;

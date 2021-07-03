@@ -42,7 +42,7 @@ protected:
 struct EthereumBlockState : EthereumBlock
 {
     EthereumBlockState(spBlockHeader const& _header, State const& _state, FH32 const& _logHash)
-      : m_state(_state.asDataObject()), m_logHash(_logHash)
+      : m_state(_state.asDataObject()), m_logHash(_logHash.asString())
     {
         m_header = readBlockHeader(_header->asDataObject());
     }

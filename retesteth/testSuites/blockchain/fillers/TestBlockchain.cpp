@@ -151,7 +151,8 @@ GCP_SPointer<EthGetBlockBy> TestBlockchain::mineBlock(
         // Then import it again and see what client says, because mining with uncles not supported
         // And because blockchain test filler can override blockheader for testing purposes
         ETH_LOG("Postmine blockheader: " + m_sDebugString, 6);
-        minedBlockHash = spFH32(new FH32(postmineBlockHeader(_blockInTest, latestBlockNumber, _preparedUncleBlocks, _rawRLP)));
+        FH32 const hash = postmineBlockHeader(_blockInTest, latestBlockNumber, _preparedUncleBlocks, _rawRLP);
+        minedBlockHash = spFH32(new FH32(hash.asString()));
     }
 
     // Expected exception for this block
