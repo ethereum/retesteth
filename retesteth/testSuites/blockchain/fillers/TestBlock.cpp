@@ -4,9 +4,9 @@
 TestBlock::TestBlock(BYTES const& _rlp, string const& _chainName, FORK const& _chainNet, VALUE const& _number)
   : m_chainName(_chainName), m_doNotExport(false)
 {
-    m_blockNumber = spVALUE(new VALUE(_number));
-    m_chainNet = spFORK(new FORK(_chainNet));
-    m_rawRLP = spBYTES(new BYTES(_rlp));
+    m_blockNumber = spVALUE(_number.copy());
+    m_chainNet = spFORK(new FORK(_chainNet.asString()));
+    m_rawRLP = spBYTES(_rlp.copy());
 }
 
 DataObject TestBlock::asDataObject() const
