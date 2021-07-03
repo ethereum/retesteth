@@ -371,7 +371,7 @@ bool checkCmdExist(std::string const& _command)
 }
 
 mutex g_popenmutex;
-string executeCmd(string const& _command, ExecCMDWarning _warningOnEmpty)
+string executeCmd(string const& _command, ExecCMDWarning _warningOnEmpty, string const& _stdin)
 {
 #if defined(_WIN32)
     BOOST_ERROR("executeCmd() has not been implemented for Windows.");
@@ -386,8 +386,15 @@ string executeCmd(string const& _command, ExecCMDWarning _warningOnEmpty)
     FILE* fp;
     {
         std::lock_guard<std::mutex> lock(g_popenmutex);
-        fp = popen(_command.c_str(), "r");
+        fp = popen(_command.c_str(), _stdin.size() > 0 ? "w" : "r");
     }
+
+    if (_stdin.size())
+    {
+        ETH_TEST_MESSAGE("Passing stdin << \n" + _stdin);
+        fprintf(fp, "%s", _stdin.c_str());
+    }
+
     if (fp == NULL || fp == 0)
         ETH_FAIL_MESSAGE("Failed to run " + _command);
     if (fgets(output, sizeof(output) - 1, fp) == NULL)

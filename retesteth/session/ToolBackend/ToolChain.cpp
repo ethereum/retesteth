@@ -251,7 +251,7 @@ ToolResponse ToolChain::mineBlockOnTool(EthereumBlockState const& _block, SealEn
     auto tupleRewardFork = prepareReward(_engine, m_fork.getContent(), _block.header()->number());
 
     string cmd = m_toolPath.string();
-    cmd += " --input.alloc " + allocPath.string();
+    cmd += " --input.alloc stdin";// + allocPath.string();
     cmd += " --input.txs " + txsPath.string();
     cmd += " --input.env " + envPath.string();
     cmd += " --state.fork " + std::get<1>(tupleRewardFork).asString();
@@ -270,7 +270,7 @@ ToolResponse ToolChain::mineBlockOnTool(EthereumBlockState const& _block, SealEn
         ETH_TEST_MESSAGE("Txs:\n" + txsPathContent);
     ETH_TEST_MESSAGE("Env:\n" + envPathContent);
 
-    string out = test::executeCmd(cmd, ExecCMDWarning::NoWarning);
+    string out = test::executeCmd(cmd, ExecCMDWarning::NoWarning, allocPathContent);
 
     string const outPathContent = contentsString(outPath.string());
     string const outAllocPathContent = contentsString(outAllocPath.string());

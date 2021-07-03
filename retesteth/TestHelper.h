@@ -68,7 +68,7 @@ enum class ExecCMDWarning
     NoWarning,
     NoWarningNoError
 };
-std::string executeCmd(std::string const& _command, ExecCMDWarning _warningOnEmpty = ExecCMDWarning::WarningOnEmptyResult);
+std::string executeCmd(std::string const& _command, ExecCMDWarning _warningOnEmpty = ExecCMDWarning::WarningOnEmptyResult, string const& _stdin = string());
 
 // Return the vector of most looking like as _needles strings from the vector
 std::vector<std::string> levenshteinDistance(
