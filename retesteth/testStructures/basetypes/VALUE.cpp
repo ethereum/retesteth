@@ -27,12 +27,18 @@ VALUE::VALUE(DataObject const& _data)
         m_data = _data.asInt();
     else
     {
-        verifyHexString(_data.asString(), _data.getKey());
-        m_data = dev::bigint(_data.asString());
+        string const correct = verifyHexString(_data.asString(), _data.getKey());
+        if (correct.size())
+        {
+            m_bigint = true;
+            m_data = dev::bigint(correct);
+        }
+        else
+            m_data = dev::bigint(_data.asString());
     }
 }
 
-void VALUE::verifyHexString(std::string const& _s, std::string const& _k) const
+string VALUE::verifyHexString(std::string const& _s, std::string const& _k) const
 {
     string const suffix = _k.empty() ? _k : " (key: " + _k + " )";
     if (_s[0] == '0' && _s[1] == 'x')
@@ -44,11 +50,16 @@ void VALUE::verifyHexString(std::string const& _s, std::string const& _k) const
             (_s[2] == '0' && _s[3] == '0' && _s.size() % 2 == 0 && _s.size() > 4))
             throw test::UpwardsException("VALUE has leading 0 `" + _s + "`" + suffix);
 
-        if (_s.size() > 64 + 2)
+        size_t pos = _s.find(":bigint");
+        if (pos != string::npos)
+            return _s.substr(pos + 8);
+        else if (_s.size() > 64 + 2)
             throw test::UpwardsException("VALUE  >u256 `" + _s + "`" + suffix);
     }
     else
         throw test::UpwardsException("VALUE is not prefixed hex `" + _s + "`" + suffix);
+
+    return string();
 }
 
 string VALUE::asDecString() const
@@ -56,13 +67,13 @@ string VALUE::asDecString() const
     return m_data.str(0, std::ios_base::dec);
 }
 
-string VALUE::asString(size_t _roundBytes) const
+string VALUE::asString(size_t _roundBytes, bool _noMarker) const
 {
     string ret = m_data.str(_roundBytes, std::ios_base::hex);
     if (ret.size() % 2 != 0)
         ret = "0" + ret;
     test::strToLower(ret);
-    return "0x" + ret;
+    return m_bigint && !_noMarker ? "0x:bigint 0x" + ret : "0x" + ret;
     // return dev::toCompactHexPrefixed(m_data, _roundBytes);
 }
 

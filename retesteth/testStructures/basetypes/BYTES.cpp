@@ -37,7 +37,9 @@ string rlpToString(dev::RLP const& _rlp, size_t _minFieldSize)
 {
     std::ostringstream stream;
     stream << _rlp.toBytes();
-    return stream.str() == "0x" && _minFieldSize == 1 ? "0x00" : stream.str();
+    bool prefix = (stream.str().size() > 64 + 2);
+    return stream.str() == "0x" && _minFieldSize == 1 ? "0x00"
+            : prefix ? "0x:bigint " + stream.str() : stream.str();
 }
 
 }  // namespace teststruct
