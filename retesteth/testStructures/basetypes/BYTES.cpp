@@ -33,11 +33,14 @@ BYTES::BYTES(DataObject const& _data)
     m_data = "0x" + m_data;
 }
 
-string rlpToString(dev::RLP const& _rlp, size_t _minFieldSize)
+string rlpToString(dev::RLP const& _rlp, size_t _minFieldSize, RLPTYPE _expected)
 {
     std::ostringstream stream;
     stream << _rlp.toBytes();
-    bool prefix = (stream.str().size() > 64 + 2);
+
+    // Allow RLPs with bigint. Add marker in the json
+    bool const prefix = (stream.str().size() > 64 + 2) && _expected == RLPTYPE::ALLOWBIGINT;
+
     return stream.str() == "0x" && _minFieldSize == 1 ? "0x00"
             : prefix ? "0x:bigint " + stream.str() : stream.str();
 }

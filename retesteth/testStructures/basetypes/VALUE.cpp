@@ -27,11 +27,11 @@ VALUE::VALUE(DataObject const& _data)
         m_data = _data.asInt();
     else
     {
-        string const correct = verifyHexString(_data.asString(), _data.getKey());
-        if (correct.size())
+        string const withoutKeyWord = verifyHexString(_data.asString(), _data.getKey());
+        if (withoutKeyWord.size())
         {
             m_bigint = true;
-            m_data = dev::bigint(correct);
+            m_data = dev::bigint(withoutKeyWord);
         }
         else
             m_data = dev::bigint(_data.asString());
@@ -41,20 +41,33 @@ VALUE::VALUE(DataObject const& _data)
 string VALUE::verifyHexString(std::string const& _s, std::string const& _k) const
 {
     string const suffix = _k.empty() ? _k : " (key: " + _k + " )";
-    if (_s[0] == '0' && _s[1] == 'x')
+
+    static string const prefix = "0x:bigint ";
+    size_t pos = _s.find(prefix);
+    if (pos != string::npos)
+        pos = pos + prefix.size();
+    else
+        pos = 0;
+
+    if (_s.size() - pos < 2)
+        throw test::UpwardsException("VALUE element must be at leas 0x prefix" + suffix);
+
+    if (_s[0 + pos] == '0' && _s[1 + pos] == 'x')
     {
-        if (_s.size() == 2)
+        size_t const fixedsize = _s.size() - pos;
+        if (fixedsize - pos == 2)
             throw test::UpwardsException("VALUE set as empty byte string: `" + _s + "`" + suffix);
+
         // don't allow 0x001, but allow 0x0, 0x00
-        if ((_s[2] == '0' && _s.size() % 2 == 1 && _s.size() != 3) ||
-            (_s[2] == '0' && _s[3] == '0' && _s.size() % 2 == 0 && _s.size() > 4))
+        if ((_s[2 + pos] == '0' && fixedsize % 2 == 1 && fixedsize != 3) ||
+            (_s[2 + pos] == '0' && _s[3 + pos] == '0' && fixedsize % 2 == 0 && fixedsize > 4))
             throw test::UpwardsException("VALUE has leading 0 `" + _s + "`" + suffix);
 
-        size_t pos = _s.find(":bigint");
-        if (pos != string::npos)
-            return _s.substr(pos + 8);
-        else if (_s.size() > 64 + 2)
+        else if (fixedsize > 64 + 2 && pos == 0)
             throw test::UpwardsException("VALUE  >u256 `" + _s + "`" + suffix);
+
+        if (pos > 0)
+            return _s.substr(pos);
     }
     else
         throw test::UpwardsException("VALUE is not prefixed hex `" + _s + "`" + suffix);

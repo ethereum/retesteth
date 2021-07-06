@@ -90,7 +90,7 @@ void TransactionLegacy::fromRLP(dev::RLP const& _rlp)
     string const to = rlpToString(_rlp[i++], 0);
     trData["to"] = to == "0x" ? "" : to;
     trData["value"] = rlpToString(_rlp[i++]);
-    trData["data"] = rlpToString(_rlp[i++], 0);
+    trData["data"] = rlpToString(_rlp[i++], 0, RLPTYPE::BYTES);
     trData["v"] = rlpToString(_rlp[i++]);
     trData["r"] = rlpToString(_rlp[i++]);
     trData["s"] = rlpToString(_rlp[i++]);

@@ -24,7 +24,12 @@ private:
     string m_data;
 };
 
-string rlpToString(dev::RLP const& _rlp, size_t _minFieldSize = 1);
+enum class RLPTYPE
+{
+    ALLOWBIGINT,
+    BYTES
+};
+string rlpToString(dev::RLP const& _rlp, size_t _minFieldSize = 1, RLPTYPE _expected = RLPTYPE::ALLOWBIGINT);
 typedef GCP_SPointer<BYTES> spBYTES;
 
 }  // namespace teststruct

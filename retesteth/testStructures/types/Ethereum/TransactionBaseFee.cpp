@@ -119,7 +119,7 @@ void TransactionBaseFee::fromRLP(dev::RLP const& _rlp)
     string const to = rlpToString(_rlp[i++], 0);
     trData["to"] = to == "0x" ? "" : to;
     trData["value"] = rlpToString(_rlp[i++]);
-    trData["data"] = rlpToString(_rlp[i++], 0);
+    trData["data"] = rlpToString(_rlp[i++], 0, RLPTYPE::BYTES);
 
     // read access list
     spAccessList list = spAccessList(new AccessList(_rlp[i++]));

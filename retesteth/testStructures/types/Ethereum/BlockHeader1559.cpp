@@ -127,7 +127,7 @@ BlockHeader1559::BlockHeader1559(dev::RLP const& _rlp)
     init["gasLimit"] = rlpToString(_rlp[i++]);
     init["gasUsed"] = rlpToString(_rlp[i++]);
     init["timestamp"] = rlpToString(_rlp[i++]);
-    init["extraData"] = rlpToString(_rlp[i++], 0);
+    init["extraData"] = rlpToString(_rlp[i++], 0, RLPTYPE::BYTES);
     init["mixHash"] = rlpToString(_rlp[i++]);
     init["nonce"] = rlpToString(_rlp[i++]);
     init["baseFeePerGas"] = rlpToString(_rlp[i++]);
