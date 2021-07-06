@@ -12,6 +12,7 @@ struct FH8 : FH
 {
     FH8(string const& _data) : FH(_data, 8) {}
     FH8(DataObject const& _data) : FH(_data, 8) {}
+    FH8(dev::bigint const& _data) : FH(_data, 8) {}
     FH8* copy() const { return new FH8(m_data); }
 
     static FH8 const& zero()

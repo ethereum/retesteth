@@ -61,10 +61,10 @@ FH32 ToolImpl::eth_sendRawTransaction(BYTES const& _rlp, VALUE const& _secret)
 {
     rpcCall("", {});
     ETH_TEST_MESSAGE("\nRequest: eth_sendRawTransaction \n" + _rlp.asString());
-
     TRYCATCHCALL(
         spTransaction spTr = readTransaction(_rlp);
         spTr.getContent().setSecret(_secret);
+        ETH_TEST_MESSAGE(spTr->asDataObject().asJson());
         m_toolChainManager.getContent().addPendingTransaction(spTr);
         FH32 trHash = spTr.getContent().hash();
         ETH_TEST_MESSAGE("Response: " + trHash.asString());

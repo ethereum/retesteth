@@ -20,21 +20,67 @@ namespace test
 {
 namespace teststruct
 {
-FH::FH(string const& _data, size_t _scale) : m_data(_data), m_scale(_scale)
+// Fast constructor without any checks
+FH::FH(dev::bigint const& _data, size_t _scale) : m_data(_data), m_scale(_scale) {}
+
+void FH::_initialize(string const& _data, string const& _key)
 {
     string const scale = to_string(m_scale);
-    if (!validateHash(m_data, m_scale))
-        ETH_ERROR_MESSAGE("Initializing FH" + scale + " from string that is not hash" + scale + " `" + m_data + "`");
-    strToLower(m_data);
+    size_t pos = _data.find("0x:bigint ");
+    if (pos == string::npos)
+    {
+        if (!validateHash(_data, m_scale))
+        {
+            if (_key.empty())
+                throw test::UpwardsException(
+                    "Initializing FH" + scale + " from string that is not hash" + scale + " `" + _data + "`");
+            else
+                throw test::UpwardsException("Key `" + _key + "` is not hash" + scale + " `" + _data + "`");
+        }
+        m_data = dev::bigint(_data);
+    }
+    else
+    {
+        // Validate hex
+        pos += 10;  // length of prefix
+        try
+        {
+            std::cerr << "INIT " << _data.substr(pos) << std::endl;
+            VALUE v(_data.substr(pos));
+            m_data = v.asBigInt();
+            m_bigint = true;
+        }
+        catch (std::exception const& _ex)
+        {
+            string const key = _key.empty() ? string() : "(Key: `" + _key + "`)";
+            throw test::UpwardsException("Initializing FH" + scale + " " + key + " from bigint failed (check the string): `" +
+                                         _data + "` Reason: " + _ex.what());
+        }
+    }
+}
+
+FH::FH(string const& _data, size_t _scale) : m_scale(_scale)
+{
+    _initialize(_data);
 }
 
 FH::FH(DataObject const& _data, size_t _scale) : m_scale(_scale)
 {
-    string const scale = to_string(_scale);
-    if (!validateHash(_data.asString(), m_scale))
-        throw test::UpwardsException("Key `" + _data.getKey() + "` is not hash" + scale + " `" + _data.asString() + "`");
-    m_data = _data.asString();
-    strToLower(m_data);
+    _initialize(_data.asString(), _data.getKey());
+}
+
+
+string FH::asString() const
+{
+    string ret = m_data.str(1, std::ios_base::hex);
+    test::strToLower(ret);
+    if (ret.size() % 2 != 0)
+        ret = "0" + ret;
+
+    for (size_t size = ret.size() / 2; size < m_scale; size++)
+        ret = "00" + ret;
+
+    return m_bigint ? "0x:bigint 0x" + ret : "0x" + ret;
 }
 
 }  // namespace teststruct

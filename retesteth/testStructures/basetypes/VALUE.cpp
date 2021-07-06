@@ -80,14 +80,13 @@ string VALUE::asDecString() const
     return m_data.str(0, std::ios_base::dec);
 }
 
-string VALUE::asString(size_t _roundBytes, bool _noMarker) const
+string VALUE::asString(size_t _roundBytes) const
 {
     string ret = m_data.str(_roundBytes, std::ios_base::hex);
     if (ret.size() % 2 != 0)
         ret = "0" + ret;
     test::strToLower(ret);
-    return m_bigint && !_noMarker ? "0x:bigint 0x" + ret : "0x" + ret;
-    // return dev::toCompactHexPrefixed(m_data, _roundBytes);
+    return m_bigint ? "0x:bigint 0x" + ret : "0x" + ret;
 }
 
 }  // namespace teststruct

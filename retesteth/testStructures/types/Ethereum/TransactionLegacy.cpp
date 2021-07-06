@@ -119,7 +119,7 @@ void TransactionLegacy::streamHeader(dev::RLPStream& _s) const
     if (m_creation)
         _s << "";
     else
-        _s << dev::Address(to().asString());
+        _s << to().asBigInt();
     _s << value().asBigInt();
     _s << test::sfromHex(data().asString());
 }

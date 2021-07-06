@@ -48,7 +48,7 @@ struct VALUE : GCP_SPointerBase
 
     VALUE operator++(int) { m_data++; return *this; }
 
-    string asString(size_t _roundBytes = 1, bool _noMarker = false) const;
+    string asString(size_t _roundBytes = 1) const;
     string asDecString() const;
     dev::bigint const& asBigInt() const { return m_data; }
     bool isBigInt() const { return m_bigint; }
