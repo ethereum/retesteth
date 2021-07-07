@@ -228,13 +228,16 @@ GCP_SPointer<EthGetBlockBy> TestBlockchain::mineBlock(
 spBlockHeader TestBlockchain::mineNextBlockAndRevert()
 {
     ETH_LOGC("Mine uncle block (next block) and revert: " + m_sDebugString, 6, LogColor::YELLOW);
-    m_session.test_modifyTimestamp(1000);
+    {
+        VALUE latestBlockNumber(m_session.eth_blockNumber());
+        EthGetBlockBy const latestBlock(m_session.eth_getBlockByNumber(latestBlockNumber, Request::LESSOBJECTS));
+        m_session.test_modifyTimestamp(latestBlock.header()->timestamp().asU256() + 1000);
+    }
+
     m_session.test_mineBlocks(1);
     VALUE latestBlockNumber(m_session.eth_blockNumber());
     EthGetBlockBy const nextBlock(m_session.eth_getBlockByNumber(latestBlockNumber, Request::LESSOBJECTS));
     m_session.test_rewindToBlock(nextBlock.header()->number().asU256() - 1);  // rewind to the previous block
-
-    //m_session.test_modifyTimestamp(1000);  // Shift block timestamp relative to previous block
 
     // assign a random coinbase for an uncle block to avoid UncleIsAncestor exception
     // otherwise this uncle would be similar to a block mined

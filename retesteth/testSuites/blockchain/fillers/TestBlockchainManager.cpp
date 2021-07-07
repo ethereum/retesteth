@@ -172,7 +172,12 @@ void TestBlockchainManager::reorgChains(BlockchainTestFillerBlock const& _block)
         }
         chain.restoreUpToNumber(m_session, newBlockNumber, sameChain && blockNumberHasDecreased);
     }
-    m_session.test_modifyTimestamp(1000);  // Shift block timestamp relative to previous block
+
+    {
+        VALUE latestBlockNumber(m_session.eth_blockNumber());
+        EthGetBlockBy const latestBlock(m_session.eth_getBlockByNumber(latestBlockNumber, Request::LESSOBJECTS));
+        m_session.test_modifyTimestamp(latestBlock.header()->timestamp().asU256() + 1000);
+    }
 }
 
 // Read test filler uncle section in block _uncleOverwrite
