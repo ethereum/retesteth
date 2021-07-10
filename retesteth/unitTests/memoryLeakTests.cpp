@@ -39,4 +39,38 @@ BOOST_AUTO_TEST_CASE(recalculateHash)
     header.getContent().recalculateHash();
 }
 
+BOOST_AUTO_TEST_CASE(smartPointer)
+{
+    spVALUE A(new VALUE(12));
+    spVALUE B;
+
+    B = A;
+    BOOST_CHECK(B->asBigInt() == 12);
+    BOOST_CHECK(B->asBigInt() == A->asBigInt());
+
+    B.getContent() += 12;
+    BOOST_CHECK(A->asBigInt() == 24);
+}
+
+BOOST_AUTO_TEST_CASE(smartPointerVector)
+{
+    spVALUE A(new VALUE(12));
+    std::vector<spVALUE> vec;
+    vec.push_back(A);
+
+    BOOST_CHECK(vec.at(0)->asBigInt() == 12);
+    A.getContent() += 12;
+
+    BOOST_CHECK(vec.at(0)->asBigInt() == 24);
+
+    spVALUE B(new VALUE(13));
+    vec.insert(vec.begin(), B);
+
+    BOOST_CHECK(vec.at(0)->asBigInt() == 13);
+    BOOST_CHECK(vec.at(1)->asBigInt() == 24);
+    A.getContent() += 12;
+    BOOST_CHECK(vec.at(1)->asBigInt() == 36);
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
