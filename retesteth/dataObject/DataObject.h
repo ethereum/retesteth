@@ -1,8 +1,10 @@
 #pragma once
 #include <dataObject/Exception.h>
+#include <dataObject/SPointer.h>
 #include <memory>
 #include <set>
 #include <vector>
+#include <map>
 
 namespace dataobject
 {
@@ -18,10 +20,11 @@ enum DataType
 };
 
 /// DataObject
-/// An data sturcture to manage data from json, yml
-class DataObject
+/// A data sturcture to manage data from json, yml
+class DataObject : public GCP_SPointerBase
 {
 public:
+    typedef GCP_SPointer<DataObject> spDataObject;
     DataObject();
     DataObject(DataObject const&) = default;
     DataObject(DataType _type);
@@ -35,8 +38,8 @@ public:
     void setKey(std::string const& _key);
     std::string const& getKey() const;
 
-    std::vector<DataObject> const& getSubObjects() const;
-    std::vector<DataObject>& getSubObjectsUnsafe();
+    std::vector<spDataObject> const& getSubObjects() const;
+    std::vector<spDataObject>& getSubObjectsUnsafe();
 
     void addArrayObject(DataObject const& _obj);
     DataObject& addSubObject(DataObject const& _obj);
@@ -88,16 +91,19 @@ public:
     void clearSubobjects(DataType _type = DataType::NotInitialized)
     {
         m_subObjects.clear();
+        m_subObjectKeys.clear();
         m_type = _type;
     }
 
 private:
+
     DataObject& _addSubObject(DataObject const& _obj, string const& _keyOverwrite = string());
     void _assert(bool _flag, std::string const& _comment = "") const;
-    vector<DataObject>::const_iterator subByKey(string const& _key) const;
-    vector<DataObject>::iterator subByKeyU(string const& _key);
+    vector<spDataObject>::const_iterator subByKey(string const& _key) const;
+    vector<spDataObject>::iterator subByKeyU(string const& _key);
 
-    std::vector<DataObject> m_subObjects;
+    std::vector<spDataObject> m_subObjects;
+    std::map<string, spDataObject> m_subObjectKeys;
     DataType m_type;
     std::string m_strKey;
     bool m_allowOverwrite = false;  // allow overwrite elements
@@ -109,6 +115,8 @@ private:
 
     void (*m_verifier)(DataObject&) = 0;
 };
+
+typedef GCP_SPointer<DataObject> spDataObject;
 
 // Find index that _key should take place in when being added to ordered _objects by key
 size_t findOrderedKeyPosition(string const& _key, vector<DataObject> const& _objects);

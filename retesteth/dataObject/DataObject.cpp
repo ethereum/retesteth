@@ -70,13 +70,13 @@ std::string const& DataObject::getKey() const
 }
 
 /// Get vector of subobjects
-std::vector<DataObject> const& DataObject::getSubObjects() const
+std::vector<spDataObject> const& DataObject::getSubObjects() const
 {
     return m_subObjects;
 }
 
 /// Get ref vector of subobjects
-std::vector<DataObject>& DataObject::getSubObjectsUnsafe()
+std::vector<spDataObject>& DataObject::getSubObjectsUnsafe()
 {
     return m_subObjects;
 }
@@ -678,6 +678,9 @@ DataObject& DataObject::operator[](std::string const& _key)
 {
     _assert(m_type == DataType::NotInitialized || m_type == DataType::Object,
         "m_type == DataType::NotInitialized || m_type == DataType::Object (DataObject& operator[])");
+
+    if (m_subObjectKeys.count(_key))
+        return m_subObjectKeys.at(_key).getContent();
 
     auto res =
         std::find_if(m_subObjects.begin(), m_subObjects.end(), [&_key](DataObject const& x)
