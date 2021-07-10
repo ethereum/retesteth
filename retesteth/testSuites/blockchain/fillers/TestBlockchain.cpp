@@ -232,7 +232,7 @@ spBlockHeader TestBlockchain::mineNextBlockAndRevert()
     {
         VALUE latestBlockNumber(m_session.eth_blockNumber());
         EthGetBlockBy const latestBlock(m_session.eth_getBlockByNumber(latestBlockNumber, Request::LESSOBJECTS));
-        m_session.test_modifyTimestamp(latestBlock.header()->timestamp().asU256() + 1000);
+        m_session.test_modifyTimestamp(latestBlock.header()->timestamp() + 1000);
     }
 
     m_session.test_mineBlocks(1);
