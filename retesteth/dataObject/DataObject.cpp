@@ -678,9 +678,13 @@ DataObject& DataObject::operator[](std::string const& _key)
 {
     _assert(m_type == DataType::NotInitialized || m_type == DataType::Object,
         "m_type == DataType::NotInitialized || m_type == DataType::Object (DataObject& operator[])");
-    for (auto& i : m_subObjects)
-        if (i.getKey() == _key)
-            return i;
+
+    auto res =
+        std::find_if(m_subObjects.begin(), m_subObjects.end(), [&_key](DataObject const& x)
+            { return x.getKey() == _key; });
+    if (res != m_subObjects.end())
+        return *res;
+
     DataObject newObj(DataType::NotInitialized);
     newObj.setKey(_key);
     return _addSubObject(newObj);  // !could change the item order!

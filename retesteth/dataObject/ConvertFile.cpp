@@ -1,3 +1,4 @@
+#include <iostream>
 #include <dataObject/ConvertFile.h>
 #include <dataObject/Exception.h>
 // Manually construct dataobject from file string content
@@ -143,20 +144,24 @@ DataObject ConvertJsoncppStringToData(
     root.setAutosort(_autosort);
     DataObject* actualRoot = &root;
     bool keyEncountered = false;
-    const short c_debugSize = 120;
-    string debug = _input.substr(0, c_debugSize);
-    auto printDebug = [](string const& _debug) { return "\n\"------\n" + _debug + "\n\"------"; };
+
+    auto printDebug = [&_input](int _i) {
+        static const short c_debugSize = 120;
+        string debug;
+        if (_i > c_debugSize)
+            debug = _input.substr(_i - c_debugSize, c_debugSize);
+        else
+            debug = _input.substr(0, c_debugSize);
+        return "\n\"------\n" + debug + "\n\"------";
+    };
+
     for (size_t i = 0; i < _input.length(); i++)
     {
         // std::cerr << root.asJson() << std::endl;
         bool isSeenCommaBefore = checkExcessiveComa(_input, i);
         i = stripSpaces(_input, i);
         if (i == _input.length())
-            throw DataObjectException()
-                << errorPrefix + "unexpected end of json! around: " + printDebug(debug);
-
-        if (i > c_debugSize)
-            debug = _input.substr(i - c_debugSize, c_debugSize);
+            throw DataObjectException() << errorPrefix + "unexpected end of json! around: " + printDebug(i);
 
         bool escapeChar = (i > 0 && _input[i - 1] == '\\');
         if (_input[i] == '"' && !escapeChar)
@@ -167,16 +172,13 @@ DataObject ConvertJsoncppStringToData(
             if (_input.at(i) == ':')
             {
                 if (keyEncountered)
-                    throw DataObjectException() << errorPrefix +
-                                                       "attempt to set key multiple times! (like "
-                                                       "\"key\" : \"key\" : \"value\") around: " +
-                                                       printDebug(debug);
+                    throw DataObjectException() << errorPrefix + "attempt to set key multiple times! "
+                       "(like \"key\" : \"key\" : \"value\") around: " + printDebug(i);
 
                 keyEncountered = true;
                 if (actualRoot->type() == DataType::Array)
                     throw DataObjectException()
-                        << errorPrefix + "array could not have elements with keys! around: " +
-                               printDebug(debug);
+                        << errorPrefix + "array could not have elements with keys! around: " + printDebug(i);
                 obj.setKey(key);
                 bool replaceKey = false;
                 size_t keyPosExpected = _autosort ?
@@ -261,16 +263,12 @@ DataObject ConvertJsoncppStringToData(
             //    throw DataObjectException()
             //        << "lost actual root pointer around: " + printDebug(debug);
             if (isSeenCommaBefore)
-                throw DataObjectException()
-                    << "unexpected ',' before end of the array/object! around: " +
-                           printDebug(debug);
+                throw DataObjectException() << "unexpected ',' before end of the array/object! around: " + printDebug(i);
             if (actualRoot->type() == DataType::Array && _input.at(i) != ']')
-                throw DataObjectException()
-                    << "expected ']' closing the array! around: " + printDebug(debug);
+                throw DataObjectException() << "expected ']' closing the array! around: " + printDebug(i);
             if (actualRoot->type() == DataType::Object && _input.at(i) != '}')
                 throw DataObjectException()
-                    << "expected '}' closing the object! around: " + printDebug(debug) +
-                           ", got: `" + _input.at(i) + "'";
+                    << "expected '}' closing the object! around: " + printDebug(i) + ", got: `" + _input.at(i) + "'";
 
             if (!_stopper.empty() && actualRoot->getKey() == _stopper)
                 return root;
@@ -297,20 +295,16 @@ DataObject ConvertJsoncppStringToData(
                     }
                     if (_input[i + 1] == ':')
                         throw DataObjectException()
-                            << errorPrefix +
-                                   "unexpected ':' after closing an object/array! around: " +
-                                   printDebug(debug);
+                            << errorPrefix + "unexpected ':' after closing an object/array! around: " + printDebug(i);
                 }
                 continue;
             }
         }
 
         if (_input.at(i) == ',')
-            throw DataObjectException()
-                << errorPrefix + "unhendled ',' when parsing json around: " + printDebug(debug);
+            throw DataObjectException() << errorPrefix + "unhendled ',' when parsing json around: " + printDebug(i);
         if (_input.at(i) == ':')
-            throw DataObjectException()
-                << errorPrefix + "unhendled ':' when parsing json around: " + printDebug(debug);
+            throw DataObjectException() << errorPrefix + "unhendled ':' when parsing json around: " + printDebug(i);
 
         int resInt = 0;
         bool resBool = false;

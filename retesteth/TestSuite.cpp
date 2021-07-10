@@ -48,6 +48,7 @@ struct TestFileData
 
 TestFileData readTestFile(fs::path const& _testFileName)
 {
+    ETH_LOG("Read json structure " + string(_testFileName.filename().c_str()), 5);
     TestFileData testData;
     if (_testFileName.extension() == ".json")
         testData.data = test::readJsonData(_testFileName, string(), true);
@@ -56,6 +57,7 @@ TestFileData readTestFile(fs::path const& _testFileName)
     else
         ETH_ERROR_MESSAGE(
             "Unknown test format!" + test::TestOutputHelper::get().testFile().string());
+    ETH_LOG("Read json structure finish", 5);
 
     string srcString = testData.data.asJson(0, false); //json_spirit::write_string(testData.data, false);
     if (test::Options::get().showhash)
@@ -673,6 +675,9 @@ void TestSuite::executeFile(boost::filesystem::path const& _file) const
     if (_file.extension() != ".json")
         ETH_ERROR_MESSAGE("The generated test must have `.json` format!");
 
-    doTests(test::readJsonData(_file), opt);
+    ETH_LOG("Read json structure " + string(_file.filename().c_str()), 5);
+    auto const res = test::readJsonData(_file);
+    ETH_LOG("Read json finish", 5);
+    doTests(res, opt);
 }
 }
