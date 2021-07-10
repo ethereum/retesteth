@@ -1,9 +1,13 @@
 #include "FH.h"
 #include "../Common.h"
+#include <libdevcore/CommonIO.h>
+#include <libdevcore/RLP.h>
 #include <retesteth/EthChecks.h>
 #include <retesteth/TestHelper.h>
+#include <sstream>
 using namespace test;
 using namespace test::teststruct;
+using namespace dev;
 
 namespace
 {
@@ -69,6 +73,15 @@ FH::FH(DataObject const& _data, size_t _scale) : m_scale(_scale)
     _initialize(_data.asString(), _data.getKey());
 }
 
+FH::FH(dev::RLP const& _rlp, size_t _scale)
+{
+    std::ostringstream stream;
+    stream << _rlp.toBytes();
+    auto const str = stream.str();
+    m_bigint = (str.size() != _scale * 2 + 2);
+    m_data = dev::bigint(str);
+    m_scale = _scale;
+}
 
 string FH::asString() const
 {
@@ -77,8 +90,11 @@ string FH::asString() const
     if (ret.size() % 2 != 0)
         ret = "0" + ret;
 
-    for (size_t size = ret.size() / 2; size < m_scale; size++)
-        ret = "00" + ret;
+    if (!m_bigint)
+    {
+        for (size_t size = ret.size() / 2; size < m_scale; size++)
+            ret = "00" + ret;
+    }
 
     return m_bigint ? "0x:bigint 0x" + ret : "0x" + ret;
 }

@@ -1,8 +1,10 @@
 #pragma once
 #include <libdevcore/Common.h>
 #include <libdevcore/CommonData.h>
+#include <libdevcore/RLP.h>
 #include <retesteth/dataObject/DataObject.h>
 #include <retesteth/dataObject/SPointer.h>
+
 using namespace dataobject;
 
 namespace test
@@ -15,6 +17,7 @@ namespace teststruct
 
 struct VALUE : GCP_SPointerBase
 {
+    VALUE(dev::RLP const& _rlp);
     VALUE(dev::bigint const&);
     VALUE(int);
     VALUE(DataObject const&);

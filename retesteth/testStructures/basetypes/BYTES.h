@@ -12,6 +12,7 @@ namespace teststruct
 // Deserialized from string of "0x1122....." of _limit range
 struct BYTES : GCP_SPointerBase
 {
+    BYTES(dev::RLP const& _rlp);
     BYTES(DataObject const&);
     BYTES* copy() const { return new BYTES(DataObject(m_data)); }
 
@@ -24,12 +25,6 @@ private:
     string m_data;
 };
 
-enum class RLPTYPE
-{
-    ALLOWBIGINT,
-    BYTES
-};
-string rlpToString(dev::RLP const& _rlp, size_t _minFieldSize = 1, RLPTYPE _expected = RLPTYPE::ALLOWBIGINT);
 typedef GCP_SPointer<BYTES> spBYTES;
 
 }  // namespace teststruct

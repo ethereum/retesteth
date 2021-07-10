@@ -1,6 +1,7 @@
 #pragma once
 #include <libdevcore/Common.h>
 #include <libdevcore/CommonData.h>
+#include <libdevcore/RLP.h>
 #include <retesteth/dataObject/DataObject.h>
 #include <retesteth/dataObject/SPointer.h>
 using namespace dataobject;
@@ -11,6 +12,7 @@ namespace teststruct
 {
 struct FH : GCP_SPointerBase
 {
+    FH(dev::RLP const& _rlp, size_t _scale);
     FH(string const&, size_t _scale);
     FH(DataObject const&, size_t _scale);
     FH(dev::bigint const&, size_t _scale);

@@ -7,6 +7,8 @@
 #include <retesteth/TestHelper.h>
 #include <retesteth/testStructures/Common.h>
 
+using namespace dev;
+
 namespace test
 {
 namespace teststruct
@@ -82,19 +84,27 @@ void TransactionLegacy::fromRLP(dev::RLP const& _rlp)
     // 0 - nonce        3 - to      6 - v
     // 1 - gasPrice     4 - value   7 - r
     // 2 - gasLimit     5 - data    8 - s
-    DataObject trData;
+
     size_t i = 0;
-    trData["nonce"] = rlpToString(_rlp[i++]);
-    trData["gasPrice"] = rlpToString(_rlp[i++]);
-    trData["gasLimit"] = rlpToString(_rlp[i++]);
-    string const to = rlpToString(_rlp[i++], 0);
-    trData["to"] = to == "0x" ? "" : to;
-    trData["value"] = rlpToString(_rlp[i++]);
-    trData["data"] = rlpToString(_rlp[i++], 0, RLPTYPE::BYTES);
-    trData["v"] = rlpToString(_rlp[i++]);
-    trData["r"] = rlpToString(_rlp[i++]);
-    trData["s"] = rlpToString(_rlp[i++]);
-    fromDataObject(trData);
+    m_nonce = spVALUE(new VALUE(_rlp[i++]));
+    m_gasPrice = spVALUE(new VALUE(_rlp[i++]));
+    m_gasLimit = spVALUE(new VALUE(_rlp[i++]));
+
+    auto const r = _rlp[i++];
+    std::ostringstream stream;
+    stream << r.toBytes();
+    m_creation = false;
+    if (stream.str() == "0x")
+        m_creation = true;
+    else
+        m_to = spFH20(new FH20(r));
+
+    m_value = spVALUE(new VALUE(_rlp[i++]));
+    m_data = spBYTES(new BYTES(_rlp[i++]));
+    m_v = spVALUE(new VALUE(_rlp[i++]));
+    m_r = spVALUE(new VALUE(_rlp[i++]));
+    m_s = spVALUE(new VALUE(_rlp[i++]));
+    rebuildRLP();
 }
 
 TransactionLegacy::TransactionLegacy(dev::RLP const& _rlp)
@@ -116,6 +126,7 @@ void TransactionLegacy::streamHeader(dev::RLPStream& _s) const
     _s << nonce().asBigInt();
     _s << gasPrice().asBigInt();
     _s << gasLimit().asBigInt();
+
     if (m_creation)
         _s << "";
     else

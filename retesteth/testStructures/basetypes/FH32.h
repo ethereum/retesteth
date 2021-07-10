@@ -12,6 +12,7 @@ namespace teststruct
 // Deserialized from string of "0x1122...32" exact length
 struct FH32 : FH
 {
+    FH32(dev::RLP const& _rlp) : FH(_rlp, 32) {}
     FH32(DataObject const& _data) : FH(_data, 32) {}
     FH32(string const& _data) : FH(_data, 32) {}
     FH32(dev::bigint const& _data) : FH(_data, 32) {}

@@ -1,8 +1,12 @@
 #include "VALUE.h"
+#include <libdevcore/CommonIO.h>
 #include <retesteth/EthChecks.h>
 #include <retesteth/TestHelper.h>
 #include <locale>
+#include <sstream>
+
 using namespace test::teststruct;
+using namespace dev;
 
 namespace test
 {
@@ -13,6 +17,14 @@ namespace teststruct
 //     if string is dec  make string hex
 //     if string is hex  check hexvalue 0x00000 leading zeros etc
 // check limit
+
+VALUE::VALUE(dev::RLP const& _rlp)
+{
+    std::ostringstream stream;
+    stream << _rlp.toBytes();
+    m_bigint = (stream.str().size() > 64 + 2);
+    m_data = dev::bigint(stream.str());
+}
 
 VALUE::VALUE(dev::bigint const& _data) : m_data(_data) {}
 

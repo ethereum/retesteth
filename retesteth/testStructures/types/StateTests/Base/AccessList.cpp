@@ -55,10 +55,10 @@ const dev::RLPStream AccessListElement::asRLPStream() const
 AccessListElement::AccessListElement(dev::RLP const& _rlp)
 {
     size_t i = 0;
-    m_address = spFH20(new FH20(rlpToString(_rlp[i++])));
+    m_address = spFH20(new FH20(_rlp[i++]));
     auto const& rlplist = _rlp[i++].toList();
     for (auto const& key : rlplist)
-        m_storageKeys.push_back(spFH32(new FH32(rlpToString(key))));
+        m_storageKeys.push_back(spFH32(new FH32(key)));
 }
 
 AccessList::AccessList(dev::RLP const& _rlp)

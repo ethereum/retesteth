@@ -8,6 +8,8 @@
 #include <retesteth/TestHelper.h>
 #include <retesteth/testStructures/Common.h>
 
+using namespace dev;
+
 namespace test
 {
 namespace teststruct
@@ -105,31 +107,35 @@ TransactionBaseFee::TransactionBaseFee(BYTES const& _rlp)
 
 void TransactionBaseFee::fromRLP(dev::RLP const& _rlp)
 {
-    DataObject trData;
     size_t i = 0;
-    rlpToString(_rlp[i++]);  // chainID
-    trData["nonce"] = rlpToString(_rlp[i++]);
+    i++;  // chainID
 
-    trData["maxPriorityFeePerGas"] = rlpToString(_rlp[i++]);
-    trData["maxFeePerGas"] = rlpToString(_rlp[i++]);
-    m_maxPriorityFeePerGas = spVALUE(new VALUE(trData["maxPriorityFeePerGas"]));
-    m_maxFeePerGas = spVALUE(new VALUE(trData["maxFeePerGas"]));
+    m_nonce = spVALUE(new VALUE(_rlp[i++]));
+    m_maxPriorityFeePerGas = spVALUE(new VALUE(_rlp[i++]));
+    m_maxFeePerGas = spVALUE(new VALUE(_rlp[i++]));
+    m_gasLimit = spVALUE(new VALUE(_rlp[i++]));
 
-    trData["gasLimit"] = rlpToString(_rlp[i++]);
-    string const to = rlpToString(_rlp[i++], 0);
-    trData["to"] = to == "0x" ? "" : to;
-    trData["value"] = rlpToString(_rlp[i++]);
-    trData["data"] = rlpToString(_rlp[i++], 0, RLPTYPE::BYTES);
+    auto const r = _rlp[i++];
+    std::ostringstream stream;
+    stream << r.toBytes();
+    m_creation = false;
+    if (stream.str() == "0x")
+        m_creation = true;
+    else
+        m_to = spFH20(new FH20(r));
+
+    m_value = spVALUE(new VALUE(_rlp[i++]));
+    m_data = spBYTES(new BYTES(_rlp[i++]));
 
     // read access list
-    spAccessList list = spAccessList(new AccessList(_rlp[i++]));
-    trData["accessList"] = list.getContent().asDataObject();
-    m_accessList = list;
+    m_accessList = spAccessList(new AccessList(_rlp[i++]));
 
-    trData["v"] = rlpToString(_rlp[i++]);
-    trData["r"] = rlpToString(_rlp[i++]);
-    trData["s"] = rlpToString(_rlp[i++]);
-    TransactionBaseFee::fromDataObject(trData);
+    m_v = spVALUE(new VALUE(_rlp[i++]));
+    m_r = spVALUE(new VALUE(_rlp[i++]));
+    m_s = spVALUE(new VALUE(_rlp[i++]));
+
+    m_secretKey = spVALUE(new VALUE(0));
+    rebuildRLP();
 }
 
 

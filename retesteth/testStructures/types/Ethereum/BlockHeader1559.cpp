@@ -105,7 +105,6 @@ BlockHeader1559::BlockHeader1559(DataObject const& _data)
 
 BlockHeader1559::BlockHeader1559(dev::RLP const& _rlp)
 {
-    DataObject init;
     // 0 - parentHash           // 8 - number
     // 1 - uncleHash            // 9 - gasLimit
     // 2 - coinbase             // 10 - gasUsed
@@ -115,23 +114,23 @@ BlockHeader1559::BlockHeader1559(dev::RLP const& _rlp)
     // 6 - bloom                // 14 - nonce
     // 7 - difficulty           // 15 - baseFee
     size_t i = 0;
-    init["parentHash"] = rlpToString(_rlp[i++]);
-    init["uncleHash"] = rlpToString(_rlp[i++]);
-    init["coinbase"] = rlpToString(_rlp[i++]);
-    init["stateRoot"] = rlpToString(_rlp[i++]);
-    init["transactionsTrie"] = rlpToString(_rlp[i++]);
-    init["receiptTrie"] = rlpToString(_rlp[i++]);
-    init["bloom"] = rlpToString(_rlp[i++]);
-    init["difficulty"] = rlpToString(_rlp[i++]);
-    init["number"] = rlpToString(_rlp[i++]);
-    init["gasLimit"] = rlpToString(_rlp[i++]);
-    init["gasUsed"] = rlpToString(_rlp[i++]);
-    init["timestamp"] = rlpToString(_rlp[i++]);
-    init["extraData"] = rlpToString(_rlp[i++], 0, RLPTYPE::BYTES);
-    init["mixHash"] = rlpToString(_rlp[i++]);
-    init["nonce"] = rlpToString(_rlp[i++]);
-    init["baseFeePerGas"] = rlpToString(_rlp[i++]);
-    fromData(init);
+    m_parentHash = spFH32(new FH32(_rlp[i++]));
+    m_sha3Uncles = spFH32(new FH32(_rlp[i++]));
+    m_author = spFH20(new FH20(_rlp[i++]));
+    m_stateRoot = spFH32(new FH32(_rlp[i++]));
+    m_transactionsRoot = spFH32(new FH32(_rlp[i++]));
+    m_receiptsRoot = spFH32(new FH32(_rlp[i++]));
+    m_logsBloom = spFH256(new FH256(_rlp[i++]));
+    m_difficulty = spVALUE(new VALUE(_rlp[i++]));
+    m_number = spVALUE(new VALUE(_rlp[i++]));
+    m_gasLimit = spVALUE(new VALUE(_rlp[i++]));
+    m_gasUsed = spVALUE(new VALUE(_rlp[i++]));
+    m_timestamp = spVALUE(new VALUE(_rlp[i++]));
+    m_extraData = spBYTES(new BYTES(_rlp[i++]));
+    m_mixHash = spFH32(new FH32(_rlp[i++]));
+    m_nonce = spFH8(new FH8(_rlp[i++]));
+    m_baseFee = spVALUE(new VALUE(_rlp[i++]));
+    recalculateHash();
 }
 
 const DataObject BlockHeader1559::asDataObject() const

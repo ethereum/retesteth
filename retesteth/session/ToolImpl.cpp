@@ -279,6 +279,7 @@ FH32 ToolImpl::test_importRawBlock(BYTES const& _blockRLP)
     rpcCall("", {});
     TRYCATCHCALL(
         ETH_TEST_MESSAGE("\nRequest: test_importRawBlock, following transaction import are internal");
+        ETH_TEST_MESSAGE(_blockRLP.asString());
         FH32 const hash = blockchain().importRawBlock(_blockRLP);
         ETH_TEST_MESSAGE("Response test_importRawBlock: " + hash.asString());
         return hash;

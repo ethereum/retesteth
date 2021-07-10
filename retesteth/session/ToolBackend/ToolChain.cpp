@@ -263,7 +263,11 @@ ToolResponse ToolChain::mineBlockOnTool(EthereumBlockState const& _block, SealEn
 
     ETH_TEST_MESSAGE("Alloc:\n" + allocPathContent);
     if (_block.transactions().size())
+    {
         ETH_TEST_MESSAGE("Txs:\n" + txsPathContent);
+        for (auto const& tr : _block.transactions())
+            ETH_TEST_MESSAGE(tr->asDataObject().asJson());
+    }
     ETH_TEST_MESSAGE("Env:\n" + envPathContent);
 
     string out = test::executeCmd(cmd, ExecCMDWarning::NoWarning);
