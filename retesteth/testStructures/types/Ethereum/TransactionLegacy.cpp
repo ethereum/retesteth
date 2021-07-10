@@ -130,7 +130,12 @@ void TransactionLegacy::streamHeader(dev::RLPStream& _s) const
     if (m_creation)
         _s << "";
     else
-        _s << to().asBigInt();
+    {
+        if (to().isBigInt())
+            _s << to().asBigInt();
+        else
+            _s << test::sfromHex(to().asString(ExportType::RLP));
+    }
     _s << value().asBigInt();
     _s << test::sfromHex(data().asString());
 }

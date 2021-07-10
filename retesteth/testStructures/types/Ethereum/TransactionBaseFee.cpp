@@ -180,7 +180,12 @@ void TransactionBaseFee::streamHeader(dev::RLPStream& _s) const
     if (Transaction::isCreation())
         _s << "";
     else
-        _s << dev::Address(to().asString());
+    {
+        if (to().isBigInt())
+            _s << to().asBigInt();
+        else
+            _s << test::sfromHex(to().asString(ExportType::RLP));
+    }
     _s << value().asBigInt();
     _s << test::sfromHex(data().asString());
 

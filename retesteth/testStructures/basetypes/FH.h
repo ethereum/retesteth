@@ -10,6 +10,13 @@ namespace test
 {
 namespace teststruct
 {
+
+enum class ExportType
+{
+    RLP,
+    TEST
+};
+
 struct FH : GCP_SPointerBase
 {
     FH(dev::RLP const& _rlp, size_t _scale);
@@ -17,7 +24,8 @@ struct FH : GCP_SPointerBase
     FH(DataObject const&, size_t _scale);
     FH(dev::bigint const&, size_t _scale);
 
-    string asString() const;
+    bool isBigInt() const { return m_bigint; }
+    string asString(ExportType _forRLP = ExportType::TEST) const;
     dev::bigint const& asBigInt() const { return m_data; }
     bool operator==(FH const& rhs) const { return asBigInt() == rhs.asBigInt(); }
     bool operator!=(FH const& rhs) const { return asBigInt() != rhs.asBigInt(); }

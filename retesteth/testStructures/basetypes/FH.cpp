@@ -29,6 +29,7 @@ FH::FH(dev::bigint const& _data, size_t _scale) : m_data(_data), m_scale(_scale)
 
 void FH::_initialize(string const& _data, string const& _key)
 {
+    m_bigint = false;
     string const scale = to_string(m_scale);
     size_t pos = _data.find("0x:bigint ");
     if (pos == string::npos)
@@ -49,7 +50,6 @@ void FH::_initialize(string const& _data, string const& _key)
         pos += 10;  // length of prefix
         try
         {
-            std::cerr << "INIT " << _data.substr(pos) << std::endl;
             VALUE v(_data.substr(pos));
             m_data = v.asBigInt();
             m_bigint = true;
@@ -83,7 +83,7 @@ FH::FH(dev::RLP const& _rlp, size_t _scale)
     m_scale = _scale;
 }
 
-string FH::asString() const
+string FH::asString(bool _forRLP) const
 {
     string ret = m_data.str(1, std::ios_base::hex);
     test::strToLower(ret);
@@ -96,7 +96,7 @@ string FH::asString() const
             ret = "00" + ret;
     }
 
-    return m_bigint ? "0x:bigint 0x" + ret : "0x" + ret;
+    return m_bigint && !_forRLP ? "0x:bigint 0x" + ret : "0x" + ret;
 }
 
 }  // namespace teststruct
