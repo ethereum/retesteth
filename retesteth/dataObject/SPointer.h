@@ -181,6 +181,11 @@ public:
         return getCPtr();
     }
 
+    template<class Tb, class Ta>
+    Tb operator[] (Ta arg){
+        return _pointee[arg];
+    }
+
     // T* operator->() const { return _pointee; }
     // operator T*() { return _pointee; }
     // operator GCP_SPointer<T>() { return GCP_SPointer<T>(this); }

@@ -182,14 +182,14 @@ DataObject ConvertJsoncppStringToData(
                 obj.setKey(key);
                 bool replaceKey = false;
                 size_t keyPosExpected = _autosort ?
-                        max(0, (int)findOrderedKeyPosition(key, actualRoot->getSubObjects()) - 1) : 0;
+                                            max(0, (int)findOrderedKeyPosition(key, actualRoot->getSubObjects()) - 1) : 0;
                 for (size_t objI = keyPosExpected; objI < actualRoot->getSubObjects().size(); objI++)
                 {
-                    if (actualRoot->getSubObjects().at(objI).getKey() == key)
+                    if (actualRoot->getSubObjects().at(objI)->getKey() == key)
                     {
                         replaceKey = true;
                         applyDepth.push_back(actualRoot);
-                        actualRoot = &actualRoot->getSubObjectsUnsafe().at(objI);
+                        actualRoot = &actualRoot->getSubObjectsUnsafe().at(objI).getContent();
                         actualRoot->clearSubobjects();
                         break;
                     }

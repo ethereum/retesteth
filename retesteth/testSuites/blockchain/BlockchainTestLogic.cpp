@@ -252,8 +252,9 @@ DataObject DoTests(DataObject const& _input, TestSuite::TestSuiteOptions& _opt)
         {
             // Change the tests instead??
             DataObject& _inputRef = const_cast<DataObject&>(_input);
-            for (auto& el : _inputRef.getSubObjectsUnsafe())
+            for (auto& el2 : _inputRef.getSubObjectsUnsafe())
             {
+                DataObject& el = el2.getContent();
                 DataObject& _infoRef = el.atKeyUnsafe("_info");
                 _infoRef.renameKey("filledwith", "filling-rpc-server");
                 _infoRef["filling-tool-version"] = "testeth";

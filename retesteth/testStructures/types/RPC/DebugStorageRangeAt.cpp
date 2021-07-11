@@ -13,7 +13,7 @@ DebugStorageRangeAt::DebugStorageRangeAt(DataObject const& _data)
         // Convert to test storage representation
         DataObject storageCorrect;
         for (auto const& record : _data.atKey("storage").getSubObjects())
-            storageCorrect[record.atKey("key").asString()] = record.atKey("value").asString();
+            storageCorrect[record->atKey("key").asString()] = record->atKey("value").asString();
         m_storage = spStorage(new Storage(storageCorrect));
         if (_data.count("nextKey"))
             m_nextKey = spFH32(new FH32(_data.atKey("nextKey")));

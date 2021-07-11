@@ -31,7 +31,7 @@ BlockchainTestInFilled::BlockchainTestInFilled(DataObject const& _data)
         if (_data.count("exceptions"))
         {
             for (size_t i = _data.atKey("exceptions").getSubObjects().size(); i > 0; i--)
-                m_exceptions.push_back(_data.atKey("exceptions").getSubObjects().at(i - 1).asString());
+                m_exceptions.push_back(_data.atKey("exceptions").getSubObjects().at(i - 1)->asString());
         }
         requireJsonFields(_data, "BlockchainTestInFilled " + _data.getKey(),
             {{"_info", {{DataType::Object}, jsonField::Required}},
@@ -62,7 +62,7 @@ BlockchainTest::BlockchainTest(DataObject const& _data)
             TestOutputHelper::get().get().testFile().string() + " A test file must contain at least one test!");
         for (auto const& el : _data.getSubObjects())
         {
-            TestOutputHelper::get().setCurrentTestInfo(TestInfo("BlockchainTest", el.getKey()));
+            TestOutputHelper::get().setCurrentTestInfo(TestInfo("BlockchainTest", el->getKey()));
             m_tests.push_back(BlockchainTestInFilled(el));
         }
     }

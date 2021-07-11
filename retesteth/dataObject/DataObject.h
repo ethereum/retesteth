@@ -99,8 +99,6 @@ private:
 
     DataObject& _addSubObject(DataObject const& _obj, string const& _keyOverwrite = string());
     void _assert(bool _flag, std::string const& _comment = "") const;
-    vector<spDataObject>::const_iterator subByKey(string const& _key) const;
-    vector<spDataObject>::iterator subByKeyU(string const& _key);
 
     std::vector<spDataObject> m_subObjects;
     std::map<string, spDataObject> m_subObjectKeys;
@@ -119,5 +117,5 @@ private:
 typedef GCP_SPointer<DataObject> spDataObject;
 
 // Find index that _key should take place in when being added to ordered _objects by key
-size_t findOrderedKeyPosition(string const& _key, vector<DataObject> const& _objects);
+size_t findOrderedKeyPosition(string const& _key, vector<spDataObject> const& _objects);
 }

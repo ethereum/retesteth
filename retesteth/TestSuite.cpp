@@ -89,12 +89,12 @@ void removeComments(DataObject& _obj)
 		list<string> removeList;
         for (auto& i: _obj.getSubObjectsUnsafe())
 		{
-            if (i.getKey().substr(0, 2) == "//")
+            if (i->getKey().substr(0, 2) == "//")
 			{
-                removeList.push_back(i.getKey());
+                removeList.push_back(i->getKey());
 				continue;
 			}
-            removeComments(i);
+            removeComments(i.getContent());
 		}
         for (auto const& i: removeList)
             _obj.removeKey(i);
@@ -102,15 +102,16 @@ void removeComments(DataObject& _obj)
     else if (_obj.type() == DataType::Array)
     {
         for (auto& i: _obj.getSubObjectsUnsafe())
-			removeComments(i);
+            removeComments(i.getContent());
     }
 }
 
 void addClientInfo(DataObject& _v, fs::path const& _testSource, h256 const& _testSourceHash)
 {
     SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
-    for (auto& o : _v.getSubObjectsUnsafe())
+    for (auto& o2 : _v.getSubObjectsUnsafe())
     {
+        DataObject& o = o2.getContent();
         string comment;
         DataObject clientinfo;
         clientinfo.setKey("_info");
@@ -141,8 +142,9 @@ void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
 {
     DataObject v = test::readJsonData(_compiledTest, "_info");
     TestFileData fillerData = readTestFile(_sourceTest);
-    for (auto const& i: v.getSubObjects())
+    for (auto const& i2: v.getSubObjects())
     {
+        DataObject const& i = i2.getCContent();
         try
         {
             // use eth object _info section class here !!!!!

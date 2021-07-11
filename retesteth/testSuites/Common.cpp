@@ -21,7 +21,7 @@ void checkAtLeastOneTest(DataObject const& _input)
     for (auto const& test : _input.getSubObjects())
     {
         ETH_ERROR_REQUIRE_MESSAGE(
-            test.type() == DataType::Object, TestOutputHelper::get().testFile().string() +
+            test->type() == DataType::Object, TestOutputHelper::get().testFile().string() +
                                                  " should contain an object under a test name.");
     }
 }
@@ -31,7 +31,7 @@ void checkOnlyOneTest(DataObject const& _input)
     ETH_ERROR_REQUIRE_MESSAGE(_input.getSubObjects().size() == 1,
         " A test file must contain only one test: " + TestOutputHelper::get().testFile().string());
 
-    ETH_ERROR_REQUIRE_MESSAGE(_input.getSubObjects().at(0).type() == DataType::Object,
+    ETH_ERROR_REQUIRE_MESSAGE(_input.getSubObjects().at(0)->type() == DataType::Object,
         TestOutputHelper::get().testFile().string() +
             " should contain an object under a test name.");
 }
@@ -50,10 +50,10 @@ void checkTestNameIsEqualToFileName(string const& _testName)
 void checkTestNameIsEqualToFileName(DataObject const& _input)
 {
     if (!TestOutputHelper::get().testFile().empty())
-        ETH_ERROR_REQUIRE_MESSAGE(_input.getSubObjects().at(0).getKey() + "Filler" ==
+        ETH_ERROR_REQUIRE_MESSAGE(_input.getSubObjects().at(0)->getKey() + "Filler" ==
                                       TestOutputHelper::get().testFile().stem().string(),
             TestOutputHelper::get().testFile().string() +
-                " contains a test with a different name '" + _input.getSubObjects().at(0).getKey() +
+                " contains a test with a different name '" + _input.getSubObjects().at(0)->getKey() +
                 "'");
 }
 

@@ -14,7 +14,7 @@ GeneralStateTest::GeneralStateTest(DataObject const& _data)
             TestOutputHelper::get().get().testFile().string() + " A test file must contain exactly one test!");
         for (auto const& el : _data.getSubObjects())
         {
-            TestOutputHelper::get().setCurrentTestInfo(TestInfo("GeneralStateTest", el.getKey()));
+            TestOutputHelper::get().setCurrentTestInfo(TestInfo("GeneralStateTest", el->getKey()));
             m_tests.push_back(StateTestInFilled(el));
         }
     }
@@ -31,12 +31,13 @@ StateTestInFilled::StateTestInFilled(DataObject const& _data)
 
     // -- Some tests has storage keys/values with leading zeros. Convert it to hex value
     DataObject tmpD = _data.atKey("pre");
-    for (auto& acc : tmpD.getSubObjectsUnsafe())
+    for (auto& acc2 : tmpD.getSubObjectsUnsafe())
     {
+        DataObject& acc = acc2.getContent();
         for (auto& rec : acc["storage"].getSubObjectsUnsafe())
         {
-            rec.performModifier(mod_keyToCompactEvenHexPrefixed);
-            rec.performModifier(mod_valueToCompactEvenHexPrefixed);
+            rec.getContent().performModifier(mod_keyToCompactEvenHexPrefixed);
+            rec.getContent().performModifier(mod_valueToCompactEvenHexPrefixed);
         }
     }
     // -- REMOVE THIS, FIX THE TESTS
@@ -46,11 +47,11 @@ StateTestInFilled::StateTestInFilled(DataObject const& _data)
     for (auto const& elFork : _data.atKey("post").getSubObjects())
     {
         StateTestPostResults res;
-        for (auto const& elForkResults : elFork.getSubObjects())
+        for (auto const& elForkResults : elFork->getSubObjects())
             res.push_back(StateTestPostResult(elForkResults));
-        if (m_post.count(FORK(elFork.getKey())))
+        if (m_post.count(FORK(elFork->getKey())))
             ETH_ERROR_MESSAGE("StateTest post section has multiple results for the same fork!");
-        m_post[FORK(elFork.getKey())] = res;
+        m_post[FORK(elFork->getKey())] = res;
     }
     m_name = _data.getKey();
 
