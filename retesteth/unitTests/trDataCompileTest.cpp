@@ -128,7 +128,7 @@ BOOST_AUTO_TEST_CASE(compileABIArrayLabel)
 
 string const solContract = R"(
    // SPDX-License-Identifier: GPL-3.0
-   pragma solidity >=0.4.16 <0.8.0;
+   pragma solidity >=0.4.16 <0.9.0;
    contract B {
      function callback(address x) public {
          (bool success, bytes memory data) = x.call(abi.encodeWithSignature('stor()'));
