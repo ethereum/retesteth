@@ -240,8 +240,10 @@ VALUE calculateEIP1559BaseFee(ChainOperationParams const& _chainParams, spBlockH
     {
         VALUE gasUsedDelta = parentGasTarget - parent.gasUsed();
         VALUE baseFeePerGasDelta = parent.baseFee() * gasUsedDelta / parentGasTarget / BASE_FEE_MAX_CHANGE_DENOMINATOR;
-        VALUE formula = parent.baseFee() - baseFeePerGasDelta;
-        expectedBaseFee = VALUE(max<dev::bigint>(formula.asBigInt(), dev::bigint(0))).asBigInt();
+        if (parent.baseFee() > baseFeePerGasDelta)
+            expectedBaseFee = parent.baseFee() - baseFeePerGasDelta;
+        else
+            expectedBaseFee = 0;
     }
     return expectedBaseFee;
 }
