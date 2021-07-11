@@ -29,9 +29,9 @@ BlockchainTestBlock::BlockchainTestBlock(DataObject const& _data)
             {
                 for (auto const& tr : _data.atKey("transactionSequence").getSubObjects())
                 {
-                    string const sException = tr.count("exception") ? tr.atKey("exception").asString() : string();
+                    string const sException = tr->count("exception") ? tr->atKey("exception").asString() : string();
                     m_transactionSequence.push_back(
-                        {readTransaction(BYTES(tr.atKey("rawBytes"))), sException});
+                        {readTransaction(BYTES(tr->atKey("rawBytes"))), sException});
                 }
             }
 

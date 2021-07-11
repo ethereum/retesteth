@@ -113,8 +113,9 @@ VALUE calculateGasLimit(VALUE const& _parentGasLimit, VALUE const& _parentGasUse
 State restoreFullState(DataObject const& _toolState)
 {
     DataObject fullState;
-    for (auto const& accTool : _toolState.getSubObjects())
+    for (auto const& accTool2 : _toolState.getSubObjects())
     {
+        DataObject const& accTool = accTool2.getCContent();
         DataObject acc;
         acc["balance"] = accTool.count("balance") ? accTool.atKey("balance").asString() : "0x00";
         acc["nonce"] = accTool.count("nonce") ? accTool.atKey("nonce").asString() : "0x00";
@@ -122,8 +123,8 @@ State restoreFullState(DataObject const& _toolState)
         acc["storage"] = accTool.count("storage") ? accTool.atKey("storage") : DataObject(DataType::Object);
         for (auto& storageRecord : acc.atKeyUnsafe("storage").getSubObjectsUnsafe())
         {
-            storageRecord.performModifier(mod_removeLeadingZerosFromHexValuesEVEN);
-            storageRecord.performModifier(mod_removeLeadingZerosFromHexKeysEVEN);
+            storageRecord.getContent().performModifier(mod_removeLeadingZerosFromHexValuesEVEN);
+            storageRecord.getContent().performModifier(mod_removeLeadingZerosFromHexKeysEVEN);
         }
         fullState[accTool.getKey()] = acc;
     }

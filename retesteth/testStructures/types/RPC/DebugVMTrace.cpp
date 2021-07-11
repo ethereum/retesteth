@@ -19,9 +19,9 @@ VMLogRecord::VMLogRecord(DataObject const& _obj)
         memory = spBYTES(new BYTES(_obj.atKey("memory")));
         memSize = _obj.atKey("memSize").asInt();
         for (auto const& el : _obj.atKey("stack").getSubObjects())
-            stack.push_back(el.asString());
+            stack.push_back(el->asString());
         for (auto const& el : _obj.atKey("returnStack").getSubObjects())
-            returnStack.push_back(el.asString());
+            returnStack.push_back(el->asString());
         returnData = spBYTES(new BYTES(DataObject("0x")));
         depth = _obj.atKey("depth").asInt();
         refund = _obj.atKey("refund").asInt();

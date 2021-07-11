@@ -49,13 +49,13 @@ DataObject ReplaceValueToIndexesInDataList(spStateTestFillerTransaction const& _
         {
             // try to replace `el` with data indexes from transaction
             // in case `el` provided is a transaction value in dataInd array
-            if (el.type() == DataType::String)
+            if (el->type() == DataType::String)
             {
                 DataObject elCopy = el;
                 findIndexOfValueAndReplace(elCopy);
                 if (elCopy.type() == DataType::Integer)
                 {
-                    el = elCopy;
+                    el.getContent().replace(elCopy);
                     updatedDataIndexes.addArrayObject(el);
                 }
                 else if (elCopy.type() == DataType::Array)

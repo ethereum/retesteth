@@ -98,27 +98,14 @@ void DataObject::setSubObjectKey(size_t _index, std::string const& _key)
 {
     _assert(_index < m_subObjects.size(), "_index < m_subObjects.size() (DataObject::setSubObjectKey)");
     if (m_subObjects.size() > _index)
-        m_subObjects.at(_index).setKey(_key);
+        m_subObjects.at(_index).getContent().setKey(_key);
 }
 
-// Helpers for fast subObject lookup
-// Subobjects are in vector because double/empty keys and order in the vector
-vector<DataObject>::const_iterator DataObject::subByKey(string const& _key) const
-{
-    return std::find_if(m_subObjects.begin(), m_subObjects.end(), [&_key](DataObject const& x) { return x.getKey() == _key; });
-}
-vector<DataObject>::iterator DataObject::subByKeyU(string const& _key)
-{
-    return std::find_if(m_subObjects.begin(), m_subObjects.end(), [&_key](DataObject const& x) { return x.getKey() == _key; });
-}
 
 /// look if there is a subobject with _key
 bool DataObject::count(std::string const& _key) const
 {
-    vector<DataObject>::const_iterator it = subByKey(_key);
-    if (it != m_subObjects.end())
-        return true;
-    return false;
+    return m_subObjectKeys.count(_key);
 }
 
 /// Get string value
@@ -151,7 +138,7 @@ void DataObject::setKeyPos(std::string const& _key, size_t _pos)
 
     size_t elementPos = 0;
     for (size_t i = 0; i < m_subObjects.size(); i++)
-        if (m_subObjects.at(i).getKey() == _key)
+        if (m_subObjects.at(i)->getKey() == _key)
         {
             if (i == _pos)
                 return;  // item already at _pos;
@@ -163,7 +150,7 @@ void DataObject::setKeyPos(std::string const& _key, size_t _pos)
         }
 
     setOverwrite(true);
-    DataObject data = m_subObjects.at(elementPos);
+    spDataObject data = m_subObjects.at(elementPos);
     m_subObjects.erase(m_subObjects.begin() + elementPos);
     m_subObjects.insert(m_subObjects.begin() + _pos, 1, data);
     setOverwrite(false);
@@ -198,20 +185,19 @@ void DataObject::replace(DataObject const& _value)
 
 DataObject const& DataObject::atKey(std::string const& _key) const
 {
-    vector<DataObject>::const_iterator it = subByKey(_key);
-    if (it != m_subObjects.end())
-        return *it;
+    if (m_subObjectKeys.count(_key))
+        return m_subObjectKeys.at(_key).getCContent();
+
     _assert(false, "count(_key) _key=" + _key + " (DataObject::at)");
-    return m_subObjects.at(0);
+    return m_subObjects.at(0).getCContent();
 }
 
 DataObject& DataObject::atKeyUnsafe(std::string const& _key)
 {
-    vector<DataObject>::iterator it = subByKeyU(_key);
-    if (it != m_subObjects.end())
-        return *it;
+    if (m_subObjectKeys.count(_key))
+        return m_subObjectKeys.at(_key).getContent();
     _assert(false, "count(_key) _key=" + _key + " (DataObject::atKeyUnsafe)");
-    return m_subObjects.at(0);
+    return m_subObjects.at(0).getContent();
 }
 
 DataObject const& DataObject::at(size_t _pos) const
@@ -223,7 +209,7 @@ DataObject const& DataObject::at(size_t _pos) const
 DataObject& DataObject::atUnsafe(size_t _pos)
 {
     _assert((size_t)_pos < m_subObjects.size(), "DataObject::atUnsafe(int) out of range!");
-    return m_subObjects[_pos];
+    return m_subObjects[_pos].getContent();
 }
 
 DataObject const& DataObject::atLastElement() const
@@ -235,7 +221,7 @@ DataObject const& DataObject::atLastElement() const
 DataObject& DataObject::atLastElementUnsafe()
 {
     _assert(m_subObjects.size() > 0, "atLastElementUnsafe()");
-    return m_subObjects.at(m_subObjects.size() - 1);
+    return m_subObjects.at(m_subObjects.size() - 1).getContent();
 }
 
 void DataObject::addArrayObject(DataObject const& _obj)
@@ -243,30 +229,37 @@ void DataObject::addArrayObject(DataObject const& _obj)
     _assert(m_type == DataType::NotInitialized || m_type == DataType::Array,
         "m_type == DataType::NotInitialized || m_type == DataType::Array (DataObject::addArrayObject)");
     m_type = DataType::Array;
-    m_subObjects.push_back(_obj);
-    m_subObjects.at(m_subObjects.size() - 1).setAutosort(m_autosort);
+    m_subObjects.push_back(spDataObject(new DataObject(_obj)));
+    m_subObjects.at(m_subObjects.size() - 1).getContent().setAutosort(m_autosort);
 }
 
 void DataObject::renameKey(std::string const& _currentKey, std::string const& _newKey)
 {
     if (m_strKey == _currentKey)
         m_strKey = _newKey;
-    vector<DataObject>::iterator it = subByKeyU(_currentKey);
-    if (it != m_subObjects.end())
-        (*it).setKey(_newKey);
+
+    if (m_subObjectKeys.count(_currentKey))
+    {
+        spDataObject data = m_subObjectKeys.at(_currentKey);
+        m_subObjectKeys.erase(_currentKey);
+        data.getContent().setKey(_newKey);
+        m_subObjectKeys.emplace(_newKey, data);
+    }
+
 }
 
 /// vector<element> erase method with `replace()` function
 void DataObject::removeKey(std::string const& _key)
 {
     _assert(type() == DataType::Object, "type() == DataType::Object");
-    for (std::vector<DataObject>::const_iterator it = m_subObjects.begin();
+    for (std::vector<spDataObject>::const_iterator it = m_subObjects.begin();
          it != m_subObjects.end(); it++)
     {
-        if ((*it).getKey() == _key)
+        if ((*it)->getKey() == _key)
         {
             setOverwrite(true);
             m_subObjects.erase(it);
+            m_subObjectKeys.erase(_key);
             setOverwrite(false);
             break;
         }
@@ -311,7 +304,7 @@ void DataObject::setVerifier(void (*f)(DataObject&))
 void DataObject::performModifier(void (*f)(DataObject&), std::set<string> const& _exceptionKeys)
 {
     for (auto& el : m_subObjects)
-        el.performModifier(f, _exceptionKeys);
+        el.getContent().performModifier(f, _exceptionKeys);
     if (!_exceptionKeys.count(getKey()))
         f(*this);
 }
@@ -319,7 +312,7 @@ void DataObject::performModifier(void (*f)(DataObject&), std::set<string> const&
 void DataObject::performVerifier(void (*f)(DataObject const&)) const
 {
     for (auto const& el : m_subObjects)
-        el.performVerifier(f);
+        el->performVerifier(f);
     f(*this);
 }
 
@@ -338,10 +331,10 @@ std::string DataObject::asJson(int level, bool pretty, bool nokey) const
     };
 
     auto printElements = [this, &out, level, pretty]() -> void {
-        for (std::vector<DataObject>::const_iterator it = this->m_subObjects.begin();
+        for (std::vector<spDataObject>::const_iterator it = this->m_subObjects.begin();
              it < this->m_subObjects.end(); it++)
         {
-            out << (*it).asJson(level + 1, pretty);
+            out << (*it)->asJson(level + 1, pretty);
             if (it + 1 != this->m_subObjects.end())
                 out << ",";
             if (pretty)
@@ -496,7 +489,7 @@ std::string DataObject::dataTypeAsString(DataType _type)
     return "";
 }
 
-size_t dataobject::findOrderedKeyPosition(string const& _key, vector<DataObject> const& _objects)
+size_t dataobject::findOrderedKeyPosition(string const& _key, vector<spDataObject> const& _objects)
 {
     if (_objects.size() == 0)
         return 0;
@@ -505,7 +498,7 @@ size_t dataobject::findOrderedKeyPosition(string const& _key, vector<DataObject>
     while (step > 0)
     {
         step = step / 2;
-        if (_objects.at(guess).getKey() > _key)
+        if (_objects.at(guess)->getKey() > _key)
             guess -= std::max(step, (size_t)1);
         else
             guess += std::max(step, (size_t)1);
@@ -513,7 +506,7 @@ size_t dataobject::findOrderedKeyPosition(string const& _key, vector<DataObject>
     if (guess == _objects.size())
         return guess;
     guess = max(0, (int)guess - 5);
-    while (guess < _objects.size() && _objects.at(guess).getKey() <= _key)
+    while (guess < _objects.size() && _objects.at(guess)->getKey() <= _key)
         guess++;
     return guess;
 }
@@ -528,11 +521,11 @@ DataObject& DataObject::_addSubObject(DataObject const& _obj, string const& _key
 
     if (key.empty() || !m_autosort)
     {
-        m_subObjects.push_back(_obj);
+        m_subObjects.push_back(spDataObject(new DataObject(_obj)));
         pos = m_subObjects.size() - 1;
         setSubObjectKey(pos, key);
-        m_subObjects.at(pos).setOverwrite(m_allowOverwrite);
-        m_subObjects.at(pos).setAutosort(m_autosort);
+        m_subObjects.at(pos).getContent().setOverwrite(m_allowOverwrite);
+        m_subObjects.at(pos).getContent().setAutosort(m_autosort);
     }
     else
     {
@@ -540,18 +533,20 @@ DataObject& DataObject::_addSubObject(DataObject const& _obj, string const& _key
         // better use it only when export as ordered json !!!
         pos = findOrderedKeyPosition(key, m_subObjects);
         if (pos == m_subObjects.size())
-            m_subObjects.push_back(_obj);
+            m_subObjects.push_back(spDataObject(new DataObject(_obj)));
         else
         {
             setOverwrite(true);
-            m_subObjects.insert(m_subObjects.begin() + pos, 1, _obj);
+            m_subObjects.insert(m_subObjects.begin() + pos, 1, spDataObject( new DataObject(_obj)));
             setOverwrite(false);
         }
-        m_subObjects.at(pos).setKey(key);
-        m_subObjects.at(pos).setOverwrite(true);
-        m_subObjects.at(pos).setAutosort(m_autosort);
+        m_subObjects.at(pos).getContent().setKey(key);
+        m_subObjects.at(pos).getContent().setOverwrite(true);
+        m_subObjects.at(pos).getContent().setAutosort(m_autosort);
     }
-    return m_subObjects.at(pos);
+    if (!key.empty())
+        m_subObjectKeys.emplace(key, m_subObjects.at(pos));
+    return m_subObjects.at(pos).getContent();
 }
 
 void DataObject::_assert(bool _flag, std::string const& _comment) const
@@ -681,12 +676,6 @@ DataObject& DataObject::operator[](std::string const& _key)
 
     if (m_subObjectKeys.count(_key))
         return m_subObjectKeys.at(_key).getContent();
-
-    auto res =
-        std::find_if(m_subObjects.begin(), m_subObjects.end(), [&_key](DataObject const& x)
-            { return x.getKey() == _key; });
-    if (res != m_subObjects.end())
-        return *res;
 
     DataObject newObj(DataType::NotInitialized);
     newObj.setKey(_key);

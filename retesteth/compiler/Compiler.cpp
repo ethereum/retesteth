@@ -79,7 +79,7 @@ string replaceCode(string const& _code, solContracts const& _preSolidity)
         solContracts const contracts = compileSolidity(_code);
         if (contracts.Contracts().size() > 1)
             ETH_ERROR_MESSAGE("Compiling solc: Only one solidity contract is allowed per address!");
-        compiledCode = contracts.Contracts().at(0).asString();
+        compiledCode = contracts.Contracts().at(0)->asString();
     }
     else if (_code.find(c_solidityPrefix) != string::npos)
     {

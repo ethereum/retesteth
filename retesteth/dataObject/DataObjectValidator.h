@@ -82,7 +82,7 @@ private:
                 bool found = false;
                 for (auto const& element2 : _object.getSubObjects())
                 {
-                    if (element.type() == element2.type() && element.getKey() == element2.getKey())
+                    if (element->type() == element2->type() && element->getKey() == element2->getKey())
                     {
                         found = true;
                         checkExactValue(element2, element);
@@ -90,7 +90,7 @@ private:
                     }
                 }
                 if (!found)
-                    throw ExpectedButGot("Array elelemnt '" + element.asJson() + "'",
+                    throw ExpectedButGot("Array elelemnt '" + element->asJson() + "'",
                         " no elements like this in " + _object.asJson(), false);
             }
 

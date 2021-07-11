@@ -222,8 +222,8 @@ void parseJsonStrValueIntoSet(DataObject const& _json, set<string>& _out)
     {
         for (auto const& val: _json.getSubObjects())
         {
-            ETH_ERROR_REQUIRE_MESSAGE(val.type() == DataType::String, "parseJsonStrValueIntoSet expected value type = string!");
-            _out.emplace(val.asString());
+            ETH_ERROR_REQUIRE_MESSAGE(val->type() == DataType::String, "parseJsonStrValueIntoSet expected value type = string!");
+            _out.emplace(val->asString());
         }
     }
     else
@@ -261,12 +261,12 @@ void parseJsonIntValueIntoSet(DataObject const& _json, set<int>& _out)
     {
         for (auto const& val: _json.getSubObjects())
         {
-            if (val.type() == DataType::Integer)
-                _out.emplace(val.asInt());
+            if (val->type() == DataType::Integer)
+                _out.emplace(val->asInt());
             else
             {
                 ETH_ERROR_REQUIRE_MESSAGE(
-                    val.type() == DataType::String, "parseJsonIntValueIntoSet expected value type = int, \"int-int\" range!");
+                    val->type() == DataType::String, "parseJsonIntValueIntoSet expected value type = int, \"int-int\" range!");
                 parseRange(val);
             }
         }

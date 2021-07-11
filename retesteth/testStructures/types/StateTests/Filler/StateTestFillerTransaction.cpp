@@ -32,8 +32,9 @@ StateTestFillerTransaction::StateTestFillerTransaction(DataObject const& _data)
         m_secretKey = spFH32(new FH32(tmpD.atKey("secretKey")));
         m_nonce = spVALUE(new VALUE(tmpD.atKey("nonce")));
 
-        for (auto const& el : _data.atKey("data").getSubObjects())
+        for (auto const& el2 : _data.atKey("data").getSubObjects())
         {
+            DataObject const& el = el2.getCContent();
             DataObject dataInKey;
             spAccessList accessList;
             if (el.type() == DataType::Object)
@@ -73,9 +74,9 @@ StateTestFillerTransaction::StateTestFillerTransaction(DataObject const& _data)
             m_databox.push_back(Databox(dataInKey, label, rawData.substr(0, 20), accessList));
         }
         for (auto const& el : tmpD.atKey("gasLimit").getSubObjects())
-            m_gasLimit.push_back(el);
+            m_gasLimit.push_back(el.getCContent());
         for (auto const& el : tmpD.atKey("value").getSubObjects())
-            m_value.push_back(el);
+            m_value.push_back(el.getCContent());
 
         if (tmpD.count("maxFeePerGas") || tmpD.count("maxPriorityFeePerGas"))
         {

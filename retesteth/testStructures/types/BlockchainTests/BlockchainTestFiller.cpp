@@ -36,8 +36,9 @@ BlockchainTestInFiller::BlockchainTestInFiller(DataObject const& _data)
 
         // Process expect section
         std::set<FORK> knownForks;
-        for (auto const& el : _data.atKey("expect").getSubObjects())
+        for (auto const& el2 : _data.atKey("expect").getSubObjects())
         {
+            DataObject const& el = el2.getCContent();
             m_expects.push_back(el);
             BlockchainTestFillerExpectSection const& expect = m_expects.at(m_expects.size() - 1);
             for (auto const& fork : expect.forks())
@@ -53,7 +54,7 @@ BlockchainTestInFiller::BlockchainTestInFiller(DataObject const& _data)
         if (_data.count("exceptions"))
         {
             for (size_t i = _data.atKey("exceptions").getSubObjects().size(); i > 0; i--)
-                m_exceptions.push_back(_data.atKey("exceptions").getSubObjects().at(i - 1).asString());
+                m_exceptions.push_back(_data.atKey("exceptions").getSubObjects().at(i - 1)->asString());
         }
 
         m_hasAtLeastOneUncle = false;
@@ -90,7 +91,7 @@ BlockchainTestFiller::BlockchainTestFiller(DataObject const& _data)
             TestOutputHelper::get().get().testFile().string() + " A test file must contain at least one test!");
         for (auto const& el : _data.getSubObjects())
         {
-            TestOutputHelper::get().setCurrentTestInfo(TestInfo("BlockchainTestFiller", el.getKey()));
+            TestOutputHelper::get().setCurrentTestInfo(TestInfo("BlockchainTestFiller", el->getKey()));
             m_tests.push_back(BlockchainTestInFiller(el));
         }
     }

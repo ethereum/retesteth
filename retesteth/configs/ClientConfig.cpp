@@ -71,7 +71,7 @@ ClientConfig::ClientConfig(fs::path const& _clientConfigPath) : m_id(ClientConfi
                                  el.asString() + "` (" + correctMiningRewardPath.string() + ")");
         }
         for (auto const& el : correctMiningReward.getSubObjects())
-            m_correctReward[el.getKey()] = spVALUE(new VALUE(correctMiningReward.atKey(el.getKey())));
+            m_correctReward[el->getKey()] = spVALUE(new VALUE(correctMiningReward.atKey(el->getKey())));
     }
     catch (std::exception const& _ex)
     {
@@ -253,7 +253,7 @@ void ClientConfig::performFieldReplace(DataObject& _data, FieldReplaceDir const&
     if (_data.type() == DataType::Object || _data.type() == DataType::Array)
     {
         for (auto& obj : _data.getSubObjectsUnsafe())
-            performFieldReplace(obj, _dir);
+            performFieldReplace(obj.getContent(), _dir);
     }
 }
 

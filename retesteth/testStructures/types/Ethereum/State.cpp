@@ -24,7 +24,7 @@ State::State(DataObject const& _data)
     {
         for (auto const& el : _data.getSubObjects())
         {
-            FH20 key(el.getKey());
+            FH20 key(el->getKey());
             m_order.push_back(key);
             m_accounts[key] = spAccountBase(new Account(el));
         }
