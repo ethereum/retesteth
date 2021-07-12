@@ -47,7 +47,7 @@ SetChainParamsArgs::SetChainParamsArgs(DataObject const& _data)
 
 DataObject SetChainParamsArgs::asDataObject() const
 {
-    DataObject out;
+    spDataObject out (new DataObject());
     out["params"] = m_params;
     out["accounts"] = m_preState->asDataObject();
     out["sealEngine"] = sealEngineToStr(m_sealEngine);

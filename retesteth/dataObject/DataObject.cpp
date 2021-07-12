@@ -75,6 +75,12 @@ std::vector<spDataObject> const& DataObject::getSubObjects() const
     return m_subObjects;
 }
 
+/// Get map of keys to subobjects
+std::map<string, spDataObject> const& DataObject::getSubObjectKeys() const
+{
+    return m_subObjectKeys;
+}
+
 /// Get ref vector of subobjects
 std::vector<spDataObject>& DataObject::getSubObjectsUnsafe()
 {
@@ -82,13 +88,13 @@ std::vector<spDataObject>& DataObject::getSubObjectsUnsafe()
 }
 
 /// Add new subobject
-DataObject& DataObject::addSubObject(DataObject const& _obj)
+DataObject& DataObject::addSubObject(spDataObject const& _obj)
 {
     return _addSubObject(_obj);
 }
 
 /// Add new subobject and set it's key
-DataObject& DataObject::addSubObject(std::string const& _key, DataObject const& _obj)
+DataObject& DataObject::addSubObject(std::string const& _key, spDataObject const& _obj)
 {
     return _addSubObject(_obj, _key);
 }
@@ -179,6 +185,7 @@ void DataObject::replace(DataObject const& _value)
     m_type = _value.type();
     m_subObjects.clear();
     m_subObjects = _value.getSubObjects();
+    m_subObjectKeys = _value.getSubObjectKeys();
     m_allowOverwrite = _value.isOverwritable();
     setAutosort(_value.isAutosort());
 }
@@ -224,12 +231,12 @@ DataObject& DataObject::atLastElementUnsafe()
     return m_subObjects.at(m_subObjects.size() - 1).getContent();
 }
 
-void DataObject::addArrayObject(DataObject const& _obj)
+void DataObject::addArrayObject(spDataObject const& _obj)
 {
     _assert(m_type == DataType::NotInitialized || m_type == DataType::Array,
         "m_type == DataType::NotInitialized || m_type == DataType::Array (DataObject::addArrayObject)");
     m_type = DataType::Array;
-    m_subObjects.push_back(spDataObject(new DataObject(_obj)));
+    m_subObjects.push_back(_obj);
     m_subObjects.at(m_subObjects.size() - 1).getContent().setAutosort(m_autosort);
 }
 
@@ -511,17 +518,17 @@ size_t dataobject::findOrderedKeyPosition(string const& _key, vector<spDataObjec
     return guess;
 }
 
-DataObject& DataObject::_addSubObject(DataObject const& _obj, string const& _keyOverwrite)
+DataObject& DataObject::_addSubObject(spDataObject const& _obj, string const& _keyOverwrite)
 {
     if (m_type == DataType::NotInitialized)
         m_type = DataType::Object;
 
     size_t pos;
-    string const& key = _keyOverwrite.empty() ? _obj.getKey() : _keyOverwrite;
+    string const& key = _keyOverwrite.empty() ? _obj->getKey() : _keyOverwrite;
 
     if (key.empty() || !m_autosort)
     {
-        m_subObjects.push_back(spDataObject(new DataObject(_obj)));
+        m_subObjects.push_back(_obj);
         pos = m_subObjects.size() - 1;
         setSubObjectKey(pos, key);
         m_subObjects.at(pos).getContent().setOverwrite(m_allowOverwrite);
@@ -533,11 +540,11 @@ DataObject& DataObject::_addSubObject(DataObject const& _obj, string const& _key
         // better use it only when export as ordered json !!!
         pos = findOrderedKeyPosition(key, m_subObjects);
         if (pos == m_subObjects.size())
-            m_subObjects.push_back(spDataObject(new DataObject(_obj)));
+            m_subObjects.push_back(_obj);
         else
         {
             setOverwrite(true);
-            m_subObjects.insert(m_subObjects.begin() + pos, 1, spDataObject( new DataObject(_obj)));
+            m_subObjects.insert(m_subObjects.begin() + pos, 1, _obj);
             setOverwrite(false);
         }
         m_subObjects.at(pos).getContent().setKey(key);
@@ -587,7 +594,7 @@ void DataObject::setBool(bool _value)
     m_boolVal = _value;
 }
 
-DataObject& DataObject::operator=(DataObject const& _value)
+/*DataObject& DataObject::operator=(DataObject const& _value)
 {
     // So not to overwrite the existing data
     // Do not replace the key. Assuming that key is set upon calling DataObject[key] =
@@ -606,7 +613,7 @@ DataObject& DataObject::operator=(DataObject const& _value)
         m_strKey = currentKey;
     }
     return *this;
-}
+}*/
 
 bool DataObject::operator==(DataObject const& _value) const
 {
@@ -630,7 +637,7 @@ bool DataObject::operator==(DataObject const& _value) const
         equal = getSubObjects().size() == _value.getSubObjects().size();
         for (size_t i = 0; i < getSubObjects().size(); i++)
         {
-            equal = getSubObjects().at(i) == _value.getSubObjects().at(i);
+            equal = getSubObjects().at(i).getCContent() == _value.getSubObjects().at(i).getCContent();
             if (!equal)
                 break;
         }
@@ -644,7 +651,7 @@ bool DataObject::operator==(DataObject const& _value) const
         // equal = getSubObjects().at(0) == _value.getSubObjects().at(0);
         for (size_t i = 0; i < getSubObjects().size(); i++)
         {
-            equal = getSubObjects().at(i) == _value.getSubObjects().at(i);
+            equal = getSubObjects().at(i).getCContent() == _value.getSubObjects().at(i).getCContent();
             if (!equal)
                 break;
         }
@@ -677,8 +684,8 @@ DataObject& DataObject::operator[](std::string const& _key)
     if (m_subObjectKeys.count(_key))
         return m_subObjectKeys.at(_key).getContent();
 
-    DataObject newObj(DataType::NotInitialized);
-    newObj.setKey(_key);
+    spDataObject newObj(new DataObject(DataType::NotInitialized));
+    newObj.getContent().setKey(_key);
     return _addSubObject(newObj);  // !could change the item order!
 }
 

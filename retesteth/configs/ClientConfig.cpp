@@ -61,17 +61,17 @@ ClientConfig::ClientConfig(fs::path const& _clientConfigPath) : m_id(ClientConfi
         fs::path correctMiningRewardPath = genesisTemplatePath / "correctMiningReward.json";
         ETH_FAIL_REQUIRE_MESSAGE(fs::exists(correctMiningRewardPath),
             "correctMiningReward.json client config not found!");
-        DataObject correctMiningReward = test::readJsonData(correctMiningRewardPath);
-        correctMiningReward.performModifier(mod_removeComments);
-        correctMiningReward.performModifier(mod_valueToCompactEvenHexPrefixed);
+        spDataObject correctMiningReward = test::readJsonData(correctMiningRewardPath);
+        correctMiningReward.getContent().performModifier(mod_removeComments);
+        correctMiningReward.getContent().performModifier(mod_valueToCompactEvenHexPrefixed);
         for (auto const& el : cfgFile().forks())
         {
-            if (!correctMiningReward.count(el.asString()))
+            if (!correctMiningReward->count(el.asString()))
                 ETH_FAIL_MESSAGE("Correct mining reward missing block reward record for fork: `" +
                                  el.asString() + "` (" + correctMiningRewardPath.string() + ")");
         }
-        for (auto const& el : correctMiningReward.getSubObjects())
-            m_correctReward[el->getKey()] = spVALUE(new VALUE(correctMiningReward.atKey(el->getKey())));
+        for (auto const& el : correctMiningReward->getSubObjects())
+            m_correctReward[el->getKey()] = spVALUE(new VALUE(correctMiningReward->atKey(el->getKey())));
     }
     catch (std::exception const& _ex)
     {
@@ -207,9 +207,9 @@ std::string const& ClientConfig::translateException(string const& _exceptionName
 }
 
 // Get Contents of genesis template for specified FORK
-DataObject const& ClientConfig::getGenesisTemplate(FORK const& _fork) const
+spDataObject const& ClientConfig::getGenesisTemplate(FORK const& _fork) const
 {
-    ETH_FAIL_REQUIRE_MESSAGE(m_genesisTemplate.count(FORK(_fork)),
+    ETH_FAIL_REQUIRE_MESSAGE(m_genesisTemplate.count(_fork),
         "Genesis template for network '" + _fork.asString() + "' not found!");
     return m_genesisTemplate.at(_fork);
 }

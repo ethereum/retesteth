@@ -18,7 +18,7 @@ struct BlockHeaderLegacy : BlockHeader
     BlockHeaderLegacy(dev::RLP const&);
     virtual ~BlockHeaderLegacy(){/* all smart pointers */};
 
-    virtual DataObject const asDataObject() const override;
+    virtual spDataObject asDataObject() const override;
     virtual dev::RLPStream const asRLPStream() const override;
     virtual BlockType type() const override { return BlockType::BlockHeaderLegacy; }
 

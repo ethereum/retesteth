@@ -39,7 +39,7 @@ Json::Value readJson(fs::path const& _file)
 #endif
 
 /// Safely read the json file into DataObject
-DataObject readJsonData(fs::path const& _file, string const& _stopper, bool _autosort)
+spDataObject readJsonData(fs::path const& _file, string const& _stopper, bool _autosort)
 {
     try
     {
@@ -51,7 +51,7 @@ DataObject readJsonData(fs::path const& _file, string const& _stopper, bool _aut
     catch (std::exception const& _ex)
     {
         ETH_ERROR_MESSAGE(string("\nError when parsing file (") + _file.c_str() + ") " + _ex.what());
-        return DataObject();
+        return spDataObject(0);
     }
 }
 

@@ -43,7 +43,7 @@ ToolChain::ToolChain(
     m_blocks.push_back(genesisFixed);
 }
 
-DataObject const ToolChain::mineBlock(EthereumBlockState const& _pendingBlock, Mining _req)
+spDataObject const ToolChain::mineBlock(EthereumBlockState const& _pendingBlock, Mining _req)
 {
     ToolResponse const res = mineBlockOnTool(_pendingBlock, m_engine);
 
@@ -81,8 +81,8 @@ DataObject const ToolChain::mineBlock(EthereumBlockState const& _pendingBlock, M
     // Add only those transactions which tool returned a receipt for
     // Some transactions are expected to fail. That should be detected by tests
     size_t index = 0;
-    DataObject miningResult;
-    miningResult["result"] = true;
+    spDataObject miningResult(new DataObject());
+    (*miningResult)["result"] = true;
 
     for (auto const& tr : _pendingBlock.transactions())
     {
@@ -108,10 +108,10 @@ DataObject const ToolChain::mineBlock(EthereumBlockState const& _pendingBlock, M
                 if (el.index() == index)
                 {
                     rejectedInfoFound = true;
-                    DataObject rejectInfo;
-                    rejectInfo["hash"] = trHash.asString();
-                    rejectInfo["error"] = el.error();
-                    miningResult["rejectedTransactions"].addArrayObject(rejectInfo);
+                    spDataObject rejectInfo(new DataObject());
+                    (*rejectInfo)["hash"] = trHash.asString();
+                    (*rejectInfo)["error"] = el.error();
+                    (*miningResult)["rejectedTransactions"].addArrayObject(rejectInfo);
                     break;
                 }
             }

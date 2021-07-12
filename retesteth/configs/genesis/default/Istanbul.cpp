@@ -31,13 +31,13 @@ const string t8ntool_Istanbul_config = R"({
 
 genIstanbulCfg::genIstanbulCfg()
 {
-    DataObject obj;
-    obj["path"] = "besu/genesis/Istanbul.json";
-    obj["content"] = default_Istanbul_config;
+    spDataObject obj(new DataObject());
+    (*obj)["path"] = "besu/genesis/Istanbul.json";
+    (*obj)["content"] = default_Istanbul_config;
     map_configs.addArrayObject(obj);
 
-    DataObject obj2;
-    obj2["path"] = "default/genesis/Istanbul.json";
-    obj2["content"] = t8ntool_Istanbul_config;
+    spDataObject obj2(new DataObject());
+    (*obj2)["path"] = "default/genesis/Istanbul.json";
+    (*obj2)["content"] = t8ntool_Istanbul_config;
     map_configs.addArrayObject(obj2);
 }

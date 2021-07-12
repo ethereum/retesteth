@@ -23,7 +23,7 @@ struct BlockHeader : GCP_SPointerBase
 {
     virtual ~BlockHeader(){/* all smart pointers */};
 
-    virtual DataObject const asDataObject() const = 0;
+    virtual spDataObject asDataObject() const = 0;
     virtual dev::RLPStream const asRLPStream() const = 0;
     virtual BlockType type() const = 0;
 

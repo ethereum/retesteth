@@ -19,11 +19,11 @@ ToolChainManager::ToolChainManager(SetChainParamsArgs const& _config, fs::path c
     reorganizePendingBlock();
 }
 
-DataObject const ToolChainManager::mineBlocks(size_t _number, ToolChain::Mining _req)
+spDataObject const ToolChainManager::mineBlocks(size_t _number, ToolChain::Mining _req)
 {
     if (_number > 1)
         throw test::UpwardsException("ToolChainManager::mineBlocks number arg invalid: " + fto_string(_number));
-    DataObject const res = currentChainUnsafe().mineBlock(m_pendingBlock, _req);
+    spDataObject const res = currentChainUnsafe().mineBlock(m_pendingBlock, _req);
     reorganizePendingBlock();
     return res;
 }

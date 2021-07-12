@@ -42,7 +42,7 @@ namespace fs = boost::filesystem;
 namespace {
 struct TestFileData
 {
-    DataObject data;
+    spDataObject data;
     h256 hash;
 };
 
@@ -59,7 +59,7 @@ TestFileData readTestFile(fs::path const& _testFileName)
             "Unknown test format!" + test::TestOutputHelper::get().testFile().string());
     ETH_LOG("Read json structure finish", 5);
 
-    string srcString = testData.data.asJson(0, false); //json_spirit::write_string(testData.data, false);
+    string srcString = testData.data->asJson(0, false); //json_spirit::write_string(testData.data, false);
     if (test::Options::get().showhash)
     {
         std::string output = "Not a Json object!";
@@ -82,27 +82,27 @@ TestFileData readTestFile(fs::path const& _testFileName)
     return testData;
 }
 
-void removeComments(DataObject& _obj)
+void removeComments(spDataObject& _obj)
 {
-    if (_obj.type() == DataType::Object)
+    if (_obj->type() == DataType::Object)
     {
 		list<string> removeList;
-        for (auto& i: _obj.getSubObjectsUnsafe())
+        for (auto& i: (*_obj).getSubObjectsUnsafe())
 		{
             if (i->getKey().substr(0, 2) == "//")
 			{
                 removeList.push_back(i->getKey());
 				continue;
 			}
-            removeComments(i.getContent());
+            removeComments(i);
 		}
         for (auto const& i: removeList)
-            _obj.removeKey(i);
+            (*_obj).removeKey(i);
 	}
-    else if (_obj.type() == DataType::Array)
+    else if (_obj->type() == DataType::Array)
     {
-        for (auto& i: _obj.getSubObjectsUnsafe())
-            removeComments(i.getContent());
+        for (auto& i: (*_obj).getSubObjectsUnsafe())
+            removeComments(i);
     }
 }
 
@@ -113,25 +113,25 @@ void addClientInfo(DataObject& _v, fs::path const& _testSource, h256 const& _tes
     {
         DataObject& o = o2.getContent();
         string comment;
-        DataObject clientinfo;
-        clientinfo.setKey("_info");
+        spDataObject clientinfo(new DataObject());
+        (*clientinfo).setKey("_info");
         if (o.count("_info"))
         {
             DataObject const& existingInfo = o.atKey("_info");
             if (existingInfo.count("comment"))
                 comment = existingInfo.atKey("comment").asString();
             if (existingInfo.count("labels"))
-                clientinfo["labels"] = existingInfo.atKey("labels");
+                (*clientinfo)["labels"] = existingInfo.atKey("labels");
         }
 
-        clientinfo["comment"] = comment;
-        clientinfo["filling-rpc-server"] = session.web3_clientVersion();
-        clientinfo["filling-tool-version"] = test::prepareVersionString();
-        clientinfo["lllcversion"] = test::prepareLLLCVersionString();
-        clientinfo["source"] = _testSource.string();
-        clientinfo["sourceHash"] = toString(_testSourceHash);
-        if (clientinfo.count("labels"))
-            clientinfo.setKeyPos("labels", clientinfo.getSubObjects().size() - 1);
+        (*clientinfo)["comment"] = comment;
+        (*clientinfo)["filling-rpc-server"] = session.web3_clientVersion();
+        (*clientinfo)["filling-tool-version"] = test::prepareVersionString();
+        (*clientinfo)["lllcversion"] = test::prepareLLLCVersionString();
+        (*clientinfo)["source"] = _testSource.string();
+        (*clientinfo)["sourceHash"] = toString(_testSourceHash);
+        if (clientinfo->count("labels"))
+            (*clientinfo).setKeyPos("labels", clientinfo->getSubObjects().size() - 1);
 
         o["_info"].replace(clientinfo);
         o.setKeyPos("_info", 0);
@@ -140,9 +140,9 @@ void addClientInfo(DataObject& _v, fs::path const& _testSource, h256 const& _tes
 
 void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
 {
-    DataObject v = test::readJsonData(_compiledTest, "_info");
+    spDataObject v = test::readJsonData(_compiledTest, "_info");
     TestFileData fillerData = readTestFile(_sourceTest);
-    for (auto const& i2: v.getSubObjects())
+    for (auto const& i2: v->getSubObjects())
     {
         DataObject const& i = i2.getCContent();
         try
@@ -206,6 +206,7 @@ void joinThreads(vector<thread>& _threadVector, bool _all)
             else if (status == RPCSession::NotExist && ExitHandler::receivedExitSignal())
                 return;
         }
+        std::this_thread::sleep_for(200ms);
     }
 }
 }
