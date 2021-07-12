@@ -48,7 +48,7 @@ void ClientConfigFile::initWithData(DataObject const& _data)
         {
             IPADDRESS addr(el);
             if (test::inArray(m_socketAddress, addr))
-                ETH_ERROR_MESSAGE(sErrorPath + "`socketAddress` section contain dublicate element: " + el.asString());
+                ETH_ERROR_MESSAGE(sErrorPath + "`socketAddress` section contain dublicate element: " + el->asString());
             m_socketAddress.push_back(addr);
         }
     }
@@ -103,20 +103,20 @@ void ClientConfigFile::initWithData(DataObject const& _data)
     // Homestead`) According to this order:
     for (auto const& el : _data.atKey("forks").getSubObjects())
     {
-        if (el.asString()[0] == '/' && el.asString()[1] == '/')
+        if (el->asString()[0] == '/' && el->asString()[1] == '/')
             continue;
         if (test::inArray(m_forks, FORK(el)))
-            ETH_ERROR_MESSAGE(sErrorPath + "`forks` section contain dublicate element: " + el.asString());
+            ETH_ERROR_MESSAGE(sErrorPath + "`forks` section contain dublicate element: " + el->asString());
         m_forks.push_back(FORK(el));
     }
 
     // Read additionalForks are allowed fork names to run on this client, but not used in translation
     for (auto const& el : _data.atKey("additionalForks").getSubObjects())
     {
-        if (el.asString()[0] == '/' && el.asString()[1] == '/')
+        if (el->asString()[0] == '/' && el->asString()[1] == '/')
             continue;
         if (test::inArray(m_additionalForks, FORK(el)))
-            ETH_ERROR_MESSAGE(sErrorPath + "`additionalForks` section contain dublicate element: " + el.asString());
+            ETH_ERROR_MESSAGE(sErrorPath + "`additionalForks` section contain dublicate element: " + el->asString());
         m_additionalForks.push_back(FORK(el));
     }
 
@@ -124,9 +124,9 @@ void ClientConfigFile::initWithData(DataObject const& _data)
     // returned from client
     for (auto const& el : _data.atKey("exceptions").getSubObjects())
     {
-        if (m_exceptions.count(el.getKey()))
-            ETH_ERROR_MESSAGE(sErrorPath + "`exceptions` section contain dublicate element: " + el.getKey());
-        m_exceptions[el.getKey()] = el.asString();
+        if (m_exceptions.count(el->getKey()))
+            ETH_ERROR_MESSAGE(sErrorPath + "`exceptions` section contain dublicate element: " + el->getKey());
+        m_exceptions[el->getKey()] = el->asString();
     }
 
     // When sending requests to the client, some of the parameters might be named differently
@@ -135,9 +135,9 @@ void ClientConfigFile::initWithData(DataObject const& _data)
     {
         for (auto const& el : _data.atKey("fieldReplace").getSubObjects())
         {
-            if (m_fieldRaplce.count(el.getKey()))
-                ETH_ERROR_MESSAGE(sErrorPath + "`fieldReplace` section contain dublicate element: " + el.getKey());
-            m_fieldRaplce[el.getKey()] = el.asString();
+            if (m_fieldRaplce.count(el->getKey()))
+                ETH_ERROR_MESSAGE(sErrorPath + "`fieldReplace` section contain dublicate element: " + el->getKey());
+            m_fieldRaplce[el->getKey()] = el->asString();
         }
     }
 

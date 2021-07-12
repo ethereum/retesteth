@@ -72,15 +72,15 @@ killall aleth
 alethcfg::alethcfg()
 {
     {
-        DataObject obj;
-        obj["path"] = "aleth/config";
-        obj["content"] = aleth_config;
+        spDataObject obj(new DataObject());
+        (*obj)["path"] = "aleth/config";
+        (*obj)["content"] = aleth_config;
         map_configs.addArrayObject(obj);
     }
     {
-        DataObject obj;
-        obj["path"] = "aleth/aleth.sh";
-        obj["content"] = aleth_config_sh;
+        spDataObject obj(new DataObject());
+        (*obj)["path"] = "aleth/aleth.sh";
+        (*obj)["content"] = aleth_config_sh;
         map_configs.addArrayObject(obj);
     }
     /*{
@@ -90,10 +90,10 @@ alethcfg::alethcfg()
         map_configs.addArrayObject(obj);
     }*/
     {
-        DataObject obj;
-        obj["exec"] = true;
-        obj["path"] = "aleth/stop.sh";
-        obj["content"] = aleth_stop_sh;
+        spDataObject obj(new DataObject());
+        (*obj)["exec"] = true;
+        (*obj)["path"] = "aleth/stop.sh";
+        (*obj)["content"] = aleth_stop_sh;
         map_configs.addArrayObject(obj);
     }
 }

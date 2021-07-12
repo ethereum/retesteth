@@ -1,6 +1,7 @@
 #pragma once
 #include <exception>
 #include <string>
+
 namespace dataobject
 {
 struct SPointerException : virtual std::exception
@@ -32,12 +33,8 @@ class GCP_SPointerBase
 private:
     int _nRef;
     bool _isEmpty;
-    void AddRef() { _nRef++; }
-    int DelRef()
-    {
-        _nRef--;
-        return _nRef;
-    }
+    void AddRef();
+    int DelRef();
 
 public:
     GCP_SPointerBase() : _nRef(0), _isEmpty(false) {}
@@ -179,6 +176,11 @@ public:
         if (isEmpty())
             throwException("GCP_SPointer:: T const* operator->() const :: smart pointer is empty!");
         return getCPtr();
+    }
+
+    template<class Tb, class Ta>
+    Tb operator[] (Ta arg){
+        return _pointee[arg];
     }
 
     // T* operator->() const { return _pointee; }

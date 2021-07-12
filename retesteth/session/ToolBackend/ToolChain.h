@@ -52,7 +52,7 @@ public:
         RequireValid,
         AllowFailTransactions
     };
-    DataObject const mineBlock(EthereumBlockState const& _pendingBlock, Mining _req = Mining::AllowFailTransactions);
+    spDataObject const mineBlock(EthereumBlockState const& _pendingBlock, Mining _req = Mining::AllowFailTransactions);
     void rewindToBlock(size_t _number);
 
     // Used for chain reorg

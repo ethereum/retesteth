@@ -20,14 +20,14 @@ const string t8ntool_Frontier_config = R"({
 
 genFrontierCfg::genFrontierCfg()
 {
-    DataObject obj;
-    obj["path"] = "besu/genesis/Frontier.json";
-    obj["content"] = default_Frontier_config;
+    spDataObject obj(new DataObject());
+    (*obj)["path"] = "besu/genesis/Frontier.json";
+    (*obj)["content"] = default_Frontier_config;
     map_configs.addArrayObject(obj);
 
-    DataObject obj2;
-    obj2["path"] = "default/genesis/Frontier.json";
-    obj2["content"] = t8ntool_Frontier_config;
+    spDataObject obj2(new DataObject());
+    (*obj2)["path"] = "default/genesis/Frontier.json";
+    (*obj2)["content"] = t8ntool_Frontier_config;
     map_configs.addArrayObject(obj2);
 }
 

@@ -21,13 +21,14 @@ string encodeAbi(string const& _code);
 class solContracts
 {
 public:
-    void insertCode(string const& _name, string const& _code) { m_solContracts[_name] = _code; }
+    solContracts() { m_solContracts = spDataObject(new DataObject()); }
+    void insertCode(string const& _name, string const& _code) { m_solContracts.getContent()[_name] = _code; }
     string const& getCode(string const& _contractName) const;
-    std::vector<DataObject> const& Contracts() const { return m_solContracts.getSubObjects(); }
+    std::vector<spDataObject> const& Contracts() const { return m_solContracts->getSubObjects(); }
 
 private:
     // Map of "contractName" -> "bytecode"
-    DataObject m_solContracts;
+    spDataObject m_solContracts;
 };
 
 /// get solContracts information from solidity source code

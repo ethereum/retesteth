@@ -40,13 +40,13 @@ BOOST_AUTO_TEST_CASE(dataobject_setKeyPos_lastToFirst)
 	data["key1"] = "data1";
 	data["key2"] = "data2";
 	data["key3"] = "data3";
-	data.setKeyPos("key3", 0);
-	BOOST_CHECK(data.getSubObjects().at(0).getKey() == "key3");
-	BOOST_CHECK(data.getSubObjects().at(0).asString() == "data3");
-	BOOST_CHECK(data.getSubObjects().at(1).getKey() == "key1");
-	BOOST_CHECK(data.getSubObjects().at(1).asString() == "data1");
-	BOOST_CHECK(data.getSubObjects().at(2).getKey() == "key2");
-	BOOST_CHECK(data.getSubObjects().at(2).asString() == "data2");
+    data.setKeyPos("key3", 0);
+    BOOST_CHECK(data.getSubObjects().at(0)->getKey() == "key3");
+    BOOST_CHECK(data.getSubObjects().at(0)->asString() == "data3");
+    BOOST_CHECK(data.getSubObjects().at(1)->getKey() == "key1");
+    BOOST_CHECK(data.getSubObjects().at(1)->asString() == "data1");
+    BOOST_CHECK(data.getSubObjects().at(2)->getKey() == "key2");
+    BOOST_CHECK(data.getSubObjects().at(2)->asString() == "data2");
     TestOutputHelper::registerTestRunSuccess();
 }
 
@@ -57,12 +57,12 @@ BOOST_AUTO_TEST_CASE(dataobject_setKeyPos_lastToMid)
 	data["key2"] = "data2";
 	data["key3"] = "data3";
 	data.setKeyPos("key3", 1);
-	BOOST_CHECK(data.getSubObjects().at(0).getKey() == "key1");
-	BOOST_CHECK(data.getSubObjects().at(0).asString() == "data1");
-	BOOST_CHECK(data.getSubObjects().at(1).getKey() == "key3");
-	BOOST_CHECK(data.getSubObjects().at(1).asString() == "data3");
-	BOOST_CHECK(data.getSubObjects().at(2).getKey() == "key2");
-	BOOST_CHECK(data.getSubObjects().at(2).asString() == "data2");
+    BOOST_CHECK(data.getSubObjects().at(0)->getKey() == "key1");
+    BOOST_CHECK(data.getSubObjects().at(0)->asString() == "data1");
+    BOOST_CHECK(data.getSubObjects().at(1)->getKey() == "key3");
+    BOOST_CHECK(data.getSubObjects().at(1)->asString() == "data3");
+    BOOST_CHECK(data.getSubObjects().at(2)->getKey() == "key2");
+    BOOST_CHECK(data.getSubObjects().at(2)->asString() == "data2");
 }
 
 BOOST_AUTO_TEST_CASE(dataobject_setKeyPos_lastTolast)
@@ -72,12 +72,12 @@ BOOST_AUTO_TEST_CASE(dataobject_setKeyPos_lastTolast)
 	data["key2"] = "data2";
 	data["key3"] = "data3";
 	data.setKeyPos("key3", 2);
-	BOOST_CHECK(data.getSubObjects().at(0).getKey() == "key1");
-	BOOST_CHECK(data.getSubObjects().at(0).asString() == "data1");
-	BOOST_CHECK(data.getSubObjects().at(1).getKey() == "key2");
-	BOOST_CHECK(data.getSubObjects().at(1).asString() == "data2");
-	BOOST_CHECK(data.getSubObjects().at(2).getKey() == "key3");
-	BOOST_CHECK(data.getSubObjects().at(2).asString() == "data3");
+    BOOST_CHECK(data.getSubObjects().at(0)->getKey() == "key1");
+    BOOST_CHECK(data.getSubObjects().at(0)->asString() == "data1");
+    BOOST_CHECK(data.getSubObjects().at(1)->getKey() == "key2");
+    BOOST_CHECK(data.getSubObjects().at(1)->asString() == "data2");
+    BOOST_CHECK(data.getSubObjects().at(2)->getKey() == "key3");
+    BOOST_CHECK(data.getSubObjects().at(2)->asString() == "data3");
 }
 
 BOOST_AUTO_TEST_CASE(dataobject_setKeyPos_midToFirst)
@@ -87,12 +87,12 @@ BOOST_AUTO_TEST_CASE(dataobject_setKeyPos_midToFirst)
 	data["key2"] = "data2";
 	data["key3"] = "data3";
 	data.setKeyPos("key2", 0);
-	BOOST_CHECK(data.getSubObjects().at(0).getKey() == "key2");
-	BOOST_CHECK(data.getSubObjects().at(0).asString() == "data2");
-	BOOST_CHECK(data.getSubObjects().at(1).getKey() == "key1");
-	BOOST_CHECK(data.getSubObjects().at(1).asString() == "data1");
-	BOOST_CHECK(data.getSubObjects().at(2).getKey() == "key3");
-	BOOST_CHECK(data.getSubObjects().at(2).asString() == "data3");
+    BOOST_CHECK(data.getSubObjects().at(0)->getKey() == "key2");
+    BOOST_CHECK(data.getSubObjects().at(0)->asString() == "data2");
+    BOOST_CHECK(data.getSubObjects().at(1)->getKey() == "key1");
+    BOOST_CHECK(data.getSubObjects().at(1)->asString() == "data1");
+    BOOST_CHECK(data.getSubObjects().at(2)->getKey() == "key3");
+    BOOST_CHECK(data.getSubObjects().at(2)->asString() == "data3");
 }
 
 BOOST_AUTO_TEST_CASE(dataobject_setKeyPos_midTomid)
@@ -102,12 +102,12 @@ BOOST_AUTO_TEST_CASE(dataobject_setKeyPos_midTomid)
 	data["key2"] = "data2";
 	data["key3"] = "data3";
 	data.setKeyPos("key2", 1);
-	BOOST_CHECK(data.getSubObjects().at(0).getKey() == "key1");
-	BOOST_CHECK(data.getSubObjects().at(0).asString() == "data1");
-	BOOST_CHECK(data.getSubObjects().at(1).getKey() == "key2");
-	BOOST_CHECK(data.getSubObjects().at(1).asString() == "data2");
-	BOOST_CHECK(data.getSubObjects().at(2).getKey() == "key3");
-	BOOST_CHECK(data.getSubObjects().at(2).asString() == "data3");
+    BOOST_CHECK(data.getSubObjects().at(0)->getKey() == "key1");
+    BOOST_CHECK(data.getSubObjects().at(0)->asString() == "data1");
+    BOOST_CHECK(data.getSubObjects().at(1)->getKey() == "key2");
+    BOOST_CHECK(data.getSubObjects().at(1)->asString() == "data2");
+    BOOST_CHECK(data.getSubObjects().at(2)->getKey() == "key3");
+    BOOST_CHECK(data.getSubObjects().at(2)->asString() == "data3");
 }
 
 BOOST_AUTO_TEST_CASE(dataobject_setKeyPos_midToLast)
@@ -117,12 +117,12 @@ BOOST_AUTO_TEST_CASE(dataobject_setKeyPos_midToLast)
 	data["key2"] = "data2";
 	data["key3"] = "data3";
 	data.setKeyPos("key2", 2);
-	BOOST_CHECK(data.getSubObjects().at(0).getKey() == "key1");
-	BOOST_CHECK(data.getSubObjects().at(0).asString() == "data1");
-	BOOST_CHECK(data.getSubObjects().at(1).getKey() == "key3");
-	BOOST_CHECK(data.getSubObjects().at(1).asString() == "data3");
-	BOOST_CHECK(data.getSubObjects().at(2).getKey() == "key2");
-	BOOST_CHECK(data.getSubObjects().at(2).asString() == "data2");
+    BOOST_CHECK(data.getSubObjects().at(0)->getKey() == "key1");
+    BOOST_CHECK(data.getSubObjects().at(0)->asString() == "data1");
+    BOOST_CHECK(data.getSubObjects().at(1)->getKey() == "key3");
+    BOOST_CHECK(data.getSubObjects().at(1)->asString() == "data3");
+    BOOST_CHECK(data.getSubObjects().at(2)->getKey() == "key2");
+    BOOST_CHECK(data.getSubObjects().at(2)->asString() == "data2");
 }
 
 BOOST_AUTO_TEST_CASE(dataobject_setKeyPos_midToLast2)
@@ -133,14 +133,14 @@ BOOST_AUTO_TEST_CASE(dataobject_setKeyPos_midToLast2)
 	data["key3"] = "data3";
 	data["key4"] = "data4";
 	data.setKeyPos("key2", 3);
-	BOOST_CHECK(data.getSubObjects().at(0).getKey() == "key1");
-	BOOST_CHECK(data.getSubObjects().at(0).asString() == "data1");
-	BOOST_CHECK(data.getSubObjects().at(1).getKey() == "key3");
-	BOOST_CHECK(data.getSubObjects().at(1).asString() == "data3");
-	BOOST_CHECK(data.getSubObjects().at(2).getKey() == "key4");
-	BOOST_CHECK(data.getSubObjects().at(2).asString() == "data4");
-	BOOST_CHECK(data.getSubObjects().at(3).getKey() == "key2");
-	BOOST_CHECK(data.getSubObjects().at(3).asString() == "data2");
+    BOOST_CHECK(data.getSubObjects().at(0)->getKey() == "key1");
+    BOOST_CHECK(data.getSubObjects().at(0)->asString() == "data1");
+    BOOST_CHECK(data.getSubObjects().at(1)->getKey() == "key3");
+    BOOST_CHECK(data.getSubObjects().at(1)->asString() == "data3");
+    BOOST_CHECK(data.getSubObjects().at(2)->getKey() == "key4");
+    BOOST_CHECK(data.getSubObjects().at(2)->asString() == "data4");
+    BOOST_CHECK(data.getSubObjects().at(3)->getKey() == "key2");
+    BOOST_CHECK(data.getSubObjects().at(3)->asString() == "data2");
 }
 
 BOOST_AUTO_TEST_CASE(dataobject_setKeyPos_midToMid2)
@@ -151,14 +151,14 @@ BOOST_AUTO_TEST_CASE(dataobject_setKeyPos_midToMid2)
 	data["key3"] = "data3";
 	data["key4"] = "data4";
 	data.setKeyPos("key2", 2);
-	BOOST_CHECK(data.getSubObjects().at(0).getKey() == "key1");
-	BOOST_CHECK(data.getSubObjects().at(0).asString() == "data1");
-	BOOST_CHECK(data.getSubObjects().at(1).getKey() == "key3");
-	BOOST_CHECK(data.getSubObjects().at(1).asString() == "data3");
-	BOOST_CHECK(data.getSubObjects().at(2).getKey() == "key2");
-	BOOST_CHECK(data.getSubObjects().at(2).asString() == "data2");
-	BOOST_CHECK(data.getSubObjects().at(3).getKey() == "key4");
-	BOOST_CHECK(data.getSubObjects().at(3).asString() == "data4");
+    BOOST_CHECK(data.getSubObjects().at(0)->getKey() == "key1");
+    BOOST_CHECK(data.getSubObjects().at(0)->asString() == "data1");
+    BOOST_CHECK(data.getSubObjects().at(1)->getKey() == "key3");
+    BOOST_CHECK(data.getSubObjects().at(1)->asString() == "data3");
+    BOOST_CHECK(data.getSubObjects().at(2)->getKey() == "key2");
+    BOOST_CHECK(data.getSubObjects().at(2)->asString() == "data2");
+    BOOST_CHECK(data.getSubObjects().at(3)->getKey() == "key4");
+    BOOST_CHECK(data.getSubObjects().at(3)->asString() == "data4");
 }
 
 BOOST_AUTO_TEST_CASE(dataobject_setKeyPos_firstTofirst)
@@ -168,12 +168,12 @@ BOOST_AUTO_TEST_CASE(dataobject_setKeyPos_firstTofirst)
 	data["key2"] = "data2";
 	data["key3"] = "data3";
 	data.setKeyPos("key1", 0);
-	BOOST_CHECK(data.getSubObjects().at(0).getKey() == "key1");
-	BOOST_CHECK(data.getSubObjects().at(0).asString() == "data1");
-	BOOST_CHECK(data.getSubObjects().at(1).getKey() == "key2");
-	BOOST_CHECK(data.getSubObjects().at(1).asString() == "data2");
-	BOOST_CHECK(data.getSubObjects().at(2).getKey() == "key3");
-	BOOST_CHECK(data.getSubObjects().at(2).asString() == "data3");
+    BOOST_CHECK(data.getSubObjects().at(0)->getKey() == "key1");
+    BOOST_CHECK(data.getSubObjects().at(0)->asString() == "data1");
+    BOOST_CHECK(data.getSubObjects().at(1)->getKey() == "key2");
+    BOOST_CHECK(data.getSubObjects().at(1)->asString() == "data2");
+    BOOST_CHECK(data.getSubObjects().at(2)->getKey() == "key3");
+    BOOST_CHECK(data.getSubObjects().at(2)->asString() == "data3");
 }
 
 BOOST_AUTO_TEST_CASE(dataobject_setKeyPos_firstTomid)
@@ -183,12 +183,12 @@ BOOST_AUTO_TEST_CASE(dataobject_setKeyPos_firstTomid)
 	data["key2"] = "data2";
 	data["key3"] = "data3";
 	data.setKeyPos("key1", 1);
-	BOOST_CHECK(data.getSubObjects().at(0).getKey() == "key2");
-	BOOST_CHECK(data.getSubObjects().at(0).asString() == "data2");
-	BOOST_CHECK(data.getSubObjects().at(1).getKey() == "key1");
-	BOOST_CHECK(data.getSubObjects().at(1).asString() == "data1");
-	BOOST_CHECK(data.getSubObjects().at(2).getKey() == "key3");
-	BOOST_CHECK(data.getSubObjects().at(2).asString() == "data3");
+    BOOST_CHECK(data.getSubObjects().at(0)->getKey() == "key2");
+    BOOST_CHECK(data.getSubObjects().at(0)->asString() == "data2");
+    BOOST_CHECK(data.getSubObjects().at(1)->getKey() == "key1");
+    BOOST_CHECK(data.getSubObjects().at(1)->asString() == "data1");
+    BOOST_CHECK(data.getSubObjects().at(2)->getKey() == "key3");
+    BOOST_CHECK(data.getSubObjects().at(2)->asString() == "data3");
 }
 
 BOOST_AUTO_TEST_CASE(dataobject_setKeyPos_firstToLast)
@@ -198,12 +198,12 @@ BOOST_AUTO_TEST_CASE(dataobject_setKeyPos_firstToLast)
 	data["key2"] = "data2";
 	data["key3"] = "data3";
 	data.setKeyPos("key1", 2);
-	BOOST_CHECK(data.getSubObjects().at(0).getKey() == "key2");
-	BOOST_CHECK(data.getSubObjects().at(0).asString() == "data2");
-	BOOST_CHECK(data.getSubObjects().at(1).getKey() == "key3");
-	BOOST_CHECK(data.getSubObjects().at(1).asString() == "data3");
-	BOOST_CHECK(data.getSubObjects().at(2).getKey() == "key1");
-	BOOST_CHECK(data.getSubObjects().at(2).asString() == "data1");
+    BOOST_CHECK(data.getSubObjects().at(0)->getKey() == "key2");
+    BOOST_CHECK(data.getSubObjects().at(0)->asString() == "data2");
+    BOOST_CHECK(data.getSubObjects().at(1)->getKey() == "key3");
+    BOOST_CHECK(data.getSubObjects().at(1)->asString() == "data3");
+    BOOST_CHECK(data.getSubObjects().at(2)->getKey() == "key1");
+    BOOST_CHECK(data.getSubObjects().at(2)->asString() == "data1");
 }
 
 BOOST_AUTO_TEST_CASE(object_stringIntegerType_correctHex)

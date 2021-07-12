@@ -17,7 +17,7 @@ Info::Info(DataObject const& _data)
     if (_data.count("labels"))
     {
         for (auto const& el : _data.atKey("labels").getSubObjects())
-            m_labels.emplace(el.getKey(), el.asString());
+            m_labels.emplace(el->getKey(), el->asString());
     }
 
     requireJsonFields(_data, "Info " + _data.getKey(),

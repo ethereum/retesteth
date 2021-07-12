@@ -14,7 +14,7 @@ public:
     {}
 
 public:
-    DataObject web3_clientVersion() override;
+    spDataObject web3_clientVersion() override;
 
     // ETH Methods
     FH32 eth_sendRawTransaction(BYTES const& _rlp, VALUE const& _secret) override;
@@ -47,7 +47,7 @@ public:
 
     // Internal
     std::string sendRawRequest(std::string const& _request);
-    DataObject rpcCall(std::string const& _methodName,
+    spDataObject rpcCall(std::string const& _methodName,
         std::vector<std::string> const& _args = std::vector<std::string>(),
         bool _canFail = false) override;
     Socket::SocketType getSocketType() const override;

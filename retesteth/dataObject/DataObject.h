@@ -1,8 +1,10 @@
 #pragma once
 #include <dataObject/Exception.h>
+#include <dataObject/SPointer.h>
 #include <memory>
 #include <set>
 #include <vector>
+#include <map>
 
 namespace dataobject
 {
@@ -18,12 +20,13 @@ enum DataType
 };
 
 /// DataObject
-/// An data sturcture to manage data from json, yml
-class DataObject
+/// A data sturcture to manage data from json, yml
+class DataObject : public GCP_SPointerBase
 {
 public:
+    typedef GCP_SPointer<DataObject> spDataObject;
     DataObject();
-    DataObject(DataObject const&) = default;
+    DataObject(DataObject const&) = delete;
     DataObject(DataType _type);
     DataObject(DataType _type, bool _bool);
     DataObject(std::string const& _str);
@@ -35,12 +38,14 @@ public:
     void setKey(std::string const& _key);
     std::string const& getKey() const;
 
-    std::vector<DataObject> const& getSubObjects() const;
-    std::vector<DataObject>& getSubObjectsUnsafe();
+    std::vector<spDataObject> const& getSubObjects() const;
+    std::map<string, spDataObject> const& getSubObjectKeys() const;
+    std::vector<spDataObject>& getSubObjectsUnsafe();
 
-    void addArrayObject(DataObject const& _obj);
-    DataObject& addSubObject(DataObject const& _obj);
-    DataObject& addSubObject(std::string const& _key, DataObject const& _obj);
+    void addArrayObject(spDataObject const& _obj);
+    DataObject& addSubObject(spDataObject const& _obj);
+
+    DataObject& addSubObject(std::string const& _key, spDataObject const& _obj);
     void setSubObjectKey(size_t _index, std::string const& _key);
     void setKeyPos(std::string const& _key, size_t _pos);
 
@@ -53,7 +58,7 @@ public:
     bool operator==(bool _value) const;
     bool operator==(DataObject const& _value) const;
     DataObject& operator[](std::string const& _key);
-    DataObject& operator=(DataObject const& _value);
+    DataObject& operator=(DataObject const& _value) = delete;
     DataObject& operator=(std::string const& _value);
     DataObject& operator=(int _value);
 
@@ -88,16 +93,17 @@ public:
     void clearSubobjects(DataType _type = DataType::NotInitialized)
     {
         m_subObjects.clear();
+        m_subObjectKeys.clear();
         m_type = _type;
     }
 
 private:
-    DataObject& _addSubObject(DataObject const& _obj, string const& _keyOverwrite = string());
-    void _assert(bool _flag, std::string const& _comment = "") const;
-    vector<DataObject>::const_iterator subByKey(string const& _key) const;
-    vector<DataObject>::iterator subByKeyU(string const& _key);
 
-    std::vector<DataObject> m_subObjects;
+    DataObject& _addSubObject(spDataObject const& _obj, string const& _keyOverwrite = string());
+    void _assert(bool _flag, std::string const& _comment = "") const;
+
+    std::vector<spDataObject> m_subObjects;
+    std::map<string, spDataObject> m_subObjectKeys;
     DataType m_type;
     std::string m_strKey;
     bool m_allowOverwrite = false;  // allow overwrite elements
@@ -110,6 +116,8 @@ private:
     void (*m_verifier)(DataObject&) = 0;
 };
 
+typedef GCP_SPointer<DataObject> spDataObject;
+
 // Find index that _key should take place in when being added to ordered _objects by key
-size_t findOrderedKeyPosition(string const& _key, vector<DataObject> const& _objects);
+size_t findOrderedKeyPosition(string const& _key, vector<spDataObject> const& _objects);
 }

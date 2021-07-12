@@ -529,7 +529,7 @@ DataObject StateTestSuite::doTests(DataObject const& _input, TestSuiteOptions& _
             {
                 // Change the tests instead??
                 DataObject& _inputRef = const_cast<DataObject&>(_input);
-                DataObject& _infoRef = _inputRef.getSubObjectsUnsafe().at(0).atKeyUnsafe("_info");
+                DataObject& _infoRef = _inputRef.getSubObjectsUnsafe().at(0).getContent().atKeyUnsafe("_info");
                 _infoRef.renameKey("filledwith", "filling-rpc-server");
                 _infoRef["filling-tool-version"] = "testeth";
             }

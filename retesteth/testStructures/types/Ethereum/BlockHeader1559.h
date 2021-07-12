@@ -17,7 +17,7 @@ struct BlockHeader1559 : BlockHeader
     BlockHeader1559(DataObject const&);
     BlockHeader1559(dev::RLP const&);
 
-    DataObject const asDataObject() const override;
+    spDataObject asDataObject() const override;
     dev::RLPStream const asRLPStream() const override;
     BlockType type() const override { return BlockType::BlockHeader1559; }
 
