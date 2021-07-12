@@ -8,10 +8,10 @@ namespace teststruct
 {
 Account::Account(FH20 const& _addr, VALUE const& _balance, VALUE const& _nonce, BYTES const& _code, Storage const& _storage)
 {
-    m_address = spFH20(new FH20(_addr));
-    m_balance = spVALUE(new VALUE(_balance));
-    m_nonce = spVALUE(new VALUE(_nonce));
-    m_code = spBYTES(new BYTES(_code));
+    m_address = spFH20(_addr.copy());
+    m_balance = spVALUE(_balance.copy());
+    m_nonce = spVALUE(_nonce.copy());
+    m_code = spBYTES(_code.copy());
     m_storage = spStorage(new Storage(_storage));
     if (m_nonce.getCContent() > c_maxNonce)
         ETH_ERROR_MESSAGE("Account `" + m_address->asString() + "` requires nonce <= (2**64)-1");
@@ -27,8 +27,10 @@ Account::Account(DataObject const& _data)
     if (m_nonce.getCContent() > c_maxNonce)
         ETH_ERROR_MESSAGE("Account `" + m_address->asString() + "` requires nonce <= (2**64)-1");
     requireJsonFields(_data, "Account " + _data.getKey(),
-        {{"balance", {{DataType::String}, jsonField::Required}}, {"code", {{DataType::String}, jsonField::Required}},
-            {"nonce", {{DataType::String}, jsonField::Required}}, {"storage", {{DataType::Object}, jsonField::Required}}});
+        {{"balance", {{DataType::String}, jsonField::Required}},
+         {"code", {{DataType::String}, jsonField::Required}},
+         {"nonce", {{DataType::String}, jsonField::Required}},
+         {"storage", {{DataType::Object}, jsonField::Required}}});
 }
 
 const DataObject Account::asDataObject(ExportOrder _order) const

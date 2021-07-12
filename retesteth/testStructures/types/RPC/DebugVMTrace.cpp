@@ -75,7 +75,7 @@ void DebugVMTrace::printNice()
         return;
 
     string s_comment = "";
-    dev::u256 maxGas = m_log.at(0).gas->asU256();
+    dev::bigint maxGas = m_log.at(0).gas->asBigInt();
     size_t k = 0;
     size_t const step = 9;
     string const stepw = "          ";
@@ -92,7 +92,7 @@ void DebugVMTrace::printNice()
         std::cout << test::fto_string(k++) + "-" + test::fto_string(el.depth)
                   << setw(15) << el.opName
                   << setw(10) << el.gasCost->asDecString()
-                  << setw(10) << maxGas - el.gas->asU256()
+                  << setw(10) << maxGas - el.gas->asBigInt()
                   << setw(10) << el.gas->asDecString()
                   << setw(20) << el.error << std::endl;
 

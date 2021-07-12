@@ -14,8 +14,12 @@ namespace teststruct
 // Deserialized from string of "0x1122...20" exact length
 struct FH20 : FH
 {
-    FH20(DataObject const& _data) : FH(_data, 20){};
+    FH20(dev::RLP const& _rlp) : FH(_rlp, 20) {}
+    FH20(DataObject const& _data) : FH(_data, 20) {}
     FH20(string const& _data) : FH(_data, 20) {}
+    FH20(dev::bigint const& _data) : FH(_data, 20) {}
+    FH20* copy() const { return new FH20(m_data); }
+
     static FH20 random()
     {
         string initStr = "0x";
@@ -28,7 +32,11 @@ struct FH20 : FH
         }
         return FH20(DataObject(initStr));
     }
-    static FH20 zero() { return FH20("0x0000000000000000000000000000000000000000"); }
+    static FH20 const& zero()
+    {
+        static FH20 zero("0x0000000000000000000000000000000000000000");
+        return zero;
+    }
 };
 
 typedef GCP_SPointer<FH20> spFH20;

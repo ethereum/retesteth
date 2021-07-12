@@ -33,7 +33,8 @@ string const besu_config = R"({
         "HomesteadToEIP150At5",
         "EIP158ToByzantiumAt5",
         "HomesteadToDaoAt5",
-        "ByzantiumToConstantinopleFixAt5"
+        "ByzantiumToConstantinopleFixAt5",
+        "BerlinToLondonAt5"
     ],
     "exceptions" : {
         "ExtraDataTooBig" : "extra-data too long",
@@ -48,10 +49,12 @@ then
     threads=$1
 fi
 
+mkdir ~/.retesteth/logs
 i=0
 while [ "$i" -lt $threads ]; do
     tmpdir=$(mktemp -d -t ci-XXXXXXXXXX)
-    besu retesteth --rpc-http-port $((47710+$i)) --data-path=$tmpdir &
+    file=$(date +"%m-%d-%y-%s")
+    besu retesteth --rpc-http-port $((47710+$i)) --data-path=$tmpdir --logging=DEBUG >> ~/.retesteth/logs/besu-$file &
     i=$(( i + 1 ))
 done
 )";

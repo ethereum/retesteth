@@ -36,7 +36,7 @@ StateTestFillerEnv::StateTestFillerEnv(DataObject const& _data)
         m_currentNonce = spFH8(new FH8(FH8::zero()));
         m_currentMixHash = spFH32(new FH32(FH32::zero()));
         m_currentGasLimit = spVALUE(new VALUE(tmpData.atKey("currentGasLimit")));
-        if (m_currentGasLimit.getCContent() > dev::u256("0x7fffffffffffffff"))
+        if (m_currentGasLimit.getCContent() > dev::bigint("0x7fffffffffffffff"))
             throw test::UpwardsException("currentGasLimit > 0x7fffffffffffffff");
 
         if (_data.count("currentBaseFee"))

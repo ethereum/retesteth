@@ -61,10 +61,10 @@ FH32 ToolImpl::eth_sendRawTransaction(BYTES const& _rlp, VALUE const& _secret)
 {
     rpcCall("", {});
     ETH_TEST_MESSAGE("\nRequest: eth_sendRawTransaction \n" + _rlp.asString());
-
     TRYCATCHCALL(
         spTransaction spTr = readTransaction(_rlp);
         spTr.getContent().setSecret(_secret);
+        ETH_TEST_MESSAGE(spTr->asDataObject().asJson());
         m_toolChainManager.getContent().addPendingTransaction(spTr);
         FH32 trHash = spTr.getContent().hash();
         ETH_TEST_MESSAGE("Response: " + trHash.asString());
@@ -279,6 +279,7 @@ FH32 ToolImpl::test_importRawBlock(BYTES const& _blockRLP)
     rpcCall("", {});
     TRYCATCHCALL(
         ETH_TEST_MESSAGE("\nRequest: test_importRawBlock, following transaction import are internal");
+        ETH_TEST_MESSAGE(_blockRLP.asString());
         FH32 const hash = blockchain().importRawBlock(_blockRLP);
         ETH_TEST_MESSAGE("Response test_importRawBlock: " + hash.asString());
         return hash;

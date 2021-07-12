@@ -23,7 +23,7 @@ struct BlockHeader1559 : BlockHeader
 
     // Unique fields
     VALUE const& baseFee() const { return m_baseFee; }
-    void setBaseFee(VALUE const& _baseFee) { m_baseFee = spVALUE(new VALUE(_baseFee)); }
+    void setBaseFee(VALUE const& _baseFee) { m_baseFee = spVALUE(_baseFee.copy()); }
 
     // Static
     static BlockHeader1559 const& castFrom(spBlockHeader const& _from);

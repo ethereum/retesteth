@@ -24,7 +24,7 @@ struct ToolResponse
     {
         VALUE totalGasUsed = 0;
         for (auto const& rec : m_receipts)
-            totalGasUsed = totalGasUsed + rec.gasUsed();
+            totalGasUsed += rec.gasUsed();
         return totalGasUsed;
     }
     State const& state() const { return m_stateResponse; }

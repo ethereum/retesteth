@@ -89,6 +89,8 @@ BlockchainTestFillerUncle::BlockchainTestFillerUncle(DataObject const& _data)
                 {"stateRoot", {{DataType::String}, jsonField::Optional}},
                 {"timestamp", {{DataType::String}, jsonField::Optional}},
                 {"transactionsTrie", {{DataType::String}, jsonField::Optional}},
+                {"remove", {{DataType::Array}, jsonField::Optional}},
+                {"baseFeePerGas", {{DataType::String}, jsonField::Optional}},
                 //{"transactionsRoot", {{DataType::String}, jsonField::Optional}},
                 //{"sha3Uncles", {{DataType::String}, jsonField::Optional}},
                 {"uncleHash", {{DataType::String}, jsonField::Optional}}});

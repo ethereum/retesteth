@@ -19,7 +19,7 @@ ToolChain::ToolChain(
     EthereumBlockState const& _genesis, SetChainParamsArgs const& _config, fs::path const& _toolPath, fs::path const& _tmpDir)
   : m_engine(_config.sealEngine()), m_fork(new FORK(_config.params().atKey("fork"))), m_toolPath(_toolPath), m_tmpDir(_tmpDir)
 {
-    m_initialParams = GCP_SPointer<SetChainParamsArgs>(new SetChainParamsArgs(_config));
+    m_initialParams = GCP_SPointer<SetChainParamsArgs>(_config.copy());
     m_toolParams = GCP_SPointer<ToolParams>(new ToolParams(_config.params()));
 
     auto const& additional = Options::getCurrentConfig().cfgFile().additionalForks();
@@ -39,7 +39,7 @@ ToolChain::ToolChain(
     EthereumBlockState genesisFixed(_genesis.header(), _genesis.state(), FH32::zero());
     genesisFixed.headerUnsafe().getContent().setStateRoot(res.stateRoot());
     genesisFixed.headerUnsafe().getContent().recalculateHash();
-    genesisFixed.addTotalDifficulty(genesisFixed.header()->difficulty());
+    genesisFixed.setTotalDifficulty(genesisFixed.header()->difficulty());
     m_blocks.push_back(genesisFixed);
 }
 
@@ -66,7 +66,7 @@ DataObject const ToolChain::mineBlock(EthereumBlockState const& _pendingBlock, M
 
     // Calculate difficulty for tool (tool does not calculate difficulty)
     ChainOperationParams params = ChainOperationParams::defaultParams(toolParams());
-    u256 toolDifficulty = calculateEthashDifficulty(params, pendingFixed.header(), lastBlock().header());
+    VALUE toolDifficulty = calculateEthashDifficulty(params, pendingFixed.header(), lastBlock().header());
     pendingFixedHeader.setDifficulty(toolDifficulty);
 
     // Calculate new baseFee
@@ -74,7 +74,7 @@ DataObject const ToolChain::mineBlock(EthereumBlockState const& _pendingBlock, M
         lastBlock().header()->type() == BlockType::BlockHeader1559)
     {
         BlockHeader1559& pendingFixed1559Header = BlockHeader1559::castFrom(pendingFixedHeader);
-        u256 baseFee = calculateEIP1559BaseFee(params, pendingFixed.header(), lastBlock().header());
+        VALUE baseFee = calculateEIP1559BaseFee(params, pendingFixed.header(), lastBlock().header());
         pendingFixed1559Header.setBaseFee(baseFee);
     }
 
@@ -142,13 +142,13 @@ DataObject const ToolChain::mineBlock(EthereumBlockState const& _pendingBlock, M
     verifyEthereumBlockHeader(pendingFixed.header(), *this);
 
     // Require number from pending block to be equal to actual block number that is imported
-    if (_pendingBlock.header()->number() != pendingFixed.header()->number().asU256())
+    if (_pendingBlock.header()->number() != pendingFixed.header()->number().asBigInt())
         throw test::UpwardsException(string("Block Number from pending block != actual chain height! (") +
                                      _pendingBlock.header()->number().asString() +
                                      " != " + pendingFixed.header()->number().asString() + ")");
 
     // Require new block timestamp to be > than the previous block timestamp
-    if (lastBlock().header()->timestamp().asU256() >= pendingFixed.header()->timestamp().asU256())
+    if (lastBlock().header()->timestamp().asBigInt() >= pendingFixed.header()->timestamp().asBigInt())
         throw test::UpwardsException("Block Timestamp from pending block <= previous block timestamp!");
 
     if (_req == Mining::RequireValid)  // called on rawRLP import
@@ -181,7 +181,7 @@ DataObject const ToolChain::mineBlock(EthereumBlockState const& _pendingBlock, M
     VALUE totalDifficulty(0);
     if (m_blocks.size() > 0)
         totalDifficulty = m_blocks.at(m_blocks.size() - 1).totalDifficulty();
-    pendingFixed.addTotalDifficulty(totalDifficulty + pendingFixed.header()->difficulty());
+    pendingFixed.setTotalDifficulty(totalDifficulty + pendingFixed.header()->difficulty());
 
     ETH_LOG("New block N: " + to_string(m_blocks.size()), 6);
     ETH_LOG("New block TD: " + totalDifficulty.asDecString() + " + " +
@@ -208,7 +208,7 @@ ToolResponse ToolChain::mineBlockOnTool(EthereumBlockState const& _block, SealEn
     for (auto const& un : _block.uncles())
     {
         DataObject uncle;
-        int delta = (int)(_block.header()->number() - un->number()).asU256();
+        int delta = (int)(_block.header()->number() - un->number()).asBigInt();
         if (delta < 1)
             throw test::UpwardsException("Uncle header delta is < 1");
         uncle["delta"] = delta;
@@ -228,19 +228,15 @@ ToolResponse ToolChain::mineBlockOnTool(EthereumBlockState const& _block, SealEn
     writeFile(allocPath.string(), allocPathContent);
 
     // txs.json file
-    fs::path txsPath = m_tmpDir / "txs.json";
-    DataObject txs(DataType::Array);
-    static u256 c_maxGasLimit = u256("0xffffffffffffffff");
+    string const txsfile = _block.transactions().size() ? "txs.rlp" : "txs.json";
+    fs::path txsPath = m_tmpDir / txsfile;
+
+    dev::RLPStream txsout(_block.transactions().size());
     for (auto const& tr : _block.transactions())
-    {
-        if (tr->gasLimit().asU256() <= c_maxGasLimit)  // tool fails on limits here.
-            txs.addArrayObject(tr->asDataObject(ExportOrder::ToolStyle));
-        else
-            ETH_WARNING(
-                "Retesteth rejecting tx with gasLimit > 64 bits for tool" + TestOutputHelper::get().testInfo().errorDebug());
-    }
-    Options::getCurrentConfig().performFieldReplace(txs, FieldReplaceDir::RetestethToClient);
-    string const txsPathContent = txs.asJson();
+        txsout.appendRaw(tr->asRLPStream().out());
+
+    string const txsPathContent = _block.transactions().size() ?
+                "\"" + dev::toString(txsout.out()) + "\"" : "[]";
     writeFile(txsPath.string(), txsPathContent);
 
     // output file
@@ -267,7 +263,11 @@ ToolResponse ToolChain::mineBlockOnTool(EthereumBlockState const& _block, SealEn
 
     ETH_TEST_MESSAGE("Alloc:\n" + allocPathContent);
     if (_block.transactions().size())
+    {
         ETH_TEST_MESSAGE("Txs:\n" + txsPathContent);
+        for (auto const& tr : _block.transactions())
+            ETH_TEST_MESSAGE(tr->asDataObject().asJson());
+    }
     ETH_TEST_MESSAGE("Env:\n" + envPathContent);
 
     string out = test::executeCmd(cmd, ExecCMDWarning::NoWarning);
