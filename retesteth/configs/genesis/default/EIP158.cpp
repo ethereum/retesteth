@@ -24,13 +24,13 @@ const string t8ntool_EIP158_config = R"({
 
 genEIP158Cfg::genEIP158Cfg()
 {
-    DataObject obj;
-    obj["path"] = "besu/genesis/EIP158.json";
-    obj["content"] = default_EIP158_config;
+    spDataObject obj(new DataObject());
+    (*obj)["path"] = "besu/genesis/EIP158.json";
+    (*obj)["content"] = default_EIP158_config;
     map_configs.addArrayObject(obj);
 
-    DataObject obj2;
-    obj2["path"] = "default/genesis/EIP158.json";
-    obj2["content"] = t8ntool_EIP158_config;
+    spDataObject obj2(new DataObject());
+    (*obj2)["path"] = "default/genesis/EIP158.json";
+    (*obj2)["content"] = t8ntool_EIP158_config;
     map_configs.addArrayObject(obj2);
 }

@@ -64,7 +64,7 @@ public:
     std::string const& translateException(string const& _exceptionName) const;
 
     // Get Contents of genesis template for specified FORK
-    DataObject const& getGenesisTemplate(FORK const& _fork) const;
+    spDataObject const& getGenesisTemplate(FORK const& _fork) const;
 
     // Get reward information info for each fork
     std::map<FORK, spVALUE> const& getRewardMap() const { return m_correctReward; }
@@ -85,7 +85,7 @@ private:
     ClientConfigID m_id;                                ///< Internal id
     GCP_SPointer<ClientConfigFile> m_clientConfigFile;  ///< <clientname>/config file
     std::map<FORK, spVALUE> m_correctReward;            ///< Correct mining reward info for StateTests->BlockchainTests
-    std::map<FORK, DataObject> m_genesisTemplate;       ///< Template For test_setChainParams
+    std::map<FORK, spDataObject> m_genesisTemplate;       ///< Template For test_setChainParams
     fs::path m_correctMiningRewardPath;                 ///< Path to correct mining reward info file
 
     bool m_initialized = false;    ///< If setup script has run

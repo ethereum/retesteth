@@ -26,7 +26,7 @@ class DataObject : public GCP_SPointerBase
 public:
     typedef GCP_SPointer<DataObject> spDataObject;
     DataObject();
-    DataObject(DataObject const&) = default;
+    DataObject(DataObject const&) = delete;
     DataObject(DataType _type);
     DataObject(DataType _type, bool _bool);
     DataObject(std::string const& _str);
@@ -39,11 +39,13 @@ public:
     std::string const& getKey() const;
 
     std::vector<spDataObject> const& getSubObjects() const;
+    std::map<string, spDataObject> const& getSubObjectKeys() const;
     std::vector<spDataObject>& getSubObjectsUnsafe();
 
-    void addArrayObject(DataObject const& _obj);
-    DataObject& addSubObject(DataObject const& _obj);
-    DataObject& addSubObject(std::string const& _key, DataObject const& _obj);
+    void addArrayObject(spDataObject const& _obj);
+    DataObject& addSubObject(spDataObject const& _obj);
+
+    DataObject& addSubObject(std::string const& _key, spDataObject const& _obj);
     void setSubObjectKey(size_t _index, std::string const& _key);
     void setKeyPos(std::string const& _key, size_t _pos);
 
@@ -56,7 +58,7 @@ public:
     bool operator==(bool _value) const;
     bool operator==(DataObject const& _value) const;
     DataObject& operator[](std::string const& _key);
-    DataObject& operator=(DataObject const& _value);
+    DataObject& operator=(DataObject const& _value) = delete;
     DataObject& operator=(std::string const& _value);
     DataObject& operator=(int _value);
 
@@ -97,7 +99,7 @@ public:
 
 private:
 
-    DataObject& _addSubObject(DataObject const& _obj, string const& _keyOverwrite = string());
+    DataObject& _addSubObject(spDataObject const& _obj, string const& _keyOverwrite = string());
     void _assert(bool _flag, std::string const& _comment = "") const;
 
     std::vector<spDataObject> m_subObjects;

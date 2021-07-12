@@ -133,26 +133,26 @@ BlockHeader1559::BlockHeader1559(dev::RLP const& _rlp)
     recalculateHash();
 }
 
-const DataObject BlockHeader1559::asDataObject() const
+spDataObject BlockHeader1559::asDataObject() const
 {
-    DataObject out;
-    out["bloom"] = m_logsBloom->asString();
-    out["coinbase"] = m_author->asString();
-    out["difficulty"] = m_difficulty->asString();
-    out["extraData"] = m_extraData->asString();
-    out["gasLimit"] = m_gasLimit->asString();
-    out["gasUsed"] = m_gasUsed->asString();
-    out["hash"] = m_hash->asString();
-    out["mixHash"] = m_mixHash->asString();
-    out["nonce"] = m_nonce->asString();
-    out["number"] = m_number->asString();
-    out["parentHash"] = m_parentHash->asString();
-    out["receiptTrie"] = m_receiptsRoot->asString();
-    out["stateRoot"] = m_stateRoot->asString();
-    out["timestamp"] = m_timestamp->asString();
-    out["transactionsTrie"] = m_transactionsRoot->asString();
-    out["uncleHash"] = m_sha3Uncles->asString();
-    out["baseFeePerGas"] = m_baseFee->asString();
+    spDataObject out(new DataObject());
+    (*out)["bloom"] = m_logsBloom->asString();
+    (*out)["coinbase"] = m_author->asString();
+    (*out)["difficulty"] = m_difficulty->asString();
+    (*out)["extraData"] = m_extraData->asString();
+    (*out)["gasLimit"] = m_gasLimit->asString();
+    (*out)["gasUsed"] = m_gasUsed->asString();
+    (*out)["hash"] = m_hash->asString();
+    (*out)["mixHash"] = m_mixHash->asString();
+    (*out)["nonce"] = m_nonce->asString();
+    (*out)["number"] = m_number->asString();
+    (*out)["parentHash"] = m_parentHash->asString();
+    (*out)["receiptTrie"] = m_receiptsRoot->asString();
+    (*out)["stateRoot"] = m_stateRoot->asString();
+    (*out)["timestamp"] = m_timestamp->asString();
+    (*out)["transactionsTrie"] = m_transactionsRoot->asString();
+    (*out)["uncleHash"] = m_sha3Uncles->asString();
+    (*out)["baseFeePerGas"] = m_baseFee->asString();
     return out;
 }
 

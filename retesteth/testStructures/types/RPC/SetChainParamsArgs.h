@@ -26,7 +26,7 @@ protected:
     spState m_preState;
     SealEngine m_sealEngine;
     spBlockHeader m_genesis;
-    DataObject m_params;
+    spDataObject m_params;
 };
 
 }  // namespace teststruct

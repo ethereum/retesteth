@@ -178,29 +178,29 @@ fi
 t8ntoolcfg::t8ntoolcfg()
 {
     {
-        DataObject obj;
-        obj["path"] = "t8ntool/config";
-        obj["content"] = t8ntool_config;
+        spDataObject obj = spDataObject(new DataObject());
+        (*obj)["path"] = "t8ntool/config";
+        (*obj)["content"] = t8ntool_config;
         map_configs.addArrayObject(obj);
     }
     {
-        DataObject obj;
-        obj["exec"] = true;
-        obj["path"] = "t8ntool/start.sh";
-        obj["content"] = t8ntool_start;
+        spDataObject obj = spDataObject(new DataObject());
+        (*obj)["exec"] = true;
+        (*obj)["path"] = "t8ntool/start.sh";
+        (*obj)["content"] = t8ntool_start;
         map_configs.addArrayObject(obj);
     }
     {
-        DataObject obj;
-        obj["path"] = "default/config";
-        obj["content"] = t8ntool_config;
+        spDataObject obj = spDataObject(new DataObject());
+        (*obj)["path"] = "default/config";
+        (*obj)["content"] = t8ntool_config;
         map_configs.addArrayObject(obj);
     }
     {
-        DataObject obj;
-        obj["exec"] = true;
-        obj["path"] = "default/start.sh";
-        obj["content"] = t8ntool_start;
+        spDataObject obj = spDataObject(new DataObject());
+        (*obj)["exec"] = true;
+        (*obj)["path"] = "default/start.sh";
+        (*obj)["content"] = t8ntool_start;
         map_configs.addArrayObject(obj);
     }
 }
