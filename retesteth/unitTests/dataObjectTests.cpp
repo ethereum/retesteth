@@ -49,8 +49,8 @@ BOOST_AUTO_TEST_CASE(dataobject_bracers)
 
     try
     {
-        DataObject a = ConvertJsoncppStringToData(data);
-        BOOST_REQUIRE(a.atKey("logs").at(0).atKey("removed").asBool() == false);
+        spDataObject a = ConvertJsoncppStringToData(data);
+        BOOST_REQUIRE(a->atKey("logs").at(0).atKey("removed").asBool() == false);
     }
     catch (DataObjectException const& _ex)
     {
@@ -74,8 +74,8 @@ BOOST_AUTO_TEST_CASE(dataobject_EscapeChars)
     )";
     try
     {
-        DataObject a = ConvertJsoncppStringToData(data);
-        BOOST_REQUIRE(a.atKey("error").atKey("message").asString() ==
+        spDataObject a = ConvertJsoncppStringToData(data);
+        BOOST_REQUIRE(a->atKey("error").atKey("message").asString() ==
                       "invalid argument 0: invalid hex or decimal integer \\\"0x\\\"");
     }
     catch (DataObjectException const&)
@@ -183,8 +183,8 @@ BOOST_AUTO_TEST_CASE(dataobject_readJson1)
             }
         }
     )";
-    DataObject dObj = ConvertJsoncppStringToData(data);
-    BOOST_CHECK(dObj.asJson(0, false) == "{\"name\":{}}");
+    spDataObject dObj = ConvertJsoncppStringToData(data);
+    BOOST_CHECK(dObj->asJson(0, false) == "{\"name\":{}}");
 }
 
 BOOST_AUTO_TEST_CASE(dataobject_readJson2)
@@ -195,8 +195,8 @@ BOOST_AUTO_TEST_CASE(dataobject_readJson2)
             }
         }
     )";
-    DataObject dObj = ConvertJsoncppStringToData(data);
-    BOOST_CHECK(dObj.asJson(0, false) == "{\"name\":{}}");
+    spDataObject dObj = ConvertJsoncppStringToData(data);
+    BOOST_CHECK(dObj->asJson(0, false) == "{\"name\":{}}");
 }
 
 BOOST_AUTO_TEST_CASE(dataobject_readJson3)
@@ -210,8 +210,8 @@ BOOST_AUTO_TEST_CASE(dataobject_readJson3)
         }
     )";
 
-    DataObject dObj = ConvertJsoncppStringToData(data);
-    BOOST_CHECK(dObj.asJson(0, false) == "{\"name\":{\"key\":[]}}");
+    spDataObject dObj = ConvertJsoncppStringToData(data);
+    BOOST_CHECK(dObj->asJson(0, false) == "{\"name\":{\"key\":[]}}");
 }
 
 BOOST_AUTO_TEST_CASE(dataobject_readJson4)
@@ -227,8 +227,8 @@ BOOST_AUTO_TEST_CASE(dataobject_readJson4)
         }
     )";
 
-    DataObject dObj = ConvertJsoncppStringToData(data);
-    BOOST_CHECK(dObj.asJson(0, false) == "{\"name\":{\"key\":[\"aaa\",\"bbb\"]}}");
+    spDataObject dObj = ConvertJsoncppStringToData(data);
+    BOOST_CHECK(dObj->asJson(0, false) == "{\"name\":{\"key\":[\"aaa\",\"bbb\"]}}");
 }
 
 BOOST_AUTO_TEST_CASE(dataobject_readJson5)
@@ -244,8 +244,8 @@ BOOST_AUTO_TEST_CASE(dataobject_readJson5)
         }
     )";
 
-    DataObject dObj = ConvertJsoncppStringToData(data);
-    BOOST_CHECK(dObj.asJson(0, false) == "{\"name\":{\"key\":[12,34]}}");
+    spDataObject dObj = ConvertJsoncppStringToData(data);
+    BOOST_CHECK(dObj->asJson(0, false) == "{\"name\":{\"key\":[12,34]}}");
 }
 
 BOOST_AUTO_TEST_CASE(dataobject_readJson5b)
@@ -266,8 +266,8 @@ BOOST_AUTO_TEST_CASE(dataobject_readJson5b)
         }
     )";
 
-    DataObject dObj = ConvertJsoncppStringToData(data, "key");
-    BOOST_CHECK(dObj.asJson(0, false) == "{\"name\":{\"key\":[12,34]}}");
+    spDataObject dObj = ConvertJsoncppStringToData(data, "key");
+    BOOST_CHECK(dObj->asJson(0, false) == "{\"name\":{\"key\":[12,34]}}");
 }
 
 BOOST_AUTO_TEST_CASE(dataobject_readJson6)
@@ -280,8 +280,8 @@ BOOST_AUTO_TEST_CASE(dataobject_readJson6)
         }
     )";
 
-    DataObject dObj = ConvertJsoncppStringToData(data);
-    BOOST_CHECK(dObj.asJson(0, false) == "{\"name\":{\"key\":-123}}");
+    spDataObject dObj = ConvertJsoncppStringToData(data);
+    BOOST_CHECK(dObj->asJson(0, false) == "{\"name\":{\"key\":-123}}");
 }
 
 BOOST_AUTO_TEST_CASE(dataobject_readJson7)
@@ -346,8 +346,8 @@ BOOST_AUTO_TEST_CASE(dataobject_readJson7)
     string const res =
         R"({"name":{"_info":{"comment":"A tesesult","filledwith":"testee5c"},"blocks":[{"blockHeader":{"difficulty":"0x020000","extraData":""},"rlp":"0xf90262f0","transactions":[{"data":"0x","value":"0x0186a0"}],"uncleHeaders":[]}],"genesisBlockHeader":{"number":"0x00"},"genesisRLP":"0xf9c6f04171167ec0c0","lastblockhash":"0x00606595b80acde5","network":"Homestead","postState":{"0x095e7baea6a6c7c4c2dfeb977efac326af552d87":{"storage":{"0x00":"0x02"}},"0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba":{"storage":{}},"0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b":{"nonce":"0x01","storage":{}}},"pre":{"0x095e7baea6a6c7c4c2dfeb977efac326af552d87":{},"0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b":{}},"sealEngine":"NoProof"}})";
 
-    DataObject dObj = ConvertJsoncppStringToData(data);
-    BOOST_CHECK(dObj.asJson(0, false) == res);
+    spDataObject dObj = ConvertJsoncppStringToData(data);
+    BOOST_CHECK(dObj->asJson(0, false) == res);
 }
 
 BOOST_AUTO_TEST_CASE(dataobject_readJson8)
@@ -365,8 +365,8 @@ BOOST_AUTO_TEST_CASE(dataobject_readJson8)
         }
     )";
 
-    DataObject dObj = ConvertJsoncppStringToData(data);
-    BOOST_CHECK(dObj.asJson(0, false) == "{\"code\":\"}\"}");
+    spDataObject dObj = ConvertJsoncppStringToData(data);
+    BOOST_CHECK(dObj->asJson(0, false) == "{\"code\":\"}\"}");
 }
 
 BOOST_AUTO_TEST_CASE(dataobject_readJson9)
@@ -379,8 +379,8 @@ BOOST_AUTO_TEST_CASE(dataobject_readJson9)
     }
     )";
 
-    DataObject dObj = ConvertJsoncppStringToData(data);
-    BOOST_CHECK(dObj.asJson(0, false) == "{\"array\":[1,2,-1,5,3]}");
+    spDataObject dObj = ConvertJsoncppStringToData(data);
+    BOOST_CHECK(dObj->asJson(0, false) == "{\"array\":[1,2,-1,5,3]}");
 }
 
 BOOST_AUTO_TEST_CASE(dataobject_readJson10)
@@ -393,8 +393,8 @@ BOOST_AUTO_TEST_CASE(dataobject_readJson10)
     }
     )";
 
-    DataObject dObj = ConvertJsoncppStringToData(data);
-    BOOST_CHECK(dObj.asJson(0, false) == "{\"array\":[\"1\",\"2\",\"-1\",\"5\",\"3\"]}");
+    spDataObject dObj = ConvertJsoncppStringToData(data);
+    BOOST_CHECK(dObj->asJson(0, false) == "{\"array\":[\"1\",\"2\",\"-1\",\"5\",\"3\"]}");
 }
 
 BOOST_AUTO_TEST_CASE(dataobject_readJson11)
@@ -414,8 +414,8 @@ BOOST_AUTO_TEST_CASE(dataobject_readJson11)
 }
     )";
 
-    DataObject dObj = ConvertJsoncppStringToData(data);
-    BOOST_CHECK(dObj.count("forks"));
+    spDataObject dObj = ConvertJsoncppStringToData(data);
+    BOOST_CHECK(dObj->count("forks"));
 }
 
 BOOST_AUTO_TEST_CASE(dataobject_readJson12)
@@ -443,10 +443,10 @@ BOOST_AUTO_TEST_CASE(dataobject_readJson12)
     }
     )";
 
-    DataObject dObj = ConvertJsoncppStringToData(data);
+    spDataObject dObj = ConvertJsoncppStringToData(data);
     string const res =
         R"({"Byzantium":[{"hash":"0x","indexes":{"data":0,"value":0}}],"Constantinople":[{"hash":"0x","indexes":{"data":0,"value":0}}]})";
-    BOOST_CHECK(dObj.asJson(0, false) == res);
+    BOOST_CHECK(dObj->asJson(0, false) == res);
 }
 
 BOOST_AUTO_TEST_CASE(dataobject_readJson13)
@@ -478,18 +478,18 @@ BOOST_AUTO_TEST_CASE(dataobject_readJson13)
     }
     )";
 
-    DataObject dObj = ConvertJsoncppStringToData(data);
+    spDataObject dObj = ConvertJsoncppStringToData(data);
     string const res =
         R"({"expect":[{"result":{"0x0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6":{}}},{"result":{"0xd27e800c69122409ac5609fe4df903745f3988a0":{"storage":{"0x01":"0x01"}}}}]})";
-    BOOST_CHECK(dObj.asJson(0, false) == res);
+    BOOST_CHECK(dObj->asJson(0, false) == res);
 }
 
 BOOST_AUTO_TEST_CASE(dataobject_readJson14)
 {
     string data = R"( {"jsonrpc":"2.0","id":1,"result":true}   )";
-    DataObject dObj = ConvertJsoncppStringToData(data);
+    spDataObject dObj = ConvertJsoncppStringToData(data);
     string res = R"({"jsonrpc":"2.0","id":1,"result":true})";
-    BOOST_CHECK(dObj.asJson(0, false) == res);
+    BOOST_CHECK(dObj->asJson(0, false) == res);
 }
 
 BOOST_AUTO_TEST_CASE(dataobject_readJson15)
@@ -502,9 +502,9 @@ BOOST_AUTO_TEST_CASE(dataobject_readJson15)
                     "object" : null
                 }
        )";
-    DataObject dObj = ConvertJsoncppStringToData(data);
+    spDataObject dObj = ConvertJsoncppStringToData(data);
     string res = R"({"array":[null],"object":null})";
-    BOOST_CHECK(dObj.asJson(0, false) == res);
+    BOOST_CHECK(dObj->asJson(0, false) == res);
 }
 
 
@@ -771,8 +771,8 @@ BOOST_AUTO_TEST_CASE(dataobject_jsonOrder2)
         "storage" : {
         }
     })";
-    DataObject dObj = ConvertJsoncppStringToData(data, string(), true);
-    BOOST_CHECK(dObj.at(dObj.getSubObjects().size() - 2).getKey() == "nonce");
+    spDataObject dObj = ConvertJsoncppStringToData(data, string(), true);
+    BOOST_CHECK(dObj->at(dObj->getSubObjects().size() - 2).getKey() == "nonce");
 }
 
 BOOST_AUTO_TEST_CASE(dataobject_jsonOrder)
@@ -794,18 +794,21 @@ BOOST_AUTO_TEST_CASE(dataobject_jsonOrder)
 
 BOOST_AUTO_TEST_CASE(dataobject_replace)
 {
-    DataObject data;
-    DataObject data2;
-    DataObject data3;
+    spDataObject _data(new DataObject());
+    spDataObject _data2(new DataObject());
+    spDataObject _data3(new DataObject());
+    DataObject& data = _data.getContent();
+    DataObject& data2 = _data2.getContent();
+    DataObject& data3 = _data3.getContent();
     data2.setKey("key2");
     data2.setString("value2");
     data3.setKey("key3");
     data3.setString("value3");
 
-    data["field1"] = data3; // null object with key "field1" keep the key "field1"
+    data["field1"].copyFrom(data3); // null object with key "field1" keep the key "field1"
     BOOST_CHECK(data.asJson(0,false) == "{\"field1\":\"value3\"}");
 
-    data["field1"] = data2; // not null object with key "field1" replaces the key "field1" to data2's key
+    data["field1"].copyFrom(data2); // not null object with key "field1" replaces the key "field1" to data2's key
     BOOST_CHECK(data.asJson(0,false) == "{\"key2\":\"value2\"}");
 }
 
@@ -825,7 +828,7 @@ BOOST_AUTO_TEST_CASE(dataobject_arrayhell)
                     ]
                 ]
     })";
-    DataObject dObj = ConvertJsoncppStringToData(data, string(), true);
+    spDataObject dObj = ConvertJsoncppStringToData(data, string(), true);
 }
 
 BOOST_AUTO_TEST_CASE(dataobject_besuresponse)
@@ -854,11 +857,11 @@ BOOST_AUTO_TEST_CASE(dataobject_besuresponse)
             } ]
           }
         })";
-    DataObject dObj = ConvertJsoncppStringToData(data, string(), true);
+    spDataObject dObj = ConvertJsoncppStringToData(data, string(), true);
 
     string const expectedParse =
         R"({"result":{"transactions":[{"blockHash":"0xac7b82af234ef01bf4d24a3b9c22c2de091c6f71ec04d51ff23bd780533d999f","blockNumber":"0x1","chainId":null,"from":"0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b","gas":"0x7a120","gasPrice":"0xa","hash":"0x225117089dee26945644798e2c64d3117f55c95c7cf5509f7176de4b3af5202d","input":"0x604b80600c6000396000f3007c01000000000000000000000000000000000000000000000000000000006000350463cbf0b0c08114602d57005b60006004358073ffffffffffffffffffffffffffffffffffffffff16ff","nonce":"0x0","publicKey":"0x3a514176466fa815ed481ffad09110a2d344f6c9b78c1d14afc351c3a51be33d8072e77939dc03ba44790779b7a1025baf3003f6732430e20cd9b76d953391b3","r":"0xe7d3c664c49aa9f5ce4eb76c8547450466262a78bd093160f492ea0853c68e9","raw":"0xf8a5800a8307a1208081ffb857604b80600c6000396000f3007c01000000000000000000000000000000000000000000000000000000006000350463cbf0b0c08114602d57005b60006004358073ffffffffffffffffffffffffffffffffffffffff16ff1ca00e7d3c664c49aa9f5ce4eb76c8547450466262a78bd093160f492ea0853c68e9a03f843e72210ff1da4fd9e375339872bcf0fad05c014e280ffc755e173700dd62","s":"0x3f843e72210ff1da4fd9e375339872bcf0fad05c014e280ffc755e173700dd62","to":null,"transactionIndex":"0x0","v":"0x1c","value":"0xff"}]}})";
-    BOOST_CHECK(dObj.asJson(0, false) == expectedParse);
+    BOOST_CHECK(dObj->asJson(0, false) == expectedParse);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

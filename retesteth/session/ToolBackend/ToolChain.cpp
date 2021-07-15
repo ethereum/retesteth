@@ -158,12 +158,11 @@ spDataObject const ToolChain::mineBlock(EthereumBlockState const& _pendingBlock,
             pendingFixed.header()->extraData().asString() != "0x64616f2d686172642d666f726b")
             throw test::UpwardsException("Dao Extra Data required!");
 
-        if (_pendingBlock.header()->asDataObject().asJson(0, false) !=
-            pendingFixed.header()->asDataObject().asJson(0, false))
+        spDataObject const pendingH = _pendingBlock.header()->asDataObject();
+        spDataObject const pendingFixedH = pendingFixed.header()->asDataObject();
+        if (pendingH->asJson(0, false) != pendingFixedH->asJson(0, false))
         {
             string errField;
-            DataObject const pendingH = _pendingBlock.header()->asDataObject();
-            DataObject const pendingFixedH = pendingFixed.header()->asDataObject();
             string const compare = compareBlockHeaders(pendingH, pendingFixedH, errField);
             throw test::UpwardsException(string("Block from pending block != t8ntool constructed block!\n") +
                                          "Error in field: " + errField + "\n" +
@@ -199,32 +198,32 @@ ToolResponse ToolChain::mineBlockOnTool(EthereumBlockState const& _block, SealEn
     // env.json file
     fs::path envPath = m_tmpDir / "env.json";
     BlockchainTestFillerEnv env(_block.header()->asDataObject(), m_engine);
-    DataObject envData = env.asDataObject();
+    spDataObject envData = env.asDataObject();
 
     // BlockHeader hash information for tool mining
     size_t k = 0;
     for (auto const& bl : m_blocks)
-        envData["blockHashes"][fto_string(k++)] = bl.header()->hash().asString();
+        (*envData)["blockHashes"][fto_string(k++)] = bl.header()->hash().asString();
     for (auto const& un : _block.uncles())
     {
-        DataObject uncle;
+        spDataObject uncle(new DataObject());
         int delta = (int)(_block.header()->number() - un->number()).asBigInt();
         if (delta < 1)
             throw test::UpwardsException("Uncle header delta is < 1");
-        uncle["delta"] = delta;
-        uncle["address"] = un->author().asString();
-        envData["ommers"].addArrayObject(uncle);
+        (*uncle)["delta"] = delta;
+        (*uncle)["address"] = un->author().asString();
+        (*envData)["ommers"].addArrayObject(uncle);
     }
 
     // Options Hook
-    Options::getCurrentConfig().performFieldReplace(envData, FieldReplaceDir::RetestethToClient);
+    Options::getCurrentConfig().performFieldReplace(envData.getContent(), FieldReplaceDir::RetestethToClient);
 
-    string const envPathContent = envData.asJson();
+    string const envPathContent = envData->asJson();
     writeFile(envPath.string(), envPathContent);
 
     // alloc.json file
     fs::path allocPath = m_tmpDir / "alloc.json";
-    string const allocPathContent = _block.state().asDataObject().asJsonNoFirstKey();
+    string const allocPathContent = _block.state().asDataObject()->asJsonNoFirstKey();
     writeFile(allocPath.string(), allocPathContent);
 
     // txs.json file
@@ -266,7 +265,7 @@ ToolResponse ToolChain::mineBlockOnTool(EthereumBlockState const& _block, SealEn
     {
         ETH_TEST_MESSAGE("Txs:\n" + txsPathContent);
         for (auto const& tr : _block.transactions())
-            ETH_TEST_MESSAGE(tr->asDataObject().asJson());
+            ETH_TEST_MESSAGE(tr->asDataObject()->asJson());
     }
     ETH_TEST_MESSAGE("Env:\n" + envPathContent);
 
@@ -286,7 +285,7 @@ ToolResponse ToolChain::mineBlockOnTool(EthereumBlockState const& _block, SealEn
 
     // Construct block rpc response
     ToolResponse toolResponse(ConvertJsoncppStringToData(outPathContent));
-    DataObject returnState = ConvertJsoncppStringToData(outAllocPathContent);
+    spDataObject returnState = ConvertJsoncppStringToData(outAllocPathContent);
     toolResponse.attachState(restoreFullState(returnState));
 
     if (traceCondition)

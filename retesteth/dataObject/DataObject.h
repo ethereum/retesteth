@@ -59,6 +59,9 @@ public:
     bool operator==(DataObject const& _value) const;
     DataObject& operator[](std::string const& _key);
     DataObject& operator=(DataObject const& _value) = delete;
+    //DataObject& operator=(spDataObject const& _value);
+    spDataObject copy() const;
+    void copyFrom(DataObject const& _other);
     DataObject& operator=(std::string const& _value);
     DataObject& operator=(int _value);
 
@@ -70,6 +73,7 @@ public:
     void removeKey(std::string const& _key);  // vector<element> erase method with `replace()` function
 
     DataObject const& atKey(std::string const& _key) const;
+    spDataObject atKeyPointer(std::string const& _key);
     DataObject& atKeyUnsafe(std::string const& _key);
     DataObject const& at(size_t _pos) const;
     DataObject& atUnsafe(size_t _pos);

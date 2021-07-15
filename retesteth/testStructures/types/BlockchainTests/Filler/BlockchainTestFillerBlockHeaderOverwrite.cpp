@@ -8,8 +8,8 @@ namespace teststruct
 {
 BlockHeaderOverwrite::BlockHeaderOverwrite(DataObject const& _data)
 {
-    DataObject tmpD = convertDecBlockheaderIncompleteToHex(_data);
-    if (tmpD.getSubObjects().size() > 0)
+    spDataObject tmpD = convertDecBlockheaderIncompleteToHex(_data);
+    if ((*tmpD).getSubObjects().size() > 0)
         m_blockHeaderIncomplete = spBlockHeaderIncomplete(new BlockHeaderIncomplete(tmpD));
 
     m_relTimeStamp = 0;

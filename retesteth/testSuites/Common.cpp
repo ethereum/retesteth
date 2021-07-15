@@ -93,7 +93,7 @@ void compareTransactionException(spTransaction const& _tr, MineBlocksResult cons
         string const& expectedReason = Options::getCurrentConfig().translateException(_testException);
         if (remoteException.find(expectedReason) == string::npos)
         {
-            ETH_WARNING(_tr->asDataObject().asJson());
+            ETH_WARNING(_tr->asDataObject()->asJson());
             ETH_ERROR_MESSAGE(string("Transaction rejecetd but due to a different reason: \n") +
                "Expected reason: `" + expectedReason + "` (" + _testException + ")\n" +
                "Client reason: `" + remoteException

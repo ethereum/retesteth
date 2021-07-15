@@ -121,11 +121,11 @@ void addClientInfo(DataObject& _v, fs::path const& _testSource, h256 const& _tes
             if (existingInfo.count("comment"))
                 comment = existingInfo.atKey("comment").asString();
             if (existingInfo.count("labels"))
-                (*clientinfo)["labels"] = existingInfo.atKey("labels");
+                (*clientinfo)["labels"].copyFrom(existingInfo.atKey("labels"));
         }
 
         (*clientinfo)["comment"] = comment;
-        (*clientinfo)["filling-rpc-server"] = session.web3_clientVersion();
+        (*clientinfo)["filling-rpc-server"] = session.web3_clientVersion()->asString();
         (*clientinfo)["filling-tool-version"] = test::prepareVersionString();
         (*clientinfo)["lllcversion"] = test::prepareLLLCVersionString();
         (*clientinfo)["source"] = _testSource.string();
@@ -255,9 +255,9 @@ void TestSuite::runTestWithoutFiller(boost::filesystem::path const& _file) const
                     TestSuiteOptions opt;
                     opt.doFilling = true;
                     opt.allowInvalidBlocks = true;
-                    DataObject output = doTests(testData.data, opt);
-                    addClientInfo(output, _file, testData.hash);
-                    writeFile(outPath, asBytes(output.asJson()));
+                    spDataObject output = doTests(testData.data, opt);
+                    addClientInfo(output.getContent(), _file, testData.hash);
+                    writeFile(outPath, asBytes(output->asJson()));
                 }
                 else
                     executeFile(_file);
@@ -589,8 +589,8 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
                 ETH_LOG("Copying " + _testFileName.string(), 0);
                 ETH_LOG(" TO " + boostTestPath.path().string(), 0);
                 assert(_testFileName.string() != boostTestPath.path().string());
-                addClientInfo(testData.data, boostRelativeTestPath, testData.hash);
-                writeFile(boostTestPath.path(), asBytes(testData.data.asJson()));
+                addClientInfo(testData.data.getContent(), boostRelativeTestPath, testData.hash);
+                writeFile(boostTestPath.path(), asBytes(testData.data->asJson()));
                 ETH_FAIL_REQUIRE_MESSAGE(boost::filesystem::exists(boostTestPath.path().string()),
                     "Error when copying the test file!");
             }
@@ -601,10 +601,10 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
 
                 try
                 {
-                    DataObject output = doTests(testData.data, opt);
+                    spDataObject output = doTests(testData.data, opt);
                     // Add client info for all of the tests in output
-                    addClientInfo(output, boostRelativeTestPath, testData.hash);
-                    writeFile(boostTestPath.path(), asBytes(output.asJson()));
+                    addClientInfo(output.getContent(), boostRelativeTestPath, testData.hash);
+                    writeFile(boostTestPath.path(), asBytes(output->asJson()));
 
                     if (!Options::get().getGStateTransactionFilter().empty())
                     {

@@ -11,11 +11,11 @@ namespace teststruct
 struct DebugTraceTransactionLog
 {
     DebugTraceTransactionLog(DataObject const&);
-    VALUE gas() const { return VALUE(m_data.atKey("gas").asString()); }
+    VALUE gas() const { return VALUE(m_data->atKey("gas")); }
     DataObject const& getData() const { return m_data; }
 
 private:
-    DataObject m_data;
+    spDataObject m_data;
 };
 
 struct DebugTraceTransaction

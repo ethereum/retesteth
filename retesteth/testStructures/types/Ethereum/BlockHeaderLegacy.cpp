@@ -130,7 +130,7 @@ BlockHeaderLegacy::BlockHeaderLegacy(dev::RLP const& _rlp)
 
 spDataObject BlockHeaderLegacy::asDataObject() const
 {
-    spDataObject out;
+    spDataObject out (new DataObject());
     (*out)["bloom"] = m_logsBloom->asString();
     (*out)["coinbase"] = m_author->asString();
     (*out)["difficulty"] = m_difficulty->asString();

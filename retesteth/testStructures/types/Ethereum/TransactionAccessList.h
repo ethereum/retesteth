@@ -14,7 +14,7 @@ struct TransactionAccessList : TransactionLegacy
     TransactionAccessList(BYTES const&);
     TransactionAccessList(dev::RLP const&);
 
-    DataObject const asDataObject(ExportOrder _order = ExportOrder::Default) const override;
+    spDataObject asDataObject(ExportOrder _order = ExportOrder::Default) const override;
     TransactionType type() const override { return TransactionType::ACCESSLIST; }
 
 protected:

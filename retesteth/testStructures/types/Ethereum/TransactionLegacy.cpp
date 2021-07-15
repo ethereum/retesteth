@@ -153,9 +153,9 @@ void TransactionLegacy::buildVRS(VALUE const& _secret)
         sigStruct.isValid(), TestOutputHelper::get().testName() + " Could not construct transaction signature!");
 
     // 27 because devcrypto signing donesn't count chain id
-    DataObject v = DataObject(dev::toCompactHexPrefixed(dev::u256(sigStruct.v + 27)));
-    DataObject r = DataObject(dev::toCompactHexPrefixed(dev::u256(sigStruct.r)));
-    DataObject s = DataObject(dev::toCompactHexPrefixed(dev::u256(sigStruct.s)));
+    bigint v (dev::toCompactHexPrefixed(dev::u256(sigStruct.v + 27)));
+    bigint r (dev::toCompactHexPrefixed(dev::u256(sigStruct.r)));
+    bigint s (dev::toCompactHexPrefixed(dev::u256(sigStruct.s)));
     m_v = spVALUE(new VALUE(v));
     m_r = spVALUE(new VALUE(r));
     m_s = spVALUE(new VALUE(s));
@@ -163,37 +163,37 @@ void TransactionLegacy::buildVRS(VALUE const& _secret)
 }
 
 
-const DataObject TransactionLegacy::asDataObject(ExportOrder _order) const
+spDataObject TransactionLegacy::asDataObject(ExportOrder _order) const
 {
-    DataObject out;
-    out["data"] = m_data->asString();
-    out["gasLimit"] = m_gasLimit->asString();
-    out["gasPrice"] = m_gasPrice->asString();
-    out["nonce"] = m_nonce->asString();
+    spDataObject out(new DataObject());
+    (*out)["data"] = m_data->asString();
+    (*out)["gasLimit"] = m_gasLimit->asString();
+    (*out)["gasPrice"] = m_gasPrice->asString();
+    (*out)["nonce"] = m_nonce->asString();
     if (m_creation)
     {
         if (_order != ExportOrder::ToolStyle)
-            out["to"] = "";
+            (*out)["to"] = "";
     }
     else
-        out["to"] = m_to->asString();
-    out["value"] = m_value->asString();
-    out["v"] = m_v->asString();
-    out["r"] = m_r->asString();
-    out["s"] = m_s->asString();
+        (*out)["to"] = m_to->asString();
+    (*out)["value"] = m_value->asString();
+    (*out)["v"] = m_v->asString();
+    (*out)["r"] = m_r->asString();
+    (*out)["s"] = m_s->asString();
     if (_order == ExportOrder::ToolStyle)
     {
-        out.performModifier(mod_removeLeadingZerosFromHexValues, {"data", "to"});
-        out.renameKey("gasLimit", "gas");
-        out.renameKey("data", "input");
+        (*out).performModifier(mod_removeLeadingZerosFromHexValues, {"data", "to"});
+        (*out).renameKey("gasLimit", "gas");
+        (*out).renameKey("data", "input");
         if (!m_secretKey.isEmpty() && m_secretKey.getCContent() != 0)
-            out["secretKey"] = m_secretKey->asString();
+            (*out)["secretKey"] = m_secretKey->asString();
     }
     if (_order == ExportOrder::OldStyle)
     {
-        out.setKeyPos("r", 4);
-        out.setKeyPos("s", 5);
-        out.setKeyPos("v", 7);
+        (*out).setKeyPos("r", 4);
+        (*out).setKeyPos("s", 5);
+        (*out).setKeyPos("v", 7);
     }
     return out;
 }

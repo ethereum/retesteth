@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_CASE(recalculateHash)
         "uncleHash" : "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
         "baseFeePerGas" : "0x0e"
     })";
-    DataObject data = dataobject::ConvertJsoncppStringToData(str);
+    spDataObject data = dataobject::ConvertJsoncppStringToData(str);
     spBlockHeader1559 header(new BlockHeader1559(data));
     header.getContent().recalculateHash();
 }

@@ -7,7 +7,7 @@ namespace test
 {
 namespace teststruct
 {
-IPADDRESS::IPADDRESS(DataObject const& _ip) : m_data(_ip)
+IPADDRESS::IPADDRESS(DataObject const& _ip) : m_data(_ip.asString())
 {
     size_t pos = _ip.asString().find_last_of(':');
     string address = _ip.asString().substr(0, pos);

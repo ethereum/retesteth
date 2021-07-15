@@ -14,7 +14,8 @@ BlockchainTestBlock::BlockchainTestBlock(DataObject const& _data)
             m_chainName = _data.atKey("chainname").asString();
         if (_data.count("blocknumber"))
         {
-            DataObject tmpD = _data.atKey("blocknumber");
+            DataObject tmpD;
+            tmpD.copyFrom(_data.atKey("blocknumber"));
             tmpD.performModifier(mod_valueToCompactEvenHexPrefixed);
             m_blockNumber = spVALUE(new VALUE(tmpD));
         }

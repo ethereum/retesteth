@@ -15,7 +15,7 @@ struct SetChainParamsArgs : GCP_SPointerBase
     SetChainParamsArgs(DataObject const& _data);
     SetChainParamsArgs* copy() const { return new SetChainParamsArgs(asDataObject()); }
 
-    DataObject asDataObject() const;
+    spDataObject asDataObject() const;
     spBlockHeader const& genesis() const { return m_genesis; }
     State const& state() const { return m_preState; }
     SealEngine sealEngine() const { return m_sealEngine; }

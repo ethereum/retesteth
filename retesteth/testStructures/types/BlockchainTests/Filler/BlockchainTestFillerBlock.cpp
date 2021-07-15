@@ -29,8 +29,9 @@ BlockchainTestFillerBlock::BlockchainTestFillerBlock(DataObject const& _data, No
 
         if (_data.count("blocknumber"))
         {
-            DataObject tmpD = _data.atKey("blocknumber");
-            tmpD.performModifier(mod_valueToCompactEvenHexPrefixed);
+            spDataObject tmpD;
+            (*tmpD).copyFrom(_data.atKey("blocknumber"));
+            (*tmpD).performModifier(mod_valueToCompactEvenHexPrefixed);
             m_blockNumber = spVALUE(new VALUE(tmpD));
         }
 

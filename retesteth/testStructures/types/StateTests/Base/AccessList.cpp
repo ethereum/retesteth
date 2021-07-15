@@ -22,18 +22,21 @@ AccessList::AccessList(DataObject const& _data)
         m_list.push_back(spAccessListElement(new AccessListElement(el)));
 }
 
-DataObject AccessList::asDataObject() const
+spDataObject AccessList::asDataObject() const
 {
-    DataObject accessList(DataType::Array);
+    spDataObject accessList(new DataObject(DataType::Array));
     for (auto const& el : m_list)
     {
-        DataObject accessListElement;
-        accessListElement["address"] = el->address().asString();
-        DataObject keys(DataType::Array);
+        spDataObject accessListElement(new DataObject());
+        (*accessListElement)["address"] = el->address().asString();
+        spDataObject keys(new DataObject(DataType::Array));
+        (*accessListElement)["storageKeys"].copyFrom(keys);
         for (auto const& el2 : el->keys())
-            keys.addArrayObject(el2->asString());
-        accessListElement["storageKeys"] = keys;
-        accessList.addArrayObject(accessListElement);
+        {
+            spDataObject k(new DataObject(el2->asString()));
+            (*accessListElement)["storageKeys"].addArrayObject(k);
+        }
+        (*accessList).addArrayObject(accessListElement);
     }
     return accessList;
 }

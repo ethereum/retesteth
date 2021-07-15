@@ -25,15 +25,15 @@ StateTestPostResult::StateTestPostResult(DataObject const& _data)
          {"logs", {{DataType::String}, jsonField::Optional}}});
 }
 
-const DataObject StateTestPostResult::asDataObject() const
+spDataObject StateTestPostResult::asDataObject() const
 {
-    DataObject res;
-    res["hash"] = m_hash->asString();
+    spDataObject res (new DataObject());
+    (*res)["hash"] = m_hash->asString();
     if (!m_log.isEmpty())
-        res["logs"] = m_log->asString();
-    res["indexes"]["data"] = m_dataInd;
-    res["indexes"]["gas"] = m_gasInd;
-    res["indexes"]["value"] = m_valInd;
+        (*res)["logs"] = m_log->asString();
+    (*res)["indexes"]["data"] = m_dataInd;
+    (*res)["indexes"]["gas"] = m_gasInd;
+    (*res)["indexes"]["value"] = m_valInd;
     return res;
 }
 

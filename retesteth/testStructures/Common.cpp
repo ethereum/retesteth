@@ -244,12 +244,13 @@ void requireJsonFields(DataObject const& _o, std::string const& _config, std::ma
 
 // Compile LLL in code
 // Convert dec fields to hex, add 0x prefix to accounts and storage keys
-DataObject convertDecStateToHex(DataObject const& _data, solContracts const& _preSolidity)
+spDataObject convertDecStateToHex(DataObject const& _data, solContracts const& _preSolidity)
 {
     // -- Compile LLL in pre state into byte code if not already
     // -- Convert State::Storage keys/values into hex
-    DataObject tmpD = _data;
-    for (auto& acc2 : tmpD.getSubObjectsUnsafe())
+    spDataObject tmpD;
+    tmpD.getContent().copyFrom(_data);
+    for (auto& acc2 : (*tmpD).getSubObjectsUnsafe())
     {
         DataObject& acc = acc2.getContent();
         if (acc.getKey()[1] != 'x')
@@ -267,19 +268,20 @@ DataObject convertDecStateToHex(DataObject const& _data, solContracts const& _pr
 }
 
 // Convert dec fields to hex, add 0x prefix to accounts and storage keys
-DataObject convertDecBlockheaderIncompleteToHex(DataObject const& _data)
+spDataObject convertDecBlockheaderIncompleteToHex(DataObject const& _data)
 {
     // Convert to HEX
-    DataObject tmpD = _data;
-    tmpD.removeKey("RelTimestamp");     // BlockchainTestFiller fields
-    tmpD.removeKey("chainname");        // BlockchainTestFiller fields
+    spDataObject tmpD;
+    (*tmpD).copyFrom(_data);
+    (*tmpD).removeKey("RelTimestamp");     // BlockchainTestFiller fields
+    (*tmpD).removeKey("chainname");        // BlockchainTestFiller fields
 
     std::vector<string> hashKeys = {"parentHash", "coinbase", "bloom"};
     for (auto const& key : hashKeys)
         if (_data.count(key))
         {
             if (_data.atKey(key).asString().size() > 1 && _data.atKey(key).asString()[1] != 'x')
-                tmpD[key] = "0x" + _data.atKey(key).asString();
+                (*tmpD)[key] = "0x" + _data.atKey(key).asString();
         }
 
     std::vector<string> valueKeys = {
@@ -293,7 +295,7 @@ DataObject convertDecBlockheaderIncompleteToHex(DataObject const& _data)
     };
     for (auto const& key : valueKeys)
         if (_data.count(key))
-            tmpD[key].performModifier(mod_valueToCompactEvenHexPrefixed);
+            (*tmpD)[key].performModifier(mod_valueToCompactEvenHexPrefixed);
     return tmpD;
 }
 

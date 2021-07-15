@@ -17,8 +17,9 @@ StateIncomplete::StateIncomplete(DataObject const& _data, DataRequier _req)
             // Convertion is here so not to repeat convertion in State and Blockchain tests
             // Convert Expect Section IncompletePostState fields to hex, account keys add `0x` prefix
             // Code field add `0x` prefix, storage key:value add `0x` prefix, coverted to hex
-            DataObject tmpD = _data;
-            for (auto& acc2 : tmpD.getSubObjectsUnsafe())
+            spDataObject tmpD(new DataObject());
+            (*tmpD).copyFrom(_data);
+            for (auto& acc2 : (*tmpD).getSubObjectsUnsafe())
             {
                 DataObject& acc = acc2.getContent();
                 string const& key = acc2->getKey();
@@ -37,7 +38,7 @@ StateIncomplete::StateIncomplete(DataObject const& _data, DataRequier _req)
                         rec.getContent().performModifier(mod_valueToCompactEvenHexPrefixed);
                     }
             }
-            for (auto const& el : tmpD.getSubObjects())
+            for (auto const& el : tmpD->getSubObjects())
                 m_accounts[FH20(el->getKey())] = spAccountBase(new AccountIncomplete(el));
         }
         else
@@ -52,11 +53,11 @@ StateIncomplete::StateIncomplete(DataObject const& _data, DataRequier _req)
     }
 }
 
-const DataObject StateIncomplete::asDataObject(ExportOrder) const
+spDataObject StateIncomplete::asDataObject(ExportOrder) const
 {
-    DataObject out;
+    spDataObject out(new DataObject());
     for (auto const& el : m_accounts)
-        out.addSubObject(el.second->asDataObject());
+        (*out).addSubObject(el.second->asDataObject());
     return out;
 }
 

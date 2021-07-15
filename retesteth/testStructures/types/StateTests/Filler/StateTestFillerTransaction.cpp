@@ -11,9 +11,10 @@ StateTestFillerTransaction::StateTestFillerTransaction(DataObject const& _data)
 {
     try
     {
-        DataObject tmpD = _data;
-        tmpD.removeKey("data");
-        tmpD.performModifier(mod_valueToCompactEvenHexPrefixed);
+        spDataObject tmpD(new DataObject());
+        (*tmpD).copyFrom(_data);
+        (*tmpD).removeKey("data");
+        (*tmpD).performModifier(mod_valueToCompactEvenHexPrefixed);
 
         // Read data from JSON in test filler
         // The VALUE fields can be decimal -> convert it to hex
@@ -23,36 +24,37 @@ StateTestFillerTransaction::StateTestFillerTransaction(DataObject const& _data)
         else
         {
             m_creation = false;
-            DataObject dTo = _data.atKey("to");
+            spDataObject dTo(new DataObject());
+            (*dTo).copyFrom(_data.atKey("to"));
             string const& to = _data.atKey("to").asString();
             if (to.size() > 1 && to[1] != 'x')
-                dTo = "0x" + _data.atKey("to").asString();
+                (*dTo) = "0x" + _data.atKey("to").asString();
             m_to = spFH20(new FH20(dTo));
         }
-        m_secretKey = spFH32(new FH32(tmpD.atKey("secretKey")));
-        m_nonce = spVALUE(new VALUE(tmpD.atKey("nonce")));
+        m_secretKey = spFH32(new FH32(tmpD->atKey("secretKey")));
+        m_nonce = spVALUE(new VALUE(tmpD->atKey("nonce")));
 
         for (auto const& el2 : _data.atKey("data").getSubObjects())
         {
             DataObject const& el = el2.getCContent();
-            DataObject dataInKey;
+            spDataObject dataInKey(new DataObject());
             spAccessList accessList;
             if (el.type() == DataType::Object)
             {
-                dataInKey = el.atKey("data");
+                (*dataInKey).copyFrom(el.atKey("data"));
                 accessList = spAccessList(new AccessList(el.atKey("accessList")));
                 requireJsonFields(el, "StateTestFillerTransaction::dataWithList " + _data.getKey(),
                     {{"data", {{DataType::String}, jsonField::Required}},
                      {"accessList", {{DataType::Array}, jsonField::Required}}});
             }
             else
-                dataInKey = el;
+                (*dataInKey).copyFrom(el);
 
             // -- Compile LLL in transaction data into byte code if not already
-            dataInKey.setKey("`data` array element in General Transaction Section");  // Hint
+            (*dataInKey).setKey("`data` array element in General Transaction Section");  // Hint
 
             string label;
-            string rawData = dataInKey.asString();
+            string rawData = dataInKey->asString();
             std::string const c_labelPrefix = ":label";
             if (rawData.find(c_labelPrefix) != string::npos)
             {
@@ -69,20 +71,20 @@ StateTestFillerTransaction::StateTestFillerTransaction(DataObject const& _data)
                     rawData = "";
                 }
             }
-            dataInKey.setString(test::compiler::replaceCode(rawData));
+            (*dataInKey).setString(test::compiler::replaceCode(rawData));
             // ---
-            m_databox.push_back(Databox(dataInKey, label, rawData.substr(0, 20), accessList));
+            m_databox.push_back(Databox(dataInKey.getContent(), label, rawData.substr(0, 20), accessList));
         }
-        for (auto const& el : tmpD.atKey("gasLimit").getSubObjects())
+        for (auto const& el : tmpD->atKey("gasLimit").getSubObjects())
             m_gasLimit.push_back(el.getCContent());
-        for (auto const& el : tmpD.atKey("value").getSubObjects())
+        for (auto const& el : tmpD->atKey("value").getSubObjects())
             m_value.push_back(el.getCContent());
 
-        if (tmpD.count("maxFeePerGas") || tmpD.count("maxPriorityFeePerGas"))
+        if (tmpD->count("maxFeePerGas") || tmpD->count("maxPriorityFeePerGas"))
         {
             // EIP 1559 TRANSACTION TEMPLATE (gtest FILLER)
-            m_maxFeePerGas = spVALUE(new VALUE(tmpD.atKey("maxFeePerGas")));
-            m_maxPriorityFeePerGas = spVALUE(new VALUE(tmpD.atKey("maxPriorityFeePerGas")));
+            m_maxFeePerGas = spVALUE(new VALUE(tmpD->atKey("maxFeePerGas")));
+            m_maxPriorityFeePerGas = spVALUE(new VALUE(tmpD->atKey("maxPriorityFeePerGas")));
             requireJsonFields(_data, "StateTestFillerTransaction " + _data.getKey(),
                 {{"data", {{DataType::Array}, jsonField::Required}},
                  {"gasLimit", {{DataType::Array}, jsonField::Required}},
@@ -96,7 +98,7 @@ StateTestFillerTransaction::StateTestFillerTransaction(DataObject const& _data)
         else
         {
             // LEGACY TRANSACTION TEMPLATE (gtest FILLER)
-            m_gasPrice = spVALUE(new VALUE(tmpD.atKey("gasPrice")));
+            m_gasPrice = spVALUE(new VALUE(tmpD->atKey("gasPrice")));
             requireJsonFields(_data, "StateTestFillerTransaction " + _data.getKey(),
                 {{"data", {{DataType::Array}, jsonField::Required}},
                  {"gasLimit", {{DataType::Array}, jsonField::Required}},

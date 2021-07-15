@@ -9,9 +9,10 @@ TestBlock::TestBlock(BYTES const& _rlp, string const& _chainName, FORK const& _c
     m_rawRLP = spBYTES(_rlp.copy());
 }
 
-DataObject TestBlock::asDataObject() const
+spDataObject TestBlock::asDataObject() const
 {
-    DataObject res;
+    spDataObject _res(new DataObject());
+    DataObject& res = _res.getContent();
     res["chainname"] = m_chainName;
     // res["chainnetwork"] = m_chainNet->asString();
     res["blocknumber"] = m_blockNumber->asDecString();
@@ -21,17 +22,18 @@ DataObject TestBlock::asDataObject() const
     // No test objects was registered
     if (!m_block.isEmpty())
     {
-        res["uncleHeaders"] = DataObject(DataType::Array);
+        res.atKeyPointer("uncleHeaders") = spDataObject(new DataObject(DataType::Array));
         for (auto const& un : m_block->uncles())
             res["uncleHeaders"].addArrayObject(un->asDataObject());
-        res["blockHeader"] = m_block->header()->asDataObject();
-        res["transactions"] = DataObject(DataType::Array);
+        res.atKeyPointer("blockHeader") = m_block->header()->asDataObject();
+        res.atKeyPointer("transactions") = spDataObject(new DataObject(DataType::Array));
         for (auto const& tr : m_block->transactions())
             res["transactions"].addArrayObject(tr->asDataObject(ExportOrder::OldStyle));
 
         for (auto const& trSequence : m_transactionExecOrder)
         {
-            DataObject trInfo;
+            spDataObject _trInfo(new DataObject());
+            DataObject& trInfo = _trInfo.getContent();
             BYTES const& b = std::get<0>(trSequence);
             string const& v = std::get<1>(trSequence);
             trInfo["rawBytes"] = b.asString();
@@ -42,10 +44,10 @@ DataObject TestBlock::asDataObject() const
                 trInfo["valid"] = "false";
                 trInfo["exception"] = v;
             }
-            res["transactionSequence"].addArrayObject(trInfo);
+            res["transactionSequence"].addArrayObject(_trInfo);
         }
     }
 
     res["rlp"] = m_rawRLP->asString();
-    return res;
+    return _res;
 }

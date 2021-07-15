@@ -56,7 +56,7 @@ spDataObject readJsonData(fs::path const& _file, string const& _stopper, bool _a
 }
 
 /// Safely read the yaml file into DataObject
-DataObject readYamlData(fs::path const& _file)
+spDataObject readYamlData(fs::path const& _file)
 {
     try
     {
@@ -68,7 +68,7 @@ DataObject readYamlData(fs::path const& _file)
     catch (std::exception const& _ex)
     {
         ETH_ERROR_MESSAGE(string("\nError when parsing file (") + _file.c_str() + ") " + _ex.what());
-        return DataObject();
+        return spDataObject(0);
     }
 }
 

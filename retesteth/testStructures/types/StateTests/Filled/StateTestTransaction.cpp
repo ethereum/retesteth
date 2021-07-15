@@ -39,7 +39,7 @@ StateTestTransaction::StateTestTransaction(DataObject const& _data)
 
         for (auto const& el : _data.atKey("data").getSubObjects())
         {
-            DataObject dataInKey = el.getCContent();
+            DataObject const& dataInKey = el.getCContent();
             string const sDataPreview = el->asString().substr(0, 8);
             if (accessLists.size())
             {

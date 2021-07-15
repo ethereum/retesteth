@@ -6,9 +6,10 @@
 
 using namespace test::teststruct;
 namespace  {
-    DataObject translateExecToTransaction(DataObject const& _exec)
+    spDataObject translateExecToTransaction(DataObject const& _exec)
     {
-        DataObject gtransaction;
+        spDataObject _gtransaction(new DataObject());
+        DataObject& gtransaction = _gtransaction.getContent();
         requireJsonFields(_exec, "vmTestFiller exec",
             {{"address", {{DataType::String}, jsonField::Required}},
                 {"caller", {{DataType::String}, jsonField::Required}},
@@ -18,14 +19,14 @@ namespace  {
                 {"gasPrice", {{DataType::String}, jsonField::Required}},
                 {"origin", {{DataType::String}, jsonField::Required}},
                 {"value", {{DataType::String}, jsonField::Required}}});
-        gtransaction["data"].addArrayObject(DataObject(_exec.atKey("data").asString()));
-        gtransaction["gasLimit"].addArrayObject(DataObject(_exec.atKey("gas").asString()));
-        gtransaction["gasPrice"] = _exec.atKey("gasPrice");
+        gtransaction["data"].addArrayObject(spDataObject(new DataObject(_exec.atKey("data").asString())));
+        gtransaction["gasLimit"].addArrayObject(spDataObject(new DataObject(_exec.atKey("gas").asString())));
+        gtransaction["gasPrice"] = _exec.atKey("gasPrice").asString();
         gtransaction["nonce"] = "0";
         gtransaction["secretKey"] = "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8";
-        gtransaction["to"] = _exec.atKey("address");
-        gtransaction["value"].addArrayObject(DataObject(_exec.atKey("value").asString()));
-        return gtransaction;
+        gtransaction["to"] = _exec.atKey("address").asString();
+        gtransaction["value"].addArrayObject(spDataObject(new DataObject(_exec.atKey("value").asString())));
+        return _gtransaction;
     }
 }
 VMTestFiller::VMTestFiller(DataObject const& _data)

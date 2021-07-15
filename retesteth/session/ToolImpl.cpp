@@ -43,17 +43,17 @@ enum class CallType
     }                                                                                                      \
 
 
-DataObject ToolImpl::web3_clientVersion()
+spDataObject ToolImpl::web3_clientVersion()
 {
     rpcCall("", {});
     ETH_TEST_MESSAGE("\nRequest: web3_clientVersion");
     string const cmd = m_toolPath.string() + " -v";
     TRYCATCHCALL(
-                DataObject res(test::executeCmd(cmd));
-                ETH_TEST_MESSAGE("Response: web3_clientVersion " + res.asString());
+                spDataObject res(new DataObject(test::executeCmd(cmd)));
+                ETH_TEST_MESSAGE("Response: web3_clientVersion " + res->asString());
                 return res;
                 , "web3_clientVersion", CallType::FAILEVERYTHING)
-    return DataObject();
+    return spDataObject();
 }
 
 // ETH Methods
@@ -64,7 +64,7 @@ FH32 ToolImpl::eth_sendRawTransaction(BYTES const& _rlp, VALUE const& _secret)
     TRYCATCHCALL(
         spTransaction spTr = readTransaction(_rlp);
         spTr.getContent().setSecret(_secret);
-        ETH_TEST_MESSAGE(spTr->asDataObject().asJson());
+        ETH_TEST_MESSAGE(spTr->asDataObject()->asJson());
         m_toolChainManager.getContent().addPendingTransaction(spTr);
         FH32 trHash = spTr.getContent().hash();
         ETH_TEST_MESSAGE("Response: " + trHash.asString());
@@ -105,8 +105,8 @@ EthGetBlockBy ToolImpl::eth_getBlockByHash(FH32 const& _hash, Request _fullObjec
     (void)_fullObjects;
     ETH_TEST_MESSAGE("\nRequest: eth_getBlockByHash `" + _hash.asString());
     TRYCATCHCALL(
-        DataObject res = constructEthGetBlockBy(blockchain().blockByHash(_hash));
-        ETH_LOG("Response: eth_getBlockByHash `" + res.asJson(), 7);
+        spDataObject res = constructEthGetBlockBy(blockchain().blockByHash(_hash));
+        ETH_LOG("Response: eth_getBlockByHash `" + res->asJson(), 7);
         return EthGetBlockBy(res);
         , "eth_getBlockByHash", CallType::FAILEVERYTHING)
     return EthGetBlockBy(DataObject());
@@ -118,8 +118,8 @@ EthGetBlockBy ToolImpl::eth_getBlockByNumber(VALUE const& _blockNumber, Request 
     (void)_fullObjects;
     ETH_TEST_MESSAGE("\nRequest: eth_getBlockByNumber `" + _blockNumber.asDecString());
     TRYCATCHCALL(
-        DataObject res = constructEthGetBlockBy(blockchain().blockByNumber(_blockNumber));
-        ETH_LOG("Response: eth_getBlockByNumber `" + res.asJson(), 7);
+        spDataObject res = constructEthGetBlockBy(blockchain().blockByNumber(_blockNumber));
+        ETH_LOG("Response: eth_getBlockByNumber `" + res->asJson(), 7);
         return EthGetBlockBy(res);
         , "eth_getBlockByNumber", CallType::FAILEVERYTHING)
     return EthGetBlockBy(DataObject());
@@ -158,9 +158,9 @@ DebugAccountRange ToolImpl::debug_accountRange(
     (void) _txIndex;
 
     TRYCATCHCALL(
-        DataObject constructResponse =
+        spDataObject constructResponse =
             constructAccountRange(blockchain().blockByNumber(_blockNumber), _addressHash, _maxResults);
-        ETH_TEST_MESSAGE("Response: debug_accountRange " + constructResponse.asJson());
+        ETH_TEST_MESSAGE("Response: debug_accountRange " + constructResponse->asJson());
         return DebugAccountRange(constructResponse);
         , "debug_accountRange", CallType::FAILEVERYTHING)
     return DebugAccountRange(DataObject());
@@ -174,8 +174,8 @@ DebugAccountRange ToolImpl::debug_accountRange(
     (void) _txIndex;
 
     TRYCATCHCALL(
-        DataObject constructResponse = constructAccountRange(blockchain().blockByHash(_blockHash), _addressHash, _maxResults);
-        ETH_TEST_MESSAGE("Response: debug_accountRange " + constructResponse.asJson());
+        spDataObject constructResponse = constructAccountRange(blockchain().blockByHash(_blockHash), _addressHash, _maxResults);
+        ETH_TEST_MESSAGE("Response: debug_accountRange " + constructResponse->asJson());
         return DebugAccountRange(constructResponse);
         , "debug_accountRange", CallType::FAILEVERYTHING)
     return DebugAccountRange(DataObject());
@@ -190,9 +190,9 @@ DebugStorageRangeAt ToolImpl::debug_storageRangeAt(
     (void) _txIndex;
 
     TRYCATCHCALL(
-        DataObject constructResponse =
+        spDataObject constructResponse =
             constructStorageRangeAt(blockchain().blockByNumber(_blockNumber), _address, _begin, _maxResults);
-        ETH_TEST_MESSAGE("Response: debug_storageRangeAt " + constructResponse.asJson());
+        ETH_TEST_MESSAGE("Response: debug_storageRangeAt " + constructResponse->asJson());
         return DebugStorageRangeAt(constructResponse);
         , "debug_storageRangeAt", CallType::FAILEVERYTHING)
     return DebugStorageRangeAt(DataObject());
@@ -207,9 +207,9 @@ DebugStorageRangeAt ToolImpl::debug_storageRangeAt(
     (void) _txIndex;
 
     TRYCATCHCALL(
-        DataObject constructResponse =
+        spDataObject constructResponse =
             constructStorageRangeAt(blockchain().blockByHash(_blockHash), _address, _begin, _maxResults);
-        ETH_TEST_MESSAGE("Response: debug_storageRangeAt " + constructResponse.asJson());
+        ETH_TEST_MESSAGE("Response: debug_storageRangeAt " + constructResponse->asJson());
         return DebugStorageRangeAt(constructResponse);
         , "debug_storageRangeAt", CallType::FAILEVERYTHING)
     return DebugStorageRangeAt(DataObject());
@@ -229,7 +229,7 @@ DebugVMTrace ToolImpl::debug_traceTransaction(FH32 const& _trHash)
 void ToolImpl::test_setChainParams(SetChainParamsArgs const& _config)
 {
     rpcCall("", {});
-    ETH_TEST_MESSAGE("\nRequest: test_setChainParams \n" + _config.asDataObject().asJson());
+    ETH_TEST_MESSAGE("\nRequest: test_setChainParams \n" + _config.asDataObject()->asJson());
 
     // Ask tool to calculate genesis header stateRoot for genesisHeader
     TRYCATCHCALL(
@@ -264,9 +264,9 @@ MineBlocksResult ToolImpl::test_mineBlocks(size_t _number)
     rpcCall("", {});
     ETH_TEST_MESSAGE("\nRequest: test_mineBlocks");
     TRYCATCHCALL(
-        DataObject const res = blockchain().mineBlocks(_number);
+        spDataObject const res = blockchain().mineBlocks(_number);
         ETH_TEST_MESSAGE("Response test_mineBlocks {" + blockchain().lastBlock().header()->number().asDecString() + "}");
-        ETH_TEST_MESSAGE(res.asJson());
+        ETH_TEST_MESSAGE(res->asJson());
         return MineBlocksResult(res);
             , "test_mineBlocks", CallType::FAILEVERYTHING)
     return MineBlocksResult(DataObject());
@@ -300,7 +300,7 @@ FH32 ToolImpl::test_getLogHash(FH32 const& _txHash)
 }
 
 // Internal
-DataObject ToolImpl::rpcCall(
+spDataObject ToolImpl::rpcCall(
     std::string const& _methodName, std::vector<std::string> const& _args, bool _canFail)
 {
     m_lastInterfaceError.clear();
@@ -309,7 +309,7 @@ DataObject ToolImpl::rpcCall(
     (void)_methodName;
     (void)_args;
     (void)_canFail;
-    return DataObject();
+    return spDataObject(0);
 }
 
 Socket::SocketType ToolImpl::getSocketType() const

@@ -26,7 +26,7 @@ struct AccountBase : GCP_SPointerBase
     BYTES const& code() const { return m_code; }
     FH20 const& address() const { return m_address; }
 
-    virtual DataObject const asDataObject(ExportOrder order = ExportOrder::Default) const = 0;
+    virtual spDataObject asDataObject(ExportOrder order = ExportOrder::Default) const = 0;
     virtual ~AccountBase() {}
 
 protected:

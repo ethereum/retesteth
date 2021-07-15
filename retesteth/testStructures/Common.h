@@ -45,10 +45,10 @@ void requireJsonFields(
 
 // Compile LLL in code, solidity in code
 // Convert dec fields to hex, add 0x prefix to accounts and storage keys
-DataObject convertDecStateToHex(DataObject const& _data, solContracts const& _preSolidity = solContracts());
+spDataObject convertDecStateToHex(DataObject const& _data, solContracts const& _preSolidity = solContracts());
 
 // Convert dec fields to hex, add 0x prefix to accounts and storage keys
-DataObject convertDecBlockheaderIncompleteToHex(DataObject const& _data);
+spDataObject convertDecBlockheaderIncompleteToHex(DataObject const& _data);
 
 // Make a nice compare result string
 string compareBlockHeaders(DataObject const& _blockA, DataObject const& _blockB, string& _whatField);

@@ -190,12 +190,21 @@ void DataObject::replace(DataObject const& _value)
     setAutosort(_value.isAutosort());
 }
 
+spDataObject DataObject::atKeyPointer(std::string const& _key)
+{
+    if (m_subObjectKeys.count(_key))
+        return m_subObjectKeys.at(_key);
+
+    _assert(false, "count(_key) _key=" + _key + " (DataObject::atKeyPointer)");
+    return m_subObjects.at(0);
+}
+
 DataObject const& DataObject::atKey(std::string const& _key) const
 {
     if (m_subObjectKeys.count(_key))
         return m_subObjectKeys.at(_key).getCContent();
 
-    _assert(false, "count(_key) _key=" + _key + " (DataObject::at)");
+    _assert(false, "count(_key) _key=" + _key + " (DataObject::atKey)");
     return m_subObjects.at(0).getCContent();
 }
 
@@ -593,6 +602,73 @@ void DataObject::setBool(bool _value)
     m_type = DataType::Bool;
     m_boolVal = _value;
 }
+
+void DataObject::copyFrom(DataObject const& _other)
+{
+    clear();
+    m_type = _other.type();
+    if (!_other.getKey().empty())
+        m_strKey = _other.getKey();
+
+    switch (m_type)
+    {
+    case String: m_strVal = _other.asString(); break;
+    case Integer: m_intVal = _other.asInt(); break;
+    case Bool: m_boolVal = _other.asBool(); break;
+    case Array:
+        for (auto const& el : _other.getSubObjects())
+        {
+            spDataObject copy = el->copy();
+            addArrayObject(copy);
+        }
+        break;
+    case Object:
+        for (auto const& el : _other.getSubObjects())
+        {
+            spDataObject copy = el->copy();
+            addSubObject(copy);
+        }
+        break;
+    case Null: break;
+    case NotInitialized: break;
+    }
+}
+
+spDataObject DataObject::copy() const
+{
+    spDataObject c(new DataObject(m_type));
+    if (!m_strKey.empty())
+        (*c).setKey(m_strKey);
+    switch(m_type)
+    {
+    case String: (*c).setString(m_strVal); break;
+    case Integer: (*c).setInt(m_intVal); break;
+    case Bool: (*c).setBool(m_boolVal); break;
+    case Array:
+        for (size_t i = 0; i < m_subObjects.size(); i++)
+        {
+            spDataObject copy = m_subObjects.at(i)->copy();
+            (*c).addArrayObject(copy);
+        }
+    break;
+    case Object:
+        for (size_t i = 0; i < m_subObjects.size(); i++)
+        {
+            spDataObject copy = m_subObjects.at(i)->copy();
+            (*c).addSubObject(copy);
+        }
+    break;
+    case Null: break;
+    case NotInitialized: break;
+    }
+    return c;
+}
+
+/*DataObject& DataObject::operator=(spDataObject const& _value)
+{
+    m_myself = _value;
+
+}*/
 
 /*DataObject& DataObject::operator=(DataObject const& _value)
 {

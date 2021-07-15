@@ -132,7 +132,7 @@ void RPCImpl::test_setChainParams(SetChainParamsArgs const& _config)
     spDataObject data = _config.asDataObject();
     cfg.performFieldReplace(*data, FieldReplaceDir::RetestethToClient);
 
-    auto res =  rpcCall("test_setChainParams", {data.asJson()});
+    auto res =  rpcCall("test_setChainParams", {data->asJson()});
     ETH_FAIL_REQUIRE_MESSAGE(res == true, "remote test_setChainParams = false");
 }
 
@@ -150,27 +150,27 @@ void RPCImpl::test_modifyTimestamp(VALUE const& _timestamp)
 
 MineBlocksResult RPCImpl::test_mineBlocks(size_t _number)
 {
-    DataObject const res = rpcCall("test_mineBlocks", {to_string(_number)}, true);
+    spDataObject const res = rpcCall("test_mineBlocks", {to_string(_number)}, true);
 
-    if (res.type() == DataType::Object)
+    if (res->type() == DataType::Object)
     {
-        auto const& result = res.atKey("result");
+        auto const& result = res->atKey("result");
         bool miningres = result.type() == DataType::Bool ? result.asBool() : result.asInt() == 1;
         ETH_ERROR_REQUIRE_MESSAGE(miningres == true, "remote test_mineBlocks = false");
     }
-    else if (res.type() == DataType::Bool)
-        ETH_ERROR_REQUIRE_MESSAGE(res.asBool() == true, "remote test_mineBlocks = false");
+    else if (res->type() == DataType::Bool)
+        ETH_ERROR_REQUIRE_MESSAGE(res->asBool() == true, "remote test_mineBlocks = false");
     else
-        ETH_ERROR_MESSAGE("remote test_mineBlocks = " + res.asJson());
+        ETH_ERROR_MESSAGE("remote test_mineBlocks = " + res->asJson());
 
     return MineBlocksResult(res);
 }
 
 FH32 RPCImpl::test_importRawBlock(BYTES const& _blockRLP)
 {
-    DataObject const res = rpcCall("test_importRawBlock", {quote(_blockRLP.asString())}, true);
-    if (res.type() == DataType::String && res.asString().size() > 2)
-        return FH32(res.asString());
+    spDataObject const res = rpcCall("test_importRawBlock", {quote(_blockRLP.asString())}, true);
+    if (res->type() == DataType::String && res->asString().size() > 2)
+        return FH32(res->asString());
     return FH32(FH32::zero());
 }
 
@@ -237,7 +237,7 @@ spDataObject RPCImpl::rpcCall(
             ETH_FAIL_MESSAGE(m_lastInterfaceError.message());
     }
     m_lastInterfaceError.clear();  // null the error as last RPC call was success.
-    return result.atKey("result");
+    return result.getContent().atKeyPointer("result");
 }
 
 Socket::SocketType RPCImpl::getSocketType() const

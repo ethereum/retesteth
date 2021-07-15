@@ -14,7 +14,7 @@ struct FORK : GCP_SPointerBase
     FORK(char const* _s) : m_data(string(_s)) {}
     FORK(std::string const& _s) : m_data(_s) {}
     FORK(DataObject const&);
-    string const& asString() const { return m_data.asString(); }
+    string const& asString() const { return m_data; }
 
     // std container operations
     inline bool operator==(FORK const& rhs) const { return asString() == rhs.asString(); }
@@ -25,7 +25,7 @@ struct FORK : GCP_SPointerBase
 
 private:
     FORK() {}
-    DataObject m_data;
+    string m_data;
 };
 
 enum class CMP

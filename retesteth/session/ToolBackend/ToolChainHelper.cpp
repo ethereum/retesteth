@@ -116,17 +116,20 @@ State restoreFullState(DataObject const& _toolState)
     for (auto const& accTool2 : _toolState.getSubObjects())
     {
         DataObject const& accTool = accTool2.getCContent();
-        DataObject acc;
+        DataObject& acc = fullState[accTool.getKey()];
         acc["balance"] = accTool.count("balance") ? accTool.atKey("balance").asString() : "0x00";
         acc["nonce"] = accTool.count("nonce") ? accTool.atKey("nonce").asString() : "0x00";
         acc["code"] = accTool.count("code") ? accTool.atKey("code").asString() : "0x";
-        acc["storage"] = accTool.count("storage") ? accTool.atKey("storage") : DataObject(DataType::Object);
+        if (accTool.count("storage"))
+            acc["storage"].copyFrom(accTool.atKey("storage"));
+        else
+            acc["storage"].copyFrom(spDataObject(new DataObject(DataType::Object)));
         for (auto& storageRecord : acc.atKeyUnsafe("storage").getSubObjectsUnsafe())
         {
             storageRecord.getContent().performModifier(mod_removeLeadingZerosFromHexValuesEVEN);
             storageRecord.getContent().performModifier(mod_removeLeadingZerosFromHexKeysEVEN);
         }
-        fullState[accTool.getKey()] = acc;
+        //fullState[accTool.getKey()] = acc;
     }
     return State(fullState);
 }

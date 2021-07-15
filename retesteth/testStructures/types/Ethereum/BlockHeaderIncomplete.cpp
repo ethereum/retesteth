@@ -92,7 +92,8 @@ BlockHeaderIncomplete::BlockHeaderIncomplete(DataObject const& _data)
 
 spBlockHeader BlockHeaderIncomplete::overwriteBlockHeader(spBlockHeader const& _header) const
 {
-    DataObject overwrite = _header->asDataObject();
+    spDataObject _overwrite = _header->asDataObject();
+    DataObject& overwrite = _overwrite.getContent();
     if (!m_author.isEmpty())
         overwrite["author"] = m_author->asString();
     if (!m_difficulty.isEmpty())
