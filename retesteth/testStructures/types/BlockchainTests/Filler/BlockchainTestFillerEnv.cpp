@@ -10,11 +10,11 @@ BlockchainTestFillerEnv::BlockchainTestFillerEnv(DataObject const& _data, SealEn
 {
     try
     {
-        spDataObject tmpData;
+        spDataObject tmpData(new DataObject());
         (*tmpData).copyFrom(_data);
         (*tmpData).performModifier(mod_valueToCompactEvenHexPrefixed);
 
-        spDataObject coinbase;
+        spDataObject coinbase(new DataObject());
         (*coinbase).copyFrom(_data.atKey("coinbase"));
         if (coinbase->asString().size() > 1 && coinbase->asString()[1] != 'x')
             (*coinbase) = "0x" + coinbase->asString();

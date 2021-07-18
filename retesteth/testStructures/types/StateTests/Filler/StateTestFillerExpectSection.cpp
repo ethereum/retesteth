@@ -33,7 +33,7 @@ spDataObject ReplaceValueToIndexesInDataList(spStateTestFillerTransaction const&
             {
                 _data.clear();
                 for (auto const& el : indexes)
-                    _data.addArrayObject(el);
+                    _data.addArrayObject(spDataObject(new DataObject(el)));
             }
             if (indexes.size() == 0 && _data.asString().find(":label") != string::npos)
                 ETH_ERROR_MESSAGE("Label not found in tx data: `" + _data.asString() + "`");

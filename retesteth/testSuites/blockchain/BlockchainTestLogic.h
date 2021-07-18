@@ -13,11 +13,11 @@ using namespace std;
 namespace test
 {
 /// Generate blockchain test from filler
-DataObject FillTest(BlockchainTestInFiller const& _testObject, TestSuite::TestSuiteOptions const& _opt);
+spDataObject FillTest(BlockchainTestInFiller const& _testObject, TestSuite::TestSuiteOptions const& _opt);
 
 /// Read and execute the test from the file
 void RunTest(BlockchainTestInFilled const& _testObject, TestSuite::TestSuiteOptions const& _opt);
 
 /// Parse blockchain test fillers and Run/Fill tests
-DataObject DoTests(DataObject const& _input, TestSuite::TestSuiteOptions& _opt);
+spDataObject DoTests(DataObject const& _input, TestSuite::TestSuiteOptions& _opt);
 }

@@ -16,8 +16,8 @@ BlockchainTestFillerTransaction::BlockchainTestFillerTransaction(DataObject cons
         if (_data.count("expectException"))
             readExpectExceptions(_data.atKey("expectException"), m_expectExceptions);
 
-        spDataObject tmpD;
-        tmpD.getContent().copyFrom(_data);
+        spDataObject tmpD(new DataObject());
+        (*tmpD).copyFrom(_data);
 
         if ((*tmpD).count("secretKey") && (*tmpD).atKey("nonce").asString() == "auto")
         {
@@ -40,7 +40,7 @@ BlockchainTestFillerTransaction::BlockchainTestFillerTransaction(DataObject cons
         (*tmpD).performModifier(mod_valueToCompactEvenHexPrefixed);
 
         // fix 0x prefix on 'to' key
-        spDataObject dTo;
+        spDataObject dTo(new DataObject());
         (*dTo).copyFrom(_data.atKey("to"));
         string const& to = _data.atKey("to").asString();
         if (to.size() > 1 && to[1] != 'x')
@@ -51,7 +51,7 @@ BlockchainTestFillerTransaction::BlockchainTestFillerTransaction(DataObject cons
         (*tmpD)["data"] = test::compiler::replaceCode(_data.atKey("data").asString());
 
         if (_data.count("accessList"))
-            (*tmpD).atKeyPointer("accessList").getContent().copyFrom(_data.atKey("accessList"));
+            (*tmpD)["accessList"].copyFrom(_data.atKey("accessList"));
 
         m_transaction = readTransaction(tmpD);
     }

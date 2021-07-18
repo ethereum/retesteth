@@ -11,7 +11,7 @@ spDataObject constructAccountRange(EthereumBlockState const& _block, FH32 const&
     size_t iAcc = hexOrDecStringToInt(_addrHash.asString());
     spDataObject constructResponse (new DataObject());
     spDataObject emptyList(new DataObject(DataType::Object));
-    (*constructResponse)["addressMap"].copyFrom(emptyList);
+    (*constructResponse).atKeyPointer("addressMap") = emptyList;
     for (auto const& acc : _block.state().accounts())
     {
         if (k++ + 1 < iAcc)  // The first key is 1 must be included
@@ -34,7 +34,7 @@ spDataObject constructEthGetBlockBy(EthereumBlockState const& _block)
     spDataObject constructResponse = _block.header()->asDataObject();
 
     spDataObject transactionArray(new DataObject(DataType::Array));
-    (*constructResponse)["transactions"].copyFrom(transactionArray);
+    (*constructResponse).atKeyPointer("transactions") = transactionArray;
     for (auto const& tr : _block.transactions())
     {
         spDataObject fullTransaction = tr->asDataObject();
@@ -46,8 +46,8 @@ spDataObject constructEthGetBlockBy(EthereumBlockState const& _block)
         (*constructResponse)["transactions"].addArrayObject(fullTransaction);
     }
 
-    spDataObject arr(DataType::Array);
-    (*constructResponse)["uncles"].copyFrom(arr);
+    spDataObject arr(new DataObject(DataType::Array));
+    (*constructResponse).atKeyPointer("uncles") = arr;
     for (auto const& un : _block.uncles())
     {
         spDataObject unHash(new DataObject(un->hash().asString()));
@@ -71,8 +71,8 @@ spDataObject constructStorageRangeAt(
     if (_block.state().hasAccount(_address))
     {
         (*constructResponse)["complete"].setBool(true);
-        spDataObject obj(new DataObject());
-        (*constructResponse)["storage"].copyFrom(obj);
+        spDataObject obj(new DataObject(DataType::Object));
+        (*constructResponse).atKeyPointer("storage") = obj;
         (*constructResponse)["nextKey"] = FH32::zero().asString();
         if (_block.state().getAccount(_address).hasStorage())
         {
@@ -82,7 +82,7 @@ spDataObject constructStorageRangeAt(
             {
                 if (iStore++ + 1 < iBegin)
                     continue;
-                DataObject& record = (*constructResponse)[fto_string(iStore)];
+                DataObject& record = (*obj)[fto_string(iStore)];
                 record["key"] = std::get<0>(el.second)->asString();
                 record["value"] = std::get<1>(el.second)->asString();
                 record.performModifier(mod_removeLeadingZerosFromHexValuesEVEN);

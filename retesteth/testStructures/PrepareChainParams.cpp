@@ -16,7 +16,7 @@ SetChainParamsArgs prepareChainParams(
     cfg.validateForkAllowed(_net);
 
     spDataObject genesis(new DataObject());
-    (*genesis).copyFrom(cfg.getGenesisTemplate(_net).getCContent());
+    (*genesis).copyFrom(cfg.getGenesisTemplate(_net).getCContent()); // TODO need copy?
     (*genesis)["sealEngine"] = sealEngineToStr(_engine);
 
     (*genesis)["genesis"]["author"] = _env.currentCoinbase().asString();

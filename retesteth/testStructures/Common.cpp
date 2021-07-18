@@ -248,8 +248,8 @@ spDataObject convertDecStateToHex(DataObject const& _data, solContracts const& _
 {
     // -- Compile LLL in pre state into byte code if not already
     // -- Convert State::Storage keys/values into hex
-    spDataObject tmpD;
-    tmpD.getContent().copyFrom(_data);
+    spDataObject tmpD(new DataObject());
+    tmpD.getContent().copyFrom(_data); // TODO copy HERE time consuming!!!
     for (auto& acc2 : (*tmpD).getSubObjectsUnsafe())
     {
         DataObject& acc = acc2.getContent();
@@ -271,8 +271,8 @@ spDataObject convertDecStateToHex(DataObject const& _data, solContracts const& _
 spDataObject convertDecBlockheaderIncompleteToHex(DataObject const& _data)
 {
     // Convert to HEX
-    spDataObject tmpD;
-    (*tmpD).copyFrom(_data);
+    spDataObject tmpD(new DataObject());
+    (*tmpD).copyFrom(_data);               // TODO copy time consuming!!!
     (*tmpD).removeKey("RelTimestamp");     // BlockchainTestFiller fields
     (*tmpD).removeKey("chainname");        // BlockchainTestFiller fields
 

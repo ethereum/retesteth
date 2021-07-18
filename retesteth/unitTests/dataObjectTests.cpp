@@ -794,22 +794,19 @@ BOOST_AUTO_TEST_CASE(dataobject_jsonOrder)
 
 BOOST_AUTO_TEST_CASE(dataobject_replace)
 {
-    spDataObject _data(new DataObject());
-    spDataObject _data2(new DataObject());
-    spDataObject _data3(new DataObject());
-    DataObject& data = _data.getContent();
-    DataObject& data2 = _data2.getContent();
-    DataObject& data3 = _data3.getContent();
-    data2.setKey("key2");
-    data2.setString("value2");
-    data3.setKey("key3");
-    data3.setString("value3");
+    spDataObject data(new DataObject());
+    spDataObject data2(new DataObject());
+    spDataObject data3(new DataObject());
+    (*data2).setKey("key2");
+    (*data2).setString("value2");
+    (*data3).setKey("key3");
+    (*data3).setString("value3");
 
-    data["field1"].copyFrom(data3); // null object with key "field1" keep the key "field1"
-    BOOST_CHECK(data.asJson(0,false) == "{\"field1\":\"value3\"}");
+    (*data).atKeyPointer("field1") = data3; // null object with key "field1" keep the key "field1"
+    BOOST_CHECK(data->asJson(0,false) == "{\"field1\":\"value3\"}");
 
-    data["field1"].copyFrom(data2); // not null object with key "field1" replaces the key "field1" to data2's key
-    BOOST_CHECK(data.asJson(0,false) == "{\"key2\":\"value2\"}");
+    (*data).atKeyPointer("field1") = data2; // not null object with key "field1" replaces the key "field1" to data2's key
+    BOOST_CHECK(data->asJson(0,false) == "{\"key2\":\"value2\"}");
 }
 
 BOOST_AUTO_TEST_CASE(dataobject_arrayhell)

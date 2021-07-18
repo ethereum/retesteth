@@ -26,6 +26,6 @@ VALUE calculateGasLimit(VALUE const& _parentGasLimit, VALUE const& _parentGasUse
 VALUE calculateEthashDifficulty(
     ChainOperationParams const& _chainParams, spBlockHeader const& _bi, spBlockHeader const& _parent);
 VALUE calculateEIP1559BaseFee(ChainOperationParams const& _chainParams, spBlockHeader const& _bi, spBlockHeader const& _parent);
-State restoreFullState(DataObject const& _toolState);
+State restoreFullState(DataObject& _toolState);
 
 }  // namespace toolimpl

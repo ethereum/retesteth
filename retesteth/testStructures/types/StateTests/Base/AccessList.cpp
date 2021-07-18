@@ -13,7 +13,8 @@ AccessListElement::AccessListElement(DataObject const& _data)
         m_storageKeys.push_back(spFH32(new FH32(dev::toCompactHexPrefixed(dev::u256(el->asString()), 32))));
 
     requireJsonFields(_data, "AccessListElement " + _data.getKey(),
-        {{"address", {{DataType::String}, jsonField::Required}}, {"storageKeys", {{DataType::Array}, jsonField::Required}}});
+        {{"address", {{DataType::String}, jsonField::Required}},
+         {"storageKeys", {{DataType::Array}, jsonField::Required}}});
 }
 
 AccessList::AccessList(DataObject const& _data)
@@ -30,7 +31,7 @@ spDataObject AccessList::asDataObject() const
         spDataObject accessListElement(new DataObject());
         (*accessListElement)["address"] = el->address().asString();
         spDataObject keys(new DataObject(DataType::Array));
-        (*accessListElement)["storageKeys"].copyFrom(keys);
+        (*accessListElement).atKeyPointer("storageKeys") = keys;
         for (auto const& el2 : el->keys())
         {
             spDataObject k(new DataObject(el2->asString()));

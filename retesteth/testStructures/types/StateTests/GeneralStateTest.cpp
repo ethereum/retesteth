@@ -30,7 +30,9 @@ StateTestInFilled::StateTestInFilled(DataObject const& _data)
     m_env = GCP_SPointer<StateTestEnv>(new StateTestEnv(_data.atKey("env")));
 
     // -- Some tests has storage keys/values with leading zeros. Convert it to hex value
-    DataObject tmpD = _data.atKey("pre");
+    spDataObject _tmpD(new DataObject());
+    (*_tmpD).copyFrom(_data.atKey("pre"));
+    DataObject& tmpD = _tmpD.getContent();
     for (auto& acc2 : tmpD.getSubObjectsUnsafe())
     {
         DataObject& acc = acc2.getContent();

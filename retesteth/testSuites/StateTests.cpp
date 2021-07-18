@@ -94,9 +94,9 @@ void checkUnexecutedTransactions(std::vector<TransactionInGeneralSection> const&
 
 
 /// Generate a blockchain test from state test filler
-DataObject FillTestAsBlockchain(StateTestInFiller const& _test)
+spDataObject FillTestAsBlockchain(StateTestInFiller const& _test)
 {
-    DataObject filledTest;
+    spDataObject filledTest(new DataObject());
     SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
     std::vector<TransactionInGeneralSection> txs = _test.GeneralTr().buildTransactions();
 
@@ -149,55 +149,55 @@ DataObject FillTestAsBlockchain(StateTestInFiller const& _test)
                     VALUE const& balanceCorrection = cfg.getRewardMap().at(fork).getCContent();
                     mexpect.correctMiningReward(_test.Env().currentCoinbase(), balanceCorrection);
 
-                    DataObject aBlockchainTest;
+                    spDataObject aBlockchainTest(new DataObject());
                     if (_test.hasInfo())
-                        aBlockchainTest["_info"]["comment"] = _test.Info().comment();
+                        (*aBlockchainTest)["_info"]["comment"] = _test.Info().comment();
                     EthGetBlockBy genesisBlock(session.eth_getBlockByNumber(0, Request::FULLOBJECTS));
-                    aBlockchainTest["genesisBlockHeader"] = genesisBlock.header()->asDataObject();
-                    aBlockchainTest["pre"] = _test.Pre().asDataObject();
+                    (*aBlockchainTest).atKeyPointer("genesisBlockHeader") = genesisBlock.header()->asDataObject();
+                    (*aBlockchainTest).atKeyPointer("pre") = _test.Pre().asDataObject();
 
                     try
                     {
                         State postState(getRemoteState(session));
                         compareStates(mexpect, postState);
-                        aBlockchainTest["postState"] = postState.asDataObject(ExportOrder::OldStyle);
+                        (*aBlockchainTest).atKeyPointer("postState") = postState.asDataObject(ExportOrder::OldStyle);
                     }
                     catch(StateTooBig const&)
                     {
                         compareStates(mexpect, session);
-                        aBlockchainTest["postStateHash"] = remoteBlock.header()->stateRoot().asString();
+                        (*aBlockchainTest)["postStateHash"] = remoteBlock.header()->stateRoot().asString();
                     }
 
-                    aBlockchainTest["network"] = fork.asString();
-                    aBlockchainTest["sealEngine"] = sealEngineToStr(SealEngine::NoProof);
-                    aBlockchainTest["lastblockhash"] = remoteBlock.header()->hash().asString();
-                    aBlockchainTest["genesisRLP"] = genesisBlock.getRLPHeaderTransactions().asString();
+                    (*aBlockchainTest)["network"] = fork.asString();
+                    (*aBlockchainTest)["sealEngine"] = sealEngineToStr(SealEngine::NoProof);
+                    (*aBlockchainTest)["lastblockhash"] = remoteBlock.header()->hash().asString();
+                    (*aBlockchainTest)["genesisRLP"] = genesisBlock.getRLPHeaderTransactions().asString();
 
-                    DataObject block;
-                    block["rlp"] = remoteBlock.getRLPHeaderTransactions().asString();
-                    block["blockHeader"] = remoteBlock.header()->asDataObject();
-                    block["transactions"] = DataObject(DataType::Array);
+                    spDataObject block(new DataObject());
+                    (*block)["rlp"] = remoteBlock.getRLPHeaderTransactions().asString();
+                    (*block).atKeyPointer("blockHeader") = remoteBlock.header()->asDataObject();
+                    (*block).atKeyPointer("transactions") = spDataObject(new DataObject(DataType::Array));
                     if (testException.empty())
-                        block["transactions"].addArrayObject(tr.transaction()->asDataObject());
-                    block["uncleHeaders"] = DataObject(DataType::Array);
+                        (*block)["transactions"].addArrayObject(tr.transaction()->asDataObject());
+                    (*block).atKeyPointer("uncleHeaders") = spDataObject(new DataObject(DataType::Array));
 
                     if (!testException.empty())
                     {
-                        DataObject trInfo;
-                        trInfo["valid"] = "false";
-                        trInfo["rawBytes"] = tr.transaction()->getRawBytes().asString();
-                        trInfo["exception"] = testException;
-                        block["transactionSequence"].addArrayObject(trInfo);
+                        spDataObject trInfo(new DataObject());
+                        (*trInfo)["valid"] = "false";
+                        (*trInfo)["rawBytes"] = tr.transaction()->getRawBytes().asString();
+                        (*trInfo)["exception"] = testException;
+                        (*block)["transactionSequence"].addArrayObject(trInfo);
                     }
-                    aBlockchainTest["blocks"].addArrayObject(block);
+                    (*aBlockchainTest)["blocks"].addArrayObject(block);
 
                     string dataPostfix = "_d" + tr.dataIndS() + "g" + tr.gasIndS() + "v" + tr.valueIndS();
                     dataPostfix += "_" + fork.asString();
 
-                    if (filledTest.count(_test.testName() + dataPostfix))
+                    if (filledTest->count(_test.testName() + dataPostfix))
                         ETH_ERROR_MESSAGE("The test filler contain redundunt expect section: " + _test.testName() + dataPostfix);
 
-                    filledTest[_test.testName() + dataPostfix] = aBlockchainTest;
+                    (*filledTest).atKeyPointer(_test.testName() + dataPostfix) = aBlockchainTest;
                     session.test_rewindToBlock(0);
                 }  // txs
             }      // if expect.count(fork)
@@ -208,25 +208,25 @@ DataObject FillTestAsBlockchain(StateTestInFiller const& _test)
 }
 
 /// Rewrite the test file. Fill General State Test
-DataObject FillTest(StateTestInFiller const& _test)
+spDataObject FillTest(StateTestInFiller const& _test)
 {
-    DataObject filledTest;
-    filledTest.setAutosort(true);
+    spDataObject filledTest(new DataObject());
+    (*filledTest).setAutosort(true);
     TestOutputHelper::get().setCurrentTestName(_test.testName());
 
     SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
 
     if (_test.hasInfo())
-        filledTest["_info"]["comment"] = _test.Info().comment();
+        (*filledTest)["_info"]["comment"] = _test.Info().comment();
 
-    filledTest["env"] = _test.Env().asDataObject();
+    (*filledTest).atKeyPointer("env") = _test.Env().asDataObject();
 
     // Explicitly print default basefee for filled state tests
-    if (!filledTest.atKey("env").count("currentBaseFee"))
-        filledTest["env"]["currentBaseFee"] = "0x0a";
+    if (!filledTest->atKey("env").count("currentBaseFee"))
+        (*filledTest)["env"]["currentBaseFee"] = "0x0a";
 
-    filledTest["pre"] = _test.Pre().asDataObject();
-    filledTest["transaction"] = _test.GeneralTr().asDataObject();
+    (*filledTest).atKeyPointer("pre") = _test.Pre().asDataObject();
+    (*filledTest).atKeyPointer("transaction") = _test.GeneralTr().asDataObject();
 
     // Gather Transactions from general transaction section
     std::vector<TransactionInGeneralSection> txs = _test.GeneralTr().buildTransactions();
@@ -234,7 +234,7 @@ DataObject FillTest(StateTestInFiller const& _test)
     {
         // Fill up the label map to tx.data
         if (!tx.transaction()->dataLabel().empty())
-            filledTest["_info"]["labels"].addSubObject(DataObject(tx.dataIndS(), tx.transaction()->dataLabel()));
+            (*filledTest)["_info"]["labels"].addSubObject(spDataObject(new DataObject(tx.dataIndS(), tx.transaction()->dataLabel())));
     }
 
     // run transactions on all networks that we need
@@ -248,8 +248,8 @@ DataObject FillTest(StateTestInFiller const& _test)
             !Options::getDynamicOptions().getCurrentConfig().checkForkAllowed(fork))
             networkSkip = true;
 
-        DataObject forkResults;
-        forkResults.setKey(fork.asString());
+        spDataObject forkResults(new DataObject());
+        (*forkResults).setKey(fork.asString());
 
         auto const p = prepareChainParams(fork, SealEngine::NoReward, _test.Pre(), _test.Env(), ParamsContext::StateTests);
         session.test_setChainParams(p);
@@ -312,39 +312,39 @@ DataObject FillTest(StateTestInFiller const& _test)
                         compareStates(expect.result(), session);
                     }
 
-                    DataObject indexes;
-                    DataObject transactionResults;
-                    indexes["data"] = tr.dataInd();
-                    indexes["gas"] = tr.gasInd();
-                    indexes["value"] = tr.valueInd();
+                    spDataObject indexes(new DataObject());
+                    spDataObject transactionResults(new DataObject());
+                    (*indexes)["data"] = tr.dataInd();
+                    (*indexes)["gas"] = tr.gasInd();
+                    (*indexes)["value"] = tr.valueInd();
 
-                    transactionResults["indexes"] = indexes;
-                    transactionResults["hash"] = blockInfo.header()->stateRoot().asString();
-                    transactionResults["txbytes"] = tr.transaction()->getRawBytes().asString();
+                    (*transactionResults).atKeyPointer("indexes") = indexes;
+                    (*transactionResults)["hash"] = blockInfo.header()->stateRoot().asString();
+                    (*transactionResults)["txbytes"] = tr.transaction()->getRawBytes().asString();
                     if (!testException.empty())
-                        transactionResults["expectException"] = testException;
+                        (*transactionResults)["expectException"] = testException;
 
                     // Fill up the loghash (optional)
                     if (Options::getDynamicOptions().getCurrentConfig().cfgFile().checkLogsHash())
                     {
                         FH32 logHash(session.test_getLogHash(trHash));
                         if (!logHash.isZero())
-                            transactionResults["logs"] = logHash.asString();
+                            (*transactionResults)["logs"] = logHash.asString();
                     }
 
-                    forkResults.addArrayObject(transactionResults);
+                    (*forkResults).addArrayObject(transactionResults);
                     session.test_rewindToBlock(VALUE(0));
                 }
                 if (expectFoundTransaction == false)
                 {
                     ETH_ERROR_MESSAGE("Expect section does not cover any transaction: \n" + expect.initialData().asJson() +
-                                      "\n" + expect.result().asDataObject().asJson());
+                                      "\n" + expect.result().asDataObject()->asJson());
                 }
             }
         }
 
-        if (forkResults.getSubObjects().size() > 0)
-            filledTest["post"].addSubObject(forkResults);
+        if (forkResults->getSubObjects().size() > 0)
+            (*filledTest)["post"].addSubObject(forkResults);
     }
 
     checkUnexecutedTransactions(txs);
@@ -452,12 +452,12 @@ void RunTest(StateTestInFilled const& _test)
                     if (actualHash != expectedPostHash)
                     {
                         if (Options::get().logVerbosity >= 5)
-                            ETH_LOG("\nState Dump: \n" + getRemoteState(session).asDataObject().asJson(), 5);
+                            ETH_LOG("\nState Dump: \n" + getRemoteState(session).asDataObject()->asJson(), 5);
                         ETH_ERROR_MESSAGE("Post hash mismatch remote: " + actualHash.asString() +
                                           ", expected: " + expectedPostHash.asString());
                     }
                     if (Options::get().poststate)
-                        ETH_LOG("\nRunning test State Dump:" + TestOutputHelper::get().testInfo().errorDebug() + cDefault + " \n" + getRemoteState(session).asDataObject().asJson(), 1);
+                        ETH_LOG("\nRunning test State Dump:" + TestOutputHelper::get().testInfo().errorDebug() + cDefault + " \n" + getRemoteState(session).asDataObject()->asJson(), 1);
 
                     // Validate that txbytes field has the transaction data described in test `transaction` field.
                     spBYTES const& expectedBytesPtr = result.bytesPtr();
@@ -485,7 +485,7 @@ void RunTest(StateTestInFilled const& _test)
             } //ForTransactions
 
             ETH_ERROR_REQUIRE_MESSAGE(resultHaveCorrespondingTransaction,
-                "Test `post` section has expect section without corresponding transaction!" + result.asDataObject().asJson());
+                "Test `post` section has expect section without corresponding transaction!" + result.asDataObject()->asJson());
         }
     }
 
@@ -497,19 +497,19 @@ void RunTest(StateTestInFilled const& _test)
 
 namespace test
 {
-DataObject StateTestSuite::doTests(DataObject const& _input, TestSuiteOptions& _opt) const
+spDataObject StateTestSuite::doTests(DataObject const& _input, TestSuiteOptions& _opt) const
 {
     TestOutputHelper::get().setCurrentTestInfo(TestInfo("StateTestSuite::doTests init"));
     if (_opt.doFilling)
     {
-        DataObject filledTest;
+        spDataObject filledTest(new DataObject());
         GeneralStateTestFiller filler(_input);
         StateTestInFiller const& test = filler.tests().at(0);
         checkTestNameIsEqualToFileName(test.testName());
         if (Options::get().fillchain)
             filledTest = FillTestAsBlockchain(test);
         else
-            filledTest.addSubObject(test.testName(), FillTest(test));
+            (*filledTest).addSubObject(test.testName(), FillTest(test));
 
         TestOutputHelper::get().registerTestRunSuccess();
         return filledTest;
@@ -537,7 +537,7 @@ DataObject StateTestSuite::doTests(DataObject const& _input, TestSuiteOptions& _
 
             // Just check the test structure if running with --checkhash
             if (Options::get().checkhash)
-                return DataObject();
+                return spDataObject(new DataObject());
 
             for (auto const& test : filledTest.tests())
             {
@@ -546,6 +546,6 @@ DataObject StateTestSuite::doTests(DataObject const& _input, TestSuiteOptions& _
             }
         }
     }
-    return DataObject();
+    return spDataObject(new DataObject());
 }
 }// Namespace Close

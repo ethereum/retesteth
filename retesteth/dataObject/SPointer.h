@@ -92,6 +92,8 @@ public:
         }
     }
 
+    T* pointee() { return _pointee; }
+
     // Replace one pointer with another
     GCP_SPointer& operator=(GCP_SPointer const& rhs)
     {

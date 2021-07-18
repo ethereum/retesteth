@@ -8,6 +8,7 @@ namespace teststruct
 {
 SetChainParamsArgs::SetChainParamsArgs(DataObject const& _data)
 {
+    m_params = spDataObject(new DataObject());
     (*m_params).copyFrom(_data.atKey("params"));  // Client specific params
     m_preState = spState(new State(_data.atKey("accounts")));
     m_sealEngine = sealEngineFromStr(_data.atKey("sealEngine").asString());

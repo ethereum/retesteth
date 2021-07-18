@@ -1,6 +1,7 @@
 #include <dataObject/DataObject.h>
 #include <algorithm>
 #include <sstream>
+#include <iostream>
 using namespace dataobject;
 
 /// Default dataobject is null
@@ -190,13 +191,31 @@ void DataObject::replace(DataObject const& _value)
     setAutosort(_value.isAutosort());
 }
 
-spDataObject DataObject::atKeyPointer(std::string const& _key)
+DataObjectK& DataObjectK::operator=(spDataObject const& _value)
+{
+    if (m_data.count(m_key))
+    {
+        m_data.removeKey(m_key);
+        if(_value.getCContent().getKey().empty())
+            throw DataObjectException("DataObjectK::operator=(spDataObject const& _value)  _value without key, but key required!");
+        m_data.addSubObject(_value.getCContent().getKey(), _value);
+    }
+    else
+        m_data.addSubObject(m_key, _value);
+    return *this;
+}
+
+spDataObject DataObject::atKeyPointerUnsafe(std::string const& _key)
 {
     if (m_subObjectKeys.count(_key))
         return m_subObjectKeys.at(_key);
+    _assert(false, "count(_key) _key=" + _key + " (DataObject::atKeyPointerUnsafe)");
+    return spDataObject(0);
+}
 
-    _assert(false, "count(_key) _key=" + _key + " (DataObject::atKeyPointer)");
-    return m_subObjects.at(0);
+DataObjectK DataObject::atKeyPointer(std::string const& _key)
+{
+    return DataObjectK(_key, *this);
 }
 
 DataObject const& DataObject::atKey(std::string const& _key) const
@@ -308,6 +327,7 @@ void DataObject::clear(DataType _type)
     m_strKey = "";
     m_strVal = "";
     m_subObjects.clear();
+    m_subObjectKeys.clear();
     m_type = _type;
 }
 

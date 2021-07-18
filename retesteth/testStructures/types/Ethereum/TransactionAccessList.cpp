@@ -190,7 +190,7 @@ spDataObject TransactionAccessList::asDataObject(ExportOrder _order) const
     spDataObject out = TransactionLegacy::asDataObject(_order);
 
     (*out)["chainId"] = "0x01";
-    (*out)["accessList"].copyFrom(m_accessList->asDataObject());
+    (*out).atKeyPointer("accessList") = m_accessList->asDataObject();
     (*out)["type"] = "0x01";
     if (_order == ExportOrder::ToolStyle)
     {

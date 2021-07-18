@@ -19,6 +19,8 @@ enum DataType
     NotInitialized
 };
 
+class DataObjectK;
+
 /// DataObject
 /// A data sturcture to manage data from json, yml
 class DataObject : public GCP_SPointerBase
@@ -73,7 +75,8 @@ public:
     void removeKey(std::string const& _key);  // vector<element> erase method with `replace()` function
 
     DataObject const& atKey(std::string const& _key) const;
-    spDataObject atKeyPointer(std::string const& _key);
+    DataObjectK atKeyPointer(std::string const& _key);
+    spDataObject atKeyPointerUnsafe(std::string const& _key);
     DataObject& atKeyUnsafe(std::string const& _key);
     DataObject const& at(size_t _pos) const;
     DataObject& atUnsafe(size_t _pos);
@@ -121,6 +124,21 @@ private:
 };
 
 typedef GCP_SPointer<DataObject> spDataObject;
+
+// The key assigner
+class DataObjectK
+{
+public:
+    DataObjectK(string const& _key, DataObject& _container)
+      : m_key(_key), m_data(_container) {}
+    DataObjectK& operator=(spDataObject const& _value);
+    DataObject& getContent() { return m_data; }
+    operator spDataObject() { return m_data.atKeyPointerUnsafe(m_key); }
+
+private:
+    string m_key;
+    DataObject& m_data;
+};
 
 // Find index that _key should take place in when being added to ordered _objects by key
 size_t findOrderedKeyPosition(string const& _key, vector<spDataObject> const& _objects);

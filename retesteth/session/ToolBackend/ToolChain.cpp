@@ -286,7 +286,7 @@ ToolResponse ToolChain::mineBlockOnTool(EthereumBlockState const& _block, SealEn
     // Construct block rpc response
     ToolResponse toolResponse(ConvertJsoncppStringToData(outPathContent));
     spDataObject returnState = ConvertJsoncppStringToData(outAllocPathContent);
-    toolResponse.attachState(restoreFullState(returnState));
+    toolResponse.attachState(restoreFullState(returnState.getContent()));
 
     if (traceCondition)
     {

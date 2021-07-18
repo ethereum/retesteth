@@ -39,9 +39,11 @@ string const expectSectionCommon = R"(
 
 StateTestFillerExpectSection makeExpectSection(string const& _tr, string const& _exp)
 {
+    spDataObject res = ConvertJsoncppStringToData(_tr);
     spStateTestFillerTransaction spTransaction =
-        spStateTestFillerTransaction(new StateTestFillerTransaction(ConvertJsoncppStringToData(_tr)));
-    return StateTestFillerExpectSection(ConvertJsoncppStringToData(_exp), spTransaction);
+        spStateTestFillerTransaction(new StateTestFillerTransaction(res));
+    spDataObject res2 = ConvertJsoncppStringToData(_exp);
+    return StateTestFillerExpectSection(res2, spTransaction);
 }
 
 BOOST_FIXTURE_TEST_SUITE(ExpectSectionSuite, Initializer)

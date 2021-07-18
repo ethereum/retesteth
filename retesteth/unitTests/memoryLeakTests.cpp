@@ -70,6 +70,9 @@ BOOST_AUTO_TEST_CASE(smartPointerVector)
     BOOST_CHECK(vec.at(1)->asBigInt() == 24);
     A.getContent() += 12;
     BOOST_CHECK(vec.at(1)->asBigInt() == 36);
+
+    //A = B;
+    //BOOST_CHECK(vec.at(1)->asBigInt() == 13);
 }
 
 
