@@ -163,8 +163,8 @@ spDataObject ConvertJsoncppStringToData(
         if (i == _input.length())
             throw DataObjectException() << errorPrefix + "unexpected end of json! around: " + printDebug(i);
 
-        bool escapeChar = (i > 0 && _input[i - 1] == '\\');
-        if (_input[i] == '"' && !escapeChar)
+        bool escapeChar = (i > 0 && _input.at(i - 1) == '\\');
+        if (_input.at(i) == '"' && !escapeChar)
         {
             spDataObject obj(new DataObject());
             string const key = parseKeyValue(_input, i);
@@ -223,7 +223,7 @@ spDataObject ConvertJsoncppStringToData(
         }
 
         keyEncountered = false;
-        if (_input[i] == '{')
+        if (_input.at(i) == '{')
         {
             if (actualRoot->type() == DataType::Array || actualRoot->type() == DataType::Object)
             {
@@ -238,7 +238,7 @@ spDataObject ConvertJsoncppStringToData(
             actualRoot->getSubObjectsUnsafe().pop_back();
             continue;
         }
-        if (_input[i] == '[')
+        if (_input.at(i) == '[')
         {
             if (actualRoot->type() == DataType::Array || actualRoot->type() == DataType::Object)
             {
@@ -257,7 +257,7 @@ spDataObject ConvertJsoncppStringToData(
             continue;
         }
 
-        if (_input[i] == ']' || _input[i] == '}')
+        if (_input.at(i) == ']' || _input.at(i) == '}')
         {
             // if (actualRoot->type() == DataType::Null)
             //    throw DataObjectException()
@@ -288,12 +288,12 @@ spDataObject ConvertJsoncppStringToData(
 
                 if (i + 1 < _input.length())
                 {
-                    if (_input[i + 1] == ',')
+                    if (_input.at(i + 1) == ',')
                     {
                         i++;
                         continue;
                     }
-                    if (_input[i + 1] == ':')
+                    if (_input.at(i + 1) == ':')
                         throw DataObjectException()
                             << errorPrefix + "unexpected ':' after closing an object/array! around: " + printDebug(i);
                 }
@@ -336,7 +336,7 @@ spDataObject ConvertJsoncppStringToData(
                 actualRoot = applyDepth.at(applyDepth.size() - 1);
                 applyDepth.pop_back();
             }
-            if (_input[i] != ',')
+            if (_input.at(i) != ',')
                 i--;
             continue;
         }
