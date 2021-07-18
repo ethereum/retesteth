@@ -227,16 +227,36 @@ ToolResponse ToolChain::mineBlockOnTool(EthereumBlockState const& _block, SealEn
     writeFile(allocPath.string(), allocPathContent);
 
     // txs.json file
-    string const txsfile = _block.transactions().size() ? "txs.rlp" : "txs.json";
+    bool exportRLP = false;
+    string const txsfile = _block.transactions().size() && exportRLP ? "txs.rlp" : "txs.json";
     fs::path txsPath = m_tmpDir / txsfile;
 
-    dev::RLPStream txsout(_block.transactions().size());
-    for (auto const& tr : _block.transactions())
-        txsout.appendRaw(tr->asRLPStream().out());
-
-    string const txsPathContent = _block.transactions().size() ?
-                "\"" + dev::toString(txsout.out()) + "\"" : "[]";
-    writeFile(txsPath.string(), txsPathContent);
+    string txsPathContent;
+    if (exportRLP)
+    {
+        dev::RLPStream txsout(_block.transactions().size());
+        for (auto const& tr : _block.transactions())
+            txsout.appendRaw(tr->asRLPStream().out());
+        string txsPathContent = _block.transactions().size() ?
+                    "\"" + dev::toString(txsout.out()) + "\"" : "[]";
+        writeFile(txsPath.string(), txsPathContent);
+    }
+    else
+    {
+        DataObject txs(DataType::Array);
+        static u256 c_maxGasLimit = u256("0xffffffffffffffff");
+        for (auto const& tr : _block.transactions())
+        {
+            if (tr->gasLimit().asBigInt() <= c_maxGasLimit)  // tool fails on limits here.
+                txs.addArrayObject(tr->asDataObject(ExportOrder::ToolStyle));
+            else
+                ETH_WARNING(
+                    "Retesteth rejecting tx with gasLimit > 64 bits for tool" + TestOutputHelper::get().testInfo().errorDebug());
+        }
+        Options::getCurrentConfig().performFieldReplace(txs, FieldReplaceDir::RetestethToClient);
+        txsPathContent = txs.asJson();
+        writeFile(txsPath.string(), txsPathContent);
+    }
 
     // output file
     fs::path outPath = m_tmpDir / "out.json";
