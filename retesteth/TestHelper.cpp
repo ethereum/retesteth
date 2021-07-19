@@ -556,7 +556,7 @@ fs::path createUniqueTmpDirectory() {
     std::lock_guard<std::mutex> lock(g_createUniqueTmpDirectory);
     boost::uuids::uuid uuid = boost::uuids::random_generator()();
     string uuidStr = boost::lexical_cast<string>(uuid);
-    auto tpath = fs::temp_directory_path();
+    static auto tpath = fs::exists("/dev/shm") ? fs::path("/dev/shm") : fs::temp_directory_path();
     if (fs::exists(tpath / uuidStr))
         ETH_FAIL_MESSAGE("boost create tmp directory which already exist!");
     boost::filesystem::create_directory(tpath / uuidStr);
