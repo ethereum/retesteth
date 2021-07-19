@@ -46,7 +46,7 @@ VALUE RPCImpl::eth_getTransactionCount(FH20 const& _address, VALUE const& _block
 
 VALUE RPCImpl::eth_blockNumber()
 {
-    return VALUE(rpcCall("eth_blockNumber", {}));
+    return VALUE(rpcCall("eth_blockNumber", {}).getCContent());
 }
 
 EthGetBlockBy RPCImpl::eth_getBlockByHash(FH32 const& _hash, Request _fullObjects)
@@ -132,20 +132,20 @@ void RPCImpl::test_setChainParams(SetChainParamsArgs const& _config)
     spDataObject data = _config.asDataObject();
     cfg.performFieldReplace(*data, FieldReplaceDir::RetestethToClient);
 
-    auto res =  rpcCall("test_setChainParams", {data->asJson()});
-    ETH_FAIL_REQUIRE_MESSAGE(res == true, "remote test_setChainParams = false");
+    spDataObject res =  rpcCall("test_setChainParams", {data->asJson()});
+    ETH_FAIL_REQUIRE_MESSAGE(*res == true, "remote test_setChainParams = false");
 }
 
 void RPCImpl::test_rewindToBlock(VALUE const& _blockNr)
 {
-    ETH_FAIL_REQUIRE_MESSAGE(
-        rpcCall("test_rewindToBlock", {_blockNr.asDecString()}) == true, "remote test_rewintToBlock = false");
+    spDataObject res = rpcCall("test_rewindToBlock", {_blockNr.asDecString()});
+    ETH_FAIL_REQUIRE_MESSAGE(*res == true, "remote test_rewintToBlock = false");
 }
 
 void RPCImpl::test_modifyTimestamp(VALUE const& _timestamp)
 {
-    ETH_FAIL_REQUIRE_MESSAGE(
-        rpcCall("test_modifyTimestamp", {_timestamp.asDecString()}) == true, "test_modifyTimestamp was not successfull");
+    spDataObject res = rpcCall("test_modifyTimestamp", {_timestamp.asDecString()});
+    ETH_FAIL_REQUIRE_MESSAGE(*res == true, "test_modifyTimestamp was not successfull");
 }
 
 MineBlocksResult RPCImpl::test_mineBlocks(size_t _number)
