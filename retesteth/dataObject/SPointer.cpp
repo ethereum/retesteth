@@ -12,18 +12,17 @@ void throwException(std::string const& _ex)
     throw SPointerException(_ex);
 }
 
-std::mutex g_spMutexAdd;
-std::mutex g_spMutexDel;
-
-
+//std::mutex g_spMutexAdd;
+//std::mutex g_spMutexDel;
 void GCP_SPointerBase::AddRef()
 {
-    std::lock_guard<std::mutex> lock(g_spMutexAdd);
+    // very heavy. use thread unsafe pointer preferably
+    //std::lock_guard<std::mutex> lock(g_spMutexAdd);
     _nRef++;
 }
 int GCP_SPointerBase::DelRef()
 {
-    std::lock_guard<std::mutex> lock(g_spMutexDel);
+    //std::lock_guard<std::mutex> lock(g_spMutexDel);
     _nRef--;
     return _nRef;
 }
