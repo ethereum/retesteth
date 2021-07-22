@@ -5,6 +5,7 @@
 #include <retesteth/Options.h>
 #include <retesteth/configs/ClientConfig.h>
 #include <mutex>
+#include <algorithm>
 
 using namespace test;
 using namespace dev;
@@ -77,7 +78,11 @@ void mod_valueToCompactEvenHexPrefixed(DataObject& _obj)
         try
         {
             if (!(_obj.asString()[0] == '0' && _obj.asString()[1] == 'x'))
-                _obj.setString(toCompactHexPrefixed(_obj.asString(), 1));
+            {
+                string src = _obj.asString();
+                src.erase(std::remove(src.begin(), src.end(), '_'), src.end());
+                _obj.setString(toCompactHexPrefixed(src, 1));
+            }
         }
         catch (std::exception const& _ex)
         {
