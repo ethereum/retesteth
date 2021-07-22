@@ -5,70 +5,53 @@
 using namespace dataobject;
 
 /// Default dataobject is null
-DataObject::DataObject()
-{
-    m_type = DataType::NotInitialized;
-}
+DataObject::DataObject() { m_type = DataType::NotInitialized; }
 
 /// Define dataobject of _type, pass the value later (will check the value and _type)
-DataObject::DataObject(DataType _type)
-{
-    m_type = _type;
-}
+DataObject::DataObject(DataType _type) { m_type = _type; }
 
 /// Define dataobject of string
 DataObject::DataObject(std::string const& _str)
+  : m_strVal(_str)
 {
     m_type = DataType::String;
-    m_strVal = _str;
 }
 
 /// Define dataobject[_key] = string
 DataObject::DataObject(std::string const& _key, std::string const& _str)
+  : m_strKey(_key), m_strVal(_str)
 {
     m_type = DataType::String;
-    m_strVal = _str;
-    m_strKey = _key;
 }
 
 DataObject::DataObject(std::string const& _key, int _val)
+ : m_strKey(_key), m_intVal(_val)
 {
     m_type = DataType::Integer;
-    m_intVal = _val;
-    m_strKey = _key;
 }
 
 /// Define dataobject of int
 DataObject::DataObject(int _int)
+  : m_intVal(_int)
 {
     m_type = DataType::Integer;
-    m_intVal = _int;
 }
 
 /// Define dataobject of bool
 DataObject::DataObject(DataType type, bool _bool)
+  : m_boolVal(_bool)
 {
     m_type = type;
-    m_boolVal = _bool;
 }
 
 /// Get dataobject type
-DataType DataObject::type() const
-{
-    return m_type;
-}
+DataType DataObject::type() const { return m_type; }
 
 /// Set key of the dataobject
-void DataObject::setKey(std::string const& _key)
-{
-    m_strKey = _key;
-}
+void DataObject::setKey(std::string const& _key) { m_strKey = _key; }
 
 /// Get key of the dataobject
-std::string const& DataObject::getKey() const
-{
-    return m_strKey;
-}
+std::string const& DataObject::getKey() const { return m_strKey; }
 
 /// Get vector of subobjects
 std::vector<spDataObject> const& DataObject::getSubObjects() const

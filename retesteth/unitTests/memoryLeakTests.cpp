@@ -71,9 +71,9 @@ BOOST_AUTO_TEST_CASE(smartPointerVector)
     A.getContent() += 12;
     BOOST_CHECK(vec.at(1)->asBigInt() == 36);
 
-    //A = B;
-    //BOOST_CHECK(vec.at(1)->asBigInt() == 13);
+    // smart pointer changed outside of vector does not affect smart pointer stored in vector
+    A = B;
+    BOOST_CHECK(vec.at(1)->asBigInt() != 13);
 }
-
 
 BOOST_AUTO_TEST_SUITE_END()
