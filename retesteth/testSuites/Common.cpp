@@ -84,9 +84,11 @@ void compareTransactionException(spTransaction const& _tr, MineBlocksResult cons
     FH32 const& trHash = _tr->hash();
     string const remoteException = _mRes.getTrException(trHash);
     if (!_testException.empty() && remoteException.empty())
-        ETH_ERROR_MESSAGE("Client didn't reject transaction: (" + trHash.asString() + ") \n" + _tr->getRawBytes().asString());
+        ETH_ERROR_MESSAGE("Client didn't reject transaction: (" + trHash.asString() + ") \n" + _tr->getRawBytes().asString() +
+            "\nTest Expected: " + _testException);
     if (_testException.empty() && !remoteException.empty())
-        ETH_ERROR_MESSAGE("Client reject transaction expected to be valid: (" + trHash.asString() + ") \n" + _tr->getRawBytes().asString());
+        ETH_ERROR_MESSAGE("Client reject transaction expected to be valid: (" + trHash.asString() + ") \n" + _tr->getRawBytes().asString() +
+                          "\nReason: " + remoteException);
 
     if (!_testException.empty() && !remoteException.empty())
     {
