@@ -25,7 +25,7 @@ struct StateTestEnvBase : GCP_SPointerBase
     FH8 const& currentNonce() const { return m_currentNonce; }
     FH32 const& currentMixHash() const { return m_currentMixHash; }
     FH32 const& previousHash() const { return m_previousHash; }
-    DataObject const asDataObject() const;
+    spDataObject asDataObject() const;
 
     spVALUE const& currentBaseFee() const { return m_currentBaseFee; }
 

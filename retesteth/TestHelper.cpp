@@ -39,7 +39,7 @@ Json::Value readJson(fs::path const& _file)
 #endif
 
 /// Safely read the json file into DataObject
-DataObject readJsonData(fs::path const& _file, string const& _stopper, bool _autosort)
+spDataObject readJsonData(fs::path const& _file, string const& _stopper, bool _autosort)
 {
     try
     {
@@ -51,12 +51,12 @@ DataObject readJsonData(fs::path const& _file, string const& _stopper, bool _aut
     catch (std::exception const& _ex)
     {
         ETH_ERROR_MESSAGE(string("\nError when parsing file (") + _file.c_str() + ") " + _ex.what());
-        return DataObject();
+        return spDataObject(0);
     }
 }
 
 /// Safely read the yaml file into DataObject
-DataObject readYamlData(fs::path const& _file)
+spDataObject readYamlData(fs::path const& _file)
 {
     try
     {
@@ -68,7 +68,7 @@ DataObject readYamlData(fs::path const& _file)
     catch (std::exception const& _ex)
     {
         ETH_ERROR_MESSAGE(string("\nError when parsing file (") + _file.c_str() + ") " + _ex.what());
-        return DataObject();
+        return spDataObject(0);
     }
 }
 
@@ -222,8 +222,8 @@ void parseJsonStrValueIntoSet(DataObject const& _json, set<string>& _out)
     {
         for (auto const& val: _json.getSubObjects())
         {
-            ETH_ERROR_REQUIRE_MESSAGE(val.type() == DataType::String, "parseJsonStrValueIntoSet expected value type = string!");
-            _out.emplace(val.asString());
+            ETH_ERROR_REQUIRE_MESSAGE(val->type() == DataType::String, "parseJsonStrValueIntoSet expected value type = string!");
+            _out.emplace(val->asString());
         }
     }
     else
@@ -261,12 +261,12 @@ void parseJsonIntValueIntoSet(DataObject const& _json, set<int>& _out)
     {
         for (auto const& val: _json.getSubObjects())
         {
-            if (val.type() == DataType::Integer)
-                _out.emplace(val.asInt());
+            if (val->type() == DataType::Integer)
+                _out.emplace(val->asInt());
             else
             {
                 ETH_ERROR_REQUIRE_MESSAGE(
-                    val.type() == DataType::String, "parseJsonIntValueIntoSet expected value type = int, \"int-int\" range!");
+                    val->type() == DataType::String, "parseJsonIntValueIntoSet expected value type = int, \"int-int\" range!");
                 parseRange(val);
             }
         }
@@ -556,10 +556,11 @@ fs::path createUniqueTmpDirectory() {
     std::lock_guard<std::mutex> lock(g_createUniqueTmpDirectory);
     boost::uuids::uuid uuid = boost::uuids::random_generator()();
     string uuidStr = boost::lexical_cast<string>(uuid);
-    if (fs::exists(fs::temp_directory_path() / uuidStr))
+    static auto tpath = fs::exists("/dev/shm") ? fs::path("/dev/shm") : fs::temp_directory_path();
+    if (fs::exists(tpath / uuidStr))
         ETH_FAIL_MESSAGE("boost create tmp directory which already exist!");
-    boost::filesystem::create_directory(fs::temp_directory_path() / uuidStr);
-    return fs::temp_directory_path() / uuidStr;
+    boost::filesystem::create_directory(tpath / uuidStr);
+    return tpath / uuidStr;
 }
 
 }//namespace

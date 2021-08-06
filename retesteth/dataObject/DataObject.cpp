@@ -1,94 +1,84 @@
 #include <dataObject/DataObject.h>
 #include <algorithm>
 #include <sstream>
+#include <iostream>
 using namespace dataobject;
 
 /// Default dataobject is null
-DataObject::DataObject()
-{
-    m_type = DataType::NotInitialized;
-}
+DataObject::DataObject() { m_type = DataType::NotInitialized; }
 
 /// Define dataobject of _type, pass the value later (will check the value and _type)
-DataObject::DataObject(DataType _type)
-{
-    m_type = _type;
-}
+DataObject::DataObject(DataType _type) { m_type = _type; }
 
 /// Define dataobject of string
 DataObject::DataObject(std::string const& _str)
+  : m_strVal(_str)
 {
     m_type = DataType::String;
-    m_strVal = _str;
 }
 
 /// Define dataobject[_key] = string
 DataObject::DataObject(std::string const& _key, std::string const& _str)
+  : m_strKey(_key), m_strVal(_str)
 {
     m_type = DataType::String;
-    m_strVal = _str;
-    m_strKey = _key;
 }
 
 DataObject::DataObject(std::string const& _key, int _val)
+ : m_strKey(_key), m_intVal(_val)
 {
     m_type = DataType::Integer;
-    m_intVal = _val;
-    m_strKey = _key;
 }
 
 /// Define dataobject of int
 DataObject::DataObject(int _int)
+  : m_intVal(_int)
 {
     m_type = DataType::Integer;
-    m_intVal = _int;
 }
 
 /// Define dataobject of bool
 DataObject::DataObject(DataType type, bool _bool)
+  : m_boolVal(_bool)
 {
     m_type = type;
-    m_boolVal = _bool;
 }
 
 /// Get dataobject type
-DataType DataObject::type() const
-{
-    return m_type;
-}
+DataType DataObject::type() const { return m_type; }
 
 /// Set key of the dataobject
-void DataObject::setKey(std::string const& _key)
-{
-    m_strKey = _key;
-}
+void DataObject::setKey(std::string const& _key) { m_strKey = _key; }
 
 /// Get key of the dataobject
-std::string const& DataObject::getKey() const
-{
-    return m_strKey;
-}
+std::string const& DataObject::getKey() const { return m_strKey; }
 
 /// Get vector of subobjects
-std::vector<DataObject> const& DataObject::getSubObjects() const
+std::vector<spDataObject> const& DataObject::getSubObjects() const
 {
     return m_subObjects;
 }
 
+/// Get map of keys to subobjects
+std::map<string, spDataObject> const& DataObject::getSubObjectKeys() const
+{
+    return m_subObjectKeys;
+}
+
 /// Get ref vector of subobjects
-std::vector<DataObject>& DataObject::getSubObjectsUnsafe()
+std::vector<spDataObject>& DataObject::getSubObjectsUnsafe()
 {
     return m_subObjects;
 }
 
 /// Add new subobject
-DataObject& DataObject::addSubObject(DataObject const& _obj)
+DataObject& DataObject::addSubObject(spDataObject const& _obj)
 {
     return _addSubObject(_obj);
 }
 
 /// Add new subobject and set it's key
-DataObject& DataObject::addSubObject(std::string const& _key, DataObject const& _obj)
+DataObject& DataObject::addSubObject(std::string const& _key, spDataObject const& _obj)
 {
     return _addSubObject(_obj, _key);
 }
@@ -98,27 +88,14 @@ void DataObject::setSubObjectKey(size_t _index, std::string const& _key)
 {
     _assert(_index < m_subObjects.size(), "_index < m_subObjects.size() (DataObject::setSubObjectKey)");
     if (m_subObjects.size() > _index)
-        m_subObjects.at(_index).setKey(_key);
+        m_subObjects.at(_index).getContent().setKey(_key);
 }
 
-// Helpers for fast subObject lookup
-// Subobjects are in vector because double/empty keys and order in the vector
-vector<DataObject>::const_iterator DataObject::subByKey(string const& _key) const
-{
-    return std::find_if(m_subObjects.begin(), m_subObjects.end(), [&_key](DataObject const& x) { return x.getKey() == _key; });
-}
-vector<DataObject>::iterator DataObject::subByKeyU(string const& _key)
-{
-    return std::find_if(m_subObjects.begin(), m_subObjects.end(), [&_key](DataObject const& x) { return x.getKey() == _key; });
-}
 
 /// look if there is a subobject with _key
 bool DataObject::count(std::string const& _key) const
 {
-    vector<DataObject>::const_iterator it = subByKey(_key);
-    if (it != m_subObjects.end())
-        return true;
-    return false;
+    return m_subObjectKeys.count(_key);
 }
 
 /// Get string value
@@ -151,7 +128,7 @@ void DataObject::setKeyPos(std::string const& _key, size_t _pos)
 
     size_t elementPos = 0;
     for (size_t i = 0; i < m_subObjects.size(); i++)
-        if (m_subObjects.at(i).getKey() == _key)
+        if (m_subObjects.at(i)->getKey() == _key)
         {
             if (i == _pos)
                 return;  // item already at _pos;
@@ -163,7 +140,7 @@ void DataObject::setKeyPos(std::string const& _key, size_t _pos)
         }
 
     setOverwrite(true);
-    DataObject data = m_subObjects.at(elementPos);
+    spDataObject data = m_subObjects.at(elementPos);
     m_subObjects.erase(m_subObjects.begin() + elementPos);
     m_subObjects.insert(m_subObjects.begin() + _pos, 1, data);
     setOverwrite(false);
@@ -192,26 +169,53 @@ void DataObject::replace(DataObject const& _value)
     m_type = _value.type();
     m_subObjects.clear();
     m_subObjects = _value.getSubObjects();
+    m_subObjectKeys = _value.getSubObjectKeys();
     m_allowOverwrite = _value.isOverwritable();
     setAutosort(_value.isAutosort());
 }
 
+DataObjectK& DataObjectK::operator=(spDataObject const& _value)
+{
+    if (m_data.count(m_key))
+    {
+        m_data.removeKey(m_key);
+        if(_value.getCContent().getKey().empty())
+            throw DataObjectException("DataObjectK::operator=(spDataObject const& _value)  _value without key, but key required!");
+        m_data.addSubObject(_value.getCContent().getKey(), _value);
+    }
+    else
+        m_data.addSubObject(m_key, _value);
+    return *this;
+}
+
+spDataObject DataObject::atKeyPointerUnsafe(std::string const& _key)
+{
+    if (m_subObjectKeys.count(_key))
+        return m_subObjectKeys.at(_key);
+    _assert(false, "count(_key) _key=" + _key + " (DataObject::atKeyPointerUnsafe)");
+    return spDataObject(0);
+}
+
+DataObjectK DataObject::atKeyPointer(std::string const& _key)
+{
+    return DataObjectK(_key, *this);
+}
+
 DataObject const& DataObject::atKey(std::string const& _key) const
 {
-    vector<DataObject>::const_iterator it = subByKey(_key);
-    if (it != m_subObjects.end())
-        return *it;
-    _assert(false, "count(_key) _key=" + _key + " (DataObject::at)");
-    return m_subObjects.at(0);
+    if (m_subObjectKeys.count(_key))
+        return m_subObjectKeys.at(_key).getCContent();
+
+    _assert(false, "count(_key) _key=" + _key + " (DataObject::atKey)");
+    return m_subObjects.at(0).getCContent();
 }
 
 DataObject& DataObject::atKeyUnsafe(std::string const& _key)
 {
-    vector<DataObject>::iterator it = subByKeyU(_key);
-    if (it != m_subObjects.end())
-        return *it;
+    if (m_subObjectKeys.count(_key))
+        return m_subObjectKeys.at(_key).getContent();
     _assert(false, "count(_key) _key=" + _key + " (DataObject::atKeyUnsafe)");
-    return m_subObjects.at(0);
+    return m_subObjects.at(0).getContent();
 }
 
 DataObject const& DataObject::at(size_t _pos) const
@@ -223,7 +227,7 @@ DataObject const& DataObject::at(size_t _pos) const
 DataObject& DataObject::atUnsafe(size_t _pos)
 {
     _assert((size_t)_pos < m_subObjects.size(), "DataObject::atUnsafe(int) out of range!");
-    return m_subObjects[_pos];
+    return m_subObjects[_pos].getContent();
 }
 
 DataObject const& DataObject::atLastElement() const
@@ -235,38 +239,45 @@ DataObject const& DataObject::atLastElement() const
 DataObject& DataObject::atLastElementUnsafe()
 {
     _assert(m_subObjects.size() > 0, "atLastElementUnsafe()");
-    return m_subObjects.at(m_subObjects.size() - 1);
+    return m_subObjects.at(m_subObjects.size() - 1).getContent();
 }
 
-void DataObject::addArrayObject(DataObject const& _obj)
+void DataObject::addArrayObject(spDataObject const& _obj)
 {
     _assert(m_type == DataType::NotInitialized || m_type == DataType::Array,
         "m_type == DataType::NotInitialized || m_type == DataType::Array (DataObject::addArrayObject)");
     m_type = DataType::Array;
     m_subObjects.push_back(_obj);
-    m_subObjects.at(m_subObjects.size() - 1).setAutosort(m_autosort);
+    m_subObjects.at(m_subObjects.size() - 1).getContent().setAutosort(m_autosort);
 }
 
 void DataObject::renameKey(std::string const& _currentKey, std::string const& _newKey)
 {
     if (m_strKey == _currentKey)
         m_strKey = _newKey;
-    vector<DataObject>::iterator it = subByKeyU(_currentKey);
-    if (it != m_subObjects.end())
-        (*it).setKey(_newKey);
+
+    if (m_subObjectKeys.count(_currentKey))
+    {
+        spDataObject data = m_subObjectKeys.at(_currentKey);
+        m_subObjectKeys.erase(_currentKey);
+        data.getContent().setKey(_newKey);
+        m_subObjectKeys.emplace(_newKey, data);
+    }
+
 }
 
 /// vector<element> erase method with `replace()` function
 void DataObject::removeKey(std::string const& _key)
 {
     _assert(type() == DataType::Object, "type() == DataType::Object");
-    for (std::vector<DataObject>::const_iterator it = m_subObjects.begin();
+    for (std::vector<spDataObject>::const_iterator it = m_subObjects.begin();
          it != m_subObjects.end(); it++)
     {
-        if ((*it).getKey() == _key)
+        if ((*it)->getKey() == _key)
         {
             setOverwrite(true);
             m_subObjects.erase(it);
+            m_subObjectKeys.erase(_key);
             setOverwrite(false);
             break;
         }
@@ -299,6 +310,7 @@ void DataObject::clear(DataType _type)
     m_strKey = "";
     m_strVal = "";
     m_subObjects.clear();
+    m_subObjectKeys.clear();
     m_type = _type;
 }
 
@@ -311,7 +323,7 @@ void DataObject::setVerifier(void (*f)(DataObject&))
 void DataObject::performModifier(void (*f)(DataObject&), std::set<string> const& _exceptionKeys)
 {
     for (auto& el : m_subObjects)
-        el.performModifier(f, _exceptionKeys);
+        el.getContent().performModifier(f, _exceptionKeys);
     if (!_exceptionKeys.count(getKey()))
         f(*this);
 }
@@ -319,7 +331,7 @@ void DataObject::performModifier(void (*f)(DataObject&), std::set<string> const&
 void DataObject::performVerifier(void (*f)(DataObject const&)) const
 {
     for (auto const& el : m_subObjects)
-        el.performVerifier(f);
+        el->performVerifier(f);
     f(*this);
 }
 
@@ -338,10 +350,10 @@ std::string DataObject::asJson(int level, bool pretty, bool nokey) const
     };
 
     auto printElements = [this, &out, level, pretty]() -> void {
-        for (std::vector<DataObject>::const_iterator it = this->m_subObjects.begin();
+        for (std::vector<spDataObject>::const_iterator it = this->m_subObjects.begin();
              it < this->m_subObjects.end(); it++)
         {
-            out << (*it).asJson(level + 1, pretty);
+            out << (*it)->asJson(level + 1, pretty);
             if (it + 1 != this->m_subObjects.end())
                 out << ",";
             if (pretty)
@@ -496,7 +508,7 @@ std::string DataObject::dataTypeAsString(DataType _type)
     return "";
 }
 
-size_t dataobject::findOrderedKeyPosition(string const& _key, vector<DataObject> const& _objects)
+size_t dataobject::findOrderedKeyPosition(string const& _key, vector<spDataObject> const& _objects)
 {
     if (_objects.size() == 0)
         return 0;
@@ -505,7 +517,7 @@ size_t dataobject::findOrderedKeyPosition(string const& _key, vector<DataObject>
     while (step > 0)
     {
         step = step / 2;
-        if (_objects.at(guess).getKey() > _key)
+        if (_objects.at(guess)->getKey() > _key)
             guess -= std::max(step, (size_t)1);
         else
             guess += std::max(step, (size_t)1);
@@ -513,26 +525,26 @@ size_t dataobject::findOrderedKeyPosition(string const& _key, vector<DataObject>
     if (guess == _objects.size())
         return guess;
     guess = max(0, (int)guess - 5);
-    while (guess < _objects.size() && _objects.at(guess).getKey() <= _key)
+    while (guess < _objects.size() && _objects.at(guess)->getKey() <= _key)
         guess++;
     return guess;
 }
 
-DataObject& DataObject::_addSubObject(DataObject const& _obj, string const& _keyOverwrite)
+DataObject& DataObject::_addSubObject(spDataObject const& _obj, string const& _keyOverwrite)
 {
     if (m_type == DataType::NotInitialized)
         m_type = DataType::Object;
 
     size_t pos;
-    string const& key = _keyOverwrite.empty() ? _obj.getKey() : _keyOverwrite;
+    string const& key = _keyOverwrite.empty() ? _obj->getKey() : _keyOverwrite;
 
     if (key.empty() || !m_autosort)
     {
         m_subObjects.push_back(_obj);
         pos = m_subObjects.size() - 1;
         setSubObjectKey(pos, key);
-        m_subObjects.at(pos).setOverwrite(m_allowOverwrite);
-        m_subObjects.at(pos).setAutosort(m_autosort);
+        m_subObjects.at(pos).getContent().setOverwrite(m_allowOverwrite);
+        m_subObjects.at(pos).getContent().setAutosort(m_autosort);
     }
     else
     {
@@ -547,11 +559,13 @@ DataObject& DataObject::_addSubObject(DataObject const& _obj, string const& _key
             m_subObjects.insert(m_subObjects.begin() + pos, 1, _obj);
             setOverwrite(false);
         }
-        m_subObjects.at(pos).setKey(key);
-        m_subObjects.at(pos).setOverwrite(true);
-        m_subObjects.at(pos).setAutosort(m_autosort);
+        m_subObjects.at(pos).getContent().setKey(key);
+        m_subObjects.at(pos).getContent().setOverwrite(true);
+        m_subObjects.at(pos).getContent().setAutosort(m_autosort);
     }
-    return m_subObjects.at(pos);
+    if (!key.empty())
+        m_subObjectKeys.emplace(key, m_subObjects.at(pos));
+    return m_subObjects.at(pos).getContent();
 }
 
 void DataObject::_assert(bool _flag, std::string const& _comment) const
@@ -592,7 +606,74 @@ void DataObject::setBool(bool _value)
     m_boolVal = _value;
 }
 
-DataObject& DataObject::operator=(DataObject const& _value)
+void DataObject::copyFrom(DataObject const& _other)
+{
+    clear();
+    m_type = _other.type();
+    if (!_other.getKey().empty())
+        m_strKey = _other.getKey();
+
+    switch (m_type)
+    {
+    case String: m_strVal = _other.asString(); break;
+    case Integer: m_intVal = _other.asInt(); break;
+    case Bool: m_boolVal = _other.asBool(); break;
+    case Array:
+        for (auto const& el : _other.getSubObjects())
+        {
+            spDataObject copy = el->copy();
+            addArrayObject(copy);
+        }
+        break;
+    case Object:
+        for (auto const& el : _other.getSubObjects())
+        {
+            spDataObject copy = el->copy();
+            addSubObject(copy);
+        }
+        break;
+    case Null: break;
+    case NotInitialized: break;
+    }
+}
+
+spDataObject DataObject::copy() const
+{
+    spDataObject c(new DataObject(m_type));
+    if (!m_strKey.empty())
+        (*c).setKey(m_strKey);
+    switch(m_type)
+    {
+    case String: (*c).setString(m_strVal); break;
+    case Integer: (*c).setInt(m_intVal); break;
+    case Bool: (*c).setBool(m_boolVal); break;
+    case Array:
+        for (size_t i = 0; i < m_subObjects.size(); i++)
+        {
+            spDataObject copy = m_subObjects.at(i)->copy();
+            (*c).addArrayObject(copy);
+        }
+    break;
+    case Object:
+        for (size_t i = 0; i < m_subObjects.size(); i++)
+        {
+            spDataObject copy = m_subObjects.at(i)->copy();
+            (*c).addSubObject(copy);
+        }
+    break;
+    case Null: break;
+    case NotInitialized: break;
+    }
+    return c;
+}
+
+/*DataObject& DataObject::operator=(spDataObject const& _value)
+{
+    m_myself = _value;
+
+}*/
+
+/*DataObject& DataObject::operator=(DataObject const& _value)
 {
     // So not to overwrite the existing data
     // Do not replace the key. Assuming that key is set upon calling DataObject[key] =
@@ -611,7 +692,7 @@ DataObject& DataObject::operator=(DataObject const& _value)
         m_strKey = currentKey;
     }
     return *this;
-}
+}*/
 
 bool DataObject::operator==(DataObject const& _value) const
 {
@@ -635,7 +716,7 @@ bool DataObject::operator==(DataObject const& _value) const
         equal = getSubObjects().size() == _value.getSubObjects().size();
         for (size_t i = 0; i < getSubObjects().size(); i++)
         {
-            equal = getSubObjects().at(i) == _value.getSubObjects().at(i);
+            equal = getSubObjects().at(i).getCContent() == _value.getSubObjects().at(i).getCContent();
             if (!equal)
                 break;
         }
@@ -649,7 +730,7 @@ bool DataObject::operator==(DataObject const& _value) const
         // equal = getSubObjects().at(0) == _value.getSubObjects().at(0);
         for (size_t i = 0; i < getSubObjects().size(); i++)
         {
-            equal = getSubObjects().at(i) == _value.getSubObjects().at(i);
+            equal = getSubObjects().at(i).getCContent() == _value.getSubObjects().at(i).getCContent();
             if (!equal)
                 break;
         }
@@ -679,14 +760,11 @@ DataObject& DataObject::operator[](std::string const& _key)
     _assert(m_type == DataType::NotInitialized || m_type == DataType::Object,
         "m_type == DataType::NotInitialized || m_type == DataType::Object (DataObject& operator[])");
 
-    auto res =
-        std::find_if(m_subObjects.begin(), m_subObjects.end(), [&_key](DataObject const& x)
-            { return x.getKey() == _key; });
-    if (res != m_subObjects.end())
-        return *res;
+    if (m_subObjectKeys.count(_key))
+        return m_subObjectKeys.at(_key).getContent();
 
-    DataObject newObj(DataType::NotInitialized);
-    newObj.setKey(_key);
+    spDataObject newObj(new DataObject(DataType::NotInitialized));
+    newObj.getContent().setKey(_key);
     return _addSubObject(newObj);  // !could change the item order!
 }
 

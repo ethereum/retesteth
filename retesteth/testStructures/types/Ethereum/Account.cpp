@@ -33,21 +33,21 @@ Account::Account(DataObject const& _data)
          {"storage", {{DataType::Object}, jsonField::Required}}});
 }
 
-const DataObject Account::asDataObject(ExportOrder _order) const
+spDataObject Account::asDataObject(ExportOrder _order) const
 {
-    DataObject out;
+    spDataObject out(new DataObject());
     string const& addr = m_address->asString();
-    out["balance"] = m_balance->asString();
-    out["code"] = m_code->asString();
-    out["nonce"] = m_nonce->asString();
-    out["storage"] = m_storage->asDataObject();
-    out.setKey(addr);
+    (*out)["balance"] = m_balance->asString();
+    (*out)["code"] = m_code->asString();
+    (*out)["nonce"] = m_nonce->asString();
+    (*out).atKeyPointer("storage") = m_storage->asDataObject();
+    (*out).setKey(addr);
 
     if (_order == ExportOrder::OldStyle)
     {
-        out.setKeyPos("code", 0);
-        out.setKeyPos("nonce", 1);
-        out.setKeyPos("balance", 2);
+        (*out).setKeyPos("code", 0);
+        (*out).setKeyPos("nonce", 1);
+        (*out).setKeyPos("balance", 2);
     }
     return out;
 }

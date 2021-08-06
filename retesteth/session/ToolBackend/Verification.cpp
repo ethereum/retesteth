@@ -91,20 +91,20 @@ void verify1559Parent(spBlockHeader const& _header, spBlockHeader const& _parent
         if (_parent->type() != BlockType::BlockHeaderLegacy)
             ETH_FAIL_MESSAGE("verify1559Parent first 1559 block must be on top of legacy block!");
 
-        DataObject parentData = _parent->asDataObject();
+        spDataObject parentData = _parent->asDataObject();
 
         // fake legacy block gasLimit for delta validation
         // https://eips.ethereum.org/EIPS/eip-1559
         // if INITIAL_FORK_BLOCK_NUMBER == block.number:
         //            parent_gas_target = self.parent(block).gas_limit
         //            parent_gas_limit = self.parent(block).gas_limit * ELASTICITY_MULTIPLIER
-        parentData["gasLimit"] = (_parent->gasLimit() * ELASTICITY_MULTIPLIER).asString();
+        (*parentData)["gasLimit"] = (_parent->gasLimit() * ELASTICITY_MULTIPLIER).asString();
 
         // https://eips.ethereum.org/EIPS/eip-1559
         // INITIAL_BASE_FEE = 1000000000
         // fake legacy block baseFee for delta validation
         VALUE genesisBaseFee = INITIAL_BASE_FEE * 8 / 7;
-        parentData["baseFeePerGas"] = genesisBaseFee.asString();
+        (*parentData)["baseFeePerGas"] = genesisBaseFee.asString();
 
         spBlockHeader fixedParent = spBlockHeader(new BlockHeader1559(parentData));
         verify1559Parent_private(_header, fixedParent, _chain);

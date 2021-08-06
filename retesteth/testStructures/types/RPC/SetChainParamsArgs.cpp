@@ -8,23 +8,25 @@ namespace teststruct
 {
 SetChainParamsArgs::SetChainParamsArgs(DataObject const& _data)
 {
-    m_params = _data.atKey("params");  // Client specific params
+    m_params = spDataObject(new DataObject());
+    (*m_params).copyFrom(_data.atKey("params"));  // Client specific params
     m_preState = spState(new State(_data.atKey("accounts")));
     m_sealEngine = sealEngineFromStr(_data.atKey("sealEngine").asString());
 
     // Fill up required fields for blocheader info
     DataObject const& genesis = _data.atKey("genesis");
-    DataObject fullBlockHeader;
-    fullBlockHeader["author"] = genesis.atKey("author");
-    fullBlockHeader["difficulty"] = genesis.atKey("difficulty");
-    fullBlockHeader["gasLimit"] = genesis.atKey("gasLimit");
+    spDataObject _fullBlockHeader(new DataObject());
+    DataObject& fullBlockHeader = _fullBlockHeader.getContent();
+    fullBlockHeader["author"] = genesis.atKey("author").asString();
+    fullBlockHeader["difficulty"] = genesis.atKey("difficulty").asString();
+    fullBlockHeader["gasLimit"] = genesis.atKey("gasLimit").asString();
     if (genesis.count("baseFeePerGas"))
-        fullBlockHeader["baseFeePerGas"] = genesis.atKey("baseFeePerGas");
+        fullBlockHeader["baseFeePerGas"] = genesis.atKey("baseFeePerGas").asString();
 
-    fullBlockHeader["extraData"] = genesis.atKey("extraData");
-    fullBlockHeader["timestamp"] = genesis.atKey("timestamp");
-    fullBlockHeader["nonce"] = genesis.atKey("nonce");
-    fullBlockHeader["mixHash"] = genesis.atKey("mixHash");
+    fullBlockHeader["extraData"] = genesis.atKey("extraData").asString();
+    fullBlockHeader["timestamp"] = genesis.atKey("timestamp").asString();
+    fullBlockHeader["nonce"] = genesis.atKey("nonce").asString();
+    fullBlockHeader["mixHash"] = genesis.atKey("mixHash").asString();
 
     // Fields that are ommited in RPC setChainParams, use default fields of empty block
     fullBlockHeader["bloom"] = FH256::zero().asString();
@@ -45,26 +47,26 @@ SetChainParamsArgs::SetChainParamsArgs(DataObject const& _data)
          {"sealEngine", {{DataType::String}, jsonField::Required}}});
 }
 
-DataObject SetChainParamsArgs::asDataObject() const
+spDataObject SetChainParamsArgs::asDataObject() const
 {
-    DataObject out;
-    out["params"] = m_params;
-    out["accounts"] = m_preState->asDataObject();
-    out["sealEngine"] = sealEngineToStr(m_sealEngine);
-    out["genesis"]["author"] = m_genesis->author().asString();
-    out["genesis"]["difficulty"] = m_genesis->difficulty().asString();
-    out["genesis"]["gasLimit"] = m_genesis->gasLimit().asString();
+    spDataObject out (new DataObject());
+    (*out)["params"].copyFrom(m_params);
+    (*out).atKeyPointer("accounts") = m_preState->asDataObject();
+    (*out)["sealEngine"] = sealEngineToStr(m_sealEngine);
+    (*out)["genesis"]["author"] = m_genesis->author().asString();
+    (*out)["genesis"]["difficulty"] = m_genesis->difficulty().asString();
+    (*out)["genesis"]["gasLimit"] = m_genesis->gasLimit().asString();
 
     if (m_genesis->type() == BlockType::BlockHeader1559)
     {
         BlockHeader1559 const& newbl = BlockHeader1559::castFrom(m_genesis);
-        out["genesis"]["baseFeePerGas"] = newbl.baseFee().asString();
+        (*out)["genesis"]["baseFeePerGas"] = newbl.baseFee().asString();
     }
 
-    out["genesis"]["extraData"] = m_genesis->extraData().asString();
-    out["genesis"]["timestamp"] = m_genesis->timestamp().asString();
-    out["genesis"]["nonce"] = m_genesis->nonce().asString();
-    out["genesis"]["mixHash"] = m_genesis->mixHash().asString();
+    (*out)["genesis"]["extraData"] = m_genesis->extraData().asString();
+    (*out)["genesis"]["timestamp"] = m_genesis->timestamp().asString();
+    (*out)["genesis"]["nonce"] = m_genesis->nonce().asString();
+    (*out)["genesis"]["mixHash"] = m_genesis->mixHash().asString();
     return out;
 }
 

@@ -22,7 +22,7 @@ struct TransactionLegacy : Transaction
     VALUE const& gasPrice() const { return m_gasPrice; }
 
     virtual TransactionType type() const override { return TransactionType::LEGACY; }
-    virtual DataObject const asDataObject(ExportOrder _order = ExportOrder::Default) const override;
+    virtual spDataObject asDataObject(ExportOrder _order = ExportOrder::Default) const override;
 
 protected:
     TransactionLegacy() {}

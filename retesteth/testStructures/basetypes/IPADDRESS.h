@@ -11,7 +11,7 @@ namespace teststruct
 struct IPADDRESS : GCP_SPointerBase
 {
     IPADDRESS(DataObject const&);
-    string const& asString() const { return m_data.asString(); }
+    string const& asString() const { return m_data; }
 
     // std container operations
     inline bool operator==(IPADDRESS const& rhs) const { return asString() == rhs.asString(); }
@@ -21,7 +21,7 @@ struct IPADDRESS : GCP_SPointerBase
 
 private:
     IPADDRESS() {}
-    DataObject m_data;
+    string m_data;
 };
 
 typedef GCP_SPointer<IPADDRESS> spIPADDRESS;

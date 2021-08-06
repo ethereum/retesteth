@@ -133,16 +133,16 @@ bool checkExcessiveComa(string const& _input, size_t _i)
 }
 
 /// Convert Json object represented as string to DataObject
-DataObject ConvertJsoncppStringToData(
+spDataObject ConvertJsoncppStringToData(
     std::string const& _input, string const& _stopper, bool _autosort)
 {
     if (_input.size() < 2 || _input.find("{") == string::npos || _input.find("}") == string::npos)
         throw DataObjectException() << "ConvertJsoncppStringToData can't read json structure in file: `" + _input.substr(0, 50);
 
     std::vector<DataObject*> applyDepth;  // indexes at root array of objects that we are reading into
-    DataObject root;
-    root.setAutosort(_autosort);
-    DataObject* actualRoot = &root;
+    spDataObject root(new DataObject());
+    root.getContent().setAutosort(_autosort);
+    DataObject* actualRoot = &root.getContent();
     bool keyEncountered = false;
 
     auto printDebug = [&_input](int _i) {
@@ -163,11 +163,11 @@ DataObject ConvertJsoncppStringToData(
         if (i == _input.length())
             throw DataObjectException() << errorPrefix + "unexpected end of json! around: " + printDebug(i);
 
-        bool escapeChar = (i > 0 && _input[i - 1] == '\\');
-        if (_input[i] == '"' && !escapeChar)
+        bool escapeChar = (i > 0 && _input.at(i - 1) == '\\');
+        if (_input.at(i) == '"' && !escapeChar)
         {
-            DataObject obj;
-            string key = parseKeyValue(_input, i);
+            spDataObject obj(new DataObject());
+            string const key = parseKeyValue(_input, i);
             i = stripSpaces(_input, i);
             if (_input.at(i) == ':')
             {
@@ -179,17 +179,17 @@ DataObject ConvertJsoncppStringToData(
                 if (actualRoot->type() == DataType::Array)
                     throw DataObjectException()
                         << errorPrefix + "array could not have elements with keys! around: " + printDebug(i);
-                obj.setKey(key);
+                (*obj).setKey(key);
                 bool replaceKey = false;
                 size_t keyPosExpected = _autosort ?
-                        max(0, (int)findOrderedKeyPosition(key, actualRoot->getSubObjects()) - 1) : 0;
+                                            max(0, (int)findOrderedKeyPosition(key, actualRoot->getSubObjects()) - 1) : 0;
                 for (size_t objI = keyPosExpected; objI < actualRoot->getSubObjects().size(); objI++)
                 {
-                    if (actualRoot->getSubObjects().at(objI).getKey() == key)
+                    if (actualRoot->getSubObjects().at(objI)->getKey() == key)
                     {
                         replaceKey = true;
                         applyDepth.push_back(actualRoot);
-                        actualRoot = &actualRoot->getSubObjectsUnsafe().at(objI);
+                        actualRoot = &actualRoot->getSubObjectsUnsafe().at(objI).getContent();
                         actualRoot->clearSubobjects();
                         break;
                     }
@@ -207,7 +207,7 @@ DataObject ConvertJsoncppStringToData(
                 keyEncountered = false;
                 if (actualRoot->type() == DataType::Array)
                 {
-                    actualRoot->addArrayObject(DataObject(key));
+                    actualRoot->addArrayObject(spDataObject(new DataObject(key)));
                     if (_input.at(i) != ',')
                         i--;  // because cycle iteration we need to process ending clouse
                     continue;
@@ -223,27 +223,27 @@ DataObject ConvertJsoncppStringToData(
         }
 
         keyEncountered = false;
-        if (_input[i] == '{')
+        if (_input.at(i) == '{')
         {
             if (actualRoot->type() == DataType::Array || actualRoot->type() == DataType::Object)
             {
-                DataObject newObj(DataType::Object);
+                spDataObject newObj(new DataObject(DataType::Object));
                 applyDepth.push_back(actualRoot);
                 actualRoot = &actualRoot->addSubObject(newObj);
                 // actualRoot->setAutosort(_autosort);
                 continue;
             }
 
-            actualRoot->addSubObject(DataObject());
+            actualRoot->addSubObject(spDataObject(new DataObject()));
             actualRoot->getSubObjectsUnsafe().pop_back();
             continue;
         }
-        if (_input[i] == '[')
+        if (_input.at(i) == '[')
         {
             if (actualRoot->type() == DataType::Array || actualRoot->type() == DataType::Object)
             {
-                DataObject newObj(DataType::Array);
-                newObj.setAutosort(_autosort);
+                spDataObject newObj(new DataObject(DataType::Array));
+                (*newObj).setAutosort(_autosort);
                 applyDepth.push_back(actualRoot);
                 actualRoot = &actualRoot->addSubObject(newObj);
 
@@ -252,12 +252,12 @@ DataObject ConvertJsoncppStringToData(
                 continue;
             }
 
-            actualRoot->addArrayObject(DataObject());
+            actualRoot->addArrayObject(spDataObject(new DataObject()));
             actualRoot->getSubObjectsUnsafe().pop_back();
             continue;
         }
 
-        if (_input[i] == ']' || _input[i] == '}')
+        if (_input.at(i) == ']' || _input.at(i) == '}')
         {
             // if (actualRoot->type() == DataType::Null)
             //    throw DataObjectException()
@@ -288,12 +288,12 @@ DataObject ConvertJsoncppStringToData(
 
                 if (i + 1 < _input.length())
                 {
-                    if (_input[i + 1] == ',')
+                    if (_input.at(i + 1) == ',')
                     {
                         i++;
                         continue;
                     }
-                    if (_input[i + 1] == ':')
+                    if (_input.at(i + 1) == ':')
                         throw DataObjectException()
                             << errorPrefix + "unexpected ':' after closing an object/array! around: " + printDebug(i);
                 }
@@ -319,11 +319,11 @@ DataObject ConvertJsoncppStringToData(
             if (actualRoot->type() == DataType::Array)
             {
                 if (isReadDigit)
-                    actualRoot->addArrayObject(DataObject(resInt));
+                    actualRoot->addArrayObject(spDataObject(new DataObject(resInt)));
                 else if (isReadBool)
-                    actualRoot->addArrayObject(DataObject(DataType::Bool, resBool));
+                    actualRoot->addArrayObject(spDataObject(new DataObject(DataType::Bool, resBool)));
                 else
-                    actualRoot->addArrayObject(DataObject(DataType::Null));
+                    actualRoot->addArrayObject(spDataObject(new DataObject(DataType::Null)));
             }
             else
             {
@@ -336,7 +336,7 @@ DataObject ConvertJsoncppStringToData(
                 actualRoot = applyDepth.at(applyDepth.size() - 1);
                 applyDepth.pop_back();
             }
-            if (_input[i] != ',')
+            if (_input.at(i) != ',')
                 i--;
             continue;
         }

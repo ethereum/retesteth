@@ -152,12 +152,9 @@ void TransactionAccessList::buildVRS(VALUE const& _secret)
     ETH_FAIL_REQUIRE_MESSAGE(
         sigStruct.isValid(), TestOutputHelper::get().testName() + " Could not construct transaction signature!");
 
-    DataObject v = DataObject(dev::toCompactHexPrefixed(dev::u256(sigStruct.v), 1));
-    DataObject r = DataObject(dev::toCompactHexPrefixed(dev::u256(sigStruct.r)));
-    DataObject s = DataObject(dev::toCompactHexPrefixed(dev::u256(sigStruct.s)));
-    m_v = spVALUE(new VALUE(v));
-    m_r = spVALUE(new VALUE(r));
-    m_s = spVALUE(new VALUE(s));
+    m_v = spVALUE(new VALUE(dev::toCompactHexPrefixed(dev::u256(sigStruct.v), 1)));
+    m_r = spVALUE(new VALUE(dev::toCompactHexPrefixed(dev::u256(sigStruct.r))));
+    m_s = spVALUE(new VALUE(dev::toCompactHexPrefixed(dev::u256(sigStruct.s))));
     rebuildRLP();
 }
 
@@ -188,19 +185,19 @@ void TransactionAccessList::streamHeader(dev::RLPStream& _s) const
     _s.appendRaw(accessList.out());
 }
 
-DataObject const TransactionAccessList::asDataObject(ExportOrder _order) const
+spDataObject TransactionAccessList::asDataObject(ExportOrder _order) const
 {
-    DataObject out = TransactionLegacy::asDataObject(_order);
+    spDataObject out = TransactionLegacy::asDataObject(_order);
 
-    out["chainId"] = "0x01";
-    out["accessList"] = m_accessList->asDataObject();
-    out["type"] = "0x01";
+    (*out)["chainId"] = "0x01";
+    (*out).atKeyPointer("accessList") = m_accessList->asDataObject();
+    (*out)["type"] = "0x01";
     if (_order == ExportOrder::ToolStyle)
     {
-        out["chainId"] = "0x1";
-        out["type"] = "0x1";
+        (*out)["chainId"] = "0x1";
+        (*out)["type"] = "0x1";
         if (!m_secretKey.isEmpty() && m_secretKey.getCContent() != 0)
-            out["secretKey"] = m_secretKey->asString();
+            (*out)["secretKey"] = m_secretKey->asString();
     }
     return out;
 }

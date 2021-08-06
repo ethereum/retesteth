@@ -110,22 +110,26 @@ VALUE calculateGasLimit(VALUE const& _parentGasLimit, VALUE const& _parentGasUse
 
 // Because tool report incomplete state. restore missing fields with zeros
 // Also remove leading zeros in storage
-State restoreFullState(DataObject const& _toolState)
+State restoreFullState(DataObject& _toolState)
 {
     DataObject fullState;
-    for (auto const& accTool : _toolState.getSubObjects())
+    for (auto& accTool2 : _toolState.getSubObjectsUnsafe())
     {
-        DataObject acc;
+        DataObject& accTool = accTool2.getContent();
+        DataObject& acc = fullState[accTool.getKey()];
         acc["balance"] = accTool.count("balance") ? accTool.atKey("balance").asString() : "0x00";
         acc["nonce"] = accTool.count("nonce") ? accTool.atKey("nonce").asString() : "0x00";
         acc["code"] = accTool.count("code") ? accTool.atKey("code").asString() : "0x";
-        acc["storage"] = accTool.count("storage") ? accTool.atKey("storage") : DataObject(DataType::Object);
+        if (accTool.count("storage"))
+            acc.atKeyPointer("storage") = accTool.atKeyPointerUnsafe("storage");
+        else
+            acc.atKeyPointer("storage") = spDataObject(new DataObject(DataType::Object));
         for (auto& storageRecord : acc.atKeyUnsafe("storage").getSubObjectsUnsafe())
         {
-            storageRecord.performModifier(mod_removeLeadingZerosFromHexValuesEVEN);
-            storageRecord.performModifier(mod_removeLeadingZerosFromHexKeysEVEN);
+            storageRecord.getContent().performModifier(mod_removeLeadingZerosFromHexValuesEVEN);
+            storageRecord.getContent().performModifier(mod_removeLeadingZerosFromHexKeysEVEN);
         }
-        fullState[accTool.getKey()] = acc;
+        //fullState[accTool.getKey()] = acc;
     }
     return State(fullState);
 }

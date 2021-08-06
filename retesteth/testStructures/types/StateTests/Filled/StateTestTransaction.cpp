@@ -25,7 +25,7 @@ StateTestTransaction::StateTestTransaction(DataObject const& _data)
         {
             for (auto const& el : _data.atKey("accessLists").getSubObjects())
             {
-                if (el.type() == DataType::Null)
+                if (el->type() == DataType::Null)
                     accessLists.push_back(spAccessList(0));
                 else
                     accessLists.push_back(spAccessList(new AccessList(el)));
@@ -39,8 +39,8 @@ StateTestTransaction::StateTestTransaction(DataObject const& _data)
 
         for (auto const& el : _data.atKey("data").getSubObjects())
         {
-            DataObject dataInKey = el;
-            string const sDataPreview = el.asString().substr(0, 8);
+            DataObject const& dataInKey = el.getCContent();
+            string const sDataPreview = el->asString().substr(0, 8);
             if (accessLists.size())
             {
                 if (accessLists.at(index).isEmpty())
@@ -54,9 +54,9 @@ StateTestTransaction::StateTestTransaction(DataObject const& _data)
             index++;
         }
         for (auto const& el : _data.atKey("gasLimit").getSubObjects())
-            m_gasLimit.push_back(el);
+            m_gasLimit.push_back(el.getCContent());
         for (auto const& el : _data.atKey("value").getSubObjects())
-            m_value.push_back(el);
+            m_value.push_back(el.getCContent());
 
         if (_data.count("maxFeePerGas") || _data.count("maxPriorityFeePerGas"))
         {

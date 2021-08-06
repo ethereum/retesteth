@@ -28,7 +28,7 @@ struct AccessList : GCP_SPointerBase
     AccessList(){};
     AccessList(DataObject const&);
     AccessList(dev::RLP const& _rlp);
-    DataObject asDataObject() const;
+    spDataObject asDataObject() const;
     std::vector<spAccessListElement> const& list() const { return m_list; }
 
 private:

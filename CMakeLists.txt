@@ -15,7 +15,7 @@ HunterGate(
 )
 
 project(retesteth VERSION 0.1.2)
-set(VERSION_SUFFIX "london")
+set(VERSION_SUFFIX "london-spdataobj")
 
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)

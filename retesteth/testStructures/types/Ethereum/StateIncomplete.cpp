@@ -17,10 +17,12 @@ StateIncomplete::StateIncomplete(DataObject const& _data, DataRequier _req)
             // Convertion is here so not to repeat convertion in State and Blockchain tests
             // Convert Expect Section IncompletePostState fields to hex, account keys add `0x` prefix
             // Code field add `0x` prefix, storage key:value add `0x` prefix, coverted to hex
-            DataObject tmpD = _data;
-            for (auto& acc : tmpD.getSubObjectsUnsafe())
+            spDataObject tmpD(new DataObject());
+            (*tmpD).copyFrom(_data);
+            for (auto& acc2 : (*tmpD).getSubObjectsUnsafe())
             {
-                string const& key = acc.getKey();
+                DataObject& acc = acc2.getContent();
+                string const& key = acc2->getKey();
                 if ((key.size() > 2 && (key[0] != '0' || key[1] != 'x')))
                     acc.setKey("0x" + acc.getKey());
                 if (acc.count("balance"))
@@ -32,17 +34,17 @@ StateIncomplete::StateIncomplete(DataObject const& _data, DataRequier _req)
                 if (acc.count("storage"))
                     for (auto& rec : acc["storage"].getSubObjectsUnsafe())
                     {
-                        rec.performModifier(mod_keyToCompactEvenHexPrefixed);
-                        rec.performModifier(mod_valueToCompactEvenHexPrefixed);
+                        rec.getContent().performModifier(mod_keyToCompactEvenHexPrefixed);
+                        rec.getContent().performModifier(mod_valueToCompactEvenHexPrefixed);
                     }
             }
-            for (auto const& el : tmpD.getSubObjects())
-                m_accounts[FH20(el.getKey())] = spAccountBase(new AccountIncomplete(el));
+            for (auto const& el : tmpD->getSubObjects())
+                m_accounts[FH20(el->getKey())] = spAccountBase(new AccountIncomplete(el));
         }
         else
         {
             for (auto const& el : _data.getSubObjects())
-                m_accounts[FH20(el.getKey())] = spAccountBase(new AccountIncomplete(el));
+                m_accounts[FH20(el->getKey())] = spAccountBase(new AccountIncomplete(el));
         }
     }
     catch (std::exception const& _ex)
@@ -51,11 +53,11 @@ StateIncomplete::StateIncomplete(DataObject const& _data, DataRequier _req)
     }
 }
 
-const DataObject StateIncomplete::asDataObject(ExportOrder) const
+spDataObject StateIncomplete::asDataObject(ExportOrder) const
 {
-    DataObject out;
+    spDataObject out(new DataObject());
     for (auto const& el : m_accounts)
-        out.addSubObject(el.second->asDataObject());
+        (*out).addSubObject(el.second->asDataObject());
     return out;
 }
 

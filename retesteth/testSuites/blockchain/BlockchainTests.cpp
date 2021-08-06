@@ -33,25 +33,25 @@ namespace fs = boost::filesystem;
 namespace test
 {
 /// !!! DataObject return without reference!!! must be SP!!!
-DataObject BlockchainTestTransitionSuite::doTests(DataObject const& _input, TestSuiteOptions& _opt) const
+spDataObject BlockchainTestTransitionSuite::doTests(DataObject const& _input, TestSuiteOptions& _opt) const
 {
     _opt.allowInvalidBlocks = true;
     return DoTests(_input, _opt);
 }
 
-DataObject BlockchainTestInvalidSuite::doTests(DataObject const& _input, TestSuiteOptions& _opt) const
+spDataObject BlockchainTestInvalidSuite::doTests(DataObject const& _input, TestSuiteOptions& _opt) const
 {
     _opt.allowInvalidBlocks = true;
     return DoTests(_input, _opt);
 }
 
-DataObject BlockchainTestValidSuite::doTests(DataObject const& _input, TestSuiteOptions& _opt) const
+spDataObject BlockchainTestValidSuite::doTests(DataObject const& _input, TestSuiteOptions& _opt) const
 {
     _opt.allowInvalidBlocks = false;
     return DoTests(_input, _opt);
 }
 
-DataObject LegacyConstantinopleBlockchainInvalidTestSuite::doTests(
+spDataObject LegacyConstantinopleBlockchainInvalidTestSuite::doTests(
     DataObject const& _input, TestSuiteOptions& _opt) const
 {
     _opt.allowInvalidBlocks = true;
@@ -59,7 +59,7 @@ DataObject LegacyConstantinopleBlockchainInvalidTestSuite::doTests(
     return DoTests(_input, _opt);
 }
 
-DataObject LegacyConstantinopleBlockchainValidTestSuite::doTests(
+spDataObject LegacyConstantinopleBlockchainValidTestSuite::doTests(
     DataObject const& _input, TestSuiteOptions& _opt) const
 {
     _opt.allowInvalidBlocks = false;
@@ -67,7 +67,7 @@ DataObject LegacyConstantinopleBlockchainValidTestSuite::doTests(
     return DoTests(_input, _opt);
 }
 
-DataObject LegacyConstantinopleBCGeneralStateTestsSuite::doTests(
+spDataObject LegacyConstantinopleBCGeneralStateTestsSuite::doTests(
     DataObject const& _input, TestSuiteOptions& _opt) const
 {
     _opt.isLegacyTests = true;

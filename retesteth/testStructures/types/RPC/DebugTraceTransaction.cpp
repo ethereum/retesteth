@@ -25,7 +25,10 @@ DebugTraceTransaction::DebugTraceTransaction(DataObject const& _data)
     }
 }
 
-DebugTraceTransactionLog::DebugTraceTransactionLog(DataObject const& _data) : m_data(_data) {}
+DebugTraceTransactionLog::DebugTraceTransactionLog(DataObject const& _data) {
+    m_data = spDataObject(new DataObject());
+    (*m_data).copyFrom(_data);
+}
 
 string DebugTraceTransaction::getFinal() const
 {

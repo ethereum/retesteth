@@ -101,7 +101,9 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
                 printVmTrace(session, tr->hash(), latestBlock.header()->stateRoot());
         }
 
-        bool condition = latestBlock.header().getCContent() == tblock.header().getCContent();
+        spDataObject remoteHeader = latestBlock.header()->asDataObject();
+        spDataObject testHeader = tblock.header()->asDataObject();
+        bool condition = remoteHeader->asJson(0, false) == testHeader->asJson(0, false);
         /*if (_opt.isLegacyTests)
         {
             inTestHeader = bdata.atKey("blockHeader");  // copy!!!
@@ -125,8 +127,7 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
         {
             string errField;
             message = "Client return HEADER vs Test HEADER: \n";
-            message += compareBlockHeaders(
-                latestBlock.header()->asDataObject(), tblock.header()->asDataObject(), errField);
+            message += compareBlockHeaders(remoteHeader.getCContent(), testHeader.getCContent(), errField);
         }
         ETH_ERROR_REQUIRE_MESSAGE(
             condition, "Client report different blockheader after importing the rlp than expected by test! \n" + message);
@@ -209,9 +210,9 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
     }
 }
 
-DataObject DoTests(DataObject const& _input, TestSuite::TestSuiteOptions& _opt)
+spDataObject DoTests(DataObject const& _input, TestSuite::TestSuiteOptions& _opt)
 {
-    DataObject tests;
+    spDataObject tests(new DataObject());
     if (_opt.doFilling)
     {
         BlockchainTestFiller testFiller(_input);
@@ -238,9 +239,9 @@ DataObject DoTests(DataObject const& _input, TestSuite::TestSuiteOptions& _opt)
             }
 
             // One blockchain test generate many tests for each network
-            DataObject filledTests = FillTest(bcTest, _opt);
-            for (auto const& t : filledTests.getSubObjects())
-                tests.addSubObject(t);
+            spDataObject filledTests = FillTest(bcTest, _opt);
+            for (auto const& t : (*filledTests).getSubObjects())
+                (*tests).addSubObject(t);
             TestOutputHelper::get().registerTestRunSuccess();
         }
     }
@@ -252,8 +253,9 @@ DataObject DoTests(DataObject const& _input, TestSuite::TestSuiteOptions& _opt)
         {
             // Change the tests instead??
             DataObject& _inputRef = const_cast<DataObject&>(_input);
-            for (auto& el : _inputRef.getSubObjectsUnsafe())
+            for (auto& el2 : _inputRef.getSubObjectsUnsafe())
             {
+                DataObject& el = el2.getContent();
                 DataObject& _infoRef = el.atKeyUnsafe("_info");
                 _infoRef.renameKey("filledwith", "filling-rpc-server");
                 _infoRef["filling-tool-version"] = "testeth";

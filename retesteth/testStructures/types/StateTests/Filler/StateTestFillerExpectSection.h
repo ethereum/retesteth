@@ -44,7 +44,7 @@ private:
     std::set<int> m_valInd;
     std::vector<FORK> m_forks;
     GCP_SPointer<StateIncomplete> m_result;
-    DataObject m_initialData;
+    spDataObject m_initialData;
 
     std::map<FORK, string> m_expectExceptions;
 };

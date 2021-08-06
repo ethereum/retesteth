@@ -19,9 +19,7 @@ VMLogRecord::VMLogRecord(DataObject const& _obj)
         memory = spBYTES(new BYTES(_obj.atKey("memory")));
         memSize = _obj.atKey("memSize").asInt();
         for (auto const& el : _obj.atKey("stack").getSubObjects())
-            stack.push_back(el.asString());
-        for (auto const& el : _obj.atKey("returnStack").getSubObjects())
-            returnStack.push_back(el.asString());
+            stack.push_back(el->asString());
         returnData = spBYTES(new BYTES(DataObject("0x")));
         depth = _obj.atKey("depth").asInt();
         refund = _obj.atKey("refund").asInt();
@@ -48,10 +46,10 @@ DebugVMTrace::DebugVMTrace(string const& _info, string const& _trNumber, FH32 co
             for (size_t i = 0; i < logs.size() - 1; i++)
                 m_log.push_back(VMLogRecord(ConvertJsoncppStringToData(logs.at(i))));
 
-            DataObject lastRecord(ConvertJsoncppStringToData(logs.at(logs.size() - 1)));
-            m_output = lastRecord.atKey("output").asString();
-            m_gasUsed = spVALUE(new VALUE(lastRecord.atKey("gasUsed")));
-            m_time = lastRecord.atKey("time").asInt();
+            spDataObject lastRecord = ConvertJsoncppStringToData(logs.at(logs.size() - 1));
+            m_output = lastRecord->atKey("output").asString();
+            m_gasUsed = spVALUE(new VALUE(lastRecord->atKey("gasUsed")));
+            m_time = lastRecord->atKey("time").asInt();
         }
 
         m_rawUnparsedLogs = _logs;

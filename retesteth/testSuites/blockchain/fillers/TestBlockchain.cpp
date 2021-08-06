@@ -193,13 +193,13 @@ GCP_SPointer<EthGetBlockBy> TestBlockchain::mineBlock(
             if (exception.empty())
                 ETH_WARNING(
                     "TestBlockchain::mineBlock transaction has unexpectedly failed to be mined (see logs --verbosity 6): \n" +
-                    trInTest.tr().asDataObject().asJson() + "\nReason: `" + reason + "`");
+                    trInTest.tr().asDataObject()->asJson() + "\nReason: `" + reason + "`");
             else
             {
                string const& expectedReason = Options::getCurrentConfig().translateException(exception);
                if (reason.find(expectedReason) == string::npos)
                {
-                   ETH_WARNING(trInTest.tr().asDataObject().asJson());
+                   ETH_WARNING(trInTest.tr().asDataObject()->asJson());
                    ETH_ERROR_MESSAGE(string("Transaction rejecetd but due to a different reason: \n") +
                       "Expected reason: `" + expectedReason + "` (" + exception + ")\n" +
                       "Client reason: `" + reason
@@ -211,7 +211,7 @@ GCP_SPointer<EthGetBlockBy> TestBlockchain::mineBlock(
         {
             if (!exception.empty())
                 ETH_WARNING("TestBlockchain::mineBlock transaction expected to failed with `"+ exception +"` but mined good: \n" +
-                            trInTest.tr().asDataObject().asJson());
+                            trInTest.tr().asDataObject()->asJson());
         }
     }
 
@@ -242,8 +242,8 @@ spBlockHeader TestBlockchain::mineNextBlockAndRevert()
 
     // assign a random coinbase for an uncle block to avoid UncleIsAncestor exception
     // otherwise this uncle would be similar to a block mined
-    DataObject head = nextBlock.header()->asDataObject();
-    head["coinbase"] = "0xb94f5374fce5ed0000000097c15331677e6ebf0b";  // FH20::random().asString();
+    spDataObject head = nextBlock.header()->asDataObject();
+    (*head)["coinbase"] = "0xb94f5374fce5ed0000000097c15331677e6ebf0b";  // FH20::random().asString();
     return readBlockHeader(head);
 }
 

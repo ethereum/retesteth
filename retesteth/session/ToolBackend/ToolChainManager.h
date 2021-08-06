@@ -22,7 +22,7 @@ public:
         assert(m_chains.count(m_currentChain));
         return m_chains.at(m_currentChain);
     }
-    DataObject const mineBlocks(size_t _number, ToolChain::Mining _req = ToolChain::Mining::AllowFailTransactions);
+    spDataObject const mineBlocks(size_t _number, ToolChain::Mining _req = ToolChain::Mining::AllowFailTransactions);
     FH32 importRawBlock(BYTES const& _rlp);
 
     EthereumBlockState const& lastBlock() const { return currentChain().lastBlock(); }

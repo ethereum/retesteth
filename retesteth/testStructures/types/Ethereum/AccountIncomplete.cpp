@@ -33,9 +33,10 @@ AccountIncomplete::AccountIncomplete(DataObject const& _data)
     ETH_ERROR_REQUIRE_MESSAGE(_data.getSubObjects().size() > 0, "AccountIncomplete must have at least one object!");
 }
 
-const DataObject AccountIncomplete::asDataObject(ExportOrder) const
+spDataObject AccountIncomplete::asDataObject(ExportOrder) const
 {
-    DataObject out;
+    spDataObject _out(new DataObject());
+    DataObject& out = _out.getContent();
     string const& addr = m_address->asString();
     if (!m_balance.isEmpty())
         out["balance"] = m_balance->asString();
@@ -44,11 +45,11 @@ const DataObject AccountIncomplete::asDataObject(ExportOrder) const
     if (!m_code.isEmpty())
         out["code"] = m_code->asString();
     if (!m_storage.isEmpty())
-        out["storage"] = m_storage->asDataObject();
+        out.atKeyPointer("storage") = m_storage->asDataObject();
     if (m_shouldNotExist)
         out["shouldnotexist"] = "1";
     out.setKey(addr);
-    return out;
+    return _out;
 }
 
 

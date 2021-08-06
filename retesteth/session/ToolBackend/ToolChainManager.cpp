@@ -19,11 +19,11 @@ ToolChainManager::ToolChainManager(SetChainParamsArgs const& _config, fs::path c
     reorganizePendingBlock();
 }
 
-DataObject const ToolChainManager::mineBlocks(size_t _number, ToolChain::Mining _req)
+spDataObject const ToolChainManager::mineBlocks(size_t _number, ToolChain::Mining _req)
 {
     if (_number > 1)
         throw test::UpwardsException("ToolChainManager::mineBlocks number arg invalid: " + fto_string(_number));
-    DataObject const res = currentChainUnsafe().mineBlock(m_pendingBlock, _req);
+    spDataObject const res = currentChainUnsafe().mineBlock(m_pendingBlock, _req);
     reorganizePendingBlock();
     return res;
 }
@@ -42,14 +42,14 @@ void ToolChainManager::reorganizePendingBlock()
     if (currentChain().fork() == "BerlinToLondonAt5" && bl.header()->number() == 4)
     {
         // Switch default mining to 1559 blocks
-        DataObject parentData = bl.header()->asDataObject();
+        spDataObject parentData = bl.header()->asDataObject();
 
         VALUE newGasLimit = bl.header()->gasLimit() * ELASTICITY_MULTIPLIER;
-        parentData.atKeyUnsafe("gasLimit").setString(newGasLimit.asString());
+        (*parentData).atKeyUnsafe("gasLimit").setString(newGasLimit.asString());
 
         // https://eips.ethereum.org/EIPS/eip-1559
         // INITIAL_BASE_FEE = 1000000000
-        parentData["baseFeePerGas"] = VALUE(INITIAL_BASE_FEE).asString();
+        (*parentData)["baseFeePerGas"] = VALUE(INITIAL_BASE_FEE).asString();
 
         spBlockHeader newPending(new BlockHeader1559(parentData));
         m_pendingBlock = spEthereumBlockState(new EthereumBlockState(newPending, bl.state(), bl.logHash()));
@@ -110,7 +110,7 @@ FH32 ToolChainManager::importRawBlock(BYTES const& _rlp)
         toolimpl::verifyBlockRLP(rlp);
 
         spBlockHeader header = readBlockHeader(rlp[0]);
-        ETH_TEST_MESSAGE(header->asDataObject().asJson());
+        ETH_TEST_MESSAGE(header->asDataObject()->asJson());
         for (auto const& chain : m_chains)
             for (auto const& bl : chain.second->blocks())
                 if (bl.header()->hash() == header->hash())
@@ -124,7 +124,7 @@ FH32 ToolChainManager::importRawBlock(BYTES const& _rlp)
         for (auto const& trRLP : rlp[1].toList())
         {
             spTransaction spTr = readTransaction(trRLP);
-            ETH_TEST_MESSAGE(spTr->asDataObject().asJson());
+            ETH_TEST_MESSAGE(spTr->asDataObject()->asJson());
             addPendingTransaction(spTr);
         }
 

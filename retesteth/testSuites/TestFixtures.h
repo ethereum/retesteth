@@ -108,6 +108,12 @@ public:
             return;
         }
 
+        if (casename == "bcForgedTest")
+        {
+            ETH_STDOUT_MESSAGE("Skipping " + casename + " because bigint exceptions run in progress!");
+            return;
+        }
+
         suite.runAllTestsInFolder(casename);
         test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
     }

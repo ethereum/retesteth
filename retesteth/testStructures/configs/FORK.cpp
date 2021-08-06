@@ -26,7 +26,7 @@ namespace teststruct
 // If to not use FORK in currentConfig init code.
 // Would be possible to calculate the indexes at constructor time
 // Given the FORK array is small and usage of compares are single lines it shall be fine
-FORK::FORK(DataObject const& _data) : m_data(_data) {}
+FORK::FORK(DataObject const& _data) : m_data(_data.asString()) {}
 
 bool compareFork(FORK const& _left, CMP _t, FORK const& _right)
 {

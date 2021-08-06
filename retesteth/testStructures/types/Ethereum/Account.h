@@ -16,7 +16,7 @@ struct Account : AccountBase
 {
     Account(DataObject const&);
     Account(FH20 const& _addr, VALUE const& _balance, VALUE const& _nonce, BYTES const& _code, Storage const& _storage);
-    DataObject const asDataObject(ExportOrder order = ExportOrder::Default) const override;
+    spDataObject asDataObject(ExportOrder order = ExportOrder::Default) const override;
 
 private:
     Account() {}

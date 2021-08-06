@@ -53,7 +53,8 @@ BlockchainTestFillerUncle::BlockchainTestFillerUncle(DataObject const& _data)
 
         // Fields that are to overwrite in uncle's header that will be constructed by test
         // map 'fieldName' -> 'field new value'
-        DataObject tmpD = convertDecBlockheaderIncompleteToHex(_data);
+        spDataObject _tmpD = convertDecBlockheaderIncompleteToHex(_data);
+        DataObject& tmpD = *_tmpD;
         tmpD.removeKey("populateFromBlock");                // BlockchainTestFiller fields
         tmpD.removeKey("sameAsPreviousBlockUncle");         // BlockchainTestFiller fields
         tmpD.removeKey("sameAsBlock");                      // BlockchainTestFiller fields

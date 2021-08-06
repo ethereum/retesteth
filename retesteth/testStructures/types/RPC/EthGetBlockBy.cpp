@@ -23,9 +23,11 @@ EthGetBlockBy::EthGetBlockBy(DataObject const& _data)
         m_lessobjects = false;
         for (auto const& el : _data.atKey("transactions").getSubObjects())
         {
-            DataObject cel = el;
-            cel.renameKey("input", "data");
-            cel.renameKey("gas", "gasLimit");
+            // TODO get rid of copy here
+            spDataObject cel(new DataObject());
+            (*cel).copyFrom(el);
+            (*cel).renameKey("input", "data");
+            (*cel).renameKey("gas", "gasLimit");
 
             m_transactions.push_back(EthGetBlockByTransaction(cel));
             if (!m_transactions.at(m_transactions.size() - 1).isFullTransaction())

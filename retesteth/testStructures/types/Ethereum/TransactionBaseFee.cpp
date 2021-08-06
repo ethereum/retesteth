@@ -157,12 +157,9 @@ void TransactionBaseFee::buildVRS(VALUE const& _secret)
     ETH_FAIL_REQUIRE_MESSAGE(
         sigStruct.isValid(), TestOutputHelper::get().testName() + " Could not construct transaction signature!");
 
-    DataObject v = DataObject(dev::toCompactHexPrefixed(dev::u256(sigStruct.v), 1));
-    DataObject r = DataObject(dev::toCompactHexPrefixed(dev::u256(sigStruct.r)));
-    DataObject s = DataObject(dev::toCompactHexPrefixed(dev::u256(sigStruct.s)));
-    m_v = spVALUE(new VALUE(v));
-    m_r = spVALUE(new VALUE(r));
-    m_s = spVALUE(new VALUE(s));
+    m_v = spVALUE(new VALUE(dev::toCompactHexPrefixed(dev::u256(sigStruct.v), 1)));
+    m_r = spVALUE(new VALUE(dev::toCompactHexPrefixed(dev::u256(sigStruct.r))));
+    m_s = spVALUE(new VALUE(dev::toCompactHexPrefixed(dev::u256(sigStruct.s))));
     rebuildRLP();
 }
 
@@ -197,62 +194,62 @@ void TransactionBaseFee::streamHeader(dev::RLPStream& _s) const
     _s.appendRaw(accessList.out());
 }
 
-DataObject const TransactionBaseFee::asDataObject(ExportOrder _order) const
+spDataObject TransactionBaseFee::asDataObject(ExportOrder _order) const
 {
     // Because we don't use gas_price field need to explicitly output
-    DataObject out;
-    out["data"] = m_data->asString();
-    out["gasLimit"] = m_gasLimit->asString();
-    out["nonce"] = m_nonce->asString();
+    spDataObject out(new DataObject());
+    (*out)["data"] = m_data->asString();
+    (*out)["gasLimit"] = m_gasLimit->asString();
+    (*out)["nonce"] = m_nonce->asString();
     if (m_creation)
     {
         if (_order != ExportOrder::ToolStyle)
-            out["to"] = "";
+            (*out)["to"] = "";
     }
     else
-        out["to"] = m_to->asString();
-    out["value"] = m_value->asString();
-    out["v"] = m_v->asString();
-    out["r"] = m_r->asString();
-    out["s"] = m_s->asString();
+        (*out)["to"] = m_to->asString();
+    (*out)["value"] = m_value->asString();
+    (*out)["v"] = m_v->asString();
+    (*out)["r"] = m_r->asString();
+    (*out)["s"] = m_s->asString();
     if (_order == ExportOrder::ToolStyle)
     {
-        out.performModifier(mod_removeLeadingZerosFromHexValues, {"data", "to"});
-        out.renameKey("gasLimit", "gas");
-        out.renameKey("data", "input");
+        (*out).performModifier(mod_removeLeadingZerosFromHexValues, {"data", "to"});
+        (*out).renameKey("gasLimit", "gas");
+        (*out).renameKey("data", "input");
         if (!m_secretKey.isEmpty() && m_secretKey.getCContent() != 0)
-            out["secretKey"] = m_secretKey->asString();
+            (*out)["secretKey"] = m_secretKey->asString();
     }
     if (_order == ExportOrder::OldStyle)
     {
-        out.setKeyPos("r", 4);
-        out.setKeyPos("s", 5);
-        out.setKeyPos("v", 7);
+        (*out).setKeyPos("r", 4);
+        (*out).setKeyPos("s", 5);
+        (*out).setKeyPos("v", 7);
     }
 
     // standard transaction output without gas_price end
 
     // begin eip1559 transaction info
-    out["chainId"] = "0x01";
-    out["type"] = "0x02";
-    out["maxFeePerGas"] = m_maxFeePerGas->asString();
-    out["maxPriorityFeePerGas"] = m_maxPriorityFeePerGas->asString();
+    (*out)["chainId"] = "0x01";
+    (*out)["type"] = "0x02";
+    (*out)["maxFeePerGas"] = m_maxFeePerGas->asString();
+    (*out)["maxPriorityFeePerGas"] = m_maxPriorityFeePerGas->asString();
     if (_order == ExportOrder::ToolStyle)
     {
-        out["chainId"] = "0x1";
-        out["type"] = "0x2";
+        (*out)["chainId"] = "0x1";
+        (*out)["type"] = "0x2";
 
-        DataObject t8ntoolFields;
-        t8ntoolFields["maxFeePerGas"] = m_maxFeePerGas->asString();
-        t8ntoolFields["maxPriorityFeePerGas"] = m_maxPriorityFeePerGas->asString();
-        t8ntoolFields.performModifier(mod_removeLeadingZerosFromHexValues);
-        out["maxFeePerGas"] = t8ntoolFields["maxFeePerGas"];
-        out["maxPriorityFeePerGas"] = t8ntoolFields["maxPriorityFeePerGas"];
+        spDataObject t8ntoolFields(new DataObject());
+        (*t8ntoolFields)["maxFeePerGas"] = m_maxFeePerGas->asString();
+        (*t8ntoolFields)["maxPriorityFeePerGas"] = m_maxPriorityFeePerGas->asString();
+        (*t8ntoolFields).performModifier(mod_removeLeadingZerosFromHexValues);
+        (*out)["maxFeePerGas"] = (*t8ntoolFields)["maxFeePerGas"].asString();
+        (*out)["maxPriorityFeePerGas"] = (*t8ntoolFields)["maxPriorityFeePerGas"].asString();
 
         if (!m_secretKey.isEmpty() && m_secretKey.getCContent() != 0)
-            out["secretKey"] = m_secretKey->asString();
+            (*out)["secretKey"] = m_secretKey->asString();
     }
-    out["accessList"] = m_accessList->asDataObject();
+    (*out).atKeyPointer("accessList") = m_accessList->asDataObject();
     return out;
 }
 
