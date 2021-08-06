@@ -6,6 +6,7 @@
 #include <retesteth/EthChecks.h>
 #include <retesteth/TestHelper.h>
 #include <retesteth/testStructures/Common.h>
+using namespace dev;
 
 namespace test
 {
@@ -43,7 +44,7 @@ void TransactionAccessList::fromDataObject(DataObject const& _data)
         else
         {
             m_v = spVALUE(new VALUE(_data.atKey("v")));
-            if (m_v.getCContent() > dev::u256("0xff"))
+            if (m_v.getCContent() > dev::bigint("0xff"))
                 throw test::UpwardsException("Incorrect transaction `v` value: " + m_v->asString());
             m_r = spVALUE(new VALUE(_data.atKey("r")));
             m_s = spVALUE(new VALUE(_data.atKey("s")));
@@ -106,24 +107,32 @@ void TransactionAccessList::fromRLP(dev::RLP const& _rlp)
     // 3 - gasLimit     6 - data    9 - s
     DataObject trData;
     size_t i = 0;
-    rlpToString(_rlp[i++]);  // chainID
-    trData["nonce"] = rlpToString(_rlp[i++]);
-    trData["gasPrice"] = rlpToString(_rlp[i++]);
-    trData["gasLimit"] = rlpToString(_rlp[i++]);
-    string const to = rlpToString(_rlp[i++], 0);
-    trData["to"] = to == "0x" ? "" : to;
-    trData["value"] = rlpToString(_rlp[i++]);
-    trData["data"] = rlpToString(_rlp[i++], 0);
+    i++;  // chainID
+    m_nonce = spVALUE(new VALUE(_rlp[i++]));
+    m_gasPrice = spVALUE(new VALUE(_rlp[i++]));
+    m_gasLimit = spVALUE(new VALUE(_rlp[i++]));
+
+    auto const r = _rlp[i++];
+    std::ostringstream stream;
+    stream << r.toBytes();
+    m_creation = false;
+    if (stream.str() == "0x")
+        m_creation = true;
+    else
+        m_to = spFH20(new FH20(r));
+
+    m_value = spVALUE(new VALUE(_rlp[i++]));
+    m_data = spBYTES(new BYTES(_rlp[i++]));
 
     // read access list
-    spAccessList list = spAccessList(new AccessList(_rlp[i++]));
-    trData["accessList"] = list.getContent().asDataObject();
-    m_accessList = list;
+    m_accessList = spAccessList(new AccessList(_rlp[i++]));
 
-    trData["v"] = rlpToString(_rlp[i++]);
-    trData["r"] = rlpToString(_rlp[i++]);
-    trData["s"] = rlpToString(_rlp[i++]);
-    fromDataObject(trData);
+    m_v = spVALUE(new VALUE(_rlp[i++]));
+    m_r = spVALUE(new VALUE(_rlp[i++]));
+    m_s = spVALUE(new VALUE(_rlp[i++]));
+
+    m_secretKey = spVALUE(new VALUE(0));
+    rebuildRLP();
 }
 
 void TransactionAccessList::buildVRS(VALUE const& _secret)
@@ -143,27 +152,29 @@ void TransactionAccessList::buildVRS(VALUE const& _secret)
     ETH_FAIL_REQUIRE_MESSAGE(
         sigStruct.isValid(), TestOutputHelper::get().testName() + " Could not construct transaction signature!");
 
-    DataObject v = DataObject(dev::toCompactHexPrefixed(dev::u256(sigStruct.v), 1));
-    DataObject r = DataObject(dev::toCompactHexPrefixed(dev::u256(sigStruct.r)));
-    DataObject s = DataObject(dev::toCompactHexPrefixed(dev::u256(sigStruct.s)));
-    m_v = spVALUE(new VALUE(v));
-    m_r = spVALUE(new VALUE(r));
-    m_s = spVALUE(new VALUE(s));
+    m_v = spVALUE(new VALUE(dev::toCompactHexPrefixed(dev::u256(sigStruct.v), 1)));
+    m_r = spVALUE(new VALUE(dev::toCompactHexPrefixed(dev::u256(sigStruct.r))));
+    m_s = spVALUE(new VALUE(dev::toCompactHexPrefixed(dev::u256(sigStruct.s))));
     rebuildRLP();
 }
 
 void TransactionAccessList::streamHeader(dev::RLPStream& _s) const
 {
     // rlp([chainId, nonce, gasPrice, gasLimit, to, value, data, access_list, yParity, senderR, senderS])
-    _s << VALUE(1).asU256();
-    _s << nonce().asU256();
-    _s << gasPrice().asU256();
-    _s << gasLimit().asU256();
+    _s << VALUE(1).asBigInt();
+    _s << nonce().asBigInt();
+    _s << gasPrice().asBigInt();
+    _s << gasLimit().asBigInt();
     if (Transaction::isCreation())
         _s << "";
     else
-        _s << dev::Address(to().asString());
-    _s << value().asU256();
+    {
+        if (to().isBigInt())
+            _s << to().asBigInt();
+        else
+            _s << test::sfromHex(to().asString(ExportType::RLP));
+    }
+    _s << value().asBigInt();
     _s << test::sfromHex(data().asString());
 
     // Access Listist
@@ -174,19 +185,19 @@ void TransactionAccessList::streamHeader(dev::RLPStream& _s) const
     _s.appendRaw(accessList.out());
 }
 
-DataObject const TransactionAccessList::asDataObject(ExportOrder _order) const
+spDataObject TransactionAccessList::asDataObject(ExportOrder _order) const
 {
-    DataObject out = TransactionLegacy::asDataObject(_order);
+    spDataObject out = TransactionLegacy::asDataObject(_order);
 
-    out["chainId"] = "0x01";
-    out["accessList"] = m_accessList->asDataObject();
-    out["type"] = "0x01";
+    (*out)["chainId"] = "0x01";
+    (*out).atKeyPointer("accessList") = m_accessList->asDataObject();
+    (*out)["type"] = "0x01";
     if (_order == ExportOrder::ToolStyle)
     {
-        out["chainId"] = "0x1";
-        out["type"] = "0x1";
+        (*out)["chainId"] = "0x1";
+        (*out)["type"] = "0x1";
         if (!m_secretKey.isEmpty() && m_secretKey.getCContent() != 0)
-            out["secretKey"] = m_secretKey->asString();
+            (*out)["secretKey"] = m_secretKey->asString();
     }
     return out;
 }
@@ -198,9 +209,9 @@ void TransactionAccessList::rebuildRLP()
     dev::RLPStream out;
     out.appendList(11);
     streamHeader(out);
-    out << v().asU256().convert_to<dev::byte>();
-    out << r().asU256();
-    out << s().asU256();
+    out << v().asBigInt().convert_to<dev::byte>();
+    out << r().asBigInt();
+    out << s().asBigInt();
 
     // Alter output with prefixed 01 byte + tr.rlp
     dev::bytes outa = out.out();

@@ -10,10 +10,11 @@ AccessListElement::AccessListElement(DataObject const& _data)
 {
     m_address = spFH20(new FH20(_data.atKey("address")));
     for (auto const& el : _data.atKey("storageKeys").getSubObjects())
-        m_storageKeys.push_back(spFH32(new FH32(dev::toCompactHexPrefixed(dev::u256(el.asString()), 32))));
+        m_storageKeys.push_back(spFH32(new FH32(dev::toCompactHexPrefixed(dev::u256(el->asString()), 32))));
 
     requireJsonFields(_data, "AccessListElement " + _data.getKey(),
-        {{"address", {{DataType::String}, jsonField::Required}}, {"storageKeys", {{DataType::Array}, jsonField::Required}}});
+        {{"address", {{DataType::String}, jsonField::Required}},
+         {"storageKeys", {{DataType::Array}, jsonField::Required}}});
 }
 
 AccessList::AccessList(DataObject const& _data)
@@ -22,18 +23,21 @@ AccessList::AccessList(DataObject const& _data)
         m_list.push_back(spAccessListElement(new AccessListElement(el)));
 }
 
-DataObject AccessList::asDataObject() const
+spDataObject AccessList::asDataObject() const
 {
-    DataObject accessList(DataType::Array);
+    spDataObject accessList(new DataObject(DataType::Array));
     for (auto const& el : m_list)
     {
-        DataObject accessListElement;
-        accessListElement["address"] = el->address().asString();
-        DataObject keys(DataType::Array);
+        spDataObject accessListElement(new DataObject());
+        (*accessListElement)["address"] = el->address().asString();
+        spDataObject keys(new DataObject(DataType::Array));
+        (*accessListElement).atKeyPointer("storageKeys") = keys;
         for (auto const& el2 : el->keys())
-            keys.addArrayObject(el2->asString());
-        accessListElement["storageKeys"] = keys;
-        accessList.addArrayObject(accessListElement);
+        {
+            spDataObject k(new DataObject(el2->asString()));
+            (*accessListElement)["storageKeys"].addArrayObject(k);
+        }
+        (*accessList).addArrayObject(accessListElement);
     }
     return accessList;
 }
@@ -55,10 +59,10 @@ const dev::RLPStream AccessListElement::asRLPStream() const
 AccessListElement::AccessListElement(dev::RLP const& _rlp)
 {
     size_t i = 0;
-    m_address = spFH20(new FH20(rlpToString(_rlp[i++])));
+    m_address = spFH20(new FH20(_rlp[i++]));
     auto const& rlplist = _rlp[i++].toList();
     for (auto const& key : rlplist)
-        m_storageKeys.push_back(spFH32(new FH32(rlpToString(key))));
+        m_storageKeys.push_back(spFH32(new FH32(key)));
 }
 
 AccessList::AccessList(dev::RLP const& _rlp)

@@ -38,7 +38,7 @@ class SessionInterface
 {
 public:
     // DataObject represents json output
-    virtual DataObject web3_clientVersion() = 0;
+    virtual spDataObject web3_clientVersion() = 0;
 
     // ETH Methods
     virtual FH32 eth_sendRawTransaction(BYTES const& _rlp, VALUE const& _secret) = 0;
@@ -70,7 +70,7 @@ public:
     virtual FH32 test_getLogHash(FH32 const& _txHash) = 0;
 
     // Internal
-    virtual DataObject rpcCall(std::string const& _methodName,
+    virtual spDataObject rpcCall(std::string const& _methodName,
         std::vector<std::string> const& _args = std::vector<std::string>(),
         bool _canFail = false) = 0;
     virtual Socket::SocketType getSocketType() const = 0;

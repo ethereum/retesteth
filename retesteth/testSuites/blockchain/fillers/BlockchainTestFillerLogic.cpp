@@ -9,13 +9,13 @@ using namespace test::blockchainfiller;
 namespace test
 {
 /// Generate blockchain test from filler
-DataObject FillTest(BlockchainTestInFiller const& _test, TestSuite::TestSuiteOptions const& _opt)
+spDataObject FillTest(BlockchainTestInFiller const& _test, TestSuite::TestSuiteOptions const& _opt)
 {
     (void)_opt;
     if (Options::get().logVerbosity > 1)
         ETH_STDOUT_MESSAGE("Filling " + _test.testName());
 
-    DataObject result;
+    spDataObject result(new DataObject());
     if (ExitHandler::receivedExitSignal())
         return result;
     SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
@@ -30,7 +30,8 @@ DataObject FillTest(BlockchainTestInFiller const& _test, TestSuite::TestSuiteOpt
             if (expect.hasFork(net))
             {
                 // Construct filled blockchain test
-                DataObject filledTest;
+                spDataObject _filledTest(new DataObject());
+                DataObject& filledTest = _filledTest.getContent();
                 string const newtestname = _test.testName() + "_" + net.asString();
                 TestOutputHelper::get().setCurrentTestName(newtestname);
                 filledTest.setKey(newtestname);
@@ -38,13 +39,13 @@ DataObject FillTest(BlockchainTestInFiller const& _test, TestSuite::TestSuiteOpt
                     filledTest["_info"]["comment"] = _test.Info().comment();
                 filledTest["sealEngine"] = sealEngineToStr(_test.sealEngine());
                 filledTest["network"] = net.asString();
-                filledTest["pre"] = _test.Pre().asDataObject();
+                filledTest.atKeyPointer("pre") = _test.Pre().asDataObject();
 
                 // Initialise chain manager
                 ETH_LOGC("FILL GENESIS INFO: ", 6, LogColor::LIME);
                 TestBlockchainManager testchain(_test.Env(), _test.Pre(), _test.sealEngine(), net);
                 TestBlock const& genesis = testchain.getLastBlock();
-                filledTest["genesisBlockHeader"] = genesis.getTestHeader()->asDataObject();
+                filledTest.atKeyPointer("genesisBlockHeader") = genesis.getTestHeader()->asDataObject();
                 filledTest["genesisRLP"] = genesis.getRawRLP().asString();
 
                 TestOutputHelper::get().setUnitTestExceptions(_test.unitTestExceptions());
@@ -53,7 +54,7 @@ DataObject FillTest(BlockchainTestInFiller const& _test, TestSuite::TestSuiteOpt
                 for (auto const& block : _test.blocks())
                 {
                     if (ExitHandler::receivedExitSignal())
-                        return filledTest;
+                        return _filledTest;
                     // Debug
                     if (Options::get().blockLimit != 0 && blocks++ >= Options::get().blockLimit)
                         break;
@@ -80,7 +81,7 @@ DataObject FillTest(BlockchainTestInFiller const& _test, TestSuite::TestSuiteOpt
                 {
                     State remoteState(getRemoteState(session));
                     compareStates(expect.result(), remoteState);
-                    filledTest["postState"] = remoteState.asDataObject(ExportOrder::OldStyle);
+                    filledTest.atKeyPointer("postState") = remoteState.asDataObject(ExportOrder::OldStyle);
                     if (Options::get().poststate)
                         ETH_STDOUT_MESSAGE("\nState Dump:" + TestOutputHelper::get().testInfo().errorDebug() + cDefault +
                                            " \n" + filledTest.atKey("postState").asJson());
@@ -97,7 +98,7 @@ DataObject FillTest(BlockchainTestInFiller const& _test, TestSuite::TestSuiteOpt
 
 
                 filledTest["lastblockhash"] = finalBlock.header()->hash().asString();
-                result.addSubObject(filledTest);
+                (*result).addSubObject(_filledTest);
             }  // expects count net
         }
     }

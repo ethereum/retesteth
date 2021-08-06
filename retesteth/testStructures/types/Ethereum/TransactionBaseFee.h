@@ -13,7 +13,7 @@ struct TransactionBaseFee : Transaction
     TransactionBaseFee(BYTES const&);
     TransactionBaseFee(dev::RLP const&);
 
-    DataObject const asDataObject(ExportOrder _order = ExportOrder::Default) const override;
+    spDataObject asDataObject(ExportOrder _order = ExportOrder::Default) const override;
     TransactionType type() const override { return TransactionType::BASEFEE; }
 
 private:

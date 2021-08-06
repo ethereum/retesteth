@@ -25,7 +25,6 @@ struct VMLogRecord
     spBYTES memory;
     long long memSize;
     std::vector<string> stack;
-    std::vector<string> returnStack;
     spBYTES returnData;
     size_t depth;
     spVALUE refund;

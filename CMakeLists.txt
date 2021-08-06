@@ -14,8 +14,8 @@ HunterGate(
 	LOCAL
 )
 
-project(retesteth VERSION 0.1.1)
-set(VERSION_SUFFIX "eip1559")
+project(retesteth VERSION 0.1.2)
+set(VERSION_SUFFIX "london-spdataobj")
 
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)

@@ -5,68 +5,75 @@ using namespace test;
 
 namespace toolimpl
 {
-DataObject constructAccountRange(EthereumBlockState const& _block, FH32 const& _addrHash, size_t _maxResult)
+spDataObject constructAccountRange(EthereumBlockState const& _block, FH32 const& _addrHash, size_t _maxResult)
 {
     size_t k = 0;
     size_t iAcc = hexOrDecStringToInt(_addrHash.asString());
-    DataObject constructResponse;
-    constructResponse["addressMap"] = DataObject(DataType::Object);
+    spDataObject constructResponse (new DataObject());
+    spDataObject emptyList(new DataObject(DataType::Object));
+    (*constructResponse).atKeyPointer("addressMap") = emptyList;
     for (auto const& acc : _block.state().accounts())
     {
         if (k++ + 1 < iAcc)  // The first key is 1 must be included
             continue;
 
-        constructResponse["addressMap"].addSubObject(fto_string(iAcc++), DataObject(acc.first.asString()));
-        if (constructResponse.atKey("addressMap").getSubObjects().size() == _maxResult)
+        spDataObject address(new DataObject(acc.first.asString()));
+        (*constructResponse)["addressMap"].addSubObject(fto_string(iAcc++), address);
+        if (constructResponse->atKey("addressMap").getSubObjects().size() == _maxResult)
             break;
     }
-    if (constructResponse.atKey("addressMap").getSubObjects().size() == 0)
-        constructResponse["nextKey"] = test::stoCompactHexPrefixed(0, 32);
+    if (constructResponse->atKey("addressMap").getSubObjects().size() == 0)
+        (*constructResponse)["nextKey"] = test::stoCompactHexPrefixed(0, 32);
     else
-        constructResponse["nextKey"] = test::stoCompactHexPrefixed(k + 1, 32);  // because we rely on empty structure +1
+        (*constructResponse)["nextKey"] = test::stoCompactHexPrefixed(k + 1, 32);  // because we rely on empty structure +1
     return constructResponse;
 }
 
-DataObject constructEthGetBlockBy(EthereumBlockState const& _block)
+spDataObject constructEthGetBlockBy(EthereumBlockState const& _block)
 {
-    DataObject constructResponse = _block.header()->asDataObject();
+    spDataObject constructResponse = _block.header()->asDataObject();
 
-    constructResponse["transactions"] = DataObject(DataType::Array);
+    spDataObject transactionArray(new DataObject(DataType::Array));
+    (*constructResponse).atKeyPointer("transactions") = transactionArray;
     for (auto const& tr : _block.transactions())
     {
-        DataObject fullTransaction = tr->asDataObject();
-        fullTransaction["blockHash"] =
-            _block.header()->hash().asString();  // We don't know the hash its in tool response
-        fullTransaction["blockNumber"] = _block.header()->number().asString();
-        fullTransaction["from"] = FH20::zero().asString();  // Can be recovered from vrs
-        fullTransaction["transactionIndex"] = "0x00";       // Its in tool response
-        fullTransaction["hash"] = tr->hash().asString();
-        constructResponse["transactions"].addArrayObject(fullTransaction);
+        spDataObject fullTransaction = tr->asDataObject();
+        (*fullTransaction)["blockHash"] = _block.header()->hash().asString();  // We don't know the hash its in tool response
+        (*fullTransaction)["blockNumber"] = _block.header()->number().asString();
+        (*fullTransaction)["from"] = FH20::zero().asString();  // Can be recovered from vrs
+        (*fullTransaction)["transactionIndex"] = "0x00";       // Its in tool response
+        (*fullTransaction)["hash"] = tr->hash().asString();
+        (*constructResponse)["transactions"].addArrayObject(fullTransaction);
     }
 
-    constructResponse["uncles"] = DataObject(DataType::Array);
+    spDataObject arr(new DataObject(DataType::Array));
+    (*constructResponse).atKeyPointer("uncles") = arr;
     for (auto const& un : _block.uncles())
-        constructResponse["uncles"].addArrayObject(un->hash().asString());
+    {
+        spDataObject unHash(new DataObject(un->hash().asString()));
+        (*constructResponse)["uncles"].addArrayObject(unHash);
+    }
 
-    constructResponse["size"] = "0x00";
-    constructResponse["totalDifficulty"] = "0x00";
-    constructResponse.renameKey("bloom", "logsBloom");
-    constructResponse.renameKey("coinbase", "miner");
-    constructResponse.renameKey("receiptTrie", "receiptsRoot");
-    constructResponse.renameKey("transactionsTrie", "transactionsRoot");
-    constructResponse.renameKey("uncleHash", "sha3Uncles");
+    (*constructResponse)["size"] = "0x00";
+    (*constructResponse)["totalDifficulty"] = "0x00";
+    (*constructResponse).renameKey("bloom", "logsBloom");
+    (*constructResponse).renameKey("coinbase", "miner");
+    (*constructResponse).renameKey("receiptTrie", "receiptsRoot");
+    (*constructResponse).renameKey("transactionsTrie", "transactionsRoot");
+    (*constructResponse).renameKey("uncleHash", "sha3Uncles");
     return constructResponse;
 }
 
-DataObject constructStorageRangeAt(
+spDataObject constructStorageRangeAt(
     EthereumBlockState const& _block, FH20 const& _address, FH32 const& _begin, size_t _maxResult)
 {
-    DataObject constructResponse;
+    spDataObject constructResponse (new DataObject());
     if (_block.state().hasAccount(_address))
     {
-        constructResponse["complete"].setBool(true);
-        constructResponse["storage"] = DataObject(DataType::Object);
-        constructResponse["nextKey"] = FH32::zero().asString();
+        (*constructResponse)["complete"].setBool(true);
+        spDataObject obj(new DataObject(DataType::Object));
+        (*constructResponse).atKeyPointer("storage") = obj;
+        (*constructResponse)["nextKey"] = FH32::zero().asString();
         if (_block.state().getAccount(_address).hasStorage())
         {
             size_t iStore = 0;
@@ -75,23 +82,25 @@ DataObject constructStorageRangeAt(
             {
                 if (iStore++ + 1 < iBegin)
                     continue;
-                DataObject record;
+                DataObject& record = (*obj)[fto_string(iStore)];
                 record["key"] = std::get<0>(el.second)->asString();
                 record["value"] = std::get<1>(el.second)->asString();
                 record.performModifier(mod_removeLeadingZerosFromHexValuesEVEN);
-                constructResponse["storage"][fto_string(iStore)] = record;
-                if (constructResponse.atKey("storage").getSubObjects().size() == _maxResult)
+
+                if (constructResponse->atKey("storage").getSubObjects().size() == _maxResult)
                 {
-                    constructResponse["complete"].setBool(false);
-                    constructResponse["nextKey"] = dev::toCompactHexPrefixed(iStore + 1, 32);
+                    (*constructResponse)["complete"].setBool(false);
+                    (*constructResponse)["nextKey"] = dev::toCompactHexPrefixed(iStore + 1, 32);
                     break;
                 }
             }
         }
         else
-            constructResponse["storage"] = DataObject();
+        {
+            (*constructResponse)["storage"];
+        }
     }
-    ETH_LOG(constructResponse.asJson(), 7);
+    ETH_LOG(constructResponse->asJson(), 7);
     return constructResponse;
 }
 

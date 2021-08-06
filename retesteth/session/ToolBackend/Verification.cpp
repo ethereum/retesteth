@@ -43,7 +43,7 @@ void verify1559Block(spBlockHeader const& _header, ToolChain const& _chain)
            expected_base_fee_per_gas = INITIAL_BASE_FEE
         */
 
-        if (header.baseFee().asU256() != INITIAL_BASE_FEE)
+        if (header.baseFee().asBigInt() != INITIAL_BASE_FEE)
             throw test::UpwardsException(
                 "Invalid block1559: Initial baseFee must be 1000000000, got: " + header.baseFee().asDecString());
     }
@@ -91,20 +91,20 @@ void verify1559Parent(spBlockHeader const& _header, spBlockHeader const& _parent
         if (_parent->type() != BlockType::BlockHeaderLegacy)
             ETH_FAIL_MESSAGE("verify1559Parent first 1559 block must be on top of legacy block!");
 
-        DataObject parentData = _parent->asDataObject();
+        spDataObject parentData = _parent->asDataObject();
 
         // fake legacy block gasLimit for delta validation
         // https://eips.ethereum.org/EIPS/eip-1559
         // if INITIAL_FORK_BLOCK_NUMBER == block.number:
         //            parent_gas_target = self.parent(block).gas_limit
         //            parent_gas_limit = self.parent(block).gas_limit * ELASTICITY_MULTIPLIER
-        parentData["gasLimit"] = (_parent->gasLimit() * ELASTICITY_MULTIPLIER).asString();
+        (*parentData)["gasLimit"] = (_parent->gasLimit() * ELASTICITY_MULTIPLIER).asString();
 
         // https://eips.ethereum.org/EIPS/eip-1559
         // INITIAL_BASE_FEE = 1000000000
         // fake legacy block baseFee for delta validation
         VALUE genesisBaseFee = INITIAL_BASE_FEE * 8 / 7;
-        parentData["baseFeePerGas"] = genesisBaseFee.asString();
+        (*parentData)["baseFeePerGas"] = genesisBaseFee.asString();
 
         spBlockHeader fixedParent = spBlockHeader(new BlockHeader1559(parentData));
         verify1559Parent_private(_header, fixedParent, _chain);
@@ -116,7 +116,7 @@ void verify1559Parent(spBlockHeader const& _header, spBlockHeader const& _parent
 void verifyCommonBlock(spBlockHeader const& _header, ToolChain const& _chain)
 {
     BlockHeader const& header = _header.getCContent();
-    if (header.difficulty() < dev::u256("0x20000"))
+    if (header.difficulty() < dev::bigint("0x20000"))
         throw test::UpwardsException("Invalid difficulty: header.difficulty < 0x20000");
     if (header.extraData().asString().size() > 32 * 2 + 2)
         throw test::UpwardsException("Header extraData > 32 bytes");
@@ -127,7 +127,7 @@ void verifyCommonBlock(spBlockHeader const& _header, ToolChain const& _chain)
         throw test::UpwardsException("BlockHeader require Dao ExtraData! (0x64616f2d686172642d666f726b)");
 
     // Check gasLimit
-    if (header.gasLimit() > dev::u256("0x7fffffffffffffff"))
+    if (header.gasLimit() > dev::bigint("0x7fffffffffffffff"))
         throw test::UpwardsException("Header gasLimit > 0x7fffffffffffffff");
     if (header.gasUsed() > header.gasLimit())
         throw test::UpwardsException("Invalid gasUsed: header.gasUsed > header.gasLimit");
@@ -147,20 +147,19 @@ void verifyCommonParent(spBlockHeader const& _header, spBlockHeader const& _pare
 
     // Validate block difficulty delta
     ChainOperationParams params = ChainOperationParams::defaultParams(_chain.toolParams());
-    u256 newDiff = calculateEthashDifficulty(params, _header, _parent);
-    if (header.difficulty().asU256() != newDiff)
+    VALUE newDiff = calculateEthashDifficulty(params, _header, _parent);
+    if (header.difficulty() != newDiff)
         throw test::UpwardsException(
             "Invalid difficulty: " + header.difficulty().asDecString() + ", want: " + VALUE(newDiff).asDecString());
 
-
-    u256 parentGasLimit = parent.gasLimit().asU256();
+    bigint parentGasLimit = parent.gasLimit().asBigInt();
     if (header.number() == 5 && _chain.fork() == "BerlinToLondonAt5")
         parentGasLimit = parentGasLimit * ELASTICITY_MULTIPLIER;
 
     // Verify delta gas (legacy formula)
-    VALUE deltaGas = parent.gasLimit().asU256() / 1024;
-    if (header.gasLimit().asU256() >= parentGasLimit + deltaGas.asU256() ||
-        header.gasLimit().asU256() <= parentGasLimit - deltaGas.asU256())
+    VALUE const deltaGas = parent.gasLimit() / VALUE(1024);
+    if (header.gasLimit().asBigInt() >= parentGasLimit + deltaGas.asBigInt() ||
+        header.gasLimit().asBigInt() <= parentGasLimit - deltaGas.asBigInt())
         throw test::UpwardsException("Invalid gaslimit: " + header.gasLimit().asDecString() + ", want " +
                                      parent.gasLimit().asDecString() + " +/- " + deltaGas.asDecString());
 }

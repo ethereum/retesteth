@@ -105,7 +105,6 @@ BlockHeader1559::BlockHeader1559(DataObject const& _data)
 
 BlockHeader1559::BlockHeader1559(dev::RLP const& _rlp)
 {
-    DataObject init;
     // 0 - parentHash           // 8 - number
     // 1 - uncleHash            // 9 - gasLimit
     // 2 - coinbase             // 10 - gasUsed
@@ -115,45 +114,45 @@ BlockHeader1559::BlockHeader1559(dev::RLP const& _rlp)
     // 6 - bloom                // 14 - nonce
     // 7 - difficulty           // 15 - baseFee
     size_t i = 0;
-    init["parentHash"] = rlpToString(_rlp[i++]);
-    init["uncleHash"] = rlpToString(_rlp[i++]);
-    init["coinbase"] = rlpToString(_rlp[i++]);
-    init["stateRoot"] = rlpToString(_rlp[i++]);
-    init["transactionsTrie"] = rlpToString(_rlp[i++]);
-    init["receiptTrie"] = rlpToString(_rlp[i++]);
-    init["bloom"] = rlpToString(_rlp[i++]);
-    init["difficulty"] = rlpToString(_rlp[i++]);
-    init["number"] = rlpToString(_rlp[i++]);
-    init["gasLimit"] = rlpToString(_rlp[i++]);
-    init["gasUsed"] = rlpToString(_rlp[i++]);
-    init["timestamp"] = rlpToString(_rlp[i++]);
-    init["extraData"] = rlpToString(_rlp[i++], 0);
-    init["mixHash"] = rlpToString(_rlp[i++]);
-    init["nonce"] = rlpToString(_rlp[i++]);
-    init["baseFeePerGas"] = rlpToString(_rlp[i++]);
-    fromData(init);
+    m_parentHash = spFH32(new FH32(_rlp[i++]));
+    m_sha3Uncles = spFH32(new FH32(_rlp[i++]));
+    m_author = spFH20(new FH20(_rlp[i++]));
+    m_stateRoot = spFH32(new FH32(_rlp[i++]));
+    m_transactionsRoot = spFH32(new FH32(_rlp[i++]));
+    m_receiptsRoot = spFH32(new FH32(_rlp[i++]));
+    m_logsBloom = spFH256(new FH256(_rlp[i++]));
+    m_difficulty = spVALUE(new VALUE(_rlp[i++]));
+    m_number = spVALUE(new VALUE(_rlp[i++]));
+    m_gasLimit = spVALUE(new VALUE(_rlp[i++]));
+    m_gasUsed = spVALUE(new VALUE(_rlp[i++]));
+    m_timestamp = spVALUE(new VALUE(_rlp[i++]));
+    m_extraData = spBYTES(new BYTES(_rlp[i++]));
+    m_mixHash = spFH32(new FH32(_rlp[i++]));
+    m_nonce = spFH8(new FH8(_rlp[i++]));
+    m_baseFee = spVALUE(new VALUE(_rlp[i++]));
+    recalculateHash();
 }
 
-const DataObject BlockHeader1559::asDataObject() const
+spDataObject BlockHeader1559::asDataObject() const
 {
-    DataObject out;
-    out["bloom"] = m_logsBloom->asString();
-    out["coinbase"] = m_author->asString();
-    out["difficulty"] = m_difficulty->asString();
-    out["extraData"] = m_extraData->asString();
-    out["gasLimit"] = m_gasLimit->asString();
-    out["gasUsed"] = m_gasUsed->asString();
-    out["hash"] = m_hash->asString();
-    out["mixHash"] = m_mixHash->asString();
-    out["nonce"] = m_nonce->asString();
-    out["number"] = m_number->asString();
-    out["parentHash"] = m_parentHash->asString();
-    out["receiptTrie"] = m_receiptsRoot->asString();
-    out["stateRoot"] = m_stateRoot->asString();
-    out["timestamp"] = m_timestamp->asString();
-    out["transactionsTrie"] = m_transactionsRoot->asString();
-    out["uncleHash"] = m_sha3Uncles->asString();
-    out["baseFeePerGas"] = m_baseFee->asString();
+    spDataObject out(new DataObject());
+    (*out)["bloom"] = m_logsBloom->asString();
+    (*out)["coinbase"] = m_author->asString();
+    (*out)["difficulty"] = m_difficulty->asString();
+    (*out)["extraData"] = m_extraData->asString();
+    (*out)["gasLimit"] = m_gasLimit->asString();
+    (*out)["gasUsed"] = m_gasUsed->asString();
+    (*out)["hash"] = m_hash->asString();
+    (*out)["mixHash"] = m_mixHash->asString();
+    (*out)["nonce"] = m_nonce->asString();
+    (*out)["number"] = m_number->asString();
+    (*out)["parentHash"] = m_parentHash->asString();
+    (*out)["receiptTrie"] = m_receiptsRoot->asString();
+    (*out)["stateRoot"] = m_stateRoot->asString();
+    (*out)["timestamp"] = m_timestamp->asString();
+    (*out)["transactionsTrie"] = m_transactionsRoot->asString();
+    (*out)["uncleHash"] = m_sha3Uncles->asString();
+    (*out)["baseFeePerGas"] = m_baseFee->asString();
     return out;
 }
 
@@ -169,15 +168,15 @@ const RLPStream BlockHeader1559::asRLPStream() const
     header << h256(m_transactionsRoot->asString());
     header << h256(m_receiptsRoot->asString());
     header << h2048(m_logsBloom->asString());
-    header << m_difficulty->asU256();
-    header << m_number->asU256();
-    header << m_gasLimit->asU256();
-    header << m_gasUsed->asU256();
-    header << m_timestamp->asU256();
+    header << m_difficulty->asBigInt();
+    header << m_number->asBigInt();
+    header << m_gasLimit->asBigInt();
+    header << m_gasUsed->asBigInt();
+    header << m_timestamp->asBigInt();
     header << test::sfromHex(m_extraData->asString());
     header << h256(m_mixHash->asString());
     header << h64(m_nonce->asString());
-    header << m_baseFee->asU256();
+    header << m_baseFee->asBigInt();
     return header;
 }
 

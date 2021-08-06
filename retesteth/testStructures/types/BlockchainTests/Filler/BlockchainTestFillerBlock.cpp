@@ -29,8 +29,9 @@ BlockchainTestFillerBlock::BlockchainTestFillerBlock(DataObject const& _data, No
 
         if (_data.count("blocknumber"))
         {
-            DataObject tmpD = _data.atKey("blocknumber");
-            tmpD.performModifier(mod_valueToCompactEvenHexPrefixed);
+            spDataObject tmpD(new DataObject());
+            (*tmpD).copyFrom(_data.atKey("blocknumber"));
+            (*tmpD).performModifier(mod_valueToCompactEvenHexPrefixed);
             m_blockNumber = spVALUE(new VALUE(tmpD));
         }
 
@@ -51,14 +52,14 @@ BlockchainTestFillerBlock::BlockchainTestFillerBlock(DataObject const& _data, No
         if (_data.count("blockHeader"))
         {
             if (_data.atKey("blockHeader").getSubObjects().size() &&
-                _data.atKey("blockHeader").getSubObjects().at(0).type() == DataType::Object)
+                _data.atKey("blockHeader").getSubObjects().at(0)->type() == DataType::Object)
             {
                 // Read overwrite rules specific to fork
                 for (auto const& rec : _data.atKey("blockHeader").getSubObjects())
                 {
                     // Parse ">=Frontier" : "BlockHeaderOverwrite"
                     ClientConfig const& cfg = Options::get().getDynamicOptions().getCurrentConfig();
-                    std::set<string> forksString = {rec.getKey()};
+                    std::set<string> forksString = {rec->getKey()};
                     std::vector<FORK> parsedForks = cfg.translateNetworks(forksString);
                     for (auto const& el : parsedForks)
                         m_overwriteHeaderByForkMap.emplace(el, spBlockHeaderOverwrite(new BlockHeaderOverwrite(rec)));

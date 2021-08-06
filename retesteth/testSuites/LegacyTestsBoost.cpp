@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_SUITE(LegacyTests)
             // Invalid Opcode Tests
             BOOST_AUTO_TEST_CASE(stBadOpcode) {}
 
-            // New Tests
+            // Recent Tests
             BOOST_AUTO_TEST_CASE(stArgsZeroOneBalance) {}
             BOOST_AUTO_TEST_CASE(stTimeConsuming) {}
         BOOST_AUTO_TEST_SUITE_END()  // GeneralStateTests Constantinople Legacy
@@ -143,7 +143,7 @@ BOOST_AUTO_TEST_SUITE(LegacyTests)
             // Bad opcodes test
             BOOST_AUTO_TEST_CASE(stBadOpcode) {}
 
-            // New Tests
+            // Recent Tests
             BOOST_AUTO_TEST_CASE(stArgsZeroOneBalance) {}
             BOOST_AUTO_TEST_CASE(stTimeConsuming) {}
         BOOST_AUTO_TEST_SUITE_END()  // BCGeneralStateTests Constantinople Legacy

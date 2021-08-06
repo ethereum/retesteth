@@ -12,20 +12,20 @@ namespace toolimpl
 struct ChainOperationParams
 {
     static ChainOperationParams defaultParams(ToolParams const& _params);
-    u256 minimumDifficulty;
-    u256 difficultyBoundDivisor;
-    u256 durationLimit;
-    u256 homesteadForkBlock;
-    u256 byzantiumForkBlock;
-    u256 muirGlacierForkBlock;
-    u256 constantinopleForkBlock;
-    u256 londonForkBlock;
+    bigint minimumDifficulty;
+    bigint difficultyBoundDivisor;
+    bigint durationLimit;
+    bigint homesteadForkBlock;
+    bigint byzantiumForkBlock;
+    bigint muirGlacierForkBlock;
+    bigint constantinopleForkBlock;
+    bigint londonForkBlock;
 };
 std::tuple<VALUE, FORK> prepareReward(SealEngine _engine, FORK const& _fork, VALUE const& _blockNumber = VALUE(0));
 VALUE calculateGasLimit(VALUE const& _parentGasLimit, VALUE const& _parentGasUsed);
-u256 calculateEthashDifficulty(
+VALUE calculateEthashDifficulty(
     ChainOperationParams const& _chainParams, spBlockHeader const& _bi, spBlockHeader const& _parent);
-u256 calculateEIP1559BaseFee(ChainOperationParams const& _chainParams, spBlockHeader const& _bi, spBlockHeader const& _parent);
-State restoreFullState(DataObject const& _toolState);
+VALUE calculateEIP1559BaseFee(ChainOperationParams const& _chainParams, spBlockHeader const& _bi, spBlockHeader const& _parent);
+State restoreFullState(DataObject& _toolState);
 
 }  // namespace toolimpl

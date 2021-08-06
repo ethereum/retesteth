@@ -9,7 +9,7 @@ namespace teststruct
 {
 // Look at expect section data indexes filter and try to replace string values
 // into indexes of transaction data array (searching by label)
-DataObject ReplaceValueToIndexesInDataList(spStateTestFillerTransaction const& _gtr, DataObject const& _dataList)
+spDataObject ReplaceValueToIndexesInDataList(spStateTestFillerTransaction const& _gtr, DataObject const& _dataList)
 {
     auto findIndexOfValueAndReplace = [&_gtr](DataObject& _data) {
         if (_data.type() == DataType::String)
@@ -33,7 +33,7 @@ DataObject ReplaceValueToIndexesInDataList(spStateTestFillerTransaction const& _
             {
                 _data.clear();
                 for (auto const& el : indexes)
-                    _data.addArrayObject(el);
+                    _data.addArrayObject(spDataObject(new DataObject(el)));
             }
             if (indexes.size() == 0 && _data.asString().find(":label") != string::npos)
                 ETH_ERROR_MESSAGE("Label not found in tx data: `" + _data.asString() + "`");
@@ -41,39 +41,41 @@ DataObject ReplaceValueToIndexesInDataList(spStateTestFillerTransaction const& _
     };
     // Check if dataIndexes contain values of transaction data vector
     // Find those values and vector and replace by indexes
-    DataObject dataIndexes = _dataList;
-    if (dataIndexes.type() == DataType::Array)
+    spDataObject dataIndexes(new DataObject());
+    (*dataIndexes).copyFrom(_dataList);
+    if (dataIndexes->type() == DataType::Array)
     {
-        DataObject updatedDataIndexes;
-        for (auto& el : dataIndexes.getSubObjectsUnsafe())
+        spDataObject updatedDataIndexes(new DataObject());
+        for (auto& el : (*dataIndexes).getSubObjectsUnsafe())
         {
             // try to replace `el` with data indexes from transaction
             // in case `el` provided is a transaction value in dataInd array
-            if (el.type() == DataType::String)
+            if (el->type() == DataType::String)
             {
-                DataObject elCopy = el;
-                findIndexOfValueAndReplace(elCopy);
-                if (elCopy.type() == DataType::Integer)
+                spDataObject elCopy(new DataObject());
+                (*elCopy).copyFrom(el);
+                findIndexOfValueAndReplace(elCopy.getContent());
+                if (elCopy->type() == DataType::Integer)
                 {
-                    el = elCopy;
-                    updatedDataIndexes.addArrayObject(el);
+                    el.getContent().replace(elCopy);
+                    (*updatedDataIndexes).addArrayObject(elCopy);
                 }
-                else if (elCopy.type() == DataType::Array)
+                else if (elCopy->type() == DataType::Array)
                 {
-                    for (auto const& el2 : elCopy.getSubObjects())
-                        updatedDataIndexes.addArrayObject(el2);
+                    for (auto const& el2 : elCopy->getSubObjects())
+                        (*updatedDataIndexes).addArrayObject(el2);
                 }
                 else
-                    updatedDataIndexes.addArrayObject(el);
+                    (*updatedDataIndexes).addArrayObject(el);
             }
             else
-                updatedDataIndexes.addArrayObject(el);
+                (*updatedDataIndexes).addArrayObject(el);
         }
         dataIndexes = updatedDataIndexes;
     }
-    else if (dataIndexes.type() == DataType::String)
-        findIndexOfValueAndReplace(dataIndexes);
-    dataIndexes.setKey(_dataList.getKey());
+    else if (dataIndexes->type() == DataType::String)
+        findIndexOfValueAndReplace(dataIndexes.getContent());
+    (*dataIndexes).setKey(_dataList.getKey());
     return dataIndexes;
 }
 
@@ -81,9 +83,11 @@ StateTestFillerExpectSection::StateTestFillerExpectSection(DataObject const& _da
 {
     try
     {
-        m_initialData["indexes"] = _data.atKey("indexes");
-        m_initialData["network"] = _data.atKey("network");
-        DataObject dataIndexes = ReplaceValueToIndexesInDataList(_gtr, _data.atKey("indexes").atKey("data"));
+        m_initialData = spDataObject(new DataObject());
+        (*m_initialData).atKeyPointer("indexes").getContent().copyFrom(_data.atKey("indexes"));
+        (*m_initialData).atKeyPointer("network").getContent().copyFrom(_data.atKey("network"));
+
+        spDataObject dataIndexes = ReplaceValueToIndexesInDataList(_gtr, _data.atKey("indexes").atKey("data"));
         parseJsonIntValueIntoSet(dataIndexes, m_dataInd);
         parseJsonIntValueIntoSet(_data.atKey("indexes").atKey("gas"), m_gasInd);
         parseJsonIntValueIntoSet(_data.atKey("indexes").atKey("value"), m_valInd);

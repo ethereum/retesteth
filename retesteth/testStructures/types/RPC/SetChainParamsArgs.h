@@ -13,7 +13,9 @@ namespace teststruct
 struct SetChainParamsArgs : GCP_SPointerBase
 {
     SetChainParamsArgs(DataObject const& _data);
-    DataObject asDataObject() const;
+    SetChainParamsArgs* copy() const { return new SetChainParamsArgs(asDataObject()); }
+
+    spDataObject asDataObject() const;
     spBlockHeader const& genesis() const { return m_genesis; }
     State const& state() const { return m_preState; }
     SealEngine sealEngine() const { return m_sealEngine; }
@@ -24,7 +26,7 @@ protected:
     spState m_preState;
     SealEngine m_sealEngine;
     spBlockHeader m_genesis;
-    DataObject m_params;
+    spDataObject m_params;
 };
 
 }  // namespace teststruct

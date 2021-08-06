@@ -10,7 +10,7 @@ Storage::Storage(DataObject const& _data)
     {
         DataObject tmpKey;
         tmpKey.setKey("Storage record in storage");  // Hint
-        tmpKey.setString(el.getKey());
+        tmpKey.setString(el->getKey());
         spVALUE key(new VALUE(tmpKey));
         spVALUE val(new VALUE(el));
         m_map[key->asString()] = {key, val};
@@ -24,13 +24,13 @@ void Storage::merge(Storage const& _storage)
         m_map[record.first] = record.second;
 }
 
-const DataObject Storage::asDataObject() const
+spDataObject Storage::asDataObject() const
 {
-    DataObject out(DataType::Object);
+    spDataObject out(new DataObject(DataType::Object));
     for (auto const& el : m_map)
     {
         StorageRecord const& record = el.second;
-        out[std::get<0>(record)->asString()] = std::get<1>(record)->asString();
+        (*out)[std::get<0>(record)->asString()] = std::get<1>(record)->asString();
     }
     return out;
 }

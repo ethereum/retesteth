@@ -23,14 +23,18 @@ struct BlockHeader : GCP_SPointerBase
 {
     virtual ~BlockHeader(){/* all smart pointers */};
 
-    virtual DataObject const asDataObject() const = 0;
+    virtual spDataObject asDataObject() const = 0;
     virtual dev::RLPStream const asRLPStream() const = 0;
     virtual BlockType type() const = 0;
 
     bool operator==(BlockHeader const& _rhs) const { return asDataObject() == _rhs.asDataObject(); }
     bool operator!=(BlockHeader const& _rhs) const { return !(*this == _rhs); }
 
-    void recalculateHash() { m_hash = spFH32(new FH32("0x" + dev::toString(dev::sha3(asRLPStream().out())))); }
+    void recalculateHash()
+    {
+        FH32* newHash = new FH32("0x" + dev::toString(dev::sha3(asRLPStream().out())));
+        m_hash = spFH32(newHash);
+    }
     bool hasUncles() const
     {
         return m_sha3Uncles->asString() != "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347";
@@ -42,14 +46,14 @@ struct BlockHeader : GCP_SPointerBase
     FH32 const& parentHash() const { return m_parentHash; }
     VALUE const& number() const { return m_number; }
 
-    void setParentHash(FH32 const& _hash) { m_parentHash = spFH32(new FH32(_hash)); }
-    void setHeaderHash(FH32 const& _hash) { m_hash = spFH32(new FH32(_hash)); }
-    void setStateRoot(FH32 const& _hash) { m_stateRoot = spFH32(new FH32(_hash)); }
-    void setNumber(VALUE const& _number) { m_number = spVALUE(new VALUE(_number)); }
+    void setParentHash(FH32 const& _hash) { m_parentHash = spFH32(_hash.copy()); }
+    void setHeaderHash(FH32 const& _hash) { m_hash = spFH32(_hash.copy()); }
+    void setStateRoot(FH32 const& _hash) { m_stateRoot = spFH32(_hash.copy()); }
+    void setNumber(VALUE const& _number) { m_number = spVALUE(_number.copy()); }
 
     // Would soon go uncommon
     VALUE const& difficulty() const { return m_difficulty; }
-    void setDifficulty(VALUE const& _value) { m_difficulty = spVALUE(new VALUE(_value.asU256())); }
+    void setDifficulty(VALUE const& _value) { m_difficulty = spVALUE(_value.copy()); }
 
     // Classic Ethereum blockheader fields
     FH32 const& receiptTrie() const { return m_receiptsRoot; }
@@ -63,14 +67,14 @@ struct BlockHeader : GCP_SPointerBase
     FH32 const& mixHash() const { return m_mixHash; }
     VALUE const& gasLimit() const { return m_gasLimit; }
 
-    void setLogsBloom(FH256 const& _logs) { m_logsBloom = spFH256(new FH256(_logs)); }
-    void setTimestamp(VALUE const& _value) { m_timestamp = spVALUE(new VALUE(_value.asU256())); }
-    void setTransactionHash(FH32 const& _hash) { m_transactionsRoot = spFH32(new FH32(_hash)); }
-    void setTrReceiptsHash(FH32 const& _hash) { m_receiptsRoot = spFH32(new FH32(_hash)); }
-    void setExtraData(BYTES const& _extraData) { m_extraData = spBYTES(new BYTES(_extraData)); }
-    void setUnclesHash(FH32 const& _hash) { m_sha3Uncles = spFH32(new FH32(_hash)); }
-    void setGasUsed(VALUE const& _gasUsed) { m_gasUsed = spVALUE(new VALUE(_gasUsed)); }
-    void setGasLimit(VALUE const& _gasLimit) { m_gasLimit = spVALUE(new VALUE(_gasLimit)); }
+    void setLogsBloom(FH256 const& _logs) { m_logsBloom = spFH256(_logs.copy()); }
+    void setTimestamp(VALUE const& _value) { m_timestamp = spVALUE(_value.copy()); }
+    void setTransactionHash(FH32 const& _hash) { m_transactionsRoot = spFH32(_hash.copy()); }
+    void setTrReceiptsHash(FH32 const& _hash) { m_receiptsRoot = spFH32(_hash.copy()); }
+    void setExtraData(BYTES const& _extraData) { m_extraData = spBYTES(_extraData.copy()); }
+    void setUnclesHash(FH32 const& _hash) { m_sha3Uncles = spFH32(_hash.copy()); }
+    void setGasUsed(VALUE const& _gasUsed) { m_gasUsed = spVALUE(_gasUsed.copy()); }
+    void setGasLimit(VALUE const& _gasLimit) { m_gasLimit = spVALUE(_gasLimit.copy()); }
 
 protected:
     BlockHeader() {}

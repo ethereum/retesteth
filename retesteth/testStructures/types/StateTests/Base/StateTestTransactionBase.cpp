@@ -4,28 +4,30 @@
 using namespace dataobject;
 using namespace test::teststruct;
 
-const DataObject StateTestTransactionBase::asDataObject() const
+spDataObject StateTestTransactionBase::asDataObject() const
 {
     // Serialize data back to JSON
-    DataObject out;
+    spDataObject _out(new DataObject());
+    DataObject& out = _out.getContent();
     size_t index = 0;
     bool atLeastOneNonNullAccessList = false;
-    DataObject txAccessListData(DataType::Array);
+    spDataObject txAccessListData(new DataObject(DataType::Array));
     for (Databox const& el : m_databox)
     {
-        out["data"].addArrayObject(el.m_data.asString());
+        spDataObject elb(new DataObject(el.m_data.asString()));
+        out["data"].addArrayObject(elb);
         if (el.m_accessList.isEmpty())
-            txAccessListData.addArrayObject(DataObject(DataType::Null));
+            (*txAccessListData).addArrayObject(spDataObject(new DataObject(DataType::Null)));
         else
         {
-            txAccessListData.addArrayObject(el.m_accessList->asDataObject());
+            (*txAccessListData).addArrayObject(el.m_accessList->asDataObject());
             atLeastOneNonNullAccessList = true;
         }
         index++;
     }
 
     if (atLeastOneNonNullAccessList)
-        out["accessLists"] = txAccessListData;
+        out.atKeyPointer("accessLists") = txAccessListData;
 
     if (!m_maxFeePerGas.isEmpty() || !m_maxPriorityFeePerGas.isEmpty())
     {
@@ -43,7 +45,10 @@ const DataObject StateTestTransactionBase::asDataObject() const
     }
 
     for (VALUE const& el : m_gasLimit)
-        out["gasLimit"].addArrayObject(el.asString());
+    {
+        spDataObject els(new DataObject(el.asString()));
+        out["gasLimit"].addArrayObject(els);
+    }
     out["nonce"] = m_nonce->asString();
     out["secretKey"] = m_secretKey->asString();
     if (m_creation)
@@ -51,9 +56,12 @@ const DataObject StateTestTransactionBase::asDataObject() const
     else
         out["to"] = m_to->asString();
     for (VALUE const& el : m_value)
-        out["value"].addArrayObject(el.asString());
+    {
+        spDataObject els(new DataObject(el.asString()));
+        out["value"].addArrayObject(els);
+    }
 
-    return out;
+    return _out;
 }
 
 /// Construct individual transactions from gstate test transaction
@@ -98,7 +106,7 @@ std::vector<TransactionInGeneralSection> StateTestTransactionBase::buildTransact
 
                 // Export Access List
                 if (!databox.m_accessList.isEmpty())
-                    trData["accessList"] = databox.m_accessList->asDataObject();
+                    trData.atKeyPointer("accessList") = databox.m_accessList->asDataObject();
 
                 out.push_back(
                     TransactionInGeneralSection(trData, dIND, gIND, vIND, databox.m_dataRawPreview, databox.m_dataLabel));

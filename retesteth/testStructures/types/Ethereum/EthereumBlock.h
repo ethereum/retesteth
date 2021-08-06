@@ -42,12 +42,12 @@ protected:
 struct EthereumBlockState : EthereumBlock
 {
     EthereumBlockState(spBlockHeader const& _header, State const& _state, FH32 const& _logHash)
-      : m_state(_state.asDataObject()), m_logHash(_logHash)
+      : m_state(_state.asDataObject()), m_logHash(_logHash.asString())
     {
         m_header = readBlockHeader(_header->asDataObject());
     }
 
-    void addTotalDifficulty(VALUE const& _totalDifficulty) { m_totalDifficulty = spVALUE(new VALUE(_totalDifficulty)); }
+    void setTotalDifficulty(VALUE const& _totalDifficulty) { m_totalDifficulty = spVALUE(_totalDifficulty.copy()); }
     VALUE const& totalDifficulty() const { return m_totalDifficulty; }
 
     State const& state() const { return m_state; }

@@ -36,11 +36,11 @@ using namespace test;
 
 namespace test
 {
-DataObject RPCTestSuite::doTests(DataObject const& _input, TestSuiteOptions& _opt) const
+spDataObject RPCTestSuite::doTests(DataObject const& _input, TestSuiteOptions& _opt) const
 {
     (void)_input;
     (void)_opt;
-    return DataObject();
+    return spDataObject(new DataObject());
 }
 
 TestSuite::TestPath RPCTestSuite::suiteFolder() const

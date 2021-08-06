@@ -33,15 +33,15 @@ const string t8ntool_BerlinToLondonAt5_config = R"({
 genBerlinToLondonCfg::genBerlinToLondonCfg()
 {
     {
-        DataObject obj;
-        obj["path"] = "besu/genesis/BerlinToLondonAt5.json";
-        obj["content"] = default_BerlinToLondonAt5_config;
+        spDataObject obj(new DataObject());
+        (*obj)["path"] = "besu/genesis/BerlinToLondonAt5.json";
+        (*obj)["content"] = default_BerlinToLondonAt5_config;
         map_configs.addArrayObject(obj);
     }
     {
-        DataObject obj;
-        obj["path"] = "default/genesis/BerlinToLondonAt5.json";
-        obj["content"] = t8ntool_BerlinToLondonAt5_config;
+        spDataObject obj(new DataObject());
+        (*obj)["path"] = "default/genesis/BerlinToLondonAt5.json";
+        (*obj)["content"] = t8ntool_BerlinToLondonAt5_config;
         map_configs.addArrayObject(obj);
     }
 }

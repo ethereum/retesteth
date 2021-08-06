@@ -14,7 +14,7 @@ GeneralStateTestFiller::GeneralStateTestFiller(DataObject const& _data)
             TestOutputHelper::get().get().testFile().string() + " A test file must contain exactly one test!");
         for (auto const& el : _data.getSubObjects())
         {
-            TestOutputHelper::get().setCurrentTestInfo(TestInfo("GeneralStateTestFiller", el.getKey()));
+            TestOutputHelper::get().setCurrentTestInfo(TestInfo("GeneralStateTestFiller", el->getKey()));
             m_tests.push_back(StateTestInFiller(el));
         }
     }

@@ -140,7 +140,7 @@ CompareResult compareStorage(Storage const& _expectStorage, Storage const& _remo
         VALUE const& expVal = std::get<1>(element.second);
 
         // If remote storage doesn't exist and expected is not 00 (zeros omited)
-        if (!_remoteStorage.hasKey(expKey) && expVal.asU256() != 0)
+        if (!_remoteStorage.hasKey(expKey) && expVal.asBigInt() != 0)
         {
             ETH_MARK_ERROR(message + "test expected storage key: '" + expKey.asString() + "' to be set to: '" +
                            expVal.asString() + "', but remote key '" + expKey.asString() + "' does not exist!");
@@ -250,7 +250,7 @@ void compareStates(StateBase const& _stateExpect, State const& _statePost)
             result = accountCompareResult;
     }
     if (Options::get().poststate)
-        ETH_STDOUT_MESSAGE("State Dump: \n" + _statePost.asDataObject().asJson());
+        ETH_STDOUT_MESSAGE("State Dump: \n" + _statePost.asDataObject()->asJson());
     if (result != CompareResult::Success)
         ETH_ERROR_MESSAGE("CompareStates failed with errors: " + CompareResultToString(result));
 }

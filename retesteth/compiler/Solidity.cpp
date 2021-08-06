@@ -292,10 +292,10 @@ string EncodeArgument(string const& _element, ArgumentSignature const& _sig)
 
 string const& test::compiler::solContracts::getCode(string const& _contractName) const
 {
-    if (!m_solContracts.count(_contractName))
+    if (!m_solContracts->count(_contractName))
         ETH_ERROR_MESSAGE("solContracts::getCode: error contract name: `" + _contractName +
                           "` not found! (Specify contract in \"solidity\": section of the test filler)");
-    return m_solContracts.atKey(_contractName).asString();
+    return m_solContracts->atKey(_contractName).asString();
 }
 
 // Encode Solidity abi

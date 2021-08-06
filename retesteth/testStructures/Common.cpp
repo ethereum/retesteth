@@ -5,6 +5,7 @@
 #include <retesteth/Options.h>
 #include <retesteth/configs/ClientConfig.h>
 #include <mutex>
+#include <algorithm>
 
 using namespace test;
 using namespace dev;
@@ -63,8 +64,8 @@ void mod_removeComments(DataObject& _obj)
     std::list<string> keysToRemove;
     for (auto& el : _obj.getSubObjectsUnsafe())
     {
-        if (el.getKey()[0] == '/' && el.getKey()[1] == '/')
-            keysToRemove.push_back(el.getKey());
+        if (el->getKey()[0] == '/' && el->getKey()[1] == '/')
+            keysToRemove.push_back(el->getKey());
     }
     for (auto const& key : keysToRemove)
         _obj.removeKey(key);
@@ -76,7 +77,12 @@ void mod_valueToCompactEvenHexPrefixed(DataObject& _obj)
     {
         try
         {
-            _obj.setString(toCompactHexPrefixed(_obj.asString(), 1));
+            if (!(_obj.asString()[0] == '0' && _obj.asString()[1] == 'x'))
+            {
+                string src = _obj.asString();
+                src.erase(std::remove(src.begin(), src.end(), '_'), src.end());
+                _obj.setString(toCompactHexPrefixed(src, 1));
+            }
         }
         catch (std::exception const& _ex)
         {
@@ -89,7 +95,8 @@ void mod_keyToCompactEvenHexPrefixed(DataObject& _obj)
 {
     try
     {
-        _obj.setKey(toCompactHexPrefixed(_obj.getKey(), 1));
+        if (!(_obj.getKey()[0] == '0' && _obj.getKey()[1] == 'x'))
+            _obj.setKey(toCompactHexPrefixed(_obj.getKey(), 1));
     }
     catch (std::exception const& _ex)
     {
@@ -152,11 +159,11 @@ void requireJsonFields(
     // check for unexpected fiedls
     for (auto const& field : _o.getSubObjects())
     {
-        string message = "'" + field.getKey() + "' should not be declared in '" + _section + "' section!";
+        string message = "'" + field->getKey() + "' should not be declared in '" + _section + "' section!";
         if (_fail)
-            ETH_FAIL_REQUIRE_MESSAGE(_validationMap.count(field.getKey()), message);
+            ETH_FAIL_REQUIRE_MESSAGE(_validationMap.count(field->getKey()), message);
         else
-            ETH_ERROR_REQUIRE_MESSAGE(_validationMap.count(field.getKey()), message);
+            ETH_ERROR_REQUIRE_MESSAGE(_validationMap.count(field->getKey()), message);
     }
 
     // check field types with validation map
@@ -195,9 +202,9 @@ void requireJsonFields(DataObject const& _o, std::string const& _config, std::ma
     // check for unexpected fiedls
     for (auto const& field : _o.getSubObjects())
     {
-        if (!_validationMap.count(field.getKey()))
+        if (!_validationMap.count(field->getKey()))
         {
-            std::string const comment = "Unexpected field '" + field.getKey() + "' in config: " + _config;
+            std::string const comment = "Unexpected field '" + field->getKey() + "' in config: " + _config;
             ETH_ERROR_MESSAGE(comment + "\n" + _o.asJson());
         }
     }
@@ -242,13 +249,15 @@ void requireJsonFields(DataObject const& _o, std::string const& _config, std::ma
 
 // Compile LLL in code
 // Convert dec fields to hex, add 0x prefix to accounts and storage keys
-DataObject convertDecStateToHex(DataObject const& _data, solContracts const& _preSolidity)
+spDataObject convertDecStateToHex(DataObject const& _data, solContracts const& _preSolidity)
 {
     // -- Compile LLL in pre state into byte code if not already
     // -- Convert State::Storage keys/values into hex
-    DataObject tmpD = _data;
-    for (auto& acc : tmpD.getSubObjectsUnsafe())
+    spDataObject tmpD(new DataObject());
+    tmpD.getContent().copyFrom(_data); // TODO copy HERE time consuming!!!
+    for (auto& acc2 : (*tmpD).getSubObjectsUnsafe())
     {
+        DataObject& acc = acc2.getContent();
         if (acc.getKey()[1] != 'x')
             acc.setKey("0x" + acc.getKey());
         acc["code"].setString(test::compiler::replaceCode(acc.atKey("code").asString(), _preSolidity));
@@ -256,27 +265,28 @@ DataObject convertDecStateToHex(DataObject const& _data, solContracts const& _pr
         acc["balance"].performModifier(mod_valueToCompactEvenHexPrefixed);
         for (auto& rec : acc["storage"].getSubObjectsUnsafe())
         {
-            rec.performModifier(mod_keyToCompactEvenHexPrefixed);
-            rec.performModifier(mod_valueToCompactEvenHexPrefixed);
+            rec.getContent().performModifier(mod_keyToCompactEvenHexPrefixed);
+            rec.getContent().performModifier(mod_valueToCompactEvenHexPrefixed);
         }
     }
     return tmpD;
 }
 
 // Convert dec fields to hex, add 0x prefix to accounts and storage keys
-DataObject convertDecBlockheaderIncompleteToHex(DataObject const& _data)
+spDataObject convertDecBlockheaderIncompleteToHex(DataObject const& _data)
 {
     // Convert to HEX
-    DataObject tmpD = _data;
-    tmpD.removeKey("RelTimestamp");     // BlockchainTestFiller fields
-    tmpD.removeKey("chainname");        // BlockchainTestFiller fields
+    spDataObject tmpD(new DataObject());
+    (*tmpD).copyFrom(_data);               // TODO copy time consuming!!!
+    (*tmpD).removeKey("RelTimestamp");     // BlockchainTestFiller fields
+    (*tmpD).removeKey("chainname");        // BlockchainTestFiller fields
 
     std::vector<string> hashKeys = {"parentHash", "coinbase", "bloom"};
     for (auto const& key : hashKeys)
         if (_data.count(key))
         {
             if (_data.atKey(key).asString().size() > 1 && _data.atKey(key).asString()[1] != 'x')
-                tmpD[key] = "0x" + _data.atKey(key).asString();
+                (*tmpD)[key] = "0x" + _data.atKey(key).asString();
         }
 
     std::vector<string> valueKeys = {
@@ -290,7 +300,7 @@ DataObject convertDecBlockheaderIncompleteToHex(DataObject const& _data)
     };
     for (auto const& key : valueKeys)
         if (_data.count(key))
-            tmpD[key].performModifier(mod_valueToCompactEvenHexPrefixed);
+            (*tmpD)[key].performModifier(mod_valueToCompactEvenHexPrefixed);
     return tmpD;
 }
 
@@ -303,9 +313,10 @@ string compareBlockHeaders(DataObject const& _blockA, DataObject const& _blockB,
     _whatField = string();
     ETH_ERROR_REQUIRE_MESSAGE(_blockA.getSubObjects().size() == _blockB.getSubObjects().size(),
         "compareBlockHeaders  _blockA.size() != _blockB.size()");
-    for (auto const& el : _blockA.getSubObjects())
+    for (auto const& el2 : _blockA.getSubObjects())
     {
-        string const testHeaderField = _blockB.getSubObjects().at(k++).asString();
+        DataObject const& el = el2;
+        string const testHeaderField = _blockB.getSubObjects().at(k++)->asString();
         message += cYellow + el.getKey() + cRed + " ";
         if (el.asString() != testHeaderField)
         {
@@ -332,10 +343,10 @@ void readExpectExceptions(DataObject const& _data, std::map<FORK, string>& _out)
     {
         // Parse ">=Frontier" : "EXCEPTION"
         ClientConfig const& cfg = Options::get().getDynamicOptions().getCurrentConfig();
-        std::set<string> forksString = {rec.getKey()};
+        std::set<string> forksString = {rec->getKey()};
         std::vector<FORK> parsedForks = cfg.translateNetworks(forksString);
         for (auto const& el : parsedForks)
-            _out.emplace(el, rec.asString());
+            _out.emplace(el, rec->asString());
     }
 }
 

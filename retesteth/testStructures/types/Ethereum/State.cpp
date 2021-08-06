@@ -24,7 +24,7 @@ State::State(DataObject const& _data)
     {
         for (auto const& el : _data.getSubObjects())
         {
-            FH20 key(el.getKey());
+            FH20 key(el->getKey());
             m_order.push_back(key);
             m_accounts[key] = spAccountBase(new Account(el));
         }
@@ -53,18 +53,18 @@ bool State::hasAccount(FH20 const& _address) const
     return m_accounts.count(_address);
 }
 
-const DataObject State::asDataObject(ExportOrder _order) const
+spDataObject State::asDataObject(ExportOrder _order) const
 {
-    DataObject out;
+    spDataObject out(new DataObject());
     if (_order == ExportOrder::OldStyle)
     {
         for (auto const& el : m_order)
-            out.addSubObject(m_accounts.at(el)->asDataObject(_order));
+            (*out).addSubObject(m_accounts.at(el)->asDataObject(_order));
     }
     else
     {
         for (auto const& el : m_accounts)
-            out.addSubObject(el.second->asDataObject());
+            (*out).addSubObject(el.second->asDataObject());
     }
     return out;
 }

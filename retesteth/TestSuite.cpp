@@ -42,12 +42,13 @@ namespace fs = boost::filesystem;
 namespace {
 struct TestFileData
 {
-    DataObject data;
+    spDataObject data;
     h256 hash;
 };
 
 TestFileData readTestFile(fs::path const& _testFileName)
 {
+    ETH_LOG("Read json structure " + string(_testFileName.filename().c_str()), 5);
     TestFileData testData;
     if (_testFileName.extension() == ".json")
         testData.data = test::readJsonData(_testFileName, string(), true);
@@ -56,8 +57,9 @@ TestFileData readTestFile(fs::path const& _testFileName)
     else
         ETH_ERROR_MESSAGE(
             "Unknown test format!" + test::TestOutputHelper::get().testFile().string());
+    ETH_LOG("Read json structure finish", 5);
 
-    string srcString = testData.data.asJson(0, false); //json_spirit::write_string(testData.data, false);
+    string srcString = testData.data->asJson(0, false); //json_spirit::write_string(testData.data, false);
     if (test::Options::get().showhash)
     {
         std::string output = "Not a Json object!";
@@ -80,55 +82,56 @@ TestFileData readTestFile(fs::path const& _testFileName)
     return testData;
 }
 
-void removeComments(DataObject& _obj)
+void removeComments(spDataObject& _obj)
 {
-    if (_obj.type() == DataType::Object)
+    if (_obj->type() == DataType::Object)
     {
 		list<string> removeList;
-        for (auto& i: _obj.getSubObjectsUnsafe())
+        for (auto& i: (*_obj).getSubObjectsUnsafe())
 		{
-            if (i.getKey().substr(0, 2) == "//")
+            if (i->getKey().substr(0, 2) == "//")
 			{
-                removeList.push_back(i.getKey());
+                removeList.push_back(i->getKey());
 				continue;
 			}
             removeComments(i);
 		}
         for (auto const& i: removeList)
-            _obj.removeKey(i);
+            (*_obj).removeKey(i);
 	}
-    else if (_obj.type() == DataType::Array)
+    else if (_obj->type() == DataType::Array)
     {
-        for (auto& i: _obj.getSubObjectsUnsafe())
-			removeComments(i);
+        for (auto& i: (*_obj).getSubObjectsUnsafe())
+            removeComments(i);
     }
 }
 
 void addClientInfo(DataObject& _v, fs::path const& _testSource, h256 const& _testSourceHash)
 {
     SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
-    for (auto& o : _v.getSubObjectsUnsafe())
+    for (auto& o2 : _v.getSubObjectsUnsafe())
     {
+        DataObject& o = o2.getContent();
         string comment;
-        DataObject clientinfo;
-        clientinfo.setKey("_info");
+        spDataObject clientinfo(new DataObject());
+        (*clientinfo).setKey("_info");
         if (o.count("_info"))
         {
             DataObject const& existingInfo = o.atKey("_info");
             if (existingInfo.count("comment"))
                 comment = existingInfo.atKey("comment").asString();
             if (existingInfo.count("labels"))
-                clientinfo["labels"] = existingInfo.atKey("labels");
+                (*clientinfo)["labels"].copyFrom(existingInfo.atKey("labels"));
         }
 
-        clientinfo["comment"] = comment;
-        clientinfo["filling-rpc-server"] = session.web3_clientVersion();
-        clientinfo["filling-tool-version"] = test::prepareVersionString();
-        clientinfo["lllcversion"] = test::prepareLLLCVersionString();
-        clientinfo["source"] = _testSource.string();
-        clientinfo["sourceHash"] = toString(_testSourceHash);
-        if (clientinfo.count("labels"))
-            clientinfo.setKeyPos("labels", clientinfo.getSubObjects().size() - 1);
+        (*clientinfo)["comment"] = comment;
+        (*clientinfo)["filling-rpc-server"] = session.web3_clientVersion()->asString();
+        (*clientinfo)["filling-tool-version"] = test::prepareVersionString();
+        (*clientinfo)["lllcversion"] = test::prepareLLLCVersionString();
+        (*clientinfo)["source"] = _testSource.string();
+        (*clientinfo)["sourceHash"] = toString(_testSourceHash);
+        if (clientinfo->count("labels"))
+            (*clientinfo).setKeyPos("labels", clientinfo->getSubObjects().size() - 1);
 
         o["_info"].replace(clientinfo);
         o.setKeyPos("_info", 0);
@@ -137,10 +140,11 @@ void addClientInfo(DataObject& _v, fs::path const& _testSource, h256 const& _tes
 
 void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
 {
-    DataObject v = test::readJsonData(_compiledTest, "_info");
+    spDataObject v = test::readJsonData(_compiledTest, "_info");
     TestFileData fillerData = readTestFile(_sourceTest);
-    for (auto const& i: v.getSubObjects())
+    for (auto const& i2: v->getSubObjects())
     {
+        DataObject const& i = i2.getCContent();
         try
         {
             // use eth object _info section class here !!!!!
@@ -202,6 +206,7 @@ void joinThreads(vector<thread>& _threadVector, bool _all)
             else if (status == RPCSession::NotExist && ExitHandler::receivedExitSignal())
                 return;
         }
+        std::this_thread::sleep_for(200ms);
     }
 }
 }
@@ -250,9 +255,9 @@ void TestSuite::runTestWithoutFiller(boost::filesystem::path const& _file) const
                     TestSuiteOptions opt;
                     opt.doFilling = true;
                     opt.allowInvalidBlocks = true;
-                    DataObject output = doTests(testData.data, opt);
-                    addClientInfo(output, _file, testData.hash);
-                    writeFile(outPath, asBytes(output.asJson()));
+                    spDataObject output = doTests(testData.data, opt);
+                    addClientInfo(output.getContent(), _file, testData.hash);
+                    writeFile(outPath, asBytes(output->asJson()));
                 }
                 else
                     executeFile(_file);
@@ -437,10 +442,6 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
         return;
     }
 
-    // Just check the filler existance if running with --checkhash
-    if (Options::get().checkhash)
-        return;
-
     // run all tests
     AbsoluteFillerPath fillerPath = getFullPathFiller(_testFolder);
     vector<fs::path> const files = test::getFiles(fillerPath.path(), {".json", ".yml"}, filter);
@@ -588,8 +589,8 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
                 ETH_LOG("Copying " + _testFileName.string(), 0);
                 ETH_LOG(" TO " + boostTestPath.path().string(), 0);
                 assert(_testFileName.string() != boostTestPath.path().string());
-                addClientInfo(testData.data, boostRelativeTestPath, testData.hash);
-                writeFile(boostTestPath.path(), asBytes(testData.data.asJson()));
+                addClientInfo(testData.data.getContent(), boostRelativeTestPath, testData.hash);
+                writeFile(boostTestPath.path(), asBytes(testData.data->asJson()));
                 ETH_FAIL_REQUIRE_MESSAGE(boost::filesystem::exists(boostTestPath.path().string()),
                     "Error when copying the test file!");
             }
@@ -600,10 +601,10 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
 
                 try
                 {
-                    DataObject output = doTests(testData.data, opt);
+                    spDataObject output = doTests(testData.data, opt);
                     // Add client info for all of the tests in output
-                    addClientInfo(output, boostRelativeTestPath, testData.hash);
-                    writeFile(boostTestPath.path(), asBytes(output.asJson()));
+                    addClientInfo(output.getContent(), boostRelativeTestPath, testData.hash);
+                    writeFile(boostTestPath.path(), asBytes(output->asJson()));
 
                     if (!Options::get().getGStateTransactionFilter().empty())
                     {
@@ -663,7 +664,8 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
     }
     catch (std::exception const& _ex)
     {
-        //
+        // there was an error close thread
+        RPCSession::sessionEnd(TestOutputHelper::getThreadID(), RPCSession::SessionStatus::HasFinished);
     }
 }
 
@@ -676,6 +678,9 @@ void TestSuite::executeFile(boost::filesystem::path const& _file) const
     if (_file.extension() != ".json")
         ETH_ERROR_MESSAGE("The generated test must have `.json` format!");
 
-    doTests(test::readJsonData(_file), opt);
+    ETH_LOG("Read json structure " + string(_file.filename().c_str()), 5);
+    auto const res = test::readJsonData(_file);
+    ETH_LOG("Read json finish", 5);
+    doTests(res, opt);
 }
 }

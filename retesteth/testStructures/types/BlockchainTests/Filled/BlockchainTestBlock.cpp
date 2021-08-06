@@ -14,7 +14,8 @@ BlockchainTestBlock::BlockchainTestBlock(DataObject const& _data)
             m_chainName = _data.atKey("chainname").asString();
         if (_data.count("blocknumber"))
         {
-            DataObject tmpD = _data.atKey("blocknumber");
+            DataObject tmpD;
+            tmpD.copyFrom(_data.atKey("blocknumber"));
             tmpD.performModifier(mod_valueToCompactEvenHexPrefixed);
             m_blockNumber = spVALUE(new VALUE(tmpD));
         }
@@ -29,9 +30,9 @@ BlockchainTestBlock::BlockchainTestBlock(DataObject const& _data)
             {
                 for (auto const& tr : _data.atKey("transactionSequence").getSubObjects())
                 {
-                    string const sException = tr.count("exception") ? tr.atKey("exception").asString() : string();
+                    string const sException = tr->count("exception") ? tr->atKey("exception").asString() : string();
                     m_transactionSequence.push_back(
-                        {readTransaction(BYTES(tr.atKey("rawBytes"))), sException});
+                        {readTransaction(BYTES(tr->atKey("rawBytes"))), sException});
                 }
             }
 

@@ -34,7 +34,7 @@ public:
         };
         DataType dataTypeExpected;
         verification verificationType;
-        DataObject dataEnum;
+        spDataObject dataEnum;
     };
 
     std::vector<ValidationRule> const& getRules() { return rulesVector; }
@@ -71,8 +71,7 @@ private:
             if (_obj.atKey("enum").type() != DataType::Array)
                 throw DataObjectException() << "Validation scheme 'enum' field must be an array!";
             rule.verificationType = ValidationRule::verification::CHECK_EXACT;
-            rule.dataEnum =
-                _obj.atKey("enum").getSubObjects().at(0);  // enum with only 1 element!!!
+            rule.dataEnum = _obj.atKey("enum").getSubObjects().at(0);  // enum with only 1 element!!!
         }
 
         rulesVector.push_back(rule);

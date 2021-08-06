@@ -12,7 +12,7 @@ namespace teststruct
 struct StateBase : GCP_SPointerBase
 {
     std::map<FH20, spAccountBase> const& accounts() const { return m_accounts; }
-    virtual DataObject const asDataObject(ExportOrder order = ExportOrder::Default) const = 0;
+    virtual spDataObject asDataObject(ExportOrder order = ExportOrder::Default) const = 0;
     virtual ~StateBase() {}
 
 protected:

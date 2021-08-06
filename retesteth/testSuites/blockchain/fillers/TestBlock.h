@@ -42,7 +42,7 @@ public:
     void setDoNotExport(bool _flag) { m_doNotExport = _flag; }
     bool isDoNotExport() const { return m_doNotExport; }
 
-    DataObject asDataObject() const;
+    spDataObject asDataObject() const;
 
 private:
     TestBlock() {}

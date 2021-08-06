@@ -40,13 +40,13 @@ BOOST_AUTO_TEST_CASE(dataobject_setKeyPos_lastToFirst)
 	data["key1"] = "data1";
 	data["key2"] = "data2";
 	data["key3"] = "data3";
-	data.setKeyPos("key3", 0);
-	BOOST_CHECK(data.getSubObjects().at(0).getKey() == "key3");
-	BOOST_CHECK(data.getSubObjects().at(0).asString() == "data3");
-	BOOST_CHECK(data.getSubObjects().at(1).getKey() == "key1");
-	BOOST_CHECK(data.getSubObjects().at(1).asString() == "data1");
-	BOOST_CHECK(data.getSubObjects().at(2).getKey() == "key2");
-	BOOST_CHECK(data.getSubObjects().at(2).asString() == "data2");
+    data.setKeyPos("key3", 0);
+    BOOST_CHECK(data.getSubObjects().at(0)->getKey() == "key3");
+    BOOST_CHECK(data.getSubObjects().at(0)->asString() == "data3");
+    BOOST_CHECK(data.getSubObjects().at(1)->getKey() == "key1");
+    BOOST_CHECK(data.getSubObjects().at(1)->asString() == "data1");
+    BOOST_CHECK(data.getSubObjects().at(2)->getKey() == "key2");
+    BOOST_CHECK(data.getSubObjects().at(2)->asString() == "data2");
     TestOutputHelper::registerTestRunSuccess();
 }
 
@@ -57,12 +57,12 @@ BOOST_AUTO_TEST_CASE(dataobject_setKeyPos_lastToMid)
 	data["key2"] = "data2";
 	data["key3"] = "data3";
 	data.setKeyPos("key3", 1);
-	BOOST_CHECK(data.getSubObjects().at(0).getKey() == "key1");
-	BOOST_CHECK(data.getSubObjects().at(0).asString() == "data1");
-	BOOST_CHECK(data.getSubObjects().at(1).getKey() == "key3");
-	BOOST_CHECK(data.getSubObjects().at(1).asString() == "data3");
-	BOOST_CHECK(data.getSubObjects().at(2).getKey() == "key2");
-	BOOST_CHECK(data.getSubObjects().at(2).asString() == "data2");
+    BOOST_CHECK(data.getSubObjects().at(0)->getKey() == "key1");
+    BOOST_CHECK(data.getSubObjects().at(0)->asString() == "data1");
+    BOOST_CHECK(data.getSubObjects().at(1)->getKey() == "key3");
+    BOOST_CHECK(data.getSubObjects().at(1)->asString() == "data3");
+    BOOST_CHECK(data.getSubObjects().at(2)->getKey() == "key2");
+    BOOST_CHECK(data.getSubObjects().at(2)->asString() == "data2");
 }
 
 BOOST_AUTO_TEST_CASE(dataobject_setKeyPos_lastTolast)
@@ -72,12 +72,12 @@ BOOST_AUTO_TEST_CASE(dataobject_setKeyPos_lastTolast)
 	data["key2"] = "data2";
 	data["key3"] = "data3";
 	data.setKeyPos("key3", 2);
-	BOOST_CHECK(data.getSubObjects().at(0).getKey() == "key1");
-	BOOST_CHECK(data.getSubObjects().at(0).asString() == "data1");
-	BOOST_CHECK(data.getSubObjects().at(1).getKey() == "key2");
-	BOOST_CHECK(data.getSubObjects().at(1).asString() == "data2");
-	BOOST_CHECK(data.getSubObjects().at(2).getKey() == "key3");
-	BOOST_CHECK(data.getSubObjects().at(2).asString() == "data3");
+    BOOST_CHECK(data.getSubObjects().at(0)->getKey() == "key1");
+    BOOST_CHECK(data.getSubObjects().at(0)->asString() == "data1");
+    BOOST_CHECK(data.getSubObjects().at(1)->getKey() == "key2");
+    BOOST_CHECK(data.getSubObjects().at(1)->asString() == "data2");
+    BOOST_CHECK(data.getSubObjects().at(2)->getKey() == "key3");
+    BOOST_CHECK(data.getSubObjects().at(2)->asString() == "data3");
 }
 
 BOOST_AUTO_TEST_CASE(dataobject_setKeyPos_midToFirst)
@@ -87,12 +87,12 @@ BOOST_AUTO_TEST_CASE(dataobject_setKeyPos_midToFirst)
 	data["key2"] = "data2";
 	data["key3"] = "data3";
 	data.setKeyPos("key2", 0);
-	BOOST_CHECK(data.getSubObjects().at(0).getKey() == "key2");
-	BOOST_CHECK(data.getSubObjects().at(0).asString() == "data2");
-	BOOST_CHECK(data.getSubObjects().at(1).getKey() == "key1");
-	BOOST_CHECK(data.getSubObjects().at(1).asString() == "data1");
-	BOOST_CHECK(data.getSubObjects().at(2).getKey() == "key3");
-	BOOST_CHECK(data.getSubObjects().at(2).asString() == "data3");
+    BOOST_CHECK(data.getSubObjects().at(0)->getKey() == "key2");
+    BOOST_CHECK(data.getSubObjects().at(0)->asString() == "data2");
+    BOOST_CHECK(data.getSubObjects().at(1)->getKey() == "key1");
+    BOOST_CHECK(data.getSubObjects().at(1)->asString() == "data1");
+    BOOST_CHECK(data.getSubObjects().at(2)->getKey() == "key3");
+    BOOST_CHECK(data.getSubObjects().at(2)->asString() == "data3");
 }
 
 BOOST_AUTO_TEST_CASE(dataobject_setKeyPos_midTomid)
@@ -102,12 +102,12 @@ BOOST_AUTO_TEST_CASE(dataobject_setKeyPos_midTomid)
 	data["key2"] = "data2";
 	data["key3"] = "data3";
 	data.setKeyPos("key2", 1);
-	BOOST_CHECK(data.getSubObjects().at(0).getKey() == "key1");
-	BOOST_CHECK(data.getSubObjects().at(0).asString() == "data1");
-	BOOST_CHECK(data.getSubObjects().at(1).getKey() == "key2");
-	BOOST_CHECK(data.getSubObjects().at(1).asString() == "data2");
-	BOOST_CHECK(data.getSubObjects().at(2).getKey() == "key3");
-	BOOST_CHECK(data.getSubObjects().at(2).asString() == "data3");
+    BOOST_CHECK(data.getSubObjects().at(0)->getKey() == "key1");
+    BOOST_CHECK(data.getSubObjects().at(0)->asString() == "data1");
+    BOOST_CHECK(data.getSubObjects().at(1)->getKey() == "key2");
+    BOOST_CHECK(data.getSubObjects().at(1)->asString() == "data2");
+    BOOST_CHECK(data.getSubObjects().at(2)->getKey() == "key3");
+    BOOST_CHECK(data.getSubObjects().at(2)->asString() == "data3");
 }
 
 BOOST_AUTO_TEST_CASE(dataobject_setKeyPos_midToLast)
@@ -117,12 +117,12 @@ BOOST_AUTO_TEST_CASE(dataobject_setKeyPos_midToLast)
 	data["key2"] = "data2";
 	data["key3"] = "data3";
 	data.setKeyPos("key2", 2);
-	BOOST_CHECK(data.getSubObjects().at(0).getKey() == "key1");
-	BOOST_CHECK(data.getSubObjects().at(0).asString() == "data1");
-	BOOST_CHECK(data.getSubObjects().at(1).getKey() == "key3");
-	BOOST_CHECK(data.getSubObjects().at(1).asString() == "data3");
-	BOOST_CHECK(data.getSubObjects().at(2).getKey() == "key2");
-	BOOST_CHECK(data.getSubObjects().at(2).asString() == "data2");
+    BOOST_CHECK(data.getSubObjects().at(0)->getKey() == "key1");
+    BOOST_CHECK(data.getSubObjects().at(0)->asString() == "data1");
+    BOOST_CHECK(data.getSubObjects().at(1)->getKey() == "key3");
+    BOOST_CHECK(data.getSubObjects().at(1)->asString() == "data3");
+    BOOST_CHECK(data.getSubObjects().at(2)->getKey() == "key2");
+    BOOST_CHECK(data.getSubObjects().at(2)->asString() == "data2");
 }
 
 BOOST_AUTO_TEST_CASE(dataobject_setKeyPos_midToLast2)
@@ -133,14 +133,14 @@ BOOST_AUTO_TEST_CASE(dataobject_setKeyPos_midToLast2)
 	data["key3"] = "data3";
 	data["key4"] = "data4";
 	data.setKeyPos("key2", 3);
-	BOOST_CHECK(data.getSubObjects().at(0).getKey() == "key1");
-	BOOST_CHECK(data.getSubObjects().at(0).asString() == "data1");
-	BOOST_CHECK(data.getSubObjects().at(1).getKey() == "key3");
-	BOOST_CHECK(data.getSubObjects().at(1).asString() == "data3");
-	BOOST_CHECK(data.getSubObjects().at(2).getKey() == "key4");
-	BOOST_CHECK(data.getSubObjects().at(2).asString() == "data4");
-	BOOST_CHECK(data.getSubObjects().at(3).getKey() == "key2");
-	BOOST_CHECK(data.getSubObjects().at(3).asString() == "data2");
+    BOOST_CHECK(data.getSubObjects().at(0)->getKey() == "key1");
+    BOOST_CHECK(data.getSubObjects().at(0)->asString() == "data1");
+    BOOST_CHECK(data.getSubObjects().at(1)->getKey() == "key3");
+    BOOST_CHECK(data.getSubObjects().at(1)->asString() == "data3");
+    BOOST_CHECK(data.getSubObjects().at(2)->getKey() == "key4");
+    BOOST_CHECK(data.getSubObjects().at(2)->asString() == "data4");
+    BOOST_CHECK(data.getSubObjects().at(3)->getKey() == "key2");
+    BOOST_CHECK(data.getSubObjects().at(3)->asString() == "data2");
 }
 
 BOOST_AUTO_TEST_CASE(dataobject_setKeyPos_midToMid2)
@@ -151,14 +151,14 @@ BOOST_AUTO_TEST_CASE(dataobject_setKeyPos_midToMid2)
 	data["key3"] = "data3";
 	data["key4"] = "data4";
 	data.setKeyPos("key2", 2);
-	BOOST_CHECK(data.getSubObjects().at(0).getKey() == "key1");
-	BOOST_CHECK(data.getSubObjects().at(0).asString() == "data1");
-	BOOST_CHECK(data.getSubObjects().at(1).getKey() == "key3");
-	BOOST_CHECK(data.getSubObjects().at(1).asString() == "data3");
-	BOOST_CHECK(data.getSubObjects().at(2).getKey() == "key2");
-	BOOST_CHECK(data.getSubObjects().at(2).asString() == "data2");
-	BOOST_CHECK(data.getSubObjects().at(3).getKey() == "key4");
-	BOOST_CHECK(data.getSubObjects().at(3).asString() == "data4");
+    BOOST_CHECK(data.getSubObjects().at(0)->getKey() == "key1");
+    BOOST_CHECK(data.getSubObjects().at(0)->asString() == "data1");
+    BOOST_CHECK(data.getSubObjects().at(1)->getKey() == "key3");
+    BOOST_CHECK(data.getSubObjects().at(1)->asString() == "data3");
+    BOOST_CHECK(data.getSubObjects().at(2)->getKey() == "key2");
+    BOOST_CHECK(data.getSubObjects().at(2)->asString() == "data2");
+    BOOST_CHECK(data.getSubObjects().at(3)->getKey() == "key4");
+    BOOST_CHECK(data.getSubObjects().at(3)->asString() == "data4");
 }
 
 BOOST_AUTO_TEST_CASE(dataobject_setKeyPos_firstTofirst)
@@ -168,12 +168,12 @@ BOOST_AUTO_TEST_CASE(dataobject_setKeyPos_firstTofirst)
 	data["key2"] = "data2";
 	data["key3"] = "data3";
 	data.setKeyPos("key1", 0);
-	BOOST_CHECK(data.getSubObjects().at(0).getKey() == "key1");
-	BOOST_CHECK(data.getSubObjects().at(0).asString() == "data1");
-	BOOST_CHECK(data.getSubObjects().at(1).getKey() == "key2");
-	BOOST_CHECK(data.getSubObjects().at(1).asString() == "data2");
-	BOOST_CHECK(data.getSubObjects().at(2).getKey() == "key3");
-	BOOST_CHECK(data.getSubObjects().at(2).asString() == "data3");
+    BOOST_CHECK(data.getSubObjects().at(0)->getKey() == "key1");
+    BOOST_CHECK(data.getSubObjects().at(0)->asString() == "data1");
+    BOOST_CHECK(data.getSubObjects().at(1)->getKey() == "key2");
+    BOOST_CHECK(data.getSubObjects().at(1)->asString() == "data2");
+    BOOST_CHECK(data.getSubObjects().at(2)->getKey() == "key3");
+    BOOST_CHECK(data.getSubObjects().at(2)->asString() == "data3");
 }
 
 BOOST_AUTO_TEST_CASE(dataobject_setKeyPos_firstTomid)
@@ -183,12 +183,12 @@ BOOST_AUTO_TEST_CASE(dataobject_setKeyPos_firstTomid)
 	data["key2"] = "data2";
 	data["key3"] = "data3";
 	data.setKeyPos("key1", 1);
-	BOOST_CHECK(data.getSubObjects().at(0).getKey() == "key2");
-	BOOST_CHECK(data.getSubObjects().at(0).asString() == "data2");
-	BOOST_CHECK(data.getSubObjects().at(1).getKey() == "key1");
-	BOOST_CHECK(data.getSubObjects().at(1).asString() == "data1");
-	BOOST_CHECK(data.getSubObjects().at(2).getKey() == "key3");
-	BOOST_CHECK(data.getSubObjects().at(2).asString() == "data3");
+    BOOST_CHECK(data.getSubObjects().at(0)->getKey() == "key2");
+    BOOST_CHECK(data.getSubObjects().at(0)->asString() == "data2");
+    BOOST_CHECK(data.getSubObjects().at(1)->getKey() == "key1");
+    BOOST_CHECK(data.getSubObjects().at(1)->asString() == "data1");
+    BOOST_CHECK(data.getSubObjects().at(2)->getKey() == "key3");
+    BOOST_CHECK(data.getSubObjects().at(2)->asString() == "data3");
 }
 
 BOOST_AUTO_TEST_CASE(dataobject_setKeyPos_firstToLast)
@@ -198,12 +198,12 @@ BOOST_AUTO_TEST_CASE(dataobject_setKeyPos_firstToLast)
 	data["key2"] = "data2";
 	data["key3"] = "data3";
 	data.setKeyPos("key1", 2);
-	BOOST_CHECK(data.getSubObjects().at(0).getKey() == "key2");
-	BOOST_CHECK(data.getSubObjects().at(0).asString() == "data2");
-	BOOST_CHECK(data.getSubObjects().at(1).getKey() == "key3");
-	BOOST_CHECK(data.getSubObjects().at(1).asString() == "data3");
-	BOOST_CHECK(data.getSubObjects().at(2).getKey() == "key1");
-	BOOST_CHECK(data.getSubObjects().at(2).asString() == "data1");
+    BOOST_CHECK(data.getSubObjects().at(0)->getKey() == "key2");
+    BOOST_CHECK(data.getSubObjects().at(0)->asString() == "data2");
+    BOOST_CHECK(data.getSubObjects().at(1)->getKey() == "key3");
+    BOOST_CHECK(data.getSubObjects().at(1)->asString() == "data3");
+    BOOST_CHECK(data.getSubObjects().at(2)->getKey() == "key1");
+    BOOST_CHECK(data.getSubObjects().at(2)->asString() == "data1");
 }
 
 BOOST_AUTO_TEST_CASE(object_stringIntegerType_correctHex)
@@ -261,207 +261,207 @@ void testCompareResult(DataObject const& _exp, DataObject const& _post, CompareR
 
 BOOST_AUTO_TEST_CASE(compareStates_noError)
 {
-    DataObject expectData;
-    expectData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x82123";
-    DataObject postData;
-    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x82123";
-    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
-    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
-    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["storage"] = DataObject(DataType::Object);
+    spDataObject expectData(new DataObject());
+    (*expectData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x82123";
+    spDataObject postData(new DataObject());
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x82123";
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"].atKeyPointer("storage") = spDataObject(new DataObject(DataType::Object));
     testCompareResult(expectData, postData, CompareResult::Success);
 }
 
 BOOST_AUTO_TEST_CASE(compareStates_missingAccount)
 {
-    DataObject expectData;
-    expectData["0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x82123";
-    DataObject postData;
-    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x82123";
-    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
-    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
-    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["storage"] = DataObject(DataType::Object);
+    spDataObject expectData(new DataObject());
+    (*expectData)["0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x82123";
+    spDataObject postData(new DataObject());
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x82123";
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"].atKeyPointer("storage") = spDataObject(new DataObject(DataType::Object));
     testCompareResult(expectData, postData, CompareResult::MissingExpectedAccount);
 }
 
 BOOST_AUTO_TEST_CASE(compareStates_shouldnoexist)
 {
-    DataObject expectData;
-    expectData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["shouldnotexist"] = "1";
-    DataObject postData;
-    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x82123";
-    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
-    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
-    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["storage"] = DataObject(DataType::Object);
+    spDataObject expectData(new DataObject());
+    (*expectData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["shouldnotexist"] = "1";
+    spDataObject postData(new DataObject());
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x82123";
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"].atKeyPointer("storage") = spDataObject(new DataObject(DataType::Object));
     testCompareResult(expectData, postData, CompareResult::AccountShouldNotExist);
 }
 
 BOOST_AUTO_TEST_CASE(compareStates_wrongBalance)
 {
-    DataObject expectData;
-    expectData["0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x82124";
-    DataObject postData;
-    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x82124";
-    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
-    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
-    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["storage"] = DataObject(DataType::Object);
-    postData["0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x82123";
-    postData["0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
-    postData["0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
-    postData["0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["storage"] = DataObject(DataType::Object);
+    spDataObject expectData(new DataObject());
+    (*expectData)["0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x82124";
+    spDataObject postData(new DataObject());
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x82124";
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"].atKeyPointer("storage") = spDataObject(new DataObject(DataType::Object));
+    (*postData)["0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x82123";
+    (*postData)["0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
+    (*postData)["0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
+    (*postData)["0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"].atKeyPointer("storage") = spDataObject(new DataObject(DataType::Object));
     testCompareResult(expectData, postData, CompareResult::IncorrectBalance);
 }
 
 BOOST_AUTO_TEST_CASE(compareStates_wrongNonce)
 {
-    DataObject expectData;
-    expectData["0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x082123";
-    expectData["0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x02";
-    DataObject postData;
-    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x082124";
-    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
-    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
-    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["storage"] = DataObject(DataType::Object);
-    postData["0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x82123";
-    postData["0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
-    postData["0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
-    postData["0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["storage"] = DataObject(DataType::Object);
+    spDataObject expectData(new DataObject());
+    (*expectData)["0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x082123";
+    (*expectData)["0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x02";
+    spDataObject postData(new DataObject());
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x082124";
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"].atKeyPointer("storage") = spDataObject(new DataObject(DataType::Object));
+    (*postData)["0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x82123";
+    (*postData)["0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
+    (*postData)["0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
+    (*postData)["0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"].atKeyPointer("storage") = spDataObject(new DataObject(DataType::Object));
     testCompareResult(expectData, postData, CompareResult::IncorrectNonce);
 }
 
 BOOST_AUTO_TEST_CASE(compareStates_multipleError)
 {
-    DataObject expectData;
-    expectData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x082124";
-    expectData["0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x082123";
-    expectData["0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x02";
-    expectData["0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x02";
-    DataObject postData;
-    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x082124";
-    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
-    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
-    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["storage"] = DataObject(DataType::Object);
-    postData["0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x082123";
-    postData["0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
-    postData["0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
-    postData["0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["storage"] = DataObject(DataType::Object);
+    spDataObject expectData(new DataObject());
+    (*expectData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x082124";
+    (*expectData)["0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x082123";
+    (*expectData)["0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x02";
+    (*expectData)["0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x02";
+    spDataObject postData(new DataObject());
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x082124";
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"].atKeyPointer("storage") = spDataObject(new DataObject(DataType::Object));
+    (*postData)["0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x082123";
+    (*postData)["0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
+    (*postData)["0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
+    (*postData)["0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"].atKeyPointer("storage") = spDataObject(new DataObject(DataType::Object));
     testCompareResult(expectData, postData, CompareResult::IncorrectCode, 3);
 }
 
 BOOST_AUTO_TEST_CASE(compareStates_accountShouldNotExistAndItsNot)
 {
-	DataObject expectData;
-	expectData["0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["shouldnotexist"] = "1";
-	DataObject postData;
-	postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x82124";
-	postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
-	postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
-	postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["storage"] = DataObject(DataType::Object);
+    spDataObject expectData(new DataObject());
+    (*expectData)["0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["shouldnotexist"] = "1";
+    spDataObject postData(new DataObject());
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x82124";
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"].atKeyPointer("storage") = spDataObject(new DataObject(DataType::Object));
     testCompareResult(expectData, postData, CompareResult::Success);
 }
 
 BOOST_AUTO_TEST_CASE(compareStates_prefixedZeros)
 {
-    DataObject expectData;
-    expectData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x082124";
-    DataObject postData;
-    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x82124";
-    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
-    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
-    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["storage"] =
-        DataObject(DataType::Object);
+    spDataObject expectData(new DataObject());
+    (*expectData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x082124";
+    spDataObject postData(new DataObject());
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x82124";
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"].atKeyPointer("storage") =
+        spDataObject(new DataObject(DataType::Object));
     testCompareResult(expectData, postData, CompareResult::Success);
 }
 
 BOOST_AUTO_TEST_CASE(compareStates_prefixedZeros2)
 {
-    DataObject expectData;
-    expectData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x82124";
-    DataObject postData;
-    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x082124";
-    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
-    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
-    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["storage"] =
-        DataObject(DataType::Object);
+    spDataObject expectData(new DataObject());
+    (*expectData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x82124";
+    spDataObject postData(new DataObject());
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x082124";
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"].atKeyPointer("storage") =
+        spDataObject(new DataObject(DataType::Object));
     testCompareResult(expectData, postData, CompareResult::Success);
 }
 
 BOOST_AUTO_TEST_CASE(compareStates_storageEmpty)
 {
-    DataObject expectStorage;
-    expectStorage["0x01"] = "0x00";
-    DataObject expectData;
-    expectData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["storage"] = expectStorage;
-    DataObject postData;
-    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x082124";
-    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
-    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
-    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["storage"] =
-        DataObject(DataType::Object);
+    spDataObject expectStorage(new DataObject());
+    (*expectStorage)["0x01"] = "0x00";
+    spDataObject expectData(new DataObject());
+    (*expectData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"].atKeyPointer("storage") = expectStorage;
+    spDataObject postData(new DataObject());
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x082124";
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"].atKeyPointer("storage") =
+        spDataObject(new DataObject(DataType::Object));
     testCompareResult(expectData, postData, CompareResult::Success);
 }
 
 BOOST_AUTO_TEST_CASE(compareStates_storageIncorrect)
 {
-    DataObject expectStorage;
-    expectStorage["0x01"] = "0x01";
-    DataObject expectData;
-    expectData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["storage"] = expectStorage;
-    DataObject postData;
-    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x082124";
-    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
-    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
-    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["storage"] =
-        DataObject(DataType::Object);
+    spDataObject expectStorage(new DataObject());
+    (*expectStorage)["0x01"] = "0x01";
+    spDataObject expectData(new DataObject());
+    (*expectData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"].atKeyPointer("storage") = expectStorage;
+    spDataObject postData(new DataObject());
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x082124";
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"].atKeyPointer("storage") =
+        spDataObject(new DataObject(DataType::Object));
     testCompareResult(expectData, postData, CompareResult::IncorrectStorage);
 }
 
 BOOST_AUTO_TEST_CASE(compareStates_storageCorrect)
 {
-    DataObject expectStorage;
-    expectStorage["0x01"] = "0x01";
-    DataObject expectData;
-    expectData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["storage"] = expectStorage;
-    DataObject postStorage;
-    postStorage["0x01"] = "0x01";
-    DataObject postData;
-    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x082124";
-    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
-    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
-    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["storage"] = postStorage;
+    spDataObject expectStorage(new DataObject());
+    (*expectStorage)["0x01"] = "0x01";
+    spDataObject expectData(new DataObject());
+    (*expectData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"].atKeyPointer("storage") = expectStorage;
+    spDataObject postStorage(new DataObject());
+    (*postStorage)["0x01"] = "0x01";
+    spDataObject postData(new DataObject());
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x082124";
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"].atKeyPointer("storage") = postStorage;
     testCompareResult(expectData, postData, CompareResult::Success);
 }
 
 BOOST_AUTO_TEST_CASE(compareStates_storageMissingOnPost)
 {
-    DataObject expectStorage;
-    expectStorage["0x01"] = "0x01";
-    expectStorage["0x02"] = "0x01";
-    DataObject expectData;
-    expectData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["storage"] = expectStorage;
-    DataObject postStorage;
-    postStorage["0x01"] = "0x01";
-    DataObject postData;
-    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x082124";
-    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
-    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
-    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["storage"] = postStorage;
+    spDataObject expectStorage(new DataObject());
+    (*expectStorage)["0x01"] = "0x01";
+    (*expectStorage)["0x02"] = "0x01";
+    spDataObject expectData(new DataObject());
+    (*expectData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"].atKeyPointer("storage") = expectStorage;
+    spDataObject postStorage(new DataObject());
+    (*postStorage)["0x01"] = "0x01";
+    spDataObject postData(new DataObject());
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x082124";
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"].atKeyPointer("storage") = postStorage;
     testCompareResult(expectData, postData, CompareResult::IncorrectStorage);
 }
 
 BOOST_AUTO_TEST_CASE(compareStates_storageMissingOnExpect)
 {
-    DataObject expectStorage;
-    expectStorage["0x01"] = "0x01";
-    DataObject expectData;
-    expectData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["storage"] = expectStorage;
-    DataObject postStorage;
-    postStorage["0x01"] = "0x01";
-    postStorage["0x02"] = "0x01";
-    DataObject postData;
-    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x082124";
-    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
-    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
-    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["storage"] = postStorage;
+    spDataObject expectStorage(new DataObject());
+    (*expectStorage)["0x01"] = "0x01";
+    spDataObject expectData(new DataObject());
+    (*expectData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"].atKeyPointer("storage") = expectStorage;
+    spDataObject postStorage(new DataObject());
+    (*postStorage)["0x01"] = "0x01";
+    (*postStorage)["0x02"] = "0x01";
+    spDataObject postData(new DataObject());
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x082124";
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"].atKeyPointer("storage") = postStorage;
     testCompareResult(expectData, postData, CompareResult::IncorrectStorage, 2);
 }
 
@@ -469,22 +469,22 @@ void ExpectVsPost(string const& _expectKey, string const& _expectVal, string con
     CompareResult _res, string const& _doubleVal = "0x02", size_t _errCount = 2)
 {
     ETH_LOG("Exp(" + _expectKey + ":" + _expectVal + ") vs Post(" + _postKey + "," + _postVal + ") dd: " + _doubleVal, 0);
-    DataObject expectStorage(DataType::Object);
+    spDataObject expectStorage(new DataObject(DataType::Object));
     if (_expectKey != "--")
-        expectStorage[_expectKey] = _expectVal;
-    expectStorage["0x02"] = "0x02";
-    DataObject expectData;
-    expectData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["storage"] = expectStorage;
-    DataObject postStorage(DataType::Object);
+        (*expectStorage)[_expectKey] = _expectVal;
+    (*expectStorage)["0x02"] = "0x02";
+    spDataObject expectData(new DataObject());
+    (*expectData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"].atKeyPointer("storage") = expectStorage;
+    spDataObject postStorage(new DataObject(DataType::Object));
     if (_postKey != "--")
-        postStorage[_postKey] = _postVal;
-    postStorage["0x02"] = _doubleVal;
+        (*postStorage)[_postKey] = _postVal;
+    (*postStorage)["0x02"] = _doubleVal;
 
-    DataObject postData;
-    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x082124";
-    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
-    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
-    postData["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["storage"] = postStorage;
+    spDataObject postData(new DataObject());
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x082124";
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
+    (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"].atKeyPointer("storage") = postStorage;
     testCompareResult(expectData, postData, _res, _errCount);
 }
 

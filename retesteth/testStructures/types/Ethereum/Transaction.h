@@ -22,7 +22,7 @@ struct Transaction : GCP_SPointerBase
 {
     // Transaction Interface
     virtual TransactionType type() const = 0;
-    virtual DataObject const asDataObject(ExportOrder _order = ExportOrder::Default) const = 0;
+    virtual spDataObject asDataObject(ExportOrder _order = ExportOrder::Default) const = 0;
     virtual ~Transaction(){ /* all fields are smart pointers */ };
 
     // Common transaction data
@@ -47,7 +47,7 @@ struct Transaction : GCP_SPointerBase
     void setDataRawPreview(string const& _dataRawPreview) { m_dataRawPreview = _dataRawPreview; }
 
     /// Debug transaction data for t8ntool wrapper
-    void setSecret(VALUE const& _secret) { m_secretKey = spVALUE(new VALUE(_secret)); }
+    void setSecret(VALUE const& _secret) { m_secretKey = spVALUE(_secret.copy()); }
     VALUE const& getSecret() const { return m_secretKey; }
 
 protected:
