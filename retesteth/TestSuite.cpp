@@ -155,11 +155,26 @@ void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
             DataObject const& info = i.atKey("_info");
             ETH_ERROR_REQUIRE_MESSAGE(info.count("sourceHash") > 0,
                 "sourceHash not found in " + _compiledTest.string() + " in " + i.getKey());
+
             h256 const sourceHash = h256(info.atKey("sourceHash").asString());
-            ETH_ERROR_REQUIRE_MESSAGE(sourceHash == fillerData.hash,
-                "Test " + _compiledTest.string() +
-                    " is outdated. Filler hash is different! ('" + sourceHash.hex().substr(0, 4) +
-                    "' != '" + fillerData.hash.hex().substr(0, 4) + "') ");
+            if (sourceHash != fillerData.hash)
+            {
+                string sourceHashStr;
+                string fillerHashStr;
+                if (Options::get().showhash)
+                {
+                    sourceHashStr = sourceHash.hex();
+                    fillerHashStr = fillerData.hash.hex();
+                }
+                else
+                {
+                    sourceHashStr = sourceHash.hex().substr(0, 4);
+                    fillerHashStr = fillerData.hash.hex().substr(0, 4);
+                }
+                ETH_ERROR_MESSAGE("Test " + _compiledTest.string() +
+                        " is outdated. Filler hash is different! " +
+                        "('" + sourceHashStr + "' != '" + fillerHashStr + "') ");
+            }
         }
         catch (test::UpwardsException const&)
         {
