@@ -94,6 +94,12 @@ public:
 
     T* pointee() { return _pointee; }
 
+    // Remove link to the pointer.
+    void null() {
+        release();
+        _pointee = nullptr;
+    }
+
     // Replace one pointer with another
     GCP_SPointer& operator=(GCP_SPointer const& rhs)
     {
@@ -107,6 +113,7 @@ public:
         return *this;
     }
 
+    // Disable this to aboid auto cast confusion
     /*GCP_SPointer& operator=(const int rhs)
     {
         _pointee = nullptr;

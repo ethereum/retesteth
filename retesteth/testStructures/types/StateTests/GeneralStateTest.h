@@ -14,7 +14,7 @@ namespace teststruct
 {
 struct StateTestInFilled : GCP_SPointerBase
 {
-    StateTestInFilled(DataObject const&);
+    StateTestInFilled(spDataObjectMove);
 
     string const& testName() const { return m_name; }
     Info const& testInfo() const { return m_info; }
@@ -35,7 +35,7 @@ private:
 
 struct GeneralStateTest
 {
-    GeneralStateTest(DataObject const&);
+    GeneralStateTest(spDataObjectMove);
     std::vector<StateTestInFilled> const& tests() const { return m_tests; }
 
 private:

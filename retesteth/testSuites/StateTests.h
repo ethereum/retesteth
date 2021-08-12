@@ -31,7 +31,7 @@ class StateTestSuite: public TestSuite
 public:
     StateTestSuite();
     StateTestSuite(int){};
-    spDataObject doTests(DataObject const& _input, TestSuiteOptions& _opt) const override;
+    spDataObject doTests(spDataObjectMove _input, TestSuiteOptions& _opt) const override;
     TestSuite::TestPath suiteFolder() const override;
     TestSuite::FillerPath suiteFillerFolder() const override;
 };

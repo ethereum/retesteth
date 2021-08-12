@@ -85,7 +85,7 @@ public:
     };
 
     // Main test executive function. should be declared for each test suite. it fills and runs the test .json file
-    virtual spDataObject doTests(DataObject const&, TestSuiteOptions& _options) const = 0;
+    virtual spDataObject doTests(spDataObjectMove, TestSuiteOptions& _options) const = 0;
 
 	// Execute all tests from suiteFolder()/_testFolder/*
 	// This functions checks that tests in the repo are updated with /src/suiteFillerFolder()/*Filler tests

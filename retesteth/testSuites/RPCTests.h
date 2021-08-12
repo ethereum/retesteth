@@ -28,7 +28,7 @@ namespace test
 class RPCTestSuite : public TestSuite
 {
 public:
-    spDataObject doTests(DataObject const& _input, TestSuiteOptions& _opt) const override;
+    spDataObject doTests(spDataObjectMove _input, TestSuiteOptions& _opt) const override;
     TestPath suiteFolder() const override;
     FillerPath suiteFillerFolder() const override;
 };

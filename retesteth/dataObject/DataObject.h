@@ -140,6 +140,22 @@ private:
     DataObject& m_data;
 };
 
+// DataObject move requester
+class spDataObjectMove
+{
+public:
+    spDataObjectMove() {}
+    void assignPointer(spDataObject const& _obj) { m_obj = _obj; }
+    spDataObject& getPointer() { return m_obj; }
+    operator DataObject const&() const { return m_obj.getCContent(); }
+
+private:
+    spDataObject m_obj;
+};
+
+// Move
+spDataObjectMove move(spDataObject& _obj);
+
 // Find index that _key should take place in when being added to ordered _objects by key
 size_t findOrderedKeyPosition(string const& _key, vector<spDataObject> const& _objects);
 }

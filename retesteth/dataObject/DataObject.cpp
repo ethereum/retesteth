@@ -773,3 +773,11 @@ DataObject& DataObject::operator=(std::string const& _value)
     setString(_value);
     return *this;
 }
+
+spDataObjectMove dataobject::move(spDataObject& _obj)
+{
+    spDataObjectMove m;
+    m.assignPointer(_obj);
+    _obj.null();
+    return m;
+}

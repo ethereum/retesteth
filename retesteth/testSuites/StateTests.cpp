@@ -497,7 +497,7 @@ void RunTest(StateTestInFilled const& _test)
 
 namespace test
 {
-spDataObject StateTestSuite::doTests(DataObject const& _input, TestSuiteOptions& _opt) const
+spDataObject StateTestSuite::doTests(spDataObjectMove _input, TestSuiteOptions& _opt) const
 {
     TestOutputHelper::get().setCurrentTestInfo(TestInfo("StateTestSuite::doTests init"));
     if (_opt.doFilling)
@@ -528,7 +528,7 @@ spDataObject StateTestSuite::doTests(DataObject const& _input, TestSuiteOptions&
             if (_opt.isLegacyTests)
             {
                 // Change the tests instead??
-                DataObject& _inputRef = const_cast<DataObject&>(_input);
+                DataObject& _inputRef = _input.getPointer().getContent();
                 DataObject& _infoRef = _inputRef.getSubObjectsUnsafe().at(0).getContent().atKeyUnsafe("_info");
                 _infoRef.renameKey("filledwith", "filling-rpc-server");
                 _infoRef["filling-tool-version"] = "testeth";
