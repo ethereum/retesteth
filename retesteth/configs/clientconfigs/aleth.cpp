@@ -15,7 +15,9 @@ string const aleth_config = R"({
         "Byzantium",
         "Constantinople",
         "ConstantinopleFix",
-        "Istanbul"
+        "Istanbul",
+        "Berlin",
+        "London"
     ],
     "additionalForks" : [
         "FrontierToHomesteadAt5",
