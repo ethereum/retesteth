@@ -29,15 +29,15 @@ namespace  {
         return _gtransaction;
     }
 }
-VMTestFiller::VMTestFiller(DataObject const& _data)
+VMTestFiller::VMTestFiller(spDataObject& _data)
 {
     try
     {
-        ETH_ERROR_REQUIRE_MESSAGE(_data.type() == DataType::Object,
+        ETH_ERROR_REQUIRE_MESSAGE(_data->type() == DataType::Object,
             TestOutputHelper::get().get().testFile().string() + " A test file must contain an object value (json/yaml).");
-        ETH_ERROR_REQUIRE_MESSAGE(_data.getSubObjects().size() == 1,
+        ETH_ERROR_REQUIRE_MESSAGE(_data->getSubObjects().size() == 1,
             TestOutputHelper::get().get().testFile().string() + " A test file must contain exactly one test!");
-        for (auto const& el : _data.getSubObjects())
+        for (auto& el : _data.getContent().getSubObjectsUnsafe())
         {
             TestOutputHelper::get().setCurrentTestInfo(TestInfo("VMTestFiller", el->getKey()));
             m_tests.push_back(VMTestInFiller(el));
@@ -49,29 +49,30 @@ VMTestFiller::VMTestFiller(DataObject const& _data)
     }
 }
 
-VMTestInFiller::VMTestInFiller(DataObject const& _data)
+VMTestInFiller::VMTestInFiller(spDataObject& _data)
 {
     try
     {
-        if (_data.count("_info"))
-            m_info = GCP_SPointer<InfoIncomplete>(new InfoIncomplete(_data.atKey("_info")));
-        m_env = GCP_SPointer<StateTestFillerEnv>(new StateTestFillerEnv(_data.atKey("env")));
-        m_pre = spState(new State(convertDecStateToHex(_data.atKey("pre"))));
-        m_name = _data.getKey();
+        if (_data->count("_info"))
+            m_info = GCP_SPointer<InfoIncomplete>(new InfoIncomplete(dataobject::move((*_data).atKeyPointerUnsafe("_info"))));
+        m_env = GCP_SPointer<StateTestFillerEnv>(new StateTestFillerEnv(_data->atKey("env")));
+        convertDecStateToHex((*_data).atKeyPointerUnsafe("pre"));
+        m_pre = spState(new State(MOVE(_data, "pre")));
+        m_name = _data->getKey();
 
-        StateTestFillerTransaction stateTx(translateExecToTransaction(_data.atKey("exec")));
+        StateTestFillerTransaction stateTx(translateExecToTransaction(_data->atKey("exec")));
         m_transaction = spTransaction(new TransactionLegacy(stateTx.buildTransactions().at(0).transaction()->asDataObject()));
-        if (_data.count("expect"))
-            m_expect = spStateIncomplete(new StateIncomplete(_data.atKey("expect"), DataRequier::ALLOWDEC));
+        if (_data->count("expect"))
+            m_expect = spStateIncomplete(new StateIncomplete(_data->atKey("expect"), DataRequier::ALLOWDEC));
 
-        requireJsonFields(_data, "vmTestFiller " + _data.getKey(),
+        requireJsonFields(_data, "vmTestFiller " + _data->getKey(),
             {{"_info", {{DataType::Object}, jsonField::Optional}},
                 {"env", {{DataType::Object}, jsonField::Required}},
                 {"pre", {{DataType::Object}, jsonField::Required}},
                 {"exec", {{DataType::Object}, jsonField::Required}},
                 {"expect", {{DataType::Object}, jsonField::Optional}},
                 {"expectOut", {{DataType::String}, jsonField::Optional}}});
-        if (_data.count("expectOut"))
+        if (_data->count("expectOut"))
             ETH_WARNING("Unable to verify `expectOut` when creating a stateTest from VMTest " +
                         TestOutputHelper::get().testInfo().errorDebug());
     }

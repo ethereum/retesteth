@@ -9,11 +9,12 @@ namespace teststruct
 {
 struct InfoIncomplete : GCP_SPointerBase
 {
-    InfoIncomplete(DataObject const&);
+    InfoIncomplete(spDataObjectMove);
     string const& comment() const { return m_comment; }
 
 private:
     string m_comment;
+    spDataObject m_rawData;
 };
 
 typedef GCP_SPointer<InfoIncomplete> spInfoIncomplete;

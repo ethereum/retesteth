@@ -78,7 +78,7 @@ VALUE ToolImpl::eth_getTransactionCount(FH20 const& _address, VALUE const& _bloc
     rpcCall("", {});
     ETH_TEST_MESSAGE("\nRequest: eth_getTransactionCount " + _blockNumber.asString() + " " + _address.asString());
     TRYCATCHCALL(
-        VALUE const& nonce = blockchain().blockByNumber(_blockNumber).state().getAccount(_address).nonce();
+        VALUE const& nonce = blockchain().blockByNumber(_blockNumber).state()->getAccount(_address).nonce();
         ETH_TEST_MESSAGE("Response: eth_getTransactionCount " + nonce.asDecString());
         return nonce;
         , "eth_getTransactionCount", CallType::FAILEVERYTHING)
@@ -130,7 +130,7 @@ BYTES ToolImpl::eth_getCode(FH20 const& _address, VALUE const& _blockNumber)
     rpcCall("", {});
     ETH_TEST_MESSAGE("\nRequest: eth_getCode " + _blockNumber.asString() + " " + _address.asString());
     TRYCATCHCALL(
-        BYTES const& code = blockchain().blockByNumber(_blockNumber).state().getAccount(_address).code();
+        BYTES const& code = blockchain().blockByNumber(_blockNumber).state()->getAccount(_address).code();
         ETH_TEST_MESSAGE("Response: eth_getCode " + code.asString());
         return code;
         , "eth_getCode", CallType::FAILEVERYTHING)
@@ -142,7 +142,7 @@ VALUE ToolImpl::eth_getBalance(FH20 const& _address, VALUE const& _blockNumber)
     rpcCall("", {});
     ETH_TEST_MESSAGE("\nRequest: eth_getBalance " + _blockNumber.asString() + " " + _address.asString());
     TRYCATCHCALL(
-        VALUE const& balance = blockchain().blockByNumber(_blockNumber).state().getAccount(_address).balance();
+        VALUE const& balance = blockchain().blockByNumber(_blockNumber).state()->getAccount(_address).balance();
         ETH_TEST_MESSAGE("Response: eth_getBalance " + balance.asDecString());
         return balance;
         , "eth_getBalance", CallType::FAILEVERYTHING)
@@ -226,10 +226,10 @@ DebugVMTrace ToolImpl::debug_traceTransaction(FH32 const& _trHash)
 }
 
 // Test
-void ToolImpl::test_setChainParams(SetChainParamsArgs const& _config)
+void ToolImpl::test_setChainParams(spSetChainParamsArgs const& _config)
 {
     rpcCall("", {});
-    ETH_TEST_MESSAGE("\nRequest: test_setChainParams \n" + _config.asDataObject()->asJson());
+    ETH_TEST_MESSAGE("\nRequest: test_setChainParams \n" + _config->asDataObject()->asJson());
 
     // Ask tool to calculate genesis header stateRoot for genesisHeader
     TRYCATCHCALL(

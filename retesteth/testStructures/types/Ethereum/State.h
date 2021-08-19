@@ -13,7 +13,7 @@ namespace teststruct
 // Marks that State is made of full account objects
 struct State : StateBase
 {
-    State(DataObject const&);
+    State(spDataObjectMove);
     State(std::vector<spAccount>&);
 
     std::map<FH20, spAccountBase> const& accounts() const { return m_accounts; }
@@ -24,6 +24,7 @@ struct State : StateBase
     spDataObject asDataObject(ExportOrder order = ExportOrder::Default) const override;
 
 private:
+    spDataObject m_raw;
     std::vector<FH20> m_order;
     State() {}
 };

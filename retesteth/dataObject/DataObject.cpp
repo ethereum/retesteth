@@ -188,12 +188,12 @@ DataObjectK& DataObjectK::operator=(spDataObject const& _value)
     return *this;
 }
 
-spDataObject DataObject::atKeyPointerUnsafe(std::string const& _key)
+spDataObject& DataObject::atKeyPointerUnsafe(std::string const& _key)
 {
     if (m_subObjectKeys.count(_key))
         return m_subObjectKeys.at(_key);
     _assert(false, "count(_key) _key=" + _key + " (DataObject::atKeyPointerUnsafe)");
-    return spDataObject(0);
+    return m_subObjectKeys.at(0);
 }
 
 DataObjectK DataObject::atKeyPointer(std::string const& _key)

@@ -124,12 +124,12 @@ DebugVMTrace RPCImpl::debug_traceTransaction(FH32 const& _trHash)
 }
 
 // Test
-void RPCImpl::test_setChainParams(SetChainParamsArgs const& _config)
+void RPCImpl::test_setChainParams(spSetChainParamsArgs const& _config)
 {
     RPCSession::currentCfgCountTestRun();
 
     ClientConfig const& cfg = Options::getCurrentConfig();
-    spDataObject data = _config.asDataObject();
+    spDataObject data = _config->asDataObject();
     cfg.performFieldReplace(*data, FieldReplaceDir::RetestethToClient);
 
     spDataObject res =  rpcCall("test_setChainParams", {data->asJson()});

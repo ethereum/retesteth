@@ -28,7 +28,7 @@ struct ToolResponse
             totalGasUsed += rec.gasUsed();
         return totalGasUsed;
     }
-    State const& state() const { return m_stateResponse; }
+    spState const& state() const { return m_stateResponse; }
     std::vector<ToolResponseReceipt> const& receipts() const { return m_receipts; }
 
     // Tool export the state separately

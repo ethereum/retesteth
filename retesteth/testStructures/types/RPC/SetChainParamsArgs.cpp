@@ -6,15 +6,20 @@ namespace test
 {
 namespace teststruct
 {
-SetChainParamsArgs::SetChainParamsArgs(DataObject const& _data)
+SetChainParamsArgs::SetChainParamsArgs(spDataObject& _data)
 {
-    m_params = spDataObject(new DataObject());
-    (*m_params).copyFrom(_data.atKey("params"));  // Client specific params
-    m_preState = spState(new State(_data.atKey("accounts")));
-    m_sealEngine = sealEngineFromStr(_data.atKey("sealEngine").asString());
+    requireJsonFields(_data, "SetChainParamsArgs " + _data->getKey(),
+        {{"params", {{DataType::Object}, jsonField::Required}},
+            {"accounts", {{DataType::Object}, jsonField::Required}},
+            {"genesis", {{DataType::Object}, jsonField::Required}},
+            {"sealEngine", {{DataType::String}, jsonField::Required}}});
+
+    m_params = MOVE(_data, "params").getPointer();
+    m_preState = spState(new State(MOVE(_data, "accounts")));
+    m_sealEngine = sealEngineFromStr(_data->atKey("sealEngine").asString());
 
     // Fill up required fields for blocheader info
-    DataObject const& genesis = _data.atKey("genesis");
+    DataObject const& genesis = _data->atKey("genesis");
     spDataObject _fullBlockHeader(new DataObject());
     DataObject& fullBlockHeader = _fullBlockHeader.getContent();
     fullBlockHeader["author"] = genesis.atKey("author").asString();
@@ -39,12 +44,6 @@ SetChainParamsArgs::SetChainParamsArgs(DataObject const& _data)
     fullBlockHeader["parentHash"] = FH32::zero().asString();
 
     m_genesis = readBlockHeader(fullBlockHeader);
-
-    requireJsonFields(_data, "SetChainParamsArgs " + _data.getKey(),
-        {{"params", {{DataType::Object}, jsonField::Required}},
-         {"accounts", {{DataType::Object}, jsonField::Required}},
-         {"genesis", {{DataType::Object}, jsonField::Required}},
-         {"sealEngine", {{DataType::String}, jsonField::Required}}});
 }
 
 spDataObject SetChainParamsArgs::asDataObject() const

@@ -17,7 +17,7 @@ namespace test
 class BlockchainTestValidSuite : public TestSuite
 {
 public:
-    spDataObject doTests(spDataObjectMove _input, TestSuiteOptions& _opt) const override;
+    spDataObject doTests(spDataObject& _input, TestSuiteOptions& _opt) const override;
     TestPath suiteFolder() const override;
     FillerPath suiteFillerFolder() const override;
 };
@@ -26,7 +26,7 @@ public:
 class BlockchainTestInvalidSuite : public TestSuite
 {
 public:
-    spDataObject doTests(spDataObjectMove _input, TestSuiteOptions& _opt) const override;
+    spDataObject doTests(spDataObject& _input, TestSuiteOptions& _opt) const override;
     TestPath suiteFolder() const override;
     FillerPath suiteFillerFolder() const override;
 };
@@ -35,7 +35,7 @@ public:
 class BlockchainTestTransitionSuite : public TestSuite
 {
 public:
-    spDataObject doTests(spDataObjectMove _input, TestSuiteOptions& _opt) const override;
+    spDataObject doTests(spDataObject& _input, TestSuiteOptions& _opt) const override;
     TestPath suiteFolder() const override;
     FillerPath suiteFillerFolder() const override;
 };
@@ -66,7 +66,7 @@ class LegacyConstantinopleBCGeneralStateTestsSuite : public BlockchainTestValidS
 protected:
     bool legacyTestSuiteFlag() const override { return  true; }
 public:
-    spDataObject doTests(spDataObjectMove _input, TestSuiteOptions& _opt) const override;
+    spDataObject doTests(spDataObject& _input, TestSuiteOptions& _opt) const override;
     test::TestSuite::TestPath suiteFolder() const override;
     test::TestSuite::FillerPath suiteFillerFolder() const override;
 };
@@ -77,7 +77,7 @@ class LegacyConstantinopleBlockchainInvalidTestSuite : public BlockchainTestInva
 protected:
     bool legacyTestSuiteFlag() const override { return  true; }
 public:
-    spDataObject doTests(spDataObjectMove _input, TestSuiteOptions& _opt) const override;
+    spDataObject doTests(spDataObject& _input, TestSuiteOptions& _opt) const override;
     TestPath suiteFolder() const override
     {
         return TestSuite::TestPath(
@@ -95,7 +95,7 @@ class LegacyConstantinopleBlockchainValidTestSuite : public BlockchainTestValidS
 protected:
     bool legacyTestSuiteFlag() const override { return  true; }
 public:
-    spDataObject doTests(spDataObjectMove _input, TestSuiteOptions& _opt) const override;
+    spDataObject doTests(spDataObject& _input, TestSuiteOptions& _opt) const override;
     TestPath suiteFolder() const override
     {
         return TestSuite::TestPath(

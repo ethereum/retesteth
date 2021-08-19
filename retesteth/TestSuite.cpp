@@ -270,7 +270,7 @@ void TestSuite::runTestWithoutFiller(boost::filesystem::path const& _file) const
                     TestSuiteOptions opt;
                     opt.doFilling = true;
                     opt.allowInvalidBlocks = true;
-                    spDataObject output = doTests(dataobject::move(testData.data), opt);
+                    spDataObject output = doTests(testData.data, opt);
                     addClientInfo(output.getContent(), _file, testData.hash);
                     writeFile(outPath, asBytes(output->asJson()));
                 }
@@ -616,7 +616,7 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
 
                 try
                 {
-                    spDataObject output = doTests(dataobject::move(testData.data), opt);
+                    spDataObject output = doTests(testData.data, opt);
                     // Add client info for all of the tests in output
                     addClientInfo(output.getContent(), boostRelativeTestPath, testData.hash);
                     writeFile(boostTestPath.path(), asBytes(output->asJson()));
@@ -696,6 +696,6 @@ void TestSuite::executeFile(boost::filesystem::path const& _file) const
     ETH_LOG("Read json structure " + string(_file.filename().c_str()), 5);
     spDataObject res = test::readJsonData(_file);
     ETH_LOG("Read json finish", 5);
-    doTests(dataobject::move(res), opt);
+    doTests(res, opt);
 }
 }

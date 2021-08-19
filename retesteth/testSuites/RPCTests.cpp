@@ -36,7 +36,7 @@ using namespace test;
 
 namespace test
 {
-spDataObject RPCTestSuite::doTests(spDataObjectMove _input, TestSuiteOptions& _opt) const
+spDataObject RPCTestSuite::doTests(spDataObject& _input, TestSuiteOptions& _opt) const
 {
     (void)_input;
     (void)_opt;

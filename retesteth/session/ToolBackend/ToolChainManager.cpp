@@ -8,14 +8,14 @@ using namespace test;
 
 namespace toolimpl
 {
-ToolChainManager::ToolChainManager(SetChainParamsArgs const& _config, fs::path const& _toolPath, fs::path const& _tmpDir)
+ToolChainManager::ToolChainManager(spSetChainParamsArgs const& _config, fs::path const& _toolPath, fs::path const& _tmpDir)
 {
     m_currentChain = 0;
     m_maxChains = 0;
-    EthereumBlockState genesis(_config.genesis(), _config.state(), FH32::zero());
+    EthereumBlockState genesis(_config->genesis(), _config->state(), FH32::zero());
     m_chains[m_currentChain] = spToolChain(new ToolChain(genesis, _config, _toolPath, _tmpDir));
     m_pendingBlock =
-        spEthereumBlockState(new EthereumBlockState(currentChain().lastBlock().header(), _config.state(), FH32::zero()));
+        spEthereumBlockState(new EthereumBlockState(currentChain().lastBlock().header(), _config->state(), FH32::zero()));
     reorganizePendingBlock();
 }
 

@@ -210,7 +210,7 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
     }
 }
 
-spDataObject DoTests(DataObject const& _input, TestSuite::TestSuiteOptions& _opt)
+spDataObject DoTests(spDataObject& _input, TestSuite::TestSuiteOptions& _opt)
 {
     spDataObject tests(new DataObject());
     if (_opt.doFilling)
@@ -252,7 +252,7 @@ spDataObject DoTests(DataObject const& _input, TestSuite::TestSuiteOptions& _opt
         if (_opt.isLegacyTests)
         {
             // Change the tests instead??
-            DataObject& _inputRef = const_cast<DataObject&>(_input);
+            DataObject& _inputRef = _input.getContent();
             for (auto& el2 : _inputRef.getSubObjectsUnsafe())
             {
                 DataObject& el = el2.getContent();

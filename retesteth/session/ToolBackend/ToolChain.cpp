@@ -16,11 +16,14 @@ using namespace dataobject;
 namespace toolimpl
 {
 ToolChain::ToolChain(
-    EthereumBlockState const& _genesis, SetChainParamsArgs const& _config, fs::path const& _toolPath, fs::path const& _tmpDir)
-  : m_engine(_config.sealEngine()), m_fork(new FORK(_config.params().atKey("fork"))), m_toolPath(_toolPath), m_tmpDir(_tmpDir)
+    EthereumBlockState const& _genesis, spSetChainParamsArgs const& _config, fs::path const& _toolPath, fs::path const& _tmpDir)
+  : m_initialParams(_config),
+    m_engine(_config->sealEngine()),
+    m_fork(new FORK(_config->params().atKey("fork"))),
+    m_toolPath(_toolPath),
+    m_tmpDir(_tmpDir)
 {
-    m_initialParams = GCP_SPointer<SetChainParamsArgs>(_config.copy());
-    m_toolParams = GCP_SPointer<ToolParams>(new ToolParams(_config.params()));
+    m_toolParams = GCP_SPointer<ToolParams>(new ToolParams(_config->params()));
 
     auto const& additional = Options::getCurrentConfig().cfgFile().additionalForks();
     if (!inArray(additional, m_fork.getCContent()))
@@ -67,7 +70,6 @@ spDataObject const ToolChain::mineBlock(EthereumBlockState const& _pendingBlock,
     // Calculate difficulty for tool (tool does not calculate difficulty)
     ChainOperationParams params = ChainOperationParams::defaultParams(toolParams());
     VALUE toolDifficulty = calculateEthashDifficulty(params, pendingFixed.header(), lastBlock().header());
-    //pendingFixedHeader.setDifficulty(toolDifficulty);
     pendingFixedHeader.setDifficulty(res.currentDifficulty());
     if (toolDifficulty != res.currentDifficulty())
         ETH_ERROR_MESSAGE("tool vs retesteth difficulty disagree: " + res.currentDifficulty().asDecString() + " vs " + toolDifficulty.asDecString());
@@ -235,7 +237,7 @@ ToolResponse ToolChain::mineBlockOnTool(EthereumBlockState const& _block, Ethere
 
     // alloc.json file
     fs::path allocPath = m_tmpDir / "alloc.json";
-    string const allocPathContent = _block.state().asDataObject()->asJsonNoFirstKey();
+    string const allocPathContent = _block.state()->asDataObject()->asJsonNoFirstKey();
     writeFile(allocPath.string(), allocPathContent);
 
     // txs.json file

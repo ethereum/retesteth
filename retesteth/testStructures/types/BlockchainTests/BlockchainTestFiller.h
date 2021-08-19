@@ -18,7 +18,7 @@ namespace teststruct
 {
 struct BlockchainTestInFiller : GCP_SPointerBase
 {
-    BlockchainTestInFiller(DataObject const&);
+    BlockchainTestInFiller(spDataObject&);
     string const& testName() const { return m_name; }
     bool hasInfo() const { return !m_info.isEmpty(); }
     InfoIncomplete const& Info() const { return m_info; }
@@ -48,7 +48,7 @@ private:
 
 struct BlockchainTestFiller
 {
-    BlockchainTestFiller(DataObject const&);
+    BlockchainTestFiller(spDataObject&);
     std::vector<BlockchainTestInFiller> const& tests() const { return m_tests; }
 
 private:

@@ -5,10 +5,11 @@ namespace test
 {
 namespace teststruct
 {
-InfoIncomplete::InfoIncomplete(DataObject const& _data)
+InfoIncomplete::InfoIncomplete(spDataObjectMove _data)
 {
-    m_comment = _data.atKey("comment").asString();
-    requireJsonFields(_data, "Info " + _data.getKey(),
+    m_rawData = _data.getPointer();
+    m_comment = m_rawData->atKey("comment").asString();
+    requireJsonFields(_data, "Info " + m_rawData->getKey(),
         {   {"comment", {{DataType::String}, jsonField::Required}}});
 }
 

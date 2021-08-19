@@ -112,11 +112,11 @@ VALUE calculateGasLimit(VALUE const& _parentGasLimit, VALUE const& _parentGasUse
 // Also remove leading zeros in storage
 State restoreFullState(DataObject& _toolState)
 {
-    DataObject fullState;
+    spDataObject fullState(new DataObject());
     for (auto& accTool2 : _toolState.getSubObjectsUnsafe())
     {
         DataObject& accTool = accTool2.getContent();
-        DataObject& acc = fullState[accTool.getKey()];
+        DataObject& acc = fullState.getContent()[accTool.getKey()];
         acc["balance"] = accTool.count("balance") ? accTool.atKey("balance").asString() : "0x00";
         acc["nonce"] = accTool.count("nonce") ? accTool.atKey("nonce").asString() : "0x00";
         acc["code"] = accTool.count("code") ? accTool.atKey("code").asString() : "0x";
@@ -131,7 +131,7 @@ State restoreFullState(DataObject& _toolState)
         }
         //fullState[accTool.getKey()] = acc;
     }
-    return State(fullState);
+    return State(dataobject::move(fullState));
 }
 
 ChainOperationParams ChainOperationParams::defaultParams(ToolParams const& _params)

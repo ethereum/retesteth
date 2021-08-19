@@ -244,11 +244,11 @@ BOOST_AUTO_TEST_CASE(object_stringIntegerType_otherTypes)
 }
 
 
-void testCompareResult(DataObject const& _exp, DataObject const& _post, CompareResult _expResult, size_t _errCount = 2)
+void testCompareResult(DataObject const& _exp, spDataObject& _post, CompareResult _expResult, size_t _errCount = 2)
 {
     try
     {
-        test::compareStates(StateIncomplete(_exp), State(_post));
+        test::compareStates(StateIncomplete(_exp), State(dataobject::move(_post)));
         ETH_FAIL_REQUIRE(_expResult == CompareResult::Success);
     }
     catch (test::EthError const& _ex)

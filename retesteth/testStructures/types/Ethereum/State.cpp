@@ -18,11 +18,12 @@ State::State(std::vector<spAccount>& _accList)
     }
 }
 
-State::State(DataObject const& _data)
+State::State(spDataObjectMove _data)
 {
     try
     {
-        for (auto const& el : _data.getSubObjects())
+        m_raw = _data.getPointer();
+        for (auto const& el : m_raw->getSubObjects())
         {
             FH20 key(el->getKey());
             m_order.push_back(key);
@@ -33,7 +34,7 @@ State::State(DataObject const& _data)
     }
     catch (std::exception const& _ex)
     {
-        throw UpwardsException(string("State parse error: ") + _ex.what() + _data.asJson());
+        throw UpwardsException(string("State parse error: ") + _ex.what() + m_raw->asJson());
     }
 }
 

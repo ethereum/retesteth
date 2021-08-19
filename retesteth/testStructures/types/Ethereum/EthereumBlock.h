@@ -41,8 +41,8 @@ protected:
 
 struct EthereumBlockState : EthereumBlock
 {
-    EthereumBlockState(spBlockHeader const& _header, State const& _state, FH32 const& _logHash)
-      : m_state(_state.asDataObject()), m_logHash(_logHash.asString())
+    EthereumBlockState(spBlockHeader const& _header, spState const& _state, FH32 const& _logHash)
+      : m_state(_state), m_logHash(_logHash.asString())
     {
         m_header = readBlockHeader(_header->asDataObject());
     }
@@ -50,7 +50,7 @@ struct EthereumBlockState : EthereumBlock
     void setTotalDifficulty(VALUE const& _totalDifficulty) { m_totalDifficulty = spVALUE(_totalDifficulty.copy()); }
     VALUE const& totalDifficulty() const { return m_totalDifficulty; }
 
-    State const& state() const { return m_state; }
+    spState const& state() const { return m_state; }
     FH32 const& logHash() const { return m_logHash; }
 
     // Debug
@@ -59,7 +59,7 @@ struct EthereumBlockState : EthereumBlock
 
 private:
     /// EthereumBlockState(){}
-    State m_state;
+    const spState m_state;
     FH32 m_logHash;
     spVALUE m_totalDifficulty;
     std::map<FH32, spFH32> m_transactionsLog;

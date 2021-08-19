@@ -5,15 +5,16 @@
 
 using namespace test::teststruct;
 
-BlockchainTestInFiller::BlockchainTestInFiller(DataObject const& _data)
+BlockchainTestInFiller::BlockchainTestInFiller(spDataObject& _data)
 {
     try
     {
         m_hasAtLeastOneUncle = false;
-        m_name = _data.getKey();
-        if (_data.count("_info"))
-            m_info = spInfoIncomplete(new InfoIncomplete(_data.atKey("_info")));
-        m_pre = spState(new State(convertDecStateToHex(_data.atKey("pre"))));
+        m_name = _data->getKey();
+        if (_data->count("_info"))
+            m_info = spInfoIncomplete(new InfoIncomplete(MOVE(_data, "_info")));
+        convertDecStateToHex((*_data).atKeyPointerUnsafe("pre"));
+        m_pre = spState(new State(MOVE(_data, "pre")));
 
         // Prepare nonce map for transaction 'auto' nonce parsing
         NonceMap nonceMap;
@@ -22,9 +23,9 @@ BlockchainTestInFiller::BlockchainTestInFiller(DataObject const& _data)
         // nonce map
 
         m_sealEngine = SealEngine::NoProof;
-        if (_data.count("sealEngine"))
+        if (_data->count("sealEngine"))
         {
-            string const sEngine = _data.atKey("sealEngine").asString();
+            string const sEngine = _data->atKey("sealEngine").asString();
             if (sEngine == sealEngineToStr(SealEngine::Ethash))
                 m_sealEngine = SealEngine::Ethash;
             else if (sEngine == sealEngineToStr(SealEngine::NoProof))
@@ -32,11 +33,11 @@ BlockchainTestInFiller::BlockchainTestInFiller(DataObject const& _data)
             else
                 ETH_ERROR_MESSAGE("BlockchainTestInFiller: Unknown sealEngine: " + sEngine);
         }
-        m_env = spBlockchainTestFillerEnv(new BlockchainTestFillerEnv(_data.atKey("genesisBlockHeader"), m_sealEngine));
+        m_env = spBlockchainTestFillerEnv(new BlockchainTestFillerEnv(_data->atKey("genesisBlockHeader"), m_sealEngine));
 
         // Process expect section
         std::set<FORK> knownForks;
-        for (auto const& el2 : _data.atKey("expect").getSubObjects())
+        for (auto const& el2 : _data->atKey("expect").getSubObjects())
         {
             DataObject const& el = el2.getCContent();
             m_expects.push_back(el);
@@ -51,21 +52,21 @@ BlockchainTestInFiller::BlockchainTestInFiller(DataObject const& _data)
 
         ETH_ERROR_REQUIRE_MESSAGE(m_expects.size() > 0, "BlockchainTestFiller require expect section!");
 
-        if (_data.count("exceptions"))
+        if (_data->count("exceptions"))
         {
-            for (size_t i = _data.atKey("exceptions").getSubObjects().size(); i > 0; i--)
-                m_exceptions.push_back(_data.atKey("exceptions").getSubObjects().at(i - 1)->asString());
+            for (size_t i = _data->atKey("exceptions").getSubObjects().size(); i > 0; i--)
+                m_exceptions.push_back(_data->atKey("exceptions").getSubObjects().at(i - 1)->asString());
         }
 
         m_hasAtLeastOneUncle = false;
-        for (auto const& el : _data.atKey("blocks").getSubObjects())
+        for (auto const& el : _data->atKey("blocks").getSubObjects())
         {
             m_blocks.push_back(BlockchainTestFillerBlock(el, nonceMap));
             if (m_blocks.at(m_blocks.size() - 1).uncles().size() > 0)
                 m_hasAtLeastOneUncle = true;
         }
 
-        requireJsonFields(_data, "BlockchainTestInFiller " + _data.getKey(),
+        requireJsonFields(_data, "BlockchainTestInFiller " + _data->getKey(),
             {{"_info", {{DataType::Object}, jsonField::Optional}},
                 {"sealEngine", {{DataType::String}, jsonField::Optional}},
                 {"genesisBlockHeader", {{DataType::Object}, jsonField::Required}},
@@ -80,16 +81,16 @@ BlockchainTestInFiller::BlockchainTestInFiller(DataObject const& _data)
     }
 }
 
-BlockchainTestFiller::BlockchainTestFiller(DataObject const& _data)
+BlockchainTestFiller::BlockchainTestFiller(spDataObject& _data)
 {
     try
     {
         TestOutputHelper::get().setCurrentTestInfo(TestInfo("TestFillerInit"));
-        ETH_ERROR_REQUIRE_MESSAGE(_data.type() == DataType::Object,
+        ETH_ERROR_REQUIRE_MESSAGE(_data->type() == DataType::Object,
             TestOutputHelper::get().get().testFile().string() + " A test file must contain an object value (json/yaml).");
-        ETH_ERROR_REQUIRE_MESSAGE(_data.getSubObjects().size() >= 1,
+        ETH_ERROR_REQUIRE_MESSAGE(_data->getSubObjects().size() >= 1,
             TestOutputHelper::get().get().testFile().string() + " A test file must contain at least one test!");
-        for (auto const& el : _data.getSubObjects())
+        for (auto& el : _data.getContent().getSubObjectsUnsafe())
         {
             TestOutputHelper::get().setCurrentTestInfo(TestInfo("BlockchainTestFiller", el->getKey()));
             m_tests.push_back(BlockchainTestInFiller(el));

@@ -15,7 +15,7 @@ namespace teststruct
 {
 struct VMTestInFiller : GCP_SPointerBase
 {
-    VMTestInFiller(DataObject const&);
+    VMTestInFiller(spDataObject&);
 
     string const& testName() const { return m_name; }
     bool hasInfo() const { return !m_info.isEmpty(); }
@@ -42,7 +42,7 @@ private:
 
 struct VMTestFiller
 {
-    VMTestFiller(DataObject const&);
+    VMTestFiller(spDataObject&);
     std::vector<VMTestInFiller> const& tests() const { return m_tests; }
 
 private:

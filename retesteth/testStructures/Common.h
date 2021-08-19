@@ -45,7 +45,7 @@ void requireJsonFields(
 
 // Compile LLL in code, solidity in code
 // Convert dec fields to hex, add 0x prefix to accounts and storage keys
-spDataObject convertDecStateToHex(DataObject const& _data, solContracts const& _preSolidity = solContracts());
+void convertDecStateToHex(spDataObject& _data, solContracts const& _preSolidity = solContracts());
 
 // Convert dec fields to hex, add 0x prefix to accounts and storage keys
 spDataObject convertDecBlockheaderIncompleteToHex(DataObject const& _data);
@@ -55,6 +55,9 @@ string compareBlockHeaders(DataObject const& _blockA, DataObject const& _blockB,
 
 // Read expect Exceptions
 void readExpectExceptions(DataObject const& _data, std::map<FORK, string>& _out);
+
+// Marco move subpointer from key _key in _dataobject
+#define MOVE(_dataobject, _key) dataobject::move((*_dataobject).atKeyPointerUnsafe(_key))
 
 }  // namespace teststruct
 }  // namespace test

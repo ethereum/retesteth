@@ -76,7 +76,7 @@ public:
 
     DataObject const& atKey(std::string const& _key) const;
     DataObjectK atKeyPointer(std::string const& _key);
-    spDataObject atKeyPointerUnsafe(std::string const& _key);
+    spDataObject& atKeyPointerUnsafe(std::string const& _key);
     DataObject& atKeyUnsafe(std::string const& _key);
     DataObject const& at(size_t _pos) const;
     DataObject& atUnsafe(size_t _pos);
@@ -140,6 +140,8 @@ private:
     DataObject& m_data;
 };
 
+
+// Can help to keep incapsulation
 // DataObject move requester
 class spDataObjectMove
 {
@@ -156,6 +158,7 @@ private:
 // Move
 spDataObjectMove move(spDataObject& _obj);
 
+// TODO refactor to use linked lists so no need to insert into vector
 // Find index that _key should take place in when being added to ordered _objects by key
 size_t findOrderedKeyPosition(string const& _key, vector<spDataObject> const& _objects);
 }
