@@ -150,7 +150,7 @@ void verifyCommonParent(spBlockHeader const& _header, spBlockHeader const& _pare
     VALUE newDiff = calculateEthashDifficulty(params, _header, _parent);
     if (header.difficulty() != newDiff)
         throw test::UpwardsException(
-            "Invalid difficulty: " + header.difficulty().asDecString() + ", want: " + VALUE(newDiff).asDecString());
+            "Invalid difficulty: " + header.difficulty().asDecString() + ", retesteth want: " + VALUE(newDiff).asDecString());
 
     bigint parentGasLimit = parent.gasLimit().asBigInt();
     if (header.number() == 5 && _chain.fork() == "BerlinToLondonAt5")

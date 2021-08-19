@@ -52,7 +52,7 @@ public:
         RequireValid,
         AllowFailTransactions
     };
-    spDataObject const mineBlock(EthereumBlockState const& _pendingBlock, Mining _req = Mining::AllowFailTransactions);
+    spDataObject const mineBlock(EthereumBlockState const& _pendingBlock, EthereumBlockState const& _parentBlock, Mining _req = Mining::AllowFailTransactions);
     void rewindToBlock(size_t _number);
 
     // Used for chain reorg
@@ -63,7 +63,7 @@ private:
     ToolChain(){};
     // Execute t8ntool cmd with input _block information, and get the output block information
     // Information includes header, transactions, state
-    ToolResponse mineBlockOnTool(EthereumBlockState const& _block, SealEngine _engine = SealEngine::NoReward);
+    ToolResponse mineBlockOnTool(EthereumBlockState const& _block, EthereumBlockState const& _parent, SealEngine _engine = SealEngine::NoReward);
 
     GCP_SPointer<ToolParams> m_toolParams;
     GCP_SPointer<SetChainParamsArgs> m_initialParams;

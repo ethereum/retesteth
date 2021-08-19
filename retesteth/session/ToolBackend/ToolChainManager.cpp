@@ -23,7 +23,7 @@ spDataObject const ToolChainManager::mineBlocks(size_t _number, ToolChain::Minin
 {
     if (_number > 1)
         throw test::UpwardsException("ToolChainManager::mineBlocks number arg invalid: " + fto_string(_number));
-    spDataObject const res = currentChainUnsafe().mineBlock(m_pendingBlock, _req);
+    spDataObject const res = currentChainUnsafe().mineBlock(m_pendingBlock, currentChainUnsafe().lastBlock(), _req);
     reorganizePendingBlock();
     return res;
 }

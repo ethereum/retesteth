@@ -34,7 +34,7 @@ ToolChain::ToolChain(
     }
 
     // We yet don't know the state root. ask the tool to calculate it
-    ToolResponse res = mineBlockOnTool(_genesis, SealEngine::NoReward);
+    ToolResponse res = mineBlockOnTool(_genesis, _genesis, SealEngine::NoReward);
 
     EthereumBlockState genesisFixed(_genesis.header(), _genesis.state(), FH32::zero());
     genesisFixed.headerUnsafe().getContent().setStateRoot(res.stateRoot());
@@ -43,9 +43,9 @@ ToolChain::ToolChain(
     m_blocks.push_back(genesisFixed);
 }
 
-spDataObject const ToolChain::mineBlock(EthereumBlockState const& _pendingBlock, Mining _req)
+spDataObject const ToolChain::mineBlock(EthereumBlockState const& _pendingBlock, EthereumBlockState const& _parentBlock, Mining _req)
 {
-    ToolResponse const res = mineBlockOnTool(_pendingBlock, m_engine);
+    ToolResponse const res = mineBlockOnTool(_pendingBlock, _parentBlock, m_engine);
 
     // Pending fixed is pending header corrected by the information returned by tool
     // The tool can reject transactions changing the stateHash, TxRoot, TxReceipts, HeaderHash, GasUsed
@@ -67,7 +67,10 @@ spDataObject const ToolChain::mineBlock(EthereumBlockState const& _pendingBlock,
     // Calculate difficulty for tool (tool does not calculate difficulty)
     ChainOperationParams params = ChainOperationParams::defaultParams(toolParams());
     VALUE toolDifficulty = calculateEthashDifficulty(params, pendingFixed.header(), lastBlock().header());
-    pendingFixedHeader.setDifficulty(toolDifficulty);
+    //pendingFixedHeader.setDifficulty(toolDifficulty);
+    pendingFixedHeader.setDifficulty(res.currentDifficulty());
+    if (toolDifficulty != res.currentDifficulty())
+        ETH_ERROR_MESSAGE("tool vs retesteth difficulty disagree: " + res.currentDifficulty().asDecString() + " vs " + toolDifficulty.asDecString());
 
     // Calculate new baseFee
     if (pendingFixedHeader.type() == BlockType::BlockHeader1559 &&
@@ -193,12 +196,21 @@ spDataObject const ToolChain::mineBlock(EthereumBlockState const& _pendingBlock,
     return miningResult;
 }
 
-ToolResponse ToolChain::mineBlockOnTool(EthereumBlockState const& _block, SealEngine _engine)
+ToolResponse ToolChain::mineBlockOnTool(EthereumBlockState const& _block, EthereumBlockState const& _parent, SealEngine _engine)
 {
     // env.json file
     fs::path envPath = m_tmpDir / "env.json";
     BlockchainTestFillerEnv env(_block.header()->asDataObject(), m_engine);
     spDataObject envData = env.asDataObject();
+    if (_parent.header()->number() != _block.header()->number())
+    {
+        if (_parent.header()->hash() != _block.header()->parentHash())
+            ETH_ERROR_MESSAGE("ToolChain::mineBlockOnTool: provided parent block != pending parent block hash!");
+        (*envData).removeKey("currentDifficulty");
+        (*envData)["parentTimestamp"] = _parent.header()->timestamp().asString();
+        (*envData)["parentDifficulty"] = _parent.header()->difficulty().asString();
+        (*envData)["parentUncleHash"] = _parent.header()->uncleHash().asString();
+    }
 
     // BlockHeader hash information for tool mining
     size_t k = 0;
@@ -227,7 +239,7 @@ ToolResponse ToolChain::mineBlockOnTool(EthereumBlockState const& _block, SealEn
     writeFile(allocPath.string(), allocPathContent);
 
     // txs.json file
-    bool exportRLP = false;
+    bool exportRLP = true;
     string const txsfile = _block.transactions().size() && exportRLP ? "txs.rlp" : "txs.json";
     fs::path txsPath = m_tmpDir / txsfile;
 
