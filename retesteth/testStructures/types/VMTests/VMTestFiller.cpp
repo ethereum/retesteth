@@ -65,8 +65,8 @@ VMTestInFiller::VMTestInFiller(spDataObject& _data)
                         TestOutputHelper::get().testInfo().errorDebug());
 
         if (_data->count("_info"))
-            m_info = GCP_SPointer<InfoIncomplete>(new InfoIncomplete(dataobject::move((*_data).atKeyPointerUnsafe("_info"))));
-        m_env = GCP_SPointer<StateTestFillerEnv>(new StateTestFillerEnv(_data->atKey("env")));
+            m_info = GCP_SPointer<InfoIncomplete>(new InfoIncomplete(MOVE(_data, "_info")));
+        m_env = GCP_SPointer<StateTestFillerEnv>(new StateTestFillerEnv(MOVE(_data, "env")));
         convertDecStateToHex((*_data).atKeyPointerUnsafe("pre"));
         m_pre = spState(new State(MOVE(_data, "pre")));
         m_name = _data->getKey();

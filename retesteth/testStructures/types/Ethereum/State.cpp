@@ -11,10 +11,11 @@ State::State(std::vector<spAccount>& _accList)
     // Here spAccountBase will take control of spAccount content and increase its refCount
     // AccountBase will handle all the logic for Account, but with this constructor
     // We certain that account provided for the state is full and not incomplete
+    m_raw = spDataObject(new DataObject());
     for (auto& el : _accList)
     {
-        m_order.push_back(el->address());
         m_accounts[el->address()] = spAccountBase(&el.getContent());
+        (*m_raw).atKeyPointer(el->address().asString()) = el.getContent().asDataObject();
     }
 }
 
@@ -26,7 +27,6 @@ State::State(spDataObjectMove _data)
         for (auto const& el : m_raw->getSubObjects())
         {
             FH20 key(el->getKey());
-            m_order.push_back(key);
             m_accounts[key] = spAccountBase(new Account(el));
         }
         if (m_accounts.size() == 0)
@@ -54,26 +54,11 @@ bool State::hasAccount(FH20 const& _address) const
     return m_accounts.count(_address);
 }
 
-spDataObject State::asDataObject(ExportOrder _order) const
+spDataObject State::asDataObject() const
 {
     // As long as we guarantee unmutability of parsed data in the structure
     // We can return the same data object as we got, not recalculating the whole thing
-    if (!m_raw.isEmpty())
-        return m_raw;
-
-    // TODO move initialization into constructor???
-    spDataObject out(new DataObject());
-    if (_order == ExportOrder::OldStyle)
-    {
-        for (auto const& el : m_order)
-            (*out).addSubObject(m_accounts.at(el)->asDataObject(_order));
-    }
-    else
-    {
-        for (auto const& el : m_accounts)
-            (*out).addSubObject(el.second->asDataObject());
-    }
-    return out;
+    return m_raw;
 }
 
 }  // namespace teststruct

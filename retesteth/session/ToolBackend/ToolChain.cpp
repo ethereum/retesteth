@@ -202,8 +202,9 @@ ToolResponse ToolChain::mineBlockOnTool(EthereumBlockState const& _block, Ethere
 {
     // env.json file
     fs::path envPath = m_tmpDir / "env.json";
-    BlockchainTestFillerEnv env(_block.header()->asDataObject(), m_engine);
-    spDataObject envData = env.asDataObject();
+    auto spHeader = _block.header()->asDataObject();
+    BlockchainTestFillerEnv env(dataobject::move(spHeader), m_engine);
+    spDataObject& envData = const_cast<spDataObject&>(env.asDataObject());
     if (_parent.header()->number() != _block.header()->number())
     {
         if (_parent.header()->hash() != _block.header()->parentHash())

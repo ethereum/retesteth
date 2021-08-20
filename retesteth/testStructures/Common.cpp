@@ -91,6 +91,13 @@ void mod_valueToCompactEvenHexPrefixed(DataObject& _obj)
                 src.erase(std::remove(src.begin(), src.end(), '_'), src.end());
                 _obj.setString(toCompactHexPrefixed(src, 1));
             }
+            else
+            {
+                if (_obj.asString().size() == 2)
+                    _obj.asStringUnsafe().insert(2, "00");
+                else
+                    _obj.performModifier(mod_removeLeadingZerosFromHexValueEVEN);
+            }
         }
         catch (std::exception const& _ex)
         {
@@ -105,8 +112,13 @@ void mod_keyToCompactEvenHexPrefixed(DataObject& _obj)
     {
         if (!(_obj.getKey()[0] == '0' && _obj.getKey()[1] == 'x'))
             _obj.setKey(toCompactHexPrefixed(_obj.getKey(), 1));
-        if (_obj.getKey().size() == 3)
-            _obj.getKeyUnsafe().insert(2, "0");
+        else
+        {
+            if (_obj.getKey().size() == 2)
+                _obj.getKeyUnsafe().insert(2, "00");
+            else
+                _obj.performModifier(mod_removeLeadingZerosFromHexKeyEVEN);
+        }
     }
     catch (std::exception const& _ex)
     {
@@ -127,7 +139,7 @@ void mod_removeLeadingZerosFromHexValues(DataObject& _obj)
 }
 
 // Remove leading zeros from hex values leaving 0x0004 - > 0x04
-void mod_removeLeadingZerosFromHexValuesEVEN(DataObject& _obj)
+void mod_removeLeadingZerosFromHexValueEVEN(DataObject& _obj)
 {
     mod_removeLeadingZerosFromHexValues(_obj);
     if (_obj.type() == DataType::String)
@@ -138,7 +150,7 @@ void mod_removeLeadingZerosFromHexValuesEVEN(DataObject& _obj)
     }
 }
 
-void mod_removeLeadingZerosFromHexKeysEVEN(DataObject& _obj)
+void mod_removeLeadingZerosFromHexKeyEVEN(DataObject& _obj)
 {
     string str = _obj.getKey();
     removeLeadingZeroes(str);
@@ -146,6 +158,12 @@ void mod_removeLeadingZerosFromHexKeysEVEN(DataObject& _obj)
     if (t == DigitsType::UnEvenHexPrefixed)
         str = "0x0" + str.substr(2);
     _obj.setKey(str);
+}
+
+void mod_valueInsertZeroXPrefix(DataObject& _obj)
+{
+    if (_obj.asString().size() > 1 && _obj.asString()[1] != 'x')
+        _obj.asStringUnsafe().insert(0, "0x");
 }
 
 long long int hexOrDecStringToInt(string const& _str)
@@ -270,10 +288,13 @@ void convertDecStateToHex(spDataObject& _data, solContracts const& _preSolidity,
             acc.setKey("0x" + acc.getKey());
         acc.performModifier(mod_keyToLowerCase);
 
-        if (acc.count("code") && _compileCode == StateToHex::COMPILECODE)
-            acc["code"].setString(test::compiler::replaceCode(acc.atKey("code").asString(), _preSolidity));
-        if (acc.count("code") && acc.atKey("code").asString().empty())
-            acc["code"] = "0x" + acc.atKey("code").asString();
+        if (acc.count("code"))
+        {
+            if (_compileCode == StateToHex::COMPILECODE)
+                acc["code"].setString(test::compiler::replaceCode(acc.atKey("code").asString(), _preSolidity));
+            if (acc.atKey("code").asString().empty())
+                acc["code"] = "0x" + acc.atKey("code").asString();
+        }
 
         if (acc.count("nonce"))
             acc["nonce"].performModifier(mod_valueToCompactEvenHexPrefixed);
@@ -285,7 +306,6 @@ void convertDecStateToHex(spDataObject& _data, solContracts const& _preSolidity,
             {
                 rec.getContent().performModifier(mod_keyToCompactEvenHexPrefixed);
                 rec.getContent().performModifier(mod_valueToCompactEvenHexPrefixed);
-                rec.getContent().performModifier(mod_removeLeadingZerosFromHexValuesEVEN);
                 rec.getContent().performModifier(mod_valueToLowerCase);
                 rec.getContent().performModifier(mod_keyToLowerCase);
             }

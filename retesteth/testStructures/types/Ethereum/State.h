@@ -21,11 +21,10 @@ struct State : StateBase
     bool hasAccount(Account const& _account) const;
     bool hasAccount(FH20 const& _address) const;
 
-    spDataObject asDataObject(ExportOrder order = ExportOrder::Default) const override;
+    spDataObject asDataObject() const override;
 
 private:
     spDataObject m_raw;
-    std::vector<FH20> m_order;
     State() {}
 };
 

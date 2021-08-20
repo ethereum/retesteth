@@ -126,8 +126,8 @@ State restoreFullState(DataObject& _toolState)
             acc.atKeyPointer("storage") = spDataObject(new DataObject(DataType::Object));
         for (auto& storageRecord : acc.atKeyUnsafe("storage").getSubObjectsUnsafe())
         {
-            storageRecord.getContent().performModifier(mod_removeLeadingZerosFromHexValuesEVEN);
-            storageRecord.getContent().performModifier(mod_removeLeadingZerosFromHexKeysEVEN);
+            storageRecord.getContent().performModifier(mod_removeLeadingZerosFromHexValueEVEN);
+            storageRecord.getContent().performModifier(mod_removeLeadingZerosFromHexKeyEVEN);
         }
         //fullState[accTool.getKey()] = acc;
     }

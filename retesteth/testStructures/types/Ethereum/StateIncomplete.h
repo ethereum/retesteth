@@ -15,7 +15,7 @@ struct StateIncomplete : StateBase
 {
     StateIncomplete(spDataObjectMove);
     void correctMiningReward(FH20 const& _coinbase, VALUE const& _reward);
-    spDataObject asDataObject(ExportOrder _order = ExportOrder::Default) const override;
+    spDataObject asDataObject() const override;
     spDataObject const& rawData() const { return m_rawData; }
 
 private:

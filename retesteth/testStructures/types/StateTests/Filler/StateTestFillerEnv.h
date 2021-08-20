@@ -12,7 +12,7 @@ namespace teststruct
 // Filler constructor of env converts all dec fields to hex
 struct StateTestFillerEnv : StateTestEnvBase
 {
-    StateTestFillerEnv(DataObject const& _data);
+    StateTestFillerEnv(spDataObjectMove);
     VALUE const& currentTimestamp() const override { return m_genesisTimestamp; }
     VALUE const& firstBlockTimestamp() const { return m_currentTimestamp; }
 

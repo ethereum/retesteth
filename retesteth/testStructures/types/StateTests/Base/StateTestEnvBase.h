@@ -25,7 +25,7 @@ struct StateTestEnvBase : GCP_SPointerBase
     FH8 const& currentNonce() const { return m_currentNonce; }
     FH32 const& currentMixHash() const { return m_currentMixHash; }
     FH32 const& previousHash() const { return m_previousHash; }
-    spDataObject asDataObject() const;
+    spDataObject const& asDataObject() const;
 
     spVALUE const& currentBaseFee() const { return m_currentBaseFee; }
 
@@ -33,6 +33,8 @@ struct StateTestEnvBase : GCP_SPointerBase
 
 protected:
     StateTestEnvBase() {}
+    spDataObject m_raw;
+
     spFH20 m_currentCoinbase;
     spVALUE m_currentDifficulty;
     spVALUE m_currentGasLimit;

@@ -11,15 +11,17 @@ namespace test
 {
 namespace teststruct
 {
+
 // DataObject converters. Mostly Dec -> Hex, json data convertation
 void mod_removeLeadingZerosFromHexValues(DataObject&);
-void mod_removeLeadingZerosFromHexValuesEVEN(DataObject&);
-void mod_removeLeadingZerosFromHexKeysEVEN(DataObject&);
+void mod_removeLeadingZerosFromHexValueEVEN(DataObject&);
+void mod_removeLeadingZerosFromHexKeyEVEN(DataObject&);
 void mod_removeComments(DataObject& _obj);
 void mod_valueToLowerCase(DataObject&);
 void mod_keyToLowerCase(DataObject&);
 void mod_valueToCompactEvenHexPrefixed(DataObject&);
 void mod_keyToCompactEvenHexPrefixed(DataObject&);
+void mod_valueInsertZeroXPrefix(DataObject&);
 long long int hexOrDecStringToInt(string const& _str);
 
 // Check the presents of fields in a DataObject with a validation map

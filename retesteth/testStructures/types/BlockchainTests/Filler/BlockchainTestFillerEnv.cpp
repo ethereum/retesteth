@@ -6,31 +6,37 @@ namespace test
 namespace teststruct
 {
 // Env. Build a type representation
-BlockchainTestFillerEnv::BlockchainTestFillerEnv(DataObject const& _data, SealEngine _sEngine)
+BlockchainTestFillerEnv::BlockchainTestFillerEnv(spDataObjectMove _data, SealEngine _sEngine)
 {
     try
     {
-        spDataObject tmpData(new DataObject());
-        (*tmpData).copyFrom(_data);
-        (*tmpData).performModifier(mod_valueToCompactEvenHexPrefixed);
+        m_raw = _data.getPointer();
 
-        spDataObject coinbase(new DataObject());
-        (*coinbase).copyFrom(_data.atKey("coinbase"));
-        if (coinbase->asString().size() > 1 && coinbase->asString()[1] != 'x')
-            (*coinbase) = "0x" + coinbase->asString();
-        m_currentCoinbase = spFH20(new FH20(coinbase));
-        m_currentDifficulty = spVALUE(new VALUE(tmpData->atKey("difficulty")));
-        m_currentGasLimit = spVALUE(new VALUE(tmpData->atKey("gasLimit")));
+        (*m_raw).atKeyUnsafe("coinbase").performModifier(mod_valueInsertZeroXPrefix);
+        (*m_raw).atKeyUnsafe("difficulty").performModifier(mod_valueToCompactEvenHexPrefixed);
+        (*m_raw).atKeyUnsafe("gasLimit").performModifier(mod_valueToCompactEvenHexPrefixed);
+        (*m_raw).atKeyUnsafe("number").performModifier(mod_valueToCompactEvenHexPrefixed);
+        (*m_raw).atKeyUnsafe("timestamp").performModifier(mod_valueToCompactEvenHexPrefixed);
+        (*m_raw).atKeyUnsafe("parentHash").performModifier(mod_valueInsertZeroXPrefix);
+
+        (*m_raw).performModifier(mod_valueToLowerCase);
+
+        m_currentCoinbase = spFH20(new FH20(m_raw->atKey("coinbase")));
+        m_currentDifficulty = spVALUE(new VALUE(m_raw->atKey("difficulty")));
+        m_currentGasLimit = spVALUE(new VALUE(m_raw->atKey("gasLimit")));
         if (m_currentGasLimit.getCContent() > dev::bigint("0x7fffffffffffffff"))
             throw test::UpwardsException("currentGasLimit must be < 0x7fffffffffffffff");
 
-        if (tmpData->count("baseFeePerGas"))
-            m_currentBaseFee = spVALUE(new VALUE(tmpData->atKey("baseFeePerGas")));
+        if (m_raw->count("baseFeePerGas"))
+        {
+            (*m_raw).atKeyUnsafe("baseFeePerGas").performModifier(mod_valueToCompactEvenHexPrefixed);
+            m_currentBaseFee = spVALUE(new VALUE(m_raw->atKey("baseFeePerGas")));
+        }
 
-        m_currentNumber = spVALUE(new VALUE(tmpData->atKey("number")));
-        m_currentTimestamp = spVALUE(new VALUE(tmpData->atKey("timestamp")));
-        m_previousHash = spFH32(new FH32(_data.atKey("parentHash")));
-        m_currentExtraData = spBYTES(new BYTES(_data.atKey("extraData")));
+        m_currentNumber = spVALUE(new VALUE(m_raw->atKey("number")));
+        m_currentTimestamp = spVALUE(new VALUE(m_raw->atKey("timestamp")));
+        m_previousHash = spFH32(new FH32(m_raw->atKey("parentHash")));
+        m_currentExtraData = spBYTES(new BYTES(m_raw->atKey("extraData")));
 
         if (_sEngine == SealEngine::NoProof)
         {
@@ -39,12 +45,12 @@ BlockchainTestFillerEnv::BlockchainTestFillerEnv(DataObject const& _data, SealEn
         }
         else
         {
-            m_currentNonce = spFH8(new FH8(_data.atKey("nonce")));
-            m_currentMixHash = spFH32(new FH32(_data.atKey("mixHash")));
+            m_currentNonce = spFH8(new FH8(m_raw->atKey("nonce")));
+            m_currentMixHash = spFH32(new FH32(m_raw->atKey("mixHash")));
         }
 
         // Allowed fields for this structure
-        requireJsonFields(_data, "GenesisBlockHeader(BlockchainTestFillerEnv) " + _data.getKey(),
+        requireJsonFields(m_raw, "GenesisBlockHeader(BlockchainTestFillerEnv) " + m_raw->getKey(),
             {{"bloom", {{DataType::String}, jsonField::Optional}},
              {"logsBloom", {{DataType::String}, jsonField::Optional}},
              {"coinbase", {{DataType::String}, jsonField::Optional}},
@@ -70,6 +76,17 @@ BlockchainTestFillerEnv::BlockchainTestFillerEnv(DataObject const& _data, SealEn
              {"uncleHash", {{DataType::String}, jsonField::Optional}}
                           });
 
+        // Format the env to RPC format
+        spDataObject out(new DataObject());
+        (*out).atKeyPointer("currentCoinbase") = (*m_raw).atKeyPointerUnsafe("coinbase");
+        (*out).atKeyPointer("currentDifficulty") = (*m_raw).atKeyPointerUnsafe("difficulty");
+        (*out).atKeyPointer("currentNumber") = (*m_raw).atKeyPointerUnsafe("number");
+        (*out).atKeyPointer("currentTimestamp") = (*m_raw).atKeyPointerUnsafe("timestamp");
+        (*out).atKeyPointer("currentGasLimit") = (*m_raw).atKeyPointerUnsafe("gasLimit");
+        (*out).atKeyPointer("previousHash") = (*m_raw).atKeyPointerUnsafe("parentHash");
+        if (!m_currentBaseFee.isEmpty())
+            (*out).atKeyPointer("currentBaseFee") = (*m_raw).atKeyPointerUnsafe("baseFeePerGas");
+        m_raw = out;
     }
     catch (std::exception const& _ex)
     {

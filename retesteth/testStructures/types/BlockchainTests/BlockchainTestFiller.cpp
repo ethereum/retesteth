@@ -42,7 +42,8 @@ BlockchainTestInFiller::BlockchainTestInFiller(spDataObject& _data)
             else
                 ETH_ERROR_MESSAGE("BlockchainTestInFiller: Unknown sealEngine: " + sEngine);
         }
-        m_env = spBlockchainTestFillerEnv(new BlockchainTestFillerEnv(_data->atKey("genesisBlockHeader"), m_sealEngine));
+
+        m_env = spBlockchainTestFillerEnv(new BlockchainTestFillerEnv(MOVE(_data, "genesisBlockHeader"), m_sealEngine));
 
         // Process expect section
         std::set<FORK> knownForks;

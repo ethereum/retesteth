@@ -85,7 +85,7 @@ spDataObject constructStorageRangeAt(
                 DataObject& record = (*obj)[fto_string(iStore)];
                 record["key"] = std::get<0>(el.second)->asString();
                 record["value"] = std::get<1>(el.second)->asString();
-                record.performModifier(mod_removeLeadingZerosFromHexValuesEVEN);
+                record.performModifier(mod_removeLeadingZerosFromHexValueEVEN);
 
                 if (constructResponse->atKey("storage").getSubObjects().size() == _maxResult)
                 {

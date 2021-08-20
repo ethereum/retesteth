@@ -21,7 +21,7 @@ StateIncomplete::StateIncomplete(spDataObjectMove _data)
     }
 }
 
-spDataObject StateIncomplete::asDataObject(ExportOrder) const
+spDataObject StateIncomplete::asDataObject() const
 {
     spDataObject out(new DataObject());
     for (auto const& el : m_accounts)

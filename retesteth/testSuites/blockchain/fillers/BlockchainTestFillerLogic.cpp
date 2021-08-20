@@ -81,7 +81,7 @@ spDataObject FillTest(BlockchainTestInFiller const& _test, TestSuite::TestSuiteO
                 {
                     State remoteState(getRemoteState(session));
                     compareStates(expect.result(), remoteState);
-                    filledTest.atKeyPointer("postState") = remoteState.asDataObject(ExportOrder::OldStyle);
+                    filledTest.atKeyPointer("postState") = remoteState.asDataObject();
                     if (Options::get().poststate)
                         ETH_STDOUT_MESSAGE("\nState Dump:" + TestOutputHelper::get().testInfo().errorDebug() + cDefault +
                                            " \n" + filledTest.atKey("postState").asJson());
