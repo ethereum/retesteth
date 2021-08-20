@@ -52,6 +52,7 @@ void DataObject::setKey(std::string const& _key) { m_strKey = _key; }
 
 /// Get key of the dataobject
 std::string const& DataObject::getKey() const { return m_strKey; }
+std::string& DataObject::getKeyUnsafe() { return m_strKey; }
 
 /// Get vector of subobjects
 std::vector<spDataObject> const& DataObject::getSubObjects() const
@@ -102,6 +103,11 @@ bool DataObject::count(std::string const& _key) const
 std::string const& DataObject::asString() const
 {
     _assert(m_type == DataType::String, "m_type == DataType::String (DataObject::asString())");
+    return m_strVal;
+}
+std::string& DataObject::asStringUnsafe()
+{
+    _assert(m_type == DataType::String, "m_type == DataType::String (DataObject::asStringUnsafe())");
     return m_strVal;
 }
 

@@ -141,7 +141,9 @@ spDataObject FillTestAsBlockchain(StateTestInFiller const& _test)
                     tr.markExecuted();
 
                     // Mining reward
-                    StateIncomplete mexpect(expect.result().asDataObject());  // make a copy of the state
+                    spDataObject expectCopy(new DataObject());
+                    (*expectCopy).copyFrom(expect.result().rawData());
+                    StateIncomplete mexpect = StateIncomplete(dataobject::move(expectCopy));
                     ClientConfig const& cfg = Options::getDynamicOptions().getCurrentConfig();
                     ETH_ERROR_REQUIRE_MESSAGE(cfg.getRewardMap().count(fork),
                         "Network '" + fork.asString() + "' not found in correct mining info config (" +

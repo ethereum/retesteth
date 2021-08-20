@@ -9,6 +9,15 @@ BlockchainTestInFiller::BlockchainTestInFiller(spDataObject& _data)
 {
     try
     {
+        requireJsonFields(_data, "BlockchainTestInFiller " + _data->getKey(),
+            {{"_info", {{DataType::Object}, jsonField::Optional}},
+                {"sealEngine", {{DataType::String}, jsonField::Optional}},
+                {"genesisBlockHeader", {{DataType::Object}, jsonField::Required}},
+                {"expect", {{DataType::Array}, jsonField::Required}},
+                {"exceptions", {{DataType::Array}, jsonField::Optional}},
+                {"pre", {{DataType::Object}, jsonField::Required}},
+                {"blocks", {{DataType::Array}, jsonField::Required}}});
+
         m_hasAtLeastOneUncle = false;
         m_name = _data->getKey();
         if (_data->count("_info"))
@@ -37,10 +46,9 @@ BlockchainTestInFiller::BlockchainTestInFiller(spDataObject& _data)
 
         // Process expect section
         std::set<FORK> knownForks;
-        for (auto const& el2 : _data->atKey("expect").getSubObjects())
+        for (auto& el2 : (*_data).atKeyUnsafe("expect").getSubObjectsUnsafe())
         {
-            DataObject const& el = el2.getCContent();
-            m_expects.push_back(el);
+            m_expects.push_back(el2);
             BlockchainTestFillerExpectSection const& expect = m_expects.at(m_expects.size() - 1);
             for (auto const& fork : expect.forks())
             {
@@ -65,15 +73,6 @@ BlockchainTestInFiller::BlockchainTestInFiller(spDataObject& _data)
             if (m_blocks.at(m_blocks.size() - 1).uncles().size() > 0)
                 m_hasAtLeastOneUncle = true;
         }
-
-        requireJsonFields(_data, "BlockchainTestInFiller " + _data->getKey(),
-            {{"_info", {{DataType::Object}, jsonField::Optional}},
-                {"sealEngine", {{DataType::String}, jsonField::Optional}},
-                {"genesisBlockHeader", {{DataType::Object}, jsonField::Required}},
-                {"expect", {{DataType::Array}, jsonField::Required}},
-                {"exceptions", {{DataType::Array}, jsonField::Optional}},
-                {"pre", {{DataType::Object}, jsonField::Required}},
-                {"blocks", {{DataType::Array}, jsonField::Required}}});
     }
     catch (std::exception const& _ex)
     {

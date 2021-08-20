@@ -47,14 +47,22 @@ namespace test
 {
 namespace teststruct
 {
-// DataObject modifiers. Convert all json values to lower case
-void mod_valuesToLowerCase(DataObject& _obj)
+// DataObject modifiers
+void mod_valueToLowerCase(DataObject& _obj)
 {
     if (_obj.type() == DataType::String)
     {
-        string value = _obj.asString();
+        string& value = _obj.asStringUnsafe();
         std::transform(value.begin(), value.end(), value.begin(), [](unsigned char c) { return std::tolower(c); });
-        _obj = value;
+    }
+}
+
+void mod_keyToLowerCase(DataObject& _obj)
+{
+    if (!_obj.getKey().empty())
+    {
+        string& value = _obj.getKeyUnsafe();
+        std::transform(value.begin(), value.end(), value.begin(), [](unsigned char c) { return std::tolower(c); });
     }
 }
 
@@ -97,6 +105,8 @@ void mod_keyToCompactEvenHexPrefixed(DataObject& _obj)
     {
         if (!(_obj.getKey()[0] == '0' && _obj.getKey()[1] == 'x'))
             _obj.setKey(toCompactHexPrefixed(_obj.getKey(), 1));
+        if (_obj.getKey().size() == 3)
+            _obj.getKeyUnsafe().insert(2, "0");
     }
     catch (std::exception const& _ex)
     {
@@ -249,7 +259,7 @@ void requireJsonFields(DataObject const& _o, std::string const& _config, std::ma
 
 // Compile LLL in code
 // Convert dec fields to hex, add 0x prefix to accounts and storage keys
-void convertDecStateToHex(spDataObject& _data, solContracts const& _preSolidity)
+void convertDecStateToHex(spDataObject& _data, solContracts const& _preSolidity, StateToHex _compileCode)
 {
     // -- Compile LLL in pre state into byte code if not already
     // -- Convert State::Storage keys/values into hex
@@ -258,13 +268,27 @@ void convertDecStateToHex(spDataObject& _data, solContracts const& _preSolidity)
         DataObject& acc = acc2.getContent();
         if (acc.getKey()[1] != 'x')
             acc.setKey("0x" + acc.getKey());
-        acc["code"].setString(test::compiler::replaceCode(acc.atKey("code").asString(), _preSolidity));
-        acc["nonce"].performModifier(mod_valueToCompactEvenHexPrefixed);
-        acc["balance"].performModifier(mod_valueToCompactEvenHexPrefixed);
-        for (auto& rec : acc["storage"].getSubObjectsUnsafe())
+        acc.performModifier(mod_keyToLowerCase);
+
+        if (acc.count("code") && _compileCode == StateToHex::COMPILECODE)
+            acc["code"].setString(test::compiler::replaceCode(acc.atKey("code").asString(), _preSolidity));
+        if (acc.count("code") && acc.atKey("code").asString().empty())
+            acc["code"] = "0x" + acc.atKey("code").asString();
+
+        if (acc.count("nonce"))
+            acc["nonce"].performModifier(mod_valueToCompactEvenHexPrefixed);
+        if (acc.count("balance"))
+            acc["balance"].performModifier(mod_valueToCompactEvenHexPrefixed);
+        if (acc.count("storage"))
         {
-            rec.getContent().performModifier(mod_keyToCompactEvenHexPrefixed);
-            rec.getContent().performModifier(mod_valueToCompactEvenHexPrefixed);
+            for (auto& rec : acc["storage"].getSubObjectsUnsafe())
+            {
+                rec.getContent().performModifier(mod_keyToCompactEvenHexPrefixed);
+                rec.getContent().performModifier(mod_valueToCompactEvenHexPrefixed);
+                rec.getContent().performModifier(mod_removeLeadingZerosFromHexValuesEVEN);
+                rec.getContent().performModifier(mod_valueToLowerCase);
+                rec.getContent().performModifier(mod_keyToLowerCase);
+            }
         }
     }
 }

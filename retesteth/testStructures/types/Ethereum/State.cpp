@@ -56,6 +56,12 @@ bool State::hasAccount(FH20 const& _address) const
 
 spDataObject State::asDataObject(ExportOrder _order) const
 {
+    // As long as we guarantee unmutability of parsed data in the structure
+    // We can return the same data object as we got, not recalculating the whole thing
+    if (!m_raw.isEmpty())
+        return m_raw;
+
+    // TODO move initialization into constructor???
     spDataObject out(new DataObject());
     if (_order == ExportOrder::OldStyle)
     {

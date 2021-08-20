@@ -46,12 +46,16 @@ StateTestInFiller::StateTestInFiller(spDataObject& _data)
         if (_data->count("solidity"))
             solidityCode = test::compiler::compileSolidity(_data->atKey("solidity").asString());
 
+        // "Pre" section
         convertDecStateToHex((*_data).atKeyPointerUnsafe("pre"), solidityCode);
         m_pre = spState(new State(MOVE(_data, "pre")));
-        m_transaction = spStateTestFillerTransaction(new StateTestFillerTransaction(_data->atKey("transaction")));
-        for (auto const& el : _data->atKey("expect").getSubObjects())
-            m_expectSections.push_back(StateTestFillerExpectSection(el, m_transaction));
+
+
+        for (auto& el : (*_data).atKeyUnsafe("expect").getSubObjectsUnsafe())
+            m_expectSections.push_back(StateTestFillerExpectSection(dataobject::move(el), m_transaction));
         ETH_ERROR_REQUIRE_MESSAGE(m_expectSections.size() > 0, "StateTestFiller require expect sections!");
+
+        m_transaction = spStateTestFillerTransaction(new StateTestFillerTransaction(_data->atKey("transaction")));
         m_name = _data->getKey();
     }
     catch (std::exception const& _ex)

@@ -39,6 +39,7 @@ public:
     DataType type() const;
     void setKey(std::string const& _key);
     std::string const& getKey() const;
+    std::string& getKeyUnsafe();
 
     std::vector<spDataObject> const& getSubObjects() const;
     std::map<string, spDataObject> const& getSubObjectKeys() const;
@@ -54,6 +55,8 @@ public:
     bool count(std::string const& _key) const;
 
     std::string const& asString() const;
+    std::string& asStringUnsafe();
+
     int asInt() const;
     bool asBool() const;
 

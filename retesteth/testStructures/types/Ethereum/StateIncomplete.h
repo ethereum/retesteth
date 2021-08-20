@@ -10,20 +10,17 @@ namespace test
 {
 namespace teststruct
 {
-enum class DataRequier
-{
-    ALLOWDEC,
-    ONLYHEX
-};
 // Marks that State is made of AccountIncomplete
 struct StateIncomplete : StateBase
 {
-    StateIncomplete(DataObject const&, DataRequier req = DataRequier::ONLYHEX);
+    StateIncomplete(spDataObjectMove);
     void correctMiningReward(FH20 const& _coinbase, VALUE const& _reward);
     spDataObject asDataObject(ExportOrder _order = ExportOrder::Default) const override;
+    spDataObject const& rawData() const { return m_rawData; }
 
 private:
     StateIncomplete(){};
+    spDataObject m_rawData;
 };
 
 typedef GCP_SPointer<StateIncomplete> spStateIncomplete;

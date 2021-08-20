@@ -43,7 +43,7 @@ StateTestFillerExpectSection makeExpectSection(string const& _tr, string const& 
     spStateTestFillerTransaction spTransaction =
         spStateTestFillerTransaction(new StateTestFillerTransaction(res));
     spDataObject res2 = ConvertJsoncppStringToData(_exp);
-    return StateTestFillerExpectSection(res2, spTransaction);
+    return StateTestFillerExpectSection(dataobject::move(res2), spTransaction);
 }
 
 BOOST_FIXTURE_TEST_SUITE(ExpectSectionSuite, Initializer)

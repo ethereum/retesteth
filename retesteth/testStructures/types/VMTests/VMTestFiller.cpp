@@ -53,18 +53,6 @@ VMTestInFiller::VMTestInFiller(spDataObject& _data)
 {
     try
     {
-        if (_data->count("_info"))
-            m_info = GCP_SPointer<InfoIncomplete>(new InfoIncomplete(dataobject::move((*_data).atKeyPointerUnsafe("_info"))));
-        m_env = GCP_SPointer<StateTestFillerEnv>(new StateTestFillerEnv(_data->atKey("env")));
-        convertDecStateToHex((*_data).atKeyPointerUnsafe("pre"));
-        m_pre = spState(new State(MOVE(_data, "pre")));
-        m_name = _data->getKey();
-
-        StateTestFillerTransaction stateTx(translateExecToTransaction(_data->atKey("exec")));
-        m_transaction = spTransaction(new TransactionLegacy(stateTx.buildTransactions().at(0).transaction()->asDataObject()));
-        if (_data->count("expect"))
-            m_expect = spStateIncomplete(new StateIncomplete(_data->atKey("expect"), DataRequier::ALLOWDEC));
-
         requireJsonFields(_data, "vmTestFiller " + _data->getKey(),
             {{"_info", {{DataType::Object}, jsonField::Optional}},
                 {"env", {{DataType::Object}, jsonField::Required}},
@@ -75,6 +63,21 @@ VMTestInFiller::VMTestInFiller(spDataObject& _data)
         if (_data->count("expectOut"))
             ETH_WARNING("Unable to verify `expectOut` when creating a stateTest from VMTest " +
                         TestOutputHelper::get().testInfo().errorDebug());
+
+        if (_data->count("_info"))
+            m_info = GCP_SPointer<InfoIncomplete>(new InfoIncomplete(dataobject::move((*_data).atKeyPointerUnsafe("_info"))));
+        m_env = GCP_SPointer<StateTestFillerEnv>(new StateTestFillerEnv(_data->atKey("env")));
+        convertDecStateToHex((*_data).atKeyPointerUnsafe("pre"));
+        m_pre = spState(new State(MOVE(_data, "pre")));
+        m_name = _data->getKey();
+
+        StateTestFillerTransaction stateTx(translateExecToTransaction(_data->atKey("exec")));
+        m_transaction = spTransaction(new TransactionLegacy(stateTx.buildTransactions().at(0).transaction()->asDataObject()));
+        if (_data->count("expect"))
+        {
+            convertDecStateToHex((*_data).atKeyPointerUnsafe("expect"), solContracts(), StateToHex::NOCOMPILECODE);
+            m_expect = spStateIncomplete(new StateIncomplete(MOVE(_data, "expect")));
+        }
     }
     catch (std::exception const& _ex)
     {

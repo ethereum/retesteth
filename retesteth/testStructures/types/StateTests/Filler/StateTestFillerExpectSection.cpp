@@ -79,18 +79,21 @@ spDataObject ReplaceValueToIndexesInDataList(spStateTestFillerTransaction const&
     return dataIndexes;
 }
 
-StateTestFillerExpectSection::StateTestFillerExpectSection(DataObject const& _data, spStateTestFillerTransaction const& _gtr)
+StateTestFillerExpectSection::StateTestFillerExpectSection(spDataObjectMove _data, spStateTestFillerTransaction const& _gtr)
 {
     try
     {
-        m_initialData = spDataObject(new DataObject());
-        (*m_initialData).atKeyPointer("indexes").getContent().copyFrom(_data.atKey("indexes"));
-        (*m_initialData).atKeyPointer("network").getContent().copyFrom(_data.atKey("network"));
+        m_initialData = _data.getPointer();
+        requireJsonFields(m_initialData, "StateTestFillerExpectSection " + m_initialData->getKey(),
+            {{"indexes", {{DataType::Object}, jsonField::Required}},
+                {"network", {{DataType::Array}, jsonField::Required}},
+                {"expectException", {{DataType::Object}, jsonField::Optional}},
+                {"result", {{DataType::Object}, jsonField::Required}}});
 
-        spDataObject dataIndexes = ReplaceValueToIndexesInDataList(_gtr, _data.atKey("indexes").atKey("data"));
+        spDataObject dataIndexes = ReplaceValueToIndexesInDataList(_gtr, m_initialData->atKey("indexes").atKey("data"));
         parseJsonIntValueIntoSet(dataIndexes, m_dataInd);
-        parseJsonIntValueIntoSet(_data.atKey("indexes").atKey("gas"), m_gasInd);
-        parseJsonIntValueIntoSet(_data.atKey("indexes").atKey("value"), m_valInd);
+        parseJsonIntValueIntoSet(m_initialData->atKey("indexes").atKey("gas"), m_gasInd);
+        parseJsonIntValueIntoSet(m_initialData->atKey("indexes").atKey("value"), m_valInd);
 
         ETH_ERROR_REQUIRE_MESSAGE(m_dataInd.size() > 0, "Expect section `indexes::data` is empty!");
         ETH_ERROR_REQUIRE_MESSAGE(m_gasInd.size() > 0, "Expect section `indexes::gas` is empty!");
@@ -98,26 +101,22 @@ StateTestFillerExpectSection::StateTestFillerExpectSection(DataObject const& _da
 
         // get allowed networks for this expect section
         std::set<string> forks;
-        parseJsonStrValueIntoSet(_data.atKey("network"), forks);
+        parseJsonStrValueIntoSet(m_initialData->atKey("network"), forks);
         ETH_ERROR_REQUIRE_MESSAGE(forks.size() > 0, "Expect section `network` is empty!");
 
         // Parse >=Frontier into  Frontier, Homestead, ... Constantinople according to current config
         ClientConfig const& cfg = Options::get().getDynamicOptions().getCurrentConfig();
         m_forks = cfg.translateNetworks(forks);
-        m_result = GCP_SPointer<StateIncomplete>(new StateIncomplete(_data.atKey("result"), DataRequier::ALLOWDEC));
 
-        if (_data.count("expectException"))
-            readExpectExceptions(_data.atKey("expectException"), m_expectExceptions);
+        convertDecStateToHex((*m_initialData).atKeyPointerUnsafe("result"), solContracts(), StateToHex::NOCOMPILECODE);
+        m_result = GCP_SPointer<StateIncomplete>(new StateIncomplete(MOVE(m_initialData, "result")));
 
-        requireJsonFields(_data, "StateTestFillerExpectSection " + _data.getKey(),
-            {{"indexes", {{DataType::Object}, jsonField::Required}},
-             {"network", {{DataType::Array}, jsonField::Required}},
-             {"expectException", {{DataType::Object}, jsonField::Optional}},
-             {"result", {{DataType::Object}, jsonField::Required}}});
+        if (m_initialData->count("expectException"))
+            readExpectExceptions(m_initialData->atKey("expectException"), m_expectExceptions);
     }
     catch (std::exception const& _ex)
     {
-        throw UpwardsException(string("StateTestFillerExpectSection parse error: ") + _ex.what() + "\n" + _data.asJson());
+        throw UpwardsException(string("StateTestFillerExpectSection parse error: ") + _ex.what() + "\n" + m_initialData->asJson());
     }
 }
 

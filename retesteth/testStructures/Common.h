@@ -16,7 +16,8 @@ void mod_removeLeadingZerosFromHexValues(DataObject&);
 void mod_removeLeadingZerosFromHexValuesEVEN(DataObject&);
 void mod_removeLeadingZerosFromHexKeysEVEN(DataObject&);
 void mod_removeComments(DataObject& _obj);
-void mod_valuesToLowerCase(DataObject&);
+void mod_valueToLowerCase(DataObject&);
+void mod_keyToLowerCase(DataObject&);
 void mod_valueToCompactEvenHexPrefixed(DataObject&);
 void mod_keyToCompactEvenHexPrefixed(DataObject&);
 long long int hexOrDecStringToInt(string const& _str);
@@ -45,7 +46,13 @@ void requireJsonFields(
 
 // Compile LLL in code, solidity in code
 // Convert dec fields to hex, add 0x prefix to accounts and storage keys
-void convertDecStateToHex(spDataObject& _data, solContracts const& _preSolidity = solContracts());
+enum class StateToHex
+{
+    COMPILECODE,
+    NOCOMPILECODE
+};
+void convertDecStateToHex(
+    spDataObject& _data, solContracts const& _preSolidity = solContracts(), StateToHex _compileCode = StateToHex::COMPILECODE);
 
 // Convert dec fields to hex, add 0x prefix to accounts and storage keys
 spDataObject convertDecBlockheaderIncompleteToHex(DataObject const& _data);
