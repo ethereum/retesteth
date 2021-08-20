@@ -33,6 +33,7 @@ struct StateTestTransactionBase : GCP_SPointerBase
 
 protected:
     StateTestTransactionBase(){};
+    spDataObject m_rawData;
     std::vector<Databox> m_databox;
     std::vector<VALUE> m_gasLimit;
     std::vector<VALUE> m_value;

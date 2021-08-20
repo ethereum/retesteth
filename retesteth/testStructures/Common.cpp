@@ -306,10 +306,10 @@ void convertDecStateToHex(spDataObject& _data, solContracts const& _preSolidity,
             {
                 rec.getContent().performModifier(mod_keyToCompactEvenHexPrefixed);
                 rec.getContent().performModifier(mod_valueToCompactEvenHexPrefixed);
-                rec.getContent().performModifier(mod_valueToLowerCase);
-                rec.getContent().performModifier(mod_keyToLowerCase);
+                acc.performModifier(mod_keyToLowerCase);
             }
         }
+        acc.performModifier(mod_valueToLowerCase);
     }
 }
 

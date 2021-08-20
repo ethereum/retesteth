@@ -219,8 +219,7 @@ spDataObject FillTest(StateTestInFiller const& _test)
     SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
 
     if (_test.hasInfo())
-        (*filledTest)["_info"]["comment"] = _test.Info().comment();
-
+        (*filledTest).atKeyPointer("_info") = _test.Info().rawData();
     (*filledTest).atKeyPointer("env") = _test.Env().asDataObject();
 
     // Explicitly print default basefee for filled state tests

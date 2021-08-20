@@ -6,62 +6,7 @@ using namespace test::teststruct;
 
 spDataObject StateTestTransactionBase::asDataObject() const
 {
-    // Serialize data back to JSON
-    spDataObject _out(new DataObject());
-    DataObject& out = _out.getContent();
-    size_t index = 0;
-    bool atLeastOneNonNullAccessList = false;
-    spDataObject txAccessListData(new DataObject(DataType::Array));
-    for (Databox const& el : m_databox)
-    {
-        spDataObject elb(new DataObject(el.m_data.asString()));
-        out["data"].addArrayObject(elb);
-        if (el.m_accessList.isEmpty())
-            (*txAccessListData).addArrayObject(spDataObject(new DataObject(DataType::Null)));
-        else
-        {
-            (*txAccessListData).addArrayObject(el.m_accessList->asDataObject());
-            atLeastOneNonNullAccessList = true;
-        }
-        index++;
-    }
-
-    if (atLeastOneNonNullAccessList)
-        out.atKeyPointer("accessLists") = txAccessListData;
-
-    if (!m_maxFeePerGas.isEmpty() || !m_maxPriorityFeePerGas.isEmpty())
-    {
-        if (m_maxFeePerGas.isEmpty() || m_maxPriorityFeePerGas.isEmpty())
-            ETH_FAIL_MESSAGE("Must be defined both m_maxFeePerGas and m_maxPriorityFeePerGas!");
-        if (!atLeastOneNonNullAccessList)
-            ETH_FAIL_MESSAGE("Basefee transaction must have accesslist!");
-        out["maxFeePerGas"] = m_maxFeePerGas->asString();
-        out["maxPriorityFeePerGas"] = m_maxPriorityFeePerGas->asString();
-    }
-    else
-    {
-        // Legacy Transaction
-        out["gasPrice"] = m_gasPrice->asString();
-    }
-
-    for (VALUE const& el : m_gasLimit)
-    {
-        spDataObject els(new DataObject(el.asString()));
-        out["gasLimit"].addArrayObject(els);
-    }
-    out["nonce"] = m_nonce->asString();
-    out["secretKey"] = m_secretKey->asString();
-    if (m_creation)
-        out["to"] = "";
-    else
-        out["to"] = m_to->asString();
-    for (VALUE const& el : m_value)
-    {
-        spDataObject els(new DataObject(el.asString()));
-        out["value"].addArrayObject(els);
-    }
-
-    return _out;
+    return m_rawData;
 }
 
 /// Construct individual transactions from gstate test transaction

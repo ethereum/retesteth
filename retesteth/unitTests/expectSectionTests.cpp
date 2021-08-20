@@ -41,7 +41,7 @@ StateTestFillerExpectSection makeExpectSection(string const& _tr, string const& 
 {
     spDataObject res = ConvertJsoncppStringToData(_tr);
     spStateTestFillerTransaction spTransaction =
-        spStateTestFillerTransaction(new StateTestFillerTransaction(res));
+        spStateTestFillerTransaction(new StateTestFillerTransaction(dataobject::move(res)));
     spDataObject res2 = ConvertJsoncppStringToData(_exp);
     return StateTestFillerExpectSection(dataobject::move(res2), spTransaction);
 }

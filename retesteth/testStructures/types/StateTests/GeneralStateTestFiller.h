@@ -18,11 +18,7 @@ struct StateTestInFiller : GCP_SPointerBase
 
     string const& testName() const { return m_name; }
     bool hasInfo() const { return !m_info.isEmpty(); }
-    InfoIncomplete const& Info() const
-    {
-        assert(hasInfo());
-        return m_info;
-    }
+    InfoIncomplete const& Info() const { return m_info; }
     StateTestFillerEnv const& Env() const { return m_env; }
     State const& Pre() const { return m_pre; }
     StateTestFillerTransaction const& GeneralTr() const { return m_transaction; }

@@ -28,7 +28,8 @@ StateTestFillerTransaction makeTransaction(std::vector<string> const& _data)
             str += ", ";
     }
     str += "]," + transactionCommon + "}";
-    return StateTestFillerTransaction(ConvertJsoncppStringToData(str));
+    auto p = ConvertJsoncppStringToData(str);
+    return StateTestFillerTransaction(dataobject::move(p));
 }
 
 BOOST_FIXTURE_TEST_SUITE(trDataCompileSuite, TestOutputHelperFixture)

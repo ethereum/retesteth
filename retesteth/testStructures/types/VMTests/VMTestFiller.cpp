@@ -71,7 +71,8 @@ VMTestInFiller::VMTestInFiller(spDataObject& _data)
         m_pre = spState(new State(MOVE(_data, "pre")));
         m_name = _data->getKey();
 
-        StateTestFillerTransaction stateTx(translateExecToTransaction(_data->atKey("exec")));
+        auto t = translateExecToTransaction(_data->atKey("exec"));
+        StateTestFillerTransaction stateTx(dataobject::move(t));
         m_transaction = spTransaction(new TransactionLegacy(stateTx.buildTransactions().at(0).transaction()->asDataObject()));
         if (_data->count("expect"))
         {

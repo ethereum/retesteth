@@ -16,7 +16,7 @@ namespace teststruct
 // Constructor conver all fields to hex and compile src data code into bytes
 struct StateTestFillerTransaction : StateTestTransactionBase
 {
-    StateTestFillerTransaction(DataObject const&);
+    StateTestFillerTransaction(spDataObjectMove);
 };
 
 typedef GCP_SPointer<StateTestFillerTransaction> spStateTestFillerTransaction;

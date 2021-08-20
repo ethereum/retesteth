@@ -46,10 +46,9 @@ StateTestInFiller::StateTestInFiller(spDataObject& _data)
         if (_data->count("solidity"))
             solidityCode = test::compiler::compileSolidity(_data->atKey("solidity").asString());
 
-        // "Pre" section
-        convertDecStateToHex((*_data).atKeyPointerUnsafe("pre"), solidityCode);
+        convertDecStateToHex((*_data).atKeyPointerUnsafe("pre"), solidityCode); // "Pre" section
         m_pre = spState(new State(MOVE(_data, "pre")));
-        m_transaction = spStateTestFillerTransaction(new StateTestFillerTransaction(_data->atKey("transaction")));
+        m_transaction = spStateTestFillerTransaction(new StateTestFillerTransaction(MOVE(_data, "transaction")));
 
         for (auto& el : (*_data).atKeyUnsafe("expect").getSubObjectsUnsafe())
             m_expectSections.push_back(StateTestFillerExpectSection(dataobject::move(el), m_transaction));

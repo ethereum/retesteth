@@ -61,7 +61,7 @@ private:
                 }
             }
             else
-                throw SPointerException("SPointer delete more times than counter increased!");
+                throwException("GCP_SPointer::release() SPointer delete more times than counter increased!");
         }
     }
 
