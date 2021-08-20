@@ -123,7 +123,9 @@ spDataObject const ToolChain::mineBlock(EthereumBlockState const& _pendingBlock,
             if (!rejectedInfoFound)
                 ETH_ERROR_MESSAGE("tool didn't provide information about rejected transaction");
             if (_req == Mining::AllowFailTransactions)
+            {
                 ETH_WARNING_TEST(message, 6);
+            }
             else
                 throw test::UpwardsException(message);
         }

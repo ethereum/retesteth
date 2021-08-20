@@ -187,21 +187,29 @@ void requireJsonFields(
     // check for unexpected fiedls
     for (auto const& field : _o.getSubObjects())
     {
-        string message = "'" + field->getKey() + "' should not be declared in '" + _section + "' section!";
+        string const message = "'" + field->getKey() + "' should not be declared in '" + _section + "' section!";
         if (_fail)
+        {
             ETH_FAIL_REQUIRE_MESSAGE(_validationMap.count(field->getKey()), message);
+        }
         else
+        {
             ETH_ERROR_REQUIRE_MESSAGE(_validationMap.count(field->getKey()), message);
+        }
     }
 
     // check field types with validation map
     for (auto const& vmap : _validationMap)
     {
-        string message = vmap.first + " not found in " + _section + " section! " + TestOutputHelper::get().testName();
+        string const message = vmap.first + " not found in " + _section + " section! " + TestOutputHelper::get().testName();
         if (_fail)
+        {
             ETH_FAIL_REQUIRE_MESSAGE(_o.count(vmap.first) > 0, message);
+        }
         else
+        {
             ETH_ERROR_REQUIRE_MESSAGE(_o.count(vmap.first) > 0, message);
+        }
         bool matched = false;
         std::string sTypes;
         for (auto const& type : vmap.second)

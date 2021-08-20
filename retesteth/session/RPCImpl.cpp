@@ -159,7 +159,9 @@ MineBlocksResult RPCImpl::test_mineBlocks(size_t _number)
         ETH_ERROR_REQUIRE_MESSAGE(miningres == true, "remote test_mineBlocks = false");
     }
     else if (res->type() == DataType::Bool)
+    {
         ETH_ERROR_REQUIRE_MESSAGE(res->asBool() == true, "remote test_mineBlocks = false");
+    }
     else
         ETH_ERROR_MESSAGE("remote test_mineBlocks = " + res->asJson());
 

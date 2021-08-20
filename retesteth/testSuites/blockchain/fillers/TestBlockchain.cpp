@@ -378,8 +378,10 @@ bool TestBlockchain::checkBlockException(string const& _sBlockException) const
     // Check malicious block import exception
     // Relies on that previous block import was exactly this block !!!
     if (_sBlockException.empty())
+    {
         ETH_ERROR_REQUIRE_MESSAGE(m_session.getLastRPCError().empty(),
             "Postmine block tweak expected no exception! Client errors with: '" + m_session.getLastRPCError().message() + "'");
+    }
     else
     {
         std::string const& clientExceptionString =
