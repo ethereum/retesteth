@@ -25,7 +25,7 @@ struct FH : GCP_SPointerBase
     FH(dev::bigint const&, size_t _scale);
 
     bool isBigInt() const { return m_bigint; }
-    string asString(ExportType _forRLP = ExportType::TEST) const;
+    string const& asString(ExportType _forRLP = ExportType::TEST) const;
     dev::bigint const& asBigInt() const { return m_data; }
     bool operator==(FH const& rhs) const { return asBigInt() == rhs.asBigInt(); }
     bool operator!=(FH const& rhs) const { return asBigInt() != rhs.asBigInt(); }
@@ -40,6 +40,8 @@ private:
 protected:
     bool m_bigint = false;
     dev::bigint m_data;
+    mutable string m_dataStrZeroXCache;
+    mutable string m_dataStrBigIntCache;
     size_t m_scale;
 };
 
