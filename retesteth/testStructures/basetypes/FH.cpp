@@ -11,7 +11,7 @@ using namespace test;
 using namespace test::teststruct;
 using namespace dev;
 
-std::mutex g_cacheAccessMutex;
+std::mutex g_cacheAccessMutexFH;
 
 namespace
 {
@@ -89,7 +89,7 @@ FH::FH(dev::RLP const& _rlp, size_t _scale)
 
 string const& FH::asString(ExportType _forRLP) const
 {
-    std::lock_guard<std::mutex> lock(g_cacheAccessMutex);
+    std::lock_guard<std::mutex> lock(g_cacheAccessMutexFH);
     if (m_dataStrBigIntCache.empty())
     {
         string& ret = m_dataStrZeroXCache;
@@ -108,7 +108,6 @@ string const& FH::asString(ExportType _forRLP) const
         m_dataStrZeroXCache.insert(0, "0x");
         m_dataStrBigIntCache.insert(0, "0x:bigint 0x");
     }
-
     return m_bigint && _forRLP != ExportType::RLP ? m_dataStrBigIntCache : m_dataStrZeroXCache;
 }
 
