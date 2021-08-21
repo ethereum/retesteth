@@ -21,22 +21,25 @@ StateIncomplete::StateIncomplete(spDataObjectMove _data)
     }
 }
 
-spDataObject StateIncomplete::asDataObject() const
+spDataObject const& StateIncomplete::asDataObject() const
 {
-    spDataObject out(new DataObject());
-    for (auto const& el : m_accounts)
-        (*out).addSubObject(el.second->asDataObject());
-    return out;
+    return m_rawData;
 }
 
+// Since we do not export StateIncomplete after correctMiningReward
+// No need to correct m_rawData, but keep in mind that it won't match
 void StateIncomplete::correctMiningReward(FH20 const& _coinbase, VALUE const& _reward)
 {
-    for (auto& el : m_accounts)
+    if (m_accounts.count(_coinbase))
     {
-        // We always assume that StateIncomplete is made of AccountIncomplete, but still
-        AccountIncomplete& acc = dynamic_cast<AccountIncomplete&>(el.second.getContent());
-        if (el.first == _coinbase && acc.hasBalance())
+        auto rec = m_accounts.at(_coinbase);
+        if (rec.getCContent().hasBalance())
+        {
+            // We always assume that StateIncomplete is made of AccountIncomplete, but still
+            AccountIncomplete& acc = dynamic_cast<AccountIncomplete&>(rec.getContent());
             acc.setBalance(acc.balance() + _reward);
+            (*m_rawData).atKeyUnsafe(_coinbase.asString()).atKeyUnsafe("balance").setString(acc.balance().asString());
+        }
     }
 }
 

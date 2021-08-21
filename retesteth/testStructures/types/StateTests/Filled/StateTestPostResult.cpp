@@ -25,6 +25,7 @@ StateTestPostResult::StateTestPostResult(DataObject const& _data)
          {"logs", {{DataType::String}, jsonField::Optional}}});
 }
 
+/// Used solo to print the debug message
 spDataObject StateTestPostResult::asDataObject() const
 {
     spDataObject res (new DataObject());

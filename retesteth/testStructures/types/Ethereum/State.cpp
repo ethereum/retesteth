@@ -53,7 +53,7 @@ bool State::hasAccount(FH20 const& _address) const
     return m_accounts.count(_address);
 }
 
-spDataObject State::asDataObject() const
+spDataObject const& State::asDataObject() const
 {
     // As long as we guarantee unmutability of parsed data in the structure
     // We can return the same data object as we got, not recalculating the whole thing

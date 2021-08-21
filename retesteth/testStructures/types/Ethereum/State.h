@@ -29,7 +29,7 @@ public:
     bool hasAccount(Account const& _account) const;
     bool hasAccount(FH20 const& _address) const;
 
-    spDataObject asDataObject() const override;
+    spDataObject const& asDataObject() const override;
 
 private:
     spDataObject m_raw;
@@ -42,7 +42,7 @@ public:
     struct Account : AccountBase
     {
         Account(spDataObject&);
-        Account(FH20 const& _addr, spVALUE& _balance, spVALUE& _nonce, spBYTES& _code, Storage const& _storage);
+        Account(FH20 const& _addr, spVALUE& _balance, spVALUE& _nonce, spBYTES& _code, spStorage& _storage);
         spDataObject const& asDataObject() const override;
         AccountType type() const override { return AccountType::FullAccount; }
 

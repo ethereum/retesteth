@@ -36,7 +36,7 @@ spDataObject FillTest(BlockchainTestInFiller const& _test, TestSuite::TestSuiteO
                 TestOutputHelper::get().setCurrentTestName(newtestname);
                 filledTest.setKey(newtestname);
                 if (_test.hasInfo())
-                    filledTest["_info"]["comment"] = _test.Info().comment();
+                    (*_filledTest).atKeyPointer("_info") = _test.Info().rawData();
                 filledTest["sealEngine"] = sealEngineToStr(_test.sealEngine());
                 filledTest["network"] = net.asString();
                 filledTest.atKeyPointer("pre") = _test.Pre().asDataObject();

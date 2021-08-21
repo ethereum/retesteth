@@ -153,7 +153,7 @@ spDataObject FillTestAsBlockchain(StateTestInFiller const& _test)
 
                     spDataObject aBlockchainTest(new DataObject());
                     if (_test.hasInfo())
-                        (*aBlockchainTest)["_info"]["comment"] = _test.Info().comment();
+                        (*aBlockchainTest).atKeyPointer("_info") = _test.Info().rawData();
                     EthGetBlockBy genesisBlock(session.eth_getBlockByNumber(0, Request::FULLOBJECTS));
                     (*aBlockchainTest).atKeyPointer("genesisBlockHeader") = genesisBlock.header()->asDataObject();
                     (*aBlockchainTest).atKeyPointer("pre") = _test.Pre().asDataObject();

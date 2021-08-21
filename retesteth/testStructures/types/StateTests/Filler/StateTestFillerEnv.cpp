@@ -12,13 +12,8 @@ StateTestFillerEnv::StateTestFillerEnv(spDataObjectMove _data)
     {
         m_raw = _data.getPointer();
 
+        (*m_raw).performModifier(mod_valueToCompactEvenHexPrefixed, {"currentCoinbase", "previousHash"});
         (*m_raw).atKeyUnsafe("currentCoinbase").performModifier(mod_valueInsertZeroXPrefix);
-        (*m_raw).atKeyUnsafe("currentDifficulty").performModifier(mod_valueToCompactEvenHexPrefixed);
-        (*m_raw).atKeyUnsafe("currentGasLimit").performModifier(mod_valueToCompactEvenHexPrefixed);
-        (*m_raw).atKeyUnsafe("currentNumber").performModifier(mod_valueToCompactEvenHexPrefixed);
-        (*m_raw).atKeyUnsafe("currentTimestamp").performModifier(mod_valueToCompactEvenHexPrefixed);
-        if (m_raw->count("currentBaseFee"))
-            (*m_raw).atKeyUnsafe("currentBaseFee").performModifier(mod_valueToCompactEvenHexPrefixed);
         (*m_raw).atKeyUnsafe("previousHash").performModifier(mod_valueInsertZeroXPrefix);
         (*m_raw).performModifier(mod_valueToLowerCase);
 

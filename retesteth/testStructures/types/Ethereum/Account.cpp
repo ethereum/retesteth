@@ -8,13 +8,13 @@ namespace teststruct
 {
 
 // The Account is a part of State class and manages it's data
-State::Account::Account(FH20 const& _addr, spVALUE& _balance, spVALUE& _nonce, spBYTES& _code, Storage const& _storage)
+State::Account::Account(FH20 const& _addr, spVALUE& _balance, spVALUE& _nonce, spBYTES& _code, spStorage& _storage)
 {
     m_address = spFH20(_addr.copy());
     m_balance = _balance;
     m_nonce = _nonce;
     m_code = _code;
-    m_storage = spStorage(new Storage(_storage));
+    m_storage = _storage;
     if (m_nonce.getCContent() > c_maxNonce)
         ETH_ERROR_MESSAGE("Account `" + m_address->asString() + "` requires nonce <= (2**64)-1");
 }

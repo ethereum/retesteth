@@ -17,7 +17,7 @@ State::Account remoteGetAccount(SessionInterface& _session, VALUE const& _bNumbe
 
     bool hasStorage = true;
     FH32 beginHash = FH32::zero();
-    Storage tmpStorage = Storage(DataObject(DataType::Object));
+    spStorage tmpStorage = spStorage(new Storage(DataObject(DataType::Object)));
     size_t safety = 500;
     while (hasStorage && --safety)
     {
@@ -27,7 +27,7 @@ State::Account remoteGetAccount(SessionInterface& _session, VALUE const& _bNumbe
             hasStorage = false;
         else
             beginHash = res.nextKey();
-        tmpStorage.merge(res.storage());
+        (*tmpStorage).merge(res.storage());
     }
     if (safety == 0)
         ETH_ERROR_MESSAGE("remoteGetAccount::DebugStorageRangeAt seems like an endless loop!");

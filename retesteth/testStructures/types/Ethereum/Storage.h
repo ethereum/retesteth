@@ -9,11 +9,12 @@ namespace test
 {
 namespace teststruct
 {
-// Account Storage  "0x11" -> "0x1122334455..32"
+// Account Storage  "0x11" -> {value("0x11"),  value("0x1122334455..32") }
+// TODO review the logic here
 struct Storage : GCP_SPointerBase
 {
     Storage(DataObject const&);
-    typedef std::tuple<GCP_SPointer<VALUE>, GCP_SPointer<VALUE>> StorageRecord;
+    typedef std::tuple<spVALUE, spVALUE> StorageRecord;
 
     std::map<string, StorageRecord> const& getKeys() const { return m_map; }
     bool hasKey(VALUE const& _key) const { return m_map.count(_key.asString()); }
