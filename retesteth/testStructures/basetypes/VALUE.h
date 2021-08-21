@@ -20,7 +20,7 @@ struct VALUE : GCP_SPointerBase
     VALUE(dev::RLP const& _rlp);
     VALUE(dev::bigint const&);
     VALUE(int);
-    VALUE(DataObject const&);
+    VALUE(DataObject const&);  // Does not require to move smart pointer here as this structure changes a lot
     VALUE* copy() const { return new VALUE(m_data); }
 
     bool operator<(int _rhs) const { return m_data < _rhs; }

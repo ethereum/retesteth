@@ -27,6 +27,21 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 namespace test
 {
 
+enum CompareResult
+{
+    Success,
+    AccountShouldNotExist,
+    MissingExpectedAccount,
+    IncorrectBalance,
+    IncorrectNonce,
+    IncorrectCode,
+    IncorrectStorage,
+    None
+};
+string CompareResultToString(CompareResult res);
+
+
+
 // Get Remote State From Client
 struct StateTooBig : UpwardsException
 {
@@ -47,19 +62,6 @@ void checkAtLeastOneTest(DataObject const& _input);
 void checkTestNameIsEqualToFileName(DataObject const& _input);
 void checkTestNameIsEqualToFileName(string const& _testName);
 
-
-enum CompareResult
-{
-    Success,
-    AccountShouldNotExist,
-    MissingExpectedAccount,
-    IncorrectBalance,
-    IncorrectNonce,
-    IncorrectCode,
-    IncorrectStorage,
-    None
-};
-string CompareResultToString(CompareResult res);
 
 // Compafre expected StateIncomplete against remote client (get post state data on the fly with session)
 void compareStates(StateBase const& _stateExpect, SessionInterface& _session);

@@ -1,5 +1,4 @@
 #pragma once
-#include "Ethereum/Account.h"
 #include "Ethereum/AccountIncomplete.h"
 #include "Ethereum/EthereumBlock.h"
 #include "Ethereum/State.h"

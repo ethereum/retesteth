@@ -27,21 +27,21 @@ FH32 RPCImpl::eth_sendRawTransaction(BYTES const& _rlp, VALUE const& _secret)
     return FH32(result.getCContent());
 }
 
-VALUE RPCImpl::eth_getTransactionCount(FH20 const& _address, VALUE const& _blockNumber)
+spVALUE RPCImpl::eth_getTransactionCount(FH20 const& _address, VALUE const& _blockNumber)
 {
     try
     {
         spDataObject response = rpcCall("eth_getTransactionCount", {quote(_address.asString()), quote(_blockNumber.asString())});
         (*response).performModifier(mod_valueToCompactEvenHexPrefixed);
         if (response->type() == DataType::String)
-            return VALUE(response);
-        return VALUE(response->asInt());
+            return spVALUE(new VALUE(response));
+        return spVALUE(new VALUE(response->asInt()));
     }
     catch(std::exception const& _ex)
     {
         ETH_FAIL_MESSAGE(string("RPC eth_getTransactionCount Exception: ") + _ex.what());
     }
-    return VALUE(0);
+    return spVALUE(0);
 }
 
 VALUE RPCImpl::eth_blockNumber()
@@ -65,20 +65,21 @@ EthGetBlockBy RPCImpl::eth_getBlockByNumber(VALUE const& _blockNumber, Request _
     return EthGetBlockBy(response);
 }
 
-BYTES RPCImpl::eth_getCode(FH20 const& _address, VALUE const& _blockNumber)
+spBYTES RPCImpl::eth_getCode(FH20 const& _address, VALUE const& _blockNumber)
 {
-    spDataObject const res(rpcCall("eth_getCode", {quote(_address.asString()), quote(_blockNumber.asString())}));
+    spDataObject res = rpcCall("eth_getCode", {quote(_address.asString()), quote(_blockNumber.asString())});
     if (res->asString().empty())
     {
         ETH_WARNING_TEST("eth_getCode return `` empty string, correct to `0x` empty bytes ", 6);
-        return BYTES(DataObject("0x"));
+        return spBYTES(new BYTES(DataObject("0x")));
     }
-    return BYTES(res);
+    return spBYTES(new BYTES(res));
 }
 
-VALUE RPCImpl::eth_getBalance(FH20 const& _address, VALUE const& _blockNumber)
+spVALUE RPCImpl::eth_getBalance(FH20 const& _address, VALUE const& _blockNumber)
 {
-    return VALUE(rpcCall("eth_getBalance", {quote(_address.asString()), quote(_blockNumber.asString())}));
+    auto ret = rpcCall("eth_getBalance", {quote(_address.asString()), quote(_blockNumber.asString())});
+    return spVALUE(new VALUE(ret));
 }
 
 

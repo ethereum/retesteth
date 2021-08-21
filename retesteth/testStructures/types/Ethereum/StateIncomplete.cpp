@@ -12,7 +12,7 @@ StateIncomplete::StateIncomplete(spDataObjectMove _data)
     m_rawData = _data.getPointer();
     try
     {
-        for (auto const& el : m_rawData->getSubObjects())
+        for (auto& el : (*m_rawData).getSubObjectsUnsafe())
             m_accounts[FH20(el->getKey())] = spAccountBase(new AccountIncomplete(el));
     }
     catch (std::exception const& _ex)

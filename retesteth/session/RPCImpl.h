@@ -13,13 +13,14 @@ public:
 
     // ETH Methods
     FH32 eth_sendRawTransaction(BYTES const& _rlp, VALUE const& _secret) override;
-    VALUE eth_getTransactionCount(FH20 const& _address, VALUE const& _blockNumber) override;
     VALUE eth_blockNumber() override;
     EthGetBlockBy eth_getBlockByHash(FH32 const& _hash, Request _fullObjects) override;
     EthGetBlockBy eth_getBlockByNumber(VALUE const& _blockNumber, Request _fullObjects) override;
 
-    BYTES eth_getCode(FH20 const& _address, VALUE const& _blockNumber) override;
-    VALUE eth_getBalance(FH20 const& _address, VALUE const& _blockNumber) override;
+    // Account functions
+    spVALUE eth_getTransactionCount(FH20 const& _address, VALUE const& _blockNumber) override;
+    spBYTES eth_getCode(FH20 const& _address, VALUE const& _blockNumber) override;
+    spVALUE eth_getBalance(FH20 const& _address, VALUE const& _blockNumber) override;
 
     // Debug
     DebugAccountRange debug_accountRange(

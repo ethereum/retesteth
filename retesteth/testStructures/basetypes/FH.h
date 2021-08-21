@@ -21,7 +21,7 @@ struct FH : GCP_SPointerBase
 {
     FH(dev::RLP const& _rlp, size_t _scale);
     FH(string const&, size_t _scale);
-    FH(DataObject const&, size_t _scale);
+    FH(DataObject const&, size_t _scale);  // Does not require to move smart pointer here as this structure changes a lot
     FH(dev::bigint const&, size_t _scale);
 
     bool isBigInt() const { return m_bigint; }

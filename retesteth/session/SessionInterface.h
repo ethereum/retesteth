@@ -42,13 +42,15 @@ public:
 
     // ETH Methods
     virtual FH32 eth_sendRawTransaction(BYTES const& _rlp, VALUE const& _secret) = 0;
-    virtual VALUE eth_getTransactionCount(FH20 const& _address, VALUE const& _blockNumber) = 0;
 
     virtual VALUE eth_blockNumber() = 0;
     virtual EthGetBlockBy eth_getBlockByHash(FH32 const& _blockHash, Request _fullObjects) = 0;
     virtual EthGetBlockBy eth_getBlockByNumber(VALUE const& _blockNumber, Request _fullObjects) = 0;
-    virtual BYTES eth_getCode(FH20 const& _address, VALUE const& _blockNumber) = 0;
-    virtual VALUE eth_getBalance(FH20 const& _address, VALUE const& _blockNumber) = 0;
+
+    // Account functions
+    virtual spBYTES eth_getCode(FH20 const& _address, VALUE const& _blockNumber) = 0;
+    virtual spVALUE eth_getBalance(FH20 const& _address, VALUE const& _blockNumber) = 0;
+    virtual spVALUE eth_getTransactionCount(FH20 const& _address, VALUE const& _blockNumber) = 0;
 
     // Debug
     virtual DebugAccountRange debug_accountRange(

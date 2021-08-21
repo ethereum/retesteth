@@ -11,6 +11,12 @@ namespace test
 namespace teststruct
 {
 
+enum class AccountType
+{
+    Incomplete,
+    FullAccount
+};
+
 // Ethereum account description
 struct AccountBase : GCP_SPointerBase
 {
@@ -26,11 +32,13 @@ struct AccountBase : GCP_SPointerBase
     BYTES const& code() const { return m_code; }
     FH20 const& address() const { return m_address; }
 
-    virtual spDataObject asDataObject(ExportOrder order = ExportOrder::Default) const = 0;
+    virtual spDataObject const& asDataObject() const = 0;
+    virtual AccountType type() const = 0;
     virtual ~AccountBase() {}
 
 protected:
     AccountBase() {}
+    mutable spDataObject m_rawData;
     bool m_shouldNotExist = false;
     spFH20 m_address;
     spVALUE m_balance;

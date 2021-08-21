@@ -14,9 +14,10 @@ namespace teststruct
 // It can be missing some of the fields defined
 struct AccountIncomplete : AccountBase
 {
-    AccountIncomplete(DataObject const&);
+    AccountIncomplete(spDataObject&);
     void setBalance(VALUE const& _balance) { m_balance = spVALUE(new VALUE(_balance)); }
-    spDataObject asDataObject(ExportOrder) const override;
+    spDataObject const& asDataObject() const override;
+    AccountType type() const override { return AccountType::Incomplete; }
 };
 
 typedef GCP_SPointer<AccountIncomplete> spAccountIncomplete;
