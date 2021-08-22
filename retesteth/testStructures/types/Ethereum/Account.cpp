@@ -40,7 +40,6 @@ spDataObject const& State::Account::asDataObject() const
 {
     if (m_rawData.isEmpty())
     {
-        // Prepare output data TODO make mutable and generate on request
         m_rawData = spDataObject(new DataObject());
         (*m_rawData).setKey(m_address->asString());
         (*m_rawData)["code"] = m_code->asString();

@@ -22,10 +22,12 @@ Info::Info(DataObject const& _data)
 
     requireJsonFields(_data, "Info " + _data.getKey(),
         {{"comment", {{DataType::String}, jsonField::Required}},
-            {"filling-rpc-server", {{DataType::String}, jsonField::Required}},
-            {"filling-tool-version", {{DataType::String}, jsonField::Required}},
-            {"lllcversion", {{DataType::String}, jsonField::Required}}, {"source", {{DataType::String}, jsonField::Required}},
-            {"sourceHash", {{DataType::String}, jsonField::Required}}, {"labels", {{DataType::Object}, jsonField::Optional}}});
+         {"filling-rpc-server", {{DataType::String}, jsonField::Required}},
+         {"filling-tool-version", {{DataType::String}, jsonField::Required}},
+         {"lllcversion", {{DataType::String}, jsonField::Required}},
+         {"source", {{DataType::String}, jsonField::Required}},
+         {"sourceHash", {{DataType::String}, jsonField::Required}},
+         {"labels", {{DataType::Object}, jsonField::Optional}}});
 }
 
 }  // namespace teststruct

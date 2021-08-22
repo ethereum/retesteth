@@ -463,8 +463,23 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
     if (files.size() == 0)
         ETH_WARNING(_testFolder + " no tests detected in folder!");
 
+    // Debug see how many test suite folders are there
+    static size_t testNumber = 0;
+    static size_t totalFolderNumber = 0;
+
+    size_t totalFolders = 0;
+    for (fs::directory_iterator it(fillerPath.parent_path()); it != fs::directory_iterator(); ++it)
+    {
+        if (fs::is_directory(it->status()))
+            totalFolders++;
+    }
+    if (totalFolderNumber != totalFolders)
+        testNumber = 0;
+    totalFolderNumber = totalFolders;
+    string currentTest = "(" + test::fto_string(++testNumber) + " of " + test::fto_string(totalFolders) + ")";
+
     // repeat this part for all connected clients
-    auto thisPart = [this, &files, &_testFolder]() {
+    auto thisPart = [this, &files, &_testFolder, &currentTest]() {
         auto& testOutput = test::TestOutputHelper::get();
         vector<thread> threadVector;
 
@@ -488,7 +503,7 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
         if (RPCSession::isRunningTooLong() || TestChecker::isTimeConsumingTest(_testFolder.c_str()))
             RPCSession::restartScripts(true);
 
-        testOutput.initTest(files.size());
+        testOutput.initTest(files.size(), currentTest);
         for (auto const& file : files)
         {
             if (ExitHandler::receivedExitSignal())

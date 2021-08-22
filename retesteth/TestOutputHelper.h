@@ -81,7 +81,7 @@ public:
     //TestOutputHelper(TestOutputHelper const&) = delete;
     void operator=(TestOutputHelper const&) = delete;
 
-    void initTest(size_t _maxTests = 1);
+    void initTest(size_t _maxTests = 1, std::string const& _debug = std::string());
 
     // Display percantage of completed tests to std::out.
     // Has to be called before execution of every test.

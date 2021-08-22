@@ -132,7 +132,7 @@ void TestOutputHelper::setUnitTestExceptions(std::vector<std::string> const& _me
     m_expected_UnitTestExceptions = _messages;
 }
 
-void TestOutputHelper::initTest(size_t _maxTests)
+void TestOutputHelper::initTest(size_t _maxTests, string const& _debug)
 {
     //_maxTests = 0 means this function is called from testing thread
     m_currentTestName = string();
@@ -140,7 +140,7 @@ void TestOutputHelper::initTest(size_t _maxTests)
     m_timer = Timer();
     if (!Options::get().createRandomTest && _maxTests != 0 && !Options::get().singleTestFile)
     {
-        std::cout << "Test Case \"" + TestInfo::caseName() + "\": \n";
+        ETH_STDOUT_MESSAGE("Test Case \"" + TestInfo::caseName() + "\": " + _debug);
         m_timer.restart();
     }
     m_maxTests = _maxTests;
