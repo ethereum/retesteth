@@ -40,7 +40,7 @@ string const t8ntool_config = R"({
       "TooMuchGasUsed2" : "Error importing raw rlp block: t8ntool didn't return a transaction with hash",
       "InvalidNumber" : "BlockHeader number != parent.number + 1",
       "InvalidTimestampEqualParent" : "timestamp equals parent's",
-      "InvalidTimestampOlderParent" : "BlockHeader timestamp is less then it's parent block!",
+      "InvalidTimestampOlderParent" : "BlockHeader timestamp is less or equal then it's parent block!",
       "InvalidLogBloom" : "Error in field: bloom",
       "InvalidStateRoot" : "Error in field: stateRoot",
       "InvalidGasUsed" : "Error in field: gasUsed",

@@ -48,12 +48,16 @@ struct TestFileData
 
 TestFileData readTestFile(fs::path const& _testFileName)
 {
+    // Binary file hash calculation is impossible as git messes up with the files
+    // So we read json structure and print it here to calculate the hash from string
+    // Adds around 1% to execution time
+    static bool isLegacy = (Options::get().rCurrentTestSuite.find("LegacyTests") != string::npos);
     ETH_LOG("Read json structure " + string(_testFileName.filename().c_str()), 5);
     TestFileData testData;
     if (_testFileName.extension() == ".json")
-        testData.data = test::readJsonData(_testFileName, string(), false);
+        testData.data = test::readJsonData(_testFileName, string(), isLegacy);
     else if (_testFileName.extension() == ".yml")
-        testData.data = test::readYamlData(_testFileName);
+        testData.data = test::readYamlData(_testFileName, isLegacy);
     else
         ETH_ERROR_MESSAGE(
             "Unknown test format!" + test::TestOutputHelper::get().testFile().string());
@@ -704,8 +708,8 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
 void TestSuite::executeFile(boost::filesystem::path const& _file) const
 {
     TestSuiteOptions opt;
-    opt.isLegacyTests = Options::get().rCurrentTestSuite.find("LegacyTests") != string::npos;
-    opt.isLegacyTests = opt.isLegacyTests || legacyTestSuiteFlag();
+    static bool isLegacy = Options::get().rCurrentTestSuite.find("LegacyTests") != string::npos;
+    opt.isLegacyTests = isLegacy || legacyTestSuiteFlag();
 
     if (_file.extension() != ".json")
         ETH_ERROR_MESSAGE("The generated test must have `.json` format!");
@@ -715,4 +719,6 @@ void TestSuite::executeFile(boost::filesystem::path const& _file) const
     ETH_LOG("Read json finish", 5);
     doTests(res, opt);
 }
+
+
 }

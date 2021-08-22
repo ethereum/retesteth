@@ -56,14 +56,14 @@ spDataObject readJsonData(fs::path const& _file, string const& _stopper, bool _a
 }
 
 /// Safely read the yaml file into DataObject
-spDataObject readYamlData(fs::path const& _file)
+spDataObject readYamlData(fs::path const& _file, bool _sort)
 {
     try
     {
         string s = dev::contentsString(_file);
         ETH_ERROR_REQUIRE_MESSAGE(
             s.length() > 0, "Contents of " + _file.string() + " is empty. Trying to parse empty file. (forgot --filltests?)");
-        return dataobject::ConvertYamlToData(YAML::Load(s));
+        return dataobject::ConvertYamlToData(YAML::Load(s), _sort);
     }
     catch (std::exception const& _ex)
     {
