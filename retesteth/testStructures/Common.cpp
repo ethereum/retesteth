@@ -166,6 +166,18 @@ void mod_valueInsertZeroXPrefix(DataObject& _obj)
         _obj.asStringUnsafe().insert(0, "0x");
 }
 
+void mod_sortKeys(DataObject& _obj)
+{
+    std::map<string, spDataObject> const map = _obj.getSubObjectKeys();
+    if (map.size() > 1)
+    {
+        _obj.clearSubobjects();
+        _obj.setAutosort(true);
+        for (auto const& el : map)
+            _obj.atKeyPointer(el.second->getKey()) = el.second;
+    }
+}
+
 long long int hexOrDecStringToInt(string const& _str)
 {
     long long int res;

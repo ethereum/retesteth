@@ -51,7 +51,7 @@ TestFileData readTestFile(fs::path const& _testFileName)
     ETH_LOG("Read json structure " + string(_testFileName.filename().c_str()), 5);
     TestFileData testData;
     if (_testFileName.extension() == ".json")
-        testData.data = test::readJsonData(_testFileName, string(), true);
+        testData.data = test::readJsonData(_testFileName, string(), false);
     else if (_testFileName.extension() == ".yml")
         testData.data = test::readYamlData(_testFileName);
     else
@@ -272,6 +272,7 @@ void TestSuite::runTestWithoutFiller(boost::filesystem::path const& _file) const
                     opt.allowInvalidBlocks = true;
                     spDataObject output = doTests(testData.data, opt);
                     addClientInfo(output.getContent(), _file, testData.hash);
+                    (*output).performModifier(mod_sortKeys);
                     writeFile(outPath, asBytes(output->asJson()));
                 }
                 else
@@ -634,6 +635,7 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
                     spDataObject output = doTests(testData.data, opt);
                     // Add client info for all of the tests in output
                     addClientInfo(output.getContent(), boostRelativeTestPath, testData.hash);
+                    (*output).performModifier(mod_sortKeys);
                     writeFile(boostTestPath.path(), asBytes(output->asJson()));
 
                     if (!Options::get().getGStateTransactionFilter().empty())

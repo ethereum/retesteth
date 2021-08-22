@@ -213,7 +213,6 @@ spDataObject FillTestAsBlockchain(StateTestInFiller const& _test)
 spDataObject FillTest(StateTestInFiller const& _test)
 {
     spDataObject filledTest(new DataObject());
-    (*filledTest).setAutosort(true);
     TestOutputHelper::get().setCurrentTestName(_test.testName());
 
     SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());

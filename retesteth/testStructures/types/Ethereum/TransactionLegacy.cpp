@@ -165,6 +165,7 @@ void TransactionLegacy::buildVRS(VALUE const& _secret)
 
 spDataObject TransactionLegacy::asDataObject(ExportOrder _order) const
 {
+    // TODO Memory cache?
     spDataObject out(new DataObject());
     (*out)["data"] = m_data->asString();
     (*out)["gasLimit"] = m_gasLimit->asString();

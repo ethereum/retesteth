@@ -112,8 +112,11 @@ private:
     DataObject& _addSubObject(spDataObject const& _obj, string const& _keyOverwrite = string());
     void _assert(bool _flag, std::string const& _comment = "") const;
 
+    // Use vector here to be able to quickly find insert position
+    // of objects to be ordered by it's key with findOrderedKeyPosition
     std::vector<spDataObject> m_subObjects;
     std::map<string, spDataObject> m_subObjectKeys;
+
     DataType m_type;
     std::string m_strKey;
     bool m_allowOverwrite = false;  // allow overwrite elements
@@ -128,7 +131,7 @@ private:
 
 typedef GCP_SPointer<DataObject> spDataObject;
 
-// The key assigner
+// The key assigner, assign left pointer to DataObjectK's host m_data[key]
 class DataObjectK
 {
 public:
@@ -145,7 +148,7 @@ private:
 
 
 // Can help to keep incapsulation
-// DataObject move requester
+// DataObject move requester, require the memory pointer to be irreversably moved into it
 class spDataObjectMove
 {
 public:
@@ -158,10 +161,10 @@ private:
     spDataObject m_obj;
 };
 
-// Move
+// Move memory from _obj to spDataObjectMove and flush _obj pointer
 spDataObjectMove move(spDataObject& _obj);
 
-// TODO refactor to use linked lists so no need to insert into vector
 // Find index that _key should take place in when being added to ordered _objects by key
+// Heavy function, use only on export when need to construct json with sorted keys
 size_t findOrderedKeyPosition(string const& _key, vector<spDataObject> const& _objects);
 }

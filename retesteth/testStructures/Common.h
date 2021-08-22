@@ -22,6 +22,7 @@ void mod_keyToLowerCase(DataObject&);
 void mod_valueToCompactEvenHexPrefixed(DataObject&);
 void mod_keyToCompactEvenHexPrefixed(DataObject&);
 void mod_valueInsertZeroXPrefix(DataObject&);
+void mod_sortKeys(DataObject&);
 long long int hexOrDecStringToInt(string const& _str);
 
 // Check the presents of fields in a DataObject with a validation map
