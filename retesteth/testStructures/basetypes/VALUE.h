@@ -23,7 +23,7 @@ struct VALUE : GCP_SPointerBase
     VALUE(DataObject const&);  // Does not require to move smart pointer here as this structure changes a lot
     VALUE* copy() const { return new VALUE(m_data); }
 
-    bool operator<(int _rhs) const { return m_data < _rhs; }
+    bool operator<(long long _rhs) const { return m_data < _rhs; }
     bool operator>(VALUE const& _rhs) const { return m_data > _rhs.asBigInt(); }
     bool operator>=(VALUE const& _rhs) const { return m_data >= _rhs.asBigInt(); }
     bool operator<(VALUE const& _rhs) const { return m_data < _rhs.asBigInt(); }
@@ -32,22 +32,22 @@ struct VALUE : GCP_SPointerBase
     bool operator==(VALUE const& _rhs) const { return m_data == _rhs.asBigInt(); }
 
     VALUE operator-(VALUE const& _rhs) const { return VALUE(m_data - _rhs.asBigInt()); }
-    VALUE operator-(int _rhs) const { return VALUE(m_data - _rhs); }
+    VALUE operator-(long long  _rhs) const { return VALUE(m_data - _rhs); }
     VALUE operator/(VALUE const& _rhs) const { return VALUE(m_data / _rhs.asBigInt()); }
-    VALUE operator/(int _rhs) const { return VALUE(m_data / _rhs); }
+    VALUE operator/(long long  _rhs) const { return VALUE(m_data / _rhs); }
     VALUE operator*(VALUE const& _rhs) const { return VALUE(m_data * _rhs.asBigInt()); }
-    VALUE operator*(int _rhs) const { return VALUE(m_data * _rhs); }
+    VALUE operator*(long long  _rhs) const { return VALUE(m_data * _rhs); }
     VALUE operator+(VALUE const& _rhs) const { return VALUE(m_data + _rhs.asBigInt()); }
-    VALUE operator+(int _rhs) const { return VALUE(m_data + _rhs); }
+    VALUE operator+(long long  _rhs) const { return VALUE(m_data + _rhs); }
 
     VALUE& operator+=(VALUE const& _rhs) { m_data += _rhs.asBigInt(); m_dirty = true; return *this; }
-    VALUE& operator+=(int _rhs) { m_data += _rhs; m_dirty = true; return *this; }
+    VALUE& operator+=(long long  _rhs) { m_data += _rhs; m_dirty = true; return *this; }
     VALUE& operator-=(VALUE const& _rhs) { m_data -= _rhs.asBigInt(); m_dirty = true; return *this; }
-    VALUE& operator-=(int _rhs) { m_data -= _rhs; m_dirty = true; return *this; }
+    VALUE& operator-=(long long  _rhs) { m_data -= _rhs; m_dirty = true; return *this; }
     VALUE& operator/=(VALUE const& _rhs) { m_data /= _rhs.asBigInt(); m_dirty = true; return *this; }
-    VALUE& operator/=(int _rhs) { m_data /= _rhs; m_dirty = true; return *this; }
+    VALUE& operator/=(long long  _rhs) { m_data /= _rhs; m_dirty = true; return *this; }
     VALUE& operator*=(VALUE const& _rhs) { m_data *= _rhs.asBigInt(); m_dirty = true; return *this; }
-    VALUE& operator*=(int _rhs) { m_data *= _rhs; m_dirty = true; return *this; }
+    VALUE& operator*=(long long  _rhs) { m_data *= _rhs; m_dirty = true; return *this; }
 
     VALUE operator++(int) { m_data++; return *this; }
 

@@ -143,7 +143,8 @@ void verifyCommonParent(spBlockHeader const& _header, spBlockHeader const& _pare
                                      " != " + parent.number().asDecString() + ")");
 
     if (parent.timestamp() >= header.timestamp())
-        throw test::UpwardsException("BlockHeader timestamp is less then it's parent block!");
+        throw test::UpwardsException("BlockHeader timestamp is less or equal then it's parent block! (" +
+            header.timestamp().asDecString() + " <= " + parent.timestamp().asDecString() + ")");
 
     // Validate block difficulty delta
     ChainOperationParams params = ChainOperationParams::defaultParams(_chain.toolParams());
