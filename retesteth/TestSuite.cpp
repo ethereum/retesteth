@@ -47,6 +47,27 @@ struct TestFileData
     bool hashCalculated = true;
 };
 
+size_t getMaxAllowedThreads()
+{
+    // If debugging, already there is an open instance of a client.
+    // Only one thread allowed to connect to it;
+    size_t maxAllowedThreads = Options::get().threadCount;
+    ClientConfig const& currConfig = Options::get().getDynamicOptions().getCurrentConfig();
+    ClientConfgSocketType socType = currConfig.cfgFile().socketType();
+    if (socType == ClientConfgSocketType::IPCDebug)
+        maxAllowedThreads = 1;
+
+    // If connecting to TCP sockets. Max threads are limited with tcp ports provided
+    if (socType == ClientConfgSocketType::TCP)
+    {
+        maxAllowedThreads = min(maxAllowedThreads, currConfig.cfgFile().socketAdresses().size());
+        if (maxAllowedThreads != Options::get().threadCount)
+            ETH_WARNING(
+                "Correct -j option to `" + test::fto_string(maxAllowedThreads) + "` (or provide socket ports in config)!");
+    }
+    return maxAllowedThreads;
+}
+
 TestFileData readTestFile(fs::path const& _testFileName)
 {
     // Legacy hash validation require to sort json data upon load, thats the old algo used to calculate hash
@@ -163,6 +184,7 @@ void addClientInfo(DataObject& _v, fs::path const& _testSource, h256 const& _tes
 
 void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
 {
+    ETH_LOG(string("Check `") + _compiledTest.c_str() + "` hash", 7);
     TestFileData fillerData = readTestFile(_sourceTest);
 
     // If no hash calculated, skip the hash check
@@ -249,7 +271,8 @@ void joinThreads(vector<thread>& _threadVector, bool _all)
             else if (status == RPCSession::NotExist && ExitHandler::receivedExitSignal())
                 return;
         }
-        std::this_thread::sleep_for(200ms);
+        // TIME CONSUMING WITH THREADS, UNCOMMENT THIS TO GET PROPER PROFILER READINGS ??
+        // std::this_thread::sleep_for(200ms);
     }
 }
 }
@@ -495,27 +518,13 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
         ETH_WARNING(_testFolder + " no tests detected in folder!");
     }
 
+
     // repeat this part for all connected clients
     auto thisPart = [this, &files, &_testFolder]() {
         auto& testOutput = test::TestOutputHelper::get();
+
         vector<thread> threadVector;
-
-        // If debugging, already there is an open instance of a client.
-        // Only one thread allowed to connect to it;
-        size_t maxAllowedThreads = Options::get().threadCount;
-        ClientConfig const& currConfig = Options::get().getDynamicOptions().getCurrentConfig();
-        ClientConfgSocketType socType = currConfig.cfgFile().socketType();
-        if (socType == ClientConfgSocketType::IPCDebug)
-            maxAllowedThreads = 1;
-
-        // If connecting to TCP sockets. Max threads are limited with tcp ports provided
-        if (socType == ClientConfgSocketType::TCP)
-        {
-            maxAllowedThreads = min(maxAllowedThreads, currConfig.cfgFile().socketAdresses().size());
-            if (maxAllowedThreads != Options::get().threadCount)
-                ETH_WARNING(
-                    "Correct -j option to `" + test::fto_string(maxAllowedThreads) + "` (or provide socket ports in config)!");
-        }
+        size_t maxAllowedThreads = getMaxAllowedThreads();
 
         if (RPCSession::isRunningTooLong() || TestChecker::isTimeConsumingTest(_testFolder.c_str()))
             RPCSession::restartScripts(true);
