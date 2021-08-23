@@ -29,7 +29,7 @@ ToolResponse::ToolResponse(DataObject const& _data)
          {"receiptRoot", {{DataType::String}, jsonField::Required}},
          {"logsHash", {{DataType::String}, jsonField::Required}},
          {"logsBloom", {{DataType::String}, jsonField::Required}},
-         {"currentDifficulty", {{DataType::Integer}, jsonField::Required}},
+         {"currentDifficulty", {{DataType::String}, jsonField::Required}},
          {"rejected", {{DataType::Array}, jsonField::Optional}},
          {"receipts", {{DataType::Array}, jsonField::Required}}});
 }

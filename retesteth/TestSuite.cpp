@@ -72,8 +72,14 @@ TestFileData readTestFile(fs::path const& _testFileName)
 {
     // Legacy hash validation require to sort json data upon load, thats the old algo used to calculate hash
     // Avoid time consuming legacy tests hash validation if there is no --checkhash option
-    static bool isLegacy = (Options::get().rCurrentTestSuite.find("LegacyTests") != string::npos);
-    static bool bSortOnLoad = (Options::get().checkhash && isLegacy);
+    static bool isLegacy = (boost::unit_test::framework::current_test_case().full_name().find("LegacyTests") != string::npos);
+    static bool bSortOnLoad = isLegacy; //(Options::get().checkhash && isLegacy); uncomment here if there would be too many legacy tests
+    if (Options::get().rCurrentTestSuite.empty())
+    {
+        // Current test case is dynamic if we run all tests. need to see if we hit LegacyTests
+        isLegacy = (boost::unit_test::framework::current_test_case().full_name().find("LegacyTests") != string::npos);
+        bSortOnLoad = isLegacy;
+    }
 
     // Binary file hash calculation is impossible as git messes up with the files
     // So we read json structure and print it here to calculate the hash from string

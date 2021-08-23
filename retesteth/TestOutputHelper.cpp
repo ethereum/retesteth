@@ -144,9 +144,7 @@ void TestOutputHelper::initTest(size_t _maxTests)
     {
         // Calculate total number of test suites by traversing boost test suite
         test_case_counter tcc;
-        auto const& tcase = boost::unit_test::framework::current_test_case();
-        auto const& parent = boost::unit_test::framework::get(tcase.p_parent_id, boost::unit_test::test_unit_type::TUT_SUITE);
-        traverse_test_tree(parent, tcc, true);
+        traverse_test_tree(boost::unit_test::framework::master_test_suite(), tcc, true);
         totalTestsNumber = tcc.p_count.get();
         m_currentTestRun = 0;
         if (totalTestsNumber == 0)
@@ -332,7 +330,7 @@ void checkUnfinishedTestFolders()
         return;
 
     if (Options::get().rCurrentTestSuite.empty())
-        ETH_WARNING("Options rCurrentTestSuite is empty!");
+        ETH_WARNING("Options rCurrentTestSuite is empty, total tests run can be wrong!");
 
     // -t SuiteName/SubSuiteName/caseName   parse caseName as filter
     // rCurrentTestSuite is empty if run without -t argument
