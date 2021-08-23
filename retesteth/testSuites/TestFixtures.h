@@ -97,6 +97,7 @@ public:
              && !test::Options::get().all)
         {
             ETH_STDOUT_MESSAGE("Skipping " + casename + " because --all option is not specified.");
+            test::TestOutputHelper::get().currentTestRunPP();
             test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
             return;
         }
@@ -104,12 +105,14 @@ public:
         if (allFlags.count(TestExecution::RequireOptionFill) && !Options::get().filltests)
         {
             ETH_STDOUT_MESSAGE("Skipping " + casename + " because --filltests option is not specified.");
+            test::TestOutputHelper::get().currentTestRunPP();
             test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
             return;
         }
 
         if (casename == "bcForgedTest")
         {
+            test::TestOutputHelper::get().currentTestRunPP();
             ETH_STDOUT_MESSAGE("Skipping " + casename + " because bigint exceptions run in progress!");
             return;
         }

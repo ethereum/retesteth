@@ -81,7 +81,7 @@ public:
     //TestOutputHelper(TestOutputHelper const&) = delete;
     void operator=(TestOutputHelper const&) = delete;
 
-    void initTest(size_t _maxTests = 1, std::string const& _debug = std::string());
+    void initTest(size_t _maxTests = 1);
 
     // Display percantage of completed tests to std::out.
     // Has to be called before execution of every test.
@@ -110,6 +110,7 @@ public:
     boost::filesystem::path const& testFile() const { return m_currentTestFileName; }
     static void printTestExecStats();
     static void registerTestRunSuccess();
+    static void currentTestRunPP() { m_currentTestRun++; };
 
     /// get string representation of current threadID
     static std::thread::id getThreadID();
@@ -131,6 +132,9 @@ private:
     boost::filesystem::path m_currentTestFileName;
     std::vector<std::string> m_errors; //flag errors for triggering boost erros after all thread finished
     std::vector<std::string> m_expected_UnitTestExceptions;  // expect following errors
+
+    // Debug print
+    static size_t m_currentTestRun;
 };
 
 class TestOutputHelperFixture

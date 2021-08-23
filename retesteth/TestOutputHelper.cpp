@@ -18,9 +18,12 @@
  * Fixture class for boost output when running testeth
  */
 
+#include <boost/test/tree/test_case_counter.hpp>
+#include <boost/test/tree/traverse.hpp>
+#include <boost/test/unit_test.hpp>
 #include <mutex>
 #include <thread>
-#include <boost/test/unit_test.hpp>
+
 #include <libdevcore/include.h>
 #include <retesteth/TestOutputHelper.h>
 #include <retesteth/Options.h>
@@ -30,6 +33,7 @@ using namespace std;
 using namespace dev;
 using namespace test;
 using namespace boost;
+using namespace boost::unit_test;
 
 mutex g_finishedTestFoldersMapMutex;
 typedef std::set<std::string> FolderNameSet;
@@ -132,15 +136,31 @@ void TestOutputHelper::setUnitTestExceptions(std::vector<std::string> const& _me
     m_expected_UnitTestExceptions = _messages;
 }
 
-void TestOutputHelper::initTest(size_t _maxTests, string const& _debug)
+size_t TestOutputHelper::m_currentTestRun = 0;
+void TestOutputHelper::initTest(size_t _maxTests)
 {
+    static size_t totalTestsNumber = 0;
+    if (totalTestsNumber == 0)
+    {
+        // Calculate total number of test suites by traversing boost test suite
+        test_case_counter tcc;
+        auto const& tcase = boost::unit_test::framework::current_test_case();
+        auto const& parent = boost::unit_test::framework::get(tcase.p_parent_id, boost::unit_test::test_unit_type::TUT_SUITE);
+        traverse_test_tree(parent, tcc, true);
+        totalTestsNumber = tcc.p_count.get();
+        m_currentTestRun = 0;
+        if (totalTestsNumber == 0)
+            totalTestsNumber = 1;
+    }
+
     //_maxTests = 0 means this function is called from testing thread
     m_currentTestName = string();
     m_currentTestFileName = string();
     m_timer = Timer();
     if (!Options::get().createRandomTest && _maxTests != 0 && !Options::get().singleTestFile)
     {
-        ETH_STDOUT_MESSAGE("Test Case \"" + TestInfo::caseName() + "\": " + _debug);
+        string testOutOf = "(" + test::fto_string(++m_currentTestRun) + " of " + test::fto_string(totalTestsNumber) + ")";
+        ETH_STDOUT_MESSAGE("Test Case \"" + TestInfo::caseName() + "\": " + testOutOf);
         m_timer.restart();
     }
     m_maxTests = _maxTests;
