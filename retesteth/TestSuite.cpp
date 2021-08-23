@@ -44,24 +44,42 @@ struct TestFileData
 {
     spDataObject data;
     h256 hash;
+    bool hashCalculated = true;
 };
 
 TestFileData readTestFile(fs::path const& _testFileName)
 {
+    // Legacy hash validation require to sort json data upon load, thats the old algo used to calculate hash
+    // Avoid time consuming legacy tests hash validation if there is no --checkhash option
+    static bool isLegacy = (Options::get().rCurrentTestSuite.find("LegacyTests") != string::npos);
+    static bool bSortOnLoad = (Options::get().checkhash && isLegacy);
+
     // Binary file hash calculation is impossible as git messes up with the files
     // So we read json structure and print it here to calculate the hash from string
     // Adds around 1% to execution time
-    static bool isLegacy = (Options::get().rCurrentTestSuite.find("LegacyTests") != string::npos);
     ETH_LOG("Read json structure " + string(_testFileName.filename().c_str()), 5);
     TestFileData testData;
     if (_testFileName.extension() == ".json")
-        testData.data = test::readJsonData(_testFileName, string(), isLegacy);
+        testData.data = test::readJsonData(_testFileName, string(), bSortOnLoad);
     else if (_testFileName.extension() == ".yml")
-        testData.data = test::readYamlData(_testFileName, isLegacy);
+        testData.data = test::readYamlData(_testFileName, bSortOnLoad);
     else
         ETH_ERROR_MESSAGE(
             "Unknown test format!" + test::TestOutputHelper::get().testFile().string());
     ETH_LOG("Read json structure finish", 5);
+
+    // Do not calculate the hash on Legacy tests unless --checkhash option provided
+    if (isLegacy && !bSortOnLoad)
+    {
+        static bool wasWarning = false;
+        if (!wasWarning)
+        {
+            wasWarning = true;
+            ETH_WARNING("Skipping LegacyTests hash verification to save time!");
+        }
+        testData.hashCalculated = false;
+        return testData;
+    }
 
     string srcString = testData.data->asJson(0, false); //json_spirit::write_string(testData.data, false);
     if (test::Options::get().showhash)
@@ -83,6 +101,7 @@ TestFileData readTestFile(fs::path const& _testFileName)
         std::cerr << "DATA: '" << std::endl << srcString << "'" << std::endl;
     }
     testData.hash = sha3(srcString);
+    testData.hashCalculated = true;
     return testData;
 }
 
@@ -144,8 +163,13 @@ void addClientInfo(DataObject& _v, fs::path const& _testSource, h256 const& _tes
 
 void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
 {
-    spDataObject v = test::readJsonData(_compiledTest, "_info");
     TestFileData fillerData = readTestFile(_sourceTest);
+
+    // If no hash calculated, skip the hash check
+    if (!fillerData.hashCalculated)
+        return;
+
+    spDataObject v = test::readJsonData(_compiledTest, "_info");
     for (auto const& i2: v->getSubObjects())
     {
         DataObject const& i = i2.getCContent();
@@ -466,25 +490,13 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
     AbsoluteFillerPath fillerPath = getFullPathFiller(_testFolder);
     vector<fs::path> const files = test::getFiles(fillerPath.path(), {".json", ".yml"}, filter);
     if (files.size() == 0)
-        ETH_WARNING(_testFolder + " no tests detected in folder!");
-
-    // Debug see how many test suite folders are there
-    static size_t testNumber = 0;
-    static size_t totalFolderNumber = 0;
-
-    size_t totalFolders = 0;
-    for (fs::directory_iterator it(fillerPath.parent_path()); it != fs::directory_iterator(); ++it)
     {
-        if (fs::is_directory(it->status()))
-            totalFolders++;
+        TestOutputHelper::get().currentTestRunPP();
+        ETH_WARNING(_testFolder + " no tests detected in folder!");
     }
-    if (totalFolderNumber != totalFolders)
-        testNumber = 0;
-    totalFolderNumber = totalFolders;
-    string currentTest = "(" + test::fto_string(++testNumber) + " of " + test::fto_string(totalFolders) + ")";
 
     // repeat this part for all connected clients
-    auto thisPart = [this, &files, &_testFolder, &currentTest]() {
+    auto thisPart = [this, &files, &_testFolder]() {
         auto& testOutput = test::TestOutputHelper::get();
         vector<thread> threadVector;
 
@@ -508,7 +520,7 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
         if (RPCSession::isRunningTooLong() || TestChecker::isTimeConsumingTest(_testFolder.c_str()))
             RPCSession::restartScripts(true);
 
-        testOutput.initTest(files.size(), currentTest);
+        testOutput.initTest(files.size());
         for (auto const& file : files)
         {
             if (ExitHandler::receivedExitSignal())
