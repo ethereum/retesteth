@@ -278,7 +278,7 @@ void joinThreads(vector<thread>& _threadVector, bool _all)
                 return;
         }
         // TIME CONSUMING WITH THREADS, UNCOMMENT THIS TO GET PROPER PROFILER READINGS ??
-        // std::this_thread::sleep_for(200ms);
+        std::this_thread::sleep_for(200ms);
     }
 }
 }
