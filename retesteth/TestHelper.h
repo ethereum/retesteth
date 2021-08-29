@@ -54,6 +54,7 @@ void strToLower(string& _input);
 
 /// retesteth version string
 std::string prepareVersionString();
+int retestethVersion();
 
 /// local lllc version string
 std::string prepareLLLCVersionString();

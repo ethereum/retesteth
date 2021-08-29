@@ -78,8 +78,9 @@ public:
     bool lowcpu = false; ///< Disable cpu-intense tests
 	bool nonetwork = false;///< For libp2p
 	/// @}
+    static bool isLegacy();
 
-	/// Get reference to options
+    /// Get reference to options
 	/// The first time used, options are parsed with argc, argv
 	static Options const& get(int argc = 0, const char** argv = 0);
     static DynamicOptions& getDynamicOptions() { return m_dynamicOptions; }

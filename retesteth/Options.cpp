@@ -520,3 +520,14 @@ string Options::getGStateTransactionFilter() const
     filter += trValueIndex == -1 ? string() : " vInd: " + to_string(trValueIndex);
     return filter;
 }
+
+bool Options::isLegacy()
+{
+    static bool isLegacy = (boost::unit_test::framework::current_test_case().full_name().find("LegacyTests") != string::npos);
+
+    // Current test case is dynamic if we run all tests. need to see if we hit LegacyTests
+    if (Options::get().rCurrentTestSuite.empty())
+        isLegacy = (boost::unit_test::framework::current_test_case().full_name().find("LegacyTests") != string::npos);
+
+    return isLegacy;
+}

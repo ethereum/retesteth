@@ -294,6 +294,18 @@ string prepareVersionString()
     return version;
 }
 
+int retestethVersion()
+{
+    static int iversion = 0;
+    if (iversion == 0)
+    {
+        string version = string(ETH_PROJECT_VERSION);
+        version.erase(std::remove(version.begin(), version.end(), '.'), version.end());
+        iversion = atoi(version.c_str());
+    }
+    return iversion;
+}
+
 string prepareLLLCVersionString()
 {
     if (test::checkCmdExist("lllc"))
