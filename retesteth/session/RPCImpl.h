@@ -40,6 +40,7 @@ public:
     MineBlocksResult test_mineBlocks(size_t _number) override;
     FH32 test_importRawBlock(BYTES const& _blockRLP) override;
     FH32 test_getLogHash(FH32 const& _txHash) override;
+    TestRawTransaction test_rawTransaction(BYTES const& _rlp, FORK const& _fork) override;
 
     // Internal
     std::string sendRawRequest(std::string const& _request);

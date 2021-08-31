@@ -4,5 +4,6 @@
 #include "RPC/DebugTraceTransaction.h"
 #include "RPC/DebugVMTrace.h"
 #include "RPC/EthGetBlockBy.h"
-#include "RPC/SetChainParamsArgs.h"
 #include "RPC/MineBlocksResult.h"
+#include "RPC/SetChainParamsArgs.h"
+#include "RPC/TestRawTranasction.h"

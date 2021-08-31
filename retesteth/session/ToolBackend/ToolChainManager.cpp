@@ -10,6 +10,8 @@ namespace toolimpl
 {
 ToolChainManager::ToolChainManager(spSetChainParamsArgs const& _config, fs::path const& _toolPath, fs::path const& _tmpDir)
 {
+    m_tmpDir = _tmpDir;
+    m_toolPath = _toolPath;
     m_currentChain = 0;
     m_maxChains = 0;
     EthereumBlockState genesis(_config->genesis(), _config->state(), FH32::zero());
@@ -212,6 +214,36 @@ void ToolChainManager::reorganizeChainForTotalDifficulty()
             m_currentChain = chain.first;
         }
     }
+}
+
+TestRawTransaction ToolChainManager::test_rawTransaction(BYTES const& _rlp, FORK const& _fork) const
+{
+    DataObject out;
+    // Prepare transaction file
+    fs::path txsPath = m_tmpDir / "tx.rlp";
+
+    dev::RLPStream txsout(1);
+    txsout.appendRaw(dev::fromHex(_rlp.asString()));
+    writeFile(txsPath.string(), string("\"") + dev::toString(txsout.out()) + "\"");
+
+    string cmd = m_toolPath.string();
+    cmd += " --input.txs " + txsPath.string();
+    cmd += " --state.fork " + _fork.asString();
+    string response = test::executeCmd(cmd, ExecCMDWarning::NoWarning);
+    ETH_TEST_MESSAGE("T9N Response:\n" + response);
+
+    if (response.find("error") != string::npos)
+    {
+        out["error"] = response;
+        out["sender"] = FH20::zero().asString();
+    }
+    else
+    {
+        out["error"] = "";
+        size_t pos = response.find("0x");
+        out["sender"] = response.substr(pos);
+    }
+    return TestRawTransaction(out);
 }
 
 

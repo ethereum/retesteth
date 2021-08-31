@@ -3,6 +3,7 @@
 #include <retesteth/testStructures/types/Ethereum/EthereumBlock.h>
 #include <retesteth/testStructures/types/RPC/EthGetBlockBy.h>
 #include <retesteth/testStructures/types/RPC/SetChainParamsArgs.h>
+#include <retesteth/testStructures/types/RPC/TestRawTranasction.h>
 #include <boost/filesystem.hpp>
 namespace fs = boost::filesystem;
 
@@ -31,6 +32,9 @@ public:
     void rewindToBlock(VALUE const& _number);
     void modifyTimestamp(VALUE const& _time);
 
+    // Transaction tests
+    TestRawTransaction test_rawTransaction(BYTES const& _rlp, FORK const& _fork) const;
+
 
 private:
     ToolChainManager() {}
@@ -48,6 +52,9 @@ private:
     size_t m_currentChain;
     size_t m_maxChains;
     spEthereumBlockState m_pendingBlock;
+
+    fs::path m_tmpDir;
+    fs::path m_toolPath;
 };
 
 }  // namespace toolimpl

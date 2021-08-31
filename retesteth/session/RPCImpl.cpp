@@ -182,6 +182,12 @@ FH32 RPCImpl::test_getLogHash(FH32 const& _txHash)
     return FH32(rpcCall("test_getLogHash", {quote(_txHash.asString())}));
 }
 
+TestRawTransaction RPCImpl::test_rawTransaction(BYTES const& _rlp, FORK const& _fork)
+{
+    spDataObject const res = rpcCall("test_rawTransaction", {quote(_rlp.asString()), quote(_fork.asString())});
+    return TestRawTransaction(res);
+}
+
 // Internal
 std::string RPCImpl::sendRawRequest(std::string const& _request)
 {

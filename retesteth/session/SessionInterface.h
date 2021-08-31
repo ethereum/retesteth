@@ -70,6 +70,7 @@ public:
     virtual MineBlocksResult test_mineBlocks(size_t _number) = 0;
     virtual FH32 test_importRawBlock(BYTES const& _blockRLP) = 0;
     virtual FH32 test_getLogHash(FH32 const& _txHash) = 0;
+    virtual TestRawTransaction test_rawTransaction(BYTES const& _rlp, FORK const& _fork) = 0;
 
     // Internal
     virtual spDataObject rpcCall(std::string const& _methodName,

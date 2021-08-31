@@ -300,6 +300,18 @@ FH32 ToolImpl::test_getLogHash(FH32 const& _txHash)
     return _txHash;
 }
 
+TestRawTransaction ToolImpl::test_rawTransaction(BYTES const& _rlp, FORK const& _fork)
+{
+    rpcCall("", {});
+    TRYCATCHCALL(
+        ETH_TEST_MESSAGE("\nRequest: test_rawTransaction '" + _rlp.asString() + "', Fork: `" + _fork.asString());
+        TestRawTransaction res = m_toolChainManager->test_rawTransaction(_rlp, _fork);
+        ETH_TEST_MESSAGE("Response: test_rawTransaction error = `" + res.error() + "`, sender = `" + res.sender().asString());
+        return res;
+        , "test_rawTransaction", CallType::FAILEVERYTHING)
+    return TestRawTransaction(DataObject());
+}
+
 // Internal
 spDataObject ToolImpl::rpcCall(
     std::string const& _methodName, std::vector<std::string> const& _args, bool _canFail)
