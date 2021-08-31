@@ -216,33 +216,43 @@ void ToolChainManager::reorganizeChainForTotalDifficulty()
     }
 }
 
-TestRawTransaction ToolChainManager::test_rawTransaction(BYTES const& _rlp, FORK const& _fork) const
+TestRawTransaction ToolChainManager::test_rawTransaction(
+    BYTES const& _rlp, FORK const& _fork, fs::path const& _toolPath, fs::path const& _tmpDir)
 {
+    // Prepare test_mineBlocks response structure
     DataObject out;
+    out["result"] = true;
+
     // Prepare transaction file
-    fs::path txsPath = m_tmpDir / "tx.rlp";
+    fs::path txsPath = _tmpDir / "tx.rlp";
 
     dev::RLPStream txsout(1);
     txsout.appendRaw(dev::fromHex(_rlp.asString()));
     writeFile(txsPath.string(), string("\"") + dev::toString(txsout.out()) + "\"");
 
-    string cmd = m_toolPath.string();
+    string cmd = _toolPath.string();
     cmd += " --input.txs " + txsPath.string();
     cmd += " --state.fork " + _fork.asString();
     string response = test::executeCmd(cmd, ExecCMDWarning::NoWarning);
     ETH_TEST_MESSAGE("T9N Response:\n" + response);
 
+    string hash = "0x" + dev::toString(dev::sha3(fromHex(_rlp.asString())));
+    spDataObject tr(new DataObject());
     if (response.find("error") != string::npos)
     {
-        out["error"] = response;
-        out["sender"] = FH20::zero().asString();
+        (*tr)["error"] = response;
+        (*tr)["sender"] = FH20::zero().asString();
+        (*tr)["hash"] = hash;
+        out["rejectedTransactions"].addArrayObject(tr);
     }
     else
     {
-        out["error"] = "";
         size_t pos = response.find("0x");
-        out["sender"] = response.substr(pos);
+        (*tr)["sender"] = response.substr(pos);
+        (*tr)["hash"] = hash;
+        out["acceptedTransactions"].addArrayObject(tr);
     }
+
     return TestRawTransaction(out);
 }
 

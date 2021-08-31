@@ -305,7 +305,7 @@ TestRawTransaction ToolImpl::test_rawTransaction(BYTES const& _rlp, FORK const& 
     rpcCall("", {});
     TRYCATCHCALL(
         ETH_TEST_MESSAGE("\nRequest: test_rawTransaction '" + _rlp.asString() + "', Fork: `" + _fork.asString());
-        TestRawTransaction res = m_toolChainManager->test_rawTransaction(_rlp, _fork);
+        TestRawTransaction res = ToolChainManager::test_rawTransaction(_rlp, _fork, m_toolPath, m_tmpDir);
         ETH_TEST_MESSAGE("Response: test_rawTransaction error = `" + res.error() + "`, sender = `" + res.sender().asString());
         return res;
         , "test_rawTransaction", CallType::FAILEVERYTHING)

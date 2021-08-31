@@ -57,6 +57,8 @@ enum class StateToHex
 void convertDecStateToHex(
     spDataObject& _data, solContracts const& _preSolidity = solContracts(), StateToHex _compileCode = StateToHex::COMPILECODE);
 
+void convertDecTransactionToHex(spDataObject& _data);
+
 // Convert dec fields to hex, add 0x prefix to accounts and storage keys
 spDataObject convertDecBlockheaderIncompleteToHex(DataObject const& _data);
 

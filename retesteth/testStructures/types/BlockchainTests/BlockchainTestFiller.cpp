@@ -68,7 +68,7 @@ BlockchainTestInFiller::BlockchainTestInFiller(spDataObject& _data)
         }
 
         m_hasAtLeastOneUncle = false;
-        for (auto const& el : _data->atKey("blocks").getSubObjects())
+        for (auto& el : (*_data).atKeyUnsafe("blocks").getSubObjectsUnsafe())
         {
             m_blocks.push_back(BlockchainTestFillerBlock(el, nonceMap));
             if (m_blocks.at(m_blocks.size() - 1).uncles().size() > 0)

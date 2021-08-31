@@ -411,5 +411,19 @@ void readExpectExceptions(DataObject const& _data, std::map<FORK, string>& _out)
     }
 }
 
+void convertDecTransactionToHex(spDataObject& _data)
+{
+    DataObject& data = _data.getContent();
+    data.performModifier(mod_valueToCompactEvenHexPrefixed, {"data", "to"});
+
+    // fix 0x prefix on 'to' key
+    string& to = data.atKeyUnsafe("to").asStringUnsafe();
+    if (to.size() > 1 && to.at(1) != 'x')
+        to.insert(0, "0x");
+
+    // Compile LLL in transaction data into byte code if not already
+    data["data"] = test::compiler::replaceCode(data.atKey("data").asString());
+}
+
 }  // namespace teststruct
 }  // namespace test

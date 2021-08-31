@@ -47,7 +47,7 @@ struct MineBlocksResult
         return empty;
     }
 
-private:
+protected:
     bool m_result;
     bool m_isRejectData;
     std::map<FH32, string> m_rejectedTransactions;

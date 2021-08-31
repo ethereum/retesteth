@@ -33,7 +33,8 @@ public:
     void modifyTimestamp(VALUE const& _time);
 
     // Transaction tests
-    TestRawTransaction test_rawTransaction(BYTES const& _rlp, FORK const& _fork) const;
+    static TestRawTransaction test_rawTransaction(
+        BYTES const& _rlp, FORK const& _fork, fs::path const& _toolPath, fs::path const& _tmpDir);
 
 
 private:
