@@ -74,7 +74,7 @@ BlockchainTestFillerBlock::BlockchainTestFillerBlock(spDataObject& _data, NonceM
             }
         }
 
-        requireJsonFields(_data, "BlockchainTestFillerBlock " + _data->getKey(),
+        REQUIRE_JSONFIELDS(_data, "BlockchainTestFillerBlock " + _data->getKey(),
             {{"rlp", {{DataType::String}, jsonField::Optional}},
                 {"chainname", {{DataType::String}, jsonField::Optional}},
                 {"donotimportonclient", {{DataType::String}, jsonField::Optional}},

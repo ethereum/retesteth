@@ -38,7 +38,7 @@ EthGetBlockBy::EthGetBlockBy(DataObject const& _data)
         for (auto const& un : _data.atKey("uncles").getSubObjects())
             m_uncles.push_back(FH32(un));
 
-        requireJsonFields(_data, "EthGetBlockBy " + _data.getKey(),
+        REQUIRE_JSONFIELDS(_data, "EthGetBlockBy " + _data.getKey(),
             {{"logsBloom", {{DataType::String}, jsonField::Required}},
              {"author", {{DataType::String}, jsonField::Optional}},                 //Geth return field
              {"miner", {{DataType::String}, jsonField::Required}},

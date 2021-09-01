@@ -64,7 +64,7 @@ BlockchainTestFillerUncle::BlockchainTestFillerUncle(DataObject const& _data)
         if (tmpD.getSubObjects().size() > 0)
             m_headerIncomplete = spBlockHeaderIncomplete(new BlockHeaderIncomplete(tmpD));
 
-        requireJsonFields(_data, "BlockchainTestFillerUncle " + _data.getKey(),
+        REQUIRE_JSONFIELDS(_data, "BlockchainTestFillerUncle " + _data.getKey(),
             {{"populateFromBlock", {{DataType::String}, jsonField::Optional}},
                 {"sameAsPreviousBlockUncle", {{DataType::String}, jsonField::Optional}},
                 {"sameAsBlock", {{DataType::String}, jsonField::Optional}},

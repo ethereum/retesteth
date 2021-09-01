@@ -219,7 +219,7 @@ spDataObject RPCImpl::rpcCall(
 
     if (!ExitHandler::receivedExitSignal())
     {
-        requireJsonFields(result, "rpcCall_response (req: '" + request.substr(0, 70) + "')",
+        REQUIRE_JSONFIELDS(result, "rpcCall_response (req: '" + request.substr(0, 70) + "')",
             {{"jsonrpc", {{DataType::String}, jsonField::Required}},
              {"id", {{DataType::Integer}, jsonField::Required}},
              {"result", {{DataType::String, DataType::Integer, DataType::Bool, DataType::Object, DataType::Array},

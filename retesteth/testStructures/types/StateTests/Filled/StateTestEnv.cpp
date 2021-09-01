@@ -31,7 +31,7 @@ StateTestEnv::StateTestEnv(DataObject const& _data)
         {
             // 1559 env info
             m_currentBaseFee = spVALUE(new VALUE(_data.atKey("currentBaseFee")));
-            requireJsonFields(_data, "StateTestEnv " + _data.getKey(),
+            REQUIRE_JSONFIELDS(_data, "StateTestEnv " + _data.getKey(),
                 {{"currentCoinbase", {{DataType::String}, jsonField::Required}},
                 {"currentDifficulty", {{DataType::String}, jsonField::Required}},
                 {"currentNumber", {{DataType::String}, jsonField::Required}},
@@ -44,7 +44,7 @@ StateTestEnv::StateTestEnv(DataObject const& _data)
         {
             // Legacy env info
             m_currentBaseFee = spVALUE(0);
-            requireJsonFields(_data, "StateTestEnv " + _data.getKey(),
+            REQUIRE_JSONFIELDS(_data, "StateTestEnv " + _data.getKey(),
                 {{"currentCoinbase", {{DataType::String}, jsonField::Required}},
                  {"currentDifficulty", {{DataType::String}, jsonField::Required}},
                  {"currentGasLimit", {{DataType::String}, jsonField::Required}},

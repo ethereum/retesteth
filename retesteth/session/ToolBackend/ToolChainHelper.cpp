@@ -38,7 +38,7 @@ ToolParams::ToolParams(DataObject const& _data)
     else
         m_londonForkBlock = spVALUE(new VALUE(unreachable));
 
-    requireJsonFields(_data, "ToolParams " + _data.getKey(),
+    REQUIRE_JSONFIELDS(_data, "ToolParams " + _data.getKey(),
         {{"fork", {{DataType::String}, jsonField::Required}},
             {"muirGlacierForkBlock", {{DataType::String}, jsonField::Optional}},
             {"constantinopleForkBlock", {{DataType::String}, jsonField::Optional}},

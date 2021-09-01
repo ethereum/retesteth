@@ -41,7 +41,7 @@ BlockchainTestBlock::BlockchainTestBlock(DataObject const& _data)
         }
         m_rlp = spBYTES(new BYTES(_data.atKey("rlp").asString()));
 
-        requireJsonFields(_data, "BlockchainTestBlock " + _data.getKey(),
+        REQUIRE_JSONFIELDS(_data, "BlockchainTestBlock " + _data.getKey(),
             {{"rlp", {{DataType::String}, jsonField::Required}},
                 {"chainname", {{DataType::String}, jsonField::Optional}},    // User information
                 {"blocknumber", {{DataType::String}, jsonField::Optional}},  // User information

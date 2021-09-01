@@ -41,7 +41,7 @@ StateTestFillerEnv::StateTestFillerEnv(spDataObjectMove _data)
         {
             // 1559 env info
             m_currentBaseFee = spVALUE(new VALUE(m_raw->atKey("currentBaseFee")));
-            requireJsonFields(m_raw, "StateTestFillerEnv " + m_raw->getKey(),
+            REQUIRE_JSONFIELDS(m_raw, "StateTestFillerEnv " + m_raw->getKey(),
                 {{"currentCoinbase", {{DataType::String}, jsonField::Required}},
                     {"currentDifficulty", {{DataType::String}, jsonField::Required}},
                     {"currentGasLimit", {{DataType::String}, jsonField::Required}},
@@ -54,7 +54,7 @@ StateTestFillerEnv::StateTestFillerEnv(spDataObjectMove _data)
         {
             // legacy env info
             m_currentBaseFee = spVALUE(0);
-            requireJsonFields(m_raw, "StateTestFillerEnv " + m_raw->getKey(),
+            REQUIRE_JSONFIELDS(m_raw, "StateTestFillerEnv " + m_raw->getKey(),
                 {{"currentCoinbase", {{DataType::String}, jsonField::Required}},
                     {"currentDifficulty", {{DataType::String}, jsonField::Required}},
                     {"currentGasLimit", {{DataType::String}, jsonField::Required}},

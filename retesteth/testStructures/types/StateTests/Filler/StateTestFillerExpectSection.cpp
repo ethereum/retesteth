@@ -84,7 +84,7 @@ StateTestFillerExpectSection::StateTestFillerExpectSection(spDataObjectMove _dat
     try
     {
         m_initialData = _data.getPointer();
-        requireJsonFields(m_initialData, "StateTestFillerExpectSection " + m_initialData->getKey(),
+        REQUIRE_JSONFIELDS(m_initialData, "StateTestFillerExpectSection " + m_initialData->getKey(),
             {{"indexes", {{DataType::Object}, jsonField::Required}},
                 {"network", {{DataType::Array}, jsonField::Required}},
                 {"expectException", {{DataType::Object}, jsonField::Optional}},

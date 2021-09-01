@@ -8,7 +8,7 @@ BlockchainTestInFilled::BlockchainTestInFilled(spDataObject& _data)
 {
     try
     {
-        requireJsonFields(_data, "BlockchainTestInFilled " + _data->getKey(),
+        REQUIRE_JSONFIELDS(_data, "BlockchainTestInFilled " + _data->getKey(),
             {{"_info", {{DataType::Object}, jsonField::Required}},
                 {"sealEngine", {{DataType::String}, jsonField::Optional}},
                 {"genesisBlockHeader", {{DataType::Object}, jsonField::Required}},

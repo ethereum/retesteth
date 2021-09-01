@@ -253,6 +253,7 @@ TestRawTransaction ToolChainManager::test_rawTransaction(
         out["acceptedTransactions"].addArrayObject(tr);
     }
 
+    ETH_TEST_MESSAGE("Response: test_rawTransaction `" + out.asJson());
     return TestRawTransaction(out);
 }
 

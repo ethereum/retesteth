@@ -17,7 +17,7 @@ StateTestPostResult::StateTestPostResult(DataObject const& _data)
         m_txbytes = spBYTES(new BYTES(_data.atKey("txbytes").asString()));
     if (_data.count("expectException"))
         m_expectException = _data.atKey("expectException").asString();
-    requireJsonFields(_data, "StateTestPostResult " + _data.getKey(),
+    REQUIRE_JSONFIELDS(_data, "StateTestPostResult " + _data.getKey(),
         {{"indexes", {{DataType::Object}, jsonField::Required}},
          {"hash", {{DataType::String}, jsonField::Required}},
          {"txbytes", {{DataType::String}, jsonField::Optional}},

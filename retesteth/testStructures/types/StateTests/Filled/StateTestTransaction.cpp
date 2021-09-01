@@ -63,7 +63,7 @@ StateTestTransaction::StateTestTransaction(DataObject const& _data)
             // EIP 1559 style transaction
             m_maxFeePerGas = spVALUE(new VALUE(_data.atKey("maxFeePerGas")));
             m_maxPriorityFeePerGas = spVALUE(new VALUE(_data.atKey("maxPriorityFeePerGas")));
-            requireJsonFields(_data, "StateTestTransaction " + _data.getKey(),
+            REQUIRE_JSONFIELDS(_data, "StateTestTransaction " + _data.getKey(),
                 {{"data", {{DataType::Array}, jsonField::Required}},
                  {"accessLists", {{DataType::Array}, jsonField::Required}},
                  {"gasLimit", {{DataType::Array}, jsonField::Required}},
@@ -78,7 +78,7 @@ StateTestTransaction::StateTestTransaction(DataObject const& _data)
         {
             // Legacy and access list style transaction
             m_gasPrice = spVALUE(new VALUE(_data.atKey("gasPrice")));
-            requireJsonFields(_data, "StateTestTransaction " + _data.getKey(),
+            REQUIRE_JSONFIELDS(_data, "StateTestTransaction " + _data.getKey(),
                 {{"data", {{DataType::Array}, jsonField::Required}},
                  {"accessLists", {{DataType::Array}, jsonField::Optional}},
                  {"gasLimit", {{DataType::Array}, jsonField::Required}},

@@ -68,7 +68,7 @@ BlockHeaderIncomplete::BlockHeaderIncomplete(DataObject const& _data)
                               !m_receiptsRoot.isEmpty() || !m_sha3Uncles.isEmpty() || !m_stateRoot.isEmpty() ||
                               !m_timestamp.isEmpty() || !m_transactionsRoot.isEmpty() || !m_baseFee.isEmpty();
 
-    requireJsonFields(_data, "BlockHeaderIncomplete " + _data.getKey(),
+    REQUIRE_JSONFIELDS(_data, "BlockHeaderIncomplete " + _data.getKey(),
         {{"bloom", {{DataType::String}, jsonField::Optional}},
          {"coinbase", {{DataType::String}, jsonField::Optional}},
          {"difficulty", {{DataType::String}, jsonField::Optional}},

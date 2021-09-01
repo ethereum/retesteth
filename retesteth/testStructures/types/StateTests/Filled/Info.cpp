@@ -20,7 +20,7 @@ Info::Info(DataObject const& _data)
             m_labels.emplace(el->getKey(), el->asString());
     }
 
-    requireJsonFields(_data, "Info " + _data.getKey(),
+    REQUIRE_JSONFIELDS(_data, "Info " + _data.getKey(),
         {{"comment", {{DataType::String}, jsonField::Required}},
          {"filling-rpc-server", {{DataType::String}, jsonField::Required}},
          {"filling-tool-version", {{DataType::String}, jsonField::Required}},

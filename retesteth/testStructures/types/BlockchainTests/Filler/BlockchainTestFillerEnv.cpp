@@ -50,7 +50,7 @@ BlockchainTestFillerEnv::BlockchainTestFillerEnv(spDataObjectMove _data, SealEng
         }
 
         // Allowed fields for this structure
-        requireJsonFields(m_raw, "GenesisBlockHeader(BlockchainTestFillerEnv) " + m_raw->getKey(),
+        REQUIRE_JSONFIELDS(m_raw, "GenesisBlockHeader(BlockchainTestFillerEnv) " + m_raw->getKey(),
             {{"bloom", {{DataType::String}, jsonField::Optional}},
              {"logsBloom", {{DataType::String}, jsonField::Optional}},
              {"coinbase", {{DataType::String}, jsonField::Optional}},

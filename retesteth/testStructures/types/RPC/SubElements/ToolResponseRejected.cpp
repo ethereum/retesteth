@@ -13,7 +13,7 @@ ToolResponseRejected::ToolResponseRejected(DataObject const& _data)
     if (_data.count("hash"))
         m_trHash = spFH32(new FH32(_data.atKey("hash")));
 
-    requireJsonFields(_data, "ToolResponseRejected " + _data.getKey(),
+    REQUIRE_JSONFIELDS(_data, "ToolResponseRejected " + _data.getKey(),
         {{"index", {{DataType::Integer}, jsonField::Required}},
          {"error", {{DataType::String}, jsonField::Required}},
          {"hash", {{DataType::String}, jsonField::Optional}}

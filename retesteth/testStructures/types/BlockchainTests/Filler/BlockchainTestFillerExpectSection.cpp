@@ -11,7 +11,7 @@ BlockchainTestFillerExpectSection::BlockchainTestFillerExpectSection(spDataObjec
 {
     try
     {
-        requireJsonFields(_data, "BlockchainTestFillerExpectSection " + _data->getKey(),
+        REQUIRE_JSONFIELDS(_data, "BlockchainTestFillerExpectSection " + _data->getKey(),
             {{"network", {{DataType::Array, DataType::String}, jsonField::Required}},
                 {"result", {{DataType::Object}, jsonField::Required}}});
 

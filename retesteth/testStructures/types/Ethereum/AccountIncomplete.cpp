@@ -25,7 +25,7 @@ AccountIncomplete::AccountIncomplete(spDataObject& _data)
     }
     if (_data->count("code"))
         m_code = spBYTES(new BYTES(_data->atKey("code")));
-    requireJsonFields(_data, "AccountIncomplete " + _data->getKey(),
+    REQUIRE_JSONFIELDS(_data, "AccountIncomplete " + _data->getKey(),
         {{"shouldnotexist", {{DataType::String}, jsonField::Optional}},
          {"storage", {{DataType::Object}, jsonField::Optional}},
          {"balance", {{DataType::String}, jsonField::Optional}},

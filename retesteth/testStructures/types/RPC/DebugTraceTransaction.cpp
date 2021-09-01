@@ -14,7 +14,7 @@ DebugTraceTransaction::DebugTraceTransaction(DataObject const& _data)
             m_entries.push_back(DebugTraceTransactionLog(entry));
         m_gas = spVALUE(new VALUE(_data.atKey("gas")));
         m_return = spBYTES(new BYTES(_data.atKey("return")));
-        requireJsonFields(_data, "DebugTraceTransaction " + _data.getKey(),
+        REQUIRE_JSONFIELDS(_data, "DebugTraceTransaction " + _data.getKey(),
             {{"structLogs", {{DataType::Object}, jsonField::Required}},
              {"gas", {{DataType::String}, jsonField::Required}},
              {"return", {{DataType::String}, jsonField::Required}}});

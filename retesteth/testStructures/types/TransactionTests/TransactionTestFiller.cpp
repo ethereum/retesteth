@@ -34,7 +34,7 @@ TransactionTestInFiller::TransactionTestInFiller(spDataObject& _data)
     try
     {
         // TODO make _data spDataObjectMove
-        requireJsonFields(_data, "TransactionTestInFiller " + _data->getKey(),
+        REQUIRE_JSONFIELDS(_data, "TransactionTestInFiller " + _data->getKey(),
             {{"_info", {{DataType::Object}, jsonField::Optional}},
              {"expectException", {{DataType::Object}, jsonField::Required}},
              {"transaction", {{DataType::Object}, jsonField::Required}}});

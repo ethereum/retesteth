@@ -23,7 +23,7 @@ ToolResponse::ToolResponse(DataObject const& _data)
             m_rejectedTransactions.push_back(ToolResponseRejected(el));
     }
 
-    requireJsonFields(_data, "ToolResponse " + _data.getKey(),
+    REQUIRE_JSONFIELDS(_data, "ToolResponse " + _data.getKey(),
         {{"stateRoot", {{DataType::String}, jsonField::Required}},
          {"txRoot", {{DataType::String}, jsonField::Required}},
          {"receiptRoot", {{DataType::String}, jsonField::Required}},

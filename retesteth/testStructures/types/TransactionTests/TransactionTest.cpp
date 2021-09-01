@@ -34,7 +34,7 @@ TransactionTestInFilled::TransactionTestInFilled(spDataObject& _data)
 {
     try
     {
-        requireJsonFields(_data, "TransactionTestInFilled " + _data->getKey(),
+        REQUIRE_JSONFIELDS(_data, "TransactionTestInFilled " + _data->getKey(),
             {{"_info", {{DataType::Object}, jsonField::Required}},
              {"result", {{DataType::Object}, jsonField::Required}},
              {"txbytes", {{DataType::String}, jsonField::Required}}});

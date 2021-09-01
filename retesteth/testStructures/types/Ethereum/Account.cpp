@@ -29,7 +29,7 @@ State::Account::Account(spDataObject& _data)
     m_storage = spStorage(new Storage(_data->atKey("storage")));
     if (m_nonce.getCContent() > c_maxNonce)
         ETH_ERROR_MESSAGE("Account `" + m_address->asString() + "` requires nonce <= (2**64)-1");
-    requireJsonFields(_data, "Account " + _data->getKey(),
+    REQUIRE_JSONFIELDS(_data, "Account " + _data->getKey(),
         {{"balance", {{DataType::String}, jsonField::Required}},
          {"code", {{DataType::String}, jsonField::Required}},
          {"nonce", {{DataType::String}, jsonField::Required}},

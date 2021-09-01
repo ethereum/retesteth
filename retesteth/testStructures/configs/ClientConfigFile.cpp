@@ -142,7 +142,7 @@ void ClientConfigFile::initWithData(DataObject const& _data)
     }
 
     // Limit sections in the file
-    requireJsonFields(_data, "ClientConfigFile " + _data.getKey(),
+    REQUIRE_JSONFIELDS(_data, "ClientConfigFile " + _data.getKey(),
         {{"name", {{DataType::String}, jsonField::Required}},
          {"socketType", {{DataType::String}, jsonField::Required}},
          {"socketAddress", {{DataType::String, DataType::Array}, jsonField::Required}},

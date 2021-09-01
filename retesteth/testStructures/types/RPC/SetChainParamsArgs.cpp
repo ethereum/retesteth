@@ -8,7 +8,7 @@ namespace teststruct
 {
 SetChainParamsArgs::SetChainParamsArgs(spDataObject& _data)
 {
-    requireJsonFields(_data, "SetChainParamsArgs " + _data->getKey(),
+    REQUIRE_JSONFIELDS(_data, "SetChainParamsArgs " + _data->getKey(),
         {{"params", {{DataType::Object}, jsonField::Required}},
             {"accounts", {{DataType::Object}, jsonField::Required}},
             {"genesis", {{DataType::Object}, jsonField::Required}},

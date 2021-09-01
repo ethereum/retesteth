@@ -23,7 +23,7 @@ BlockchainTestEnv::BlockchainTestEnv(DataObject const& _data)
         if (!_data.count("baseFeePerGas"))
         {
             // Legacy header Allowed fields for this structure
-            requireJsonFields(_data, "GenesisBlockHeader(BlockchainTestEnv) " + _data.getKey(),
+            REQUIRE_JSONFIELDS(_data, "GenesisBlockHeader(BlockchainTestEnv) " + _data.getKey(),
                 {{"bloom", {{DataType::String}, jsonField::Optional}},
                  {"logsBloom", {{DataType::String}, jsonField::Optional}},
                  {"coinbase", {{DataType::String}, jsonField::Optional}},
@@ -54,7 +54,7 @@ BlockchainTestEnv::BlockchainTestEnv(DataObject const& _data)
             m_currentBaseFee = spVALUE(new VALUE(_data.atKey("baseFeePerGas")));
 
             // Allowed fields for this structure
-            requireJsonFields(_data, "GenesisBlockHeader(BlockchainTestEnv) " + _data.getKey(),
+            REQUIRE_JSONFIELDS(_data, "GenesisBlockHeader(BlockchainTestEnv) " + _data.getKey(),
                 {{"bloom", {{DataType::String}, jsonField::Optional}},
                  {"logsBloom", {{DataType::String}, jsonField::Optional}},
                  {"coinbase", {{DataType::String}, jsonField::Optional}},

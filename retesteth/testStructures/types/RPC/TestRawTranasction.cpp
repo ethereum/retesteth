@@ -33,7 +33,7 @@ TestRawTransaction::TestRawTransaction(DataObject const& _data) :
         ETH_ERROR_MESSAGE("test_rawTransaction no `acceptedTransactions` nor `rejectedTransactions` is defined!");
     }
 
-    requireJsonFields(_data, "test_rawTransaction::TestRawTransaction",
+    REQUIRE_JSONFIELDS(_data, "test_rawTransaction::TestRawTransaction",
         {{"result", {{DataType::Bool, DataType::Integer}, jsonField::Required}},
          {"rejectedTransactions", {{DataType::Array}, jsonField::Optional}},
          {"acceptedTransactions", {{DataType::Array}, jsonField::Optional}}

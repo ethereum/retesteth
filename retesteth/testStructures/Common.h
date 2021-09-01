@@ -47,6 +47,10 @@ static VALUE c_maxNonce(DataObject("0xffffffffffffffff"));
 void requireJsonFields(
     DataObject const& _o, std::string const& _configName, std::map<std::string, jsonType> const& _validationMap);
 
+#define REQUIRE_JSONFIELDS(_data, _name, ...)  \
+ static std::map<std::string, jsonType> requireJsonFieldsMap = __VA_ARGS__; \
+ requireJsonFields(_data, _name, requireJsonFieldsMap)
+
 // Compile LLL in code, solidity in code
 // Convert dec fields to hex, add 0x prefix to accounts and storage keys
 enum class StateToHex

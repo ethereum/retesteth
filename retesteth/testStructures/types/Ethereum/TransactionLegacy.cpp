@@ -48,7 +48,7 @@ void TransactionLegacy::fromDataObject(DataObject const& _data)
             m_s = spVALUE(new VALUE(_data.atKey("s")));
             rebuildRLP();
         }
-        requireJsonFields(_data, "TransactionLegacy " + _data.getKey(),
+        REQUIRE_JSONFIELDS(_data, "TransactionLegacy " + _data.getKey(),
             {
                 {"data", {{DataType::String}, jsonField::Required}},
                 {"gasLimit", {{DataType::String}, jsonField::Required}},

@@ -26,7 +26,7 @@ GeneralStateTest::GeneralStateTest(spDataObject& _data)
 
 StateTestInFilled::StateTestInFilled(spDataObject& _data)
 {
-    requireJsonFields(_data, "StateTestInFilled " + _data->getKey(),
+    REQUIRE_JSONFIELDS(_data, "StateTestInFilled " + _data->getKey(),
         {{"_info", {{DataType::Object}, jsonField::Required}},
             {"env", {{DataType::Object}, jsonField::Required}},
             {"post", {{DataType::Object}, jsonField::Required}},

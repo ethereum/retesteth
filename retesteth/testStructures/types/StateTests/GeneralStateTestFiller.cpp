@@ -28,7 +28,7 @@ StateTestInFiller::StateTestInFiller(spDataObject& _data)
 {
     try
     {
-        requireJsonFields(_data, "StateTestInFiller " + _data->getKey(),
+        REQUIRE_JSONFIELDS(_data, "StateTestInFiller " + _data->getKey(),
             {{"_info", {{DataType::Object}, jsonField::Optional}},
                 {"env", {{DataType::Object}, jsonField::Required}},
                 {"expect", {{DataType::Array}, jsonField::Required}},

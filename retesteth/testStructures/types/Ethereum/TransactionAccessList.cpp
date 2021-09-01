@@ -50,7 +50,7 @@ void TransactionAccessList::fromDataObject(DataObject const& _data)
             m_s = spVALUE(new VALUE(_data.atKey("s")));
             rebuildRLP();
         }
-        requireJsonFields(_data, "TransactionAccessList " + _data.getKey(),
+        REQUIRE_JSONFIELDS(_data, "TransactionAccessList " + _data.getKey(),
             {
                 {"data", {{DataType::String}, jsonField::Required}},
                 {"gasPrice", {{DataType::String}, jsonField::Required}},

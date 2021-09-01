@@ -38,7 +38,7 @@ StateTestFillerTransaction::StateTestFillerTransaction(spDataObjectMove _data)
             spAccessList accessList;
             if (el->type() == DataType::Object)
             {
-                requireJsonFields(el, "StateTestFillerTransaction::dataWithList " + m_rawData->getKey(),
+                REQUIRE_JSONFIELDS(el, "StateTestFillerTransaction::dataWithList " + m_rawData->getKey(),
                     {{"data", {{DataType::String}, jsonField::Required}},
                      {"accessList", {{DataType::Array}, jsonField::Required}}});
 
@@ -84,7 +84,7 @@ StateTestFillerTransaction::StateTestFillerTransaction(spDataObjectMove _data)
             // EIP 1559 TRANSACTION TEMPLATE (gtest FILLER)
             m_maxFeePerGas = spVALUE(new VALUE(m_rawData->atKey("maxFeePerGas")));
             m_maxPriorityFeePerGas = spVALUE(new VALUE(m_rawData->atKey("maxPriorityFeePerGas")));
-            requireJsonFields(m_rawData, "StateTestFillerTransaction " + m_rawData->getKey(),
+            REQUIRE_JSONFIELDS(m_rawData, "StateTestFillerTransaction " + m_rawData->getKey(),
                 {{"data", {{DataType::Array}, jsonField::Required}},
                  {"gasLimit", {{DataType::Array}, jsonField::Required}},
                  {"nonce", {{DataType::String}, jsonField::Required}},
@@ -98,7 +98,7 @@ StateTestFillerTransaction::StateTestFillerTransaction(spDataObjectMove _data)
         {
             // LEGACY TRANSACTION TEMPLATE (gtest FILLER)
             m_gasPrice = spVALUE(new VALUE(m_rawData->atKey("gasPrice")));
-            requireJsonFields(m_rawData, "StateTestFillerTransaction " + m_rawData->getKey(),
+            REQUIRE_JSONFIELDS(m_rawData, "StateTestFillerTransaction " + m_rawData->getKey(),
                 {{"data", {{DataType::Array}, jsonField::Required}},
                  {"gasLimit", {{DataType::Array}, jsonField::Required}},
                  {"gasPrice", {{DataType::String}, jsonField::Required}},

@@ -10,7 +10,7 @@ namespace  {
     {
         spDataObject _gtransaction(new DataObject());
         DataObject& gtransaction = _gtransaction.getContent();
-        requireJsonFields(_exec, "vmTestFiller exec",
+        REQUIRE_JSONFIELDS(_exec, "vmTestFiller exec",
             {{"address", {{DataType::String}, jsonField::Required}},
                 {"caller", {{DataType::String}, jsonField::Required}},
                 {"data", {{DataType::String}, jsonField::Required}},
@@ -53,7 +53,7 @@ VMTestInFiller::VMTestInFiller(spDataObject& _data)
 {
     try
     {
-        requireJsonFields(_data, "vmTestFiller " + _data->getKey(),
+        REQUIRE_JSONFIELDS(_data, "vmTestFiller " + _data->getKey(),
             {{"_info", {{DataType::Object}, jsonField::Optional}},
                 {"env", {{DataType::Object}, jsonField::Required}},
                 {"pre", {{DataType::Object}, jsonField::Required}},

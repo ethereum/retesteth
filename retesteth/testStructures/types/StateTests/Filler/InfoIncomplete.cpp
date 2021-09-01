@@ -8,7 +8,7 @@ namespace teststruct
 InfoIncomplete::InfoIncomplete(spDataObjectMove _data)
 {
     m_rawData = _data.getPointer();
-    requireJsonFields(_data, "Info " + m_rawData->getKey(),
+    REQUIRE_JSONFIELDS(_data, "Info " + m_rawData->getKey(),
         {   {"comment", {{DataType::String}, jsonField::Required}}});
 }
 

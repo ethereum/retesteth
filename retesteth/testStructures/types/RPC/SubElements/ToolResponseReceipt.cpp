@@ -12,7 +12,7 @@ ToolResponseReceipt::ToolResponseReceipt(DataObject const& _data)
     m_blockHash = spFH32(new FH32(_data.atKey("blockHash")));
     m_trGasUsed = spVALUE(new VALUE(_data.atKey("gasUsed")));
 
-    requireJsonFields(_data, "ToolResponseReceipt " + _data.getKey(),
+    REQUIRE_JSONFIELDS(_data, "ToolResponseReceipt " + _data.getKey(),
         {{"type", {{DataType::String}, jsonField::Optional}},
          {"root", {{DataType::String}, jsonField::Required}},
          {"status", {{DataType::String}, jsonField::Required}},
