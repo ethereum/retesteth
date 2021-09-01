@@ -10,6 +10,38 @@ BlockchainTestFillerUncle::BlockchainTestFillerUncle(DataObject const& _data)
 {
     try
     {
+        REQUIRE_JSONFIELDS(_data, "BlockchainTestFillerUncle " + _data.getKey(),
+            {{"populateFromBlock", {{DataType::String}, jsonField::Optional}},
+                {"sameAsPreviousBlockUncle", {{DataType::String}, jsonField::Optional}},
+                {"sameAsBlock", {{DataType::String}, jsonField::Optional}},
+                {"sameAsPreviousSibling", {{DataType::String}, jsonField::Optional}},
+                {"RelTimestampFromPopulateBlock", {{DataType::String}, jsonField::Optional}},
+                {"chainname", {{DataType::String}, jsonField::Optional}},
+                {"bloom", {{DataType::String}, jsonField::Optional}},
+                //{"logsBloom", {{DataType::String}, jsonField::Optional}},
+                {"coinbase", {{DataType::String}, jsonField::Optional}},
+                //{"author", {{DataType::String}, jsonField::Optional}},
+                //{"miner", {{DataType::String}, jsonField::Optional}},
+                {"difficulty", {{DataType::String}, jsonField::Optional}},
+                {"extraData", {{DataType::String}, jsonField::Optional}},
+                {"gasLimit", {{DataType::String}, jsonField::Optional}},
+                {"gasUsed", {{DataType::String}, jsonField::Optional}},
+                {"hash", {{DataType::String}, jsonField::Optional}},
+                {"mixHash", {{DataType::String}, jsonField::Optional}},
+                {"nonce", {{DataType::String}, jsonField::Optional}},
+                {"number", {{DataType::String}, jsonField::Optional}},
+                {"parentHash", {{DataType::String}, jsonField::Optional}},
+                {"receiptTrie", {{DataType::String}, jsonField::Optional}},
+                //{"receiptsRoot", {{DataType::String}, jsonField::Optional}},
+                {"stateRoot", {{DataType::String}, jsonField::Optional}},
+                {"timestamp", {{DataType::String}, jsonField::Optional}},
+                {"transactionsTrie", {{DataType::String}, jsonField::Optional}},
+                {"remove", {{DataType::Array}, jsonField::Optional}},
+                {"baseFeePerGas", {{DataType::String}, jsonField::Optional}},
+                //{"transactionsRoot", {{DataType::String}, jsonField::Optional}},
+                //{"sha3Uncles", {{DataType::String}, jsonField::Optional}},
+                {"uncleHash", {{DataType::String}, jsonField::Optional}}});
+
         if (_data.count("populateFromBlock"))
         {
             // Indicates that uncle will be generated from the blocknumber `populateFromBlock`
@@ -63,38 +95,6 @@ BlockchainTestFillerUncle::BlockchainTestFillerUncle(DataObject const& _data)
 
         if (tmpD.getSubObjects().size() > 0)
             m_headerIncomplete = spBlockHeaderIncomplete(new BlockHeaderIncomplete(tmpD));
-
-        REQUIRE_JSONFIELDS(_data, "BlockchainTestFillerUncle " + _data.getKey(),
-            {{"populateFromBlock", {{DataType::String}, jsonField::Optional}},
-                {"sameAsPreviousBlockUncle", {{DataType::String}, jsonField::Optional}},
-                {"sameAsBlock", {{DataType::String}, jsonField::Optional}},
-                {"sameAsPreviousSibling", {{DataType::String}, jsonField::Optional}},
-                {"RelTimestampFromPopulateBlock", {{DataType::String}, jsonField::Optional}},
-                {"chainname", {{DataType::String}, jsonField::Optional}},
-                {"bloom", {{DataType::String}, jsonField::Optional}},
-                //{"logsBloom", {{DataType::String}, jsonField::Optional}},
-                {"coinbase", {{DataType::String}, jsonField::Optional}},
-                //{"author", {{DataType::String}, jsonField::Optional}},
-                //{"miner", {{DataType::String}, jsonField::Optional}},
-                {"difficulty", {{DataType::String}, jsonField::Optional}},
-                {"extraData", {{DataType::String}, jsonField::Optional}},
-                {"gasLimit", {{DataType::String}, jsonField::Optional}},
-                {"gasUsed", {{DataType::String}, jsonField::Optional}},
-                {"hash", {{DataType::String}, jsonField::Optional}},
-                {"mixHash", {{DataType::String}, jsonField::Optional}},
-                {"nonce", {{DataType::String}, jsonField::Optional}},
-                {"number", {{DataType::String}, jsonField::Optional}},
-                {"parentHash", {{DataType::String}, jsonField::Optional}},
-                {"receiptTrie", {{DataType::String}, jsonField::Optional}},
-                //{"receiptsRoot", {{DataType::String}, jsonField::Optional}},
-                {"stateRoot", {{DataType::String}, jsonField::Optional}},
-                {"timestamp", {{DataType::String}, jsonField::Optional}},
-                {"transactionsTrie", {{DataType::String}, jsonField::Optional}},
-                {"remove", {{DataType::Array}, jsonField::Optional}},
-                {"baseFeePerGas", {{DataType::String}, jsonField::Optional}},
-                //{"transactionsRoot", {{DataType::String}, jsonField::Optional}},
-                //{"sha3Uncles", {{DataType::String}, jsonField::Optional}},
-                {"uncleHash", {{DataType::String}, jsonField::Optional}}});
     }
     catch (std::exception const& _ex)
     {

@@ -25,34 +25,6 @@ void TransactionBaseFee::fromDataObject(DataObject const& _data)
     m_secretKey = spVALUE(new VALUE(0));
     try
     {
-        m_accessList = spAccessList(new AccessList(_data.atKey("accessList")));
-        m_maxFeePerGas = spVALUE(new VALUE(_data.atKey("maxFeePerGas")));
-        m_maxPriorityFeePerGas = spVALUE(new VALUE(_data.atKey("maxPriorityFeePerGas")));
-
-        m_data = spBYTES(new BYTES(_data.atKey("data")));
-        m_gasLimit = spVALUE(new VALUE(_data.atKey("gasLimit")));
-        m_nonce = spVALUE(new VALUE(_data.atKey("nonce")));
-        m_value = spVALUE(new VALUE(_data.atKey("value")));
-
-        if (_data.atKey("to").type() == DataType::Null || _data.atKey("to").asString().empty())
-            m_creation = true;
-        else
-        {
-            m_creation = false;
-            m_to = spFH20(new FH20(_data.atKey("to")));
-        }
-
-        if (_data.count("secretKey"))
-            buildVRS(_data.atKey("secretKey"));
-        else
-        {
-            m_v = spVALUE(new VALUE(_data.atKey("v")));
-            if (m_v.getCContent() > dev::bigint("0xff"))
-                throw test::UpwardsException("Incorrect transaction `v` value: " + m_v->asString());
-            m_r = spVALUE(new VALUE(_data.atKey("r")));
-            m_s = spVALUE(new VALUE(_data.atKey("s")));
-            rebuildRLP();
-        }
         REQUIRE_JSONFIELDS(_data, "TransactionBaseFee " + _data.getKey(),
             {
                 {"data", {{DataType::String}, jsonField::Required}},
@@ -84,6 +56,35 @@ void TransactionBaseFee::fromDataObject(DataObject const& _data)
                 {"transactionIndex", {{DataType::String}, jsonField::Optional}},  // EthGetBlockBy transaction
                 {"expectException", {{DataType::Object}, jsonField::Optional}}    // BlockchainTest filling
             });
+
+        m_accessList = spAccessList(new AccessList(_data.atKey("accessList")));
+        m_maxFeePerGas = spVALUE(new VALUE(_data.atKey("maxFeePerGas")));
+        m_maxPriorityFeePerGas = spVALUE(new VALUE(_data.atKey("maxPriorityFeePerGas")));
+
+        m_data = spBYTES(new BYTES(_data.atKey("data")));
+        m_gasLimit = spVALUE(new VALUE(_data.atKey("gasLimit")));
+        m_nonce = spVALUE(new VALUE(_data.atKey("nonce")));
+        m_value = spVALUE(new VALUE(_data.atKey("value")));
+
+        if (_data.atKey("to").type() == DataType::Null || _data.atKey("to").asString().empty())
+            m_creation = true;
+        else
+        {
+            m_creation = false;
+            m_to = spFH20(new FH20(_data.atKey("to")));
+        }
+
+        if (_data.count("secretKey"))
+            buildVRS(_data.atKey("secretKey"));
+        else
+        {
+            m_v = spVALUE(new VALUE(_data.atKey("v")));
+            if (m_v.getCContent() > dev::bigint("0xff"))
+                throw test::UpwardsException("Incorrect transaction `v` value: " + m_v->asString());
+            m_r = spVALUE(new VALUE(_data.atKey("r")));
+            m_s = spVALUE(new VALUE(_data.atKey("s")));
+            rebuildRLP();
+        }
     }
     catch (std::exception const& _ex)
     {

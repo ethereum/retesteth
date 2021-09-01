@@ -10,6 +10,38 @@ StateTestTransaction::StateTestTransaction(DataObject const& _data)
 {
     try
     {
+        if (_data.count("maxFeePerGas") || _data.count("maxPriorityFeePerGas"))
+        {
+            REQUIRE_JSONFIELDS(_data, "StateTestTransaction " + _data.getKey(),
+                {{"data", {{DataType::Array}, jsonField::Required}},
+                    {"accessLists", {{DataType::Array}, jsonField::Required}},
+                    {"gasLimit", {{DataType::Array}, jsonField::Required}},
+                    {"nonce", {{DataType::String}, jsonField::Required}},
+                    {"value", {{DataType::Array}, jsonField::Required}},
+                    {"to", {{DataType::String}, jsonField::Required}},
+                    {"maxFeePerGas", {{DataType::String}, jsonField::Required}},
+                    {"maxPriorityFeePerGas", {{DataType::String}, jsonField::Required}},
+                    {"secretKey", {{DataType::String}, jsonField::Required}}});
+            // EIP 1559 style transaction
+            m_maxFeePerGas = spVALUE(new VALUE(_data.atKey("maxFeePerGas")));
+            m_maxPriorityFeePerGas = spVALUE(new VALUE(_data.atKey("maxPriorityFeePerGas")));
+
+        }
+        else
+        {
+            REQUIRE_JSONFIELDS(_data, "StateTestTransaction " + _data.getKey(),
+                {{"data", {{DataType::Array}, jsonField::Required}},
+                    {"accessLists", {{DataType::Array}, jsonField::Optional}},
+                    {"gasLimit", {{DataType::Array}, jsonField::Required}},
+                    {"gasPrice", {{DataType::String}, jsonField::Required}},
+                    {"nonce", {{DataType::String}, jsonField::Required}},
+                    {"value", {{DataType::Array}, jsonField::Required}},
+                    {"to", {{DataType::String}, jsonField::Required}},
+                    {"secretKey", {{DataType::String}, jsonField::Required}}});
+            // Legacy and access list style transaction
+            m_gasPrice = spVALUE(new VALUE(_data.atKey("gasPrice")));
+        }
+
         if (_data.atKey("to").asString().empty())
             m_creation = true;
         else
@@ -57,37 +89,6 @@ StateTestTransaction::StateTestTransaction(DataObject const& _data)
             m_gasLimit.push_back(el.getCContent());
         for (auto const& el : _data.atKey("value").getSubObjects())
             m_value.push_back(el.getCContent());
-
-        if (_data.count("maxFeePerGas") || _data.count("maxPriorityFeePerGas"))
-        {
-            // EIP 1559 style transaction
-            m_maxFeePerGas = spVALUE(new VALUE(_data.atKey("maxFeePerGas")));
-            m_maxPriorityFeePerGas = spVALUE(new VALUE(_data.atKey("maxPriorityFeePerGas")));
-            REQUIRE_JSONFIELDS(_data, "StateTestTransaction " + _data.getKey(),
-                {{"data", {{DataType::Array}, jsonField::Required}},
-                 {"accessLists", {{DataType::Array}, jsonField::Required}},
-                 {"gasLimit", {{DataType::Array}, jsonField::Required}},
-                 {"nonce", {{DataType::String}, jsonField::Required}},
-                 {"value", {{DataType::Array}, jsonField::Required}},
-                 {"to", {{DataType::String}, jsonField::Required}},
-                 {"maxFeePerGas", {{DataType::String}, jsonField::Required}},
-                 {"maxPriorityFeePerGas", {{DataType::String}, jsonField::Required}},
-                 {"secretKey", {{DataType::String}, jsonField::Required}}});
-        }
-        else
-        {
-            // Legacy and access list style transaction
-            m_gasPrice = spVALUE(new VALUE(_data.atKey("gasPrice")));
-            REQUIRE_JSONFIELDS(_data, "StateTestTransaction " + _data.getKey(),
-                {{"data", {{DataType::Array}, jsonField::Required}},
-                 {"accessLists", {{DataType::Array}, jsonField::Optional}},
-                 {"gasLimit", {{DataType::Array}, jsonField::Required}},
-                 {"gasPrice", {{DataType::String}, jsonField::Required}},
-                 {"nonce", {{DataType::String}, jsonField::Required}},
-                 {"value", {{DataType::Array}, jsonField::Required}},
-                 {"to", {{DataType::String}, jsonField::Required}},
-                 {"secretKey", {{DataType::String}, jsonField::Required}}});
-        }
     }
     catch (std::exception const& _ex)
     {

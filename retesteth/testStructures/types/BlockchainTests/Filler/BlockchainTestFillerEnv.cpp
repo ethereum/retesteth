@@ -12,6 +12,32 @@ BlockchainTestFillerEnv::BlockchainTestFillerEnv(spDataObjectMove _data, SealEng
     {
         m_raw = _data.getPointer();
 
+        // Allowed fields for this structure
+        REQUIRE_JSONFIELDS(m_raw, "GenesisBlockHeader(BlockchainTestFillerEnv) " + m_raw->getKey(),
+            {{"bloom", {{DataType::String}, jsonField::Optional}},
+                {"logsBloom", {{DataType::String}, jsonField::Optional}},
+                {"coinbase", {{DataType::String}, jsonField::Optional}},
+                {"author", {{DataType::String}, jsonField::Optional}},
+                {"miner", {{DataType::String}, jsonField::Optional}},
+                {"difficulty", {{DataType::String}, jsonField::Required}},
+                {"extraData", {{DataType::String}, jsonField::Required}},
+                {"gasLimit", {{DataType::String}, jsonField::Required}},
+                {"baseFeePerGas", {{DataType::String}, jsonField::Optional}},
+                {"gasUsed", {{DataType::String}, jsonField::Required}},
+                {"hash", {{DataType::String}, jsonField::Optional}},
+                {"mixHash", {{DataType::String}, jsonField::Optional}},
+                {"nonce", {{DataType::String}, jsonField::Optional}},
+                {"number", {{DataType::String}, jsonField::Required}},
+                {"parentHash", {{DataType::String}, jsonField::Required}},
+                {"receiptTrie", {{DataType::String}, jsonField::Optional}},
+                {"receiptsRoot", {{DataType::String}, jsonField::Optional}},
+                {"stateRoot", {{DataType::String}, jsonField::Required}},
+                {"timestamp", {{DataType::String}, jsonField::Required}},
+                {"transactionsTrie", {{DataType::String}, jsonField::Optional}},
+                {"transactionsRoot", {{DataType::String}, jsonField::Optional}},
+                {"sha3Uncles", {{DataType::String}, jsonField::Optional}},
+                {"uncleHash", {{DataType::String}, jsonField::Optional}}});
+
         (*m_raw).atKeyUnsafe("coinbase").performModifier(mod_valueInsertZeroXPrefix);
         (*m_raw).atKeyUnsafe("difficulty").performModifier(mod_valueToCompactEvenHexPrefixed);
         (*m_raw).atKeyUnsafe("gasLimit").performModifier(mod_valueToCompactEvenHexPrefixed);
@@ -48,33 +74,6 @@ BlockchainTestFillerEnv::BlockchainTestFillerEnv(spDataObjectMove _data, SealEng
             m_currentNonce = spFH8(new FH8(m_raw->atKey("nonce")));
             m_currentMixHash = spFH32(new FH32(m_raw->atKey("mixHash")));
         }
-
-        // Allowed fields for this structure
-        REQUIRE_JSONFIELDS(m_raw, "GenesisBlockHeader(BlockchainTestFillerEnv) " + m_raw->getKey(),
-            {{"bloom", {{DataType::String}, jsonField::Optional}},
-             {"logsBloom", {{DataType::String}, jsonField::Optional}},
-             {"coinbase", {{DataType::String}, jsonField::Optional}},
-             {"author", {{DataType::String}, jsonField::Optional}},
-             {"miner", {{DataType::String}, jsonField::Optional}},
-             {"difficulty", {{DataType::String}, jsonField::Required}},
-             {"extraData", {{DataType::String}, jsonField::Required}},
-             {"gasLimit", {{DataType::String}, jsonField::Required}},
-             {"baseFeePerGas", {{DataType::String}, jsonField::Optional}},
-             {"gasUsed", {{DataType::String}, jsonField::Required}},
-             {"hash", {{DataType::String}, jsonField::Optional}},
-             {"mixHash", {{DataType::String}, jsonField::Optional}},
-             {"nonce", {{DataType::String}, jsonField::Optional}},
-             {"number", {{DataType::String}, jsonField::Required}},
-             {"parentHash", {{DataType::String}, jsonField::Required}},
-             {"receiptTrie", {{DataType::String}, jsonField::Optional}},
-             {"receiptsRoot", {{DataType::String}, jsonField::Optional}},
-             {"stateRoot", {{DataType::String}, jsonField::Required}},
-             {"timestamp", {{DataType::String}, jsonField::Required}},
-             {"transactionsTrie", {{DataType::String}, jsonField::Optional}},
-             {"transactionsRoot", {{DataType::String}, jsonField::Optional}},
-             {"sha3Uncles", {{DataType::String}, jsonField::Optional}},
-             {"uncleHash", {{DataType::String}, jsonField::Optional}}
-                          });
 
         // Format the env to RPC format
         spDataObject out(new DataObject());

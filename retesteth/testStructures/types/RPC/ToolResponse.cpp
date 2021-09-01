@@ -8,6 +8,16 @@ namespace teststruct
 {
 ToolResponse::ToolResponse(DataObject const& _data)
 {
+    REQUIRE_JSONFIELDS(_data, "ToolResponse " + _data.getKey(),
+        {{"stateRoot", {{DataType::String}, jsonField::Required}},
+            {"txRoot", {{DataType::String}, jsonField::Required}},
+            {"receiptRoot", {{DataType::String}, jsonField::Required}},
+            {"logsHash", {{DataType::String}, jsonField::Required}},
+            {"logsBloom", {{DataType::String}, jsonField::Required}},
+            {"currentDifficulty", {{DataType::String}, jsonField::Required}},
+            {"rejected", {{DataType::Array}, jsonField::Optional}},
+            {"receipts", {{DataType::Array}, jsonField::Required}}});
+
     m_stateRoot = spFH32(new FH32(_data.atKey("stateRoot")));
     m_txRoot = spFH32(new FH32(_data.atKey("txRoot")));
     m_receiptRoot = spFH32(new FH32(_data.atKey("receiptRoot")));
@@ -22,16 +32,6 @@ ToolResponse::ToolResponse(DataObject const& _data)
         for (auto const& el : _data.atKey("rejected").getSubObjects())
             m_rejectedTransactions.push_back(ToolResponseRejected(el));
     }
-
-    REQUIRE_JSONFIELDS(_data, "ToolResponse " + _data.getKey(),
-        {{"stateRoot", {{DataType::String}, jsonField::Required}},
-         {"txRoot", {{DataType::String}, jsonField::Required}},
-         {"receiptRoot", {{DataType::String}, jsonField::Required}},
-         {"logsHash", {{DataType::String}, jsonField::Required}},
-         {"logsBloom", {{DataType::String}, jsonField::Required}},
-         {"currentDifficulty", {{DataType::String}, jsonField::Required}},
-         {"rejected", {{DataType::Array}, jsonField::Optional}},
-         {"receipts", {{DataType::Array}, jsonField::Required}}});
 }
 
 

@@ -22,6 +22,18 @@ ClientConfigFile::ClientConfigFile(fs::path const& _clientConfigPath)
 
 void ClientConfigFile::initWithData(DataObject const& _data)
 {
+    // Limit sections in the file
+    REQUIRE_JSONFIELDS(_data, "ClientConfigFile " + _data.getKey(),
+        {{"name", {{DataType::String}, jsonField::Required}},
+            {"socketType", {{DataType::String}, jsonField::Required}},
+            {"socketAddress", {{DataType::String, DataType::Array}, jsonField::Required}},
+            {"initializeTime", {{DataType::String}, jsonField::Optional}},
+            {"checkLogsHash", {{DataType::Bool}, jsonField::Optional}},
+            {"forks", {{DataType::Array}, jsonField::Required}},
+            {"additionalForks", {{DataType::Array}, jsonField::Required}},
+            {"exceptions", {{DataType::Object}, jsonField::Required}},
+            {"fieldReplace", {{DataType::Object}, jsonField::Optional}}});
+
     string const sErrorPath = "ClientConfig (" + m_configFilePath.string() + ") ";
     m_name = _data.atKey("name").asString();
 
@@ -140,19 +152,6 @@ void ClientConfigFile::initWithData(DataObject const& _data)
             m_fieldRaplce[el->getKey()] = el->asString();
         }
     }
-
-    // Limit sections in the file
-    REQUIRE_JSONFIELDS(_data, "ClientConfigFile " + _data.getKey(),
-        {{"name", {{DataType::String}, jsonField::Required}},
-         {"socketType", {{DataType::String}, jsonField::Required}},
-         {"socketAddress", {{DataType::String, DataType::Array}, jsonField::Required}},
-         {"initializeTime", {{DataType::String}, jsonField::Optional}},
-         {"checkLogsHash", {{DataType::Bool}, jsonField::Optional}},
-         {"forks", {{DataType::Array}, jsonField::Required}},
-         {"additionalForks", {{DataType::Array}, jsonField::Required}},
-         {"exceptions", {{DataType::Object}, jsonField::Required}},
-         {"fieldReplace", {{DataType::Object}, jsonField::Optional}}
-                      });
 }
 
 std::vector<IPADDRESS> const& ClientConfigFile::socketAdresses() const

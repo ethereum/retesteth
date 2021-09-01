@@ -11,6 +11,11 @@ namespace teststruct
 TestRawTransaction::TestRawTransaction(DataObject const& _data) :
     MineBlocksResult(_data)
 {
+    REQUIRE_JSONFIELDS(_data, "test_rawTransaction::TestRawTransaction",
+        {{"result", {{DataType::Bool, DataType::Integer}, jsonField::Required}},
+            {"rejectedTransactions", {{DataType::Array}, jsonField::Optional}},
+            {"acceptedTransactions", {{DataType::Array}, jsonField::Optional}}});
+
     if (_data.count("rejectedTransactions"))
     {
         ETH_ERROR_REQUIRE_MESSAGE(_data.atKey("rejectedTransactions").getSubObjects().size() == 1,
@@ -32,13 +37,6 @@ TestRawTransaction::TestRawTransaction(DataObject const& _data) :
     {
         ETH_ERROR_MESSAGE("test_rawTransaction no `acceptedTransactions` nor `rejectedTransactions` is defined!");
     }
-
-    REQUIRE_JSONFIELDS(_data, "test_rawTransaction::TestRawTransaction",
-        {{"result", {{DataType::Bool, DataType::Integer}, jsonField::Required}},
-         {"rejectedTransactions", {{DataType::Array}, jsonField::Optional}},
-         {"acceptedTransactions", {{DataType::Array}, jsonField::Optional}}
-        });
-
 }
 
 string const& TestRawTransaction::error() const

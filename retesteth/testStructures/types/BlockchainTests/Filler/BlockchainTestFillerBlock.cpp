@@ -13,6 +13,17 @@ BlockchainTestFillerBlock::BlockchainTestFillerBlock(spDataObject& _data, NonceM
 {
     try
     {
+        REQUIRE_JSONFIELDS(_data, "BlockchainTestFillerBlock " + _data->getKey(),
+            {{"rlp", {{DataType::String}, jsonField::Optional}},
+                {"chainname", {{DataType::String}, jsonField::Optional}},
+                {"donotimportonclient", {{DataType::String}, jsonField::Optional}},
+                {"blocknumber", {{DataType::String}, jsonField::Optional}},
+                {"chainnetwork", {{DataType::String}, jsonField::Optional}},
+                {"transactions", {{DataType::Array}, jsonField::Optional}},
+                {"uncleHeaders", {{DataType::Array}, jsonField::Optional}},
+                {"expectException", {{DataType::Object}, jsonField::Optional}},
+                {"blockHeader", {{DataType::Object}, jsonField::Optional}}});
+
         if (_data->count("rlp"))
         {
             m_rlp = spBYTES(new BYTES(_data->atKey("rlp")));
@@ -73,17 +84,6 @@ BlockchainTestFillerBlock::BlockchainTestFillerBlock(spDataObject& _data, NonceM
                     m_overwriteHeaderByForkMap.emplace(el, overwrite);
             }
         }
-
-        REQUIRE_JSONFIELDS(_data, "BlockchainTestFillerBlock " + _data->getKey(),
-            {{"rlp", {{DataType::String}, jsonField::Optional}},
-                {"chainname", {{DataType::String}, jsonField::Optional}},
-                {"donotimportonclient", {{DataType::String}, jsonField::Optional}},
-                {"blocknumber", {{DataType::String}, jsonField::Optional}},
-                {"chainnetwork", {{DataType::String}, jsonField::Optional}},
-                {"transactions", {{DataType::Array}, jsonField::Optional}},
-                {"uncleHeaders", {{DataType::Array}, jsonField::Optional}},
-                {"expectException", {{DataType::Object}, jsonField::Optional}},
-                {"blockHeader", {{DataType::Object}, jsonField::Optional}}});
     }
     catch (std::exception const& _ex)
     {

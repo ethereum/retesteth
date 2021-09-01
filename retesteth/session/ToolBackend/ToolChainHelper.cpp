@@ -12,6 +12,14 @@ namespace toolimpl
 {
 ToolParams::ToolParams(DataObject const& _data)
 {
+    REQUIRE_JSONFIELDS(_data, "ToolParams " + _data.getKey(),
+        {{"fork", {{DataType::String}, jsonField::Required}},
+            {"muirGlacierForkBlock", {{DataType::String}, jsonField::Optional}},
+            {"constantinopleForkBlock", {{DataType::String}, jsonField::Optional}},
+            {"byzantiumForkBlock", {{DataType::String}, jsonField::Optional}},
+            {"londonForkBlock", {{DataType::String}, jsonField::Optional}},
+            {"homesteadForkBlock", {{DataType::String}, jsonField::Optional}}});
+
     const bigint unreachable = 10000000000;
     if (_data.count("homesteadForkBlock"))
         m_homesteadForkBlock = spVALUE(new VALUE(_data.atKey("homesteadForkBlock")));
@@ -37,14 +45,6 @@ ToolParams::ToolParams(DataObject const& _data)
         m_londonForkBlock = spVALUE(new VALUE(_data.atKey("londonForkBlock")));
     else
         m_londonForkBlock = spVALUE(new VALUE(unreachable));
-
-    REQUIRE_JSONFIELDS(_data, "ToolParams " + _data.getKey(),
-        {{"fork", {{DataType::String}, jsonField::Required}},
-            {"muirGlacierForkBlock", {{DataType::String}, jsonField::Optional}},
-            {"constantinopleForkBlock", {{DataType::String}, jsonField::Optional}},
-            {"byzantiumForkBlock", {{DataType::String}, jsonField::Optional}},
-            {"londonForkBlock", {{DataType::String}, jsonField::Optional}},
-            {"homesteadForkBlock", {{DataType::String}, jsonField::Optional}}});
 }
 
 // We simulate the client backend side here, so thats why number5 is hardcoded

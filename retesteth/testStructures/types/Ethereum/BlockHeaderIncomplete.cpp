@@ -12,6 +12,26 @@ namespace teststruct
 {
 BlockHeaderIncomplete::BlockHeaderIncomplete(DataObject const& _data)
 {
+    REQUIRE_JSONFIELDS(_data, "BlockHeaderIncomplete " + _data.getKey(),
+        {{"bloom", {{DataType::String}, jsonField::Optional}},
+            {"coinbase", {{DataType::String}, jsonField::Optional}},
+            {"difficulty", {{DataType::String}, jsonField::Optional}},
+            {"extraData", {{DataType::String}, jsonField::Optional}},
+            {"gasLimit", {{DataType::String}, jsonField::Optional}},
+            {"baseFeePerGas", {{DataType::String}, jsonField::Optional}},
+            {"gasUsed", {{DataType::String}, jsonField::Optional}},
+            {"hash", {{DataType::String}, jsonField::Optional}},
+            {"mixHash", {{DataType::String}, jsonField::Optional}},
+            {"nonce", {{DataType::String}, jsonField::Optional}},
+            {"number", {{DataType::String}, jsonField::Optional}},
+            {"parentHash", {{DataType::String}, jsonField::Optional}},
+            {"receiptTrie", {{DataType::String}, jsonField::Optional}},
+            {"stateRoot", {{DataType::String}, jsonField::Optional}},
+            {"timestamp", {{DataType::String}, jsonField::Optional}},
+            {"transactionsTrie", {{DataType::String}, jsonField::Optional}},
+            {"remove", {{DataType::Array}, jsonField::Optional}},
+            {"uncleHash", {{DataType::String}, jsonField::Optional}}});
+
     string const akey = _data.count("author") ? "author" : "coinbase";
     if (_data.count(akey))
         m_author = spFH20(new FH20(_data.atKey(akey)));
@@ -68,25 +88,6 @@ BlockHeaderIncomplete::BlockHeaderIncomplete(DataObject const& _data)
                               !m_receiptsRoot.isEmpty() || !m_sha3Uncles.isEmpty() || !m_stateRoot.isEmpty() ||
                               !m_timestamp.isEmpty() || !m_transactionsRoot.isEmpty() || !m_baseFee.isEmpty();
 
-    REQUIRE_JSONFIELDS(_data, "BlockHeaderIncomplete " + _data.getKey(),
-        {{"bloom", {{DataType::String}, jsonField::Optional}},
-         {"coinbase", {{DataType::String}, jsonField::Optional}},
-         {"difficulty", {{DataType::String}, jsonField::Optional}},
-         {"extraData", {{DataType::String}, jsonField::Optional}},
-         {"gasLimit", {{DataType::String}, jsonField::Optional}},
-         {"baseFeePerGas", {{DataType::String}, jsonField::Optional}},
-         {"gasUsed", {{DataType::String}, jsonField::Optional}},
-         {"hash", {{DataType::String}, jsonField::Optional}},
-         {"mixHash", {{DataType::String}, jsonField::Optional}},
-         {"nonce", {{DataType::String}, jsonField::Optional}},
-         {"number", {{DataType::String}, jsonField::Optional}},
-         {"parentHash", {{DataType::String}, jsonField::Optional}},
-         {"receiptTrie", {{DataType::String}, jsonField::Optional}},
-         {"stateRoot", {{DataType::String}, jsonField::Optional}},
-         {"timestamp", {{DataType::String}, jsonField::Optional}},
-         {"transactionsTrie", {{DataType::String}, jsonField::Optional}},
-         {"remove", {{DataType::Array}, jsonField::Optional}},
-         {"uncleHash", {{DataType::String}, jsonField::Optional}}});
     ETH_ERROR_REQUIRE_MESSAGE(hasAtLeastOneField, "BlockHeaderIncomplete must have at least one field!");
 }
 

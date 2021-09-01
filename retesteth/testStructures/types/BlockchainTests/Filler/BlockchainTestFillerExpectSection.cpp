@@ -13,7 +13,7 @@ BlockchainTestFillerExpectSection::BlockchainTestFillerExpectSection(spDataObjec
     {
         REQUIRE_JSONFIELDS(_data, "BlockchainTestFillerExpectSection " + _data->getKey(),
             {{"network", {{DataType::Array, DataType::String}, jsonField::Required}},
-                {"result", {{DataType::Object}, jsonField::Required}}});
+             {"result", {{DataType::Object}, jsonField::Required}}});
 
         // get allowed networks for this expect section
         std::set<string> forks;

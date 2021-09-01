@@ -10,6 +10,30 @@ StateTestFillerEnv::StateTestFillerEnv(spDataObjectMove _data)
 {
     try
     {
+        if (m_raw->count("currentBaseFee"))
+        {
+            REQUIRE_JSONFIELDS(m_raw, "StateTestFillerEnv " + m_raw->getKey(),
+                {{"currentCoinbase", {{DataType::String}, jsonField::Required}},
+                    {"currentDifficulty", {{DataType::String}, jsonField::Required}},
+                    {"currentGasLimit", {{DataType::String}, jsonField::Required}},
+                    {"currentNumber", {{DataType::String}, jsonField::Required}},
+                    {"currentTimestamp", {{DataType::String}, jsonField::Required}},
+                    {"currentBaseFee", {{DataType::String}, jsonField::Required}},
+                    {"previousHash", {{DataType::String}, jsonField::Required}}});
+        }
+        else
+        {
+            REQUIRE_JSONFIELDS(m_raw, "StateTestFillerEnv " + m_raw->getKey(),
+                {{"currentCoinbase", {{DataType::String}, jsonField::Required}},
+                    {"currentDifficulty", {{DataType::String}, jsonField::Required}},
+                    {"currentGasLimit", {{DataType::String}, jsonField::Required}},
+                    {"currentNumber", {{DataType::String}, jsonField::Required}},
+                    {"currentTimestamp", {{DataType::String}, jsonField::Required}},
+                    {"previousHash", {{DataType::String}, jsonField::Required}}});
+            // legacy env info
+            m_currentBaseFee = spVALUE(0);
+        }
+
         m_raw = _data.getPointer();
 
         (*m_raw).performModifier(mod_valueToCompactEvenHexPrefixed, {"currentCoinbase", "previousHash"});
@@ -37,31 +61,10 @@ StateTestFillerEnv::StateTestFillerEnv(spDataObjectMove _data)
         if (m_currentGasLimit.getCContent() > dev::bigint("0x7fffffffffffffff"))
             throw test::UpwardsException("currentGasLimit > 0x7fffffffffffffff");
 
+        // 1559 env info
         if (m_raw->count("currentBaseFee"))
-        {
-            // 1559 env info
             m_currentBaseFee = spVALUE(new VALUE(m_raw->atKey("currentBaseFee")));
-            REQUIRE_JSONFIELDS(m_raw, "StateTestFillerEnv " + m_raw->getKey(),
-                {{"currentCoinbase", {{DataType::String}, jsonField::Required}},
-                    {"currentDifficulty", {{DataType::String}, jsonField::Required}},
-                    {"currentGasLimit", {{DataType::String}, jsonField::Required}},
-                    {"currentNumber", {{DataType::String}, jsonField::Required}},
-                    {"currentTimestamp", {{DataType::String}, jsonField::Required}},
-                    {"currentBaseFee", {{DataType::String}, jsonField::Required}},
-                    {"previousHash", {{DataType::String}, jsonField::Required}}});
-        }
-        else
-        {
-            // legacy env info
-            m_currentBaseFee = spVALUE(0);
-            REQUIRE_JSONFIELDS(m_raw, "StateTestFillerEnv " + m_raw->getKey(),
-                {{"currentCoinbase", {{DataType::String}, jsonField::Required}},
-                    {"currentDifficulty", {{DataType::String}, jsonField::Required}},
-                    {"currentGasLimit", {{DataType::String}, jsonField::Required}},
-                    {"currentNumber", {{DataType::String}, jsonField::Required}},
-                    {"currentTimestamp", {{DataType::String}, jsonField::Required}},
-                    {"previousHash", {{DataType::String}, jsonField::Required}}});
-        }
+
     }
     catch (std::exception const& _ex)
     {

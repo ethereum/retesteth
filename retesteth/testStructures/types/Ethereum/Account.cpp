@@ -21,6 +21,12 @@ State::Account::Account(FH20 const& _addr, spVALUE& _balance, spVALUE& _nonce, s
 
 State::Account::Account(spDataObject& _data)
 {
+    REQUIRE_JSONFIELDS(_data, "Account " + _data->getKey(),
+        {{"balance", {{DataType::String}, jsonField::Required}},
+            {"code", {{DataType::String}, jsonField::Required}},
+            {"nonce", {{DataType::String}, jsonField::Required}},
+            {"storage", {{DataType::Object}, jsonField::Required}}});
+
     m_rawData = _data;
     m_address = spFH20(new FH20(_data->getKey()));
     m_balance = spVALUE(new VALUE(_data->atKey("balance")));
@@ -29,11 +35,6 @@ State::Account::Account(spDataObject& _data)
     m_storage = spStorage(new Storage(_data->atKey("storage")));
     if (m_nonce.getCContent() > c_maxNonce)
         ETH_ERROR_MESSAGE("Account `" + m_address->asString() + "` requires nonce <= (2**64)-1");
-    REQUIRE_JSONFIELDS(_data, "Account " + _data->getKey(),
-        {{"balance", {{DataType::String}, jsonField::Required}},
-         {"code", {{DataType::String}, jsonField::Required}},
-         {"nonce", {{DataType::String}, jsonField::Required}},
-         {"storage", {{DataType::Object}, jsonField::Required}}});
 }
 
 spDataObject const& State::Account::asDataObject() const

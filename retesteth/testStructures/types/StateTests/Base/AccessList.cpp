@@ -8,13 +8,13 @@ namespace teststruct
 {
 AccessListElement::AccessListElement(DataObject const& _data)
 {
-    m_address = spFH20(new FH20(_data.atKey("address")));
-    for (auto const& el : _data.atKey("storageKeys").getSubObjects())
-        m_storageKeys.push_back(spFH32(new FH32(dev::toCompactHexPrefixed(dev::u256(el->asString()), 32))));
-
     REQUIRE_JSONFIELDS(_data, "AccessListElement " + _data.getKey(),
         {{"address", {{DataType::String}, jsonField::Required}},
          {"storageKeys", {{DataType::Array}, jsonField::Required}}});
+
+    m_address = spFH20(new FH20(_data.atKey("address")));
+    for (auto const& el : _data.atKey("storageKeys").getSubObjects())
+        m_storageKeys.push_back(spFH32(new FH32(dev::toCompactHexPrefixed(dev::u256(el->asString()), 32))));
 }
 
 AccessList::AccessList(DataObject const& _data)

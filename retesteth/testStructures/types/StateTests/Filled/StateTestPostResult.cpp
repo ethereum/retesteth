@@ -7,6 +7,13 @@ namespace teststruct
 {
 StateTestPostResult::StateTestPostResult(DataObject const& _data)
 {
+    REQUIRE_JSONFIELDS(_data, "StateTestPostResult " + _data.getKey(),
+        {{"indexes", {{DataType::Object}, jsonField::Required}},
+            {"hash", {{DataType::String}, jsonField::Required}},
+            {"txbytes", {{DataType::String}, jsonField::Optional}},
+            {"expectException", {{DataType::String}, jsonField::Optional}},
+            {"logs", {{DataType::String}, jsonField::Optional}}});
+
     m_dataInd = _data.atKey("indexes").atKey("data").asInt();
     m_gasInd = _data.atKey("indexes").atKey("gas").asInt();
     m_valInd = _data.atKey("indexes").atKey("value").asInt();
@@ -17,12 +24,6 @@ StateTestPostResult::StateTestPostResult(DataObject const& _data)
         m_txbytes = spBYTES(new BYTES(_data.atKey("txbytes").asString()));
     if (_data.count("expectException"))
         m_expectException = _data.atKey("expectException").asString();
-    REQUIRE_JSONFIELDS(_data, "StateTestPostResult " + _data.getKey(),
-        {{"indexes", {{DataType::Object}, jsonField::Required}},
-         {"hash", {{DataType::String}, jsonField::Required}},
-         {"txbytes", {{DataType::String}, jsonField::Optional}},
-         {"expectException", {{DataType::String}, jsonField::Optional}},
-         {"logs", {{DataType::String}, jsonField::Optional}}});
 }
 
 /// Used solo to print the debug message

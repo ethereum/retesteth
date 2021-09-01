@@ -14,6 +14,11 @@ struct MineBlocksResult
 {
     MineBlocksResult(DataObject const& _data)
     {
+        REQUIRE_JSONFIELDS(_data, "test_mineBlocks::MineBlocksResult",
+            {{"result", {{DataType::Bool, DataType::Integer}, jsonField::Required}},
+                {"rejectedTransactions", {{DataType::Array}, jsonField::Optional}},
+                {"acceptedTransactions", {{DataType::Array}, jsonField::Optional}}});
+
         m_isRejectData = false;
         if (_data.type() == DataType::Bool)
             m_result = _data.asBool();
@@ -30,10 +35,6 @@ struct MineBlocksResult
                     m_rejectedTransactions.emplace(
                         FH32(el->atKey("hash").asString()), el->atKey("error").asString());
             }
-            REQUIRE_JSONFIELDS(_data, "test_mineBlocks::MineBlocksResult",
-                {{"result", {{DataType::Bool, DataType::Integer}, jsonField::Required}},
-                    {"rejectedTransactions", {{DataType::Array}, jsonField::Optional}},
-                    {"acceptedTransactions", {{DataType::Array}, jsonField::Optional}}});
         }
     }
 
