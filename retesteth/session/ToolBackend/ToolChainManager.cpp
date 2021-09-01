@@ -236,7 +236,7 @@ TestRawTransaction ToolChainManager::test_rawTransaction(
     string response = test::executeCmd(cmd, ExecCMDWarning::NoWarning);
     ETH_TEST_MESSAGE("T9N Response:\n" + response);
 
-    string hash = "0x" + dev::toString(dev::sha3(fromHex(_rlp.asString())));
+    string const hash = "0x" + dev::toString(dev::sha3(fromHex(_rlp.asString())));
     spDataObject tr(new DataObject());
     if (response.find("error") != string::npos)
     {

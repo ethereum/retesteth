@@ -28,6 +28,7 @@ string const t8ntool_config = R"({
         "BerlinToLondonAt5"
     ],
     "exceptions" : {
+      "AddressTooShort" : "input string too short for common.Address",
       "InvalidStateRoot" : "",
       "ExtraDataTooBig" : "Error importing raw rlp block: Header extraData > 32 bytes",
       "InvalidDifficulty" : "Invalid difficulty:",

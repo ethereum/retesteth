@@ -2,6 +2,7 @@
 #include "retesteth/testSuites/TestFixtures.h"
 #include <retesteth/TestOutputHelper.h>
 #include <retesteth/session/Session.h>
+#include <retesteth/testStructures/types/TransactionTests/TransactionTest.h>
 #include <retesteth/testStructures/types/TransactionTests/TransactionTestFiller.h>
 #include <retesteth/testSuites/Common.h>
 
@@ -29,16 +30,37 @@ spDataObject FillTest(TransactionTestInFiller const& _test)
         if (_test.getExpectException(el).empty())
         {
             (*result)["hash"] = res.trhash().asString();
-            (*result)["sender"] = res.trhash().asString();
+            (*result)["sender"] = res.sender().asString();
         }
         else
-            (*result)["invalid"] = "1";
-        (*filledTest).addSubObject(result);
+            (*result)["exception"] = _test.getExpectException(el);
+        (*filledTest)["result"].addSubObject(result);
     }
 
-    (*filledTest).atKeyPointer("transaction") = _test.transaction()->asDataObject();
+    (*filledTest)["txbytes"] = _test.transaction()->getRawBytes().asString();
     return filledTest;
 }
+
+void RunTest(TransactionTestInFilled const& _test)
+{
+    TestOutputHelper::get().setCurrentTestName(_test.testName());
+    SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
+    for (auto const& el : Options::getCurrentConfig().cfgFile().forks())
+    {
+        TestRawTransaction res = session.test_rawTransaction(_test.rlp(), el);
+        compareTransactionException(_test.transaction(), res, _test.getExpectException(el));
+        if (_test.getExpectException(el).empty())
+        {
+            spFH32 remoteHash = std::get<0>(_test.getAcceptedTransaction(el));
+            spFH20 remoteSender = std::get<1>(_test.getAcceptedTransaction(el));
+            ETH_ERROR_REQUIRE_MESSAGE(res.trhash() == remoteHash.getCContent(),
+                "Remote trHash != test trHash! (`" + res.trhash().asString() + "` != `" + remoteHash->asString());
+            ETH_ERROR_REQUIRE_MESSAGE(res.sender() == remoteSender.getCContent(),
+                "Remote sender != test sender! (`" + res.sender().asString() + "` != `" + remoteSender->asString());
+        }
+    }
+}
+
 }  // namespace
 
 namespace test
@@ -53,16 +75,24 @@ spDataObject TransactionTestSuite::doTests(spDataObject& _input, TestSuiteOption
         TransactionTestFiller filler(_input);
 
         for (auto const& test : filler.tests())
+        {
             (*filledTest).addSubObject(test.testName(), FillTest(test));
-
-        TestOutputHelper::get().registerTestRunSuccess();
+            TestOutputHelper::get().registerTestRunSuccess();
+        }
         return filledTest;
     }
     else
     {
+        TransactionTest filledTest(_input);
         // Just check the test structure if running with --checkhash
         if (Options::get().checkhash)
             return spDataObject(new DataObject());
+
+        for (auto const& test : filledTest.tests())
+        {
+            RunTest(test);
+            TestOutputHelper::get().registerTestRunSuccess();
+        }
     }
 
     return spDataObject(new DataObject());

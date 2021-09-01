@@ -32,8 +32,8 @@ struct MineBlocksResult
             }
             requireJsonFields(_data, "test_mineBlocks::MineBlocksResult",
                 {{"result", {{DataType::Bool, DataType::Integer}, jsonField::Required}},
-                 {"rejectedTransactions", {{DataType::Array}, jsonField::Optional}}
-                });
+                    {"rejectedTransactions", {{DataType::Array}, jsonField::Optional}},
+                    {"acceptedTransactions", {{DataType::Array}, jsonField::Optional}}});
         }
     }
 

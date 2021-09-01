@@ -18,7 +18,7 @@ TransactionTestFiller::TransactionTestFiller(spDataObject& _data)
             TestOutputHelper::get().get().testFile().string() + " A test file must contain at least one test!");
         for (auto& el : _data.getContent().getSubObjectsUnsafe())
         {
-            TestOutputHelper::get().setCurrentTestInfo(TestInfo("GeneralStateTestFiller", el->getKey()));
+            TestOutputHelper::get().setCurrentTestInfo(TestInfo("TransactionTestFiller", el->getKey()));
             m_tests.push_back(TransactionTestInFiller(el));
         }
     }
@@ -39,6 +39,7 @@ TransactionTestInFiller::TransactionTestInFiller(spDataObject& _data)
              {"expectException", {{DataType::Object}, jsonField::Required}},
              {"transaction", {{DataType::Object}, jsonField::Required}}});
 
+        m_name = _data->getKey();
         if (_data->count("_info"))
             m_info = GCP_SPointer<InfoIncomplete>(new InfoIncomplete(MOVE(_data, "_info")));
 
