@@ -14,7 +14,7 @@ HunterGate(
 	LOCAL
 )
 
-project(retesteth VERSION 0.1.3)
+project(retesteth VERSION 0.2.0)
 set(VERSION_SUFFIX "memory")
 
 set(Boost_USE_STATIC_LIBS ON)
