@@ -298,8 +298,10 @@ void joinThreads(vector<thread>& _threadVector, bool _all)
             else if (status == RPCSession::NotExist && ExitHandler::receivedExitSignal())
                 return;
         }
-        // TIME CONSUMING WITH THREADS, UNCOMMENT THIS TO GET PROPER PROFILER READINGS ??
-        std::this_thread::sleep_for(100ms);
+
+        // The session availability check is time consuming. Let other threads to work
+        if (Options::get().threadCount > 1)
+            std::this_thread::sleep_for(50ms);
     }
 }
 }
