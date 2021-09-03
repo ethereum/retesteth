@@ -14,16 +14,16 @@ struct MineBlocksResult
 {
     MineBlocksResult(DataObject const& _data)
     {
-        REQUIRE_JSONFIELDS(_data, "test_mineBlocks::MineBlocksResult",
-            {{"result", {{DataType::Bool, DataType::Integer}, jsonField::Required}},
-                {"rejectedTransactions", {{DataType::Array}, jsonField::Optional}},
-                {"acceptedTransactions", {{DataType::Array}, jsonField::Optional}}});
-
         m_isRejectData = false;
         if (_data.type() == DataType::Bool)
             m_result = _data.asBool();
         else
         {
+            REQUIRE_JSONFIELDS(_data, "test_mineBlocks::MineBlocksResult",
+                {{"result", {{DataType::Bool, DataType::Integer}, jsonField::Required}},
+                    {"rejectedTransactions", {{DataType::Array}, jsonField::Optional}},
+                    {"acceptedTransactions", {{DataType::Array}, jsonField::Optional}}});
+
             if (_data.atKey("result").type() == DataType::Bool)
                 m_result = _data.atKey("result").asBool();
             else

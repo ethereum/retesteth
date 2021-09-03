@@ -10,6 +10,7 @@ StateTestFillerEnv::StateTestFillerEnv(spDataObjectMove _data)
 {
     try
     {
+        m_raw = _data.getPointer();
         if (m_raw->count("currentBaseFee"))
         {
             REQUIRE_JSONFIELDS(m_raw, "StateTestFillerEnv " + m_raw->getKey(),
@@ -33,8 +34,6 @@ StateTestFillerEnv::StateTestFillerEnv(spDataObjectMove _data)
             // legacy env info
             m_currentBaseFee = spVALUE(0);
         }
-
-        m_raw = _data.getPointer();
 
         (*m_raw).performModifier(mod_valueToCompactEvenHexPrefixed, {"currentCoinbase", "previousHash"});
         (*m_raw).atKeyUnsafe("currentCoinbase").performModifier(mod_valueInsertZeroXPrefix);
