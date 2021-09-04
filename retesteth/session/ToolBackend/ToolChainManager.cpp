@@ -4,6 +4,7 @@
 #include <retesteth/EthChecks.h>
 #include <retesteth/TestHelper.h>
 #include <retesteth/testStructures/Common.h>
+#include <retesteth/dataObject/ConvertFile.h>
 using namespace test;
 
 namespace toolimpl
@@ -235,20 +236,20 @@ TestRawTransaction ToolChainManager::test_rawTransaction(
     cmd += " --state.fork " + _fork.asString();
     string response = test::executeCmd(cmd, ExecCMDWarning::NoWarning);
     ETH_TEST_MESSAGE("T9N Response:\n" + response);
+    spDataObject res = dataobject::ConvertJsoncppStringToData(response);
 
     string const hash = "0x" + dev::toString(dev::sha3(fromHex(_rlp.asString())));
     spDataObject tr(new DataObject());
     if (response.find("error") != string::npos)
     {
-        (*tr)["error"] = response;
+        (*tr)["error"] = res->getSubObjects().at(0)->atKey("error").asString();;
         (*tr)["sender"] = FH20::zero().asString();
         (*tr)["hash"] = hash;
         out["rejectedTransactions"].addArrayObject(tr);
     }
     else
     {
-        size_t pos = response.find("0x");
-        (*tr)["sender"] = response.substr(pos);
+        (*tr)["sender"] = res->getSubObjects().at(0)->atKey("address").asString();
         (*tr)["hash"] = hash;
         out["acceptedTransactions"].addArrayObject(tr);
     }
