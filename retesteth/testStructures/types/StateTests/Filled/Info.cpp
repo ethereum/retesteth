@@ -12,7 +12,7 @@ Info::Info(DataObject const& _data)
             {"filling-rpc-server", {{DataType::String}, jsonField::Required}},
             {"filling-tool-version", {{DataType::String}, jsonField::Required}},
             {"lllcversion", {{DataType::String}, jsonField::Required}},
-            {"generatedTestHash", {{DataType::String}, jsonField::Required}},
+            {"generatedTestHash", {{DataType::String}, jsonField::Optional}},
             {"source", {{DataType::String}, jsonField::Required}},
             {"sourceHash", {{DataType::String}, jsonField::Required}},
             {"labels", {{DataType::Object}, jsonField::Optional}}});

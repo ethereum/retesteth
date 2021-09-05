@@ -29,9 +29,9 @@
 #include <retesteth/TestOutputHelper.h>
 #include <retesteth/TestSuite.h>
 #include <retesteth/session/Session.h>
+#include <retesteth/session/ThreadManager.h>
 #include <boost/test/unit_test.hpp>
 #include <string>
-#include <thread>
 
 using namespace std;
 using namespace dev;
@@ -46,27 +46,6 @@ struct TestFileData
     h256 hash;
     bool hashCalculated = true;
 };
-
-size_t getMaxAllowedThreads()
-{
-    // If debugging, already there is an open instance of a client.
-    // Only one thread allowed to connect to it;
-    size_t maxAllowedThreads = Options::get().threadCount;
-    ClientConfig const& currConfig = Options::get().getDynamicOptions().getCurrentConfig();
-    ClientConfgSocketType socType = currConfig.cfgFile().socketType();
-    if (socType == ClientConfgSocketType::IPCDebug)
-        maxAllowedThreads = 1;
-
-    // If connecting to TCP sockets. Max threads are limited with tcp ports provided
-    if (socType == ClientConfgSocketType::TCP)
-    {
-        maxAllowedThreads = min(maxAllowedThreads, currConfig.cfgFile().socketAdresses().size());
-        if (maxAllowedThreads != Options::get().threadCount)
-            ETH_WARNING(
-                "Correct -j option to `" + test::fto_string(maxAllowedThreads) + "` (or provide socket ports in config)!");
-    }
-    return maxAllowedThreads;
-}
 
 TestFileData readTestFile(fs::path const& _testFileName)
 {
@@ -282,51 +261,6 @@ void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
         {
             continue;
         }
-    }
-}
-
-void joinThreads(vector<thread>& _threadVector, bool _all)
-{
-    if (_all)
-    {
-        for (auto& th : _threadVector)
-        {
-            thread::id const id = th.get_id();
-            th.join();
-            // A thread with exception thrown still being joined here!
-            RPCSession::sessionEnd(id, RPCSession::SessionStatus::Available);
-        }
-        _threadVector.clear();
-        if (ExitHandler::receivedExitSignal())
-        {
-            // if one of the tests threads failed with fatal exception
-            // stop retesteth execution
-            ExitHandler::doExit();
-        }
-        return;  // otherwise continue test execution
-    }
-
-    bool finished = false;
-    while (!finished)
-    {
-        for (vector<thread>::iterator it = _threadVector.begin(); it != _threadVector.end(); it++)
-        {
-            auto status = RPCSession::sessionStatus((*it).get_id());
-            if (status == RPCSession::HasFinished)
-            {
-                thread::id const id = (*it).get_id();
-                (*it).join();
-                RPCSession::sessionEnd(id, RPCSession::SessionStatus::Available);
-                _threadVector.erase(it);
-                return;
-            }
-            else if (status == RPCSession::NotExist && ExitHandler::receivedExitSignal())
-                return;
-        }
-
-        // The session availability check is time consuming. Let other threads to work
-        if (Options::get().threadCount > 1)
-            std::this_thread::sleep_for(50ms);
     }
 }
 }
@@ -577,9 +511,6 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
     auto thisPart = [this, &files, &_testFolder]() {
         auto& testOutput = test::TestOutputHelper::get();
 
-        vector<thread> threadVector;
-        size_t maxAllowedThreads = getMaxAllowedThreads();
-
         if (RPCSession::isRunningTooLong() || TestChecker::isTimeConsumingTest(_testFolder.c_str()))
             RPCSession::restartScripts(true);
 
@@ -595,15 +526,13 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
             }
 
             testOutput.showProgress();
-            if (threadVector.size() == maxAllowedThreads)
-                joinThreads(threadVector, false);
-
             if (ExitHandler::receivedExitSignal())
                 break;
+
             thread testThread(&TestSuite::executeTest, this, _testFolder, file);
-            threadVector.push_back(std::move(testThread));
+            ThreadManager::addTask(std::move(testThread));
         }
-        joinThreads(threadVector, true);
+        ThreadManager::joinThreads();
         testOutput.finishTest();
     };
     runFunctionForAllClients(thisPart);
