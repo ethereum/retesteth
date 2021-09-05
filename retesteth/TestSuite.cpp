@@ -506,7 +506,6 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
         ETH_WARNING(_testFolder + " no tests detected in folder!");
     }
 
-
     // repeat this part for all connected clients
     auto thisPart = [this, &files, &_testFolder]() {
         auto& testOutput = test::TestOutputHelper::get();
@@ -526,13 +525,15 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
             }
 
             testOutput.showProgress();
-            if (ExitHandler::receivedExitSignal())
-                break;
 
-            thread testThread(&TestSuite::executeTest, this, _testFolder, file);
-            ThreadManager::addTask(std::move(testThread));
+
+            auto threadJob = [this, &_testFolder, &file]() {
+                executeTest(_testFolder, file);
+            };
+            //thread testThread(&TestSuite::executeTest, this, _testFolder, file);
+            ThreadManager::get().addTask(threadJob);
         }
-        ThreadManager::joinThreads();
+        ThreadManager::get().joinThreads();
         testOutput.finishTest();
     };
     runFunctionForAllClients(thisPart);

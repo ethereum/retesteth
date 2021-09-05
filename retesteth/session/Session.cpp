@@ -243,6 +243,28 @@ void RPCSession::restartScripts(bool _stop)
     }
 }
 
+void RPCSession::sessionPrint()
+{
+    std::lock_guard<std::mutex> lock(g_socketMapMutex);
+    std::cerr << "Session Status " << std::endl;
+    size_t i = 0;
+    for (auto const& el : socketMap)
+    {
+        sessionInfo const& info = el.second;
+        string isUsed;
+        switch (info.isUsed)
+        {
+            case Working : isUsed = "Working"; break;
+            case Available : isUsed = "Available"; break;
+            case HasFinished : isUsed = "HasFinished"; break;
+            case NotExist : isUsed = "NotExist"; break;
+            default: isUsed = "unknown";
+        }
+        std::cerr << i++ << ": " << el.first << " " << isUsed << std::endl;
+    }
+    std::cerr << std::endl;
+}
+
 SessionInterface& RPCSession::instance(thread::id const& _threadID)
 {
     std::lock_guard<std::mutex> lock(g_socketMapMutex);

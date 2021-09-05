@@ -6,6 +6,11 @@
 #include <retesteth/testStructures/Common.h>
 #include <retesteth/testStructures/PrepareChainParams.h>
 #include <retesteth/testSuites/Common.h>
+#include <retesteth/session/ThreadManager.h>
+#include <future>
+#include <mutex>
+mutex g_subs;
+
 namespace test
 {
 
@@ -213,6 +218,7 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
 spDataObject DoTests(spDataObject& _input, TestSuite::TestSuiteOptions& _opt)
 {
     spDataObject tests(new DataObject());
+    size_t allTests = 0;
     if (_opt.doFilling)
     {
         BlockchainTestFiller testFiller(_input);
@@ -271,6 +277,7 @@ spDataObject DoTests(spDataObject& _input, TestSuite::TestSuiteOptions& _opt)
             return tests;
         ETH_LOG("Parse test done", 5);
 
+
         for (BlockchainTestInFilled const& bcTest : test.tests())
         {
             // Select test by name if --singletest and --singlenet is set
@@ -285,9 +292,49 @@ spDataObject DoTests(spDataObject& _input, TestSuite::TestSuiteOptions& _opt)
                 if (bcTest.network().asString() != Options::get().singleTestNet)
                     continue;
             }
-            RunTest(bcTest, _opt);
+
+            bool sleeping = ThreadManager::get().threadsSleeping();
+            if (sleeping)
+            {
+                auto job = [bcTest, _opt, &allTests]() {
+                    std::cerr << TestOutputHelper::getThreadID() << " is sub " << std::endl;
+                    RPCSession::sessionStart(TestOutputHelper::getThreadID());
+                    try {
+                        RunTest(bcTest, _opt);
+                    }  catch (std::exception const&) {
+                        // error handling in subs
+                    }
+                    {
+                    std::lock_guard<std::mutex> lock(g_subs);
+                    allTests--;
+                    }
+                    RPCSession::sessionEnd(TestOutputHelper::getThreadID(), RPCSession::SessionStatus::HasFinished);
+                };
+                {
+                std::lock_guard<std::mutex> lock(g_subs);
+                allTests++;
+                }
+                ThreadManager::get().addTask(job);
+            }
+            else
+                RunTest(bcTest, _opt);
             TestOutputHelper::get().registerTestRunSuccess();
         }
+    }
+    while(true)
+    {
+        bool lock = g_subs.try_lock();
+        if (lock)
+        {
+            if (allTests == 0)
+            {
+                g_subs.unlock();
+                return tests;
+            }
+            g_subs.unlock();
+        }
+        else
+            std::this_thread::sleep_for(50ms);
     }
     return tests;
 }

@@ -2,15 +2,27 @@
 #include <stdio.h>
 #include <vector>
 #include <thread>
+#include <functional>
 
 class ThreadManager
 {
 public:
-    static void joinThreads(bool _all = true);
-    static void addTask(std::thread _job);
+    static ThreadManager& get() {
+        static ThreadManager instance;
+        return instance;
+    }
+
+    void joinThreads(bool _all = true);
+    void addTask(std::function<void()> _task);
+    bool threadsSleeping() const;
+
 private:
     ThreadManager() {}
-    static size_t getMaxAllowedThreads();
-    static std::vector<std::thread> threadVector;
-    static unsigned int currConfigId;
+    bool _threadsSleeping();
+
+    size_t getMaxAllowedThreads();
+    std::vector<std::thread> threadVector;
+    unsigned int currConfigId = 0;
+    size_t m_maxAllowedThreads = 0;
+    bool m_threadsSleeping = false;
 };

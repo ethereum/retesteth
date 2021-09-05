@@ -26,6 +26,7 @@ public:
     };
 
     static SessionInterface& instance(thread::id const& _threadID);
+    static void sessionPrint();
     static void sessionStart(thread::id const& _threadID);
     static void sessionEnd(thread::id const& _threadID, SessionStatus _status);
     static SessionStatus sessionStatus(thread::id const& _threadID);
