@@ -185,7 +185,7 @@ spDataObject TransactionLegacy::asDataObject(ExportOrder _order) const
     (*out)["s"] = m_s->asString();
     if (_order == ExportOrder::ToolStyle)
     {
-        (*out).performModifier(mod_removeLeadingZerosFromHexValues, {"data", "to"});
+        (*out).performModifier(mod_removeLeadingZerosFromHexValues, DataObject::ModifierOption::RECURSIVE, {"data", "to"});
         (*out).renameKey("gasLimit", "gas");
         (*out).renameKey("data", "input");
         if (!m_secretKey.isEmpty() && m_secretKey.getCContent() != 0)

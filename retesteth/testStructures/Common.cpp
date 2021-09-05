@@ -414,7 +414,7 @@ void readExpectExceptions(DataObject const& _data, std::map<FORK, string>& _out)
 void convertDecTransactionToHex(spDataObject& _data)
 {
     DataObject& data = _data.getContent();
-    data.performModifier(mod_valueToCompactEvenHexPrefixed, {"data", "to"});
+    data.performModifier(mod_valueToCompactEvenHexPrefixed, DataObject::ModifierOption::RECURSIVE, {"data", "to"});
 
     // fix 0x prefix on 'to' key
     string& to = data.atKeyUnsafe("to").asStringUnsafe();

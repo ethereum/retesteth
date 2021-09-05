@@ -41,7 +41,7 @@ StateTestFillerTransaction::StateTestFillerTransaction(spDataObjectMove _data)
         // Read data from JSON in test filler
         // The VALUE fields can be decimal -> convert it to hex
         // The data field can be LLL or other code -> compile it to BYTES
-        (*m_rawData).performModifier(mod_valueToCompactEvenHexPrefixed, {"data", "to", "secretKey"});
+        (*m_rawData).performModifier(mod_valueToCompactEvenHexPrefixed, DataObject::ModifierOption::RECURSIVE, {"data", "to", "secretKey"});
         if (m_rawData->count("secretKey"))
             (*m_rawData).atKeyUnsafe("secretKey").performModifier(mod_valueInsertZeroXPrefix);
 

@@ -87,7 +87,13 @@ public:
     DataObject& atLastElementUnsafe();
 
     void setVerifier(void (*f)(DataObject&));
-    void performModifier(void (*f)(DataObject&), std::set<string> const& _exceptionKeys = {});
+    enum ModifierOption
+    {
+        RECURSIVE,
+        NONRECURSIVE
+    };
+    void performModifier(
+        void (*f)(DataObject&), ModifierOption _opt = ModifierOption::RECURSIVE, std::set<string> const& _exceptionKeys = {});
     void performVerifier(void (*f)(DataObject const&)) const;
 
     void clear(DataType _type = DataType::NotInitialized);

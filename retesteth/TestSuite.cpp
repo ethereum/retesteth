@@ -151,36 +151,61 @@ void removeComments(spDataObject& _obj)
     }
 }
 
-void addClientInfo(DataObject& _v, fs::path const& _testSource, h256 const& _testSourceHash)
+bool addClientInfo(
+    DataObject& _filledTest, fs::path const& _testSource, h256 const& _testSourceHash, fs::path const& _existingFilledTest)
 {
+    bool atLeastOneUpdate = false || Options::get().forceupdate;
     SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
-    for (auto& o2 : _v.getSubObjectsUnsafe())
-    {
-        DataObject& o = o2.getContent();
-        string comment;
-        spDataObject clientinfo(new DataObject());
-        (*clientinfo).setKey("_info");
-        if (o.count("_info"))
-        {
-            DataObject const& existingInfo = o.atKey("_info");
-            if (existingInfo.count("comment"))
-                comment = existingInfo.atKey("comment").asString();
-            if (existingInfo.count("labels"))
-                (*clientinfo)["labels"].copyFrom(existingInfo.atKey("labels"));
-        }
 
-        (*clientinfo)["comment"] = comment;
+    spDataObject filledTest(new DataObject());
+    if ((Options::get().filltests && fs::exists(_existingFilledTest)) && !Options::get().forceupdate)
+        filledTest = test::readJsonData(_existingFilledTest);
+    for (auto& testInGenerated : _filledTest.getSubObjectsUnsafe())
+    {
+        DataObject& testInGeneratedRef = testInGenerated.getContent();
+        spDataObject clientinfo(new DataObject());
+        if (testInGeneratedRef.count("_info"))
+            clientinfo = testInGeneratedRef.atKeyPointerUnsafe("_info");
+
+        testInGeneratedRef.removeKey("_info");
+        testInGeneratedRef.performModifier(mod_sortKeys);
+        string filledTestHashStr = testInGeneratedRef.asJson(0, false);
+        (*clientinfo)["generatedTestHash"] = dev::toString(sha3(filledTestHashStr));
+        (*clientinfo)["sourceHash"] = toString(_testSourceHash);
+
+        // See if we actually changed something in the test after regeneration
+        if (filledTest->count(testInGenerated->getKey()))
+        {
+            DataObject const& existingTest = filledTest->atKey(testInGenerated->getKey());
+            if (!existingTest.atKey("_info").count("generatedTestHash"))
+                atLeastOneUpdate = true;
+            else
+            {
+                string const& existingHash = existingTest.atKey("_info").atKey("generatedTestHash").asString();
+                if (existingHash != clientinfo->atKey("generatedTestHash").asString())
+                    atLeastOneUpdate = true;
+                string const& existingSrcHash = existingTest.atKey("_info").atKey("sourceHash").asString();
+                if (existingSrcHash != clientinfo->atKey("sourceHash").asString())
+                    atLeastOneUpdate = true;
+            }
+        }
+        else
+            atLeastOneUpdate = true;
+
+        if (!clientinfo->count("comment"))
+            (*clientinfo)["comment"] = "";
         (*clientinfo)["filling-rpc-server"] = session.web3_clientVersion()->asString();
         (*clientinfo)["filling-tool-version"] = test::prepareVersionString();
         (*clientinfo)["lllcversion"] = test::prepareLLLCVersionString();
         (*clientinfo)["source"] = _testSource.string();
-        (*clientinfo)["sourceHash"] = toString(_testSourceHash);
         if (clientinfo->count("labels"))
             (*clientinfo).setKeyPos("labels", clientinfo->getSubObjects().size() - 1);
+        (*clientinfo).performModifier(mod_sortKeys);
 
-        o["_info"].replace(clientinfo);
-        o.setKeyPos("_info", 0);
+        testInGeneratedRef.atKeyPointer("_info") = clientinfo;
+        testInGeneratedRef.setKeyPos("_info", 0);
     }
+    return atLeastOneUpdate;
 }
 
 void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
@@ -351,8 +376,8 @@ void TestSuite::runTestWithoutFiller(boost::filesystem::path const& _file) const
                     opt.doFilling = true;
                     opt.allowInvalidBlocks = true;
                     spDataObject output = doTests(testData.data, opt);
-                    addClientInfo(output.getContent(), _file, testData.hash);
-                    (*output).performModifier(mod_sortKeys);
+                    addClientInfo(output.getContent(), _file, testData.hash, outPath);
+                    (*output).performModifier(mod_sortKeys, DataObject::ModifierOption::NONRECURSIVE);
                     writeFile(outPath, asBytes(output->asJson()));
                 }
                 else
@@ -674,7 +699,7 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
                 ETH_LOG("Copying " + _testFileName.string(), 0);
                 ETH_LOG(" TO " + boostTestPath.path().string(), 0);
                 assert(_testFileName.string() != boostTestPath.path().string());
-                addClientInfo(testData.data.getContent(), boostRelativeTestPath, testData.hash);
+                addClientInfo(testData.data.getContent(), boostRelativeTestPath, testData.hash, boostTestPath.path());
                 writeFile(boostTestPath.path(), asBytes(testData.data->asJson()));
                 ETH_FAIL_REQUIRE_MESSAGE(boost::filesystem::exists(boostTestPath.path().string()),
                     "Error when copying the test file!");
@@ -687,10 +712,14 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
                 try
                 {
                     spDataObject output = doTests(testData.data, opt);
-                    // Add client info for all of the tests in output
-                    addClientInfo(output.getContent(), boostRelativeTestPath, testData.hash);
-                    (*output).performModifier(mod_sortKeys);
-                    writeFile(boostTestPath.path(), asBytes(output->asJson()));
+
+                    bool update =
+                        addClientInfo(output.getContent(), boostRelativeTestPath, testData.hash, boostTestPath.path());
+                    if (update)
+                    {
+                        (*output).performModifier(mod_sortKeys, DataObject::ModifierOption::NONRECURSIVE);
+                        writeFile(boostTestPath.path(), asBytes(output->asJson()));
+                    }
 
                     if (!Options::get().getGStateTransactionFilter().empty())
                     {

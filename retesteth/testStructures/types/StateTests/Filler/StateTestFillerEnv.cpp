@@ -35,7 +35,8 @@ StateTestFillerEnv::StateTestFillerEnv(spDataObjectMove _data)
             m_currentBaseFee = spVALUE(0);
         }
 
-        (*m_raw).performModifier(mod_valueToCompactEvenHexPrefixed, {"currentCoinbase", "previousHash"});
+        (*m_raw).performModifier(
+            mod_valueToCompactEvenHexPrefixed, DataObject::ModifierOption::RECURSIVE, {"currentCoinbase", "previousHash"});
         (*m_raw).atKeyUnsafe("currentCoinbase").performModifier(mod_valueInsertZeroXPrefix);
         (*m_raw).atKeyUnsafe("previousHash").performModifier(mod_valueInsertZeroXPrefix);
         (*m_raw).performModifier(mod_valueToLowerCase);

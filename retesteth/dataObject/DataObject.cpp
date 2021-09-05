@@ -331,13 +331,16 @@ void DataObject::setVerifier(void (*f)(DataObject&))
     m_verifier(*this);
 }
 
-void DataObject::performModifier(void (*f)(DataObject&), std::set<string> const& _exceptionKeys)
+void DataObject::performModifier(void (*f)(DataObject&), ModifierOption _opt, std::set<string> const& _exceptionKeys)
 {
     if (!_exceptionKeys.count(getKey()))
     {
         f(*this);
-        for (auto& el : m_subObjects)
-            el.getContent().performModifier(f, _exceptionKeys);
+        if (_opt == ModifierOption::RECURSIVE)
+        {
+            for (auto& el : m_subObjects)
+                el.getContent().performModifier(f, _opt, _exceptionKeys);
+        }
     }
 }
 
