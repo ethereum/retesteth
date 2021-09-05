@@ -93,6 +93,7 @@ void printHelp()
     cout << setw(30) << "--checkhash" << setw(25) << "Check that tests are updated from fillers\n";
     cout << setw(30) << "--poststate" << setw(25) << "Show post state hash or fullstate\n";
     cout << setw(30) << "--fullstate" << setw(25) << "Do not compress large states to hash\n";
+    cout << setw(30) << "--forceupdate" << setw(25) << "Update generated test (_info) even if there are no changes\n";
 
     //	cout << setw(30) << "--randomcode <MaxOpcodeNum>" << setw(25) << "Generate smart random EVM
     //code\n"; 	cout << setw(30) << "--createRandomTest" << setw(25) << "Create random test and
@@ -211,6 +212,8 @@ Options::Options(int argc, const char** argv)
         }
         else if (arg == "--filltests")
             filltests = true;
+        else if (arg == "--forceupdate")
+            forceupdate = true;
         else if (arg == "--limitblocks")
         {
             throwIfNoArgumentFollows();
