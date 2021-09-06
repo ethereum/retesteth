@@ -27,6 +27,7 @@
 #include <testStructures/Common.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
+#include <retesteth/dataObject/SPointer.h>
 
 using namespace std;
 using namespace test;
@@ -475,6 +476,9 @@ Options::Options(int argc, const char** argv)
             BOOST_THROW_EXCEPTION(
                 InvalidOption("--seed <uint> could be used only with --createRandomTest \n"));
     }
+
+    if (threadCount == 1)
+        dataobject::GCP_SPointer<int>::DISABLETHREADSAFE();
 }
 
 Options const& Options::get(int argc, const char** argv)

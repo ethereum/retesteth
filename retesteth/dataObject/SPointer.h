@@ -1,6 +1,7 @@
 #pragma once
 #include <exception>
 #include <string>
+#include <mutex>
 
 namespace dataobject
 {
@@ -25,6 +26,7 @@ private:
 };
 
 void throwException(std::string const& _ex);
+void disableThreadsafe();
 
 template <class T>
 class GCP_SPointer;
@@ -35,6 +37,8 @@ private:
     bool _isEmpty;
     void AddRef();
     int DelRef();
+    static std::mutex g_spRefAccessMutex;
+
 
 public:
     GCP_SPointerBase() : _nRef(0), _isEmpty(false) {}
@@ -66,6 +70,7 @@ private:
     }
 
 public:
+    static void DISABLETHREADSAFE() { disableThreadsafe(); };
     explicit GCP_SPointer() : _pointee(nullptr) {}
     GCP_SPointer(int) : _pointee(nullptr) {}
     explicit GCP_SPointer(T* pointee)
