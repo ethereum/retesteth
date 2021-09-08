@@ -250,7 +250,7 @@ TestRawTransaction ToolChainManager::test_rawTransaction(
     else
     {
         (*tr)["sender"] = res->getSubObjects().at(0)->atKey("address").asString();
-        (*tr)["hash"] = hash;
+        (*tr)["hash"] = res->getSubObjects().at(0)->atKey("hash").asString();
         out["acceptedTransactions"].addArrayObject(tr);
     }
 
