@@ -87,6 +87,6 @@ void ThreadManager::joinThreads(bool _all)
 
         // The session availability check is time consuming. Let other threads to work
         if (Options::get().threadCount > 1)
-            std::this_thread::sleep_for(50ms);
+            std::this_thread::sleep_for(25ms);
     }
 }
