@@ -4,18 +4,21 @@
 #include <retesteth/EthChecks.h>
 #include <retesteth/TestHelper.h>
 #include <retesteth/testStructures/Common.h>
+#include <retesteth/dataObject/ConvertFile.h>
 using namespace test;
 
 namespace toolimpl
 {
-ToolChainManager::ToolChainManager(SetChainParamsArgs const& _config, fs::path const& _toolPath, fs::path const& _tmpDir)
+ToolChainManager::ToolChainManager(spSetChainParamsArgs const& _config, fs::path const& _toolPath, fs::path const& _tmpDir)
 {
+    m_tmpDir = _tmpDir;
+    m_toolPath = _toolPath;
     m_currentChain = 0;
     m_maxChains = 0;
-    EthereumBlockState genesis(_config.genesis(), _config.state(), FH32::zero());
+    EthereumBlockState genesis(_config->genesis(), _config->state(), FH32::zero());
     m_chains[m_currentChain] = spToolChain(new ToolChain(genesis, _config, _toolPath, _tmpDir));
     m_pendingBlock =
-        spEthereumBlockState(new EthereumBlockState(currentChain().lastBlock().header(), _config.state(), FH32::zero()));
+        spEthereumBlockState(new EthereumBlockState(currentChain().lastBlock().header(), _config->state(), FH32::zero()));
     reorganizePendingBlock();
 }
 
@@ -23,7 +26,7 @@ spDataObject const ToolChainManager::mineBlocks(size_t _number, ToolChain::Minin
 {
     if (_number > 1)
         throw test::UpwardsException("ToolChainManager::mineBlocks number arg invalid: " + fto_string(_number));
-    spDataObject const res = currentChainUnsafe().mineBlock(m_pendingBlock, _req);
+    spDataObject const res = currentChainUnsafe().mineBlock(m_pendingBlock, currentChainUnsafe().lastBlock(), _req);
     reorganizePendingBlock();
     return res;
 }
@@ -212,6 +215,47 @@ void ToolChainManager::reorganizeChainForTotalDifficulty()
             m_currentChain = chain.first;
         }
     }
+}
+
+TestRawTransaction ToolChainManager::test_rawTransaction(
+    BYTES const& _rlp, FORK const& _fork, fs::path const& _toolPath, fs::path const& _tmpDir)
+{
+    // Prepare test_mineBlocks response structure
+    DataObject out;
+    out["result"] = true;
+
+    // Prepare transaction file
+    fs::path txsPath = _tmpDir / "tx.rlp";
+
+    dev::RLPStream txsout(1);
+    txsout.appendRaw(dev::fromHex(_rlp.asString()));
+    writeFile(txsPath.string(), string("\"") + dev::toString(txsout.out()) + "\"");
+
+    string cmd = _toolPath.string();
+    cmd += " --input.txs " + txsPath.string();
+    cmd += " --state.fork " + _fork.asString();
+    string response = test::executeCmd(cmd, ExecCMDWarning::NoWarning);
+    ETH_TEST_MESSAGE("T9N Response:\n" + response);
+    spDataObject res = dataobject::ConvertJsoncppStringToData(response);
+
+    string const hash = "0x" + dev::toString(dev::sha3(fromHex(_rlp.asString())));
+    spDataObject tr(new DataObject());
+    if (response.find("error") != string::npos)
+    {
+        (*tr)["error"] = res->getSubObjects().at(0)->atKey("error").asString();;
+        (*tr)["sender"] = FH20::zero().asString();
+        (*tr)["hash"] = hash;
+        out["rejectedTransactions"].addArrayObject(tr);
+    }
+    else
+    {
+        (*tr)["sender"] = res->getSubObjects().at(0)->atKey("address").asString();
+        (*tr)["hash"] = res->getSubObjects().at(0)->atKey("hash").asString();
+        out["acceptedTransactions"].addArrayObject(tr);
+    }
+
+    ETH_TEST_MESSAGE("Response: test_rawTransaction `" + out.asJson());
+    return TestRawTransaction(out);
 }
 
 

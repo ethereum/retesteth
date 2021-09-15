@@ -1,7 +1,8 @@
 #include <dataObject/DataObject.h>
+#include <math.h>
 #include <algorithm>
-#include <sstream>
 #include <iostream>
+#include <sstream>
 using namespace dataobject;
 
 /// Default dataobject is null
@@ -52,6 +53,7 @@ void DataObject::setKey(std::string const& _key) { m_strKey = _key; }
 
 /// Get key of the dataobject
 std::string const& DataObject::getKey() const { return m_strKey; }
+std::string& DataObject::getKeyUnsafe() { return m_strKey; }
 
 /// Get vector of subobjects
 std::vector<spDataObject> const& DataObject::getSubObjects() const
@@ -104,6 +106,11 @@ std::string const& DataObject::asString() const
     _assert(m_type == DataType::String, "m_type == DataType::String (DataObject::asString())");
     return m_strVal;
 }
+std::string& DataObject::asStringUnsafe()
+{
+    _assert(m_type == DataType::String, "m_type == DataType::String (DataObject::asStringUnsafe())");
+    return m_strVal;
+}
 
 /// Get int value
 int DataObject::asInt() const
@@ -122,7 +129,8 @@ bool DataObject::asBool() const
 /// Set position in vector of the subobject with _key
 void DataObject::setKeyPos(std::string const& _key, size_t _pos)
 {
-    _assert(_pos < m_subObjects.size(), "_pos < m_subObjects.size()");
+    //_assert(_pos < m_subObjects.size(), "DataObject::setKeyPos(`" + _key + "`, `" + to_string(_pos) + "`) _pos <
+    //m_subObjects.size() ");
     _assert(count(_key), "count(_key) _key = " + _key + " (DataObject::setKeyPos)");
     _assert(!_key.empty(), "!_key.empty() (DataObject::setKeyPos)");
 
@@ -142,7 +150,10 @@ void DataObject::setKeyPos(std::string const& _key, size_t _pos)
     setOverwrite(true);
     spDataObject data = m_subObjects.at(elementPos);
     m_subObjects.erase(m_subObjects.begin() + elementPos);
-    m_subObjects.insert(m_subObjects.begin() + _pos, 1, data);
+    if (_pos >= m_subObjects.size())
+        m_subObjects.push_back(data);
+    else
+        m_subObjects.insert(m_subObjects.begin() + _pos, 1, data);
     setOverwrite(false);
 }
 
@@ -179,21 +190,21 @@ DataObjectK& DataObjectK::operator=(spDataObject const& _value)
     if (m_data.count(m_key))
     {
         m_data.removeKey(m_key);
-        if(_value.getCContent().getKey().empty())
+        if (_value->getKey().empty())
             throw DataObjectException("DataObjectK::operator=(spDataObject const& _value)  _value without key, but key required!");
-        m_data.addSubObject(_value.getCContent().getKey(), _value);
+        m_data.addSubObject(_value->getKey(), _value);
     }
     else
         m_data.addSubObject(m_key, _value);
     return *this;
 }
 
-spDataObject DataObject::atKeyPointerUnsafe(std::string const& _key)
+spDataObject& DataObject::atKeyPointerUnsafe(std::string const& _key)
 {
     if (m_subObjectKeys.count(_key))
         return m_subObjectKeys.at(_key);
     _assert(false, "count(_key) _key=" + _key + " (DataObject::atKeyPointerUnsafe)");
-    return spDataObject(0);
+    return m_subObjectKeys.at(0);
 }
 
 DataObjectK DataObject::atKeyPointer(std::string const& _key)
@@ -320,12 +331,17 @@ void DataObject::setVerifier(void (*f)(DataObject&))
     m_verifier(*this);
 }
 
-void DataObject::performModifier(void (*f)(DataObject&), std::set<string> const& _exceptionKeys)
+void DataObject::performModifier(void (*f)(DataObject&), ModifierOption _opt, std::set<string> const& _exceptionKeys)
 {
-    for (auto& el : m_subObjects)
-        el.getContent().performModifier(f, _exceptionKeys);
     if (!_exceptionKeys.count(getKey()))
+    {
         f(*this);
+        if (_opt == ModifierOption::RECURSIVE)
+        {
+            for (auto& el : m_subObjects)
+                el.getContent().performModifier(f, _opt, _exceptionKeys);
+        }
+    }
 }
 
 void DataObject::performVerifier(void (*f)(DataObject const&)) const
@@ -512,22 +528,58 @@ size_t dataobject::findOrderedKeyPosition(string const& _key, vector<spDataObjec
 {
     if (_objects.size() == 0)
         return 0;
-    size_t step = _objects.size() / 2;
-    size_t guess = step;
-    while (step > 0)
+
+    size_t m = 0;
+    int L = 0;
+    int R = _objects.size() - 1;
+    while (L <= R)
     {
-        step = step / 2;
-        if (_objects.at(guess)->getKey() > _key)
-            guess -= std::max(step, (size_t)1);
+        m = floor((L + R) / 2);
+        if (_objects.at(m)->getKey() < _key)
+            L = m + 1;
+        else if (_objects.at(m)->getKey() > _key)
+            R = m - 1;
         else
-            guess += std::max(step, (size_t)1);
+            return m;
     }
+
+    if (_objects.at(m)->getKey() > _key)
+        return m;
+    else
+        return m + 1;
+
+    /*size_t step =  floor((double)_objects.size() / 2);
+    size_t guess = step;
+    while (step > 0 && guess > 0 && guess < _objects.size())
+    {
+        if (_objects.at(guess)->getKey() > _key)
+        {
+            step = floor((double)(guess) / 2);
+            guess -= std::max(step, (size_t)1);
+        }
+        else
+        {
+            step = floor((double)(_objects.size() - guess) / 2);
+            guess += std::max(step, (size_t)1);
+        }
+    }
+
     if (guess == _objects.size())
+    {
+        std::cerr << _key << " - " << guess << std::endl;
         return guess;
-    guess = max(0, (int)guess - 5);
-    while (guess < _objects.size() && _objects.at(guess)->getKey() <= _key)
+    }
+
+    if (_objects.at(guess)->getKey() <= _key)
         guess++;
+
+   // //guess = max(0, (int)guess - 5);
+  //  while (guess < _objects.size() && _objects.at(guess)->getKey() <= _key)
+  //      guess++;
+
+    std::cerr << _key << " - " << guess << std::endl;
     return guess;
+*/
 }
 
 DataObject& DataObject::_addSubObject(spDataObject const& _obj, string const& _keyOverwrite)
@@ -772,4 +824,12 @@ DataObject& DataObject::operator=(std::string const& _value)
 {
     setString(_value);
     return *this;
+}
+
+spDataObjectMove dataobject::move(spDataObject& _obj)
+{
+    spDataObjectMove m;
+    m.assignPointer(_obj);
+    _obj.null();
+    return m;
 }

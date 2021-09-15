@@ -76,4 +76,14 @@ BOOST_AUTO_TEST_CASE(smartPointerVector)
     BOOST_CHECK(vec.at(1)->asBigInt() != 13);
 }
 
+BOOST_AUTO_TEST_CASE(smartPointerMove)
+{
+    spDataObject obj(new DataObject("some pointer"));
+    spDataObjectMove m;
+    m = dataobject::move(obj);
+    BOOST_CHECK(obj.isEmpty() == true);
+    spDataObject objm = m.getPointer();
+    BOOST_CHECK(objm.getCContent().asString() == "some pointer");
+}
+
 BOOST_AUTO_TEST_SUITE_END()

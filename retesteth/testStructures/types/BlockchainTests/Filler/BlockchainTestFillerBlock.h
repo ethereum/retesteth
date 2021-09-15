@@ -18,7 +18,7 @@ namespace teststruct
 // BlockchainTestFiller block instructions
 struct BlockchainTestFillerBlock : GCP_SPointerBase
 {
-    BlockchainTestFillerBlock(DataObject const&, NonceMap&);
+    BlockchainTestFillerBlock(spDataObject&, NonceMap&);
 
     // Block can be represented as raw RLP without any of other fields
     // other then BlockHeader with expected exceptions

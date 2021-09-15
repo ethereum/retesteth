@@ -42,13 +42,15 @@ public:
 
     // ETH Methods
     virtual FH32 eth_sendRawTransaction(BYTES const& _rlp, VALUE const& _secret) = 0;
-    virtual VALUE eth_getTransactionCount(FH20 const& _address, VALUE const& _blockNumber) = 0;
 
     virtual VALUE eth_blockNumber() = 0;
     virtual EthGetBlockBy eth_getBlockByHash(FH32 const& _blockHash, Request _fullObjects) = 0;
     virtual EthGetBlockBy eth_getBlockByNumber(VALUE const& _blockNumber, Request _fullObjects) = 0;
-    virtual BYTES eth_getCode(FH20 const& _address, VALUE const& _blockNumber) = 0;
-    virtual VALUE eth_getBalance(FH20 const& _address, VALUE const& _blockNumber) = 0;
+
+    // Account functions
+    virtual spBYTES eth_getCode(FH20 const& _address, VALUE const& _blockNumber) = 0;
+    virtual spVALUE eth_getBalance(FH20 const& _address, VALUE const& _blockNumber) = 0;
+    virtual spVALUE eth_getTransactionCount(FH20 const& _address, VALUE const& _blockNumber) = 0;
 
     // Debug
     virtual DebugAccountRange debug_accountRange(
@@ -62,12 +64,13 @@ public:
     virtual DebugVMTrace debug_traceTransaction(FH32 const& _trHash) = 0;
 
     // Test
-    virtual void test_setChainParams(SetChainParamsArgs const& _config) = 0;
+    virtual void test_setChainParams(spSetChainParamsArgs const& _config) = 0;
     virtual void test_rewindToBlock(VALUE const& _blockNr) = 0;
     virtual void test_modifyTimestamp(VALUE const& _timestamp) = 0;
     virtual MineBlocksResult test_mineBlocks(size_t _number) = 0;
     virtual FH32 test_importRawBlock(BYTES const& _blockRLP) = 0;
     virtual FH32 test_getLogHash(FH32 const& _txHash) = 0;
+    virtual TestRawTransaction test_rawTransaction(BYTES const& _rlp, FORK const& _fork) = 0;
 
     // Internal
     virtual spDataObject rpcCall(std::string const& _methodName,

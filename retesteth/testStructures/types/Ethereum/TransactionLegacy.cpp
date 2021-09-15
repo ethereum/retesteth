@@ -23,6 +23,31 @@ void TransactionLegacy::fromDataObject(DataObject const& _data)
 {
     try
     {
+        REQUIRE_JSONFIELDS(_data, "TransactionLegacy " + _data.getKey(),
+            {
+                {"data", {{DataType::String}, jsonField::Required}},
+                {"gasLimit", {{DataType::String}, jsonField::Required}},
+                {"gasPrice", {{DataType::String}, jsonField::Required}},
+                {"nonce", {{DataType::String}, jsonField::Required}},
+                {"value", {{DataType::String}, jsonField::Required}},
+                {"to", {{DataType::String, DataType::Null}, jsonField::Required}},
+                {"secretKey", {{DataType::String}, jsonField::Optional}},
+                {"v", {{DataType::String}, jsonField::Optional}},
+                {"r", {{DataType::String}, jsonField::Optional}},
+                {"s", {{DataType::String}, jsonField::Optional}},
+
+                {"publicKey", {{DataType::String}, jsonField::Optional}},  // Besu EthGetBlockBy transaction
+                {"raw", {{DataType::String}, jsonField::Optional}},        // Besu EthGetBlockBy transaction
+                {"chainId", {{DataType::String}, jsonField::Optional}},    // Besu EthGetBlockBy transaction
+
+                {"blockHash", {{DataType::String}, jsonField::Optional}},         // EthGetBlockBy transaction
+                {"blockNumber", {{DataType::String}, jsonField::Optional}},       // EthGetBlockBy transaction
+                {"from", {{DataType::String}, jsonField::Optional}},              // EthGetBlockBy transaction
+                {"hash", {{DataType::String}, jsonField::Optional}},              // EthGetBlockBy transaction
+                {"transactionIndex", {{DataType::String}, jsonField::Optional}},  // EthGetBlockBy transaction
+                {"expectException", {{DataType::Object}, jsonField::Optional}}    // BlockchainTest filling
+            });
+
         m_data = spBYTES(new BYTES(_data.atKey("data")));
         m_gasLimit = spVALUE(new VALUE(_data.atKey("gasLimit")));
         m_gasPrice = spVALUE(new VALUE(_data.atKey("gasPrice")));
@@ -48,30 +73,6 @@ void TransactionLegacy::fromDataObject(DataObject const& _data)
             m_s = spVALUE(new VALUE(_data.atKey("s")));
             rebuildRLP();
         }
-        requireJsonFields(_data, "TransactionLegacy " + _data.getKey(),
-            {
-                {"data", {{DataType::String}, jsonField::Required}},
-                {"gasLimit", {{DataType::String}, jsonField::Required}},
-                {"gasPrice", {{DataType::String}, jsonField::Required}},
-                {"nonce", {{DataType::String}, jsonField::Required}},
-                {"value", {{DataType::String}, jsonField::Required}},
-                {"to", {{DataType::String, DataType::Null}, jsonField::Required}},
-                {"secretKey", {{DataType::String}, jsonField::Optional}},
-                {"v", {{DataType::String}, jsonField::Optional}},
-                {"r", {{DataType::String}, jsonField::Optional}},
-                {"s", {{DataType::String}, jsonField::Optional}},
-
-                {"publicKey", {{DataType::String}, jsonField::Optional}},  // Besu EthGetBlockBy transaction
-                {"raw", {{DataType::String}, jsonField::Optional}},        // Besu EthGetBlockBy transaction
-                {"chainId", {{DataType::String}, jsonField::Optional}},    // Besu EthGetBlockBy transaction
-
-                {"blockHash", {{DataType::String}, jsonField::Optional}},         // EthGetBlockBy transaction
-                {"blockNumber", {{DataType::String}, jsonField::Optional}},       // EthGetBlockBy transaction
-                {"from", {{DataType::String}, jsonField::Optional}},              // EthGetBlockBy transaction
-                {"hash", {{DataType::String}, jsonField::Optional}},              // EthGetBlockBy transaction
-                {"transactionIndex", {{DataType::String}, jsonField::Optional}},  // EthGetBlockBy transaction
-                {"expectException", {{DataType::Object}, jsonField::Optional}}    // BlockchainTest filling
-            });
     }
     catch (std::exception const& _ex)
     {
@@ -165,6 +166,7 @@ void TransactionLegacy::buildVRS(VALUE const& _secret)
 
 spDataObject TransactionLegacy::asDataObject(ExportOrder _order) const
 {
+    // TODO Memory cache?
     spDataObject out(new DataObject());
     (*out)["data"] = m_data->asString();
     (*out)["gasLimit"] = m_gasLimit->asString();
@@ -183,7 +185,7 @@ spDataObject TransactionLegacy::asDataObject(ExportOrder _order) const
     (*out)["s"] = m_s->asString();
     if (_order == ExportOrder::ToolStyle)
     {
-        (*out).performModifier(mod_removeLeadingZerosFromHexValues, {"data", "to"});
+        (*out).performModifier(mod_removeLeadingZerosFromHexValues, DataObject::ModifierOption::RECURSIVE, {"data", "to"});
         (*out).renameKey("gasLimit", "gas");
         (*out).renameKey("data", "input");
         if (!m_secretKey.isEmpty() && m_secretKey.getCContent() != 0)

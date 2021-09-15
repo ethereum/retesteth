@@ -4,23 +4,10 @@ namespace test
 {
 namespace teststruct
 {
-// Export Env Function Some formatters might be performed here
-spDataObject StateTestEnvBase::asDataObject() const
-{
-    spDataObject out(new DataObject());
-    (*out)["currentCoinbase"] = m_currentCoinbase->asString();
-    (*out)["currentDifficulty"] = m_currentDifficulty->asString();
-    (*out)["currentNumber"] = m_currentNumber->asString();
-    (*out)["currentTimestamp"] = m_currentTimestamp->asString();
-    (*out)["previousHash"] = m_previousHash->asString();
-    (*out)["currentGasLimit"] = m_currentGasLimit->asString();
 
-    if (!m_currentBaseFee.isEmpty())
-    {
-        // EIP1559 env info
-        (*out)["currentBaseFee"] = m_currentBaseFee->asString();
-    }
-    return out;
+spDataObject const& StateTestEnvBase::asDataObject() const
+{
+    return m_raw;
 }
 
 }  // namespace teststruct

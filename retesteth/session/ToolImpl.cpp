@@ -73,16 +73,16 @@ FH32 ToolImpl::eth_sendRawTransaction(BYTES const& _rlp, VALUE const& _secret)
     return FH32::zero();
 }
 
-VALUE ToolImpl::eth_getTransactionCount(FH20 const& _address, VALUE const& _blockNumber)
+spVALUE ToolImpl::eth_getTransactionCount(FH20 const& _address, VALUE const& _blockNumber)
 {
     rpcCall("", {});
     ETH_TEST_MESSAGE("\nRequest: eth_getTransactionCount " + _blockNumber.asString() + " " + _address.asString());
     TRYCATCHCALL(
-        VALUE const& nonce = blockchain().blockByNumber(_blockNumber).state().getAccount(_address).nonce();
-        ETH_TEST_MESSAGE("Response: eth_getTransactionCount " + nonce.asDecString());
+        spVALUE nonce (blockchain().blockByNumber(_blockNumber).state()->getAccount(_address).nonce().copy());
+        ETH_TEST_MESSAGE("Response: eth_getTransactionCount " + nonce->asDecString());
         return nonce;
         , "eth_getTransactionCount", CallType::FAILEVERYTHING)
-    return VALUE(0);
+    return spVALUE(0);
 }
 
 VALUE ToolImpl::eth_blockNumber()
@@ -125,28 +125,29 @@ EthGetBlockBy ToolImpl::eth_getBlockByNumber(VALUE const& _blockNumber, Request 
     return EthGetBlockBy(DataObject());
 }
 
-BYTES ToolImpl::eth_getCode(FH20 const& _address, VALUE const& _blockNumber)
+spBYTES ToolImpl::eth_getCode(FH20 const& _address, VALUE const& _blockNumber)
 {
     rpcCall("", {});
     ETH_TEST_MESSAGE("\nRequest: eth_getCode " + _blockNumber.asString() + " " + _address.asString());
     TRYCATCHCALL(
-        BYTES const& code = blockchain().blockByNumber(_blockNumber).state().getAccount(_address).code();
-        ETH_TEST_MESSAGE("Response: eth_getCode " + code.asString());
+        spBYTES code(blockchain().blockByNumber(_blockNumber).state()->getAccount(_address).code().copy());
+        ETH_TEST_MESSAGE("Response: eth_getCode " + code->asString());
         return code;
         , "eth_getCode", CallType::FAILEVERYTHING)
-    return BYTES(DataObject());
+    return spBYTES(0);
 }
 
-VALUE ToolImpl::eth_getBalance(FH20 const& _address, VALUE const& _blockNumber)
+spVALUE ToolImpl::eth_getBalance(FH20 const& _address, VALUE const& _blockNumber)
 {
     rpcCall("", {});
     ETH_TEST_MESSAGE("\nRequest: eth_getBalance " + _blockNumber.asString() + " " + _address.asString());
     TRYCATCHCALL(
-        VALUE const& balance = blockchain().blockByNumber(_blockNumber).state().getAccount(_address).balance();
-        ETH_TEST_MESSAGE("Response: eth_getBalance " + balance.asDecString());
+        // Make a copy here because we do not expose the memory of the tool backend
+        spVALUE balance(blockchain().blockByNumber(_blockNumber).state()->getAccount(_address).balance().copy());
+        ETH_TEST_MESSAGE("Response: eth_getBalance " + balance->asDecString());
         return balance;
         , "eth_getBalance", CallType::FAILEVERYTHING)
-    return VALUE(0);
+    return spVALUE(0);
 }
 
 // Debug
@@ -226,10 +227,10 @@ DebugVMTrace ToolImpl::debug_traceTransaction(FH32 const& _trHash)
 }
 
 // Test
-void ToolImpl::test_setChainParams(SetChainParamsArgs const& _config)
+void ToolImpl::test_setChainParams(spSetChainParamsArgs const& _config)
 {
     rpcCall("", {});
-    ETH_TEST_MESSAGE("\nRequest: test_setChainParams \n" + _config.asDataObject()->asJson());
+    ETH_TEST_MESSAGE("\nRequest: test_setChainParams \n" + _config->asDataObject()->asJson());
 
     // Ask tool to calculate genesis header stateRoot for genesisHeader
     TRYCATCHCALL(
@@ -297,6 +298,17 @@ FH32 ToolImpl::test_getLogHash(FH32 const& _txHash)
         return res;
         , "test_getLogHash", CallType::FAILEVERYTHING)
     return _txHash;
+}
+
+TestRawTransaction ToolImpl::test_rawTransaction(BYTES const& _rlp, FORK const& _fork)
+{
+    rpcCall("", {});
+    TRYCATCHCALL(
+        ETH_TEST_MESSAGE("\nRequest: test_rawTransaction '" + _rlp.asString() + "', Fork: `" + _fork.asString());
+        TestRawTransaction res = ToolChainManager::test_rawTransaction(_rlp, _fork, m_toolPath, m_tmpDir);
+        return res;
+        , "test_rawTransaction", CallType::FAILEVERYTHING)
+    return TestRawTransaction(DataObject());
 }
 
 // Internal

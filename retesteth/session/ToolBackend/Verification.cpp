@@ -143,14 +143,15 @@ void verifyCommonParent(spBlockHeader const& _header, spBlockHeader const& _pare
                                      " != " + parent.number().asDecString() + ")");
 
     if (parent.timestamp() >= header.timestamp())
-        throw test::UpwardsException("BlockHeader timestamp is less then it's parent block!");
+        throw test::UpwardsException("BlockHeader timestamp is less or equal then it's parent block! (" +
+            header.timestamp().asDecString() + " <= " + parent.timestamp().asDecString() + ")");
 
     // Validate block difficulty delta
     ChainOperationParams params = ChainOperationParams::defaultParams(_chain.toolParams());
     VALUE newDiff = calculateEthashDifficulty(params, _header, _parent);
     if (header.difficulty() != newDiff)
         throw test::UpwardsException(
-            "Invalid difficulty: " + header.difficulty().asDecString() + ", want: " + VALUE(newDiff).asDecString());
+            "Invalid difficulty: " + header.difficulty().asDecString() + ", retesteth want: " + VALUE(newDiff).asDecString());
 
     bigint parentGasLimit = parent.gasLimit().asBigInt();
     if (header.number() == 5 && _chain.fork() == "BerlinToLondonAt5")

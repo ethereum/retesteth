@@ -27,21 +27,21 @@ FH32 RPCImpl::eth_sendRawTransaction(BYTES const& _rlp, VALUE const& _secret)
     return FH32(result.getCContent());
 }
 
-VALUE RPCImpl::eth_getTransactionCount(FH20 const& _address, VALUE const& _blockNumber)
+spVALUE RPCImpl::eth_getTransactionCount(FH20 const& _address, VALUE const& _blockNumber)
 {
     try
     {
         spDataObject response = rpcCall("eth_getTransactionCount", {quote(_address.asString()), quote(_blockNumber.asString())});
         (*response).performModifier(mod_valueToCompactEvenHexPrefixed);
         if (response->type() == DataType::String)
-            return VALUE(response);
-        return VALUE(response->asInt());
+            return spVALUE(new VALUE(response));
+        return spVALUE(new VALUE(response->asInt()));
     }
     catch(std::exception const& _ex)
     {
         ETH_FAIL_MESSAGE(string("RPC eth_getTransactionCount Exception: ") + _ex.what());
     }
-    return VALUE(0);
+    return spVALUE(0);
 }
 
 VALUE RPCImpl::eth_blockNumber()
@@ -65,20 +65,21 @@ EthGetBlockBy RPCImpl::eth_getBlockByNumber(VALUE const& _blockNumber, Request _
     return EthGetBlockBy(response);
 }
 
-BYTES RPCImpl::eth_getCode(FH20 const& _address, VALUE const& _blockNumber)
+spBYTES RPCImpl::eth_getCode(FH20 const& _address, VALUE const& _blockNumber)
 {
-    spDataObject const res(rpcCall("eth_getCode", {quote(_address.asString()), quote(_blockNumber.asString())}));
+    spDataObject res = rpcCall("eth_getCode", {quote(_address.asString()), quote(_blockNumber.asString())});
     if (res->asString().empty())
     {
         ETH_WARNING_TEST("eth_getCode return `` empty string, correct to `0x` empty bytes ", 6);
-        return BYTES(DataObject("0x"));
+        return spBYTES(new BYTES(DataObject("0x")));
     }
-    return BYTES(res);
+    return spBYTES(new BYTES(res));
 }
 
-VALUE RPCImpl::eth_getBalance(FH20 const& _address, VALUE const& _blockNumber)
+spVALUE RPCImpl::eth_getBalance(FH20 const& _address, VALUE const& _blockNumber)
 {
-    return VALUE(rpcCall("eth_getBalance", {quote(_address.asString()), quote(_blockNumber.asString())}));
+    auto ret = rpcCall("eth_getBalance", {quote(_address.asString()), quote(_blockNumber.asString())});
+    return spVALUE(new VALUE(ret));
 }
 
 
@@ -124,12 +125,12 @@ DebugVMTrace RPCImpl::debug_traceTransaction(FH32 const& _trHash)
 }
 
 // Test
-void RPCImpl::test_setChainParams(SetChainParamsArgs const& _config)
+void RPCImpl::test_setChainParams(spSetChainParamsArgs const& _config)
 {
     RPCSession::currentCfgCountTestRun();
 
     ClientConfig const& cfg = Options::getCurrentConfig();
-    spDataObject data = _config.asDataObject();
+    spDataObject data = _config->asDataObject();
     cfg.performFieldReplace(*data, FieldReplaceDir::RetestethToClient);
 
     spDataObject res =  rpcCall("test_setChainParams", {data->asJson()});
@@ -159,7 +160,9 @@ MineBlocksResult RPCImpl::test_mineBlocks(size_t _number)
         ETH_ERROR_REQUIRE_MESSAGE(miningres == true, "remote test_mineBlocks = false");
     }
     else if (res->type() == DataType::Bool)
+    {
         ETH_ERROR_REQUIRE_MESSAGE(res->asBool() == true, "remote test_mineBlocks = false");
+    }
     else
         ETH_ERROR_MESSAGE("remote test_mineBlocks = " + res->asJson());
 
@@ -177,6 +180,12 @@ FH32 RPCImpl::test_importRawBlock(BYTES const& _blockRLP)
 FH32 RPCImpl::test_getLogHash(FH32 const& _txHash)
 {
     return FH32(rpcCall("test_getLogHash", {quote(_txHash.asString())}));
+}
+
+TestRawTransaction RPCImpl::test_rawTransaction(BYTES const& _rlp, FORK const& _fork)
+{
+    spDataObject const res = rpcCall("test_rawTransaction", {quote(_rlp.asString()), quote(_fork.asString())});
+    return TestRawTransaction(res);
 }
 
 // Internal
@@ -210,7 +219,7 @@ spDataObject RPCImpl::rpcCall(
 
     if (!ExitHandler::receivedExitSignal())
     {
-        requireJsonFields(result, "rpcCall_response (req: '" + request.substr(0, 70) + "')",
+        REQUIRE_JSONFIELDS(result, "rpcCall_response (req: '" + request.substr(0, 70) + "')",
             {{"jsonrpc", {{DataType::String}, jsonField::Required}},
              {"id", {{DataType::Integer}, jsonField::Required}},
              {"result", {{DataType::String, DataType::Integer, DataType::Bool, DataType::Object, DataType::Array},

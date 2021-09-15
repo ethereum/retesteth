@@ -12,7 +12,7 @@ spDataObject constructAccountRange(EthereumBlockState const& _block, FH32 const&
     spDataObject constructResponse (new DataObject());
     spDataObject emptyList(new DataObject(DataType::Object));
     (*constructResponse).atKeyPointer("addressMap") = emptyList;
-    for (auto const& acc : _block.state().accounts())
+    for (auto const& acc : _block.state()->accounts())
     {
         if (k++ + 1 < iAcc)  // The first key is 1 must be included
             continue;
@@ -68,24 +68,24 @@ spDataObject constructStorageRangeAt(
     EthereumBlockState const& _block, FH20 const& _address, FH32 const& _begin, size_t _maxResult)
 {
     spDataObject constructResponse (new DataObject());
-    if (_block.state().hasAccount(_address))
+    if (_block.state()->hasAccount(_address))
     {
         (*constructResponse)["complete"].setBool(true);
         spDataObject obj(new DataObject(DataType::Object));
         (*constructResponse).atKeyPointer("storage") = obj;
         (*constructResponse)["nextKey"] = FH32::zero().asString();
-        if (_block.state().getAccount(_address).hasStorage())
+        if (_block.state()->getAccount(_address).hasStorage())
         {
             size_t iStore = 0;
             size_t iBegin = hexOrDecStringToInt(_begin.asString());
-            for (auto const& el : _block.state().getAccount(_address).storage().getKeys())
+            for (auto const& el : _block.state()->getAccount(_address).storage().getKeys())
             {
                 if (iStore++ + 1 < iBegin)
                     continue;
                 DataObject& record = (*obj)[fto_string(iStore)];
                 record["key"] = std::get<0>(el.second)->asString();
                 record["value"] = std::get<1>(el.second)->asString();
-                record.performModifier(mod_removeLeadingZerosFromHexValuesEVEN);
+                record.performModifier(mod_removeLeadingZerosFromHexValueEVEN);
 
                 if (constructResponse->atKey("storage").getSubObjects().size() == _maxResult)
                 {

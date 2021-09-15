@@ -15,6 +15,33 @@ EthGetBlockBy::EthGetBlockBy(DataObject const& _data)
 {
     try
     {
+        REQUIRE_JSONFIELDS(_data, "EthGetBlockBy " + _data.getKey(),
+            {{"logsBloom", {{DataType::String}, jsonField::Required}},
+                {"author", {{DataType::String}, jsonField::Optional}},                 //Geth return field
+                {"miner", {{DataType::String}, jsonField::Required}},
+                {"difficulty", {{DataType::String}, jsonField::Required}},
+                {"extraData", {{DataType::String}, jsonField::Required}},
+                {"gasLimit", {{DataType::String}, jsonField::Optional}},
+                {"baseFeePerGas", {{DataType::String}, jsonField::Optional}},
+                {"gasUsed", {{DataType::String}, jsonField::Required}},
+                {"hash", {{DataType::String}, jsonField::Required}},
+                {"mixHash", {{DataType::String}, jsonField::Optional}},
+                {"nonce", {{DataType::String}, jsonField::Optional}},
+                {"number", {{DataType::String}, jsonField::Required}},
+                {"parentHash", {{DataType::String}, jsonField::Required}},
+                {"receiptsRoot", {{DataType::String}, jsonField::Required}},
+                {"stateRoot", {{DataType::String}, jsonField::Required}},
+                {"timestamp", {{DataType::String}, jsonField::Required}},
+                {"transactionsRoot", {{DataType::String}, jsonField::Required}},
+                {"sha3Uncles", {{DataType::String}, jsonField::Required}},
+                {"seedHash", {{DataType::String}, jsonField::Optional}},               //Aleth field
+                {"boundary", {{DataType::String}, jsonField::Optional}},               //Aleth field
+                {"miner", {{DataType::String}, jsonField::Required}},
+                {"size", {{DataType::String}, jsonField::Required}},
+                {"totalDifficulty", {{DataType::String}, jsonField::Required}},
+                {"uncles", {{DataType::Array}, jsonField::Required}},
+                {"transactions", {{DataType::Array}, jsonField::Required}}});
+
         m_header = readBlockHeader(_data); // BlockHeader verify _data fields
 
         m_size = spVALUE(new VALUE(_data.atKey("size")));
@@ -37,33 +64,6 @@ EthGetBlockBy::EthGetBlockBy(DataObject const& _data)
         // Remote eth_getBlockBy* always return uncles as hashes.
         for (auto const& un : _data.atKey("uncles").getSubObjects())
             m_uncles.push_back(FH32(un));
-
-        requireJsonFields(_data, "EthGetBlockBy " + _data.getKey(),
-            {{"logsBloom", {{DataType::String}, jsonField::Required}},
-             {"author", {{DataType::String}, jsonField::Optional}},                 //Geth return field
-             {"miner", {{DataType::String}, jsonField::Required}},
-             {"difficulty", {{DataType::String}, jsonField::Required}},
-             {"extraData", {{DataType::String}, jsonField::Required}},
-             {"gasLimit", {{DataType::String}, jsonField::Optional}},
-             {"baseFeePerGas", {{DataType::String}, jsonField::Optional}},
-             {"gasUsed", {{DataType::String}, jsonField::Required}},
-             {"hash", {{DataType::String}, jsonField::Required}},
-             {"mixHash", {{DataType::String}, jsonField::Optional}},
-             {"nonce", {{DataType::String}, jsonField::Optional}},
-             {"number", {{DataType::String}, jsonField::Required}},
-             {"parentHash", {{DataType::String}, jsonField::Required}},
-             {"receiptsRoot", {{DataType::String}, jsonField::Required}},
-             {"stateRoot", {{DataType::String}, jsonField::Required}},
-             {"timestamp", {{DataType::String}, jsonField::Required}},
-             {"transactionsRoot", {{DataType::String}, jsonField::Required}},
-             {"sha3Uncles", {{DataType::String}, jsonField::Required}},
-             {"seedHash", {{DataType::String}, jsonField::Optional}},               //Aleth field
-             {"boundary", {{DataType::String}, jsonField::Optional}},               //Aleth field
-             {"miner", {{DataType::String}, jsonField::Required}},
-             {"size", {{DataType::String}, jsonField::Required}},
-             {"totalDifficulty", {{DataType::String}, jsonField::Required}},
-             {"uncles", {{DataType::Array}, jsonField::Required}},
-             {"transactions", {{DataType::Array}, jsonField::Required}}});
     }
     catch (std::exception const& _ex)
     {

@@ -28,6 +28,7 @@ string const t8ntool_config = R"({
         "BerlinToLondonAt5"
     ],
     "exceptions" : {
+      "AddressTooShort" : "input string too short for common.Address",
       "InvalidStateRoot" : "",
       "ExtraDataTooBig" : "Error importing raw rlp block: Header extraData > 32 bytes",
       "InvalidDifficulty" : "Invalid difficulty:",
@@ -40,7 +41,7 @@ string const t8ntool_config = R"({
       "TooMuchGasUsed2" : "Error importing raw rlp block: t8ntool didn't return a transaction with hash",
       "InvalidNumber" : "BlockHeader number != parent.number + 1",
       "InvalidTimestampEqualParent" : "timestamp equals parent's",
-      "InvalidTimestampOlderParent" : "BlockHeader timestamp is less then it's parent block!",
+      "InvalidTimestampOlderParent" : "BlockHeader timestamp is less or equal then it's parent block!",
       "InvalidLogBloom" : "Error in field: bloom",
       "InvalidStateRoot" : "Error in field: stateRoot",
       "InvalidGasUsed" : "Error in field: gasUsed",
@@ -171,7 +172,18 @@ string const t8ntool_start = R"(#!/bin/sh
 if [ $1 = "-v" ]; then
     /bin/evm -v
 else
-    /bin/evm t8n $1 $2 $3 $4 $5 $6 $7 $8 $9 $10 $11 $12 $13 $14 $15 $16 $17 $18 $19 $20 --verbosity 2
+    stateProvided=0
+    for index in $1 $2 $3 $4 $5 $6 $7 $8 $9 $10 $11 $12 $13 $14 $15 $16 $17 $18 $19 $20 ; do
+        if [ $index = "--input.alloc" ]; then
+            stateProvided=1
+            break
+        fi
+    done
+    if [ $stateProvided -eq 1 ]; then
+        /bin/evm t8n $1 $2 $3 $4 $5 $6 $7 $8 $9 $10 $11 $12 $13 $14 $15 $16 $17 $18 $19 $20 --verbosity 2
+    else
+        /bin/evm t9n $1 $2 $3 $4 $5 $6 $7 $8 $9 $10 $11 $12 $13 $14 $15 $16 $17 $18 $19 $20
+    fi
 fi
 )";
 

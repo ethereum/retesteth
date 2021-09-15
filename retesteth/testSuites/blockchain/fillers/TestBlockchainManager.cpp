@@ -261,7 +261,7 @@ spBlockHeader TestBlockchainManager::prepareUncle(
             // Get the Timestamp of that block (which uncle is populated from)
             assert(currentChainMining.getBlocks().size() > origIndex);
             VALUE timestamp(currentChainMining.getBlocks().at(origIndex).getTestHeader()->timestamp());
-            uncleBlockHeader.getContent().setTimestamp(timestamp + _uncleSectionInTest.relTimestampFromPopulateBlock());
+            (*uncleBlockHeader).setTimestamp(timestamp + _uncleSectionInTest.relTimestampFromPopulateBlock());
         }
     }
 

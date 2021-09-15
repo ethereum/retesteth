@@ -20,6 +20,7 @@ struct ToolResponse
     FH32 const& receiptRoot() const { return m_receiptRoot; }
     FH32 const& logsHash() const { return m_logsHash; }
     FH256 const& logsBloom() const { return m_logsBloom; }
+    VALUE const& currentDifficulty() const { return m_currentDifficulty; }
     VALUE totalGasUsed() const
     {
         VALUE totalGasUsed = 0;
@@ -27,7 +28,7 @@ struct ToolResponse
             totalGasUsed += rec.gasUsed();
         return totalGasUsed;
     }
-    State const& state() const { return m_stateResponse; }
+    spState const& state() const { return m_stateResponse; }
     std::vector<ToolResponseReceipt> const& receipts() const { return m_receipts; }
 
     // Tool export the state separately
@@ -43,6 +44,7 @@ private:
     spFH32 m_receiptRoot;
     spFH32 m_logsHash;
     spFH256 m_logsBloom;
+    spVALUE m_currentDifficulty;
     std::vector<ToolResponseReceipt> m_receipts;
     spState m_stateResponse;
     std::map<FH32, DebugVMTrace> m_debugTrace;

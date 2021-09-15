@@ -3,10 +3,13 @@
 #include <retesteth/EthChecks.h>
 #include <retesteth/TestHelper.h>
 #include <locale>
+#include <mutex>
 #include <sstream>
 
 using namespace test::teststruct;
 using namespace dev;
+
+std::mutex g_cacheAccessMutexValue;
 
 namespace test
 {
@@ -92,13 +95,22 @@ string VALUE::asDecString() const
     return m_data.str(0, std::ios_base::dec);
 }
 
-string VALUE::asString(size_t _roundBytes) const
+string const& VALUE::asString(size_t _roundBytes) const
 {
-    string ret = m_data.str(_roundBytes, std::ios_base::hex);
-    if (ret.size() % 2 != 0)
-        ret = "0" + ret;
-    test::strToLower(ret);
-    return m_bigint ? "0x:bigint 0x" + ret : "0x" + ret;
+    std::lock_guard<std::mutex> lock(g_cacheAccessMutexValue);
+    if (m_dirty)
+    {
+        string& ret = m_dataStrZeroXCache;
+        ret = m_data.str(_roundBytes, std::ios_base::hex);
+        if (ret.size() % 2 != 0)
+            ret.insert(0, "0");
+        test::strToLower(ret);
+
+        m_dataStrBigIntCache = m_dataStrZeroXCache;
+        m_dataStrZeroXCache.insert(0, "0x");
+        m_dataStrBigIntCache.insert(0, "0x:bigint 0x");
+    }
+    return m_bigint ? m_dataStrBigIntCache : m_dataStrZeroXCache;
 }
 
 }  // namespace teststruct

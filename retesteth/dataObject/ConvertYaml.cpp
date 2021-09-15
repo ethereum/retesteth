@@ -25,7 +25,7 @@ std::string yamlTypeAsString(YAML::NodeType::value _type)
     return "";
 }
 
-spDataObject ConvertYamlToData(YAML::Node const& _node)
+spDataObject ConvertYamlToData(YAML::Node const& _node, bool _sort)
 {
     if (_node.IsNull())
         return spDataObject(new DataObject(DataType::Null));
@@ -41,18 +41,20 @@ spDataObject ConvertYamlToData(YAML::Node const& _node)
     if (_node.IsMap())
     {
         spDataObject jObject(new DataObject(DataType::Object));
-        (*jObject).setAutosort(true);
+        if (_sort)
+            (*jObject).setAutosort(true);
         for (auto const& i : _node)
-            (*jObject).addSubObject(i.first.as<string>(), ConvertYamlToData(i.second));
+            (*jObject).addSubObject(i.first.as<string>(), ConvertYamlToData(i.second, _sort));
         return jObject;
     }
 
     if (_node.IsSequence())
     {
         spDataObject jArray(new DataObject(DataType::Array));
-        (*jArray).setAutosort(true);
+        if (_sort)
+            (*jArray).setAutosort(true);
         for (size_t i = 0; i < _node.size(); i++)
-            (*jArray).addArrayObject(ConvertYamlToData(_node[i]));
+            (*jArray).addArrayObject(ConvertYamlToData(_node[i], _sort));
         return jArray;
     }
 

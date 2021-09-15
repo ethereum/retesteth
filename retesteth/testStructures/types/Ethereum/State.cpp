@@ -1,31 +1,31 @@
 #include "State.h"
-#include "Account.h"
 #include <retesteth/EthChecks.h>
 
 namespace test
 {
 namespace teststruct
 {
-State::State(std::vector<spAccount>& _accList)
+
+State::State(std::map<FH20, spAccountBase>& _accList)
 {
-    // Here spAccountBase will take control of spAccount content and increase its refCount
-    // AccountBase will handle all the logic for Account, but with this constructor
     // We certain that account provided for the state is full and not incomplete
-    for (auto& el : _accList)
+    m_accounts = _accList;
+    m_raw = spDataObject(new DataObject());
+    for (auto const& el : _accList)
     {
-        m_order.push_back(el->address());
-        m_accounts[el->address()] = spAccountBase(&el.getContent());
+        ETH_ERROR_REQUIRE_MESSAGE(el.second->type() == AccountType::FullAccount, "State::State(std::map) provided account type is not of a FullAccount type!");
+        (*m_raw).atKeyPointer(el.first.asString()) = el.second->asDataObject();  // Recreate export data
     }
 }
 
-State::State(DataObject const& _data)
+State::State(spDataObjectMove _data)
 {
     try
     {
-        for (auto const& el : _data.getSubObjects())
+        m_raw = _data.getPointer();
+        for (auto& el : (*m_raw).getSubObjectsUnsafe())
         {
             FH20 key(el->getKey());
-            m_order.push_back(key);
             m_accounts[key] = spAccountBase(new Account(el));
         }
         if (m_accounts.size() == 0)
@@ -33,17 +33,17 @@ State::State(DataObject const& _data)
     }
     catch (std::exception const& _ex)
     {
-        throw UpwardsException(string("State parse error: ") + _ex.what() + _data.asJson());
+        throw UpwardsException(string("State parse error: ") + _ex.what() + m_raw->asJson());
     }
 }
 
-Account const& State::getAccount(FH20 const& _address) const
+State::Account const& State::getAccount(FH20 const& _address) const
 {
     assert(m_accounts.count(_address));
-    return dynamic_cast<Account const&>(m_accounts.at(_address).getCContent());
+    return dynamic_cast<State::Account const&>(m_accounts.at(_address).getCContent());
 }
 
-bool State::hasAccount(Account const& _accaunt) const
+bool State::hasAccount(State::Account const& _accaunt) const
 {
     return m_accounts.count(_accaunt.address());
 }
@@ -53,20 +53,11 @@ bool State::hasAccount(FH20 const& _address) const
     return m_accounts.count(_address);
 }
 
-spDataObject State::asDataObject(ExportOrder _order) const
+spDataObject const& State::asDataObject() const
 {
-    spDataObject out(new DataObject());
-    if (_order == ExportOrder::OldStyle)
-    {
-        for (auto const& el : m_order)
-            (*out).addSubObject(m_accounts.at(el)->asDataObject(_order));
-    }
-    else
-    {
-        for (auto const& el : m_accounts)
-            (*out).addSubObject(el.second->asDataObject());
-    }
-    return out;
+    // As long as we guarantee unmutability of parsed data in the structure
+    // We can return the same data object as we got, not recalculating the whole thing
+    return m_raw;
 }
 
 }  // namespace teststruct

@@ -36,7 +36,7 @@ spDataObject FillTest(BlockchainTestInFiller const& _test, TestSuite::TestSuiteO
                 TestOutputHelper::get().setCurrentTestName(newtestname);
                 filledTest.setKey(newtestname);
                 if (_test.hasInfo())
-                    filledTest["_info"]["comment"] = _test.Info().comment();
+                    (*_filledTest).atKeyPointer("_info") = _test.Info().rawData();
                 filledTest["sealEngine"] = sealEngineToStr(_test.sealEngine());
                 filledTest["network"] = net.asString();
                 filledTest.atKeyPointer("pre") = _test.Pre().asDataObject();
@@ -81,7 +81,7 @@ spDataObject FillTest(BlockchainTestInFiller const& _test, TestSuite::TestSuiteO
                 {
                     State remoteState(getRemoteState(session));
                     compareStates(expect.result(), remoteState);
-                    filledTest.atKeyPointer("postState") = remoteState.asDataObject(ExportOrder::OldStyle);
+                    filledTest.atKeyPointer("postState") = remoteState.asDataObject();
                     if (Options::get().poststate)
                         ETH_STDOUT_MESSAGE("\nState Dump:" + TestOutputHelper::get().testInfo().errorDebug() + cDefault +
                                            " \n" + filledTest.atKey("postState").asJson());

@@ -7,6 +7,7 @@
 #include <boost/uuid/uuid_generators.hpp>  // generators
 #include <boost/uuid/uuid_io.hpp>          // streaming operators etc
 #include <boost/uuid/uuid_io.hpp>
+
 #include <csignal>
 #include <mutex>
 
@@ -56,14 +57,14 @@ spDataObject readJsonData(fs::path const& _file, string const& _stopper, bool _a
 }
 
 /// Safely read the yaml file into DataObject
-spDataObject readYamlData(fs::path const& _file)
+spDataObject readYamlData(fs::path const& _file, bool _sort)
 {
     try
     {
         string s = dev::contentsString(_file);
         ETH_ERROR_REQUIRE_MESSAGE(
             s.length() > 0, "Contents of " + _file.string() + " is empty. Trying to parse empty file. (forgot --filltests?)");
-        return dataobject::ConvertYamlToData(YAML::Load(s));
+        return dataobject::ConvertYamlToData(YAML::Load(s), _sort);
     }
     catch (std::exception const& _ex)
     {
@@ -291,6 +292,18 @@ string prepareVersionString()
     version += "+commit." + commit.substr(0, 8);
     version += "." + string(DEV_QUOTED(ETH_BUILD_OS)) + "." + string(DEV_QUOTED(ETH_BUILD_COMPILER));
     return version;
+}
+
+int retestethVersion()
+{
+    static int iversion = 0;
+    if (iversion == 0)
+    {
+        string version = string(ETH_PROJECT_VERSION);
+        version.erase(std::remove(version.begin(), version.end(), '.'), version.end());
+        iversion = atoi(version.c_str());
+    }
+    return iversion;
 }
 
 string prepareLLLCVersionString()

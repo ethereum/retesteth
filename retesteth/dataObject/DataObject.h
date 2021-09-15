@@ -39,6 +39,7 @@ public:
     DataType type() const;
     void setKey(std::string const& _key);
     std::string const& getKey() const;
+    std::string& getKeyUnsafe();
 
     std::vector<spDataObject> const& getSubObjects() const;
     std::map<string, spDataObject> const& getSubObjectKeys() const;
@@ -54,6 +55,8 @@ public:
     bool count(std::string const& _key) const;
 
     std::string const& asString() const;
+    std::string& asStringUnsafe();
+
     int asInt() const;
     bool asBool() const;
 
@@ -76,7 +79,7 @@ public:
 
     DataObject const& atKey(std::string const& _key) const;
     DataObjectK atKeyPointer(std::string const& _key);
-    spDataObject atKeyPointerUnsafe(std::string const& _key);
+    spDataObject& atKeyPointerUnsafe(std::string const& _key);
     DataObject& atKeyUnsafe(std::string const& _key);
     DataObject const& at(size_t _pos) const;
     DataObject& atUnsafe(size_t _pos);
@@ -84,7 +87,13 @@ public:
     DataObject& atLastElementUnsafe();
 
     void setVerifier(void (*f)(DataObject&));
-    void performModifier(void (*f)(DataObject&), std::set<string> const& _exceptionKeys = {});
+    enum ModifierOption
+    {
+        RECURSIVE,
+        NONRECURSIVE
+    };
+    void performModifier(
+        void (*f)(DataObject&), ModifierOption _opt = ModifierOption::RECURSIVE, std::set<string> const& _exceptionKeys = {});
     void performVerifier(void (*f)(DataObject const&)) const;
 
     void clear(DataType _type = DataType::NotInitialized);
@@ -109,8 +118,11 @@ private:
     DataObject& _addSubObject(spDataObject const& _obj, string const& _keyOverwrite = string());
     void _assert(bool _flag, std::string const& _comment = "") const;
 
+    // Use vector here to be able to quickly find insert position
+    // of objects to be ordered by it's key with findOrderedKeyPosition
     std::vector<spDataObject> m_subObjects;
     std::map<string, spDataObject> m_subObjectKeys;
+
     DataType m_type;
     std::string m_strKey;
     bool m_allowOverwrite = false;  // allow overwrite elements
@@ -125,7 +137,7 @@ private:
 
 typedef GCP_SPointer<DataObject> spDataObject;
 
-// The key assigner
+// The key assigner, assign left pointer to DataObjectK's host m_data[key]
 class DataObjectK
 {
 public:
@@ -140,6 +152,25 @@ private:
     DataObject& m_data;
 };
 
+
+// Can help to keep incapsulation
+// DataObject move requester, require the memory pointer to be irreversably moved into it
+class spDataObjectMove
+{
+public:
+    spDataObjectMove() {}
+    void assignPointer(spDataObject const& _obj) { m_obj = _obj; }
+    spDataObject& getPointer() { return m_obj; }
+    operator DataObject const&() const { return m_obj.getCContent(); }
+
+private:
+    spDataObject m_obj;
+};
+
+// Move memory from _obj to spDataObjectMove and flush _obj pointer
+spDataObjectMove move(spDataObject& _obj);
+
 // Find index that _key should take place in when being added to ordered _objects by key
+// Heavy function, use only on export when need to construct json with sorted keys
 size_t findOrderedKeyPosition(string const& _key, vector<spDataObject> const& _objects);
 }

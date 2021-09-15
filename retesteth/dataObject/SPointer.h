@@ -1,6 +1,7 @@
 #pragma once
 #include <exception>
 #include <string>
+#include <mutex>
 
 namespace dataobject
 {
@@ -25,6 +26,7 @@ private:
 };
 
 void throwException(std::string const& _ex);
+void disableThreadsafe();
 
 template <class T>
 class GCP_SPointer;
@@ -35,6 +37,8 @@ private:
     bool _isEmpty;
     void AddRef();
     int DelRef();
+    static std::mutex g_spRefAccessMutex;
+
 
 public:
     GCP_SPointerBase() : _nRef(0), _isEmpty(false) {}
@@ -61,11 +65,12 @@ private:
                 }
             }
             else
-                throw SPointerException("SPointer delete more times than counter increased!");
+                throwException("GCP_SPointer::release() SPointer delete more times than counter increased!");
         }
     }
 
 public:
+    static void DISABLETHREADSAFE() { disableThreadsafe(); };
     explicit GCP_SPointer() : _pointee(nullptr) {}
     GCP_SPointer(int) : _pointee(nullptr) {}
     explicit GCP_SPointer(T* pointee)
@@ -94,6 +99,12 @@ public:
 
     T* pointee() { return _pointee; }
 
+    // Remove link to the pointer.
+    void null() {
+        release();
+        _pointee = nullptr;
+    }
+
     // Replace one pointer with another
     GCP_SPointer& operator=(GCP_SPointer const& rhs)
     {
@@ -107,6 +118,7 @@ public:
         return *this;
     }
 
+    // Disable this to aboid auto cast confusion
     /*GCP_SPointer& operator=(const int rhs)
     {
         _pointee = nullptr;

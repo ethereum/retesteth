@@ -21,6 +21,7 @@
 #include <dataObject/ConvertFile.h>
 #include <dataObject/DataObject.h>
 #include <retesteth/TestOutputHelper.h>
+#include <retesteth/testSuites/Common.h>
 #include <boost/test/unit_test.hpp>
 
 using namespace std;
@@ -29,6 +30,25 @@ using namespace test;
 using namespace dataobject;
 
 BOOST_FIXTURE_TEST_SUITE(DataObjectTestSuite, TestOutputHelperFixture)
+
+BOOST_AUTO_TEST_CASE(dataobject_sort)
+{
+    DataObject obj;
+    obj.setAutosort(true);
+    obj["indexes"] = "1";
+    obj["hash"] = "2";
+    obj["txbytes"] = "3";
+    obj["logs"] = "4";
+
+    DataObject obj2;
+    obj2["indexes"] = "1";
+    obj2["hash"] = "2";
+    obj2["txbytes"] = "3";
+    obj2["logs"] = "4";
+    obj2.performModifier(mod_sortKeys);
+
+    BOOST_CHECK_EQUAL(obj.asJson(0, false), obj2.asJson(0, false));
+}
 
 BOOST_AUTO_TEST_CASE(dataobject_bracers)
 {
@@ -507,7 +527,6 @@ BOOST_AUTO_TEST_CASE(dataobject_readJson15)
     BOOST_CHECK(dObj->asJson(0, false) == res);
 }
 
-
 BOOST_AUTO_TEST_CASE(dataobject_findOrderedKeyPosition_before1_of3)
 {
     string const key = "aab0";
@@ -787,6 +806,7 @@ BOOST_AUTO_TEST_CASE(dataobject_jsonOrder)
     data["aa2"] = "2";
     data["aa70"] = "7";
     data["aa8"] = "8";
+    std::cerr << data.asJson(0) << std::endl;
     BOOST_CHECK(data.asJson(0, false) ==
                 "{\"aa1\":\"1\",\"aa2\":\"2\",\"aa3\":\"3\",\"aa31\":\"3\",\"aa5\":\"5\",\"aa7\":"
                 "\"7\",\"aa70\":\"7\",\"aa8\":\"8\"}");
@@ -855,9 +875,9 @@ BOOST_AUTO_TEST_CASE(dataobject_besuresponse)
           }
         })";
     spDataObject dObj = ConvertJsoncppStringToData(data, string(), true);
-
     string const expectedParse =
         R"({"result":{"transactions":[{"blockHash":"0xac7b82af234ef01bf4d24a3b9c22c2de091c6f71ec04d51ff23bd780533d999f","blockNumber":"0x1","chainId":null,"from":"0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b","gas":"0x7a120","gasPrice":"0xa","hash":"0x225117089dee26945644798e2c64d3117f55c95c7cf5509f7176de4b3af5202d","input":"0x604b80600c6000396000f3007c01000000000000000000000000000000000000000000000000000000006000350463cbf0b0c08114602d57005b60006004358073ffffffffffffffffffffffffffffffffffffffff16ff","nonce":"0x0","publicKey":"0x3a514176466fa815ed481ffad09110a2d344f6c9b78c1d14afc351c3a51be33d8072e77939dc03ba44790779b7a1025baf3003f6732430e20cd9b76d953391b3","r":"0xe7d3c664c49aa9f5ce4eb76c8547450466262a78bd093160f492ea0853c68e9","raw":"0xf8a5800a8307a1208081ffb857604b80600c6000396000f3007c01000000000000000000000000000000000000000000000000000000006000350463cbf0b0c08114602d57005b60006004358073ffffffffffffffffffffffffffffffffffffffff16ff1ca00e7d3c664c49aa9f5ce4eb76c8547450466262a78bd093160f492ea0853c68e9a03f843e72210ff1da4fd9e375339872bcf0fad05c014e280ffc755e173700dd62","s":"0x3f843e72210ff1da4fd9e375339872bcf0fad05c014e280ffc755e173700dd62","to":null,"transactionIndex":"0x0","v":"0x1c","value":"0xff"}]}})";
+
     BOOST_CHECK(dObj->asJson(0, false) == expectedParse);
 }
 

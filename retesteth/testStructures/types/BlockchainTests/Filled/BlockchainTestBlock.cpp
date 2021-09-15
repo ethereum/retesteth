@@ -10,6 +10,25 @@ BlockchainTestBlock::BlockchainTestBlock(DataObject const& _data)
 {
     try
     {
+        REQUIRE_JSONFIELDS(_data, "BlockchainTestBlock " + _data.getKey(),
+            {{"rlp", {{DataType::String}, jsonField::Required}},
+                {"chainname", {{DataType::String}, jsonField::Optional}},    // User information
+                {"blocknumber", {{DataType::String}, jsonField::Optional}},  // User information
+                {"transactions", {{DataType::Array}, jsonField::Optional}},
+                {"transactionSequence", {{DataType::Array}, jsonField::Optional}},
+                {"uncleHeaders", {{DataType::Array}, jsonField::Optional}},
+                {"expectException", {{DataType::String}, jsonField::Optional}},                   // User information
+                {"expectExceptionALL", {{DataType::String}, jsonField::Optional}},                // Legacy field
+                {"expectExceptionByzantium", {{DataType::String}, jsonField::Optional}},          // Legacy field
+                {"expectExceptionHomestead", {{DataType::String}, jsonField::Optional}},          // Legacy field
+                {"expectExceptionEIP150", {{DataType::String}, jsonField::Optional}},             // Legacy field
+                {"expectExceptionEIP158", {{DataType::String}, jsonField::Optional}},             // Legacy field
+                {"expectExceptionFrontier", {{DataType::String}, jsonField::Optional}},           // Legacy field
+                {"expectExceptionConstantinople", {{DataType::String}, jsonField::Optional}},     // Legacy field
+                {"expectExceptionConstantinopleFix", {{DataType::String}, jsonField::Optional}},  // Legacy field
+                {"expectExceptionIstanbul", {{DataType::String}, jsonField::Optional}},           // Legacy field
+                {"blockHeader", {{DataType::Object}, jsonField::Optional}}});
+
         if (_data.count("chainname"))
             m_chainName = _data.atKey("chainname").asString();
         if (_data.count("blocknumber"))
@@ -40,25 +59,6 @@ BlockchainTestBlock::BlockchainTestBlock(DataObject const& _data)
                 m_uncles.push_back(readBlockHeader(un));
         }
         m_rlp = spBYTES(new BYTES(_data.atKey("rlp").asString()));
-
-        requireJsonFields(_data, "BlockchainTestBlock " + _data.getKey(),
-            {{"rlp", {{DataType::String}, jsonField::Required}},
-                {"chainname", {{DataType::String}, jsonField::Optional}},    // User information
-                {"blocknumber", {{DataType::String}, jsonField::Optional}},  // User information
-                {"transactions", {{DataType::Array}, jsonField::Optional}},
-                {"transactionSequence", {{DataType::Array}, jsonField::Optional}},
-                {"uncleHeaders", {{DataType::Array}, jsonField::Optional}},
-                {"expectException", {{DataType::String}, jsonField::Optional}},                   // User information
-                {"expectExceptionALL", {{DataType::String}, jsonField::Optional}},                // Legacy field
-                {"expectExceptionByzantium", {{DataType::String}, jsonField::Optional}},          // Legacy field
-                {"expectExceptionHomestead", {{DataType::String}, jsonField::Optional}},          // Legacy field
-                {"expectExceptionEIP150", {{DataType::String}, jsonField::Optional}},             // Legacy field
-                {"expectExceptionEIP158", {{DataType::String}, jsonField::Optional}},             // Legacy field
-                {"expectExceptionFrontier", {{DataType::String}, jsonField::Optional}},           // Legacy field
-                {"expectExceptionConstantinople", {{DataType::String}, jsonField::Optional}},     // Legacy field
-                {"expectExceptionConstantinopleFix", {{DataType::String}, jsonField::Optional}},  // Legacy field
-                {"expectExceptionIstanbul", {{DataType::String}, jsonField::Optional}},           // Legacy field
-                {"blockHeader", {{DataType::Object}, jsonField::Optional}}});
     }
     catch (std::exception const& _ex)
     {

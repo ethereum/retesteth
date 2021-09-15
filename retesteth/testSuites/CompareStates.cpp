@@ -1,21 +1,23 @@
 #include "Common.h"
-#include <dataObject/DataObject.h>
 #include <retesteth/Options.h>
-#include <retesteth/session/Session.h>
+#include <retesteth/testStructures/types/Ethereum/State.h>
 using namespace std;
 namespace test
 {
-CompareResult compareAccounts(AccountBase const& _expectAccount, Account const& _remoteAccount);
 
-Account remoteGetAccount(SessionInterface& _session, VALUE const& _bNumber, VALUE const& _trIndex, FH20 const& _account)
+CompareResult compareAccounts(AccountBase const& _expectAccount, State::Account const& _remoteAccount);
+
+State::Account remoteGetAccount(SessionInterface& _session, VALUE const& _bNumber, VALUE const& _trIndex, FH20 const& _account)
 {
-    VALUE balance(_session.eth_getBalance(_account, _bNumber));
-    VALUE nonce(_session.eth_getTransactionCount(_account, _bNumber));
-    BYTES code(_session.eth_getCode(_account, _bNumber));
+    // TODO make sp here. do not copy returned data
+    // Read the returned memory and put it in the account
+    spVALUE balance = _session.eth_getBalance(_account, _bNumber);
+    spVALUE nonce = _session.eth_getTransactionCount(_account, _bNumber);
+    spBYTES code = _session.eth_getCode(_account, _bNumber);
 
     bool hasStorage = true;
     FH32 beginHash = FH32::zero();
-    Storage tmpStorage = Storage(DataObject(DataType::Object));
+    spStorage tmpStorage = spStorage(new Storage(DataObject(DataType::Object)));
     size_t safety = 500;
     while (hasStorage && --safety)
     {
@@ -25,11 +27,11 @@ Account remoteGetAccount(SessionInterface& _session, VALUE const& _bNumber, VALU
             hasStorage = false;
         else
             beginHash = res.nextKey();
-        tmpStorage.merge(res.storage());
+        (*tmpStorage).merge(res.storage());
     }
     if (safety == 0)
         ETH_ERROR_MESSAGE("remoteGetAccount::DebugStorageRangeAt seems like an endless loop!");
-    return Account(_account, balance, nonce, code, tmpStorage);
+    return State::Account(_account, balance, nonce, code, tmpStorage);
 }
 
 // Get full remote state from the client
@@ -59,11 +61,11 @@ State getRemoteState(SessionInterface& _session)
                                 FH20 const& _account) { return remoteGetAccount(_session, recentBNumber, trIndex, _account); };
 
     size_t byteSize = 0;
-    std::vector<spAccount> stateAccountMap;
+    std::map<FH20, spAccountBase> stateAccountMap;
     for (auto const& acc : accountList)
     {
-        spAccount remAccount(new Account(getRemoteAccount(acc)));
-        stateAccountMap.push_back(remAccount);
+        spAccountBase remAccount(new State::Account(getRemoteAccount(acc)));
+        stateAccountMap.emplace(acc, remAccount);
         if (!Options::get().fullstate)
         {
             byteSize += remAccount->storage().getKeys().size() * 64;
@@ -176,8 +178,9 @@ CompareResult compareStorage(Storage const& _expectStorage, Storage const& _remo
     return result;
 }
 
+// TODO make a friend with Account class ?
 // Compare Expected Account agains Account
-CompareResult compareAccounts(AccountBase const& _expectAccount, Account const& _remoteAccount)
+CompareResult compareAccounts(AccountBase const& _expectAccount, State::Account const& _remoteAccount)
 {
     // report all errors, but return the last error as a compare result
     CompareResult result = CompareResult::Success;

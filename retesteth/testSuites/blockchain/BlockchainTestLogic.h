@@ -19,5 +19,5 @@ spDataObject FillTest(BlockchainTestInFiller const& _testObject, TestSuite::Test
 void RunTest(BlockchainTestInFilled const& _testObject, TestSuite::TestSuiteOptions const& _opt);
 
 /// Parse blockchain test fillers and Run/Fill tests
-spDataObject DoTests(DataObject const& _input, TestSuite::TestSuiteOptions& _opt);
+spDataObject DoTests(spDataObject& _input, TestSuite::TestSuiteOptions& _opt);
 }

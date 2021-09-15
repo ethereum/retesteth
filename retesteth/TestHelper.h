@@ -25,7 +25,7 @@ Json::Value readJson(fs::path const& _path);
 /// Safely read the json file into DataObject
 spDataObject readJsonData(
     fs::path const& _file, string const& _stopper = string(), bool _autosort = false);
-spDataObject readYamlData(fs::path const& _file);
+spDataObject readYamlData(fs::path const& _file, bool _sort = false);
 
 /// Get files from directory
 std::vector<boost::filesystem::path> getFiles(boost::filesystem::path const& _dirPath, std::set<std::string> _extentionMask, std::string const& _particularFile = {});
@@ -54,6 +54,7 @@ void strToLower(string& _input);
 
 /// retesteth version string
 std::string prepareVersionString();
+int retestethVersion();
 
 /// local lllc version string
 std::string prepareLLLCVersionString();

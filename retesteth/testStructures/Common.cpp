@@ -47,14 +47,22 @@ namespace test
 {
 namespace teststruct
 {
-// DataObject modifiers. Convert all json values to lower case
-void mod_valuesToLowerCase(DataObject& _obj)
+// DataObject modifiers
+void mod_valueToLowerCase(DataObject& _obj)
 {
     if (_obj.type() == DataType::String)
     {
-        string value = _obj.asString();
+        string& value = _obj.asStringUnsafe();
         std::transform(value.begin(), value.end(), value.begin(), [](unsigned char c) { return std::tolower(c); });
-        _obj = value;
+    }
+}
+
+void mod_keyToLowerCase(DataObject& _obj)
+{
+    if (!_obj.getKey().empty())
+    {
+        string& value = _obj.getKeyUnsafe();
+        std::transform(value.begin(), value.end(), value.begin(), [](unsigned char c) { return std::tolower(c); });
     }
 }
 
@@ -83,6 +91,13 @@ void mod_valueToCompactEvenHexPrefixed(DataObject& _obj)
                 src.erase(std::remove(src.begin(), src.end(), '_'), src.end());
                 _obj.setString(toCompactHexPrefixed(src, 1));
             }
+            else
+            {
+                if (_obj.asString().size() == 2)
+                    _obj.asStringUnsafe().insert(2, "00");
+                else
+                    _obj.performModifier(mod_removeLeadingZerosFromHexValueEVEN);
+            }
         }
         catch (std::exception const& _ex)
         {
@@ -97,6 +112,13 @@ void mod_keyToCompactEvenHexPrefixed(DataObject& _obj)
     {
         if (!(_obj.getKey()[0] == '0' && _obj.getKey()[1] == 'x'))
             _obj.setKey(toCompactHexPrefixed(_obj.getKey(), 1));
+        else
+        {
+            if (_obj.getKey().size() == 2)
+                _obj.getKeyUnsafe().insert(2, "00");
+            else
+                _obj.performModifier(mod_removeLeadingZerosFromHexKeyEVEN);
+        }
     }
     catch (std::exception const& _ex)
     {
@@ -117,7 +139,7 @@ void mod_removeLeadingZerosFromHexValues(DataObject& _obj)
 }
 
 // Remove leading zeros from hex values leaving 0x0004 - > 0x04
-void mod_removeLeadingZerosFromHexValuesEVEN(DataObject& _obj)
+void mod_removeLeadingZerosFromHexValueEVEN(DataObject& _obj)
 {
     mod_removeLeadingZerosFromHexValues(_obj);
     if (_obj.type() == DataType::String)
@@ -128,7 +150,7 @@ void mod_removeLeadingZerosFromHexValuesEVEN(DataObject& _obj)
     }
 }
 
-void mod_removeLeadingZerosFromHexKeysEVEN(DataObject& _obj)
+void mod_removeLeadingZerosFromHexKeyEVEN(DataObject& _obj)
 {
     string str = _obj.getKey();
     removeLeadingZeroes(str);
@@ -136,6 +158,24 @@ void mod_removeLeadingZerosFromHexKeysEVEN(DataObject& _obj)
     if (t == DigitsType::UnEvenHexPrefixed)
         str = "0x0" + str.substr(2);
     _obj.setKey(str);
+}
+
+void mod_valueInsertZeroXPrefix(DataObject& _obj)
+{
+    if (_obj.asString().size() > 1 && _obj.asString()[1] != 'x')
+        _obj.asStringUnsafe().insert(0, "0x");
+}
+
+void mod_sortKeys(DataObject& _obj)
+{
+    std::map<string, spDataObject> const map = _obj.getSubObjectKeys();
+    if (map.size() > 1)
+    {
+        _obj.clearSubobjects();
+        _obj.setAutosort(true);
+        for (auto const& el : map)
+            _obj.atKeyPointer(el.second->getKey()) = el.second;
+    }
 }
 
 long long int hexOrDecStringToInt(string const& _str)
@@ -159,21 +199,29 @@ void requireJsonFields(
     // check for unexpected fiedls
     for (auto const& field : _o.getSubObjects())
     {
-        string message = "'" + field->getKey() + "' should not be declared in '" + _section + "' section!";
+        string const message = "'" + field->getKey() + "' should not be declared in '" + _section + "' section!";
         if (_fail)
+        {
             ETH_FAIL_REQUIRE_MESSAGE(_validationMap.count(field->getKey()), message);
+        }
         else
+        {
             ETH_ERROR_REQUIRE_MESSAGE(_validationMap.count(field->getKey()), message);
+        }
     }
 
     // check field types with validation map
     for (auto const& vmap : _validationMap)
     {
-        string message = vmap.first + " not found in " + _section + " section! " + TestOutputHelper::get().testName();
+        string const message = vmap.first + " not found in " + _section + " section! " + TestOutputHelper::get().testName();
         if (_fail)
+        {
             ETH_FAIL_REQUIRE_MESSAGE(_o.count(vmap.first) > 0, message);
+        }
         else
+        {
             ETH_ERROR_REQUIRE_MESSAGE(_o.count(vmap.first) > 0, message);
+        }
         bool matched = false;
         std::string sTypes;
         for (auto const& type : vmap.second)
@@ -249,27 +297,40 @@ void requireJsonFields(DataObject const& _o, std::string const& _config, std::ma
 
 // Compile LLL in code
 // Convert dec fields to hex, add 0x prefix to accounts and storage keys
-spDataObject convertDecStateToHex(DataObject const& _data, solContracts const& _preSolidity)
+void convertDecStateToHex(spDataObject& _data, solContracts const& _preSolidity, StateToHex _compileCode)
 {
     // -- Compile LLL in pre state into byte code if not already
     // -- Convert State::Storage keys/values into hex
-    spDataObject tmpD(new DataObject());
-    tmpD.getContent().copyFrom(_data); // TODO copy HERE time consuming!!!
-    for (auto& acc2 : (*tmpD).getSubObjectsUnsafe())
+    for (auto& acc2 : (*_data).getSubObjectsUnsafe())
     {
         DataObject& acc = acc2.getContent();
         if (acc.getKey()[1] != 'x')
             acc.setKey("0x" + acc.getKey());
-        acc["code"].setString(test::compiler::replaceCode(acc.atKey("code").asString(), _preSolidity));
-        acc["nonce"].performModifier(mod_valueToCompactEvenHexPrefixed);
-        acc["balance"].performModifier(mod_valueToCompactEvenHexPrefixed);
-        for (auto& rec : acc["storage"].getSubObjectsUnsafe())
+        acc.performModifier(mod_keyToLowerCase);
+
+        if (acc.count("code"))
         {
-            rec.getContent().performModifier(mod_keyToCompactEvenHexPrefixed);
-            rec.getContent().performModifier(mod_valueToCompactEvenHexPrefixed);
+            if (_compileCode == StateToHex::COMPILECODE)
+                acc["code"].setString(test::compiler::replaceCode(acc.atKey("code").asString(), _preSolidity));
+            if (acc.atKey("code").asString().empty())
+                acc["code"] = "0x" + acc.atKey("code").asString();
         }
+
+        if (acc.count("nonce"))
+            acc["nonce"].performModifier(mod_valueToCompactEvenHexPrefixed);
+        if (acc.count("balance"))
+            acc["balance"].performModifier(mod_valueToCompactEvenHexPrefixed);
+        if (acc.count("storage"))
+        {
+            for (auto& rec : acc["storage"].getSubObjectsUnsafe())
+            {
+                rec.getContent().performModifier(mod_keyToCompactEvenHexPrefixed);
+                rec.getContent().performModifier(mod_valueToCompactEvenHexPrefixed);
+                acc.performModifier(mod_keyToLowerCase);
+            }
+        }
+        acc.performModifier(mod_valueToLowerCase);
     }
-    return tmpD;
 }
 
 // Convert dec fields to hex, add 0x prefix to accounts and storage keys
@@ -348,6 +409,20 @@ void readExpectExceptions(DataObject const& _data, std::map<FORK, string>& _out)
         for (auto const& el : parsedForks)
             _out.emplace(el, rec->asString());
     }
+}
+
+void convertDecTransactionToHex(spDataObject& _data)
+{
+    DataObject& data = _data.getContent();
+    data.performModifier(mod_valueToCompactEvenHexPrefixed, DataObject::ModifierOption::RECURSIVE, {"data", "to"});
+
+    // fix 0x prefix on 'to' key
+    string& to = data.atKeyUnsafe("to").asStringUnsafe();
+    if (to.size() > 1 && to.at(1) != 'x')
+        to.insert(0, "0x");
+
+    // Compile LLL in transaction data into byte code if not already
+    data["data"] = test::compiler::replaceCode(data.atKey("data").asString());
 }
 
 }  // namespace teststruct

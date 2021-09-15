@@ -3,6 +3,7 @@
 #include <retesteth/testStructures/types/Ethereum/EthereumBlock.h>
 #include <retesteth/testStructures/types/RPC/EthGetBlockBy.h>
 #include <retesteth/testStructures/types/RPC/SetChainParamsArgs.h>
+#include <retesteth/testStructures/types/RPC/TestRawTranasction.h>
 #include <boost/filesystem.hpp>
 namespace fs = boost::filesystem;
 
@@ -14,7 +15,7 @@ namespace toolimpl
 class ToolChainManager : public GCP_SPointerBase
 {
 public:
-    ToolChainManager(SetChainParamsArgs const& _config, fs::path const& _toolPath, fs::path const& _tmpDir);
+    ToolChainManager(spSetChainParamsArgs const& _config, fs::path const& _toolPath, fs::path const& _tmpDir);
     void addPendingTransaction(spTransaction const& _tr) { m_pendingBlock.getContent().addTransaction(_tr); }
 
     ToolChain const& currentChain() const
@@ -30,6 +31,10 @@ public:
     EthereumBlockState const& blockByHash(FH32 const& _hash) const;
     void rewindToBlock(VALUE const& _number);
     void modifyTimestamp(VALUE const& _time);
+
+    // Transaction tests
+    static TestRawTransaction test_rawTransaction(
+        BYTES const& _rlp, FORK const& _fork, fs::path const& _toolPath, fs::path const& _tmpDir);
 
 
 private:
@@ -48,6 +53,9 @@ private:
     size_t m_currentChain;
     size_t m_maxChains;
     spEthereumBlockState m_pendingBlock;
+
+    fs::path m_tmpDir;
+    fs::path m_toolPath;
 };
 
 }  // namespace toolimpl

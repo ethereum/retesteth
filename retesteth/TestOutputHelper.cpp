@@ -18,9 +18,12 @@
  * Fixture class for boost output when running testeth
  */
 
+#include <boost/test/tree/test_case_counter.hpp>
+#include <boost/test/tree/traverse.hpp>
+#include <boost/test/unit_test.hpp>
 #include <mutex>
 #include <thread>
-#include <boost/test/unit_test.hpp>
+
 #include <libdevcore/include.h>
 #include <retesteth/TestOutputHelper.h>
 #include <retesteth/Options.h>
@@ -30,6 +33,7 @@ using namespace std;
 using namespace dev;
 using namespace test;
 using namespace boost;
+using namespace boost::unit_test;
 
 mutex g_finishedTestFoldersMapMutex;
 typedef std::set<std::string> FolderNameSet;
@@ -132,15 +136,29 @@ void TestOutputHelper::setUnitTestExceptions(std::vector<std::string> const& _me
     m_expected_UnitTestExceptions = _messages;
 }
 
+size_t TestOutputHelper::m_currentTestRun = 0;
 void TestOutputHelper::initTest(size_t _maxTests)
 {
+    static size_t totalTestsNumber = 0;
+    if (totalTestsNumber == 0)
+    {
+        // Calculate total number of test suites by traversing boost test suite
+        test_case_counter tcc;
+        traverse_test_tree(boost::unit_test::framework::master_test_suite(), tcc, true);
+        totalTestsNumber = tcc.p_count.get();
+        m_currentTestRun = 0;
+        if (totalTestsNumber == 0)
+            totalTestsNumber = 1;
+    }
+
     //_maxTests = 0 means this function is called from testing thread
     m_currentTestName = string();
     m_currentTestFileName = string();
     m_timer = Timer();
     if (!Options::get().createRandomTest && _maxTests != 0 && !Options::get().singleTestFile)
     {
-        std::cout << "Test Case \"" + TestInfo::caseName() + "\": \n";
+        string testOutOf = "(" + test::fto_string(++m_currentTestRun) + " of " + test::fto_string(totalTestsNumber) + ")";
+        ETH_STDOUT_MESSAGE("Test Case \"" + TestInfo::caseName() + "\": " + testOutOf);
         m_timer.restart();
     }
     m_maxTests = _maxTests;
@@ -312,7 +330,7 @@ void checkUnfinishedTestFolders()
         return;
 
     if (Options::get().rCurrentTestSuite.empty())
-        ETH_WARNING("Options rCurrentTestSuite is empty!");
+        ETH_WARNING("Options rCurrentTestSuite is empty, total tests run can be wrong!");
 
     // -t SuiteName/SubSuiteName/caseName   parse caseName as filter
     // rCurrentTestSuite is empty if run without -t argument

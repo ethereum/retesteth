@@ -11,14 +11,18 @@ namespace test
 {
 namespace teststruct
 {
+
 // DataObject converters. Mostly Dec -> Hex, json data convertation
 void mod_removeLeadingZerosFromHexValues(DataObject&);
-void mod_removeLeadingZerosFromHexValuesEVEN(DataObject&);
-void mod_removeLeadingZerosFromHexKeysEVEN(DataObject&);
+void mod_removeLeadingZerosFromHexValueEVEN(DataObject&);
+void mod_removeLeadingZerosFromHexKeyEVEN(DataObject&);
 void mod_removeComments(DataObject& _obj);
-void mod_valuesToLowerCase(DataObject&);
+void mod_valueToLowerCase(DataObject&);
+void mod_keyToLowerCase(DataObject&);
 void mod_valueToCompactEvenHexPrefixed(DataObject&);
 void mod_keyToCompactEvenHexPrefixed(DataObject&);
+void mod_valueInsertZeroXPrefix(DataObject&);
+void mod_sortKeys(DataObject&);
 long long int hexOrDecStringToInt(string const& _str);
 
 // Check the presents of fields in a DataObject with a validation map
@@ -43,9 +47,21 @@ static VALUE c_maxNonce(DataObject("0xffffffffffffffff"));
 void requireJsonFields(
     DataObject const& _o, std::string const& _configName, std::map<std::string, jsonType> const& _validationMap);
 
+#define REQUIRE_JSONFIELDS(_data, _name, ...)  \
+ static std::map<std::string, jsonType> requireJsonFieldsMap = __VA_ARGS__; \
+ requireJsonFields(_data, _name, requireJsonFieldsMap)
+
 // Compile LLL in code, solidity in code
 // Convert dec fields to hex, add 0x prefix to accounts and storage keys
-spDataObject convertDecStateToHex(DataObject const& _data, solContracts const& _preSolidity = solContracts());
+enum class StateToHex
+{
+    COMPILECODE,
+    NOCOMPILECODE
+};
+void convertDecStateToHex(
+    spDataObject& _data, solContracts const& _preSolidity = solContracts(), StateToHex _compileCode = StateToHex::COMPILECODE);
+
+void convertDecTransactionToHex(spDataObject& _data);
 
 // Convert dec fields to hex, add 0x prefix to accounts and storage keys
 spDataObject convertDecBlockheaderIncompleteToHex(DataObject const& _data);
@@ -55,6 +71,9 @@ string compareBlockHeaders(DataObject const& _blockA, DataObject const& _blockB,
 
 // Read expect Exceptions
 void readExpectExceptions(DataObject const& _data, std::map<FORK, string>& _out);
+
+// Marco move subpointer from key _key in _dataobject
+#define MOVE(_dataobject, _key) dataobject::move((*_dataobject).atKeyPointerUnsafe(_key))
 
 }  // namespace teststruct
 }  // namespace test

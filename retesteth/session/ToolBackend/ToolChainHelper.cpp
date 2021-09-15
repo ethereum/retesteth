@@ -12,6 +12,14 @@ namespace toolimpl
 {
 ToolParams::ToolParams(DataObject const& _data)
 {
+    REQUIRE_JSONFIELDS(_data, "ToolParams " + _data.getKey(),
+        {{"fork", {{DataType::String}, jsonField::Required}},
+            {"muirGlacierForkBlock", {{DataType::String}, jsonField::Optional}},
+            {"constantinopleForkBlock", {{DataType::String}, jsonField::Optional}},
+            {"byzantiumForkBlock", {{DataType::String}, jsonField::Optional}},
+            {"londonForkBlock", {{DataType::String}, jsonField::Optional}},
+            {"homesteadForkBlock", {{DataType::String}, jsonField::Optional}}});
+
     const bigint unreachable = 10000000000;
     if (_data.count("homesteadForkBlock"))
         m_homesteadForkBlock = spVALUE(new VALUE(_data.atKey("homesteadForkBlock")));
@@ -37,14 +45,6 @@ ToolParams::ToolParams(DataObject const& _data)
         m_londonForkBlock = spVALUE(new VALUE(_data.atKey("londonForkBlock")));
     else
         m_londonForkBlock = spVALUE(new VALUE(unreachable));
-
-    requireJsonFields(_data, "ToolParams " + _data.getKey(),
-        {{"fork", {{DataType::String}, jsonField::Required}},
-            {"muirGlacierForkBlock", {{DataType::String}, jsonField::Optional}},
-            {"constantinopleForkBlock", {{DataType::String}, jsonField::Optional}},
-            {"byzantiumForkBlock", {{DataType::String}, jsonField::Optional}},
-            {"londonForkBlock", {{DataType::String}, jsonField::Optional}},
-            {"homesteadForkBlock", {{DataType::String}, jsonField::Optional}}});
 }
 
 // We simulate the client backend side here, so thats why number5 is hardcoded
@@ -112,11 +112,11 @@ VALUE calculateGasLimit(VALUE const& _parentGasLimit, VALUE const& _parentGasUse
 // Also remove leading zeros in storage
 State restoreFullState(DataObject& _toolState)
 {
-    DataObject fullState;
+    spDataObject fullState(new DataObject());
     for (auto& accTool2 : _toolState.getSubObjectsUnsafe())
     {
         DataObject& accTool = accTool2.getContent();
-        DataObject& acc = fullState[accTool.getKey()];
+        DataObject& acc = fullState.getContent()[accTool.getKey()];
         acc["balance"] = accTool.count("balance") ? accTool.atKey("balance").asString() : "0x00";
         acc["nonce"] = accTool.count("nonce") ? accTool.atKey("nonce").asString() : "0x00";
         acc["code"] = accTool.count("code") ? accTool.atKey("code").asString() : "0x";
@@ -126,12 +126,12 @@ State restoreFullState(DataObject& _toolState)
             acc.atKeyPointer("storage") = spDataObject(new DataObject(DataType::Object));
         for (auto& storageRecord : acc.atKeyUnsafe("storage").getSubObjectsUnsafe())
         {
-            storageRecord.getContent().performModifier(mod_removeLeadingZerosFromHexValuesEVEN);
-            storageRecord.getContent().performModifier(mod_removeLeadingZerosFromHexKeysEVEN);
+            storageRecord.getContent().performModifier(mod_removeLeadingZerosFromHexValueEVEN);
+            storageRecord.getContent().performModifier(mod_removeLeadingZerosFromHexKeyEVEN);
         }
         //fullState[accTool.getKey()] = acc;
     }
-    return State(fullState);
+    return State(dataobject::move(fullState));
 }
 
 ChainOperationParams ChainOperationParams::defaultParams(ToolParams const& _params)

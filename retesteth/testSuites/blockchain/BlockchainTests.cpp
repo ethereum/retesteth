@@ -33,42 +33,39 @@ namespace fs = boost::filesystem;
 namespace test
 {
 /// !!! DataObject return without reference!!! must be SP!!!
-spDataObject BlockchainTestTransitionSuite::doTests(DataObject const& _input, TestSuiteOptions& _opt) const
+spDataObject BlockchainTestTransitionSuite::doTests(spDataObject& _input, TestSuiteOptions& _opt) const
 {
     _opt.allowInvalidBlocks = true;
     return DoTests(_input, _opt);
 }
 
-spDataObject BlockchainTestInvalidSuite::doTests(DataObject const& _input, TestSuiteOptions& _opt) const
+spDataObject BlockchainTestInvalidSuite::doTests(spDataObject& _input, TestSuiteOptions& _opt) const
 {
     _opt.allowInvalidBlocks = true;
     return DoTests(_input, _opt);
 }
 
-spDataObject BlockchainTestValidSuite::doTests(DataObject const& _input, TestSuiteOptions& _opt) const
+spDataObject BlockchainTestValidSuite::doTests(spDataObject& _input, TestSuiteOptions& _opt) const
 {
     _opt.allowInvalidBlocks = false;
     return DoTests(_input, _opt);
 }
 
-spDataObject LegacyConstantinopleBlockchainInvalidTestSuite::doTests(
-    DataObject const& _input, TestSuiteOptions& _opt) const
+spDataObject LegacyConstantinopleBlockchainInvalidTestSuite::doTests(spDataObject& _input, TestSuiteOptions& _opt) const
 {
     _opt.allowInvalidBlocks = true;
     _opt.isLegacyTests = true;
     return DoTests(_input, _opt);
 }
 
-spDataObject LegacyConstantinopleBlockchainValidTestSuite::doTests(
-    DataObject const& _input, TestSuiteOptions& _opt) const
+spDataObject LegacyConstantinopleBlockchainValidTestSuite::doTests(spDataObject& _input, TestSuiteOptions& _opt) const
 {
     _opt.allowInvalidBlocks = false;
     _opt.isLegacyTests = true;
     return DoTests(_input, _opt);
 }
 
-spDataObject LegacyConstantinopleBCGeneralStateTestsSuite::doTests(
-    DataObject const& _input, TestSuiteOptions& _opt) const
+spDataObject LegacyConstantinopleBCGeneralStateTestsSuite::doTests(spDataObject& _input, TestSuiteOptions& _opt) const
 {
     _opt.isLegacyTests = true;
     return DoTests(_input, _opt);

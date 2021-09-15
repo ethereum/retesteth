@@ -40,6 +40,7 @@ public:
     bool filltests = false;            ///< Create JSON test files from execution results
     bool showhash = false;  ///< Show filler hash for debug information
     bool checkhash = false; ///< Check that tests are updated from fillers
+    bool forceupdate = false; ///< Force tests update ragardless of new changes
     size_t blockLimit = 0;  ///< Perform blockchain blocks till this limit
     size_t rpcLimit = 0;    ///< Perform rpcRequests till this limit
     bool fillchain = false; ///< Fill tests as a blockchain tests if possible
@@ -78,8 +79,9 @@ public:
     bool lowcpu = false; ///< Disable cpu-intense tests
 	bool nonetwork = false;///< For libp2p
 	/// @}
+    static bool isLegacy();
 
-	/// Get reference to options
+    /// Get reference to options
 	/// The first time used, options are parsed with argc, argv
 	static Options const& get(int argc = 0, const char** argv = 0);
     static DynamicOptions& getDynamicOptions() { return m_dynamicOptions; }

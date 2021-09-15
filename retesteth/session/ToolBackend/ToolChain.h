@@ -31,7 +31,7 @@ private:
 class ToolChain : public GCP_SPointerBase
 {
 public:
-    ToolChain(EthereumBlockState const& _genesis, SetChainParamsArgs const& _params, fs::path const& _toolPath,
+    ToolChain(EthereumBlockState const& _genesis, spSetChainParamsArgs const& _params, fs::path const& _toolPath,
         fs::path const& _tmpDir);
 
     EthereumBlockState const& lastBlock() const
@@ -44,7 +44,7 @@ public:
     SealEngine engine() const { return m_engine; }
     FORK const& fork() const { return m_fork; }
     fs::path const& toolPath() const { return m_toolPath; }
-    SetChainParamsArgs const& params() const { return m_initialParams; }
+    spSetChainParamsArgs const& params() const { return m_initialParams; }
     ToolParams const& toolParams() const { return m_toolParams; }
 
     enum class Mining
@@ -52,7 +52,7 @@ public:
         RequireValid,
         AllowFailTransactions
     };
-    spDataObject const mineBlock(EthereumBlockState const& _pendingBlock, Mining _req = Mining::AllowFailTransactions);
+    spDataObject const mineBlock(EthereumBlockState const& _pendingBlock, EthereumBlockState const& _parentBlock, Mining _req = Mining::AllowFailTransactions);
     void rewindToBlock(size_t _number);
 
     // Used for chain reorg
@@ -63,10 +63,10 @@ private:
     ToolChain(){};
     // Execute t8ntool cmd with input _block information, and get the output block information
     // Information includes header, transactions, state
-    ToolResponse mineBlockOnTool(EthereumBlockState const& _block, SealEngine _engine = SealEngine::NoReward);
+    ToolResponse mineBlockOnTool(EthereumBlockState const& _block, EthereumBlockState const& _parent, SealEngine _engine = SealEngine::NoReward);
 
     GCP_SPointer<ToolParams> m_toolParams;
-    GCP_SPointer<SetChainParamsArgs> m_initialParams;
+    const spSetChainParamsArgs m_initialParams;
     std::vector<EthereumBlockState> m_blocks;
     SealEngine m_engine;
     spFORK m_fork;

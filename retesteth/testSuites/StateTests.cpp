@@ -141,7 +141,9 @@ spDataObject FillTestAsBlockchain(StateTestInFiller const& _test)
                     tr.markExecuted();
 
                     // Mining reward
-                    StateIncomplete mexpect(expect.result().asDataObject());  // make a copy of the state
+                    spDataObject expectCopy(new DataObject());
+                    (*expectCopy).copyFrom(expect.result().rawData());
+                    StateIncomplete mexpect = StateIncomplete(dataobject::move(expectCopy));
                     ClientConfig const& cfg = Options::getDynamicOptions().getCurrentConfig();
                     ETH_ERROR_REQUIRE_MESSAGE(cfg.getRewardMap().count(fork),
                         "Network '" + fork.asString() + "' not found in correct mining info config (" +
@@ -151,7 +153,7 @@ spDataObject FillTestAsBlockchain(StateTestInFiller const& _test)
 
                     spDataObject aBlockchainTest(new DataObject());
                     if (_test.hasInfo())
-                        (*aBlockchainTest)["_info"]["comment"] = _test.Info().comment();
+                        (*aBlockchainTest).atKeyPointer("_info") = _test.Info().rawData();
                     EthGetBlockBy genesisBlock(session.eth_getBlockByNumber(0, Request::FULLOBJECTS));
                     (*aBlockchainTest).atKeyPointer("genesisBlockHeader") = genesisBlock.header()->asDataObject();
                     (*aBlockchainTest).atKeyPointer("pre") = _test.Pre().asDataObject();
@@ -160,7 +162,7 @@ spDataObject FillTestAsBlockchain(StateTestInFiller const& _test)
                     {
                         State postState(getRemoteState(session));
                         compareStates(mexpect, postState);
-                        (*aBlockchainTest).atKeyPointer("postState") = postState.asDataObject(ExportOrder::OldStyle);
+                        (*aBlockchainTest).atKeyPointer("postState") = postState.asDataObject();
                     }
                     catch(StateTooBig const&)
                     {
@@ -211,14 +213,12 @@ spDataObject FillTestAsBlockchain(StateTestInFiller const& _test)
 spDataObject FillTest(StateTestInFiller const& _test)
 {
     spDataObject filledTest(new DataObject());
-    (*filledTest).setAutosort(true);
     TestOutputHelper::get().setCurrentTestName(_test.testName());
 
     SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
 
     if (_test.hasInfo())
-        (*filledTest)["_info"]["comment"] = _test.Info().comment();
-
+        (*filledTest).atKeyPointer("_info") = _test.Info().rawData();
     (*filledTest).atKeyPointer("env") = _test.Env().asDataObject();
 
     // Explicitly print default basefee for filled state tests
@@ -497,7 +497,7 @@ void RunTest(StateTestInFilled const& _test)
 
 namespace test
 {
-spDataObject StateTestSuite::doTests(DataObject const& _input, TestSuiteOptions& _opt) const
+spDataObject StateTestSuite::doTests(spDataObject& _input, TestSuiteOptions& _opt) const
 {
     TestOutputHelper::get().setCurrentTestInfo(TestInfo("StateTestSuite::doTests init"));
     if (_opt.doFilling)
@@ -528,7 +528,7 @@ spDataObject StateTestSuite::doTests(DataObject const& _input, TestSuiteOptions&
             if (_opt.isLegacyTests)
             {
                 // Change the tests instead??
-                DataObject& _inputRef = const_cast<DataObject&>(_input);
+                DataObject& _inputRef = _input.getContent();
                 DataObject& _infoRef = _inputRef.getSubObjectsUnsafe().at(0).getContent().atKeyUnsafe("_info");
                 _infoRef.renameKey("filledwith", "filling-rpc-server");
                 _infoRef["filling-tool-version"] = "testeth";

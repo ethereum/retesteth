@@ -9,7 +9,7 @@ namespace test
 {
 namespace teststruct
 {
-SetChainParamsArgs prepareChainParams(
+spSetChainParamsArgs prepareChainParams(
     FORK const& _net, SealEngine _engine, State const& _state, StateTestEnvBase const& _env, ParamsContext _paramsContext)
 {
     ClientConfig const& cfg = Options::get().getDynamicOptions().getCurrentConfig();
@@ -63,7 +63,7 @@ SetChainParamsArgs prepareChainParams(
     // Because of template might contain preset accounts
     for (auto const& el : _state.accounts())
         (*genesis)["accounts"].addSubObject(el.second->asDataObject());
-    return SetChainParamsArgs(genesis);
+    return spSetChainParamsArgs(new SetChainParamsArgs(genesis));
 }
 
 }  // namespace teststruct

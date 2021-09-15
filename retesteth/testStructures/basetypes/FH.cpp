@@ -5,9 +5,13 @@
 #include <retesteth/EthChecks.h>
 #include <retesteth/TestHelper.h>
 #include <sstream>
+#include <mutex>
+
 using namespace test;
 using namespace test::teststruct;
 using namespace dev;
+
+std::mutex g_cacheAccessMutexFH;
 
 namespace
 {
@@ -83,20 +87,28 @@ FH::FH(dev::RLP const& _rlp, size_t _scale)
     m_scale = _scale;
 }
 
-string FH::asString(ExportType _forRLP) const
+string const& FH::asString(ExportType _forRLP) const
 {
-    string ret = m_data.str(1, std::ios_base::hex);
-    test::strToLower(ret);
-    if (ret.size() % 2 != 0)
-        ret = "0" + ret;
-
-    if (!m_bigint)
+    std::lock_guard<std::mutex> lock(g_cacheAccessMutexFH);
+    if (m_dataStrBigIntCache.empty())
     {
-        for (size_t size = ret.size() / 2; size < m_scale; size++)
-            ret = "00" + ret;
-    }
+        string& ret = m_dataStrZeroXCache;
+        ret = m_data.str(1, std::ios_base::hex);
+        test::strToLower(ret);
+        if (ret.size() % 2 != 0)
+            ret.insert(0, "0");
 
-    return m_bigint && _forRLP != ExportType::RLP ? "0x:bigint 0x" + ret : "0x" + ret;
+        if (!m_bigint)
+        {
+            for (size_t size = ret.size() / 2; size < m_scale; size++)
+                ret.insert(0, "00");
+        }
+
+        m_dataStrBigIntCache = m_dataStrZeroXCache;
+        m_dataStrZeroXCache.insert(0, "0x");
+        m_dataStrBigIntCache.insert(0, "0x:bigint 0x");
+    }
+    return m_bigint && _forRLP != ExportType::RLP ? m_dataStrBigIntCache : m_dataStrZeroXCache;
 }
 
 }  // namespace teststruct

@@ -110,6 +110,7 @@ public:
     boost::filesystem::path const& testFile() const { return m_currentTestFileName; }
     static void printTestExecStats();
     static void registerTestRunSuccess();
+    static void currentTestRunPP() { m_currentTestRun++; };
 
     /// get string representation of current threadID
     static std::thread::id getThreadID();
@@ -131,6 +132,9 @@ private:
     boost::filesystem::path m_currentTestFileName;
     std::vector<std::string> m_errors; //flag errors for triggering boost erros after all thread finished
     std::vector<std::string> m_expected_UnitTestExceptions;  // expect following errors
+
+    // Debug print
+    static size_t m_currentTestRun;
 };
 
 class TestOutputHelperFixture

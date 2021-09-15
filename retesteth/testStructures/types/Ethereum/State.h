@@ -1,8 +1,8 @@
 #pragma once
-#include "Account.h"
 #include "Base/StateBase.h"
 #include <retesteth/dataObject/DataObject.h>
 #include <retesteth/dataObject/SPointer.h>
+
 using namespace dataobject;
 using namespace test::teststruct;
 
@@ -10,22 +10,46 @@ namespace test
 {
 namespace teststruct
 {
+
 // Marks that State is made of full account objects
 struct State : StateBase
 {
-    State(DataObject const&);
-    State(std::vector<spAccount>&);
+
+public:
+    // Mark that account has internal data of State and editing pointer of one will edit the state
+    struct Account;
+    typedef GCP_SPointer<Account> spAccount;
+
+public:
+    State(spDataObjectMove);
+    State(std::map<FH20, spAccountBase>&);
 
     std::map<FH20, spAccountBase> const& accounts() const { return m_accounts; }
     Account const& getAccount(FH20 const& _address) const;
     bool hasAccount(Account const& _account) const;
     bool hasAccount(FH20 const& _address) const;
 
-    spDataObject asDataObject(ExportOrder order = ExportOrder::Default) const override;
+    spDataObject const& asDataObject() const override;
 
 private:
-    std::vector<FH20> m_order;
+    spDataObject m_raw;
     State() {}
+
+public:
+    // Ethereum account description
+    // Describe the strict account defenition
+    // Constructor require all fields to be set
+    struct Account : AccountBase
+    {
+        Account(spDataObject&);
+        Account(FH20 const& _addr, spVALUE& _balance, spVALUE& _nonce, spBYTES& _code, spStorage& _storage);
+        spDataObject const& asDataObject() const override;
+        AccountType type() const override { return AccountType::FullAccount; }
+
+    private:
+        Account() {}
+    };
+
 };
 
 typedef GCP_SPointer<State> spState;

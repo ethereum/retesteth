@@ -7,68 +7,39 @@ namespace test
 {
 namespace teststruct
 {
-StateIncomplete::StateIncomplete(DataObject const& _data, DataRequier _req)
+StateIncomplete::StateIncomplete(spDataObjectMove _data)
 {
+    m_rawData = _data.getPointer();
     try
     {
-        // The difference to Common.h::ConvertDecStateToHex is that here we don't compile code
-        if (_req == DataRequier::ALLOWDEC)
-        {
-            // Convertion is here so not to repeat convertion in State and Blockchain tests
-            // Convert Expect Section IncompletePostState fields to hex, account keys add `0x` prefix
-            // Code field add `0x` prefix, storage key:value add `0x` prefix, coverted to hex
-            spDataObject tmpD(new DataObject());
-            (*tmpD).copyFrom(_data);
-            for (auto& acc2 : (*tmpD).getSubObjectsUnsafe())
-            {
-                DataObject& acc = acc2.getContent();
-                string const& key = acc2->getKey();
-                if ((key.size() > 2 && (key[0] != '0' || key[1] != 'x')))
-                    acc.setKey("0x" + acc.getKey());
-                if (acc.count("balance"))
-                    acc["balance"].performModifier(mod_valueToCompactEvenHexPrefixed);
-                if (acc.count("nonce"))
-                    acc["nonce"].performModifier(mod_valueToCompactEvenHexPrefixed);
-                if (acc.count("code") && acc.atKey("code").asString().empty())
-                    acc["code"] = "0x" + acc.atKey("code").asString();
-                if (acc.count("storage"))
-                    for (auto& rec : acc["storage"].getSubObjectsUnsafe())
-                    {
-                        rec.getContent().performModifier(mod_keyToCompactEvenHexPrefixed);
-                        rec.getContent().performModifier(mod_valueToCompactEvenHexPrefixed);
-                    }
-            }
-            for (auto const& el : tmpD->getSubObjects())
-                m_accounts[FH20(el->getKey())] = spAccountBase(new AccountIncomplete(el));
-        }
-        else
-        {
-            for (auto const& el : _data.getSubObjects())
-                m_accounts[FH20(el->getKey())] = spAccountBase(new AccountIncomplete(el));
-        }
+        for (auto& el : (*m_rawData).getSubObjectsUnsafe())
+            m_accounts[FH20(el->getKey())] = spAccountBase(new AccountIncomplete(el));
     }
     catch (std::exception const& _ex)
     {
-        throw UpwardsException(string("StateIncomplete parse error: ") + _ex.what() + _data.asJson());
+        throw UpwardsException(string("StateIncomplete parse error: ") + _ex.what() + m_rawData->asJson());
     }
 }
 
-spDataObject StateIncomplete::asDataObject(ExportOrder) const
+spDataObject const& StateIncomplete::asDataObject() const
 {
-    spDataObject out(new DataObject());
-    for (auto const& el : m_accounts)
-        (*out).addSubObject(el.second->asDataObject());
-    return out;
+    return m_rawData;
 }
 
+// Since we do not export StateIncomplete after correctMiningReward
+// No need to correct m_rawData, but keep in mind that it won't match
 void StateIncomplete::correctMiningReward(FH20 const& _coinbase, VALUE const& _reward)
 {
-    for (auto& el : m_accounts)
+    if (m_accounts.count(_coinbase))
     {
-        // We always assume that StateIncomplete is made of AccountIncomplete, but still
-        AccountIncomplete& acc = dynamic_cast<AccountIncomplete&>(el.second.getContent());
-        if (el.first == _coinbase && acc.hasBalance())
+        auto rec = m_accounts.at(_coinbase);
+        if (rec.getCContent().hasBalance())
+        {
+            // We always assume that StateIncomplete is made of AccountIncomplete, but still
+            AccountIncomplete& acc = dynamic_cast<AccountIncomplete&>(rec.getContent());
             acc.setBalance(acc.balance() + _reward);
+            (*m_rawData).atKeyUnsafe(_coinbase.asString()).atKeyUnsafe("balance").setString(acc.balance().asString());
+        }
     }
 }
 

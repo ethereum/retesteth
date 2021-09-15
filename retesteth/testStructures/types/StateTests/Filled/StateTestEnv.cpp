@@ -10,6 +10,32 @@ StateTestEnv::StateTestEnv(DataObject const& _data)
 {
     try
     {
+        if (_data.count("currentBaseFee"))
+        {
+            REQUIRE_JSONFIELDS(_data, "StateTestEnv " + _data.getKey(),
+                {{"currentCoinbase", {{DataType::String}, jsonField::Required}},
+                    {"currentDifficulty", {{DataType::String}, jsonField::Required}},
+                    {"currentNumber", {{DataType::String}, jsonField::Required}},
+                    {"currentTimestamp", {{DataType::String}, jsonField::Required}},
+                    {"currentGasLimit", {{DataType::String}, jsonField::Required}},
+                    {"currentBaseFee", {{DataType::String}, jsonField::Required}},
+                    {"previousHash", {{DataType::String}, jsonField::Required}}});
+            // 1559 env info
+            m_currentBaseFee = spVALUE(new VALUE(_data.atKey("currentBaseFee")));
+        }
+        else
+        {
+            // Legacy env info
+            m_currentBaseFee = spVALUE(0);
+            REQUIRE_JSONFIELDS(_data, "StateTestEnv " + _data.getKey(),
+                {{"currentCoinbase", {{DataType::String}, jsonField::Required}},
+                    {"currentDifficulty", {{DataType::String}, jsonField::Required}},
+                    {"currentGasLimit", {{DataType::String}, jsonField::Required}},
+                    {"currentNumber", {{DataType::String}, jsonField::Required}},
+                    {"currentTimestamp", {{DataType::String}, jsonField::Required}},
+                    {"previousHash", {{DataType::String}, jsonField::Required}}});
+        }
+
         m_currentCoinbase = spFH20(new FH20(_data.atKey("currentCoinbase")));
         m_currentDifficulty = spVALUE(new VALUE(_data.atKey("currentDifficulty")));
         m_currentNumber = spVALUE(new VALUE(_data.atKey("currentNumber")));
@@ -26,32 +52,6 @@ StateTestEnv::StateTestEnv(DataObject const& _data)
         m_currentExtraData = spBYTES(new BYTES(tmpD));
         m_currentNonce = spFH8(new FH8(FH8::zero()));
         m_currentMixHash = spFH32(new FH32(FH32::zero()));
-
-        if (_data.count("currentBaseFee"))
-        {
-            // 1559 env info
-            m_currentBaseFee = spVALUE(new VALUE(_data.atKey("currentBaseFee")));
-            requireJsonFields(_data, "StateTestEnv " + _data.getKey(),
-                {{"currentCoinbase", {{DataType::String}, jsonField::Required}},
-                {"currentDifficulty", {{DataType::String}, jsonField::Required}},
-                {"currentNumber", {{DataType::String}, jsonField::Required}},
-                {"currentTimestamp", {{DataType::String}, jsonField::Required}},
-                {"currentGasLimit", {{DataType::String}, jsonField::Required}},
-                {"currentBaseFee", {{DataType::String}, jsonField::Required}},
-                {"previousHash", {{DataType::String}, jsonField::Required}}});
-        }
-        else
-        {
-            // Legacy env info
-            m_currentBaseFee = spVALUE(0);
-            requireJsonFields(_data, "StateTestEnv " + _data.getKey(),
-                {{"currentCoinbase", {{DataType::String}, jsonField::Required}},
-                 {"currentDifficulty", {{DataType::String}, jsonField::Required}},
-                 {"currentGasLimit", {{DataType::String}, jsonField::Required}},
-                 {"currentNumber", {{DataType::String}, jsonField::Required}},
-                 {"currentTimestamp", {{DataType::String}, jsonField::Required}},
-                 {"previousHash", {{DataType::String}, jsonField::Required}}});
-        }
     }
     catch (std::exception const& _ex)
     {

@@ -9,55 +9,36 @@ namespace test
 {
 namespace teststruct
 {
-BlockchainTestFillerTransaction::BlockchainTestFillerTransaction(DataObject const& _data, NonceMap& _nonceMap)
+BlockchainTestFillerTransaction::BlockchainTestFillerTransaction(spDataObjectMove _data, NonceMap& _nonceMap)
 {
     try
     {
-        if (_data.count("expectException"))
-            readExpectExceptions(_data.atKey("expectException"), m_expectExceptions);
+        m_rawData = _data.getPointer();
+        if (m_rawData->count("expectException"))
+            readExpectExceptions(m_rawData->atKey("expectException"), m_expectExceptions);
 
-        spDataObject tmpD(new DataObject());
-        (*tmpD).copyFrom(_data);
-
-        if ((*tmpD).count("secretKey") && (*tmpD).atKey("nonce").asString() == "auto")
+        // Convert nonce = "auto"
+        if (m_rawData->count("secretKey") && m_rawData->atKey("nonce").asString() == "auto")
         {
-            dev::Secret priv((*tmpD).atKey("secretKey").asString());
+            dev::Secret priv(m_rawData->atKey("secretKey").asString());
             dev::Address key = dev::toAddress(priv);
             if (_nonceMap.count("0x" + key.hex()))
             {
-                (*tmpD).atKeyUnsafe("nonce").setString(_nonceMap.at("0x" + key.hex())->asDecString());
+                (*m_rawData).atKeyUnsafe("nonce").setString(_nonceMap.at("0x" + key.hex())->asDecString());
                 _nonceMap["0x" + key.hex()].getContent()++;
             }
             else
                 ETH_ERROR_MESSAGE("Parsing tx.nonce `auto` can't find tx.origin in nonce map!");
         }
 
-        (*tmpD).removeKey("data");
-        (*tmpD).removeKey("to");
-        (*tmpD).removeKey("expectException");
-        if (tmpD->count("accessList"))
-            (*tmpD).removeKey("accessList");
-        (*tmpD).performModifier(mod_valueToCompactEvenHexPrefixed);
-
-        // fix 0x prefix on 'to' key
-        spDataObject dTo(new DataObject());
-        (*dTo).copyFrom(_data.atKey("to"));
-        string const& to = _data.atKey("to").asString();
-        if (to.size() > 1 && to[1] != 'x')
-            *dTo = "0x" + _data.atKey("to").asString();
-        (*tmpD).atKeyPointer("to") = dTo;
-
-        // Compile LLL in transaction data into byte code if not already
-        (*tmpD)["data"] = test::compiler::replaceCode(_data.atKey("data").asString());
-
-        if (_data.count("accessList"))
-            (*tmpD)["accessList"].copyFrom(_data.atKey("accessList"));
-
-        m_transaction = readTransaction(tmpD);
+        (*m_rawData).removeKey("expectException");
+        convertDecTransactionToHex(m_rawData);
+        m_transaction = readTransaction(m_rawData);
     }
     catch (std::exception const& _ex)
     {
-        throw UpwardsException(string("BlockchainTestFillerTransaction convertion error: ") + _ex.what() + _data.asJson());
+        throw UpwardsException(
+            string("BlockchainTestFillerTransaction convertion error: ") + _ex.what() + _data.getPointer()->asJson());
     }
 }
 

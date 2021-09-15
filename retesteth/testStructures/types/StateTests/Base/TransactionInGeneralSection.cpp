@@ -12,8 +12,8 @@ TransactionInGeneralSection::TransactionInGeneralSection(
     m_skipped(false)
 {
     m_tr = readTransaction(_tr);
-    m_tr.getContent().setDataLabel(_dataLabel);
-    m_tr.getContent().setDataRawPreview(_dataRawPreview);
+    (*m_tr).setDataLabel(_dataLabel);
+    (*m_tr).setDataRawPreview(_dataRawPreview);
 }
 
 void TransactionInGeneralSection::assignTransactionLabel(string const& _label)

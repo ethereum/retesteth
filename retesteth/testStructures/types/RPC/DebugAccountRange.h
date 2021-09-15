@@ -13,10 +13,10 @@ struct DebugAccountRange
 {
     DebugAccountRange(DataObject const&);
     FH32 const& nextKey() const { return m_nextKey; }
-    std::vector<FH20> const& addresses() const { return m_addresses; }
+    std::vector<spFH20> const& addresses() const { return m_addresses; }
 
 private:
-    std::vector<FH20> m_addresses;
+    std::vector<spFH20> m_addresses;
     spFH32 m_nextKey;
 };
 

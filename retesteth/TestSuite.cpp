@@ -29,9 +29,9 @@
 #include <retesteth/TestOutputHelper.h>
 #include <retesteth/TestSuite.h>
 #include <retesteth/session/Session.h>
+#include <retesteth/session/ThreadManager.h>
 #include <boost/test/unit_test.hpp>
 #include <string>
-#include <thread>
 
 using namespace std;
 using namespace dev;
@@ -44,20 +44,43 @@ struct TestFileData
 {
     spDataObject data;
     h256 hash;
+    bool hashCalculated = true;
 };
 
 TestFileData readTestFile(fs::path const& _testFileName)
 {
+    // Legacy hash validation require to sort json data upon load, thats the old algo used to calculate hash
+    // Avoid time consuming legacy tests hash validation if there is no --checkhash option
+    bool isLegacy = Options::isLegacy();
+    bool bSortOnLoad =
+        isLegacy;  //(Options::get().checkhash && isLegacy); uncomment here if there would be too many legacy tests
+
+    // Binary file hash calculation is impossible as git messes up with the files
+    // So we read json structure and print it here to calculate the hash from string
+    // Adds around 1% to execution time
     ETH_LOG("Read json structure " + string(_testFileName.filename().c_str()), 5);
     TestFileData testData;
     if (_testFileName.extension() == ".json")
-        testData.data = test::readJsonData(_testFileName, string(), true);
+        testData.data = test::readJsonData(_testFileName, string(), bSortOnLoad);
     else if (_testFileName.extension() == ".yml")
-        testData.data = test::readYamlData(_testFileName);
+        testData.data = test::readYamlData(_testFileName, bSortOnLoad);
     else
         ETH_ERROR_MESSAGE(
             "Unknown test format!" + test::TestOutputHelper::get().testFile().string());
     ETH_LOG("Read json structure finish", 5);
+
+    // Do not calculate the hash on Legacy tests unless --checkhash option provided
+    if (isLegacy && !bSortOnLoad)
+    {
+        static bool wasWarning = false;
+        if (!wasWarning)
+        {
+            wasWarning = true;
+            ETH_WARNING("Skipping LegacyTests hash verification to save time!");
+        }
+        testData.hashCalculated = false;
+        return testData;
+    }
 
     string srcString = testData.data->asJson(0, false); //json_spirit::write_string(testData.data, false);
     if (test::Options::get().showhash)
@@ -79,6 +102,7 @@ TestFileData readTestFile(fs::path const& _testFileName)
         std::cerr << "DATA: '" << std::endl << srcString << "'" << std::endl;
     }
     testData.hash = sha3(srcString);
+    testData.hashCalculated = true;
     return testData;
 }
 
@@ -106,42 +130,73 @@ void removeComments(spDataObject& _obj)
     }
 }
 
-void addClientInfo(DataObject& _v, fs::path const& _testSource, h256 const& _testSourceHash)
+bool addClientInfo(
+    DataObject& _filledTest, fs::path const& _testSource, h256 const& _testSourceHash, fs::path const& _existingFilledTest)
 {
+    bool atLeastOneUpdate = false || Options::get().forceupdate;
     SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
-    for (auto& o2 : _v.getSubObjectsUnsafe())
-    {
-        DataObject& o = o2.getContent();
-        string comment;
-        spDataObject clientinfo(new DataObject());
-        (*clientinfo).setKey("_info");
-        if (o.count("_info"))
-        {
-            DataObject const& existingInfo = o.atKey("_info");
-            if (existingInfo.count("comment"))
-                comment = existingInfo.atKey("comment").asString();
-            if (existingInfo.count("labels"))
-                (*clientinfo)["labels"].copyFrom(existingInfo.atKey("labels"));
-        }
 
-        (*clientinfo)["comment"] = comment;
+    spDataObject filledTest(new DataObject());
+    if ((Options::get().filltests && fs::exists(_existingFilledTest)) && !Options::get().forceupdate)
+        filledTest = test::readJsonData(_existingFilledTest);
+    for (auto& testInGenerated : _filledTest.getSubObjectsUnsafe())
+    {
+        DataObject& testInGeneratedRef = testInGenerated.getContent();
+        spDataObject clientinfo(new DataObject());
+        if (testInGeneratedRef.count("_info"))
+            clientinfo = testInGeneratedRef.atKeyPointerUnsafe("_info");
+
+        testInGeneratedRef.removeKey("_info");
+        testInGeneratedRef.performModifier(mod_sortKeys);
+        string filledTestHashStr = testInGeneratedRef.asJson(0, false);
+        (*clientinfo)["generatedTestHash"] = dev::toString(sha3(filledTestHashStr));
+        (*clientinfo)["sourceHash"] = toString(_testSourceHash);
+
+        // See if we actually changed something in the test after regeneration
+        if (filledTest->count(testInGenerated->getKey()))
+        {
+            DataObject const& existingTest = filledTest->atKey(testInGenerated->getKey());
+            if (!existingTest.atKey("_info").count("generatedTestHash"))
+                atLeastOneUpdate = true;
+            else
+            {
+                string const& existingHash = existingTest.atKey("_info").atKey("generatedTestHash").asString();
+                if (existingHash != clientinfo->atKey("generatedTestHash").asString())
+                    atLeastOneUpdate = true;
+                string const& existingSrcHash = existingTest.atKey("_info").atKey("sourceHash").asString();
+                if (existingSrcHash != clientinfo->atKey("sourceHash").asString())
+                    atLeastOneUpdate = true;
+            }
+        }
+        else
+            atLeastOneUpdate = true;
+
+        if (!clientinfo->count("comment"))
+            (*clientinfo)["comment"] = "";
         (*clientinfo)["filling-rpc-server"] = session.web3_clientVersion()->asString();
         (*clientinfo)["filling-tool-version"] = test::prepareVersionString();
         (*clientinfo)["lllcversion"] = test::prepareLLLCVersionString();
         (*clientinfo)["source"] = _testSource.string();
-        (*clientinfo)["sourceHash"] = toString(_testSourceHash);
         if (clientinfo->count("labels"))
             (*clientinfo).setKeyPos("labels", clientinfo->getSubObjects().size() - 1);
+        (*clientinfo).performModifier(mod_sortKeys);
 
-        o["_info"].replace(clientinfo);
-        o.setKeyPos("_info", 0);
+        testInGeneratedRef.atKeyPointer("_info") = clientinfo;
+        testInGeneratedRef.setKeyPos("_info", 0);
     }
+    return atLeastOneUpdate;
 }
 
 void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
 {
-    spDataObject v = test::readJsonData(_compiledTest, "_info");
+    ETH_LOG(string("Check `") + _compiledTest.c_str() + "` hash", 7);
     TestFileData fillerData = readTestFile(_sourceTest);
+
+    // If no hash calculated, skip the hash check
+    if (!fillerData.hashCalculated)
+        return;
+
+    spDataObject v = test::readJsonData(_compiledTest, "_info");
     for (auto const& i2: v->getSubObjects())
     {
         DataObject const& i = i2.getCContent();
@@ -155,58 +210,57 @@ void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
             DataObject const& info = i.atKey("_info");
             ETH_ERROR_REQUIRE_MESSAGE(info.count("sourceHash") > 0,
                 "sourceHash not found in " + _compiledTest.string() + " in " + i.getKey());
+
+            // Check test version  vs retesteth version
+            if (!Options::isLegacy())
+            {
+                ETH_ERROR_REQUIRE_MESSAGE(info.count("filling-tool-version"),
+                    string() + "Field `filling-tool-version` not found in generated test!" + _compiledTest.c_str());
+                string strippedVersion;
+                string const version = info.atKey("filling-tool-version").asString().substr(9, 10);
+                for (auto const& ch : version)
+                {
+                    if (isdigit(ch))
+                        strippedVersion += ch;
+                }
+                if (strippedVersion.at(0) == '0')
+                    strippedVersion.erase(0, 1);
+                int testVersion = atoi(strippedVersion.c_str());
+                if (testVersion > retestethVersion())
+                    ETH_WARNING("Test was filled with newer version of retesteth! (test: `" + strippedVersion +
+                                "` vs retesteth: `" + test::fto_string(retestethVersion()) +
+                                "`) This might cause failures, please update retesteth!");
+                else if (testVersion < retestethVersion() - 1)
+                    ETH_WARNING("Test filled with older version of retesteth! (test: `" + strippedVersion +
+                                "` vs retesteth: `" + test::fto_string(retestethVersion()) +
+                                "`) This might cause failures, please regenerate the test!");
+            }
+
+            // Check source hash vs filled test hash
             h256 const sourceHash = h256(info.atKey("sourceHash").asString());
-            ETH_ERROR_REQUIRE_MESSAGE(sourceHash == fillerData.hash,
-                "Test " + _compiledTest.string() +
-                    " is outdated. Filler hash is different! ('" + sourceHash.hex().substr(0, 4) +
-                    "' != '" + fillerData.hash.hex().substr(0, 4) + "') ");
+            if (sourceHash != fillerData.hash)
+            {
+                string sourceHashStr;
+                string fillerHashStr;
+                if (Options::get().showhash)
+                {
+                    sourceHashStr = sourceHash.hex();
+                    fillerHashStr = fillerData.hash.hex();
+                }
+                else
+                {
+                    sourceHashStr = sourceHash.hex().substr(0, 4);
+                    fillerHashStr = fillerData.hash.hex().substr(0, 4);
+                }
+                ETH_ERROR_MESSAGE("Test " + _compiledTest.string() +
+                        " is outdated. Filler hash is different! " +
+                        "('" + sourceHashStr + "' != '" + fillerHashStr + "') ");
+            }
         }
         catch (test::UpwardsException const&)
         {
             continue;
         }
-    }
-}
-
-void joinThreads(vector<thread>& _threadVector, bool _all)
-{
-    if (_all)
-    {
-        for (auto& th : _threadVector)
-        {
-            thread::id const id = th.get_id();
-            th.join();
-            // A thread with exception thrown still being joined here!
-            RPCSession::sessionEnd(id, RPCSession::SessionStatus::Available);
-        }
-        _threadVector.clear();
-        if (ExitHandler::receivedExitSignal())
-        {
-            // if one of the tests threads failed with fatal exception
-            // stop retesteth execution
-            ExitHandler::doExit();
-        }
-        return;  // otherwise continue test execution
-    }
-
-    bool finished = false;
-    while (!finished)
-    {
-        for (vector<thread>::iterator it = _threadVector.begin(); it != _threadVector.end(); it++)
-        {
-            auto status = RPCSession::sessionStatus((*it).get_id());
-            if (status == RPCSession::HasFinished)
-            {
-                thread::id const id = (*it).get_id();
-                (*it).join();
-                RPCSession::sessionEnd(id, RPCSession::SessionStatus::Available);
-                _threadVector.erase(it);
-                return;
-            }
-            else if (status == RPCSession::NotExist && ExitHandler::receivedExitSignal())
-                return;
-        }
-        std::this_thread::sleep_for(200ms);
     }
 }
 }
@@ -256,7 +310,8 @@ void TestSuite::runTestWithoutFiller(boost::filesystem::path const& _file) const
                     opt.doFilling = true;
                     opt.allowInvalidBlocks = true;
                     spDataObject output = doTests(testData.data, opt);
-                    addClientInfo(output.getContent(), _file, testData.hash);
+                    addClientInfo(output.getContent(), _file, testData.hash, outPath);
+                    (*output).performModifier(mod_sortKeys, DataObject::ModifierOption::NONRECURSIVE);
                     writeFile(outPath, asBytes(output->asJson()));
                 }
                 else
@@ -446,29 +501,15 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
     AbsoluteFillerPath fillerPath = getFullPathFiller(_testFolder);
     vector<fs::path> const files = test::getFiles(fillerPath.path(), {".json", ".yml"}, filter);
     if (files.size() == 0)
+    {
+        TestOutputHelper::get().currentTestRunPP();
         ETH_WARNING(_testFolder + " no tests detected in folder!");
+    }
+
 
     // repeat this part for all connected clients
     auto thisPart = [this, &files, &_testFolder]() {
         auto& testOutput = test::TestOutputHelper::get();
-        vector<thread> threadVector;
-
-        // If debugging, already there is an open instance of a client.
-        // Only one thread allowed to connect to it;
-        size_t maxAllowedThreads = Options::get().threadCount;
-        ClientConfig const& currConfig = Options::get().getDynamicOptions().getCurrentConfig();
-        ClientConfgSocketType socType = currConfig.cfgFile().socketType();
-        if (socType == ClientConfgSocketType::IPCDebug)
-            maxAllowedThreads = 1;
-
-        // If connecting to TCP sockets. Max threads are limited with tcp ports provided
-        if (socType == ClientConfgSocketType::TCP)
-        {
-            maxAllowedThreads = min(maxAllowedThreads, currConfig.cfgFile().socketAdresses().size());
-            if (maxAllowedThreads != Options::get().threadCount)
-                ETH_WARNING(
-                    "Correct -j option to `" + test::fto_string(maxAllowedThreads) + "` (or provide socket ports in config)!");
-        }
 
         if (RPCSession::isRunningTooLong() || TestChecker::isTimeConsumingTest(_testFolder.c_str()))
             RPCSession::restartScripts(true);
@@ -485,15 +526,13 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
             }
 
             testOutput.showProgress();
-            if (threadVector.size() == maxAllowedThreads)
-                joinThreads(threadVector, false);
-
             if (ExitHandler::receivedExitSignal())
                 break;
+
             thread testThread(&TestSuite::executeTest, this, _testFolder, file);
-            threadVector.push_back(std::move(testThread));
+            ThreadManager::addTask(std::move(testThread));
         }
-        joinThreads(threadVector, true);
+        ThreadManager::joinThreads();
         testOutput.finishTest();
     };
     runFunctionForAllClients(thisPart);
@@ -589,7 +628,7 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
                 ETH_LOG("Copying " + _testFileName.string(), 0);
                 ETH_LOG(" TO " + boostTestPath.path().string(), 0);
                 assert(_testFileName.string() != boostTestPath.path().string());
-                addClientInfo(testData.data.getContent(), boostRelativeTestPath, testData.hash);
+                addClientInfo(testData.data.getContent(), boostRelativeTestPath, testData.hash, boostTestPath.path());
                 writeFile(boostTestPath.path(), asBytes(testData.data->asJson()));
                 ETH_FAIL_REQUIRE_MESSAGE(boost::filesystem::exists(boostTestPath.path().string()),
                     "Error when copying the test file!");
@@ -602,9 +641,14 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
                 try
                 {
                     spDataObject output = doTests(testData.data, opt);
-                    // Add client info for all of the tests in output
-                    addClientInfo(output.getContent(), boostRelativeTestPath, testData.hash);
-                    writeFile(boostTestPath.path(), asBytes(output->asJson()));
+
+                    bool update =
+                        addClientInfo(output.getContent(), boostRelativeTestPath, testData.hash, boostTestPath.path());
+                    if (update)
+                    {
+                        (*output).performModifier(mod_sortKeys, DataObject::ModifierOption::NONRECURSIVE);
+                        writeFile(boostTestPath.path(), asBytes(output->asJson()));
+                    }
 
                     if (!Options::get().getGStateTransactionFilter().empty())
                     {
@@ -672,15 +716,17 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
 void TestSuite::executeFile(boost::filesystem::path const& _file) const
 {
     TestSuiteOptions opt;
-    opt.isLegacyTests = Options::get().rCurrentTestSuite.find("LegacyTests") != string::npos;
-    opt.isLegacyTests = opt.isLegacyTests || legacyTestSuiteFlag();
+    static bool isLegacy = Options::get().rCurrentTestSuite.find("LegacyTests") != string::npos;
+    opt.isLegacyTests = isLegacy || legacyTestSuiteFlag();
 
     if (_file.extension() != ".json")
         ETH_ERROR_MESSAGE("The generated test must have `.json` format!");
 
     ETH_LOG("Read json structure " + string(_file.filename().c_str()), 5);
-    auto const res = test::readJsonData(_file);
+    spDataObject res = test::readJsonData(_file);
     ETH_LOG("Read json finish", 5);
     doTests(res, opt);
 }
+
+
 }
