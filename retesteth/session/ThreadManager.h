@@ -1,6 +1,6 @@
 #pragma once
 #include <stdio.h>
-#include <vector>
+#include <map>
 #include <thread>
 
 class ThreadManager
@@ -11,6 +11,6 @@ public:
 private:
     ThreadManager() {}
     static size_t getMaxAllowedThreads();
-    static std::vector<std::thread> threadVector;
+    static std::map<std::thread::id, std::thread> threadMap;
     static unsigned int currConfigId;
 };
