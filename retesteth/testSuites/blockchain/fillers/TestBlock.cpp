@@ -28,7 +28,7 @@ spDataObject TestBlock::asDataObject() const
         res.atKeyPointer("blockHeader") = m_block->header()->asDataObject();
         res.atKeyPointer("transactions") = spDataObject(new DataObject(DataType::Array));
         for (auto const& tr : m_block->transactions())
-            res["transactions"].addArrayObject(tr->asDataObject(ExportOrder::OldStyle));
+            res["transactions"].addArrayObject(tr->asDataObject());
 
         for (auto const& trSequence : m_transactionExecOrder)
         {

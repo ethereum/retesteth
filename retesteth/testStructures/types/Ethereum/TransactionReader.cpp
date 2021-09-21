@@ -87,11 +87,11 @@ spTransaction readTransaction(dev::RLP const& _rlp)
         return _readTransaction(TransactionType::LEGACY, _rlp);
 }
 
-spTransaction readTransaction(DataObject const& _filledData)
+spTransaction readTransaction(spDataObjectMove _filledData)
 {
-    if (_filledData.count("maxPriorityFeePerGas"))
+    if (_filledData.getPointer()->count("maxPriorityFeePerGas"))
         return spTransaction(new TransactionBaseFee(_filledData));
-    if (_filledData.count("accessList"))
+    if (_filledData.getPointer()->count("accessList"))
         return spTransaction(new TransactionAccessList(_filledData));
     return spTransaction(new TransactionLegacy(_filledData));
 }

@@ -13,7 +13,7 @@ namespace teststruct
 struct BYTES : GCP_SPointerBase
 {
     BYTES(dev::RLP const& _rlp);
-    BYTES(DataObject const&);
+    explicit BYTES(DataObject const&);
     BYTES* copy() const { return new BYTES(DataObject(m_data)); }
 
     string const& asString() const { return m_data; }

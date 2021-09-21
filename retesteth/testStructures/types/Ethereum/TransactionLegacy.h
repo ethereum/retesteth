@@ -14,7 +14,7 @@ namespace teststruct
 
 struct TransactionLegacy : Transaction
 {
-    TransactionLegacy(DataObject const&);
+    TransactionLegacy(spDataObjectMove);
     TransactionLegacy(BYTES const&);
     TransactionLegacy(dev::RLP const&);
 

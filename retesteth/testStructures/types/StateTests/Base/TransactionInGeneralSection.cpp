@@ -6,7 +6,7 @@
 using namespace test::teststruct;
 
 TransactionInGeneralSection::TransactionInGeneralSection(
-    DataObject const& _tr, size_t _dInd, size_t _gInd, size_t _vInd, string const& _dataRawPreview, string const& _dataLabel)
+    spDataObjectMove _tr, size_t _dInd, size_t _gInd, size_t _vInd, string const& _dataRawPreview, string const& _dataLabel)
   : m_dataIndexBox(_dInd, test::fto_string(_dInd), _gInd, test::fto_string(_gInd), _vInd, test::fto_string(_vInd)),
     m_executed(false),
     m_skipped(false)

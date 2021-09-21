@@ -12,7 +12,7 @@ namespace teststruct
 // Transaction Structure inside RPC response eth_getBlockByHash/eth_getBlockByNumber
 struct EthGetBlockByTransaction
 {
-    EthGetBlockByTransaction(DataObject const&);
+    EthGetBlockByTransaction(spDataObjectMove);
     FH32 const& hash() const { return m_hash; }
     spTransaction const& transaction() const
     {

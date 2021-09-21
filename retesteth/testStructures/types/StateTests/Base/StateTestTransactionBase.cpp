@@ -20,41 +20,43 @@ std::vector<TransactionInGeneralSection> StateTestTransactionBase::buildTransact
         {
             for (size_t vIND = 0; vIND < m_value.size(); vIND++)
             {
-                Databox const& databox = m_databox.at(dIND);
                 if (ExitHandler::receivedExitSignal())
                     return out;
-                DataObject trData;
-                trData["data"] = databox.m_data.asString();
-                trData["gasLimit"] = m_gasLimit.at(gIND).asString();
-                trData["value"] = m_value.at(vIND).asString();
-                trData["nonce"] = m_nonce->asString();
+
+                Databox const& databox = m_databox.at(dIND);
+
+                spDataObject trData(new DataObject());
+                (*trData)["data"] = databox.m_data.asString();
+                (*trData)["gasLimit"] = m_gasLimit.at(gIND).asString();
+                (*trData)["value"] = m_value.at(vIND).asString();
+                (*trData)["nonce"] = m_nonce->asString();
                 if (m_creation)
-                    trData["to"] = "";
+                    (*trData)["to"] = "";
                 else
-                    trData["to"] = m_to->asString();
-                trData["secretKey"] = m_secretKey->asString();
+                    (*trData)["to"] = m_to->asString();
+                (*trData)["secretKey"] = m_secretKey->asString();
 
                 // EIP 1559
                 if (!m_maxPriorityFeePerGas.isEmpty())
                 {
                     // Type 0x02 transaction fields
-                    trData["maxPriorityFeePerGas"] = m_maxPriorityFeePerGas->asString();
-                    trData["maxFeePerGas"] = m_maxFeePerGas->asString();
+                    (*trData)["maxPriorityFeePerGas"] = m_maxPriorityFeePerGas->asString();
+                    (*trData)["maxFeePerGas"] = m_maxFeePerGas->asString();
 
                     if (databox.m_accessList.isEmpty())
                         ETH_FAIL_MESSAGE("BaseFeeTransaction must have access list!");
                 }
                 else
                 {
-                    trData["gasPrice"] = m_gasPrice->asString();
+                    (*trData)["gasPrice"] = m_gasPrice->asString();
                 }
 
                 // Export Access List
                 if (!databox.m_accessList.isEmpty())
-                    trData.atKeyPointer("accessList") = databox.m_accessList->asDataObject();
+                    (*trData).atKeyPointer("accessList") = databox.m_accessList->asDataObject();
 
                 out.push_back(
-                    TransactionInGeneralSection(trData, dIND, gIND, vIND, databox.m_dataRawPreview, databox.m_dataLabel));
+                    TransactionInGeneralSection(dataobject::move(trData), dIND, gIND, vIND, databox.m_dataRawPreview, databox.m_dataLabel));
             }
         }
     }

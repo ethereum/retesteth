@@ -221,15 +221,8 @@ spDataObject TransactionBaseFee::asDataObject(ExportOrder _order) const
         if (!m_secretKey.isEmpty() && m_secretKey.getCContent() != 0)
             (*out)["secretKey"] = m_secretKey->asString();
     }
-    if (_order == ExportOrder::OldStyle)
-    {
-        (*out).setKeyPos("r", 4);
-        (*out).setKeyPos("s", 5);
-        (*out).setKeyPos("v", 7);
-    }
 
     // standard transaction output without gas_price end
-
     // begin eip1559 transaction info
     (*out)["chainId"] = "0x01";
     (*out)["type"] = "0x02";

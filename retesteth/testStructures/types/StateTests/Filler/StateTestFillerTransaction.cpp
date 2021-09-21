@@ -97,7 +97,7 @@ StateTestFillerTransaction::StateTestFillerTransaction(spDataObjectMove _data)
             }
             (*dataInKey).setString(test::compiler::replaceCode(rawData));
             // ---
-            m_databox.push_back(Databox(dataInKey.getContent(), label, rawData.substr(0, 20), accessList));
+            m_databox.push_back(Databox(BYTES(dataInKey.getContent()), label, rawData.substr(0, 20), accessList));
         }
         for (auto const& el : m_rawData->atKey("gasLimit").getSubObjects())
             m_gasLimit.push_back(el.getCContent());

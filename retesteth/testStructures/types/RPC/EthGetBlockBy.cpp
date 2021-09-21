@@ -11,11 +11,11 @@ namespace test
 {
 namespace teststruct
 {
-EthGetBlockBy::EthGetBlockBy(DataObject const& _data)
+EthGetBlockBy::EthGetBlockBy(spDataObject& _data)
 {
     try
     {
-        REQUIRE_JSONFIELDS(_data, "EthGetBlockBy " + _data.getKey(),
+        REQUIRE_JSONFIELDS(_data, "EthGetBlockBy " + _data->getKey(),
             {{"logsBloom", {{DataType::String}, jsonField::Required}},
                 {"author", {{DataType::String}, jsonField::Optional}},                 //Geth return field
                 {"miner", {{DataType::String}, jsonField::Required}},
@@ -42,27 +42,24 @@ EthGetBlockBy::EthGetBlockBy(DataObject const& _data)
                 {"uncles", {{DataType::Array}, jsonField::Required}},
                 {"transactions", {{DataType::Array}, jsonField::Required}}});
 
+
         m_header = readBlockHeader(_data); // BlockHeader verify _data fields
 
-        m_size = spVALUE(new VALUE(_data.atKey("size")));
-        m_totalDifficulty = spVALUE(new VALUE(_data.atKey("totalDifficulty")));
+        m_size = spVALUE(new VALUE(_data->atKey("size")));
+        m_totalDifficulty = spVALUE(new VALUE(_data->atKey("totalDifficulty")));
 
         m_lessobjects = false;
-        for (auto const& el : _data.atKey("transactions").getSubObjects())
+        for (auto& el : _data.getContent().atKeyUnsafe("transactions").getSubObjectsUnsafe())
         {
-            // TODO get rid of copy here
-            spDataObject cel(new DataObject());
-            (*cel).copyFrom(el);
-            (*cel).renameKey("input", "data");
-            (*cel).renameKey("gas", "gasLimit");
-
-            m_transactions.push_back(EthGetBlockByTransaction(cel));
+            (*el).renameKey("input", "data");
+            (*el).renameKey("gas", "gasLimit");
+            m_transactions.push_back(EthGetBlockByTransaction(dataobject::move(el)));
             if (!m_transactions.at(m_transactions.size() - 1).isFullTransaction())
                 m_lessobjects = true;
         }
 
         // Remote eth_getBlockBy* always return uncles as hashes.
-        for (auto const& un : _data.atKey("uncles").getSubObjects())
+        for (auto const& un : _data->atKey("uncles").getSubObjects())
             m_uncles.push_back(FH32(un));
     }
     catch (std::exception const& _ex)

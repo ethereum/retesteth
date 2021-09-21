@@ -37,7 +37,7 @@ BlockchainTestInFilled::BlockchainTestInFilled(spDataObject& _data)
         else
             m_postHash = spFH32(new FH32(_data->atKey("postStateHash")));
 
-        for (auto const& el : _data->atKey("blocks").getSubObjects())
+        for (auto& el : _data.getContent().atKeyUnsafe("blocks").getSubObjectsUnsafe())
             m_blocks.push_back(BlockchainTestBlock(el));
         m_lastBlockHash = spFH32(new FH32(_data->atKey("lastblockhash")));
 

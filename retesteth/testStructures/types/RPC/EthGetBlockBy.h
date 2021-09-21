@@ -13,7 +13,7 @@ namespace teststruct
 // Structure for RPC response eth_getBlockByHash/eth_getBlockByNumber
 struct EthGetBlockBy : GCP_SPointerBase
 {
-    EthGetBlockBy(DataObject const&);
+    EthGetBlockBy(spDataObject&);
     spBlockHeader const& header() const { return m_header; }
     std::vector<EthGetBlockByTransaction> const& transactions() const { return m_transactions; }
     std::vector<FH32> const& uncles() const { return m_uncles; }

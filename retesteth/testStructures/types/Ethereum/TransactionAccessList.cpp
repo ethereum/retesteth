@@ -86,13 +86,13 @@ void TransactionAccessList::fromDataObject(DataObject const& _data)
     }
 }
 
-TransactionAccessList::TransactionAccessList(dev::RLP const& _rlp)
+TransactionAccessList::TransactionAccessList(dev::RLP const& _rlp) : TransactionLegacy()
 {
     m_secretKey = spVALUE(new VALUE(0));
     fromRLP(_rlp);
 }
 
-TransactionAccessList::TransactionAccessList(BYTES const& _rlp)
+TransactionAccessList::TransactionAccessList(BYTES const& _rlp) : TransactionLegacy()
 {
     m_secretKey = spVALUE(new VALUE(0));
     dev::bytes decodeRLP = sfromHex(_rlp.asString());
@@ -191,7 +191,8 @@ spDataObject TransactionAccessList::asDataObject(ExportOrder _order) const
     spDataObject out = TransactionLegacy::asDataObject(_order);
 
     (*out)["chainId"] = "0x01";
-    (*out).atKeyPointer("accessList") = m_accessList->asDataObject();
+    if (!out->count("accessList"))
+        (*out).atKeyPointer("accessList") = m_accessList->asDataObject();
     (*out)["type"] = "0x01";
     if (_order == ExportOrder::ToolStyle)
     {

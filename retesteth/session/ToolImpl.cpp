@@ -109,7 +109,8 @@ EthGetBlockBy ToolImpl::eth_getBlockByHash(FH32 const& _hash, Request _fullObjec
         ETH_LOG("Response: eth_getBlockByHash `" + res->asJson(), 7);
         return EthGetBlockBy(res);
         , "eth_getBlockByHash", CallType::FAILEVERYTHING)
-    return EthGetBlockBy(DataObject());
+    spDataObject spnull(0);
+    return EthGetBlockBy(spnull);
 }
 
 EthGetBlockBy ToolImpl::eth_getBlockByNumber(VALUE const& _blockNumber, Request _fullObjects)
@@ -122,7 +123,8 @@ EthGetBlockBy ToolImpl::eth_getBlockByNumber(VALUE const& _blockNumber, Request 
         ETH_LOG("Response: eth_getBlockByNumber `" + res->asJson(), 7);
         return EthGetBlockBy(res);
         , "eth_getBlockByNumber", CallType::FAILEVERYTHING)
-    return EthGetBlockBy(DataObject());
+    spDataObject spnull(0);
+    return EthGetBlockBy(spnull);
 }
 
 spBYTES ToolImpl::eth_getCode(FH20 const& _address, VALUE const& _blockNumber)
