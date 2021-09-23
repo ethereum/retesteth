@@ -195,7 +195,7 @@ void TransactionBaseFee::streamHeader(dev::RLPStream& _s) const
     _s.appendRaw(accessList.out());
 }
 
-spDataObject TransactionBaseFee::asDataObject(ExportOrder _order) const
+const spDataObject TransactionBaseFee::asDataObject(ExportOrder _order) const
 {
     // Because we don't use gas_price field need to explicitly output
     spDataObject out(new DataObject());

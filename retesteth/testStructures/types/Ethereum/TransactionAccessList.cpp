@@ -186,7 +186,7 @@ void TransactionAccessList::streamHeader(dev::RLPStream& _s) const
     _s.appendRaw(accessList.out());
 }
 
-spDataObject TransactionAccessList::asDataObject(ExportOrder _order) const
+const spDataObject TransactionAccessList::asDataObject(ExportOrder _order) const
 {
     spDataObject out = TransactionLegacy::asDataObject(_order);
 

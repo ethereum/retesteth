@@ -22,7 +22,7 @@ struct Transaction : GCP_SPointerBase
 {
     // Transaction Interface
     virtual TransactionType type() const = 0;
-    virtual spDataObject asDataObject(ExportOrder _order = ExportOrder::Default) const = 0;
+    virtual const spDataObject asDataObject(ExportOrder _order = ExportOrder::Default) const = 0;
     virtual ~Transaction(){ /* all fields are smart pointers */ };
 
     // Common transaction data

@@ -171,9 +171,12 @@ void TransactionLegacy::buildVRS(VALUE const& _secret)
 }
 
 
-spDataObject TransactionLegacy::asDataObject(ExportOrder _order) const
+const spDataObject TransactionLegacy::asDataObject(ExportOrder _order) const
 {
-    // TODO optimize out preparation here
+    // Optimize out preparation here
+    // Cache output data so not to construct it multiple times
+    // Useful when filling the tests as this function is called 2-3 times for each tr
+    // Promise that after constructor the data does not change
     if (m_rawData.isEmpty())
     {
         spDataObject out(new DataObject());
