@@ -2,9 +2,12 @@
 #include "ThreadManager.h"
 #include <retesteth/Options.h>
 #include <retesteth/ExitHandler.h>
+#include <condition_variable>
 
-map<thread::id, thread> ThreadManager::threadMap;
+std::condition_variable g_cv;
+std::mutex g_callbackmutex;
 unsigned int ThreadManager::currConfigId = 0;
+map<thread::id, thread> ThreadManager::threadMap;
 
 size_t ThreadManager::getMaxAllowedThreads()
 {
@@ -28,9 +31,14 @@ size_t ThreadManager::getMaxAllowedThreads()
     return maxAllowedThreads;
 }
 
-void ThreadManager::addTask(std::thread _job)
+void ThreadManager::addTask(std::function<void()> _job)
 {
-    threadMap.emplace(_job.get_id(), std::move(_job));
+    auto wrappedJob = [_job](){
+        _job();
+        g_cv.notify_one();
+    };
+    thread workThread(wrappedJob);
+    threadMap.emplace(workThread.get_id(), std::move(workThread));
 
     // See how many connections we can afford on current running configuration
     static size_t maxAllowedThreads = getMaxAllowedThreads();
@@ -43,7 +51,11 @@ void ThreadManager::addTask(std::thread _job)
 
     // Wait for at least one connection to finish it's task
     if (threadMap.size() == maxAllowedThreads)
+    {
+        std::unique_lock<std::mutex> lk(g_callbackmutex);
+        g_cv.wait(lk);
         joinThreads(false);
+    }
 }
 
 void ThreadManager::joinThreads(bool _all)

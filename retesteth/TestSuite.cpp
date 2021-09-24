@@ -533,8 +533,10 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
             if (ExitHandler::receivedExitSignal())
                 break;
 
-            thread testThread(&TestSuite::executeTest, this, _testFolder, file);
-            ThreadManager::addTask(std::move(testThread));
+            auto job = [this, &_testFolder, &file](){
+                executeTest(_testFolder, file);
+            };
+            ThreadManager::addTask(job);
         }
         ThreadManager::joinThreads();
         testOutput.finishTest();
