@@ -4,6 +4,8 @@
 #include <thread>
 #include <functional>
 
+// Manages jobs ensuring that only as many as -j flag allows are currently running
+// Construct over the Session class which manages new connections to the clients
 class ThreadManager
 {
 public:
@@ -11,6 +13,7 @@ public:
     static void addTask(std::function<void()> _job);
 private:
     ThreadManager() {}
+    static void waitForAtLeastOneJobToFinish();
     static size_t getMaxAllowedThreads();
     static std::map<std::thread::id, std::thread> threadMap;
     static unsigned int currConfigId;

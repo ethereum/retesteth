@@ -4,6 +4,8 @@
 #include <retesteth/ExitHandler.h>
 #include <condition_variable>
 
+size_t g_activejobs = 0;
+std::mutex g_jobsmutex;
 std::condition_variable g_cv;
 std::mutex g_callbackmutex;
 unsigned int ThreadManager::currConfigId = 0;
@@ -33,9 +35,16 @@ size_t ThreadManager::getMaxAllowedThreads()
 
 void ThreadManager::addTask(std::function<void()> _job)
 {
+    {
+         std::lock_guard<std::mutex> lk(g_jobsmutex);
+         g_activejobs++;
+    }
+
     auto wrappedJob = [_job](){
         _job();
         g_cv.notify_one();
+        std::lock_guard<std::mutex> lk(g_jobsmutex);
+        g_activejobs--;
     };
     thread workThread(wrappedJob);
     threadMap.emplace(workThread.get_id(), std::move(workThread));
@@ -52,8 +61,7 @@ void ThreadManager::addTask(std::function<void()> _job)
     // Wait for at least one connection to finish it's task
     if (threadMap.size() == maxAllowedThreads)
     {
-        std::unique_lock<std::mutex> lk(g_callbackmutex);
-        g_cv.wait(lk);
+        waitForAtLeastOneJobToFinish();
         joinThreads(false);
     }
 }
@@ -100,4 +108,17 @@ void ThreadManager::joinThreads(bool _all)
         if (Options::get().threadCount > 1)
             std::this_thread::sleep_for(25ms);
     }
+}
+
+void ThreadManager::waitForAtLeastOneJobToFinish()
+{
+    std::unique_lock<std::mutex> lkj(g_jobsmutex);
+    if (g_activejobs != 0)
+    {
+        lkj.unlock();
+        std::unique_lock<std::mutex> lk(g_callbackmutex);
+        g_cv.wait(lk);
+    }
+    else
+        lkj.unlock();
 }
