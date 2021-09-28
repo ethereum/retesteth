@@ -80,7 +80,10 @@ std::tuple<VALUE, FORK> prepareReward(SealEngine _engine, FORK const& _fork, VAL
         if (_blockNumber < 5)
         {
             if (!RewardMapForToolBefore5.count(_fork))
-                ETH_ERROR_MESSAGE("ToolBackend error getting reward for fork: " + _fork.asString());
+            {
+                fs::path const& rewardMapPath = Options::get().getDynamicOptions().getCurrentConfig().getRewardMapPath();
+                ETH_ERROR_MESSAGE("ToolBackend error getting reward for fork: " + _fork.asString() + ", check that fork reward is defined at (" + rewardMapPath.c_str() + ")");
+            }
             auto const& trFork = RewardMapForToolBefore5.at(_fork);
             assert(rewards.count(trFork));
             return {rewards.at(trFork).getCContent(), trFork};
@@ -88,7 +91,10 @@ std::tuple<VALUE, FORK> prepareReward(SealEngine _engine, FORK const& _fork, VAL
         else
         {
             if (!RewardMapForToolAfter5.count(_fork))
-                ETH_ERROR_MESSAGE("ToolBackend error getting reward for fork: " + _fork.asString());
+            {
+                fs::path const& rewardMapPath = Options::get().getDynamicOptions().getCurrentConfig().getRewardMapPath();
+                ETH_ERROR_MESSAGE("ToolBackend error getting reward for fork: " + _fork.asString() + ", check that fork reward is defined at " + rewardMapPath.c_str() + ")");
+            }
             auto const& trFork = RewardMapForToolAfter5.at(_fork);
             assert(rewards.count(trFork));
             return {rewards.at(trFork).getCContent(), _fork == "HomesteadToDaoAt5" ? "HomesteadToDaoAt5" : trFork};
