@@ -169,12 +169,12 @@ void TransactionBaseFee::streamHeader(dev::RLPStream& _s) const
     // rlp([chainId, nonce, maxPriorityFeePerGas, maxFeePerGas, gasLimit, to, value, data, access_list, signatureYParity,
     // signatureR, signatureS])
     _s << VALUE(1).asBigInt();
-    _s << nonce().asBigInt();
+    _s << nonce().serializeRLP();
 
-    _s << m_maxPriorityFeePerGas->asBigInt();
-    _s << m_maxFeePerGas->asBigInt();
+    _s << m_maxPriorityFeePerGas->serializeRLP();
+    _s << m_maxFeePerGas->serializeRLP();
 
-    _s << gasLimit().asBigInt();
+    _s << gasLimit().serializeRLP();
     if (Transaction::isCreation())
         _s << "";
     else
@@ -184,7 +184,7 @@ void TransactionBaseFee::streamHeader(dev::RLPStream& _s) const
         else
             _s << test::sfromHex(to().asString(ExportType::RLP));
     }
-    _s << value().asBigInt();
+    _s << value().serializeRLP();
     _s << test::sfromHex(data().asString());
 
     // Access Listist
@@ -254,9 +254,12 @@ void TransactionBaseFee::rebuildRLP()
     dev::RLPStream out;
     out.appendList(12);
     TransactionBaseFee::streamHeader(out);
-    out << v().asBigInt().convert_to<dev::byte>();
-    out << r().asBigInt();
-    out << s().asBigInt();
+    if (v().isBigInt())
+        out << v().serializeRLP();
+    else
+        out << v().asBigInt().convert_to<dev::byte>();
+    out << r().serializeRLP();
+    out << s().serializeRLP();
 
     // Alter output with prefixed 02 byte + tr.rlp
     dev::bytes outa = out.out();

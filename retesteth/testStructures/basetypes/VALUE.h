@@ -17,6 +17,7 @@ namespace teststruct
 
 struct VALUE : GCP_SPointerBase
 {
+    // TODO ideally separate bigint logic into another class that behave exactly the same as VALUE but with exceptions
     VALUE(dev::RLP const& _rlp);
     VALUE(dev::bigint const&);
     VALUE(int);
@@ -51,20 +52,28 @@ struct VALUE : GCP_SPointerBase
 
     VALUE operator++(int) { m_data++; return *this; }
 
-    string const& asString(size_t _roundBytes = 1) const;
+    string const& asString() const;
     string asDecString() const;
     dev::bigint const& asBigInt() const { return m_data; }
+    dev::bytes const& serializeRLP() const;
     bool isBigInt() const { return m_bigint; }
 
 private:
     VALUE() {}
     string verifyHexString(std::string const& _s, std::string const& _k = string()) const;
+    void calculateCache() const;
     dev::bigint m_data;
-    bool m_bigint = false;
 
     // Optimizations
     mutable bool m_dirty = true;
     mutable string m_dataStrZeroXCache;
+    mutable dev::bytes m_bytesData;
+
+    // Bigint specific
+    bool m_bigint = false;
+    mutable bool m_bigintEmpty = false;
+    mutable dev::bytes m_bytesBigIntData;
+    mutable size_t m_prefixedZeros = 0;
     mutable string m_dataStrBigIntCache;
 };
 

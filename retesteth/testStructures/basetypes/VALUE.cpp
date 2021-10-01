@@ -25,8 +25,16 @@ VALUE::VALUE(dev::RLP const& _rlp)
 {
     std::ostringstream stream;
     stream << _rlp.toBytes();
-    m_bigint = (stream.str().size() > 64 + 2);
-    m_data = dev::bigint(stream.str());
+    auto const str = stream.str();
+    for (size_t i = 2; i < str.size() - 2; i++)
+    {
+        if (str.at(i) == '0')
+            m_prefixedZeros++;
+        else
+            break;
+    }
+    m_bigint = (str.size() > 64 + 2) || m_prefixedZeros >= 2;
+    m_data = dev::bigint(str);
 }
 
 VALUE::VALUE(dev::bigint const& _data) : m_data(_data) {}
@@ -65,24 +73,42 @@ string VALUE::verifyHexString(std::string const& _s, std::string const& _k) cons
         pos = 0;
 
     if (_s.size() - pos < 2)
-        throw test::UpwardsException("VALUE element must be at leas 0x prefix" + suffix);
+        throw test::UpwardsException("VALUE element must be at least 0x prefix" + suffix);
 
     if (_s[0 + pos] == '0' && _s[1 + pos] == 'x')
     {
-        size_t const fixedsize = _s.size() - pos;
-        if (fixedsize - pos == 2)
-            throw test::UpwardsException("VALUE set as empty byte string: `" + _s + "`" + suffix);
+        if (pos == 0)
+        {
+            size_t const fixedsize = _s.size() - pos;
+            if (fixedsize - pos == 2)
+                throw test::UpwardsException("VALUE set as empty byte string: `" + _s + "`" + suffix);
 
-        // don't allow 0x001, but allow 0x0, 0x00
-        if ((_s[2 + pos] == '0' && fixedsize % 2 == 1 && fixedsize != 3) ||
-            (_s[2 + pos] == '0' && _s[3 + pos] == '0' && fixedsize % 2 == 0 && fixedsize > 4))
-            throw test::UpwardsException("VALUE has leading 0 `" + _s + "`" + suffix);
+            // don't allow 0x001, but allow 0x0, 0x00
+            if ((_s[2 + pos] == '0' && fixedsize % 2 == 1 && fixedsize != 3) ||
+                (_s[2 + pos] == '0' && _s[3 + pos] == '0' && fixedsize % 2 == 0 && fixedsize > 4))
+                throw test::UpwardsException("VALUE has leading 0 `" + _s + "`" + suffix);
 
-        else if (fixedsize > 64 + 2 && pos == 0)
-            throw test::UpwardsException("VALUE  >u256 `" + _s + "`" + suffix);
+            else if (fixedsize > 64 + 2)
+                throw test::UpwardsException("VALUE  >u256 `" + _s + "`" + suffix);
+        }
+        else
+        {
+            m_prefixedZeros = 0;
+            const string ret = _s.substr(pos);
+            if (ret.size() == 2)
+                m_bigintEmpty = true;
 
-        if (pos > 0)
-            return _s.substr(pos);
+            for (size_t i = 2; i < ret.size() - 2; i++)
+            {
+                if (ret.at(i) == '0')
+                    m_prefixedZeros++;
+                else
+                    break;
+            }
+
+            // Indicates bigint
+            return ret;
+        }
     }
     else
         throw test::UpwardsException("VALUE is not prefixed hex `" + _s + "`" + suffix);
@@ -95,22 +121,56 @@ string VALUE::asDecString() const
     return m_data.str(0, std::ios_base::dec);
 }
 
-string const& VALUE::asString(size_t _roundBytes) const
+string const& VALUE::asString() const
 {
-    std::lock_guard<std::mutex> lock(g_cacheAccessMutexValue);
+    calculateCache();
+    return m_bigint ? m_dataStrBigIntCache : m_dataStrZeroXCache;
+}
+
+dev::bytes const& VALUE::serializeRLP() const
+{
+    calculateCache();
+    if (m_bigint)
+        return m_bytesBigIntData;
+    return m_bytesData;
+}
+
+void VALUE::calculateCache() const
+{
     if (m_dirty)
     {
+        // Mutex ? because of string function thread unsafe? double check this
+        std::lock_guard<std::mutex> lock(g_cacheAccessMutexValue);
         string& ret = m_dataStrZeroXCache;
-        ret = m_data.str(_roundBytes, std::ios_base::hex);
-        if (ret.size() % 2 != 0)
-            ret.insert(0, "0");
-        test::strToLower(ret);
 
-        m_dataStrBigIntCache = m_dataStrZeroXCache;
-        m_dataStrZeroXCache.insert(0, "0x");
-        m_dataStrBigIntCache.insert(0, "0x:bigint 0x");
+        if (m_bigintEmpty)
+            ret = "";
+        else
+        {
+            ret = m_data.str(0, std::ios_base::hex);
+            if (ret.size() % 2 != 0)
+                ret.insert(0, "0");
+            test::strToLower(ret);
+        }
+
+        if (m_bigint)
+        {
+            string prefixedZero;
+            for (size_t i = 0; i < m_prefixedZeros; i += 2)
+                prefixedZero.insert(0, "00");
+
+            m_dataStrBigIntCache = m_dataStrZeroXCache;
+            m_dataStrZeroXCache.insert(0, "0x");
+            m_dataStrBigIntCache.insert(0, prefixedZero);
+            m_dataStrBigIntCache.insert(0, "0x:bigint 0x");
+            m_bytesBigIntData = test::sfromHex(prefixedZero) + test::sfromHex(m_dataStrZeroXCache);
+        }
+        else
+        {
+            m_dataStrZeroXCache.insert(0, "0x");
+            m_bytesData = (m_data == 0) ? test::sfromHex("") : test::sfromHex(m_dataStrZeroXCache);
+        }
     }
-    return m_bigint ? m_dataStrBigIntCache : m_dataStrZeroXCache;
 }
 
 }  // namespace teststruct

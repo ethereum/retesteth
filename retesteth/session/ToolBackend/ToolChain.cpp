@@ -254,8 +254,7 @@ ToolResponse ToolChain::mineBlockOnTool(EthereumBlockState const& _block, Ethere
         dev::RLPStream txsout(_block.transactions().size());
         for (auto const& tr : _block.transactions())
             txsout.appendRaw(tr->asRLPStream().out());
-        string txsPathContent = _block.transactions().size() ?
-                    "\"" + dev::toString(txsout.out()) + "\"" : "[]";
+        txsPathContent = _block.transactions().size() ? "\"" + dev::toString(txsout.out()) + "\"" : "[]";
         writeFile(txsPath.string(), txsPathContent);
     }
     else

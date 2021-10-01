@@ -126,9 +126,9 @@ TransactionLegacy::TransactionLegacy(BYTES const& _rlp)
 
 void TransactionLegacy::streamHeader(dev::RLPStream& _s) const
 {
-    _s << nonce().asBigInt();
-    _s << gasPrice().asBigInt();
-    _s << gasLimit().asBigInt();
+    _s << nonce().serializeRLP();
+    _s << gasPrice().serializeRLP();
+    _s << gasLimit().serializeRLP();
 
     if (m_creation)
         _s << "";
@@ -139,7 +139,7 @@ void TransactionLegacy::streamHeader(dev::RLPStream& _s) const
         else
             _s << test::sfromHex(to().asString(ExportType::RLP));
     }
-    _s << value().asBigInt();
+    _s << value().serializeRLP();
     _s << test::sfromHex(data().asString());
 }
 
@@ -215,9 +215,12 @@ void TransactionLegacy::rebuildRLP()
     dev::RLPStream out;
     out.appendList(9);
     streamHeader(out);
-    out << v().asBigInt().convert_to<dev::byte>();
-    out << r().asBigInt();
-    out << s().asBigInt();
+    if (v().isBigInt())
+        out << v().serializeRLP();
+    else
+        out << v().asBigInt().convert_to<dev::byte>();
+    out << r().serializeRLP();
+    out << s().serializeRLP();
     m_outRlpStream = out;
     m_rawRLPdata = spBYTES(new BYTES(dev::toHexPrefixed(out.out())));
     m_hash = spFH32(new FH32("0x" + dev::toString(dev::sha3(out.out()))));
