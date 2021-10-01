@@ -69,8 +69,6 @@ void TransactionLegacy::fromDataObject(DataObject const& _data)
         else
         {
             m_v = spVALUE(new VALUE(_data.atKey("v")));
-            if (m_v.getCContent() > dev::bigint("0xff"))
-                throw test::UpwardsException("Incorrect transaction `v` value: " + m_v->asString());
             m_r = spVALUE(new VALUE(_data.atKey("r")));
             m_s = spVALUE(new VALUE(_data.atKey("s")));
             rebuildRLP();

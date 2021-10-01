@@ -25,7 +25,7 @@ void checkException(std::function<void()> _job, string const& _exStr)
     ETH_ERROR_REQUIRE_MESSAGE(exception, "Expected error! `" + _exStr);
 }
 
-void checkSerialize(VALUE const& _a, string const& _rlpForm, string const& _expectedAfter = string())
+void checkSerializeBigint(VALUE const& _a, string const& _rlpForm, string const& _expectedAfter = string())
 {
     RLPStream sout(1);
     sout << _a.serializeRLP();
@@ -54,32 +54,37 @@ BOOST_FIXTURE_TEST_SUITE(StructTest, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(value_normal)
 {
-    VALUE a(DataObject("0x1122"));
-    VALUE b(DataObject("0x01"));
-    VALUE c(DataObject("0x1"));
-    VALUE d(DataObject("0x00"));
-    VALUE e(DataObject("0x0"));
+    std::vector<VALUE> tests = {
+        VALUE(DataObject("0x1122")),
+        VALUE(DataObject("0x01")),
+        VALUE(DataObject("0x1")),
+        VALUE(DataObject("0x00")),
+        VALUE(DataObject("0x0")),
+        VALUE(DataObject("0x112233445500"))
+    };
 
-    RLPStream sout(5);
-    sout << a.serializeRLP();
-    sout << b.serializeRLP();
-    sout << c.serializeRLP();
-    sout << d.serializeRLP();
-    sout << e.serializeRLP();
+    RLPStream sout(tests.size());
+    RLPStream sout2(tests.size());
+    for (auto const& el : tests)
+    {
+        sout << el.serializeRLP();
+        sout2 << el.asBigInt();
+    }
 
     auto out = sout.out();
+    auto out2 = sout2.out();
     // std::cerr << toHexPrefixed(out) << std::endl;
-    ETH_ERROR_REQUIRE_MESSAGE(toHexPrefixed(out) == "0xc782112201018080", "RLP Serialize");
+    ETH_ERROR_REQUIRE_MESSAGE(toHexPrefixed(out) == "0xce8211220101808086112233445500", "RLP Serialize different to expected: `" + toHexPrefixed(out));
+    ETH_ERROR_REQUIRE_MESSAGE(toHexPrefixed(out) == toHexPrefixed(out2), "RLP (serializeRLP != asBigInt) " + toHexPrefixed(out) + " != " + toHexPrefixed(out2));
+
 
     size_t i = 0;
     RLP rlp(out);
-    VALUE aa(rlp[i++]);
-    VALUE bb(rlp[i++]);
-    VALUE cc(rlp[i++]);
-
-    ETH_ERROR_REQUIRE_MESSAGE(aa.asString() == a.asString(), "Var a Serialize");
-    ETH_ERROR_REQUIRE_MESSAGE(bb.asString() == b.asString(), "Var b Serialize");
-    ETH_ERROR_REQUIRE_MESSAGE(cc.asString() == c.asString(), "Var c Serialize");
+    for (auto const& el : tests)
+    {
+        VALUE deserialized(rlp[i++]);
+        ETH_ERROR_REQUIRE_MESSAGE(deserialized.asString() == el.asString(), "Var (Deserialize != Serialize) " + deserialized.asString() + " != " + el.asString());
+    }
 }
 
 BOOST_AUTO_TEST_CASE(value_notPrefixed)
@@ -124,37 +129,37 @@ BOOST_AUTO_TEST_CASE(valueb_emptyString)
 BOOST_AUTO_TEST_CASE(valueb_prefixed00)
 {
     VALUE a(DataObject("0x:bigint 0x0022"));
-    checkSerialize(a, "0xc3820022");
+    checkSerializeBigint(a, "0xc3820022");
 }
 
 BOOST_AUTO_TEST_CASE(valueb_normal)
 {
     VALUE a(DataObject("0x:bigint 0x22"));
-    checkSerialize(a, "0xc122", "0x22");
+    checkSerializeBigint(a, "0xc122", "0x22");
 }
 
 BOOST_AUTO_TEST_CASE(valueb_empty)
 {
     VALUE a(DataObject("0x:bigint 0x"));
-    checkSerialize(a, "0xc180", "0x00");
+    checkSerializeBigint(a, "0xc180", "0x00");
 }
 
 BOOST_AUTO_TEST_CASE(valueb_zero)
 {
     VALUE a(DataObject("0x:bigint 0x00"));
-    checkSerialize(a, "0xc100", "0x00");
+    checkSerializeBigint(a, "0xc100", "0x00");
 }
 
 BOOST_AUTO_TEST_CASE(valueb_zeroPrefixed)
 {
     VALUE a(DataObject("0x:bigint 0x0000"));
-    checkSerialize(a, "0xc3820000");
+    checkSerializeBigint(a, "0xc3820000");
 }
 
 BOOST_AUTO_TEST_CASE(valueb_oversize)
 {
     VALUE a(DataObject("0x:bigint 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
-    checkSerialize(a, "0xe2a1ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+    checkSerializeBigint(a, "0xe2a1ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
 }
 
 
