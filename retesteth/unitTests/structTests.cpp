@@ -58,27 +58,44 @@ BOOST_AUTO_TEST_CASE(value_normal)
         VALUE(DataObject("0x1122")),
         VALUE(DataObject("0x01")),
         VALUE(DataObject("0x1")),
-        VALUE(DataObject("0x00")),
+        VALUE(DataObject("0x00")),         // bigint serializes 0 value into `80` instead of `00`
         VALUE(DataObject("0x0")),
+        VALUE(DataObject("0x22")),
         VALUE(DataObject("0x112233445500"))
+    };
+
+    std::vector<VALUE> testsBigint = {
+        VALUE(DataObject("0x:bigint 0x1122")),
+        VALUE(DataObject("0x:bigint 0x01")),
+        VALUE(DataObject("0x:bigint 0x1")),
+        VALUE(DataObject("0x:bigint 0x")),  // 0x is empty `80` encoding
+        VALUE(DataObject("0x:bigint 0x")),  // use `0x:bigint 0x00` to actually encode `00`
+        VALUE(DataObject("0x:bigint 0x22")),
+        VALUE(DataObject("0x:bigint 0x112233445500"))
     };
 
     RLPStream sout(tests.size());
     RLPStream sout2(tests.size());
+    RLPStream soutBigint(tests.size());
+    size_t i = 0;
     for (auto const& el : tests)
     {
         sout << el.serializeRLP();
         sout2 << el.asBigInt();
+        soutBigint << testsBigint.at(i++).serializeRLP();
     }
 
     auto out = sout.out();
     auto out2 = sout2.out();
+    auto outbigint = soutBigint.out();
     // std::cerr << toHexPrefixed(out) << std::endl;
-    ETH_ERROR_REQUIRE_MESSAGE(toHexPrefixed(out) == "0xce8211220101808086112233445500", "RLP Serialize different to expected: `" + toHexPrefixed(out));
+    ETH_ERROR_REQUIRE_MESSAGE(toHexPrefixed(out) == "0xcf821122010180802286112233445500", "RLP Serialize different to expected: `" + toHexPrefixed(out));
     ETH_ERROR_REQUIRE_MESSAGE(toHexPrefixed(out) == toHexPrefixed(out2), "RLP (serializeRLP != asBigInt) " + toHexPrefixed(out) + " != " + toHexPrefixed(out2));
+    ETH_ERROR_REQUIRE_MESSAGE(toHexPrefixed(out) == toHexPrefixed(outbigint), "RLP (serializeRLP != bigint serializeRLP) " + toHexPrefixed(out) + " != " + toHexPrefixed(outbigint));
+    ETH_ERROR_REQUIRE_MESSAGE(toHexPrefixed(out2) == toHexPrefixed(outbigint), "RLP (asBigInt != bigint serializeRLP) " + toHexPrefixed(out2) + " != " + toHexPrefixed(outbigint));
 
 
-    size_t i = 0;
+    i = 0;
     RLP rlp(out);
     for (auto const& el : tests)
     {
@@ -136,6 +153,12 @@ BOOST_AUTO_TEST_CASE(valueb_normal)
 {
     VALUE a(DataObject("0x:bigint 0x22"));
     checkSerializeBigint(a, "0xc122", "0x22");
+}
+
+BOOST_AUTO_TEST_CASE(valueb_normal2)
+{
+    VALUE a(DataObject("0x:bigint 0x01"));
+    checkSerializeBigint(a, "0xc101", "0x01");
 }
 
 BOOST_AUTO_TEST_CASE(valueb_empty)
