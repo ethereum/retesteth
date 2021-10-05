@@ -16,9 +16,9 @@ struct FH32 : FH
     FH32(DataObject const& _data) : FH(_data, 32) {}
     FH32(string const& _data) : FH(_data, 32) {}
     FH32(dev::bigint const& _data) : FH(_data, 32) {}
-    FH32* copy() const { return new FH32(m_data); }
+    FH32* copy() const { return new FH32(asString()); }
 
-    bool isZero() const { return m_data == 0; }
+    bool isZero() const { return m_data.getCContent() == 0; }
     static FH32 const& zero()
     {
         static FH32 zero("0x0000000000000000000000000000000000000000000000000000000000000000");

@@ -29,13 +29,12 @@ namespace test
 namespace teststruct
 {
 // Fast constructor without any checks
-FH::FH(dev::bigint const& _data, size_t _scale) : m_data(_data), m_scale(_scale) {}
+FH::FH(dev::bigint const& _data, size_t _scale) : m_data(new VALUE(_data)), m_scale(_scale) {}
 
 void FH::_initialize(string const& _data, string const& _key)
 {
-    m_bigint = false;
     string const scale = to_string(m_scale);
-    size_t pos = _data.find("0x:bigint ");
+    size_t const pos = _data.find("0x:bigint ");
     if (pos == string::npos)
     {
         if (!validateHash(_data, m_scale))
@@ -46,17 +45,21 @@ void FH::_initialize(string const& _data, string const& _key)
             else
                 throw test::UpwardsException("Key `" + _key + "` is not hash" + scale + " `" + _data + "`");
         }
-        m_data = dev::bigint(_data);
+        m_data = spVALUE(new VALUE(dev::bigint(_data)));
     }
     else
     {
         // Validate hex
-        pos += 10;  // length of prefix
+        // pos += 10;  // length of prefix
         try
         {
-            VALUE v(_data.substr(pos));
-            m_data = v.asBigInt();
-            m_bigint = true;
+            if (validateHash(_data, m_scale))
+                m_data = spVALUE(new VALUE(dev::bigint(_data.substr(pos + 10))));
+            else
+            {
+                m_isCorrectHash = false;
+                m_data = spVALUE(new VALUE(_data.substr(pos)));
+            }
         }
         catch (std::exception const& _ex)
         {
@@ -79,19 +82,50 @@ FH::FH(DataObject const& _data, size_t _scale) : m_scale(_scale)
 
 FH::FH(dev::RLP const& _rlp, size_t _scale)
 {
-    std::ostringstream stream;
-    stream << _rlp.toBytes();
-    auto const str = stream.str();
-    m_bigint = (str.size() != _scale * 2 + 2);
-    m_data = dev::bigint(str);
+    m_data = spVALUE(new VALUE(_rlp));
     m_scale = _scale;
+
+    if (m_data->isBigInt())
+    {
+        size_t const gotScale = (m_data->asString().size() - 11) / 2;
+        if (gotScale != _scale)
+            m_isCorrectHash = false;
+    }
+    else
+    {
+        size_t const gotScale = (m_data->asString().size() - 1) / 2;
+        if (gotScale != _scale)
+            throw test::UpwardsException("Initializing FH" + test::fto_string(_scale) +
+                                         " from RLP failed (check the string): `" + m_data->asString() +
+                                         "` Reason: " + "Scale mismatch, got: " + test::fto_string(gotScale));
+    }
 }
 
-string const& FH::asString(ExportType _forRLP) const
+string const& FH::asString() const
 {
-    std::lock_guard<std::mutex> lock(g_cacheAccessMutexFH);
-    if (m_dataStrBigIntCache.empty())
+    if (m_data->isBigInt() && !m_isCorrectHash)
+        return m_data->asString();
+
+    if (m_dataStrZeroXCache.empty())
     {
+        if (m_data->isBigInt())
+            m_dataStrZeroXCache = m_data->asString().substr(10);
+        else
+            m_dataStrZeroXCache = m_data->asString();
+
+        if (m_isCorrectHash)
+            for (size_t size = m_dataStrZeroXCache.size() / 2; size <= m_scale; size++)
+                m_dataStrZeroXCache.insert(2, "00");
+    }
+
+    return m_dataStrZeroXCache;
+    /*
+    if (m_bigint && _forRLP != ExportType::RLP)
+        return m_bigintHash->asString();
+
+    if (m_dataStrZeroXCache.empty())
+    {
+        std::lock_guard<std::mutex> lock(g_cacheAccessMutexFH);
         string& ret = m_dataStrZeroXCache;
         ret = m_data.str(1, std::ios_base::hex);
         test::strToLower(ret);
@@ -104,11 +138,19 @@ string const& FH::asString(ExportType _forRLP) const
                 ret.insert(0, "00");
         }
 
-        m_dataStrBigIntCache = m_dataStrZeroXCache;
         m_dataStrZeroXCache.insert(0, "0x");
-        m_dataStrBigIntCache.insert(0, "0x:bigint 0x");
     }
-    return m_bigint && _forRLP != ExportType::RLP ? m_dataStrBigIntCache : m_dataStrZeroXCache;
+    return m_dataStrZeroXCache; */
+}
+
+dev::bytes const& FH::serializeRLP() const
+{
+    if (m_rlpDataCache.empty())
+        m_rlpDataCache = test::sfromHex(asString());
+
+    if (m_data->isBigInt())
+        return m_data->serializeRLP();
+    return m_rlpDataCache;
 }
 
 }  // namespace teststruct

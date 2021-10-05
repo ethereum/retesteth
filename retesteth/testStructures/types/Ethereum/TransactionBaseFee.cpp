@@ -168,20 +168,13 @@ void TransactionBaseFee::streamHeader(dev::RLPStream& _s) const
     // signatureR, signatureS])
     _s << VALUE(1).asBigInt();
     _s << nonce().serializeRLP();
-
     _s << m_maxPriorityFeePerGas->serializeRLP();
     _s << m_maxFeePerGas->serializeRLP();
-
     _s << gasLimit().serializeRLP();
     if (Transaction::isCreation())
         _s << "";
     else
-    {
-        if (to().isBigInt())
-            _s << to().asBigInt();
-        else
-            _s << test::sfromHex(to().asString(ExportType::RLP));
-    }
+        _s << to().serializeRLP();
     _s << value().serializeRLP();
     _s << test::sfromHex(data().asString());
 

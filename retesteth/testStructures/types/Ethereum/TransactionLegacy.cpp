@@ -127,16 +127,10 @@ void TransactionLegacy::streamHeader(dev::RLPStream& _s) const
     _s << nonce().serializeRLP();
     _s << gasPrice().serializeRLP();
     _s << gasLimit().serializeRLP();
-
     if (m_creation)
         _s << "";
     else
-    {
-        if (to().isBigInt())
-            _s << to().asBigInt();
-        else
-            _s << test::sfromHex(to().asString(ExportType::RLP));
-    }
+        _s << to().serializeRLP();
     _s << value().serializeRLP();
     _s << test::sfromHex(data().asString());
 }

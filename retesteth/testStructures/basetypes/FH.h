@@ -1,4 +1,5 @@
 #pragma once
+#include "VALUE.h"
 #include <libdevcore/Common.h>
 #include <libdevcore/CommonData.h>
 #include <libdevcore/RLP.h>
@@ -24,9 +25,10 @@ struct FH : GCP_SPointerBase
     FH(DataObject const&, size_t _scale);  // Does not require to move smart pointer here as this structure changes a lot
     FH(dev::bigint const&, size_t _scale);
 
-    bool isBigInt() const { return m_bigint; }
-    string const& asString(ExportType _forRLP = ExportType::TEST) const;
-    dev::bigint const& asBigInt() const { return m_data; }
+    bool isBigInt() const { return m_data->isBigInt(); }
+    string const& asString() const;
+    dev::bytes const& serializeRLP() const;
+    dev::bigint const& asBigInt() const { return m_data->asBigInt(); }
     bool operator==(FH const& rhs) const { return asBigInt() == rhs.asBigInt(); }
     bool operator!=(FH const& rhs) const { return asBigInt() != rhs.asBigInt(); }
     bool operator<(FH const& rhs) const { return asBigInt() < rhs.asBigInt(); }
@@ -38,11 +40,11 @@ private:
     void _initialize(string const& _s, string const& _k = string());
 
 protected:
-    bool m_bigint = false;
-    dev::bigint m_data;
-    mutable string m_dataStrZeroXCache;
-    mutable string m_dataStrBigIntCache;
+    spVALUE m_data;
     size_t m_scale;
+    bool m_isCorrectHash = true;
+    mutable string m_dataStrZeroXCache;
+    mutable dev::bytes m_rlpDataCache;
 };
 
 }  // namespace teststruct

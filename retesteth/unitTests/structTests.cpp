@@ -25,7 +25,8 @@ void checkException(std::function<void()> _job, string const& _exStr)
     ETH_ERROR_REQUIRE_MESSAGE(exception, "Expected error! `" + _exStr);
 }
 
-void checkSerializeBigint(VALUE const& _a, string const& _rlpForm, string const& _expectedAfter = string())
+template <class T>
+void checkSerializeBigint(T const& _a, string const& _rlpForm, string const& _expectedAfter = string())
 {
     RLPStream sout(1);
     sout << _a.serializeRLP();
@@ -36,7 +37,7 @@ void checkSerializeBigint(VALUE const& _a, string const& _rlpForm, string const&
 
     size_t i = 0;
     RLP rlp(out);
-    VALUE aa(rlp[i++]);
+    T aa(rlp[i++]);
 
     if (!_expectedAfter.empty())
     {
@@ -112,6 +113,8 @@ BOOST_AUTO_TEST_CASE(value_notPrefixed)
 BOOST_AUTO_TEST_CASE(value_leadingZero)
 {
     checkException([]() { VALUE a(DataObject("0x0002")); }, "has leading 0");
+    checkException([]() { VALUE a(DataObject("0x0001000000000000000000000000000000000000000000000000000000000000000001")); },
+        "has leading 0");
 }
 
 BOOST_AUTO_TEST_CASE(value_wrongChar)
@@ -147,6 +150,9 @@ BOOST_AUTO_TEST_CASE(valueb_prefixed00)
 {
     VALUE a(DataObject("0x:bigint 0x0022"));
     checkSerializeBigint(a, "0xc3820022");
+
+    VALUE b(DataObject(" 0x:bigint 0x0001000000000000000000000000000000000000000000000000000000000000000001"));
+    checkSerializeBigint(b, "0xe4a30001000000000000000000000000000000000000000000000000000000000000000001");
 }
 
 BOOST_AUTO_TEST_CASE(valueb_normal)
@@ -185,5 +191,123 @@ BOOST_AUTO_TEST_CASE(valueb_oversize)
     checkSerializeBigint(a, "0xe2a1ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
 }
 
+
+// HASH FUNCTIONS
+BOOST_AUTO_TEST_CASE(hash32)
+{
+    FH32 a("0x1122334455667788991011121314151617181920212223242526272829303132");
+    checkSerializeBigint(a, "0xe1a01122334455667788991011121314151617181920212223242526272829303132");
+    FH32 b("0x0000334455667788991011121314151617181920212223242526272829303132");
+    checkSerializeBigint(b, "0xe1a00000334455667788991011121314151617181920212223242526272829303132");
+    FH32 c("0x0022334455667788991011121314151617181920212223242526272829303132");
+    checkSerializeBigint(c, "0xe1a00022334455667788991011121314151617181920212223242526272829303132");
+}
+
+BOOST_AUTO_TEST_CASE(hash256)
+{
+    FH256 a(
+        "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        "000000000000000000000000000000000000000000");
+    checkSerializeBigint(a,
+        "0xf90103b9010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        "000000000000000000000000000000000000000000000000000000");
+}
+
+BOOST_AUTO_TEST_CASE(hash32_exceptions)
+{
+    checkException([]() { FH32 a("0x112233"); }, "Initializing FH32 from string that is not hash32");
+    checkException([]() { FH32 a("0x12233"); }, "Initializing FH32 from string that is not hash32");
+    checkException([]() { FH32 a("0x0000112233"); }, "Initializing FH32 from string that is not hash32");
+    checkException([]() { FH32 a("0x112233445566778899101112131415161718192021222324252627282930313233"); },
+        "Initializing FH32 from string that is not hash32");
+    checkException([]() { FH32 a("112233"); }, "Initializing FH32 from string that is not hash32");
+    checkException([]() { FH32 a("0x"); }, "Initializing FH32 from string that is not hash32");
+    checkException([]() { FH32 a(""); }, "Initializing FH32 from string that is not hash32");
+}
+
+
+BOOST_AUTO_TEST_CASE(hash_serialization)
+{
+    typedef std::tuple<FH*, string> HashType;
+    std::vector<HashType> tests = {
+        {new FH32(DataObject("0x1122334455667788991011121314151617181920212223242526272829303132")), "32"},
+        {new FH256(DataObject(
+             "0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+             "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+             "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+             "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+             "00000000000000000000000000000000000000000000000000000000000000")),
+            "256"}};
+
+    std::vector<HashType> testsBigint = {
+        {new FH32(DataObject("0x:bigint 0x1122334455667788991011121314151617181920212223242526272829303132")), "32"},
+        {new FH256(DataObject(
+             "0x:bigint "
+             "0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+             "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+             "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+             "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+             "00000000000000000000000000000000000000000000000000000000000000")),
+            "256"}};
+
+    RLPStream sout(tests.size());
+    RLPStream sout2(tests.size());
+    RLPStream soutBigint(tests.size());
+    size_t i = 0;
+    for (auto const& el : tests)
+    {
+        sout << std::get<0>(el)->serializeRLP();
+        sout2 << test::sfromHex(std::get<0>(el)->asString());
+        soutBigint << std::get<0>(testsBigint.at(i++))->serializeRLP();
+    }
+
+    auto out = sout.out();
+    auto out2 = sout2.out();
+    auto outbigint = soutBigint.out();
+    // std::cerr << toHexPrefixed(out) << std::endl;
+    ETH_ERROR_REQUIRE_MESSAGE(
+        toHexPrefixed(out) ==
+            "0xf90124a01122334455667788991011121314151617181920212223242526272829303132b901000000000000000000000000000000000000"
+            "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            "0000000000000000000000",
+        "RLP Serialize different to expected: `" + toHexPrefixed(out));
+    ETH_ERROR_REQUIRE_MESSAGE(toHexPrefixed(out) == toHexPrefixed(out2),
+        "RLP (serializeRLP != asBigInt) " + toHexPrefixed(out) + " != " + toHexPrefixed(out2));
+    ETH_ERROR_REQUIRE_MESSAGE(toHexPrefixed(out) == toHexPrefixed(outbigint),
+        "RLP (serializeRLP != bigint serializeRLP) " + toHexPrefixed(out) + " != " + toHexPrefixed(outbigint));
+    ETH_ERROR_REQUIRE_MESSAGE(toHexPrefixed(out2) == toHexPrefixed(outbigint),
+        "RLP (asBigInt != bigint serializeRLP) " + toHexPrefixed(out2) + " != " + toHexPrefixed(outbigint));
+
+
+    i = 0;
+    RLP rlp(out);
+    for (auto const& el : tests)
+    {
+        FH* deserialized = 0;
+        auto const& type = std::get<1>(el);
+        if (type == "32")
+            deserialized = new FH32(rlp[i]);
+        else if (type == "256")
+            deserialized = new FH256(rlp[i]);
+        ETH_ERROR_REQUIRE_MESSAGE(deserialized->asString() == std::get<0>(el)->asString(),
+            "Var (Deserialize != Serialize) " + deserialized->asString() + " != " + std::get<0>(el)->asString());
+        i++;
+    }
+
+    // delete pointers
+    for (auto& el : tests)
+        delete std::get<0>(el);
+    for (auto& el : testsBigint)
+        delete std::get<0>(el);
+}
 
 BOOST_AUTO_TEST_SUITE_END()

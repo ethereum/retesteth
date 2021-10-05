@@ -33,6 +33,7 @@ VALUE::VALUE(dev::RLP const& _rlp)
         else
             break;
     }
+
     m_bigint = (str.size() > 64 + 2) || m_prefixedZeros >= 2;
     m_data = dev::bigint(str);
 }
@@ -155,9 +156,12 @@ void VALUE::calculateCache() const
 
         if (m_bigint)
         {
+            size_t existingZero = 0;
             string prefixedZero;
-            for (size_t i = 0; i < m_prefixedZeros; i += 2)
-                prefixedZero.insert(0, "00");
+            if (m_dataStrZeroXCache.size() > 2 && m_dataStrZeroXCache.at(0) == '0' && m_prefixedZeros > 0)
+                existingZero = 1;
+            for (size_t i = 0; i < m_prefixedZeros - existingZero; i += 1)
+                prefixedZero.insert(0, "0");
 
             m_dataStrBigIntCache = m_dataStrZeroXCache;
             m_dataStrZeroXCache.insert(0, "0x");
