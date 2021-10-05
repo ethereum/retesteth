@@ -1,6 +1,7 @@
 #include <retesteth/TestHelper.h>
 #include <retesteth/TestOutputHelper.h>
 #include <retesteth/testStructures/basetypes.h>
+#include <retesteth/testStructures/types/Ethereum/TransactionReader.h>
 #include <boost/test/unit_test.hpp>
 #include <functional>
 
@@ -231,6 +232,17 @@ BOOST_AUTO_TEST_CASE(hash32_exceptions)
     checkException([]() { FH32 a(""); }, "Initializing FH32 from string that is not hash32");
 }
 
+BOOST_AUTO_TEST_CASE(hash32_bigint)
+{
+    checkSerializeBigint(FH32("0x:bigint 0x112233"), "0xc483112233");
+    checkSerializeBigint(FH32("0x:bigint 0x12233"), "0xc483012233", "0x:bigint 0x012233");
+    checkSerializeBigint(FH32("0x:bigint 0x0000112233"), "0xc6850000112233");
+    checkSerializeBigint(FH32("0x:bigint 0x112233445566778899101112131415161718192021222324252627282930313233"),
+        "0xe2a1112233445566778899101112131415161718192021222324252627282930313233");
+    checkSerializeBigint(FH32("0x:bigint 0x"), "0xc180");
+    checkSerializeBigint(FH32("0x:bigint 0x00"), "0xc100");
+}
+
 
 BOOST_AUTO_TEST_CASE(hash_serialization)
 {
@@ -315,6 +327,37 @@ BOOST_AUTO_TEST_CASE(hash_serialization)
         delete std::get<0>(el);
     for (auto& el : testsBigint)
         delete std::get<0>(el);
+}
+
+
+// TRANSACTIONS
+BOOST_AUTO_TEST_CASE(transactionLegacy_serialization)
+{
+    spDataObject tr(new DataObject());
+    (*tr)["data"] = "0x00112233";
+    (*tr)["gasLimit"] = "0x112233";
+    (*tr)["gasPrice"] = "0x0a";
+    (*tr)["nonce"] = "0x01";
+    (*tr)["secretKey"] = "0x45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8";
+    (*tr)["to"] = "";
+    (*tr)["value"] = "0x11";
+    spTransaction spTr = readTransaction(dataobject::move(tr));
+
+    auto const trRead = spTr->asDataObject()->asJson(0, false);
+    const string expectedRead =
+        R"({"data":"0x00112233","gasLimit":"0x112233","gasPrice":"0x0a","nonce":"0x01","to":"","value":"0x11","v":"0x1c","r":"0x20705a98ccbb2eff7872ba4df9854597732e6a4436252ff7acc56ce7aeebe17a","s":"0x1869c076e616f3aeeaa160ab6050a1c009a58eda3ab6752ddb87dc6762e03112"})";
+    ETH_ERROR_REQUIRE_MESSAGE(trRead == expectedRead, "Transaction read different to expected '" + trRead + "'");
+
+    BYTES const& trSerialized = spTr->getRawBytes();
+    ETH_ERROR_REQUIRE_MESSAGE(trSerialized.asString() ==
+                                  "0xf850010a83112233801184001122331ca020705a98ccbb2eff7872ba4df9854597732e6a4436252ff7acc56ce7"
+                                  "aeebe17aa01869c076e616f3aeeaa160ab6050a1c009a58eda3ab6752ddb87dc6762e03112",
+        "Transaction rawBytes different: " + trSerialized.asString());
+
+    spTransaction spTr2 = readTransaction(trSerialized);
+    auto const trRead2 = spTr2->asDataObject()->asJson(0, false);
+    ETH_ERROR_REQUIRE_MESSAGE(
+        trRead == trRead2, "Transaction deserialized read different (before != after) " + trRead + " != " + trRead2);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
