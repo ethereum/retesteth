@@ -252,6 +252,8 @@ TestRawTransaction ToolChainManager::test_rawTransaction(
         (*tr)["sender"] = res->getSubObjects().at(0)->atKey("address").asString();
         (*tr)["hash"] = res->getSubObjects().at(0)->atKey("hash").asString();
         out["acceptedTransactions"].addArrayObject(tr);
+        if (tr->atKey("hash").asString() != hash)
+            ETH_ERROR_MESSAGE("t8n tool returned different tx.hash than retesteth: (t8n.hash != retesteth.hash) " + tr->atKey("hash").asString() + " != " + hash);
     }
 
     ETH_TEST_MESSAGE("Response: test_rawTransaction `" + out.asJson());

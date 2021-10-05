@@ -85,20 +85,11 @@ FH::FH(dev::RLP const& _rlp, size_t _scale)
     m_data = spVALUE(new VALUE(_rlp));
     m_scale = _scale;
 
-    if (m_data->isBigInt())
-    {
-        size_t const gotScale = (m_data->asString().size() - 11) / 2;
-        if (gotScale != _scale)
-            m_isCorrectHash = false;
-    }
-    else
-    {
-        size_t const gotScale = (m_data->asString().size() - 1) / 2;
-        if (gotScale != _scale)
-            throw test::UpwardsException("Initializing FH" + test::fto_string(_scale) +
-                                         " from RLP failed (check the string): `" + m_data->asString() +
-                                         "` Reason: " + "Scale mismatch, got: " + test::fto_string(gotScale));
-    }
+    size_t const gotScale = m_data->isBigInt() ? (m_data->asString().size() - 11) / 2
+                                               : (m_data->asString().size() - 1) / 2;
+
+    if (gotScale != _scale)
+        m_isCorrectHash = false;
 }
 
 string const& FH::asString() const
