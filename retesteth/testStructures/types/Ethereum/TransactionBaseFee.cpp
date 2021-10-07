@@ -29,6 +29,7 @@ void TransactionBaseFee::fromDataObject(DataObject const& _data)
             {
                 {"data", {{DataType::String}, jsonField::Required}},
                 {"gasLimit", {{DataType::String}, jsonField::Required}},
+                {"gasPrice", {{DataType::String}, jsonField::Optional}},
                 {"nonce", {{DataType::String}, jsonField::Required}},
                 {"value", {{DataType::String}, jsonField::Required}},
                 {"to", {{DataType::String, DataType::Null}, jsonField::Required}},
