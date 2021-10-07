@@ -246,10 +246,7 @@ void TransactionBaseFee::rebuildRLP()
     dev::RLPStream out;
     out.appendList(12);
     TransactionBaseFee::streamHeader(out);
-    if (v().isBigInt())
-        out << v().serializeRLP();
-    else
-        out << v().asBigInt().convert_to<dev::byte>();
+    out << v().serializeRLP();
     out << r().serializeRLP();
     out << s().serializeRLP();
 

@@ -358,6 +358,38 @@ BOOST_AUTO_TEST_CASE(transactionLegacy_serialization)
     auto const trRead2 = spTr2->asDataObject()->asJson(0, false);
     ETH_ERROR_REQUIRE_MESSAGE(
         trRead == trRead2, "Transaction deserialized read different (before != after) " + trRead + " != " + trRead2);
+    ETH_ERROR_REQUIRE_MESSAGE(spTr->hash() == spTr2->hash(), "Transaction deserialized hash is different (before != after) " + spTr->hash().asString() + " != " + spTr2->hash().asString())
+}
+
+BOOST_AUTO_TEST_CASE(transactionLegacy_vbigint_serialization)
+{
+    spDataObject tr(new DataObject());
+    (*tr)["data"] = "0x00112233";
+    (*tr)["gasLimit"] = "0x112233";
+    (*tr)["gasPrice"] = "0x0a";
+    (*tr)["nonce"] = "0x01";
+    (*tr)["to"] = "";
+    (*tr)["value"] = "0x11";
+    (*tr)["v"] = "0x01000000000000001b";
+    (*tr)["r"] = "0x48b55bfa915ac795c431978d8a6a992b628d557da5ff759b307d495a36649353";
+    (*tr)["s"] = "0x1fffd310ac743f371de3b9f7f9cb56c0b28ad43601b4ab949f53faa07bd2c804";
+    spTransaction spTr = readTransaction(dataobject::move(tr));
+
+    auto const trRead = spTr->asDataObject()->asJson(0, false);
+    const string expectedRead =
+        R"({"data":"0x00112233","gasLimit":"0x112233","gasPrice":"0x0a","nonce":"0x01","to":"","value":"0x11","v":"0x01000000000000001b","r":"0x48b55bfa915ac795c431978d8a6a992b628d557da5ff759b307d495a36649353","s":"0x1fffd310ac743f371de3b9f7f9cb56c0b28ad43601b4ab949f53faa07bd2c804"})";
+    ETH_ERROR_REQUIRE_MESSAGE(trRead == expectedRead, "Transaction read different to expected '" + trRead + "'");
+
+    BYTES const& trSerialized = spTr->getRawBytes();
+    ETH_ERROR_REQUIRE_MESSAGE(trSerialized.asString() ==
+                                  "0xf859010a83112233801184001122338901000000000000001ba048b55bfa915ac795c431978d8a6a992b628d557da5ff759b307d495a36649353a01fffd310ac743f371de3b9f7f9cb56c0b28ad43601b4ab949f53faa07bd2c804",
+        "Transaction rawBytes different: " + trSerialized.asString());
+
+    spTransaction spTr2 = readTransaction(trSerialized);
+    auto const trRead2 = spTr2->asDataObject()->asJson(0, false);
+    ETH_ERROR_REQUIRE_MESSAGE(
+        trRead == trRead2, "Transaction deserialized read different (before != after) " + trRead + " != " + trRead2);
+    ETH_ERROR_REQUIRE_MESSAGE(spTr->hash() == spTr2->hash(), "Transaction deserialized hash is different (before != after) " + spTr->hash().asString() + " != " + spTr2->hash().asString())
 }
 
 BOOST_AUTO_TEST_SUITE_END()

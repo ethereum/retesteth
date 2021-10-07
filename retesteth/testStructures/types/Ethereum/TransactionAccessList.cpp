@@ -204,10 +204,7 @@ void TransactionAccessList::rebuildRLP()
     dev::RLPStream out;
     out.appendList(11);
     streamHeader(out);
-    if (v().isBigInt())
-        out << v().serializeRLP();
-    else
-        out << v().asBigInt().convert_to<dev::byte>();
+    out << v().serializeRLP();
     out << r().serializeRLP();
     out << s().serializeRLP();
 
