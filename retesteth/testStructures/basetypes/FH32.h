@@ -17,7 +17,7 @@ struct FH32 : FH
     FH32(string const& _data) : FH(_data, 32) {}
     FH32* copy() const { return new FH32(asString()); }
 
-    bool isZero() const { return m_data.getCContent().asString() == zero().asStringBytes(); }
+    bool isZero() const { return m_data.asString() == zero().asStringBytes(); }
     static FH32 const& zero()
     {
         static FH32 zero("0x0000000000000000000000000000000000000000000000000000000000000000");

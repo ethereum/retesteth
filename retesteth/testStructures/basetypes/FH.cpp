@@ -44,7 +44,7 @@ void FH::_initialize(string const& _data, string const& _key)
             else
                 throw test::UpwardsException("Key `" + _key + "` is not hash" + scale + " `" + _data + "`");
         }
-        m_data = spBYTES(new BYTES(_data));
+        m_data = BYTES(_data);
     }
     else
     {
@@ -53,11 +53,11 @@ void FH::_initialize(string const& _data, string const& _key)
         try
         {
             if (validateHash(_data, m_scale))
-                m_data = spBYTES(new BYTES(_data.substr(pos + 10)));
+                m_data = BYTES(_data.substr(pos + 10));
             else
             {
                 m_isCorrectHash = false;
-                m_data = spBYTES(new BYTES(_data.substr(pos + 10)));
+                m_data = BYTES(_data.substr(pos + 10));
             }
         }
         catch (std::exception const& _ex)
@@ -81,10 +81,10 @@ FH::FH(DataObject const& _data, size_t _scale) : m_scale(_scale)
 
 FH::FH(dev::RLP const& _rlp, size_t _scale)
 {
-    m_data = spBYTES(new BYTES(_rlp));
+    m_data = BYTES(_rlp);
     m_scale = _scale;
 
-    size_t const gotScale = (m_data->asString().size() - 2) / 2;
+    size_t const gotScale = (m_data.asString().size() - 2) / 2;
 
     if (gotScale != _scale)
         m_isCorrectHash = false;
@@ -95,10 +95,10 @@ string const& FH::asString() const
     if (m_dataStrZeroXCache.empty())
     {
         if (m_isCorrectHash)
-            m_dataStrZeroXCache = m_data->asString();
+            m_dataStrZeroXCache = m_data.asString();
         else
         {
-            m_dataStrZeroXCache = m_data->asString();
+            m_dataStrZeroXCache = m_data.asString();
             m_dataStrZeroXCache.insert(0, "0x:bigint ");
         }
     }
@@ -108,7 +108,7 @@ string const& FH::asString() const
 dev::bytes const& FH::serializeRLP() const
 {
     if (m_rlpDataCache.empty())
-        m_rlpDataCache = test::sfromHex(m_data->asString());
+        m_rlpDataCache = test::sfromHex(m_data.asString());
     return m_rlpDataCache;
 }
 

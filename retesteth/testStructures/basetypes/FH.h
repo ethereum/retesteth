@@ -20,19 +20,20 @@ struct FH : GCP_SPointerBase
 
     string const& asString() const;
     dev::bytes const& serializeRLP() const;
-    string const& asStringBytes() const { return m_data->asString(); }
-    bool operator==(FH const& rhs) const { return m_data->asString() == rhs.asStringBytes(); }
-    bool operator!=(FH const& rhs) const { return m_data->asString() != rhs.asStringBytes(); }
-    bool operator<(FH const& rhs) const { return m_data->asString() < rhs.asStringBytes(); }
+    string const& asStringBytes() const { return m_data.asString(); }
+    bool operator==(FH const& rhs) const { return m_data.asString() == rhs.asStringBytes(); }
+    bool operator!=(FH const& rhs) const { return m_data.asString() != rhs.asStringBytes(); }
+    bool operator<(FH const& rhs) const { return m_data.asString() < rhs.asStringBytes(); }
 
     size_t scale() const { return m_scale; }
 
 private:
     FH() {}
+    //FH(FH const&) {}
     void _initialize(string const& _s, string const& _k = string());
 
 protected:
-    spBYTES m_data;
+    BYTES m_data = BYTES(DataObject("0x00"));
     size_t m_scale;
     bool m_isCorrectHash = true;
     mutable string m_dataStrZeroXCache;
