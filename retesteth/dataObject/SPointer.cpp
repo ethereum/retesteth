@@ -1,7 +1,6 @@
 #include "SPointer.h"
 #include <string>
 #include <mutex>
-
 namespace dataobject
 {
 
@@ -30,15 +29,27 @@ void GCP_SPointerBase::AddRef()
     else
         _nRef++;
 }
+
 int GCP_SPointerBase::DelRef()
 {
     if (G_IS_THREADSAFE)
     {
         std::lock_guard<std::mutex> lock(g_spRefAccessMutex);
         _nRef--;
+        return _nRef;
     }
     else
         _nRef--;
+    return _nRef;
+}
+
+int GCP_SPointerBase::GetRef()
+{
+    if (G_IS_THREADSAFE)
+    {
+        std::lock_guard<std::mutex> lock(g_spRefAccessMutex);
+        return _nRef;
+    }
     return _nRef;
 }
 
