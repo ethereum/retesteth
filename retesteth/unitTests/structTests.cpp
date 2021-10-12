@@ -319,6 +319,7 @@ BOOST_AUTO_TEST_CASE(hash_serialization)
             deserialized = new FH256(rlp[i]);
         ETH_ERROR_REQUIRE_MESSAGE(deserialized->asString() == std::get<0>(el)->asString(),
             "Var (Deserialize != Serialize) " + deserialized->asString() + " != " + std::get<0>(el)->asString());
+        delete deserialized;
         i++;
     }
 
