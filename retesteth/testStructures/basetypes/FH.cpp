@@ -17,9 +17,8 @@ namespace
 {
 bool validateHash(std::string const& _hash, size_t _size)
 {
-    // TODO disable stringIntegerType check here???
     // validate 0x...... _size bytes hash
-    if (_hash.size() != _size * 2 + 2 || stringIntegerType(_hash) != DigitsType::HexPrefixed)
+    if (_hash.size() != _size * 2 + 2) // || stringIntegerType(_hash) != DigitsType::HexPrefixed)
         return false;
     return true;
 }
