@@ -41,7 +41,16 @@ TransactionTestInFilled::TransactionTestInFilled(spDataObject& _data)
 
         m_name = _data->getKey();
         m_rlp = spBYTES(new BYTES(_data->atKey("txbytes").asString()));
-        m_readTransaction = readTransaction(m_rlp); // ?? broken rlp ??
+
+        try {
+            m_readTransaction = readTransaction(m_rlp);
+        }
+        catch (...)
+        {
+            ETH_WARNING("Unable to read transaction from 'txbytes'");
+            m_readTransaction = spTransaction(0);
+        }
+
         for (auto const& el : _data->atKey("result").getSubObjects())
         {
             if (el->count("exception"))

@@ -48,7 +48,13 @@ void RunTest(TransactionTestInFilled const& _test)
     for (auto const& el : Options::getCurrentConfig().cfgFile().forks())
     {
         TestRawTransaction res = session.test_rawTransaction(_test.rlp(), el);
-        compareTransactionException(_test.transaction(), res, _test.getExpectException(el));
+        if (_test.transaction().isEmpty())
+        {
+            spTransaction tr(new TransactionLegacy(BYTES(DataObject("0xf85f800182520894000000000000000000000000000b9331677e6ebf0a801ca098ff921201554726367d2be8c804a7ff89ccf285ebc57dff8ae4c44b9c19ac4aa01887321be575c8095f789dd4c743dfe42c1820f9231f98a962b210e3ac2452a3"))));
+            compareTransactionException(tr, res, _test.getExpectException(el));
+        }
+        else
+            compareTransactionException(_test.transaction(), res, _test.getExpectException(el));
         if (_test.getExpectException(el).empty())
         {
             spFH32 remoteHash = std::get<0>(_test.getAcceptedTransaction(el));

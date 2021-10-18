@@ -12,7 +12,7 @@ namespace teststruct
 // Deserialized from string of "0x1122....." of _limit range
 struct BYTES : GCP_SPointerBase
 {
-    BYTES(dev::RLP const& _rlp);
+    explicit BYTES(dev::RLP const& _rlp);
     explicit BYTES(DataObject const&);
     BYTES* copy() const { return new BYTES(DataObject(m_data)); }
 
