@@ -82,10 +82,11 @@ void TransactionLegacy::fromDataObject(DataObject const& _data)
 
 void TransactionLegacy::fromRLP(dev::RLP const& _rlp)
 {
+    if (_rlp.itemCount() != 9)
+        throw test::UpwardsException("TransactionLegacy::fromRLP(RLP) expected to have exactly 9 elements!");
     // 0 - nonce        3 - to      6 - v
     // 1 - gasPrice     4 - value   7 - r
     // 2 - gasLimit     5 - data    8 - s
-
     size_t i = 0;
     m_nonce = spVALUE(new VALUE(_rlp[i++]));
     m_gasPrice = spVALUE(new VALUE(_rlp[i++]));

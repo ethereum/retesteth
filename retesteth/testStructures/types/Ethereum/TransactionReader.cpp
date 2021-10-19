@@ -57,7 +57,7 @@ spTransaction readTransaction(BYTES const& _rlp)
         }
         catch (std::exception const& _ex)
         {
-            ETH_ERROR_MESSAGE(
+            throw test::UpwardsException(
                 string("readTransaction(BYTES const&) error building RLP: ") + _ex.what() + "\n" + _rlp.asString());
         }
     }
@@ -79,7 +79,7 @@ spTransaction readTransaction(dev::RLP const& _rlp)
         case 2:
             return _readTransaction(TransactionType::BASEFEE, realRLP);
         default:
-            ETH_ERROR_MESSAGE("readTransaction(dev::RLP const& _rlp) unknown transaction type!");
+            throw test::UpwardsException("readTransaction(dev::RLP const& _rlp) unknown transaction type!");
         }
         return spTransaction(0);
     }

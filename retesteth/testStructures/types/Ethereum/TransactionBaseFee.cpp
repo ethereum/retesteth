@@ -107,6 +107,9 @@ TransactionBaseFee::TransactionBaseFee(BYTES const& _rlp)
 
 void TransactionBaseFee::fromRLP(dev::RLP const& _rlp)
 {
+    if (_rlp.itemCount() != 12)
+        throw test::UpwardsException("TransactionBaseFee::fromRLP(RLP) expected to have exactly 11 elements!");
+
     size_t i = 0;
     i++;  // chainID
 
