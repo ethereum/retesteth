@@ -46,6 +46,8 @@ public:
     FH32 test_importRawBlock(BYTES const& _blockRLP) override;
     FH32 test_getLogHash(FH32 const& _txHash) override;
     TestRawTransaction test_rawTransaction(BYTES const& _rlp, FORK const& _fork) override;
+    VALUE test_calculateDifficulty(FORK const& _fork, VALUE const& _blockNumber, VALUE const& _parentTimestamp,
+        VALUE const& _parentDifficulty, VALUE const& _currentTimestamp, VALUE const& _uncleNumber) override;
 
     // Internal
     std::string sendRawRequest(std::string const& _request);

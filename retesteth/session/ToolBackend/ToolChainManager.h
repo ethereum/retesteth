@@ -36,6 +36,11 @@ public:
     static TestRawTransaction test_rawTransaction(
         BYTES const& _rlp, FORK const& _fork, fs::path const& _toolPath, fs::path const& _tmpDir);
 
+    // Difficulty tests
+    static VALUE test_calculateDifficulty(FORK const& _fork, VALUE const& _blockNumber, VALUE const& _parentTimestamp,
+        VALUE const& _parentDifficulty, VALUE const& _currentTimestamp, VALUE const& _uncleNumber,
+        , fs::path const& _toolPath, fs::path const& _tmpDir);
+
 
 private:
     ToolChainManager() {}

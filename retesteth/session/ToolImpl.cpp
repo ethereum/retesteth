@@ -313,6 +313,18 @@ TestRawTransaction ToolImpl::test_rawTransaction(BYTES const& _rlp, FORK const& 
     return TestRawTransaction(DataObject());
 }
 
+VALUE ToolImpl::test_calculateDifficulty(FORK const& _fork, VALUE const& _blockNumber, VALUE const& _parentTimestamp,
+    VALUE const& _parentDifficulty, VALUE const& _currentTimestamp, VALUE const& _uncleNumber)
+{
+    rpcCall("", {});
+    TRYCATCHCALL(
+        ETH_TEST_MESSAGE("\nRequest: test_calculateDifficulty '");
+        return ToolChainManager::test_calculateDifficulty(_fork, _blockNumber, _parentTimestamp, _parentDifficulty, _currentTimestamp, _uncleNumber,
+            m_toolPath, m_tmpDir);
+        , "test_calculateDifficulty", CallType::FAILEVERYTHING)
+    return VALUE(DataObject());
+}
+
 // Internal
 spDataObject ToolImpl::rpcCall(
     std::string const& _methodName, std::vector<std::string> const& _args, bool _canFail)

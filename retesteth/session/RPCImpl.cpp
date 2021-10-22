@@ -188,6 +188,20 @@ TestRawTransaction RPCImpl::test_rawTransaction(BYTES const& _rlp, FORK const& _
     return TestRawTransaction(res);
 }
 
+VALUE RPCImpl::test_calculateDifficulty(FORK const& _fork, VALUE const& _blockNumber, VALUE const& _parentTimestamp,
+    VALUE const& _parentDifficulty, VALUE const& _currentTimestamp, VALUE const& _uncleNumber)
+{
+    return VALUE(rpcCall("test_calculateDifficulty", {
+             quote(_fork.asString()),
+             quote(_blockNumber.asString()),
+             quote(_parentTimestamp.asString()),
+             quote(_parentDifficulty.asString()),
+             quote(_currentTimestamp.asString()),
+             quote(_uncleNumber.asString())
+            })
+        );
+}
+
 // Internal
 std::string RPCImpl::sendRawRequest(std::string const& _request)
 {

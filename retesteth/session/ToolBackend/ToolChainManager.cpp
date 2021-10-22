@@ -260,5 +260,24 @@ TestRawTransaction ToolChainManager::test_rawTransaction(
     return TestRawTransaction(out);
 }
 
+VALUE ToolChainManager::test_calculateDifficulty(FORK const& _fork, VALUE const& _blockNumber, VALUE const& _parentTimestamp,
+    VALUE const& _parentDifficulty, VALUE const& _currentTimestamp, VALUE const& _uncleNumber,
+    fs::path const& _toolPath, fs::path const& _tmpDir)
+{
+    std::map<FH20, spAccountBase> state = {
+        {FH20("0x1122334455667788991011121314151617181920"),
+            spAccountBase(new State::Account())
+            }
+    };
+    FH32 loghash(DataObject("0x1122334455667788991011121314151617181920212223242526272829303132"));
+    spState stateA(new State(state));
+    DataObject headrAData;
+    spBlockHeader headerA(new BlockHeaderLegacy(headrAData));
+    EthereumBlockState blockA(headerA, stateA, loghash); //stateA const declare once
+    EthereumBlockState blockB(headerA, stateA, loghash);
+    ToolChain chain(blockA, blockB, _fork, _toolPath, _tmpDir);
+    return chain.lastBlock().header()->difficulty();
+}
+
 
 }  // namespace toolimpl
