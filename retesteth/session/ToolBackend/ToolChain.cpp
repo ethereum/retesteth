@@ -55,8 +55,10 @@ ToolChain::ToolChain(
     m_toolPath(_toolPath),
     m_tmpDir(_tmpDir)
 {
+    // Constructor to execute t8n given 2 blocks to calculate the difficulty transition
     ToolResponse res = mineBlockOnTool(_blockB, _blockA, SealEngine::NoReward);
     m_blocks.push_back(_blockB);
+    m_blocks.back().headerUnsafe().getContent().setDifficulty(res.currentDifficulty());
 }
 
 spDataObject const ToolChain::mineBlock(EthereumBlockState const& _pendingBlock, EthereumBlockState const& _parentBlock, Mining _req)

@@ -15,58 +15,28 @@ namespace fs = boost::filesystem;
 namespace
 {
 
-State const& makeState()
-{
-    spDataObject stateData(new DataObject());
-    static bool init = false;
-    if (init == false)
-    {
-        spDataObject accountData(new DataObject());
-        (*accountData)["balance"] = "0x1000";
-        (*accountData)["nonce"] = "0x1000";
-        (*accountData)["code"] = "0x";
-        spDataObject storage(new DataObject(DataType::Object));
-        (*accountData).atKeyPointer("storage") = storage;
-        (*stateData).atKeyPointer("0x095e7baea6a6c7c4c2dfeb977efac326af552d87") = accountData;
-        init = true;
-    }
-    static State state(dataobject::move(stateData));
-    return state;
-}
-
 spDataObject makeTest(FORK const& _fork, VALUE const& _bn, VALUE const& _td, VALUE const& _pd, VALUE const& _un)
 {
     spDataObject test(new DataObject());
     SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
 
-    spDataObject envData(new DataObject());
-    (*envData)["currentCoinbase"] = "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba";
-    (*envData)["currentDifficulty"] = _pd.asString(); // Means parent difficulty of the first block to be mined
-    (*envData)["currentGasLimit"] = "0xff112233445566";
-    (*envData)["currentNumber"] = (_bn-1).asString();
-    (*envData)["currentTimestamp"] = "0x00";
-    (*envData)["previousHash"] = "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6";
-    StateTestFillerEnv env(dataobject::move(envData));
-
-    auto const p = prepareChainParams(_fork, SealEngine::NoReward, makeState(), env, ParamsContext::StateTests);
-    session.test_setChainParams(p);
-    session.test_modifyTimestamp(_td);
-    session.test_mineBlocks(1);
-
-    ETH_FAIL_MESSAGE("");
-
-    (void)_td;
-    (void)_un;
-
+    VALUE const res = session.test_calculateDifficulty(_fork, _bn, 0, _pd, _td, _un);
+    (*test)["network"] = _fork.asString();
+    (*test)["parentTimestamp"] = "0x00";
+    (*test)["parentUncles"] = _un.asString();
+    (*test)["parentDifficulty"] = _pd.asString();
+    (*test)["currentTimestamp"] = _td.asString();
+    (*test)["currentBlockNumber"] = _bn.asString();
+    (*test)["currentDifficulty"] = res.asString();
     return test;
 }
 
-void FillTest(DifficultyTestInFiller const& _test, spDataObject& _out)
+spDataObject FillTest(DifficultyTestInFiller const& _test)
 {
     TestOutputHelper::get().setCurrentTestName(_test.testName());
-
+    spDataObject filledTest(new DataObject());
     if (_test.hasInfo())
-        (*_out).atKeyPointer("_info") = _test.info().rawData();
+        (*filledTest).atKeyPointer("_info") = _test.info().rawData();
 
     size_t i = 0;
     for (auto const& fork : _test.networks())
@@ -91,12 +61,13 @@ void FillTest(DifficultyTestInFiller const& _test, spDataObject& _out)
                     for (auto const& un : _test.uncles())
                     {
                         string const testname = _test.testName() + "-" + test::fto_string(i++);
-                        (*_out).atKeyPointer(testname) = makeTest(fork, bn, td, pd, un);
+                        (*filledTest).atKeyPointer(testname) = makeTest(fork, bn, td, pd, un);
                     }
                 }
             }
         }
     }
+    return filledTest;
 }
 
 void RunTest(DifficultyTestInFilled const& _test)
@@ -124,7 +95,7 @@ spDataObject DifficultyTestSuite::doTests(spDataObject& _input, TestSuiteOptions
 
         for (auto const& test : filler.tests())
         {
-            FillTest(test, filledTest);
+            (*filledTest).addSubObject(test.testName(), FillTest(test));
             TestOutputHelper::get().registerTestRunSuccess();
         }
         return filledTest;

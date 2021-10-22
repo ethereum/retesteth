@@ -319,6 +319,8 @@ VALUE ToolImpl::test_calculateDifficulty(FORK const& _fork, VALUE const& _blockN
     rpcCall("", {});
     TRYCATCHCALL(
         ETH_TEST_MESSAGE("\nRequest: test_calculateDifficulty '");
+        ETH_TEST_MESSAGE("Fork: " + _fork.asString() + ", bn: " + _blockNumber.asString() + ", pt: " + _parentTimestamp.asString() +
+            ", pd: " + _parentDifficulty.asString() + ", ct: " + _currentTimestamp.asString() + ", un: " + _uncleNumber.asString());
         return ToolChainManager::test_calculateDifficulty(_fork, _blockNumber, _parentTimestamp, _parentDifficulty, _currentTimestamp, _uncleNumber,
             m_toolPath, m_tmpDir);
         , "test_calculateDifficulty", CallType::FAILEVERYTHING)

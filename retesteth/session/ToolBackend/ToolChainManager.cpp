@@ -264,17 +264,28 @@ VALUE ToolChainManager::test_calculateDifficulty(FORK const& _fork, VALUE const&
     VALUE const& _parentDifficulty, VALUE const& _currentTimestamp, VALUE const& _uncleNumber,
     fs::path const& _toolPath, fs::path const& _tmpDir)
 {
-    std::map<FH20, spAccountBase> state = {
-        {FH20("0x1122334455667788991011121314151617181920"),
-            spAccountBase(new State::Account())
-            }
-    };
-    FH32 loghash(DataObject("0x1122334455667788991011121314151617181920212223242526272829303132"));
-    spState stateA(new State(state));
-    DataObject headrAData;
-    spBlockHeader headerA(new BlockHeaderLegacy(headrAData));
-    EthereumBlockState blockA(headerA, stateA, loghash); //stateA const declare once
-    EthereumBlockState blockB(headerA, stateA, loghash);
+    DifficultyStatic const& data = prepareEthereumBlockStateTemplate();
+
+    // Constructor has serialization from data.blockA
+    EthereumBlockState blockA(data.blockA, data.state, data.loghash);
+    EthereumBlockState blockB(data.blockA, data.state, data.loghash);
+
+    BlockHeader& headerA = blockA.headerUnsafe().getContent();
+    headerA.setDifficulty(_parentDifficulty);
+    if (_blockNumber == 0)
+        ETH_ERROR_MESSAGE("ToolChainManager::test_calculateDifficulty calculating difficulty for blocknumber 0!");
+    headerA.setNumber(_blockNumber - 1);
+    headerA.setTimestamp(_parentTimestamp);
+
+    // Set uncle hash to non empty
+    if (_uncleNumber > 0)
+        headerA.setUnclesHash(FH32("0x2dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347"));
+
+    BlockHeader& headerB = blockB.headerUnsafe().getContent();
+    headerB.setTimestamp(_currentTimestamp);
+    headerB.setNumber(_blockNumber);
+    headerB.setParentHash(headerA.hash());
+
     ToolChain chain(blockA, blockB, _fork, _toolPath, _tmpDir);
     return chain.lastBlock().header()->difficulty();
 }
