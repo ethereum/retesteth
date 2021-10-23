@@ -73,11 +73,16 @@ spDataObject FillTest(DifficultyTestInFiller const& _test)
 void RunTest(DifficultyTestInFilled const& _test)
 {
     TestOutputHelper::get().setCurrentTestName(_test.testName());
-    //SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
-    //for (auto const& el : Options::getCurrentConfig().cfgFile().forks())
-    //{
+    SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
 
-    //}
+    for (auto const& v : _test.testVectors())
+    {
+        VALUE const res = session.test_calculateDifficulty(
+            v.network, v.currentBlockNumber, v.parentTimestamp, v.parentDifficulty, v.currentTimestamp, v.parentUncles);
+        ETH_ERROR_REQUIRE_MESSAGE(res == v.currentDifficulty, _test.testName() + "/" + v.testName +
+                                                                  " difficulty mismatch got: `" + res.asDecString() +
+                                                                  ", test want: `" + v.currentDifficulty->asDecString());
+    }
 }
 
 }  // namespace
