@@ -40,9 +40,16 @@ DifficultyTestInFilled::DifficultyTestInFilled(spDataObject& _data)
         if (subObjects.at(0)->getKey() != "_info")
             throw test::UpwardsException(_data->getKey() + " missing `_info` section as first subobject!");
 
+        // Read structure "_info", "fork1" : { test1, test2, test3}, "fork2" : {...}
         m_name = _data->getKey();
         for (size_t i = 1; i < subObjects.size(); i++)
-            m_testVectors.push_back(DifficultyTestVector(subObjects.at(i)));
+        {
+            TestVector a;
+            string const& network = subObjects.at(i)->getKey();
+            for (auto const& el : subObjects.at(i)->getSubObjects())
+                a.push_back(DifficultyTestVector(el));
+            m_testVectors.emplace(network, a);
+        }
     }
     catch (std::exception const& _ex)
     {
@@ -57,7 +64,6 @@ DifficultyTestVector::DifficultyTestVector(spDataObject const& _data)
             {"currentBlockNumber", {{DataType::String}, jsonField::Required}},
             {"currentDifficulty", {{DataType::String}, jsonField::Required}},
             {"currentTimestamp", {{DataType::String}, jsonField::Required}},
-            {"network", {{DataType::String}, jsonField::Required}},
             {"parentDifficulty", {{DataType::String}, jsonField::Required}},
             {"parentTimestamp", {{DataType::String}, jsonField::Required}},
             {"parentUncles", {{DataType::String}, jsonField::Required}},
@@ -66,10 +72,9 @@ DifficultyTestVector::DifficultyTestVector(spDataObject const& _data)
     currentBlockNumber = spVALUE(new VALUE(_data->atKey("currentBlockNumber")));
     currentDifficulty = spVALUE(new VALUE(_data->atKey("currentDifficulty")));
     currentTimestamp = spVALUE(new VALUE(_data->atKey("currentTimestamp")));
-    network = spFORK(new FORK(_data->atKey("network")));
     parentDifficulty = spVALUE(new VALUE(_data->atKey("parentDifficulty")));
     parentTimestamp = spVALUE(new VALUE(_data->atKey("parentTimestamp")));
     parentUncles = VALUE(_data->atKey("parentUncles")) == 1;
 
-    testName = _data->getKey();
+    testVectorName = _data->getKey();
 }

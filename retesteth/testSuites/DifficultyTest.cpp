@@ -21,7 +21,6 @@ spDataObject makeTest(FORK const& _fork, VALUE const& _bn, VALUE const& _td, VAL
     SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
 
     VALUE const res = session.test_calculateDifficulty(_fork, _bn, 0, _pd, _td, _un);
-    (*test)["network"] = _fork.asString();
     (*test)["parentTimestamp"] = "0x00";
     (*test)["parentUncles"] = _un.asString();
     (*test)["parentDifficulty"] = _pd.asString();
@@ -52,6 +51,7 @@ spDataObject FillTest(DifficultyTestInFiller const& _test)
         if (networkSkip)
             continue;
 
+        spDataObject filledTestNetwork(new DataObject());
         for (auto const& bn : _test.blocknumbers().vector())
         {
             for (auto const& td : _test.timestumps().vector())
@@ -61,11 +61,13 @@ spDataObject FillTest(DifficultyTestInFiller const& _test)
                     for (auto const& un : _test.uncles())
                     {
                         string const testname = _test.testName() + "-" + test::fto_string(i++);
-                        (*filledTest).atKeyPointer(testname) = makeTest(fork, bn, td, pd, un);
+                        (*filledTestNetwork).atKeyPointer(testname) = makeTest(fork, bn, td, pd, un);
                     }
                 }
             }
         }
+
+        (*filledTest).atKeyPointer(fork.asString()) = filledTestNetwork;
     }
     return filledTest;
 }
@@ -77,11 +79,14 @@ void RunTest(DifficultyTestInFilled const& _test)
 
     for (auto const& v : _test.testVectors())
     {
-        VALUE const res = session.test_calculateDifficulty(
-            v.network, v.currentBlockNumber, v.parentTimestamp, v.parentDifficulty, v.currentTimestamp, v.parentUncles);
-        ETH_ERROR_REQUIRE_MESSAGE(res == v.currentDifficulty, _test.testName() + "/" + v.testName +
-                                                                  " difficulty mismatch got: `" + res.asDecString() +
-                                                                  ", test want: `" + v.currentDifficulty->asDecString());
+        for (auto const& el : v.second)
+        {
+            VALUE const res = session.test_calculateDifficulty(
+                v.first, el.currentBlockNumber, el.parentTimestamp, el.parentDifficulty, el.currentTimestamp, el.parentUncles);
+            ETH_ERROR_REQUIRE_MESSAGE(res == el.currentDifficulty, _test.testName() + "/" + el.testVectorName +
+                                                                       " difficulty mismatch got: `" + res.asDecString() +
+                                                                       ", test want: `" + el.currentDifficulty->asDecString());
+        }
     }
 }
 

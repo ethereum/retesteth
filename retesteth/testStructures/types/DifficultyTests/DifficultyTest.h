@@ -16,23 +16,24 @@ struct DifficultyTestVector
     spVALUE currentBlockNumber;
     spVALUE currentDifficulty;
     spVALUE currentTimestamp;
-    spFORK network;
     spVALUE parentDifficulty;
     spVALUE parentTimestamp;
     bool parentUncles;
-    string testName;
+    string testVectorName;
 };
+
+typedef std::vector<DifficultyTestVector> TestVector;
 
 struct DifficultyTestInFilled : GCP_SPointerBase
 {
     DifficultyTestInFilled(spDataObject&);
     string const& testName() const { return m_name; }
-    std::vector<DifficultyTestVector> const& testVectors() const { return m_testVectors; }
+    std::map<string, TestVector> const& testVectors() const { return m_testVectors; }
 
 private:
     DifficultyTestInFilled() {}
     string m_name;
-    std::vector<DifficultyTestVector> m_testVectors;
+    std::map<string, TestVector> m_testVectors;
 };
 
 struct DifficultyTest
