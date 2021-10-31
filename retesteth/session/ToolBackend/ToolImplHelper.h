@@ -18,4 +18,13 @@ spDataObject constructEthGetBlockBy(EthereumBlockState const& _block);
 // RLP Validators
 void verifyBlockRLP(dev::RLP const& _rlp);
 
+// Prepare data for ToolChainManager::test_calculateDifficulty
+struct DifficultyStatic
+{
+    spBlockHeader blockA;
+    FH32 loghash = FH32("0x1122334455667788991011121314151617181920212223242526272829303132");
+    spState state;
+};
+DifficultyStatic const& prepareEthereumBlockStateTemplate();
+
 }  // namespace toolimpl

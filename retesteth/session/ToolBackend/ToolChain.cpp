@@ -46,6 +46,21 @@ ToolChain::ToolChain(
     m_blocks.push_back(genesisFixed);
 }
 
+ToolChain::ToolChain(
+    EthereumBlockState const& _blockA, EthereumBlockState const& _blockB,
+    FORK const& _fork, fs::path const& _toolPath, fs::path const& _tmpDir)
+  : m_initialParams(0),
+    m_engine(SealEngine::NoProof),
+    m_fork(new FORK(_fork.asString())),
+    m_toolPath(_toolPath),
+    m_tmpDir(_tmpDir)
+{
+    // Constructor to execute t8n given 2 blocks to calculate the difficulty transition
+    ToolResponse res = mineBlockOnTool(_blockB, _blockA, SealEngine::NoReward);
+    m_blocks.push_back(_blockB);
+    m_blocks.back().headerUnsafe().getContent().setDifficulty(res.currentDifficulty());
+}
+
 spDataObject const ToolChain::mineBlock(EthereumBlockState const& _pendingBlock, EthereumBlockState const& _parentBlock, Mining _req)
 {
     ToolResponse const res = mineBlockOnTool(_pendingBlock, _parentBlock, m_engine);

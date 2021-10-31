@@ -34,6 +34,10 @@ public:
     ToolChain(EthereumBlockState const& _genesis, spSetChainParamsArgs const& _params, fs::path const& _toolPath,
         fs::path const& _tmpDir);
 
+    // Calculate difficulty from _blockA to _blockB constructor
+    ToolChain(EthereumBlockState const& _blockA, EthereumBlockState const& _blockB, FORK const& _fork,
+        fs::path const& _toolPath, fs::path const& _tmpDir);
+
     EthereumBlockState const& lastBlock() const
     {
         assert(m_blocks.size() > 0);
