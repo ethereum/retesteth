@@ -128,4 +128,18 @@ string fto_string(t _val)
 {
     return std::to_string(_val);
 }
+
+/// RLP header calculator / Stream Emulator
+class RLPStreamU
+{
+public:
+    RLPStreamU(size_t _size) : m_size(_size) {}
+    void appendRaw(string const& _data);
+    string outHeader() const;
+
+private:
+    size_t m_size;
+    string const* m_data;
+};
+
 }  // namespace test

@@ -217,6 +217,7 @@ void ToolChainManager::reorganizeChainForTotalDifficulty()
     }
 }
 
+
 TestRawTransaction ToolChainManager::test_rawTransaction(
     BYTES const& _rlp, FORK const& _fork, fs::path const& _toolPath, fs::path const& _tmpDir)
 {
@@ -227,9 +228,9 @@ TestRawTransaction ToolChainManager::test_rawTransaction(
     // Prepare transaction file
     fs::path txsPath = _tmpDir / "tx.rlp";
 
-    dev::RLPStream txsout(1);
-    txsout.appendRaw(dev::fromHex(_rlp.asString()));
-    writeFile(txsPath.string(), string("\"") + dev::toString(txsout.out()) + "\"");
+    test::RLPStreamU txsout(1);
+    txsout.appendRaw(_rlp.asString());
+    writeFile(txsPath.string(), string("\"") + txsout.outHeader() + _rlp.asString().substr(2) + "\"");
 
     string cmd = _toolPath.string();
     cmd += " --input.txs " + txsPath.string();
