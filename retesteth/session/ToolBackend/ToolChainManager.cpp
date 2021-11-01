@@ -5,6 +5,7 @@
 #include <retesteth/TestHelper.h>
 #include <retesteth/testStructures/Common.h>
 #include <retesteth/dataObject/ConvertFile.h>
+#include <retesteth/FileSystem.h>
 using namespace test;
 
 namespace toolimpl
@@ -217,7 +218,6 @@ void ToolChainManager::reorganizeChainForTotalDifficulty()
     }
 }
 
-
 TestRawTransaction ToolChainManager::test_rawTransaction(
     BYTES const& _rlp, FORK const& _fork, fs::path const& _toolPath, fs::path const& _tmpDir)
 {
@@ -228,14 +228,25 @@ TestRawTransaction ToolChainManager::test_rawTransaction(
     // Prepare transaction file
     fs::path txsPath = _tmpDir / "tx.rlp";
 
+    // Rlp list header builder for given data
     test::RLPStreamU txsout(1);
     txsout.appendRaw(_rlp.asString());
-    writeFile(txsPath.string(), string("\"") + txsout.outHeader() + _rlp.asString().substr(2) + "\"");
+
+    // Write data with less memory allocation
+    WRITEFILEN(txsPath.string(), string("\""), txsout.outHeader());
+    for (size_t i = 2; i < _rlp.asString().size(); i++)
+        ADDTOFILE(_rlp.asString()[i])
+    ADDTOFILE("\"");
+    CLOSEFILE();
+
+    // Write data with memory allocation but faster
+    // writeFile(txsPath.string(), string("\"") + txsout.outHeader() + _rlp.asString().substr(2) + "\"");
 
     string cmd = _toolPath.string();
     cmd += " --input.txs " + txsPath.string();
     cmd += " --state.fork " + _fork.asString();
     string response = test::executeCmd(cmd, ExecCMDWarning::NoWarning);
+
     ETH_TEST_MESSAGE("T9N Response:\n" + response);
     spDataObject res = dataobject::ConvertJsoncppStringToData(response);
 
