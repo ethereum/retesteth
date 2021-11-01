@@ -293,19 +293,24 @@ ToolResponse ToolChain::mineBlockOnTool(EthereumBlockState const& _block, Ethere
     fs::path outPath = m_tmpDir / "out.json";
     fs::path outAllocPath = m_tmpDir / "outAlloc.json";
 
-    // Convert FrontierToHomesteadAt5 -> Homestead if block > 5, and get reward
-    auto tupleRewardFork = prepareReward(_engine, m_fork.getContent(), _block.header()->number());
 
     string cmd = m_toolPath.string();
+    if (_engine != SealEngine::NoReward)
+    {
+        // Convert FrontierToHomesteadAt5 -> Homestead if block > 5, and get reward
+        auto tupleRewardFork = prepareReward(_engine, m_fork.getContent(), _block.header()->number());
+        cmd += " --state.fork " + std::get<1>(tupleRewardFork).asString();
+        cmd += " --state.reward " + std::get<0>(tupleRewardFork).asDecString();
+    }
+    else
+        cmd += " --state.fork " + m_fork->asString();
+
     cmd += " --input.alloc " + allocPath.string();
     cmd += " --input.txs " + txsPath.string();
     cmd += " --input.env " + envPath.string();
-    cmd += " --state.fork " + std::get<1>(tupleRewardFork).asString();
     cmd += " --output.basedir " + m_tmpDir.string();
     cmd += " --output.result " + outPath.filename().string();
     cmd += " --output.alloc " + outAllocPath.filename().string();
-    if (_engine != SealEngine::NoReward)
-        cmd += " --state.reward " + std::get<0>(tupleRewardFork).asDecString();
 
     bool traceCondition = Options::get().vmtrace && _block.header()->number() != 0;
     if (traceCondition)
