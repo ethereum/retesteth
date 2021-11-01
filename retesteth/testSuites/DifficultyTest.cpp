@@ -143,6 +143,7 @@ TestSuite::FillerPath DifficultyTestSuite::suiteFillerFolder() const
 using DifficultyTestsFixture = TestFixture<DifficultyTestSuite, DefaultFlags>;
 BOOST_FIXTURE_TEST_SUITE(DifficultyTests, DifficultyTestsFixture)
 
+BOOST_AUTO_TEST_CASE(dfArrowGlacier) {}
 BOOST_AUTO_TEST_CASE(dfExample) {}
 
 BOOST_AUTO_TEST_SUITE_END()
