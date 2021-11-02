@@ -10,7 +10,7 @@ State::State(std::map<FH20, spAccountBase>& _accList)
 {
     // We certain that account provided for the state is full and not incomplete
     m_accounts = _accList;
-    m_raw = spDataObject(new DataObject());
+    m_raw = spDataObject();
     for (auto const& el : _accList)
     {
         ETH_ERROR_REQUIRE_MESSAGE(el.second->type() == AccountType::FullAccount, "State::State(std::map) provided account type is not of a FullAccount type!");

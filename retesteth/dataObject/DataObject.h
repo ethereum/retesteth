@@ -20,13 +20,14 @@ enum DataType
 };
 
 class DataObjectK;
+class GCP_SPointerDataObject;
+typedef GCP_SPointerDataObject spDataObject;
 
 /// DataObject
 /// A data sturcture to manage data from json, yml
 class DataObject : public GCP_SPointerBase
 {
 public:
-    typedef GCP_SPointer<DataObject> spDataObject;
     DataObject();
     DataObject(DataObject const&) = delete;
     DataObject(DataType _type);
@@ -135,7 +136,13 @@ private:
     void (*m_verifier)(DataObject&) = 0;
 };
 
-typedef GCP_SPointer<DataObject> spDataObject;
+// Default DataObject pointer allocator so not to type 'new DataObject()' each time
+class GCP_SPointerDataObject : public GCP_SPointer<DataObject>
+{
+public:
+    GCP_SPointerDataObject() : GCP_SPointer<DataObject>(new DataObject()){}
+    GCP_SPointerDataObject(DataObject* _data) : GCP_SPointer<DataObject>(_data){}
+};
 
 // The key assigner, assign left pointer to DataObjectK's host m_data[key]
 class DataObjectK

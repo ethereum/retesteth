@@ -41,9 +41,8 @@ State::Account::Account(spDataObject& _data)
 
 spDataObject const& State::Account::asDataObject() const
 {
-    if (m_rawData.isEmpty())
+    if (m_rawData->getSubObjects().size() == 0)
     {
-        m_rawData = spDataObject(new DataObject());
         (*m_rawData).setKey(m_address->asString());
         (*m_rawData)["code"] = m_code->asString();
         (*m_rawData)["nonce"] = m_nonce->asString();

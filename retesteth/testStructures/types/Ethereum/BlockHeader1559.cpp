@@ -135,7 +135,7 @@ BlockHeader1559::BlockHeader1559(dev::RLP const& _rlp)
 
 spDataObject BlockHeader1559::asDataObject() const
 {
-    spDataObject out(new DataObject());
+    spDataObject out;
     (*out)["bloom"] = m_logsBloom->asString();
     (*out)["coinbase"] = m_author->asString();
     (*out)["difficulty"] = m_difficulty->asString();

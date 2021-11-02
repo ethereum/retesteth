@@ -76,7 +76,7 @@ BlockchainTestFillerEnv::BlockchainTestFillerEnv(spDataObjectMove _data, SealEng
         }
 
         // Format the env to RPC format
-        spDataObject out(new DataObject());
+        spDataObject out;
         (*out).atKeyPointer("currentCoinbase") = (*m_raw).atKeyPointerUnsafe("coinbase");
         (*out).atKeyPointer("currentDifficulty") = (*m_raw).atKeyPointerUnsafe("difficulty");
         (*out).atKeyPointer("currentNumber") = (*m_raw).atKeyPointerUnsafe("number");

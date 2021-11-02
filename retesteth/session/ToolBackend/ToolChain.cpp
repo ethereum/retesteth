@@ -101,7 +101,7 @@ spDataObject const ToolChain::mineBlock(EthereumBlockState const& _pendingBlock,
     // Add only those transactions which tool returned a receipt for
     // Some transactions are expected to fail. That should be detected by tests
     size_t index = 0;
-    spDataObject miningResult(new DataObject());
+    spDataObject miningResult;
     (*miningResult)["result"] = true;
 
     for (auto const& tr : _pendingBlock.transactions())
@@ -128,7 +128,7 @@ spDataObject const ToolChain::mineBlock(EthereumBlockState const& _pendingBlock,
                 if (el.index() == index)
                 {
                     rejectedInfoFound = true;
-                    spDataObject rejectInfo(new DataObject());
+                    spDataObject rejectInfo;
                     (*rejectInfo)["hash"] = trHash.asString();
                     (*rejectInfo)["error"] = el.error();
                     (*miningResult)["rejectedTransactions"].addArrayObject(rejectInfo);
@@ -238,7 +238,7 @@ ToolResponse ToolChain::mineBlockOnTool(EthereumBlockState const& _block, Ethere
         (*envData)["blockHashes"][fto_string(k++)] = bl.header()->hash().asString();
     for (auto const& un : _block.uncles())
     {
-        spDataObject uncle(new DataObject());
+        spDataObject uncle;
         int delta = (int)(_block.header()->number() - un->number()).asBigInt();
         if (delta < 1)
             throw test::UpwardsException("Uncle header delta is < 1");

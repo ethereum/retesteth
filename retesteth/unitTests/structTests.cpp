@@ -334,7 +334,7 @@ BOOST_AUTO_TEST_CASE(hash_serialization)
 // TRANSACTIONS
 BOOST_AUTO_TEST_CASE(transactionLegacy_serialization)
 {
-    spDataObject tr(new DataObject());
+    spDataObject tr;
     (*tr)["data"] = "0x00112233";
     (*tr)["gasLimit"] = "0x112233";
     (*tr)["gasPrice"] = "0x0a";
@@ -364,7 +364,7 @@ BOOST_AUTO_TEST_CASE(transactionLegacy_serialization)
 
 BOOST_AUTO_TEST_CASE(transactionLegacy_vbigint_serialization)
 {
-    spDataObject tr(new DataObject());
+    spDataObject tr;
     (*tr)["data"] = "0x00112233";
     (*tr)["gasLimit"] = "0x112233";
     (*tr)["gasPrice"] = "0x0a";

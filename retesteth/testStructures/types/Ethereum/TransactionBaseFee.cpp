@@ -193,7 +193,7 @@ void TransactionBaseFee::streamHeader(dev::RLPStream& _s) const
 const spDataObject TransactionBaseFee::asDataObject(ExportOrder _order) const
 {
     // Because we don't use gas_price field need to explicitly output
-    spDataObject out(new DataObject());
+    spDataObject out;
     (*out)["data"] = m_data->asString();
     (*out)["gasLimit"] = m_gasLimit->asString();
     (*out)["nonce"] = m_nonce->asString();
@@ -228,7 +228,7 @@ const spDataObject TransactionBaseFee::asDataObject(ExportOrder _order) const
         (*out)["chainId"] = "0x1";
         (*out)["type"] = "0x2";
 
-        spDataObject t8ntoolFields(new DataObject());
+        spDataObject t8ntoolFields;
         (*t8ntoolFields)["maxFeePerGas"] = m_maxFeePerGas->asString();
         (*t8ntoolFields)["maxPriorityFeePerGas"] = m_maxPriorityFeePerGas->asString();
         (*t8ntoolFields).performModifier(mod_removeLeadingZerosFromHexValues);

@@ -170,9 +170,9 @@ const spDataObject TransactionLegacy::asDataObject(ExportOrder _order) const
     // Cache output data so not to construct it multiple times
     // Useful when filling the tests as this function is called 2-3 times for each tr
     // Promise that after constructor the data does not change
-    if (m_rawData.isEmpty())
+    if (m_rawData->getSubObjects().size() == 0)
     {
-        spDataObject out(new DataObject());
+        spDataObject out;
         (*out)["data"] = m_data->asString();
         (*out)["gasLimit"] = m_gasLimit->asString();
         (*out)["gasPrice"] = m_gasPrice->asString();
@@ -189,9 +189,9 @@ const spDataObject TransactionLegacy::asDataObject(ExportOrder _order) const
     }
 
 
-    if (_order == ExportOrder::ToolStyle && m_rawDataTool.isEmpty())
+    if (_order == ExportOrder::ToolStyle && m_rawDataTool->getSubObjects().size() == 0)
     {
-        m_rawDataTool = spDataObject(new DataObject());
+        m_rawDataTool = spDataObject();
         (*m_rawDataTool).copyFrom(m_rawData);
         (*m_rawDataTool).performModifier(mod_removeLeadingZerosFromHexValues, DataObject::ModifierOption::RECURSIVE, {"data", "to"});
         (*m_rawDataTool).renameKey("gasLimit", "gas");

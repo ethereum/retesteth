@@ -814,9 +814,9 @@ BOOST_AUTO_TEST_CASE(dataobject_jsonOrder)
 
 BOOST_AUTO_TEST_CASE(dataobject_replace)
 {
-    spDataObject data(new DataObject());
-    spDataObject data2(new DataObject());
-    spDataObject data3(new DataObject());
+    spDataObject data;
+    spDataObject data2;
+    spDataObject data3;
     (*data2).setKey("key2");
     (*data2).setString("value2");
     (*data3).setKey("key3");

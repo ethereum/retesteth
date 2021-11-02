@@ -118,7 +118,7 @@ VALUE calculateGasLimit(VALUE const& _parentGasLimit, VALUE const& _parentGasUse
 // Also remove leading zeros in storage
 State restoreFullState(DataObject& _toolState)
 {
-    spDataObject fullState(new DataObject());
+    spDataObject fullState;
     for (auto& accTool2 : _toolState.getSubObjectsUnsafe())
     {
         DataObject& accTool = accTool2.getContent();

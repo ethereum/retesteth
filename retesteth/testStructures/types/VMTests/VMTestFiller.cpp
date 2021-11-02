@@ -8,7 +8,7 @@ using namespace test::teststruct;
 namespace  {
     spDataObject translateExecToTransaction(DataObject const& _exec)
     {
-        spDataObject _gtransaction(new DataObject());
+        spDataObject _gtransaction;
         DataObject& gtransaction = _gtransaction.getContent();
         REQUIRE_JSONFIELDS(_exec, "vmTestFiller exec",
             {{"address", {{DataType::String}, jsonField::Required}},
@@ -76,7 +76,7 @@ VMTestInFiller::VMTestInFiller(spDataObject& _data)
         StateTestFillerTransaction stateTx(dataobject::move(t));
 
         auto dataobj = stateTx.buildTransactions().at(0).transaction()->asDataObject();
-        spDataObject tmp = spDataObject(new DataObject());
+        spDataObject tmp;
         tmp.getContent().copyFrom(dataobj);
         m_transaction = spTransaction(new TransactionLegacy(dataobject::move(tmp)));
         if (_data->count("expect"))

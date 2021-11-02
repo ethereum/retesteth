@@ -136,14 +136,14 @@ bool addClientInfo(
     bool atLeastOneUpdate = false || Options::get().forceupdate;
     SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
 
-    spDataObject filledTest(new DataObject());
+    spDataObject filledTest;
     if ((Options::get().filltests && fs::exists(_existingFilledTest)) && !Options::get().forceupdate)
         filledTest = test::readJsonData(_existingFilledTest);
 
     for (spDataObject& testInGenerated : _filledTest.getSubObjectsUnsafe())
     {
         DataObject& testInGeneratedRef = testInGenerated.getContent();
-        spDataObject clientinfo(new DataObject());
+        spDataObject clientinfo;
 
         // Since one gtest parsed into many bctests we need a copy
         if (testInGeneratedRef.count("_info"))

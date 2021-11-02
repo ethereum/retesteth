@@ -23,12 +23,12 @@ const string t8ntool_HomesteadToDaoAt5_config = R"({
 
 genHomesteadToDaoCfg::genHomesteadToDaoCfg()
 {
-    spDataObject obj(new DataObject());
+    spDataObject obj;
     (*obj)["path"] = "besu/genesis/HomesteadToDaoAt5.json";
     (*obj)["content"] = default_HomesteadToDaoAt5_config;
     map_configs.addArrayObject(obj);
 
-    spDataObject obj2(new DataObject());
+    spDataObject obj2;
     (*obj2)["path"] = "default/genesis/HomesteadToDaoAt5.json";
     (*obj2)["content"] = t8ntool_HomesteadToDaoAt5_config;
     map_configs.addArrayObject(obj2);

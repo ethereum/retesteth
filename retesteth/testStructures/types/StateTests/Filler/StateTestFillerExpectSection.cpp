@@ -41,18 +41,18 @@ spDataObject ReplaceValueToIndexesInDataList(spStateTestFillerTransaction const&
     };
     // Check if dataIndexes contain values of transaction data vector
     // Find those values and vector and replace by indexes
-    spDataObject dataIndexes(new DataObject());
+    spDataObject dataIndexes;
     (*dataIndexes).copyFrom(_dataList);
     if (dataIndexes->type() == DataType::Array)
     {
-        spDataObject updatedDataIndexes(new DataObject());
+        spDataObject updatedDataIndexes;
         for (auto& el : (*dataIndexes).getSubObjectsUnsafe())
         {
             // try to replace `el` with data indexes from transaction
             // in case `el` provided is a transaction value in dataInd array
             if (el->type() == DataType::String)
             {
-                spDataObject elCopy(new DataObject());
+                spDataObject elCopy; //TODO copy???
                 (*elCopy).copyFrom(el);
                 findIndexOfValueAndReplace(elCopy.getContent());
                 if (elCopy->type() == DataType::Integer)

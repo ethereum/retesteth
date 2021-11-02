@@ -12,7 +12,7 @@ namespace
 {
 spDataObject FillTest(TransactionTestInFiller const& _test)
 {
-    spDataObject filledTest(new DataObject());
+    spDataObject filledTest;
     TestOutputHelper::get().setCurrentTestName(_test.testName());
 
     SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
@@ -25,7 +25,7 @@ spDataObject FillTest(TransactionTestInFiller const& _test)
         TestRawTransaction res = session.test_rawTransaction(_test.transaction()->getRawBytes(), el);
         compareTransactionException(_test.transaction(), res, _test.getExpectException(el));
 
-        spDataObject result(new DataObject());
+        spDataObject result;
         (*result).setKey(el.asString());
         if (_test.getExpectException(el).empty())
         {
@@ -82,7 +82,7 @@ spDataObject TransactionTestSuite::doTests(spDataObject& _input, TestSuiteOption
 
     if (_opt.doFilling)
     {
-        spDataObject filledTest(new DataObject());
+        spDataObject filledTest;
         TransactionTestFiller filler(_input);
 
         for (auto const& test : filler.tests())
@@ -97,7 +97,7 @@ spDataObject TransactionTestSuite::doTests(spDataObject& _input, TestSuiteOption
         TransactionTest filledTest(_input);
         // Just check the test structure if running with --checkhash
         if (Options::get().checkhash)
-            return spDataObject(new DataObject());
+            return spDataObject();
 
         for (auto const& test : filledTest.tests())
         {
@@ -106,7 +106,7 @@ spDataObject TransactionTestSuite::doTests(spDataObject& _input, TestSuiteOption
         }
     }
 
-    return spDataObject(new DataObject());
+    return spDataObject();
 }
 
 /// TEST SUITE ///

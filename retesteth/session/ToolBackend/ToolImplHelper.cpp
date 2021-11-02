@@ -9,7 +9,7 @@ spDataObject constructAccountRange(EthereumBlockState const& _block, FH32 const&
 {
     size_t k = 0;
     size_t iAcc = hexOrDecStringToInt(_addrHash.asString());
-    spDataObject constructResponse (new DataObject());
+    spDataObject constructResponse;
     spDataObject emptyList(new DataObject(DataType::Object));
     (*constructResponse).atKeyPointer("addressMap") = emptyList;
     for (auto const& acc : _block.state()->accounts())
@@ -67,7 +67,7 @@ spDataObject constructEthGetBlockBy(EthereumBlockState const& _block)
 spDataObject constructStorageRangeAt(
     EthereumBlockState const& _block, FH20 const& _address, FH32 const& _begin, size_t _maxResult)
 {
-    spDataObject constructResponse (new DataObject());
+    spDataObject constructResponse;
     if (_block.state()->hasAccount(_address))
     {
         (*constructResponse)["complete"].setBool(true);
@@ -159,7 +159,7 @@ DifficultyStatic const& prepareEthereumBlockStateTemplate()
     static DifficultyStatic data;
     if (data.blockA.isEmpty())
     {
-        spDataObject accountData(new DataObject());
+        spDataObject accountData;
         (*accountData).setKey("0x1122334455667788991011121314151617181920");
         (*accountData)["balance"] = "0x1000";
         (*accountData)["code"] = "0x";

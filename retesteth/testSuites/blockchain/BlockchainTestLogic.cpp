@@ -212,7 +212,7 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
 
 spDataObject DoTests(spDataObject& _input, TestSuite::TestSuiteOptions& _opt)
 {
-    spDataObject tests(new DataObject());
+    spDataObject tests;
     if (_opt.doFilling)
     {
         BlockchainTestFiller testFiller(_input);

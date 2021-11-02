@@ -140,7 +140,7 @@ spDataObject ConvertJsoncppStringToData(
         throw DataObjectException() << "ConvertJsoncppStringToData can't read json structure in file: `" + _input.substr(0, 50);
 
     std::vector<DataObject*> applyDepth;  // indexes at root array of objects that we are reading into
-    spDataObject root(new DataObject());
+    spDataObject root;
     root.getContent().setAutosort(_autosort);
     DataObject* actualRoot = &root.getContent();
     bool keyEncountered = false;
@@ -166,7 +166,7 @@ spDataObject ConvertJsoncppStringToData(
         const bool escapeChar = (i > 0 && _input.at(i - 1) == '\\');
         if (_input.at(i) == '"' && !escapeChar)
         {
-            spDataObject obj(new DataObject());
+            spDataObject obj;
             const string key = parseKeyValue(_input, i);
             i = stripSpaces(_input, i);
             if (_input.at(i) == ':')
@@ -234,7 +234,7 @@ spDataObject ConvertJsoncppStringToData(
                 continue;
             }
 
-            actualRoot->addSubObject(spDataObject(new DataObject()));
+            actualRoot->addSubObject(spDataObject());
             actualRoot->getSubObjectsUnsafe().pop_back();
             continue;
         }
@@ -252,7 +252,7 @@ spDataObject ConvertJsoncppStringToData(
                 continue;
             }
 
-            actualRoot->addArrayObject(spDataObject(new DataObject()));
+            actualRoot->addArrayObject(spDataObject());
             actualRoot->getSubObjectsUnsafe().pop_back();
             continue;
         }

@@ -21,7 +21,7 @@ string encodeAbi(string const& _code);
 class solContracts
 {
 public:
-    solContracts() { m_solContracts = spDataObject(new DataObject()); }
+    solContracts() {}
     void insertCode(string const& _name, string const& _code) { m_solContracts.getContent()[_name] = _code; }
     string const& getCode(string const& _contractName) const;
     std::vector<spDataObject> const& Contracts() const { return m_solContracts->getSubObjects(); }

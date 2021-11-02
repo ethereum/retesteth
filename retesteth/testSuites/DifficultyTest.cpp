@@ -17,7 +17,7 @@ namespace
 
 spDataObject makeTest(FORK const& _fork, VALUE const& _bn, VALUE const& _td, VALUE const& _pd, VALUE const& _un)
 {
-    spDataObject test(new DataObject());
+    spDataObject test;
     SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
 
     VALUE const res = session.test_calculateDifficulty(_fork, _bn, 0, _pd, _td, _un);
@@ -33,7 +33,7 @@ spDataObject makeTest(FORK const& _fork, VALUE const& _bn, VALUE const& _td, VAL
 spDataObject FillTest(DifficultyTestInFiller const& _test)
 {
     TestOutputHelper::get().setCurrentTestName(_test.testName());
-    spDataObject filledTest(new DataObject());
+    spDataObject filledTest;
     if (_test.hasInfo())
         (*filledTest).atKeyPointer("_info") = _test.info().rawData();
 
@@ -51,7 +51,7 @@ spDataObject FillTest(DifficultyTestInFiller const& _test)
         if (networkSkip)
             continue;
 
-        spDataObject filledTestNetwork(new DataObject());
+        spDataObject filledTestNetwork;
         for (auto const& bn : _test.blocknumbers().vector())
         {
             for (auto const& td : _test.timestumps().vector())
@@ -100,7 +100,7 @@ spDataObject DifficultyTestSuite::doTests(spDataObject& _input, TestSuiteOptions
 
     if (_opt.doFilling)
     {
-        spDataObject filledTest(new DataObject());
+        spDataObject filledTest;
         DifficultyTestFiller filler(_input);
 
         for (auto const& test : filler.tests())
@@ -115,7 +115,7 @@ spDataObject DifficultyTestSuite::doTests(spDataObject& _input, TestSuiteOptions
         DifficultyTest filledTest(_input);
         // Just check the test structure if running with --checkhash
         if (Options::get().checkhash)
-            return spDataObject(new DataObject());
+            return spDataObject();
 
         for (auto const& test : filledTest.tests())
         {
@@ -124,7 +124,7 @@ spDataObject DifficultyTestSuite::doTests(spDataObject& _input, TestSuiteOptions
         }
     }
 
-    return spDataObject(new DataObject());
+    return spDataObject();
 }
 
 /// TEST SUITE ///

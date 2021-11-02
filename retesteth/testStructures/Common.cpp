@@ -337,7 +337,7 @@ void convertDecStateToHex(spDataObject& _data, solContracts const& _preSolidity,
 spDataObject convertDecBlockheaderIncompleteToHex(DataObject const& _data)
 {
     // Convert to HEX
-    spDataObject tmpD(new DataObject());
+    spDataObject tmpD;
     (*tmpD).copyFrom(_data);               // TODO copy time consuming!!!
     (*tmpD).removeKey("RelTimestamp");     // BlockchainTestFiller fields
     (*tmpD).removeKey("chainname");        // BlockchainTestFiller fields

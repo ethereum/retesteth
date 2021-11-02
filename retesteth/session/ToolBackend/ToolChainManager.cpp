@@ -251,7 +251,7 @@ TestRawTransaction ToolChainManager::test_rawTransaction(
     spDataObject res = dataobject::ConvertJsoncppStringToData(response);
 
     string const hash = "0x" + dev::toString(dev::sha3(fromHex(_rlp.asString())));
-    spDataObject tr(new DataObject());
+    spDataObject tr;
     if (response.find("error") != string::npos)
     {
         (*tr)["error"] = res->getSubObjects().at(0)->atKey("error").asString();;

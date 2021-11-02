@@ -490,34 +490,34 @@ fi
 oewrapcfg::oewrapcfg()
 {
     {
-        spDataObject obj(new DataObject());
+        spDataObject obj;
         (*obj)["path"] = "oewrap/config";
         (*obj)["content"] = oewrap_config;
         map_configs.addArrayObject(obj);
     }
     {
-        spDataObject obj(new DataObject());
+        spDataObject obj;
         (*obj)["exec"] = true;
         (*obj)["path"] = "oewrap/setup.sh";
         (*obj)["content"] = oewrap_setup;
         map_configs.addArrayObject(obj);
     }
     {
-        spDataObject obj(new DataObject());
+        spDataObject obj;
         (*obj)["exec"] = true;
         (*obj)["path"] = "oewrap/start.sh";
         (*obj)["content"] = oewrap_start;
         map_configs.addArrayObject(obj);
     }
     {
-        spDataObject obj(new DataObject());
+        spDataObject obj;
         (*obj)["exec"] = true;
         (*obj)["path"] = "oewrap/t8n_oe.js";
         (*obj)["content"] = oewrap_wrapper;
         map_configs.addArrayObject(obj);
     }
     {
-        spDataObject obj(new DataObject());
+        spDataObject obj;
         (*obj)["exec"] = false;
         (*obj)["path"] = "oewrap/package.json";
         (*obj)["content"] = oewrap_package;

@@ -121,7 +121,7 @@ StateTestFillerTransaction::StateTestFillerTransaction(spDataObjectMove _data)
         (*m_rawData).performModifier(mod_valueToLowerCase);
         size_t index = 0;
         bool atLeastOneNonNullAccessList = false;
-        spDataObject exportDatas(new DataObject());
+        spDataObject exportDatas;
         spDataObject txAccessListData(new DataObject(DataType::Array));
         for (Databox const& el : m_databox)
         {

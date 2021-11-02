@@ -25,7 +25,7 @@ std::vector<TransactionInGeneralSection> StateTestTransactionBase::buildTransact
 
                 Databox const& databox = m_databox.at(dIND);
 
-                spDataObject trData(new DataObject());
+                spDataObject trData;
                 (*trData)["data"] = databox.m_data.asString();
                 (*trData)["gasLimit"] = m_gasLimit.at(gIND).asString();
                 (*trData)["value"] = m_value.at(vIND).asString();

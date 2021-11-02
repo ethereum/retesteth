@@ -20,7 +20,7 @@ SetChainParamsArgs::SetChainParamsArgs(spDataObject& _data)
 
     // Fill up required fields for blocheader info
     DataObject const& genesis = _data->atKey("genesis");
-    spDataObject _fullBlockHeader(new DataObject());
+    spDataObject _fullBlockHeader;
     DataObject& fullBlockHeader = _fullBlockHeader.getContent();
     fullBlockHeader["author"] = genesis.atKey("author").asString();
     fullBlockHeader["difficulty"] = genesis.atKey("difficulty").asString();
@@ -48,7 +48,7 @@ SetChainParamsArgs::SetChainParamsArgs(spDataObject& _data)
 
 spDataObject SetChainParamsArgs::asDataObject() const
 {
-    spDataObject out (new DataObject());
+    spDataObject out;
     (*out)["params"].copyFrom(m_params);
     (*out).atKeyPointer("accounts") = m_preState->asDataObject();
     (*out)["sealEngine"] = sealEngineToStr(m_sealEngine);
