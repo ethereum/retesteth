@@ -292,6 +292,8 @@ VALUE ToolChainManager::test_calculateDifficulty(FORK const& _fork, VALUE const&
     // Set uncle hash to non empty
     if (_uncleNumber > 0)
         headerA.setUnclesHash(FH32("0x2dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347"));
+    else
+        headerA.setUnclesHash(FH32("0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347"));
 
     BlockHeader& headerB = blockB.headerUnsafe().getContent();
     headerB.setTimestamp(_currentTimestamp);
