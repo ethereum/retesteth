@@ -50,7 +50,8 @@ void RunTest(TransactionTestInFilled const& _test)
         TestRawTransaction res = session.test_rawTransaction(_test.rlp(), el);
         if (_test.transaction().isEmpty())
         {
-            // Fake the hash of the valid transaction to search for exception
+            // Retesteth was unable to read the transaction rlp from the test into a valid transaction
+            // Fake the hash of the valid transaction to search for exception. (compareTransactionException requires transaction object to print debug in case of error)
             spTransaction tr(new TransactionLegacy(BYTES(DataObject("0xf85f800182520894000000000000000000000000000b9331677e6ebf0a801ca098ff921201554726367d2be8c804a7ff89ccf285ebc57dff8ae4c44b9c19ac4aa01887321be575c8095f789dd4c743dfe42c1820f9231f98a962b210e3ac2452a3"))));
             string const& chash = tr.getContent().hash().asStringBytes();
             string& hash = const_cast<string&>(chash);
@@ -58,7 +59,15 @@ void RunTest(TransactionTestInFilled const& _test)
             compareTransactionException(tr, res, _test.getExpectException(el));
         }
         else
-            compareTransactionException(_test.transaction(), res, _test.getExpectException(el));
+        {
+            // Fake the hash anyway, because of serialization issues S(0) = 80, S(D(00)) = S(0) = 80 (and not 00)
+            // (compareTransactionException requires transaction object to print debug in case of error)
+            spTransaction tr = _test.transaction();
+            string const& chash = tr.getContent().hash().asStringBytes();
+            string& hash = const_cast<string&>(chash);
+            hash = "0x" + dev::toString(dev::sha3(fromHex(_test.rlp().asString())));
+            compareTransactionException(tr, res, _test.getExpectException(el));
+        }
 
         if (_test.getExpectException(el).empty())
         {
