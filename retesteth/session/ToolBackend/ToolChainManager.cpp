@@ -245,14 +245,34 @@ TestRawTransaction ToolChainManager::test_rawTransaction(
     string cmd = _toolPath.string();
     cmd += " --input.txs " + txsPath.string();
     cmd += " --state.fork " + _fork.asString();
-    string response = test::executeCmd(cmd, ExecCMDWarning::NoWarning);
+    cmd += " 2>&1";
+    string response = test::executeCmd(cmd, ExecCMDWarning::NoWarningNoError);
 
     ETH_TEST_MESSAGE("T9N Response:\n" + response);
-    spDataObject res = dataobject::ConvertJsoncppStringToData(response);
+    spDataObject res;
+
+    try
+    {
+        res = dataobject::ConvertJsoncppStringToData(response);
+    }
+    catch (std::exception const& _ex) {
+        if (string(_ex.what()).find("can't read json") != string::npos)
+        {
+            // Unable to read json. treat response as exceptional failure on wrong input
+            ETH_WARNING("t9n returned invalid json, probably failed on input!");
+            res = spDataObject(new DataObject(DataType::Array));
+            spDataObject errObj;
+            (*errObj)["error"] = response;
+            (*res).addSubObject(errObj);
+            ETH_TEST_MESSAGE("T9N Response reconstructed:\n" + res->asJson());
+        }
+        else
+            throw _ex;
+    }
 
     string const hash = "0x" + dev::toString(dev::sha3(fromHex(_rlp.asString())));
     spDataObject tr;
-    if (response.find("error") != string::npos)
+    if (response.find("error") != string::npos || response.find("ERROR") != string::npos)
     {
         (*tr)["error"] = res->getSubObjects().at(0)->atKey("error").asString();;
         (*tr)["sender"] = FH20::zero().asString();
