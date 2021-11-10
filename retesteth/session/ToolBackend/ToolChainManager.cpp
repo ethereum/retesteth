@@ -272,17 +272,24 @@ TestRawTransaction ToolChainManager::test_rawTransaction(
 
     string const hash = "0x" + dev::toString(dev::sha3(fromHex(_rlp.asString())));
     spDataObject tr;
+
+    auto const& resTr = res->getSubObjects().at(0);
+    if (resTr->count("intrinsicGas"))
+        (*tr)["intrinsicGas"] = VALUE(resTr->atKey("intrinsicGas").asInt()).asString();
+    else
+        (*tr)["intrinsicGas"] = "0x00";
+
     if (response.find("error") != string::npos || response.find("ERROR") != string::npos)
     {
-        (*tr)["error"] = res->getSubObjects().at(0)->atKey("error").asString();;
+        (*tr)["error"] = resTr->atKey("error").asString();
         (*tr)["sender"] = FH20::zero().asString();
         (*tr)["hash"] = hash;
         out["rejectedTransactions"].addArrayObject(tr);
     }
     else
     {
-        (*tr)["sender"] = res->getSubObjects().at(0)->atKey("address").asString();
-        (*tr)["hash"] = res->getSubObjects().at(0)->atKey("hash").asString();
+        (*tr)["sender"] = resTr->atKey("address").asString();
+        (*tr)["hash"] = resTr->atKey("hash").asString();
         out["acceptedTransactions"].addArrayObject(tr);
         if (tr->atKey("hash").asString() != hash)
             ETH_ERROR_MESSAGE("t8n tool returned different tx.hash than retesteth: (t8n.hash != retesteth.hash) " + tr->atKey("hash").asString() + " != " + hash);

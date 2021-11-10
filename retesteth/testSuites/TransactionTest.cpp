@@ -34,6 +34,7 @@ spDataObject FillTest(TransactionTestInFiller const& _test)
         }
         else
             (*result)["exception"] = _test.getExpectException(el);
+        (*result)["intrinsicGas"] = res.intrinsicGas().asString();
         (*filledTest)["result"].addSubObject(result);
     }
 
@@ -71,12 +72,16 @@ void RunTest(TransactionTestInFilled const& _test)
 
         if (_test.getExpectException(el).empty())
         {
-            spFH32 remoteHash = std::get<0>(_test.getAcceptedTransaction(el));
-            spFH20 remoteSender = std::get<1>(_test.getAcceptedTransaction(el));
-            ETH_ERROR_REQUIRE_MESSAGE(res.trhash() == remoteHash.getCContent(),
-                "Remote trHash != test trHash! (`" + res.trhash().asString() + "` != `" + remoteHash->asString());
-            ETH_ERROR_REQUIRE_MESSAGE(res.sender() == remoteSender.getCContent(),
-                "Remote sender != test sender! (`" + res.sender().asString() + "` != `" + remoteSender->asString());
+            auto const& testResult = _test.getAcceptedTransaction(el);
+            spVALUE const& testIntrinsicGas = testResult.m_intrinsicGas;
+            spFH32 const& testHash = testResult.m_hash;
+            spFH20 const& testSender = testResult.m_sender;
+            ETH_ERROR_REQUIRE_MESSAGE(res.trhash() == testHash.getCContent(),
+                "Remote trHash != test trHash! (`" + res.trhash().asString() + "` != `" + testHash->asString());
+            ETH_ERROR_REQUIRE_MESSAGE(res.sender() == testSender.getCContent(),
+                "Remote sender != test sender! (`" + res.sender().asString() + "` != `" + testSender->asString());
+            ETH_ERROR_REQUIRE_MESSAGE(res.intrinsicGas() == testIntrinsicGas,
+                "Remote intrGas != test intrGas! (`" + res.intrinsicGas().asDecString() + "` != `" + testIntrinsicGas->asDecString());
         }
     }
 }
