@@ -275,7 +275,14 @@ TestRawTransaction ToolChainManager::test_rawTransaction(
 
     auto const& resTr = res->getSubObjects().at(0);
     if (resTr->count("intrinsicGas"))
-        (*tr)["intrinsicGas"] = VALUE(resTr->atKey("intrinsicGas").asInt()).asString();
+    {
+        if (resTr->atKey("intrinsicGas").type() == DataType::Integer)
+            (*tr)["intrinsicGas"] = VALUE(resTr->atKey("intrinsicGas").asInt()).asString();
+        else if (resTr->atKey("intrinsicGas").type() == DataType::String)
+            (*tr)["intrinsicGas"] = VALUE(resTr->atKey("intrinsicGas").asString()).asString();
+        else
+            ETH_ERROR_MESSAGE("`intrinsicGas` field type expected to be Int or String: `" + resTr->asJson());
+    }
     else
         (*tr)["intrinsicGas"] = "0x00";
 
