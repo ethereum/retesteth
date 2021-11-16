@@ -16,6 +16,7 @@ ToolResponse::ToolResponse(DataObject const& _data)
             {"logsBloom", {{DataType::String}, jsonField::Required}},
             {"currentDifficulty", {{DataType::String}, jsonField::Required}},
             {"rejected", {{DataType::Array}, jsonField::Optional}},
+            {"gasUsed", {{DataType::String}, jsonField::Optional}},
             {"receipts", {{DataType::Array}, jsonField::Required}}});
 
     m_stateRoot = spFH32(new FH32(_data.atKey("stateRoot")));
