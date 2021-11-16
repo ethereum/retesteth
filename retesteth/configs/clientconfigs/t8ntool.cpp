@@ -31,6 +31,7 @@ string const t8ntool_config = R"({
     "exceptions" : {
       "AddressTooShort" : "input string too short for common.Address",
       "AddressTooLong" : "rlp: input string too long for common.Address, decoding into (types.Transaction)(types.LegacyTx).To",
+      "NonceMax" : "nonce exceeds 2^64-1",
       "NonceTooLong" : "rlp: input string too long for uint64, decoding into (types.Transaction)(types.LegacyTx).Nonce",
       "InvalidVRS" : "invalid transaction v, r, s values",
       "InvalidV" : "rlp: expected input string or byte for *big.Int, decoding into (types.Transaction)(types.LegacyTx).V",
