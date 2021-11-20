@@ -1,7 +1,12 @@
 #include "ToolImplHelper.h"
 #include <retesteth/TestHelper.h>
 #include <retesteth/testStructures/Common.h>
+#include <mutex>
 using namespace test;
+
+namespace  {
+    mutex g_DifficultyStatic_Access;
+}
 
 namespace toolimpl
 {
@@ -156,6 +161,7 @@ void verifyBlockRLP(dev::RLP const& _rlp)
 // Prepare data for ToolChainManager::test_calculateDifficulty
 DifficultyStatic const& prepareEthereumBlockStateTemplate()
 {
+    std::lock_guard<std::mutex> lock(g_DifficultyStatic_Access);
     static DifficultyStatic data;
     if (data.blockA.isEmpty())
     {

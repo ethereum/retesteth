@@ -91,6 +91,7 @@ FH::FH(dev::RLP const& _rlp, size_t _scale)
 
 string const& FH::asString() const
 {
+    std::lock_guard<std::mutex> lock(g_cacheAccessMutexFH);
     if (m_dataStrZeroXCache.empty())
     {
         if (m_isCorrectHash)

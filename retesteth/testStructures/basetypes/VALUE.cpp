@@ -138,10 +138,10 @@ dev::bytes const& VALUE::serializeRLP() const
 
 void VALUE::calculateCache() const
 {
+    std::lock_guard<std::mutex> lock(g_cacheAccessMutexValue);
     if (m_dirty)
     {
-        // Mutex ? because of string function thread unsafe? double check this
-        std::lock_guard<std::mutex> lock(g_cacheAccessMutexValue);
+        m_dirty = false;
         string& ret = m_dataStrZeroXCache;
 
         if (m_bigintEmpty)
