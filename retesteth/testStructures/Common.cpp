@@ -423,6 +423,9 @@ void convertDecTransactionToHex(spDataObject& _data)
 
     // Compile LLL in transaction data into byte code if not already
     data["data"] = test::compiler::replaceCode(data.atKey("data").asString());
+
+    data["data"].performModifier(mod_valueToLowerCase);
+    data["to"].performModifier(mod_valueToLowerCase);
 }
 
 }  // namespace teststruct
