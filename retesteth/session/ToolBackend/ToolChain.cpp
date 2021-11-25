@@ -314,7 +314,15 @@ ToolResponse ToolChain::mineBlockOnTool(EthereumBlockState const& _block, Ethere
 
     bool traceCondition = Options::get().vmtrace && _block.header()->number() != 0;
     if (traceCondition)
-        cmd += " --trace";
+    {
+        cmd += " --trace ";
+        if (!Options::get().vmtrace_nomemory)
+            cmd += "--trace.memory ";
+        if (!Options::get().vmtrace_noreturndata)
+            cmd += "--trace.returndata ";
+        if (Options::get().vmtrace_nostack)
+            cmd += "--trace.nostack ";
+    }
 
     ETH_TEST_MESSAGE("Alloc:\n" + allocPathContent);
     if (_block.transactions().size())

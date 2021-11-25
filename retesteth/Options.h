@@ -35,8 +35,13 @@ public:
 
     size_t threadCount = 1;	///< Execute tests on threads
     bool enableClientsOutput = false;  ///< Enable stderr from clients
+
     bool vmtrace = false;              ///< Create EVM execution tracer
     bool vmtraceraw = false;           ///< Create EVM execution tracer. output raw info
+    bool vmtrace_nomemory = false;
+    bool vmtrace_nostack = false;
+    bool vmtrace_noreturndata = false;
+
     bool filltests = false;            ///< Create JSON test files from execution results
     bool showhash = false;  ///< Show filler hash for debug information
     bool checkhash = false; ///< Check that tests are updated from fillers
