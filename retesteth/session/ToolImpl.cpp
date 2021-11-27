@@ -109,7 +109,8 @@ EthGetBlockBy ToolImpl::eth_getBlockByHash(FH32 const& _hash, Request _fullObjec
         ETH_LOG("Response: eth_getBlockByHash `" + res->asJson(), 7);
         return EthGetBlockBy(res);
         , "eth_getBlockByHash", CallType::FAILEVERYTHING)
-    return EthGetBlockBy(DataObject());
+    spDataObject spnull(0);
+    return EthGetBlockBy(spnull);
 }
 
 EthGetBlockBy ToolImpl::eth_getBlockByNumber(VALUE const& _blockNumber, Request _fullObjects)
@@ -122,7 +123,8 @@ EthGetBlockBy ToolImpl::eth_getBlockByNumber(VALUE const& _blockNumber, Request 
         ETH_LOG("Response: eth_getBlockByNumber `" + res->asJson(), 7);
         return EthGetBlockBy(res);
         , "eth_getBlockByNumber", CallType::FAILEVERYTHING)
-    return EthGetBlockBy(DataObject());
+    spDataObject spnull(0);
+    return EthGetBlockBy(spnull);
 }
 
 spBYTES ToolImpl::eth_getCode(FH20 const& _address, VALUE const& _blockNumber)
@@ -309,6 +311,20 @@ TestRawTransaction ToolImpl::test_rawTransaction(BYTES const& _rlp, FORK const& 
         return res;
         , "test_rawTransaction", CallType::FAILEVERYTHING)
     return TestRawTransaction(DataObject());
+}
+
+VALUE ToolImpl::test_calculateDifficulty(FORK const& _fork, VALUE const& _blockNumber, VALUE const& _parentTimestamp,
+    VALUE const& _parentDifficulty, VALUE const& _currentTimestamp, VALUE const& _uncleNumber)
+{
+    rpcCall("", {});
+    TRYCATCHCALL(
+        ETH_TEST_MESSAGE("\nRequest: test_calculateDifficulty '");
+        ETH_TEST_MESSAGE("Fork: " + _fork.asString() + ", bn: " + _blockNumber.asString() + ", pt: " + _parentTimestamp.asString() +
+            ", pd: " + _parentDifficulty.asString() + ", ct: " + _currentTimestamp.asString() + ", un: " + _uncleNumber.asString());
+        return ToolChainManager::test_calculateDifficulty(_fork, _blockNumber, _parentTimestamp, _parentDifficulty, _currentTimestamp, _uncleNumber,
+            m_toolPath, m_tmpDir);
+        , "test_calculateDifficulty", CallType::FAILEVERYTHING)
+    return VALUE(DataObject());
 }
 
 // Internal

@@ -15,7 +15,7 @@ spDataObject FillTest(BlockchainTestInFiller const& _test, TestSuite::TestSuiteO
     if (Options::get().logVerbosity > 1)
         ETH_STDOUT_MESSAGE("Filling " + _test.testName());
 
-    spDataObject result(new DataObject());
+    spDataObject result;
     if (ExitHandler::receivedExitSignal())
         return result;
     SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
@@ -30,7 +30,7 @@ spDataObject FillTest(BlockchainTestInFiller const& _test, TestSuite::TestSuiteO
             if (expect.hasFork(net))
             {
                 // Construct filled blockchain test
-                spDataObject _filledTest(new DataObject());
+                spDataObject _filledTest;
                 DataObject& filledTest = _filledTest.getContent();
                 string const newtestname = _test.testName() + "_" + net.asString();
                 TestOutputHelper::get().setCurrentTestName(newtestname);

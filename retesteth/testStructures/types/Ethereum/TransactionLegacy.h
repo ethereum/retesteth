@@ -14,7 +14,7 @@ namespace teststruct
 
 struct TransactionLegacy : Transaction
 {
-    TransactionLegacy(DataObject const&);
+    TransactionLegacy(spDataObjectMove);
     TransactionLegacy(BYTES const&);
     TransactionLegacy(dev::RLP const&);
 
@@ -22,7 +22,7 @@ struct TransactionLegacy : Transaction
     VALUE const& gasPrice() const { return m_gasPrice; }
 
     virtual TransactionType type() const override { return TransactionType::LEGACY; }
-    virtual spDataObject asDataObject(ExportOrder _order = ExportOrder::Default) const override;
+    virtual spDataObject const asDataObject(ExportOrder _order = ExportOrder::Default) const override;
 
 protected:
     TransactionLegacy() {}

@@ -14,6 +14,7 @@ struct BlockchainTestFillerTransaction : GCP_SPointerBase
 {
     BlockchainTestFillerTransaction(spDataObjectMove, NonceMap& _nonceMap);
     Transaction const& tr() const { return m_transaction; }
+    spTransaction const& trPointer() const { return m_transaction; }
 
     // Test functions
     string const& getExpectException(FORK const& _net) const
@@ -26,7 +27,6 @@ struct BlockchainTestFillerTransaction : GCP_SPointerBase
 
 private:
     BlockchainTestFillerTransaction() {}
-    spDataObject m_rawData;
     spTransaction m_transaction;
     std::map<FORK, string> m_expectExceptions;
 };

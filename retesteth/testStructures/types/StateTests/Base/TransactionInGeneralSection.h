@@ -17,7 +17,7 @@ namespace teststruct
 struct TransactionInGeneralSection
 {
     TransactionInGeneralSection(
-        DataObject const&, size_t _dInd, size_t _gInd, size_t _vInd, string const& _dataRawPreview, string const& _dataLabel);
+        spDataObjectMove, size_t _dInd, size_t _gInd, size_t _vInd, string const& _dataRawPreview, string const& _dataLabel);
     size_t dataInd() const { return m_dataIndexBox.m_dInd; }
     string const& dataIndS() const { return m_dataIndexBox.m_dIndS; }
     size_t gasInd() const { return m_dataIndexBox.m_gInd; }

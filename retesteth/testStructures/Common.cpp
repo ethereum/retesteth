@@ -337,7 +337,7 @@ void convertDecStateToHex(spDataObject& _data, solContracts const& _preSolidity,
 spDataObject convertDecBlockheaderIncompleteToHex(DataObject const& _data)
 {
     // Convert to HEX
-    spDataObject tmpD(new DataObject());
+    spDataObject tmpD;
     (*tmpD).copyFrom(_data);               // TODO copy time consuming!!!
     (*tmpD).removeKey("RelTimestamp");     // BlockchainTestFiller fields
     (*tmpD).removeKey("chainname");        // BlockchainTestFiller fields
@@ -423,6 +423,9 @@ void convertDecTransactionToHex(spDataObject& _data)
 
     // Compile LLL in transaction data into byte code if not already
     data["data"] = test::compiler::replaceCode(data.atKey("data").asString());
+
+    data["data"].performModifier(mod_valueToLowerCase);
+    data["to"].performModifier(mod_valueToLowerCase);
 }
 
 }  // namespace teststruct

@@ -25,20 +25,49 @@ string const t8ntool_config = R"({
         "EIP158ToByzantiumAt5",
         "HomesteadToDaoAt5",
         "ByzantiumToConstantinopleFixAt5",
-        "BerlinToLondonAt5"
+        "BerlinToLondonAt5",
+        "ArrowGlacier"
     ],
     "exceptions" : {
       "AddressTooShort" : "input string too short for common.Address",
+      "AddressTooLong" : "rlp: input string too long for common.Address, decoding into (types.Transaction)(types.LegacyTx).To",
+      "NonceMax" : "nonce exceeds 2^64-1",
+      "NonceTooLong" : "rlp: input string too long for uint64, decoding into (types.Transaction)(types.LegacyTx).Nonce",
+      "InvalidVRS" : "invalid transaction v, r, s values",
+      "InvalidV" : "rlp: expected input string or byte for *big.Int, decoding into (types.Transaction)(types.LegacyTx).V",
+      "InvalidR" : "rlp: expected input string or byte for *big.Int, decoding into (types.Transaction)(types.LegacyTx).R",
+      "InvalidS" : "rlp: expected input string or byte for *big.Int, decoding into (types.Transaction)(types.LegacyTx).S",
+      "InvalidChainID" : "invalid chain id for signer",
+      "ECRecoveryFail" : "recovery failed",
       "InvalidStateRoot" : "",
       "ExtraDataTooBig" : "Error importing raw rlp block: Header extraData > 32 bytes",
+      "InvalidData" : "rlp: expected input string or byte for []uint8, decoding into (types.Transaction)(types.LegacyTx).Data",
       "InvalidDifficulty" : "Invalid difficulty:",
       "InvalidDifficulty2" : "Error in field: difficulty",
       "InvalidDifficulty_TooLarge" : "Blockheader parse error: VALUE  >u256",
       "InvalidGasLimit" : "Header gasLimit > 0x7fffffffffffffff",
       "InvalidGasLimit2" : "Invalid gaslimit:",
       "InvalidGasLimit3" : "GasLimit must be < 0x7fffffffffffffff",
+      "InvalidGasLimit4" : "rlp: input string too long for uint64, decoding into (types.Transaction)(types.LegacyTx).Gas",
+      "InvalidGasLimit5" : "rlp: expected input string or byte for uint64, decoding into (types.Transaction)(types.LegacyTx).Gas",
+      "InvalidValue" : "value exceeds 256 bits",
+      "InvalidGasPrice" : "gasPrice exceeds 256 bits",
+      "InvalidMaxPriorityFeePerGas" : "maxPriorityFeePerGas exceeds 256 bits",
+      "InvalidMaxFeePerGas" : "maxFeePerGas exceeds 256 bits",
+      "InvalidNonce" : "rlp: expected input string or byte for uint64, decoding into (types.Transaction)(types.LegacyTx).Nonce",
+      "InvalidTo" : "rlp: expected input string or byte for common.Address, decoding into (types.Transaction)(types.LegacyTx).To",
+      "GasLimitPriceProductOverflow" : "gas * gasPrice exceeds 256 bits",
       "TooMuchGasUsed" : "Invalid gasUsed:",
       "TooMuchGasUsed2" : "Error importing raw rlp block: t8ntool didn't return a transaction with hash",
+      "LeadingZerosGasLimit" : "rlp: non-canonical integer (leading zero bytes) for uint64, decoding into (types.Transaction)(types.LegacyTx).Gas",
+      "LeadingZerosGasPrice" : "rlp: non-canonical integer (leading zero bytes) for *big.Int, decoding into (types.Transaction)(types.LegacyTx).GasPrice",
+      "LeadingZerosValue" : "rlp: non-canonical integer (leading zero bytes) for *big.Int, decoding into (types.Transaction)(types.LegacyTx).Value",
+      "LeadingZerosNonce" : "rlp: non-canonical integer (leading zero bytes) for uint64, decoding into (types.Transaction)(types.LegacyTx).Nonce",
+      "LeadingZerosR" : "rlp: non-canonical integer (leading zero bytes) for *big.Int, decoding into (types.Transaction)(types.LegacyTx).R",
+      "LeadingZerosS" : "rlp: non-canonical integer (leading zero bytes) for *big.Int, decoding into (types.Transaction)(types.LegacyTx).S",
+      "LeadingZerosV" : "rlp: non-canonical integer (leading zero bytes) for *big.Int, decoding into (types.Transaction)(types.LegacyTx).V",
+      "LeadingZerosDataSize" : "rlp: non-canonical size information for []uint8, decoding into (types.Transaction)(types.LegacyTx).Data",
+      "LeadingZerosNonceSize" : "rlp: non-canonical size information for uint64, decoding into (types.Transaction)(types.LegacyTx).Nonce",
       "InvalidNumber" : "BlockHeader number != parent.number + 1",
       "InvalidTimestampEqualParent" : "timestamp equals parent's",
       "InvalidTimestampOlderParent" : "BlockHeader timestamp is less or equal then it's parent block!",
@@ -60,6 +89,7 @@ string const t8ntool_config = R"({
       "TooManyUncles" : "Too many uncles!",
       "UncleIsBrother" : "Uncle is brother!",
       "OutOfGas" : "out of gas",
+      "SenderNotEOA" : "sender not an eoa:",
       "IntrinsicGas" : "t8ntool didn't return a transaction with hash",
       "ExtraDataIncorrectDAO" : "BlockHeader require Dao ExtraData!",
       "InvalidTransactionVRS" : "t8ntool didn't return a transaction with hash",
@@ -67,6 +97,8 @@ string const t8ntool_config = R"({
       "TRANSACTION_VALUE_TOOLARGE" : "TransactionLegacy convertion error: VALUE  >u256",
       "TRANSACTION_VALUE_TOOSHORT" : "t8ntool didn't return a transaction with hash",
       "OVERSIZE_RLP" : "Error importing raw rlp block: OversizeRLP",
+      "RLP_TooFewElements" : "rlp: too few elements ",
+      "RLP_TooManyElements" : "rlp: input list has too many elements ",
       "RLP_InputContainsMoreThanOneValue" : "Error importing raw rlp block: OversizeRLP",
       "RLP_VALUESIZE_MORE_AVAILABLEINPUTLENGTH" : "Error importing raw rlp block: UndersizeRLP",
       "RLP_ELEMENT_LARGER_CONTAININGLIST_UNDERSIZE" : "Error importing raw rlp block: UndersizeRLP",
@@ -147,6 +179,9 @@ string const t8ntool_config = R"({
       "RLP_ExpectedInputList_TRANSACTION_DECODEINTO_BLOCK_EXTBLOCK_TXS" : "Error importing raw rlp block: BadCast",
       "RLP_ExpectedInputList_HEADER_DECODEINTO_BLOCK_EXTBLOCK_UNCLES" : "Error importing raw rlp block: OversizeRLP",
       "RLP_ExpectedInputList_TXDATA_DECODEINTO_BLOCK_EXTBLOCK_TXS0" : "Error importing raw rlp block: Transaction RLP is expected to be list",
+      "RLP_Error_EOF" : "ERROR(11): unexpected EOF",
+      "RLP_Error_RLP_Size" : "ERROR(11): rlp: value size exceeds available input length",
+      "RLP_Error_Size_Information" : "ERROR(11): rlp: non-canonical size information",
       "LegacyBlockImportImpossible" : "Legacy block import is impossible",
       "LegacyBlockImportImpossible2" : "Legacy block can only be on top of LegacyBlock",
       "LegacyBlockBaseFeeTransaction" : "BaseFee transaction in a Legacy blcok",
@@ -173,16 +208,16 @@ if [ $1 = "-v" ]; then
     /bin/evm -v
 else
     stateProvided=0
-    for index in $1 $2 $3 $4 $5 $6 $7 $8 $9 $10 $11 $12 $13 $14 $15 $16 $17 $18 $19 $20 ; do
+    for index in ${1} ${2} ${3} ${4} ${5} ${6} ${7} ${8} ${9} ${10} ${11} ${12} ${13} ${14} ${15} ${16} ${17} ${18} ${19} ${20} ; do
         if [ $index = "--input.alloc" ]; then
             stateProvided=1
             break
         fi
     done
     if [ $stateProvided -eq 1 ]; then
-        /bin/evm t8n $1 $2 $3 $4 $5 $6 $7 $8 $9 $10 $11 $12 $13 $14 $15 $16 $17 $18 $19 $20 --verbosity 2
+        /bin/evm t8n ${1} ${2} ${3} ${4} ${5} ${6} ${7} ${8} ${9} ${10} ${11} ${12} ${13} ${14} ${15} ${16} ${17} ${18} ${19} ${20} --verbosity 2
     else
-        /bin/evm t9n $1 $2 $3 $4 $5 $6 $7 $8 $9 $10 $11 $12 $13 $14 $15 $16 $17 $18 $19 $20
+        /bin/evm t9n ${1} ${2} ${3} ${4} ${5} ${6} ${7} ${8} ${9} ${10} ${11} ${12} ${13} ${14} ${15} ${16} ${17} ${18} ${19} ${20}
     fi
 fi
 )";
@@ -190,26 +225,26 @@ fi
 t8ntoolcfg::t8ntoolcfg()
 {
     {
-        spDataObject obj = spDataObject(new DataObject());
+        spDataObject obj;
         (*obj)["path"] = "t8ntool/config";
         (*obj)["content"] = t8ntool_config;
         map_configs.addArrayObject(obj);
     }
     {
-        spDataObject obj = spDataObject(new DataObject());
+        spDataObject obj;
         (*obj)["exec"] = true;
         (*obj)["path"] = "t8ntool/start.sh";
         (*obj)["content"] = t8ntool_start;
         map_configs.addArrayObject(obj);
     }
     {
-        spDataObject obj = spDataObject(new DataObject());
+        spDataObject obj;
         (*obj)["path"] = "default/config";
         (*obj)["content"] = t8ntool_config;
         map_configs.addArrayObject(obj);
     }
     {
-        spDataObject obj = spDataObject(new DataObject());
+        spDataObject obj;
         (*obj)["exec"] = true;
         (*obj)["path"] = "default/start.sh";
         (*obj)["content"] = t8ntool_start;

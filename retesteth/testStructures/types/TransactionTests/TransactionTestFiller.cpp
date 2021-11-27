@@ -33,7 +33,6 @@ TransactionTestInFiller::TransactionTestInFiller(spDataObject& _data)
 {
     try
     {
-        // TODO make _data spDataObjectMove
         REQUIRE_JSONFIELDS(_data, "TransactionTestInFiller " + _data->getKey(),
             {{"_info", {{DataType::Object}, jsonField::Optional}},
              {"expectException", {{DataType::Object}, jsonField::Required}},
@@ -46,7 +45,7 @@ TransactionTestInFiller::TransactionTestInFiller(spDataObject& _data)
         readExpectExceptions(_data->atKey("expectException"), m_expectExceptions);
 
         convertDecTransactionToHex(_data.getContent().atKeyPointerUnsafe("transaction"));
-        m_transaction = readTransaction(_data->atKey("transaction"));
+        m_transaction = readTransaction(MOVE(_data, "transaction"));
     }
     catch (std::exception const& _ex)
     {

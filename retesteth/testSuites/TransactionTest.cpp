@@ -12,7 +12,7 @@ namespace
 {
 spDataObject FillTest(TransactionTestInFiller const& _test)
 {
-    spDataObject filledTest(new DataObject());
+    spDataObject filledTest;
     TestOutputHelper::get().setCurrentTestName(_test.testName());
 
     SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
@@ -25,7 +25,7 @@ spDataObject FillTest(TransactionTestInFiller const& _test)
         TestRawTransaction res = session.test_rawTransaction(_test.transaction()->getRawBytes(), el);
         compareTransactionException(_test.transaction(), res, _test.getExpectException(el));
 
-        spDataObject result(new DataObject());
+        spDataObject result;
         (*result).setKey(el.asString());
         if (_test.getExpectException(el).empty())
         {
@@ -34,6 +34,7 @@ spDataObject FillTest(TransactionTestInFiller const& _test)
         }
         else
             (*result)["exception"] = _test.getExpectException(el);
+        (*result)["intrinsicGas"] = res.intrinsicGas().asString();
         (*filledTest)["result"].addSubObject(result);
     }
 
@@ -48,15 +49,39 @@ void RunTest(TransactionTestInFilled const& _test)
     for (auto const& el : Options::getCurrentConfig().cfgFile().forks())
     {
         TestRawTransaction res = session.test_rawTransaction(_test.rlp(), el);
-        compareTransactionException(_test.transaction(), res, _test.getExpectException(el));
+        if (_test.transaction().isEmpty())
+        {
+            // Retesteth was unable to read the transaction rlp from the test into a valid transaction
+            // Fake the hash of the valid transaction to search for exception. (compareTransactionException requires transaction object to print debug in case of error)
+            spTransaction tr(new TransactionLegacy(BYTES(DataObject("0xf85f800182520894000000000000000000000000000b9331677e6ebf0a801ca098ff921201554726367d2be8c804a7ff89ccf285ebc57dff8ae4c44b9c19ac4aa01887321be575c8095f789dd4c743dfe42c1820f9231f98a962b210e3ac2452a3"))));
+            string const& chash = tr.getContent().hash().asStringBytes();
+            string& hash = const_cast<string&>(chash);
+            hash = "0x" + dev::toString(dev::sha3(fromHex(_test.rlp().asString())));
+            compareTransactionException(tr, res, _test.getExpectException(el));
+        }
+        else
+        {
+            // Fake the hash anyway, because of serialization issues S(0) = 80, S(D(00)) = S(0) = 80 (and not 00)
+            // (compareTransactionException requires transaction object to print debug in case of error)
+            spTransaction tr = _test.transaction();
+            string const& chash = tr.getContent().hash().asStringBytes();
+            string& hash = const_cast<string&>(chash);
+            hash = "0x" + dev::toString(dev::sha3(fromHex(_test.rlp().asString())));
+            compareTransactionException(tr, res, _test.getExpectException(el));
+        }
+
         if (_test.getExpectException(el).empty())
         {
-            spFH32 remoteHash = std::get<0>(_test.getAcceptedTransaction(el));
-            spFH20 remoteSender = std::get<1>(_test.getAcceptedTransaction(el));
-            ETH_ERROR_REQUIRE_MESSAGE(res.trhash() == remoteHash.getCContent(),
-                "Remote trHash != test trHash! (`" + res.trhash().asString() + "` != `" + remoteHash->asString());
-            ETH_ERROR_REQUIRE_MESSAGE(res.sender() == remoteSender.getCContent(),
-                "Remote sender != test sender! (`" + res.sender().asString() + "` != `" + remoteSender->asString());
+            auto const& testResult = _test.getAcceptedTransaction(el);
+            spVALUE const& testIntrinsicGas = testResult.m_intrinsicGas;
+            spFH32 const& testHash = testResult.m_hash;
+            spFH20 const& testSender = testResult.m_sender;
+            ETH_ERROR_REQUIRE_MESSAGE(res.trhash() == testHash.getCContent(),
+                "Remote trHash != test trHash! (`" + res.trhash().asString() + "` != `" + testHash->asString());
+            ETH_ERROR_REQUIRE_MESSAGE(res.sender() == testSender.getCContent(),
+                "Remote sender != test sender! (`" + res.sender().asString() + "` != `" + testSender->asString());
+            ETH_ERROR_REQUIRE_MESSAGE(res.intrinsicGas() == testIntrinsicGas,
+                "Remote intrGas != test intrGas! (`" + res.intrinsicGas().asDecString() + "` != `" + testIntrinsicGas->asDecString());
         }
     }
 }
@@ -71,7 +96,7 @@ spDataObject TransactionTestSuite::doTests(spDataObject& _input, TestSuiteOption
 
     if (_opt.doFilling)
     {
-        spDataObject filledTest(new DataObject());
+        spDataObject filledTest;
         TransactionTestFiller filler(_input);
 
         for (auto const& test : filler.tests())
@@ -86,7 +111,7 @@ spDataObject TransactionTestSuite::doTests(spDataObject& _input, TestSuiteOption
         TransactionTest filledTest(_input);
         // Just check the test structure if running with --checkhash
         if (Options::get().checkhash)
-            return spDataObject(new DataObject());
+            return spDataObject();
 
         for (auto const& test : filledTest.tests())
         {
@@ -95,7 +120,7 @@ spDataObject TransactionTestSuite::doTests(spDataObject& _input, TestSuiteOption
         }
     }
 
-    return spDataObject(new DataObject());
+    return spDataObject();
 }
 
 /// TEST SUITE ///

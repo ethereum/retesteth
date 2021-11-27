@@ -13,10 +13,12 @@ namespace test
 {
 namespace teststruct
 {
-TransactionLegacy::TransactionLegacy(DataObject const& _data)
+TransactionLegacy::TransactionLegacy(spDataObjectMove _data)
 {
     m_secretKey = spVALUE(new VALUE(0));
-    fromDataObject(_data);
+    m_rawData = _data.getPointer();
+    fromDataObject(m_rawData.getCContent());
+    (*m_rawData).removeKey("secretKey");
 }
 
 void TransactionLegacy::fromDataObject(DataObject const& _data)
@@ -67,8 +69,6 @@ void TransactionLegacy::fromDataObject(DataObject const& _data)
         else
         {
             m_v = spVALUE(new VALUE(_data.atKey("v")));
-            if (m_v.getCContent() > dev::bigint("0xff"))
-                throw test::UpwardsException("Incorrect transaction `v` value: " + m_v->asString());
             m_r = spVALUE(new VALUE(_data.atKey("r")));
             m_s = spVALUE(new VALUE(_data.atKey("s")));
             rebuildRLP();
@@ -82,10 +82,11 @@ void TransactionLegacy::fromDataObject(DataObject const& _data)
 
 void TransactionLegacy::fromRLP(dev::RLP const& _rlp)
 {
+    if (_rlp.itemCount() != 9)
+        throw test::UpwardsException("TransactionLegacy::fromRLP(RLP) expected to have exactly 9 elements!");
     // 0 - nonce        3 - to      6 - v
     // 1 - gasPrice     4 - value   7 - r
     // 2 - gasLimit     5 - data    8 - s
-
     size_t i = 0;
     m_nonce = spVALUE(new VALUE(_rlp[i++]));
     m_gasPrice = spVALUE(new VALUE(_rlp[i++]));
@@ -124,20 +125,14 @@ TransactionLegacy::TransactionLegacy(BYTES const& _rlp)
 
 void TransactionLegacy::streamHeader(dev::RLPStream& _s) const
 {
-    _s << nonce().asBigInt();
-    _s << gasPrice().asBigInt();
-    _s << gasLimit().asBigInt();
-
+    _s << nonce().serializeRLP();
+    _s << gasPrice().serializeRLP();
+    _s << gasLimit().serializeRLP();
     if (m_creation)
         _s << "";
     else
-    {
-        if (to().isBigInt())
-            _s << to().asBigInt();
-        else
-            _s << test::sfromHex(to().asString(ExportType::RLP));
-    }
-    _s << value().asBigInt();
+        _s << to().serializeRLP();
+    _s << value().serializeRLP();
     _s << test::sfromHex(data().asString());
 }
 
@@ -160,44 +155,52 @@ void TransactionLegacy::buildVRS(VALUE const& _secret)
     m_v = spVALUE(new VALUE(v));
     m_r = spVALUE(new VALUE(r));
     m_s = spVALUE(new VALUE(s));
+
+    (*m_rawData)["v"] = m_v->asString();
+    (*m_rawData)["r"] = m_r->asString();
+    (*m_rawData)["s"] = m_s->asString();
+
     rebuildRLP();
 }
 
 
-spDataObject TransactionLegacy::asDataObject(ExportOrder _order) const
+const spDataObject TransactionLegacy::asDataObject(ExportOrder _order) const
 {
-    // TODO Memory cache?
-    spDataObject out(new DataObject());
-    (*out)["data"] = m_data->asString();
-    (*out)["gasLimit"] = m_gasLimit->asString();
-    (*out)["gasPrice"] = m_gasPrice->asString();
-    (*out)["nonce"] = m_nonce->asString();
-    if (m_creation)
+    // Optimize out preparation here
+    // Cache output data so not to construct it multiple times
+    // Useful when filling the tests as this function is called 2-3 times for each tr
+    // Promise that after constructor the data does not change
+    if (m_rawData->getSubObjects().size() == 0)
     {
-        if (_order != ExportOrder::ToolStyle)
+        spDataObject out;
+        (*out)["data"] = m_data->asString();
+        (*out)["gasLimit"] = m_gasLimit->asString();
+        (*out)["gasPrice"] = m_gasPrice->asString();
+        (*out)["nonce"] = m_nonce->asString();
+        if (m_creation)
             (*out)["to"] = "";
+        else
+            (*out)["to"] = m_to->asString();
+        (*out)["value"] = m_value->asString();
+        (*out)["v"] = m_v->asString();
+        (*out)["r"] = m_r->asString();
+        (*out)["s"] = m_s->asString();
+        m_rawData = out;
     }
-    else
-        (*out)["to"] = m_to->asString();
-    (*out)["value"] = m_value->asString();
-    (*out)["v"] = m_v->asString();
-    (*out)["r"] = m_r->asString();
-    (*out)["s"] = m_s->asString();
-    if (_order == ExportOrder::ToolStyle)
+
+
+    if (_order == ExportOrder::ToolStyle && m_rawDataTool->getSubObjects().size() == 0)
     {
-        (*out).performModifier(mod_removeLeadingZerosFromHexValues, DataObject::ModifierOption::RECURSIVE, {"data", "to"});
-        (*out).renameKey("gasLimit", "gas");
-        (*out).renameKey("data", "input");
+        m_rawDataTool = spDataObject();
+        (*m_rawDataTool).copyFrom(m_rawData);
+        (*m_rawDataTool).performModifier(mod_removeLeadingZerosFromHexValues, DataObject::ModifierOption::RECURSIVE, {"data", "to"});
+        (*m_rawDataTool).renameKey("gasLimit", "gas");
+        (*m_rawDataTool).renameKey("data", "input");
         if (!m_secretKey.isEmpty() && m_secretKey.getCContent() != 0)
-            (*out)["secretKey"] = m_secretKey->asString();
+            (*m_rawDataTool)["secretKey"] = m_secretKey->asString();
     }
-    if (_order == ExportOrder::OldStyle)
-    {
-        (*out).setKeyPos("r", 4);
-        (*out).setKeyPos("s", 5);
-        (*out).setKeyPos("v", 7);
-    }
-    return out;
+
+    return (_order == ExportOrder::ToolStyle) ? m_rawDataTool : m_rawData;
 }
 
 void TransactionLegacy::rebuildRLP()
@@ -205,9 +208,9 @@ void TransactionLegacy::rebuildRLP()
     dev::RLPStream out;
     out.appendList(9);
     streamHeader(out);
-    out << v().asBigInt().convert_to<dev::byte>();
-    out << r().asBigInt();
-    out << s().asBigInt();
+    out << v().serializeRLP();
+    out << r().serializeRLP();
+    out << s().serializeRLP();
     m_outRlpStream = out;
     m_rawRLPdata = spBYTES(new BYTES(dev::toHexPrefixed(out.out())));
     m_hash = spFH32(new FH32("0x" + dev::toString(dev::sha3(out.out()))));

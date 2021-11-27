@@ -28,6 +28,8 @@ State::Account::Account(spDataObject& _data)
             {"storage", {{DataType::Object}, jsonField::Required}}});
 
     m_rawData = _data;
+    if (_data->getKey().empty())
+        ETH_ERROR_MESSAGE("State::Account::Account(spDataObject& _data) _data.key is empty! \n" + _data->asJson());
     m_address = spFH20(new FH20(_data->getKey()));
     m_balance = spVALUE(new VALUE(_data->atKey("balance")));
     m_nonce = spVALUE(new VALUE(_data->atKey("nonce")));
@@ -39,9 +41,8 @@ State::Account::Account(spDataObject& _data)
 
 spDataObject const& State::Account::asDataObject() const
 {
-    if (m_rawData.isEmpty())
+    if (m_rawData->getSubObjects().size() == 0)
     {
-        m_rawData = spDataObject(new DataObject());
         (*m_rawData).setKey(m_address->asString());
         (*m_rawData)["code"] = m_code->asString();
         (*m_rawData)["nonce"] = m_nonce->asString();

@@ -32,12 +32,12 @@ const string t8ntool_Berlin_config = R"({
 
 genBerlinCfg::genBerlinCfg()
 {
-    spDataObject obj (new DataObject());
+    spDataObject obj;
     (*obj)["path"] = "besu/genesis/Berlin.json";
     (*obj)["content"] = default_Berlin_config;
     map_configs.addArrayObject(obj);
 
-    spDataObject obj2 (new DataObject());
+    spDataObject obj2;
     (*obj2)["path"] = "default/genesis/Berlin.json";
     (*obj2)["content"] = t8ntool_Berlin_config;
     map_configs.addArrayObject(obj2);

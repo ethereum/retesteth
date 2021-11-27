@@ -6,11 +6,11 @@ namespace test
 {
 namespace teststruct
 {
-BlockchainTestBlock::BlockchainTestBlock(DataObject const& _data)
+BlockchainTestBlock::BlockchainTestBlock(spDataObject& _data)
 {
     try
     {
-        REQUIRE_JSONFIELDS(_data, "BlockchainTestBlock " + _data.getKey(),
+        REQUIRE_JSONFIELDS(_data, "BlockchainTestBlock " + _data->getKey(),
             {{"rlp", {{DataType::String}, jsonField::Required}},
                 {"chainname", {{DataType::String}, jsonField::Optional}},    // User information
                 {"blocknumber", {{DataType::String}, jsonField::Optional}},  // User information
@@ -29,25 +29,23 @@ BlockchainTestBlock::BlockchainTestBlock(DataObject const& _data)
                 {"expectExceptionIstanbul", {{DataType::String}, jsonField::Optional}},           // Legacy field
                 {"blockHeader", {{DataType::Object}, jsonField::Optional}}});
 
-        if (_data.count("chainname"))
-            m_chainName = _data.atKey("chainname").asString();
-        if (_data.count("blocknumber"))
+        if (_data->count("chainname"))
+            m_chainName = _data->atKey("chainname").asString();
+        if (_data->count("blocknumber"))
         {
-            DataObject tmpD;
-            tmpD.copyFrom(_data.atKey("blocknumber"));
-            tmpD.performModifier(mod_valueToCompactEvenHexPrefixed);
-            m_blockNumber = spVALUE(new VALUE(tmpD));
+            _data.getContent().atKeyUnsafe("blocknumber").performModifier(mod_valueToCompactEvenHexPrefixed);
+            m_blockNumber = spVALUE(new VALUE(_data->atKey("blocknumber")));
         }
-        if (_data.count("blockHeader"))
+        if (_data->count("blockHeader"))
         {
-            m_blockHeader = readBlockHeader(_data.atKey("blockHeader"));
+            m_blockHeader = readBlockHeader(_data->atKey("blockHeader"));
 
-            for (auto const& tr : _data.atKey("transactions").getSubObjects())
-                m_transactions.push_back(readTransaction(tr));
+            for (auto& tr : _data.getContent().atKeyUnsafe("transactions").getSubObjectsUnsafe())
+                m_transactions.push_back(readTransaction(dataobject::move(tr)));
 
-            if (_data.count("transactionSequence"))
+            if (_data->count("transactionSequence"))
             {
-                for (auto const& tr : _data.atKey("transactionSequence").getSubObjects())
+                for (auto const& tr : _data->atKey("transactionSequence").getSubObjects())
                 {
                     string const sException = tr->count("exception") ? tr->atKey("exception").asString() : string();
                     m_transactionSequence.push_back(
@@ -55,14 +53,14 @@ BlockchainTestBlock::BlockchainTestBlock(DataObject const& _data)
                 }
             }
 
-            for (auto const& un : _data.atKey("uncleHeaders").getSubObjects())
+            for (auto const& un : _data->atKey("uncleHeaders").getSubObjects())
                 m_uncles.push_back(readBlockHeader(un));
         }
-        m_rlp = spBYTES(new BYTES(_data.atKey("rlp").asString()));
+        m_rlp = spBYTES(new BYTES(_data->atKey("rlp").asString()));
     }
     catch (std::exception const& _ex)
     {
-        throw UpwardsException(string("BlockchainTestBlock convertion error: ") + _ex.what() + _data.asJson());
+        throw UpwardsException(string("BlockchainTestBlock convertion error: ") + _ex.what() + _data->asJson());
     }
 }
 

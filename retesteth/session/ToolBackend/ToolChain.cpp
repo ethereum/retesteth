@@ -46,6 +46,21 @@ ToolChain::ToolChain(
     m_blocks.push_back(genesisFixed);
 }
 
+ToolChain::ToolChain(
+    EthereumBlockState const& _blockA, EthereumBlockState const& _blockB,
+    FORK const& _fork, fs::path const& _toolPath, fs::path const& _tmpDir)
+  : m_initialParams(0),
+    m_engine(SealEngine::NoProof),
+    m_fork(new FORK(_fork.asString())),
+    m_toolPath(_toolPath),
+    m_tmpDir(_tmpDir)
+{
+    // Constructor to execute t8n given 2 blocks to calculate the difficulty transition
+    ToolResponse res = mineBlockOnTool(_blockB, _blockA, SealEngine::NoReward);
+    m_blocks.push_back(_blockB);
+    m_blocks.back().headerUnsafe().getContent().setDifficulty(res.currentDifficulty());
+}
+
 spDataObject const ToolChain::mineBlock(EthereumBlockState const& _pendingBlock, EthereumBlockState const& _parentBlock, Mining _req)
 {
     ToolResponse const res = mineBlockOnTool(_pendingBlock, _parentBlock, m_engine);
@@ -86,7 +101,7 @@ spDataObject const ToolChain::mineBlock(EthereumBlockState const& _pendingBlock,
     // Add only those transactions which tool returned a receipt for
     // Some transactions are expected to fail. That should be detected by tests
     size_t index = 0;
-    spDataObject miningResult(new DataObject());
+    spDataObject miningResult;
     (*miningResult)["result"] = true;
 
     for (auto const& tr : _pendingBlock.transactions())
@@ -113,7 +128,7 @@ spDataObject const ToolChain::mineBlock(EthereumBlockState const& _pendingBlock,
                 if (el.index() == index)
                 {
                     rejectedInfoFound = true;
-                    spDataObject rejectInfo(new DataObject());
+                    spDataObject rejectInfo;
                     (*rejectInfo)["hash"] = trHash.asString();
                     (*rejectInfo)["error"] = el.error();
                     (*miningResult)["rejectedTransactions"].addArrayObject(rejectInfo);
@@ -223,7 +238,7 @@ ToolResponse ToolChain::mineBlockOnTool(EthereumBlockState const& _block, Ethere
         (*envData)["blockHashes"][fto_string(k++)] = bl.header()->hash().asString();
     for (auto const& un : _block.uncles())
     {
-        spDataObject uncle(new DataObject());
+        spDataObject uncle;
         int delta = (int)(_block.header()->number() - un->number()).asBigInt();
         if (delta < 1)
             throw test::UpwardsException("Uncle header delta is < 1");
@@ -254,8 +269,7 @@ ToolResponse ToolChain::mineBlockOnTool(EthereumBlockState const& _block, Ethere
         dev::RLPStream txsout(_block.transactions().size());
         for (auto const& tr : _block.transactions())
             txsout.appendRaw(tr->asRLPStream().out());
-        string txsPathContent = _block.transactions().size() ?
-                    "\"" + dev::toString(txsout.out()) + "\"" : "[]";
+        txsPathContent = _block.transactions().size() ? "\"" + dev::toString(txsout.out()) + "\"" : "[]";
         writeFile(txsPath.string(), txsPathContent);
     }
     else
@@ -279,23 +293,36 @@ ToolResponse ToolChain::mineBlockOnTool(EthereumBlockState const& _block, Ethere
     fs::path outPath = m_tmpDir / "out.json";
     fs::path outAllocPath = m_tmpDir / "outAlloc.json";
 
-    // Convert FrontierToHomesteadAt5 -> Homestead if block > 5, and get reward
-    auto tupleRewardFork = prepareReward(_engine, m_fork.getContent(), _block.header()->number());
 
     string cmd = m_toolPath.string();
+    if (_engine != SealEngine::NoReward)
+    {
+        // Convert FrontierToHomesteadAt5 -> Homestead if block > 5, and get reward
+        auto tupleRewardFork = prepareReward(_engine, m_fork.getContent(), _block.header()->number());
+        cmd += " --state.fork " + std::get<1>(tupleRewardFork).asString();
+        cmd += " --state.reward " + std::get<0>(tupleRewardFork).asDecString();
+    }
+    else
+        cmd += " --state.fork " + m_fork->asString();
+
     cmd += " --input.alloc " + allocPath.string();
     cmd += " --input.txs " + txsPath.string();
     cmd += " --input.env " + envPath.string();
-    cmd += " --state.fork " + std::get<1>(tupleRewardFork).asString();
     cmd += " --output.basedir " + m_tmpDir.string();
     cmd += " --output.result " + outPath.filename().string();
     cmd += " --output.alloc " + outAllocPath.filename().string();
-    if (_engine != SealEngine::NoReward)
-        cmd += " --state.reward " + std::get<0>(tupleRewardFork).asDecString();
 
     bool traceCondition = Options::get().vmtrace && _block.header()->number() != 0;
     if (traceCondition)
-        cmd += " --trace";
+    {
+        cmd += " --trace ";
+        if (!Options::get().vmtrace_nomemory)
+            cmd += "--trace.memory ";
+        if (!Options::get().vmtrace_noreturndata)
+            cmd += "--trace.returndata ";
+        if (Options::get().vmtrace_nostack)
+            cmd += "--trace.nostack ";
+    }
 
     ETH_TEST_MESSAGE("Alloc:\n" + allocPathContent);
     if (_block.transactions().size())

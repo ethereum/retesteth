@@ -37,6 +37,7 @@ private:
     bool _isEmpty;
     void AddRef();
     int DelRef();
+    int GetRef();
     static std::mutex g_spRefAccessMutex;
 
 
@@ -56,7 +57,7 @@ private:
     {
         if (_pointee != nullptr)
         {
-            if (_pointee->_nRef > 0)
+            if (_pointee->GetRef() > 0)
             {
                 if (_pointee->DelRef() == 0)
                 {
@@ -133,7 +134,7 @@ public:
         // Mark pointer as a ghost. Everyone will think that it is deleted, but it is not
         if (_pointee != nullptr)
         {
-            if (_pointee->_nRef > 0)
+            if (_pointee->GetRef() > 0)
                 _pointee->_isEmpty = empty;
         }
     }
@@ -142,7 +143,7 @@ public:
     int getRefCount() const
     {
         if (_pointee)
-            return _pointee->_nRef;
+            return _pointee->GetRef();
         return -1;
     }
 

@@ -136,15 +136,18 @@ bool addClientInfo(
     bool atLeastOneUpdate = false || Options::get().forceupdate;
     SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
 
-    spDataObject filledTest(new DataObject());
+    spDataObject filledTest;
     if ((Options::get().filltests && fs::exists(_existingFilledTest)) && !Options::get().forceupdate)
         filledTest = test::readJsonData(_existingFilledTest);
-    for (auto& testInGenerated : _filledTest.getSubObjectsUnsafe())
+
+    for (spDataObject& testInGenerated : _filledTest.getSubObjectsUnsafe())
     {
         DataObject& testInGeneratedRef = testInGenerated.getContent();
-        spDataObject clientinfo(new DataObject());
+        spDataObject clientinfo;
+
+        // Since one gtest parsed into many bctests we need a copy
         if (testInGeneratedRef.count("_info"))
-            clientinfo = testInGeneratedRef.atKeyPointerUnsafe("_info");
+            clientinfo.getContent().copyFrom(testInGeneratedRef.atKey("_info"));
 
         testInGeneratedRef.removeKey("_info");
         testInGeneratedRef.performModifier(mod_sortKeys);
@@ -163,6 +166,7 @@ bool addClientInfo(
                 string const& existingHash = existingTest.atKey("_info").atKey("generatedTestHash").asString();
                 if (existingHash != clientinfo->atKey("generatedTestHash").asString())
                     atLeastOneUpdate = true;
+
                 string const& existingSrcHash = existingTest.atKey("_info").atKey("sourceHash").asString();
                 if (existingSrcHash != clientinfo->atKey("sourceHash").asString())
                     atLeastOneUpdate = true;
@@ -529,8 +533,10 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
             if (ExitHandler::receivedExitSignal())
                 break;
 
-            thread testThread(&TestSuite::executeTest, this, _testFolder, file);
-            ThreadManager::addTask(std::move(testThread));
+            auto job = [this, &_testFolder, &file](){
+                executeTest(_testFolder, file);
+            };
+            ThreadManager::addTask(job);
         }
         ThreadManager::joinThreads();
         testOutput.finishTest();

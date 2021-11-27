@@ -85,10 +85,9 @@ void TestBlockchain::generateBlock(
         {
             string const& exception = tr.getExpectException(m_network);
             bool hasException = !exception.empty();
-            spTransaction spTr = readTransaction(tr.tr().asDataObject());
-            testTransactionMap[tr.tr().hash()] = {spTr, hasException};
+            testTransactionMap[tr.tr().hash()] = {tr.trPointer(), hasException};
             hasAtLeastOneInvalid = hasAtLeastOneInvalid || hasException;
-            newBlock.registerTransactionSequence({spTr->getRawBytes(), exception});
+            newBlock.registerTransactionSequence({tr.tr().getRawBytes(), exception});
         }
 
         // Only export the order if we have rejected transactions. to save space in tests

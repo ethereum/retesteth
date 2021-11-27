@@ -10,6 +10,19 @@ namespace test
 {
 namespace teststruct
 {
+struct TransactionResult
+{
+    TransactionResult(){};
+    TransactionResult(spFH32 const& _hash, spFH20 const& _sender, spVALUE const& _intrGas)
+      : m_intrinsicGas(_intrGas), m_hash(_hash), m_sender(_sender)
+    {}
+    string m_exception;
+    spVALUE m_intrinsicGas;
+    spFH32 m_hash;
+    spFH20 m_sender;
+};
+
+
 struct TransactionTestInFilled : GCP_SPointerBase
 {
     TransactionTestInFilled(spDataObject&);
@@ -23,9 +36,9 @@ struct TransactionTestInFilled : GCP_SPointerBase
             return m_expectExceptions.at(_net);
         return emptyString;
     }
-    tuple<spFH32, spFH20> const& getAcceptedTransaction(FORK const& _net) const
+    TransactionResult const& getAcceptedTransaction(FORK const& _net) const
     {
-        static HashSender empty = {0, 0};
+        static TransactionResult empty;
         if (m_acceptedTransactions.count(_net))
             return m_acceptedTransactions.at(_net);
         return empty;
@@ -39,8 +52,8 @@ private:
     spTransaction m_readTransaction;
     std::map<FORK, std::string> m_expectExceptions;
 
-    typedef tuple<spFH32, spFH20> HashSender;
-    std::map<FORK, HashSender> m_acceptedTransactions;
+    std::map<FORK, TransactionResult> m_acceptedTransactions;
+    std::map<FORK, TransactionResult> m_rejectedTransactions;
 };
 
 struct TransactionTest

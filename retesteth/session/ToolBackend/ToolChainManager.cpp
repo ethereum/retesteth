@@ -5,6 +5,7 @@
 #include <retesteth/TestHelper.h>
 #include <retesteth/testStructures/Common.h>
 #include <retesteth/dataObject/ConvertFile.h>
+#include <retesteth/FileSystem.h>
 using namespace test;
 
 namespace toolimpl
@@ -227,35 +228,114 @@ TestRawTransaction ToolChainManager::test_rawTransaction(
     // Prepare transaction file
     fs::path txsPath = _tmpDir / "tx.rlp";
 
-    dev::RLPStream txsout(1);
-    txsout.appendRaw(dev::fromHex(_rlp.asString()));
-    writeFile(txsPath.string(), string("\"") + dev::toString(txsout.out()) + "\"");
+    // Rlp list header builder for given data
+    test::RLPStreamU txsout(1);
+    txsout.appendRaw(_rlp.asString());
+
+    // Write data with less memory allocation
+    WRITEFILEN(txsPath.string(), string("\""), txsout.outHeader());
+    for (size_t i = 2; i < _rlp.asString().size(); i++)
+        ADDTOFILE(_rlp.asString()[i])
+    ADDTOFILE("\"");
+    CLOSEFILE();
+
+    // Write data with memory allocation but faster
+    // writeFile(txsPath.string(), string("\"") + txsout.outHeader() + _rlp.asString().substr(2) + "\"");
 
     string cmd = _toolPath.string();
     cmd += " --input.txs " + txsPath.string();
     cmd += " --state.fork " + _fork.asString();
-    string response = test::executeCmd(cmd, ExecCMDWarning::NoWarning);
+    cmd += " 2>&1";
+    string response = test::executeCmd(cmd, ExecCMDWarning::NoWarningNoError);
+
     ETH_TEST_MESSAGE("T9N Response:\n" + response);
-    spDataObject res = dataobject::ConvertJsoncppStringToData(response);
+    spDataObject res;
+
+    try
+    {
+        res = dataobject::ConvertJsoncppStringToData(response);
+    }
+    catch (std::exception const& _ex) {
+        if (string(_ex.what()).find("can't read json") != string::npos)
+        {
+            // Unable to read json. treat response as exceptional failure on wrong input
+            ETH_WARNING("t9n returned invalid json, probably failed on input!");
+            res = spDataObject(new DataObject(DataType::Array));
+            spDataObject errObj;
+            (*errObj)["error"] = response;
+            (*res).addSubObject(errObj);
+            ETH_TEST_MESSAGE("T9N Response reconstructed:\n" + res->asJson());
+        }
+        else
+            throw _ex;
+    }
 
     string const hash = "0x" + dev::toString(dev::sha3(fromHex(_rlp.asString())));
-    spDataObject tr(new DataObject());
-    if (response.find("error") != string::npos)
+    spDataObject tr;
+
+    auto const& resTr = res->getSubObjects().at(0);
+    if (resTr->count("intrinsicGas"))
     {
-        (*tr)["error"] = res->getSubObjects().at(0)->atKey("error").asString();;
+        if (resTr->atKey("intrinsicGas").type() == DataType::Integer)
+            (*tr)["intrinsicGas"] = VALUE(resTr->atKey("intrinsicGas").asInt()).asString();
+        else if (resTr->atKey("intrinsicGas").type() == DataType::String)
+            (*tr)["intrinsicGas"] = VALUE(resTr->atKey("intrinsicGas").asString()).asString();
+        else
+            ETH_ERROR_MESSAGE("`intrinsicGas` field type expected to be Int or String: `" + resTr->asJson());
+    }
+    else
+        (*tr)["intrinsicGas"] = "0x00";
+
+    if (response.find("error") != string::npos || response.find("ERROR") != string::npos)
+    {
+        (*tr)["error"] = resTr->atKey("error").asString();
         (*tr)["sender"] = FH20::zero().asString();
         (*tr)["hash"] = hash;
         out["rejectedTransactions"].addArrayObject(tr);
     }
     else
     {
-        (*tr)["sender"] = res->getSubObjects().at(0)->atKey("address").asString();
-        (*tr)["hash"] = res->getSubObjects().at(0)->atKey("hash").asString();
+        (*tr)["sender"] = resTr->atKey("address").asString();
+        (*tr)["hash"] = resTr->atKey("hash").asString();
         out["acceptedTransactions"].addArrayObject(tr);
+        if (tr->atKey("hash").asString() != hash)
+            ETH_ERROR_MESSAGE("t8n tool returned different tx.hash than retesteth: (t8n.hash != retesteth.hash) " + tr->atKey("hash").asString() + " != " + hash);
     }
 
     ETH_TEST_MESSAGE("Response: test_rawTransaction `" + out.asJson());
     return TestRawTransaction(out);
+}
+
+VALUE ToolChainManager::test_calculateDifficulty(FORK const& _fork, VALUE const& _blockNumber, VALUE const& _parentTimestamp,
+    VALUE const& _parentDifficulty, VALUE const& _currentTimestamp, VALUE const& _uncleNumber,
+    fs::path const& _toolPath, fs::path const& _tmpDir)
+{
+    DifficultyStatic const& data = prepareEthereumBlockStateTemplate();
+
+    // Constructor has serialization from data.blockA
+    EthereumBlockState blockA(data.blockA, data.state, data.loghash);
+    EthereumBlockState blockB(data.blockA, data.state, data.loghash);
+
+    BlockHeader& headerA = blockA.headerUnsafe().getContent();
+    headerA.setDifficulty(_parentDifficulty);
+    if (_blockNumber == 0)
+        ETH_ERROR_MESSAGE("ToolChainManager::test_calculateDifficulty calculating difficulty for blocknumber 0!");
+    headerA.setNumber(_blockNumber - 1);
+    headerA.setTimestamp(_parentTimestamp);
+
+    // Set uncle hash to non empty
+    if (_uncleNumber > 0)
+        headerA.setUnclesHash(FH32("0x2dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347"));
+    else
+        headerA.setUnclesHash(FH32("0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347"));
+
+    BlockHeader& headerB = blockB.headerUnsafe().getContent();
+    headerB.setTimestamp(_currentTimestamp);
+    headerB.setNumber(_blockNumber);
+    headerB.setParentHash(headerA.hash());
+
+    ToolChain chain(blockA, blockB, _fork, _toolPath, _tmpDir);
+    return chain.lastBlock().header()->difficulty();
 }
 
 

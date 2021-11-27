@@ -17,7 +17,7 @@ struct ToolResponse
     ToolResponse(DataObject const& _data);
     FH32 const& stateRoot() const { return m_stateRoot; }
     FH32 const& txRoot() const { return m_txRoot; }
-    FH32 const& receiptRoot() const { return m_receiptRoot; }
+    FH32 const& receiptRoot() const { return m_receiptsRoot; }
     FH32 const& logsHash() const { return m_logsHash; }
     FH256 const& logsBloom() const { return m_logsBloom; }
     VALUE const& currentDifficulty() const { return m_currentDifficulty; }
@@ -41,7 +41,7 @@ private:
     ToolResponse() {}
     spFH32 m_stateRoot;
     spFH32 m_txRoot;
-    spFH32 m_receiptRoot;
+    spFH32 m_receiptsRoot;
     spFH32 m_logsHash;
     spFH256 m_logsBloom;
     spVALUE m_currentDifficulty;

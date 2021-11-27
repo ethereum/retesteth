@@ -46,7 +46,7 @@ string const alethIPCDebug_config = R"({
 
 alethIpcDebugcfg::alethIpcDebugcfg()
 {
-    spDataObject obj(new DataObject());
+    spDataObject obj;
     (*obj)["path"] = "alethIPCDebug/config";
     (*obj)["content"] = alethIPCDebug_config;
     map_configs.addArrayObject(obj);

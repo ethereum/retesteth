@@ -26,12 +26,12 @@ const string t8ntool_EIP158ToByzantiumAt5_config = R"({
 
 genEIP158ToByzantiumCfg::genEIP158ToByzantiumCfg()
 {
-    spDataObject obj(new DataObject());
+    spDataObject obj;
     (*obj)["path"] = "besu/genesis/EIP158ToByzantiumAt5.json";
     (*obj)["content"] = default_EIP158ToByzantiumAt5_config;
     map_configs.addArrayObject(obj);
 
-    spDataObject obj2(new DataObject());
+    spDataObject obj2;
     (*obj2)["path"] = "default/genesis/EIP158ToByzantiumAt5.json";
     (*obj2)["content"] = t8ntool_EIP158ToByzantiumAt5_config;
     map_configs.addArrayObject(obj2);

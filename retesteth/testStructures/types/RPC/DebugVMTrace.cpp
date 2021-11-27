@@ -38,7 +38,7 @@ DebugVMTrace::DebugVMTrace(string const& _info, string const& _trNumber, FH32 co
     {
         m_infoString = _info;
         m_trNumber = _trNumber;
-        m_trHash = spFH32(new FH32(_trHash));
+        m_trHash = spFH32(_trHash.copy());
 
         auto logs = test::explode(_logs, '\n');
         if (logs.size())

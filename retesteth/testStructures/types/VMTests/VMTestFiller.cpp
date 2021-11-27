@@ -8,7 +8,7 @@ using namespace test::teststruct;
 namespace  {
     spDataObject translateExecToTransaction(DataObject const& _exec)
     {
-        spDataObject _gtransaction(new DataObject());
+        spDataObject _gtransaction;
         DataObject& gtransaction = _gtransaction.getContent();
         REQUIRE_JSONFIELDS(_exec, "vmTestFiller exec",
             {{"address", {{DataType::String}, jsonField::Required}},
@@ -49,6 +49,7 @@ VMTestFiller::VMTestFiller(spDataObject& _data)
     }
 }
 
+// TODO remove this test suite
 VMTestInFiller::VMTestInFiller(spDataObject& _data)
 {
     try
@@ -73,7 +74,11 @@ VMTestInFiller::VMTestInFiller(spDataObject& _data)
 
         auto t = translateExecToTransaction(_data->atKey("exec"));
         StateTestFillerTransaction stateTx(dataobject::move(t));
-        m_transaction = spTransaction(new TransactionLegacy(stateTx.buildTransactions().at(0).transaction()->asDataObject()));
+
+        auto dataobj = stateTx.buildTransactions().at(0).transaction()->asDataObject();
+        spDataObject tmp;
+        tmp.getContent().copyFrom(dataobj);
+        m_transaction = spTransaction(new TransactionLegacy(dataobject::move(tmp)));
         if (_data->count("expect"))
         {
             convertDecStateToHex((*_data).atKeyPointerUnsafe("expect"), solContracts(), StateToHex::NOCOMPILECODE);

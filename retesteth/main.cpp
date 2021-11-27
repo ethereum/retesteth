@@ -147,7 +147,7 @@ int main(int argc, const char* argv[])
         {
             argv[i + 1] =
                 "LLLCSuite,SOLCSuite,DataObjectTestSuite,EthObjectsSuite,OptionsSuite,TestHelperSuite,ExpectSectionSuite,"
-                "trDataCompileSuite";
+                "trDataCompileSuite,StructTest,MemoryLeak";
             break;
         }
     }

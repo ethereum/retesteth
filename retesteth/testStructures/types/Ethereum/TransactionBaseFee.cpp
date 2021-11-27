@@ -29,6 +29,7 @@ void TransactionBaseFee::fromDataObject(DataObject const& _data)
             {
                 {"data", {{DataType::String}, jsonField::Required}},
                 {"gasLimit", {{DataType::String}, jsonField::Required}},
+                {"gasPrice", {{DataType::String}, jsonField::Optional}},
                 {"nonce", {{DataType::String}, jsonField::Required}},
                 {"value", {{DataType::String}, jsonField::Required}},
                 {"to", {{DataType::String, DataType::Null}, jsonField::Required}},
@@ -79,8 +80,6 @@ void TransactionBaseFee::fromDataObject(DataObject const& _data)
         else
         {
             m_v = spVALUE(new VALUE(_data.atKey("v")));
-            if (m_v.getCContent() > dev::bigint("0xff"))
-                throw test::UpwardsException("Incorrect transaction `v` value: " + m_v->asString());
             m_r = spVALUE(new VALUE(_data.atKey("r")));
             m_s = spVALUE(new VALUE(_data.atKey("s")));
             rebuildRLP();
@@ -108,6 +107,9 @@ TransactionBaseFee::TransactionBaseFee(BYTES const& _rlp)
 
 void TransactionBaseFee::fromRLP(dev::RLP const& _rlp)
 {
+    if (_rlp.itemCount() != 12)
+        throw test::UpwardsException("TransactionBaseFee::fromRLP(RLP) expected to have exactly 11 elements!");
+
     size_t i = 0;
     i++;  // chainID
 
@@ -169,22 +171,15 @@ void TransactionBaseFee::streamHeader(dev::RLPStream& _s) const
     // rlp([chainId, nonce, maxPriorityFeePerGas, maxFeePerGas, gasLimit, to, value, data, access_list, signatureYParity,
     // signatureR, signatureS])
     _s << VALUE(1).asBigInt();
-    _s << nonce().asBigInt();
-
-    _s << m_maxPriorityFeePerGas->asBigInt();
-    _s << m_maxFeePerGas->asBigInt();
-
-    _s << gasLimit().asBigInt();
+    _s << nonce().serializeRLP();
+    _s << m_maxPriorityFeePerGas->serializeRLP();
+    _s << m_maxFeePerGas->serializeRLP();
+    _s << gasLimit().serializeRLP();
     if (Transaction::isCreation())
         _s << "";
     else
-    {
-        if (to().isBigInt())
-            _s << to().asBigInt();
-        else
-            _s << test::sfromHex(to().asString(ExportType::RLP));
-    }
-    _s << value().asBigInt();
+        _s << to().serializeRLP();
+    _s << value().serializeRLP();
     _s << test::sfromHex(data().asString());
 
     // Access Listist
@@ -195,10 +190,10 @@ void TransactionBaseFee::streamHeader(dev::RLPStream& _s) const
     _s.appendRaw(accessList.out());
 }
 
-spDataObject TransactionBaseFee::asDataObject(ExportOrder _order) const
+const spDataObject TransactionBaseFee::asDataObject(ExportOrder _order) const
 {
     // Because we don't use gas_price field need to explicitly output
-    spDataObject out(new DataObject());
+    spDataObject out;
     (*out)["data"] = m_data->asString();
     (*out)["gasLimit"] = m_gasLimit->asString();
     (*out)["nonce"] = m_nonce->asString();
@@ -221,15 +216,8 @@ spDataObject TransactionBaseFee::asDataObject(ExportOrder _order) const
         if (!m_secretKey.isEmpty() && m_secretKey.getCContent() != 0)
             (*out)["secretKey"] = m_secretKey->asString();
     }
-    if (_order == ExportOrder::OldStyle)
-    {
-        (*out).setKeyPos("r", 4);
-        (*out).setKeyPos("s", 5);
-        (*out).setKeyPos("v", 7);
-    }
 
     // standard transaction output without gas_price end
-
     // begin eip1559 transaction info
     (*out)["chainId"] = "0x01";
     (*out)["type"] = "0x02";
@@ -240,7 +228,7 @@ spDataObject TransactionBaseFee::asDataObject(ExportOrder _order) const
         (*out)["chainId"] = "0x1";
         (*out)["type"] = "0x2";
 
-        spDataObject t8ntoolFields(new DataObject());
+        spDataObject t8ntoolFields;
         (*t8ntoolFields)["maxFeePerGas"] = m_maxFeePerGas->asString();
         (*t8ntoolFields)["maxPriorityFeePerGas"] = m_maxPriorityFeePerGas->asString();
         (*t8ntoolFields).performModifier(mod_removeLeadingZerosFromHexValues);
@@ -261,9 +249,9 @@ void TransactionBaseFee::rebuildRLP()
     dev::RLPStream out;
     out.appendList(12);
     TransactionBaseFee::streamHeader(out);
-    out << v().asBigInt().convert_to<dev::byte>();
-    out << r().asBigInt();
-    out << s().asBigInt();
+    out << v().serializeRLP();
+    out << r().serializeRLP();
+    out << s().serializeRLP();
 
     // Alter output with prefixed 02 byte + tr.rlp
     dev::bytes outa = out.out();

@@ -28,7 +28,7 @@ spDataObject AccessList::asDataObject() const
     spDataObject accessList(new DataObject(DataType::Array));
     for (auto const& el : m_list)
     {
-        spDataObject accessListElement(new DataObject());
+        spDataObject accessListElement;
         (*accessListElement)["address"] = el->address().asString();
         spDataObject keys(new DataObject(DataType::Array));
         (*accessListElement).atKeyPointer("storageKeys") = keys;

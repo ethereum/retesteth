@@ -73,8 +73,6 @@ void TransactionAccessList::fromDataObject(DataObject const& _data)
         else
         {
             m_v = spVALUE(new VALUE(_data.atKey("v")));
-            if (m_v.getCContent() > dev::bigint("0xff"))
-                throw test::UpwardsException("Incorrect transaction `v` value: " + m_v->asString());
             m_r = spVALUE(new VALUE(_data.atKey("r")));
             m_s = spVALUE(new VALUE(_data.atKey("s")));
             rebuildRLP();
@@ -86,13 +84,13 @@ void TransactionAccessList::fromDataObject(DataObject const& _data)
     }
 }
 
-TransactionAccessList::TransactionAccessList(dev::RLP const& _rlp)
+TransactionAccessList::TransactionAccessList(dev::RLP const& _rlp) : TransactionLegacy()
 {
     m_secretKey = spVALUE(new VALUE(0));
     fromRLP(_rlp);
 }
 
-TransactionAccessList::TransactionAccessList(BYTES const& _rlp)
+TransactionAccessList::TransactionAccessList(BYTES const& _rlp) : TransactionLegacy()
 {
     m_secretKey = spVALUE(new VALUE(0));
     dev::bytes decodeRLP = sfromHex(_rlp.asString());
@@ -102,6 +100,9 @@ TransactionAccessList::TransactionAccessList(BYTES const& _rlp)
 
 void TransactionAccessList::fromRLP(dev::RLP const& _rlp)
 {
+    if (_rlp.itemCount() != 11)
+        throw test::UpwardsException("TransactionAccessList::fromRLP(RLP) expected to have exactly 10 elements!");
+
     // 0 - chainID
     // 1 - nonce        4 - to      7 - v
     // 2 - gasPrice     5 - value   8 - r
@@ -163,19 +164,14 @@ void TransactionAccessList::streamHeader(dev::RLPStream& _s) const
 {
     // rlp([chainId, nonce, gasPrice, gasLimit, to, value, data, access_list, yParity, senderR, senderS])
     _s << VALUE(1).asBigInt();
-    _s << nonce().asBigInt();
-    _s << gasPrice().asBigInt();
-    _s << gasLimit().asBigInt();
+    _s << nonce().serializeRLP();
+    _s << gasPrice().serializeRLP();
+    _s << gasLimit().serializeRLP();
     if (Transaction::isCreation())
         _s << "";
     else
-    {
-        if (to().isBigInt())
-            _s << to().asBigInt();
-        else
-            _s << test::sfromHex(to().asString(ExportType::RLP));
-    }
-    _s << value().asBigInt();
+        _s << to().serializeRLP();
+    _s << value().serializeRLP();
     _s << test::sfromHex(data().asString());
 
     // Access Listist
@@ -186,12 +182,13 @@ void TransactionAccessList::streamHeader(dev::RLPStream& _s) const
     _s.appendRaw(accessList.out());
 }
 
-spDataObject TransactionAccessList::asDataObject(ExportOrder _order) const
+const spDataObject TransactionAccessList::asDataObject(ExportOrder _order) const
 {
     spDataObject out = TransactionLegacy::asDataObject(_order);
 
     (*out)["chainId"] = "0x01";
-    (*out).atKeyPointer("accessList") = m_accessList->asDataObject();
+    if (!out->count("accessList"))
+        (*out).atKeyPointer("accessList") = m_accessList->asDataObject();
     (*out)["type"] = "0x01";
     if (_order == ExportOrder::ToolStyle)
     {
@@ -210,9 +207,9 @@ void TransactionAccessList::rebuildRLP()
     dev::RLPStream out;
     out.appendList(11);
     streamHeader(out);
-    out << v().asBigInt().convert_to<dev::byte>();
-    out << r().asBigInt();
-    out << s().asBigInt();
+    out << v().serializeRLP();
+    out << r().serializeRLP();
+    out << s().serializeRLP();
 
     // Alter output with prefixed 01 byte + tr.rlp
     dev::bytes outa = out.out();

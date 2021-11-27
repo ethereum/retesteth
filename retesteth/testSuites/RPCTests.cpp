@@ -40,7 +40,7 @@ spDataObject RPCTestSuite::doTests(spDataObject& _input, TestSuiteOptions& _opt)
 {
     (void)_input;
     (void)_opt;
-    return spDataObject(new DataObject());
+    return spDataObject();
 }
 
 TestSuite::TestPath RPCTestSuite::suiteFolder() const

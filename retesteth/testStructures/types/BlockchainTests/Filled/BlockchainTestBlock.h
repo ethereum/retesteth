@@ -15,7 +15,7 @@ typedef std::tuple<spTransaction, string> TransactionException;
 
 struct BlockchainTestBlock : GCP_SPointerBase
 {
-    BlockchainTestBlock(DataObject const&);
+    BlockchainTestBlock(spDataObject&);
     BYTES const& rlp() const { return m_rlp; }
     bool expectedInvalid() const { return m_blockHeader.isEmpty(); }
     spBlockHeader const& header() const { return m_blockHeader; }

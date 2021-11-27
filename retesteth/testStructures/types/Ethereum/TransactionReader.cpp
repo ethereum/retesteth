@@ -57,7 +57,7 @@ spTransaction readTransaction(BYTES const& _rlp)
         }
         catch (std::exception const& _ex)
         {
-            ETH_FAIL_MESSAGE(
+            throw test::UpwardsException(
                 string("readTransaction(BYTES const&) error building RLP: ") + _ex.what() + "\n" + _rlp.asString());
         }
     }
@@ -79,7 +79,7 @@ spTransaction readTransaction(dev::RLP const& _rlp)
         case 2:
             return _readTransaction(TransactionType::BASEFEE, realRLP);
         default:
-            ETH_FAIL_MESSAGE("readTransaction(dev::RLP const& _rlp) unknown transaction type!");
+            throw test::UpwardsException("readTransaction(dev::RLP const& _rlp) unknown transaction type!");
         }
         return spTransaction(0);
     }
@@ -87,11 +87,11 @@ spTransaction readTransaction(dev::RLP const& _rlp)
         return _readTransaction(TransactionType::LEGACY, _rlp);
 }
 
-spTransaction readTransaction(DataObject const& _filledData)
+spTransaction readTransaction(spDataObjectMove _filledData)
 {
-    if (_filledData.count("maxPriorityFeePerGas"))
+    if (_filledData.getPointer()->count("maxPriorityFeePerGas"))
         return spTransaction(new TransactionBaseFee(_filledData));
-    if (_filledData.count("accessList"))
+    if (_filledData.getPointer()->count("accessList"))
         return spTransaction(new TransactionAccessList(_filledData));
     return spTransaction(new TransactionLegacy(_filledData));
 }

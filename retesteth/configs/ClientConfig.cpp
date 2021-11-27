@@ -58,17 +58,17 @@ ClientConfig::ClientConfig(fs::path const& _clientConfigPath) : m_id(ClientConfi
         }
 
         // Load correctmining Reward
-        fs::path correctMiningRewardPath = genesisTemplatePath / "correctMiningReward.json";
-        ETH_FAIL_REQUIRE_MESSAGE(fs::exists(correctMiningRewardPath),
+        m_correctMiningRewardPath = genesisTemplatePath / "correctMiningReward.json";
+        ETH_FAIL_REQUIRE_MESSAGE(fs::exists(m_correctMiningRewardPath),
             "correctMiningReward.json client config not found!");
-        spDataObject correctMiningReward = test::readJsonData(correctMiningRewardPath);
+        spDataObject correctMiningReward = test::readJsonData(m_correctMiningRewardPath);
         correctMiningReward.getContent().performModifier(mod_removeComments);
         correctMiningReward.getContent().performModifier(mod_valueToCompactEvenHexPrefixed);
         for (auto const& el : cfgFile().forks())
         {
             if (!correctMiningReward->count(el.asString()))
                 ETH_FAIL_MESSAGE("Correct mining reward missing block reward record for fork: `" +
-                                 el.asString() + "` (" + correctMiningRewardPath.string() + ")");
+                                 el.asString() + "` (" + m_correctMiningRewardPath.string() + ")");
         }
         for (auto const& el : correctMiningReward->getSubObjects())
             m_correctReward[el->getKey()] = spVALUE(new VALUE(correctMiningReward->atKey(el->getKey())));

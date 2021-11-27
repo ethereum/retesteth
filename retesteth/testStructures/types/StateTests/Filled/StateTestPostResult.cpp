@@ -29,7 +29,7 @@ StateTestPostResult::StateTestPostResult(DataObject const& _data)
 /// Used solo to print the debug message
 spDataObject StateTestPostResult::asDataObject() const
 {
-    spDataObject res (new DataObject());
+    spDataObject res;
     (*res)["hash"] = m_hash->asString();
     if (!m_log.isEmpty())
         (*res)["logs"] = m_log->asString();

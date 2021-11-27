@@ -4,6 +4,7 @@
 
 #include <retesteth/dataObject/ConvertFile.h>
 #include <retesteth/testStructures/structures.h>
+#include <retesteth/dataObject/SPointer.h>
 
 using namespace std;
 using namespace dev;
@@ -84,6 +85,42 @@ BOOST_AUTO_TEST_CASE(smartPointerMove)
     BOOST_CHECK(obj.isEmpty() == true);
     spDataObject objm = m.getPointer();
     BOOST_CHECK(objm.getCContent().asString() == "some pointer");
+}
+
+BOOST_AUTO_TEST_CASE(spPointerConstructor)
+{
+    struct B : GCP_SPointerBase
+    {
+    public:
+        B(int _v) : v(_v){}
+        int v = 0;
+    private:
+        B(){}
+    };
+    typedef GCP_SPointer<B> spB;
+
+    class A {
+    public:
+        A(){
+            m_spB = spB(new B(5));
+        }
+        spB m_spB;
+    };
+
+    A* a = new A();
+    ETH_ERROR_REQUIRE_MESSAGE(a->m_spB.getCContent().v == 5, "Subclass init");
+    ETH_ERROR_REQUIRE_MESSAGE(a->m_spB.getRefCount() == 1, "Refs to pointer = 1");
+
+    A aa(*a);
+    ETH_ERROR_REQUIRE_MESSAGE(aa.m_spB.getCContent().v == 5, "Subclass copy init");
+    ETH_ERROR_REQUIRE_MESSAGE(aa.m_spB.getRefCount() == 2, "Refs to pointer copy = 2");
+    aa.m_spB.getContent().v = 6;
+    ETH_ERROR_REQUIRE_MESSAGE(aa.m_spB.getCContent().v == 6, "Subclass copy change");
+    ETH_ERROR_REQUIRE_MESSAGE(a->m_spB.getCContent().v == 6, "Subclass change");
+
+    delete a;
+    ETH_ERROR_REQUIRE_MESSAGE(aa.m_spB.getRefCount() == 1, "Refs to pointer delete = 1");
+    ETH_ERROR_REQUIRE_MESSAGE(aa.m_spB.getCContent().v == 6, "Subclass delete change");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -43,7 +43,7 @@ string parseKeyValue(string const& _input, size_t& _i)
 
     if (endPos != string::npos)
     {
-        string key = _input.substr(_i + 1, endPos - _i - 1);
+        const string key = _input.substr(_i + 1, endPos - _i - 1);
         _i = endPos + 1;
         return key;
     }
@@ -58,7 +58,7 @@ bool readBoolOrNull(string const& _input, size_t& _i, bool& _result, bool& _read
         return false;
 
     // true false
-    string text = _input.substr(_i, 4);
+    const string text = _input.substr(_i, 4);
     if (text == "null")
     {
         _i += 4;
@@ -86,7 +86,7 @@ bool readBoolOrNull(string const& _input, size_t& _i, bool& _result, bool& _read
 bool readDigit(string const& _input, size_t& _i, int& _result)
 {
     bool readMinus = false;
-    char e = _input[_i];
+    auto const& e = _input[_i];
     if (e == '-')
     {
         readMinus = true;
@@ -97,7 +97,7 @@ bool readDigit(string const& _input, size_t& _i, int& _result)
     string readNumber;
     while (digit)
     {
-        e = _input[_i];
+        auto const& e = _input[_i];
         if (e == '0' || e == '1' || e == '2' || e == '3' || e == '4' || e == '5' || e == '6' ||
             e == '7' || e == '8' || e == '9')
         {
@@ -140,7 +140,7 @@ spDataObject ConvertJsoncppStringToData(
         throw DataObjectException() << "ConvertJsoncppStringToData can't read json structure in file: `" + _input.substr(0, 50);
 
     std::vector<DataObject*> applyDepth;  // indexes at root array of objects that we are reading into
-    spDataObject root(new DataObject());
+    spDataObject root;
     root.getContent().setAutosort(_autosort);
     DataObject* actualRoot = &root.getContent();
     bool keyEncountered = false;
@@ -163,11 +163,11 @@ spDataObject ConvertJsoncppStringToData(
         if (i == _input.length())
             throw DataObjectException() << errorPrefix + "unexpected end of json! around: " + printDebug(i);
 
-        bool escapeChar = (i > 0 && _input.at(i - 1) == '\\');
+        const bool escapeChar = (i > 0 && _input.at(i - 1) == '\\');
         if (_input.at(i) == '"' && !escapeChar)
         {
-            spDataObject obj(new DataObject());
-            string const key = parseKeyValue(_input, i);
+            spDataObject obj;
+            const string key = parseKeyValue(_input, i);
             i = stripSpaces(_input, i);
             if (_input.at(i) == ':')
             {
@@ -181,7 +181,7 @@ spDataObject ConvertJsoncppStringToData(
                         << errorPrefix + "array could not have elements with keys! around: " + printDebug(i);
                 (*obj).setKey(key);
                 bool replaceKey = false;
-                size_t keyPosExpected = _autosort ?
+                const size_t keyPosExpected = _autosort ?
                                             max(0, (int)findOrderedKeyPosition(key, actualRoot->getSubObjects()) - 1) : 0;
                 for (size_t objI = keyPosExpected; objI < actualRoot->getSubObjects().size(); objI++)
                 {
@@ -234,7 +234,7 @@ spDataObject ConvertJsoncppStringToData(
                 continue;
             }
 
-            actualRoot->addSubObject(spDataObject(new DataObject()));
+            actualRoot->addSubObject(spDataObject());
             actualRoot->getSubObjectsUnsafe().pop_back();
             continue;
         }
@@ -252,7 +252,7 @@ spDataObject ConvertJsoncppStringToData(
                 continue;
             }
 
-            actualRoot->addArrayObject(spDataObject(new DataObject()));
+            actualRoot->addArrayObject(spDataObject());
             actualRoot->getSubObjectsUnsafe().pop_back();
             continue;
         }
@@ -310,7 +310,7 @@ spDataObject ConvertJsoncppStringToData(
         bool resBool = false;
         bool isReadBool = false;
         bool isReadNull = false;
-        bool isReadDigit = readDigit(_input, i, resInt);
+        const bool isReadDigit = readDigit(_input, i, resInt);
         if (!isReadDigit)
             isReadBool = readBoolOrNull(_input, i, resBool, isReadNull);
 

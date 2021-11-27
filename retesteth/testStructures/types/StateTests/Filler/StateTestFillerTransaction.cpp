@@ -97,7 +97,7 @@ StateTestFillerTransaction::StateTestFillerTransaction(spDataObjectMove _data)
             }
             (*dataInKey).setString(test::compiler::replaceCode(rawData));
             // ---
-            m_databox.push_back(Databox(dataInKey.getContent(), label, rawData.substr(0, 20), accessList));
+            m_databox.push_back(Databox(BYTES(dataInKey.getContent()), label, rawData.substr(0, 20), accessList));
         }
         for (auto const& el : m_rawData->atKey("gasLimit").getSubObjects())
             m_gasLimit.push_back(el.getCContent());
@@ -121,7 +121,7 @@ StateTestFillerTransaction::StateTestFillerTransaction(spDataObjectMove _data)
         (*m_rawData).performModifier(mod_valueToLowerCase);
         size_t index = 0;
         bool atLeastOneNonNullAccessList = false;
-        spDataObject exportDatas(new DataObject());
+        spDataObject exportDatas;
         spDataObject txAccessListData(new DataObject(DataType::Array));
         for (Databox const& el : m_databox)
         {

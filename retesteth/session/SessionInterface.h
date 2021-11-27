@@ -71,6 +71,8 @@ public:
     virtual FH32 test_importRawBlock(BYTES const& _blockRLP) = 0;
     virtual FH32 test_getLogHash(FH32 const& _txHash) = 0;
     virtual TestRawTransaction test_rawTransaction(BYTES const& _rlp, FORK const& _fork) = 0;
+    virtual VALUE test_calculateDifficulty(FORK const& _fork, VALUE const& _blockNumber, VALUE const& _parentTimestamp,
+        VALUE const& _parentDifficulty, VALUE const& _currentTimestamp, VALUE const& _uncleNumber) = 0;
 
     // Internal
     virtual spDataObject rpcCall(std::string const& _methodName,

@@ -34,7 +34,8 @@ string const besu_config = R"({
         "EIP158ToByzantiumAt5",
         "HomesteadToDaoAt5",
         "ByzantiumToConstantinopleFixAt5",
-        "BerlinToLondonAt5"
+        "BerlinToLondonAt5",
+        "ArrowGlacier"
     ],
     "exceptions" : {
         "ExtraDataTooBig" : "extra-data too long",
@@ -66,20 +67,20 @@ killall -9 java
 besucfg::besucfg()
 {
     {
-        spDataObject obj(new DataObject());
+        spDataObject obj;
         (*obj)["path"] = "besu/config";
         (*obj)["content"] = besu_config;
         map_configs.addArrayObject(obj);
     }
     {
-        spDataObject obj(new DataObject());
+        spDataObject obj;
         (*obj)["exec"] = true;
         (*obj)["path"] = "besu/start.sh";
         (*obj)["content"] = besu_start;
         map_configs.addArrayObject(obj);
     }
     {
-        spDataObject obj(new DataObject());
+        spDataObject obj;
         (*obj)["exec"] = true;
         (*obj)["path"] = "besu/stop.sh";
         (*obj)["content"] = besu_stop;

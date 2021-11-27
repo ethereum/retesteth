@@ -41,16 +41,36 @@ TransactionTestInFilled::TransactionTestInFilled(spDataObject& _data)
 
         m_name = _data->getKey();
         m_rlp = spBYTES(new BYTES(_data->atKey("txbytes").asString()));
-        m_readTransaction = readTransaction(m_rlp); // ?? broken rlp ??
+
+        try {
+            m_readTransaction = readTransaction(m_rlp);
+        }
+        catch (...)
+        {
+            ETH_WARNING("Unable to read transaction from 'txbytes'");
+            m_readTransaction = spTransaction(0);
+        }
+
         for (auto const& el : _data->atKey("result").getSubObjects())
         {
+
             if (el->count("exception"))
+            {
+                REQUIRE_JSONFIELDS(el, "TransactionTestInFilled::result ",
+                    {{"exception", {{DataType::String}, jsonField::Required}},
+                        {"intrinsicGas", {{DataType::String}, jsonField::Required}}});
                 m_expectExceptions.emplace(FORK(el->getKey()), el->atKey("exception").asString());
+            }
             else
             {
+                REQUIRE_JSONFIELDS(el, "TransactionTestInFilled::result ",
+                    {{"hash", {{DataType::String}, jsonField::Required}},
+                        {"sender", {{DataType::String}, jsonField::Required}},
+                        {"intrinsicGas", {{DataType::String}, jsonField::Required}}});
                 spFH32 hash(new FH32(el->atKey("hash")));
                 spFH20 sender(new FH20(el->atKey("sender")));
-                m_acceptedTransactions.emplace(FORK(el->getKey()), HashSender{hash, sender});
+                spVALUE intrGas(new VALUE(el->atKey("intrinsicGas")));
+                m_acceptedTransactions.emplace(FORK(el->getKey()), TransactionResult(hash, sender, intrGas));
             }
         }
     }

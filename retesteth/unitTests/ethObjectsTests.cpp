@@ -261,9 +261,9 @@ void testCompareResult(spDataObject& _exp, spDataObject& _post, CompareResult _e
 
 BOOST_AUTO_TEST_CASE(compareStates_noError)
 {
-    spDataObject expectData(new DataObject());
+    spDataObject expectData;
     (*expectData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x82123";
-    spDataObject postData(new DataObject());
+    spDataObject postData;
     (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x82123";
     (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
     (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
@@ -273,9 +273,9 @@ BOOST_AUTO_TEST_CASE(compareStates_noError)
 
 BOOST_AUTO_TEST_CASE(compareStates_missingAccount)
 {
-    spDataObject expectData(new DataObject());
+    spDataObject expectData;
     (*expectData)["0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x82123";
-    spDataObject postData(new DataObject());
+    spDataObject postData;
     (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x82123";
     (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
     (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
@@ -285,9 +285,9 @@ BOOST_AUTO_TEST_CASE(compareStates_missingAccount)
 
 BOOST_AUTO_TEST_CASE(compareStates_shouldnoexist)
 {
-    spDataObject expectData(new DataObject());
+    spDataObject expectData;
     (*expectData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["shouldnotexist"] = "1";
-    spDataObject postData(new DataObject());
+    spDataObject postData;
     (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x82123";
     (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
     (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
@@ -297,9 +297,9 @@ BOOST_AUTO_TEST_CASE(compareStates_shouldnoexist)
 
 BOOST_AUTO_TEST_CASE(compareStates_wrongBalance)
 {
-    spDataObject expectData(new DataObject());
+    spDataObject expectData;
     (*expectData)["0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x82124";
-    spDataObject postData(new DataObject());
+    spDataObject postData;
     (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x82124";
     (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
     (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
@@ -313,10 +313,10 @@ BOOST_AUTO_TEST_CASE(compareStates_wrongBalance)
 
 BOOST_AUTO_TEST_CASE(compareStates_wrongNonce)
 {
-    spDataObject expectData(new DataObject());
+    spDataObject expectData;
     (*expectData)["0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x082123";
     (*expectData)["0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x02";
-    spDataObject postData(new DataObject());
+    spDataObject postData;
     (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x082124";
     (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
     (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
@@ -330,12 +330,12 @@ BOOST_AUTO_TEST_CASE(compareStates_wrongNonce)
 
 BOOST_AUTO_TEST_CASE(compareStates_multipleError)
 {
-    spDataObject expectData(new DataObject());
+    spDataObject expectData;
     (*expectData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x082124";
     (*expectData)["0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x082123";
     (*expectData)["0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x02";
     (*expectData)["0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x02";
-    spDataObject postData(new DataObject());
+    spDataObject postData;
     (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x082124";
     (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
     (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
@@ -349,9 +349,9 @@ BOOST_AUTO_TEST_CASE(compareStates_multipleError)
 
 BOOST_AUTO_TEST_CASE(compareStates_accountShouldNotExistAndItsNot)
 {
-    spDataObject expectData(new DataObject());
+    spDataObject expectData;
     (*expectData)["0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["shouldnotexist"] = "1";
-    spDataObject postData(new DataObject());
+    spDataObject postData;
     (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x82124";
     (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
     (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
@@ -361,9 +361,9 @@ BOOST_AUTO_TEST_CASE(compareStates_accountShouldNotExistAndItsNot)
 
 BOOST_AUTO_TEST_CASE(compareStates_prefixedZeros)
 {
-    spDataObject expectData(new DataObject());
+    spDataObject expectData;
     (*expectData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x082124";
-    spDataObject postData(new DataObject());
+    spDataObject postData;
     (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x82124";
     (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
     (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
@@ -374,9 +374,9 @@ BOOST_AUTO_TEST_CASE(compareStates_prefixedZeros)
 
 BOOST_AUTO_TEST_CASE(compareStates_prefixedZeros2)
 {
-    spDataObject expectData(new DataObject());
+    spDataObject expectData;
     (*expectData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x82124";
-    spDataObject postData(new DataObject());
+    spDataObject postData;
     (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x082124";
     (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
     (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
@@ -387,11 +387,11 @@ BOOST_AUTO_TEST_CASE(compareStates_prefixedZeros2)
 
 BOOST_AUTO_TEST_CASE(compareStates_storageEmpty)
 {
-    spDataObject expectStorage(new DataObject());
+    spDataObject expectStorage;
     (*expectStorage)["0x01"] = "0x00";
-    spDataObject expectData(new DataObject());
+    spDataObject expectData;
     (*expectData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"].atKeyPointer("storage") = expectStorage;
-    spDataObject postData(new DataObject());
+    spDataObject postData;
     (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x082124";
     (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
     (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
@@ -402,11 +402,11 @@ BOOST_AUTO_TEST_CASE(compareStates_storageEmpty)
 
 BOOST_AUTO_TEST_CASE(compareStates_storageIncorrect)
 {
-    spDataObject expectStorage(new DataObject());
+    spDataObject expectStorage;
     (*expectStorage)["0x01"] = "0x01";
-    spDataObject expectData(new DataObject());
+    spDataObject expectData;
     (*expectData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"].atKeyPointer("storage") = expectStorage;
-    spDataObject postData(new DataObject());
+    spDataObject postData;
     (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x082124";
     (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
     (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
@@ -417,13 +417,13 @@ BOOST_AUTO_TEST_CASE(compareStates_storageIncorrect)
 
 BOOST_AUTO_TEST_CASE(compareStates_storageCorrect)
 {
-    spDataObject expectStorage(new DataObject());
+    spDataObject expectStorage;
     (*expectStorage)["0x01"] = "0x01";
-    spDataObject expectData(new DataObject());
+    spDataObject expectData;
     (*expectData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"].atKeyPointer("storage") = expectStorage;
-    spDataObject postStorage(new DataObject());
+    spDataObject postStorage;
     (*postStorage)["0x01"] = "0x01";
-    spDataObject postData(new DataObject());
+    spDataObject postData;
     (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x082124";
     (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
     (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
@@ -433,14 +433,14 @@ BOOST_AUTO_TEST_CASE(compareStates_storageCorrect)
 
 BOOST_AUTO_TEST_CASE(compareStates_storageMissingOnPost)
 {
-    spDataObject expectStorage(new DataObject());
+    spDataObject expectStorage;
     (*expectStorage)["0x01"] = "0x01";
     (*expectStorage)["0x02"] = "0x01";
-    spDataObject expectData(new DataObject());
+    spDataObject expectData;
     (*expectData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"].atKeyPointer("storage") = expectStorage;
-    spDataObject postStorage(new DataObject());
+    spDataObject postStorage;
     (*postStorage)["0x01"] = "0x01";
-    spDataObject postData(new DataObject());
+    spDataObject postData;
     (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x082124";
     (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
     (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
@@ -450,14 +450,14 @@ BOOST_AUTO_TEST_CASE(compareStates_storageMissingOnPost)
 
 BOOST_AUTO_TEST_CASE(compareStates_storageMissingOnExpect)
 {
-    spDataObject expectStorage(new DataObject());
+    spDataObject expectStorage;
     (*expectStorage)["0x01"] = "0x01";
-    spDataObject expectData(new DataObject());
+    spDataObject expectData;
     (*expectData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"].atKeyPointer("storage") = expectStorage;
-    spDataObject postStorage(new DataObject());
+    spDataObject postStorage;
     (*postStorage)["0x01"] = "0x01";
     (*postStorage)["0x02"] = "0x01";
-    spDataObject postData(new DataObject());
+    spDataObject postData;
     (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x082124";
     (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
     (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";
@@ -473,14 +473,14 @@ void ExpectVsPost(string const& _expectKey, string const& _expectVal, string con
     if (_expectKey != "--")
         (*expectStorage)[_expectKey] = _expectVal;
     (*expectStorage)["0x02"] = "0x02";
-    spDataObject expectData(new DataObject());
+    spDataObject expectData;
     (*expectData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"].atKeyPointer("storage") = expectStorage;
     spDataObject postStorage(new DataObject(DataType::Object));
     if (_postKey != "--")
         (*postStorage)[_postKey] = _postVal;
     (*postStorage)["0x02"] = _doubleVal;
 
-    spDataObject postData(new DataObject());
+    spDataObject postData;
     (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["balance"] = "0x082124";
     (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["code"] = "0x1234";
     (*postData)["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"]["nonce"] = "0x01";

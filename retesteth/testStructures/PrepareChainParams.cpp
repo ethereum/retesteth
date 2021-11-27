@@ -15,7 +15,7 @@ spSetChainParamsArgs prepareChainParams(
     ClientConfig const& cfg = Options::get().getDynamicOptions().getCurrentConfig();
     cfg.validateForkAllowed(_net);
 
-    spDataObject genesis(new DataObject());
+    spDataObject genesis;
     (*genesis).copyFrom(cfg.getGenesisTemplate(_net).getCContent()); // TODO need copy?
     (*genesis)["sealEngine"] = sealEngineToStr(_engine);
 

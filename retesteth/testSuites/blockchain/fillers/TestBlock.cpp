@@ -11,7 +11,7 @@ TestBlock::TestBlock(BYTES const& _rlp, string const& _chainName, FORK const& _c
 
 spDataObject TestBlock::asDataObject() const
 {
-    spDataObject _res(new DataObject());
+    spDataObject _res;
     DataObject& res = _res.getContent();
     res["chainname"] = m_chainName;
     // res["chainnetwork"] = m_chainNet->asString();
@@ -28,11 +28,11 @@ spDataObject TestBlock::asDataObject() const
         res.atKeyPointer("blockHeader") = m_block->header()->asDataObject();
         res.atKeyPointer("transactions") = spDataObject(new DataObject(DataType::Array));
         for (auto const& tr : m_block->transactions())
-            res["transactions"].addArrayObject(tr->asDataObject(ExportOrder::OldStyle));
+            res["transactions"].addArrayObject(tr->asDataObject());
 
         for (auto const& trSequence : m_transactionExecOrder)
         {
-            spDataObject _trInfo(new DataObject());
+            spDataObject _trInfo;
             DataObject& trInfo = _trInfo.getContent();
             BYTES const& b = std::get<0>(trSequence);
             string const& v = std::get<1>(trSequence);

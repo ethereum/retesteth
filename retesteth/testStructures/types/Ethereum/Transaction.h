@@ -22,7 +22,7 @@ struct Transaction : GCP_SPointerBase
 {
     // Transaction Interface
     virtual TransactionType type() const = 0;
-    virtual spDataObject asDataObject(ExportOrder _order = ExportOrder::Default) const = 0;
+    virtual const spDataObject asDataObject(ExportOrder _order = ExportOrder::Default) const = 0;
     virtual ~Transaction(){ /* all fields are smart pointers */ };
 
     // Common transaction data
@@ -80,6 +80,8 @@ protected:
     dev::RLPStream m_outRlpStream;
     spBYTES m_rawRLPdata;  // raw transaction data without rlp header (for typed transactions)
     spVALUE m_secretKey;   // Additional info for t8ntool transaction wrapper
+    mutable spDataObject m_rawData;      // Json representation
+    mutable spDataObject m_rawDataTool;  // Json representation for tool
 };
 
 typedef GCP_SPointer<Transaction> spTransaction;
