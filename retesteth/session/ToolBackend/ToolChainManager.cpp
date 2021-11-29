@@ -49,7 +49,7 @@ void ToolChainManager::reorganizePendingBlock()
         spDataObject parentData = bl.header()->asDataObject();
 
         VALUE newGasLimit = bl.header()->gasLimit() * ELASTICITY_MULTIPLIER;
-        (*parentData).atKeyUnsafe("gasLimit").setString(newGasLimit.asString());
+        (*parentData).atKeyUnsafe("gasLimit").setString(string(newGasLimit.asString()));
 
         // https://eips.ethereum.org/EIPS/eip-1559
         // INITIAL_BASE_FEE = 1000000000

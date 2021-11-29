@@ -134,7 +134,7 @@ void mod_removeLeadingZerosFromHexValues(DataObject& _obj)
     {
         string str = _obj.asString();
         removeLeadingZeroes(str);
-        _obj.setString(str);
+        _obj.setString(std::move(str));
     }
 }
 

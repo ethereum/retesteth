@@ -634,7 +634,7 @@ void DataObject::_assert(bool _flag, std::string const& _comment) const
     }
 }
 
-void DataObject::setString(string const& _value)
+void DataObject::setString(string&& _value)
 {
     _assert(m_type == DataType::String || m_type == DataType::NotInitialized,
         "In DataObject=(string) DataObject must be string or NotInitialized!");
@@ -696,7 +696,7 @@ spDataObject DataObject::copy() const
         (*c).setKey(m_strKey);
     switch(m_type)
     {
-    case String: (*c).setString(m_strVal); break;
+    case String: (*c).setString(string(m_strVal)); break;
     case Integer: (*c).setInt(m_intVal); break;
     case Bool: (*c).setBool(m_boolVal); break;
     case Array:
@@ -820,9 +820,21 @@ DataObject& DataObject::operator[](std::string const& _key)
     return _addSubObject(newObj);  // !could change the item order!
 }
 
+DataObject& DataObject::operator=(std::string&& _value)
+{
+    _assert(m_type == DataType::String || m_type == DataType::NotInitialized,
+        "In DataObject=(string) DataObject must be string or NotInitialized!");
+    m_type = DataType::String;
+    m_strVal = _value;
+    return *this;
+}
+
 DataObject& DataObject::operator=(std::string const& _value)
 {
-    setString(_value);
+    _assert(m_type == DataType::String || m_type == DataType::NotInitialized,
+        "In DataObject=(string) DataObject must be string or NotInitialized!");
+    m_type = DataType::String;
+    m_strVal = _value;
     return *this;
 }
 

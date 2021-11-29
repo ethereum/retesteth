@@ -68,10 +68,11 @@ public:
     //DataObject& operator=(spDataObject const& _value);
     spDataObject copy() const;
     void copyFrom(DataObject const& _other);
+    DataObject& operator=(std::string&& _value);
     DataObject& operator=(std::string const& _value);
     DataObject& operator=(int _value);
 
-    void setString(string const& _value);
+    void setString(string&& _value);
     void setInt(int _value);
     void setBool(bool _value);
     void replace(DataObject const& _value);

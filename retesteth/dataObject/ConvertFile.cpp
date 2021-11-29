@@ -167,7 +167,7 @@ spDataObject ConvertJsoncppStringToData(
         if (_input.at(i) == '"' && !escapeChar)
         {
             spDataObject obj;
-            const string key = parseKeyValue(_input, i);
+            string key = parseKeyValue(_input, i);
             i = stripSpaces(_input, i);
             if (_input.at(i) == ':')
             {
@@ -213,7 +213,7 @@ spDataObject ConvertJsoncppStringToData(
                     continue;
                 }
                 else
-                    actualRoot->setString(key);
+                    actualRoot->setString(std::move(key));
                 if (_input.at(i) != ',')
                     i--;  // because cycle iteration we need to process ending clouse
                 actualRoot = applyDepth.at(applyDepth.size() - 1);

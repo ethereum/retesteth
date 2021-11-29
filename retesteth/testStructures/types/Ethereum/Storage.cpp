@@ -10,7 +10,7 @@ Storage::Storage(DataObject const& _data)
     {
         DataObject tmpKey;
         tmpKey.setKey("Storage record in storage");  // Hint
-        tmpKey.setString(el->getKey());
+        tmpKey.setString(string(el->getKey()));
         spVALUE key(new VALUE(tmpKey));
         spVALUE val(new VALUE(el));
         m_map[key->asString()] = {key, val};
