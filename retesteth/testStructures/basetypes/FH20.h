@@ -29,7 +29,7 @@ struct FH20 : FH
             std::shuffle(hex.begin(), hex.end(), rng);
             initStr += hex.at(5);
         }
-        return FH20(DataObject(initStr));
+        return FH20(DataObject(std::move(initStr)));
     }
     static FH20 const& zero()
     {

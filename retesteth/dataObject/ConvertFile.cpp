@@ -207,7 +207,7 @@ spDataObject ConvertJsoncppStringToData(
                 keyEncountered = false;
                 if (actualRoot->type() == DataType::Array)
                 {
-                    actualRoot->addArrayObject(spDataObject(new DataObject(key)));
+                    actualRoot->addArrayObject(spDataObject(new DataObject(std::move(key))));
                     if (_input.at(i) != ',')
                         i--;  // because cycle iteration we need to process ending clouse
                     continue;

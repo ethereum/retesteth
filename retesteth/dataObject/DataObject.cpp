@@ -12,20 +12,22 @@ DataObject::DataObject() { m_type = DataType::NotInitialized; }
 DataObject::DataObject(DataType _type) { m_type = _type; }
 
 /// Define dataobject of string
-DataObject::DataObject(std::string const& _str)
-  : m_strVal(_str)
+DataObject::DataObject(std::string&& _str) : m_strVal(_str) { m_type = DataType::String; }
+DataObject::DataObject(std::string const& _str) : m_strVal(_str) { m_type = DataType::String; }
+
+/// Define dataobject[_key] = string
+DataObject::DataObject(std::string&& _key, std::string&& _str)
+  : m_strKey(_key), m_strVal(_str)
 {
     m_type = DataType::String;
 }
-
-/// Define dataobject[_key] = string
 DataObject::DataObject(std::string const& _key, std::string const& _str)
   : m_strKey(_key), m_strVal(_str)
 {
     m_type = DataType::String;
 }
 
-DataObject::DataObject(std::string const& _key, int _val)
+DataObject::DataObject(std::string&& _key, int _val)
  : m_strKey(_key), m_intVal(_val)
 {
     m_type = DataType::Integer;

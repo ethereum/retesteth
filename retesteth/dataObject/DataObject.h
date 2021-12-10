@@ -32,11 +32,17 @@ public:
     DataObject(DataObject const&) = delete;
     DataObject(DataType _type);
     DataObject(DataType _type, bool _bool);
-    DataObject(std::string const& _str);
-    DataObject(std::string const& _key, std::string const& _str);
-    DataObject(std::string const& _key, int _val);
-    DataObject(int _int);
 
+    // DataObject(str)
+    DataObject(std::string&& _str);
+    DataObject(std::string const& _str);
+
+    // DataObject(key)
+    DataObject(std::string&& _key, std::string&& _str);
+    DataObject(std::string const& _key, std::string const& _str);
+    DataObject(std::string&& _key, int _val);
+
+    DataObject(int _int);
     DataType type() const;
     void setKey(std::string&& _key);
     void setKey(std::string const& _key);
@@ -121,7 +127,7 @@ public:
 private:
 
     DataObject& _addSubObject(spDataObject const& _obj, string&& _keyOverwrite = string());
-    void _assert(bool _flag, std::string const& _comment = "") const;
+    void _assert(bool _flag, std::string const& _comment = string()) const;
 
     // Use vector here to be able to quickly find insert position
     // of objects to be ordered by it's key with findOrderedKeyPosition
