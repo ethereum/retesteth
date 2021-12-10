@@ -134,7 +134,7 @@ void RPCImpl::test_setChainParams(spSetChainParamsArgs const& _config)
     cfg.performFieldReplace(*data, FieldReplaceDir::RetestethToClient);
 
     spDataObject res =  rpcCall("test_setChainParams", {data->asJson()});
-    ETH_FAIL_REQUIRE_MESSAGE(*res == true, "remote test_setChainParams = false");
+    ETH_ERROR_REQUIRE_MESSAGE(*res == true, "remote test_setChainParams = false");
 }
 
 void RPCImpl::test_rewindToBlock(VALUE const& _blockNr)
