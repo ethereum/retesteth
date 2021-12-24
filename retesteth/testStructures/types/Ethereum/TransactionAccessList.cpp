@@ -32,6 +32,7 @@ void TransactionAccessList::fromDataObject(DataObject const& _data)
                 {"value", {{DataType::String}, jsonField::Required}},
                 {"to", {{DataType::String, DataType::Null}, jsonField::Required}},
                 {"secretKey", {{DataType::String}, jsonField::Optional}},
+                {"sender", {{DataType::String}, jsonField::Optional}},
                 {"v", {{DataType::String}, jsonField::Optional}},
                 {"r", {{DataType::String}, jsonField::Optional}},
                 {"s", {{DataType::String}, jsonField::Optional}},
@@ -148,8 +149,9 @@ void TransactionAccessList::buildVRS(VALUE const& _secret)
     dev::bytes outa = stream.out();
     outa.insert(outa.begin(), dev::byte(1));  // txType
 
-    dev::h256 hash(dev::sha3(outa));
-    dev::Signature sig = dev::sign(dev::Secret(_secret.asString()), hash);
+    const dev::h256 hash(dev::sha3(outa));
+    const dev::Secret secret(_secret.asString());
+    dev::Signature sig = dev::sign(secret, hash);
     dev::SignatureStruct sigStruct = *(dev::SignatureStruct const*)&sig;
     ETH_FAIL_REQUIRE_MESSAGE(
         sigStruct.isValid(), TestOutputHelper::get().testName() + " Could not construct transaction signature!");

@@ -34,6 +34,7 @@ void TransactionLegacy::fromDataObject(DataObject const& _data)
                 {"value", {{DataType::String}, jsonField::Required}},
                 {"to", {{DataType::String, DataType::Null}, jsonField::Required}},
                 {"secretKey", {{DataType::String}, jsonField::Optional}},
+                {"sender", {{DataType::String}, jsonField::Optional}},
                 {"v", {{DataType::String}, jsonField::Optional}},
                 {"r", {{DataType::String}, jsonField::Optional}},
                 {"s", {{DataType::String}, jsonField::Optional}},
@@ -142,16 +143,17 @@ void TransactionLegacy::buildVRS(VALUE const& _secret)
     dev::RLPStream stream;
     stream.appendList(6);
     streamHeader(stream);
-    dev::h256 hash(dev::sha3(stream.out()));
-    dev::Signature sig = dev::sign(dev::Secret(_secret.asString()), hash);
+    const dev::h256 hash(dev::sha3(stream.out()));
+    const dev::Secret secret(_secret.asString());
+    dev::Signature sig = dev::sign(secret, hash);
     dev::SignatureStruct sigStruct = *(dev::SignatureStruct const*)&sig;
     ETH_FAIL_REQUIRE_MESSAGE(
         sigStruct.isValid(), TestOutputHelper::get().testName() + " Could not construct transaction signature!");
 
     // 27 because devcrypto signing donesn't count chain id
-    bigint v (dev::toCompactHexPrefixed(dev::u256(sigStruct.v + 27)));
-    bigint r (dev::toCompactHexPrefixed(dev::u256(sigStruct.r)));
-    bigint s (dev::toCompactHexPrefixed(dev::u256(sigStruct.s)));
+    const bigint v (dev::toCompactHexPrefixed(dev::u256(sigStruct.v + 27)));
+    const bigint r (dev::toCompactHexPrefixed(dev::u256(sigStruct.r)));
+    const bigint s (dev::toCompactHexPrefixed(dev::u256(sigStruct.s)));
     m_v = spVALUE(new VALUE(v));
     m_r = spVALUE(new VALUE(r));
     m_s = spVALUE(new VALUE(s));
@@ -159,7 +161,6 @@ void TransactionLegacy::buildVRS(VALUE const& _secret)
     (*m_rawData)["v"] = m_v->asString();
     (*m_rawData)["r"] = m_r->asString();
     (*m_rawData)["s"] = m_s->asString();
-
     rebuildRLP();
 }
 
