@@ -71,6 +71,7 @@ void printHelp()
 
     cout << "\nDebugging\n";
     cout << setw(30) << "-d <index>" << setw(25) << "Set the transaction data array index when running GeneralStateTests\n";
+    cout << setw(30) << "-d <label>" << setw(25) << "Set the transaction data array label (string) when running GeneralStateTests\n";
     cout << setw(30) << "-g <index>" << setw(25) << "Set the transaction gas array index when running GeneralStateTests\n";
     cout << setw(30) << "-v <index>" << setw(25) << "Set the transaction value array index when running GeneralStateTests\n";
     cout << setw(30) << "--vmtrace" << setw(25) << "Trace transaction execution\n";
@@ -378,7 +379,10 @@ Options::Options(int argc, const char** argv)
                 trDataIndex = atoi(argValue.c_str());
                 break;
             case DigitsType::String:
-                trDataLabel = argValue;
+                if (argValue.find(":label") == string::npos)
+                    trDataLabel += ":label " + argValue;
+                else
+                    trDataLabel = argValue;
                 break;
             default:
             {
