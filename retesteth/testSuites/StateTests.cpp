@@ -234,7 +234,14 @@ spDataObject FillTest(StateTestInFiller const& _test)
     {
         // Fill up the label map to tx.data
         if (!tx.transaction()->dataLabel().empty())
-            (*filledTest)["_info"]["labels"].addSubObject(spDataObject(new DataObject(tx.dataIndS(), tx.transaction()->dataLabel())));
+        {
+            static string const removePrefix = ":label ";
+            string label = tx.transaction()->dataLabel();
+            size_t const pos = label.find(removePrefix);
+            if (pos != string::npos)
+                label.erase(pos, removePrefix.length());
+            (*filledTest)["_info"]["labels"].addSubObject(spDataObject(new DataObject(tx.dataIndS(), label)));
+        }
     }
 
     // run transactions on all networks that we need
@@ -371,7 +378,7 @@ void RunTest(StateTestInFilled const& _test)
         auto res = std::find_if(txs.begin(), txs.end(),
             [&_infoLabels](TransactionInGeneralSection const& el) { return el.dataIndS() == _infoLabels.first; });
         if (res != txs.end())
-            (*res).assignTransactionLabel(_infoLabels.second);
+            (*res).assignTransactionLabel(":label " + _infoLabels.second);
         else
             ETH_WARNING("Test `_info` section has a label with tr.index that was not found!");
     }
