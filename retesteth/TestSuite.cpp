@@ -180,6 +180,7 @@ bool addClientInfo(
         (*clientinfo)["filling-rpc-server"] = session.web3_clientVersion()->asString();
         (*clientinfo)["filling-tool-version"] = test::prepareVersionString();
         (*clientinfo)["lllcversion"] = test::prepareLLLCVersionString();
+        (*clientinfo)["solidity"] = test::prepareSolidityVersionString();
         (*clientinfo)["source"] = _testSource.string();
         if (clientinfo->count("labels"))
             (*clientinfo).setKeyPos("labels", clientinfo->getSubObjects().size() - 1);

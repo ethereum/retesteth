@@ -58,6 +58,7 @@ int retestethVersion();
 
 /// local lllc version string
 std::string prepareLLLCVersionString();
+std::string prepareSolidityVersionString();
 
 /// check system command
 bool checkCmdExist(std::string const& _command);

@@ -306,19 +306,51 @@ int retestethVersion()
     return iversion;
 }
 
+std::mutex g_lllcversionMutex;
 string prepareLLLCVersionString()
 {
+    std::lock_guard<std::mutex> lock(g_lllcversionMutex);
+    static string lllcVersion;
+    if (!lllcVersion.empty())
+        return lllcVersion;
     if (test::checkCmdExist("lllc"))
     {
         string const cmd = "lllc --version";
-        string result = test::executeCmd(cmd);
-        string::size_type pos = result.rfind("Version");
+        string const result = test::executeCmd(cmd);
+        string::size_type const pos = result.rfind("Version");
         if (pos != string::npos)
-            return result.substr(pos, result.length());
+        {
+            lllcVersion = result.substr(pos, result.length());
+            return lllcVersion;
+        }
     }
-    string const res = "Error getting LLLC Version";
-    ETH_WARNING(res);
-    return res;
+    lllcVersion = "Error getting LLLC Version";
+    ETH_WARNING(lllcVersion);
+    return lllcVersion;
+}
+
+std::mutex g_solcversionMutex;
+string prepareSolidityVersionString()
+{
+    std::lock_guard<std::mutex> lock(g_solcversionMutex);
+    static string solcVersion;
+    if (!solcVersion.empty())
+        return solcVersion;
+
+    if (test::checkCmdExist("solc"))
+    {
+        string const cmd = "solc --version";
+        string const result = test::executeCmd(cmd);
+        string::size_type const pos = result.rfind("Version");
+        if (pos != string::npos)
+        {
+            solcVersion = result.substr(pos, result.length());
+            return solcVersion;
+        }
+    }
+    solcVersion = "Error getting solc Version";
+    ETH_WARNING(solcVersion);
+    return solcVersion;
 }
 
 /// Safe dev::fromHex
