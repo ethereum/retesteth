@@ -149,6 +149,11 @@ void RPCImpl::test_modifyTimestamp(VALUE const& _timestamp)
     ETH_FAIL_REQUIRE_MESSAGE(*res == true, "test_modifyTimestamp was not successfull");
 }
 
+void RPCImpl::test_setRandom(VALUE const& _random)
+{
+    ETH_FAIL_REQUIRE_MESSAGE(false, "test_setRandom not implemented for RPCImpl: " + _random.asString());
+}
+
 MineBlocksResult RPCImpl::test_mineBlocks(size_t _number)
 {
     spDataObject const res = rpcCall("test_mineBlocks", {to_string(_number)}, true);

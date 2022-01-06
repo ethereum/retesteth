@@ -226,7 +226,11 @@ ToolResponse ToolChain::mineBlockOnTool(EthereumBlockState const& _block, Ethere
     {
         if (_parent.header()->hash() != _block.header()->parentHash())
             ETH_ERROR_MESSAGE("ToolChain::mineBlockOnTool: provided parent block != pending parent block hash!");
-        (*envData).removeKey("currentDifficulty");
+        if (_block.currentRandom().isEmpty()) {
+            (*envData).removeKey("currentDifficulty");
+        } else {
+            (*envData)["currentRandom"] = _block.currentRandom()->asString();
+        }
         (*envData)["parentTimestamp"] = _parent.header()->timestamp().asString();
         (*envData)["parentDifficulty"] = _parent.header()->difficulty().asString();
         (*envData)["parentUncleHash"] = _parent.header()->uncleHash().asString();

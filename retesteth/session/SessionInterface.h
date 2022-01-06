@@ -67,6 +67,7 @@ public:
     virtual void test_setChainParams(spSetChainParamsArgs const& _config) = 0;
     virtual void test_rewindToBlock(VALUE const& _blockNr) = 0;
     virtual void test_modifyTimestamp(VALUE const& _timestamp) = 0;
+    virtual void test_setRandom(VALUE const& _random) = 0;
     virtual MineBlocksResult test_mineBlocks(size_t _number) = 0;
     virtual FH32 test_importRawBlock(BYTES const& _blockRLP) = 0;
     virtual FH32 test_getLogHash(FH32 const& _txHash) = 0;

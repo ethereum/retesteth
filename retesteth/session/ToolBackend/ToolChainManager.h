@@ -31,6 +31,7 @@ public:
     EthereumBlockState const& blockByHash(FH32 const& _hash) const;
     void rewindToBlock(VALUE const& _number);
     void modifyTimestamp(VALUE const& _time);
+    void setRandom(VALUE const& _random);
 
     // Transaction tests
     static TestRawTransaction test_rawTransaction(

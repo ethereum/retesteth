@@ -49,6 +49,8 @@ struct EthereumBlockState : EthereumBlock
 
     void setTotalDifficulty(VALUE const& _totalDifficulty) { m_totalDifficulty = spVALUE(_totalDifficulty.copy()); }
     VALUE const& totalDifficulty() const { return m_totalDifficulty; }
+    void setCurrentRandom(VALUE const& _random) { m_currentRandom = spVALUE(_random.copy()); }
+    spVALUE const& currentRandom() const { return m_currentRandom; }
 
     spState const& state() const { return m_state; }
     FH32 const& logHash() const { return m_logHash; }
@@ -62,6 +64,7 @@ private:
     const spState m_state;
     FH32 m_logHash;
     spVALUE m_totalDifficulty;
+    spVALUE m_currentRandom;
     std::map<FH32, spFH32> m_transactionsLog;
     std::map<FH32, DebugVMTrace> m_transactionsTrace;
 };

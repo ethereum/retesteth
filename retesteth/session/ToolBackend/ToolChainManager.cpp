@@ -103,6 +103,11 @@ void ToolChainManager::modifyTimestamp(VALUE const& _time)
     m_pendingBlock.getContent().headerUnsafe().getContent().setTimestamp(_time);
 }
 
+void ToolChainManager::setRandom(VALUE const& _random)
+{
+    m_pendingBlock.getContent().setCurrentRandom(_random);
+}
+
 // Import Raw Block via t8ntool
 FH32 ToolChainManager::importRawBlock(BYTES const& _rlp)
 {

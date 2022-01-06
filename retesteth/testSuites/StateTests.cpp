@@ -292,6 +292,9 @@ spDataObject FillTest(StateTestInFiller const& _test)
 
                     expectFoundTransaction = true;
                     session.test_modifyTimestamp(_test.Env().firstBlockTimestamp());
+                    if (!_test.Env().currentRandom().isEmpty()) {
+                        session.test_setRandom(_test.Env().currentRandom());
+                    }
                     FH32 trHash(session.eth_sendRawTransaction(tr.transaction()->getRawBytes(), tr.transaction()->getSecret()));
 
                     MineBlocksResult const mRes = session.test_mineBlocks(1);

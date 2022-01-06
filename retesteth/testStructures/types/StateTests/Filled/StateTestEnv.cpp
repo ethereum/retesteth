@@ -15,6 +15,7 @@ StateTestEnv::StateTestEnv(DataObject const& _data)
             REQUIRE_JSONFIELDS(_data, "StateTestEnv " + _data.getKey(),
                 {{"currentCoinbase", {{DataType::String}, jsonField::Required}},
                     {"currentDifficulty", {{DataType::String}, jsonField::Required}},
+                    {"currentRandom", {{DataType::String}, jsonField::Optional}},
                     {"currentNumber", {{DataType::String}, jsonField::Required}},
                     {"currentTimestamp", {{DataType::String}, jsonField::Required}},
                     {"currentGasLimit", {{DataType::String}, jsonField::Required}},
@@ -30,6 +31,7 @@ StateTestEnv::StateTestEnv(DataObject const& _data)
             REQUIRE_JSONFIELDS(_data, "StateTestEnv " + _data.getKey(),
                 {{"currentCoinbase", {{DataType::String}, jsonField::Required}},
                     {"currentDifficulty", {{DataType::String}, jsonField::Required}},
+                    {"currentRandom", {{DataType::String}, jsonField::Optional}},
                     {"currentGasLimit", {{DataType::String}, jsonField::Required}},
                     {"currentNumber", {{DataType::String}, jsonField::Required}},
                     {"currentTimestamp", {{DataType::String}, jsonField::Required}},
@@ -38,6 +40,8 @@ StateTestEnv::StateTestEnv(DataObject const& _data)
 
         m_currentCoinbase = spFH20(new FH20(_data.atKey("currentCoinbase")));
         m_currentDifficulty = spVALUE(new VALUE(_data.atKey("currentDifficulty")));
+        if (_data.count("currentRandom"))
+            m_currentRandom = spVALUE(new VALUE(_data.atKey("currentRandom")));
         m_currentNumber = spVALUE(new VALUE(_data.atKey("currentNumber")));
         m_currentGasLimit = spVALUE(new VALUE(_data.atKey("currentGasLimit")));
 

@@ -14,7 +14,6 @@ struct StateTestEnvBase : GCP_SPointerBase
 {
     FH20 const& currentCoinbase() const { return m_currentCoinbase; }
     VALUE const& currentDifficulty() const { return m_currentDifficulty; }
-    VALUE const& currentRandom() const { return m_currentRandom; }
     VALUE const& currentGasLimit() const { return m_currentGasLimit; }
     VALUE const& currentNumber() const { return m_currentNumber; }
 
@@ -28,6 +27,7 @@ struct StateTestEnvBase : GCP_SPointerBase
     FH32 const& previousHash() const { return m_previousHash; }
     spDataObject const& asDataObject() const;
 
+    spVALUE const& currentRandom() const { return m_currentRandom; }
     spVALUE const& currentBaseFee() const { return m_currentBaseFee; }
 
     virtual ~StateTestEnvBase() {}
@@ -38,7 +38,6 @@ protected:
 
     spFH20 m_currentCoinbase;
     spVALUE m_currentDifficulty;
-    spVALUE m_currentRandom;
     spVALUE m_currentGasLimit;
     spVALUE m_currentNumber;
     spVALUE m_currentTimestamp;
@@ -47,6 +46,7 @@ protected:
     spFH8 m_currentNonce;
     spFH32 m_currentMixHash;
 
+    spVALUE m_currentRandom;
     spVALUE m_currentBaseFee;
 };
 

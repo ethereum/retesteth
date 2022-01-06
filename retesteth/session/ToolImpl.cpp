@@ -262,6 +262,16 @@ void ToolImpl::test_modifyTimestamp(VALUE const& _timestamp)
             , "test_modifyTimestamp", CallType::DONTFAILONUPWARDS)
 }
 
+void ToolImpl::test_setRandom(VALUE const& _random)
+{
+    rpcCall("", {});
+    ETH_TEST_MESSAGE("\nRequest: test_setRandom " + _random.asDecString());
+    TRYCATCHCALL(
+        blockchain().setRandom(_random);
+        ETH_TEST_MESSAGE("Response: test_setRandom " + _random.asDecString());
+            , "test_setRandom", CallType::DONTFAILONUPWARDS)
+}
+
 MineBlocksResult ToolImpl::test_mineBlocks(size_t _number)
 {
     rpcCall("", {});
