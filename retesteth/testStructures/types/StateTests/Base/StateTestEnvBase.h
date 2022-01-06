@@ -14,6 +14,7 @@ struct StateTestEnvBase : GCP_SPointerBase
 {
     FH20 const& currentCoinbase() const { return m_currentCoinbase; }
     VALUE const& currentDifficulty() const { return m_currentDifficulty; }
+    VALUE const& currentRandom() const { return m_currentRandom; }
     VALUE const& currentGasLimit() const { return m_currentGasLimit; }
     VALUE const& currentNumber() const { return m_currentNumber; }
 
@@ -37,6 +38,7 @@ protected:
 
     spFH20 m_currentCoinbase;
     spVALUE m_currentDifficulty;
+    spVALUE m_currentRandom;
     spVALUE m_currentGasLimit;
     spVALUE m_currentNumber;
     spVALUE m_currentTimestamp;

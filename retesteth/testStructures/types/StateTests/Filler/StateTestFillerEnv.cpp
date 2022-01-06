@@ -16,6 +16,7 @@ StateTestFillerEnv::StateTestFillerEnv(spDataObjectMove _data)
             REQUIRE_JSONFIELDS(m_raw, "StateTestFillerEnv " + m_raw->getKey(),
                 {{"currentCoinbase", {{DataType::String}, jsonField::Required}},
                     {"currentDifficulty", {{DataType::String}, jsonField::Required}},
+                    {"currentRandom", {{DataType::String}, jsonField::Optional}},
                     {"currentGasLimit", {{DataType::String}, jsonField::Required}},
                     {"currentNumber", {{DataType::String}, jsonField::Required}},
                     {"currentTimestamp", {{DataType::String}, jsonField::Required}},
@@ -27,6 +28,7 @@ StateTestFillerEnv::StateTestFillerEnv(spDataObjectMove _data)
             REQUIRE_JSONFIELDS(m_raw, "StateTestFillerEnv " + m_raw->getKey(),
                 {{"currentCoinbase", {{DataType::String}, jsonField::Required}},
                     {"currentDifficulty", {{DataType::String}, jsonField::Required}},
+                    {"currentRandom", {{DataType::String}, jsonField::Optional}},
                     {"currentGasLimit", {{DataType::String}, jsonField::Required}},
                     {"currentNumber", {{DataType::String}, jsonField::Required}},
                     {"currentTimestamp", {{DataType::String}, jsonField::Required}},
@@ -43,6 +45,8 @@ StateTestFillerEnv::StateTestFillerEnv(spDataObjectMove _data)
 
         m_currentCoinbase = spFH20(new FH20(m_raw->atKey("currentCoinbase")));
         m_currentDifficulty = spVALUE(new VALUE(m_raw->atKey("currentDifficulty")));
+        if (m_raw->count("currentRandom"))
+            m_currentRandom = spVALUE(new VALUE(m_raw->atKey("currentRandom")));
         m_currentNumber = spVALUE(new VALUE(m_raw->atKey("currentNumber")));
 
         // Indicates first block timestamp in StateTests
