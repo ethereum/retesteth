@@ -127,6 +127,9 @@ spDataObject FillTestAsBlockchain(StateTestInFiller const& _test)
                     session.test_setChainParams(
                         prepareChainParams(fork, SealEngine::NoProof, _test.Pre(), _test.Env(), ParamsContext::StateTests));
                     session.test_modifyTimestamp(_test.Env().firstBlockTimestamp());
+                    if (!_test.Env().currentRandom().isEmpty()) {
+                        session.test_setRandom(_test.Env().currentRandom());
+                    }
                     FH32 trHash(session.eth_sendRawTransaction(tr.transaction()->getRawBytes(), tr.transaction()->getSecret()));
 
                     // Mine a block, execute transaction
@@ -441,6 +444,9 @@ void RunTest(StateTestInFilled const& _test)
                 if (checkIndexes)
                 {
                     session.test_modifyTimestamp(_test.Env().firstBlockTimestamp());
+                    if (!_test.Env().currentRandom().isEmpty()) {
+                        session.test_setRandom(_test.Env().currentRandom());
+                    }
                     FH32 trHash(session.eth_sendRawTransaction(tr.transaction()->getRawBytes(), tr.transaction()->getSecret()));
 
                     MineBlocksResult const mRes = session.test_mineBlocks(1);
