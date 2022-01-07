@@ -2,7 +2,6 @@
 #include <retesteth/EthChecks.h>
 #include <retesteth/TestHelper.h>
 #include <retesteth/testStructures/Common.h>
-#include <libdevcrypto/Common.h>
 
 namespace test
 {
@@ -57,9 +56,7 @@ StateTestFillerTransaction::StateTestFillerTransaction(spDataObjectMove _data)
 
         // Secret key
         m_secretKey = spFH32(new FH32(m_rawData->atKey("secretKey")));
-
-        const dev::Secret secret(m_secretKey->asString());
-        (*m_rawData)["sender"] = "0x" + dev::toAddress(dev::toPublic(secret)).hex();
+        (*m_rawData)["sender"] = convertSecretToPublic(m_secretKey)->asString();
 
         m_nonce = spVALUE(new VALUE(m_rawData->atKey("nonce")));
 

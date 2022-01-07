@@ -6,6 +6,7 @@
 #include <retesteth/configs/ClientConfig.h>
 #include <mutex>
 #include <algorithm>
+#include <libdevcrypto/Common.h>
 
 using namespace test;
 using namespace dev;
@@ -13,6 +14,13 @@ using namespace test::teststruct;
 
 namespace
 {
+
+spFH20 convertSecretToPublic(spFH32 const& _secret)
+{
+    const dev::Secret secret(_secret->asString());
+    return spFH20(new FH20("0x" + dev::toAddress(dev::toPublic(secret)).hex()));
+}
+
 string toCompactHexPrefixed(string const& _str, size_t _minSize)
 {
     string prefix = string();
