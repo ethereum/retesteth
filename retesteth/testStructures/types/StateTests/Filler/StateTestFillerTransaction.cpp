@@ -56,7 +56,8 @@ StateTestFillerTransaction::StateTestFillerTransaction(spDataObjectMove _data)
 
         // Secret key
         m_secretKey = spFH32(new FH32(m_rawData->atKey("secretKey")));
-        (*m_rawData)["sender"] = convertSecretToPublic(m_secretKey)->asString();
+        m_publicKey = convertSecretToPublic(m_secretKey);
+        (*m_rawData)["sender"] = m_publicKey->asString();
 
         m_nonce = spVALUE(new VALUE(m_rawData->atKey("nonce")));
 

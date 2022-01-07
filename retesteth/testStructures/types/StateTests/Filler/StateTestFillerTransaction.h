@@ -17,6 +17,7 @@ namespace teststruct
 struct StateTestFillerTransaction : StateTestTransactionBase
 {
     StateTestFillerTransaction(spDataObjectMove);
+    spFH20 const& getSender() const { return m_publicKey; }
 };
 
 typedef GCP_SPointer<StateTestFillerTransaction> spStateTestFillerTransaction;

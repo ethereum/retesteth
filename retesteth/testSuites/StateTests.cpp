@@ -180,7 +180,12 @@ spDataObject FillTestAsBlockchain(StateTestInFiller const& _test)
                     (*block).atKeyPointer("blockHeader") = remoteBlock.header()->asDataObject();
                     (*block).atKeyPointer("transactions") = spDataObject(new DataObject(DataType::Array));
                     if (testException.empty())
+                    {
                         (*block)["transactions"].addArrayObject(tr.transaction()->asDataObject());
+                        auto sender = _test.GeneralTr().getSender();
+                        if (!sender.isEmpty())
+                            (*block)["transactions"].atLastElementUnsafe()["sender"] = sender->asString();
+                    }
                     (*block).atKeyPointer("uncleHeaders") = spDataObject(new DataObject(DataType::Array));
 
                     if (!testException.empty())
