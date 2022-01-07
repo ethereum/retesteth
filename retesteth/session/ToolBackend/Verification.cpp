@@ -116,8 +116,8 @@ void verify1559Parent(spBlockHeader const& _header, spBlockHeader const& _parent
 void verifyCommonBlock(spBlockHeader const& _header, ToolChain const& _chain)
 {
     BlockHeader const& header = _header.getCContent();
-    if (header.difficulty() < dev::bigint("0x20000"))
-        throw test::UpwardsException("Invalid difficulty: header.difficulty < 0x20000");
+    if ((header.difficulty() < dev::bigint("0x20000")) && (header.difficulty() != dev::bigint("0x00")))
+        throw test::UpwardsException("Invalid difficulty: header.difficulty < 0x20000 && != 0");
     if (header.extraData().asString().size() > 32 * 2 + 2)
         throw test::UpwardsException("Header extraData > 32 bytes");
 
@@ -149,7 +149,7 @@ void verifyCommonParent(spBlockHeader const& _header, spBlockHeader const& _pare
     // Validate block difficulty delta
     ChainOperationParams params = ChainOperationParams::defaultParams(_chain.toolParams());
     VALUE newDiff = calculateEthashDifficulty(params, _header, _parent);
-    if (header.difficulty() != newDiff)
+    if ((header.difficulty() != dev::bigint("0x00")) && (header.difficulty() != newDiff))
         throw test::UpwardsException(
             "Invalid difficulty: " + header.difficulty().asDecString() + ", retesteth want: " + VALUE(newDiff).asDecString());
 

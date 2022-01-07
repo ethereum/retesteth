@@ -85,6 +85,9 @@ spDataObject const ToolChain::mineBlock(EthereumBlockState const& _pendingBlock,
     // Calculate difficulty for tool (tool does not calculate difficulty)
     ChainOperationParams params = ChainOperationParams::defaultParams(toolParams());
     VALUE toolDifficulty = calculateEthashDifficulty(params, pendingFixed.header(), lastBlock().header());
+    if (!_pendingBlock.currentRandom().isEmpty()) {
+        toolDifficulty = VALUE(0);
+    }
     pendingFixedHeader.setDifficulty(res.currentDifficulty());
     if (toolDifficulty != res.currentDifficulty())
         ETH_ERROR_MESSAGE("tool vs retesteth difficulty disagree: " + res.currentDifficulty().asDecString() + " vs " + toolDifficulty.asDecString());
