@@ -251,16 +251,10 @@ spDataObject DoTests(spDataObject& _input, TestSuite::TestSuiteOptions& _opt)
         TestOutputHelper::get().setCurrentTestName("----");
         if (_opt.isLegacyTests)
         {
-            // Change the tests instead??
-            DataObject& _inputRef = _input.getContent();
-            for (auto& el2 : _inputRef.getSubObjectsUnsafe())
+            for (auto& test : _input.getContent().getSubObjectsUnsafe())
             {
-                DataObject& el = el2.getContent();
-                DataObject& _infoRef = el.atKeyUnsafe("_info");
-                _infoRef.renameKey("filledwith", "filling-rpc-server");
-                _infoRef["filling-tool-version"] = "testeth";
-                if (!el.count("genesisRLP"))
-                    el["genesisRLP"] = "0x00";
+                if (!test.getContent().count("genesisRLP"))
+                    test.getContent()["genesisRLP"] = "0x00";
             }
         }
 

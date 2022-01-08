@@ -537,14 +537,6 @@ spDataObject StateTestSuite::doTests(spDataObject& _input, TestSuiteOptions& _op
         {
             TestOutputHelper::get().setCurrentTestInfo(TestInfo("Parsing generalstate test"));
             TestOutputHelper::get().setCurrentTestName("----");
-            if (_opt.isLegacyTests)
-            {
-                // Change the tests instead??
-                DataObject& _inputRef = _input.getContent();
-                DataObject& _infoRef = _inputRef.getSubObjectsUnsafe().at(0).getContent().atKeyUnsafe("_info");
-                _infoRef.renameKey("filledwith", "filling-rpc-server");
-                _infoRef["filling-tool-version"] = "testeth";
-            }
             GeneralStateTest filledTest(_input);
 
             // Just check the test structure if running with --checkhash
