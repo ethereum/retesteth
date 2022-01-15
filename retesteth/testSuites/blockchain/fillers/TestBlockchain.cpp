@@ -400,7 +400,7 @@ bool TestBlockchain::checkBlockException(string const& _sBlockException) const
 // Need to call resetChainParams because TestBLockchainManager could have chains with different networks
 void TestBlockchain::resetChainParams() const
 {
-    m_session.test_setChainParams(prepareChainParams(m_network, m_sealEngine, m_genesisState, m_testEnv));
+    m_session.test_setChainParams(prepareChainParams(m_network, m_sealEngine, m_genesisState, &m_testEnv));
 }
 
 }  // namespace blockchainfiller

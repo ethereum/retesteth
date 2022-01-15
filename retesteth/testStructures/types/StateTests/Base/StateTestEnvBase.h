@@ -9,11 +9,19 @@ namespace test
 {
 namespace teststruct
 {
+enum class TestEnvClass
+{
+    LEGACY,
+    EIP1559,
+    UNDEFINED
+};
+
 // Base logic for State Test Env section
 struct StateTestEnvBase : GCP_SPointerBase
 {
+    virtual TestEnvClass type() const { return TestEnvClass::UNDEFINED; }
+
     FH20 const& currentCoinbase() const { return m_currentCoinbase; }
-    VALUE const& currentDifficulty() const { return m_currentDifficulty; }
     VALUE const& currentGasLimit() const { return m_currentGasLimit; }
     VALUE const& currentNumber() const { return m_currentNumber; }
 
@@ -26,9 +34,6 @@ struct StateTestEnvBase : GCP_SPointerBase
     FH32 const& currentMixHash() const { return m_currentMixHash; }
     FH32 const& previousHash() const { return m_previousHash; }
     spDataObject const& asDataObject() const;
-
-    spVALUE const& currentBaseFee() const { return m_currentBaseFee; }
-
     virtual ~StateTestEnvBase() {}
 
 protected:
@@ -36,7 +41,6 @@ protected:
     spDataObject m_raw;
 
     spFH20 m_currentCoinbase;
-    spVALUE m_currentDifficulty;
     spVALUE m_currentGasLimit;
     spVALUE m_currentNumber;
     spVALUE m_currentTimestamp;
@@ -44,8 +48,28 @@ protected:
     spBYTES m_currentExtraData;
     spFH8 m_currentNonce;
     spFH32 m_currentMixHash;
+};
 
+struct StateTestEnvBase1559
+{
+    spVALUE const& currentBaseFee() const { return m_currentBaseFee; }
+    VALUE const& currentDifficulty() const { return m_currentDifficulty; }
+    static StateTestEnvBase1559 const* castFrom(StateTestEnvBase const* _from);
+
+protected:
+    virtual void initialize1559Fields(DataObject const&) = 0;
     spVALUE m_currentBaseFee;
+    spVALUE m_currentDifficulty;
+};
+
+struct StateTestEnvBaseLegacy
+{
+    VALUE const& currentDifficulty() const { return m_currentDifficulty; }
+    static StateTestEnvBaseLegacy const* castFrom(StateTestEnvBase const* _from);
+
+protected:
+    virtual void initializeLegacyFields(DataObject const&) = 0;
+    spVALUE m_currentDifficulty;
 };
 
 

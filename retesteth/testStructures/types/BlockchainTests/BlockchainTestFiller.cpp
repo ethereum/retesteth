@@ -3,8 +3,21 @@
 #include <retesteth/Options.h>
 #include <retesteth/testStructures/Common.h>
 
-using namespace test::teststruct;
+namespace
+{
+BlockchainTestFillerEnv* readBlockchainFillerTestEnv(spDataObjectMove _data, SealEngine _sEngine)
+{
+    auto const& data = _data.getPointer();
+    if (data->count("baseFeePerGas"))
+        return new BlockchainTestFillerEnv1559(_data, _sEngine);
+    return new BlockchainTestFillerEnvLegacy(_data, _sEngine);
+}
+}  // namespace
 
+namespace test
+{
+namespace teststruct
+{
 BlockchainTestInFiller::BlockchainTestInFiller(spDataObject& _data)
 {
     try
@@ -43,7 +56,7 @@ BlockchainTestInFiller::BlockchainTestInFiller(spDataObject& _data)
                 ETH_ERROR_MESSAGE("BlockchainTestInFiller: Unknown sealEngine: " + sEngine);
         }
 
-        m_env = spBlockchainTestFillerEnv(new BlockchainTestFillerEnv(MOVE(_data, "genesisBlockHeader"), m_sealEngine));
+        m_env = spBlockchainTestFillerEnv(readBlockchainFillerTestEnv(MOVE(_data, "genesisBlockHeader"), m_sealEngine));
 
         // Process expect section
         std::set<FORK> knownForks;
@@ -123,3 +136,6 @@ std::set<FORK> BlockchainTestInFiller::getAllForksFromExpectSections() const
             out.emplace(el);
     return out;
 }
+
+}  // namespace teststruct
+}  // namespace test

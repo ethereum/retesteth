@@ -13,6 +13,17 @@ using namespace test;
 using namespace teststruct;
 using namespace dataobject;
 
+namespace
+{
+BlockchainTestFillerEnv* readBlockchainFillerTestEnv(spDataObjectMove _data, SealEngine _sEngine)
+{
+    auto const& data = _data.getPointer();
+    if (data->count("baseFeePerGas"))
+        return new BlockchainTestFillerEnv1559(_data, _sEngine);
+    return new BlockchainTestFillerEnvLegacy(_data, _sEngine);
+}
+}  // namespace
+
 namespace toolimpl
 {
 ToolChain::ToolChain(
@@ -220,8 +231,8 @@ ToolResponse ToolChain::mineBlockOnTool(EthereumBlockState const& _block, Ethere
     // env.json file
     fs::path envPath = m_tmpDir / "env.json";
     auto spHeader = _block.header()->asDataObject();
-    BlockchainTestFillerEnv env(dataobject::move(spHeader), m_engine);
-    spDataObject& envData = const_cast<spDataObject&>(env.asDataObject());
+    spBlockchainTestFillerEnv env(readBlockchainFillerTestEnv(dataobject::move(spHeader), m_engine));
+    spDataObject& envData = const_cast<spDataObject&>(env->asDataObject());
     if (_parent.header()->number() != _block.header()->number())
     {
         if (_parent.header()->hash() != _block.header()->parentHash())

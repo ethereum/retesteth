@@ -8,16 +8,36 @@ namespace test
 {
 namespace teststruct
 {
-// Marks that Env is taken from StateTest filler
-// Filler constructor of env converts all dec fields to hex
+// Filler constructor of Env converts all dec fields to hex
+// In State test, Env define timestamp of the first block
 struct StateTestFillerEnv : StateTestEnvBase
 {
-    StateTestFillerEnv(spDataObjectMove);
     VALUE const& currentTimestamp() const override { return m_genesisTimestamp; }
     VALUE const& firstBlockTimestamp() const { return m_currentTimestamp; }
 
+protected:
+    void initializeCommonFields(spDataObject const&);
+
 private:
     spVALUE m_genesisTimestamp;
+};
+
+struct StateTestFillerEnv1559 : StateTestFillerEnv, StateTestEnvBase1559
+{
+    TestEnvClass type() const override { return TestEnvClass::EIP1559; }
+    StateTestFillerEnv1559(spDataObjectMove);
+
+protected:
+    void initialize1559Fields(DataObject const&) override;
+};
+
+struct StateTestFillerEnvLegacy : StateTestFillerEnv, StateTestEnvBaseLegacy
+{
+    TestEnvClass type() const override { return TestEnvClass::LEGACY; }
+    StateTestFillerEnvLegacy(spDataObjectMove);
+
+protected:
+    void initializeLegacyFields(DataObject const&) override;
 };
 
 

@@ -13,8 +13,28 @@ namespace teststruct
 // Filler marks that fields are converted from dec to hex explicitly
 struct BlockchainTestFillerEnv : StateTestEnvBase
 {
-    BlockchainTestFillerEnv(spDataObjectMove _data, SealEngine _sEngine);
+protected:
+    void initializeCommonFields(spDataObject const&, SealEngine);
 };
+
+struct BlockchainTestFillerEnv1559 : BlockchainTestFillerEnv, StateTestEnvBase1559
+{
+    TestEnvClass type() const override { return TestEnvClass::EIP1559; }
+    BlockchainTestFillerEnv1559(spDataObjectMove _data, SealEngine _sEngine);
+
+protected:
+    void initialize1559Fields(DataObject const&) override;
+};
+
+struct BlockchainTestFillerEnvLegacy : BlockchainTestFillerEnv, StateTestEnvBaseLegacy
+{
+    TestEnvClass type() const override { return TestEnvClass::LEGACY; }
+    BlockchainTestFillerEnvLegacy(spDataObjectMove _data, SealEngine _sEngine);
+
+protected:
+    void initializeLegacyFields(DataObject const&) override;
+};
+
 
 typedef GCP_SPointer<BlockchainTestFillerEnv> spBlockchainTestFillerEnv;
 

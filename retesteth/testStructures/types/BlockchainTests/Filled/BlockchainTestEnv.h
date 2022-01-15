@@ -12,7 +12,26 @@ namespace teststruct
 // This represent env section consructed from blockchain test genesis header
 struct BlockchainTestEnv : StateTestEnvBase
 {
-    BlockchainTestEnv(DataObject const& _data);
+protected:
+    void initializeCommonFields(DataObject const&);
+};
+
+struct BlockchainTestEnvLegacy : BlockchainTestEnv, StateTestEnvBaseLegacy
+{
+    TestEnvClass type() const override { return TestEnvClass::LEGACY; }
+    BlockchainTestEnvLegacy(DataObject const& _data);
+
+protected:
+    void initializeLegacyFields(DataObject const&) override;
+};
+
+struct BlockchainTestEnv1559 : BlockchainTestEnv, StateTestEnvBase1559
+{
+    TestEnvClass type() const override { return TestEnvClass::EIP1559; }
+    BlockchainTestEnv1559(DataObject const& _data);
+
+protected:
+    void initialize1559Fields(DataObject const&) override;
 };
 
 typedef GCP_SPointer<BlockchainTestEnv> spBlockchainTestEnv;

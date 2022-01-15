@@ -3,7 +3,20 @@
 #include <retesteth/Options.h>
 #include <retesteth/testStructures/Common.h>
 
-using namespace test::teststruct;
+namespace
+{
+StateTestEnv* readStateTestEnv(DataObject const& _data)
+{
+    if (_data.count("currentBaseFee"))
+        return new StateTestEnv1559(_data);
+    return new StateTestEnvLegacy(_data);
+}
+}  // namespace
+
+namespace test
+{
+namespace teststruct
+{
 GeneralStateTest::GeneralStateTest(spDataObject& _data)
 {
     try
@@ -34,7 +47,7 @@ StateTestInFilled::StateTestInFilled(spDataObject& _data)
             {"transaction", {{DataType::Object}, jsonField::Required}}});
 
     m_info = GCP_SPointer<Info>(new Info(_data->atKey("_info")));
-    m_env = GCP_SPointer<StateTestEnv>(new StateTestEnv(_data->atKey("env")));
+    m_env = GCP_SPointer<StateTestEnv>(readStateTestEnv(_data->atKey("env")));
 
     // -- Some tests has storage keys/values with leading zeros. Convert it to hex value
     for (auto& spAcc : _data.getContent().atKeyUnsafe("pre").getSubObjectsUnsafe())
@@ -61,3 +74,6 @@ StateTestInFilled::StateTestInFilled(spDataObject& _data)
     }
     m_name = _data->getKey();
 }
+
+}  // namespace teststruct
+}  // namespace test

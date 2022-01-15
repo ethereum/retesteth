@@ -3,6 +3,17 @@
 #include <retesteth/Options.h>
 #include <retesteth/testStructures/Common.h>
 
+namespace
+{
+StateTestFillerEnv* readStateTestFillerEnv(spDataObjectMove _data)
+{
+    auto const& data = _data.getPointer();
+    if (data->count("currentBaseFee"))
+        return new StateTestFillerEnv1559(_data);
+    return new StateTestFillerEnvLegacy(_data);
+}
+}  // namespace
+
 using namespace test::teststruct;
 GeneralStateTestFiller::GeneralStateTestFiller(spDataObject& _data)
 {
@@ -38,7 +49,7 @@ StateTestInFiller::StateTestInFiller(spDataObject& _data)
 
         if (_data->count("_info"))
             m_info = GCP_SPointer<InfoIncomplete>(new InfoIncomplete(MOVE(_data, "_info")));
-        m_env = GCP_SPointer<StateTestFillerEnv>(new StateTestFillerEnv(MOVE(_data, "env")));
+        m_env = GCP_SPointer<StateTestFillerEnv>(readStateTestFillerEnv(MOVE(_data, "env")));
 
         // Compile solidity contracts from separate field
         // Because one solidity contract may depend on another during the compilation
@@ -65,9 +76,9 @@ StateTestInFiller::StateTestInFiller(spDataObject& _data)
 // Gather all networks from all the expect sections
 std::set<FORK> StateTestInFiller::getAllForksFromExpectSections() const
 {
-    std::set<FORK> out;
-    for (auto const& ex : m_expectSections)
-        for (auto const& el : ex.forks())
-            out.emplace(el);
-    return out;
+    std::set<FORK> allForksMentionedInExpectSections;
+    for (auto const& expectSection : m_expectSections)
+        for (auto const& fork : expectSection.forks())
+            allForksMentionedInExpectSections.emplace(fork);
+    return allForksMentionedInExpectSections;
 }

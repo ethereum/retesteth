@@ -125,7 +125,7 @@ spDataObject FillTestAsBlockchain(StateTestInFiller const& _test)
                         continue;
 
                     session.test_setChainParams(
-                        prepareChainParams(fork, SealEngine::NoProof, _test.Pre(), _test.Env(), ParamsContext::StateTests));
+                        prepareChainParams(fork, SealEngine::NoProof, _test.Pre(), &_test.Env(), ParamsContext::StateTests));
                     session.test_modifyTimestamp(_test.Env().firstBlockTimestamp());
                     FH32 trHash(session.eth_sendRawTransaction(tr.transaction()->getRawBytes(), tr.transaction()->getSecret()));
 
@@ -263,7 +263,7 @@ spDataObject FillTest(StateTestInFiller const& _test)
         spDataObject forkResults;
         (*forkResults).setKey(fork.asString());
 
-        auto const p = prepareChainParams(fork, SealEngine::NoReward, _test.Pre(), _test.Env(), ParamsContext::StateTests);
+        auto const p = prepareChainParams(fork, SealEngine::NoReward, _test.Pre(), &_test.Env(), ParamsContext::StateTests);
         session.test_setChainParams(p);
 
         // Run transactions for defined expect sections only
@@ -408,7 +408,7 @@ void RunTest(StateTestInFilled const& _test)
         }
         else
         {
-            auto p = prepareChainParams(network, SealEngine::NoReward, _test.Pre(), _test.Env(), ParamsContext::StateTests);
+            auto p = prepareChainParams(network, SealEngine::NoReward, _test.Pre(), &_test.Env(), ParamsContext::StateTests);
             session.test_setChainParams(p);
         }
 
