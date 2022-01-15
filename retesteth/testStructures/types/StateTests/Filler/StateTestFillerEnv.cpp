@@ -27,7 +27,7 @@ void requireEIP1559EnvScheme(spDataObject const& _data)
             {"previousHash", {{DataType::String}, jsonField::Required}}});
 }
 
-/*void requireMergeEnvScheme(spDataObject const& _data)
+void requireMergeEnvScheme(spDataObject const& _data)
 {
     REQUIRE_JSONFIELDS(_data, "StateTestFillerEnv(Merge) " + _data->getKey(),
         {{"currentCoinbase", {{DataType::String}, jsonField::Required}},
@@ -37,12 +37,12 @@ void requireEIP1559EnvScheme(spDataObject const& _data)
             {"currentBaseFee", {{DataType::String}, jsonField::Required}},
             {"currentRandom", {{DataType::String}, jsonField::Required}},
             {"previousHash", {{DataType::String}, jsonField::Required}}});
-}*/
+}
 
 void convertEnvDecFieldsToHex(spDataObject& _data)
 {
-    (*_data).performModifier(
-        mod_valueToCompactEvenHexPrefixed, DataObject::ModifierOption::RECURSIVE, {"currentCoinbase", "previousHash"});
+    (*_data).performModifier(mod_valueToCompactEvenHexPrefixed, DataObject::ModifierOption::RECURSIVE,
+        {"currentCoinbase", "previousHash", "currentRandom"});
     (*_data).atKeyUnsafe("currentCoinbase").performModifier(mod_valueInsertZeroXPrefix);
     (*_data).atKeyUnsafe("previousHash").performModifier(mod_valueInsertZeroXPrefix);
     (*_data).performModifier(mod_valueToLowerCase);
@@ -54,6 +54,12 @@ namespace test
 {
 namespace teststruct
 {
+void StateTestFillerEnvMerge::initializeMergeFields(DataObject const& _data)
+{
+    m_currentBaseFee = spVALUE(new VALUE(_data.atKey("currentBaseFee")));
+    m_currentRandom = spFH32(new FH32(_data.atKey("currentRandom")));
+}
+
 void StateTestFillerEnv1559::initialize1559Fields(DataObject const& _data)
 {
     m_currentDifficulty = spVALUE(new VALUE(_data.atKey("currentDifficulty")));
@@ -63,6 +69,22 @@ void StateTestFillerEnv1559::initialize1559Fields(DataObject const& _data)
 void StateTestFillerEnvLegacy::initializeLegacyFields(DataObject const& _data)
 {
     m_currentDifficulty = spVALUE(new VALUE(_data.atKey("currentDifficulty")));
+}
+
+StateTestFillerEnvMerge::StateTestFillerEnvMerge(spDataObjectMove _data)
+{
+    try
+    {
+        m_raw = _data.getPointer();
+        requireMergeEnvScheme(m_raw);
+        convertEnvDecFieldsToHex(m_raw);
+        initializeCommonFields(m_raw);
+        initializeMergeFields(m_raw);
+    }
+    catch (std::exception const& _ex)
+    {
+        throw UpwardsException(string("StateTestFillerEnv(Merge) parse error: ") + _ex.what() + m_raw->asJson());
+    }
 }
 
 StateTestFillerEnv1559::StateTestFillerEnv1559(spDataObjectMove _data)

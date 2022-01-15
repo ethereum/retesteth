@@ -8,7 +8,12 @@ namespace
 StateTestEnv* readStateTestEnv(DataObject const& _data)
 {
     if (_data.count("currentBaseFee"))
-        return new StateTestEnv1559(_data);
+    {
+        if (_data.count("currentRandom"))
+            return new StateTestEnvMerge(_data);
+        else
+            return new StateTestEnv1559(_data);
+    }
     return new StateTestEnvLegacy(_data);
 }
 }  // namespace

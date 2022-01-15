@@ -22,6 +22,15 @@ private:
     spVALUE m_genesisTimestamp;
 };
 
+struct StateTestFillerEnvMerge : StateTestFillerEnv, StateTestEnvBaseMerge
+{
+    TestEnvClass type() const override { return TestEnvClass::MERGE; }
+    StateTestFillerEnvMerge(spDataObjectMove);
+
+protected:
+    void initializeMergeFields(DataObject const&) override;
+};
+
 struct StateTestFillerEnv1559 : StateTestFillerEnv, StateTestEnvBase1559
 {
     TestEnvClass type() const override { return TestEnvClass::EIP1559; }

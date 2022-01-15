@@ -27,6 +27,18 @@ void requireEIP1559EnvScheme(DataObject const& _data)
             {"previousHash", {{DataType::String}, jsonField::Required}}});
 }
 
+void requireMergeEnvScheme(DataObject const& _data)
+{
+    REQUIRE_JSONFIELDS(_data, "StateTestEnv(Merge) " + _data.getKey(),
+        {{"currentCoinbase", {{DataType::String}, jsonField::Required}},
+            {"currentRandom", {{DataType::String}, jsonField::Required}},
+            {"currentNumber", {{DataType::String}, jsonField::Required}},
+            {"currentTimestamp", {{DataType::String}, jsonField::Required}},
+            {"currentGasLimit", {{DataType::String}, jsonField::Required}},
+            {"currentBaseFee", {{DataType::String}, jsonField::Required}},
+            {"previousHash", {{DataType::String}, jsonField::Required}}});
+}
+
 }  // namespace
 
 
@@ -53,6 +65,12 @@ void StateTestEnv::initializeCommonFields(DataObject const& _data)
     m_currentMixHash = spFH32(new FH32(FH32::zero()));
 }
 
+void StateTestEnvMerge::initializeMergeFields(DataObject const& _data)
+{
+    m_currentRandom = spFH32(new FH32(_data.atKey("currentRandom")));
+    m_currentBaseFee = spVALUE(new VALUE(_data.atKey("currentBaseFee")));
+}
+
 void StateTestEnv1559::initialize1559Fields(DataObject const& _data)
 {
     m_currentDifficulty = spVALUE(new VALUE(_data.atKey("currentDifficulty")));
@@ -62,6 +80,20 @@ void StateTestEnv1559::initialize1559Fields(DataObject const& _data)
 void StateTestEnvLegacy::initializeLegacyFields(DataObject const& _data)
 {
     m_currentDifficulty = spVALUE(new VALUE(_data.atKey("currentDifficulty")));
+}
+
+StateTestEnvMerge::StateTestEnvMerge(DataObject const& _data)
+{
+    try
+    {
+        requireMergeEnvScheme(_data);
+        initializeCommonFields(_data);
+        initializeMergeFields(_data);
+    }
+    catch (std::exception const& _ex)
+    {
+        throw UpwardsException(string("StateTestEnv(Merge) parse error: ") + _ex.what() + _data.asJson());
+    }
 }
 
 StateTestEnv1559::StateTestEnv1559(DataObject const& _data)

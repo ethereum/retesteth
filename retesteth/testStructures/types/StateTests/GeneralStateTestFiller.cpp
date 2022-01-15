@@ -9,7 +9,12 @@ StateTestFillerEnv* readStateTestFillerEnv(spDataObjectMove _data)
 {
     auto const& data = _data.getPointer();
     if (data->count("currentBaseFee"))
-        return new StateTestFillerEnv1559(_data);
+    {
+        if (data->count("currentRandom"))
+            return new StateTestFillerEnvMerge(_data);
+        else
+            return new StateTestFillerEnv1559(_data);
+    }
     return new StateTestFillerEnvLegacy(_data);
 }
 }  // namespace

@@ -4,6 +4,21 @@ namespace test
 {
 namespace teststruct
 {
+StateTestEnvBaseMerge const* StateTestEnvBaseMerge::castFrom(StateTestEnvBase const* _from)
+{
+    try
+    {
+        if (_from->type() != TestEnvClass::MERGE)
+            ETH_FAIL_MESSAGE("StateTestEnvBaseMERGE::castFrom() got wrong type!");
+        return dynamic_cast<StateTestEnvBaseMerge const*>(_from);
+    }
+    catch (...)
+    {
+        ETH_FAIL_MESSAGE("StateTestEnvBaseMerge::castFrom() failed!");
+    }
+    return 0;
+}
+
 StateTestEnvBase1559 const* StateTestEnvBase1559::castFrom(StateTestEnvBase const* _from)
 {
     try

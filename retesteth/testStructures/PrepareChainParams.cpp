@@ -6,55 +6,62 @@ using namespace test;
 using namespace test::teststruct;
 
 namespace  {
-
-    spDataObject prepareGenesisSubsection(StateTestEnvBase const* _env, ParamsContext _context, FORK const& _net)
+string calculateGenesisBaseFee(VALUE const& _currentBaseFee, ParamsContext _context)
+{
+    if (_context == ParamsContext::StateTests)
     {
-        spDataObject genesis;
+        // Reverse back one step the baseFee calculation formula
+        // to get the value for genesis block
+        VALUE genesisBaseFee = _currentBaseFee * 8 / 7;
+        return genesisBaseFee.asString();
+    }
+    else
+        return _currentBaseFee.asString();
+}
 
-        (*genesis)["author"] = _env->currentCoinbase().asString();
-        (*genesis)["gasLimit"] = _env->currentGasLimit().asString();
-        (*genesis)["extraData"] = _env->currentExtraData().asString();
-        (*genesis)["timestamp"] = _env->currentTimestamp().asString();
-        (*genesis)["nonce"] = _env->currentNonce().asString();
-        (*genesis)["mixHash"] = _env->currentMixHash().asString();
+spDataObject prepareGenesisSubsection(StateTestEnvBase const* _env, ParamsContext _context, FORK const& _net)
+{
+    spDataObject genesis;
+    (*genesis)["author"] = _env->currentCoinbase().asString();
+    (*genesis)["gasLimit"] = _env->currentGasLimit().asString();
+    (*genesis)["extraData"] = _env->currentExtraData().asString();
+    (*genesis)["timestamp"] = _env->currentTimestamp().asString();
+    (*genesis)["nonce"] = _env->currentNonce().asString();
+    (*genesis)["mixHash"] = _env->currentMixHash().asString();
 
-        if (_env->type() == TestEnvClass::EIP1559)
+    if (_env->type() == TestEnvClass::EIP1559)
+    {
+        StateTestEnvBase1559 const* eip1559info = StateTestEnvBase1559::castFrom(_env);
+        (*genesis)["baseFeePerGas"] = calculateGenesisBaseFee(eip1559info->currentBaseFee(), _context);
+        (*genesis)["difficulty"] = eip1559info->currentDifficulty().asString();
+    }
+    else if (_env->type() == TestEnvClass::MERGE)
+    {
+        StateTestEnvBaseMerge const* mergeInfo = StateTestEnvBaseMerge::castFrom(_env);
+        (*genesis)["baseFeePerGas"] = calculateGenesisBaseFee(mergeInfo->currentBaseFee(), _context);
+        (*genesis)["currentRandom"] = mergeInfo->currentRandom()->asString();
+    }
+    else
+    {
+        StateTestEnvBaseLegacy const* legacyInfo = StateTestEnvBaseLegacy::castFrom(_env);
+
+        // If we are filling the test on London and it has legacy env info
+        // convert this info into 1559info
+        if (_net.asString() == "London")
         {
-            StateTestEnvBase1559 const* eip1559info = StateTestEnvBase1559::castFrom(_env);
-            if (_context == ParamsContext::StateTests)
-            {
-                // Reverse back the baseFee calculation formula for genesis block
-                VALUE const& baseFee = eip1559info->currentBaseFee().getCContent();
-                VALUE genesisBaseFee = baseFee * 8 / 7;
-                (*genesis)["baseFeePerGas"] = genesisBaseFee.asString();
-            }
-            else
-                (*genesis)["baseFeePerGas"] = eip1559info->currentBaseFee()->asString();
-            (*genesis)["difficulty"] = eip1559info->currentDifficulty().asString();
+            VALUE currentBaseFee(DataObject("0x0a"));
+            (*genesis)["baseFeePerGas"] = calculateGenesisBaseFee(currentBaseFee, _context);
         }
-        else
-        {
-            StateTestEnvBaseLegacy const* legacyInfo = StateTestEnvBaseLegacy::castFrom(_env);
-            // set baseFee for legacy headers running on 1559 upgrade
-            if (_net.asString() == "London")
-            {
-                if (_context == ParamsContext::StateTests)
-                {
-                    VALUE genesisBaseFee = 10 * 8 / 7;
-                    (*genesis)["baseFeePerGas"] = genesisBaseFee.asString();
-                }
-                else
-                    (*genesis)["baseFeePerGas"] = "0x10";
-            }
-            (*genesis)["difficulty"] = legacyInfo->currentDifficulty().asString();
-        }
+        (*genesis)["difficulty"] = legacyInfo->currentDifficulty().asString();
+    }
 
-        // Convert back 1559 genesis into legacy genesis, when filling 1559 tests
-        auto const& additional = Options::getCurrentConfig().cfgFile().additionalForks();
-        if (!inArray(additional, _net) && compareFork(_net, CMP::lt, FORK("London")))
-            (*genesis).removeKey("baseFeePerGas");
+    // Convert back 1559genesis into legacy genesis
+    // when filling tests with defined 1559env info
+    auto const& additional = Options::getCurrentConfig().cfgFile().additionalForks();
+    if (!inArray(additional, _net) && compareFork(_net, CMP::lt, FORK("London")))
+        (*genesis).removeKey("baseFeePerGas");
 
-        return genesis;
+    return genesis;
     }
 }
 
