@@ -3,6 +3,35 @@
 #include <retesteth/TestHelper.h>
 #include <retesteth/testStructures/Common.h>
 
+namespace
+{
+void require1559TransactionScheme(spDataObject const& _data)
+{
+    REQUIRE_JSONFIELDS(_data, "StateTestFillerTransaction " + _data->getKey(),
+        {{"data", {{DataType::Array}, jsonField::Required}},
+            {"gasLimit", {{DataType::Array}, jsonField::Required}},
+            {"nonce", {{DataType::String}, jsonField::Required}},
+            {"value", {{DataType::Array}, jsonField::Required}},
+            {"to", {{DataType::String}, jsonField::Required}},
+            {"maxFeePerGas", {{DataType::String}, jsonField::Required}},
+            {"maxPriorityFeePerGas", {{DataType::String}, jsonField::Required}},
+            {"secretKey", {{DataType::String}, jsonField::Required}}});
+}
+
+void requireLegacyTransctionScheme(spDataObject const& _data)
+{
+    // LEGACY TRANSACTION TEMPLATE (gtest FILLER)
+    REQUIRE_JSONFIELDS(_data, "StateTestFillerTransaction " + _data->getKey(),
+        {{"data", {{DataType::Array}, jsonField::Required}},
+            {"gasLimit", {{DataType::Array}, jsonField::Required}},
+            {"gasPrice", {{DataType::String}, jsonField::Required}},
+            {"nonce", {{DataType::String}, jsonField::Required}},
+            {"value", {{DataType::Array}, jsonField::Required}},
+            {"to", {{DataType::String}, jsonField::Required}},
+            {"secretKey", {{DataType::String}, jsonField::Required}}});
+}
+}
+
 namespace test
 {
 namespace teststruct
@@ -12,31 +41,10 @@ StateTestFillerTransaction::StateTestFillerTransaction(spDataObjectMove _data)
     try
     {
         m_rawData = _data.getPointer();
-
         if (m_rawData->count("maxFeePerGas") || m_rawData->count("maxPriorityFeePerGas"))
-        {
-            REQUIRE_JSONFIELDS(m_rawData, "StateTestFillerTransaction " + m_rawData->getKey(),
-                {{"data", {{DataType::Array}, jsonField::Required}},
-                    {"gasLimit", {{DataType::Array}, jsonField::Required}},
-                    {"nonce", {{DataType::String}, jsonField::Required}},
-                    {"value", {{DataType::Array}, jsonField::Required}},
-                    {"to", {{DataType::String}, jsonField::Required}},
-                    {"maxFeePerGas", {{DataType::String}, jsonField::Required}},
-                    {"maxPriorityFeePerGas", {{DataType::String}, jsonField::Required}},
-                    {"secretKey", {{DataType::String}, jsonField::Required}}});
-        }
+            require1559TransactionScheme(m_rawData);
         else
-        {
-            // LEGACY TRANSACTION TEMPLATE (gtest FILLER)
-            REQUIRE_JSONFIELDS(m_rawData, "StateTestFillerTransaction " + m_rawData->getKey(),
-                {{"data", {{DataType::Array}, jsonField::Required}},
-                    {"gasLimit", {{DataType::Array}, jsonField::Required}},
-                    {"gasPrice", {{DataType::String}, jsonField::Required}},
-                    {"nonce", {{DataType::String}, jsonField::Required}},
-                    {"value", {{DataType::Array}, jsonField::Required}},
-                    {"to", {{DataType::String}, jsonField::Required}},
-                    {"secretKey", {{DataType::String}, jsonField::Required}}});
-        }
+            requireLegacyTransctionScheme(m_rawData);
 
         // Read data from JSON in test filler
         // The VALUE fields can be decimal -> convert it to hex
@@ -54,35 +62,31 @@ StateTestFillerTransaction::StateTestFillerTransaction(spDataObjectMove _data)
             m_to = spFH20(new FH20(m_rawData->atKey("to")));
         }
 
-        // Secret key
         m_secretKey = spFH32(new FH32(m_rawData->atKey("secretKey")));
         m_publicKey = convertSecretToPublic(m_secretKey);
         (*m_rawData)["sender"] = m_publicKey->asString();
 
         m_nonce = spVALUE(new VALUE(m_rawData->atKey("nonce")));
-
-        for (auto& el : (*m_rawData).atKeyUnsafe("data").getSubObjectsUnsafe())
+        for (auto& dataEl : (*m_rawData).atKeyUnsafe("data").getSubObjectsUnsafe())
         {
-            spDataObject dataInKey;
             spAccessList accessList;
-            if (el->type() == DataType::Object)
+            spDataObject actualDataField;
+            if (dataEl->type() == DataType::Object)
             {
-                REQUIRE_JSONFIELDS(el, "StateTestFillerTransaction::dataWithList " + m_rawData->getKey(),
+                REQUIRE_JSONFIELDS(dataEl, "StateTestFillerTransaction::dataWithList " + m_rawData->getKey(),
                     {{"data", {{DataType::String}, jsonField::Required}},
                      {"accessList", {{DataType::Array}, jsonField::Required}}});
 
-                dataInKey = (*el).atKeyPointerUnsafe("data");
-                accessList = spAccessList(new AccessList(el->atKey("accessList")));
+                actualDataField = (*dataEl).atKeyPointerUnsafe("data");
+                accessList = spAccessList(new AccessList(dataEl->atKey("accessList")));
             }
             else
-                dataInKey = el;
+                actualDataField = dataEl;
 
             // -- Compile LLL in transaction data into byte code if not already
-            // (*dataInKey).setKey("`data` array element in General Transaction Section");  // Hint
             // Detect :label prefix over code compilation
-
             string label;
-            string rawData = dataInKey->asString();
+            string rawData = actualDataField->asString();
             std::string const c_labelPrefix = ":label";
             if (rawData.find(c_labelPrefix) != string::npos)
             {
@@ -99,9 +103,9 @@ StateTestFillerTransaction::StateTestFillerTransaction(spDataObjectMove _data)
                     rawData = "";
                 }
             }
-            (*dataInKey).setString(test::compiler::replaceCode(rawData));
+            (*actualDataField).setString(test::compiler::replaceCode(rawData));
             // ---
-            m_databox.push_back(Databox(BYTES(dataInKey.getContent()), label, rawData.substr(0, 20), accessList));
+            m_databox.push_back(Databox(BYTES(actualDataField.getContent()), label, rawData.substr(0, 20), accessList));
         }
         for (auto const& el : m_rawData->atKey("gasLimit").getSubObjects())
             m_gasLimit.push_back(el.getCContent());
@@ -122,6 +126,9 @@ StateTestFillerTransaction::StateTestFillerTransaction(spDataObjectMove _data)
 
 
         // Prepare data for export (export format is different to import format in this case
+        // This is done as part of optimization. So not to construct export every time on request
+        // Export data (m_rawData) is prepared in constructor and then promise that
+        // it corresponds to the actual data in the class (class does not change after parsing)
         (*m_rawData).performModifier(mod_valueToLowerCase);
         size_t index = 0;
         bool atLeastOneNonNullAccessList = false;
