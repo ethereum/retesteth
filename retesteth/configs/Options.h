@@ -25,6 +25,7 @@ class genIstanbulCfg { public: genIstanbulCfg(); };
 class genBerlinCfg { public: genBerlinCfg(); };
 class genLondonCfg { public: genLondonCfg(); };
 class genArrowGlacierCfg { public: genArrowGlacierCfg(); };
+class genMergeCfg { public: genMergeCfg(); };
 
 // Transition genesis configs
 class genFrontierToHomesteadCfg { public: genFrontierToHomesteadCfg(); };
@@ -60,6 +61,7 @@ public:
         genBerlinCfg genBerlin;
         genLondonCfg genLondon;
         genArrowGlacierCfg genArrowGlacier;
+        genMergeCfg genMerge;
 
         // Transition genesis configs
         genFrontierToHomesteadCfg genFrontierToHomestead;

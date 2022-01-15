@@ -50,7 +50,6 @@ SetChainParamsArgsGenesis::SetChainParamsArgsGenesis(DataObject const& _data)
 SetChainParamsArgsGenesis1559::SetChainParamsArgsGenesis1559(DataObject const& _data)
     : SetChainParamsArgsGenesis(_data, false)
 {
-    //{"currentRandom", {{DataType::String}, jsonField::Optional}},
     REQUIRE_JSONFIELDS(_data, "SetChainParamsArgs::genesis ",
         {
             {"author", {{DataType::String}, jsonField::Required}},
