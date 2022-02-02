@@ -53,13 +53,14 @@ TransactionTestInFilled::TransactionTestInFilled(spDataObject& _data)
 
         for (auto const& el : _data->atKey("result").getSubObjects())
         {
-
+            FORK fork(el->getKey());
+            m_forks.push_back(fork);
             if (el->count("exception"))
             {
                 REQUIRE_JSONFIELDS(el, "TransactionTestInFilled::result ",
                     {{"exception", {{DataType::String}, jsonField::Required}},
                         {"intrinsicGas", {{DataType::String}, jsonField::Required}}});
-                m_expectExceptions.emplace(FORK(el->getKey()), el->atKey("exception").asString());
+                m_expectExceptions.emplace(fork, el->atKey("exception").asString());
             }
             else
             {
@@ -70,7 +71,7 @@ TransactionTestInFilled::TransactionTestInFilled(spDataObject& _data)
                 spFH32 hash(new FH32(el->atKey("hash")));
                 spFH20 sender(new FH20(el->atKey("sender")));
                 spVALUE intrGas(new VALUE(el->atKey("intrinsicGas")));
-                m_acceptedTransactions.emplace(FORK(el->getKey()), TransactionResult(hash, sender, intrGas));
+                m_acceptedTransactions.emplace(fork, TransactionResult(hash, sender, intrGas));
             }
         }
     }

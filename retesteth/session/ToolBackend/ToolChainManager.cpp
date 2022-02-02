@@ -246,7 +246,9 @@ TestRawTransaction ToolChainManager::test_rawTransaction(
     cmd += " --input.txs " + txsPath.string();
     cmd += " --state.fork " + _fork.asString();
     cmd += " 2>&1";
+    ETH_WARNING_TEST(cmd, 6);
     string response = test::executeCmd(cmd, ExecCMDWarning::NoWarningNoError);
+
 
     ETH_TEST_MESSAGE("T9N Response:\n" + response);
     spDataObject res;

@@ -35,12 +35,19 @@ TransactionTestInFiller::TransactionTestInFiller(spDataObject& _data)
     {
         REQUIRE_JSONFIELDS(_data, "TransactionTestInFiller " + _data->getKey(),
             {{"_info", {{DataType::Object}, jsonField::Optional}},
+             {"additionalForks", {{DataType::Array}, jsonField::Optional}},
              {"expectException", {{DataType::Object}, jsonField::Required}},
              {"transaction", {{DataType::Object}, jsonField::Required}}});
 
         m_name = _data->getKey();
         if (_data->count("_info"))
             m_info = GCP_SPointer<InfoIncomplete>(new InfoIncomplete(MOVE(_data, "_info")));
+
+        if (_data->count("additionalForks"))
+        {
+            for (auto const& additionalFork : _data->atKey("additionalForks").getSubObjects())
+                m_additionalForks.push_back(FORK(additionalFork));
+        }
 
         readExpectExceptions(_data->atKey("expectException"), m_expectExceptions);
 

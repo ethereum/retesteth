@@ -29,6 +29,7 @@ struct TransactionTestInFilled : GCP_SPointerBase
     string const& testName() const { return m_name; }
     BYTES const& rlp() const { return m_rlp; }
     spTransaction const& transaction() const { return m_readTransaction; }
+    std::vector<FORK> const& allForks() const { return m_forks; }
     string const& getExpectException(FORK const& _net) const
     {
         static string emptyString = string();
@@ -50,6 +51,7 @@ private:
     string m_name;
     spBYTES m_rlp;
     spTransaction m_readTransaction;
+    std::vector<FORK> m_forks;
     std::map<FORK, std::string> m_expectExceptions;
 
     std::map<FORK, TransactionResult> m_acceptedTransactions;
