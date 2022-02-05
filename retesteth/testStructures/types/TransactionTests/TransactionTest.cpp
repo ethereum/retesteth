@@ -54,7 +54,7 @@ TransactionTestInFilled::TransactionTestInFilled(spDataObject& _data)
         for (auto const& el : _data->atKey("result").getSubObjects())
         {
             FORK fork(el->getKey());
-            m_forks.push_back(fork);
+            m_forks.emplace(fork);
             if (el->count("exception"))
             {
                 REQUIRE_JSONFIELDS(el, "TransactionTestInFilled::result ",

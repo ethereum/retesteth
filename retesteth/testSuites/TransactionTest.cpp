@@ -20,11 +20,13 @@ spDataObject FillTest(TransactionTestInFiller const& _test)
     if (_test.hasInfo())
         (*filledTest).atKeyPointer("_info") = _test.info().rawData();
 
-    auto executionForks = Options::getCurrentConfig().cfgFile().forks();
+    std::set<FORK> executionForks;
+    for (auto const& fork : Options::getCurrentConfig().cfgFile().forks())
+        executionForks.emplace(fork);
     for (auto const& fork : _test.additionalForks())
     {
         if (Options::getDynamicOptions().getCurrentConfig().checkForkAllowed(fork))
-            executionForks.push_back(fork);
+            executionForks.emplace(fork);
         else
             ETH_WARNING("Client config does not support fork `" + fork.asString() + "`, skipping test generation!");
     }
