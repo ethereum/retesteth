@@ -1,3 +1,4 @@
+#include "BlockMining.h"
 #include "ToolChainHelper.h"
 #include "ToolChainManager.h"
 #include <Options.h>
@@ -12,17 +13,6 @@ using namespace dev;
 using namespace test;
 using namespace teststruct;
 using namespace dataobject;
-
-namespace
-{
-BlockchainTestFillerEnv* readBlockchainFillerTestEnv(spDataObjectMove _data, SealEngine _sEngine)
-{
-    auto const& data = _data.getPointer();
-    if (data->count("baseFeePerGas"))
-        return new BlockchainTestFillerEnv1559(_data, _sEngine);
-    return new BlockchainTestFillerEnvLegacy(_data, _sEngine);
-}
-}  // namespace
 
 namespace toolimpl
 {
@@ -226,171 +216,15 @@ spDataObject const ToolChain::mineBlock(EthereumBlockState const& _pendingBlock,
     return miningResult;
 }
 
-ToolResponse ToolChain::mineBlockOnTool(EthereumBlockState const& _block, EthereumBlockState const& _parent, SealEngine _engine)
+ToolResponse ToolChain::mineBlockOnTool(
+    EthereumBlockState const& _currentBlock, EthereumBlockState const& _parentBlock, SealEngine _engine)
 {
-    // env.json file
-    fs::path envPath = m_tmpDir / "env.json";
-    auto spHeader = _block.header()->asDataObject();
-    spBlockchainTestFillerEnv env(readBlockchainFillerTestEnv(dataobject::move(spHeader), m_engine));
-    spDataObject& envData = const_cast<spDataObject&>(env->asDataObject());
-    if (_parent.header()->number() != _block.header()->number())
-    {
-        if (_parent.header()->hash() != _block.header()->parentHash())
-            ETH_ERROR_MESSAGE("ToolChain::mineBlockOnTool: provided parent block != pending parent block hash!");
-        (*envData).removeKey("currentDifficulty");
-        (*envData)["parentTimestamp"] = _parent.header()->timestamp().asString();
-        (*envData)["parentDifficulty"] = _parent.header()->difficulty().asString();
-        (*envData)["parentUncleHash"] = _parent.header()->uncleHash().asString();
-    }
-
-    // BlockHeader hash information for tool mining
-    size_t k = 0;
-    for (auto const& bl : m_blocks)
-        (*envData)["blockHashes"][fto_string(k++)] = bl.header()->hash().asString();
-    for (auto const& un : _block.uncles())
-    {
-        spDataObject uncle;
-        int delta = (int)(_block.header()->number() - un->number()).asBigInt();
-        if (delta < 1)
-            throw test::UpwardsException("Uncle header delta is < 1");
-        (*uncle)["delta"] = delta;
-        (*uncle)["address"] = un->author().asString();
-        (*envData)["ommers"].addArrayObject(uncle);
-    }
-
-    // Options Hook
-    Options::getCurrentConfig().performFieldReplace(envData.getContent(), FieldReplaceDir::RetestethToClient);
-
-    string const envPathContent = envData->asJson();
-    writeFile(envPath.string(), envPathContent);
-
-    // alloc.json file
-    fs::path allocPath = m_tmpDir / "alloc.json";
-    string const allocPathContent = _block.state()->asDataObject()->asJsonNoFirstKey();
-    writeFile(allocPath.string(), allocPathContent);
-
-    // txs.json file
-    bool exportRLP = true;
-    string const txsfile = _block.transactions().size() && exportRLP ? "txs.rlp" : "txs.json";
-    fs::path txsPath = m_tmpDir / txsfile;
-
-    string txsPathContent;
-    if (exportRLP)
-    {
-        dev::RLPStream txsout(_block.transactions().size());
-        for (auto const& tr : _block.transactions())
-            txsout.appendRaw(tr->asRLPStream().out());
-        txsPathContent = _block.transactions().size() ? "\"" + dev::toString(txsout.out()) + "\"" : "[]";
-        writeFile(txsPath.string(), txsPathContent);
-    }
-    else
-    {
-        DataObject txs(DataType::Array);
-        static u256 c_maxGasLimit = u256("0xffffffffffffffff");
-        for (auto const& tr : _block.transactions())
-        {
-            if (tr->gasLimit().asBigInt() <= c_maxGasLimit)  // tool fails on limits here.
-                txs.addArrayObject(tr->asDataObject(ExportOrder::ToolStyle));
-            else
-                ETH_WARNING(
-                    "Retesteth rejecting tx with gasLimit > 64 bits for tool" + TestOutputHelper::get().testInfo().errorDebug());
-        }
-        Options::getCurrentConfig().performFieldReplace(txs, FieldReplaceDir::RetestethToClient);
-        txsPathContent = txs.asJson();
-        writeFile(txsPath.string(), txsPathContent);
-    }
-
-    // output file
-    fs::path outPath = m_tmpDir / "out.json";
-    fs::path outAllocPath = m_tmpDir / "outAlloc.json";
-
-
-    string cmd = m_toolPath.string();
-    if (_engine != SealEngine::NoReward)
-    {
-        // Convert FrontierToHomesteadAt5 -> Homestead if block > 5, and get reward
-        auto tupleRewardFork = prepareReward(_engine, m_fork.getContent(), _block.header()->number());
-        cmd += " --state.fork " + std::get<1>(tupleRewardFork).asString();
-        cmd += " --state.reward " + std::get<0>(tupleRewardFork).asDecString();
-    }
-    else
-        cmd += " --state.fork " + m_fork->asString();
-
-    cmd += " --input.alloc " + allocPath.string();
-    cmd += " --input.txs " + txsPath.string();
-    cmd += " --input.env " + envPath.string();
-    cmd += " --output.basedir " + m_tmpDir.string();
-    cmd += " --output.result " + outPath.filename().string();
-    cmd += " --output.alloc " + outAllocPath.filename().string();
-
-    bool traceCondition = Options::get().vmtrace && _block.header()->number() != 0;
-    if (traceCondition)
-    {
-        cmd += " --trace ";
-        if (!Options::get().vmtrace_nomemory)
-            cmd += "--trace.memory ";
-        if (!Options::get().vmtrace_noreturndata)
-            cmd += "--trace.returndata ";
-        if (Options::get().vmtrace_nostack)
-            cmd += "--trace.nostack ";
-    }
-
-    ETH_TEST_MESSAGE("Alloc:\n" + allocPathContent);
-    if (_block.transactions().size())
-    {
-        ETH_TEST_MESSAGE("Txs:\n" + txsPathContent);
-        for (auto const& tr : _block.transactions())
-            ETH_TEST_MESSAGE(tr->asDataObject()->asJson());
-    }
-    ETH_TEST_MESSAGE("Env:\n" + envPathContent);
-
-    string out = test::executeCmd(cmd, ExecCMDWarning::NoWarning);
-
-    string const outPathContent = contentsString(outPath.string());
-    string const outAllocPathContent = contentsString(outAllocPath.string());
-    ETH_TEST_MESSAGE("Res:\n" + outPathContent);
-    ETH_TEST_MESSAGE("RAlloc:\n" + outAllocPathContent);
-    ETH_TEST_MESSAGE(cmd);
-    ETH_TEST_MESSAGE(out);
-
-    if (outPathContent.empty())
-        ETH_ERROR_MESSAGE("Tool returned empty file: " + outPath.string());
-    if (outAllocPathContent.empty())
-        ETH_ERROR_MESSAGE("Tool returned empty file: " + outAllocPath.string());
-
-    // Construct block rpc response
-    ToolResponse toolResponse(ConvertJsoncppStringToData(outPathContent));
-    spDataObject returnState = ConvertJsoncppStringToData(outAllocPathContent);
-    toolResponse.attachState(restoreFullState(returnState.getContent()));
-
-    if (traceCondition)
-    {
-        size_t i = 0;
-        for (auto const& tr : _block.transactions())
-        {
-            fs::path txTraceFile;
-            string const trNumber = test::fto_string(i++);
-            txTraceFile = m_tmpDir / string("trace-" + trNumber + "-" + tr->hash().asString() + ".jsonl");
-            if (fs::exists(txTraceFile))
-            {
-                string const preinfo =
-                    "\nTransaction number: " + trNumber + ", hash: " + tr->hash().asString() + "\n";
-                string const info = TestOutputHelper::get().testInfo().errorDebug();
-                string const traceinfo = "\nVMTrace:" + info + cDefault + preinfo;
-                toolResponse.attachDebugTrace(tr->hash(),
-                    DebugVMTrace(traceinfo, trNumber, tr->hash(), contentsString(txTraceFile)));
-            }
-            else
-                ETH_LOG("Trace file `" + txTraceFile.string() + "` not found!", 1);
-        }
-    }
-
-    fs::remove(envPath);
-    fs::remove(allocPath);
-    fs::remove(txsPath);
-    fs::remove(outPath);
-    fs::remove(outAllocPath);
-    return toolResponse;
+    BlockMining toolMiner(m_toolPath, m_tmpDir, _currentBlock, _parentBlock, _engine, m_fork, m_blocks);
+    toolMiner.prepareEnvFile();
+    toolMiner.prepareAllocFile();
+    toolMiner.prepareTxnFile();
+    toolMiner.executeTransition();
+    return toolMiner.readResult();
 }
 
 void ToolChain::rewindToBlock(size_t _number)

@@ -67,7 +67,8 @@ private:
     ToolChain(){};
     // Execute t8ntool cmd with input _block information, and get the output block information
     // Information includes header, transactions, state
-    ToolResponse mineBlockOnTool(EthereumBlockState const& _block, EthereumBlockState const& _parent, SealEngine _engine = SealEngine::NoReward);
+    ToolResponse mineBlockOnTool(EthereumBlockState const& _currentBlock, EthereumBlockState const& _parentBlock,
+        SealEngine _engine = SealEngine::NoReward);
 
     GCP_SPointer<ToolParams> m_toolParams;
     const spSetChainParamsArgs m_initialParams;
