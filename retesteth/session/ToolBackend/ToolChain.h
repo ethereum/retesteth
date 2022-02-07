@@ -77,6 +77,10 @@ private:
     spFORK m_fork;
     fs::path m_toolPath;
     fs::path m_tmpDir;
+
+private:
+    void checkDifficultyAgainstRetesteth(VALUE const& _toolDifficulty, spBlockHeader const& _pendingHeader);
+    void calculateAndSetBaseFee(spBlockHeader& _pendingHeader, spBlockHeader const& _parentHeader);
 };
 
 typedef GCP_SPointer<ToolChain> spToolChain;

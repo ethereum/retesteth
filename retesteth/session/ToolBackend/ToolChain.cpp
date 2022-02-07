@@ -14,6 +14,20 @@ using namespace test;
 using namespace teststruct;
 using namespace dataobject;
 
+namespace  {
+void correctHeaderByToolResponse(BlockHeader& _header, ToolResponse const& _res)
+{
+    // Update a block header with information that we have and what we get from t8ntool
+    _header.setStateRoot(_res.stateRoot());
+    _header.setGasUsed(_res.totalGasUsed());
+    _header.setTransactionHash(_res.txRoot());
+    _header.setTrReceiptsHash(_res.receiptRoot());
+    _header.setLogsBloom(_res.logsBloom());
+    _header.setStateRoot(_res.stateRoot());
+    _header.setDifficulty(_res.currentDifficulty());
+}
+}
+
 namespace toolimpl
 {
 ToolChain::ToolChain(
@@ -26,19 +40,19 @@ ToolChain::ToolChain(
 {
     m_toolParams = GCP_SPointer<ToolParams>(new ToolParams(_config->params()));
 
-    auto const& additional = Options::getCurrentConfig().cfgFile().additionalForks();
-    if (!inArray(additional, m_fork.getCContent()))
+    auto const& additionalForks = Options::getCurrentConfig().cfgFile().additionalForks();
+    if (!inArray(additionalForks, m_fork.getCContent()))
     {
         if (compareFork(m_fork, CMP::lt, FORK("London"))
             && _genesis.header()->type() == BlockType::BlockHeader1559)
-        throw test::UpwardsException("Constructing 1559 genesis on network which is lower London!");
+            throw test::UpwardsException("Constructing 1559 genesis on network which is lower London!");
         if (compareFork(m_fork, CMP::ge, FORK("London"))
             && _genesis.header()->type() != BlockType::BlockHeader1559)
-        throw test::UpwardsException("Constructing legacy genesis on network which is higher London!");
+            throw test::UpwardsException("Constructing legacy genesis on network which is higher London!");
     }
 
-    // We yet don't know the state root. ask the tool to calculate it
-    ToolResponse res = mineBlockOnTool(_genesis, _genesis, SealEngine::NoReward);
+    // We yet don't know the state root of genesis. Ask the tool to calculate it
+    ToolResponse const res = mineBlockOnTool(_genesis, _genesis, SealEngine::NoReward);
 
     EthereumBlockState genesisFixed(_genesis.header(), _genesis.state(), FH32::zero());
     genesisFixed.headerUnsafe().getContent().setStateRoot(res.stateRoot());
@@ -48,7 +62,7 @@ ToolChain::ToolChain(
 }
 
 ToolChain::ToolChain(
-    EthereumBlockState const& _blockA, EthereumBlockState const& _blockB,
+    EthereumBlockState const& _parentBlock, EthereumBlockState const& _currentBlock,
     FORK const& _fork, fs::path const& _toolPath, fs::path const& _tmpDir)
   : m_initialParams(0),
     m_engine(SealEngine::NoProof),
@@ -56,48 +70,28 @@ ToolChain::ToolChain(
     m_toolPath(_toolPath),
     m_tmpDir(_tmpDir)
 {
-    // Constructor to execute t8n given 2 blocks to calculate the difficulty transition
-    ToolResponse res = mineBlockOnTool(_blockB, _blockA, SealEngine::NoReward);
-    m_blocks.push_back(_blockB);
+    // Calculate the difficutly of _currentBlock given _parentBlock
+    ToolResponse res = mineBlockOnTool(_currentBlock, _parentBlock, SealEngine::NoReward);
+    m_blocks.push_back(_currentBlock);
     m_blocks.back().headerUnsafe().getContent().setDifficulty(res.currentDifficulty());
 }
 
+
 spDataObject const ToolChain::mineBlock(EthereumBlockState const& _pendingBlock, EthereumBlockState const& _parentBlock, Mining _req)
 {
+    // Ask the tool to calculate post state and block header
+    // With current chain information, txs from pending block
     ToolResponse const res = mineBlockOnTool(_pendingBlock, _parentBlock, m_engine);
 
     // Pending fixed is pending header corrected by the information returned by tool
     // The tool can reject transactions changing the stateHash, TxRoot, TxReceipts, HeaderHash, GasUsed
     EthereumBlockState pendingFixed(_pendingBlock.header(), res.state(), res.logsHash());
 
-    // Construct a block header with information that we have and what we get from t8ntool
-    // The block number is current max block + 1
     BlockHeader& pendingFixedHeader = pendingFixed.headerUnsafe().getContent();
     pendingFixedHeader.setNumber(m_blocks.size());
-
-    // Tool calculated transactions and state
-    pendingFixedHeader.setStateRoot(res.stateRoot());         // Assign StateHash from the tool
-    pendingFixedHeader.setGasUsed(res.totalGasUsed());        // Assign GasUsed from the tool
-    pendingFixedHeader.setTransactionHash(res.txRoot());      // Assign TxRoot from the tool
-    pendingFixedHeader.setTrReceiptsHash(res.receiptRoot());  // Assign TxReceipt from the tool
-    pendingFixedHeader.setLogsBloom(res.logsBloom());         // Assign LogsBloom from the
-    pendingFixedHeader.setStateRoot(res.stateRoot());         // Assign StateHash from the tool
-
-    // Calculate difficulty for tool (tool does not calculate difficulty)
-    ChainOperationParams params = ChainOperationParams::defaultParams(toolParams());
-    VALUE toolDifficulty = calculateEthashDifficulty(params, pendingFixed.header(), lastBlock().header());
-    pendingFixedHeader.setDifficulty(res.currentDifficulty());
-    if (toolDifficulty != res.currentDifficulty())
-        ETH_ERROR_MESSAGE("tool vs retesteth difficulty disagree: " + res.currentDifficulty().asDecString() + " vs " + toolDifficulty.asDecString());
-
-    // Calculate new baseFee
-    if (pendingFixedHeader.type() == BlockType::BlockHeader1559 &&
-        lastBlock().header()->type() == BlockType::BlockHeader1559)
-    {
-        BlockHeader1559& pendingFixed1559Header = BlockHeader1559::castFrom(pendingFixedHeader);
-        VALUE baseFee = calculateEIP1559BaseFee(params, pendingFixed.header(), lastBlock().header());
-        pendingFixed1559Header.setBaseFee(baseFee);
-    }
+    correctHeaderByToolResponse(pendingFixedHeader, res);
+    checkDifficultyAgainstRetesteth(res.currentDifficulty(), pendingFixed.header());
+    calculateAndSetBaseFee(pendingFixed.headerUnsafe(), lastBlock().header());
 
     // Add only those transactions which tool returned a receipt for
     // Some transactions are expected to fail. That should be detected by tests
@@ -231,5 +225,28 @@ void ToolChain::rewindToBlock(size_t _number)
 {
     while (m_blocks.size() > _number + 1)
         m_blocks.pop_back();
+}
+
+// Helper functions
+void ToolChain::checkDifficultyAgainstRetesteth(VALUE const& _toolDifficulty, spBlockHeader const& _pendingHeader)
+{
+    // Calculate difficulty for tool (tool does not calculate difficulty)
+    ChainOperationParams params = ChainOperationParams::defaultParams(toolParams());
+    VALUE retestethDifficulty = calculateEthashDifficulty(params, _pendingHeader, lastBlock().header());
+    if (_toolDifficulty != retestethDifficulty)
+        ETH_ERROR_MESSAGE("tool vs retesteth difficulty disagree: " + _toolDifficulty.asDecString() + " vs " + retestethDifficulty.asDecString());
+}
+
+void ToolChain::calculateAndSetBaseFee(spBlockHeader& _pendingHeader, spBlockHeader const& _parentHeader)
+{
+    // Calculate new baseFee
+    if (_pendingHeader.getCContent().type() == BlockType::BlockHeader1559 &&
+        _parentHeader->type() == BlockType::BlockHeader1559)
+    {
+        BlockHeader1559& pendingFixed1559Header = BlockHeader1559::castFrom(_pendingHeader.getContent());
+        ChainOperationParams params = ChainOperationParams::defaultParams(toolParams());
+        VALUE baseFee = calculateEIP1559BaseFee(params, _pendingHeader, _parentHeader);
+        pendingFixed1559Header.setBaseFee(baseFee);
+    }
 }
 }  // namespace toolimpl

@@ -227,9 +227,6 @@ VALUE calculateEthashDifficulty(
 
 VALUE calculateEIP1559BaseFee(ChainOperationParams const& _chainParams, spBlockHeader const& _bi, spBlockHeader const& _parent)
 {
-    (void)_chainParams;
-    (void)_bi;
-
     VALUE expectedBaseFee(0);
     BlockHeader1559 const& parent = BlockHeader1559::castFrom(_parent);
 
