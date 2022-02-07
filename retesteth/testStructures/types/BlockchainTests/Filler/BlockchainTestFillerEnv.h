@@ -15,6 +15,9 @@ struct BlockchainTestFillerEnv : StateTestEnvBase
 {
 protected:
     void initializeCommonFields(spDataObject const&, SealEngine);
+private:
+    virtual void define() const = 0; //BlockchainTestFillerEnv is abstract
+
 };
 
 struct BlockchainTestFillerEnv1559 : BlockchainTestFillerEnv, StateTestEnvBase1559
@@ -24,6 +27,9 @@ struct BlockchainTestFillerEnv1559 : BlockchainTestFillerEnv, StateTestEnvBase15
 
 protected:
     void initialize1559Fields(DataObject const&) override;
+private:
+    void define() const override {}
+
 };
 
 struct BlockchainTestFillerEnvLegacy : BlockchainTestFillerEnv, StateTestEnvBaseLegacy
@@ -33,6 +39,9 @@ struct BlockchainTestFillerEnvLegacy : BlockchainTestFillerEnv, StateTestEnvBase
 
 protected:
     void initializeLegacyFields(DataObject const&) override;
+private:
+    void define() const override {}
+
 };
 
 

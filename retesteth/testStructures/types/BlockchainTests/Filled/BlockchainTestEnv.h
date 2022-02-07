@@ -14,6 +14,8 @@ struct BlockchainTestEnv : StateTestEnvBase
 {
 protected:
     void initializeCommonFields(DataObject const&);
+private:
+    virtual void define() const = 0; // BlockchainTestEnv is abstract
 };
 
 struct BlockchainTestEnvLegacy : BlockchainTestEnv, StateTestEnvBaseLegacy
@@ -23,6 +25,8 @@ struct BlockchainTestEnvLegacy : BlockchainTestEnv, StateTestEnvBaseLegacy
 
 protected:
     void initializeLegacyFields(DataObject const&) override;
+private:
+    void define() const override {}
 };
 
 struct BlockchainTestEnv1559 : BlockchainTestEnv, StateTestEnvBase1559
@@ -32,6 +36,8 @@ struct BlockchainTestEnv1559 : BlockchainTestEnv, StateTestEnvBase1559
 
 protected:
     void initialize1559Fields(DataObject const&) override;
+private:
+    void define() const override {}
 };
 
 typedef GCP_SPointer<BlockchainTestEnv> spBlockchainTestEnv;

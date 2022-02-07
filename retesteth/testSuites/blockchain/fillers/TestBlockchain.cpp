@@ -7,7 +7,7 @@ namespace test
 {
 namespace blockchainfiller
 {
-TestBlockchain::TestBlockchain(BlockchainTestFillerEnv const& _testEnv, State const& _genesisState, SealEngine _engine,
+TestBlockchain::TestBlockchain(BlockchainTestFillerEnv const* _testEnv, State const& _genesisState, SealEngine _engine,
     FORK const& _network, string const& _chainName, RegenerateGenesis _regenerateGenesis)
   : m_session(RPCSession::instance(TestOutputHelper::getThreadID())),
     m_network(_network),
@@ -400,7 +400,7 @@ bool TestBlockchain::checkBlockException(string const& _sBlockException) const
 // Need to call resetChainParams because TestBLockchainManager could have chains with different networks
 void TestBlockchain::resetChainParams() const
 {
-    m_session.test_setChainParams(prepareChainParams(m_network, m_sealEngine, m_genesisState, &m_testEnv));
+    m_session.test_setChainParams(prepareChainParams(m_network, m_sealEngine, m_genesisState, m_testEnv));
 }
 
 }  // namespace blockchainfiller

@@ -49,7 +49,12 @@ spDataObject prepareGenesisSubsection(StateTestEnvBase const* _env, ParamsContex
         // convert this info into 1559info
         if (_net.asString() == "London")
         {
-            VALUE currentBaseFee(DataObject("0x0a"));
+            string defaultBaseFee = "0x0a";
+            // Because of the typo, blockchain tests were generated with hex "0x10" baseFee instead of dec "10"
+            if (_context == ParamsContext::BlockchainTests)
+                defaultBaseFee = "0x10";
+
+            VALUE currentBaseFee((DataObject(defaultBaseFee)));
             (*genesis)["baseFeePerGas"] = calculateGenesisBaseFee(currentBaseFee, _context);
         }
         (*genesis)["difficulty"] = legacyInfo->currentDifficulty().asString();

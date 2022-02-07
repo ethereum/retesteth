@@ -43,7 +43,7 @@ spDataObject FillTest(BlockchainTestInFiller const& _test, TestSuite::TestSuiteO
 
                 // Initialise chain manager
                 ETH_LOGC("FILL GENESIS INFO: ", 6, LogColor::LIME);
-                TestBlockchainManager testchain(_test.Env(), _test.Pre(), _test.sealEngine(), net);
+                TestBlockchainManager testchain(&_test.Env(), _test.Pre(), _test.sealEngine(), net);
                 TestBlock const& genesis = testchain.getLastBlock();
                 filledTest.atKeyPointer("genesisBlockHeader") = genesis.getTestHeader()->asDataObject();
                 filledTest["genesisRLP"] = genesis.getRawRLP().asString();

@@ -9,7 +9,7 @@ namespace blockchainfiller
 // Initialize blockchain manager with first chain information
 // _env, _pre, _engine, _network
 TestBlockchainManager::TestBlockchainManager(
-    BlockchainTestFillerEnv const& _genesisEnv, State const& _genesisPre, SealEngine _engine, FORK const& _network)
+    BlockchainTestFillerEnv const* _genesisEnv, State const& _genesisPre, SealEngine _engine, FORK const& _network)
   : m_session(RPCSession::instance(TestOutputHelper::getThreadID())),
     m_sDefaultChainName(BlockchainTestFillerBlock::defaultChainName()),
     m_genesisEnv(_genesisEnv),
