@@ -93,120 +93,21 @@ spDataObject const ToolChain::mineBlock(EthereumBlockState const& _pendingBlock,
     checkDifficultyAgainstRetesteth(res.currentDifficulty(), pendingFixed.header());
     calculateAndSetBaseFee(pendingFixed.headerUnsafe(), lastBlock().header());
 
-    // Add only those transactions which tool returned a receipt for
-    // Some transactions are expected to fail. That should be detected by tests
-    size_t index = 0;
     spDataObject miningResult;
-    (*miningResult)["result"] = true;
+    miningResult = coorectTransactionsByToolResponse(res, pendingFixed, _pendingBlock, _req);
+    correctUncleHeaders(pendingFixed, _pendingBlock);
 
-    for (auto const& tr : _pendingBlock.transactions())
-    {
-        bool found = false;
-        FH32 const trHash = tr->hash();
-        for (auto const& trReceipt : res.receipts())
-        {
-            if (trReceipt.trHash() == trHash)
-            {
-                found = true;
-                pendingFixed.addTransaction(tr);
-                break;
-            }
-        }
-        if (!found)
-        {
-            string const message = "t8ntool didn't return a transaction with hash: " + trHash.asString();
-
-            // Find the rejected transaction information
-            bool rejectedInfoFound = false;
-            for (auto const& el : res.rejected())
-            {
-                if (el.index() == index)
-                {
-                    rejectedInfoFound = true;
-                    spDataObject rejectInfo;
-                    (*rejectInfo)["hash"] = trHash.asString();
-                    (*rejectInfo)["error"] = el.error();
-                    (*miningResult)["rejectedTransactions"].addArrayObject(rejectInfo);
-                    break;
-                }
-            }
-            if (!rejectedInfoFound)
-                ETH_ERROR_MESSAGE("tool didn't provide information about rejected transaction");
-            if (_req == Mining::AllowFailTransactions)
-            {
-                ETH_WARNING_TEST(message, 6);
-            }
-            else
-                throw test::UpwardsException(message);
-        }
-        index++;
-    }
-
-
-    // Treat all uncles as valid as t8ntool does not calculate uncles
-    // Uncle header validity as well as RLP logic is checked before
-    for (auto const& un : _pendingBlock.uncles())
-    {
-        verifyEthereumBlockHeader(un, *this);
-        pendingFixed.addUncle(un);
-    }
-    pendingFixed.recalculateUncleHash(); // Rely that only uncle hash is recalculated (simulate t8ntool unclehash)
-
-    // Calculate header hash from header fields (do not recalc tx, un hashes)
+    // Calculate header hash from header fields (does not recalc tx, un hashes)
     pendingFixed.headerUnsafe().getContent().recalculateHash();
 
     // Blockchain rules
     verifyEthereumBlockHeader(pendingFixed.header(), *this);
+    additionalHeaderVerification(res, pendingFixed, _pendingBlock, _req);
 
-    // Require number from pending block to be equal to actual block number that is imported
-    if (_pendingBlock.header()->number() != pendingFixed.header()->number().asBigInt())
-        throw test::UpwardsException(string("Block Number from pending block != actual chain height! (") +
-                                     _pendingBlock.header()->number().asString() +
-                                     " != " + pendingFixed.header()->number().asString() + ")");
-
-    // Require new block timestamp to be > than the previous block timestamp
-    if (lastBlock().header()->timestamp().asBigInt() >= pendingFixed.header()->timestamp().asBigInt())
-        throw test::UpwardsException("Block Timestamp from pending block <= previous block timestamp!");
-
-    if (_req == Mining::RequireValid)  // called on rawRLP import
-    {
-        if (m_fork.getContent().asString() == "HomesteadToDaoAt5" && pendingFixed.header()->number() > 4 &&
-            pendingFixed.header()->number() < 19 &&
-            pendingFixed.header()->extraData().asString() != "0x64616f2d686172642d666f726b")
-            throw test::UpwardsException("Dao Extra Data required!");
-
-        spDataObject const pendingH = _pendingBlock.header()->asDataObject();
-        spDataObject const pendingFixedH = pendingFixed.header()->asDataObject();
-        if (pendingH->asJson(0, false) != pendingFixedH->asJson(0, false))
-        {
-            string errField;
-            string const compare = compareBlockHeaders(pendingH, pendingFixedH, errField);
-            throw test::UpwardsException(string("Block from pending block != t8ntool constructed block!\n") +
-                                         "Error in field: " + errField + "\n" +
-                                         "rawRLP/Pending header  vs  t8ntool header \n" + compare);
-        }
-    }
-
-    if (pendingFixed.header()->transactionRoot() != res.txRoot())
-    {
-        ETH_ERROR_MESSAGE(string("ToolChain::mineBlock txRootHash is different to one ruturned by tool \n") +
-                          "constructedBlockHash: " + pendingFixed.header()->transactionRoot().asString() +
-                          "\n toolTransactionRoot: " + res.txRoot().asString());
-    }
-
-    VALUE totalDifficulty(0);
-    if (m_blocks.size() > 0)
-        totalDifficulty = m_blocks.at(m_blocks.size() - 1).totalDifficulty();
-    pendingFixed.setTotalDifficulty(totalDifficulty + pendingFixed.header()->difficulty());
-
-    ETH_LOG("New block N: " + to_string(m_blocks.size()), 6);
-    ETH_LOG("New block TD: " + totalDifficulty.asDecString() + " + " +
-                pendingFixed.header()->difficulty().asDecString() + " = " +
-                pendingFixed.totalDifficulty().asDecString(), 6);
+    calculateAndSetTotalDifficulty(pendingFixed);
 
     pendingFixed.setTrsTrace(res.debugTrace());
     m_blocks.push_back(pendingFixed);
-
     return miningResult;
 }
 
@@ -234,7 +135,8 @@ void ToolChain::checkDifficultyAgainstRetesteth(VALUE const& _toolDifficulty, sp
     ChainOperationParams params = ChainOperationParams::defaultParams(toolParams());
     VALUE retestethDifficulty = calculateEthashDifficulty(params, _pendingHeader, lastBlock().header());
     if (_toolDifficulty != retestethDifficulty)
-        ETH_ERROR_MESSAGE("tool vs retesteth difficulty disagree: " + _toolDifficulty.asDecString() + " vs " + retestethDifficulty.asDecString());
+        ETH_ERROR_MESSAGE("tool vs retesteth difficulty disagree: " + _toolDifficulty.asDecString() + " vs " +
+                          retestethDifficulty.asDecString());
 }
 
 void ToolChain::calculateAndSetBaseFee(spBlockHeader& _pendingHeader, spBlockHeader const& _parentHeader)
@@ -248,5 +150,124 @@ void ToolChain::calculateAndSetBaseFee(spBlockHeader& _pendingHeader, spBlockHea
         VALUE baseFee = calculateEIP1559BaseFee(params, _pendingHeader, _parentHeader);
         pendingFixed1559Header.setBaseFee(baseFee);
     }
+}
+
+spDataObject ToolChain::coorectTransactionsByToolResponse(
+    ToolResponse const& _res, EthereumBlockState& _pendingFixed, EthereumBlockState const& _pendingBlock, Mining _miningReq)
+{
+    // Add only those transactions which tool returned a receipt for
+    // Some transactions are expected to fail. That should be detected by tests
+    size_t index = 0;
+    spDataObject miningResult;
+    (*miningResult)["result"] = true;
+
+    for (auto const& tr : _pendingBlock.transactions())
+    {
+        bool found = false;
+        FH32 const trHash = tr->hash();
+        for (auto const& trReceipt : _res.receipts())
+        {
+            if (trReceipt.trHash() == trHash)
+            {
+                found = true;
+                _pendingFixed.addTransaction(tr);
+                break;
+            }
+        }
+        if (!found)
+        {
+            string const message = "t8ntool didn't return a transaction with hash: " + trHash.asString();
+
+            // Find the rejected transaction information
+            bool rejectedInfoFound = false;
+            for (auto const& el : _res.rejected())
+            {
+                if (el.index() == index)
+                {
+                    rejectedInfoFound = true;
+                    spDataObject rejectInfo;
+                    (*rejectInfo)["hash"] = trHash.asString();
+                    (*rejectInfo)["error"] = el.error();
+                    (*miningResult)["rejectedTransactions"].addArrayObject(rejectInfo);
+                    break;
+                }
+            }
+            if (!rejectedInfoFound)
+                ETH_ERROR_MESSAGE("tool didn't provide information about rejected transaction");
+            if (_miningReq == Mining::AllowFailTransactions)
+            {
+                ETH_WARNING_TEST(message, 6);
+            }
+            else
+                throw test::UpwardsException(message);
+        }
+        index++;
+    }
+    return miningResult;
+}
+
+void ToolChain::correctUncleHeaders(EthereumBlockState& _pendingFixed, EthereumBlockState const& _pendingBlock)
+{
+    // Treat all uncles as valid as t8ntool does not calculate uncles
+    // Uncle header validity as well as RLP logic is checked before
+    for (auto const& un : _pendingBlock.uncles())
+    {
+        verifyEthereumBlockHeader(un, *this);
+        _pendingFixed.addUncle(un);
+    }
+    _pendingFixed.recalculateUncleHash();  // Rely that only uncle hash is recalculated (simulate t8ntool unclehash)
+}
+
+void ToolChain::additionalHeaderVerification(
+    ToolResponse const& _res, EthereumBlockState& _pendingFixed, EthereumBlockState const& _pendingBlock, Mining _miningReq)
+{
+    // Require number from pending block to be equal to actual block number that is imported
+    if (_pendingBlock.header()->number() != _pendingFixed.header()->number().asBigInt())
+        throw test::UpwardsException(string("Block Number from pending block != actual chain height! (") +
+                                     _pendingBlock.header()->number().asString() +
+                                     " != " + _pendingFixed.header()->number().asString() + ")");
+
+    // Require new block timestamp to be > than the previous block timestamp
+    if (lastBlock().header()->timestamp().asBigInt() >= _pendingFixed.header()->timestamp().asBigInt())
+        throw test::UpwardsException("Block Timestamp from pending block <= previous block timestamp!");
+
+    if (_miningReq == Mining::RequireValid)  // called on rawRLP import
+    {
+        if (m_fork.getContent().asString() == "HomesteadToDaoAt5" && _pendingFixed.header()->number() > 4 &&
+            _pendingFixed.header()->number() < 19 &&
+            _pendingFixed.header()->extraData().asString() != "0x64616f2d686172642d666f726b")
+            throw test::UpwardsException("Dao Extra Data required!");
+
+        spDataObject const pendingH = _pendingBlock.header()->asDataObject();
+        spDataObject const pendingFixedH = _pendingFixed.header()->asDataObject();
+        if (pendingH->asJson(0, false) != pendingFixedH->asJson(0, false))
+        {
+            string errField;
+            string const compare = compareBlockHeaders(pendingH, pendingFixedH, errField);
+            throw test::UpwardsException(string("Block from pending block != t8ntool constructed block!\n") +
+                                         "Error in field: " + errField + "\n" +
+                                         "rawRLP/Pending header  vs  t8ntool header \n" + compare);
+        }
+    }
+
+    if (_pendingFixed.header()->transactionRoot() != _res.txRoot())
+    {
+        ETH_ERROR_MESSAGE(string("ToolChain::mineBlock txRootHash is different to one ruturned by tool \n") +
+                          "constructedBlockHash: " + _pendingFixed.header()->transactionRoot().asString() +
+                          "\n toolTransactionRoot: " + _res.txRoot().asString());
+    }
+}
+
+void ToolChain::calculateAndSetTotalDifficulty(EthereumBlockState& _pendingFixed)
+{
+    VALUE totalDifficulty(0);
+    if (m_blocks.size() > 0)
+        totalDifficulty = m_blocks.at(m_blocks.size() - 1).totalDifficulty();
+    _pendingFixed.setTotalDifficulty(totalDifficulty + _pendingFixed.header()->difficulty());
+
+    ETH_LOG("New block N: " + to_string(m_blocks.size()), 6);
+    ETH_LOG("New block TD: " + totalDifficulty.asDecString() + " + " + _pendingFixed.header()->difficulty().asDecString() +
+                " = " + _pendingFixed.totalDifficulty().asDecString(),
+        6);
 }
 }  // namespace toolimpl
