@@ -1,4 +1,5 @@
 #pragma once
+#include "ToolChain.h"
 #include <testStructures/types/RPC/ToolResponse.h>
 #include <testStructures/types/ethereum.h>
 #include <boost/filesystem/path.hpp>
@@ -10,16 +11,9 @@ namespace toolimpl
 class BlockMining
 {
 public:
-    BlockMining(fs::path const& _toolPath, fs::path const& _tmpDir, EthereumBlockState const& _currentBlock,
-        EthereumBlockState const& _parentBlock, SealEngine _engine, spFORK const& _fork,
-        std::vector<EthereumBlockState> const& _blockHistory)
-      : m_toolPathRef(_toolPath),
-        m_engine(_engine),
-        m_forkRef(_fork),
-        m_tmpDirRef(_tmpDir),
-        m_currentBlockRef(_currentBlock),
-        m_parentBlockRef(_parentBlock),
-        m_blockHistoryRef(_blockHistory)
+    BlockMining(ToolChain const& _toolChain, EthereumBlockState const& _currentBlock, EthereumBlockState const& _parentBlock,
+        SealEngine _engine)
+      : m_chainRef(_toolChain), m_currentBlockRef(_currentBlock), m_parentBlockRef(_parentBlock), m_engine(_engine)
     {}
     ~BlockMining();
 
@@ -30,13 +24,10 @@ public:
     ToolResponse readResult();
 
 private:
-    fs::path const& m_toolPathRef;
-    SealEngine m_engine;
-    spFORK const& m_forkRef;
-    fs::path const& m_tmpDirRef;
+    ToolChain const& m_chainRef;
     EthereumBlockState const& m_currentBlockRef;
     EthereumBlockState const& m_parentBlockRef;
-    std::vector<EthereumBlockState> const& m_blockHistoryRef;
+    SealEngine m_engine;
 
 private:
     fs::path m_allocPath;

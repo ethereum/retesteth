@@ -213,7 +213,7 @@ spDataObject const ToolChain::mineBlock(EthereumBlockState const& _pendingBlock,
 ToolResponse ToolChain::mineBlockOnTool(
     EthereumBlockState const& _currentBlock, EthereumBlockState const& _parentBlock, SealEngine _engine)
 {
-    BlockMining toolMiner(m_toolPath, m_tmpDir, _currentBlock, _parentBlock, _engine, m_fork, m_blocks);
+    BlockMining toolMiner(*this, _currentBlock, _parentBlock, _engine);
     toolMiner.prepareEnvFile();
     toolMiner.prepareAllocFile();
     toolMiner.prepareTxnFile();

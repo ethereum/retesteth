@@ -25,9 +25,9 @@ namespace toolimpl
 {
 void BlockMining::prepareEnvFile()
 {
-    m_envPath = m_tmpDirRef / "env.json";
+    m_envPath = m_chainRef.tmpDir() / "env.json";
     auto spHeader = m_currentBlockRef.header()->asDataObject();
-    spBlockchainTestFillerEnv env(readBlockchainFillerTestEnv(dataobject::move(spHeader), m_engine));
+    spBlockchainTestFillerEnv env(readBlockchainFillerTestEnv(dataobject::move(spHeader), m_chainRef.engine()));
     spDataObject& envData = const_cast<spDataObject&>(env->asDataObject());
     if (m_parentBlockRef.header()->number() != m_currentBlockRef.header()->number())
     {
@@ -41,7 +41,7 @@ void BlockMining::prepareEnvFile()
 
     // BlockHeader hash information for tool mining
     size_t k = 0;
-    for (auto const& bl : m_blockHistoryRef)
+    for (auto const& bl : m_chainRef.blocks())
         (*envData)["blockHashes"][fto_string(k++)] = bl.header()->hash().asString();
     for (auto const& un : m_currentBlockRef.uncles())
     {
@@ -63,7 +63,7 @@ void BlockMining::prepareEnvFile()
 
 void BlockMining::prepareAllocFile()
 {
-    m_allocPath = m_tmpDirRef / "alloc.json";
+    m_allocPath = m_chainRef.tmpDir() / "alloc.json";
     m_allocPathContent = m_currentBlockRef.state()->asDataObject()->asJsonNoFirstKey();
     writeFile(m_allocPath.string(), m_allocPathContent);
 }
@@ -72,7 +72,7 @@ void BlockMining::prepareTxnFile()
 {
     bool exportRLP = true;
     string const txsfile = m_currentBlockRef.transactions().size() && exportRLP ? "txs.rlp" : "txs.json";
-    m_txsPath = m_tmpDirRef / txsfile;
+    m_txsPath = m_chainRef.tmpDir() / txsfile;
 
     string txsPathContent;
     if (exportRLP)
@@ -103,24 +103,24 @@ void BlockMining::prepareTxnFile()
 
 void BlockMining::executeTransition()
 {
-    m_outPath = m_tmpDirRef / "out.json";
-    m_outAllocPath = m_tmpDirRef / "outAlloc.json";
+    m_outPath = m_chainRef.tmpDir() / "out.json";
+    m_outAllocPath = m_chainRef.tmpDir() / "outAlloc.json";
 
-    string cmd = m_toolPathRef.string();
+    string cmd = m_chainRef.toolPath().string();
     if (m_engine != SealEngine::NoReward)
     {
         // Convert FrontierToHomesteadAt5 -> Homestead if block > 5, and get reward
-        auto tupleRewardFork = prepareReward(m_engine, m_forkRef.getCContent(), m_currentBlockRef.header()->number());
+        auto tupleRewardFork = prepareReward(m_engine, m_chainRef.fork(), m_currentBlockRef.header()->number());
         cmd += " --state.fork " + std::get<1>(tupleRewardFork).asString();
         cmd += " --state.reward " + std::get<0>(tupleRewardFork).asDecString();
     }
     else
-        cmd += " --state.fork " + m_forkRef->asString();
+        cmd += " --state.fork " + m_chainRef.fork().asString();
 
     cmd += " --input.alloc " + m_allocPath.string();
     cmd += " --input.txs " + m_txsPath.string();
     cmd += " --input.env " + m_envPath.string();
-    cmd += " --output.basedir " + m_tmpDirRef.string();
+    cmd += " --output.basedir " + m_chainRef.tmpDir().string();
     cmd += " --output.result " + m_outPath.filename().string();
     cmd += " --output.alloc " + m_outAllocPath.filename().string();
 
@@ -181,7 +181,7 @@ void BlockMining::traceTransactions(ToolResponse& _toolResponse)
     {
         fs::path txTraceFile;
         string const trNumber = test::fto_string(i++);
-        txTraceFile = m_tmpDirRef / string("trace-" + trNumber + "-" + tr->hash().asString() + ".jsonl");
+        txTraceFile = m_chainRef.tmpDir() / string("trace-" + trNumber + "-" + tr->hash().asString() + ".jsonl");
         if (fs::exists(txTraceFile))
         {
             string const preinfo = "\nTransaction number: " + trNumber + ", hash: " + tr->hash().asString() + "\n";
