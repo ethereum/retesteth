@@ -44,20 +44,7 @@ void ToolChainManager::reorganizePendingBlock()
 {
     EthereumBlockState const& bl = currentChain().lastBlock();
     if (currentChain().fork() == "BerlinToLondonAt5" && bl.header()->number() == 4)
-    {
-        // Switch default mining to 1559 blocks
-        spDataObject parentData = bl.header()->asDataObject();
-
-        VALUE newGasLimit = bl.header()->gasLimit() * ELASTICITY_MULTIPLIER;
-        (*parentData).atKeyUnsafe("gasLimit").setString(string(newGasLimit.asString()));
-
-        // https://eips.ethereum.org/EIPS/eip-1559
-        // INITIAL_BASE_FEE = 1000000000
-        (*parentData)["baseFeePerGas"] = VALUE(INITIAL_BASE_FEE).asString();
-
-        spBlockHeader newPending(new BlockHeader1559(parentData));
-        m_pendingBlock = spEthereumBlockState(new EthereumBlockState(newPending, bl.state(), bl.logHash()));
-    }
+        init1559PendingBlock(bl);
     else
         m_pendingBlock = spEthereumBlockState(new EthereumBlockState(bl.header(), bl.state(), bl.logHash()));
 
@@ -340,5 +327,20 @@ VALUE ToolChainManager::test_calculateDifficulty(FORK const& _fork, VALUE const&
     return chain.lastBlock().header()->difficulty();
 }
 
+void ToolChainManager::init1559PendingBlock(EthereumBlockState const& _lastBlock)
+{
+    // Switch default mining to 1559 blocks
+    spDataObject parentData = _lastBlock.header()->asDataObject();
+
+    VALUE newGasLimit = _lastBlock.header()->gasLimit() * ELASTICITY_MULTIPLIER;
+    (*parentData).atKeyUnsafe("gasLimit").setString(string(newGasLimit.asString()));
+
+    // https://eips.ethereum.org/EIPS/eip-1559
+    // INITIAL_BASE_FEE = 1000000000
+    (*parentData)["baseFeePerGas"] = VALUE(INITIAL_BASE_FEE).asString();
+
+    spBlockHeader newPending(new BlockHeader1559(parentData));
+    m_pendingBlock = spEthereumBlockState(new EthereumBlockState(newPending, _lastBlock.state(), _lastBlock.logHash()));
+}
 
 }  // namespace toolimpl

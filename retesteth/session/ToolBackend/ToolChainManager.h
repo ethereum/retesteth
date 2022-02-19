@@ -61,6 +61,9 @@ private:
 
     fs::path m_tmpDir;
     fs::path m_toolPath;
+
+private:
+    void init1559PendingBlock(EthereumBlockState const&);
 };
 
 }  // namespace toolimpl

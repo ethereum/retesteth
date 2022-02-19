@@ -24,7 +24,6 @@ void correctHeaderByToolResponse(BlockHeader& _header, ToolResponse const& _res)
     _header.setTrReceiptsHash(_res.receiptRoot());
     _header.setLogsBloom(_res.logsBloom());
     _header.setStateRoot(_res.stateRoot());
-    _header.setDifficulty(_res.currentDifficulty());
 }
 }
 
@@ -47,7 +46,8 @@ ToolChain::ToolChain(
             && _genesis.header()->type() == BlockType::BlockHeader1559)
             throw test::UpwardsException("Constructing 1559 genesis on network which is lower London!");
         if (compareFork(m_fork, CMP::ge, FORK("London"))
-            && _genesis.header()->type() != BlockType::BlockHeader1559)
+            && _genesis.header()->type() != BlockType::BlockHeader1559
+            && _genesis.header()->type() != BlockType::BlockHeaderMerge)
             throw test::UpwardsException("Constructing legacy genesis on network which is higher London!");
     }
 
@@ -90,7 +90,11 @@ spDataObject const ToolChain::mineBlock(EthereumBlockState const& _pendingBlock,
     BlockHeader& pendingFixedHeader = pendingFixed.headerUnsafe().getContent();
     pendingFixedHeader.setNumber(m_blocks.size());
     correctHeaderByToolResponse(pendingFixedHeader, res);
-    checkDifficultyAgainstRetesteth(res.currentDifficulty(), pendingFixed.header());
+    if (_pendingBlock.header()->type() != BlockType::BlockHeaderMerge)
+    {
+        pendingFixedHeader.setDifficulty(res.currentDifficulty());
+        checkDifficultyAgainstRetesteth(res.currentDifficulty(), pendingFixed.header());
+    }
     calculateAndSetBaseFee(pendingFixed.headerUnsafe(), lastBlock().header());
 
     spDataObject miningResult;

@@ -6,14 +6,20 @@ namespace
 void verifyLegacyBlock(spBlockHeader const& _header, ToolChain const& _chain)
 {
     (void)_chain;
-    (void)_header;
-    //    if (_header->type() != BlockType::BlockHeaderLegacy)
-    //        ETH_FAIL_MESSAGE("verifyLegacyBlock got block of another type!");
-    //    BlockHeaderLegacy const& header = BlockHeaderLegacy::castFrom(_header);
+    BlockHeader const& header = _header.getCContent();
+    if (header.difficulty() < dev::bigint("0x20000"))
+        throw test::UpwardsException("Invalid difficulty: header.difficulty < 0x20000");
 }
 
 void verifyLegacyParent(spBlockHeader const& _header, spBlockHeader const& _parent, ToolChain const& _chain)
 {
+    // Validate block difficulty delta
+    ChainOperationParams params = ChainOperationParams::defaultParams(_chain.toolParams());
+    VALUE newDiff = calculateEthashDifficulty(params, _header, _parent);
+    if (_header.getCContent().difficulty() != newDiff)
+        throw test::UpwardsException("Invalid difficulty: " + _header.getCContent().difficulty().asDecString() +
+                                     ", retesteth want: " + VALUE(newDiff).asDecString());
+
     if (_chain.fork().asString() == "BerlinToLondonAt5" && _parent->number() == 4)
         throw test::UpwardsException("Legacy block import is impossible on BerlinToLondonAt5 after block#4!");
 
@@ -24,9 +30,32 @@ void verifyLegacyParent(spBlockHeader const& _header, spBlockHeader const& _pare
         throw test::UpwardsException("Legacy block can only be on top of LegacyBlock!");
 }
 
+void verifyMergeBlock(spBlockHeader const& _header, ToolChain const& _chain)
+{
+    (void)_chain;
+    if (_header->type() != BlockType::BlockHeaderMerge)
+        ETH_FAIL_MESSAGE("verifyMergeBlock got block of another type!");
+    BlockHeaderMerge const& header = BlockHeaderMerge::castFrom(_header);
+
+    // https://eips.ethereum.org/EIPS/eip-3675
+    if (header.difficulty() != 0)
+        throw test::UpwardsException() << "Invalid blockMerge: Invalid difficulty != 0";
+
+    static FH32 emptyOmmersHash("0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347");
+    if (header.uncleHash() != emptyOmmersHash)
+        throw test::UpwardsException() << "Invalid blockMerge: Invalid uncleHash != emptyUncleHash";
+
+    if (header.nonce() != FH8::zero())
+        throw test::UpwardsException() << "Invalid blockMerge: Invalid nonce != 0x0000000000000000";
+}
+
 void verify1559Block(spBlockHeader const& _header, ToolChain const& _chain)
 {
     (void)_chain;
+    BlockHeader const& headerLegacy = _header.getCContent();
+    if (headerLegacy.difficulty() < dev::bigint("0x20000"))
+        throw test::UpwardsException("Invalid difficulty: header.difficulty < 0x20000");
+
     if (_header->type() != BlockType::BlockHeader1559)
         ETH_FAIL_MESSAGE("verify1559Block got block of another type!");
     BlockHeader1559 const& header = BlockHeader1559::castFrom(_header);
@@ -82,6 +111,13 @@ void verify1559Parent_private(spBlockHeader const& _header, spBlockHeader const&
 
 void verify1559Parent(spBlockHeader const& _header, spBlockHeader const& _parent, ToolChain const& _chain)
 {
+    // Validate block difficulty delta
+    ChainOperationParams params = ChainOperationParams::defaultParams(_chain.toolParams());
+    VALUE newDiff = calculateEthashDifficulty(params, _header, _parent);
+    if (_header.getCContent().difficulty() != newDiff)
+        throw test::UpwardsException("Invalid difficulty: " + _header.getCContent().difficulty().asDecString() +
+                                     ", retesteth want: " + VALUE(newDiff).asDecString());
+
     if (_header->type() != BlockType::BlockHeader1559)
         ETH_FAIL_MESSAGE("verify1559Parent got block of another type!");
 
@@ -113,11 +149,16 @@ void verify1559Parent(spBlockHeader const& _header, spBlockHeader const& _parent
         verify1559Parent_private(_header, _parent, _chain);
 }
 
+void verifyMergeParent(spBlockHeader const& _header, spBlockHeader const& _parent, ToolChain const& _chain)
+{
+    (void)_header;
+    (void)_parent;
+    (void)_chain;
+}
+
 void verifyCommonBlock(spBlockHeader const& _header, ToolChain const& _chain)
 {
     BlockHeader const& header = _header.getCContent();
-    if (header.difficulty() < dev::bigint("0x20000"))
-        throw test::UpwardsException("Invalid difficulty: header.difficulty < 0x20000");
     if (header.extraData().asString().size() > 32 * 2 + 2)
         throw test::UpwardsException("Header extraData > 32 bytes");
 
@@ -145,13 +186,6 @@ void verifyCommonParent(spBlockHeader const& _header, spBlockHeader const& _pare
     if (parent.timestamp() >= header.timestamp())
         throw test::UpwardsException("BlockHeader timestamp is less or equal then it's parent block! (" +
             header.timestamp().asDecString() + " <= " + parent.timestamp().asDecString() + ")");
-
-    // Validate block difficulty delta
-    ChainOperationParams params = ChainOperationParams::defaultParams(_chain.toolParams());
-    VALUE newDiff = calculateEthashDifficulty(params, _header, _parent);
-    if (header.difficulty() != newDiff)
-        throw test::UpwardsException(
-            "Invalid difficulty: " + header.difficulty().asDecString() + ", retesteth want: " + VALUE(newDiff).asDecString());
 
     bigint parentGasLimit = parent.gasLimit().asBigInt();
     if (header.number() == 5 && _chain.fork() == "BerlinToLondonAt5")
@@ -182,6 +216,9 @@ void verifyEthereumBlockHeader(spBlockHeader const& _header, ToolChain const& _c
     case BlockType::BlockHeader1559:
         verify1559Block(_header, _chain);
         break;
+    case BlockType::BlockHeaderMerge:
+        verifyMergeBlock(_header, _chain);
+        break;
     default:
         throw test::UpwardsException("Unhandled block type check!");
     }
@@ -208,6 +245,9 @@ void verifyEthereumBlockHeader(spBlockHeader const& _header, ToolChain const& _c
                 break;
             case BlockType::BlockHeader1559:
                 verify1559Parent(_header, parentBlock.header(), _chain);
+                break;
+            case BlockType::BlockHeaderMerge:
+                verifyMergeParent(_header, parentBlock.header(), _chain);
                 break;
             default:
                 throw test::UpwardsException("Unhandled block type check!");

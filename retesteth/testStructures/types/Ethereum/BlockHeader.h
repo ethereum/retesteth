@@ -15,7 +15,8 @@ namespace teststruct
 enum class BlockType
 {
     BlockHeaderLegacy,
-    BlockHeader1559
+    BlockHeader1559,
+    BlockHeaderMerge
 };
 
 // Ethereum blockheader interface
