@@ -64,6 +64,8 @@ private:
 
 private:
     void init1559PendingBlock(EthereumBlockState const&);
+    void initMergePendingBlock(EthereumBlockState const&);
+    bool isTerminalPoWBlock();
 };
 
 }  // namespace toolimpl

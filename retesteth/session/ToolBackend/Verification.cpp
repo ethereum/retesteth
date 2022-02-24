@@ -11,44 +11,6 @@ void verifyLegacyBlock(spBlockHeader const& _header, ToolChain const& _chain)
         throw test::UpwardsException("Invalid difficulty: header.difficulty < 0x20000");
 }
 
-void verifyLegacyParent(spBlockHeader const& _header, spBlockHeader const& _parent, ToolChain const& _chain)
-{
-    // Validate block difficulty delta
-    ChainOperationParams params = ChainOperationParams::defaultParams(_chain.toolParams());
-    VALUE newDiff = calculateEthashDifficulty(params, _header, _parent);
-    if (_header.getCContent().difficulty() != newDiff)
-        throw test::UpwardsException("Invalid difficulty: " + _header.getCContent().difficulty().asDecString() +
-                                     ", retesteth want: " + VALUE(newDiff).asDecString());
-
-    if (_chain.fork().asString() == "BerlinToLondonAt5" && _parent->number() == 4)
-        throw test::UpwardsException("Legacy block import is impossible on BerlinToLondonAt5 after block#4!");
-
-    if (_header->type() != BlockType::BlockHeaderLegacy)
-        ETH_FAIL_MESSAGE("verifyLegacyBlock got block of another type!");
-
-    if (_parent->type() != BlockType::BlockHeaderLegacy)
-        throw test::UpwardsException("Legacy block can only be on top of LegacyBlock!");
-}
-
-void verifyMergeBlock(spBlockHeader const& _header, ToolChain const& _chain)
-{
-    (void)_chain;
-    if (_header->type() != BlockType::BlockHeaderMerge)
-        ETH_FAIL_MESSAGE("verifyMergeBlock got block of another type!");
-    BlockHeaderMerge const& header = BlockHeaderMerge::castFrom(_header);
-
-    // https://eips.ethereum.org/EIPS/eip-3675
-    if (header.difficulty() != 0)
-        throw test::UpwardsException() << "Invalid blockMerge: Invalid difficulty != 0";
-
-    static FH32 emptyOmmersHash("0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347");
-    if (header.uncleHash() != emptyOmmersHash)
-        throw test::UpwardsException() << "Invalid blockMerge: Invalid uncleHash != emptyUncleHash";
-
-    if (header.nonce() != FH8::zero())
-        throw test::UpwardsException() << "Invalid blockMerge: Invalid nonce != 0x0000000000000000";
-}
-
 void verify1559Block(spBlockHeader const& _header, ToolChain const& _chain)
 {
     (void)_chain;
@@ -76,6 +38,44 @@ void verify1559Block(spBlockHeader const& _header, ToolChain const& _chain)
             throw test::UpwardsException(
                 "Invalid block1559: Initial baseFee must be 1000000000, got: " + header.baseFee().asDecString());
     }
+}
+
+void verifyMergeBlock(spBlockHeader const& _header, ToolChain const& _chain)
+{
+    (void)_chain;
+    if (_header->type() != BlockType::BlockHeaderMerge)
+        ETH_FAIL_MESSAGE("verifyMergeBlock got block of another type!");
+    BlockHeaderMerge const& header = BlockHeaderMerge::castFrom(_header);
+
+    // https://eips.ethereum.org/EIPS/eip-3675
+    if (header.difficulty() != 0)
+        throw test::UpwardsException() << "Invalid blockMerge: Invalid difficulty != 0";
+
+    static FH32 emptyOmmersHash("0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347");
+    if (header.uncleHash() != emptyOmmersHash)
+        throw test::UpwardsException() << "Invalid blockMerge: Invalid uncleHash != emptyUncleHash";
+
+    if (header.nonce() != FH8::zero())
+        throw test::UpwardsException() << "Invalid blockMerge: Invalid nonce != 0x0000000000000000";
+}
+
+void verifyLegacyParent(spBlockHeader const& _header, spBlockHeader const& _parent, ToolChain const& _chain)
+{
+    // Validate block difficulty delta
+    ChainOperationParams params = ChainOperationParams::defaultParams(_chain.toolParams());
+    VALUE newDiff = calculateEthashDifficulty(params, _header, _parent);
+    if (_header.getCContent().difficulty() != newDiff)
+        throw test::UpwardsException("Invalid difficulty: " + _header.getCContent().difficulty().asDecString() +
+                                     ", retesteth want: " + VALUE(newDiff).asDecString());
+
+    if (_chain.fork().asString() == "BerlinToLondonAt5" && _parent->number() == 4)
+        throw test::UpwardsException("Legacy block import is impossible on BerlinToLondonAt5 after block#4!");
+
+    if (_header->type() != BlockType::BlockHeaderLegacy)
+        ETH_FAIL_MESSAGE("verifyLegacyBlock got block of another type!");
+
+    if (_parent->type() != BlockType::BlockHeaderLegacy)
+        throw test::UpwardsException("Legacy block can only be on top of LegacyBlock!");
 }
 
 void verify1559Parent_private(spBlockHeader const& _header, spBlockHeader const& _parent, ToolChain const& _chain)
@@ -154,6 +154,12 @@ void verifyMergeParent(spBlockHeader const& _header, spBlockHeader const& _paren
     (void)_header;
     (void)_parent;
     (void)_chain;
+
+    if (_header->type() != BlockType::BlockHeaderMerge)
+        ETH_FAIL_MESSAGE("verifyMergeParent got block of another type!");
+    if (_parent->type() != BlockType::BlockHeaderMerge)
+        throw test::UpwardsException("Merge block can only be on top of MergeBlock!");
+
 }
 
 void verifyCommonBlock(spBlockHeader const& _header, ToolChain const& _chain)

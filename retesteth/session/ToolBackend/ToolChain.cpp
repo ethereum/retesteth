@@ -82,6 +82,7 @@ spDataObject const ToolChain::mineBlock(EthereumBlockState const& _pendingBlock,
     // Ask the tool to calculate post state and block header
     // With current chain information, txs from pending block
     ToolResponse const res = mineBlockOnTool(_pendingBlock, _parentBlock, m_engine);
+    ETH_LOG("ToolChain::mineBlock of new block: " + BlockHeader::BlockTypeToString(_pendingBlock.header()->type()), 5);
 
     // Pending fixed is pending header corrected by the information returned by tool
     // The tool can reject transactions changing the stateHash, TxRoot, TxReceipts, HeaderHash, GasUsed

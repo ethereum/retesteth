@@ -19,6 +19,7 @@ struct BlockchainTestBlock : GCP_SPointerBase
     BYTES const& rlp() const { return m_rlp; }
     bool expectedInvalid() const { return m_blockHeader.isEmpty(); }
     spBlockHeader const& header() const { return m_blockHeader; }
+    string const& getExpectException() const { return m_exception; }
 
     std::vector<spBlockHeader> const& uncles() const { return m_uncles; }
     std::vector<spTransaction> const& transactions() const { return m_transactions; }
@@ -27,6 +28,7 @@ struct BlockchainTestBlock : GCP_SPointerBase
 private:
     BlockchainTestBlock() {}
     string m_chainName;
+    string m_exception;
     spVALUE m_blockNumber;
     spBlockHeader m_blockHeader;
     std::vector<spBlockHeader> m_uncles;

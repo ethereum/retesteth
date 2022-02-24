@@ -21,6 +21,9 @@ ToolChainManager::ToolChainManager(spSetChainParamsArgs const& _config, fs::path
     m_pendingBlock =
         spEthereumBlockState(new EthereumBlockState(currentChain().lastBlock().header(), _config->state(), FH32::zero()));
     reorganizePendingBlock();
+
+
+    ETH_LOG("test_setChainParams of new block: " + BlockHeader::BlockTypeToString(lastBlock().header()->type()), 5);
 }
 
 spDataObject const ToolChainManager::mineBlocks(size_t _number, ToolChain::Mining _req)
@@ -45,6 +48,8 @@ void ToolChainManager::reorganizePendingBlock()
     EthereumBlockState const& bl = currentChain().lastBlock();
     if (currentChain().fork() == "BerlinToLondonAt5" && bl.header()->number() == 4)
         init1559PendingBlock(bl);
+    else if (currentChain().fork() == "LondonToMergeAtDiff" && isTerminalPoWBlock())
+        initMergePendingBlock(bl);
     else
         m_pendingBlock = spEthereumBlockState(new EthereumBlockState(bl.header(), bl.state(), bl.logHash()));
 
@@ -327,6 +332,7 @@ VALUE ToolChainManager::test_calculateDifficulty(FORK const& _fork, VALUE const&
     return chain.lastBlock().header()->difficulty();
 }
 
+
 void ToolChainManager::init1559PendingBlock(EthereumBlockState const& _lastBlock)
 {
     // Switch default mining to 1559 blocks
@@ -340,6 +346,41 @@ void ToolChainManager::init1559PendingBlock(EthereumBlockState const& _lastBlock
     (*parentData)["baseFeePerGas"] = VALUE(INITIAL_BASE_FEE).asString();
 
     spBlockHeader newPending(new BlockHeader1559(parentData));
+    m_pendingBlock = spEthereumBlockState(new EthereumBlockState(newPending, _lastBlock.state(), _lastBlock.logHash()));
+}
+
+bool ToolChainManager::isTerminalPoWBlock()
+{
+    VALUE TERMINAL_TOTAL_DIFFICULTY(DataObject("0x0fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
+    DataObject const& configParams = currentChain().params()->params();
+    if (configParams.count("terminalTotalDifficulty"))
+        TERMINAL_TOTAL_DIFFICULTY = VALUE(configParams.atKey("terminalTotalDifficulty"));
+
+    auto const& currentChainBlocks = currentChain().blocks();
+    bool parentBlockTDLessThanTerminalTD = true;
+    if (currentChainBlocks.size() > 2 &&
+        currentChainBlocks.at(currentChainBlocks.size() - 2).totalDifficulty() >= TERMINAL_TOTAL_DIFFICULTY)
+        parentBlockTDLessThanTerminalTD = false;
+
+    // pow_block.total_difficulty >= TERMINAL_TOTAL_DIFFICULTY
+    // and pow_block.parent_block.total_difficulty < TERMINAL_TOTAL_DIFFICULTY
+    if (currentChain().lastBlock().totalDifficulty() >= TERMINAL_TOTAL_DIFFICULTY
+        && parentBlockTDLessThanTerminalTD)
+        return true;
+    return false;
+}
+
+void ToolChainManager::initMergePendingBlock(EthereumBlockState const& _lastBlock)
+{
+    // Switch default mining to Merge POS blocks
+    // https://eips.ethereum.org/EIPS/eip-3675
+    spDataObject parentData = _lastBlock.header()->asDataObject();
+    (*parentData)["uncleHash"] = "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347";
+    (*parentData)["difficulty"] = "0x00";
+    (*parentData)["mixHash"] = "0x0000000000000000000000000000000000000000000000000000000000000000";
+    (*parentData)["nonce"] = "0x0000000000000000";
+
+    spBlockHeader newPending(new BlockHeaderMerge(parentData));
     m_pendingBlock = spEthereumBlockState(new EthereumBlockState(newPending, _lastBlock.state(), _lastBlock.logHash()));
 }
 

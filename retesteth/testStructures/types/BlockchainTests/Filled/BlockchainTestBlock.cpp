@@ -29,6 +29,8 @@ BlockchainTestBlock::BlockchainTestBlock(spDataObject& _data)
                 {"expectExceptionIstanbul", {{DataType::String}, jsonField::Optional}},           // Legacy field
                 {"blockHeader", {{DataType::Object}, jsonField::Optional}}});
 
+        if (_data->count("expectException"))
+            m_exception = _data->atKey("expectException").asString();
         if (_data->count("chainname"))
             m_chainName = _data->atKey("chainname").asString();
         if (_data->count("blocknumber"))
