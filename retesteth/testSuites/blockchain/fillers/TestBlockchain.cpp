@@ -33,7 +33,7 @@ void TestBlockchain::generateBlock(
     if (_block.isRawRLP())
     {
         FH32 const blHash(m_session.test_importRawBlock(_block.rawRLP()));
-        checkBlockException(_block.getExpectException(m_network));
+        checkBlockException(m_session, _block.getExpectException(m_network));
         if (!blHash.isZero())
             ETH_ERROR_MESSAGE("rawBlock rlp appered to be valid. Unable to contruct objects from RLP!");
         else
@@ -156,7 +156,7 @@ GCP_SPointer<EthGetBlockBy> TestBlockchain::mineBlock(
 
     // Expected exception for this block
     string const& sBlockException = _blockInTest.getExpectException(m_network);
-    checkBlockException(sBlockException);  // Check any impoprt failure exceptions here
+    checkBlockException(m_session, sBlockException);  // Check any impoprt failure exceptions here
 
     GCP_SPointer<EthGetBlockBy> remoteBlock;
     if (!minedBlockHash.isEmpty())
@@ -372,25 +372,25 @@ FH32 TestBlockchain::postmineBlockHeader(BlockchainTestFillerBlock const& _block
 }
 
 // Returns true if the block is valid
-bool TestBlockchain::checkBlockException(string const& _sBlockException) const
+bool TestBlockchain::checkBlockException(SessionInterface const& _session, string const& _sBlockException)
 {
     // Check malicious block import exception
     // Relies on that previous block import was exactly this block !!!
     if (_sBlockException.empty())
     {
-        ETH_ERROR_REQUIRE_MESSAGE(m_session.getLastRPCError().empty(),
-            "Postmine block tweak expected no exception! Client errors with: '" + m_session.getLastRPCError().message() + "'");
+        ETH_ERROR_REQUIRE_MESSAGE(_session.getLastRPCError().empty(),
+            "Postmine block tweak expected no exception! Client errors with: '" + _session.getLastRPCError().message() + "'");
     }
     else
     {
         std::string const& clientExceptionString =
             Options::get().getDynamicOptions().getCurrentConfig().translateException(_sBlockException);
-        size_t pos = m_session.getLastRPCError().message().find(clientExceptionString);
+        size_t pos = _session.getLastRPCError().message().find(clientExceptionString);
         if (clientExceptionString.empty())
             pos = string::npos;
         ETH_ERROR_REQUIRE_MESSAGE(pos != string::npos,
             cYellow + _sBlockException + cRed + " Not found in client response to postmine block tweak!" +
-                "\nImport result of postmine block: \n'" + cYellow + m_session.getLastRPCError().message() + cRed +
+                "\nImport result of postmine block: \n'" + cYellow + _session.getLastRPCError().message() + cRed +
                 "',\n Test Expected: \n'" + cYellow + clientExceptionString + cRed + "'\n");
         return false;  // block is not valid
     }

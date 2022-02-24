@@ -96,7 +96,7 @@ void TestBlockchainManager::syncOnRemoteClient(DataObject& _exportBlocksSection)
 
             m_session.test_importRawBlock(std::get<0>(rlpAndException));
             string const& canonExcept = std::get<1>(rlpAndException);
-            bool isValid = chain.checkBlockException(canonExcept);  // Check on canon exception
+            bool isValid = chain.checkBlockException(m_session, canonExcept);  // Check on canon exception
             if (!isValid)
             {
                 DataObject& testObj = _exportBlocksSection.atUnsafe(ind);

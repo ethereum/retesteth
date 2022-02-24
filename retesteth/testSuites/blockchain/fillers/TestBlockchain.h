@@ -46,7 +46,7 @@ public:
 
     // Verify post-import exceptin according to expectException section in test
     // Return true if block is valid, false if block is not valid
-    bool checkBlockException(string const& _sBlockException) const;
+    static bool checkBlockException(SessionInterface const& _session, string const& _sBlockException);
 
 private:
     // Ask remote client to generate a blockheader that will later used for uncles

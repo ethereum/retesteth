@@ -6,6 +6,7 @@
 #include <retesteth/testStructures/Common.h>
 #include <retesteth/testStructures/PrepareChainParams.h>
 #include <retesteth/testSuites/Common.h>
+#include "fillers/TestBlockchain.h"
 namespace test
 {
 
@@ -85,6 +86,13 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
             if (!_opt.allowInvalidBlocks || !tblock.expectedInvalid())
                 ETH_ERROR_MESSAGE(
                     "Importing raw RLP block, block was expected to be valid! " + session.getLastRPCError().message());
+
+            if (Options::getDynamicOptions().getCurrentConfig().cfgFile().socketType() == ClientConfgSocketType::TransitionTool)
+            {
+                string const& sBlockException = tblock.getExpectException();
+                if (!sBlockException.empty())
+                    blockchainfiller::TestBlockchain::checkBlockException(session, sBlockException);
+            }
             continue;
         }
         else
