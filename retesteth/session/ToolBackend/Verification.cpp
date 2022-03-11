@@ -158,7 +158,7 @@ void verifyMergeParent(spBlockHeader const& _header, spBlockHeader const& _paren
     if (_header->type() != BlockType::BlockHeaderMerge)
         ETH_FAIL_MESSAGE("verifyMergeParent got block of another type!");
     if (_parent->type() != BlockType::BlockHeaderMerge)
-        throw test::UpwardsException("Merge block can only be on top of MergeBlock!");
+        throw test::UpwardsException("Merge block can only be on top of MergeBlock! Invalid difficulty:");
 
 }
 
