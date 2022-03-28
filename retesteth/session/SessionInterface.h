@@ -41,7 +41,7 @@ public:
     virtual spDataObject web3_clientVersion() = 0;
 
     // ETH Methods
-    virtual FH32 eth_sendRawTransaction(BYTES const& _rlp, VALUE const& _secret) = 0;
+    virtual spFH32 eth_sendRawTransaction(BYTES const& _rlp, VALUE const& _secret) = 0;
 
     virtual VALUE eth_blockNumber() = 0;
     virtual EthGetBlockBy eth_getBlockByHash(FH32 const& _blockHash, Request _fullObjects) = 0;
@@ -68,8 +68,8 @@ public:
     virtual void test_rewindToBlock(VALUE const& _blockNr) = 0;
     virtual void test_modifyTimestamp(VALUE const& _timestamp) = 0;
     virtual MineBlocksResult test_mineBlocks(size_t _number) = 0;
-    virtual FH32 test_importRawBlock(BYTES const& _blockRLP) = 0;
-    virtual FH32 test_getLogHash(FH32 const& _txHash) = 0;
+    virtual spFH32 test_importRawBlock(BYTES const& _blockRLP) = 0;
+    virtual spFH32 test_getLogHash(FH32 const& _txHash) = 0;
     virtual TestRawTransaction test_rawTransaction(BYTES const& _rlp, FORK const& _fork) = 0;
     virtual VALUE test_calculateDifficulty(FORK const& _fork, VALUE const& _blockNumber, VALUE const& _parentTimestamp,
         VALUE const& _parentDifficulty, VALUE const& _currentTimestamp, VALUE const& _uncleNumber) = 0;

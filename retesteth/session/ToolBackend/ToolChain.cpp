@@ -169,7 +169,7 @@ spDataObject ToolChain::coorectTransactionsByToolResponse(
     for (auto const& tr : _pendingBlock.transactions())
     {
         bool found = false;
-        FH32 const trHash = tr->hash();
+        FH32 const& trHash = tr->hash();
         for (auto const& trReceipt : _res.receipts())
         {
             if (trReceipt.trHash() == trHash)

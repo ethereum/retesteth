@@ -24,7 +24,7 @@ public:
         return m_chains.at(m_currentChain);
     }
     spDataObject const mineBlocks(size_t _number, ToolChain::Mining _req = ToolChain::Mining::AllowFailTransactions);
-    FH32 importRawBlock(BYTES const& _rlp);
+    spFH32 importRawBlock(BYTES const& _rlp);
 
     EthereumBlockState const& lastBlock() const { return currentChain().lastBlock(); }
     EthereumBlockState const& blockByNumber(VALUE const& _number) const;

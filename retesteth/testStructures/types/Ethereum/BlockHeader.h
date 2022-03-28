@@ -62,9 +62,9 @@ struct BlockHeader : GCP_SPointerBase
     FH32 const& parentHash() const { return m_parentHash; }
     VALUE const& number() const { return m_number; }
 
-    void setParentHash(FH32 const& _hash) { m_parentHash = spFH32(_hash.copy()); }
-    void setHeaderHash(FH32 const& _hash) { m_hash = spFH32(_hash.copy()); }
-    void setStateRoot(FH32 const& _hash) { m_stateRoot = spFH32(_hash.copy()); }
+    void setParentHash(FH32 const& _hash) { m_parentHash = _hash.copy(); }
+    void setHeaderHash(FH32 const& _hash) { m_hash = _hash.copy(); }
+    void setStateRoot(FH32 const& _hash) { m_stateRoot = _hash.copy(); }
     void setNumber(VALUE const& _number) { m_number = spVALUE(_number.copy()); }
 
     // Would soon go uncommon

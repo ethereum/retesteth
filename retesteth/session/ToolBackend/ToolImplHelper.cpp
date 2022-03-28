@@ -78,7 +78,7 @@ spDataObject constructStorageRangeAt(
         (*constructResponse)["complete"].setBool(true);
         spDataObject obj(new DataObject(DataType::Object));
         (*constructResponse).atKeyPointer("storage") = obj;
-        (*constructResponse)["nextKey"] = FH32::zero().asString();
+        (*constructResponse)["nextKey"] = FH32::zero()->asString();
         if (_block.state()->getAccount(_address).hasStorage())
         {
             size_t iStore = 0;

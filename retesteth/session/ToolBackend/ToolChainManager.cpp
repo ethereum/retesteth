@@ -96,7 +96,7 @@ void ToolChainManager::modifyTimestamp(VALUE const& _time)
 }
 
 // Import Raw Block via t8ntool
-FH32 ToolChainManager::importRawBlock(BYTES const& _rlp)
+spFH32 ToolChainManager::importRawBlock(BYTES const& _rlp)
 {
     try
     {
@@ -141,7 +141,7 @@ FH32 ToolChainManager::importRawBlock(BYTES const& _rlp)
         }
 
         mineBlocks(1, ToolChain::Mining::RequireValid);
-        FH32 const importedHash = lastBlock().header()->hash();
+        FH32 const& importedHash = lastBlock().header()->hash();
         if (importedHash != header->hash())
         {
             string errField;
@@ -154,7 +154,7 @@ FH32 ToolChainManager::importRawBlock(BYTES const& _rlp)
 
         reorganizeChainForTotalDifficulty();
         reorganizePendingBlock();
-        return importedHash;
+        return importedHash.copy();
     }
     catch (std::exception const& _ex)
     {

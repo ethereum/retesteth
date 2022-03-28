@@ -57,7 +57,7 @@ spDataObject ToolImpl::web3_clientVersion()
 }
 
 // ETH Methods
-FH32 ToolImpl::eth_sendRawTransaction(BYTES const& _rlp, VALUE const& _secret)
+spFH32 ToolImpl::eth_sendRawTransaction(BYTES const& _rlp, VALUE const& _secret)
 {
     rpcCall("", {});
     ETH_TEST_MESSAGE("\nRequest: eth_sendRawTransaction \n" + _rlp.asString());
@@ -66,8 +66,8 @@ FH32 ToolImpl::eth_sendRawTransaction(BYTES const& _rlp, VALUE const& _secret)
         spTr.getContent().setSecret(_secret);
         ETH_TEST_MESSAGE(spTr->asDataObject()->asJson());
         m_toolChainManager.getContent().addPendingTransaction(spTr);
-        FH32 trHash = spTr.getContent().hash();
-        ETH_TEST_MESSAGE("Response: " + trHash.asString());
+        spFH32 trHash = spTr.getContent().hash().copy();
+        ETH_TEST_MESSAGE("Response: " + trHash->asString());
         return trHash;
         , "eth_sendRawTransaction", CallType::FAILEVERYTHING)
     return FH32::zero();
@@ -277,29 +277,29 @@ MineBlocksResult ToolImpl::test_mineBlocks(size_t _number)
 
 // Import block from RAW rlp and validate it according to ethereum rules
 // Very logic heavy function. Must be on the client side. Its a clien logic.
-FH32 ToolImpl::test_importRawBlock(BYTES const& _blockRLP)
+spFH32 ToolImpl::test_importRawBlock(BYTES const& _blockRLP)
 {
     rpcCall("", {});
     TRYCATCHCALL(
         ETH_TEST_MESSAGE("\nRequest: test_importRawBlock, following transaction import are internal");
         ETH_TEST_MESSAGE(_blockRLP.asString());
-        FH32 const hash = blockchain().importRawBlock(_blockRLP);
-        ETH_TEST_MESSAGE("Response test_importRawBlock: " + hash.asString());
+        spFH32 const hash = blockchain().importRawBlock(_blockRLP);
+        ETH_TEST_MESSAGE("Response test_importRawBlock: " + hash->asString());
         return hash;
         , "test_importRawBlock", CallType::DONTFAILONUPWARDS)
     return FH32::zero();
 }
 
-FH32 ToolImpl::test_getLogHash(FH32 const& _txHash)
+spFH32 ToolImpl::test_getLogHash(FH32 const& _txHash)
 {
     rpcCall("", {});
     TRYCATCHCALL(
         ETH_TEST_MESSAGE("\nRequest: test_getLogHash " + _txHash.asString());
-        FH32 const& res = blockchain().lastBlock().logHash();
-        ETH_TEST_MESSAGE("Response: test_getLogHash " + res.asString());
+        spFH32 const res = blockchain().lastBlock().logHash().copy();
+        ETH_TEST_MESSAGE("Response: test_getLogHash " + res->asString());
         return res;
         , "test_getLogHash", CallType::FAILEVERYTHING)
-    return _txHash;
+    return _txHash.copy();
 }
 
 TestRawTransaction ToolImpl::test_rawTransaction(BYTES const& _rlp, FORK const& _fork)

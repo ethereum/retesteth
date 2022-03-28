@@ -18,13 +18,13 @@ spDataObject RPCImpl::web3_clientVersion()
 }
 
 // ETH Methods
-FH32 RPCImpl::eth_sendRawTransaction(BYTES const& _rlp, VALUE const& _secret)
+spFH32 RPCImpl::eth_sendRawTransaction(BYTES const& _rlp, VALUE const& _secret)
 {
     (void)_secret;
     spDataObject const result = rpcCall("eth_sendRawTransaction", {quote(_rlp.asString())}, true);
     if (!m_lastInterfaceError.empty())
         ETH_ERROR_MESSAGE(m_lastInterfaceError.message());
-    return FH32(result.getCContent());
+    return spFH32(new FH32(result.getCContent()));
 }
 
 spVALUE RPCImpl::eth_getTransactionCount(FH20 const& _address, VALUE const& _blockNumber)
@@ -169,17 +169,17 @@ MineBlocksResult RPCImpl::test_mineBlocks(size_t _number)
     return MineBlocksResult(res);
 }
 
-FH32 RPCImpl::test_importRawBlock(BYTES const& _blockRLP)
+spFH32 RPCImpl::test_importRawBlock(BYTES const& _blockRLP)
 {
     spDataObject const res = rpcCall("test_importRawBlock", {quote(_blockRLP.asString())}, true);
     if (res->type() == DataType::String && res->asString().size() > 2)
-        return FH32(res->asString());
-    return FH32(FH32::zero());
+        return spFH32(new FH32(res->asString()));
+    return spFH32(FH32::zero());
 }
 
-FH32 RPCImpl::test_getLogHash(FH32 const& _txHash)
+spFH32 RPCImpl::test_getLogHash(FH32 const& _txHash)
 {
-    return FH32(rpcCall("test_getLogHash", {quote(_txHash.asString())}));
+    return spFH32(new FH32(rpcCall("test_getLogHash", {quote(_txHash.asString())})));
 }
 
 TestRawTransaction RPCImpl::test_rawTransaction(BYTES const& _rlp, FORK const& _fork)

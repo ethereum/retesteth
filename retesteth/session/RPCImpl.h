@@ -12,7 +12,7 @@ public:
     spDataObject web3_clientVersion() override;
 
     // ETH Methods
-    FH32 eth_sendRawTransaction(BYTES const& _rlp, VALUE const& _secret) override;
+    spFH32 eth_sendRawTransaction(BYTES const& _rlp, VALUE const& _secret) override;
     VALUE eth_blockNumber() override;
     EthGetBlockBy eth_getBlockByHash(FH32 const& _hash, Request _fullObjects) override;
     EthGetBlockBy eth_getBlockByNumber(VALUE const& _blockNumber, Request _fullObjects) override;
@@ -38,8 +38,8 @@ public:
     void test_rewindToBlock(VALUE const& _blockNr) override;
     void test_modifyTimestamp(VALUE const& _timestamp) override;
     MineBlocksResult test_mineBlocks(size_t _number) override;
-    FH32 test_importRawBlock(BYTES const& _blockRLP) override;
-    FH32 test_getLogHash(FH32 const& _txHash) override;
+    spFH32 test_importRawBlock(BYTES const& _blockRLP) override;
+    spFH32 test_getLogHash(FH32 const& _txHash) override;
     TestRawTransaction test_rawTransaction(BYTES const& _rlp, FORK const& _fork) override;
     VALUE test_calculateDifficulty(FORK const& _fork, VALUE const& _blockNumber, VALUE const& _parentTimestamp,
         VALUE const& _parentDifficulty, VALUE const& _currentTimestamp, VALUE const& _uncleNumber) override;

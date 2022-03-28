@@ -59,7 +59,7 @@ private:
 
     // After test_mineBlock we can change the blockheader or add uncles. that will require to tweak
     // the block And reimport it again, then check exceptions
-    FH32 postmineBlockHeader(BlockchainTestFillerBlock const& _block, VALUE const& _latestBlockNumber,
+    spFH32 postmineBlockHeader(BlockchainTestFillerBlock const& _block, VALUE const& _latestBlockNumber,
         std::vector<spBlockHeader> const& _uncles, BYTES& _rawRLP);
 
     SessionInterface& m_session;                      // Session with the client

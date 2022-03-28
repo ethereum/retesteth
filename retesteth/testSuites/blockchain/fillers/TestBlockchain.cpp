@@ -32,9 +32,9 @@ void TestBlockchain::generateBlock(
     // If block is raw RLP block
     if (_block.isRawRLP())
     {
-        FH32 const blHash(m_session.test_importRawBlock(_block.rawRLP()));
+        spFH32 const blHash(m_session.test_importRawBlock(_block.rawRLP()));
         checkBlockException(m_session, _block.getExpectException(m_network));
-        if (!blHash.isZero())
+        if (!blHash->isZero())
             ETH_ERROR_MESSAGE("rawBlock rlp appered to be valid. Unable to contruct objects from RLP!");
         else
         {
@@ -150,8 +150,7 @@ GCP_SPointer<EthGetBlockBy> TestBlockchain::mineBlock(
         // Then import it again and see what client says, because mining with uncles not supported
         // And because blockchain test filler can override blockheader for testing purposes
         ETH_LOG("Postmine blockheader: " + m_sDebugString, 6);
-        FH32 const hash = postmineBlockHeader(_blockInTest, latestBlockNumber, _preparedUncleBlocks, _rawRLP);
-        minedBlockHash = spFH32(new FH32(hash.asString()));
+        minedBlockHash = postmineBlockHeader(_blockInTest, latestBlockNumber, _preparedUncleBlocks, _rawRLP);
     }
 
     // Expected exception for this block
@@ -326,7 +325,7 @@ void TestBlockchain::restoreUpToNumber(SessionInterface& _session, VALUE const& 
 
 // Because remote client does not work with uncles, manipulate the response record with uncle information
 // Manually here imitating a block with retesteth manipulations
-FH32 TestBlockchain::postmineBlockHeader(BlockchainTestFillerBlock const& _blockInTest, VALUE const& _latestBlockNumber,
+spFH32 TestBlockchain::postmineBlockHeader(BlockchainTestFillerBlock const& _blockInTest, VALUE const& _latestBlockNumber,
     std::vector<spBlockHeader> const& _uncles, BYTES& _rawRLP)
 {
     // if blockHeader is defined in test Filler, rewrite the last block header fields with info from
@@ -368,7 +367,7 @@ FH32 TestBlockchain::postmineBlockHeader(BlockchainTestFillerBlock const& _block
 
     m_session.test_rewindToBlock(_latestBlockNumber - 1);
     _rawRLP = BYTES(managedBlock.getRLP().asString());
-    return FH32(m_session.test_importRawBlock(_rawRLP));
+    return m_session.test_importRawBlock(_rawRLP);
 }
 
 // Returns true if the block is valid
