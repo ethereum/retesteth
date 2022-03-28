@@ -33,11 +33,11 @@
 #include <retesteth/Options.h>
 #include <retesteth/TestHelper.h>
 #include <retesteth/TestOutputHelper.h>
-#include <retesteth/testSuiteRunner/TestSuite.h>
 #include <retesteth/session/Session.h>
 #include <retesteth/testStructures/Common.h>
 #include <retesteth/testStructures/PrepareChainParams.h>
 #include <retesteth/testStructures/structures.h>
+#include <retesteth/testSuiteRunner/TestSuite.h>
 #include <retesteth/testSuites/Common.h>
 #include <retesteth/testSuites/StateTests.h>
 #include <retesteth/testSuites/blockchain/BlockchainTests.h>

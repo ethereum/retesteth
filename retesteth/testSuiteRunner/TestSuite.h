@@ -1,18 +1,18 @@
 /*
-	This file is part of cpp-ethereum.
+    This file is part of cpp-ethereum.
 
-	cpp-ethereum is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
+    cpp-ethereum is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
-	cpp-ethereum is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
+    cpp-ethereum is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
 
-	You should have received a copy of the GNU General Public License
-	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
+    You should have received a copy of the GNU General Public License
+    along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
  */
 /** @file
  * A base class for test suites
@@ -20,19 +20,19 @@
 
 #pragma once
 #include <dataObject/DataObject.h>
-#include <boost/filesystem/path.hpp>
 #include <libdevcore/SHA3.h>
+#include <boost/filesystem/path.hpp>
 #include <functional>
 using namespace dataobject;
 namespace fs = boost::filesystem;
 
 namespace test
 {
-
 class TestSuite
 {
 protected:
     virtual bool legacyTestSuiteFlag() const { return false; }
+
 private:
     // Execute Test.json file
     void executeFile(boost::filesystem::path const& _file) const;
@@ -53,12 +53,7 @@ public:
 
     struct TestSuiteOptions
     {
-        TestSuiteOptions()
-          : doFilling(false),
-            disableSecondRun(false),
-            allowInvalidBlocks(false),
-            isLegacyTests(false)
-        {}
+        TestSuiteOptions() : doFilling(false), disableSecondRun(false), allowInvalidBlocks(false), isLegacyTests(false) {}
         bool doFilling;           // pass the filling flag to doTest function
         bool disableSecondRun;    // disable running the test after filling is done
         bool allowInvalidBlocks;  // allow and check malicious blocks
@@ -97,13 +92,13 @@ public:
     // If the src test does not end up with either Filler.json or Copier.json an exception occurs.
     void runAllTestsInFolder(std::string const& _testFolder) const;
 
-	// Execute Filler.json or Copier.json test file in a given folder
-	void executeTest(std::string const& _testFolder, boost::filesystem::path const& _jsonFileName) const;
+    // Execute Filler.json or Copier.json test file in a given folder
+    void executeTest(std::string const& _testFolder, boost::filesystem::path const& _jsonFileName) const;
 
-	// Execute Test.json file
-	void runTestWithoutFiller(boost::filesystem::path const& _file) const;
+    // Execute Test.json file
+    void runTestWithoutFiller(boost::filesystem::path const& _file) const;
 
-	// Return full path to folder for tests from _testFolder
+    // Return full path to folder for tests from _testFolder
     AbsoluteFillerPath getFullPathFiller(std::string const& _testFolder) const;
 
     // Structure  <suiteFolder>/<testFolder>/<test>.json
@@ -121,9 +116,8 @@ protected:
     virtual FillerPath suiteFillerFolder() const = 0;
 };
 
-bool addClientInfo(
-    DataObject& _filledTest, fs::path const& _testSource, dev::h256 const& _testSourceHash, fs::path const& _existingFilledTest);
+bool addClientInfo(DataObject& _filledTest, fs::path const& _testSource, dev::h256 const& _testSourceHash,
+    fs::path const& _existingFilledTest);
 
 
-}
-
+}  // namespace test

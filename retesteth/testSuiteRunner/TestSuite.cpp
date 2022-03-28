@@ -1,18 +1,18 @@
 /*
-	This file is part of cpp-ethereum.
+    This file is part of cpp-ethereum.
 
-	cpp-ethereum is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
+    cpp-ethereum is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
-	cpp-ethereum is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
+    cpp-ethereum is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
 
-	You should have received a copy of the GNU General Public License
-	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
+    You should have received a copy of the GNU General Public License
+    along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
  */
 /** @file
  * Base functions for all test suites
@@ -24,11 +24,11 @@
 #include <retesteth/ExitHandler.h>
 #include <retesteth/Options.h>
 #include <retesteth/TestHelper.h>
-#include <retesteth/testSuites/TestFixtures.h>
 #include <retesteth/TestOutputHelper.h>
-#include <retesteth/testSuiteRunner/TestSuite.h>
 #include <retesteth/session/Session.h>
 #include <retesteth/session/ThreadManager.h>
+#include <retesteth/testSuiteRunner/TestSuite.h>
+#include <retesteth/testSuites/TestFixtures.h>
 #include <boost/test/unit_test.hpp>
 #include <string>
 
@@ -37,8 +37,9 @@ using namespace dev;
 using namespace test;
 
 
-//Helper functions for test proccessing
-namespace {
+// Helper functions for test proccessing
+namespace
+{
 struct TestFileData
 {
     spDataObject data;
@@ -64,8 +65,7 @@ TestFileData readTestFile(fs::path const& _testFileName)
     else if (_testFileName.extension() == ".yml")
         testData.data = test::readYamlData(_testFileName, bSortOnLoad);
     else
-        ETH_ERROR_MESSAGE(
-            "Unknown test format!" + test::TestOutputHelper::get().testFile().string());
+        ETH_ERROR_MESSAGE("Unknown test format!" + test::TestOutputHelper::get().testFile().string());
     ETH_LOG("Read json structure finish", 5);
 
     // Do not calculate the hash on Legacy tests unless --checkhash option provided
@@ -81,7 +81,7 @@ TestFileData readTestFile(fs::path const& _testFileName)
         return testData;
     }
 
-    string srcString = testData.data->asJson(0, false); //json_spirit::write_string(testData.data, false);
+    string srcString = testData.data->asJson(0, false);  // json_spirit::write_string(testData.data, false);
     if (test::Options::get().showhash)
     {
         std::string output = "Not a Json object!";
@@ -109,22 +109,22 @@ void removeComments(spDataObject& _obj)
 {
     if (_obj->type() == DataType::Object)
     {
-		list<string> removeList;
-        for (auto& i: (*_obj).getSubObjectsUnsafe())
-		{
+        list<string> removeList;
+        for (auto& i : (*_obj).getSubObjectsUnsafe())
+        {
             if (i->getKey().substr(0, 2) == "//")
-			{
+            {
                 removeList.push_back(i->getKey());
-				continue;
-			}
+                continue;
+            }
             removeComments(i);
-		}
-        for (auto const& i: removeList)
+        }
+        for (auto const& i : removeList)
             (*_obj).removeKey(i);
-	}
+    }
     else if (_obj->type() == DataType::Array)
     {
-        for (auto& i: (*_obj).getSubObjectsUnsafe())
+        for (auto& i : (*_obj).getSubObjectsUnsafe())
             removeComments(i);
     }
 }
@@ -139,7 +139,7 @@ void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
         return;
 
     spDataObject v = test::readJsonData(_compiledTest, "_info");
-    for (auto const& i2: v->getSubObjects())
+    for (auto const& i2 : v->getSubObjects())
     {
         DataObject const& i = i2.getCContent();
         try
@@ -147,11 +147,10 @@ void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
             // use eth object _info section class here !!!!!
             ETH_ERROR_REQUIRE_MESSAGE(
                 i.type() == DataType::Object, i.getKey() + " should contain an object under a test name.");
-            ETH_ERROR_REQUIRE_MESSAGE(
-                i.count("_info") > 0, "_info section not set! " + _compiledTest.string());
+            ETH_ERROR_REQUIRE_MESSAGE(i.count("_info") > 0, "_info section not set! " + _compiledTest.string());
             DataObject const& info = i.atKey("_info");
-            ETH_ERROR_REQUIRE_MESSAGE(info.count("sourceHash") > 0,
-                "sourceHash not found in " + _compiledTest.string() + " in " + i.getKey());
+            ETH_ERROR_REQUIRE_MESSAGE(
+                info.count("sourceHash") > 0, "sourceHash not found in " + _compiledTest.string() + " in " + i.getKey());
 
             // Check test version  vs retesteth version
             if (!Options::isLegacy())
@@ -194,9 +193,8 @@ void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
                     sourceHashStr = sourceHash.hex().substr(0, 4);
                     fillerHashStr = fillerData.hash.hex().substr(0, 4);
                 }
-                ETH_ERROR_MESSAGE("Test " + _compiledTest.string() +
-                        " is outdated. Filler hash is different! " +
-                        "('" + sourceHashStr + "' != '" + fillerHashStr + "') ");
+                ETH_ERROR_MESSAGE("Test " + _compiledTest.string() + " is outdated. Filler hash is different! " + "('" +
+                                  sourceHashStr + "' != '" + fillerHashStr + "') ");
             }
         }
         catch (test::UpwardsException const&)
@@ -205,7 +203,7 @@ void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
         }
     }
 }
-}
+}  // namespace
 
 namespace test
 {
@@ -299,7 +297,7 @@ string TestSuite::checkFillerExistance(string const& _testFolder) const
     filter += opt.getGStateTransactionFilter();
     ETH_LOG("Checking test filler hashes for " + boost::unit_test::framework::current_test_case().full_name(), 4);
     if (!filter.empty())
-        ETH_LOG("Filter: '" + filter +  "'", 0);
+        ETH_LOG("Filter: '" + filter + "'", 0);
     AbsoluteTestPath testsPath = getFullPath(_testFolder);
     if (!fs::exists(testsPath.path()))
     {
@@ -341,8 +339,7 @@ string TestSuite::checkFillerExistance(string const& _testFolder) const
         if (testNameFilter.empty())
         {
             // No tests generated, check at least one filler existence
-            vector<fs::path> existingFillers =
-                test::getFiles(fullPathToFillers.path(), {".json", ".yml"});
+            vector<fs::path> existingFillers = test::getFiles(fullPathToFillers.path(), {".json", ".yml"});
             for (auto const& filler : existingFillers)
             {
                 // put filler names as if it was actual tests
@@ -362,33 +359,24 @@ string TestSuite::checkFillerExistance(string const& _testFolder) const
 
     for (auto const& file : compiledFiles)
     {
-        fs::path const expectedFillerName =
-            fullPathToFillers.path() / fs::path(file.stem().string() + c_fillerPostf + ".json");
-        fs::path const expectedFillerName2 =
-            fullPathToFillers.path() / fs::path(file.stem().string() + c_fillerPostf + ".yml");
-        fs::path const expectedCopierName =
-            fullPathToFillers.path() / fs::path(file.stem().string() + c_copierPostf + ".json");
+        fs::path const expectedFillerName = fullPathToFillers.path() / fs::path(file.stem().string() + c_fillerPostf + ".json");
+        fs::path const expectedFillerName2 = fullPathToFillers.path() / fs::path(file.stem().string() + c_fillerPostf + ".yml");
+        fs::path const expectedCopierName = fullPathToFillers.path() / fs::path(file.stem().string() + c_copierPostf + ".json");
 
         string exceptionStr;
         if (checkFillerWhenFilterIsSetButNoTestsFilled)
-            exceptionStr = "Could not find a filler for provided --singletest filter: '" +
-                           file.filename().string() + "'";
+            exceptionStr = "Could not find a filler for provided --singletest filter: '" + file.filename().string() + "'";
         else
-            exceptionStr =
-                "Compiled test folder contains test without Filler: " + file.filename().string();
+            exceptionStr = "Compiled test folder contains test without Filler: " + file.filename().string();
         {
             TestInfo errorInfo("CheckFillers", file.stem().string());
             TestOutputHelper::get().setCurrentTestInfo(errorInfo);
         }
-        ETH_ERROR_REQUIRE_MESSAGE(fs::exists(expectedFillerName) ||
-                                      fs::exists(expectedFillerName2) ||
-                                      fs::exists(expectedCopierName),
-            exceptionStr);
         ETH_ERROR_REQUIRE_MESSAGE(
-            !(fs::exists(expectedFillerName) && fs::exists(expectedFillerName2) &&
-                fs::exists(expectedCopierName)),
-            "Src test could either be Filler.json, Filler.yml or Copier.json: " +
-                file.filename().string());
+            fs::exists(expectedFillerName) || fs::exists(expectedFillerName2) || fs::exists(expectedCopierName), exceptionStr);
+        ETH_ERROR_REQUIRE_MESSAGE(
+            !(fs::exists(expectedFillerName) && fs::exists(expectedFillerName2) && fs::exists(expectedCopierName)),
+            "Src test could either be Filler.json, Filler.yml or Copier.json: " + file.filename().string());
 
         // Check that filled tests created from actual fillers depenging on a test type
         if (fs::exists(expectedFillerName))
@@ -471,9 +459,7 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
             if (ExitHandler::receivedExitSignal())
                 break;
 
-            auto job = [this, &_testFolder, &file](){
-                executeTest(_testFolder, file);
-            };
+            auto job = [this, &_testFolder, &file]() { executeTest(_testFolder, file); };
             ThreadManager::addTask(job);
         }
         ThreadManager::joinThreads();
@@ -488,8 +474,7 @@ void TestSuite::runFunctionForAllClients(std::function<void()> _func)
     for (auto const& config : Options::getDynamicOptions().getClientConfigs())
     {
         Options::getDynamicOptions().setCurrentConfig(config);
-        std::cout << "Running tests for config '" << config.cfgFile().name() << "' "
-                  << config.getId().id() << std::endl;
+        std::cout << "Running tests for config '" << config.cfgFile().name() << "' " << config.getId().id() << std::endl;
 
         // Run tests
         _func();
@@ -515,8 +500,7 @@ TestSuite::TestSuite()
 
 TestSuite::AbsoluteFillerPath TestSuite::getFullPathFiller(string const& _testFolder) const
 {
-    return TestSuite::AbsoluteFillerPath(
-        test::getTestPath() / suiteFillerFolder().path() / _testFolder);
+    return TestSuite::AbsoluteFillerPath(test::getTestPath() / suiteFillerFolder().path() / _testFolder);
 }
 
 TestSuite::AbsoluteTestPath TestSuite::getFullPath(string const& _testFolder) const
@@ -559,8 +543,7 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
             ETH_LOG("Running " + testname + ": " + "(" + test::fto_string(threadID) + ")", 3);
         }
         // Filename of the test that would be generated
-        AbsoluteTestPath const boostTestPath =
-            getFullPath(_testFolder).path() / fs::path(testname + ".json");
+        AbsoluteTestPath const boostTestPath = getFullPath(_testFolder).path() / fs::path(testname + ".json");
 
         bool wasErrors = false;
         TestSuiteOptions opt;
@@ -574,8 +557,8 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
                 assert(_testFileName.string() != boostTestPath.path().string());
                 addClientInfo(testData.data.getContent(), boostRelativeTestPath, testData.hash, boostTestPath.path());
                 writeFile(boostTestPath.path(), asBytes(testData.data->asJson()));
-                ETH_FAIL_REQUIRE_MESSAGE(boost::filesystem::exists(boostTestPath.path().string()),
-                    "Error when copying the test file!");
+                ETH_FAIL_REQUIRE_MESSAGE(
+                    boost::filesystem::exists(boostTestPath.path().string()), "Error when copying the test file!");
             }
             else
             {
@@ -673,4 +656,4 @@ void TestSuite::executeFile(boost::filesystem::path const& _file) const
 }
 
 
-}
+}  // namespace test

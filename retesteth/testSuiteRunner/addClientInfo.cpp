@@ -6,7 +6,6 @@
 
 namespace
 {
-
 string calculateHashOfTheNewFilledTest(DataObject& _newFilledTestRef)
 {
     // Check up the generated test hash without _info section
@@ -16,7 +15,8 @@ string calculateHashOfTheNewFilledTest(DataObject& _newFilledTestRef)
     return dev::toString(sha3(newFilledTestHashStr));
 }
 
-bool checkIfThereAreUpdatesToTheTest(spDataObject _oldFilledTestFile, spDataObject _newFilledTest, string const& _newFilledTestHash, string const& _newFilledTestSrcHash)
+bool checkIfThereAreUpdatesToTheTest(spDataObject _oldFilledTestFile, spDataObject _newFilledTest,
+    string const& _newFilledTestHash, string const& _newFilledTestSrcHash)
 {
     // See if we actually changed something in the test after regeneration
     if (_oldFilledTestFile->count(_newFilledTest->getKey()))
@@ -40,14 +40,13 @@ bool checkIfThereAreUpdatesToTheTest(spDataObject _oldFilledTestFile, spDataObje
     return false;
 }
 
-}
+}  // namespace
 
 
 namespace test
 {
-
-bool addClientInfo(
-    DataObject& _newFilledTestData, fs::path const& _testSource, dev::h256 const& _testSourceHash, fs::path const& _existingFilledTest)
+bool addClientInfo(DataObject& _newFilledTestData, fs::path const& _testSource, dev::h256 const& _testSourceHash,
+    fs::path const& _existingFilledTest)
 {
     bool atLeastOneUpdate = false || Options::get().forceupdate;
 
@@ -70,7 +69,8 @@ bool addClientInfo(
 
         string const& newHash = newTestClientInfo->atKey("generatedTestHash").asString();
         string const& newSrcHash = newTestClientInfo->atKey("sourceHash").asString();
-        atLeastOneUpdate = atLeastOneUpdate || checkIfThereAreUpdatesToTheTest(oldFilledTestFile, newFilledTest, newHash, newSrcHash);
+        atLeastOneUpdate =
+            atLeastOneUpdate || checkIfThereAreUpdatesToTheTest(oldFilledTestFile, newFilledTest, newHash, newSrcHash);
 
         if (!newTestClientInfo->count("comment"))
             (*newTestClientInfo)["comment"] = "";
@@ -90,4 +90,4 @@ bool addClientInfo(
     return atLeastOneUpdate;
 }
 
-}
+}  // namespace test
