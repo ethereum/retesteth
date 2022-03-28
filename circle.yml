@@ -149,7 +149,7 @@ jobs:
       - image: ethereum/cpp-build-env:7
     steps: *linux-steps
 
-  macOS-XCode11:
+  macOS-XCode12:
     environment:
       - CXX: clang++
       - GCOV: gcov
@@ -157,7 +157,7 @@ jobs:
       - BUILD_PARALLEL_JOBS: 8
       - TEST_PARALLEL_JOBS: 8
     macos:
-      xcode: "11.3.1"
+      xcode: "12.5.1"
     steps:
       - checkout
       - *environment-info
@@ -181,6 +181,6 @@ workflows:
   version: 2
   cpp-ethereum:
     jobs:
-      - macOS-XCode11
+      - macOS-XCode12
       - Linux-Clang6
       - Linux-GCC6-Debug
