@@ -1,4 +1,4 @@
-#include "TestSuite.h"
+#include "TestSuiteHelperFunctions.h"
 #include <dataObject/DataObject.h>
 #include <retesteth/Options.h>
 #include <retesteth/TestOutputHelper.h>
@@ -45,6 +45,8 @@ bool checkIfThereAreUpdatesToTheTest(spDataObject _oldFilledTestFile, spDataObje
 
 namespace test
 {
+namespace testsuite
+{
 bool addClientInfo(DataObject& _newFilledTestData, fs::path const& _testSource, dev::h256 const& _testSourceHash,
     fs::path const& _existingFilledTest)
 {
@@ -90,4 +92,5 @@ bool addClientInfo(DataObject& _newFilledTestData, fs::path const& _testSource, 
     return atLeastOneUpdate;
 }
 
+}  // namespace testsuite
 }  // namespace test

@@ -116,8 +116,4 @@ protected:
     virtual FillerPath suiteFillerFolder() const = 0;
 };
 
-bool addClientInfo(DataObject& _filledTest, fs::path const& _testSource, dev::h256 const& _testSourceHash,
-    fs::path const& _existingFilledTest);
-
-
 }  // namespace test
