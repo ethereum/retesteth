@@ -28,6 +28,9 @@ namespace fs = boost::filesystem;
 
 namespace test
 {
+extern string const c_fillerPostf;
+extern string const c_copierPostf;
+
 class TestSuite
 {
 protected:
@@ -37,6 +40,7 @@ private:
     // Execute Test.json file
     void executeFile(boost::filesystem::path const& _file) const;
     std::string checkFillerExistance(std::string const& _testFolder) const;
+
     struct BoostPath
     {
         BoostPath(boost::filesystem::path _path) : m_path(_path) {}
@@ -71,9 +75,9 @@ public:
         FillerPath(boost::filesystem::path _path) : BoostPath(_path) {}
     };
 
-    struct AbsoluteTestPath : BoostPath
+    struct AbsoluteFilledTestPath : BoostPath
     {
-        AbsoluteTestPath(boost::filesystem::path _path) : BoostPath(_path) {}
+        AbsoluteFilledTestPath(boost::filesystem::path _path) : BoostPath(_path) {}
     };
 
     struct AbsoluteFillerPath : BoostPath
@@ -102,7 +106,7 @@ public:
     AbsoluteFillerPath getFullPathFiller(std::string const& _testFolder) const;
 
     // Structure  <suiteFolder>/<testFolder>/<test>.json
-    AbsoluteTestPath getFullPath(std::string const& _testFolder) const;
+    AbsoluteFilledTestPath getFullPathFilled(std::string const& _testFolder) const;
 
     //
     static void runFunctionForAllClients(std::function<void()> _func);

@@ -121,125 +121,6 @@ void TestSuite::runTestWithoutFiller(boost::filesystem::path const& _file) const
     }
 }
 
-string TestSuite::checkFillerExistance(string const& _testFolder) const
-{
-    test::Options const& opt = test::Options::get();
-    string const testNameFilter = opt.singleTestName.empty() ? string() : opt.singleTestName;
-    string filter = testNameFilter;
-    filter += opt.singleTestNet.empty() ? string() : " " + opt.singleTestNet;
-    filter += opt.getGStateTransactionFilter();
-    ETH_LOG("Checking test filler hashes for " + boost::unit_test::framework::current_test_case().full_name(), 4);
-    if (!filter.empty())
-        ETH_LOG("Filter: '" + filter + "'", 0);
-    AbsoluteTestPath testsPath = getFullPath(_testFolder);
-    if (!fs::exists(testsPath.path()))
-    {
-        ETH_LOG("Tests folder does not exists, creating test folder: '" + string(testsPath.path().c_str()) + "'", 2);
-        fs::create_directories(testsPath.path());
-    }
-    vector<fs::path> compiledFiles = test::getFiles(testsPath.path(), {".json", ".yml"}, testNameFilter);
-    AbsoluteFillerPath fullPathToFillers = getFullPathFiller(_testFolder);
-
-    // Check unfilled tests
-    if (Options::get().checkhash)
-    {
-        vector<fs::path> fillerFiles = test::getFiles(fullPathToFillers.path(), {".json", ".yml"}, testNameFilter);
-        if (fillerFiles.size() > compiledFiles.size())
-        {
-            string message = "Tests are not generated: ";
-            for (auto const& filler : fillerFiles)
-            {
-                bool found = false;
-                for (auto const& filled : compiledFiles)
-                {
-                    string const fillerName = filler.stem().string();
-                    if (fillerName.substr(0, fillerName.size() - 6) == filled.stem().string())
-                    {
-                        found = true;
-                        break;
-                    }
-                }
-                if (!found)
-                    message += "\n " + string(filler.c_str());
-            }
-            ETH_ERROR_MESSAGE(message + "\n");
-        }
-    }
-
-    bool checkFillerWhenFilterIsSetButNoTestsFilled = false;
-    if (compiledFiles.size() == 0)
-    {
-        if (testNameFilter.empty())
-        {
-            // No tests generated, check at least one filler existence
-            vector<fs::path> existingFillers = test::getFiles(fullPathToFillers.path(), {".json", ".yml"});
-            for (auto const& filler : existingFillers)
-            {
-                // put filler names as if it was actual tests
-                string fillerName(filler.stem().c_str());
-                string fillerSuffix = fillerName.substr(fillerName.size() - 6);
-                if (fillerSuffix == c_fillerPostf || fillerSuffix == c_copierPostf)
-                    compiledFiles.push_back(fillerName.substr(0, fillerName.size() - 6));
-            }
-        }
-        else
-        {
-            // No tests generated and filter is set, check that filler for filter is exist
-            compiledFiles.push_back(fs::path(testNameFilter));  // put the test name as if it was compiled.
-            checkFillerWhenFilterIsSetButNoTestsFilled = true;
-        }
-    }
-
-    for (auto const& file : compiledFiles)
-    {
-        fs::path const expectedFillerName = fullPathToFillers.path() / fs::path(file.stem().string() + c_fillerPostf + ".json");
-        fs::path const expectedFillerName2 = fullPathToFillers.path() / fs::path(file.stem().string() + c_fillerPostf + ".yml");
-        fs::path const expectedCopierName = fullPathToFillers.path() / fs::path(file.stem().string() + c_copierPostf + ".json");
-
-        string exceptionStr;
-        if (checkFillerWhenFilterIsSetButNoTestsFilled)
-            exceptionStr = "Could not find a filler for provided --singletest filter: '" + file.filename().string() + "'";
-        else
-            exceptionStr = "Compiled test folder contains test without Filler: " + file.filename().string();
-        {
-            TestInfo errorInfo("CheckFillers", file.stem().string());
-            TestOutputHelper::get().setCurrentTestInfo(errorInfo);
-        }
-        ETH_ERROR_REQUIRE_MESSAGE(
-            fs::exists(expectedFillerName) || fs::exists(expectedFillerName2) || fs::exists(expectedCopierName), exceptionStr);
-        ETH_ERROR_REQUIRE_MESSAGE(
-            !(fs::exists(expectedFillerName) && fs::exists(expectedFillerName2) && fs::exists(expectedCopierName)),
-            "Src test could either be Filler.json, Filler.yml or Copier.json: " + file.filename().string());
-
-        // Check that filled tests created from actual fillers depenging on a test type
-        if (fs::exists(expectedFillerName))
-        {
-            if (Options::get().filltests == false)  // If we are filling the test it is probably
-                                                    // outdated/being updated. no need to check.
-                checkFillerHash(file, expectedFillerName);
-            if (!testNameFilter.empty())
-                return testNameFilter + c_fillerPostf;
-        }
-        if (fs::exists(expectedFillerName2))
-        {
-            if (Options::get().filltests == false)
-                checkFillerHash(file, expectedFillerName2);
-            if (!testNameFilter.empty())
-                return testNameFilter + c_fillerPostf;
-        }
-        if (fs::exists(expectedCopierName))
-        {
-            if (Options::get().filltests == false)
-                checkFillerHash(file, expectedCopierName);
-            if (!testNameFilter.empty())
-                return testNameFilter + c_copierPostf;
-        }
-    }
-
-    // No compiled test files. Filter is empty
-    return testNameFilter;
-}
-
 void TestSuite::runAllTestsInFolder(string const& _testFolder) const
 {
     Options::getDynamicOptions().getClientConfigs();
@@ -336,9 +217,9 @@ TestSuite::AbsoluteFillerPath TestSuite::getFullPathFiller(string const& _testFo
     return TestSuite::AbsoluteFillerPath(test::getTestPath() / suiteFillerFolder().path() / _testFolder);
 }
 
-TestSuite::AbsoluteTestPath TestSuite::getFullPath(string const& _testFolder) const
+TestSuite::AbsoluteFilledTestPath TestSuite::getFullPathFilled(string const& _testFolder) const
 {
-    return TestSuite::AbsoluteTestPath(test::getTestPath() / suiteFolder().path() / _testFolder);
+    return TestSuite::AbsoluteFilledTestPath(test::getTestPath() / suiteFolder().path() / _testFolder);
 }
 
 void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFileName) const
@@ -376,7 +257,7 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
             ETH_LOG("Running " + testname + ": " + "(" + test::fto_string(threadID) + ")", 3);
         }
         // Filename of the test that would be generated
-        AbsoluteTestPath const boostTestPath = getFullPath(_testFolder).path() / fs::path(testname + ".json");
+        AbsoluteFilledTestPath const boostTestPath = getFullPathFilled(_testFolder).path() / fs::path(testname + ".json");
 
         bool wasErrors = false;
         TestSuiteOptions opt;
