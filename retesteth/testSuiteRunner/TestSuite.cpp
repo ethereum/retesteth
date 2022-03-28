@@ -38,6 +38,33 @@ using namespace dev;
 using namespace test;
 using namespace test::testsuite;
 
+namespace
+{
+string getTestNameFromFillerFilename(fs::path const& _fillerTestFilePath, bool& _isCopier)
+{
+    string const fillerName = _fillerTestFilePath.stem().string();
+    size_t pos = fillerName.rfind(c_fillerPostf);
+    if (pos != string::npos)
+        return fillerName.substr(0, pos);
+    else
+    {
+        pos = fillerName.rfind(c_copierPostf);
+        if (pos != string::npos)
+        {
+            return fillerName.substr(0, pos);
+            _isCopier = true;
+        }
+        else
+        {
+            string const requireStr = " require: Filler.json/Filler.yml/Copier.json";
+            ETH_FAIL_REQUIRE_MESSAGE(
+                false, "Incorrect file suffix in the filler folder! " + _fillerTestFilePath.string() + requireStr);
+        }
+    }
+    return fillerName;
+}
+}  // namespace
+
 namespace test
 {
 string const c_fillerPostf = "Filler";
@@ -199,76 +226,36 @@ void TestSuite::runFunctionForAllClients(std::function<void()> _func)
     }
 }
 
-std::mutex g_testPathMutex;
-TestSuite::TestSuite()
-{
-    std::lock_guard<std::mutex> lock(g_testPathMutex);
-    static bool runningTestsMessage = true;
-    if (runningTestsMessage)
-    {
-        boost::filesystem::path const testPath = test::getTestPath();
-        ETH_STDOUT_MESSAGE(string("Running tests using path: ") + testPath.c_str());
-        runningTestsMessage = false;
-    }
-}
-
-TestSuite::AbsoluteFillerPath TestSuite::getFullPathFiller(string const& _testFolder) const
-{
-    return TestSuite::AbsoluteFillerPath(test::getTestPath() / suiteFillerFolder().path() / _testFolder);
-}
-
-TestSuite::AbsoluteFilledTestPath TestSuite::getFullPathFilled(string const& _testFolder) const
-{
-    return TestSuite::AbsoluteFilledTestPath(test::getTestPath() / suiteFolder().path() / _testFolder);
-}
-
-void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFileName) const
+void TestSuite::executeTest(string const& _testFolder, fs::path const& _fillerTestFilePath) const
 {
     try
     {
         TestOutputHelper::get().setCurrentTestInfo(TestInfo("TestSuite::executeTest"));
         RPCSession::sessionStart(TestOutputHelper::getThreadID());
-        TestOutputHelper::get().setCurrentTestFile(_testFileName);
-        fs::path const boostRelativeTestPath = fs::relative(_testFileName, getTestPath());
-        string testname = _testFileName.stem().string();
-        bool isCopySource = false;
-        size_t pos = testname.rfind(c_fillerPostf);
-        if (pos != string::npos)
-            testname = testname.substr(0, pos);
-        else
-        {
-            pos = testname.rfind(c_copierPostf);
-            if (pos != string::npos)
-            {
-                testname = testname.substr(0, pos);
-                isCopySource = true;
-            }
-            else
-            {
-                string requireStr = " require: Filler.json/Filler.yml/Copier.json";
-                ETH_FAIL_REQUIRE_MESSAGE(
-                    false, "Incorrect file suffix in the filler folder! " + _testFileName.string() + requireStr);
-            }
-        }
+        TestOutputHelper::get().setCurrentTestFile(_fillerTestFilePath);
+        fs::path const boostRelativeTestPath = fs::relative(_fillerTestFilePath, getTestPath());
 
+        bool isCopier = false;
+        string const testName = getTestNameFromFillerFilename(_fillerTestFilePath, isCopier);
         if (Options::get().logVerbosity >= 3)
         {
             size_t const threadID = std::hash<std::thread::id>()(TestOutputHelper::getThreadID());
-            ETH_LOG("Running " + testname + ": " + "(" + test::fto_string(threadID) + ")", 3);
+            ETH_LOG("Running " + testName + ": " + "(" + test::fto_string(threadID) + ")", 3);
         }
+
         // Filename of the test that would be generated
-        AbsoluteFilledTestPath const boostTestPath = getFullPathFilled(_testFolder).path() / fs::path(testname + ".json");
+        AbsoluteFilledTestPath const boostTestPath = getFullPathFilled(_testFolder).path() / fs::path(testName + ".json");
 
         bool wasErrors = false;
         TestSuiteOptions opt;
         if (Options::get().filltests)
         {
-            TestFileData testData = readTestFile(_testFileName);
-            if (isCopySource)
+            TestFileData testData = readTestFile(_fillerTestFilePath);
+            if (isCopier)
             {
-                ETH_LOG("Copying " + _testFileName.string(), 0);
+                ETH_LOG("Copying " + _fillerTestFilePath.string(), 0);
                 ETH_LOG(" TO " + boostTestPath.path().string(), 0);
-                assert(_testFileName.string() != boostTestPath.path().string());
+                assert(_fillerTestFilePath.string() != boostTestPath.path().string());
                 addClientInfo(testData.data.getContent(), boostRelativeTestPath, testData.hash, boostTestPath.path());
                 writeFile(boostTestPath.path(), asBytes(testData.data->asJson()));
                 ETH_FAIL_REQUIRE_MESSAGE(
@@ -369,5 +356,27 @@ void TestSuite::executeFile(boost::filesystem::path const& _file) const
     doTests(res, opt);
 }
 
+std::mutex g_testPathMutex;
+TestSuite::TestSuite()
+{
+    std::lock_guard<std::mutex> lock(g_testPathMutex);
+    static bool runningTestsMessage = true;
+    if (runningTestsMessage)
+    {
+        boost::filesystem::path const testPath = test::getTestPath();
+        ETH_STDOUT_MESSAGE(string("Running tests using path: ") + testPath.c_str());
+        runningTestsMessage = false;
+    }
+}
+
+TestSuite::AbsoluteFillerPath TestSuite::getFullPathFiller(string const& _testFolder) const
+{
+    return TestSuite::AbsoluteFillerPath(test::getTestPath() / suiteFillerFolder().path() / _testFolder);
+}
+
+TestSuite::AbsoluteFilledTestPath TestSuite::getFullPathFilled(string const& _testFolder) const
+{
+    return TestSuite::AbsoluteFilledTestPath(test::getTestPath() / suiteFolder().path() / _testFolder);
+}
 
 }  // namespace test
