@@ -39,7 +39,7 @@ TestFileData readTestFile(fs::path const& _testFileName)
         return testData;
     }
 
-    string srcString = testData.data->asJson(0, false);  // json_spirit::write_string(testData.data, false);
+    string const srcString = testData.data->asJson(0, false);
     if (test::Options::get().showhash)
     {
         std::string output = "Not a Json object!";
@@ -67,100 +67,26 @@ void removeComments(spDataObject& _obj)
 {
     if (_obj->type() == DataType::Object)
     {
-        list<string> removeList;
-        for (auto& i : (*_obj).getSubObjectsUnsafe())
+        list<string> removeKeysList;
+        for (auto& element : (*_obj).getSubObjectsUnsafe())
         {
-            if (i->getKey().substr(0, 2) == "//")
+            if (element->getKey().substr(0, 2) == "//")
             {
-                removeList.push_back(i->getKey());
+                removeKeysList.push_back(element->getKey());
                 continue;
             }
-            removeComments(i);
+            removeComments(element);
         }
-        for (auto const& i : removeList)
-            (*_obj).removeKey(i);
+        for (auto const& key : removeKeysList)
+            (*_obj).removeKey(key);
     }
     else if (_obj->type() == DataType::Array)
     {
-        for (auto& i : (*_obj).getSubObjectsUnsafe())
-            removeComments(i);
+        for (auto& element : (*_obj).getSubObjectsUnsafe())
+            removeComments(element);
     }
 }
 
-void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
-{
-    ETH_LOG(string("Check `") + _compiledTest.c_str() + "` hash", 7);
-    TestFileData fillerData = readTestFile(_sourceTest);
-
-    // If no hash calculated, skip the hash check
-    if (!fillerData.hashCalculated)
-        return;
-
-    spDataObject v = test::readJsonData(_compiledTest, "_info");
-    for (auto const& i2 : v->getSubObjects())
-    {
-        DataObject const& i = i2.getCContent();
-        try
-        {
-            // use eth object _info section class here !!!!!
-            ETH_ERROR_REQUIRE_MESSAGE(
-                i.type() == DataType::Object, i.getKey() + " should contain an object under a test name.");
-            ETH_ERROR_REQUIRE_MESSAGE(i.count("_info") > 0, "_info section not set! " + _compiledTest.string());
-            DataObject const& info = i.atKey("_info");
-            ETH_ERROR_REQUIRE_MESSAGE(
-                info.count("sourceHash") > 0, "sourceHash not found in " + _compiledTest.string() + " in " + i.getKey());
-
-            // Check test version  vs retesteth version
-            if (!Options::isLegacy())
-            {
-                ETH_ERROR_REQUIRE_MESSAGE(info.count("filling-tool-version"),
-                    string() + "Field `filling-tool-version` not found in generated test!" + _compiledTest.c_str());
-                string strippedVersion;
-                string const version = info.atKey("filling-tool-version").asString().substr(9, 10);
-                for (auto const& ch : version)
-                {
-                    if (isdigit(ch))
-                        strippedVersion += ch;
-                }
-                if (strippedVersion.at(0) == '0')
-                    strippedVersion.erase(0, 1);
-                int testVersion = atoi(strippedVersion.c_str());
-                if (testVersion > retestethVersion())
-                    ETH_WARNING("Test was filled with newer version of retesteth! (test: `" + strippedVersion +
-                                "` vs retesteth: `" + test::fto_string(retestethVersion()) +
-                                "`) This might cause failures, please update retesteth!");
-                else if (testVersion < retestethVersion() - 1)
-                    ETH_WARNING("Test filled with older version of retesteth! (test: `" + strippedVersion +
-                                "` vs retesteth: `" + test::fto_string(retestethVersion()) +
-                                "`) This might cause failures, please regenerate the test!");
-            }
-
-            // Check source hash vs filled test hash
-            h256 const sourceHash = h256(info.atKey("sourceHash").asString());
-            if (sourceHash != fillerData.hash)
-            {
-                string sourceHashStr;
-                string fillerHashStr;
-                if (Options::get().showhash)
-                {
-                    sourceHashStr = sourceHash.hex();
-                    fillerHashStr = fillerData.hash.hex();
-                }
-                else
-                {
-                    sourceHashStr = sourceHash.hex().substr(0, 4);
-                    fillerHashStr = fillerData.hash.hex().substr(0, 4);
-                }
-                ETH_ERROR_MESSAGE("Test " + _compiledTest.string() + " is outdated. Filler hash is different! " + "('" +
-                                  sourceHashStr + "' != '" + fillerHashStr + "') ");
-            }
-        }
-        catch (test::UpwardsException const&)
-        {
-            continue;
-        }
-    }
-}
 
 }  // namespace testsuite
 }  // namespace test
