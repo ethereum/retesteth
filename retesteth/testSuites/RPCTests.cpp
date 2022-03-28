@@ -25,7 +25,7 @@
 #include <retesteth/Options.h>
 #include <retesteth/TestHelper.h>
 #include <retesteth/TestOutputHelper.h>
-#include <retesteth/TestSuite.h>
+#include <retesteth/testSuiteRunner/TestSuite.h>
 #include <retesteth/session/Session.h>
 #include <retesteth/testSuites/Common.h>
 #include <retesteth/testSuites/RPCTests.h>

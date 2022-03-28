@@ -21,8 +21,10 @@
 #pragma once
 #include <dataObject/DataObject.h>
 #include <boost/filesystem/path.hpp>
+#include <libdevcore/SHA3.h>
 #include <functional>
 using namespace dataobject;
+namespace fs = boost::filesystem;
 
 namespace test
 {
@@ -118,6 +120,10 @@ protected:
     // each test suite.
     virtual FillerPath suiteFillerFolder() const = 0;
 };
+
+bool addClientInfo(
+    DataObject& _filledTest, fs::path const& _testSource, dev::h256 const& _testSourceHash, fs::path const& _existingFilledTest);
+
 
 }
 

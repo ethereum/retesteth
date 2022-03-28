@@ -20,7 +20,7 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 #include <dataObject/DataObject.h>
-#include <retesteth/TestSuite.h>
+#include <retesteth/testSuiteRunner/TestSuite.h>
 #include <boost/filesystem/path.hpp>
 
 namespace test

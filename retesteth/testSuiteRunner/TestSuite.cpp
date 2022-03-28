@@ -20,14 +20,13 @@
 
 #include <dataObject/DataObject.h>
 #include <libdevcore/CommonIO.h>
-#include <libdevcore/SHA3.h>
 #include <retesteth/EthChecks.h>
 #include <retesteth/ExitHandler.h>
 #include <retesteth/Options.h>
 #include <retesteth/TestHelper.h>
 #include <retesteth/testSuites/TestFixtures.h>
 #include <retesteth/TestOutputHelper.h>
-#include <retesteth/TestSuite.h>
+#include <retesteth/testSuiteRunner/TestSuite.h>
 #include <retesteth/session/Session.h>
 #include <retesteth/session/ThreadManager.h>
 #include <boost/test/unit_test.hpp>
@@ -36,7 +35,7 @@
 using namespace std;
 using namespace dev;
 using namespace test;
-namespace fs = boost::filesystem;
+
 
 //Helper functions for test proccessing
 namespace {
@@ -128,68 +127,6 @@ void removeComments(spDataObject& _obj)
         for (auto& i: (*_obj).getSubObjectsUnsafe())
             removeComments(i);
     }
-}
-
-bool addClientInfo(
-    DataObject& _filledTest, fs::path const& _testSource, h256 const& _testSourceHash, fs::path const& _existingFilledTest)
-{
-    bool atLeastOneUpdate = false || Options::get().forceupdate;
-    SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
-
-    spDataObject filledTest;
-    if ((Options::get().filltests && fs::exists(_existingFilledTest)) && !Options::get().forceupdate)
-        filledTest = test::readJsonData(_existingFilledTest);
-
-    for (spDataObject& testInGenerated : _filledTest.getSubObjectsUnsafe())
-    {
-        DataObject& testInGeneratedRef = testInGenerated.getContent();
-        spDataObject clientinfo;
-
-        // Since one gtest parsed into many bctests we need a copy
-        if (testInGeneratedRef.count("_info"))
-            clientinfo.getContent().copyFrom(testInGeneratedRef.atKey("_info"));
-
-        testInGeneratedRef.removeKey("_info");
-        testInGeneratedRef.performModifier(mod_sortKeys);
-        string filledTestHashStr = testInGeneratedRef.asJson(0, false);
-        (*clientinfo)["generatedTestHash"] = dev::toString(sha3(filledTestHashStr));
-        (*clientinfo)["sourceHash"] = toString(_testSourceHash);
-
-        // See if we actually changed something in the test after regeneration
-        if (filledTest->count(testInGenerated->getKey()))
-        {
-            DataObject const& existingTest = filledTest->atKey(testInGenerated->getKey());
-            if (!existingTest.atKey("_info").count("generatedTestHash"))
-                atLeastOneUpdate = true;
-            else
-            {
-                string const& existingHash = existingTest.atKey("_info").atKey("generatedTestHash").asString();
-                if (existingHash != clientinfo->atKey("generatedTestHash").asString())
-                    atLeastOneUpdate = true;
-
-                string const& existingSrcHash = existingTest.atKey("_info").atKey("sourceHash").asString();
-                if (existingSrcHash != clientinfo->atKey("sourceHash").asString())
-                    atLeastOneUpdate = true;
-            }
-        }
-        else
-            atLeastOneUpdate = true;
-
-        if (!clientinfo->count("comment"))
-            (*clientinfo)["comment"] = "";
-        (*clientinfo)["filling-rpc-server"] = session.web3_clientVersion()->asString();
-        (*clientinfo)["filling-tool-version"] = test::prepareVersionString();
-        (*clientinfo)["lllcversion"] = test::prepareLLLCVersionString();
-        (*clientinfo)["solidity"] = test::prepareSolidityVersionString();
-        (*clientinfo)["source"] = _testSource.string();
-        if (clientinfo->count("labels"))
-            (*clientinfo).setKeyPos("labels", clientinfo->getSubObjects().size() - 1);
-        (*clientinfo).performModifier(mod_sortKeys);
-
-        testInGeneratedRef.atKeyPointer("_info") = clientinfo;
-        testInGeneratedRef.setKeyPos("_info", 0);
-    }
-    return atLeastOneUpdate;
 }
 
 void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)

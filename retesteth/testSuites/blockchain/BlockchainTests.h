@@ -6,7 +6,7 @@
 #include <dataObject/DataObject.h>
 #include <retesteth/Options.h>
 #include <retesteth/TestHelper.h>
-#include <retesteth/TestSuite.h>
+#include <retesteth/testSuiteRunner/TestSuite.h>
 #include <retesteth/testSuites/TestFixtures.h>
 #include <boost/filesystem/path.hpp>
 

@@ -1,6 +1,6 @@
 #include "TestBlockchainManager.h"
 #include <retesteth/Options.h>
-#include <retesteth/TestSuite.h>
+#include <retesteth/testSuiteRunner/TestSuite.h>
 #include <retesteth/testStructures/types/BlockchainTests/BlockchainTestFiller.h>
 #include <retesteth/testSuites/Common.h>
 #include <retesteth/ExitHandler.h>

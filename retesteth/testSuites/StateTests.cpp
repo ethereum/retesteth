@@ -33,7 +33,7 @@
 #include <retesteth/Options.h>
 #include <retesteth/TestHelper.h>
 #include <retesteth/TestOutputHelper.h>
-#include <retesteth/TestSuite.h>
+#include <retesteth/testSuiteRunner/TestSuite.h>
 #include <retesteth/session/Session.h>
 #include <retesteth/testStructures/Common.h>
 #include <retesteth/testStructures/PrepareChainParams.h>
@@ -245,7 +245,8 @@ spDataObject FillTest(StateTestInFiller const& _test)
             size_t const pos = label.find(removePrefix);
             if (pos != string::npos)
                 label.erase(pos, removePrefix.length());
-            (*filledTest)["_info"]["labels"].addSubObject(spDataObject(new DataObject(tx.dataIndS(), label)));
+            if (!(*filledTest)["_info"]["labels"].count(tx.dataIndS()))
+                (*filledTest)["_info"]["labels"].addSubObject(spDataObject(new DataObject(tx.dataIndS(), label)));
         }
     }
 

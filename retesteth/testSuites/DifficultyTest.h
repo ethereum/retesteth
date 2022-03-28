@@ -4,7 +4,7 @@
 
 #pragma once
 #include <dataObject/DataObject.h>
-#include <retesteth/TestSuite.h>
+#include <retesteth/testSuiteRunner/TestSuite.h>
 #include <boost/filesystem/path.hpp>
 
 namespace test
