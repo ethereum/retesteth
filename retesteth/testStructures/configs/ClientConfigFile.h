@@ -33,6 +33,7 @@ struct ClientConfigFile : GCP_SPointerBase
     std::vector<FORK> const& additionalForks() const { return m_additionalForks; }
     std::set<FORK> allowedForks() const;
     bool checkLogsHash() const { return m_checkLogsHash; }
+    int chainID() const { return m_chanID; }
 
     std::map<string, string> const& exceptions() const { return m_exceptions; }
     std::map<string, string> const& fieldreplace() const { return m_fieldRaplce; }
@@ -49,6 +50,7 @@ private:
     ClientConfgSocketType m_socketType;      ///< Connection type
     std::vector<IPADDRESS> m_socketAddress;  ///< List of IP to connect to (IP::PORT)
     bool m_checkLogsHash;                    ///< Enable logsHash verification
+    int m_chanID;                            ///< Use custom chainID
 
     size_t m_initializeTime;                 ///< Time to start the instance
     std::vector<FORK> m_forks;               ///< Allowed forks as network name
