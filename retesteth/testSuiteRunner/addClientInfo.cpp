@@ -47,7 +47,7 @@ namespace test
 {
 namespace testsuite
 {
-bool addClientInfo(DataObject& _newFilledTestData, fs::path const& _testSource, dev::h256 const& _testSourceHash,
+bool addClientInfoIfUpdate(DataObject& _newFilledTestData, fs::path const& _testSourcePath, dev::h256 const& _testSourceHash,
     fs::path const& _existingFilledTest)
 {
     bool atLeastOneUpdate = false || Options::get().forceupdate;
@@ -81,7 +81,7 @@ bool addClientInfo(DataObject& _newFilledTestData, fs::path const& _testSource, 
         (*newTestClientInfo)["filling-tool-version"] = test::prepareVersionString();
         (*newTestClientInfo)["lllcversion"] = test::prepareLLLCVersionString();
         (*newTestClientInfo)["solidity"] = test::prepareSolidityVersionString();
-        (*newTestClientInfo)["source"] = _testSource.string();
+        (*newTestClientInfo)["source"] = _testSourcePath.string();
         if (newTestClientInfo->count("labels"))
             (*newTestClientInfo).setKeyPos("labels", newTestClientInfo->getSubObjects().size() - 1);
         (*newTestClientInfo).performModifier(mod_sortKeys);

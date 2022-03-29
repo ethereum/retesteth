@@ -57,9 +57,8 @@ public:
 
     struct TestSuiteOptions
     {
-        TestSuiteOptions() : doFilling(false), disableSecondRun(false), allowInvalidBlocks(false), isLegacyTests(false) {}
+        TestSuiteOptions() : doFilling(false), allowInvalidBlocks(false), isLegacyTests(false) {}
         bool doFilling;           // pass the filling flag to doTest function
-        bool disableSecondRun;    // disable running the test after filling is done
         bool allowInvalidBlocks;  // allow and check malicious blocks
         bool isLegacyTests;       // running old generated tests
     };
@@ -118,6 +117,11 @@ protected:
     // A folder of the test suite in src folder. like "VMTestsFiller". should be implemented for
     // each test suite.
     virtual FillerPath suiteFillerFolder() const = 0;
+
+private:
+    void _executeTest(std::string const& _testFolder, boost::filesystem::path const& _jsonFileName) const;
+    bool _fillTest(fs::path const& _fillerTestFilePath, AbsoluteFilledTestPath const& _outputTestFilePath) const;
+    void _runTest(AbsoluteFilledTestPath const& _filledTestPath) const;
 };
 
 }  // namespace test

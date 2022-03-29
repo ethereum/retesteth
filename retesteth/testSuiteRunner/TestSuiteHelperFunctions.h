@@ -16,7 +16,7 @@ struct TestFileData
     bool hashCalculated = true;
 };
 
-bool addClientInfo(DataObject& _filledTest, fs::path const& _testSource, dev::h256 const& _testSourceHash,
+bool addClientInfoIfUpdate(DataObject& _filledTest, fs::path const& _testSource, dev::h256 const& _testSourceHash,
     fs::path const& _existingFilledTest);
 
 TestFileData readTestFile(fs::path const& _testFileName);
