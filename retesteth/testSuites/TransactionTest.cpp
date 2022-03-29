@@ -5,6 +5,7 @@
 #include <retesteth/testStructures/types/TransactionTests/TransactionTest.h>
 #include <retesteth/testStructures/types/TransactionTests/TransactionTestFiller.h>
 #include <retesteth/testSuites/Common.h>
+#include <retesteth/ExitHandler.h>
 
 using namespace test;
 namespace fs = boost::filesystem;
@@ -33,6 +34,9 @@ spDataObject FillTest(TransactionTestInFiller const& _test)
 
     for (auto const& fork : executionForks)
     {
+        if (ExitHandler::receivedExitSignal())
+            break;
+
         TestRawTransaction res = session.test_rawTransaction(_test.transaction()->getRawBytes(), fork);
         compareTransactionException(_test.transaction(), res, _test.getExpectException(fork));
 
@@ -59,6 +63,9 @@ void RunTest(TransactionTestInFilled const& _test)
     SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
     for (auto const& fork : _test.allForks())
     {
+        if (ExitHandler::receivedExitSignal())
+            break;
+
         if (!Options::getDynamicOptions().getCurrentConfig().checkForkAllowed(fork))
         {
             ETH_WARNING("Client config does not support fork `" + fork.asString() + "`, skipping test!");
@@ -118,6 +125,8 @@ spDataObject TransactionTestSuite::doTests(spDataObject& _input, TestSuiteOption
 
         for (auto const& test : filler.tests())
         {
+            if (ExitHandler::receivedExitSignal())
+                break;
             (*filledTest).addSubObject(test.testName(), FillTest(test));
             TestOutputHelper::get().registerTestRunSuccess();
         }
@@ -132,6 +141,8 @@ spDataObject TransactionTestSuite::doTests(spDataObject& _input, TestSuiteOption
 
         for (auto const& test : filledTest.tests())
         {
+            if (ExitHandler::receivedExitSignal())
+                break;
             RunTest(test);
             TestOutputHelper::get().registerTestRunSuccess();
         }

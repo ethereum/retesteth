@@ -244,6 +244,7 @@ TestRawTransaction ToolChainManager::test_rawTransaction(
 
     ETH_TEST_MESSAGE("T9N Response:\n" + response);
     spDataObject res;
+    bool errorCaught = false;
 
     try
     {
@@ -259,6 +260,7 @@ TestRawTransaction ToolChainManager::test_rawTransaction(
             (*errObj)["error"] = response;
             (*res).addSubObject(errObj);
             ETH_TEST_MESSAGE("T9N Response reconstructed:\n" + res->asJson());
+            errorCaught = true;
         }
         else
             throw _ex;
@@ -280,7 +282,7 @@ TestRawTransaction ToolChainManager::test_rawTransaction(
     else
         (*tr)["intrinsicGas"] = "0x00";
 
-    if (response.find("error") != string::npos || response.find("ERROR") != string::npos)
+    if (response.find("error") != string::npos || response.find("ERROR") != string::npos || errorCaught)
     {
         (*tr)["error"] = resTr->atKey("error").asString();
         (*tr)["sender"] = FH20::zero().asString();
