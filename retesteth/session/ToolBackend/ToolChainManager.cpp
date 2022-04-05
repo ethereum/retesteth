@@ -62,7 +62,9 @@ void ToolChainManager::reorganizePendingBlock()
         header.setExtraData(BYTES(DataObject("0x64616f2d686172642d666f726b")));
     header.setParentHash(currentChain().lastBlock().header()->hash());
 
-    if (currentChain().lastBlock().header()->type() == BlockType::BlockHeader1559)
+    bool isParent1559 = currentChain().lastBlock().header()->type() == BlockType::BlockHeader1559;
+    bool isParentMerge = currentChain().lastBlock().header()->type() == BlockType::BlockHeaderMerge;
+    if (isParent1559 || isParentMerge)
     {
         BlockHeader1559& header1559 = BlockHeader1559::castFrom(header);
         ChainOperationParams params = ChainOperationParams::defaultParams(currentChain().toolParams());

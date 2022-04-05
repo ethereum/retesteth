@@ -146,12 +146,15 @@ void ToolChain::checkDifficultyAgainstRetesteth(VALUE const& _toolDifficulty, sp
 
 void ToolChain::calculateAndSetBaseFee(spBlockHeader& _pendingHeader, spBlockHeader const& _parentHeader)
 {
+    bool isOn1559 = _pendingHeader.getCContent().type() == BlockType::BlockHeader1559 && _parentHeader->type() == BlockType::BlockHeader1559;
+    bool isOn1559ToMerge = _pendingHeader.getCContent().type() == BlockType::BlockHeaderMerge && _parentHeader->type() == BlockType::BlockHeader1559;
+    bool isOnMerge = _pendingHeader.getCContent().type() == BlockType::BlockHeaderMerge && _parentHeader->type() == BlockType::BlockHeaderMerge;
+
     // Calculate new baseFee
-    if (_pendingHeader.getCContent().type() == BlockType::BlockHeader1559 &&
-        _parentHeader->type() == BlockType::BlockHeader1559)
+    if (isOn1559 || isOn1559ToMerge || isOnMerge)
     {
-        BlockHeader1559& pendingFixed1559Header = BlockHeader1559::castFrom(_pendingHeader.getContent());
         ChainOperationParams params = ChainOperationParams::defaultParams(toolParams());
+        BlockHeader1559& pendingFixed1559Header = BlockHeader1559::castFrom(_pendingHeader.getContent());
         VALUE baseFee = calculateEIP1559BaseFee(params, _pendingHeader, _parentHeader);
         pendingFixed1559Header.setBaseFee(baseFee);
     }

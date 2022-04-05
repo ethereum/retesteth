@@ -22,6 +22,17 @@ enum class BlockType
 // Ethereum blockheader interface
 struct BlockHeader : GCP_SPointerBase
 {
+    static string TypeToString(BlockType _t)
+    {
+        switch (_t)
+        {
+            case BlockType::BlockHeader1559: return "BlockHeader1559";
+            case BlockType::BlockHeaderLegacy: return "BlockHeaderLegacy";
+            case BlockType::BlockHeaderMerge: return "BlockHeaderMerge";
+            default: return "UnparsedBlockType";
+        }
+        return "UnparsedBlockType";
+    }
     virtual ~BlockHeader(){/* all smart pointers */};
 
     virtual spDataObject asDataObject() const = 0;
