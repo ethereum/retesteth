@@ -35,7 +35,8 @@ const string t8ntool_correctMiningReward_config = R"({
     "YOLOv2" :           "2000000000000000000",
     "YOLOv3" :           "2000000000000000000",
     "Aleut"  :           "2000000000000000000",
-    "Merge"  :           "2000000000000000000"
+    "Merge"  :           "2000000000000000000",
+    "Merged"  :          "2000000000000000000"
 })";
 
 genRewardsCfg::genRewardsCfg()

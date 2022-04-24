@@ -39,8 +39,12 @@ ToolChain::ToolChain(
 {
     m_toolParams = GCP_SPointer<ToolParams>(new ToolParams(_config->params()));
 
-    auto const& additionalForks = Options::getCurrentConfig().cfgFile().additionalForks();
-    if (!inArray(additionalForks, m_fork.getCContent()))
+    // Practically tool here does not have any idea of what are the fork names.
+    // Because any tool can have custom name implementation. Since this is a mock for tool functions
+    // We know what are the fork names. Because devs refuse to expose core logic for tests
+    // The protocol logic is implemented here to catch test errors.
+    auto const& forks = Options::getCurrentConfig().cfgFile().forks();
+    if (inArray(forks, m_fork.getCContent()))
     {
         if (compareFork(m_fork, CMP::lt, FORK("London"))
             && _genesis.header()->type() == BlockType::BlockHeader1559)

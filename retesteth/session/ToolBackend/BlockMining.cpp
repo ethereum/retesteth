@@ -39,6 +39,11 @@ void BlockMining::prepareEnvFile()
         (*envData)["parentUncleHash"] = m_parentBlockRef.header()->uncleHash().asString();
     }
 
+    if ("Merged" == m_chainRef.fork().asString())
+    {
+        (*envData)["currentRandom"] = m_currentBlockRef.header()->mixHash().asString();
+    }
+
     // BlockHeader hash information for tool mining
     size_t k = 0;
     for (auto const& bl : m_chainRef.blocks())
