@@ -224,17 +224,17 @@ TestRawTransaction ToolChainManager::test_rawTransaction(
 
     // Rlp list header builder for given data
     test::RLPStreamU txsout(1);
-    txsout.appendRaw(_rlp.asString());
-
-    // Write data with less memory allocation
-    WRITEFILEN(txsPath.string(), string("\""), txsout.outHeader());
-    for (size_t i = 2; i < _rlp.asString().size(); i++)
-        ADDTOFILE(_rlp.asString()[i])
-    ADDTOFILE("\"");
-    CLOSEFILE();
+    if (_rlp.firstByte() < 128)
+    {
+        // wrap typed transactions as RLPstring in RLPStream
+        txsout.appendString(_rlp.asString());
+    }
+    else
+        txsout.appendRaw(_rlp.asString());
 
     // Write data with memory allocation but faster
-    // writeFile(txsPath.string(), string("\"") + txsout.outHeader() + _rlp.asString().substr(2) + "\"");
+    writeFile(txsPath.string(), string("\"") + txsout.outHeader() + _rlp.asString().substr(2) + "\"");
+    ETH_TEST_MESSAGE("TXS file:\n" + string("\"") + txsout.outHeader() + _rlp.asString().substr(2) + "\"");
 
     string cmd = _toolPath.string();
     cmd += " --input.txs " + txsPath.string();

@@ -609,8 +609,18 @@ fs::path createUniqueTmpDirectory() {
 }
 
 // RLPStream emulator
+void RLPStreamU::appendString(string const& _data)
+{
+    if (m_data != 0)
+        ETH_FAIL_MESSAGE("RLPStreamU::appendString called more than 1 times!");
+    m_data = &_data;
+    m_wrapString = true;
+}
+
 void RLPStreamU::appendRaw(string const& _data)
 {
+    if (m_data != 0)
+        ETH_FAIL_MESSAGE("RLPStreamU::appendRaw called more than 1 times!");
     m_data = &_data;
 }
 
@@ -631,18 +641,47 @@ string RLPStreamU::outHeader() const
     // payload in binary form, followed by the length of the payload, followed by the concatenation of the RLP encodings of the
     // items. The range of the first byte is thus [0xf8, 0xff].
 
-    (void)m_size;
-    long const payloadSize = (m_data->size() / 2) - 1;
     size_t header;
+    long payloadSize = (m_data->size() / 2) - 1;
+    string wrappedStringHeaderStr = "";
+    if (m_wrapString)
+    {
+        // if a string is 0-55 bytes long, the RLP encoding consists of a single byte
+        // with value 0x80 plus the length of the string followed by the string.
+        // The range of the first byte is thus [0x80, 0xb7].
+
+        // If a string is more than 55 bytes long, the RLP encoding consists of a single byte
+        // with value 0xb7 plus the length in bytes of the length of the string in binary form,
+        // followed by the length of the string, followed by the string.
+        // For example, a length-1024 string would be encoded as \xb9\x04\x00 followed by the string.
+        // The range of the first byte is thus [0xb8, 0xbf].
+
+        if (payloadSize > 55)
+        {
+            auto const lengthOfTheString = dev::toCompactHex(payloadSize);
+            auto const lengthInBytesOfTheLengthOfTheStringInBinaryForm = lengthOfTheString.size() / 2;
+
+            size_t const wrappedStringHeader = 183 + lengthInBytesOfTheLengthOfTheStringInBinaryForm;
+            wrappedStringHeaderStr = dev::toCompactHex(wrappedStringHeader) + lengthOfTheString;
+        }
+        else
+        {
+            size_t wrappedStringHeader = 128 + payloadSize;
+            wrappedStringHeaderStr = dev::toCompactHex(wrappedStringHeader);
+        }
+        payloadSize += wrappedStringHeaderStr.size() / 2;
+    }
+
     if (payloadSize > 55)
     {
-        auto const payloadSizeHex = dev::toCompactHex(payloadSize);
-        header = 247 + payloadSizeHex.size() / 2;
-        return "0x" + dev::toCompactHex(header) + payloadSizeHex;
+        auto const lengthOfThePayload = dev::toCompactHex(payloadSize);
+        auto const theLengthInBytesOfTheLengthOfThePayloadInBinaryForm = lengthOfThePayload.size() / 2;
+        header = 247 + theLengthInBytesOfTheLengthOfThePayloadInBinaryForm;
+        return "0x" + dev::toCompactHex(header) + lengthOfThePayload + wrappedStringHeaderStr;
     }
     else
         header = 192 + payloadSize;
-    return "0x" + dev::toCompactHex(header);
+    return "0x" + dev::toCompactHex(header) + wrappedStringHeaderStr;
 }
 
 }//namespace

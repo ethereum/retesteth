@@ -134,13 +134,19 @@ string fto_string(t _val)
 class RLPStreamU
 {
 public:
-    RLPStreamU(size_t _size) : m_size(_size) {}
+    RLPStreamU(size_t _size) : m_size(_size)
+    {
+        if (_size > 1)
+            ETH_FAIL_MESSAGE("RLPStreamU does not support stream of multiple rlp items. It's a mock to wrap 1 transaction.");
+    }
     void appendRaw(string const& _data);
+    void appendString(string const& _data);
     string outHeader() const;
 
 private:
+    bool m_wrapString = false;
     size_t m_size;
-    string const* m_data;
+    string const* m_data = 0;
 };
 
 }  // namespace test
