@@ -14,7 +14,16 @@ AccessListElement::AccessListElement(DataObject const& _data)
 
     m_address = spFH20(new FH20(_data.atKey("address")));
     for (auto const& el : _data.atKey("storageKeys").getSubObjects())
-        m_storageKeys.push_back(spFH32(new FH32(dev::toCompactHexPrefixed(dev::u256(el->asString()), 32))));
+    {
+        auto const elStr = el->asString();
+        if (elStr.find("bigint") != string::npos)
+            m_storageKeys.push_back(spFH32(new FH32(el->asString())));
+        else
+        {
+            // TODO: This is a filler file convertion logic!!!
+            m_storageKeys.push_back(spFH32(new FH32(dev::toCompactHexPrefixed(dev::u256(elStr), 32))));
+        }
+    }
 }
 
 AccessList::AccessList(DataObject const& _data)
@@ -45,12 +54,11 @@ spDataObject AccessList::asDataObject() const
 const dev::RLPStream AccessListElement::asRLPStream() const
 {
     dev::RLPStream stream(2);
-    stream << dev::Address(m_address->asString());
+    stream << m_address->serializeRLP();
 
     dev::RLPStream storages(m_storageKeys.size());
     for (auto const& key : m_storageKeys)
-        storages << dev::h256(key->asString());
-    // storages << dev::u256(key.asString());
+        storages << key->serializeRLP();
 
     stream.appendRaw(storages.out());
     return stream;
