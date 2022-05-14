@@ -18,7 +18,8 @@ string const t8ntool_config = R"({
         "ConstantinopleFix",
         "Istanbul",
         "Berlin",
-        "London"
+        "London",
+        "Merge"
     ],
     "additionalForks" : [
         "FrontierToHomesteadAt5",
@@ -27,8 +28,7 @@ string const t8ntool_config = R"({
         "HomesteadToDaoAt5",
         "ByzantiumToConstantinopleFixAt5",
         "BerlinToLondonAt5",
-        "ArrowGlacier",
-        "Merge"
+        "ArrowGlacier"
     ],
     "exceptions" : {
       "AddressTooShort" : "input string too short for common.Address",

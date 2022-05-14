@@ -69,7 +69,6 @@ SetChainParamsArgsGenesisMerge::SetChainParamsArgsGenesisMerge(DataObject const&
     REQUIRE_JSONFIELDS(_data, "SetChainParamsArgs::genesis ",
         {
             {"author", {{DataType::String}, jsonField::Required}},
-            {"difficulty", {{DataType::String}, jsonField::Optional}},
             {"gasLimit", {{DataType::String}, jsonField::Required}},
             {"baseFeePerGas", {{DataType::String}, jsonField::Required}},
             {"currentRandom", {{DataType::String}, jsonField::Required}},
@@ -158,7 +157,8 @@ spBlockHeader SetChainParamsArgsGenesisMerge::constructBlockHeader() const
     spDataObject header = buildCommonBlockHeader();
     (*header)["baseFeePerGas"] = m_dataRef.atKey("baseFeePerGas").asString();
     (*header)["difficulty"] = "0x00";
-    (*header)["mixHash"] = m_dataRef.atKey("currentRandom").asString();
+    auto const curRandomU256 = dev::u256(m_dataRef.atKey("currentRandom").asString());
+    (*header)["mixHash"] = dev::toCompactHexPrefixed(curRandomU256, 32);
     return readBlockHeader(header);
 }
 

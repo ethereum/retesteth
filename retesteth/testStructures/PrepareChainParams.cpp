@@ -44,10 +44,11 @@ spDataObject prepareGenesisSubsection(StateTestEnvBase const* _env, ParamsContex
     else
     {
         StateTestEnvBaseLegacy const* legacyInfo = StateTestEnvBaseLegacy::castFrom(_env);
+        (*genesis)["difficulty"] = legacyInfo->currentDifficulty().asString();
 
         // If we are filling the test on London and it has legacy env info
         // convert this info into 1559info
-        if (_net.asString() == "London")
+        if (compareFork(_net, CMP::ge, FORK("London")))
         {
             string defaultBaseFee = "0x0a";
             // Because of the typo, blockchain tests were generated with hex "0x10" baseFee instead of dec "10"
@@ -57,7 +58,13 @@ spDataObject prepareGenesisSubsection(StateTestEnvBase const* _env, ParamsContex
             VALUE currentBaseFee((DataObject(defaultBaseFee)));
             (*genesis)["baseFeePerGas"] = calculateGenesisBaseFee(currentBaseFee, _context);
         }
-        (*genesis)["difficulty"] = legacyInfo->currentDifficulty().asString();
+
+        if (compareFork(_net, CMP::ge, FORK("Merge")))
+        {
+            (*genesis).renameKey("difficulty", "currentRandom");
+            auto const randomH32 = toCompactHexPrefixed(dev::u256((*genesis)["currentRandom"].asString()), 32);
+            (*genesis)["mixHash"] = randomH32;
+        }
     }
 
     // Convert back 1559genesis into legacy genesis
