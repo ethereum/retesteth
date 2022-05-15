@@ -32,6 +32,7 @@ struct ClientConfigFile : GCP_SPointerBase
     std::vector<FORK> const& forks() const { return m_forks; }
     std::vector<FORK> const& additionalForks() const { return m_additionalForks; }
     std::set<FORK> allowedForks() const;
+    std::set<FORK> forkProgressionAsSet() const;
     bool checkLogsHash() const { return m_checkLogsHash; }
     int chainID() const { return m_chanID; }
 

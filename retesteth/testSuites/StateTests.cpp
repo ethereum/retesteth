@@ -214,6 +214,24 @@ spDataObject FillTestAsBlockchain(StateTestInFiller const& _test)
     return filledTest;
 }
 
+void putDefaultValuesToEnvSectionIfNotPresent(DataObject& _env)
+{
+    // Explicitly print default basefee for filled state tests
+    if (!_env.count("currentBaseFee"))
+        _env["currentBaseFee"] = "0x0a";
+
+    // Explicitly print default random for filled state tests
+    if (!_env.count("currentRandom"))
+    {
+        auto const& difficulty = _env.atKey("currentDifficulty").asString();
+        _env["currentRandom"] = dev::toCompactHexPrefixed(u256(difficulty), 32);
+    }
+
+    // For other forks while using Merge ENV
+    if (!_env.count("currentDifficulty"))
+        _env["currentDifficulty"] = "0x020000";
+}
+
 /// Rewrite the test file. Fill General State Test
 spDataObject FillTest(StateTestInFiller const& _test)
 {
@@ -225,10 +243,7 @@ spDataObject FillTest(StateTestInFiller const& _test)
     if (_test.hasInfo())
         (*filledTest).atKeyPointer("_info") = _test.Info().rawData();
     (*filledTest).atKeyPointer("env") = _test.Env().asDataObject();
-
-    // Explicitly print default basefee for filled state tests
-    if (!filledTest->atKey("env").count("currentBaseFee"))
-        (*filledTest)["env"]["currentBaseFee"] = "0x0a";
+    putDefaultValuesToEnvSectionIfNotPresent((*filledTest).atKeyUnsafe("env"));
 
     (*filledTest).atKeyPointer("pre") = _test.Pre().asDataObject();
     (*filledTest).atKeyPointer("transaction") = _test.GeneralTr().asDataObject();

@@ -179,5 +179,17 @@ std::set<FORK> ClientConfigFile::allowedForks() const
     return out;
 }
 
+std::set<FORK> ClientConfigFile::forkProgressionAsSet() const
+{
+    static std::set<FORK> out;
+    if (out.size() == 0)
+    {
+        for (auto const& el : m_forks)
+            out.insert(el);
+    }
+    return out;
+}
+
+
 }  // namespace teststruct
 }  // namespace test

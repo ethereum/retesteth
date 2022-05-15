@@ -32,6 +32,7 @@ void requireMergeEnvScheme(DataObject const& _data)
     REQUIRE_JSONFIELDS(_data, "StateTestEnv(Merge) " + _data.getKey(),
         {{"currentCoinbase", {{DataType::String}, jsonField::Required}},
             {"currentRandom", {{DataType::String}, jsonField::Required}},
+            {"currentDifficulty", {{DataType::String}, jsonField::Required}},
             {"currentNumber", {{DataType::String}, jsonField::Required}},
             {"currentTimestamp", {{DataType::String}, jsonField::Required}},
             {"currentGasLimit", {{DataType::String}, jsonField::Required}},
@@ -69,6 +70,7 @@ void StateTestEnvMerge::initializeMergeFields(DataObject const& _data)
 {
     m_currentRandom = spFH32(new FH32(_data.atKey("currentRandom")));
     m_currentBaseFee = spVALUE(new VALUE(_data.atKey("currentBaseFee")));
+    m_currentDifficultyForOtherNets = spVALUE(new VALUE(_data.atKey("currentDifficulty")));
 }
 
 void StateTestEnv1559::initialize1559Fields(DataObject const& _data)

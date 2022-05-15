@@ -21,6 +21,10 @@ string calculateGenesisBaseFee(VALUE const& _currentBaseFee, ParamsContext _cont
 
 spDataObject prepareGenesisSubsection(StateTestEnvBase const* _env, ParamsContext _context, FORK const& _net)
 {
+    auto const& additional = Options::getCurrentConfig().cfgFile().additionalForks();
+    bool netIsAdditional = inArray(additional, _net);
+
+    // Convert legacy, eip1559, merge env info into one another depending on _net for execution context
     spDataObject genesis;
     (*genesis)["author"] = _env->currentCoinbase().asString();
     (*genesis)["gasLimit"] = _env->currentGasLimit().asString();
@@ -40,15 +44,23 @@ spDataObject prepareGenesisSubsection(StateTestEnvBase const* _env, ParamsContex
         StateTestEnvBaseMerge const* mergeInfo = StateTestEnvBaseMerge::castFrom(_env);
         (*genesis)["baseFeePerGas"] = calculateGenesisBaseFee(mergeInfo->currentBaseFee(), _context);
         (*genesis)["currentRandom"] = mergeInfo->currentRandom()->asString();
+        auto const randomH32 = toCompactHexPrefixed(dev::u256((*genesis)["currentRandom"].asString()), 32);
+        (*genesis)["mixHash"] = randomH32;
+        if (!netIsAdditional && compareFork(_net, CMP::lt, FORK("Merge")))
+            (*genesis)["difficulty"] = mergeInfo->currentDifficultyForOther()->asString();
     }
     else
     {
         StateTestEnvBaseLegacy const* legacyInfo = StateTestEnvBaseLegacy::castFrom(_env);
         (*genesis)["difficulty"] = legacyInfo->currentDifficulty().asString();
 
+        // When filling old tests env section, put default values required for new networks
+
+        auto const& curConfig = Options::getCurrentConfig();
         // If we are filling the test on London and it has legacy env info
         // convert this info into 1559info
-        if (compareFork(_net, CMP::ge, FORK("London")))
+        bool knowLondon = curConfig.checkForkInProgression(FORK("London"));
+        if (!netIsAdditional && knowLondon && compareFork(_net, CMP::ge, FORK("London")))
         {
             string defaultBaseFee = "0x0a";
             // Because of the typo, blockchain tests were generated with hex "0x10" baseFee instead of dec "10"
@@ -59,20 +71,33 @@ spDataObject prepareGenesisSubsection(StateTestEnvBase const* _env, ParamsContex
             (*genesis)["baseFeePerGas"] = calculateGenesisBaseFee(currentBaseFee, _context);
         }
 
-        if (compareFork(_net, CMP::ge, FORK("Merge")))
+        bool knowMerge = curConfig.checkForkInProgression(FORK("Merge"));
+        if (!netIsAdditional && knowMerge && compareFork(_net, CMP::ge, FORK("Merge")))
         {
             (*genesis).renameKey("difficulty", "currentRandom");
             auto const randomH32 = toCompactHexPrefixed(dev::u256((*genesis)["currentRandom"].asString()), 32);
             (*genesis)["mixHash"] = randomH32;
         }
+
+        auto const& confPath = curConfig.getConfigPath();
+        if (!knowLondon)
+            ETH_WARNING(string("Client config missing required fork 'London': ") + confPath.c_str());
+        if (!knowMerge)
+            ETH_WARNING(string("Client config missing required fork 'Merge': ") + confPath.c_str());
     }
 
-    // Convert back 1559genesis into legacy genesis
-    // when filling tests with defined 1559env info
-    auto const& additional = Options::getCurrentConfig().cfgFile().additionalForks();
-    if (!inArray(additional, _net) && compareFork(_net, CMP::lt, FORK("London")))
-        (*genesis).removeKey("baseFeePerGas");
-
+    if (!netIsAdditional)
+    {
+        // Convert back 1559genesis into legacy genesis
+        // when filling tests with defined 1559env info
+        if ((*genesis).count("baseFeePerGas") && compareFork(_net, CMP::lt, FORK("London")))
+            (*genesis).removeKey("baseFeePerGas");
+        if ((*genesis).count("currentRandom") && compareFork(_net, CMP::lt, FORK("Merge")))
+        {
+            (*genesis).removeKey("currentRandom");
+            (*genesis)["mixHash"] = _env->currentMixHash().asString();
+        }
+    }
     return genesis;
     }
 }

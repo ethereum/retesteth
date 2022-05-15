@@ -55,10 +55,12 @@ struct StateTestEnvBaseMerge
 {
     spVALUE const& currentBaseFee() const { return m_currentBaseFee; }
     spFH32 const& currentRandom() const { return m_currentRandom; }
+    spVALUE const& currentDifficultyForOther() const { return m_currentDifficultyForOtherNets; }
     static StateTestEnvBaseMerge const* castFrom(StateTestEnvBase const* _from);
 
 protected:
     virtual void initializeMergeFields(DataObject const&) = 0;
+    spVALUE m_currentDifficultyForOtherNets;
     spVALUE m_currentBaseFee;
     spFH32 m_currentRandom;
 };

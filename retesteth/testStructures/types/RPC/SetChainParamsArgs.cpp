@@ -35,7 +35,7 @@ namespace teststruct
 SetChainParamsArgsGenesis::SetChainParamsArgsGenesis(DataObject const& _data)
   : m_dataRef(_data)
 {
-    REQUIRE_JSONFIELDS(_data, "SetChainParamsArgs::genesis ",
+    REQUIRE_JSONFIELDS(_data, "SetChainParamsArgs::genesis(legacy) ",
         {
             {"author", {{DataType::String}, jsonField::Required}},
             {"difficulty", {{DataType::String}, jsonField::Required}},
@@ -50,7 +50,7 @@ SetChainParamsArgsGenesis::SetChainParamsArgsGenesis(DataObject const& _data)
 SetChainParamsArgsGenesis1559::SetChainParamsArgsGenesis1559(DataObject const& _data)
     : SetChainParamsArgsGenesis(_data, false)
 {
-    REQUIRE_JSONFIELDS(_data, "SetChainParamsArgs::genesis ",
+    REQUIRE_JSONFIELDS(_data, "SetChainParamsArgs::genesis(1559) ",
         {
             {"author", {{DataType::String}, jsonField::Required}},
             {"difficulty", {{DataType::String}, jsonField::Required}},
@@ -66,7 +66,7 @@ SetChainParamsArgsGenesis1559::SetChainParamsArgsGenesis1559(DataObject const& _
 SetChainParamsArgsGenesisMerge::SetChainParamsArgsGenesisMerge(DataObject const& _data)
   : SetChainParamsArgsGenesis(_data, false)
 {
-    REQUIRE_JSONFIELDS(_data, "SetChainParamsArgs::genesis ",
+    REQUIRE_JSONFIELDS(_data, "SetChainParamsArgs::genesis(Merge) ",
         {
             {"author", {{DataType::String}, jsonField::Required}},
             {"gasLimit", {{DataType::String}, jsonField::Required}},

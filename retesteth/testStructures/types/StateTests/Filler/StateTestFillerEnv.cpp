@@ -58,6 +58,7 @@ void StateTestFillerEnvMerge::initializeMergeFields(DataObject const& _data)
 {
     m_currentBaseFee = spVALUE(new VALUE(_data.atKey("currentBaseFee")));
     m_currentRandom = spFH32(new FH32(_data.atKey("currentRandom")));
+    m_currentDifficultyForOtherNets = spVALUE(new VALUE(DataObject("0x020000")));
 }
 
 void StateTestFillerEnv1559::initialize1559Fields(DataObject const& _data)
