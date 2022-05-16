@@ -38,6 +38,18 @@ spDataObject prepareGenesisSubsection(StateTestEnvBase const* _env, ParamsContex
         StateTestEnvBase1559 const* eip1559info = StateTestEnvBase1559::castFrom(_env);
         (*genesis)["baseFeePerGas"] = calculateGenesisBaseFee(eip1559info->currentBaseFee(), _context);
         (*genesis)["difficulty"] = eip1559info->currentDifficulty().asString();
+
+        auto const& curConfig = Options::getCurrentConfig();
+        bool knowMerge = curConfig.checkForkInProgression(FORK("Merge"));
+        if (!netIsAdditional && knowMerge && compareFork(_net, CMP::ge, FORK("Merge")))
+        {
+            (*genesis).renameKey("difficulty", "currentRandom");
+            auto const randomH32 = toCompactHexPrefixed(dev::u256((*genesis)["currentRandom"].asString()), 32);
+            (*genesis)["mixHash"] = randomH32;
+        }
+        auto const& confPath = curConfig.getConfigPath();
+        if (!knowMerge)
+            ETH_WARNING(string("Client config missing required fork 'Merge': ") + confPath.c_str());
     }
     else if (_env->type() == TestEnvClass::MERGE)
     {
