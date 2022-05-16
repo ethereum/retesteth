@@ -59,7 +59,7 @@ public:
 
     // Translate smart network names into network names ( `<=Homestead` to `Frontier, Homestead`)
     std::vector<FORK> translateNetworks(set<string> const& _networks) const;
-    static std::vector<FORK> translateNetworks(set<string> const& _networks, std::vector<FORK> const& _netOrder);
+    static void translateNetworks(set<string> const& _networks, std::vector<FORK> const& _netOrder, std::vector<FORK>& _out);
 
     // Translate exceptionID from tests into client error string from configs
     // Print suggestions if no match found

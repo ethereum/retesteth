@@ -3,7 +3,11 @@
 #include <testStructures/Common.h>
 #include <retesteth/EthChecks.h>
 #include <retesteth/TestHelper.h>
+#include <mutex>
 using namespace test::teststruct;
+std::mutex g_allowedForks_static_var;
+std::mutex g_forkProgressionAsSet_static_var;
+
 
 namespace test
 {
@@ -168,6 +172,7 @@ std::vector<IPADDRESS> const& ClientConfigFile::socketAdresses() const
 
 std::set<FORK> ClientConfigFile::allowedForks() const
 {
+    std::lock_guard<std::mutex> lock(g_allowedForks_static_var);
     static std::set<FORK> out;
     if (out.size() == 0)
     {
@@ -181,6 +186,7 @@ std::set<FORK> ClientConfigFile::allowedForks() const
 
 std::set<FORK> ClientConfigFile::forkProgressionAsSet() const
 {
+    std::lock_guard<std::mutex> lock(g_forkProgressionAsSet_static_var);
     static std::set<FORK> out;
     if (out.size() == 0)
     {

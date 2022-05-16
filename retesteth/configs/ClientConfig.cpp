@@ -2,6 +2,7 @@
 #include <retesteth/testStructures/Common.h>
 #include <mutex>
 std::mutex g_staticDeclaration_clientConfigID;
+std::mutex g_staticDeclaration_translateNetworks_static;
 namespace test
 {
 ClientConfigID::ClientConfigID()
@@ -106,20 +107,20 @@ bool ClientConfig::checkForkInProgression(FORK const& _net) const
 /// translate network names in expect section field
 /// >Homestead to EIP150, EIP158, Byzantium, ...
 /// <=Homestead to Frontier, Homestead
-std::vector<FORK> ClientConfig::translateNetworks(set<string> const& _networks, std::vector<FORK> const& _netOrder)
+void ClientConfig::translateNetworks(set<string> const& _networks, std::vector<FORK> const& _netOrder, std::vector<FORK>& _out)
 {
+    std::lock_guard<std::mutex> lock(g_staticDeclaration_translateNetworks_static);
     // Construct vector with test network names in a right order
     // (from Frontier to Homestead ... to Constantinople)
     // According to fork order in config file
 
     // Protection from putting double networks.
     // Use vector instead of set to keep the fork order
-    std::vector<FORK> out;
-    auto addNet = [&out](FORK const& _el) {
-        for (auto const& fork : out)
+    auto addNet = [&_out](FORK const& _el) {
+        for (auto const& fork : _out)
             if (fork == _el)
                 return;
-        out.push_back(_el);
+        _out.push_back(_el);
     };
 
     for (auto const& net : _networks)
@@ -163,7 +164,7 @@ std::vector<FORK> ClientConfig::translateNetworks(set<string> const& _networks, 
             }
             else if (net[0] == '<' && net[1] == '=')
             {
-                out.push_back(*it);
+                _out.push_back(*it);
                 while (it != forkOrder.begin())
                 {
                     addNet(*(--it));
@@ -176,12 +177,12 @@ std::vector<FORK> ClientConfig::translateNetworks(set<string> const& _networks, 
         if (!isNetworkTranslated)
             addNet(net);
     }
-    return out;
 }
 
 std::vector<FORK> ClientConfig::translateNetworks(set<string> const& _networks) const
 {
-    std::vector<FORK> nets = ClientConfig::translateNetworks(_networks, cfgFile().forks());
+    std::vector<FORK> nets;
+    ClientConfig::translateNetworks(_networks, cfgFile().forks(), nets);
     for (auto const& net : nets)
         validateForkAllowed(net);
     return nets;
