@@ -19,12 +19,28 @@ string calculateGenesisBaseFee(VALUE const& _currentBaseFee, ParamsContext _cont
         return _currentBaseFee.asString();
 }
 
+void convert1559EnvToMerge(FORK const& _net, bool _netIsAdditional, spDataObject _genesis)
+{
+    auto const& curConfig = Options::getCurrentConfig();
+    bool knowMerge = curConfig.checkForkInProgression(FORK("Merge"));
+    if (!_netIsAdditional && knowMerge && compareFork(_net, CMP::ge, FORK("Merge")))
+    {
+        (*_genesis).renameKey("difficulty", "currentRandom");
+        auto const randomH32 = toCompactHexPrefixed(dev::u256((*_genesis)["currentRandom"].asString()), 32);
+        (*_genesis)["mixHash"] = randomH32;
+    }
+    auto const& confPath = curConfig.getConfigPath();
+    if (!knowMerge)
+        ETH_WARNING(string("Client config missing required fork 'Merge': ") + confPath.c_str());
+}
+
 spDataObject prepareGenesisSubsection(StateTestEnvBase const* _env, ParamsContext _context, FORK const& _net)
 {
     auto const& additional = Options::getCurrentConfig().cfgFile().additionalForks();
     bool netIsAdditional = inArray(additional, _net);
 
     // Convert legacy, eip1559, merge env info into one another depending on _net for execution context
+    // And build up RPC setChainParams genesis section
     spDataObject genesis;
     (*genesis)["author"] = _env->currentCoinbase().asString();
     (*genesis)["gasLimit"] = _env->currentGasLimit().asString();
@@ -38,18 +54,7 @@ spDataObject prepareGenesisSubsection(StateTestEnvBase const* _env, ParamsContex
         StateTestEnvBase1559 const* eip1559info = StateTestEnvBase1559::castFrom(_env);
         (*genesis)["baseFeePerGas"] = calculateGenesisBaseFee(eip1559info->currentBaseFee(), _context);
         (*genesis)["difficulty"] = eip1559info->currentDifficulty().asString();
-
-        auto const& curConfig = Options::getCurrentConfig();
-        bool knowMerge = curConfig.checkForkInProgression(FORK("Merge"));
-        if (!netIsAdditional && knowMerge && compareFork(_net, CMP::ge, FORK("Merge")))
-        {
-            (*genesis).renameKey("difficulty", "currentRandom");
-            auto const randomH32 = toCompactHexPrefixed(dev::u256((*genesis)["currentRandom"].asString()), 32);
-            (*genesis)["mixHash"] = randomH32;
-        }
-        auto const& confPath = curConfig.getConfigPath();
-        if (!knowMerge)
-            ETH_WARNING(string("Client config missing required fork 'Merge': ") + confPath.c_str());
+        convert1559EnvToMerge(_net, netIsAdditional, genesis);
     }
     else if (_env->type() == TestEnvClass::MERGE)
     {
@@ -110,6 +115,7 @@ spDataObject prepareGenesisSubsection(StateTestEnvBase const* _env, ParamsContex
             (*genesis)["mixHash"] = _env->currentMixHash().asString();
         }
     }
+
     return genesis;
     }
 }

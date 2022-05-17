@@ -9,7 +9,14 @@ BlockchainTestFillerEnv* readBlockchainFillerTestEnv(spDataObjectMove _data, Sea
 {
     auto const& data = _data.getPointer();
     if (data->count("baseFeePerGas"))
-        return new BlockchainTestFillerEnv1559(_data, _sEngine);
+    {
+        spDataObject diff = data->atKey("difficulty").copy();
+        (*diff).performModifier(mod_valueToCompactEvenHexPrefixed);
+        if (VALUE(diff->asString()) != 0)
+            return new BlockchainTestFillerEnv1559(_data, _sEngine);
+        else
+            return new BlockchainTestFillerEnvMerge(_data, _sEngine);
+    }
     return new BlockchainTestFillerEnvLegacy(_data, _sEngine);
 }
 }  // namespace

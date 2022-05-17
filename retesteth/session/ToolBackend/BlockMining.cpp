@@ -14,9 +14,18 @@ namespace
 {
 BlockchainTestFillerEnv* readBlockchainFillerTestEnv(spDataObjectMove _data, SealEngine _sEngine)
 {
+    // This peace is a copy of same code in BlockchainTestFiller.cpp
+    // Because this file emulates t8ntool as a 3d party (blockchain logic of it)
     auto const& data = _data.getPointer();
     if (data->count("baseFeePerGas"))
-        return new BlockchainTestFillerEnv1559(_data, _sEngine);
+    {
+        spDataObject diff = data->atKey("difficulty").copy();
+        (*diff).performModifier(mod_valueToCompactEvenHexPrefixed);
+        if (VALUE(diff->asString()) != 0)
+            return new BlockchainTestFillerEnv1559(_data, _sEngine);
+        else
+            return new BlockchainTestFillerEnvMerge(_data, _sEngine);
+    }
     return new BlockchainTestFillerEnvLegacy(_data, _sEngine);
 }
 }  // namespace

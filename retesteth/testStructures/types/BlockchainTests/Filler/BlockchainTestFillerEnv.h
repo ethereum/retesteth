@@ -20,6 +20,18 @@ private:
 
 };
 
+struct BlockchainTestFillerEnvMerge : BlockchainTestFillerEnv, StateTestEnvBaseMerge
+{
+    TestEnvClass type() const override { return TestEnvClass::MERGE; }
+    BlockchainTestFillerEnvMerge(spDataObjectMove _data, SealEngine _sEngine);
+
+protected:
+    void initializeMergeFields(DataObject const&) override;
+private:
+    void define() const override {}
+
+};
+
 struct BlockchainTestFillerEnv1559 : BlockchainTestFillerEnv, StateTestEnvBase1559
 {
     TestEnvClass type() const override { return TestEnvClass::EIP1559; }

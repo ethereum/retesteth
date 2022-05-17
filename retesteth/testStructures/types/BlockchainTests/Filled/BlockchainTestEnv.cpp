@@ -57,12 +57,48 @@ void require1559BlockchainHeader(DataObject const& _data)
             {"sha3Uncles", {{DataType::String}, jsonField::Optional}},
             {"uncleHash", {{DataType::String}, jsonField::Optional}}});
 }
+
+void requireMergeBlockchainHeader(DataObject const& _data)
+{
+    REQUIRE_JSONFIELDS(_data, "GenesisBlockHeader(BlockchainTestEnvMerge) " + _data.getKey(),
+        {{"bloom", {{DataType::String}, jsonField::Optional}},
+            {"logsBloom", {{DataType::String}, jsonField::Optional}},
+            {"coinbase", {{DataType::String}, jsonField::Optional}},
+            {"author", {{DataType::String}, jsonField::Optional}},
+            {"miner", {{DataType::String}, jsonField::Optional}},
+            {"difficulty", {{DataType::String}, jsonField::Required}},
+            {"extraData", {{DataType::String}, jsonField::Required}},
+            {"gasLimit", {{DataType::String}, jsonField::Required}},
+            {"baseFeePerGas", {{DataType::String}, jsonField::Required}},
+            {"gasUsed", {{DataType::String}, jsonField::Required}},
+            {"hash", {{DataType::String}, jsonField::Optional}},
+            {"mixHash", {{DataType::String}, jsonField::Optional}},
+            {"nonce", {{DataType::String}, jsonField::Optional}},
+            {"number", {{DataType::String}, jsonField::Required}},
+            {"parentHash", {{DataType::String}, jsonField::Required}},
+            {"receiptTrie", {{DataType::String}, jsonField::Optional}},
+            {"receiptsRoot", {{DataType::String}, jsonField::Optional}},
+            {"stateRoot", {{DataType::String}, jsonField::Required}},
+            {"timestamp", {{DataType::String}, jsonField::Required}},
+            {"transactionsTrie", {{DataType::String}, jsonField::Optional}},
+            {"transactionsRoot", {{DataType::String}, jsonField::Optional}},
+            {"sha3Uncles", {{DataType::String}, jsonField::Optional}},
+            {"uncleHash", {{DataType::String}, jsonField::Optional}}});
+}
 }
 
 namespace test
 {
 namespace teststruct
 {
+
+void BlockchainTestEnvMerge::initializeMergeFields(DataObject const& _data)
+{
+    m_currentDifficulty = spVALUE(new VALUE(_data.atKey("difficulty")));
+    m_currentBaseFee = spVALUE(new VALUE(_data.atKey("baseFeePerGas")));
+    m_currentRandom = spFH32(new FH32(_data.atKey("mixHash")));
+    m_currentDifficultyForOtherNets = m_currentDifficulty;
+}
 
 void BlockchainTestEnv1559::initialize1559Fields(DataObject const& _data)
 {
@@ -99,7 +135,19 @@ BlockchainTestEnv1559::BlockchainTestEnv1559(DataObject const& _data)
     {
         throw UpwardsException(string("BlockchainTestEnv(1559) convertion error: ") + _ex.what() + _data.asJson());
     }
+}
 
+BlockchainTestEnvMerge::BlockchainTestEnvMerge(DataObject const& _data)
+{
+    try {
+        requireMergeBlockchainHeader(_data);
+        initializeCommonFields(_data);
+        initializeMergeFields(_data);
+    }
+    catch (std::exception const& _ex)
+    {
+        throw UpwardsException(string("BlockchainTestEnv(Merge) convertion error: ") + _ex.what() + _data.asJson());
+    }
 }
 
 void BlockchainTestEnv::initializeCommonFields(DataObject const& _data)

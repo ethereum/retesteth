@@ -40,6 +40,19 @@ private:
     void define() const override {}
 };
 
+struct BlockchainTestEnvMerge : BlockchainTestEnv, StateTestEnvBaseMerge
+{
+    TestEnvClass type() const override { return TestEnvClass::MERGE; }
+    BlockchainTestEnvMerge(DataObject const& _data);
+    VALUE const& currentDifficulty() const { return m_currentDifficulty; }
+
+protected:
+    void initializeMergeFields(DataObject const&) override;
+private:
+    void define() const override {}
+    spVALUE m_currentDifficulty;
+};
+
 typedef GCP_SPointer<BlockchainTestEnv> spBlockchainTestEnv;
 
 
