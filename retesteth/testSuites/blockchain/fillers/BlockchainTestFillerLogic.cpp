@@ -8,6 +8,7 @@
 using namespace test::blockchainfiller;
 namespace test
 {
+
 /// Generate blockchain test from filler
 spDataObject FillTest(BlockchainTestInFiller const& _test, TestSuite::TestSuiteOptions const& _opt)
 {
@@ -99,10 +100,12 @@ spDataObject FillTest(BlockchainTestInFiller const& _test, TestSuite::TestSuiteO
 
                 filledTest["lastblockhash"] = finalBlock.header()->hash().asString();
                 (*result).addSubObject(_filledTest);
+
+                verifyFilledTest(_test.unitTestVerify(), _filledTest, net);
             }  // expects count net
         }
     }
+
     return result;
 }
-
 }  // namespace test

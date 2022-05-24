@@ -63,6 +63,7 @@ spDataObject prepareGenesisSubsection(StateTestEnvBase const* _env, ParamsContex
         (*genesis)["currentRandom"] = mergeInfo->currentRandom()->asString();
         auto const randomH32 = toCompactHexPrefixed(dev::u256((*genesis)["currentRandom"].asString()), 32);
         (*genesis)["mixHash"] = randomH32;
+
         if (!netIsAdditional && compareFork(_net, CMP::lt, FORK("Merge")))
             (*genesis)["difficulty"] = mergeInfo->currentDifficultyForOther()->asString();
     }

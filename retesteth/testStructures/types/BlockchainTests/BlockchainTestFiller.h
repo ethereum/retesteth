@@ -30,8 +30,12 @@ struct BlockchainTestInFiller : GCP_SPointerBase
 
     bool hasExpectForNetwork(FORK const& _net) const;
     std::set<FORK> getAllForksFromExpectSections() const;
-    std::vector<string> const& unitTestExceptions() const { return m_exceptions; }
     bool hasUnclesInTest() const { return m_hasAtLeastOneUncle; }
+
+    // UnitTest features
+    std::vector<string> const& unitTestExceptions() const { return m_exceptions; }
+    DataObject const& unitTestVerify() const { return m_verify; }
+
 
 private:
     BlockchainTestInFiller() {}
@@ -44,6 +48,8 @@ private:
     std::vector<BlockchainTestFillerExpectSection> m_expects;
     std::vector<string> m_exceptions;
     bool m_hasAtLeastOneUncle;
+
+    spDataObject m_verify;
 };
 
 struct BlockchainTestFiller

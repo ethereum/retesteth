@@ -50,6 +50,8 @@ StateTestInFiller::StateTestInFiller(spDataObject& _data)
                 {"expect", {{DataType::Array}, jsonField::Required}},
                 {"pre", {{DataType::Object}, jsonField::Required}},
                 {"solidity", {{DataType::String}, jsonField::Optional}},
+                {"verify", {{DataType::Object}, jsonField::Optional}},
+                {"verifyBC", {{DataType::Object}, jsonField::Optional}},
                 {"transaction", {{DataType::Object}, jsonField::Required}}});
 
         if (_data->count("_info"))
@@ -71,6 +73,16 @@ StateTestInFiller::StateTestInFiller(spDataObject& _data)
         ETH_ERROR_REQUIRE_MESSAGE(m_expectSections.size() > 0, "StateTestFiller require expect sections!");
 
         m_name = _data->getKey();
+        if (_data->count("verify"))
+        {
+            spDataObjectMove m = MOVE(_data, "verify");
+            m_verify = m.getPointer();
+        }
+        if (_data->count("verifyBC"))
+        {
+            spDataObjectMove m = MOVE(_data, "verifyBC");
+            m_verifyBC = m.getPointer();
+        }
     }
     catch (std::exception const& _ex)
     {

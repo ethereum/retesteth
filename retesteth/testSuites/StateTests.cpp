@@ -204,6 +204,7 @@ spDataObject FillTestAsBlockchain(StateTestInFiller const& _test)
                     if (filledTest->count(_test.testName() + dataPostfix))
                         ETH_ERROR_MESSAGE("The test filler contain redundunt expect section: " + _test.testName() + dataPostfix);
 
+                    verifyFilledTest(_test.unitTestVerifyBC(), aBlockchainTest, fork);
                     (*filledTest).atKeyPointer(_test.testName() + dataPostfix) = aBlockchainTest;
                     session.test_rewindToBlock(0);
                 }  // txs
@@ -362,13 +363,14 @@ spDataObject FillTest(StateTestInFiller const& _test)
 
                     (*forkResults).addArrayObject(transactionResults);
                     session.test_rewindToBlock(VALUE(0));
-                }
+                }  // tx
+
                 if (expectFoundTransaction == false)
                 {
                     ETH_ERROR_MESSAGE("Expect section does not cover any transaction: \n" + expect.initialData().asJson() +
                                       "\n" + expect.result().asDataObject()->asJson());
                 }
-            }
+            }  // expect has fork
         }
 
         if (forkResults->getSubObjects().size() > 0)
@@ -376,6 +378,7 @@ spDataObject FillTest(StateTestInFiller const& _test)
     }
 
     checkUnexecutedTransactions(txs);
+    verifyFilledTest(_test.unitTestVerify(), filledTest);
     return filledTest;
 }
 

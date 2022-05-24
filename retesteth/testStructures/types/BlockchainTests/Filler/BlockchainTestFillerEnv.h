@@ -29,7 +29,6 @@ protected:
     void initializeMergeFields(DataObject const&) override;
 private:
     void define() const override {}
-
 };
 
 struct BlockchainTestFillerEnv1559 : BlockchainTestFillerEnv, StateTestEnvBase1559

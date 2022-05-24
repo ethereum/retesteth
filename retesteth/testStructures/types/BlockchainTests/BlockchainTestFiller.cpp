@@ -35,6 +35,7 @@ BlockchainTestInFiller::BlockchainTestInFiller(spDataObject& _data)
                 {"genesisBlockHeader", {{DataType::Object}, jsonField::Required}},
                 {"expect", {{DataType::Array}, jsonField::Required}},
                 {"exceptions", {{DataType::Array}, jsonField::Optional}},
+                {"verify", {{DataType::Object}, jsonField::Optional}},
                 {"pre", {{DataType::Object}, jsonField::Required}},
                 {"blocks", {{DataType::Array}, jsonField::Required}}});
 
@@ -81,10 +82,17 @@ BlockchainTestInFiller::BlockchainTestInFiller(spDataObject& _data)
 
         ETH_ERROR_REQUIRE_MESSAGE(m_expects.size() > 0, "BlockchainTestFiller require expect section!");
 
+        // UnitTests
         if (_data->count("exceptions"))
         {
             for (size_t i = _data->atKey("exceptions").getSubObjects().size(); i > 0; i--)
                 m_exceptions.push_back(_data->atKey("exceptions").getSubObjects().at(i - 1)->asString());
+        }
+
+        if (_data->count("verify"))
+        {
+            spDataObjectMove m = MOVE(_data, "verify");
+            m_verify = m.getPointer();
         }
 
         m_hasAtLeastOneUncle = false;

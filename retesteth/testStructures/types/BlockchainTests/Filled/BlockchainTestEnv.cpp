@@ -94,10 +94,9 @@ namespace teststruct
 
 void BlockchainTestEnvMerge::initializeMergeFields(DataObject const& _data)
 {
-    m_currentDifficulty = spVALUE(new VALUE(_data.atKey("difficulty")));
     m_currentBaseFee = spVALUE(new VALUE(_data.atKey("baseFeePerGas")));
     m_currentRandom = spFH32(new FH32(_data.atKey("mixHash")));
-    m_currentDifficultyForOtherNets = m_currentDifficulty;
+    m_currentDifficultyForOtherNets = spVALUE(new VALUE(_data.atKey("difficulty")));
 }
 
 void BlockchainTestEnv1559::initialize1559Fields(DataObject const& _data)
