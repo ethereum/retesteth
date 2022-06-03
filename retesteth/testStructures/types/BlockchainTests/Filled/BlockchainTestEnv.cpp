@@ -96,7 +96,7 @@ void BlockchainTestEnvMerge::initializeMergeFields(DataObject const& _data)
 {
     m_currentBaseFee = spVALUE(new VALUE(_data.atKey("baseFeePerGas")));
     m_currentRandom = spFH32(new FH32(_data.atKey("mixHash")));
-    m_currentDifficultyForOtherNets = spVALUE(new VALUE(_data.atKey("difficulty")));
+    m_currentDifficulty = spVALUE(new VALUE(DataObject("0x020000")));
 }
 
 void BlockchainTestEnv1559::initialize1559Fields(DataObject const& _data)

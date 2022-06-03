@@ -7,7 +7,7 @@ namespace test
 {
 namespace blockchainfiller
 {
-TestBlockchain::TestBlockchain(BlockchainTestFillerEnv const* _testEnv, State const& _genesisState, SealEngine _engine,
+TestBlockchain::TestBlockchain(BlockchainTestFillerEnv const& _testEnv, State const& _genesisState, SealEngine _engine,
     FORK const& _network, string const& _chainName, RegenerateGenesis _regenerateGenesis)
   : m_session(RPCSession::instance(TestOutputHelper::getThreadID())),
     m_network(_network),

@@ -25,7 +25,7 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
     SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
 
     TestOutputHelper::get().setCurrentTestInfo(TestInfo(_test.network().asString(), 0));
-    session.test_setChainParams(prepareChainParams(_test.network(), _test.sealEngine(), _test.Pre(), &_test.Env()));
+    session.test_setChainParams(prepareChainParams(_test.network(), _test.sealEngine(), _test.Pre(), _test.Env()));
 
     // for all blocks
     size_t blockNumber = 0;

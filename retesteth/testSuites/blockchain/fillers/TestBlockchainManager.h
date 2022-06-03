@@ -16,7 +16,7 @@ public:
     // Initialize blockchain manager with first chain information
     // _env, _pre, _engine, _network
     TestBlockchainManager(
-        BlockchainTestFillerEnv const* _genesisEnv, State const& _genesisPre, SealEngine _engine, FORK const& _network);
+        BlockchainTestFillerEnv const& _genesisEnv, State const& _genesisPre, SealEngine _engine, FORK const& _network);
 
     // Perform block generation logic by parsing the filler file section
     void parseBlockFromFiller(BlockchainTestFillerBlock const& _block, bool _generateUncles);
@@ -43,7 +43,7 @@ private:
     std::string m_sCurrentChainName;        // Chain name that is mining blocks
     std::string const m_sDefaultChainName;  // Default chain name to restore genesis
 
-    BlockchainTestFillerEnv const* m_genesisEnv;  // Genesis Info
+    BlockchainTestFillerEnv const& m_genesisEnv;  // Genesis Info
     State m_genesisPre;
     SealEngine m_sealEngine;
 

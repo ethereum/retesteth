@@ -9,19 +9,10 @@ namespace test
 {
 namespace teststruct
 {
-enum class TestEnvClass
-{
-    LEGACY,
-    EIP1559,
-    MERGE,
-    UNDEFINED
-};
 
 // Base logic for State Test Env section
 struct StateTestEnvBase : GCP_SPointerBase
 {
-    virtual TestEnvClass type() const { return TestEnvClass::UNDEFINED; }
-
     FH20 const& currentCoinbase() const { return m_currentCoinbase; }
     VALUE const& currentGasLimit() const { return m_currentGasLimit; }
     VALUE const& currentNumber() const { return m_currentNumber; }
@@ -34,8 +25,12 @@ struct StateTestEnvBase : GCP_SPointerBase
     FH8 const& currentNonce() const { return m_currentNonce; }
     FH32 const& currentMixHash() const { return m_currentMixHash; }
     FH32 const& previousHash() const { return m_previousHash; }
-    spDataObject const& asDataObject() const;
+    virtual spDataObject const& asDataObject() const;
     virtual ~StateTestEnvBase() {}
+
+    VALUE const& currentBaseFee() const { return m_currentBaseFee; }
+    FH32 const& currentRandom() const { return m_currentRandom; }
+    VALUE const& currentDifficulty() const { return m_currentDifficulty; }
 
 protected:
     StateTestEnvBase() {}
@@ -49,42 +44,13 @@ protected:
     spBYTES m_currentExtraData;
     spFH8 m_currentNonce;
     spFH32 m_currentMixHash;
-};
 
-struct StateTestEnvBaseMerge
-{
-    spVALUE const& currentBaseFee() const { return m_currentBaseFee; }
-    spFH32 const& currentRandom() const { return m_currentRandom; }
-    spVALUE const& currentDifficultyForOther() const { return m_currentDifficultyForOtherNets; }
-    static StateTestEnvBaseMerge const* castFrom(StateTestEnvBase const* _from);
-
-protected:
-    virtual void initializeMergeFields(DataObject const&) = 0;
-    spVALUE m_currentDifficultyForOtherNets;
+    // 1559
+    spVALUE m_currentDifficulty;
     spVALUE m_currentBaseFee;
+
+    // Merge
     spFH32 m_currentRandom;
-};
-
-struct StateTestEnvBase1559
-{
-    spVALUE const& currentBaseFee() const { return m_currentBaseFee; }
-    VALUE const& currentDifficulty() const { return m_currentDifficulty; }
-    static StateTestEnvBase1559 const* castFrom(StateTestEnvBase const* _from);
-
-protected:
-    virtual void initialize1559Fields(DataObject const&) = 0;
-    spVALUE m_currentBaseFee;
-    spVALUE m_currentDifficulty;
-};
-
-struct StateTestEnvBaseLegacy
-{
-    VALUE const& currentDifficulty() const { return m_currentDifficulty; }
-    static StateTestEnvBaseLegacy const* castFrom(StateTestEnvBase const* _from);
-
-protected:
-    virtual void initializeLegacyFields(DataObject const&) = 0;
-    spVALUE m_currentDifficulty;
 };
 
 

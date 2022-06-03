@@ -1,5 +1,5 @@
 #pragma once
-#include "../../StateTests/Base/StateTestEnvBase.h"
+#include <retesteth/testStructures/types/StateTests/Base/StateTestEnvBase.h>
 #include <retesteth/dataObject/DataObject.h>
 using namespace dataobject;
 using namespace test::teststruct;
@@ -18,35 +18,33 @@ private:
     virtual void define() const = 0; // BlockchainTestEnv is abstract
 };
 
-struct BlockchainTestEnvLegacy : BlockchainTestEnv, StateTestEnvBaseLegacy
+struct BlockchainTestEnvLegacy : BlockchainTestEnv
 {
-    TestEnvClass type() const override { return TestEnvClass::LEGACY; }
     BlockchainTestEnvLegacy(DataObject const& _data);
 
 protected:
-    void initializeLegacyFields(DataObject const&) override;
+    void initializeLegacyFields(DataObject const&);
 private:
     void define() const override {}
 };
 
-struct BlockchainTestEnv1559 : BlockchainTestEnv, StateTestEnvBase1559
+struct BlockchainTestEnv1559 : BlockchainTestEnv
 {
-    TestEnvClass type() const override { return TestEnvClass::EIP1559; }
     BlockchainTestEnv1559(DataObject const& _data);
 
 protected:
-    void initialize1559Fields(DataObject const&) override;
+    void initialize1559Fields(DataObject const&);
 private:
     void define() const override {}
 };
 
-struct BlockchainTestEnvMerge : BlockchainTestEnv, StateTestEnvBaseMerge
+struct BlockchainTestEnvMerge : BlockchainTestEnv
 {
-    TestEnvClass type() const override { return TestEnvClass::MERGE; }
     BlockchainTestEnvMerge(DataObject const& _data);
 
 protected:
-    void initializeMergeFields(DataObject const&) override;
+    void initializeMergeFields(DataObject const&);
+
 private:
     void define() const override {}
 };

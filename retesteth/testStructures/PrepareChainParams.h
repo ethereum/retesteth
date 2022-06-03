@@ -18,7 +18,7 @@ enum class ParamsContext
 };
 
 // Prepare chain params rpc request
-spSetChainParamsArgs prepareChainParams(FORK const&, SealEngine, State const&, StateTestEnvBase const*,
+spSetChainParamsArgs prepareChainParams(FORK const&, SealEngine, State const&, StateTestEnvBase const&,
     ParamsContext _paramsContext = ParamsContext::BlockchainTests);
 
 }  // namespace teststruct

@@ -4,39 +4,17 @@
 
 namespace
 {
-void requireLegacyEnvScheme(spDataObject const& _data)
+void requireStateTestsFillerEnvScheme(spDataObject const& _data)
 {
-    REQUIRE_JSONFIELDS(_data, "StateTestFillerEnv(Legacy) " + _data->getKey(),
+    REQUIRE_JSONFIELDS(_data, "StateTestFillerEnv " + _data->getKey(),
         {{"currentCoinbase", {{DataType::String}, jsonField::Required}},
-            {"currentDifficulty", {{DataType::String}, jsonField::Required}},
-            {"currentGasLimit", {{DataType::String}, jsonField::Required}},
-            {"currentNumber", {{DataType::String}, jsonField::Required}},
-            {"currentTimestamp", {{DataType::String}, jsonField::Required}},
-            {"previousHash", {{DataType::String}, jsonField::Required}}});
-}
-
-void requireEIP1559EnvScheme(spDataObject const& _data)
-{
-    REQUIRE_JSONFIELDS(_data, "StateTestFillerEnv(EIP1559) " + _data->getKey(),
-        {{"currentCoinbase", {{DataType::String}, jsonField::Required}},
-            {"currentDifficulty", {{DataType::String}, jsonField::Required}},
-            {"currentGasLimit", {{DataType::String}, jsonField::Required}},
-            {"currentNumber", {{DataType::String}, jsonField::Required}},
-            {"currentTimestamp", {{DataType::String}, jsonField::Required}},
-            {"currentBaseFee", {{DataType::String}, jsonField::Required}},
-            {"previousHash", {{DataType::String}, jsonField::Required}}});
-}
-
-void requireMergeEnvScheme(spDataObject const& _data)
-{
-    REQUIRE_JSONFIELDS(_data, "StateTestFillerEnv(Merge) " + _data->getKey(),
-        {{"currentCoinbase", {{DataType::String}, jsonField::Required}},
-            {"currentGasLimit", {{DataType::String}, jsonField::Required}},
-            {"currentNumber", {{DataType::String}, jsonField::Required}},
-            {"currentTimestamp", {{DataType::String}, jsonField::Required}},
-            {"currentBaseFee", {{DataType::String}, jsonField::Required}},
-            {"currentRandom", {{DataType::String}, jsonField::Required}},
-            {"previousHash", {{DataType::String}, jsonField::Required}}});
+         {"currentDifficulty", {{DataType::String}, jsonField::Optional}},
+         {"currentGasLimit", {{DataType::String}, jsonField::Required}},
+         {"currentNumber", {{DataType::String}, jsonField::Required}},
+         {"currentTimestamp", {{DataType::String}, jsonField::Required}},
+         {"currentBaseFee", {{DataType::String}, jsonField::Optional}},
+         {"currentRandom", {{DataType::String}, jsonField::Optional}},
+         {"previousHash", {{DataType::String}, jsonField::Required}}});
 }
 
 void convertEnvDecFieldsToHex(spDataObject& _data)
@@ -54,80 +32,31 @@ namespace test
 {
 namespace teststruct
 {
-void StateTestFillerEnvMerge::initializeMergeFields(DataObject const& _data)
-{
-    m_currentBaseFee = spVALUE(new VALUE(_data.atKey("currentBaseFee")));
-    m_currentRandom = spFH32(new FH32(_data.atKey("currentRandom")));
-    m_currentDifficultyForOtherNets = spVALUE(new VALUE(DataObject("0x020000")));
-}
-
-void StateTestFillerEnv1559::initialize1559Fields(DataObject const& _data)
-{
-    m_currentDifficulty = spVALUE(new VALUE(_data.atKey("currentDifficulty")));
-    m_currentBaseFee = spVALUE(new VALUE(_data.atKey("currentBaseFee")));
-}
-
-void StateTestFillerEnvLegacy::initializeLegacyFields(DataObject const& _data)
-{
-    m_currentDifficulty = spVALUE(new VALUE(_data.atKey("currentDifficulty")));
-}
-
-StateTestFillerEnvMerge::StateTestFillerEnvMerge(spDataObjectMove _data)
+StateTestFillerEnv::StateTestFillerEnv(spDataObjectMove _data)
 {
     try
     {
         m_raw = _data.getPointer();
-        requireMergeEnvScheme(m_raw);
+        requireStateTestsFillerEnvScheme(m_raw);
         convertEnvDecFieldsToHex(m_raw);
-        initializeCommonFields(m_raw);
-        initializeMergeFields(m_raw);
+        initializeFields(m_raw);
     }
     catch (std::exception const& _ex)
     {
-        throw UpwardsException(string("StateTestFillerEnv(Merge) parse error: ") + _ex.what() + m_raw->asJson());
+        throw UpwardsException(string("StateTestFillerEnv parse error: ") + _ex.what() + m_raw->asJson());
     }
 }
 
-StateTestFillerEnv1559::StateTestFillerEnv1559(spDataObjectMove _data)
-{
-    try
-    {
-        m_raw = _data.getPointer();
-        requireEIP1559EnvScheme(m_raw);
-        convertEnvDecFieldsToHex(m_raw);
-        initializeCommonFields(m_raw);
-        initialize1559Fields(m_raw);
-    }
-    catch (std::exception const& _ex)
-    {
-        throw UpwardsException(string("StateTestFillerEnv(1559) parse error: ") + _ex.what() + m_raw->asJson());
-    }
-}
-
-StateTestFillerEnvLegacy::StateTestFillerEnvLegacy(spDataObjectMove _data)
-{
-    try
-    {
-        m_raw = _data.getPointer();
-        requireLegacyEnvScheme(m_raw);
-        convertEnvDecFieldsToHex(m_raw);
-        initializeCommonFields(m_raw);
-        initializeLegacyFields(m_raw);
-    }
-    catch (std::exception const& _ex)
-    {
-        throw UpwardsException(string("StateTestFillerEnv(legacy) parse error: ") + _ex.what() + m_raw->asJson());
-    }
-}
-
-void StateTestFillerEnv::initializeCommonFields(spDataObject const& _data)
+void StateTestFillerEnv::initializeFields(spDataObject const& _data)
 {
     m_currentNumber = spVALUE(new VALUE(_data->atKey("currentNumber")));
     m_currentCoinbase = spFH20(new FH20(_data->atKey("currentCoinbase")));
+
     // Indicates first block timestamp in StateTests
     m_currentTimestamp = spVALUE(new VALUE(_data->atKey("currentTimestamp")));
     // Indicates zero block timestamp in StateTests
     m_genesisTimestamp = spVALUE(new VALUE(0));
+
     m_previousHash = spFH32(new FH32(_data->atKey("previousHash")));
 
     spDataObject tmpD(new DataObject("0x00"));  // State Tests extra data is 0x00
@@ -137,6 +66,39 @@ void StateTestFillerEnv::initializeCommonFields(spDataObject const& _data)
     m_currentGasLimit = spVALUE(new VALUE(_data->atKey("currentGasLimit")));
     if (m_currentGasLimit.getCContent() > dev::bigint("0x7fffffffffffffff"))
         throw test::UpwardsException("currentGasLimit > 0x7fffffffffffffff");
+
+    // 1559
+    m_currentDifficulty = spVALUE(new VALUE(DataObject("0x020000")));
+    m_currentBaseFee = spVALUE(new VALUE(DataObject("0x0a")));
+
+    if (_data->count("currentDifficulty"))
+        m_currentDifficulty = spVALUE(new VALUE(_data->atKey("currentDifficulty")));
+
+    if (_data->count("currentBaseFee"))
+        m_currentBaseFee = spVALUE(new VALUE(_data->atKey("currentBaseFee")));
+
+    // Merge
+    auto const& difficulty = m_currentDifficulty->asString();
+    m_currentRandom = spFH32(new FH32(dev::toCompactHexPrefixed(dev::u256(difficulty), 32)));
+
+    if (_data->count("currentRandom"))
+        m_currentRandom = spFH32(new FH32(_data->atKey("currentRandom")));
+}
+
+spDataObject const& StateTestFillerEnv::asDataObject() const
+{
+    spDataObject const& c_raw = StateTestEnvBase::asDataObject();
+    spDataObject& raw = const_cast<spDataObject&>(c_raw);
+    if (!raw->count("currentBaseFee"))
+        (*raw)["currentBaseFee"] = m_currentBaseFee.getCContent().asString();
+
+    if (!raw->count("currentRandom"))
+        (*raw)["currentRandom"] = m_currentRandom.getCContent().asString();
+
+    if (!raw->count("currentDifficulty"))
+        (*raw)["currentDifficulty"] = m_currentDifficulty.getCContent().asString();
+
+    return raw;
 }
 
 }  // namespace teststruct

@@ -23,7 +23,7 @@ class TestBlockchain
 public:
     // Single blockchain with block rlps, keep track of a blockchain information
     // Using _env, _pre, _engine, _network settings
-    TestBlockchain(BlockchainTestFillerEnv const* _testEnv, State const& _genesisState, SealEngine _engine,
+    TestBlockchain(BlockchainTestFillerEnv const& _testEnv, State const& _genesisState, SealEngine _engine,
         FORK const& _network, string const& _chainName, RegenerateGenesis _regenerateGenesis);
 
     // Need to call resetChainParams because TestBLockchainManager could have chains with different networks
@@ -65,7 +65,7 @@ private:
     SessionInterface& m_session;                      // Session with the client
     FORK m_network;                                   // Forkname in genesis
     SealEngine m_sealEngine;                          // Chain seal engine information
-    BlockchainTestFillerEnv const* m_testEnv;         // Chain genesis data information
+    BlockchainTestFillerEnv const& m_testEnv;         // Chain genesis data information
     State const& m_genesisState;                      // PreState of genesis block
 
 

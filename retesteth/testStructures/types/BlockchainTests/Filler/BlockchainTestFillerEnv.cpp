@@ -141,13 +141,17 @@ void BlockchainTestFillerEnv::initializeCommonFields(spDataObject const& _data, 
         m_currentNonce = spFH8(new FH8(_data->atKey("nonce")));
         m_currentMixHash = spFH32(new FH32(_data->atKey("mixHash")));
     }
+
+    m_currentDifficulty = spVALUE(new VALUE(DataObject("0x020000")));
+    m_currentBaseFee = spVALUE(new VALUE(DataObject("0x10")));
+    auto const& difficulty = m_currentDifficulty->asString();
+    m_currentRandom = spFH32(new FH32(dev::toCompactHexPrefixed(dev::u256(difficulty), 32)));
 }
 
 void BlockchainTestFillerEnvMerge::initializeMergeFields(DataObject const& _data)
 {
     m_currentBaseFee = spVALUE(new VALUE(_data.atKey("baseFeePerGas")));
     m_currentRandom = spFH32(new FH32(_data.atKey("mixHash")));
-    m_currentDifficultyForOtherNets = spVALUE(new VALUE(DataObject("0x020000")));
 }
 
 void BlockchainTestFillerEnv1559::initialize1559Fields(DataObject const& _data)

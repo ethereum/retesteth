@@ -12,41 +12,16 @@ namespace teststruct
 // In State test, Env define timestamp of the first block
 struct StateTestFillerEnv : StateTestEnvBase
 {
+    StateTestFillerEnv(spDataObjectMove);
     VALUE const& currentTimestamp() const override { return m_genesisTimestamp; }
     VALUE const& firstBlockTimestamp() const { return m_currentTimestamp; }
+    spDataObject const& asDataObject() const override;
 
 protected:
-    void initializeCommonFields(spDataObject const&);
+    void initializeFields(spDataObject const&);
 
 private:
     spVALUE m_genesisTimestamp;
-};
-
-struct StateTestFillerEnvMerge : StateTestFillerEnv, StateTestEnvBaseMerge
-{
-    TestEnvClass type() const override { return TestEnvClass::MERGE; }
-    StateTestFillerEnvMerge(spDataObjectMove);
-
-protected:
-    void initializeMergeFields(DataObject const&) override;
-};
-
-struct StateTestFillerEnv1559 : StateTestFillerEnv, StateTestEnvBase1559
-{
-    TestEnvClass type() const override { return TestEnvClass::EIP1559; }
-    StateTestFillerEnv1559(spDataObjectMove);
-
-protected:
-    void initialize1559Fields(DataObject const&) override;
-};
-
-struct StateTestFillerEnvLegacy : StateTestFillerEnv, StateTestEnvBaseLegacy
-{
-    TestEnvClass type() const override { return TestEnvClass::LEGACY; }
-    StateTestFillerEnvLegacy(spDataObjectMove);
-
-protected:
-    void initializeLegacyFields(DataObject const&) override;
 };
 
 
