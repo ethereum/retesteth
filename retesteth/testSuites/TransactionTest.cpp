@@ -37,6 +37,10 @@ spDataObject FillTest(TransactionTestInFiller const& _test)
         if (ExitHandler::receivedExitSignal())
             break;
 
+        Options const& opt = Options::get();
+        if (!opt.singleTestNet.empty() && FORK(opt.singleTestNet) != fork)
+            continue;
+
         TestRawTransaction res = session.test_rawTransaction(_test.transaction()->getRawBytes(), fork);
         compareTransactionException(_test.transaction(), res, _test.getExpectException(fork));
 
@@ -65,6 +69,10 @@ void RunTest(TransactionTestInFilled const& _test)
     {
         if (ExitHandler::receivedExitSignal())
             break;
+
+        Options const& opt = Options::get();
+        if (!opt.singleTestNet.empty() && FORK(opt.singleTestNet) != fork)
+            continue;
 
         if (!Options::getDynamicOptions().getCurrentConfig().checkForkAllowed(fork))
         {
