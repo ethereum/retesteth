@@ -85,7 +85,7 @@ void BlockMining::prepareAllocFile()
 void BlockMining::prepareTxnFile()
 {
     bool exportRLP = true;
-    string const txsfile = m_currentBlockRef.transactions().size() && exportRLP ? "txs.rlp" : "txs.json";
+    string const txsfile = exportRLP ? "txs.rlp" : "txs.json";
     m_txsPath = m_chainRef.tmpDir() / txsfile;
 
     string txsPathContent;
@@ -94,7 +94,7 @@ void BlockMining::prepareTxnFile()
         dev::RLPStream txsout(m_currentBlockRef.transactions().size());
         for (auto const& tr : m_currentBlockRef.transactions())
             txsout.appendRaw(tr->asRLPStream().out());
-        m_txsPathContent = m_currentBlockRef.transactions().size() ? "\"" + dev::toString(txsout.out()) + "\"" : "[]";
+        m_txsPathContent =  "\"" + dev::toString(txsout.out()) + "\"";
         writeFile(m_txsPath.string(), m_txsPathContent);
     }
     else
