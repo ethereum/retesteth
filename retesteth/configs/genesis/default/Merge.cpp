@@ -24,6 +24,7 @@ const string default_Merge_config = R"({
 const string t8ntool_Merge_config = R"({
     "params" : {
         "fork" : "Merged",
+        "terminalTotalDifficulty" : "0x00",
         "constantinopleForkBlock" : "0x00",
         "byzantiumForkBlock" : "0x00",
         "homesteadForkBlock" : "0x00"

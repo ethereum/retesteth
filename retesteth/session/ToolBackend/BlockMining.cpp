@@ -48,7 +48,7 @@ void BlockMining::prepareEnvFile()
         (*envData)["parentUncleHash"] = m_parentBlockRef.header()->uncleHash().asString();
     }
 
-    if ("Merged" == m_chainRef.fork().asString())
+    if (m_currentBlockRef.header()->type() == BlockType::BlockHeaderMerge)
     {
         (*envData)["currentRandom"] = m_currentBlockRef.header()->mixHash().asString();
     }
@@ -121,15 +121,12 @@ void BlockMining::executeTransition()
     m_outAllocPath = m_chainRef.tmpDir() / "outAlloc.json";
 
     string cmd = m_chainRef.toolPath().string();
+
+    // Convert FrontierToHomesteadAt5 -> Homestead if block > 5, and get reward
+    auto tupleRewardFork = prepareReward(m_engine, m_chainRef.fork(), m_currentBlockRef.header()->number(), m_currentBlockRef.totalDifficulty());
+    cmd += " --state.fork " + std::get<1>(tupleRewardFork).asString();
     if (m_engine != SealEngine::NoReward)
-    {
-        // Convert FrontierToHomesteadAt5 -> Homestead if block > 5, and get reward
-        auto tupleRewardFork = prepareReward(m_engine, m_chainRef.fork(), m_currentBlockRef.header()->number());
-        cmd += " --state.fork " + std::get<1>(tupleRewardFork).asString();
         cmd += " --state.reward " + std::get<0>(tupleRewardFork).asDecString();
-    }
-    else
-        cmd += " --state.fork " + m_chainRef.fork().asString();
 
     cmd += " --input.alloc " + m_allocPath.string();
     cmd += " --input.txs " + m_txsPath.string();
@@ -170,7 +167,6 @@ ToolResponse BlockMining::readResult()
     string const outAllocPathContent = dev::contentsString(m_outAllocPath.string());
     ETH_TEST_MESSAGE("Res:\n" + outPathContent);
     ETH_TEST_MESSAGE("RAlloc:\n" + outAllocPathContent);
-
     if (outPathContent.empty())
         ETH_ERROR_MESSAGE("Tool returned empty file: " + m_outPath.string());
     if (outAllocPathContent.empty())

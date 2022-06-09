@@ -45,6 +45,7 @@ struct EthereumBlockState : EthereumBlock
       : m_state(_state), m_logHash(_logHash.asString())
     {
         m_header = readBlockHeader(_header->asDataObject());
+        m_totalDifficulty = spVALUE(new VALUE(_header->difficulty().asBigInt()));
     }
 
     void setTotalDifficulty(VALUE const& _totalDifficulty) { m_totalDifficulty = spVALUE(_totalDifficulty.copy()); }

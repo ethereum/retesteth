@@ -51,6 +51,14 @@ spDataObject prepareGenesisSubsection(StateTestEnvBase const& _env, ParamsContex
             (*genesis)["mixHash"] = randomH32;
         }
     }
+    else
+    {
+        // Net Is Additional, probably special transition net.
+        // Can't get rid of this hardcode configs :(((
+        if (_net == FORK("ArrowGlacierToMergeAtDiffC0000"))
+            (*genesis)["baseFeePerGas"] = calculateGenesisBaseFee(_env.currentBaseFee(), _context);
+
+    }
     return genesis;
 }}
 

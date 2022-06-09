@@ -8,6 +8,15 @@ using namespace test;
 using namespace teststruct;
 using namespace dataobject;
 
+namespace  {
+FORK convertForkToToolConfig(FORK const& _fork)
+{
+    auto const& genesisSetupInTool = Options::getCurrentConfig().getGenesisTemplate(_fork);
+    FORK const t8nForkName(genesisSetupInTool.getCContent().atKey("params").atKey("fork").asString());
+    return t8nForkName;
+}
+}
+
 namespace toolimpl
 {
 ToolParams::ToolParams(DataObject const& _data)
@@ -18,7 +27,9 @@ ToolParams::ToolParams(DataObject const& _data)
             {"constantinopleForkBlock", {{DataType::String}, jsonField::Optional}},
             {"byzantiumForkBlock", {{DataType::String}, jsonField::Optional}},
             {"londonForkBlock", {{DataType::String}, jsonField::Optional}},
-            {"homesteadForkBlock", {{DataType::String}, jsonField::Optional}}});
+            {"homesteadForkBlock", {{DataType::String}, jsonField::Optional}},
+            {"terminalTotalDifficulty", {{DataType::String}, jsonField::Optional}}
+        });
 
     const bigint unreachable = 10000000000;
     if (_data.count("homesteadForkBlock"))
@@ -55,7 +66,8 @@ static std::map<FORK, FORK> RewardMapForToolBefore5 = {
     {"EIP158ToByzantiumAt5", "EIP158"},
     {"HomesteadToDaoAt5", "Homestead"},
     {"ByzantiumToConstantinopleFixAt5", "Byzantium"},
-    {"BerlinToLondonAt5", "Berlin"}
+    {"BerlinToLondonAt5", "Berlin"},
+    {"ArrowGlacierToMergeAtDiffC0000", "ArrowGlacier"}
 };
 static std::map<FORK, FORK> RewardMapForToolAfter5 = {
     {"FrontierToHomesteadAt5", "Homestead"},
@@ -63,13 +75,24 @@ static std::map<FORK, FORK> RewardMapForToolAfter5 = {
     {"EIP158ToByzantiumAt5", "Byzantium"},
     {"HomesteadToDaoAt5", "Homestead"},
     {"ByzantiumToConstantinopleFixAt5", "ConstantinopleFix"},
-    {"BerlinToLondonAt5", "London"}
+    {"BerlinToLondonAt5", "London"},
+    {"ArrowGlacierToMergeAtDiffC0000", "Merge"}
 };
 
-std::tuple<VALUE, FORK> prepareReward(SealEngine _engine, FORK const& _fork, VALUE const& _blockNumber)
+std::tuple<VALUE, FORK> prepareReward(SealEngine _engine, FORK const& _fork, VALUE const& _blockNumber, VALUE const& _currentTD)
 {
     if (_engine == SealEngine::Ethash)
         ETH_WARNING_TEST("t8ntool backend treat Ethash as NoProof!", 6);
+
+    bool isMerge = false;
+    bool posTransitionDifficultyNotReached = false;
+    if (_fork.asString() == "ArrowGlacierToMergeAtDiffC0000")
+    {
+        isMerge = true;
+        // The TD here is the one before tool called for mining. so its like n-1 td.
+        if (_currentTD < VALUE(DataObject("0x0C0000")))
+            posTransitionDifficultyNotReached = true;
+    }
 
     // Setup mining rewards
     std::map<FORK, spVALUE> const& rewards = Options::get().getDynamicOptions().getCurrentConfig().getRewardMap();
@@ -77,14 +100,14 @@ std::tuple<VALUE, FORK> prepareReward(SealEngine _engine, FORK const& _fork, VAL
         return {rewards.at(_fork).getCContent(), _fork};
     else
     {
-        if (_blockNumber < 5)
+        if ((!isMerge && _blockNumber < 5) || posTransitionDifficultyNotReached)
         {
             if (!RewardMapForToolBefore5.count(_fork))
             {
                 fs::path const& rewardMapPath = Options::get().getDynamicOptions().getCurrentConfig().getRewardMapPath();
                 ETH_ERROR_MESSAGE("ToolBackend error getting reward for fork: " + _fork.asString() + ", check that fork reward is defined at (" + rewardMapPath.c_str() + ")");
             }
-            auto const& trFork = RewardMapForToolBefore5.at(_fork);
+            auto const& trFork = convertForkToToolConfig(RewardMapForToolBefore5.at(_fork));
             assert(rewards.count(trFork));
             return {rewards.at(trFork).getCContent(), trFork};
         }
@@ -95,7 +118,7 @@ std::tuple<VALUE, FORK> prepareReward(SealEngine _engine, FORK const& _fork, VAL
                 fs::path const& rewardMapPath = Options::get().getDynamicOptions().getCurrentConfig().getRewardMapPath();
                 ETH_ERROR_MESSAGE("ToolBackend error getting reward for fork: " + _fork.asString() + ", check that fork reward is defined at " + rewardMapPath.c_str() + ")");
             }
-            auto const& trFork = RewardMapForToolAfter5.at(_fork);
+            auto const& trFork = convertForkToToolConfig(RewardMapForToolAfter5.at(_fork));
             assert(rewards.count(trFork));
             return {rewards.at(trFork).getCContent(), _fork == "HomesteadToDaoAt5" ? "HomesteadToDaoAt5" : trFork};
         }

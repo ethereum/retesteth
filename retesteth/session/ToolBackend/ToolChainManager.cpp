@@ -48,13 +48,14 @@ void ToolChainManager::reorganizePendingBlock()
     EthereumBlockState const& bl = currentChain().lastBlock();
     if (currentChain().fork() == "BerlinToLondonAt5" && bl.header()->number() == 4)
         init1559PendingBlock(bl);
-    else if (currentChain().fork() == "LondonToMergeAtDiff" && isTerminalPoWBlock())
+    else if (currentChain().fork() == "ArrowGlacierToMergeAtDiffC0000" && isTerminalPoWBlock())
         initMergePendingBlock(bl);
     else
         m_pendingBlock = spEthereumBlockState(new EthereumBlockState(bl.header(), bl.state(), bl.logHash()));
 
     BlockHeader& header = m_pendingBlock.getContent().headerUnsafe().getContent();
     header.setNumber(bl.header()->number() + 1);
+    m_pendingBlock.getContent().setTotalDifficulty(currentChain().lastBlock().totalDifficulty());
 
     // Because aleth and geth+retesteth does this, but better be empty extraData
     header.setExtraData(bl.header()->extraData());
@@ -119,6 +120,8 @@ FH32 ToolChainManager::importRawBlock(BYTES const& _rlp)
         verifyEthereumBlockHeader(header, currentChain());
 
         m_pendingBlock = spEthereumBlockState(new EthereumBlockState(header, lastBlock().state(), FH32::zero()));
+        m_pendingBlock.getContent().setTotalDifficulty(lastBlock().totalDifficulty());
+
         for (auto const& trRLP : rlp[1].toList())
         {
             spTransaction spTr = readTransaction(trRLP);
@@ -366,10 +369,10 @@ bool ToolChainManager::isTerminalPoWBlock()
         currentChainBlocks.at(currentChainBlocks.size() - 2).totalDifficulty() >= TERMINAL_TOTAL_DIFFICULTY)
         parentBlockTDLessThanTerminalTD = false;
 
+    VALUE const currentTD = currentChain().lastBlock().totalDifficulty();
     // pow_block.total_difficulty >= TERMINAL_TOTAL_DIFFICULTY
     // and pow_block.parent_block.total_difficulty < TERMINAL_TOTAL_DIFFICULTY
-    if (currentChain().lastBlock().totalDifficulty() >= TERMINAL_TOTAL_DIFFICULTY
-        && parentBlockTDLessThanTerminalTD)
+    if (currentTD >= TERMINAL_TOTAL_DIFFICULTY && parentBlockTDLessThanTerminalTD)
         return true;
     return false;
 }

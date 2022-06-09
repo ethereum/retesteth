@@ -26,6 +26,7 @@ class genBerlinCfg { public: genBerlinCfg(); };
 class genLondonCfg { public: genLondonCfg(); };
 class genArrowGlacierCfg { public: genArrowGlacierCfg(); };
 class genMergeCfg { public: genMergeCfg(); };
+class genArrowGlacierToMergeAtDiffC0000Cfg { public: genArrowGlacierToMergeAtDiffC0000Cfg(); };
 
 // Transition genesis configs
 class genFrontierToHomesteadCfg { public: genFrontierToHomesteadCfg(); };
@@ -70,5 +71,6 @@ public:
         genEIP158ToByzantiumCfg genEIP158ToByzantium;
         genByzantiumToConstantinopleFixCfg genBezantiumToConstantinopleFix;
         genBerlinToLondonCfg genBerlinToLondon;
+        genArrowGlacierToMergeAtDiffC0000Cfg genArrowGlacierToMergeAtDiffC0000;
     }
 };

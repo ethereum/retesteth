@@ -87,7 +87,7 @@ private:
     ClientConfigID m_id;                                ///< Internal id
     GCP_SPointer<ClientConfigFile> m_clientConfigFile;  ///< <clientname>/config file
     std::map<FORK, spVALUE> m_correctReward;            ///< Correct mining reward info for StateTests->BlockchainTests
-    std::map<FORK, spDataObject> m_genesisTemplate;       ///< Template For test_setChainParams
+    std::map<FORK, spDataObject> m_genesisTemplate;     ///< Template For test_setChainParams
     fs::path m_correctMiningRewardPath;                 ///< Path to correct mining reward info file
 
     bool m_initialized = false;    ///< If setup script has run
