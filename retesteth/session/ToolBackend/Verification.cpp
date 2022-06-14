@@ -38,6 +38,17 @@ void verify1559Block(spBlockHeader const& _header, ToolChain const& _chain)
             throw test::UpwardsException(
                 "Invalid block1559: Initial baseFee must be 1000000000, got: " + header.baseFee().asDecString());
     }
+
+    if (_chain.fork() == "ArrowGlacierToMergeAtDiffC0000")
+    {
+        bool isTTDDefined = _chain.params()->params().count("terminalTotalDifficulty");
+        if (!isTTDDefined)
+            throw test::UpwardsException("terminalTotalDifficulty is not defined in chain params: \n" + _chain.params()->params().asJson());
+
+        VALUE const TTD = _chain.params()->params().atKey("terminalTotalDifficulty");
+        if (_chain.lastBlock().totalDifficulty() >=  TTD)
+            throw test::UpwardsException() << "Invalid block1559: Chain switched to PoS!";
+    }
 }
 
 void verifyMergeBlock(spBlockHeader const& _header, ToolChain const& _chain)

@@ -103,7 +103,6 @@ FH32 ToolChainManager::importRawBlock(BYTES const& _rlp)
 {
     try
     {
-        // ETH_TEST_MESSAGE(_rlp.asString());
         dev::bytes decodeRLP = sfromHex(_rlp.asString());
         dev::RLP rlp(decodeRLP, dev::RLP::VeryStrict);
         toolimpl::verifyBlockRLP(rlp);
