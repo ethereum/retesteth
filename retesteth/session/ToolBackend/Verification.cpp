@@ -169,12 +169,12 @@ void verifyMergeParent(spBlockHeader const& _header, spBlockHeader const& _paren
         ETH_FAIL_MESSAGE("verifyMergeParent got block of another type!");
     bool isTTDDefined = _chain.params()->params().count("terminalTotalDifficulty");
     if (!isTTDDefined)
-        throw test::UpwardsException("terminalTotalDifficulty is not defined in chain params: \n" + _chain.params()->params().asJson());
+        ETH_WARNING("terminalTotalDifficulty is not defined in chain params: \n" + _chain.params()->params().asJson());
 
 
     if (_parent->type() != BlockType::BlockHeaderMerge)
     {
-        VALUE const TTD = _chain.params()->params().atKey("terminalTotalDifficulty");
+        VALUE const TTD = isTTDDefined ? _chain.params()->params().atKey("terminalTotalDifficulty") : VALUE (DataObject("0xffffffffffffffffffffffffffff"));
         if (_parentTD < TTD)
             throw test::UpwardsException("Parent (transition - 1) block has not reached TTD (" + _parentTD.asString() +
                                          " < " + TTD.asString() + ") but current block set to PoS format! \nParent: \n" +
