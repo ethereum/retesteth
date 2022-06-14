@@ -213,7 +213,8 @@ string const t8ntool_config = R"({
       "2930AccessListStorageHashTooShort": "rlp: input string too short for common.Hash, decoding into (types.Transaction)(types.AccessListTx).AccessList[0].StorageKeys[0]",
       "2930AccessListStorageHashTooLong": "rlp: input string too long for common.Hash, decoding into (types.Transaction)(types.AccessListTx).AccessList[0].StorageKeys[0]",
       "InvalidDifficultyRLP": "Error importing raw rlp block: Invalid difficulty: header.difficulty < 0x20000",
-      "1559verifyParent": "Error importing raw rlp block: verify1559Parent 1559 block must be on top of 1559 block!"
+      "1559verifyParent": "Error importing raw rlp block: verify1559Parent 1559 block must be on top of 1559 block!",
+      "BlockHeaderTimestampInvalid": "Error importing raw rlp block: BlockHeader timestamp is less or equal then it's parent block!"
     }
 })";
 
