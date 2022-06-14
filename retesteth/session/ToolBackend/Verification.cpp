@@ -104,24 +104,13 @@ void verify1559Parent_private(spBlockHeader const& _header, spBlockHeader const&
                                               "`, got: `" + header.baseFee().asDecString() + "`";
 
     (void) parent;
-    // Check if the block changed the gas target too much
-    //    VALUE const parentGasTarget = parent.gasLimit() / ELASTICITY_MULTIPLIER;
-    //    VALUE const headerGasTarget = header.gasLimit() / ELASTICITY_MULTIPLIER;
-
-    //VALUE deltaGas = parent.gasLimit().asU256() / 1024;
-
-    // https://eips.ethereum.org/EIPS/eip-1559
-    // assert block.gas_limit < parent_gas_limit + parent_gas_limit // 1024, 'invalid block: gas limit increased too much'
-    // assert block.gas_limit > parent_gas_limit - parent_gas_limit // 1024, 'invalid block: gas limit decreased too much'
-
-    //if (header.gasLimit().asU256() >= parent.gasLimit().asU256() + deltaGas.asU256() ||
-    //    header.gasLimit().asU256() <= parent.gasLimit().asU256() - deltaGas.asU256())
-    //    throw test::UpwardsException("Invalid gaslimit: " + header.gasLimit().asDecString() + ", want " +
-    //                                 parent.gasLimit().asDecString() + " +/- " + deltaGas.asDecString());
 }
 
 void verify1559Parent(spBlockHeader const& _header, spBlockHeader const& _parent, ToolChain const& _chain)
 {
+    if (_parent->type() == BlockType::BlockHeaderMerge)
+        throw test::UpwardsException("Trying to import 1559 block on top of PoS block!");
+
     // Validate block difficulty delta
     ChainOperationParams params = ChainOperationParams::defaultParams(_chain.toolParams());
     VALUE newDiff = calculateEthashDifficulty(params, _header, _parent);
@@ -230,29 +219,8 @@ void verifyCommonParent(spBlockHeader const& _header, spBlockHeader const& _pare
                                      parent.gasLimit().asDecString() + " +/- " + deltaGas.asDecString());
 }
 
-}  // namespace
-
-namespace toolimpl
+void verifyBlockParent(spBlockHeader const& _header, ToolChain const& _chain)
 {
-// Blockchain logic validator
-void verifyEthereumBlockHeader(spBlockHeader const& _header, ToolChain const& _chain)
-{
-    // Check Ethereum rules
-    verifyCommonBlock(_header, _chain);
-    switch (_header->type())
-    {
-    case BlockType::BlockHeaderLegacy:
-        verifyLegacyBlock(_header, _chain);
-        break;
-    case BlockType::BlockHeader1559:
-        verify1559Block(_header, _chain);
-        break;
-    case BlockType::BlockHeaderMerge:
-        verifyMergeBlock(_header, _chain);
-        break;
-    default:
-        throw test::UpwardsException("Unhandled block type check!");
-    }
     bool found = false;
     for (auto const& parentBlock : _chain.blocks())
     {
@@ -288,6 +256,31 @@ void verifyEthereumBlockHeader(spBlockHeader const& _header, ToolChain const& _c
     if (!found)
         throw test::UpwardsException(
             "verifyEthereumBlockHeader:: Parent block hash not found: " + _header->parentHash().asString());
+}
+}  // namespace
+
+namespace toolimpl
+{
+// Blockchain logic validator
+void verifyEthereumBlockHeader(spBlockHeader const& _header, ToolChain const& _chain)
+{
+    // Check Ethereum rules
+    verifyBlockParent(_header, _chain);
+    verifyCommonBlock(_header, _chain);
+    switch (_header->type())
+    {
+    case BlockType::BlockHeaderLegacy:
+        verifyLegacyBlock(_header, _chain);
+        break;
+    case BlockType::BlockHeader1559:
+        verify1559Block(_header, _chain);
+        break;
+    case BlockType::BlockHeaderMerge:
+        verifyMergeBlock(_header, _chain);
+        break;
+    default:
+        throw test::UpwardsException("Unhandled block type check!");
+    }
 }
 
 }  // namespace toolimpl
