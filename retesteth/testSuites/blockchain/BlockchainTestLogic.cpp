@@ -82,8 +82,8 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
         if (!session.getLastRPCError().empty())
         {
             // If there was an error on block rlp import
-            // and options does NOT allow invalid blocks or this block was expected to be valid
-            if (!_opt.allowInvalidBlocks || !tblock.expectedInvalid())
+            // and options does NOT allow invalid blocks OR this block was expected to be valid
+            if ((!_opt.allowInvalidBlocks && !tblock.expectedInvalid()) || !tblock.expectedInvalid())
                 ETH_ERROR_MESSAGE(
                     "Importing raw RLP block, block was expected to be valid! " + session.getLastRPCError().message());
 

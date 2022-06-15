@@ -214,7 +214,8 @@ string const t8ntool_config = R"({
       "2930AccessListStorageHashTooShort": "rlp: input string too short for common.Hash, decoding into (types.Transaction)(types.AccessListTx).AccessList[0].StorageKeys[0]",
       "2930AccessListStorageHashTooLong": "rlp: input string too long for common.Hash, decoding into (types.Transaction)(types.AccessListTx).AccessList[0].StorageKeys[0]",
       "3675PoWBlockRejected" : "Invalid block1559: Chain switched to PoS!",
-      "3675PoSBlockRejected" : "Error importing raw rlp block: Parent (transition - 1) block has not reached TTD (0x0a0000 < 0x0c0000) but current block set to PoS format!"
+      "3675PoSBlockRejected" : "Error importing raw rlp block: Parent (transition - 1) block has not reached TTD (0x0a0000 < 0x0c0000) but current block set to PoS format!",
+      "3675PreMerge1559BlockRejected" : "Trying to import 1559 block on top of PoS block"
     }
 })";
 
