@@ -376,7 +376,10 @@ std::string DataObject::asJson(int level, bool pretty, bool nokey) const
         for (std::vector<spDataObject>::const_iterator it = this->m_subObjects.begin();
              it < this->m_subObjects.end(); it++)
         {
-            out << (*it)->asJson(level + 1, pretty);
+            if ((*it).isEmpty())
+                out << "NaN";
+            else
+                out << (*it)->asJson(level + 1, pretty);
             if (it + 1 != this->m_subObjects.end())
                 out << ",";
             if (pretty)
