@@ -29,7 +29,8 @@ string const t8ntool_config = R"({
         "ByzantiumToConstantinopleFixAt5",
         "BerlinToLondonAt5",
         "ArrowGlacier",
-        "ArrowGlacierToMergeAtDiffC0000"
+        "ArrowGlacierToMergeAtDiffC0000",
+        "GrayGlacier"
     ],
     "exceptions" : {
       "AddressTooShort" : "input string too short for common.Address",
