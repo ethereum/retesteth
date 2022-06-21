@@ -17,7 +17,7 @@ struct BlockchainTestBlock : GCP_SPointerBase
 {
     BlockchainTestBlock(spDataObject&);
     BYTES const& rlp() const { return m_rlp; }
-    bool expectedInvalid() const { return !m_exception.empty(); }
+    bool expectedInvalid() const { return m_blockHeader.isEmpty(); }
     spBlockHeader const& header() const { return m_blockHeader; }
     string const& getExpectException() const { return m_exception; }
 
