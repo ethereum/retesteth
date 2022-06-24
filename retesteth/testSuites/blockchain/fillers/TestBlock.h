@@ -23,6 +23,7 @@ public:
 
     // Attach Uncle header to EthereumBlock (the one described in tests)
     void registerTestUncle(spBlockHeader const& _uncle) { m_block.getContent().addUncle(_uncle); }
+    bool isThereTestHeader() const { return !m_block.isEmpty(); }
     std::vector<spBlockHeader> const& getUncles() const { return m_block->uncles(); }
 
     // Attach test exception to the test block

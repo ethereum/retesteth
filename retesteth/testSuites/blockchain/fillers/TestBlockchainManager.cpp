@@ -198,6 +198,10 @@ spBlockHeader TestBlockchainManager::prepareUncle(
         size_t sameAsPreviuousBlockUncle = _uncleSectionInTest.sameAsPreviousBlockUncle();
         ETH_ERROR_REQUIRE_MESSAGE(currentChainMining.getBlocks().size() > sameAsPreviuousBlockUncle,
             "Trying to copy uncle from unregistered block with sameAsPreviuousBlockUncle!");
+
+        if (!currentChainMining.getBlocks().at(sameAsPreviuousBlockUncle).isThereTestHeader())
+            ETH_FAIL_MESSAGE("SameAsPreviousBlockUncle::Trying to get Uncles from invalid block#" +  test::fto_string(sameAsPreviuousBlockUncle));
+
         ETH_ERROR_REQUIRE_MESSAGE(
             currentChainMining.getBlocks().at(sameAsPreviuousBlockUncle).getUncles().size() > 0,
             "Previous block has no uncles!");

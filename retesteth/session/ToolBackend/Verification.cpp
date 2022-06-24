@@ -165,13 +165,30 @@ void verifyMergeParent(spBlockHeader const& _header, spBlockHeader const& _paren
     {
         VALUE const TTD = isTTDDefined ? _chain.params()->params().atKey("terminalTotalDifficulty") : VALUE (DataObject("0xffffffffffffffffffffffffffff"));
         if (_parentTD < TTD)
-            throw test::UpwardsException("Parent (transition - 1) block has not reached TTD (" + _parentTD.asString() +
+            throw test::UpwardsException("Parent (transition) block has not reached TTD (" + _parentTD.asString() +
                                          " < " + TTD.asString() + ") but current block set to PoS format! \nParent: \n" +
                                          _parent->asDataObject()->asJson() + "\nCurrent: " + _header->asDataObject()->asJson());
+
+        // Check if the base fee is correct
+        ChainOperationParams params = ChainOperationParams::defaultParams(_chain.toolParams());
+        VALUE newBaseFee = calculateEIP1559BaseFee(params, _header, _parent);
+        BlockHeader1559 const& header = BlockHeader1559::castFrom(_header);
+        if (header.baseFee() != newBaseFee)
+            throw test::UpwardsException() << "Invalid blockMerge: base fee not correct! Expected: `" + newBaseFee.asDecString() +
+                                                  "`, got: `" + header.baseFee().asDecString() + "`";
     }
     if (_parent->type() == BlockType::BlockHeaderMerge)
     {
         ETH_TEST_MESSAGE("Verifying Merge Block Parent");
+
+        // Check if the base fee is correct
+        ChainOperationParams params = ChainOperationParams::defaultParams(_chain.toolParams());
+        VALUE newBaseFee = calculateEIP1559BaseFee(params, _header, _parent);
+        BlockHeaderMerge const& header = BlockHeaderMerge::castFrom(_header);
+        if (header.baseFee() != newBaseFee)
+            throw test::UpwardsException() << "Invalid blockMerge: base fee not correct! Expected: `" + newBaseFee.asDecString() +
+                                                  "`, got: `" + header.baseFee().asDecString() + "`";
+
         verifyMergeBlock(_parent, _chain);
     }
 }
