@@ -16,7 +16,6 @@ VMLogRecord::VMLogRecord(DataObject const& _obj)
         op = _obj.atKey("op").asInt();
         gas = spVALUE(new VALUE(_obj.atKey("gas")));
         gasCost = spVALUE(new VALUE(_obj.atKey("gasCost")));
-        memory = spBYTES(new BYTES(_obj.atKey("memory")));
         memSize = _obj.atKey("memSize").asInt();
         for (auto const& el : _obj.atKey("stack").getSubObjects())
             stack.push_back(el->asString());
@@ -102,8 +101,6 @@ void DebugVMTrace::printNice()
             s_comment = stepw + "SSTORE [" + el.stack.at(el.stack.size() - 1) + "] = " + el.stack.at(el.stack.size() - 2);
         if (el.opName == "MSTORE" && el.stack.size() > 1)
             s_comment = stepw + "MSTORE [" + el.stack.at(el.stack.size() - 1) + "] = " + el.stack.at(el.stack.size() - 2);
-        if (el.opName == "RETURN")
-            s_comment = stepw + "RETURN " + el.memory->asString();
     }
     std::cout << std::endl;
 }

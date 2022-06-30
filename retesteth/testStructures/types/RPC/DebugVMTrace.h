@@ -22,7 +22,6 @@ struct VMLogRecord
     size_t op;
     spVALUE gas;
     spVALUE gasCost;
-    spBYTES memory;
     long long memSize;
     std::vector<string> stack;
     spBYTES returnData;
