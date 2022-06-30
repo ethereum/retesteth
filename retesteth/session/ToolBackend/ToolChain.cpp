@@ -239,10 +239,6 @@ void ToolChain::additionalHeaderVerification(
                                      _pendingBlock.header()->number().asString() +
                                      " != " + _pendingFixed.header()->number().asString() + ")");
 
-    // Require new block timestamp to be > than the previous block timestamp
-    if (lastBlock().header()->timestamp().asBigInt() >= _pendingFixed.header()->timestamp().asBigInt())
-        throw test::UpwardsException("Block Timestamp from pending block <= previous block timestamp!");
-
     if (_miningReq == Mining::RequireValid)  // called on rawRLP import
     {
         if (m_fork.getContent().asString() == "HomesteadToDaoAt5" && _pendingFixed.header()->number() > 4 &&

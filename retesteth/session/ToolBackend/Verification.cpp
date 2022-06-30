@@ -1,34 +1,74 @@
 #include "Verification.h"
 using namespace toolimpl;
 
+namespace {
+
+void check_timestamp(BlockHeader const& _header, BlockHeader const& _parent)
+{
+    if (_parent.timestamp() >= _header.timestamp())
+        throw test::UpwardsException("BlockHeader timestamp is less or equal then it's parent block! (" +
+                                     _header.timestamp().asDecString() + " <= " + _parent.timestamp().asDecString() + ")");
+}
+
+void check_difficultyDelta(ToolChain const& _chain, BlockHeader const& _header, BlockHeader const& _parent)
+{
+    // Validate block difficulty delta
+    ChainOperationParams params = ChainOperationParams::defaultParams(_chain.toolParams());
+    VALUE newDiff = calculateEthashDifficulty(params, _header, _parent);
+    if (_header.difficulty() != newDiff)
+        throw test::UpwardsException("Invalid difficulty: " + _header.difficulty().asDecString() +
+                                     ", retesteth want: " + VALUE(newDiff).asDecString());
+}
+
+void check_baseFeeDelta(ToolChain const& _chain, spBlockHeader const& _header, spBlockHeader const& _parent)
+{
+    // Check if the base fee is correct
+    ChainOperationParams params = ChainOperationParams::defaultParams(_chain.toolParams());
+    VALUE newBaseFee = calculateEIP1559BaseFee(params, _header, _parent);
+    BlockHeader1559 const& header = BlockHeader1559::castFrom(_header);
+    if (header.baseFee() != newBaseFee)
+        throw test::UpwardsException() << "Invalid block: base fee not correct! Expected: `" + newBaseFee.asDecString() +
+                                              "`, got: `" + header.baseFee().asDecString() + "`";
+}
+
+void check_difficultyMin(BlockHeader const& _header)
+{
+    if (_header.difficulty() < dev::bigint("0x20000"))
+        throw test::UpwardsException("Invalid difficulty: header.difficulty < 0x20000");
+}
+
+void check_blockType(BlockType const& _t, BlockType const& _expected, string const& _error)
+{
+    if (_t != _expected)
+        ETH_FAIL_MESSAGE(_error + " got block of another type!");
+}
+
+void check_gasUsed(BlockHeader const& _header, string const& _error)
+{
+    if (_header.gasUsed() > _header.gasLimit())
+        throw test::UpwardsException() << _error + " Invalid gasUsed: header.gasUsed > header.gasLimit!";
+}
+
+}
+
 namespace
 {
 void verifyLegacyBlock(spBlockHeader const& _header, ToolChain const& _chain)
 {
     (void)_chain;
-    BlockHeader const& header = _header.getCContent();
-    if (header.difficulty() < dev::bigint("0x20000"))
-        throw test::UpwardsException("Invalid difficulty: header.difficulty < 0x20000");
+    check_difficultyMin(_header);
 }
 
 void verify1559Block(spBlockHeader const& _header, ToolChain const& _chain)
 {
-    (void)_chain;
-    BlockHeader const& headerLegacy = _header.getCContent();
-    if (headerLegacy.difficulty() < dev::bigint("0x20000"))
-        throw test::UpwardsException("Invalid difficulty: header.difficulty < 0x20000");
+    check_difficultyMin(_header);
+    check_blockType(_header->type(), BlockType::BlockHeader1559, "verify1559Block");
+    check_gasUsed(_header, "Invalid block1559:");
 
-    if (_header->type() != BlockType::BlockHeader1559)
-        ETH_FAIL_MESSAGE("verify1559Block got block of another type!");
     BlockHeader1559 const& header = BlockHeader1559::castFrom(_header);
-
-    // Check if the block used too much gas
-    if (header.gasUsed() > header.gasLimit())
-        throw test::UpwardsException() << "Invalid block1559: Invalid gasUsed: too much gas used!";
-
-    // Check first ever EIP1559 gasLimit
     if (header.number() == 5 && _chain.fork() == "BerlinToLondonAt5")
     {
+        // Check first ever EIP1559 gasLimit
         /* https://eips.ethereum.org/EIPS/eip-1559
            if INITIAL_FORK_BLOCK_NUMBER == block.number:
            expected_base_fee_per_gas = INITIAL_BASE_FEE
@@ -54,8 +94,8 @@ void verify1559Block(spBlockHeader const& _header, ToolChain const& _chain)
 void verifyMergeBlock(spBlockHeader const& _header, ToolChain const& _chain)
 {
     (void)_chain;
-    if (_header->type() != BlockType::BlockHeaderMerge)
-        ETH_FAIL_MESSAGE("verifyMergeBlock got block of another type!");
+    check_blockType(_header->type(), BlockType::BlockHeaderMerge, "verifyMergeBlock");
+
     BlockHeaderMerge const& header = BlockHeaderMerge::castFrom(_header);
 
     /// Verify rules
@@ -72,18 +112,13 @@ void verifyMergeBlock(spBlockHeader const& _header, ToolChain const& _chain)
 
 void verifyLegacyParent(spBlockHeader const& _header, spBlockHeader const& _parent, ToolChain const& _chain)
 {
-    // Validate block difficulty delta
-    ChainOperationParams params = ChainOperationParams::defaultParams(_chain.toolParams());
-    VALUE newDiff = calculateEthashDifficulty(params, _header, _parent);
-    if (_header.getCContent().difficulty() != newDiff)
-        throw test::UpwardsException("Invalid difficulty: " + _header.getCContent().difficulty().asDecString() +
-                                     ", retesteth want: " + VALUE(newDiff).asDecString());
+    check_timestamp(_header, _parent);
+    check_difficultyDelta(_chain, _header, _parent);
 
     if (_chain.fork().asString() == "BerlinToLondonAt5" && _parent->number() == 4)
         throw test::UpwardsException("Legacy block import is impossible on BerlinToLondonAt5 after block#4!");
 
-    if (_header->type() != BlockType::BlockHeaderLegacy)
-        ETH_FAIL_MESSAGE("verifyLegacyBlock got block of another type!");
+    check_blockType(_header->type(), BlockType::BlockHeaderLegacy, "verifyLegacyBlock");
 
     if (_parent->type() != BlockType::BlockHeaderLegacy)
         throw test::UpwardsException("Legacy block can only be on top of LegacyBlock!");
@@ -91,35 +126,19 @@ void verifyLegacyParent(spBlockHeader const& _header, spBlockHeader const& _pare
 
 void verify1559Parent_private(spBlockHeader const& _header, spBlockHeader const& _parent, ToolChain const& _chain)
 {
-    BlockHeader1559 const& header = BlockHeader1559::castFrom(_header);
     if (_parent->type() != BlockType::BlockHeader1559)
         throw test::UpwardsException() << "verify1559Parent 1559 block must be on top of 1559 block!";
-    BlockHeader1559 const& parent = BlockHeader1559::castFrom(_parent);
-
-    // Check if the base fee is correct
-    ChainOperationParams params = ChainOperationParams::defaultParams(_chain.toolParams());
-    VALUE newBaseFee = calculateEIP1559BaseFee(params, _header, _parent);
-    if (header.baseFee() != newBaseFee)
-        throw test::UpwardsException() << "Invalid block1559: base fee not correct! Expected: `" + newBaseFee.asDecString() +
-                                              "`, got: `" + header.baseFee().asDecString() + "`";
-
-    (void) parent;
+    check_baseFeeDelta(_chain, _header, _parent);
 }
 
 void verify1559Parent(spBlockHeader const& _header, spBlockHeader const& _parent, ToolChain const& _chain)
 {
     if (_parent->type() == BlockType::BlockHeaderMerge)
         throw test::UpwardsException("Trying to import 1559 block on top of PoS block!");
+    check_blockType(_header->type(), BlockType::BlockHeader1559, "verify1559Parent");
 
-    // Validate block difficulty delta
-    ChainOperationParams params = ChainOperationParams::defaultParams(_chain.toolParams());
-    VALUE newDiff = calculateEthashDifficulty(params, _header, _parent);
-    if (_header.getCContent().difficulty() != newDiff)
-        throw test::UpwardsException("Invalid difficulty: " + _header.getCContent().difficulty().asDecString() +
-                                     ", retesteth want: " + VALUE(newDiff).asDecString());
-
-    if (_header->type() != BlockType::BlockHeader1559)
-        ETH_FAIL_MESSAGE("verify1559Parent got block of another type!");
+    check_timestamp(_header, _parent);
+    check_difficultyDelta(_chain, _header, _parent);
 
     BlockHeader1559 const& header = BlockHeader1559::castFrom(_header);
     if (header.number() == 5 && _chain.fork() == "BerlinToLondonAt5")
@@ -154,13 +173,13 @@ void verifyMergeParent(spBlockHeader const& _header, spBlockHeader const& _paren
     /// Verify the rules
     /// https://eips.ethereum.org/EIPS/eip-3675
 
-    if (_header->type() != BlockType::BlockHeaderMerge)
-        ETH_FAIL_MESSAGE("verifyMergeParent got block of another type!");
+    check_blockType(_header->type(), BlockType::BlockHeaderMerge, "verifyMergeParent");
     bool isTTDDefined = _chain.params()->params().count("terminalTotalDifficulty");
     if (!isTTDDefined)
         ETH_WARNING("terminalTotalDifficulty is not defined in chain params: \n" + _chain.params()->params().asJson());
 
 
+    check_baseFeeDelta(_chain, _header, _parent);
     if (_parent->type() != BlockType::BlockHeaderMerge)
     {
         VALUE const TTD = isTTDDefined ? _chain.params()->params().atKey("terminalTotalDifficulty") : VALUE (DataObject("0xffffffffffffffffffffffffffff"));
@@ -168,27 +187,10 @@ void verifyMergeParent(spBlockHeader const& _header, spBlockHeader const& _paren
             throw test::UpwardsException("Parent (transition) block has not reached TTD (" + _parentTD.asString() +
                                          " < " + TTD.asString() + ") but current block set to PoS format! \nParent: \n" +
                                          _parent->asDataObject()->asJson() + "\nCurrent: " + _header->asDataObject()->asJson());
-
-        // Check if the base fee is correct
-        ChainOperationParams params = ChainOperationParams::defaultParams(_chain.toolParams());
-        VALUE newBaseFee = calculateEIP1559BaseFee(params, _header, _parent);
-        BlockHeader1559 const& header = BlockHeader1559::castFrom(_header);
-        if (header.baseFee() != newBaseFee)
-            throw test::UpwardsException() << "Invalid blockMerge: base fee not correct! Expected: `" + newBaseFee.asDecString() +
-                                                  "`, got: `" + header.baseFee().asDecString() + "`";
     }
     if (_parent->type() == BlockType::BlockHeaderMerge)
     {
         ETH_TEST_MESSAGE("Verifying Merge Block Parent");
-
-        // Check if the base fee is correct
-        ChainOperationParams params = ChainOperationParams::defaultParams(_chain.toolParams());
-        VALUE newBaseFee = calculateEIP1559BaseFee(params, _header, _parent);
-        BlockHeaderMerge const& header = BlockHeaderMerge::castFrom(_header);
-        if (header.baseFee() != newBaseFee)
-            throw test::UpwardsException() << "Invalid blockMerge: base fee not correct! Expected: `" + newBaseFee.asDecString() +
-                                                  "`, got: `" + header.baseFee().asDecString() + "`";
-
         verifyMergeBlock(_parent, _chain);
     }
 }
@@ -207,8 +209,8 @@ void verifyCommonBlock(spBlockHeader const& _header, ToolChain const& _chain)
     // Check gasLimit
     if (header.gasLimit() > dev::bigint("0x7fffffffffffffff"))
         throw test::UpwardsException("Header gasLimit > 0x7fffffffffffffff");
-    if (header.gasUsed() > header.gasLimit())
-        throw test::UpwardsException("Invalid gasUsed: header.gasUsed > header.gasLimit");
+
+    check_gasUsed(header, "verifyCommonBlock: ");
 }
 
 
@@ -219,10 +221,6 @@ void verifyCommonParent(spBlockHeader const& _header, spBlockHeader const& _pare
     if (header.number() != parent.number() + 1)
         throw test::UpwardsException("BlockHeader number != parent.number + 1 (" + header.number().asDecString() +
                                      " != " + parent.number().asDecString() + ")");
-
-    if (parent.timestamp() >= header.timestamp())
-        throw test::UpwardsException("BlockHeader timestamp is less or equal then it's parent block! (" +
-            header.timestamp().asDecString() + " <= " + parent.timestamp().asDecString() + ")");
 
     bigint parentGasLimit = parent.gasLimit().asBigInt();
     if (header.number() == 5 && _chain.fork() == "BerlinToLondonAt5")

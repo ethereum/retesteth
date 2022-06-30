@@ -179,11 +179,11 @@ ChainOperationParams ChainOperationParams::defaultParams(ToolParams const& _para
 
 // Aleth calculate difficulty formula
 VALUE calculateEthashDifficulty(
-    ChainOperationParams const& _chainParams, spBlockHeader const& _bi, spBlockHeader const& _parent)
+    ChainOperationParams const& _chainParams, BlockHeader const& _bi, BlockHeader const& _parent)
 {
     const unsigned c_expDiffPeriod = 100000;
 
-    if (_bi->number() == 0)
+    if (_bi.number() == 0)
         throw test::UpwardsException("calculateEthashDifficulty was called for block with number == 0");
 
     auto const& minimumDifficulty = _chainParams.minimumDifficulty;
@@ -191,30 +191,30 @@ VALUE calculateEthashDifficulty(
     auto const& durationLimit = _chainParams.durationLimit;
 
     VALUE target(0);  // stick to a bigint for the target. Don't want to risk going negative.
-    if (_bi->number() < _chainParams.homesteadForkBlock)
+    if (_bi.number() < _chainParams.homesteadForkBlock)
     {
         // Frontier-era difficulty adjustment
-        target = _bi->timestamp() >= _parent->timestamp() + durationLimit ?
-                     _parent->difficulty() - (_parent->difficulty() / difficultyBoundDivisor) :
-                     (_parent->difficulty() + (_parent->difficulty() / difficultyBoundDivisor));
+        target = _bi.timestamp() >= _parent.timestamp() + durationLimit ?
+                     _parent.difficulty() - (_parent.difficulty() / difficultyBoundDivisor) :
+                     (_parent.difficulty() + (_parent.difficulty() / difficultyBoundDivisor));
     }
     else
     {
-        VALUE const timestampDiff = _bi->timestamp() - _parent->timestamp();
+        VALUE const timestampDiff = _bi.timestamp() - _parent.timestamp();
         VALUE const adjFactor =
-            _bi->number() < _chainParams.byzantiumForkBlock ?
+            _bi.number() < _chainParams.byzantiumForkBlock ?
                 max<bigint>(1 - timestampDiff.asBigInt() / 10, -99) :  // Homestead-era difficulty adjustment
-                max<bigint>((_parent->hasUncles() ? 2 : 1) - timestampDiff.asBigInt() / 9,
+                max<bigint>((_parent.hasUncles() ? 2 : 1) - timestampDiff.asBigInt() / 9,
                     -99);  // Byzantium-era difficulty adjustment
 
-        target = _parent->difficulty() + _parent->difficulty() / 2048 * adjFactor;
+        target = _parent.difficulty() + _parent.difficulty() / 2048 * adjFactor;
     }
 
     VALUE o = target;
-    unsigned exponentialIceAgeBlockNumber = (unsigned)_parent->number().asBigInt() + 1;
+    unsigned exponentialIceAgeBlockNumber = (unsigned)_parent.number().asBigInt() + 1;
 
     // EIP-2384 Istanbul/Berlin Difficulty Bomb Delay
-    if (_bi->number().asBigInt() >= _chainParams.muirGlacierForkBlock)
+    if (_bi.number().asBigInt() >= _chainParams.muirGlacierForkBlock)
     {
         if (exponentialIceAgeBlockNumber >= 9000000)
             exponentialIceAgeBlockNumber -= 9000000;
@@ -222,7 +222,7 @@ VALUE calculateEthashDifficulty(
             exponentialIceAgeBlockNumber = 0;
     }
     // EIP-1234 Constantinople Ice Age delay
-    else if (_bi->number().asBigInt() >= _chainParams.constantinopleForkBlock)
+    else if (_bi.number().asBigInt() >= _chainParams.constantinopleForkBlock)
     {
         if (exponentialIceAgeBlockNumber >= 5000000)
             exponentialIceAgeBlockNumber -= 5000000;
@@ -230,7 +230,7 @@ VALUE calculateEthashDifficulty(
             exponentialIceAgeBlockNumber = 0;
     }
     // EIP-649 Byzantium Ice Age delay
-    else if (_bi->number().asBigInt() >= _chainParams.byzantiumForkBlock)
+    else if (_bi.number().asBigInt() >= _chainParams.byzantiumForkBlock)
     {
         if (exponentialIceAgeBlockNumber >= 3000000)
             exponentialIceAgeBlockNumber -= 3000000;
