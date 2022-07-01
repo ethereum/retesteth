@@ -63,6 +63,7 @@ void printHelp()
     cout << "\nSetting test suite and test\n";
     cout << setw(40) << "--testpath <PathToTheTestRepo>" << setw(25) << "Set path to the test repo\n";
     cout << setw(40) << "--testfile <TestFile>" << setw(0) << "Run tests from a file. Requires -t <TestSuite>\n";
+    cout << setw(40) << "--testfolder <SubFolder>" << setw(0) << "Run tests from a custom test folder located in a given suite. Requires -t <TestSuite>\n";
     cout << setw(40) << "--outfile <TestFile>" << setw(0) << "When using `--testfile` with `--filltests` output to this file\n";
     cout << setw(40) << "--singletest <TestName>" << setw(0)
          << "Run on a single test. `Testname` is filename without Filler.json\n";
@@ -303,6 +304,11 @@ Options::Options(int argc, const char** argv)
         else if (arg == "--testfile")
         {
             throwIfNoArgumentFollows();
+            if (customTestFolder.is_initialized())
+            {
+                ETH_STDERROR_MESSAGE("--testfolder initialized together with --testfile");
+                exit(1);
+            }
             singleTestFile = std::string{argv[++i]};
             if (!boost::filesystem::exists(singleTestFile.get()))
             {
@@ -310,6 +316,16 @@ Options::Options(int argc, const char** argv)
                     "Could not locate custom test file: '" + singleTestFile.get() + "'");
                 exit(1);
             }
+        }
+        else if (arg == "--testfolder")
+        {
+            throwIfNoArgumentFollows();
+            if (singleTestFile.is_initialized())
+            {
+                ETH_STDERROR_MESSAGE("--testfolder initialized together with --testfile");
+                exit(1);
+            }
+            customTestFolder = std::string{argv[++i]};
         }
         else if (arg == "--outfile")
         {
