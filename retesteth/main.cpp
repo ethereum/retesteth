@@ -44,8 +44,26 @@ void customTestSuite()
         }
         else if (opt.rCurrentTestSuite.find("BlockchainTests") != std::string::npos)
         {
-            test::BlockchainTestInvalidSuite suite;
-            runSuite(&suite);
+            if (opt.rCurrentTestSuite.find("InvalidBlocks") != std::string::npos)
+            {
+                test::BlockchainTestInvalidSuite suite;
+                runSuite(&suite);
+            }
+            else if (opt.rCurrentTestSuite.find("ValidBlocks") != std::string::npos)
+            {
+                test::BlockchainTestValidSuite suite;
+                runSuite(&suite);
+            }
+            else if (opt.rCurrentTestSuite.find("TransitionTests") != std::string::npos)
+            {
+                test::BlockchainTestTransitionSuite suite;
+                runSuite(&suite);
+            }
+            else
+            {
+                test::BlockchainTestInvalidSuite suite;
+                runSuite(&suite);
+            }
         }
         else if (opt.rCurrentTestSuite.find("DifficultyTests") != std::string::npos)
         {
