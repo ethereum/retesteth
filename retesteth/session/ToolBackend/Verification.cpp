@@ -112,7 +112,6 @@ void verifyMergeBlock(spBlockHeader const& _header, ToolChain const& _chain)
 
 void verifyLegacyParent(spBlockHeader const& _header, spBlockHeader const& _parent, ToolChain const& _chain)
 {
-    check_timestamp(_header, _parent);
     check_difficultyDelta(_chain, _header, _parent);
 
     if (_chain.fork().asString() == "BerlinToLondonAt5" && _parent->number() == 4)
@@ -136,8 +135,6 @@ void verify1559Parent(spBlockHeader const& _header, spBlockHeader const& _parent
     if (_parent->type() == BlockType::BlockHeaderMerge)
         throw test::UpwardsException("Trying to import 1559 block on top of PoS block!");
     check_blockType(_header->type(), BlockType::BlockHeader1559, "verify1559Parent");
-
-    check_timestamp(_header, _parent);
     check_difficultyDelta(_chain, _header, _parent);
 
     BlockHeader1559 const& header = BlockHeader1559::castFrom(_header);
@@ -222,6 +219,7 @@ void verifyCommonParent(spBlockHeader const& _header, spBlockHeader const& _pare
         throw test::UpwardsException("BlockHeader number != parent.number + 1 (" + header.number().asDecString() +
                                      " != " + parent.number().asDecString() + ")");
 
+    check_timestamp(_header, _parent);
     bigint parentGasLimit = parent.gasLimit().asBigInt();
     if (header.number() == 5 && _chain.fork() == "BerlinToLondonAt5")
         parentGasLimit = parentGasLimit * ELASTICITY_MULTIPLIER;

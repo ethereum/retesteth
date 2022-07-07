@@ -168,7 +168,7 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
     // run all tests
     AbsoluteFillerPath fillerPath = getFullPathFiller(_testFolder);
     if (!fs::exists(fillerPath.path()))
-        ETH_ERROR_MESSAGE(string(fillerPath.path().c_str()) + " does not exist!");
+        ETH_WARNING(string(fillerPath.path().c_str()) + " does not exist!");
     vector<fs::path> const testFillers = test::getFiles(fillerPath.path(), {".json", ".yml"}, filter);
     if (testFillers.size() == 0)
     {
