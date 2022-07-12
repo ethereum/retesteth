@@ -12,18 +12,40 @@ VMLogRecord::VMLogRecord(DataObject const& _obj)
 {
     try
     {
+        REQUIRE_JSONFIELDS(_obj, "VMLogRecord " + _obj.getKey(),
+            {{"pc", {{DataType::Integer}, jsonField::Required}},
+             {"op", {{DataType::Integer}, jsonField::Required}},
+             {"gas", {{DataType::String}, jsonField::Required}},
+             {"gasCost", {{DataType::String}, jsonField::Required}},
+             {"memory", {{DataType::String}, jsonField::Optional}},
+             {"memSize", {{DataType::Integer}, jsonField::Required}},
+             {"stack", {{DataType::Array}, jsonField::Required}},
+             {"depth", {{DataType::Integer}, jsonField::Required}},
+             {"refund", {{DataType::Integer}, jsonField::Required}},
+             {"opName", {{DataType::String}, jsonField::Required}},
+             {"returnData", {{DataType::String}, jsonField::Optional}},
+             {"error", {{DataType::String}, jsonField::Optional}}});
+
         pc = _obj.atKey("pc").asInt();
         op = _obj.atKey("op").asInt();
         gas = spVALUE(new VALUE(_obj.atKey("gas")));
         gasCost = spVALUE(new VALUE(_obj.atKey("gasCost")));
+        if (_obj.count("memory"))
+            memory = spBYTES(new BYTES(_obj.atKey("memory")));
+        else
+            memory = spBYTES(new BYTES(DataObject("0x")));
         memSize = _obj.atKey("memSize").asInt();
         for (auto const& el : _obj.atKey("stack").getSubObjects())
             stack.push_back(el->asString());
-        returnData = spBYTES(new BYTES(DataObject("0x")));
+        if (_obj.count("returnData"))
+            returnData = spBYTES(new BYTES(_obj.atKey("returnData")));
+        else
+            returnData = spBYTES(new BYTES(DataObject("0x")));
         depth = _obj.atKey("depth").asInt();
         refund = _obj.atKey("refund").asInt();
         opName = _obj.atKey("opName").asString();
-        error = _obj.atKey("error").asString();
+        error = _obj.count("error") ? _obj.atKey("error").asString() : "";
+
     }
     catch (std::exception const& _ex)
     {
@@ -101,6 +123,8 @@ void DebugVMTrace::printNice()
             s_comment = stepw + "SSTORE [" + el.stack.at(el.stack.size() - 1) + "] = " + el.stack.at(el.stack.size() - 2);
         if (el.opName == "MSTORE" && el.stack.size() > 1)
             s_comment = stepw + "MSTORE [" + el.stack.at(el.stack.size() - 1) + "] = " + el.stack.at(el.stack.size() - 2);
+        if (el.opName == "RETURN")
+            s_comment = stepw + "RETURN " + el.memory->asString();
     }
     std::cout << std::endl;
 }
