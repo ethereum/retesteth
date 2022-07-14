@@ -10,6 +10,7 @@ class alethcfg { public: alethcfg(); };
 class alethIpcDebugcfg { public: alethIpcDebugcfg(); };
 class besucfg { public: besucfg(); };
 class t8ntoolcfg { public: t8ntoolcfg(); };
+class t8ntooleipcfg { public: t8ntooleipcfg(); };
 class oewrapcfg { public: oewrapcfg(); };
 
 // Genesis configs for clients
@@ -28,6 +29,10 @@ class genArrowGlacierCfg { public: genArrowGlacierCfg(); };
 class genGrayGlacierCfg { public: genGrayGlacierCfg(); };
 class genMergeCfg { public: genMergeCfg(); };
 class genArrowGlacierToMergeAtDiffC0000Cfg { public: genArrowGlacierToMergeAtDiffC0000Cfg(); };
+
+// T8ntooleip
+class t8ntooleip_genRewardsCfg { public: t8ntooleip_genRewardsCfg(); };
+class t8ntooleip_genLondon1884Cfg { public: t8ntooleip_genLondon1884Cfg(); };
 
 // Transition genesis configs
 class genFrontierToHomesteadCfg { public: genFrontierToHomesteadCfg(); };
@@ -48,6 +53,7 @@ public:
         alethIpcDebugcfg alethIpcDebug;
         besucfg besu;
         t8ntoolcfg t8ntool;
+        t8ntooleipcfg t8ntooleip;
         oewrapcfg oewrap;
 
         // Genesis configs for clients
@@ -65,6 +71,10 @@ public:
         genArrowGlacierCfg genArrowGlacier;
         genGrayGlacierCfg genGrayGlacier;
         genMergeCfg genMerge;
+
+        // T8ntooleip
+        t8ntooleip_genRewardsCfg t8ntooleip_RewardsCfg;
+        t8ntooleip_genLondon1884Cfg t8ntooleip_London1884Cfg;
 
         // Transition genesis configs
         genFrontierToHomesteadCfg genFrontierToHomestead;

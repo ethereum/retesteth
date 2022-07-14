@@ -17,6 +17,7 @@ ClientConfig::ClientConfig(fs::path const& _clientConfigPath) : m_id(ClientConfi
 {
     try
     {
+        fs::path const default_ClientConfigPath = _clientConfigPath.parent_path() / "default";
         TestOutputHelper::get().setCurrentTestInfo(TestInfo("Client Config init"));
         fs::path configFile = _clientConfigPath / "config";
         ETH_FAIL_REQUIRE_MESSAGE(fs::exists(configFile), string("Client config not found: ") + configFile.c_str());
@@ -41,6 +42,7 @@ ClientConfig::ClientConfig(fs::path const& _clientConfigPath) : m_id(ClientConfi
 
         // Load genesis templates from default dir if not set in this folder
         fs::path genesisTemplatePath = _clientConfigPath / "genesis";
+        fs::path default_genesisTemplatePath = default_ClientConfigPath / "genesis";
         if (!fs::exists(genesisTemplatePath))
         {
             genesisTemplatePath = _clientConfigPath.parent_path() / "default" / "genesis";
@@ -50,7 +52,20 @@ ClientConfig::ClientConfig(fs::path const& _clientConfigPath) : m_id(ClientConfi
         // Load genesis templates
         for (auto const& net : cfgFile().allowedForks())
         {
-            fs::path configGenesisTemplatePath = genesisTemplatePath / (net.asString() + ".json");
+            fs::path const configGenesisTemplatePath = genesisTemplatePath / (net.asString() + ".json");
+            if (!fs::exists(configGenesisTemplatePath))
+            {
+                // try to load default option instead, if genesis folder exists but overrides only a few defaults
+                fs::path const default_configGenesisTemplatePath = default_genesisTemplatePath / (net.asString() + ".json");
+                ETH_FAIL_REQUIRE_MESSAGE(fs::exists(default_genesisTemplatePath), "default/genesis client config not found!");
+                if (fs::exists(default_configGenesisTemplatePath))
+                {
+                    m_genesisTemplate[net] = test::readJsonData(default_configGenesisTemplatePath);
+                    continue;
+                }
+                else
+                    ETH_WARNING(string("Tried to load default config unsuccessfull: ") + default_configGenesisTemplatePath.c_str());
+            }
             ETH_FAIL_REQUIRE_MESSAGE(fs::exists(configGenesisTemplatePath),
                 "\ntemplate '" + net.asString() + ".json' for client '" +
                     _clientConfigPath.stem().string() + "' not found ('" +
