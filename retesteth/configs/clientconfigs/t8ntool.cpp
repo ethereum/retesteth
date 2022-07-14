@@ -100,6 +100,7 @@ string const t8ntool_config = R"({
       "BLOCKHEADER_VALUE_TOOLARGE" : "Blockheader parse error: VALUE  >u256",
       "TRANSACTION_VALUE_TOOLARGE" : "TransactionLegacy convertion error: VALUE  >u256",
       "TRANSACTION_VALUE_TOOSHORT" : "t8ntool didn't return a transaction with hash",
+      "TR_NonceHasMaxValue" : "nonce has max value:",
       "OVERSIZE_RLP" : "Error importing raw rlp block: OversizeRLP",
       "RLP_TooFewElements" : "rlp: too few elements ",
       "RLP_TooManyElements" : "rlp: input list has too many elements ",
