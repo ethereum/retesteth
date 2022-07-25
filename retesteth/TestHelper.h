@@ -136,7 +136,7 @@ class RLPStreamU
 public:
     RLPStreamU(size_t _size) : m_size(_size)
     {
-        if (_size > 1)
+        if (m_size > 1)
             ETH_FAIL_MESSAGE("RLPStreamU does not support stream of multiple rlp items. It's a mock to wrap 1 transaction.");
     }
     void appendRaw(string const& _data);

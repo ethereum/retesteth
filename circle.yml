@@ -151,7 +151,7 @@ jobs:
 
   macOS-XCode12:
     environment:
-      - CXX: clang++
+      - CXX: clang
       - GCOV: gcov
       - GENERATOR: Ninja
       - BUILD_PARALLEL_JOBS: 8
@@ -160,12 +160,14 @@ jobs:
       xcode: "12.5.1"
     steps:
       - checkout
-      - *environment-info
       - run:
           name: "Install macOS dependencies"
           # Python3 and requests are needed for Hunter upload.
           command: |
             HOMEBREW_NO_AUTO_UPDATE=1 brew install -q cmake ninja
+            brew install llvm@8
+            brew link --overwrite llvm@8
+      - *environment-info
       - *configureMac
 #      - *upload-hunter-cache
 #      - *install-solidity-mac
