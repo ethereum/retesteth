@@ -9,9 +9,9 @@ set(HUNTER_JOBS_NUMBER 4 CACHE STRING "Hunter jobs number")
 set(HUNTER_CACHE_SERVERS "https://github.com/ethereum/hunter-cache" CACHE STRING "Hunter cache servers")
 
 HunterGate(
-	URL "https://github.com/ruslo/hunter/archive/v0.23.44.tar.gz"
-	SHA1 "c4cfcc0cd39fdae8de08f6205b7f34cab4a7ba79"
-	LOCAL
+        URL "https://github.com/ruslo/hunter/archive/v0.23.44.tar.gz"
+        SHA1 "c4cfcc0cd39fdae8de08f6205b7f34cab4a7ba79"
+        LOCAL
 )
 
 project(retesteth VERSION 0.2.2)
@@ -19,8 +19,11 @@ set(VERSION_SUFFIX "testinfo")
 
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)
-hunter_add_package(Boost COMPONENTS filesystem program_options system)
-find_package(Boost CONFIG REQUIRED filesystem program_options system)
+#hunter_add_package(Boost COMPONENTS filesystem program_options system)
+
+execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/cmake/scripts/boost.sh filesystem program_options system)
+set(BOOST_ROOT ${CMAKE_CURRENT_BINARY_DIR}/dependecies/boost/boost_1_79_0/)
+find_package(Boost 1.79 REQUIRED COMPONENTS  filesystem program_options system)
 
 hunter_add_package(yaml-cpp)
 find_package(yaml-cpp CONFIG REQUIRED)

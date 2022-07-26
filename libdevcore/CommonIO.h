@@ -36,6 +36,7 @@
 #include "Common.h"
 #include "CommonData.h"
 #include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
 
 namespace dev
 {
