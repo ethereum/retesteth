@@ -83,6 +83,7 @@ void printHelp()
     cout << setw(30) << "--limitblocks" << setw(25) << "Limit the block exectuion in blockchain tests for debug\n";
     cout << setw(30) << "--limitrpc" << setw(25) << "Limit the rpc exectuion in tests for debug\n";
     cout << setw(30) << "--verbosity <level>" << setw(25) << "Set logs verbosity. 0 - silent, 1 - only errors, 2 - informative, >2 - detailed\n";
+    cout << setw(30) << "--nologcolor" << setw(25) << "Disable color codes in log output\n";
     cout << setw(30) << "--exectimelog" << setw(25) << "Output execution time for each test suite\n";
     cout << setw(30) << "--statediff" << setw(25) << "Trace state difference for state tests\n";
     cout << setw(30) << "--stderr" << setw(25) << "Redirect ipc client stderr to stdout\n";
@@ -356,6 +357,10 @@ Options::Options(int argc, const char** argv)
                 std::cerr.rdbuf(strCout.rdbuf());
                 break;
             }
+        }
+        else if (arg == "--nologcolor")
+        {
+            nologcolor = true;
         }
         else if (arg == "--datadir")
         {
