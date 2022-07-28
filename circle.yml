@@ -46,6 +46,8 @@ defaults:
       command: |
         ./retesteth -t GeneralStateTests/stExample -- --testpath ~/project/tests
         ./retesteth -t BlockchainTests/ValidBlocks/bcExample -- --testpath ~/project/tests
+        ./retesteth -t GeneralStateTests -- --checkhash --testpath ~/project/tests
+        ./retesteth -t BlockchainTests -- --checkhash --testpath ~/project/tests
 
   test: &test
     run:
