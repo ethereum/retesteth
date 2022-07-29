@@ -1,5 +1,6 @@
 # retesteth
 testeth via RPC (wiki: https://github.com/ethereum/retesteth/wiki)
+tests execution/generation via transition tool (https://ethereum-tests.readthedocs.io/en/latest/t8ntool-ref.html)
 (Execution stats: http://retesteth.ethdevops.io/)
 
 * A test generation tool for the test fillers https://github.com/ethereum/tests/tree/develop/src
@@ -8,11 +9,13 @@ testeth via RPC (wiki: https://github.com/ethereum/retesteth/wiki)
 
 # The Goal
 
-* A test tool that would be capable of running current Blockchain tests against any client by sending RPC request to the client instance on either local or remote host. (using unix or TCP sockets)
-* Filling existing tests (generating post state from *Filler.json instruction files) using RPC and any existing client
-* Running RPC request - response tests with a provided client on localhost
+* A test tool that would be capable of running current Blockchain/State tests against any client
+* On client side use test RPC or transition tool executable which exports client core logic of transaction execution on given state
+* Filling existing tests (generating post state from *Filler.json instruction files) using the above and any existing client
+* Running request - response tests with a provided client on localhost
 * Bunch tests execution with many clients with many threads
 * A minimum set of additional RPC methods for client to negotiate with the tool: https://github.com/ethereum/retesteth/wiki/RPC-Methods
+* Or a simple transition tool that is also usefull for transaction debugging: https://ethereum-tests.readthedocs.io/en/latest/t8ntool-ref.html
 
 # Current progress
 
@@ -23,17 +26,37 @@ testeth via RPC (wiki: https://github.com/ethereum/retesteth/wiki)
 * done: Implement a set of PoC methods in other client then aleth
 * done: Refactoring and stability when generating GeneralStateTests
 * done: Blockchain test generation support
-* now: Use retesteth to produce fork tests with geth/besu/aleth
-* now: Refactor the code, improve stability
+* done: Use retesteth to produce fork tests with geth/besu
+* done: Refactor the code, improve stability
+* now: Support and development, support teams
 
 # Building instructions
+Ubuntu (retesteth):
 ```
 git clone git@github.com:ethereum/retesteth.git
 cd retesteth
 mkdir build
 cd build
-cmake ..
+cmake .. -DCMAKE_BUILD_TYPE=Release
 make -j4
+```
+
+MacOS (retesteth + tests + geth):
+```
+HOMEBREW_NO_AUTO_UPDATE=1 brew install -q cmake ninja git go@1.16
+git clone --depth 1 https://github.com/ethereum/go-ethereum.git
+git clone --depth 1 https://github.com/ethereum/tests.git
+cd go-ethereum
+make all
+ln -s ./build/bin/evm /usr/local/bin/evm
+cd ..
+git clone https://github.com/ethereum/retesteth.git
+cd retesteth
+mkdir build
+cd build
+cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../toolchain.cmake
+cmake --build .
+
 ```
 Or try building instruction for beginners: [retesteth + solidity build](https://github.com/ethereum/retesteth#building-instructions-for-beginners)
 
@@ -43,7 +66,7 @@ Wiki: https://github.com/ethereum/retesteth/wiki
 Requires to have a client installed on your system. Read the wiki page on detailed instruction on how to configure your client to work with `retesteth`
 https://github.com/ethereum/retesteth/wiki/Add-client-configuration-to-Retesteth
 ```bash
-./retesteth -t GeneralStateTests
+./retesteth -t GeneralStateTests -- --testpath "your path to ethereum/tests repo"
 ```
 
 # Docker instructions
