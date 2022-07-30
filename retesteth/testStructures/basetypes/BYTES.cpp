@@ -40,5 +40,11 @@ BYTES::BYTES(DataObject const& _data)
     m_data = "0x" + m_data;
 }
 
+size_t BYTES::firstByte() const
+{
+    string const sFirstByte = asString().substr(2, 2);
+    return std::strtol(sFirstByte.c_str(), NULL, 16);
+}
+
 }  // namespace teststruct
 }  // namespace test

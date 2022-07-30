@@ -40,6 +40,7 @@ protected:
     spVALUE m_gasPrice;
     spVALUE m_nonce;
     spFH32 m_secretKey;
+    spFH20 m_publicKey;
     spFH20 m_to;
     bool m_creation;
 

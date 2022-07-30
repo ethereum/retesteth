@@ -74,4 +74,10 @@ void printVmTrace(SessionInterface& _session, FH32 const& _trHash, FH32 const& _
 
 // Validate transaction exception
 void compareTransactionException(spTransaction const& _tr, MineBlocksResult const& _mRes, string const& _testException);
+
+// Verify filled json structures
+void verifyFilledTest(DataObject const& _want, DataObject const& _have);
+void verifyFilledTest(DataObject const& _want, DataObject const& _have, FORK const& _net);
+void verifyFilledTestRecursive(DataObject const& _want, DataObject const& _have, string& _debug);
+
 }

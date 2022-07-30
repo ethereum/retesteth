@@ -3,7 +3,11 @@
 #include <testStructures/Common.h>
 #include <retesteth/EthChecks.h>
 #include <retesteth/TestHelper.h>
+#include <mutex>
 using namespace test::teststruct;
+std::mutex g_allowedForks_static_var;
+std::mutex g_forkProgressionAsSet_static_var;
+
 
 namespace test
 {
@@ -29,6 +33,7 @@ void ClientConfigFile::initWithData(DataObject const& _data)
             {"socketAddress", {{DataType::String, DataType::Array}, jsonField::Required}},
             {"initializeTime", {{DataType::String}, jsonField::Optional}},
             {"checkLogsHash", {{DataType::Bool}, jsonField::Optional}},
+            {"chainID", {{DataType::Integer}, jsonField::Optional}},
             {"forks", {{DataType::Array}, jsonField::Required}},
             {"additionalForks", {{DataType::Array}, jsonField::Required}},
             {"exceptions", {{DataType::Object}, jsonField::Required}},
@@ -111,6 +116,10 @@ void ClientConfigFile::initWithData(DataObject const& _data)
     if (_data.count("checkLogsHash"))
         m_checkLogsHash = _data.atKey("checkLogsHash").asBool();
 
+    m_chanID = 1;
+    if (_data.count("chainID"))
+        m_chanID = _data.atKey("chainID").asInt();
+
     // Read forks as fork order. Order is required for translation (`>=Frontier` -> `Frontier,
     // Homestead`) According to this order:
     for (auto const& el : _data.atKey("forks").getSubObjects())
@@ -163,6 +172,7 @@ std::vector<IPADDRESS> const& ClientConfigFile::socketAdresses() const
 
 std::set<FORK> ClientConfigFile::allowedForks() const
 {
+    std::lock_guard<std::mutex> lock(g_allowedForks_static_var);
     static std::set<FORK> out;
     if (out.size() == 0)
     {
@@ -173,6 +183,19 @@ std::set<FORK> ClientConfigFile::allowedForks() const
     }
     return out;
 }
+
+std::set<FORK> ClientConfigFile::forkProgressionAsSet() const
+{
+    std::lock_guard<std::mutex> lock(g_forkProgressionAsSet_static_var);
+    static std::set<FORK> out;
+    if (out.size() == 0)
+    {
+        for (auto const& el : m_forks)
+            out.insert(el);
+    }
+    return out;
+}
+
 
 }  // namespace teststruct
 }  // namespace test

@@ -19,12 +19,17 @@ namespace logmessage
 void eth_warning_message(std::string const& _message, unsigned _verbosity)
 {
     if (Options::get().logVerbosity >= _verbosity)
-        std::cout << cYellow << "WARNING: " << _message << "\x1b[0m" << std::endl;
+    {
+        if (Options::get().nologcolor)
+            std::cout << "WARNING: " << _message << std::endl;
+        else
+            std::cout << cYellow << "WARNING: " << _message << "\x1b[0m" << std::endl;
+    }
 }
 
 void eth_stdout_message(std::string const& _message, std::string const& _color)
 {
-    if (_color.empty())
+    if (_color.empty() || Options::get().nologcolor)
         std::cout <<  _message << std::endl;
     else
         std::cout << _color << _message << "\x1b[0m" << std::endl;
@@ -32,7 +37,10 @@ void eth_stdout_message(std::string const& _message, std::string const& _color)
 
 void eth_stderror_message(std::string const& _message)
 {
-    std::cerr << cRed << _message << "\x1b[0m" << std::endl;
+    if (Options::get().nologcolor)
+        std::cerr << _message << std::endl;
+    else
+        std::cerr << cRed << _message << "\x1b[0m" << std::endl;
 }
 
 void eth_log_message(std::string const& _message, LogColor _color)
@@ -51,7 +59,10 @@ void eth_log_message(std::string const& _message, LogColor _color)
     default:
         break;
     }
-    std::cout << s_pre << _message << "\x1b[0m" << std::endl;
+    if (Options::get().nologcolor)
+        std::cout << _message << std::endl;
+    else
+        std::cout << s_pre << _message << "\x1b[0m" << std::endl;
 }
 
 void eth_error(std::string const& _message)

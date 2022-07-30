@@ -8,6 +8,15 @@ using namespace test;
 using namespace teststruct;
 using namespace dataobject;
 
+namespace  {
+FORK convertForkToToolConfig(FORK const& _fork)
+{
+    auto const& genesisSetupInTool = Options::getCurrentConfig().getGenesisTemplate(_fork);
+    FORK const t8nForkName(genesisSetupInTool.getCContent().atKey("params").atKey("fork").asString());
+    return t8nForkName;
+}
+}
+
 namespace toolimpl
 {
 ToolParams::ToolParams(DataObject const& _data)
@@ -18,7 +27,9 @@ ToolParams::ToolParams(DataObject const& _data)
             {"constantinopleForkBlock", {{DataType::String}, jsonField::Optional}},
             {"byzantiumForkBlock", {{DataType::String}, jsonField::Optional}},
             {"londonForkBlock", {{DataType::String}, jsonField::Optional}},
-            {"homesteadForkBlock", {{DataType::String}, jsonField::Optional}}});
+            {"homesteadForkBlock", {{DataType::String}, jsonField::Optional}},
+            {"terminalTotalDifficulty", {{DataType::String}, jsonField::Optional}}
+        });
 
     const bigint unreachable = 10000000000;
     if (_data.count("homesteadForkBlock"))
@@ -55,7 +66,8 @@ static std::map<FORK, FORK> RewardMapForToolBefore5 = {
     {"EIP158ToByzantiumAt5", "EIP158"},
     {"HomesteadToDaoAt5", "Homestead"},
     {"ByzantiumToConstantinopleFixAt5", "Byzantium"},
-    {"BerlinToLondonAt5", "Berlin"}
+    {"BerlinToLondonAt5", "Berlin"},
+    {"ArrowGlacierToMergeAtDiffC0000", "ArrowGlacier"}
 };
 static std::map<FORK, FORK> RewardMapForToolAfter5 = {
     {"FrontierToHomesteadAt5", "Homestead"},
@@ -63,13 +75,24 @@ static std::map<FORK, FORK> RewardMapForToolAfter5 = {
     {"EIP158ToByzantiumAt5", "Byzantium"},
     {"HomesteadToDaoAt5", "Homestead"},
     {"ByzantiumToConstantinopleFixAt5", "ConstantinopleFix"},
-    {"BerlinToLondonAt5", "London"}
+    {"BerlinToLondonAt5", "London"},
+    {"ArrowGlacierToMergeAtDiffC0000", "Merge"}
 };
 
-std::tuple<VALUE, FORK> prepareReward(SealEngine _engine, FORK const& _fork, VALUE const& _blockNumber)
+std::tuple<VALUE, FORK> prepareReward(SealEngine _engine, FORK const& _fork, VALUE const& _blockNumber, VALUE const& _currentTD)
 {
     if (_engine == SealEngine::Ethash)
         ETH_WARNING_TEST("t8ntool backend treat Ethash as NoProof!", 6);
+
+    bool isMerge = false;
+    bool posTransitionDifficultyNotReached = false;
+    if (_fork.asString() == "ArrowGlacierToMergeAtDiffC0000")
+    {
+        isMerge = true;
+        // The TD here is the one before tool called for mining. so its like n-1 td.
+        if (_currentTD < VALUE(DataObject("0x0C0000")))
+            posTransitionDifficultyNotReached = true;
+    }
 
     // Setup mining rewards
     std::map<FORK, spVALUE> const& rewards = Options::get().getDynamicOptions().getCurrentConfig().getRewardMap();
@@ -77,14 +100,14 @@ std::tuple<VALUE, FORK> prepareReward(SealEngine _engine, FORK const& _fork, VAL
         return {rewards.at(_fork).getCContent(), _fork};
     else
     {
-        if (_blockNumber < 5)
+        if ((!isMerge && _blockNumber < 5) || posTransitionDifficultyNotReached)
         {
             if (!RewardMapForToolBefore5.count(_fork))
             {
                 fs::path const& rewardMapPath = Options::get().getDynamicOptions().getCurrentConfig().getRewardMapPath();
                 ETH_ERROR_MESSAGE("ToolBackend error getting reward for fork: " + _fork.asString() + ", check that fork reward is defined at (" + rewardMapPath.c_str() + ")");
             }
-            auto const& trFork = RewardMapForToolBefore5.at(_fork);
+            auto const& trFork = convertForkToToolConfig(RewardMapForToolBefore5.at(_fork));
             assert(rewards.count(trFork));
             return {rewards.at(trFork).getCContent(), trFork};
         }
@@ -95,7 +118,7 @@ std::tuple<VALUE, FORK> prepareReward(SealEngine _engine, FORK const& _fork, VAL
                 fs::path const& rewardMapPath = Options::get().getDynamicOptions().getCurrentConfig().getRewardMapPath();
                 ETH_ERROR_MESSAGE("ToolBackend error getting reward for fork: " + _fork.asString() + ", check that fork reward is defined at " + rewardMapPath.c_str() + ")");
             }
-            auto const& trFork = RewardMapForToolAfter5.at(_fork);
+            auto const& trFork = convertForkToToolConfig(RewardMapForToolAfter5.at(_fork));
             assert(rewards.count(trFork));
             return {rewards.at(trFork).getCContent(), _fork == "HomesteadToDaoAt5" ? "HomesteadToDaoAt5" : trFork};
         }
@@ -156,11 +179,11 @@ ChainOperationParams ChainOperationParams::defaultParams(ToolParams const& _para
 
 // Aleth calculate difficulty formula
 VALUE calculateEthashDifficulty(
-    ChainOperationParams const& _chainParams, spBlockHeader const& _bi, spBlockHeader const& _parent)
+    ChainOperationParams const& _chainParams, BlockHeader const& _bi, BlockHeader const& _parent)
 {
     const unsigned c_expDiffPeriod = 100000;
 
-    if (_bi->number() == 0)
+    if (_bi.number() == 0)
         throw test::UpwardsException("calculateEthashDifficulty was called for block with number == 0");
 
     auto const& minimumDifficulty = _chainParams.minimumDifficulty;
@@ -168,30 +191,30 @@ VALUE calculateEthashDifficulty(
     auto const& durationLimit = _chainParams.durationLimit;
 
     VALUE target(0);  // stick to a bigint for the target. Don't want to risk going negative.
-    if (_bi->number() < _chainParams.homesteadForkBlock)
+    if (_bi.number() < _chainParams.homesteadForkBlock)
     {
         // Frontier-era difficulty adjustment
-        target = _bi->timestamp() >= _parent->timestamp() + durationLimit ?
-                     _parent->difficulty() - (_parent->difficulty() / difficultyBoundDivisor) :
-                     (_parent->difficulty() + (_parent->difficulty() / difficultyBoundDivisor));
+        target = _bi.timestamp() >= _parent.timestamp() + durationLimit ?
+                     _parent.difficulty() - (_parent.difficulty() / difficultyBoundDivisor) :
+                     (_parent.difficulty() + (_parent.difficulty() / difficultyBoundDivisor));
     }
     else
     {
-        VALUE const timestampDiff = _bi->timestamp() - _parent->timestamp();
+        VALUE const timestampDiff = _bi.timestamp() - _parent.timestamp();
         VALUE const adjFactor =
-            _bi->number() < _chainParams.byzantiumForkBlock ?
+            _bi.number() < _chainParams.byzantiumForkBlock ?
                 max<bigint>(1 - timestampDiff.asBigInt() / 10, -99) :  // Homestead-era difficulty adjustment
-                max<bigint>((_parent->hasUncles() ? 2 : 1) - timestampDiff.asBigInt() / 9,
+                max<bigint>((_parent.hasUncles() ? 2 : 1) - timestampDiff.asBigInt() / 9,
                     -99);  // Byzantium-era difficulty adjustment
 
-        target = _parent->difficulty() + _parent->difficulty() / 2048 * adjFactor;
+        target = _parent.difficulty() + _parent.difficulty() / 2048 * adjFactor;
     }
 
     VALUE o = target;
-    unsigned exponentialIceAgeBlockNumber = (unsigned)_parent->number().asBigInt() + 1;
+    unsigned exponentialIceAgeBlockNumber = (unsigned)_parent.number().asBigInt() + 1;
 
     // EIP-2384 Istanbul/Berlin Difficulty Bomb Delay
-    if (_bi->number().asBigInt() >= _chainParams.muirGlacierForkBlock)
+    if (_bi.number().asBigInt() >= _chainParams.muirGlacierForkBlock)
     {
         if (exponentialIceAgeBlockNumber >= 9000000)
             exponentialIceAgeBlockNumber -= 9000000;
@@ -199,7 +222,7 @@ VALUE calculateEthashDifficulty(
             exponentialIceAgeBlockNumber = 0;
     }
     // EIP-1234 Constantinople Ice Age delay
-    else if (_bi->number().asBigInt() >= _chainParams.constantinopleForkBlock)
+    else if (_bi.number().asBigInt() >= _chainParams.constantinopleForkBlock)
     {
         if (exponentialIceAgeBlockNumber >= 5000000)
             exponentialIceAgeBlockNumber -= 5000000;
@@ -207,7 +230,7 @@ VALUE calculateEthashDifficulty(
             exponentialIceAgeBlockNumber = 0;
     }
     // EIP-649 Byzantium Ice Age delay
-    else if (_bi->number().asBigInt() >= _chainParams.byzantiumForkBlock)
+    else if (_bi.number().asBigInt() >= _chainParams.byzantiumForkBlock)
     {
         if (exponentialIceAgeBlockNumber >= 3000000)
             exponentialIceAgeBlockNumber -= 3000000;
@@ -227,9 +250,6 @@ VALUE calculateEthashDifficulty(
 
 VALUE calculateEIP1559BaseFee(ChainOperationParams const& _chainParams, spBlockHeader const& _bi, spBlockHeader const& _parent)
 {
-    (void)_chainParams;
-    (void)_bi;
-
     VALUE expectedBaseFee(0);
     BlockHeader1559 const& parent = BlockHeader1559::castFrom(_parent);
 

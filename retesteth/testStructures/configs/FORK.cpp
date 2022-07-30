@@ -14,7 +14,8 @@ size_t getForkIndex(test::teststruct::FORK const& _f)
         if (forks.at(i) == _f)
             return i;
     }
-    ETH_FAIL_MESSAGE("Fork name `" + _f.asString() + "` not found in current config!");
+    string const sConfigPath = Options::getCurrentConfig().cfgFile().path().c_str();
+    ETH_FAIL_MESSAGE("Fork name `" + _f.asString() + "` not found in current config 'Forks'! (" + sConfigPath + ")");
     return 0;
 }
 }  // namespace

@@ -43,7 +43,7 @@ private:
     std::string m_sCurrentChainName;        // Chain name that is mining blocks
     std::string const m_sDefaultChainName;  // Default chain name to restore genesis
 
-    BlockchainTestFillerEnv m_genesisEnv;  // Genesis Info
+    BlockchainTestFillerEnv const& m_genesisEnv;  // Genesis Info
     State m_genesisPre;
     SealEngine m_sealEngine;
 

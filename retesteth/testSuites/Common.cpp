@@ -104,4 +104,76 @@ void compareTransactionException(spTransaction const& _tr, MineBlocksResult cons
     }
 }
 
+
+void verifyFilledTest(DataObject const& _want, DataObject const& _have)
+{
+    string root;
+    if (_want.getSubObjects().size() != 0)
+        verifyFilledTestRecursive(_want, _have, root);
+}
+
+void verifyFilledTest(DataObject const& _want, DataObject const& _have, FORK const& _net)
+{
+    string root = _net.asString() + " -> ";
+    if (_want.getSubObjects().size() != 0)
+    {
+        if (_want.count(_net.asString()))
+            verifyFilledTestRecursive(_want.atKey(_net.asString()), _have, root);
+        else
+            ETH_WARNING("retesteth::verify does not have fork: " + _net.asString());
+    }
+}
+
+void verifyFilledTestRecursive(DataObject const& _want, DataObject const& _have, string& _debug)
+{
+    size_t k = 0;
+    for (auto const& el : _want.getSubObjects())
+    {
+        if (_want.type() == DataType::Object)
+        {
+            bool mustNotExist = false;
+            if (el->type() == DataType::String && el->asString() == "shouldnotexist")
+                mustNotExist = true;
+
+            if (!mustNotExist && !_have.count(el->getKey()) )
+                ETH_ERROR_MESSAGE("verify: filled test missing expected key: " +
+                                  _debug + "\n Key: `" + el->getKey() + "`");
+            if (mustNotExist && _have.count(el->getKey()))
+                ETH_ERROR_MESSAGE("verify: filled test has unexpected key: " +
+                                  _debug + "\n Key: `" + el->getKey() + "`");
+            if (mustNotExist && !_have.count(el->getKey()))
+                continue;
+
+            size_t pos = _debug.size();
+            _debug += el->getKey() + " -> ";
+            if (el->getSubObjects().size() > 0)
+                verifyFilledTestRecursive(el, _have.atKey(el->getKey()), _debug);
+
+            if (el->getSubObjects().size() == 0 && _have.getSubObjects().size() != 0)
+                verifyFilledTestRecursive(el, _have.atKey(el->getKey()), _debug);
+            _debug = _debug.substr(0, pos - 1);
+        }
+        if (_want.type() == DataType::Array)
+        {
+            if (_have.getSubObjects().size() <= k)
+                ETH_ERROR_MESSAGE("verify: filled test missing expected array element: " +
+                                  _debug + "`" + el->asJson() + "`");
+            _debug += "[" + test::fto_string(k) + "] -> ";
+            verifyFilledTestRecursive(el, _have.at(k), _debug);
+        }
+        k++;
+    }
+
+    if (_want.getSubObjects().size() == 0 && _have.getSubObjects().size() == 0)
+    {
+        auto const& elWantJson = _want.asJson();
+        auto const& haveJson = _have.asJson();
+        if (elWantJson != haveJson)
+            ETH_ERROR_MESSAGE("verify: filled test generated field mismatch,\n " +
+                              _debug + "\n" +
+                              " want: " + elWantJson + "\n  vs \n have: " + haveJson + "\n"
+                );
+    }
+}
+
 }  // namespace

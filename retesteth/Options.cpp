@@ -63,6 +63,7 @@ void printHelp()
     cout << "\nSetting test suite and test\n";
     cout << setw(40) << "--testpath <PathToTheTestRepo>" << setw(25) << "Set path to the test repo\n";
     cout << setw(40) << "--testfile <TestFile>" << setw(0) << "Run tests from a file. Requires -t <TestSuite>\n";
+    cout << setw(40) << "--testfolder <SubFolder>" << setw(0) << "Run tests from a custom test folder located in a given suite. Requires -t <TestSuite>\n";
     cout << setw(40) << "--outfile <TestFile>" << setw(0) << "When using `--testfile` with `--filltests` output to this file\n";
     cout << setw(40) << "--singletest <TestName>" << setw(0)
          << "Run on a single test. `Testname` is filename without Filler.json\n";
@@ -71,6 +72,7 @@ void printHelp()
 
     cout << "\nDebugging\n";
     cout << setw(30) << "-d <index>" << setw(25) << "Set the transaction data array index when running GeneralStateTests\n";
+    cout << setw(30) << "-d <label>" << setw(25) << "Set the transaction data array label (string) when running GeneralStateTests\n";
     cout << setw(30) << "-g <index>" << setw(25) << "Set the transaction gas array index when running GeneralStateTests\n";
     cout << setw(30) << "-v <index>" << setw(25) << "Set the transaction value array index when running GeneralStateTests\n";
     cout << setw(30) << "--vmtrace" << setw(25) << "Trace transaction execution\n";
@@ -81,6 +83,7 @@ void printHelp()
     cout << setw(30) << "--limitblocks" << setw(25) << "Limit the block exectuion in blockchain tests for debug\n";
     cout << setw(30) << "--limitrpc" << setw(25) << "Limit the rpc exectuion in tests for debug\n";
     cout << setw(30) << "--verbosity <level>" << setw(25) << "Set logs verbosity. 0 - silent, 1 - only errors, 2 - informative, >2 - detailed\n";
+    cout << setw(30) << "--nologcolor" << setw(25) << "Disable color codes in log output\n";
     cout << setw(30) << "--exectimelog" << setw(25) << "Output execution time for each test suite\n";
     cout << setw(30) << "--statediff" << setw(25) << "Trace state difference for state tests\n";
     cout << setw(30) << "--stderr" << setw(25) << "Redirect ipc client stderr to stdout\n";
@@ -302,6 +305,11 @@ Options::Options(int argc, const char** argv)
         else if (arg == "--testfile")
         {
             throwIfNoArgumentFollows();
+            if (customTestFolder.is_initialized())
+            {
+                ETH_STDERROR_MESSAGE("--testfolder initialized together with --testfile");
+                exit(1);
+            }
             singleTestFile = std::string{argv[++i]};
             if (!boost::filesystem::exists(singleTestFile.get()))
             {
@@ -309,6 +317,16 @@ Options::Options(int argc, const char** argv)
                     "Could not locate custom test file: '" + singleTestFile.get() + "'");
                 exit(1);
             }
+        }
+        else if (arg == "--testfolder")
+        {
+            throwIfNoArgumentFollows();
+            if (singleTestFile.is_initialized())
+            {
+                ETH_STDERROR_MESSAGE("--testfolder initialized together with --testfile");
+                exit(1);
+            }
+            customTestFolder = std::string{argv[++i]};
         }
         else if (arg == "--outfile")
         {
@@ -339,6 +357,10 @@ Options::Options(int argc, const char** argv)
                 std::cerr.rdbuf(strCout.rdbuf());
                 break;
             }
+        }
+        else if (arg == "--nologcolor")
+        {
+            nologcolor = true;
         }
         else if (arg == "--datadir")
         {
@@ -378,7 +400,10 @@ Options::Options(int argc, const char** argv)
                 trDataIndex = atoi(argValue.c_str());
                 break;
             case DigitsType::String:
-                trDataLabel = argValue;
+                if (argValue.find(":label") == string::npos)
+                    trDataLabel += ":label " + argValue;
+                else
+                    trDataLabel = argValue;
                 break;
             default:
             {

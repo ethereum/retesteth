@@ -3,7 +3,10 @@
 #include <retesteth/Options.h>
 #include <retesteth/testStructures/Common.h>
 
-using namespace test::teststruct;
+namespace test
+{
+namespace teststruct
+{
 GeneralStateTest::GeneralStateTest(spDataObject& _data)
 {
     try
@@ -61,3 +64,6 @@ StateTestInFilled::StateTestInFilled(spDataObject& _data)
     }
     m_name = _data->getKey();
 }
+
+}  // namespace teststruct
+}  // namespace test

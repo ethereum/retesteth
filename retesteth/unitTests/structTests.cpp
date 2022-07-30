@@ -1,4 +1,5 @@
 #include <retesteth/TestHelper.h>
+#include <retesteth/Options.h>
 #include <retesteth/TestOutputHelper.h>
 #include <retesteth/testStructures/basetypes.h>
 #include <retesteth/testStructures/types/Ethereum/TransactionReader.h>
@@ -9,6 +10,19 @@ using namespace std;
 using namespace dev;
 using namespace test;
 using namespace test::teststruct;
+
+class Initializer : public TestOutputHelperFixture
+{
+public:
+    Initializer()
+    {
+        for (auto const& config : Options::getDynamicOptions().getClientConfigs())
+        {
+            Options::getDynamicOptions().setCurrentConfig(config);
+            break;
+        }
+    }
+};
 
 void checkException(std::function<void()> _job, string const& _exStr)
 {
@@ -52,7 +66,7 @@ void checkSerializeBigint(T const& _a, string const& _rlpForm, string const& _ex
     // check that 0x:bigint 0x00 encode into rlp 00 and not 80
 }
 
-BOOST_FIXTURE_TEST_SUITE(StructTest, TestOutputHelperFixture)
+BOOST_FIXTURE_TEST_SUITE(StructTest, Initializer)
 
 BOOST_AUTO_TEST_CASE(value_normal)
 {

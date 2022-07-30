@@ -5,6 +5,7 @@
 #include <libdevcore/SHA3.h>
 #include <libdevcrypto/Common.h>
 #include <retesteth/EthChecks.h>
+#include <retesteth/Options.h>
 #include <retesteth/TestHelper.h>
 #include <retesteth/testStructures/Common.h>
 
@@ -34,6 +35,7 @@ void TransactionBaseFee::fromDataObject(DataObject const& _data)
                 {"value", {{DataType::String}, jsonField::Required}},
                 {"to", {{DataType::String, DataType::Null}, jsonField::Required}},
                 {"secretKey", {{DataType::String}, jsonField::Optional}},
+                {"sender", {{DataType::String}, jsonField::Optional}},
                 {"v", {{DataType::String}, jsonField::Optional}},
                 {"r", {{DataType::String}, jsonField::Optional}},
                 {"s", {{DataType::String}, jsonField::Optional}},
@@ -154,8 +156,9 @@ void TransactionBaseFee::buildVRS(VALUE const& _secret)
     dev::bytes outa = stream.out();
     outa.insert(outa.begin(), dev::byte(2));  // txType
 
-    dev::h256 hash(dev::sha3(outa));
-    dev::Signature sig = dev::sign(dev::Secret(_secret.asString()), hash);
+    const dev::Secret secret(_secret.asString());
+    const dev::h256 hash(dev::sha3(outa));
+    dev::Signature sig = dev::sign(secret, hash);
     dev::SignatureStruct sigStruct = *(dev::SignatureStruct const*)&sig;
     ETH_FAIL_REQUIRE_MESSAGE(
         sigStruct.isValid(), TestOutputHelper::get().testName() + " Could not construct transaction signature!");
@@ -170,7 +173,8 @@ void TransactionBaseFee::streamHeader(dev::RLPStream& _s) const
 {
     // rlp([chainId, nonce, maxPriorityFeePerGas, maxFeePerGas, gasLimit, to, value, data, access_list, signatureYParity,
     // signatureR, signatureS])
-    _s << VALUE(1).asBigInt();
+    const int chainID = Options::getCurrentConfig().cfgFile().chainID();
+    _s << VALUE(chainID).asBigInt();
     _s << nonce().serializeRLP();
     _s << m_maxPriorityFeePerGas->serializeRLP();
     _s << m_maxFeePerGas->serializeRLP();
@@ -219,13 +223,18 @@ const spDataObject TransactionBaseFee::asDataObject(ExportOrder _order) const
 
     // standard transaction output without gas_price end
     // begin eip1559 transaction info
-    (*out)["chainId"] = "0x01";
+    const int chainID = Options::getCurrentConfig().cfgFile().chainID();
+    DataObject chainIDs(test::fto_string(chainID));
+    chainIDs.performModifier(mod_valueToCompactEvenHexPrefixed);
+
+    (*out)["chainId"] = chainIDs.asString();
     (*out)["type"] = "0x02";
     (*out)["maxFeePerGas"] = m_maxFeePerGas->asString();
     (*out)["maxPriorityFeePerGas"] = m_maxPriorityFeePerGas->asString();
     if (_order == ExportOrder::ToolStyle)
     {
-        (*out)["chainId"] = "0x1";
+        chainIDs.performModifier(mod_removeLeadingZerosFromHexValues);
+        (*out)["chainId"] = chainIDs.asString();
         (*out)["type"] = "0x2";
 
         spDataObject t8ntoolFields;

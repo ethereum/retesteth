@@ -304,10 +304,14 @@ FH32 ToolImpl::test_getLogHash(FH32 const& _txHash)
 
 TestRawTransaction ToolImpl::test_rawTransaction(BYTES const& _rlp, FORK const& _fork)
 {
+    auto const& genesisSetupInTool = Options::getCurrentConfig().getGenesisTemplate(_fork);
+    FORK t8nForkName(genesisSetupInTool.getCContent().atKey("params").atKey("fork").asString());
+    // TODO parametrize structure here. so not to get an error if params or fork dissappear
+
     rpcCall("", {});
     TRYCATCHCALL(
-        ETH_TEST_MESSAGE("\nRequest: test_rawTransaction '" + _rlp.asString() + "', Fork: `" + _fork.asString());
-        TestRawTransaction res = ToolChainManager::test_rawTransaction(_rlp, _fork, m_toolPath, m_tmpDir);
+        ETH_TEST_MESSAGE("\nRequest: test_rawTransaction '" + _rlp.asString() + "', Fork: `" + t8nForkName.asString());
+        TestRawTransaction res = ToolChainManager::test_rawTransaction(_rlp, t8nForkName, m_toolPath, m_tmpDir);
         return res;
         , "test_rawTransaction", CallType::FAILEVERYTHING)
     return TestRawTransaction(DataObject());

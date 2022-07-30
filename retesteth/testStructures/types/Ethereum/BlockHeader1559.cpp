@@ -184,8 +184,8 @@ BlockHeader1559& BlockHeader1559::castFrom(BlockHeader& _from)
 {
     try
     {
-        if (_from.type() != BlockType::BlockHeader1559)
-            ETH_FAIL_MESSAGE("BlockHeader1559::castFrom() got wrong block type!");
+        if (_from.type() != BlockType::BlockHeader1559 && _from.type() != BlockType::BlockHeaderMerge)
+            ETH_FAIL_MESSAGE("BlockHeader1559::castFrom() got wrong block type! `" + BlockHeader::TypeToString(_from.type()));
         return dynamic_cast<BlockHeader1559&>(_from);
     }
     catch (...)
@@ -199,8 +199,8 @@ BlockHeader1559 const& BlockHeader1559::castFrom(spBlockHeader const& _from)
 {
     try
     {
-        if (_from->type() != BlockType::BlockHeader1559)
-            ETH_FAIL_MESSAGE("BlockHeader1559::castFrom() got wrong block type!");
+        if (_from->type() != BlockType::BlockHeader1559 && _from->type() != BlockType::BlockHeaderMerge)
+            ETH_FAIL_MESSAGE("BlockHeader1559::castFrom() got wrong block type! `" + BlockHeader::TypeToString(_from->type()));
         return dynamic_cast<BlockHeader1559 const&>(_from.getCContent());
     }
     catch (...)

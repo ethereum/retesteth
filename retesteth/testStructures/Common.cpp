@@ -6,6 +6,7 @@
 #include <retesteth/configs/ClientConfig.h>
 #include <mutex>
 #include <algorithm>
+#include <libdevcrypto/Common.h>
 
 using namespace test;
 using namespace dev;
@@ -13,6 +14,7 @@ using namespace test::teststruct;
 
 namespace
 {
+
 string toCompactHexPrefixed(string const& _str, size_t _minSize)
 {
     string prefix = string();
@@ -47,6 +49,13 @@ namespace test
 {
 namespace teststruct
 {
+
+spFH20 convertSecretToPublic(spFH32 const& _secret)
+{
+    const dev::Secret secret(_secret->asString());
+    return spFH20(new FH20("0x" + dev::toAddress(dev::toPublic(secret)).hex()));
+}
+
 // DataObject modifiers
 void mod_valueToLowerCase(DataObject& _obj)
 {
@@ -134,7 +143,7 @@ void mod_removeLeadingZerosFromHexValues(DataObject& _obj)
     {
         string str = _obj.asString();
         removeLeadingZeroes(str);
-        _obj.setString(str);
+        _obj.setString(std::move(str));
     }
 }
 

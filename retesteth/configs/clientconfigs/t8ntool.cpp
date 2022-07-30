@@ -7,6 +7,7 @@ string const t8ntool_config = R"({
     "socketType" : "tranition-tool",
     "socketAddress" : "start.sh",
     "checkLogsHash" : true,
+    "chainID" : 1,
     "forks" : [
         "Frontier",
         "Homestead",
@@ -17,7 +18,8 @@ string const t8ntool_config = R"({
         "ConstantinopleFix",
         "Istanbul",
         "Berlin",
-        "London"
+        "London",
+        "Merge"
     ],
     "additionalForks" : [
         "FrontierToHomesteadAt5",
@@ -26,7 +28,9 @@ string const t8ntool_config = R"({
         "HomesteadToDaoAt5",
         "ByzantiumToConstantinopleFixAt5",
         "BerlinToLondonAt5",
-        "ArrowGlacier"
+        "ArrowGlacier",
+        "ArrowGlacierToMergeAtDiffC0000",
+        "GrayGlacier"
     ],
     "exceptions" : {
       "AddressTooShort" : "input string too short for common.Address",
@@ -96,6 +100,7 @@ string const t8ntool_config = R"({
       "BLOCKHEADER_VALUE_TOOLARGE" : "Blockheader parse error: VALUE  >u256",
       "TRANSACTION_VALUE_TOOLARGE" : "TransactionLegacy convertion error: VALUE  >u256",
       "TRANSACTION_VALUE_TOOSHORT" : "t8ntool didn't return a transaction with hash",
+      "TR_NonceHasMaxValue" : "nonce has max value:",
       "OVERSIZE_RLP" : "Error importing raw rlp block: OversizeRLP",
       "RLP_TooFewElements" : "rlp: too few elements ",
       "RLP_TooManyElements" : "rlp: input list has too many elements ",
@@ -199,13 +204,26 @@ string const t8ntool_config = R"({
       "TR_NonceTooHigh" : "nonce too high",
       "TR_NonceTooLow" : "nonce too low",
       "TR_TypeNotSupported" : "transaction type not supported",
-      "TR_TipGtFeeCap": "max priority fee per gas higher than max fee per gas"
+      "TR_TipGtFeeCap": "max priority fee per gas higher than max fee per gas",
+      "TR_TooShort": "typed transaction too short",
+      "1559BaseFeeTooLarge": "TransactionBaseFee convertion error: VALUE  >u256",
+      "1559PriorityFeeGreaterThanBaseFee": "maxFeePerGas \u003c maxPriorityFeePerGas",
+      "2930AccessListAddressTooLong": "rlp: input string too long for common.Address, decoding into (types.Transaction)(types.AccessListTx).AccessList[0].Address",
+      "2930AccessListAddressTooShort": "rlp: input string too short for common.Address, decoding into (types.Transaction)(types.AccessListTx).AccessList[0].Address",
+      "2930AccessListStorageHashTooLong": "rlp: input string too long for common.Hash, decoding into (types.Transaction)(types.AccessListTx).AccessList[0].StorageKeys[0]",
+      "1559LeadingZerosBaseFee": "rlp: non-canonical integer (leading zero bytes) for *big.Int, decoding into (types.Transaction)(types.DynamicFeeTx).GasFeeCap",
+      "1559LeadingZerosPriorityFee":  "rlp: non-canonical integer (leading zero bytes) for *big.Int, decoding into (types.Transaction)(types.DynamicFeeTx).GasTipCap",
+      "2930AccessListStorageHashTooShort": "rlp: input string too short for common.Hash, decoding into (types.Transaction)(types.AccessListTx).AccessList[0].StorageKeys[0]",
+      "2930AccessListStorageHashTooLong": "rlp: input string too long for common.Hash, decoding into (types.Transaction)(types.AccessListTx).AccessList[0].StorageKeys[0]",
+      "3675PoWBlockRejected" : "Invalid block1559: Chain switched to PoS!",
+      "3675PoSBlockRejected" : "Parent (transition) block has not reached TTD",
+      "3675PreMerge1559BlockRejected" : "Trying to import 1559 block on top of PoS block"
     }
 })";
 
 string const t8ntool_start = R"(#!/bin/sh
 if [ $1 = "-v" ]; then
-    /bin/evm -v
+    evm -v
 else
     stateProvided=0
     for index in ${1} ${2} ${3} ${4} ${5} ${6} ${7} ${8} ${9} ${10} ${11} ${12} ${13} ${14} ${15} ${16} ${17} ${18} ${19} ${20} ; do
@@ -215,9 +233,9 @@ else
         fi
     done
     if [ $stateProvided -eq 1 ]; then
-        /bin/evm t8n ${1} ${2} ${3} ${4} ${5} ${6} ${7} ${8} ${9} ${10} ${11} ${12} ${13} ${14} ${15} ${16} ${17} ${18} ${19} ${20} --verbosity 2
+        evm t8n ${1} ${2} ${3} ${4} ${5} ${6} ${7} ${8} ${9} ${10} ${11} ${12} ${13} ${14} ${15} ${16} ${17} ${18} ${19} ${20} --verbosity 2
     else
-        /bin/evm t9n ${1} ${2} ${3} ${4} ${5} ${6} ${7} ${8} ${9} ${10} ${11} ${12} ${13} ${14} ${15} ${16} ${17} ${18} ${19} ${20}
+        evm t9n ${1} ${2} ${3} ${4} ${5} ${6} ${7} ${8} ${9} ${10} ${11} ${12} ${13} ${14} ${15} ${16} ${17} ${18} ${19} ${20}
     fi
 fi
 )";

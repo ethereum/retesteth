@@ -3,7 +3,28 @@
 #include <retesteth/Options.h>
 #include <retesteth/testStructures/Common.h>
 
-using namespace test::teststruct;
+namespace
+{
+BlockchainTestEnv* readBlockchainTestEnv(DataObject const& _data)
+{
+    if (_data.count("baseFeePerGas"))
+    {
+        spDataObject diff = _data.atKey("difficulty").copy();
+        (*diff).performModifier(mod_valueToCompactEvenHexPrefixed);
+        if (VALUE(diff->asString()) != 0)
+            return new BlockchainTestEnv1559(_data);
+        else
+            return new BlockchainTestEnvMerge(_data);
+        return new BlockchainTestEnv1559(_data);
+    }
+    return new BlockchainTestEnvLegacy(_data);
+}
+}  // namespace
+
+namespace test
+{
+namespace teststruct
+{
 BlockchainTestInFilled::BlockchainTestInFilled(spDataObject& _data)
 {
     try
@@ -23,7 +44,7 @@ BlockchainTestInFilled::BlockchainTestInFilled(spDataObject& _data)
 
         m_name = _data->getKey();
         m_info = GCP_SPointer<Info>(new Info(_data->atKey("_info")));
-        m_env = spBlockchainTestEnv(new BlockchainTestEnv(_data->atKey("genesisBlockHeader")));
+        m_env = spBlockchainTestEnv(readBlockchainTestEnv(_data->atKey("genesisBlockHeader")));
 
         m_genesisRLP = spBYTES(new BYTES(_data->atKey("genesisRLP")));
         m_pre = spState(new State(MOVE(_data, "pre")));
@@ -73,3 +94,5 @@ BlockchainTest::BlockchainTest(spDataObject& _data)
     }
 }
 
+}  // namespace teststruct
+}  // namespace test

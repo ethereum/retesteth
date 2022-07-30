@@ -5,6 +5,8 @@
 #include <retesteth/Options.h>
 #include <retesteth/testSuites/StateTests.h>
 #include <retesteth/testSuites/blockchain/BlockchainTests.h>
+#include <retesteth/testSuites/TransactionTest.h>
+#include <retesteth/testSuites/DifficultyTest.h>
 #include <boost/test/included/unit_test.hpp>
 #include <thread>
 
@@ -21,42 +23,57 @@ void customTestSuite()
     std::cerr.rdbuf(oldCerrStreamBuf);
     test::Options const& opt = test::Options::get();
 
-    // if generating a random test
-    /*if (opt.createRandomTest)
-    {
-        if (!dev::test::createRandomTest())
-            throw framework::internal_error(
-                "Create random test error! See std::error for more details.");
-    }*/
+    auto runSuite = [&opt](test::TestSuite* _suite){
+        if (opt.singleTestFile.is_initialized())
+        {
+            boost::filesystem::path file(opt.singleTestFile.get());
+            _suite->runTestWithoutFiller(file);
+        }
+        else if (opt.customTestFolder.is_initialized())
+        {
+            _suite->runAllTestsInFolder(opt.customTestFolder.get());
+        }
+    };
 
-    // if running a testfile
-    if (opt.singleTestFile.is_initialized())
+    if (opt.singleTestFile.is_initialized() || opt.customTestFolder.is_initialized())
     {
-        boost::filesystem::path file(opt.singleTestFile.get());
         if (opt.rCurrentTestSuite.find("GeneralStateTests") != std::string::npos)
         {
             test::StateTestSuite suite;
-            suite.runTestWithoutFiller(file);
+            runSuite(&suite);
         }
         else if (opt.rCurrentTestSuite.find("BlockchainTests") != std::string::npos)
         {
-            test::BlockchainTestValidSuite suite;
-            suite.runTestWithoutFiller(file);
+            if (opt.rCurrentTestSuite.find("InvalidBlocks") != std::string::npos)
+            {
+                test::BlockchainTestInvalidSuite suite;
+                runSuite(&suite);
+            }
+            else if (opt.rCurrentTestSuite.find("ValidBlocks") != std::string::npos)
+            {
+                test::BlockchainTestValidSuite suite;
+                runSuite(&suite);
+            }
+            else if (opt.rCurrentTestSuite.find("TransitionTests") != std::string::npos)
+            {
+                test::BlockchainTestTransitionSuite suite;
+                runSuite(&suite);
+            }
+            else
+            {
+                test::BlockchainTestInvalidSuite suite;
+                runSuite(&suite);
+            }
         }
-        else if (opt.rCurrentTestSuite.find("TransitionTests") != std::string::npos)
+        else if (opt.rCurrentTestSuite.find("DifficultyTests") != std::string::npos)
         {
-            // dev::test::TransitionTestsSuite suite;
-            // suite.runTestWithoutFiller(file);
-        }
-        else if (opt.rCurrentTestSuite.find("VMtests") != std::string::npos)
-        {
-            // dev::test::VmTestSuite suite;
-            // suite.runTestWithoutFiller(file);
+            test::DifficultyTestSuite suite;
+            runSuite(&suite);
         }
         else if (opt.rCurrentTestSuite.find("TransactionTests") != std::string::npos)
         {
-            // dev::test::TransactionTestSuite suite;
-            // suite.runTestWithoutFiller(file);
+             test::TransactionTestSuite suite;
+             runSuite(&suite);
         }
     }
 }
@@ -119,7 +136,6 @@ void setDefaultOrCLocale()
 // Custom Boost Unit Test Main
 int main(int argc, const char* argv[])
 {
-    std::string const dynamicTestSuiteName = "customTestSuite";
     setDefaultOrCLocale();
     signal(SIGABRT, &ExitHandler::exitHandler);
     signal(SIGTERM, &ExitHandler::exitHandler);
@@ -137,6 +153,7 @@ int main(int argc, const char* argv[])
     }
 
     test::Options const& opt = test::Options::get();
+    std::string const dynamicTestSuiteName = "customTestSuite";
 
     // Special UnitTest
     for (int i = 0; i < argc; i++)
@@ -152,7 +169,7 @@ int main(int argc, const char* argv[])
         }
     }
 
-    if (opt.createRandomTest || opt.singleTestFile.is_initialized())
+    if (opt.createRandomTest || opt.singleTestFile.is_initialized() || opt.customTestFolder.is_initialized())
     {
         bool testSuiteFound = false;
         for (int i = 0; i < argc; i++)
@@ -173,10 +190,18 @@ int main(int argc, const char* argv[])
             std::cerr << "createRandomTest requires a test suite to be set -t <TestSuite>\n";
             return -1;
         }
-        if (!testSuiteFound && opt.singleTestFile.is_initialized())
+        if (!testSuiteFound)
         {
-            std::cerr << "testfile <file>  requires a test suite to be set -t <TestSuite>\n";
-            return -1;
+            if (opt.singleTestFile.is_initialized())
+            {
+                std::cerr << "testfile <file>  requires a test suite to be set -t <TestSuite>\n";
+                return -1;
+            }
+            else if (opt.customTestFolder.is_initialized())
+            {
+                std::cerr << "testfolder <subfolder>  requires a test suite to be set -t <TestSuite>\n";
+                return -1;
+            }
         }
 
         // Disable initial output as the random test will output valid json to std
@@ -186,7 +211,7 @@ int main(int argc, const char* argv[])
         std::cerr.rdbuf(strCout.rdbuf());
 
         // add custom test suite
-        test_suite* ts1 = BOOST_TEST_SUITE("customTestSuite");
+        test_suite* ts1 = BOOST_TEST_SUITE(dynamicTestSuiteName);
         ts1->add(BOOST_TEST_CASE(&customTestSuite));
         framework::master_test_suite().add(ts1);
     }
@@ -218,7 +243,7 @@ int main(int argc, const char* argv[])
         }
 
         // Print suggestions of a test case if test suite not found
-        if (requestSuiteNotFound && sMinusTArg != "customTestSuite")
+        if (requestSuiteNotFound && sMinusTArg != dynamicTestSuiteName)
         {
             std::cerr << "Error: '" + sMinusTArg + "' suite not found! \n";
             printTestSuiteSuggestions(sMinusTArg);

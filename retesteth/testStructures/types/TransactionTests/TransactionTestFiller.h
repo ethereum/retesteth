@@ -17,6 +17,7 @@ struct TransactionTestInFiller : GCP_SPointerBase
     InfoIncomplete const& info() const { return m_info; }
     bool hasInfo() const { return !m_info.isEmpty(); }
     spTransaction const& transaction() const { return m_transaction; }
+    std::vector<FORK> const& additionalForks() const { return m_additionalForks; }
     string const& getExpectException(FORK const& _net) const
     {
         static string emptyString = string();
@@ -31,6 +32,7 @@ private:
     string m_name;
     spTransaction m_transaction;
     GCP_SPointer<InfoIncomplete> m_info;
+    std::vector<FORK> m_additionalForks;
     std::map<FORK, std::string> m_expectExceptions;
 };
 

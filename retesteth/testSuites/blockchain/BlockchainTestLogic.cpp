@@ -6,6 +6,7 @@
 #include <retesteth/testStructures/Common.h>
 #include <retesteth/testStructures/PrepareChainParams.h>
 #include <retesteth/testSuites/Common.h>
+#include "fillers/TestBlockchain.h"
 namespace test
 {
 
@@ -80,11 +81,18 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
 
         if (!session.getLastRPCError().empty())
         {
-            // If there was an error on block rlp import
             // and options does NOT allow invalid blocks or this block was expected to be valid
+            // BCValidBlocks does not allow invalid blocks!
             if (!_opt.allowInvalidBlocks || !tblock.expectedInvalid())
                 ETH_ERROR_MESSAGE(
-                    "Importing raw RLP block, block was expected to be valid! " + session.getLastRPCError().message());
+                    "Importing raw RLP block, block was expected to be valid! (if it was intended, check that it is not in Valid blocks test suite) " + session.getLastRPCError().message());
+
+            if (Options::getDynamicOptions().getCurrentConfig().cfgFile().socketType() == ClientConfgSocketType::TransitionTool)
+            {
+                string const& sBlockException = tblock.getExpectException();
+                if (!sBlockException.empty())
+                    blockchainfiller::TestBlockchain::checkBlockException(session, sBlockException);
+            }
             continue;
         }
         else
@@ -251,16 +259,10 @@ spDataObject DoTests(spDataObject& _input, TestSuite::TestSuiteOptions& _opt)
         TestOutputHelper::get().setCurrentTestName("----");
         if (_opt.isLegacyTests)
         {
-            // Change the tests instead??
-            DataObject& _inputRef = _input.getContent();
-            for (auto& el2 : _inputRef.getSubObjectsUnsafe())
+            for (auto& test : _input.getContent().getSubObjectsUnsafe())
             {
-                DataObject& el = el2.getContent();
-                DataObject& _infoRef = el.atKeyUnsafe("_info");
-                _infoRef.renameKey("filledwith", "filling-rpc-server");
-                _infoRef["filling-tool-version"] = "testeth";
-                if (!el.count("genesisRLP"))
-                    el["genesisRLP"] = "0x00";
+                if (!test.getContent().count("genesisRLP"))
+                    test.getContent()["genesisRLP"] = "0x00";
             }
         }
 

@@ -5,6 +5,7 @@
 #include <retesteth/testStructures/types/TransactionTests/TransactionTest.h>
 #include <retesteth/testStructures/types/TransactionTests/TransactionTestFiller.h>
 #include <retesteth/testSuites/Common.h>
+#include <retesteth/ExitHandler.h>
 
 using namespace test;
 namespace fs = boost::filesystem;
@@ -20,20 +21,38 @@ spDataObject FillTest(TransactionTestInFiller const& _test)
     if (_test.hasInfo())
         (*filledTest).atKeyPointer("_info") = _test.info().rawData();
 
-    for (auto const& el : Options::getCurrentConfig().cfgFile().forks())
+    std::set<FORK> executionForks;
+    for (auto const& fork : Options::getCurrentConfig().cfgFile().forks())
+        executionForks.emplace(fork);
+    for (auto const& fork : _test.additionalForks())
     {
-        TestRawTransaction res = session.test_rawTransaction(_test.transaction()->getRawBytes(), el);
-        compareTransactionException(_test.transaction(), res, _test.getExpectException(el));
+        if (Options::getDynamicOptions().getCurrentConfig().checkForkAllowed(fork))
+            executionForks.emplace(fork);
+        else
+            ETH_WARNING("Client config does not support fork `" + fork.asString() + "`, skipping test generation!");
+    }
+
+    for (auto const& fork : executionForks)
+    {
+        if (ExitHandler::receivedExitSignal())
+            break;
+
+        Options const& opt = Options::get();
+        if (!opt.singleTestNet.empty() && FORK(opt.singleTestNet) != fork)
+            continue;
+
+        TestRawTransaction res = session.test_rawTransaction(_test.transaction()->getRawBytes(), fork);
+        compareTransactionException(_test.transaction(), res, _test.getExpectException(fork));
 
         spDataObject result;
-        (*result).setKey(el.asString());
-        if (_test.getExpectException(el).empty())
+        (*result).setKey(fork.asString());
+        if (_test.getExpectException(fork).empty())
         {
             (*result)["hash"] = res.trhash().asString();
             (*result)["sender"] = res.sender().asString();
         }
         else
-            (*result)["exception"] = _test.getExpectException(el);
+            (*result)["exception"] = _test.getExpectException(fork);
         (*result)["intrinsicGas"] = res.intrinsicGas().asString();
         (*filledTest)["result"].addSubObject(result);
     }
@@ -46,9 +65,22 @@ void RunTest(TransactionTestInFilled const& _test)
 {
     TestOutputHelper::get().setCurrentTestName(_test.testName());
     SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
-    for (auto const& el : Options::getCurrentConfig().cfgFile().forks())
+    for (auto const& fork : _test.allForks())
     {
-        TestRawTransaction res = session.test_rawTransaction(_test.rlp(), el);
+        if (ExitHandler::receivedExitSignal())
+            break;
+
+        Options const& opt = Options::get();
+        if (!opt.singleTestNet.empty() && FORK(opt.singleTestNet) != fork)
+            continue;
+
+        if (!Options::getDynamicOptions().getCurrentConfig().checkForkAllowed(fork))
+        {
+            ETH_WARNING("Client config does not support fork `" + fork.asString() + "`, skipping test!");
+            continue;
+        }
+
+        TestRawTransaction res = session.test_rawTransaction(_test.rlp(), fork);
         if (_test.transaction().isEmpty())
         {
             // Retesteth was unable to read the transaction rlp from the test into a valid transaction
@@ -57,7 +89,7 @@ void RunTest(TransactionTestInFilled const& _test)
             string const& chash = tr.getContent().hash().asStringBytes();
             string& hash = const_cast<string&>(chash);
             hash = "0x" + dev::toString(dev::sha3(fromHex(_test.rlp().asString())));
-            compareTransactionException(tr, res, _test.getExpectException(el));
+            compareTransactionException(tr, res, _test.getExpectException(fork));
         }
         else
         {
@@ -67,12 +99,12 @@ void RunTest(TransactionTestInFilled const& _test)
             string const& chash = tr.getContent().hash().asStringBytes();
             string& hash = const_cast<string&>(chash);
             hash = "0x" + dev::toString(dev::sha3(fromHex(_test.rlp().asString())));
-            compareTransactionException(tr, res, _test.getExpectException(el));
+            compareTransactionException(tr, res, _test.getExpectException(fork));
         }
 
-        if (_test.getExpectException(el).empty())
+        if (_test.getExpectException(fork).empty())
         {
-            auto const& testResult = _test.getAcceptedTransaction(el);
+            auto const& testResult = _test.getAcceptedTransaction(fork);
             spVALUE const& testIntrinsicGas = testResult.m_intrinsicGas;
             spFH32 const& testHash = testResult.m_hash;
             spFH20 const& testSender = testResult.m_sender;
@@ -101,6 +133,8 @@ spDataObject TransactionTestSuite::doTests(spDataObject& _input, TestSuiteOption
 
         for (auto const& test : filler.tests())
         {
+            if (ExitHandler::receivedExitSignal())
+                break;
             (*filledTest).addSubObject(test.testName(), FillTest(test));
             TestOutputHelper::get().registerTestRunSuccess();
         }
@@ -115,6 +149,8 @@ spDataObject TransactionTestSuite::doTests(spDataObject& _input, TestSuiteOption
 
         for (auto const& test : filledTest.tests())
         {
+            if (ExitHandler::receivedExitSignal())
+                break;
             RunTest(test);
             TestOutputHelper::get().registerTestRunSuccess();
         }
@@ -150,5 +186,7 @@ BOOST_AUTO_TEST_CASE(ttGasLimit) {}
 BOOST_AUTO_TEST_CASE(ttNonce) {}
 BOOST_AUTO_TEST_CASE(ttSignature) {}
 BOOST_AUTO_TEST_CASE(ttVValue) {}
+BOOST_AUTO_TEST_CASE(ttEIP1559) {}
+BOOST_AUTO_TEST_CASE(ttEIP2930) {}
 
 BOOST_AUTO_TEST_SUITE_END()

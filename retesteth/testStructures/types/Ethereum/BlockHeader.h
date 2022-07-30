@@ -15,12 +15,24 @@ namespace teststruct
 enum class BlockType
 {
     BlockHeaderLegacy,
-    BlockHeader1559
+    BlockHeader1559,
+    BlockHeaderMerge
 };
 
 // Ethereum blockheader interface
 struct BlockHeader : GCP_SPointerBase
 {
+    static string TypeToString(BlockType _t)
+    {
+        switch (_t)
+        {
+            case BlockType::BlockHeader1559: return "BlockHeader1559";
+            case BlockType::BlockHeaderLegacy: return "BlockHeaderLegacy";
+            case BlockType::BlockHeaderMerge: return "BlockHeaderMerge";
+            default: return "UnparsedBlockType";
+        }
+        return "UnparsedBlockType";
+    }
     virtual ~BlockHeader(){/* all smart pointers */};
 
     virtual spDataObject asDataObject() const = 0;
@@ -29,6 +41,21 @@ struct BlockHeader : GCP_SPointerBase
 
     bool operator==(BlockHeader const& _rhs) const { return asDataObject() == _rhs.asDataObject(); }
     bool operator!=(BlockHeader const& _rhs) const { return !(*this == _rhs); }
+    static string BlockTypeToString(BlockType _bl)
+    {
+        switch (_bl)
+        {
+        case BlockType::BlockHeader1559:
+            return "BlockHeader1559";
+        case BlockType::BlockHeaderLegacy:
+            return "BlockHeaderLegacy";
+        case BlockType::BlockHeaderMerge:
+            return "BlockHeaderMerge";
+        default:
+            return "BlockHeaderUndefined";
+        };
+        return "BlockHEaderUndefined";
+    }
 
     void recalculateHash()
     {

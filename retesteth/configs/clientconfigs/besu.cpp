@@ -35,7 +35,8 @@ string const besu_config = R"({
         "HomesteadToDaoAt5",
         "ByzantiumToConstantinopleFixAt5",
         "BerlinToLondonAt5",
-        "ArrowGlacier"
+        "ArrowGlacier",
+        "GrayGlacier"
     ],
     "exceptions" : {
         "ExtraDataTooBig" : "extra-data too long",

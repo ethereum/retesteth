@@ -17,11 +17,6 @@ hunter_config(
     HTTP_CLIENT=NO
 )
 
-hunter_config(Boost VERSION 1.65.2
-    URL http://retesteth.ethdevops.io/dependencies/boost_1_65_1.tar.bz2
-    SHA1 4a5b0c3c1b1b9a4d6cb6a6cc395e903e76f76720
-)
-
 hunter_config(ethash VERSION 0.4.0
     URL https://github.com/chfast/ethash/archive/v0.4.0.tar.gz
     SHA1 fd92ffadff2931877a3b68685dd8c53f0bdec539

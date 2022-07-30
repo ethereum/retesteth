@@ -1,13 +1,14 @@
 #include "TestBlockchainManager.h"
-#include <retesteth/Options.h>
-#include <retesteth/TestSuite.h>
-#include <retesteth/testStructures/types/BlockchainTests/BlockchainTestFiller.h>
-#include <retesteth/testSuites/Common.h>
 #include <retesteth/ExitHandler.h>
+#include <retesteth/Options.h>
+#include <retesteth/testStructures/types/BlockchainTests/BlockchainTestFiller.h>
+#include <retesteth/testSuiteRunner/TestSuite.h>
+#include <retesteth/testSuites/Common.h>
 
 using namespace test::blockchainfiller;
 namespace test
 {
+
 /// Generate blockchain test from filler
 spDataObject FillTest(BlockchainTestInFiller const& _test, TestSuite::TestSuiteOptions const& _opt)
 {
@@ -99,10 +100,12 @@ spDataObject FillTest(BlockchainTestInFiller const& _test, TestSuite::TestSuiteO
 
                 filledTest["lastblockhash"] = finalBlock.header()->hash().asString();
                 (*result).addSubObject(_filledTest);
+
+                verifyFilledTest(_test.unitTestVerify(), _filledTest, net);
             }  // expects count net
         }
     }
+
     return result;
 }
-
 }  // namespace test

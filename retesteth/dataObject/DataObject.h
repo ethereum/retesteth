@@ -32,12 +32,19 @@ public:
     DataObject(DataObject const&) = delete;
     DataObject(DataType _type);
     DataObject(DataType _type, bool _bool);
-    DataObject(std::string const& _str);
-    DataObject(std::string const& _key, std::string const& _str);
-    DataObject(std::string const& _key, int _val);
-    DataObject(int _int);
 
+    // DataObject(str)
+    DataObject(std::string&& _str);
+    DataObject(std::string const& _str);
+
+    // DataObject(key)
+    DataObject(std::string&& _key, std::string&& _str);
+    DataObject(std::string const& _key, std::string const& _str);
+    DataObject(std::string&& _key, int _val);
+
+    DataObject(int _int);
     DataType type() const;
+    void setKey(std::string&& _key);
     void setKey(std::string const& _key);
     std::string const& getKey() const;
     std::string& getKeyUnsafe();
@@ -49,8 +56,9 @@ public:
     void addArrayObject(spDataObject const& _obj);
     DataObject& addSubObject(spDataObject const& _obj);
 
+    DataObject& addSubObject(std::string&& _key, spDataObject const& _obj);
     DataObject& addSubObject(std::string const& _key, spDataObject const& _obj);
-    void setSubObjectKey(size_t _index, std::string const& _key);
+    void setSubObjectKey(size_t _index, std::string&& _key);
     void setKeyPos(std::string const& _key, size_t _pos);
 
     bool count(std::string const& _key) const;
@@ -64,18 +72,20 @@ public:
     bool operator==(bool _value) const;
     bool operator==(DataObject const& _value) const;
     DataObject& operator[](std::string const& _key);
+    DataObject& operator[](std::string&& _key);
     DataObject& operator=(DataObject const& _value) = delete;
     //DataObject& operator=(spDataObject const& _value);
     spDataObject copy() const;
     void copyFrom(DataObject const& _other);
+    DataObject& operator=(std::string&& _value);
     DataObject& operator=(std::string const& _value);
     DataObject& operator=(int _value);
 
-    void setString(string const& _value);
+    void setString(string&& _value);
     void setInt(int _value);
     void setBool(bool _value);
     void replace(DataObject const& _value);
-    void renameKey(std::string const& _currentKey, std::string const& _newKey);
+    void renameKey(std::string const& _currentKey, std::string&& _newKey);
     void removeKey(std::string const& _key);  // vector<element> erase method with `replace()` function
 
     DataObject const& atKey(std::string const& _key) const;
@@ -116,8 +126,8 @@ public:
 
 private:
 
-    DataObject& _addSubObject(spDataObject const& _obj, string const& _keyOverwrite = string());
-    void _assert(bool _flag, std::string const& _comment = "") const;
+    DataObject& _addSubObject(spDataObject const& _obj, string&& _keyOverwrite = string());
+    void _assert(bool _flag, std::string const& _comment = string()) const;
 
     // Use vector here to be able to quickly find insert position
     // of objects to be ordered by it's key with findOrderedKeyPosition

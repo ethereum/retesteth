@@ -21,7 +21,9 @@ StateTestTransaction::StateTestTransaction(DataObject const& _data)
                     {"to", {{DataType::String}, jsonField::Required}},
                     {"maxFeePerGas", {{DataType::String}, jsonField::Required}},
                     {"maxPriorityFeePerGas", {{DataType::String}, jsonField::Required}},
-                    {"secretKey", {{DataType::String}, jsonField::Required}}});
+                    {"secretKey", {{DataType::String}, jsonField::Required}},
+                    {"sender", {{DataType::String}, jsonField::Optional}}
+                });
             // EIP 1559 style transaction
             m_maxFeePerGas = spVALUE(new VALUE(_data.atKey("maxFeePerGas")));
             m_maxPriorityFeePerGas = spVALUE(new VALUE(_data.atKey("maxPriorityFeePerGas")));
@@ -37,7 +39,9 @@ StateTestTransaction::StateTestTransaction(DataObject const& _data)
                     {"nonce", {{DataType::String}, jsonField::Required}},
                     {"value", {{DataType::Array}, jsonField::Required}},
                     {"to", {{DataType::String}, jsonField::Required}},
-                    {"secretKey", {{DataType::String}, jsonField::Required}}});
+                    {"secretKey", {{DataType::String}, jsonField::Required}},
+                    {"sender", {{DataType::String}, jsonField::Optional}}
+                });
             // Legacy and access list style transaction
             m_gasPrice = spVALUE(new VALUE(_data.atKey("gasPrice")));
         }

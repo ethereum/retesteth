@@ -2,6 +2,7 @@
 #include <retesteth/testStructures/Common.h>
 #include <mutex>
 std::mutex g_staticDeclaration_clientConfigID;
+std::mutex g_staticDeclaration_translateNetworks_static;
 namespace test
 {
 ClientConfigID::ClientConfigID()
@@ -16,6 +17,7 @@ ClientConfig::ClientConfig(fs::path const& _clientConfigPath) : m_id(ClientConfi
 {
     try
     {
+        fs::path const default_ClientConfigPath = _clientConfigPath.parent_path() / "default";
         TestOutputHelper::get().setCurrentTestInfo(TestInfo("Client Config init"));
         fs::path configFile = _clientConfigPath / "config";
         ETH_FAIL_REQUIRE_MESSAGE(fs::exists(configFile), string("Client config not found: ") + configFile.c_str());
@@ -40,6 +42,7 @@ ClientConfig::ClientConfig(fs::path const& _clientConfigPath) : m_id(ClientConfi
 
         // Load genesis templates from default dir if not set in this folder
         fs::path genesisTemplatePath = _clientConfigPath / "genesis";
+        fs::path default_genesisTemplatePath = default_ClientConfigPath / "genesis";
         if (!fs::exists(genesisTemplatePath))
         {
             genesisTemplatePath = _clientConfigPath.parent_path() / "default" / "genesis";
@@ -49,7 +52,20 @@ ClientConfig::ClientConfig(fs::path const& _clientConfigPath) : m_id(ClientConfi
         // Load genesis templates
         for (auto const& net : cfgFile().allowedForks())
         {
-            fs::path configGenesisTemplatePath = genesisTemplatePath / (net.asString() + ".json");
+            fs::path const configGenesisTemplatePath = genesisTemplatePath / (net.asString() + ".json");
+            if (!fs::exists(configGenesisTemplatePath))
+            {
+                // try to load default option instead, if genesis folder exists but overrides only a few defaults
+                fs::path const default_configGenesisTemplatePath = default_genesisTemplatePath / (net.asString() + ".json");
+                ETH_FAIL_REQUIRE_MESSAGE(fs::exists(default_genesisTemplatePath), "default/genesis client config not found!");
+                if (fs::exists(default_configGenesisTemplatePath))
+                {
+                    m_genesisTemplate[net] = test::readJsonData(default_configGenesisTemplatePath);
+                    continue;
+                }
+                else
+                    ETH_WARNING(string("Tried to load default config unsuccessfull: ") + default_configGenesisTemplatePath.c_str());
+            }
             ETH_FAIL_REQUIRE_MESSAGE(fs::exists(configGenesisTemplatePath),
                 "\ntemplate '" + net.asString() + ".json' for client '" +
                     _clientConfigPath.stem().string() + "' not found ('" +
@@ -98,23 +114,28 @@ bool ClientConfig::checkForkAllowed(FORK const& _net) const
     return cfgFile().allowedForks().count(_net);
 }
 
+bool ClientConfig::checkForkInProgression(FORK const& _net) const
+{
+    return cfgFile().forkProgressionAsSet().count(_net);
+}
+
 /// translate network names in expect section field
 /// >Homestead to EIP150, EIP158, Byzantium, ...
 /// <=Homestead to Frontier, Homestead
-std::vector<FORK> ClientConfig::translateNetworks(set<string> const& _networks, std::vector<FORK> const& _netOrder)
+void ClientConfig::translateNetworks(set<string> const& _networks, std::vector<FORK> const& _netOrder, std::vector<FORK>& _out)
 {
+    std::lock_guard<std::mutex> lock(g_staticDeclaration_translateNetworks_static);
     // Construct vector with test network names in a right order
     // (from Frontier to Homestead ... to Constantinople)
     // According to fork order in config file
 
     // Protection from putting double networks.
     // Use vector instead of set to keep the fork order
-    std::vector<FORK> out;
-    auto addNet = [&out](FORK const& _el) {
-        for (auto const& fork : out)
+    auto addNet = [&_out](FORK const& _el) {
+        for (auto const& fork : _out)
             if (fork == _el)
                 return;
-        out.push_back(_el);
+        _out.push_back(_el);
     };
 
     for (auto const& net : _networks)
@@ -158,7 +179,7 @@ std::vector<FORK> ClientConfig::translateNetworks(set<string> const& _networks, 
             }
             else if (net[0] == '<' && net[1] == '=')
             {
-                out.push_back(*it);
+                _out.push_back(*it);
                 while (it != forkOrder.begin())
                 {
                     addNet(*(--it));
@@ -171,12 +192,12 @@ std::vector<FORK> ClientConfig::translateNetworks(set<string> const& _networks, 
         if (!isNetworkTranslated)
             addNet(net);
     }
-    return out;
 }
 
 std::vector<FORK> ClientConfig::translateNetworks(set<string> const& _networks) const
 {
-    std::vector<FORK> nets = ClientConfig::translateNetworks(_networks, cfgFile().forks());
+    std::vector<FORK> nets;
+    ClientConfig::translateNetworks(_networks, cfgFile().forks(), nets);
     for (auto const& net : nets)
         validateForkAllowed(net);
     return nets;

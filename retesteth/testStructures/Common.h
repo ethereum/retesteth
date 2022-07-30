@@ -75,5 +75,8 @@ void readExpectExceptions(DataObject const& _data, std::map<FORK, string>& _out)
 // Marco move subpointer from key _key in _dataobject
 #define MOVE(_dataobject, _key) dataobject::move((*_dataobject).atKeyPointerUnsafe(_key))
 
+// Convert Secret Key to Public eth key
+spFH20 convertSecretToPublic(spFH32 const& _secret);
+
 }  // namespace teststruct
 }  // namespace test

@@ -96,7 +96,7 @@ void TestBlockchainManager::syncOnRemoteClient(DataObject& _exportBlocksSection)
 
             m_session.test_importRawBlock(std::get<0>(rlpAndException));
             string const& canonExcept = std::get<1>(rlpAndException);
-            bool isValid = chain.checkBlockException(canonExcept);  // Check on canon exception
+            bool isValid = chain.checkBlockException(m_session, canonExcept);  // Check on canon exception
             if (!isValid)
             {
                 DataObject& testObj = _exportBlocksSection.atUnsafe(ind);
@@ -198,6 +198,10 @@ spBlockHeader TestBlockchainManager::prepareUncle(
         size_t sameAsPreviuousBlockUncle = _uncleSectionInTest.sameAsPreviousBlockUncle();
         ETH_ERROR_REQUIRE_MESSAGE(currentChainMining.getBlocks().size() > sameAsPreviuousBlockUncle,
             "Trying to copy uncle from unregistered block with sameAsPreviuousBlockUncle!");
+
+        if (!currentChainMining.getBlocks().at(sameAsPreviuousBlockUncle).isThereTestHeader())
+            ETH_FAIL_MESSAGE("SameAsPreviousBlockUncle::Trying to get Uncles from invalid block#" +  test::fto_string(sameAsPreviuousBlockUncle));
+
         ETH_ERROR_REQUIRE_MESSAGE(
             currentChainMining.getBlocks().at(sameAsPreviuousBlockUncle).getUncles().size() > 0,
             "Previous block has no uncles!");

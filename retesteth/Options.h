@@ -51,6 +51,7 @@ public:
     bool fillchain = false; ///< Fill tests as a blockchain tests if possible
     bool stats = false;     ///< Execution time and stats for state tests
     bool poststate = false;
+    bool nologcolor = false;
     std::string statsOutFile; ///< Stats output file. "out" for standard output
     fs::path datadir;         ///< Path to datadir (~/.retesteth)
     std::vector<IPADDRESS> nodesoverride;  ///< ["IP:port", ""IP:port""] array
@@ -71,6 +72,7 @@ public:
     /// Test selection
 	/// @{
 	bool singleTest = false;
+    boost::optional<std::string> customTestFolder;  // --testfolder run unregistered tests
     boost::optional<std::string> singleTestFile;    // --testfile run a single file
     boost::optional<std::string> singleTestOutFile; // --testfile run a single file filler output
     std::string singleTestName;     // A test name (usually a file.json test)

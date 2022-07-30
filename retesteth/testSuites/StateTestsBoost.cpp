@@ -2,7 +2,7 @@
 #include "retesteth/TestOutputHelper.h"
 #include "retesteth/testSuites/StateTests.h"
 #include "retesteth/testSuites/TestFixtures.h"
-#include <retesteth/TestSuite.h>
+#include <retesteth/testSuiteRunner/TestSuite.h>
 #include <boost/test/unit_test.hpp>
 
 using namespace std;
@@ -134,6 +134,12 @@ BOOST_AUTO_TEST_CASE(stEIP3607) {}
 
 // Heavy
 BOOST_AUTO_TEST_CASE(stTimeConsuming) {}
+
+// Retesteth unit tests
+using StateTestsRetestethUnit = TestFixture<StateTestSuite, RequireOptionFill>;
+BOOST_FIXTURE_TEST_SUITE(Retesteth, StateTestsRetestethUnit)
+BOOST_AUTO_TEST_CASE(stExpectSection) {}
+BOOST_AUTO_TEST_SUITE_END()
 
 // Converted VMTests
 using GeneralStateTestsVMFixture = TestFixture<StateTestVMSuite, DefaultFlags>;

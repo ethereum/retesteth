@@ -85,15 +85,38 @@ StateTestFillerExpectSection::StateTestFillerExpectSection(spDataObjectMove _dat
     {
         m_initialData = _data.getPointer();
         REQUIRE_JSONFIELDS(m_initialData, "StateTestFillerExpectSection " + m_initialData->getKey(),
-            {{"indexes", {{DataType::Object}, jsonField::Required}},
+            {{"indexes", {{DataType::Object}, jsonField::Optional}},
                 {"network", {{DataType::Array}, jsonField::Required}},
                 {"expectException", {{DataType::Object}, jsonField::Optional}},
                 {"result", {{DataType::Object}, jsonField::Required}}});
 
-        spDataObject dataIndexes = ReplaceValueToIndexesInDataList(_gtr, m_initialData->atKey("indexes").atKey("data"));
-        parseJsonIntValueIntoSet(dataIndexes, m_dataInd);
-        parseJsonIntValueIntoSet(m_initialData->atKey("indexes").atKey("gas"), m_gasInd);
-        parseJsonIntValueIntoSet(m_initialData->atKey("indexes").atKey("value"), m_valInd);
+        // Parse Indexes
+        if (m_initialData->count("indexes"))
+        {
+            if (m_initialData->atKey("indexes").count("data"))
+            {
+                spDataObject dataIndexes = ReplaceValueToIndexesInDataList(_gtr, m_initialData->atKey("indexes").atKey("data"));
+                parseJsonIntValueIntoSet(dataIndexes, m_dataInd);
+            }
+            else
+                m_dataInd.emplace(-1);
+
+            if (m_initialData->atKey("indexes").count("gas"))
+                parseJsonIntValueIntoSet(m_initialData->atKey("indexes").atKey("gas"), m_gasInd);
+            else
+                m_gasInd.emplace(-1);
+
+            if (m_initialData->atKey("indexes").count("value"))
+                parseJsonIntValueIntoSet(m_initialData->atKey("indexes").atKey("value"), m_valInd);
+            else
+                m_valInd.emplace(-1);
+        }
+        else
+        {
+            m_dataInd.emplace(-1);
+            m_gasInd.emplace(-1);
+            m_valInd.emplace(-1);
+        }
 
         ETH_ERROR_REQUIRE_MESSAGE(m_dataInd.size() > 0, "Expect section `indexes::data` is empty!");
         ETH_ERROR_REQUIRE_MESSAGE(m_gasInd.size() > 0, "Expect section `indexes::gas` is empty!");

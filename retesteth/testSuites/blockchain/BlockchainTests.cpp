@@ -160,6 +160,7 @@ BOOST_AUTO_TEST_CASE(bcValidBlockTest) {}
 BOOST_AUTO_TEST_CASE(bcWalletTest) {}
 BOOST_AUTO_TEST_CASE(bcExample) {}
 BOOST_AUTO_TEST_CASE(bcEIP1559) {}
+BOOST_AUTO_TEST_CASE(bcEIP3675) {}
 
 BOOST_AUTO_TEST_SUITE_END() // ValidBlocks
 
@@ -175,6 +176,7 @@ BOOST_AUTO_TEST_CASE(bcUncleSpecialTests) {}
 BOOST_AUTO_TEST_CASE(bcUncleTest) {}
 BOOST_AUTO_TEST_CASE(bcExample) {}
 BOOST_AUTO_TEST_CASE(bcEIP1559) {}
+BOOST_AUTO_TEST_CASE(bcEIP3675) {}
 BOOST_AUTO_TEST_SUITE_END()
 
 using BCInValidSuiteFixture2 = TestFixture<BlockchainTestInvalidSuite, RequireOptionFill>;
@@ -191,6 +193,7 @@ BOOST_AUTO_TEST_CASE(bcFrontierToHomestead) {}
 BOOST_AUTO_TEST_CASE(bcHomesteadToDao) {}
 BOOST_AUTO_TEST_CASE(bcHomesteadToEIP150) {}
 BOOST_AUTO_TEST_CASE(bcBerlinToLondon) {}
+BOOST_AUTO_TEST_CASE(bcArrowGlacierToMerge) {}
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -33,11 +33,11 @@
 #include <retesteth/Options.h>
 #include <retesteth/TestHelper.h>
 #include <retesteth/TestOutputHelper.h>
-#include <retesteth/TestSuite.h>
 #include <retesteth/session/Session.h>
 #include <retesteth/testStructures/Common.h>
 #include <retesteth/testStructures/PrepareChainParams.h>
 #include <retesteth/testStructures/structures.h>
+#include <retesteth/testSuiteRunner/TestSuite.h>
 #include <retesteth/testSuites/Common.h>
 #include <retesteth/testSuites/StateTests.h>
 #include <retesteth/testSuites/blockchain/BlockchainTests.h>
@@ -180,7 +180,12 @@ spDataObject FillTestAsBlockchain(StateTestInFiller const& _test)
                     (*block).atKeyPointer("blockHeader") = remoteBlock.header()->asDataObject();
                     (*block).atKeyPointer("transactions") = spDataObject(new DataObject(DataType::Array));
                     if (testException.empty())
+                    {
                         (*block)["transactions"].addArrayObject(tr.transaction()->asDataObject());
+                        auto sender = _test.GeneralTr().getSender();
+                        if (!sender.isEmpty())
+                            (*block)["transactions"].atLastElementUnsafe()["sender"] = sender->asString();
+                    }
                     (*block).atKeyPointer("uncleHeaders") = spDataObject(new DataObject(DataType::Array));
 
                     if (!testException.empty())
@@ -199,6 +204,7 @@ spDataObject FillTestAsBlockchain(StateTestInFiller const& _test)
                     if (filledTest->count(_test.testName() + dataPostfix))
                         ETH_ERROR_MESSAGE("The test filler contain redundunt expect section: " + _test.testName() + dataPostfix);
 
+                    verifyFilledTest(_test.unitTestVerifyBC(), aBlockchainTest, fork);
                     (*filledTest).atKeyPointer(_test.testName() + dataPostfix) = aBlockchainTest;
                     session.test_rewindToBlock(0);
                 }  // txs
@@ -220,11 +226,6 @@ spDataObject FillTest(StateTestInFiller const& _test)
     if (_test.hasInfo())
         (*filledTest).atKeyPointer("_info") = _test.Info().rawData();
     (*filledTest).atKeyPointer("env") = _test.Env().asDataObject();
-
-    // Explicitly print default basefee for filled state tests
-    if (!filledTest->atKey("env").count("currentBaseFee"))
-        (*filledTest)["env"]["currentBaseFee"] = "0x0a";
-
     (*filledTest).atKeyPointer("pre") = _test.Pre().asDataObject();
     (*filledTest).atKeyPointer("transaction") = _test.GeneralTr().asDataObject();
 
@@ -234,7 +235,15 @@ spDataObject FillTest(StateTestInFiller const& _test)
     {
         // Fill up the label map to tx.data
         if (!tx.transaction()->dataLabel().empty())
-            (*filledTest)["_info"]["labels"].addSubObject(spDataObject(new DataObject(tx.dataIndS(), tx.transaction()->dataLabel())));
+        {
+            static string const removePrefix = ":label ";
+            string label = tx.transaction()->dataLabel();
+            size_t const pos = label.find(removePrefix);
+            if (pos != string::npos)
+                label.erase(pos, removePrefix.length());
+            if (!(*filledTest)["_info"]["labels"].count(tx.dataIndS()))
+                (*filledTest)["_info"]["labels"].addSubObject(spDataObject(new DataObject(tx.dataIndS(), label)));
+        }
     }
 
     // run transactions on all networks that we need
@@ -251,8 +260,11 @@ spDataObject FillTest(StateTestInFiller const& _test)
         spDataObject forkResults;
         (*forkResults).setKey(fork.asString());
 
-        auto const p = prepareChainParams(fork, SealEngine::NoReward, _test.Pre(), _test.Env(), ParamsContext::StateTests);
-        session.test_setChainParams(p);
+        if (!networkSkip)
+        {
+            auto const p = prepareChainParams(fork, SealEngine::NoReward, _test.Pre(), _test.Env(), ParamsContext::StateTests);
+            session.test_setChainParams(p);
+        }
 
         // Run transactions for defined expect sections only
         for (auto const& expect : _test.Expects())
@@ -334,13 +346,14 @@ spDataObject FillTest(StateTestInFiller const& _test)
 
                     (*forkResults).addArrayObject(transactionResults);
                     session.test_rewindToBlock(VALUE(0));
-                }
+                }  // tx
+
                 if (expectFoundTransaction == false)
                 {
                     ETH_ERROR_MESSAGE("Expect section does not cover any transaction: \n" + expect.initialData().asJson() +
                                       "\n" + expect.result().asDataObject()->asJson());
                 }
-            }
+            }  // expect has fork
         }
 
         if (forkResults->getSubObjects().size() > 0)
@@ -348,6 +361,7 @@ spDataObject FillTest(StateTestInFiller const& _test)
     }
 
     checkUnexecutedTransactions(txs);
+    verifyFilledTest(_test.unitTestVerify(), filledTest);
     return filledTest;
 }
 
@@ -371,7 +385,7 @@ void RunTest(StateTestInFilled const& _test)
         auto res = std::find_if(txs.begin(), txs.end(),
             [&_infoLabels](TransactionInGeneralSection const& el) { return el.dataIndS() == _infoLabels.first; });
         if (res != txs.end())
-            (*res).assignTransactionLabel(_infoLabels.second);
+            (*res).assignTransactionLabel(":label " + _infoLabels.second);
         else
             ETH_WARNING("Test `_info` section has a label with tr.index that was not found!");
     }
@@ -525,14 +539,6 @@ spDataObject StateTestSuite::doTests(spDataObject& _input, TestSuiteOptions& _op
         {
             TestOutputHelper::get().setCurrentTestInfo(TestInfo("Parsing generalstate test"));
             TestOutputHelper::get().setCurrentTestName("----");
-            if (_opt.isLegacyTests)
-            {
-                // Change the tests instead??
-                DataObject& _inputRef = _input.getContent();
-                DataObject& _infoRef = _inputRef.getSubObjectsUnsafe().at(0).getContent().atKeyUnsafe("_info");
-                _infoRef.renameKey("filledwith", "filling-rpc-server");
-                _infoRef["filling-tool-version"] = "testeth";
-            }
             GeneralStateTest filledTest(_input);
 
             // Just check the test structure if running with --checkhash

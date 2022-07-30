@@ -9,6 +9,7 @@
 
 #include <retesteth/testStructures/types/StateTests/Filler/StateTestFillerEnv.h>
 #include <retesteth/testStructures/types/Ethereum/State.h>
+#include <retesteth/ExitHandler.h>
 
 using namespace test;
 namespace fs = boost::filesystem;
@@ -40,6 +41,9 @@ spDataObject FillTest(DifficultyTestInFiller const& _test)
     size_t i = 0;
     for (auto const& fork : _test.networks())
     {
+        if (ExitHandler::receivedExitSignal())
+            break;
+
         // Skip by --singlenet option
         bool networkSkip = false;
         Options const& opt = Options::get();
@@ -60,6 +64,8 @@ spDataObject FillTest(DifficultyTestInFiller const& _test)
                 {
                     for (auto const& un : _test.uncles())
                     {
+                        if (ExitHandler::receivedExitSignal())
+                            break;
                         string const testname = _test.testName() + "-" + test::fto_string(i++);
                         (*filledTestNetwork).atKeyPointer(testname) = makeTest(fork, bn, td, pd, un);
                     }
@@ -81,6 +87,8 @@ void RunTest(DifficultyTestInFilled const& _test)
     {
         for (auto const& el : v.second)
         {
+            if (ExitHandler::receivedExitSignal())
+                break;
             VALUE const res = session.test_calculateDifficulty(
                 v.first, el.currentBlockNumber, el.parentTimestamp, el.parentDifficulty, el.currentTimestamp, el.parentUncles);
             ETH_ERROR_REQUIRE_MESSAGE(res == el.currentDifficulty, _test.testName() + "/" + el.testVectorName +
@@ -105,6 +113,8 @@ spDataObject DifficultyTestSuite::doTests(spDataObject& _input, TestSuiteOptions
 
         for (auto const& test : filler.tests())
         {
+            if (ExitHandler::receivedExitSignal())
+                break;
             (*filledTest).addSubObject(test.testName(), FillTest(test));
             TestOutputHelper::get().registerTestRunSuccess();
         }
@@ -119,6 +129,8 @@ spDataObject DifficultyTestSuite::doTests(spDataObject& _input, TestSuiteOptions
 
         for (auto const& test : filledTest.tests())
         {
+            if (ExitHandler::receivedExitSignal())
+                break;
             RunTest(test);
             TestOutputHelper::get().registerTestRunSuccess();
         }
@@ -149,6 +161,7 @@ BOOST_AUTO_TEST_CASE(dfConstantinople) {}
 BOOST_AUTO_TEST_CASE(dfEIP2384) {}
 BOOST_AUTO_TEST_CASE(dfExample) {}
 BOOST_AUTO_TEST_CASE(dfFrontier) {}
+BOOST_AUTO_TEST_CASE(dfGrayGlacier) {}
 BOOST_AUTO_TEST_CASE(dfHomestead) {}
 
 BOOST_AUTO_TEST_SUITE_END()

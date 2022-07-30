@@ -49,15 +49,17 @@ public:
 
     // Path to name.sh file for IPC client initialization
     fs::path const getShellPath() const { return cfgFile().shell(); }
+    fs::path const getConfigPath() const { return cfgFile().path(); }
 
     // Functionality
     // Verify FORK is allowed by Fork + AdditionalForks and throw an error if not
     bool validateForkAllowed(FORK const& _net, bool _bail = true) const;
     bool checkForkAllowed(FORK const& _net) const;
+    bool checkForkInProgression(FORK const& _net) const;
 
     // Translate smart network names into network names ( `<=Homestead` to `Frontier, Homestead`)
     std::vector<FORK> translateNetworks(set<string> const& _networks) const;
-    static std::vector<FORK> translateNetworks(set<string> const& _networks, std::vector<FORK> const& _netOrder);
+    static void translateNetworks(set<string> const& _networks, std::vector<FORK> const& _netOrder, std::vector<FORK>& _out);
 
     // Translate exceptionID from tests into client error string from configs
     // Print suggestions if no match found
@@ -85,7 +87,7 @@ private:
     ClientConfigID m_id;                                ///< Internal id
     GCP_SPointer<ClientConfigFile> m_clientConfigFile;  ///< <clientname>/config file
     std::map<FORK, spVALUE> m_correctReward;            ///< Correct mining reward info for StateTests->BlockchainTests
-    std::map<FORK, spDataObject> m_genesisTemplate;       ///< Template For test_setChainParams
+    std::map<FORK, spDataObject> m_genesisTemplate;     ///< Template For test_setChainParams
     fs::path m_correctMiningRewardPath;                 ///< Path to correct mining reward info file
 
     bool m_initialized = false;    ///< If setup script has run

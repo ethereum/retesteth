@@ -34,7 +34,10 @@ std::vector<TransactionInGeneralSection> StateTestTransactionBase::buildTransact
                     (*trData)["to"] = "";
                 else
                     (*trData)["to"] = m_to->asString();
+
                 (*trData)["secretKey"] = m_secretKey->asString();
+                if (!m_publicKey.isEmpty())
+                    (*trData)["sender"] = m_publicKey->asString();
 
                 // EIP 1559
                 if (!m_maxPriorityFeePerGas.isEmpty())

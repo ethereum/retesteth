@@ -1,18 +1,18 @@
 /*
-	This file is part of cpp-ethereum.
+    This file is part of cpp-ethereum.
 
-	cpp-ethereum is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
+    cpp-ethereum is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
-	cpp-ethereum is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
+    cpp-ethereum is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
 
-	You should have received a copy of the GNU General Public License
-	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
+    You should have received a copy of the GNU General Public License
+    along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
  */
 /** @file
  * A base class for test suites
@@ -20,21 +20,27 @@
 
 #pragma once
 #include <dataObject/DataObject.h>
+#include <libdevcore/SHA3.h>
 #include <boost/filesystem/path.hpp>
 #include <functional>
 using namespace dataobject;
+namespace fs = boost::filesystem;
 
 namespace test
 {
+extern string const c_fillerPostf;
+extern string const c_copierPostf;
 
 class TestSuite
 {
 protected:
     virtual bool legacyTestSuiteFlag() const { return false; }
+
 private:
     // Execute Test.json file
     void executeFile(boost::filesystem::path const& _file) const;
     std::string checkFillerExistance(std::string const& _testFolder) const;
+
     struct BoostPath
     {
         BoostPath(boost::filesystem::path _path) : m_path(_path) {}
@@ -51,14 +57,8 @@ public:
 
     struct TestSuiteOptions
     {
-        TestSuiteOptions()
-          : doFilling(false),
-            disableSecondRun(false),
-            allowInvalidBlocks(false),
-            isLegacyTests(false)
-        {}
+        TestSuiteOptions() : doFilling(false), allowInvalidBlocks(false), isLegacyTests(false) {}
         bool doFilling;           // pass the filling flag to doTest function
-        bool disableSecondRun;    // disable running the test after filling is done
         bool allowInvalidBlocks;  // allow and check malicious blocks
         bool isLegacyTests;       // running old generated tests
     };
@@ -74,9 +74,9 @@ public:
         FillerPath(boost::filesystem::path _path) : BoostPath(_path) {}
     };
 
-    struct AbsoluteTestPath : BoostPath
+    struct AbsoluteFilledTestPath : BoostPath
     {
-        AbsoluteTestPath(boost::filesystem::path _path) : BoostPath(_path) {}
+        AbsoluteFilledTestPath(boost::filesystem::path _path) : BoostPath(_path) {}
     };
 
     struct AbsoluteFillerPath : BoostPath
@@ -95,17 +95,17 @@ public:
     // If the src test does not end up with either Filler.json or Copier.json an exception occurs.
     void runAllTestsInFolder(std::string const& _testFolder) const;
 
-	// Execute Filler.json or Copier.json test file in a given folder
-	void executeTest(std::string const& _testFolder, boost::filesystem::path const& _jsonFileName) const;
+    // Execute Filler.json or Copier.json test file in a given folder
+    void executeTest(std::string const& _testFolder, boost::filesystem::path const& _jsonFileName) const;
 
-	// Execute Test.json file
-	void runTestWithoutFiller(boost::filesystem::path const& _file) const;
+    // Execute Test.json file
+    void runTestWithoutFiller(boost::filesystem::path const& _file) const;
 
-	// Return full path to folder for tests from _testFolder
+    // Return full path to folder for tests from _testFolder
     AbsoluteFillerPath getFullPathFiller(std::string const& _testFolder) const;
 
     // Structure  <suiteFolder>/<testFolder>/<test>.json
-    AbsoluteTestPath getFullPath(std::string const& _testFolder) const;
+    AbsoluteFilledTestPath getFullPathFilled(std::string const& _testFolder) const;
 
     //
     static void runFunctionForAllClients(std::function<void()> _func);
@@ -117,7 +117,11 @@ protected:
     // A folder of the test suite in src folder. like "VMTestsFiller". should be implemented for
     // each test suite.
     virtual FillerPath suiteFillerFolder() const = 0;
+
+private:
+    void _executeTest(std::string const& _testFolder, boost::filesystem::path const& _jsonFileName) const;
+    bool _fillTest(fs::path const& _fillerTestFilePath, AbsoluteFilledTestPath const& _outputTestFilePath) const;
+    void _runTest(AbsoluteFilledTestPath const& _filledTestPath) const;
 };
 
-}
-
+}  // namespace test

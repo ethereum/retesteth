@@ -4,6 +4,7 @@
 #include <libdevcore/SHA3.h>
 #include <libdevcrypto/Common.h>
 #include <retesteth/EthChecks.h>
+#include <retesteth/Options.h>
 #include <retesteth/TestHelper.h>
 #include <retesteth/testStructures/Common.h>
 
@@ -34,6 +35,7 @@ void TransactionLegacy::fromDataObject(DataObject const& _data)
                 {"value", {{DataType::String}, jsonField::Required}},
                 {"to", {{DataType::String, DataType::Null}, jsonField::Required}},
                 {"secretKey", {{DataType::String}, jsonField::Optional}},
+                {"sender", {{DataType::String}, jsonField::Optional}},
                 {"v", {{DataType::String}, jsonField::Optional}},
                 {"r", {{DataType::String}, jsonField::Optional}},
                 {"s", {{DataType::String}, jsonField::Optional}},
@@ -41,6 +43,7 @@ void TransactionLegacy::fromDataObject(DataObject const& _data)
                 {"publicKey", {{DataType::String}, jsonField::Optional}},  // Besu EthGetBlockBy transaction
                 {"raw", {{DataType::String}, jsonField::Optional}},        // Besu EthGetBlockBy transaction
                 {"chainId", {{DataType::String}, jsonField::Optional}},    // Besu EthGetBlockBy transaction
+                {"type", {{DataType::String}, jsonField::Optional}},       // Besu EthGetBlockBy transaction
 
                 {"blockHash", {{DataType::String}, jsonField::Optional}},         // EthGetBlockBy transaction
                 {"blockNumber", {{DataType::String}, jsonField::Optional}},       // EthGetBlockBy transaction
@@ -138,20 +141,39 @@ void TransactionLegacy::streamHeader(dev::RLPStream& _s) const
 
 void TransactionLegacy::buildVRS(VALUE const& _secret)
 {
+    const int chainID = Options::getCurrentConfig().cfgFile().chainID();
     m_secretKey = spVALUE(new VALUE(_secret));
     dev::RLPStream stream;
-    stream.appendList(6);
+    stream.appendList((chainID == 1) ? 6 : 9);
     streamHeader(stream);
-    dev::h256 hash(dev::sha3(stream.out()));
-    dev::Signature sig = dev::sign(dev::Secret(_secret.asString()), hash);
+    if (chainID != 1)
+    {
+        stream << VALUE(chainID).serializeRLP();
+        stream << VALUE(0).serializeRLP();
+        stream << VALUE(0).serializeRLP();
+    }
+
+    const dev::h256 hash(dev::sha3(stream.out()));
+    const dev::Secret secret(_secret.asString());
+    dev::Signature sig = dev::sign(secret, hash);
     dev::SignatureStruct sigStruct = *(dev::SignatureStruct const*)&sig;
     ETH_FAIL_REQUIRE_MESSAGE(
         sigStruct.isValid(), TestOutputHelper::get().testName() + " Could not construct transaction signature!");
 
     // 27 because devcrypto signing donesn't count chain id
-    bigint v (dev::toCompactHexPrefixed(dev::u256(sigStruct.v + 27)));
-    bigint r (dev::toCompactHexPrefixed(dev::u256(sigStruct.r)));
-    bigint s (dev::toCompactHexPrefixed(dev::u256(sigStruct.s)));
+    // https://github.com/ethereum/EIPs/blob/master/EIPS/eip-155.md
+
+    bigint v;
+    if (chainID == 1)
+        v = bigint(dev::toCompactHexPrefixed(dev::u256(sigStruct.v + 27)));
+    else
+    {
+        // {0,1} + CHAIN_ID * 2 + 35
+        v = bigint(dev::toCompactHexPrefixed(dev::u256(sigStruct.v + chainID * 2 + 35)));
+    }
+
+    const bigint r (dev::toCompactHexPrefixed(dev::u256(sigStruct.r)));
+    const bigint s (dev::toCompactHexPrefixed(dev::u256(sigStruct.s)));
     m_v = spVALUE(new VALUE(v));
     m_r = spVALUE(new VALUE(r));
     m_s = spVALUE(new VALUE(s));
@@ -159,7 +181,6 @@ void TransactionLegacy::buildVRS(VALUE const& _secret)
     (*m_rawData)["v"] = m_v->asString();
     (*m_rawData)["r"] = m_r->asString();
     (*m_rawData)["s"] = m_s->asString();
-
     rebuildRLP();
 }
 
@@ -170,6 +191,9 @@ const spDataObject TransactionLegacy::asDataObject(ExportOrder _order) const
     // Cache output data so not to construct it multiple times
     // Useful when filling the tests as this function is called 2-3 times for each tr
     // Promise that after constructor the data does not change
+
+    // TODO: UPDATE for upper comment: not sure that m_rawData makes sense here as it potentially can be modified somewhere
+    // better to trade little serialization cpu time and have better code structure
     if (m_rawData->getSubObjects().size() == 0)
     {
         spDataObject out;

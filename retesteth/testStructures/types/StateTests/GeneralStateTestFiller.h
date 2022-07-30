@@ -24,6 +24,8 @@ struct StateTestInFiller : GCP_SPointerBase
     StateTestFillerTransaction const& GeneralTr() const { return m_transaction; }
     std::vector<StateTestFillerExpectSection> const& Expects() const { return m_expectSections; }
     std::set<FORK> getAllForksFromExpectSections() const;
+    DataObject const& unitTestVerify() const { return m_verify; }
+    DataObject const& unitTestVerifyBC() const { return m_verifyBC; }
 
 private:
     StateTestInFiller() {}
@@ -33,6 +35,8 @@ private:
     spState m_pre;
     GCP_SPointer<StateTestFillerTransaction> m_transaction;
     std::vector<StateTestFillerExpectSection> m_expectSections;
+    spDataObject m_verify;
+    spDataObject m_verifyBC;
 };
 
 struct GeneralStateTestFiller

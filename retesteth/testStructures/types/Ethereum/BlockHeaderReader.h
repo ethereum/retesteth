@@ -1,6 +1,7 @@
 #include "BlockHeader.h"
 #include "BlockHeader1559.h"
 #include "BlockHeaderLegacy.h"
+#include "BlockHeaderMerge.h"
 
 using namespace dataobject;
 using namespace test::teststruct;
