@@ -28,6 +28,7 @@ struct ClientConfigFile : GCP_SPointerBase
     string const& name() const { return m_name; }
     ClientConfgSocketType socketType() const { return m_socketType; }
     std::vector<IPADDRESS> const& socketAdresses() const;
+    std::map<string, fs::path> const& customCompilers() const { return m_customCompilers; }
     size_t initializeTime() const { return  m_initializeTime; }
     std::vector<FORK> const& forks() const { return m_forks; }
     std::vector<FORK> const& additionalForks() const { return m_additionalForks; }
@@ -45,11 +46,15 @@ struct ClientConfigFile : GCP_SPointerBase
 private:
     ClientConfigFile() {}
     void initWithData(DataObject const&);
+    void parseSocketType(DataObject const& _data, string const& _sErrorPath);
 
+private:
     // Inside the file
     string m_name;                           ///< Client name
     ClientConfgSocketType m_socketType;      ///< Connection type
     std::vector<IPADDRESS> m_socketAddress;  ///< List of IP to connect to (IP::PORT)
+
+    std::map<string, fs::path> m_customCompilers;
     bool m_checkLogsHash;                    ///< Enable logsHash verification
     int m_chanID;                            ///< Use custom chainID
 
