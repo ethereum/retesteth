@@ -94,7 +94,9 @@ std::vector<ClientConfig> const& Options::DynamicOptions::getClientConfigs()
     // Because can not initialize the configs while loading Options up
     if (m_clientConfigs.size() == 0)
     {
-        fs::path homeDir = getRetestethDataDir();
+        fs::path const homeDir = getRetestethDataDir();
+        ETH_STDOUT_MESSAGE(string("Retesteth config path: ") + homeDir.string());
+
         if (fs::exists(homeDir))
         {
             if (!fs::exists(homeDir / "version"))
