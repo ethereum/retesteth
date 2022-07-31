@@ -8,6 +8,22 @@ using namespace test::teststruct;
 std::mutex g_allowedForks_static_var;
 std::mutex g_forkProgressionAsSet_static_var;
 
+namespace
+{
+void requireJsonFileStructure(DataObject const& _data)
+{
+    // Limit sections in the file
+    REQUIRE_JSONFIELDS(_data, "ClientConfigFile " + _data.getKey(),
+        {{"name", {{DataType::String}, jsonField::Required}}, {"socketType", {{DataType::String}, jsonField::Required}},
+            {"socketAddress", {{DataType::String, DataType::Array}, jsonField::Required}},
+            {"customCompilers", {{DataType::Object}, jsonField::Optional}},
+            {"initializeTime", {{DataType::String}, jsonField::Optional}},
+            {"checkLogsHash", {{DataType::Bool}, jsonField::Optional}}, {"chainID", {{DataType::Integer}, jsonField::Optional}},
+            {"forks", {{DataType::Array}, jsonField::Required}}, {"additionalForks", {{DataType::Array}, jsonField::Required}},
+            {"exceptions", {{DataType::Object}, jsonField::Required}},
+            {"fieldReplace", {{DataType::Object}, jsonField::Optional}}});
+}
+}  // namespace
 
 namespace test
 {
@@ -24,24 +40,8 @@ ClientConfigFile::ClientConfigFile(fs::path const& _clientConfigPath)
     initWithData(test::readJsonData(m_configFilePath));
 }
 
-void ClientConfigFile::initWithData(DataObject const& _data)
+void ClientConfigFile::parseSocketType(DataObject const& _data, string const& _sErrorPath)
 {
-    // Limit sections in the file
-    REQUIRE_JSONFIELDS(_data, "ClientConfigFile " + _data.getKey(),
-        {{"name", {{DataType::String}, jsonField::Required}},
-            {"socketType", {{DataType::String}, jsonField::Required}},
-            {"socketAddress", {{DataType::String, DataType::Array}, jsonField::Required}},
-            {"initializeTime", {{DataType::String}, jsonField::Optional}},
-            {"checkLogsHash", {{DataType::Bool}, jsonField::Optional}},
-            {"chainID", {{DataType::Integer}, jsonField::Optional}},
-            {"forks", {{DataType::Array}, jsonField::Required}},
-            {"additionalForks", {{DataType::Array}, jsonField::Required}},
-            {"exceptions", {{DataType::Object}, jsonField::Required}},
-            {"fieldReplace", {{DataType::Object}, jsonField::Optional}}});
-
-    string const sErrorPath = "ClientConfig (" + m_configFilePath.string() + ") ";
-    m_name = _data.atKey("name").asString();
-
     // SocketTypes for client connection
     std::string const& socketTypeStr = _data.atKey("socketType").asString();
     if (socketTypeStr == "ipc")
@@ -53,19 +53,19 @@ void ClientConfigFile::initWithData(DataObject const& _data)
     else if (socketTypeStr == "tranition-tool")
         m_socketType = ClientConfgSocketType::TransitionTool;
     else
-        ETH_FAIL_MESSAGE(sErrorPath + "Unknown `socketType` : " + socketTypeStr +
+        ETH_FAIL_MESSAGE(_sErrorPath + "Unknown `socketType` : " + socketTypeStr +
                          ", Allowed: ['ipc', 'tcp', 'ipc-debug', 'transition-tool']");
 
     // SocketAddress is an array of ipaddresses or path to a socket file
     if (m_socketType == ClientConfgSocketType::TCP)
     {
         if (_data.atKey("socketAddress").getSubObjects().size() == 0)
-            ETH_FAIL_MESSAGE(sErrorPath + "socketAddress must be non empty array!");
+            ETH_FAIL_MESSAGE(_sErrorPath + "socketAddress must be non empty array!");
         for (auto const& el : _data.atKey("socketAddress").getSubObjects())
         {
             IPADDRESS addr(el);
             if (test::inArray(m_socketAddress, addr))
-                ETH_ERROR_MESSAGE(sErrorPath + "`socketAddress` section contain dublicate element: " + el->asString());
+                ETH_ERROR_MESSAGE(_sErrorPath + "`socketAddress` section contain dublicate element: " + el->asString());
             m_socketAddress.push_back(addr);
         }
     }
@@ -73,12 +73,12 @@ void ClientConfigFile::initWithData(DataObject const& _data)
     else if (m_socketType == ClientConfgSocketType::IPC)
     {
         if (_data.atKey("socketAddress").type() != DataType::String)
-            ETH_FAIL_MESSAGE(sErrorPath + "`socketAddress` must be string for this socketType!");
+            ETH_FAIL_MESSAGE(_sErrorPath + "`socketAddress` must be string for this socketType!");
         m_pathToExecFile = fs::path(_data.atKey("socketAddress").asString());
         if (!fs::exists(m_pathToExecFile))
             m_pathToExecFile = m_configFilePath.parent_path() / m_pathToExecFile;  // try relative path
         if (!fs::exists(m_pathToExecFile))
-            ETH_FAIL_MESSAGE(sErrorPath +
+            ETH_FAIL_MESSAGE(_sErrorPath +
                              "`socketAddress` for socketType::ipc must point to a shell script, "
                              "that runs a client instance! " +
                              "But file `" + m_pathToExecFile.string() + "` not found!");
@@ -87,26 +87,36 @@ void ClientConfigFile::initWithData(DataObject const& _data)
     else if (m_socketType == ClientConfgSocketType::IPCDebug)
     {
         if (_data.atKey("socketAddress").type() != DataType::String)
-            ETH_FAIL_MESSAGE(sErrorPath + "`socketAddress` must be string for this socketType!");
+            ETH_FAIL_MESSAGE(_sErrorPath + "`socketAddress` must be string for this socketType!");
         m_pathToExecFile = fs::path(_data.atKey("socketAddress").asString());
         if (!fs::exists(m_pathToExecFile))
-            ETH_FAIL_MESSAGE(sErrorPath + "`socketAddress` for socketType::ipc-debug must point to a running unix socket!" +
+            ETH_FAIL_MESSAGE(_sErrorPath + "`socketAddress` for socketType::ipc-debug must point to a running unix socket!" +
                              " But socket file not found (" + m_pathToExecFile.string() + ")");
     }
     // Transition tool would not use Socket class and run tool file instead.
     else if (m_socketType == ClientConfgSocketType::TransitionTool)
     {
         if (_data.atKey("socketAddress").type() != DataType::String)
-            ETH_FAIL_MESSAGE(sErrorPath + "`socketAddress` must be string for this socketType!");
+            ETH_FAIL_MESSAGE(_sErrorPath + "`socketAddress` must be string for this socketType!");
 
         m_pathToExecFile = fs::path(_data.atKey("socketAddress").asString());
         fs::path const cfgPath = m_configFilePath.parent_path();
         ETH_FAIL_REQUIRE_MESSAGE(fs::exists(m_pathToExecFile) || fs::exists(cfgPath / m_pathToExecFile),
-            sErrorPath + "`socketAddress` for socketType::transition-tool must point to a tool cmd!" + " But file not found (" +
-                m_pathToExecFile.string() + ")");
+            _sErrorPath + "`socketAddress` for socketType::transition-tool must point to a tool cmd!" +
+                " But file not found (" + m_pathToExecFile.string() + ")");
         if (fs::exists(cfgPath / m_pathToExecFile))
             m_pathToExecFile = cfgPath / m_pathToExecFile;
     }
+}
+
+void ClientConfigFile::initWithData(DataObject const& _data)
+{
+    requireJsonFileStructure(_data);
+
+    string const sErrorPath = "ClientConfig (" + m_configFilePath.string() + ") ";
+    m_name = _data.atKey("name").asString();
+
+    parseSocketType(_data, sErrorPath);
 
     m_initializeTime = 0;
     if (_data.count("initializeTime"))
@@ -159,6 +169,27 @@ void ClientConfigFile::initWithData(DataObject const& _data)
             if (m_fieldRaplce.count(el->getKey()))
                 ETH_ERROR_MESSAGE(sErrorPath + "`fieldReplace` section contain dublicate element: " + el->getKey());
             m_fieldRaplce[el->getKey()] = el->asString();
+        }
+    }
+
+    if (_data.count("customCompilers"))
+    {
+        auto const& map = _data.atKey("customCompilers");
+        for (auto const& compiler : map.getSubObjects())
+        {
+            ETH_ERROR_REQUIRE_MESSAGE(compiler->getKey()[0] == ':',
+                sErrorPath + "`customCompilers` keyword must begin with `:` " + compiler->getKey());
+            ETH_ERROR_REQUIRE_MESSAGE(compiler->type() == DataType::String,
+                sErrorPath + "`customCompilers` section must has map struture <string> : <string>");
+            fs::path const cfgPath = m_configFilePath.parent_path();
+            ETH_FAIL_REQUIRE_MESSAGE(fs::exists(compiler->asString()) || fs::exists(cfgPath / compiler->asString()),
+                sErrorPath + "`customCompilers` element must point to executable cmd!" + " But file not found (" +
+                    compiler->asString() + ")");
+
+            if (fs::exists(cfgPath / compiler->asString()))
+                m_customCompilers.emplace(compiler->getKey(), cfgPath / compiler->asString());
+            else
+                m_customCompilers.emplace(compiler->getKey(), compiler->asString());
         }
     }
 }
