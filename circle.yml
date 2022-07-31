@@ -24,7 +24,7 @@ defaults:
       # (ninja is using relative paths otherwise).
       working_directory: ~/build
       command: |
-        cmake ../project -G "$GENERATOR" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCOVERAGE=ON $CMAKE_OPTIONS
+        cmake ../project -G "$GENERATOR" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCOVERAGE=OFF $CMAKE_OPTIONS
 
   configureMac: &configureMac
     run:
@@ -38,6 +38,21 @@ defaults:
       name: "Build"
       working_directory: ~/build
       command: cmake --build . -- -j $BUILD_PARALLEL_JOBS
+
+  linuxInstallGO: &linuxInstallGO
+    run:
+      name: "LinuxInstallGO and Tests"
+      working_directory: ~/project
+      command: |
+          curl -L --output go1.18.linux-amd64.tar.gz "https://dl.google.com/go/go1.18.linux-amd64.tar.gz"
+          tar -xf go1.18.linux-amd64.tar.gz
+          sudo mv go /usr/local
+          sudo ln -s /usr/local/go/bin/go /usr/local/bin/go
+          git clone --depth 1 https://github.com/ethereum/go-ethereum.git
+          git clone --depth 1 https://github.com/ethereum/tests.git
+          cd go-ethereum
+          make all
+          sudo ln -s ~/project/go-ethereum/build/bin/evm /usr/local/bin/evm
 
   test-retesteth: &test-retesteth
     run:
@@ -126,9 +141,11 @@ defaults:
     - *configure
 #    - *upload-hunter-cache
 #    - *install-solidity
+    - *linuxInstallGO
     - *build
     - *store-retesteth
     - *test
+    - *test-retesteth
 #    - *upload-coverage-data
 
 
@@ -137,6 +154,7 @@ jobs:
 
   Linux-Clang6:
     environment:
+      - BUILD_TYPE: Release
       - CXX: clang++-6.0
       - CC:  clang-6.0
       - GCOV: llvm-cov-6.0 gcov
@@ -149,7 +167,7 @@ jobs:
 
   Linux-GCC6-Debug:
     environment:
-      - BUILD_TYPE: Release
+      - BUILD_TYPE: Debug
       - CXX: g++-6
       - CC:  gcc-6
       - GCOV: gcov-6
