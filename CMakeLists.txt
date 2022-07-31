@@ -14,8 +14,8 @@ HunterGate(
         LOCAL
 )
 
-project(retesteth VERSION 0.2.2)
-set(VERSION_SUFFIX "testinfo")
+project(retesteth VERSION 0.2.3)
+set(VERSION_SUFFIX "postmerge")
 
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)
