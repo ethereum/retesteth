@@ -42,19 +42,21 @@ bool tryCustomCompiler(string const& _code, string& _compiledCode)
     auto const& compilers = Options::getCurrentConfig().cfgFile().customCompilers();
     for (auto const& compiler : compilers)
     {
-        char afterPrefix = _code[compiler.first.length()];
-        if (_code.find(compiler.first) != string::npos && (afterPrefix == ' ' || afterPrefix == '\n'))
+        if (_code.find(compiler.first) != string::npos)
         {
             size_t const pos = _code.find(compiler.first);
-            string const customCode = _code.substr(pos + compiler.first.length() + 1);
+            char afterPrefix = _code[pos + compiler.first.length()];
+            if ((afterPrefix == ' ' || afterPrefix == '\n'))
+            {
+                string const customCode = _code.substr(pos + compiler.first.length() + 1);
+                fs::path path(fs::temp_directory_path() / fs::unique_path());
+                string cmd = compiler.second.string() + " " + path.string();
+                writeFile(path.string(), customCode);
 
-            fs::path path(fs::temp_directory_path() / fs::unique_path());
-            string cmd = compiler.second.string() + " " + path.string();
-            writeFile(path.string(), customCode);
-
-            _compiledCode = test::executeCmd(cmd);
-            utiles::checkHexHasEvenLength(_compiledCode);
-            return true;
+                _compiledCode = test::executeCmd(cmd);
+                utiles::checkHexHasEvenLength(_compiledCode);
+                return true;
+            }
         }
     }
     return false;
@@ -67,49 +69,74 @@ void tryKnownCompilers(string const& _code, solContracts const& _preSolidity, st
     string const c_solidityPrefix = ":solidity";
     string const c_yulPrefix = ":yul";
 
-    bool bRawEndline = _code[c_rawPrefix.length()] == ' ' || _code[c_rawPrefix.length()] == '\n';
-    bool bAbiEndline = _code[c_abiPrefix.length()] == ' ' || _code[c_abiPrefix.length()] == '\n';
-    bool bSolidityEndline = _code[c_solidityPrefix.length()] == ' ' || _code[c_solidityPrefix.length()] == '\n';
-    bool bYulEndline = _code[c_yulPrefix.length()] == ' ' || _code[c_yulPrefix.length()] == '\n';
-
+    bool found = false;
     if (_code.find("pragma solidity") != string::npos)
     {
         solContracts const contracts = compileSolidity(_code);
         if (contracts.Contracts().size() > 1)
             ETH_ERROR_MESSAGE("Compiling solc: Only one solidity contract is allowed per address!");
         _compiledCode = contracts.Contracts().at(0)->asString();
+        found = true;
     }
-    else if (_code.find(c_solidityPrefix) != string::npos && bSolidityEndline)
+    else if (_code.find(c_solidityPrefix) != string::npos)
     {
         size_t const pos = _code.find(c_solidityPrefix);
-        string const contractName = _code.substr(pos + c_solidityPrefix.length() + 1);
-        _compiledCode = _preSolidity.getCode(contractName);
+        const char endChar = _code[pos + c_solidityPrefix.length()];
+        bool bSolidityEndline = endChar == ' ' || endChar == '\n';
+        if (bSolidityEndline)
+        {
+            string const contractName = _code.substr(pos + c_solidityPrefix.length() + 1);
+            _compiledCode = _preSolidity.getCode(contractName);
+            found = true;
+        }
     }
-    else if (_code.find(c_rawPrefix) != string::npos && bRawEndline)
+    else if (_code.find(c_rawPrefix) != string::npos)
     {
         size_t const pos = _code.find(c_rawPrefix);
-        _compiledCode = _code.substr(pos + c_rawPrefix.length() + 1);
-        utiles::checkHexHasEvenLength(_compiledCode);
+        const char endChar = _code[pos + c_rawPrefix.length()];
+        bool bRawEndline = endChar == ' ' || endChar == '\n';
+        if (bRawEndline)
+        {
+            _compiledCode = _code.substr(pos + c_rawPrefix.length() + 1);
+            utiles::checkHexHasEvenLength(_compiledCode);
+            found = true;
+        }
     }
-    else if (_code.find(c_abiPrefix) != string::npos && bAbiEndline)
+    else if (_code.find(c_abiPrefix) != string::npos)
     {
         size_t const pos = _code.find(c_abiPrefix);
-        string const abiCode = _code.substr(pos + c_abiPrefix.length() + 1);
-        _compiledCode = utiles::encodeAbi(abiCode);
-        utiles::checkHexHasEvenLength(_compiledCode);
+        const char endChar = _code[pos + c_abiPrefix.length()];
+        bool bAbiEndline = endChar == ' ' || endChar == '\n';
+        if (bAbiEndline)
+        {
+            string const abiCode = _code.substr(pos + c_abiPrefix.length() + 1);
+            _compiledCode = utiles::encodeAbi(abiCode);
+            utiles::checkHexHasEvenLength(_compiledCode);
+            found = true;
+        }
     }
-    else if (_code.find(c_yulPrefix) != string::npos && bYulEndline)
+    else if (_code.find(c_yulPrefix) != string::npos)
     {
         size_t const pos = _code.find(c_yulPrefix);
-        string const yulCode = _code.substr(pos + c_yulPrefix.length() + 1);
-        _compiledCode = compileYul(yulCode);
-        utiles::checkHexHasEvenLength(_compiledCode);
+        const char endChar = _code[pos + c_yulPrefix.length()];
+        bool bYulEndline = endChar == ' ' || endChar == '\n';
+        if (bYulEndline)
+        {
+            string const yulCode = _code.substr(pos + c_yulPrefix.length() + 1);
+            _compiledCode = compileYul(yulCode);
+            utiles::checkHexHasEvenLength(_compiledCode);
+            found = true;
+        }
     }
-    else if (_code.find('{') != string::npos || _code.find("(asm") != string::npos )
-        _compiledCode = compileLLL(_code);
-    else
+
+    if (!found)
     {
-        ETH_ERROR_MESSAGE("Trying to compile code of unknown type (missing 0x prefix?): `" + _code);
+        if (_code.find('{') != string::npos || _code.find("(asm") != string::npos )
+            _compiledCode = compileLLL(_code);
+        else
+        {
+            ETH_ERROR_MESSAGE("Trying to compile code of unknown type (missing 0x prefix?): `" + _code);
+        }
     }
 }
 }  // namespace
