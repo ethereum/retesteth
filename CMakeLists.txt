@@ -19,15 +19,19 @@ set(VERSION_SUFFIX "postmerge")
 
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)
-#hunter_add_package(Boost COMPONENTS filesystem program_options system)
+set(Boost_USE_DEBUG_RUNTIME OFF)
 
 find_package(Boost 1.79 COMPONENTS  filesystem program_options system)
 IF( NOT Boost_FOUND )
     message("Boost 1.79 not found in system, trying to autoinstall")
     execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/cmake/scripts/boost.sh filesystem program_options system)
     set(BOOST_ROOT ${CMAKE_CURRENT_BINARY_DIR}/dependecies/boost/boost_1_79_0/)
-    find_package(Boost 1.79 REQUIRED COMPONENTS  filesystem program_options system)
+    find_package(Boost 1.79 REQUIRED COMPONENTS  filesystem program_options system PATHS ${BOOST_ROOT}/tools/boost_install ${BOOST_ROOT}/stage/lib/cmake)
+    set(Boost_INCLUDE_DIR ${CMAKE_CURRENT_BINARY_DIR}/dependecies/boost/boost_1_79_0/)
 ENDIF()
+
+message("Boost libdir: `${Boost_LIBRARIES}`")
+message("Boost include: `${Boost_INCLUDE_DIR}`")
 
 hunter_add_package(yaml-cpp)
 find_package(yaml-cpp CONFIG REQUIRED)
