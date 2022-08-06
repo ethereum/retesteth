@@ -39,6 +39,14 @@ hunter_add_package(cryptopp)
 find_package(cryptopp CONFIG REQUIRED)
 hunter_add_package(libscrypt)
 find_package(libscrypt CONFIG REQUIRED)
+
+if (POLICY CMP0074)
+    cmake_policy(SET CMP0074 NEW)   # Use download timestamp for remote objects
+endif()
+if (POLICY CMP0135)
+    cmake_policy(SET CMP0135 NEW)   # Use provided package_ROOT variables
+endif()
+
 hunter_add_package(CURL)
 find_package(CURL CONFIG REQUIRED)
 
