@@ -1,24 +1,40 @@
-include(ExternalProject)
-include(GNUInstallDirs)
 
-set(prefix "${CMAKE_BINARY_DIR}/deps")
-set(MPIR_LIBRARY "${prefix}/${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}mpir${CMAKE_STATIC_LIBRARY_SUFFIX}")
-set(MPIR_INCLUDE_DIR "${prefix}/include")
+#set(MPIR_INCLUDE_DIR ${CMAKE_CURRENT_BINARY_DIR}/deps/include)
+#set(MPIR_LIBRARIES ${CMAKE_CURRENT_BINARY_DIR}/deps/lib)
+#find_path(MPIR_INCLUDE_DIR NAMES mpir.h )
+#find_library(MPIR_LIBRARIES NAMES mpir libmpir)
+#INCLUDE(FindPackageHandleStandardArgs)
+#FIND_PACKAGE_HANDLE_STANDARD_ARGS(mpir REQUIRED_VARS MPIR_LIBRARIES MPIR_INCLUDE_DIR)
 
-ExternalProject_Add(mpir
-    PREFIX "${prefix}"
-    DOWNLOAD_NAME mpir-cmake.tar.gz
-    DOWNLOAD_NO_PROGRESS TRUE
-    URL https://github.com/chfast/mpir/archive/cmake.tar.gz
-    URL_HASH SHA256=d32ea73cb2d8115a8e59b244f96f29bad7ff03367162b660bae6495826811e06
-    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
-        -DCMAKE_BUILD_TYPE=Release
-        -DMPIR_GMP=On
-    BUILD_BYPRODUCTS "${MPIR_LIBRARY}"
-)
+find_package(mpir)
 
-add_library(MPIR::mpir STATIC IMPORTED)
-set_property(TARGET MPIR::mpir PROPERTY IMPORTED_CONFIGURATIONS Release)
-set_property(TARGET MPIR::mpir PROPERTY IMPORTED_LOCATION_RELEASE ${MPIR_LIBRARY})
-set_property(TARGET MPIR::mpir PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${MPIR_INCLUDE_DIR})
-add_dependencies(MPIR::mpir mpir)
+IF( NOT MPIR_FOUND )
+    message(STATUS "MPIR NOT FOUND, WILL USE HUNTER TO BUILD IT")
+    include(ExternalProject)
+    include(GNUInstallDirs)
+
+    set(prefix "${CMAKE_BINARY_DIR}/deps")
+    set(MPIR_LIBRARY "${prefix}/${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}mpir${CMAKE_STATIC_LIBRARY_SUFFIX}")
+    set(MPIR_INCLUDE_DIR "${prefix}/include")
+
+    ExternalProject_Add(mpir
+        PREFIX "${prefix}"
+        DOWNLOAD_NAME mpir-cmake.tar.gz
+        DOWNLOAD_NO_PROGRESS TRUE
+        URL https://github.com/chfast/mpir/archive/cmake.tar.gz
+        URL_HASH SHA256=d32ea73cb2d8115a8e59b244f96f29bad7ff03367162b660bae6495826811e06
+        CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
+            -DCMAKE_BUILD_TYPE=Release
+            -DMPIR_GMP=On
+        BUILD_BYPRODUCTS "${MPIR_LIBRARY}"
+    )
+
+    add_library(MPIR::mpir STATIC IMPORTED)
+    set_property(TARGET MPIR::mpir PROPERTY IMPORTED_CONFIGURATIONS Release)
+    set_property(TARGET MPIR::mpir PROPERTY IMPORTED_LOCATION_RELEASE ${MPIR_LIBRARY})
+    set_property(TARGET MPIR::mpir PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${MPIR_INCLUDE_DIR})
+    add_dependencies(MPIR::mpir mpir)
+ELSE()
+    message(STATUS "FOUND MPIR, CONFIGURE CMAKE VARS")
+ENDIF()
+
