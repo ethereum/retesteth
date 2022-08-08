@@ -99,8 +99,9 @@ void printHelp()
     cout << setw(30) << "--fillchain" << setw(25) << "When filling the state tests, fill tests as blockchain instead\n";
     cout << setw(30) << "--showhash" << setw(25) << "Show filler hash debug information\n";
     cout << setw(30) << "--checkhash" << setw(25) << "Check that tests are updated from fillers\n";
-    cout << setw(30) << "--poststate" << setw(25) << "Debug show test postState hash or fullstate\n";
-    cout << setw(30) << "--fullstate" << setw(25) << "Do not compress large states to hash\n";
+    cout << setw(30) << "--poststate" << setw(25) << "Debug(6) show test postState hash or fullstate, when used with --filltests export `postState` in StateTests\n";
+    cout << setw(30) << "--poststate <file>" << setw(25) << "Same as above plus export post state into a file\n";
+    cout << setw(30) << "--fullstate" << setw(25) << "Do not compress large states to hash when debug\n";
     cout << setw(30) << "--forceupdate" << setw(25) << "Update generated test (_info) even if there are no changes\n";
 
     //	cout << setw(30) << "--randomcode <MaxOpcodeNum>" << setw(25) << "Generate smart random EVM
@@ -139,9 +140,12 @@ Options::Options(int argc, const char** argv)
         auto getOptionalArg = [&i, &argc, &argv]() {
             if (i + 1 < argc)
             {
-                string nextArg = argv[++i];
+                string nextArg = argv[i + 1];
                 if (nextArg.substr(0, 1) != "-")
+                {
+                    i++;
                     return nextArg;
+                }
             }
             return string();
         };
@@ -355,6 +359,7 @@ Options::Options(int argc, const char** argv)
         {
             poststate = true;
             fullstate = true;
+            poststatefile = getOptionalArg();
         }
         else if (arg == "--verbosity")
         {
@@ -507,6 +512,11 @@ Options::Options(int argc, const char** argv)
             cerr << "Unknown option: " + arg << "\n";
             exit(1);
         }
+    }
+
+    if (poststate && logVerbosity < 6 && poststatefile.empty())
+    {
+        ETH_STDOUT_MESSAGE("Warning: --poststate is defined, but state is printed with verbosity level 6, which is not set");
     }
 
     // check restrickted options
