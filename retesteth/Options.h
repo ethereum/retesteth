@@ -38,6 +38,8 @@ public:
 
     bool vmtrace = false;              ///< Create EVM execution tracer
     bool vmtraceraw = false;           ///< Create EVM execution tracer. output raw info
+    fs::path vmtracerawfile;
+
     bool vmtrace_nomemory = false;
     bool vmtrace_nostack = false;
     bool vmtrace_noreturndata = false;

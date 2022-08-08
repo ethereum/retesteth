@@ -38,6 +38,7 @@ struct DebugVMTrace
     DebugVMTrace(string const& _info, string const& _trNumber, FH32 const& _trHash, string const& _logs);
     void print();
     void printNice();
+    string const& printRaw() const { return m_rawUnparsedLogs; }
 
 private:
     string m_infoString;

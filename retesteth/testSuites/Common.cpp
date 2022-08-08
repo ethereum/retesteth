@@ -63,7 +63,15 @@ void printVmTrace(SessionInterface& _session, FH32 const& _trHash, FH32 const& _
 
     ETH_STDOUT_MESSAGE("------------------------");
     if (Options::get().vmtraceraw)
-        ret.print();
+    {
+        if (!Options::get().vmtracerawfile.string().empty())
+        {
+            ETH_STDOUT_MESSAGE("Export vmtraceraw to " + Options::get().vmtracerawfile.string());
+            dev::writeFile(Options::get().vmtracerawfile, asBytes(ret.printRaw()));
+        }
+        else
+            ret.print();
+    }
     else
         ret.printNice();
 
