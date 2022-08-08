@@ -43,9 +43,15 @@ namespace
 {
 void createDirectoryIfNotExistent(boost::filesystem::path const& _path)
 {
-    if (!fs::exists(_path))
+    if (!fs::exists(_path) && !_path.empty())
     {
-        fs::create_directories(_path);
+        try {
+            fs::create_directories(_path);
+        }
+        catch (...)
+        {
+            BOOST_THROW_EXCEPTION(FileError("Could not create directory: `" + _path.string()+ "`"));
+        }
         DEV_IGNORE_EXCEPTIONS(fs::permissions(_path, fs::owner_all));
     }
 }
