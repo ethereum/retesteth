@@ -310,14 +310,19 @@ spDataObject FillTest(StateTestInFiller const& _test)
                     tr.markExecuted();
 
                     if (Options::get().poststate)
-                        ETH_STDOUT_MESSAGE("PostState " + TestOutputHelper::get().testInfo().errorDebug() + " : \n" + cDefault +
+                        ETH_TEST_MESSAGE("PostState " + TestOutputHelper::get().testInfo().errorDebug() + " : \n" + cDefault +
                                            "Hash: " + blockInfo.header()->stateRoot().asString());
 
                     if (Options::get().vmtrace)
                         printVmTrace(session, trHash, blockInfo.header()->stateRoot());
+
+                    spDataObject transactionResults;
                     try
                     {
-                        compareStates(expect.result(), getRemoteState(session));
+                        auto const remState = getRemoteState(session);
+                        compareStates(expect.result(), remState);
+                        if (Options::get().poststate)
+                            (*transactionResults).atKeyPointer("postState") = remState.asDataObject();
                     }
                     catch(StateTooBig const&)
                     {
@@ -325,7 +330,6 @@ spDataObject FillTest(StateTestInFiller const& _test)
                     }
 
                     spDataObject indexes;
-                    spDataObject transactionResults;
                     (*indexes)["data"] = tr.dataInd();
                     (*indexes)["gas"] = tr.gasInd();
                     (*indexes)["value"] = tr.valueInd();
@@ -465,13 +469,17 @@ void RunTest(StateTestInFilled const& _test)
                     FH32 const& actualHash = blockInfo.header()->stateRoot();
                     if (actualHash != expectedPostHash)
                     {
-                        if (Options::get().logVerbosity >= 5)
-                            ETH_LOG("\nState Dump: \n" + getRemoteState(session).asDataObject()->asJson(), 5);
+                        ETH_LOG("\nState Dump: \n" + getRemoteState(session).asDataObject()->asJson(), 5);
                         ETH_ERROR_MESSAGE("Post hash mismatch remote: " + actualHash.asString() +
                                           ", expected: " + expectedPostHash.asString());
                     }
                     if (Options::get().poststate)
-                        ETH_LOG("\nRunning test State Dump:" + TestOutputHelper::get().testInfo().errorDebug() + cDefault + " \n" + getRemoteState(session).asDataObject()->asJson(), 1);
+                    {
+                        auto const remStateJson = getRemoteState(session).asDataObject()->asJson();
+                        ETH_LOG("\nRunning test State Dump:" + TestOutputHelper::get().testInfo().errorDebug() + cDefault + " \n" + remStateJson, 6);
+                        if (!Options::get().poststatefile.empty())
+                            dev::writeFile(Options::get().poststatefile, dev::asBytes(remStateJson));
+                    }
 
                     // Validate that txbytes field has the transaction data described in test `transaction` field.
                     spBYTES const& expectedBytesPtr = result.bytesPtr();
@@ -492,9 +500,8 @@ void RunTest(StateTestInFilled const& _test)
                     }
 
                     session.test_rewindToBlock(0);
-                    if (Options::get().logVerbosity >= 5)
-                        ETH_LOG("Executed: d: " + to_string(tr.dataInd()) + ", g: " + to_string(tr.gasInd()) +
-                                    ", v: " + to_string(tr.valueInd()) + ", fork: " + network.asString(), 5);
+                    ETH_LOG("Executed: d: " + to_string(tr.dataInd()) + ", g: " + to_string(tr.gasInd()) +
+                            ", v: " + to_string(tr.valueInd()) + ", fork: " + network.asString(), 5);
                 }
             } //ForTransactions
 
