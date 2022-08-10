@@ -78,7 +78,7 @@ class TestOutputHelper
 {
 public:
     static TestOutputHelper& get();
-    //TestOutputHelper(TestOutputHelper const&) = delete;
+    TestOutputHelper(TestOutputHelper const&) = default;
     void operator=(TestOutputHelper const&) = delete;
 
     void initTest(size_t _maxTests = 1);
