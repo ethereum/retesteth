@@ -97,7 +97,11 @@ void TestBlockchain::generateBlock(
         for (auto const& remoteTr : minedBlock->transactions())
         {
             if (Options::get().vmtrace)
-                printVmTrace(m_session, remoteTr.hash(), minedBlock->header()->stateRoot());
+            {
+                string const testNameOut = TestOutputHelper::get().testName() + "_" + remoteTr.hash().asString() + ".txt";
+                VMtraceinfo info(m_session, remoteTr.hash(), minedBlock->header()->stateRoot(), testNameOut);
+                printVmTrace(info);
+            }
 
             if (testTransactionMap.count(remoteTr.hash()))
             {

@@ -106,7 +106,11 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
         for (auto const& tr : tblock.transactions())
         {
             if (Options::get().vmtrace)
-                printVmTrace(session, tr->hash(), latestBlock.header()->stateRoot());
+            {
+                string const testNameOut = _test.testName() + "_" + tr->hash().asString() + ".txt";
+                VMtraceinfo info(session, tr->hash(), latestBlock.header()->stateRoot(), testNameOut);
+                printVmTrace(info);
+            }
         }
 
         spDataObject remoteHeader = latestBlock.header()->asDataObject();

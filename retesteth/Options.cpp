@@ -77,7 +77,7 @@ void printHelp()
     cout << setw(30) << "-v <index>" << setw(25) << "Set the transaction value array index when running GeneralStateTests\n";
     cout << setw(30) << "--vmtrace" << setw(25) << "Trace transaction execution\n";
     cout << setw(30) << "--vmtraceraw" << setw(25) << "Trace transaction execution raw format\n";
-    cout << setw(30) << "--vmtraceraw <file>" << setw(25) << "Trace transaction execution raw format to a given file\n";
+    cout << setw(30) << "--vmtraceraw <folder>" << setw(25) << "Trace transactions execution raw format to a given folder\n";
     cout << setw(30) << "--vmtrace.nomemory" << setw(25) << "Disable memory in vmtrace/vmtraceraw\n";
     cout << setw(30) << "--vmtrace.nostack" << setw(25) << "Disable stack in vmtrace/vmtraceraw\n";
     cout << setw(30) << "--vmtrace.noreturndata" << setw(25) << "Disable returndata in vmtrace/vmtraceraw\n";
@@ -221,7 +221,7 @@ Options::Options(int argc, const char** argv)
         {
             vmtrace = true;
             vmtraceraw = true;
-            vmtracerawfile = getOptionalArg();
+            vmtracerawfolder = getOptionalArg();
         }
         else if (arg == "--vmtrace.nomemory")
         {
@@ -517,6 +517,10 @@ Options::Options(int argc, const char** argv)
     if (poststate && logVerbosity < 6 && poststatefolder.empty())
     {
         ETH_STDOUT_MESSAGE("Warning: --poststate is defined, but state is printed with verbosity level 6, which is not set");
+    }
+    if (vmtraceraw && logVerbosity < 6 && vmtracerawfolder.empty())
+    {
+        ETH_STDOUT_MESSAGE("Warning: --vmtraceraw is defined, but trace is printed with verbosity level 6, which is not set");
     }
 
     // check restrickted options

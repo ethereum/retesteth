@@ -57,17 +57,17 @@ void checkTestNameIsEqualToFileName(DataObject const& _input)
                 "'");
 }
 
-void printVmTrace(SessionInterface& _session, FH32 const& _trHash, FH32 const& _stateRoot)
+void printVmTrace(VMtraceinfo const& _info)
 {
-    DebugVMTrace ret(_session.debug_traceTransaction(_trHash));
+    DebugVMTrace ret(_info.session.debug_traceTransaction(_info.trHash));
 
-    ETH_STDOUT_MESSAGE("------------------------");
+    ETH_TEST_MESSAGE("------------------------");
     if (Options::get().vmtraceraw)
     {
-        if (!Options::get().vmtracerawfile.string().empty())
+        if (!Options::get().vmtracerawfolder.string().empty())
         {
-            ETH_STDOUT_MESSAGE("Export vmtraceraw to " + Options::get().vmtracerawfile.string());
-            dev::writeFile(Options::get().vmtracerawfile, asBytes(ret.printRaw()));
+            ETH_TEST_MESSAGE("Export vmtraceraw to " + (Options::get().vmtracerawfolder / _info.trName).string());
+            dev::writeFile(Options::get().vmtracerawfolder / _info.trName, asBytes(ret.printRaw()));
         }
         else
             ret.print();
@@ -76,9 +76,9 @@ void printVmTrace(SessionInterface& _session, FH32 const& _trHash, FH32 const& _
         ret.printNice();
 
     DataObject state;
-    state["stateRoot"] = _stateRoot.asString();
-    ETH_LOG(state.asJson(0, false), 0);
-    ETH_STDOUT_MESSAGE("\n------------------------");
+    state["stateRoot"] = _info.stateRoot.asString();
+    ETH_TEST_MESSAGE(state.asJson(0, false));
+    ETH_TEST_MESSAGE("\n------------------------");
 }
 
 void compareTransactionException(spTransaction const& _tr, MineBlocksResult const& _mRes, string const& _testException)

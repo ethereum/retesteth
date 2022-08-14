@@ -314,7 +314,12 @@ spDataObject FillTest(StateTestInFiller const& _test)
                                            "Hash: " + blockInfo.header()->stateRoot().asString());
 
                     if (Options::get().vmtrace)
-                        printVmTrace(session, trHash, blockInfo.header()->stateRoot());
+                    {
+                        string const testNameOut = _test.testName() + "_d" + tr.dataIndS() + "g" + tr.gasIndS() + "v" + tr.valueIndS()
+                                                 + "_" + fork.asString() + "_" + trHash.asString() + ".txt";
+                        VMtraceinfo info(session, trHash, blockInfo.header()->stateRoot(), testNameOut);
+                        printVmTrace(info);
+                    }
 
                     spDataObject transactionResults;
                     try
@@ -464,7 +469,12 @@ void RunTest(StateTestInFilled const& _test)
                     // Validate post state
                     FH32 const& expectedPostHash = result.hash();
                     if (Options::get().vmtrace && !Options::get().filltests)
-                        printVmTrace(session, trHash, blockInfo.header()->stateRoot());
+                    {
+                        string const testNameOut = _test.testName() + "_d" + tr.dataIndS() + "g" + tr.gasIndS() + "v" + tr.valueIndS()
+                                                   + "_" + network.asString() + "_" + trHash.asString() + ".txt";
+                        VMtraceinfo info(session, trHash, blockInfo.header()->stateRoot(), testNameOut);
+                        printVmTrace(info);
+                    }
 
                     FH32 const& actualHash = blockInfo.header()->stateRoot();
                     if (actualHash != expectedPostHash)

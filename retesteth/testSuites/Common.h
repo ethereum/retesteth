@@ -70,7 +70,16 @@ void compareStates(StateBase const& _stateExpect, SessionInterface& _session);
 void compareStates(StateBase const& _stateExpect, State const& _statePost);
 
 // json trace vm
-void printVmTrace(SessionInterface& _session, FH32 const& _trHash, FH32 const& _stateRoot);
+struct VMtraceinfo
+{
+    VMtraceinfo(SessionInterface& _info, FH32 const& _trHash, FH32 const& _stateRoot, string const& _trName) :
+        session(_info), trHash(_trHash), stateRoot(_stateRoot), trName(_trName) {}
+    SessionInterface& session;
+    FH32 const& trHash;
+    FH32 const& stateRoot;
+    string const& trName;
+};
+void printVmTrace(VMtraceinfo const& _info);
 
 // Validate transaction exception
 void compareTransactionException(spTransaction const& _tr, MineBlocksResult const& _mRes, string const& _testException);
