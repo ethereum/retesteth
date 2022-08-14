@@ -100,7 +100,7 @@ void printHelp()
     cout << setw(30) << "--showhash" << setw(25) << "Show filler hash debug information\n";
     cout << setw(30) << "--checkhash" << setw(25) << "Check that tests are updated from fillers\n";
     cout << setw(30) << "--poststate" << setw(25) << "Debug(6) show test postState hash or fullstate, when used with --filltests export `postState` in StateTests\n";
-    cout << setw(30) << "--poststate <file>" << setw(25) << "Same as above plus export post state into a file\n";
+    cout << setw(30) << "--poststate <folder>" << setw(25) << "Same as above plus export test post states into a folder\n";
     cout << setw(30) << "--fullstate" << setw(25) << "Do not compress large states to hash when debug\n";
     cout << setw(30) << "--forceupdate" << setw(25) << "Update generated test (_info) even if there are no changes\n";
 
@@ -359,7 +359,7 @@ Options::Options(int argc, const char** argv)
         {
             poststate = true;
             fullstate = true;
-            poststatefile = getOptionalArg();
+            poststatefolder = getOptionalArg();
         }
         else if (arg == "--verbosity")
         {
@@ -514,7 +514,7 @@ Options::Options(int argc, const char** argv)
         }
     }
 
-    if (poststate && logVerbosity < 6 && poststatefile.empty())
+    if (poststate && logVerbosity < 6 && poststatefolder.empty())
     {
         ETH_STDOUT_MESSAGE("Warning: --poststate is defined, but state is printed with verbosity level 6, which is not set");
     }
