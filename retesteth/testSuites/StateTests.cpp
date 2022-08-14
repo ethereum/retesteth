@@ -477,8 +477,12 @@ void RunTest(StateTestInFilled const& _test)
                     {
                         auto const remStateJson = getRemoteState(session).asDataObject()->asJson();
                         ETH_LOG("\nRunning test State Dump:" + TestOutputHelper::get().testInfo().errorDebug() + cDefault + " \n" + remStateJson, 6);
-                        if (!Options::get().poststatefile.empty())
-                            dev::writeFile(Options::get().poststatefile, dev::asBytes(remStateJson));
+                        if (!Options::get().poststatefolder.empty())
+                        {
+                            string testNameOut = _test.testName() + "_d" + tr.dataIndS() + "g" + tr.gasIndS() + "v" + tr.valueIndS();
+                            testNameOut += "_" + network.asString() + ".txt";
+                            dev::writeFile(Options::get().poststatefolder / testNameOut, dev::asBytes(remStateJson));
+                        }
                     }
 
                     // Validate that txbytes field has the transaction data described in test `transaction` field.

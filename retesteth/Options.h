@@ -53,7 +53,7 @@ public:
     bool fillchain = false; ///< Fill tests as a blockchain tests if possible
     bool stats = false;     ///< Execution time and stats for state tests
     bool poststate = false;
-    fs::path poststatefile;
+    fs::path poststatefolder;
     bool nologcolor = false;
     std::string statsOutFile; ///< Stats output file. "out" for standard output
     fs::path datadir;         ///< Path to datadir (~/.retesteth)
