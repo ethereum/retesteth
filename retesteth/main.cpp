@@ -14,101 +14,13 @@ using namespace boost::unit_test;
 static std::ostringstream strCout;
 std::streambuf* oldCoutStreamBuf;
 std::streambuf* oldCerrStreamBuf;
+std::string const c_sDynamicTestSuiteName = "customTestSuite";
+
+void customTestSuite();
+void travisOut(std::atomic_bool* _stopTravisOut);
+void timeoutThread(std::atomic_bool* _stopTimeout);
 void printTestSuiteSuggestions(string const& _sMinusTArg);
-
-void customTestSuite()
-{
-    // restore output for creating test
-    std::cout.rdbuf(oldCoutStreamBuf);
-    std::cerr.rdbuf(oldCerrStreamBuf);
-    test::Options const& opt = test::Options::get();
-
-    auto runSuite = [&opt](test::TestSuite* _suite){
-        if (opt.singleTestFile.is_initialized())
-        {
-            boost::filesystem::path file(opt.singleTestFile.get());
-            _suite->runTestWithoutFiller(file);
-        }
-        else if (opt.customTestFolder.is_initialized())
-        {
-            _suite->runAllTestsInFolder(opt.customTestFolder.get());
-        }
-    };
-
-    if (opt.singleTestFile.is_initialized() || opt.customTestFolder.is_initialized())
-    {
-        if (opt.rCurrentTestSuite.find("GeneralStateTests") != std::string::npos)
-        {
-            test::StateTestSuite suite;
-            runSuite(&suite);
-        }
-        else if (opt.rCurrentTestSuite.find("BlockchainTests") != std::string::npos)
-        {
-            if (opt.rCurrentTestSuite.find("InvalidBlocks") != std::string::npos)
-            {
-                test::BlockchainTestInvalidSuite suite;
-                runSuite(&suite);
-            }
-            else if (opt.rCurrentTestSuite.find("ValidBlocks") != std::string::npos)
-            {
-                test::BlockchainTestValidSuite suite;
-                runSuite(&suite);
-            }
-            else if (opt.rCurrentTestSuite.find("TransitionTests") != std::string::npos)
-            {
-                test::BlockchainTestTransitionSuite suite;
-                runSuite(&suite);
-            }
-            else
-            {
-                test::BlockchainTestInvalidSuite suite;
-                runSuite(&suite);
-            }
-        }
-        else if (opt.rCurrentTestSuite.find("DifficultyTests") != std::string::npos)
-        {
-            test::DifficultyTestSuite suite;
-            runSuite(&suite);
-        }
-        else if (opt.rCurrentTestSuite.find("TransactionTests") != std::string::npos)
-        {
-             test::TransactionTestSuite suite;
-             runSuite(&suite);
-        }
-    }
-}
-
-void travisOut(std::atomic_bool* _stopTravisOut)
-{
-    int tickCounter = 0;
-    while (!*_stopTravisOut)
-    {
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-        ++tickCounter;
-        if (tickCounter % 10 == 0)
-            std::cout << ".\n" << std::flush;  // Output dot every 10s.
-        if (ExitHandler::receivedExitSignal())
-            break;
-    }
-}
-
-void timeoutThread(std::atomic_bool* _stopTimeout)
-{
-    uint tickCounter = 0;
-    const uint C_MAX_TESTEXEC_TIMEOUT = 36000;
-    while (!*_stopTimeout)
-    {
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-        ++tickCounter;
-        if (tickCounter > C_MAX_TESTEXEC_TIMEOUT)
-        {
-            test::TestOutputHelper::get().setCurrentTestInfo(test::TestInfo("Timeout"));
-            ETH_FAIL_MESSAGE("Test execution timeout reached! " + test::fto_string(C_MAX_TESTEXEC_TIMEOUT) + "sec");
-        }
-        if (ExitHandler::receivedExitSignal())
-            break;
-    }
-}
+bool checkTestSuiteIsKnown(int argc, const char* argv[], string sMinusTArg = string());
 
 /*
 The equivalent of setlocale(LC_ALL, “C”) is called before any user code is run.
@@ -153,7 +65,6 @@ int main(int argc, const char* argv[])
     }
 
     test::Options const& opt = test::Options::get();
-    std::string const dynamicTestSuiteName = "customTestSuite";
 
     // Special UnitTest
     for (int i = 0; i < argc; i++)
@@ -179,7 +90,7 @@ int main(int argc, const char* argv[])
             if (arg == "-t" && i + 1 < argc)
             {
                 testSuiteFound = true;
-                argv[i + 1] = (char*)dynamicTestSuiteName.c_str();
+                argv[i + 1] = (char*)c_sDynamicTestSuiteName.c_str();
                 break;
             }
         }
@@ -204,52 +115,23 @@ int main(int argc, const char* argv[])
             }
         }
 
-        // Disable initial output as the random test will output valid json to std
-        oldCoutStreamBuf = std::cout.rdbuf();
-        oldCerrStreamBuf = std::cerr.rdbuf();
-        std::cout.rdbuf(strCout.rdbuf());
-        std::cerr.rdbuf(strCout.rdbuf());
+        // Disable initial boost output as the random test suite must output valid json to std
+        if (opt.createRandomTest)
+        {
+            oldCoutStreamBuf = std::cout.rdbuf();
+            oldCerrStreamBuf = std::cerr.rdbuf();
+            std::cout.rdbuf(strCout.rdbuf());
+            std::cerr.rdbuf(strCout.rdbuf());
+        }
 
         // add custom test suite
-        test_suite* ts1 = BOOST_TEST_SUITE(dynamicTestSuiteName);
+        test_suite* ts1 = BOOST_TEST_SUITE(c_sDynamicTestSuiteName);
         ts1->add(BOOST_TEST_CASE(&customTestSuite));
         framework::master_test_suite().add(ts1);
     }
 
-    string sMinusTArg;
-    // unit_test_main delete this option from _argv
-    for (int i = 0; i < argc; i++)  // find -t boost arg
-    {
-        std::string const arg = std::string{argv[i]};
-        if (arg == "-t" && i + 1 < argc)
-        {
-            sMinusTArg = std::string{argv[i + 1]};
-            break;
-    }
-    }
-
-    if (!sMinusTArg.empty())
-    {
-        bool requestSuiteNotFound = false;
-        std::vector<std::string> requestedSuites = test::explode(sMinusTArg, ',');
-        for (auto const& suite : requestedSuites)
-        {
-            if (!test::inArray(c_allTestNames, suite))
-            {
-                requestSuiteNotFound = true;
-                sMinusTArg = suite;
-                break;
-            }
-        }
-
-        // Print suggestions of a test case if test suite not found
-        if (requestSuiteNotFound && sMinusTArg != dynamicTestSuiteName)
-        {
-            std::cerr << "Error: '" + sMinusTArg + "' suite not found! \n";
-            printTestSuiteSuggestions(sMinusTArg);
-            return -1;
-        }
-    }
+    if (!checkTestSuiteIsKnown(argc, argv))
+        return -1;
 
     int result = 0;
     try
@@ -289,4 +171,150 @@ void printTestSuiteSuggestions(string const& _sMinusTArg)
     std::cerr << "Did you mean: \n";
     for (auto const& element : testList)
         std::cerr << "-t " << element << "\n";
+}
+
+void travisOut(std::atomic_bool* _stopTravisOut)
+{
+    int tickCounter = 0;
+    while (!*_stopTravisOut)
+    {
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        ++tickCounter;
+        if (tickCounter % 10 == 0)
+            std::cout << ".\n" << std::flush;  // Output dot every 10s.
+        if (ExitHandler::receivedExitSignal())
+            break;
+    }
+}
+
+void timeoutThread(std::atomic_bool* _stopTimeout)
+{
+    uint tickCounter = 0;
+    const uint C_MAX_TESTEXEC_TIMEOUT = 36000;
+    while (!*_stopTimeout)
+    {
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        ++tickCounter;
+        if (tickCounter > C_MAX_TESTEXEC_TIMEOUT)
+        {
+            test::TestOutputHelper::get().setCurrentTestInfo(test::TestInfo("Timeout"));
+            ETH_FAIL_MESSAGE("Test execution timeout reached! " + test::fto_string(C_MAX_TESTEXEC_TIMEOUT) + "sec");
+        }
+        if (ExitHandler::receivedExitSignal())
+            break;
+    }
+}
+
+void runCustomTestFileOrFolder();
+void customTestSuite()
+{
+    test::Options const& opt = test::Options::get();
+    if (opt.createRandomTest)
+    {
+        // Restore output for creating test
+        std::cout.rdbuf(oldCoutStreamBuf);
+        std::cerr.rdbuf(oldCerrStreamBuf);
+    }
+
+    if (opt.singleTestFile.is_initialized() || opt.customTestFolder.is_initialized())
+        runCustomTestFileOrFolder();
+}
+
+void runCustomTestFileOrFolder()
+{
+    test::Options const& opt = test::Options::get();
+    auto runSuite = [&opt](test::TestSuite* _suite){
+        if (opt.singleTestFile.is_initialized())
+        {
+            boost::filesystem::path file(opt.singleTestFile.get());
+            _suite->runTestWithoutFiller(file);
+        }
+        else if (opt.customTestFolder.is_initialized())
+        {
+            _suite->runAllTestsInFolder(opt.customTestFolder.get());
+        }
+    };
+
+    if (opt.rCurrentTestSuite.find("GeneralStateTests") != std::string::npos)
+    {
+        test::StateTestSuite suite;
+        runSuite(&suite);
+    }
+    else if (opt.rCurrentTestSuite.find("BlockchainTests") != std::string::npos)
+    {
+        if (opt.rCurrentTestSuite.find("InvalidBlocks") != std::string::npos)
+        {
+            test::BlockchainTestInvalidSuite suite;
+            runSuite(&suite);
+        }
+        else if (opt.rCurrentTestSuite.find("ValidBlocks") != std::string::npos)
+        {
+            test::BlockchainTestValidSuite suite;
+            runSuite(&suite);
+        }
+        else if (opt.rCurrentTestSuite.find("TransitionTests") != std::string::npos)
+        {
+            test::BlockchainTestTransitionSuite suite;
+            runSuite(&suite);
+        }
+        else
+        {
+            test::BlockchainTestInvalidSuite suite;
+            runSuite(&suite);
+        }
+    }
+    else if (opt.rCurrentTestSuite.find("DifficultyTests") != std::string::npos)
+    {
+        test::DifficultyTestSuite suite;
+        runSuite(&suite);
+    }
+    else if (opt.rCurrentTestSuite.find("TransactionTests") != std::string::npos)
+    {
+        test::TransactionTestSuite suite;
+        runSuite(&suite);
+    }
+    else
+    {
+        string sMinusTArg = opt.rCurrentTestSuite;
+        std::cerr << "Error: '" + sMinusTArg + "' suite not found! \n";
+        printTestSuiteSuggestions(sMinusTArg);
+    }
+}
+
+bool checkTestSuiteIsKnown(int argc, const char* argv[], string sMinusTArg)
+{
+    // unit_test_main delete this option from _argv
+    for (int i = 0; i < argc; i++)  // find -t boost arg
+    {
+        std::string const arg = std::string{argv[i]};
+        if (arg == "-t" && i + 1 < argc)
+        {
+            sMinusTArg = std::string{argv[i + 1]};
+            break;
+        }
+    }
+
+    if (!sMinusTArg.empty())
+    {
+        bool requestSuiteNotFound = false;
+        std::vector<std::string> requestedSuites = test::explode(sMinusTArg, ',');
+        for (auto const& suite : requestedSuites)
+        {
+            if (!test::inArray(c_allTestNames, suite))
+            {
+                requestSuiteNotFound = true;
+                sMinusTArg = suite;
+                break;
+            }
+        }
+
+        // Print suggestions of a test case if test suite not found
+        if (requestSuiteNotFound && sMinusTArg != c_sDynamicTestSuiteName)
+        {
+            std::cerr << "Error: '" + sMinusTArg + "' suite not found! \n";
+            printTestSuiteSuggestions(sMinusTArg);
+            return false;
+        }
+    }
+    return true;
 }
