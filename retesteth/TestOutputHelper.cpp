@@ -193,7 +193,8 @@ void TestOutputHelper::showProgress()
 std::mutex g_execTimeResults;
 void TestOutputHelper::finishTest()
 {
-    if (Options::get().exectimelog)
+    auto const& opt = Options::get();
+    if (opt.exectimelog && !opt.singleTestFile)
     {
         std::cout << "Tests finished: " << m_currTest << std::endl;
         execTimeName res;
