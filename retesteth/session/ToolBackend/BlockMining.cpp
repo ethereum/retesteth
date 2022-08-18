@@ -212,6 +212,7 @@ BlockMining::~BlockMining()
     fs::remove(m_txsPath);
     fs::remove(m_outPath);
     fs::remove(m_outAllocPath);
+    fs::remove(m_chainRef.tmpDir());
 }
 
 }  // namespace toolimpl
