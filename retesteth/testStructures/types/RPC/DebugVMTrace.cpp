@@ -4,6 +4,7 @@
 #include <dataObject/ConvertFile.h>
 #include <testStructures/Common.h>
 
+const string c_tooManyRawsMessage = "==TOO MANY LOG ROWS TO PRINT (Use --vmtraceraw <folder>)==";
 namespace test
 {
 namespace teststruct
@@ -53,7 +54,8 @@ VMLogRecord::VMLogRecord(DataObject const& _obj)
     }
 }
 
-DebugVMTrace::DebugVMTrace(string const& _info, string const& _trNumber, FH32 const& _trHash, string const& _logs)
+DebugVMTrace::DebugVMTrace(
+    string const& _info, string const& _trNumber, FH32 const& _trHash, boost::filesystem::path const& _logs)
 {
     try
     {
@@ -61,19 +63,42 @@ DebugVMTrace::DebugVMTrace(string const& _info, string const& _trNumber, FH32 co
         m_trNumber = _trNumber;
         m_trHash = spFH32(_trHash.copy());
 
-        auto logs = test::explode(_logs, '\n');
-        if (logs.size())
+        string line;
+        size_t k = 0;
+        const size_t c_maxRowsToPrint = 100;
+        fs::ifstream fileHandler(_logs);
+        while (getline(fileHandler, line))
         {
-            for (size_t i = 0; i < logs.size() - 1; i++)
-                m_log.push_back(VMLogRecord(ConvertJsoncppStringToData(logs.at(i))));
-
-            spDataObject lastRecord = ConvertJsoncppStringToData(logs.at(logs.size() - 1));
-            m_output = lastRecord->atKey("output").asString();
-            m_gasUsed = spVALUE(new VALUE(lastRecord->atKey("gasUsed")));
-            m_time = lastRecord->atKey("time").asInt();
+            k++;
+            if (k < c_maxRowsToPrint)
+            {
+                m_rawUnparsedLogs += line + "\n";
+                auto const data = ConvertJsoncppStringToData(line);
+                if (data->getSubObjects().size() == 3)
+                {
+                    m_output = data->atKey("output").asString();
+                    m_gasUsed = spVALUE(new VALUE(data->atKey("gasUsed")));
+                    m_time = data->atKey("time").asInt();
+                }
+                else
+                    m_log.push_back(VMLogRecord(data));
+            }
+            else if (k == c_maxRowsToPrint)
+            {
+                m_limitReached = true;
+                m_rawUnparsedLogs += c_tooManyRawsMessage;
+                m_output = "";
+                m_gasUsed = spVALUE(new VALUE(DataObject("0x00")));
+                m_time = 0;
+            }
         }
+        fileHandler.close();
 
-        m_rawUnparsedLogs = _logs;
+        // Take a handle of t8ntool file in our own tmp path
+        auto const uniqueFolder = fs::unique_path();
+        fs::create_directory(_logs.parent_path().parent_path() / uniqueFolder);
+        m_rawVmTraceFile = _logs.parent_path().parent_path() / uniqueFolder / _logs.stem();
+        fs::rename(_logs, m_rawVmTraceFile);
     }
     catch (std::exception const& _ex)
     {
@@ -126,7 +151,31 @@ void DebugVMTrace::printNice()
         if (el.opName == "RETURN")
             s_comment = stepw + "RETURN " + el.memory->asString();
     }
+    if (m_limitReached)
+        std::cout << c_tooManyRawsMessage << std::endl;
     std::cout << std::endl;
+}
+
+void DebugVMTrace::exportLogs(fs::path const& _folder)
+{
+    try
+    {
+        if (!fs::exists(_folder.parent_path()))
+            fs::create_directories(_folder.parent_path());
+        fs::rename(m_rawVmTraceFile, _folder);
+    }
+    catch (std::exception const& _ex)
+    {
+        try
+        {
+            fs::copy(m_rawVmTraceFile, _folder);
+            fs::remove(m_rawVmTraceFile);
+        }
+        catch (std::exception const& _ex)
+        {
+            throw UpwardsException(string("DebugVMTrace::exportLogs error: ") + _ex.what());
+        }
+    }
 }
 
 }  // namespace teststruct
