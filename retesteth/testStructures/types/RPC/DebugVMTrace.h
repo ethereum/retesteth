@@ -1,7 +1,9 @@
 #pragma once
 #include "../../basetypes.h"
 #include <retesteth/dataObject/DataObject.h>
+#include <boost/filesystem/path.hpp>
 
+namespace fs = boost::filesystem;
 using namespace dataobject;
 
 namespace test
@@ -35,10 +37,10 @@ struct VMLogRecord
 struct DebugVMTrace
 {
     DebugVMTrace() {}  // for tuples
-    DebugVMTrace(string const& _info, string const& _trNumber, FH32 const& _trHash, string const& _logs);
+    DebugVMTrace(string const& _info, string const& _trNumber, FH32 const& _trHash, fs::path const& _logs);
     void print();
     void printNice();
-    string const& printRaw() const { return m_rawUnparsedLogs; }
+    void exportLogs(fs::path const& _folder);
 
 private:
     string m_infoString;
@@ -46,6 +48,8 @@ private:
     spFH32 m_trHash;
     std::vector<VMLogRecord> m_log;
     string m_rawUnparsedLogs;
+    fs::path m_rawVmTraceFile;
+    bool m_limitReached = false;
 
     // Last record
     string m_output;

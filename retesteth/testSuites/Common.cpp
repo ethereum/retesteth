@@ -67,7 +67,7 @@ void printVmTrace(VMtraceinfo const& _info)
         if (!Options::get().vmtracerawfolder.string().empty())
         {
             ETH_TEST_MESSAGE("Export vmtraceraw to " + (Options::get().vmtracerawfolder / _info.trName).string());
-            dev::writeFile(Options::get().vmtracerawfolder / _info.trName, asBytes(ret.printRaw()));
+            ret.exportLogs(Options::get().vmtracerawfolder / _info.trName);
         }
         else
             ret.print();
