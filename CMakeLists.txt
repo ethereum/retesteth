@@ -13,9 +13,9 @@ set(HUNTER_JOBS_NUMBER 4 CACHE STRING "Hunter jobs number")
 set(HUNTER_CACHE_SERVERS "https://github.com/ethereum/hunter-cache" CACHE STRING "Hunter cache servers")
 
 HunterGate(
-        URL "https://github.com/ruslo/hunter/archive/v0.23.44.tar.gz"
-        SHA1 "c4cfcc0cd39fdae8de08f6205b7f34cab4a7ba79"
-        LOCAL
+    URL "https://github.com/cpp-pm/hunter/archive/v0.24.7.tar.gz"
+    SHA1 "908ddcb223f25fa155315baae64ce0ab48a38bf7"
+    LOCAL
 )
 
 project(retesteth VERSION 0.2.3)
@@ -26,11 +26,13 @@ set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_DEBUG_RUNTIME OFF)
 
 IF (FETCHDEPS)
-    message(STATUS "[retesteth] Will now autoinstall custom dependency: Boost 1.79")
-    execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/cmake/scripts/boost.sh filesystem program_options system)
-    set(BOOST_ROOT ${CMAKE_CURRENT_BINARY_DIR}/dependecies/boost/boost_1_79_0/)
-    find_package(Boost 1.79 REQUIRED COMPONENTS  filesystem program_options system PATHS ${BOOST_ROOT}/tools/boost_install ${BOOST_ROOT}/stage/lib/cmake)
-    set(Boost_INCLUDE_DIR ${CMAKE_CURRENT_BINARY_DIR}/dependecies/boost/boost_1_79_0/)
+    hunter_add_package(Boost COMPONENTS filesystem program_options system)
+    find_package(Boost 1.79 REQUIRED COMPONENTS  filesystem program_options system)
+    #message(STATUS "[retesteth] Will now autoinstall custom dependency: Boost 1.79")
+    #execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/cmake/scripts/boost.sh filesystem program_options system)
+    #set(BOOST_ROOT ${CMAKE_CURRENT_BINARY_DIR}/dependecies/boost/boost_1_79_0/)
+    #find_package(Boost 1.79 REQUIRED COMPONENTS  filesystem program_options system PATHS ${BOOST_ROOT}/tools/boost_install ${BOOST_ROOT}/stage/lib/cmake)
+    #set(Boost_INCLUDE_DIR ${CMAKE_CURRENT_BINARY_DIR}/dependecies/boost/boost_1_79_0/)
 ELSE()
     message(STATUS "[retesteth] FETCHDEPS=FALSE looking for locally installed dependencies")
     find_package(Boost 1.79 REQUIRED COMPONENTS  filesystem program_options system)
