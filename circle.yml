@@ -152,25 +152,25 @@ defaults:
 version: 2
 jobs:
 
-  Linux-Clang6:
+  Linux-Clang11:
     environment:
       - BUILD_TYPE: Release
-      - CXX: clang++-6.0
-      - CC:  clang-6.0
-      - GCOV: llvm-cov-6.0 gcov
+      - CXX: clang++
+      - CC:  clang
+      - GCOV: llvm-cov gcov
       - GENERATOR: Ninja
       - BUILD_PARALLEL_JOBS: 8
       - TEST_PARALLEL_JOBS: 8
     docker:
-      - image: ethereum/cpp-build-env:7
+      - image: ethereum/cpp-build-env:18-clang-11
     steps: *linux-steps
 
-  Linux-GCC6-Debug:
+  Linux-GCC9-Debug:
     environment:
       - BUILD_TYPE: Debug
-      - CXX: g++-6
-      - CC:  gcc-6
-      - GCOV: gcov-6
+      - CXX: g++-9
+      - CC:  gcc-9
+      - GCOV: gcov-9
       - GENERATOR: Ninja
       - BUILD_PARALLEL_JOBS: 4
       - TEST_PARALLEL_JOBS: 4
@@ -178,7 +178,7 @@ jobs:
       # - CMAKE_OPTIONS: -DSANITIZE=address
       # - ASAN_OPTIONS: detect_leaks=0
     docker:
-      - image: ethereum/cpp-build-env:7
+      - image: ethereum/cpp-build-env:18-gcc-9
     steps: *linux-steps
 
   macOS-XCode12:
@@ -226,5 +226,5 @@ workflows:
   cpp-ethereum:
     jobs:
       - macOS-XCode12
-      - Linux-Clang6
-      - Linux-GCC6-Debug
+      - Linux-Clang11
+      - Linux-GCC9-Debug

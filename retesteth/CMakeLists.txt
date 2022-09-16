@@ -94,7 +94,7 @@ add_executable(${PROJECT_NAME} ${sources})
 
 if (JSONCPP)
     add_definitions(-DJSONCPP)
-    target_link_libraries(${PROJECT_NAME} PUBLIC Boost::filesystem Boost::program_options Boost::system jsoncpp_lib_static yaml-cpp::yaml-cpp devcore devcrypto cryptopp-static CURL::libcurl)
+    target_link_libraries(${PROJECT_NAME} PUBLIC ${Boost_LIBRARIES} jsoncpp_lib_static yaml-cpp devcore devcrypto cryptopp-static CURL::libcurl)
 else()
     target_link_libraries(${PROJECT_NAME} PUBLIC ${Boost_LIBRARIES} yaml-cpp devcore devcrypto cryptopp-static CURL::libcurl)
 endif()
