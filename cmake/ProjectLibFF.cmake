@@ -24,7 +24,10 @@ ExternalProject_Add(libff
     INSTALL_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR> --config Release --target install
     BUILD_BYPRODUCTS "${libff_library}"
 )
-add_dependencies(libff mpir)
+
+IF( NOT MPIR_FOUND )
+    add_dependencies(libff mpir)
+ENDIF()
 
 # Create snark imported library
 add_library(libff::ff STATIC IMPORTED)
@@ -32,5 +35,10 @@ file(MAKE_DIRECTORY ${libff_inlcude_dir})
 set_property(TARGET libff::ff PROPERTY IMPORTED_CONFIGURATIONS Release)
 set_property(TARGET libff::ff PROPERTY IMPORTED_LOCATION_RELEASE ${libff_library})
 set_property(TARGET libff::ff PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${libff_inlcude_dir})
-set_property(TARGET libff::ff PROPERTY INTERFACE_LINK_LIBRARIES MPIR::mpir)
+IF( NOT MPIR_FOUND )
+    set_property(TARGET libff::ff PROPERTY INTERFACE_LINK_LIBRARIES MPIR::mpir)
+ELSE()
+    set_property(TARGET libff::ff PROPERTY INTERFACE_LINK_LIBRARIES ${MPIR_LIBRARY})
+ENDIF()
+
 add_dependencies(libff::ff libff)
