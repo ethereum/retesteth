@@ -202,7 +202,7 @@ spDataObject FillTestAsBlockchain(StateTestInFiller const& _test)
                     dataPostfix += "_" + fork.asString();
 
                     if (filledTest->count(_test.testName() + dataPostfix))
-                        ETH_ERROR_MESSAGE("The test filler contain redundunt expect section: " + _test.testName() + dataPostfix);
+                        ETH_ERROR_MESSAGE("The test filler contain redundant expect section: " + _test.testName() + dataPostfix + " (" + tr.transaction()->dataLabel() + ")");
 
                     verifyFilledTest(_test.unitTestVerifyBC(), aBlockchainTest, fork);
                     (*filledTest).atKeyPointer(_test.testName() + dataPostfix) = aBlockchainTest;
