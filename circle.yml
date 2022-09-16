@@ -196,7 +196,7 @@ jobs:
           name: "Install macOS dependencies"
           # Python3 and requests are needed for Hunter upload.
           command: |
-            HOMEBREW_NO_AUTO_UPDATE=1 brew install -q cmake ninja git go@1.17
+            HOMEBREW_NO_AUTO_UPDATE=1 brew install -q cmake ninja git go@1.16
             git clone --depth 1 https://github.com/ethereum/go-ethereum.git
             git clone --depth 1 https://github.com/ethereum/tests.git
             cd go-ethereum
