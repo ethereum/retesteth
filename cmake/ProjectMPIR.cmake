@@ -1,15 +1,5 @@
-
-#set(MPIR_INCLUDE_DIR ${CMAKE_CURRENT_BINARY_DIR}/deps/include)
-#set(MPIR_LIBRARIES ${CMAKE_CURRENT_BINARY_DIR}/deps/lib)
-#find_path(MPIR_INCLUDE_DIR NAMES mpir.h )
-#find_library(MPIR_LIBRARIES NAMES mpir libmpir)
-#INCLUDE(FindPackageHandleStandardArgs)
-#FIND_PACKAGE_HANDLE_STANDARD_ARGS(mpir REQUIRED_VARS MPIR_LIBRARIES MPIR_INCLUDE_DIR)
-
-find_package(mpir)
-
-IF( NOT MPIR_FOUND )
-    message(STATUS "MPIR NOT FOUND, WILL USE HUNTER TO BUILD IT")
+IF (FETCHDEPS)
+    message(STATUS "[retesteth] Will add mpir dependency as external project to compile")
     include(ExternalProject)
     include(GNUInstallDirs)
 
@@ -35,6 +25,6 @@ IF( NOT MPIR_FOUND )
     set_property(TARGET MPIR::mpir PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${MPIR_INCLUDE_DIR})
     add_dependencies(MPIR::mpir mpir)
 ELSE()
-    message(STATUS "FOUND MPIR, CONFIGURE CMAKE VARS")
+    find_package(mpir REQUIRED)
 ENDIF()
 

@@ -63,11 +63,13 @@ find_library(MPIR_LIBRARY
 
 if ( MPIR_LIBRARY )
     set(MPIR_FOUND TRUE)
+else()
+    message(FATAL_ERROR "[mpir] Locally installed MPIR not found!")
 endif()
 
-message(STATUS
-    "mpir: FOUND=${MPIR_FOUND}, VERSION=${MPIR_VERSION}, LIB=${MPIR_LIBRARY}")
+message(STATUS "[mpir] FOUND=${MPIR_FOUND}, VERSION=${MPIR_VERSION}, LIB=${MPIR_LIBRARY}")
+message(STATUS "[mpir] Found FindMPIR: ${MPIR_LIBRARY}")
 
-message(STATUS "Found FindMPIR: ${MPIR_LIBRARY}")
+
 mark_as_advanced(MPIR_INCLUDE_DIR MPIR_LIBRARY)
 

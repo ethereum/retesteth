@@ -2,6 +2,10 @@
 cmake_minimum_required(VERSION 3.9.3)
 set(CMAKE_TOOLCHAIN_FILE ${CMAKE_SOURCE_DIR}/toolchain.cmake)
 
+if("${FETCHDEPS}" STREQUAL "")
+    set(FETCHDEPS TRUE)
+endif()
+
 include("./cmake/Hunter/HunterGate.cmake")
 
 set(HUNTER_CONFIGURATION_TYPES Release)
@@ -21,17 +25,19 @@ set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_DEBUG_RUNTIME OFF)
 
-find_package(Boost 1.79 COMPONENTS  filesystem program_options system)
-IF( NOT Boost_FOUND )
-    message("Boost 1.79 not found in system, trying to autoinstall")
+IF (FETCHDEPS)
+    message(STATUS "[retesteth] Will now autoinstall custom dependency: Boost 1.79")
     execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/cmake/scripts/boost.sh filesystem program_options system)
     set(BOOST_ROOT ${CMAKE_CURRENT_BINARY_DIR}/dependecies/boost/boost_1_79_0/)
     find_package(Boost 1.79 REQUIRED COMPONENTS  filesystem program_options system PATHS ${BOOST_ROOT}/tools/boost_install ${BOOST_ROOT}/stage/lib/cmake)
     set(Boost_INCLUDE_DIR ${CMAKE_CURRENT_BINARY_DIR}/dependecies/boost/boost_1_79_0/)
+ELSE()
+    message(STATUS "[retesteth] FETCHDEPS=FALSE looking for locally installed dependencies")
+    find_package(Boost 1.79 REQUIRED COMPONENTS  filesystem program_options system)
 ENDIF()
 
-message("Boost libdir: `${Boost_LIBRARIES}`")
-message("Boost include: `${Boost_INCLUDE_DIR}`")
+message(STATUS "[retesteth] Boost libdir: `${Boost_LIBRARIES}`")
+message(STATUS "[retesteth] Boost include: `${Boost_INCLUDE_DIR}`")
 
 hunter_add_package(yaml-cpp)
 find_package(yaml-cpp CONFIG REQUIRED)
@@ -40,6 +46,7 @@ find_package(cryptopp CONFIG REQUIRED)
 hunter_add_package(libscrypt)
 find_package(libscrypt CONFIG REQUIRED)
 
+# Silence cmake warnings on newer versions
 if (POLICY CMP0074)
     cmake_policy(SET CMP0074 NEW)   # Use download timestamp for remote objects
 endif()
