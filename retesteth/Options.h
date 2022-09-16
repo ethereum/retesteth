@@ -5,7 +5,6 @@
 #include <retesteth/configs/ClientConfig.h>
 #include <boost/filesystem.hpp>
 #include <boost/optional.hpp>
-#include <boost/program_options.hpp>
 
 using namespace dev;
 namespace test
