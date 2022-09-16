@@ -21,6 +21,18 @@ void travisOut(std::atomic_bool* _stopTravisOut);
 void timeoutThread(std::atomic_bool* _stopTimeout);
 void printTestSuiteSuggestions(string const& _sMinusTArg);
 bool checkTestSuiteIsKnown(int argc, const char* argv[], string sMinusTArg = string());
+void disableOutput()
+{
+    oldCoutStreamBuf = std::cout.rdbuf();
+    oldCerrStreamBuf = std::cerr.rdbuf();
+    std::cout.rdbuf(strCout.rdbuf());
+    std::cerr.rdbuf(strCout.rdbuf());
+}
+void enableOutput()
+{
+    std::cout.rdbuf(oldCoutStreamBuf);
+    std::cerr.rdbuf(oldCerrStreamBuf);
+}
 
 /*
 The equivalent of setlocale(LC_ALL, “C”) is called before any user code is run.
@@ -117,12 +129,7 @@ int main(int argc, const char* argv[])
 
         // Disable initial boost output as the random test suite must output valid json to std
         if (opt.createRandomTest)
-        {
-            oldCoutStreamBuf = std::cout.rdbuf();
-            oldCerrStreamBuf = std::cerr.rdbuf();
-            std::cout.rdbuf(strCout.rdbuf());
-            std::cerr.rdbuf(strCout.rdbuf());
-        }
+            disableOutput();
 
         // add custom test suite
         test_suite* ts1 = BOOST_TEST_SUITE(c_sDynamicTestSuiteName);
@@ -137,14 +144,25 @@ int main(int argc, const char* argv[])
     try
     {
         auto fakeInit = [](int, char* []) -> boost::unit_test::test_suite* { return nullptr; };
-        if (opt.jsontrace || opt.vmtrace || opt.statediff || opt.createRandomTest || !opt.travisOutThread)
+        if (opt.jsontrace || opt.vmtrace || opt.statediff || opt.createRandomTest || !opt.travisOutThread
+            || opt.getvectors)
         {
+            if (opt.getvectors)
+                disableOutput();
+
             std::atomic_bool stopTimeout{false};
             std::thread timeout(timeoutThread, &stopTimeout);
             // Do not use travis '.' output thread if debug is defined
             result = unit_test_main(fakeInit, argc, const_cast<char**>(argv));
             stopTimeout = true;
             timeout.join();
+
+            if (opt.getvectors)
+            {
+                enableOutput();
+                TestOutputHelper::get().printTestVectors();
+                disableOutput();
+            }
         }
         else
         {
@@ -210,11 +228,7 @@ void customTestSuite()
 {
     test::Options const& opt = test::Options::get();
     if (opt.createRandomTest)
-    {
-        // Restore output for creating test
-        std::cout.rdbuf(oldCoutStreamBuf);
-        std::cerr.rdbuf(oldCerrStreamBuf);
-    }
+        enableOutput();
 
     if (opt.singleTestFile.is_initialized() || opt.customTestFolder.is_initialized())
         runCustomTestFileOrFolder();

@@ -75,6 +75,7 @@ void printHelp()
     cout << setw(30) << "-d <label>" << setw(25) << "Set the transaction data array label (string) when running GeneralStateTests\n";
     cout << setw(30) << "-g <index>" << setw(25) << "Set the transaction gas array index when running GeneralStateTests\n";
     cout << setw(30) << "-v <index>" << setw(25) << "Set the transaction value array index when running GeneralStateTests\n";
+    cout << setw(30) << "--getvectors" << setw(25) << "Output all subunits of the given test (disables execution)\n";
     cout << setw(30) << "--vmtrace" << setw(25) << "Trace transaction execution\n";
     cout << setw(30) << "--vmtraceraw" << setw(25) << "Trace transaction execution raw format\n";
     cout << setw(30) << "--vmtraceraw <folder>" << setw(25) << "Trace transactions execution raw format to a given folder\n";
@@ -86,7 +87,6 @@ void printHelp()
     cout << setw(30) << "--verbosity <level>" << setw(25) << "Set logs verbosity. 0 - silent, 1 - only errors, 2 - informative, >2 - detailed\n";
     cout << setw(30) << "--nologcolor" << setw(25) << "Disable color codes in log output\n";
     cout << setw(30) << "--exectimelog" << setw(25) << "Output execution time for each test suite\n";
-//    cout << setw(30) << "--statediff" << setw(25) << "Trace state difference for state tests\n";
     cout << setw(30) << "--stderr" << setw(25) << "Redirect ipc client stderr to stdout\n";
     cout << setw(30) << "--travisout" << setw(25) << "Output `.` to stdout\n";
 
@@ -285,6 +285,8 @@ Options::Options(int argc, const char** argv)
             showhash = true;
         else if (arg == "--checkhash")
             checkhash = true;
+        else if (arg == "--getvectors")
+            getvectors = true;
         else if (arg == "--stats")
         {
             throwIfNoArgumentFollows();

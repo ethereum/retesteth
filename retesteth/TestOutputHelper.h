@@ -108,9 +108,14 @@ public:
     TestInfo const& testInfo() const { return m_testInfo; }
     std::string const& testName() const { return m_currentTestName; }
     boost::filesystem::path const& testFile() const { return m_currentTestFileName; }
+
+public:
     static void printTestExecStats();
     static void registerTestRunSuccess();
     static void currentTestRunPP() { m_currentTestRun++; };
+
+    static void addTestVector(std::string&& _str);
+    static void printTestVectors();
 
     /// get string representation of current threadID
     static std::thread::id getThreadID();

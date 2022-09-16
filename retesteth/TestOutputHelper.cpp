@@ -48,6 +48,10 @@ static std::map<thread::id, TestOutputHelper> helperThreadMap;  // threadID => o
 mutex g_totalTestsRun;
 mutex g_failedTestsMap;
 mutex g_execTotalErrors;
+
+mutex g_outputVectors;
+static std::vector<std::string> outputVectors;
+
 static int totalTestsRun = 0;
 static std::map<std::string, std::string> s_failedTestsMap;
 
@@ -427,4 +431,17 @@ std::string TestInfo::errorDebug() const
         message += ", TrData: `" + m_sTransactionData + "`";
 
     return message + ")" + cDefault;
+}
+
+void TestOutputHelper::addTestVector(std::string&& _str)
+{
+    std::lock_guard<std::mutex> lock(g_outputVectors);
+    outputVectors.push_back(_str);
+}
+
+void TestOutputHelper::printTestVectors()
+{
+    std::lock_guard<std::mutex> lock(g_outputVectors);
+    for (auto const& el : outputVectors)
+        std::cout << el;
 }

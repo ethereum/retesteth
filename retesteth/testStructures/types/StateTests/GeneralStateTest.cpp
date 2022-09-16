@@ -65,5 +65,38 @@ StateTestInFilled::StateTestInFilled(spDataObject& _data)
     m_name = _data->getKey();
 }
 
+void GeneralStateTest::getAllVectors() const
+{
+    string execTotal;
+    for (auto const& test : m_tests)
+    {
+        auto const& genTr = test.GeneralTr();
+
+        size_t k = 0;
+        size_t vectorSize = genTr.databoxVector().size() * genTr.gasLimitVector().size() * genTr.valueVector().size();
+        vectorSize = std::max(vectorSize, (size_t)1);
+
+        string* execs = new string[vectorSize];
+        for (size_t d = 0; d < genTr.databoxVector().size(); d++)
+            for (size_t g = 0; g < genTr.gasLimitVector().size(); g++)
+                for (size_t v = 0; v < genTr.valueVector().size(); v++)
+                {
+                    string exec;
+                    exec += "--singletest " + test.testName();
+                    exec += " -d " + test::fto_string(d);
+                    exec += " -g " + test::fto_string(g);
+                    exec += " -v " + test::fto_string(v);
+                    execs[k++] = std::move(exec);
+                }
+
+        for (auto const& fork : test.Post())
+            for (size_t k = 0; k < vectorSize; k++)
+                execTotal += execs[k] + " --singlenet " + fork.first.asString() + "\n";
+
+        delete[] execs;
+    }
+    TestOutputHelper::get().addTestVector(std::move(execTotal));
+}
+
 }  // namespace teststruct
 }  // namespace test

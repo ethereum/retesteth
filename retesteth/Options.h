@@ -63,6 +63,7 @@ public:
     bool statediff = false;        ///< Fill full post state in General tests
     bool fullstate = false;        ///< Replace large state output to it's hash
     bool createRandomTest = false; ///< Generate random test
+    bool getvectors = false;       ///< Request to print all subunits of the test
     bool travisOutThread = false;  ///< Output `.` to std:out when running tests
     boost::optional<uint64_t> randomTestSeed; ///< Define a seed for random test
 	bool jsontrace = false; ///< Vmtrace to stdout in json format

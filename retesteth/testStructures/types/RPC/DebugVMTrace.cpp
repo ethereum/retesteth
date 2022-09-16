@@ -69,8 +69,7 @@ DebugVMTrace::DebugVMTrace(
         fs::ifstream fileHandler(_logs);
         while (getline(fileHandler, line))
         {
-            k++;
-            if (k < c_maxRowsToPrint)
+            if (++k < c_maxRowsToPrint)
             {
                 m_rawUnparsedLogs += line + "\n";
                 auto const data = ConvertJsoncppStringToData(line);

@@ -30,6 +30,8 @@ struct StateTestTransactionBase : GCP_SPointerBase
     };
 
     std::vector<Databox> const& databoxVector() const { return m_databox; };
+    std::vector<VALUE> const& gasLimitVector() const { return m_gasLimit; };
+    std::vector<VALUE> const& valueVector() const { return m_value; };
 
 protected:
     StateTestTransactionBase(){};
