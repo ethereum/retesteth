@@ -80,7 +80,7 @@ int main(int argc, const char* argv[])
         }
     }
 
-    if (opt.createRandomTest || opt.singleTestFile.is_initialized() || opt.customTestFolder.is_initialized())
+    if (opt.createRandomTest || opt.singleTestFile || opt.customTestFolder)
     {
         bool testSuiteFound = false;
         for (int i = 0; i < argc; i++)
@@ -103,12 +103,12 @@ int main(int argc, const char* argv[])
         }
         if (!testSuiteFound)
         {
-            if (opt.singleTestFile.is_initialized())
+            if (opt.singleTestFile)
             {
                 std::cerr << "testfile <file>  requires a test suite to be set -t <TestSuite>\n";
                 return -1;
             }
-            else if (opt.customTestFolder.is_initialized())
+            else if (opt.customTestFolder)
             {
                 std::cerr << "testfolder <subfolder>  requires a test suite to be set -t <TestSuite>\n";
                 return -1;
@@ -216,7 +216,7 @@ void customTestSuite()
         std::cerr.rdbuf(oldCerrStreamBuf);
     }
 
-    if (opt.singleTestFile.is_initialized() || opt.customTestFolder.is_initialized())
+    if (opt.singleTestFile || opt.customTestFolder)
         runCustomTestFileOrFolder();
 }
 
@@ -224,14 +224,14 @@ void runCustomTestFileOrFolder()
 {
     test::Options const& opt = test::Options::get();
     auto runSuite = [&opt](test::TestSuite* _suite){
-        if (opt.singleTestFile.is_initialized())
+        if (opt.singleTestFile)
         {
-            boost::filesystem::path file(opt.singleTestFile.get());
+            boost::filesystem::path file(opt.singleTestFile);
             _suite->runTestWithoutFiller(file);
         }
-        else if (opt.customTestFolder.is_initialized())
+        else if (opt.customTestFolder)
         {
-            _suite->runAllTestsInFolder(opt.customTestFolder.get());
+            _suite->runAllTestsInFolder(opt.customTestFolder);
         }
     };
 
