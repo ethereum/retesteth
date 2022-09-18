@@ -25,16 +25,14 @@
 #include <retesteth/Options.h>
 #include <retesteth/TestHelper.h>
 #include <testStructures/Common.h>
-#include <boost/algorithm/string.hpp>
-#include <boost/filesystem.hpp>
 #include <retesteth/dataObject/SPointer.h>
 
 using namespace std;
 using namespace test;
 namespace fs = boost::filesystem;
 Options::DynamicOptions Options::m_dynamicOptions;
-void displayTestSuites();
 
+void displayTestSuites();
 void printVersion()
 {
     cout << prepareVersionString() << "\n";
@@ -42,28 +40,8 @@ void printVersion()
 
 void printHelp()
 {
-    printVersion();
-    cout << "Usage: \n";
-    cout << std::left;
-    cout << "\nSetting test suite\n";
-    cout << setw(30) << "-t <TestSuite>" << setw(0) << "Execute test operations\n";
-    cout << setw(30) << "-t <TestSuite>/<TestCase>" << setw(0) << "\n";
-    cout << "\nAll options below must follow after `--`\n";
-    cout << "\nRetesteth options\n";
-    cout << setw(40) << "-j <ThreadNumber>" << setw(0) << "Run test execution using threads\n";
-    cout << setw(40) << "--clients `client1, client2`" << setw(0)
-         << "Use following configurations from datadir path (default: ~/.retesteth)\n";
-    cout << setw(40) << "--datadir" << setw(0) << "Path to configs (default: ~/.retesteth)\n";
-    cout << setw(40) << "--nodes" << setw(0) << "List of client tcp ports (\"addr:ip, addr:ip\")\n";
-    cout << setw(42) << " " << setw(0) << "Overrides the config file \"socketAddress\" section \n";
-    cout << setw(40) << "--help -h" << setw(25) << "Display list of command arguments\n";
-    cout << setw(40) << "--version -v" << setw(25) << "Display build information\n";
-    cout << setw(40) << "--list" << setw(25) << "Display available test suites\n";
 
-    cout << "\nSetting test suite and test\n";
-    cout << setw(40) << "--testpath <PathToTheTestRepo>" << setw(25) << "Set path to the test repo\n";
-    cout << setw(40) << "--testfile <TestFile>" << setw(0) << "Run tests from a file. Requires -t <TestSuite>\n";
-    cout << setw(40) << "--testfolder <SubFolder>" << setw(0) << "Run tests from a custom test folder located in a given suite. Requires -t <TestSuite>\n";
+
     cout << setw(40) << "--outfile <TestFile>" << setw(0) << "When using `--testfile` with `--filltests` output to this file\n";
     cout << setw(40) << "--singletest <TestName>" << setw(0)
          << "Run on a single test. `Testname` is filename without Filler.json\n";
@@ -114,9 +92,212 @@ void printHelp()
     // in the output field\n";
 }
 
+bool Options::Option::match(string const& _arg) const
+{
+    if (m_argType == ARGS::ONEMERGED)
+        return m_sOptionName == _arg.substr(0, m_sOptionName.size());
+    else
+    {
+        for (auto const& el : explode(m_sOptionName, '|'))
+            if (el == _arg)
+                return true;
+    }
+    return false;
+}
+bool Options::Option::isAfterSeparatorOption() const
+{
+    return !m_allowBeforeSeparator;
+}
+
+void Options::Option::setDefHelp(string&& _def, std::function<void()> _help)
+{
+    m_sOptionName = std::move(_def);
+    m_printHelpFunc = _help;
+}
+
+void Options::Option::printHelp()
+{
+    if (m_printHelpFunc)
+        m_printHelpFunc();
+}
+
+void Options::Option::initArgs(const char** _argv, size_t _argc, string const& _arg, size_t& _i)
+{
+    m_inited = false;
+    auto throwIfNoArgumentFollows = [&_argc, &_argv, this](size_t i) {
+        auto throwException = [this](){
+            BOOST_THROW_EXCEPTION(InvalidOption(m_sOptionName + " option is missing an argument."));
+        };
+        if (i + 1 >= _argc)
+            throwException();
+        string nextArg{_argv[i + 1]};
+        if (nextArg.substr(0, 1) == "-")
+            throwException();
+    };
+
+    switch(m_argType)
+    {
+    case ARGS::NONE:
+    {
+        m_inited = true;
+        break;
+    }
+    case ARGS::ONEMERGED:
+    {
+        size_t optNameLength = m_sOptionName.length();
+        if (_arg.length() != optNameLength)
+        {
+            string mergedArg = _arg.substr(optNameLength, _arg.length());
+            initArg(mergedArg);
+        }
+        else
+        {
+            throwIfNoArgumentFollows(_i);
+            initArg(string{_argv[++_i]});
+        }
+        m_inited = true;
+        break;
+    }
+    case ARGS::ONE:
+    {
+        throwIfNoArgumentFollows(_i);
+        initArg(string{_argv[++_i]});
+        m_inited = true;
+        break;
+    }
+    default:
+        m_inited = false;
+    }
+}
+
+void Options::Option::tryInit(const char** _argv, size_t _argc)
+{
+    bool seenSeparator = false;
+    for (size_t i = 1; i < _argc; ++i)
+    {
+        auto arg = std::string{_argv[i]};
+        if (arg == "--")
+            seenSeparator = true;
+
+        if (match(arg))
+        {
+            if (m_optionOverrides)
+            {
+                m_inited = true;
+                break;
+            }
+
+            if (isAfterSeparatorOption() && !seenSeparator)
+                BOOST_THROW_EXCEPTION(
+                    InvalidOption(arg + " option appears before the separator `--`"));
+            if (!isAfterSeparatorOption() && seenSeparator)
+                BOOST_THROW_EXCEPTION(
+                    InvalidOption(arg + " option appears after the separator `--`"));
+
+            initArgs(_argv, _argc, arg, i);
+            break;
+        }
+    }
+}
+
+#define ADD_OPTION(VAR, STR, STRHELP) \
+ VAR.setDefHelp(STR, STRHELP); \
+ m_options.push_back(&VAR);
+
+#define ADD_OPTION_BOOST(VAR, STR, STRHELP) \
+ VAR.setBeforeSeparator(); \
+ VAR.setDefHelp(STR, STRHELP); \
+ m_options.push_back(&VAR);
+
+
+#define ADD_OPTION_OVERRIDE(VAR, STR, STRHELP) \
+ VAR.setOverrideOption(); \
+ VAR.setDefHelp(STR, STRHELP); \
+ m_options.push_back(&VAR);
+
+
 Options::Options(int argc, const char** argv)
 {
-    trDataIndex = -1;
+    ADD_OPTION_OVERRIDE(help, "-h|--help", [](){
+        printVersion();
+        cout << std::left;
+        cout << "\nUsage:\n";
+        cout << "General options\n";
+        cout << setw(30) << "-h --help" << setw(0) << "Display list of command arguments\n";
+    });
+    ADD_OPTION_OVERRIDE(version, "-v|--version", [](){
+        cout << setw(30) << "-v --version " << setw(0) << "Display build information\n";
+    });
+    ADD_OPTION_OVERRIDE(listsuites, "--list", [](){
+        cout << setw(30) << "--list" << setw(0) << "Display available test suites\n";
+    });
+
+    ADD_OPTION_BOOST(rCurrentTestSuite, "-t", [](){
+        cout << "\nSetting test suite\n";
+        cout << setw(30) << "-t <TestSuite>" << setw(0) << "Execute test operations\n";
+        cout << setw(30) << "-t <TestSuite>/<TestCase>" << setw(0) << "\n";
+        cout << "\nAll options below must follow after `--`\n";
+    });
+    ADD_OPTION(threadCount, "-j", [](){
+        cout << "\nRetesteth options\n";
+        cout << setw(40) << "-j <ThreadNumber>" << setw(0) << "Run test execution using threads\n";
+    });
+    ADD_OPTION(clients, "--clients", [](){
+        cout << setw(40) << "--clients `client1, client2`" << setw(0)
+             << "Use following configurations from datadir path (default: ~/.retesteth)\n";
+    });
+    ADD_OPTION(datadir, "--datadir", [](){
+        cout << setw(40) << "--datadir" << setw(0) << "Path to configs (default: ~/.retesteth)\n";
+    });
+    ADD_OPTION(nodesoverride, "--nodes", [](){
+        cout << setw(40) << "--nodes" << setw(0) << "List of client tcp ports (\"addr:ip, addr:ip\")\n";
+        cout << setw(40) << " " << setw(0) << "|-Overrides the config file \"socketAddress\" section \n";
+    });
+    ADD_OPTION(testpath, "--testpath", [](){
+        cout << "\nSetting test suite and test\n";
+        cout << setw(40) << "--testpath <PathToTheTestRepo>" << setw(25) << "Set path to the test repo\n";
+    });
+    ADD_OPTION(singleTestFile, "--testfile", [](){
+        cout << setw(40) << "--testfile <TestFile>" << setw(0) << "Run tests from a file. Requires -t <TestSuite>\n";
+    });
+    ADD_OPTION(customTestFolder, "--testfolder", [](){
+        cout << setw(40) << "--testfolder <SubFolder>" << setw(0) << "Run tests from a custom test folder located in a given suite. Requires -t <TestSuite>\n";
+    });
+
+
+
+    for(auto& option : m_options)
+        option->tryInit(argv, argc);
+
+    if (help.initialized())
+    {
+        for(auto& option : m_options)
+            option->printHelp();
+        exit(0);
+    }
+
+    if (version.initialized())
+    {
+        printVersion();
+        exit(0);
+    }
+
+    if (listsuites.initialized())
+    {
+        displayTestSuites();
+        exit(0);
+    }
+
+    if (customTestFolder.initialized() && singleTestFile.initialized())
+    {
+        std::cerr << "Error: `--testfolder` initialized together with `--testfile`" << std::endl;
+        exit(1);
+    }
+
+
+    exit(0);
+
+    /*trDataIndex = -1;
     trGasIndex = -1;
     trValueIndex = -1;
     bool seenSeparator = false;  // true if "--" has been seen.
@@ -483,11 +664,6 @@ Options::Options(int argc, const char** argv)
         else if (arg == "--seed")
         {
             throwIfNoArgumentFollows();
-            /*u256 input = toInt(argv[++i]);
-                    if (input > std::numeric_limits<uint64_t>::max())
-                        BOOST_WARN("Seed is > u64. Using u64_max instead.");
-                    randomTestSeed =
-               static_cast<uint64_t>(min<u256>(std::numeric_limits<uint64_t>::max(), input));*/
         }
         else if (arg == "--clients")
         {
@@ -544,6 +720,7 @@ Options::Options(int argc, const char** argv)
 
     if (threadCount == 1)
         dataobject::GCP_SPointer<int>::DISABLETHREADSAFE();
+    */
 }
 
 Options const& Options::get(int argc, const char** argv)
@@ -603,3 +780,5 @@ bool Options::isLegacy()
 
     return isLegacy;
 }
+
+

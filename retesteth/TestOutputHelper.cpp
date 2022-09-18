@@ -233,8 +233,7 @@ void TestOutputHelper::printBoostError()
 void TestOutputHelper::printTestExecStats()
 {
     auto const& opt = Options::get();
-    if (!(opt.singleTestFile.is_initialized()
-            || opt.customTestFolder.is_initialized()))
+    if (!(opt.singleTestFile || opt.customTestFolder))
         checkUnfinishedTestFolders();
 
     if (Options::get().exectimelog)
