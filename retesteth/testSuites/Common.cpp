@@ -64,10 +64,11 @@ void printVmTrace(VMtraceinfo const& _info)
     ETH_TEST_MESSAGE("------------------------");
     if (Options::get().vmtraceraw)
     {
-        if (!Options::get().vmtracerawfolder.string().empty())
+        if (!Options::get().vmtraceraw.outpath.empty())
         {
-            ETH_TEST_MESSAGE("Export vmtraceraw to " + (Options::get().vmtracerawfolder / _info.trName).string());
-            ret.exportLogs(Options::get().vmtracerawfolder / _info.trName);
+            auto outpath = fs::path(Options::get().vmtraceraw.outpath);
+            ETH_TEST_MESSAGE("Export vmtraceraw to " + (outpath / _info.trName).string());
+            ret.exportLogs(outpath / _info.trName);
         }
         else
             ret.print();

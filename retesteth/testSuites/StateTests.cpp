@@ -55,10 +55,10 @@ namespace
 bool OptionsAllowTransaction(test::teststruct::TransactionInGeneralSection const& _tr)
 {
     Options const& opt = Options::get();
-    if ((opt.trDataIndex == (int)_tr.dataInd() || opt.trDataIndex == -1) &&
+    if ((opt.trData.index == (int)_tr.dataInd() || opt.trData.index == -1) &&
         (opt.trGasIndex == (int)_tr.gasInd() || opt.trGasIndex == -1) &&
         (opt.trValueIndex == (int)_tr.valueInd() || opt.trValueIndex == -1) &&
-        (opt.trDataLabel == _tr.transaction()->dataLabel() || opt.trDataLabel.empty()))
+        (opt.trData.label == _tr.transaction()->dataLabel() || opt.trData.label.empty()))
         return true;
     return false;
 }
@@ -86,7 +86,7 @@ void checkUnexecutedTransactions(std::vector<TransactionInGeneralSection> const&
     {
         Options const& opt = Options::get();
         TestInfo errorInfo(
-            opt.singleTestNet.empty() ? "N/A" : opt.singleTestNet, opt.trDataIndex, opt.trGasIndex, opt.trValueIndex);
+            opt.singleTestNet.empty() ? "N/A" : opt.singleTestNet.c_str(), opt.trData.index, opt.trGasIndex, opt.trValueIndex);
         TestOutputHelper::get().setCurrentTestInfo(errorInfo);
     }
     ETH_ERROR_REQUIRE_MESSAGE(atLeastOneExecuted, "Specified filter did not run a single transaction! ");
@@ -487,11 +487,11 @@ void RunTest(StateTestInFilled const& _test)
                     {
                         auto const remStateJson = getRemoteState(session).asDataObject()->asJson();
                         ETH_LOG("\nRunning test State Dump:" + TestOutputHelper::get().testInfo().errorDebug() + cDefault + " \n" + remStateJson, 6);
-                        if (!Options::get().poststatefolder.empty())
+                        if (!Options::get().poststate.outpath.empty())
                         {
                             string testNameOut = _test.testName() + "_d" + tr.dataIndS() + "g" + tr.gasIndS() + "v" + tr.valueIndS();
                             testNameOut += "_" + network.asString() + ".txt";
-                            dev::writeFile(Options::get().poststatefolder / testNameOut, dev::asBytes(remStateJson));
+                            dev::writeFile(fs::path(Options::get().poststate.outpath) / testNameOut, dev::asBytes(remStateJson));
                         }
                     }
 

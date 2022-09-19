@@ -239,9 +239,9 @@ spDataObject DoTests(spDataObject& _input, TestSuite::TestSuiteOptions& _opt)
         for (BlockchainTestInFiller const& bcTest : testFiller.tests())
         {
             // Select test by name if --singletest and --singlenet is set
-            if (Options::get().singleTest)
+            if (Options::get().singletest.initialized())
             {
-                if (!Options::get().singleSubTestName.empty() && bcTest.testName() != Options::get().singleSubTestName)
+                if (!Options::get().singletest.subname.empty() && bcTest.testName() != Options::get().singletest.subname)
                     continue;
             }
             if (!Options::get().singleTestNet.empty())
@@ -280,9 +280,9 @@ spDataObject DoTests(spDataObject& _input, TestSuite::TestSuiteOptions& _opt)
         for (BlockchainTestInFilled const& bcTest : test.tests())
         {
             // Select test by name if --singletest and --singlenet is set
-            if (Options::get().singleTest)
+            if (Options::get().singletest.initialized())
             {
-                if (!Options::get().singleSubTestName.empty() && bcTest.testName() != Options::get().singleSubTestName)
+                if (!Options::get().singletest.subname.empty() && bcTest.testName() != Options::get().singletest.subname)
                     continue;
             }
 
