@@ -26,15 +26,15 @@ BOOST_AUTO_TEST_CASE(options_singletestA)
 {
     const char* argv[] = {"./retesteth", "--", "--singletest", "filename"};
     TestOptions opt(4, argv);
-    BOOST_CHECK(opt.get().singleTestName == "filename");
+    BOOST_CHECK(opt.get().singletest.name == "filename");
 }
 
 BOOST_AUTO_TEST_CASE(options_singletestAsB)
 {
     const char* argv[] = {"./retesteth", "--", "--singletest", "filename/testname"};
     TestOptions opt(4, argv);
-    BOOST_CHECK(opt.get().singleTestName == "filename");
-    BOOST_CHECK(opt.get().singleSubTestName == "testname");
+    BOOST_CHECK(opt.get().singletest.name == "filename");
+    BOOST_CHECK(opt.get().singletest.subname == "testname");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

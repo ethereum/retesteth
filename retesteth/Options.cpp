@@ -23,7 +23,6 @@
 
 #include <dataObject/ConvertFile.h>
 #include <retesteth/Options.h>
-#include <retesteth/TestHelper.h>
 #include <testStructures/Common.h>
 #include <retesteth/dataObject/SPointer.h>
 
@@ -36,60 +35,6 @@ void displayTestSuites();
 void printVersion()
 {
     cout << prepareVersionString() << "\n";
-}
-
-void printHelp()
-{
-
-
-    cout << setw(40) << "--outfile <TestFile>" << setw(0) << "When using `--testfile` with `--filltests` output to this file\n";
-    cout << setw(40) << "--singletest <TestName>" << setw(0)
-         << "Run on a single test. `Testname` is filename without Filler.json\n";
-    cout << setw(40) << "--singletest <TestName>/<Subtest>" << setw(0) << "`Subtest` is a test name inside the file\n";
-    cout << setw(40) << "--singlenet <ForkName>" << setw(0) << "Run only specific fork configuration\n";
-
-    cout << "\nDebugging\n";
-    cout << setw(30) << "-d <index>" << setw(25) << "Set the transaction data array index when running GeneralStateTests\n";
-    cout << setw(30) << "-d <label>" << setw(25) << "Set the transaction data array label (string) when running GeneralStateTests\n";
-    cout << setw(30) << "-g <index>" << setw(25) << "Set the transaction gas array index when running GeneralStateTests\n";
-    cout << setw(30) << "-v <index>" << setw(25) << "Set the transaction value array index when running GeneralStateTests\n";
-    cout << setw(30) << "--vmtrace" << setw(25) << "Trace transaction execution\n";
-    cout << setw(30) << "--vmtraceraw" << setw(25) << "Trace transaction execution raw format\n";
-    cout << setw(30) << "--vmtraceraw <folder>" << setw(25) << "Trace transactions execution raw format to a given folder\n";
-    cout << setw(30) << "--vmtrace.nomemory" << setw(25) << "Disable memory in vmtrace/vmtraceraw\n";
-    cout << setw(30) << "--vmtrace.nostack" << setw(25) << "Disable stack in vmtrace/vmtraceraw\n";
-    cout << setw(30) << "--vmtrace.noreturndata" << setw(25) << "Disable returndata in vmtrace/vmtraceraw\n";
-    cout << setw(30) << "--limitblocks" << setw(25) << "Limit the block exectuion in blockchain tests for debug\n";
-    cout << setw(30) << "--limitrpc" << setw(25) << "Limit the rpc exectuion in tests for debug\n";
-    cout << setw(30) << "--verbosity <level>" << setw(25) << "Set logs verbosity. 0 - silent, 1 - only errors, 2 - informative, >2 - detailed\n";
-    cout << setw(30) << "--nologcolor" << setw(25) << "Disable color codes in log output\n";
-    cout << setw(30) << "--exectimelog" << setw(25) << "Output execution time for each test suite\n";
-//    cout << setw(30) << "--statediff" << setw(25) << "Trace state difference for state tests\n";
-    cout << setw(30) << "--stderr" << setw(25) << "Redirect ipc client stderr to stdout\n";
-    cout << setw(30) << "--travisout" << setw(25) << "Output `.` to stdout\n";
-
-    cout << "\nAdditional Tests\n";
-    cout << setw(30) << "--all" << setw(0) << "Enable all tests\n";
-    cout << setw(30) << "--lowcpu" << setw(25) << "Disable cpu intense tests\n";
-
-    cout << "\nTest Generation\n";
-    cout << setw(30) << "--filltests" << setw(0) << "Run test fillers\n";
-    cout << setw(30) << "--fillchain" << setw(25) << "When filling the state tests, fill tests as blockchain instead\n";
-    cout << setw(30) << "--showhash" << setw(25) << "Show filler hash debug information\n";
-    cout << setw(30) << "--checkhash" << setw(25) << "Check that tests are updated from fillers\n";
-    cout << setw(30) << "--poststate" << setw(25) << "Debug(6) show test postState hash or fullstate, when used with --filltests export `postState` in StateTests\n";
-    cout << setw(30) << "--poststate <folder>" << setw(25) << "Same as above plus export test post states into a folder\n";
-    cout << setw(30) << "--fullstate" << setw(25) << "Do not compress large states to hash when debug\n";
-    cout << setw(30) << "--forceupdate" << setw(25) << "Update generated test (_info) even if there are no changes\n";
-
-    //	cout << setw(30) << "--randomcode <MaxOpcodeNum>" << setw(25) << "Generate smart random EVM
-    //code\n"; 	cout << setw(30) << "--createRandomTest" << setw(25) << "Create random test and
-    //output it to the console\n"; 	cout << setw(30) << "--createRandomTest <PathToOptions.json>" <<
-    //setw(25) << "Use following options file for random code generation\n"; 	cout << setw(30) <<
-    //"--seed <uint>" << setw(25) << "Define a seed for random test\n"; 	cout << setw(30) <<
-    //"--options <PathTo.json>" << setw(25) << "Use following options file for random code
-    //generation\n";  cout << setw(30) << "--fulloutput" << setw(25) << "Disable address compression
-    // in the output field\n";
 }
 
 bool Options::Option::match(string const& _arg) const
@@ -109,6 +54,12 @@ bool Options::Option::isAfterSeparatorOption() const
     return !m_allowBeforeSeparator;
 }
 
+void Options::Option::validate() const
+{
+    if (initialized() && m_validatorFunc)
+        m_validatorFunc();
+}
+
 void Options::Option::setDefHelp(string&& _def, std::function<void()> _help)
 {
     m_sOptionName = std::move(_def);
@@ -121,9 +72,9 @@ void Options::Option::printHelp()
         m_printHelpFunc();
 }
 
-void Options::Option::initArgs(const char** _argv, size_t _argc, string const& _arg, size_t& _i)
+void Options::Option::initArgs(const char** _argv, size_t _argc, string const& _optionName, size_t _i)
 {
-    m_inited = false;
+    m_inited = m_inited || false;
     auto throwIfNoArgumentFollows = [&_argc, &_argv, this](size_t i) {
         auto throwException = [this](){
             BOOST_THROW_EXCEPTION(InvalidOption(m_sOptionName + " option is missing an argument."));
@@ -140,14 +91,21 @@ void Options::Option::initArgs(const char** _argv, size_t _argc, string const& _
     case ARGS::NONE:
     {
         m_inited = true;
+        return;
+    }
+    case ARGS::NONE_OPTIONAL:
+    {
+        if (_i + 1 < _argc)
+            initArg(string{_argv[++_i]});
+        m_inited = true;
         break;
     }
     case ARGS::ONEMERGED:
     {
         size_t optNameLength = m_sOptionName.length();
-        if (_arg.length() != optNameLength)
+        if (_optionName.length() != optNameLength)
         {
-            string mergedArg = _arg.substr(optNameLength, _arg.length());
+            string mergedArg = _optionName.substr(optNameLength, _optionName.length());
             initArg(mergedArg);
         }
         else
@@ -156,14 +114,14 @@ void Options::Option::initArgs(const char** _argv, size_t _argc, string const& _
             initArg(string{_argv[++_i]});
         }
         m_inited = true;
-        break;
+        return;
     }
     case ARGS::ONE:
     {
         throwIfNoArgumentFollows(_i);
         initArg(string{_argv[++_i]});
         m_inited = true;
-        break;
+        return;
     }
     default:
         m_inited = false;
@@ -204,11 +162,15 @@ void Options::Option::tryInit(const char** _argv, size_t _argc)
  VAR.setDefHelp(STR, STRHELP); \
  m_options.push_back(&VAR);
 
+#define ADD_OPTIONV(VAR, STR, STRHELP, VALIDATOR) \
+ VAR.setValidator(VALIDATOR); \
+ VAR.setDefHelp(STR, STRHELP); \
+ m_options.push_back(&VAR);
+
 #define ADD_OPTION_BOOST(VAR, STR, STRHELP) \
  VAR.setBeforeSeparator(); \
  VAR.setDefHelp(STR, STRHELP); \
  m_options.push_back(&VAR);
-
 
 #define ADD_OPTION_OVERRIDE(VAR, STR, STRHELP) \
  VAR.setOverrideOption(); \
@@ -225,22 +187,39 @@ Options::Options(int argc, const char** argv)
         cout << "General options\n";
         cout << setw(30) << "-h --help" << setw(0) << "Display list of command arguments\n";
     });
+    help.setValidator([this](){
+        for(auto& option : m_options)
+            option->printHelp();
+        exit(0);
+    });
+
     ADD_OPTION_OVERRIDE(version, "-v|--version", [](){
         cout << setw(30) << "-v --version " << setw(0) << "Display build information\n";
     });
+    version.setValidator([](){
+            printVersion();
+            exit(0);
+    });
+
     ADD_OPTION_OVERRIDE(listsuites, "--list", [](){
         cout << setw(30) << "--list" << setw(0) << "Display available test suites\n";
+    });
+    listsuites.setValidator([](){
+            displayTestSuites();
+            exit(0);
     });
 
     ADD_OPTION_BOOST(rCurrentTestSuite, "-t", [](){
         cout << "\nSetting test suite\n";
         cout << setw(30) << "-t <TestSuite>" << setw(0) << "Execute test operations\n";
-        cout << setw(30) << "-t <TestSuite>/<TestCase>" << setw(0) << "\n";
+        cout << setw(30) << "-t <TestSuite>/<TestCase>" << setw(0) << "See `--testfile` and `--testfolder` to run custom tests\n";
         cout << "\nAll options below must follow after `--`\n";
     });
-    ADD_OPTION(threadCount, "-j", [](){
+    ADD_OPTIONV(threadCount, "-j", [](){
         cout << "\nRetesteth options\n";
         cout << setw(40) << "-j <ThreadNumber>" << setw(0) << "Run test execution using threads\n";
+        },[this](){
+            threadCount = max((size_t)1, (size_t)threadCount);
     });
     ADD_OPTION(clients, "--clients", [](){
         cout << setw(40) << "--clients `client1, client2`" << setw(0)
@@ -257,42 +236,150 @@ Options::Options(int argc, const char** argv)
         cout << "\nSetting test suite and test\n";
         cout << setw(40) << "--testpath <PathToTheTestRepo>" << setw(25) << "Set path to the test repo\n";
     });
-    ADD_OPTION(singleTestFile, "--testfile", [](){
+    ADD_OPTIONV(singleTestFile, "--testfile", [](){
         cout << setw(40) << "--testfile <TestFile>" << setw(0) << "Run tests from a file. Requires -t <TestSuite>\n";
+        }, [this](){
+        if (customTestFolder.initialized())
+        {
+            std::cerr << "Error: `--testfolder` initialized together with `--testfile`" << std::endl;
+            exit(1);
+        }
     });
-    ADD_OPTION(customTestFolder, "--testfolder", [](){
+    ADD_OPTION(singleTestOutFile, "--outfile", [](){
+        cout << setw(40) << "--outfile <TestFile>" << setw(0) << "When using `--testfile` with `--filltests` output to this file\n";
+    });
+    ADD_OPTIONV(customTestFolder, "--testfolder", [](){
         cout << setw(40) << "--testfolder <SubFolder>" << setw(0) << "Run tests from a custom test folder located in a given suite. Requires -t <TestSuite>\n";
+        }, [this](){
+        if (singleTestFile.initialized())
+        {
+            std::cerr << "Error: `--testfolder` initialized together with `--testfile`" << std::endl;
+            exit(1);
+        }
+    });
+    ADD_OPTION(singletest, "--singletest", [](){
+        cout << setw(40) << "--singletest <TestName>" << setw(0)
+             << "Run on a single test. `Testname` is filename without Filler.json\n";
+        cout << setw(40) << "--singletest <TestName>/<Subtest>" << setw(0) << "`Subtest` is a test name inside the file\n";
+    });
+    ADD_OPTION(singleTestNet, "--singlenet", [](){
+        cout << setw(40) << "--singlenet <ForkName>" << setw(0) << "Run only specific fork configuration\n";
+    });
+    ADD_OPTION(trData, "-d", [](){
+        cout << "\nDebugging\n";
+        cout << setw(30) << "-d <index>" << setw(25) << "Set the transaction data array index when running GeneralStateTests\n";
+        cout << setw(30) << "-d <label>" << setw(25) << "Set the transaction data array label (string) when running GeneralStateTests\n";
+    });
+    ADD_OPTION(trGasIndex, "-g", [](){
+        cout << setw(30) << "-g <index>" << setw(25) << "Set the transaction gas array index when running GeneralStateTests\n";
+    });
+    ADD_OPTION(trValueIndex, "-v", [](){
+        cout << setw(30) << "-v <index>" << setw(25) << "Set the transaction value array index when running GeneralStateTests\n";
+    });
+    ADD_OPTION(vmtrace, "--vmtrace", [](){
+        cout << setw(30) << "--vmtrace" << setw(25) << "Trace transaction execution\n";
+    });
+    ADD_OPTIONV(vmtraceraw, "--vmtraceraw", [](){
+        cout << setw(30) << "--vmtraceraw" << setw(25) << "Trace transaction execution raw format\n";
+        cout << setw(30) << "--vmtraceraw <folder>" << setw(25) << "Trace transactions execution raw format to a given folder\n";
+        }, [this](){
+            vmtrace = true;
+    });
+    ADD_OPTIONV(vmtrace_nomemory, "--vmtrace.nomemory", [](){
+        cout << setw(30) << "--vmtrace.nomemory" << setw(25) << "Disable memory in vmtrace/vmtraceraw\n";
+        }, [this](){
+            if (!(vmtrace.initialized() || vmtraceraw.initialized()))
+                std::cerr << "Error: --vmtrace.nomemory requires --vmtrace or --vmtraceraw" << std::endl;
+    });
+    ADD_OPTIONV(vmtrace_nostack, "--vmtrace.nostack", [](){
+            cout << setw(30) << "--vmtrace.nostack" << setw(25) << "Disable stack in vmtrace/vmtraceraw\n";
+        }, [this](){
+            if (!(vmtrace.initialized() || vmtraceraw.initialized()))
+                std::cerr << "Error: --vmtrace.nostack requires --vmtrace or --vmtraceraw" << std::endl;
+    });
+    ADD_OPTIONV(vmtrace_noreturndata, "--vmtrace.noreturndata", [](){
+            cout << setw(30) << "--vmtrace.noreturndata" << setw(25) << "Disable returndata in vmtrace/vmtraceraw\n";
+        }, [this](){
+            if (!(vmtrace.initialized() || vmtraceraw.initialized()))
+            std::cerr << "Error: --vmtrace.noreturndata requires --vmtrace or --vmtraceraw" << std::endl;
+    });
+    ADD_OPTION(blockLimit, "--limitblocks", [](){
+            cout << setw(30) << "--limitblocks" << setw(25) << "Limit the block exectuion in blockchain tests for debug\n";
+    });
+    ADD_OPTION(rpcLimit, "--limitrpc", [](){
+        cout << setw(30) << "--limitrpc" << setw(25) << "Limit the rpc exectuion in tests for debug\n";
+    });
+    ADD_OPTIONV(logVerbosity, "--verbosity", [](){
+        cout << setw(30) << "--verbosity <level>" << setw(25) << "Set logs verbosity. 0 - silent, 1 - only errors, 2 - informative, >2 - detailed\n";
+        },[this](){
+            // disable all output
+            static std::ostringstream strCout;
+            if (logVerbosity == 0)
+            {
+                std::cout.rdbuf(strCout.rdbuf());
+                std::cerr.rdbuf(strCout.rdbuf());
+            }
+    });
+    ADD_OPTION(nologcolor, "--nologcolor", [](){
+        cout << setw(30) << "--nologcolor" << setw(25) << "Disable color codes in log output\n";
+    });
+    ADD_OPTION(exectimelog, "--exectimelog", [](){
+        cout << setw(30) << "--exectimelog" << setw(25) << "Output execution time for each test suite\n";
+    });
+    ADD_OPTION(enableClientsOutput, "--stderr", [](){
+        cout << setw(30) << "--stderr" << setw(25) << "Redirect ipc client stderr to stdout\n";
+    });
+    ADD_OPTION(travisOutThread, "--travisout", [](){
+        cout << setw(30) << "--travisout" << setw(25) << "Output `.` to stdout\n";
+    });
+    ADD_OPTION(all, "--all", [](){
+        cout << "\nAdditional Tests\n";
+        cout << setw(30) << "--all" << setw(0) << "Enable all tests\n";
+    });
+    ADD_OPTION(lowcpu, "--lowcpu", [](){
+        cout << setw(30) << "--lowcpu" << setw(25) << "Disable cpu intense tests\n";
+    });
+    ADD_OPTION(filltests, "--filltests", [](){
+        cout << "\nTest Generation\n";
+        cout << setw(30) << "--filltests" << setw(0) << "Run test fillers\n";
+    });
+    ADD_OPTIONV(fillchain, "--fillchain", [](){
+        cout << setw(30) << "--fillchain" << setw(25) << "When filling the state tests, fill tests as blockchain instead\n";
+        },[this](){
+            if (!filltests.initialized())
+            {
+                std::cout << "WARNING: `--fillchain` option provided without `--filltests`, activating `--filltests` (did you mean `--filltests`?)\n";
+                filltests = true;
+            }
+    });
+    ADD_OPTION(showhash, "--showhash", [](){
+        cout << setw(30) << "--showhash" << setw(25) << "Show filler hash debug information\n";
+    });
+    ADD_OPTION(checkhash, "--checkhash", [](){
+        cout << setw(30) << "--checkhash" << setw(25) << "Check that tests are updated from fillers\n";
+    });
+    ADD_OPTIONV(poststate, "--poststate", [](){
+        cout << setw(30) << "--poststate" << setw(25) << "Debug(6) show test postState hash or fullstate, when used with --filltests export `postState` in StateTests\n";
+        cout << setw(30) << "--poststate <folder>" << setw(25) << "Same as above plus export test post states into a folder\n";
+        }, [this](){
+            if (!filltests.initialized())
+                std::cerr << "Error: --poststate requires --filltests" << std::endl;
+    });
+    ADD_OPTION(fullstate, "--fullstate", [](){
+        cout << setw(30) << "--fullstate" << setw(25) << "Do not compress large states to hash when debug\n";
+    });
+    ADD_OPTION(forceupdate, "--forceupdate", [](){
+        cout << setw(30) << "--forceupdate" << setw(25) << "Update generated test (_info) even if there are no changes\n";
     });
 
 
+    // check for unrecognized options
 
     for(auto& option : m_options)
         option->tryInit(argv, argc);
+    for(auto& option : m_options)
+        option->validate();
 
-    if (help.initialized())
-    {
-        for(auto& option : m_options)
-            option->printHelp();
-        exit(0);
-    }
-
-    if (version.initialized())
-    {
-        printVersion();
-        exit(0);
-    }
-
-    if (listsuites.initialized())
-    {
-        displayTestSuites();
-        exit(0);
-    }
-
-    if (customTestFolder.initialized() && singleTestFile.initialized())
-    {
-        std::cerr << "Error: `--testfolder` initialized together with `--testfile`" << std::endl;
-        exit(1);
-    }
 
 
     exit(0);
@@ -763,8 +850,8 @@ void displayTestSuites()
 string Options::getGStateTransactionFilter() const
 {
     string filter;
-    filter += trDataIndex == -1 ? string() : " dInd: " + to_string(trDataIndex);
-    filter += trDataLabel.empty() ? string() : " dLbl: " + trDataLabel;
+    filter += trData.index == -1 ? string() : " dInd: " + to_string(trData.index);
+    filter += trData.label.empty() ? string() : " dLbl: " + trData.label;
     filter += trGasIndex == -1 ? string() : " gInd: " + to_string(trGasIndex);
     filter += trValueIndex == -1 ? string() : " vInd: " + to_string(trValueIndex);
     return filter;

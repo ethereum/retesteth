@@ -1,11 +1,11 @@
-
 #pragma once
 
 #include <libdevcore/Exceptions.h>
-#include <retesteth/configs/ClientConfig.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/optional.hpp>
+#include <retesteth/TestHelper.h>
+#include <retesteth/configs/ClientConfig.h>
 
 using namespace dev;
 namespace test
@@ -17,22 +17,24 @@ private:
     enum class ARGS
     {
         NONE,
+        NONE_OPTIONAL,
         ONE,
-        ONEMERGED,
-        TWO
+        ONEMERGED
     };
 
     class Option
     {
     public:
         bool initialized() const { return m_inited; }
+        void setValidator(std::function<void()> _func) { m_validatorFunc = _func; }
         void setDefHelp(string&& _def, std::function<void()> _help);
         void setBeforeSeparator() { m_allowBeforeSeparator = true; }
         void setOverrideOption() { m_optionOverrides = true; }
         void tryInit(const char** _argv, size_t _argc);
         void printHelp();
+        void validate() const;
     private:
-        void initArgs(const char** _argv, size_t _argc, string const& _arg, size_t& _i);
+        void initArgs(const char** _argv, size_t _argc, string const& _optionName, size_t _i);
         bool isAfterSeparatorOption() const;
         bool match(string const& _arg) const;
     protected:
@@ -40,11 +42,13 @@ private:
         Option(){};
         string m_sOptionHelp;
         string m_sOptionName;
+
         ARGS m_argType;
         bool m_allowBeforeSeparator = false;
         bool m_optionOverrides = false;
         bool m_inited = false;
         std::function<void()> m_printHelpFunc;
+        std::function<void()> m_validatorFunc;
     };
 
     struct void_opt : public Option
@@ -58,10 +62,43 @@ private:
     {
         sizet_opt(int _arg) { m_argType = ARGS::ONEMERGED; m_arg = (size_t)_arg; }
         operator size_t() const { return m_arg; }
+        sizet_opt& operator=(size_t _var) { m_arg = _var; return *this;}
     protected:
         size_t m_arg;
         void initArg(string const& _arg) override {
-            m_arg = max(1, atoi(_arg.c_str()));
+            m_arg = max(0, atoi(_arg.c_str()));
+        }
+    };
+
+    struct int_opt : public Option
+    {
+        int_opt(int _arg) : m_arg(_arg) { m_argType = ARGS::ONE; }
+        operator int() const { return m_arg; }
+    protected:
+        int m_arg;
+        void initArg(string const& _arg) override {
+            m_arg = atoi(_arg.c_str());
+        }
+    };
+
+    struct bool_opt : public Option
+    {
+        bool_opt(bool _arg) { m_argType = ARGS::NONE; m_inited = _arg; }
+        operator bool() const { return m_inited; }
+        bool_opt& operator=(bool _arg) { m_inited = _arg; return *this; }
+    protected:
+        void initArg(string const& _arg) override { (void) _arg; }
+    };
+
+    struct booloutpath_opt : public bool_opt
+    {
+        booloutpath_opt(bool _arg) : bool_opt(_arg) { m_argType = ARGS::NONE_OPTIONAL; }
+        operator bool() const { return m_inited; }
+        string outpath;
+    protected:
+        void initArg(string const& _arg) override {
+            if (_arg.substr(0, 1) != "-")
+                outpath = _arg;
         }
     };
 
@@ -76,7 +113,6 @@ private:
 
     struct fspath_opt : public string_opt
     {
-        operator bool() const { return !empty(); }
     protected:
         void initArg(string const& _arg) override {
             string_opt::initArg(_arg);
@@ -119,6 +155,57 @@ private:
         }
     };
 
+    struct singletest_opt : public Option
+    {
+        singletest_opt() { m_argType = ARGS::ONE;}
+        string name;
+        string subname;
+    protected:
+        void initArg(string const& _arg) override {
+            name = _arg;
+
+            size_t pos = name.find("Filler");
+            if (pos != string::npos)
+            {
+                name = name.substr(0, pos);
+                std::cout << "WARNING: Correcting filter to: `" + name + "`" << std::endl;
+            }
+            pos = name.find_last_of('/');
+            if (pos != string::npos)
+            {
+                subname = name.substr(pos + 1);
+                name = name.substr(0, pos);
+            }
+        }
+    };
+
+    struct dataind_opt : public Option
+    {
+        dataind_opt() { m_argType = ARGS::ONE;}
+        int index = -1;
+        string label;
+    protected:
+        void initArg(string const& _arg) override {
+            DigitsType type = stringIntegerType(_arg);
+            switch (type)
+            {
+            case DigitsType::Decimal:
+                index = atoi(_arg.c_str());
+                break;
+            case DigitsType::String:
+                label = _arg;
+                if (_arg.find(":label") == string::npos)
+                    label = ":label " + label;
+                break;
+            default:
+            {
+                std::cerr << "Error: Wrong argument format: " + _arg << std::endl;
+                exit(0);
+            }
+            }
+        }
+    };
+
 
 public:
     // General Options
@@ -139,64 +226,39 @@ public:
     fspath_opt testpath;
     fspath_opt singleTestFile;
     fspath_opt customTestFolder;
+    string_opt singleTestOutFile;
+    singletest_opt singletest;
+    string_opt singleTestNet;
 
+    // Debugging
+    dataind_opt trData;
+    int_opt trGasIndex= -1;
+    int_opt trValueIndex = -1;
+    bool_opt vmtrace = false;
+    booloutpath_opt vmtraceraw = false;
+    bool_opt vmtrace_nomemory = false;
+    bool_opt vmtrace_nostack = false;
+    bool_opt vmtrace_noreturndata = false;
+    sizet_opt blockLimit = 0;
+    sizet_opt rpcLimit = 0;
+    sizet_opt logVerbosity = 1;
+    bool_opt nologcolor = false;
+    bool_opt exectimelog = false;
+    bool_opt enableClientsOutput = false;
+    bool_opt travisOutThread = false;
 
-    //--------------------------------------------------------------
-    bool enableClientsOutput = false;  ///< Enable stderr from clients
+    // Additional Tests
+    bool_opt all = false;
+    bool_opt lowcpu = false;
 
-    bool vmtrace = false;              ///< Create EVM execution tracer
-    bool vmtraceraw = false;           ///< Create EVM execution tracer. output raw info
-    fs::path vmtracerawfolder;
-
-    bool vmtrace_nomemory = false;
-    bool vmtrace_nostack = false;
-    bool vmtrace_noreturndata = false;
-
-    bool filltests = false;            ///< Create JSON test files from execution results
-    bool showhash = false;  ///< Show filler hash for debug information
-    bool checkhash = false; ///< Check that tests are updated from fillers
-    bool forceupdate = false; ///< Force tests update ragardless of new changes
-    size_t blockLimit = 0;  ///< Perform blockchain blocks till this limit
-    size_t rpcLimit = 0;    ///< Perform rpcRequests till this limit
-    bool fillchain = false; ///< Fill tests as a blockchain tests if possible
-    bool stats = false;     ///< Execution time and stats for state tests
-    bool poststate = false;
-    fs::path poststatefolder;
-    bool nologcolor = false;
-    std::string statsOutFile; ///< Stats output file. "out" for standard output
-
-
-    bool exectimelog = false; ///< Print execution time for each test suite
-
-    bool statediff = false;        ///< Fill full post state in General tests
-    bool fullstate = false;        ///< Replace large state output to it's hash
-    bool createRandomTest = false; ///< Generate random test
-    bool travisOutThread = false;  ///< Output `.` to std:out when running tests
-    boost::optional<uint64_t> randomTestSeed; ///< Define a seed for random test
-	bool jsontrace = false; ///< Vmtrace to stdout in json format
-	//eth::StandardTrace::DebugOptions jsontraceOptions; ///< output config for jsontrace
-
-    unsigned logVerbosity = 1;
-	boost::optional<boost::filesystem::path> randomCodeOptionsPath; ///< Options for random code generation in fuzz tests
-
-
-    /// Test selection
-	/// @{
-	bool singleTest = false;
-
-
-    boost::optional<std::string> singleTestOutFile; // --testfile run a single file filler output
-    std::string singleTestName;     // A test name (usually a file.json test)
-    std::string singleSubTestName;  // A test name inside a file.json (for blockchain tests)
-    std::string singleTestNet;
-    std::string trDataLabel;  ///< GeneralState data
-    int trDataIndex = -1;     ///< GeneralState data
-    int trGasIndex= -1;       ///< GeneralState gas
-    int trValueIndex = -1;    ///< GeneralState value
-    bool all = false;	///< Running every test, including time consuming ones.
-    bool lowcpu = false; ///< Disable cpu-intense tests
-	bool nonetwork = false;///< For libp2p
-	/// @}
+    // Test Generation
+    bool_opt filltests = false;
+    bool_opt fillchain = false;
+    bool_opt showhash = false;
+    bool_opt checkhash = false;
+    booloutpath_opt poststate = false;
+    bool_opt fullstate = false;
+    bool_opt forceupdate = false;
     static bool isLegacy();
 
 public:

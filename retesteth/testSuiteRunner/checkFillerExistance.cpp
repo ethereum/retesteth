@@ -10,7 +10,7 @@ namespace
 string const getTestNameFilter()
 {
     test::Options const& opt = test::Options::get();
-    string const testNameFilter = opt.singleTestName.empty() ? string() : opt.singleTestName;
+    string const testNameFilter = opt.singletest.name.empty() ? string() : opt.singletest.name;
     string filter = testNameFilter;
     filter += opt.singleTestNet.empty() ? string() : " " + opt.singleTestNet;
     filter += opt.getGStateTransactionFilter();
