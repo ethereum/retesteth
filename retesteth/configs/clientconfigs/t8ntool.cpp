@@ -22,7 +22,8 @@ string const t8ntool_config = R"({
         "Istanbul",
         "Berlin",
         "London",
-        "Merge"
+        "Merge",
+        "Shanghai"
     ],
     "additionalForks" : [
         "FrontierToHomesteadAt5",

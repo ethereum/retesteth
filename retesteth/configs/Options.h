@@ -29,6 +29,7 @@ class genArrowGlacierCfg { public: genArrowGlacierCfg(); };
 class genGrayGlacierCfg { public: genGrayGlacierCfg(); };
 class genMergeCfg { public: genMergeCfg(); };
 class genArrowGlacierToMergeAtDiffC0000Cfg { public: genArrowGlacierToMergeAtDiffC0000Cfg(); };
+class genShanghaiCfg { public: genShanghaiCfg(); };
 
 // T8ntooleip
 class t8ntooleip_genRewardsCfg { public: t8ntooleip_genRewardsCfg(); };
@@ -71,6 +72,7 @@ public:
         genArrowGlacierCfg genArrowGlacier;
         genGrayGlacierCfg genGrayGlacier;
         genMergeCfg genMerge;
+        genShanghaiCfg genShanghai;
 
         // T8ntooleip
         t8ntooleip_genRewardsCfg t8ntooleip_RewardsCfg;

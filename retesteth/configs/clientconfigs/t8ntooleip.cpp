@@ -20,7 +20,8 @@ string const t8ntooleip_config = R"({
         "Berlin",
         "London",
         "London+1884",
-        "Merge"
+        "Merge",
+        "Shanghai"
     ],
     "additionalForks" : [
         "FrontierToHomesteadAt5",
