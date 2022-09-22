@@ -155,7 +155,7 @@ void TestOutputHelper::initTest(size_t _maxTests)
     m_currentTestName = string();
     m_currentTestFileName = string();
     m_timer = Timer();
-    if (!Options::get().createRandomTest && _maxTests != 0 && !Options::get().singleTestFile)
+    if (_maxTests != 0 && !Options::get().singleTestFile.initialized())
     {
         string testOutOf = "(" + test::fto_string(++m_currentTestRun) + " of " + test::fto_string(totalTestsNumber) + ")";
         ETH_STDOUT_MESSAGE("Test Case \"" + TestInfo::caseName() + "\": " + testOutOf);
@@ -176,7 +176,7 @@ void TestOutputHelper::showProgress()
 {
     m_currTest++;
     int m_testsPerProgs = std::max(1, (int)(m_maxTests / 4));
-    if (!test::Options::get().createRandomTest && (m_currTest % m_testsPerProgs == 0 || m_currTest ==  m_maxTests))
+    if (m_currTest % m_testsPerProgs == 0 || m_currTest ==  m_maxTests)
     {
         ETH_FAIL_REQUIRE_MESSAGE(m_maxTests > 0, "TestHelper has 0 or negative m_maxTests!");
         ETH_FAIL_REQUIRE_MESSAGE(
@@ -194,7 +194,7 @@ std::mutex g_execTimeResults;
 void TestOutputHelper::finishTest()
 {
     auto const& opt = Options::get();
-    if (opt.exectimelog && !opt.singleTestFile)
+    if (opt.exectimelog && !opt.singleTestFile.initialized())
     {
         std::cout << "Tests finished: " << m_currTest << std::endl;
         execTimeName res;
@@ -233,8 +233,7 @@ void TestOutputHelper::printBoostError()
 void TestOutputHelper::printTestExecStats()
 {
     auto const& opt = Options::get();
-    if (!(opt.singleTestFile.is_initialized()
-            || opt.customTestFolder.is_initialized()))
+    if (!(opt.singleTestFile.initialized() || opt.customTestFolder.initialized()))
         checkUnfinishedTestFolders();
 
     if (Options::get().exectimelog)

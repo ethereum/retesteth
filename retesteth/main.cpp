@@ -80,7 +80,7 @@ int main(int argc, const char* argv[])
         }
     }
 
-    if (opt.createRandomTest || opt.singleTestFile.is_initialized() || opt.customTestFolder.is_initialized())
+    if (opt.singleTestFile.initialized() || opt.customTestFolder.initialized())
     {
         bool testSuiteFound = false;
         for (int i = 0; i < argc; i++)
@@ -96,32 +96,18 @@ int main(int argc, const char* argv[])
         }
 
         // BOOST ERROR could not be used here because boost main is not initialized
-        if (!testSuiteFound && opt.createRandomTest)
-        {
-            std::cerr << "createRandomTest requires a test suite to be set -t <TestSuite>\n";
-            return -1;
-        }
         if (!testSuiteFound)
         {
-            if (opt.singleTestFile.is_initialized())
+            if (opt.singleTestFile.initialized())
             {
                 std::cerr << "testfile <file>  requires a test suite to be set -t <TestSuite>\n";
                 return -1;
             }
-            else if (opt.customTestFolder.is_initialized())
+            else if (opt.customTestFolder.initialized())
             {
                 std::cerr << "testfolder <subfolder>  requires a test suite to be set -t <TestSuite>\n";
                 return -1;
             }
-        }
-
-        // Disable initial boost output as the random test suite must output valid json to std
-        if (opt.createRandomTest)
-        {
-            oldCoutStreamBuf = std::cout.rdbuf();
-            oldCerrStreamBuf = std::cerr.rdbuf();
-            std::cout.rdbuf(strCout.rdbuf());
-            std::cerr.rdbuf(strCout.rdbuf());
         }
 
         // add custom test suite
@@ -137,7 +123,7 @@ int main(int argc, const char* argv[])
     try
     {
         auto fakeInit = [](int, char* []) -> boost::unit_test::test_suite* { return nullptr; };
-        if (opt.jsontrace || opt.vmtrace || opt.statediff || opt.createRandomTest || !opt.travisOutThread)
+        if (opt.vmtrace || !opt.travisOutThread)
         {
             std::atomic_bool stopTimeout{false};
             std::thread timeout(timeoutThread, &stopTimeout);
@@ -209,14 +195,7 @@ void runCustomTestFileOrFolder();
 void customTestSuite()
 {
     test::Options const& opt = test::Options::get();
-    if (opt.createRandomTest)
-    {
-        // Restore output for creating test
-        std::cout.rdbuf(oldCoutStreamBuf);
-        std::cerr.rdbuf(oldCerrStreamBuf);
-    }
-
-    if (opt.singleTestFile.is_initialized() || opt.customTestFolder.is_initialized())
+    if (opt.singleTestFile.initialized() || opt.customTestFolder.initialized())
         runCustomTestFileOrFolder();
 }
 
@@ -224,14 +203,14 @@ void runCustomTestFileOrFolder()
 {
     test::Options const& opt = test::Options::get();
     auto runSuite = [&opt](test::TestSuite* _suite){
-        if (opt.singleTestFile.is_initialized())
+        if (opt.singleTestFile.initialized())
         {
-            boost::filesystem::path file(opt.singleTestFile.get());
+            boost::filesystem::path file(opt.singleTestFile);
             _suite->runTestWithoutFiller(file);
         }
-        else if (opt.customTestFolder.is_initialized())
+        else if (opt.customTestFolder.initialized())
         {
-            _suite->runAllTestsInFolder(opt.customTestFolder.get());
+            _suite->runAllTestsInFolder(opt.customTestFolder);
         }
     };
 

@@ -98,8 +98,8 @@ void TestSuite::runTestWithoutFiller(boost::filesystem::path const& _file) const
                     fileName = fileName.substr(0, fileName.length() - 6) + ".json";
 
                     fs::path outPath;
-                    if (Options::get().singleTestOutFile.is_initialized())
-                        outPath = fs::path(Options::get().singleTestOutFile.get());
+                    if (Options::get().singleTestOutFile.initialized())
+                        outPath = fs::path(Options::get().singleTestOutFile);
                     else
                         outPath = _file.parent_path() / fileName;
 
