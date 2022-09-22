@@ -1,6 +1,6 @@
 #pragma once
 #ifdef JSONCPP
-#include <dataObject/DataObject.h>
+#include <libdataobj/DataObject.h>
 #include <json/value.h>
 
 namespace dataobject

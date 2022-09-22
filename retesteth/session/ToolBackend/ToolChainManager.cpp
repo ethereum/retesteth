@@ -4,7 +4,7 @@
 #include <retesteth/EthChecks.h>
 #include <retesteth/TestHelper.h>
 #include <retesteth/testStructures/Common.h>
-#include <retesteth/dataObject/ConvertFile.h>
+#include <libdataobj/ConvertFile.h>
 #include <retesteth/FileSystem.h>
 using namespace test;
 

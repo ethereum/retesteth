@@ -6,8 +6,8 @@
 #include "../Ethereum/Transaction.h"
 
 #include <EthChecks.h>
-#include <dataObject/DataObject.h>
-#include <dataObject/SPointer.h>
+#include <libdataobj/DataObject.h>
+#include <libdataobj/SPointer.h>
 #include <libdevcore/RLP.h>
 #include <testStructures/types/RPC/DebugVMTrace.h>
 using namespace dataobject;

@@ -8,7 +8,7 @@
 #include <thread>
 
 #include <retesteth/configs/ClientConfig.h>
-#include <retesteth/dataObject/DataObject.h>
+#include <libdataobj/DataObject.h>
 #include <retesteth/session/SessionInterface.h>
 
 using namespace dataobject;

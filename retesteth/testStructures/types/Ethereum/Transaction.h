@@ -1,7 +1,7 @@
 #pragma once
 #include "../../basetypes.h"
 #include <libdevcore/RLP.h>
-#include <retesteth/dataObject/DataObject.h>
+#include <libdataobj/DataObject.h>
 #include <retesteth/testStructures/types/StateTests/Base/AccessList.h>
 using namespace dataobject;
 using namespace test::teststruct;

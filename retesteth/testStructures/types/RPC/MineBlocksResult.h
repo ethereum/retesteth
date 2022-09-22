@@ -1,6 +1,6 @@
 #pragma once
 #include "../../basetypes.h"
-#include <retesteth/dataObject/DataObject.h>
+#include <libdataobj/DataObject.h>
 #include <retesteth/testStructures/Common.h>
 
 using namespace dataobject;

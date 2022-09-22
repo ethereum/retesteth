@@ -1,8 +1,8 @@
 #pragma once
 #include "../basetypes/IPADDRESS.h"
 #include "FORK.h"
-#include <retesteth/dataObject/DataObject.h>
-#include <retesteth/dataObject/SPointer.h>
+#include <libdataobj/DataObject.h>
+#include <libdataobj/SPointer.h>
 #include <boost/filesystem.hpp>
 #include <map>
 using namespace dataobject;

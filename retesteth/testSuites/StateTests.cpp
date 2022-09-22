@@ -26,7 +26,7 @@
 #include <thread>
 #include <mutex>
 
-#include <dataObject/DataObject.h>
+#include <libdataobj/DataObject.h>
 #include <libdevcore/CommonData.h>
 #include <libdevcore/CommonIO.h>
 #include <retesteth/ExitHandler.h>

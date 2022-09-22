@@ -195,7 +195,7 @@ private:
                     label = ":label " + label;
                 break;
             default:
-                BOOST_THROW_EXCEPTION(InvalidOption("Error: `" + m_sOptionName + " option has wrong argument format: " + _arg));
+                BOOST_THROW_EXCEPTION(InvalidOption("Error: `" + m_sOptionName + "` option has wrong argument format: " + _arg));
             }
         }
     };

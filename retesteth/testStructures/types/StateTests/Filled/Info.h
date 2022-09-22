@@ -1,6 +1,6 @@
 #pragma once
-#include <retesteth/dataObject/DataObject.h>
-#include <retesteth/dataObject/SPointer.h>
+#include <libdataobj/DataObject.h>
+#include <libdataobj/SPointer.h>
 #include <map>
 using namespace dataobject;
 

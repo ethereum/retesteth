@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 #include <map>
-#include <dataObject/DataObject.h>
+#include <libdataobj/DataObject.h>
 
 extern dataobject::DataObject map_configs;
 

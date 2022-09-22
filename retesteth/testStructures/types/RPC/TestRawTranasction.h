@@ -1,7 +1,7 @@
 #pragma once
 #include "../../basetypes.h"
 #include "MineBlocksResult.h"
-#include <retesteth/dataObject/DataObject.h>
+#include <libdataobj/DataObject.h>
 
 using namespace dataobject;
 

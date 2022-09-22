@@ -1,6 +1,6 @@
 #pragma once
-#include <dataObject/DataObject.h>
-#include <dataObject/DataObjectScheme.h>
+#include <libdataobj/DataObject.h>
+#include <libdataobj/DataObjectScheme.h>
 #include <string>
 #include <vector>
 

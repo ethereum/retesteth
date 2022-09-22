@@ -3,7 +3,7 @@
 #include "../Ethereum/State.h"
 #include "SubElements/ToolResponseReceipt.h"
 #include "SubElements/ToolResponseRejected.h"
-#include <dataObject/DataObject.h>
+#include <libdataobj/DataObject.h>
 #include <testStructures/types/RPC/DebugVMTrace.h>
 
 using namespace dataobject;

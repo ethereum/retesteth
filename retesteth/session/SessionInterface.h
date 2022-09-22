@@ -1,6 +1,6 @@
 #pragma once
 #include "Socket.h"
-#include <retesteth/dataObject/DataObject.h>
+#include <libdataobj/DataObject.h>
 #include <retesteth/testStructures/basetypes.h>
 #include <retesteth/testStructures/types/rpc.h>
 #include <string>

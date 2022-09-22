@@ -20,8 +20,8 @@
  * RPC protocol unit tests.
  */
 
-#include <dataObject/DataObjectScheme.h>
-#include <dataObject/DataObjectValidator.h>
+#include <libdataobj/DataObjectScheme.h>
+#include <libdataobj/DataObjectValidator.h>
 #include <retesteth/Options.h>
 #include <retesteth/TestHelper.h>
 #include <retesteth/TestOutputHelper.h>

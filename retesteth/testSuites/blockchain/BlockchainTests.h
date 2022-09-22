@@ -3,7 +3,7 @@
  */
 
 #pragma once
-#include <dataObject/DataObject.h>
+#include <libdataobj/DataObject.h>
 #include <retesteth/Options.h>
 #include <retesteth/TestHelper.h>
 #include <retesteth/testSuiteRunner/TestSuite.h>
