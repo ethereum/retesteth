@@ -5,6 +5,7 @@
 #include <set>
 #include <vector>
 #include <map>
+#include <variant>
 
 namespace dataobject
 {
@@ -22,6 +23,15 @@ enum DataType
 class DataObjectK;
 class GCP_SPointerDataObject;
 typedef GCP_SPointerDataObject spDataObject;
+
+struct VectorInfo
+{
+    // Use vector here to be able to quickly find insert position
+    // of objects to be ordered by it's key with findOrderedKeyPosition
+    std::vector<spDataObject> m_subObjects;
+    std::map<string, spDataObject> m_subObjectKeys;
+};
+typedef std::variant<string, bool, int, VectorInfo> DataVariant;
 
 /// DataObject
 /// A data sturcture to manage data from json, yml
@@ -63,6 +73,7 @@ public:
 
     bool count(std::string const& _key) const;
 
+    DataVariant const& asVariant() const { return m_value; }
     std::string const& asString() const;
     std::string& asStringUnsafe();
 
@@ -119,8 +130,12 @@ public:
     bool isAutosort() const { return m_autosort; }
     void clearSubobjects(DataType _type = DataType::NotInitialized)
     {
-        m_subObjects.clear();
-        m_subObjectKeys.clear();
+        if (m_type == DataType::Array || m_type == DataType::Object)
+        {
+            auto& vector = std::get<VectorInfo>(m_value);
+            vector.m_subObjectKeys.clear();
+            vector.m_subObjects.clear();
+        }
         m_type = _type;
     }
 
@@ -128,20 +143,11 @@ private:
 
     DataObject& _addSubObject(spDataObject const& _obj, string&& _keyOverwrite = string());
     void _assert(bool _flag, std::string const& _comment = string()) const;
-
-    // Use vector here to be able to quickly find insert position
-    // of objects to be ordered by it's key with findOrderedKeyPosition
-    std::vector<spDataObject> m_subObjects;
-    std::map<string, spDataObject> m_subObjectKeys;
-
+    DataVariant m_value;
     DataType m_type;
     std::string m_strKey;
     bool m_allowOverwrite = false;  // allow overwrite elements
     bool m_autosort = false;
-
-    std::string m_strVal;
-    bool m_boolVal;
-    int m_intVal;
 
     void (*m_verifier)(DataObject&) = 0;
 };

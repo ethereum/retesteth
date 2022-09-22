@@ -4,6 +4,7 @@ file(GLOB headers "*.h")
 add_library(dataobj ${sources} ${headers})
 target_include_directories(dataobj SYSTEM PRIVATE "../")
 target_link_libraries(dataobj PRIVATE yaml-cpp)
+target_compile_features(dataobj PUBLIC cxx_std_17)
 
 #add_dependencies(devcore BuildInfo.h)
 
