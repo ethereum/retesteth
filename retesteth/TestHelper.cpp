@@ -15,8 +15,8 @@
 #include <retesteth/Options.h>
 #include <retesteth/TestHelper.h>
 #include <retesteth/TestOutputHelper.h>
-#include <retesteth/dataObject/ConvertFile.h>
-#include <retesteth/dataObject/ConvertYaml.h>
+#include <libdataobj/ConvertFile.h>
+#include <libdataobj/ConvertYaml.h>
 
 using namespace std;
 namespace fs = boost::filesystem;

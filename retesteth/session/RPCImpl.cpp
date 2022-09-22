@@ -1,7 +1,7 @@
 #include <cstdio>
 #include <thread>
 
-#include <dataObject/ConvertFile.h>
+#include <libdataobj/ConvertFile.h>
 #include <retesteth/EthChecks.h>
 #include <retesteth/ExitHandler.h>
 #include <retesteth/TestHelper.h>

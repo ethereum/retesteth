@@ -2,7 +2,7 @@
 #include "ToolChainHelper.h"
 #include "ToolChainManager.h"
 #include <Options.h>
-#include <dataObject/ConvertFile.h>
+#include <libdataobj/ConvertFile.h>
 #include <libdevcore/CommonIO.h>
 #include <testStructures/Common.h>
 #include <testStructures/types/BlockchainTests/Filler/BlockchainTestFillerEnv.h>

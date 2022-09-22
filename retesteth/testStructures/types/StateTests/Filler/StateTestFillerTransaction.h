@@ -2,8 +2,8 @@
 #include "../../../basetypes.h"
 #include "../../../types/ethereum.h"
 #include "../Base/StateTestTransactionBase.h"
-#include <retesteth/dataObject/DataObject.h>
-#include <retesteth/dataObject/SPointer.h>
+#include <libdataobj/DataObject.h>
+#include <libdataobj/SPointer.h>
 using namespace dataobject;
 using namespace test::teststruct;
 

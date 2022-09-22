@@ -7,7 +7,7 @@
 #ifdef JSONCPP
 #include <json/json.h>
 #endif
-#include <dataObject/DataObject.h>
+#include <libdataobj/DataObject.h>
 #include <retesteth/EthChecks.h>
 #include <retesteth/compiler/Compiler.h>
 #include <retesteth/testStructures/basetypes/BYTES.h>

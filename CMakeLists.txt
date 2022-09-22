@@ -78,5 +78,5 @@ endif()
 
 add_subdirectory(libdevcore)
 add_subdirectory(libdevcrypto)
+add_subdirectory(libdataobj)
 add_subdirectory(retesteth)
-

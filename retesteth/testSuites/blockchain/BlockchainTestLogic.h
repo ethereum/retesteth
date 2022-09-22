@@ -3,7 +3,7 @@
  */
 
 #pragma once
-#include <dataObject/DataObject.h>
+#include <libdataobj/DataObject.h>
 #include <retesteth/testStructures/types/BlockchainTests/BlockchainTest.h>
 #include <retesteth/testStructures/types/BlockchainTests/BlockchainTestFiller.h>
 #include <retesteth/testSuiteRunner/TestSuite.h>

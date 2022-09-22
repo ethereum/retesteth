@@ -3,8 +3,8 @@
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/RLP.h>
 #include <libdevcore/SHA3.h>
-#include <retesteth/dataObject/DataObject.h>
-#include <retesteth/dataObject/SPointer.h>
+#include <libdataobj/DataObject.h>
+#include <libdataobj/SPointer.h>
 using namespace dataobject;
 using namespace test::teststruct;
 

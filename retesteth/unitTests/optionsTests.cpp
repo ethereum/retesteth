@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(options_missarg)
     }
     catch (std::exception const& _ex)
     {
-        BOOST_CHECK(string(_ex.what()).find("-t option is missing an argument") != string::npos);
+        BOOST_CHECK(string(_ex.what()).find("`-t` option is missing an argument") != string::npos);
     }
 }
 
@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(options_dwrongarg)
     }
     catch (std::exception const& _ex)
     {
-        BOOST_CHECK(string(_ex.what()).find("-d option has wrong argument") != string::npos);
+        BOOST_CHECK(string(_ex.what()).find("`-d` option has wrong argument") != string::npos);
     }
 }
 
@@ -178,7 +178,7 @@ BOOST_AUTO_TEST_CASE(options_fspath_wrong)
     }
     catch (std::exception const& _ex)
     {
-        BOOST_CHECK(string(_ex.what()).find("-testpath could not locate file or path") != string::npos);
+        BOOST_CHECK(string(_ex.what()).find("`--testpath` could not locate file or path") != string::npos);
     }
 }
 

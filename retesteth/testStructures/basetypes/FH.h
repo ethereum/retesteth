@@ -3,8 +3,8 @@
 #include <libdevcore/Common.h>
 #include <libdevcore/CommonData.h>
 #include <libdevcore/RLP.h>
-#include <retesteth/dataObject/DataObject.h>
-#include <retesteth/dataObject/SPointer.h>
+#include <libdataobj/DataObject.h>
+#include <libdataobj/SPointer.h>
 using namespace dataobject;
 
 namespace test

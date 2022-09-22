@@ -21,10 +21,10 @@
 #include <iostream>
 #include <iomanip>
 
-#include <dataObject/ConvertFile.h>
+#include <libdataobj/ConvertFile.h>
 #include <retesteth/Options.h>
 #include <testStructures/Common.h>
-#include <retesteth/dataObject/SPointer.h>
+#include <libdataobj/SPointer.h>
 
 
 using namespace std;

@@ -1,5 +1,5 @@
 #pragma once
-#include <dataObject/DataObject.h>
+#include "DataObject.h"
 
 namespace dataobject
 {

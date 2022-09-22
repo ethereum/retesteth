@@ -1,7 +1,7 @@
 #include "DebugVMTrace.h"
 #include <EthChecks.h>
 #include <TestHelper.h>
-#include <dataObject/ConvertFile.h>
+#include <libdataobj/ConvertFile.h>
 #include <testStructures/Common.h>
 
 const string c_tooManyRawsMessage = "==TOO MANY LOG ROWS TO PRINT (Use --vmtraceraw <folder>)==";

@@ -1,6 +1,7 @@
 #include <iostream>
-#include <dataObject/ConvertFile.h>
-#include <dataObject/Exception.h>
+#include "DataObject.h"
+#include "ConvertFile.h"
+#include "Exception.h"
 // Manually construct dataobject from file string content
 // bacuse Json::Reader::parse has a memory leak
 

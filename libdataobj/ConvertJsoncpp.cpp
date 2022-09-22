@@ -1,5 +1,5 @@
 #ifdef JSONCPP
-#include <dataObject/ConvertJsoncpp.h>
+#include <libdataobj/ConvertJsoncpp.h>
 
 namespace dataobject
 {

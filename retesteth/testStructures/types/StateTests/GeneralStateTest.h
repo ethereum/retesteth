@@ -3,8 +3,8 @@
 #include "Filled/StateTestEnv.h"
 #include "Filled/StateTestPostResult.h"
 #include "Filled/StateTestTransaction.h"
-#include <retesteth/dataObject/DataObject.h>
-#include <retesteth/dataObject/SPointer.h>
+#include <libdataobj/DataObject.h>
+#include <libdataobj/SPointer.h>
 
 using namespace dataobject;
 using namespace test::teststruct;

@@ -1,8 +1,8 @@
 #include "BlockMining.h"
 #include "Options.h"
 #include "ToolChainHelper.h"
-#include "dataObject/ConvertFile.h"
-#include "dataObject/DataObject.h"
+#include "libdataobj/ConvertFile.h"
+#include "libdataobj/DataObject.h"
 #include <libdevcore/CommonIO.h>
 #include <testStructures/types/BlockchainTests/BlockchainTestFiller.h>
 

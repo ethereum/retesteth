@@ -19,7 +19,7 @@
  */
 
 #include "TestSuiteHelperFunctions.h"
-#include <dataObject/DataObject.h>
+#include <libdataobj/DataObject.h>
 #include <libdevcore/CommonIO.h>
 #include <retesteth/EthChecks.h>
 #include <retesteth/ExitHandler.h>

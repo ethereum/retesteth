@@ -1,5 +1,5 @@
 #pragma once
-#include <retesteth/dataObject/DataObject.h>
+#include <libdataobj/DataObject.h>
 #include <retesteth/testStructures/types/Ethereum/EthereumBlock.h>
 using namespace dataobject;
 

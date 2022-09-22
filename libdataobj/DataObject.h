@@ -1,6 +1,6 @@
 #pragma once
-#include <dataObject/Exception.h>
-#include <dataObject/SPointer.h>
+#include "Exception.h"
+#include "SPointer.h"
 #include <memory>
 #include <set>
 #include <vector>

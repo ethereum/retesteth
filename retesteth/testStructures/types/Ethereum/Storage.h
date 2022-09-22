@@ -1,7 +1,7 @@
 #pragma once
 #include "../../basetypes.h"
-#include <retesteth/dataObject/DataObject.h>
-#include <retesteth/dataObject/SPointer.h>
+#include <libdataobj/DataObject.h>
+#include <libdataobj/SPointer.h>
 using namespace dataobject;
 using namespace test::teststruct;
 

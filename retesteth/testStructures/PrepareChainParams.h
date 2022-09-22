@@ -3,7 +3,7 @@
 #include "configs/SealEngine.h"
 #include "types/Ethereum/State.h"
 #include "types/StateTests/Base/StateTestEnvBase.h"
-#include <retesteth/dataObject/DataObject.h>
+#include <libdataobj/DataObject.h>
 #include <retesteth/testStructures/types/RPC/SetChainParamsArgs.h>
 using namespace dataobject;
 

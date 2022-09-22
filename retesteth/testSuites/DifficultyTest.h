@@ -3,7 +3,7 @@
  */
 
 #pragma once
-#include <dataObject/DataObject.h>
+#include <libdataobj/DataObject.h>
 #include <retesteth/testSuiteRunner/TestSuite.h>
 #include <boost/filesystem/path.hpp>
 
