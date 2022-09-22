@@ -1,11 +1,12 @@
 #pragma once
 
 #include <libdevcore/Exceptions.h>
+#include <retesteth/TestHelper.h>
+#include <retesteth/configs/ClientConfig.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/optional.hpp>
-#include <retesteth/TestHelper.h>
-#include <retesteth/configs/ClientConfig.h>
+#include <list>
 
 using namespace dev;
 namespace test
@@ -30,11 +31,11 @@ private:
         void setDefHelp(string&& _def, std::function<void()> _help);
         void setBeforeSeparator() { m_allowBeforeSeparator = true; }
         void setOverrideOption() { m_optionOverrides = true; }
-        void tryInit(const char** _argv, size_t _argc);
+        void tryInit(list<const char*>& _argList);
         void printHelp();
         void validate() const;
     private:
-        void initArgs(const char** _argv, size_t _argc, string const& _optionName, size_t _i);
+        int initArgs(list<const char*> const& _argList, list<const char*>::const_iterator _arg);
         bool isAfterSeparatorOption() const;
         bool match(string const& _arg) const;
     protected:
@@ -97,7 +98,6 @@ private:
         string outpath;
     protected:
         void initArg(string const& _arg) override {
-            if (_arg.substr(0, 1) != "-")
                 outpath = _arg;
         }
     };
@@ -117,10 +117,7 @@ private:
         void initArg(string const& _arg) override {
             string_opt::initArg(_arg);
             if (!boost::filesystem::exists(_arg))
-            {
-                std::cerr << "Could not locate file or path: '" + _arg + "'" << std::endl;
-                exit(1);
-            }
+                BOOST_THROW_EXCEPTION(InvalidOption("Error: `" + m_sOptionName + "` could not locate file or path: " + _arg));
         }
     };
 
@@ -198,10 +195,7 @@ private:
                     label = ":label " + label;
                 break;
             default:
-            {
-                std::cerr << "Error: Wrong argument format: " + _arg << std::endl;
-                exit(0);
-            }
+                BOOST_THROW_EXCEPTION(InvalidOption("Error: `" + m_sOptionName + " option has wrong argument format: " + _arg));
             }
         }
     };
@@ -219,7 +213,7 @@ public:
     // Retesteth options
     sizet_opt threadCount = 1;
     vecstr_opt clients;
-    fspath_opt datadir;
+    string_opt datadir;
     vecaddr_opt nodesoverride;
 
     // Setting test suite and test
@@ -264,7 +258,7 @@ public:
 public:
     struct InvalidOption : public Exception
     {
-        InvalidOption(std::string _message = std::string()) : Exception(_message) {}
+        InvalidOption(std::string&& _message = std::string()) : Exception(std::move(_message)) {}
     };
 
     struct DynamicOptions
