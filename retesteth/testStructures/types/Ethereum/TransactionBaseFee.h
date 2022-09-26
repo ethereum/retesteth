@@ -1,8 +1,5 @@
 #pragma once
 #include "Transaction.h"
-using namespace dataobject;
-using namespace test::teststruct;
-
 namespace test
 {
 namespace teststruct

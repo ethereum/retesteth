@@ -5,9 +5,8 @@
 #include <retesteth/testStructures/types/rpc.h>
 #include <string>
 
-using namespace dataobject;
-using namespace test::teststruct;
-
+namespace test::session
+{
 enum class Request
 {
     FULLOBJECTS,
@@ -17,9 +16,9 @@ enum class Request
 struct RPCError
 {
     RPCError() : m_empty(true) { clear(); };
-    RPCError(string const& _error, string const& _message) : m_error(_error), m_message(_message), m_empty(false){};
-    string const& error() const { return m_error; }
-    string const& message() const { return m_message; }
+    RPCError(std::string const& _error, std::string const& _message) : m_error(_error), m_message(_message), m_empty(false){};
+    std::string const& error() const { return m_error; }
+    std::string const& message() const { return m_message; }
     bool empty() const { return m_empty; }
     void clear()
     {
@@ -29,10 +28,13 @@ struct RPCError
     }
 
 private:
-    string m_error;
-    string m_message;
+    std::string m_error;
+    std::string m_message;
     bool m_empty;
 };
+
+using namespace dataobject;
+using namespace test::teststruct;
 
 class SessionInterface
 {
@@ -88,3 +90,5 @@ protected:
     inline std::string quote(std::string const& _arg) { return "\"" + _arg + "\""; }
     RPCError m_lastInterfaceError;
 };
+
+}  // namespace test::session

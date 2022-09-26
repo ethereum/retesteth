@@ -5,9 +5,7 @@
 #include <string>
 #include <vector>
 
-namespace test
-{
-namespace blockchainfiller
+namespace test::blockchainfiller
 {
 // TestBlockchain class with chain reorgs
 class TestBlockchainManager
@@ -32,13 +30,13 @@ private:
     void reorgChains(BlockchainTestFillerBlock const& _newBlock);
 
     // Prepare uncles
-    vectorOfSchemeBlock prepareUncles(BlockchainTestFillerBlock const& _block, string const& _debug);
+    vectorOfSchemeBlock prepareUncles(BlockchainTestFillerBlock const& _block, std::string const& _debug);
 
     // Parse uncle section in block and generate uncles from all the chain information
     spBlockHeader prepareUncle(
         BlockchainTestFillerUncle _uncleOverwrite, vectorOfSchemeBlock const& _currentBlockPreparedUncles);
 
-    SessionInterface& m_session;  // session with the client
+    session::SessionInterface& m_session;  // session with the client
 
     std::string m_sCurrentChainName;        // Chain name that is mining blocks
     std::string const m_sDefaultChainName;  // Default chain name to restore genesis
@@ -61,4 +59,3 @@ private:
 };
 
 }  // namespace blockchainfiller
-}  // namespace test

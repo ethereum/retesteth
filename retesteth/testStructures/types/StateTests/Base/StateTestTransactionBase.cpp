@@ -1,6 +1,8 @@
 #include "StateTestTransactionBase.h"
+#include <retesteth/EthChecks.h>
 #include <retesteth/ExitHandler.h>
 
+using namespace std;
 using namespace dataobject;
 using namespace test::teststruct;
 

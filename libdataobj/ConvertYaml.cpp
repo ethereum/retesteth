@@ -1,5 +1,6 @@
 #include "ConvertYaml.h"
 #include <iostream>
+using namespace std;
 
 namespace dataobject
 {

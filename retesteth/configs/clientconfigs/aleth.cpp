@@ -2,6 +2,8 @@
 using namespace std;
 using namespace dataobject;
 
+namespace retesteth::options
+{
 string const aleth_config = R"({
     "name" : "Ethereum cpp-client",
     "socketType" : "ipc",
@@ -97,3 +99,4 @@ alethcfg::alethcfg()
         map_configs.addArrayObject(obj);
     }
 }
+}  // namespace retesteth::options

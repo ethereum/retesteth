@@ -4,7 +4,10 @@
 #include <retesteth/session/SessionInterface.h>
 #include <retesteth/session/Socket.h>
 #include <string>
-using namespace toolimpl;
+
+namespace test::session
+{
+using namespace dataobject;
 
 class ToolImpl : public SessionInterface
 {
@@ -62,9 +65,11 @@ private:
     fs::path m_toolPath;
     fs::path m_tmpDir;
     size_t m_totalCalls = 0;
-    ToolChainManager& blockchain() { return m_toolChainManager.getContent(); }
-    void makeRPCError(string const& _error);
+    toolimpl::ToolChainManager& blockchain() { return m_toolChainManager.getContent(); }
+    void makeRPCError(std::string const& _error);
 
     // Manage blockchains as ethereum client backend
-    GCP_SPointer<ToolChainManager> m_toolChainManager;
+    GCP_SPointer<toolimpl::ToolChainManager> m_toolChainManager;
 };
+
+}  // namespace test::session

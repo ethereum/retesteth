@@ -6,8 +6,6 @@
 #include <libdataobj/DataObject.h>
 #include <testStructures/types/RPC/DebugVMTrace.h>
 
-using namespace dataobject;
-
 namespace test
 {
 namespace teststruct

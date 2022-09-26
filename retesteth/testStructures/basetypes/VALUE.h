@@ -5,12 +5,11 @@
 #include <libdataobj/DataObject.h>
 #include <libdataobj/SPointer.h>
 
+
+namespace test::teststruct
+{
 using namespace dataobject;
 
-namespace test
-{
-namespace teststruct
-{
 // Validate and manage the type of VALUE (bigInt)
 // Deserialized from string of "0x1122...32", "123343"
 // Can be limited by _limit max value
@@ -52,21 +51,21 @@ struct VALUE : GCP_SPointerBase
 
     VALUE operator++(int) { m_data++; return *this; }
 
-    string const& asString() const;
-    string asDecString() const;
+    std::string const& asString() const;
+    std::string asDecString() const;
     dev::bigint const& asBigInt() const { return m_data; }
     dev::bytes const& serializeRLP() const;
     bool isBigInt() const { return m_bigint; }
 
 private:
     VALUE() {}
-    string verifyHexString(std::string const& _s, std::string const& _k = string()) const;
+    std::string verifyHexString(std::string const& _s, std::string const& _k = std::string()) const;
     void calculateCache() const;
     dev::bigint m_data;
 
     // Optimizations
     mutable bool m_dirty = true;
-    mutable string m_dataStrZeroXCache;
+    mutable std::string m_dataStrZeroXCache;
     mutable dev::bytes m_bytesData;
 
     // Bigint specific
@@ -74,11 +73,10 @@ private:
     mutable bool m_bigintEmpty = false;
     mutable dev::bytes m_bytesBigIntData;
     mutable size_t m_prefixedZeros = 0;
-    mutable string m_dataStrBigIntCache;
+    mutable std::string m_dataStrBigIntCache;
 };
 
 typedef GCP_SPointer<VALUE> spVALUE;
 
 
 }  // namespace teststruct
-}  // namespace test

@@ -3,15 +3,15 @@
 #include <libdevcore/Address.h>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/RLP.h>
+#include <retesteth/EthChecks.h>
 #include <retesteth/TestHelper.h>
 #include <retesteth/testStructures/Common.h>
 
 using namespace dev;
+using namespace std;
 using namespace test::debug;
 
-namespace test
-{
-namespace teststruct
+namespace test::teststruct
 {
 void BlockHeader1559::fromData(DataObject const& _data)
 {
@@ -213,4 +213,3 @@ BlockHeader1559 const& BlockHeader1559::castFrom(spBlockHeader const& _from)
 }
 
 }  // namespace teststruct
-}  // namespace test

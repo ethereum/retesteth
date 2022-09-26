@@ -3,6 +3,8 @@
 using namespace std;
 using namespace dataobject;
 
+namespace retesteth::options
+{
 const string default_Berlin_config = R"({
     "params" : {
        "homesteadForkBlock" : "0x00",
@@ -42,3 +44,4 @@ genBerlinCfg::genBerlinCfg()
     (*obj2)["content"] = t8ntool_Berlin_config;
     map_configs.addArrayObject(obj2);
 }
+}  // namespace retesteth::options

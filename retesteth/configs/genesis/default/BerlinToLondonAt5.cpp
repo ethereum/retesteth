@@ -3,6 +3,8 @@
 using namespace std;
 using namespace dataobject;
 
+namespace retesteth::options
+{
 const string default_BerlinToLondonAt5_config = R"({
     "params" : {
       "homesteadForkBlock" : "0x00",
@@ -45,3 +47,4 @@ genBerlinToLondonCfg::genBerlinToLondonCfg()
         map_configs.addArrayObject(obj);
     }
 }
+}  // namespace retesteth::options

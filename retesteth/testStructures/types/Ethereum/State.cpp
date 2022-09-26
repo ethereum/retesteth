@@ -1,9 +1,8 @@
 #include "State.h"
 #include <retesteth/EthChecks.h>
 
-namespace test
-{
-namespace teststruct
+using namespace std;
+namespace test::teststruct
 {
 
 State::State(std::map<FH20, spAccountBase>& _accList)
@@ -61,4 +60,3 @@ spDataObject const& State::asDataObject() const
 }
 
 }  // namespace teststruct
-}  // namespace test

@@ -1,10 +1,12 @@
 #pragma once
 #include <libdataobj/DataObject.h>
 #include <retesteth/testStructures/types/Ethereum/EthereumBlock.h>
-using namespace dataobject;
 
 namespace toolimpl
 {
+using namespace dataobject;
+using namespace test::teststruct;
+
 // Construct accountRange RPC style
 spDataObject constructAccountRange(EthereumBlockState const& _block, FH32 const& _addrHash, size_t _maxResult);
 

@@ -7,7 +7,9 @@
 #include <retesteth/testStructures/PrepareChainParams.h>
 #include <retesteth/testSuites/Common.h>
 #include "fillers/TestBlockchain.h"
+using namespace std;
 using namespace test::debug;
+using namespace test::session;
 namespace test
 {
 

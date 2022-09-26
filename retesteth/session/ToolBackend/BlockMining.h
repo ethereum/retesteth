@@ -3,10 +3,12 @@
 #include <testStructures/types/RPC/ToolResponse.h>
 #include <testStructures/types/ethereum.h>
 #include <boost/filesystem/path.hpp>
-namespace fs = boost::filesystem;
 
 namespace toolimpl
 {
+namespace fs = boost::filesystem;
+using namespace test::teststruct;
+
 // t8n tool generation of new block
 class BlockMining
 {
@@ -31,11 +33,11 @@ private:
 
 private:
     fs::path m_allocPath;
-    string m_allocPathContent;
+    std::string m_allocPathContent;
     fs::path m_envPath;
-    string m_envPathContent;
+    std::string m_envPathContent;
     fs::path m_txsPath;
-    string m_txsPathContent;
+    std::string m_txsPathContent;
     fs::path m_outPath;
     fs::path m_outAllocPath;
     void traceTransactions(ToolResponse& _toolResponse);

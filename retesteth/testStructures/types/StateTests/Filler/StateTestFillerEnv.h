@@ -1,8 +1,6 @@
 #pragma once
 #include "../Base/StateTestEnvBase.h"
 #include <libdataobj/DataObject.h>
-using namespace dataobject;
-using namespace test::teststruct;
 
 namespace test
 {

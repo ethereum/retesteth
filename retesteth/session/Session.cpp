@@ -36,6 +36,8 @@ using namespace dev;
 using namespace test;
 using namespace test::debug;
 
+namespace test::session
+{
 struct sessionInfo
 {
     sessionInfo(FILE* _pipe, RPCSession* _session, std::string const& _tmpDir, int _pid, ClientConfigID const& _configId)
@@ -364,3 +366,5 @@ void RPCSession::clear()
 }
 
 RPCSession::RPCSession(SessionInterface* _impl) : m_implementation(_impl) {}
+
+}  // namespace test::session

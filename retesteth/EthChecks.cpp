@@ -5,6 +5,7 @@
 #include <csignal>
 #include <iostream>
 #include <thread>
+using namespace std;
 
 namespace test::debug
 {
@@ -30,6 +31,8 @@ Debug::Debug()
             }
             else if (flag == "STATS")
                 m_channels[DC::STATS] = true;  // Default test execution stats
+            else if (flag == "STATE")
+                m_channels[DC::STATE] = true;  // Poststate output
             else if (flag == "SOCKET")
                 m_channels[DC::SOCKET] = true;  // Socket debug information
             else if (flag == "TESTLOG")
@@ -60,12 +63,14 @@ void Debug::initializeDefaultChannels()
         m_channels[DC::SOCKET] = true;
     if (verb >= 3)
         m_channels[DC::TESTLOG] = true;
+    if (verb >= 4)
+        m_channels[DC::STATE] = true;
     if (verb >= 6)
         m_channels[DC::RPC] = true;
     if (verb >= 7)
         m_channels[DC::LOWLOG] = true;
     if (Options::get().poststate.initialized())
-        m_channels[DC::TESTLOG] = true;
+        m_channels[DC::STATE] = true;
 }
 
 

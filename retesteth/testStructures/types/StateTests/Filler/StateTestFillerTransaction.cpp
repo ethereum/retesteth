@@ -3,6 +3,10 @@
 #include <retesteth/TestHelper.h>
 #include <retesteth/testStructures/Common.h>
 
+using namespace std;
+using namespace dataobject;
+using namespace test::teststruct;
+
 namespace
 {
 void require1559TransactionScheme(spDataObject const& _data)
@@ -32,9 +36,7 @@ void requireLegacyTransctionScheme(spDataObject const& _data)
 }
 }
 
-namespace test
-{
-namespace teststruct
+namespace test::teststruct
 {
 StateTestFillerTransaction::StateTestFillerTransaction(spDataObjectMove _data)
 {
@@ -168,4 +170,3 @@ StateTestFillerTransaction::StateTestFillerTransaction(spDataObjectMove _data)
 }
 
 }  // namespace teststruct
-}  // namespace test

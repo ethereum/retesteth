@@ -3,7 +3,6 @@
 #include <string>
 #include <vector>
 
-using namespace std;
 namespace dataobject
 {
 struct DataObjectException : virtual std::exception
@@ -19,7 +18,7 @@ struct DataObjectException : virtual std::exception
         setMessage(_t);
         return *this;
     }
-    DataObjectException& operator<<(string const& _t)
+    DataObjectException& operator<<(std::string const& _t)
     {
         setMessage(_t);
         return *this;
@@ -42,8 +41,8 @@ struct ExpectedButGot : public DataObjectException
 
     ExpectedButGot(bool _expected, bool _got)
     {
-        string expected = _expected ? "'true'" : "'false'";
-        string got = _got ? "'true'" : "'false'";
+        std::string expected = _expected ? "'true'" : "'false'";
+        std::string got = _got ? "'true'" : "'false'";
         setMessage(m_ErrorMessage + expected + ", but got: " + got);
     }
 

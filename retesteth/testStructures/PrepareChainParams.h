@@ -5,7 +5,6 @@
 #include "types/StateTests/Base/StateTestEnvBase.h"
 #include <libdataobj/DataObject.h>
 #include <retesteth/testStructures/types/RPC/SetChainParamsArgs.h>
-using namespace dataobject;
 
 namespace test
 {

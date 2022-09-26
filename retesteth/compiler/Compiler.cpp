@@ -2,11 +2,15 @@
 #include "Options.h"
 #include "TestHelper.h"
 #include <libdevcore/CommonIO.h>
+#include <retesteth/EthChecks.h>
+#include <retesteth/TestOutputHelper.h>
 #include <retesteth/testStructures/Common.h>
 #include <boost/filesystem.hpp>
 using namespace dev;
 using namespace test;
+using namespace std;
 using namespace dataobject;
+using namespace test::compiler;
 namespace fs = boost::filesystem;
 
 namespace
@@ -36,6 +40,7 @@ string compileLLL(string const& _code)
     }
 #endif
 }
+
 
 bool tryCustomCompiler(string const& _code, string& _compiledCode)
 {
@@ -141,9 +146,7 @@ void tryKnownCompilers(string const& _code, solContracts const& _preSolidity, st
 }
 }  // namespace
 
-namespace test
-{
-namespace compiler
+namespace test::compiler
 {
 namespace utiles
 {
@@ -154,7 +157,6 @@ void checkHexHasEvenLength(string const& _hex)
     ETH_ERROR_REQUIRE_MESSAGE(_hex.length() % 2 == 0,
         TestOutputHelper::get().testName() + ": Hex field is expected to be of odd length: '" + _hex + "'");
 }
-
 }  // namespace utiles
 
 /// This function is called for every account "code" : field in Fillers
@@ -184,4 +186,3 @@ string replaceCode(string const& _code, solContracts const& _preSolidity)
     return compiledCode;
 }
 }  // namespace compiler
-}  // namespace test

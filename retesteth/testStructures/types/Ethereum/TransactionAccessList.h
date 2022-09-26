@@ -1,7 +1,5 @@
 #pragma once
 #include "TransactionLegacy.h"
-using namespace dataobject;
-using namespace test::teststruct;
 
 namespace test
 {

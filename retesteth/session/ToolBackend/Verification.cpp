@@ -1,6 +1,8 @@
 #include "Verification.h"
 using namespace toolimpl;
 using namespace test::debug;
+using namespace std;
+using namespace dev;
 
 namespace {
 

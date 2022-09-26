@@ -6,13 +6,13 @@
 #include <retesteth/EthChecks.h>
 #include <retesteth/Options.h>
 #include <retesteth/TestHelper.h>
+#include <retesteth/TestOutputHelper.h>
 #include <retesteth/testStructures/Common.h>
 
+using namespace std;
 using namespace dev;
 
-namespace test
-{
-namespace teststruct
+namespace test::teststruct
 {
 TransactionLegacy::TransactionLegacy(spDataObjectMove _data)
 {
@@ -241,4 +241,3 @@ void TransactionLegacy::rebuildRLP()
 }
 
 }  // namespace teststruct
-}  // namespace test

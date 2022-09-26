@@ -2,9 +2,8 @@
 #include <retesteth/EthChecks.h>
 #include <retesteth/testStructures/Common.h>
 
-namespace test
-{
-namespace teststruct
+using namespace std;
+namespace test::teststruct
 {
 DebugTraceTransaction::DebugTraceTransaction(DataObject const& _data)
 {
@@ -43,4 +42,3 @@ string DebugTraceTransaction::getFinal() const
 }
 
 }  // namespace teststruct
-}  // namespace test

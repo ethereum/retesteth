@@ -7,7 +7,9 @@
 #include <retesteth/testSuites/Common.h>
 #include <retesteth/ExitHandler.h>
 
+using namespace std;
 using namespace test;
+using namespace test::session;
 namespace fs = boost::filesystem;
 namespace
 {
@@ -88,7 +90,7 @@ void RunTest(TransactionTestInFilled const& _test)
             spTransaction tr(new TransactionLegacy(BYTES(DataObject("0xf85f800182520894000000000000000000000000000b9331677e6ebf0a801ca098ff921201554726367d2be8c804a7ff89ccf285ebc57dff8ae4c44b9c19ac4aa01887321be575c8095f789dd4c743dfe42c1820f9231f98a962b210e3ac2452a3"))));
             string const& chash = tr.getContent().hash().asStringBytes();
             string& hash = const_cast<string&>(chash);
-            hash = "0x" + dev::toString(dev::sha3(fromHex(_test.rlp().asString())));
+            hash = "0x" + dev::toString(dev::sha3(dev::fromHex(_test.rlp().asString())));
             compareTransactionException(tr, res, _test.getExpectException(fork));
         }
         else
@@ -98,7 +100,7 @@ void RunTest(TransactionTestInFilled const& _test)
             spTransaction tr = _test.transaction();
             string const& chash = tr.getContent().hash().asStringBytes();
             string& hash = const_cast<string&>(chash);
-            hash = "0x" + dev::toString(dev::sha3(fromHex(_test.rlp().asString())));
+            hash = "0x" + dev::toString(dev::sha3(dev::fromHex(_test.rlp().asString())));
             compareTransactionException(tr, res, _test.getExpectException(fork));
         }
 

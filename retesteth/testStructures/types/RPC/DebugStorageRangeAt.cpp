@@ -2,10 +2,9 @@
 #include <retesteth/EthChecks.h>
 #include <retesteth/testStructures/Common.h>
 
+using namespace std;
 using namespace test::debug;
-namespace test
-{
-namespace teststruct
+namespace test::teststruct
 {
 DebugStorageRangeAt::DebugStorageRangeAt(DataObject const& _data)
 {
@@ -36,4 +35,3 @@ DebugStorageRangeAt::DebugStorageRangeAt(DataObject const& _data)
 }
 
 }  // namespace teststruct
-}  // namespace test

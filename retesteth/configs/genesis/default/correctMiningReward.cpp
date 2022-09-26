@@ -3,6 +3,8 @@
 using namespace std;
 using namespace dataobject;
 
+namespace retesteth::options
+{
 const string default_correctMiningReward_config = R"({
     "//comment" : "State Tests does not calculate mining reward in post conditions, so when filling a blockchain test out of it, the mining reward must be set",
     "Frontier":          "5000000000000000000",
@@ -55,3 +57,4 @@ genRewardsCfg::genRewardsCfg()
     (*obj2)["content"] = t8ntool_correctMiningReward_config;
     map_configs.addArrayObject(obj2);
 }
+}  // namespace retesteth::options

@@ -3,8 +3,6 @@
 #include "../Storage.h"
 #include <libdataobj/DataObject.h>
 #include <libdataobj/SPointer.h>
-using namespace dataobject;
-using namespace test::teststruct;
 
 namespace test
 {

@@ -2,8 +2,6 @@
 #include "../../basetypes.h"
 #include <libdataobj/DataObject.h>
 
-using namespace dataobject;
-
 namespace test
 {
 namespace teststruct
@@ -22,7 +20,7 @@ struct DebugTraceTransaction
 {
     DebugTraceTransaction(DataObject const&);
     std::vector<DebugTraceTransactionLog> const& getEntries() const { return m_entries; }
-    string getFinal() const;
+    std::string getFinal() const;
 
 private:
     std::vector<DebugTraceTransactionLog> m_entries;

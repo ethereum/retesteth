@@ -6,17 +6,13 @@
 #include <libdataobj/DataObject.h>
 #include <libdataobj/SPointer.h>
 
-using namespace dataobject;
-using namespace test::teststruct;
-namespace test
-{
-namespace teststruct
+namespace test::teststruct
 {
 struct StateTestInFilled : GCP_SPointerBase
 {
     StateTestInFilled(spDataObject&);
 
-    string const& testName() const { return m_name; }
+    std::string const& testName() const { return m_name; }
     Info const& testInfo() const { return m_info; }
     StateTestEnv const& Env() const { return m_env; }
     State const& Pre() const { return m_pre; }
@@ -25,7 +21,7 @@ struct StateTestInFilled : GCP_SPointerBase
 
 private:
     StateTestInFilled() {}
-    string m_name;
+    std::string m_name;
     GCP_SPointer<Info> m_info;
     GCP_SPointer<StateTestEnv> m_env;
     spState m_pre;
@@ -43,6 +39,4 @@ private:
     std::vector<StateTestInFilled> m_tests;
 };
 
-
 }  // namespace teststruct
-}  // namespace test

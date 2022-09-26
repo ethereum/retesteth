@@ -1,8 +1,10 @@
 #include "TransactionReader.h"
 #include "TransactionAccessList.h"
 #include "TransactionBaseFee.h"
+#include <retesteth/EthChecks.h>
 #include <retesteth/TestHelper.h>
 
+using namespace std;
 using namespace dataobject;
 using namespace test::teststruct;
 
@@ -28,9 +30,7 @@ spTransaction _readTransaction(TransactionType _t, dev::RLP const& _rlp)
 }
 
 }  // namespace
-namespace test
-{
-namespace teststruct
+namespace test::teststruct
 {
 // The transaction here might be  01 + rlp (tx.data)
 // OR                             rlp (01 + rlp (tx.data))
@@ -97,4 +97,3 @@ spTransaction readTransaction(spDataObjectMove _filledData)
 }
 
 }  // namespace teststruct
-}  // namespace test

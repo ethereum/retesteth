@@ -10,8 +10,6 @@
 #include <libdataobj/SPointer.h>
 #include <libdevcore/RLP.h>
 #include <testStructures/types/RPC/DebugVMTrace.h>
-using namespace dataobject;
-using namespace test::teststruct;
 
 namespace test
 {

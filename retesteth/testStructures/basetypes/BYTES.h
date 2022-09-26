@@ -2,12 +2,11 @@
 #include <libdevcore/RLP.h>
 #include <libdataobj/DataObject.h>
 #include <libdataobj/SPointer.h>
+
+namespace test::teststruct
+{
 using namespace dataobject;
 
-namespace test
-{
-namespace teststruct
-{
 // Validate and manage the type of BYTES
 // Deserialized from string of "0x1122....." of _limit range
 struct BYTES : GCP_SPointerBase
@@ -16,17 +15,16 @@ struct BYTES : GCP_SPointerBase
     explicit BYTES(DataObject const&);
     BYTES* copy() const { return new BYTES(DataObject(m_data)); }
 
-    string const& asString() const { return m_data; }
+    std::string const& asString() const { return m_data; }
     size_t firstByte() const;
     bool operator!=(BYTES const& _rhs) const { return m_data != _rhs.asString(); }
     bool operator==(BYTES const& _rhs) const { return m_data == _rhs.asString(); }
 
 private:
     BYTES() {}
-    string m_data;
+    std::string m_data;
 };
 
 typedef GCP_SPointer<BYTES> spBYTES;
 
 }  // namespace teststruct
-}  // namespace test

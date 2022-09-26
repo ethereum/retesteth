@@ -2,6 +2,7 @@
 #include <string>
 using namespace std;
 using namespace test::debug;
+using namespace test::session;
 
 namespace test
 {

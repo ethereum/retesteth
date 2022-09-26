@@ -6,12 +6,12 @@
 #include <retesteth/EthChecks.h>
 #include <retesteth/Options.h>
 #include <retesteth/TestHelper.h>
+#include <retesteth/TestOutputHelper.h>
 #include <retesteth/testStructures/Common.h>
+using namespace std;
 using namespace dev;
 
-namespace test
-{
-namespace teststruct
+namespace test::teststruct
 {
 TransactionAccessList::TransactionAccessList(DataObject const& _data)
   : TransactionLegacy()
@@ -231,4 +231,3 @@ void TransactionAccessList::rebuildRLP()
 }
 
 }  // namespace teststruct
-}  // namespace test

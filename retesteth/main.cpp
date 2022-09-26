@@ -10,6 +10,7 @@
 #include <boost/test/included/unit_test.hpp>
 #include <thread>
 
+using namespace std;
 using namespace boost::unit_test;
 static std::ostringstream strCout;
 std::streambuf* oldCoutStreamBuf;

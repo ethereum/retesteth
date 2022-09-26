@@ -3,10 +3,15 @@
 #include <retesteth/session/Socket.h>
 #include <string>
 
+namespace test::session
+{
+using namespace dataobject;
+using namespace test::teststruct;
+
 class RPCImpl : public SessionInterface
 {
 public:
-    RPCImpl(Socket::SocketType _type, const string& _path) : m_socket(_type, _path) {}
+    RPCImpl(Socket::SocketType _type, const std::string& _path) : m_socket(_type, _path) {}
 
 public:
     spDataObject web3_clientVersion() override;
@@ -56,3 +61,5 @@ private:
     Socket m_socket;
     size_t m_rpcSequence = 1;
 };
+
+}  // namespace test::session

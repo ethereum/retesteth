@@ -7,6 +7,7 @@
 #include "EthChecks.h"
 #include "DifficultyTestFiller.h"
 
+using namespace std;
 using namespace test;
 using namespace test::teststruct;
 

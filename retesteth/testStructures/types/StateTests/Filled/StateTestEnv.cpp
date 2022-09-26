@@ -2,6 +2,10 @@
 #include <retesteth/EthChecks.h>
 #include <retesteth/testStructures/Common.h>
 
+using namespace std;
+using namespace dataobject;
+using namespace test::teststruct;
+
 namespace
 {
 void requireStateTestEnvScheme(DataObject const& _data)
@@ -20,9 +24,7 @@ void requireStateTestEnvScheme(DataObject const& _data)
 }  // namespace
 
 
-namespace test
-{
-namespace teststruct
+namespace test::teststruct
 {
 void StateTestEnv::initializeFields(DataObject const& _data)
 {
@@ -71,6 +73,4 @@ StateTestEnv::StateTestEnv(DataObject const& _data)
     }
 }
 
-
 }  // namespace teststruct
-}  // namespace test

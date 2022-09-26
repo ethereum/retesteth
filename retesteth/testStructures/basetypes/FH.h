@@ -5,22 +5,18 @@
 #include <libdevcore/RLP.h>
 #include <libdataobj/DataObject.h>
 #include <libdataobj/SPointer.h>
-using namespace dataobject;
 
-namespace test
+namespace test::teststruct
 {
-namespace teststruct
-{
-
 struct FH : GCP_SPointerBase
 {
     FH(dev::RLP const& _rlp, size_t _scale);
-    FH(string const&, size_t _scale);
+    FH(std::string const&, size_t _scale);
     FH(DataObject const&, size_t _scale);  // Does not require to move smart pointer here as this structure changes a lot
 
-    string const& asString() const;
+    std::string const& asString() const;
     dev::bytes const& serializeRLP() const;
-    string const& asStringBytes() const { return m_data.asString(); }
+    std::string const& asStringBytes() const { return m_data.asString(); }
     bool operator==(FH const& rhs) const { return m_data.asString() == rhs.asStringBytes(); }
     bool operator!=(FH const& rhs) const { return m_data.asString() != rhs.asStringBytes(); }
     bool operator<(FH const& rhs) const { return m_data.asString() < rhs.asStringBytes(); }
@@ -30,15 +26,14 @@ struct FH : GCP_SPointerBase
 private:
     FH() {}
     //FH(FH const&) {}
-    void _initialize(string const& _s, string const& _k = string());
+    void _initialize(std::string const& _s, std::string const& _k = std::string());
 
 protected:
     BYTES m_data = BYTES(DataObject("0x00"));
     size_t m_scale;
     bool m_isCorrectHash = true;
-    mutable string m_dataStrZeroXCache;
+    mutable std::string m_dataStrZeroXCache;
     mutable dev::bytes m_rlpDataCache;
 };
 
 }  // namespace teststruct
-}  // namespace test

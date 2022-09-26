@@ -4,8 +4,6 @@
 #include "../Ethereum/State.h"
 #include <libdataobj/DataObject.h>
 
-using namespace dataobject;
-
 namespace test
 {
 namespace teststruct

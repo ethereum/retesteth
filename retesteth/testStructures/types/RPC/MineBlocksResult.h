@@ -3,8 +3,6 @@
 #include <libdataobj/DataObject.h>
 #include <retesteth/testStructures/Common.h>
 
-using namespace dataobject;
-
 namespace test
 {
 namespace teststruct
@@ -51,7 +49,7 @@ struct MineBlocksResult
 protected:
     bool m_result;
     bool m_isRejectData;
-    std::map<FH32, string> m_rejectedTransactions;
+    std::map<FH32, std::string> m_rejectedTransactions;
 };
 
 

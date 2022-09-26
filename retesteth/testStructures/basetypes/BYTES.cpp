@@ -5,6 +5,7 @@
 #include <sstream>
 using namespace test::teststruct;
 using namespace dev;
+using namespace std;
 
 namespace
 {

@@ -5,6 +5,9 @@
 #include <retesteth/testSuiteRunner/TestSuite.h>
 #include <retesteth/testSuites/Common.h>
 
+using namespace std;
+using namespace dataobject;
+using namespace test::session;
 using namespace test::debug;
 using namespace test::blockchainfiller;
 namespace test
@@ -84,8 +87,8 @@ spDataObject FillTest(BlockchainTestInFiller const& _test, TestSuite::TestSuiteO
                     compareStates(expect.result(), remoteState);
                     filledTest.atKeyPointer("postState") = remoteState.asDataObject();
                     if (Options::get().poststate)
-                        ETH_DC_MESSAGE(DC::TESTLOG, "\nState Dump:" + TestOutputHelper::get().testInfo().errorDebug() +
-                                                        cDefault + " \n" + filledTest.atKey("postState").asJson());
+                        ETH_DC_MESSAGE(DC::STATE, "\nState Dump:" + TestOutputHelper::get().testInfo().errorDebug() + cDefault +
+                                                      " \n" + filledTest.atKey("postState").asJson());
                 }
                 catch (StateTooBig const&)
                 {
@@ -94,8 +97,8 @@ spDataObject FillTest(BlockchainTestInFiller const& _test, TestSuite::TestSuiteO
                 }
 
                 if (Options::get().poststate)
-                    ETH_DC_MESSAGE(DC::TESTLOG, "PostState " + TestOutputHelper::get().testInfo().errorDebug() + " : \n" +
-                                                    cDefault + "Hash: " + finalBlock.header()->stateRoot().asString());
+                    ETH_DC_MESSAGE(DC::STATE, "PostState " + TestOutputHelper::get().testInfo().errorDebug() + " : \n" +
+                                                  cDefault + "Hash: " + finalBlock.header()->stateRoot().asString());
 
 
                 filledTest["lastblockhash"] = finalBlock.header()->hash().asString();

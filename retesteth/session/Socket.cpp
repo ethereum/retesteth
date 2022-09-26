@@ -5,6 +5,8 @@
 
 using namespace std;
 
+namespace test::session
+{
 Socket::Socket(SocketType _type, string const& _path) : m_path(_path), m_socketType(_type)
 {
 #if defined(_WIN32)
@@ -273,3 +275,5 @@ std::string const& JsonObjectValidator::getResponse() const
 {
     return m_response;
 }
+
+}  // namespace test::session

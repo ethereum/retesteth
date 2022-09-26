@@ -19,7 +19,7 @@ struct DifficultyTestVector
     spVALUE parentDifficulty;
     spVALUE parentTimestamp;
     bool parentUncles;
-    string testVectorName;
+    std::string testVectorName;
 };
 
 typedef std::vector<DifficultyTestVector> TestVector;
@@ -27,13 +27,13 @@ typedef std::vector<DifficultyTestVector> TestVector;
 struct DifficultyTestInFilled : GCP_SPointerBase
 {
     DifficultyTestInFilled(spDataObject&);
-    string const& testName() const { return m_name; }
-    std::map<string, TestVector> const& testVectors() const { return m_testVectors; }
+    std::string const& testName() const { return m_name; }
+    std::map<std::string, TestVector> const& testVectors() const { return m_testVectors; }
 
 private:
     DifficultyTestInFilled() {}
-    string m_name;
-    std::map<string, TestVector> m_testVectors;
+    std::string m_name;
+    std::map<std::string, TestVector> m_testVectors;
 };
 
 struct DifficultyTest

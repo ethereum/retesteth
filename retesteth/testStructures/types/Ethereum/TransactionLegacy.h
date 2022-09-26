@@ -4,8 +4,6 @@
 #include <libdevcore/RLP.h>
 #include <libdataobj/DataObject.h>
 #include <retesteth/testStructures/types/StateTests/Base/AccessList.h>
-using namespace dataobject;
-using namespace test::teststruct;
 
 namespace test
 {

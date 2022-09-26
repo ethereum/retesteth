@@ -3,6 +3,8 @@
 using namespace std;
 using namespace dataobject;
 
+namespace retesteth::options
+{
 const string default_ByzantiumToConstantinopleFixAt5_config = R"({
     "params" : {
       "homesteadForkBlock" : "0x00",
@@ -39,3 +41,4 @@ genByzantiumToConstantinopleFixCfg::genByzantiumToConstantinopleFixCfg()
     (*obj2)["content"] = t8ntool_ByzantiumToConstantinopleFixAt5_config;
     map_configs.addArrayObject(obj2);
 }
+}  // namespace retesteth::options

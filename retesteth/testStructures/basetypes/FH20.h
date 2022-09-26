@@ -4,7 +4,6 @@
 #include <libdataobj/SPointer.h>
 #include <algorithm>
 #include <random>
-using namespace dataobject;
 
 namespace test
 {
@@ -16,13 +15,13 @@ struct FH20 : FH
 {
     FH20(dev::RLP const& _rlp) : FH(_rlp, 20) {}
     FH20(DataObject const& _data) : FH(_data, 20) {}
-    FH20(string const& _data) : FH(_data, 20) {}
+    FH20(std::string const& _data) : FH(_data, 20) {}
     FH20* copy() const { return new FH20(asString()); }
 
     static FH20 random()
     {
-        string initStr = "0x";
-        std::vector<string> hex{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f"};
+        std::string initStr = "0x";
+        std::vector<std::string> hex{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f"};
         auto rng = std::default_random_engine{};
         for (size_t i = 0; i < 40; i++)
         {

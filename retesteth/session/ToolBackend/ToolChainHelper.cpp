@@ -5,6 +5,7 @@
 #include <retesteth/testStructures/Common.h>
 using namespace dev;
 using namespace test;
+using namespace std;
 using namespace test::debug;
 using namespace teststruct;
 using namespace dataobject;

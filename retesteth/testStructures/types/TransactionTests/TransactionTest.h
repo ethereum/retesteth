@@ -6,9 +6,7 @@
 #include <retesteth/testStructures/types/Ethereum/Transaction.h>
 #include <map>
 
-namespace test
-{
-namespace teststruct
+namespace test::teststruct
 {
 struct TransactionResult
 {
@@ -16,7 +14,7 @@ struct TransactionResult
     TransactionResult(spFH32 const& _hash, spFH20 const& _sender, spVALUE const& _intrGas)
       : m_intrinsicGas(_intrGas), m_hash(_hash), m_sender(_sender)
     {}
-    string m_exception;
+    std::string m_exception;
     spVALUE m_intrinsicGas;
     spFH32 m_hash;
     spFH20 m_sender;
@@ -26,13 +24,13 @@ struct TransactionResult
 struct TransactionTestInFilled : GCP_SPointerBase
 {
     TransactionTestInFilled(spDataObject&);
-    string const& testName() const { return m_name; }
+    std::string const& testName() const { return m_name; }
     BYTES const& rlp() const { return m_rlp; }
     spTransaction const& transaction() const { return m_readTransaction; }
     std::set<FORK> const& allForks() const { return m_forks; }
-    string const& getExpectException(FORK const& _net) const
+    std::string const& getExpectException(FORK const& _net) const
     {
-        static string emptyString = string();
+        static std::string emptyString = std::string();
         if (m_expectExceptions.count(_net))
             return m_expectExceptions.at(_net);
         return emptyString;
@@ -48,7 +46,7 @@ struct TransactionTestInFilled : GCP_SPointerBase
 private:
     TransactionTestInFilled() {}
 
-    string m_name;
+    std::string m_name;
     spBYTES m_rlp;
     spTransaction m_readTransaction;
     std::set<FORK> m_forks;
@@ -70,4 +68,3 @@ private:
 
 
 }  // namespace teststruct
-}  // namespace test

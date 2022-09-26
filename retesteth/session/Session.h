@@ -11,8 +11,8 @@
 #include <libdataobj/DataObject.h>
 #include <retesteth/session/SessionInterface.h>
 
-using namespace dataobject;
-
+namespace test::session
+{
 // Session connections to an instance of a client
 class RPCSession : public boost::noncopyable
 {
@@ -25,10 +25,10 @@ public:
         NotExist      // socket yet not initialized
     };
 
-    static SessionInterface& instance(thread::id const& _threadID);
-    static void sessionStart(thread::id const& _threadID);
-    static void sessionEnd(thread::id const& _threadID, SessionStatus _status);
-    static SessionStatus sessionStatus(thread::id const& _threadID);
+    static SessionInterface& instance(std::thread::id const& _threadID);
+    static void sessionStart(std::thread::id const& _threadID);
+    static void sessionEnd(std::thread::id const& _threadID, SessionStatus _status);
+    static SessionStatus sessionStatus(std::thread::id const& _threadID);
     static void clear();
 
     // Flush the memory by restarting the clients with configuration scripts
@@ -41,6 +41,8 @@ public:
 
 private:
     explicit RPCSession(SessionInterface* _impl);
-    static void runNewInstanceOfAClient(thread::id const& _threadID, test::ClientConfig const& _config);
+    static void runNewInstanceOfAClient(std::thread::id const& _threadID, test::ClientConfig const& _config);
     SessionInterface* m_implementation;
 };
+
+}  // namespace test::session

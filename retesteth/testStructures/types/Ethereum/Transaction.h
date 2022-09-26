@@ -3,8 +3,6 @@
 #include <libdevcore/RLP.h>
 #include <libdataobj/DataObject.h>
 #include <retesteth/testStructures/types/StateTests/Base/AccessList.h>
-using namespace dataobject;
-using namespace test::teststruct;
 
 namespace test
 {
@@ -41,10 +39,10 @@ struct Transaction : GCP_SPointerBase
     dev::RLPStream const& asRLPStream() const { return m_outRlpStream; }
 
     /// Debug transaction data for retesteth
-    string const& dataLabel() const { return m_dataLabel; }
-    string const& dataRawPreview() const { return m_dataRawPreview; }
-    void setDataLabel(string const& _label) { m_dataLabel = _label; }
-    void setDataRawPreview(string const& _dataRawPreview) { m_dataRawPreview = _dataRawPreview; }
+    std::string const& dataLabel() const { return m_dataLabel; }
+    std::string const& dataRawPreview() const { return m_dataRawPreview; }
+    void setDataLabel(std::string const& _label) { m_dataLabel = _label; }
+    void setDataRawPreview(std::string const& _dataRawPreview) { m_dataRawPreview = _dataRawPreview; }
 
     /// Debug transaction data for t8ntool wrapper
     void setSecret(VALUE const& _secret) { m_secretKey = spVALUE(_secret.copy()); }
@@ -72,8 +70,8 @@ protected:
     spVALUE m_s;
 
     // Debug
-    string m_dataRawPreview;  // Attached data raw preview before code compilation
-    string m_dataLabel;       // Attached data Label from filler
+    std::string m_dataRawPreview;  // Attached data raw preview before code compilation
+    std::string m_dataLabel;       // Attached data Label from filler
 
     // Optimization
     spFH32 m_hash;

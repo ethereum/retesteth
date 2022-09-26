@@ -4,15 +4,19 @@
 #include <libdataobj/ConvertFile.h>
 #include <retesteth/EthChecks.h>
 #include <retesteth/ExitHandler.h>
+#include <retesteth/Options.h>
 #include <retesteth/TestHelper.h>
+#include <retesteth/TestOutputHelper.h>
 #include <retesteth/session/RPCImpl.h>
 #include <retesteth/session/Session.h>
 #include <retesteth/testStructures/Common.h>
-#include <retesteth/Options.h>
 
+using namespace std;
 using namespace test;
 using namespace test::debug;
 
+namespace test::session
+{
 spDataObject RPCImpl::web3_clientVersion()
 {
     return rpcCall("web3_clientVersion", {});
@@ -274,3 +278,5 @@ std::string const& RPCImpl::getSocketPath() const
 {
     return m_socket.path();
 }
+
+}  // namespace test::session

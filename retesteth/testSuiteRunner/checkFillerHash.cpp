@@ -4,6 +4,8 @@
 #include "TestSuiteHelperFunctions.h"
 
 using namespace std;
+using namespace dev;
+using namespace test;
 using namespace test::debug;
 
 namespace
@@ -33,9 +35,7 @@ void checkTestVersion(DataObject const& _info, fs::path const& _compiledTest)
 }
 }  // namespace
 
-namespace test
-{
-namespace testsuite
+namespace test::testsuite
 {
 void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
 {
@@ -91,4 +91,3 @@ void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
 }
 
 }  // namespace testsuite
-}  // namespace test

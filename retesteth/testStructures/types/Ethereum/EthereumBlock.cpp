@@ -3,11 +3,10 @@
 #include <libdevcore/RLP.h>
 #include <libdevcore/SHA3.h>
 #include <retesteth/EthChecks.h>
+using namespace std;
 using namespace dev;
 
-namespace test
-{
-namespace teststruct
+namespace test::teststruct
 {
 void EthereumBlock::recalculateUncleHash()
 {
@@ -74,4 +73,3 @@ DebugVMTrace const& EthereumBlockState::getTrTrace(FH32 const& _hash) const
 }
 
 }  // namespace teststruct
-}  // namespace test

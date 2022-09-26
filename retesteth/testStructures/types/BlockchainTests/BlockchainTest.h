@@ -9,8 +9,6 @@
 #include <libdataobj/DataObject.h>
 #include <libdataobj/SPointer.h>
 
-// using namespace dataobject;
-using namespace test::teststruct;
 namespace test
 {
 namespace teststruct
@@ -18,7 +16,7 @@ namespace teststruct
 struct BlockchainTestInFilled : GCP_SPointerBase
 {
     BlockchainTestInFilled(spDataObject&);
-    string const& testName() const { return m_name; }
+    std::string const& testName() const { return m_name; }
     Info const& testInfo() const { return m_info; }
     BlockchainTestEnv const& Env() const { return m_env; }
     BYTES const& genesisRLP() const { return m_genesisRLP; }
@@ -33,11 +31,11 @@ struct BlockchainTestInFilled : GCP_SPointerBase
     FH32 const& lastBlockHash() const { return m_lastBlockHash; }
 
     std::vector<BlockchainTestBlock> const& blocks() const { return m_blocks; }
-    std::vector<string> const& unitTestExceptions() const { return m_exceptions; }
+    std::vector<std::string> const& unitTestExceptions() const { return m_exceptions; }
 
 private:
     BlockchainTestInFilled() {}
-    string m_name;
+    std::string m_name;
     spInfo m_info;
     SealEngine m_sealEngine;
     spFORK m_fork;
@@ -50,7 +48,7 @@ private:
     spFH32 m_postHash;
     spFH32 m_lastBlockHash;
 
-    std::vector<string> m_exceptions;
+    std::vector<std::string> m_exceptions;
 };
 
 struct BlockchainTest

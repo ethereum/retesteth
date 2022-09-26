@@ -25,9 +25,10 @@
 #include <thread>
 
 #include <libdevcore/include.h>
-#include <retesteth/TestOutputHelper.h>
-#include <retesteth/Options.h>
+#include <retesteth/EthChecks.h>
 #include <retesteth/ExitHandler.h>
+#include <retesteth/Options.h>
+#include <retesteth/TestOutputHelper.h>
 
 using namespace std;
 using namespace dev;

@@ -3,6 +3,8 @@
 using namespace std;
 using namespace dataobject;
 
+namespace retesteth::options
+{
 const string default_EIP158ToByzantiumAt5_config = R"({
     "params" : {
         "homesteadForkBlock" : "0x00",
@@ -36,3 +38,4 @@ genEIP158ToByzantiumCfg::genEIP158ToByzantiumCfg()
     (*obj2)["content"] = t8ntool_EIP158ToByzantiumAt5_config;
     map_configs.addArrayObject(obj2);
 }
+}  // namespace retesteth::options

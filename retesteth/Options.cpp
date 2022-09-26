@@ -22,9 +22,10 @@
 #include <iomanip>
 
 #include <libdataobj/ConvertFile.h>
+#include <libdataobj/SPointer.h>
 #include <retesteth/Options.h>
 #include <testStructures/Common.h>
-#include <libdataobj/SPointer.h>
+#include <boost/test/unit_test.hpp>
 
 
 using namespace std;
@@ -205,7 +206,8 @@ Options::Options(int argc, const char** argv)
     });
     ADD_OPTIONV(logVerbosity, "--verbosity", [](){
         cout << setw(30) << "--verbosity <level>" << setw(25) << "Set logs verbosity. 0 - silent, 1 - only errors, 2 - informative, >2 - detailed\n";
-        cout << setw(30) << "--verbosity <channel>" << setw(25) << "Set logs channels. 'STATS|RPC|TESTLOG|LOWLOG|SOCKET'\n";
+        cout << setw(30) << "--verbosity <channel>" << setw(25)
+             << "Set logs channels. 'STATS|RPC|TESTLOG|LOWLOG|SOCKET|STATE'\n";
         },[this](){
             // disable all output
             static std::ostringstream strCout;
@@ -260,11 +262,7 @@ Options::Options(int argc, const char** argv)
         cout << setw(30) << "--poststate" << setw(25) << "Debug(6) show test postState hash or fullstate, when used with --filltests export `postState` in StateTests\n";
         cout << setw(30) << "--poststate <folder>" << setw(25) << "Same as above plus export test post states into a folder\n";
         }, [this](){
-            if (!filltests.initialized())
-                BOOST_THROW_EXCEPTION(InvalidOption("Error: --poststate requires --filltests"));
             fullstate = true;
-            if (logVerbosity.val < 6 && poststate.outpath.empty())
-                std::cout << "Warning: --poststate is defined, but state is printed with verbosity level 6, which is not set" << std::endl;
     });
     ADD_OPTION(fullstate, "--fullstate", [](){
         cout << setw(30) << "--fullstate" << setw(25) << "Do not compress large states to hash when debug\n";

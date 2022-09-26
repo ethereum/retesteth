@@ -3,9 +3,10 @@
 #include <retesteth/testStructures/Common.h>
 
 #include <retesteth/Options.h>
-namespace test
-{
-namespace teststruct
+using namespace std;
+using namespace test::compiler;
+
+namespace test::teststruct
 {
 // Look at expect section data indexes filter and try to replace string values
 // into indexes of transaction data array (searching by label)
@@ -158,4 +159,3 @@ void StateTestFillerExpectSection::correctMiningReward(FH20 const& _coinbase, VA
 }
 
 }  // namespace teststruct
-}  // namespace test

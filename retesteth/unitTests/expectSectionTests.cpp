@@ -5,6 +5,7 @@
 #include <testStructures/types/StateTests/Filler/StateTestFillerExpectSection.h>
 #include <testStructures/types/StateTests/Filler/StateTestFillerTransaction.h>
 
+using namespace std;
 using namespace test;
 using namespace dataobject;
 

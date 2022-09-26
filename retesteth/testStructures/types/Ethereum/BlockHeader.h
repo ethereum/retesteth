@@ -5,8 +5,6 @@
 #include <libdevcore/SHA3.h>
 #include <libdataobj/DataObject.h>
 #include <libdataobj/SPointer.h>
-using namespace dataobject;
-using namespace test::teststruct;
 
 namespace test
 {
@@ -22,7 +20,7 @@ enum class BlockType
 // Ethereum blockheader interface
 struct BlockHeader : GCP_SPointerBase
 {
-    static string TypeToString(BlockType _t)
+    static std::string TypeToString(BlockType _t)
     {
         switch (_t)
         {
@@ -41,7 +39,7 @@ struct BlockHeader : GCP_SPointerBase
 
     bool operator==(BlockHeader const& _rhs) const { return asDataObject() == _rhs.asDataObject(); }
     bool operator!=(BlockHeader const& _rhs) const { return !(*this == _rhs); }
-    static string BlockTypeToString(BlockType _bl)
+    static std::string BlockTypeToString(BlockType _bl)
     {
         switch (_bl)
         {

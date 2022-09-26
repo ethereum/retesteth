@@ -4,6 +4,7 @@
 #include <iostream>
 #include <sstream>
 using namespace dataobject;
+using namespace std;
 
 /// Default dataobject is null
 DataObject::DataObject() { m_type = DataType::NotInitialized; }

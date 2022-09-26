@@ -19,11 +19,12 @@
  */
 
 #include <libdevcore/CommonIO.h>
+#include <retesteth/EthChecks.h>
+#include <retesteth/Options.h>
 #include <retesteth/TestHelper.h>
 #include <retesteth/TestOutputHelper.h>
 #include <retesteth/configs/ClientConfig.h>
 #include <boost/test/unit_test.hpp>
-#include <retesteth/Options.h>
 
 using namespace std;
 using namespace dev;

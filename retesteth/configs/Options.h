@@ -3,6 +3,8 @@
 #include <map>
 #include <libdataobj/DataObject.h>
 
+namespace retesteth::options
+{
 extern dataobject::DataObject map_configs;
 
 // Attached clients config
@@ -86,3 +88,4 @@ public:
         genArrowGlacierToMergeAtDiffC0000Cfg genArrowGlacierToMergeAtDiffC0000;
     }
 };
+}  // namespace retesteth::options

@@ -3,6 +3,8 @@
 #include <retesteth/testStructures/types/Ethereum/State.h>
 using namespace std;
 using namespace test::debug;
+using namespace test::session;
+
 namespace test
 {
 
@@ -254,7 +256,7 @@ void compareStates(StateBase const& _stateExpect, State const& _statePost)
             result = accountCompareResult;
     }
     if (Options::get().poststate)
-        ETH_DC_MESSAGE(DC::TESTLOG, "State Dump: \n" + _statePost.asDataObject()->asJson());
+        ETH_DC_MESSAGE(DC::STATE, "State Dump: \n" + _statePost.asDataObject()->asJson());
     if (result != CompareResult::Success)
         ETH_ERROR_MESSAGE("CompareStates failed with errors: " + CompareResultToString(result));
 }

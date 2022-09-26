@@ -13,6 +13,8 @@
 #include <boost/noncopyable.hpp>
 #include <string>
 
+namespace test::session
+{
 class SocketResponseValidator
 {
 public:
@@ -77,3 +79,5 @@ private:
     std::string sendRequestIPC(std::string const& _req, SocketResponseValidator& _val);
 };
 #endif
+
+}  // namespace test::session

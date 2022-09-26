@@ -4,6 +4,11 @@
 #include <retesteth/TestOutputHelper.h>
 #include <retesteth/session/Session.h>
 
+using namespace std;
+using namespace dev;
+using namespace dataobject;
+using namespace test::teststruct;
+
 namespace
 {
 string calculateHashOfTheNewFilledTest(DataObject& _newFilledTestRef)
@@ -43,9 +48,7 @@ bool checkIfThereAreUpdatesToTheTest(spDataObject _oldFilledTestFile, spDataObje
 }  // namespace
 
 
-namespace test
-{
-namespace testsuite
+namespace test::testsuite
 {
 bool addClientInfoIfUpdate(DataObject& _newFilledTestData, fs::path const& _testSourcePath, dev::h256 const& _testSourceHash,
     fs::path const& _existingFilledTest)
@@ -56,7 +59,7 @@ bool addClientInfoIfUpdate(DataObject& _newFilledTestData, fs::path const& _test
     if (Options::get().filltests && fs::exists(_existingFilledTest) && !Options::get().forceupdate)
         oldFilledTestFile = test::readJsonData(_existingFilledTest);
 
-    SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
+    session::SessionInterface& session = session::RPCSession::instance(TestOutputHelper::getThreadID());
     for (spDataObject& newFilledTest : _newFilledTestData.getSubObjectsUnsafe())
     {
         spDataObject newTestClientInfo;
@@ -93,4 +96,3 @@ bool addClientInfoIfUpdate(DataObject& _newFilledTestData, fs::path const& _test
 }
 
 }  // namespace testsuite
-}  // namespace test

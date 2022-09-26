@@ -3,6 +3,8 @@
 using namespace std;
 using namespace dataobject;
 
+namespace retesteth::options
+{
 const string default_Istanbul_config = R"({
     "params" : {
         "homesteadForkBlock" : "0x00",
@@ -41,3 +43,4 @@ genIstanbulCfg::genIstanbulCfg()
     (*obj2)["content"] = t8ntool_Istanbul_config;
     map_configs.addArrayObject(obj2);
 }
+}  // namespace retesteth::options

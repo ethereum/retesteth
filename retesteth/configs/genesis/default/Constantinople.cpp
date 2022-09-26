@@ -3,6 +3,8 @@
 using namespace std;
 using namespace dataobject;
 
+namespace retesteth::options
+{
 const string default_Constantinople_config = R"({
     "params" : {
        "homesteadForkBlock" : "0x00",
@@ -38,4 +40,4 @@ genConstantinopleCfg::genConstantinopleCfg()
     (*obj2)["content"] = t8ntool_Constantinople_config;
     map_configs.addArrayObject(obj2);
 }
-
+}  // namespace retesteth::options

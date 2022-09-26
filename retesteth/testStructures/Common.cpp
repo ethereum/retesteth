@@ -8,10 +8,12 @@
 #include <algorithm>
 #include <libdevcrypto/Common.h>
 
+using namespace std;
 using namespace test;
 using namespace test::debug;
 using namespace dev;
 using namespace test::teststruct;
+using namespace test::compiler;
 
 namespace
 {
@@ -46,9 +48,7 @@ void removeLeadingZeroes(string& _hexStr)
 }  // namespace
 
 
-namespace test
-{
-namespace teststruct
+namespace test::teststruct
 {
 
 spFH20 convertSecretToPublic(spFH32 const& _secret)
@@ -439,4 +439,3 @@ void convertDecTransactionToHex(spDataObject& _data)
 }
 
 }  // namespace teststruct
-}  // namespace test

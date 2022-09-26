@@ -1,8 +1,7 @@
 #include "Storage.h"
 
-namespace test
-{
-namespace teststruct
+using namespace std;
+namespace test::teststruct
 {
 Storage::Storage(DataObject const& _data)
 {
@@ -35,6 +34,4 @@ spDataObject Storage::asDataObject() const
     return out;
 }
 
-
 }  // namespace teststruct
-}  // namespace test

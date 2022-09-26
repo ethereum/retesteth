@@ -3,6 +3,7 @@
 #include <mutex>
 #include <thread>
 using namespace test;
+using namespace test::session;
 
 std::mutex g_executionMutex;
 bool ExitHandler::m_receivedExitSig = false;

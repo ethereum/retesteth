@@ -1,5 +1,6 @@
-#include <retesteth/TestHelper.h>
+#include <retesteth/EthChecks.h>
 #include <retesteth/Options.h>
+#include <retesteth/TestHelper.h>
 #include <retesteth/TestOutputHelper.h>
 #include <retesteth/testStructures/basetypes.h>
 #include <retesteth/testStructures/types/Ethereum/TransactionReader.h>

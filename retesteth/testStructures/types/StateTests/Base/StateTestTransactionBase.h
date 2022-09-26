@@ -5,11 +5,7 @@
 #include <libdataobj/DataObject.h>
 #include <libdataobj/SPointer.h>
 
-using namespace dataobject;
-using namespace test::teststruct;
-namespace test
-{
-namespace teststruct
+namespace test::teststruct
 {
 // Base logic for State Test Transaction section
 struct StateTestTransactionBase : GCP_SPointerBase
@@ -19,13 +15,13 @@ struct StateTestTransactionBase : GCP_SPointerBase
 
     struct Databox
     {
-        Databox(BYTES const& _data, string const& _label, string const& _rawPreview,
+        Databox(BYTES const& _data, std::string const& _label, std::string const& _rawPreview,
             spAccessList const& _accessList = spAccessList(0))
           : m_data(_data), m_dataLabel(_label), m_dataRawPreview(_rawPreview), m_accessList(_accessList)
         {}
         BYTES m_data;
-        string m_dataLabel;
-        string m_dataRawPreview;  // The source code preview before code compilation
+        std::string m_dataLabel;
+        std::string m_dataRawPreview;  // The source code preview before code compilation
         spAccessList m_accessList;
     };
 
@@ -49,6 +45,4 @@ protected:
     spVALUE m_maxPriorityFeePerGas;
 };
 
-
 }  // namespace teststruct
-}  // namespace test

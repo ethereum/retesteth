@@ -1,6 +1,11 @@
+#include <retesteth/EthChecks.h>
+#include <retesteth/TestOutputHelper.h>
 #include <retesteth/configs/ClientConfig.h>
 #include <retesteth/testStructures/Common.h>
 #include <mutex>
+using namespace std;
+using namespace dataobject;
+using namespace test::teststruct;
 std::mutex g_staticDeclaration_clientConfigID;
 std::mutex g_staticDeclaration_translateNetworks_static;
 namespace test

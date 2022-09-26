@@ -3,15 +3,10 @@
 #include "BlockHeaderLegacy.h"
 #include "BlockHeaderMerge.h"
 
-using namespace dataobject;
-using namespace test::teststruct;
 
-namespace test
-{
-namespace teststruct
+namespace test::teststruct
 {
 spBlockHeader readBlockHeader(DataObject const& _data);
 spBlockHeader readBlockHeader(dev::RLP const& _rlp);
 
 }  // namespace teststruct
-}  // namespace test

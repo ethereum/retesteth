@@ -6,6 +6,8 @@
 #include <retesteth/testStructures/Common.h>
 #include <libdataobj/ConvertFile.h>
 #include <retesteth/FileSystem.h>
+using namespace std;
+using namespace dev;
 using namespace test;
 using namespace test::debug;
 

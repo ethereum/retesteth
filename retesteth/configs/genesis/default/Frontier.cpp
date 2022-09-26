@@ -3,6 +3,8 @@
 using namespace std;
 using namespace dataobject;
 
+namespace retesteth::options
+{
 const string default_Frontier_config = R"({
     "params" : {
     },
@@ -30,4 +32,4 @@ genFrontierCfg::genFrontierCfg()
     (*obj2)["content"] = t8ntool_Frontier_config;
     map_configs.addArrayObject(obj2);
 }
-
+}  // namespace retesteth::options

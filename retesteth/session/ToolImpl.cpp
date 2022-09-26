@@ -13,7 +13,10 @@
 using namespace test;
 using namespace test::debug;
 using namespace toolimpl;
+using namespace std;
 
+namespace test::session
+{
 /// Because ToolBackend is like a light client module of retesteth
 /// Execute its logic in try catch blocks. treating any std::exceptions as its failure
 /// And treating any Eth exceptions as a message to retesteth behaviour
@@ -360,3 +363,5 @@ void ToolImpl::makeRPCError(string const& _error)
     ETH_DC_MESSAGE(DC::WARNING, "makeRPCError " + _error);
     m_lastInterfaceError = RPCError("", _error);
 }
+
+}  // namespace test::session

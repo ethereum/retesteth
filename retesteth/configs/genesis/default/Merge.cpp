@@ -3,6 +3,8 @@
 using namespace std;
 using namespace dataobject;
 
+namespace retesteth::options
+{
 const string default_Merge_config = R"({
     "params" : {
        "homesteadForkBlock" : "0x00",
@@ -49,3 +51,4 @@ genMergeCfg::genMergeCfg()
         map_configs.addArrayObject(obj);
     }
 }
+}  // namespace retesteth::options

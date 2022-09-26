@@ -3,6 +3,8 @@
 using namespace std;
 using namespace dataobject;
 
+namespace retesteth::options
+{
 const string default_ArrowGlacier_config = R"({
     "params" : {
        "homesteadForkBlock" : "0x00",
@@ -44,3 +46,4 @@ genArrowGlacierCfg::genArrowGlacierCfg()
     (*obj2)["content"] = t8ntool_ArrowGlacier_config;
     map_configs.addArrayObject(obj2);
 }
+}  // namespace retesteth::options

@@ -2,6 +2,8 @@
 using namespace std;
 using namespace dataobject;
 
+namespace retesteth::options
+{
 string const t8ntooleip_config = R"({
     "name" : "Ethereum GO on StateTool + Custom EIP",
     "socketType" : "tranition-tool",
@@ -257,3 +259,4 @@ t8ntooleipcfg::t8ntooleipcfg()
         map_configs.addArrayObject(obj);
     }
 }
+}  // namespace retesteth::options

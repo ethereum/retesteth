@@ -4,10 +4,9 @@
 #include <retesteth/testStructures/Common.h>
 
 #include <libdevcrypto/Common.h>
+using namespace std;
 
-namespace test
-{
-namespace teststruct
+namespace test::teststruct
 {
 BlockchainTestFillerTransaction::BlockchainTestFillerTransaction(spDataObjectMove _data, NonceMap& _nonceMap)
 {
@@ -53,4 +52,3 @@ BlockchainTestFillerTransaction::BlockchainTestFillerTransaction(spDataObjectMov
 }
 
 }  // namespace teststruct
-}  // namespace test

@@ -5,6 +5,7 @@
 #include "EthChecks.h"
 #include "TransactionTestFiller.h"
 
+using namespace std;
 using namespace test;
 using namespace test::teststruct;
 

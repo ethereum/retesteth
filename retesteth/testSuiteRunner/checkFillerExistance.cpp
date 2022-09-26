@@ -1,8 +1,13 @@
+#include "EthChecks.h"
 #include "Options.h"
 #include "TestHelper.h"
 #include "TestSuite.h"
 #include "TestSuiteHelperFunctions.h"
+#include <retesteth/TestOutputHelper.h>
+#include <boost/test/unit_test.hpp>
 
+using namespace std;
+using namespace test;
 using namespace test::debug;
 using namespace test::testsuite;
 

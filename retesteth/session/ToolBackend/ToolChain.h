@@ -4,10 +4,11 @@
 #include <testStructures/types/ethereum.h>
 #include <boost/filesystem.hpp>
 #include <vector>
-namespace fs = boost::filesystem;
-
 namespace toolimpl
 {
+namespace fs = boost::filesystem;
+using namespace test::teststruct;
+
 // Parse SetChainParams::params section
 struct ToolParams : GCP_SPointerBase
 {

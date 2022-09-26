@@ -1,14 +1,16 @@
 #pragma once
 #include <testStructures/structures.h>
 
+namespace test::blockchainfiller
+{
 typedef std::vector<spBlockHeader> vectorOfSchemeBlock;
-typedef std::tuple<BYTES, string> TransactBytesException;
+typedef std::tuple<BYTES, std::string> TransactBytesException;
 class TestBlock
 {
 public:
 
     // _rlp of a block that has been imported on remote clinet
-    TestBlock(BYTES const& _rlp, string const& _chainName, FORK const& _chainNet, VALUE const& _number);
+    TestBlock(BYTES const& _rlp, std::string const& _chainName, FORK const& _chainNet, VALUE const& _number);
 
     // Attach block header to the test block
     void registerTestHeader(spBlockHeader const& _header) { m_block = spEthereumBlock(new EthereumBlock(_header)); }
@@ -27,7 +29,7 @@ public:
     std::vector<spBlockHeader> const& getUncles() const { return m_block->uncles(); }
 
     // Attach test exception to the test block
-    void registerTestExceptios(string const& _exception) { m_expectException = _exception; }
+    void registerTestExceptios(std::string const& _exception) { m_expectException = _exception; }
 
     // Attach uncle header of potential fork to this block. If test has no uncles this will not be called
     void setNextBlockForked(spBlockHeader const& _next)
@@ -52,9 +54,9 @@ private:
     // Transaction Execution order for invalid transaction check
     std::vector<TransactBytesException> m_transactionExecOrder;
 
-    string m_chainName;
+    std::string m_chainName;
     spFORK m_chainNet;
-    string m_expectException;
+    std::string m_expectException;
     spVALUE m_blockNumber;
     spBYTES m_rawRLP;
     bool m_doNotExport;
@@ -62,3 +64,4 @@ private:
     // A block mined in paralel representing an uncle (it has the same blocknumber)
     spBlockHeader m_nextBlockForked;  // Hypothetical next block for uncles
 };
+}  // namespace test::blockchainfiller

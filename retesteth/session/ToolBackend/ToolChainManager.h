@@ -5,10 +5,11 @@
 #include <retesteth/testStructures/types/RPC/SetChainParamsArgs.h>
 #include <retesteth/testStructures/types/RPC/TestRawTranasction.h>
 #include <boost/filesystem.hpp>
-namespace fs = boost::filesystem;
 
 namespace toolimpl
 {
+namespace fs = boost::filesystem;
+
 // Manage test blockchains for reorg
 // Manage pending block for eth_sendRawTransaction
 // Imports raw blocks (RLP) into apropriate chain, reorg if needed

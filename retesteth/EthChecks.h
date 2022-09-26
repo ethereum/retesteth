@@ -1,9 +1,7 @@
 #pragma once
-#include <retesteth/TestOutputHelper.h>
 #include <map>
 #include <string>
 
-using namespace test;
 namespace test::debug
 {
 enum DC
@@ -12,6 +10,7 @@ enum DC
     DEFAULT,
     SOCKET,
     STATS,
+    STATE,
     WARNING,
     TESTLOG,
     LOWLOG
@@ -61,50 +60,50 @@ int eth_getVerbosity();
 
 
 // Channels message
-#define ETH_DC_MESSAGE(dc, message)                  \
-    if (debug::Debug::get().flag(dc))                \
-    {                                                \
-        debug::logmessage::eth_log_message(message); \
+#define ETH_DC_MESSAGE(dc, message)                        \
+    if (test::debug::Debug::get().flag(dc))                \
+    {                                                      \
+        test::debug::logmessage::eth_log_message(message); \
     }
 
-#define ETH_DC_MESSAGEC(dc, message, color)                 \
-    if (debug::Debug::get().flag(dc))                       \
-    {                                                       \
-        debug::logmessage::eth_log_message(message, color); \
+#define ETH_DC_MESSAGEC(dc, message, color)                       \
+    if (test::debug::Debug::get().flag(dc))                       \
+    {                                                             \
+        test::debug::logmessage::eth_log_message(message, color); \
     }
 
-#define ETH_WARNING(message) debug::logmessage::eth_warning_message(message)
+#define ETH_WARNING(message) test::debug::logmessage::eth_warning_message(message)
 
 // Plain messages
-#define ETH_STDOUT_MESSAGE(message) debug::logmessage::eth_stdout_message(message)
-#define ETH_STDOUT_MESSAGEC(message, color) debug::logmessage::eth_stdout_message(message, color)
-#define ETH_STDERROR_MESSAGE(message) debug::logmessage::eth_stderror_message(message)
+#define ETH_STDOUT_MESSAGE(message) test::debug::logmessage::eth_stdout_message(message)
+#define ETH_STDOUT_MESSAGEC(message, color) test::debug::logmessage::eth_stdout_message(message, color)
+#define ETH_STDERROR_MESSAGE(message) test::debug::logmessage::eth_stderror_message(message)
 
 // Notice an error during test execution, but continue other tests
 // Throw the exception so to exit the test execution loop
-#define ETH_ERROR_MESSAGE(message) debug::logmessage::eth_error(message)
-#define ETH_ERROR_REQUIRE_MESSAGE(flag, message) \
-    if (!(flag))                                 \
-    {                                            \
-        debug::logmessage::eth_error(message);   \
+#define ETH_ERROR_MESSAGE(message) test::debug::logmessage::eth_error(message)
+#define ETH_ERROR_REQUIRE_MESSAGE(flag, message)     \
+    if (!(flag))                                     \
+    {                                                \
+        test::debug::logmessage::eth_error(message); \
     }
 
 // Notice an error during test execution, but continue current test
 // Thie needed to mark multiple error checks into the log in one test
-#define ETH_MARK_ERROR(message) debug::logmessage::eth_mark_error(message)
-#define ETH_MARK_ERROR_FLAG(flag, message)          \
-    if (!(flag))                                    \
-    {                                               \
-        debug::logmessage::eth_mark_error(message); \
+#define ETH_MARK_ERROR(message) test::debug::logmessage::eth_mark_error(message)
+#define ETH_MARK_ERROR_FLAG(flag, message)                \
+    if (!(flag))                                          \
+    {                                                     \
+        test::debug::logmessage::eth_mark_error(message); \
     }
 
 // Stop retesteth execution rise sigabrt
-#define ETH_FAIL_REQUIRE(flag) debug::logmessage::eth_require(flag)
-#define ETH_FAIL_MESSAGE(message) debug::logmessage::eth_fail(message)
-#define ETH_FAIL_REQUIRE_MESSAGE(flag, message) \
-    if (!(flag))                                \
-    {                                           \
-        debug::logmessage::eth_fail(message);   \
+#define ETH_FAIL_REQUIRE(flag) test::debug::logmessage::eth_require(flag)
+#define ETH_FAIL_MESSAGE(message) test::debug::logmessage::eth_fail(message)
+#define ETH_FAIL_REQUIRE_MESSAGE(flag, message)     \
+    if (!(flag))                                    \
+    {                                               \
+        test::debug::logmessage::eth_fail(message); \
     }
 
 /// Base class for all exceptions.

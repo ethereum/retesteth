@@ -4,6 +4,7 @@
 #include <mutex>
 using namespace test;
 using namespace test::debug;
+using namespace std;
 
 namespace  {
     mutex g_DifficultyStatic_Access;

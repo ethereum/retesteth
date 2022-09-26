@@ -2,9 +2,7 @@
 #include <retesteth/EthChecks.h>
 #include <retesteth/testStructures/Common.h>
 
-namespace test
-{
-namespace teststruct
+namespace test::teststruct
 {
 ToolResponse::ToolResponse(DataObject const& _data)
 {
@@ -42,4 +40,3 @@ ToolResponse::ToolResponse(DataObject const& _data)
 
 
 }  // namespace teststruct
-}  // namespace test

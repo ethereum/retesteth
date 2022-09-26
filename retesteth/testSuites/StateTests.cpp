@@ -47,6 +47,7 @@ using namespace dev;
 using namespace test;
 using namespace test::debug;
 using namespace test::teststruct;
+using namespace test::session;
 namespace fs = boost::filesystem;
 string const c_trHashNotFound = "TR hash not found in mined block! (Check that tr is properly mined and not oog)";
 
@@ -311,8 +312,8 @@ spDataObject FillTest(StateTestInFiller const& _test)
                     tr.markExecuted();
 
                     if (Options::get().poststate)
-                        ETH_DC_MESSAGE(DC::TESTLOG, "PostState " + TestOutputHelper::get().testInfo().errorDebug() + " : \n" +
-                                                        cDefault + "Hash: " + blockInfo.header()->stateRoot().asString());
+                        ETH_DC_MESSAGE(DC::STATE, "PostState " + TestOutputHelper::get().testInfo().errorDebug() + " : \n" +
+                                                      cDefault + "Hash: " + blockInfo.header()->stateRoot().asString());
 
                     if (Options::get().vmtrace)
                     {
@@ -488,8 +489,8 @@ void RunTest(StateTestInFilled const& _test)
                     {
                         auto const remStateJson = getRemoteState(session).asDataObject()->asJson();
                         ETH_DC_MESSAGE(
-                            DC::TESTLOG, "\nRunning test State Dump:" + TestOutputHelper::get().testInfo().errorDebug() +
-                                             cDefault + " \n" + remStateJson);
+                            DC::STATE, "\nRunning test State Dump:" + TestOutputHelper::get().testInfo().errorDebug() +
+                                           cDefault + " \n" + remStateJson);
                         if (!Options::get().poststate.outpath.empty())
                         {
                             string testNameOut = _test.testName() + "_d" + tr.dataIndS() + "g" + tr.gasIndS() + "v" + tr.valueIndS();

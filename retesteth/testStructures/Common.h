@@ -4,12 +4,8 @@
 #include <retesteth/testStructures/types/Ethereum/BlockHeaderReader.h>
 #include <retesteth/testStructures/types/Ethereum/TransactionReader.h>
 #include <map>
-using namespace dataobject;
-using namespace test::compiler;
 
-namespace test
-{
-namespace teststruct
+namespace test::teststruct
 {
 
 // DataObject converters. Mostly Dec -> Hex, json data convertation
@@ -23,7 +19,7 @@ void mod_valueToCompactEvenHexPrefixed(DataObject&);
 void mod_keyToCompactEvenHexPrefixed(DataObject&);
 void mod_valueInsertZeroXPrefix(DataObject&);
 void mod_sortKeys(DataObject&);
-long long int hexOrDecStringToInt(string const& _str);
+long long int hexOrDecStringToInt(std::string const& _str);
 
 // Check the presents of fields in a DataObject with a validation map
 typedef std::set<DataType> possibleType;
@@ -58,8 +54,9 @@ enum class StateToHex
     COMPILECODE,
     NOCOMPILECODE
 };
-void convertDecStateToHex(
-    spDataObject& _data, solContracts const& _preSolidity = solContracts(), StateToHex _compileCode = StateToHex::COMPILECODE);
+void convertDecStateToHex(spDataObject& _data,
+    test::compiler::solContracts const& _preSolidity = test::compiler::solContracts(),
+    StateToHex _compileCode = StateToHex::COMPILECODE);
 
 void convertDecTransactionToHex(spDataObject& _data);
 
@@ -67,16 +64,15 @@ void convertDecTransactionToHex(spDataObject& _data);
 spDataObject convertDecBlockheaderIncompleteToHex(DataObject const& _data);
 
 // Make a nice compare result string
-string compareBlockHeaders(DataObject const& _blockA, DataObject const& _blockB, string& _whatField);
+std::string compareBlockHeaders(DataObject const& _blockA, DataObject const& _blockB, std::string& _whatField);
 
 // Read expect Exceptions
-void readExpectExceptions(DataObject const& _data, std::map<FORK, string>& _out);
+void readExpectExceptions(DataObject const& _data, std::map<FORK, std::string>& _out);
 
 // Marco move subpointer from key _key in _dataobject
-#define MOVE(_dataobject, _key) dataobject::move((*_dataobject).atKeyPointerUnsafe(_key))
+#define MOVE(_dataobject, _key) move((*_dataobject).atKeyPointerUnsafe(_key))
 
 // Convert Secret Key to Public eth key
 spFH20 convertSecretToPublic(spFH32 const& _secret);
 
 }  // namespace teststruct
-}  // namespace test

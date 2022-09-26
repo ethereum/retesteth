@@ -1,6 +1,7 @@
 #include <BuildInfo.h>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/FileSystem.h>
+#include <retesteth/EthChecks.h>
 #include <retesteth/Options.h>
 #include <retesteth/configs/Options.h>
 #include <boost/filesystem.hpp>
@@ -8,6 +9,9 @@
 using namespace std;
 using namespace test;
 using namespace test::debug;
+using namespace dataobject;
+using namespace dev;
+using namespace test::teststruct;
 namespace fs = boost::filesystem;
 
 namespace
@@ -16,13 +20,12 @@ fs::path getRetestethDataDir()
 {
     fs::path dataDir = Options::get().datadir;
     if (dataDir.empty())
-        dataDir = getDataDir("retesteth");
+        dataDir = dev::getDataDir("retesteth");
 
     if (!fs::exists(dataDir))
         ETH_DC_MESSAGE(DC::WARNING, "Options path `" + dataDir.string() + "` doesn't exist, attempt to create a new directory");
     return dataDir;
 }
-}  // namespace
 
 string prepareRetestethVersion()
 {
@@ -30,11 +33,15 @@ string prepareRetestethVersion()
     return version;
 }
 
+}  // namespace
+
+namespace retesteth::options
+{
 DataObject map_configs;
 void deployFirstRunConfigs(fs::path const& _dir)
 {
     // Deploy default configs
-    OptionsInit init;
+    retesteth::options::OptionsInit init;
     writeFile(_dir / "version", prepareRetestethVersion());
     for (DataObject const& cfg : map_configs.getSubObjects())
     {
@@ -44,7 +51,10 @@ void deployFirstRunConfigs(fs::path const& _dir)
             writeFile(_dir / fs::path(cfg.atKey("path").asString()), cfg.atKey("content").asString());
     }
 }
+}  // namespace retesteth::options
 
+namespace test
+{
 size_t Options::DynamicOptions::activeConfigs() const
 {
     return m_clientConfigs.size();
@@ -110,7 +120,7 @@ std::vector<ClientConfig> const& Options::DynamicOptions::getClientConfigs()
                             "')! Redeploy the configs by deleting the folder `" + homeDir.string() + "`!");
         }
         else
-            deployFirstRunConfigs(homeDir);
+            retesteth::options::deployFirstRunConfigs(homeDir);
 
         // Load the configs from options file
         std::vector<string> cfgs = Options::get().clients;
@@ -127,3 +137,4 @@ std::vector<ClientConfig> const& Options::DynamicOptions::getClientConfigs()
     }
     return m_clientConfigs;
 }
+}  // namespace test

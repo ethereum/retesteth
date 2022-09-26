@@ -1,14 +1,12 @@
 #pragma once
 
 #include <libdevcore/Exceptions.h>
-#include <retesteth/TestHelper.h>
 #include <retesteth/configs/ClientConfig.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/optional.hpp>
 #include <list>
 
-using namespace dev;
 namespace test
 {
 class TestOptions;
@@ -28,21 +26,22 @@ private:
     public:
         bool initialized() const { return m_inited; }
         void setValidator(std::function<void()> _func) { m_validatorFunc = _func; }
-        void setDefHelp(string&& _def, std::function<void()> _help);
+        void setDefHelp(std::string&& _def, std::function<void()> _help);
         void setBeforeSeparator() { m_allowBeforeSeparator = true; }
         void setOverrideOption() { m_optionOverrides = true; }
-        void tryInit(list<const char*>& _argList);
+        void tryInit(std::list<const char*>& _argList);
         void printHelp();
         void validate() const;
     private:
-        int initArgs(list<const char*> const& _argList, list<const char*>::const_iterator _arg);
+        int initArgs(std::list<const char*> const& _argList, std::list<const char*>::const_iterator _arg);
         bool isAfterSeparatorOption() const;
-        bool match(string const& _arg) const;
+        bool match(std::string const& _arg) const;
+
     protected:
-        virtual void initArg(string const& _arg) = 0;
+        virtual void initArg(std::string const& _arg) = 0;
         Option(){};
-        string m_sOptionHelp;
-        string m_sOptionName;
+        std::string m_sOptionHelp;
+        std::string m_sOptionName;
 
         ARGS m_argType;
         bool m_allowBeforeSeparator = false;
@@ -56,7 +55,7 @@ private:
     {
         void_opt() { m_argType = ARGS::NONE; }
     protected:
-        void initArg(string const& _arg) override { (void) _arg; }
+        void initArg(std::string const& _arg) override { (void)_arg; }
     };
 
     struct sizet_opt : public Option
@@ -66,9 +65,7 @@ private:
         sizet_opt& operator=(size_t _var) { m_arg = _var; return *this;}
     protected:
         size_t m_arg;
-        void initArg(string const& _arg) override {
-            m_arg = max(0, atoi(_arg.c_str()));
-        }
+        void initArg(std::string const& _arg) override { m_arg = std::max(0, atoi(_arg.c_str())); }
     };
 
     struct int_opt : public Option
@@ -77,9 +74,7 @@ private:
         operator int() const { return m_arg; }
     protected:
         int m_arg;
-        void initArg(string const& _arg) override {
-            m_arg = atoi(_arg.c_str());
-        }
+        void initArg(std::string const& _arg) override { m_arg = atoi(_arg.c_str()); }
     };
 
     struct bool_opt : public Option
@@ -88,27 +83,24 @@ private:
         operator bool() const { return m_inited; }
         bool_opt& operator=(bool _arg) { m_inited = _arg; return *this; }
     protected:
-        void initArg(string const& _arg) override { (void) _arg; }
+        void initArg(std::string const& _arg) override { (void)_arg; }
     };
 
     struct booloutpath_opt : public bool_opt
     {
         booloutpath_opt(bool _arg) : bool_opt(_arg) { m_argType = ARGS::NONE_OPTIONAL; }
         operator bool() const { return m_inited; }
-        string outpath;
+        std::string outpath;
+
     protected:
-        void initArg(string const& _arg) override {
-                outpath = _arg;
-        }
+        void initArg(std::string const& _arg) override { outpath = _arg; }
     };
 
-    struct string_opt : public Option, string
+    struct string_opt : public Option, std::string
     {
         string_opt() { m_argType = ARGS::ONE;}
     protected:
-        void initArg(string const& _arg) override {
-            assign(_arg);
-        }
+        void initArg(std::string const& _arg) override { assign(_arg); }
     };
 
     struct stringosizet_opt : public Option
@@ -116,15 +108,16 @@ private:
         stringosizet_opt() { m_argType = ARGS::ONE;}
         stringosizet_opt(size_t _i) : val(_i) { m_argType = ARGS::ONE;}
         bool operator == (size_t _i) const { return _i == val; }
-        string str;
+        std::string str;
         size_t val;
     protected:
-        void initArg(string const& _arg) override {
+        void initArg(std::string const& _arg) override
+        {
             DigitsType type = test::stringIntegerType(_arg);
             if (type == DigitsType::String)
                 str = _arg;
             else if (type == DigitsType::Decimal)
-                val = max(0, atoi(_arg.c_str()));
+                val = std::max(0, atoi(_arg.c_str()));
             else
                 BOOST_THROW_EXCEPTION(InvalidOption("Error: `" + m_sOptionName + "` wrong option argument format: " + _arg));
         }
@@ -133,7 +126,8 @@ private:
     struct fspath_opt : public string_opt
     {
     protected:
-        void initArg(string const& _arg) override {
+        void initArg(std::string const& _arg) override
+        {
             string_opt::initArg(_arg);
             if (!boost::filesystem::exists(_arg))
                 BOOST_THROW_EXCEPTION(InvalidOption("Error: `" + m_sOptionName + "` could not locate file or path: " + _arg));
@@ -143,11 +137,13 @@ private:
     struct vecstr_opt : public Option
     {
         vecstr_opt() { m_argType = ARGS::ONE;}
-        operator std::vector<string>() const { return m_vector; }
+        operator std::vector<std::string>() const { return m_vector; }
+
     protected:
-        std::vector<string> m_vector;
-        void initArg(string const& _arg) override {
-            std::vector<string> elements;
+        std::vector<std::string> m_vector;
+        void initArg(std::string const& _arg) override
+        {
+            std::vector<std::string> elements;
             boost::split(elements, _arg, boost::is_any_of(", "));
             for (auto& it : elements)
             {
@@ -165,7 +161,8 @@ private:
         size_t size() const { return m_vector.size(); }
     protected:
         std::vector<IPADDRESS> m_vector;
-        void initArg(string const& _arg) override {
+        void initArg(std::string const& _arg) override
+        {
             for (auto const& el : explode(_arg, ','))
                 m_vector.push_back(IPADDRESS(el));
         }
@@ -174,20 +171,22 @@ private:
     struct singletest_opt : public Option
     {
         singletest_opt() { m_argType = ARGS::ONE;}
-        string name;
-        string subname;
+        std::string name;
+        std::string subname;
+
     protected:
-        void initArg(string const& _arg) override {
+        void initArg(std::string const& _arg) override
+        {
             name = _arg;
 
             size_t pos = name.find("Filler");
-            if (pos != string::npos)
+            if (pos != std::string::npos)
             {
                 name = name.substr(0, pos);
                 std::cout << "WARNING: Correcting filter to: `" + name + "`" << std::endl;
             }
             pos = name.find_last_of('/');
-            if (pos != string::npos)
+            if (pos != std::string::npos)
             {
                 subname = name.substr(pos + 1);
                 name = name.substr(0, pos);
@@ -199,9 +198,11 @@ private:
     {
         dataind_opt() { m_argType = ARGS::ONE;}
         int index = -1;
-        string label;
+        std::string label;
+
     protected:
-        void initArg(string const& _arg) override {
+        void initArg(std::string const& _arg) override
+        {
             DigitsType type = stringIntegerType(_arg);
             switch (type)
             {
@@ -210,7 +211,7 @@ private:
                 break;
             case DigitsType::String:
                 label = _arg;
-                if (_arg.find(":label") == string::npos)
+                if (_arg.find(":label") == std::string::npos)
                     label = ":label " + label;
                 break;
             default:
@@ -275,9 +276,9 @@ public:
     static bool isLegacy();
 
 public:
-    struct InvalidOption : public Exception
+    struct InvalidOption : public dev::Exception
     {
-        InvalidOption(std::string&& _message = std::string()) : Exception(std::move(_message)) {}
+        InvalidOption(std::string&& _message = std::string()) : dev::Exception(std::move(_message)) {}
     };
 
     struct DynamicOptions
@@ -300,7 +301,7 @@ public:
     static Options const& get(int argc = 0, const char** argv = 0);
     static DynamicOptions& getDynamicOptions() { return m_dynamicOptions; }
     static ClientConfig const& getCurrentConfig() { return m_dynamicOptions.getCurrentConfig(); }
-    string getGStateTransactionFilter() const;
+    std::string getGStateTransactionFilter() const;
 
 private:
     Options(int argc = 0, const char** argv = 0);

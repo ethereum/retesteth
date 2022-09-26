@@ -10,6 +10,7 @@
 #include <testStructures/types/RPC/ToolResponse.h>
 
 using namespace dev;
+using namespace std;
 using namespace test;
 using namespace test::debug;
 using namespace teststruct;

@@ -4,8 +4,11 @@
 #include "libdataobj/ConvertFile.h"
 #include "libdataobj/DataObject.h"
 #include <libdevcore/CommonIO.h>
+#include <retesteth/TestOutputHelper.h>
 #include <testStructures/types/BlockchainTests/BlockchainTestFiller.h>
 
+using namespace std;
+using namespace dev;
 using namespace test;
 using namespace test::debug;
 using namespace dataobject;

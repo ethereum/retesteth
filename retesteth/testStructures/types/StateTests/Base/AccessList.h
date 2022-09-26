@@ -2,7 +2,6 @@
 #include <libdataobj/DataObject.h>
 #include <libdataobj/SPointer.h>
 #include <retesteth/testStructures/basetypes.h>
-using namespace dataobject;
 
 namespace test
 {

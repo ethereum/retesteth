@@ -1,14 +1,15 @@
 #include "BlockHeaderIncomplete.h"
 #include "../../basetypes.h"
 #include <libdevcore/Address.h>
+#include <retesteth/EthChecks.h>
 #include <retesteth/TestHelper.h>
 #include <retesteth/testStructures/Common.h>
 
 using namespace dev;
+using namespace std;
+using namespace dataobject;
 
-namespace test
-{
-namespace teststruct
+namespace test::teststruct
 {
 BlockHeaderIncomplete::BlockHeaderIncomplete(DataObject const& _data)
 {
@@ -137,4 +138,3 @@ spBlockHeader BlockHeaderIncomplete::overwriteBlockHeader(spBlockHeader const& _
 }
 
 }  // namespace teststruct
-}  // namespace test

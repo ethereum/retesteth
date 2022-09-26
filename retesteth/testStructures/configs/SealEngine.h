@@ -1,9 +1,7 @@
 #pragma once
 #include <string>
 
-namespace test
-{
-namespace teststruct
+namespace test::teststruct
 {
 
 // SealEngine enum
@@ -17,6 +15,4 @@ enum class SealEngine
 SealEngine sealEngineFromStr(std::string const&);
 std::string sealEngineToStr(SealEngine);
 
-
 }  // namespace teststruct
-}  // namespace test

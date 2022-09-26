@@ -5,11 +5,10 @@
 #include <retesteth/EthChecks.h>
 #include <retesteth/testStructures/Common.h>
 
+using namespace std;
 using namespace dev;
 
-namespace test
-{
-namespace teststruct
+namespace test::teststruct
 {
 EthGetBlockBy::EthGetBlockBy(spDataObject& _data)
 {
@@ -88,4 +87,3 @@ BYTES EthGetBlockBy::getRLPHeaderTransactions() const
 }
 
 }  // namespace teststruct
-}  // namespace test

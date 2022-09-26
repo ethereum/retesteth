@@ -4,7 +4,6 @@
 #include <boost/filesystem/path.hpp>
 
 namespace fs = boost::filesystem;
-using namespace dataobject;
 
 namespace test
 {
@@ -26,33 +25,33 @@ struct VMLogRecord
     spVALUE gasCost;
     spBYTES memory;
     long long memSize;
-    std::vector<string> stack;
+    std::vector<std::string> stack;
     spBYTES returnData;
     size_t depth;
     spVALUE refund;
-    string opName;
-    string error;
+    std::string opName;
+    std::string error;
 };
 
 struct DebugVMTrace
 {
     DebugVMTrace() {}  // for tuples
-    DebugVMTrace(string const& _info, string const& _trNumber, FH32 const& _trHash, fs::path const& _logs);
+    DebugVMTrace(std::string const& _info, std::string const& _trNumber, FH32 const& _trHash, fs::path const& _logs);
     void print();
     void printNice();
     void exportLogs(fs::path const& _folder);
 
 private:
-    string m_infoString;
-    string m_trNumber;
+    std::string m_infoString;
+    std::string m_trNumber;
     spFH32 m_trHash;
     std::vector<VMLogRecord> m_log;
-    string m_rawUnparsedLogs;
+    std::string m_rawUnparsedLogs;
     fs::path m_rawVmTraceFile;
     bool m_limitReached = false;
 
     // Last record
-    string m_output;
+    std::string m_output;
     spVALUE m_gasUsed;
     long long m_time;
 };

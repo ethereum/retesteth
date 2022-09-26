@@ -2,13 +2,11 @@
 #include <libdataobj/DataObject.h>
 #include <libdevcore/SHA3.h>
 #include <boost/filesystem/path.hpp>
+namespace test::testsuite
+{
 using namespace dataobject;
 namespace fs = boost::filesystem;
 
-namespace test
-{
-namespace testsuite
-{
 struct TestFileData
 {
     spDataObject data;
@@ -24,4 +22,3 @@ void removeComments(spDataObject& _obj);
 void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest);
 
 }  // namespace testsuite
-}  // namespace test

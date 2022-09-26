@@ -3,8 +3,6 @@
 #include "MineBlocksResult.h"
 #include <libdataobj/DataObject.h>
 
-using namespace dataobject;
-
 namespace test
 {
 namespace teststruct
@@ -16,7 +14,7 @@ struct TestRawTransaction : MineBlocksResult
     FH20 const& sender() const { return m_sender; }
     FH32 const& trhash() const { return m_trHash; }
     VALUE const& intrinsicGas() const { return m_intrinsicGas; }
-    string const& error() const;
+    std::string const& error() const;
 
 private:
     spFH20 m_sender;

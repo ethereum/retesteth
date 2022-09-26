@@ -8,11 +8,13 @@
 #include <boost/asio.hpp>
 #include <mutex>
 #include <string>
-namespace fs = boost::filesystem;
-using namespace test::teststruct;
 
 namespace test
 {
+namespace fs = boost::filesystem;
+using namespace test::teststruct;
+using namespace dataobject;
+
 struct ClientConfigID
 {
     /// ClientConfigID handles the unique id logic so not to store it inside int and accedentially
@@ -58,12 +60,13 @@ public:
     bool checkForkInProgression(FORK const& _net) const;
 
     // Translate smart network names into network names ( `<=Homestead` to `Frontier, Homestead`)
-    std::vector<FORK> translateNetworks(set<string> const& _networks) const;
-    static void translateNetworks(set<string> const& _networks, std::vector<FORK> const& _netOrder, std::vector<FORK>& _out);
+    std::vector<FORK> translateNetworks(std::set<std::string> const& _networks) const;
+    static void translateNetworks(
+        std::set<std::string> const& _networks, std::vector<FORK> const& _netOrder, std::vector<FORK>& _out);
 
     // Translate exceptionID from tests into client error string from configs
     // Print suggestions if no match found
-    std::string const& translateException(string const& _exceptionName) const;
+    std::string const& translateException(std::string const& _exceptionName) const;
 
     // Get Contents of genesis template for specified FORK
     spDataObject const& getGenesisTemplate(FORK const& _fork) const;

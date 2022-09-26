@@ -1,10 +1,11 @@
 #include "Compiler.h"
 #include "TestHelper.h"
 #include <libdevcore/CommonIO.h>
+#include <retesteth/EthChecks.h>
 using namespace dev;
 using namespace test;
 using namespace dataobject;
-
+using namespace std;
 
 namespace test
 {

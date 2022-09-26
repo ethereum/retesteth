@@ -2,6 +2,8 @@
 using namespace std;
 using namespace dataobject;
 
+namespace retesteth::options
+{
 string const besu_config = R"({
     "name" : "Hyperledger Besu on TCP",
     "socketType" : "tcp",
@@ -88,3 +90,4 @@ besucfg::besucfg()
         map_configs.addArrayObject(obj);
     }
 }
+}  // namespace retesteth::options

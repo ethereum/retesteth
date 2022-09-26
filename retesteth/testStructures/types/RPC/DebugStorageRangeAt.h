@@ -3,8 +3,6 @@
 #include "../Ethereum/Storage.h"
 #include <libdataobj/DataObject.h>
 
-using namespace dataobject;
-
 namespace test
 {
 namespace teststruct

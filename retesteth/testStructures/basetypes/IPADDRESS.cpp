@@ -1,6 +1,7 @@
 #include "IPADDRESS.h"
 #include <retesteth/EthChecks.h>
 #include <boost/asio.hpp>
+using namespace std;
 using namespace test::teststruct;
 
 namespace test

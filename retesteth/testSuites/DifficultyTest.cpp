@@ -11,7 +11,9 @@
 #include <retesteth/testStructures/types/Ethereum/State.h>
 #include <retesteth/ExitHandler.h>
 
+using namespace std;
 using namespace test;
+using namespace test::session;
 namespace fs = boost::filesystem;
 namespace
 {

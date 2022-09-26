@@ -3,8 +3,6 @@
 #include "../../Ethereum/Transaction.h"
 #include <libdataobj/DataObject.h>
 
-using namespace dataobject;
-
 namespace test
 {
 namespace teststruct

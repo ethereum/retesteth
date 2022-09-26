@@ -6,17 +6,13 @@
 #include <libdataobj/DataObject.h>
 #include <libdataobj/SPointer.h>
 
-using namespace dataobject;
-using namespace test::teststruct;
-namespace test
-{
-namespace teststruct
+namespace test::teststruct
 {
 struct StateTestInFiller : GCP_SPointerBase
 {
     StateTestInFiller(spDataObject&);
 
-    string const& testName() const { return m_name; }
+    std::string const& testName() const { return m_name; }
     bool hasInfo() const { return !m_info.isEmpty(); }
     InfoIncomplete const& Info() const { return m_info; }
     StateTestFillerEnv const& Env() const { return m_env; }
@@ -29,7 +25,7 @@ struct StateTestInFiller : GCP_SPointerBase
 
 private:
     StateTestInFiller() {}
-    string m_name;
+    std::string m_name;
     GCP_SPointer<InfoIncomplete> m_info;
     GCP_SPointer<StateTestFillerEnv> m_env;
     spState m_pre;
@@ -51,4 +47,3 @@ private:
 
 
 }  // namespace teststruct
-}  // namespace test

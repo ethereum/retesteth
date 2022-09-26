@@ -11,14 +11,16 @@
 #include <csignal>
 #include <mutex>
 
+#include <libdataobj/ConvertFile.h>
+#include <libdataobj/ConvertYaml.h>
 #include <libdevcore/CommonIO.h>
+#include <retesteth/EthChecks.h>
 #include <retesteth/Options.h>
 #include <retesteth/TestHelper.h>
 #include <retesteth/TestOutputHelper.h>
-#include <libdataobj/ConvertFile.h>
-#include <libdataobj/ConvertYaml.h>
 
 using namespace std;
+using namespace dev;
 namespace fs = boost::filesystem;
 
 namespace  test {
@@ -682,6 +684,12 @@ string RLPStreamU::outHeader() const
     else
         header = 192 + payloadSize;
     return "0x" + dev::toCompactHex(header) + wrappedStringHeaderStr;
+}
+
+RLPStreamU::RLPStreamU(size_t _size) : m_size(_size)
+{
+    if (m_size > 1)
+        ETH_FAIL_MESSAGE("RLPStreamU does not support stream of multiple rlp items. It's a mock to wrap 1 transaction.");
 }
 
 }//namespace

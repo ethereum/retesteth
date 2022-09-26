@@ -1,7 +1,11 @@
 #include "BlockchainTest.h"
 #include <retesteth/EthChecks.h>
 #include <retesteth/Options.h>
+#include <retesteth/TestOutputHelper.h>
 #include <retesteth/testStructures/Common.h>
+
+using namespace std;
+using namespace test::teststruct;
 
 namespace
 {
@@ -21,9 +25,7 @@ BlockchainTestEnv* readBlockchainTestEnv(DataObject const& _data)
 }
 }  // namespace
 
-namespace test
-{
-namespace teststruct
+namespace test::teststruct
 {
 BlockchainTestInFilled::BlockchainTestInFilled(spDataObject& _data)
 {
@@ -95,4 +97,3 @@ BlockchainTest::BlockchainTest(spDataObject& _data)
 }
 
 }  // namespace teststruct
-}  // namespace test

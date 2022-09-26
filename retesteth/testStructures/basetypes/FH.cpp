@@ -10,6 +10,7 @@
 using namespace test;
 using namespace test::teststruct;
 using namespace dev;
+using namespace std;
 
 std::mutex g_cacheAccessMutexFH;
 

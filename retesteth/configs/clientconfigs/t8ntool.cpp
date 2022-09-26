@@ -2,6 +2,8 @@
 using namespace std;
 using namespace dataobject;
 
+namespace retesteth::options
+{
 string const t8ntool_config = R"({
     "name" : "Ethereum GO on StateTool",
     "socketType" : "tranition-tool",
@@ -306,3 +308,4 @@ t8ntoolcfg::t8ntoolcfg()
         map_configs.addArrayObject(obj);
     }
 }
+}  // namespace retesteth::options

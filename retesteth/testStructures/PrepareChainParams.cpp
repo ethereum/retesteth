@@ -2,6 +2,7 @@
 #include <retesteth/Options.h>
 #include <retesteth/configs/ClientConfig.h>
 
+using namespace std;
 using namespace test;
 using namespace test::teststruct;
 
@@ -47,7 +48,7 @@ spDataObject prepareGenesisSubsection(StateTestEnvBase const& _env, ParamsContex
         {
             (*genesis).removeKey("difficulty");
             (*genesis)["currentRandom"] = _env.currentRandom().asString();
-            auto const randomH32 = toCompactHexPrefixed(dev::u256((*genesis)["currentRandom"].asString()), 32);
+            auto const randomH32 = dev::toCompactHexPrefixed(dev::u256((*genesis)["currentRandom"].asString()), 32);
             (*genesis)["mixHash"] = randomH32;
         }
     }

@@ -1,12 +1,10 @@
 #pragma once
 #include <libdataobj/DataObject.h>
 #include <libdataobj/SPointer.h>
-using namespace dataobject;
 
-namespace test
+namespace test::teststruct
 {
-namespace teststruct
-{
+using namespace dataobject;
 struct InfoIncomplete : GCP_SPointerBase
 {
     InfoIncomplete(spDataObjectMove);
@@ -19,4 +17,3 @@ private:
 typedef GCP_SPointer<InfoIncomplete> spInfoIncomplete;
 
 }  // namespace teststruct
-}  // namespace test

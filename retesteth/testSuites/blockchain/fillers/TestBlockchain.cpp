@@ -3,10 +3,11 @@
 #include <retesteth/testSuites/Common.h>
 #include <retesteth/testStructures/PrepareChainParams.h>
 
+using namespace std;
 using namespace test::debug;
-namespace test
-{
-namespace blockchainfiller
+using namespace test::session;
+
+namespace test::blockchainfiller
 {
 TestBlockchain::TestBlockchain(BlockchainTestFillerEnv const& _testEnv, State const& _genesisState, SealEngine _engine,
     FORK const& _network, string const& _chainName, RegenerateGenesis _regenerateGenesis)
@@ -410,4 +411,3 @@ void TestBlockchain::resetChainParams() const
 }
 
 }  // namespace blockchainfiller
-}  // namespace test

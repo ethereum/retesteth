@@ -23,13 +23,12 @@
 #include <libdevcore/SHA3.h>
 #include <boost/filesystem/path.hpp>
 #include <functional>
-using namespace dataobject;
-namespace fs = boost::filesystem;
 
 namespace test
 {
-extern string const c_fillerPostf;
-extern string const c_copierPostf;
+namespace fs = boost::filesystem;
+extern std::string const c_fillerPostf;
+extern std::string const c_copierPostf;
 
 class TestSuite
 {
@@ -85,7 +84,7 @@ public:
     };
 
     // Main test executive function. should be declared for each test suite. it fills and runs the test .json file
-    virtual spDataObject doTests(spDataObject&, TestSuiteOptions& _options) const = 0;
+    virtual dataobject::spDataObject doTests(dataobject::spDataObject&, TestSuiteOptions& _options) const = 0;
 
     // Execute all tests from suiteFolder()/_testFolder/*
     // This functions checks that tests in the repo are updated with /src/suiteFillerFolder()/*Filler tests

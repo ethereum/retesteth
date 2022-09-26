@@ -3,6 +3,8 @@
 using namespace std;
 using namespace dataobject;
 
+namespace retesteth::options
+{
 const string default_EIP150_config = R"({
     "params" : {
        "homesteadForkBlock" : "0x00",
@@ -33,3 +35,4 @@ genEIP150Cfg::genEIP150Cfg()
     (*obj2)["content"] = t8ntool_EIP150_config;
     map_configs.addArrayObject(obj2);
 }
+}  // namespace retesteth::options

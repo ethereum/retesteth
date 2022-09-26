@@ -2,12 +2,13 @@
 #include "DataObject.h"
 #include "ConvertFile.h"
 #include "Exception.h"
+using namespace std;
 // Manually construct dataobject from file string content
 // bacuse Json::Reader::parse has a memory leak
 
 namespace dataobject
 {
-string const errorPrefix = "Error parsing json: ";
+std::string const errorPrefix = "Error parsing json: ";
 bool isEmptyChar(char const& _char)
 {
     if (_char == ' ' || _char == '\n' || _char == '\r' || _char == '\t')
@@ -15,7 +16,7 @@ bool isEmptyChar(char const& _char)
     return false;
 }
 
-size_t stripSpaces(string const& _input, size_t _i)
+size_t stripSpaces(std::string const& _input, size_t _i)
 {
     size_t i = _i;
     for (; i < _input.length(); i++)

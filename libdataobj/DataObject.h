@@ -1,10 +1,11 @@
 #pragma once
 #include "Exception.h"
 #include "SPointer.h"
+#include <map>
 #include <memory>
 #include <set>
+#include <string>
 #include <vector>
-#include <map>
 
 namespace dataobject
 {
@@ -50,7 +51,7 @@ public:
     std::string& getKeyUnsafe();
 
     std::vector<spDataObject> const& getSubObjects() const;
-    std::map<string, spDataObject> const& getSubObjectKeys() const;
+    std::map<std::string, spDataObject> const& getSubObjectKeys() const;
     std::vector<spDataObject>& getSubObjectsUnsafe();
 
     void addArrayObject(spDataObject const& _obj);
@@ -81,7 +82,7 @@ public:
     DataObject& operator=(std::string const& _value);
     DataObject& operator=(int _value);
 
-    void setString(string&& _value);
+    void setString(std::string&& _value);
     void setInt(int _value);
     void setBool(bool _value);
     void replace(DataObject const& _value);
@@ -103,8 +104,8 @@ public:
         RECURSIVE,
         NONRECURSIVE
     };
-    void performModifier(
-        void (*f)(DataObject&), ModifierOption _opt = ModifierOption::RECURSIVE, std::set<string> const& _exceptionKeys = {});
+    void performModifier(void (*f)(DataObject&), ModifierOption _opt = ModifierOption::RECURSIVE,
+        std::set<std::string> const& _exceptionKeys = {});
     void performVerifier(void (*f)(DataObject const&)) const;
 
     void clear(DataType _type = DataType::NotInitialized);
@@ -125,14 +126,13 @@ public:
     }
 
 private:
-
-    DataObject& _addSubObject(spDataObject const& _obj, string&& _keyOverwrite = string());
-    void _assert(bool _flag, std::string const& _comment = string()) const;
+    DataObject& _addSubObject(spDataObject const& _obj, std::string&& _keyOverwrite = std::string());
+    void _assert(bool _flag, std::string const& _comment = std::string()) const;
 
     // Use vector here to be able to quickly find insert position
     // of objects to be ordered by it's key with findOrderedKeyPosition
     std::vector<spDataObject> m_subObjects;
-    std::map<string, spDataObject> m_subObjectKeys;
+    std::map<std::string, spDataObject> m_subObjectKeys;
 
     DataType m_type;
     std::string m_strKey;
@@ -158,14 +158,13 @@ public:
 class DataObjectK
 {
 public:
-    DataObjectK(string const& _key, DataObject& _container)
-      : m_key(_key), m_data(_container) {}
+    DataObjectK(std::string const& _key, DataObject& _container) : m_key(_key), m_data(_container) {}
     DataObjectK& operator=(spDataObject const& _value);
     DataObject& getContent() { return m_data; }
     operator spDataObject() { return m_data.atKeyPointerUnsafe(m_key); }
 
 private:
-    string m_key;
+    std::string m_key;
     DataObject& m_data;
 };
 
@@ -189,5 +188,5 @@ spDataObjectMove move(spDataObject& _obj);
 
 // Find index that _key should take place in when being added to ordered _objects by key
 // Heavy function, use only on export when need to construct json with sorted keys
-size_t findOrderedKeyPosition(string const& _key, vector<spDataObject> const& _objects);
+size_t findOrderedKeyPosition(std::string const& _key, std::vector<spDataObject> const& _objects);
 }

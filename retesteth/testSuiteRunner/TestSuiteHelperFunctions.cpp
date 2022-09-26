@@ -1,10 +1,13 @@
 #include "TestSuiteHelperFunctions.h"
 #include "Options.h"
+#include <retesteth/EthChecks.h>
+#include <retesteth/TestOutputHelper.h>
 
+using namespace dev;
+using namespace std;
 using namespace test::debug;
-namespace test
-{
-namespace testsuite
+
+namespace test::testsuite
 {
 TestFileData readTestFile(fs::path const& _testFileName)
 {
@@ -88,6 +91,4 @@ void removeComments(spDataObject& _obj)
     }
 }
 
-
 }  // namespace testsuite
-}  // namespace test

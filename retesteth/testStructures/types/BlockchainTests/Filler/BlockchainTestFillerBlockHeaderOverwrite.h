@@ -4,7 +4,6 @@
 #include "../../Ethereum/BlockHeaderIncomplete.h"
 #include <libdataobj/DataObject.h>
 #include <libdataobj/SPointer.h>
-using namespace dataobject;
 
 namespace test
 {

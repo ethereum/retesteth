@@ -2,10 +2,12 @@
 #include "TestHelper.h"
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/SHA3.h>
+#include <retesteth/EthChecks.h>
 using namespace dev;
 using namespace test;
 using namespace test::debug;
 using namespace dataobject;
+using namespace std;
 
 namespace
 {

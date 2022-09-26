@@ -4,14 +4,11 @@
 #include "../../Ethereum/Transaction.h"
 #include <libdataobj/DataObject.h>
 #include <libdataobj/SPointer.h>
+
+namespace test::teststruct
+{
 using namespace dataobject;
-
-namespace test
-{
-namespace teststruct
-{
-
-typedef std::tuple<spTransaction, string> TransactionException;
+typedef std::tuple<spTransaction, std::string> TransactionException;
 
 struct BlockchainTestBlock : GCP_SPointerBase
 {
@@ -19,7 +16,7 @@ struct BlockchainTestBlock : GCP_SPointerBase
     BYTES const& rlp() const { return m_rlp; }
     bool expectedInvalid() const { return m_blockHeader.isEmpty(); }
     spBlockHeader const& header() const { return m_blockHeader; }
-    string const& getExpectException() const { return m_exception; }
+    std::string const& getExpectException() const { return m_exception; }
 
     std::vector<spBlockHeader> const& uncles() const { return m_uncles; }
     std::vector<spTransaction> const& transactions() const { return m_transactions; }
@@ -27,8 +24,8 @@ struct BlockchainTestBlock : GCP_SPointerBase
 
 private:
     BlockchainTestBlock() {}
-    string m_chainName;
-    string m_exception;
+    std::string m_chainName;
+    std::string m_exception;
     spVALUE m_blockNumber;
     spBlockHeader m_blockHeader;
     std::vector<spBlockHeader> m_uncles;
@@ -38,4 +35,3 @@ private:
 };
 
 }  // namespace teststruct
-}  // namespace test

@@ -21,7 +21,6 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 #include <retesteth/session/Session.h>
 #include <boost/filesystem/path.hpp>
-
 #include <retesteth/testStructures/types/ethereum.h>
 
 namespace test
@@ -38,8 +37,7 @@ enum CompareResult
     IncorrectStorage,
     None
 };
-string CompareResultToString(CompareResult res);
-
+std::string CompareResultToString(CompareResult res);
 
 
 // Get Remote State From Client
@@ -47,7 +45,7 @@ struct StateTooBig : UpwardsException
 {
     StateTooBig() : UpwardsException("StateTooBig") {}
 };
-State getRemoteState(SessionInterface& _session);
+State getRemoteState(test::session::SessionInterface& _session);
 
 // Check that test has data object
 void checkDataObject(DataObject const& _input);
@@ -60,11 +58,11 @@ void checkAtLeastOneTest(DataObject const& _input);
 
 // Check test name in the file is equal to the test name of the file
 void checkTestNameIsEqualToFileName(DataObject const& _input);
-void checkTestNameIsEqualToFileName(string const& _testName);
+void checkTestNameIsEqualToFileName(std::string const& _testName);
 
 
 // Compafre expected StateIncomplete against remote client (get post state data on the fly with session)
-void compareStates(StateBase const& _stateExpect, SessionInterface& _session);
+void compareStates(StateBase const& _stateExpect, test::session::SessionInterface& _session);
 
 // Compare expected StateIncomplete against post state State
 void compareStates(StateBase const& _stateExpect, State const& _statePost);
@@ -72,21 +70,21 @@ void compareStates(StateBase const& _stateExpect, State const& _statePost);
 // json trace vm
 struct VMtraceinfo
 {
-    VMtraceinfo(SessionInterface& _info, FH32 const& _trHash, FH32 const& _stateRoot, string const& _trName) :
-        session(_info), trHash(_trHash), stateRoot(_stateRoot), trName(_trName) {}
-    SessionInterface& session;
+    VMtraceinfo(test::session::SessionInterface& _info, FH32 const& _trHash, FH32 const& _stateRoot, std::string const& _trName)
+      : session(_info), trHash(_trHash), stateRoot(_stateRoot), trName(_trName)
+    {}
+    test::session::SessionInterface& session;
     FH32 const& trHash;
     FH32 const& stateRoot;
-    string const& trName;
+    std::string const& trName;
 };
 void printVmTrace(VMtraceinfo const& _info);
 
 // Validate transaction exception
-void compareTransactionException(spTransaction const& _tr, MineBlocksResult const& _mRes, string const& _testException);
+void compareTransactionException(spTransaction const& _tr, MineBlocksResult const& _mRes, std::string const& _testException);
 
 // Verify filled json structures
 void verifyFilledTest(DataObject const& _want, DataObject const& _have);
 void verifyFilledTest(DataObject const& _want, DataObject const& _have, FORK const& _net);
-void verifyFilledTestRecursive(DataObject const& _want, DataObject const& _have, string& _debug);
-
+void verifyFilledTestRecursive(DataObject const& _want, DataObject const& _have, std::string& _debug);
 }

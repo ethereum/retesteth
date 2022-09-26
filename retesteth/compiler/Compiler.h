@@ -1,29 +1,29 @@
 #pragma once
 #include <libdataobj/DataObject.h>
 #include <string>
-using namespace dataobject;
 
-namespace test
-{
-namespace compiler
+namespace test::compiler
 {
 namespace utiles
 {
 /// verify compiled code length
-void checkHexHasEvenLength(string const& _hex);
+void checkHexHasEvenLength(std::string const& _hex);
 
 /// ecnode abi options into bytecode
-string encodeAbi(string const& _code);
+std::string encodeAbi(std::string const& _code);
 
 }  // namespace utiles
+
+
+using namespace dataobject;
 
 /// Compile solidity source code into solidity information
 class solContracts
 {
 public:
     solContracts() {}
-    void insertCode(string const& _name, string const& _code) { m_solContracts.getContent()[_name] = _code; }
-    string const& getCode(string const& _contractName) const;
+    void insertCode(std::string const& _name, std::string const& _code) { m_solContracts.getContent()[_name] = _code; }
+    std::string const& getCode(std::string const& _contractName) const;
     std::vector<spDataObject> const& Contracts() const { return m_solContracts->getSubObjects(); }
 
 private:
@@ -32,13 +32,12 @@ private:
 };
 
 /// get solContracts information from solidity source code
-solContracts compileSolidity(string const& _code);
+solContracts compileSolidity(std::string const& _code);
 
 /// compile LLL / wasm or other src code into bytecode
 std::string replaceCode(std::string const& _code, solContracts const& _preSolidity = solContracts());
 
 /// compile clean YUL
-std::string compileYul(string const& _code);
+std::string compileYul(std::string const& _code);
 
 }  // namespace compiler
-}  // namespace test

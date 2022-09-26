@@ -1,6 +1,9 @@
 #include "BlockchainTestFillerEnv.h"
 #include <retesteth/EthChecks.h>
 #include <retesteth/testStructures/Common.h>
+using namespace std;
+using namespace dataobject;
+using namespace test::teststruct;
 
 namespace  {
 void requireLegacyBlockchainHeader(spDataObject const& _data)

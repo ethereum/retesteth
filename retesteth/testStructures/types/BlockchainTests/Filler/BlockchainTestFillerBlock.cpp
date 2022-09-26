@@ -3,10 +3,9 @@
 #include <retesteth/testStructures/Common.h>
 #include <retesteth/configs/ClientConfig.h>
 #include <retesteth/Options.h>
+using namespace std;
 
-namespace test
-{
-namespace teststruct
+namespace test::teststruct
 {
 BlockchainTestFillerBlock::BlockchainTestFillerBlock(spDataObject& _data, NonceMap& _nonceMap)
   : m_chainName(BlockchainTestFillerBlock::defaultChainName())
@@ -92,4 +91,3 @@ BlockchainTestFillerBlock::BlockchainTestFillerBlock(spDataObject& _data, NonceM
 }
 
 }  // namespace teststruct
-}  // namespace test

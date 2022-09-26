@@ -2,11 +2,10 @@
 #include <retesteth/EthChecks.h>
 #include <retesteth/testStructures/Common.h>
 
+using namespace std;
 using namespace dataobject;
 
-namespace test
-{
-namespace teststruct
+namespace test::teststruct
 {
 TestRawTransaction::TestRawTransaction(DataObject const& _data) :
     MineBlocksResult(_data)
@@ -55,4 +54,3 @@ string const& TestRawTransaction::error() const
 }
 
 }  // namespace teststruct
-}  // namespace test

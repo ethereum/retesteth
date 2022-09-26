@@ -4,11 +4,10 @@
 #include <libdataobj/ConvertFile.h>
 #include <testStructures/Common.h>
 
+using namespace std;
 using namespace test::debug;
 const string c_tooManyRawsMessage = "==TOO MANY LOG ROWS TO PRINT (Use --vmtraceraw <folder>)==";
-namespace test
-{
-namespace teststruct
+namespace test::teststruct
 {
 VMLogRecord::VMLogRecord(DataObject const& _obj)
 {
@@ -180,4 +179,3 @@ void DebugVMTrace::exportLogs(fs::path const& _folder)
 }
 
 }  // namespace teststruct
-}  // namespace test

@@ -2,13 +2,12 @@
 #include "../../Ethereum/Transaction.h"
 #include <libdataobj/DataObject.h>
 #include <libdataobj/SPointer.h>
-using namespace dataobject;
 namespace test
 {
 namespace teststruct
 {
 // NonceMap;
-typedef std::map<string, spVALUE> NonceMap;
+typedef std::map<std::string, spVALUE> NonceMap;
 
 struct BlockchainTestFillerTransaction : GCP_SPointerBase
 {
@@ -17,9 +16,9 @@ struct BlockchainTestFillerTransaction : GCP_SPointerBase
     spTransaction const& trPointer() const { return m_transaction; }
 
     // Test functions
-    string const& getExpectException(FORK const& _net) const
+    std::string const& getExpectException(FORK const& _net) const
     {
-        static string emptyString = string();  // mutex ??
+        static std::string emptyString = std::string();  // mutex ??
         if (m_expectExceptions.count(_net))
             return m_expectExceptions.at(_net);
         return emptyString;
@@ -28,7 +27,7 @@ struct BlockchainTestFillerTransaction : GCP_SPointerBase
 private:
     BlockchainTestFillerTransaction() {}
     spTransaction m_transaction;
-    std::map<FORK, string> m_expectExceptions;
+    std::map<FORK, std::string> m_expectExceptions;
 };
 
 }  // namespace teststruct

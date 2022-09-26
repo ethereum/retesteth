@@ -2,6 +2,9 @@
 #include <retesteth/EthChecks.h>
 #include <retesteth/testStructures/Common.h>
 
+using namespace dataobject;
+using namespace test::teststruct;
+
 namespace
 {
 void requireSetChainParamsScheme(DataObject const& _data)

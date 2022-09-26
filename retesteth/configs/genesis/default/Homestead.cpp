@@ -3,6 +3,8 @@
 using namespace std;
 using namespace dataobject;
 
+namespace retesteth::options
+{
 const string default_Homestead_config = R"({
     "params" : {
         "homesteadForkBlock" : "0x00"
@@ -32,3 +34,4 @@ genHomesteadCfg::genHomesteadCfg()
     (*obj2)["content"] = t8ntool_Homestead_config;
     map_configs.addArrayObject(obj2);
 }
+}  // namespace retesteth::options

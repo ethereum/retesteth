@@ -1,15 +1,21 @@
-#include "Session.h"
 #include "ThreadManager.h"
-#include <retesteth/Options.h>
+#include "Session.h"
+#include <retesteth/EthChecks.h>
 #include <retesteth/ExitHandler.h>
+#include <retesteth/Options.h>
 #include <condition_variable>
 
 size_t g_activejobs = 0;
 std::mutex g_jobsmutex;
 std::condition_variable g_cv;
 std::mutex g_callbackmutex;
+using namespace std;
+
+namespace test::session
+{
 unsigned int ThreadManager::currConfigId = 0;
 map<thread::id, thread> ThreadManager::threadMap;
+using namespace test;
 
 size_t ThreadManager::getMaxAllowedThreads()
 {
@@ -122,3 +128,4 @@ void ThreadManager::waitForAtLeastOneJobToFinish()
     else
         lkj.unlock();
 }
+}  // namespace test::session
