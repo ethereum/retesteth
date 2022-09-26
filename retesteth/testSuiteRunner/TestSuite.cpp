@@ -37,6 +37,7 @@ using namespace std;
 using namespace dev;
 using namespace test;
 using namespace test::testsuite;
+using namespace test::debug;
 
 namespace
 {
@@ -75,8 +76,9 @@ void TestSuite::runTestWithoutFiller(boost::filesystem::path const& _file) const
         {
             Options::getDynamicOptions().setCurrentConfig(config);
 
-            std::cout << "Running tests for config '" << config.cfgFile().name() << "' " << config.getId().id() << std::endl;
-            ETH_LOG("Running " + _file.filename().string() + ": ", 3);
+            ETH_DC_MESSAGE(DC::STATS,
+                "Running tests for config '" + config.cfgFile().name() + "' " + test::fto_string(config.getId().id()));
+            ETH_DC_MESSAGE(DC::TESTLOG, "Running " + _file.filename().string() + ": ");
 
             // Allow to execute a custom test .json file on any test suite
             auto& testOutput = test::TestOutputHelper::get();
@@ -214,7 +216,8 @@ void TestSuite::runFunctionForAllClients(std::function<void()> _func)
     for (auto const& config : Options::getDynamicOptions().getClientConfigs())
     {
         Options::getDynamicOptions().setCurrentConfig(config);
-        std::cout << "Running tests for config '" << config.cfgFile().name() << "' " << config.getId().id() << std::endl;
+        ETH_DC_MESSAGE(
+            DC::STATS, "Running tests for config '" + config.cfgFile().name() + "' " + test::fto_string(config.getId().id()));
 
         // Run tests
         _func();
@@ -244,11 +247,8 @@ void TestSuite::_executeTest(string const& _testFolder, fs::path const& _fillerT
 
     // Construct output test file name
     string const testName = getTestNameFromFillerFilename(_fillerTestFilePath);
-    if (Options::get().logVerbosity >= 3)
-    {
-        size_t const threadID = std::hash<std::thread::id>()(TestOutputHelper::getThreadID());
-        ETH_LOG("Running " + testName + ": " + "(" + test::fto_string(threadID) + ")", 3);
-    }
+    size_t const threadID = std::hash<std::thread::id>()(TestOutputHelper::getThreadID());
+    ETH_DC_MESSAGE(DC::TESTLOG, "Running " + testName + ": " + "(" + test::fto_string(threadID) + ")");
     AbsoluteFilledTestPath const filledTestPath = getFullPathFilled(_testFolder).path() / fs::path(testName + ".json");
 
     bool wereFillerErrors = false;
@@ -305,8 +305,8 @@ bool TestSuite::_fillTest(fs::path const& _fillerTestFilePath, AbsoluteFilledTes
     bool isCopier = (_fillerTestFilePath.stem().string().rfind(c_copierPostf) != string::npos);
     if (isCopier)
     {
-        ETH_LOG("Copying " + _fillerTestFilePath.string(), 0);
-        ETH_LOG(" TO " + _outputTestFilePath.path().string(), 0);
+        ETH_DC_MESSAGE(DC::TESTLOG, "Copying " + _fillerTestFilePath.string());
+        ETH_DC_MESSAGE(DC::TESTLOG, " TO " + _outputTestFilePath.path().string());
         assert(_fillerTestFilePath.string() != _outputTestFilePath.path().string());
         addClientInfoIfUpdate(testData.data.getContent(), testFillerPathRelative, testData.hash, _outputTestFilePath.path());
         writeFile(_outputTestFilePath.path(), asBytes(testData.data->asJson()));
@@ -362,9 +362,9 @@ void TestSuite::executeFile(boost::filesystem::path const& _file) const
     if (_file.extension() != ".json")
         ETH_ERROR_MESSAGE("The generated test must have `.json` format!");
 
-    ETH_LOG("Read json structure " + string(_file.filename().c_str()), 5);
+    ETH_DC_MESSAGE(DC::TESTLOG, "Read json structure " + string(_file.filename().c_str()));
     spDataObject res = test::readJsonData(_file);
-    ETH_LOG("Read json finish", 5);
+    ETH_DC_MESSAGE(DC::TESTLOG, "Read json finish");
     doTests(res, opt);
 }
 
@@ -376,7 +376,7 @@ TestSuite::TestSuite()
     if (runningTestsMessage)
     {
         boost::filesystem::path const testPath = test::getTestPath();
-        ETH_STDOUT_MESSAGE(string("Running tests using path: ") + testPath.c_str());
+        ETH_DC_MESSAGE(DC::STATS, string("Running tests using path: ") + testPath.c_str());
         runningTestsMessage = false;
     }
 }

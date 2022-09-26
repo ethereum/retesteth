@@ -1,9 +1,39 @@
 #pragma once
 #include <retesteth/TestOutputHelper.h>
+#include <map>
 #include <string>
-using namespace test;
 
-namespace  test {
+using namespace test;
+namespace test::debug
+{
+enum DC
+{
+    RPC,
+    DEFAULT,
+    SOCKET,
+    STATS,
+    WARNING,
+    TESTLOG,
+    LOWLOG
+};
+
+class Debug
+{
+public:
+    static Debug const& get()
+    {
+        static Debug instance;
+        return instance;
+    }
+    bool flag(DC _channel) const { return m_channels.at(_channel); }
+
+private:
+    Debug();
+    Debug(Debug const&) = delete;
+    void initializeDefaultChannels();
+    std::map<DC, bool> m_channels;
+};
+
 enum class LogColor
 {
     DEFAULT,
@@ -18,77 +48,63 @@ extern std::string const cDefault;
 
 namespace logmessage
 {
-void eth_warning_message(std::string const& _message, unsigned _verbosity = 1);
+void eth_warning_message(std::string const& _message);
 void eth_stdout_message(std::string const& _message, std::string const& _color = std::string());
 void eth_stderror_message(std::string const& _message);
-void eth_log_message(std::string const& _message, test::LogColor _logColor = test::LogColor::DEFAULT);
+void eth_log_message(std::string const& _message, test::debug::LogColor _logColor = test::debug::LogColor::DEFAULT);
 void eth_require(bool _flag);
-void eth_check_message(std::string const& _message);
-void eth_require_message(std::string const& _message);
 void eth_fail(std::string const& _message);
 void eth_error(std::string const& _message);
 void eth_mark_error(std::string const& _message);
 int eth_getVerbosity();
-
 }  // namespace logmessage
 
-using namespace logmessage;
 
-// Prints output to stderr/cout (depending on --verbosity option)
-#define ETH_WARNING(message) eth_warning_message(message)
-#define ETH_WARNING_TEST(message, verbosity)     \
-    if (eth_getVerbosity() >= 6)                 \
-    {                                            \
-        eth_warning_message(message, verbosity); \
+// Channels message
+#define ETH_DC_MESSAGE(dc, message)                  \
+    if (debug::Debug::get().flag(dc))                \
+    {                                                \
+        debug::logmessage::eth_log_message(message); \
     }
+
+#define ETH_DC_MESSAGEC(dc, message, color)                 \
+    if (debug::Debug::get().flag(dc))                       \
+    {                                                       \
+        debug::logmessage::eth_log_message(message, color); \
+    }
+
+#define ETH_WARNING(message) debug::logmessage::eth_warning_message(message)
 
 // Plain messages
-#define ETH_STDOUT_MESSAGE(message) eth_stdout_message(message)
-#define ETH_STDOUT_MESSAGEC(message, color) eth_stdout_message(message, color)
-#define ETH_STDERROR_MESSAGE(message) eth_stderror_message(message)
-
-// Verbosity conditional messages
-#define ETH_TEST_MESSAGE(message) \
-    if (eth_getVerbosity() >= 6)  \
-    {                             \
-        eth_log_message(message); \
-    }
-#define ETH_LOG(message, verbosity)      \
-    if (eth_getVerbosity() >= verbosity) \
-    {                                    \
-        eth_log_message(message);        \
-    }
-#define ETH_LOGC(message, verbosity, color) \
-    if (eth_getVerbosity() >= verbosity)    \
-    {                                       \
-        eth_log_message(message, color);    \
-    }
+#define ETH_STDOUT_MESSAGE(message) debug::logmessage::eth_stdout_message(message)
+#define ETH_STDOUT_MESSAGEC(message, color) debug::logmessage::eth_stdout_message(message, color)
+#define ETH_STDERROR_MESSAGE(message) debug::logmessage::eth_stderror_message(message)
 
 // Notice an error during test execution, but continue other tests
 // Throw the exception so to exit the test execution loop
-#define ETH_ERROR_MESSAGE(message) eth_error(message)
+#define ETH_ERROR_MESSAGE(message) debug::logmessage::eth_error(message)
 #define ETH_ERROR_REQUIRE_MESSAGE(flag, message) \
     if (!(flag))                                 \
     {                                            \
-        eth_check_message(message);              \
+        debug::logmessage::eth_error(message);   \
     }
 
 // Notice an error during test execution, but continue current test
 // Thie needed to mark multiple error checks into the log in one test
-#define ETH_MARK_ERROR(message) eth_mark_error(message)
-#define ETH_MARK_ERROR_FLAG(flag, message) \
-    if (!(flag))                           \
-    {                                      \
-        eth_mark_error(message);           \
+#define ETH_MARK_ERROR(message) debug::logmessage::eth_mark_error(message)
+#define ETH_MARK_ERROR_FLAG(flag, message)          \
+    if (!(flag))                                    \
+    {                                               \
+        debug::logmessage::eth_mark_error(message); \
     }
 
 // Stop retesteth execution rise sigabrt
-#define ETH_FAIL_REQUIRE(flag) eth_require(flag)
-#define ETH_FAIL_MESSAGE(message) eth_fail(message)
+#define ETH_FAIL_REQUIRE(flag) debug::logmessage::eth_require(flag)
+#define ETH_FAIL_MESSAGE(message) debug::logmessage::eth_fail(message)
 #define ETH_FAIL_REQUIRE_MESSAGE(flag, message) \
     if (!(flag))                                \
     {                                           \
-        eth_require_message(message);           \
+        debug::logmessage::eth_fail(message);   \
     }
 
 /// Base class for all exceptions.
@@ -107,7 +123,10 @@ using namespace logmessage;
         std::string m_message;                                                                                                \
     }
 
+}  // namespace test::debug
+
+namespace test
+{
 ETHEXCEPTION(UpwardsException);
 ETHEXCEPTION(EthError);
-
-}  // namespace
+}  // namespace test

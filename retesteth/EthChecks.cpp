@@ -6,24 +6,87 @@
 #include <iostream>
 #include <thread>
 
+namespace test::debug
+{
+Debug::Debug()
+{
+    for (int channel = DC::RPC; channel != DC::LOWLOG; channel++)
+    {
+        DC channelType = static_cast<DC>(channel);
+        m_channels[channelType] = false;
+    }
+    m_channels[DC::LOWLOG] = false;
+    if (!Options::get().logVerbosity.str.empty())
+    {
+        std::vector<string> elements;
+        boost::split(elements, Options::get().logVerbosity.str, boost::is_any_of("|"));
+        for (auto const& flag : elements)
+        {
+            m_channels[DC::DEFAULT] = true;
+            if (flag == "RPC")
+            {
+                m_channels[DC::RPC] = true;
+                m_channels[DC::WARNING] = true;
+            }
+            else if (flag == "STATS")
+                m_channels[DC::STATS] = true;  // Default test execution stats
+            else if (flag == "SOCKET")
+                m_channels[DC::SOCKET] = true;  // Socket debug information
+            else if (flag == "TESTLOG")
+                m_channels[DC::TESTLOG] = true;  // Additional test execution info
+            else if (flag == "LOWLOG")
+                m_channels[DC::LOWLOG] = true;  // Peculiar debug info
+            else if (flag == "WARNING")
+                m_channels[DC::WARNING] = true;  // Warning messages
+            else
+                ETH_STDOUT_MESSAGEC("WARNING: Debug channel `" + flag + "` not found!", cYellow);
+        }
+    }
+    else
+        initializeDefaultChannels();
+};
 
-namespace test {
+void Debug::initializeDefaultChannels()
+{
+    // Default log channel initialization
+    auto const& verb = Options::get().logVerbosity.val;
+    m_channels[DC::DEFAULT] = true;
+    if (verb >= 1)
+    {
+        m_channels[DC::STATS] = true;
+        m_channels[DC::WARNING] = true;
+    }
+    if (verb >= 2)
+        m_channels[DC::SOCKET] = true;
+    if (verb >= 3)
+        m_channels[DC::TESTLOG] = true;
+    if (verb >= 6)
+        m_channels[DC::RPC] = true;
+    if (verb >= 7)
+        m_channels[DC::LOWLOG] = true;
+    if (Options::get().poststate.initialized())
+        m_channels[DC::TESTLOG] = true;
+}
+
+
 std::string const cBYellowBlack = "\x1b[43m\x1b[30m";
 std::string const cYellow = "\x1b[33m";
 std::string const cLime = "\x1b[32m";
 std::string const cRed = "\x1b[0;31m";
 std::string const cDefault = "\x1b[0m";
 
+
 namespace logmessage
 {
-void eth_warning_message(std::string const& _message, unsigned _verbosity)
+void eth_warning_message(std::string const& _message)
 {
-    if (Options::get().logVerbosity >= _verbosity)
+    if (Options::get().nologcolor)
     {
-        if (Options::get().nologcolor)
-            std::cout << "WARNING: " << _message << std::endl;
-        else
-            std::cout << cYellow << "WARNING: " << _message << "\x1b[0m" << std::endl;
+        ETH_DC_MESSAGE(DC::WARNING, "WARNING: " + _message);
+    }
+    else
+    {
+        ETH_DC_MESSAGE(DC::WARNING, cYellow + "WARNING: " + _message + "\x1b[0m");
     }
 }
 
@@ -83,16 +146,6 @@ void eth_mark_error(std::string const& _message)
     TestOutputHelper::get().markError(_message);
 }
 
-void eth_check_message(std::string const& _message)
-{
-    eth_error(_message);
-}
-
-void eth_require_message(std::string const& _message)
-{
-    eth_fail(_message);
-}
-
 void eth_require(bool _flag)
 {
     if (!_flag)
@@ -110,8 +163,9 @@ void eth_fail(std::string const& _message)
 
 int eth_getVerbosity()
 {
-    return Options::get().logVerbosity;
+    return Options::get().logVerbosity.val;
 }
 
 }  // namespace logmessage
-}  // namespace test
+
+}  // namespace test::debug

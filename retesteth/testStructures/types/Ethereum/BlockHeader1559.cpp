@@ -7,6 +7,7 @@
 #include <retesteth/testStructures/Common.h>
 
 using namespace dev;
+using namespace test::debug;
 
 namespace test
 {
@@ -72,7 +73,7 @@ void BlockHeader1559::fromData(DataObject const& _data)
         }
         else
         {
-            ETH_WARNING_TEST("BlockHeader `mixHash` is not defined. Using default `0x00..00` value!", 6);
+            ETH_DC_MESSAGE(DC::TESTLOG, "BlockHeader `mixHash` is not defined. Using default `0x00..00` value!");
             m_mixHash = spFH32(new FH32(FH32::zero()));
             m_nonce = spFH8(new FH8(FH8::zero()));
         }

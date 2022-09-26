@@ -3,6 +3,7 @@
 #include <retesteth/Options.h>
 #include <retesteth/session/Session.h>
 using namespace std;
+using namespace test::debug;
 namespace test
 {
 
@@ -61,13 +62,13 @@ void printVmTrace(VMtraceinfo const& _info)
 {
     DebugVMTrace ret(_info.session.debug_traceTransaction(_info.trHash));
 
-    ETH_TEST_MESSAGE("------------------------");
+    ETH_DC_MESSAGE(DC::TESTLOG, "------------------------");
     if (Options::get().vmtraceraw)
     {
         if (!Options::get().vmtraceraw.outpath.empty())
         {
             auto outpath = fs::path(Options::get().vmtraceraw.outpath);
-            ETH_TEST_MESSAGE("Export vmtraceraw to " + (outpath / _info.trName).string());
+            ETH_DC_MESSAGE(DC::TESTLOG, "Export vmtraceraw to " + (outpath / _info.trName).string());
             ret.exportLogs(outpath / _info.trName);
         }
         else
@@ -78,8 +79,8 @@ void printVmTrace(VMtraceinfo const& _info)
 
     DataObject state;
     state["stateRoot"] = _info.stateRoot.asString();
-    ETH_TEST_MESSAGE(state.asJson(0, false));
-    ETH_TEST_MESSAGE("\n------------------------");
+    ETH_DC_MESSAGE(DC::TESTLOG, state.asJson(0, false));
+    ETH_DC_MESSAGE(DC::TESTLOG, "\n------------------------");
 }
 
 void compareTransactionException(spTransaction const& _tr, MineBlocksResult const& _mRes, string const& _testException)

@@ -2,6 +2,7 @@
 #include <retesteth/EthChecks.h>
 #include <retesteth/testStructures/Common.h>
 
+using namespace test::debug;
 namespace test
 {
 namespace teststruct
@@ -24,7 +25,7 @@ DebugStorageRangeAt::DebugStorageRangeAt(DataObject const& _data)
             m_nextKey = spFH32(new FH32(_data.atKey("nextKey")));
         else
         {
-            ETH_WARNING_TEST("DebugStorageRangeAt key `nextKey` is not set, use `0x00..00` instead.", 6);
+            ETH_DC_MESSAGE(DC::LOWLOG, "DebugStorageRangeAt key `nextKey` is not set, use `0x00..00` instead.");
             m_nextKey = spFH32(new FH32(FH32::zero()));
         }
     }

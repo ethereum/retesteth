@@ -1,6 +1,7 @@
 #include "TestBlockchainManager.h"
 #include <string>
 using namespace std;
+using namespace test::debug;
 
 namespace test
 {
@@ -28,7 +29,7 @@ TestBlockchainManager::TestBlockchainManager(
 // Generate block using a client from the filler information
 void TestBlockchainManager::parseBlockFromFiller(BlockchainTestFillerBlock const& _block, bool _generateUncles)
 {
-    ETH_LOGC("STARTING A NEW BLOCK: ", 6, LogColor::LIME);
+    ETH_DC_MESSAGEC(DC::TESTLOG, "STARTING A NEW BLOCK: ", LogColor::LIME);
 
     // See if chain reorg is needed. ex: new fork, or remine block
     reorgChains(_block);
@@ -86,7 +87,7 @@ void TestBlockchainManager::syncOnRemoteClient(DataObject& _exportBlocksSection)
     if (m_wasAtLeastOneFork)
     {
         // !!! RELY ON _exportBlocksSection has the same block order as m_testBlockRLPs
-        ETH_LOGC("IMPORT KNOWN BLOCKS ", 6, LogColor::LIME);
+        ETH_DC_MESSAGEC(DC::TESTLOG, "IMPORT KNOWN BLOCKS ", LogColor::LIME);
         TestBlockchain const& chain = m_mapOfKnownChain.at(m_sDefaultChainName);
         chain.resetChainParams();  // restore canon chain of the test
         size_t ind = 0;
@@ -115,7 +116,7 @@ void TestBlockchainManager::syncOnRemoteClient(DataObject& _exportBlocksSection)
 
 vectorOfSchemeBlock TestBlockchainManager::prepareUncles(BlockchainTestFillerBlock const& _block, string const& _debug)
 {
-    ETH_LOGC("Prepare Uncles for the block: " + _debug, 6, LogColor::YELLOW);
+    ETH_DC_MESSAGEC(DC::TESTLOG, "Prepare Uncles for the block: " + _debug, LogColor::YELLOW);
     vectorOfSchemeBlock preparedUncleBlocks;  // Prepared uncles for the current block
     // return block header using uncle overwrite section on uncles array from test
     for (auto const& uncle : _block.uncles())
@@ -160,7 +161,8 @@ void TestBlockchainManager::reorgChains(BlockchainTestFillerBlock const& _block)
     if (!sameChain || blockNumberHasDecreased)
     {
         m_wasAtLeastOneFork = true;
-        ETH_LOGC("PERFORM REWIND HISTORY:  (current: " + m_sCurrentChainName + ", new: " + newBlockChainName + ")", 6,
+        ETH_DC_MESSAGEC(DC::TESTLOG,
+            "PERFORM REWIND HISTORY:  (current: " + m_sCurrentChainName + ", new: " + newBlockChainName + ")",
             LogColor::YELLOW);
 
         TestBlockchain& chain = m_mapOfKnownChain.at(newBlockChainName);

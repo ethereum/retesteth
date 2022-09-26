@@ -5,6 +5,7 @@
 #include <retesteth/testSuiteRunner/TestSuite.h>
 #include <retesteth/testSuites/Common.h>
 
+using namespace test::debug;
 using namespace test::blockchainfiller;
 namespace test
 {
@@ -13,8 +14,7 @@ namespace test
 spDataObject FillTest(BlockchainTestInFiller const& _test, TestSuite::TestSuiteOptions const& _opt)
 {
     (void)_opt;
-    if (Options::get().logVerbosity > 1)
-        ETH_STDOUT_MESSAGE("Filling " + _test.testName());
+    ETH_DC_MESSAGE(DC::TESTLOG, "Filling " + _test.testName());
 
     spDataObject result;
     if (ExitHandler::receivedExitSignal())
@@ -43,7 +43,7 @@ spDataObject FillTest(BlockchainTestInFiller const& _test, TestSuite::TestSuiteO
                 filledTest.atKeyPointer("pre") = _test.Pre().asDataObject();
 
                 // Initialise chain manager
-                ETH_LOGC("FILL GENESIS INFO: ", 6, LogColor::LIME);
+                ETH_DC_MESSAGEC(DC::TESTLOG, "FILL GENESIS INFO: ", LogColor::LIME);
                 TestBlockchainManager testchain(_test.Env(), _test.Pre(), _test.sealEngine(), net);
                 TestBlock const& genesis = testchain.getLastBlock();
                 filledTest.atKeyPointer("genesisBlockHeader") = genesis.getTestHeader()->asDataObject();
@@ -84,8 +84,8 @@ spDataObject FillTest(BlockchainTestInFiller const& _test, TestSuite::TestSuiteO
                     compareStates(expect.result(), remoteState);
                     filledTest.atKeyPointer("postState") = remoteState.asDataObject();
                     if (Options::get().poststate)
-                        ETH_STDOUT_MESSAGE("\nState Dump:" + TestOutputHelper::get().testInfo().errorDebug() + cDefault +
-                                           " \n" + filledTest.atKey("postState").asJson());
+                        ETH_DC_MESSAGE(DC::TESTLOG, "\nState Dump:" + TestOutputHelper::get().testInfo().errorDebug() +
+                                                        cDefault + " \n" + filledTest.atKey("postState").asJson());
                 }
                 catch (StateTooBig const&)
                 {
@@ -94,8 +94,8 @@ spDataObject FillTest(BlockchainTestInFiller const& _test, TestSuite::TestSuiteO
                 }
 
                 if (Options::get().poststate)
-                    ETH_STDOUT_MESSAGE("PostState " + TestOutputHelper::get().testInfo().errorDebug() + " : \n" + cDefault +
-                                       "Hash: " + finalBlock.header()->stateRoot().asString());
+                    ETH_DC_MESSAGE(DC::TESTLOG, "PostState " + TestOutputHelper::get().testInfo().errorDebug() + " : \n" +
+                                                    cDefault + "Hash: " + finalBlock.header()->stateRoot().asString());
 
 
                 filledTest["lastblockhash"] = finalBlock.header()->hash().asString();

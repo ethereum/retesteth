@@ -45,6 +45,7 @@
 using namespace std;
 using namespace dev;
 using namespace test;
+using namespace test::debug;
 using namespace test::teststruct;
 namespace fs = boost::filesystem;
 string const c_trHashNotFound = "TR hash not found in mined block! (Check that tr is properly mined and not oog)";
@@ -310,8 +311,8 @@ spDataObject FillTest(StateTestInFiller const& _test)
                     tr.markExecuted();
 
                     if (Options::get().poststate)
-                        ETH_TEST_MESSAGE("PostState " + TestOutputHelper::get().testInfo().errorDebug() + " : \n" + cDefault +
-                                           "Hash: " + blockInfo.header()->stateRoot().asString());
+                        ETH_DC_MESSAGE(DC::TESTLOG, "PostState " + TestOutputHelper::get().testInfo().errorDebug() + " : \n" +
+                                                        cDefault + "Hash: " + blockInfo.header()->stateRoot().asString());
 
                     if (Options::get().vmtrace)
                     {
@@ -479,14 +480,16 @@ void RunTest(StateTestInFilled const& _test)
                     FH32 const& actualHash = blockInfo.header()->stateRoot();
                     if (actualHash != expectedPostHash)
                     {
-                        ETH_LOG("\nState Dump: \n" + getRemoteState(session).asDataObject()->asJson(), 5);
+                        ETH_DC_MESSAGE(DC::TESTLOG, "\nState Dump: \n" + getRemoteState(session).asDataObject()->asJson());
                         ETH_ERROR_MESSAGE("Post hash mismatch remote: " + actualHash.asString() +
                                           ", expected: " + expectedPostHash.asString());
                     }
                     if (Options::get().poststate)
                     {
                         auto const remStateJson = getRemoteState(session).asDataObject()->asJson();
-                        ETH_LOG("\nRunning test State Dump:" + TestOutputHelper::get().testInfo().errorDebug() + cDefault + " \n" + remStateJson, 6);
+                        ETH_DC_MESSAGE(
+                            DC::TESTLOG, "\nRunning test State Dump:" + TestOutputHelper::get().testInfo().errorDebug() +
+                                             cDefault + " \n" + remStateJson);
                         if (!Options::get().poststate.outpath.empty())
                         {
                             string testNameOut = _test.testName() + "_d" + tr.dataIndS() + "g" + tr.gasIndS() + "v" + tr.valueIndS();
@@ -514,8 +517,8 @@ void RunTest(StateTestInFilled const& _test)
                     }
 
                     session.test_rewindToBlock(0);
-                    ETH_LOG("Executed: d: " + to_string(tr.dataInd()) + ", g: " + to_string(tr.gasInd()) +
-                            ", v: " + to_string(tr.valueInd()) + ", fork: " + network.asString(), 5);
+                    ETH_DC_MESSAGE(DC::TESTLOG, "Executed: d: " + to_string(tr.dataInd()) + ", g: " + to_string(tr.gasInd()) +
+                                                    ", v: " + to_string(tr.valueInd()) + ", fork: " + network.asString());
                 }
             } //ForTransactions
 

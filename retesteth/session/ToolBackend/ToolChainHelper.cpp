@@ -5,6 +5,7 @@
 #include <retesteth/testStructures/Common.h>
 using namespace dev;
 using namespace test;
+using namespace test::debug;
 using namespace teststruct;
 using namespace dataobject;
 
@@ -82,7 +83,7 @@ static std::map<FORK, FORK> RewardMapForToolAfter5 = {
 std::tuple<VALUE, FORK> prepareReward(SealEngine _engine, FORK const& _fork, VALUE const& _blockNumber, VALUE const& _currentTD)
 {
     if (_engine == SealEngine::Ethash)
-        ETH_WARNING_TEST("t8ntool backend treat Ethash as NoProof!", 6);
+        ETH_DC_MESSAGE(DC::LOWLOG, "t8ntool backend treat Ethash as NoProof!");
 
     bool isMerge = false;
     bool posTransitionDifficultyNotReached = false;

@@ -4,6 +4,7 @@
 #include "TestSuiteHelperFunctions.h"
 
 using namespace std;
+using namespace test::debug;
 
 namespace
 {
@@ -38,7 +39,7 @@ namespace testsuite
 {
 void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
 {
-    ETH_LOG(string("Check `") + _compiledTest.c_str() + "` hash", 7);
+    ETH_DC_MESSAGE(DC::TESTLOG, string("Check `") + _compiledTest.c_str() + "` hash");
     TestFileData fillerData = readTestFile(_sourceTest);
 
     // If no hash calculated, skip the hash check

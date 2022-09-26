@@ -11,6 +11,7 @@
 #include <retesteth/Options.h>
 
 using namespace test;
+using namespace test::debug;
 
 spDataObject RPCImpl::web3_clientVersion()
 {
@@ -70,7 +71,7 @@ spBYTES RPCImpl::eth_getCode(FH20 const& _address, VALUE const& _blockNumber)
     spDataObject res = rpcCall("eth_getCode", {quote(_address.asString()), quote(_blockNumber.asString())});
     if (res->asString().empty())
     {
-        ETH_WARNING_TEST("eth_getCode return `` empty string, correct to `0x` empty bytes ", 6);
+        ETH_DC_MESSAGE(DC::LOWLOG, "eth_getCode return `` empty string, correct to `0x` empty bytes ");
         return spBYTES(new BYTES(DataObject("0x")));
     }
     return spBYTES(new BYTES(res));
@@ -222,10 +223,10 @@ spDataObject RPCImpl::rpcCall(
 
     request += "],\"id\":" + to_string(m_rpcSequence++) + "}";
 
-    ETH_TEST_MESSAGE("Request: " + request);
+    ETH_DC_MESSAGE(DC::RPC, "Request: " + request);
     JsonObjectValidator validator;  // read response while counting `{}`
     string reply = m_socket.sendRequest(request, validator);
-    ETH_TEST_MESSAGE("Reply: `" + reply + "`");
+    ETH_DC_MESSAGE(DC::RPC, "Reply: `" + reply + "`");
 
     spDataObject result = ConvertJsoncppStringToData(reply, string(), false);
     if (result->count("error"))
@@ -236,8 +237,9 @@ spDataObject RPCImpl::rpcCall(
         REQUIRE_JSONFIELDS(result, "rpcCall_response (req: '" + request.substr(0, 70) + "')",
             {{"jsonrpc", {{DataType::String}, jsonField::Required}},
              {"id", {{DataType::Integer}, jsonField::Required}},
-             {"result", {{DataType::String, DataType::Integer, DataType::Bool, DataType::Object, DataType::Array},
-                               jsonField::Required}},
+             {"result", {{DataType::String, DataType::Integer,
+                          DataType::Bool, DataType::Object, DataType::Array},
+                        jsonField::Required}},
              {"error", {{DataType::String, DataType::Object}, jsonField::Optional}}});
     }
     else

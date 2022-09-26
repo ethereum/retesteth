@@ -1,6 +1,7 @@
 #include "TestSuiteHelperFunctions.h"
 #include "Options.h"
 
+using namespace test::debug;
 namespace test
 {
 namespace testsuite
@@ -16,7 +17,7 @@ TestFileData readTestFile(fs::path const& _testFileName)
     // Binary file hash calculation is impossible as git messes up with the files
     // So we read json structure and print it here to calculate the hash from string
     // Adds around 1% to execution time
-    ETH_LOG("Read json structure " + string(_testFileName.filename().c_str()), 5);
+    ETH_DC_MESSAGE(DC::TESTLOG, "Read json structure " + string(_testFileName.filename().c_str()));
     TestFileData testData;
     if (_testFileName.extension() == ".json")
         testData.data = test::readJsonData(_testFileName, string(), bSortOnLoad);
@@ -24,7 +25,7 @@ TestFileData readTestFile(fs::path const& _testFileName)
         testData.data = test::readYamlData(_testFileName, bSortOnLoad);
     else
         ETH_ERROR_MESSAGE("Unknown test format!" + test::TestOutputHelper::get().testFile().string());
-    ETH_LOG("Read json structure finish", 5);
+    ETH_DC_MESSAGE(DC::TESTLOG, "Read json structure finish");
 
     // Do not calculate the hash on Legacy tests unless --checkhash option provided
     if (isLegacy && !bSortOnLoad)

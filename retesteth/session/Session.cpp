@@ -34,6 +34,7 @@
 using namespace std;
 using namespace dev;
 using namespace test;
+using namespace test::debug;
 
 struct sessionInfo
 {
@@ -124,7 +125,7 @@ void RPCSession::runNewInstanceOfAClient(thread::id const& _threadID, ClientConf
             {
                 sessionInfo info(
                     NULL, new RPCSession(new RPCImpl(Socket::SocketType::TCP, addr.asString())), "", 0, _config.getId());
-                ETH_LOG("addr: " + addr.asString(), 2);
+                ETH_DC_MESSAGE(DC::RPC, "addr: " + addr.asString());
                 socketMap.insert(std::pair<thread::id, sessionInfo>(_threadID, std::move(info)));
                 return;
             }
@@ -200,7 +201,7 @@ void RPCSession::restartScripts(bool _stop)
             if (fs::exists(curCFG.getStopperScript().c_str()))
             {
                 // Close all active connection listeners
-                ETH_LOG("Restart Client Scripts...", 1);
+                ETH_DC_MESSAGE(DC::RPC, "Restart Client Scripts...");
                 RPCSession::clear();
             }
         };
@@ -230,7 +231,7 @@ void RPCSession::restartScripts(bool _stop)
         case ClientConfgSocketType::TCP:
         {
             thread task(cmd, start, test::fto_string(threads) + " 2>/dev/null");
-            ETH_LOG(start, 1);
+            ETH_DC_MESSAGE(DC::RPC, start);
             task.detach();
             size_t const initTime = curCFG.cfgFile().initializeTime();
             size_t const seconds = Options::get().lowcpu ? initTime * 5 : initTime;
@@ -277,9 +278,9 @@ SessionInterface& RPCSession::instance(thread::id const& _threadID)
     if (needToCreateNew)
     {
         size_t const threadID = std::hash<std::thread::id>()(_threadID);
-        ETH_LOG("Run new connection session for `" + test::fto_string(threadID) + "`", 2);
+        ETH_DC_MESSAGE(DC::SOCKET, "Run new connection session for `" + test::fto_string(threadID) + "`");
         runNewInstanceOfAClient(_threadID, Options::getDynamicOptions().getCurrentConfig());
-        ETH_LOG("New instance started", 2);
+        ETH_DC_MESSAGE(DC::SOCKET, "New instance started");
     }
 
     ETH_FAIL_REQUIRE_MESSAGE(socketMap.size() <= Options::get().threadCount,
@@ -351,7 +352,7 @@ void RPCSession::clear()
         if (!curCFG.getStopperScript().empty() && Options::get().nodesoverride.size() == 0)
         {
             executeCmd(curCFG.getStopperScript().c_str(), ExecCMDWarning::NoWarningNoError);
-            ETH_LOG(curCFG.getStopperScript().c_str(), 1);
+            ETH_DC_MESSAGE(DC::RPC, curCFG.getStopperScript().c_str());
             if (!ExitHandler::receivedExitSignal())
             {
                 size_t const initTime = curCFG.cfgFile().initializeTime();

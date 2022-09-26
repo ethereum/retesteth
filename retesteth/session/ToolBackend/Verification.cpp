@@ -1,5 +1,6 @@
 #include "Verification.h"
 using namespace toolimpl;
+using namespace test::debug;
 
 namespace {
 
@@ -187,7 +188,7 @@ void verifyMergeParent(spBlockHeader const& _header, spBlockHeader const& _paren
     }
     if (_parent->type() == BlockType::BlockHeaderMerge)
     {
-        ETH_TEST_MESSAGE("Verifying Merge Block Parent");
+        ETH_DC_MESSAGE(DC::TESTLOG, "Verifying Merge Block Parent");
         verifyMergeBlock(_parent, _chain);
     }
 }

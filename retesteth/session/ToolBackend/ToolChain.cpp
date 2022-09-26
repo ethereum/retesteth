@@ -11,6 +11,7 @@
 
 using namespace dev;
 using namespace test;
+using namespace test::debug;
 using namespace teststruct;
 using namespace dataobject;
 
@@ -86,7 +87,8 @@ spDataObject const ToolChain::mineBlock(EthereumBlockState const& _pendingBlock,
     // Ask the tool to calculate post state and block header
     // With current chain information, txs from pending block
     ToolResponse const res = mineBlockOnTool(_pendingBlock, _parentBlock, m_engine);
-    ETH_LOG("ToolChain::mineBlock of new block: " + BlockHeader::BlockTypeToString(_pendingBlock.header()->type()), 5);
+    ETH_DC_MESSAGE(
+        DC::TESTLOG, "ToolChain::mineBlock of new block: " + BlockHeader::BlockTypeToString(_pendingBlock.header()->type()));
 
     // Pending fixed is pending header corrected by the information returned by tool
     // The tool can reject transactions changing the stateHash, TxRoot, TxReceipts, HeaderHash, GasUsed
@@ -208,7 +210,7 @@ spDataObject ToolChain::coorectTransactionsByToolResponse(
                 ETH_ERROR_MESSAGE("tool didn't provide information about rejected transaction");
             if (_miningReq == Mining::AllowFailTransactions)
             {
-                ETH_WARNING_TEST(message, 6);
+                ETH_DC_MESSAGE(DC::WARNING, message);
             }
             else
                 throw test::UpwardsException(message);
@@ -273,9 +275,9 @@ void ToolChain::calculateAndSetTotalDifficulty(EthereumBlockState& _pendingFixed
         totalDifficulty = m_blocks.at(m_blocks.size() - 1).totalDifficulty();
     _pendingFixed.setTotalDifficulty(totalDifficulty + _pendingFixed.header()->difficulty());
 
-    ETH_LOG("New block N: " + to_string(m_blocks.size()), 6);
-    ETH_LOG("New block TD: " + totalDifficulty.asDecString() + " + " + _pendingFixed.header()->difficulty().asDecString() +
-                " = " + _pendingFixed.totalDifficulty().asDecString(),
-        6);
+    ETH_DC_MESSAGE(DC::TESTLOG, "New block N: " + to_string(m_blocks.size()));
+    ETH_DC_MESSAGE(DC::TESTLOG, "New block TD: " + totalDifficulty.asDecString() + " + " +
+                                    _pendingFixed.header()->difficulty().asDecString() + " = " +
+                                    _pendingFixed.totalDifficulty().asDecString());
 }
 }  // namespace toolimpl

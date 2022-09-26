@@ -3,6 +3,7 @@
 #include "TestSuite.h"
 #include "TestSuiteHelperFunctions.h"
 
+using namespace test::debug;
 using namespace test::testsuite;
 
 namespace
@@ -14,9 +15,10 @@ string const getTestNameFilter()
     string filter = testNameFilter;
     filter += opt.singleTestNet.empty() ? string() : " " + opt.singleTestNet;
     filter += opt.getGStateTransactionFilter();
-    ETH_LOG("Checking test filler hashes for " + boost::unit_test::framework::current_test_case().full_name(), 4);
+    ETH_DC_MESSAGE(
+        DC::TESTLOG, "Checking test filler hashes for " + boost::unit_test::framework::current_test_case().full_name());
     if (!filter.empty())
-        ETH_LOG("Filter: '" + filter + "'", 0);
+        ETH_DC_MESSAGE(DC::STATS, "Filter: '" + filter + "'");
     return testNameFilter;
 }
 
@@ -24,7 +26,8 @@ TestSuite::AbsoluteFilledTestPath createPathIfNotExist(TestSuite::AbsoluteFilled
 {
     if (!fs::exists(_path.path()))
     {
-        ETH_LOG("Tests folder does not exists, creating test folder: '" + string(_path.path().c_str()) + "'", 2);
+        ETH_DC_MESSAGE(
+            DC::WARNING, "Tests folder does not exists, creating test folder: '" + string(_path.path().c_str()) + "'");
         fs::create_directories(_path.path());
     }
     return _path;

@@ -3,6 +3,7 @@
 #include <retesteth/testStructures/Common.h>
 #include <mutex>
 using namespace test;
+using namespace test::debug;
 
 namespace  {
     mutex g_DifficultyStatic_Access;
@@ -105,7 +106,7 @@ spDataObject constructStorageRangeAt(
             (*constructResponse)["storage"];
         }
     }
-    ETH_LOG(constructResponse->asJson(), 7);
+    ETH_DC_MESSAGE(DC::LOWLOG, constructResponse->asJson());
     return constructResponse;
 }
 

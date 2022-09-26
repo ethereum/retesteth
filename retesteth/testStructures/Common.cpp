@@ -9,6 +9,7 @@
 #include <libdevcrypto/Common.h>
 
 using namespace test;
+using namespace test::debug;
 using namespace dev;
 using namespace test::teststruct;
 

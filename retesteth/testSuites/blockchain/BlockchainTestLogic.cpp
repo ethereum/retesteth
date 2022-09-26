@@ -7,14 +7,14 @@
 #include <retesteth/testStructures/PrepareChainParams.h>
 #include <retesteth/testSuites/Common.h>
 #include "fillers/TestBlockchain.h"
+using namespace test::debug;
 namespace test
 {
 
 /// Read and execute the test from the file
 void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions const& _opt)
 {
-    if (Options::get().logVerbosity > 1)
-        ETH_STDOUT_MESSAGE("Running " + _test.testName());
+    ETH_DC_MESSAGE(DC::TESTLOG, "Running " + _test.testName());
 
     ClientConfig const& cfg = Options::get().getDynamicOptions().getCurrentConfig();
     if (!cfg.validateForkAllowed(_test.network(), false))
@@ -39,7 +39,7 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
         TestOutputHelper::get().setCurrentTestInfo(TestInfo(_test.network().asString(), blockNumber++));
 
         // Transaction sequence validation
-        ETH_LOGC("PERFORM TRANSACTION SEQUENCE VALIDATION...", 7, LogColor::YELLOW);
+        ETH_DC_MESSAGEC(DC::LOWLOG, "PERFORM TRANSACTION SEQUENCE VALIDATION...", LogColor::YELLOW);
 
         bool atLeastOnceSequence = false;
         typedef std::tuple<spTransaction, string> SpTrException;
@@ -270,12 +270,12 @@ spDataObject DoTests(spDataObject& _input, TestSuite::TestSuiteOptions& _opt)
             }
         }
 
-        ETH_LOG("Parse test", 5);
+        ETH_DC_MESSAGE(DC::TESTLOG, "Parse test");
         BlockchainTest test(_input);
         // Just check the test structure if running with --checkhash
         if (Options::get().checkhash)
             return tests;
-        ETH_LOG("Parse test done", 5);
+        ETH_DC_MESSAGE(DC::TESTLOG, "Parse test done");
 
         for (BlockchainTestInFilled const& bcTest : test.tests())
         {

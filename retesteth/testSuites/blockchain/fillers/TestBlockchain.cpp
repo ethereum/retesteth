@@ -3,6 +3,7 @@
 #include <retesteth/testSuites/Common.h>
 #include <retesteth/testStructures/PrepareChainParams.h>
 
+using namespace test::debug;
 namespace test
 {
 namespace blockchainfiller
@@ -46,7 +47,7 @@ void TestBlockchain::generateBlock(
     }
 
     // Import known transactions to remote client
-    ETH_LOGC("Import transactions: " + m_sDebugString, 6, LogColor::YELLOW);
+    ETH_DC_MESSAGEC(DC::TESTLOG, "Import transactions: " + m_sDebugString, LogColor::YELLOW);
     for (auto const& tr : _block.transactions())
         m_session.eth_sendRawTransaction(tr.tr().getRawBytes(), tr.tr().getSecret());
 
@@ -143,7 +144,7 @@ void TestBlockchain::generateBlock(
 GCP_SPointer<EthGetBlockBy> TestBlockchain::mineBlock(
     BlockchainTestFillerBlock const& _blockInTest, vectorOfSchemeBlock const& _preparedUncleBlocks, BYTES& _rawRLP)
 {
-    ETH_LOGC("MINE BLOCK: " + m_sDebugString, 6, LogColor::YELLOW);
+    ETH_DC_MESSAGEC(DC::TESTLOG, "MINE BLOCK: " + m_sDebugString, LogColor::YELLOW);
     MineBlocksResult const miningRes = m_session.test_mineBlocks(1);
     VALUE latestBlockNumber(m_session.eth_blockNumber());
 
@@ -153,7 +154,7 @@ GCP_SPointer<EthGetBlockBy> TestBlockchain::mineBlock(
         // Need to overwrite the blockheader of a mined block with either blockHeader or uncles
         // Then import it again and see what client says, because mining with uncles not supported
         // And because blockchain test filler can override blockheader for testing purposes
-        ETH_LOG("Postmine blockheader: " + m_sDebugString, 6);
+        ETH_DC_MESSAGE(DC::TESTLOG, "Postmine blockheader: " + m_sDebugString);
         FH32 const hash = postmineBlockHeader(_blockInTest, latestBlockNumber, _preparedUncleBlocks, _rawRLP);
         minedBlockHash = spFH32(new FH32(hash.asString()));
     }
@@ -231,7 +232,7 @@ GCP_SPointer<EthGetBlockBy> TestBlockchain::mineBlock(
 // Ask remote client to generate a blockheader that will later used for uncles
 spBlockHeader TestBlockchain::mineNextBlockAndRevert()
 {
-    ETH_LOGC("Mine uncle block (next block) and revert: " + m_sDebugString, 6, LogColor::YELLOW);
+    ETH_DC_MESSAGEC(DC::TESTLOG, "Mine uncle block (next block) and revert: " + m_sDebugString, LogColor::YELLOW);
     {
         VALUE latestBlockNumber(m_session.eth_blockNumber());
         EthGetBlockBy const latestBlock(m_session.eth_getBlockByNumber(latestBlockNumber, Request::LESSOBJECTS));
@@ -252,14 +253,15 @@ spBlockHeader TestBlockchain::mineNextBlockAndRevert()
 
 string TestBlockchain::prepareDebugInfoString(string const& _newBlockChainName)
 {
-    string sBlockNumber = string();
     size_t newBlockNumber = m_blocks.size();
     TestInfo errorInfo(m_network.asString(), newBlockNumber, _newBlockChainName);
-    if (Options::get().logVerbosity >= 6)
-        sBlockNumber = fto_string(newBlockNumber);  // very heavy
     TestOutputHelper::get().setCurrentTestInfo(errorInfo);
+
+    string sBlockNumber;
+    if (test::debug::Debug::get().flag(DC::TESTLOG))
+        sBlockNumber = fto_string(newBlockNumber);  // very heavy
     m_sDebugString = "(bl: " + sBlockNumber + ", ch: " + _newBlockChainName + ", net: " + m_network.asString() + ")";
-    ETH_LOGC("Generating a test block: " + m_sDebugString, 6, LogColor::YELLOW);
+    ETH_DC_MESSAGEC(DC::TESTLOG, "Generating a test block: " + m_sDebugString, LogColor::YELLOW);
     return m_sDebugString;
 }
 

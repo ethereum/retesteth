@@ -7,6 +7,7 @@
 #include <libdataobj/ConvertFile.h>
 #include <retesteth/FileSystem.h>
 using namespace test;
+using namespace test::debug;
 
 namespace toolimpl
 {
@@ -23,7 +24,8 @@ ToolChainManager::ToolChainManager(spSetChainParamsArgs const& _config, fs::path
     reorganizePendingBlock();
 
 
-    ETH_LOG("test_setChainParams of new block: " + BlockHeader::BlockTypeToString(lastBlock().header()->type()), 5);
+    ETH_DC_MESSAGE(
+        DC::RPC, "test_setChainParams of new block: " + BlockHeader::BlockTypeToString(lastBlock().header()->type()));
 }
 
 spDataObject const ToolChainManager::mineBlocks(size_t _number, ToolChain::Mining _req)
@@ -108,7 +110,7 @@ FH32 ToolChainManager::importRawBlock(BYTES const& _rlp)
         toolimpl::verifyBlockRLP(rlp);
 
         spBlockHeader header = readBlockHeader(rlp[0]);
-        ETH_TEST_MESSAGE(header->asDataObject()->asJson());
+        ETH_DC_MESSAGE(DC::RPC, header->asDataObject()->asJson());
         for (auto const& chain : m_chains)
             for (auto const& bl : chain.second->blocks())
                 if (bl.header()->hash() == header->hash())
@@ -124,7 +126,7 @@ FH32 ToolChainManager::importRawBlock(BYTES const& _rlp)
         for (auto const& trRLP : rlp[1].toList())
         {
             spTransaction spTr = readTransaction(trRLP);
-            ETH_TEST_MESSAGE(spTr->asDataObject()->asJson());
+            ETH_DC_MESSAGE(DC::RPC, spTr->asDataObject()->asJson());
             addPendingTransaction(spTr);
         }
 
@@ -236,17 +238,17 @@ TestRawTransaction ToolChainManager::test_rawTransaction(
 
     // Write data with memory allocation but faster
     writeFile(txsPath.string(), string("\"") + txsout.outHeader() + _rlp.asString().substr(2) + "\"");
-    ETH_TEST_MESSAGE("TXS file:\n" + string("\"") + txsout.outHeader() + _rlp.asString().substr(2) + "\"");
+    ETH_DC_MESSAGE(DC::RPC, "TXS file:\n" + string("\"") + txsout.outHeader() + _rlp.asString().substr(2) + "\"");
 
     string cmd = _toolPath.string();
     cmd += " --input.txs " + txsPath.string();
     cmd += " --state.fork " + _fork.asString();
     cmd += " 2>&1";
-    ETH_WARNING_TEST(cmd, 6);
+    ETH_DC_MESSAGE(DC::RPC, cmd);
     string response = test::executeCmd(cmd, ExecCMDWarning::NoWarningNoError);
 
 
-    ETH_TEST_MESSAGE("T9N Response:\n" + response);
+    ETH_DC_MESSAGE(DC::RPC, "T9N Response:\n" + response);
     spDataObject res;
     bool errorCaught = false;
 
@@ -263,7 +265,7 @@ TestRawTransaction ToolChainManager::test_rawTransaction(
             spDataObject errObj;
             (*errObj)["error"] = response;
             (*res).addSubObject(errObj);
-            ETH_TEST_MESSAGE("T9N Response reconstructed:\n" + res->asJson());
+            ETH_DC_MESSAGE(DC::RPC, "T9N Response reconstructed:\n" + res->asJson());
             errorCaught = true;
         }
         else
@@ -302,7 +304,7 @@ TestRawTransaction ToolChainManager::test_rawTransaction(
             ETH_ERROR_MESSAGE("t8n tool returned different tx.hash than retesteth: (t8n.hash != retesteth.hash) " + tr->atKey("hash").asString() + " != " + hash);
     }
 
-    ETH_TEST_MESSAGE("Response: test_rawTransaction `" + out.asJson());
+    ETH_DC_MESSAGE(DC::RPC, "Response: test_rawTransaction `" + out.asJson());
     return TestRawTransaction(out);
 }
 

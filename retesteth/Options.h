@@ -111,6 +111,25 @@ private:
         }
     };
 
+    struct stringosizet_opt : public Option
+    {
+        stringosizet_opt() { m_argType = ARGS::ONE;}
+        stringosizet_opt(size_t _i) : val(_i) { m_argType = ARGS::ONE;}
+        bool operator == (size_t _i) const { return _i == val; }
+        string str;
+        size_t val;
+    protected:
+        void initArg(string const& _arg) override {
+            DigitsType type = test::stringIntegerType(_arg);
+            if (type == DigitsType::String)
+                str = _arg;
+            else if (type == DigitsType::Decimal)
+                val = max(0, atoi(_arg.c_str()));
+            else
+                BOOST_THROW_EXCEPTION(InvalidOption("Error: `" + m_sOptionName + "` wrong option argument format: " + _arg));
+        }
+    };
+
     struct fspath_opt : public string_opt
     {
     protected:
@@ -235,7 +254,7 @@ public:
     bool_opt vmtrace_noreturndata = false;
     sizet_opt blockLimit = 0;
     sizet_opt rpcLimit = 0;
-    sizet_opt logVerbosity = 1;
+    stringosizet_opt logVerbosity = 1;
     bool_opt nologcolor = false;
     bool_opt exectimelog = false;
     bool_opt enableClientsOutput = false;

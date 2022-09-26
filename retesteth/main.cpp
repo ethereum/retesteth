@@ -21,6 +21,18 @@ void travisOut(std::atomic_bool* _stopTravisOut);
 void timeoutThread(std::atomic_bool* _stopTimeout);
 void printTestSuiteSuggestions(string const& _sMinusTArg);
 bool checkTestSuiteIsKnown(int argc, const char* argv[], string sMinusTArg = string());
+void disableOutput()
+{
+    oldCoutStreamBuf = std::cout.rdbuf();
+    oldCerrStreamBuf = std::cerr.rdbuf();
+    std::cout.rdbuf(strCout.rdbuf());
+    std::cerr.rdbuf(strCout.rdbuf());
+}
+void enableOutput()
+{
+    std::cout.rdbuf(oldCoutStreamBuf);
+    std::cerr.rdbuf(oldCerrStreamBuf);
+}
 
 /*
 The equivalent of setlocale(LC_ALL, “C”) is called before any user code is run.

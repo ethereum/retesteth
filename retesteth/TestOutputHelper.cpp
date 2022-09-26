@@ -32,6 +32,7 @@
 using namespace std;
 using namespace dev;
 using namespace test;
+using namespace test::debug;
 using namespace boost;
 using namespace boost::unit_test;
 
@@ -158,7 +159,7 @@ void TestOutputHelper::initTest(size_t _maxTests)
     if (_maxTests != 0 && !Options::get().singleTestFile.initialized())
     {
         string testOutOf = "(" + test::fto_string(++m_currentTestRun) + " of " + test::fto_string(totalTestsNumber) + ")";
-        ETH_STDOUT_MESSAGE("Test Case \"" + TestInfo::caseName() + "\": " + testOutOf);
+        ETH_DC_MESSAGE(DC::STATS, "Test Case \"" + TestInfo::caseName() + "\": " + testOutOf);
         m_timer.restart();
     }
     m_maxTests = _maxTests;
@@ -183,10 +184,8 @@ void TestOutputHelper::showProgress()
             m_currTest <= m_maxTests, "TestHelper has m_currTest > m_maxTests!");
         assert(m_maxTests > 0);
         int percent = int(m_currTest*100/m_maxTests);
-        std::cout << percent << "%";
-        if (percent != 100)
-            std::cout << "...";
-        std::cout << "\n";
+        string const ending = (percent != 100) ? "..." : "";
+        ETH_DC_MESSAGE(DC::STATS, test::fto_string(percent) + "%" + ending);
     }
 }
 

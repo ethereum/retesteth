@@ -4,6 +4,7 @@
 #include <libdataobj/ConvertFile.h>
 #include <testStructures/Common.h>
 
+using namespace test::debug;
 const string c_tooManyRawsMessage = "==TOO MANY LOG ROWS TO PRINT (Use --vmtraceraw <folder>)==";
 namespace test
 {
@@ -108,13 +109,13 @@ DebugVMTrace::DebugVMTrace(
 
 void DebugVMTrace::print()
 {
-    ETH_LOG(m_infoString, 0);
-    ETH_LOG(m_rawUnparsedLogs, 0);
+    ETH_DC_MESSAGE(DC::DEFAULT, m_infoString);
+    ETH_DC_MESSAGE(DC::DEFAULT, m_rawUnparsedLogs);
 }
 
 void DebugVMTrace::printNice()
 {
-    ETH_LOG(m_infoString, 0);
+    ETH_DC_MESSAGE(DC::DEFAULT, m_infoString);
     if (m_log.size() == 0)
         return;
 
@@ -123,13 +124,13 @@ void DebugVMTrace::printNice()
     size_t k = 0;
     size_t const step = 9;
     string const stepw = "          ";
-    std::cout << test::cBYellowBlack << "N" << setw(15) << "OPNAME" << setw(10) << "GASCOST" << setw(10) << "TOTALGAS"
-              << setw(10) << "REMAINGAS" << setw(20) << "ERROR" << test::cDefault << std::endl;
+    std::cout << cBYellowBlack << "N" << setw(15) << "OPNAME" << setw(10) << "GASCOST" << setw(10) << "TOTALGAS" << setw(10)
+              << "REMAINGAS" << setw(20) << "ERROR" << cDefault << std::endl;
     for (VMLogRecord const& el : m_log)
     {
         if (!s_comment.empty())
         {
-            std::cout << setw(step * el.depth) << test::cYellow << s_comment << test::cDefault << std::endl;
+            std::cout << setw(step * el.depth) << cYellow << s_comment << cDefault << std::endl;
             s_comment = string();
         }
         std::cout << setw(step * (el.depth - 1));

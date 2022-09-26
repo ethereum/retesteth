@@ -7,6 +7,7 @@
 #include <testStructures/types/BlockchainTests/BlockchainTestFiller.h>
 
 using namespace test;
+using namespace test::debug;
 using namespace dataobject;
 using namespace test::teststruct;
 
@@ -147,26 +148,26 @@ void BlockMining::executeTransition()
             cmd += "--trace.nostack ";
     }
 
-    ETH_TEST_MESSAGE("Alloc:\n" + m_allocPathContent);
+    ETH_DC_MESSAGE(DC::RPC, "Alloc:\n" + m_allocPathContent);
     if (m_currentBlockRef.transactions().size())
     {
-        ETH_TEST_MESSAGE("Txs:\n" + m_txsPathContent);
+        ETH_DC_MESSAGE(DC::RPC, "Txs:\n" + m_txsPathContent);
         for (auto const& tr : m_currentBlockRef.transactions())
-            ETH_TEST_MESSAGE(tr->asDataObject()->asJson());
+            ETH_DC_MESSAGE(DC::RPC, tr->asDataObject()->asJson());
     }
-    ETH_TEST_MESSAGE("Env:\n" + m_envPathContent);
+    ETH_DC_MESSAGE(DC::RPC, "Env:\n" + m_envPathContent);
 
     string out = test::executeCmd(cmd, ExecCMDWarning::NoWarning);
-    ETH_TEST_MESSAGE(cmd);
-    ETH_TEST_MESSAGE(out);
+    ETH_DC_MESSAGE(DC::RPC, cmd);
+    ETH_DC_MESSAGE(DC::RPC, out);
 }
 
 ToolResponse BlockMining::readResult()
 {
     string const outPathContent = dev::contentsString(m_outPath.string());
     string const outAllocPathContent = dev::contentsString(m_outAllocPath.string());
-    ETH_TEST_MESSAGE("Res:\n" + outPathContent);
-    ETH_TEST_MESSAGE("RAlloc:\n" + outAllocPathContent);
+    ETH_DC_MESSAGE(DC::RPC, "Res:\n" + outPathContent);
+    ETH_DC_MESSAGE(DC::RPC, "RAlloc:\n" + outAllocPathContent);
     if (outPathContent.empty())
         ETH_ERROR_MESSAGE("Tool returned empty file: " + m_outPath.string());
     if (outAllocPathContent.empty())
@@ -200,7 +201,7 @@ void BlockMining::traceTransactions(ToolResponse& _toolResponse)
             _toolResponse.attachDebugTrace(tr->hash(), DebugVMTrace(traceinfo, trNumber, tr->hash(), txTraceFile));
         }
         else
-            ETH_LOG("Trace file `" + txTraceFile.string() + "` not found!", 1);
+            ETH_DC_MESSAGE(DC::WARNING, "Trace file `" + txTraceFile.string() + "` not found!");
     }
 }
 

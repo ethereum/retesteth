@@ -7,6 +7,7 @@
 
 using namespace std;
 using namespace test;
+using namespace test::debug;
 namespace fs = boost::filesystem;
 
 namespace
@@ -18,7 +19,7 @@ fs::path getRetestethDataDir()
         dataDir = getDataDir("retesteth");
 
     if (!fs::exists(dataDir))
-        ETH_LOG("Options path `" + dataDir.string() + "` doesn't exist, attempt to create a new directory", 3);
+        ETH_DC_MESSAGE(DC::WARNING, "Options path `" + dataDir.string() + "` doesn't exist, attempt to create a new directory");
     return dataDir;
 }
 }  // namespace
@@ -95,7 +96,7 @@ std::vector<ClientConfig> const& Options::DynamicOptions::getClientConfigs()
     if (m_clientConfigs.size() == 0)
     {
         fs::path const homeDir = getRetestethDataDir();
-        ETH_STDOUT_MESSAGE(string("Retesteth config path: ") + homeDir.string());
+        ETH_DC_MESSAGE(DC::STATS, string("Retesteth config path: ") + homeDir.string());
 
         if (fs::exists(homeDir))
         {
@@ -116,10 +117,10 @@ std::vector<ClientConfig> const& Options::DynamicOptions::getClientConfigs()
         if (cfgs.empty())
             cfgs.push_back("default");
 
-        std::cout << "Active client configurations: '";
+        string clientNames;
         for (auto const& clientName : cfgs)
-            std::cout << clientName << " ";
-        std::cout << "'" << std::endl;
+            clientNames += clientName + " ";
+        ETH_DC_MESSAGE(DC::STATS, "Active client configurations: '" + clientNames + "'");
 
         for (auto const& clientName : cfgs)
             m_clientConfigs.push_back(ClientConfig(homeDir / clientName));

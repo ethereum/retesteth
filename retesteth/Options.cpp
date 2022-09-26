@@ -58,7 +58,6 @@ void printVersion()
  VAR.setDefHelp(STR, STRHELP); \
  m_options.push_back(&VAR);
 
-
 Options::Options(int argc, const char** argv)
 {
     ADD_OPTION_OVERRIDE(help, "-h|--help", [](){
@@ -177,7 +176,7 @@ Options::Options(int argc, const char** argv)
         cout << setw(30) << "--vmtraceraw <folder>" << setw(25) << "Trace transactions execution raw format to a given folder\n";
         }, [this](){
             vmtrace = true;
-            if (logVerbosity < 6 && vmtraceraw.outpath.empty())
+            if (logVerbosity.val < 6 && vmtraceraw.outpath.empty())
                 std::cout << "Warning: --vmtraceraw is defined, but trace is printed with verbosity level 6, which is not set" << std::endl;
     });
     ADD_OPTIONV(vmtrace_nomemory, "--vmtrace.nomemory", [](){
@@ -206,6 +205,7 @@ Options::Options(int argc, const char** argv)
     });
     ADD_OPTIONV(logVerbosity, "--verbosity", [](){
         cout << setw(30) << "--verbosity <level>" << setw(25) << "Set logs verbosity. 0 - silent, 1 - only errors, 2 - informative, >2 - detailed\n";
+        cout << setw(30) << "--verbosity <channel>" << setw(25) << "Set logs channels. 'STATS|RPC|TESTLOG|LOWLOG|SOCKET'\n";
         },[this](){
             // disable all output
             static std::ostringstream strCout;
@@ -263,7 +263,7 @@ Options::Options(int argc, const char** argv)
             if (!filltests.initialized())
                 BOOST_THROW_EXCEPTION(InvalidOption("Error: --poststate requires --filltests"));
             fullstate = true;
-            if (logVerbosity < 6 && poststate.outpath.empty())
+            if (logVerbosity.val < 6 && poststate.outpath.empty())
                 std::cout << "Warning: --poststate is defined, but state is printed with verbosity level 6, which is not set" << std::endl;
     });
     ADD_OPTION(fullstate, "--fullstate", [](){
