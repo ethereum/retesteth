@@ -1,11 +1,14 @@
 #include "ToolChainManager.h"
 #include "ToolChainHelper.h"
 #include "ToolImplHelper.h"
+#include "Verification.h"
+#include <libdataobj/ConvertFile.h>
+#include <libdevcore/CommonIO.h>
+#include <libdevcore/SHA3.h>
 #include <retesteth/EthChecks.h>
+#include <retesteth/FileSystem.h>
 #include <retesteth/TestHelper.h>
 #include <retesteth/testStructures/Common.h>
-#include <libdataobj/ConvertFile.h>
-#include <retesteth/FileSystem.h>
 using namespace std;
 using namespace dev;
 using namespace test;

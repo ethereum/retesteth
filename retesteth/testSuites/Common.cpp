@@ -1,6 +1,7 @@
 #include "Common.h"
 #include <libdataobj/DataObject.h>
 #include <retesteth/Options.h>
+#include <retesteth/TestHelper.h>
 #include <retesteth/TestOutputHelper.h>
 #include <retesteth/session/Session.h>
 using namespace std;

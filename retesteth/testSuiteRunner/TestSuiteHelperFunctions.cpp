@@ -1,6 +1,7 @@
 #include "TestSuiteHelperFunctions.h"
 #include "Options.h"
 #include <retesteth/EthChecks.h>
+#include <retesteth/TestHelper.h>
 #include <retesteth/TestOutputHelper.h>
 
 using namespace dev;

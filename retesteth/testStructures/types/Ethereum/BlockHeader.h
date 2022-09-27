@@ -1,14 +1,9 @@
 #pragma once
 #include "../../basetypes.h"
-#include <libdevcore/CommonIO.h>
 #include <libdevcore/RLP.h>
-#include <libdevcore/SHA3.h>
 #include <libdataobj/DataObject.h>
-#include <libdataobj/SPointer.h>
 
-namespace test
-{
-namespace teststruct
+namespace test::teststruct
 {
 enum class BlockType
 {
@@ -20,17 +15,7 @@ enum class BlockType
 // Ethereum blockheader interface
 struct BlockHeader : GCP_SPointerBase
 {
-    static std::string TypeToString(BlockType _t)
-    {
-        switch (_t)
-        {
-            case BlockType::BlockHeader1559: return "BlockHeader1559";
-            case BlockType::BlockHeaderLegacy: return "BlockHeaderLegacy";
-            case BlockType::BlockHeaderMerge: return "BlockHeaderMerge";
-            default: return "UnparsedBlockType";
-        }
-        return "UnparsedBlockType";
-    }
+    static std::string TypeToString(BlockType _t);
     virtual ~BlockHeader(){/* all smart pointers */};
 
     virtual spDataObject asDataObject() const = 0;
@@ -39,31 +24,10 @@ struct BlockHeader : GCP_SPointerBase
 
     bool operator==(BlockHeader const& _rhs) const { return asDataObject() == _rhs.asDataObject(); }
     bool operator!=(BlockHeader const& _rhs) const { return !(*this == _rhs); }
-    static std::string BlockTypeToString(BlockType _bl)
-    {
-        switch (_bl)
-        {
-        case BlockType::BlockHeader1559:
-            return "BlockHeader1559";
-        case BlockType::BlockHeaderLegacy:
-            return "BlockHeaderLegacy";
-        case BlockType::BlockHeaderMerge:
-            return "BlockHeaderMerge";
-        default:
-            return "BlockHeaderUndefined";
-        };
-        return "BlockHEaderUndefined";
-    }
+    static std::string BlockTypeToString(BlockType _bl);
 
-    void recalculateHash()
-    {
-        FH32* newHash = new FH32("0x" + dev::toString(dev::sha3(asRLPStream().out())));
-        m_hash = spFH32(newHash);
-    }
-    bool hasUncles() const
-    {
-        return m_sha3Uncles->asString() != "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347";
-    }
+    void recalculateHash();
+    bool hasUncles() const;
 
     // Common
     FH32 const& stateRoot() const { return m_stateRoot; }
@@ -130,6 +94,4 @@ protected:
 
 typedef GCP_SPointer<BlockHeader> spBlockHeader;
 
-
 }  // namespace teststruct
-}  // namespace test

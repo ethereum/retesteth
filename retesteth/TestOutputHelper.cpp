@@ -28,6 +28,7 @@
 #include <retesteth/EthChecks.h>
 #include <retesteth/ExitHandler.h>
 #include <retesteth/Options.h>
+#include <retesteth/TestHelper.h>
 #include <retesteth/TestOutputHelper.h>
 
 using namespace std;

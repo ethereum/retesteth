@@ -3,12 +3,11 @@
 #include <libdataobj/DataObject.h>
 #include <boost/filesystem/path.hpp>
 
+
+namespace test::teststruct
+{
 namespace fs = boost::filesystem;
 
-namespace test
-{
-namespace teststruct
-{
 /*
  * VMTrace: (stExample/add11, fork: Istanbul, TrInfo: d: 0, g: 0, v: 0)
 Transaction number: 0, hash: 0x5363f287fccaad86a0ce8d2c5b15b4b917afe6ebac6a87e61884bf18fc7af58a
@@ -56,6 +55,4 @@ private:
     long long m_time;
 };
 
-
 }  // namespace teststruct
-}  // namespace test

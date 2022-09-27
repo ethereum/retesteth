@@ -1,9 +1,6 @@
 #pragma once
 #include "../../../basetypes.h"
-#include "../../../configs/FORK.h"
 #include <libdataobj/DataObject.h>
-#include <libdataobj/SPointer.h>
-
 
 namespace test
 {

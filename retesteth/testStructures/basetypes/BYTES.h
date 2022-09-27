@@ -1,7 +1,6 @@
 #pragma once
 #include <libdevcore/RLP.h>
 #include <libdataobj/DataObject.h>
-#include <libdataobj/SPointer.h>
 
 namespace test::teststruct
 {

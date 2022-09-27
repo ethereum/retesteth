@@ -2,7 +2,6 @@
 #include "../../../configs/FORK.h"
 #include "../../../types/Ethereum/StateIncomplete.h"
 #include <libdataobj/DataObject.h>
-#include <libdataobj/SPointer.h>
 
 namespace test
 {

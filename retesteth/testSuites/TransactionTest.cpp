@@ -1,11 +1,14 @@
 #include "TransactionTest.h"
 #include "retesteth/testSuites/TestFixtures.h"
+#include <libdevcore/CommonIO.h>
+#include <libdevcore/SHA3.h>
+#include <retesteth/ExitHandler.h>
 #include <retesteth/TestOutputHelper.h>
 #include <retesteth/session/Session.h>
+#include <retesteth/testStructures/types/Ethereum/TransactionLegacy.h>
 #include <retesteth/testStructures/types/TransactionTests/TransactionTest.h>
 #include <retesteth/testStructures/types/TransactionTests/TransactionTestFiller.h>
 #include <retesteth/testSuites/Common.h>
-#include <retesteth/ExitHandler.h>
 
 using namespace std;
 using namespace test;

@@ -3,6 +3,7 @@
 #include <retesteth/EthChecks.h>
 #include <retesteth/ExitHandler.h>
 #include <retesteth/Options.h>
+#include <retesteth/TestHelper.h>
 #include <condition_variable>
 
 size_t g_activejobs = 0;

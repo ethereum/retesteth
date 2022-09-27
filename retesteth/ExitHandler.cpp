@@ -1,5 +1,6 @@
 #include <retesteth/ExitHandler.h>
 #include <retesteth/TestOutputHelper.h>
+#include <retesteth/session/Session.h>
 #include <mutex>
 #include <thread>
 using namespace test;

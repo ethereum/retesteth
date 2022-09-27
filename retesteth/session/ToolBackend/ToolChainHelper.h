@@ -1,7 +1,5 @@
 #pragma once
 #include "ToolChain.h"
-#include "Verification.h"
-#include <libdevcore/Common.h>
 #include <retesteth/testStructures/types/Ethereum/BlockHeader.h>
 
 namespace toolimpl

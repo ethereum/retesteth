@@ -1,14 +1,7 @@
 #pragma once
-
-#include <stdio.h>
 #include <boost/noncopyable.hpp>
-#include <boost/test/unit_test.hpp>
-#include <map>
-#include <string>
 #include <thread>
-
 #include <retesteth/configs/ClientConfig.h>
-#include <libdataobj/DataObject.h>
 #include <retesteth/session/SessionInterface.h>
 
 namespace test::session

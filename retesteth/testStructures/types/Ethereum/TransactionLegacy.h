@@ -3,7 +3,6 @@
 #include "Transaction.h"
 #include <libdevcore/RLP.h>
 #include <libdataobj/DataObject.h>
-#include <retesteth/testStructures/types/StateTests/Base/AccessList.h>
 
 namespace test
 {

@@ -3,6 +3,7 @@
 #include <TestHelper.h>
 #include <libdataobj/ConvertFile.h>
 #include <testStructures/Common.h>
+#include <boost/filesystem/fstream.hpp>
 
 using namespace std;
 using namespace test::debug;

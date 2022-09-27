@@ -1,5 +1,7 @@
 #pragma once
 #include "Transaction.h"
+#include <retesteth/testStructures/types/StateTests/Base/AccessList.h>
+
 namespace test
 {
 namespace teststruct

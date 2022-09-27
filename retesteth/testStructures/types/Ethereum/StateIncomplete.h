@@ -1,12 +1,8 @@
 #pragma once
-#include "AccountIncomplete.h"
 #include "Base/StateBase.h"
 #include <libdataobj/DataObject.h>
-#include <libdataobj/SPointer.h>
 
-namespace test
-{
-namespace teststruct
+namespace test::teststruct
 {
 // Marks that State is made of AccountIncomplete
 struct StateIncomplete : StateBase
@@ -24,4 +20,3 @@ private:
 typedef GCP_SPointer<StateIncomplete> spStateIncomplete;
 
 }  // namespace teststruct
-}  // namespace test

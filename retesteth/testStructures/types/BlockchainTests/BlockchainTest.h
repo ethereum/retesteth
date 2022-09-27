@@ -3,11 +3,9 @@
 #include "../../configs/SealEngine.h"
 #include "../Ethereum/State.h"
 #include "../StateTests/Filled/Info.h"
-
 #include "Filled/BlockchainTestBlock.h"
 #include "Filled/BlockchainTestEnv.h"
 #include <libdataobj/DataObject.h>
-#include <libdataobj/SPointer.h>
 
 namespace test
 {

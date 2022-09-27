@@ -1,8 +1,8 @@
 #pragma once
+#include <testStructures/types/Ethereum/EthereumBlock.h>
 #include <testStructures/types/RPC/SetChainParamsArgs.h>
 #include <testStructures/types/RPC/ToolResponse.h>
-#include <testStructures/types/ethereum.h>
-#include <boost/filesystem.hpp>
+#include <boost/filesystem/path.hpp>
 #include <vector>
 namespace toolimpl
 {

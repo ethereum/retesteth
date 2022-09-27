@@ -1,10 +1,9 @@
 #pragma once
 #include "ToolChain.h"
-#include <retesteth/testStructures/types/Ethereum/EthereumBlock.h>
 #include <retesteth/testStructures/types/RPC/EthGetBlockBy.h>
 #include <retesteth/testStructures/types/RPC/SetChainParamsArgs.h>
 #include <retesteth/testStructures/types/RPC/TestRawTranasction.h>
-#include <boost/filesystem.hpp>
+#include <boost/filesystem/path.hpp>
 
 namespace toolimpl
 {

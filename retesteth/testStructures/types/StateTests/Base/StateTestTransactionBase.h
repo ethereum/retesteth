@@ -3,7 +3,6 @@
 #include "AccessList.h"
 #include "TransactionInGeneralSection.h"
 #include <libdataobj/DataObject.h>
-#include <libdataobj/SPointer.h>
 
 namespace test::teststruct
 {

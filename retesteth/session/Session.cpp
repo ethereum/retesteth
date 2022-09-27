@@ -22,14 +22,16 @@
 
 #include "Session.h"
 
-#include <thread>
 #include <retesteth/EthChecks.h>
+#include <retesteth/ExitHandler.h>
 #include <retesteth/Options.h>
 #include <retesteth/TestHelper.h>
 #include <retesteth/configs/ClientConfig.h>
 #include <retesteth/session/RPCImpl.h>
 #include <retesteth/session/ToolImpl.h>
-#include <retesteth/ExitHandler.h>
+#include <csignal>
+#include <thread>
+
 
 using namespace std;
 using namespace dev;

@@ -1,11 +1,8 @@
 #pragma once
 #include "Base/StateBase.h"
 #include <libdataobj/DataObject.h>
-#include <libdataobj/SPointer.h>
 
-namespace test
-{
-namespace teststruct
+namespace test::teststruct
 {
 using namespace dataobject;
 
@@ -53,4 +50,3 @@ public:
 typedef GCP_SPointer<State> spState;
 
 }  // namespace teststruct
-}  // namespace test

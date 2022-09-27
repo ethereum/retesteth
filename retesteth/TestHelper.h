@@ -3,7 +3,6 @@
 #include <vector>
 #include <set>
 #include <boost/filesystem.hpp>
-#include <boost/filesystem/fstream.hpp>
 #ifdef JSONCPP
 #include <json/json.h>
 #endif

@@ -1,7 +1,6 @@
 #pragma once
 #include "../StateTests/Filler/InfoIncomplete.h"
 #include <libdataobj/DataObject.h>
-#include <libdataobj/SPointer.h>
 #include <retesteth/testStructures/configs/FORK.h>
 #include <retesteth/testStructures/types/Ethereum/Transaction.h>
 #include <map>

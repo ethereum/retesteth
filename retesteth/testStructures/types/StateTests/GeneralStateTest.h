@@ -1,10 +1,10 @@
 #pragma once
+#include "../Ethereum/State.h"
 #include "Filled/Info.h"
 #include "Filled/StateTestEnv.h"
 #include "Filled/StateTestPostResult.h"
 #include "Filled/StateTestTransaction.h"
 #include <libdataobj/DataObject.h>
-#include <libdataobj/SPointer.h>
 
 namespace test::teststruct
 {

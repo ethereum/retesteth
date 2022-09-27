@@ -1,5 +1,6 @@
 #include "ToolChainHelper.h"
 #include "ToolChainManager.h"
+#include "Verification.h"
 #include <retesteth/EthChecks.h>
 #include <retesteth/Options.h>
 #include <retesteth/testStructures/Common.h>

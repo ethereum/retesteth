@@ -7,8 +7,6 @@
 
 #include <EthChecks.h>
 #include <libdataobj/DataObject.h>
-#include <libdataobj/SPointer.h>
-#include <libdevcore/RLP.h>
 #include <testStructures/types/RPC/DebugVMTrace.h>
 
 namespace test

@@ -18,15 +18,10 @@
  * Class for handling testeth custom options
  */
 
-#include <iostream>
-#include <iomanip>
-
-#include <libdataobj/ConvertFile.h>
-#include <libdataobj/SPointer.h>
-#include <retesteth/Options.h>
-#include <testStructures/Common.h>
+#include "Options.h"
+#include <retesteth/TestHelper.h>
+#include <boost/algorithm/string.hpp>
 #include <boost/test/unit_test.hpp>
-
 
 using namespace std;
 using namespace test;
@@ -492,4 +487,74 @@ int Options::Option::initArgs(list<const char*> const& _argList, list<const char
     return 0;
 }
 
+void Options::stringosizet_opt::initArg(std::string const& _arg)
+{
+    DigitsType type = test::stringIntegerType(_arg);
+    if (type == DigitsType::String)
+        str = _arg;
+    else if (type == DigitsType::Decimal)
+        val = std::max(0, atoi(_arg.c_str()));
+    else
+        BOOST_THROW_EXCEPTION(InvalidOption("Error: `" + m_sOptionName + "` wrong option argument format: " + _arg));
+}
 
+void Options::vecstr_opt::initArg(std::string const& _arg)
+{
+    std::vector<std::string> elements;
+    boost::split(elements, _arg, boost::is_any_of(", "));
+    for (auto& it : elements)
+    {
+        boost::algorithm::trim(it);
+        if (!it.empty())
+            m_vector.push_back(it);
+    }
+}
+
+void Options::vecaddr_opt::initArg(std::string const& _arg)
+{
+    for (auto const& el : explode(_arg, ','))
+        m_vector.push_back(IPADDRESS(el));
+}
+
+void Options::singletest_opt::initArg(std::string const& _arg)
+{
+    name = _arg;
+
+    size_t pos = name.find("Filler");
+    if (pos != std::string::npos)
+    {
+        name = name.substr(0, pos);
+        std::cout << "WARNING: Correcting filter to: `" + name + "`" << std::endl;
+    }
+    pos = name.find_last_of('/');
+    if (pos != std::string::npos)
+    {
+        subname = name.substr(pos + 1);
+        name = name.substr(0, pos);
+    }
+}
+
+void Options::dataind_opt::initArg(std::string const& _arg)
+{
+    DigitsType type = test::stringIntegerType(_arg);
+    switch (type)
+    {
+    case DigitsType::Decimal:
+        index = atoi(_arg.c_str());
+        break;
+    case DigitsType::String:
+        label = _arg;
+        if (_arg.find(":label") == std::string::npos)
+            label = ":label " + label;
+        break;
+    default:
+        BOOST_THROW_EXCEPTION(InvalidOption("Error: `" + m_sOptionName + "` option has wrong argument format: " + _arg));
+    }
+}
+
+void Options::fspath_opt::initArg(std::string const& _arg)
+{
+    string_opt::initArg(_arg);
+    if (!boost::filesystem::exists(_arg))
+        BOOST_THROW_EXCEPTION(InvalidOption("Error: `" + m_sOptionName + "` could not locate file or path: " + _arg));
+}

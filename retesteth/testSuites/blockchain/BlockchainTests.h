@@ -4,8 +4,6 @@
 
 #pragma once
 #include <libdataobj/DataObject.h>
-#include <retesteth/Options.h>
-#include <retesteth/TestHelper.h>
 #include <retesteth/testSuiteRunner/TestSuite.h>
 #include <retesteth/testSuites/TestFixtures.h>
 #include <boost/filesystem/path.hpp>

@@ -1,4 +1,5 @@
 #include <retesteth/EthChecks.h>
+#include <retesteth/TestHelper.h>
 #include <retesteth/TestOutputHelper.h>
 #include <retesteth/configs/ClientConfig.h>
 #include <retesteth/testStructures/Common.h>

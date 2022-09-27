@@ -1,7 +1,6 @@
 #pragma once
 #include "../../Ethereum/Transaction.h"
 #include <libdataobj/DataObject.h>
-#include <libdataobj/SPointer.h>
 namespace test
 {
 namespace teststruct

@@ -1,5 +1,6 @@
 #pragma once
 #include "TransactionLegacy.h"
+#include <retesteth/testStructures/types/StateTests/Base/AccessList.h>
 
 namespace test
 {

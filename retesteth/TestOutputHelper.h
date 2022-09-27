@@ -20,7 +20,7 @@
 
 #pragma once
 #include <libdevcore/CommonData.h>
-#include <boost/filesystem.hpp>
+#include <boost/filesystem/path.hpp>
 #include <boost/test/unit_test.hpp>
 #include <thread>
 #include <vector>

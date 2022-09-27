@@ -1,10 +1,7 @@
 #pragma once
 #include "../../../basetypes.h"
-#include "../../../types/ethereum.h"
 #include "../Base/StateTestTransactionBase.h"
 #include <libdataobj/DataObject.h>
-#include <libdataobj/SPointer.h>
-
 namespace test
 {
 namespace teststruct

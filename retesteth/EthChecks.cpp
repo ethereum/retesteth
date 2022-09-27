@@ -2,6 +2,7 @@
 #include <retesteth/ExitHandler.h>
 #include <retesteth/Options.h>
 #include <retesteth/TestOutputHelper.h>
+#include <boost/algorithm/string.hpp>
 #include <csignal>
 #include <iostream>
 #include <thread>

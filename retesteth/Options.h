@@ -2,9 +2,6 @@
 
 #include <libdevcore/Exceptions.h>
 #include <retesteth/configs/ClientConfig.h>
-#include <boost/algorithm/string.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/optional.hpp>
 #include <list>
 
 namespace test
@@ -111,27 +108,13 @@ private:
         std::string str;
         size_t val;
     protected:
-        void initArg(std::string const& _arg) override
-        {
-            DigitsType type = test::stringIntegerType(_arg);
-            if (type == DigitsType::String)
-                str = _arg;
-            else if (type == DigitsType::Decimal)
-                val = std::max(0, atoi(_arg.c_str()));
-            else
-                BOOST_THROW_EXCEPTION(InvalidOption("Error: `" + m_sOptionName + "` wrong option argument format: " + _arg));
-        }
+        void initArg(std::string const& _arg) override;
     };
 
     struct fspath_opt : public string_opt
     {
     protected:
-        void initArg(std::string const& _arg) override
-        {
-            string_opt::initArg(_arg);
-            if (!boost::filesystem::exists(_arg))
-                BOOST_THROW_EXCEPTION(InvalidOption("Error: `" + m_sOptionName + "` could not locate file or path: " + _arg));
-        }
+        void initArg(std::string const& _arg) override;
     };
 
     struct vecstr_opt : public Option
@@ -141,17 +124,7 @@ private:
 
     protected:
         std::vector<std::string> m_vector;
-        void initArg(std::string const& _arg) override
-        {
-            std::vector<std::string> elements;
-            boost::split(elements, _arg, boost::is_any_of(", "));
-            for (auto& it : elements)
-            {
-                boost::algorithm::trim(it);
-                if (!it.empty())
-                    m_vector.push_back(it);
-            }
-        }
+        void initArg(std::string const& _arg) override;
     };
 
     struct vecaddr_opt : public Option
@@ -161,11 +134,7 @@ private:
         size_t size() const { return m_vector.size(); }
     protected:
         std::vector<IPADDRESS> m_vector;
-        void initArg(std::string const& _arg) override
-        {
-            for (auto const& el : explode(_arg, ','))
-                m_vector.push_back(IPADDRESS(el));
-        }
+        void initArg(std::string const& _arg) override;
     };
 
     struct singletest_opt : public Option
@@ -175,23 +144,7 @@ private:
         std::string subname;
 
     protected:
-        void initArg(std::string const& _arg) override
-        {
-            name = _arg;
-
-            size_t pos = name.find("Filler");
-            if (pos != std::string::npos)
-            {
-                name = name.substr(0, pos);
-                std::cout << "WARNING: Correcting filter to: `" + name + "`" << std::endl;
-            }
-            pos = name.find_last_of('/');
-            if (pos != std::string::npos)
-            {
-                subname = name.substr(pos + 1);
-                name = name.substr(0, pos);
-            }
-        }
+        void initArg(std::string const& _arg) override;
     };
 
     struct dataind_opt : public Option
@@ -201,23 +154,7 @@ private:
         std::string label;
 
     protected:
-        void initArg(std::string const& _arg) override
-        {
-            DigitsType type = stringIntegerType(_arg);
-            switch (type)
-            {
-            case DigitsType::Decimal:
-                index = atoi(_arg.c_str());
-                break;
-            case DigitsType::String:
-                label = _arg;
-                if (_arg.find(":label") == std::string::npos)
-                    label = ":label " + label;
-                break;
-            default:
-                BOOST_THROW_EXCEPTION(InvalidOption("Error: `" + m_sOptionName + "` option has wrong argument format: " + _arg));
-            }
-        }
+        void initArg(std::string const& _arg) override;
     };
 
 

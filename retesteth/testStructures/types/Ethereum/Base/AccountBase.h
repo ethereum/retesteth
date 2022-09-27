@@ -2,7 +2,6 @@
 #include "../../../basetypes.h"
 #include "../Storage.h"
 #include <libdataobj/DataObject.h>
-#include <libdataobj/SPointer.h>
 
 namespace test
 {

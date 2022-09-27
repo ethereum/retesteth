@@ -1,6 +1,5 @@
 #pragma once
 #include "ToolBackend/ToolChainManager.h"
-#include <retesteth/TestHelper.h>
 #include <retesteth/session/SessionInterface.h>
 #include <retesteth/session/Socket.h>
 #include <string>

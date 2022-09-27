@@ -1,7 +1,6 @@
 #pragma once
 #include "ToolChain.h"
 #include <testStructures/types/RPC/ToolResponse.h>
-#include <testStructures/types/ethereum.h>
 #include <boost/filesystem/path.hpp>
 
 namespace toolimpl

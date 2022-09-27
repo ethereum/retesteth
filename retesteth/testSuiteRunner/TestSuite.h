@@ -20,7 +20,6 @@
 
 #pragma once
 #include <libdataobj/DataObject.h>
-#include <libdevcore/SHA3.h>
 #include <boost/filesystem/path.hpp>
 #include <functional>
 

@@ -3,7 +3,6 @@
 #include "BlockHeader1559.h"
 #include <libdevcore/RLP.h>
 #include <libdataobj/DataObject.h>
-#include <libdataobj/SPointer.h>
 
 namespace test
 {

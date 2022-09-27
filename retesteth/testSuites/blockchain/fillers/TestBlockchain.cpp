@@ -1,7 +1,8 @@
 #include "TestBlockchain.h"
 #include <retesteth/Options.h>
-#include <retesteth/testSuites/Common.h>
+#include <retesteth/TestHelper.h>
 #include <retesteth/testStructures/PrepareChainParams.h>
+#include <retesteth/testSuites/Common.h>
 
 using namespace std;
 using namespace test::debug;

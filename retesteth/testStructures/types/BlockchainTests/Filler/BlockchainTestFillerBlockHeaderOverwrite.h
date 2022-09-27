@@ -3,7 +3,6 @@
 #include "../../../configs/FORK.h"
 #include "../../Ethereum/BlockHeaderIncomplete.h"
 #include <libdataobj/DataObject.h>
-#include <libdataobj/SPointer.h>
 
 namespace test
 {

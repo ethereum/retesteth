@@ -6,6 +6,7 @@
 #include "EthChecks.h"
 #include "Options.h"
 #include "TestOutputHelper.h"
+#include <retesteth/TestHelper.h>
 
 namespace test
 {

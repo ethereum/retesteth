@@ -2,8 +2,7 @@
 #include "../basetypes/IPADDRESS.h"
 #include "FORK.h"
 #include <libdataobj/DataObject.h>
-#include <libdataobj/SPointer.h>
-#include <boost/filesystem.hpp>
+#include <boost/filesystem/path.hpp>
 #include <map>
 
 namespace test::teststruct

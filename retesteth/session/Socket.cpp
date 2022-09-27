@@ -2,6 +2,8 @@
 #include <curl/curl.h>
 #include <retesteth/EthChecks.h>
 #include <retesteth/ExitHandler.h>
+#include <chrono>
+#include <memory>
 
 using namespace std;
 

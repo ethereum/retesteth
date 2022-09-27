@@ -1,10 +1,7 @@
 #pragma once
-#include <libdevcore/Common.h>
-#include <libdevcore/CommonData.h>
-#include <libdevcore/RLP.h>
 #include <libdataobj/DataObject.h>
-#include <libdataobj/SPointer.h>
-
+#include <libdevcore/Common.h>
+#include <libdevcore/RLP.h>
 
 namespace test::teststruct
 {

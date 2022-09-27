@@ -1,7 +1,6 @@
 #pragma once
 #include "AccountBase.h"
 #include <libdataobj/DataObject.h>
-#include <libdataobj/SPointer.h>
 
 namespace test
 {

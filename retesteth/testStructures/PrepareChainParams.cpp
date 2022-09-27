@@ -1,5 +1,6 @@
 #include "PrepareChainParams.h"
 #include <retesteth/Options.h>
+#include <retesteth/TestHelper.h>
 #include <retesteth/configs/ClientConfig.h>
 
 using namespace std;
