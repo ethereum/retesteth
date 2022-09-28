@@ -71,6 +71,12 @@ spDataObject LegacyConstantinopleBCGeneralStateTestsSuite::doTests(spDataObject&
     return DoTests(_input, _opt);
 }
 
+BCGeneralStateTestsSuite::BCGeneralStateTestsSuite()
+{
+    TestInfo errorInfo("Initialized ", "BCGeneralStateTestsSuite");
+    TestOutputHelper::get().setCurrentTestInfo(errorInfo);
+}
+
 TestSuite::TestPath BlockchainTestValidSuite::suiteFolder() const
 {
     return TestSuite::TestPath(fs::path("BlockchainTests") / "ValidBlocks");

@@ -7,6 +7,9 @@
 #include <retesteth/testSuites/blockchain/BlockchainTests.h>
 #include <retesteth/testSuites/TransactionTest.h>
 #include <retesteth/testSuites/DifficultyTest.h>
+#include <retesteth/EthChecks.h>
+#include <retesteth/TestHelper.h>
+#include <retesteth/TestOutputHelper.h>
 #include <boost/test/included/unit_test.hpp>
 #include <thread>
 

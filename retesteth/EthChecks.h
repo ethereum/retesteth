@@ -44,6 +44,7 @@ extern std::string const cYellow;
 extern std::string const cLime;
 extern std::string const cRed;
 extern std::string const cDefault;
+extern std::string const cZero;
 
 namespace logmessage
 {

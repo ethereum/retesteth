@@ -80,6 +80,7 @@ std::string const cYellow = "\x1b[33m";
 std::string const cLime = "\x1b[32m";
 std::string const cRed = "\x1b[0;31m";
 std::string const cDefault = "\x1b[0m";
+std::string const cZero = "";
 
 
 namespace logmessage
@@ -112,26 +113,24 @@ void eth_stderror_message(std::string const& _message)
         std::cerr << cRed << _message << "\x1b[0m" << std::endl;
 }
 
-void eth_log_message(std::string const& _message, LogColor _color)
+inline string const& LogColorToColor(LogColor _color)
 {
-    string s_pre;
     switch (_color)
     {
-    case LogColor::YELLOW:
-        s_pre = cYellow;
-        break;
-    case LogColor::LIME:
-        s_pre = "\x1b[32m";
-        break;
-    case LogColor::DEFAULT:
-        break;
-    default:
-        break;
+    case LogColor::YELLOW: return cYellow;
+    case LogColor::LIME: return cLime;
+    case LogColor::DEFAULT: return cZero;
+    default: return cZero;
     }
-    if (Options::get().nologcolor)
+    return cZero;
+}
+
+void eth_log_message(std::string const& _message, LogColor _color)
+{
+    if (Options::get().nologcolor || _color == LogColor::DEFAULT)
         std::cout << _message << std::endl;
     else
-        std::cout << s_pre << _message << "\x1b[0m" << std::endl;
+        std::cout << LogColorToColor(_color) << _message << cDefault << std::endl;
 }
 
 void eth_error(std::string const& _message)

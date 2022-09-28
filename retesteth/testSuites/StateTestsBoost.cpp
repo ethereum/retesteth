@@ -3,6 +3,7 @@
 #include "retesteth/testSuites/StateTests.h"
 #include "retesteth/testSuites/TestFixtures.h"
 #include <retesteth/testSuiteRunner/TestSuite.h>
+#include <retesteth/Options.h>
 #include <boost/test/unit_test.hpp>
 
 using namespace std;

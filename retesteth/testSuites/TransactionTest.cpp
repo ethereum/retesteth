@@ -9,6 +9,7 @@
 #include <retesteth/testStructures/types/TransactionTests/TransactionTest.h>
 #include <retesteth/testStructures/types/TransactionTests/TransactionTestFiller.h>
 #include <retesteth/testSuites/Common.h>
+#include <retesteth/Options.h>
 
 using namespace std;
 using namespace test;

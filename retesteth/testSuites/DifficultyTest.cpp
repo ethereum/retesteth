@@ -6,9 +6,10 @@
 #include <retesteth/testStructures/types/DifficultyTests/DifficultyTest.h>
 #include <retesteth/testStructures/types/DifficultyTests/DifficultyTestFiller.h>
 #include <retesteth/testStructures/PrepareChainParams.h>
-
+#include <retesteth/Options.h>
 #include <retesteth/testStructures/types/StateTests/Filler/StateTestFillerEnv.h>
 #include <retesteth/testStructures/types/Ethereum/State.h>
+#include <retesteth/TestHelper.h>
 #include <retesteth/ExitHandler.h>
 
 using namespace std;

@@ -10,6 +10,7 @@
 
 namespace test
 {
+using namespace dataobject;
 
 /// Suite run and check blockchain tests with valid blocks only
 class BlockchainTestValidSuite : public TestSuite
@@ -44,10 +45,7 @@ class BCGeneralStateTestsSuite : public BlockchainTestValidSuite
     test::TestSuite::TestPath suiteFolder() const override;
     test::TestSuite::FillerPath suiteFillerFolder() const override;
 public:
-    BCGeneralStateTestsSuite() {
-        TestInfo errorInfo("Initialized ", "BCGeneralStateTestsSuite");
-        TestOutputHelper::get().setCurrentTestInfo(errorInfo);
-    }
+    BCGeneralStateTestsSuite();
 };
 
 class BCGeneralStateTestsVMSuite : public BCGeneralStateTestsSuite
