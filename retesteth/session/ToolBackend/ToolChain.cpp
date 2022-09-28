@@ -206,7 +206,7 @@ spDataObject ToolChain::coorectTransactionsByToolResponse(
                 ETH_ERROR_MESSAGE("tool didn't provide information about rejected transaction");
             if (_miningReq == Mining::AllowFailTransactions)
             {
-                ETH_DC_MESSAGE(DC::WARNING, message);
+                ETH_DC_MESSAGE(DC::LOWLOG, message);
             }
             else
                 throw test::UpwardsException(message);

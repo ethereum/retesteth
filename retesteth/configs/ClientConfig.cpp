@@ -5,6 +5,7 @@
 #include <retesteth/testStructures/Common.h>
 using namespace std;
 using namespace dataobject;
+using namespace test::debug;
 using namespace test::teststruct;
 std::mutex g_staticDeclaration_clientConfigID;
 std::mutex g_staticDeclaration_translateNetworks_static;
@@ -247,9 +248,16 @@ void ClientConfig::initializeFirstSetup()
         m_initialized = true;
         if (fs::exists(getSetupScript()))
         {
-            std::cout << "Initialize setup script.." << std::endl;
+            auto cmd = [](string const& _cmd) {
+                test::executeCmd(_cmd, ExecCMDWarning::NoWarning);
+            };
             string const setup = getSetupScript().c_str();
-            test::executeCmd(setup, ExecCMDWarning::NoWarning);
+            ETH_DC_MESSAGE(DC::RPC, string("Initialize setup script: ") + setup);
+
+            thread task(cmd, setup);
+            task.detach();
+            size_t const initTime = cfgFile().initializeTime();
+            this_thread::sleep_for(chrono::seconds(initTime));
         }
     }
 }

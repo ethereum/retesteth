@@ -12,6 +12,7 @@ class besucfg { public: besucfg(); };
 class t8ntoolcfg { public: t8ntoolcfg(); };
 class t8ntooleipcfg { public: t8ntooleipcfg(); };
 class oewrapcfg { public: oewrapcfg(); };
+class ethereumjscfg { public: ethereumjscfg(); };
 
 // Genesis configs for clients
 class genRewardsCfg { public: genRewardsCfg(); };
@@ -55,6 +56,7 @@ public:
         t8ntoolcfg t8ntool;
         t8ntooleipcfg t8ntooleip;
         oewrapcfg oewrap;
+        ethereumjscfg ethereumjs;
 
         // Genesis configs for clients
         genRewardsCfg rewards;
