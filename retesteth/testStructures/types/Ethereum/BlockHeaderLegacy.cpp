@@ -1,8 +1,4 @@
-#include "BlockHeaderLegacy.h"
-#include "../../basetypes.h"
 #include <libdevcore/Address.h>
-#include <libdevcore/RLP.h>
-#include <libdevcore/SHA3.h>
 #include <retesteth/EthChecks.h>
 #include <retesteth/TestHelper.h>
 #include <retesteth/testStructures/Common.h>

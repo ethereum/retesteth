@@ -19,10 +19,8 @@
  */
 
 #include <libdataobj/ConvertFile.h>
-#include <libdataobj/DataObject.h>
 #include <retesteth/TestOutputHelper.h>
 #include <retesteth/testSuites/Common.h>
-#include <boost/test/unit_test.hpp>
 
 using namespace std;
 using namespace dev;

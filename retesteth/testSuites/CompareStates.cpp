@@ -1,6 +1,5 @@
 #include "Common.h"
 #include <retesteth/Options.h>
-#include <retesteth/testStructures/types/Ethereum/State.h>
 using namespace std;
 using namespace test::debug;
 using namespace test::session;

@@ -1,6 +1,3 @@
-#include <cstdio>
-#include <thread>
-
 #include <libdataobj/ConvertFile.h>
 #include <retesteth/EthChecks.h>
 #include <retesteth/ExitHandler.h>
@@ -9,7 +6,6 @@
 #include <retesteth/TestOutputHelper.h>
 #include <retesteth/session/RPCImpl.h>
 #include <retesteth/session/Session.h>
-#include <retesteth/testStructures/Common.h>
 
 using namespace std;
 using namespace test;

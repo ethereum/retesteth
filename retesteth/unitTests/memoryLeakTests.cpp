@@ -1,10 +1,6 @@
-#include <retesteth/TestHelper.h>
 #include <retesteth/TestOutputHelper.h>
-#include <boost/test/unit_test.hpp>
-
 #include <libdataobj/ConvertFile.h>
 #include <retesteth/testStructures/structures.h>
-#include <libdataobj/SPointer.h>
 
 using namespace std;
 using namespace dev;

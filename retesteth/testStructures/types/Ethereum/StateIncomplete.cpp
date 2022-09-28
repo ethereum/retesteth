@@ -1,7 +1,6 @@
 #include "StateIncomplete.h"
 #include "AccountIncomplete.h"
 #include <retesteth/EthChecks.h>
-#include <retesteth/testStructures/Common.h>
 
 using namespace std;
 namespace test::teststruct

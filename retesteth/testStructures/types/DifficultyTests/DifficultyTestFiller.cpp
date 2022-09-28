@@ -1,7 +1,6 @@
 #include <TestHelper.h>
 #include <TestOutputHelper.h>
 #include <retesteth/testStructures/Common.h>
-#include <retesteth/configs/ClientConfig.h>
 #include <retesteth/Options.h>
 
 #include "EthChecks.h"

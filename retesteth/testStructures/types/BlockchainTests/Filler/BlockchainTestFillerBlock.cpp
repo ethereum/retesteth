@@ -1,7 +1,6 @@
 #include "BlockchainTestFillerBlock.h"
 #include <retesteth/EthChecks.h>
 #include <retesteth/testStructures/Common.h>
-#include <retesteth/configs/ClientConfig.h>
 #include <retesteth/Options.h>
 using namespace std;
 

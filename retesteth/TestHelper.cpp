@@ -1,23 +1,14 @@
 #include <BuildInfo.h>
 #include <fcntl.h>
 #include <boost/algorithm/string/trim.hpp>
-#include <boost/lexical_cast.hpp>
-#include <boost/test/unit_test.hpp>
-#include <boost/uuid/uuid.hpp>             // uuid class
 #include <boost/uuid/uuid_generators.hpp>  // generators
-#include <boost/uuid/uuid_io.hpp>          // streaming operators etc
 #include <boost/uuid/uuid_io.hpp>
-
-#include <csignal>
-#include <mutex>
-
 #include <libdataobj/ConvertFile.h>
 #include <libdataobj/ConvertYaml.h>
 #include <libdevcore/CommonIO.h>
 #include <retesteth/EthChecks.h>
 #include <retesteth/Options.h>
 #include <retesteth/TestHelper.h>
-#include <retesteth/TestOutputHelper.h>
 
 using namespace std;
 using namespace dev;
@@ -469,7 +460,6 @@ std::vector<std::string> explode(std::string const& s, char delim)
     return result;
 }
 
-#include <sys/wait.h>
 #define READ   0
 #define WRITE  1
 #define EXECLARG0(cmd) execl(cmd, cmd, (char*)NULL)

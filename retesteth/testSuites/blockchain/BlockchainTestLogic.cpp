@@ -1,9 +1,6 @@
 #include "BlockchainTestLogic.h"
-#include <retesteth/EthChecks.h>
 #include <retesteth/ExitHandler.h>
 #include <retesteth/Options.h>
-#include <retesteth/session/Session.h>
-#include <retesteth/testStructures/Common.h>
 #include <retesteth/testStructures/PrepareChainParams.h>
 #include <retesteth/testSuites/Common.h>
 #include "fillers/TestBlockchain.h"

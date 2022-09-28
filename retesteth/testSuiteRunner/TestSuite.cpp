@@ -19,7 +19,6 @@
  */
 
 #include "TestSuiteHelperFunctions.h"
-#include <libdataobj/DataObject.h>
 #include <libdevcore/CommonIO.h>
 #include <retesteth/EthChecks.h>
 #include <retesteth/ExitHandler.h>
@@ -30,8 +29,6 @@
 #include <retesteth/session/ThreadManager.h>
 #include <retesteth/testSuiteRunner/TestSuite.h>
 #include <retesteth/testSuites/TestFixtures.h>
-#include <boost/test/unit_test.hpp>
-#include <string>
 
 using namespace std;
 using namespace dev;

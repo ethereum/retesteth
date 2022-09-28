@@ -1,4 +1,3 @@
-#include "Compiler.h"
 #include "TestHelper.h"
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/SHA3.h>

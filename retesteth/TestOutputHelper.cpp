@@ -19,14 +19,8 @@
  */
 
 #include <boost/test/tree/test_case_counter.hpp>
-#include <boost/test/tree/traverse.hpp>
-#include <boost/test/unit_test.hpp>
-#include <mutex>
-#include <thread>
-
 #include <libdevcore/include.h>
 #include <retesteth/EthChecks.h>
-#include <retesteth/ExitHandler.h>
 #include <retesteth/Options.h>
 #include <retesteth/TestHelper.h>
 #include <retesteth/TestOutputHelper.h>

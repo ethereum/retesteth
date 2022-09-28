@@ -1,4 +1,3 @@
-#include "TestFixtures.h"
 #include <retesteth/EthChecks.h>
 #include <retesteth/Options.h>
 #include <retesteth/TestHelper.h>

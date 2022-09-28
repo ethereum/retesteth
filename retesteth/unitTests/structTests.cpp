@@ -2,10 +2,7 @@
 #include <retesteth/Options.h>
 #include <retesteth/TestHelper.h>
 #include <retesteth/TestOutputHelper.h>
-#include <retesteth/testStructures/basetypes.h>
 #include <retesteth/testStructures/types/Ethereum/TransactionReader.h>
-#include <boost/test/unit_test.hpp>
-#include <functional>
 
 using namespace std;
 using namespace dev;

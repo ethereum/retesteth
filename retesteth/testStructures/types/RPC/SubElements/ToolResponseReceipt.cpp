@@ -1,5 +1,4 @@
 #include "ToolResponseReceipt.h"
-#include <retesteth/EthChecks.h>
 #include <retesteth/testStructures/Common.h>
 
 namespace test::teststruct

@@ -4,8 +4,6 @@
 #include <retesteth/TestOutputHelper.h>
 #include <boost/algorithm/string.hpp>
 #include <csignal>
-#include <iostream>
-#include <thread>
 using namespace std;
 
 namespace test::debug

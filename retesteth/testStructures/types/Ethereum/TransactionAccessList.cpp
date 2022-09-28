@@ -1,5 +1,4 @@
 #include "TransactionAccessList.h"
-#include <libdevcore/Address.h>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/SHA3.h>
 #include <libdevcrypto/Common.h>

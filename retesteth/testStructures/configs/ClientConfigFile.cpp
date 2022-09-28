@@ -1,9 +1,7 @@
 #include "ClientConfigFile.h"
-#include "../basetypes/IPADDRESS.h"
 #include <testStructures/Common.h>
 #include <retesteth/EthChecks.h>
 #include <retesteth/TestHelper.h>
-#include <mutex>
 using namespace std;
 using namespace test::teststruct;
 std::mutex g_allowedForks_static_var;

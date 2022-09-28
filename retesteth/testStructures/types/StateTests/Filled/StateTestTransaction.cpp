@@ -1,6 +1,5 @@
 #include "StateTestTransaction.h"
 #include <retesteth/EthChecks.h>
-#include <retesteth/TestHelper.h>
 #include <retesteth/testStructures/Common.h>
 
 using namespace std;

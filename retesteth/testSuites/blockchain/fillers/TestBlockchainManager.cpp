@@ -1,6 +1,5 @@
 #include "TestBlockchainManager.h"
 #include <retesteth/TestHelper.h>
-#include <string>
 using namespace std;
 using namespace test::debug;
 using namespace test::session;

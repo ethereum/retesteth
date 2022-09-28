@@ -1,11 +1,8 @@
-#include "Compiler.h"
 #include "Options.h"
 #include "TestHelper.h"
 #include <libdevcore/CommonIO.h>
 #include <retesteth/EthChecks.h>
 #include <retesteth/TestOutputHelper.h>
-#include <retesteth/testStructures/Common.h>
-#include <boost/filesystem.hpp>
 using namespace dev;
 using namespace test;
 using namespace std;

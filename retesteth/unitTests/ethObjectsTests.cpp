@@ -21,12 +21,7 @@
 #include <libdataobj/ConvertFile.h>
 #include <retesteth/TestHelper.h>
 #include <retesteth/TestOutputHelper.h>
-#include <retesteth/testStructures/Common.h>
-#include <retesteth/testStructures/configs/ClientConfigFile.h>
-#include <retesteth/testStructures/types/ethereum.h>
 #include <retesteth/testSuites/Common.h>
-#include <boost/test/unit_test.hpp>
-#include <thread>
 
 using namespace std;
 using namespace dev;

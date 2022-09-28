@@ -1,9 +1,7 @@
 #include <libdataobj/ConvertFile.h>
 #include <retesteth/Options.h>
-#include <retesteth/TestHelper.h>
 #include <retesteth/TestOutputHelper.h>
 #include <testStructures/types/StateTests/Filler/StateTestFillerExpectSection.h>
-#include <testStructures/types/StateTests/Filler/StateTestFillerTransaction.h>
 
 using namespace std;
 using namespace test;

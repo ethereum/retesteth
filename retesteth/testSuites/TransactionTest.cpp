@@ -4,7 +4,6 @@
 #include <libdevcore/SHA3.h>
 #include <retesteth/ExitHandler.h>
 #include <retesteth/TestOutputHelper.h>
-#include <retesteth/session/Session.h>
 #include <retesteth/testStructures/types/Ethereum/TransactionLegacy.h>
 #include <retesteth/testStructures/types/TransactionTests/TransactionTest.h>
 #include <retesteth/testStructures/types/TransactionTests/TransactionTestFiller.h>

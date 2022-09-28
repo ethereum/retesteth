@@ -21,10 +21,6 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 #include "BlockchainTests.h"
 #include "BlockchainTestLogic.h"
 #include <retesteth/TestOutputHelper.h>
-#include <retesteth/testSuites/TestFixtures.h>
-#include <boost/filesystem/operations.hpp>
-#include <boost/test/unit_test.hpp>
-#include <thread>
 
 using namespace std;
 using namespace test;

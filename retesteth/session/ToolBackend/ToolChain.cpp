@@ -1,15 +1,8 @@
 #include "BlockMining.h"
-#include "ToolChainHelper.h"
-#include "ToolChainManager.h"
 #include "Verification.h"
 #include <Options.h>
-#include <libdataobj/ConvertFile.h>
-#include <libdevcore/CommonIO.h>
 #include <retesteth/TestHelper.h>
 #include <testStructures/Common.h>
-#include <testStructures/types/BlockchainTests/Filler/BlockchainTestFillerEnv.h>
-#include <testStructures/types/RPC/DebugVMTrace.h>
-#include <testStructures/types/RPC/ToolResponse.h>
 
 using namespace dev;
 using namespace std;

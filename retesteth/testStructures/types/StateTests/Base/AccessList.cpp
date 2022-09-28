@@ -1,5 +1,4 @@
 #include "AccessList.h"
-#include <libdevcore/Address.h>
 #include <retesteth/testStructures/Common.h>
 
 using namespace std;

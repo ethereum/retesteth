@@ -4,7 +4,6 @@
 #include "TestSuite.h"
 #include "TestSuiteHelperFunctions.h"
 #include <retesteth/TestOutputHelper.h>
-#include <boost/test/unit_test.hpp>
 
 using namespace std;
 using namespace test;

@@ -1,6 +1,4 @@
 #include "BlockHeaderIncomplete.h"
-#include "../../basetypes.h"
-#include <libdevcore/Address.h>
 #include <retesteth/EthChecks.h>
 #include <retesteth/TestHelper.h>
 #include <retesteth/testStructures/Common.h>

@@ -3,9 +3,6 @@
 #include "TestHelper.h"
 #include "TestOutputHelper.h"
 #include <retesteth/Options.h>
-#include <retesteth/configs/ClientConfig.h>
-#include <mutex>
-#include <algorithm>
 #include <libdevcrypto/Common.h>
 
 using namespace std;

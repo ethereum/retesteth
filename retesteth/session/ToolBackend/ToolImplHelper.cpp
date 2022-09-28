@@ -1,7 +1,6 @@
 #include "ToolImplHelper.h"
 #include <retesteth/TestHelper.h>
 #include <retesteth/testStructures/Common.h>
-#include <mutex>
 using namespace test;
 using namespace test::debug;
 using namespace std;

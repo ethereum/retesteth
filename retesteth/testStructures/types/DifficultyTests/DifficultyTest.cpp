@@ -1,7 +1,5 @@
-#include <Options.h>
 #include <TestOutputHelper.h>
 #include <retesteth/testStructures/Common.h>
-
 #include "EthChecks.h"
 #include "DifficultyTest.h"
 

@@ -21,23 +21,12 @@
  * General State Tests parser.
  */
 
-#include <boost/filesystem/operations.hpp>
-#include <boost/test/unit_test.hpp>
-#include <thread>
-#include <mutex>
-
-#include <libdataobj/DataObject.h>
-#include <libdevcore/CommonData.h>
 #include <libdevcore/CommonIO.h>
 #include <retesteth/ExitHandler.h>
 #include <retesteth/Options.h>
-#include <retesteth/TestHelper.h>
 #include <retesteth/TestOutputHelper.h>
-#include <retesteth/session/Session.h>
-#include <retesteth/testStructures/Common.h>
 #include <retesteth/testStructures/PrepareChainParams.h>
 #include <retesteth/testStructures/structures.h>
-#include <retesteth/testSuiteRunner/TestSuite.h>
 #include <retesteth/testSuites/Common.h>
 #include <retesteth/testSuites/StateTests.h>
 #include <retesteth/testSuites/blockchain/BlockchainTests.h>

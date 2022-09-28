@@ -1,5 +1,4 @@
 #include "TestSuiteHelperFunctions.h"
-#include <libdataobj/DataObject.h>
 #include <libdevcore/CommonIO.h>
 #include <retesteth/Options.h>
 #include <retesteth/TestHelper.h>

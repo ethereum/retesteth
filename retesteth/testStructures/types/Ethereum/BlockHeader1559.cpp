@@ -1,8 +1,4 @@
-#include "BlockHeader1559.h"
-#include "../../basetypes.h"
 #include <libdevcore/Address.h>
-#include <libdevcore/CommonIO.h>
-#include <libdevcore/RLP.h>
 #include <retesteth/EthChecks.h>
 #include <retesteth/TestHelper.h>
 #include <retesteth/testStructures/Common.h>

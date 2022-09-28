@@ -3,7 +3,6 @@
 #include <retesteth/TestOutputHelper.h>
 #include <retesteth/configs/ClientConfig.h>
 #include <retesteth/testStructures/Common.h>
-#include <mutex>
 using namespace std;
 using namespace dataobject;
 using namespace test::teststruct;

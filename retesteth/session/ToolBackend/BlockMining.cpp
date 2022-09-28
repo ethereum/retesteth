@@ -2,7 +2,6 @@
 #include "Options.h"
 #include "ToolChainHelper.h"
 #include "libdataobj/ConvertFile.h"
-#include "libdataobj/DataObject.h"
 #include <libdevcore/CommonIO.h>
 #include <retesteth/TestHelper.h>
 #include <retesteth/TestOutputHelper.h>

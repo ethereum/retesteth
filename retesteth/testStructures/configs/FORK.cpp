@@ -1,4 +1,3 @@
-#include "FORK.h"
 #include <retesteth/EthChecks.h>
 #include <retesteth/Options.h>
 using namespace std;

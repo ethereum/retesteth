@@ -1,8 +1,5 @@
 #include "EthGetBlockBy.h"
 #include "../Ethereum/EthereumBlock.h"
-#include "SubElements/EthGetBlockByTransaction.h"
-#include <libdevcore/RLP.h>
-#include <retesteth/EthChecks.h>
 #include <retesteth/testStructures/Common.h>
 
 using namespace std;

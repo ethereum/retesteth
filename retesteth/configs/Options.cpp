@@ -4,7 +4,6 @@
 #include <retesteth/EthChecks.h>
 #include <retesteth/Options.h>
 #include <retesteth/configs/Options.h>
-#include <boost/filesystem.hpp>
 
 using namespace std;
 using namespace test;
