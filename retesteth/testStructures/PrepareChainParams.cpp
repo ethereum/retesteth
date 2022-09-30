@@ -22,7 +22,8 @@ string calculateGenesisBaseFee(VALUE const& _currentBaseFee, ParamsContext _cont
 
 spDataObject prepareGenesisSubsection(StateTestEnvBase const& _env, ParamsContext _context, FORK const& _net)
 {
-    auto const& additional = Options::getCurrentConfig().cfgFile().additionalForks();
+    auto const& cfg = Options::getCurrentConfig();
+    auto const& additional = cfg.cfgFile().additionalForks();
     bool netIsAdditional = inArray(additional, _net);
 
     // Build up RPC setChainParams genesis section
@@ -35,16 +36,30 @@ spDataObject prepareGenesisSubsection(StateTestEnvBase const& _env, ParamsContex
     (*genesis)["mixHash"] = _env.currentMixHash().asString();
     (*genesis)["difficulty"] = _env.currentDifficulty().asString();
 
+    FORK net = _net;
+    if (netIsAdditional)
+    {
+        // Treat additional fork name `fork+` as `fork` for env section convertion
+        for (auto const& fork : cfg.cfgFile().forks())
+        {
+            string const alteredFname = fork.asString() + "+";
+            if (net.asString().find(alteredFname) != string::npos)
+            {
+                net = fork;
+                netIsAdditional = false;
+                break;
+            }
+        }
+    }
+
     if (!netIsAdditional)
     {
-        auto const& cfg = Options::getCurrentConfig();
-
         bool knowLondon = cfg.checkForkInProgression("London");
-        if (knowLondon && compareFork(_net, CMP::ge, FORK("London")))
+        if (knowLondon && compareFork(net, CMP::ge, FORK("London")))
             (*genesis)["baseFeePerGas"] = calculateGenesisBaseFee(_env.currentBaseFee(), _context);
 
         bool knowMerge = cfg.checkForkInProgression("Merge");
-        if (knowMerge && compareFork(_net, CMP::ge, FORK("Merge")))
+        if (knowMerge && compareFork(net, CMP::ge, FORK("Merge")))
         {
             (*genesis).removeKey("difficulty");
             (*genesis)["currentRandom"] = _env.currentRandom().asString();
