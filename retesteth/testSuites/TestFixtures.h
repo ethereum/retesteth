@@ -16,11 +16,13 @@ static std::vector<std::string> const c_timeConsumingTestSuites{
     std::string{"bcExploitTest"},
     std::string{"bcExpectSection"},
     std::string{"bcWalletTest"},
-    std::string{"stQuadraticComplexityTest"},
-    std::string{"vmPerformance"}
+    std::string{"stQuadraticComplexityTest"}
 };
 
-static std::vector<std::string> const c_cpuIntenseTests{std::string{"CALLBlake2f_MaxRoundsFiller"}};
+static std::vector<std::string> const c_cpuIntenseTests{
+    std::string{"CALLBlake2f_MaxRoundsFiller"},
+    std::string{"loopMulFiller"}
+};
 
 class TestChecker
 {

@@ -10,6 +10,7 @@ enum DC
     DEFAULT,
     SOCKET,
     STATS,
+    STATS2,
     STATE,
     WARNING,
     TESTLOG,

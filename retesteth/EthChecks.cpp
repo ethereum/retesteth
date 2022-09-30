@@ -59,10 +59,12 @@ void Debug::initializeDefaultChannels()
         m_channels[DC::WARNING] = true;
     }
     if (verb >= 2)
-        m_channels[DC::SOCKET] = true;
+        m_channels[DC::STATS2] = true;
     if (verb >= 3)
         m_channels[DC::TESTLOG] = true;
     if (verb >= 4)
+        m_channels[DC::SOCKET] = true;
+    if (verb >= 5)
         m_channels[DC::STATE] = true;
     if (verb >= 6)
         m_channels[DC::RPC] = true;

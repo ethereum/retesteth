@@ -246,7 +246,7 @@ void TestSuite::_executeTest(string const& _testFolder, fs::path const& _fillerT
     // Construct output test file name
     string const testName = getTestNameFromFillerFilename(_fillerTestFilePath);
     size_t const threadID = std::hash<std::thread::id>()(TestOutputHelper::getThreadID());
-    ETH_DC_MESSAGE(DC::TESTLOG, "Running " + testName + ": " + "(" + test::fto_string(threadID) + ")");
+    ETH_DC_MESSAGE(DC::STATS2, "Running " + testName + ": " + "(" + test::fto_string(threadID) + ")");
     AbsoluteFilledTestPath const filledTestPath = getFullPathFilled(_testFolder).path() / fs::path(testName + ".json");
 
     bool wereFillerErrors = false;

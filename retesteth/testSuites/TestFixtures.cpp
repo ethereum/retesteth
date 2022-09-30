@@ -38,7 +38,7 @@ TestFixture<T,U>::TestFixture(std::set<TestExecution> const& _execFlags)
     boost::filesystem::path const suiteFillerPath = suite.getFullPathFiller(casename).parent_path();
 
     // skip wallet test as it takes too much time (250 blocks) run it with --all flag
-    if ((inArray(c_timeConsumingTestSuites, casename) || allFlags.count(TestExecution::RequireOptionAll))
+    if ((TestChecker::isTimeConsumingTest(casename) || allFlags.count(TestExecution::RequireOptionAll))
         && !test::Options::get().all)
     {
         ETH_STDOUT_MESSAGE("Skipping " + casename + " because --all option is not specified.");
