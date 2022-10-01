@@ -11,6 +11,7 @@ string const t8ntool_config = R"({
     "checkLogsHash" : true,
     "chainID" : 1,
     "customCompilers" : {
+        ":yul" : "yul.sh",
         ":mycompiler" : "mycompiler.sh"
     },
     "forks" : [
@@ -265,6 +266,11 @@ echo "0x600360005500"
 # just like described in this file."
 )";
 
+
+string const t8ntool_yulcompiler = R"(#!/bin/sh
+echo 0x`solc --assemble $1 2>/dev/null | grep "Binary representation:" -A 1 | tail -n1`
+)";
+
 t8ntoolcfg::t8ntoolcfg()
 {
     {
@@ -289,6 +295,13 @@ t8ntoolcfg::t8ntoolcfg()
     }
     {
         spDataObject obj;
+        (*obj)["exec"] = true;
+        (*obj)["path"] = "t8ntool/yul.sh";
+        (*obj)["content"] = t8ntool_yulcompiler;
+        map_configs.addArrayObject(obj);
+    }
+    {
+        spDataObject obj;
         (*obj)["path"] = "default/config";
         (*obj)["content"] = t8ntool_config;
         map_configs.addArrayObject(obj);
@@ -305,6 +318,13 @@ t8ntoolcfg::t8ntoolcfg()
         (*obj)["exec"] = true;
         (*obj)["path"] = "default/mycompiler.sh";
         (*obj)["content"] = t8ntool_customcompiler;
+        map_configs.addArrayObject(obj);
+    }
+    {
+        spDataObject obj;
+        (*obj)["exec"] = true;
+        (*obj)["path"] = "default/yul.sh";
+        (*obj)["content"] = t8ntool_yulcompiler;
         map_configs.addArrayObject(obj);
     }
 }

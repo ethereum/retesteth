@@ -69,7 +69,6 @@ void tryKnownCompilers(string const& _code, solContracts const& _preSolidity, st
     string const c_rawPrefix = ":raw";
     string const c_abiPrefix = ":abi";
     string const c_solidityPrefix = ":solidity";
-    string const c_yulPrefix = ":yul";
 
     bool found = false;
     if (_code.find("pragma solidity") != string::npos)
@@ -113,19 +112,6 @@ void tryKnownCompilers(string const& _code, solContracts const& _preSolidity, st
         {
             string const abiCode = _code.substr(pos + c_abiPrefix.length() + 1);
             _compiledCode = utiles::encodeAbi(abiCode);
-            utiles::checkHexHasEvenLength(_compiledCode);
-            found = true;
-        }
-    }
-    else if (_code.find(c_yulPrefix) != string::npos)
-    {
-        size_t const pos = _code.find(c_yulPrefix);
-        const char endChar = _code[pos + c_yulPrefix.length()];
-        bool bYulEndline = endChar == ' ' || endChar == '\n';
-        if (bYulEndline)
-        {
-            string const yulCode = _code.substr(pos + c_yulPrefix.length() + 1);
-            _compiledCode = compileYul(yulCode);
             utiles::checkHexHasEvenLength(_compiledCode);
             found = true;
         }
