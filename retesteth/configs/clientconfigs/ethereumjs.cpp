@@ -224,7 +224,7 @@ curl -X POST -d "${1} ${2} ${3} ${4} ${5} ${6} ${7} ${8} ${9} ${10} ${11} ${12} 
 string const ethereumjs_setup = R"(#!/bin/sh
 dir=$(pwd)
 cd $ETHEREUMJS_PATH/packages/vm
-npx ts-node tests/retesteth/transition-cluster.ts &> /dev/null &
+npx ts-node test/retesteth/transition-cluster.ts &> /dev/null &
 cd $dir
 )";
 string const ethereumjs_stop = R"(#!/bin/sh
