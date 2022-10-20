@@ -1,6 +1,6 @@
 #include "retesteth/TestOutputHelper.h"
-#include "retesteth/testSuites/StateTests.h"
 #include "retesteth/testSuites/TestFixtures.h"
+#include "retesteth/testSuites/statetests/StateTests.h"
 #include <retesteth/Options.h>
 
 using namespace std;
@@ -47,8 +47,7 @@ TestSuite::TestPath LegacyConstantinopleStateTestSuite::suiteFolder() const
 
 TestSuite::FillerPath LegacyConstantinopleStateTestSuite::suiteFillerFolder() const
 {
-    return TestSuite::FillerPath(
-        fs::path("src") / "LegacyTests" / "Constantinople" / "GeneralStateTestsFiller");
+    return TestSuite::FillerPath(fs::path("src") / "LegacyTests" / "Constantinople" / "GeneralStateTestsFiller");
 }
 
 // latest version StateTests

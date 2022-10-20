@@ -5,9 +5,9 @@
 
 //Suites
 #include <retesteth/testSuites/DifficultyTest.h>
-#include <retesteth/testSuites/blockchain/BlockchainTests.h>
-#include <retesteth/testSuites/StateTests.h>
 #include <retesteth/testSuites/TransactionTest.h>
+#include <retesteth/testSuites/blockchain/BlockchainTests.h>
+#include <retesteth/testSuites/statetests/StateTests.h>
 
 using namespace test;
 

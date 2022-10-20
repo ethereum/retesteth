@@ -25,8 +25,7 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace test
 {
-
-class StateTestSuite: public TestSuite
+class StateTestSuite : public TestSuite
 {
 public:
     StateTestSuite();
@@ -39,14 +38,15 @@ public:
 class LegacyConstantinopleStateTestSuite : public StateTestSuite
 {
 protected:
-    bool legacyTestSuiteFlag() const override { return  true; }
+    bool legacyTestSuiteFlag() const override { return true; }
+
 public:
     LegacyConstantinopleStateTestSuite() : StateTestSuite(0){};
     TestSuite::TestPath suiteFolder() const override;
     TestSuite::FillerPath suiteFillerFolder() const override;
 };
 
-class StateTestVMSuite: public StateTestSuite
+class StateTestVMSuite : public StateTestSuite
 {
 public:
     StateTestVMSuite() : StateTestSuite(0){};
@@ -54,6 +54,4 @@ public:
     TestSuite::FillerPath suiteFillerFolder() const override;
 };
 
-}
-
-
+}  // namespace test

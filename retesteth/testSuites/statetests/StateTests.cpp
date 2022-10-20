@@ -1,4 +1,4 @@
-﻿/*
+/*
     This file is part of cpp-ethereum.
 
     cpp-ethereum is free software: you can redistribute it and/or modify
@@ -21,14 +21,14 @@
  * General State Tests parser.
  */
 
-#include <libdevcore/CommonIO.h>
-#include <retesteth/ExitHandler.h>
+#include "StateTests.h"
+#include "StateTestsHelper.h"
 #include <retesteth/Options.h>
 #include <retesteth/TestOutputHelper.h>
+#include <retesteth/session/Session.h>
 #include <retesteth/testStructures/PrepareChainParams.h>
 #include <retesteth/testStructures/structures.h>
 #include <retesteth/testSuites/Common.h>
-#include <retesteth/testSuites/StateTests.h>
 #include <retesteth/testSuites/blockchain/BlockchainTests.h>
 
 using namespace std;
@@ -37,53 +37,11 @@ using namespace test;
 using namespace test::debug;
 using namespace test::teststruct;
 using namespace test::session;
+using namespace test::statetests;
 namespace fs = boost::filesystem;
-string const c_trHashNotFound = "TR hash not found in mined block! (Check that tr is properly mined and not oog)";
 
 namespace
 {
-
-bool OptionsAllowTransaction(test::teststruct::TransactionInGeneralSection const& _tr)
-{
-    Options const& opt = Options::get();
-    if ((opt.trData.index == (int)_tr.dataInd() || opt.trData.index == -1) &&
-        (opt.trGasIndex == (int)_tr.gasInd() || opt.trGasIndex == -1) &&
-        (opt.trValueIndex == (int)_tr.valueInd() || opt.trValueIndex == -1) &&
-        (opt.trData.label == _tr.transaction()->dataLabel() || opt.trData.label.empty()))
-        return true;
-    return false;
-}
-
-void checkUnexecutedTransactions(std::vector<TransactionInGeneralSection> const& _txs)
-{
-    bool atLeastOneExecuted = false;
-    bool atLeastOneWithoutExpectSection = false;
-    for (auto const& tr : _txs)
-    {
-        if (ExitHandler::receivedExitSignal())
-            return;
-        if (tr.getExecuted())
-            atLeastOneExecuted = true;
-        bool transactionExecutedOrSkipped = tr.getExecuted() || tr.getSkipped();
-        atLeastOneWithoutExpectSection = !transactionExecutedOrSkipped || atLeastOneWithoutExpectSection;
-        if (!transactionExecutedOrSkipped || atLeastOneWithoutExpectSection)
-        {
-            TestInfo errorInfo("all", (int)tr.dataInd(), (int)tr.gasInd(), (int)tr.valueInd());
-            TestOutputHelper::get().setCurrentTestInfo(errorInfo);
-            ETH_MARK_ERROR("Test has transaction uncovered with expect section!");
-        }
-    }
-    if (!atLeastOneExecuted)
-    {
-        Options const& opt = Options::get();
-        TestInfo errorInfo(
-            opt.singleTestNet.empty() ? "N/A" : opt.singleTestNet.c_str(), opt.trData.index, opt.trGasIndex, opt.trValueIndex);
-        TestOutputHelper::get().setCurrentTestInfo(errorInfo);
-    }
-    ETH_ERROR_REQUIRE_MESSAGE(atLeastOneExecuted, "Specified filter did not run a single transaction! ");
-}
-
-
 /// Generate a blockchain test from state test filler
 spDataObject FillTestAsBlockchain(StateTestInFiller const& _test)
 {
@@ -118,6 +76,7 @@ spDataObject FillTestAsBlockchain(StateTestInFiller const& _test)
                     session.test_setChainParams(
                         prepareChainParams(fork, SealEngine::NoProof, _test.Pre(), _test.Env(), ParamsContext::StateTests));
                     session.test_modifyTimestamp(_test.Env().firstBlockTimestamp());
+                    modifyTransactionChainIDByNetwork(tr.transaction(), fork);
                     FH32 trHash(session.eth_sendRawTransaction(tr.transaction()->getRawBytes(), tr.transaction()->getSecret()));
 
                     // Mine a block, execute transaction
@@ -155,7 +114,7 @@ spDataObject FillTestAsBlockchain(StateTestInFiller const& _test)
                         compareStates(mexpect, postState);
                         (*aBlockchainTest).atKeyPointer("postState") = postState.asDataObject();
                     }
-                    catch(StateTooBig const&)
+                    catch (StateTooBig const&)
                     {
                         compareStates(mexpect, session);
                         (*aBlockchainTest)["postStateHash"] = remoteBlock.header()->stateRoot().asString();
@@ -193,7 +152,8 @@ spDataObject FillTestAsBlockchain(StateTestInFiller const& _test)
                     dataPostfix += "_" + fork.asString();
 
                     if (filledTest->count(_test.testName() + dataPostfix))
-                        ETH_ERROR_MESSAGE("The test filler contain redundunt expect section: " + _test.testName() + dataPostfix);
+                        ETH_ERROR_MESSAGE("The test filler contain redundant expect section: " + _test.testName() +
+                                          dataPostfix + " (" + tr.transaction()->dataLabel() + ")");
 
                     verifyFilledTest(_test.unitTestVerifyBC(), aBlockchainTest, fork);
                     (*filledTest).atKeyPointer(_test.testName() + dataPostfix) = aBlockchainTest;
@@ -268,7 +228,8 @@ spDataObject FillTest(StateTestInFiller const& _test)
                 {
                     TestInfo errorInfo(fork.asString(), tr.dataInd(), tr.gasInd(), tr.valueInd());
                     if (!tr.transaction()->dataLabel().empty() || !tr.transaction()->dataRawPreview().empty())
-                        errorInfo.setTrDataDebug(tr.transaction()->dataLabel() + " " + tr.transaction()->dataRawPreview() + "..");
+                        errorInfo.setTrDataDebug(
+                            tr.transaction()->dataLabel() + " " + tr.transaction()->dataRawPreview() + "..");
 
                     TestOutputHelper::get().setCurrentTestInfo(errorInfo);
 
@@ -288,6 +249,8 @@ spDataObject FillTest(StateTestInFiller const& _test)
 
                     expectFoundTransaction = true;
                     session.test_modifyTimestamp(_test.Env().firstBlockTimestamp());
+
+                    modifyTransactionChainIDByNetwork(tr.transaction(), fork);
                     FH32 trHash(session.eth_sendRawTransaction(tr.transaction()->getRawBytes(), tr.transaction()->getSecret()));
 
                     MineBlocksResult const mRes = session.test_mineBlocks(1);
@@ -306,8 +269,8 @@ spDataObject FillTest(StateTestInFiller const& _test)
 
                     if (Options::get().vmtrace)
                     {
-                        string const testNameOut = _test.testName() + "_d" + tr.dataIndS() + "g" + tr.gasIndS() + "v" + tr.valueIndS()
-                                                 + "_" + fork.asString() + "_" + trHash.asString() + ".txt";
+                        string const testNameOut = _test.testName() + "_d" + tr.dataIndS() + "g" + tr.gasIndS() + "v" +
+                                                   tr.valueIndS() + "_" + fork.asString() + "_" + trHash.asString() + ".txt";
                         VMtraceinfo info(session, trHash, blockInfo.header()->stateRoot(), testNameOut);
                         printVmTrace(info);
                     }
@@ -320,7 +283,7 @@ spDataObject FillTest(StateTestInFiller const& _test)
                         if (Options::get().poststate)
                             (*transactionResults).atKeyPointer("postState") = remState.asDataObject();
                     }
-                    catch(StateTooBig const&)
+                    catch (StateTooBig const&)
                     {
                         compareStates(expect.result(), session);
                     }
@@ -365,162 +328,7 @@ spDataObject FillTest(StateTestInFiller const& _test)
     return filledTest;
 }
 
-/// Read and execute the test file
-void RunTest(StateTestInFilled const& _test)
-{
-    if (ExitHandler::receivedExitSignal())
-        return;
-
-    TestOutputHelper::get().setCurrentTestName(_test.testName());
-    SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
-
-    // Gather Transactions from general transaction section
-    std::vector<TransactionInGeneralSection> txs = _test.GeneralTr().buildTransactions();
-
-    // Recover transaction labels from filled test _info section
-    for (auto const& _infoLabels : _test.testInfo().labels())
-    {
-        // find a transaction with such index
-        // might make sense having el.dataIndString()
-        auto res = std::find_if(txs.begin(), txs.end(),
-            [&_infoLabels](TransactionInGeneralSection const& el) { return el.dataIndS() == _infoLabels.first; });
-        if (res != txs.end())
-            (*res).assignTransactionLabel(":label " + _infoLabels.second);
-        else
-            ETH_WARNING("Test `_info` section has a label with tr.index that was not found!");
-    }
-
-
-    bool forkNotAllowed = false;
-
-    for (auto const& post : _test.Post())
-    {
-        bool networkSkip = false;
-        FORK const& network = post.first;
-        Options const& opt = Options::get();
-
-        // If options singlenet select different network or test has network that is not allowed by clinet configs
-        if (!opt.singleTestNet.empty() && FORK(opt.singleTestNet) != network)
-            networkSkip = true;
-        else if (!Options::getDynamicOptions().getCurrentConfig().checkForkAllowed(network))
-        {
-            networkSkip = true;
-            forkNotAllowed = true;
-            ETH_WARNING("Skipping unsupported fork: " + network.asString() + " in " + _test.testName());
-        }
-        else
-        {
-            auto p = prepareChainParams(network, SealEngine::NoReward, _test.Pre(), _test.Env(), ParamsContext::StateTests);
-            session.test_setChainParams(p);
-        }
-
-        // One test could have many transactions on same chainParams
-        // It is expected that for a setted chainParams there going to be a transaction
-        // Rather then all transactions would be filtered out and not executed at all
-
-        // read all results for a specific fork
-        for (StateTestPostResult const& result : post.second)
-        {
-            bool resultHaveCorrespondingTransaction = false;
-            // look for a transaction with this indexes and execute it on a client
-            for (TransactionInGeneralSection& tr : txs)
-            {
-                if (ExitHandler::receivedExitSignal())
-                    return;
-
-                TestInfo errorInfo(network.asString(), tr.dataInd(), tr.gasInd(), tr.valueInd());
-                errorInfo.setTrDataDebug(tr.transaction()->dataLabel() + " " + tr.transaction()->dataRawPreview() + "..");
-
-                TestOutputHelper::get().setCurrentTestInfo(errorInfo);
-                bool checkIndexes = result.checkIndexes(tr.dataInd(), tr.gasInd(), tr.valueInd());
-                if (checkIndexes)
-                    resultHaveCorrespondingTransaction = true;
-
-                if (!OptionsAllowTransaction(tr) || networkSkip)
-                {
-                    tr.markSkipped();
-                    continue;
-                }
-
-                if (checkIndexes)
-                {
-                    session.test_modifyTimestamp(_test.Env().firstBlockTimestamp());
-                    FH32 trHash(session.eth_sendRawTransaction(tr.transaction()->getRawBytes(), tr.transaction()->getSecret()));
-
-                    MineBlocksResult const mRes = session.test_mineBlocks(1);
-                    string const& testException = result.expectException();
-                    compareTransactionException(tr.transaction(), mRes, testException);
-
-                    VALUE latestBlockN(session.eth_blockNumber());
-                    EthGetBlockBy blockInfo(session.eth_getBlockByNumber(latestBlockN, Request::LESSOBJECTS));
-                    if (!blockInfo.hasTransaction(trHash) && testException.empty())
-                        ETH_ERROR_MESSAGE("StateTest::RunTest: " + c_trHashNotFound);
-                    tr.markExecuted();
-
-                    // Validate post state
-                    FH32 const& expectedPostHash = result.hash();
-                    if (Options::get().vmtrace && !Options::get().filltests)
-                    {
-                        string const testNameOut = _test.testName() + "_d" + tr.dataIndS() + "g" + tr.gasIndS() + "v" + tr.valueIndS()
-                                                   + "_" + network.asString() + "_" + trHash.asString() + ".txt";
-                        VMtraceinfo info(session, trHash, blockInfo.header()->stateRoot(), testNameOut);
-                        printVmTrace(info);
-                    }
-
-                    FH32 const& actualHash = blockInfo.header()->stateRoot();
-                    if (actualHash != expectedPostHash)
-                    {
-                        ETH_DC_MESSAGE(DC::TESTLOG, "\nState Dump: \n" + getRemoteState(session).asDataObject()->asJson());
-                        ETH_ERROR_MESSAGE("Post hash mismatch remote: " + actualHash.asString() +
-                                          ", expected: " + expectedPostHash.asString());
-                    }
-                    if (Options::get().poststate)
-                    {
-                        auto const remStateJson = getRemoteState(session).asDataObject()->asJson();
-                        ETH_DC_MESSAGE(
-                            DC::STATE, "\nRunning test State Dump:" + TestOutputHelper::get().testInfo().errorDebug() +
-                                           cDefault + " \n" + remStateJson);
-                        if (!Options::get().poststate.outpath.empty())
-                        {
-                            string testNameOut = _test.testName() + "_d" + tr.dataIndS() + "g" + tr.gasIndS() + "v" + tr.valueIndS();
-                            testNameOut += "_" + network.asString() + ".txt";
-                            dev::writeFile(fs::path(Options::get().poststate.outpath) / testNameOut, dev::asBytes(remStateJson));
-                        }
-                    }
-
-                    // Validate that txbytes field has the transaction data described in test `transaction` field.
-                    spBYTES const& expectedBytesPtr = result.bytesPtr();
-                    if (!expectedBytesPtr.isEmpty())
-                    {
-                        if (tr.transaction()->getRawBytes().asString() != expectedBytesPtr->asString())
-                            ETH_ERROR_MESSAGE("TxBytes mismatch: test transaction section doest not match txbytes in post section!");
-                    }
-
-                    // Validate log hash
-                    if (Options::getDynamicOptions().getCurrentConfig().cfgFile().checkLogsHash())
-                    {
-                        FH32 const& expectedLogHash = result.logs();
-                        FH32 remoteLogHash(session.test_getLogHash(trHash));
-                        if (remoteLogHash != expectedLogHash)
-                            ETH_ERROR_MESSAGE("Logs hash mismatch: '" + remoteLogHash.asString() + "', expected: '" +
-                                              expectedLogHash.asString() + "'");
-                    }
-
-                    session.test_rewindToBlock(0);
-                    ETH_DC_MESSAGE(DC::TESTLOG, "Executed: d: " + to_string(tr.dataInd()) + ", g: " + to_string(tr.gasInd()) +
-                                                    ", v: " + to_string(tr.valueInd()) + ", fork: " + network.asString());
-                }
-            } //ForTransactions
-
-            ETH_ERROR_REQUIRE_MESSAGE(resultHaveCorrespondingTransaction,
-                "Test `post` section has expect section without corresponding transaction!" + result.asDataObject()->asJson());
-        }
-    }
-
-    if (!forkNotAllowed)
-        checkUnexecutedTransactions(txs);
-}
-}  // namespace closed
+}  // namespace
 
 
 namespace test
@@ -568,4 +376,4 @@ spDataObject StateTestSuite::doTests(spDataObject& _input, TestSuiteOptions& _op
     }
     return spDataObject();
 }
-}// Namespace Close
+}  // namespace test

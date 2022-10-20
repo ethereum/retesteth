@@ -1,15 +1,15 @@
 #define BOOST_TEST_MODULE EthereumTests
 #define BOOST_TEST_NO_MAIN
 #include <AllTestNames.h>
+#include <retesteth/EthChecks.h>
 #include <retesteth/ExitHandler.h>
 #include <retesteth/Options.h>
-#include <retesteth/testSuites/StateTests.h>
-#include <retesteth/testSuites/blockchain/BlockchainTests.h>
-#include <retesteth/testSuites/TransactionTest.h>
-#include <retesteth/testSuites/DifficultyTest.h>
-#include <retesteth/EthChecks.h>
 #include <retesteth/TestHelper.h>
 #include <retesteth/TestOutputHelper.h>
+#include <retesteth/testSuites/DifficultyTest.h>
+#include <retesteth/testSuites/TransactionTest.h>
+#include <retesteth/testSuites/blockchain/BlockchainTests.h>
+#include <retesteth/testSuites/statetests/StateTests.h>
 #include <boost/test/included/unit_test.hpp>
 
 using namespace std;
