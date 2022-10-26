@@ -62,10 +62,33 @@ ToolChain::ToolChain(
     m_blocks.push_back(genesisFixed);
 }
 
+spSetChainParamsArgs genT9NChainParams(FORK const& _net)
+{
+    spDataObject difficultyParams;
+    // Dummy chain params, not used in t9n but we need to setup chainID
+    (*difficultyParams).atKeyPointer("accounts") = spDataObject(new DataObject(DataType::Object));
+    (*difficultyParams)["genesis"]["author"] = "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba";
+    (*difficultyParams)["genesis"]["difficulty"] = "0x00";
+    (*difficultyParams)["genesis"]["gasLimit"] = "0xff112233445566";
+    (*difficultyParams)["genesis"]["baseFeePerGas"] = "0x0b";
+    (*difficultyParams)["genesis"]["extraData"] = "0x00";
+    (*difficultyParams)["genesis"]["timestamp"] = "0x00";
+    (*difficultyParams)["genesis"]["nonce"] = "0x0000000000000000";
+    (*difficultyParams)["genesis"]["mixHash"] = "0x0000000000000000000000000000000000000000000000000000000000020000";
+    (*difficultyParams)["sealEngine"] = "NoProof";
+
+    auto const& forkChainIDmap = Options::getCurrentConfig().getGenesisTemplateChainID();
+    if (forkChainIDmap.count(_net))
+        (*difficultyParams)["params"]["chainID"] = forkChainIDmap.at(_net)->asString();
+    else
+        (*difficultyParams)["params"]["chainID"] = VALUE(Options::getCurrentConfig().cfgFile().defaultChainID()).asString();
+    return spSetChainParamsArgs(new SetChainParamsArgs(difficultyParams));
+}
+
 ToolChain::ToolChain(
     EthereumBlockState const& _parentBlock, EthereumBlockState const& _currentBlock,
     FORK const& _fork, fs::path const& _toolPath, fs::path const& _tmpDir)
-  : m_initialParams(0),
+   :m_initialParams(genT9NChainParams(_fork)),
     m_engine(SealEngine::NoProof),
     m_fork(new FORK(_fork.asString())),
     m_toolPath(_toolPath),

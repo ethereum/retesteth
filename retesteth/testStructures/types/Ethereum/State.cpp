@@ -27,8 +27,8 @@ State::State(spDataObjectMove _data)
             FH20 key(el->getKey());
             m_accounts[key] = spAccountBase(new Account(el));
         }
-        if (m_accounts.size() == 0)
-            ETH_ERROR_MESSAGE("State must have at least one record!");
+        if (m_raw->type() != DataType::Object)
+            ETH_ERROR_MESSAGE("State must be initialized from json type `Object`!");
     }
     catch (std::exception const& _ex)
     {
