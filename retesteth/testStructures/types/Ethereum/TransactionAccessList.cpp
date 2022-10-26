@@ -12,8 +12,7 @@ using namespace dev;
 
 namespace test::teststruct
 {
-TransactionAccessList::TransactionAccessList(DataObject const& _data)
-  : TransactionLegacy()
+TransactionAccessList::TransactionAccessList(DataObject const& _data) : TransactionLegacy()
 {
     fromDataObject(_data);
 }

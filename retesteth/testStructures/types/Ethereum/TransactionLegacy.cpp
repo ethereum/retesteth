@@ -13,7 +13,7 @@ using namespace dev;
 
 namespace test::teststruct
 {
-TransactionLegacy::TransactionLegacy(spDataObjectMove _data)
+TransactionLegacy::TransactionLegacy(spDataObjectMove _data) : Transaction()
 {
     m_rawData = _data.getPointer();
     fromDataObject(m_rawData.getCContent());
@@ -129,12 +129,12 @@ void TransactionLegacy::fromRLP(dev::RLP const& _rlp)
     rebuildRLP();
 }
 
-TransactionLegacy::TransactionLegacy(dev::RLP const& _rlp)
+TransactionLegacy::TransactionLegacy(dev::RLP const& _rlp) : Transaction()
 {
     fromRLP(_rlp);
 }
 
-TransactionLegacy::TransactionLegacy(BYTES const& _rlp)
+TransactionLegacy::TransactionLegacy(BYTES const& _rlp) : Transaction()
 {
     dev::bytes decodeRLP = sfromHex(_rlp.asString());
     dev::RLP rlp(decodeRLP, dev::RLP::VeryStrict);
@@ -222,7 +222,6 @@ const spDataObject TransactionLegacy::asDataObject(ExportOrder _order) const
         (*out)["v"] = m_v->asString();
         (*out)["r"] = m_r->asString();
         (*out)["s"] = m_s->asString();
-        (*out)["chainId"] = m_chainID->asString();
         m_rawData = out;
     }
 
@@ -236,9 +235,6 @@ const spDataObject TransactionLegacy::asDataObject(ExportOrder _order) const
         (*m_rawDataTool).renameKey("data", "input");
         if (!m_secretKey.isEmpty() && m_secretKey.getCContent() != 0)
             (*m_rawDataTool)["secretKey"] = m_secretKey->asString();
-        DataObject chainIDs(m_chainID->asString());
-        chainIDs.performModifier(mod_removeLeadingZerosFromHexValues);
-        (*m_rawDataTool)["chainId"] = chainIDs.asString();
     }
 
     return (_order == ExportOrder::ToolStyle) ? m_rawDataTool : m_rawData;

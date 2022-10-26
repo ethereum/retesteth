@@ -19,6 +19,7 @@ void requireJsonFileStructure(DataObject const& _data)
             {"customCompilers", {{DataType::Object}, jsonField::Optional}},
             {"initializeTime", {{DataType::String}, jsonField::Optional}},
             {"checkLogsHash", {{DataType::Bool}, jsonField::Optional}},
+            {"defaultChainID", {{DataType::Integer}, jsonField::Optional}},
             {"forks", {{DataType::Array}, jsonField::Required}},
             {"additionalForks", {{DataType::Array}, jsonField::Required}},
             {"exceptions", {{DataType::Object}, jsonField::Required}},
@@ -122,6 +123,10 @@ void ClientConfigFile::initWithData(DataObject const& _data)
     m_initializeTime = 0;
     if (_data.count("initializeTime"))
         m_initializeTime = atoi(_data.atKey("initializeTime").asString().c_str());
+
+    m_defaultChainID = 1;
+    if (_data.count("defaultChainID"))
+        m_defaultChainID = _data.atKey("defaultChainID").asInt();
 
     m_checkLogsHash = false;
     if (_data.count("checkLogsHash"))

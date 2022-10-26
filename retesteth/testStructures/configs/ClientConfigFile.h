@@ -26,6 +26,7 @@ struct ClientConfigFile : GCP_SPointerBase
     std::vector<IPADDRESS> const& socketAdresses() const;
     std::map<std::string, fs::path> const& customCompilers() const { return m_customCompilers; }
     size_t initializeTime() const { return  m_initializeTime; }
+    int defaultChainID() const { return m_defaultChainID; }
     std::vector<FORK> const& forks() const { return m_forks; }
     std::vector<FORK> const& additionalForks() const { return m_additionalForks; }
     std::set<FORK> allowedForks() const;
@@ -48,6 +49,7 @@ private:
     std::string m_name;                      ///< Client name
     ClientConfgSocketType m_socketType;      ///< Connection type
     std::vector<IPADDRESS> m_socketAddress;  ///< List of IP to connect to (IP::PORT)
+    int m_defaultChainID = 1;                ///< Transactions to initialize with this chainID by default
 
     std::map<std::string, fs::path> m_customCompilers;
     bool m_checkLogsHash;                    ///< Enable logsHash verification

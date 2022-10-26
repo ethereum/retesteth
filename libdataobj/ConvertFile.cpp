@@ -149,6 +149,7 @@ void JsonReader::processLine(string const& _line)
         //    _input.substr(0, 50);
     }
     std::cerr << _line << std::endl;
+    (void)m_stopper;
     // for (size_t i = 0; i < _line.length(); i++)
 }
 

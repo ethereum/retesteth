@@ -65,6 +65,7 @@ public:
 
     // Get Contents of genesis template for specified FORK
     spDataObject const& getGenesisTemplate(FORK const& _fork) const;
+    std::map<FORK, spVALUE> const getGenesisTemplateChainID() const { return m_genesisTemplateChainID; }
 
     // Get reward information info for each fork
     std::map<FORK, spVALUE> const& getRewardMap() const { return m_correctReward; }
@@ -86,6 +87,9 @@ private:
     GCP_SPointer<ClientConfigFile> m_clientConfigFile;  ///< <clientname>/config file
     std::map<FORK, spVALUE> m_correctReward;            ///< Correct mining reward info for StateTests->BlockchainTests
     std::map<FORK, spDataObject> m_genesisTemplate;     ///< Template For test_setChainParams
+    std::map<FORK, spVALUE> m_genesisTemplateChainID;   ///< ChainID value from template read
+
+
     fs::path m_correctMiningRewardPath;                 ///< Path to correct mining reward info file
 
     bool m_initialized = false;    ///< If setup script has run

@@ -67,6 +67,11 @@ ClientConfig::ClientConfig(fs::path const& _clientConfigPath) : m_id(ClientConfi
                 if (fs::exists(default_configGenesisTemplatePath))
                 {
                     m_genesisTemplate[net] = test::readJsonData(default_configGenesisTemplatePath);
+
+                    auto const& genesisData = m_genesisTemplate[net];
+                    if (genesisData->count("params") && genesisData->atKey("params").count("chainID"))
+                        m_genesisTemplateChainID[net] = spVALUE(new VALUE(genesisData->atKey("params").atKey("chainID")));
+
                     continue;
                 }
                 else
@@ -77,7 +82,13 @@ ClientConfig::ClientConfig(fs::path const& _clientConfigPath) : m_id(ClientConfi
                     _clientConfigPath.stem().string() + "' not found ('" +
                     configGenesisTemplatePath.c_str() + "') in configs!");
             m_genesisTemplate[net] = test::readJsonData(configGenesisTemplatePath);
+
+            auto const& genesisData = m_genesisTemplate[net];
+            if (genesisData->count("params") && genesisData->atKey("params").count("chainID"))
+                m_genesisTemplateChainID[net] = spVALUE(new VALUE(genesisData->atKey("params").atKey("chainID")));
         }
+
+
 
         // Load correctmining Reward
         m_correctMiningRewardPath = genesisTemplatePath / "correctMiningReward.json";

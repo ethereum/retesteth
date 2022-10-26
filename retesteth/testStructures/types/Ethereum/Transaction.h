@@ -46,13 +46,7 @@ struct Transaction : GCP_SPointerBase
     /// Debug transaction data for t8ntool wrapper
     void setSecret(VALUE const& _secret) { m_secretKey = spVALUE(_secret.copy()); }
     VALUE const& getSecret() const { return m_secretKey; }
-    void setChainID(VALUE const& _chainID) {
-        if (m_secretKey.getCContent() != 0)
-        {
-            m_chainID = spVALUE(_chainID.copy());
-            buildVRS();
-        }
-    }
+    void setChainID(VALUE const& _chainID);
     VALUE const& getChainID() const { return m_chainID; }
 
 protected:
@@ -64,7 +58,7 @@ protected:
     virtual void rebuildRLP() = 0;
 
 protected:
-    Transaction() {}
+    Transaction();
     spBYTES m_data;
     spVALUE m_gasLimit;
     spVALUE m_nonce;
@@ -77,7 +71,7 @@ protected:
     spVALUE m_s;
 
     // Variable
-    mutable spVALUE m_chainID = spVALUE(new VALUE(1));
+    mutable spVALUE m_chainID;
 
     // Debug
     std::string m_dataRawPreview;  // Attached data raw preview before code compilation

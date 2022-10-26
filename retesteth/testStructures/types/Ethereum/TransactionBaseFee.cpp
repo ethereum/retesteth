@@ -13,8 +13,7 @@ using namespace dev;
 
 namespace test::teststruct
 {
-TransactionBaseFee::TransactionBaseFee(DataObject const& _data)
-  : Transaction()
+TransactionBaseFee::TransactionBaseFee(DataObject const& _data) : Transaction()
 {
     fromDataObject(_data);
 }
@@ -96,12 +95,12 @@ void TransactionBaseFee::fromDataObject(DataObject const& _data)
     }
 }
 
-TransactionBaseFee::TransactionBaseFee(dev::RLP const& _rlp)
+TransactionBaseFee::TransactionBaseFee(dev::RLP const& _rlp) : Transaction()
 {
     fromRLP(_rlp);
 }
 
-TransactionBaseFee::TransactionBaseFee(BYTES const& _rlp)
+TransactionBaseFee::TransactionBaseFee(BYTES const& _rlp) : Transaction()
 {
     dev::bytes decodeRLP = sfromHex(_rlp.asString());
     dev::RLP rlp(decodeRLP, dev::RLP::VeryStrict);
