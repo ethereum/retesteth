@@ -1,8 +1,12 @@
-#include <iostream>
-#include "DataObject.h"
 #include "ConvertFile.h"
+#include "DataObject.h"
 #include "Exception.h"
+#include <algorithm>
+#include <fstream>
+#include <iostream>
+
 using namespace std;
+using namespace dataobject::jsonreader;
 // Manually construct dataobject from file string content
 // bacuse Json::Reader::parse has a memory leak
 
@@ -134,9 +138,41 @@ bool checkExcessiveComa(string const& _input, size_t _i)
     return false;
 }
 
+void JsonReader::processLine(string const& _line)
+{
+    if (_line.empty())
+        return;
+    if (!m_seenBegining)
+    {
+        // if (_line.find("{") == string::npos)
+        //    throw DataObjectException() << "ConvertJsoncppStringToData can't read json structure in file: `" +
+        //    _input.substr(0, 50);
+    }
+    std::cerr << _line << std::endl;
+    // for (size_t i = 0; i < _line.length(); i++)
+}
+
+spDataObject ConvertJsoncppFileToData(string const& _file, string const& _stopper, bool _autosort)
+{
+    std::ifstream file(_file);
+    if (file.is_open())
+    {
+        string line;
+        JsonReader reader(_stopper, _autosort);
+        while (std::getline(file, line))
+        {
+            line.erase(std::remove(line.begin(), line.end(), ' '), line.end());
+            reader.processLine(line);
+        }
+        file.close();
+        return reader.getResult();
+    }
+    else
+        throw DataObjectException() << "ConvertJsoncppFileToData can't open file: `" + _file;
+}
+
 /// Convert Json object represented as string to DataObject
-spDataObject ConvertJsoncppStringToData(
-    std::string const& _input, string const& _stopper, bool _autosort)
+spDataObject ConvertJsoncppStringToData(string const& _input, string const& _stopper, bool _autosort)
 {
     if (_input.size() < 2 || _input.find("{") == string::npos || _input.find("}") == string::npos)
         throw DataObjectException() << "ConvertJsoncppStringToData can't read json structure in file: `" + _input.substr(0, 50);
@@ -159,7 +195,6 @@ spDataObject ConvertJsoncppStringToData(
 
     for (size_t i = 0; i < _input.length(); i++)
     {
-        // std::cerr << root.asJson() << std::endl;
         bool isSeenCommaBefore = checkExcessiveComa(_input, i);
         i = stripSpaces(_input, i);
         if (i == _input.length())
