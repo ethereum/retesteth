@@ -148,6 +148,34 @@ defaults:
     - *test-retesteth
 #    - *upload-coverage-data
 
+  mac-steps: &mac-steps
+      - checkout
+      - run:
+          name: "Install macOS dependencies"
+          # Python3 and requests are needed for Hunter upload.
+          command: |
+            HOMEBREW_NO_AUTO_UPDATE=1 brew install -q cmake ninja git
+            git clone --depth 1 https://github.com/ethereum/go-ethereum.git
+            git clone --depth 1 https://github.com/ethereum/tests.git
+
+            curl -L https://go.dev/dl/go1.19.1.darwin-amd64.pkg -o go1.19.pkg
+            chmod +x go1.19.pkg
+            sudo installer -pkg go1.19.pkg -target /
+            sudo ln -s /usr/local/go/bin/go /usr/local/bin
+
+            cd go-ethereum
+            make all
+            ln -s ~/project/go-ethereum/build/bin/evm /usr/local/bin/evm
+
+      - *environment-info
+      - *configureMac
+#      - *install-solidity-mac
+      - *build
+      - *store-retesteth
+      - *test
+      - *test-retesteth
+#      - *upload-coverage-data
+
 
 version: 2
 jobs:
@@ -181,6 +209,17 @@ jobs:
       - image: ethereum/cpp-build-env:18-gcc-9
     steps: *linux-steps
 
+  macOS-XCode14:
+    environment:
+      - BUILD_TYPE: Release
+      - CXX: clang++
+      - GENERATOR: Ninja
+      - BUILD_PARALLEL_JOBS: 4
+      - TEST_PARALLEL_JOBS: 4
+    macos:
+      xcode: "14.0.1"
+    steps: *mac-steps
+
   macOS-XCode12:
     environment:
       - BUILD_TYPE: Release
@@ -190,33 +229,7 @@ jobs:
       - TEST_PARALLEL_JOBS: 8
     macos:
       xcode: "12.5.1"
-    steps:
-      - checkout
-      - run:
-          name: "Install macOS dependencies"
-          # Python3 and requests are needed for Hunter upload.
-          command: |
-            HOMEBREW_NO_AUTO_UPDATE=1 brew install -q cmake ninja git
-            git clone --depth 1 https://github.com/ethereum/go-ethereum.git
-            git clone --depth 1 https://github.com/ethereum/tests.git
-
-            curl -L https://go.dev/dl/go1.19.1.darwin-amd64.pkg -o go1.19.pkg
-            chmod +x go1.19.pkg
-            sudo installer -pkg go1.19.pkg -target /
-            sudo ln -s /usr/local/go/bin/go /usr/local/bin
-
-            cd go-ethereum
-            make all
-            ln -s ~/project/go-ethereum/build/bin/evm /usr/local/bin/evm
-
-      - *environment-info
-      - *configureMac
-#      - *install-solidity-mac
-      - *build
-      - *store-retesteth
-      - *test
-      - *test-retesteth
-#      - *upload-coverage-data
+    steps: *mac-steps
 
 # TODO: Run GCC6 build only in develop branch.
 # TODO: Enabled nightly builds and add more configs.
@@ -226,5 +239,6 @@ workflows:
   cpp-ethereum:
     jobs:
       - macOS-XCode12
+      - macOS-XCode14
       - Linux-Clang11
       - Linux-GCC9-Debug
