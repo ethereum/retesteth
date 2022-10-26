@@ -46,12 +46,20 @@ struct Transaction : GCP_SPointerBase
     /// Debug transaction data for t8ntool wrapper
     void setSecret(VALUE const& _secret) { m_secretKey = spVALUE(_secret.copy()); }
     VALUE const& getSecret() const { return m_secretKey; }
+    void setChainID(VALUE const& _chainID) {
+        if (m_secretKey.getCContent() != 0)
+        {
+            m_chainID = spVALUE(_chainID.copy());
+            buildVRS();
+        }
+    }
+    VALUE const& getChainID() const { return m_chainID; }
 
 protected:
     // Potected transaction interface
     virtual void fromDataObject(DataObject const&) = 0;
     virtual void fromRLP(dev::RLP const&) = 0;
-    virtual void buildVRS(VALUE const& _secret) = 0;
+    virtual void buildVRS() = 0;
     virtual void streamHeader(dev::RLPStream& _stream) const = 0;
     virtual void rebuildRLP() = 0;
 
@@ -68,6 +76,9 @@ protected:
     spVALUE m_r;
     spVALUE m_s;
 
+    // Variable
+    mutable spVALUE m_chainID = spVALUE(new VALUE(1));
+
     // Debug
     std::string m_dataRawPreview;  // Attached data raw preview before code compilation
     std::string m_dataLabel;       // Attached data Label from filler
@@ -76,7 +87,7 @@ protected:
     spFH32 m_hash;
     dev::RLPStream m_outRlpStream;
     spBYTES m_rawRLPdata;  // raw transaction data without rlp header (for typed transactions)
-    spVALUE m_secretKey;   // Additional info for t8ntool transaction wrapper
+    spVALUE m_secretKey = spVALUE(new VALUE(0));   // Additional info for t8ntool transaction wrapper
     mutable spDataObject m_rawData;      // Json representation
     mutable spDataObject m_rawDataTool;  // Json representation for tool
 };

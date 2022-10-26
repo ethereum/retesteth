@@ -103,6 +103,7 @@ void RunTest(StateTestInFilled const& _test)
                 if (checkIndexes)
                 {
                     session.test_modifyTimestamp(_test.Env().firstBlockTimestamp());
+                    modifyTransactionChainIDByNetwork(tr.transaction(), network);
                     FH32 trHash(session.eth_sendRawTransaction(tr.transaction()->getRawBytes(), tr.transaction()->getSecret()));
 
                     MineBlocksResult const mRes = session.test_mineBlocks(1);
@@ -149,12 +150,13 @@ void RunTest(StateTestInFilled const& _test)
                     }
 
                     // Validate that txbytes field has the transaction data described in test `transaction` field.
-                    spBYTES const& expectedBytesPtr = result.bytesPtr();
+                    spBYTES const& expectedBytesPtr = result.txbytesPtr();
                     if (!expectedBytesPtr.isEmpty())
                     {
                         if (tr.transaction()->getRawBytes().asString() != expectedBytesPtr->asString())
                             ETH_ERROR_MESSAGE(
-                                "TxBytes mismatch: test transaction section doest not match txbytes in post section!");
+                                string("TxBytes mismatch: test transaction section does not match txbytes in post section! ") +
+                                "\n Constructed: " + expectedBytesPtr->asString() + "\n vs \n " + tr.transaction()->getRawBytes().asString());
                     }
 
                     // Validate log hash

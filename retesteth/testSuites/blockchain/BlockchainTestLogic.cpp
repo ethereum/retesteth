@@ -57,6 +57,7 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
         {
             spTransaction const& tr = std::get<0>(el);
             string const& sException = std::get<1>(el);
+            modifyTransactionChainIDByNetwork(tr, _test.network());
             session.eth_sendRawTransaction(tr->getRawBytes(), tr->getSecret());
             SpTrException info = {tr, sException};
             expectedExceptions.emplace(tr->hash(), info);

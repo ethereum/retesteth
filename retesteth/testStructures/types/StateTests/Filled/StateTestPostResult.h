@@ -21,7 +21,7 @@ struct StateTestPostResult : GCP_SPointerBase
             return emptyLogs;
         return m_log;
     }
-    spBYTES const& bytesPtr() const { return m_txbytes; }
+    spBYTES const& txbytesPtr() const { return m_txbytes; }
     spDataObject asDataObject() const;
     std::string const& expectException() const { return m_expectException; }
 

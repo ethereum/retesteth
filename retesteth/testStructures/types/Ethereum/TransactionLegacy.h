@@ -27,7 +27,7 @@ protected:
     // Potected transaction interface
     virtual void fromRLP(dev::RLP const&) override;
     virtual void fromDataObject(DataObject const&) override;
-    virtual void buildVRS(VALUE const& _secret) override;
+    virtual void buildVRS() override;
     virtual void streamHeader(dev::RLPStream& _stream) const override;
     virtual void rebuildRLP() override;
 

@@ -19,7 +19,7 @@ private:
     void fromRLP(dev::RLP const&) override;
     void fromDataObject(DataObject const&) override;
 
-    void buildVRS(VALUE const& _secret) override;
+    void buildVRS() override;
     void streamHeader(dev::RLPStream& _stream) const override;
 
     void rebuildRLP() override;

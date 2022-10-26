@@ -133,6 +133,10 @@ void BlockMining::executeTransition()
     if (m_engine != SealEngine::NoReward)
         cmd += " --state.reward " + std::get<0>(tupleRewardFork).asDecString();
 
+    auto const& params = m_chainRef.params().getCContent().params();
+    if (params.count("chainID"))
+        cmd += " --state.chainid " + VALUE(params.atKey("chainID")).asDecString();
+
     cmd += " --input.alloc " + m_allocPath.string();
     cmd += " --input.txs " + m_txsPath.string();
     cmd += " --input.env " + m_envPath.string();

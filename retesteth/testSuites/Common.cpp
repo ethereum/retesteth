@@ -186,4 +186,20 @@ void verifyFilledTestRecursive(DataObject const& _want, DataObject const& _have,
     }
 }
 
+void modifyTransactionChainIDByNetwork(test::Transaction const& _tr, FORK const& _fork)
+{
+    auto const& genesisData = Options::getDynamicOptions().getCurrentConfig().getGenesisTemplate(_fork);
+    // TODO: Hide this into structure interface
+    if (genesisData->count("params") && genesisData->atKey("params").count("chainID"))
+    {
+        VALUE chainID(genesisData->atKey("params").atKey("chainID"));
+        if (_tr.getChainID() != chainID)
+        {
+            // This is gona be very cpu heavy because we need to recalculate the signature
+            auto& tr = const_cast<test::Transaction&>(_tr);
+            tr.setChainID(chainID);
+        }
+    }
+}
+
 }  // namespace

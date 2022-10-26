@@ -51,7 +51,10 @@ void TestBlockchain::generateBlock(
     // Import known transactions to remote client
     ETH_DC_MESSAGEC(DC::TESTLOG, "Import transactions: " + m_sDebugString, LogColor::YELLOW);
     for (auto const& tr : _block.transactions())
+    {
+        modifyTransactionChainIDByNetwork(tr.tr(), m_network);
         m_session.eth_sendRawTransaction(tr.tr().getRawBytes(), tr.tr().getSecret());
+    }
 
     // Remote client generate block with transactions
     // And if it has uncles or blockheader overwrite we perform manual overwrite and reimport block again

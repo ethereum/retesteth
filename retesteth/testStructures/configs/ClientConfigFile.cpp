@@ -13,12 +13,14 @@ void requireJsonFileStructure(DataObject const& _data)
 {
     // Limit sections in the file
     REQUIRE_JSONFIELDS(_data, "ClientConfigFile " + _data.getKey(),
-        {{"name", {{DataType::String}, jsonField::Required}}, {"socketType", {{DataType::String}, jsonField::Required}},
+        {{"name", {{DataType::String}, jsonField::Required}},
+            {"socketType", {{DataType::String}, jsonField::Required}},
             {"socketAddress", {{DataType::String, DataType::Array}, jsonField::Required}},
             {"customCompilers", {{DataType::Object}, jsonField::Optional}},
             {"initializeTime", {{DataType::String}, jsonField::Optional}},
-            {"checkLogsHash", {{DataType::Bool}, jsonField::Optional}}, {"chainID", {{DataType::Integer}, jsonField::Optional}},
-            {"forks", {{DataType::Array}, jsonField::Required}}, {"additionalForks", {{DataType::Array}, jsonField::Required}},
+            {"checkLogsHash", {{DataType::Bool}, jsonField::Optional}},
+            {"forks", {{DataType::Array}, jsonField::Required}},
+            {"additionalForks", {{DataType::Array}, jsonField::Required}},
             {"exceptions", {{DataType::Object}, jsonField::Required}},
             {"fieldReplace", {{DataType::Object}, jsonField::Optional}}});
 }
@@ -124,10 +126,6 @@ void ClientConfigFile::initWithData(DataObject const& _data)
     m_checkLogsHash = false;
     if (_data.count("checkLogsHash"))
         m_checkLogsHash = _data.atKey("checkLogsHash").asBool();
-
-    m_chanID = 1;
-    if (_data.count("chainID"))
-        m_chanID = _data.atKey("chainID").asInt();
 
     // Read forks as fork order. Order is required for translation (`>=Frontier` -> `Frontier,
     // Homestead`) According to this order:

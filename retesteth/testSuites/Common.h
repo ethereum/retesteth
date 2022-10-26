@@ -87,4 +87,8 @@ void compareTransactionException(spTransaction const& _tr, MineBlocksResult cons
 void verifyFilledTest(DataObject const& _want, DataObject const& _have);
 void verifyFilledTest(DataObject const& _want, DataObject const& _have, FORK const& _net);
 void verifyFilledTestRecursive(DataObject const& _want, DataObject const& _have, std::string& _debug);
+
+// Configure transaction chainID by current client config
+void modifyTransactionChainIDByNetwork(test::Transaction const& _tr, FORK const& _fork);
+
 }

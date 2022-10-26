@@ -49,5 +49,4 @@ void checkUnexecutedTransactions(std::vector<TransactionInGeneralSection> const&
     ETH_ERROR_REQUIRE_MESSAGE(atLeastOneExecuted, "Specified filter did not run a single transaction! ");
 }
 
-
 }  // namespace test::statetests

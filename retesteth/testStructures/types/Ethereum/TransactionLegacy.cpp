@@ -15,7 +15,6 @@ namespace test::teststruct
 {
 TransactionLegacy::TransactionLegacy(spDataObjectMove _data)
 {
-    m_secretKey = spVALUE(new VALUE(0));
     m_rawData = _data.getPointer();
     fromDataObject(m_rawData.getCContent());
     (*m_rawData).removeKey("secretKey");
@@ -58,6 +57,9 @@ void TransactionLegacy::fromDataObject(DataObject const& _data)
         m_nonce = spVALUE(new VALUE(_data.atKey("nonce")));
         m_value = spVALUE(new VALUE(_data.atKey("value")));
 
+        if (_data.count("chainId"))
+            m_chainID = spVALUE(new VALUE(_data.atKey("chainId")));
+
         if (_data.atKey("to").type() == DataType::Null || _data.atKey("to").asString().empty())
             m_creation = true;
         else
@@ -67,7 +69,10 @@ void TransactionLegacy::fromDataObject(DataObject const& _data)
         }
 
         if (_data.count("secretKey"))
-            buildVRS(_data.atKey("secretKey"));
+        {
+            setSecret(_data.atKey("secretKey"));
+            buildVRS();
+        }
         else
         {
             m_v = spVALUE(new VALUE(_data.atKey("v")));
@@ -108,18 +113,29 @@ void TransactionLegacy::fromRLP(dev::RLP const& _rlp)
     m_v = spVALUE(new VALUE(_rlp[i++]));
     m_r = spVALUE(new VALUE(_rlp[i++]));
     m_s = spVALUE(new VALUE(_rlp[i++]));
+
+    if (m_v.getCContent() == 27 || m_v.getCContent() == 28)
+        m_chainID = spVALUE(new VALUE(1));
+    else
+    {
+        int chainID = std::floor((double)(m_v.getCContent().asBigInt() - 35) / 2);
+        if (chainID < 0)
+            ETH_WARNING("Error decoding chainID from transaction RLP: " + test::fto_string(chainID));
+        else
+            m_chainID = spVALUE(new VALUE(chainID));
+    }
+
+    m_secretKey = spVALUE(new VALUE(0));
     rebuildRLP();
 }
 
 TransactionLegacy::TransactionLegacy(dev::RLP const& _rlp)
 {
-    m_secretKey = spVALUE(new VALUE(0));
     fromRLP(_rlp);
 }
 
 TransactionLegacy::TransactionLegacy(BYTES const& _rlp)
 {
-    m_secretKey = spVALUE(new VALUE(0));
     dev::bytes decodeRLP = sfromHex(_rlp.asString());
     dev::RLP rlp(decodeRLP, dev::RLP::VeryStrict);
     fromRLP(rlp);
@@ -138,22 +154,20 @@ void TransactionLegacy::streamHeader(dev::RLPStream& _s) const
     _s << test::sfromHex(data().asString());
 }
 
-void TransactionLegacy::buildVRS(VALUE const& _secret)
+void TransactionLegacy::buildVRS()
 {
-    const int chainID = Options::getCurrentConfig().cfgFile().chainID();
-    m_secretKey = spVALUE(new VALUE(_secret));
     dev::RLPStream stream;
-    stream.appendList((chainID == 1) ? 6 : 9);
+    stream.appendList((m_chainID.getCContent() == 1) ? 6 : 9);
     streamHeader(stream);
-    if (chainID != 1)
+    if (m_chainID.getCContent() != 1)
     {
-        stream << VALUE(chainID).serializeRLP();
+        stream << m_chainID->serializeRLP();
         stream << VALUE(0).serializeRLP();
         stream << VALUE(0).serializeRLP();
     }
 
     const dev::h256 hash(dev::sha3(stream.out()));
-    const dev::Secret secret(_secret.asString());
+    const dev::Secret secret(m_secretKey->asString());
     dev::Signature sig = dev::sign(secret, hash);
     dev::SignatureStruct sigStruct = *(dev::SignatureStruct const*)&sig;
     ETH_FAIL_REQUIRE_MESSAGE(
@@ -163,12 +177,12 @@ void TransactionLegacy::buildVRS(VALUE const& _secret)
     // https://github.com/ethereum/EIPs/blob/master/EIPS/eip-155.md
 
     bigint v;
-    if (chainID == 1)
+    if (m_chainID.getCContent() == 1)
         v = bigint(dev::toCompactHexPrefixed(dev::u256(sigStruct.v + 27)));
     else
     {
         // {0,1} + CHAIN_ID * 2 + 35
-        v = bigint(dev::toCompactHexPrefixed(dev::u256(sigStruct.v + chainID * 2 + 35)));
+        v = bigint(dev::toCompactHexPrefixed(dev::u256(sigStruct.v + m_chainID->asBigInt() * 2 + 35)));
     }
 
     const bigint r (dev::toCompactHexPrefixed(dev::u256(sigStruct.r)));
@@ -208,6 +222,7 @@ const spDataObject TransactionLegacy::asDataObject(ExportOrder _order) const
         (*out)["v"] = m_v->asString();
         (*out)["r"] = m_r->asString();
         (*out)["s"] = m_s->asString();
+        (*out)["chainId"] = m_chainID->asString();
         m_rawData = out;
     }
 
@@ -221,6 +236,9 @@ const spDataObject TransactionLegacy::asDataObject(ExportOrder _order) const
         (*m_rawDataTool).renameKey("data", "input");
         if (!m_secretKey.isEmpty() && m_secretKey.getCContent() != 0)
             (*m_rawDataTool)["secretKey"] = m_secretKey->asString();
+        DataObject chainIDs(m_chainID->asString());
+        chainIDs.performModifier(mod_removeLeadingZerosFromHexValues);
+        (*m_rawDataTool)["chainId"] = chainIDs.asString();
     }
 
     return (_order == ExportOrder::ToolStyle) ? m_rawDataTool : m_rawData;

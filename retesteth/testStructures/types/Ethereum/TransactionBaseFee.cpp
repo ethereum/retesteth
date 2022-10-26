@@ -21,7 +21,6 @@ TransactionBaseFee::TransactionBaseFee(DataObject const& _data)
 
 void TransactionBaseFee::fromDataObject(DataObject const& _data)
 {
-    m_secretKey = spVALUE(new VALUE(0));
     try
     {
         REQUIRE_JSONFIELDS(_data, "TransactionBaseFee " + _data.getKey(),
@@ -67,6 +66,9 @@ void TransactionBaseFee::fromDataObject(DataObject const& _data)
         m_nonce = spVALUE(new VALUE(_data.atKey("nonce")));
         m_value = spVALUE(new VALUE(_data.atKey("value")));
 
+        if (_data.count("chainId"))
+            m_chainID = spVALUE(new VALUE(_data.atKey("chainId")));
+
         if (_data.atKey("to").type() == DataType::Null || _data.atKey("to").asString().empty())
             m_creation = true;
         else
@@ -76,7 +78,10 @@ void TransactionBaseFee::fromDataObject(DataObject const& _data)
         }
 
         if (_data.count("secretKey"))
-            buildVRS(_data.atKey("secretKey"));
+        {
+            setSecret(_data.atKey("secretKey"));
+            buildVRS();
+        }
         else
         {
             m_v = spVALUE(new VALUE(_data.atKey("v")));
@@ -93,13 +98,11 @@ void TransactionBaseFee::fromDataObject(DataObject const& _data)
 
 TransactionBaseFee::TransactionBaseFee(dev::RLP const& _rlp)
 {
-    m_secretKey = spVALUE(new VALUE(0));
     fromRLP(_rlp);
 }
 
 TransactionBaseFee::TransactionBaseFee(BYTES const& _rlp)
 {
-    m_secretKey = spVALUE(new VALUE(0));
     dev::bytes decodeRLP = sfromHex(_rlp.asString());
     dev::RLP rlp(decodeRLP, dev::RLP::VeryStrict);
     fromRLP(rlp);
@@ -111,7 +114,7 @@ void TransactionBaseFee::fromRLP(dev::RLP const& _rlp)
         throw test::UpwardsException("TransactionBaseFee::fromRLP(RLP) expected to have exactly 11 elements!");
 
     size_t i = 0;
-    i++;  // chainID
+    m_chainID = spVALUE(new VALUE(_rlp[i++]));
 
     m_nonce = spVALUE(new VALUE(_rlp[i++]));
     m_maxPriorityFeePerGas = spVALUE(new VALUE(_rlp[i++]));
@@ -142,10 +145,8 @@ void TransactionBaseFee::fromRLP(dev::RLP const& _rlp)
 }
 
 
-void TransactionBaseFee::buildVRS(VALUE const& _secret)
+void TransactionBaseFee::buildVRS()
 {
-    setSecret(_secret);
-
     dev::RLPStream stream;
     stream.appendList(9);
     streamHeader(stream);
@@ -154,7 +155,7 @@ void TransactionBaseFee::buildVRS(VALUE const& _secret)
     dev::bytes outa = stream.out();
     outa.insert(outa.begin(), dev::byte(2));  // txType
 
-    const dev::Secret secret(_secret.asString());
+    const dev::Secret secret(m_secretKey->asString());
     const dev::h256 hash(dev::sha3(outa));
     dev::Signature sig = dev::sign(secret, hash);
     dev::SignatureStruct sigStruct = *(dev::SignatureStruct const*)&sig;
@@ -171,8 +172,7 @@ void TransactionBaseFee::streamHeader(dev::RLPStream& _s) const
 {
     // rlp([chainId, nonce, maxPriorityFeePerGas, maxFeePerGas, gasLimit, to, value, data, access_list, signatureYParity,
     // signatureR, signatureS])
-    const int chainID = Options::getCurrentConfig().cfgFile().chainID();
-    _s << VALUE(chainID).asBigInt();
+    _s << m_chainID->asBigInt();
     _s << nonce().serializeRLP();
     _s << m_maxPriorityFeePerGas->serializeRLP();
     _s << m_maxFeePerGas->serializeRLP();
@@ -221,16 +221,13 @@ const spDataObject TransactionBaseFee::asDataObject(ExportOrder _order) const
 
     // standard transaction output without gas_price end
     // begin eip1559 transaction info
-    const int chainID = Options::getCurrentConfig().cfgFile().chainID();
-    DataObject chainIDs(test::fto_string(chainID));
-    chainIDs.performModifier(mod_valueToCompactEvenHexPrefixed);
-
-    (*out)["chainId"] = chainIDs.asString();
+    (*out)["chainId"] = m_chainID->asString();
     (*out)["type"] = "0x02";
     (*out)["maxFeePerGas"] = m_maxFeePerGas->asString();
     (*out)["maxPriorityFeePerGas"] = m_maxPriorityFeePerGas->asString();
     if (_order == ExportOrder::ToolStyle)
     {
+        DataObject chainIDs(m_chainID->asString());
         chainIDs.performModifier(mod_removeLeadingZerosFromHexValues);
         (*out)["chainId"] = chainIDs.asString();
         (*out)["type"] = "0x2";

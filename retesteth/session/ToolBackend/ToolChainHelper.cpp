@@ -28,7 +28,8 @@ ToolParams::ToolParams(DataObject const& _data)
             {"byzantiumForkBlock", {{DataType::String}, jsonField::Optional}},
             {"londonForkBlock", {{DataType::String}, jsonField::Optional}},
             {"homesteadForkBlock", {{DataType::String}, jsonField::Optional}},
-            {"terminalTotalDifficulty", {{DataType::String}, jsonField::Optional}}
+            {"terminalTotalDifficulty", {{DataType::String}, jsonField::Optional}},
+            {"chainID", {{DataType::String}, jsonField::Optional}}
         });
 
     const bigint unreachable = 10000000000;
