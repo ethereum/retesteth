@@ -43,11 +43,13 @@ find_package(yaml-cpp CONFIG REQUIRED)
 IF (NOT LOCALDEPS MATCHES ".*CRYPTOPP")
     hunter_add_package(cryptopp)
     find_package(cryptopp CONFIG REQUIRED)
+    set(CRYPTOPP_LINK "cryptopp-static")
 ELSE()
     message(STATUS "[retesteth] LOCALDEPS=CRYPTOPP looking for locally installed version")
     find_package(cryptopp MODULE REQUIRED)
     message(STATUS "[retesteth] cryptopp libdir: `${CRYPTOPP_LIBRARIES}`")
     message(STATUS "[retesteth] cryptopp include: `${CRYPTOPP_INCLUDE_DIRS}`")
+    set(CRYPTOPP_LINK ${CRYPTOPP_LIBRARIES})
 ENDIF()
 
 
