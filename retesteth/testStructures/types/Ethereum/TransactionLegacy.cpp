@@ -13,11 +13,9 @@ using namespace dev;
 
 namespace test::teststruct
 {
-TransactionLegacy::TransactionLegacy(spDataObjectMove _data) : Transaction()
+TransactionLegacy::TransactionLegacy(DataObject const& _data) : Transaction()
 {
-    m_rawData = _data.getPointer();
-    fromDataObject(m_rawData.getCContent());
-    (*m_rawData).removeKey("secretKey");
+    fromDataObject(_data);
 }
 
 void TransactionLegacy::fromDataObject(DataObject const& _data)
@@ -190,54 +188,36 @@ void TransactionLegacy::buildVRS()
     m_v = spVALUE(new VALUE(v));
     m_r = spVALUE(new VALUE(r));
     m_s = spVALUE(new VALUE(s));
-
-    (*m_rawData)["v"] = m_v->asString();
-    (*m_rawData)["r"] = m_r->asString();
-    (*m_rawData)["s"] = m_s->asString();
     rebuildRLP();
 }
 
 
 const spDataObject TransactionLegacy::asDataObject(ExportOrder _order) const
 {
-    // Optimize out preparation here
-    // Cache output data so not to construct it multiple times
-    // Useful when filling the tests as this function is called 2-3 times for each tr
-    // Promise that after constructor the data does not change
+    spDataObject out;
+    (*out)["data"] = m_data->asString();
+    (*out)["gasLimit"] = m_gasLimit->asString();
+    (*out)["gasPrice"] = m_gasPrice->asString();
+    (*out)["nonce"] = m_nonce->asString();
+    if (m_creation)
+        (*out)["to"] = "";
+    else
+        (*out)["to"] = m_to->asString();
+    (*out)["value"] = m_value->asString();
+    (*out)["v"] = m_v->asString();
+    (*out)["r"] = m_r->asString();
+    (*out)["s"] = m_s->asString();
 
-    // TODO: UPDATE for upper comment: not sure that m_rawData makes sense here as it potentially can be modified somewhere
-    // better to trade little serialization cpu time and have better code structure
-    if (m_rawData->getSubObjects().size() == 0)
+    if (_order == ExportOrder::ToolStyle)
     {
-        spDataObject out;
-        (*out)["data"] = m_data->asString();
-        (*out)["gasLimit"] = m_gasLimit->asString();
-        (*out)["gasPrice"] = m_gasPrice->asString();
-        (*out)["nonce"] = m_nonce->asString();
-        if (m_creation)
-            (*out)["to"] = "";
-        else
-            (*out)["to"] = m_to->asString();
-        (*out)["value"] = m_value->asString();
-        (*out)["v"] = m_v->asString();
-        (*out)["r"] = m_r->asString();
-        (*out)["s"] = m_s->asString();
-        m_rawData = out;
-    }
-
-
-    if (_order == ExportOrder::ToolStyle && m_rawDataTool->getSubObjects().size() == 0)
-    {
-        m_rawDataTool = spDataObject();
-        (*m_rawDataTool).copyFrom(m_rawData);
-        (*m_rawDataTool).performModifier(mod_removeLeadingZerosFromHexValues, DataObject::ModifierOption::RECURSIVE, {"data", "to"});
-        (*m_rawDataTool).renameKey("gasLimit", "gas");
-        (*m_rawDataTool).renameKey("data", "input");
+        (*out).performModifier(mod_removeLeadingZerosFromHexValues, DataObject::ModifierOption::RECURSIVE, {"data", "to"});
+        (*out).renameKey("gasLimit", "gas");
+        (*out).renameKey("data", "input");
         if (!m_secretKey.isEmpty() && m_secretKey.getCContent() != 0)
-            (*m_rawDataTool)["secretKey"] = m_secretKey->asString();
+            (*out)["secretKey"] = m_secretKey->asString();
     }
 
-    return (_order == ExportOrder::ToolStyle) ? m_rawDataTool : m_rawData;
+    return out;
 }
 
 void TransactionLegacy::rebuildRLP()
