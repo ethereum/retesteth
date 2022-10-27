@@ -2,10 +2,6 @@
 cmake_minimum_required(VERSION 3.9.3)
 set(CMAKE_TOOLCHAIN_FILE ${CMAKE_SOURCE_DIR}/toolchain.cmake)
 
-if("${FETCHDEPS}" STREQUAL "")
-    set(FETCHDEPS TRUE)
-endif()
-
 include("./cmake/Hunter/HunterGate.cmake")
 
 set(HUNTER_CONFIGURATION_TYPES Release)
@@ -17,6 +13,7 @@ HunterGate(
     SHA1 "908ddcb223f25fa155315baae64ce0ab48a38bf7"
     LOCAL
 )
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 project(retesteth VERSION 0.2.3)
 set(VERSION_SUFFIX "postmerge")
@@ -25,7 +22,7 @@ set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_DEBUG_RUNTIME OFF)
 
-IF (FETCHDEPS)
+IF (NOT LOCALDEPS MATCHES ".*BOOST")
     hunter_add_package(Boost COMPONENTS filesystem system)
     find_package(Boost 1.79 REQUIRED COMPONENTS  filesystem system)
     #message(STATUS "[retesteth] Will now autoinstall custom dependency: Boost 1.79")
@@ -34,17 +31,26 @@ IF (FETCHDEPS)
     #find_package(Boost 1.79 REQUIRED COMPONENTS  filesystem program_options system PATHS ${BOOST_ROOT}/tools/boost_install ${BOOST_ROOT}/stage/lib/cmake)
     #set(Boost_INCLUDE_DIR ${CMAKE_CURRENT_BINARY_DIR}/dependecies/boost/boost_1_79_0/)
 ELSE()
-    message(STATUS "[retesteth] FETCHDEPS=FALSE looking for locally installed dependencies")
+    message(STATUS "[retesteth] LOCALDEPS=BOOST looking for locally installed version")
     find_package(Boost 1.79 REQUIRED COMPONENTS  filesystem system)
 ENDIF()
-
 message(STATUS "[retesteth] Boost libdir: `${Boost_LIBRARIES}`")
 message(STATUS "[retesteth] Boost include: `${Boost_INCLUDE_DIR}`")
 
 hunter_add_package(yaml-cpp)
 find_package(yaml-cpp CONFIG REQUIRED)
-hunter_add_package(cryptopp)
-find_package(cryptopp CONFIG REQUIRED)
+
+IF (NOT LOCALDEPS MATCHES ".*CRYPTOPP")
+    hunter_add_package(cryptopp)
+    find_package(cryptopp CONFIG REQUIRED)
+ELSE()
+    message(STATUS "[retesteth] LOCALDEPS=CRYPTOPP looking for locally installed version")
+    find_package(cryptopp MODULE REQUIRED)
+    message(STATUS "[retesteth] cryptopp libdir: `${CRYPTOPP_LIBRARIES}`")
+    message(STATUS "[retesteth] cryptopp include: `${CRYPTOPP_INCLUDE_DIRS}`")
+ENDIF()
+
+
 hunter_add_package(libscrypt)
 find_package(libscrypt CONFIG REQUIRED)
 

@@ -1,4 +1,4 @@
-IF (FETCHDEPS)
+IF (NOT LOCALDEPS MATCHES ".*MPIR")
     message(STATUS "[retesteth] Will add mpir dependency as external project to compile")
     include(ExternalProject)
     include(GNUInstallDirs)
