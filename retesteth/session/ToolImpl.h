@@ -11,7 +11,7 @@ using namespace dataobject;
 class ToolImpl : public SessionInterface
 {
 public:
-    ToolImpl(Socket::SocketType _type, fs::path const& _path, fs::path const& _tmpDir)
+    ToolImpl(Socket::SocketType _type, boost::filesystem::path const& _path, boost::filesystem::path const& _tmpDir)
       : m_sockType(_type), m_toolPath(_path), m_tmpDir(_tmpDir)
     {}
 
@@ -61,8 +61,8 @@ public:
 
 private:
     Socket::SocketType m_sockType;
-    fs::path m_toolPath;
-    fs::path m_tmpDir;
+    boost::filesystem::path m_toolPath;
+    boost::filesystem::path m_tmpDir;
     size_t m_totalCalls = 0;
     toolimpl::ToolChainManager& blockchain() { return m_toolChainManager.getContent(); }
     void makeRPCError(std::string const& _error);

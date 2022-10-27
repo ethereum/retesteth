@@ -7,6 +7,8 @@
 
 using namespace std;
 using namespace test::debug;
+namespace fs = boost::filesystem;
+
 const string c_tooManyRawsMessage = "==TOO MANY LOG ROWS TO PRINT (Use --vmtraceraw <folder>)==";
 namespace test::teststruct
 {

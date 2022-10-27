@@ -7,6 +7,7 @@ using namespace std;
 using namespace test::debug;
 using namespace teststruct;
 using namespace dataobject;
+namespace fs = boost::filesystem;
 
 namespace  {
 FORK convertForkToToolConfig(FORK const& _fork)

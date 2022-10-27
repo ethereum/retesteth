@@ -36,6 +36,7 @@ using namespace test;
 using namespace test::testsuite;
 using namespace test::debug;
 using namespace test::session;
+namespace fs = boost::filesystem;
 
 namespace
 {

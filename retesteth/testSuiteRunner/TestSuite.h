@@ -25,7 +25,6 @@
 
 namespace test
 {
-namespace fs = boost::filesystem;
 extern std::string const c_fillerPostf;
 extern std::string const c_copierPostf;
 
@@ -118,7 +117,7 @@ protected:
 
 private:
     void _executeTest(std::string const& _testFolder, boost::filesystem::path const& _jsonFileName) const;
-    bool _fillTest(fs::path const& _fillerTestFilePath, AbsoluteFilledTestPath const& _outputTestFilePath) const;
+    bool _fillTest(boost::filesystem::path const& _fillerTestFilePath, AbsoluteFilledTestPath const& _outputTestFilePath) const;
     void _runTest(AbsoluteFilledTestPath const& _filledTestPath) const;
 };
 

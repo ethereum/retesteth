@@ -12,18 +12,17 @@
 
 
 namespace test {
-namespace fs = boost::filesystem;
 using namespace dataobject;
 // Helping functions
 
 #ifdef JSONCPP
 /// Construct Json object from string
-Json::Value readJson(fs::path const& _path);
+Json::Value readJson(boost::filesystem::path const& _path);
 #endif
 
 /// Safely read the json file into DataObject
-spDataObject readJsonData(fs::path const& _file, std::string const& _stopper = std::string(), bool _autosort = false);
-spDataObject readYamlData(fs::path const& _file, bool _sort = false);
+spDataObject readJsonData(boost::filesystem::path const& _file, std::string const& _stopper = std::string(), bool _autosort = false);
+spDataObject readYamlData(boost::filesystem::path const& _file, bool _sort = false);
 
 /// Get files from directory
 std::vector<boost::filesystem::path> getFiles(boost::filesystem::path const& _dirPath, std::set<std::string> _extentionMask, std::string const& _particularFile = {});
@@ -32,7 +31,7 @@ std::vector<boost::filesystem::path> getFiles(boost::filesystem::path const& _di
 boost::filesystem::path getTestPath();
 
 /// Copy file from _source to _destination
-void copyFile(fs::path const& _source, fs::path const& _destination);
+void copyFile(boost::filesystem::path const& _source, boost::filesystem::path const& _destination);
 
 /// Read a single string object or an Array of string objects into set<string>
 void parseJsonStrValueIntoSet(DataObject const& _json, std::set<std::string>& _out);
@@ -119,7 +118,7 @@ FILE* popen2(std::string const& _command, std::vector<std::string>const& _args, 
 int pclose2(FILE* _fp, pid_t _pid);
 
 /// return path to the unique tmp directory
-fs::path createUniqueTmpDirectory();
+boost::filesystem::path createUniqueTmpDirectory();
 
 ///
 template <class t>

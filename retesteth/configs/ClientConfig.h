@@ -6,7 +6,6 @@
 
 namespace test
 {
-namespace fs = boost::filesystem;
 using namespace test::teststruct;
 using namespace dataobject;
 
@@ -38,15 +37,15 @@ enum class FieldReplaceDir
 class ClientConfig
 {
 public:
-    ClientConfig(fs::path const& _clientConfigPath);
+    ClientConfig(boost::filesystem::path const& _clientConfigPath);
     ClientConfigID const& getId() const { return m_id; }
 
     // Main config file
     ClientConfigFile const& cfgFile() const { return m_clientConfigFile; }
 
     // Path to name.sh file for IPC client initialization
-    fs::path const getShellPath() const { return cfgFile().shell(); }
-    fs::path const getConfigPath() const { return cfgFile().path(); }
+    boost::filesystem::path const getShellPath() const { return cfgFile().shell(); }
+    boost::filesystem::path const getConfigPath() const { return cfgFile().path(); }
 
     // Functionality
     // Verify FORK is allowed by Fork + AdditionalForks and throw an error if not
@@ -71,13 +70,13 @@ public:
     std::map<FORK, spVALUE> const& getRewardMap() const { return m_correctReward; }
 
     // Get path to correct mining reward info file
-    fs::path const& getRewardMapPath() const { return m_correctMiningRewardPath; }
+    boost::filesystem::path const& getRewardMapPath() const { return m_correctMiningRewardPath; }
 
     // Get path to scripts
     void initializeFirstSetup();
-    fs::path const& getSetupScript() const { return m_setupScriptPath; }
-    fs::path const& getStartScript() const { return m_starterScriptPath; }
-    fs::path const& getStopperScript() const { return m_stopperScriptPath; }
+    boost::filesystem::path const& getSetupScript() const { return m_setupScriptPath; }
+    boost::filesystem::path const& getStartScript() const { return m_starterScriptPath; }
+    boost::filesystem::path const& getStopperScript() const { return m_stopperScriptPath; }
 
     // Replace notations in requests if needed
     void performFieldReplace(DataObject& _data, FieldReplaceDir const& _dir) const;
@@ -90,12 +89,12 @@ private:
     std::map<FORK, spVALUE> m_genesisTemplateChainID;   ///< ChainID value from template read
 
 
-    fs::path m_correctMiningRewardPath;                 ///< Path to correct mining reward info file
+    boost::filesystem::path m_correctMiningRewardPath;  ///< Path to correct mining reward info file
 
     bool m_initialized = false;    ///< If setup script has run
-    fs::path m_setupScriptPath;    ///< Path to setup script (run once before thread exec)
-    fs::path m_starterScriptPath;  ///< Path to starter script
-    fs::path m_stopperScriptPath;  ///< Path to stopper script
+    boost::filesystem::path m_setupScriptPath;    ///< Path to setup script (run once before thread exec)
+    boost::filesystem::path m_starterScriptPath;  ///< Path to starter script
+    boost::filesystem::path m_stopperScriptPath;  ///< Path to stopper script
 };
 
 }  // namespace test

@@ -26,6 +26,7 @@
 
 using namespace std;
 using namespace test;
+namespace fs = boost::filesystem;
 
 namespace test
 {

@@ -9,6 +9,7 @@ using namespace std;
 using namespace dev;
 using namespace dataobject;
 using namespace test::teststruct;
+namespace fs = boost::filesystem;
 
 namespace
 {

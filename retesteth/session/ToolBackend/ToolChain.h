@@ -6,7 +6,6 @@
 #include <vector>
 namespace toolimpl
 {
-namespace fs = boost::filesystem;
 using namespace test::teststruct;
 
 // Parse SetChainParams::params section
@@ -32,12 +31,12 @@ private:
 class ToolChain : public GCP_SPointerBase
 {
 public:
-    ToolChain(EthereumBlockState const& _genesis, spSetChainParamsArgs const& _params, fs::path const& _toolPath,
-        fs::path const& _tmpDir);
+    ToolChain(EthereumBlockState const& _genesis, spSetChainParamsArgs const& _params, boost::filesystem::path const& _toolPath,
+        boost::filesystem::path const& _tmpDir);
 
     // Calculate difficulty from _blockA to _blockB constructor
     ToolChain(EthereumBlockState const& _blockA, EthereumBlockState const& _blockB, FORK const& _fork,
-        fs::path const& _toolPath, fs::path const& _tmpDir);
+        boost::filesystem::path const& _toolPath, boost::filesystem::path const& _tmpDir);
 
     EthereumBlockState const& lastBlock() const
     {
@@ -48,7 +47,7 @@ public:
     std::vector<EthereumBlockState> const& blocks() const { return m_blocks; }
     SealEngine engine() const { return m_engine; }
     FORK const& fork() const { return m_fork; }
-    fs::path const& toolPath() const { return m_toolPath; }
+    boost::filesystem::path const& toolPath() const { return m_toolPath; }
     spSetChainParamsArgs const& params() const { return m_initialParams; }
     ToolParams const& toolParams() const { return m_toolParams; }
 
@@ -62,7 +61,7 @@ public:
 
     // Used for chain reorg
     void insertBlock(EthereumBlockState const& _block) { m_blocks.push_back(_block); }
-    fs::path const& tmpDir() const { return m_tmpDir; }
+    boost::filesystem::path const& tmpDir() const { return m_tmpDir; }
 
 private:
     ToolChain(){};
@@ -76,8 +75,8 @@ private:
     std::vector<EthereumBlockState> m_blocks;
     SealEngine m_engine;
     spFORK m_fork;
-    fs::path m_toolPath;
-    fs::path m_tmpDir;
+    boost::filesystem::path m_toolPath;
+    boost::filesystem::path m_tmpDir;
 
 private:
     void checkDifficultyAgainstRetesteth(VALUE const& _toolDifficulty, spBlockHeader const& _pendingHeader);

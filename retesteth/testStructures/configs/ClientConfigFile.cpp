@@ -4,6 +4,8 @@
 #include <retesteth/TestHelper.h>
 using namespace std;
 using namespace test::teststruct;
+namespace fs = boost::filesystem;
+
 std::mutex g_allowedForks_static_var;
 std::mutex g_forkProgressionAsSet_static_var;
 

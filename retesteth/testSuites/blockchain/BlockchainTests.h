@@ -77,12 +77,12 @@ public:
     TestPath suiteFolder() const override
     {
         return TestSuite::TestPath(
-            fs::path("LegacyTests/Constantinople/BlockchainTests/InvalidBlocks"));
+            boost::filesystem::path("LegacyTests/Constantinople/BlockchainTests/InvalidBlocks"));
     }
     FillerPath suiteFillerFolder() const override
     {
         return TestSuite::FillerPath(
-            fs::path("/src/LegacyTests/Constantinople/BlockchainTestsFiller/InvalidBlocks"));
+            boost::filesystem::path("/src/LegacyTests/Constantinople/BlockchainTestsFiller/InvalidBlocks"));
     }
 };
 
@@ -95,12 +95,12 @@ public:
     TestPath suiteFolder() const override
     {
         return TestSuite::TestPath(
-            fs::path("LegacyTests/Constantinople/BlockchainTests/ValidBlocks"));
+            boost::filesystem::path("LegacyTests/Constantinople/BlockchainTests/ValidBlocks"));
     }
     FillerPath suiteFillerFolder() const override
     {
         return TestSuite::FillerPath(
-            fs::path("/src/LegacyTests/Constantinople/BlockchainTestsFiller/ValidBlocks"));
+            boost::filesystem::path("/src/LegacyTests/Constantinople/BlockchainTestsFiller/ValidBlocks"));
     }
 };
 

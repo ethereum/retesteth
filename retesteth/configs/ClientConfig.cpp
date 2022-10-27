@@ -7,6 +7,8 @@ using namespace std;
 using namespace dataobject;
 using namespace test::debug;
 using namespace test::teststruct;
+namespace fs = boost::filesystem;
+
 std::mutex g_staticDeclaration_clientConfigID;
 std::mutex g_staticDeclaration_translateNetworks_static;
 namespace test

@@ -7,7 +7,6 @@
 
 namespace test::teststruct
 {
-namespace fs = boost::filesystem;
 enum class ClientConfgSocketType
 {
     TCP,
@@ -19,12 +18,12 @@ enum class ClientConfgSocketType
 struct ClientConfigFile : GCP_SPointerBase
 {
     ClientConfigFile(DataObject const& _data);
-    ClientConfigFile(fs::path const& _clientConfigPath);
+    ClientConfigFile(boost::filesystem::path const& _clientConfigPath);
 
     std::string const& name() const { return m_name; }
     ClientConfgSocketType socketType() const { return m_socketType; }
     std::vector<IPADDRESS> const& socketAdresses() const;
-    std::map<std::string, fs::path> const& customCompilers() const { return m_customCompilers; }
+    std::map<std::string, boost::filesystem::path> const& customCompilers() const { return m_customCompilers; }
     size_t initializeTime() const { return  m_initializeTime; }
     int defaultChainID() const { return m_defaultChainID; }
     std::vector<FORK> const& forks() const { return m_forks; }
@@ -35,8 +34,8 @@ struct ClientConfigFile : GCP_SPointerBase
 
     std::map<std::string, std::string> const& exceptions() const { return m_exceptions; }
     std::map<std::string, std::string> const& fieldreplace() const { return m_fieldRaplce; }
-    fs::path const& path() const { return m_configFilePath; }
-    fs::path const& shell() const { return m_pathToExecFile; }
+    boost::filesystem::path const& path() const { return m_configFilePath; }
+    boost::filesystem::path const& shell() const { return m_pathToExecFile; }
 
 
 private:
@@ -51,7 +50,7 @@ private:
     std::vector<IPADDRESS> m_socketAddress;  ///< List of IP to connect to (IP::PORT)
     int m_defaultChainID = 1;                ///< Transactions to initialize with this chainID by default
 
-    std::map<std::string, fs::path> m_customCompilers;
+    std::map<std::string, boost::filesystem::path> m_customCompilers;
     bool m_checkLogsHash;                    ///< Enable logsHash verification
     size_t m_initializeTime;                 ///< Time to start the instance
     std::vector<FORK> m_forks;               ///< Allowed forks as network name
@@ -60,8 +59,8 @@ private:
     std::map<std::string, std::string> m_fieldRaplce;  ///< Replace field names in requests map
 
     // Additional values
-    fs::path m_configFilePath;  ///< Path to the config file
-    fs::path m_pathToExecFile;  ///< Path to cmd that runs the client instance (for t8ntool)
+    boost::filesystem::path m_configFilePath;  ///< Path to the config file
+    boost::filesystem::path m_pathToExecFile;  ///< Path to cmd that runs the client instance (for t8ntool)
 };
 
 

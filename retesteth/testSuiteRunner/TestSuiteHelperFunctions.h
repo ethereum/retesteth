@@ -5,7 +5,6 @@
 namespace test::testsuite
 {
 using namespace dataobject;
-namespace fs = boost::filesystem;
 
 struct TestFileData
 {
@@ -14,11 +13,11 @@ struct TestFileData
     bool hashCalculated = true;
 };
 
-bool addClientInfoIfUpdate(DataObject& _filledTest, fs::path const& _testSource, dev::h256 const& _testSourceHash,
-    fs::path const& _existingFilledTest);
+bool addClientInfoIfUpdate(DataObject& _filledTest, boost::filesystem::path const& _testSource, dev::h256 const& _testSourceHash,
+    boost::filesystem::path const& _existingFilledTest);
 
-TestFileData readTestFile(fs::path const& _testFileName);
+TestFileData readTestFile(boost::filesystem::path const& _testFileName);
 void removeComments(spDataObject& _obj);
-void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest);
+void checkFillerHash(boost::filesystem::path const& _compiledTest, boost::filesystem::path const& _sourceTest);
 
 }  // namespace testsuite

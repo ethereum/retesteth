@@ -10,6 +10,7 @@ using namespace test;
 using namespace test::debug;
 using namespace teststruct;
 using namespace dataobject;
+namespace fs = boost::filesystem;
 
 namespace  {
 void correctHeaderByToolResponse(BlockHeader& _header, ToolResponse const& _res)

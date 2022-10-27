@@ -36,7 +36,6 @@ using namespace std;
 using namespace dev;
 
 namespace fs = boost::filesystem;
-
 namespace dev
 {
 namespace

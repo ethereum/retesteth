@@ -7,6 +7,7 @@ using namespace test;
 using namespace test::debug;
 using namespace dataobject;
 using namespace std;
+namespace fs = boost::filesystem;
 
 namespace
 {

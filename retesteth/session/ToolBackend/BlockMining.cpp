@@ -14,6 +14,7 @@ using namespace test;
 using namespace test::debug;
 using namespace dataobject;
 using namespace test::teststruct;
+namespace fs = boost::filesystem;
 
 namespace
 {

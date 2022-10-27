@@ -5,7 +5,6 @@
 
 namespace toolimpl
 {
-namespace fs = boost::filesystem;
 using namespace test::teststruct;
 
 // t8n tool generation of new block
@@ -31,14 +30,14 @@ private:
     SealEngine m_engine;
 
 private:
-    fs::path m_allocPath;
+    boost::filesystem::path m_allocPath;
     std::string m_allocPathContent;
-    fs::path m_envPath;
+    boost::filesystem::path m_envPath;
     std::string m_envPathContent;
-    fs::path m_txsPath;
+    boost::filesystem::path m_txsPath;
     std::string m_txsPathContent;
-    fs::path m_outPath;
-    fs::path m_outAllocPath;
+    boost::filesystem::path m_outPath;
+    boost::filesystem::path m_outAllocPath;
     void traceTransactions(ToolResponse& _toolResponse);
 };
 }  // namespace toolimpl
