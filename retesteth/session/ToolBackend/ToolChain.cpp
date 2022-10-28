@@ -122,7 +122,7 @@ spDataObject const ToolChain::mineBlock(EthereumBlockState const& _pendingBlock,
         pendingFixedHeader.setDifficulty(res.currentDifficulty());
         checkDifficultyAgainstRetesteth(res.currentDifficulty(), pendingFixed.header());
     }
-    calculateAndSetBaseFee(pendingFixed.headerUnsafe(), lastBlock().header());
+    calculateAndSetBaseFee(res.currentBasefee(), pendingFixed.headerUnsafe(), lastBlock().header());
 
     spDataObject miningResult;
     miningResult = coorectTransactionsByToolResponse(res, pendingFixed, _pendingBlock, _req);
@@ -162,15 +162,23 @@ void ToolChain::rewindToBlock(size_t _number)
 // Helper functions
 void ToolChain::checkDifficultyAgainstRetesteth(VALUE const& _toolDifficulty, spBlockHeader const& _pendingHeader)
 {
-    // Calculate difficulty for tool (tool does not calculate difficulty)
     ChainOperationParams params = ChainOperationParams::defaultParams(toolParams());
     VALUE retestethDifficulty = calculateEthashDifficulty(params, _pendingHeader, lastBlock().header());
     if (_toolDifficulty != retestethDifficulty)
-        ETH_ERROR_MESSAGE("tool vs retesteth difficulty disagree: " + _toolDifficulty.asDecString() + " vs " +
+        ETH_WARNING("tool vs retesteth difficulty disagree: " + _toolDifficulty.asDecString() + " vs " +
                           retestethDifficulty.asDecString());
 }
 
-void ToolChain::calculateAndSetBaseFee(spBlockHeader& _pendingHeader, spBlockHeader const& _parentHeader)
+void ToolChain::checkBasefeeAgainstRetesteth(VALUE const& _toolBasefee, spBlockHeader const& _pendingHeader, spBlockHeader const& _parentHeader)
+{
+    ChainOperationParams params = ChainOperationParams::defaultParams(toolParams());
+    VALUE retestethBaseFee = calculateEIP1559BaseFee(params, _pendingHeader, _parentHeader);
+    if (_toolBasefee != retestethBaseFee)
+        ETH_WARNING("tool vs retesteth basefee disagree: " + _toolBasefee.asDecString() + " vs " +
+                    retestethBaseFee.asDecString());
+}
+
+void ToolChain::calculateAndSetBaseFee(VALUE const& _toolBaseFee, spBlockHeader& _pendingHeader, spBlockHeader const& _parentHeader)
 {
     bool isOn1559 = _pendingHeader.getCContent().type() == BlockType::BlockHeader1559 && _parentHeader->type() == BlockType::BlockHeader1559;
     bool isOn1559ToMerge = _pendingHeader.getCContent().type() == BlockType::BlockHeaderMerge && _parentHeader->type() == BlockType::BlockHeader1559;
@@ -179,10 +187,10 @@ void ToolChain::calculateAndSetBaseFee(spBlockHeader& _pendingHeader, spBlockHea
     // Calculate new baseFee
     if (isOn1559 || isOn1559ToMerge || isOnMerge)
     {
-        ChainOperationParams params = ChainOperationParams::defaultParams(toolParams());
         BlockHeader1559& pendingFixed1559Header = BlockHeader1559::castFrom(_pendingHeader.getContent());
-        VALUE baseFee = calculateEIP1559BaseFee(params, _pendingHeader, _parentHeader);
-        pendingFixed1559Header.setBaseFee(baseFee);
+        pendingFixed1559Header.setBaseFee(_toolBaseFee);
+        spBlockHeader pendingFixed1559HeaderSP(&pendingFixed1559Header);
+        checkBasefeeAgainstRetesteth(_toolBaseFee, pendingFixed1559HeaderSP, _parentHeader);
     }
 }
 

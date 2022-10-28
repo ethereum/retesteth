@@ -19,6 +19,7 @@ struct ToolResponse
     FH32 const& logsHash() const { return m_logsHash; }
     FH256 const& logsBloom() const { return m_logsBloom; }
     VALUE const& currentDifficulty() const { return m_currentDifficulty; }
+    VALUE const& currentBasefee() const { return m_currentBasefee; }
     VALUE totalGasUsed() const
     {
         VALUE totalGasUsed = 0;
@@ -43,6 +44,7 @@ private:
     spFH32 m_logsHash;
     spFH256 m_logsBloom;
     spVALUE m_currentDifficulty;
+    spVALUE m_currentBasefee;
     std::vector<ToolResponseReceipt> m_receipts;
     spState m_stateResponse;
     std::map<FH32, DebugVMTrace> m_debugTrace;

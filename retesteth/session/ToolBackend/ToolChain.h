@@ -80,7 +80,9 @@ private:
 
 private:
     void checkDifficultyAgainstRetesteth(VALUE const& _toolDifficulty, spBlockHeader const& _pendingHeader);
-    void calculateAndSetBaseFee(spBlockHeader& _pendingHeader, spBlockHeader const& _parentHeader);
+    void checkBasefeeAgainstRetesteth(VALUE const& _toolBasefee, spBlockHeader const& _pendingHeader, spBlockHeader const& _parentHeader);
+    void calculateAndSetBaseFee(VALUE const& _toolBaseFee, spBlockHeader& _pendingHeader, spBlockHeader const& _parentHeader);
+
     spDataObject coorectTransactionsByToolResponse(ToolResponse const& _res, EthereumBlockState& _pendingFixed,
         EthereumBlockState const& _pendingBlock, Mining _miningReq);
     void correctUncleHeaders(EthereumBlockState& _pendingFixed, EthereumBlockState const& _pendingBlock);

@@ -12,6 +12,7 @@ ToolResponse::ToolResponse(DataObject const& _data)
             {"logsHash", {{DataType::String}, jsonField::Required}},
             {"logsBloom", {{DataType::String}, jsonField::Required}},
             {"currentDifficulty", {{DataType::String, DataType::Null}, jsonField::Required}},
+            {"currentBaseFee", {{DataType::String, DataType::Null}, jsonField::Optional}},
             {"rejected", {{DataType::Array}, jsonField::Optional}},
             {"gasUsed", {{DataType::String}, jsonField::Optional}},
             {"receipts", {{DataType::Array}, jsonField::Required}}});
@@ -26,6 +27,11 @@ ToolResponse::ToolResponse(DataObject const& _data)
         m_currentDifficulty = spVALUE(new VALUE(_data.atKey("currentDifficulty")));
     else
         m_currentDifficulty = spVALUE(new VALUE(0));
+
+    if (_data.count("currentBaseFee"))
+        m_currentBasefee = spVALUE(new VALUE(_data.atKey("currentBaseFee")));
+    else
+        m_currentBasefee = spVALUE(new VALUE(0));
 
     for (auto const& el : _data.atKey("receipts").getSubObjects())
         m_receipts.push_back(ToolResponseReceipt(el));
