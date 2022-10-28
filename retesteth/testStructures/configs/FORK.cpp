@@ -3,6 +3,7 @@
 using namespace std;
 using namespace test;
 using namespace test::teststruct;
+using namespace test::debug;
 
 namespace
 {
@@ -31,6 +32,19 @@ FORK::FORK(DataObject const& _data) : m_data(_data.asString()) {}
 
 bool compareFork(FORK const& _left, CMP _t, FORK const& _right)
 {
+    auto const& opt = Options::getCurrentConfig();
+    bool knowLeft = opt.checkForkInProgression(_left);
+    bool knowRight = opt.checkForkInProgression(_right);
+    if (!knowLeft)
+    {
+        ETH_DC_MESSAGEC(DC::LOWLOG, "compareFork fork `" + _left.asString() + "` is unknown in current config!", LogColor::YELLOW);
+        return false;
+    }
+    if (!knowRight)
+    {
+        ETH_DC_MESSAGEC(DC::LOWLOG, "compareFork fork `" + _right.asString() + "` is unknown in current config!", LogColor::YELLOW);
+        return false;
+    }
     switch (_t)
     {
     case CMP::ge:
