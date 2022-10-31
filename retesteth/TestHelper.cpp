@@ -334,10 +334,17 @@ string prepareSolidityVersionString()
     {
         string const cmd = "solc --version";
         string const result = test::executeCmd(cmd);
-        string::size_type const pos = result.rfind("Version");
+        string const cVersion  = "Version";
+        string::size_type const pos = result.rfind(cVersion);
         if (pos != string::npos)
         {
             solcVersion = result.substr(pos, result.length());
+            string number = solcVersion.substr(cVersion.length() + 2, 5);
+            removeSubChar(number, '.');
+            int v = std::atoi(number.c_str());
+            if (v < 85)
+                ETH_WARNING("Solidity version detected (" + solcVersion + ") is less then '0.8.5', "
+                    "ethereum test filling require version >= 0.8.5 to fill with correct results!");
             return solcVersion;
         }
     }
@@ -680,6 +687,14 @@ RLPStreamU::RLPStreamU(size_t _size) : m_size(_size)
 {
     if (m_size > 1)
         ETH_FAIL_MESSAGE("RLPStreamU does not support stream of multiple rlp items. It's a mock to wrap 1 transaction.");
+}
+
+void removeSubChar(std::string& _string, unsigned char _r)
+{
+    _string.erase(
+        std::remove_if(_string.begin(), _string.end(), [&_r](unsigned char ch) {
+            return ch == _r;
+        }), _string.end());
 }
 
 }//namespace

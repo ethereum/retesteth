@@ -18,10 +18,7 @@ IPADDRESS::IPADDRESS(DataObject const& _ip) : m_data(_ip.asString())
     int port = atoi(sport.c_str());
 
     string trim_address = address;
-    trim_address.erase(
-        std::remove_if(trim_address.begin(), trim_address.end(), [](unsigned char ch) {
-            return ch == '.';
-        }), trim_address.end());
+    removeSubChar(trim_address, '.');
 
     if (test::stringIntegerType(trim_address) == DigitsType::String)
     {
