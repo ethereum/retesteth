@@ -267,7 +267,13 @@ echo "0x600360005500"
 
 
 string const t8ntool_yulcompiler = R"(#!/bin/sh
-echo 0x`solc --assemble $1 2>/dev/null | grep "Binary representation:" -A 1 | tail -n1`
+solc=$(which solc)
+if [ -z $solc ]; then
+   >&2 echo "yul.sh \"Yul compilation error: 'solc' not found!\""
+   echo "0x"
+else
+    echo 0x`solc --assemble $1 2>/dev/null | grep "Binary representation:" -A 1 | tail -n1`
+fi
 )";
 
 t8ntoolcfg::t8ntoolcfg()
