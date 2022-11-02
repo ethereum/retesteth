@@ -30,9 +30,12 @@ TestFixture<T,U>::TestFixture(std::set<TestExecution> const& _execFlags)
     for (auto const& el : defaultBoostFlags.getFlags())
         allFlags.emplace(el);
 
-    if (allFlags.count(TestExecution::NotRefillable) &&
-        (Options::get().fillchain || Options::get().filltests))
-        ETH_ERROR_MESSAGE("Tests are sealed and not refillable!");
+    if (!Options::get().forceupdate)
+    {
+        if (allFlags.count(TestExecution::NotRefillable) &&
+            (Options::get().fillchain || Options::get().filltests))
+            ETH_ERROR_MESSAGE("Tests are sealed and not refillable!");
+    }
 
     std::string const casename = boost::unit_test::framework::current_test_case().p_name;
     boost::filesystem::path const suiteFillerPath = suite.getFullPathFiller(casename).parent_path();
