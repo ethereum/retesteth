@@ -353,7 +353,7 @@ std::string const& ToolImpl::getSocketPath() const
 
 void ToolImpl::makeRPCError(string const& _error)
 {
-    ETH_DC_MESSAGE(DC::WARNING, "makeRPCError " + _error);
+    ETH_DC_MESSAGE(DC::LOWLOG, "makeRPCError " + _error);
     m_lastInterfaceError = RPCError("", _error);
 }
 

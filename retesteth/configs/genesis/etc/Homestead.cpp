@@ -12,9 +12,11 @@ const string rpc_Homestead_config = R"({
     }
 })";
 
+// "homesteadForkBlock" for difficulty verification warning
 const string etc_Homestead_config = R"({
     "params" : {
-        "fork" : "Homestead"
+        "fork" : "Homestead",
+        "homesteadForkBlock" : "0x00"
     },
     "accounts" : {
     }

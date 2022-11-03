@@ -21,6 +21,7 @@ void requireJsonFileStructure(DataObject const& _data)
             {"customCompilers", {{DataType::Object}, jsonField::Optional}},
             {"initializeTime", {{DataType::String}, jsonField::Optional}},
             {"checkLogsHash", {{DataType::Bool}, jsonField::Optional}},
+            {"checkDifficulty", {{DataType::Bool}, jsonField::Optional}},
             {"defaultChainID", {{DataType::Integer}, jsonField::Optional}},
             {"forks", {{DataType::Array}, jsonField::Required}},
             {"additionalForks", {{DataType::Array}, jsonField::Required}},
@@ -133,6 +134,10 @@ void ClientConfigFile::initWithData(DataObject const& _data)
     m_checkLogsHash = false;
     if (_data.count("checkLogsHash"))
         m_checkLogsHash = _data.atKey("checkLogsHash").asBool();
+
+    m_checkDifficulty = true;
+    if (_data.count("checkDifficulty"))
+        m_checkDifficulty = _data.atKey("checkDifficulty").asBool();
 
     // Read forks as fork order. Order is required for translation (`>=Frontier` -> `Frontier,
     // Homestead`) According to this order:

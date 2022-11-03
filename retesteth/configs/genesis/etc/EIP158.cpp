@@ -14,9 +14,11 @@ const string rpc_EIP158_config = R"({
     }
 })";
 
+// "homesteadForkBlock" for difficulty verification warning
 const string etc_EIP158_config = R"({
     "params" : {
-        "fork" : "EIP158"
+        "fork" : "EIP158",
+        "homesteadForkBlock" : "0x00"
     },
     "accounts" : {
     }

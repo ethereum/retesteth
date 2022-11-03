@@ -385,7 +385,10 @@ string compareBlockHeaders(DataObject const& _blockA, DataObject const& _blockB,
     {
         DataObject const& el = el2;
         string const testHeaderField = _blockB.getSubObjects().at(k++)->asString();
-        message += cYellow + el.getKey() + cRed + " ";
+        if (Options::get().nologcolor)
+            message += el.getKey() + " ";
+        else
+            message += cYellow + el.getKey() + cRed + " ";
         if (el.asString() != testHeaderField)
         {
             if (el.getKey() != "hash")
@@ -395,7 +398,10 @@ string compareBlockHeaders(DataObject const& _blockA, DataObject const& _blockB,
             }
             else
                 errorInHashField = true;
-            message += el.asString() + " vs " + cYellow + testHeaderField + cRed + "\n";
+            if (Options::get().nologcolor)
+                message += el.asString() + " vs " + testHeaderField + "\n";
+            else
+                message += el.asString() + " vs " + cYellow + testHeaderField + cRed + "\n";
         }
         else
             message += el.asString() + " vs " + testHeaderField + "\n";

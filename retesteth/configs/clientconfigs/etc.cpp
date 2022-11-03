@@ -9,6 +9,7 @@ string const etc_config = R"({
     "socketType" : "tranition-tool",
     "socketAddress" : "start.sh",
     "checkLogsHash" : true,
+    "checkDifficulty" : false,
     "customCompilers" : {
         ":yul" : "yul.sh",
         ":mycompiler" : "mycompiler.sh"

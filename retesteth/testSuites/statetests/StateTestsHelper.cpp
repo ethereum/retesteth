@@ -5,6 +5,7 @@
 
 using namespace std;
 using namespace test::teststruct;
+using namespace test::debug;
 
 namespace test::statetests
 {
@@ -46,7 +47,12 @@ void checkUnexecutedTransactions(std::vector<TransactionInGeneralSection> const&
             opt.singleTestNet.empty() ? "N/A" : opt.singleTestNet.c_str(), opt.trData.index, opt.trGasIndex, opt.trValueIndex);
         TestOutputHelper::get().setCurrentTestInfo(errorInfo);
     }
-    ETH_ERROR_REQUIRE_MESSAGE(atLeastOneExecuted, "Specified filter did not run a single transaction! ");
+    if (Options::isLegacy())
+    {
+        ETH_DC_MESSAGEC(DC::LOWLOG, "Specified filter did not run a single transaction!", LogColor::YELLOW);
+    }
+    else
+        ETH_ERROR_REQUIRE_MESSAGE(atLeastOneExecuted, "Specified filter did not run a single transaction! ");
 }
 
 }  // namespace test::statetests

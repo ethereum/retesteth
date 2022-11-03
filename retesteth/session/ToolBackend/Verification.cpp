@@ -1,4 +1,5 @@
 #include "Verification.h"
+#include "retesteth/Options.h"
 using namespace toolimpl;
 using namespace test::debug;
 using namespace std;
@@ -15,6 +16,8 @@ void check_timestamp(BlockHeader const& _header, BlockHeader const& _parent)
 
 void check_difficultyDelta(ToolChain const& _chain, BlockHeader const& _header, BlockHeader const& _parent)
 {
+    if (!test::Options::getCurrentConfig().cfgFile().checkDifficulty())
+        return;
     // Validate block difficulty delta
     ChainOperationParams params = ChainOperationParams::defaultParams(_chain.toolParams());
     VALUE newDiff = calculateEthashDifficulty(params, _header, _parent);
