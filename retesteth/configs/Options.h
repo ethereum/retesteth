@@ -10,11 +10,12 @@ class alethcfg { public: alethcfg(); };
 class alethIpcDebugcfg { public: alethIpcDebugcfg(); };
 class besucfg { public: besucfg(); };
 class t8ntoolcfg { public: t8ntoolcfg(); };
+class etccfg { public: etccfg(); };
 class t8ntooleipcfg { public: t8ntooleipcfg(); };
 class oewrapcfg { public: oewrapcfg(); };
 class ethereumjscfg { public: ethereumjscfg(); };
 
-// Genesis configs for clients
+// Genesis configs for clients (besu/t8ntool)
 class genRewardsCfg { public: genRewardsCfg(); };
 class genFrontierCfg { public: genFrontierCfg(); };
 class genHomesteadCfg { public: genHomesteadCfg(); };
@@ -30,6 +31,19 @@ class genArrowGlacierCfg { public: genArrowGlacierCfg(); };
 class genGrayGlacierCfg { public: genGrayGlacierCfg(); };
 class genMergeCfg { public: genMergeCfg(); };
 class genArrowGlacierToMergeAtDiffC0000Cfg { public: genArrowGlacierToMergeAtDiffC0000Cfg(); };
+
+// Genesis configs for clients (etc)
+class genRewardsCfgETC { public: genRewardsCfgETC(); };
+class genFrontierCfgETC { public: genFrontierCfgETC(); };
+class genHomesteadCfgETC { public: genHomesteadCfgETC(); };
+class genEIP150CfgETC { public: genEIP150CfgETC(); };
+class genEIP158CfgETC { public: genEIP158CfgETC(); };
+class genAtlantisCfgETC { public: genAtlantisCfgETC(); };
+class genAghartaCfgETC { public: genAghartaCfgETC(); };
+class genPhoenixCfgETC { public: genPhoenixCfgETC(); };
+class genMagnetoCfgETC { public: genMagnetoCfgETC(); };
+class genMystiqueCfgETC { public: genMystiqueCfgETC(); };
+
 
 // T8ntooleip
 class t8ntooleip_genRewardsCfg { public: t8ntooleip_genRewardsCfg(); };
@@ -54,11 +68,12 @@ public:
         alethIpcDebugcfg alethIpcDebug;
         besucfg besu;
         t8ntoolcfg t8ntool;
+        etccfg etc;
         t8ntooleipcfg t8ntooleip;
         oewrapcfg oewrap;
         ethereumjscfg ethereumjs;
 
-        // Genesis configs for clients
+        // Genesis configs for clients (besu/t8ntool)
         genRewardsCfg rewards;
         genFrontierCfg genFrontier;
         genHomesteadCfg genHomestead;
@@ -73,6 +88,18 @@ public:
         genArrowGlacierCfg genArrowGlacier;
         genGrayGlacierCfg genGrayGlacier;
         genMergeCfg genMerge;
+
+        // Genesis configs for clients (etc)
+        genRewardsCfgETC rewardsETC;
+        genFrontierCfgETC genFrontierETC;
+        genHomesteadCfgETC genHomesteadETC;
+        genEIP150CfgETC genEIP150ETC;
+        genEIP158CfgETC genEIP158ETC;
+        genAtlantisCfgETC genAtlantisETC;
+        genAghartaCfgETC genAghartaETC;
+        genPhoenixCfgETC genPhoenixETC;
+        genMagnetoCfgETC genMagnetoETC;
+        genMystiqueCfgETC genMystiqueETC;
 
         // T8ntooleip
         t8ntooleip_genRewardsCfg t8ntooleip_RewardsCfg;
