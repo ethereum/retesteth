@@ -1,0 +1,7 @@
+SHELL=/bin/bash
+# m h  dom mon dow   command
+0 0 * * * /data/script.sh &> /data/script.log
+0 20 * * 2 /data/dockerupdate.sh &> /data/dockerupdate.log
+0 16 * * * /data/script.sh t8ntool --filltests
+0 20 * * 1 /data/script.sh besu --filltests
+#29 8 * * * /data/script.sh &> /data/script.log
