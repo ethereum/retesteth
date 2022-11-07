@@ -136,16 +136,17 @@ void performTransaction(StateTestExecInfo const& _info)
     // Validate post state
     FH32 const& expectedPostHash = result.hash();
     FH32 const& actualHash = blockInfo.header()->stateRoot();
+
+    performVMTrace(_info, trHash, actualHash);
+    performPostState(_info);
+    performStateDiff(_info);
+
     if (actualHash != expectedPostHash)
     {
         ETH_DC_MESSAGE(DC::TESTLOG, "\nState Dump: \n" + getRemoteState(session).asDataObject()->asJson());
         ETH_ERROR_MESSAGE("Post hash mismatch remote: " + actualHash.asString() + ", expected: " + expectedPostHash.asString());
     }
-
-    performVMTrace(_info, trHash, actualHash);
-    performPostState(_info);
     performValidations(_info, trHash);
-    performStateDiff(_info);
 
     session.test_rewindToBlock(0);
     ETH_DC_MESSAGE(DC::TESTLOG, "Executed: d: " + to_string(tr.dataInd()) + ", g: " + to_string(tr.gasInd()) +
