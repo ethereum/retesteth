@@ -35,6 +35,71 @@ std::vector<TransactionInGeneralSection> buildTransactionsWithLabels(StateTestIn
     return txs;
 }
 
+void performVMTrace(StateTestExecInfo const& _info, FH32 const& _trHash, FH32 const& _stateHash)
+{
+    if (Options::get().vmtrace && !Options::get().filltests)
+    {
+        auto& session = _info.session;         // Connection with the client
+        auto const& test = _info.test;         // State test
+        auto& tr = _info.tr;                   // Built transaction
+        auto const& network = _info.network;   // Current network (forkname)
+
+
+        string const testNameOut = test.testName() + "_d" + tr.dataIndS() + "g" + tr.gasIndS() + "v" + tr.valueIndS() + "_" +
+                                   network.asString() + "_" + _trHash.asString() + ".txt";
+        VMtraceinfo info(session, _trHash, _stateHash, testNameOut);
+        printVmTrace(info);
+    }
+}
+
+void performValidations(StateTestExecInfo const& _info, FH32 const& _trHash)
+{
+    auto& session = _info.session;         // Connection with the client
+    auto& tr = _info.tr;                   // Built transaction
+    auto const& result = _info.expResult;  // Expected post state result
+
+    // Validate that txbytes field has the transaction data described in test `transaction` field.
+    spBYTES const& expectedBytesPtr = result.txbytesPtr();
+    if (!expectedBytesPtr.isEmpty())
+    {
+        if (tr.transaction()->getRawBytes().asString() != expectedBytesPtr->asString())
+            ETH_ERROR_MESSAGE(string("TxBytes mismatch: test transaction section does not match txbytes in post section! ") +
+                              "\n Constructed: " + expectedBytesPtr->asString() + "\n vs \n " +
+                              tr.transaction()->getRawBytes().asString());
+    }
+
+    // Validate log hash
+    if (Options::getDynamicOptions().getCurrentConfig().cfgFile().checkLogsHash())
+    {
+        FH32 const& expectedLogHash = result.logs();
+        FH32 remoteLogHash(session.test_getLogHash(_trHash));
+        if (remoteLogHash != expectedLogHash)
+            ETH_ERROR_MESSAGE(
+                "Logs hash mismatch: '" + remoteLogHash.asString() + "', expected: '" + expectedLogHash.asString() + "'");
+    }
+}
+
+void performPostState(StateTestExecInfo const& _info)
+{
+    if (Options::get().poststate)
+    {
+        auto& session = _info.session;         // Connection with the client
+        auto const& test = _info.test;         // State test
+        auto& tr = _info.tr;                   // Built transaction
+        auto const& network = _info.network;   // Current network (forkname)
+
+        auto const remStateJson = getRemoteState(session).asDataObject()->asJson();
+        ETH_DC_MESSAGE(DC::STATE,
+            "\nRunning test State Dump:" + TestOutputHelper::get().testInfo().errorDebug() + cDefault + " \n" + remStateJson);
+        if (!Options::get().poststate.outpath.empty())
+        {
+            string testNameOut = test.testName() + "_d" + tr.dataIndS() + "g" + tr.gasIndS() + "v" + tr.valueIndS();
+            testNameOut += "_" + network.asString() + ".txt";
+            dev::writeFile(fs::path(Options::get().poststate.outpath) / testNameOut, dev::asBytes(remStateJson));
+        }
+    }
+}
+
 void performTransaction(StateTestExecInfo const& _info)
 {
     auto& session = _info.session;         // Connection with the client
@@ -59,52 +124,16 @@ void performTransaction(StateTestExecInfo const& _info)
 
     // Validate post state
     FH32 const& expectedPostHash = result.hash();
-    if (Options::get().vmtrace && !Options::get().filltests)
-    {
-        string const testNameOut = test.testName() + "_d" + tr.dataIndS() + "g" + tr.gasIndS() + "v" + tr.valueIndS() + "_" +
-                                   network.asString() + "_" + trHash.asString() + ".txt";
-        VMtraceinfo info(session, trHash, blockInfo.header()->stateRoot(), testNameOut);
-        printVmTrace(info);
-    }
-
     FH32 const& actualHash = blockInfo.header()->stateRoot();
     if (actualHash != expectedPostHash)
     {
         ETH_DC_MESSAGE(DC::TESTLOG, "\nState Dump: \n" + getRemoteState(session).asDataObject()->asJson());
         ETH_ERROR_MESSAGE("Post hash mismatch remote: " + actualHash.asString() + ", expected: " + expectedPostHash.asString());
     }
-    if (Options::get().poststate)
-    {
-        auto const remStateJson = getRemoteState(session).asDataObject()->asJson();
-        ETH_DC_MESSAGE(DC::STATE,
-            "\nRunning test State Dump:" + TestOutputHelper::get().testInfo().errorDebug() + cDefault + " \n" + remStateJson);
-        if (!Options::get().poststate.outpath.empty())
-        {
-            string testNameOut = test.testName() + "_d" + tr.dataIndS() + "g" + tr.gasIndS() + "v" + tr.valueIndS();
-            testNameOut += "_" + network.asString() + ".txt";
-            dev::writeFile(fs::path(Options::get().poststate.outpath) / testNameOut, dev::asBytes(remStateJson));
-        }
-    }
 
-    // Validate that txbytes field has the transaction data described in test `transaction` field.
-    spBYTES const& expectedBytesPtr = result.txbytesPtr();
-    if (!expectedBytesPtr.isEmpty())
-    {
-        if (tr.transaction()->getRawBytes().asString() != expectedBytesPtr->asString())
-            ETH_ERROR_MESSAGE(string("TxBytes mismatch: test transaction section does not match txbytes in post section! ") +
-                              "\n Constructed: " + expectedBytesPtr->asString() + "\n vs \n " +
-                              tr.transaction()->getRawBytes().asString());
-    }
-
-    // Validate log hash
-    if (Options::getDynamicOptions().getCurrentConfig().cfgFile().checkLogsHash())
-    {
-        FH32 const& expectedLogHash = result.logs();
-        FH32 remoteLogHash(session.test_getLogHash(trHash));
-        if (remoteLogHash != expectedLogHash)
-            ETH_ERROR_MESSAGE(
-                "Logs hash mismatch: '" + remoteLogHash.asString() + "', expected: '" + expectedLogHash.asString() + "'");
-    }
+    performVMTrace(_info, trHash, actualHash);
+    performPostState(_info);
+    performValidations(_info, trHash);
 
     session.test_rewindToBlock(0);
     ETH_DC_MESSAGE(DC::TESTLOG, "Executed: d: " + to_string(tr.dataInd()) + ", g: " + to_string(tr.gasInd()) +
