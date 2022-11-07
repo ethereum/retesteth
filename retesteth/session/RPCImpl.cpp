@@ -24,7 +24,10 @@ FH32 RPCImpl::eth_sendRawTransaction(BYTES const& _rlp, VALUE const& _secret)
     (void)_secret;
     spDataObject const result = rpcCall("eth_sendRawTransaction", {quote(_rlp.asString())}, true);
     if (!m_lastInterfaceError.empty())
-        ETH_ERROR_MESSAGE(m_lastInterfaceError.message());
+    {
+        ETH_WARNING("eth_sendRawTransaction:: " + m_lastInterfaceError.message());
+        return FH32(FH32::zero());
+    }
     return FH32(result.getCContent());
 }
 
