@@ -163,7 +163,9 @@ Options::Options(int argc, const char** argv)
             stateTestOnly("-v");
     });
 
-
+    ADD_OPTION(statediff, "--statediff", [](){
+        cout << setw(30) << "--statediff" << setw(25) << "Print statediff post vs pre\n";
+    });
     ADD_OPTION(vmtrace, "--vmtrace", [](){
         cout << setw(30) << "--vmtrace" << setw(25) << "Trace transaction execution\n";
     });

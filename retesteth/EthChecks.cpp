@@ -70,7 +70,7 @@ void Debug::initializeDefaultChannels()
         m_channels[DC::RPC] = true;
     if (verb >= 7)
         m_channels[DC::LOWLOG] = true;
-    if (Options::get().poststate.initialized())
+    if (Options::get().poststate.initialized() || Options::get().statediff.initialized())
         m_channels[DC::STATE] = true;
 }
 

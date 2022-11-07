@@ -67,6 +67,9 @@ void compareStates(StateBase const& _stateExpect, test::session::SessionInterfac
 // Compare expected StateIncomplete against post state State
 void compareStates(StateBase const& _stateExpect, State const& _statePost);
 
+// make State diff
+spDataObject stateDiff(State const& _pre, State const& _post);
+
 // json trace vm
 struct VMtraceinfo
 {

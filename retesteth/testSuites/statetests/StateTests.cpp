@@ -270,6 +270,13 @@ spDataObject FillTest(StateTestInFiller const& _test)
                         ETH_DC_MESSAGE(DC::STATE, "PostState " + TestOutputHelper::get().testInfo().errorDebug() + " : \n" +
                                                       cDefault + "Hash: " + blockInfo.header()->stateRoot().asString());
 
+                    if (Options::get().statediff)
+                    {
+                        auto const stateDiffJson = stateDiff(_test.Pre(), getRemoteState(session))->asJson();
+                        ETH_DC_MESSAGE(DC::STATE,
+                            "\nRunning test State Diff:" + TestOutputHelper::get().testInfo().errorDebug() + cDefault + " \n" + stateDiffJson);
+                    }
+
                     if (Options::get().vmtrace)
                     {
                         string const testNameOut = _test.testName() + "_d" + tr.dataIndS() + "g" + tr.gasIndS() + "v" +

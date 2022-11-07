@@ -100,6 +100,17 @@ void performPostState(StateTestExecInfo const& _info)
     }
 }
 
+void performStateDiff(StateTestExecInfo const& _info)
+{
+    if (Options::get().statediff)
+    {
+        auto& session = _info.session;  // Connection with the client
+        auto const stateDiffJson = stateDiff(_info.test.Pre(), getRemoteState(session))->asJson();
+        ETH_DC_MESSAGE(DC::STATE,
+            "\nRunning test State Diff:" + TestOutputHelper::get().testInfo().errorDebug() + cDefault + " \n" + stateDiffJson);
+    }
+}
+
 void performTransaction(StateTestExecInfo const& _info)
 {
     auto& session = _info.session;         // Connection with the client
@@ -134,6 +145,7 @@ void performTransaction(StateTestExecInfo const& _info)
     performVMTrace(_info, trHash, actualHash);
     performPostState(_info);
     performValidations(_info, trHash);
+    performStateDiff(_info);
 
     session.test_rewindToBlock(0);
     ETH_DC_MESSAGE(DC::TESTLOG, "Executed: d: " + to_string(tr.dataInd()) + ", g: " + to_string(tr.gasInd()) +
