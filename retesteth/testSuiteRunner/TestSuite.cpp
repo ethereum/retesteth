@@ -255,7 +255,7 @@ void TestSuite::_executeTest(string const& _testFolder, fs::path const& _fillerT
         wereFillerErrors = _fillTest(_fillerTestFilePath, filledTestPath.path());
 
     bool disableSecondRun = false;
-    if (!Options::get().getGStateTransactionFilter().empty())
+    if (!Options::get().getGStateTransactionFilter().empty() && Options::get().filltests)
     {
         ETH_WARNING("GState transaction filter is set. Disabling generated test run!");
         disableSecondRun = true;

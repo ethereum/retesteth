@@ -47,12 +47,26 @@ void checkUnexecutedTransactions(std::vector<TransactionInGeneralSection> const&
             opt.singleTestNet.empty() ? "N/A" : opt.singleTestNet.c_str(), opt.trData.index, opt.trGasIndex, opt.trValueIndex);
         TestOutputHelper::get().setCurrentTestInfo(errorInfo);
     }
-    if (Options::isLegacy())
+
+    if (!atLeastOneExecuted)
     {
-        ETH_DC_MESSAGEC(DC::LOWLOG, "Specified filter did not run a single transaction!", LogColor::YELLOW);
+        string const errorMessage = "Specified filter did not run a single transaction! " + TestOutputHelper::get().testInfo().errorDebug();
+        if (Options::get().filltests)
+        {
+            ETH_ERROR_MESSAGE(errorMessage);
+        }
+        else
+        {
+            if (Options::isLegacy())
+            {
+                ETH_DC_MESSAGEC(DC::LOWLOG, errorMessage, LogColor::YELLOW);
+            }
+            else
+            {
+                ETH_WARNING(errorMessage);
+            }
+        }
     }
-    else
-        ETH_ERROR_REQUIRE_MESSAGE(atLeastOneExecuted, "Specified filter did not run a single transaction! ");
 }
 
 }  // namespace test::statetests
