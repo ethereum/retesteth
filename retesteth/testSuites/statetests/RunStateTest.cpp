@@ -17,7 +17,7 @@ using namespace test::session;
 namespace fs = boost::filesystem;
 
 namespace  {
-std::vector<TransactionInGeneralSection> recoverTransactionLabels(StateTestInFilled const& _test)
+std::vector<TransactionInGeneralSection> buildTransactionsWithLabels(StateTestInFilled const& _test)
 {
     std::vector<TransactionInGeneralSection> txs = _test.GeneralTr().buildTransactions();
     // Recover transaction labels from filled test _info section
@@ -48,7 +48,9 @@ void RunTest(StateTestInFilled const& _test)
     SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
 
     // Gather Transactions from general transaction section
-    std::vector<TransactionInGeneralSection> txs = recoverTransactionLabels(_test);
+    std::vector<TransactionInGeneralSection> txs = buildTransactionsWithLabels(_test);
+    TestOutputHelper::get().setUnitTestExceptions(_test.unitTestExceptions());
+
 
     bool forkNotAllowed = false;
     for (auto const& post : _test.Post())

@@ -19,6 +19,8 @@ struct StateTestInFilled : GCP_SPointerBase
     StateTestTransaction const& GeneralTr() const { return m_transaction; }
     std::map<FORK, StateTestPostResults> const& Post() const { return m_post; }
 
+    std::vector<std::string> const& unitTestExceptions() const { return m_exceptions; }
+
 private:
     StateTestInFilled() {}
     std::string m_name;
@@ -27,6 +29,7 @@ private:
     spState m_pre;
     GCP_SPointer<StateTestTransaction> m_transaction;
     std::map<FORK, StateTestPostResults> m_post;
+    std::vector<std::string> m_exceptions;
 };
 
 struct GeneralStateTest

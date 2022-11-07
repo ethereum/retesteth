@@ -31,10 +31,18 @@ StateTestInFilled::StateTestInFilled(spDataObject& _data)
 {
     REQUIRE_JSONFIELDS(_data, "StateTestInFilled " + _data->getKey(),
         {{"_info", {{DataType::Object}, jsonField::Required}},
+            {"exceptions", {{DataType::Array}, jsonField::Optional}},
             {"env", {{DataType::Object}, jsonField::Required}},
             {"post", {{DataType::Object}, jsonField::Required}},
             {"pre", {{DataType::Object}, jsonField::Required}},
             {"transaction", {{DataType::Object}, jsonField::Required}}});
+
+    // UnitTests
+    if (_data->count("exceptions"))
+    {
+        for (size_t i = _data->atKey("exceptions").getSubObjects().size(); i > 0; i--)
+            m_exceptions.push_back(_data->atKey("exceptions").getSubObjects().at(i - 1)->asString());
+    }
 
     m_info = GCP_SPointer<Info>(new Info(_data->atKey("_info")));
     m_env = GCP_SPointer<StateTestEnv>(new StateTestEnv(_data->atKey("env")));

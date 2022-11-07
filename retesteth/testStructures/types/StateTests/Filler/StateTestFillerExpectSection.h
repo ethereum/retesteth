@@ -21,7 +21,7 @@ struct StateTestFillerExpectSection
     }
 
     // Check that this indexes are present in this expect section
-    bool checkIndexes(size_t _dInd, size_t _gInd, size_t _vInd) const;
+    bool checkIndexes(int _dInd, int _gInd, int _vInd) const;
     void correctMiningReward(FH20 const& _coinbase, VALUE const& _reward);
 
     // Get expect exception for transaction
@@ -32,6 +32,10 @@ struct StateTestFillerExpectSection
             return m_expectExceptions.at(_net);
         return emptyString;
     }
+
+    std::set<int> const& getDataInd() const {return  m_dataInd; }
+    std::set<int> const& getGasInd() const {return  m_gasInd; }
+    std::set<int> const& getValInd() const {return  m_valInd; }
 
 private:
     std::set<int> m_dataInd;

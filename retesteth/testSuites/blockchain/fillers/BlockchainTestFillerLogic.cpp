@@ -104,6 +104,9 @@ spDataObject FillTest(BlockchainTestInFiller const& _test, TestSuite::TestSuiteO
                 (*result).addSubObject(_filledTest);
 
                 verifyFilledTest(_test.unitTestVerify(), _filledTest, net);
+                for (auto const& ex : TestOutputHelper::get().getUnitTestExceptions())
+                    ETH_FAIL_MESSAGE("Expected exception didn't occur: \n`" + ex + "`");
+
             }  // expects count net
         }
     }

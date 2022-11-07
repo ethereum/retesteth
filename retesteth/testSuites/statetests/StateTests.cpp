@@ -180,6 +180,9 @@ spDataObject FillTest(StateTestInFiller const& _test)
     (*filledTest).atKeyPointer("pre") = _test.Pre().asDataObject();
     (*filledTest).atKeyPointer("transaction") = _test.GeneralTr().asDataObject();
 
+    for (auto const& ex : _test.unitTestExceptions())
+        (*filledTest)["exceptions"].addArrayObject(spDataObject(new DataObject(ex)));
+
     // Gather Transactions from general transaction section
     std::vector<TransactionInGeneralSection> txs = _test.GeneralTr().buildTransactions();
     for (auto const& tx : txs)
@@ -325,6 +328,9 @@ spDataObject FillTest(StateTestInFiller const& _test)
 
     checkUnexecutedTransactions(txs);
     verifyFilledTest(_test.unitTestVerify(), filledTest);
+    for (auto const& ex : TestOutputHelper::get().getUnitTestExceptions())
+        ETH_FAIL_MESSAGE("Expected exception didn't occur: \n`" + ex + "`");
+
     return filledTest;
 }
 
