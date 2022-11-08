@@ -9,7 +9,8 @@ enum class SealEngine
 {
     NoProof,
     NoReward,
-    Ethash
+    Ethash,
+    Genesis
 };
 
 SealEngine sealEngineFromStr(std::string const&);

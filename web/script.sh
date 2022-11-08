@@ -13,17 +13,17 @@ git checkout develop
 #git checkout headers
 git pull
 git submodule update --init
-TEST_HEAD=$(git rev-parse HEAD | cut -c1-8)
+TEST_HEAD=$(git rev-parse HEAD | cut -c1-7)
 
 echo "Fetch retesteth: "
 cd $BUILDPATH/retesteth
-git reset --hard HEAD~1
+git reset --hard HEAD~100
 git fetch origin
 git checkout develop
 git pull
 rm -r ./build
 rm -r $HOMEPATH/.retesteth/
-RETESTETH_HEAD=$(git rev-parse HEAD | cut -c1-8)
+RETESTETH_HEAD=$(git rev-parse HEAD | cut -c1-7)
 echo "Build retesteth: "
 mkdir build
 cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DSANITIZE="" && make
@@ -33,14 +33,14 @@ cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DSANITIZE="" && make
 if [ "$1" = "geth" ] || [ "$1" = "t8ntool" ] || [ -z "$1" ]; then
     echo "Fetch go-ethereum: "
     cd $BUILDPATH/go-ethereum
-    git reset --hard HEAD~1
+    git reset --hard HEAD~100
     git fetch origin
     git checkout master
     git pull
     rm ./build/bin/geth
     rm ./build/bin/evm
-    GETH_HEAD=$(git rev-parse HEAD | cut -c1-8)
-    GETHTool_HEAD=$(git rev-parse HEAD | cut -c1-8)
+    GETH_HEAD=$(git rev-parse HEAD | cut -c1-7)
+    GETHTool_HEAD=$(git rev-parse HEAD | cut -c1-7)
     echo "Build go-ethereum: "
     make all
 fi
@@ -53,7 +53,7 @@ if [ "$1" = "besu" ] || [ -z "$1" ]; then
     git checkout main
     git pull
     rm ./build/install/besu/bin/besu
-    BESU_HEAD=$(git rev-parse HEAD | cut -c1-8)
+    BESU_HEAD=$(git rev-parse HEAD | cut -c1-7)
     echo "Build besu: "
     export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
     # export JAVA_HOME=/usr/lib/jvm/java-14-oracle
@@ -71,7 +71,7 @@ if [ "$1" = "ethereumjs" ] || [ -z "$1" ]; then
     git fetch origin
     git checkout master
     git pull
-    ETHEREUMJS_HEAD=$(git rev-parse HEAD | cut -c1-8)
+    ETHEREUMJS_HEAD=$(git rev-parse HEAD | cut -c1-7)
     echo "Build ethereumjs: "
     npm i
     npm run build --workspaces
@@ -85,7 +85,7 @@ fi
 #    git checkout main
 #    git pull
 #    rm -r  ./target/release
-#    OEWR_HEAD=$(git rev-parse HEAD | cut -c1-8)
+#    OEWR_HEAD=$(git rev-parse HEAD | cut -c1-7)
 #    echo "Build open-ethereum: "
 #    cargo build --release
 #    sleep 10
@@ -101,7 +101,7 @@ if [ "$1" = "aleth" ] || [ "$1" = "testeth" ] || [ -z "$1" ]; then
     git pull
     rm ./aleth/aleth
     rm ./test/testeth
-    ALETH_HEAD=$(git rev-parse HEAD | cut -c1-8)
+    ALETH_HEAD=$(git rev-parse HEAD | cut -c1-7)
     echo "Build aleth: "
     cmake .. -DCMAKE_BUILD_TYPE=Release
     make

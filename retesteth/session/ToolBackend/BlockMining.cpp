@@ -132,7 +132,12 @@ void BlockMining::executeTransition()
     auto tupleRewardFork = prepareReward(m_engine, m_chainRef.fork(), m_currentBlockRef.header()->number(), m_currentBlockRef.totalDifficulty());
     cmd += " --state.fork " + std::get<1>(tupleRewardFork).asString();
     if (m_engine != SealEngine::NoReward)
-        cmd += " --state.reward " + std::get<0>(tupleRewardFork).asDecString();
+    {
+        if (m_engine == SealEngine::Genesis)
+            cmd += " --state.reward -1";
+        else
+            cmd += " --state.reward " + std::get<0>(tupleRewardFork).asDecString();
+    }
 
     auto const& params = m_chainRef.params().getCContent().params();
     if (params.count("chainID"))

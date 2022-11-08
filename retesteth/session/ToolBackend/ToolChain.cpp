@@ -145,7 +145,8 @@ spDataObject const ToolChain::mineBlock(EthereumBlockState const& _pendingBlock,
 ToolResponse ToolChain::mineBlockOnTool(
     EthereumBlockState const& _currentBlock, EthereumBlockState const& _parentBlock, SealEngine _engine)
 {
-    BlockMining toolMiner(*this, _currentBlock, _parentBlock, _engine);
+    bool isGenesis = _currentBlock.header()->number() == _parentBlock.header()->number();
+    BlockMining toolMiner(*this, _currentBlock, _parentBlock, isGenesis ? SealEngine::Genesis : _engine);
     toolMiner.prepareEnvFile();
     toolMiner.prepareAllocFile();
     toolMiner.prepareTxnFile();
