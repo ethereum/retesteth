@@ -54,8 +54,13 @@ void printVersion()
  VAR.setDefHelp(STR, STRHELP); \
  m_options.push_back(&VAR);
 
+#include <libdataobj/ConvertFile2.h>
+using namespace dataobject;
 Options::Options(int argc, const char** argv)
 {
+    ConvertJsoncppFileToData("/home/wins/Ethereum/tests/GeneralStateTests/stExample/add11.json");
+    exit(1);
+
     ADD_OPTION_OVERRIDE(help, "-h|--help", [](){
         printVersion();
         cout << std::left;

@@ -6,7 +6,6 @@
 #include <iostream>
 
 using namespace std;
-using namespace dataobject::jsonreader;
 // Manually construct dataobject from file string content
 // bacuse Json::Reader::parse has a memory leak
 
@@ -136,40 +135,6 @@ bool checkExcessiveComa(string const& _input, size_t _i)
     if (_input[reader] == ',')
         return true;
     return false;
-}
-
-void JsonReader::processLine(string const& _line)
-{
-    if (_line.empty())
-        return;
-    if (!m_seenBegining)
-    {
-        // if (_line.find("{") == string::npos)
-        //    throw DataObjectException() << "ConvertJsoncppStringToData can't read json structure in file: `" +
-        //    _input.substr(0, 50);
-    }
-    std::cerr << _line << std::endl;
-    (void)m_stopper;
-    // for (size_t i = 0; i < _line.length(); i++)
-}
-
-spDataObject ConvertJsoncppFileToData(string const& _file, string const& _stopper, bool _autosort)
-{
-    std::ifstream file(_file);
-    if (file.is_open())
-    {
-        string line;
-        JsonReader reader(_stopper, _autosort);
-        while (std::getline(file, line))
-        {
-            line.erase(std::remove(line.begin(), line.end(), ' '), line.end());
-            reader.processLine(line);
-        }
-        file.close();
-        return reader.getResult();
-    }
-    else
-        throw DataObjectException() << "ConvertJsoncppFileToData can't open file: `" + _file;
 }
 
 /// Convert Json object represented as string to DataObject
