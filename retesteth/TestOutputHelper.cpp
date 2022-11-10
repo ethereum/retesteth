@@ -401,7 +401,12 @@ std::string TestInfo::errorDebug() const
 {
     if (m_sFork.empty())
         return "";
-    string message = cYellow + " (" + m_currentTestCaseName + "/" + TestOutputHelper::get().testName();
+
+    string message;
+    bool nologcolor = Options::get().nologcolor;
+    if (!nologcolor)
+        message = cYellow;
+    message += " (" + m_currentTestCaseName + "/" + TestOutputHelper::get().testName();
 
     if (!m_isGeneralTestInfo)
     {
@@ -420,5 +425,7 @@ std::string TestInfo::errorDebug() const
     if (!m_sTransactionData.empty())
         message += ", TrData: `" + m_sTransactionData + "`";
 
+    if (nologcolor)
+        return message + ")";
     return message + ")" + cDefault;
 }

@@ -339,8 +339,13 @@ string prepareSolidityVersionString()
         if (pos != string::npos)
         {
             solcVersion = result.substr(pos, result.length());
-            string number = solcVersion.substr(cVersion.length() + 2, 5);
-            removeSubChar(number, '.');
+            string number;
+            string const numberDirty = solcVersion.substr(cVersion.length(), 15);
+            for (auto const& chr : numberDirty)
+            {
+                if (std::isdigit(chr))
+                    number += chr;
+            }
             int v = std::atoi(number.c_str());
             if (v < 85)
                 ETH_WARNING("Solidity version detected (" + solcVersion + ") is less then '0.8.5', "
