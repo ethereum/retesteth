@@ -17,10 +17,7 @@ void KeyProcessor::processChar(char const& _ch)
     case STATE::READKEY:
     {
         if (_ch == '"')
-        {
-            m_res.getContent().setKey(std::move(m_key));
             m_state = STATE::FINISH;
-        }
         else
             m_key += _ch;
         break;

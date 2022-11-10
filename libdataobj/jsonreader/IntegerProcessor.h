@@ -4,15 +4,11 @@
 
 namespace dataobject::jsonreader::processors
 {
-class ArrayProcessor : public JsonNodeProcessor
+class IntegerProcessor : public JsonNodeProcessor
 {
 public:
-    ArrayProcessor(bool _begin) : m_state(STATE::READBEGIN)
-    {
-        if (!_begin)
-            m_state = STATE::BEGIN;
-    }
-    NodeType type() const override { return NodeType::ARRAY; }
+    IntegerProcessor(const char& _ch) : m_state(STATE::BEGIN) { processChar(_ch); }
+    NodeType type() const override { return NodeType::INT; }
     virtual bool finalized() const override { return m_state == STATE::FINISH; }
     void processChar(char const& _ch) override;
 
@@ -21,11 +17,9 @@ private:
     {
         BEGIN,
         READBEGIN,
-        READ,
-        SEEKFORCONTINUE,
-        SEEKFOREND,
         FINISH
     };
+    std::string m_valueread;
     STATE m_state = STATE::BEGIN;
     JsonNodeProcessor* m_reader = nullptr;
 };

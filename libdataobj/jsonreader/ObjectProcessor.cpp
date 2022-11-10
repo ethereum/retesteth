@@ -1,6 +1,7 @@
 #include "ObjectProcessor.h"
 #include "JsonReader.h"
 #include "KeyProcessor.h"
+#include <iostream>
 using namespace std;
 
 namespace dataobject::jsonreader::processors
@@ -8,15 +9,20 @@ namespace dataobject::jsonreader::processors
 void ObjectProcessor::processChar(char const& _ch)
 {
     string key;
-    auto seekforcontinue = [this, &key](const char& _ch) {
+    auto seekforcontinue = [this](const char& _ch) {
+        std::cerr << "scont ch `" << _ch << "` " << int(_ch) << std::endl;
         if (_ch == ',')
         {
-            m_reader->m_res.getContent().setKey(key);
-            m_res.getContent().addSubObject(m_reader->m_res);
-            delete m_reader;
-            m_reader = nullptr;
             m_state = STATE::READBEGIN;
+            return;
         }
+        if (_ch == '}')
+        {
+            m_state = STATE::FINISH;
+            return;
+        }
+        if (_ch == ' ')
+            return;
         else
             m_state = STATE::SEEKFOREND;
     };
@@ -27,7 +33,7 @@ void ObjectProcessor::processChar(char const& _ch)
         if (_ch == ' ')
             break;
         if (_ch != '{')
-            throw DataObjectException("JsonReader::ObjectProcessor::processChar: expected '{' in declaration of the object! ");
+            throw DataObjectException(string() + "JsonReader::ObjectProcessor::processChar: expected '{' in declaration of the object! Got: `" + _ch);
         m_state = STATE::READBEGIN;
         break;
     }
@@ -49,8 +55,15 @@ void ObjectProcessor::processChar(char const& _ch)
                 key = std::move(((KeyProcessor*)m_reader)->key());
                 delete m_reader;
                 m_reader = nullptr;
+                m_state = STATE::SEEKFORVALUE;
             }
-            m_state = STATE::SEEKFORVALUE;
+            else
+            {
+                m_res.getContent().addSubObject(m_reader->m_res);
+                delete m_reader;
+                m_reader = nullptr;
+                m_state = STATE::SEEKFORCONTINUE;
+            }
         }
         else
             m_reader->processChar(_ch);
@@ -65,6 +78,7 @@ void ObjectProcessor::processChar(char const& _ch)
             m_state = STATE::READVALUEBEGIN;
             break;
         }
+        seekforcontinue(_ch);
         break;
     }
     case STATE::READVALUEBEGIN:
@@ -78,13 +92,27 @@ void ObjectProcessor::processChar(char const& _ch)
     }
     case STATE::READVALUE:
     {
+        m_reader->processChar(_ch);
         if (m_reader->finalized())
         {
+            if (!key.empty())
+                m_reader->m_res.getContent().setKey(key);
+            if (m_reader->type() == NodeType::KEY)
+            {
+                spDataObject value(new DataObject(std::move(((KeyProcessor*)m_reader)->key())));
+                m_res.getContent().addSubObject(value);
+            }
+            else
+                m_res.getContent().addSubObject(m_reader->m_res);
+            delete m_reader;
+            m_reader = nullptr;
+
             m_state = STATE::SEEKFORCONTINUE;
+            if (_ch == '"')
+                break;
             seekforcontinue(_ch);
+            break;
         }
-        else
-            m_reader->processChar(_ch);
         break;
     }
     case STATE::SEEKFORCONTINUE:
@@ -101,12 +129,12 @@ void ObjectProcessor::processChar(char const& _ch)
         if (_ch == '}')
             m_state = STATE::FINISH;
         else
-            throw DataObjectException("JsonReader::ObjectProcessor::processChar: Unexpected End Of Object node, expected '}'!");
+            throw DataObjectException(string() + "JsonReader::ObjectProcessor::processChar: Unexpected End Of Object node, expected '}', but got: `" + _ch + "`");
         break;
     }
     case STATE::FINISH:
     {
-        throw DataObjectException("JsonReader::ObjectProcessor::processChar: reading char after finished parsing!");
+        throw DataObjectException(string() + "JsonReader::ObjectProcessor::processChar: reading char after finished parsing! `" + _ch + "`");
         break;
     }
     }

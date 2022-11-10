@@ -3,8 +3,7 @@
 #include "../Exception.h"
 #include "JsonNodeProcessor.h"
 #include "KeyProcessor.h"
-#include "ObjectProcessor.h"
-#include "ArrayProcessor.h"
+#include "IntegerProcessor.h"
 #include <algorithm>
 #include <fstream>
 #include <iostream>
@@ -24,6 +23,8 @@ JsonNodeProcessor* JsonReader::detectJsonNode(const char& _ch)
         return new ObjectProcessor(true);
     if (_ch == '[')
         return new ArrayProcessor(true);
+    if (std::isdigit(_ch))
+        return  new IntegerProcessor(_ch);
     throw DataObjectException(string("Undetermend processor ") + _ch);
     return nullptr;
 }
@@ -32,6 +33,7 @@ JsonNodeProcessor* JsonReader::detectJsonNode(const char& _ch)
 void JsonReader::processLine(string const& _line)
 {
     (void)m_stopper;
+    m_processedLineNumber++;
     // Reading root json object from file. The root json must include one object.
     if (_line.empty())
         return;
@@ -46,11 +48,7 @@ void JsonReader::processLine(string const& _line)
     }
     catch (DataObjectException const& _ex)
     {
-        throw DataObjectException(_ex.what());
-    }
-    catch (std::exception const& _ex)
-    {
-        throw DataObjectException(_ex.what());
+        throw DataObjectException(string(_ex.what()) + "\n Line " + std::to_string(m_processedLineNumber) + ": " + _line);
     }
 }
 }  // namespace dataobject::jsonreader
@@ -64,13 +62,13 @@ spDataObject ConvertJsoncppFileToData(string const& _file, string const& _stoppe
     {
         string line;
         JsonReader reader(_stopper, _autosort);
-        size_t k = 0;
+        //size_t k = 0;
         while (std::getline(file, line))
         {
             reader.processLine(line);
 
-            if (k++ == 100)
-                break;
+            //if (k++ == 100)
+            //    break;
         }
         file.close();
 
