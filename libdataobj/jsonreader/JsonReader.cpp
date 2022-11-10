@@ -4,6 +4,7 @@
 #include "JsonNodeProcessor.h"
 #include "KeyProcessor.h"
 #include "ObjectProcessor.h"
+#include "ArrayProcessor.h"
 #include <algorithm>
 #include <fstream>
 #include <iostream>
@@ -14,7 +15,6 @@ using namespace dataobject::jsonreader::processors;
 
 namespace dataobject::jsonreader
 {
-// static string debug;
 
 JsonNodeProcessor* JsonReader::detectJsonNode(const char& _ch)
 {
@@ -22,6 +22,8 @@ JsonNodeProcessor* JsonReader::detectJsonNode(const char& _ch)
         return new KeyProcessor(true);
     if (_ch == '{')
         return new ObjectProcessor(true);
+    if (_ch == '[')
+        return new ArrayProcessor(true);
     throw DataObjectException(string("Undetermend processor ") + _ch);
     return nullptr;
 }

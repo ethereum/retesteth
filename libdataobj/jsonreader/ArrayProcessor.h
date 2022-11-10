@@ -14,7 +14,7 @@ public:
     }
     NodeType type() const override { return NodeType::OBJECT; }
     virtual bool finalized() const override { return m_state == STATE::FINISH; }
-    void processChar(char const& _ch) override { (void)_ch; };
+    void processChar(char const& _ch) override;
 
 private:
     enum class STATE
