@@ -9,7 +9,15 @@ void ArrayProcessor::readBegin(char const& _ch)
     if (_ch == ' ')
         return;
     if (m_reader == nullptr)
+    {
         m_reader = JsonReader::detectJsonNode(_ch);
+        if (m_reader == nullptr)
+        {
+            m_res = spDataObject(new DataObject(DataType::Array));
+            m_state = &ArrayProcessor::preFinish;
+            return;
+        }
+    }
     m_state = &ArrayProcessor::read;
 }
 

@@ -7,12 +7,29 @@ using namespace std;
 namespace dataobject::jsonreader::processors
 {
 
+void ObjectProcessor::begin(char const& _ch)
+{
+    if (_ch == ' ')
+        return;
+    if (_ch != '{')
+        throw DataObjectException(string() + "JsonReader::ObjectProcessor::processChar: expected `{` at the begining of json! `" + _ch + "`");
+    m_state = &ObjectProcessor::readBegin;
+}
+
 void ObjectProcessor::readBegin(char const& _ch)
 {
     if (_ch == ' ')
         return;
     if (m_reader == nullptr)
+    {
         m_reader = JsonReader::detectJsonNode(_ch);
+        if (m_reader == nullptr)
+        {
+            m_res = spDataObject(new DataObject(DataType::Object));
+            m_state = &ObjectProcessor::prefinish;
+            return;
+        }
+    }
     m_state = &ObjectProcessor::readNode;
 }
 
@@ -53,7 +70,6 @@ void ObjectProcessor::seekValueOrContinue(char const& _ch)
 
 void ObjectProcessor::seekContinue(char const& _ch)
 {
-    std::cerr << "scont ch `" << _ch << "` " << int(_ch) << std::endl;
     if (_ch == ',')
     {
         m_state = &ObjectProcessor::readBegin;
@@ -109,4 +125,5 @@ void ObjectProcessor::processChar(char const& _ch)
 {
     (this->*m_state)(_ch);
 }
+
 }  // namespace dataobject::jsonreader::processors

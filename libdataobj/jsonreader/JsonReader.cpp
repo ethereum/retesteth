@@ -4,6 +4,7 @@
 #include "JsonNodeProcessor.h"
 #include "StringProcessor.h"
 #include "IntegerProcessor.h"
+#include "BoolProcessor.h"
 #include <algorithm>
 #include <fstream>
 #include <iostream>
@@ -25,6 +26,10 @@ JsonNodeProcessor* JsonReader::detectJsonNode(const char& _ch)
         return new ArrayProcessor();
     if (std::isdigit(_ch))
         return  new IntegerProcessor(_ch);
+    if (_ch == '}' || _ch == ']')
+        return nullptr;
+    if (_ch == 't' || _ch == 'f')
+        return  new BoolProcessor(_ch);
     throw DataObjectException(string("Undetermend processor ") + _ch);
     return nullptr;
 }
@@ -62,20 +67,22 @@ spDataObject ConvertJsoncppFileToData(string const& _file, string const& _stoppe
     {
         string line;
         JsonReader reader(_stopper, _autosort);
-        //size_t k = 0;
         while (std::getline(file, line))
         {
             reader.processLine(line);
-
-            //if (k++ == 100)
-            //    break;
         }
+        reader.processLine(".");
         file.close();
 
         if (!reader.finalized())
+        {
+            //std::cerr << reader.getResult()->asJson() << std::endl;
             throw DataObjectException("ConvertJsoncppFileToData: Json structure incomplete in file: " + _file);
+        }
+        //else
+        //    std::cerr << reader.getResult()->asJson() << std::endl;
 
-        std::cerr << reader.getResult()->asJson() << std::endl;
+
         return reader.getResult();
     }
     else

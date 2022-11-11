@@ -58,8 +58,8 @@ void printVersion()
 using namespace dataobject;
 Options::Options(int argc, const char** argv)
 {
-    ConvertJsoncppFileToData("/home/wins/Ethereum/tests/GeneralStateTests/stExample/add11.json");
-    exit(1);
+//    ConvertJsoncppFileToData("/home/wins/Ethereum/tests/BlockchainTests/ValidBlocks/bcExample/mergeExample.json");
+//    exit(1);
 
     ADD_OPTION_OVERRIDE(help, "-h|--help", [](){
         printVersion();

@@ -7,11 +7,14 @@ namespace dataobject::jsonreader::processors
 class ObjectProcessor : public JsonNodeProcessor
 {
 public:
+    ObjectProcessor(bool) : m_state(&ObjectProcessor::begin) {}
     ObjectProcessor() : m_state(&ObjectProcessor::readBegin) {}
     NodeType type() const override { return NodeType::OBJECT; }
     virtual bool finalized() const override { return m_finalized; }
     void processChar(char const& _ch) override;
+
 private:
+    void begin(char const&);
     void readBegin(char const&);
     void readNode(char const&);
     void seekValueOrContinue(char const&);
