@@ -2,7 +2,7 @@
 #include "../DataObject.h"
 #include "../Exception.h"
 #include "JsonNodeProcessor.h"
-#include "KeyProcessor.h"
+#include "StringProcessor.h"
 #include "IntegerProcessor.h"
 #include <algorithm>
 #include <fstream>
@@ -18,11 +18,11 @@ namespace dataobject::jsonreader
 JsonNodeProcessor* JsonReader::detectJsonNode(const char& _ch)
 {
     if (_ch == '"')
-        return new KeyProcessor(true);
+        return new StringProcessor();
     if (_ch == '{')
-        return new ObjectProcessor(true);
+        return new ObjectProcessor();
     if (_ch == '[')
-        return new ArrayProcessor(true);
+        return new ArrayProcessor();
     if (std::isdigit(_ch))
         return  new IntegerProcessor(_ch);
     throw DataObjectException(string("Undetermend processor ") + _ch);

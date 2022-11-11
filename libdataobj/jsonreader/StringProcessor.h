@@ -4,24 +4,22 @@
 
 namespace dataobject::jsonreader::processors
 {
-class KeyProcessor : public JsonNodeProcessor
+class StringProcessor : public JsonNodeProcessor
 {
 public:
-    KeyProcessor(bool _begin) : m_state(STATE::READKEY) { (void)_begin; }
-    NodeType type() const override { return NodeType::KEY; }
+    StringProcessor() { m_res = spDataObject(new DataObject(DataType::String)); }
+    NodeType type() const override { return NodeType::STRING; }
     virtual bool finalized() const override { return m_state == STATE::FINISH; }
     void processChar(char const& _ch) override;
-    std::string& key() { return m_key; }
 
 private:
     enum class STATE
     {
-        BEGIN,
-        READKEY,
+        READBEGIN,
+        PREFINISH,
         FINISH
     };
-    STATE m_state = STATE::BEGIN;
-    std::string m_key;
+    STATE m_state = STATE::READBEGIN;
     JsonNodeProcessor* m_reader = nullptr;
 };
 

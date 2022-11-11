@@ -30,7 +30,7 @@ private:
     spDataObject m_res = spDataObject(new DataObject(DataType::Object));
     DataObject* m_actualRoot;
     bool m_seenBegining = false;
-    processors::JsonNodeProcessor* m_processor = new processors::ObjectProcessor(false);
+    processors::JsonNodeProcessor* m_processor = new processors::ObjectProcessor();
 };
 
 }  // namespace dataobject::jsonreader

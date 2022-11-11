@@ -7,30 +7,25 @@ namespace dataobject::jsonreader::processors
 class ObjectProcessor : public JsonNodeProcessor
 {
 public:
-    ObjectProcessor(bool _begin) : m_state(STATE::READBEGIN)
-    {
-        if (!_begin)
-            m_state = STATE::BEGIN;
-    }
+    ObjectProcessor() : m_state(&ObjectProcessor::readBegin) {}
     NodeType type() const override { return NodeType::OBJECT; }
-    virtual bool finalized() const override { return m_state == STATE::FINISH; }
+    virtual bool finalized() const override { return m_finalized; }
     void processChar(char const& _ch) override;
+private:
+    void readBegin(char const&);
+    void readNode(char const&);
+    void seekValueOrContinue(char const&);
+    void seekContinue(char const&);
+    void readValueBegin(char const&);
+    void readValue(char const&);
+    void prefinish(char const&);
+    void finish(char const&);
 
 private:
-    enum class STATE
-    {
-        BEGIN,
-        READBEGIN,
-        READ,
-        SEEKFORVALUE,
-        READVALUEBEGIN,
-        READVALUE,
-        SEEKFORCONTINUE,
-        SEEKFOREND,
-        FINISH
-    };
-    STATE m_state = STATE::BEGIN;
+    void (ObjectProcessor::*m_state)(char const&);
     JsonNodeProcessor* m_reader = nullptr;
+    bool m_finalized = false;
+    std::string m_key;
 };
 
 }  // namespace dataobject::jsonreader::processors

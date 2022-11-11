@@ -7,7 +7,6 @@ enum class NodeType
 {
     ARRAY,
     OBJECT,
-    KEY,
     STRING,
     INT,
     BOOL,

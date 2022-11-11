@@ -20,7 +20,7 @@ private:
         FINISH
     };
     std::string m_valueread;
-    STATE m_state = STATE::BEGIN;
+    STATE m_state = STATE::READBEGIN;
     JsonNodeProcessor* m_reader = nullptr;
 };
 
