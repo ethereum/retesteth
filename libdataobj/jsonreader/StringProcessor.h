@@ -1,31 +1,32 @@
 #pragma once
 #include "../DataObject.h"
 #include "JsonNodeProcessor.h"
+#include <memory>
 
 namespace dataobject::jsonreader::processors
 {
 class StringProcessor : public JsonNodeProcessor
 {
 public:
-    StringProcessor()
+    StringProcessor() : m_state(&StringProcessor::readBegin)
     {
         m_res = spDataObject(new DataObject(DataType::String));
         m_prevChar = &beginChar;
     }
     NodeType type() const override { return NodeType::STRING; }
-    virtual bool finalized() const override { return m_state == STATE::FINISH; }
+    virtual bool finalized() const override { return m_finalized; }
     void processChar(char const& _ch) override;
 
 private:
-    enum class STATE
-    {
-        READBEGIN,
-        PREFINISH,
-        FINISH
-    };
-    STATE m_state = STATE::READBEGIN;
-    JsonNodeProcessor* m_reader = nullptr;
+    void readBegin(char const&);
+    void preFinish(char const&);
+    void finish(char const&);
+
+private:
+    void (StringProcessor::*m_state)(char const&);
+    std::unique_ptr<JsonNodeProcessor> m_reader;
     static char beginChar;
+    bool m_finalized = false;
     char const* m_prevChar;
 };
 

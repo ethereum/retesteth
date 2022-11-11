@@ -10,10 +10,10 @@ void ArrayProcessor::readBegin(char const& _ch)
 {
     if (isEmptyChar(_ch))
         return;
-    if (m_reader == nullptr)
+    if (m_reader.get() == nullptr)
     {
         m_reader = JsonReader::detectJsonNode(_ch);
-        if (m_reader == nullptr)
+        if (m_reader.get() == nullptr)
         {
             m_res = spDataObject(new DataObject(DataType::Array));
             m_state = &ArrayProcessor::preFinish;
@@ -44,8 +44,7 @@ void ArrayProcessor::seekContinue(char const& _ch)
     if (_ch == ',')
     {
         m_res.getContent().addArrayObject(m_reader->m_res);
-        delete m_reader;
-        m_reader = nullptr;
+        m_reader.reset();
         m_state = &ArrayProcessor::readBegin;
     }
     else
@@ -62,8 +61,7 @@ void ArrayProcessor::seekEnd(char const& _ch)
     if (_ch == ']')
     {
         m_res.getContent().addArrayObject(m_reader->m_res);
-        delete m_reader;
-        m_reader = nullptr;
+        m_reader.reset();
         m_state = &ArrayProcessor::preFinish;
     }
     else

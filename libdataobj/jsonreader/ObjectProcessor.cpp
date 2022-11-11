@@ -24,24 +24,23 @@ void ObjectProcessor::readBegin(char const& _ch)
 {
     if (isEmptyChar(_ch))
         return;
-    if (m_reader == nullptr)
+
+    m_reader = JsonReader::detectJsonNode(_ch);
+    if (m_reader.get() == nullptr)
     {
-        m_reader = JsonReader::detectJsonNode(_ch);
-        if (m_reader == nullptr)
-        {
-            if (_ch != '}')
-                throw DataObjectException(errPrefix + " expected `}` at the end of object! got(`" + _ch + "`)");
-            m_res = spDataObject(new DataObject(DataType::Object));
-            m_state = &ObjectProcessor::prefinish;
-            return;
-        }
-        else
-        {
-            m_reader->m_res.getContent().setAutosort(m_res->isAutosort());
-            if (!m_stopper->empty() && m_reader->type() == NodeType::OBJECT)
-                ((ObjectProcessor*)m_reader)->setStopper(*m_stopper);
-        }
+        if (_ch != '}')
+            throw DataObjectException(errPrefix + " expected `}` at the end of object! got(`" + _ch + "`)");
+        m_res = spDataObject(new DataObject(DataType::Object));
+        m_state = &ObjectProcessor::prefinish;
+        return;
     }
+    else
+    {
+        m_reader->m_res.getContent().setAutosort(m_res->isAutosort());
+        if (!m_stopper->empty() && m_reader->type() == NodeType::OBJECT)
+            ((ObjectProcessor*)m_reader.get())->setStopper(*m_stopper);
+    }
+
     m_state = &ObjectProcessor::readNode;
 }
 
@@ -60,8 +59,7 @@ void ObjectProcessor::readNode(char const& _ch)
             m_res.getContent().addSubObject(m_reader->m_res);
             m_state = &ObjectProcessor::seekContinue;
         }
-        delete m_reader;
-        m_reader = nullptr;
+        m_reader.reset();
         (this->*m_state)(_ch);
     }
 }
@@ -101,13 +99,13 @@ void ObjectProcessor::readValueBegin(char const& _ch)
 {
     if (isEmptyChar(_ch))
         return;
-    if (m_reader == nullptr)
+    if (m_reader.get() == nullptr)
     {
         bool autosort = m_res.getContent().isAutosort();
         m_reader = JsonReader::detectJsonNode(_ch);
         m_reader->m_res.getContent().setAutosort(autosort);
         if (!m_stopper->empty() && m_reader->type() == NodeType::OBJECT)
-            ((ObjectProcessor*)m_reader)->setStopper(*m_stopper);
+            ((ObjectProcessor*)m_reader.get())->setStopper(*m_stopper);
     }
     m_state = &ObjectProcessor::readValue;
 }
@@ -145,8 +143,7 @@ void ObjectProcessor::readValue(char const& _ch)
             (this->*m_state)(_ch);
         }
 
-        delete m_reader;
-        m_reader = nullptr;
+        m_reader.reset();
 
         if (!(*m_stopper).empty() && m_key == *m_stopper)
         {

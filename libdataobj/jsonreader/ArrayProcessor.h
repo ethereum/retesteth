@@ -1,6 +1,7 @@
 #pragma once
 #include "../DataObject.h"
 #include "JsonNodeProcessor.h"
+#include <memory>
 
 namespace dataobject::jsonreader::processors
 {
@@ -21,7 +22,7 @@ private:
 
 private:
     void (ArrayProcessor::*m_state)(char const&);
-    JsonNodeProcessor* m_reader = nullptr;
+    std::unique_ptr<JsonNodeProcessor> m_reader;
     bool m_finalized = false;
 };
 

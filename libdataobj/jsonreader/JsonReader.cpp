@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <fstream>
 #include <iostream>
+#include <memory>
 
 using namespace std;
 using namespace dataobject::jsonreader;
@@ -17,23 +18,23 @@ using namespace dataobject::jsonreader::processors;
 namespace dataobject::jsonreader
 {
 
-JsonNodeProcessor* JsonReader::detectJsonNode(const char& _ch)
+std::unique_ptr<JsonNodeProcessor> JsonReader::detectJsonNode(const char& _ch)
 {
     if (_ch == '"')
-        return new StringProcessor();
+        return std::unique_ptr<JsonNodeProcessor>(new StringProcessor());
     if (_ch == '{')
-        return new ObjectProcessor();
+        return std::unique_ptr<JsonNodeProcessor>(new ObjectProcessor());
     if (_ch == '[')
-        return new ArrayProcessor();
+        return std::unique_ptr<JsonNodeProcessor>(new ArrayProcessor());
     const bool minus = _ch == '-';
     if (std::isdigit(_ch) || minus)
-        return new IntegerProcessor(_ch, minus);
+        return std::unique_ptr<JsonNodeProcessor>(new IntegerProcessor(_ch, minus));
     if (_ch == '}' || _ch == ']')
-        return nullptr;
+        return std::unique_ptr<JsonNodeProcessor>(nullptr);
     if (_ch == 't' || _ch == 'f')
-        return  new BoolProcessor(_ch);
+        return  std::unique_ptr<JsonNodeProcessor>(new BoolProcessor(_ch));
     if (_ch == 'n')
-        return new NullProcessor(_ch);
+        return std::unique_ptr<JsonNodeProcessor>(new NullProcessor(_ch));
     throw DataObjectException(string("Undetermend processor `") + _ch + "`");
     return nullptr;
 }
