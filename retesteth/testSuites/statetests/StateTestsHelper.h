@@ -9,6 +9,8 @@ bool OptionsAllowTransaction(TransactionInGeneralSection const& _tr);
 void checkUnexecutedTransactions(std::vector<TransactionInGeneralSection> const& _txs);
 
 void RunTest(StateTestInFilled const& _test);
+spDataObject FillTest(StateTestInFiller const& _test);
+
 
 struct StateTestExecInfo
 {

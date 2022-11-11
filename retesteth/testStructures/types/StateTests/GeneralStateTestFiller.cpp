@@ -9,6 +9,18 @@ using namespace test::teststruct;
 using namespace test::compiler;
 
 namespace  {
+void checkCoinbaseInExpectSection(StateTestFillerExpectSection const& _expect, GCP_SPointer<StateTestFillerEnv> const& _env)
+{
+    for (auto const& acc : _expect.result().accounts())
+    {
+        if (acc.first == _env.getCContent().currentCoinbase())
+        {
+            if (acc.second.getCContent().hasBalance())
+                ETH_WARNING("Expect section checking coinbase balance! " + acc.first.asString());
+            break;
+        }
+    }
+}
 void checkRedundantExpectSection(std::vector<StateTestFillerExpectSection> const& _readExpectSections, StateTestFillerExpectSection const& _newExpectSection)
 {
     for (auto const& readExpect : _readExpectSections)
@@ -98,6 +110,7 @@ StateTestInFiller::StateTestInFiller(spDataObject& _data)
         {
             StateTestFillerExpectSection newSection(dataobject::move(el), m_transaction);
             checkRedundantExpectSection(m_expectSections, newSection);
+            checkCoinbaseInExpectSection(newSection, m_env);
             m_expectSections.push_back(newSection);
         }
         ETH_ERROR_REQUIRE_MESSAGE(m_expectSections.size() > 0, "StateTestFiller require expect sections!");
