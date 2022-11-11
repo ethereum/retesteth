@@ -1,12 +1,14 @@
-#include "JsonReader.h"
 #include "ArrayProcessor.h"
+#include "JsonReader.h"
+#include "JsonReaderHelper.h"
 using namespace std;
+using namespace dataobject::jsonreader;
 namespace dataobject::jsonreader::processors
 {
 
 void ArrayProcessor::readBegin(char const& _ch)
 {
-    if (_ch == ' ')
+    if (isEmptyChar(_ch))
         return;
     if (m_reader == nullptr)
     {
@@ -16,6 +18,10 @@ void ArrayProcessor::readBegin(char const& _ch)
             m_res = spDataObject(new DataObject(DataType::Array));
             m_state = &ArrayProcessor::preFinish;
             return;
+        }
+        else
+        {
+            m_reader->m_res.getContent().setAutosort(m_res->isAutosort());
         }
     }
     m_state = &ArrayProcessor::read;
@@ -33,7 +39,7 @@ void ArrayProcessor::read(char const& _ch)
 
 void ArrayProcessor::seekContinue(char const& _ch)
 {
-    if (_ch == ' ')
+    if (isEmptyChar(_ch))
         return;
     if (_ch == ',')
     {
@@ -51,7 +57,7 @@ void ArrayProcessor::seekContinue(char const& _ch)
 
 void ArrayProcessor::seekEnd(char const& _ch)
 {
-    if (_ch == ' ')
+    if (isEmptyChar(_ch))
         return;
     if (_ch == ']')
     {
@@ -73,6 +79,8 @@ void ArrayProcessor::preFinish(char const& _ch)
 
 void ArrayProcessor::finish(char const& _ch)
 {
+    if (isEmptyChar(_ch))
+        return;
     throw DataObjectException(string() + "JsonReader::ArrayProcessor::processChar: reading char after finished parsing! `" + _ch + "`");
 }
 

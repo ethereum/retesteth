@@ -9,7 +9,8 @@ void IntegerProcessor::processChar(char const& _ch)
     {
     case STATE::BEGIN:
     {
-        m_valueread += _ch;
+        if (!m_minus)
+            m_valueread += _ch;
         m_state = STATE::READBEGIN;
         break;
     }
@@ -19,7 +20,12 @@ void IntegerProcessor::processChar(char const& _ch)
         {
             if (m_valueread.size() == 0)
                 throw DataObjectException(string() + "JsonReader::IntegerProcessor::processChar: reading empty int!");
-            m_res.getContent().setInt(std::atoi(m_valueread.c_str()));
+
+            const int v = std::atoi(m_valueread.c_str());
+            if (m_minus)
+                m_res.getContent().setInt(v * -1);
+            else
+                m_res.getContent().setInt(v);
             m_state = STATE::FINISH;
         }
         m_valueread += _ch;

@@ -1,4 +1,5 @@
 #include "ConvertFile.h"
+#include "ConvertFile2.h"
 #include "DataObject.h"
 #include "Exception.h"
 #include <algorithm>
@@ -140,6 +141,8 @@ bool checkExcessiveComa(string const& _input, size_t _i)
 /// Convert Json object represented as string to DataObject
 spDataObject ConvertJsoncppStringToData(string const& _input, string const& _stopper, bool _autosort)
 {
+    return ConvertJsoncppStringToData2(_input, _stopper, _autosort);
+
     if (_input.size() < 2 || _input.find("{") == string::npos || _input.find("}") == string::npos)
         throw DataObjectException() << "ConvertJsoncppStringToData can't read json structure in file: `" + _input.substr(0, 50);
 

@@ -1,10 +1,11 @@
 #include "JsonReader.h"
 #include "../DataObject.h"
 #include "../Exception.h"
-#include "JsonNodeProcessor.h"
-#include "StringProcessor.h"
-#include "IntegerProcessor.h"
 #include "BoolProcessor.h"
+#include "IntegerProcessor.h"
+#include "JsonNodeProcessor.h"
+#include "NullProcessor.h"
+#include "StringProcessor.h"
 #include <algorithm>
 #include <fstream>
 #include <iostream>
@@ -24,31 +25,33 @@ JsonNodeProcessor* JsonReader::detectJsonNode(const char& _ch)
         return new ObjectProcessor();
     if (_ch == '[')
         return new ArrayProcessor();
-    if (std::isdigit(_ch))
-        return  new IntegerProcessor(_ch);
+    const bool minus = _ch == '-';
+    if (std::isdigit(_ch) || minus)
+        return new IntegerProcessor(_ch, minus);
     if (_ch == '}' || _ch == ']')
         return nullptr;
     if (_ch == 't' || _ch == 'f')
         return  new BoolProcessor(_ch);
-    throw DataObjectException(string("Undetermend processor ") + _ch);
+    if (_ch == 'n')
+        return new NullProcessor(_ch);
+    throw DataObjectException(string("Undetermend processor `") + _ch + "`");
     return nullptr;
 }
 
 
 void JsonReader::processLine(string const& _line)
 {
-    (void)m_stopper;
     m_processedLineNumber++;
     // Reading root json object from file. The root json must include one object.
     if (_line.empty())
         return;
     try
     {
-        if (m_processor->finalized())
-            throw DataObjectException("JsonReader::processLine: Unexpected json file end on line: " + _line);
         for (auto const& ch : _line)
         {
             m_processor->processChar(ch);
+            if (m_processor->aborted())
+                break;
         }
     }
     catch (DataObjectException const& _ex)
@@ -60,6 +63,16 @@ void JsonReader::processLine(string const& _line)
 
 namespace dataobject
 {
+spDataObject ConvertJsoncppStringToData2(string const& _input, string const& _stopper, bool _autosort)
+{
+    JsonReader reader(_stopper, _autosort);
+    reader.processLine(_input);
+    reader.processLine(" ");
+    if (!reader.finalized() && !reader.aborted())
+        throw DataObjectException("ConvertJsoncppFileToData: Json structure incomplete in string!");
+    return reader.getResult();
+}
+
 spDataObject ConvertJsoncppFileToData(string const& _file, string const& _stopper, bool _autosort)
 {
     std::ifstream file(_file);
@@ -70,8 +83,10 @@ spDataObject ConvertJsoncppFileToData(string const& _file, string const& _stoppe
         while (std::getline(file, line))
         {
             reader.processLine(line);
+            if (reader.aborted())
+                break;
         }
-        reader.processLine(".");
+        reader.processLine(" ");
         file.close();
 
         if (!reader.finalized())

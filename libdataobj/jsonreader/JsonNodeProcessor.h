@@ -19,6 +19,7 @@ public:
     virtual void processChar(char const& _ch) = 0;
     virtual NodeType type() const = 0;
     virtual bool finalized() const = 0;
+    virtual bool aborted() const { return false; }
     virtual ~JsonNodeProcessor(){};
 
 public:

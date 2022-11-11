@@ -63,6 +63,7 @@ TestFileData readTestFile(fs::path const& _testFileName)
 
         std::cerr << "JSON: '" << std::endl << output << "'" << std::endl;
         std::cerr << "DATA: '" << std::endl << srcString << "'" << std::endl;
+        std::cerr << "FULL: '" << std::endl << testData.data->asJson() << "'" << std::endl;
     }
     testData.hash = sha3(srcString);
     testData.hashCalculated = true;

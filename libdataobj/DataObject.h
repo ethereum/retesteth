@@ -87,6 +87,7 @@ public:
     void replace(DataObject const& _value);
     void renameKey(std::string const& _currentKey, std::string&& _newKey);
     void removeKey(std::string const& _key);  // vector<element> erase method with `replace()` function
+    void replaceObjectAtKey(std::string const& _key, spDataObject _newObj);
 
     DataObject const& atKey(std::string const& _key) const;
     DataObjectK atKeyPointer(std::string const& _key);

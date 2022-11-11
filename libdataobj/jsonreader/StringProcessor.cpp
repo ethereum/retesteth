@@ -1,16 +1,20 @@
 #include "StringProcessor.h"
 namespace dataobject::jsonreader::processors
 {
+char StringProcessor::beginChar = '"';
 void StringProcessor::processChar(char const& _ch)
 {
     switch (m_state)
     {
     case STATE::READBEGIN:
     {
-        if (_ch == '"')
+        if (_ch == '"' && *m_prevChar != '\\')
             m_state = STATE::PREFINISH;
         else
+        {
+            m_prevChar = &_ch;
             m_res.getContent().asStringUnsafe() += _ch;
+        }
         break;
     }
     case STATE::PREFINISH:

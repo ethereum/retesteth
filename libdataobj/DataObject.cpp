@@ -285,6 +285,20 @@ void DataObject::renameKey(std::string const& _currentKey, std::string&& _newKey
 
 }
 
+void DataObject::replaceObjectAtKey(std::string const& _key, spDataObject _newObj)
+{
+    for (auto& el : m_subObjects)
+    {
+        if (el->getKey() == _key)
+        {
+            el = _newObj;
+            break;
+        }
+    }
+    m_subObjectKeys.at(_key) = _newObj;
+}
+
+
 /// vector<element> erase method with `replace()` function
 void DataObject::removeKey(std::string const& _key)
 {
