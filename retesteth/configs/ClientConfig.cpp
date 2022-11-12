@@ -138,6 +138,16 @@ bool ClientConfig::checkForkInProgression(FORK const& _net) const
     return cfgFile().forkProgressionAsSet().count(_net);
 }
 
+bool ClientConfig::checkForkSkipOnFiller(FORK const& _net) const
+{
+    for (auto const& fork : cfgFile().fillerSkipForks())
+    {
+        if (fork == _net)
+            return true;
+    }
+    return false;
+}
+
 /// translate network names in expect section field
 /// >Homestead to EIP150, EIP158, Byzantium, ...
 /// <=Homestead to Frontier, Homestead

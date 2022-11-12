@@ -52,6 +52,7 @@ public:
     bool validateForkAllowed(FORK const& _net, bool _bail = true) const;
     bool checkForkAllowed(FORK const& _net) const;
     bool checkForkInProgression(FORK const& _net) const;
+    bool checkForkSkipOnFiller(FORK const& _net) const;
 
     // Translate smart network names into network names ( `<=Homestead` to `Frontier, Homestead`)
     std::vector<FORK> translateNetworks(std::set<std::string> const& _networks) const;

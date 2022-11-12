@@ -37,6 +37,9 @@ string const t8ntool_config = R"({
         "ArrowGlacierToMergeAtDiffC0000",
         "GrayGlacier"
     ],
+    "fillerSkipForks" : [
+        "Merge+3540+3670"
+    ],
     "exceptions" : {
       "AddressTooShort" : "input string too short for common.Address",
       "AddressTooLong" : "rlp: input string too long for common.Address, decoding into (types.Transaction)(types.LegacyTx).To",

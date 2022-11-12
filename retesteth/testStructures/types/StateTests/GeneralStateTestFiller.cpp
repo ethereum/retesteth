@@ -7,6 +7,7 @@
 using namespace std;
 using namespace test::teststruct;
 using namespace test::compiler;
+using namespace test;
 
 namespace  {
 void checkCoinbaseInExpectSection(StateTestFillerExpectSection const& _expect, GCP_SPointer<StateTestFillerEnv> const& _env)
@@ -16,7 +17,10 @@ void checkCoinbaseInExpectSection(StateTestFillerExpectSection const& _expect, G
         if (acc.first == _env.getCContent().currentCoinbase())
         {
             if (acc.second.getCContent().hasBalance())
-                ETH_WARNING("Expect section checking coinbase balance! " + acc.first.asString());
+            {
+                auto const& debug = TestOutputHelper::get().testInfo().errorDebug();
+                ETH_WARNING("Expect section checking coinbase balance! " + acc.first.asString() + debug);
+            }
             break;
         }
     }

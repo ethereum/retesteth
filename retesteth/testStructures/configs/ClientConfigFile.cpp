@@ -25,6 +25,7 @@ void requireJsonFileStructure(DataObject const& _data)
             {"defaultChainID", {{DataType::Integer}, jsonField::Optional}},
             {"forks", {{DataType::Array}, jsonField::Required}},
             {"additionalForks", {{DataType::Array}, jsonField::Required}},
+            {"fillerSkipForks", {{DataType::Array}, jsonField::Optional}},
             {"exceptions", {{DataType::Object}, jsonField::Required}},
             {"fieldReplace", {{DataType::Object}, jsonField::Optional}}});
 }
@@ -160,6 +161,19 @@ void ClientConfigFile::initWithData(DataObject const& _data)
         m_additionalForks.push_back(FORK(el));
     }
 
+    // Read fillerSkipForks are allowed to skip fork names when filling the test
+    if (_data.count("fillerSkipForks"))
+    {
+        for (auto const& el : _data.atKey("fillerSkipForks").getSubObjects())
+        {
+            if (el->asString()[0] == '/' && el->asString()[1] == '/')
+                continue;
+            if (test::inArray(m_skipForks, FORK(el)))
+                ETH_ERROR_MESSAGE(sErrorPath + "`fillerSkipForks` section contain dublicate element: " + el->asString());
+            m_skipForks.push_back(FORK(el));
+        }
+    }
+
     // When client used to fill up tests this map translate exceptionsID in test to exception string
     // returned from client
     for (auto const& el : _data.atKey("exceptions").getSubObjects())
@@ -219,6 +233,8 @@ std::set<FORK> ClientConfigFile::allowedForks() const
         for (auto const& el : m_forks)
             out.insert(el);
         for (auto const& el : m_additionalForks)
+            out.insert(el);
+        for (auto const& el : m_skipForks)
             out.insert(el);
     }
     return out;

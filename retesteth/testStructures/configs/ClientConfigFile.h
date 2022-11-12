@@ -28,6 +28,7 @@ struct ClientConfigFile : GCP_SPointerBase
     int defaultChainID() const { return m_defaultChainID; }
     std::vector<FORK> const& forks() const { return m_forks; }
     std::vector<FORK> const& additionalForks() const { return m_additionalForks; }
+    std::vector<FORK> const& fillerSkipForks() const { return m_skipForks; }
     std::set<FORK> allowedForks() const;
     std::set<FORK> forkProgressionAsSet() const;
     bool checkLogsHash() const { return m_checkLogsHash; }
@@ -57,6 +58,7 @@ private:
     size_t m_initializeTime;                 ///< Time to start the instance
     std::vector<FORK> m_forks;               ///< Allowed forks as network name
     std::vector<FORK> m_additionalForks;     ///< Allowed forks as network name
+    std::vector<FORK> m_skipForks;           ///< Allowed forks to skip when filling
     std::map<std::string, std::string> m_exceptions;   ///< Exception Translation
     std::map<std::string, std::string> m_fieldRaplce;  ///< Replace field names in requests map
 
