@@ -60,6 +60,8 @@ ClientConfig::ClientConfig(fs::path const& _clientConfigPath) : m_id(ClientConfi
         // Load genesis templates
         for (auto const& net : cfgFile().allowedForks())
         {
+            if (checkForkSkipOnFiller(net))
+                continue;
             fs::path const configGenesisTemplatePath = genesisTemplatePath / (net.asString() + ".json");
             if (!fs::exists(configGenesisTemplatePath))
             {
