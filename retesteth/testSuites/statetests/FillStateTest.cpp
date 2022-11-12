@@ -91,14 +91,15 @@ spDataObject performTransaction(StateTestFillerExecInfo const& _info)
     auto& tr = _info.tr;                   // Built transaction
     auto const& fork = _info.network;      // Current network (forkname)
     auto const& expect = _info.expResult;  // Expected post state result
+    auto const& ethTr = tr.transaction();
 
     session.test_modifyTimestamp(test.Env().firstBlockTimestamp());
-    modifyTransactionChainIDByNetwork(tr.transaction(), fork);
-    FH32 trHash(session.eth_sendRawTransaction(tr.transaction()->getRawBytes(), tr.transaction()->getSecret()));
+    modifyTransactionChainIDByNetwork(ethTr, fork);
+    FH32 trHash(session.eth_sendRawTransaction(ethTr->getRawBytes(), ethTr->getSecret()));
 
     MineBlocksResult const mRes = session.test_mineBlocks(1);
     string const& testException = expect.getExpectException(fork);
-    compareTransactionException(tr.transaction(), mRes, testException);
+    compareTransactionException(ethTr, mRes, testException);
 
     VALUE latestBlockN(session.eth_blockNumber());
     EthGetBlockBy blockInfo(session.eth_getBlockByNumber(latestBlockN, Request::LESSOBJECTS));
@@ -131,7 +132,7 @@ spDataObject performTransaction(StateTestFillerExecInfo const& _info)
 
     (*transactionResults).atKeyPointer("indexes") = indexes;
     (*transactionResults)["hash"] = blockInfo.header()->stateRoot().asString();
-    (*transactionResults)["txbytes"] = tr.transaction()->getRawBytes().asString();
+    (*transactionResults)["txbytes"] = ethTr->getRawBytes().asString();
     if (!testException.empty())
         (*transactionResults)["expectException"] = testException;
 
@@ -199,10 +200,11 @@ spDataObject FillTest(StateTestInFiller const& _test)
                 bool expectFoundTransaction = false;
                 for (auto& tr : txs)
                 {
+                    auto const& ethTr = tr.transaction();
                     TestInfo errorInfo(fork.asString(), tr.dataInd(), tr.gasInd(), tr.valueInd());
-                    if (!tr.transaction()->dataLabel().empty() || !tr.transaction()->dataRawPreview().empty())
+                    if (!ethTr->dataLabel().empty() || !ethTr->dataRawPreview().empty())
                         errorInfo.setTrDataDebug(
-                            tr.transaction()->dataLabel() + " " + tr.transaction()->dataRawPreview() + "..");
+                            ethTr->dataLabel() + " " + ethTr->dataRawPreview() + "..");
                     TestOutputHelper::get().setCurrentTestInfo(errorInfo);
 
                     bool expectChekIndexes = expect.checkIndexes(tr.dataInd(), tr.gasInd(), tr.valueInd());
