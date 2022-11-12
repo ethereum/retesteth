@@ -13,23 +13,6 @@ using namespace test::statetests;
 
 namespace  {
 
-bool hasSkipFork(std::set<FORK> const& _allforks)
-{
-    Options const& opt = Options::get();
-    auto const& skipforks = opt.getCurrentConfig().cfgFile().fillerSkipForks();
-    for (auto const& skipfork : skipforks)
-    {
-        if (_allforks.count(skipfork))
-        {
-            ETH_WARNING(string("Test has unsupported fork `") + skipfork.asString() +
-                        "` allowed to skip, skipping the test from filling!"
-                        + TestOutputHelper::get().testInfo().errorDebug());
-            return true;
-        }
-    }
-    return false;
-}
-
 void fillInfoWithLabels(std::vector<TransactionInGeneralSection> const& _txs, spDataObject _filledTest)
 {
     for (auto const& tx : _txs)
@@ -240,7 +223,7 @@ spDataObject FillTest(StateTestInFiller const& _test)
             (*filledTest)["post"].addSubObject(forkResults);
     }
 
-    checkUnexecutedTransactions(txs);
+    checkUnexecutedTransactions(txs, Report::ERROR);
     verifyFilledTest(_test.unitTestVerify(), filledTest);
     for (auto const& ex : TestOutputHelper::get().getUnitTestExceptions())
         ETH_FAIL_MESSAGE("Expected exception didn't occur: \n`" + ex + "`");

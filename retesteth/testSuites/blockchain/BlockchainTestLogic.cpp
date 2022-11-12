@@ -16,8 +16,13 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
     ETH_DC_MESSAGE(DC::TESTLOG, "Running " + _test.testName());
 
     ClientConfig const& cfg = Options::get().getDynamicOptions().getCurrentConfig();
-    if (!cfg.validateForkAllowed(_test.network(), false))
+    bool fillerSkipFork = cfg.checkForkSkipOnFiller(_test.network());
+    if (!cfg.validateForkAllowed(_test.network(), false) || fillerSkipFork)
+    {
+        if (fillerSkipFork)
+            ETH_WARNING("Skipping unsupported fork: " + _test.network().asString() + " in " + _test.testName());
         return;
+    }
 
     TestOutputHelper::get().setCurrentTestName(_test.testName());
     TestOutputHelper::get().setUnitTestExceptions(_test.unitTestExceptions());

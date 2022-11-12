@@ -21,7 +21,7 @@ bool OptionsAllowTransaction(TransactionInGeneralSection const& _tr)
     return false;
 }
 
-void checkUnexecutedTransactions(std::vector<TransactionInGeneralSection> const& _txs)
+void checkUnexecutedTransactions(std::vector<TransactionInGeneralSection> const& _txs, Report _report)
 {
     bool atLeastOneExecuted = false;
     bool atLeastOneWithoutExpectSection = false;
@@ -51,7 +51,7 @@ void checkUnexecutedTransactions(std::vector<TransactionInGeneralSection> const&
     if (!atLeastOneExecuted)
     {
         string const errorMessage = "Specified filter did not run a single transaction! " + TestOutputHelper::get().testInfo().errorDebug();
-        if (Options::get().filltests)
+        if (_report == Report::ERROR)
         {
             ETH_ERROR_MESSAGE(errorMessage);
         }
@@ -68,5 +68,23 @@ void checkUnexecutedTransactions(std::vector<TransactionInGeneralSection> const&
         }
     }
 }
+
+bool hasSkipFork(std::set<FORK> const& _allforks)
+{
+    Options const& opt = Options::get();
+    auto const& skipforks = opt.getCurrentConfig().cfgFile().fillerSkipForks();
+    for (auto const& skipfork : skipforks)
+    {
+        if (_allforks.count(skipfork))
+        {
+            ETH_WARNING(string("Test has unsupported fork `") + skipfork.asString() +
+                        "` allowed to skip, skipping the test from filling!"
+                        + TestOutputHelper::get().testInfo().errorDebug());
+            return true;
+        }
+    }
+    return false;
+}
+
 
 }  // namespace test::statetests

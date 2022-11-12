@@ -223,6 +223,6 @@ void RunTest(StateTestInFilled const& _test)
         }
     }
 
-    checkUnexecutedTransactions(txs);
+    checkUnexecutedTransactions(txs, Report::WARNING);
 }
 }  // namespace test::statetests

@@ -4,12 +4,19 @@
 
 namespace test::statetests
 {
+enum class Report
+{
+    WARNING,
+    ERROR
+};
 extern std::string const c_trHashNotFound;
 bool OptionsAllowTransaction(TransactionInGeneralSection const& _tr);
-void checkUnexecutedTransactions(std::vector<TransactionInGeneralSection> const& _txs);
+void checkUnexecutedTransactions(std::vector<TransactionInGeneralSection> const& _txs, Report _report = Report::WARNING);
+bool hasSkipFork(std::set<FORK> const& _allforks);
 
 void RunTest(StateTestInFilled const& _test);
 spDataObject FillTest(StateTestInFiller const& _test);
+spDataObject FillTestAsBlockchain(StateTestInFiller const& _test);
 
 
 struct StateTestExecInfo
