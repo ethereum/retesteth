@@ -9,6 +9,7 @@ using namespace test;
 using namespace std;
 using namespace test::debug;
 using namespace test::session;
+using namespace test::statetests;
 
 namespace  {
 
@@ -46,6 +47,106 @@ void fillInfoWithLabels(std::vector<TransactionInGeneralSection> const& _txs, sp
         }
     }
 }
+
+void performPoststate(EthGetBlockBy const& _blockInfo)
+{
+    if (Options::get().poststate)
+        ETH_DC_MESSAGE(DC::STATE, "PostState " + TestOutputHelper::get().testInfo().errorDebug() + " : \n" +
+                                  cDefault + "Hash: " + _blockInfo.header()->stateRoot().asString());
+}
+
+void performStatediff(StateTestFillerExecInfo const& _info)
+{
+    if (Options::get().statediff)
+    {
+        auto& session = _info.session;         // Connection with the client
+        auto const& test = _info.test;         // State test
+
+        auto const stateDiffJson = stateDiff(test.Pre(), getRemoteState(session))->asJson();
+        ETH_DC_MESSAGE(DC::STATE,
+            "\nRunning test State Diff:" + TestOutputHelper::get().testInfo().errorDebug() + cDefault + " \n" + stateDiffJson);
+    }
+}
+
+void performVmtrace(StateTestFillerExecInfo const& _info, EthGetBlockBy const& _blockInfo, FH32 const& _trHash)
+{
+    if (Options::get().vmtrace)
+    {
+        auto& session = _info.session;         // Connection with the client
+        auto const& test = _info.test;         // State test
+        auto& tr = _info.tr;                   // Built transaction
+        auto const& fork = _info.network;      // Current network (forkname)
+
+        string const testNameOut = test.testName() + "_d" + tr.dataIndS() + "g" + tr.gasIndS() + "v" +
+                                   tr.valueIndS() + "_" + fork.asString() + "_" + _trHash.asString() + ".txt";
+        VMtraceinfo info(session, _trHash, _blockInfo.header()->stateRoot(), testNameOut);
+        printVmTrace(info);
+    }
+}
+
+spDataObject performTransaction(StateTestFillerExecInfo const& _info)
+{
+    auto& session = _info.session;         // Connection with the client
+    auto const& test = _info.test;         // State test
+    auto& tr = _info.tr;                   // Built transaction
+    auto const& fork = _info.network;      // Current network (forkname)
+    auto const& expect = _info.expResult;  // Expected post state result
+
+    session.test_modifyTimestamp(test.Env().firstBlockTimestamp());
+    modifyTransactionChainIDByNetwork(tr.transaction(), fork);
+    FH32 trHash(session.eth_sendRawTransaction(tr.transaction()->getRawBytes(), tr.transaction()->getSecret()));
+
+    MineBlocksResult const mRes = session.test_mineBlocks(1);
+    string const& testException = expect.getExpectException(fork);
+    compareTransactionException(tr.transaction(), mRes, testException);
+
+    VALUE latestBlockN(session.eth_blockNumber());
+    EthGetBlockBy blockInfo(session.eth_getBlockByNumber(latestBlockN, Request::LESSOBJECTS));
+    if (!blockInfo.hasTransaction(trHash) && testException.empty())
+        ETH_ERROR_MESSAGE("StateTest::FillTest: " + c_trHashNotFound);
+
+    tr.markExecuted();
+
+    performPoststate(blockInfo);
+    performStatediff(_info);
+    performVmtrace(_info, blockInfo, trHash);
+
+    spDataObject transactionResults;
+    try
+    {
+        auto const remState = getRemoteState(session);
+        compareStates(expect.result(), remState);
+        if (Options::get().poststate)
+            (*transactionResults).atKeyPointer("postState") = remState.asDataObject();
+    }
+    catch (StateTooBig const&)
+    {
+        compareStates(expect.result(), session);
+    }
+
+    spDataObject indexes;
+    (*indexes)["data"] = tr.dataInd();
+    (*indexes)["gas"] = tr.gasInd();
+    (*indexes)["value"] = tr.valueInd();
+
+    (*transactionResults).atKeyPointer("indexes") = indexes;
+    (*transactionResults)["hash"] = blockInfo.header()->stateRoot().asString();
+    (*transactionResults)["txbytes"] = tr.transaction()->getRawBytes().asString();
+    if (!testException.empty())
+        (*transactionResults)["expectException"] = testException;
+
+    // Fill up the loghash (optional)
+    if (Options::getDynamicOptions().getCurrentConfig().cfgFile().checkLogsHash())
+    {
+        FH32 logHash(session.test_getLogHash(trHash));
+        if (!logHash.isZero())
+            (*transactionResults)["logs"] = logHash.asString();
+    }
+
+    session.test_rewindToBlock(VALUE(0));
+    return transactionResults;
+}
+
 }
 
 namespace test::statetests
@@ -68,7 +169,6 @@ spDataObject FillTest(StateTestInFiller const& _test)
     std::vector<TransactionInGeneralSection> txs = _test.GeneralTr().buildTransactions();
     fillInfoWithLabels(txs, filledTest);
 
-    // run transactions on all networks that we need
     auto const allforks = _test.getAllForksFromExpectSections();
     if (hasSkipFork(allforks))
         return spDataObject(new DataObject(DataType::Null));
@@ -103,7 +203,6 @@ spDataObject FillTest(StateTestInFiller const& _test)
                     if (!tr.transaction()->dataLabel().empty() || !tr.transaction()->dataRawPreview().empty())
                         errorInfo.setTrDataDebug(
                             tr.transaction()->dataLabel() + " " + tr.transaction()->dataRawPreview() + "..");
-
                     TestOutputHelper::get().setCurrentTestInfo(errorInfo);
 
                     bool expectChekIndexes = expect.checkIndexes(tr.dataInd(), tr.gasInd(), tr.valueInd());
@@ -121,74 +220,10 @@ spDataObject FillTest(StateTestInFiller const& _test)
                         continue;
 
                     expectFoundTransaction = true;
-                    session.test_modifyTimestamp(_test.Env().firstBlockTimestamp());
 
-                    modifyTransactionChainIDByNetwork(tr.transaction(), fork);
-                    FH32 trHash(session.eth_sendRawTransaction(tr.transaction()->getRawBytes(), tr.transaction()->getSecret()));
-
-                    MineBlocksResult const mRes = session.test_mineBlocks(1);
-                    string const& testException = expect.getExpectException(fork);
-                    compareTransactionException(tr.transaction(), mRes, testException);
-
-                    VALUE latestBlockN(session.eth_blockNumber());
-                    EthGetBlockBy blockInfo(session.eth_getBlockByNumber(latestBlockN, Request::LESSOBJECTS));
-                    if (!blockInfo.hasTransaction(trHash) && testException.empty())
-                        ETH_ERROR_MESSAGE("StateTest::FillTest: " + c_trHashNotFound);
-                    tr.markExecuted();
-
-                    if (Options::get().poststate)
-                        ETH_DC_MESSAGE(DC::STATE, "PostState " + TestOutputHelper::get().testInfo().errorDebug() + " : \n" +
-                                                      cDefault + "Hash: " + blockInfo.header()->stateRoot().asString());
-
-                    if (Options::get().statediff)
-                    {
-                        auto const stateDiffJson = stateDiff(_test.Pre(), getRemoteState(session))->asJson();
-                        ETH_DC_MESSAGE(DC::STATE,
-                            "\nRunning test State Diff:" + TestOutputHelper::get().testInfo().errorDebug() + cDefault + " \n" + stateDiffJson);
-                    }
-
-                    if (Options::get().vmtrace)
-                    {
-                        string const testNameOut = _test.testName() + "_d" + tr.dataIndS() + "g" + tr.gasIndS() + "v" +
-                                                   tr.valueIndS() + "_" + fork.asString() + "_" + trHash.asString() + ".txt";
-                        VMtraceinfo info(session, trHash, blockInfo.header()->stateRoot(), testNameOut);
-                        printVmTrace(info);
-                    }
-
-                    spDataObject transactionResults;
-                    try
-                    {
-                        auto const remState = getRemoteState(session);
-                        compareStates(expect.result(), remState);
-                        if (Options::get().poststate)
-                            (*transactionResults).atKeyPointer("postState") = remState.asDataObject();
-                    }
-                    catch (StateTooBig const&)
-                    {
-                        compareStates(expect.result(), session);
-                    }
-
-                    spDataObject indexes;
-                    (*indexes)["data"] = tr.dataInd();
-                    (*indexes)["gas"] = tr.gasInd();
-                    (*indexes)["value"] = tr.valueInd();
-
-                    (*transactionResults).atKeyPointer("indexes") = indexes;
-                    (*transactionResults)["hash"] = blockInfo.header()->stateRoot().asString();
-                    (*transactionResults)["txbytes"] = tr.transaction()->getRawBytes().asString();
-                    if (!testException.empty())
-                        (*transactionResults)["expectException"] = testException;
-
-                    // Fill up the loghash (optional)
-                    if (Options::getDynamicOptions().getCurrentConfig().cfgFile().checkLogsHash())
-                    {
-                        FH32 logHash(session.test_getLogHash(trHash));
-                        if (!logHash.isZero())
-                            (*transactionResults)["logs"] = logHash.asString();
-                    }
-
+                    auto const transactionResults = performTransaction(StateTestFillerExecInfo(session, _test, expect, tr, fork));
                     (*forkResults).addArrayObject(transactionResults);
-                    session.test_rewindToBlock(VALUE(0));
+
                 }  // tx
 
                 if (expectFoundTransaction == false)
