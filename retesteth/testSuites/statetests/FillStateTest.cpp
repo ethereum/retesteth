@@ -10,13 +10,50 @@ using namespace std;
 using namespace test::debug;
 using namespace test::session;
 
+namespace  {
+
+bool hasSkipFork(std::set<FORK> const& _allforks)
+{
+    Options const& opt = Options::get();
+    auto const& skipforks = opt.getCurrentConfig().cfgFile().fillerSkipForks();
+    for (auto const& skipfork : skipforks)
+    {
+        if (_allforks.count(skipfork))
+        {
+            ETH_WARNING(string("Test has unsupported fork `") + skipfork.asString() +
+                        "` allowed to skip, skipping the test from filling!"
+                        + TestOutputHelper::get().testInfo().errorDebug());
+            return true;
+        }
+    }
+    return false;
+}
+
+void fillInfoWithLabels(std::vector<TransactionInGeneralSection> const& _txs, spDataObject _filledTest)
+{
+    for (auto const& tx : _txs)
+    {
+        // Fill up the label map to tx.data
+        if (!tx.transaction()->dataLabel().empty())
+        {
+            static string const removePrefix = ":label ";
+            string label = tx.transaction()->dataLabel();
+            size_t const pos = label.find(removePrefix);
+            if (pos != string::npos)
+                label.erase(pos, removePrefix.length());
+            if (!(*_filledTest)["_info"]["labels"].count(tx.dataIndS()))
+                (*_filledTest)["_info"]["labels"].addSubObject(spDataObject(new DataObject(tx.dataIndS(), label)));
+        }
+    }
+}
+}
+
 namespace test::statetests
 {
 spDataObject FillTest(StateTestInFiller const& _test)
 {
     spDataObject filledTest;
     TestOutputHelper::get().setCurrentTestName(_test.testName());
-
     SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
 
     if (_test.hasInfo())
@@ -28,42 +65,30 @@ spDataObject FillTest(StateTestInFiller const& _test)
     for (auto const& ex : _test.unitTestExceptions())
         (*filledTest)["exceptions"].addArrayObject(spDataObject(new DataObject(ex)));
 
-    // Gather Transactions from general transaction section
     std::vector<TransactionInGeneralSection> txs = _test.GeneralTr().buildTransactions();
-    for (auto const& tx : txs)
-    {
-        // Fill up the label map to tx.data
-        if (!tx.transaction()->dataLabel().empty())
-        {
-            static string const removePrefix = ":label ";
-            string label = tx.transaction()->dataLabel();
-            size_t const pos = label.find(removePrefix);
-            if (pos != string::npos)
-                label.erase(pos, removePrefix.length());
-            if (!(*filledTest)["_info"]["labels"].count(tx.dataIndS()))
-                (*filledTest)["_info"]["labels"].addSubObject(spDataObject(new DataObject(tx.dataIndS(), label)));
-        }
-    }
+    fillInfoWithLabels(txs, filledTest);
 
     // run transactions on all networks that we need
-    for (auto const& fork : _test.getAllForksFromExpectSections())  // object constructed!!!
-    {
-        // Skip by --singlenet option
-        bool networkSkip = false;
-        Options const& opt = Options::get();
+    auto const allforks = _test.getAllForksFromExpectSections();
+    if (hasSkipFork(allforks))
+        return spDataObject(new DataObject(DataType::Null));
 
-        if ((!opt.singleTestNet.empty() && FORK(opt.singleTestNet) != fork) ||
-            !Options::getDynamicOptions().getCurrentConfig().checkForkAllowed(fork))
-            networkSkip = true;
+    for (auto const& fork : allforks)
+    {
+        Options const& opt = Options::get();
+        bool allowedFork = !opt.getCurrentConfig().checkForkAllowed(fork);
+        if ((!opt.singleTestNet.empty() && FORK(opt.singleTestNet) != fork) || allowedFork)
+        {
+            for (TransactionInGeneralSection& tr : txs)
+                tr.markSkipped();
+            continue;
+        }
 
         spDataObject forkResults;
         (*forkResults).setKey(fork.asString());
 
-        if (!networkSkip)
-        {
-            auto const p = prepareChainParams(fork, SealEngine::NoReward, _test.Pre(), _test.Env(), ParamsContext::StateTests);
-            session.test_setChainParams(p);
-        }
+        auto const p = prepareChainParams(fork, SealEngine::NoReward, _test.Pre(), _test.Env(), ParamsContext::StateTests);
+        session.test_setChainParams(p);
 
         // Run transactions for defined expect sections only
         for (auto const& expect : _test.Expects())
@@ -82,7 +107,7 @@ spDataObject FillTest(StateTestInFiller const& _test)
                     TestOutputHelper::get().setCurrentTestInfo(errorInfo);
 
                     bool expectChekIndexes = expect.checkIndexes(tr.dataInd(), tr.gasInd(), tr.valueInd());
-                    if (!OptionsAllowTransaction(tr) || networkSkip)
+                    if (!OptionsAllowTransaction(tr))
                     {
                         tr.markSkipped();
 

@@ -108,9 +108,12 @@ void TestSuite::runTestWithoutFiller(boost::filesystem::path const& _file) const
                     opt.doFilling = true;
                     opt.allowInvalidBlocks = true;
                     spDataObject output = doTests(testData.data, opt);
-                    addClientInfoIfUpdate(output.getContent(), _file, testData.hash, outPath);
-                    (*output).performModifier(mod_sortKeys, DataObject::ModifierOption::NONRECURSIVE);
-                    writeFile(outPath, asBytes(output->asJson()));
+                    if (output->type() != DataType::Null)
+                    {
+                        addClientInfoIfUpdate(output.getContent(), _file, testData.hash, outPath);
+                        (*output).performModifier(mod_sortKeys, DataObject::ModifierOption::NONRECURSIVE);
+                        writeFile(outPath, asBytes(output->asJson()));
+                    }
                 }
                 else
                     executeFile(_file);

@@ -174,12 +174,13 @@ void RunTest(StateTestInFilled const& _test)
         FORK const& network = post.first;
         Options const& opt = Options::get();
 
-        bool allowedFork = Options::getDynamicOptions().getCurrentConfig().checkForkAllowed(network);
-        if ((!opt.singleTestNet.empty() && FORK(opt.singleTestNet) != network) || !allowedFork)
+        bool skipedFork = opt.getCurrentConfig().checkForkSkipOnFiller(network);
+        bool allowedFork = opt.getCurrentConfig().checkForkAllowed(network);
+        if ((!opt.singleTestNet.empty() && FORK(opt.singleTestNet) != network) || !allowedFork || skipedFork)
         {
             for (TransactionInGeneralSection& tr : txs)
                 tr.markSkipped();
-            if (!allowedFork)
+            if (!allowedFork || skipedFork)
                 ETH_WARNING("Skipping unsupported fork: " + network.asString() + " in " + _test.testName());
             continue;
         }

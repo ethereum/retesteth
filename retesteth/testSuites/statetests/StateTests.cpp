@@ -183,7 +183,13 @@ spDataObject StateTestSuite::doTests(spDataObject& _input, TestSuiteOptions& _op
         if (Options::get().fillchain)
             filledTest = FillTestAsBlockchain(test);
         else
-            (*filledTest).addSubObject(test.testName(), FillTest(test));
+        {
+            auto const filled = FillTest(test);
+            if (filled->type() != DataType::Null)
+                (*filledTest).addSubObject(test.testName(), filled);
+            else
+                return filled;
+        }
 
         TestOutputHelper::get().registerTestRunSuccess();
         return filledTest;
