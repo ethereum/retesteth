@@ -33,6 +33,7 @@ struct ClientConfigFile : GCP_SPointerBase
     std::set<FORK> forkProgressionAsSet() const;
     bool checkLogsHash() const { return m_checkLogsHash; }
     bool checkDifficulty() const { return m_checkDifficulty; }
+    bool checkBasefee() const { return m_checkBasefee; }
 
     std::map<std::string, std::string> const& exceptions() const { return m_exceptions; }
     std::map<std::string, std::string> const& fieldreplace() const { return m_fieldRaplce; }
@@ -55,6 +56,7 @@ private:
     std::map<std::string, boost::filesystem::path> m_customCompilers;
     bool m_checkLogsHash;                    ///< Enable logsHash verification
     bool m_checkDifficulty;                  ///< Enable difficulty verification
+    bool m_checkBasefee;                     ///< Enable basefee verifivation
     size_t m_initializeTime;                 ///< Time to start the instance
     std::vector<FORK> m_forks;               ///< Allowed forks as network name
     std::vector<FORK> m_additionalForks;     ///< Allowed forks as network name

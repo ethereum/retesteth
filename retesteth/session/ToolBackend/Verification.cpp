@@ -28,6 +28,8 @@ void check_difficultyDelta(ToolChain const& _chain, BlockHeader const& _header, 
 
 void check_baseFeeDelta(ToolChain const& _chain, spBlockHeader const& _header, spBlockHeader const& _parent)
 {
+    if (!test::Options::getCurrentConfig().cfgFile().checkBasefee())
+        return;
     // Check if the base fee is correct
     ChainOperationParams params = ChainOperationParams::defaultParams(_chain.toolParams());
     VALUE newBaseFee = calculateEIP1559BaseFee(params, _header, _parent);

@@ -23,6 +23,15 @@ void checkCoinbaseInExpectSection(StateTestFillerExpectSection const& _expect, G
             }
             break;
         }
+        else if (acc.first == FH20("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"))
+        {
+            if (acc.second.getCContent().hasBalance())
+            {
+                auto const& debug = TestOutputHelper::get().testInfo().errorDebug();
+                ETH_WARNING("Expect section checking sender balance! " + acc.first.asString() + debug);
+            }
+            break;
+        }
     }
 }
 void checkRedundantExpectSection(std::vector<StateTestFillerExpectSection> const& _readExpectSections, StateTestFillerExpectSection const& _newExpectSection)
