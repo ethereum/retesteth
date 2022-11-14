@@ -175,8 +175,18 @@ void ToolChain::checkBasefeeAgainstRetesteth(VALUE const& _toolBasefee, spBlockH
     ChainOperationParams params = ChainOperationParams::defaultParams(toolParams());
     VALUE retestethBaseFee = calculateEIP1559BaseFee(params, _pendingHeader, _parentHeader);
     if (_toolBasefee != retestethBaseFee)
-        ETH_WARNING("tool vs retesteth basefee disagree: " + _toolBasefee.asDecString() + " vs " +
-                    retestethBaseFee.asDecString());
+    {
+        if (Options::get().filltests)
+        {
+            ETH_WARNING("tool vs retesteth basefee disagree: " + _toolBasefee.asDecString() + " vs " +
+                        retestethBaseFee.asDecString());
+        }
+        else
+        {
+            ETH_DC_MESSAGEC(DC::LOWLOG, "tool vs retesteth basefee disagree: " + _toolBasefee.asDecString() + " vs " +
+                                            retestethBaseFee.asDecString(), LogColor::YELLOW);
+        }
+    }
 }
 
 void ToolChain::calculateAndSetBaseFee(VALUE const& _toolBaseFee, spBlockHeader& _pendingHeader, spBlockHeader const& _parentHeader)

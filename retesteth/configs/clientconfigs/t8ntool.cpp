@@ -9,6 +9,7 @@ string const t8ntool_config = R"({
     "socketType" : "tranition-tool",
     "socketAddress" : "start.sh",
     "checkLogsHash" : true,
+    "checkBasefee" : true,
     "customCompilers" : {
         ":yul" : "yul.sh",
         ":mycompiler" : "mycompiler.sh"
