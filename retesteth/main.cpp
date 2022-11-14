@@ -138,14 +138,24 @@ int main(int argc, const char* argv[])
     try
     {
         auto fakeInit = [](int, char* []) -> boost::unit_test::test_suite* { return nullptr; };
-        if (opt.vmtrace || !opt.travisOutThread)
+        if (opt.vmtrace || !opt.travisOutThread || opt.getvectors)
         {
+            if (opt.getvectors)
+                disableOutput();
+
             std::atomic_bool stopTimeout{false};
             std::thread timeout(timeoutThread, &stopTimeout);
             // Do not use travis '.' output thread if debug is defined
             result = unit_test_main(fakeInit, argc, const_cast<char**>(argv));
             stopTimeout = true;
             timeout.join();
+
+            if (opt.getvectors)
+            {
+                enableOutput();
+                test::TestOutputHelper::get().printTestVectors();
+                disableOutput();
+            }
         }
         else
         {

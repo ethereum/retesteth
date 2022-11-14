@@ -125,6 +125,11 @@ spDataObject DifficultyTestSuite::doTests(spDataObject& _input, TestSuiteOptions
         // Just check the test structure if running with --checkhash
         if (Options::get().checkhash)
             return spDataObject();
+        if (Options::get().getvectors)
+        {
+            filledTest.registerAllVectors();
+            return spDataObject();
+        }
 
         for (auto const& test : filledTest.tests())
         {

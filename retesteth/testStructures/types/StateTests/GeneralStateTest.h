@@ -36,6 +36,7 @@ struct GeneralStateTest
 {
     GeneralStateTest(spDataObject&);
     std::vector<StateTestInFilled> const& tests() const { return m_tests; }
+    void registerAllVectors() const;
 
 private:
     GeneralStateTest() {}

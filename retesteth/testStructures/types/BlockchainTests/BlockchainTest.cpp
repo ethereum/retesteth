@@ -2,6 +2,7 @@
 #include <retesteth/EthChecks.h>
 #include <retesteth/TestOutputHelper.h>
 #include <retesteth/testStructures/Common.h>
+#include <boost/test/framework.hpp>
 
 using namespace std;
 using namespace test::teststruct;
@@ -93,6 +94,21 @@ BlockchainTest::BlockchainTest(spDataObject& _data)
     {
         ETH_ERROR_MESSAGE(_ex.what());
     }
+}
+
+void BlockchainTest::registerAllVectors() const
+{
+    string execTotal;
+    auto const& helper = TestOutputHelper::get();
+    string const suite = boost::unit_test::framework::current_test_case().full_name();
+    string const execPrefix = string("-t ") + suite + " --";
+    for (auto const& test : m_tests)
+    {
+        auto const filename = helper.testFile().stem().string();
+        const string exec = string(" --singletest ") + filename + "/" + test.testName() + "\n";
+        execTotal += execPrefix + exec;
+    }
+    TestOutputHelper::get().addTestVector(std::move(execTotal));
 }
 
 }  // namespace teststruct

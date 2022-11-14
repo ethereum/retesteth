@@ -151,6 +151,11 @@ spDataObject TransactionTestSuite::doTests(spDataObject& _input, TestSuiteOption
         // Just check the test structure if running with --checkhash
         if (Options::get().checkhash)
             return spDataObject();
+        if (Options::get().getvectors)
+        {
+            filledTest.registerAllVectors();
+            return spDataObject();
+        }
 
         for (auto const& test : filledTest.tests())
         {

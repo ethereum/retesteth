@@ -32,6 +32,9 @@ using namespace test::debug;
 using namespace boost;
 using namespace boost::unit_test;
 
+mutex g_outputVectors;
+static std::vector<std::string> outputVectors;
+
 mutex g_finishedTestFoldersMapMutex;
 typedef std::set<std::string> FolderNameSet;
 static std::map<boost::filesystem::path, FolderNameSet> finishedTestFoldersMap;
@@ -428,4 +431,17 @@ std::string TestInfo::errorDebug() const
     if (nologcolor)
         return message + ")";
     return message + ")" + cDefault;
+}
+
+void TestOutputHelper::addTestVector(std::string&& _str)
+{
+    std::lock_guard<std::mutex> lock(g_outputVectors);
+    outputVectors.push_back(_str);
+}
+
+void TestOutputHelper::printTestVectors()
+{
+    std::lock_guard<std::mutex> lock(g_outputVectors);
+    for (auto const& el : outputVectors)
+        std::cout << el;
 }

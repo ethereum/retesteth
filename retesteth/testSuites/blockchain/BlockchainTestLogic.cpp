@@ -280,6 +280,11 @@ spDataObject DoTests(spDataObject& _input, TestSuite::TestSuiteOptions& _opt)
         // Just check the test structure if running with --checkhash
         if (Options::get().checkhash)
             return tests;
+        if (Options::get().getvectors)
+        {
+            test.registerAllVectors();
+            return tests;
+        }
         ETH_DC_MESSAGE(DC::TESTLOG, "Parse test done");
 
         for (BlockchainTestInFilled const& bcTest : test.tests())

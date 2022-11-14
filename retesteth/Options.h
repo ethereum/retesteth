@@ -185,6 +185,7 @@ public:
     dataind_opt trData;
     int_opt trGasIndex= -1;
     int_opt trValueIndex = -1;
+    bool_opt getvectors = false;
     bool_opt vmtrace = false;
     bool_opt statediff = false;
     booloutpath_opt vmtraceraw = false;

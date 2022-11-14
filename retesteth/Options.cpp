@@ -163,6 +163,9 @@ Options::Options(int argc, const char** argv)
             stateTestOnly("-v");
     });
 
+    ADD_OPTION(getvectors, "--getvectors", []() {
+        cout << setw(30) << "--getvectors" << setw(25) << "Output all subunits of the given test (disables execution)\n";
+    });
     ADD_OPTION(statediff, "--statediff", [](){
         cout << setw(30) << "--statediff" << setw(25) << "Print statediff post vs pre\n";
     });

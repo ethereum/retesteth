@@ -78,3 +78,15 @@ TransactionTestInFilled::TransactionTestInFilled(spDataObject& _data)
         ETH_ERROR_MESSAGE(string("TransactionTestFilled convertion error: ") + _ex.what());
     }
 }
+
+void TransactionTest::registerAllVectors() const
+{
+    string execTotal;
+    auto const& helper = TestOutputHelper::get();
+    string const suite = boost::unit_test::framework::current_test_case().full_name();
+    string const execPrefix = string("-t ") + suite + " --";
+    auto const filename = helper.testFile().stem().string();
+    const string exec = string(" --singletest ") + filename + "\n";
+    execTotal += execPrefix + exec;
+    TestOutputHelper::get().addTestVector(std::move(execTotal));
+}

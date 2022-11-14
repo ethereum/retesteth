@@ -58,6 +58,7 @@ struct TransactionTest
 {
     TransactionTest(spDataObject&);
     std::vector<TransactionTestInFilled> const& tests() const { return m_tests; }
+    void registerAllVectors() const;
 
 private:
     TransactionTest() {}

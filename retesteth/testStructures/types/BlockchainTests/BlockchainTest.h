@@ -53,6 +53,7 @@ struct BlockchainTest
 {
     BlockchainTest(spDataObject&);
     std::vector<BlockchainTestInFilled> const& tests() const { return m_tests; }
+    void registerAllVectors() const;
 
 private:
     BlockchainTest() {}

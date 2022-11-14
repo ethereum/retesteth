@@ -37,6 +37,7 @@ struct DifficultyTest
 {
     DifficultyTest(spDataObject&);
     std::vector<DifficultyTestInFilled> const& tests() const { return m_tests; }
+    void registerAllVectors() const;
 
 private:
     DifficultyTest() {}
