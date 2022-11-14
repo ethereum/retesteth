@@ -25,7 +25,8 @@ void checkCoinbaseInExpectSection(StateTestFillerExpectSection const& _expect, G
         }
         else if (acc.first == FH20("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"))
         {
-            if (acc.second.getCContent().hasBalance())
+            auto const& accAddress = acc.second.getCContent();
+            if (accAddress.hasBalance() && accAddress.balance() != 0)
             {
                 auto const& debug = TestOutputHelper::get().testInfo().errorDebug();
                 ETH_WARNING("Expect section checking sender balance! " + acc.first.asString() + debug);

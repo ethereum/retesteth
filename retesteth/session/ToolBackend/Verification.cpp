@@ -35,7 +35,7 @@ void check_baseFeeDelta(ToolChain const& _chain, spBlockHeader const& _header, s
     VALUE newBaseFee = calculateEIP1559BaseFee(params, _header, _parent);
     BlockHeader1559 const& header = BlockHeader1559::castFrom(_header);
     if (header.baseFee() != newBaseFee)
-        throw test::UpwardsException() << "Invalid block: base fee not correct! Expected: `" + newBaseFee.asDecString() +
+        throw test::UpwardsException() << "Invalid block: Error in field: baseFeePerGas! Expected: `" + newBaseFee.asDecString() +
                                               "`, got: `" + header.baseFee().asDecString() + "`";
 }
 

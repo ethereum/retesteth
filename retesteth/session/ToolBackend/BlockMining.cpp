@@ -59,6 +59,16 @@ void BlockMining::prepareEnvFile()
         (*envData)["currentRandom"] = m_currentBlockRef.header()->mixHash().asString();
     }
 
+    auto const& parentType = m_parentBlockRef.header()->type();
+    if (parentType == BlockType::BlockHeader1559 || parentType == BlockType::BlockHeaderMerge)
+    {
+        (*envData).removeKey("currentBaseFee");
+        BlockHeader1559 const& h1559 = (BlockHeader1559 const&) m_parentBlockRef.header().getCContent();
+        (*envData)["parentBaseFee"] = h1559.baseFee().asString();
+        (*envData)["parentGasUsed"] = h1559.gasUsed().asString();
+        (*envData)["parentGasLimit"] = h1559.gasLimit().asString();
+    }
+
     // BlockHeader hash information for tool mining
     size_t k = 0;
     for (auto const& bl : m_chainRef.blocks())
