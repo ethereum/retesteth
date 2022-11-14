@@ -10,6 +10,7 @@ string const etc_config = R"({
     "socketAddress" : "start.sh",
     "checkLogsHash" : true,
     "checkDifficulty" : false,
+    "checkBasefee" : false,
     "customCompilers" : {
         ":yul" : "yul.sh",
         ":mycompiler" : "mycompiler.sh"

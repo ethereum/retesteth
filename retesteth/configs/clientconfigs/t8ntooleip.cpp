@@ -9,6 +9,7 @@ string const t8ntooleip_config = R"({
     "socketType" : "tranition-tool",
     "socketAddress" : "start.sh",
     "checkLogsHash" : true,
+    "checkBasefee" : true,
     "forks" : [
         "Frontier",
         "Homestead",

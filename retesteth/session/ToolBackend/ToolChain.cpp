@@ -172,6 +172,8 @@ void ToolChain::checkDifficultyAgainstRetesteth(VALUE const& _toolDifficulty, sp
 
 void ToolChain::checkBasefeeAgainstRetesteth(VALUE const& _toolBasefee, spBlockHeader const& _pendingHeader, spBlockHeader const& _parentHeader)
 {
+    if (!test::Options::getCurrentConfig().cfgFile().checkBasefee())
+        return;
     ChainOperationParams params = ChainOperationParams::defaultParams(toolParams());
     VALUE retestethBaseFee = calculateEIP1559BaseFee(params, _pendingHeader, _parentHeader);
     if (_toolBasefee != retestethBaseFee)
