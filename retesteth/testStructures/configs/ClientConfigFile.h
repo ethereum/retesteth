@@ -34,6 +34,7 @@ struct ClientConfigFile : GCP_SPointerBase
     bool checkLogsHash() const { return m_checkLogsHash; }
     bool checkDifficulty() const { return m_checkDifficulty; }
     bool checkBasefee() const { return m_checkBasefee; }
+    bool calculateBasefee() const { return m_calculateBasefee; }
 
     std::map<std::string, std::string> const& exceptions() const { return m_exceptions; }
     std::map<std::string, std::string> const& fieldreplace() const { return m_fieldRaplce; }
@@ -57,6 +58,7 @@ private:
     bool m_checkLogsHash;                    ///< Enable logsHash verification
     bool m_checkDifficulty;                  ///< Enable difficulty verification
     bool m_checkBasefee;                     ///< Enable basefee verifivation
+    bool m_calculateBasefee;                 ///< Retesteth calculate basefee value
     size_t m_initializeTime;                 ///< Time to start the instance
     std::vector<FORK> m_forks;               ///< Allowed forks as network name
     std::vector<FORK> m_additionalForks;     ///< Allowed forks as network name

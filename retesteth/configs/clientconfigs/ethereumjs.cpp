@@ -9,6 +9,7 @@ string const ethereumjs_config = R"({
     "socketType":"tranition-tool",
     "socketAddress":"start.sh",
     "initializeTime" : "5",
+    "calculateBasefee" : true,
     "forks":[
        "Frontier",
        "Homestead",

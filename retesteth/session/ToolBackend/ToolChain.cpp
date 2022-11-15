@@ -122,7 +122,7 @@ spDataObject const ToolChain::mineBlock(EthereumBlockState const& _pendingBlock,
         pendingFixedHeader.setDifficulty(res.currentDifficulty());
         checkDifficultyAgainstRetesteth(res.currentDifficulty(), pendingFixed.header());
     }
-    calculateAndSetBaseFee(res.currentBasefee(), pendingFixed.headerUnsafe(), lastBlock().header());
+    calculateAndCheckSetBaseFee(res.currentBasefee(), pendingFixed.headerUnsafe(), lastBlock().header());
 
     spDataObject miningResult;
     miningResult = coorectTransactionsByToolResponse(res, pendingFixed, _pendingBlock, _req);
@@ -191,7 +191,7 @@ void ToolChain::checkBasefeeAgainstRetesteth(VALUE const& _toolBasefee, spBlockH
     }
 }
 
-void ToolChain::calculateAndSetBaseFee(VALUE const& _toolBaseFee, spBlockHeader& _pendingHeader, spBlockHeader const& _parentHeader)
+void ToolChain::calculateAndCheckSetBaseFee(VALUE const& _toolBaseFee, spBlockHeader& _pendingHeader, spBlockHeader const& _parentHeader)
 {
     bool isOn1559 = _pendingHeader.getCContent().type() == BlockType::BlockHeader1559 && _parentHeader->type() == BlockType::BlockHeader1559;
     bool isOn1559ToMerge = _pendingHeader.getCContent().type() == BlockType::BlockHeaderMerge && _parentHeader->type() == BlockType::BlockHeader1559;
@@ -201,9 +201,20 @@ void ToolChain::calculateAndSetBaseFee(VALUE const& _toolBaseFee, spBlockHeader&
     if (isOn1559 || isOn1559ToMerge || isOnMerge)
     {
         BlockHeader1559& pendingFixed1559Header = BlockHeader1559::castFrom(_pendingHeader.getContent());
-        pendingFixed1559Header.setBaseFee(_toolBaseFee);
-        spBlockHeader pendingFixed1559HeaderSP(&pendingFixed1559Header);
-        checkBasefeeAgainstRetesteth(_toolBaseFee, pendingFixed1559HeaderSP, _parentHeader);
+
+        if (Options::getCurrentConfig().cfgFile().calculateBasefee())
+        {
+            // If the tool does not return basefee in result file, the value is set 0, we need to corret it
+            ChainOperationParams params = ChainOperationParams::defaultParams(toolParams());
+            VALUE retestethBaseFee = calculateEIP1559BaseFee(params, _pendingHeader, _parentHeader);
+            pendingFixed1559Header.setBaseFee(retestethBaseFee);
+        }
+        else
+        {
+            pendingFixed1559Header.setBaseFee(_toolBaseFee);
+            spBlockHeader pendingFixed1559HeaderSP(&pendingFixed1559Header);
+            checkBasefeeAgainstRetesteth(_toolBaseFee, pendingFixed1559HeaderSP, _parentHeader);
+        }
     }
 }
 
