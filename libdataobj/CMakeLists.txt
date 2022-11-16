@@ -1,5 +1,5 @@
-file(GLOB sources "*.cpp")
-file(GLOB headers "*.h")
+file(GLOB_RECURSE sources "*.cpp")
+file(GLOB_RECURSE headers "*.h")
 
 add_library(dataobj ${sources} ${headers})
 target_include_directories(dataobj SYSTEM PRIVATE "../")

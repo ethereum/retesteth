@@ -1,18 +1,8 @@
-#include "ConvertFile.h"
-#include "DataObject.h"
-#include "Exception.h"
-#include "JsonReader/JsonReader.h"
-#include <algorithm>
-#include <fstream>
-#include <iostream>
-
+#include "JsonReader.h"
 using namespace std;
+using namespace dataobject;
 using namespace dataobject::jsonreader;
-// Manually construct dataobject from file string content
-// bacuse Json::Reader::parse has a memory leak
 
-namespace dataobject
-{
 std::string const errorPrefix = "Error parsing json: ";
 bool isEmptyChar(char const& _char)
 {
@@ -21,7 +11,7 @@ bool isEmptyChar(char const& _char)
     return false;
 }
 
-size_t stripSpaces(std::string const& _input, size_t _i)
+size_t stripSpaces(JsonInput const& _input, size_t _i)
 {
     size_t i = _i;
     for (; i < _input.length(); i++)
@@ -34,9 +24,9 @@ size_t stripSpaces(std::string const& _input, size_t _i)
     return i;
 }
 
-string parseKeyValue(string const& _input, size_t& _i)
+string parseKeyValue(JsonInput const& _input, size_t& _i)
 {
-    if (_i + 1 > _input.size())
+    if (_i + 1 > _input.length())
         throw DataObjectException() << errorPrefix + "reached EOF before reading char: `\"`";
 
     bool escapeChar = true;
@@ -59,9 +49,9 @@ string parseKeyValue(string const& _input, size_t& _i)
     return string();
 }
 
-bool readBoolOrNull(string const& _input, size_t& _i, bool& _result, bool& _readNull)
+bool readBoolOrNull(JsonInput const& _input, size_t& _i, bool& _result, bool& _readNull)
 {
-    if (_i + 4 >= _input.size())
+    if (_i + 4 >= _input.length())
         return false;
 
     // true false
@@ -90,7 +80,7 @@ bool readBoolOrNull(string const& _input, size_t& _i, bool& _result, bool& _read
     return false;
 }
 
-bool readDigit(string const& _input, size_t& _i, int& _result)
+bool readDigit(JsonInput const& _input, size_t& _i, int& _result)
 {
     bool readMinus = false;
     auto const& e = _input[_i];
@@ -127,7 +117,7 @@ bool readDigit(string const& _input, size_t& _i, int& _result)
     return false;
 }
 
-bool checkExcessiveComa(string const& _input, size_t _i)
+bool checkExcessiveComa(JsonInput const& _input, size_t _i)
 {
     if (_i < 1)
         return false;
@@ -139,53 +129,21 @@ bool checkExcessiveComa(string const& _input, size_t _i)
     return false;
 }
 
-spDataObject ConvertJsoncppFileToData(string const& _file, string const& _stopper, bool _autosort)
+void JsonReader::parse()
 {
-    JsonReader reader(new JsonInputFile(_file), _stopper, _autosort);
-    reader.parse();
-    return reader.getResult();
-    /*
-    std::ifstream file(_file);
-    if (file.is_open())
-    {
-        string line;
-        JsonReader reader(_stopper, _autosort);
-        while (std::getline(file, line))
-        {
-            line.erase(std::remove(line.begin(), line.end(), ' '), line.end());
-            reader.processLine(line);
-        }
-        file.close();
-        return reader.getResult();
-    }
-    else
-        throw DataObjectException() << "ConvertJsoncppFileToData can't open file: `" + _file;
-*/
-}
 
-/// Convert Json object represented as string to DataObject
-spDataObject ConvertJsoncppStringToData(string const& _input, string const& _stopper, bool _autosort)
-{
-    JsonReader reader(new JsonInputString(_input), _stopper, _autosort);
-    reader.parse();
-    return reader.getResult();
+//    if (_input.size() < 2 || _input.find("{") == string::npos || _input.find("}") == string::npos)
+//        throw DataObjectException() << "ConvertJsoncppStringToData can't read json structure in file: `" + _input.substr(0, 50);
 
-    if (_input.size() < 2 || _input.find("{") == string::npos || _input.find("}") == string::npos)
-        throw DataObjectException() << "ConvertJsoncppStringToData can't read json structure in file: `" + _input.substr(0, 50);
+    JsonInput const& _input = *m_input;
 
-    std::vector<DataObject*> applyDepth;  // indexes at root array of objects that we are reading into
-    spDataObject root;
-    root.getContent().setAutosort(_autosort);
-    DataObject* actualRoot = &root.getContent();
-    bool keyEncountered = false;
-
-    auto printDebug = [&_input](int _i) {
+    auto printDebug = [this](int _i) {
         static const short c_debugSize = 120;
         string debug;
         if (_i > c_debugSize)
-            debug = _input.substr(_i - c_debugSize, c_debugSize);
+            debug = m_input->substr(_i - c_debugSize, c_debugSize);
         else
-            debug = _input.substr(0, c_debugSize);
+            debug = m_input->substr(0, c_debugSize);
         return "\n\"------\n" + debug + "\n\"------";
     };
 
@@ -206,7 +164,7 @@ spDataObject ConvertJsoncppStringToData(string const& _input, string const& _sto
             {
                 if (keyEncountered)
                     throw DataObjectException() << errorPrefix + "attempt to set key multiple times! "
-                       "(like \"key\" : \"key\" : \"value\") around: " + printDebug(i);
+                                                       "(like \"key\" : \"key\" : \"value\") around: " + printDebug(i);
 
                 keyEncountered = true;
                 if (actualRoot->type() == DataType::Array)
@@ -214,8 +172,8 @@ spDataObject ConvertJsoncppStringToData(string const& _input, string const& _sto
                         << errorPrefix + "array could not have elements with keys! around: " + printDebug(i);
                 (*obj).setKey(key);
                 bool replaceKey = false;
-                const size_t keyPosExpected = _autosort ?
-                                            max(0, (int)findOrderedKeyPosition(key, actualRoot->getSubObjects()) - 1) : 0;
+                const size_t keyPosExpected = m_autosort ?
+                                                  max(0, (int)findOrderedKeyPosition(key, actualRoot->getSubObjects()) - 1) : 0;
                 for (size_t objI = keyPosExpected; objI < actualRoot->getSubObjects().size(); objI++)
                 {
                     if (actualRoot->getSubObjects().at(objI)->getKey() == key)
@@ -232,7 +190,7 @@ spDataObject ConvertJsoncppStringToData(string const& _input, string const& _sto
                     continue;
                 applyDepth.push_back(actualRoot);  // remember the header
                 actualRoot = &actualRoot->addSubObject(obj);
-                actualRoot->setAutosort(_autosort);
+                actualRoot->setAutosort(m_autosort);
                 continue;
             }
             else
@@ -276,7 +234,7 @@ spDataObject ConvertJsoncppStringToData(string const& _input, string const& _sto
             if (actualRoot->type() == DataType::Array || actualRoot->type() == DataType::Object)
             {
                 spDataObject newObj(new DataObject(DataType::Array));
-                (*newObj).setAutosort(_autosort);
+                (*newObj).setAutosort(m_autosort);
                 applyDepth.push_back(actualRoot);
                 actualRoot = &actualRoot->addSubObject(newObj);
 
@@ -303,16 +261,16 @@ spDataObject ConvertJsoncppStringToData(string const& _input, string const& _sto
                 throw DataObjectException()
                     << "expected '}' closing the object! around: " + printDebug(i) + ", got: `" + _input.at(i) + "'";
 
-            if (!_stopper.empty() && actualRoot->getKey() == _stopper)
-                return root;
+            if (!m_stopper.empty() && actualRoot->getKey() == m_stopper)
+                return;
 
             if (applyDepth.size() == 0)
             {
                 i++;
                 i = stripSpaces(_input, i);
                 if (i != _input.length())
-                    throw DataObjectException() << errorPrefix + "expected end of json! " + _input;
-                return root;
+                    throw DataObjectException() << errorPrefix + "expected end of json! " + _input.getAll();
+                return;
             }
             else
             {
@@ -374,6 +332,5 @@ spDataObject ConvertJsoncppStringToData(string const& _input, string const& _sto
             continue;
         }
     }
-    return root;
-}
+    return;
 }
