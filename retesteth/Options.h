@@ -176,7 +176,7 @@ public:
     // Setting test suite and test
     fspath_opt testpath;
     fspath_opt singleTestFile;
-    fspath_opt customTestFolder;
+    string_opt customTestFolder;
     string_opt singleTestOutFile;
     singletest_opt singletest;
     string_opt singleTestNet;
