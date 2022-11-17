@@ -218,18 +218,23 @@ spDataObject ConvertJsoncppStringToData(string const& _input, string const& _sto
                     throw DataObjectException()
                         << errorPrefix + "array could not have elements with keys! around: " + printDebug(i);
                 (*obj).setKey(key);
+
+
                 bool replaceKey = false;
-                const size_t keyPosExpected = _autosort ?
-                                            max(0, (int)findOrderedKeyPosition(key, actualRoot->getSubObjects()) - 1) : 0;
-                for (size_t objI = keyPosExpected; objI < actualRoot->getSubObjects().size(); objI++)
+                if (actualRoot->count(key))
                 {
-                    if (actualRoot->getSubObjects().at(objI)->getKey() == key)
+                    const size_t keyPosExpected = _autosort ?
+                                                max(0, (int)findOrderedKeyPosition(key, actualRoot->getSubObjects()) - 1) : 0;
+                    for (size_t objI = keyPosExpected; objI < actualRoot->getSubObjects().size(); objI++)
                     {
-                        replaceKey = true;
-                        applyDepth.push_back(actualRoot);
-                        actualRoot = &actualRoot->getSubObjectsUnsafe().at(objI).getContent();
-                        actualRoot->clearSubobjects();
-                        break;
+                        if (actualRoot->getSubObjects().at(objI)->getKey() == key)
+                        {
+                            replaceKey = true;
+                            applyDepth.push_back(actualRoot);
+                            actualRoot = &actualRoot->getSubObjectsUnsafe().at(objI).getContent();
+                            actualRoot->clearSubobjects();
+                            break;
+                        }
                     }
                 }
 
