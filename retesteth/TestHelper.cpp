@@ -37,10 +37,11 @@ spDataObject readJsonData(fs::path const& _file, string const& _stopper, bool _a
 {
     try
     {
-        string s = dev::contentsString(_file);
-        ETH_ERROR_REQUIRE_MESSAGE(
-            s.length() > 0, "Contents of " + _file.string() + " is empty. Trying to parse empty file. (forgot --filltests?)");
-        return dataobject::ConvertJsoncppStringToData(s, _stopper, _autosort);
+        //string s = dev::contentsString(_file);
+        //ETH_ERROR_REQUIRE_MESSAGE(
+        //    s.length() > 0, "Contents of " + _file.string() + " is empty. Trying to parse empty file. (forgot --filltests?)");
+        //return dataobject::ConvertJsoncppStringToData(s, _stopper, _autosort);
+        return dataobject::ConvertJsoncppFileToData(_file.string(), _stopper, _autosort);
     }
     catch (std::exception const& _ex)
     {

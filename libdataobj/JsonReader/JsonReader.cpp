@@ -11,7 +11,7 @@ bool isEmptyChar(char const& _char)
     return false;
 }
 
-size_t stripSpaces(JsonInput const& _input, size_t _i)
+size_t stripSpaces(JsonInput& _input, size_t _i)
 {
     size_t i = _i;
     for (; i < _input.length(); i++)
@@ -24,7 +24,7 @@ size_t stripSpaces(JsonInput const& _input, size_t _i)
     return i;
 }
 
-string parseKeyValue(JsonInput const& _input, size_t& _i)
+string parseKeyValue(JsonInput& _input, size_t& _i)
 {
     if (_i + 1 > _input.length())
         throw DataObjectException() << errorPrefix + "reached EOF before reading char: `\"`";
@@ -49,7 +49,7 @@ string parseKeyValue(JsonInput const& _input, size_t& _i)
     return string();
 }
 
-bool readBoolOrNull(JsonInput const& _input, size_t& _i, bool& _result, bool& _readNull)
+bool readBoolOrNull(JsonInput& _input, size_t& _i, bool& _result, bool& _readNull)
 {
     if (_i + 4 >= _input.length())
         return false;
@@ -80,7 +80,7 @@ bool readBoolOrNull(JsonInput const& _input, size_t& _i, bool& _result, bool& _r
     return false;
 }
 
-bool readDigit(JsonInput const& _input, size_t& _i, int& _result)
+bool readDigit(JsonInput& _input, size_t& _i, int& _result)
 {
     bool readMinus = false;
     auto const& e = _input[_i];
@@ -117,7 +117,7 @@ bool readDigit(JsonInput const& _input, size_t& _i, int& _result)
     return false;
 }
 
-bool checkExcessiveComa(JsonInput const& _input, size_t _i)
+bool checkExcessiveComa(JsonInput& _input, size_t _i)
 {
     if (_i < 1)
         return false;
@@ -135,7 +135,7 @@ void JsonReader::parse()
 //    if (_input.size() < 2 || _input.find("{") == string::npos || _input.find("}") == string::npos)
 //        throw DataObjectException() << "ConvertJsoncppStringToData can't read json structure in file: `" + _input.substr(0, 50);
 
-    JsonInput const& _input = *m_input;
+    JsonInput& _input = *m_input;
 
     auto printDebug = [this](int _i) {
         static const short c_debugSize = 120;
