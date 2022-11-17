@@ -6,7 +6,8 @@ namespace retesteth::options
 {
 const string rpc_Homestead_config = R"({
     "params" : {
-        "homesteadForkBlock" : "0x00"
+        "homesteadForkBlock" : "0x00",
+        "chainID" : "0x01"
     },
     "accounts" : {
     }

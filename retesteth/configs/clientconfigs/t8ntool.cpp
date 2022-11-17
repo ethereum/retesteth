@@ -39,7 +39,8 @@ string const t8ntool_config = R"({
         "GrayGlacier"
     ],
     "fillerSkipForks" : [
-        "Merge+3540+3670"
+        "Merge+3540+3670",
+        "Merge+3860"
     ],
     "exceptions" : {
       "AddressTooShort" : "input string too short for common.Address",

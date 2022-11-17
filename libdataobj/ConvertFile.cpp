@@ -219,7 +219,6 @@ spDataObject ConvertJsoncppStringToData(string const& _input, string const& _sto
                         << errorPrefix + "array could not have elements with keys! around: " + printDebug(i);
                 (*obj).setKey(key);
 
-
                 bool replaceKey = false;
                 if (actualRoot->count(key))
                 {

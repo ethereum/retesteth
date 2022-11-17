@@ -6,7 +6,8 @@ namespace retesteth::options
 {
 const string etc_Frontier_config = R"({
     "params" : {
-        "fork" : "Frontier"
+        "fork" : "Frontier",
+        "chainID" : "0x01"
     },
     "accounts" : {
     }

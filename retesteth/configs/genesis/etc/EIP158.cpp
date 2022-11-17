@@ -8,7 +8,8 @@ const string rpc_EIP158_config = R"({
     "params" : {
        "homesteadForkBlock" : "0x00",
        "EIP150ForkBlock" : "0x00",
-       "EIP158ForkBlock" : "0x00"
+       "EIP158ForkBlock" : "0x00",
+       "chainID" : "0x01"
     },
     "accounts" : {
     }
