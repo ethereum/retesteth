@@ -64,90 +64,6 @@ string getTestNameFromFillerFilename(fs::path const& _fillerTestFilePath)
 
 namespace test
 {
-string const c_fillerPostf = "Filler";
-string const c_copierPostf = "Copier";
-
-void TestSuite::runTestWithoutFiller(boost::filesystem::path const& _file) const
-{
-    try
-    {
-        for (auto const& config : Options::getDynamicOptions().getClientConfigs())
-        {
-            Options::getDynamicOptions().setCurrentConfig(config);
-
-            ETH_DC_MESSAGE(DC::STATS,
-                "Running tests for config '" + config.cfgFile().name() + "' " + test::fto_string(config.getId().id()));
-            ETH_DC_MESSAGE(DC::TESTLOG, "Running " + _file.filename().string() + ": ");
-
-            // Allow to execute a custom test .json file on any test suite
-            auto& testOutput = test::TestOutputHelper::get();
-            testOutput.initTest(1);
-
-            try
-            {
-                if (Options::get().filltests)
-                {
-                    TestFileData testData = readTestFile(_file);
-                    removeComments(testData.data);
-
-                    string fileName = _file.stem().c_str();
-                    if (fileName.find("Filler") == string::npos)
-                        ETH_ERROR_MESSAGE(
-                            "Trying to fill `" + string(_file.c_str()) + "`, but file does not have Filler suffix!");
-
-                    // output filename. substract Filler suffix
-                    fileName = fileName.substr(0, fileName.length() - 6) + ".json";
-
-                    fs::path outPath;
-                    if (Options::get().singleTestOutFile.initialized())
-                        outPath = fs::path(Options::get().singleTestOutFile);
-                    else
-                        outPath = _file.parent_path() / fileName;
-
-                    TestSuiteOptions opt;
-                    opt.doFilling = true;
-                    opt.allowInvalidBlocks = true;
-                    spDataObject output = doTests(testData.data, opt);
-                    if (output->type() != DataType::Null)
-                    {
-                        addClientInfoIfUpdate(output.getContent(), _file, testData.hash, outPath);
-                        (*output).performModifier(mod_sortKeys, DataObject::ModifierOption::NONRECURSIVE);
-                        writeFile(outPath, asBytes(output->asJson()));
-                    }
-                }
-                else
-                    executeFile(_file);
-            }
-            catch (test::EthError const& _ex)
-            {
-                // Something went wrong inside the test. skip the test.
-                // (error message is stored at TestOutputHelper. EthError is via ETH_ERROR_())
-            }
-            catch (test::UpwardsException const& _ex)
-            {
-                // UpwardsException is thrown upwards in tests for debug info
-                // And it should be catched on upper level for report till this point
-                ETH_ERROR_MESSAGE(string("Unhandled UpwardsException: ") + _ex.what());
-            }
-            catch (std::exception const& _ex)
-            {
-                if (!ExitHandler::receivedExitSignal())
-                    ETH_ERROR_MESSAGE("ERROR OCCURED TESTFILE RUN: " + string(_ex.what()));
-                RPCSession::sessionEnd(TestOutputHelper::getThreadID(), RPCSession::SessionStatus::HasFinished);
-            }
-
-            testOutput.finishTest();
-            // Disconnect threads from the client
-            if (Options::getDynamicOptions().getClientConfigs().size() > 1)
-                RPCSession::clear();
-        }
-    }
-    catch (std::exception const&)
-    {
-        test::TestOutputHelper::get().finishTest();
-        test::TestOutputHelper::printTestExecStats();
-    }
-}
 
 void TestSuite::runAllTestsInFolder(string const& _testFolder) const
 {
@@ -253,9 +169,10 @@ void TestSuite::_executeTest(string const& _testFolder, fs::path const& _fillerT
     ETH_DC_MESSAGE(DC::STATS2, "Running " + testName + ": " + "(" + test::fto_string(threadID) + ")");
     AbsoluteFilledTestPath const filledTestPath = getFullPathFilled(_testFolder).path() / fs::path(testName + ".json");
 
-    bool wereFillerErrors = false;
+    bool wereFillerErrors = Options::get().filltests;
+    TestSuite::TestSuiteOptions _opt;
     if (Options::get().filltests)
-        wereFillerErrors = _fillTest(_fillerTestFilePath, filledTestPath.path());
+        wereFillerErrors = _fillTest(_opt, _fillerTestFilePath, filledTestPath.path());
 
     bool disableSecondRun = false;
     if (!Options::get().getGStateTransactionFilter().empty() && Options::get().filltests)
@@ -294,65 +211,6 @@ void TestSuite::_runTest(AbsoluteFilledTestPath const& _filledTestPath) const
             ETH_ERROR_MESSAGE("ERROR OCCURED RUNNING TESTS: " + string(_ex.what()));
         RPCSession::sessionEnd(TestOutputHelper::getThreadID(), RPCSession::SessionStatus::HasFinished);
     }
-}
-
-bool TestSuite::_fillTest(fs::path const& _fillerTestFilePath, AbsoluteFilledTestPath const& _outputTestFilePath) const
-{
-    bool wereErrors = false;
-    TestOutputHelper::get().setCurrentTestFile(_fillerTestFilePath);
-
-    TestSuiteOptions opt;
-    TestFileData testData = readTestFile(_fillerTestFilePath);
-    fs::path const testFillerPathRelative = fs::relative(_fillerTestFilePath, getTestPath());
-    bool isCopier = (_fillerTestFilePath.stem().string().rfind(c_copierPostf) != string::npos);
-    if (isCopier)
-    {
-        ETH_DC_MESSAGE(DC::TESTLOG, "Copying " + _fillerTestFilePath.string());
-        ETH_DC_MESSAGE(DC::TESTLOG, " TO " + _outputTestFilePath.path().string());
-        assert(_fillerTestFilePath.string() != _outputTestFilePath.path().string());
-        addClientInfoIfUpdate(testData.data.getContent(), testFillerPathRelative, testData.hash, _outputTestFilePath.path());
-        writeFile(_outputTestFilePath.path(), asBytes(testData.data->asJson()));
-        ETH_FAIL_REQUIRE_MESSAGE(
-            boost::filesystem::exists(_outputTestFilePath.path().string()), "Error when copying the test file!");
-    }
-    else
-    {
-        removeComments(testData.data);
-        opt.doFilling = true;
-
-        try
-        {
-            spDataObject output = doTests(testData.data, opt);
-            bool update =
-                addClientInfoIfUpdate(output.getContent(), testFillerPathRelative, testData.hash, _outputTestFilePath.path());
-            if (update)
-            {
-                (*output).performModifier(mod_sortKeys, DataObject::ModifierOption::NONRECURSIVE);
-                writeFile(_outputTestFilePath.path(), asBytes(output->asJson()));
-            }
-        }
-        catch (test::EthError const& _ex)
-        {
-            // Something went wrong inside the test. skip the test.
-            // (error message is stored at TestOutputHelper. EthError is via ETH_ERROR_())
-            wereErrors = true;
-        }
-        catch (test::UpwardsException const& _ex)
-        {
-            // UpwardsException is thrown upwards in tests for debug info
-            // And it should be catched on upper level for report till this point
-            ETH_ERROR_MESSAGE(string("Unhandled UpwardsException: ") + _ex.what());
-            wereErrors = true;
-        }
-        catch (std::exception const& _ex)
-        {
-            // Low level error occured in tests
-            ETH_MARK_ERROR("ERROR OCCURED FILLING TESTS: " + string(_ex.what()));
-            RPCSession::sessionEnd(TestOutputHelper::getThreadID(), RPCSession::SessionStatus::HasFinished);
-            wereErrors = true;
-        }
-    }
-    return wereErrors;
 }
 
 void TestSuite::executeFile(boost::filesystem::path const& _file) const

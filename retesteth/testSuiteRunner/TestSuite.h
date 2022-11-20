@@ -20,6 +20,7 @@
 
 #pragma once
 #include <libdataobj/DataObject.h>
+#include <retesteth/testSuiteRunner/TestSuiteHelperFunctions.h>
 #include <boost/filesystem/path.hpp>
 #include <functional>
 
@@ -54,10 +55,12 @@ public:
 
     struct TestSuiteOptions
     {
-        TestSuiteOptions() : doFilling(false), allowInvalidBlocks(false), isLegacyTests(false) {}
+        TestSuiteOptions() : doFilling(false), allowInvalidBlocks(false), isLegacyTests(false), calculateRelativeSrcPath(true)
+        {}
         bool doFilling;           // pass the filling flag to doTest function
         bool allowInvalidBlocks;  // allow and check malicious blocks
         bool isLegacyTests;       // running old generated tests
+        bool calculateRelativeSrcPath;  // put relative path to the test path in a filled test info
     };
 
     // Structures so not to mistake the paths and prevent bugs
@@ -117,8 +120,14 @@ protected:
 
 private:
     void _executeTest(std::string const& _testFolder, boost::filesystem::path const& _jsonFileName) const;
-    bool _fillTest(boost::filesystem::path const& _fillerTestFilePath, AbsoluteFilledTestPath const& _outputTestFilePath) const;
+    bool _fillTest(TestSuite::TestSuiteOptions& _opt, boost::filesystem::path const& _fillerTestFilePath,
+        AbsoluteFilledTestPath const& _outputTestFilePath) const;
     void _runTest(AbsoluteFilledTestPath const& _filledTestPath) const;
+
+    void _fillCopier(testsuite::TestFileData& _testData, boost::filesystem::path const& _fillerTestFilePath,
+        AbsoluteFilledTestPath const& _outputTestFilePath) const;
+    bool _fillJsonYml(testsuite::TestFileData& _testData, boost::filesystem::path const& _fillerTestFilePath,
+        AbsoluteFilledTestPath const& _outputTestFilePath, TestSuite::TestSuiteOptions& _opt) const;
 };
 
 }  // namespace test
