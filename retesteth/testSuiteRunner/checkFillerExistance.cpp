@@ -38,9 +38,10 @@ TestSuite::AbsoluteFilledTestPath createPathIfNotExist(TestSuite::AbsoluteFilled
     return _path;
 }
 
-void checkIfThereAreUnfilledTests(
+std::vector<fs::path> checkIfThereAreUnfilledTests(
     fs::path const& _fullPathToFillers, vector<fs::path> const& _compiledTests, string const& _testNameFilter)
 {
+    std::vector<fs::path> notFilledTests;
     vector<fs::path> fillerFiles = test::getFiles(_fullPathToFillers, {".json", ".yml"}, _testNameFilter);
     if (fillerFiles.size() > _compiledTests.size())
     {
@@ -58,10 +59,16 @@ void checkIfThereAreUnfilledTests(
                 }
             }
             if (!found)
-                message += "\n " + string(filler.c_str());
+            {
+                if (!Options::get().filloutdated)
+                    message += "\n " + string(filler.c_str());
+                notFilledTests.push_back(filler);
+            }
         }
-        ETH_ERROR_MESSAGE(message + "\n");
+        if (!Options::get().filloutdated)
+            ETH_ERROR_MESSAGE(message + "\n");
     }
+    return notFilledTests;
 }
 
 bool fakeFilledTestsIfThereAreNone(
@@ -102,8 +109,9 @@ std::vector<fs::path> TestSuite::checkFillerExistance(string const& _testFolder,
     vector<fs::path> compiledTests = test::getFiles(filledTestsPath.path(), {".json", ".yml"}, testNameFilter);
     AbsoluteFillerPath fullPathToFillers = getFullPathFiller(_testFolder);
 
-    if (Options::get().checkhash)
-        checkIfThereAreUnfilledTests(fullPathToFillers.path(), compiledTests, testNameFilter);
+    auto const& opt = Options::get();
+    if (opt.checkhash || opt.filloutdated)
+        outdatedTests = checkIfThereAreUnfilledTests(fullPathToFillers.path(), compiledTests, testNameFilter);
 
     bool checkFillerWhenFilterIsSetButNoTestsFilled = false;
     if (compiledTests.size() == 0)
