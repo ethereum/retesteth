@@ -240,6 +240,13 @@ Options::Options(int argc, const char** argv)
         cout << "\nTest Generation\n";
         cout << setw(30) << "--filltests" << setw(0) << "Run test fillers\n";
     });
+    ADD_OPTIONV(filloutdated, "--filloutdated", [](){
+        cout << setw(30) << "--filloutdated" << setw(0) << "Run only unfilled test fillers\n";
+        },[this](){
+            if (singletest.initialized() || trData.initialized() || trGasIndex.initialized() || trValueIndex.initialized())
+                std::cout << "WARNING: `--filloutdated` option disables all selectors (--singletest, -d, -g, -v)\n";
+            filltests = true;
+    });
 
     ADD_OPTION(fillchain, "--fillchain", [](){
         cout << setw(30) << "--fillchain" << setw(25) << "When filling the state tests, fill tests as blockchain instead\n";

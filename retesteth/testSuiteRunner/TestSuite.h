@@ -37,7 +37,7 @@ protected:
 private:
     // Execute Test.json file
     void executeFile(boost::filesystem::path const& _file) const;
-    std::string checkFillerExistance(std::string const& _testFolder) const;
+    std::vector<boost::filesystem::path> checkFillerExistance(std::string const& _testFolder, std::string& testFilter) const;
 
     struct BoostPath
     {

@@ -73,10 +73,11 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
 
     // check that destination folder test files has according Filler file in src folder
     string filter;
+    std::vector<fs::path> outdatedTests;
     try
     {
         TestOutputHelper::get().setCurrentTestInfo(TestInfo("checkFillerExistance", _testFolder));
-        filter = checkFillerExistance(_testFolder);
+        outdatedTests = checkFillerExistance(_testFolder, filter);
     }
     catch (std::exception const&)
     {
@@ -89,7 +90,8 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
     AbsoluteFillerPath fillerPath = getFullPathFiller(_testFolder);
     if (!fs::exists(fillerPath.path()))
         ETH_WARNING(string(fillerPath.path().c_str()) + " does not exist!");
-    vector<fs::path> const testFillers = test::getFiles(fillerPath.path(), {".json", ".yml"}, filter);
+    vector<fs::path> const testFillers =
+        Options::get().filloutdated ? outdatedTests : test::getFiles(fillerPath.path(), {".json", ".yml"}, filter);
     if (testFillers.size() == 0)
     {
         TestOutputHelper::get().currentTestRunPP();

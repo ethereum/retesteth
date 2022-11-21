@@ -94,9 +94,10 @@ bool fakeFilledTestsIfThereAreNone(
 
 namespace test
 {
-string TestSuite::checkFillerExistance(string const& _testFolder) const
+std::vector<fs::path> TestSuite::checkFillerExistance(string const& _testFolder, string& testNameFilter) const
 {
-    string const testNameFilter = getTestNameFilter();
+    testNameFilter = getTestNameFilter();
+    std::vector<fs::path> outdatedTests;
     AbsoluteFilledTestPath filledTestsPath = createPathIfNotExist(getFullPathFilled(_testFolder));
     vector<fs::path> compiledTests = test::getFiles(filledTestsPath.path(), {".json", ".yml"}, testNameFilter);
     AbsoluteFillerPath fullPathToFillers = getFullPathFiller(_testFolder);
@@ -132,31 +133,42 @@ string TestSuite::checkFillerExistance(string const& _testFolder) const
             "Src test could either be Filler.json, Filler.yml or Copier.json: " + test.filename().string());
 
         // Check that filled tests created from actual fillers depenging on a test type
+
+        auto fillerVerifier = [&testNameFilter, &outdatedTests](
+                                  fs::path const& _test, fs::path const& _expectedFillerName, string const& _addPostfix) {
+            auto const& opt = Options::get();
+            if (!opt.filltests || opt.filloutdated)
+            {
+                if (checkFillerHash(_test, _expectedFillerName))
+                    outdatedTests.push_back(_expectedFillerName);
+            }
+            if (!testNameFilter.empty())
+            {
+                testNameFilter += _addPostfix;
+                return true;
+            }
+            return false;
+        };
+
         if (fs::exists(expectedFillerName))
         {
-            if (Options::get().filltests == false)
-                checkFillerHash(test, expectedFillerName);
-            if (!testNameFilter.empty())
-                return testNameFilter + c_fillerPostf;
+            if (fillerVerifier(test, expectedFillerName, c_fillerPostf))
+                return outdatedTests;
         }
-        if (fs::exists(expectedFillerName2))
+        else if (fs::exists(expectedFillerName2))
         {
-            if (Options::get().filltests == false)
-                checkFillerHash(test, expectedFillerName2);
-            if (!testNameFilter.empty())
-                return testNameFilter + c_fillerPostf;
+            if (fillerVerifier(test, expectedFillerName2, c_fillerPostf))
+                return outdatedTests;
         }
-        if (fs::exists(expectedCopierName))
+        else if (fs::exists(expectedCopierName))
         {
-            if (Options::get().filltests == false)
-                checkFillerHash(test, expectedCopierName);
-            if (!testNameFilter.empty())
-                return testNameFilter + c_copierPostf;
+            if (fillerVerifier(test, expectedCopierName, c_copierPostf))
+                return outdatedTests;
         }
     }
 
     // No compiled test files. Filter is empty
-    return testNameFilter;
+    return outdatedTests;
 }
 
 }  // namespace test

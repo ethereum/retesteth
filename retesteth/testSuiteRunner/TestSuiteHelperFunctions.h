@@ -18,6 +18,6 @@ bool addClientInfoIfUpdate(DataObject& _filledTest, boost::filesystem::path cons
 
 TestFileData readTestFile(boost::filesystem::path const& _testFileName);
 void removeComments(spDataObject& _obj);
-void checkFillerHash(boost::filesystem::path const& _compiledTest, boost::filesystem::path const& _sourceTest);
+bool checkFillerHash(boost::filesystem::path const& _compiledTest, boost::filesystem::path const& _sourceTest);
 
 }  // namespace testsuite
