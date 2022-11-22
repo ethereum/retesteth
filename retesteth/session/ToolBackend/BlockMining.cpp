@@ -225,7 +225,8 @@ void BlockMining::traceTransactions(ToolResponse& _toolResponse)
             string const preinfo = "\nTransaction number: " + trNumber + ", hash: " + tr->hash().asString() + "\n";
             string const info = TestOutputHelper::get().testInfo().errorDebug();
             string const traceinfo = "\nVMTrace:" + info + cDefault + preinfo;
-            _toolResponse.attachDebugTrace(tr->hash(), DebugVMTrace(traceinfo, trNumber, tr->hash(), txTraceFile));
+            _toolResponse.attachDebugTrace(tr->hash(),
+                spDebugVMTrace(new DebugVMTrace(traceinfo, trNumber, tr->hash(), txTraceFile)));
         }
         else
             ETH_DC_MESSAGE(DC::WARNING, "Trace file `" + txTraceFile.string() + "` not found!");

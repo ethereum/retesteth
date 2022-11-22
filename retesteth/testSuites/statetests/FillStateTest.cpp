@@ -53,7 +53,7 @@ void performStatediff(StateTestFillerExecInfo const& _info)
 
 void performVmtrace(StateTestFillerExecInfo const& _info, EthGetBlockBy const& _blockInfo, FH32 const& _trHash)
 {
-    if (Options::get().vmtrace)
+    if (Options::get().vmtrace && !Options::get().fillvmtrace)
     {
         auto& session = _info.session;         // Connection with the client
         auto const& test = _info.test;         // State test
@@ -65,6 +65,20 @@ void performVmtrace(StateTestFillerExecInfo const& _info, EthGetBlockBy const& _
         VMtraceinfo info(session, _trHash, _blockInfo.header()->stateRoot(), testNameOut);
         printVmTrace(info);
     }
+}
+
+string performVmtraceAnalys(StateTestFillerExecInfo const& _info, FH32 const& _trHash)
+{
+    string vmtrace;
+    if (Options::get().fillvmtrace)
+    {
+        if (!_info.expResult.getExpectException(_info.network).empty())
+            return vmtrace;
+        DebugVMTrace ret(_info.session.debug_traceTransaction(_trHash));
+        for (auto const& log : ret.getLog())
+            vmtrace += dev::toCompactHex(log.op);
+    }
+    return vmtrace;
 }
 
 spDataObject performTransaction(StateTestFillerExecInfo const& _info)
@@ -94,6 +108,7 @@ spDataObject performTransaction(StateTestFillerExecInfo const& _info)
     performPoststate(blockInfo);
     performStatediff(_info);
     performVmtrace(_info, blockInfo, trHash);
+    string vmTraceStr = performVmtraceAnalys(_info, trHash);
 
     spDataObject transactionResults;
     try
@@ -116,6 +131,8 @@ spDataObject performTransaction(StateTestFillerExecInfo const& _info)
     (*transactionResults).atKeyPointer("indexes") = indexes;
     (*transactionResults)["hash"] = blockInfo.header()->stateRoot().asString();
     (*transactionResults)["txbytes"] = ethTr->getRawBytes().asString();
+    if (!vmTraceStr.empty())
+        (*transactionResults)["txtrace"] = "0x" + vmTraceStr;
     if (!testException.empty())
         (*transactionResults)["expectException"] = testException;
 

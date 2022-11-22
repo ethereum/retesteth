@@ -207,6 +207,7 @@ public:
     // Test Generation
     bool_opt filltests = false;
     bool_opt filloutdated = false;
+    bool_opt fillvmtrace = false;
     bool_opt fillchain = false;
     bool_opt showhash = false;
     bool_opt checkhash = false;

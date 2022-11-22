@@ -28,15 +28,18 @@ struct VMLogRecord
     spVALUE refund;
     std::string opName;
     std::string error;
+    bool isShort = false;
 };
 
-struct DebugVMTrace
+struct DebugVMTrace : GCP_SPointerBase
 {
     DebugVMTrace() {}  // for tuples
     DebugVMTrace(std::string const& _info, std::string const& _trNumber, FH32 const& _trHash, boost::filesystem::path const& _logs);
     void print();
     void printNice();
     void exportLogs(boost::filesystem::path const& _folder);
+    std::vector<VMLogRecord> const& getLog() const { return m_log; }
+    ~DebugVMTrace();
 
 private:
     std::string m_infoString;
@@ -52,5 +55,7 @@ private:
     spVALUE m_gasUsed;
     long long m_time;
 };
+
+typedef GCP_SPointer<DebugVMTrace> spDebugVMTrace;
 
 }  // namespace teststruct

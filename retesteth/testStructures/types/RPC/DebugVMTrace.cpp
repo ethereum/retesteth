@@ -4,6 +4,7 @@
 #include <libdataobj/ConvertFile.h>
 #include <testStructures/Common.h>
 #include <boost/filesystem/fstream.hpp>
+#include <Options.h>
 
 using namespace std;
 using namespace test::debug;
@@ -16,6 +17,17 @@ VMLogRecord::VMLogRecord(DataObject const& _obj)
 {
     try
     {
+        if (_obj.getSubObjects().size() == 4)
+        {
+            REQUIRE_JSONFIELDS(_obj, "VMLogRecord " + _obj.getKey(),
+                {
+                    {"output", {{DataType::String}, jsonField::Required}},
+                    {"gasUsed", {{DataType::String}, jsonField::Required}},
+                    {"time", {{DataType::Integer}, jsonField::Required}},
+                    {"error", {{DataType::String}, jsonField::Required}}});
+        }
+        else
+        {
         REQUIRE_JSONFIELDS(_obj, "VMLogRecord " + _obj.getKey(),
             {{"pc", {{DataType::Integer}, jsonField::Required}},
              {"op", {{DataType::Integer}, jsonField::Required}},
@@ -29,26 +41,35 @@ VMLogRecord::VMLogRecord(DataObject const& _obj)
              {"opName", {{DataType::String}, jsonField::Required}},
              {"returnData", {{DataType::String}, jsonField::Optional}},
              {"error", {{DataType::String}, jsonField::Optional}}});
+        }
 
-        pc = _obj.atKey("pc").asInt();
-        op = _obj.atKey("op").asInt();
-        gas = spVALUE(new VALUE(_obj.atKey("gas")));
-        gasCost = spVALUE(new VALUE(_obj.atKey("gasCost")));
-        if (_obj.count("memory"))
-            memory = spBYTES(new BYTES(_obj.atKey("memory")));
+        if (_obj.getSubObjects().size() == 4)
+        {
+            error = _obj.atKey("error").asString();
+            isShort = true;
+        }
         else
-            memory = spBYTES(new BYTES(DataObject("0x")));
-        memSize = _obj.atKey("memSize").asInt();
-        for (auto const& el : _obj.atKey("stack").getSubObjects())
-            stack.push_back(el->asString());
-        if (_obj.count("returnData"))
-            returnData = spBYTES(new BYTES(_obj.atKey("returnData")));
-        else
-            returnData = spBYTES(new BYTES(DataObject("0x")));
-        depth = _obj.atKey("depth").asInt();
-        refund = _obj.atKey("refund").asInt();
-        opName = _obj.atKey("opName").asString();
-        error = _obj.count("error") ? _obj.atKey("error").asString() : "";
+        {
+            pc = _obj.atKey("pc").asInt();
+            op = _obj.atKey("op").asInt();
+            gas = spVALUE(new VALUE(_obj.atKey("gas")));
+            gasCost = spVALUE(new VALUE(_obj.atKey("gasCost")));
+            if (_obj.count("memory"))
+                memory = spBYTES(new BYTES(_obj.atKey("memory")));
+            else
+                memory = spBYTES(new BYTES(DataObject("0x")));
+            memSize = _obj.atKey("memSize").asInt();
+            for (auto const& el : _obj.atKey("stack").getSubObjects())
+                stack.push_back(el->asString());
+            if (_obj.count("returnData"))
+                returnData = spBYTES(new BYTES(_obj.atKey("returnData")));
+            else
+                returnData = spBYTES(new BYTES(DataObject("0x")));
+            depth = _obj.atKey("depth").asInt();
+            refund = _obj.atKey("refund").asInt();
+            opName = _obj.atKey("opName").asString();
+            error = _obj.count("error") ? _obj.atKey("error").asString() : "";
+        }
 
     }
     catch (std::exception const& _ex)
@@ -56,6 +77,7 @@ VMLogRecord::VMLogRecord(DataObject const& _obj)
         throw UpwardsException(string("VMLogRecord parse error: ") + _ex.what());
     }
 }
+
 
 DebugVMTrace::DebugVMTrace(
     string const& _info, string const& _trNumber, FH32 const& _trHash, boost::filesystem::path const& _logs)
@@ -70,28 +92,43 @@ DebugVMTrace::DebugVMTrace(
         size_t k = 0;
         const size_t c_maxRowsToPrint = 100;
         fs::ifstream fileHandler(_logs);
-        while (getline(fileHandler, line))
-        {
-            if (++k < c_maxRowsToPrint)
+
+        auto readLog = [this](string const& _line){
+            auto const data = ConvertJsoncppStringToData(_line);
+            if (data->getSubObjects().size() == 3)
             {
-                m_rawUnparsedLogs += line + "\n";
-                auto const data = ConvertJsoncppStringToData(line);
-                if (data->getSubObjects().size() == 3)
-                {
-                    m_output = data->atKey("output").asString();
-                    m_gasUsed = spVALUE(new VALUE(data->atKey("gasUsed")));
-                    m_time = data->atKey("time").asInt();
-                }
-                else
-                    m_log.push_back(VMLogRecord(data));
+                m_output = data->atKey("output").asString();
+                m_gasUsed = spVALUE(new VALUE(data->atKey("gasUsed")));
+                m_time = data->atKey("time").asInt();
             }
-            else if (k == c_maxRowsToPrint)
+            else
+                m_log.push_back(VMLogRecord(data));
+        };
+
+        if (Options::get().fillvmtrace)
+        {
+            // Load logs optimized
+            while (getline(fileHandler, line))
+                readLog(line);
+        }
+        else
+        {
+            while (getline(fileHandler, line))
             {
-                m_limitReached = true;
-                m_rawUnparsedLogs += c_tooManyRawsMessage;
-                m_output = "";
-                m_gasUsed = spVALUE(new VALUE(DataObject("0x00")));
-                m_time = 0;
+                if (++k < c_maxRowsToPrint)
+                {
+                    m_rawUnparsedLogs += line + "\n";
+                    readLog(line);
+                }
+                else if (k == c_maxRowsToPrint)
+                {
+                    m_limitReached = true;
+                    m_rawUnparsedLogs += c_tooManyRawsMessage;
+                    m_output = "";
+                    m_gasUsed = spVALUE(new VALUE(DataObject("0x00")));
+                    m_time = 0;
+                    break;
+                }
             }
         }
         fileHandler.close();
@@ -129,6 +166,10 @@ void DebugVMTrace::printNice()
               << "REMAINGAS" << setw(20) << "ERROR" << cDefault << std::endl;
     for (VMLogRecord const& el : m_log)
     {
+        // Last record with error info
+        if (el.isShort)
+            continue;
+
         if (!s_comment.empty())
         {
             std::cout << setw(step * el.depth) << cYellow << s_comment << cDefault << std::endl;
@@ -158,6 +199,15 @@ void DebugVMTrace::printNice()
     std::cout << std::endl;
 }
 
+DebugVMTrace::~DebugVMTrace()
+{
+    if (!m_rawVmTraceFile.empty())
+    {
+        boost::filesystem::remove(m_rawVmTraceFile);
+        boost::filesystem::remove(m_rawVmTraceFile.parent_path());
+    }
+}
+
 void DebugVMTrace::exportLogs(fs::path const& _folder)
 {
     try
@@ -172,6 +222,7 @@ void DebugVMTrace::exportLogs(fs::path const& _folder)
         {
             fs::copy(m_rawVmTraceFile, _folder);
             fs::remove(m_rawVmTraceFile);
+            fs::remove(m_rawVmTraceFile.parent_path());
         }
         catch (std::exception const& _ex)
         {

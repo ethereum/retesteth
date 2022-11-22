@@ -52,7 +52,7 @@ struct EthereumBlockState : EthereumBlock
 
     // Debug
     DebugVMTrace const& getTrTrace(FH32 const& _hash) const;
-    void setTrsTrace(std::map<FH32, DebugVMTrace> const& _map) { m_transactionsTrace = _map; }
+    void setTrsTrace(std::map<FH32, spDebugVMTrace> const& _map) { m_transactionsTrace = _map; }
 
 private:
     /// EthereumBlockState(){}
@@ -60,7 +60,7 @@ private:
     FH32 m_logHash;
     spVALUE m_totalDifficulty;
     std::map<FH32, spFH32> m_transactionsLog;
-    std::map<FH32, DebugVMTrace> m_transactionsTrace;
+    std::map<FH32, spDebugVMTrace> m_transactionsTrace;
 };
 
 typedef GCP_SPointer<EthereumBlock> spEthereumBlock;

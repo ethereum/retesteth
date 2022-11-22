@@ -247,6 +247,12 @@ Options::Options(int argc, const char** argv)
                 std::cout << "WARNING: `--filloutdated` option disables all selectors (--singletest, -d, -g, -v)\n";
             filltests = true;
     });
+    ADD_OPTIONV(fillvmtrace, "--fillvmtrace", [](){
+            cout << setw(30) << "--fillvmtrace" << setw(0) << "Fill tests with vmtrace information (very time consuming)\n";
+        },[this](){
+            filltests = true;
+            vmtrace = true;
+        });
 
     ADD_OPTION(fillchain, "--fillchain", [](){
         cout << setw(30) << "--fillchain" << setw(25) << "When filling the state tests, fill tests as blockchain instead\n";

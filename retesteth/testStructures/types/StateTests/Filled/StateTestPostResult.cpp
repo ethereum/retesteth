@@ -12,6 +12,7 @@ StateTestPostResult::StateTestPostResult(DataObject const& _data)
             {"hash", {{DataType::String}, jsonField::Required}},
             {"postState", {{DataType::Object}, jsonField::Optional}},
             {"txbytes", {{DataType::String}, jsonField::Optional}},
+            {"txtrace", {{DataType::String}, jsonField::Optional}},
             {"expectException", {{DataType::String}, jsonField::Optional}},
             {"logs", {{DataType::String}, jsonField::Optional}}});
 
