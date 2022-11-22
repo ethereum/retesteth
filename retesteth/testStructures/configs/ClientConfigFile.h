@@ -26,6 +26,7 @@ struct ClientConfigFile : GCP_SPointerBase
     std::map<std::string, boost::filesystem::path> const& customCompilers() const { return m_customCompilers; }
     size_t initializeTime() const { return  m_initializeTime; }
     int defaultChainID() const { return m_defaultChainID; }
+    boost::filesystem::path const& tmpDir() const { return m_tmpDir; }
     std::vector<FORK> const& forks() const { return m_forks; }
     std::vector<FORK> const& additionalForks() const { return m_additionalForks; }
     std::vector<FORK> const& fillerSkipForks() const { return m_skipForks; }
@@ -55,6 +56,7 @@ private:
     int m_defaultChainID = 1;                ///< Transactions to initialize with this chainID by default
 
     std::map<std::string, boost::filesystem::path> m_customCompilers;
+    boost::filesystem::path m_tmpDir;        ///< Path to the temp dir for this config
     bool m_checkLogsHash;                    ///< Enable logsHash verification
     bool m_checkDifficulty;                  ///< Enable difficulty verification
     bool m_checkBasefee;                     ///< Enable basefee verifivation

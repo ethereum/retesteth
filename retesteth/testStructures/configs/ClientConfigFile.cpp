@@ -20,6 +20,7 @@ void requireJsonFileStructure(DataObject const& _data)
             {"socketAddress", {{DataType::String, DataType::Array}, jsonField::Required}},
             {"customCompilers", {{DataType::Object}, jsonField::Optional}},
             {"initializeTime", {{DataType::String}, jsonField::Optional}},
+            {"tmpDir", {{DataType::String}, jsonField::Optional}},
             {"checkLogsHash", {{DataType::Bool}, jsonField::Optional}},
             {"checkDifficulty", {{DataType::Bool}, jsonField::Optional}},
             {"checkBasefee", {{DataType::Bool}, jsonField::Optional}},
@@ -149,6 +150,16 @@ void ClientConfigFile::initWithData(DataObject const& _data)
     m_checkBasefee = false;
     if (_data.count("checkBasefee"))
         m_checkBasefee = _data.atKey("checkBasefee").asBool();
+
+    if (_data.count("tmpDir"))
+    {
+        m_tmpDir = fs::path(_data.atKey("tmpDir").asString());
+        if (!fs::exists(m_tmpDir))
+        {
+            ETH_WARNING(sErrorPath + "tmpDir location not found! Switching to default.");
+            m_tmpDir = "";
+        }
+    }
 
     // Read forks as fork order. Order is required for translation (`>=Frontier` -> `Frontier,
     // Homestead`) According to this order:
