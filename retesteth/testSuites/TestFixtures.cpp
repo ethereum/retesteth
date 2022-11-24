@@ -2,6 +2,7 @@
 #include <retesteth/Options.h>
 #include <retesteth/TestHelper.h>
 #include <retesteth/TestOutputHelper.h>
+#include <boost/bind/bind.hpp>
 
 //Suites
 #include <retesteth/testSuites/DifficultyTest.h>
@@ -10,6 +11,29 @@
 #include <retesteth/testSuites/statetests/StateTests.h>
 
 using namespace test;
+using namespace boost::unit_test;
+
+static std::vector<std::unique_ptr<TestFixtureBase>> g_dynamic_test_search_fixtures;
+FixtureRegistrator::FixtureRegistrator(TestFixtureBase* _fixture)
+{
+    std::unique_ptr<TestFixtureBase> ptr(_fixture);
+    g_dynamic_test_search_fixtures.push_back(std::move(ptr));
+}
+
+void test::DynamicTestsBoost()
+{
+    for (auto const& el : g_dynamic_test_search_fixtures)
+    {
+        auto suiteid = framework::master_test_suite().get(el->folder());
+        if (suiteid != INV_TEST_UNIT_ID)
+        {
+            auto& suite = framework::get<test_suite>(suiteid);
+            test_case* tcase = BOOST_TEST_CASE(boost::bind(&TestFixtureBase::execute, el.get()));
+            tcase->p_name.value = "stEIPXXX";
+            suite.add(tcase);
+        }
+    }
+}
 
 bool TestChecker::isCPUIntenseTest(std::string const& _testSuite)
 {
@@ -22,7 +46,7 @@ bool TestChecker::isTimeConsumingTest(std::string const& _testName)
 }
 
 template <class T, class U>
-TestFixture<T,U>::TestFixture(std::set<TestExecution> const& _execFlags)
+void TestFixture<T, U>::_execute(std::set<TestExecution> const& _execFlags) const
 {
     T suite;
     U defaultBoostFlags;
@@ -67,6 +91,12 @@ TestFixture<T,U>::TestFixture(std::set<TestExecution> const& _execFlags)
 
     suite.runAllTestsInFolder(casename);
     test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
+}
+
+template <class T, class U>
+TestFixture<T, U>::TestFixture(std::set<TestExecution> const& _execFlags) : m_execFlags(_execFlags)
+{
+    _execute(_execFlags);
 }
 
 // Difficulty links

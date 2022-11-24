@@ -112,20 +112,11 @@ Options::Options(int argc, const char** argv)
         cout << "\nSetting test suite and test\n";
         cout << setw(40) << "--testpath <PathToTheTestRepo>" << setw(25) << "Set path to the test repo\n";
     });
-    ADD_OPTIONV(singleTestFile, "--testfile", [](){
+    ADD_OPTION(singleTestFile, "--testfile", [](){
         cout << setw(40) << "--testfile <TestFile>" << setw(0) << "Run tests from a file. Requires -t <TestSuite>\n";
-        }, [this](){
-        if (customTestFolder.initialized())
-            BOOST_THROW_EXCEPTION(InvalidOption("Error: `--testfolder` initialized together with `--testfile`"));
     });
     ADD_OPTION(singleTestOutFile, "--outfile", [](){
         cout << setw(40) << "--outfile <TestFile>" << setw(0) << "When using `--testfile` with `--filltests` output to this file\n";
-    });
-    ADD_OPTIONV(customTestFolder, "--testfolder", [](){
-        cout << setw(40) << "--testfolder <SubFolder>" << setw(0) << "Run tests from a custom test folder located in a given suite. Requires -t <TestSuite>\n";
-        }, [this](){
-        if (singleTestFile.initialized())
-            BOOST_THROW_EXCEPTION(InvalidOption("Error: `--testfolder` initialized together with `--testfile`"));
     });
     ADD_OPTION(singletest, "--singletest", [](){
         cout << setw(40) << "--singletest <TestName>" << setw(0)

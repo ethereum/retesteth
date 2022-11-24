@@ -230,19 +230,6 @@ void TestSuite::executeFile(boost::filesystem::path const& _file) const
     doTests(res, opt);
 }
 
-std::mutex g_testPathMutex;
-TestSuite::TestSuite()
-{
-    std::lock_guard<std::mutex> lock(g_testPathMutex);
-    static bool runningTestsMessage = true;
-    if (runningTestsMessage)
-    {
-        boost::filesystem::path const testPath = test::getTestPath();
-        ETH_DC_MESSAGE(DC::STATS, string("Running tests using path: ") + testPath.c_str());
-        runningTestsMessage = false;
-    }
-}
-
 TestSuite::AbsoluteFillerPath TestSuite::getFullPathFiller(string const& _testFolder) const
 {
     return TestSuite::AbsoluteFillerPath(test::getTestPath() / suiteFillerFolder().path() / _testFolder);

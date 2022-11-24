@@ -113,9 +113,20 @@ TestSuite::FillerPath BCGeneralStateTestsSuite::suiteFillerFolder() const
     return TestSuite::FillerPath(fs::path("src") / fs::path("GeneralStateTestsFiller"));
 }
 
-BCGeneralStateTestsVMSuite::BCGeneralStateTestsVMSuite()
+spDataObject BCGeneralStateTestsVMSuite::doTests(spDataObject& _input, TestSuiteOptions& _opt) const
 {
-    test::TestOutputHelper::get().markTestFolderAsFinished(getFullPathFiller("VMTests").parent_path().parent_path(), "VMTests");
+    // Register subtest as finished test case. because each folder is treated as test case folder
+    test::TestOutputHelper::get().markTestFolderAsFinished(getFullPathFiller("VMTests").parent_path(), "VMTests");
+    return BCGeneralStateTestsSuite::doTests(_input, _opt);
+}
+
+spDataObject BCGeneralStateTestsSuite::doTests(spDataObject& _input, TestSuiteOptions& _opt) const
+{
+    // Register subtest as finished test case. because each folder is treated as test case folder
+    test::TestOutputHelper::get().markTestFolderAsFinished(getFullPathFiller("VMTests").parent_path(), "VMTests");
+    test::TestOutputHelper::get().markTestFolderAsFinished(
+        getFullPathFiller("stExpectSection").parent_path(), "stExpectSection");
+    return BlockchainTestValidSuite::doTests(_input, _opt);
 }
 
 TestSuite::TestPath BCGeneralStateTestsVMSuite::suiteFolder() const

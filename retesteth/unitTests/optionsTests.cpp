@@ -30,7 +30,6 @@ BOOST_AUTO_TEST_CASE(options_initdefault)
     BOOST_CHECK(opt.get().checkhash == false);
     BOOST_CHECK(opt.get().clients.initialized() == false);
     BOOST_CHECK(std::vector<string>(opt.get().clients).empty() == true);
-    BOOST_CHECK(opt.get().customTestFolder.empty() == true);
     BOOST_CHECK(opt.get().datadir.empty() == true);
     BOOST_CHECK(opt.get().enableClientsOutput == false);
     BOOST_CHECK(opt.get().exectimelog == false);

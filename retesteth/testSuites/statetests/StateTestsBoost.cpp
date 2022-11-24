@@ -1,11 +1,15 @@
+#include "retesteth/TestHelper.h"
 #include "retesteth/TestOutputHelper.h"
 #include "retesteth/testSuites/TestFixtures.h"
 #include "retesteth/testSuites/statetests/StateTests.h"
 #include <retesteth/Options.h>
+#include <functional>
+#include <iostream>
 
 using namespace std;
 using namespace dev;
 using namespace test;
+using namespace boost::unit_test;
 namespace fs = boost::filesystem;
 
 // Most Recent StateTestSuite
@@ -19,12 +23,6 @@ TestSuite::TestPath StateTestSuite::suiteFolder() const
 TestSuite::FillerPath StateTestSuite::suiteFillerFolder() const
 {
     return TestSuite::FillerPath(fs::path("src") / "GeneralStateTestsFiller");
-}
-
-StateTestSuite::StateTestSuite()
-{
-    // Register subtest as finished test case. because each folder is treated as test case folder
-    test::TestOutputHelper::get().markTestFolderAsFinished(getFullPathFiller("VMTests").parent_path(), "VMTests");
 }
 
 TestSuite::TestPath StateTestVMSuite::suiteFolder() const
@@ -50,8 +48,12 @@ TestSuite::FillerPath LegacyConstantinopleStateTestSuite::suiteFillerFolder() co
     return TestSuite::FillerPath(fs::path("src") / "LegacyTests" / "Constantinople" / "GeneralStateTestsFiller");
 }
 
+
 // latest version StateTests
 using GeneralStateTestsFixture = TestFixture<StateTestSuite, DefaultFlags>;
+
+
+ETH_REGISTER_DYNAMIC_TEST_SEARCH(GeneralStateTestsFixture)
 BOOST_FIXTURE_TEST_SUITE(GeneralStateTests, GeneralStateTestsFixture)
 
 // Frontier Tests

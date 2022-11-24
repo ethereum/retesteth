@@ -3,13 +3,13 @@
  */
 
 #pragma once
+#include <functional>
 #include <set>
 #include <string>
 #include <vector>
 
 namespace test
 {
-
 static std::vector<std::string> const c_timeConsumingTestSuites{
     std::string{"stTimeConsuming"},
     std::string{"stQuadraticComplexityTest"},
@@ -76,12 +76,39 @@ public:
 };
 
 // what if U has the information about flags
+class TestFixtureBase
+{
+public:
+    TestFixtureBase() {}
+    virtual std::string folder() const = 0;
+    virtual std::string fillerFoler() const = 0;
+    virtual void execute() const = 0;
+};
+
 template <class T, class U>
-class TestFixture
+class TestFixture : public TestFixtureBase
 {
 public:
     TestFixture(std::set<TestExecution> const& _execFlags = {});
+    TestFixture(int){};
+    std::string folder() const override { return m_suite.suiteFolder().path().string(); }
+    std::string fillerFoler() const override { return m_suite.suiteFillerFolder().path().string(); }
+    void execute() const override { _execute(m_execFlags); };
+
+private:
+    void _execute(std::set<TestExecution> const& _execFlags) const;
+    std::set<TestExecution> m_execFlags;
+    T m_suite;
 };
 
+
+void DynamicTestsBoost();
+class FixtureRegistrator
+{
+public:
+    FixtureRegistrator(TestFixtureBase* _fixture);
+};
+
+#define ETH_REGISTER_DYNAMIC_TEST_SEARCH(F) static FixtureRegistrator dynamicfixture##F(new F(true));
 
 }  // namespace test

@@ -231,7 +231,7 @@ void TestOutputHelper::printBoostError()
 void TestOutputHelper::printTestExecStats()
 {
     auto const& opt = Options::get();
-    if (!(opt.singleTestFile.initialized() || opt.customTestFolder.initialized()))
+    if (!opt.singleTestFile.initialized())
         checkUnfinishedTestFolders();
 
     if (Options::get().exectimelog)
@@ -341,14 +341,8 @@ void checkUnfinishedTestFolders()
 
     std::map<boost::filesystem::path, FolderNameSet>::const_iterator singleTest =
         finishedTestFoldersMap.begin();
-    if (!filter.empty() && boost::filesystem::exists(singleTest->first / filter))
+    if (!filter.empty() && finishedTestFoldersMap.size() <= 1 && boost::filesystem::exists(singleTest->first / filter))
     {
-        if (finishedTestFoldersMap.size() > 1)
-        {
-            ETH_STDERROR_MESSAGE("ERROR: Expected a single test to be passed: " + filter + "\n");
-            return;
-        }
-
         if (!pathHasTests(singleTest->first / filter))
             ETH_WARNING(string("Test folder ") + (singleTest->first / filter).c_str() +
                         " appears to have no tests!");

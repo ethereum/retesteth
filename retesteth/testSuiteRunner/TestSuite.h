@@ -50,7 +50,7 @@ private:
     };
 
 public:
-    TestSuite();
+    TestSuite() {}
     virtual ~TestSuite() {}
 
     struct TestSuiteOptions

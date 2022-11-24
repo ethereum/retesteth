@@ -28,8 +28,6 @@ namespace test
 class StateTestSuite : public TestSuite
 {
 public:
-    StateTestSuite();
-    StateTestSuite(int){};
     dataobject::spDataObject doTests(dataobject::spDataObject& _input, TestSuiteOptions& _opt) const override;
     TestSuite::TestPath suiteFolder() const override;
     TestSuite::FillerPath suiteFillerFolder() const override;
@@ -41,7 +39,6 @@ protected:
     bool legacyTestSuiteFlag() const override { return true; }
 
 public:
-    LegacyConstantinopleStateTestSuite() : StateTestSuite(0){};
     TestSuite::TestPath suiteFolder() const override;
     TestSuite::FillerPath suiteFillerFolder() const override;
 };
@@ -49,7 +46,6 @@ public:
 class StateTestVMSuite : public StateTestSuite
 {
 public:
-    StateTestVMSuite() : StateTestSuite(0){};
     TestSuite::TestPath suiteFolder() const override;
     TestSuite::FillerPath suiteFillerFolder() const override;
 };
