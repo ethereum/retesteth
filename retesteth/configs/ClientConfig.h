@@ -64,7 +64,7 @@ public:
     std::string const& translateException(std::string const& _exceptionName) const;
 
     // Get Contents of genesis template for specified FORK
-    spDataObject const& getGenesisTemplate(FORK const& _fork) const;
+    spDataObject getGenesisTemplate(FORK const& _fork) const;
     std::map<FORK, spVALUE> const getGenesisTemplateChainID() const { return m_genesisTemplateChainID; }
 
     // Get reward information info for each fork

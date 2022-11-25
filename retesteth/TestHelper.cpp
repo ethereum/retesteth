@@ -717,4 +717,12 @@ void removeSubChar(std::string& _string, unsigned char _r)
         }), _string.end());
 }
 
+string makePlussedFork(FORK const& _net)
+{
+    size_t pos = _net.asString().find("+");
+    if (pos != string::npos)
+        return _net.asString().substr(0, pos);
+    return string();
+}
+
 }//namespace

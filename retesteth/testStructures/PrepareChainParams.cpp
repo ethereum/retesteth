@@ -26,6 +26,11 @@ spDataObject prepareGenesisSubsection(StateTestEnvBase const& _env, ParamsContex
     auto const& additional = cfg.cfgFile().additionalForks();
     bool netIsAdditional = inArray(additional, _net);
 
+    // Automake plussed fork into additional nets
+    if (!netIsAdditional && _net.asString().find("+") != string::npos && !cfg.cfgFile().forkProgressionAsSet().count(_net))
+        netIsAdditional = true;
+
+
     // Build up RPC setChainParams genesis section
     spDataObject genesis;
     (*genesis)["author"] = _env.currentCoinbase().asString();

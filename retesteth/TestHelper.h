@@ -9,7 +9,7 @@
 #include <libdataobj/DataObject.h>
 #include <retesteth/compiler/Compiler.h>
 #include <retesteth/testStructures/basetypes/BYTES.h>
-
+#include <retesteth/testStructures/configs/FORK.h>
 
 namespace test {
 using namespace dataobject;
@@ -94,6 +94,8 @@ bool inArray(std::list<T> const& _array, const T& _val)
 /// Explode string into array of strings by `delim`
 std::vector<std::string> explode(std::string const& s, char delim);
 void removeSubChar(std::string& _string, unsigned char _r);
+std::string makePlussedFork(test::teststruct::FORK const& _net);
+
 
 /// See what kind of a string is str
 enum class DigitsType

@@ -1,4 +1,5 @@
 #include "Verification.h"
+#include <TestHelper.h>
 #include <retesteth/Options.h>
 #include <retesteth/testStructures/Common.h>
 using namespace dev;
@@ -98,31 +99,48 @@ std::tuple<VALUE, FORK> prepareReward(SealEngine _engine, FORK const& _fork, VAL
 
     // Setup mining rewards
     std::map<FORK, spVALUE> const& rewards = Options::get().getDynamicOptions().getCurrentConfig().getRewardMap();
-    if (rewards.count(_fork))
-        return {rewards.at(_fork).getCContent(), _fork};
+
+    // Load rewards for 'fork' from 'fork+xxxx'
+    FORK const& fork = _fork;
+    bool hasReward = rewards.count(_fork);
+    if (!hasReward)
+    {
+        string const forkPlussed = makePlussedFork(_fork);
+        if (!forkPlussed.empty())
+        {
+            hasReward = rewards.count(forkPlussed);
+            if (hasReward)
+                return {rewards.at(forkPlussed).getCContent(), _fork};
+        }
+    }
+
+    if (hasReward)
+        return {rewards.at(fork).getCContent(), _fork};
     else
     {
         if ((!isMerge && _blockNumber < 5) || posTransitionDifficultyNotReached)
         {
-            if (!RewardMapForToolBefore5.count(_fork))
+            if (!RewardMapForToolBefore5.count(fork))
             {
                 fs::path const& rewardMapPath = Options::get().getDynamicOptions().getCurrentConfig().getRewardMapPath();
-                ETH_ERROR_MESSAGE("ToolBackend error getting reward for fork: " + _fork.asString() + ", check that fork reward is defined at (" + rewardMapPath.c_str() + ")");
+                ETH_ERROR_MESSAGE("ToolBackend error getting reward for fork: " + fork.asString() +
+                                  ", check that fork reward is defined at (" + rewardMapPath.c_str() + ")");
             }
-            auto const& trFork = convertForkToToolConfig(RewardMapForToolBefore5.at(_fork));
+            auto const& trFork = convertForkToToolConfig(RewardMapForToolBefore5.at(fork));
             assert(rewards.count(trFork));
             return {rewards.at(trFork).getCContent(), trFork};
         }
         else
         {
-            if (!RewardMapForToolAfter5.count(_fork))
+            if (!RewardMapForToolAfter5.count(fork))
             {
                 fs::path const& rewardMapPath = Options::get().getDynamicOptions().getCurrentConfig().getRewardMapPath();
-                ETH_ERROR_MESSAGE("ToolBackend error getting reward for fork: " + _fork.asString() + ", check that fork reward is defined at " + rewardMapPath.c_str() + ")");
+                ETH_ERROR_MESSAGE("ToolBackend error getting reward for fork: " + fork.asString() +
+                                  ", check that fork reward is defined at " + rewardMapPath.c_str() + ")");
             }
-            auto const& trFork = convertForkToToolConfig(RewardMapForToolAfter5.at(_fork));
+            auto const& trFork = convertForkToToolConfig(RewardMapForToolAfter5.at(fork));
             assert(rewards.count(trFork));
-            return {rewards.at(trFork).getCContent(), _fork == "HomesteadToDaoAt5" ? "HomesteadToDaoAt5" : trFork};
+            return {rewards.at(trFork).getCContent(), fork == "HomesteadToDaoAt5" ? "HomesteadToDaoAt5" : trFork};
         }
     }
 }

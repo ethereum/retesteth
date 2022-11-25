@@ -178,6 +178,7 @@ spDataObject FillTest(StateTestInFiller const& _test)
     {
         Options const& opt = Options::get();
         bool allowedFork = !opt.getCurrentConfig().checkForkAllowed(fork);
+
         if ((!opt.singleTestNet.empty() && FORK(opt.singleTestNet) != fork) || allowedFork)
         {
             for (TransactionInGeneralSection& tr : txs)

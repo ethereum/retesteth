@@ -116,9 +116,22 @@ ClientConfig::ClientConfig(fs::path const& _clientConfigPath) : m_id(ClientConfi
     }
 }
 
+
+bool tryLookPlussedFork(ClientConfigFile const& _cfgFile, FORK const& _net)
+{
+    string const plussedFork = makePlussedFork(_net);
+    if (!plussedFork.empty())
+        return _cfgFile.allowedForks().count(plussedFork);
+    return false;
+}
+
 bool ClientConfig::validateForkAllowed(FORK const& _net, bool _bail) const
 {
-    if (!cfgFile().allowedForks().count(_net))
+    bool checkForkDefenition = cfgFile().allowedForks().count(_net);
+    if (!checkForkDefenition)
+        checkForkDefenition = tryLookPlussedFork(cfgFile(), _net);
+
+    if (!checkForkDefenition)
     {
         ETH_WARNING("Specified network not found: '" + _net.asString() +
                     "', skipping the test. Enable the fork network in config file: " +
@@ -132,7 +145,10 @@ bool ClientConfig::validateForkAllowed(FORK const& _net, bool _bail) const
 
 bool ClientConfig::checkForkAllowed(FORK const& _net) const
 {
-    return cfgFile().allowedForks().count(_net);
+    bool checkForkDefenition = cfgFile().allowedForks().count(_net);
+    if (!checkForkDefenition)
+        checkForkDefenition = tryLookPlussedFork(cfgFile(), _net);
+    return checkForkDefenition;
 }
 
 bool ClientConfig::checkForkInProgression(FORK const& _net) const
@@ -259,10 +275,27 @@ std::string const& ClientConfig::translateException(string const& _exceptionName
 }
 
 // Get Contents of genesis template for specified FORK
-spDataObject const& ClientConfig::getGenesisTemplate(FORK const& _fork) const
+spDataObject ClientConfig::getGenesisTemplate(FORK const& _fork) const
 {
-    ETH_FAIL_REQUIRE_MESSAGE(m_genesisTemplate.count(_fork),
-        "Genesis template for network '" + _fork.asString() + "' not found!");
+    bool const templateHasFork = m_genesisTemplate.count(_fork);
+    if (!templateHasFork)
+    {
+        string const plussedFork = makePlussedFork(_fork);
+        if (!plussedFork.empty() && m_genesisTemplate.count(plussedFork))
+        {
+            auto const& origTemplate = m_genesisTemplate.at(plussedFork).getCContent();
+            if (origTemplate.count("params") && origTemplate.atKey("params").count("fork"))
+            {
+                spDataObject tmplateOriginal = m_genesisTemplate.at(plussedFork)->copy();
+                size_t pos = _fork.asString().find("+");
+                tmplateOriginal.getContent().atKeyUnsafe("params").atKeyUnsafe("fork").asStringUnsafe() +=
+                    _fork.asString().substr(pos);
+                return tmplateOriginal;
+            }
+        }
+    }
+
+    ETH_FAIL_REQUIRE_MESSAGE(templateHasFork, "Genesis template for network '" + _fork.asString() + "' not found!");
     return m_genesisTemplate.at(_fork);
 }
 
