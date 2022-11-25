@@ -24,7 +24,7 @@ FixtureRegistrator::FixtureRegistrator(TestFixtureBase* _fixture, string&& _suit
 {
     uPtrTestFixtureBase ptr(_fixture);
     auto p = std::make_pair(std::move(ptr), std::move(_suiteName));
-    g_dynamic_test_search_fixtures.emplace_back(std::move(p));
+    g_dynamic_test_search_fixtures.push_back(std::move(p));
     delete this;
 }
 
@@ -64,11 +64,14 @@ void test::DynamicTestsBoost(vector<string>& allTestNames)
         {
             auto const folder = test::getTestPath() / fixture->fillerFoler();
             fs::path const path(folder);
+            if (!fs::exists(path))
+                continue;
             using fsIterator = fs::directory_iterator;
             for (fsIterator it(path); it != fsIterator(); ++it)
             {
                 if (fs::is_directory(*it))
                 {
+
                     string const caseName = (*it).path().filename().string();
                     auto const caseid = suite->get(caseName);
                     if (caseid == INV_TEST_UNIT_ID && !g_exceptionNames.count(caseName))
