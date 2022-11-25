@@ -51,9 +51,7 @@ TestSuite::FillerPath LegacyConstantinopleStateTestSuite::suiteFillerFolder() co
 
 // latest version StateTests
 using GeneralStateTestsFixture = TestFixture<StateTestSuite, DefaultFlags>;
-
-
-ETH_REGISTER_DYNAMIC_TEST_SEARCH(GeneralStateTestsFixture)
+ETH_REGISTER_DYNAMIC_TEST_SEARCH(GeneralStateTestsFixture, "GeneralStateTests")
 BOOST_FIXTURE_TEST_SUITE(GeneralStateTests, GeneralStateTestsFixture)
 
 // Frontier Tests
@@ -145,6 +143,7 @@ BOOST_AUTO_TEST_SUITE_END()
 
 // Converted VMTests
 using GeneralStateTestsVMFixture = TestFixture<StateTestVMSuite, DefaultFlags>;
+ETH_REGISTER_DYNAMIC_TEST_SEARCH(GeneralStateTestsVMFixture, "GeneralStateTests/VMTests")
 BOOST_FIXTURE_TEST_SUITE(VMTests, GeneralStateTestsVMFixture)
 BOOST_AUTO_TEST_CASE(vmArithmeticTest) {}
 BOOST_AUTO_TEST_CASE(vmBitwiseLogicOperation) {}

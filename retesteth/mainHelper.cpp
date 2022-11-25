@@ -295,7 +295,9 @@ int runTheBoostTests(int _argc, const char* _argv[])
 
 void lookForUnregisteredTestFolders()
 {
-    DynamicTestsBoost();
+    typedef vector<string> vectorString;
+    std::vector<string>& cheatAllTestNames = const_cast<vectorString&>(c_allTestNames);
+    DynamicTestsBoost(cheatAllTestNames);
 }
 
 }  // namespace test::main

@@ -11,27 +11,71 @@
 #include <retesteth/testSuites/statetests/StateTests.h>
 
 using namespace test;
+using namespace test::debug;
+using namespace std;
 using namespace boost::unit_test;
+namespace fs = boost::filesystem;
 
-static std::vector<std::unique_ptr<TestFixtureBase>> g_dynamic_test_search_fixtures;
-FixtureRegistrator::FixtureRegistrator(TestFixtureBase* _fixture)
+typedef std::unique_ptr<TestFixtureBase> uPtrTestFixtureBase;
+typedef std::pair<uPtrTestFixtureBase, string> FixtureToSuite;
+static std::vector<FixtureToSuite> g_dynamic_test_search_fixtures;
+
+// ACCEPT HERE A SUITE NAME
+FixtureRegistrator::FixtureRegistrator(TestFixtureBase* _fixture, string&& _suiteName)
 {
     std::unique_ptr<TestFixtureBase> ptr(_fixture);
-    g_dynamic_test_search_fixtures.push_back(std::move(ptr));
+    g_dynamic_test_search_fixtures.push_back({std::move(ptr), std::move(_suiteName)});
 }
 
-void test::DynamicTestsBoost()
+std::set<string> g_exceptionNames = {"stExpectSection", "bcExpectSection"};
+test_suite* getSuiteByPathName(std::string const& _suiteName)
+{
+    if (_suiteName.empty())
+        return nullptr;
+    auto const allSuites = test::explode(_suiteName, '/');
+    test_suite* suite = &framework::master_test_suite();
+    for (auto const& suiteName : allSuites)
+    {
+        auto const suiteid = suite->get(suiteName);
+        if (suiteid != INV_TEST_UNIT_ID)
+            suite = &framework::get<test_suite>(suiteid);
+        else
+            return nullptr;
+    }
+    return suite;
+}
+
+void test::DynamicTestsBoost(vector<string>& allTestNames)
 {
     for (auto const& el : g_dynamic_test_search_fixtures)
     {
-        auto suiteid = framework::master_test_suite().get(el->folder());
-        if (suiteid != INV_TEST_UNIT_ID)
+        auto suite = getSuiteByPathName(el.second);
+        if (suite != nullptr)
         {
-            auto& suite = framework::get<test_suite>(suiteid);
-            test_case* tcase = BOOST_TEST_CASE(boost::bind(&TestFixtureBase::execute, el.get()));
-            tcase->p_name.value = "stEIPXXX";
-            suite.add(tcase);
+            auto const folder = test::getTestPath() / el.first->fillerFoler();
+            fs::path const path(folder);
+            using fsIterator = fs::directory_iterator;
+            for (fsIterator it(path); it != fsIterator(); ++it)
+            {
+                if (fs::is_directory(*it))
+                {
+                    string const caseName = (*it).path().filename().string();
+                    auto const caseid = suite->get(caseName);
+                    if (caseid == INV_TEST_UNIT_ID && !g_exceptionNames.count(caseName))
+                    {
+                        string const fullCaseName = el.second + "/" + caseName;
+                        ETH_DC_MESSAGEC(DC::STATS2, "Registering new test case: " + fullCaseName, LogColor::YELLOW);
+                        allTestNames.push_back(fullCaseName);
+
+                        test_case* tcase = BOOST_TEST_CASE(boost::bind(&TestFixtureBase::execute, el.first.get()));
+                        tcase->p_name.value = caseName;
+                        suite->add(tcase);
+                    }
+                }
+            }
         }
+        else
+            ETH_WARNING("test::DynamicTestsBoost failed to find suite: " + el.second);
     }
 }
 

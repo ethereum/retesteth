@@ -80,6 +80,7 @@ class TestFixtureBase
 {
 public:
     TestFixtureBase() {}
+    virtual ~TestFixtureBase() {}
     virtual std::string folder() const = 0;
     virtual std::string fillerFoler() const = 0;
     virtual void execute() const = 0;
@@ -102,13 +103,14 @@ private:
 };
 
 
-void DynamicTestsBoost();
+void DynamicTestsBoost(std::vector<std::string>& allTests);
 class FixtureRegistrator
 {
 public:
-    FixtureRegistrator(TestFixtureBase* _fixture);
+    FixtureRegistrator(TestFixtureBase* _fixture, std::string&& _suiteName);
 };
 
-#define ETH_REGISTER_DYNAMIC_TEST_SEARCH(F) static FixtureRegistrator dynamicfixture##F(new F(true));
+#define ETH_REGISTER_DYNAMIC_TEST_SEARCH(F, S) \
+    static FixtureRegistrator dynamicfixture##F(new F(true), S);
 
 }  // namespace test

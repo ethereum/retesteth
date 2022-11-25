@@ -46,7 +46,6 @@ public:
     test::TestSuite::TestPath suiteFolder() const override;
     test::TestSuite::FillerPath suiteFillerFolder() const override;
     spDataObject doTests(spDataObject& _input, TestSuiteOptions& _opt) const override;
-    BCGeneralStateTestsSuite();
 };
 
 class BCGeneralStateTestsVMSuite : public BCGeneralStateTestsSuite

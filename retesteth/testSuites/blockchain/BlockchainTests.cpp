@@ -67,12 +67,6 @@ spDataObject LegacyConstantinopleBCGeneralStateTestsSuite::doTests(spDataObject&
     return DoTests(_input, _opt);
 }
 
-BCGeneralStateTestsSuite::BCGeneralStateTestsSuite()
-{
-    TestInfo errorInfo("Initialized ", "BCGeneralStateTestsSuite");
-    TestOutputHelper::get().setCurrentTestInfo(errorInfo);
-}
-
 TestSuite::TestPath BlockchainTestValidSuite::suiteFolder() const
 {
     return TestSuite::TestPath(fs::path("BlockchainTests") / "ValidBlocks");
@@ -158,6 +152,7 @@ BOOST_AUTO_TEST_SUITE(BlockchainTests)
 
 // Tests that contain only valid blocks and check that import is correct
 using BCValidSuiteFixture = TestFixture<BlockchainTestValidSuite, DefaultFlags>;
+ETH_REGISTER_DYNAMIC_TEST_SEARCH(BCValidSuiteFixture, "BlockchainTests/ValidBlocks")
 BOOST_FIXTURE_TEST_SUITE(ValidBlocks, BCValidSuiteFixture)
 BOOST_AUTO_TEST_CASE(bcBlockGasLimitTest) {}
 BOOST_AUTO_TEST_CASE(bcExploitTest) {}
@@ -179,6 +174,7 @@ BOOST_AUTO_TEST_SUITE_END() // ValidBlocks
 
 // Tests that might have invalid blocks and check that those are rejected
 using BCInValidSuiteFixture = TestFixture<BlockchainTestInvalidSuite, DefaultFlags>;
+ETH_REGISTER_DYNAMIC_TEST_SEARCH(BCInValidSuiteFixture, "BlockchainTests/InvalidBlocks")
 BOOST_FIXTURE_TEST_SUITE(InvalidBlocks, BCInValidSuiteFixture)
 BOOST_AUTO_TEST_CASE(bcBlockGasLimitTest) {}
 BOOST_AUTO_TEST_CASE(bcForgedTest) {}
@@ -199,6 +195,7 @@ BOOST_AUTO_TEST_SUITE_END()
 
 // Transition from fork to fork tests
 using BCTransitionFixture = TestFixture<BlockchainTestTransitionSuite, DefaultFlags>;
+ETH_REGISTER_DYNAMIC_TEST_SEARCH(BCTransitionFixture, "BlockchainTests/TransitionTests")
 BOOST_FIXTURE_TEST_SUITE(TransitionTests, BCTransitionFixture)
 BOOST_AUTO_TEST_CASE(bcByzantiumToConstantinopleFix) {}
 BOOST_AUTO_TEST_CASE(bcEIP158ToByzantium) {}
@@ -213,6 +210,7 @@ BOOST_AUTO_TEST_SUITE_END()
 
 // General tests in form of blockchain tests
 using BCGeneralsStateSuiteFixture = TestFixture<BCGeneralStateTestsSuite, RequireOptionAllNotRefillable>;
+ETH_REGISTER_DYNAMIC_TEST_SEARCH(BCGeneralsStateSuiteFixture, "BCGeneralStateTests")
 BOOST_FIXTURE_TEST_SUITE(BCGeneralStateTests, BCGeneralsStateSuiteFixture)
 
 // Frontier Tests
@@ -298,6 +296,7 @@ BOOST_AUTO_TEST_CASE(stTimeConsuming) {}
 
 // Converted VMTests
 using BCGeneralStateTestsVMFixture = TestFixture<BCGeneralStateTestsVMSuite, RequireOptionAll>;
+ETH_REGISTER_DYNAMIC_TEST_SEARCH(BCGeneralStateTestsVMFixture, "BCGeneralStateTests/VMTests")
 BOOST_FIXTURE_TEST_SUITE(VMTests, BCGeneralStateTestsVMFixture)
 BOOST_AUTO_TEST_CASE(vmArithmeticTest) {}
 BOOST_AUTO_TEST_CASE(vmBitwiseLogicOperation) {}

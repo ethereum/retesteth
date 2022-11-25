@@ -157,6 +157,7 @@ TestSuite::FillerPath DifficultyTestSuite::suiteFillerFolder() const
 
 }  // namespace test
 using DifficultyTestsFixture = TestFixture<DifficultyTestSuite, DefaultFlags>;
+ETH_REGISTER_DYNAMIC_TEST_SEARCH(DifficultyTestsFixture, "DifficultyTests")
 BOOST_FIXTURE_TEST_SUITE(DifficultyTests, DifficultyTestsFixture)
 
 BOOST_AUTO_TEST_CASE(dfArrowGlacier) {}

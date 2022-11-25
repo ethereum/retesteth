@@ -183,6 +183,7 @@ TestSuite::FillerPath TransactionTestSuite::suiteFillerFolder() const
 
 }  // namespace test
 using TransactionTestsFixture = TestFixture<TransactionTestSuite, DefaultFlags>;
+ETH_REGISTER_DYNAMIC_TEST_SEARCH(TransactionTestsFixture, "TransactionTests")
 BOOST_FIXTURE_TEST_SUITE(TransactionTests, TransactionTestsFixture)
 
 BOOST_AUTO_TEST_CASE(ttAddress) {}
