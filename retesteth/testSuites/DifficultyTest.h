@@ -12,7 +12,6 @@ namespace test
 class DifficultyTestSuite : public TestSuite
 {
 public:
-    DifficultyTestSuite(){};
     dataobject::spDataObject doTests(dataobject::spDataObject& _input, TestSuiteOptions& _opt) const override;
     TestSuite::TestPath suiteFolder() const override;
     TestSuite::FillerPath suiteFillerFolder() const override;

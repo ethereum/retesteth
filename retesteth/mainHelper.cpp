@@ -300,4 +300,9 @@ void lookForUnregisteredTestFolders()
     DynamicTestsBoost(cheatAllTestNames);
 }
 
+void cleanMemory()
+{
+    DynamicTestsBoostClean();
+}
+
 }  // namespace test::main

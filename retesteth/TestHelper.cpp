@@ -106,8 +106,9 @@ boost::filesystem::path getTestPath()
     if (ptestPath == nullptr)
     {
         ETH_WARNING("Could not find environment variable `ETHEREUM_TEST_PATH`");
-        ETH_STDERROR_MESSAGE("Use the --testpath <path> option to set the test path!");
-        throw EthError() << "Error getting the test path!";
+        ETH_WARNING("Use the --testpath <path> option to set the test path!");
+        testPath = boost::filesystem::path(boost::filesystem::current_path());
+        return testPath;
     }
     testPath = boost::filesystem::path(ptestPath);
     return testPath;

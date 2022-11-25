@@ -3,10 +3,10 @@
  */
 
 #pragma once
-#include <functional>
 #include <set>
 #include <string>
 #include <vector>
+#include <memory>
 
 namespace test
 {
@@ -95,6 +95,7 @@ public:
     std::string folder() const override { return m_suite.suiteFolder().path().string(); }
     std::string fillerFoler() const override { return m_suite.suiteFillerFolder().path().string(); }
     void execute() const override { _execute(m_execFlags); };
+    ~TestFixture() override {}
 
 private:
     void _execute(std::set<TestExecution> const& _execFlags) const;
@@ -104,6 +105,7 @@ private:
 
 
 void DynamicTestsBoost(std::vector<std::string>& allTests);
+void DynamicTestsBoostClean();
 class FixtureRegistrator
 {
 public:
@@ -111,6 +113,6 @@ public:
 };
 
 #define ETH_REGISTER_DYNAMIC_TEST_SEARCH(F, S) \
-    static FixtureRegistrator dynamicfixture##F(new F(true), S);
+    static FixtureRegistrator* dynamicfixture##F = new FixtureRegistrator(new F(true), S);
 
 }  // namespace test

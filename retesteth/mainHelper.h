@@ -12,6 +12,7 @@ bool checkTestSuiteIsKnown(int argc, const char* argv[], std::string sMinusTArg 
 int runTheBoostTests(int _argc, const char* _argv[]);
 
 void lookForUnregisteredTestFolders();
+void cleanMemory();
 
 void travisOut(std::atomic_bool* _stopTravisOut);
 void timeoutThread(std::atomic_bool* _stopTimeout);

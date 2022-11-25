@@ -50,40 +50,7 @@ int main(int argc, const char* argv[])
         return -1;
 
     int result = runTheBoostTests(argc, argv);
-
+    cleanMemory();
     ExitHandler::doExit();
     return result;
 }
-
-
-/*std::pair<string, string> getTestSuiteAndTestCase(std::string const& _suite)
-{
-    std::vector<std::string> testSuitePath = test::explode(_suite, '/');
-    string const testCaseName = testSuitePath.at(testSuitePath.size() - 1);
-    string testSuiteName = testSuitePath.at(0);
-    for (size_t i = 1; i < testSuitePath.size() - 1; i++)
-        testSuiteName += "/" + testSuitePath.at(i);
-    return std::make_pair(testSuiteName, testCaseName);
-}
-
-bool tryDynamicallyAddTestSuite(std::string const& _suite)
-{
-    // Try dynamically load the suite
-    auto suiteCase = getTestSuiteAndTestCase(_suite);
-    if (suiteCase.first != suiteCase.second)
-    {
-        auto suiteid = framework::master_test_suite().get(suiteCase.first);
-        if (suiteid != INV_TEST_UNIT_ID)
-        {
-            auto& suite = framework::get<test_suite>(suiteid);
-            auto caseid = suite.get("stDynamicName");
-            if (caseid != INV_TEST_UNIT_ID)
-            {
-                test_case& tcase = framework::get<test_case>(caseid);
-                tcase.p_name.value = suiteCase.second;
-            }
-            return true;
-        }
-    }
-    return false;
-}*/

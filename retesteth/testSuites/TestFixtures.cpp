@@ -20,11 +20,12 @@ typedef std::unique_ptr<TestFixtureBase> uPtrTestFixtureBase;
 typedef std::pair<uPtrTestFixtureBase, string> FixtureToSuite;
 static std::vector<FixtureToSuite> g_dynamic_test_search_fixtures;
 
-// ACCEPT HERE A SUITE NAME
 FixtureRegistrator::FixtureRegistrator(TestFixtureBase* _fixture, string&& _suiteName)
 {
-    std::unique_ptr<TestFixtureBase> ptr(_fixture);
-    g_dynamic_test_search_fixtures.push_back({std::move(ptr), std::move(_suiteName)});
+    uPtrTestFixtureBase ptr(_fixture);
+    auto p = std::make_pair(std::move(ptr), std::move(_suiteName));
+    g_dynamic_test_search_fixtures.emplace_back(std::move(p));
+    delete this;
 }
 
 std::set<string> g_exceptionNames = {"stExpectSection", "bcExpectSection"};
@@ -45,14 +46,23 @@ test_suite* getSuiteByPathName(std::string const& _suiteName)
     return suite;
 }
 
+void test::DynamicTestsBoostClean()
+{
+    for (auto& el : g_dynamic_test_search_fixtures)
+        el.first.reset();
+    g_dynamic_test_search_fixtures.clear();
+}
+
 void test::DynamicTestsBoost(vector<string>& allTestNames)
 {
     for (auto const& el : g_dynamic_test_search_fixtures)
     {
-        auto suite = getSuiteByPathName(el.second);
+        auto const& suiteName = el.second;
+        auto const& fixture= el.first;
+        auto suite = getSuiteByPathName(suiteName);
         if (suite != nullptr)
         {
-            auto const folder = test::getTestPath() / el.first->fillerFoler();
+            auto const folder = test::getTestPath() / fixture->fillerFoler();
             fs::path const path(folder);
             using fsIterator = fs::directory_iterator;
             for (fsIterator it(path); it != fsIterator(); ++it)
@@ -63,11 +73,11 @@ void test::DynamicTestsBoost(vector<string>& allTestNames)
                     auto const caseid = suite->get(caseName);
                     if (caseid == INV_TEST_UNIT_ID && !g_exceptionNames.count(caseName))
                     {
-                        string const fullCaseName = el.second + "/" + caseName;
+                        string const fullCaseName = string(suiteName) + "/" + caseName;
                         ETH_DC_MESSAGEC(DC::STATS2, "Registering new test case: " + fullCaseName, LogColor::YELLOW);
                         allTestNames.push_back(fullCaseName);
 
-                        test_case* tcase = BOOST_TEST_CASE(boost::bind(&TestFixtureBase::execute, el.first.get()));
+                        test_case* tcase = BOOST_TEST_CASE(boost::bind(&TestFixtureBase::execute, fixture.get()));
                         tcase->p_name.value = caseName;
                         suite->add(tcase);
                     }
@@ -75,7 +85,7 @@ void test::DynamicTestsBoost(vector<string>& allTestNames)
             }
         }
         else
-            ETH_WARNING("test::DynamicTestsBoost failed to find suite: " + el.second);
+            ETH_WARNING(string("test::DynamicTestsBoost failed to find suite: ") + suiteName);
     }
 }
 
