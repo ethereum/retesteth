@@ -349,5 +349,26 @@ void ClientConfig::performFieldReplace(DataObject& _data, FieldReplaceDir const&
     }
 }
 
+spVALUE const& ClientConfig::getRewardForFork(FORK const& _fork) const
+{
+    // Load rewards for 'fork' from 'fork+xxxx'
+    FORK const& fork = _fork;
+    bool hasReward = m_correctReward.count(_fork);
+    if (!hasReward)
+    {
+        string const forkPlussed = test::makePlussedFork(_fork);
+        if (!forkPlussed.empty())
+        {
+            hasReward = m_correctReward.count(forkPlussed);
+            if (hasReward)
+                return m_correctReward.at(forkPlussed);
+        }
+    }
+    ETH_ERROR_REQUIRE_MESSAGE(m_correctReward.count(fork),
+        "Network '" + fork.asString() + "' not found in correct mining info config (" +
+            getRewardMapPath().string() + ") Client: " + cfgFile().name());
+    return m_correctReward.at(fork);
+}
+
 
 }  // namespace test

@@ -11,7 +11,6 @@ using namespace test::debug;
 using namespace test::session;
 using namespace test::statetests;
 
-
 namespace test::statetests
 {
 
@@ -72,11 +71,7 @@ spDataObject FillTestAsBlockchain(StateTestInFiller const& _test)
                     spDataObject expectCopy;
                     (*expectCopy).copyFrom(expect.result().rawData());
                     StateIncomplete mexpect = StateIncomplete(dataobject::move(expectCopy));
-                    ClientConfig const& cfg = Options::getDynamicOptions().getCurrentConfig();
-                    ETH_ERROR_REQUIRE_MESSAGE(cfg.getRewardMap().count(fork),
-                        "Network '" + fork.asString() + "' not found in correct mining info config (" +
-                            cfg.getRewardMapPath().string() + ") Client: " + cfg.cfgFile().name());
-                    VALUE const& balanceCorrection = cfg.getRewardMap().at(fork).getCContent();
+                    VALUE const& balanceCorrection = Options::getCurrentConfig().getRewardForFork(fork);
                     mexpect.correctMiningReward(_test.Env().currentCoinbase(), balanceCorrection);
 
                     spDataObject aBlockchainTest;

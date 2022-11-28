@@ -69,6 +69,7 @@ public:
 
     // Get reward information info for each fork
     std::map<FORK, spVALUE> const& getRewardMap() const { return m_correctReward; }
+    spVALUE const& getRewardForFork(FORK const&) const;
 
     // Get path to correct mining reward info file
     boost::filesystem::path const& getRewardMapPath() const { return m_correctMiningRewardPath; }
