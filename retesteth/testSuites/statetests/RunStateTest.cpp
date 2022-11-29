@@ -185,6 +185,9 @@ void RunTest(StateTestInFilled const& _test)
             continue;
         }
 
+        TestInfo errorInfo("test_setChainParams: " + network.asString(), _test.testName());
+        TestOutputHelper::get().setCurrentTestInfo(errorInfo);
+
         auto p = prepareChainParams(network, SealEngine::NoReward, _test.Pre(), _test.Env(), ParamsContext::StateTests);
         session.test_setChainParams(p);
 

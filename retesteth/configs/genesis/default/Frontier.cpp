@@ -13,7 +13,8 @@ const string default_Frontier_config = R"({
 
 const string t8ntool_Frontier_config = R"({
     "params" : {
-        "fork" : "Frontier"
+        "fork" : "Frontier",
+        "chainID" : "0x01"
     },
     "accounts" : {
     }

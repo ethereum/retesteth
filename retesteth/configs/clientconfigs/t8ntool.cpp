@@ -10,6 +10,7 @@ string const t8ntool_config = R"({
     "socketAddress" : "start.sh",
     "checkLogsHash" : true,
     "checkBasefee" : true,
+    "defaultChainID" : 1,
     "customCompilers" : {
         ":yul" : "yul.sh",
         ":mycompiler" : "mycompiler.sh"

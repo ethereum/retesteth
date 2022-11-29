@@ -4,13 +4,15 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
-string const etc_config = R"({
-    "name" : "Ethereum Classic core-geth on StateTool",
+string const etctr_config = R"({
+    "name" : "Ethereum Classic Translate core-geth on StateTool",
     "socketType" : "tranition-tool",
     "socketAddress" : "start.sh",
     "checkLogsHash" : true,
     "checkDifficulty" : false,
     "checkBasefee" : false,
+    "calculateBasefee" : false,
+    "support1559" : false,
     "defaultChainID" : 61,
     "customCompilers" : {
         ":yul" : "yul.sh",
@@ -21,19 +23,17 @@ string const etc_config = R"({
         "Homestead",
         "EIP150",
         "EIP158",
-        "ETC_Atlantis",
-        "ETC_Agharta",
-        "ETC_Phoenix",
-        "ETC_Magneto",
-        "ETC_Mystique"
+        "Byzantium",
+        "Constantinople",
+        "ConstantinopleFix",
+        "Istanbul",
+        "Berlin",
+        "London",
+        "Merge"
     ],
     "additionalForks" : [
     ],
     "fillerSkipForks" : [
-        "ETC_Mystique+3540+3670",
-        "ETC_Mystique+3860",
-        "Merge+3540+3670",
-        "Merge+3860"
     ],
     "exceptions" : {
       "AddressTooShort" : "input string too short for common.Address",
@@ -224,7 +224,7 @@ string const etc_config = R"({
     }
 })";
 
-string const etc_start = R"(#!/bin/sh
+string const etctr_start = R"(#!/bin/sh
 if [ $1 = "-v" ]; then
     evmetc -v
 else
@@ -243,7 +243,7 @@ else
 fi
 )";
 
-string const etc_customcompiler = R"(#!/bin/sh
+string const etctr_customcompiler = R"(#!/bin/sh
 # You can call a custom executable here
 # The code src comes in argument $1 as a path to a file containg the code
 # So if you have custom compiler installed in the system the command would look like:
@@ -264,7 +264,7 @@ echo "0x600360005500"
 )";
 
 
-string const etc_yulcompiler = R"(#!/bin/sh
+string const etctr_yulcompiler = R"(#!/bin/sh
 solc=$(which solc)
 if [ -z $solc ]; then
    >&2 echo "yul.sh \"Yul compilation error: 'solc' not found!\""
@@ -274,33 +274,33 @@ else
 fi
 )";
 
-etccfg::etccfg()
+etctranslatecfg::etctranslatecfg()
 {
     {
         spDataObject obj;
-        (*obj)["path"] = "etc/config";
-        (*obj)["content"] = etc_config;
+        (*obj)["path"] = "etctranslate/config";
+        (*obj)["content"] = etctr_config;
         map_configs.addArrayObject(obj);
     }
     {
         spDataObject obj;
         (*obj)["exec"] = true;
-        (*obj)["path"] = "etc/start.sh";
-        (*obj)["content"] = etc_start;
+        (*obj)["path"] = "etctranslate/start.sh";
+        (*obj)["content"] = etctr_start;
         map_configs.addArrayObject(obj);
     }
     {
         spDataObject obj;
         (*obj)["exec"] = true;
-        (*obj)["path"] = "etc/mycompiler.sh";
-        (*obj)["content"] = etc_customcompiler;
+        (*obj)["path"] = "etctranslate/mycompiler.sh";
+        (*obj)["content"] = etctr_customcompiler;
         map_configs.addArrayObject(obj);
     }
     {
         spDataObject obj;
         (*obj)["exec"] = true;
-        (*obj)["path"] = "etc/yul.sh";
-        (*obj)["content"] = etc_yulcompiler;
+        (*obj)["path"] = "etctranslate/yul.sh";
+        (*obj)["content"] = etctr_yulcompiler;
         map_configs.addArrayObject(obj);
     }
 }

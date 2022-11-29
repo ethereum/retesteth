@@ -19,7 +19,8 @@ const string t8ntool_Byzantium_config = R"({
     "params" : {
         "fork" : "Byzantium",
         "byzantiumForkBlock" : "0x00",
-        "homesteadForkBlock" : "0x00"
+        "homesteadForkBlock" : "0x00",
+        "chainID" : "0x01"
     },
     "accounts" : {
     }

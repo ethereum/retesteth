@@ -22,7 +22,8 @@ const string t8ntool_ConstantinopleFix_config = R"({
         "fork" : "ConstantinopleFix",
         "constantinopleForkBlock" : "0x00",
         "byzantiumForkBlock" : "0x00",
-        "homesteadForkBlock" : "0x00"
+        "homesteadForkBlock" : "0x00",
+        "chainID" : "0x01"
     },
     "accounts" : {
     }

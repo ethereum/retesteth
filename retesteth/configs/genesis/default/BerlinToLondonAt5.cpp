@@ -25,7 +25,8 @@ const string t8ntool_BerlinToLondonAt5_config = R"({
         "constantinopleForkBlock" : "0x00",
         "byzantiumForkBlock" : "0x00",
         "homesteadForkBlock" : "0x00",
-        "londonForkBlock" : "0x05"
+        "londonForkBlock" : "0x05",
+        "chainID" : "0x01"
     },
     "accounts" : {
     }

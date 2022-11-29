@@ -36,6 +36,7 @@ struct ClientConfigFile : GCP_SPointerBase
     bool checkDifficulty() const { return m_checkDifficulty; }
     bool checkBasefee() const { return m_checkBasefee; }
     bool calculateBasefee() const { return m_calculateBasefee; }
+    bool support1559() const { return m_support1559; }
 
     std::map<std::string, std::string> const& exceptions() const { return m_exceptions; }
     std::map<std::string, std::string> const& fieldreplace() const { return m_fieldRaplce; }
@@ -61,6 +62,7 @@ private:
     bool m_checkDifficulty;                  ///< Enable difficulty verification
     bool m_checkBasefee;                     ///< Enable basefee verifivation
     bool m_calculateBasefee;                 ///< Retesteth calculate basefee value
+    bool m_support1559;                      ///< Support EIP1559 headers
     size_t m_initializeTime;                 ///< Time to start the instance
     std::vector<FORK> m_forks;               ///< Allowed forks as network name
     std::vector<FORK> m_additionalForks;     ///< Allowed forks as network name

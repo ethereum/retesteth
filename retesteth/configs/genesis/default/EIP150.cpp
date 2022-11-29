@@ -16,7 +16,8 @@ const string default_EIP150_config = R"({
 const string t8ntool_EIP150_config = R"({
     "params" : {
         "fork" : "EIP150",
-        "homesteadForkBlock" : "0x00"
+        "homesteadForkBlock" : "0x00",
+        "chainID" : "0x01"
     },
     "accounts" : {
     }

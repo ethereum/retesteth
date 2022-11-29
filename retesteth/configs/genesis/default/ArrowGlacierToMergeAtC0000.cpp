@@ -29,7 +29,8 @@ const string t8ntool_ArrowGlacierToMergeAtDiffC0000_config = R"({
         "constantinopleForkBlock" : "0x00",
         "byzantiumForkBlock" : "0x00",
         "homesteadForkBlock" : "0x00",
-        "terminalTotalDifficulty" : "0x0C0000"
+        "terminalTotalDifficulty" : "0x0C0000",
+        "chainID" : "0x01"
     },
     "accounts" : {
     }

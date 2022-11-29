@@ -23,6 +23,7 @@ void requireJsonFileStructure(DataObject const& _data)
             {"tmpDir", {{DataType::String}, jsonField::Optional}},
             {"checkLogsHash", {{DataType::Bool}, jsonField::Optional}},
             {"checkDifficulty", {{DataType::Bool}, jsonField::Optional}},
+            {"support1559", {{DataType::Bool}, jsonField::Optional}},
             {"checkBasefee", {{DataType::Bool}, jsonField::Optional}},
             {"calculateBasefee", {{DataType::Bool}, jsonField::Optional}},
             {"defaultChainID", {{DataType::Integer}, jsonField::Optional}},
@@ -150,6 +151,11 @@ void ClientConfigFile::initWithData(DataObject const& _data)
     m_checkBasefee = false;
     if (_data.count("checkBasefee"))
         m_checkBasefee = _data.atKey("checkBasefee").asBool();
+
+    m_support1559 = true;
+    if (_data.count("support1559"))
+        m_support1559 = _data.atKey("support1559").asBool();
+
 
     if (_data.count("tmpDir"))
     {

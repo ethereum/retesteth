@@ -16,7 +16,8 @@ const string default_HomesteadToEIP150At5_config = R"({
 const string t8ntool_HomesteadToEIP150At5_config = R"({
     "params" : {
         "fork" : "HomesteadToEIP150At5",
-        "homesteadForkBlock" : "0x00"
+        "homesteadForkBlock" : "0x00",
+        "chainID" : "0x01"
     },
     "accounts" : {
     }

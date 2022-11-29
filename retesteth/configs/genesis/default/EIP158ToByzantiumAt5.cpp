@@ -19,7 +19,8 @@ const string t8ntool_EIP158ToByzantiumAt5_config = R"({
     "params" : {
         "fork" : "EIP158ToByzantiumAt5",
         "byzantiumForkBlock" : "0x05",
-        "homesteadForkBlock" : "0x00"
+        "homesteadForkBlock" : "0x00",
+        "chainID" : "0x01"
     },
     "accounts" : {
     }

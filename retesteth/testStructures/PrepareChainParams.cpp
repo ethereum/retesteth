@@ -57,6 +57,13 @@ spDataObject prepareGenesisSubsection(StateTestEnvBase const& _env, ParamsContex
         }
     }
 
+    if (!cfg.cfgFile().support1559())
+    {
+        (*genesis).removeKey("baseFeePerGas");
+        (*genesis).removeKey("currentRandom");
+        return genesis;
+    }
+
     if (!netIsAdditional)
     {
         bool knowLondon = cfg.checkForkInProgression("London");

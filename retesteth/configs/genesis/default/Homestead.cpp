@@ -15,7 +15,8 @@ const string default_Homestead_config = R"({
 const string t8ntool_Homestead_config = R"({
     "params" : {
         "fork" : "Homestead",
-        "homesteadForkBlock" : "0x00"
+        "homesteadForkBlock" : "0x00",
+        "chainID" : "0x01"
     },
     "accounts" : {
     }

@@ -28,7 +28,8 @@ const string t8ntool_GrayGlacier_config = R"({
         "fork" : "GrayGlacier",
         "constantinopleForkBlock" : "0x00",
         "byzantiumForkBlock" : "0x00",
-        "homesteadForkBlock" : "0x00"
+        "homesteadForkBlock" : "0x00",
+        "chainID" : "0x01"
     },
     "accounts" : {
     }

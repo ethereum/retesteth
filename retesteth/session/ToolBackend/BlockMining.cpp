@@ -62,7 +62,8 @@ void BlockMining::prepareEnvFile()
     auto const& parentType = m_parentBlockRef.header()->type();
     if (parentType == BlockType::BlockHeader1559 || parentType == BlockType::BlockHeaderMerge)
     {
-        if (!Options::getCurrentConfig().cfgFile().calculateBasefee())
+        auto const& cfgFile = Options::getCurrentConfig().cfgFile();
+        if (!cfgFile.calculateBasefee())
         {
             (*envData).removeKey("currentBaseFee");
             BlockHeader1559 const& h1559 = (BlockHeader1559 const&) m_parentBlockRef.header().getCContent();

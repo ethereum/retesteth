@@ -11,6 +11,7 @@ class alethIpcDebugcfg { public: alethIpcDebugcfg(); };
 class besucfg { public: besucfg(); };
 class t8ntoolcfg { public: t8ntoolcfg(); };
 class etccfg { public: etccfg(); };
+class etctranslatecfg { public: etctranslatecfg(); };
 class t8ntooleipcfg { public: t8ntooleipcfg(); };
 class oewrapcfg { public: oewrapcfg(); };
 class ethereumjscfg { public: ethereumjscfg(); };
@@ -34,15 +35,29 @@ class genArrowGlacierToMergeAtDiffC0000Cfg { public: genArrowGlacierToMergeAtDif
 
 // Genesis configs for clients (etc)
 class genRewardsCfgETC { public: genRewardsCfgETC(); };
+class genRewardsCfgETCTR { public: genRewardsCfgETCTR(); };
 class genFrontierCfgETC { public: genFrontierCfgETC(); };
 class genHomesteadCfgETC { public: genHomesteadCfgETC(); };
 class genEIP150CfgETC { public: genEIP150CfgETC(); };
 class genEIP158CfgETC { public: genEIP158CfgETC(); };
+
 class genAtlantisCfgETC { public: genAtlantisCfgETC(); };
+class genByzantiumCfgETCTR { public: genByzantiumCfgETCTR(); };
+
 class genAghartaCfgETC { public: genAghartaCfgETC(); };
+class genConstantinopleCfgETCTR { public: genConstantinopleCfgETCTR(); };
+class genConstantinopleFixCfgETCTR { public: genConstantinopleFixCfgETCTR(); };
+
 class genPhoenixCfgETC { public: genPhoenixCfgETC(); };
+class genIstanbulCfgETCTR { public: genIstanbulCfgETCTR(); };
+
 class genMagnetoCfgETC { public: genMagnetoCfgETC(); };
+class genBerlinCfgETCTR { public: genBerlinCfgETCTR(); };
+
 class genMystiqueCfgETC { public: genMystiqueCfgETC(); };
+class genLondonCfgETCTR { public: genLondonCfgETCTR(); };
+class genMergeCfgETCTR { public: genMergeCfgETCTR(); };
+class genBerlinToLondonCfgETCTR { public: genBerlinToLondonCfgETCTR(); };
 
 
 // T8ntooleip
@@ -69,6 +84,7 @@ public:
         besucfg besu;
         t8ntoolcfg t8ntool;
         etccfg etc;
+        etctranslatecfg etctranslate;
         t8ntooleipcfg t8ntooleip;
         oewrapcfg oewrap;
         ethereumjscfg ethereumjs;
@@ -100,6 +116,15 @@ public:
         genPhoenixCfgETC genPhoenixETC;
         genMagnetoCfgETC genMagnetoETC;
         genMystiqueCfgETC genMystiqueETC;
+
+        genRewardsCfgETCTR rewardsETCTR;
+        genByzantiumCfgETCTR genByzantiumETCTR;
+        genConstantinopleCfgETCTR genConstantinopleETCTR;
+        genConstantinopleFixCfgETCTR genConstantinopleFixETCTR;
+        genIstanbulCfgETCTR genIstanbuilETCTR;
+        genBerlinCfgETCTR genBerlinETCTR;
+        genLondonCfgETCTR genLondonETCTR;
+        genMergeCfgETCTR genMergeETCTR;
 
         // T8ntooleip
         t8ntooleip_genRewardsCfg t8ntooleip_RewardsCfg;

@@ -189,6 +189,9 @@ spDataObject FillTest(StateTestInFiller const& _test)
         spDataObject forkResults;
         (*forkResults).setKey(fork.asString());
 
+        TestInfo errorInfo("test_setChainParams: " + fork.asString(), _test.testName());
+        TestOutputHelper::get().setCurrentTestInfo(errorInfo);
+
         auto const p = prepareChainParams(fork, SealEngine::NoReward, _test.Pre(), _test.Env(), ParamsContext::StateTests);
         session.test_setChainParams(p);
 

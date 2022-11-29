@@ -41,8 +41,9 @@ ToolChain::ToolChain(
     // Because any tool can have custom name implementation. Since this is a mock for tool functions
     // We know what are the fork names. Because devs refuse to expose core logic for tests
     // The protocol logic is implemented here to catch test errors.
-    auto const& forks = Options::getCurrentConfig().cfgFile().forks();
-    if (inArray(forks, m_fork.getCContent()))
+    auto const& opt = Options::getCurrentConfig();
+    auto const& forks = opt.cfgFile().forks();
+    if (opt.cfgFile().support1559() && inArray(forks, m_fork.getCContent()))
     {
         if (compareFork(m_fork, CMP::lt, FORK("London"))
             && _genesis.header()->type() == BlockType::BlockHeader1559)
