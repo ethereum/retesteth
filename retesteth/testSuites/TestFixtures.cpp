@@ -19,15 +19,10 @@ namespace fs = boost::filesystem;
 typedef std::unique_ptr<TestFixtureBase> uPtrTestFixtureBase;
 typedef std::pair<uPtrTestFixtureBase, string> FixtureToSuite;
 static std::vector<FixtureToSuite> g_dynamic_test_search_fixtures;
+static std::vector<FixtureToSuite> g_dynamic_test_suite_fixtures;
 
-FixtureRegistrator::FixtureRegistrator(TestFixtureBase* _fixture, string&& _suiteName)
+namespace
 {
-    uPtrTestFixtureBase ptr(_fixture);
-    auto p = std::make_pair(std::move(ptr), std::move(_suiteName));
-    g_dynamic_test_search_fixtures.push_back(std::move(p));
-    delete this;
-}
-
 std::set<string> g_exceptionNames = {"stExpectSection", "bcExpectSection"};
 test_suite* getSuiteByPathName(std::string const& _suiteName)
 {
@@ -46,19 +41,85 @@ test_suite* getSuiteByPathName(std::string const& _suiteName)
     return suite;
 }
 
-void test::DynamicTestsBoostClean()
+std::vector<fs::path> getSubfolders(fs::path const& _path)
 {
-    for (auto& el : g_dynamic_test_search_fixtures)
-        el.first.reset();
-    g_dynamic_test_search_fixtures.clear();
+    std::vector<fs::path> subFolders;
+    using fsIterator = fs::directory_iterator;
+    for (fsIterator it(_path); it != fsIterator(); ++it)
+    {
+        if (fs::is_directory(*it))
+            subFolders.push_back(*it);
+    }
+    return subFolders;
 }
+
+bool hasSubfolders(fs::path const& _path)
+{
+    using fsIterator = fs::directory_iterator;
+    for (fsIterator it(_path); it != fsIterator(); ++it)
+    {
+        if (fs::is_directory(*it))
+            return true;
+    }
+    return false;
+}
+
+test_unit_id registerNewTestCase(
+    vector<string>& allTestNames, FixtureToSuite const& _fixture, test_suite* _suite, string const& _caseName)
+{
+    auto const& suiteName = _fixture.second;
+    auto const& fixture = _fixture.first;
+
+    string const fullCaseName = string(suiteName) + "/" + _caseName;
+    ETH_DC_MESSAGEC(DC::STATS2, "Registering new test case: " + fullCaseName, LogColor::YELLOW);
+    allTestNames.push_back(fullCaseName);
+
+    test_case* tcase = BOOST_TEST_CASE(boost::bind(&TestFixtureBase::execute, fixture.get()));
+    tcase->p_name.value = _caseName;
+    _suite->add(tcase);
+
+    return _suite->get(_caseName);
+}
+
+void registerNewTestSuite(
+    vector<string>& allTestNames, FixtureToSuite const& _fixture, test_suite* _suite, fs::path const& _path)
+{
+    auto const& suiteName = _fixture.second;
+    auto const subFolders = getSubfolders(_path);
+
+    string const newSuiteName = _path.stem().string();
+    string const fullSuiteName = string(suiteName) + "/" + newSuiteName;
+    ETH_DC_MESSAGEC(DC::STATS2, "Registering new test suite: " + fullSuiteName, LogColor::YELLOW);
+    allTestNames.push_back(fullSuiteName);
+    test_suite* tsuite = BOOST_TEST_SUITE(newSuiteName);
+
+    for (auto const& path : subFolders)
+    {
+        auto const casename = path.stem().string();
+
+        FixtureToSuite fixToSuite;
+        auto ptr = _fixture.first.get();
+        uPtrTestFixtureBase uPtr(ptr->copy());
+        fixToSuite.first = std::move(uPtr);
+        fixToSuite.first.get()->setAdditionalFillerFolder("/" + newSuiteName);
+        fixToSuite.second = fullSuiteName;
+        registerNewTestCase(allTestNames, fixToSuite, tsuite, casename);
+
+        g_dynamic_test_suite_fixtures.push_back(std::move(fixToSuite));
+    }
+    _suite->add(tsuite);
+}
+
+
+}  // namespace
+
 
 void test::DynamicTestsBoost(vector<string>& allTestNames)
 {
-    for (auto const& el : g_dynamic_test_search_fixtures)
+    for (auto const& fixtureSuite : g_dynamic_test_search_fixtures)
     {
-        auto const& suiteName = el.second;
-        auto const& fixture= el.first;
+        auto const& suiteName = fixtureSuite.second;
+        auto const& fixture = fixtureSuite.first;
         auto suite = getSuiteByPathName(suiteName);
         if (suite != nullptr)
         {
@@ -71,18 +132,15 @@ void test::DynamicTestsBoost(vector<string>& allTestNames)
             {
                 if (fs::is_directory(*it))
                 {
-
                     string const caseName = (*it).path().filename().string();
                     auto const caseid = suite->get(caseName);
+
                     if (caseid == INV_TEST_UNIT_ID && !g_exceptionNames.count(caseName))
                     {
-                        string const fullCaseName = string(suiteName) + "/" + caseName;
-                        ETH_DC_MESSAGEC(DC::STATS2, "Registering new test case: " + fullCaseName, LogColor::YELLOW);
-                        allTestNames.push_back(fullCaseName);
-
-                        test_case* tcase = BOOST_TEST_CASE(boost::bind(&TestFixtureBase::execute, fixture.get()));
-                        tcase->p_name.value = caseName;
-                        suite->add(tcase);
+                        if (hasSubfolders(*it))
+                            registerNewTestSuite(allTestNames, fixtureSuite, suite, *it);
+                        else
+                            registerNewTestCase(allTestNames, fixtureSuite, suite, caseName);
                     }
                 }
             }
@@ -102,10 +160,29 @@ bool TestChecker::isTimeConsumingTest(std::string const& _testName)
     return test::inArray(c_timeConsumingTestSuites, _testName);
 }
 
+FixtureRegistrator::FixtureRegistrator(TestFixtureBase* _fixture, string&& _suiteName)
+{
+    uPtrTestFixtureBase ptr(_fixture);
+    auto p = std::make_pair(std::move(ptr), std::move(_suiteName));
+    g_dynamic_test_search_fixtures.push_back(std::move(p));
+    delete this;
+}
+
+void test::DynamicTestsBoostClean()
+{
+    for (auto& el : g_dynamic_test_search_fixtures)
+        el.first.reset();
+    g_dynamic_test_search_fixtures.clear();
+
+    for (auto& el : g_dynamic_test_suite_fixtures)
+        el.first.reset();
+    g_dynamic_test_suite_fixtures.clear();
+}
+
+
 template <class T, class U>
 void TestFixture<T, U>::_execute(std::set<TestExecution> const& _execFlags) const
 {
-    T suite;
     U defaultBoostFlags;
     std::set<TestExecution> allFlags = _execFlags;
     for (auto const& el : defaultBoostFlags.getFlags())
@@ -119,7 +196,7 @@ void TestFixture<T, U>::_execute(std::set<TestExecution> const& _execFlags) cons
     }
 
     std::string const casename = boost::unit_test::framework::current_test_case().p_name;
-    boost::filesystem::path const suiteFillerPath = suite.getFullPathFiller(casename).parent_path();
+    boost::filesystem::path const suiteFillerPath = m_suite.getFullPathFiller(casename).parent_path();
 
     // skip wallet test as it takes too much time (250 blocks) run it with --all flag
     if ((TestChecker::isTimeConsumingTest(casename) || allFlags.count(TestExecution::RequireOptionAll))
@@ -146,7 +223,7 @@ void TestFixture<T, U>::_execute(std::set<TestExecution> const& _execFlags) cons
         return;
     }
 
-    suite.runAllTestsInFolder(casename);
+    m_suite.runAllTestsInFolder(casename);
     test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
 }
 

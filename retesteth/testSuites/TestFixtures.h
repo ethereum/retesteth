@@ -3,10 +3,10 @@
  */
 
 #pragma once
+#include <memory>
 #include <set>
 #include <string>
 #include <vector>
-#include <memory>
 
 namespace test
 {
@@ -81,8 +81,10 @@ class TestFixtureBase
 public:
     TestFixtureBase() {}
     virtual ~TestFixtureBase() {}
+    virtual TestFixtureBase* copy() const = 0;
     virtual std::string folder() const = 0;
     virtual std::string fillerFoler() const = 0;
+    virtual void setAdditionalFillerFolder(std::string&& _folder) const = 0;
     virtual void execute() const = 0;
 };
 
@@ -94,7 +96,9 @@ public:
     TestFixture(int){};
     std::string folder() const override { return m_suite.suiteFolder().path().string(); }
     std::string fillerFoler() const override { return m_suite.suiteFillerFolder().path().string(); }
-    void execute() const override { _execute(m_execFlags); };
+    void setAdditionalFillerFolder(std::string&& _folder) const override { m_suite.setFillerPathAdd(std::move(_folder)); };
+    TestFixtureBase* copy() const override { return new TestFixture<T, U>(*this); }
+    void execute() const override { _execute(m_execFlags); }
     ~TestFixture() override {}
 
 private:

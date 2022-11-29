@@ -16,25 +16,25 @@ namespace fs = boost::filesystem;
 TestSuite::TestPath StateTestSuite::suiteFolder() const
 {
     if (Options::get().fillchain)
-        return TestSuite::TestPath(fs::path("BlockchainTests") / "GeneralStateTests");
-    return TestSuite::TestPath(fs::path("GeneralStateTests"));
+        return TestSuite::TestPath(fs::path("BlockchainTests") / string("GeneralStateTests" + m_fillerPathAdd));
+    return TestSuite::TestPath(fs::path("GeneralStateTests" + m_fillerPathAdd));
 }
 
 TestSuite::FillerPath StateTestSuite::suiteFillerFolder() const
 {
-    return TestSuite::FillerPath(fs::path("src") / "GeneralStateTestsFiller");
+    return TestSuite::FillerPath(fs::path("src") / string("GeneralStateTestsFiller" + m_fillerPathAdd));
 }
 
 TestSuite::TestPath StateTestVMSuite::suiteFolder() const
 {
     if (Options::get().fillchain)
-        return TestSuite::TestPath(fs::path("BlockchainTests") / "GeneralStateTests" / "VMTests");
-    return TestSuite::TestPath(fs::path("GeneralStateTests") / "VMTests");
+        return TestSuite::TestPath(fs::path("BlockchainTests") / "GeneralStateTests" / string("VMTests" + m_fillerPathAdd));
+    return TestSuite::TestPath(fs::path("GeneralStateTests") / string("VMTests" + m_fillerPathAdd));
 }
 
 TestSuite::FillerPath StateTestVMSuite::suiteFillerFolder() const
 {
-    return TestSuite::FillerPath(fs::path("src") / "GeneralStateTestsFiller" / "VMTests");
+    return TestSuite::FillerPath(fs::path("src") / "GeneralStateTestsFiller" / string("VMTests" + m_fillerPathAdd));
 }
 
 // Legacy Constantinople

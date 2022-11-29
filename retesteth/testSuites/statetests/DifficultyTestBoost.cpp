@@ -8,12 +8,12 @@ namespace fs = boost::filesystem;
 
 TestSuite::TestPath DifficultyTestSuite::suiteFolder() const
 {
-    return TestSuite::TestPath(fs::path("DifficultyTests"));
+    return TestSuite::TestPath(fs::path("DifficultyTests" + m_fillerPathAdd));
 }
 
 TestSuite::FillerPath DifficultyTestSuite::suiteFillerFolder() const
 {
-    return TestSuite::FillerPath(fs::path("src") / "DifficultyTestsFiller");
+    return TestSuite::FillerPath(fs::path("src") / std::string("DifficultyTestsFiller" + m_fillerPathAdd));
 }
 
 using DifficultyTestsFixture = TestFixture<DifficultyTestSuite, DefaultFlags>;

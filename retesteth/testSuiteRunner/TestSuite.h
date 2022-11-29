@@ -106,6 +106,7 @@ public:
 
     // Structure  <suiteFolder>/<testFolder>/<test>.json
     AbsoluteFilledTestPath getFullPathFilled(std::string const& _testFolder) const;
+    void setFillerPathAdd(std::string&& _path) const { m_fillerPathAdd = std::move(_path); }
 
     //
     static void runFunctionForAllClients(std::function<void()> _func);
@@ -117,6 +118,8 @@ protected:
     // A folder of the test suite in src folder. like "VMTestsFiller". should be implemented for
     // each test suite.
     virtual FillerPath suiteFillerFolder() const = 0;
+
+    mutable std::string m_fillerPathAdd;
 
 private:
     void _executeTest(std::string const& _testFolder, boost::filesystem::path const& _jsonFileName) const;

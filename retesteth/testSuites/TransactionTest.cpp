@@ -29,9 +29,10 @@ spDataObject FillTest(TransactionTestInFiller const& _test)
     std::set<FORK> executionForks;
     for (auto const& fork : Options::getCurrentConfig().cfgFile().forks())
         executionForks.emplace(fork);
+
     for (auto const& fork : _test.additionalForks())
     {
-        if (Options::getDynamicOptions().getCurrentConfig().checkForkAllowed(fork))
+        if (Options::getCurrentConfig().checkForkAllowed(fork))
             executionForks.emplace(fork);
         else
             ETH_WARNING("Client config does not support fork `" + fork.asString() + "`, skipping test generation!");
@@ -173,12 +174,12 @@ spDataObject TransactionTestSuite::doTests(spDataObject& _input, TestSuiteOption
 
 TestSuite::TestPath TransactionTestSuite::suiteFolder() const
 {
-    return TestSuite::TestPath(fs::path("TransactionTests"));
+    return TestSuite::TestPath(fs::path("TransactionTests" + m_fillerPathAdd));
 }
 
 TestSuite::FillerPath TransactionTestSuite::suiteFillerFolder() const
 {
-    return TestSuite::FillerPath(fs::path("src") / "TransactionTestsFiller");
+    return TestSuite::FillerPath(fs::path("src") / string("TransactionTestsFiller" + m_fillerPathAdd));
 }
 
 }  // namespace test

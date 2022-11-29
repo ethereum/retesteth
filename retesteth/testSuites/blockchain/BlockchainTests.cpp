@@ -69,42 +69,42 @@ spDataObject LegacyConstantinopleBCGeneralStateTestsSuite::doTests(spDataObject&
 
 TestSuite::TestPath BlockchainTestValidSuite::suiteFolder() const
 {
-    return TestSuite::TestPath(fs::path("BlockchainTests") / "ValidBlocks");
+    return TestSuite::TestPath(fs::path("BlockchainTests") / string("ValidBlocks" + m_fillerPathAdd));
 }
 
 TestSuite::FillerPath BlockchainTestValidSuite::suiteFillerFolder() const
 {
-    return TestSuite::FillerPath(fs::path("src") / "BlockchainTestsFiller" / "ValidBlocks");
+    return TestSuite::FillerPath(fs::path("src") / "BlockchainTestsFiller" / string("ValidBlocks" + m_fillerPathAdd));
 }
 
 TestSuite::TestPath BlockchainTestInvalidSuite::suiteFolder() const
 {
-    return TestSuite::TestPath(fs::path("BlockchainTests") / "InvalidBlocks");
+    return TestSuite::TestPath(fs::path("BlockchainTests") / string("InvalidBlocks" + m_fillerPathAdd));
 }
 
 TestSuite::FillerPath BlockchainTestInvalidSuite::suiteFillerFolder() const
 {
-    return TestSuite::FillerPath(fs::path("src") / "BlockchainTestsFiller" / "InvalidBlocks");
+    return TestSuite::FillerPath(fs::path("src") / "BlockchainTestsFiller" / string("InvalidBlocks" + m_fillerPathAdd));
 }
 
 TestSuite::TestPath BlockchainTestTransitionSuite::suiteFolder() const
 {
-    return TestSuite::TestPath(fs::path("BlockchainTests") / "TransitionTests");
+    return TestSuite::TestPath(fs::path("BlockchainTests") / string("TransitionTests" + m_fillerPathAdd));
 }
 
 TestSuite::FillerPath BlockchainTestTransitionSuite::suiteFillerFolder() const
 {
-    return TestSuite::FillerPath(fs::path("src") / "BlockchainTestsFiller" / "TransitionTests");
+    return TestSuite::FillerPath(fs::path("src") / "BlockchainTestsFiller" / string("TransitionTests" + m_fillerPathAdd));
 }
 
 TestSuite::TestPath BCGeneralStateTestsSuite::suiteFolder() const
 {
-    return TestSuite::TestPath(fs::path("BlockchainTests") / "GeneralStateTests");
+    return TestSuite::TestPath(fs::path("BlockchainTests") / string("GeneralStateTests" + m_fillerPathAdd));
 }
 
 TestSuite::FillerPath BCGeneralStateTestsSuite::suiteFillerFolder() const
 {
-    return TestSuite::FillerPath(fs::path("src") / fs::path("GeneralStateTestsFiller"));
+    return TestSuite::FillerPath(fs::path("src") / fs::path("GeneralStateTestsFiller" + m_fillerPathAdd));
 }
 
 spDataObject BCGeneralStateTestsVMSuite::doTests(spDataObject& _input, TestSuiteOptions& _opt) const
@@ -125,12 +125,12 @@ spDataObject BCGeneralStateTestsSuite::doTests(spDataObject& _input, TestSuiteOp
 
 TestSuite::TestPath BCGeneralStateTestsVMSuite::suiteFolder() const
 {
-    return TestSuite::TestPath(fs::path("BlockchainTests") / "GeneralStateTests" / "VMTests");
+    return TestSuite::TestPath(fs::path("BlockchainTests") / "GeneralStateTests" / string("VMTests" + m_fillerPathAdd));
 }
 
 TestSuite::FillerPath BCGeneralStateTestsVMSuite::suiteFillerFolder() const
 {
-    return TestSuite::FillerPath(fs::path("src") / fs::path("GeneralStateTestsFiller") / "VMTests");
+    return TestSuite::FillerPath(fs::path("src") / fs::path("GeneralStateTestsFiller") / string("VMTests" + m_fillerPathAdd));
 }
 
 TestSuite::TestPath LegacyConstantinopleBCGeneralStateTestsSuite::suiteFolder() const

@@ -98,7 +98,7 @@ std::tuple<VALUE, FORK> prepareReward(SealEngine _engine, FORK const& _fork, VAL
     }
 
     // Setup mining rewards
-    std::map<FORK, spVALUE> const& rewards = Options::get().getDynamicOptions().getCurrentConfig().getRewardMap();
+    std::map<FORK, spVALUE> const& rewards = Options::get().getCurrentConfig().getRewardMap();
 
     // Load rewards for 'fork' from 'fork+xxxx'
     FORK const& fork = _fork;
