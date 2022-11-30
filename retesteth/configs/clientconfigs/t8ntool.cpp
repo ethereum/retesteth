@@ -282,7 +282,7 @@ else
 fi
 )";
 
-t8ntoolcfg::t8ntoolcfg()
+gent8ntoolcfg::gent8ntoolcfg()
 {
     {
         spDataObject obj;
