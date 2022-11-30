@@ -274,7 +274,7 @@ else
 fi
 )";
 
-etccfg::etccfg()
+genetccfg::genetccfg()
 {
     {
         spDataObject obj;

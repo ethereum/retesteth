@@ -29,7 +29,7 @@ const string t8ntooleip_correctMiningReward_config = R"({
     "Merged"  :          "0"
 })";
 
-t8ntooleip_genRewardsCfg::t8ntooleip_genRewardsCfg()
+gent8ntooleip_genRewardsCfg::gent8ntooleip_genRewardsCfg()
 {
     spDataObject obj2;
     (*obj2)["path"] = "t8ntooleip/genesis/correctMiningReward.json";

@@ -71,7 +71,7 @@ killall aleth
 )";
 
 
-alethcfg::alethcfg()
+genalethcfg::genalethcfg()
 {
     {
         spDataObject obj;

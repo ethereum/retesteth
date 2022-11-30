@@ -243,7 +243,7 @@ else
 fi
 )";
 
-t8ntooleipcfg::t8ntooleipcfg()
+gent8ntooleipcfg::gent8ntooleipcfg()
 {
     {
         spDataObject obj;

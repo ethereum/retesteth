@@ -176,11 +176,12 @@ void RunTest(StateTestInFilled const& _test)
 
         bool skipedFork = opt.getCurrentConfig().checkForkSkipOnFiller(network);
         bool allowedFork = opt.getCurrentConfig().checkForkAllowed(network);
-        if ((!opt.singleTestNet.empty() && FORK(opt.singleTestNet) != network) || !allowedFork || skipedFork)
+        bool singleNetDeny = (!opt.singleTestNet.empty() && opt.singleTestNet != network.asString());
+        if ( singleNetDeny || !allowedFork || skipedFork)
         {
             for (TransactionInGeneralSection& tr : txs)
                 tr.markSkipped();
-            if (!allowedFork || skipedFork)
+            if ((!allowedFork || skipedFork) && !singleNetDeny)
                 ETH_WARNING("Skipping unsupported fork: " + network.asString() + " in " + _test.testName());
             continue;
         }

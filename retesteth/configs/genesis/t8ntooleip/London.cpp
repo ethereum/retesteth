@@ -15,7 +15,7 @@ const string t8ntooleip_London1884_config = R"({
     }
 })";
 
-t8ntooleip_genLondon1884Cfg::t8ntooleip_genLondon1884Cfg()
+gent8ntooleip_genLondon1884Cfg::gent8ntooleip_genLondon1884Cfg()
 {
     spDataObject obj2;
     (*obj2)["path"] = "t8ntooleip/genesis/London+1884.json";

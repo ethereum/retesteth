@@ -46,7 +46,7 @@ string const alethIPCDebug_config = R"({
     }
 })";
 
-alethIpcDebugcfg::alethIpcDebugcfg()
+genalethIpcDebugcfg::genalethIpcDebugcfg()
 {
     spDataObject obj;
     (*obj)["path"] = "alethIPCDebug/config";

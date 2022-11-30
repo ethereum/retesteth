@@ -489,7 +489,7 @@ else
 fi
 )";
 
-oewrapcfg::oewrapcfg()
+genoewrapcfg::genoewrapcfg()
 {
     {
         spDataObject obj;

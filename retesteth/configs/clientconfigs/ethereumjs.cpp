@@ -232,7 +232,7 @@ string const ethereumjs_stop = R"(#!/bin/sh
 killall node
 )";
 
-ethereumjscfg::ethereumjscfg()
+genethereumjscfg::genethereumjscfg()
 {
     {
         spDataObject obj;

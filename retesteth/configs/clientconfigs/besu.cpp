@@ -67,7 +67,7 @@ string const besu_stop = R"(#!/bin/sh
 killall -9 java
 )";
 
-besucfg::besucfg()
+genbesucfg::genbesucfg()
 {
     {
         spDataObject obj;

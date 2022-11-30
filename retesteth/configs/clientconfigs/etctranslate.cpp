@@ -274,7 +274,7 @@ else
 fi
 )";
 
-etctranslatecfg::etctranslatecfg()
+genetctranslatecfg::genetctranslatecfg()
 {
     {
         spDataObject obj;
