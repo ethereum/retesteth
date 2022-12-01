@@ -2,10 +2,7 @@
 #include "../../basetypes.h"
 #include "Transaction.h"
 #include <libdevcore/RLP.h>
-#include <retesteth/dataObject/DataObject.h>
-#include <retesteth/testStructures/types/StateTests/Base/AccessList.h>
-using namespace dataobject;
-using namespace test::teststruct;
+#include <libdataobj/DataObject.h>
 
 namespace test
 {
@@ -14,7 +11,7 @@ namespace teststruct
 
 struct TransactionLegacy : Transaction
 {
-    TransactionLegacy(spDataObjectMove);
+    TransactionLegacy(DataObject const&);
     TransactionLegacy(BYTES const&);
     TransactionLegacy(dev::RLP const&);
 
@@ -30,7 +27,7 @@ protected:
     // Potected transaction interface
     virtual void fromRLP(dev::RLP const&) override;
     virtual void fromDataObject(DataObject const&) override;
-    virtual void buildVRS(VALUE const& _secret) override;
+    virtual void buildVRS() override;
     virtual void streamHeader(dev::RLPStream& _stream) const override;
     virtual void rebuildRLP() override;
 

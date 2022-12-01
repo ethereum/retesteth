@@ -18,11 +18,9 @@
  * Unit tests for TestHelper functions.
  */
 
-#include <dataObject/ConvertFile.h>
-#include <dataObject/DataObject.h>
+#include <libdataobj/ConvertFile.h>
 #include <retesteth/TestOutputHelper.h>
 #include <retesteth/testSuites/Common.h>
-#include <boost/test/unit_test.hpp>
 
 using namespace std;
 using namespace dev;

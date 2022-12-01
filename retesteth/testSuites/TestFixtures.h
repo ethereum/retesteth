@@ -3,29 +3,32 @@
  */
 
 #pragma once
-#include "EthChecks.h"
-#include "Options.h"
-#include "TestOutputHelper.h"
-using namespace std;
+#include <memory>
+#include <set>
+#include <string>
+#include <vector>
 
 namespace test
 {
-static std::vector<std::string> const c_timeConsumingTestSuites{std::string{"stTimeConsuming"},
-    std::string{"stQuadraticComplexityTest"}, std::string{"bcExploitTest"}, std::string{"bcExpectSection"},
-    std::string{"bcWalletTest"}, std::string{"stQuadraticComplexityTest"}, std::string{"vmPerformance"} };
+static std::vector<std::string> const c_timeConsumingTestSuites{
+    std::string{"stTimeConsuming"},
+    std::string{"stQuadraticComplexityTest"},
+    std::string{"bcExploitTest"},
+    std::string{"bcExpectSection"},
+    std::string{"bcWalletTest"},
+    std::string{"stQuadraticComplexityTest"}
+};
 
-static std::vector<std::string> const c_cpuIntenseTests{std::string{"CALLBlake2f_MaxRoundsFiller"}};
+static std::vector<std::string> const c_cpuIntenseTests{
+    std::string{"CALLBlake2f_MaxRoundsFiller"},
+    std::string{"loopMulFiller"}
+};
 
 class TestChecker
 {
 public:
-    static bool isCPUIntenseTest(string const& _testSuite) {
-        return test::inArray(c_cpuIntenseTests, _testSuite);
-    }
-
-    static bool isTimeConsumingTest(string const& _testName) {
-        return test::inArray(c_timeConsumingTestSuites, _testName);
-    }
+    static bool isCPUIntenseTest(std::string const& _testSuite);
+    static bool isTimeConsumingTest(std::string const& _testName);
 };
 
 enum class TestExecution
@@ -73,54 +76,47 @@ public:
 };
 
 // what if U has the information about flags
-template <class T, class U>
-class TestFixture
+class TestFixtureBase
 {
 public:
-    TestFixture(std::set<TestExecution> const& _execFlags = {})
-    {
-        T suite;
-        U defaultBoostFlags;
-        std::set<TestExecution> allFlags = _execFlags;
-        for (auto const& el : defaultBoostFlags.getFlags())
-            allFlags.emplace(el);
-
-        if (allFlags.count(TestExecution::NotRefillable) &&
-            (Options::get().fillchain || Options::get().filltests))
-            ETH_ERROR_MESSAGE("Tests are sealed and not refillable!");
-
-        string const casename = boost::unit_test::framework::current_test_case().p_name;
-        boost::filesystem::path const suiteFillerPath = suite.getFullPathFiller(casename).parent_path();
-
-        // skip wallet test as it takes too much time (250 blocks) run it with --all flag
-        if ((inArray(c_timeConsumingTestSuites, casename) || allFlags.count(TestExecution::RequireOptionAll))
-             && !test::Options::get().all)
-        {
-            ETH_STDOUT_MESSAGE("Skipping " + casename + " because --all option is not specified.");
-            test::TestOutputHelper::get().currentTestRunPP();
-            test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
-            return;
-        }
-
-        if (allFlags.count(TestExecution::RequireOptionFill) && !Options::get().filltests)
-        {
-            ETH_STDOUT_MESSAGE("Skipping " + casename + " because --filltests option is not specified.");
-            test::TestOutputHelper::get().currentTestRunPP();
-            test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
-            return;
-        }
-
-        if (casename == "bcForgedTest")
-        {
-            test::TestOutputHelper::get().currentTestRunPP();
-            ETH_STDOUT_MESSAGE("Skipping " + casename + " because bigint exceptions run in progress!");
-            return;
-        }
-
-        suite.runAllTestsInFolder(casename);
-        test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
-    }
+    TestFixtureBase() {}
+    virtual ~TestFixtureBase() {}
+    virtual TestFixtureBase* copy() const = 0;
+    virtual std::string folder() const = 0;
+    virtual std::string fillerFoler() const = 0;
+    virtual void setAdditionalFillerFolder(std::string&& _folder) const = 0;
+    virtual void execute() const = 0;
 };
 
+template <class T, class U>
+class TestFixture : public TestFixtureBase
+{
+public:
+    TestFixture(std::set<TestExecution> const& _execFlags = {});
+    TestFixture(int){};
+    std::string folder() const override { return m_suite.suiteFolder().path().string(); }
+    std::string fillerFoler() const override { return m_suite.suiteFillerFolder().path().string(); }
+    void setAdditionalFillerFolder(std::string&& _folder) const override { m_suite.setFillerPathAdd(std::move(_folder)); };
+    TestFixtureBase* copy() const override { return new TestFixture<T, U>(*this); }
+    void execute() const override { _execute(m_execFlags); }
+    ~TestFixture() override {}
+
+private:
+    void _execute(std::set<TestExecution> const& _execFlags) const;
+    std::set<TestExecution> m_execFlags;
+    T m_suite;
+};
+
+
+void DynamicTestsBoost(std::vector<std::string>& allTests);
+void DynamicTestsBoostClean();
+class FixtureRegistrator
+{
+public:
+    FixtureRegistrator(TestFixtureBase* _fixture, std::string&& _suiteName);
+};
+
+#define ETH_REGISTER_DYNAMIC_TEST_SEARCH(F, S) \
+    static FixtureRegistrator* dynamicfixture##F = new FixtureRegistrator(new F(true), S);
 
 }  // namespace test

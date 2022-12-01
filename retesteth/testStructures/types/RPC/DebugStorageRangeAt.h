@@ -1,9 +1,7 @@
 #pragma once
 #include "../../basetypes.h"
 #include "../Ethereum/Storage.h"
-#include <retesteth/dataObject/DataObject.h>
-
-using namespace dataobject;
+#include <libdataobj/DataObject.h>
 
 namespace test
 {

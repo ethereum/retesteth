@@ -1,16 +1,13 @@
-#include "BlockHeader1559.h"
-#include "../../basetypes.h"
 #include <libdevcore/Address.h>
-#include <libdevcore/CommonIO.h>
-#include <libdevcore/RLP.h>
+#include <retesteth/EthChecks.h>
 #include <retesteth/TestHelper.h>
 #include <retesteth/testStructures/Common.h>
 
 using namespace dev;
+using namespace std;
+using namespace test::debug;
 
-namespace test
-{
-namespace teststruct
+namespace test::teststruct
 {
 void BlockHeader1559::fromData(DataObject const& _data)
 {
@@ -72,7 +69,7 @@ void BlockHeader1559::fromData(DataObject const& _data)
         }
         else
         {
-            ETH_WARNING_TEST("BlockHeader `mixHash` is not defined. Using default `0x00..00` value!", 6);
+            ETH_DC_MESSAGE(DC::TESTLOG, "BlockHeader `mixHash` is not defined. Using default `0x00..00` value!");
             m_mixHash = spFH32(new FH32(FH32::zero()));
             m_nonce = spFH8(new FH8(FH8::zero()));
         }
@@ -212,4 +209,3 @@ BlockHeader1559 const& BlockHeader1559::castFrom(spBlockHeader const& _from)
 }
 
 }  // namespace teststruct
-}  // namespace test

@@ -1,22 +1,29 @@
+#include "EthChecks.h"
 #include "Options.h"
 #include "TestHelper.h"
 #include "TestSuite.h"
 #include "TestSuiteHelperFunctions.h"
+#include <retesteth/TestOutputHelper.h>
 
+using namespace std;
+using namespace test;
+using namespace test::debug;
 using namespace test::testsuite;
+namespace fs = boost::filesystem;
 
 namespace
 {
 string const getTestNameFilter()
 {
     test::Options const& opt = test::Options::get();
-    string const testNameFilter = opt.singleTestName.empty() ? string() : opt.singleTestName;
+    string const testNameFilter = opt.singletest.name.empty() ? string() : opt.singletest.name;
     string filter = testNameFilter;
     filter += opt.singleTestNet.empty() ? string() : " " + opt.singleTestNet;
     filter += opt.getGStateTransactionFilter();
-    ETH_LOG("Checking test filler hashes for " + boost::unit_test::framework::current_test_case().full_name(), 4);
+    ETH_DC_MESSAGE(
+        DC::TESTLOG, "Checking test filler hashes for " + boost::unit_test::framework::current_test_case().full_name());
     if (!filter.empty())
-        ETH_LOG("Filter: '" + filter + "'", 0);
+        ETH_DC_MESSAGE(DC::STATS, "Filter: '" + filter + "'");
     return testNameFilter;
 }
 
@@ -24,15 +31,17 @@ TestSuite::AbsoluteFilledTestPath createPathIfNotExist(TestSuite::AbsoluteFilled
 {
     if (!fs::exists(_path.path()))
     {
-        ETH_LOG("Tests folder does not exists, creating test folder: '" + string(_path.path().c_str()) + "'", 2);
+        ETH_DC_MESSAGE(
+            DC::WARNING, "Tests folder does not exists, creating test folder: '" + string(_path.path().c_str()) + "'");
         fs::create_directories(_path.path());
     }
     return _path;
 }
 
-void checkIfThereAreUnfilledTests(
+std::vector<fs::path> checkIfThereAreUnfilledTests(
     fs::path const& _fullPathToFillers, vector<fs::path> const& _compiledTests, string const& _testNameFilter)
 {
+    std::vector<fs::path> notFilledTests;
     vector<fs::path> fillerFiles = test::getFiles(_fullPathToFillers, {".json", ".yml"}, _testNameFilter);
     if (fillerFiles.size() > _compiledTests.size())
     {
@@ -50,10 +59,16 @@ void checkIfThereAreUnfilledTests(
                 }
             }
             if (!found)
-                message += "\n " + string(filler.c_str());
+            {
+                if (!Options::get().filloutdated)
+                    message += "\n " + string(filler.c_str());
+                notFilledTests.push_back(filler);
+            }
         }
-        ETH_ERROR_MESSAGE(message + "\n");
+        if (!Options::get().filloutdated)
+            ETH_ERROR_MESSAGE(message + "\n");
     }
+    return notFilledTests;
 }
 
 bool fakeFilledTestsIfThereAreNone(
@@ -86,15 +101,17 @@ bool fakeFilledTestsIfThereAreNone(
 
 namespace test
 {
-string TestSuite::checkFillerExistance(string const& _testFolder) const
+std::vector<fs::path> TestSuite::checkFillerExistance(string const& _testFolder, string& testNameFilter) const
 {
-    string const testNameFilter = getTestNameFilter();
+    testNameFilter = getTestNameFilter();
+    std::vector<fs::path> outdatedTests;
     AbsoluteFilledTestPath filledTestsPath = createPathIfNotExist(getFullPathFilled(_testFolder));
     vector<fs::path> compiledTests = test::getFiles(filledTestsPath.path(), {".json", ".yml"}, testNameFilter);
     AbsoluteFillerPath fullPathToFillers = getFullPathFiller(_testFolder);
 
-    if (Options::get().checkhash)
-        checkIfThereAreUnfilledTests(fullPathToFillers.path(), compiledTests, testNameFilter);
+    auto const& opt = Options::get();
+    if (opt.checkhash || opt.filloutdated)
+        outdatedTests = checkIfThereAreUnfilledTests(fullPathToFillers.path(), compiledTests, testNameFilter);
 
     bool checkFillerWhenFilterIsSetButNoTestsFilled = false;
     if (compiledTests.size() == 0)
@@ -124,31 +141,42 @@ string TestSuite::checkFillerExistance(string const& _testFolder) const
             "Src test could either be Filler.json, Filler.yml or Copier.json: " + test.filename().string());
 
         // Check that filled tests created from actual fillers depenging on a test type
+
+        auto fillerVerifier = [&testNameFilter, &outdatedTests](
+                                  fs::path const& _test, fs::path const& _expectedFillerName, string const& _addPostfix) {
+            auto const& opt = Options::get();
+            if (!opt.filltests || opt.filloutdated)
+            {
+                if (checkFillerHash(_test, _expectedFillerName))
+                    outdatedTests.push_back(_expectedFillerName);
+            }
+            if (!testNameFilter.empty())
+            {
+                testNameFilter += _addPostfix;
+                return true;
+            }
+            return false;
+        };
+
         if (fs::exists(expectedFillerName))
         {
-            if (Options::get().filltests == false)
-                checkFillerHash(test, expectedFillerName);
-            if (!testNameFilter.empty())
-                return testNameFilter + c_fillerPostf;
+            if (fillerVerifier(test, expectedFillerName, c_fillerPostf))
+                return outdatedTests;
         }
-        if (fs::exists(expectedFillerName2))
+        else if (fs::exists(expectedFillerName2))
         {
-            if (Options::get().filltests == false)
-                checkFillerHash(test, expectedFillerName2);
-            if (!testNameFilter.empty())
-                return testNameFilter + c_fillerPostf;
+            if (fillerVerifier(test, expectedFillerName2, c_fillerPostf))
+                return outdatedTests;
         }
-        if (fs::exists(expectedCopierName))
+        else if (fs::exists(expectedCopierName))
         {
-            if (Options::get().filltests == false)
-                checkFillerHash(test, expectedCopierName);
-            if (!testNameFilter.empty())
-                return testNameFilter + c_copierPostf;
+            if (fillerVerifier(test, expectedCopierName, c_copierPostf))
+                return outdatedTests;
         }
     }
 
     // No compiled test files. Filter is empty
-    return testNameFilter;
+    return outdatedTests;
 }
 
 }  // namespace test

@@ -1,15 +1,11 @@
 #pragma once
 #include "../../../basetypes.h"
 #include "../../../configs/FORK.h"
-#include "../../Ethereum/BlockHeaderIncomplete.h"
 #include "../../Ethereum/Transaction.h"
 #include "BlockchainTestFillerBlockHeaderOverwrite.h"
 #include "BlockchainTestFillerTransaction.h"
 #include "BlockchainTestFillerUncle.h"
-#include <retesteth/dataObject/DataObject.h>
-#include <retesteth/dataObject/SPointer.h>
-using namespace dataobject;
-using namespace test::teststruct;
+#include <libdataobj/DataObject.h>
 
 namespace test
 {
@@ -26,7 +22,7 @@ struct BlockchainTestFillerBlock : GCP_SPointerBase
     BYTES const& rawRLP() const { return m_rlp; }
 
     // Block can have chainName explicitly defined
-    string const& chainName() const { return m_chainName; }
+    std::string const& chainName() const { return m_chainName; }
 
     // Block can have chainNext explicitly defined to generate blocks on different networks
     bool hasChainNet() const { return !m_network.isEmpty(); }
@@ -58,18 +54,18 @@ struct BlockchainTestFillerBlock : GCP_SPointerBase
 
     // Test Functions
     // Block can have exceptions expected to thrown by the client upon generation of the block
-    string const& getExpectException(FORK const& _net) const
+    std::string const& getExpectException(FORK const& _net) const
     {
-        static string emptyString = string();  // mutex ??
+        static std::string emptyString = std::string();  // mutex ??
         if (m_expectExceptions.count(_net))
             return m_expectExceptions.at(_net);
         return emptyString;
     }
 
-    static string const& defaultChainName()
+    static std::string const& defaultChainName()
     {
         // Mutex lock static defenition?
-        static string defaultChainName = "default";
+        static std::string defaultChainName = "default";
         return defaultChainName;
     }
 
@@ -77,7 +73,7 @@ struct BlockchainTestFillerBlock : GCP_SPointerBase
 
 private:
     BlockchainTestFillerBlock() {}
-    string m_chainName;
+    std::string m_chainName;
     spBYTES m_rlp;
     spVALUE m_blockNumber;
     spFORK m_network;
@@ -85,7 +81,7 @@ private:
 
     std::vector<BlockchainTestFillerUncle> m_uncles;
     std::vector<BlockchainTestFillerTransaction> m_transactions;
-    std::map<FORK, string> m_expectExceptions;
+    std::map<FORK, std::string> m_expectExceptions;
 
     std::map<FORK, spBlockHeaderOverwrite> m_overwriteHeaderByForkMap;
 };

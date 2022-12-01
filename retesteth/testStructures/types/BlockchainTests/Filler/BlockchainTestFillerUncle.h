@@ -2,10 +2,12 @@
 #include "../../../basetypes.h"
 #include "../../../configs/FORK.h"
 #include "../../Ethereum/BlockHeaderIncomplete.h"
-#include "../../Ethereum/Transaction.h"
-#include <retesteth/dataObject/DataObject.h>
-#include <retesteth/dataObject/SPointer.h>
-using namespace dataobject;
+#include <libdataobj/DataObject.h>
+
+namespace test
+{
+namespace teststruct
+{
 enum class UncleType
 {
     SameAsBlock,
@@ -14,10 +16,7 @@ enum class UncleType
     SameAsPreviousSibling
 };
 
-namespace test
-{
-namespace teststruct
-{
+
 struct BlockchainTestFillerUncle : GCP_SPointerBase
 {
     BlockchainTestFillerUncle(DataObject const&);
@@ -27,7 +26,7 @@ struct BlockchainTestFillerUncle : GCP_SPointerBase
     size_t sameAsBlock() const { return m_sameAsBlock; }
     size_t sameAsPreviousSibling() const { return m_sameAsPreviousSibling; }
 
-    string const& chainname() const { return m_chainName; }
+    std::string const& chainname() const { return m_chainName; }
     bool hasRelTimestampFromPopulateBlock() const { return m_hasRelTimestampFromPopulateBlock; }
     long long int relTimestampFromPopulateBlock() const { return m_relTimestampFromPopulateBlock; }
 
@@ -45,7 +44,7 @@ private:
 
     bool m_hasRelTimestampFromPopulateBlock = false;
     long long int m_relTimestampFromPopulateBlock;
-    string m_chainName;
+    std::string m_chainName;
 
     // Header incomplete that maps which fields to overwrite in uncle header
     spBlockHeaderIncomplete m_headerIncomplete;

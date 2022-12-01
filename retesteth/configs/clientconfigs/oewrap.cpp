@@ -2,6 +2,8 @@
 using namespace std;
 using namespace dataobject;
 
+namespace retesteth::options
+{
 string const oewrap_config = R"({
     "name" : "Openethereum-evm wrapper as StateTool",
     "socketType" : "tranition-tool",
@@ -487,7 +489,7 @@ else
 fi
 )";
 
-oewrapcfg::oewrapcfg()
+genoewrapcfg::genoewrapcfg()
 {
     {
         spDataObject obj;
@@ -524,3 +526,4 @@ oewrapcfg::oewrapcfg()
         map_configs.addArrayObject(obj);
     }
 }
+}  // namespace retesteth::options

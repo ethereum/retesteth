@@ -1,8 +1,6 @@
 #pragma once
 #include "../../basetypes.h"
-#include <retesteth/dataObject/DataObject.h>
-
-using namespace dataobject;
+#include <libdataobj/DataObject.h>
 
 namespace test
 {
@@ -22,7 +20,7 @@ struct DebugTraceTransaction
 {
     DebugTraceTransaction(DataObject const&);
     std::vector<DebugTraceTransactionLog> const& getEntries() const { return m_entries; }
-    string getFinal() const;
+    std::string getFinal() const;
 
 private:
     std::vector<DebugTraceTransactionLog> m_entries;

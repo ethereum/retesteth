@@ -23,7 +23,6 @@
 
 #include "FileSystem.h"
 #include "Common.h"
-//#include "Log.h"
 
 #if defined(_WIN32)
 #include <shlobj.h>

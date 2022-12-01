@@ -1,44 +1,40 @@
-#include "retesteth/ExitHandler.h"
+#include "retesteth/TestHelper.h"
 #include "retesteth/TestOutputHelper.h"
-#include "retesteth/testSuites/StateTests.h"
 #include "retesteth/testSuites/TestFixtures.h"
-#include <retesteth/testSuiteRunner/TestSuite.h>
-#include <boost/test/unit_test.hpp>
+#include "retesteth/testSuites/statetests/StateTests.h"
+#include <retesteth/Options.h>
+#include <functional>
+#include <iostream>
 
 using namespace std;
 using namespace dev;
 using namespace test;
+using namespace boost::unit_test;
 namespace fs = boost::filesystem;
 
 // Most Recent StateTestSuite
 TestSuite::TestPath StateTestSuite::suiteFolder() const
 {
     if (Options::get().fillchain)
-        return TestSuite::TestPath(fs::path("BlockchainTests") / "GeneralStateTests");
-    return TestSuite::TestPath(fs::path("GeneralStateTests"));
+        return TestSuite::TestPath(fs::path("BlockchainTests") / string("GeneralStateTests" + m_fillerPathAdd));
+    return TestSuite::TestPath(fs::path("GeneralStateTests" + m_fillerPathAdd));
 }
 
 TestSuite::FillerPath StateTestSuite::suiteFillerFolder() const
 {
-    return TestSuite::FillerPath(fs::path("src") / "GeneralStateTestsFiller");
-}
-
-StateTestSuite::StateTestSuite()
-{
-    // Register subtest as finished test case. because each folder is treated as test case folder
-    test::TestOutputHelper::get().markTestFolderAsFinished(getFullPathFiller("VMTests").parent_path(), "VMTests");
+    return TestSuite::FillerPath(fs::path("src") / string("GeneralStateTestsFiller" + m_fillerPathAdd));
 }
 
 TestSuite::TestPath StateTestVMSuite::suiteFolder() const
 {
     if (Options::get().fillchain)
-        return TestSuite::TestPath(fs::path("BlockchainTests") / "GeneralStateTests" / "VMTests");
-    return TestSuite::TestPath(fs::path("GeneralStateTests") / "VMTests");
+        return TestSuite::TestPath(fs::path("BlockchainTests") / "GeneralStateTests" / string("VMTests" + m_fillerPathAdd));
+    return TestSuite::TestPath(fs::path("GeneralStateTests") / string("VMTests" + m_fillerPathAdd));
 }
 
 TestSuite::FillerPath StateTestVMSuite::suiteFillerFolder() const
 {
-    return TestSuite::FillerPath(fs::path("src") / "GeneralStateTestsFiller" / "VMTests");
+    return TestSuite::FillerPath(fs::path("src") / "GeneralStateTestsFiller" / string("VMTests" + m_fillerPathAdd));
 }
 
 // Legacy Constantinople
@@ -49,12 +45,13 @@ TestSuite::TestPath LegacyConstantinopleStateTestSuite::suiteFolder() const
 
 TestSuite::FillerPath LegacyConstantinopleStateTestSuite::suiteFillerFolder() const
 {
-    return TestSuite::FillerPath(
-        fs::path("src") / "LegacyTests" / "Constantinople" / "GeneralStateTestsFiller");
+    return TestSuite::FillerPath(fs::path("src") / "LegacyTests" / "Constantinople" / "GeneralStateTestsFiller");
 }
+
 
 // latest version StateTests
 using GeneralStateTestsFixture = TestFixture<StateTestSuite, DefaultFlags>;
+ETH_REGISTER_DYNAMIC_TEST_SEARCH(GeneralStateTestsFixture, "GeneralStateTests")
 BOOST_FIXTURE_TEST_SUITE(GeneralStateTests, GeneralStateTestsFixture)
 
 // Frontier Tests
@@ -131,6 +128,9 @@ BOOST_AUTO_TEST_CASE(stEIP2537) {}
 BOOST_AUTO_TEST_CASE(stEIP2930) {}
 BOOST_AUTO_TEST_CASE(stEIP1559) {}
 BOOST_AUTO_TEST_CASE(stEIP3607) {}
+BOOST_AUTO_TEST_CASE(stEIP3540) {}
+BOOST_AUTO_TEST_CASE(stEIP3670) {}
+BOOST_AUTO_TEST_CASE(stEIP3860) {}
 
 // Heavy
 BOOST_AUTO_TEST_CASE(stTimeConsuming) {}
@@ -143,6 +143,7 @@ BOOST_AUTO_TEST_SUITE_END()
 
 // Converted VMTests
 using GeneralStateTestsVMFixture = TestFixture<StateTestVMSuite, DefaultFlags>;
+ETH_REGISTER_DYNAMIC_TEST_SEARCH(GeneralStateTestsVMFixture, "GeneralStateTests/VMTests")
 BOOST_FIXTURE_TEST_SUITE(VMTests, GeneralStateTestsVMFixture)
 BOOST_AUTO_TEST_CASE(vmArithmeticTest) {}
 BOOST_AUTO_TEST_CASE(vmBitwiseLogicOperation) {}

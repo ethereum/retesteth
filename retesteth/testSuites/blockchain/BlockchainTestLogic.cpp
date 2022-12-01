@@ -1,24 +1,28 @@
 #include "BlockchainTestLogic.h"
-#include <retesteth/EthChecks.h>
 #include <retesteth/ExitHandler.h>
 #include <retesteth/Options.h>
-#include <retesteth/session/Session.h>
-#include <retesteth/testStructures/Common.h>
 #include <retesteth/testStructures/PrepareChainParams.h>
 #include <retesteth/testSuites/Common.h>
 #include "fillers/TestBlockchain.h"
+using namespace std;
+using namespace test::debug;
+using namespace test::session;
 namespace test
 {
 
 /// Read and execute the test from the file
 void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions const& _opt)
 {
-    if (Options::get().logVerbosity > 1)
-        ETH_STDOUT_MESSAGE("Running " + _test.testName());
+    ETH_DC_MESSAGE(DC::TESTLOG, "Running " + _test.testName());
 
     ClientConfig const& cfg = Options::get().getDynamicOptions().getCurrentConfig();
-    if (!cfg.validateForkAllowed(_test.network(), false))
+    bool fillerSkipFork = cfg.checkForkSkipOnFiller(_test.network());
+    if (!cfg.validateForkAllowed(_test.network(), false) || fillerSkipFork)
+    {
+        if (fillerSkipFork)
+            ETH_WARNING("Skipping unsupported fork: " + _test.network().asString() + " in " + _test.testName());
         return;
+    }
 
     TestOutputHelper::get().setCurrentTestName(_test.testName());
     TestOutputHelper::get().setUnitTestExceptions(_test.unitTestExceptions());
@@ -39,7 +43,7 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
         TestOutputHelper::get().setCurrentTestInfo(TestInfo(_test.network().asString(), blockNumber++));
 
         // Transaction sequence validation
-        ETH_LOGC("PERFORM TRANSACTION SEQUENCE VALIDATION...", 7, LogColor::YELLOW);
+        ETH_DC_MESSAGEC(DC::LOWLOG, "PERFORM TRANSACTION SEQUENCE VALIDATION...", LogColor::YELLOW);
 
         bool atLeastOnceSequence = false;
         typedef std::tuple<spTransaction, string> SpTrException;
@@ -58,6 +62,7 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
         {
             spTransaction const& tr = std::get<0>(el);
             string const& sException = std::get<1>(el);
+            modifyTransactionChainIDByNetwork(tr, _test.network());
             session.eth_sendRawTransaction(tr->getRawBytes(), tr->getSecret());
             SpTrException info = {tr, sException};
             expectedExceptions.emplace(tr->hash(), info);
@@ -106,7 +111,11 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
         for (auto const& tr : tblock.transactions())
         {
             if (Options::get().vmtrace)
-                printVmTrace(session, tr->hash(), latestBlock.header()->stateRoot());
+            {
+                string const testNameOut = _test.testName() + "_" + tr->hash().asString() + ".txt";
+                VMtraceinfo info(session, tr->hash(), latestBlock.header()->stateRoot(), testNameOut);
+                printVmTrace(info);
+            }
         }
 
         spDataObject remoteHeader = latestBlock.header()->asDataObject();
@@ -235,9 +244,9 @@ spDataObject DoTests(spDataObject& _input, TestSuite::TestSuiteOptions& _opt)
         for (BlockchainTestInFiller const& bcTest : testFiller.tests())
         {
             // Select test by name if --singletest and --singlenet is set
-            if (Options::get().singleTest)
+            if (Options::get().singletest.initialized())
             {
-                if (!Options::get().singleSubTestName.empty() && bcTest.testName() != Options::get().singleSubTestName)
+                if (!Options::get().singletest.subname.empty() && bcTest.testName() != Options::get().singletest.subname)
                     continue;
             }
             if (!Options::get().singleTestNet.empty())
@@ -266,19 +275,24 @@ spDataObject DoTests(spDataObject& _input, TestSuite::TestSuiteOptions& _opt)
             }
         }
 
-        ETH_LOG("Parse test", 5);
+        ETH_DC_MESSAGE(DC::TESTLOG, "Parse test");
         BlockchainTest test(_input);
         // Just check the test structure if running with --checkhash
         if (Options::get().checkhash)
             return tests;
-        ETH_LOG("Parse test done", 5);
+        if (Options::get().getvectors)
+        {
+            test.registerAllVectors();
+            return tests;
+        }
+        ETH_DC_MESSAGE(DC::TESTLOG, "Parse test done");
 
         for (BlockchainTestInFilled const& bcTest : test.tests())
         {
             // Select test by name if --singletest and --singlenet is set
-            if (Options::get().singleTest)
+            if (Options::get().singletest.initialized())
             {
-                if (!Options::get().singleSubTestName.empty() && bcTest.testName() != Options::get().singleSubTestName)
+                if (!Options::get().singletest.subname.empty() && bcTest.testName() != Options::get().singletest.subname)
                     continue;
             }
 

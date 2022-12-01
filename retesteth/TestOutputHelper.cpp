@@ -19,21 +19,21 @@
  */
 
 #include <boost/test/tree/test_case_counter.hpp>
-#include <boost/test/tree/traverse.hpp>
-#include <boost/test/unit_test.hpp>
-#include <mutex>
-#include <thread>
-
 #include <libdevcore/include.h>
-#include <retesteth/TestOutputHelper.h>
+#include <retesteth/EthChecks.h>
 #include <retesteth/Options.h>
-#include <retesteth/ExitHandler.h>
+#include <retesteth/TestHelper.h>
+#include <retesteth/TestOutputHelper.h>
 
 using namespace std;
 using namespace dev;
 using namespace test;
+using namespace test::debug;
 using namespace boost;
 using namespace boost::unit_test;
+
+mutex g_outputVectors;
+static std::vector<std::string> outputVectors;
 
 mutex g_finishedTestFoldersMapMutex;
 typedef std::set<std::string> FolderNameSet;
@@ -155,10 +155,10 @@ void TestOutputHelper::initTest(size_t _maxTests)
     m_currentTestName = string();
     m_currentTestFileName = string();
     m_timer = Timer();
-    if (!Options::get().createRandomTest && _maxTests != 0 && !Options::get().singleTestFile)
+    if (_maxTests != 0 && !Options::get().singleTestFile.initialized())
     {
         string testOutOf = "(" + test::fto_string(++m_currentTestRun) + " of " + test::fto_string(totalTestsNumber) + ")";
-        ETH_STDOUT_MESSAGE("Test Case \"" + TestInfo::caseName() + "\": " + testOutOf);
+        ETH_DC_MESSAGE(DC::STATS, "Test Case \"" + TestInfo::caseName() + "\": " + testOutOf);
         m_timer.restart();
     }
     m_maxTests = _maxTests;
@@ -176,24 +176,23 @@ void TestOutputHelper::showProgress()
 {
     m_currTest++;
     int m_testsPerProgs = std::max(1, (int)(m_maxTests / 4));
-    if (!test::Options::get().createRandomTest && (m_currTest % m_testsPerProgs == 0 || m_currTest ==  m_maxTests))
+    if (m_currTest % m_testsPerProgs == 0 || m_currTest ==  m_maxTests)
     {
         ETH_FAIL_REQUIRE_MESSAGE(m_maxTests > 0, "TestHelper has 0 or negative m_maxTests!");
         ETH_FAIL_REQUIRE_MESSAGE(
             m_currTest <= m_maxTests, "TestHelper has m_currTest > m_maxTests!");
         assert(m_maxTests > 0);
         int percent = int(m_currTest*100/m_maxTests);
-        std::cout << percent << "%";
-        if (percent != 100)
-            std::cout << "...";
-        std::cout << "\n";
+        string const ending = (percent != 100) ? "..." : "";
+        ETH_DC_MESSAGE(DC::STATS, test::fto_string(percent) + "%" + ending);
     }
 }
 
 std::mutex g_execTimeResults;
 void TestOutputHelper::finishTest()
 {
-    if (Options::get().exectimelog)
+    auto const& opt = Options::get();
+    if (opt.exectimelog && !opt.singleTestFile.initialized())
     {
         std::cout << "Tests finished: " << m_currTest << std::endl;
         execTimeName res;
@@ -232,8 +231,7 @@ void TestOutputHelper::printBoostError()
 void TestOutputHelper::printTestExecStats()
 {
     auto const& opt = Options::get();
-    if (!(opt.singleTestFile.is_initialized()
-            || opt.customTestFolder.is_initialized()))
+    if (!opt.singleTestFile.initialized())
         checkUnfinishedTestFolders();
 
     if (Options::get().exectimelog)
@@ -343,14 +341,8 @@ void checkUnfinishedTestFolders()
 
     std::map<boost::filesystem::path, FolderNameSet>::const_iterator singleTest =
         finishedTestFoldersMap.begin();
-    if (!filter.empty() && boost::filesystem::exists(singleTest->first / filter))
+    if (!filter.empty() && finishedTestFoldersMap.size() <= 1 && boost::filesystem::exists(singleTest->first / filter))
     {
-        if (finishedTestFoldersMap.size() > 1)
-        {
-            ETH_STDERROR_MESSAGE("ERROR: Expected a single test to be passed: " + filter + "\n");
-            return;
-        }
-
         if (!pathHasTests(singleTest->first / filter))
             ETH_WARNING(string("Test folder ") + (singleTest->first / filter).c_str() +
                         " appears to have no tests!");
@@ -406,7 +398,12 @@ std::string TestInfo::errorDebug() const
 {
     if (m_sFork.empty())
         return "";
-    string message = cYellow + " (" + m_currentTestCaseName + "/" + TestOutputHelper::get().testName();
+
+    string message;
+    bool nologcolor = Options::get().nologcolor;
+    if (!nologcolor)
+        message = cYellow;
+    message += " (" + m_currentTestCaseName + "/" + TestOutputHelper::get().testName();
 
     if (!m_isGeneralTestInfo)
     {
@@ -425,5 +422,20 @@ std::string TestInfo::errorDebug() const
     if (!m_sTransactionData.empty())
         message += ", TrData: `" + m_sTransactionData + "`";
 
+    if (nologcolor)
+        return message + ")";
     return message + ")" + cDefault;
+}
+
+void TestOutputHelper::addTestVector(std::string&& _str)
+{
+    std::lock_guard<std::mutex> lock(g_outputVectors);
+    outputVectors.push_back(_str);
+}
+
+void TestOutputHelper::printTestVectors()
+{
+    std::lock_guard<std::mutex> lock(g_outputVectors);
+    for (auto const& el : outputVectors)
+        std::cout << el;
 }

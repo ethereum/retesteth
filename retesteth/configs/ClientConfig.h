@@ -1,18 +1,14 @@
 #pragma once
-#include <retesteth/TestHelper.h>
-
 #include <retesteth/testStructures/basetypes/VALUE.h>
 #include <retesteth/testStructures/configs/ClientConfigFile.h>
 #include <retesteth/testStructures/configs/FORK.h>
-
-#include <boost/asio.hpp>
-#include <mutex>
 #include <string>
-namespace fs = boost::filesystem;
-using namespace test::teststruct;
 
 namespace test
 {
+using namespace test::teststruct;
+using namespace dataobject;
+
 struct ClientConfigID
 {
     /// ClientConfigID handles the unique id logic so not to store it inside int and accedentially
@@ -41,44 +37,48 @@ enum class FieldReplaceDir
 class ClientConfig
 {
 public:
-    ClientConfig(fs::path const& _clientConfigPath);
+    ClientConfig(boost::filesystem::path const& _clientConfigPath);
     ClientConfigID const& getId() const { return m_id; }
 
     // Main config file
     ClientConfigFile const& cfgFile() const { return m_clientConfigFile; }
 
     // Path to name.sh file for IPC client initialization
-    fs::path const getShellPath() const { return cfgFile().shell(); }
-    fs::path const getConfigPath() const { return cfgFile().path(); }
+    boost::filesystem::path const getShellPath() const { return cfgFile().shell(); }
+    boost::filesystem::path const getConfigPath() const { return cfgFile().path(); }
 
     // Functionality
     // Verify FORK is allowed by Fork + AdditionalForks and throw an error if not
     bool validateForkAllowed(FORK const& _net, bool _bail = true) const;
     bool checkForkAllowed(FORK const& _net) const;
     bool checkForkInProgression(FORK const& _net) const;
+    bool checkForkSkipOnFiller(FORK const& _net) const;
 
     // Translate smart network names into network names ( `<=Homestead` to `Frontier, Homestead`)
-    std::vector<FORK> translateNetworks(set<string> const& _networks) const;
-    static void translateNetworks(set<string> const& _networks, std::vector<FORK> const& _netOrder, std::vector<FORK>& _out);
+    std::vector<FORK> translateNetworks(std::set<std::string> const& _networks) const;
+    static void translateNetworks(
+        std::set<std::string> const& _networks, std::vector<FORK> const& _netOrder, std::vector<FORK>& _out);
 
     // Translate exceptionID from tests into client error string from configs
     // Print suggestions if no match found
-    std::string const& translateException(string const& _exceptionName) const;
+    std::string const& translateException(std::string const& _exceptionName) const;
 
     // Get Contents of genesis template for specified FORK
-    spDataObject const& getGenesisTemplate(FORK const& _fork) const;
+    spDataObject getGenesisTemplate(FORK const& _fork) const;
+    std::map<FORK, spVALUE> const getGenesisTemplateChainID() const { return m_genesisTemplateChainID; }
 
     // Get reward information info for each fork
     std::map<FORK, spVALUE> const& getRewardMap() const { return m_correctReward; }
+    spVALUE const& getRewardForFork(FORK const&) const;
 
     // Get path to correct mining reward info file
-    fs::path const& getRewardMapPath() const { return m_correctMiningRewardPath; }
+    boost::filesystem::path const& getRewardMapPath() const { return m_correctMiningRewardPath; }
 
     // Get path to scripts
     void initializeFirstSetup();
-    fs::path const& getSetupScript() const { return m_setupScriptPath; }
-    fs::path const& getStartScript() const { return m_starterScriptPath; }
-    fs::path const& getStopperScript() const { return m_stopperScriptPath; }
+    boost::filesystem::path const& getSetupScript() const { return m_setupScriptPath; }
+    boost::filesystem::path const& getStartScript() const { return m_starterScriptPath; }
+    boost::filesystem::path const& getStopperScript() const { return m_stopperScriptPath; }
 
     // Replace notations in requests if needed
     void performFieldReplace(DataObject& _data, FieldReplaceDir const& _dir) const;
@@ -88,12 +88,15 @@ private:
     GCP_SPointer<ClientConfigFile> m_clientConfigFile;  ///< <clientname>/config file
     std::map<FORK, spVALUE> m_correctReward;            ///< Correct mining reward info for StateTests->BlockchainTests
     std::map<FORK, spDataObject> m_genesisTemplate;     ///< Template For test_setChainParams
-    fs::path m_correctMiningRewardPath;                 ///< Path to correct mining reward info file
+    std::map<FORK, spVALUE> m_genesisTemplateChainID;   ///< ChainID value from template read
+
+
+    boost::filesystem::path m_correctMiningRewardPath;  ///< Path to correct mining reward info file
 
     bool m_initialized = false;    ///< If setup script has run
-    fs::path m_setupScriptPath;    ///< Path to setup script (run once before thread exec)
-    fs::path m_starterScriptPath;  ///< Path to starter script
-    fs::path m_stopperScriptPath;  ///< Path to stopper script
+    boost::filesystem::path m_setupScriptPath;    ///< Path to setup script (run once before thread exec)
+    boost::filesystem::path m_starterScriptPath;  ///< Path to starter script
+    boost::filesystem::path m_stopperScriptPath;  ///< Path to stopper script
 };
 
 }  // namespace test

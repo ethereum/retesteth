@@ -1,15 +1,10 @@
 #pragma once
 #include "Base/StateBase.h"
-#include <retesteth/dataObject/DataObject.h>
-#include <retesteth/dataObject/SPointer.h>
+#include <libdataobj/DataObject.h>
 
+namespace test::teststruct
+{
 using namespace dataobject;
-using namespace test::teststruct;
-
-namespace test
-{
-namespace teststruct
-{
 
 // Marks that State is made of full account objects
 struct State : StateBase
@@ -55,4 +50,3 @@ public:
 typedef GCP_SPointer<State> spState;
 
 }  // namespace teststruct
-}  // namespace test

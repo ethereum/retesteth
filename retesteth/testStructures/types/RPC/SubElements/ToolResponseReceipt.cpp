@@ -1,10 +1,7 @@
 #include "ToolResponseReceipt.h"
-#include <retesteth/EthChecks.h>
 #include <retesteth/testStructures/Common.h>
 
-namespace test
-{
-namespace teststruct
+namespace test::teststruct
 {
 ToolResponseReceipt::ToolResponseReceipt(DataObject const& _data)
 {
@@ -28,4 +25,3 @@ ToolResponseReceipt::ToolResponseReceipt(DataObject const& _data)
 
 
 }  // namespace teststruct
-}  // namespace test

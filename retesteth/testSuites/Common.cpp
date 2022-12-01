@@ -1,8 +1,11 @@
 #include "Common.h"
-#include <dataObject/DataObject.h>
 #include <retesteth/Options.h>
-#include <retesteth/session/Session.h>
+#include <retesteth/TestHelper.h>
+#include <retesteth/TestOutputHelper.h>
 using namespace std;
+using namespace test::debug;
+namespace fs = boost::filesystem;
+
 namespace test
 {
 
@@ -57,20 +60,29 @@ void checkTestNameIsEqualToFileName(DataObject const& _input)
                 "'");
 }
 
-void printVmTrace(SessionInterface& _session, FH32 const& _trHash, FH32 const& _stateRoot)
+void printVmTrace(VMtraceinfo const& _info)
 {
-    DebugVMTrace ret(_session.debug_traceTransaction(_trHash));
+    DebugVMTrace ret(_info.session.debug_traceTransaction(_info.trHash));
 
-    ETH_STDOUT_MESSAGE("------------------------");
+    ETH_DC_MESSAGE(DC::TESTLOG, "------------------------");
     if (Options::get().vmtraceraw)
-        ret.print();
+    {
+        if (!Options::get().vmtraceraw.outpath.empty())
+        {
+            auto outpath = fs::path(Options::get().vmtraceraw.outpath);
+            ETH_DC_MESSAGE(DC::TESTLOG, "Export vmtraceraw to " + (outpath / _info.trName).string());
+            ret.exportLogs(outpath / _info.trName);
+        }
+        else
+            ret.print();
+    }
     else
         ret.printNice();
 
     DataObject state;
-    state["stateRoot"] = _stateRoot.asString();
-    ETH_LOG(state.asJson(0, false), 0);
-    ETH_STDOUT_MESSAGE("\n------------------------");
+    state["stateRoot"] = _info.stateRoot.asString();
+    ETH_DC_MESSAGE(DC::TESTLOG, state.asJson(0, false));
+    ETH_DC_MESSAGE(DC::TESTLOG, "\n------------------------");
 }
 
 void compareTransactionException(spTransaction const& _tr, MineBlocksResult const& _mRes, string const& _testException)
@@ -174,6 +186,115 @@ void verifyFilledTestRecursive(DataObject const& _want, DataObject const& _have,
                               " want: " + elWantJson + "\n  vs \n have: " + haveJson + "\n"
                 );
     }
+}
+
+void modifyTransactionChainIDByNetwork(test::Transaction const& _tr, FORK const& _fork)
+{
+    auto const& genesisChainID = Options::getDynamicOptions().getCurrentConfig().getGenesisTemplateChainID();
+    if (genesisChainID.count(_fork))
+    {
+        VALUE const& chainID = genesisChainID.at(_fork);
+        if (_tr.getChainID() != chainID)
+        {
+            // This is gona be very cpu heavy because we need to recalculate the signature
+            auto& tr = const_cast<test::Transaction&>(_tr);
+            tr.setChainID(chainID);
+        }
+    }
+}
+
+spDataObject storageDiff(Storage const& _pre, Storage const& _post)
+{
+    spDataObject res;
+    for (auto const& _postKey : _post.getKeys())
+    {
+        auto const& postKey = std::get<0>(_postKey.second);
+        auto const& postValue = std::get<1>(_postKey.second);
+        if (_pre.hasKey(postKey))
+        {
+            // old key changed
+            if (_pre.atKey(postKey) != postValue)
+            {
+                auto const msg = _pre.atKey(postKey).asString() + " -> " + postValue->asString() + " (" +
+                                 _pre.atKey(postKey).asDecString() + " -> " + postValue->asDecString() + ")";
+                (*res)[postKey->asString()] = msg;
+            }
+        }
+        else
+        {
+            // new key appeared
+            auto const msg = "0x -> " + postValue->asString() + " (" + "0x -> " + postValue->asDecString() + ")";
+            (*res)[postKey->asString()] = msg;
+        }
+    }
+    for (auto const& _preKey : _pre.getKeys())
+    {
+        auto const& preKey = std::get<0>(_preKey.second);
+        if (!_post.hasKey(preKey))
+        {
+            // old key removed
+            (*res)["DELETED: " + preKey->asString()] = std::get<1>(_preKey.second)->asString();
+        }
+    }
+    return res;
+}
+
+spDataObject stateDiff(State const& _pre, State const& _post)
+{
+    spDataObject res;
+    for (auto const& postAcc : _post.accounts())
+    {
+        if (_pre.hasAccount(postAcc.first))
+        {
+            // check for updates
+            auto const& accPre = _pre.getAccount(postAcc.first);
+            auto const& accPost = postAcc.second;
+            if (accPre.balance() != accPost->balance())
+            {
+                auto const msg = accPre.balance().asString() + " -> " + accPost->balance().asString() + " (" +
+                                 accPre.balance().asDecString() + " -> " + accPost->balance().asDecString() + ")";
+                (*res)[postAcc.first.asString()]["balance"] = msg;
+            }
+            if (accPre.nonce() != accPost->nonce())
+            {
+                auto const msg = accPre.nonce().asString() + " -> " + accPost->nonce().asString() + " (" +
+                                 accPre.nonce().asDecString() + " -> " + accPost->nonce().asDecString() + ")";
+                (*res)[postAcc.first.asString()]["nonce"] = msg;
+            }
+            if (accPre.code() != accPost->code())
+                (*res)[postAcc.first.asString()]["code"] = accPre.code().asString() + " -> " + accPost->code().asString();
+            auto const storageDiffRes = storageDiff(accPre.storage(), accPost->storage());
+            if (storageDiffRes->getSubObjects().size())
+                (*res)[postAcc.first.asString()].atKeyPointer("storage") = storageDiffRes;
+        }
+        else
+        {
+            // this is new account
+            string const key = "NEW: " + postAcc.first.asString();
+            (*res).atKeyPointer(key) = postAcc.second->asDataObject()->copy();
+
+            // Print dec values
+            VALUE balance((*res).atKey(key).atKey("balance"));
+            (*res).atKeyUnsafe(key)["balance"] = balance.asString() + " (" + balance.asDecString() + ")";
+            VALUE nonce((*res).atKey(key).atKey("nonce"));
+            (*res).atKeyUnsafe(key)["nonce"] = nonce.asString() + " (" + nonce.asDecString() + ")";
+            for (auto& el : (*res).atKeyUnsafe(key).atKeyUnsafe("storage").getSubObjectsUnsafe())
+            {
+                VALUE val(el->asString());
+                el.getContent().setString(val.asString() + " (" + val.asDecString() + ")");
+            }
+        }
+    }
+    for (auto const& preAcc : _pre.accounts())
+    {
+        if (!_post.hasAccount(preAcc.first))
+        {
+            // this is deleted account
+            spDataObject deleted(new DataObject(string("DELETED: ") + preAcc.first.asString()));
+            (*res).addSubObject(deleted);
+        }
+    }
+    return res;
 }
 
 }  // namespace

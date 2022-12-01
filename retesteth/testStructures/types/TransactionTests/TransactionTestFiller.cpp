@@ -1,10 +1,9 @@
 #include <TestOutputHelper.h>
 #include <retesteth/testStructures/Common.h>
-#include <retesteth/testStructures/types/Ethereum/TransactionReader.h>
-
 #include "EthChecks.h"
 #include "TransactionTestFiller.h"
 
+using namespace std;
 using namespace test;
 using namespace test::teststruct;
 

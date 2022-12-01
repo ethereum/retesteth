@@ -1,14 +1,20 @@
 #include "BlockMining.h"
 #include "Options.h"
 #include "ToolChainHelper.h"
-#include "dataObject/ConvertFile.h"
-#include "dataObject/DataObject.h"
+#include "libdataobj/ConvertFile.h"
 #include <libdevcore/CommonIO.h>
+#include <retesteth/TestHelper.h>
+#include <retesteth/TestOutputHelper.h>
+#include <retesteth/testStructures/Common.h>
 #include <testStructures/types/BlockchainTests/BlockchainTestFiller.h>
 
+using namespace std;
+using namespace dev;
 using namespace test;
+using namespace test::debug;
 using namespace dataobject;
 using namespace test::teststruct;
+namespace fs = boost::filesystem;
 
 namespace
 {
@@ -51,6 +57,20 @@ void BlockMining::prepareEnvFile()
     if (m_currentBlockRef.header()->type() == BlockType::BlockHeaderMerge)
     {
         (*envData)["currentRandom"] = m_currentBlockRef.header()->mixHash().asString();
+    }
+
+    auto const& parentType = m_parentBlockRef.header()->type();
+    if (parentType == BlockType::BlockHeader1559 || parentType == BlockType::BlockHeaderMerge)
+    {
+        auto const& cfgFile = Options::getCurrentConfig().cfgFile();
+        if (!cfgFile.calculateBasefee())
+        {
+            (*envData).removeKey("currentBaseFee");
+            BlockHeader1559 const& h1559 = (BlockHeader1559 const&) m_parentBlockRef.header().getCContent();
+            (*envData)["parentBaseFee"] = h1559.baseFee().asString();
+            (*envData)["parentGasUsed"] = h1559.gasUsed().asString();
+            (*envData)["parentGasLimit"] = h1559.gasLimit().asString();
+        }
     }
 
     // BlockHeader hash information for tool mining
@@ -126,7 +146,16 @@ void BlockMining::executeTransition()
     auto tupleRewardFork = prepareReward(m_engine, m_chainRef.fork(), m_currentBlockRef.header()->number(), m_currentBlockRef.totalDifficulty());
     cmd += " --state.fork " + std::get<1>(tupleRewardFork).asString();
     if (m_engine != SealEngine::NoReward)
-        cmd += " --state.reward " + std::get<0>(tupleRewardFork).asDecString();
+    {
+        if (m_engine == SealEngine::Genesis)
+            cmd += " --state.reward -1";
+        else
+            cmd += " --state.reward " + std::get<0>(tupleRewardFork).asDecString();
+    }
+
+    auto const& params = m_chainRef.params().getCContent().params();
+    if (params.count("chainID"))
+        cmd += " --state.chainid " + VALUE(params.atKey("chainID")).asDecString();
 
     cmd += " --input.alloc " + m_allocPath.string();
     cmd += " --input.txs " + m_txsPath.string();
@@ -147,26 +176,26 @@ void BlockMining::executeTransition()
             cmd += "--trace.nostack ";
     }
 
-    ETH_TEST_MESSAGE("Alloc:\n" + m_allocPathContent);
+    ETH_DC_MESSAGE(DC::RPC, "Alloc:\n" + m_allocPathContent);
     if (m_currentBlockRef.transactions().size())
     {
-        ETH_TEST_MESSAGE("Txs:\n" + m_txsPathContent);
+        ETH_DC_MESSAGE(DC::RPC, "Txs:\n" + m_txsPathContent);
         for (auto const& tr : m_currentBlockRef.transactions())
-            ETH_TEST_MESSAGE(tr->asDataObject()->asJson());
+            ETH_DC_MESSAGE(DC::RPC, tr->asDataObject()->asJson());
     }
-    ETH_TEST_MESSAGE("Env:\n" + m_envPathContent);
+    ETH_DC_MESSAGE(DC::RPC, "Env:\n" + m_envPathContent);
 
     string out = test::executeCmd(cmd, ExecCMDWarning::NoWarning);
-    ETH_TEST_MESSAGE(cmd);
-    ETH_TEST_MESSAGE(out);
+    ETH_DC_MESSAGE(DC::RPC, cmd);
+    ETH_DC_MESSAGE(DC::RPC, out);
 }
 
 ToolResponse BlockMining::readResult()
 {
     string const outPathContent = dev::contentsString(m_outPath.string());
     string const outAllocPathContent = dev::contentsString(m_outAllocPath.string());
-    ETH_TEST_MESSAGE("Res:\n" + outPathContent);
-    ETH_TEST_MESSAGE("RAlloc:\n" + outAllocPathContent);
+    ETH_DC_MESSAGE(DC::RPC, "Res:\n" + outPathContent);
+    ETH_DC_MESSAGE(DC::RPC, "RAlloc:\n" + outAllocPathContent);
     if (outPathContent.empty())
         ETH_ERROR_MESSAGE("Tool returned empty file: " + m_outPath.string());
     if (outAllocPathContent.empty())
@@ -197,11 +226,11 @@ void BlockMining::traceTransactions(ToolResponse& _toolResponse)
             string const preinfo = "\nTransaction number: " + trNumber + ", hash: " + tr->hash().asString() + "\n";
             string const info = TestOutputHelper::get().testInfo().errorDebug();
             string const traceinfo = "\nVMTrace:" + info + cDefault + preinfo;
-            _toolResponse.attachDebugTrace(
-                tr->hash(), DebugVMTrace(traceinfo, trNumber, tr->hash(), dev::contentsString(txTraceFile)));
+            _toolResponse.attachDebugTrace(tr->hash(),
+                spDebugVMTrace(new DebugVMTrace(traceinfo, trNumber, tr->hash(), txTraceFile)));
         }
         else
-            ETH_LOG("Trace file `" + txTraceFile.string() + "` not found!", 1);
+            ETH_DC_MESSAGE(DC::WARNING, "Trace file `" + txTraceFile.string() + "` not found!");
     }
 }
 
@@ -212,6 +241,7 @@ BlockMining::~BlockMining()
     fs::remove(m_txsPath);
     fs::remove(m_outPath);
     fs::remove(m_outAllocPath);
+    fs::remove_all(m_chainRef.tmpDir());
 }
 
 }  // namespace toolimpl

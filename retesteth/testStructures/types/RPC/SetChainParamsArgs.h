@@ -2,9 +2,7 @@
 #include "../Ethereum/BlockHeader.h"
 #include "../Ethereum/BlockHeader1559.h"
 #include "../Ethereum/State.h"
-#include <retesteth/dataObject/DataObject.h>
-
-using namespace dataobject;
+#include <libdataobj/DataObject.h>
 
 namespace test
 {

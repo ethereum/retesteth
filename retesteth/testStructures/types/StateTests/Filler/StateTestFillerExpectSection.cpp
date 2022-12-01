@@ -1,11 +1,12 @@
 #include "StateTestFillerExpectSection.h"
 #include <TestHelper.h>
-#include <retesteth/testStructures/Common.h>
-
+#include <retesteth/EthChecks.h>
 #include <retesteth/Options.h>
-namespace test
-{
-namespace teststruct
+#include <retesteth/testStructures/Common.h>
+using namespace std;
+using namespace test::compiler;
+
+namespace test::teststruct
 {
 // Look at expect section data indexes filter and try to replace string values
 // into indexes of transaction data array (searching by label)
@@ -143,11 +144,11 @@ StateTestFillerExpectSection::StateTestFillerExpectSection(spDataObjectMove _dat
     }
 }
 
-bool StateTestFillerExpectSection::checkIndexes(size_t _dInd, size_t _gInd, size_t _vInd) const
+bool StateTestFillerExpectSection::checkIndexes(int _dInd, int _gInd, int _vInd) const
 {
-    if ((m_dataInd.count(_dInd) || m_dataInd.count(-1)) &&
-        (m_gasInd.count(_gInd) || m_gasInd.count(-1)) &&
-        (m_valInd.count(_vInd) || m_valInd.count(-1)))
+    if ((m_dataInd.count(_dInd) || m_dataInd.count(-1) || _dInd == -1) &&
+        (m_gasInd.count(_gInd) || m_gasInd.count(-1) || _gInd == -1) &&
+        (m_valInd.count(_vInd) || m_valInd.count(-1) || _vInd == -1))
         return true;
     return false;
 }
@@ -158,4 +159,3 @@ void StateTestFillerExpectSection::correctMiningReward(FH20 const& _coinbase, VA
 }
 
 }  // namespace teststruct
-}  // namespace test

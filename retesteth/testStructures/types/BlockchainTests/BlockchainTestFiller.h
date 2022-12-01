@@ -7,11 +7,8 @@
 #include "Filler/BlockchainTestFillerEnv.h"
 #include "Filler/BlockchainTestFillerExpectSection.h"
 
-#include <retesteth/dataObject/DataObject.h>
-#include <retesteth/dataObject/SPointer.h>
+#include <libdataobj/DataObject.h>
 
-// using namespace dataobject;
-using namespace test::teststruct;
 namespace test
 {
 namespace teststruct
@@ -19,7 +16,7 @@ namespace teststruct
 struct BlockchainTestInFiller : GCP_SPointerBase
 {
     BlockchainTestInFiller(spDataObject&);
-    string const& testName() const { return m_name; }
+    std::string const& testName() const { return m_name; }
     bool hasInfo() const { return !m_info.isEmpty(); }
     InfoIncomplete const& Info() const { return m_info; }
     SealEngine sealEngine() const { return m_sealEngine; }
@@ -33,20 +30,20 @@ struct BlockchainTestInFiller : GCP_SPointerBase
     bool hasUnclesInTest() const { return m_hasAtLeastOneUncle; }
 
     // UnitTest features
-    std::vector<string> const& unitTestExceptions() const { return m_exceptions; }
+    std::vector<std::string> const& unitTestExceptions() const { return m_exceptions; }
     DataObject const& unitTestVerify() const { return m_verify; }
 
 
 private:
     BlockchainTestInFiller() {}
-    string m_name;
+    std::string m_name;
     spInfoIncomplete m_info;
     SealEngine m_sealEngine;
     spBlockchainTestFillerEnv m_env;
     spState m_pre;
     std::vector<BlockchainTestFillerBlock> m_blocks;
     std::vector<BlockchainTestFillerExpectSection> m_expects;
-    std::vector<string> m_exceptions;
+    std::vector<std::string> m_exceptions;
     bool m_hasAtLeastOneUncle;
 
     spDataObject m_verify;

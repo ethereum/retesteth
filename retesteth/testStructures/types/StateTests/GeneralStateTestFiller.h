@@ -1,22 +1,18 @@
 #pragma once
+#include "../Ethereum/State.h"
 #include "Filler/InfoIncomplete.h"
 #include "Filler/StateTestFillerEnv.h"
 #include "Filler/StateTestFillerExpectSection.h"
 #include "Filler/StateTestFillerTransaction.h"
-#include <retesteth/dataObject/DataObject.h>
-#include <retesteth/dataObject/SPointer.h>
+#include <libdataobj/DataObject.h>
 
-using namespace dataobject;
-using namespace test::teststruct;
-namespace test
-{
-namespace teststruct
+namespace test::teststruct
 {
 struct StateTestInFiller : GCP_SPointerBase
 {
     StateTestInFiller(spDataObject&);
 
-    string const& testName() const { return m_name; }
+    std::string const& testName() const { return m_name; }
     bool hasInfo() const { return !m_info.isEmpty(); }
     InfoIncomplete const& Info() const { return m_info; }
     StateTestFillerEnv const& Env() const { return m_env; }
@@ -24,12 +20,14 @@ struct StateTestInFiller : GCP_SPointerBase
     StateTestFillerTransaction const& GeneralTr() const { return m_transaction; }
     std::vector<StateTestFillerExpectSection> const& Expects() const { return m_expectSections; }
     std::set<FORK> getAllForksFromExpectSections() const;
+
+    std::vector<std::string> const& unitTestExceptions() const { return m_exceptions; }
     DataObject const& unitTestVerify() const { return m_verify; }
     DataObject const& unitTestVerifyBC() const { return m_verifyBC; }
 
 private:
     StateTestInFiller() {}
-    string m_name;
+    std::string m_name;
     GCP_SPointer<InfoIncomplete> m_info;
     GCP_SPointer<StateTestFillerEnv> m_env;
     spState m_pre;
@@ -37,6 +35,7 @@ private:
     std::vector<StateTestFillerExpectSection> m_expectSections;
     spDataObject m_verify;
     spDataObject m_verifyBC;
+    std::vector<std::string> m_exceptions;
 };
 
 struct GeneralStateTestFiller
@@ -51,4 +50,3 @@ private:
 
 
 }  // namespace teststruct
-}  // namespace test

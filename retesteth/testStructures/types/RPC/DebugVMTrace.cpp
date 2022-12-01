@@ -1,17 +1,33 @@
 #include "DebugVMTrace.h"
 #include <EthChecks.h>
 #include <TestHelper.h>
-#include <dataObject/ConvertFile.h>
+#include <libdataobj/ConvertFile.h>
 #include <testStructures/Common.h>
+#include <boost/filesystem/fstream.hpp>
+#include <Options.h>
 
-namespace test
-{
-namespace teststruct
+using namespace std;
+using namespace test::debug;
+namespace fs = boost::filesystem;
+
+const string c_tooManyRawsMessage = "==TOO MANY LOG ROWS TO PRINT (Use --vmtraceraw <folder>)==";
+namespace test::teststruct
 {
 VMLogRecord::VMLogRecord(DataObject const& _obj)
 {
     try
     {
+        if (_obj.getSubObjects().size() == 4)
+        {
+            REQUIRE_JSONFIELDS(_obj, "VMLogRecord " + _obj.getKey(),
+                {
+                    {"output", {{DataType::String}, jsonField::Required}},
+                    {"gasUsed", {{DataType::String}, jsonField::Required}},
+                    {"time", {{DataType::Integer}, jsonField::Required}},
+                    {"error", {{DataType::String}, jsonField::Required}}});
+        }
+        else
+        {
         REQUIRE_JSONFIELDS(_obj, "VMLogRecord " + _obj.getKey(),
             {{"pc", {{DataType::Integer}, jsonField::Required}},
              {"op", {{DataType::Integer}, jsonField::Required}},
@@ -25,26 +41,35 @@ VMLogRecord::VMLogRecord(DataObject const& _obj)
              {"opName", {{DataType::String}, jsonField::Required}},
              {"returnData", {{DataType::String}, jsonField::Optional}},
              {"error", {{DataType::String}, jsonField::Optional}}});
+        }
 
-        pc = _obj.atKey("pc").asInt();
-        op = _obj.atKey("op").asInt();
-        gas = spVALUE(new VALUE(_obj.atKey("gas")));
-        gasCost = spVALUE(new VALUE(_obj.atKey("gasCost")));
-        if (_obj.count("memory"))
-            memory = spBYTES(new BYTES(_obj.atKey("memory")));
+        if (_obj.getSubObjects().size() == 4)
+        {
+            error = _obj.atKey("error").asString();
+            isShort = true;
+        }
         else
-            memory = spBYTES(new BYTES(DataObject("0x")));
-        memSize = _obj.atKey("memSize").asInt();
-        for (auto const& el : _obj.atKey("stack").getSubObjects())
-            stack.push_back(el->asString());
-        if (_obj.count("returnData"))
-            returnData = spBYTES(new BYTES(_obj.atKey("returnData")));
-        else
-            returnData = spBYTES(new BYTES(DataObject("0x")));
-        depth = _obj.atKey("depth").asInt();
-        refund = _obj.atKey("refund").asInt();
-        opName = _obj.atKey("opName").asString();
-        error = _obj.count("error") ? _obj.atKey("error").asString() : "";
+        {
+            pc = _obj.atKey("pc").asInt();
+            op = _obj.atKey("op").asInt();
+            gas = spVALUE(new VALUE(_obj.atKey("gas")));
+            gasCost = spVALUE(new VALUE(_obj.atKey("gasCost")));
+            if (_obj.count("memory"))
+                memory = spBYTES(new BYTES(_obj.atKey("memory")));
+            else
+                memory = spBYTES(new BYTES(DataObject("0x")));
+            memSize = _obj.atKey("memSize").asInt();
+            for (auto const& el : _obj.atKey("stack").getSubObjects())
+                stack.push_back(el->asString());
+            if (_obj.count("returnData"))
+                returnData = spBYTES(new BYTES(_obj.atKey("returnData")));
+            else
+                returnData = spBYTES(new BYTES(DataObject("0x")));
+            depth = _obj.atKey("depth").asInt();
+            refund = _obj.atKey("refund").asInt();
+            opName = _obj.atKey("opName").asString();
+            error = _obj.count("error") ? _obj.atKey("error").asString() : "";
+        }
 
     }
     catch (std::exception const& _ex)
@@ -53,7 +78,9 @@ VMLogRecord::VMLogRecord(DataObject const& _obj)
     }
 }
 
-DebugVMTrace::DebugVMTrace(string const& _info, string const& _trNumber, FH32 const& _trHash, string const& _logs)
+
+DebugVMTrace::DebugVMTrace(
+    string const& _info, string const& _trNumber, FH32 const& _trHash, boost::filesystem::path const& _logs)
 {
     try
     {
@@ -61,19 +88,56 @@ DebugVMTrace::DebugVMTrace(string const& _info, string const& _trNumber, FH32 co
         m_trNumber = _trNumber;
         m_trHash = spFH32(_trHash.copy());
 
-        auto logs = test::explode(_logs, '\n');
-        if (logs.size())
+        string line;
+        size_t k = 0;
+        const size_t c_maxRowsToPrint = 100;
+        fs::ifstream fileHandler(_logs);
+
+        auto readLog = [this](string const& _line){
+            auto const data = ConvertJsoncppStringToData(_line);
+            if (data->getSubObjects().size() == 3)
+            {
+                m_output = data->atKey("output").asString();
+                m_gasUsed = spVALUE(new VALUE(data->atKey("gasUsed")));
+                m_time = data->atKey("time").asInt();
+            }
+            else
+                m_log.push_back(VMLogRecord(data));
+        };
+
+        if (Options::get().fillvmtrace)
         {
-            for (size_t i = 0; i < logs.size() - 1; i++)
-                m_log.push_back(VMLogRecord(ConvertJsoncppStringToData(logs.at(i))));
-
-            spDataObject lastRecord = ConvertJsoncppStringToData(logs.at(logs.size() - 1));
-            m_output = lastRecord->atKey("output").asString();
-            m_gasUsed = spVALUE(new VALUE(lastRecord->atKey("gasUsed")));
-            m_time = lastRecord->atKey("time").asInt();
+            // Load logs optimized
+            while (getline(fileHandler, line))
+                readLog(line);
         }
+        else
+        {
+            while (getline(fileHandler, line))
+            {
+                if (++k < c_maxRowsToPrint)
+                {
+                    m_rawUnparsedLogs += line + "\n";
+                    readLog(line);
+                }
+                else if (k == c_maxRowsToPrint)
+                {
+                    m_limitReached = true;
+                    m_rawUnparsedLogs += c_tooManyRawsMessage;
+                    m_output = "";
+                    m_gasUsed = spVALUE(new VALUE(DataObject("0x00")));
+                    m_time = 0;
+                    break;
+                }
+            }
+        }
+        fileHandler.close();
 
-        m_rawUnparsedLogs = _logs;
+        // Take a handle of t8ntool file in our own tmp path
+        auto const uniqueFolder = fs::unique_path();
+        fs::create_directory(_logs.parent_path().parent_path() / uniqueFolder);
+        m_rawVmTraceFile = _logs.parent_path().parent_path() / uniqueFolder / _logs.stem();
+        fs::rename(_logs, m_rawVmTraceFile);
     }
     catch (std::exception const& _ex)
     {
@@ -83,13 +147,13 @@ DebugVMTrace::DebugVMTrace(string const& _info, string const& _trNumber, FH32 co
 
 void DebugVMTrace::print()
 {
-    ETH_LOG(m_infoString, 0);
-    ETH_LOG(m_rawUnparsedLogs, 0);
+    ETH_DC_MESSAGE(DC::DEFAULT, m_infoString);
+    ETH_DC_MESSAGE(DC::DEFAULT, m_rawUnparsedLogs);
 }
 
 void DebugVMTrace::printNice()
 {
-    ETH_LOG(m_infoString, 0);
+    ETH_DC_MESSAGE(DC::DEFAULT, m_infoString);
     if (m_log.size() == 0)
         return;
 
@@ -98,13 +162,17 @@ void DebugVMTrace::printNice()
     size_t k = 0;
     size_t const step = 9;
     string const stepw = "          ";
-    std::cout << test::cBYellowBlack << "N" << setw(15) << "OPNAME" << setw(10) << "GASCOST" << setw(10) << "TOTALGAS"
-              << setw(10) << "REMAINGAS" << setw(20) << "ERROR" << test::cDefault << std::endl;
+    std::cout << cBYellowBlack << "N" << setw(15) << "OPNAME" << setw(10) << "GASCOST" << setw(10) << "TOTALGAS" << setw(10)
+              << "REMAINGAS" << setw(20) << "ERROR" << cDefault << std::endl;
     for (VMLogRecord const& el : m_log)
     {
+        // Last record with error info
+        if (el.isShort)
+            continue;
+
         if (!s_comment.empty())
         {
-            std::cout << setw(step * el.depth) << test::cYellow << s_comment << test::cDefault << std::endl;
+            std::cout << setw(step * el.depth) << cYellow << s_comment << cDefault << std::endl;
             s_comment = string();
         }
         std::cout << setw(step * (el.depth - 1));
@@ -126,8 +194,41 @@ void DebugVMTrace::printNice()
         if (el.opName == "RETURN")
             s_comment = stepw + "RETURN " + el.memory->asString();
     }
+    if (m_limitReached)
+        std::cout << c_tooManyRawsMessage << std::endl;
     std::cout << std::endl;
 }
 
+DebugVMTrace::~DebugVMTrace()
+{
+    if (!m_rawVmTraceFile.empty())
+    {
+        boost::filesystem::remove(m_rawVmTraceFile);
+        boost::filesystem::remove(m_rawVmTraceFile.parent_path());
+    }
+}
+
+void DebugVMTrace::exportLogs(fs::path const& _folder)
+{
+    try
+    {
+        if (!fs::exists(_folder.parent_path()))
+            fs::create_directories(_folder.parent_path());
+        fs::rename(m_rawVmTraceFile, _folder);
+    }
+    catch (std::exception const& _ex)
+    {
+        try
+        {
+            fs::copy(m_rawVmTraceFile, _folder);
+            fs::remove(m_rawVmTraceFile);
+            fs::remove(m_rawVmTraceFile.parent_path());
+        }
+        catch (std::exception const& _ex)
+        {
+            throw UpwardsException(string("DebugVMTrace::exportLogs error: ") + _ex.what());
+        }
+    }
+}
+
 }  // namespace teststruct
-}  // namespace test

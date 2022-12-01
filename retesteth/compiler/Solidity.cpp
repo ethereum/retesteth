@@ -1,10 +1,13 @@
-#include "Compiler.h"
 #include "TestHelper.h"
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/SHA3.h>
+#include <retesteth/EthChecks.h>
 using namespace dev;
 using namespace test;
+using namespace test::debug;
 using namespace dataobject;
+using namespace std;
+namespace fs = boost::filesystem;
 
 namespace
 {
@@ -301,7 +304,7 @@ string const& test::compiler::solContracts::getCode(string const& _contractName)
 // Encode Solidity abi
 string test::compiler::utiles::encodeAbi(string const& _code)
 {
-    ETH_LOG(_code, 7);
+    ETH_DC_MESSAGE(DC::LOWLOG, _code);
     string abi, abiSuffix;
 
     try
@@ -415,7 +418,7 @@ string test::compiler::utiles::encodeAbi(string const& _code)
     {
         throw test::UpwardsException(string("encodeAbi error: ") + _ex.what());
     }
-    ETH_LOG("0x" + abi + abiSuffix, 7);
+    ETH_DC_MESSAGE(DC::LOWLOG, "0x" + abi + abiSuffix);
     return "0x" + abi + abiSuffix;
 }
 

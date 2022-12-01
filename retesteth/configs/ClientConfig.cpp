@@ -1,6 +1,14 @@
+#include <retesteth/EthChecks.h>
+#include <retesteth/TestHelper.h>
+#include <retesteth/TestOutputHelper.h>
 #include <retesteth/configs/ClientConfig.h>
 #include <retesteth/testStructures/Common.h>
-#include <mutex>
+using namespace std;
+using namespace dataobject;
+using namespace test::debug;
+using namespace test::teststruct;
+namespace fs = boost::filesystem;
+
 std::mutex g_staticDeclaration_clientConfigID;
 std::mutex g_staticDeclaration_translateNetworks_static;
 namespace test
@@ -52,6 +60,8 @@ ClientConfig::ClientConfig(fs::path const& _clientConfigPath) : m_id(ClientConfi
         // Load genesis templates
         for (auto const& net : cfgFile().allowedForks())
         {
+            if (checkForkSkipOnFiller(net))
+                continue;
             fs::path const configGenesisTemplatePath = genesisTemplatePath / (net.asString() + ".json");
             if (!fs::exists(configGenesisTemplatePath))
             {
@@ -61,6 +71,11 @@ ClientConfig::ClientConfig(fs::path const& _clientConfigPath) : m_id(ClientConfi
                 if (fs::exists(default_configGenesisTemplatePath))
                 {
                     m_genesisTemplate[net] = test::readJsonData(default_configGenesisTemplatePath);
+
+                    auto const& genesisData = m_genesisTemplate[net];
+                    if (genesisData->count("params") && genesisData->atKey("params").count("chainID"))
+                        m_genesisTemplateChainID[net] = spVALUE(new VALUE(genesisData->atKey("params").atKey("chainID")));
+
                     continue;
                 }
                 else
@@ -71,7 +86,13 @@ ClientConfig::ClientConfig(fs::path const& _clientConfigPath) : m_id(ClientConfi
                     _clientConfigPath.stem().string() + "' not found ('" +
                     configGenesisTemplatePath.c_str() + "') in configs!");
             m_genesisTemplate[net] = test::readJsonData(configGenesisTemplatePath);
+
+            auto const& genesisData = m_genesisTemplate[net];
+            if (genesisData->count("params") && genesisData->atKey("params").count("chainID"))
+                m_genesisTemplateChainID[net] = spVALUE(new VALUE(genesisData->atKey("params").atKey("chainID")));
         }
+
+
 
         // Load correctmining Reward
         m_correctMiningRewardPath = genesisTemplatePath / "correctMiningReward.json";
@@ -95,9 +116,22 @@ ClientConfig::ClientConfig(fs::path const& _clientConfigPath) : m_id(ClientConfi
     }
 }
 
+
+bool tryLookPlussedFork(ClientConfigFile const& _cfgFile, FORK const& _net)
+{
+    string const plussedFork = makePlussedFork(_net);
+    if (!plussedFork.empty())
+        return _cfgFile.allowedForks().count(plussedFork);
+    return false;
+}
+
 bool ClientConfig::validateForkAllowed(FORK const& _net, bool _bail) const
 {
-    if (!cfgFile().allowedForks().count(_net))
+    bool checkForkDefenition = cfgFile().allowedForks().count(_net);
+    if (!checkForkDefenition)
+        checkForkDefenition = tryLookPlussedFork(cfgFile(), _net);
+
+    if (!checkForkDefenition)
     {
         ETH_WARNING("Specified network not found: '" + _net.asString() +
                     "', skipping the test. Enable the fork network in config file: " +
@@ -111,12 +145,25 @@ bool ClientConfig::validateForkAllowed(FORK const& _net, bool _bail) const
 
 bool ClientConfig::checkForkAllowed(FORK const& _net) const
 {
-    return cfgFile().allowedForks().count(_net);
+    bool checkForkDefenition = cfgFile().allowedForks().count(_net);
+    if (!checkForkDefenition)
+        checkForkDefenition = tryLookPlussedFork(cfgFile(), _net);
+    return checkForkDefenition;
 }
 
 bool ClientConfig::checkForkInProgression(FORK const& _net) const
 {
     return cfgFile().forkProgressionAsSet().count(_net);
+}
+
+bool ClientConfig::checkForkSkipOnFiller(FORK const& _net) const
+{
+    for (auto const& fork : cfgFile().fillerSkipForks())
+    {
+        if (fork == _net)
+            return true;
+    }
+    return false;
 }
 
 /// translate network names in expect section field
@@ -228,10 +275,27 @@ std::string const& ClientConfig::translateException(string const& _exceptionName
 }
 
 // Get Contents of genesis template for specified FORK
-spDataObject const& ClientConfig::getGenesisTemplate(FORK const& _fork) const
+spDataObject ClientConfig::getGenesisTemplate(FORK const& _fork) const
 {
-    ETH_FAIL_REQUIRE_MESSAGE(m_genesisTemplate.count(_fork),
-        "Genesis template for network '" + _fork.asString() + "' not found!");
+    bool const templateHasFork = m_genesisTemplate.count(_fork);
+    if (!templateHasFork)
+    {
+        string const plussedFork = makePlussedFork(_fork);
+        if (!plussedFork.empty() && m_genesisTemplate.count(plussedFork))
+        {
+            auto const& origTemplate = m_genesisTemplate.at(plussedFork).getCContent();
+            if (origTemplate.count("params") && origTemplate.atKey("params").count("fork"))
+            {
+                spDataObject tmplateOriginal = m_genesisTemplate.at(plussedFork)->copy();
+                size_t pos = _fork.asString().find("+");
+                tmplateOriginal.getContent().atKeyUnsafe("params").atKeyUnsafe("fork").asStringUnsafe() +=
+                    _fork.asString().substr(pos);
+                return tmplateOriginal;
+            }
+        }
+    }
+
+    ETH_FAIL_REQUIRE_MESSAGE(templateHasFork, "Genesis template for network '" + _fork.asString() + "' not found!");
     return m_genesisTemplate.at(_fork);
 }
 
@@ -242,9 +306,16 @@ void ClientConfig::initializeFirstSetup()
         m_initialized = true;
         if (fs::exists(getSetupScript()))
         {
-            std::cout << "Initialize setup script.." << std::endl;
+            auto cmd = [](string const& _cmd) {
+                test::executeCmd(_cmd, ExecCMDWarning::NoWarning);
+            };
             string const setup = getSetupScript().c_str();
-            test::executeCmd(setup, ExecCMDWarning::NoWarning);
+            ETH_DC_MESSAGE(DC::RPC, string("Initialize setup script: ") + setup);
+
+            thread task(cmd, setup);
+            task.detach();
+            size_t const initTime = cfgFile().initializeTime();
+            this_thread::sleep_for(chrono::seconds(initTime));
         }
     }
 }
@@ -276,6 +347,27 @@ void ClientConfig::performFieldReplace(DataObject& _data, FieldReplaceDir const&
         for (auto& obj : _data.getSubObjectsUnsafe())
             performFieldReplace(obj.getContent(), _dir);
     }
+}
+
+spVALUE const& ClientConfig::getRewardForFork(FORK const& _fork) const
+{
+    // Load rewards for 'fork' from 'fork+xxxx'
+    FORK const& fork = _fork;
+    bool hasReward = m_correctReward.count(_fork);
+    if (!hasReward)
+    {
+        string const forkPlussed = test::makePlussedFork(_fork);
+        if (!forkPlussed.empty())
+        {
+            hasReward = m_correctReward.count(forkPlussed);
+            if (hasReward)
+                return m_correctReward.at(forkPlussed);
+        }
+    }
+    ETH_ERROR_REQUIRE_MESSAGE(m_correctReward.count(fork),
+        "Network '" + fork.asString() + "' not found in correct mining info config (" +
+            getRewardMapPath().string() + ") Client: " + cfgFile().name());
+    return m_correctReward.at(fork);
 }
 
 

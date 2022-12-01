@@ -1,10 +1,9 @@
 #pragma once
-#include <dataObject/DataObject.h>
-#include <dataObject/DataObjectScheme.h>
+#include <libdataobj/DataObject.h>
+#include <libdataobj/DataObjectScheme.h>
 #include <string>
 #include <vector>
 
-using namespace dataobject;
 #define VerificationType DataObjectScheme::ValidationRule::verification
 namespace dataobject
 {
@@ -49,7 +48,7 @@ private:
     {
         if (_object.type() != _rule.dataTypeExpected)
             throw DataObjectException()
-                << string("Validation scheme expected another data type! ") + " Expected: '" +
+                << std::string("Validation scheme expected another data type! ") + " Expected: '" +
                        DataObject::dataTypeAsString(_rule.dataTypeExpected) + "'" + ", but got: '" +
                        DataObject::dataTypeAsString(_object.type()) + "'";
     }

@@ -1,12 +1,10 @@
 #pragma once
 #include "../../basetypes.h"
-#include <retesteth/dataObject/DataObject.h>
+#include <libdataobj/DataObject.h>
+#include <boost/filesystem/path.hpp>
 
-using namespace dataobject;
 
-namespace test
-{
-namespace teststruct
+namespace test::teststruct
 {
 /*
  * VMTrace: (stExample/add11, fork: Istanbul, TrInfo: d: 0, g: 0, v: 0)
@@ -24,34 +22,40 @@ struct VMLogRecord
     spVALUE gasCost;
     spBYTES memory;
     long long memSize;
-    std::vector<string> stack;
+    std::vector<std::string> stack;
     spBYTES returnData;
     size_t depth;
     spVALUE refund;
-    string opName;
-    string error;
+    std::string opName;
+    std::string error;
+    bool isShort = false;
 };
 
-struct DebugVMTrace
+struct DebugVMTrace : GCP_SPointerBase
 {
     DebugVMTrace() {}  // for tuples
-    DebugVMTrace(string const& _info, string const& _trNumber, FH32 const& _trHash, string const& _logs);
+    DebugVMTrace(std::string const& _info, std::string const& _trNumber, FH32 const& _trHash, boost::filesystem::path const& _logs);
     void print();
     void printNice();
+    void exportLogs(boost::filesystem::path const& _folder);
+    std::vector<VMLogRecord> const& getLog() const { return m_log; }
+    ~DebugVMTrace();
 
 private:
-    string m_infoString;
-    string m_trNumber;
+    std::string m_infoString;
+    std::string m_trNumber;
     spFH32 m_trHash;
     std::vector<VMLogRecord> m_log;
-    string m_rawUnparsedLogs;
+    std::string m_rawUnparsedLogs;
+    boost::filesystem::path m_rawVmTraceFile;
+    bool m_limitReached = false;
 
     // Last record
-    string m_output;
+    std::string m_output;
     spVALUE m_gasUsed;
     long long m_time;
 };
 
+typedef GCP_SPointer<DebugVMTrace> spDebugVMTrace;
 
 }  // namespace teststruct
-}  // namespace test

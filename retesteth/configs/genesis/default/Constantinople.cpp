@@ -1,8 +1,9 @@
 #include <retesteth/configs/Options.h>
-#include <string>
 using namespace std;
 using namespace dataobject;
 
+namespace retesteth::options
+{
 const string default_Constantinople_config = R"({
     "params" : {
        "homesteadForkBlock" : "0x00",
@@ -20,7 +21,8 @@ const string t8ntool_Constantinople_config = R"({
         "fork" : "Constantinople",
         "constantinopleForkBlock" : "0x00",
         "byzantiumForkBlock" : "0x00",
-        "homesteadForkBlock" : "0x00"
+        "homesteadForkBlock" : "0x00",
+        "chainID" : "0x01"
     },
     "accounts" : {
     }
@@ -38,4 +40,4 @@ genConstantinopleCfg::genConstantinopleCfg()
     (*obj2)["content"] = t8ntool_Constantinople_config;
     map_configs.addArrayObject(obj2);
 }
-
+}  // namespace retesteth::options

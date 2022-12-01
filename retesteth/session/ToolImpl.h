@@ -1,15 +1,17 @@
 #pragma once
 #include "ToolBackend/ToolChainManager.h"
-#include <retesteth/TestHelper.h>
 #include <retesteth/session/SessionInterface.h>
 #include <retesteth/session/Socket.h>
 #include <string>
-using namespace toolimpl;
+
+namespace test::session
+{
+using namespace dataobject;
 
 class ToolImpl : public SessionInterface
 {
 public:
-    ToolImpl(Socket::SocketType _type, fs::path const& _path, fs::path const& _tmpDir)
+    ToolImpl(Socket::SocketType _type, boost::filesystem::path const& _path, boost::filesystem::path const& _tmpDir)
       : m_sockType(_type), m_toolPath(_path), m_tmpDir(_tmpDir)
     {}
 
@@ -59,12 +61,14 @@ public:
 
 private:
     Socket::SocketType m_sockType;
-    fs::path m_toolPath;
-    fs::path m_tmpDir;
+    boost::filesystem::path m_toolPath;
+    boost::filesystem::path m_tmpDir;
     size_t m_totalCalls = 0;
-    ToolChainManager& blockchain() { return m_toolChainManager.getContent(); }
-    void makeRPCError(string const& _error);
+    toolimpl::ToolChainManager& blockchain() { return m_toolChainManager.getContent(); }
+    void makeRPCError(std::string const& _error);
 
     // Manage blockchains as ethereum client backend
-    GCP_SPointer<ToolChainManager> m_toolChainManager;
+    GCP_SPointer<toolimpl::ToolChainManager> m_toolChainManager;
 };
+
+}  // namespace test::session

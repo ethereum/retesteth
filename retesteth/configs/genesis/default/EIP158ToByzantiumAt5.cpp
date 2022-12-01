@@ -1,8 +1,9 @@
 #include <retesteth/configs/Options.h>
-#include <string>
 using namespace std;
 using namespace dataobject;
 
+namespace retesteth::options
+{
 const string default_EIP158ToByzantiumAt5_config = R"({
     "params" : {
         "homesteadForkBlock" : "0x00",
@@ -18,7 +19,8 @@ const string t8ntool_EIP158ToByzantiumAt5_config = R"({
     "params" : {
         "fork" : "EIP158ToByzantiumAt5",
         "byzantiumForkBlock" : "0x05",
-        "homesteadForkBlock" : "0x00"
+        "homesteadForkBlock" : "0x00",
+        "chainID" : "0x01"
     },
     "accounts" : {
     }
@@ -36,3 +38,4 @@ genEIP158ToByzantiumCfg::genEIP158ToByzantiumCfg()
     (*obj2)["content"] = t8ntool_EIP158ToByzantiumAt5_config;
     map_configs.addArrayObject(obj2);
 }
+}  // namespace retesteth::options

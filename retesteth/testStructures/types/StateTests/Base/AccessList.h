@@ -1,8 +1,6 @@
 #pragma once
-#include <retesteth/dataObject/DataObject.h>
-#include <retesteth/dataObject/SPointer.h>
+#include <libdataobj/DataObject.h>
 #include <retesteth/testStructures/basetypes.h>
-using namespace dataobject;
 
 namespace test
 {

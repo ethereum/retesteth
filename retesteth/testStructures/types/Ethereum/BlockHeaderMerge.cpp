@@ -1,11 +1,10 @@
 #include "BlockHeaderMerge.h"
-#include <retesteth/TestHelper.h>
+#include <retesteth/EthChecks.h>
 
+using namespace std;
 using namespace dev;
 
-namespace test
-{
-namespace teststruct
+namespace test::teststruct
 {
 BlockHeaderMerge& BlockHeaderMerge::castFrom(BlockHeader& _from)
 {
@@ -39,4 +38,3 @@ BlockHeaderMerge const& BlockHeaderMerge::castFrom(spBlockHeader const& _from)
 }
 
 }  // namespace teststruct
-}  // namespace test

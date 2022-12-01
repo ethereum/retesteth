@@ -1,7 +1,6 @@
 #pragma once
 #include "Transaction.h"
-using namespace dataobject;
-using namespace test::teststruct;
+#include <retesteth/testStructures/types/StateTests/Base/AccessList.h>
 
 namespace test
 {
@@ -20,7 +19,7 @@ private:
     void fromRLP(dev::RLP const&) override;
     void fromDataObject(DataObject const&) override;
 
-    void buildVRS(VALUE const& _secret) override;
+    void buildVRS() override;
     void streamHeader(dev::RLPStream& _stream) const override;
 
     void rebuildRLP() override;

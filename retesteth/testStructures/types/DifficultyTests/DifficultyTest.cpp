@@ -1,10 +1,9 @@
-#include <Options.h>
 #include <TestOutputHelper.h>
 #include <retesteth/testStructures/Common.h>
-
 #include "EthChecks.h"
 #include "DifficultyTest.h"
 
+using namespace std;
 using namespace test;
 using namespace test::teststruct;
 
@@ -77,4 +76,18 @@ DifficultyTestVector::DifficultyTestVector(spDataObject const& _data)
     parentUncles = VALUE(_data->atKey("parentUncles")) == 1;
 
     testVectorName = _data->getKey();
+}
+
+void DifficultyTest::registerAllVectors() const
+{
+    string execTotal;
+    auto const& helper = TestOutputHelper::get();
+    string const suite = boost::unit_test::framework::current_test_case().full_name();
+    string const execPrefix = string("-t ") + suite + " --";
+
+    auto const filename = helper.testFile().stem().string();
+    const string exec = string(" --singletest ") + filename + "\n";
+    execTotal += execPrefix + exec;
+
+    TestOutputHelper::get().addTestVector(std::move(execTotal));
 }

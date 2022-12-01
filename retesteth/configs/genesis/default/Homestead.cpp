@@ -1,8 +1,9 @@
 #include <retesteth/configs/Options.h>
-#include <string>
 using namespace std;
 using namespace dataobject;
 
+namespace retesteth::options
+{
 const string default_Homestead_config = R"({
     "params" : {
         "homesteadForkBlock" : "0x00"
@@ -14,7 +15,8 @@ const string default_Homestead_config = R"({
 const string t8ntool_Homestead_config = R"({
     "params" : {
         "fork" : "Homestead",
-        "homesteadForkBlock" : "0x00"
+        "homesteadForkBlock" : "0x00",
+        "chainID" : "0x01"
     },
     "accounts" : {
     }
@@ -32,3 +34,4 @@ genHomesteadCfg::genHomesteadCfg()
     (*obj2)["content"] = t8ntool_Homestead_config;
     map_configs.addArrayObject(obj2);
 }
+}  // namespace retesteth::options

@@ -21,10 +21,6 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 #include "BlockchainTests.h"
 #include "BlockchainTestLogic.h"
 #include <retesteth/TestOutputHelper.h>
-#include <retesteth/testSuites/TestFixtures.h>
-#include <boost/filesystem/operations.hpp>
-#include <boost/test/unit_test.hpp>
-#include <thread>
 
 using namespace std;
 using namespace test;
@@ -73,57 +69,68 @@ spDataObject LegacyConstantinopleBCGeneralStateTestsSuite::doTests(spDataObject&
 
 TestSuite::TestPath BlockchainTestValidSuite::suiteFolder() const
 {
-    return TestSuite::TestPath(fs::path("BlockchainTests") / "ValidBlocks");
+    return TestSuite::TestPath(fs::path("BlockchainTests") / string("ValidBlocks" + m_fillerPathAdd));
 }
 
 TestSuite::FillerPath BlockchainTestValidSuite::suiteFillerFolder() const
 {
-    return TestSuite::FillerPath(fs::path("src") / "BlockchainTestsFiller" / "ValidBlocks");
+    return TestSuite::FillerPath(fs::path("src") / "BlockchainTestsFiller" / string("ValidBlocks" + m_fillerPathAdd));
 }
 
 TestSuite::TestPath BlockchainTestInvalidSuite::suiteFolder() const
 {
-    return TestSuite::TestPath(fs::path("BlockchainTests") / "InvalidBlocks");
+    return TestSuite::TestPath(fs::path("BlockchainTests") / string("InvalidBlocks" + m_fillerPathAdd));
 }
 
 TestSuite::FillerPath BlockchainTestInvalidSuite::suiteFillerFolder() const
 {
-    return TestSuite::FillerPath(fs::path("src") / "BlockchainTestsFiller" / "InvalidBlocks");
+    return TestSuite::FillerPath(fs::path("src") / "BlockchainTestsFiller" / string("InvalidBlocks" + m_fillerPathAdd));
 }
 
 TestSuite::TestPath BlockchainTestTransitionSuite::suiteFolder() const
 {
-    return TestSuite::TestPath(fs::path("BlockchainTests") / "TransitionTests");
+    return TestSuite::TestPath(fs::path("BlockchainTests") / string("TransitionTests" + m_fillerPathAdd));
 }
 
 TestSuite::FillerPath BlockchainTestTransitionSuite::suiteFillerFolder() const
 {
-    return TestSuite::FillerPath(fs::path("src") / "BlockchainTestsFiller" / "TransitionTests");
+    return TestSuite::FillerPath(fs::path("src") / "BlockchainTestsFiller" / string("TransitionTests" + m_fillerPathAdd));
 }
 
 TestSuite::TestPath BCGeneralStateTestsSuite::suiteFolder() const
 {
-    return TestSuite::TestPath(fs::path("BlockchainTests") / "GeneralStateTests");
+    return TestSuite::TestPath(fs::path("BlockchainTests") / string("GeneralStateTests" + m_fillerPathAdd));
 }
 
 TestSuite::FillerPath BCGeneralStateTestsSuite::suiteFillerFolder() const
 {
-    return TestSuite::FillerPath(fs::path("src") / fs::path("GeneralStateTestsFiller"));
+    return TestSuite::FillerPath(fs::path("src") / fs::path("GeneralStateTestsFiller" + m_fillerPathAdd));
 }
 
-BCGeneralStateTestsVMSuite::BCGeneralStateTestsVMSuite()
+spDataObject BCGeneralStateTestsVMSuite::doTests(spDataObject& _input, TestSuiteOptions& _opt) const
 {
-    test::TestOutputHelper::get().markTestFolderAsFinished(getFullPathFiller("VMTests").parent_path().parent_path(), "VMTests");
+    // Register subtest as finished test case. because each folder is treated as test case folder
+    test::TestOutputHelper::get().markTestFolderAsFinished(getFullPathFiller("VMTests").parent_path(), "VMTests");
+    return BCGeneralStateTestsSuite::doTests(_input, _opt);
+}
+
+spDataObject BCGeneralStateTestsSuite::doTests(spDataObject& _input, TestSuiteOptions& _opt) const
+{
+    // Register subtest as finished test case. because each folder is treated as test case folder
+    test::TestOutputHelper::get().markTestFolderAsFinished(getFullPathFiller("VMTests").parent_path(), "VMTests");
+    test::TestOutputHelper::get().markTestFolderAsFinished(
+        getFullPathFiller("stExpectSection").parent_path(), "stExpectSection");
+    return BlockchainTestValidSuite::doTests(_input, _opt);
 }
 
 TestSuite::TestPath BCGeneralStateTestsVMSuite::suiteFolder() const
 {
-    return TestSuite::TestPath(fs::path("BlockchainTests") / "GeneralStateTests" / "VMTests");
+    return TestSuite::TestPath(fs::path("BlockchainTests") / "GeneralStateTests" / string("VMTests" + m_fillerPathAdd));
 }
 
 TestSuite::FillerPath BCGeneralStateTestsVMSuite::suiteFillerFolder() const
 {
-    return TestSuite::FillerPath(fs::path("src") / fs::path("GeneralStateTestsFiller") / "VMTests");
+    return TestSuite::FillerPath(fs::path("src") / fs::path("GeneralStateTestsFiller") / string("VMTests" + m_fillerPathAdd));
 }
 
 TestSuite::TestPath LegacyConstantinopleBCGeneralStateTestsSuite::suiteFolder() const
@@ -145,6 +152,7 @@ BOOST_AUTO_TEST_SUITE(BlockchainTests)
 
 // Tests that contain only valid blocks and check that import is correct
 using BCValidSuiteFixture = TestFixture<BlockchainTestValidSuite, DefaultFlags>;
+ETH_REGISTER_DYNAMIC_TEST_SEARCH(BCValidSuiteFixture, "BlockchainTests/ValidBlocks")
 BOOST_FIXTURE_TEST_SUITE(ValidBlocks, BCValidSuiteFixture)
 BOOST_AUTO_TEST_CASE(bcBlockGasLimitTest) {}
 BOOST_AUTO_TEST_CASE(bcExploitTest) {}
@@ -166,6 +174,7 @@ BOOST_AUTO_TEST_SUITE_END() // ValidBlocks
 
 // Tests that might have invalid blocks and check that those are rejected
 using BCInValidSuiteFixture = TestFixture<BlockchainTestInvalidSuite, DefaultFlags>;
+ETH_REGISTER_DYNAMIC_TEST_SEARCH(BCInValidSuiteFixture, "BlockchainTests/InvalidBlocks")
 BOOST_FIXTURE_TEST_SUITE(InvalidBlocks, BCInValidSuiteFixture)
 BOOST_AUTO_TEST_CASE(bcBlockGasLimitTest) {}
 BOOST_AUTO_TEST_CASE(bcForgedTest) {}
@@ -186,6 +195,7 @@ BOOST_AUTO_TEST_SUITE_END()
 
 // Transition from fork to fork tests
 using BCTransitionFixture = TestFixture<BlockchainTestTransitionSuite, DefaultFlags>;
+ETH_REGISTER_DYNAMIC_TEST_SEARCH(BCTransitionFixture, "BlockchainTests/TransitionTests")
 BOOST_FIXTURE_TEST_SUITE(TransitionTests, BCTransitionFixture)
 BOOST_AUTO_TEST_CASE(bcByzantiumToConstantinopleFix) {}
 BOOST_AUTO_TEST_CASE(bcEIP158ToByzantium) {}
@@ -200,6 +210,7 @@ BOOST_AUTO_TEST_SUITE_END()
 
 // General tests in form of blockchain tests
 using BCGeneralsStateSuiteFixture = TestFixture<BCGeneralStateTestsSuite, RequireOptionAllNotRefillable>;
+ETH_REGISTER_DYNAMIC_TEST_SEARCH(BCGeneralsStateSuiteFixture, "BCGeneralStateTests")
 BOOST_FIXTURE_TEST_SUITE(BCGeneralStateTests, BCGeneralsStateSuiteFixture)
 
 // Frontier Tests
@@ -276,12 +287,16 @@ BOOST_AUTO_TEST_CASE(stEIP2537) {}
 BOOST_AUTO_TEST_CASE(stEIP2930) {}
 BOOST_AUTO_TEST_CASE(stEIP1559) {}
 BOOST_AUTO_TEST_CASE(stEIP3607) {}
+BOOST_AUTO_TEST_CASE(stEIP3540) {}
+BOOST_AUTO_TEST_CASE(stEIP3670) {}
+BOOST_AUTO_TEST_CASE(stEIP3860) {}
 
 // Heavy
 BOOST_AUTO_TEST_CASE(stTimeConsuming) {}
 
 // Converted VMTests
 using BCGeneralStateTestsVMFixture = TestFixture<BCGeneralStateTestsVMSuite, RequireOptionAll>;
+ETH_REGISTER_DYNAMIC_TEST_SEARCH(BCGeneralStateTestsVMFixture, "BCGeneralStateTests/VMTests")
 BOOST_FIXTURE_TEST_SUITE(VMTests, BCGeneralStateTestsVMFixture)
 BOOST_AUTO_TEST_CASE(vmArithmeticTest) {}
 BOOST_AUTO_TEST_CASE(vmBitwiseLogicOperation) {}

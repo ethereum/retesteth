@@ -4,6 +4,10 @@
 #include "TestSuiteHelperFunctions.h"
 
 using namespace std;
+using namespace dev;
+using namespace test;
+using namespace test::debug;
+namespace fs = boost::filesystem;
 
 namespace
 {
@@ -32,18 +36,17 @@ void checkTestVersion(DataObject const& _info, fs::path const& _compiledTest)
 }
 }  // namespace
 
-namespace test
+namespace test::testsuite
 {
-namespace testsuite
+bool checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
 {
-void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
-{
-    ETH_LOG(string("Check `") + _compiledTest.c_str() + "` hash", 7);
+    bool isTestOutdated = false;
+    ETH_DC_MESSAGE(DC::TESTLOG, string("Check `") + _compiledTest.c_str() + "` hash");
     TestFileData fillerData = readTestFile(_sourceTest);
 
     // If no hash calculated, skip the hash check
     if (!fillerData.hashCalculated)
-        return;
+        return isTestOutdated;
 
     spDataObject compiledTestFileData = test::readJsonData(_compiledTest, "_info");
     for (auto const& test : compiledTestFileData->getSubObjects())
@@ -66,6 +69,9 @@ void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
             h256 const sourceHash = h256(info.atKey("sourceHash").asString());
             if (sourceHash != fillerData.hash)
             {
+                isTestOutdated = true;
+                if (Options::get().filloutdated)
+                    continue;
                 string sourceHashStr;
                 string fillerHashStr;
                 if (Options::get().showhash)
@@ -87,7 +93,7 @@ void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
             continue;
         }
     }
+    return isTestOutdated;
 }
 
 }  // namespace testsuite
-}  // namespace test

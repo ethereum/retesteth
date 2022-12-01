@@ -3,14 +3,14 @@
 #include "TestHelper.h"
 #include "TestOutputHelper.h"
 #include <retesteth/Options.h>
-#include <retesteth/configs/ClientConfig.h>
-#include <mutex>
-#include <algorithm>
 #include <libdevcrypto/Common.h>
 
+using namespace std;
 using namespace test;
+using namespace test::debug;
 using namespace dev;
 using namespace test::teststruct;
+using namespace test::compiler;
 
 namespace
 {
@@ -45,9 +45,7 @@ void removeLeadingZeroes(string& _hexStr)
 }  // namespace
 
 
-namespace test
-{
-namespace teststruct
+namespace test::teststruct
 {
 
 spFH20 convertSecretToPublic(spFH32 const& _secret)
@@ -387,7 +385,10 @@ string compareBlockHeaders(DataObject const& _blockA, DataObject const& _blockB,
     {
         DataObject const& el = el2;
         string const testHeaderField = _blockB.getSubObjects().at(k++)->asString();
-        message += cYellow + el.getKey() + cRed + " ";
+        if (Options::get().nologcolor)
+            message += el.getKey() + " ";
+        else
+            message += cYellow + el.getKey() + cRed + " ";
         if (el.asString() != testHeaderField)
         {
             if (el.getKey() != "hash")
@@ -397,7 +398,10 @@ string compareBlockHeaders(DataObject const& _blockA, DataObject const& _blockB,
             }
             else
                 errorInHashField = true;
-            message += el.asString() + " vs " + cYellow + testHeaderField + cRed + "\n";
+            if (Options::get().nologcolor)
+                message += el.asString() + " vs " + testHeaderField + "\n";
+            else
+                message += el.asString() + " vs " + cYellow + testHeaderField + cRed + "\n";
         }
         else
             message += el.asString() + " vs " + testHeaderField + "\n";
@@ -438,4 +442,3 @@ void convertDecTransactionToHex(spDataObject& _data)
 }
 
 }  // namespace teststruct
-}  // namespace test

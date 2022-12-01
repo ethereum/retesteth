@@ -1,9 +1,10 @@
-#include <dataObject/DataObject.h>
+#include "DataObject.h"
 #include <math.h>
 #include <algorithm>
 #include <iostream>
 #include <sstream>
 using namespace dataobject;
+using namespace std;
 
 /// Default dataobject is null
 DataObject::DataObject() { m_type = DataType::NotInitialized; }

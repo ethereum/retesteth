@@ -1,9 +1,6 @@
 #pragma once
 #include "../../../basetypes.h"
-#include "../../../configs/FORK.h"
-#include <retesteth/dataObject/DataObject.h>
-#include <retesteth/dataObject/SPointer.h>
-using namespace dataobject;
+#include <libdataobj/DataObject.h>
 
 namespace test
 {
@@ -24,9 +21,9 @@ struct StateTestPostResult : GCP_SPointerBase
             return emptyLogs;
         return m_log;
     }
-    spBYTES const& bytesPtr() const { return m_txbytes; }
+    spBYTES const& txbytesPtr() const { return m_txbytes; }
     spDataObject asDataObject() const;
-    string const& expectException() const { return m_expectException; }
+    std::string const& expectException() const { return m_expectException; }
 
 private:
     StateTestPostResult() {}
@@ -36,7 +33,7 @@ private:
     spFH32 m_hash;
     spFH32 m_log;
     spBYTES m_txbytes;
-    string m_expectException;
+    std::string m_expectException;
 };
 
 typedef std::vector<StateTestPostResult> StateTestPostResults;

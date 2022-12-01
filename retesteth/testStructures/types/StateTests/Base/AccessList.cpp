@@ -1,10 +1,8 @@
 #include "AccessList.h"
-#include <libdevcore/Address.h>
 #include <retesteth/testStructures/Common.h>
 
-namespace test
-{
-namespace teststruct
+using namespace std;
+namespace test::teststruct
 {
 AccessListElement::AccessListElement(DataObject const& _data)
 {
@@ -80,4 +78,3 @@ AccessList::AccessList(dev::RLP const& _rlp)
 }
 
 }  // namespace teststruct
-}  // namespace test

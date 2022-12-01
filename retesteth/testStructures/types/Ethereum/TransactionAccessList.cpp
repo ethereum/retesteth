@@ -1,27 +1,24 @@
 #include "TransactionAccessList.h"
-#include <libdevcore/Address.h>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/SHA3.h>
 #include <libdevcrypto/Common.h>
 #include <retesteth/EthChecks.h>
 #include <retesteth/Options.h>
 #include <retesteth/TestHelper.h>
+#include <retesteth/TestOutputHelper.h>
 #include <retesteth/testStructures/Common.h>
+using namespace std;
 using namespace dev;
 
-namespace test
+namespace test::teststruct
 {
-namespace teststruct
-{
-TransactionAccessList::TransactionAccessList(DataObject const& _data)
-  : TransactionLegacy()
+TransactionAccessList::TransactionAccessList(DataObject const& _data) : TransactionLegacy()
 {
     fromDataObject(_data);
 }
 
 void TransactionAccessList::fromDataObject(DataObject const& _data)
 {
-    m_secretKey = spVALUE(new VALUE(0));
     try
     {
         REQUIRE_JSONFIELDS(_data, "TransactionAccessList " + _data.getKey(),
@@ -62,6 +59,9 @@ void TransactionAccessList::fromDataObject(DataObject const& _data)
         m_nonce = spVALUE(new VALUE(_data.atKey("nonce")));
         m_value = spVALUE(new VALUE(_data.atKey("value")));
 
+        if (_data.count("chainId"))
+            m_chainID = spVALUE(new VALUE(_data.atKey("chainId")));
+
         if (_data.atKey("to").type() == DataType::Null || _data.atKey("to").asString().empty())
             m_creation = true;
         else
@@ -71,7 +71,10 @@ void TransactionAccessList::fromDataObject(DataObject const& _data)
         }
 
         if (_data.count("secretKey"))
-            buildVRS(_data.atKey("secretKey"));
+        {
+            setSecret(_data.atKey("secretKey"));
+            buildVRS();
+        }
         else
         {
             m_v = spVALUE(new VALUE(_data.atKey("v")));
@@ -88,13 +91,11 @@ void TransactionAccessList::fromDataObject(DataObject const& _data)
 
 TransactionAccessList::TransactionAccessList(dev::RLP const& _rlp) : TransactionLegacy()
 {
-    m_secretKey = spVALUE(new VALUE(0));
     fromRLP(_rlp);
 }
 
 TransactionAccessList::TransactionAccessList(BYTES const& _rlp) : TransactionLegacy()
 {
-    m_secretKey = spVALUE(new VALUE(0));
     dev::bytes decodeRLP = sfromHex(_rlp.asString());
     dev::RLP rlp(decodeRLP, dev::RLP::VeryStrict);
     fromRLP(rlp);
@@ -111,7 +112,7 @@ void TransactionAccessList::fromRLP(dev::RLP const& _rlp)
     // 3 - gasLimit     6 - data    9 - s
     DataObject trData;
     size_t i = 0;
-    i++;  // chainID
+    m_chainID = spVALUE(new VALUE(_rlp[i++]));
     m_nonce = spVALUE(new VALUE(_rlp[i++]));
     m_gasPrice = spVALUE(new VALUE(_rlp[i++]));
     m_gasLimit = spVALUE(new VALUE(_rlp[i++]));
@@ -134,14 +135,12 @@ void TransactionAccessList::fromRLP(dev::RLP const& _rlp)
     m_v = spVALUE(new VALUE(_rlp[i++]));
     m_r = spVALUE(new VALUE(_rlp[i++]));
     m_s = spVALUE(new VALUE(_rlp[i++]));
-
     m_secretKey = spVALUE(new VALUE(0));
     rebuildRLP();
 }
 
-void TransactionAccessList::buildVRS(VALUE const& _secret)
+void TransactionAccessList::buildVRS()
 {
-    setSecret(_secret);
     dev::RLPStream stream;
     stream.appendList(8);
     TransactionAccessList::streamHeader(stream);
@@ -151,7 +150,7 @@ void TransactionAccessList::buildVRS(VALUE const& _secret)
     outa.insert(outa.begin(), dev::byte(1));  // txType
 
     const dev::h256 hash(dev::sha3(outa));
-    const dev::Secret secret(_secret.asString());
+    const dev::Secret secret(m_secretKey->asString());
     dev::Signature sig = dev::sign(secret, hash);
     dev::SignatureStruct sigStruct = *(dev::SignatureStruct const*)&sig;
     ETH_FAIL_REQUIRE_MESSAGE(
@@ -166,8 +165,7 @@ void TransactionAccessList::buildVRS(VALUE const& _secret)
 void TransactionAccessList::streamHeader(dev::RLPStream& _s) const
 {
     // rlp([chainId, nonce, gasPrice, gasLimit, to, value, data, access_list, yParity, senderR, senderS])
-    const int chainID = Options::getCurrentConfig().cfgFile().chainID();
-    _s << VALUE(chainID).asBigInt();
+    _s << m_chainID->asBigInt();
     _s << nonce().serializeRLP();
     _s << gasPrice().serializeRLP();
     _s << gasLimit().serializeRLP();
@@ -189,16 +187,14 @@ void TransactionAccessList::streamHeader(dev::RLPStream& _s) const
 const spDataObject TransactionAccessList::asDataObject(ExportOrder _order) const
 {
     spDataObject out = TransactionLegacy::asDataObject(_order);
-    const int chainID = Options::getCurrentConfig().cfgFile().chainID();
-    DataObject chainIDs(test::fto_string(chainID));
-    chainIDs.performModifier(mod_valueToCompactEvenHexPrefixed);
 
-    (*out)["chainId"] = chainIDs.asString();
+    (*out)["chainId"] = m_chainID->asString();
     if (!out->count("accessList"))
         (*out).atKeyPointer("accessList") = m_accessList->asDataObject();
     (*out)["type"] = "0x01";
     if (_order == ExportOrder::ToolStyle)
     {
+        DataObject chainIDs(m_chainID->asString());
         chainIDs.performModifier(mod_removeLeadingZerosFromHexValues);
         (*out)["chainId"] = chainIDs.asString();
         (*out)["type"] = "0x1";
@@ -231,4 +227,3 @@ void TransactionAccessList::rebuildRLP()
 }
 
 }  // namespace teststruct
-}  // namespace test

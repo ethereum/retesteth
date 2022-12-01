@@ -1,10 +1,7 @@
 #include "ToolResponse.h"
-#include <retesteth/EthChecks.h>
 #include <retesteth/testStructures/Common.h>
 
-namespace test
-{
-namespace teststruct
+namespace test::teststruct
 {
 ToolResponse::ToolResponse(DataObject const& _data)
 {
@@ -15,6 +12,7 @@ ToolResponse::ToolResponse(DataObject const& _data)
             {"logsHash", {{DataType::String}, jsonField::Required}},
             {"logsBloom", {{DataType::String}, jsonField::Required}},
             {"currentDifficulty", {{DataType::String, DataType::Null}, jsonField::Required}},
+            {"currentBaseFee", {{DataType::String, DataType::Null}, jsonField::Optional}},
             {"rejected", {{DataType::Array}, jsonField::Optional}},
             {"gasUsed", {{DataType::String}, jsonField::Optional}},
             {"receipts", {{DataType::Array}, jsonField::Required}}});
@@ -30,6 +28,11 @@ ToolResponse::ToolResponse(DataObject const& _data)
     else
         m_currentDifficulty = spVALUE(new VALUE(0));
 
+    if (_data.count("currentBaseFee"))
+        m_currentBasefee = spVALUE(new VALUE(_data.atKey("currentBaseFee")));
+    else
+        m_currentBasefee = spVALUE(new VALUE(0));
+
     for (auto const& el : _data.atKey("receipts").getSubObjects())
         m_receipts.push_back(ToolResponseReceipt(el));
 
@@ -42,4 +45,3 @@ ToolResponse::ToolResponse(DataObject const& _data)
 
 
 }  // namespace teststruct
-}  // namespace test

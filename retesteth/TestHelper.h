@@ -3,30 +3,26 @@
 #include <vector>
 #include <set>
 #include <boost/filesystem.hpp>
-#include <boost/filesystem/fstream.hpp>
 #ifdef JSONCPP
 #include <json/json.h>
 #endif
-#include <dataObject/DataObject.h>
-#include <retesteth/EthChecks.h>
+#include <libdataobj/DataObject.h>
 #include <retesteth/compiler/Compiler.h>
 #include <retesteth/testStructures/basetypes/BYTES.h>
+#include <retesteth/testStructures/configs/FORK.h>
 
-using namespace dataobject;
-namespace fs = boost::filesystem;
 namespace test {
-
+using namespace dataobject;
 // Helping functions
 
 #ifdef JSONCPP
 /// Construct Json object from string
-Json::Value readJson(fs::path const& _path);
+Json::Value readJson(boost::filesystem::path const& _path);
 #endif
 
 /// Safely read the json file into DataObject
-spDataObject readJsonData(
-    fs::path const& _file, string const& _stopper = string(), bool _autosort = false);
-spDataObject readYamlData(fs::path const& _file, bool _sort = false);
+spDataObject readJsonData(boost::filesystem::path const& _file, std::string const& _stopper = std::string(), bool _autosort = false);
+spDataObject readYamlData(boost::filesystem::path const& _file, bool _sort = false);
 
 /// Get files from directory
 std::vector<boost::filesystem::path> getFiles(boost::filesystem::path const& _dirPath, std::set<std::string> _extentionMask, std::string const& _particularFile = {});
@@ -35,7 +31,7 @@ std::vector<boost::filesystem::path> getFiles(boost::filesystem::path const& _di
 boost::filesystem::path getTestPath();
 
 /// Copy file from _source to _destination
-void copyFile(fs::path const& _source, fs::path const& _destination);
+void copyFile(boost::filesystem::path const& _source, boost::filesystem::path const& _destination);
 
 /// Read a single string object or an Array of string objects into set<string>
 void parseJsonStrValueIntoSet(DataObject const& _json, std::set<std::string>& _out);
@@ -44,14 +40,14 @@ void parseJsonStrValueIntoSet(DataObject const& _json, std::set<std::string>& _o
 void parseJsonIntValueIntoSet(DataObject const& _json, std::set<int>& _out);
 
 /// Safe dev::fromHex
-dev::bytes sfromHex(string const& _hexStr);
+dev::bytes sfromHex(std::string const& _hexStr);
 
 /// Informatice exception dev::toCompactHexPrefixed
 std::string stoCompactHex(dev::u256 const& _val, int _minsize = 0);
 std::string stoCompactHexPrefixed(dev::u256 const& _val, int _minsize = 0);
 
 /// Convert string letters to lowercase
-void strToLower(string& _input);
+void strToLower(std::string& _input);
 
 /// retesteth version string
 std::string prepareVersionString();
@@ -97,6 +93,9 @@ bool inArray(std::list<T> const& _array, const T& _val)
 
 /// Explode string into array of strings by `delim`
 std::vector<std::string> explode(std::string const& s, char delim);
+void removeSubChar(std::string& _string, unsigned char _r);
+std::string makePlussedFork(test::teststruct::FORK const& _net);
+
 
 /// See what kind of a string is str
 enum class DigitsType
@@ -122,11 +121,11 @@ FILE* popen2(std::string const& _command, std::vector<std::string>const& _args, 
 int pclose2(FILE* _fp, pid_t _pid);
 
 /// return path to the unique tmp directory
-fs::path createUniqueTmpDirectory();
+boost::filesystem::path createUniqueTmpDirectory();
 
 ///
 template <class t>
-string fto_string(t _val)
+std::string fto_string(t _val)
 {
     return std::to_string(_val);
 }
@@ -135,19 +134,15 @@ string fto_string(t _val)
 class RLPStreamU
 {
 public:
-    RLPStreamU(size_t _size) : m_size(_size)
-    {
-        if (m_size > 1)
-            ETH_FAIL_MESSAGE("RLPStreamU does not support stream of multiple rlp items. It's a mock to wrap 1 transaction.");
-    }
-    void appendRaw(string const& _data);
-    void appendString(string const& _data);
-    string outHeader() const;
+    RLPStreamU(size_t _size);
+    void appendRaw(std::string const& _data);
+    void appendString(std::string const& _data);
+    std::string outHeader() const;
 
 private:
     bool m_wrapString = false;
     size_t m_size;
-    string const* m_data = 0;
+    std::string const* m_data = 0;
 };
 
 }  // namespace test

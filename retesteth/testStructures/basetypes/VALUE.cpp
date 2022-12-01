@@ -2,13 +2,10 @@
 #include <libdevcore/CommonIO.h>
 #include <retesteth/EthChecks.h>
 #include <retesteth/TestHelper.h>
-#include <locale>
-#include <mutex>
-#include <sstream>
 
-using namespace test::teststruct;
+using namespace std;
 using namespace dev;
-
+using namespace test::teststruct;
 std::mutex g_cacheAccessMutexValue;
 
 namespace test

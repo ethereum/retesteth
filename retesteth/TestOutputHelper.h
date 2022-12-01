@@ -20,7 +20,7 @@
 
 #pragma once
 #include <libdevcore/CommonData.h>
-#include <boost/filesystem.hpp>
+#include <boost/filesystem/path.hpp>
 #include <boost/test/unit_test.hpp>
 #include <thread>
 #include <vector>
@@ -78,7 +78,7 @@ class TestOutputHelper
 {
 public:
     static TestOutputHelper& get();
-    //TestOutputHelper(TestOutputHelper const&) = delete;
+    TestOutputHelper(TestOutputHelper const&) = default;
     void operator=(TestOutputHelper const&) = delete;
 
     void initTest(size_t _maxTests = 1);
@@ -114,6 +114,10 @@ public:
 
     /// get string representation of current threadID
     static std::thread::id getThreadID();
+
+    // Debug
+    static void addTestVector(std::string&& _str);
+    static void printTestVectors();
 
     // Mark the _folderName as executed for a given _suitePath (to filler files)
     static void markTestFolderAsFinished(

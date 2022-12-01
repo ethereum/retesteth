@@ -1,18 +1,16 @@
 #include "BlockMining.h"
-#include "ToolChainHelper.h"
-#include "ToolChainManager.h"
+#include "Verification.h"
 #include <Options.h>
-#include <dataObject/ConvertFile.h>
-#include <libdevcore/CommonIO.h>
+#include <retesteth/TestHelper.h>
 #include <testStructures/Common.h>
-#include <testStructures/types/BlockchainTests/Filler/BlockchainTestFillerEnv.h>
-#include <testStructures/types/RPC/DebugVMTrace.h>
-#include <testStructures/types/RPC/ToolResponse.h>
 
 using namespace dev;
+using namespace std;
 using namespace test;
+using namespace test::debug;
 using namespace teststruct;
 using namespace dataobject;
+namespace fs = boost::filesystem;
 
 namespace  {
 void correctHeaderByToolResponse(BlockHeader& _header, ToolResponse const& _res)
@@ -43,8 +41,9 @@ ToolChain::ToolChain(
     // Because any tool can have custom name implementation. Since this is a mock for tool functions
     // We know what are the fork names. Because devs refuse to expose core logic for tests
     // The protocol logic is implemented here to catch test errors.
-    auto const& forks = Options::getCurrentConfig().cfgFile().forks();
-    if (inArray(forks, m_fork.getCContent()))
+    auto const& opt = Options::getCurrentConfig();
+    auto const& forks = opt.cfgFile().forks();
+    if (opt.cfgFile().support1559() && inArray(forks, m_fork.getCContent()))
     {
         if (compareFork(m_fork, CMP::lt, FORK("London"))
             && _genesis.header()->type() == BlockType::BlockHeader1559)
@@ -65,10 +64,33 @@ ToolChain::ToolChain(
     m_blocks.push_back(genesisFixed);
 }
 
+spSetChainParamsArgs genT9NChainParams(FORK const& _net)
+{
+    spDataObject difficultyParams;
+    // Dummy chain params, not used in t9n but we need to setup chainID
+    (*difficultyParams).atKeyPointer("accounts") = spDataObject(new DataObject(DataType::Object));
+    (*difficultyParams)["genesis"]["author"] = "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba";
+    (*difficultyParams)["genesis"]["difficulty"] = "0x00";
+    (*difficultyParams)["genesis"]["gasLimit"] = "0xff112233445566";
+    (*difficultyParams)["genesis"]["baseFeePerGas"] = "0x0b";
+    (*difficultyParams)["genesis"]["extraData"] = "0x00";
+    (*difficultyParams)["genesis"]["timestamp"] = "0x00";
+    (*difficultyParams)["genesis"]["nonce"] = "0x0000000000000000";
+    (*difficultyParams)["genesis"]["mixHash"] = "0x0000000000000000000000000000000000000000000000000000000000020000";
+    (*difficultyParams)["sealEngine"] = "NoProof";
+
+    auto const& forkChainIDmap = Options::getCurrentConfig().getGenesisTemplateChainID();
+    if (forkChainIDmap.count(_net))
+        (*difficultyParams)["params"]["chainID"] = forkChainIDmap.at(_net)->asString();
+    else
+        (*difficultyParams)["params"]["chainID"] = VALUE(Options::getCurrentConfig().cfgFile().defaultChainID()).asString();
+    return spSetChainParamsArgs(new SetChainParamsArgs(difficultyParams));
+}
+
 ToolChain::ToolChain(
     EthereumBlockState const& _parentBlock, EthereumBlockState const& _currentBlock,
     FORK const& _fork, fs::path const& _toolPath, fs::path const& _tmpDir)
-  : m_initialParams(0),
+   :m_initialParams(genT9NChainParams(_fork)),
     m_engine(SealEngine::NoProof),
     m_fork(new FORK(_fork.asString())),
     m_toolPath(_toolPath),
@@ -86,7 +108,8 @@ spDataObject const ToolChain::mineBlock(EthereumBlockState const& _pendingBlock,
     // Ask the tool to calculate post state and block header
     // With current chain information, txs from pending block
     ToolResponse const res = mineBlockOnTool(_pendingBlock, _parentBlock, m_engine);
-    ETH_LOG("ToolChain::mineBlock of new block: " + BlockHeader::BlockTypeToString(_pendingBlock.header()->type()), 5);
+    ETH_DC_MESSAGE(
+        DC::TESTLOG, "ToolChain::mineBlock of new block: " + BlockHeader::BlockTypeToString(_pendingBlock.header()->type()));
 
     // Pending fixed is pending header corrected by the information returned by tool
     // The tool can reject transactions changing the stateHash, TxRoot, TxReceipts, HeaderHash, GasUsed
@@ -100,7 +123,7 @@ spDataObject const ToolChain::mineBlock(EthereumBlockState const& _pendingBlock,
         pendingFixedHeader.setDifficulty(res.currentDifficulty());
         checkDifficultyAgainstRetesteth(res.currentDifficulty(), pendingFixed.header());
     }
-    calculateAndSetBaseFee(pendingFixed.headerUnsafe(), lastBlock().header());
+    calculateAndCheckSetBaseFee(res.currentBasefee(), pendingFixed.headerUnsafe(), lastBlock().header());
 
     spDataObject miningResult;
     miningResult = coorectTransactionsByToolResponse(res, pendingFixed, _pendingBlock, _req);
@@ -123,7 +146,8 @@ spDataObject const ToolChain::mineBlock(EthereumBlockState const& _pendingBlock,
 ToolResponse ToolChain::mineBlockOnTool(
     EthereumBlockState const& _currentBlock, EthereumBlockState const& _parentBlock, SealEngine _engine)
 {
-    BlockMining toolMiner(*this, _currentBlock, _parentBlock, _engine);
+    bool isGenesis = _currentBlock.header()->number() == _parentBlock.header()->number();
+    BlockMining toolMiner(*this, _currentBlock, _parentBlock, isGenesis ? SealEngine::Genesis : _engine);
     toolMiner.prepareEnvFile();
     toolMiner.prepareAllocFile();
     toolMiner.prepareTxnFile();
@@ -140,15 +164,35 @@ void ToolChain::rewindToBlock(size_t _number)
 // Helper functions
 void ToolChain::checkDifficultyAgainstRetesteth(VALUE const& _toolDifficulty, spBlockHeader const& _pendingHeader)
 {
-    // Calculate difficulty for tool (tool does not calculate difficulty)
     ChainOperationParams params = ChainOperationParams::defaultParams(toolParams());
     VALUE retestethDifficulty = calculateEthashDifficulty(params, _pendingHeader, lastBlock().header());
     if (_toolDifficulty != retestethDifficulty)
-        ETH_ERROR_MESSAGE("tool vs retesteth difficulty disagree: " + _toolDifficulty.asDecString() + " vs " +
+        ETH_WARNING("tool vs retesteth difficulty disagree: " + _toolDifficulty.asDecString() + " vs " +
                           retestethDifficulty.asDecString());
 }
 
-void ToolChain::calculateAndSetBaseFee(spBlockHeader& _pendingHeader, spBlockHeader const& _parentHeader)
+void ToolChain::checkBasefeeAgainstRetesteth(VALUE const& _toolBasefee, spBlockHeader const& _pendingHeader, spBlockHeader const& _parentHeader)
+{
+    if (!test::Options::getCurrentConfig().cfgFile().checkBasefee())
+        return;
+    ChainOperationParams params = ChainOperationParams::defaultParams(toolParams());
+    VALUE retestethBaseFee = calculateEIP1559BaseFee(params, _pendingHeader, _parentHeader);
+    if (_toolBasefee != retestethBaseFee)
+    {
+        if (Options::get().filltests)
+        {
+            ETH_WARNING("tool vs retesteth basefee disagree: " + _toolBasefee.asDecString() + " vs " +
+                        retestethBaseFee.asDecString());
+        }
+        else
+        {
+            ETH_DC_MESSAGEC(DC::LOWLOG, "tool vs retesteth basefee disagree: " + _toolBasefee.asDecString() + " vs " +
+                                            retestethBaseFee.asDecString(), LogColor::YELLOW);
+        }
+    }
+}
+
+void ToolChain::calculateAndCheckSetBaseFee(VALUE const& _toolBaseFee, spBlockHeader& _pendingHeader, spBlockHeader const& _parentHeader)
 {
     bool isOn1559 = _pendingHeader.getCContent().type() == BlockType::BlockHeader1559 && _parentHeader->type() == BlockType::BlockHeader1559;
     bool isOn1559ToMerge = _pendingHeader.getCContent().type() == BlockType::BlockHeaderMerge && _parentHeader->type() == BlockType::BlockHeader1559;
@@ -157,10 +201,21 @@ void ToolChain::calculateAndSetBaseFee(spBlockHeader& _pendingHeader, spBlockHea
     // Calculate new baseFee
     if (isOn1559 || isOn1559ToMerge || isOnMerge)
     {
-        ChainOperationParams params = ChainOperationParams::defaultParams(toolParams());
         BlockHeader1559& pendingFixed1559Header = BlockHeader1559::castFrom(_pendingHeader.getContent());
-        VALUE baseFee = calculateEIP1559BaseFee(params, _pendingHeader, _parentHeader);
-        pendingFixed1559Header.setBaseFee(baseFee);
+
+        if (Options::getCurrentConfig().cfgFile().calculateBasefee())
+        {
+            // If the tool does not return basefee in result file, the value is set 0, we need to corret it
+            ChainOperationParams params = ChainOperationParams::defaultParams(toolParams());
+            VALUE retestethBaseFee = calculateEIP1559BaseFee(params, _pendingHeader, _parentHeader);
+            pendingFixed1559Header.setBaseFee(retestethBaseFee);
+        }
+        else
+        {
+            pendingFixed1559Header.setBaseFee(_toolBaseFee);
+            spBlockHeader pendingFixed1559HeaderSP(&pendingFixed1559Header);
+            checkBasefeeAgainstRetesteth(_toolBaseFee, pendingFixed1559HeaderSP, _parentHeader);
+        }
     }
 }
 
@@ -208,7 +263,7 @@ spDataObject ToolChain::coorectTransactionsByToolResponse(
                 ETH_ERROR_MESSAGE("tool didn't provide information about rejected transaction");
             if (_miningReq == Mining::AllowFailTransactions)
             {
-                ETH_WARNING_TEST(message, 6);
+                ETH_DC_MESSAGE(DC::LOWLOG, message);
             }
             else
                 throw test::UpwardsException(message);
@@ -273,9 +328,9 @@ void ToolChain::calculateAndSetTotalDifficulty(EthereumBlockState& _pendingFixed
         totalDifficulty = m_blocks.at(m_blocks.size() - 1).totalDifficulty();
     _pendingFixed.setTotalDifficulty(totalDifficulty + _pendingFixed.header()->difficulty());
 
-    ETH_LOG("New block N: " + to_string(m_blocks.size()), 6);
-    ETH_LOG("New block TD: " + totalDifficulty.asDecString() + " + " + _pendingFixed.header()->difficulty().asDecString() +
-                " = " + _pendingFixed.totalDifficulty().asDecString(),
-        6);
+    ETH_DC_MESSAGE(DC::TESTLOG, "New block N: " + to_string(m_blocks.size()));
+    ETH_DC_MESSAGE(DC::TESTLOG, "New block TD: " + totalDifficulty.asDecString() + " + " +
+                                    _pendingFixed.header()->difficulty().asDecString() + " = " +
+                                    _pendingFixed.totalDifficulty().asDecString());
 }
 }  // namespace toolimpl

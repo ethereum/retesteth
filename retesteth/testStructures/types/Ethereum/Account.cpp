@@ -1,10 +1,8 @@
 #include "State.h"
-#include <retesteth/TestHelper.h>
+#include <retesteth/EthChecks.h>
 #include <retesteth/testStructures/Common.h>
 
-namespace test
-{
-namespace teststruct
+namespace test::teststruct
 {
 
 // The Account is a part of State class and manages it's data
@@ -53,4 +51,3 @@ spDataObject const& State::Account::asDataObject() const
 }
 
 }  // namespace teststruct
-}  // namespace test

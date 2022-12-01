@@ -18,18 +18,15 @@
  * Unit tests for ethObjects functions.
  */
 
+#include <libdataobj/ConvertFile.h>
+#include <retesteth/TestHelper.h>
 #include <retesteth/TestOutputHelper.h>
-#include <retesteth/dataObject/ConvertFile.h>
-#include <retesteth/testStructures/Common.h>
-#include <retesteth/testStructures/configs/ClientConfigFile.h>
-#include <retesteth/testStructures/types/ethereum.h>
 #include <retesteth/testSuites/Common.h>
-#include <boost/test/unit_test.hpp>
-#include <thread>
 
 using namespace std;
 using namespace dev;
 using namespace test;
+using namespace test::debug;
 using namespace test::teststruct;
 
 BOOST_FIXTURE_TEST_SUITE(EthObjectsSuite, TestOutputHelperFixture)
@@ -468,7 +465,8 @@ BOOST_AUTO_TEST_CASE(compareStates_storageMissingOnExpect)
 void ExpectVsPost(string const& _expectKey, string const& _expectVal, string const& _postKey, string const& _postVal,
     CompareResult _res, string const& _doubleVal = "0x02", size_t _errCount = 2)
 {
-    ETH_LOG("Exp(" + _expectKey + ":" + _expectVal + ") vs Post(" + _postKey + "," + _postVal + ") dd: " + _doubleVal, 0);
+    ETH_DC_MESSAGE(
+        DC::DEFAULT, "Exp(" + _expectKey + ":" + _expectVal + ") vs Post(" + _postKey + "," + _postVal + ") dd: " + _doubleVal);
     spDataObject expectStorage(new DataObject(DataType::Object));
     if (_expectKey != "--")
         (*expectStorage)[_expectKey] = _expectVal;

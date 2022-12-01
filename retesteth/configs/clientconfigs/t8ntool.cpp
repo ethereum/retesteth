@@ -2,12 +2,19 @@
 using namespace std;
 using namespace dataobject;
 
+namespace retesteth::options
+{
 string const t8ntool_config = R"({
     "name" : "Ethereum GO on StateTool",
     "socketType" : "tranition-tool",
     "socketAddress" : "start.sh",
     "checkLogsHash" : true,
-    "chainID" : 1,
+    "checkBasefee" : true,
+    "defaultChainID" : 1,
+    "customCompilers" : {
+        ":yul" : "yul.sh",
+        ":mycompiler" : "mycompiler.sh"
+    },
     "forks" : [
         "Frontier",
         "Homestead",
@@ -31,6 +38,10 @@ string const t8ntool_config = R"({
         "ArrowGlacier",
         "ArrowGlacierToMergeAtDiffC0000",
         "GrayGlacier"
+    ],
+    "fillerSkipForks" : [
+        "Merge+3540+3670",
+        "Merge+3860"
     ],
     "exceptions" : {
       "AddressTooShort" : "input string too short for common.Address",
@@ -191,7 +202,7 @@ string const t8ntool_config = R"({
       "LegacyBlockImportImpossible2" : "Legacy block can only be on top of LegacyBlock",
       "LegacyBlockBaseFeeTransaction" : "BaseFee transaction in a Legacy blcok",
       "1559BlockImportImpossible_HeaderIsLegacy" : "1559 block must be on top of 1559",
-      "1559BlockImportImpossible_BaseFeeWrong": "base fee not correct!",
+      "1559BlockImportImpossible_BaseFeeWrong": "Error in field: baseFeePerGas",
       "1559BlockImportImpossible_InitialBaseFeeWrong": "Initial baseFee must be 1000000000",
       "1559BlockImportImpossible_TargetGasLow": "gasTarget decreased too much",
       "1559BlockImportImpossible_TargetGasHigh": "gasTarget increased too much",
@@ -240,7 +251,38 @@ else
 fi
 )";
 
-t8ntoolcfg::t8ntoolcfg()
+string const t8ntool_customcompiler = R"(#!/bin/sh
+# You can call a custom executable here
+# The code src comes in argument $1 as a path to a file containg the code
+# So if you have custom compiler installed in the system the command would look like:
+# mycompiler $1
+
+# Make sure your tool output clean bytecode only with no log or debug messages
+echo "0x600360005500"
+
+# Copy this file under any name you want and make the changes
+# In config file replace add the keyword and path to executable accordingly
+#    "customCompilers" : {
+#        ":mycompiler" : "mycompiler.sh",
+#         ":keyword" : "myscript.sh"
+#    },
+# Where :keyword would be looked in test's Filler files
+# And myscript.sh located in the system or .retesteth/default/myscript.sh with a call to your custom tool
+# just like described in this file."
+)";
+
+
+string const t8ntool_yulcompiler = R"(#!/bin/sh
+solc=$(which solc)
+if [ -z $solc ]; then
+   >&2 echo "yul.sh \"Yul compilation error: 'solc' not found!\""
+   echo "0x"
+else
+    echo 0x`solc --assemble $1 2>/dev/null | grep "Binary representation:" -A 1 | tail -n1`
+fi
+)";
+
+gent8ntoolcfg::gent8ntoolcfg()
 {
     {
         spDataObject obj;
@@ -257,6 +299,20 @@ t8ntoolcfg::t8ntoolcfg()
     }
     {
         spDataObject obj;
+        (*obj)["exec"] = true;
+        (*obj)["path"] = "t8ntool/mycompiler.sh";
+        (*obj)["content"] = t8ntool_customcompiler;
+        map_configs.addArrayObject(obj);
+    }
+    {
+        spDataObject obj;
+        (*obj)["exec"] = true;
+        (*obj)["path"] = "t8ntool/yul.sh";
+        (*obj)["content"] = t8ntool_yulcompiler;
+        map_configs.addArrayObject(obj);
+    }
+    {
+        spDataObject obj;
         (*obj)["path"] = "default/config";
         (*obj)["content"] = t8ntool_config;
         map_configs.addArrayObject(obj);
@@ -268,4 +324,19 @@ t8ntoolcfg::t8ntoolcfg()
         (*obj)["content"] = t8ntool_start;
         map_configs.addArrayObject(obj);
     }
+    {
+        spDataObject obj;
+        (*obj)["exec"] = true;
+        (*obj)["path"] = "default/mycompiler.sh";
+        (*obj)["content"] = t8ntool_customcompiler;
+        map_configs.addArrayObject(obj);
+    }
+    {
+        spDataObject obj;
+        (*obj)["exec"] = true;
+        (*obj)["path"] = "default/yul.sh";
+        (*obj)["content"] = t8ntool_yulcompiler;
+        map_configs.addArrayObject(obj);
+    }
 }
+}  // namespace retesteth::options

@@ -2,6 +2,8 @@
 using namespace std;
 using namespace dataobject;
 
+namespace retesteth::options
+{
 string const alethIPCDebug_config = R"({
     "name" : "Ethereum aleth on IPC Debug",
     "socketType" : "ipc-debug",
@@ -44,10 +46,11 @@ string const alethIPCDebug_config = R"({
     }
 })";
 
-alethIpcDebugcfg::alethIpcDebugcfg()
+genalethIpcDebugcfg::genalethIpcDebugcfg()
 {
     spDataObject obj;
     (*obj)["path"] = "alethIPCDebug/config";
     (*obj)["content"] = alethIPCDebug_config;
     map_configs.addArrayObject(obj);
 }
+}  // namespace retesteth::options

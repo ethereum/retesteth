@@ -1,11 +1,9 @@
 #include "StateIncomplete.h"
 #include "AccountIncomplete.h"
 #include <retesteth/EthChecks.h>
-#include <retesteth/testStructures/Common.h>
 
-namespace test
-{
-namespace teststruct
+using namespace std;
+namespace test::teststruct
 {
 StateIncomplete::StateIncomplete(spDataObjectMove _data)
 {
@@ -44,4 +42,3 @@ void StateIncomplete::correctMiningReward(FH20 const& _coinbase, VALUE const& _r
 }
 
 }  // namespace teststruct
-}  // namespace test

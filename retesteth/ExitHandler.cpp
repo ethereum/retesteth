@@ -1,8 +1,8 @@
 #include <retesteth/ExitHandler.h>
 #include <retesteth/TestOutputHelper.h>
-#include <mutex>
-#include <thread>
+#include <retesteth/session/Session.h>
 using namespace test;
+using namespace test::session;
 
 std::mutex g_executionMutex;
 bool ExitHandler::m_receivedExitSig = false;

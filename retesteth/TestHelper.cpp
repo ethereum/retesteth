@@ -1,24 +1,17 @@
 #include <BuildInfo.h>
 #include <fcntl.h>
 #include <boost/algorithm/string/trim.hpp>
-#include <boost/lexical_cast.hpp>
-#include <boost/test/unit_test.hpp>
-#include <boost/uuid/uuid.hpp>             // uuid class
 #include <boost/uuid/uuid_generators.hpp>  // generators
-#include <boost/uuid/uuid_io.hpp>          // streaming operators etc
 #include <boost/uuid/uuid_io.hpp>
-
-#include <csignal>
-#include <mutex>
-
+#include <libdataobj/ConvertFile.h>
+#include <libdataobj/ConvertYaml.h>
 #include <libdevcore/CommonIO.h>
+#include <retesteth/EthChecks.h>
 #include <retesteth/Options.h>
 #include <retesteth/TestHelper.h>
-#include <retesteth/TestOutputHelper.h>
-#include <retesteth/dataObject/ConvertFile.h>
-#include <retesteth/dataObject/ConvertYaml.h>
 
 using namespace std;
+using namespace dev;
 namespace fs = boost::filesystem;
 
 namespace  test {
@@ -113,8 +106,9 @@ boost::filesystem::path getTestPath()
     if (ptestPath == nullptr)
     {
         ETH_WARNING("Could not find environment variable `ETHEREUM_TEST_PATH`");
-        ETH_STDERROR_MESSAGE("Use the --testpath <path> option to set the test path!");
-        throw EthError() << "Error getting the test path!";
+        ETH_WARNING("Use the --testpath <path> option to set the test path!");
+        testPath = boost::filesystem::path(boost::filesystem::current_path());
+        return testPath;
     }
     testPath = boost::filesystem::path(ptestPath);
     return testPath;
@@ -341,10 +335,22 @@ string prepareSolidityVersionString()
     {
         string const cmd = "solc --version";
         string const result = test::executeCmd(cmd);
-        string::size_type const pos = result.rfind("Version");
+        string const cVersion  = "Version";
+        string::size_type const pos = result.rfind(cVersion);
         if (pos != string::npos)
         {
             solcVersion = result.substr(pos, result.length());
+            string number;
+            string const numberDirty = solcVersion.substr(cVersion.length(), 15);
+            for (auto const& chr : numberDirty)
+            {
+                if (std::isdigit(chr))
+                    number += chr;
+            }
+            int v = std::atoi(number.c_str());
+            if (v < 85)
+                ETH_WARNING("Solidity version detected (" + solcVersion + ") is less then '0.8.5', "
+                    "ethereum test filling require version >= 0.8.5 to fill with correct results!");
             return solcVersion;
         }
     }
@@ -467,7 +473,6 @@ std::vector<std::string> explode(std::string const& s, char delim)
     return result;
 }
 
-#include <sys/wait.h>
 #define READ   0
 #define WRITE  1
 #define EXECLARG0(cmd) execl(cmd, cmd, (char*)NULL)
@@ -601,11 +606,25 @@ fs::path createUniqueTmpDirectory() {
     std::lock_guard<std::mutex> lock(g_createUniqueTmpDirectory);
     boost::uuids::uuid uuid = boost::uuids::random_generator()();
     string uuidStr = boost::lexical_cast<string>(uuid);
+
     static auto tpath = fs::exists("/dev/shm") ? fs::path("/dev/shm") : fs::temp_directory_path();
-    if (fs::exists(tpath / uuidStr))
-        ETH_FAIL_MESSAGE("boost create tmp directory which already exist!");
-    boost::filesystem::create_directory(tpath / uuidStr);
-    return tpath / uuidStr;
+    auto const& tmpDir = Options::getCurrentConfig().cfgFile().tmpDir();
+
+    // tmpDir here is dynamic depengin on the client config
+    if (tmpDir.empty())
+    {
+        if (fs::exists(tpath / uuidStr))
+            ETH_FAIL_MESSAGE("boost create tmp directory which already exist!");
+        boost::filesystem::create_directory(tpath / uuidStr);
+        return tpath / uuidStr;
+    }
+    else
+    {
+        if (fs::exists(tmpDir / uuidStr))
+            ETH_FAIL_MESSAGE("boost create tmp directory which already exist!");
+        boost::filesystem::create_directory(tmpDir / uuidStr);
+        return tmpDir / uuidStr;
+    }
 }
 
 // RLPStream emulator
@@ -682,6 +701,28 @@ string RLPStreamU::outHeader() const
     else
         header = 192 + payloadSize;
     return "0x" + dev::toCompactHex(header) + wrappedStringHeaderStr;
+}
+
+RLPStreamU::RLPStreamU(size_t _size) : m_size(_size)
+{
+    if (m_size > 1)
+        ETH_FAIL_MESSAGE("RLPStreamU does not support stream of multiple rlp items. It's a mock to wrap 1 transaction.");
+}
+
+void removeSubChar(std::string& _string, unsigned char _r)
+{
+    _string.erase(
+        std::remove_if(_string.begin(), _string.end(), [&_r](unsigned char ch) {
+            return ch == _r;
+        }), _string.end());
+}
+
+string makePlussedFork(FORK const& _net)
+{
+    size_t pos = _net.asString().find("+");
+    if (pos != string::npos)
+        return _net.asString().substr(0, pos);
+    return string();
 }
 
 }//namespace

@@ -1,11 +1,13 @@
 #include "BlockchainTestFillerExpectSection.h"
 #include <TestHelper.h>
+#include <retesteth/EthChecks.h>
+#include <retesteth/Options.h>
 #include <retesteth/testStructures/Common.h>
 
-#include <retesteth/Options.h>
-namespace test
-{
-namespace teststruct
+using namespace std;
+using namespace test::compiler;
+
+namespace test::teststruct
 {
 BlockchainTestFillerExpectSection::BlockchainTestFillerExpectSection(spDataObject& _data)
 {
@@ -34,4 +36,3 @@ BlockchainTestFillerExpectSection::BlockchainTestFillerExpectSection(spDataObjec
 }
 
 }  // namespace teststruct
-}  // namespace test

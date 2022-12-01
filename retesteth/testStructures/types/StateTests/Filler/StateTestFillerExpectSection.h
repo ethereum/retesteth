@@ -1,15 +1,10 @@
 #pragma once
 #include "../../../configs/FORK.h"
 #include "../../../types/Ethereum/StateIncomplete.h"
-#include <retesteth/dataObject/DataObject.h>
-#include <retesteth/dataObject/SPointer.h>
+#include <libdataobj/DataObject.h>
 #include <testStructures/types/StateTests/Filler/StateTestFillerTransaction.h>
-using namespace dataobject;
-using namespace test::teststruct;
 
-namespace test
-{
-namespace teststruct
+namespace test::teststruct
 {
 struct StateTestFillerExpectSection
 {
@@ -26,17 +21,21 @@ struct StateTestFillerExpectSection
     }
 
     // Check that this indexes are present in this expect section
-    bool checkIndexes(size_t _dInd, size_t _gInd, size_t _vInd) const;
+    bool checkIndexes(int _dInd, int _gInd, int _vInd) const;
     void correctMiningReward(FH20 const& _coinbase, VALUE const& _reward);
 
     // Get expect exception for transaction
-    string const& getExpectException(FORK const& _net) const
+    std::string const& getExpectException(FORK const& _net) const
     {
-        static string emptyString = string();  // mutex ??
+        static std::string emptyString = std::string();  // mutex ??
         if (m_expectExceptions.count(_net))
             return m_expectExceptions.at(_net);
         return emptyString;
     }
+
+    std::set<int> const& getDataInd() const {return  m_dataInd; }
+    std::set<int> const& getGasInd() const {return  m_gasInd; }
+    std::set<int> const& getValInd() const {return  m_valInd; }
 
 private:
     std::set<int> m_dataInd;
@@ -46,9 +45,8 @@ private:
     GCP_SPointer<StateIncomplete> m_result;
     spDataObject m_initialData;
 
-    std::map<FORK, string> m_expectExceptions;
+    std::map<FORK, std::string> m_expectExceptions;
 };
 
 
 }  // namespace teststruct
-}  // namespace test

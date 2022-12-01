@@ -3,15 +3,14 @@
  */
 
 #pragma once
-#include <dataObject/DataObject.h>
-#include <retesteth/Options.h>
-#include <retesteth/TestHelper.h>
+#include <libdataobj/DataObject.h>
 #include <retesteth/testSuiteRunner/TestSuite.h>
 #include <retesteth/testSuites/TestFixtures.h>
 #include <boost/filesystem/path.hpp>
 
 namespace test
 {
+using namespace dataobject;
 
 /// Suite run and check blockchain tests with valid blocks only
 class BlockchainTestValidSuite : public TestSuite
@@ -43,21 +42,18 @@ public:
 /// Suite run/check stateTests converted into blockchain by testeth
 class BCGeneralStateTestsSuite : public BlockchainTestValidSuite
 {
+public:
     test::TestSuite::TestPath suiteFolder() const override;
     test::TestSuite::FillerPath suiteFillerFolder() const override;
-public:
-    BCGeneralStateTestsSuite() {
-        TestInfo errorInfo("Initialized ", "BCGeneralStateTestsSuite");
-        TestOutputHelper::get().setCurrentTestInfo(errorInfo);
-    }
+    spDataObject doTests(spDataObject& _input, TestSuiteOptions& _opt) const override;
 };
 
 class BCGeneralStateTestsVMSuite : public BCGeneralStateTestsSuite
 {
 public:
-    BCGeneralStateTestsVMSuite();
     test::TestSuite::TestPath suiteFolder() const override;
     test::TestSuite::FillerPath suiteFillerFolder() const override;
+    spDataObject doTests(spDataObject& _input, TestSuiteOptions& _opt) const override;
 };
 
 /// Suite run/check stateTests converted into blockchain by testeth
@@ -81,12 +77,12 @@ public:
     TestPath suiteFolder() const override
     {
         return TestSuite::TestPath(
-            fs::path("LegacyTests/Constantinople/BlockchainTests/InvalidBlocks"));
+            boost::filesystem::path("LegacyTests/Constantinople/BlockchainTests/InvalidBlocks"));
     }
     FillerPath suiteFillerFolder() const override
     {
         return TestSuite::FillerPath(
-            fs::path("/src/LegacyTests/Constantinople/BlockchainTestsFiller/InvalidBlocks"));
+            boost::filesystem::path("/src/LegacyTests/Constantinople/BlockchainTestsFiller/InvalidBlocks"));
     }
 };
 
@@ -99,12 +95,12 @@ public:
     TestPath suiteFolder() const override
     {
         return TestSuite::TestPath(
-            fs::path("LegacyTests/Constantinople/BlockchainTests/ValidBlocks"));
+            boost::filesystem::path("LegacyTests/Constantinople/BlockchainTests/ValidBlocks"));
     }
     FillerPath suiteFillerFolder() const override
     {
         return TestSuite::FillerPath(
-            fs::path("/src/LegacyTests/Constantinople/BlockchainTestsFiller/ValidBlocks"));
+            boost::filesystem::path("/src/LegacyTests/Constantinople/BlockchainTestsFiller/ValidBlocks"));
     }
 };
 

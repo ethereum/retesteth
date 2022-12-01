@@ -24,7 +24,7 @@ defaults:
       # (ninja is using relative paths otherwise).
       working_directory: ~/build
       command: |
-        cmake ../project -G "$GENERATOR" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCOVERAGE=ON $CMAKE_OPTIONS
+        cmake ../project -G "$GENERATOR" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCOVERAGE=OFF $CMAKE_OPTIONS
 
   configureMac: &configureMac
     run:
@@ -38,6 +38,21 @@ defaults:
       name: "Build"
       working_directory: ~/build
       command: cmake --build . -- -j $BUILD_PARALLEL_JOBS
+
+  linuxInstallGO: &linuxInstallGO
+    run:
+      name: "LinuxInstallGO and Tests"
+      working_directory: ~/project
+      command: |
+          curl -L --output go1.18.linux-amd64.tar.gz "https://dl.google.com/go/go1.18.linux-amd64.tar.gz"
+          tar -xf go1.18.linux-amd64.tar.gz
+          sudo mv go /usr/local
+          sudo ln -s /usr/local/go/bin/go /usr/local/bin/go
+          git clone --depth 1 https://github.com/ethereum/go-ethereum.git
+          git clone --depth 1 https://github.com/ethereum/tests.git
+          cd go-ethereum
+          make all
+          sudo ln -s ~/project/go-ethereum/build/bin/evm /usr/local/bin/evm
 
   test-retesteth: &test-retesteth
     run:
@@ -126,61 +141,28 @@ defaults:
     - *configure
 #    - *upload-hunter-cache
 #    - *install-solidity
+    - *linuxInstallGO
     - *build
     - *store-retesteth
     - *test
+    - *test-retesteth
 #    - *upload-coverage-data
 
-
-version: 2
-jobs:
-
-  Linux-Clang6:
-    environment:
-      - CXX: clang++-6.0
-      - CC:  clang-6.0
-      - GCOV: llvm-cov-6.0 gcov
-      - GENERATOR: Ninja
-      - BUILD_PARALLEL_JOBS: 8
-      - TEST_PARALLEL_JOBS: 8
-    docker:
-      - image: ethereum/cpp-build-env:7
-    steps: *linux-steps
-
-  Linux-GCC6-Debug:
-    environment:
-      - BUILD_TYPE: Release
-      - CXX: g++-6
-      - CC:  gcc-6
-      - GCOV: gcov-6
-      - GENERATOR: Ninja
-      - BUILD_PARALLEL_JOBS: 4
-      - TEST_PARALLEL_JOBS: 4
-      # TODO: Fix memory leaks reported in leveldb.
-      # - CMAKE_OPTIONS: -DSANITIZE=address
-      # - ASAN_OPTIONS: detect_leaks=0
-    docker:
-      - image: ethereum/cpp-build-env:7
-    steps: *linux-steps
-
-  macOS-XCode12:
-    environment:
-      - BUILD_TYPE: Release
-      - CXX: clang++
-      - GENERATOR: Ninja
-      - BUILD_PARALLEL_JOBS: 8
-      - TEST_PARALLEL_JOBS: 8
-    macos:
-      xcode: "12.5.1"
-    steps:
+  mac-steps: &mac-steps
       - checkout
       - run:
           name: "Install macOS dependencies"
           # Python3 and requests are needed for Hunter upload.
           command: |
-            HOMEBREW_NO_AUTO_UPDATE=1 brew install -q cmake ninja git go@1.16
+            HOMEBREW_NO_AUTO_UPDATE=1 brew install -q cmake ninja git
             git clone --depth 1 https://github.com/ethereum/go-ethereum.git
             git clone --depth 1 https://github.com/ethereum/tests.git
+
+            curl -L https://go.dev/dl/go1.19.1.darwin-amd64.pkg -o go1.19.pkg
+            chmod +x go1.19.pkg
+            sudo installer -pkg go1.19.pkg -target /
+            sudo ln -s /usr/local/go/bin/go /usr/local/bin
+
             cd go-ethereum
             make all
             ln -s ~/project/go-ethereum/build/bin/evm /usr/local/bin/evm
@@ -194,6 +176,61 @@ jobs:
       - *test-retesteth
 #      - *upload-coverage-data
 
+
+version: 2
+jobs:
+
+  Linux-Clang11:
+    environment:
+      - BUILD_TYPE: Release
+      - CXX: clang++
+      - CC:  clang
+      - GCOV: llvm-cov gcov
+      - GENERATOR: Ninja
+      - BUILD_PARALLEL_JOBS: 8
+      - TEST_PARALLEL_JOBS: 8
+    docker:
+      - image: ethereum/cpp-build-env:18-clang-11
+    steps: *linux-steps
+
+  Linux-GCC9-Debug:
+    environment:
+      - BUILD_TYPE: Debug
+      - CXX: g++-9
+      - CC:  gcc-9
+      - GCOV: gcov-9
+      - GENERATOR: Ninja
+      - BUILD_PARALLEL_JOBS: 4
+      - TEST_PARALLEL_JOBS: 4
+      # TODO: Fix memory leaks reported in leveldb.
+      # - CMAKE_OPTIONS: -DSANITIZE=address
+      # - ASAN_OPTIONS: detect_leaks=0
+    docker:
+      - image: ethereum/cpp-build-env:18-gcc-9
+    steps: *linux-steps
+
+  macOS-XCode14:
+    environment:
+      - BUILD_TYPE: Release
+      - CXX: clang++
+      - GENERATOR: Ninja
+      - BUILD_PARALLEL_JOBS: 4
+      - TEST_PARALLEL_JOBS: 4
+    macos:
+      xcode: "14.0.1"
+    steps: *mac-steps
+
+  macOS-XCode12:
+    environment:
+      - BUILD_TYPE: Release
+      - CXX: clang++
+      - GENERATOR: Ninja
+      - BUILD_PARALLEL_JOBS: 8
+      - TEST_PARALLEL_JOBS: 8
+    macos:
+      xcode: "12.5.1"
+    steps: *mac-steps
+
 # TODO: Run GCC6 build only in develop branch.
 # TODO: Enabled nightly builds and add more configs.
 # TODO: Separate builds from testing jobs.
@@ -202,5 +239,6 @@ workflows:
   cpp-ethereum:
     jobs:
       - macOS-XCode12
-      - Linux-Clang6
-      - Linux-GCC6-Debug
+      - macOS-XCode14
+      - Linux-Clang11
+      - Linux-GCC9-Debug

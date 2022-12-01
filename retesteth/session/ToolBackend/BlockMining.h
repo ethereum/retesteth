@@ -1,12 +1,12 @@
 #pragma once
 #include "ToolChain.h"
 #include <testStructures/types/RPC/ToolResponse.h>
-#include <testStructures/types/ethereum.h>
 #include <boost/filesystem/path.hpp>
-namespace fs = boost::filesystem;
 
 namespace toolimpl
 {
+using namespace test::teststruct;
+
 // t8n tool generation of new block
 class BlockMining
 {
@@ -30,14 +30,14 @@ private:
     SealEngine m_engine;
 
 private:
-    fs::path m_allocPath;
-    string m_allocPathContent;
-    fs::path m_envPath;
-    string m_envPathContent;
-    fs::path m_txsPath;
-    string m_txsPathContent;
-    fs::path m_outPath;
-    fs::path m_outAllocPath;
+    boost::filesystem::path m_allocPath;
+    std::string m_allocPathContent;
+    boost::filesystem::path m_envPath;
+    std::string m_envPathContent;
+    boost::filesystem::path m_txsPath;
+    std::string m_txsPathContent;
+    boost::filesystem::path m_outPath;
+    boost::filesystem::path m_outAllocPath;
     void traceTransactions(ToolResponse& _toolResponse);
 };
 }  // namespace toolimpl

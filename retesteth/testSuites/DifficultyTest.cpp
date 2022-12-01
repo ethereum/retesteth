@@ -1,17 +1,16 @@
 #include "DifficultyTest.h"
 #include "retesteth/testSuites/TestFixtures.h"
 #include <retesteth/TestOutputHelper.h>
-#include <retesteth/session/Session.h>
 #include <retesteth/testSuites/Common.h>
 #include <retesteth/testStructures/types/DifficultyTests/DifficultyTest.h>
 #include <retesteth/testStructures/types/DifficultyTests/DifficultyTestFiller.h>
-#include <retesteth/testStructures/PrepareChainParams.h>
-
-#include <retesteth/testStructures/types/StateTests/Filler/StateTestFillerEnv.h>
-#include <retesteth/testStructures/types/Ethereum/State.h>
+#include <retesteth/Options.h>
+#include <retesteth/TestHelper.h>
 #include <retesteth/ExitHandler.h>
 
+using namespace std;
 using namespace test;
+using namespace test::session;
 namespace fs = boost::filesystem;
 namespace
 {
@@ -126,6 +125,11 @@ spDataObject DifficultyTestSuite::doTests(spDataObject& _input, TestSuiteOptions
         // Just check the test structure if running with --checkhash
         if (Options::get().checkhash)
             return spDataObject();
+        if (Options::get().getvectors)
+        {
+            filledTest.registerAllVectors();
+            return spDataObject();
+        }
 
         for (auto const& test : filledTest.tests())
         {
@@ -135,33 +139,7 @@ spDataObject DifficultyTestSuite::doTests(spDataObject& _input, TestSuiteOptions
             TestOutputHelper::get().registerTestRunSuccess();
         }
     }
-
     return spDataObject();
 }
 
-/// TEST SUITE ///
-
-TestSuite::TestPath DifficultyTestSuite::suiteFolder() const
-{
-    return TestSuite::TestPath(fs::path("DifficultyTests"));
-}
-
-TestSuite::FillerPath DifficultyTestSuite::suiteFillerFolder() const
-{
-    return TestSuite::FillerPath(fs::path("src") / "DifficultyTestsFiller");
-}
-
 }  // namespace test
-using DifficultyTestsFixture = TestFixture<DifficultyTestSuite, DefaultFlags>;
-BOOST_FIXTURE_TEST_SUITE(DifficultyTests, DifficultyTestsFixture)
-
-BOOST_AUTO_TEST_CASE(dfArrowGlacier) {}
-BOOST_AUTO_TEST_CASE(dfByzantium) {}
-BOOST_AUTO_TEST_CASE(dfConstantinople) {}
-BOOST_AUTO_TEST_CASE(dfEIP2384) {}
-BOOST_AUTO_TEST_CASE(dfExample) {}
-BOOST_AUTO_TEST_CASE(dfFrontier) {}
-BOOST_AUTO_TEST_CASE(dfGrayGlacier) {}
-BOOST_AUTO_TEST_CASE(dfHomestead) {}
-
-BOOST_AUTO_TEST_SUITE_END()

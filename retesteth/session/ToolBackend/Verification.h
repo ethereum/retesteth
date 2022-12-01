@@ -1,6 +1,6 @@
 #pragma once
 #include "ToolChainHelper.h"
-#include <retesteth/testStructures/Common.h>
+#include <retesteth/testStructures/types/Ethereum/BlockHeader.h>
 
 namespace toolimpl
 {

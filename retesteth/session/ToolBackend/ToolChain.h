@@ -1,13 +1,13 @@
 #pragma once
+#include <testStructures/types/Ethereum/EthereumBlock.h>
 #include <testStructures/types/RPC/SetChainParamsArgs.h>
 #include <testStructures/types/RPC/ToolResponse.h>
-#include <testStructures/types/ethereum.h>
-#include <boost/filesystem.hpp>
+#include <boost/filesystem/path.hpp>
 #include <vector>
-namespace fs = boost::filesystem;
-
 namespace toolimpl
 {
+using namespace test::teststruct;
+
 // Parse SetChainParams::params section
 struct ToolParams : GCP_SPointerBase
 {
@@ -31,12 +31,12 @@ private:
 class ToolChain : public GCP_SPointerBase
 {
 public:
-    ToolChain(EthereumBlockState const& _genesis, spSetChainParamsArgs const& _params, fs::path const& _toolPath,
-        fs::path const& _tmpDir);
+    ToolChain(EthereumBlockState const& _genesis, spSetChainParamsArgs const& _params, boost::filesystem::path const& _toolPath,
+        boost::filesystem::path const& _tmpDir);
 
     // Calculate difficulty from _blockA to _blockB constructor
     ToolChain(EthereumBlockState const& _blockA, EthereumBlockState const& _blockB, FORK const& _fork,
-        fs::path const& _toolPath, fs::path const& _tmpDir);
+        boost::filesystem::path const& _toolPath, boost::filesystem::path const& _tmpDir);
 
     EthereumBlockState const& lastBlock() const
     {
@@ -47,7 +47,7 @@ public:
     std::vector<EthereumBlockState> const& blocks() const { return m_blocks; }
     SealEngine engine() const { return m_engine; }
     FORK const& fork() const { return m_fork; }
-    fs::path const& toolPath() const { return m_toolPath; }
+    boost::filesystem::path const& toolPath() const { return m_toolPath; }
     spSetChainParamsArgs const& params() const { return m_initialParams; }
     ToolParams const& toolParams() const { return m_toolParams; }
 
@@ -61,7 +61,7 @@ public:
 
     // Used for chain reorg
     void insertBlock(EthereumBlockState const& _block) { m_blocks.push_back(_block); }
-    fs::path const& tmpDir() const { return m_tmpDir; }
+    boost::filesystem::path const& tmpDir() const { return m_tmpDir; }
 
 private:
     ToolChain(){};
@@ -75,12 +75,14 @@ private:
     std::vector<EthereumBlockState> m_blocks;
     SealEngine m_engine;
     spFORK m_fork;
-    fs::path m_toolPath;
-    fs::path m_tmpDir;
+    boost::filesystem::path m_toolPath;
+    boost::filesystem::path m_tmpDir;
 
 private:
     void checkDifficultyAgainstRetesteth(VALUE const& _toolDifficulty, spBlockHeader const& _pendingHeader);
-    void calculateAndSetBaseFee(spBlockHeader& _pendingHeader, spBlockHeader const& _parentHeader);
+    void checkBasefeeAgainstRetesteth(VALUE const& _toolBasefee, spBlockHeader const& _pendingHeader, spBlockHeader const& _parentHeader);
+    void calculateAndCheckSetBaseFee(VALUE const& _toolBaseFee, spBlockHeader& _pendingHeader, spBlockHeader const& _parentHeader);
+
     spDataObject coorectTransactionsByToolResponse(ToolResponse const& _res, EthereumBlockState& _pendingFixed,
         EthereumBlockState const& _pendingBlock, Mining _miningReq);
     void correctUncleHeaders(EthereumBlockState& _pendingFixed, EthereumBlockState const& _pendingBlock);

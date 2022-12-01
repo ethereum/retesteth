@@ -6,9 +6,7 @@
 #include <string>
 #include <vector>
 
-namespace test
-{
-namespace blockchainfiller
+namespace test::blockchainfiller
 {
 // Used to tell remote client to reset chain params on another network
 enum class RegenerateGenesis
@@ -24,7 +22,7 @@ public:
     // Single blockchain with block rlps, keep track of a blockchain information
     // Using _env, _pre, _engine, _network settings
     TestBlockchain(BlockchainTestFillerEnv const& _testEnv, State const& _genesisState, SealEngine _engine,
-        FORK const& _network, string const& _chainName, RegenerateGenesis _regenerateGenesis);
+        FORK const& _network, std::string const& _chainName, RegenerateGenesis _regenerateGenesis);
 
     // Need to call resetChainParams because TestBLockchainManager could have chains with different networks
     void resetChainParams() const;
@@ -33,20 +31,20 @@ public:
 
     // Restore this chain on remote client up to < _number block
     // Restore chain up to _number of blocks. if _number is 0 restore the whole chain
-    void restoreUpToNumber(SessionInterface& _session, VALUE const& _number, bool _samechain);
+    void restoreUpToNumber(session::SessionInterface& _session, VALUE const& _number, bool _samechain);
 
     std::vector<TestBlock> const& getBlocks() const { return m_blocks; }
 
     std::string const& getChainName() const { return m_chainName; }
 
     // Prepare errorinfo about block number and chain name
-    string prepareDebugInfoString(std::string const& _newBlockChainName);
+    std::string prepareDebugInfoString(std::string const& _newBlockChainName);
 
     FORK const& getNetwork() const { return m_network; }
 
     // Verify post-import exceptin according to expectException section in test
     // Return true if block is valid, false if block is not valid
-    static bool checkBlockException(SessionInterface const& _session, string const& _sBlockException);
+    static bool checkBlockException(session::SessionInterface const& _session, std::string const& _sBlockException);
 
 private:
     // Ask remote client to generate a blockheader that will later used for uncles
@@ -62,7 +60,7 @@ private:
     FH32 postmineBlockHeader(BlockchainTestFillerBlock const& _block, VALUE const& _latestBlockNumber,
         std::vector<spBlockHeader> const& _uncles, BYTES& _rawRLP);
 
-    SessionInterface& m_session;                      // Session with the client
+    session::SessionInterface& m_session;             // Session with the client
     FORK m_network;                                   // Forkname in genesis
     SealEngine m_sealEngine;                          // Chain seal engine information
     BlockchainTestFillerEnv const& m_testEnv;         // Chain genesis data information
@@ -75,5 +73,4 @@ private:
     // std::vector<TestBlock> m_knownBlocks;       // List of fork block RLPs
 };
 
-}  // namespace blockchainfiller
-}  // namespace test
+}  // namespace test::blockchainfiller

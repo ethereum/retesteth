@@ -1,5 +1,9 @@
 #include "Verification.h"
+#include "retesteth/Options.h"
 using namespace toolimpl;
+using namespace test::debug;
+using namespace std;
+using namespace dev;
 
 namespace {
 
@@ -12,6 +16,8 @@ void check_timestamp(BlockHeader const& _header, BlockHeader const& _parent)
 
 void check_difficultyDelta(ToolChain const& _chain, BlockHeader const& _header, BlockHeader const& _parent)
 {
+    if (!test::Options::getCurrentConfig().cfgFile().checkDifficulty())
+        return;
     // Validate block difficulty delta
     ChainOperationParams params = ChainOperationParams::defaultParams(_chain.toolParams());
     VALUE newDiff = calculateEthashDifficulty(params, _header, _parent);
@@ -22,12 +28,14 @@ void check_difficultyDelta(ToolChain const& _chain, BlockHeader const& _header, 
 
 void check_baseFeeDelta(ToolChain const& _chain, spBlockHeader const& _header, spBlockHeader const& _parent)
 {
+    if (!test::Options::getCurrentConfig().cfgFile().checkBasefee())
+        return;
     // Check if the base fee is correct
     ChainOperationParams params = ChainOperationParams::defaultParams(_chain.toolParams());
     VALUE newBaseFee = calculateEIP1559BaseFee(params, _header, _parent);
     BlockHeader1559 const& header = BlockHeader1559::castFrom(_header);
     if (header.baseFee() != newBaseFee)
-        throw test::UpwardsException() << "Invalid block: base fee not correct! Expected: `" + newBaseFee.asDecString() +
+        throw test::UpwardsException() << "Invalid block: Error in field: baseFeePerGas! Expected: `" + newBaseFee.asDecString() +
                                               "`, got: `" + header.baseFee().asDecString() + "`";
 }
 
@@ -187,7 +195,7 @@ void verifyMergeParent(spBlockHeader const& _header, spBlockHeader const& _paren
     }
     if (_parent->type() == BlockType::BlockHeaderMerge)
     {
-        ETH_TEST_MESSAGE("Verifying Merge Block Parent");
+        ETH_DC_MESSAGE(DC::TESTLOG, "Verifying Merge Block Parent");
         verifyMergeBlock(_parent, _chain);
     }
 }

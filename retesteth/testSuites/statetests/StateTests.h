@@ -19,19 +19,16 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #pragma once
-#include <dataObject/DataObject.h>
+#include <libdataobj/DataObject.h>
 #include <retesteth/testSuiteRunner/TestSuite.h>
 #include <boost/filesystem/path.hpp>
 
 namespace test
 {
-
-class StateTestSuite: public TestSuite
+class StateTestSuite : public TestSuite
 {
 public:
-    StateTestSuite();
-    StateTestSuite(int){};
-    spDataObject doTests(spDataObject& _input, TestSuiteOptions& _opt) const override;
+    dataobject::spDataObject doTests(dataobject::spDataObject& _input, TestSuiteOptions& _opt) const override;
     TestSuite::TestPath suiteFolder() const override;
     TestSuite::FillerPath suiteFillerFolder() const override;
 };
@@ -39,21 +36,18 @@ public:
 class LegacyConstantinopleStateTestSuite : public StateTestSuite
 {
 protected:
-    bool legacyTestSuiteFlag() const override { return  true; }
+    bool legacyTestSuiteFlag() const override { return true; }
+
 public:
-    LegacyConstantinopleStateTestSuite() : StateTestSuite(0){};
     TestSuite::TestPath suiteFolder() const override;
     TestSuite::FillerPath suiteFillerFolder() const override;
 };
 
-class StateTestVMSuite: public StateTestSuite
+class StateTestVMSuite : public StateTestSuite
 {
 public:
-    StateTestVMSuite() : StateTestSuite(0){};
     TestSuite::TestPath suiteFolder() const override;
     TestSuite::FillerPath suiteFillerFolder() const override;
 };
 
-}
-
-
+}  // namespace test

@@ -1,8 +1,6 @@
 #pragma once
 #include "FH.h"
-#include <retesteth/dataObject/DataObject.h>
-#include <retesteth/dataObject/SPointer.h>
-using namespace dataobject;
+#include <libdataobj/DataObject.h>
 
 namespace test
 {
@@ -12,7 +10,7 @@ struct FH256 : FH
 {
     FH256(dev::RLP const& _rlp) : FH(_rlp, 256) {}
     FH256(DataObject const& _data) : FH(_data, 256) {}
-    FH256(string const& _data) : FH(_data, 256) {}
+    FH256(std::string const& _data) : FH(_data, 256) {}
     FH256* copy() const { return new FH256(asString()); }
 
     static FH256 const& zero()

@@ -1,5 +1,5 @@
-#include <retesteth/testSuites/StateTests.h>
 #include <retesteth/testSuites/blockchain/BlockchainTests.h>
+#include <retesteth/testSuites/statetests/StateTests.h>
 #include <boost/test/unit_test.hpp>
 
 using namespace test;

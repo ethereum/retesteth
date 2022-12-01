@@ -1,8 +1,9 @@
 #include <retesteth/configs/Options.h>
-#include <string>
 using namespace std;
 using namespace dataobject;
 
+namespace retesteth::options
+{
 const string default_FrontierToHomesteadAt5_config = R"({
     "params" : {
         "homesteadForkBlock" : "0x05"
@@ -14,7 +15,8 @@ const string default_FrontierToHomesteadAt5_config = R"({
 const string t8ntool_FrontierToHomesteadAt5_config = R"({
     "params" : {
         "fork" : "FrontierToHomesteadAt5",
-        "homesteadForkBlock" : "0x05"
+        "homesteadForkBlock" : "0x05",
+        "chainID" : "0x01"
     },
     "accounts" : {
     }
@@ -32,3 +34,4 @@ genFrontierToHomesteadCfg::genFrontierToHomesteadCfg()
     (*obj2)["content"] = t8ntool_FrontierToHomesteadAt5_config;
     map_configs.addArrayObject(obj2);
 }
+}  // namespace retesteth::options

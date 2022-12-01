@@ -58,7 +58,16 @@ cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../toolchain
 cmake --build .
 
 ```
-Or try building instruction for beginners: [retesteth + solidity build](https://github.com/ethereum/retesteth#building-instructions-for-beginners)
+
+MacOS / Ubuntu dependecy issues:
+If one of the following dependecies is failing to autoinstall, some times due to outdated version or fails to build on OS, you can install it locally from a version that works (newer) and select in `-DLOCALDEPS` flag
+```
+rm -r /root/.hunter
+rm CMakeCache.txt
+cmake .. -DLOCALDEPS="BOOST,MPIR,CRYPTOPP"
+```
+
+Try building instruction for beginners: [retesteth + solidity build](https://github.com/ethereum/retesteth#building-instructions-for-beginners)
 
 
 # Usage

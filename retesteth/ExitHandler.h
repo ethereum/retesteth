@@ -1,6 +1,4 @@
 #pragma once
-#include <retesteth/session/Session.h>
-
 class ExitHandler
 {
 public:

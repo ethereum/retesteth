@@ -1,9 +1,10 @@
 #pragma once
-#include <stdio.h>
 #include <map>
 #include <thread>
 #include <functional>
 
+namespace test::session
+{
 // Manages jobs ensuring that only as many as -j flag allows are currently running
 // Construct over the Session class which manages new connections to the clients
 class ThreadManager
@@ -18,3 +19,5 @@ private:
     static std::map<std::thread::id, std::thread> threadMap;
     static unsigned int currConfigId;
 };
+
+}  // namespace test::session

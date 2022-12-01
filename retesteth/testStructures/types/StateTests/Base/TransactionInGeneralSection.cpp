@@ -1,8 +1,8 @@
 #include "TransactionInGeneralSection.h"
-#include <retesteth/EthChecks.h>
 #include <retesteth/TestHelper.h>
 #include <retesteth/testStructures/types/Ethereum/TransactionReader.h>
 
+using namespace std;
 using namespace test::teststruct;
 
 TransactionInGeneralSection::TransactionInGeneralSection(

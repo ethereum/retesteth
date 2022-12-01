@@ -1,12 +1,18 @@
+#include "ConvertFile.h"
+#include "DataObject.h"
+#include "Exception.h"
+#include <algorithm>
+#include <fstream>
 #include <iostream>
-#include <dataObject/ConvertFile.h>
-#include <dataObject/Exception.h>
+
+using namespace std;
+using namespace dataobject::jsonreader;
 // Manually construct dataobject from file string content
 // bacuse Json::Reader::parse has a memory leak
 
 namespace dataobject
 {
-string const errorPrefix = "Error parsing json: ";
+std::string const errorPrefix = "Error parsing json: ";
 bool isEmptyChar(char const& _char)
 {
     if (_char == ' ' || _char == '\n' || _char == '\r' || _char == '\t')
@@ -14,7 +20,7 @@ bool isEmptyChar(char const& _char)
     return false;
 }
 
-size_t stripSpaces(string const& _input, size_t _i)
+size_t stripSpaces(std::string const& _input, size_t _i)
 {
     size_t i = _i;
     for (; i < _input.length(); i++)
@@ -132,9 +138,42 @@ bool checkExcessiveComa(string const& _input, size_t _i)
     return false;
 }
 
+void JsonReader::processLine(string const& _line)
+{
+    if (_line.empty())
+        return;
+    if (!m_seenBegining)
+    {
+        // if (_line.find("{") == string::npos)
+        //    throw DataObjectException() << "ConvertJsoncppStringToData can't read json structure in file: `" +
+        //    _input.substr(0, 50);
+    }
+    std::cerr << _line << std::endl;
+    (void)m_stopper;
+    // for (size_t i = 0; i < _line.length(); i++)
+}
+
+spDataObject ConvertJsoncppFileToData(string const& _file, string const& _stopper, bool _autosort)
+{
+    std::ifstream file(_file);
+    if (file.is_open())
+    {
+        string line;
+        JsonReader reader(_stopper, _autosort);
+        while (std::getline(file, line))
+        {
+            line.erase(std::remove(line.begin(), line.end(), ' '), line.end());
+            reader.processLine(line);
+        }
+        file.close();
+        return reader.getResult();
+    }
+    else
+        throw DataObjectException() << "ConvertJsoncppFileToData can't open file: `" + _file;
+}
+
 /// Convert Json object represented as string to DataObject
-spDataObject ConvertJsoncppStringToData(
-    std::string const& _input, string const& _stopper, bool _autosort)
+spDataObject ConvertJsoncppStringToData(string const& _input, string const& _stopper, bool _autosort)
 {
     if (_input.size() < 2 || _input.find("{") == string::npos || _input.find("}") == string::npos)
         throw DataObjectException() << "ConvertJsoncppStringToData can't read json structure in file: `" + _input.substr(0, 50);
@@ -157,7 +196,6 @@ spDataObject ConvertJsoncppStringToData(
 
     for (size_t i = 0; i < _input.length(); i++)
     {
-        // std::cerr << root.asJson() << std::endl;
         bool isSeenCommaBefore = checkExcessiveComa(_input, i);
         i = stripSpaces(_input, i);
         if (i == _input.length())
@@ -180,18 +218,22 @@ spDataObject ConvertJsoncppStringToData(
                     throw DataObjectException()
                         << errorPrefix + "array could not have elements with keys! around: " + printDebug(i);
                 (*obj).setKey(key);
+
                 bool replaceKey = false;
-                const size_t keyPosExpected = _autosort ?
-                                            max(0, (int)findOrderedKeyPosition(key, actualRoot->getSubObjects()) - 1) : 0;
-                for (size_t objI = keyPosExpected; objI < actualRoot->getSubObjects().size(); objI++)
+                if (actualRoot->count(key))
                 {
-                    if (actualRoot->getSubObjects().at(objI)->getKey() == key)
+                    const size_t keyPosExpected = _autosort ?
+                                                max(0, (int)findOrderedKeyPosition(key, actualRoot->getSubObjects()) - 1) : 0;
+                    for (size_t objI = keyPosExpected; objI < actualRoot->getSubObjects().size(); objI++)
                     {
-                        replaceKey = true;
-                        applyDepth.push_back(actualRoot);
-                        actualRoot = &actualRoot->getSubObjectsUnsafe().at(objI).getContent();
-                        actualRoot->clearSubobjects();
-                        break;
+                        if (actualRoot->getSubObjects().at(objI)->getKey() == key)
+                        {
+                            replaceKey = true;
+                            applyDepth.push_back(actualRoot);
+                            actualRoot = &actualRoot->getSubObjectsUnsafe().at(objI).getContent();
+                            actualRoot->clearSubobjects();
+                            break;
+                        }
                     }
                 }
 

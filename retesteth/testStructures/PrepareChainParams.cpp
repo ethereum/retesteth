@@ -1,7 +1,8 @@
 #include "PrepareChainParams.h"
 #include <retesteth/Options.h>
-#include <retesteth/configs/ClientConfig.h>
+#include <retesteth/TestHelper.h>
 
+using namespace std;
 using namespace test;
 using namespace test::teststruct;
 
@@ -21,8 +22,14 @@ string calculateGenesisBaseFee(VALUE const& _currentBaseFee, ParamsContext _cont
 
 spDataObject prepareGenesisSubsection(StateTestEnvBase const& _env, ParamsContext _context, FORK const& _net)
 {
-    auto const& additional = Options::getCurrentConfig().cfgFile().additionalForks();
+    auto const& cfg = Options::getCurrentConfig();
+    auto const& additional = cfg.cfgFile().additionalForks();
     bool netIsAdditional = inArray(additional, _net);
+
+    // Automake plussed fork into additional nets
+    if (!netIsAdditional && _net.asString().find("+") != string::npos && !cfg.cfgFile().forkProgressionAsSet().count(_net))
+        netIsAdditional = true;
+
 
     // Build up RPC setChainParams genesis section
     spDataObject genesis;
@@ -34,20 +41,41 @@ spDataObject prepareGenesisSubsection(StateTestEnvBase const& _env, ParamsContex
     (*genesis)["mixHash"] = _env.currentMixHash().asString();
     (*genesis)["difficulty"] = _env.currentDifficulty().asString();
 
+    FORK net = _net;
+    if (netIsAdditional)
+    {
+        // Treat additional fork name `fork+` as `fork` for env section convertion
+        for (auto const& fork : cfg.cfgFile().forks())
+        {
+            string const alteredFname = fork.asString() + "+";
+            if (net.asString().find(alteredFname) != string::npos)
+            {
+                net = fork;
+                netIsAdditional = false;
+                break;
+            }
+        }
+    }
+
+    if (!cfg.cfgFile().support1559())
+    {
+        (*genesis).removeKey("baseFeePerGas");
+        (*genesis).removeKey("currentRandom");
+        return genesis;
+    }
+
     if (!netIsAdditional)
     {
-        auto const& cfg = Options::getCurrentConfig();
-
         bool knowLondon = cfg.checkForkInProgression("London");
-        if (knowLondon && compareFork(_net, CMP::ge, FORK("London")))
+        if (knowLondon && compareFork(net, CMP::ge, FORK("London")))
             (*genesis)["baseFeePerGas"] = calculateGenesisBaseFee(_env.currentBaseFee(), _context);
 
         bool knowMerge = cfg.checkForkInProgression("Merge");
-        if (knowMerge && compareFork(_net, CMP::ge, FORK("Merge")))
+        if (knowMerge && compareFork(net, CMP::ge, FORK("Merge")))
         {
             (*genesis).removeKey("difficulty");
             (*genesis)["currentRandom"] = _env.currentRandom().asString();
-            auto const randomH32 = toCompactHexPrefixed(dev::u256((*genesis)["currentRandom"].asString()), 32);
+            auto const randomH32 = dev::toCompactHexPrefixed(dev::u256((*genesis)["currentRandom"].asString()), 32);
             (*genesis)["mixHash"] = randomH32;
         }
     }

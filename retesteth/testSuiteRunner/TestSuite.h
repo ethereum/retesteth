@@ -19,17 +19,15 @@
  */
 
 #pragma once
-#include <dataObject/DataObject.h>
-#include <libdevcore/SHA3.h>
+#include <libdataobj/DataObject.h>
+#include <retesteth/testSuiteRunner/TestSuiteHelperFunctions.h>
 #include <boost/filesystem/path.hpp>
 #include <functional>
-using namespace dataobject;
-namespace fs = boost::filesystem;
 
 namespace test
 {
-extern string const c_fillerPostf;
-extern string const c_copierPostf;
+extern std::string const c_fillerPostf;
+extern std::string const c_copierPostf;
 
 class TestSuite
 {
@@ -39,7 +37,7 @@ protected:
 private:
     // Execute Test.json file
     void executeFile(boost::filesystem::path const& _file) const;
-    std::string checkFillerExistance(std::string const& _testFolder) const;
+    std::vector<boost::filesystem::path> checkFillerExistance(std::string const& _testFolder, std::string& testFilter) const;
 
     struct BoostPath
     {
@@ -52,15 +50,17 @@ private:
     };
 
 public:
-    TestSuite();
+    TestSuite() {}
     virtual ~TestSuite() {}
 
     struct TestSuiteOptions
     {
-        TestSuiteOptions() : doFilling(false), allowInvalidBlocks(false), isLegacyTests(false) {}
+        TestSuiteOptions() : doFilling(false), allowInvalidBlocks(false), isLegacyTests(false), calculateRelativeSrcPath(true)
+        {}
         bool doFilling;           // pass the filling flag to doTest function
         bool allowInvalidBlocks;  // allow and check malicious blocks
         bool isLegacyTests;       // running old generated tests
+        bool calculateRelativeSrcPath;  // put relative path to the test path in a filled test info
     };
 
     // Structures so not to mistake the paths and prevent bugs
@@ -85,7 +85,7 @@ public:
     };
 
     // Main test executive function. should be declared for each test suite. it fills and runs the test .json file
-    virtual spDataObject doTests(spDataObject&, TestSuiteOptions& _options) const = 0;
+    virtual dataobject::spDataObject doTests(dataobject::spDataObject&, TestSuiteOptions& _options) const = 0;
 
     // Execute all tests from suiteFolder()/_testFolder/*
     // This functions checks that tests in the repo are updated with /src/suiteFillerFolder()/*Filler tests
@@ -106,6 +106,7 @@ public:
 
     // Structure  <suiteFolder>/<testFolder>/<test>.json
     AbsoluteFilledTestPath getFullPathFilled(std::string const& _testFolder) const;
+    void setFillerPathAdd(std::string&& _path) const { m_fillerPathAdd = std::move(_path); }
 
     //
     static void runFunctionForAllClients(std::function<void()> _func);
@@ -118,10 +119,18 @@ protected:
     // each test suite.
     virtual FillerPath suiteFillerFolder() const = 0;
 
+    mutable std::string m_fillerPathAdd;
+
 private:
     void _executeTest(std::string const& _testFolder, boost::filesystem::path const& _jsonFileName) const;
-    bool _fillTest(fs::path const& _fillerTestFilePath, AbsoluteFilledTestPath const& _outputTestFilePath) const;
+    bool _fillTest(TestSuite::TestSuiteOptions& _opt, boost::filesystem::path const& _fillerTestFilePath,
+        AbsoluteFilledTestPath const& _outputTestFilePath) const;
     void _runTest(AbsoluteFilledTestPath const& _filledTestPath) const;
+
+    void _fillCopier(testsuite::TestFileData& _testData, boost::filesystem::path const& _fillerTestFilePath,
+        AbsoluteFilledTestPath const& _outputTestFilePath) const;
+    bool _fillJsonYml(testsuite::TestFileData& _testData, boost::filesystem::path const& _fillerTestFilePath,
+        AbsoluteFilledTestPath const& _outputTestFilePath, TestSuite::TestSuiteOptions& _opt) const;
 };
 
 }  // namespace test

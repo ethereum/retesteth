@@ -1,25 +1,21 @@
 #include "TransactionLegacy.h"
-#include <libdevcore/Address.h>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/SHA3.h>
 #include <libdevcrypto/Common.h>
 #include <retesteth/EthChecks.h>
 #include <retesteth/Options.h>
 #include <retesteth/TestHelper.h>
+#include <retesteth/TestOutputHelper.h>
 #include <retesteth/testStructures/Common.h>
 
+using namespace std;
 using namespace dev;
 
-namespace test
+namespace test::teststruct
 {
-namespace teststruct
+TransactionLegacy::TransactionLegacy(DataObject const& _data) : Transaction()
 {
-TransactionLegacy::TransactionLegacy(spDataObjectMove _data)
-{
-    m_secretKey = spVALUE(new VALUE(0));
-    m_rawData = _data.getPointer();
-    fromDataObject(m_rawData.getCContent());
-    (*m_rawData).removeKey("secretKey");
+    fromDataObject(_data);
 }
 
 void TransactionLegacy::fromDataObject(DataObject const& _data)
@@ -59,6 +55,9 @@ void TransactionLegacy::fromDataObject(DataObject const& _data)
         m_nonce = spVALUE(new VALUE(_data.atKey("nonce")));
         m_value = spVALUE(new VALUE(_data.atKey("value")));
 
+        if (_data.count("chainId"))
+            m_chainID = spVALUE(new VALUE(_data.atKey("chainId")));
+
         if (_data.atKey("to").type() == DataType::Null || _data.atKey("to").asString().empty())
             m_creation = true;
         else
@@ -68,7 +67,10 @@ void TransactionLegacy::fromDataObject(DataObject const& _data)
         }
 
         if (_data.count("secretKey"))
-            buildVRS(_data.atKey("secretKey"));
+        {
+            setSecret(_data.atKey("secretKey"));
+            buildVRS();
+        }
         else
         {
             m_v = spVALUE(new VALUE(_data.atKey("v")));
@@ -109,18 +111,29 @@ void TransactionLegacy::fromRLP(dev::RLP const& _rlp)
     m_v = spVALUE(new VALUE(_rlp[i++]));
     m_r = spVALUE(new VALUE(_rlp[i++]));
     m_s = spVALUE(new VALUE(_rlp[i++]));
+
+    if (m_v.getCContent() == 27 || m_v.getCContent() == 28)
+        m_chainID = spVALUE(new VALUE(1));
+    else
+    {
+        int chainID = std::floor((double)(m_v.getCContent().asBigInt() - 35) / 2);
+        if (chainID < 0)
+            ETH_WARNING("Error decoding chainID from transaction RLP: " + test::fto_string(chainID));
+        else
+            m_chainID = spVALUE(new VALUE(chainID));
+    }
+
+    m_secretKey = spVALUE(new VALUE(0));
     rebuildRLP();
 }
 
-TransactionLegacy::TransactionLegacy(dev::RLP const& _rlp)
+TransactionLegacy::TransactionLegacy(dev::RLP const& _rlp) : Transaction()
 {
-    m_secretKey = spVALUE(new VALUE(0));
     fromRLP(_rlp);
 }
 
-TransactionLegacy::TransactionLegacy(BYTES const& _rlp)
+TransactionLegacy::TransactionLegacy(BYTES const& _rlp) : Transaction()
 {
-    m_secretKey = spVALUE(new VALUE(0));
     dev::bytes decodeRLP = sfromHex(_rlp.asString());
     dev::RLP rlp(decodeRLP, dev::RLP::VeryStrict);
     fromRLP(rlp);
@@ -139,22 +152,20 @@ void TransactionLegacy::streamHeader(dev::RLPStream& _s) const
     _s << test::sfromHex(data().asString());
 }
 
-void TransactionLegacy::buildVRS(VALUE const& _secret)
+void TransactionLegacy::buildVRS()
 {
-    const int chainID = Options::getCurrentConfig().cfgFile().chainID();
-    m_secretKey = spVALUE(new VALUE(_secret));
     dev::RLPStream stream;
-    stream.appendList((chainID == 1) ? 6 : 9);
+    stream.appendList((m_chainID.getCContent() == 1) ? 6 : 9);
     streamHeader(stream);
-    if (chainID != 1)
+    if (m_chainID.getCContent() != 1)
     {
-        stream << VALUE(chainID).serializeRLP();
+        stream << m_chainID->serializeRLP();
         stream << VALUE(0).serializeRLP();
         stream << VALUE(0).serializeRLP();
     }
 
     const dev::h256 hash(dev::sha3(stream.out()));
-    const dev::Secret secret(_secret.asString());
+    const dev::Secret secret(m_secretKey->asString());
     dev::Signature sig = dev::sign(secret, hash);
     dev::SignatureStruct sigStruct = *(dev::SignatureStruct const*)&sig;
     ETH_FAIL_REQUIRE_MESSAGE(
@@ -164,12 +175,12 @@ void TransactionLegacy::buildVRS(VALUE const& _secret)
     // https://github.com/ethereum/EIPs/blob/master/EIPS/eip-155.md
 
     bigint v;
-    if (chainID == 1)
+    if (m_chainID.getCContent() == 1)
         v = bigint(dev::toCompactHexPrefixed(dev::u256(sigStruct.v + 27)));
     else
     {
         // {0,1} + CHAIN_ID * 2 + 35
-        v = bigint(dev::toCompactHexPrefixed(dev::u256(sigStruct.v + chainID * 2 + 35)));
+        v = bigint(dev::toCompactHexPrefixed(dev::u256(sigStruct.v + m_chainID->asBigInt() * 2 + 35)));
     }
 
     const bigint r (dev::toCompactHexPrefixed(dev::u256(sigStruct.r)));
@@ -177,54 +188,36 @@ void TransactionLegacy::buildVRS(VALUE const& _secret)
     m_v = spVALUE(new VALUE(v));
     m_r = spVALUE(new VALUE(r));
     m_s = spVALUE(new VALUE(s));
-
-    (*m_rawData)["v"] = m_v->asString();
-    (*m_rawData)["r"] = m_r->asString();
-    (*m_rawData)["s"] = m_s->asString();
     rebuildRLP();
 }
 
 
 const spDataObject TransactionLegacy::asDataObject(ExportOrder _order) const
 {
-    // Optimize out preparation here
-    // Cache output data so not to construct it multiple times
-    // Useful when filling the tests as this function is called 2-3 times for each tr
-    // Promise that after constructor the data does not change
+    spDataObject out;
+    (*out)["data"] = m_data->asString();
+    (*out)["gasLimit"] = m_gasLimit->asString();
+    (*out)["gasPrice"] = m_gasPrice->asString();
+    (*out)["nonce"] = m_nonce->asString();
+    if (m_creation)
+        (*out)["to"] = "";
+    else
+        (*out)["to"] = m_to->asString();
+    (*out)["value"] = m_value->asString();
+    (*out)["v"] = m_v->asString();
+    (*out)["r"] = m_r->asString();
+    (*out)["s"] = m_s->asString();
 
-    // TODO: UPDATE for upper comment: not sure that m_rawData makes sense here as it potentially can be modified somewhere
-    // better to trade little serialization cpu time and have better code structure
-    if (m_rawData->getSubObjects().size() == 0)
+    if (_order == ExportOrder::ToolStyle)
     {
-        spDataObject out;
-        (*out)["data"] = m_data->asString();
-        (*out)["gasLimit"] = m_gasLimit->asString();
-        (*out)["gasPrice"] = m_gasPrice->asString();
-        (*out)["nonce"] = m_nonce->asString();
-        if (m_creation)
-            (*out)["to"] = "";
-        else
-            (*out)["to"] = m_to->asString();
-        (*out)["value"] = m_value->asString();
-        (*out)["v"] = m_v->asString();
-        (*out)["r"] = m_r->asString();
-        (*out)["s"] = m_s->asString();
-        m_rawData = out;
-    }
-
-
-    if (_order == ExportOrder::ToolStyle && m_rawDataTool->getSubObjects().size() == 0)
-    {
-        m_rawDataTool = spDataObject();
-        (*m_rawDataTool).copyFrom(m_rawData);
-        (*m_rawDataTool).performModifier(mod_removeLeadingZerosFromHexValues, DataObject::ModifierOption::RECURSIVE, {"data", "to"});
-        (*m_rawDataTool).renameKey("gasLimit", "gas");
-        (*m_rawDataTool).renameKey("data", "input");
+        (*out).performModifier(mod_removeLeadingZerosFromHexValues, DataObject::ModifierOption::RECURSIVE, {"data", "to"});
+        (*out).renameKey("gasLimit", "gas");
+        (*out).renameKey("data", "input");
         if (!m_secretKey.isEmpty() && m_secretKey.getCContent() != 0)
-            (*m_rawDataTool)["secretKey"] = m_secretKey->asString();
+            (*out)["secretKey"] = m_secretKey->asString();
     }
 
-    return (_order == ExportOrder::ToolStyle) ? m_rawDataTool : m_rawData;
+    return out;
 }
 
 void TransactionLegacy::rebuildRLP()
@@ -241,4 +234,3 @@ void TransactionLegacy::rebuildRLP()
 }
 
 }  // namespace teststruct
-}  // namespace test

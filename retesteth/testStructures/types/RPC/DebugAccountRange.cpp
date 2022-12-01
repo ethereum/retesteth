@@ -2,9 +2,8 @@
 #include <retesteth/EthChecks.h>
 #include <retesteth/testStructures/Common.h>
 
-namespace test
-{
-namespace teststruct
+using namespace std;
+namespace test::teststruct
 {
 DebugAccountRange::DebugAccountRange(DataObject const& _data)
 {
@@ -24,4 +23,3 @@ DebugAccountRange::DebugAccountRange(DataObject const& _data)
 }
 
 }  // namespace teststruct
-}  // namespace test

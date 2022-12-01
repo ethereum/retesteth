@@ -1,10 +1,9 @@
 #include "BlockchainTestBlock.h"
 #include <retesteth/EthChecks.h>
 #include <retesteth/testStructures/Common.h>
+using namespace std;
 
-namespace test
-{
-namespace teststruct
+namespace test::teststruct
 {
 BlockchainTestBlock::BlockchainTestBlock(spDataObject& _data)
 {
@@ -67,4 +66,3 @@ BlockchainTestBlock::BlockchainTestBlock(spDataObject& _data)
 }
 
 }  // namespace teststruct
-}  // namespace test

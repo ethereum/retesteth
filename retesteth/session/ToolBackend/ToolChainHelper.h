@@ -1,10 +1,7 @@
 #pragma once
 #include "ToolChain.h"
-#include "Verification.h"
-#include <libdevcore/Common.h>
 #include <retesteth/testStructures/types/Ethereum/BlockHeader.h>
 
-using namespace dev;
 namespace toolimpl
 {
 
@@ -12,14 +9,14 @@ namespace toolimpl
 struct ChainOperationParams
 {
     static ChainOperationParams defaultParams(ToolParams const& _params);
-    bigint minimumDifficulty;
-    bigint difficultyBoundDivisor;
-    bigint durationLimit;
-    bigint homesteadForkBlock;
-    bigint byzantiumForkBlock;
-    bigint muirGlacierForkBlock;
-    bigint constantinopleForkBlock;
-    bigint londonForkBlock;
+    dev::bigint minimumDifficulty;
+    dev::bigint difficultyBoundDivisor;
+    dev::bigint durationLimit;
+    dev::bigint homesteadForkBlock;
+    dev::bigint byzantiumForkBlock;
+    dev::bigint muirGlacierForkBlock;
+    dev::bigint constantinopleForkBlock;
+    dev::bigint londonForkBlock;
 };
 std::tuple<VALUE, FORK> prepareReward(SealEngine _engine, FORK const& _fork, VALUE const& _blockNumber, VALUE const& _currentTD);
 VALUE calculateGasLimit(VALUE const& _parentGasLimit, VALUE const& _parentGasUsed);

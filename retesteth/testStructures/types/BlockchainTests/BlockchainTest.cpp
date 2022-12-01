@@ -1,7 +1,11 @@
 #include "BlockchainTest.h"
 #include <retesteth/EthChecks.h>
-#include <retesteth/Options.h>
+#include <retesteth/TestOutputHelper.h>
 #include <retesteth/testStructures/Common.h>
+#include <boost/test/framework.hpp>
+
+using namespace std;
+using namespace test::teststruct;
 
 namespace
 {
@@ -21,9 +25,7 @@ BlockchainTestEnv* readBlockchainTestEnv(DataObject const& _data)
 }
 }  // namespace
 
-namespace test
-{
-namespace teststruct
+namespace test::teststruct
 {
 BlockchainTestInFilled::BlockchainTestInFilled(spDataObject& _data)
 {
@@ -94,5 +96,19 @@ BlockchainTest::BlockchainTest(spDataObject& _data)
     }
 }
 
+void BlockchainTest::registerAllVectors() const
+{
+    string execTotal;
+    auto const& helper = TestOutputHelper::get();
+    string const suite = boost::unit_test::framework::current_test_case().full_name();
+    string const execPrefix = string("-t ") + suite + " --";
+    for (auto const& test : m_tests)
+    {
+        auto const filename = helper.testFile().stem().string();
+        const string exec = string(" --singletest ") + filename + "/" + test.testName() + "\n";
+        execTotal += execPrefix + exec;
+    }
+    TestOutputHelper::get().addTestVector(std::move(execTotal));
+}
+
 }  // namespace teststruct
-}  // namespace test

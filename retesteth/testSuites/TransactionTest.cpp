@@ -1,13 +1,18 @@
 #include "TransactionTest.h"
 #include "retesteth/testSuites/TestFixtures.h"
+#include <libdevcore/CommonIO.h>
+#include <libdevcore/SHA3.h>
+#include <retesteth/ExitHandler.h>
 #include <retesteth/TestOutputHelper.h>
-#include <retesteth/session/Session.h>
+#include <retesteth/testStructures/types/Ethereum/TransactionLegacy.h>
 #include <retesteth/testStructures/types/TransactionTests/TransactionTest.h>
 #include <retesteth/testStructures/types/TransactionTests/TransactionTestFiller.h>
 #include <retesteth/testSuites/Common.h>
-#include <retesteth/ExitHandler.h>
+#include <retesteth/Options.h>
 
+using namespace std;
 using namespace test;
+using namespace test::session;
 namespace fs = boost::filesystem;
 namespace
 {
@@ -24,9 +29,10 @@ spDataObject FillTest(TransactionTestInFiller const& _test)
     std::set<FORK> executionForks;
     for (auto const& fork : Options::getCurrentConfig().cfgFile().forks())
         executionForks.emplace(fork);
+
     for (auto const& fork : _test.additionalForks())
     {
-        if (Options::getDynamicOptions().getCurrentConfig().checkForkAllowed(fork))
+        if (Options::getCurrentConfig().checkForkAllowed(fork))
             executionForks.emplace(fork);
         else
             ETH_WARNING("Client config does not support fork `" + fork.asString() + "`, skipping test generation!");
@@ -88,7 +94,7 @@ void RunTest(TransactionTestInFilled const& _test)
             spTransaction tr(new TransactionLegacy(BYTES(DataObject("0xf85f800182520894000000000000000000000000000b9331677e6ebf0a801ca098ff921201554726367d2be8c804a7ff89ccf285ebc57dff8ae4c44b9c19ac4aa01887321be575c8095f789dd4c743dfe42c1820f9231f98a962b210e3ac2452a3"))));
             string const& chash = tr.getContent().hash().asStringBytes();
             string& hash = const_cast<string&>(chash);
-            hash = "0x" + dev::toString(dev::sha3(fromHex(_test.rlp().asString())));
+            hash = "0x" + dev::toString(dev::sha3(dev::fromHex(_test.rlp().asString())));
             compareTransactionException(tr, res, _test.getExpectException(fork));
         }
         else
@@ -98,7 +104,7 @@ void RunTest(TransactionTestInFilled const& _test)
             spTransaction tr = _test.transaction();
             string const& chash = tr.getContent().hash().asStringBytes();
             string& hash = const_cast<string&>(chash);
-            hash = "0x" + dev::toString(dev::sha3(fromHex(_test.rlp().asString())));
+            hash = "0x" + dev::toString(dev::sha3(dev::fromHex(_test.rlp().asString())));
             compareTransactionException(tr, res, _test.getExpectException(fork));
         }
 
@@ -146,6 +152,11 @@ spDataObject TransactionTestSuite::doTests(spDataObject& _input, TestSuiteOption
         // Just check the test structure if running with --checkhash
         if (Options::get().checkhash)
             return spDataObject();
+        if (Options::get().getvectors)
+        {
+            filledTest.registerAllVectors();
+            return spDataObject();
+        }
 
         for (auto const& test : filledTest.tests())
         {
@@ -163,16 +174,17 @@ spDataObject TransactionTestSuite::doTests(spDataObject& _input, TestSuiteOption
 
 TestSuite::TestPath TransactionTestSuite::suiteFolder() const
 {
-    return TestSuite::TestPath(fs::path("TransactionTests"));
+    return TestSuite::TestPath(fs::path("TransactionTests" + m_fillerPathAdd));
 }
 
 TestSuite::FillerPath TransactionTestSuite::suiteFillerFolder() const
 {
-    return TestSuite::FillerPath(fs::path("src") / "TransactionTestsFiller");
+    return TestSuite::FillerPath(fs::path("src") / string("TransactionTestsFiller" + m_fillerPathAdd));
 }
 
 }  // namespace test
 using TransactionTestsFixture = TestFixture<TransactionTestSuite, DefaultFlags>;
+ETH_REGISTER_DYNAMIC_TEST_SEARCH(TransactionTestsFixture, "TransactionTests")
 BOOST_FIXTURE_TEST_SUITE(TransactionTests, TransactionTestsFixture)
 
 BOOST_AUTO_TEST_CASE(ttAddress) {}

@@ -18,504 +18,283 @@
  * Class for handling testeth custom options
  */
 
-#include <iostream>
-#include <iomanip>
-
-#include <dataObject/ConvertFile.h>
-#include <retesteth/Options.h>
+#include "Options.h"
 #include <retesteth/TestHelper.h>
-#include <testStructures/Common.h>
 #include <boost/algorithm/string.hpp>
-#include <boost/filesystem.hpp>
-#include <retesteth/dataObject/SPointer.h>
+#include <boost/test/unit_test.hpp>
 
 using namespace std;
 using namespace test;
 namespace fs = boost::filesystem;
 Options::DynamicOptions Options::m_dynamicOptions;
-void displayTestSuites();
 
+void displayTestSuites();
 void printVersion()
 {
     cout << prepareVersionString() << "\n";
 }
 
-void printHelp()
-{
-    printVersion();
-    cout << "Usage: \n";
-    cout << std::left;
-    cout << "\nSetting test suite\n";
-    cout << setw(30) << "-t <TestSuite>" << setw(0) << "Execute test operations\n";
-    cout << setw(30) << "-t <TestSuite>/<TestCase>" << setw(0) << "\n";
-    cout << "\nAll options below must follow after `--`\n";
-    cout << "\nRetesteth options\n";
-    cout << setw(40) << "-j <ThreadNumber>" << setw(0) << "Run test execution using threads\n";
-    cout << setw(40) << "--clients `client1, client2`" << setw(0)
-         << "Use following configurations from datadir path (default: ~/.retesteth)\n";
-    cout << setw(40) << "--datadir" << setw(0) << "Path to configs (default: ~/.retesteth)\n";
-    cout << setw(40) << "--nodes" << setw(0) << "List of client tcp ports (\"addr:ip, addr:ip\")\n";
-    cout << setw(42) << " " << setw(0) << "Overrides the config file \"socketAddress\" section \n";
-    cout << setw(40) << "--help -h" << setw(25) << "Display list of command arguments\n";
-    cout << setw(40) << "--version -v" << setw(25) << "Display build information\n";
-    cout << setw(40) << "--list" << setw(25) << "Display available test suites\n";
 
-    cout << "\nSetting test suite and test\n";
-    cout << setw(40) << "--testpath <PathToTheTestRepo>" << setw(25) << "Set path to the test repo\n";
-    cout << setw(40) << "--testfile <TestFile>" << setw(0) << "Run tests from a file. Requires -t <TestSuite>\n";
-    cout << setw(40) << "--testfolder <SubFolder>" << setw(0) << "Run tests from a custom test folder located in a given suite. Requires -t <TestSuite>\n";
-    cout << setw(40) << "--outfile <TestFile>" << setw(0) << "When using `--testfile` with `--filltests` output to this file\n";
-    cout << setw(40) << "--singletest <TestName>" << setw(0)
-         << "Run on a single test. `Testname` is filename without Filler.json\n";
-    cout << setw(40) << "--singletest <TestName>/<Subtest>" << setw(0) << "`Subtest` is a test name inside the file\n";
-    cout << setw(40) << "--singlenet <ForkName>" << setw(0) << "Run only specific fork configuration\n";
+#define ADD_OPTION(VAR, STR, STRHELP) \
+ VAR.setDefHelp(STR, STRHELP); \
+ m_options.push_back(&VAR);
 
-    cout << "\nDebugging\n";
-    cout << setw(30) << "-d <index>" << setw(25) << "Set the transaction data array index when running GeneralStateTests\n";
-    cout << setw(30) << "-d <label>" << setw(25) << "Set the transaction data array label (string) when running GeneralStateTests\n";
-    cout << setw(30) << "-g <index>" << setw(25) << "Set the transaction gas array index when running GeneralStateTests\n";
-    cout << setw(30) << "-v <index>" << setw(25) << "Set the transaction value array index when running GeneralStateTests\n";
-    cout << setw(30) << "--vmtrace" << setw(25) << "Trace transaction execution\n";
-    cout << setw(30) << "--vmtraceraw" << setw(25) << "Trace transaction execution raw format\n";
-    cout << setw(30) << "--vmtrace.nomemory" << setw(25) << "Disable memory in vmtrace/vmtraceraw\n";
-    cout << setw(30) << "--vmtrace.nostack" << setw(25) << "Disable stack in vmtrace/vmtraceraw\n";
-    cout << setw(30) << "--vmtrace.noreturndata" << setw(25) << "Disable returndata in vmtrace/vmtraceraw\n";
-    cout << setw(30) << "--limitblocks" << setw(25) << "Limit the block exectuion in blockchain tests for debug\n";
-    cout << setw(30) << "--limitrpc" << setw(25) << "Limit the rpc exectuion in tests for debug\n";
-    cout << setw(30) << "--verbosity <level>" << setw(25) << "Set logs verbosity. 0 - silent, 1 - only errors, 2 - informative, >2 - detailed\n";
-    cout << setw(30) << "--nologcolor" << setw(25) << "Disable color codes in log output\n";
-    cout << setw(30) << "--exectimelog" << setw(25) << "Output execution time for each test suite\n";
-    cout << setw(30) << "--statediff" << setw(25) << "Trace state difference for state tests\n";
-    cout << setw(30) << "--stderr" << setw(25) << "Redirect ipc client stderr to stdout\n";
-    cout << setw(30) << "--travisout" << setw(25) << "Output `.` to stdout\n";
+#define ADD_OPTIONV(VAR, STR, STRHELP, VALIDATOR) \
+ VAR.setValidator(VALIDATOR); \
+ VAR.setDefHelp(STR, STRHELP); \
+ m_options.push_back(&VAR);
 
-    cout << "\nAdditional Tests\n";
-    cout << setw(30) << "--all" << setw(0) << "Enable all tests\n";
-    cout << setw(30) << "--lowcpu" << setw(25) << "Disable cpu intense tests\n";
+#define ADD_OPTION_BOOST(VAR, STR, STRHELP) \
+ VAR.setBeforeSeparator(); \
+ VAR.setDefHelp(STR, STRHELP); \
+ m_options.push_back(&VAR);
 
-    cout << "\nTest Generation\n";
-    cout << setw(30) << "--filltests" << setw(0) << "Run test fillers\n";
-    cout << setw(30) << "--fillchain" << setw(25) << "When filling the state tests, fill tests as blockchain instead\n";
-    cout << setw(30) << "--showhash" << setw(25) << "Show filler hash debug information\n";
-    cout << setw(30) << "--checkhash" << setw(25) << "Check that tests are updated from fillers\n";
-    cout << setw(30) << "--poststate" << setw(25) << "Show post state hash or fullstate\n";
-    cout << setw(30) << "--fullstate" << setw(25) << "Do not compress large states to hash\n";
-    cout << setw(30) << "--forceupdate" << setw(25) << "Update generated test (_info) even if there are no changes\n";
-
-    //	cout << setw(30) << "--randomcode <MaxOpcodeNum>" << setw(25) << "Generate smart random EVM
-    //code\n"; 	cout << setw(30) << "--createRandomTest" << setw(25) << "Create random test and
-    //output it to the console\n"; 	cout << setw(30) << "--createRandomTest <PathToOptions.json>" <<
-    //setw(25) << "Use following options file for random code generation\n"; 	cout << setw(30) <<
-    //"--seed <uint>" << setw(25) << "Define a seed for random test\n"; 	cout << setw(30) <<
-    //"--options <PathTo.json>" << setw(25) << "Use following options file for random code
-    //generation\n";  cout << setw(30) << "--fulloutput" << setw(25) << "Disable address compression
-    // in the output field\n";
-}
+#define ADD_OPTION_OVERRIDE(VAR, STR, STRHELP) \
+ VAR.setOverrideOption(); \
+ VAR.setDefHelp(STR, STRHELP); \
+ m_options.push_back(&VAR);
 
 Options::Options(int argc, const char** argv)
 {
-    trDataIndex = -1;
-    trGasIndex = -1;
-    trValueIndex = -1;
-    bool seenSeparator = false;  // true if "--" has been seen.
-    for (auto i = 0; i < argc; ++i)
-    {
-        auto arg = std::string{argv[i]};
-        auto throwIfNoArgumentFollows = [&i, &argc, &arg]() {
-            if (i + 1 >= argc)
-                BOOST_THROW_EXCEPTION(InvalidOption(arg + " option is missing an argument."));
-        };
-        auto throwIfAfterSeparator = [&seenSeparator, &arg]() {
-            if (seenSeparator)
-                BOOST_THROW_EXCEPTION(
-                    InvalidOption(arg + " option appears after the separator `--`."));
-        };
-        auto throwIfBeforeSeparator = [&seenSeparator, &arg]() {
-            if (!seenSeparator)
-                BOOST_THROW_EXCEPTION(
-                    InvalidOption(arg + " option appears before the separator `--`"));
-        };
+    ADD_OPTION_OVERRIDE(help, "-h|--help", [](){
+        printVersion();
+        cout << std::left;
+        cout << "\nUsage:\n";
+        cout << "General options\n";
+        cout << setw(30) << "-h --help" << setw(0) << "Display list of command arguments\n";
+    });
+    help.setValidator([this](){
+        for(auto& option : m_options)
+            option->printHelp();
+        exit(0);
+    });
 
-        if (arg == "--")
-        {
-            if (seenSeparator)
-                BOOST_THROW_EXCEPTION(
-                    InvalidOption("The separator `--` appears more than once in the command line."));
-            seenSeparator = true;
-            continue;
-        }
-        else if (arg == "-t")
-        {
-            throwIfAfterSeparator();
-            throwIfNoArgumentFollows();
-            rCurrentTestSuite = std::string{argv[++i]};
-            continue;
-        }
-        else if (i == 0)
-        {
-            // Skip './retesteth'
-            continue;
-        }
-
-        if (arg == "--help" || arg == "-h")
-        {
-            printHelp();
-            exit(0);
-        }
-        else if (arg == "--version" || (arg == "-v" && !seenSeparator))
-        {
+    ADD_OPTION_OVERRIDE(version, "--version", [](){
+        cout << setw(30) << "--version " << setw(0) << "Display build information\n";
+    });
+    version.setValidator([](){
             printVersion();
             exit(0);
-        }
+    });
 
-        // Options below are not allowed before -- separator
-        throwIfBeforeSeparator();
-        if (arg.substr(0, 2) == "-j")
-        {
-            if (arg.length() != 2)
-            {
-                string threadDigits = arg.substr(2, arg.length());
-                threadCount = max(1, atoi(threadDigits.c_str()));
-            }
-            else
-            {
-                throwIfNoArgumentFollows();
-                string nextArg = argv[++i];
-                if (nextArg.substr(0, 1) != "-")
-                    threadCount = max(1, atoi(nextArg.c_str()));
-            }
-        }
-        else if (arg == "--stderr")
-        {
-            enableClientsOutput = true;
-        }
-        else if (arg == "--travisout")
-        {
-            travisOutThread = true;
-        }
-        else if (arg == "--vm" || arg == "--evmc")
-        {
-            // Skip VM options because they are handled by vmProgramOptions().
-            throwIfNoArgumentFollows();
-            ++i;
-        }
-        else if (arg == "--vmtrace")
-        {
-            vmtrace = true;
-        }
-        else if (arg == "--vmtraceraw")
-        {
-            vmtrace = true;
-            vmtraceraw = true;
-        }
-        else if (arg == "--vmtrace.nomemory")
-        {
-            vmtrace_nomemory = true;
-        }
-        else if (arg == "--vmtrace.nostack")
-        {
-            vmtrace_nostack = true;
-        }
-        else if (arg == "--vmtrace.noreturndata")
-        {
-            vmtrace_noreturndata = true;
-        }
-        else if (arg == "--jsontrace")
-        {
-            throwIfNoArgumentFollows();
-            jsontrace = true;
-            auto arg = std::string{argv[++i]};
-            // Json::Value value;
-            // Json::Reader().parse(arg, value);
-            // jsontraceOptions = debugOptions(value);
-        }
-        else if (arg == "--filltests")
-            filltests = true;
-        else if (arg == "--forceupdate")
-            forceupdate = true;
-        else if (arg == "--limitblocks")
-        {
-            throwIfNoArgumentFollows();
-            blockLimit = atoi(argv[++i]);
-        }
-        else if (arg == "--limitrpc")
-        {
-            throwIfNoArgumentFollows();
-            rpcLimit = atoi(argv[++i]);
-        }
-        else if (arg == "--fillchain")
-        {
-            fillchain = true;
-
-            bool noFilltests = !filltests;
-            if (noFilltests)
-            {
-                // Look ahead if this option ever provided
-                for (auto i = 0; i < argc; ++i)
-                {
-                    auto arg = std::string{argv[i]};
-                    if (arg == "--filltests")
-                    {
-                        noFilltests = false;
-                        break;
-                    }
-                }
-            }
-
-            if (noFilltests)
-                ETH_STDOUT_MESSAGEC("WARNING: `--fillchain` option provided without `--filltests`, activating `--filltests` (did you mean `--filltests`?)", cYellow);
-            filltests = true;
-        }
-        else if (arg == "--showhash")
-            showhash = true;
-        else if (arg == "--checkhash")
-            checkhash = true;
-        else if (arg == "--stats")
-        {
-            throwIfNoArgumentFollows();
-            stats = true;
-            statsOutFile = argv[++i];
-        }
-        else if (arg == "--exectimelog")
-            exectimelog = true;
-        else if (arg == "--all")
-            all = true;
-        else if (arg == "--lowcpu")
-            lowcpu = true;
-        else if (arg == "--singletest")
-        {
-            throwIfNoArgumentFollows();
-            singleTest = true;
-            singleTestName = std::string{argv[++i]};
-
-            size_t pos = singleTestName.find("Filler");
-            if (pos != string::npos)
-            {
-                singleTestName = singleTestName.substr(0, pos);
-                ETH_STDOUT_MESSAGEC("WARNING: Correcting filter to: `" + singleTestName + "`", cYellow);
-            }
-
-            pos = singleTestName.find_last_of('/');
-            if (pos != string::npos)
-            {
-                singleSubTestName = singleTestName.substr(pos + 1);
-                singleTestName = singleTestName.substr(0, pos);
-            }
-        }
-        else if (arg == "--testfile")
-        {
-            throwIfNoArgumentFollows();
-            if (customTestFolder.is_initialized())
-            {
-                ETH_STDERROR_MESSAGE("--testfolder initialized together with --testfile");
-                exit(1);
-            }
-            singleTestFile = std::string{argv[++i]};
-            if (!boost::filesystem::exists(singleTestFile.get()))
-            {
-                ETH_STDERROR_MESSAGE(
-                    "Could not locate custom test file: '" + singleTestFile.get() + "'");
-                exit(1);
-            }
-        }
-        else if (arg == "--testfolder")
-        {
-            throwIfNoArgumentFollows();
-            if (singleTestFile.is_initialized())
-            {
-                ETH_STDERROR_MESSAGE("--testfolder initialized together with --testfile");
-                exit(1);
-            }
-            customTestFolder = std::string{argv[++i]};
-        }
-        else if (arg == "--outfile")
-        {
-            throwIfNoArgumentFollows();
-            singleTestOutFile = std::string{argv[++i]};
-        }
-        else if (arg == "--singlenet")
-        {
-            throwIfNoArgumentFollows();
-            singleTestNet = std::string{argv[++i]};
-        }
-        else if (arg == "--fullstate")
-            fullstate = true;
-        else if (arg == "--poststate")
-        {
-            poststate = true;
-            fullstate = true;
-        }
-        else if (arg == "--verbosity")
-        {
-            throwIfNoArgumentFollows();
-            static std::ostringstream strCout;  // static string to redirect logs to
-            logVerbosity = atoi(argv[++i]);
-            if (logVerbosity == 0)
-            {
-                // disable all output
-                std::cout.rdbuf(strCout.rdbuf());
-                std::cerr.rdbuf(strCout.rdbuf());
-                break;
-            }
-        }
-        else if (arg == "--nologcolor")
-        {
-            nologcolor = true;
-        }
-        else if (arg == "--datadir")
-        {
-            throwIfNoArgumentFollows();
-            datadir = fs::path(std::string{argv[++i]});
-        }
-        else if (arg == "--nodes")
-        {
-            throwIfNoArgumentFollows();
-            for (auto const& el : explode(std::string{argv[++i]}, ','))
-                nodesoverride.push_back(IPADDRESS(el));
-        }
-        else if (arg == "--options")
-        {
-            throwIfNoArgumentFollows();
-            boost::filesystem::path file(std::string{argv[++i]});
-            if (boost::filesystem::exists(file))
-                randomCodeOptionsPath = file;
-            else
-            {
-                ETH_STDERROR_MESSAGE(
-                    "Options file not found! Default options at: "
-                    "tests/src/randomCodeOptions.json\n");
-                exit(0);
-            }
-        }
-        else if (arg == "--nonetwork")
-            nonetwork = true;
-        else if (arg == "-d")
-        {
-            throwIfNoArgumentFollows();
-            string const& argValue = argv[++i];
-            DigitsType type = stringIntegerType(argValue);
-            switch (type)
-            {
-            case DigitsType::Decimal:
-                trDataIndex = atoi(argValue.c_str());
-                break;
-            case DigitsType::String:
-                if (argValue.find(":label") == string::npos)
-                    trDataLabel += ":label " + argValue;
-                else
-                    trDataLabel = argValue;
-                break;
-            default:
-            {
-                ETH_STDERROR_MESSAGE("Wrong argument format: " + argValue);
-                exit(0);
-            }
-            }
-        }
-        else if (arg == "-g")
-        {
-            throwIfNoArgumentFollows();
-            trGasIndex = atoi(argv[++i]);
-        }
-        else if (arg == "-v")
-        {
-            throwIfNoArgumentFollows();
-            trValueIndex = atoi(argv[++i]);
-        }
-        else if (arg == "--testpath")
-        {
-            throwIfNoArgumentFollows();
-            ETH_FAIL_REQUIRE_MESSAGE(testpath.empty(),
-                "testpath is already set! Make sure that testpath is provided as a first option.");
-            testpath = std::string{argv[++i]};
-        }
-        else if (arg == "--statediff")
-            statediff = true;
-        else if (arg == "--randomcode")
-        {
-            throwIfNoArgumentFollows();
-            int maxCodes = atoi(argv[++i]);
-            if (maxCodes > 1000 || maxCodes <= 0)
-            {
-                cerr << "Argument for the option is invalid! (use range: 1...1000)\n";
-                exit(1);
-            }
-            // test::RandomCodeOptions options;
-            // cout << test::RandomCode::get().generate(maxCodes, options) << "\n";
-            exit(0);
-        }
-        else if (arg == "--createRandomTest")
-        {
-            createRandomTest = true;
-            if (i + 1 < argc)  // two params
-            {
-                auto options = std::string{argv[++i]};
-                if (options[0] == '-')  // not param, another option
-                    i--;
-                else
-                {
-                    boost::filesystem::path file(options);
-                    if (boost::filesystem::exists(file))
-                        randomCodeOptionsPath = file;
-                    else
-                        BOOST_THROW_EXCEPTION(
-                            InvalidOption("Options file not found! Default options at: "
-                                          "tests/src/randomCodeOptions.json\n"));
-                }
-            }
-        }
-        else if (arg == "--seed")
-        {
-            throwIfNoArgumentFollows();
-            /*u256 input = toInt(argv[++i]);
-                    if (input > std::numeric_limits<uint64_t>::max())
-                        BOOST_WARN("Seed is > u64. Using u64_max instead.");
-                    randomTestSeed =
-               static_cast<uint64_t>(min<u256>(std::numeric_limits<uint64_t>::max(), input));*/
-        }
-        else if (arg == "--clients")
-        {
-            throwIfNoArgumentFollows();
-            vector<string> clientNames;
-            string nnn = std::string{argv[++i]};
-            boost::split(clientNames, nnn, boost::is_any_of(", "));
-            for (auto& it : clientNames)
-            {
-                boost::algorithm::trim(it);
-                if (!it.empty())
-                    clients.push_back(it);
-            }
-        }
-        else if (arg == "--list")
-        {
+    ADD_OPTION_OVERRIDE(listsuites, "--list", [](){
+        cout << setw(30) << "--list" << setw(0) << "Display available test suites\n";
+    });
+    listsuites.setValidator([](){
             displayTestSuites();
             exit(0);
-        }
-        else if (seenSeparator)
-        {
-            cerr << "Unknown option: " + arg << "\n";
-            exit(1);
-        }
-    }
+    });
 
-    // check restrickted options
-    if (createRandomTest)
-    {
-        if (trValueIndex >= 0 || trGasIndex >= 0 || trDataIndex >= 0 || nonetwork || singleTest ||
-            all || stats || filltests || fillchain)
+    ADD_OPTION_BOOST(rCurrentTestSuite, "-t", [](){
+        cout << "\nSetting test suite\n";
+        cout << setw(30) << "-t <TestSuite>" << setw(0) << "Execute test operations\n";
+        cout << setw(30) << "-t <TestSuite>/<TestCase>" << setw(0) << "See `--testfile` and `--testfolder` to run custom tests\n";
+        cout << "\nAll options below must follow after `--`\n";
+    });
+    ADD_OPTIONV(threadCount, "-j", [](){
+        cout << "\nRetesteth options\n";
+        cout << setw(40) << "-j <ThreadNumber>" << setw(0) << "Run test execution using threads\n";
+        },[this](){
+            threadCount = max((size_t)1, (size_t)threadCount);
+    });
+    ADD_OPTION(clients, "--clients", [](){
+        cout << setw(40) << "--clients `client1, client2`" << setw(0)
+             << "Use following configurations from datadir path (default: ~/.retesteth)\n";
+    });
+    ADD_OPTION(datadir, "--datadir", [](){
+        cout << setw(40) << "--datadir" << setw(0) << "Path to configs (default: ~/.retesteth)\n";
+    });
+    ADD_OPTION(nodesoverride, "--nodes", [](){
+        cout << setw(40) << "--nodes" << setw(0) << "List of client tcp ports (\"addr:ip, addr:ip\")\n";
+        cout << setw(40) << " " << setw(0) << "|-Overrides the config file \"socketAddress\" section \n";
+    });
+    ADD_OPTION(testpath, "--testpath", [](){
+        cout << "\nSetting test suite and test\n";
+        cout << setw(40) << "--testpath <PathToTheTestRepo>" << setw(25) << "Set path to the test repo\n";
+    });
+    ADD_OPTION(singleTestFile, "--testfile", [](){
+        cout << setw(40) << "--testfile <TestFile>" << setw(0) << "Run tests from a file. Requires -t <TestSuite>\n";
+    });
+    ADD_OPTION(singleTestOutFile, "--outfile", [](){
+        cout << setw(40) << "--outfile <TestFile>" << setw(0) << "When using `--testfile` with `--filltests` output to this file\n";
+    });
+    ADD_OPTION(singletest, "--singletest", [](){
+        cout << setw(40) << "--singletest <TestName>" << setw(0)
+             << "Run on a single test. `Testname` is filename without Filler.json\n";
+        cout << setw(40) << "--singletest <TestName>/<Subtest>" << setw(0) << "`Subtest` is a test name inside the file\n";
+    });
+    ADD_OPTION(singleTestNet, "--singlenet", [](){
+        cout << setw(40) << "--singlenet <ForkName>" << setw(0) << "Run only specific fork configuration\n";
+    });
+
+    auto stateTestOnly = [this](string const& _name){
+        if (rCurrentTestSuite.empty() || rCurrentTestSuite.find("StateTests") == string::npos)
         {
-            cerr << "--createRandomTest cannot be used with any of the options: "
-                 << "trValueIndex, trGasIndex, trDataIndex, nonetwork, singleTest, all, "
-                 << "stats, filltests, fillchain \n";
-            exit(1);
-        }
-    }
-    else
-    {
-        if (randomTestSeed.is_initialized())
+            if (rCurrentTestSuite.find("BCGeneral") != string::npos)
+                return;
             BOOST_THROW_EXCEPTION(
-                InvalidOption("--seed <uint> could be used only with --createRandomTest \n"));
-    }
+                InvalidOption("Error: `" + _name + "` option requires `-t GeneralStateTests`"));
+        }
+    };
+    ADD_OPTIONV(trData, "-d", [](){
+        cout << "\nDebugging\n";
+        cout << setw(30) << "-d <index>" << setw(25) << "Set the transaction data array index when running GeneralStateTests\n";
+        cout << setw(30) << "-d <label>" << setw(25) << "Set the transaction data array label (string) when running GeneralStateTests\n";
+        }, [stateTestOnly](){
+            stateTestOnly("-d");
+    });
+    ADD_OPTIONV(trGasIndex, "-g", [](){
+        cout << setw(30) << "-g <index>" << setw(25) << "Set the transaction gas array index when running GeneralStateTests\n";
+        }, [stateTestOnly](){
+            stateTestOnly("-g");
+        });
+    ADD_OPTIONV(trValueIndex, "-v", [](){
+        cout << setw(30) << "-v <index>" << setw(25) << "Set the transaction value array index when running GeneralStateTests\n";
+        }, [stateTestOnly](){
+            stateTestOnly("-v");
+    });
+
+    ADD_OPTION(getvectors, "--getvectors", []() {
+        cout << setw(30) << "--getvectors" << setw(25) << "Output all subunits of the given test (disables execution)\n";
+    });
+    ADD_OPTION(statediff, "--statediff", [](){
+        cout << setw(30) << "--statediff" << setw(25) << "Print statediff post vs pre\n";
+    });
+    ADD_OPTION(vmtrace, "--vmtrace", [](){
+        cout << setw(30) << "--vmtrace" << setw(25) << "Trace transaction execution\n";
+    });
+    ADD_OPTIONV(vmtraceraw, "--vmtraceraw", [](){
+        cout << setw(30) << "--vmtraceraw" << setw(25) << "Trace transaction execution raw format\n";
+        cout << setw(30) << "--vmtraceraw <folder>" << setw(25) << "Trace transactions execution raw format to a given folder\n";
+        }, [this](){
+            vmtrace = true;
+            if (logVerbosity.val < 6 && vmtraceraw.outpath.empty())
+                std::cout << "Warning: --vmtraceraw is defined, but trace is printed with verbosity level 6, which is not set" << std::endl;
+    });
+    ADD_OPTIONV(vmtrace_nomemory, "--vmtrace.nomemory", [](){
+        cout << setw(30) << "--vmtrace.nomemory" << setw(25) << "Disable memory in vmtrace/vmtraceraw\n";
+        }, [this](){
+            if (!(vmtrace.initialized() || vmtraceraw.initialized()))
+                BOOST_THROW_EXCEPTION(InvalidOption("Error: --vmtrace.nomemory requires --vmtrace or --vmtraceraw"));
+    });
+    ADD_OPTIONV(vmtrace_nostack, "--vmtrace.nostack", [](){
+            cout << setw(30) << "--vmtrace.nostack" << setw(25) << "Disable stack in vmtrace/vmtraceraw\n";
+        }, [this](){
+            if (!(vmtrace.initialized() || vmtraceraw.initialized()))
+                BOOST_THROW_EXCEPTION(InvalidOption("Error: --vmtrace.nostack requires --vmtrace or --vmtraceraw"));
+    });
+    ADD_OPTIONV(vmtrace_noreturndata, "--vmtrace.noreturndata", [](){
+            cout << setw(30) << "--vmtrace.noreturndata" << setw(25) << "Disable returndata in vmtrace/vmtraceraw\n";
+        }, [this](){
+            if (!(vmtrace.initialized() || vmtraceraw.initialized()))
+                BOOST_THROW_EXCEPTION(InvalidOption("Error: --vmtrace.noreturndata requires --vmtrace or --vmtraceraw"));
+    });
+    ADD_OPTION(blockLimit, "--limitblocks", [](){
+            cout << setw(30) << "--limitblocks" << setw(25) << "Limit the block exectuion in blockchain tests for debug\n";
+    });
+    ADD_OPTION(rpcLimit, "--limitrpc", [](){
+        cout << setw(30) << "--limitrpc" << setw(25) << "Limit the rpc exectuion in tests for debug\n";
+    });
+    ADD_OPTIONV(logVerbosity, "--verbosity", [](){
+        cout << setw(30) << "--verbosity <level>" << setw(25) << "Set logs verbosity. 0 - silent, 1 - only errors, 2 - informative, >2 - detailed\n";
+        cout << setw(30) << "--verbosity <channel>" << setw(25)
+             << "Set logs channels. 'STATS|RPC|TESTLOG|LOWLOG|SOCKET|STATE'\n";
+        },[this](){
+            // disable all output
+            static std::ostringstream strCout;
+            if (logVerbosity == 0)
+            {
+                std::cout.rdbuf(strCout.rdbuf());
+                std::cerr.rdbuf(strCout.rdbuf());
+            }
+    });
+    ADD_OPTION(nologcolor, "--nologcolor", [](){
+        cout << setw(30) << "--nologcolor" << setw(25) << "Disable color codes in log output\n";
+    });
+    ADD_OPTION(exectimelog, "--exectimelog", [](){
+        cout << setw(30) << "--exectimelog" << setw(25) << "Output execution time for each test suite\n";
+    });
+    ADD_OPTION(enableClientsOutput, "--stderr", [](){
+        cout << setw(30) << "--stderr" << setw(25) << "Redirect ipc client stderr to stdout\n";
+    });
+    ADD_OPTION(travisOutThread, "--travisout", [](){
+        cout << setw(30) << "--travisout" << setw(25) << "Output `.` to stdout\n";
+    });
+    ADD_OPTION(all, "--all", [](){
+        cout << "\nAdditional Tests\n";
+        cout << setw(30) << "--all" << setw(0) << "Enable all tests\n";
+    });
+    ADD_OPTION(lowcpu, "--lowcpu", [](){
+        cout << setw(30) << "--lowcpu" << setw(25) << "Disable cpu intense tests\n";
+    });
+    ADD_OPTION(filltests, "--filltests", [](){
+        cout << "\nTest Generation\n";
+        cout << setw(30) << "--filltests" << setw(0) << "Run test fillers\n";
+    });
+    ADD_OPTIONV(filloutdated, "--filloutdated", [](){
+        cout << setw(30) << "--filloutdated" << setw(0) << "Run only unfilled test fillers\n";
+        },[this](){
+            if (singletest.initialized() || trData.initialized() || trGasIndex.initialized() || trValueIndex.initialized())
+                std::cout << "WARNING: `--filloutdated` option disables all selectors (--singletest, -d, -g, -v)\n";
+            filltests = true;
+    });
+    ADD_OPTIONV(fillvmtrace, "--fillvmtrace", [](){
+            cout << setw(30) << "--fillvmtrace" << setw(0) << "Fill tests with vmtrace information (very time consuming)\n";
+        },[this](){
+            filltests = true;
+            vmtrace = true;
+        });
+
+    ADD_OPTION(fillchain, "--fillchain", [](){
+        cout << setw(30) << "--fillchain" << setw(25) << "When filling the state tests, fill tests as blockchain instead\n";
+    });
+    fillchain.setValidator([this, stateTestOnly](){
+            stateTestOnly("--fillchain");
+            if (!filltests.initialized())
+            {
+                std::cout << "WARNING: `--fillchain` option provided without `--filltests`, activating `--filltests` (did you mean `--filltests`?)\n";
+                filltests = true;
+        }});
+
+    ADD_OPTION(showhash, "--showhash", [](){
+        cout << setw(30) << "--showhash" << setw(25) << "Show filler hash debug information\n";
+    });
+    ADD_OPTION(checkhash, "--checkhash", [](){
+        cout << setw(30) << "--checkhash" << setw(25) << "Check that tests are updated from fillers\n";
+    });
+    ADD_OPTIONV(poststate, "--poststate", [](){
+        cout << setw(30) << "--poststate" << setw(25) << "Debug(6) show test postState hash or fullstate, when used with --filltests export `postState` in StateTests\n";
+        cout << setw(30) << "--poststate <folder>" << setw(25) << "Same as above plus export test post states into a folder\n";
+        }, [this](){
+            fullstate = true;
+    });
+    ADD_OPTION(fullstate, "--fullstate", [](){
+        cout << setw(30) << "--fullstate" << setw(25) << "Do not compress large states to hash when debug\n";
+    });
+    ADD_OPTION(forceupdate, "--forceupdate", [](){
+        cout << setw(30) << "--forceupdate" << setw(25) << "Update generated test (_info) even if there are no changes\n";
+    });
+
+
+    // Sanity check
+    if ((size_t)argc > m_options.size())
+        BOOST_THROW_EXCEPTION(InvalidOption("Error: Too many options provided!"));
+
+    // Init input arguments into the list
+    list<const char*> argList;
+    for (int i = 1; i < argc; i++)
+        argList.push_back(argv[i]);
+
+    // Initialize options with the list, removing element on success
+    for(auto& option : m_options)
+        option->tryInit(argList);
+    for(auto& option : m_options)
+        option->validate();
+
+    // Check leftover options in the input
+    argList.remove_if([](const char * _el){ return string(_el) == "--"; });
+    for(auto const& el : argList)
+        BOOST_THROW_EXCEPTION(InvalidOption("Error: Dublicate or unrecognized option: `" + string(el) + "`"));
 
     if (threadCount == 1)
         dataobject::GCP_SPointer<int>::DISABLETHREADSAFE();
@@ -561,8 +340,8 @@ void displayTestSuites()
 string Options::getGStateTransactionFilter() const
 {
     string filter;
-    filter += trDataIndex == -1 ? string() : " dInd: " + to_string(trDataIndex);
-    filter += trDataLabel.empty() ? string() : " dLbl: " + trDataLabel;
+    filter += trData.index == -1 ? string() : " dInd: " + to_string(trData.index);
+    filter += trData.label.empty() ? string() : " dLbl: " + trData.label;
     filter += trGasIndex == -1 ? string() : " gInd: " + to_string(trGasIndex);
     filter += trValueIndex == -1 ? string() : " vInd: " + to_string(trValueIndex);
     return filter;
@@ -577,4 +356,214 @@ bool Options::isLegacy()
         isLegacy = (boost::unit_test::framework::current_test_case().full_name().find("LegacyTests") != string::npos);
 
     return isLegacy;
+}
+
+bool Options::Option::match(string const& _arg) const
+{
+    if (m_argType == ARGS::ONEMERGED)
+        return m_sOptionName == _arg.substr(0, m_sOptionName.size());
+    else
+    {
+        for (auto const& el : explode(m_sOptionName, '|'))
+            if (el == _arg)
+                return true;
+    }
+    return false;
+}
+bool Options::Option::isAfterSeparatorOption() const
+{
+    return !m_allowBeforeSeparator;
+}
+
+void Options::Option::validate() const
+{
+    if (initialized() && m_validatorFunc)
+        m_validatorFunc();
+}
+
+void Options::Option::setDefHelp(string&& _def, std::function<void()> _help)
+{
+    m_sOptionName = std::move(_def);
+    m_printHelpFunc = _help;
+}
+
+void Options::Option::printHelp()
+{
+    if (m_printHelpFunc)
+        m_printHelpFunc();
+}
+
+void Options::Option::tryInit(list<const char*>& _argList)
+{
+    bool seenSeparator = false;
+    for (list<const char*>::iterator it = _argList.begin(); it != _argList.end(); it++)
+    {
+        auto arg = std::string{*it};
+        if (arg == "--")
+            seenSeparator = true;
+
+        if (match(arg))
+        {
+            if (m_optionOverrides)
+            {
+                m_inited = true;
+                break;
+            }
+
+            if (isAfterSeparatorOption() && !seenSeparator)
+                BOOST_THROW_EXCEPTION(
+                    InvalidOption("Error: `" + arg + "` option appears before the separator `--`"));
+            if (!isAfterSeparatorOption() && seenSeparator)
+                BOOST_THROW_EXCEPTION(
+                    InvalidOption("Error: `" + arg + "` option appears after the separator `--`"));
+
+            int readArgsCount = initArgs(_argList, it);
+            list<const char*>::iterator last = it;
+            for (int i = 0; i < readArgsCount && last != _argList.end(); i++)
+                last++;
+            _argList.erase(it, last);
+            break;
+        }
+    }
+}
+
+int Options::Option::initArgs(list<const char*> const& _argList, list<const char*>::const_iterator _arg)
+{
+    m_inited = m_inited || false;
+    auto throwIfNoArgumentFollows = [&_argList, this](list<const char*>::const_iterator _arg) {
+        auto throwException = [this](){
+            BOOST_THROW_EXCEPTION(InvalidOption("Error: `" + m_sOptionName + "` option is missing an argument."));
+        };
+        if (++_arg == _argList.end())
+            throwException();
+        string nextArg{*_arg};
+        if (nextArg.substr(0, 1) == "-")
+            throwException();
+    };
+
+    switch(m_argType)
+    {
+    case ARGS::NONE:
+    {
+        m_inited = true;
+        return 1;
+    }
+    case ARGS::NONE_OPTIONAL:
+    {
+        m_inited = true;
+        if (++_arg != _argList.end())
+        {
+            auto const arg = string{(*_arg)};
+            if (arg.substr(0, 1) != "-")
+            {
+                initArg(arg);
+                return 2;
+            }
+        }
+        return 1;
+        break;
+    }
+    case ARGS::ONEMERGED:
+    {
+        size_t const optNameLength = m_sOptionName.length();
+        string const inputOption = string(*_arg);
+        if (inputOption.length() != optNameLength)
+        {
+            string mergedArg = inputOption.substr(optNameLength, inputOption.length());
+            initArg(mergedArg);
+            m_inited = true;
+            return 1;
+        }
+        else
+        {
+            throwIfNoArgumentFollows(_arg);
+            initArg(string{*(++_arg)});
+            m_inited = true;
+            return 2;
+        }
+        return 1;
+    }
+    case ARGS::ONE:
+    {
+        throwIfNoArgumentFollows(_arg);
+        initArg(string{*(++_arg)});
+        m_inited = true;
+        return 2;
+    }
+    default:
+        m_inited = false;
+    }
+    return 0;
+}
+
+void Options::stringosizet_opt::initArg(std::string const& _arg)
+{
+    DigitsType type = test::stringIntegerType(_arg);
+    if (type == DigitsType::String)
+        str = _arg;
+    else if (type == DigitsType::Decimal)
+        val = std::max(0, atoi(_arg.c_str()));
+    else
+        BOOST_THROW_EXCEPTION(InvalidOption("Error: `" + m_sOptionName + "` wrong option argument format: " + _arg));
+}
+
+void Options::vecstr_opt::initArg(std::string const& _arg)
+{
+    std::vector<std::string> elements;
+    boost::split(elements, _arg, boost::is_any_of(", "));
+    for (auto& it : elements)
+    {
+        boost::algorithm::trim(it);
+        if (!it.empty())
+            m_vector.push_back(it);
+    }
+}
+
+void Options::vecaddr_opt::initArg(std::string const& _arg)
+{
+    for (auto const& el : explode(_arg, ','))
+        m_vector.push_back(IPADDRESS(el));
+}
+
+void Options::singletest_opt::initArg(std::string const& _arg)
+{
+    name = _arg;
+
+    size_t pos = name.find("Filler");
+    if (pos != std::string::npos)
+    {
+        name = name.substr(0, pos);
+        std::cout << "WARNING: Correcting filter to: `" + name + "`" << std::endl;
+    }
+    pos = name.find_last_of('/');
+    if (pos != std::string::npos)
+    {
+        subname = name.substr(pos + 1);
+        name = name.substr(0, pos);
+    }
+}
+
+void Options::dataind_opt::initArg(std::string const& _arg)
+{
+    DigitsType type = test::stringIntegerType(_arg);
+    switch (type)
+    {
+    case DigitsType::Decimal:
+        index = atoi(_arg.c_str());
+        break;
+    case DigitsType::String:
+        label = _arg;
+        if (_arg.find(":label") == std::string::npos)
+            label = ":label " + label;
+        break;
+    default:
+        BOOST_THROW_EXCEPTION(InvalidOption("Error: `" + m_sOptionName + "` option has wrong argument format: " + _arg));
+    }
+}
+
+void Options::fspath_opt::initArg(std::string const& _arg)
+{
+    string_opt::initArg(_arg);
+    if (!boost::filesystem::exists(_arg))
+        BOOST_THROW_EXCEPTION(InvalidOption("Error: `" + m_sOptionName + "` could not locate file or path: " + _arg));
 }

@@ -1,26 +1,23 @@
 #pragma once
 #include "../StateTests/Filler/InfoIncomplete.h"
-#include <retesteth/dataObject/DataObject.h>
-#include <retesteth/dataObject/SPointer.h>
+#include <libdataobj/DataObject.h>
 #include <retesteth/testStructures/configs/FORK.h>
 #include <retesteth/testStructures/types/Ethereum/Transaction.h>
 #include <map>
 
-namespace test
-{
-namespace teststruct
+namespace test::teststruct
 {
 struct TransactionTestInFiller : GCP_SPointerBase
 {
     TransactionTestInFiller(spDataObject&);
-    string const& testName() const { return m_name; }
+    std::string const& testName() const { return m_name; }
     InfoIncomplete const& info() const { return m_info; }
     bool hasInfo() const { return !m_info.isEmpty(); }
     spTransaction const& transaction() const { return m_transaction; }
     std::vector<FORK> const& additionalForks() const { return m_additionalForks; }
-    string const& getExpectException(FORK const& _net) const
+    std::string const& getExpectException(FORK const& _net) const
     {
-        static string emptyString = string();
+        static std::string emptyString = std::string();
         if (m_expectExceptions.count(_net))
             return m_expectExceptions.at(_net);
         return emptyString;
@@ -29,7 +26,7 @@ struct TransactionTestInFiller : GCP_SPointerBase
 private:
     TransactionTestInFiller() {}
 
-    string m_name;
+    std::string m_name;
     spTransaction m_transaction;
     GCP_SPointer<InfoIncomplete> m_info;
     std::vector<FORK> m_additionalForks;
@@ -46,6 +43,4 @@ private:
     std::vector<TransactionTestInFiller> m_tests;
 };
 
-
 }  // namespace teststruct
-}  // namespace test

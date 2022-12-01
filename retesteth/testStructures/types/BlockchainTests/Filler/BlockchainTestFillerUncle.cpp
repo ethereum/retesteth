@@ -2,9 +2,8 @@
 #include <retesteth/EthChecks.h>
 #include <retesteth/testStructures/Common.h>
 
-namespace test
-{
-namespace teststruct
+using namespace std;
+namespace test::teststruct
 {
 BlockchainTestFillerUncle::BlockchainTestFillerUncle(DataObject const& _data)
 {
@@ -103,4 +102,3 @@ BlockchainTestFillerUncle::BlockchainTestFillerUncle(DataObject const& _data)
 }
 
 }  // namespace teststruct
-}  // namespace test

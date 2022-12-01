@@ -1,8 +1,9 @@
 #include <retesteth/configs/Options.h>
-#include <string>
 using namespace std;
 using namespace dataobject;
 
+namespace retesteth::options
+{
 const string default_Frontier_config = R"({
     "params" : {
     },
@@ -12,7 +13,8 @@ const string default_Frontier_config = R"({
 
 const string t8ntool_Frontier_config = R"({
     "params" : {
-        "fork" : "Frontier"
+        "fork" : "Frontier",
+        "chainID" : "0x01"
     },
     "accounts" : {
     }
@@ -30,4 +32,4 @@ genFrontierCfg::genFrontierCfg()
     (*obj2)["content"] = t8ntool_Frontier_config;
     map_configs.addArrayObject(obj2);
 }
-
+}  // namespace retesteth::options
