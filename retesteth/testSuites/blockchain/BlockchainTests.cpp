@@ -47,17 +47,27 @@ BLOCKCHAINSUITE_FOLDER_OVERRIDE(BlockchainTestValidSuite, "/ValidBlocks", "/Bloc
 BLOCKCHAINSUITE_FOLDER_OVERRIDE(BCGeneralStateTestsVMSuite, "/GeneralStateTests/VMTests", "/GeneralStateTestsFiller/VMTests")
 BLOCKCHAINSUITE_FOLDER_OVERRIDE(BCGeneralStateTestsShanghaiSuite, "/GeneralStateTests/Shanghai", "/GeneralStateTestsFiller/Shanghai")
 
-TestSuite::TestPath LegacyConstantinopleBCGeneralStateTestsSuite::suiteFolder() const
-{
-    return TestSuite::TestPath(
-        fs::path("LegacyTests") / "Constantinople" / "BlockchainTests" / "GeneralStateTests");
-}
 
-TestSuite::FillerPath LegacyConstantinopleBCGeneralStateTestsSuite::suiteFillerFolder() const
-{
-    return TestSuite::FillerPath(fs::path("src") / "LegacyTests" / "Constantinople" /
-                                 "BlockchainTestsFiller" / "GeneralStateTests");
-}
+#define LEGACY_BLOCKCHAINSUITE_FOLDER_OVERRIDE(SUITE, FOLDER, FILLER)   \
+    TestSuite::TestPath SUITE::suiteFolder() const       \
+    {                                                    \
+        return TestSuite::TestPath(fs::path(string("LegacyTests" + string(FOLDER)))); \
+    }                                                    \
+                                                         \
+    TestSuite::FillerPath SUITE::suiteFillerFolder() const   \
+    {                                                    \
+        return TestSuite::FillerPath(fs::path(string("src/LegacyTests" + string(FILLER))));  \
+    }
+
+LEGACY_BLOCKCHAINSUITE_FOLDER_OVERRIDE(LegacyConstantinopleBCGeneralStateTestsSuite,
+    "/Constantinople/BlockchainTests/GeneralStateTests",
+    "/Constantinople/BlockchainTestsFiller/GeneralStateTests")
+LEGACY_BLOCKCHAINSUITE_FOLDER_OVERRIDE(LegacyConstantinopleBlockchainInvalidTestSuite,
+    "/Constantinople/BlockchainTests/InvalidBlocks",
+    "/Constantinople/BlockchainTestsFiller/InvalidBlocks")
+LEGACY_BLOCKCHAINSUITE_FOLDER_OVERRIDE(LegacyConstantinopleBlockchainValidTestSuite,
+    "/Constantinople/BlockchainTests/ValidBlocks",
+    "/Constantinople/BlockchainTestsFiller/ValidBlocks")
 
 
 
@@ -78,6 +88,7 @@ BLOCKCHAINSUITE_DOTESTS_OVERRIDE(LegacyConstantinopleBlockchainValidTestSuite,
                                  _opt.allowInvalidBlocks = false;
                                  _opt.isLegacyTests = true;)
 BLOCKCHAINSUITE_DOTESTS_OVERRIDE(LegacyConstantinopleBCGeneralStateTestsSuite, _opt.isLegacyTests = true;)
+
 
 BLOCKCHAINSUITE_DOTESTS_OVERRIDE(BCGeneralStateTestsShanghaiSuite,
      // Register subtest as finished test case. because each folder is treated as test case folder
