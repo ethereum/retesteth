@@ -56,6 +56,14 @@ public:
     spDataObject doTests(spDataObject& _input, TestSuiteOptions& _opt) const override;
 };
 
+class BCGeneralStateTestsShanghaiSuite : public BCGeneralStateTestsSuite
+{
+public:
+    test::TestSuite::TestPath suiteFolder() const override;
+    test::TestSuite::FillerPath suiteFillerFolder() const override;
+    spDataObject doTests(spDataObject& _input, TestSuiteOptions& _opt) const override;
+};
+
 /// Suite run/check stateTests converted into blockchain by testeth
 class LegacyConstantinopleBCGeneralStateTestsSuite : public BlockchainTestValidSuite
 {

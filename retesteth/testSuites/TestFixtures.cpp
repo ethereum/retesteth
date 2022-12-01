@@ -245,6 +245,7 @@ template TestFixture<test::LegacyConstantinopleStateTestSuite,test::NotRefillabl
 // BC links
 template TestFixture<test::BCGeneralStateTestsSuite,test::RequireOptionAllNotRefillable>::TestFixture(std::set<TestExecution> const& _execFlags);
 template TestFixture<test::BCGeneralStateTestsVMSuite,test::RequireOptionAll>::TestFixture(std::set<TestExecution> const& _execFlags);
+template TestFixture<test::BCGeneralStateTestsShanghaiSuite,test::RequireOptionAll>::TestFixture(std::set<TestExecution> const& _execFlags);
 template TestFixture<test::BlockchainTestTransitionSuite,test::DefaultFlags>::TestFixture(std::set<TestExecution> const& _execFlags);
 template TestFixture<test::BlockchainTestInvalidSuite,test::RequireOptionFill>::TestFixture(std::set<TestExecution> const& _execFlags);
 template TestFixture<test::BlockchainTestInvalidSuite,test::DefaultFlags>::TestFixture(std::set<TestExecution> const& _execFlags);
@@ -254,6 +255,7 @@ template TestFixture<test::BlockchainTestValidSuite,test::DefaultFlags>::TestFix
 template TestFixture<test::StateTestSuite,test::RequireOptionFill>::TestFixture(std::set<TestExecution> const& _execFlags);
 template TestFixture<test::StateTestSuite,test::DefaultFlags>::TestFixture(std::set<TestExecution> const& _execFlags);
 template TestFixture<test::StateTestVMSuite,test::DefaultFlags>::TestFixture(std::set<TestExecution> const& _execFlags);
+template TestFixture<test::StateTestShanghaiSuite,test::DefaultFlags>::TestFixture(std::set<TestExecution> const& _execFlags);
 
 template TestFixture<test::TransactionTestSuite,test::DefaultFlags>::TestFixture(std::set<TestExecution> const& _execFlags);
 

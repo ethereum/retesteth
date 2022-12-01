@@ -12,30 +12,24 @@ using namespace test;
 using namespace boost::unit_test;
 namespace fs = boost::filesystem;
 
-// Most Recent StateTestSuite
-TestSuite::TestPath StateTestSuite::suiteFolder() const
-{
-    if (Options::get().fillchain)
-        return TestSuite::TestPath(fs::path("BlockchainTests") / string("GeneralStateTests" + m_fillerPathAdd));
-    return TestSuite::TestPath(fs::path("GeneralStateTests" + m_fillerPathAdd));
-}
+#define STATESUITE_FOLDER_OVERRIDE(SUITE, FOLDER)   \
+    TestSuite::TestPath SUITE::suiteFolder() const  \
+    {                                               \
+        if (Options::get().fillchain)               \
+            return TestSuite::TestPath(fs::path(string("BlockchainTests/GeneralStateTests") + string(FOLDER + m_fillerPathAdd))); \
+        return TestSuite::TestPath(fs::path(string("GeneralStateTests") + string(FOLDER + m_fillerPathAdd))); \
+    }                                               \
+                                                    \
+    TestSuite::FillerPath SUITE::suiteFillerFolder() const \
+    {                                               \
+        return TestSuite::FillerPath(fs::path(string("src/GeneralStateTestsFiller") + string(FOLDER + m_fillerPathAdd))); \
+    }
 
-TestSuite::FillerPath StateTestSuite::suiteFillerFolder() const
-{
-    return TestSuite::FillerPath(fs::path("src") / string("GeneralStateTestsFiller" + m_fillerPathAdd));
-}
 
-TestSuite::TestPath StateTestVMSuite::suiteFolder() const
-{
-    if (Options::get().fillchain)
-        return TestSuite::TestPath(fs::path("BlockchainTests") / "GeneralStateTests" / string("VMTests" + m_fillerPathAdd));
-    return TestSuite::TestPath(fs::path("GeneralStateTests") / string("VMTests" + m_fillerPathAdd));
-}
+STATESUITE_FOLDER_OVERRIDE(StateTestSuite, "")
+STATESUITE_FOLDER_OVERRIDE(StateTestVMSuite, "/VMTests")
+STATESUITE_FOLDER_OVERRIDE(StateTestShanghaiSuite, "/Shanghai")
 
-TestSuite::FillerPath StateTestVMSuite::suiteFillerFolder() const
-{
-    return TestSuite::FillerPath(fs::path("src") / "GeneralStateTestsFiller" / string("VMTests" + m_fillerPathAdd));
-}
 
 // Legacy Constantinople
 TestSuite::TestPath LegacyConstantinopleStateTestSuite::suiteFolder() const
@@ -139,6 +133,12 @@ BOOST_AUTO_TEST_CASE(stTimeConsuming) {}
 using StateTestsRetestethUnit = TestFixture<StateTestSuite, RequireOptionFill>;
 BOOST_FIXTURE_TEST_SUITE(Retesteth, StateTestsRetestethUnit)
 BOOST_AUTO_TEST_CASE(stExpectSection) {}
+BOOST_AUTO_TEST_SUITE_END()
+
+// Shanghai tests suite
+using GeneralStateTestsShanghaiFixture = TestFixture<StateTestShanghaiSuite, DefaultFlags>;
+ETH_REGISTER_DYNAMIC_TEST_SEARCH(GeneralStateTestsShanghaiFixture, "GeneralStateTests/Shanghai")
+BOOST_FIXTURE_TEST_SUITE(Shanghai, GeneralStateTestsShanghaiFixture)
 BOOST_AUTO_TEST_SUITE_END()
 
 // Converted VMTests

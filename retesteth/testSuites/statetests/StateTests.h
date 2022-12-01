@@ -50,4 +50,11 @@ public:
     TestSuite::FillerPath suiteFillerFolder() const override;
 };
 
+class StateTestShanghaiSuite : public StateTestSuite
+{
+public:
+    TestSuite::TestPath suiteFolder() const override;
+    TestSuite::FillerPath suiteFillerFolder() const override;
+};
+
 }  // namespace test
