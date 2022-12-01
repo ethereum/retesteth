@@ -190,7 +190,18 @@ void verifyFilledTestRecursive(DataObject const& _want, DataObject const& _have,
 
 void modifyTransactionChainIDByNetwork(test::Transaction const& _tr, FORK const& _fork)
 {
-    auto const& genesisChainID = Options::getDynamicOptions().getCurrentConfig().getGenesisTemplateChainID();
+    if (Options::get().chainid.initialized())
+    {
+        VALUE const chainID((size_t)Options::get().chainid);
+        if (_tr.getChainID() != chainID)
+        {
+            auto& tr = const_cast<test::Transaction&>(_tr);
+            tr.setChainID(chainID);
+        }
+        return;
+    }
+
+    auto const& genesisChainID = Options::getCurrentConfig().getGenesisTemplateChainID();
     if (genesisChainID.count(_fork))
     {
         VALUE const& chainID = genesisChainID.at(_fork);

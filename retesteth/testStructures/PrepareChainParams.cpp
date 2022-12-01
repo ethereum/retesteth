@@ -88,12 +88,27 @@ spDataObject prepareGenesisSubsection(StateTestEnvBase const& _env, ParamsContex
 
     }
     return genesis;
-}}
+}
 
-
-namespace test
+void overrideChainIDByOptions(spDataObject& _genesis)
 {
-namespace teststruct
+    if (Options::get().chainid.initialized())
+    {
+        if ((*_genesis).count("params"))
+        {
+            string const chainIDOverride = dev::toCompactHexPrefixed((size_t)Options::get().chainid);
+            if ((*_genesis).atKey("params").count("chainID"))
+                (*_genesis).atKeyUnsafe("params").atKeyUnsafe("chainID") = chainIDOverride;
+            else
+                (*_genesis).atKeyUnsafe("params")["chainID"] = chainIDOverride;
+        }
+    }
+}
+
+}
+
+
+namespace test::teststruct
 {
 spSetChainParamsArgs prepareChainParams(
     FORK const& _net, SealEngine _engine, State const& _state, StateTestEnvBase const& _env, ParamsContext _context)
@@ -103,6 +118,8 @@ spSetChainParamsArgs prepareChainParams(
 
     spDataObject genesis;
     (*genesis).copyFrom(cfg.getGenesisTemplate(_net).getCContent()); // TODO need copy?
+    overrideChainIDByOptions(genesis);
+
     (*genesis)["sealEngine"] = sealEngineToStr(_engine);
     (*genesis).atKeyPointer("genesis") = prepareGenesisSubsection(_env, _context, _net);
 
@@ -113,4 +130,3 @@ spSetChainParamsArgs prepareChainParams(
 }
 
 }  // namespace teststruct
-}  // namespace test

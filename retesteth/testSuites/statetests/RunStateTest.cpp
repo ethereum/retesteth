@@ -63,9 +63,19 @@ void performValidations(StateTestExecInfo const& _info, FH32 const& _trHash)
     if (!expectedBytesPtr.isEmpty())
     {
         if (tr.transaction()->getRawBytes().asString() != expectedBytesPtr->asString())
-            ETH_ERROR_MESSAGE(string("TxBytes mismatch: test transaction section does not match txbytes in post section! ") +
-                              "\n Constructed: " + expectedBytesPtr->asString() + "\n vs \n " +
-                              tr.transaction()->getRawBytes().asString());
+        {
+            string const msg = string("TxBytes mismatch: test transaction section does not match txbytes in post section! ") +
+                               "\n Constructed: " + expectedBytesPtr->asString() + "\n vs \n " +
+                               tr.transaction()->getRawBytes().asString();
+            if (Options::get().chainid.initialized())
+            {
+                ETH_DC_MESSAGE(DC::LOWLOG, msg);
+            }
+            else
+            {
+                ETH_ERROR_MESSAGE(msg);
+            }
+        }
     }
 
     // Validate log hash

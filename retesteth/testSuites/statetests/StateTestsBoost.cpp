@@ -122,7 +122,6 @@ BOOST_AUTO_TEST_CASE(stEIP2537) {}
 BOOST_AUTO_TEST_CASE(stEIP2930) {}
 BOOST_AUTO_TEST_CASE(stEIP1559) {}
 BOOST_AUTO_TEST_CASE(stEIP3607) {}
-BOOST_AUTO_TEST_CASE(stEIP3540) {}
 BOOST_AUTO_TEST_CASE(stEIP3670) {}
 BOOST_AUTO_TEST_CASE(stEIP3860) {}
 
@@ -139,6 +138,7 @@ BOOST_AUTO_TEST_SUITE_END()
 using GeneralStateTestsShanghaiFixture = TestFixture<StateTestShanghaiSuite, DefaultFlags>;
 ETH_REGISTER_DYNAMIC_TEST_SEARCH(GeneralStateTestsShanghaiFixture, "GeneralStateTests/Shanghai")
 BOOST_FIXTURE_TEST_SUITE(Shanghai, GeneralStateTestsShanghaiFixture)
+BOOST_AUTO_TEST_CASE(stEIP3540) {}
 BOOST_AUTO_TEST_SUITE_END()
 
 // Converted VMTests

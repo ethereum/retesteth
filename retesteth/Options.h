@@ -208,6 +208,7 @@ public:
     bool_opt filloutdated = false;
     bool_opt fillvmtrace = false;
     bool_opt fillchain = false;
+    sizet_opt chainid = 1;
     bool_opt showhash = false;
     bool_opt checkhash = false;
     booloutpath_opt poststate = false;

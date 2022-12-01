@@ -255,7 +255,9 @@ Options::Options(int argc, const char** argv)
                 std::cout << "WARNING: `--fillchain` option provided without `--filltests`, activating `--filltests` (did you mean `--filltests`?)\n";
                 filltests = true;
         }});
-
+    ADD_OPTION(chainid, "--chainid", [](){
+        cout << setw(30) << "--chainid" << setw(25) << "Override config chainid when generating transactions\n";
+    });
     ADD_OPTION(showhash, "--showhash", [](){
         cout << setw(30) << "--showhash" << setw(25) << "Show filler hash debug information\n";
     });
