@@ -32,7 +32,8 @@ spDataObject FillTest(TransactionTestInFiller const& _test)
 
     for (auto const& fork : _test.additionalForks())
     {
-        if (Options::getCurrentConfig().checkForkAllowed(fork))
+        auto const& opt = Options::getCurrentConfig();
+        if (opt.checkForkAllowed(fork) && !opt.checkForkSkipOnFiller(fork))
             executionForks.emplace(fork);
         else
             ETH_WARNING("Client config does not support fork `" + fork.asString() + "`, skipping test generation!");
@@ -80,7 +81,8 @@ void RunTest(TransactionTestInFilled const& _test)
         if (!opt.singleTestNet.empty() && FORK(opt.singleTestNet) != fork)
             continue;
 
-        if (!Options::getDynamicOptions().getCurrentConfig().checkForkAllowed(fork))
+        auto const& cfg = Options::getCurrentConfig();
+        if (!cfg.checkForkAllowed(fork) || cfg.checkForkSkipOnFiller(fork))
         {
             ETH_WARNING("Client config does not support fork `" + fork.asString() + "`, skipping test!");
             continue;
