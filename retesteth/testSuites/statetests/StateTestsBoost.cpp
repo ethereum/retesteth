@@ -25,6 +25,19 @@ namespace fs = boost::filesystem;
         return TestSuite::FillerPath(fs::path(string("src/GeneralStateTestsFiller") + string(FOLDER + m_fillerPathAdd))); \
     }
 
+#define EIPSTATESUITE_FOLDER_OVERRIDE(SUITE, FOLDER)   \
+    TestSuite::TestPath SUITE::suiteFolder() const  \
+    {                                               \
+        if (Options::get().fillchain)               \
+            return TestSuite::TestPath(fs::path(string("BlockchainTests/EIPStateTests") + string(FOLDER + m_fillerPathAdd))); \
+        return TestSuite::TestPath(fs::path(string("EIPStateTests") + string(FOLDER + m_fillerPathAdd))); \
+    }                                               \
+                                                    \
+    TestSuite::FillerPath SUITE::suiteFillerFolder() const \
+    {                                               \
+        return TestSuite::FillerPath(fs::path(string("src/EIPStateTestsFiller") + string(FOLDER + m_fillerPathAdd))); \
+    }
+
 
 STATESUITE_FOLDER_OVERRIDE(StateTestSuite, "")
 STATESUITE_FOLDER_OVERRIDE(StateTestVMSuite, "/VMTests")
@@ -41,6 +54,22 @@ TestSuite::FillerPath LegacyConstantinopleStateTestSuite::suiteFillerFolder() co
 {
     return TestSuite::FillerPath(fs::path("src") / "LegacyTests" / "Constantinople" / "GeneralStateTestsFiller");
 }
+
+
+EIPSTATESUITE_FOLDER_OVERRIDE(EIPStateTestSuite, "")
+EIPSTATESUITE_FOLDER_OVERRIDE(EIPStateTestEOFSuite, "/stEOF")
+
+
+using EIPStateTestsFixture = TestFixture<EIPStateTestSuite, DefaultFlags>;
+ETH_REGISTER_DYNAMIC_TEST_SEARCH(EIPStateTestsFixture, "EIPStateTests")
+BOOST_FIXTURE_TEST_SUITE(EIPStateTests, EIPStateTestsFixture)
+
+using EIPStateTestsEOFFixture = TestFixture<EIPStateTestEOFSuite, DefaultFlags>;
+ETH_REGISTER_DYNAMIC_TEST_SEARCH(EIPStateTestsEOFFixture, "EIPStateTests/stEOF")
+BOOST_FIXTURE_TEST_SUITE(stEOF, EIPStateTestsEOFFixture)
+
+BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE_END()
 
 
 // latest version StateTests

@@ -233,30 +233,40 @@ TestFixture<T, U>::TestFixture(std::set<TestExecution> const& _execFlags) : m_ex
     _execute(_execFlags);
 }
 
+
+#define REGISTER_TEMPLATE(SUITE, FLAG) \
+    template TestFixture<SUITE, FLAG>::TestFixture(std::set<TestExecution> const& _execFlags);
+
 // Difficulty links
-template TestFixture<test::DifficultyTestSuite,test::DefaultFlags>::TestFixture(std::set<TestExecution> const& _execFlags);
+REGISTER_TEMPLATE(DifficultyTestSuite, DefaultFlags)
+REGISTER_TEMPLATE(TransactionTestSuite, DefaultFlags)
 
 // Legacy links
-template TestFixture<test::LegacyConstantinopleBlockchainValidTestSuite,test::NotRefillable>::TestFixture(std::set<TestExecution> const& _execFlags);
-template TestFixture<test::LegacyConstantinopleBlockchainInvalidTestSuite,test::NotRefillable>::TestFixture(std::set<TestExecution> const& _execFlags);
-template TestFixture<test::LegacyConstantinopleBCGeneralStateTestsSuite,test::NotRefillable>::TestFixture(std::set<TestExecution> const& _execFlags);
-template TestFixture<test::LegacyConstantinopleStateTestSuite,test::NotRefillable>::TestFixture(std::set<TestExecution> const& _execFlags);
+REGISTER_TEMPLATE(LegacyConstantinopleBlockchainValidTestSuite, NotRefillable)
+REGISTER_TEMPLATE(LegacyConstantinopleBlockchainInvalidTestSuite, NotRefillable)
+REGISTER_TEMPLATE(LegacyConstantinopleBCGeneralStateTestsSuite, NotRefillable)
+REGISTER_TEMPLATE(LegacyConstantinopleStateTestSuite, NotRefillable)
 
 // BC links
-template TestFixture<test::BCGeneralStateTestsSuite,test::RequireOptionAllNotRefillable>::TestFixture(std::set<TestExecution> const& _execFlags);
-template TestFixture<test::BCGeneralStateTestsVMSuite,test::RequireOptionAll>::TestFixture(std::set<TestExecution> const& _execFlags);
-template TestFixture<test::BCGeneralStateTestsShanghaiSuite,test::RequireOptionAll>::TestFixture(std::set<TestExecution> const& _execFlags);
-template TestFixture<test::BlockchainTestTransitionSuite,test::DefaultFlags>::TestFixture(std::set<TestExecution> const& _execFlags);
-template TestFixture<test::BlockchainTestInvalidSuite,test::RequireOptionFill>::TestFixture(std::set<TestExecution> const& _execFlags);
-template TestFixture<test::BlockchainTestInvalidSuite,test::DefaultFlags>::TestFixture(std::set<TestExecution> const& _execFlags);
-template TestFixture<test::BlockchainTestValidSuite,test::DefaultFlags>::TestFixture(std::set<TestExecution> const& _execFlags);
+REGISTER_TEMPLATE(BCGeneralStateTestsSuite, RequireOptionAllNotRefillable)
+REGISTER_TEMPLATE(BCEIPStateTestsSuite, RequireOptionAllNotRefillable)
+REGISTER_TEMPLATE(BCEIPStateTestsEOFSuite, RequireOptionAll)
+
+REGISTER_TEMPLATE(BCGeneralStateTestsVMSuite, RequireOptionAll)
+REGISTER_TEMPLATE(BCGeneralStateTestsShanghaiSuite, RequireOptionAll)
+
+REGISTER_TEMPLATE(BlockchainTestTransitionSuite, DefaultFlags)
+REGISTER_TEMPLATE(BlockchainTestInvalidSuite, RequireOptionFill)
+REGISTER_TEMPLATE(BlockchainTestInvalidSuite, DefaultFlags)
+REGISTER_TEMPLATE(BlockchainTestValidSuite, DefaultFlags)
 
 // State link
-template TestFixture<test::StateTestSuite,test::RequireOptionFill>::TestFixture(std::set<TestExecution> const& _execFlags);
-template TestFixture<test::StateTestSuite,test::DefaultFlags>::TestFixture(std::set<TestExecution> const& _execFlags);
-template TestFixture<test::StateTestVMSuite,test::DefaultFlags>::TestFixture(std::set<TestExecution> const& _execFlags);
-template TestFixture<test::StateTestShanghaiSuite,test::DefaultFlags>::TestFixture(std::set<TestExecution> const& _execFlags);
+REGISTER_TEMPLATE(StateTestSuite, RequireOptionFill)
+REGISTER_TEMPLATE(StateTestSuite, DefaultFlags)
+REGISTER_TEMPLATE(StateTestVMSuite, DefaultFlags)
+REGISTER_TEMPLATE(StateTestShanghaiSuite, DefaultFlags)
 
-template TestFixture<test::TransactionTestSuite,test::DefaultFlags>::TestFixture(std::set<TestExecution> const& _execFlags);
+REGISTER_TEMPLATE(EIPStateTestSuite, DefaultFlags)
+REGISTER_TEMPLATE(EIPStateTestEOFSuite, DefaultFlags)
 
 

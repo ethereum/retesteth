@@ -29,6 +29,9 @@ REGISTER_SUITE(BCGeneralStateTestsSuite, BlockchainTestValidSuite,)
 REGISTER_SUITE(BCGeneralStateTestsVMSuite, BCGeneralStateTestsSuite,)
 REGISTER_SUITE(BCGeneralStateTestsShanghaiSuite, BCGeneralStateTestsSuite,)
 
+REGISTER_SUITE(BCEIPStateTestsSuite, BlockchainTestValidSuite,)
+REGISTER_SUITE(BCEIPStateTestsEOFSuite, BCEIPStateTestsSuite,)
+
 #define LEGACYFLAG  \
     protected:      \
         bool legacyTestSuiteFlag() const override { return  true; }

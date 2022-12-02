@@ -41,11 +41,15 @@ namespace test
     }
 
 BLOCKCHAINSUITE_FOLDER_OVERRIDE(BCGeneralStateTestsSuite, "/GeneralStateTests", "/GeneralStateTestsFiller")
+BLOCKCHAINSUITE_FOLDER_OVERRIDE(BCGeneralStateTestsVMSuite, "/GeneralStateTests/VMTests", "/GeneralStateTestsFiller/VMTests")
+BLOCKCHAINSUITE_FOLDER_OVERRIDE(BCGeneralStateTestsShanghaiSuite, "/GeneralStateTests/Shanghai", "/GeneralStateTestsFiller/Shanghai")
+
+BLOCKCHAINSUITE_FOLDER_OVERRIDE(BCEIPStateTestsSuite, "/EIPStateTests", "/EIPStateTestsFiller")
+BLOCKCHAINSUITE_FOLDER_OVERRIDE(BCEIPStateTestsEOFSuite, "/EIPStateTests/stEOF", "/EIPStateTestsFiller/stEOF")
+
 BLOCKCHAINSUITE_FOLDER_OVERRIDE(BlockchainTestTransitionSuite, "/TransitionTests", "/BlockchainTestsFiller/TransitionTests")
 BLOCKCHAINSUITE_FOLDER_OVERRIDE(BlockchainTestInvalidSuite, "/InvalidBlocks", "/BlockchainTestsFiller/InvalidBlocks")
 BLOCKCHAINSUITE_FOLDER_OVERRIDE(BlockchainTestValidSuite, "/ValidBlocks", "/BlockchainTestsFiller/ValidBlocks")
-BLOCKCHAINSUITE_FOLDER_OVERRIDE(BCGeneralStateTestsVMSuite, "/GeneralStateTests/VMTests", "/GeneralStateTestsFiller/VMTests")
-BLOCKCHAINSUITE_FOLDER_OVERRIDE(BCGeneralStateTestsShanghaiSuite, "/GeneralStateTests/Shanghai", "/GeneralStateTestsFiller/Shanghai")
 
 
 #define LEGACY_BLOCKCHAINSUITE_FOLDER_OVERRIDE(SUITE, FOLDER, FILLER)   \
@@ -90,17 +94,18 @@ BLOCKCHAINSUITE_DOTESTS_OVERRIDE(LegacyConstantinopleBlockchainValidTestSuite,
 BLOCKCHAINSUITE_DOTESTS_OVERRIDE(LegacyConstantinopleBCGeneralStateTestsSuite, _opt.isLegacyTests = true;)
 
 
-BLOCKCHAINSUITE_DOTESTS_OVERRIDE(BCGeneralStateTestsShanghaiSuite,
-     // Register subtest as finished test case. because each folder is treated as test case folder
-     test::TestOutputHelper::get().markTestFolderAsFinished(
-         getFullPathFiller("Shanghai").parent_path(), "Shanghai");
-    )
 
 BLOCKCHAINSUITE_DOTESTS_OVERRIDE(BCGeneralStateTestsVMSuite,
      // Register subtest as finished test case. because each folder is treated as test case folder
      test::TestOutputHelper::get().markTestFolderAsFinished(
         getFullPathFiller("VMTests").parent_path(), "VMTests");
     )
+
+BLOCKCHAINSUITE_DOTESTS_OVERRIDE(BCGeneralStateTestsShanghaiSuite,
+     test::TestOutputHelper::get().markTestFolderAsFinished(
+         getFullPathFiller("Shanghai").parent_path(), "Shanghai");
+    )
+
 
 BLOCKCHAINSUITE_DOTESTS_OVERRIDE(BCGeneralStateTestsSuite,
      // Register subtest as finished test case. because each folder is treated as test case folder
@@ -110,6 +115,16 @@ BLOCKCHAINSUITE_DOTESTS_OVERRIDE(BCGeneralStateTestsSuite,
          getFullPathFiller("Shanghai").parent_path(), "Shanghai");
      test::TestOutputHelper::get().markTestFolderAsFinished(
          getFullPathFiller("stExpectSection").parent_path(), "stExpectSection");
+    )
+
+BLOCKCHAINSUITE_DOTESTS_OVERRIDE(BCEIPStateTestsSuite,
+     test::TestOutputHelper::get().markTestFolderAsFinished(
+         getFullPathFiller("stEOF").parent_path(), "stEOF");
+    )
+
+BLOCKCHAINSUITE_DOTESTS_OVERRIDE(BCEIPStateTestsEOFSuite,
+         test::TestOutputHelper::get().markTestFolderAsFinished(
+             getFullPathFiller("stEOF").parent_path(), "stEOF");
     )
 
 }  // Namespace Close
@@ -278,5 +293,18 @@ ETH_REGISTER_DYNAMIC_TEST_SEARCH(BCGeneralStateTestsShanghaiFixture, "BCGeneralS
 BOOST_FIXTURE_TEST_SUITE(Shanghai, BCGeneralStateTestsShanghaiFixture)
 BOOST_AUTO_TEST_CASE(stEIP3540) {}
 BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()
+
+using BCEIPStateSuiteFixture = TestFixture<BCEIPStateTestsSuite, RequireOptionAllNotRefillable>;
+ETH_REGISTER_DYNAMIC_TEST_SEARCH(BCEIPStateSuiteFixture, "BCEIPStateTests")
+BOOST_FIXTURE_TEST_SUITE(BCEIPStateTests, BCEIPStateSuiteFixture)
+
+using BCEIPStateTestsEOFFixture = TestFixture<BCEIPStateTestsEOFSuite, RequireOptionAll>;
+ETH_REGISTER_DYNAMIC_TEST_SEARCH(BCEIPStateTestsEOFFixture, "BCEIPStateTests/stEOF")
+BOOST_FIXTURE_TEST_SUITE(stEOF, BCEIPStateTestsEOFFixture)
+BOOST_AUTO_TEST_CASE(stEIP3540) {}
+BOOST_AUTO_TEST_SUITE_END()
+
 
 BOOST_AUTO_TEST_SUITE_END()
