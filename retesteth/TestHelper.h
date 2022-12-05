@@ -95,6 +95,7 @@ bool inArray(std::list<T> const& _array, const T& _val)
 std::vector<std::string> explode(std::string const& s, char delim);
 void removeSubChar(std::string& _string, unsigned char _r);
 std::string makePlussedFork(test::teststruct::FORK const& _net);
+bool isBoostSuite(std::string const& suiteName);
 
 
 /// See what kind of a string is str

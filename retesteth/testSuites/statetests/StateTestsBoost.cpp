@@ -2,6 +2,7 @@
 #include "retesteth/TestOutputHelper.h"
 #include "retesteth/testSuites/TestFixtures.h"
 #include "retesteth/testSuites/statetests/StateTests.h"
+#include "libdataobj/DataObject.h"
 #include <retesteth/Options.h>
 #include <functional>
 #include <iostream>
@@ -9,6 +10,7 @@
 using namespace std;
 using namespace dev;
 using namespace test;
+using namespace dataobject;
 using namespace boost::unit_test;
 namespace fs = boost::filesystem;
 
@@ -38,10 +40,22 @@ namespace fs = boost::filesystem;
         return TestSuite::FillerPath(fs::path(string("src/EIPStateTestsFiller") + string(FOLDER + m_fillerPathAdd))); \
     }
 
+#define STATESUITE_DO_OVERRIDE(SUITE, CODE) \
+spDataObject SUITE::doTests(spDataObject& _input, TestSuite::TestSuiteOptions& _opt) const \
+{                                           \
+    CODE                                    \
+    return DoTests(_input, _opt);           \
+}
+
+#define MARKFINISHED(CASE) \
+    test::TestOutputHelper::get().markTestFolderAsFinished(getFullPathFiller(CASE).parent_path(), CASE);
 
 STATESUITE_FOLDER_OVERRIDE(StateTestSuite, "")
+STATESUITE_DO_OVERRIDE(StateTestSuite, MARKFINISHED("VMTests"))
 STATESUITE_FOLDER_OVERRIDE(StateTestVMSuite, "/VMTests")
+STATESUITE_DO_OVERRIDE(StateTestVMSuite,)
 STATESUITE_FOLDER_OVERRIDE(StateTestShanghaiSuite, "/Shanghai")
+STATESUITE_DO_OVERRIDE(StateTestShanghaiSuite,)
 
 
 // Legacy Constantinople
@@ -57,7 +71,9 @@ TestSuite::FillerPath LegacyConstantinopleStateTestSuite::suiteFillerFolder() co
 
 
 EIPSTATESUITE_FOLDER_OVERRIDE(EIPStateTestSuite, "")
+STATESUITE_DO_OVERRIDE(EIPStateTestSuite, MARKFINISHED("stEOF"))
 EIPSTATESUITE_FOLDER_OVERRIDE(EIPStateTestEOFSuite, "/stEOF")
+STATESUITE_DO_OVERRIDE(EIPStateTestEOFSuite,)
 
 
 using EIPStateTestsFixture = TestFixture<EIPStateTestSuite, DefaultFlags>;

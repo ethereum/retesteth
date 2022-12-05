@@ -9,9 +9,11 @@
 #include <retesteth/EthChecks.h>
 #include <retesteth/Options.h>
 #include <retesteth/TestHelper.h>
+#include <boost/test/unit_test.hpp>
 
 using namespace std;
 using namespace dev;
+using namespace boost::unit_test;
 namespace fs = boost::filesystem;
 
 namespace  test {
@@ -723,6 +725,31 @@ string makePlussedFork(FORK const& _net)
     if (pos != string::npos)
         return _net.asString().substr(0, pos);
     return string();
+}
+
+bool isBoostSuite(std::string const& suiteName)
+{
+    test_suite const* suite = &boost::unit_test::framework::master_test_suite();
+    auto const allSuites = test::explode(suiteName, '/');
+    for (auto const& suiteName : allSuites)
+    {
+        auto const suiteid = suite->get(suiteName);
+        if (suiteid != INV_TEST_UNIT_ID)
+        {
+            try
+            {
+                suite = &framework::get<test_suite>(suiteid);
+            }
+            catch (std::exception const&)
+            {
+                // asked test case
+                return false;
+            }
+        }
+        else
+            return false;
+    }
+    return true;
 }
 
 }//namespace

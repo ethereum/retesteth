@@ -326,27 +326,27 @@ bool pathHasTests(fs::path const& _path)
 void checkUnfinishedTestFolders()
 {
     std::lock_guard<std::mutex> lock(g_finishedTestFoldersMapMutex);
+    auto const& opt = Options::get();
     // Unit tests does not mark test folders
     if (finishedTestFoldersMap.size() == 0)
         return;
 
-    if (Options::get().rCurrentTestSuite.empty())
+    if (opt.rCurrentTestSuite.empty())
         ETH_WARNING("Options rCurrentTestSuite is empty, total tests run can be wrong!");
 
     // -t SuiteName/SubSuiteName/caseName   parse caseName as filter
     // rCurrentTestSuite is empty if run without -t argument
     string filter;
-    size_t pos = Options::get().rCurrentTestSuite.rfind('/');
+    size_t pos = opt.rCurrentTestSuite.rfind('/');
     if (pos != string::npos)
-        filter = Options::get().rCurrentTestSuite.substr(pos + 1);
+        filter = opt.rCurrentTestSuite.substr(pos + 1);
 
     std::map<fs::path, FolderNameSet>::const_iterator singleTest =
         finishedTestFoldersMap.begin();
     if (!filter.empty() && finishedTestFoldersMap.size() <= 1 && fs::exists(singleTest->first / filter))
     {
         if (!pathHasTests(singleTest->first / filter))
-            ETH_WARNING(string("Test folder ") + (singleTest->first / filter).c_str() +
-                        " appears to have no tests!");
+            ETH_WARNING(string("Test folder ") + (singleTest->first / filter).c_str() + " appears to have no tests!");
     }
     else
     {
@@ -366,9 +366,9 @@ void checkUnfinishedTestFolders()
                 {
                     string const folderName = it->path().filename().string();
                     allFolders.insert(folderName);
-                    if (!pathHasTests(it->path()))
-                        ETH_WARNING(string("Test folder ") + it->path().c_str() +
-                                    " appears to have no tests!");
+                    string const& suiteName = opt.rCurrentTestSuite + "/" + it->path().stem().string();
+                    if (!isBoostSuite(suiteName) && !pathHasTests(it->path()))
+                        ETH_WARNING(string("Test folder ") + it->path().c_str() + " appears to have no tests!");
                 }
             }
 

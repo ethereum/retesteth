@@ -29,10 +29,13 @@ namespace fs = boost::filesystem;
 namespace test
 {
 
+#define MARKFINISHED(CASE) \
+    test::TestOutputHelper::get().markTestFolderAsFinished(getFullPathFiller(CASE).parent_path(), CASE);
+
 #define BLOCKCHAINSUITE_FOLDER_OVERRIDE(SUITE, FOLDER, FILLER)   \
     TestSuite::TestPath SUITE::suiteFolder() const       \
     {                                                    \
-        return TestSuite::TestPath(fs::path(string("BlockchainTests" + string (FOLDER) + m_fillerPathAdd))); \
+        return TestSuite::TestPath(fs::path(string("BlockchainTests" + string(FOLDER) + m_fillerPathAdd))); \
     }                                                    \
                                                          \
     TestSuite::FillerPath SUITE::suiteFillerFolder() const   \
@@ -96,38 +99,16 @@ BLOCKCHAINSUITE_DOTESTS_OVERRIDE(LegacyConstantinopleBlockchainValidTestSuite,
 BLOCKCHAINSUITE_DOTESTS_OVERRIDE(LegacyConstantinopleBCGeneralStateTestsSuite, _opt.isLegacyTests = true;)
 
 
-
-BLOCKCHAINSUITE_DOTESTS_OVERRIDE(BCGeneralStateTestsVMSuite,
-     // Register subtest as finished test case. because each folder is treated as test case folder
-     test::TestOutputHelper::get().markTestFolderAsFinished(
-        getFullPathFiller("VMTests").parent_path(), "VMTests");
-    )
-
-BLOCKCHAINSUITE_DOTESTS_OVERRIDE(BCGeneralStateTestsShanghaiSuite,
-     test::TestOutputHelper::get().markTestFolderAsFinished(
-         getFullPathFiller("Shanghai").parent_path(), "Shanghai");
-    )
-
-
+BLOCKCHAINSUITE_DOTESTS_OVERRIDE(BCGeneralStateTestsVMSuite, MARKFINISHED("VMTests"))
+BLOCKCHAINSUITE_DOTESTS_OVERRIDE(BCGeneralStateTestsShanghaiSuite, MARKFINISHED("Shanghai"))
 BLOCKCHAINSUITE_DOTESTS_OVERRIDE(BCGeneralStateTestsSuite,
      // Register subtest as finished test case. because each folder is treated as test case folder
-     test::TestOutputHelper::get().markTestFolderAsFinished(
-         getFullPathFiller("VMTests").parent_path(), "VMTests");
-     test::TestOutputHelper::get().markTestFolderAsFinished(
-         getFullPathFiller("Shanghai").parent_path(), "Shanghai");
-     test::TestOutputHelper::get().markTestFolderAsFinished(
-         getFullPathFiller("stExpectSection").parent_path(), "stExpectSection");
-    )
+     MARKFINISHED("Shanghai")
+     MARKFINISHED("VMTests")
+     MARKFINISHED("stExpectSection"))
 
-BLOCKCHAINSUITE_DOTESTS_OVERRIDE(BCEIPStateTestsSuite,
-     test::TestOutputHelper::get().markTestFolderAsFinished(
-         getFullPathFiller("stEOF").parent_path(), "stEOF");
-    )
-
-BLOCKCHAINSUITE_DOTESTS_OVERRIDE(BCEIPStateTestsEOFSuite,
-         test::TestOutputHelper::get().markTestFolderAsFinished(
-             getFullPathFiller("stEOF").parent_path(), "stEOF");
-    )
+BLOCKCHAINSUITE_DOTESTS_OVERRIDE(BCEIPStateTestsSuite, MARKFINISHED("stEOF"))
+BLOCKCHAINSUITE_DOTESTS_OVERRIDE(BCEIPStateTestsEOFSuite, MARKFINISHED("stEOF"))
 
 }  // Namespace Close
 

@@ -40,13 +40,9 @@ namespace fs = boost::filesystem;
 
 namespace test
 {
-spDataObject StateTestSuite::doTests(spDataObject& _input, TestSuiteOptions& _opt) const
+spDataObject StateTestSuite::DoTests(spDataObject& _input, TestSuiteOptions& _opt) const
 {
     TestOutputHelper::get().setCurrentTestInfo(TestInfo("StateTestSuite::doTests init"));
-
-    // Register subtest as finished test case. because each folder is treated as test case folder
-    test::TestOutputHelper::get().markTestFolderAsFinished(getFullPathFiller("VMTests").parent_path(), "VMTests");
-
     if (_opt.doFilling)
     {
         spDataObject filledTest;
