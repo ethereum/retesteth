@@ -50,6 +50,7 @@ BLOCKCHAINSUITE_FOLDER_OVERRIDE(BCEIPStateTestsEOFSuite, "/EIPStateTests/stEOF",
 BLOCKCHAINSUITE_FOLDER_OVERRIDE(BlockchainTestTransitionSuite, "/TransitionTests", "/BlockchainTestsFiller/TransitionTests")
 BLOCKCHAINSUITE_FOLDER_OVERRIDE(BlockchainTestInvalidSuite, "/InvalidBlocks", "/BlockchainTestsFiller/InvalidBlocks")
 BLOCKCHAINSUITE_FOLDER_OVERRIDE(BlockchainTestValidSuite, "/ValidBlocks", "/BlockchainTestsFiller/ValidBlocks")
+BLOCKCHAINSUITE_FOLDER_OVERRIDE(BlockchainTestEIPSuite, "/EIPTests", "/BlockchainTestsFiller/EIPTests")
 
 
 #define LEGACY_BLOCKCHAINSUITE_FOLDER_OVERRIDE(SUITE, FOLDER, FILLER)   \
@@ -84,6 +85,7 @@ LEGACY_BLOCKCHAINSUITE_FOLDER_OVERRIDE(LegacyConstantinopleBlockchainValidTestSu
 
 BLOCKCHAINSUITE_DOTESTS_OVERRIDE(BlockchainTestTransitionSuite, _opt.allowInvalidBlocks = true;)
 BLOCKCHAINSUITE_DOTESTS_OVERRIDE(BlockchainTestInvalidSuite, _opt.allowInvalidBlocks = true;)
+BLOCKCHAINSUITE_DOTESTS_OVERRIDE(BlockchainTestEIPSuite, _opt.allowInvalidBlocks = true;)
 BLOCKCHAINSUITE_DOTESTS_OVERRIDE(BlockchainTestValidSuite, _opt.allowInvalidBlocks = false;)
 BLOCKCHAINSUITE_DOTESTS_OVERRIDE(LegacyConstantinopleBlockchainInvalidTestSuite,
                                  _opt.allowInvalidBlocks = true;
@@ -169,6 +171,12 @@ BOOST_AUTO_TEST_CASE(bcExample) {}
 BOOST_AUTO_TEST_CASE(bcEIP1559) {}
 BOOST_AUTO_TEST_CASE(bcEIP3675) {}
 BOOST_AUTO_TEST_SUITE_END()
+
+using BCEIPSuiteFixture = TestFixture<BlockchainTestEIPSuite, DefaultFlags>;
+ETH_REGISTER_DYNAMIC_TEST_SEARCH(BCEIPSuiteFixture, "BlockchainTests/EIPTests")
+BOOST_FIXTURE_TEST_SUITE(EIPTests, BCEIPSuiteFixture)
+BOOST_AUTO_TEST_SUITE_END()
+
 
 using BCInValidSuiteFixture2 = TestFixture<BlockchainTestInvalidSuite, RequireOptionFill>;
 BOOST_FIXTURE_TEST_SUITE(Retesteth, BCInValidSuiteFixture2)

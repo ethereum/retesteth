@@ -25,6 +25,8 @@ using namespace dataobject;
 REGISTER_SUITE(BlockchainTestValidSuite, TestSuite,)
 REGISTER_SUITE(BlockchainTestInvalidSuite, TestSuite,)
 REGISTER_SUITE(BlockchainTestTransitionSuite, TestSuite,)
+REGISTER_SUITE(BlockchainTestEIPSuite, BlockchainTestInvalidSuite,)
+
 REGISTER_SUITE(BCGeneralStateTestsSuite, BlockchainTestValidSuite,)
 REGISTER_SUITE(BCGeneralStateTestsVMSuite, BCGeneralStateTestsSuite,)
 REGISTER_SUITE(BCGeneralStateTestsShanghaiSuite, BCGeneralStateTestsSuite,)
