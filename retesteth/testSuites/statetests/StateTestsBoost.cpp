@@ -79,10 +79,13 @@ STATESUITE_DO_OVERRIDE(EIPStateTestEOFSuite,)
 using EIPStateTestsFixture = TestFixture<EIPStateTestSuite, DefaultFlags>;
 ETH_REGISTER_DYNAMIC_TEST_SEARCH(EIPStateTestsFixture, "EIPStateTests")
 BOOST_FIXTURE_TEST_SUITE(EIPStateTests, EIPStateTestsFixture)
+BOOST_AUTO_TEST_CASE(stEIP3855) {}
+BOOST_AUTO_TEST_CASE(stEIP3860) {}
 
 using EIPStateTestsEOFFixture = TestFixture<EIPStateTestEOFSuite, DefaultFlags>;
 ETH_REGISTER_DYNAMIC_TEST_SEARCH(EIPStateTestsEOFFixture, "EIPStateTests/stEOF")
 BOOST_FIXTURE_TEST_SUITE(stEOF, EIPStateTestsEOFFixture)
+BOOST_AUTO_TEST_CASE(stEIP3540) {}
 
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
@@ -162,13 +165,9 @@ BOOST_AUTO_TEST_CASE(stSLoadTest) {}
 BOOST_AUTO_TEST_CASE(stChainId) {}
 BOOST_AUTO_TEST_CASE(stSelfBalance) {}
 BOOST_AUTO_TEST_CASE(stStaticFlagEnabled) {}
-BOOST_AUTO_TEST_CASE(stSubroutine) {}
-BOOST_AUTO_TEST_CASE(stEIP2537) {}
 BOOST_AUTO_TEST_CASE(stEIP2930) {}
 BOOST_AUTO_TEST_CASE(stEIP1559) {}
 BOOST_AUTO_TEST_CASE(stEIP3607) {}
-BOOST_AUTO_TEST_CASE(stEIP3670) {}
-BOOST_AUTO_TEST_CASE(stEIP3860) {}
 
 // Heavy
 BOOST_AUTO_TEST_CASE(stTimeConsuming) {}
@@ -183,7 +182,6 @@ BOOST_AUTO_TEST_SUITE_END()
 using GeneralStateTestsShanghaiFixture = TestFixture<StateTestShanghaiSuite, DefaultFlags>;
 ETH_REGISTER_DYNAMIC_TEST_SEARCH(GeneralStateTestsShanghaiFixture, "GeneralStateTests/Shanghai")
 BOOST_FIXTURE_TEST_SUITE(Shanghai, GeneralStateTestsShanghaiFixture)
-BOOST_AUTO_TEST_CASE(stEIP3540) {}
 BOOST_AUTO_TEST_SUITE_END()
 
 // Converted VMTests

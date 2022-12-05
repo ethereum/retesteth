@@ -253,13 +253,9 @@ BOOST_AUTO_TEST_CASE(stChainId) {}
 BOOST_AUTO_TEST_CASE(stSLoadTest) {}
 BOOST_AUTO_TEST_CASE(stSelfBalance) {}
 BOOST_AUTO_TEST_CASE(stStaticFlagEnabled) {}
-BOOST_AUTO_TEST_CASE(stSubroutine) {}
-BOOST_AUTO_TEST_CASE(stEIP2537) {}
 BOOST_AUTO_TEST_CASE(stEIP2930) {}
 BOOST_AUTO_TEST_CASE(stEIP1559) {}
 BOOST_AUTO_TEST_CASE(stEIP3607) {}
-BOOST_AUTO_TEST_CASE(stEIP3670) {}
-BOOST_AUTO_TEST_CASE(stEIP3860) {}
 
 // Heavy
 BOOST_AUTO_TEST_CASE(stTimeConsuming) {}
@@ -280,7 +276,6 @@ BOOST_AUTO_TEST_SUITE_END()
 using BCGeneralStateTestsShanghaiFixture = TestFixture<BCGeneralStateTestsShanghaiSuite, RequireOptionAll>;
 ETH_REGISTER_DYNAMIC_TEST_SEARCH(BCGeneralStateTestsShanghaiFixture, "BCGeneralStateTests/Shanghai")
 BOOST_FIXTURE_TEST_SUITE(Shanghai, BCGeneralStateTestsShanghaiFixture)
-BOOST_AUTO_TEST_CASE(stEIP3540) {}
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -288,6 +283,8 @@ BOOST_AUTO_TEST_SUITE_END()
 using BCEIPStateSuiteFixture = TestFixture<BCEIPStateTestsSuite, RequireOptionAllNotRefillable>;
 ETH_REGISTER_DYNAMIC_TEST_SEARCH(BCEIPStateSuiteFixture, "BCEIPStateTests")
 BOOST_FIXTURE_TEST_SUITE(BCEIPStateTests, BCEIPStateSuiteFixture)
+BOOST_AUTO_TEST_CASE(stEIP3855) {}
+BOOST_AUTO_TEST_CASE(stEIP3860) {}
 
 using BCEIPStateTestsEOFFixture = TestFixture<BCEIPStateTestsEOFSuite, RequireOptionAll>;
 ETH_REGISTER_DYNAMIC_TEST_SEARCH(BCEIPStateTestsEOFFixture, "BCEIPStateTests/stEOF")
