@@ -34,7 +34,17 @@ test_suite* getSuiteByPathName(std::string const& _suiteName)
     {
         auto const suiteid = suite->get(suiteName);
         if (suiteid != INV_TEST_UNIT_ID)
-            suite = &framework::get<test_suite>(suiteid);
+        {
+            try {
+                suite = &framework::get<test_suite>(suiteid);
+            }
+            catch (std::exception const&)
+            {
+                ETH_WARNING("Pathname `" + _suiteName + "` is not a suite!");
+                return nullptr;
+            }
+
+        }
         else
             return nullptr;
     }

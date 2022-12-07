@@ -12,7 +12,7 @@ namespace test
 {
 using namespace dataobject;
 
-#define REGISTER_SUITE(SUITE, BASE, CODE)               \
+#define REGISTER_SUITE_OVERRIDE(SUITE, BASE, CODE)      \
     class SUITE : public BASE                           \
     {                                                   \
         CODE                                            \
@@ -22,24 +22,32 @@ using namespace dataobject;
         FillerPath suiteFillerFolder() const override;  \
     };
 
-REGISTER_SUITE(BlockchainTestValidSuite, TestSuite,)
-REGISTER_SUITE(BlockchainTestInvalidSuite, TestSuite,)
-REGISTER_SUITE(BlockchainTestTransitionSuite, TestSuite,)
-REGISTER_SUITE(BlockchainTestEIPSuite, BlockchainTestInvalidSuite,)
+#define REGISTER_SUITE(SUITE, BASE)                     \
+    class SUITE : public BASE                           \
+    {                                                   \
+    public:                                             \
+        TestPath suiteFolder() const override;          \
+        FillerPath suiteFillerFolder() const override;  \
+    };
 
-REGISTER_SUITE(BCGeneralStateTestsSuite, BlockchainTestValidSuite,)
-REGISTER_SUITE(BCGeneralStateTestsVMSuite, BCGeneralStateTestsSuite,)
-REGISTER_SUITE(BCGeneralStateTestsShanghaiSuite, BCGeneralStateTestsSuite,)
+REGISTER_SUITE_OVERRIDE(BlockchainTestValidSuite, TestSuite,)
+REGISTER_SUITE_OVERRIDE(BlockchainTestInvalidSuite, TestSuite,)
+REGISTER_SUITE_OVERRIDE(BlockchainTestTransitionSuite, TestSuite,)
 
-REGISTER_SUITE(BCEIPStateTestsSuite, BlockchainTestValidSuite,)
-REGISTER_SUITE(BCEIPStateTestsEOFSuite, BCEIPStateTestsSuite,)
+REGISTER_SUITE(BlockchainTestEIPSuite, BlockchainTestInvalidSuite)
+REGISTER_SUITE(BCGeneralStateTestsSuite, BlockchainTestValidSuite)
+REGISTER_SUITE(BCGeneralStateTestsVMSuite, BCGeneralStateTestsSuite)
+REGISTER_SUITE(BCGeneralStateTestsShanghaiSuite, BCGeneralStateTestsSuite)
+
+REGISTER_SUITE(BCEIPStateTestsSuite, BlockchainTestValidSuite)
+REGISTER_SUITE(BCEIPStateTestsEOFSuite, BCEIPStateTestsSuite)
 
 #define LEGACYFLAG  \
     protected:      \
         bool legacyTestSuiteFlag() const override { return  true; }
 
-REGISTER_SUITE(LegacyConstantinopleBCGeneralStateTestsSuite, BlockchainTestValidSuite, LEGACYFLAG)
-REGISTER_SUITE(LegacyConstantinopleBlockchainInvalidTestSuite, BlockchainTestInvalidSuite, LEGACYFLAG)
-REGISTER_SUITE(LegacyConstantinopleBlockchainValidTestSuite, BlockchainTestValidSuite, LEGACYFLAG)
+REGISTER_SUITE_OVERRIDE(LegacyConstantinopleBCGeneralStateTestsSuite, BlockchainTestValidSuite, LEGACYFLAG)
+REGISTER_SUITE_OVERRIDE(LegacyConstantinopleBlockchainInvalidTestSuite, BlockchainTestInvalidSuite, LEGACYFLAG)
+REGISTER_SUITE_OVERRIDE(LegacyConstantinopleBlockchainValidTestSuite, BlockchainTestValidSuite, LEGACYFLAG)
 
 }  // test

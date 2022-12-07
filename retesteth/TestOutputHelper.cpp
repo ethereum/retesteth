@@ -323,6 +323,22 @@ bool pathHasTests(fs::path const& _path)
     return false;
 }
 
+string selectRootPath(string const& _str, string const& _tArgument)
+{
+    string masterPrefix = _tArgument;
+    size_t const pos1 = _str.find("src/");
+    if (pos1 != string::npos)
+    {
+        size_t const pos2 = _str.find("/", pos1 + 4);
+        size_t const pos3 = _tArgument.find("/");
+        if (pos3 != string::npos)
+            masterPrefix = _tArgument.substr(0, pos3);
+        if (pos2 != string::npos)
+            return masterPrefix + "/" + _str.substr(pos2 + 1);
+    }
+    return masterPrefix;
+}
+
 void checkUnfinishedTestFolders()
 {
     std::lock_guard<std::mutex> lock(g_finishedTestFoldersMapMutex);
@@ -364,11 +380,17 @@ void checkUnfinishedTestFolders()
             {
                 if (fs::is_directory(*it))
                 {
-                    string const folderName = it->path().filename().string();
-                    allFolders.insert(folderName);
-                    string const& suiteName = opt.rCurrentTestSuite + "/" + it->path().stem().string();
-                    if (!isBoostSuite(suiteName) && !pathHasTests(it->path()))
-                        ETH_WARNING(string("Test folder ") + it->path().c_str() + " appears to have no tests!");
+                    string const suiteName = selectRootPath(it->path().string(), opt.rCurrentTestSuite);
+                    bool const isSuite = isBoostSuite(suiteName);
+
+                    if (!isSuite)
+                    {
+                        string const folderName = it->path().filename().string();
+                        allFolders.insert(folderName);
+
+                        if (!pathHasTests(it->path()))
+                            ETH_WARNING(string("Test folder ") + it->path().c_str() + " appears to have no tests!");
+                    }
                 }
             }
 

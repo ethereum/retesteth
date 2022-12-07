@@ -40,7 +40,7 @@ namespace fs = boost::filesystem;
 
 namespace test
 {
-spDataObject StateTestSuite::DoTests(spDataObject& _input, TestSuiteOptions& _opt) const
+spDataObject StateTestSuite::doTests(spDataObject& _input, TestSuiteOptions& _opt) const
 {
     TestOutputHelper::get().setCurrentTestInfo(TestInfo("StateTestSuite::doTests init"));
     if (_opt.doFilling)

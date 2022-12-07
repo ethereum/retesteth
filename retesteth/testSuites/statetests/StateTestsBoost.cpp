@@ -27,35 +27,11 @@ namespace fs = boost::filesystem;
         return TestSuite::FillerPath(fs::path(string("src/GeneralStateTestsFiller") + string(FOLDER + m_fillerPathAdd))); \
     }
 
-#define EIPSTATESUITE_FOLDER_OVERRIDE(SUITE, FOLDER)   \
-    TestSuite::TestPath SUITE::suiteFolder() const  \
-    {                                               \
-        if (Options::get().fillchain)               \
-            return TestSuite::TestPath(fs::path(string("BlockchainTests/EIPStateTests") + string(FOLDER + m_fillerPathAdd))); \
-        return TestSuite::TestPath(fs::path(string("EIPStateTests") + string(FOLDER + m_fillerPathAdd))); \
-    }                                               \
-                                                    \
-    TestSuite::FillerPath SUITE::suiteFillerFolder() const \
-    {                                               \
-        return TestSuite::FillerPath(fs::path(string("src/EIPStateTestsFiller") + string(FOLDER + m_fillerPathAdd))); \
-    }
-
-#define STATESUITE_DO_OVERRIDE(SUITE, CODE) \
-spDataObject SUITE::doTests(spDataObject& _input, TestSuite::TestSuiteOptions& _opt) const \
-{                                           \
-    CODE                                    \
-    return DoTests(_input, _opt);           \
-}
-
-#define MARKFINISHED(CASE) \
-    test::TestOutputHelper::get().markTestFolderAsFinished(getFullPathFiller(CASE).parent_path(), CASE);
-
 STATESUITE_FOLDER_OVERRIDE(StateTestSuite, "")
-STATESUITE_DO_OVERRIDE(StateTestSuite, MARKFINISHED("VMTests"))
 STATESUITE_FOLDER_OVERRIDE(StateTestVMSuite, "/VMTests")
-STATESUITE_DO_OVERRIDE(StateTestVMSuite,)
 STATESUITE_FOLDER_OVERRIDE(StateTestShanghaiSuite, "/Shanghai")
-STATESUITE_DO_OVERRIDE(StateTestShanghaiSuite,)
+STATESUITE_FOLDER_OVERRIDE(EIPStateTestSuite, "/EIPTests")
+STATESUITE_FOLDER_OVERRIDE(EIPStateTestEOFSuite, "/EIPTests/stEOF")
 
 
 // Legacy Constantinople
@@ -68,27 +44,6 @@ TestSuite::FillerPath LegacyConstantinopleStateTestSuite::suiteFillerFolder() co
 {
     return TestSuite::FillerPath(fs::path("src") / "LegacyTests" / "Constantinople" / "GeneralStateTestsFiller");
 }
-
-
-EIPSTATESUITE_FOLDER_OVERRIDE(EIPStateTestSuite, "")
-STATESUITE_DO_OVERRIDE(EIPStateTestSuite, MARKFINISHED("stEOF"))
-EIPSTATESUITE_FOLDER_OVERRIDE(EIPStateTestEOFSuite, "/stEOF")
-STATESUITE_DO_OVERRIDE(EIPStateTestEOFSuite,)
-
-
-using EIPStateTestsFixture = TestFixture<EIPStateTestSuite, DefaultFlags>;
-ETH_REGISTER_DYNAMIC_TEST_SEARCH(EIPStateTestsFixture, "EIPStateTests")
-BOOST_FIXTURE_TEST_SUITE(EIPStateTests, EIPStateTestsFixture)
-BOOST_AUTO_TEST_CASE(stEIP3855) {}
-BOOST_AUTO_TEST_CASE(stEIP3860) {}
-
-using EIPStateTestsEOFFixture = TestFixture<EIPStateTestEOFSuite, DefaultFlags>;
-ETH_REGISTER_DYNAMIC_TEST_SEARCH(EIPStateTestsEOFFixture, "EIPStateTests/stEOF")
-BOOST_FIXTURE_TEST_SUITE(stEOF, EIPStateTestsEOFFixture)
-BOOST_AUTO_TEST_CASE(stEIP3540) {}
-
-BOOST_AUTO_TEST_SUITE_END()
-BOOST_AUTO_TEST_SUITE_END()
 
 
 // latest version StateTests
@@ -195,5 +150,20 @@ BOOST_AUTO_TEST_CASE(vmLogTest) {}
 BOOST_AUTO_TEST_CASE(vmPerformance) {}
 BOOST_AUTO_TEST_CASE(vmTests) {}
 BOOST_AUTO_TEST_SUITE_END()
+
+using EIPStateTestsFixture = TestFixture<EIPStateTestSuite, DefaultFlags>;
+ETH_REGISTER_DYNAMIC_TEST_SEARCH(EIPStateTestsFixture, "GeneralStateTests/EIPTests")
+BOOST_FIXTURE_TEST_SUITE(EIPTests, EIPStateTestsFixture)
+BOOST_AUTO_TEST_CASE(stEIP3855) {}
+BOOST_AUTO_TEST_CASE(stEIP3860) {}
+
+using EIPStateTestsEOFFixture = TestFixture<EIPStateTestEOFSuite, DefaultFlags>;
+ETH_REGISTER_DYNAMIC_TEST_SEARCH(EIPStateTestsEOFFixture, "GeneralStateTests/EIPTests/stEOF")
+BOOST_FIXTURE_TEST_SUITE(stEOF, EIPStateTestsEOFFixture)
+BOOST_AUTO_TEST_CASE(stEIP3540) {}
+
+BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE_END()
+
 
 BOOST_AUTO_TEST_SUITE_END()

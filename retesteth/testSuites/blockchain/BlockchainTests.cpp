@@ -29,9 +29,6 @@ namespace fs = boost::filesystem;
 namespace test
 {
 
-#define MARKFINISHED(CASE) \
-    test::TestOutputHelper::get().markTestFolderAsFinished(getFullPathFiller(CASE).parent_path(), CASE);
-
 #define BLOCKCHAINSUITE_FOLDER_OVERRIDE(SUITE, FOLDER, FILLER)   \
     TestSuite::TestPath SUITE::suiteFolder() const       \
     {                                                    \
@@ -46,9 +43,8 @@ namespace test
 BLOCKCHAINSUITE_FOLDER_OVERRIDE(BCGeneralStateTestsSuite, "/GeneralStateTests", "/GeneralStateTestsFiller")
 BLOCKCHAINSUITE_FOLDER_OVERRIDE(BCGeneralStateTestsVMSuite, "/GeneralStateTests/VMTests", "/GeneralStateTestsFiller/VMTests")
 BLOCKCHAINSUITE_FOLDER_OVERRIDE(BCGeneralStateTestsShanghaiSuite, "/GeneralStateTests/Shanghai", "/GeneralStateTestsFiller/Shanghai")
-
-BLOCKCHAINSUITE_FOLDER_OVERRIDE(BCEIPStateTestsSuite, "/EIPStateTests", "/EIPStateTestsFiller")
-BLOCKCHAINSUITE_FOLDER_OVERRIDE(BCEIPStateTestsEOFSuite, "/EIPStateTests/stEOF", "/EIPStateTestsFiller/stEOF")
+BLOCKCHAINSUITE_FOLDER_OVERRIDE(BCEIPStateTestsSuite, "/GeneralStateTests/EIPTests", "/GeneralStateTestsFiller/EIPTests")
+BLOCKCHAINSUITE_FOLDER_OVERRIDE(BCEIPStateTestsEOFSuite, "/GeneralStateTests/EIPTests/stEOF", "/GeneralStateTestsFiller/EIPTests/stEOF")
 
 BLOCKCHAINSUITE_FOLDER_OVERRIDE(BlockchainTestTransitionSuite, "/TransitionTests", "/BlockchainTestsFiller/TransitionTests")
 BLOCKCHAINSUITE_FOLDER_OVERRIDE(BlockchainTestInvalidSuite, "/InvalidBlocks", "/BlockchainTestsFiller/InvalidBlocks")
@@ -78,7 +74,6 @@ LEGACY_BLOCKCHAINSUITE_FOLDER_OVERRIDE(LegacyConstantinopleBlockchainValidTestSu
     "/Constantinople/BlockchainTestsFiller/ValidBlocks")
 
 
-
 #define BLOCKCHAINSUITE_DOTESTS_OVERRIDE(SUITE, FUNC)   \
     spDataObject SUITE::doTests(spDataObject& _input, TestSuiteOptions& _opt) const \
     {                                                   \
@@ -88,7 +83,6 @@ LEGACY_BLOCKCHAINSUITE_FOLDER_OVERRIDE(LegacyConstantinopleBlockchainValidTestSu
 
 BLOCKCHAINSUITE_DOTESTS_OVERRIDE(BlockchainTestTransitionSuite, _opt.allowInvalidBlocks = true;)
 BLOCKCHAINSUITE_DOTESTS_OVERRIDE(BlockchainTestInvalidSuite, _opt.allowInvalidBlocks = true;)
-BLOCKCHAINSUITE_DOTESTS_OVERRIDE(BlockchainTestEIPSuite, _opt.allowInvalidBlocks = true;)
 BLOCKCHAINSUITE_DOTESTS_OVERRIDE(BlockchainTestValidSuite, _opt.allowInvalidBlocks = false;)
 BLOCKCHAINSUITE_DOTESTS_OVERRIDE(LegacyConstantinopleBlockchainInvalidTestSuite,
                                  _opt.allowInvalidBlocks = true;
@@ -97,18 +91,6 @@ BLOCKCHAINSUITE_DOTESTS_OVERRIDE(LegacyConstantinopleBlockchainValidTestSuite,
                                  _opt.allowInvalidBlocks = false;
                                  _opt.isLegacyTests = true;)
 BLOCKCHAINSUITE_DOTESTS_OVERRIDE(LegacyConstantinopleBCGeneralStateTestsSuite, _opt.isLegacyTests = true;)
-
-
-BLOCKCHAINSUITE_DOTESTS_OVERRIDE(BCGeneralStateTestsVMSuite, MARKFINISHED("VMTests"))
-BLOCKCHAINSUITE_DOTESTS_OVERRIDE(BCGeneralStateTestsShanghaiSuite, MARKFINISHED("Shanghai"))
-BLOCKCHAINSUITE_DOTESTS_OVERRIDE(BCGeneralStateTestsSuite,
-     // Register subtest as finished test case. because each folder is treated as test case folder
-     MARKFINISHED("Shanghai")
-     MARKFINISHED("VMTests")
-     MARKFINISHED("stExpectSection"))
-
-BLOCKCHAINSUITE_DOTESTS_OVERRIDE(BCEIPStateTestsSuite, MARKFINISHED("stEOF"))
-BLOCKCHAINSUITE_DOTESTS_OVERRIDE(BCEIPStateTestsEOFSuite, MARKFINISHED("stEOF"))
 
 }  // Namespace Close
 
@@ -278,18 +260,17 @@ ETH_REGISTER_DYNAMIC_TEST_SEARCH(BCGeneralStateTestsShanghaiFixture, "BCGeneralS
 BOOST_FIXTURE_TEST_SUITE(Shanghai, BCGeneralStateTestsShanghaiFixture)
 BOOST_AUTO_TEST_SUITE_END()
 
-BOOST_AUTO_TEST_SUITE_END()
-
 using BCEIPStateSuiteFixture = TestFixture<BCEIPStateTestsSuite, RequireOptionAllNotRefillable>;
-ETH_REGISTER_DYNAMIC_TEST_SEARCH(BCEIPStateSuiteFixture, "BCEIPStateTests")
-BOOST_FIXTURE_TEST_SUITE(BCEIPStateTests, BCEIPStateSuiteFixture)
+ETH_REGISTER_DYNAMIC_TEST_SEARCH(BCEIPStateSuiteFixture, "BCGeneralStateTests/EIPTests")
+BOOST_FIXTURE_TEST_SUITE(EIPTests, BCEIPStateSuiteFixture)
 BOOST_AUTO_TEST_CASE(stEIP3855) {}
 BOOST_AUTO_TEST_CASE(stEIP3860) {}
 
 using BCEIPStateTestsEOFFixture = TestFixture<BCEIPStateTestsEOFSuite, RequireOptionAll>;
-ETH_REGISTER_DYNAMIC_TEST_SEARCH(BCEIPStateTestsEOFFixture, "BCEIPStateTests/stEOF")
+ETH_REGISTER_DYNAMIC_TEST_SEARCH(BCEIPStateTestsEOFFixture, "BCGeneralStateTests/EIPTests/stEOF")
 BOOST_FIXTURE_TEST_SUITE(stEOF, BCEIPStateTestsEOFFixture)
 BOOST_AUTO_TEST_CASE(stEIP3540) {}
+BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
 
 

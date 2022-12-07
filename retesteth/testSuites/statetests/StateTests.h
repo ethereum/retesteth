@@ -29,7 +29,6 @@ namespace test
 class StateTestSuite : public TestSuite
 {
 public:
-    dataobject::spDataObject DoTests(dataobject::spDataObject& _input, TestSuiteOptions& _opt) const;
     dataobject::spDataObject doTests(dataobject::spDataObject& _input, TestSuiteOptions& _opt) const override;
     TestSuite::TestPath suiteFolder() const override;
     TestSuite::FillerPath suiteFillerFolder() const override;
@@ -50,7 +49,6 @@ public:
     class NAME : public StateTestSuite      \
     {                                       \
     public:                                 \
-        dataobject::spDataObject doTests(dataobject::spDataObject& _input, TestSuiteOptions& _opt) const override; \
         TestSuite::TestPath suiteFolder() const override;        \
         TestSuite::FillerPath suiteFillerFolder() const override;\
     };
