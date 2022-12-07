@@ -17,7 +17,14 @@ VMLogRecord::VMLogRecord(DataObject const& _obj)
 {
     try
     {
-        if (_obj.getSubObjects().size() == 4)
+        if (_obj.getSubObjects().size() == 2)
+        {
+            REQUIRE_JSONFIELDS(_obj, "VMLogRecord " + _obj.getKey(),
+                {
+                    {"output", {{DataType::String}, jsonField::Required}},
+                    {"gasUsed", {{DataType::String}, jsonField::Required}}});
+        }
+        else if (_obj.getSubObjects().size() == 4)
         {
             REQUIRE_JSONFIELDS(_obj, "VMLogRecord " + _obj.getKey(),
                 {
@@ -43,7 +50,11 @@ VMLogRecord::VMLogRecord(DataObject const& _obj)
              {"error", {{DataType::String}, jsonField::Optional}}});
         }
 
-        if (_obj.getSubObjects().size() == 4)
+        if (_obj.getSubObjects().size() == 2)
+        {
+            isShort = true;
+        }
+        else if (_obj.getSubObjects().size() == 4)
         {
             error = _obj.atKey("error").asString();
             isShort = true;
@@ -90,7 +101,7 @@ DebugVMTrace::DebugVMTrace(
 
         string line;
         size_t k = 0;
-        const size_t c_maxRowsToPrint = 100;
+        const size_t c_maxRowsToPrint = 300;
         fs::ifstream fileHandler(_logs);
 
         auto readLog = [this](string const& _line){
