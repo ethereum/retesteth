@@ -169,7 +169,7 @@ void DebugVMTrace::printNice()
         return;
 
     string s_comment = "";
-    dev::bigint maxGas = m_log.at(0).gas->asBigInt();
+    dev::bigint maxGas = m_log.at(0).isShort ? 500000 : m_log.at(0).gas->asBigInt();
     size_t k = 0;
     size_t const step = 9;
     string const stepw = "          ";

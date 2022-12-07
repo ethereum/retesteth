@@ -271,14 +271,17 @@ echo "0x600360005500"
 # just like described in this file."
 )";
 
-
-string const t8ntool_yulcompiler = R"(#!/bin/sh
+string const yul_compiler_sh = R"(#!/bin/sh
 solc=$(which solc)
 if [ -z $solc ]; then
    >&2 echo "yul.sh \"Yul compilation error: 'solc' not found!\""
    echo "0x"
 else
-    echo 0x`solc --assemble $1 2>/dev/null | grep "Binary representation:" -A 1 | tail -n1`
+    out=$(solc --assemble $1 2>&1)
+    case "$out" in
+    *Error*) >&2 echo "yul.sh \"Yul compilation error: \"\n$out";;
+    *       )  a=$(echo $out | grep "Binary representation:" -A 1 | tail -n1) echo 0x$a;;
+    esac
 fi
 )";
 
@@ -308,7 +311,7 @@ gent8ntoolcfg::gent8ntoolcfg()
         spDataObject obj;
         (*obj)["exec"] = true;
         (*obj)["path"] = "t8ntool/yul.sh";
-        (*obj)["content"] = t8ntool_yulcompiler;
+        (*obj)["content"] = yul_compiler_sh;
         map_configs.addArrayObject(obj);
     }
     {
@@ -335,7 +338,7 @@ gent8ntoolcfg::gent8ntoolcfg()
         spDataObject obj;
         (*obj)["exec"] = true;
         (*obj)["path"] = "default/yul.sh";
-        (*obj)["content"] = t8ntool_yulcompiler;
+        (*obj)["content"] = yul_compiler_sh;
         map_configs.addArrayObject(obj);
     }
 }

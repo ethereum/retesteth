@@ -264,16 +264,6 @@ echo "0x600360005500"
 )";
 
 
-string const etctr_yulcompiler = R"(#!/bin/sh
-solc=$(which solc)
-if [ -z $solc ]; then
-   >&2 echo "yul.sh \"Yul compilation error: 'solc' not found!\""
-   echo "0x"
-else
-    echo 0x`solc --assemble $1 2>/dev/null | grep "Binary representation:" -A 1 | tail -n1`
-fi
-)";
-
 genetctranslatecfg::genetctranslatecfg()
 {
     {
@@ -300,7 +290,7 @@ genetctranslatecfg::genetctranslatecfg()
         spDataObject obj;
         (*obj)["exec"] = true;
         (*obj)["path"] = "etctranslate/yul.sh";
-        (*obj)["content"] = etctr_yulcompiler;
+        (*obj)["content"] = yul_compiler_sh;
         map_configs.addArrayObject(obj);
     }
 }

@@ -5,6 +5,7 @@
 namespace retesteth::options
 {
 extern dataobject::DataObject map_configs;
+extern std::string const yul_compiler_sh;
 
 #define REGISTER(X) \
     class gen##X { public: gen##X(); };
