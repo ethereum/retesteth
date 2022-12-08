@@ -94,9 +94,9 @@ private:
         void initArg(std::string const& _arg) override { outpath = _arg; }
     };
 
-    struct vmtrace_opt : public booloutpath_opt
+    struct booloutpathselector_opt : public booloutpath_opt
     {
-        vmtrace_opt(bool _arg) : booloutpath_opt(_arg) { m_argType = ARGS::NONE_OPTIONAL; }
+        booloutpathselector_opt(bool _arg) : booloutpath_opt(_arg) { m_argType = ARGS::NONE_OPTIONAL; }
         operator bool() const { return m_inited; }
         size_t blockNumber;
         size_t transactionNumber;
@@ -200,9 +200,9 @@ public:
     int_opt trGasIndex= -1;
     int_opt trValueIndex = -1;
     bool_opt getvectors = false;
-    vmtrace_opt vmtrace = false;
+    booloutpathselector_opt vmtrace = false;
     bool_opt statediff = false;
-    vmtrace_opt vmtraceraw = false;
+    booloutpathselector_opt vmtraceraw = false;
     bool_opt vmtrace_nomemory = false;
     bool_opt vmtrace_nostack = false;
     bool_opt vmtrace_noreturndata = false;
@@ -226,7 +226,7 @@ public:
     sizet_opt chainid = 1;
     bool_opt showhash = false;
     bool_opt checkhash = false;
-    booloutpath_opt poststate = false;
+    booloutpathselector_opt poststate = false;
     bool_opt fullstate = false;
     bool_opt forceupdate = false;
     static bool isLegacy();

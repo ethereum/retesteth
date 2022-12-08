@@ -171,8 +171,6 @@ Options::Options(int argc, const char** argv)
             vmtrace.isBlockSelected = vmtraceraw.isBlockSelected;
             vmtrace.blockNumber = vmtraceraw.blockNumber;
             vmtrace.transactionNumber = vmtraceraw.transactionNumber;
-            if (logVerbosity.val < 6 && vmtraceraw.outpath.empty())
-                std::cout << "Warning: --vmtraceraw is defined, but trace is printed with verbosity level 6, which is not set" << std::endl;
     });
     ADD_OPTIONV(vmtrace_nomemory, "--vmtrace.nomemory", [](){
         cout << setw(30) << "--vmtrace.nomemory" << setw(25) << "Disable memory in vmtrace/vmtraceraw\n";
@@ -582,7 +580,7 @@ void Options::fspath_opt::initArg(std::string const& _arg)
         BOOST_THROW_EXCEPTION(InvalidOption("Error: `" + m_sOptionName + "` could not locate file or path: " + _arg));
 }
 
-void Options::vmtrace_opt::parse2OptionalArgs(std::string const& _arg)
+void Options::booloutpathselector_opt::parse2OptionalArgs(std::string const& _arg)
 {
     // Can take 0 args, act as bool
     // 1 arg = either path or block selector

@@ -115,8 +115,10 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
         size_t txIndex = 0;
         for (auto const& tr : tblock.transactions())
         {
-            TxContext const ctx(session, _test.testName(), tr, latestBlock.header(), blockNumber, txIndex);
+            TxContext const ctx(session, _test.testName(), tr, latestBlock.header(),
+                _test.network(), blockNumber, txIndex);
             performVMTrace(ctx);
+            performPostState(ctx);
             txIndex++;
         }
 

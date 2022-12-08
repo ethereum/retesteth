@@ -104,8 +104,10 @@ void TestBlockchain::generateBlock(
         size_t txIndex = 0;
         for (auto const& remoteTr : minedBlock->transactions())
         {
-            TxContext const ctx(m_session, TestOutputHelper::get().testName(), remoteTr.transaction(), minedBlock->header(), (size_t)minedBlock->header()->number().asBigInt(), txIndex++);
+            TxContext const ctx(m_session, TestOutputHelper::get().testName(), remoteTr.transaction(), minedBlock->header(),
+                m_network, (size_t)minedBlock->header()->number().asBigInt(), txIndex);
             performVMTrace(ctx);
+            txIndex++;
 
             if (testTransactionMap.count(remoteTr.hash()))
             {
