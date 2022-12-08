@@ -254,8 +254,9 @@ void compareStates(StateBase const& _stateExpect, State const& _statePost)
         if (accountCompareResult != CompareResult::Success)
             result = accountCompareResult;
     }
-    if (Options::get().poststate)
-        ETH_DC_MESSAGE(DC::STATE, "State Dump: \n" + _statePost.asDataObject()->asJson());
+    auto const& opt = Options::get();
+    if (opt.poststate && !opt.poststate.isBlockSelected)
+        ETH_DC_MESSAGE(DC::STATE, "Compare States State Dump: \n" + _statePost.asDataObject()->asJson());
     if (result != CompareResult::Success)
         ETH_ERROR_MESSAGE("CompareStates failed with errors: " + CompareResultToString(result));
 }

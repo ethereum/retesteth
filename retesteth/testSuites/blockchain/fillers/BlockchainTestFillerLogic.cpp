@@ -85,9 +85,6 @@ spDataObject FillTest(BlockchainTestInFiller const& _test, TestSuite::TestSuiteO
                     State remoteState(getRemoteState(session));
                     compareStates(expect.result(), remoteState);
                     filledTest.atKeyPointer("postState") = remoteState.asDataObject();
-                    if (Options::get().poststate)
-                        ETH_DC_MESSAGE(DC::STATE, "\nState Dump:" + TestOutputHelper::get().testInfo().errorDebug() + cDefault +
-                                                      " \n" + filledTest.atKey("postState").asJson());
                 }
                 catch (StateTooBig const&)
                 {
@@ -95,7 +92,7 @@ spDataObject FillTest(BlockchainTestInFiller const& _test, TestSuite::TestSuiteO
                     filledTest["postStateHash"] = finalBlock.header()->stateRoot().asString();
                 }
 
-                if (Options::get().poststate)
+                if (Options::get().poststate && !Options::get().poststate.isBlockSelected)
                     ETH_DC_MESSAGE(DC::STATE, "PostState " + TestOutputHelper::get().testInfo().errorDebug() + " : \n" +
                                                   cDefault + "Hash: " + finalBlock.header()->stateRoot().asString());
 

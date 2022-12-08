@@ -1,6 +1,7 @@
 #pragma once
 #include <retesteth/session/SessionInterface.h>
 #include <retesteth/testStructures/configs/FORK.h>
+#include <retesteth/testStructures/basetypes/FH32.h>
 
 
 namespace test {
@@ -20,6 +21,9 @@ struct TxContext {
 };
 
 void performVMTrace(TxContext const& _context);
+void performPostState(test::session::SessionInterface& _session, std::string const& _testName,
+                      std::string const& _net, test::teststruct::FH32 const&);
 void performPostState(TxContext const& _context);
+void performPostStateBlockOnly(TxContext const& _context);
 
 }

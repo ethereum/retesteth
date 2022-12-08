@@ -7,8 +7,21 @@
 #include <libdevcore/CommonIO.h>
 using namespace std;
 using namespace dev;
+using namespace test;
 using namespace test::debug;
 namespace fs = boost::filesystem;
+
+namespace  {
+string getAndPrintRemoteState(test::session::SessionInterface& _session, FH32 const& _root)
+{
+    auto const remStateJson = getRemoteState(_session).asDataObject()->asJson();
+    ETH_DC_MESSAGE(DC::STATE,
+        "\nState Dump:" + TestOutputHelper::get().testInfo().errorDebug() + cDefault + " \n" + remStateJson);
+    ETH_DC_MESSAGE(DC::STATE, "PostState " + TestOutputHelper::get().testInfo().errorDebug() + " : \n" +
+                                  cDefault + "Hash: " + _root.asString());
+    return remStateJson;
+}
+}
 
 namespace test {
 
@@ -31,20 +44,49 @@ void performVMTrace(TxContext const& _context)
     }
 }
 
+void performPostState(test::session::SessionInterface& _session, string const& _testName, string const& _network, FH32 const& _root)
+{
+    auto const& poststate = Options::get().poststate;
+    if (poststate.initialized() && !poststate.isBlockSelected)
+    {
+        auto const remStateJson = getAndPrintRemoteState(_session, _root);
+        if (!poststate.outpath.empty())
+        {
+            string const testNameOut = _testName + "_" + _network + ".txt";
+            dev::writeFile(fs::path(poststate.outpath) / testNameOut, dev::asBytes(remStateJson));
+        }
+    }
+}
+
+void performPostStateBlockOnly(TxContext const& _context)
+{
+    auto const& poststate = Options::get().poststate;
+    if (poststate.initialized())
+    {
+        if (!(poststate.isBlockSelected && poststate.blockNumber == _context.blIndex))
+            return;
+
+        auto const remStateJson = getAndPrintRemoteState(_context.session, _context.blockHeader->stateRoot());
+        if (!poststate.outpath.empty())
+        {
+            string testNameOut = _context.testName + "_block" + test::fto_string(_context.blIndex);
+            testNameOut += "_" + _context.network.asString() + ".txt";
+            dev::writeFile(fs::path(poststate.outpath) / testNameOut, dev::asBytes(remStateJson));
+        }
+    }
+}
+
 void performPostState(TxContext const& _context)
 {
     auto const& poststate = Options::get().poststate;
     if (poststate.initialized())
     {
         CHECK_SELECTOR(poststate, _context)
-        auto const remStateJson = getRemoteState(_context.session).asDataObject()->asJson();
-        ETH_DC_MESSAGE(DC::STATE,
-            "\nRunning test State Dump:" + TestOutputHelper::get().testInfo().errorDebug() + cDefault + " \n" + remStateJson);
-
+        auto const remStateJson = getAndPrintRemoteState(_context.session, _context.blockHeader->stateRoot());
         if (!poststate.outpath.empty())
         {
             string testNameOut = _context.testName + "_block" + test::fto_string(_context.blIndex)
-                                 + "_transaction" + test::fto_string(_context.trIndex);
+                               + "_transaction" + test::fto_string(_context.trIndex);
             testNameOut += "_" + _context.network.asString() + ".txt";
             dev::writeFile(fs::path(poststate.outpath) / testNameOut, dev::asBytes(remStateJson));
         }

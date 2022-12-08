@@ -51,6 +51,7 @@ void TestBlockchain::generateBlock(
 
     // Import known transactions to remote client
     ETH_DC_MESSAGEC(DC::TESTLOG, "Import transactions: " + m_sDebugString, LogColor::YELLOW);
+    tryIntermidiatePostState(_block, _uncles);
     for (auto const& tr : _block.transactions())
     {
         modifyTransactionChainIDByNetwork(tr.tr(), m_network);
@@ -147,7 +148,7 @@ void TestBlockchain::generateBlock(
 }
 
 GCP_SPointer<EthGetBlockBy> TestBlockchain::mineBlock(
-    BlockchainTestFillerBlock const& _blockInTest, vectorOfSchemeBlock const& _preparedUncleBlocks, BYTES& _rawRLP)
+    BlockchainTestFillerBlock const& _blockInTest, vectorOfSchemeBlock const& _preparedUncleBlocks, BYTES& _rawRLP, bool _isTest)
 {
     ETH_DC_MESSAGEC(DC::TESTLOG, "MINE BLOCK: " + m_sDebugString, LogColor::YELLOW);
     MineBlocksResult const miningRes = m_session.test_mineBlocks(1);
@@ -187,6 +188,9 @@ GCP_SPointer<EthGetBlockBy> TestBlockchain::mineBlock(
             new EthGetBlockBy((m_session.eth_getBlockByNumber(latestBlockNumber, Request::FULLOBJECTS))));
         _rawRLP = remoteBlock->getRLPHeaderTransactions();
     }
+
+    if (_isTest)
+        return remoteBlock;
 
     // check that transactions are good
     for (auto const& trInTest : _blockInTest.transactions())
@@ -413,5 +417,51 @@ void TestBlockchain::resetChainParams() const
 {
     m_session.test_setChainParams(prepareChainParams(m_network, m_sealEngine, m_genesisState, m_testEnv));
 }
+
+void TestBlockchain::tryIntermidiatePostState(BlockchainTestFillerBlock const& _block, vectorOfSchemeBlock const& _uncles)
+{
+    auto const& poststate = Options::get().poststate;
+    if (poststate.initialized() && poststate.isBlockSelected)
+    {
+        auto const currentBlockNumber = m_session.eth_blockNumber();
+        if (poststate.blockNumber - 1 != (size_t)currentBlockNumber.asBigInt())
+            return;
+
+        bool thereisTransactionIndex = poststate.transactionNumber < _block.transactions().size();
+        if (!thereisTransactionIndex)
+            return;
+
+        size_t txIndex = 0;
+        for (auto const& tr : _block.transactions())
+        {
+            modifyTransactionChainIDByNetwork(tr.tr(), m_network);
+            m_session.eth_sendRawTransaction(tr.tr().getRawBytes(), tr.tr().getSecret());
+
+            if (txIndex == poststate.transactionNumber)
+            {
+                BYTES rawRLP(DataObject("0x"));
+                GCP_SPointer<EthGetBlockBy> minedBlock = mineBlock(_block, _uncles, rawRLP, true);
+                if (!minedBlock.isEmpty())
+                {
+                    TxContext const ctx(m_session, TestOutputHelper::get().testName(), tr.trPointer(), minedBlock->header(),
+                        m_network, (size_t)minedBlock->header()->number().asBigInt(), txIndex);
+                    performPostState(ctx);
+                }
+                else
+                    ETH_WARNING("Tying to get intermidiate tx state for block#" + test::fto_string(poststate.blockNumber) + ", but block mining failed!");
+
+                m_session.test_rewindToBlock(currentBlockNumber);
+                {
+                    VALUE latestBlockNumber(m_session.eth_blockNumber());
+                    EthGetBlockBy const latestBlock(m_session.eth_getBlockByNumber(latestBlockNumber, Request::LESSOBJECTS));
+                    m_session.test_modifyTimestamp(latestBlock.header()->timestamp() + 1000);
+                }
+                return;
+            }
+            txIndex++;
+        }
+    }
+}
+
 
 }  // namespace blockchainfiller

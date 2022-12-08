@@ -53,7 +53,8 @@ private:
     // Mine the test block on remote client.
     // if blockheader is tweaked or there are uncles, postmine tweak this and reimport
     GCP_SPointer<EthGetBlockBy> mineBlock(
-        BlockchainTestFillerBlock const& _block, vectorOfSchemeBlock const& _preparedUncleBlocks, BYTES& _rawRLP);
+        BlockchainTestFillerBlock const& _block, vectorOfSchemeBlock const& _preparedUncleBlocks, BYTES& _rawRLP,
+        bool _isTest = false);
 
     // After test_mineBlock we can change the blockheader or add uncles. that will require to tweak
     // the block And reimport it again, then check exceptions
@@ -71,6 +72,8 @@ private:
     std::string m_chainName;          // Name of this chain
     std::vector<TestBlock> m_blocks;  // List of blocks
     // std::vector<TestBlock> m_knownBlocks;       // List of fork block RLPs
+private:
+    void tryIntermidiatePostState(BlockchainTestFillerBlock const&, vectorOfSchemeBlock const&);
 };
 
 }  // namespace test::blockchainfiller

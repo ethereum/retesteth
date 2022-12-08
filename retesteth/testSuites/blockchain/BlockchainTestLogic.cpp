@@ -116,11 +116,13 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
         for (auto const& tr : tblock.transactions())
         {
             TxContext const ctx(session, _test.testName(), tr, latestBlock.header(),
-                _test.network(), blockNumber, txIndex);
+                                _test.network(), blockNumber, txIndex);
             performVMTrace(ctx);
-            performPostState(ctx);
             txIndex++;
         }
+        TxContext const ctx(session, _test.testName(), spTransaction(0), latestBlock.header(),
+                            _test.network(), blockNumber, 0);
+        performPostStateBlockOnly(ctx);
 
         spDataObject remoteHeader = latestBlock.header()->asDataObject();
         spDataObject testHeader = tblock.header()->asDataObject();
@@ -199,6 +201,7 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
     }
 
     EthGetBlockBy latestBlock(session.eth_getBlockByNumber(session.eth_blockNumber(), Request::LESSOBJECTS));
+    performPostState(session, _test.testName(), _test.network().asString(), latestBlock.header()->stateRoot());
     if (_test.isFullState())
         compareStates(_test.Post(), session);
     else
