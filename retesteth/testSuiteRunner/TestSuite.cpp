@@ -177,9 +177,16 @@ void TestSuite::_executeTest(string const& _testFolder, fs::path const& _fillerT
         wereFillerErrors = _fillTest(_opt, _fillerTestFilePath, filledTestPath.path());
 
     bool disableSecondRun = false;
-    if (!Options::get().getGStateTransactionFilter().empty() && Options::get().filltests)
+    auto noSecondRunConditions = [](){
+        bool condition = true;
+        auto const& opt = Options::get();
+        condition = condition && !opt.getGStateTransactionFilter().empty();
+        condition = condition && opt.vmtrace.initialized();
+        return !condition;
+    };
+    if (noSecondRunConditions() && Options::get().filltests)
     {
-        ETH_WARNING("GState transaction filter is set. Disabling generated test run!");
+        ETH_WARNING("Test filter or log is set. Disabling generated test run!");
         disableSecondRun = true;
     }
 

@@ -168,6 +168,9 @@ Options::Options(int argc, const char** argv)
         cout << setw(30) << "--vmtraceraw <folder>" << setw(25) << "Trace transactions execution raw format to a given folder\n";
         }, [this](){
             vmtrace = true;
+            vmtrace.isBlockSelected = vmtraceraw.isBlockSelected;
+            vmtrace.blockNumber = vmtraceraw.blockNumber;
+            vmtrace.transactionNumber = vmtraceraw.transactionNumber;
             if (logVerbosity.val < 6 && vmtraceraw.outpath.empty())
                 std::cout << "Warning: --vmtraceraw is defined, but trace is printed with verbosity level 6, which is not set" << std::endl;
     });
@@ -459,6 +462,15 @@ int Options::Option::initArgs(list<const char*> const& _argList, list<const char
             if (arg.substr(0, 1) != "-")
             {
                 initArg(arg);
+                if (++_arg != _argList.end())
+                {
+                    auto const arg2 = string{(*_arg)};
+                    if (arg2.substr(0, 1) != "-")
+                    {
+                        initArg2(arg2);
+                        return 3;
+                    }
+                }
                 return 2;
             }
         }
@@ -568,4 +580,20 @@ void Options::fspath_opt::initArg(std::string const& _arg)
     string_opt::initArg(_arg);
     if (!boost::filesystem::exists(_arg))
         BOOST_THROW_EXCEPTION(InvalidOption("Error: `" + m_sOptionName + "` could not locate file or path: " + _arg));
+}
+
+void Options::vmtrace_opt::parse2OptionalArgs(std::string const& _arg)
+{
+    // Can take 0 args, act as bool
+    // 1 arg = either path or block selector
+    // 2 arg = path and block selector in any order
+    size_t pos = _arg.find(":");
+    if (pos != string::npos && !isBlockSelected)
+    {
+        blockNumber = atoi(_arg.substr(0, pos).c_str());
+        transactionNumber = atoi(_arg.substr(pos + 1).c_str());
+        isBlockSelected = true;
+    }
+    else
+        outpath = _arg;
 }

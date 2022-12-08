@@ -102,8 +102,10 @@ DebugVMTrace::DebugVMTrace(
         string line;
         size_t k = 0;
         const size_t c_maxRowsToPrint = 300;
-        fs::ifstream fileHandler(_logs);
+        if (!fs::exists(_logs))
+            return;
 
+        fs::ifstream fileHandler(_logs);
         auto readLog = [this](string const& _line){
             auto const data = ConvertJsoncppStringToData(_line);
             if (data->getSubObjects().size() == 3)

@@ -3,10 +3,13 @@
 #include <retesteth/Options.h>
 #include <retesteth/testStructures/PrepareChainParams.h>
 #include <retesteth/testSuites/Common.h>
+#include "Common.h"
 #include "fillers/TestBlockchain.h"
 using namespace std;
+using namespace test;
 using namespace test::debug;
 using namespace test::session;
+
 namespace test
 {
 
@@ -40,7 +43,8 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
         if (Options::get().blockLimit != 0 && blockNumber + 1 >= Options::get().blockLimit)
             break;
 
-        TestOutputHelper::get().setCurrentTestInfo(TestInfo(_test.network().asString(), blockNumber++));
+        blockNumber++;
+        TestOutputHelper::get().setCurrentTestInfo(TestInfo(_test.network().asString(), blockNumber));
 
         // Transaction sequence validation
         ETH_DC_MESSAGEC(DC::LOWLOG, "PERFORM TRANSACTION SEQUENCE VALIDATION...", LogColor::YELLOW);
@@ -108,14 +112,12 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
         // Check Blockheader
         EthGetBlockBy latestBlock(session.eth_getBlockByHash(blHash, Request::FULLOBJECTS));
 
+        size_t txIndex = 0;
         for (auto const& tr : tblock.transactions())
         {
-            if (Options::get().vmtrace)
-            {
-                string const testNameOut = _test.testName() + "_" + tr->hash().asString() + ".txt";
-                VMtraceinfo info(session, tr->hash(), latestBlock.header()->stateRoot(), testNameOut);
-                printVmTrace(info);
-            }
+            TxContext const ctx(session, _test.testName(), tr, latestBlock.header(), blockNumber, txIndex);
+            performVMTrace(ctx);
+            txIndex++;
         }
 
         spDataObject remoteHeader = latestBlock.header()->asDataObject();

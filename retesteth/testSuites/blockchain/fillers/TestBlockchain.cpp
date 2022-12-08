@@ -3,6 +3,7 @@
 #include <retesteth/TestHelper.h>
 #include <retesteth/testStructures/PrepareChainParams.h>
 #include <retesteth/testSuites/Common.h>
+#include "../Common.h"
 
 using namespace std;
 using namespace test::debug;
@@ -100,14 +101,11 @@ void TestBlockchain::generateBlock(
         if (!hasAtLeastOneInvalid)
             newBlock.nullTransactionSequence();
 
+        size_t txIndex = 0;
         for (auto const& remoteTr : minedBlock->transactions())
         {
-            if (Options::get().vmtrace)
-            {
-                string const testNameOut = TestOutputHelper::get().testName() + "_" + remoteTr.hash().asString() + ".txt";
-                VMtraceinfo info(m_session, remoteTr.hash(), minedBlock->header()->stateRoot(), testNameOut);
-                printVmTrace(info);
-            }
+            TxContext const ctx(m_session, TestOutputHelper::get().testName(), remoteTr.transaction(), minedBlock->header(), (size_t)minedBlock->header()->number().asBigInt(), txIndex++);
+            performVMTrace(ctx);
 
             if (testTransactionMap.count(remoteTr.hash()))
             {

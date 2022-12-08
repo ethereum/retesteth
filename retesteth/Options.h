@@ -36,6 +36,7 @@ private:
 
     protected:
         virtual void initArg(std::string const& _arg) = 0;
+        virtual void initArg2(std::string const&){};
         Option(){};
         std::string m_sOptionHelp;
         std::string m_sOptionName;
@@ -91,6 +92,20 @@ private:
 
     protected:
         void initArg(std::string const& _arg) override { outpath = _arg; }
+    };
+
+    struct vmtrace_opt : public booloutpath_opt
+    {
+        vmtrace_opt(bool _arg) : booloutpath_opt(_arg) { m_argType = ARGS::NONE_OPTIONAL; }
+        operator bool() const { return m_inited; }
+        size_t blockNumber;
+        size_t transactionNumber;
+        bool isBlockSelected = false;
+
+    protected:
+        void initArg(std::string const& _arg) override { parse2OptionalArgs(_arg); }
+        void initArg2(std::string const& _arg) override { parse2OptionalArgs(_arg); }
+        void parse2OptionalArgs(std::string const& _arg);
     };
 
     struct string_opt : public Option, std::string
@@ -185,9 +200,9 @@ public:
     int_opt trGasIndex= -1;
     int_opt trValueIndex = -1;
     bool_opt getvectors = false;
-    bool_opt vmtrace = false;
+    vmtrace_opt vmtrace = false;
     bool_opt statediff = false;
-    booloutpath_opt vmtraceraw = false;
+    vmtrace_opt vmtraceraw = false;
     bool_opt vmtrace_nomemory = false;
     bool_opt vmtrace_nostack = false;
     bool_opt vmtrace_noreturndata = false;
