@@ -93,4 +93,14 @@ void performPostState(TxContext const& _context)
     }
 }
 
+void performStatediffBlockOnly(size_t _block)
+{
+    auto const& statediff = Options::get().statediff;
+    if (statediff.initialized() && statediff.isBlockSelected)
+    {
+        if (statediff.firstBlock == _block)
+        {
+        }
+    }
+}
 }

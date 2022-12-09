@@ -10,4 +10,6 @@ private:
     static bool m_receivedExitSig;
 };
 
-
+#define CHECKEXIT                          \
+    if (ExitHandler::receivedExitSignal()) \
+        return;

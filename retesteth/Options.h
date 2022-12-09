@@ -14,6 +14,7 @@ private:
     {
         NONE,
         NONE_OPTIONAL,
+        NONE_OPTIONAL2,
         ONE,
         ONEMERGED
     };
@@ -94,9 +95,23 @@ private:
         void initArg(std::string const& _arg) override { outpath = _arg; }
     };
 
+    struct statediff_opt : public bool_opt
+    {
+        statediff_opt(bool _arg) : bool_opt(_arg) { m_argType = ARGS::NONE_OPTIONAL; }
+        operator bool() const { return m_inited; }
+        bool isBlockSelected = false;
+        size_t firstBlock;
+        size_t firstTrnsx;
+        size_t seconBlock;
+        size_t seconTrnsx;
+
+    protected:
+        void initArg(std::string const& _arg) override;
+    };
+
     struct booloutpathselector_opt : public booloutpath_opt
     {
-        booloutpathselector_opt(bool _arg) : booloutpath_opt(_arg) { m_argType = ARGS::NONE_OPTIONAL; }
+        booloutpathselector_opt(bool _arg) : booloutpath_opt(_arg) { m_argType = ARGS::NONE_OPTIONAL2; }
         operator bool() const { return m_inited; }
         size_t blockNumber;
         size_t transactionNumber;
@@ -201,7 +216,7 @@ public:
     int_opt trValueIndex = -1;
     bool_opt getvectors = false;
     booloutpathselector_opt vmtrace = false;
-    bool_opt statediff = false;
+    statediff_opt statediff = false;
     booloutpathselector_opt vmtraceraw = false;
     bool_opt vmtrace_nomemory = false;
     bool_opt vmtrace_nostack = false;
