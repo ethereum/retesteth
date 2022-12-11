@@ -159,13 +159,20 @@ Options::Options(int argc, const char** argv)
     });
     ADD_OPTION(statediff, "--statediff", [](){
         cout << setw(30) << "--statediff" << setw(25) << "Print statediff post vs pre\n";
+        cout << setw(30) << "--statediff xtoy" << setw(25) << "Statediff from block 'x' to block 'y'\n";
+        cout << setw(30) << "--statediff x:ytox2:y2" << setw(25) << "Statediff from block 'x', transaction 'y' to block 'x2', transaction 'y2' (require --filltests)\n";
     });
     ADD_OPTION(vmtrace, "--vmtrace", [](){
         cout << setw(30) << "--vmtrace" << setw(25) << "Trace transaction execution\n";
+        cout << setw(30) << "--vmtrace x:y" << setw(25) << "Show vmtrace of block 'x', transaction 'y'\n";
+        cout << setw(30) << "--vmtrace <folder>" << setw(25) << "Trace transactions execution to a given folder\n";
+        cout << setw(30) << "--vmtrace x:y <folder>" << setw(25) << "Same as above but combined\n";
     });
     ADD_OPTIONV(vmtraceraw, "--vmtraceraw", [](){
         cout << setw(30) << "--vmtraceraw" << setw(25) << "Trace transaction execution raw format\n";
+        cout << setw(30) << "--vmtraceraw x:y" << setw(25) << "Show vmtrace in raw format of block 'x', transaction 'y'\n";
         cout << setw(30) << "--vmtraceraw <folder>" << setw(25) << "Trace transactions execution raw format to a given folder\n";
+        cout << setw(30) << "--vmtraceraw x:y <folder>" << setw(25) << "Same as above but combined\n";
         }, [this](){
             vmtrace = true;
             vmtrace.isBlockSelected = vmtraceraw.isBlockSelected;
@@ -267,7 +274,9 @@ Options::Options(int argc, const char** argv)
     });
     ADD_OPTIONV(poststate, "--poststate", [](){
         cout << setw(30) << "--poststate" << setw(25) << "Debug(6) show test postState hash or fullstate, when used with --filltests export `postState` in StateTests\n";
+        cout << setw(30) << "--poststate x:y" << setw(25) << "Show poststate of block 'x', transaction 'y'\n";
         cout << setw(30) << "--poststate <folder>" << setw(25) << "Same as above plus export test post states into a folder\n";
+        cout << setw(30) << "--poststate x:y <folder>" << setw(25) << "Same as above but combined\n";
         }, [this](){
             fullstate = true;
     });
