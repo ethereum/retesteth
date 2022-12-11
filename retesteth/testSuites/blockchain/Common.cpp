@@ -14,7 +14,7 @@ namespace fs = boost::filesystem;
 namespace  {
 string getAndPrintRemoteState(test::session::SessionInterface& _session, FH32 const& _root)
 {
-    auto const remStateJson = getRemoteState(_session).asDataObject()->asJson();
+    auto const remStateJson = getRemoteState(_session)->asDataObject()->asJson();
     ETH_DC_MESSAGE(DC::STATE,
         "\nState Dump:" + TestOutputHelper::get().testInfo().errorDebug() + cDefault + " \n" + remStateJson);
     ETH_DC_MESSAGE(DC::STATE, "PostState " + TestOutputHelper::get().testInfo().errorDebug() + " : \n" +
@@ -89,17 +89,6 @@ void performPostState(TxContext const& _context)
                                + "_transaction" + test::fto_string(_context.trIndex);
             testNameOut += "_" + _context.network.asString() + ".txt";
             dev::writeFile(fs::path(poststate.outpath) / testNameOut, dev::asBytes(remStateJson));
-        }
-    }
-}
-
-void performStatediffBlockOnly(size_t _block)
-{
-    auto const& statediff = Options::get().statediff;
-    if (statediff.initialized() && statediff.isBlockSelected)
-    {
-        if (statediff.firstBlock == _block)
-        {
         }
     }
 }

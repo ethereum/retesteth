@@ -116,7 +116,7 @@ spDataObject performTransaction(StateTestFillerExecInfo const& _info)
         auto const remState = getRemoteState(session);
         compareStates(expect.result(), remState);
         if (Options::get().poststate)
-            (*transactionResults).atKeyPointer("postState") = remState.asDataObject();
+            (*transactionResults).atKeyPointer("postState") = remState->asDataObject();
     }
     catch (StateTooBig const&)
     {

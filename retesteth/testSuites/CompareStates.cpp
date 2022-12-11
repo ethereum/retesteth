@@ -37,7 +37,7 @@ State::Account remoteGetAccount(SessionInterface& _session, VALUE const& _bNumbe
 }
 
 // Get full remote state from the client
-State getRemoteState(SessionInterface& _session)
+spState getRemoteState(SessionInterface& _session)
 {
     VALUE recentBNumber(_session.eth_blockNumber());
     EthGetBlockBy recentBlock(_session.eth_getBlockByNumber(recentBNumber, Request::LESSOBJECTS));
@@ -76,7 +76,7 @@ State getRemoteState(SessionInterface& _session)
                 throw StateTooBig();
         }
     }
-    return State(stateAccountMap);
+    return spState(new State(stateAccountMap));
 }
 
 // Compare expected state with session asking post state data on the fly

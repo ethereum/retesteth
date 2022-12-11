@@ -148,7 +148,7 @@ void BlockchainTestRunner::performOptionCommands(BlockchainTestBlock const& _tbl
     TxContext const ctx(
         m_session, m_test.testName(), spTransaction(0), _latestBlock.header(), m_test.network(), m_blockNumber, 0);
     performPostStateBlockOnly(ctx);
-    performStatediffBlockOnly(m_blockNumber);
+    this->performStatediffBlockOnly(m_blockNumber);
 }
 
 void BlockchainTestRunner::validateBlockHeader(BlockchainTestBlock const& _tblock, EthGetBlockBy const& _latestBlock)
@@ -269,5 +269,22 @@ void BlockchainTestRunner::checkGenesis()
         if (m_test.genesisRLP() != genesis.getRLPHeaderTransactions())
             ETH_ERROR_MESSAGE("genesisRLP in test != genesisRLP on remote client! (" + m_test.genesisRLP().asString() +
                               "' != '" + genesis.getRLPHeaderTransactions().asString() + "'");
+    }
+}
+
+void BlockchainTestRunner::performStatediffBlockOnly(size_t _blockNumber)
+{
+    auto const& statediff = Options::get().statediff;
+    if (statediff.initialized() && statediff.isBlockSelected && m_stateDiffStateB.isEmpty())
+    {
+        if (statediff.firstBlock == _blockNumber && m_stateDiffStateA.isEmpty())
+            m_stateDiffStateA = getRemoteState(m_session);
+        else if (statediff.seconBlock == _blockNumber && m_stateDiffStateB.isEmpty())
+        {
+            m_stateDiffStateB = getRemoteState(m_session);
+            auto const diff = test::stateDiff(m_stateDiffStateA, m_stateDiffStateB)->asJson();
+            ETH_DC_MESSAGE(DC::STATE,
+                "\nRunning BC test State Diff:" + TestOutputHelper::get().testInfo().errorDebug() + cDefault + " \n" + diff);
+        }
     }
 }

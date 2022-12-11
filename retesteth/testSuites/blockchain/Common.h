@@ -25,6 +25,4 @@ void performPostState(test::session::SessionInterface& _session, std::string con
                       std::string const& _net, test::teststruct::FH32 const&);
 void performPostState(TxContext const& _context);
 void performPostStateBlockOnly(TxContext const& _context);
-
-void performStatediffBlockOnly(size_t _block);
 }

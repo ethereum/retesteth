@@ -98,7 +98,7 @@ void performPostState(StateTestExecInfo const& _info)
         auto& tr = _info.tr;                   // Built transaction
         auto const& network = _info.network;   // Current network (forkname)
 
-        auto const remStateJson = getRemoteState(session).asDataObject()->asJson();
+        auto const remStateJson = getRemoteState(session)->asDataObject()->asJson();
         ETH_DC_MESSAGE(DC::STATE,
             "\nRunning test State Dump:" + TestOutputHelper::get().testInfo().errorDebug() + cDefault + " \n" + remStateJson);
         if (!Options::get().poststate.outpath.empty())
@@ -153,7 +153,7 @@ void performTransaction(StateTestExecInfo const& _info)
 
     if (actualHash != expectedPostHash)
     {
-        ETH_DC_MESSAGE(DC::TESTLOG, "\nState Dump: \n" + getRemoteState(session).asDataObject()->asJson());
+        ETH_DC_MESSAGE(DC::TESTLOG, "\nState Dump: \n" + getRemoteState(session)->asDataObject()->asJson());
         ETH_ERROR_MESSAGE("Post hash mismatch remote: " + actualHash.asString() + ", expected: " + expectedPostHash.asString());
     }
     performValidations(_info, trHash);

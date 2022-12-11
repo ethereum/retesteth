@@ -597,23 +597,46 @@ void Options::fspath_opt::initArg(std::string const& _arg)
 
 void Options::statediff_opt::initArg(std::string const& _arg)
 {
+    string const del = "to";
     size_t const pos1 = _arg.find(":");
-    size_t const pos2 = _arg.find("to");
-    size_t const pos3 = _arg.find(":", pos1 + 1);
-    if (pos1 != string::npos && pos2 != string::npos && pos3 != string::npos)
+    if (pos1 != string::npos)
     {
-        isBlockSelected = true;
-        string const block1 = _arg.substr(0, pos1);
-        string const trans1 = _arg.substr(pos1 + 1, pos2 - pos1 - 1);
-        string const block2 = _arg.substr(pos2 + 2, pos3 - pos2 - 2);
-        string const trans2 = _arg.substr(pos3 + 1);
-        firstBlock = atoi(block1.c_str());
-        firstTrnsx = atoi(trans1.c_str());
-        seconBlock = atoi(block2.c_str());
-        seconTrnsx = atoi(trans2.c_str());
+        size_t const pos2 = _arg.find(del);
+        size_t const pos3 = _arg.find(":", pos1 + 1);
+        if (pos1 != string::npos && pos2 != string::npos && pos3 != string::npos)
+        {
+            isBlockSelected = true;
+            string const block1 = _arg.substr(0, pos1);
+            string const trans1 = _arg.substr(pos1 + 1, pos2 - pos1 - 1);
+            string const block2 = _arg.substr(pos2 + del.size(), pos3 - pos2 - del.size());
+            string const trans2 = _arg.substr(pos3 + 1);
+            firstBlock = atoi(block1.c_str());
+            firstTrnsx = atoi(trans1.c_str());
+            seconBlock = atoi(block2.c_str());
+            seconTrnsx = atoi(trans2.c_str());
+        }
+        else
+            BOOST_THROW_EXCEPTION(InvalidOption("Error: `" + m_sOptionName + "` option arg format is x:ytox2:y2"));
     }
     else
-        BOOST_THROW_EXCEPTION(InvalidOption("Error: `" + m_sOptionName + "` option arg format is x:ytox2:y2"));
+    {
+        size_t const pos2 = _arg.find(del);
+        if (pos2 != string::npos)
+        {
+            isBlockSelected = true;
+            firstTrnsx = 0;
+            seconTrnsx = 0;
+            string const block1 = _arg.substr(0, pos2);
+            string const block2 = _arg.substr(pos2 + del.size(), _arg.size() - pos2 - del.size());
+            firstBlock = atoi(block1.c_str());
+            seconBlock = atoi(block2.c_str());
+        }
+        else
+            BOOST_THROW_EXCEPTION(InvalidOption("Error: `" + m_sOptionName + "` option arg format is xtoy"));
+    }
+
+    if (firstBlock >= seconBlock)
+        BOOST_THROW_EXCEPTION(InvalidOption("Error: `" + m_sOptionName + "` option arg format is `xtoy` or `x:ytox2:y2`, where `y > x` or `x > x2`"));
 }
 
 void Options::booloutpathselector_opt::parse2OptionalArgs(std::string const& _arg)

@@ -82,9 +82,9 @@ spDataObject FillTest(BlockchainTestInFiller const& _test, TestSuite::TestSuiteO
 
                 try
                 {
-                    State remoteState(getRemoteState(session));
+                    spState remoteState = getRemoteState(session);
                     compareStates(expect.result(), remoteState);
-                    filledTest.atKeyPointer("postState") = remoteState.asDataObject();
+                    filledTest.atKeyPointer("postState") = remoteState->asDataObject();
                 }
                 catch (StateTooBig const&)
                 {

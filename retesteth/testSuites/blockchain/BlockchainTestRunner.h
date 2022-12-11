@@ -1,6 +1,7 @@
 #pragma once
 #include <retesteth/session/SessionInterface.h>
 #include <retesteth/testStructures/types/BlockchainTests/BlockchainTest.h>
+#include <retesteth/testStructures/types/Ethereum/State.h>
 #include <retesteth/testSuiteRunner/TestSuite.h>
 #include <string>
 
@@ -26,12 +27,17 @@ public:
     test::session::SessionInterface& session() { return m_session; }
     void checkPostState(teststruct::EthGetBlockBy const&);
     void checkGenesis();
+private:
+    void performStatediffBlockOnly(size_t);
 
 private:
     teststruct::BlockchainTestInFilled const& m_test;
     TestSuite::TestSuiteOptions const& m_opt;
     test::session::SessionInterface& m_session;
     size_t m_blockNumber = 0;
+
+    test::teststruct::spState m_stateDiffStateA;
+    test::teststruct::spState m_stateDiffStateB;
 };
 
 }  // namespace test

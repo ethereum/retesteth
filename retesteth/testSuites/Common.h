@@ -45,7 +45,7 @@ struct StateTooBig : UpwardsException
 {
     StateTooBig() : UpwardsException("StateTooBig") {}
 };
-State getRemoteState(test::session::SessionInterface& _session);
+spState getRemoteState(test::session::SessionInterface& _session);
 
 // Check that test has data object
 void checkDataObject(DataObject const& _input);

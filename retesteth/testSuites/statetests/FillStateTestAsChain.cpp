@@ -83,9 +83,9 @@ spDataObject FillTestAsBlockchain(StateTestInFiller const& _test)
 
                     try
                     {
-                        State postState(getRemoteState(session));
+                        spState postState = getRemoteState(session);
                         compareStates(mexpect, postState);
-                        (*aBlockchainTest).atKeyPointer("postState") = postState.asDataObject();
+                        (*aBlockchainTest).atKeyPointer("postState") = postState->asDataObject();
                     }
                     catch (StateTooBig const&)
                     {
