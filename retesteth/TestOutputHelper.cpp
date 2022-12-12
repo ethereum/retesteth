@@ -413,11 +413,12 @@ void TestOutputHelper::markTestFolderAsFinished(
     finishedTestFoldersMap[_suitePath].emplace(_folderName);
 }
 
-
 TestInfo::TestInfo(std::string const& _info, std::string const& _testName) : m_sFork(_info)
 {
+    namespace framework = boost::unit_test::framework;
     m_isGeneralTestInfo = true;
-    m_currentTestCaseName = boost::unit_test::framework::current_test_case().p_name;
+    m_currentTestCaseName = makeTestCaseName();
+
     if (!_testName.empty())
         TestOutputHelper::get().setCurrentTestName(_testName);
 }
@@ -453,6 +454,23 @@ std::string TestInfo::errorDebug() const
     if (nologcolor)
         return message + ")";
     return message + ")" + cDefault;
+}
+
+string TestInfo::makeTestCaseName() const
+{
+    string name;
+    auto const& boostTCase = framework::current_test_case();
+    try
+    {
+        auto const& boostSuite = framework::get<test_suite>(boostTCase.p_parent_id);
+        name = boostSuite.p_name.get() + "/";
+    }
+    catch (std::exception const&)
+    {
+        ETH_WARNING("Error getting parent suite from boost!" + boostTCase.p_name.get());
+    }
+
+    return name + boostTCase.p_name.get();
 }
 
 void TestOutputHelper::addTestVector(std::string&& _str)

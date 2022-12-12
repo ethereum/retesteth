@@ -34,14 +34,14 @@ struct TestInfo
       : m_sFork(_fork), m_trD(_trD), m_trG(_trG), m_trV(_trV)
     {
         m_isStateTransactionInfo = true;
-        m_currentTestCaseName = boost::unit_test::framework::current_test_case().p_name;
+        m_currentTestCaseName = makeTestCaseName();
     }
 
     TestInfo(std::string const& _fork, size_t _trD, size_t _trG, size_t _trV)
       : m_sFork(_fork), m_trD(_trD), m_trG(_trG), m_trV(_trV)
     {
         m_isStateTransactionInfo = true;
-        m_currentTestCaseName = boost::unit_test::framework::current_test_case().p_name;
+        m_currentTestCaseName = makeTestCaseName();
     }
 
     TestInfo(std::string const& _fork, size_t _block, std::string const& _chainName = std::string())
@@ -51,7 +51,7 @@ struct TestInfo
         m_isStateTransactionInfo(false)
     {
         m_isBlockchainTestInfo = true;
-        m_currentTestCaseName = boost::unit_test::framework::current_test_case().p_name;
+        m_currentTestCaseName = makeTestCaseName();
     }
 
     TestInfo(std::string const& _info, std::string const& _testName = std::string());
@@ -61,6 +61,9 @@ struct TestInfo
     static std::string caseName() { return boost::unit_test::framework::current_test_case().p_name; }
 
     void setTrDataDebug(std::string const& _data) { m_sTransactionData = _data; }
+
+private:
+    std::string makeTestCaseName() const;
 
 private:
     std::string m_sFork, m_sChainName;
