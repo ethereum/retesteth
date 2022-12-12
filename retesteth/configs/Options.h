@@ -23,6 +23,9 @@ extern std::string const yul_compiler_sh;
   FOR_EACH(X, etccfg, RewardsCfgETC, AtlantisCfgETC, AghartaCfgETC, PhoenixCfgETC, MagnetoCfgETC, \
     MystiqueCfgETC)
 
+#define DECLARE_NIMBUS(X) \
+  FOR_EACH(X, nimbuscfg, RewardsCfgNIMBUS, MergeCfgNIMBUS)
+
 #define DECLARE_ETCTR(X) \
   FOR_EACH(X, etctranslatecfg, RewardsCfgETCTR, ByzantiumCfgETCTR, ConstantinopleCfgETCTR, ConstantinopleFixCfgETCTR, \
     IstanbulCfgETCTR, BerlinCfgETCTR, LondonCfgETCTR, MergeCfgETCTR)
@@ -53,6 +56,7 @@ DECLARE_ETC(REGISTER)
 DECLARE_ETCTR(REGISTER)
 DECLARE_OEWRAP(REGISTER)
 DECLARE_ETHJS(REGISTER)
+DECLARE_NIMBUS(REGISTER)
 
 // Example configs
 DECLARE_T8NTOOL_EIP(REGISTER)
@@ -70,6 +74,7 @@ public:
         DECLARE_ETCTR(INIT)
         DECLARE_OEWRAP(INIT)
         DECLARE_ETHJS(INIT)
+        DECLARE_NIMBUS(INIT)
 
         DECLARE_T8NTOOL_EIP(INIT)
         DECLARE_ALETH(INIT)
