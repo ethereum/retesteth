@@ -53,7 +53,9 @@ void performPostState(test::session::SessionInterface& _session, string const& _
         if (!poststate.outpath.empty())
         {
             string const testNameOut = _testName + "_" + _network + ".txt";
-            dev::writeFile(fs::path(poststate.outpath) / testNameOut, dev::asBytes(remStateJson));
+            fs::path const pathOut = fs::path(poststate.outpath) / testNameOut;
+            ETH_DC_MESSAGE(DC::STATE, "Export post state to " + pathOut.string());
+            dev::writeFile(pathOut, dev::asBytes(remStateJson));
         }
     }
 }
@@ -71,7 +73,9 @@ void performPostStateBlockOnly(TxContext const& _context)
         {
             string testNameOut = _context.testName + "_block" + test::fto_string(_context.blIndex);
             testNameOut += "_" + _context.network.asString() + ".txt";
-            dev::writeFile(fs::path(poststate.outpath) / testNameOut, dev::asBytes(remStateJson));
+            fs::path const pathOut = fs::path(poststate.outpath) / testNameOut;
+            ETH_DC_MESSAGE(DC::STATE, "Export post state to " + pathOut.string());
+            dev::writeFile(pathOut, dev::asBytes(remStateJson));
         }
     }
 }
@@ -88,8 +92,35 @@ void performPostState(TxContext const& _context)
             string testNameOut = _context.testName + "_block" + test::fto_string(_context.blIndex)
                                + "_transaction" + test::fto_string(_context.trIndex);
             testNameOut += "_" + _context.network.asString() + ".txt";
-            dev::writeFile(fs::path(poststate.outpath) / testNameOut, dev::asBytes(remStateJson));
+            fs::path const pathOut = fs::path(poststate.outpath) / testNameOut;
+            ETH_DC_MESSAGE(DC::STATE, "Export post state to " + pathOut.string());
+            dev::writeFile(pathOut, dev::asBytes(remStateJson));
         }
     }
 }
+
+void showWarningIfStatediffNotFound(spState const& _stateA, spState const& _stateB)
+{
+    auto const& statediff = Options::get().statediff;
+    if (statediff.initialized() && statediff.isBlockSelected)
+    {
+        if (statediff.isTransSelected)
+        {
+            if (_stateA.isEmpty())
+                ETH_WARNING("--statediff unable to get intermidiate state for block: `" + test::fto_string(statediff.firstBlock) +
+                            "`, tx: `" + test::fto_string(statediff.firstTrnsx) + "`");
+            else if (_stateB.isEmpty())
+                ETH_WARNING("--statediff unable to get intermidiate state for block: `" + test::fto_string(statediff.seconBlock) +
+                            "`, tx: `" + test::fto_string(statediff.seconTrnsx) + "`");
+        }
+        else
+        {
+            if (_stateA.isEmpty())
+                ETH_WARNING("--statediff unable to get state for block: `" + test::fto_string(statediff.firstBlock));
+            else if (_stateB.isEmpty())
+                ETH_WARNING("--statediff unable to get state for block: `" + test::fto_string(statediff.seconBlock));
+        }
+    }
+}
+
 }

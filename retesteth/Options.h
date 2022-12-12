@@ -100,6 +100,7 @@ private:
         statediff_opt(bool _arg) : bool_opt(_arg) { m_argType = ARGS::NONE_OPTIONAL; }
         operator bool() const { return m_inited; }
         bool isBlockSelected = false;
+        bool isTransSelected = false;
         size_t firstBlock;
         size_t firstTrnsx;
         size_t seconBlock;

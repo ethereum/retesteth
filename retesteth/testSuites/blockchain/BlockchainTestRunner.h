@@ -11,6 +11,7 @@ class BlockchainTestRunner
 {
 public:
     BlockchainTestRunner(teststruct::BlockchainTestInFilled const&, TestSuite::TestSuiteOptions const&);
+    ~BlockchainTestRunner();
     static bool validateFork(std::string const& _testname, teststruct::FORK const& _net);
     bool abortBlock() const;
     void incrementBlockAndSetTestInfo();
@@ -27,6 +28,7 @@ public:
     test::session::SessionInterface& session() { return m_session; }
     void checkPostState(teststruct::EthGetBlockBy const&);
     void checkGenesis();
+    void performFinalStateDiff();
 private:
     void performStatediffBlockOnly(size_t);
 
@@ -36,6 +38,7 @@ private:
     test::session::SessionInterface& m_session;
     size_t m_blockNumber = 0;
 
+    bool m_triedStateDiff = false;
     test::teststruct::spState m_stateDiffStateA;
     test::teststruct::spState m_stateDiffStateB;
 };

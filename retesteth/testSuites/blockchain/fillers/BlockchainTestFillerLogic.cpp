@@ -80,6 +80,14 @@ spDataObject FillTest(BlockchainTestInFiller const& _test, TestSuite::TestSuiteO
                 // Fill info about the lastblockhash
                 EthGetBlockBy finalBlock(session.eth_getBlockByNumber(session.eth_blockNumber(), Request::LESSOBJECTS));
 
+                // Perform --statediff without selector
+                if (Options::get().statediff.initialized() && !Options::get().statediff.isBlockSelected)
+                {
+                    auto const diff = test::stateDiff(_test.Pre(), getRemoteState(session))->asJson();
+                    ETH_DC_MESSAGE(DC::STATE,
+                        "\nFilling BC test State Diff:" + TestOutputHelper::get().testInfo().errorDebug() + cDefault + " \n" + diff);
+                }
+
                 try
                 {
                     spState remoteState = getRemoteState(session);

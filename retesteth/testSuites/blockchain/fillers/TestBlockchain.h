@@ -23,6 +23,7 @@ public:
     // Using _env, _pre, _engine, _network settings
     TestBlockchain(BlockchainTestFillerEnv const& _testEnv, State const& _genesisState, SealEngine _engine,
         FORK const& _network, std::string const& _chainName, RegenerateGenesis _regenerateGenesis);
+    ~TestBlockchain();
 
     // Need to call resetChainParams because TestBLockchainManager could have chains with different networks
     void resetChainParams() const;
@@ -73,7 +74,13 @@ private:
     std::vector<TestBlock> m_blocks;  // List of blocks
     // std::vector<TestBlock> m_knownBlocks;       // List of fork block RLPs
 private:
-    void tryIntermidiatePostState(BlockchainTestFillerBlock const&, vectorOfSchemeBlock const&);
+    void _tryIntermidiatePostState(BlockchainTestFillerBlock const&, vectorOfSchemeBlock const&);
+    void _performStatediff(size_t _blockNumber, size_t _txNumber);
+
+private:
+    bool m_triedStateDiff = false;
+    spState m_stateDiffStateA;
+    spState m_stateDiffStateB;
 };
 
 }  // namespace test::blockchainfiller

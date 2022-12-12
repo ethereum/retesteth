@@ -51,7 +51,7 @@ void TestBlockchain::generateBlock(
 
     // Import known transactions to remote client
     ETH_DC_MESSAGEC(DC::TESTLOG, "Import transactions: " + m_sDebugString, LogColor::YELLOW);
-    tryIntermidiatePostState(_block, _uncles);
+    _tryIntermidiatePostState(_block, _uncles);
     for (auto const& tr : _block.transactions())
     {
         modifyTransactionChainIDByNetwork(tr.tr(), m_network);
@@ -76,6 +76,9 @@ void TestBlockchain::generateBlock(
     }
     else
     {
+        if (!Options::get().statediff.isTransSelected)
+            _performStatediff((size_t)minedBlock->header()->number().asBigInt(), 0);
+
         // if block mining succeed. the block is valid.
         FORK const& newBlockNet = _block.hasChainNet() ? _block.chainNet() : m_network;
         TestBlock newBlock(rawRLP, _block.chainName(), newBlockNet, m_blocks.size());
@@ -418,49 +421,114 @@ void TestBlockchain::resetChainParams() const
     m_session.test_setChainParams(prepareChainParams(m_network, m_sealEngine, m_genesisState, m_testEnv));
 }
 
-void TestBlockchain::tryIntermidiatePostState(BlockchainTestFillerBlock const& _block, vectorOfSchemeBlock const& _uncles)
+void TestBlockchain::_tryIntermidiatePostState(BlockchainTestFillerBlock const& _block, vectorOfSchemeBlock const& _uncles)
 {
-    auto const& poststate = Options::get().poststate;
-    if (poststate.initialized() && poststate.isBlockSelected)
+    auto runForOption = [this, &_block, &_uncles]
+        (auto const& _option, size_t _blockNumber, size_t _transNumber)
     {
-        auto const currentBlockNumber = m_session.eth_blockNumber();
-        if (poststate.blockNumber - 1 != (size_t)currentBlockNumber.asBigInt())
-            return;
+        bool const optionInitialized = _option.initialized() && _option.isBlockSelected;
+        auto const optionBlockNumber = _blockNumber;
+        auto const optionTransNumber = _transNumber;
 
-        bool thereisTransactionIndex = poststate.transactionNumber < _block.transactions().size();
-        if (!thereisTransactionIndex)
-            return;
-
-        size_t txIndex = 0;
-        for (auto const& tr : _block.transactions())
+        if (optionInitialized)
         {
-            modifyTransactionChainIDByNetwork(tr.tr(), m_network);
-            m_session.eth_sendRawTransaction(tr.tr().getRawBytes(), tr.tr().getSecret());
-
-            if (txIndex == poststate.transactionNumber)
-            {
-                BYTES rawRLP(DataObject("0x"));
-                GCP_SPointer<EthGetBlockBy> minedBlock = mineBlock(_block, _uncles, rawRLP, true);
-                if (!minedBlock.isEmpty())
-                {
-                    TxContext const ctx(m_session, TestOutputHelper::get().testName(), tr.trPointer(), minedBlock->header(),
-                        m_network, (size_t)minedBlock->header()->number().asBigInt(), txIndex);
-                    performPostState(ctx);
-                }
-                else
-                    ETH_WARNING("Tying to get intermidiate tx state for block#" + test::fto_string(poststate.blockNumber) + ", but block mining failed!");
-
-                m_session.test_rewindToBlock(currentBlockNumber);
-                {
-                    VALUE latestBlockNumber(m_session.eth_blockNumber());
-                    EthGetBlockBy const latestBlock(m_session.eth_getBlockByNumber(latestBlockNumber, Request::LESSOBJECTS));
-                    m_session.test_modifyTimestamp(latestBlock.header()->timestamp() + 1000);
-                }
+            auto const currentBlockNumber = m_session.eth_blockNumber();
+            if (optionBlockNumber - 1 != (size_t)currentBlockNumber.asBigInt())
                 return;
+
+            bool thereisTransactionIndex = optionTransNumber < _block.transactions().size();
+            if (!thereisTransactionIndex)
+                return;
+
+            size_t txIndex = 0;
+            for (auto const& tr : _block.transactions())
+            {
+                modifyTransactionChainIDByNetwork(tr.tr(), m_network);
+                m_session.eth_sendRawTransaction(tr.tr().getRawBytes(), tr.tr().getSecret());
+
+                if (txIndex == optionTransNumber)
+                {
+                    BYTES rawRLP(DataObject("0x"));
+                    GCP_SPointer<EthGetBlockBy> minedBlock = mineBlock(_block, _uncles, rawRLP, true);
+                    if (!minedBlock.isEmpty())
+                    {
+                        TxContext const ctx(m_session, TestOutputHelper::get().testName(), tr.trPointer(), minedBlock->header(),
+                            m_network, (size_t)minedBlock->header()->number().asBigInt(), txIndex);
+                        performPostState(ctx);
+                        _performStatediff((size_t)(currentBlockNumber.asBigInt()+1), txIndex);
+                    }
+                    else
+                        ETH_WARNING("Tying to get intermidiate tx state for block#" + test::fto_string(optionBlockNumber) + ", but block mining failed!");
+
+                    m_session.test_rewindToBlock(currentBlockNumber);
+                    {
+                        VALUE latestBlockNumber(m_session.eth_blockNumber());
+                        EthGetBlockBy const latestBlock(m_session.eth_getBlockByNumber(latestBlockNumber, Request::LESSOBJECTS));
+                        m_session.test_modifyTimestamp(latestBlock.header()->timestamp() + 1000);
+                    }
+                    return;
+                }
+                txIndex++;
             }
-            txIndex++;
+        }
+    };
+
+    auto const& opt = Options::get();
+    runForOption(opt.poststate, opt.poststate.blockNumber, opt.poststate.transactionNumber);
+
+    auto runForStatediff = [this, &opt, &runForOption](){
+        if (m_stateDiffStateA.isEmpty())
+            runForOption(opt.statediff, opt.statediff.firstBlock, opt.statediff.firstTrnsx);
+        else if (m_stateDiffStateB.isEmpty())
+            runForOption(opt.statediff, opt.statediff.seconBlock, opt.statediff.seconTrnsx);
+    };
+
+    if (opt.statediff.firstBlock == opt.statediff.seconBlock)
+    {
+        // attempt to capture the intermidiate state from different txs
+        runForStatediff();
+        runForStatediff();
+    }
+    else
+        runForStatediff();
+
+}
+
+void TestBlockchain::_performStatediff(size_t _blockNumber, size_t _txNumber)
+{
+    m_triedStateDiff = true;
+    auto const& statediff = Options::get().statediff;
+    if (statediff.initialized() && statediff.isBlockSelected && m_stateDiffStateB.isEmpty())
+    {
+        bool selector = statediff.firstBlock == _blockNumber;
+        if (statediff.isTransSelected)
+            selector = selector && statediff.firstTrnsx == _txNumber;
+
+        if (selector && m_stateDiffStateA.isEmpty())
+        {
+            m_stateDiffStateA = getRemoteState(m_session);
+        }
+        else
+        {
+            bool selector = statediff.seconBlock == _blockNumber;
+            if (statediff.isTransSelected)
+                selector = selector && statediff.seconTrnsx == _txNumber;
+
+            if (selector && m_stateDiffStateB.isEmpty() && !m_stateDiffStateA.isEmpty())
+            {
+                m_stateDiffStateB = getRemoteState(m_session);
+                auto const diff = test::stateDiff(m_stateDiffStateA, m_stateDiffStateB)->asJson();
+                ETH_DC_MESSAGE(DC::STATE,
+                    "\nFilling BC test State Diff:" + TestOutputHelper::get().testInfo().errorDebug() + cDefault + " \n" + diff);
+            }
         }
     }
+}
+
+TestBlockchain::~TestBlockchain()
+{
+    if (m_triedStateDiff)
+        showWarningIfStatediffNotFound(m_stateDiffStateA, m_stateDiffStateB);
 }
 
 

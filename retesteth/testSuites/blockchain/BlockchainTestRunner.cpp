@@ -149,6 +149,7 @@ void BlockchainTestRunner::performOptionCommands(BlockchainTestBlock const& _tbl
         m_session, m_test.testName(), spTransaction(0), _latestBlock.header(), m_test.network(), m_blockNumber, 0);
     performPostStateBlockOnly(ctx);
     this->performStatediffBlockOnly(m_blockNumber);
+    this->performStatediffBlockOnly(m_blockNumber);
 }
 
 void BlockchainTestRunner::validateBlockHeader(BlockchainTestBlock const& _tblock, EthGetBlockBy const& _latestBlock)
@@ -237,6 +238,8 @@ void BlockchainTestRunner::validateTransactions(BlockchainTestBlock const& _tblo
 void BlockchainTestRunner::checkPostState(EthGetBlockBy const& _latestBlock)
 {
     performPostState(m_session, m_test.testName(), m_test.network().asString(), _latestBlock.header()->stateRoot());
+    performFinalStateDiff();
+
     if (m_test.isFullState())
         compareStates(m_test.Post(), m_session);
     else
@@ -277,9 +280,10 @@ void BlockchainTestRunner::performStatediffBlockOnly(size_t _blockNumber)
     auto const& statediff = Options::get().statediff;
     if (statediff.initialized() && statediff.isBlockSelected && m_stateDiffStateB.isEmpty())
     {
+        m_triedStateDiff = true;
         if (statediff.firstBlock == _blockNumber && m_stateDiffStateA.isEmpty())
             m_stateDiffStateA = getRemoteState(m_session);
-        else if (statediff.seconBlock == _blockNumber && m_stateDiffStateB.isEmpty())
+        else if (statediff.seconBlock == _blockNumber && m_stateDiffStateB.isEmpty() && !m_stateDiffStateA.isEmpty())
         {
             m_stateDiffStateB = getRemoteState(m_session);
             auto const diff = test::stateDiff(m_stateDiffStateA, m_stateDiffStateB)->asJson();
@@ -287,4 +291,21 @@ void BlockchainTestRunner::performStatediffBlockOnly(size_t _blockNumber)
                 "\nRunning BC test State Diff:" + TestOutputHelper::get().testInfo().errorDebug() + cDefault + " \n" + diff);
         }
     }
+}
+
+void BlockchainTestRunner::performFinalStateDiff()
+{
+    auto const& statediff = Options::get().statediff;
+    if (statediff.initialized() && !statediff.isBlockSelected)
+    {
+        auto const diff = test::stateDiff(m_test.Pre(), getRemoteState(m_session))->asJson();
+        ETH_DC_MESSAGE(DC::STATE,
+            "\nRunning BC test State Diff:" + TestOutputHelper::get().testInfo().errorDebug() + cDefault + " \n" + diff);
+    }
+}
+
+BlockchainTestRunner::~BlockchainTestRunner()
+{
+    if (m_triedStateDiff)
+        showWarningIfStatediffNotFound(m_stateDiffStateA, m_stateDiffStateB);
 }

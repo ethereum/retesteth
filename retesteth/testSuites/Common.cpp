@@ -252,7 +252,7 @@ spDataObject storageDiff(Storage const& _pre, Storage const& _post)
 
 spDataObject stateDiff(State const& _pre, State const& _post)
 {
-    spDataObject res;
+    spDataObject res(new DataObject(DataType::Object));
     for (auto const& postAcc : _post.accounts())
     {
         if (_pre.hasAccount(postAcc.first))

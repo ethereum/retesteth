@@ -1,6 +1,7 @@
 #pragma once
 #include <retesteth/session/SessionInterface.h>
 #include <retesteth/testStructures/configs/FORK.h>
+#include <retesteth/testStructures/types/Ethereum/State.h>
 #include <retesteth/testStructures/basetypes/FH32.h>
 
 
@@ -25,4 +26,5 @@ void performPostState(test::session::SessionInterface& _session, std::string con
                       std::string const& _net, test::teststruct::FH32 const&);
 void performPostState(TxContext const& _context);
 void performPostStateBlockOnly(TxContext const& _context);
+void showWarningIfStatediffNotFound(test::teststruct::spState const&, test::teststruct::spState const&);
 }

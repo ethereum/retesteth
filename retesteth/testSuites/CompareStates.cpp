@@ -1,5 +1,6 @@
 #include "Common.h"
 #include <retesteth/Options.h>
+#include <retesteth/TestOutputHelper.h>
 using namespace std;
 using namespace test::debug;
 using namespace test::session;
@@ -256,7 +257,9 @@ void compareStates(StateBase const& _stateExpect, State const& _statePost)
     }
     auto const& opt = Options::get();
     if (opt.poststate && !opt.poststate.isBlockSelected)
-        ETH_DC_MESSAGE(DC::STATE, "Compare States State Dump: \n" + _statePost.asDataObject()->asJson());
+        ETH_DC_MESSAGE(DC::STATE, "Compare States State Dump: " +
+                       test::TestOutputHelper::get().testInfo().errorDebug() + cDefault +
+                       " \n" + _statePost.asDataObject()->asJson());
     if (result != CompareResult::Success)
         ETH_ERROR_MESSAGE("CompareStates failed with errors: " + CompareResultToString(result));
 }
