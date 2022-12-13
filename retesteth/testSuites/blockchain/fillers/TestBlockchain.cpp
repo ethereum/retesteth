@@ -433,7 +433,7 @@ void TestBlockchain::_tryIntermidiatePostState(BlockchainTestFillerBlock const& 
         if (optionInitialized)
         {
             auto const currentBlockNumber = m_session.eth_blockNumber();
-            if (optionBlockNumber - 1 != (size_t)currentBlockNumber.asBigInt())
+            if (optionBlockNumber != (size_t)currentBlockNumber.asBigInt() + 1)
                 return;
 
             bool thereisTransactionIndex = optionTransNumber < _block.transactions().size();
@@ -522,6 +522,25 @@ void TestBlockchain::_performStatediff(size_t _blockNumber, size_t _txNumber)
                     "\nFilling BC test State Diff:" + TestOutputHelper::get().testInfo().errorDebug() + cDefault + " \n" + diff);
             }
         }
+    }
+}
+
+void TestBlockchain::performOptionCommandsOnGenesis()
+{
+    auto const& poststate = Options::get().poststate;
+    if (poststate.initialized() && poststate.isBlockSelected && poststate.blockNumber == 0)
+    {
+        auto const genesis = m_session.eth_getBlockByNumber(0, Request::LESSOBJECTS);
+        auto const& testname = TestOutputHelper::get().testName();
+        TxContext const ctx(m_session, testname, spTransaction(0), genesis.header(), m_network, 0, 0);
+        performPostState(ctx);
+    }
+
+    auto const& statediff = Options::get().statediff;
+    if (statediff.initialized() && statediff.isBlockSelected && statediff.firstBlock == 0)
+    {
+        m_triedStateDiff = true;
+        m_stateDiffStateA = getRemoteState(m_session);
     }
 }
 

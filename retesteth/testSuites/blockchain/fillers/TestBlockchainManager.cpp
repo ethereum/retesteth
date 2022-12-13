@@ -277,5 +277,11 @@ spBlockHeader TestBlockchainManager::prepareUncle(
     return uncleBlockHeader;
 }
 
+void TestBlockchainManager::performOptionCommandsOnGenesis()
+{
+    TestBlockchain& currentChainMining = getCurrentChain();
+    currentChainMining.performOptionCommandsOnGenesis();
+}
+
 }  // namespace blockchainfiller
 }  // namespace test

@@ -51,8 +51,11 @@ spDataObject FillTest(BlockchainTestInFiller const& _test, TestSuite::TestSuiteO
                 filledTest.atKeyPointer("genesisBlockHeader") = genesis.getTestHeader()->asDataObject();
                 filledTest["genesisRLP"] = genesis.getRawRLP().asString();
 
-                TestOutputHelper::get().setUnitTestExceptions(_test.unitTestExceptions());
+                auto& helper = TestOutputHelper::get();
+                helper.setUnitTestExceptions(_test.unitTestExceptions());
+                helper.setCurrentTestInfo(TestInfo(net.asString(), 0));
 
+                testchain.performOptionCommandsOnGenesis();
                 size_t blocks = 0;
                 for (auto const& block : _test.blocks())
                 {

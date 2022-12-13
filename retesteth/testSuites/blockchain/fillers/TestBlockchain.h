@@ -47,6 +47,8 @@ public:
     // Return true if block is valid, false if block is not valid
     static bool checkBlockException(session::SessionInterface const& _session, std::string const& _sBlockException);
 
+    void performOptionCommandsOnGenesis();
+
 private:
     // Ask remote client to generate a blockheader that will later used for uncles
     spBlockHeader mineNextBlockAndRevert();
