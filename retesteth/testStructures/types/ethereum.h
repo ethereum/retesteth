@@ -4,4 +4,4 @@
 #include "Ethereum/State.h"
 #include "Ethereum/StateIncomplete.h"
 #include "Ethereum/Storage.h"
-#include "Ethereum/Transaction.h"
+#include "Ethereum/Transactions/Transaction.h"

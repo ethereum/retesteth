@@ -1,7 +1,7 @@
 #pragma once
 #include "../../../basetypes.h"
-#include "../../Ethereum/BlockHeader.h"
-#include "../../Ethereum/Transaction.h"
+#include "../../Ethereum/Blocks/BlockHeader.h"
+#include "../../Ethereum/Transactions/Transaction.h"
 #include <libdataobj/DataObject.h>
 
 namespace test::teststruct

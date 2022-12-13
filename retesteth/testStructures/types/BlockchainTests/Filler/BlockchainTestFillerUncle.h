@@ -1,7 +1,7 @@
 #pragma once
 #include "../../../basetypes.h"
 #include "../../../configs/FORK.h"
-#include "../../Ethereum/BlockHeaderIncomplete.h"
+#include "../../Ethereum/Blocks/BlockHeaderIncomplete.h"
 #include <libdataobj/DataObject.h>
 
 namespace test

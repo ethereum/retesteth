@@ -1,6 +1,6 @@
 #pragma once
-#include "../Ethereum/BlockHeader.h"
-#include "../Ethereum/BlockHeader1559.h"
+#include "../Ethereum/Blocks/BlockHeader.h"
+#include "../Ethereum/Blocks/BlockHeader1559.h"
 #include "../Ethereum/State.h"
 #include <libdataobj/DataObject.h>
 

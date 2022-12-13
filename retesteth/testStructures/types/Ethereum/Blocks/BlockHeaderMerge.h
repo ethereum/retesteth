@@ -1,5 +1,5 @@
 #pragma once
-#include "../../basetypes.h"
+#include <retesteth/testStructures/basetypes.h>
 #include "BlockHeader1559.h"
 #include <libdevcore/RLP.h>
 #include <libdataobj/DataObject.h>

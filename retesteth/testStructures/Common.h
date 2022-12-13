@@ -1,8 +1,8 @@
 #pragma once
 #include <retesteth/compiler/Compiler.h>
 #include <libdataobj/DataObject.h>
-#include <retesteth/testStructures/types/Ethereum/BlockHeaderReader.h>
-#include <retesteth/testStructures/types/Ethereum/TransactionReader.h>
+#include <retesteth/testStructures/types/Ethereum/Blocks/BlockHeaderReader.h>
+#include <retesteth/testStructures/types/Ethereum/Transactions/TransactionReader.h>
 #include <map>
 
 namespace test::teststruct

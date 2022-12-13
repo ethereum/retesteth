@@ -1,9 +1,9 @@
 #pragma once
-#include "../../basetypes.h"
-#include "../Ethereum/BlockHeader.h"
-#include "../Ethereum/BlockHeaderReader.h"
+#include <retesteth/testStructures/basetypes.h>
+#include "../Ethereum/Blocks/BlockHeader.h"
+#include "../Ethereum/Blocks/BlockHeaderReader.h"
 #include "../Ethereum/State.h"
-#include "../Ethereum/Transaction.h"
+#include "../Ethereum/Transactions/Transaction.h"
 
 #include <EthChecks.h>
 #include <libdataobj/DataObject.h>

@@ -1,5 +1,5 @@
 #pragma once
-#include "../../basetypes.h"
+#include <retesteth/testStructures/basetypes.h>
 #include "../Ethereum/State.h"
 #include "SubElements/ToolResponseReceipt.h"
 #include "SubElements/ToolResponseRejected.h"

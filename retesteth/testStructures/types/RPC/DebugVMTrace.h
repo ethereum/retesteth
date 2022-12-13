@@ -1,5 +1,5 @@
 #pragma once
-#include "../../basetypes.h"
+#include <retesteth/testStructures/basetypes.h>
 #include <libdataobj/DataObject.h>
 #include <boost/filesystem/path.hpp>
 

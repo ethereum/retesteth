@@ -1,6 +1,6 @@
 #pragma once
-#include "../../basetypes.h"
-#include "../Ethereum/BlockHeader.h"
+#include <retesteth/testStructures/basetypes.h>
+#include "../Ethereum/Blocks/BlockHeader.h"
 #include "SubElements/EthGetBlockByTransaction.h"
 #include <libdataobj/DataObject.h>
 

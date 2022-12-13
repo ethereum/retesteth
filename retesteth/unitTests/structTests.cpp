@@ -2,7 +2,7 @@
 #include <retesteth/Options.h>
 #include <retesteth/TestHelper.h>
 #include <retesteth/TestOutputHelper.h>
-#include <retesteth/testStructures/types/Ethereum/TransactionReader.h>
+#include <retesteth/testStructures/types/Ethereum/Transactions/TransactionReader.h>
 
 using namespace std;
 using namespace dev;

@@ -1,7 +1,7 @@
 #pragma once
 #include "../../../basetypes.h"
 #include "../../../configs/FORK.h"
-#include "../../Ethereum/Transaction.h"
+#include "../../Ethereum/Transactions/Transaction.h"
 #include "BlockchainTestFillerBlockHeaderOverwrite.h"
 #include "BlockchainTestFillerTransaction.h"
 #include "BlockchainTestFillerUncle.h"
