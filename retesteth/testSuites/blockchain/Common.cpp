@@ -54,7 +54,7 @@ void performPostState(test::session::SessionInterface& _session, string const& _
         {
             string const testNameOut = _testName + "_" + _network + ".txt";
             fs::path const pathOut = fs::path(poststate.outpath) / testNameOut;
-            ETH_DC_MESSAGE(DC::STATE, "Export post state to " + pathOut.string());
+            ETH_DC_MESSAGEC(DC::STATE, "Export post state to " + pathOut.string(), LogColor::LIME);
             dev::writeFile(pathOut, dev::asBytes(remStateJson));
         }
     }
@@ -63,9 +63,9 @@ void performPostState(test::session::SessionInterface& _session, string const& _
 void performPostStateBlockOnly(TxContext const& _context)
 {
     auto const& poststate = Options::get().poststate;
-    if (poststate.initialized())
+    if (poststate.initialized() && poststate.isBlockSelected)
     {
-        if (!(poststate.isBlockSelected && poststate.blockNumber == _context.blIndex))
+        if (poststate.blockNumber != _context.blIndex)
             return;
 
         auto const remStateJson = getAndPrintRemoteState(_context.session, _context.blockHeader->stateRoot());
@@ -74,7 +74,7 @@ void performPostStateBlockOnly(TxContext const& _context)
             string testNameOut = _context.testName + "_block" + test::fto_string(_context.blIndex);
             testNameOut += "_" + _context.network.asString() + ".txt";
             fs::path const pathOut = fs::path(poststate.outpath) / testNameOut;
-            ETH_DC_MESSAGE(DC::STATE, "Export post state to " + pathOut.string());
+            ETH_DC_MESSAGEC(DC::STATE, "Export post state to " + pathOut.string(), LogColor::LIME);
             dev::writeFile(pathOut, dev::asBytes(remStateJson));
         }
     }
@@ -93,7 +93,7 @@ void performPostState(TxContext const& _context)
                                + "_transaction" + test::fto_string(_context.trIndex);
             testNameOut += "_" + _context.network.asString() + ".txt";
             fs::path const pathOut = fs::path(poststate.outpath) / testNameOut;
-            ETH_DC_MESSAGE(DC::STATE, "Export post state to " + pathOut.string());
+            ETH_DC_MESSAGEC(DC::STATE, "Export post state to " + pathOut.string(), LogColor::LIME);
             dev::writeFile(pathOut, dev::asBytes(remStateJson));
         }
     }

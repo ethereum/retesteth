@@ -20,6 +20,7 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
 
     BlockchainTestRunner runner(_test, _opt);
     runner.setChainParams();
+    runner.performOptionCommandsOnGenesis();
 
     for (BlockchainTestBlock const& tblock : _test.blocks())
     {
@@ -36,7 +37,6 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
 
         auto const blockFull = runner.requestBlock(blHash);
         runner.performOptionCommands(tblock, blockFull);
-
         runner.validateBlockHeader(tblock, blockFull);
         runner.validateUncles(tblock, blockFull);
         runner.validateTransactions(tblock, blockFull);

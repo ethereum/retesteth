@@ -70,7 +70,7 @@ void printVmTrace(VMtraceinfo const& _info)
         if (!Options::get().vmtraceraw.outpath.empty())
         {
             auto outpath = fs::path(Options::get().vmtraceraw.outpath);
-            ETH_DC_MESSAGE(DC::TESTLOG, "Export vmtraceraw to " + (outpath / _info.trName).string());
+            ETH_DC_MESSAGEC(DC::TESTLOG, "Export vmtraceraw to " + (outpath / _info.trName).string(), LogColor::LIME);
             ret.exportLogs(outpath / _info.trName);
         }
         else

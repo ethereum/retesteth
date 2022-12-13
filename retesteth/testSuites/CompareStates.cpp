@@ -40,7 +40,7 @@ State::Account remoteGetAccount(SessionInterface& _session, VALUE const& _bNumbe
 // Get full remote state from the client
 spState getRemoteState(SessionInterface& _session)
 {
-    VALUE recentBNumber(_session.eth_blockNumber());
+    VALUE const recentBNumber = _session.eth_blockNumber();
     EthGetBlockBy recentBlock(_session.eth_getBlockByNumber(recentBNumber, Request::LESSOBJECTS));
     VALUE trIndex(recentBlock.transactions().size());
 

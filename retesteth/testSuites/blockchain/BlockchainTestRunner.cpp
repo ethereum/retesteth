@@ -136,6 +136,16 @@ bool BlockchainTestRunner::checkLastRPCBlockException(BlockchainTestBlock const&
     return false;
 }
 
+void BlockchainTestRunner::performOptionCommandsOnGenesis()
+{
+    size_t const blockNumber = 0;
+    auto const genesis  = requestBlock(VALUE(blockNumber));
+    TxContext const ctx(
+        m_session, m_test.testName(), spTransaction(0), genesis.header(), m_test.network(), blockNumber, 0);
+    performPostStateBlockOnly(ctx);
+    this->performStatediffBlockOnly(blockNumber);
+}
+
 void BlockchainTestRunner::performOptionCommands(BlockchainTestBlock const& _tblock, EthGetBlockBy const& _latestBlock)
 {
     size_t txIndex = 0;
@@ -148,7 +158,6 @@ void BlockchainTestRunner::performOptionCommands(BlockchainTestBlock const& _tbl
     TxContext const ctx(
         m_session, m_test.testName(), spTransaction(0), _latestBlock.header(), m_test.network(), m_blockNumber, 0);
     performPostStateBlockOnly(ctx);
-    this->performStatediffBlockOnly(m_blockNumber);
     this->performStatediffBlockOnly(m_blockNumber);
 }
 
@@ -237,7 +246,7 @@ void BlockchainTestRunner::validateTransactions(BlockchainTestBlock const& _tblo
 
 void BlockchainTestRunner::checkPostState(EthGetBlockBy const& _latestBlock)
 {
-    performPostState(m_session, m_test.testName(), m_test.network().asString(), _latestBlock.header()->stateRoot());
+    performFinalPostState(_latestBlock);
     performFinalStateDiff();
 
     if (m_test.isFullState())
@@ -282,8 +291,13 @@ void BlockchainTestRunner::performStatediffBlockOnly(size_t _blockNumber)
     {
         m_triedStateDiff = true;
         if (statediff.firstBlock == _blockNumber && m_stateDiffStateA.isEmpty())
+        {
             m_stateDiffStateA = getRemoteState(m_session);
-        else if (statediff.seconBlock == _blockNumber && m_stateDiffStateB.isEmpty() && !m_stateDiffStateA.isEmpty())
+            if (statediff.seconBlock != statediff.firstBlock)
+                return;
+        }
+
+        if (statediff.seconBlock == _blockNumber && m_stateDiffStateB.isEmpty() && !m_stateDiffStateA.isEmpty())
         {
             m_stateDiffStateB = getRemoteState(m_session);
             auto const diff = test::stateDiff(m_stateDiffStateA, m_stateDiffStateB)->asJson();
@@ -301,6 +315,15 @@ void BlockchainTestRunner::performFinalStateDiff()
         auto const diff = test::stateDiff(m_test.Pre(), getRemoteState(m_session))->asJson();
         ETH_DC_MESSAGE(DC::STATE,
             "\nRunning BC test State Diff:" + TestOutputHelper::get().testInfo().errorDebug() + cDefault + " \n" + diff);
+    }
+}
+
+void BlockchainTestRunner::performFinalPostState(EthGetBlockBy const& _latestBlock)
+{
+    auto const& poststate = Options::get().poststate;
+    if (poststate.initialized() && !poststate.isBlockSelected)
+    {
+        performPostState(m_session, m_test.testName(), m_test.network().asString(), _latestBlock.header()->stateRoot());
     }
 }
 

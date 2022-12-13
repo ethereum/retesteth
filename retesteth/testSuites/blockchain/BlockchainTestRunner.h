@@ -21,6 +21,7 @@ public:
     teststruct::EthGetBlockBy requestBlock(teststruct::FH32 const&);
     teststruct::EthGetBlockBy requestBlock(teststruct::VALUE const&);
     bool checkLastRPCBlockException(teststruct::BlockchainTestBlock const&);
+    void performOptionCommandsOnGenesis();
     void performOptionCommands(teststruct::BlockchainTestBlock const&, teststruct::EthGetBlockBy const&);
     void validateBlockHeader(teststruct::BlockchainTestBlock const&, teststruct::EthGetBlockBy const&);
     void validateUncles(teststruct::BlockchainTestBlock const&, teststruct::EthGetBlockBy const&);
@@ -28,8 +29,11 @@ public:
     test::session::SessionInterface& session() { return m_session; }
     void checkPostState(teststruct::EthGetBlockBy const&);
     void checkGenesis();
-    void performFinalStateDiff();
+
+
 private:
+    void performFinalPostState(teststruct::EthGetBlockBy const&);
+    void performFinalStateDiff();
     void performStatediffBlockOnly(size_t);
 
 private:
