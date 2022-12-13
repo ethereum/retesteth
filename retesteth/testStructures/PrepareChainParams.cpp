@@ -61,6 +61,7 @@ spDataObject prepareGenesisSubsection(StateTestEnvBase const& _env, ParamsContex
     {
         (*genesis).removeKey("baseFeePerGas");
         (*genesis).removeKey("currentRandom");
+        (*genesis).removeKey("withdrawalsRoot");
         return genesis;
     }
 
@@ -70,13 +71,24 @@ spDataObject prepareGenesisSubsection(StateTestEnvBase const& _env, ParamsContex
         if (knowLondon && compareFork(net, CMP::ge, FORK("London")))
             (*genesis)["baseFeePerGas"] = calculateGenesisBaseFee(_env.currentBaseFee(), _context);
 
-        bool knowMerge = cfg.checkForkInProgression("Merge");
-        if (knowMerge && compareFork(net, CMP::ge, FORK("Merge")))
-        {
+        auto mergify = [&genesis, &_env](){
             (*genesis).removeKey("difficulty");
             (*genesis)["currentRandom"] = _env.currentRandom().asString();
             auto const randomH32 = dev::toCompactHexPrefixed(dev::u256((*genesis)["currentRandom"].asString()), 32);
             (*genesis)["mixHash"] = randomH32;
+        };
+
+        bool knowMerge = cfg.checkForkInProgression("Merge");
+        if (knowMerge && compareFork(net, CMP::ge, FORK("Merge")))
+        {
+            mergify();
+        }
+
+        bool knowShaghai = cfg.checkForkInProgression("Shanghai");
+        if (knowShaghai && compareFork(net, CMP::ge, FORK("Shanghai")))
+        {
+            mergify();
+            (*genesis)["withdrawalsRoot"] = _env.currentWithdrawalsRoot().asString();
         }
     }
     else

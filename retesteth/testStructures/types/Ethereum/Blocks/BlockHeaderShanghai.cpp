@@ -1,15 +1,17 @@
+#include "BlockHeaderShanghai.h"
 #include <libdevcore/Address.h>
-#include <retesteth/EthChecks.h>
 #include <retesteth/TestHelper.h>
+#include <retesteth/EthChecks.h>
 #include <retesteth/testStructures/Common.h>
 
-using namespace dev;
 using namespace std;
+using namespace dev;
 using namespace test::debug;
 
 namespace test::teststruct
 {
-void BlockHeader1559::fromData(DataObject const& _data)
+
+void BlockHeaderShanghai::fromData(DataObject const& _data)
 {
     try
     {
@@ -39,13 +41,15 @@ void BlockHeader1559::fromData(DataObject const& _data)
                 {"transactionsRoot", {{DataType::String}, jsonField::Optional}},
                 {"sha3Uncles", {{DataType::String}, jsonField::Optional}},
                 {"uncleHash", {{DataType::String}, jsonField::Optional}},
+                {"withdrawalsRoot", {{DataType::String}, jsonField::Required}},
                 {"rejectedTransactions", {{DataType::Array}, jsonField::Optional}},   // EthGetBlockBy test debug field
                 {"seedHash", {{DataType::String}, jsonField::Optional}},         // EthGetBlockBy aleth field
                 {"boundary", {{DataType::String}, jsonField::Optional}},         // EthGetBlockBy aleth field
                 {"size", {{DataType::String}, jsonField::Optional}},             // EthGetBlockBy field
                 {"totalDifficulty", {{DataType::String}, jsonField::Optional}},  // EthGetBlockBy field
                 {"transactions", {{DataType::Array}, jsonField::Optional}},      // EthGetBlockBy field
-                {"uncles", {{DataType::Array}, jsonField::Optional}}             // EthGetBlockBy field
+                {"uncles", {{DataType::Array}, jsonField::Optional}},            // EthGetBlockBy field
+                {"withdrawals", {{DataType::Array}, jsonField::Optional}}        // EthGetBlockBy field
             });
 
         string const akey = _data.count("author") ? "author" :
@@ -84,6 +88,7 @@ void BlockHeader1559::fromData(DataObject const& _data)
         m_timestamp = spVALUE(new VALUE(_data.atKey("timestamp")));
         string const tkey = _data.count("transactionsRoot") ? "transactionsRoot" : "transactionsTrie";
         m_transactionsRoot = spFH32(new FH32(_data.atKey(tkey)));
+        m_withdrawalsRoot = spFH32(new FH32(_data.atKey("withdrawalsRoot")));
 
         // Manual hash calculation
         if (m_hash.isEmpty())
@@ -91,16 +96,16 @@ void BlockHeader1559::fromData(DataObject const& _data)
     }
     catch (std::exception const& _ex)
     {
-        throw test::UpwardsException(string("Blockheader1559 parse error: ") + _ex.what());
+        throw test::UpwardsException(string("BlockheaderShanghai parse error: ") + _ex.what());
     }
 }
 
-BlockHeader1559::BlockHeader1559(DataObject const& _data)
+BlockHeaderShanghai::BlockHeaderShanghai(DataObject const& _data)
 {
     fromData(_data);
 }
 
-BlockHeader1559::BlockHeader1559(dev::RLP const& _rlp)
+BlockHeaderShanghai::BlockHeaderShanghai(dev::RLP const& _rlp)
 {
     // 0 - parentHash           // 8 - number
     // 1 - uncleHash            // 9 - gasLimit
@@ -110,6 +115,8 @@ BlockHeader1559::BlockHeader1559(dev::RLP const& _rlp)
     // 5 - receiptTrie          // 13 - mixHash
     // 6 - bloom                // 14 - nonce
     // 7 - difficulty           // 15 - baseFee
+    // 16 - withdrawals root
+
     size_t i = 0;
     m_parentHash = spFH32(new FH32(_rlp[i++]));
     m_sha3Uncles = spFH32(new FH32(_rlp[i++]));
@@ -127,10 +134,11 @@ BlockHeader1559::BlockHeader1559(dev::RLP const& _rlp)
     m_mixHash = spFH32(new FH32(_rlp[i++]));
     m_nonce = spFH8(new FH8(_rlp[i++]));
     m_baseFee = spVALUE(new VALUE(_rlp[i++]));
+    m_withdrawalsRoot = spFH32(new FH32(_rlp[i++]));
     recalculateHash();
 }
 
-spDataObject BlockHeader1559::asDataObject() const
+spDataObject BlockHeaderShanghai::asDataObject() const
 {
     spDataObject out;
     (*out)["bloom"] = m_logsBloom->asString();
@@ -150,10 +158,11 @@ spDataObject BlockHeader1559::asDataObject() const
     (*out)["transactionsTrie"] = m_transactionsRoot->asString();
     (*out)["uncleHash"] = m_sha3Uncles->asString();
     (*out)["baseFeePerGas"] = m_baseFee->asString();
+    (*out)["withdrawalsRoot"] = m_withdrawalsRoot->asString();
     return out;
 }
 
-const RLPStream BlockHeader1559::asRLPStream() const
+const RLPStream BlockHeaderShanghai::asRLPStream() const
 {
     RLPStream header;
     header.appendList(16);
@@ -174,41 +183,38 @@ const RLPStream BlockHeader1559::asRLPStream() const
     header << h256(m_mixHash->asString());
     header << h64(m_nonce->asString());
     header << m_baseFee->asBigInt();
+    header << h256(m_withdrawalsRoot->asString());
     return header;
 }
 
-BlockHeader1559& BlockHeader1559::castFrom(BlockHeader& _from)
+BlockHeaderShanghai& BlockHeaderShanghai::castFrom(BlockHeader& _from)
 {
     try
     {
-        if (_from.type() != BlockType::BlockHeader1559 &&
-            _from.type() != BlockType::BlockHeaderMerge &&
-            _from.type() != BlockType::BlockHeaderShanghai)
-            ETH_FAIL_MESSAGE("BlockHeader1559::castFrom() got wrong block type! `" + BlockHeader::TypeToString(_from.type()));
-        return dynamic_cast<BlockHeader1559&>(_from);
+        if (_from.type() != BlockType::BlockHeaderShanghai)
+            ETH_FAIL_MESSAGE("BlockHeaderShanghai::castFrom() got wrong block type!");
+        return dynamic_cast<BlockHeaderShanghai&>(_from);
     }
     catch (...)
     {
-        ETH_FAIL_MESSAGE("BlockHeader1559::castFrom() failed!");
+        ETH_FAIL_MESSAGE("BlockHeaderShanghai::castFrom() failed!");
     }
-    return dynamic_cast<BlockHeader1559&>(_from);
+    return dynamic_cast<BlockHeaderShanghai&>(_from);
 }
 
-BlockHeader1559 const& BlockHeader1559::castFrom(spBlockHeader const& _from)
+BlockHeaderShanghai const& BlockHeaderShanghai::castFrom(spBlockHeader const& _from)
 {
     try
     {
-        if (_from->type() != BlockType::BlockHeader1559 &&
-            _from->type() != BlockType::BlockHeaderMerge &&
-            _from->type() != BlockType::BlockHeaderShanghai)
-            ETH_FAIL_MESSAGE("BlockHeader1559::castFrom() got wrong block type! `" + BlockHeader::TypeToString(_from->type()));
-        return dynamic_cast<BlockHeader1559 const&>(_from.getCContent());
+        if (_from->type() != BlockType::BlockHeaderShanghai)
+            ETH_FAIL_MESSAGE("BlockHeaderShanghai::castFrom() got wrong block type!");
+        return dynamic_cast<BlockHeaderShanghai const&>(_from.getCContent());
     }
     catch (...)
     {
-        ETH_FAIL_MESSAGE("BlockHeader1559::castFrom() failed!");
+        ETH_FAIL_MESSAGE("BlockHeaderShanghai::castFrom() failed!");
     }
-    spBlockHeader1559 foo(new BlockHeader1559(DataObject()));
+    spBlockHeaderShanghai foo(new BlockHeaderShanghai(DataObject()));
     return foo.getCContent();
 }
 

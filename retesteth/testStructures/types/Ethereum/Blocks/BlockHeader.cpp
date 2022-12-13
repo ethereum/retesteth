@@ -14,6 +14,8 @@ std::string BlockHeader::TypeToString(BlockType _t)
         return "BlockHeaderLegacy";
     case BlockType::BlockHeaderMerge:
         return "BlockHeaderMerge";
+    case BlockType::BlockHeaderShanghai:
+        return "BlockHeaderShanghai";
     default:
         return "UnparsedBlockType";
     }
@@ -30,6 +32,8 @@ std::string BlockHeader::BlockTypeToString(BlockType _bl)
         return "BlockHeaderLegacy";
     case BlockType::BlockHeaderMerge:
         return "BlockHeaderMerge";
+    case BlockType::BlockHeaderShanghai:
+        return "BlockHeaderShanghai";
     default:
         return "BlockHeaderUndefined";
     };

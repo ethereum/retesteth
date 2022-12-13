@@ -7,9 +7,16 @@ using namespace test::teststruct;
 
 namespace  {
 
+bool isHeaderShanghai(DataObject const& _filledData)
+{
+    if (_filledData.count("withdrawalsRoot"))
+        return true;
+    return false;
+}
+
 bool isHeaderMerge(DataObject const& _filledData)
 {
-    if (!_filledData.count("baseFeePerGas"))
+    if (!_filledData.count("baseFeePerGas") || _filledData.count("withdrawalsRoot"))
         return false;
 
     string uncleHashName = "sha3Uncles";
@@ -29,7 +36,8 @@ bool isHeaderMerge(DataObject const& _filledData)
 
 bool isHeader1559(DataObject const& _filledData)
 {
-    if (_filledData.count("baseFeePerGas") && !isHeaderMerge(_filledData))
+    if (_filledData.count("baseFeePerGas") && !isHeaderMerge(_filledData)
+        && !_filledData.count("withdrawalsRoot"))
         return true;
     return false;
 }
@@ -41,11 +49,15 @@ bool isHeaderLegacy(DataObject const& _filledData)
     return false;
 }
 
+bool isHeaderShanghai(dev::RLP const& _rlp)
+{
+    return (_rlp.itemCount() == 17);
+}
 
 
 bool isHeaderMerge(dev::RLP const& _rlp)
 {
-    if (_rlp.itemCount() == 15)
+    if (_rlp.itemCount() != 16)
         return false;
     // 0 - parentHash           // 8 - number
     // 1 - uncleHash            // 9 - gasLimit
@@ -69,7 +81,7 @@ bool isHeaderMerge(dev::RLP const& _rlp)
 
 bool isHeader1559(dev::RLP const& _rlp)
 {
-    return (_rlp.itemCount() != 15 && !isHeaderMerge(_rlp));
+    return (_rlp.itemCount() == 16 && !isHeaderMerge(_rlp));
 }
 
 bool isHeaderLegacy(dev::RLP const& _rlp)
@@ -93,6 +105,9 @@ spBlockHeader readBlockHeader(dev::RLP const& _rlp)
     if (isHeaderMerge(_rlp))
         return spBlockHeader(new BlockHeaderMerge(_rlp));
 
+    if (isHeaderShanghai(_rlp))
+        return spBlockHeader(new BlockHeaderShanghai(_rlp));
+
     ETH_ERROR_MESSAGE("readBlockHeader: unknown block type! /n" + dev::asString(_rlp.toBytes()));
     return spBlockHeader(new BlockHeaderLegacy(_rlp));
 }
@@ -107,6 +122,9 @@ spBlockHeader readBlockHeader(DataObject const& _filledData)
 
     if (isHeaderMerge(_filledData))
         return spBlockHeader(new BlockHeaderMerge(_filledData));
+
+    if (isHeaderShanghai(_filledData))
+        return spBlockHeader(new BlockHeaderShanghai(_filledData));
 
     ETH_ERROR_MESSAGE("readBlockHeader: unknown block type! /n" + _filledData.asJson());
     return spBlockHeader(new BlockHeaderLegacy(_filledData));

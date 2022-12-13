@@ -47,6 +47,11 @@ struct SetChainParamsArgsGenesisMerge : SetChainParamsArgsGenesis
     SetChainParamsArgsGenesisMerge(DataObject const&);
     spBlockHeader constructBlockHeader() const override;
 };
+struct SetChainParamsArgsGenesisShanghai : SetChainParamsArgsGenesis
+{
+    SetChainParamsArgsGenesisShanghai(DataObject const&);
+    spBlockHeader constructBlockHeader() const override;
+};
 
 typedef GCP_SPointer<SetChainParamsArgs> spSetChainParamsArgs;
 typedef GCP_SPointer<SetChainParamsArgsGenesis> spSetChainParamsArgsGenesis;

@@ -50,7 +50,8 @@ ToolChain::ToolChain(
             throw test::UpwardsException("Constructing 1559 genesis on network which is lower London!");
         if (compareFork(m_fork, CMP::ge, FORK("London"))
             && _genesis.header()->type() != BlockType::BlockHeader1559
-            && _genesis.header()->type() != BlockType::BlockHeaderMerge)
+            && _genesis.header()->type() != BlockType::BlockHeaderMerge
+            && _genesis.header()->type() != BlockType::BlockHeaderShanghai)
             throw test::UpwardsException("Constructing legacy genesis on network which is higher London!");
     }
 

@@ -29,6 +29,8 @@ struct StateTestEnvBase : GCP_SPointerBase
     FH32 const& currentRandom() const { return m_currentRandom; }
     VALUE const& currentDifficulty() const { return m_currentDifficulty; }
 
+    FH32 const& currentWithdrawalsRoot() const { return m_currentWithdrawalsRoot; }
+
 protected:
     StateTestEnvBase() {}
     spDataObject m_raw;
@@ -48,6 +50,9 @@ protected:
 
     // Merge
     spFH32 m_currentRandom;
+
+    // Shaghai
+    spFH32 m_currentWithdrawalsRoot;
 };
 
 

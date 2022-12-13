@@ -10,7 +10,8 @@ BlockHeaderMerge& BlockHeaderMerge::castFrom(BlockHeader& _from)
 {
     try
     {
-        if (_from.type() != BlockType::BlockHeaderMerge)
+        if (_from.type() != BlockType::BlockHeaderMerge &&
+            _from.type() != BlockType::BlockHeaderShanghai)
             ETH_FAIL_MESSAGE("BlockHeaderMerge::castFrom() got wrong block type!");
         return dynamic_cast<BlockHeaderMerge&>(_from);
     }
@@ -25,7 +26,8 @@ BlockHeaderMerge const& BlockHeaderMerge::castFrom(spBlockHeader const& _from)
 {
     try
     {
-        if (_from->type() != BlockType::BlockHeaderMerge)
+        if (_from->type() != BlockType::BlockHeaderMerge &&
+            _from->type() != BlockType::BlockHeaderShanghai)
             ETH_FAIL_MESSAGE("BlockHeaderMerge::castFrom() got wrong block type!");
         return dynamic_cast<BlockHeaderMerge const&>(_from.getCContent());
     }
