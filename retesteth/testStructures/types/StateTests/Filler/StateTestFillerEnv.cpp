@@ -86,6 +86,9 @@ void StateTestFillerEnv::initializeFields(spDataObject const& _data)
 
     if (_data->count("currentRandom"))
         m_currentRandom = spFH32(new FH32(_data->atKey("currentRandom")));
+
+    // Shanghai
+    m_currentWithdrawalsRoot = spFH32(new FH32(DataObject("0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347")));
 }
 
 spDataObject const& StateTestFillerEnv::asDataObject() const

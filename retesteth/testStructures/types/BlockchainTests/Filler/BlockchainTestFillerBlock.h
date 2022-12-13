@@ -5,6 +5,7 @@
 #include "BlockchainTestFillerBlockHeaderOverwrite.h"
 #include "BlockchainTestFillerTransaction.h"
 #include "BlockchainTestFillerUncle.h"
+#include "BlockchainTestFillerWithdrawal.h"
 #include <libdataobj/DataObject.h>
 
 namespace test
@@ -81,6 +82,7 @@ private:
 
     std::vector<BlockchainTestFillerUncle> m_uncles;
     std::vector<BlockchainTestFillerTransaction> m_transactions;
+    BlockchainTestFillerWithdrawal m_withdrawals;
     std::map<FORK, std::string> m_expectExceptions;
 
     std::map<FORK, spBlockHeaderOverwrite> m_overwriteHeaderByForkMap;

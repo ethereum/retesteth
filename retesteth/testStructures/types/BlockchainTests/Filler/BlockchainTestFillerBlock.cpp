@@ -19,6 +19,7 @@ BlockchainTestFillerBlock::BlockchainTestFillerBlock(spDataObject& _data, NonceM
                 {"chainnetwork", {{DataType::String}, jsonField::Optional}},
                 {"transactions", {{DataType::Array}, jsonField::Optional}},
                 {"uncleHeaders", {{DataType::Array}, jsonField::Optional}},
+                {"withdrawals", {{DataType::Array}, jsonField::Optional}},
                 {"expectException", {{DataType::Object}, jsonField::Optional}},
                 {"blockHeader", {{DataType::Object}, jsonField::Optional}}});
 
@@ -49,6 +50,9 @@ BlockchainTestFillerBlock::BlockchainTestFillerBlock(spDataObject& _data, NonceM
         if (_data->count("transactions"))
             for (auto& tr : (*_data).atKeyUnsafe("transactions").getSubObjectsUnsafe())
                 m_transactions.push_back(BlockchainTestFillerTransaction(dataobject::move(tr), _nonceMap));
+
+        if (_data->count("withdrawals"))
+            m_withdrawals = BlockchainTestFillerWithdrawal(MOVE(_data, "withdrawals"));
 
         if (_data->count("uncleHeaders"))
             for (auto const& un : _data->atKey("uncleHeaders").getSubObjects())
