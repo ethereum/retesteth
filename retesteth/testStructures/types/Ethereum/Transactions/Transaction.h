@@ -82,6 +82,7 @@ protected:
     dev::RLPStream m_outRlpStream;
     spBYTES m_rawRLPdata;  // raw transaction data without rlp header (for typed transactions)
     spVALUE m_secretKey = spVALUE(new VALUE(0));   // Additional info for t8ntool transaction wrapper
+    spFH20 m_sender;
 };
 
 typedef GCP_SPointer<Transaction> spTransaction;

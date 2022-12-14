@@ -58,6 +58,8 @@ void TransactionAccessList::fromDataObject(DataObject const& _data)
         m_gasPrice = spVALUE(new VALUE(_data.atKey("gasPrice")));
         m_nonce = spVALUE(new VALUE(_data.atKey("nonce")));
         m_value = spVALUE(new VALUE(_data.atKey("value")));
+        if (_data.count("sender"))
+            m_sender = spFH20(new FH20(_data.atKey("sender")));
 
         if (_data.count("chainId"))
             m_chainID = spVALUE(new VALUE(_data.atKey("chainId")));

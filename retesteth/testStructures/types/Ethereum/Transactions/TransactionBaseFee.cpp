@@ -64,6 +64,8 @@ void TransactionBaseFee::fromDataObject(DataObject const& _data)
         m_gasLimit = spVALUE(new VALUE(_data.atKey("gasLimit")));
         m_nonce = spVALUE(new VALUE(_data.atKey("nonce")));
         m_value = spVALUE(new VALUE(_data.atKey("value")));
+        if (_data.count("sender"))
+            m_sender = spFH20(new FH20(_data.atKey("sender")));
 
         if (_data.count("chainId"))
             m_chainID = spVALUE(new VALUE(_data.atKey("chainId")));
@@ -209,6 +211,9 @@ const spDataObject TransactionBaseFee::asDataObject(ExportOrder _order) const
     (*out)["v"] = m_v->asString();
     (*out)["r"] = m_r->asString();
     (*out)["s"] = m_s->asString();
+    if (!m_sender.isEmpty())
+        (*out)["sender"] = m_sender->asString();
+
     if (_order == ExportOrder::ToolStyle)
     {
         (*out).performModifier(mod_removeLeadingZerosFromHexValues, DataObject::ModifierOption::RECURSIVE, {"data", "to"});
