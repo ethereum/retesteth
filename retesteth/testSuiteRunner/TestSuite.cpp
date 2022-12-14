@@ -180,8 +180,11 @@ void TestSuite::_executeTest(string const& _testFolder, fs::path const& _fillerT
     auto noSecondRunConditions = [](){
         bool condition = true;
         auto const& opt = Options::get();
-        condition = condition && !opt.getGStateTransactionFilter().empty();
-        condition = condition && opt.vmtrace.initialized();
+        condition = condition && opt.getGStateTransactionFilter().empty();
+        condition = condition && !opt.vmtrace.initialized();
+        condition = condition && !opt.singleTestNet.initialized();
+        condition = condition && !opt.poststate.initialized();
+        condition = condition && !opt.statediff.initialized();
         return !condition;
     };
     if (noSecondRunConditions() && Options::get().filltests)

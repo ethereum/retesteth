@@ -1,4 +1,5 @@
 #include "TestBlockchainManager.h"
+#include "BlockchainTestFillerRunner.h"
 #include <retesteth/ExitHandler.h>
 #include <retesteth/Options.h>
 #include <retesteth/testSuiteRunner/TestSuite.h>
@@ -16,15 +17,14 @@ namespace test
 spDataObject FillTest(BlockchainTestInFiller const& _test, TestSuite::TestSuiteOptions const& _opt)
 {
     (void)_opt;
-    ETH_DC_MESSAGE(DC::TESTLOG, "Filling " + _test.testName());
-
     spDataObject result;
-    if (ExitHandler::receivedExitSignal())
-        return result;
-    SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
+    BlockchainTestFillerRunner filler(_test);
+    CHECKEXITR(result);
+
     for (FORK const& net : _test.getAllForksFromExpectSections())
     {
-        if (!Options::get().singleTestNet.empty() && net.asString() != Options::get().singleTestNet)
+        CHECKEXITR(result)
+        if (filler.checkSinglenet(net))
             continue;
 
         for (auto const& expect : _test.expects())
@@ -32,37 +32,20 @@ spDataObject FillTest(BlockchainTestInFiller const& _test, TestSuite::TestSuiteO
             // if expect is for this network, generate the test
             if (expect.hasFork(net))
             {
-                // Construct filled blockchain test
-                spDataObject _filledTest;
-                DataObject& filledTest = _filledTest.getContent();
-                string const newtestname = _test.testName() + "_" + net.asString();
-                TestOutputHelper::get().setCurrentTestName(newtestname);
-                filledTest.setKey(newtestname);
-                if (_test.hasInfo())
-                    (*_filledTest).atKeyPointer("_info") = _test.Info().rawData();
-                filledTest["sealEngine"] = sealEngineToStr(_test.sealEngine());
-                filledTest["network"] = net.asString();
-                filledTest.atKeyPointer("pre") = _test.Pre().asDataObject();
+                auto filledTest = filler.makeNewBCTestForNet(net);
+                auto testchain = filler.makeTestChainManager(net);
 
-                // Initialise chain manager
-                ETH_DC_MESSAGEC(DC::TESTLOG, "FILL GENESIS INFO: ", LogColor::LIME);
-                TestBlockchainManager testchain(_test.Env(), _test.Pre(), _test.sealEngine(), net);
-                TestBlock const& genesis = testchain.getLastBlock();
-                filledTest.atKeyPointer("genesisBlockHeader") = genesis.getTestHeader()->asDataObject();
-                filledTest["genesisRLP"] = genesis.getRawRLP().asString();
-
-                auto& helper = TestOutputHelper::get();
-                helper.setUnitTestExceptions(_test.unitTestExceptions());
-                helper.setCurrentTestInfo(TestInfo(net.asString(), 0));
+                filler.makeGenesis(filledTest, testchain);
+                filler.setTestInfoAndExpectExceptions(net);
 
                 testchain.performOptionCommandsOnGenesis();
-                size_t blocks = 0;
+
+                size_t blockNumber = 0;
                 for (auto const& block : _test.blocks())
                 {
-                    if (ExitHandler::receivedExitSignal())
-                        return _filledTest;
-                    // Debug
-                    if (Options::get().blockLimit != 0 && blocks++ >= Options::get().blockLimit)
+                    CHECKEXITR(result)
+
+                    if (filler.optionsLimitBlock(blockNumber++))
                         break;
 
                     // Generate a test block from filler block section
@@ -72,46 +55,22 @@ spDataObject FillTest(BlockchainTestInFiller const& _test, TestSuite::TestSuiteO
                     // If block is not disabled for testing purposes
                     // Get the json output of a constructed block for the test (includes rlp)
                     if (!testchain.getLastBlock().isDoNotExport())
-                        filledTest["blocks"].addArrayObject(testchain.getLastBlock().asDataObject());
+                        (*filledTest)["blocks"].addArrayObject(testchain.getLastBlock().asDataObject());
                 }
 
                 // Import blocks that have been rewinded with the chain switch
                 // This makes some block invalid. Because block can be mined as valid on side chain
                 // So just import all block ever generated with test filler
-                testchain.syncOnRemoteClient(filledTest["blocks"]);
+                testchain.syncOnRemoteClient((*filledTest)["blocks"]);
 
-                // Fill info about the lastblockhash
-                EthGetBlockBy finalBlock(session.eth_getBlockByNumber(session.eth_blockNumber(), Request::LESSOBJECTS));
+                EthGetBlockBy finalBlock = filler.getLastBlock();
 
-                // Perform --statediff without selector
-                if (Options::get().statediff.initialized() && !Options::get().statediff.isBlockSelected)
-                {
-                    auto const diff = test::stateDiff(_test.Pre(), getRemoteState(session))->asJson();
-                    ETH_DC_MESSAGE(DC::STATE,
-                        "\nFilling BC test State Diff:" + TestOutputHelper::get().testInfo().errorDebug() + cDefault + " \n" + diff);
-                }
+                filler.performOptionsOnFinalState(finalBlock);
+                filler.compareFinalState(filledTest, expect.result(), finalBlock);
 
-                try
-                {
-                    spState remoteState = getRemoteState(session);
-                    compareStates(expect.result(), remoteState);
-                    filledTest.atKeyPointer("postState") = remoteState->asDataObject();
-                }
-                catch (StateTooBig const&)
-                {
-                    compareStates(expect.result(), session);
-                    filledTest["postStateHash"] = finalBlock.header()->stateRoot().asString();
-                }
+                (*result).addSubObject(filledTest);
 
-                if (Options::get().poststate && !Options::get().poststate.isBlockSelected)
-                    ETH_DC_MESSAGE(DC::STATE, "PostState " + TestOutputHelper::get().testInfo().errorDebug() + " : \n" +
-                                                  cDefault + "Hash: " + finalBlock.header()->stateRoot().asString());
-
-
-                filledTest["lastblockhash"] = finalBlock.header()->hash().asString();
-                (*result).addSubObject(_filledTest);
-
-                verifyFilledTest(_test.unitTestVerify(), _filledTest, net);
+                verifyFilledTest(_test.unitTestVerify(), filledTest, net);
                 for (auto const& ex : TestOutputHelper::get().getUnitTestExceptions())
                     ETH_FAIL_MESSAGE("Expected exception didn't occur: \n`" + ex + "`");
 

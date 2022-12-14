@@ -25,12 +25,12 @@ Withdrawals::Withdrawals(spDataObjectMove _data)
 {
     auto const raw = _data.getPointer();
     if (raw->type() != DataType::Array)
-        ETH_FAIL_MESSAGE("Withdrawals require json array, but got: /n" + raw->asJson());
+        ETH_FAIL_MESSAGE("Withdrawals require json array, but got: \n" + raw->asJson());
 
     for (auto const& record : raw->getSubObjects())
     {
-        if (raw->type() != DataType::Object)
-            ETH_FAIL_MESSAGE("Withdrawals::record require to be json object, but got: /n" + record->asJson());
+        if (record->type() != DataType::Object)
+            ETH_FAIL_MESSAGE("Withdrawals::record require to be json object, but got: \n" + record->asJson());
         WithdrawalRecord rec(record);
         m_records.push_back(std::move(rec));
     }

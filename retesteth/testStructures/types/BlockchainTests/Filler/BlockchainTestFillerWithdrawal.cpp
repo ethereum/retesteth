@@ -1,28 +1,38 @@
 #include "BlockchainTestFillerWithdrawal.h"
 #include <retesteth/testStructures/Common.h>
+#include <retesteth/EthChecks.h>
+using namespace std;
+using namespace test;
 
 namespace test::teststruct
 {
 
 BlockchainTestFillerWithdrawal::BlockchainTestFillerWithdrawal(spDataObjectMove _data)
 {
-    auto data = _data.getPointer();
-    for (auto& record : data.getContent().getSubObjectsUnsafe())
+    try
     {
-        REQUIRE_JSONFIELDS(record, "FillerBlock::WithdrawalRecord ",
-            {{"index", {{DataType::String}, jsonField::Required}},
-                {"validatorIndex", {{DataType::String}, jsonField::Required}},
-                {"address", {{DataType::String}, jsonField::Required}},
-                {"amount", {{DataType::String}, jsonField::Required}}});
+        auto data = _data.getPointer();
+        for (auto& record : data.getContent().getSubObjectsUnsafe())
+        {
+            REQUIRE_JSONFIELDS(record, "FillerBlock::WithdrawalRecord ",
+                {{"index", {{DataType::String}, jsonField::Required}},
+                    {"validatorIndex", {{DataType::String}, jsonField::Required}},
+                    {"address", {{DataType::String}, jsonField::Required}},
+                    {"amount", {{DataType::String}, jsonField::Required}}});
 
-        #define MODIFY(INDEX, MOD) \
-            record.getContent().atKeyUnsafe(INDEX).performModifier(MOD);
+            #define MODIFY(INDEX, MOD) \
+                record.getContent().atKeyUnsafe(INDEX).performModifier(MOD);
 
-        MODIFY("index", mod_valueToCompactEvenHexPrefixed)
-        MODIFY("validatorIndex", mod_valueToCompactEvenHexPrefixed)
-        MODIFY("address", mod_valueToCompactEvenHexPrefixed)
+            MODIFY("index", mod_valueToCompactEvenHexPrefixed)
+            MODIFY("validatorIndex", mod_valueToCompactEvenHexPrefixed)
+            MODIFY("amount", mod_valueToCompactEvenHexPrefixed)
+        }
+        m_withdrawals = spWithdrawals(new Withdrawals(dataobject::move(data)));
     }
-    m_withdrawals = spWithdrawals(new Withdrawals(dataobject::move(data)));
+    catch (std::exception const& _ex)
+    {
+        throw UpwardsException(string("Withdrawals convertion error: ") + _ex.what() + "\n");
+    }
 }
 
 }
