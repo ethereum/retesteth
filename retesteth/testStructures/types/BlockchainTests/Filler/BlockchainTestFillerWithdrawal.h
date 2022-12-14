@@ -7,8 +7,8 @@ struct BlockchainTestFillerWithdrawal
 {
     BlockchainTestFillerWithdrawal(){};
     BlockchainTestFillerWithdrawal(dataobject::spDataObjectMove);
-    Withdrawals const& withdrawals() const { return m_withdrawals; }
+    spWithdrawal const& withdrawal() const { return m_withdrawal; }
 private:
-    spWithdrawals m_withdrawals;
+    spWithdrawal m_withdrawal;
 };
 }  // namespace test

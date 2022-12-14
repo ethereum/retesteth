@@ -53,6 +53,9 @@ struct BlockchainTestFillerBlock : GCP_SPointerBase
     // Uncle generate instruction section
     std::vector<BlockchainTestFillerUncle> const& uncles() const { return m_uncles; }
 
+    // Uncle generate instruction section
+    std::vector<BlockchainTestFillerWithdrawal> const& withdrawals() const { return m_withdrawals; }
+
     // Test Functions
     // Block can have exceptions expected to thrown by the client upon generation of the block
     std::string const& getExpectException(FORK const& _net) const
@@ -82,7 +85,7 @@ private:
 
     std::vector<BlockchainTestFillerUncle> m_uncles;
     std::vector<BlockchainTestFillerTransaction> m_transactions;
-    BlockchainTestFillerWithdrawal m_withdrawals;
+    std::vector<BlockchainTestFillerWithdrawal> m_withdrawals;
     std::map<FORK, std::string> m_expectExceptions;
 
     std::map<FORK, spBlockHeaderOverwrite> m_overwriteHeaderByForkMap;

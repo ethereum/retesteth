@@ -5,24 +5,16 @@
 namespace test::teststruct
 {
 
-struct Withdrawals : GCP_SPointerBase
+struct Withdrawal : GCP_SPointerBase
 {
-    Withdrawals(dataobject::spDataObjectMove);
+    Withdrawal(DataObject const&);
     spDataObject asDataObject() const;
-protected:
-    struct WithdrawalRecord
-    {
-        WithdrawalRecord(DataObject const&);
-        spDataObject asDataObject() const;
-        spVALUE index;
-        spVALUE validatorIndex;
-        spFH20 address;
-        spVALUE amount;
-    };
-private:
-    std::vector<WithdrawalRecord> m_records;
+    spVALUE index;
+    spVALUE validatorIndex;
+    spFH20 address;
+    spVALUE amount;
 };
 
-typedef dataobject::GCP_SPointer<Withdrawals> spWithdrawals;
+typedef dataobject::GCP_SPointer<Withdrawal> spWithdrawal;
 
 }  // namespace teststruct

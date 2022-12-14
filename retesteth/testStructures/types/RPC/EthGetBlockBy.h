@@ -31,5 +31,7 @@ private:
     spVALUE m_totalDifficulty;
 };
 
+typedef  GCP_SPointer<EthGetBlockBy> spEthGetBlockBy;
+
 }  // namespace teststruct
 }  // namespace test

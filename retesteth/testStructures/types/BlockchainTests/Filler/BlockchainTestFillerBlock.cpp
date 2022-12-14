@@ -52,7 +52,8 @@ BlockchainTestFillerBlock::BlockchainTestFillerBlock(spDataObject& _data, NonceM
                 m_transactions.push_back(BlockchainTestFillerTransaction(dataobject::move(tr), _nonceMap));
 
         if (_data->count("withdrawals"))
-            m_withdrawals = BlockchainTestFillerWithdrawal(MOVE(_data, "withdrawals"));
+            for (auto& wt : (*_data).atKeyUnsafe("withdrawals").getSubObjectsUnsafe())
+                m_withdrawals.push_back(BlockchainTestFillerWithdrawal(dataobject::move(wt)));
 
         if (_data->count("uncleHeaders"))
             for (auto const& un : _data->atKey("uncleHeaders").getSubObjects())

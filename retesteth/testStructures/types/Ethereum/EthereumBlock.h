@@ -4,21 +4,22 @@
 #include "../Ethereum/Blocks/BlockHeaderReader.h"
 #include "../Ethereum/State.h"
 #include "../Ethereum/Transactions/Transaction.h"
+#include "../Ethereum/Withdrawals.h"
 
 #include <EthChecks.h>
 #include <libdataobj/DataObject.h>
 #include <testStructures/types/RPC/DebugVMTrace.h>
 
-namespace test
+namespace test::teststruct
 {
-namespace teststruct
-{
+
 // Ethereum Block for RLP managment
 struct EthereumBlock : GCP_SPointerBase
 {
     EthereumBlock(spBlockHeader const& _header) : m_header(_header) {}
     void addTransaction(spTransaction const& _tr) { m_transactions.push_back(_tr); }
     void addUncle(spBlockHeader const& _header) { m_uncles.push_back(_header); }
+    void addWithdrawal(spWithdrawal const& _withdrawal) { m_withdrawals.push_back(_withdrawal); }
     void replaceHeader(spBlockHeader const& _header) { m_header = readBlockHeader(_header->asDataObject()); }
     void recalculateUncleHash();
     BYTES const getRLP() const;
@@ -27,12 +28,14 @@ struct EthereumBlock : GCP_SPointerBase
     spBlockHeader& headerUnsafe() { return m_header; }
     std::vector<spBlockHeader> const& uncles() const { return m_uncles; }
     std::vector<spTransaction> const& transactions() const { return m_transactions; }
+    std::vector<spWithdrawal> const& withdrawals() const { return m_withdrawals; }
 
 protected:
     EthereumBlock() {}
     spBlockHeader m_header;
     std::vector<spTransaction> m_transactions;
     std::vector<spBlockHeader> m_uncles;
+    std::vector<spWithdrawal> m_withdrawals;
 };
 
 struct EthereumBlockState : EthereumBlock
@@ -67,4 +70,3 @@ typedef GCP_SPointer<EthereumBlock> spEthereumBlock;
 typedef GCP_SPointer<EthereumBlockState> spEthereumBlockState;
 
 }  // namespace teststruct
-}  // namespace test

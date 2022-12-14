@@ -79,6 +79,12 @@ private:
     void _tryIntermidiatePostState(BlockchainTestFillerBlock const&, vectorOfSchemeBlock const&);
     void _performStatediff(size_t _blockNumber, size_t _txNumber);
 
+    void _generateBlock_RawBlock(BlockchainTestFillerBlock const& _block);
+    void _generateBlock_ImportTransactionsOnRemoteClient(BlockchainTestFillerBlock const& _block,
+        vectorOfSchemeBlock const& _uncles);
+    void _generateBlock_RegisterInvalidBlock(BlockchainTestFillerBlock const& _block, BYTES const& _rawRLP);
+    void _generateBlock_RegisterTestTransactions(BlockchainTestFillerBlock const& _block, TestBlock& _newBlock, spEthGetBlockBy);
+
 private:
     bool m_triedStateDiff = false;
     spState m_stateDiffStateA;

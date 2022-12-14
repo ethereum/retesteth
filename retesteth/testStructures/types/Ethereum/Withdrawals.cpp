@@ -8,7 +8,7 @@ using namespace std;
 
 namespace test::teststruct {
 
-Withdrawals::WithdrawalRecord::WithdrawalRecord(DataObject const& _data)
+Withdrawal::Withdrawal(DataObject const& _data)
 {
     REQUIRE_JSONFIELDS(_data, "WithdrawalRecord ",
         {{"index", {{DataType::String}, jsonField::Required}},
@@ -21,30 +21,8 @@ Withdrawals::WithdrawalRecord::WithdrawalRecord(DataObject const& _data)
     amount = spVALUE(new VALUE(_data.atKey("amount")));
 }
 
-Withdrawals::Withdrawals(spDataObjectMove _data)
-{
-    auto const raw = _data.getPointer();
-    if (raw->type() != DataType::Array)
-        ETH_FAIL_MESSAGE("Withdrawals require json array, but got: \n" + raw->asJson());
 
-    for (auto const& record : raw->getSubObjects())
-    {
-        if (record->type() != DataType::Object)
-            ETH_FAIL_MESSAGE("Withdrawals::record require to be json object, but got: \n" + record->asJson());
-        WithdrawalRecord rec(record);
-        m_records.push_back(std::move(rec));
-    }
-}
-
-spDataObject Withdrawals::asDataObject() const
-{
-    spDataObject ret(new DataObject(DataType::Array));
-    for (auto const& record : m_records)
-        (*ret).addArrayObject(record.asDataObject());
-    return ret;
-}
-
-spDataObject Withdrawals::WithdrawalRecord::asDataObject() const
+spDataObject Withdrawal::asDataObject() const
 {
     spDataObject ret(new DataObject(DataType::Object));
     (*ret)["index"] = index->asString();
