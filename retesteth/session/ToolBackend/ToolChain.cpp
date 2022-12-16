@@ -118,13 +118,12 @@ spDataObject const ToolChain::mineBlock(EthereumBlockState const& _pendingBlock,
 
     BlockHeader& pendingFixedHeader = pendingFixed.headerUnsafe().getContent();
     pendingFixedHeader.setNumber(m_blocks.size());
+
+    // Fetch hashes information from t8n tool response
     correctHeaderByToolResponse(pendingFixedHeader, res);
-    if (_pendingBlock.header()->type() != BlockType::BlockHeaderMerge)
-    {
-        pendingFixedHeader.setDifficulty(res.currentDifficulty());
-        checkDifficultyAgainstRetesteth(res.currentDifficulty(), pendingFixed.header());
-    }
+    setAndCheckDifficulty(res.currentDifficulty(), pendingFixed.headerUnsafe());
     calculateAndCheckSetBaseFee(res.currentBasefee(), pendingFixed.headerUnsafe(), lastBlock().header());
+    setWithdrawalsRoot(res.withdrawalsRoot(), pendingFixed.headerUnsafe());
 
     spDataObject miningResult;
     miningResult = coorectTransactionsByToolResponse(res, pendingFixed, _pendingBlock, _req);
@@ -193,11 +192,31 @@ void ToolChain::checkBasefeeAgainstRetesteth(VALUE const& _toolBasefee, spBlockH
     }
 }
 
+void ToolChain::setAndCheckDifficulty(VALUE const& _difficulty, spBlockHeader& _pendingHeader)
+{
+    if (_pendingHeader->type() == BlockType::BlockHeaderLegacy ||
+        _pendingHeader->type() == BlockType::BlockHeader1559)
+    {
+        _pendingHeader.getContent().setDifficulty(_difficulty);
+        checkDifficultyAgainstRetesteth(_difficulty, _pendingHeader);
+    }
+}
+
+void ToolChain::setWithdrawalsRoot(FH32 const& _withdrawalsRoot, spBlockHeader& _pendingHeader)
+{
+    bool const isOnShanghai = _pendingHeader.getCContent().type() == BlockType::BlockHeaderShanghai;
+    if (isOnShanghai)
+    {
+        BlockHeaderShanghai& pendingFixedShanghaiHeader = BlockHeaderShanghai::castFrom(_pendingHeader.getContent());
+        pendingFixedShanghaiHeader.setWithdrawalsRoot(_withdrawalsRoot);
+    }
+}
+
 void ToolChain::calculateAndCheckSetBaseFee(VALUE const& _toolBaseFee, spBlockHeader& _pendingHeader, spBlockHeader const& _parentHeader)
 {
-    bool isOn1559 = _pendingHeader.getCContent().type() == BlockType::BlockHeader1559 && _parentHeader->type() == BlockType::BlockHeader1559;
-    bool isOn1559ToMerge = _pendingHeader.getCContent().type() == BlockType::BlockHeaderMerge && _parentHeader->type() == BlockType::BlockHeader1559;
-    bool isOnMerge = _pendingHeader.getCContent().type() == BlockType::BlockHeaderMerge && _parentHeader->type() == BlockType::BlockHeaderMerge;
+    bool const isOn1559 = _pendingHeader.getCContent().type() == BlockType::BlockHeader1559 && _parentHeader->type() == BlockType::BlockHeader1559;
+    bool const isOn1559ToMerge = _pendingHeader.getCContent().type() == BlockType::BlockHeaderMerge && _parentHeader->type() == BlockType::BlockHeader1559;
+    bool const isOnMerge = _pendingHeader.getCContent().type() == BlockType::BlockHeaderMerge && _parentHeader->type() == BlockType::BlockHeaderMerge;
 
     // Calculate new baseFee
     if (isOn1559 || isOn1559ToMerge || isOnMerge)

@@ -14,6 +14,7 @@ BlockchainTestBlock::BlockchainTestBlock(spDataObject& _data)
                 {"chainname", {{DataType::String}, jsonField::Optional}},    // User information
                 {"blocknumber", {{DataType::String}, jsonField::Optional}},  // User information
                 {"transactions", {{DataType::Array}, jsonField::Optional}},
+                {"withdrawals", {{DataType::Array}, jsonField::Optional}},
                 {"transactionSequence", {{DataType::Array}, jsonField::Optional}},
                 {"uncleHeaders", {{DataType::Array}, jsonField::Optional}},
                 {"expectException", {{DataType::String}, jsonField::Optional}},                   // User information
@@ -43,6 +44,9 @@ BlockchainTestBlock::BlockchainTestBlock(spDataObject& _data)
 
             for (auto& tr : _data.getContent().atKeyUnsafe("transactions").getSubObjectsUnsafe())
                 m_transactions.push_back(readTransaction(dataobject::move(tr)));
+
+            for (auto const& wt : _data->atKey("withdrawals").getSubObjects())
+                m_withdrawals.push_back(spWithdrawal(new Withdrawal(wt)));
 
             if (_data->count("transactionSequence"))
             {

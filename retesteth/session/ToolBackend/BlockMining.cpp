@@ -59,13 +59,23 @@ void BlockMining::prepareEnvFile()
         (*envData)["parentUncleHash"] = m_parentBlockRef.header()->uncleHash().asString();
     }
 
-    if (m_currentBlockRef.header()->type() == BlockType::BlockHeaderMerge)
+    if (m_currentBlockRef.header()->type() == BlockType::BlockHeaderMerge
+     || m_currentBlockRef.header()->type() == BlockType::BlockHeaderShanghai)
     {
         (*envData)["currentRandom"] = m_currentBlockRef.header()->mixHash().asString();
     }
 
+    if (m_currentBlockRef.header()->type() == BlockType::BlockHeaderShanghai)
+    {
+        (*envData).atKeyPointer("withdrawals") = spDataObject(new DataObject(DataType::Array));
+        for (auto const& wt : m_currentBlockRef.withdrawals())
+            (*envData)["withdrawals"].addArrayObject(wt->asDataObject(ExportOrder::ToolStyle));
+    }
+
     auto const& parentType = m_parentBlockRef.header()->type();
-    if (parentType == BlockType::BlockHeader1559 || parentType == BlockType::BlockHeaderMerge)
+    if (parentType == BlockType::BlockHeader1559
+        || parentType == BlockType::BlockHeaderMerge
+        || parentType == BlockType::BlockHeaderShanghai)
     {
         auto const& cfgFile = Options::getCurrentConfig().cfgFile();
         if (!cfgFile.calculateBasefee())

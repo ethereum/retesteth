@@ -38,7 +38,8 @@ GCP_SPointer<EthGetBlockBy> TestBlockchain::mineBlock(
     VALUE latestBlockNumber(m_session.eth_blockNumber());
 
     spFH32 minedBlockHash;
-    if (_blockInTest.hasBlockHeaderOverwrite(m_network) || _blockInTest.uncles().size() > 0)
+    if (_blockInTest.hasBlockHeaderOverwrite(m_network) || _blockInTest.uncles().size() > 0
+        || _blockInTest.withdrawals().size() > 0)
     {
         // Need to overwrite the blockheader of a mined block with either blockHeader or uncles
         // Then import it again and see what client says, because mining with uncles not supported
@@ -238,6 +239,9 @@ FH32 TestBlockchain::postmineBlockHeader(BlockchainTestFillerBlock const& _block
     for (auto const& un : _uncles)
         managedBlock.addUncle(un);
 
+    for (auto const& wt : _blockInTest.withdrawals())
+        managedBlock.addWithdrawal(wt.withdrawal());
+
     bool weOverwriteHashFields = false;
     if (_blockInTest.hasBlockHeaderOverwrite(m_network))
     {
@@ -263,7 +267,6 @@ FH32 TestBlockchain::postmineBlockHeader(BlockchainTestFillerBlock const& _block
 
     if (!weOverwriteHashFields)
         managedBlock.recalculateUncleHash();
-
     m_session.test_rewindToBlock(_latestBlockNumber - 1);
     _rawRLP = BYTES(managedBlock.getRLP().asString());
     return FH32(m_session.test_importRawBlock(_rawRLP));

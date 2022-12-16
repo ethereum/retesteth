@@ -38,6 +38,9 @@ private:
     // 1559 block
     spVALUE m_baseFee;
 
+    // Shanghai block
+    spFH32 m_withdrawalsRoot;
+
     // Overwrite fields
     std::set<std::string> m_removeKeys;
 };

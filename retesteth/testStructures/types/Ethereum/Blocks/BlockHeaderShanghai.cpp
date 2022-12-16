@@ -165,7 +165,7 @@ spDataObject BlockHeaderShanghai::asDataObject() const
 const RLPStream BlockHeaderShanghai::asRLPStream() const
 {
     RLPStream header;
-    header.appendList(16);
+    header.appendList(17);
 
     header << h256(m_parentHash->asString());
     header << h256(m_sha3Uncles->asString());

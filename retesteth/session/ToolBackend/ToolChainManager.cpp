@@ -148,6 +148,16 @@ FH32 ToolChainManager::importRawBlock(BYTES const& _rlp)
             m_pendingBlock.getContent().addUncle(un);
         }
 
+        // TODO verify withdrawals rlp signature and block size
+        if (header->type() == BlockType::BlockHeaderShanghai)
+        {
+            for (auto const& wtRLP : rlp[3].toList())
+            {
+                spWithdrawal wt(new Withdrawal(wtRLP));
+                m_pendingBlock.getContent().addWithdrawal(wt);
+            }
+        }
+
         mineBlocks(1, ToolChain::Mining::RequireValid);
         FH32 const importedHash = lastBlock().header()->hash();
         if (importedHash != header->hash())

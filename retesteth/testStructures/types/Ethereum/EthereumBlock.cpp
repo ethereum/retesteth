@@ -36,7 +36,8 @@ BYTES const EthereumBlock::getRLP() const
     try
     {
         // RLP of a block
-        RLPStream stream(3);
+        bool const isShanghai =  (m_header->type() == BlockType::BlockHeaderShanghai);
+        RLPStream stream(isShanghai ? 4 : 3);
         stream.appendRaw(m_header->asRLPStream().out());
 
         // Transaction list
@@ -50,6 +51,15 @@ BYTES const EthereumBlock::getRLP() const
         for (auto const& un : m_uncles)
             uncleList.appendRaw(un->asRLPStream().out());
         stream.appendRaw(uncleList.out());
+
+        // Withdrawals
+        if (isShanghai)
+        {
+            RLPStream withdrawalsList(m_withdrawals.size());
+            for (auto const& wt : m_withdrawals)
+                withdrawalsList.appendRaw(wt->asRLPStream().out());
+            stream.appendRaw(withdrawalsList.out());
+        }
 
         return BYTES(dev::toHexPrefixed(stream.out()));
     }

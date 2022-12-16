@@ -113,19 +113,22 @@ spDataObject constructStorageRangeAt(
 // RLP Validators
 void verifyBlockRLP(dev::RLP const& _rlp)
 {
+    size_t const blockheader = 0;
+    size_t const transactions = 1;
+    size_t const uncles = 2;
     if (!_rlp.isList())
         throw dev::RLPException("RLP is expected to be list");
 
-    if (!_rlp[0].isList())
+    if (!_rlp[blockheader].isList())
         throw dev::RLPException("BlockHeader RLP is expected to be list");
 
     for (size_t i = 0; i < 15; i++)
     {
-        if (!_rlp[0][i].isData())
+        if (!_rlp[blockheader][i].isData())
             throw dev::RLPException("Blockheader RLP field is not data!");
     }
 
-    for (auto const& tr : _rlp[1])
+    for (auto const& tr : _rlp[transactions])
     {
         if (tr.isList())
         {
@@ -146,7 +149,7 @@ void verifyBlockRLP(dev::RLP const& _rlp)
             throw dev::RLPException("Transaction RLP is expected to be list");
     }
 
-    for (auto const& un : _rlp[2])
+    for (auto const& un : _rlp[uncles])
     {
         if (!un.isList())
             throw dev::RLPException("Uncleheader RLP is expected to be list");

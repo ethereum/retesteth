@@ -99,23 +99,38 @@ void verify1559Block(spBlockHeader const& _header, ToolChain const& _chain)
     }
 }
 
-void verifyMergeBlock(spBlockHeader const& _header, ToolChain const& _chain)
+void verifyCommonMergeRules(spBlockHeader const& _header, string const& _msg)
 {
-    (void)_chain;
-    check_blockType(_header->type(), BlockType::BlockHeaderMerge, "verifyMergeBlock");
-
     BlockHeaderMerge const& header = BlockHeaderMerge::castFrom(_header);
 
     /// Verify rules
     /// https://eips.ethereum.org/EIPS/eip-3675
     if (header.uncleHash().asString() != "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347")
-        throw test::UpwardsException("Merge block.uncleHash != empty \n" + header.asDataObject()->asJson());
+        throw test::UpwardsException(_msg + " block.uncleHash != empty \n" + header.asDataObject()->asJson());
     if (header.difficulty() != 0)
-        throw test::UpwardsException("Merge block.difficulty must be 0! ");
+        throw test::UpwardsException(_msg + " block.difficulty must be 0! ");
     if (header.nonce().asString() != "0x0000000000000000")
-        throw test::UpwardsException("Merge block nonce != 0x00..00 \n" + header.asDataObject()->asJson());
+        throw test::UpwardsException(_msg + " block nonce != 0x00..00 \n" + header.asDataObject()->asJson());
     if ((header.extraData().asString().size()-2) / 2 > MAX_EXTRADATA_SIZE_IN_MERGE)
-        throw test::UpwardsException("Merge block extraDataSize > 32bytes \n" + header.asDataObject()->asJson());
+        throw test::UpwardsException(_msg + " block extraDataSize > 32bytes \n" + header.asDataObject()->asJson());
+}
+
+void verifyShanghaiBlock(spBlockHeader const& _header, ToolChain const& _chain)
+{
+    (void)_chain;
+    check_blockType(_header->type(), BlockType::BlockHeaderShanghai, "verifyShanghaiBlock");
+
+    //BlockHeaderShanghai const& header = BlockHeaderShanghai::castFrom(_header);
+    verifyCommonMergeRules(_header, "Shanghai");
+
+    /// Verify shanghai rules
+}
+
+void verifyMergeBlock(spBlockHeader const& _header, ToolChain const& _chain)
+{
+    (void)_chain;
+    check_blockType(_header->type(), BlockType::BlockHeaderMerge, "verifyMergeBlock");
+    verifyCommonMergeRules(_header, "Merge");
 }
 
 void verifyLegacyParent(spBlockHeader const& _header, spBlockHeader const& _parent, ToolChain const& _chain)
@@ -171,6 +186,17 @@ void verify1559Parent(spBlockHeader const& _header, spBlockHeader const& _parent
     }
     else
         verify1559Parent_private(_header, _parent, _chain);
+}
+
+void verifyShanghaiParent(spBlockHeader const& _header, spBlockHeader const& _parent, ToolChain const& _chain)
+{
+    check_blockType(_header->type(), BlockType::BlockHeaderShanghai, "verifyShanghaiParent");
+    if (_parent->type() == BlockType::BlockHeaderMerge)
+        verifyMergeBlock(_parent, _chain);
+    else if (_parent->type() == BlockType::BlockHeaderShanghai)
+        verifyShanghaiBlock(_parent, _chain);
+    else
+        throw test::UpwardsException("Shanghai parent block must be of type Merge!");
 }
 
 void verifyMergeParent(spBlockHeader const& _header, spBlockHeader const& _parent, ToolChain const& _chain, VALUE const& _parentTD)
@@ -269,8 +295,11 @@ void verifyBlockParent(spBlockHeader const& _header, ToolChain const& _chain)
             case BlockType::BlockHeaderMerge:
                 verifyMergeParent(_header, parentBlock.header(), _chain, parentBlock.totalDifficulty());
                 break;
+            case BlockType::BlockHeaderShanghai:
+                verifyShanghaiParent(_header, parentBlock.header(), _chain);
+                break;
             default:
-                throw test::UpwardsException("Unhandled block type check!");
+                throw test::UpwardsException("verifyBlockParent::Unhandled block type check!");
             }
         }
     }
@@ -299,8 +328,11 @@ void verifyEthereumBlockHeader(spBlockHeader const& _header, ToolChain const& _c
     case BlockType::BlockHeaderMerge:
         verifyMergeBlock(_header, _chain);
         break;
+    case BlockType::BlockHeaderShanghai:
+        verifyShanghaiBlock(_header, _chain);
+        break;
     default:
-        throw test::UpwardsException("Unhandled block type check!");
+        throw test::UpwardsException("verifyEthereumBlockHeader::Unhandled block type check!");
     }
 }
 

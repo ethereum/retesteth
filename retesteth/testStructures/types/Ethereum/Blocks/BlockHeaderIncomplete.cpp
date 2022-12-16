@@ -18,6 +18,7 @@ BlockHeaderIncomplete::BlockHeaderIncomplete(DataObject const& _data)
             {"extraData", {{DataType::String}, jsonField::Optional}},
             {"gasLimit", {{DataType::String}, jsonField::Optional}},
             {"baseFeePerGas", {{DataType::String}, jsonField::Optional}},
+            {"withdrawalsRoot", {{DataType::String}, jsonField::Optional}},
             {"gasUsed", {{DataType::String}, jsonField::Optional}},
             {"hash", {{DataType::String}, jsonField::Optional}},
             {"mixHash", {{DataType::String}, jsonField::Optional}},
@@ -78,6 +79,9 @@ BlockHeaderIncomplete::BlockHeaderIncomplete(DataObject const& _data)
     if (_data.count("baseFeePerGas"))
         m_baseFee = spVALUE(new VALUE(_data.atKey("baseFeePerGas")));
 
+    if (_data.count("withdrawalsRoot"))
+        m_withdrawalsRoot = spFH32(new FH32(_data.atKey("withdrawalsRoot")));
+
     if (_data.count("remove"))
         test::parseJsonStrValueIntoSet(_data.atKey("remove"), m_removeKeys);
 
@@ -85,7 +89,8 @@ BlockHeaderIncomplete::BlockHeaderIncomplete(DataObject const& _data)
                               !m_gasLimit.isEmpty() || !m_gasUsed.isEmpty() || !m_hash.isEmpty() || !m_logsBloom.isEmpty() ||
                               !m_mixHash.isEmpty() || !m_nonce.isEmpty() || !m_number.isEmpty() || !m_parentHash.isEmpty() ||
                               !m_receiptsRoot.isEmpty() || !m_sha3Uncles.isEmpty() || !m_stateRoot.isEmpty() ||
-                              !m_timestamp.isEmpty() || !m_transactionsRoot.isEmpty() || !m_baseFee.isEmpty();
+                              !m_timestamp.isEmpty() || !m_transactionsRoot.isEmpty() || !m_baseFee.isEmpty() ||
+                              !m_withdrawalsRoot.isEmpty();
 
     ETH_ERROR_REQUIRE_MESSAGE(hasAtLeastOneField, "BlockHeaderIncomplete must have at least one field!");
 }
@@ -128,6 +133,9 @@ spBlockHeader BlockHeaderIncomplete::overwriteBlockHeader(spBlockHeader const& _
         overwrite["hash"] = m_hash->asString();
     if (!m_baseFee.isEmpty())
         overwrite["baseFeePerGas"] = m_baseFee->asString();
+    if (!m_withdrawalsRoot.isEmpty())
+        overwrite["withdrawalsRoot"] = m_withdrawalsRoot->asString();
+
     overwrite.removeKey("updatePoW");  // deprecated key
     for (auto const& el : m_removeKeys)
         overwrite.removeKey(el);
