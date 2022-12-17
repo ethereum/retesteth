@@ -45,8 +45,11 @@ BlockchainTestBlock::BlockchainTestBlock(spDataObject& _data)
             for (auto& tr : _data.getContent().atKeyUnsafe("transactions").getSubObjectsUnsafe())
                 m_transactions.push_back(readTransaction(dataobject::move(tr)));
 
-            for (auto const& wt : _data->atKey("withdrawals").getSubObjects())
-                m_withdrawals.push_back(spWithdrawal(new Withdrawal(wt)));
+            if (_data->count("withdrawals"))
+            {
+                for (auto const& wt : _data->atKey("withdrawals").getSubObjects())
+                    m_withdrawals.push_back(spWithdrawal(new Withdrawal(wt)));
+            }
 
             if (_data->count("transactionSequence"))
             {
