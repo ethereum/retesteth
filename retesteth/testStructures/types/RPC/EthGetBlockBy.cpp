@@ -37,6 +37,7 @@ EthGetBlockBy::EthGetBlockBy(spDataObject& _data)
                 {"size", {{DataType::String}, jsonField::Required}},
                 {"totalDifficulty", {{DataType::String}, jsonField::Required}},
                 {"uncles", {{DataType::Array}, jsonField::Required}},
+                {"withdrawals", {{DataType::Array}, jsonField::Optional}},
                 {"transactions", {{DataType::Array}, jsonField::Required}}});
 
 
@@ -53,6 +54,14 @@ EthGetBlockBy::EthGetBlockBy(spDataObject& _data)
             m_transactions.push_back(EthGetBlockByTransaction(dataobject::move(el)));
             if (!m_transactions.at(m_transactions.size() - 1).isFullTransaction())
                 m_lessobjects = true;
+        }
+
+        if (_data->count("withdrawals"))
+        {
+            for (auto& el : _data.getContent().atKeyUnsafe("withdrawals").getSubObjectsUnsafe())
+            {
+                m_withdrawals.push_back(EthGetBlockByWithdrawal(dataobject::move(el)));
+            }
         }
 
         // Remote eth_getBlockBy* always return uncles as hashes.
@@ -81,7 +90,8 @@ BYTES EthGetBlockBy::getRLPHeaderTransactions() const
     EthereumBlock block(m_header);
     for (auto const& tr : m_transactions)
         block.addTransaction(tr.transaction());
-    // withdrawals ?
+    for (auto const& wt: m_withdrawals)
+        block.addWithdrawal(wt.withdrawal());
     return block.getRLP();
 }
 

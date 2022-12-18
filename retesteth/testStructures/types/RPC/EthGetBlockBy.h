@@ -2,6 +2,7 @@
 #include <retesteth/testStructures/basetypes.h>
 #include "../Ethereum/Blocks/BlockHeader.h"
 #include "SubElements/EthGetBlockByTransaction.h"
+#include "SubElements/EthGetBlockByWithdrawal.h"
 #include <libdataobj/DataObject.h>
 
 namespace test
@@ -25,6 +26,7 @@ private:
     bool m_lessobjects = false;
     spBlockHeader m_header;
     std::vector<EthGetBlockByTransaction> m_transactions;
+    std::vector<EthGetBlockByWithdrawal> m_withdrawals;
     std::vector<FH32> m_uncles;
 
     spVALUE m_size;

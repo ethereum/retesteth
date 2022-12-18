@@ -127,6 +127,8 @@ spDataObject const ToolChain::mineBlock(EthereumBlockState const& _pendingBlock,
 
     spDataObject miningResult;
     miningResult = coorectTransactionsByToolResponse(res, pendingFixed, _pendingBlock, _req);
+    for (auto const& wt : _pendingBlock.withdrawals())
+        pendingFixed.addWithdrawal(wt);
     correctUncleHeaders(pendingFixed, _pendingBlock);
 
     // Calculate header hash from header fields (does not recalc tx, un hashes)

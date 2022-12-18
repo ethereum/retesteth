@@ -32,7 +32,6 @@ TestBlockchain::TestBlockchain(BlockchainTestFillerEnv const& _testEnv, State co
 
 void TestBlockchain::_mineBlock_importWithdrawals(BlockchainTestFillerBlock const& _blockInTest)
 {
-    return;
     if (Options::getCurrentConfig().cfgFile().socketType() == ClientConfgSocketType::TransitionTool)
     {
         if (_blockInTest.withdrawals().size() > 0)
