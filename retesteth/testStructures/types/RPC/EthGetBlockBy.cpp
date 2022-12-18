@@ -81,6 +81,7 @@ BYTES EthGetBlockBy::getRLPHeaderTransactions() const
     EthereumBlock block(m_header);
     for (auto const& tr : m_transactions)
         block.addTransaction(tr.transaction());
+    // withdrawals ?
     return block.getRLP();
 }
 

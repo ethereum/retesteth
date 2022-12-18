@@ -228,6 +228,21 @@ void ToolChainManager::reorganizeChainForTotalDifficulty()
     }
 }
 
+void ToolChainManager::registerWithdrawal(BYTES const& _wt)
+{
+    try
+    {
+        dev::bytes decodeRLP = sfromHex(_wt.asString());
+        dev::RLP rlp(decodeRLP, dev::RLP::VeryStrict);
+        spWithdrawal wt(new Withdrawal(rlp));
+        m_pendingBlock.getContent().addWithdrawal(wt);
+    }
+    catch(std::exception const& _ex)
+    {
+        throw test::UpwardsException(string("Error importing rlp of withdrawal: ") + _ex.what());
+    }
+}
+
 TestRawTransaction ToolChainManager::test_rawTransaction(
     BYTES const& _rlp, FORK const& _fork, fs::path const& _toolPath, fs::path const& _tmpDir)
 {

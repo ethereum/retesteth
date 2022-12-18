@@ -46,6 +46,7 @@ public:
     void test_modifyTimestamp(VALUE const& _timestamp) override;
     MineBlocksResult test_mineBlocks(size_t _number) override;
     FH32 test_importRawBlock(BYTES const& _blockRLP) override;
+    void test_registerWithdrawal(BYTES const& _rlp) override;
     FH32 test_getLogHash(FH32 const& _txHash) override;
     TestRawTransaction test_rawTransaction(BYTES const& _rlp, FORK const& _fork) override;
     VALUE test_calculateDifficulty(FORK const& _fork, VALUE const& _blockNumber, VALUE const& _parentTimestamp,

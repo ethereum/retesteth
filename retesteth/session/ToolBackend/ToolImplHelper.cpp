@@ -60,6 +60,11 @@ spDataObject constructEthGetBlockBy(EthereumBlockState const& _block)
         (*constructResponse)["uncles"].addArrayObject(unHash);
     }
 
+    for (auto const& wt : _block.withdrawals())
+    {
+        (*constructResponse)["withdrawals"].addArrayObject(wt->asDataObject());
+    }
+
     (*constructResponse)["size"] = "0x00";
     (*constructResponse)["totalDifficulty"] = "0x00";
     (*constructResponse).renameKey("bloom", "logsBloom");

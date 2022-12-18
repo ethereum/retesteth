@@ -314,6 +314,16 @@ TestRawTransaction ToolImpl::test_rawTransaction(BYTES const& _rlp, FORK const& 
     return TestRawTransaction(DataObject());
 }
 
+void ToolImpl::test_registerWithdrawal(BYTES const& _rlp)
+{
+    rpcCall("", {});
+    TRYCATCHCALL(
+        ETH_DC_MESSAGE(DC::RPC, "\nRequest: test_registerWithdrawal '" + _rlp.asString());
+        m_toolChainManager.getContent().registerWithdrawal(_rlp);
+        , "test_registerWithdrawal", CallType::FAILEVERYTHING)
+}
+
+
 VALUE ToolImpl::test_calculateDifficulty(FORK const& _fork, VALUE const& _blockNumber, VALUE const& _parentTimestamp,
     VALUE const& _parentDifficulty, VALUE const& _currentTimestamp, VALUE const& _uncleNumber)
 {

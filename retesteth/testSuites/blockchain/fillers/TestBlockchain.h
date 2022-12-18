@@ -85,6 +85,8 @@ private:
     void _generateBlock_RegisterInvalidBlock(BlockchainTestFillerBlock const& _block, BYTES const& _rawRLP);
     void _generateBlock_RegisterTestTransactions(BlockchainTestFillerBlock const& _block, TestBlock& _newBlock, spEthGetBlockBy);
 
+    void _mineBlock_importWithdrawals(BlockchainTestFillerBlock const&);
+
 private:
     bool m_triedStateDiff = false;
     spState m_stateDiffStateA;
