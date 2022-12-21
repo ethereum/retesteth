@@ -30,9 +30,14 @@ TestBlockchain::TestBlockchain(BlockchainTestFillerEnv const& _testEnv, State co
     m_blocks.push_back(genesisBlock);
 }
 
+bool clientSupportWithdrawalsRPC()
+{
+    return Options::getCurrentConfig().cfgFile().socketType() == ClientConfgSocketType::TransitionTool;
+}
+
 void TestBlockchain::_mineBlock_importWithdrawals(BlockchainTestFillerBlock const& _blockInTest)
 {
-    if (Options::getCurrentConfig().cfgFile().socketType() == ClientConfgSocketType::TransitionTool)
+    if (clientSupportWithdrawalsRPC())
     {
         if (_blockInTest.withdrawals().size() > 0)
         {
@@ -56,7 +61,8 @@ GCP_SPointer<EthGetBlockBy> TestBlockchain::mineBlock(
     VALUE latestBlockNumber(m_session.eth_blockNumber());
 
     spFH32 minedBlockHash;
-    if (_blockInTest.hasBlockHeaderOverwrite(m_network) || _blockInTest.uncles().size() > 0)
+    if (_blockInTest.hasBlockHeaderOverwrite(m_network) || _blockInTest.uncles().size() > 0 ||
+        !clientSupportWithdrawalsRPC())
     {
         // Need to overwrite the blockheader of a mined block with either blockHeader or uncles
         // Then import it again and see what client says, because mining with uncles not supported
