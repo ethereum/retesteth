@@ -256,7 +256,7 @@ FH32 TestBlockchain::postmineBlockHeader(BlockchainTestFillerBlock const& _block
     EthGetBlockBy remoteBlock(m_session.eth_getBlockByNumber(_latestBlockNumber, Request::FULLOBJECTS));
     EthereumBlock managedBlock(remoteBlock.header());
     for (auto const& tr : remoteBlock.transactions())  // + invalid transactions?
-        managedBlock.addTransaction(tr.transaction());
+        managedBlock.addTransaction(tr->transaction());
 
     // Attach test-generated uncle to a block and then reimport it again
     for (auto const& un : _uncles)

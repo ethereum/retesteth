@@ -47,26 +47,37 @@ EthGetBlockBy::EthGetBlockBy(spDataObject& _data)
         m_totalDifficulty = spVALUE(new VALUE(_data->atKey("totalDifficulty")));
 
         m_lessobjects = false;
-        for (auto& el : _data.getContent().atKeyUnsafe("transactions").getSubObjectsUnsafe())
+        string const c_transactions = "transactions";
+        m_transactions.reserve(_data->atKey(c_transactions).getSubObjects().size());
+        for (auto& el : _data.getContent().atKeyUnsafe(c_transactions).getSubObjectsUnsafe())
         {
             (*el).renameKey("input", "data");
             (*el).renameKey("gas", "gasLimit");
-            m_transactions.push_back(EthGetBlockByTransaction(dataobject::move(el)));
-            if (!m_transactions.at(m_transactions.size() - 1).isFullTransaction())
+            spEthGetBlockByTransaction tr(new EthGetBlockByTransaction(dataobject::move(el)));
+            m_transactions.push_back(std::move(tr));
+            if (!m_transactions.at(m_transactions.size() - 1)->isFullTransaction())
                 m_lessobjects = true;
         }
 
-        if (_data->count("withdrawals"))
+        string const c_withdrawals = "withdrawals";
+        if (_data->count(c_withdrawals))
         {
-            for (auto& el : _data.getContent().atKeyUnsafe("withdrawals").getSubObjectsUnsafe())
+            m_withdrawals.reserve(_data->atKey(c_withdrawals).getSubObjects().size());
+            for (auto& el : _data.getContent().atKeyUnsafe(c_withdrawals).getSubObjectsUnsafe())
             {
-                m_withdrawals.push_back(EthGetBlockByWithdrawal(dataobject::move(el)));
+                spEthGetBlockByWithdrawal wt(new EthGetBlockByWithdrawal(dataobject::move(el)));
+                m_withdrawals.push_back(std::move(wt));
             }
         }
 
         // Remote eth_getBlockBy* always return uncles as hashes.
-        for (auto const& un : _data->atKey("uncles").getSubObjects())
-            m_uncles.push_back(FH32(un));
+        string const c_uncles = "uncles";
+        m_uncles.reserve(_data->atKey(c_uncles).getSubObjects().size());
+        for (auto const& un : _data->atKey(c_uncles).getSubObjects())
+        {
+            FH32 unh(un);
+            m_uncles.push_back(std::move(unh));
+        }
     }
     catch (std::exception const& _ex)
     {
@@ -78,7 +89,7 @@ bool EthGetBlockBy::hasTransaction(FH32 const& _hash) const
 {
     for (auto const& tr : m_transactions)
     {
-        if (tr.hash() == _hash)
+        if (tr->hash() == _hash)
             return true;
     }
     return false;
@@ -89,9 +100,9 @@ BYTES EthGetBlockBy::getRLPHeaderTransactions() const
 {
     EthereumBlock block(m_header);
     for (auto const& tr : m_transactions)
-        block.addTransaction(tr.transaction());
+        block.addTransaction(tr->transaction());
     for (auto const& wt: m_withdrawals)
-        block.addWithdrawal(wt.withdrawal());
+        block.addWithdrawal(wt->withdrawal());
     return block.getRLP();
 }
 

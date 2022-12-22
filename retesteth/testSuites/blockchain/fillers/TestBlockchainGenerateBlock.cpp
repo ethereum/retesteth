@@ -119,20 +119,20 @@ void TestBlockchain::_generateBlock_RegisterTestTransactions(BlockchainTestFille
     size_t txIndex = 0;
     for (auto const& remoteTr : _minedBlock->transactions())
     {
-        TxContext const ctx(m_session, TestOutputHelper::get().testName(), remoteTr.transaction(), _minedBlock->header(),
+        TxContext const ctx(m_session, TestOutputHelper::get().testName(), remoteTr->transaction(), _minedBlock->header(),
             m_network, (size_t)_minedBlock->header()->number().asBigInt(), txIndex);
         performVMTrace(ctx);
         txIndex++;
 
-        if (testTransactionMap.count(remoteTr.hash()))
+        if (testTransactionMap.count(remoteTr->hash()))
         {
-            bool isMarkedInvalid = std::get<1>(testTransactionMap.at(remoteTr.hash()));
-            spTransaction const& spTr = std::get<0>(testTransactionMap.at(remoteTr.hash()));
+            bool isMarkedInvalid = std::get<1>(testTransactionMap.at(remoteTr->hash()));
+            spTransaction const& spTr = std::get<0>(testTransactionMap.at(remoteTr->hash()));
 
             if (!isMarkedInvalid)
                 _newBlock.registerTestTransaction(spTr);
 
-            testTransactionMap.erase(remoteTr.hash());
+            testTransactionMap.erase(remoteTr->hash());
         }
         else
             ETH_ERROR_MESSAGE("Remote client returned block with transaction that is not registered in test!");

@@ -14,7 +14,7 @@ struct EthGetBlockBy : GCP_SPointerBase
 {
     EthGetBlockBy(spDataObject&);
     spBlockHeader const& header() const { return m_header; }
-    std::vector<EthGetBlockByTransaction> const& transactions() const { return m_transactions; }
+    std::vector<spEthGetBlockByTransaction> const& transactions() const { return m_transactions; }
     std::vector<FH32> const& uncles() const { return m_uncles; }
     BYTES getRLPHeaderTransactions() const;
 
@@ -25,8 +25,8 @@ private:
     EthGetBlockBy() {}
     bool m_lessobjects = false;
     spBlockHeader m_header;
-    std::vector<EthGetBlockByTransaction> m_transactions;
-    std::vector<EthGetBlockByWithdrawal> m_withdrawals;
+    std::vector<spEthGetBlockByTransaction> m_transactions;
+    std::vector<spEthGetBlockByWithdrawal> m_withdrawals;
     std::vector<FH32> m_uncles;
 
     spVALUE m_size;
