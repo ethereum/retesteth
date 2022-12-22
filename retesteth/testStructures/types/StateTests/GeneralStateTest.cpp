@@ -49,10 +49,13 @@ GeneralStateTest::GeneralStateTest(spDataObject& _data)
             TestOutputHelper::get().get().testFile().string() + " A test file must contain an object value (json/yaml).");
         ETH_ERROR_REQUIRE_MESSAGE(_data->getSubObjects().size() == 1,
             TestOutputHelper::get().get().testFile().string() + " A test file must contain exactly one test!");
+
+        m_tests.reserve(_data.getContent().getSubObjects().size());
         for (auto& el : _data.getContent().getSubObjectsUnsafe())
         {
             TestOutputHelper::get().setCurrentTestInfo(TestInfo("GeneralStateTest", el->getKey()));
-            m_tests.push_back(StateTestInFilled(el));
+            StateTestInFilled const test(el);
+            m_tests.push_back(std::move(test));
         }
     }
     catch (DataObjectException const& _ex)
@@ -98,8 +101,12 @@ StateTestInFilled::StateTestInFilled(spDataObject& _data)
     for (auto const& elFork : _data->atKey("post").getSubObjects())
     {
         StateTestPostResults res;
+        res.reserve(elFork->getSubObjects().size());
         for (auto const& elForkResults : elFork->getSubObjects())
-            res.push_back(StateTestPostResult(elForkResults));
+        {
+            StateTestPostResult const postResult(elForkResults);
+            res.push_back(std::move(postResult));
+        }
         if (m_post.count(FORK(elFork->getKey())))
             ETH_ERROR_MESSAGE("StateTest post section has multiple results for the same fork!");
         m_post[FORK(elFork->getKey())] = res;

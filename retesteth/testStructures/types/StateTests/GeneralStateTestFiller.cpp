@@ -74,7 +74,8 @@ GeneralStateTestFiller::GeneralStateTestFiller(spDataObject& _data)
         for (auto& el : _data.getContent().getSubObjectsUnsafe())
         {
             TestOutputHelper::get().setCurrentTestInfo(TestInfo("GeneralStateTestFiller", el->getKey()));
-            m_tests.push_back(StateTestInFiller(el));
+            StateTestInFiller const test(el);
+            m_tests.push_back(std::move(test));
         }
     }
     catch (DataObjectException const& _ex)
@@ -120,12 +121,14 @@ StateTestInFiller::StateTestInFiller(spDataObject& _data)
         m_pre = spState(new State(MOVE(_data, "pre")));
         m_transaction = spStateTestFillerTransaction(new StateTestFillerTransaction(MOVE(_data, "transaction")));
 
-        for (auto& el : (*_data).atKeyUnsafe("expect").getSubObjectsUnsafe())
+        string const c_expect = "expect";
+        m_expectSections.reserve((*_data).atKey(c_expect).getSubObjects().size());
+        for (auto& el : (*_data).atKeyUnsafe(c_expect).getSubObjectsUnsafe())
         {
             StateTestFillerExpectSection newSection(dataobject::move(el), m_transaction);
             checkRedundantExpectSection(m_expectSections, newSection);
             checkCoinbaseInExpectSection(newSection, m_env);
-            m_expectSections.push_back(newSection);
+            m_expectSections.push_back(std::move(newSection));
         }
         ETH_ERROR_REQUIRE_MESSAGE(m_expectSections.size() > 0, "StateTestFiller require expect sections!");
 

@@ -16,15 +16,14 @@ std::vector<TransactionInGeneralSection> StateTestTransactionBase::buildTransact
 {
     // Construct vector of all transactions that are described int data
     std::vector<TransactionInGeneralSection> out;
+    out.reserve(m_databox.size() * m_gasLimit.size() * m_value.size());
     for (size_t dIND = 0; dIND < m_databox.size(); dIND++)
     {
         for (size_t gIND = 0; gIND < m_gasLimit.size(); gIND++)
         {
             for (size_t vIND = 0; vIND < m_value.size(); vIND++)
             {
-                if (ExitHandler::receivedExitSignal())
-                    return out;
-
+                CHECKEXITR(out)
                 Databox const& databox = m_databox.at(dIND);
 
                 spDataObject trData;
@@ -60,8 +59,8 @@ std::vector<TransactionInGeneralSection> StateTestTransactionBase::buildTransact
                 if (!databox.m_accessList.isEmpty())
                     (*trData).atKeyPointer("accessList") = databox.m_accessList->asDataObject();
 
-                out.push_back(
-                    TransactionInGeneralSection(dataobject::move(trData), dIND, gIND, vIND, databox.m_dataRawPreview, databox.m_dataLabel));
+                TransactionInGeneralSection const tr(dataobject::move(trData), dIND, gIND, vIND, databox.m_dataRawPreview, databox.m_dataLabel);
+                out.push_back(std::move(tr));
             }
         }
     }
