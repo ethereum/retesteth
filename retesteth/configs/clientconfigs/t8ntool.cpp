@@ -37,7 +37,8 @@ string const t8ntool_config = R"({
         "BerlinToLondonAt5",
         "ArrowGlacier",
         "ArrowGlacierToMergeAtDiffC0000",
-        "GrayGlacier"
+        "GrayGlacier",
+        "MergeToShanghaiAt5"
     ],
     "fillerSkipForks" : [
         "Merge+3540+3670",

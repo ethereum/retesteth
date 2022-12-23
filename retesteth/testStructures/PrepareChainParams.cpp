@@ -65,18 +65,22 @@ spDataObject prepareGenesisSubsection(StateTestEnvBase const& _env, ParamsContex
         return genesis;
     }
 
+    auto londify = [&_env, &_context](DataObject& _genesis){
+        _genesis["baseFeePerGas"] = calculateGenesisBaseFee(_env.currentBaseFee(), _context);
+    };
+
+    auto mergify = [&_env](DataObject& _genesis){
+        _genesis.removeKey("difficulty");
+        _genesis["currentRandom"] = _env.currentRandom().asString();
+        auto const randomH32 = dev::toCompactHexPrefixed(dev::u256(_genesis["currentRandom"].asString()), 32);
+        _genesis["mixHash"] = randomH32;
+    };
+
     if (!netIsAdditional)
     {
         bool knowLondon = cfg.checkForkInProgression("London");
         if (knowLondon && compareFork(net, CMP::ge, FORK("London")))
-            (*genesis)["baseFeePerGas"] = calculateGenesisBaseFee(_env.currentBaseFee(), _context);
-
-        auto mergify = [&_env](DataObject& _genesis){
-            _genesis.removeKey("difficulty");
-            _genesis["currentRandom"] = _env.currentRandom().asString();
-            auto const randomH32 = dev::toCompactHexPrefixed(dev::u256(_genesis["currentRandom"].asString()), 32);
-            _genesis["mixHash"] = randomH32;
-        };
+            londify(genesis.getContent());
 
         bool knowMerge = cfg.checkForkInProgression("Merge");
         if (knowMerge && compareFork(net, CMP::ge, FORK("Merge")))
@@ -96,8 +100,12 @@ spDataObject prepareGenesisSubsection(StateTestEnvBase const& _env, ParamsContex
         // Net Is Additional, probably special transition net.
         // Can't get rid of this hardcode configs :(((
         if (_net == FORK("ArrowGlacierToMergeAtDiffC0000") || _net == FORK("ArrowGlacier"))
-            (*genesis)["baseFeePerGas"] = calculateGenesisBaseFee(_env.currentBaseFee(), _context);
-
+            londify(genesis.getContent());
+        else if (_net == FORK("MergeToShanghaiAt5"))
+        {
+            londify(genesis.getContent());
+            mergify(genesis.getContent());
+        }
     }
     return genesis;
 }

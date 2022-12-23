@@ -50,6 +50,8 @@ void ToolChainManager::rewindToBlock(VALUE const& _number)
 void ToolChainManager::reorganizePendingBlock()
 {
     EthereumBlockState const& bl = currentChain().lastBlock();
+
+    // Transform pending block to new network
     if (currentChain().fork() == "BerlinToLondonAt5" && bl.header()->number() == 4)
         init1559PendingBlock(bl);
     else if (currentChain().fork() == "ArrowGlacierToMergeAtDiffC0000" && isTerminalPoWBlock())

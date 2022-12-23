@@ -15,7 +15,8 @@ extern std::string const yul_compiler_sh;
 #define DECLARE_T8NTOOL(X) \
   FOR_EACH(X, t8ntoolcfg, RewardsCfg, FrontierCfg, HomesteadCfg, EIP150Cfg, EIP158Cfg, ByzantiumCfg, \
     ConstantinopleCfg, ConstantinopleFixCfg, IstanbulCfg, BerlinCfg, LondonCfg, MergeCfg, \
-    ArrowGlacierCfg, GrayGlacierCfg, ArrowGlacierToMergeAtDiffC0000Cfg, \
+    ShanghaiCfg, \
+    ArrowGlacierCfg, GrayGlacierCfg, ArrowGlacierToMergeAtDiffC0000Cfg, MergeToShanghaiAt5Cfg, \
     FrontierToHomesteadCfg, HomesteadToDaoCfg, HomesteadToEIP150Cfg, EIP158ToByzantiumCfg, \
     ByzantiumToConstantinopleFixCfg, BerlinToLondonCfg )
 
