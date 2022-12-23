@@ -23,6 +23,7 @@ struct EthereumBlock : GCP_SPointerBase
     void replaceHeader(spBlockHeader const& _header) { m_header = readBlockHeader(_header->asDataObject()); }
     void recalculateUncleHash();
     BYTES const getRLP() const;
+    void forceWithdrawalsRLP() { m_forceWithdrawalsRLP = true; }
 
     spBlockHeader const& header() const { return m_header; }
     spBlockHeader& headerUnsafe() { return m_header; }
@@ -36,6 +37,8 @@ protected:
     std::vector<spTransaction> m_transactions;
     std::vector<spBlockHeader> m_uncles;
     std::vector<spWithdrawal> m_withdrawals;
+protected:
+    bool m_forceWithdrawalsRLP = false;
 };
 
 struct EthereumBlockState : EthereumBlock

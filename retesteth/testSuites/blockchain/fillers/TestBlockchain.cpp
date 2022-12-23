@@ -262,6 +262,8 @@ FH32 TestBlockchain::postmineBlockHeader(BlockchainTestFillerBlock const& _block
     for (auto const& un : _uncles)
         managedBlock.addUncle(un);
 
+    if (_blockInTest.withdrawals().size() > 0)
+        managedBlock.forceWithdrawalsRLP();
     for (auto const& wt : _blockInTest.withdrawals())
         managedBlock.addWithdrawal(wt.withdrawal());
 

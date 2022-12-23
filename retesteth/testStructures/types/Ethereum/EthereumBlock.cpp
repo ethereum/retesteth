@@ -36,7 +36,7 @@ BYTES const EthereumBlock::getRLP() const
     try
     {
         // RLP of a block
-        bool const isShanghai =  (m_header->type() == BlockType::BlockHeaderShanghai);
+        bool const isShanghai =  (m_header->type() == BlockType::BlockHeaderShanghai || m_forceWithdrawalsRLP);
         RLPStream stream(isShanghai ? 4 : 3);
         stream.appendRaw(m_header->asRLPStream().out());
 
