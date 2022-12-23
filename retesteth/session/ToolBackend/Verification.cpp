@@ -157,6 +157,9 @@ void verify1559Parent(spBlockHeader const& _header, spBlockHeader const& _parent
 {
     if (_parent->type() == BlockType::BlockHeaderMerge)
         throw test::UpwardsException("Trying to import 1559 block on top of PoS block!");
+    else if (_parent->type() == BlockType::BlockHeaderShanghai)
+        throw test::UpwardsException("Trying to import 1559 block on top of Shanghai block!");
+
     check_blockType(_header->type(), BlockType::BlockHeader1559, "verify1559Parent");
     check_difficultyDelta(_chain, _header, _parent);
 
@@ -191,12 +194,18 @@ void verify1559Parent(spBlockHeader const& _header, spBlockHeader const& _parent
 void verifyShanghaiParent(spBlockHeader const& _header, spBlockHeader const& _parent, ToolChain const& _chain)
 {
     check_blockType(_header->type(), BlockType::BlockHeaderShanghai, "verifyShanghaiParent");
-    if (_parent->type() == BlockType::BlockHeaderMerge)
-        verifyMergeBlock(_parent, _chain);
-    else if (_parent->type() == BlockType::BlockHeaderShanghai)
+    if (_parent->type() == BlockType::BlockHeaderShanghai)
         verifyShanghaiBlock(_parent, _chain);
     else
-        throw test::UpwardsException("Shanghai parent block must be of type Merge!");
+    {
+        if (_header->number() == 5 && _chain.fork() == "MergeToShanghaiAt5")
+        {
+            if (_parent->type() != BlockType::BlockHeaderMerge)
+                throw test::UpwardsException("Trying to import Shanghai block on top of Merge block before transition!!");
+        }
+        else
+            throw test::UpwardsException("Trying to import Shanghai block on top of Merge block before transition!!");
+    }
 }
 
 void verifyMergeParent(spBlockHeader const& _header, spBlockHeader const& _parent, ToolChain const& _chain, VALUE const& _parentTD)
@@ -211,6 +220,9 @@ void verifyMergeParent(spBlockHeader const& _header, spBlockHeader const& _paren
 
 
     check_baseFeeDelta(_chain, _header, _parent);
+    if (_parent->type() == BlockType::BlockHeaderShanghai)
+        throw test::UpwardsException("Trying to import Merge block on top of Shanghai block after transition!!");
+
     if (_parent->type() != BlockType::BlockHeaderMerge)
     {
         VALUE const TTD = isTTDDefined ? _chain.params()->params().atKey("terminalTotalDifficulty") : VALUE (DataObject("0xffffffffffffffffffffffffffff"));

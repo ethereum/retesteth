@@ -63,8 +63,10 @@ private:
     boost::filesystem::path m_toolPath;
 
 private:
+    void transitionPendingBlock(EthereumBlockState const&);
     void init1559PendingBlock(EthereumBlockState const&);
     void initMergePendingBlock(EthereumBlockState const&);
+    void initShanghaiPendingBlock(EthereumBlockState const&);
     bool isTerminalPoWBlock();
 };
 

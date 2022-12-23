@@ -50,14 +50,7 @@ void ToolChainManager::rewindToBlock(VALUE const& _number)
 void ToolChainManager::reorganizePendingBlock()
 {
     EthereumBlockState const& bl = currentChain().lastBlock();
-
-    // Transform pending block to new network
-    if (currentChain().fork() == "BerlinToLondonAt5" && bl.header()->number() == 4)
-        init1559PendingBlock(bl);
-    else if (currentChain().fork() == "ArrowGlacierToMergeAtDiffC0000" && isTerminalPoWBlock())
-        initMergePendingBlock(bl);
-    else
-        m_pendingBlock = spEthereumBlockState(new EthereumBlockState(bl.header(), bl.state(), bl.logHash()));
+    transitionPendingBlock(bl);
 
     BlockHeader& header = m_pendingBlock.getContent().headerUnsafe().getContent();
     header.setNumber(bl.header()->number() + 1);
@@ -419,6 +412,30 @@ void ToolChainManager::initMergePendingBlock(EthereumBlockState const& _lastBloc
 
     spBlockHeader newPending(new BlockHeaderMerge(parentData));
     m_pendingBlock = spEthereumBlockState(new EthereumBlockState(newPending, _lastBlock.state(), _lastBlock.logHash()));
+}
+
+void ToolChainManager::initShanghaiPendingBlock(EthereumBlockState const& _lastBlock)
+{
+    spDataObject parentData = _lastBlock.header()->asDataObject();
+    (*parentData)["withdrawalsRoot"] = "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421";
+    spBlockHeader newPending(new BlockHeaderShanghai(parentData));
+    m_pendingBlock = spEthereumBlockState(new EthereumBlockState(newPending, _lastBlock.state(), _lastBlock.logHash()));
+}
+
+void ToolChainManager::transitionPendingBlock(EthereumBlockState const& bl)
+{
+    // Transform pending block to new network
+    if (bl.header()->number() == 4)
+    {
+        if (currentChain().fork() == "BerlinToLondonAt5")
+            init1559PendingBlock(bl);
+        else if (currentChain().fork() == "MergeToShanghaiAt5")
+            initShanghaiPendingBlock(bl);
+    }
+    else if (currentChain().fork() == "ArrowGlacierToMergeAtDiffC0000" && isTerminalPoWBlock())
+        initMergePendingBlock(bl);
+    else
+        m_pendingBlock = spEthereumBlockState(new EthereumBlockState(bl.header(), bl.state(), bl.logHash()));
 }
 
 }  // namespace toolimpl

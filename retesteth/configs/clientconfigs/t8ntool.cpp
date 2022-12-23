@@ -208,6 +208,8 @@ string const t8ntool_config = R"({
       "1559BlockImportImpossible_TargetGasLow": "gasTarget decreased too much",
       "1559BlockImportImpossible_TargetGasHigh": "gasTarget increased too much",
       "1559BlockImportImpossible_InitialGasLimitInvalid": "Invalid block1559: Initial gasLimit must be",
+      "MergeBlockImportImpossible" : "Trying to import Merge block on top of Shanghai block after transition",
+      "ShanghaiBlockImportImpossible" : "Shanghai block on top of Merge block before transition",
       "TR_IntrinsicGas" : "intrinsic gas too low:",
       "TR_NoFunds" : "insufficient funds for gas * price + value",
       "TR_NoFundsValue" : "insufficient funds for transfer",
