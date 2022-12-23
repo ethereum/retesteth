@@ -422,20 +422,25 @@ void ToolChainManager::initShanghaiPendingBlock(EthereumBlockState const& _lastB
     m_pendingBlock = spEthereumBlockState(new EthereumBlockState(newPending, _lastBlock.state(), _lastBlock.logHash()));
 }
 
-void ToolChainManager::transitionPendingBlock(EthereumBlockState const& bl)
+void ToolChainManager::transitionPendingBlock(EthereumBlockState const& _bl)
 {
+    auto const updatePending = [this, &_bl](){
+        m_pendingBlock = spEthereumBlockState(new EthereumBlockState(_bl.header(), _bl.state(), _bl.logHash()));
+    };
     // Transform pending block to new network
-    if (bl.header()->number() == 4)
+    if (_bl.header()->number() == 4)
     {
         if (currentChain().fork() == "BerlinToLondonAt5")
-            init1559PendingBlock(bl);
+            init1559PendingBlock(_bl);
         else if (currentChain().fork() == "MergeToShanghaiAt5")
-            initShanghaiPendingBlock(bl);
+            initShanghaiPendingBlock(_bl);
+        else
+            updatePending();
     }
     else if (currentChain().fork() == "ArrowGlacierToMergeAtDiffC0000" && isTerminalPoWBlock())
-        initMergePendingBlock(bl);
+        initMergePendingBlock(_bl);
     else
-        m_pendingBlock = spEthereumBlockState(new EthereumBlockState(bl.header(), bl.state(), bl.logHash()));
+        updatePending();
 }
 
 }  // namespace toolimpl
