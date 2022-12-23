@@ -53,20 +53,20 @@ VALUE RPCImpl::eth_blockNumber()
     return VALUE(rpcCall("eth_blockNumber", {}).getCContent());
 }
 
-EthGetBlockBy RPCImpl::eth_getBlockByHash(FH32 const& _hash, Request _fullObjects)
+spEthGetBlockBy RPCImpl::eth_getBlockByHash(FH32 const& _hash, Request _fullObjects)
 {
     spDataObject response = rpcCall("eth_getBlockByHash", {quote(_hash.asString()), _fullObjects == Request::FULLOBJECTS ? "true" : "false"});
     ClientConfig const& cfg = Options::getCurrentConfig();
     cfg.performFieldReplace(*response, FieldReplaceDir::ClientToRetesteth);
-    return EthGetBlockBy(response);
+    return spEthGetBlockBy(new EthGetBlockBy(response));
 }
 
-EthGetBlockBy RPCImpl::eth_getBlockByNumber(VALUE const& _blockNumber, Request _fullObjects)
+spEthGetBlockBy RPCImpl::eth_getBlockByNumber(VALUE const& _blockNumber, Request _fullObjects)
 {
     spDataObject response = rpcCall("eth_getBlockByNumber", {quote(_blockNumber.asString()), _fullObjects == Request::FULLOBJECTS ? "true" : "false"});
     ClientConfig const& cfg = Options::getCurrentConfig();
     cfg.performFieldReplace(*response, FieldReplaceDir::ClientToRetesteth);
-    return EthGetBlockBy(response);
+    return spEthGetBlockBy(new EthGetBlockBy(response));
 }
 
 spBYTES RPCImpl::eth_getCode(FH20 const& _address, VALUE const& _blockNumber)

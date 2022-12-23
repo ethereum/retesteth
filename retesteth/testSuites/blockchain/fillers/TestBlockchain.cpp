@@ -334,7 +334,7 @@ void TestBlockchain::performOptionCommandsOnGenesis()
     {
         auto const genesis = m_session.eth_getBlockByNumber(0, Request::LESSOBJECTS);
         auto const& testname = TestOutputHelper::get().testName();
-        TxContext const ctx(m_session, testname, spTransaction(0), genesis.header(), m_network, 0, 0);
+        TxContext const ctx(m_session, testname, spTransaction(0), genesis->header(), m_network, 0, 0);
         performPostState(ctx);
     }
 

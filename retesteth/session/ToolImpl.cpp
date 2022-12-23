@@ -96,7 +96,7 @@ VALUE ToolImpl::eth_blockNumber()
 }
 
 
-EthGetBlockBy ToolImpl::eth_getBlockByHash(FH32 const& _hash, Request _fullObjects)
+spEthGetBlockBy ToolImpl::eth_getBlockByHash(FH32 const& _hash, Request _fullObjects)
 {
     rpcCall("", {});
     (void)_fullObjects;
@@ -104,13 +104,12 @@ EthGetBlockBy ToolImpl::eth_getBlockByHash(FH32 const& _hash, Request _fullObjec
     TRYCATCHCALL(
         spDataObject res = constructEthGetBlockBy(blockchain().blockByHash(_hash));
         ETH_DC_MESSAGE(DC::RPC, "Response: eth_getBlockByHash `" + res->asJson());
-        return EthGetBlockBy(res);
+        return spEthGetBlockBy(new EthGetBlockBy(res));
         , "eth_getBlockByHash", CallType::FAILEVERYTHING)
-    spDataObject spnull(0);
-    return EthGetBlockBy(spnull);
+    return spEthGetBlockBy(0);
 }
 
-EthGetBlockBy ToolImpl::eth_getBlockByNumber(VALUE const& _blockNumber, Request _fullObjects)
+spEthGetBlockBy ToolImpl::eth_getBlockByNumber(VALUE const& _blockNumber, Request _fullObjects)
 {
     rpcCall("", {});
     (void)_fullObjects;
@@ -118,10 +117,9 @@ EthGetBlockBy ToolImpl::eth_getBlockByNumber(VALUE const& _blockNumber, Request 
     TRYCATCHCALL(
         spDataObject res = constructEthGetBlockBy(blockchain().blockByNumber(_blockNumber));
         ETH_DC_MESSAGE(DC::RPC, "Response: eth_getBlockByNumber `" + res->asJson());
-        return EthGetBlockBy(res);
+        return spEthGetBlockBy(new EthGetBlockBy(res));
         , "eth_getBlockByNumber", CallType::FAILEVERYTHING)
-    spDataObject spnull(0);
-    return EthGetBlockBy(spnull);
+    return spEthGetBlockBy(0);
 }
 
 spBYTES ToolImpl::eth_getCode(FH20 const& _address, VALUE const& _blockNumber)

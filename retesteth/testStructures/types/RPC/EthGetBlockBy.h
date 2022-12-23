@@ -5,10 +5,9 @@
 #include "SubElements/EthGetBlockByWithdrawal.h"
 #include <libdataobj/DataObject.h>
 
-namespace test
+namespace test::teststruct
 {
-namespace teststruct
-{
+
 // Structure for RPC response eth_getBlockByHash/eth_getBlockByNumber
 struct EthGetBlockBy : GCP_SPointerBase
 {
@@ -36,4 +35,3 @@ private:
 typedef  GCP_SPointer<EthGetBlockBy> spEthGetBlockBy;
 
 }  // namespace teststruct
-}  // namespace test
