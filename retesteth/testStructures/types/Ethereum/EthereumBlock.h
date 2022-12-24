@@ -17,9 +17,9 @@ namespace test::teststruct
 struct EthereumBlock : GCP_SPointerBase
 {
     EthereumBlock(spBlockHeader const& _header) : m_header(_header) {}
-    void addTransaction(spTransaction const& _tr) { m_transactions.push_back(_tr); }
-    void addUncle(spBlockHeader const& _header) { m_uncles.push_back(_header); }
-    void addWithdrawal(spWithdrawal const& _withdrawal) { m_withdrawals.push_back(_withdrawal); }
+    void addTransaction(spTransaction const& _tr) { m_transactions.emplace_back(_tr); }
+    void addUncle(spBlockHeader const& _header) { m_uncles.emplace_back(_header); }
+    void addWithdrawal(spWithdrawal const& _withdrawal) { m_withdrawals.emplace_back(_withdrawal); }
     void replaceHeader(spBlockHeader const& _header) { m_header = readBlockHeader(_header->asDataObject()); }
     void recalculateUncleHash();
     BYTES const getRLP() const;

@@ -53,8 +53,7 @@ EthGetBlockBy::EthGetBlockBy(spDataObject& _data)
         {
             (*el).renameKey("input", "data");
             (*el).renameKey("gas", "gasLimit");
-            spEthGetBlockByTransaction tr(new EthGetBlockByTransaction(dataobject::move(el)));
-            m_transactions.push_back(std::move(tr));
+            m_transactions.emplace_back(spEthGetBlockByTransaction(new EthGetBlockByTransaction(dataobject::move(el))));
             if (!m_transactions.at(m_transactions.size() - 1)->isFullTransaction())
                 m_lessobjects = true;
         }
@@ -64,20 +63,14 @@ EthGetBlockBy::EthGetBlockBy(spDataObject& _data)
         {
             m_withdrawals.reserve(_data->atKey(c_withdrawals).getSubObjects().size());
             for (auto& el : _data.getContent().atKeyUnsafe(c_withdrawals).getSubObjectsUnsafe())
-            {
-                spEthGetBlockByWithdrawal wt(new EthGetBlockByWithdrawal(dataobject::move(el)));
-                m_withdrawals.push_back(std::move(wt));
-            }
+                m_withdrawals.emplace_back(spEthGetBlockByWithdrawal(new EthGetBlockByWithdrawal(dataobject::move(el))));
         }
 
         // Remote eth_getBlockBy* always return uncles as hashes.
         string const c_uncles = "uncles";
         m_uncles.reserve(_data->atKey(c_uncles).getSubObjects().size());
         for (auto const& un : _data->atKey(c_uncles).getSubObjects())
-        {
-            FH32 unh(un);
-            m_uncles.push_back(std::move(unh));
-        }
+            m_uncles.emplace_back(FH32(un));
     }
     catch (std::exception const& _ex)
     {

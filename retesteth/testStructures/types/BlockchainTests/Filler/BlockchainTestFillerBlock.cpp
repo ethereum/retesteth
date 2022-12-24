@@ -48,16 +48,20 @@ BlockchainTestFillerBlock::BlockchainTestFillerBlock(spDataObject& _data, NonceM
             m_network = spFORK(new FORK(_data->atKey("chainnetwork")));
 
         if (_data->count("transactions"))
-            for (auto& tr : (*_data).atKeyUnsafe("transactions").getSubObjectsUnsafe())
-                m_transactions.push_back(BlockchainTestFillerTransaction(dataobject::move(tr), _nonceMap));
+        {
+            string const c_transactions = "transactions";
+            m_transactions.reserve(_data->atKey(c_transactions).getSubObjects().size());
+            for (auto& tr : (*_data).atKeyUnsafe(c_transactions).getSubObjectsUnsafe())
+                m_transactions.emplace_back(BlockchainTestFillerTransaction(dataobject::move(tr), _nonceMap));
+        }
 
         if (_data->count("withdrawals"))
             for (auto& wt : (*_data).atKeyUnsafe("withdrawals").getSubObjectsUnsafe())
-                m_withdrawals.push_back(BlockchainTestFillerWithdrawal(dataobject::move(wt)));
+                m_withdrawals.emplace_back(BlockchainTestFillerWithdrawal(dataobject::move(wt)));
 
         if (_data->count("uncleHeaders"))
             for (auto const& un : _data->atKey("uncleHeaders").getSubObjects())
-                m_uncles.push_back(BlockchainTestFillerUncle(un));
+                m_uncles.emplace_back(BlockchainTestFillerUncle(un));
 
         if (_data->count("expectException"))
             readExpectExceptions(_data->atKey("expectException"), m_expectExceptions);

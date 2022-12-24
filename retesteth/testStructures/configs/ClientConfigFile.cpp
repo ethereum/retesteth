@@ -76,7 +76,7 @@ void ClientConfigFile::parseSocketType(DataObject const& _data, string const& _s
             IPADDRESS addr(el);
             if (test::inArray(m_socketAddress, addr))
                 ETH_ERROR_MESSAGE(_sErrorPath + "`socketAddress` section contain dublicate element: " + el->asString());
-            m_socketAddress.push_back(addr);
+            m_socketAddress.emplace_back(addr);
         }
     }
     // IPC would connect to a client using shell script
@@ -175,7 +175,7 @@ void ClientConfigFile::initWithData(DataObject const& _data)
             continue;
         if (test::inArray(m_forks, FORK(el)))
             ETH_ERROR_MESSAGE(sErrorPath + "`forks` section contain dublicate element: " + el->asString());
-        m_forks.push_back(FORK(el));
+        m_forks.emplace_back(FORK(el));
     }
 
     // Read additionalForks are allowed fork names to run on this client, but not used in translation
@@ -185,7 +185,7 @@ void ClientConfigFile::initWithData(DataObject const& _data)
             continue;
         if (test::inArray(m_additionalForks, FORK(el)))
             ETH_ERROR_MESSAGE(sErrorPath + "`additionalForks` section contain dublicate element: " + el->asString());
-        m_additionalForks.push_back(FORK(el));
+        m_additionalForks.emplace_back(FORK(el));
     }
 
     // Read fillerSkipForks are allowed to skip fork names when filling the test
@@ -197,7 +197,7 @@ void ClientConfigFile::initWithData(DataObject const& _data)
                 continue;
             if (test::inArray(m_skipForks, FORK(el)))
                 ETH_ERROR_MESSAGE(sErrorPath + "`fillerSkipForks` section contain dublicate element: " + el->asString());
-            m_skipForks.push_back(FORK(el));
+            m_skipForks.emplace_back(FORK(el));
         }
     }
 

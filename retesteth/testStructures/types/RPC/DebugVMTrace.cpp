@@ -71,7 +71,7 @@ VMLogRecord::VMLogRecord(DataObject const& _obj)
                 memory = spBYTES(new BYTES(DataObject("0x")));
             memSize = _obj.atKey("memSize").asInt();
             for (auto const& el : _obj.atKey("stack").getSubObjects())
-                stack.push_back(el->asString());
+                stack.emplace_back(el->asString());
             if (_obj.count("returnData"))
                 returnData = spBYTES(new BYTES(_obj.atKey("returnData")));
             else
@@ -115,7 +115,7 @@ DebugVMTrace::DebugVMTrace(
                 m_time = data->atKey("time").asInt();
             }
             else
-                m_log.push_back(VMLogRecord(data));
+                m_log.emplace_back(VMLogRecord(data));
         };
 
         if (Options::get().fillvmtrace)

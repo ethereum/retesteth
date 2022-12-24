@@ -59,8 +59,7 @@ std::vector<TransactionInGeneralSection> StateTestTransactionBase::buildTransact
                 if (!databox.m_accessList.isEmpty())
                     (*trData).atKeyPointer("accessList") = databox.m_accessList->asDataObject();
 
-                TransactionInGeneralSection const tr(dataobject::move(trData), dIND, gIND, vIND, databox.m_dataRawPreview, databox.m_dataLabel);
-                out.push_back(std::move(tr));
+                out.emplace_back(TransactionInGeneralSection(dataobject::move(trData), dIND, gIND, vIND, databox.m_dataRawPreview, databox.m_dataLabel));
             }
         }
     }

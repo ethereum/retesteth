@@ -20,7 +20,7 @@ public:
     void registerTestTransaction(spTransaction const& _tr) { m_block.getContent().addTransaction(_tr); }
 
     // Attach Transaction to transaction Execution Order section
-    void registerTransactionSequence(TransactBytesException const& _trTuple) { m_transactionExecOrder.push_back(_trTuple); }
+    void registerTransactionSequence(TransactBytesException const& _trTuple) { m_transactionExecOrder.emplace_back(_trTuple); }
     void nullTransactionSequence() { m_transactionExecOrder.clear(); }
 
     // Attach Uncle header to EthereumBlock (the one described in tests)

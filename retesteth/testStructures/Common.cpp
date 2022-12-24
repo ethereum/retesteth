@@ -80,7 +80,7 @@ void mod_removeComments(DataObject& _obj)
     for (auto& el : _obj.getSubObjectsUnsafe())
     {
         if (el->getKey()[0] == '/' && el->getKey()[1] == '/')
-            keysToRemove.push_back(el->getKey());
+            keysToRemove.emplace_back(el->getKey());
     }
     for (auto const& key : keysToRemove)
         _obj.removeKey(key);

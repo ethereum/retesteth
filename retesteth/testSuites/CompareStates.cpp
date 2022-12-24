@@ -52,7 +52,7 @@ spState getRemoteState(SessionInterface& _session)
         DebugAccountRange range(_session.debug_accountRange(recentBNumber, trIndex, nextKey, 10));
         for (auto const& el : range.addresses())
         {
-            accountList.push_back(el);
+            accountList.emplace_back(el);
             if (!Options::get().fullstate && accountList.size() > 50)
                 throw StateTooBig();
         }
@@ -170,7 +170,7 @@ CompareResult compareStorage(Storage const& _expectStorage, Storage const& _remo
         for (auto const& el : _remoteStorage.getKeys())
         {
             if (!_expectStorage.hasKey(VALUE(el.first)))
-                keys.push_back(el.first);
+                keys.emplace_back(el.first);
         }
         storage += "\n [" + keys.at(0) + "] = " + _remoteStorage.atKey(VALUE(keys.at(0))).asString();
 

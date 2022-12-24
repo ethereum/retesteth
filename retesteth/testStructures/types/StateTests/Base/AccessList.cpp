@@ -15,11 +15,11 @@ AccessListElement::AccessListElement(DataObject const& _data)
     {
         auto const elStr = el->asString();
         if (elStr.find("bigint") != string::npos)
-            m_storageKeys.push_back(spFH32(new FH32(el->asString())));
+            m_storageKeys.emplace_back(spFH32(new FH32(el->asString())));
         else
         {
             // TODO: This is a filler file convertion logic!!!
-            m_storageKeys.push_back(spFH32(new FH32(dev::toCompactHexPrefixed(dev::u256(elStr), 32))));
+            m_storageKeys.emplace_back(spFH32(new FH32(dev::toCompactHexPrefixed(dev::u256(elStr), 32))));
         }
     }
 }
@@ -27,7 +27,7 @@ AccessListElement::AccessListElement(DataObject const& _data)
 AccessList::AccessList(DataObject const& _data)
 {
     for (auto const& el : _data.getSubObjects())
-        m_list.push_back(spAccessListElement(new AccessListElement(el)));
+        m_list.emplace_back(spAccessListElement(new AccessListElement(el)));
 }
 
 spDataObject AccessList::asDataObject() const
@@ -68,13 +68,13 @@ AccessListElement::AccessListElement(dev::RLP const& _rlp)
     m_address = spFH20(new FH20(_rlp[i++]));
     auto const& rlplist = _rlp[i++].toList();
     for (auto const& key : rlplist)
-        m_storageKeys.push_back(spFH32(new FH32(key)));
+        m_storageKeys.emplace_back(spFH32(new FH32(key)));
 }
 
 AccessList::AccessList(dev::RLP const& _rlp)
 {
     for (auto const& accList : _rlp.toList())
-        m_list.push_back(spAccessListElement(new AccessListElement(accList)));
+        m_list.emplace_back(spAccessListElement(new AccessListElement(accList)));
 }
 
 }  // namespace teststruct

@@ -27,7 +27,7 @@ TestBlockchain::TestBlockchain(BlockchainTestFillerEnv const& _testEnv, State co
     TestBlock genesisBlock(latestBlock.getRLPHeaderTransactions(), "genesis", m_network, 0);
     genesisBlock.registerTestHeader(latestBlock.header());
     genesisBlock.setNextBlockForked(mineNextBlockAndRevert());
-    m_blocks.push_back(genesisBlock);
+    m_blocks.emplace_back(genesisBlock);
 }
 
 bool clientSupportWithdrawalsRPC()

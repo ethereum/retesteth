@@ -61,9 +61,9 @@ StateTestTransaction::StateTestTransaction(DataObject const& _data)
             for (auto const& el : _data.atKey("accessLists").getSubObjects())
             {
                 if (el->type() == DataType::Null)
-                    accessLists.push_back(spAccessList(0));
+                    accessLists.emplace_back(spAccessList(0));
                 else
-                    accessLists.push_back(spAccessList(new AccessList(el)));
+                    accessLists.emplace_back(spAccessList(new AccessList(el)));
             }
         }
 
@@ -72,26 +72,29 @@ StateTestTransaction::StateTestTransaction(DataObject const& _data)
             if (accessLists.size() != _data.atKey("data").getSubObjects().size())
                 ETH_ERROR_MESSAGE("`AccessLists` array length must match `data` array length!");
 
-        for (auto const& el : _data.atKey("data").getSubObjects())
+        string const c_data = "data";
+        m_databox.reserve(_data.atKey(c_data).getSubObjects().size());
+        for (auto const& el : _data.atKey(c_data).getSubObjects())
         {
             BYTES dataInKey = BYTES(el.getCContent());
             string const sDataPreview = el->asString().substr(0, 8);
             if (accessLists.size())
             {
                 if (accessLists.at(index).isEmpty())
-                    m_databox.push_back(Databox(dataInKey, string(), sDataPreview));
+                    m_databox.emplace_back(Databox(dataInKey, string(), sDataPreview));
                 else
-                    m_databox.push_back(Databox(dataInKey, string(), sDataPreview, accessLists.at(index)));
+                    m_databox.emplace_back(Databox(dataInKey, string(), sDataPreview, accessLists.at(index)));
             }
             else
-                m_databox.push_back(Databox(dataInKey, string(), sDataPreview));
+                m_databox.emplace_back(Databox(dataInKey, string(), sDataPreview));
 
             index++;
         }
+
         for (auto const& el : _data.atKey("gasLimit").getSubObjects())
-            m_gasLimit.push_back(el.getCContent());
+            m_gasLimit.emplace_back(el.getCContent());
         for (auto const& el : _data.atKey("value").getSubObjects())
-            m_value.push_back(el.getCContent());
+            m_value.emplace_back(el.getCContent());
     }
     catch (std::exception const& _ex)
     {

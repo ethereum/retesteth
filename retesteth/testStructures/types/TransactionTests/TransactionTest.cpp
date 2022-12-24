@@ -15,10 +15,11 @@ TransactionTest::TransactionTest(spDataObject& _data)
             TestOutputHelper::get().get().testFile().string() + " A test file must contain an object value (json/yaml).");
         ETH_ERROR_REQUIRE_MESSAGE(_data->getSubObjects().size() >= 1,
             TestOutputHelper::get().get().testFile().string() + " A test file must contain at least one test!");
+        m_tests.reserve(_data->getSubObjects().size());
         for (auto& el : _data.getContent().getSubObjectsUnsafe())
         {
             TestOutputHelper::get().setCurrentTestInfo(TestInfo("TransactionTestFiller", el->getKey()));
-            m_tests.push_back(TransactionTestInFilled(el));
+            m_tests.emplace_back(TransactionTestInFilled(el));
         }
     }
     catch (DataObjectException const& _ex)

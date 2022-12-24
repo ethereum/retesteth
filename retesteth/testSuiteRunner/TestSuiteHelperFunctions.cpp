@@ -78,7 +78,7 @@ void removeComments(spDataObject& _obj)
         {
             if (element->getKey().substr(0, 2) == "//")
             {
-                removeKeysList.push_back(element->getKey());
+                removeKeysList.emplace_back(element->getKey());
                 continue;
             }
             removeComments(element);

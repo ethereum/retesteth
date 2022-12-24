@@ -132,7 +132,7 @@ std::vector<ClientConfig> const& Options::DynamicOptions::getClientConfigs()
         ETH_DC_MESSAGE(DC::STATS, "Active client configurations: '" + clientNames + "'");
 
         for (auto const& clientName : cfgs)
-            m_clientConfigs.push_back(ClientConfig(homeDir / clientName));
+            m_clientConfigs.emplace_back(ClientConfig(homeDir / clientName));
     }
     return m_clientConfigs;
 }

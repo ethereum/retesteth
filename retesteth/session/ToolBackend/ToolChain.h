@@ -60,7 +60,7 @@ public:
     void rewindToBlock(size_t _number);
 
     // Used for chain reorg
-    void insertBlock(EthereumBlockState const& _block) { m_blocks.push_back(_block); }
+    void insertBlock(EthereumBlockState const& _block) { m_blocks.emplace_back(_block); }
     boost::filesystem::path const& tmpDir() const { return m_tmpDir; }
 
 private:

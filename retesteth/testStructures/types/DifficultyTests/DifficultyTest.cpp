@@ -18,7 +18,7 @@ DifficultyTest::DifficultyTest(spDataObject& _data)
         for (auto& el : _data.getContent().getSubObjectsUnsafe())
         {
             TestOutputHelper::get().setCurrentTestInfo(TestInfo("DifficultyTestFiller", el->getKey()));
-            m_tests.push_back(DifficultyTestInFilled(el));
+            m_tests.emplace_back(DifficultyTestInFilled(el));
         }
     }
     catch (DataObjectException const& _ex)
@@ -46,7 +46,7 @@ DifficultyTestInFilled::DifficultyTestInFilled(spDataObject& _data)
             TestVector a;
             string const& network = subObjects.at(i)->getKey();
             for (auto const& el : subObjects.at(i)->getSubObjects())
-                a.push_back(DifficultyTestVector(el));
+                a.emplace_back(DifficultyTestVector(el));
             m_testVectors.emplace(network, a);
         }
     }

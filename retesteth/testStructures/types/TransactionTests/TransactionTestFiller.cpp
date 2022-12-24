@@ -19,8 +19,7 @@ TransactionTestFiller::TransactionTestFiller(spDataObject& _data)
         for (auto& el : _data.getContent().getSubObjectsUnsafe())
         {
             TestOutputHelper::get().setCurrentTestInfo(TestInfo("TransactionTestFiller", el->getKey()));
-            TransactionTestInFiller const test(el);
-            m_tests.push_back(std::move(test));
+            m_tests.emplace_back(TransactionTestInFiller(el));
         }
     }
     catch (DataObjectException const& _ex)
@@ -50,10 +49,7 @@ TransactionTestInFiller::TransactionTestInFiller(spDataObject& _data)
             auto const& forkObjects = _data->atKey(c_additionalForks).getSubObjects();
             m_additionalForks.reserve(forkObjects.size());
             for (auto const& additionalFork : forkObjects)
-            {
-                FORK const fork(additionalFork);
-                m_additionalForks.push_back(std::move(fork));
-            }
+                m_additionalForks.emplace_back(FORK(additionalFork));
         }
 
         readExpectExceptions(_data->atKey("expectException"), m_expectExceptions);

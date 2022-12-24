@@ -62,7 +62,7 @@ std::vector<fs::path> checkIfThereAreUnfilledTests(
             {
                 if (!Options::get().filloutdated)
                     message += "\n " + string(filler.c_str());
-                notFilledTests.push_back(filler);
+                notFilledTests.emplace_back(filler);
             }
         }
         if (!Options::get().filloutdated)
@@ -84,14 +84,14 @@ bool fakeFilledTestsIfThereAreNone(
             string fillerName(filler.stem().c_str());
             string fillerSuffix = fillerName.substr(fillerName.size() - 6);
             if (fillerSuffix == c_fillerPostf || fillerSuffix == c_copierPostf)
-                _compiledTests.push_back(fillerName.substr(0, fillerName.size() - 6));
+                _compiledTests.emplace_back(fillerName.substr(0, fillerName.size() - 6));
         }
         return false;
     }
     else
     {
         // No tests generated and filter is set, check that filler for filter is exist
-        _compiledTests.push_back(fs::path(_testNameFilter));  // put the test name as if it was compiled.
+        _compiledTests.emplace_back(fs::path(_testNameFilter));  // put the test name as if it was compiled.
         return true;
     }
     return false;
@@ -148,7 +148,7 @@ std::vector<fs::path> TestSuite::checkFillerExistance(string const& _testFolder,
             if (!opt.filltests || opt.filloutdated)
             {
                 if (checkFillerHash(_test, _expectedFillerName))
-                    outdatedTests.push_back(_expectedFillerName);
+                    outdatedTests.emplace_back(_expectedFillerName);
             }
             if (!testNameFilter.empty())
             {

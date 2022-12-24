@@ -62,7 +62,7 @@ ToolChain::ToolChain(
     genesisFixed.headerUnsafe().getContent().setStateRoot(res.stateRoot());
     genesisFixed.headerUnsafe().getContent().recalculateHash();
     genesisFixed.setTotalDifficulty(genesisFixed.header()->difficulty());
-    m_blocks.push_back(genesisFixed);
+    m_blocks.emplace_back(genesisFixed);
 }
 
 spSetChainParamsArgs genT9NChainParams(FORK const& _net)
@@ -99,7 +99,7 @@ ToolChain::ToolChain(
 {
     // Calculate the difficutly of _currentBlock given _parentBlock
     ToolResponse res = mineBlockOnTool(_currentBlock, _parentBlock, SealEngine::NoReward);
-    m_blocks.push_back(_currentBlock);
+    m_blocks.emplace_back(_currentBlock);
     m_blocks.back().headerUnsafe().getContent().setDifficulty(res.currentDifficulty());
 }
 
@@ -141,7 +141,7 @@ spDataObject const ToolChain::mineBlock(EthereumBlockState const& _pendingBlock,
     calculateAndSetTotalDifficulty(pendingFixed);
 
     pendingFixed.setTrsTrace(res.debugTrace());
-    m_blocks.push_back(pendingFixed);
+    m_blocks.emplace_back(pendingFixed);
     return miningResult;
 }
 

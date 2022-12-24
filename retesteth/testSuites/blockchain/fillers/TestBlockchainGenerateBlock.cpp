@@ -54,7 +54,7 @@ void TestBlockchain::generateBlock(
         if (_generateUncles)
             newBlock.setNextBlockForked(mineNextBlockAndRevert());
 
-        m_blocks.push_back(newBlock);
+        m_blocks.emplace_back(newBlock);
     }
 }
 
@@ -68,7 +68,7 @@ void TestBlockchain::_generateBlock_RawBlock(BlockchainTestFillerBlock const& _b
     {
         TestBlock newBlock(_block.rawRLP(), m_chainName, m_network, m_blocks.size());
         newBlock.registerTestExceptios(_block.getExpectException(m_network));
-        m_blocks.push_back(newBlock);
+        m_blocks.emplace_back(newBlock);
     }
 }
 
@@ -92,7 +92,7 @@ void TestBlockchain::_generateBlock_RegisterInvalidBlock(BlockchainTestFillerBlo
     TestBlock newBlock(_rawRLP, _block.chainName(), newBlockNet, m_blocks.size());
     newBlock.registerTestExceptios(_block.getExpectException(m_network));
     newBlock.setDoNotExport(_block.isDoNotImportOnClient());
-    m_blocks.push_back(newBlock);
+    m_blocks.emplace_back(newBlock);
 }
 
 void TestBlockchain::_generateBlock_RegisterTestTransactions(BlockchainTestFillerBlock const& _block,

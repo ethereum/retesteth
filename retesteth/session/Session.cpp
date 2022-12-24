@@ -74,9 +74,9 @@ void RPCSession::runNewInstanceOfAClient(thread::id const& _threadID, ClientConf
 
         string command = "bash";
         std::vector<string> args;
-        args.push_back(_config.getShellPath().c_str());
-        args.push_back(tmpDir.string());
-        args.push_back(ipcPath);
+        args.emplace_back(_config.getShellPath().c_str());
+        args.emplace_back(tmpDir.string());
+        args.emplace_back(ipcPath);
 
         int pid = 0;
         test::popenOutput mode =
@@ -336,10 +336,8 @@ void RPCSession::clear()
     std::lock_guard<std::mutex> lock(g_socketMapMutex);
     std::vector<thread> closingThreads;
     for (auto& element : socketMap)
-    {
-        thread t(closeSession, element.first);
-        closingThreads.push_back(std::move(t));
-    }
+        closingThreads.emplace_back(thread(closeSession, element.first));
+
     for (auto& th : closingThreads)
         th.join();
 

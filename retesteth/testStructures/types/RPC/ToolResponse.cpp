@@ -36,13 +36,15 @@ ToolResponse::ToolResponse(DataObject const& _data)
     if (_data.count("withdrawalsRoot"))
         m_withdrawalsRoot = spFH32(new FH32(_data.atKey("withdrawalsRoot")));
 
-    for (auto const& el : _data.atKey("receipts").getSubObjects())
-        m_receipts.push_back(ToolResponseReceipt(el));
+    auto const& receipts = _data.atKey("receipts").getSubObjects();
+    m_receipts.reserve(receipts.size());
+    for (auto const& el : receipts)
+        m_receipts.emplace_back(ToolResponseReceipt(el));
 
     if (_data.count("rejected"))
     {
         for (auto const& el : _data.atKey("rejected").getSubObjects())
-            m_rejectedTransactions.push_back(ToolResponseRejected(el));
+            m_rejectedTransactions.emplace_back(ToolResponseRejected(el));
     }
 }
 

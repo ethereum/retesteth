@@ -75,9 +75,9 @@ vector<fs::path> getFiles(fs::path const& _dirPath, set<string> const _extention
     {
         if (!_particularFile.empty())
         {
-            fs::path file = _dirPath / (_particularFile + ext);
+            fs::path const file = _dirPath / (_particularFile + ext);
             if (fs::exists(file))
-                files.push_back(file);
+                files.emplace_back(file);
         }
         else
         {
@@ -87,7 +87,7 @@ vector<fs::path> getFiles(fs::path const& _dirPath, set<string> const _extention
                 for (fsIterator it(_dirPath); it != fsIterator(); ++it)
                 {
                     if (fs::is_regular_file(it->path()) && it->path().extension() == ext)
-                        files.push_back(it->path());
+                        files.emplace_back(it->path());
                 }
             }
         }
@@ -168,7 +168,7 @@ vector<string> levenshteinDistance(std::string const& _needle, std::vector<std::
     std::sort(distanceMap.begin(), distanceMap.end(),
         [](NameDistance const& _a, NameDistance const& _b) { return _a.second < _b.second; });
     for (size_t i = 0; i < _max && i < distanceMap.size(); i++)
-        ret.push_back(_sVec[distanceMap[i].first]);
+        ret.emplace_back(_sVec[distanceMap[i].first]);
     return ret;
 }
 
@@ -471,7 +471,7 @@ std::vector<std::string> explode(std::string const& s, char delim)
     std::vector<std::string> result;
     std::istringstream iss(s);
     for (std::string token; std::getline(iss, token, delim);)
-        result.push_back(std::move(token));
+        result.emplace_back(token);
     return result;
 }
 

@@ -68,17 +68,14 @@ BlockchainTestInFilled::BlockchainTestInFilled(spDataObject& _data)
         string const c_blocks = "blocks";
         m_blocks.reserve(_data->atKey(c_blocks).getSubObjects().size());
         for (auto& el : _data.getContent().atKeyUnsafe(c_blocks).getSubObjectsUnsafe())
-        {
-            BlockchainTestBlock const block(el);
-            m_blocks.push_back(std::move(block));
-        }
+            m_blocks.emplace_back(BlockchainTestBlock(el));
 
         m_lastBlockHash = spFH32(new FH32(_data->atKey("lastblockhash")));
 
         if (_data->count("exceptions"))
         {
             for (size_t i = _data->atKey("exceptions").getSubObjects().size(); i > 0; i--)
-                m_exceptions.push_back(_data->atKey("exceptions").getSubObjects().at(i - 1)->asString());
+                m_exceptions.emplace_back(_data->atKey("exceptions").getSubObjects().at(i - 1)->asString());
         }
     }
     catch (std::exception const& _ex)
@@ -100,8 +97,7 @@ BlockchainTest::BlockchainTest(spDataObject& _data)
         for (auto& el : (*_data).getSubObjectsUnsafe())
         {
             TestOutputHelper::get().setCurrentTestInfo(TestInfo("BlockchainTest", el->getKey()));
-            BlockchainTestInFilled const test(el);
-            m_tests.push_back(std::move(test));
+            m_tests.emplace_back(BlockchainTestInFilled(el));
         }
     }
     catch (DataObjectException const& _ex)

@@ -59,7 +59,7 @@ void TestBlockchainManager::parseBlockFromFiller(BlockchainTestFillerBlock const
 
     // Get this block exception on canon chain to later verify it
     FORK const& canonNet = getDefaultChain().getNetwork();
-    m_testBlockRLPs.push_back(std::make_tuple(lastBlock.getRawRLP(), _block.getExpectException(canonNet)));
+    m_testBlockRLPs.emplace_back(std::make_tuple(lastBlock.getRawRLP(), _block.getExpectException(canonNet)));
 }
 
 TestBlockchain& TestBlockchainManager::getDefaultChain()
@@ -121,7 +121,7 @@ vectorOfSchemeBlock TestBlockchainManager::prepareUncles(BlockchainTestFillerBlo
     vectorOfSchemeBlock preparedUncleBlocks;  // Prepared uncles for the current block
     // return block header using uncle overwrite section on uncles array from test
     for (auto const& uncle : _block.uncles())
-        preparedUncleBlocks.push_back(prepareUncle(uncle, preparedUncleBlocks));
+        preparedUncleBlocks.emplace_back(prepareUncle(uncle, preparedUncleBlocks));
     return preparedUncleBlocks;
 }
 

@@ -82,7 +82,7 @@ test_unit_id registerNewTestCase(
 
     string const fullCaseName = string(suiteName) + "/" + _caseName;
     ETH_DC_MESSAGEC(DC::STATS2, "Registering new test case: " + fullCaseName, LogColor::YELLOW);
-    allTestNames.push_back(fullCaseName);
+    allTestNames.emplace_back(fullCaseName);
 
     test_case* tcase = BOOST_TEST_CASE(boost::bind(&TestFixtureBase::execute, fixture.get()));
     tcase->p_name.value = _caseName;
@@ -100,7 +100,7 @@ void registerNewTestSuite(
     string const newSuiteName = _path.stem().string();
     string const fullSuiteName = string(suiteName) + "/" + newSuiteName;
     ETH_DC_MESSAGEC(DC::STATS2, "Registering new test suite: " + fullSuiteName, LogColor::YELLOW);
-    allTestNames.push_back(fullSuiteName);
+    allTestNames.emplace_back(fullSuiteName);
     test_suite* tsuite = BOOST_TEST_SUITE(newSuiteName);
 
     for (auto const& path : subFolders)
@@ -115,7 +115,7 @@ void registerNewTestSuite(
         fixToSuite.second = fullSuiteName;
         registerNewTestCase(allTestNames, fixToSuite, tsuite, casename);
 
-        g_dynamic_test_suite_fixtures.push_back(std::move(fixToSuite));
+        g_dynamic_test_suite_fixtures.emplace_back(std::move(fixToSuite));
     }
     _suite->add(tsuite);
 }
@@ -173,8 +173,7 @@ bool TestChecker::isTimeConsumingTest(std::string const& _testName)
 FixtureRegistrator::FixtureRegistrator(TestFixtureBase* _fixture, string&& _suiteName)
 {
     uPtrTestFixtureBase ptr(_fixture);
-    auto p = std::make_pair(std::move(ptr), std::move(_suiteName));
-    g_dynamic_test_search_fixtures.push_back(std::move(p));
+    g_dynamic_test_search_fixtures.push_back(std::make_pair(std::move(ptr), std::move(_suiteName)));
     delete this;
 }
 

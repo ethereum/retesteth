@@ -110,7 +110,7 @@ bool TestOutputHelper::markError(std::string const& _message)
 
     // Mark the error
     string const testDebugInfo = m_testInfo.errorDebug();
-    m_errors.push_back(_message + testDebugInfo);
+    m_errors.emplace_back(_message + testDebugInfo);
     if (testDebugInfo.empty())
         ETH_WARNING(TestOutputHelper::get().testName() + ", Message: " + _message +
                     ", has empty debugInfo! Missing debug Testinfo for test step.");
@@ -201,7 +201,7 @@ void TestOutputHelper::finishTest()
         res.second = TestInfo::caseName();
         std::cout << res.second + " time: " + fto_string(res.first) << "\n";
         std::lock_guard<std::mutex> lock(g_execTimeResults);
-        execTimeResults.push_back(res);
+        execTimeResults.emplace_back(res);
     }
     printBoostError();  // !! could delete instance of TestOutputHelper !!
 }
@@ -476,7 +476,7 @@ string TestInfo::makeTestCaseName() const
 void TestOutputHelper::addTestVector(std::string&& _str)
 {
     std::lock_guard<std::mutex> lock(g_outputVectors);
-    outputVectors.push_back(_str);
+    outputVectors.emplace_back(_str);
 }
 
 void TestOutputHelper::printTestVectors()
