@@ -117,6 +117,7 @@ string const t8ntool_config = R"({
       "TR_NonceHasMaxValue" : "nonce has max value:",
       "OVERSIZE_RLP" : "Error importing raw rlp block: OversizeRLP",
       "RLP_BadCast" : "BadCast",
+      "RLP_ExpectedAsList" : "expected to be list",
       "RLP_TooFewElements" : "rlp: too few elements ",
       "RLP_TooManyElements" : "rlp: input list has too many elements ",
       "RLP_InputContainsMoreThanOneValue" : "Error importing raw rlp block: OversizeRLP",

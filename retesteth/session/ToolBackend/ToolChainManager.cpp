@@ -148,6 +148,20 @@ FH32 ToolChainManager::importRawBlock(BYTES const& _rlp)
         // TODO verify withdrawals rlp signature and block size
         if (header->type() == BlockType::BlockHeaderShanghai)
         {
+            if (!rlp[3].isList())
+                throw dev::RLPException("Withdrawals RLP is expected to be list");
+            for (auto const& wt : rlp[3])
+            {
+                if (!wt.isList())
+                    throw dev::RLPException("Withdrawals RLP is expected to be list");
+
+                for (size_t i = 0; i < 4; i++)
+                {
+                    if (!wt[4].isData())
+                        throw dev::RLPException("Withdrawals RLP field is not data!");
+                }
+            }
+
             for (auto const& wtRLP : rlp[3].toList())
             {
                 spWithdrawal wt(new Withdrawal(wtRLP));
