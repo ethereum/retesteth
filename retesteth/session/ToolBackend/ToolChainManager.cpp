@@ -157,7 +157,7 @@ FH32 ToolChainManager::importRawBlock(BYTES const& _rlp)
 
                 for (size_t i = 0; i < 4; i++)
                 {
-                    if (!wt[4].isData())
+                    if (!wt[i].isData())
                         throw dev::RLPException("Withdrawals RLP field is not data!");
                 }
             }

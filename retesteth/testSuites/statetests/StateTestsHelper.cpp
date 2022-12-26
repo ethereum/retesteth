@@ -69,22 +69,4 @@ void checkUnexecutedTransactions(std::vector<TransactionInGeneralSection> const&
     }
 }
 
-bool hasSkipFork(std::set<FORK> const& _allforks)
-{
-    Options const& opt = Options::get();
-    auto const& skipforks = opt.getCurrentConfig().cfgFile().fillerSkipForks();
-    for (auto const& skipfork : skipforks)
-    {
-        if (_allforks.count(skipfork))
-        {
-            ETH_WARNING(string("Test has unsupported fork `") + skipfork.asString() +
-                        "` allowed to skip, skipping the test from filling!"
-                        + TestOutputHelper::get().testInfo().errorDebug());
-            return true;
-        }
-    }
-    return false;
-}
-
-
 }  // namespace test::statetests

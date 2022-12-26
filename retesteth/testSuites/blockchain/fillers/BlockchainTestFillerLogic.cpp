@@ -21,7 +21,11 @@ spDataObject FillTest(BlockchainTestInFiller const& _test, TestSuite::TestSuiteO
     BlockchainTestFillerRunner filler(_test);
     CHECKEXITR(result);
 
-    for (FORK const& net : _test.getAllForksFromExpectSections())
+    auto const allForks = _test.getAllForksFromExpectSections();
+    if (hasSkipFork(allForks))
+        return spDataObject(new DataObject(DataType::Null));
+
+    for (FORK const& net : allForks)
     {
         CHECKEXITR(result)
         if (filler.checkSinglenet(net))
