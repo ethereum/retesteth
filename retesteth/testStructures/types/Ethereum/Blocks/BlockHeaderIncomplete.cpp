@@ -30,6 +30,7 @@ BlockHeaderIncomplete::BlockHeaderIncomplete(DataObject const& _data)
             {"timestamp", {{DataType::String}, jsonField::Optional}},
             {"transactionsTrie", {{DataType::String}, jsonField::Optional}},
             {"remove", {{DataType::Array}, jsonField::Optional}},
+            {"forceNoWithdrawalsRLP", {{DataType::String}, jsonField::Optional}},
             {"uncleHash", {{DataType::String}, jsonField::Optional}}});
 
     string const akey = _data.count("author") ? "author" : "coinbase";

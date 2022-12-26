@@ -24,6 +24,7 @@ struct EthereumBlock : GCP_SPointerBase
     void recalculateUncleHash();
     BYTES const getRLP() const;
     void forceWithdrawalsRLP() { m_forceWithdrawalsRLP = true; }
+    void forceNoWithdrawalsRLP() { m_forceNoWithdrawalsRLP = true; }
 
     spBlockHeader const& header() const { return m_header; }
     spBlockHeader& headerUnsafe() { return m_header; }
@@ -40,6 +41,7 @@ protected:
     std::vector<spWithdrawal> m_withdrawals;
 protected:
     bool m_forceWithdrawalsRLP = false;
+    bool m_forceNoWithdrawalsRLP = false;
 };
 
 struct EthereumBlockState : EthereumBlock

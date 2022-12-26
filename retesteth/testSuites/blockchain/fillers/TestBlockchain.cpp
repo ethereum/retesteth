@@ -271,6 +271,10 @@ FH32 TestBlockchain::postmineBlockHeader(BlockchainTestFillerBlock const& _block
     if (_blockInTest.hasBlockHeaderOverwrite(m_network))
     {
         BlockHeaderOverwrite const& headerOverwrite = _blockInTest.getHeaderOverwrite(m_network);
+
+        if (headerOverwrite.forceNoWithdrawalsRLP())
+            managedBlock.forceNoWithdrawalsRLP();
+
         if (headerOverwrite.hasBlockHeader())
             managedBlock.replaceHeader(headerOverwrite.header().overwriteBlockHeader(managedBlock.header()));
 

@@ -18,6 +18,8 @@ BlockHeaderOverwrite::BlockHeaderOverwrite(DataObject const& _data)
         m_hasRelTimeStamp = true;
         m_relTimeStamp = hexOrDecStringToInt(_data.atKey("RelTimestamp").asString());
     }
+    if (_data.count("forceNoWithdrawalsRLP"))
+        m_forceNoWithdrawalsRLP = true;
 }
 
 }  // namespace teststruct
