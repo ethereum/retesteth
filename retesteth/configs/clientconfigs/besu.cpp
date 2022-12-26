@@ -40,6 +40,13 @@ string const besu_config = R"({
         "ArrowGlacier",
         "GrayGlacier"
     ],
+    "fillerSkipForks" : [
+        "Merge+3540+3670",
+        "Merge+3860",
+        "Merge+3855",
+        "MergeToShanghaiAt5",
+        "Shanghai"
+    ],
     "exceptions" : {
         "ExtraDataTooBig" : "extra-data too long",
         "InvalidDifficulty" : "invalid difficulty"
