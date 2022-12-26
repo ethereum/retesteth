@@ -45,13 +45,14 @@ ToolChain::ToolChain(
     auto const& forks = opt.cfgFile().forks();
     if (opt.cfgFile().support1559() && inArray(forks, m_fork.getCContent()))
     {
+        auto const genesisHeaderType = _genesis.header()->type();
         if (compareFork(m_fork, CMP::lt, FORK("London"))
-            && _genesis.header()->type() == BlockType::BlockHeader1559)
+            && genesisHeaderType == BlockType::BlockHeader1559)
             throw test::UpwardsException("Constructing 1559 genesis on network which is lower London!");
         if (compareFork(m_fork, CMP::ge, FORK("London"))
-            && _genesis.header()->type() != BlockType::BlockHeader1559
-            && _genesis.header()->type() != BlockType::BlockHeaderMerge
-            && _genesis.header()->type() != BlockType::BlockHeaderShanghai)
+            && genesisHeaderType != BlockType::BlockHeader1559
+            && genesisHeaderType != BlockType::BlockHeaderMerge
+            && genesisHeaderType != BlockType::BlockHeaderShanghai)
             throw test::UpwardsException("Constructing legacy genesis on network which is higher London!");
     }
 
@@ -116,14 +117,14 @@ spDataObject const ToolChain::mineBlock(EthereumBlockState const& _pendingBlock,
     // The tool can reject transactions changing the stateHash, TxRoot, TxReceipts, HeaderHash, GasUsed
     EthereumBlockState pendingFixed(_pendingBlock.header(), res.state(), res.logsHash());
 
-    BlockHeader& pendingFixedHeader = pendingFixed.headerUnsafe().getContent();
-    pendingFixedHeader.setNumber(m_blocks.size());
+    auto& pendingFixedHeader = pendingFixed.headerUnsafe();
+    pendingFixedHeader.getContent().setNumber(m_blocks.size());
 
     // Fetch hashes information from t8n tool response
-    correctHeaderByToolResponse(pendingFixedHeader, res);
-    setAndCheckDifficulty(res.currentDifficulty(), pendingFixed.headerUnsafe());
-    calculateAndCheckSetBaseFee(res.currentBasefee(), pendingFixed.headerUnsafe(), lastBlock().header());
-    setWithdrawalsRoot(res.withdrawalsRoot(), pendingFixed.headerUnsafe());
+    correctHeaderByToolResponse(pendingFixedHeader.getContent(), res);
+    setAndCheckDifficulty(res.currentDifficulty(), pendingFixedHeader);
+    calculateAndCheckSetBaseFee(res.currentBasefee(), pendingFixedHeader, lastBlock().header());
+    setWithdrawalsRoot(res.withdrawalsRoot(), pendingFixedHeader);
 
     spDataObject miningResult;
     miningResult = coorectTransactionsByToolResponse(res, pendingFixed, _pendingBlock, _req);
@@ -216,9 +217,10 @@ void ToolChain::setWithdrawalsRoot(FH32 const& _withdrawalsRoot, spBlockHeader& 
 
 void ToolChain::calculateAndCheckSetBaseFee(VALUE const& _toolBaseFee, spBlockHeader& _pendingHeader, spBlockHeader const& _parentHeader)
 {
-    bool const isOn1559 = _pendingHeader.getCContent().type() == BlockType::BlockHeader1559 && _parentHeader->type() == BlockType::BlockHeader1559;
-    bool const isOn1559ToMerge = _pendingHeader.getCContent().type() == BlockType::BlockHeaderMerge && _parentHeader->type() == BlockType::BlockHeader1559;
-    bool const isOnMerge = _pendingHeader.getCContent().type() == BlockType::BlockHeaderMerge && _parentHeader->type() == BlockType::BlockHeaderMerge;
+    auto const pendingHeaderType = _pendingHeader.getCContent().type();
+    bool const isOn1559 = pendingHeaderType == BlockType::BlockHeader1559 && _parentHeader->type() == BlockType::BlockHeader1559;
+    bool const isOn1559ToMerge = pendingHeaderType == BlockType::BlockHeaderMerge && _parentHeader->type() == BlockType::BlockHeader1559;
+    bool const isOnMerge = pendingHeaderType == BlockType::BlockHeaderMerge && _parentHeader->type() == BlockType::BlockHeaderMerge;
 
     // Calculate new baseFee
     if (isOn1559 || isOn1559ToMerge || isOnMerge)
