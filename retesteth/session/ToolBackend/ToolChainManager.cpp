@@ -55,6 +55,7 @@ void ToolChainManager::reorganizePendingBlock()
     BlockHeader& header = m_pendingBlock.getContent().headerUnsafe().getContent();
     header.setNumber(bl.header()->number() + 1);
     m_pendingBlock.getContent().setTotalDifficulty(currentChain().lastBlock().totalDifficulty());
+    m_pendingBlock.getContent().clear();
 
     // Because aleth and geth+retesteth does this, but better be empty extraData
     header.setExtraData(bl.header()->extraData());
@@ -62,8 +63,9 @@ void ToolChainManager::reorganizePendingBlock()
         header.setExtraData(BYTES(DataObject("0x64616f2d686172642d666f726b")));
     header.setParentHash(currentChain().lastBlock().header()->hash());
 
-    bool isParent1559 = currentChain().lastBlock().header()->type() == BlockType::BlockHeader1559;
-    bool isParentMerge = currentChain().lastBlock().header()->type() == BlockType::BlockHeaderMerge;
+    auto const lastBlockType = currentChain().lastBlock().header()->type();
+    bool isParent1559 = lastBlockType == BlockType::BlockHeader1559;
+    bool isParentMerge = lastBlockType == BlockType::BlockHeaderMerge;
     if (isParent1559 || isParentMerge)
     {
         BlockHeader1559& header1559 = BlockHeader1559::castFrom(header);
@@ -172,6 +174,7 @@ FH32 ToolChainManager::importRawBlock(BYTES const& _rlp)
     catch (std::exception const& _ex)
     {
         reorganizeChainForTotalDifficulty();
+        m_pendingBlock.getContent().clear();
         throw test::UpwardsException(string("Error importing raw rlp block: ") + _ex.what());
     }
 }

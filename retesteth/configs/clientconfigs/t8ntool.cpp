@@ -61,6 +61,7 @@ string const t8ntool_config = R"({
       "InvalidData" : "rlp: expected input string or byte for []uint8, decoding into (types.Transaction)(types.LegacyTx).Data",
       "InvalidDifficulty" : "Invalid difficulty:",
       "InvalidDifficulty2" : "Error in field: difficulty",
+      "InvalidWithdrawals" : "Error in field: withdrawalsRoot",
       "InvalidDifficulty_TooLarge" : "Blockheader parse error: VALUE  >u256",
       "InvalidGasLimit" : "Header gasLimit > 0x7fffffffffffffff",
       "InvalidGasLimit2" : "Invalid gaslimit:",

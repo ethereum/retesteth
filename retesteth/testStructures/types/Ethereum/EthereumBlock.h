@@ -29,6 +29,7 @@ struct EthereumBlock : GCP_SPointerBase
     spBlockHeader& headerUnsafe() { return m_header; }
     std::vector<spBlockHeader> const& uncles() const { return m_uncles; }
     std::vector<spTransaction> const& transactions() const { return m_transactions; }
+    void clear() { m_transactions.clear(); m_withdrawals.clear(); m_uncles.clear(); }
     std::vector<spWithdrawal> const& withdrawals() const { return m_withdrawals; }
 
 protected:
