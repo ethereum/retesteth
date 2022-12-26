@@ -37,12 +37,13 @@ string const t8ntool_config = R"({
         "BerlinToLondonAt5",
         "ArrowGlacier",
         "ArrowGlacierToMergeAtDiffC0000",
-        "GrayGlacier",
-        "MergeToShanghaiAt5"
+        "GrayGlacier"
     ],
     "fillerSkipForks" : [
         "Merge+3540+3670",
-        "Merge+3860"
+        "Merge+3860",
+        "MergeToShanghaiAt5",
+        "Shanghai"
     ],
     "exceptions" : {
       "AddressTooShort" : "input string too short for common.Address",
