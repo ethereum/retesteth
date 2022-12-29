@@ -28,7 +28,8 @@ string const besu_config = R"({
         "ConstantinopleFix",
         "Istanbul",
         "Berlin",
-        "London"
+        "London",
+        "Merge"
     ],
     "additionalForks" : [
         "FrontierToHomesteadAt5",

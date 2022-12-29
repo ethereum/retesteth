@@ -57,6 +57,8 @@ if [ "$1" = "besu" ] || [ -z "$1" ]; then
     echo "Build besu: "
     export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
     # export JAVA_HOME=/usr/lib/jvm/java-14-oracle
+    ./gradlew clean distZip -x test
+    ./gradlew clean
     ./gradlew build
     #./gradlew integrationTest
     ./gradlew installDist

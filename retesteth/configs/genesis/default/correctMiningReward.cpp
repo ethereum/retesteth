@@ -17,7 +17,8 @@ const string default_correctMiningReward_config = R"({
     "Berlin" :           "2000000000000000000",
     "London" :           "2000000000000000000",
     "ArrowGlacier" :     "2000000000000000000",
-    "GrayGlacier" :      "2000000000000000000"
+    "GrayGlacier" :      "2000000000000000000",
+    "Merge"  :           "0"
 })";
 
 const string t8ntool_correctMiningReward_config = R"({

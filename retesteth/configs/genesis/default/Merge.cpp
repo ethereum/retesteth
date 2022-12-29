@@ -16,6 +16,7 @@ const string default_Merge_config = R"({
        "berlinForkBlock" : "0x00",
        "londonForkBlock" : "0x00",
        "terminalTotalDifficulty" : "0x00",
+       "mergeNetSplitForkBlock" : "0x00",
        "chainID" : "0x01"
     },
     "accounts" : {
