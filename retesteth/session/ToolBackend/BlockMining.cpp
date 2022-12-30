@@ -119,7 +119,7 @@ void BlockMining::prepareAllocFile()
 
 void BlockMining::prepareTxnFile()
 {
-    bool exportRLP = true;
+    bool const exportRLP = !Options::getCurrentConfig().cfgFile().transactionsAsJson();
     string const txsfile = exportRLP ? "txs.rlp" : "txs.json";
     m_txsPath = m_chainRef.tmpDir() / txsfile;
 

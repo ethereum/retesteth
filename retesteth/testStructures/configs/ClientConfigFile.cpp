@@ -21,6 +21,7 @@ void requireJsonFileStructure(DataObject const& _data)
             {"customCompilers", {{DataType::Object}, jsonField::Optional}},
             {"initializeTime", {{DataType::String}, jsonField::Optional}},
             {"tmpDir", {{DataType::String}, jsonField::Optional}},
+            {"transactionsAsJson", {{DataType::Bool}, jsonField::Optional}},
             {"checkLogsHash", {{DataType::Bool}, jsonField::Optional}},
             {"checkDifficulty", {{DataType::Bool}, jsonField::Optional}},
             {"support1559", {{DataType::Bool}, jsonField::Optional}},
@@ -156,6 +157,9 @@ void ClientConfigFile::initWithData(DataObject const& _data)
     if (_data.count("support1559"))
         m_support1559 = _data.atKey("support1559").asBool();
 
+    m_transactionsAsJson = false;
+    if (_data.count("transactionsAsJson"))
+        m_transactionsAsJson = _data.atKey("transactionsAsJson").asBool();
 
     if (_data.count("tmpDir"))
     {
