@@ -175,8 +175,9 @@ void DebugVMTrace::printNice()
     size_t k = 0;
     size_t const step = 9;
     string const stepw = "          ";
+
     std::cout << cBYellowBlack << "N" << setw(15) << "OPNAME" << setw(10) << "GASCOST" << setw(10) << "TOTALGAS" << setw(10)
-              << "REMAINGAS" << setw(20) << "ERROR" << cDefault << std::endl;
+              << "REMAINGAS" << setw(10) << "STACK" << cDefault << std::endl;
     for (VMLogRecord const& el : m_log)
     {
         // Last record with error info
@@ -193,8 +194,24 @@ void DebugVMTrace::printNice()
                   << setw(15) << el.opName
                   << setw(10) << el.gasCost->asDecString()
                   << setw(10) << maxGas - el.gas->asBigInt()
-                  << setw(10) << el.gas->asDecString()
-                  << setw(20) << el.error << std::endl;
+                  << setw(10) << el.gas->asDecString();
+
+        const size_t c_stackPreviewSize = 10;
+        if (el.stack.size())
+            std::cout << setw(5) <<  el.stack.size() << ":[";
+        for (auto const& stackEl : el.stack)
+        {
+            if (stackEl.size() > c_stackPreviewSize)
+                std::cout << stackEl.substr(2, c_stackPreviewSize) << "...,";
+            else
+                std::cout << stackEl.substr(2) << ",";
+        }
+
+        if (el.stack.size())
+            std::cout << "]";
+        std::cout << std::endl;
+        if (el.error.size())
+            std::cout << "Detected error: " << el.error << std::endl;
 
         // Opcode highlight
         static vector<string> callopcodes = { "CALLCODE", "CALL", "DELEGATECALL" };
