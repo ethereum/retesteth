@@ -13,12 +13,12 @@ DataObject::DataObject() { m_type = DataType::NotInitialized; }
 DataObject::DataObject(DataType _type) { m_type = _type; }
 
 /// Define dataobject of string
-DataObject::DataObject(std::string&& _str) : m_strVal(_str) { m_type = DataType::String; }
+DataObject::DataObject(std::string&& _str) : m_strVal(std::move(_str)) { m_type = DataType::String; }
 DataObject::DataObject(std::string const& _str) : m_strVal(_str) { m_type = DataType::String; }
 
 /// Define dataobject[_key] = string
 DataObject::DataObject(std::string&& _key, std::string&& _str)
-  : m_strKey(_key), m_strVal(_str)
+  : m_strKey(std::move(_key)), m_strVal(std::move(_str))
 {
     m_type = DataType::String;
 }
@@ -29,7 +29,7 @@ DataObject::DataObject(std::string const& _key, std::string const& _str)
 }
 
 DataObject::DataObject(std::string&& _key, int _val)
- : m_strKey(_key), m_intVal(_val)
+  : m_strKey(std::move(_key)), m_intVal(_val)
 {
     m_type = DataType::Integer;
 }
@@ -52,7 +52,7 @@ DataObject::DataObject(DataType type, bool _bool)
 DataType DataObject::type() const { return m_type; }
 
 /// Set key of the dataobject
-void DataObject::setKey(std::string&& _key) { m_strKey = _key; }
+void DataObject::setKey(std::string&& _key) { m_strKey = std::move(_key); }
 void DataObject::setKey(std::string const& _key) { m_strKey = _key; }
 
 /// Get key of the dataobject
@@ -86,7 +86,7 @@ DataObject& DataObject::addSubObject(spDataObject const& _obj)
 /// Add new subobject and set it's key
 DataObject& DataObject::addSubObject(std::string&& _key, spDataObject const& _obj)
 {
-    return _addSubObject(_obj, std::move(_key));
+    return _addSubObject(_obj, std::forward<string&&>(_key));
 }
 DataObject& DataObject::addSubObject(std::string const& _key, spDataObject const& _obj)
 {
@@ -98,7 +98,7 @@ void DataObject::setSubObjectKey(size_t _index, std::string&& _key)
 {
     _assert(_index < m_subObjects.size(), "_index < m_subObjects.size() (DataObject::setSubObjectKey)");
     if (m_subObjects.size() > _index)
-        m_subObjects.at(_index).getContent().setKey(std::move(_key));
+        m_subObjects.at(_index).getContent().setKey(std::forward<string&&>(_key));
 }
 
 
@@ -279,7 +279,7 @@ void DataObject::renameKey(std::string const& _currentKey, std::string&& _newKey
     {
         spDataObject data = m_subObjectKeys.at(_currentKey);
         m_subObjectKeys.erase(_currentKey);
-        data.getContent().setKey(std::move(_newKey));
+        data.getContent().setKey(_newKey);
         m_subObjectKeys.emplace(_newKey, data);
     }
 
@@ -599,13 +599,13 @@ DataObject& DataObject::_addSubObject(spDataObject const& _obj, string&& _keyOve
         m_type = DataType::Object;
 
     size_t pos;
-    string const* key = _keyOverwrite.empty() ? &_obj->getKey() : &_keyOverwrite;
-    if (key->empty() || !m_autosort)
+    string const key = _keyOverwrite.empty() ? _obj->getKey() : _keyOverwrite;
+    if (key.empty() || !m_autosort)
     {
         m_subObjects.push_back(_obj);
         pos = m_subObjects.size() - 1;
         if (!_keyOverwrite.empty())
-            setSubObjectKey(pos, std::move(_keyOverwrite));
+            setSubObjectKey(pos, std::forward<string&&>(_keyOverwrite));
         else
             setSubObjectKey(pos, string(_obj->getKey()));
         m_subObjects.at(pos).getContent().setOverwrite(m_allowOverwrite);
@@ -615,7 +615,7 @@ DataObject& DataObject::_addSubObject(spDataObject const& _obj, string&& _keyOve
     {
         // find ordered position to insert key
         // better use it only when export as ordered json !!!
-        pos = findOrderedKeyPosition(*key, m_subObjects);
+        pos = findOrderedKeyPosition(key, m_subObjects);
         if (pos == m_subObjects.size())
             m_subObjects.push_back(_obj);
         else
@@ -626,14 +626,14 @@ DataObject& DataObject::_addSubObject(spDataObject const& _obj, string&& _keyOve
         }
 
         if (!_keyOverwrite.empty())
-            m_subObjects.at(pos).getContent().setKey(std::move(_keyOverwrite));
+            m_subObjects.at(pos).getContent().setKey(std::forward<string&&>(_keyOverwrite));
         else
             m_subObjects.at(pos).getContent().setKey(string(_obj->getKey()));
         m_subObjects.at(pos).getContent().setOverwrite(true);
         m_subObjects.at(pos).getContent().setAutosort(m_autosort);
     }
-    if (!key->empty())
-        m_subObjectKeys.emplace(*key, m_subObjects.at(pos));
+    if (!key.empty())
+        m_subObjectKeys.emplace(key, m_subObjects.at(pos));
     return m_subObjects.at(pos).getContent();
 }
 
@@ -656,7 +656,7 @@ void DataObject::setString(string&& _value)
     _assert(m_type == DataType::String || m_type == DataType::NotInitialized,
         "In DataObject=(string) DataObject must be string or NotInitialized!");
     m_type = DataType::String;
-    m_strVal = _value;
+    m_strVal = std::move(_value);
 }
 
 void DataObject::setInt(int _value)
@@ -846,7 +846,7 @@ DataObject& DataObject::operator[](std::string&& _key)
         return m_subObjectKeys.at(_key).getContent();
 
     spDataObject newObj(new DataObject(DataType::NotInitialized));
-    newObj.getContent().setKey(std::move(_key));
+    newObj.getContent().setKey(std::forward<string&&>(_key));
     return _addSubObject(newObj);  // !could change the item order!
 }
 
@@ -855,7 +855,7 @@ DataObject& DataObject::operator=(std::string&& _value)
     _assert(m_type == DataType::String || m_type == DataType::NotInitialized,
         "In DataObject=(string) DataObject must be string or NotInitialized!");
     m_type = DataType::String;
-    m_strVal = _value;
+    m_strVal = std::move(_value);
     return *this;
 }
 
