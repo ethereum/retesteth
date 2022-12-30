@@ -224,6 +224,7 @@ string const t8ntool_config = R"({
       "TR_TypeNotSupported" : "transaction type not supported",
       "TR_TipGtFeeCap": "max priority fee per gas higher than max fee per gas",
       "TR_TooShort": "typed transaction too short",
+      "TR_InitCodeLimitExceeded" : "max initcode size exceeded",
       "1559BaseFeeTooLarge": "TransactionBaseFee convertion error: VALUE  >u256",
       "1559PriorityFeeGreaterThanBaseFee": "maxFeePerGas \u003c maxPriorityFeePerGas",
       "2930AccessListAddressTooLong": "rlp: input string too long for common.Address, decoding into (types.Transaction)(types.AccessListTx).AccessList[0].Address",
@@ -235,7 +236,8 @@ string const t8ntool_config = R"({
       "2930AccessListStorageHashTooLong": "rlp: input string too long for common.Hash, decoding into (types.Transaction)(types.AccessListTx).AccessList[0].StorageKeys[0]",
       "3675PoWBlockRejected" : "Invalid block1559: Chain switched to PoS!",
       "3675PoSBlockRejected" : "Parent (transition) block has not reached TTD",
-      "3675PreMerge1559BlockRejected" : "Trying to import 1559 block on top of PoS block"
+      "3675PreMerge1559BlockRejected" : "Trying to import 1559 block on top of PoS block",
+      "WT_ERROR" : "Withdrawals"
     }
 })";
 
