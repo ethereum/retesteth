@@ -348,4 +348,27 @@ void verifyEthereumBlockHeader(spBlockHeader const& _header, ToolChain const& _c
     }
 }
 
+void verifyWithdrawalsRLP(dev::RLP const& _rlp)
+{
+    if (!_rlp.isList())
+        throw dev::RLPException("Withdrawals RLP is expected to be list");
+    for (auto const& wt : _rlp)
+    {
+        if (!wt.isList())
+            throw dev::RLPException("Withdrawals RLP is expected to be list");
+
+        for (size_t i = 0; i < 4; i++)
+        {
+            if (!wt[i].isData())
+                throw dev::RLPException("Withdrawals RLP field is not data!");
+        }
+    }
+}
+
+void verifyWithdrawalRecord(spWithdrawal const& _wtRecord)
+{
+    if (_wtRecord->index.getCContent() >= POW2_64)
+        throw test::UpwardsException("Withdrawals Index >= 2**64");
+}
+
 }  // namespace toolimpl

@@ -37,7 +37,7 @@ bool clientSupportWithdrawalsRPC()
 
 void TestBlockchain::_mineBlock_importWithdrawals(BlockchainTestFillerBlock const& _blockInTest)
 {
-    if (clientSupportWithdrawalsRPC())
+    if (clientSupportWithdrawalsRPC() && !_blockInTest.hasBlockHeaderOverwrite(m_network))
     {
         if (_blockInTest.withdrawals().size() > 0)
         {
