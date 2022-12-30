@@ -19,6 +19,7 @@
  * @date 2014
  */
 
+#ifdef CRYPTOPP
 #include <libdevcore/Guards.h>  // <boost/thread> conflicts with <thread>
 #include "CryptoPP.h"
 #include <cryptopp/eccrypto.h>
@@ -249,3 +250,5 @@ void Secp256k1PP::decrypt(Secret const& _k, bytes& io_text)
 	io_text.resize(r.messageLength);
 	io_text = std::move(plain);
 }
+
+#endif

@@ -74,6 +74,7 @@ Address toAddress(Secret const& _secret);
 // Convert transaction from and nonce to address.
 Address toAddress(Address const& _from, u256 const& _nonce);
 
+#ifdef RCRYPTOPP
 /// Encrypts plain text using Public key.
 void encrypt(Public const& _k, bytesConstRef _plain, bytes& o_cipher);
 
@@ -100,9 +101,6 @@ bool decryptECIES(Secret const& _k, bytesConstRef _cipher, bytes& o_plaintext);
 /// @a _sharedMacData is shared authenticated data.
 bool decryptECIES(Secret const& _k, bytesConstRef _sharedMacData, bytesConstRef _cipher, bytes& o_plaintext);
 
-/// Encrypts payload with random IV/ctr using AES128-CTR.
-std::pair<bytes, h128> encryptSymNoAuth(SecureFixedHash<16> const& _k, bytesConstRef _plain);
-
 /// Encrypts payload with specified IV/ctr using AES128-CTR.
 bytes encryptAES128CTR(bytesConstRef _k, h128 const& _iv, bytesConstRef _plain);
 
@@ -116,6 +114,11 @@ inline bytes encryptSymNoAuth(SecureFixedHash<32> const& _k, h128 const& _iv, by
 /// Decrypts payload with specified IV/ctr using AES128-CTR.
 inline bytesSec decryptSymNoAuth(SecureFixedHash<16> const& _k, h128 const& _iv, bytesConstRef _cipher) { return decryptAES128CTR(_k.ref(), _iv, _cipher); }
 inline bytesSec decryptSymNoAuth(SecureFixedHash<32> const& _k, h128 const& _iv, bytesConstRef _cipher) { return decryptAES128CTR(_k.ref(), _iv, _cipher); }
+
+#endif
+
+/// Encrypts payload with random IV/ctr using AES128-CTR.
+std::pair<bytes, h128> encryptSymNoAuth(SecureFixedHash<16> const& _k, bytesConstRef _plain);
 
 /// Recovers Public key from signed message hash.
 Public recover(Signature const& _sig, h256 const& _hash);
@@ -144,10 +147,12 @@ public:
 	KeyPair(Secret const& _sec);
 
 	/// Create a new, randomly generated object.
-	static KeyPair create();
+    static KeyPair create();
 
+    #ifdef RCRYPTOPP
 	/// Create from an encrypted seed.
-	static KeyPair fromEncryptedSeed(bytesConstRef _seed, std::string const& _password);
+    static KeyPair fromEncryptedSeed(bytesConstRef _seed, std::string const& _password);
+    #endif
 
 	Secret const& secret() const { return m_secret; }
 

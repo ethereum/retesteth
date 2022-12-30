@@ -21,6 +21,8 @@
  * CryptoPP headers and primitive helper methods
  */
 
+#ifdef CRYPTOPP
+
 #pragma once
 
 #include "Common.h"
@@ -36,6 +38,7 @@ static const unsigned c_eciesOverhead = 113;
  * CryptoPP secp256k1 algorithms.
  * @todo Collect ECIES methods into class.
  */
+
 class Secp256k1PP
 {	
 public:
@@ -66,3 +69,4 @@ private:
 }
 }
 
+#endif

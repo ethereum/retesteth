@@ -19,6 +19,7 @@
  * @date 2014
  */
 
+#ifdef CRYPTOPP
 #include "AES.h"
 #include <cryptopp/aes.h>
 #include <cryptopp/filters.h>
@@ -58,3 +59,4 @@ bytes dev::aesDecrypt(bytesConstRef _ivCipher, std::string const& _password, uns
 		return bytes();
 	}
 }
+#endif
