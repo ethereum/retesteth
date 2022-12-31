@@ -49,10 +49,10 @@ const RLPStream Withdrawal::asRLPStream() const
 {
     RLPStream rlp;
     rlp.appendList(4);
-    rlp << index->asBigInt();
-    rlp << validatorIndex->asBigInt();
-    rlp << Address(address->asString());
-    rlp << amount->asBigInt();
+    rlp << index->serializeRLP();
+    rlp << validatorIndex->serializeRLP();
+    rlp << address->serializeRLP();
+    rlp << amount->serializeRLP();
     return rlp;
 }
 
