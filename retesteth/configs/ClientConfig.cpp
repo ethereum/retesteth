@@ -307,7 +307,8 @@ void ClientConfig::initializeFirstSetup()
         if (fs::exists(getSetupScript()))
         {
             auto cmd = [](string const& _cmd) {
-                test::executeCmd(_cmd, ExecCMDWarning::NoWarning);
+                int exitCode;
+                test::executeCmd(_cmd, exitCode, ExecCMDWarning::NoWarning);
             };
             string const setup = getSetupScript().c_str();
             ETH_DC_MESSAGE(DC::RPC, string("Initialize setup script: ") + setup);

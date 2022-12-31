@@ -38,6 +38,7 @@ private:
     std::string m_txsPathContent;
     boost::filesystem::path m_outPath;
     boost::filesystem::path m_outAllocPath;
+    boost::filesystem::path m_outErrorPath;
     void traceTransactions(ToolResponse& _toolResponse);
 };
 }  // namespace toolimpl

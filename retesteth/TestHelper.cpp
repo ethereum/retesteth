@@ -311,8 +311,9 @@ string prepareLLLCVersionString()
         return lllcVersion;
     if (test::checkCmdExist("lllc"))
     {
+        int exitCode;
         string const cmd = "lllc --version";
-        string const result = test::executeCmd(cmd);
+        string const result = test::executeCmd(cmd, exitCode);
         string::size_type const pos = result.rfind("Version");
         if (pos != string::npos)
         {
@@ -335,8 +336,9 @@ string prepareSolidityVersionString()
 
     if (test::checkCmdExist("solc"))
     {
+        int exitCode;
         string const cmd = "solc --version";
-        string const result = test::executeCmd(cmd);
+        string const result = test::executeCmd(cmd, exitCode);
         string const cVersion  = "Version";
         string::size_type const pos = result.rfind(cVersion);
         if (pos != string::npos)
@@ -424,7 +426,7 @@ bool checkCmdExist(std::string const& _command)
 }
 
 mutex g_popenmutex;
-string executeCmd(string const& _command, ExecCMDWarning _warningOnEmpty)
+string executeCmd(string const& _command, int& _exitCode, ExecCMDWarning _warningOnEmpty)
 {
 #if defined(_WIN32)
     BOOST_ERROR("executeCmd() has not been implemented for Windows.");
@@ -458,9 +460,15 @@ string executeCmd(string const& _command, ExecCMDWarning _warningOnEmpty)
         }
     }
 
-    int exitCode = pclose(fp);
-    if (exitCode != 0 && _warningOnEmpty != ExecCMDWarning::NoWarningNoError)
-        ETH_ERROR_MESSAGE("The command '" + _command + "' exited with " + toString(exitCode) + " code.");
+    _exitCode = pclose(fp);
+    if (_exitCode != 0 )
+    {
+        string const msg = "The command '" + _command + "' exited with " + toString(_exitCode) + " code.";
+        if (_warningOnEmpty != ExecCMDWarning::NoWarningNoError)
+            ETH_ERROR_MESSAGE(msg);
+        else
+            return msg;
+    }
     return boost::trim_copy(out);
 #endif
 }

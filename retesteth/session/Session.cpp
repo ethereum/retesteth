@@ -225,7 +225,8 @@ void RPCSession::restartScripts(bool _stop)
         size_t const threads = Options::get().threadCount;
         string const start = curCFG.getStartScript().c_str();
         auto cmd = [](string const& _cmd, string const& _args) {
-            test::executeCmd(_cmd + " " + _args, ExecCMDWarning::NoWarning);
+            int exitCode;
+            test::executeCmd(_cmd + " " + _args, exitCode, ExecCMDWarning::NoWarning);
         };
         switch (curCFG.cfgFile().socketType())
         {
@@ -350,7 +351,8 @@ void RPCSession::clear()
         ClientConfig const& curCFG = Options::getDynamicOptions().getCurrentConfig();
         if (!curCFG.getStopperScript().empty() && Options::get().nodesoverride.size() == 0)
         {
-            executeCmd(curCFG.getStopperScript().c_str(), ExecCMDWarning::NoWarningNoError);
+            int exitCode;
+            executeCmd(curCFG.getStopperScript().c_str(), exitCode, ExecCMDWarning::NoWarningNoError);
             ETH_DC_MESSAGE(DC::RPC, curCFG.getStopperScript().c_str());
             if (!ExitHandler::receivedExitSignal())
             {

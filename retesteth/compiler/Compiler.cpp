@@ -23,7 +23,8 @@ string compileLLL(string const& _code)
     writeFile(path.string(), _code);
     try
     {
-        string result = executeCmd(cmd);
+        int exitCode;
+        string result = executeCmd(cmd, exitCode);
         fs::remove_all(path);
         result = "0x" + result;
         test::compiler::utiles::checkHexHasEvenLength(result);
@@ -55,7 +56,8 @@ bool tryCustomCompiler(string const& _code, string& _compiledCode)
                 string cmd = compiler.second.string() + " " + path.string();
                 writeFile(path.string(), customCode);
 
-                _compiledCode = test::executeCmd(cmd);
+                int exitCode;
+                _compiledCode = test::executeCmd(cmd, exitCode);
                 utiles::checkHexHasEvenLength(_compiledCode);
                 return true;
             }

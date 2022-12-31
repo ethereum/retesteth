@@ -46,7 +46,8 @@ spDataObject ToolImpl::web3_clientVersion()
     ETH_DC_MESSAGE(DC::RPC, "\nRequest: web3_clientVersion");
     string const cmd = m_toolPath.string() + " -v";
     TRYCATCHCALL(
-                spDataObject res(new DataObject(test::executeCmd(cmd)));
+                int exitCode;
+                spDataObject res(new DataObject(test::executeCmd(cmd, exitCode)));
                 ETH_DC_MESSAGE(DC::RPC, "Response: web3_clientVersion " + res->asString());
                 return res;
                 , "web3_clientVersion", CallType::FAILEVERYTHING)
@@ -265,6 +266,8 @@ MineBlocksResult ToolImpl::test_mineBlocks(size_t _number)
         spDataObject const res = blockchain().mineBlocks(_number);
         ETH_DC_MESSAGE(DC::RPC, "Response test_mineBlocks {" + blockchain().lastBlock().header()->number().asDecString() + "}");
         ETH_DC_MESSAGE(DC::RPC, res->asJson());
+        // test_mineBlocks assumed not to fail ever to be able to construct test block RLP
+        // for invalid block generation test_importRawBlock is used which takes malicious RLP
         return MineBlocksResult(res);
             , "test_mineBlocks", CallType::FAILEVERYTHING)
     return MineBlocksResult(DataObject());

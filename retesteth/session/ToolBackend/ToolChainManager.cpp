@@ -152,7 +152,6 @@ FH32 ToolChainManager::importRawBlock(BYTES const& _rlp)
             for (auto const& wtRLP : rlp[3].toList())
             {
                 spWithdrawal wt(new Withdrawal(wtRLP));
-                verifyWithdrawalRecord(wt);
                 m_pendingBlock.getContent().addWithdrawal(wt);
             }
         }
@@ -272,7 +271,8 @@ TestRawTransaction ToolChainManager::test_rawTransaction(
     cmd += " --state.fork " + _fork.asString();
     cmd += " 2>&1";
     ETH_DC_MESSAGE(DC::RPC, cmd);
-    string response = test::executeCmd(cmd, ExecCMDWarning::NoWarningNoError);
+    int exitCode;
+    string response = test::executeCmd(cmd, exitCode, ExecCMDWarning::NoWarningNoError);
 
 
     ETH_DC_MESSAGE(DC::RPC, "T9N Response:\n" + response);

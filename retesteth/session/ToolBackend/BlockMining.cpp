@@ -154,6 +154,7 @@ void BlockMining::executeTransition()
 {
     m_outPath = m_chainRef.tmpDir() / "out.json";
     m_outAllocPath = m_chainRef.tmpDir() / "outAlloc.json";
+    m_outErrorPath = m_chainRef.tmpDir() / "error.json";
 
     string cmd = m_chainRef.toolPath().string();
 
@@ -178,6 +179,7 @@ void BlockMining::executeTransition()
     cmd += " --output.basedir " + m_chainRef.tmpDir().string();
     cmd += " --output.result " + m_outPath.filename().string();
     cmd += " --output.alloc " + m_outAllocPath.filename().string();
+    cmd += " --output.errorlog " + m_outErrorPath.string();
 
     bool traceCondition = Options::get().vmtrace && m_currentBlockRef.header()->number() != 0;
     if (traceCondition)
@@ -200,7 +202,14 @@ void BlockMining::executeTransition()
     }
     ETH_DC_MESSAGE(DC::RPC, "Env:\n" + m_envPathContent);
 
-    string out = test::executeCmd(cmd, ExecCMDWarning::NoWarning);
+    int exitcode;
+    string out = test::executeCmd(cmd, exitcode, ExecCMDWarning::NoWarningNoError);
+    if (exitcode != 0)
+    {
+        string const outErrorContent = dev::contentsString(m_outErrorPath.string());
+        throw test::UpwardsException(outErrorContent);
+    }
+
     ETH_DC_MESSAGE(DC::RPC, cmd);
     ETH_DC_MESSAGE(DC::RPC, out);
 }
@@ -253,6 +262,7 @@ BlockMining::~BlockMining()
 {
     fs::remove(m_envPath);
     fs::remove(m_allocPath);
+    fs::remove(m_outErrorPath);
     fs::remove(m_txsPath);
     fs::remove(m_outPath);
     fs::remove(m_outAllocPath);
