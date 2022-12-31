@@ -207,6 +207,7 @@ void BlockMining::executeTransition()
     if (exitcode != 0)
     {
         string const outErrorContent = dev::contentsString(m_outErrorPath.string());
+        ETH_DC_MESSAGE(DC::RPC, "Err:\n" + outErrorContent);
         throw test::UpwardsException(outErrorContent);
     }
 
