@@ -54,7 +54,7 @@ void TestBlockchain::_mineBlock_importWithdrawals(BlockchainTestFillerBlock cons
 GCP_SPointer<EthGetBlockBy> TestBlockchain::mineBlock(
     BlockchainTestFillerBlock const& _blockInTest, vectorOfSchemeBlock const& _preparedUncleBlocks, BYTES& _rawRLP, bool _isTest)
 {
-    ETH_DC_MESSAGEC(DC::TESTLOG, "MINE BLOCK: " + m_sDebugString, LogColor::YELLOW);
+    ETH_DC_MESSAGEC(DC::RPC, "MINE BLOCK: " + m_sDebugString, LogColor::YELLOW);
 
     _mineBlock_importWithdrawals(_blockInTest);
     MineBlocksResult const miningRes = m_session.test_mineBlocks(1);
@@ -148,7 +148,7 @@ GCP_SPointer<EthGetBlockBy> TestBlockchain::mineBlock(
 // Ask remote client to generate a blockheader that will later used for uncles
 spBlockHeader TestBlockchain::mineNextBlockAndRevert()
 {
-    ETH_DC_MESSAGEC(DC::TESTLOG, "Mine uncle block (next block) and revert: " + m_sDebugString, LogColor::YELLOW);
+    ETH_DC_MESSAGEC(DC::RPC, "Mine uncle block (next block) and revert: " + m_sDebugString, LogColor::YELLOW);
     {
         VALUE latestBlockNumber(m_session.eth_blockNumber());
         EthGetBlockBy const latestBlock(m_session.eth_getBlockByNumber(latestBlockNumber, Request::LESSOBJECTS));
@@ -177,7 +177,7 @@ string TestBlockchain::prepareDebugInfoString(string const& _newBlockChainName)
     if (test::debug::Debug::get().flag(DC::TESTLOG))
         sBlockNumber = fto_string(newBlockNumber);  // very heavy
     m_sDebugString = "(bl: " + sBlockNumber + ", ch: " + _newBlockChainName + ", net: " + m_network.asString() + ")";
-    ETH_DC_MESSAGEC(DC::TESTLOG, "Generating a test block: " + m_sDebugString, LogColor::YELLOW);
+    ETH_DC_MESSAGEC(DC::RPC, "Generating a test block: " + m_sDebugString, LogColor::YELLOW);
     return m_sDebugString;
 }
 

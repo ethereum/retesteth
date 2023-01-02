@@ -76,7 +76,7 @@ void TestBlockchain::_generateBlock_ImportTransactionsOnRemoteClient(BlockchainT
     vectorOfSchemeBlock const& _uncles)
 {
     // Import known transactions to remote client
-    ETH_DC_MESSAGEC(DC::TESTLOG, "Import transactions: " + m_sDebugString, LogColor::YELLOW);
+    ETH_DC_MESSAGEC(DC::RPC, "Import transactions: " + m_sDebugString, LogColor::YELLOW);
     _tryIntermidiatePostState(_block, _uncles);
     for (auto const& tr : _block.transactions())
     {

@@ -360,7 +360,7 @@ void verifyWithdrawalsRLP(dev::RLP const& _rlp)
         for (size_t i = 0; i < 4; i++)
         {
             if (!wt[i].isData())
-                throw dev::RLPException("Withdrawals RLP field is not data!");
+                throw dev::RLPException("Rlp structure is wrong: Withdrawals RLP field is not data!");
         }
     }
 }

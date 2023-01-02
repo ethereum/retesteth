@@ -46,7 +46,7 @@ spDataObject BlockchainTestFillerRunner::makeNewBCTestForNet(FORK const& _net)
 
 TestBlockchainManager BlockchainTestFillerRunner::makeTestChainManager(teststruct::FORK const& _net)
 {
-    ETH_DC_MESSAGEC(DC::TESTLOG, "FILL GENESIS INFO: ", LogColor::LIME);
+    ETH_DC_MESSAGEC(DC::RPC, "FILL GENESIS INFO: ", LogColor::LIME);
     return TestBlockchainManager(m_test.Env(), m_test.Pre(), m_test.sealEngine(), _net);
 }
 

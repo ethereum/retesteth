@@ -238,7 +238,8 @@ string const t8ntool_config = R"({
       "3675PoSBlockRejected" : "Parent (transition) block has not reached TTD",
       "3675PreMerge1559BlockRejected" : "Trying to import 1559 block on top of PoS block",
       "INPUT_UNMARSHAL_ERROR" : "cannot unmarshal hex",
-      "INPUT_UNMARSHAL_SIZE_ERROR" : "failed unmarshaling"
+      "INPUT_UNMARSHAL_SIZE_ERROR" : "failed unmarshaling",
+      "RLP_BODY_UNMARSHAL_ERROR" : "Rlp structure is wrong"
     }
 })";
 

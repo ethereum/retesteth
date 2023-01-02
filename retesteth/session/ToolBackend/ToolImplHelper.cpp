@@ -35,34 +35,39 @@ spDataObject constructAccountRange(EthereumBlockState const& _block, FH32 const&
     return constructResponse;
 }
 
-spDataObject constructEthGetBlockBy(EthereumBlockState const& _block)
+spDataObject constructEthGetBlockBy(EthereumBlockState const& _block, test::session::Request _request)
 {
+    // Imitate eth_getBlockBy...  rpc response
     spDataObject constructResponse = _block.header()->asDataObject();
 
     spDataObject transactionArray(new DataObject(DataType::Array));
     (*constructResponse).atKeyPointer("transactions") = transactionArray;
-    for (auto const& tr : _block.transactions())
-    {
-        spDataObject fullTransaction = tr->asDataObject();
-        (*fullTransaction)["blockHash"] = _block.header()->hash().asString();  // We don't know the hash its in tool response
-        (*fullTransaction)["blockNumber"] = _block.header()->number().asString();
-        (*fullTransaction)["from"] = FH20::zero().asString();  // Can be recovered from vrs
-        (*fullTransaction)["transactionIndex"] = "0x00";       // Its in tool response
-        (*fullTransaction)["hash"] = tr->hash().asString();
-        (*constructResponse)["transactions"].addArrayObject(fullTransaction);
-    }
-
     spDataObject arr(new DataObject(DataType::Array));
     (*constructResponse).atKeyPointer("uncles") = arr;
-    for (auto const& un : _block.uncles())
-    {
-        spDataObject unHash(new DataObject(un->hash().asString()));
-        (*constructResponse)["uncles"].addArrayObject(unHash);
-    }
 
-    for (auto const& wt : _block.withdrawals())
+    if (_request == test::session::Request::FULLOBJECTS)
     {
-        (*constructResponse)["withdrawals"].addArrayObject(wt->asDataObject());
+        for (auto const& tr : _block.transactions())
+        {
+            spDataObject fullTransaction = tr->asDataObject();
+            (*fullTransaction)["blockHash"] = _block.header()->hash().asString();  // We don't know the hash its in tool response
+            (*fullTransaction)["blockNumber"] = _block.header()->number().asString();
+            (*fullTransaction)["from"] = FH20::zero().asString();  // Can be recovered from vrs
+            (*fullTransaction)["transactionIndex"] = "0x00";       // Its in tool response
+            (*fullTransaction)["hash"] = tr->hash().asString();
+            (*constructResponse)["transactions"].addArrayObject(fullTransaction);
+        }
+
+        for (auto const& un : _block.uncles())
+        {
+            spDataObject unHash(new DataObject(un->hash().asString()));
+            (*constructResponse)["uncles"].addArrayObject(unHash);
+        }
+
+        for (auto const& wt : _block.withdrawals())
+        {
+            (*constructResponse)["withdrawals"].addArrayObject(wt->asDataObject());
+        }
     }
 
     (*constructResponse)["size"] = "0x00";
