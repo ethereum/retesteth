@@ -1,5 +1,6 @@
 #include <TestOutputHelper.h>
 #include <retesteth/testStructures/Common.h>
+#include <retesteth/Options.h>
 #include "EthChecks.h"
 #include "TransactionTest.h"
 
@@ -46,7 +47,8 @@ TransactionTestInFilled::TransactionTestInFilled(spDataObject& _data)
         }
         catch (...)
         {
-            ETH_WARNING("Unable to read transaction from 'txbytes'");
+            if (Options::get().filltests)
+                ETH_WARNING("Unable to read transaction from 'txbytes'");
             m_readTransaction = spTransaction(0);
         }
 

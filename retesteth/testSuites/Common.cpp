@@ -89,7 +89,8 @@ void compareTransactionException(spTransaction const& _tr, MineBlocksResult cons
 {
     if (!_mRes.isRejectData() && !_testException.empty())
     {
-        ETH_WARNING("Looks like client does not support rejected transaction information!");
+        if (Options::get().filltests)
+            ETH_WARNING("Looks like client does not support rejected transaction information!");
         return;
     }
     // Mine a block, execute transaction

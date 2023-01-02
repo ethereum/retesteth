@@ -5,6 +5,7 @@
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/SHA3.h>
 #include <retesteth/TestHelper.h>
+#include <retesteth/Options.h>
 using namespace std;
 using namespace dev;
 using namespace test;
@@ -250,7 +251,8 @@ TestRawTransaction ToolChainManager::test_rawTransaction(
     out["result"] = true;
 
     // Prepare transaction file
-    fs::path txsPath = _tmpDir / "tx.rlp";
+    fs::path const txsPath = _tmpDir / "tx.rlp";
+    fs::path const errorLog = _tmpDir / "error.txt";
 
     // Rlp list header builder for given data
     test::RLPStreamU txsout(1);
@@ -269,7 +271,8 @@ TestRawTransaction ToolChainManager::test_rawTransaction(
     string cmd = _toolPath.string();
     cmd += " --input.txs " + txsPath.string();
     cmd += " --state.fork " + _fork.asString();
-    cmd += " 2>&1";
+    cmd += " --output.errorlog " + errorLog.string();
+
     ETH_DC_MESSAGE(DC::RPC, cmd);
     int exitCode;
     string response = test::executeCmd(cmd, exitCode, ExecCMDWarning::NoWarningNoError);
@@ -283,14 +286,17 @@ TestRawTransaction ToolChainManager::test_rawTransaction(
     {
         res = dataobject::ConvertJsoncppStringToData(response);
     }
-    catch (std::exception const& _ex) {
+    catch (std::exception const& _ex)
+    {
         if (string(_ex.what()).find("can't read json") != string::npos)
         {
             // Unable to read json. treat response as exceptional failure on wrong input
-            ETH_WARNING("t9n returned invalid json, probably failed on input!");
+            if (Options::get().filltests)
+                ETH_WARNING("t9n returned invalid json, probably failed on input!");
             res = spDataObject(new DataObject(DataType::Array));
             spDataObject errObj;
-            (*errObj)["error"] = response;
+            string const outErrorContent = dev::contentsString(errorLog.string());
+            (*errObj)["error"] = outErrorContent;
             (*res).addSubObject(errObj);
             ETH_DC_MESSAGE(DC::RPC, "T9N Response reconstructed:\n" + res->asJson());
             errorCaught = true;

@@ -268,7 +268,7 @@ else
     if [ $stateProvided -eq 1 ]; then
         evm t8n $cmdArgs --verbosity 2 2> $errorLogFile
     else
-        evm t9n $cmdArgs
+        evm t9n $cmdArgs 2> $errorLogFile
     fi
 fi
 )";

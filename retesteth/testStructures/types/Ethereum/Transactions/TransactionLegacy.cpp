@@ -121,7 +121,10 @@ void TransactionLegacy::fromRLP(dev::RLP const& _rlp)
     {
         int chainID = std::floor((double)(m_v.getCContent().asBigInt() - 35) / 2);
         if (chainID < 0)
-            ETH_WARNING("Error decoding chainID from transaction RLP: " + test::fto_string(chainID));
+        {
+            if (Options::get().filltests)
+                ETH_WARNING("Error decoding chainID from transaction RLP: " + test::fto_string(chainID));
+        }
         else
             m_chainID = spVALUE(new VALUE(chainID));
     }
