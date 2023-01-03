@@ -204,6 +204,7 @@ void BlockMining::executeTransition()
 
     int exitcode;
     string out = test::executeCmd(cmd, exitcode, ExecCMDWarning::NoWarningNoError);
+    ETH_DC_MESSAGE(DC::RPC, cmd);
     if (exitcode != 0)
     {
         string const outErrorContent = dev::contentsString(m_outErrorPath.string());
@@ -211,7 +212,6 @@ void BlockMining::executeTransition()
         throw test::UpwardsException(outErrorContent);
     }
 
-    ETH_DC_MESSAGE(DC::RPC, cmd);
     ETH_DC_MESSAGE(DC::RPC, out);
 }
 

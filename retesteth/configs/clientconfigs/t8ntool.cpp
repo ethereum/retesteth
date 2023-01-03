@@ -258,6 +258,7 @@ else
         if [ $readErrorLog -eq 1 ]; then
             errorLogFile=$index
             readErrorLog=0
+            continue
         fi
         if [ $index = "--output.errorlog" ]; then
             readErrorLog=1

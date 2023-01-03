@@ -237,7 +237,7 @@ string const nimbus_config = R"({
 
 string const nimbus_start = R"(#!/bin/sh
 if [ $1 = "-v" ]; then
-    evm_nimbus -v
+    evm_nimbus --version
 else
     stateProvided=0
     readErrorLog=0
@@ -250,6 +250,7 @@ else
         if [ $readErrorLog -eq 1 ]; then
             errorLogFile=$index
             readErrorLog=0
+            continue
         fi
         if [ $index = "--output.errorlog" ]; then
             readErrorLog=1
