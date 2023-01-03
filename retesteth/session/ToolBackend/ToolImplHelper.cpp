@@ -58,16 +58,24 @@ spDataObject constructEthGetBlockBy(EthereumBlockState const& _block, test::sess
             (*constructResponse)["transactions"].addArrayObject(fullTransaction);
         }
 
-        for (auto const& un : _block.uncles())
-        {
-            spDataObject unHash(new DataObject(un->hash().asString()));
-            (*constructResponse)["uncles"].addArrayObject(unHash);
-        }
-
         for (auto const& wt : _block.withdrawals())
         {
             (*constructResponse)["withdrawals"].addArrayObject(wt->asDataObject());
         }
+    }
+    else
+    {
+        for (auto const& tr : _block.transactions())
+        {
+            spDataObject trHash(new DataObject(tr->hash().asString()));
+            (*constructResponse)["transactions"].addArrayObject(trHash);
+        }
+    }
+
+    for (auto const& un : _block.uncles())
+    {
+        spDataObject unHash(new DataObject(un->hash().asString()));
+        (*constructResponse)["uncles"].addArrayObject(unHash);
     }
 
     (*constructResponse)["size"] = "0x00";
