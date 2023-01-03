@@ -43,7 +43,8 @@ string const t8ntool_config = R"({
         "Merge+3540+3670",
         "Merge+3860",
         "MergeToShanghaiAt5",
-        "Shanghai"
+        "Shanghai",
+        ">=Shanghai"
     ],
     "exceptions" : {
       "AddressTooShort" : "input string too short for common.Address",
