@@ -98,6 +98,8 @@ EthereumBlockState const& ToolChainManager::blockByHash(FH32 const& _hash) const
 void ToolChainManager::modifyTimestamp(VALUE const& _time)
 {
     m_pendingBlock.getContent().headerUnsafe().getContent().setTimestamp(_time);
+    if (currentChain().fork() == "MergeToShanghaiAtTime15k" && m_pendingBlock->header()->timestamp() >= 15000)
+        initShanghaiPendingBlock(m_pendingBlock);
 }
 
 // Import Raw Block via t8ntool
@@ -440,16 +442,19 @@ void ToolChainManager::transitionPendingBlock(EthereumBlockState const& _bl)
     auto const updatePending = [this, &_bl](){
         m_pendingBlock = spEthereumBlockState(new EthereumBlockState(_bl.header(), _bl.state(), _bl.logHash()));
     };
+
     // Transform pending block to new network
     if (_bl.header()->number() == 4)
     {
         if (currentChain().fork() == "BerlinToLondonAt5")
+        {
             init1559PendingBlock(_bl);
-        else if (currentChain().fork() == "MergeToShanghaiAt5")
-            initShanghaiPendingBlock(_bl);
-        else
-            updatePending();
+            return;
+        }
     }
+
+    if (currentChain().fork() == "MergeToShanghaiAtTime15k" && m_pendingBlock->header()->timestamp() >= 15000)
+        initShanghaiPendingBlock(_bl);
     else if (currentChain().fork() == "ArrowGlacierToMergeAtDiffC0000" && isTerminalPoWBlock())
         initMergePendingBlock(_bl);
     else

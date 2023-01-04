@@ -4,7 +4,7 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
-const string default_MergeToShanghaiAt5_config = R"({
+const string default_MergeToShanghaiAtTime15k_config = R"({
     "params" : {
        "homesteadForkBlock" : "0x00",
        "EIP150ForkBlock" : "0x00",
@@ -24,9 +24,9 @@ const string default_MergeToShanghaiAt5_config = R"({
     }
 })";
 
-const string t8ntool_MergeToShanghaiAt5_config = R"({
+const string t8ntool_MergeToShanghaiAtTime15k_config = R"({
     "params" : {
-        "fork" : "MergeToShanghaiAt5",
+        "fork" : "MergeToShanghaiAtTime15k",
         "constantinopleForkBlock" : "0x00",
         "byzantiumForkBlock" : "0x00",
         "homesteadForkBlock" : "0x00",
@@ -37,16 +37,16 @@ const string t8ntool_MergeToShanghaiAt5_config = R"({
     }
 })";
 
-genMergeToShanghaiAt5Cfg::genMergeToShanghaiAt5Cfg()
+genMergeToShanghaiAtTime15kCfg::genMergeToShanghaiAtTime15kCfg()
 {
     spDataObject obj(new DataObject());
-    (*obj)["path"] = "besu/genesis/MergeToShanghaiAt5.json";
-    (*obj)["content"] = default_MergeToShanghaiAt5_config;
+    (*obj)["path"] = "besu/genesis/MergeToShanghaiAtTime15k.json";
+    (*obj)["content"] = default_MergeToShanghaiAtTime15k_config;
     map_configs.addArrayObject(obj);
 
     spDataObject obj2(new DataObject());
-    (*obj2)["path"] = "default/genesis/MergeToShanghaiAt5.json";
-    (*obj2)["content"] = t8ntool_MergeToShanghaiAt5_config;
+    (*obj2)["path"] = "default/genesis/MergeToShanghaiAtTime15k.json";
+    (*obj2)["content"] = t8ntool_MergeToShanghaiAtTime15k_config;
     map_configs.addArrayObject(obj2);
 }
 }  // namespace retesteth::options

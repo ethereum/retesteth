@@ -198,7 +198,7 @@ void verifyShanghaiParent(spBlockHeader const& _header, spBlockHeader const& _pa
         verifyShanghaiBlock(_parent, _chain);
     else
     {
-        if (_header->number() == 5 && _chain.fork() == "MergeToShanghaiAt5")
+        if (_header->timestamp() >= 15000 && _chain.fork() == "MergeToShanghaiAtTime15k")
         {
             if (_parent->type() != BlockType::BlockHeaderMerge)
                 throw test::UpwardsException("Trying to import Shanghai block on top of Merge block before transition!!");

@@ -36,7 +36,7 @@ string const ethereumjs_config = R"({
         "Merge+3540+3670",
         "Merge+3860",
         "Merge+3855",
-        "MergeToShanghaiAt5",
+        "MergeToShanghaiAtTime15k",
         "Shanghai"
     ],
     "exceptions":{

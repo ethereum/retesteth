@@ -101,7 +101,7 @@ spDataObject prepareGenesisSubsection(StateTestEnvBase const& _env, ParamsContex
         // Can't get rid of this hardcode configs :(((
         if (_net == FORK("ArrowGlacierToMergeAtDiffC0000") || _net == FORK("ArrowGlacier"))
             londify(genesis.getContent());
-        else if (_net == FORK("MergeToShanghaiAt5"))
+        else if (_net == FORK("MergeToShanghaiAtTime15k"))
         {
             londify(genesis.getContent());
             mergify(genesis.getContent());

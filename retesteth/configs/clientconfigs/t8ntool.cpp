@@ -42,7 +42,7 @@ string const t8ntool_config = R"({
     "fillerSkipForks" : [
         "Merge+3540+3670",
         "Merge+3860",
-        "MergeToShanghaiAt5",
+        "MergeToShanghaiAtTime15k",
         "Shanghai",
         ">=Shanghai"
     ],

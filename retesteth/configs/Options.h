@@ -16,7 +16,7 @@ extern std::string const yul_compiler_sh;
   FOR_EACH(X, t8ntoolcfg, RewardsCfg, FrontierCfg, HomesteadCfg, EIP150Cfg, EIP158Cfg, ByzantiumCfg, \
     ConstantinopleCfg, ConstantinopleFixCfg, IstanbulCfg, BerlinCfg, LondonCfg, MergeCfg, \
     ShanghaiCfg, \
-    ArrowGlacierCfg, GrayGlacierCfg, ArrowGlacierToMergeAtDiffC0000Cfg, MergeToShanghaiAt5Cfg, \
+    ArrowGlacierCfg, GrayGlacierCfg, ArrowGlacierToMergeAtDiffC0000Cfg, MergeToShanghaiAtTime15kCfg, \
     FrontierToHomesteadCfg, HomesteadToDaoCfg, HomesteadToEIP150Cfg, EIP158ToByzantiumCfg, \
     ByzantiumToConstantinopleFixCfg, BerlinToLondonCfg )
 
