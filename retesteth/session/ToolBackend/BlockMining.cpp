@@ -209,7 +209,7 @@ void BlockMining::executeTransition()
     {
         string const outErrorContent = dev::contentsString(m_outErrorPath.string());
         ETH_DC_MESSAGE(DC::RPC, "Err:\n" + outErrorContent);
-        throw test::UpwardsException(outErrorContent);
+        throw test::UpwardsException(outErrorContent.empty() ? (out.empty() ? "Tool failed: " + cmd : out) : outErrorContent);
     }
 
     ETH_DC_MESSAGE(DC::RPC, out);
