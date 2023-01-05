@@ -221,9 +221,10 @@ void ToolChain::calculateAndCheckSetBaseFee(VALUE const& _toolBaseFee, spBlockHe
     bool const isOn1559 = pendingHeaderType == BlockType::BlockHeader1559 && _parentHeader->type() == BlockType::BlockHeader1559;
     bool const isOn1559ToMerge = pendingHeaderType == BlockType::BlockHeaderMerge && _parentHeader->type() == BlockType::BlockHeader1559;
     bool const isOnMerge = pendingHeaderType == BlockType::BlockHeaderMerge && _parentHeader->type() == BlockType::BlockHeaderMerge;
+    bool const isOnShanghai = pendingHeaderType == BlockType::BlockHeaderShanghai;
 
     // Calculate new baseFee
-    if (isOn1559 || isOn1559ToMerge || isOnMerge)
+    if (isOn1559 || isOn1559ToMerge || isOnMerge || isOnShanghai)
     {
         BlockHeader1559& pendingFixed1559Header = BlockHeader1559::castFrom(_pendingHeader.getContent());
 
