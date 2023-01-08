@@ -4,12 +4,17 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
+
 string const t8ntooleip_config = R"({
-    "name" : "Ethereum GO on StateTool + Custom EIP",
+    "name" : "Ethereum GO on StateTool",
     "socketType" : "tranition-tool",
     "socketAddress" : "start.sh",
     "checkLogsHash" : true,
     "checkBasefee" : true,
+    "defaultChainID" : 1,
+    "customCompilers" : {
+        ":yul" : "yul.sh"
+    },
     "forks" : [
         "Frontier",
         "Homestead",
@@ -21,7 +26,6 @@ string const t8ntooleip_config = R"({
         "Istanbul",
         "Berlin",
         "London",
-        "London+1884",
         "Merge"
     ],
     "additionalForks" : [
@@ -34,6 +38,13 @@ string const t8ntooleip_config = R"({
         "ArrowGlacier",
         "ArrowGlacierToMergeAtDiffC0000",
         "GrayGlacier"
+    ],
+    "fillerSkipForks" : [
+        "Merge+3540+3670",
+        "Merge+3860",
+        "MergeToShanghaiAtTime15k",
+        "Shanghai",
+        ">=Shanghai"
     ],
     "exceptions" : {
       "AddressTooShort" : "input string too short for common.Address",
@@ -51,6 +62,7 @@ string const t8ntooleip_config = R"({
       "InvalidData" : "rlp: expected input string or byte for []uint8, decoding into (types.Transaction)(types.LegacyTx).Data",
       "InvalidDifficulty" : "Invalid difficulty:",
       "InvalidDifficulty2" : "Error in field: difficulty",
+      "InvalidWithdrawals" : "Error in field: withdrawalsRoot",
       "InvalidDifficulty_TooLarge" : "Blockheader parse error: VALUE  >u256",
       "InvalidGasLimit" : "Header gasLimit > 0x7fffffffffffffff",
       "InvalidGasLimit2" : "Invalid gaslimit:",
@@ -105,6 +117,8 @@ string const t8ntooleip_config = R"({
       "TRANSACTION_VALUE_TOOSHORT" : "t8ntool didn't return a transaction with hash",
       "TR_NonceHasMaxValue" : "nonce has max value:",
       "OVERSIZE_RLP" : "Error importing raw rlp block: OversizeRLP",
+      "RLP_BadCast" : "BadCast",
+      "RLP_ExpectedAsList" : "expected to be list",
       "RLP_TooFewElements" : "rlp: too few elements ",
       "RLP_TooManyElements" : "rlp: input list has too many elements ",
       "RLP_InputContainsMoreThanOneValue" : "Error importing raw rlp block: OversizeRLP",
@@ -194,11 +208,13 @@ string const t8ntooleip_config = R"({
       "LegacyBlockImportImpossible2" : "Legacy block can only be on top of LegacyBlock",
       "LegacyBlockBaseFeeTransaction" : "BaseFee transaction in a Legacy blcok",
       "1559BlockImportImpossible_HeaderIsLegacy" : "1559 block must be on top of 1559",
-      "1559BlockImportImpossible_BaseFeeWrong": "base fee not correct!",
+      "1559BlockImportImpossible_BaseFeeWrong": "Error in field: baseFeePerGas",
       "1559BlockImportImpossible_InitialBaseFeeWrong": "Initial baseFee must be 1000000000",
       "1559BlockImportImpossible_TargetGasLow": "gasTarget decreased too much",
       "1559BlockImportImpossible_TargetGasHigh": "gasTarget increased too much",
       "1559BlockImportImpossible_InitialGasLimitInvalid": "Invalid block1559: Initial gasLimit must be",
+      "MergeBlockImportImpossible" : "Trying to import Merge block on top of Shanghai block after transition",
+      "ShanghaiBlockImportImpossible" : "Shanghai block on top of Merge block before transition",
       "TR_IntrinsicGas" : "intrinsic gas too low:",
       "TR_NoFunds" : "insufficient funds for gas * price + value",
       "TR_NoFundsValue" : "insufficient funds for transfer",
@@ -209,6 +225,7 @@ string const t8ntooleip_config = R"({
       "TR_TypeNotSupported" : "transaction type not supported",
       "TR_TipGtFeeCap": "max priority fee per gas higher than max fee per gas",
       "TR_TooShort": "typed transaction too short",
+      "TR_InitCodeLimitExceeded" : "max initcode size exceeded",
       "1559BaseFeeTooLarge": "TransactionBaseFee convertion error: VALUE  >u256",
       "1559PriorityFeeGreaterThanBaseFee": "maxFeePerGas \u003c maxPriorityFeePerGas",
       "2930AccessListAddressTooLong": "rlp: input string too long for common.Address, decoding into (types.Transaction)(types.AccessListTx).AccessList[0].Address",
@@ -220,28 +237,13 @@ string const t8ntooleip_config = R"({
       "2930AccessListStorageHashTooLong": "rlp: input string too long for common.Hash, decoding into (types.Transaction)(types.AccessListTx).AccessList[0].StorageKeys[0]",
       "3675PoWBlockRejected" : "Invalid block1559: Chain switched to PoS!",
       "3675PoSBlockRejected" : "Parent (transition) block has not reached TTD",
-      "3675PreMerge1559BlockRejected" : "Trying to import 1559 block on top of PoS block"
+      "3675PreMerge1559BlockRejected" : "Trying to import 1559 block on top of PoS block",
+      "INPUT_UNMARSHAL_ERROR" : "cannot unmarshal hex",
+      "INPUT_UNMARSHAL_SIZE_ERROR" : "failed unmarshaling",
+      "RLP_BODY_UNMARSHAL_ERROR" : "Rlp structure is wrong"
     }
 })";
 
-string const t8ntooleip_start = R"(#!/bin/sh
-if [ $1 = "-v" ]; then
-    evm -v
-else
-    stateProvided=0
-    for index in ${1} ${2} ${3} ${4} ${5} ${6} ${7} ${8} ${9} ${10} ${11} ${12} ${13} ${14} ${15} ${16} ${17} ${18} ${19} ${20} ; do
-        if [ $index = "--input.alloc" ]; then
-            stateProvided=1
-            break
-        fi
-    done
-    if [ $stateProvided -eq 1 ]; then
-        evm t8n ${1} ${2} ${3} ${4} ${5} ${6} ${7} ${8} ${9} ${10} ${11} ${12} ${13} ${14} ${15} ${16} ${17} ${18} ${19} ${20} --verbosity 2
-    else
-        evm t9n ${1} ${2} ${3} ${4} ${5} ${6} ${7} ${8} ${9} ${10} ${11} ${12} ${13} ${14} ${15} ${16} ${17} ${18} ${19} ${20}
-    fi
-fi
-)";
 
 gent8ntooleipcfg::gent8ntooleipcfg()
 {
@@ -255,8 +257,16 @@ gent8ntooleipcfg::gent8ntooleipcfg()
         spDataObject obj;
         (*obj)["exec"] = true;
         (*obj)["path"] = "t8ntooleip/start.sh";
-        (*obj)["content"] = t8ntooleip_start;
+        (*obj)["content"] = t8ntool_start;
         map_configs.addArrayObject(obj);
     }
+    {
+        spDataObject obj;
+        (*obj)["exec"] = true;
+        (*obj)["path"] = "t8ntooleip/yul.sh";
+        (*obj)["content"] = yul_compiler_sh;
+        map_configs.addArrayObject(obj);
+    }
+
 }
 }  // namespace retesteth::options
