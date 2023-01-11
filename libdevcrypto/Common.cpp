@@ -34,9 +34,7 @@
 #endif
 #include <libdevcore/SHA3.h>
 #include <libdevcore/RLP.h>
-#include "AES.h"
 #include "CryptoPP.h"
-#include "Exceptions.h"
 using namespace std;
 using namespace dev;
 using namespace dev::crypto;
@@ -284,13 +282,6 @@ KeyPair KeyPair::create()
             return keyPair;
     }
 }
-
-#ifdef RCRYPTOPP
-KeyPair KeyPair::fromEncryptedSeed(bytesConstRef _seed, std::string const& _password)
-{
-    return KeyPair(Secret(sha3(aesDecrypt(_seed, _password))));
-}
-#endif
 
 h256 crypto::kdf(Secret const& _priv, h256 const& _hash)
 {
