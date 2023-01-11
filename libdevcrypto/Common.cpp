@@ -32,7 +32,6 @@
 #include <cryptopp/sha.h>
 #include <cryptopp/modes.h>
 #endif
-#include <libscrypt.h>
 #include <libdevcore/SHA3.h>
 #include <libdevcore/RLP.h>
 #include "AES.h"
@@ -268,15 +267,6 @@ bytesSec dev::pbkdf2(string const& _pass, bytes const& _salt, unsigned _iteratio
     return ret;
 }
 #endif
-
-bytesSec dev::scrypt(std::string const& _pass, bytes const& _salt, uint64_t _n, uint32_t _r, uint32_t _p, unsigned _dkLen)
-{
-    bytesSec ret(_dkLen);
-    if (libscrypt_scrypt(reinterpret_cast<uint8_t const*>(_pass.data()), _pass.size(), _salt.data(),
-            _salt.size(), _n, _r, _p, ret.writable().data(), _dkLen) != 0)
-        BOOST_THROW_EXCEPTION(CryptoException() << errinfo_comment("Key derivation failed."));
-    return ret;
-}
 
 KeyPair::KeyPair(Secret const& _sec) : m_secret(_sec), m_public(toPublic(_sec))
 {

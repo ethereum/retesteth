@@ -55,9 +55,6 @@ IF (RCRYPTOPP)
     ENDIF()
 ENDIF()
 
-hunter_add_package(libscrypt)
-find_package(libscrypt CONFIG REQUIRED)
-
 # Silence cmake warnings on newer versions
 if (POLICY CMP0074)
     cmake_policy(SET CMP0074 NEW)   # Use download timestamp for remote objects
