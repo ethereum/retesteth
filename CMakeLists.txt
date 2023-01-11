@@ -78,7 +78,6 @@ include(EthDependencies)
 include(EthCompilerSettings)
 
 include(ProjectSecp256k1)
-include(ProjectLibFF)
 configure_project()
 
 if(JSONCPP)

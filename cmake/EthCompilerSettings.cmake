@@ -55,12 +55,6 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 		if("${CMAKE_CXX_COMPILER_VERSION}" VERSION_LESS 4.8)
 			message(FATAL_ERROR "This compiler ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION} is not supported. GCC 4.8 or newer is required.")
 		endif()
-
-	# Stop if buggy clang compiler detected.
-	elseif("${CMAKE_CXX_COMPILER_ID}" MATCHES AppleClang)
-		if("${CMAKE_CXX_COMPILER_VERSION}" VERSION_LESS 8.4)
-			message(FATAL_ERROR "This compiler ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION} is not able to compile required libff. Install clang 4+ from Homebrew or XCode 9.")
-		endif()
 	endif()
 
 # The major alternative compiler to GCC/Clang is Microsoft's Visual C++ compiler, only available on Windows.
