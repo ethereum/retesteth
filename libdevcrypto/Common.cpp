@@ -23,14 +23,11 @@
 #include <libdevcore/Guards.h>  // <boost/thread> conflicts with <thread>
 #include "Common.h"
 #include <secp256k1.h>
-#include <secp256k1_ecdh.h>
 #include <secp256k1_recovery.h>
-#include <secp256k1_sha256.h>
 #include <libdevcore/SHA3.h>
 #include <libdevcore/RLP.h>
 using namespace std;
 using namespace dev;
-using namespace dev::crypto;
 
 namespace
 {
@@ -142,96 +139,4 @@ bool dev::verify(Public const& _p, Signature const& _s, h256 const& _hash)
     if (!_p)
         return false;
     return _p == recover(_s, _hash);
-}
-
-KeyPair::KeyPair(Secret const& _sec) : m_secret(_sec), m_public(toPublic(_sec))
-{
-    // Assign address only if the secret key is valid.
-    if (m_public)
-        m_address = toAddress(m_public);
-}
-
-KeyPair KeyPair::create()
-{
-    while (true)
-    {
-        KeyPair keyPair(Secret::random());
-        if (keyPair.address())
-            return keyPair;
-    }
-}
-
-h256 crypto::kdf(Secret const& _priv, h256 const& _hash)
-{
-    // H(H(r||k)^h)
-    h256 s;
-    sha3mac(Secret::random().ref(), _priv.ref(), s.ref());
-    s ^= _hash;
-    sha3(s.ref(), s.ref());
-
-    if (!s || !_hash || !_priv)
-        BOOST_THROW_EXCEPTION(InvalidState());
-    return s;
-}
-
-Secret Nonce::next()
-{
-    Guard l(x_value);
-    if (!m_value)
-    {
-        m_value = Secret::random();
-        if (!m_value)
-            BOOST_THROW_EXCEPTION(InvalidState());
-    }
-    m_value = sha3Secure(m_value.ref());
-    return sha3(~m_value);
-}
-
-bool ecdh::agree(Secret const& _s, Public const& _r, Secret& o_s) noexcept
-{
-    auto* ctx = getCtx();
-    static_assert(sizeof(Secret) == 32, "Invalid Secret type size");
-    secp256k1_pubkey rawPubkey;
-    std::array<byte, 65> serializedPubKey{{0x04}};
-    std::copy(_r.asArray().begin(), _r.asArray().end(), serializedPubKey.begin() + 1);
-    if (!secp256k1_ec_pubkey_parse(
-            ctx, &rawPubkey, serializedPubKey.data(), serializedPubKey.size()))
-        return false;  // Invalid public key.
-    // FIXME: We should verify the public key when constructed, maybe even keep
-    //        secp256k1_pubkey as the internal data of Public.
-    std::array<byte, 33> compressedPoint;
-    if (!secp256k1_ecdh_raw(ctx, compressedPoint.data(), &rawPubkey, _s.data()))
-        return false;  // Invalid secret key.
-    std::copy(compressedPoint.begin() + 1, compressedPoint.end(), o_s.writable().data());
-    return true;
-}
-
-bytes ecies::kdf(Secret const& _z, bytes const& _s1, unsigned kdByteLen)
-{
-    auto reps = ((kdByteLen + 7) * 8) / 512;
-    // SEC/ISO/Shoup specify counter size SHOULD be equivalent
-    // to size of hash output, however, it also notes that
-    // the 4 bytes is okay. NIST specifies 4 bytes.
-    std::array<byte, 4> ctr{{0, 0, 0, 1}};
-    bytes k;
-    secp256k1_sha256_t ctx;
-    for (unsigned i = 0; i <= reps; i++)
-    {
-        secp256k1_sha256_initialize(&ctx);
-        secp256k1_sha256_write(&ctx, ctr.data(), ctr.size());
-        secp256k1_sha256_write(&ctx, _z.data(), Secret::size);
-        secp256k1_sha256_write(&ctx, _s1.data(), _s1.size());
-        // append hash to k
-        std::array<byte, 32> digest;
-        secp256k1_sha256_finalize(&ctx, digest.data());
-
-        k.reserve(k.size() + h256::size);
-        move(digest.begin(), digest.end(), back_inserter(k));
-
-        if (++ctr[3] || ++ctr[2] || ++ctr[1] || ++ctr[0])
-            continue;
-    }
-
-    k.resize(kdByteLen);
-    return k;
 }
