@@ -40,21 +40,6 @@ message(STATUS "[retesteth] Boost include: `${Boost_INCLUDE_DIR}`")
 hunter_add_package(yaml-cpp)
 find_package(yaml-cpp CONFIG REQUIRED)
 
-IF (RCRYPTOPP)
-    IF (NOT LOCALDEPS MATCHES ".*CRYPTOPP")
-        hunter_add_package(cryptopp)
-        find_package(cryptopp CONFIG REQUIRED)
-        set(CRYPTOPP_LINK "cryptopp-static")
-        message(STATUS "[retesteth] cryptopp used from hunter")
-    ELSE()
-        message(STATUS "[retesteth] LOCALDEPS=CRYPTOPP looking for locally installed version")
-        find_package(cryptopp MODULE REQUIRED)
-        message(STATUS "[retesteth] cryptopp libdir: `${CRYPTOPP_LIBRARIES}`")
-        message(STATUS "[retesteth] cryptopp include: `${CRYPTOPP_INCLUDE_DIRS}`")
-        set(CRYPTOPP_LINK ${CRYPTOPP_LIBRARIES})
-    ENDIF()
-ENDIF()
-
 # Silence cmake warnings on newer versions
 if (POLICY CMP0074)
     cmake_policy(SET CMP0074 NEW)   # Use download timestamp for remote objects

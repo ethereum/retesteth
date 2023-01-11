@@ -74,49 +74,6 @@ Address toAddress(Secret const& _secret);
 // Convert transaction from and nonce to address.
 Address toAddress(Address const& _from, u256 const& _nonce);
 
-#ifdef RCRYPTOPP
-/// Encrypts plain text using Public key.
-void encrypt(Public const& _k, bytesConstRef _plain, bytes& o_cipher);
-
-/// Decrypts cipher using Secret key.
-bool decrypt(Secret const& _k, bytesConstRef _cipher, bytes& o_plaintext);
-
-/// Symmetric encryption.
-void encryptSym(Secret const& _k, bytesConstRef _plain, bytes& o_cipher);
-
-/// Symmetric decryption.
-bool decryptSym(Secret const& _k, bytesConstRef _cipher, bytes& o_plaintext);
-
-/// Encrypt payload using ECIES standard with AES128-CTR.
-void encryptECIES(Public const& _k, bytesConstRef _plain, bytes& o_cipher);
-
-/// Encrypt payload using ECIES standard with AES128-CTR.
-/// @a _sharedMacData is shared authenticated data.
-void encryptECIES(Public const& _k, bytesConstRef _sharedMacData, bytesConstRef _plain, bytes& o_cipher);
-
-/// Decrypt payload using ECIES standard with AES128-CTR.
-bool decryptECIES(Secret const& _k, bytesConstRef _cipher, bytes& o_plaintext);
-
-/// Decrypt payload using ECIES standard with AES128-CTR.
-/// @a _sharedMacData is shared authenticated data.
-bool decryptECIES(Secret const& _k, bytesConstRef _sharedMacData, bytesConstRef _cipher, bytes& o_plaintext);
-
-/// Encrypts payload with specified IV/ctr using AES128-CTR.
-bytes encryptAES128CTR(bytesConstRef _k, h128 const& _iv, bytesConstRef _plain);
-
-/// Decrypts payload with specified IV/ctr using AES128-CTR.
-bytesSec decryptAES128CTR(bytesConstRef _k, h128 const& _iv, bytesConstRef _cipher);
-
-/// Encrypts payload with specified IV/ctr using AES128-CTR.
-inline bytes encryptSymNoAuth(SecureFixedHash<16> const& _k, h128 const& _iv, bytesConstRef _plain) { return encryptAES128CTR(_k.ref(), _iv, _plain); }
-inline bytes encryptSymNoAuth(SecureFixedHash<32> const& _k, h128 const& _iv, bytesConstRef _plain) { return encryptAES128CTR(_k.ref(), _iv, _plain); }
-
-/// Decrypts payload with specified IV/ctr using AES128-CTR.
-inline bytesSec decryptSymNoAuth(SecureFixedHash<16> const& _k, h128 const& _iv, bytesConstRef _cipher) { return decryptAES128CTR(_k.ref(), _iv, _cipher); }
-inline bytesSec decryptSymNoAuth(SecureFixedHash<32> const& _k, h128 const& _iv, bytesConstRef _cipher) { return decryptAES128CTR(_k.ref(), _iv, _cipher); }
-
-#endif
-
 /// Encrypts payload with random IV/ctr using AES128-CTR.
 std::pair<bytes, h128> encryptSymNoAuth(SecureFixedHash<16> const& _k, bytesConstRef _plain);
 
@@ -145,11 +102,6 @@ public:
 
 	/// Create a new, randomly generated object.
     static KeyPair create();
-
-    #ifdef RCRYPTOPP
-	/// Create from an encrypted seed.
-    static KeyPair fromEncryptedSeed(bytesConstRef _seed, std::string const& _password);
-    #endif
 
 	Secret const& secret() const { return m_secret; }
 
