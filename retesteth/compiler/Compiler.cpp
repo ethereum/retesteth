@@ -101,6 +101,7 @@ void tryKnownCompilers(string const& _code, solContracts const& _preSolidity, st
         if (bRawEndline)
         {
             _compiledCode = _code.substr(pos + c_rawPrefix.length() + 1);
+            test::removeSubChar(_compiledCode, {' ', '-'});
             utiles::checkHexHasEvenLength(_compiledCode);
             found = true;
         }

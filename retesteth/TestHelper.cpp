@@ -719,6 +719,17 @@ RLPStreamU::RLPStreamU(size_t _size) : m_size(_size)
         ETH_FAIL_MESSAGE("RLPStreamU does not support stream of multiple rlp items. It's a mock to wrap 1 transaction.");
 }
 
+void removeSubChar(std::string& _string, std::vector<unsigned char> _r)
+{
+    _string.erase(
+        std::remove_if(_string.begin(), _string.end(), [&_r](unsigned char ch) {
+            for (auto const& charToRemove : _r)
+                if (ch == charToRemove)
+                    return true;
+            return false;
+        }), _string.end());
+}
+
 void removeSubChar(std::string& _string, unsigned char _r)
 {
     _string.erase(
