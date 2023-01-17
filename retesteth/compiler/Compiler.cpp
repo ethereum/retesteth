@@ -12,6 +12,21 @@ namespace fs = boost::filesystem;
 
 namespace
 {
+
+void removeCommentsFromCode(string& _code)
+{
+    size_t pos = _code.find("#");
+    while(pos != string::npos)
+    {
+        size_t posEndl = _code.find('\n');
+        if (posEndl != string::npos)
+            _code.erase(pos, posEndl - pos + 1);
+        else
+            _code.erase(pos);
+        pos = _code.find("#");
+    }
+}
+
 string compileLLL(string const& _code)
 {
 #if defined(_WIN32)
@@ -102,6 +117,8 @@ void tryKnownCompilers(string const& _code, solContracts const& _preSolidity, st
         {
             _compiledCode = _code.substr(pos + c_rawPrefix.length() + 1);
             test::removeSubChar(_compiledCode, {' ', '-'});
+            removeCommentsFromCode(_compiledCode);
+            test::removeSubChar(_compiledCode, '\n');
             utiles::checkHexHasEvenLength(_compiledCode);
             found = true;
         }
