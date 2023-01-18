@@ -64,7 +64,7 @@ If one of the following dependecies is failing to autoinstall, some times due to
 ```
 rm -r /root/.hunter
 rm CMakeCache.txt
-cmake .. -DLOCALDEPS="BOOST,MPIR,CRYPTOPP"
+cmake .. -DLOCALDEPS="BOOST"
 ```
 
 Try building instruction for beginners: [retesteth + solidity build](https://github.com/ethereum/retesteth#building-instructions-for-beginners)
