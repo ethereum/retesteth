@@ -139,7 +139,11 @@ void BlockMining::prepareTxnFile()
         for (auto const& tr : m_currentBlockRef.transactions())
         {
             if (tr->gasLimit().asBigInt() <= c_maxGasLimit)  // tool fails on limits here.
-                txs.addArrayObject(tr->asDataObject(ExportOrder::ToolStyle));
+            {
+                auto trData = tr->asDataObject(ExportOrder::ToolStyle);
+                (*trData)["hash"] = tr->hash().asString();
+                txs.addArrayObject(trData);
+            }
             else
                 ETH_WARNING("Retesteth rejecting tx with gasLimit > 64 bits for tool" +
                             TestOutputHelper::get().testInfo().errorDebug());
