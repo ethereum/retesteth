@@ -6,6 +6,7 @@
 
 //Suites
 #include <retesteth/testSuites/DifficultyTest.h>
+#include <retesteth/testSuites/EOFTest.h>
 #include <retesteth/testSuites/TransactionTest.h>
 #include <retesteth/testSuites/blockchain/BlockchainTests.h>
 #include <retesteth/testSuites/statetests/StateTests.h>
@@ -273,6 +274,7 @@ REGISTER_TEMPLATE(BlockchainTestValidSuite, DefaultFlags)
 // State link
 REGISTER_TEMPLATE(StateTestSuite, RequireOptionFill)
 REGISTER_TEMPLATE(StateTestSuite, DefaultFlags)
+REGISTER_TEMPLATE(EOFTestSuite, DefaultFlags)
 REGISTER_TEMPLATE(StateTestVMSuite, DefaultFlags)
 REGISTER_TEMPLATE(StateTestShanghaiSuite, DefaultFlags)
 

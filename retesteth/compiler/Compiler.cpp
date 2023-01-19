@@ -18,7 +18,7 @@ void removeCommentsFromCode(string& _code)
     size_t posComment = _code.find("#");
     while(posComment != string::npos)
     {
-        size_t posEndl = _code.find('\n');
+        size_t const posEndl = _code.find('\n');
         if (posEndl != string::npos)
         {
             if (posEndl < posComment)

@@ -16,6 +16,7 @@ void require1559TransactionScheme(spDataObject const& _data)
             {"nonce", {{DataType::String}, jsonField::Required}},
             {"value", {{DataType::Array}, jsonField::Required}},
             {"to", {{DataType::String}, jsonField::Required}},
+            {"sender", {{DataType::String}, jsonField::Optional}},
             {"maxFeePerGas", {{DataType::String}, jsonField::Required}},
             {"maxPriorityFeePerGas", {{DataType::String}, jsonField::Required}},
             {"secretKey", {{DataType::String}, jsonField::Required}}});
@@ -31,6 +32,7 @@ void requireLegacyTransctionScheme(spDataObject const& _data)
             {"nonce", {{DataType::String}, jsonField::Required}},
             {"value", {{DataType::Array}, jsonField::Required}},
             {"to", {{DataType::String}, jsonField::Required}},
+            {"sender", {{DataType::String}, jsonField::Optional}},
             {"secretKey", {{DataType::String}, jsonField::Required}}});
 }
 }
