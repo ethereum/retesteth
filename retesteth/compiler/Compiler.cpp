@@ -15,15 +15,23 @@ namespace
 
 void removeCommentsFromCode(string& _code)
 {
-    size_t pos = _code.find("#");
-    while(pos != string::npos)
+    size_t posComment = _code.find("#");
+    while(posComment != string::npos)
     {
         size_t posEndl = _code.find('\n');
         if (posEndl != string::npos)
-            _code.erase(pos, posEndl - pos + 1);
+        {
+            if (posEndl < posComment)
+            {
+                _code.erase(posEndl, 1);
+                posComment = _code.find("#");
+                continue;
+            }
+            _code.erase(posComment, posEndl - posComment + 1);
+        }
         else
-            _code.erase(pos);
-        pos = _code.find("#");
+            _code.erase(posComment);
+        posComment = _code.find("#");
     }
 }
 
