@@ -2,6 +2,11 @@
 #include <iostream>
 using namespace std;
 
+namespace  {
+    string const YML_INT_TAG = "tag:yaml.org,2002:int";
+    string const YML_BOOL_TAG = "tag:yaml.org,2002:bool";
+}
+
 namespace dataobject
 {
 
@@ -33,8 +38,10 @@ spDataObject ConvertYamlToData(YAML::Node const& _node, bool _sort)
 
     if (_node.IsScalar())
     {
-        if (_node.Tag() == "tag:yaml.org,2002:int")
+        if (_node.Tag() == YML_INT_TAG)
             return spDataObject(new DataObject(_node.as<int>()));
+        else if (_node.Tag() == YML_BOOL_TAG)
+            return spDataObject(new DataObject(DataType::Bool, _node.as<bool>()));
         else
             return spDataObject(new DataObject(_node.as<string>()));
     }
