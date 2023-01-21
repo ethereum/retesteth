@@ -125,13 +125,11 @@ spDataObject SetChainParamsArgs::asDataObject() const
     (*out)["genesis"]["difficulty"] = m_genesis->difficulty().asString();
     (*out)["genesis"]["gasLimit"] = m_genesis->gasLimit().asString();
 
-    if (m_genesis->type() == BlockType::BlockHeader1559
-        || m_genesis->type() == BlockType::BlockHeaderMerge
-        || m_genesis->type() == BlockType::BlockHeaderShanghai)
+    if (isBlockExportBasefee(m_genesis))
     {
         BlockHeader1559 const& newbl = BlockHeader1559::castFrom(m_genesis);
         (*out)["genesis"]["baseFeePerGas"] = newbl.baseFee().asString();
-        if (m_genesis->type() == BlockType::BlockHeaderShanghai)
+        if (isBlockExportWithdrawals(m_genesis))
         {
             BlockHeaderShanghai const& newbl = BlockHeaderShanghai::castFrom(m_genesis);
             (*out)["genesis"]["withdrawalsRoot"] = newbl.withdrawalsRoot().asString();

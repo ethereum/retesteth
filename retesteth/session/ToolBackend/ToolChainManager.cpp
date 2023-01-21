@@ -64,10 +64,7 @@ void ToolChainManager::reorganizePendingBlock()
         header.setExtraData(BYTES(DataObject("0x64616f2d686172642d666f726b")));
     header.setParentHash(currentChain().lastBlock().header()->hash());
 
-    auto const lastBlockType = currentChain().lastBlock().header()->type();
-    bool isParent1559 = lastBlockType == BlockType::BlockHeader1559;
-    bool isParentMerge = lastBlockType == BlockType::BlockHeaderMerge;
-    if (isParent1559 || isParentMerge)
+    if (isBlockExportBasefee(currentChain().lastBlock().header()))
     {
         BlockHeader1559& header1559 = BlockHeader1559::castFrom(header);
         ChainOperationParams params = ChainOperationParams::defaultParams(currentChain().toolParams());
@@ -149,7 +146,7 @@ FH32 ToolChainManager::importRawBlock(BYTES const& _rlp)
         }
 
         // TODO verify withdrawals rlp signature and block size
-        if (header->type() == BlockType::BlockHeaderShanghai)
+        if (isBlockExportWithdrawals(header))
         {
             verifyWithdrawalsRLP(rlp[3]);
             for (auto const& wtRLP : rlp[3].toList())

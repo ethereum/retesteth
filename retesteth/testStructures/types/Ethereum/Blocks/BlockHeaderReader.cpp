@@ -130,4 +130,22 @@ spBlockHeader readBlockHeader(DataObject const& _filledData)
     return spBlockHeader(new BlockHeaderLegacy(_filledData));
 }
 
+bool isBlockExportCurrentRandom(BlockHeader const& _header)
+{
+    return _header.type() == BlockType::BlockHeaderMerge
+           || _header.type() == BlockType::BlockHeaderShanghai;
+}
+
+bool isBlockExportWithdrawals(BlockHeader const& _header)
+{
+    return _header.type() == BlockType::BlockHeaderShanghai;
+}
+
+bool isBlockExportBasefee(BlockHeader const& _header)
+{
+    return _header.type() == BlockType::BlockHeader1559
+           || _header.type() == BlockType::BlockHeaderMerge
+           || _header.type() == BlockType::BlockHeaderShanghai;
+}
+
 }  // namespace teststruct

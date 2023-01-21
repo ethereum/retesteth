@@ -5,28 +5,6 @@
 
 using namespace std;
 using namespace test::teststruct;
-namespace
-{
-BlockchainTestFillerEnv* readBlockchainFillerTestEnv(spDataObjectMove _data, SealEngine _sEngine)
-{
-    auto const& data = _data.getPointer();
-    if (data->count("baseFeePerGas"))
-    {
-        spDataObject diff = data->atKey("difficulty").copy();
-        (*diff).performModifier(mod_valueToCompactEvenHexPrefixed);
-        if (VALUE(diff->asString()) != 0)
-            return new BlockchainTestFillerEnv1559(_data, _sEngine);
-        else
-        {
-            if (data->count("withdrawalsRoot"))
-                return new BlockchainTestFillerEnvShanghai(_data, _sEngine);
-            else
-                return new BlockchainTestFillerEnvMerge(_data, _sEngine);
-        }
-    }
-    return new BlockchainTestFillerEnvLegacy(_data, _sEngine);
-}
-}  // namespace
 
 namespace test::teststruct
 {

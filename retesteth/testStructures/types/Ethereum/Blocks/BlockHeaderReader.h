@@ -8,4 +8,10 @@ namespace test::teststruct
 {
 spBlockHeader readBlockHeader(DataObject const& _data);
 spBlockHeader readBlockHeader(dev::RLP const& _rlp);
+
+// Block Serialization conditions
+bool isBlockExportCurrentRandom(BlockHeader const&);
+bool isBlockExportWithdrawals(BlockHeader const&);
+bool isBlockExportBasefee(BlockHeader const&);
+
 }  // namespace teststruct

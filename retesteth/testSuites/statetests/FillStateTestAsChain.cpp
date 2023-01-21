@@ -110,6 +110,8 @@ spDataObject FillTestAsBlockchain(StateTestInFiller const& _test)
                             (*block)["transactions"].atLastElementUnsafe()["sender"] = sender->asString();
                     }
                     (*block).atKeyPointer("uncleHeaders") = spDataObject(new DataObject(DataType::Array));
+                    if (isBlockExportWithdrawals(remoteBlock.header()))
+                        (*block).atKeyPointer("withdrawals") = spDataObject(new DataObject(DataType::Array));
 
                     if (!testException.empty())
                     {

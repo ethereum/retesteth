@@ -32,6 +32,11 @@ spDataObject TestBlock::asDataObject() const
         res.atKeyPointer("transactions") = spDataObject(new DataObject(DataType::Array));
         for (auto const& tr : m_block->transactions())
             res["transactions"].addArrayObject(tr->asDataObject());
+
+        if (isBlockExportWithdrawals(m_block->header()))
+            res.atKeyPointer("withdrawals") = spDataObject(new DataObject(DataType::Array));
+
+        // Print withdrawals anyway if it's present
         for (auto const& wt : m_block->withdrawals())
             res["withdrawals"].addArrayObject((wt->asDataObject()));
 

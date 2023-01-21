@@ -2,9 +2,7 @@
 #include <retesteth/testStructures/types/StateTests/Base/StateTestEnvBase.h>
 #include <libdataobj/DataObject.h>
 
-namespace test
-{
-namespace teststruct
+namespace test::teststruct
 {
 
 // Blockchain test does not have Env section
@@ -64,7 +62,6 @@ private:
 
 
 typedef GCP_SPointer<BlockchainTestFillerEnv> spBlockchainTestFillerEnv;
-
+BlockchainTestFillerEnv* readBlockchainFillerTestEnv(spDataObjectMove _data, SealEngine _sEngine);
 
 }  // namespace teststruct
-}  // namespace test
