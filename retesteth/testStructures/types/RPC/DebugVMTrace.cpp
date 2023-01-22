@@ -112,7 +112,8 @@ DebugVMTrace::DebugVMTrace(
             {
                 m_output = data->atKey("output").asString();
                 m_gasUsed = spVALUE(new VALUE(data->atKey("gasUsed")));
-                m_time = data->atKey("time").asInt();
+                if (data->count("time"))
+                    m_time = data->atKey("time").asInt();
             }
             else
                 m_log.emplace_back(VMLogRecord(data));
@@ -131,7 +132,8 @@ DebugVMTrace::DebugVMTrace(
                 if (++k < c_maxRowsToPrint)
                 {
                     m_rawUnparsedLogs += line + "\n";
-                    readLog(line);
+                    if (!Options::get().vmtraceraw)
+                        readLog(line);
                 }
                 else if (k == c_maxRowsToPrint)
                 {
