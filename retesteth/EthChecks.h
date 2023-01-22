@@ -7,6 +7,7 @@ namespace test::debug
 enum DC
 {
     RPC,
+    RPC2,
     DEFAULT,
     SOCKET,
     STATS,

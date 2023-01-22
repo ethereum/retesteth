@@ -28,6 +28,11 @@ Debug::Debug()
                 m_channels[DC::RPC] = true;
                 m_channels[DC::WARNING] = true;
             }
+            else if (flag == "RPC2")
+            {
+                m_channels[DC::RPC2] = true;
+                m_channels[DC::WARNING] = true;
+            }
             else if (flag == "STATS")
                 m_channels[DC::STATS] = true;  // Default test execution stats
             else if (flag == "STATE")
@@ -69,7 +74,10 @@ void Debug::initializeDefaultChannels()
     if (verb >= 6)
         m_channels[DC::RPC] = true;
     if (verb >= 7)
+    {
         m_channels[DC::LOWLOG] = true;
+        m_channels[DC::RPC2] = true;
+    }
     if (Options::get().poststate.initialized() || Options::get().statediff.initialized())
         m_channels[DC::STATE] = true;
 }
