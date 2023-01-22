@@ -197,11 +197,19 @@ void ToolChain::checkBasefeeAgainstRetesteth(VALUE const& _toolBasefee, spBlockH
 
 void ToolChain::setAndCheckDifficulty(VALUE const& _difficulty, spBlockHeader& _pendingHeader)
 {
-    if (_pendingHeader->type() == BlockType::BlockHeaderLegacy ||
-        _pendingHeader->type() == BlockType::BlockHeader1559)
+    if (isBlockExportDifficulty(_pendingHeader))
     {
-        _pendingHeader.getContent().setDifficulty(_difficulty);
-        checkDifficultyAgainstRetesteth(_difficulty, _pendingHeader);
+        if (Options::getCurrentConfig().cfgFile().calculateDifficulty())
+        {
+            ChainOperationParams params = ChainOperationParams::defaultParams(toolParams());
+            VALUE retestethDifficulty = calculateEthashDifficulty(params, _pendingHeader, lastBlock().header());
+            _pendingHeader.getContent().setDifficulty(retestethDifficulty);
+        }
+        else
+        {
+            _pendingHeader.getContent().setDifficulty(_difficulty);
+            checkDifficultyAgainstRetesteth(_difficulty, _pendingHeader);
+        }
     }
 }
 

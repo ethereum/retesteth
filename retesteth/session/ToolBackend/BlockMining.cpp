@@ -21,36 +21,45 @@ namespace toolimpl
 void BlockMining::prepareEnvFile()
 {
     m_envPath = m_chainRef.tmpDir() / "env.json";
-    auto spHeader = m_currentBlockRef.header()->asDataObject();
+    auto const& cfgFile = Options::getCurrentConfig().cfgFile();
+
+    auto const& parentBlcokH = m_parentBlockRef.header();
+    auto const& currentBlockH = m_currentBlockRef.header();
+
+    auto spHeader = currentBlockH->asDataObject();
     spBlockchainTestFillerEnv env(readBlockchainFillerTestEnv(dataobject::move(spHeader), m_chainRef.engine()));
     spDataObject& envData = const_cast<spDataObject&>(env->asDataObject());
-    if (m_parentBlockRef.header()->number() != m_currentBlockRef.header()->number())
+
+    if (parentBlcokH->number() != currentBlockH->number())
     {
-        if (m_parentBlockRef.header()->hash() != m_currentBlockRef.header()->parentHash())
+        if (parentBlcokH->hash() != currentBlockH->parentHash())
             ETH_ERROR_MESSAGE("ToolChain::mineBlockOnTool: provided parent block != pending parent block hash!");
-        (*envData).removeKey("currentDifficulty");
-        (*envData)["parentTimestamp"] = m_parentBlockRef.header()->timestamp().asString();
-        (*envData)["parentDifficulty"] = m_parentBlockRef.header()->difficulty().asString();
-        (*envData)["parentUncleHash"] = m_parentBlockRef.header()->uncleHash().asString();
+
+        if (!cfgFile.calculateDifficulty())
+        {
+            (*envData).removeKey("currentDifficulty");
+            (*envData)["parentTimestamp"] = parentBlcokH->timestamp().asString();
+            (*envData)["parentDifficulty"] = parentBlcokH->difficulty().asString();
+            (*envData)["parentUncleHash"] = parentBlcokH->uncleHash().asString();
+        }
     }
 
-    if (isBlockExportCurrentRandom(m_currentBlockRef.header()))
-        (*envData)["currentRandom"] = m_currentBlockRef.header()->mixHash().asString();
+    if (isBlockExportCurrentRandom(currentBlockH))
+        (*envData)["currentRandom"] = currentBlockH->mixHash().asString();
 
-    if (isBlockExportWithdrawals(m_currentBlockRef.header()))
+    if (isBlockExportWithdrawals(currentBlockH))
     {
         (*envData).atKeyPointer("withdrawals") = spDataObject(new DataObject(DataType::Array));
         for (auto const& wt : m_currentBlockRef.withdrawals())
             (*envData)["withdrawals"].addArrayObject(wt->asDataObject(ExportOrder::ToolStyle));
     }
 
-    if (isBlockExportBasefee(m_parentBlockRef.header()))
+    if (isBlockExportBasefee(parentBlcokH))
     {
-        auto const& cfgFile = Options::getCurrentConfig().cfgFile();
         if (!cfgFile.calculateBasefee())
         {
             (*envData).removeKey("currentBaseFee");
-            BlockHeader1559 const& h1559 = (BlockHeader1559 const&) m_parentBlockRef.header().getCContent();
+            BlockHeader1559 const& h1559 = (BlockHeader1559 const&) parentBlcokH.getCContent();
             (*envData)["parentBaseFee"] = h1559.baseFee().asString();
             (*envData)["parentGasUsed"] = h1559.gasUsed().asString();
             (*envData)["parentGasLimit"] = h1559.gasLimit().asString();
@@ -64,7 +73,7 @@ void BlockMining::prepareEnvFile()
     for (auto const& un : m_currentBlockRef.uncles())
     {
         spDataObject uncle;
-        int delta = (int)(m_currentBlockRef.header()->number() - un->number()).asBigInt();
+        int delta = (int)(currentBlockH->number() - un->number()).asBigInt();
         if (delta < 1)
             throw test::UpwardsException("Uncle header delta is < 1");
         (*uncle)["delta"] = delta;

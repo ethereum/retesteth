@@ -148,4 +148,10 @@ bool isBlockExportBasefee(BlockHeader const& _header)
            || _header.type() == BlockType::BlockHeaderShanghai;
 }
 
+bool isBlockExportDifficulty(BlockHeader const& _header)
+{
+    return _header.type() == BlockType::BlockHeaderLegacy
+           || _header.type() == BlockType::BlockHeader1559;
+}
+
 }  // namespace teststruct

@@ -13,5 +13,6 @@ spBlockHeader readBlockHeader(dev::RLP const& _rlp);
 bool isBlockExportCurrentRandom(BlockHeader const&);
 bool isBlockExportWithdrawals(BlockHeader const&);
 bool isBlockExportBasefee(BlockHeader const&);
+bool isBlockExportDifficulty(BlockHeader const&);
 
 }  // namespace teststruct

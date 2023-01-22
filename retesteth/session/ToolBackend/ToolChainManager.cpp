@@ -71,6 +71,13 @@ void ToolChainManager::reorganizePendingBlock()
         VALUE newFee = calculateEIP1559BaseFee(params, m_pendingBlock->header(), currentChain().lastBlock().header());
         header1559.setBaseFee(VALUE(newFee));
     }
+
+    if (isBlockExportDifficulty(header) && Options::getCurrentConfig().cfgFile().calculateDifficulty())
+    {
+        ChainOperationParams params = ChainOperationParams::defaultParams(currentChain().toolParams());
+        VALUE retestethDifficulty = calculateEthashDifficulty(params, m_pendingBlock->header(), currentChain().lastBlock().header());
+        header.setDifficulty(retestethDifficulty);
+    }
 }
 
 EthereumBlockState const& ToolChainManager::blockByNumber(VALUE const& _number) const
