@@ -37,6 +37,8 @@ DebugVMTrace::DebugVMTraceRaw::DebugVMTraceRaw(string const& _info, fs::path con
                 break;
             }
         }
+        if (m_rawUnparsedLogs.empty())
+            ETH_WARNING("Reading empty vmtrace logs: " + _logs.string());
         fileHandler.close();
     }
     catch (const ifstream::failure& e) {
@@ -79,6 +81,8 @@ DebugVMTrace::DebugVMTraceNice::DebugVMTraceNice(string const& _info, fs::path c
                 }
             }
         }
+        if (m_log.size() == 0)
+            ETH_WARNING("Reading empty vmtrace logs: " + _logs.string());
         fileHandler.close();
     }
     catch (const ifstream::failure& e) {
