@@ -132,6 +132,8 @@ Options::Options(int argc, const char** argv)
         {
             if (rCurrentTestSuite.find("BCGeneral") != string::npos)
                 return;
+            if (rCurrentTestSuite.find("EOFTests") != string::npos)
+                return;
             BOOST_THROW_EXCEPTION(
                 InvalidOption("Error: `" + _name + "` option requires `-t GeneralStateTests`"));
         }
