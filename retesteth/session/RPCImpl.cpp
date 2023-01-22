@@ -124,7 +124,7 @@ DebugVMTrace RPCImpl::debug_traceTransaction(FH32 const& _trHash)
 {
     (void)_trHash;
     ETH_FAIL_MESSAGE("RPCImpl::debug_traceTransaction is not implemented!");
-    static DebugVMTrace empty("", "", FH32::zero(), "");
+    static DebugVMTrace empty;
     return empty;
 }
 

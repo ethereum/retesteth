@@ -167,8 +167,6 @@ Options::Options(int argc, const char** argv)
     ADD_OPTION(vmtrace, "--vmtrace", [](){
         cout << setw(30) << "--vmtrace" << setw(25) << "Trace transaction execution\n";
         cout << setw(30) << "--vmtrace x:y" << setw(25) << "Show vmtrace of block 'x', transaction 'y'\n";
-        cout << setw(30) << "--vmtrace <folder>" << setw(25) << "Trace transactions execution to a given folder\n";
-        cout << setw(30) << "--vmtrace x:y <folder>" << setw(25) << "Same as above but combined\n";
     });
     ADD_OPTIONV(vmtraceraw, "--vmtraceraw", [](){
         cout << setw(30) << "--vmtraceraw" << setw(25) << "Trace transaction execution raw format\n";

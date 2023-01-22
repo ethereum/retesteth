@@ -77,7 +77,7 @@ void printVmTrace(VMtraceinfo const& _info)
             ret.print();
     }
     else
-        ret.printNice();
+        ret.print();
 
     DataObject state;
     state["stateRoot"] = _info.stateRoot.asString();

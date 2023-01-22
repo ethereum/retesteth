@@ -78,7 +78,7 @@ DebugVMTrace const& EthereumBlockState::getTrTrace(FH32 const& _hash) const
         return m_transactionsTrace.at(_hash);
     else
         ETH_WARNING("Transaction trace not found! (" + _hash.asString() + ")");
-    static DebugVMTrace empty("", "", FH32::zero(), "");
+    static DebugVMTrace empty;
     return empty;
 }
 
