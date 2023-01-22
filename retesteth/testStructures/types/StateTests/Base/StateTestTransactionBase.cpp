@@ -8,6 +8,8 @@ using namespace test::teststruct;
 
 spDataObject StateTestTransactionBase::asDataObject() const
 {
+    // Saves serialization time because processed in the constructor
+    // TODO: double check this
     return m_rawData;
 }
 

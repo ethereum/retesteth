@@ -18,7 +18,11 @@ void removeCommentsFromCode(string& _code)
     size_t posComment = _code.find("#");
     while(posComment != string::npos)
     {
-        size_t const posEndl = _code.find('\n');
+        size_t posEndl = string::npos;
+        size_t const posEndl1 = _code.find('\n');
+        size_t const posEndl2 = _code.find("\\n");
+        posEndl = min(posEndl1, posEndl2);
+
         if (posEndl != string::npos)
         {
             if (posEndl < posComment)
@@ -126,7 +130,7 @@ void tryKnownCompilers(string const& _code, solContracts const& _preSolidity, st
             _compiledCode = _code.substr(pos + c_rawPrefix.length() + 1);
             test::removeSubChar(_compiledCode, {' ', '-'});
             removeCommentsFromCode(_compiledCode);
-            test::removeSubChar(_compiledCode, '\n');
+            test::removeSubChar(_compiledCode, {'\n', 'n', '\\'});
             utiles::checkHexHasEvenLength(_compiledCode);
             found = true;
         }
