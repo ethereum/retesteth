@@ -7,6 +7,8 @@
 #include <retesteth/TestOutputHelper.h>
 #include <retesteth/testStructures/Common.h>
 #include <testStructures/types/BlockchainTests/BlockchainTestFiller.h>
+#include <filesystem>
+#include <regex>
 
 using namespace std;
 using namespace dev;
@@ -138,41 +140,41 @@ void BlockMining::executeTransition()
     m_outAllocPath = m_chainRef.tmpDir() / "outAlloc.json";
     m_outErrorPath = m_chainRef.tmpDir() / "error.json";
 
-    string cmd = m_chainRef.toolPath().string();
+    m_cmd = m_chainRef.toolPath().string();
 
     // Convert FrontierToHomesteadAt5 -> Homestead if block > 5, and get reward
     auto tupleRewardFork = prepareReward(m_engine, m_chainRef.fork(), m_currentBlockRef);
-    cmd += " --state.fork " + std::get<1>(tupleRewardFork).asString();
+    m_cmd += " --state.fork " + std::get<1>(tupleRewardFork).asString();
     if (m_engine != SealEngine::NoReward)
     {
         if (m_engine == SealEngine::Genesis)
-            cmd += " --state.reward -1";
+            m_cmd += " --state.reward -1";
         else
-            cmd += " --state.reward " + std::get<0>(tupleRewardFork).asDecString();
+            m_cmd += " --state.reward " + std::get<0>(tupleRewardFork).asDecString();
     }
 
     auto const& params = m_chainRef.params().getCContent().params();
     if (params.count("chainID"))
-        cmd += " --state.chainid " + VALUE(params.atKey("chainID")).asDecString();
+        m_cmd += " --state.chainid " + VALUE(params.atKey("chainID")).asDecString();
 
-    cmd += " --input.alloc " + m_allocPath.string();
-    cmd += " --input.txs " + m_txsPath.string();
-    cmd += " --input.env " + m_envPath.string();
-    cmd += " --output.basedir " + m_chainRef.tmpDir().string();
-    cmd += " --output.result " + m_outPath.filename().string();
-    cmd += " --output.alloc " + m_outAllocPath.filename().string();
-    cmd += " --output.errorlog " + m_outErrorPath.string();
+    m_cmd += " --input.alloc " + m_allocPath.string();
+    m_cmd += " --input.txs " + m_txsPath.string();
+    m_cmd += " --input.env " + m_envPath.string();
+    m_cmd += " --output.basedir " + m_chainRef.tmpDir().string();
+    m_cmd += " --output.result " + m_outPath.filename().string();
+    m_cmd += " --output.alloc " + m_outAllocPath.filename().string();
+    m_cmd += " --output.errorlog " + m_outErrorPath.string();
 
     bool traceCondition = Options::get().vmtrace && m_currentBlockRef.header()->number() != 0;
     if (traceCondition)
     {
-        cmd += " --trace ";
+        m_cmd += " --trace ";
         if (!Options::get().vmtrace_nomemory)
-            cmd += "--trace.memory ";
+            m_cmd += "--trace.memory ";
         if (!Options::get().vmtrace_noreturndata)
-            cmd += "--trace.returndata ";
+            m_cmd += "--trace.returndata ";
         if (Options::get().vmtrace_nostack)
-            cmd += "--trace.nostack ";
+            m_cmd += "--trace.nostack ";
     }
 
     ETH_DC_MESSAGE(DC::RPC, "Alloc:\n" + m_allocPathContent);
@@ -185,13 +187,13 @@ void BlockMining::executeTransition()
     ETH_DC_MESSAGE(DC::RPC, "Env:\n" + m_envPathContent);
 
     int exitcode;
-    string out = test::executeCmd(cmd, exitcode, ExecCMDWarning::NoWarningNoError);
-    ETH_DC_MESSAGE(DC::RPC, cmd);
+    string out = test::executeCmd(m_cmd, exitcode, ExecCMDWarning::NoWarningNoError);
+    ETH_DC_MESSAGE(DC::RPC, m_cmd);
     if (exitcode != 0)
     {
         string const outErrorContent = dev::contentsString(m_outErrorPath.string());
         ETH_DC_MESSAGE(DC::RPC, "Err:\n" + outErrorContent);
-        throw test::UpwardsException(outErrorContent.empty() ? (out.empty() ? "Tool failed: " + cmd : out) : outErrorContent);
+        throw test::UpwardsException(outErrorContent.empty() ? (out.empty() ? "Tool failed: " + m_cmd : out) : outErrorContent);
     }
 
     ETH_DC_MESSAGE(DC::RPC, out);
@@ -243,6 +245,29 @@ void BlockMining::traceTransactions(ToolResponse& _toolResponse)
 
 BlockMining::~BlockMining()
 {
+    auto const& t8ntoolcall = Options::get().t8ntoolcall;
+    if (!t8ntoolcall.empty())
+    {
+        string folder = m_chainRef.fork().asString() + "_block";
+        folder += m_currentBlockRef.header()->number().asDecString() + "_";
+        folder += m_currentBlockRef.header()->hash().asString().substr(0, 6);
+        auto const from = m_chainRef.tmpDir().string();
+        auto const to = (t8ntoolcall / fs::path(folder)).string();
+
+        try
+        {
+            std::filesystem::copy(from, to);
+        }
+        catch (std::exception const& _ex)
+        {
+            ETH_WARNING(string() + "Can't export t8ntool call to destination file (check that dest is empty or use more test selectors like --singletest): \n" + _ex.what());
+        }
+
+        m_cmd = std::regex_replace(m_cmd, std::regex(m_chainRef.tmpDir().string()), to);
+        fs::path const cmdFile = to + "/command.sh";
+        dev::writeFile(cmdFile, dev::asBytes(m_cmd));
+    }
+
     fs::remove(m_envPath);
     fs::remove(m_allocPath);
     fs::remove(m_outErrorPath);

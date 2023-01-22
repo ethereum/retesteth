@@ -159,6 +159,9 @@ Options::Options(int argc, const char** argv)
     ADD_OPTION(getvectors, "--getvectors", []() {
         cout << setw(30) << "--getvectors" << setw(25) << "Output all subunits of the given test (disables execution)\n";
     });
+    ADD_OPTION(t8ntoolcall, "--exportcall", []() {
+        cout << setw(30) << "--exportcall <folder>" << setw(25) << "Export t8ntool exec files to a folder (t8ntool only)\n";
+    });
     ADD_OPTION(statediff, "--statediff", [](){
         cout << setw(30) << "--statediff" << setw(25) << "Print statediff post vs pre\n";
         cout << setw(30) << "--statediff xtoy" << setw(25) << "Statediff from block 'x' to block 'y'\n";

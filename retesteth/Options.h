@@ -229,6 +229,7 @@ public:
     bool_opt exectimelog = false;
     bool_opt enableClientsOutput = false;
     bool_opt travisOutThread = false;
+    string_opt t8ntoolcall;
 
     // Additional Tests
     bool_opt all = false;
