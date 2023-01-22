@@ -14,6 +14,7 @@ private:
     public:
         virtual void print() = 0;
         std::vector<VMLogRecord> const& getLog() const { return m_log; };
+        virtual ~DebugVMTraceImplInterface(){}
     protected:
         std::string m_infoString;
         std::vector<VMLogRecord> m_log;
