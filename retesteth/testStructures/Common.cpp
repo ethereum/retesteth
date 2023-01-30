@@ -260,7 +260,7 @@ void requireJsonFields(DataObject const& _o, std::string const& _config, std::ma
         if (!_validationMap.count(field->getKey()))
         {
             std::string const comment = "Unexpected field '" + field->getKey() + "' in config: " + _config;
-            ETH_ERROR_MESSAGE(comment + "\n" + _o.asJson());
+            throw test::UpwardsException(comment + "\n" + _o.asJson());
         }
     }
 
@@ -273,7 +273,7 @@ void requireJsonFields(DataObject const& _o, std::string const& _config, std::ma
             if (vmap.second.second == jsonField::Required)
             {
                 std::string const comment = "Expected field '" + vmap.first + "' not found in config: " + _config;
-                ETH_ERROR_MESSAGE(comment + "\n" + _o.asJson());
+                throw test::UpwardsException(comment + "\n" + _o.asJson());
             }
             else if (vmap.second.second == jsonField::Optional)
                 continue;
@@ -297,7 +297,7 @@ void requireJsonFields(DataObject const& _o, std::string const& _config, std::ma
             }
             std::string const comment = "Field '" + vmap.first + "' expected to be `" + sTypes + "`, but set to `" +
                                         DataObject::dataTypeAsString(_o.atKey(vmap.first).type()) + "` in " + _config;
-            ETH_ERROR_MESSAGE(comment + "\n" + _o.asJson());
+            throw test::UpwardsException(comment + "\n" + _o.asJson());
         }
     }
 }
