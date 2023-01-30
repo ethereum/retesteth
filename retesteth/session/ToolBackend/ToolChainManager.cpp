@@ -6,6 +6,7 @@
 #include <libdevcore/SHA3.h>
 #include <retesteth/TestHelper.h>
 #include <retesteth/Options.h>
+#include <retesteth/Constants.h>
 using namespace std;
 using namespace dev;
 using namespace test;
@@ -436,7 +437,7 @@ void ToolChainManager::initMergePendingBlock(EthereumBlockState const& _lastBloc
 void ToolChainManager::initShanghaiPendingBlock(EthereumBlockState const& _lastBlock)
 {
     spDataObject parentData = _lastBlock.header()->asDataObject();
-    (*parentData)["withdrawalsRoot"] = "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421";
+    (*parentData)["withdrawalsRoot"] = C_WITHDRAWALS_EMPTY_ROOT;
     spBlockHeader newPending(new BlockHeaderShanghai(parentData));
     m_pendingBlock = spEthereumBlockState(new EthereumBlockState(newPending, _lastBlock.state(), _lastBlock.logHash()));
 }

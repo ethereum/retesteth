@@ -1,5 +1,6 @@
 #include "SetChainParamsArgs.h"
 #include <retesteth/testStructures/Common.h>
+#include <retesteth/Constants.h>
 
 using namespace dataobject;
 using namespace test::teststruct;
@@ -158,9 +159,9 @@ spDataObject SetChainParamsArgsGenesis::buildCommonBlockHeader() const
     fullBlockHeader["bloom"] = FH256::zero().asString();
     fullBlockHeader["gasUsed"] = "0x00";
     fullBlockHeader["number"] = "0x00";
-    fullBlockHeader["receiptTrie"] = "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421";
+    fullBlockHeader["receiptTrie"] = C_WITHDRAWALS_EMPTY_ROOT;
     fullBlockHeader["stateRoot"] = FH32::zero().asString();
-    fullBlockHeader["transactionsTrie"] = "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421";
+    fullBlockHeader["transactionsTrie"] = C_WITHDRAWALS_EMPTY_ROOT;
     fullBlockHeader["uncleHash"] = "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347";
     fullBlockHeader["parentHash"] = FH32::zero().asString();
     return _fullBlockHeader;

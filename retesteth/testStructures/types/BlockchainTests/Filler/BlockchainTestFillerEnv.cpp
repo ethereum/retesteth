@@ -1,6 +1,7 @@
 #include "BlockchainTestFillerEnv.h"
 #include <retesteth/EthChecks.h>
 #include <retesteth/testStructures/Common.h>
+#include <retesteth/Constants.h>
 using namespace std;
 using namespace dataobject;
 using namespace test::teststruct;
@@ -176,7 +177,7 @@ void BlockchainTestFillerEnv::initializeCommonFields(spDataObject const& _data, 
     m_currentBaseFee = spVALUE(new VALUE(DataObject("0x10")));
     auto const& difficulty = m_currentDifficulty->asString();
     m_currentRandom = spFH32(new FH32(dev::toCompactHexPrefixed(dev::u256(difficulty), 32)));
-    m_currentWithdrawalsRoot = spFH32(new FH32(DataObject("0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421")));
+    m_currentWithdrawalsRoot = spFH32(new FH32(DataObject(C_WITHDRAWALS_EMPTY_ROOT)));
 }
 
 void BlockchainTestFillerEnvShanghai::initializeShanghaiFields(DataObject const& _data)
