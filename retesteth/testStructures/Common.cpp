@@ -48,6 +48,12 @@ void removeLeadingZeroes(string& _hexStr)
 namespace test::teststruct
 {
 
+spFH20 convertSecretToPublic(VALUE const& _secret)
+{
+    spFH32 secret(new FH32(_secret.asString()));
+    return convertSecretToPublic(secret);
+}
+
 spFH20 convertSecretToPublic(spFH32 const& _secret)
 {
     const dev::Secret secret(_secret->asString());

@@ -122,6 +122,10 @@ void BlockMining::prepareTxnFile()
             {
                 auto trData = tr->asDataObject(ExportOrder::ToolStyle);
                 (*trData)["hash"] = tr->hash().asString();
+
+                if (tr->getSecret() != 0)
+                    (*trData)["sender"] = convertSecretToPublic(tr->getSecret())->asString();
+
                 txs.addArrayObject(trData);
             }
             else

@@ -74,5 +74,6 @@ void readExpectExceptions(DataObject const& _data, std::map<FORK, std::string>& 
 
 // Convert Secret Key to Public eth key
 spFH20 convertSecretToPublic(spFH32 const& _secret);
+spFH20 convertSecretToPublic(VALUE const& _secret);
 
 }  // namespace teststruct
