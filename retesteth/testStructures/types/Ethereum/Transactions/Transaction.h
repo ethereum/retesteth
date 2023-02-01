@@ -34,6 +34,7 @@ struct Transaction : GCP_SPointerBase
     VALUE const& s() const { return m_s; }
 
     FH32 const& hash() const { return m_hash; }
+    FH20 const& sender() const;
     BYTES const& getRawBytes() const { return m_rawRLPdata; }
     dev::RLPStream const& asRLPStream() const { return m_outRlpStream; }
 
@@ -53,6 +54,7 @@ protected:
     // Potected transaction interface
     virtual void fromDataObject(DataObject const&) = 0;
     virtual void fromRLP(dev::RLP const&) = 0;
+    virtual dev::h256 buildVRSHash() const = 0;
     virtual void buildVRS() = 0;
     virtual void streamHeader(dev::RLPStream& _stream) const = 0;
     virtual void rebuildRLP() = 0;
@@ -82,7 +84,7 @@ protected:
     dev::RLPStream m_outRlpStream;
     spBYTES m_rawRLPdata;  // raw transaction data without rlp header (for typed transactions)
     spVALUE m_secretKey = spVALUE(new VALUE(0));   // Additional info for t8ntool transaction wrapper
-    spFH20 m_sender;
+    mutable spFH20 m_sender;
 };
 
 typedef GCP_SPointer<Transaction> spTransaction;

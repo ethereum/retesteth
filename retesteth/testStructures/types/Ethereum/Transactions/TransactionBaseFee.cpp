@@ -145,8 +145,7 @@ void TransactionBaseFee::fromRLP(dev::RLP const& _rlp)
     rebuildRLP();
 }
 
-
-void TransactionBaseFee::buildVRS()
+dev::h256 TransactionBaseFee::buildVRSHash() const
 {
     dev::RLPStream stream;
     stream.appendList(9);
@@ -155,9 +154,13 @@ void TransactionBaseFee::buildVRS()
     // Alter output with prefixed 02 byte + tr.rlp
     dev::bytes outa = stream.out();
     outa.insert(outa.begin(), dev::byte(2));  // txType
+    return dev::sha3(outa);
+}
 
+void TransactionBaseFee::buildVRS()
+{
     const dev::Secret secret(m_secretKey->asString());
-    const dev::h256 hash(dev::sha3(outa));
+    const dev::h256 hash = buildVRSHash();
     dev::Signature sig = dev::sign(secret, hash);
     dev::SignatureStruct sigStruct = *(dev::SignatureStruct const*)&sig;
     ETH_FAIL_REQUIRE_MESSAGE(

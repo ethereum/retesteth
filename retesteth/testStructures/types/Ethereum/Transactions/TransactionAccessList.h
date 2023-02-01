@@ -22,6 +22,7 @@ protected:
     // Override protected interface
     void fromRLP(dev::RLP const&) override;
     void fromDataObject(DataObject const&) override;
+    dev::h256 buildVRSHash() const override;
     void buildVRS() override;
     void streamHeader(dev::RLPStream& _stream) const override;
     void rebuildRLP() override;

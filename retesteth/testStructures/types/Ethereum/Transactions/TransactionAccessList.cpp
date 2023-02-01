@@ -141,7 +141,7 @@ void TransactionAccessList::fromRLP(dev::RLP const& _rlp)
     rebuildRLP();
 }
 
-void TransactionAccessList::buildVRS()
+dev::h256 TransactionAccessList::buildVRSHash() const
 {
     dev::RLPStream stream;
     stream.appendList(8);
@@ -150,8 +150,12 @@ void TransactionAccessList::buildVRS()
     // Alter output with prefixed 01 byte + tr.rlp
     dev::bytes outa = stream.out();
     outa.insert(outa.begin(), dev::byte(1));  // txType
+    return dev::sha3(outa);
+}
 
-    const dev::h256 hash(dev::sha3(outa));
+void TransactionAccessList::buildVRS()
+{
+    const dev::h256 hash = buildVRSHash();
     const dev::Secret secret(m_secretKey->asString());
     dev::Signature sig = dev::sign(secret, hash);
     dev::SignatureStruct sigStruct = *(dev::SignatureStruct const*)&sig;

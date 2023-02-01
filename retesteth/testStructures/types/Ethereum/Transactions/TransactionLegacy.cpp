@@ -158,7 +158,7 @@ void TransactionLegacy::streamHeader(dev::RLPStream& _s) const
     _s << test::sfromHex(data().asString());
 }
 
-void TransactionLegacy::buildVRS()
+dev::h256 TransactionLegacy::buildVRSHash() const
 {
     dev::RLPStream stream;
     stream.appendList((m_chainID.getCContent() == 1) ? 6 : 9);
@@ -169,8 +169,12 @@ void TransactionLegacy::buildVRS()
         stream << VALUE(0).serializeRLP();
         stream << VALUE(0).serializeRLP();
     }
+    return dev::sha3(stream.out());
+}
 
-    const dev::h256 hash(dev::sha3(stream.out()));
+void TransactionLegacy::buildVRS()
+{
+    const dev::h256 hash = buildVRSHash();
     const dev::Secret secret(m_secretKey->asString());
     dev::Signature sig = dev::sign(secret, hash);
     dev::SignatureStruct sigStruct = *(dev::SignatureStruct const*)&sig;
