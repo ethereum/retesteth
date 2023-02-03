@@ -1,4 +1,5 @@
 #include "ToolResponse.h"
+#include "Constants.h"
 #include <retesteth/testStructures/Common.h>
 
 namespace test::teststruct
@@ -32,7 +33,7 @@ ToolResponse::ToolResponse(DataObject const& _data)
     if (_data.count("currentBaseFee"))
         m_currentBasefee = spVALUE(new VALUE(_data.atKey("currentBaseFee")));
 
-    m_withdrawalsRoot = spFH32(new FH32(FH32::zero()));
+    m_withdrawalsRoot = spFH32(new FH32(C_WITHDRAWALS_EMPTY_ROOT));
     if (_data.count("withdrawalsRoot"))
         m_withdrawalsRoot = spFH32(new FH32(_data.atKey("withdrawalsRoot")));
 
