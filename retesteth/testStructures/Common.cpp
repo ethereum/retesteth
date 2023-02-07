@@ -92,6 +92,19 @@ void mod_removeComments(DataObject& _obj)
         _obj.removeKey(key);
 }
 
+void mod_valueToFH32(DataObject& _obj)
+{
+    if (_obj.type() == DataType::String)
+    {
+        size_t size = _obj.asString().size();
+        if (_obj.asString().substr(0, 2) == "0x")
+        {
+            while (size++ < 66)
+                _obj.asStringUnsafe().insert(2, "0");
+        }
+    }
+}
+
 void mod_valueToCompactEvenHexPrefixed(DataObject& _obj)
 {
     if (_obj.type() == DataType::String)

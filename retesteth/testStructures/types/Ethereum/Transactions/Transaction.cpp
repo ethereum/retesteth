@@ -39,8 +39,14 @@ FH20 const& Transaction::sender() const
             {
                 bool const legacyV = (type() == TransactionType::LEGACY && m_chainID->asBigInt() == 1);
                 dev::byte const v(legacyV ? m_v->asBigInt() - 27 : m_v->asBigInt());
-                dev::h256 const r(m_r->asString());
-                dev::h256 const s(m_s->asString());
+
+                DataObject rs;
+                rs["r"] = m_r->asString();
+                rs["s"] = m_s->asString();
+                rs.performModifier(mod_valueToFH32);
+
+                dev::h256 const r(rs.atKey("r").asString());
+                dev::h256 const s(rs.atKey("s").asString());
                 dev::h256 const recoverHash = buildVRSHash();
                 dev::SignatureStruct const sig(r,s,v);
                 dev::Public const pubkey = dev::recover(sig, recoverHash);

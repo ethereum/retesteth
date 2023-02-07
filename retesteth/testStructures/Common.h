@@ -18,6 +18,7 @@ void mod_keyToLowerCase(DataObject&);
 void mod_valueToCompactEvenHexPrefixed(DataObject&);
 void mod_keyToCompactEvenHexPrefixed(DataObject&);
 void mod_valueInsertZeroXPrefix(DataObject&);
+void mod_valueToFH32(DataObject&);
 void mod_sortKeys(DataObject&);
 long long int hexOrDecStringToInt(std::string const& _str);
 
