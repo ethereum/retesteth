@@ -37,7 +37,8 @@ FH20 const& Transaction::sender() const
         {
             try
             {
-                dev::byte const v(m_v->asBigInt());
+                bool const legacyV = (type() == TransactionType::LEGACY && m_chainID->asBigInt() == 1);
+                dev::byte const v(legacyV ? m_v->asBigInt() - 27 : m_v->asBigInt());
                 dev::h256 const r(m_r->asString());
                 dev::h256 const s(m_s->asString());
                 dev::h256 const recoverHash = buildVRSHash();
