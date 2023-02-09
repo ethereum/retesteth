@@ -149,7 +149,92 @@ spDataObject makeGeneratedEOFTest(DataObject& _stateTestFiller)
     }
     return eofTest;
 }
+
+class ExpectSection
+{
+public:
+    ExpectSection(bool _expectedresult)
+    {
+        if (_expectedresult)
+            (*m_data).atKeyPointer("result") = makeValidResultExpect();
+        else
+            (*m_data).atKeyPointer("result") = makeInvalidResultExpect();
+    }
+    bool isEmpty() const
+    {
+        return m_indexes.size() == 0 || m_nets.size() == 0;
+    }
+    void addNet(string const& _net)
+    {
+        m_nets.emplace(_net);
+    }
+    void addIndex(size_t _ind)
+    {
+        m_indexes.emplace(_ind);
+    }
+    spDataObject getObject()
+    {
+        for (auto const& net : m_nets)
+        {
+            spDataObject netObj(new DataObject(net));
+            (*m_data)["network"].addArrayObject(netObj);
+        }
+        for (auto const& ind : m_indexes)
+        {
+            auto& dataIndexes = (*m_data)["indexes"]["data"];
+            dataIndexes.addArrayObject(spDataObject(new DataObject(ind)));
+        }
+        return m_data;
+    }
+public:
+    std::set<string> m_nets;
+    std::set<size_t> m_indexes;
+    spDataObject m_data;
+};
+
+void convertEOFTestToStateTestFiller(spDataObject& _input)
+{
+    auto& test = (*_input).atUnsafe(0);
+    makeBasicSections(test);
+    spDataObject transaction = makeTransactionWithoutData();
+
+    size_t index = 0;
+    ExpectSection expectValid(true);
+    ExpectSection expectInValid(false);
+    for (auto& vectr : test.atKeyUnsafe("vectors").getSubObjectsUnsafe())
+    {
+        (*transaction)["data"].addArrayObject((*vectr).atKeyPointerUnsafe("code"));
+        for (auto const& res : vectr->atKey("results").getSubObjects())
+        {
+            if (res->atKey("result").asBool())
+            {
+                expectValid.addNet(res->getKey());
+                expectValid.addIndex(index);
+            }
+            else
+            {
+                expectInValid.addNet(res->getKey());
+                expectInValid.addIndex(index);
+            }
+        }
+        index++;
+    }
+
+    spDataObject expectSection(new DataObject(DataType::Array));
+    if (!expectValid.isEmpty())
+        (*expectSection).addArrayObject(expectValid.getObject());
+    if (!expectInValid.isEmpty())
+        (*expectSection).addArrayObject(expectInValid.getObject());
+    ETH_ERROR_REQUIRE_MESSAGE(expectSection->getSubObjects().size() > 0, "Expect section construction error!");
+
+    test.atKeyPointer("expect") = expectSection;
+    test.atKeyPointer("transaction") = transaction;
+    test.removeKey("vectors");
+    test.removeKey("_info");
+}
+
 }  // namespace
+
 spDataObject EOFTestSuite::doTests(spDataObject& _input, TestSuiteOptions& _opt) const
 {
     if (_opt.doFilling)
@@ -159,6 +244,21 @@ spDataObject EOFTestSuite::doTests(spDataObject& _input, TestSuiteOptions& _opt)
         auto eofTest = makeGeneratedEOFTest(test);
         StateTestSuite::doTests(_input, _opt);
         return eofTest;
+    }
+    else
+    {
+        convertEOFTestToStateTestFiller(_input);
+        _opt.doFilling = true;
+
+        // Cheat the file name to look like its filler for internal checks
+        fs::path const& c_file = TestOutputHelper::get().testFile();
+        fs::path& file = const_cast<fs::path&>(c_file);
+        string sFile = c_file.string();
+        size_t pos = sFile.find(".json");
+        sFile.insert(pos, "Filler");
+        file = sFile;
+
+        StateTestSuite::doTests(_input, _opt);
     }
     return spDataObject(0);
 }
