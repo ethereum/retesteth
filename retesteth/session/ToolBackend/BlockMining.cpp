@@ -7,7 +7,6 @@
 #include <retesteth/TestOutputHelper.h>
 #include <retesteth/testStructures/Common.h>
 #include <testStructures/types/BlockchainTests/BlockchainTestFiller.h>
-#include <filesystem>
 #include <regex>
 
 using namespace std;
@@ -251,13 +250,15 @@ BlockMining::~BlockMining()
     {
         string folder = m_chainRef.fork().asString() + "_block";
         folder += m_currentBlockRef.header()->number().asDecString() + "_";
-        folder += m_currentBlockRef.header()->hash().asString().substr(0, 6);
+        folder += m_currentBlockRef.header()->hash().asString().substr(0, 8);
         auto const from = m_chainRef.tmpDir().string();
         auto const to = (t8ntoolcall / fs::path(folder)).string();
 
         try
         {
-            std::filesystem::copy(from, to);
+            if (!fs::exists(to))
+                fs::create_directories(to);
+            fs::copy(from, to);
         }
         catch (std::exception const& _ex)
         {
