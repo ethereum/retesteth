@@ -41,6 +41,9 @@ extern std::string const t8ntool_start;
 #define DECLARE_BESU(X) \
   FOR_EACH(X, besucfg)
 
+#define DECLARE_EVMONE(X) \
+  FOR_EACH(X, evmonecfg)
+
 #define DECLARE_T8NTOOL_EIP(X) \
   FOR_EACH(X, t8ntooleipcfg, t8ntooleip_genRewardsCfg, t8ntooleip_genLondon1884Cfg)
 
@@ -54,6 +57,7 @@ extern std::string const t8ntool_start;
 // Main Configs (T8NTOOL is the base config that puts in to default for other clients as well)
 DECLARE_T8NTOOL(REGISTER)
 DECLARE_BESU(REGISTER)
+DECLARE_EVMONE(REGISTER)
 DECLARE_ETC(REGISTER)
 DECLARE_ETCTR(REGISTER)
 DECLARE_OEWRAP(REGISTER)
@@ -72,6 +76,7 @@ public:
     OptionsInit() {
         DECLARE_T8NTOOL(INIT)
         DECLARE_BESU(INIT)
+        DECLARE_EVMONE(INIT)
         DECLARE_ETC(INIT)
         DECLARE_ETCTR(INIT)
         DECLARE_OEWRAP(INIT)

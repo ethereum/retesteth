@@ -55,8 +55,9 @@ if [ "$1" = "besu" ] || [ -z "$1" ]; then
     rm ./build/install/besu/bin/besu
     BESU_HEAD=$(git rev-parse HEAD | cut -c1-7)
     echo "Build besu: "
-    export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
-    # export JAVA_HOME=/usr/lib/jvm/java-14-oracle
+    #export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+    #export JAVA_HOME=/usr/lib/jvm/java-14-oracle
+    export JAVA_HOME=/usr/lib/jvm/java-17-oracle    
     ./gradlew clean distZip -x test
     ./gradlew clean
     ./gradlew build
