@@ -205,10 +205,17 @@ ToolResponse BlockMining::readResult()
     string const outAllocPathContent = dev::contentsString(m_outAllocPath.string());
     ETH_DC_MESSAGE(DC::RPC, "Res:\n" + outPathContent);
     ETH_DC_MESSAGE(DC::RPC, "RAlloc:\n" + outAllocPathContent);
+
     if (outPathContent.empty())
-        ETH_ERROR_MESSAGE("Tool returned empty file: " + m_outPath.string());
+    {
+        string const outErrorContent = dev::contentsString(m_outErrorPath.string());
+        ETH_ERROR_MESSAGE("Tool returned empty file: " + m_outPath.string() + "\n" + outErrorContent);
+    }
     if (outAllocPathContent.empty())
-        ETH_ERROR_MESSAGE("Tool returned empty file: " + m_outAllocPath.string());
+    {
+        string const outErrorContent = dev::contentsString(m_outErrorPath.string());
+        ETH_ERROR_MESSAGE("Tool returned empty file: " + m_outAllocPath.string() + "\n" + outErrorContent);
+    }
 
     // Construct block rpc response
     ToolResponse toolResponse(ConvertJsoncppStringToData(outPathContent));
