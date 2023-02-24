@@ -67,6 +67,7 @@ public:
 
     // Test
     virtual void test_setChainParams(spSetChainParamsArgs const& _config) = 0;
+    virtual void test_setChainParamsNoGenesis(spSetChainParamsArgs const& _config) = 0;
     virtual void test_rewindToBlock(VALUE const& _blockNr) = 0;
     virtual void test_modifyTimestamp(VALUE const& _timestamp) = 0;
     virtual MineBlocksResult test_mineBlocks(size_t _number) = 0;

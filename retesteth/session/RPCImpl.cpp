@@ -129,6 +129,12 @@ DebugVMTrace RPCImpl::debug_traceTransaction(FH32 const& _trHash)
 }
 
 // Test
+void RPCImpl::test_setChainParamsNoGenesis(spSetChainParamsArgs const& _config)
+{
+    (void) _config;
+    ETH_FAIL_MESSAGE("RPCImpl::test_setChainParamsNoGenesis is not implemented!");
+}
+
 void RPCImpl::test_setChainParams(spSetChainParamsArgs const& _config)
 {
     RPCSession::currentCfgCountTestRun();

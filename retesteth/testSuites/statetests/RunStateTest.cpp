@@ -200,7 +200,7 @@ void RunTest(StateTestInFilled const& _test)
         TestOutputHelper::get().setCurrentTestInfo(errorInfo);
 
         auto p = prepareChainParams(network, SealEngine::NoReward, _test.Pre(), _test.Env(), ParamsContext::StateTests);
-        session.test_setChainParams(p);
+        session.test_setChainParamsNoGenesis(p);
 
         // Read all results for a specific fork
         for (StateTestPostResult const& result : post.second)

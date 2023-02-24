@@ -193,7 +193,7 @@ spDataObject FillTest(StateTestInFiller const& _test)
         TestOutputHelper::get().setCurrentTestInfo(errorInfo);
 
         auto const p = prepareChainParams(fork, SealEngine::NoReward, _test.Pre(), _test.Env(), ParamsContext::StateTests);
-        session.test_setChainParams(p);
+        session.test_setChainParamsNoGenesis(p);
 
         // Run transactions for defined expect sections only
         for (auto const& expect : _test.Expects())

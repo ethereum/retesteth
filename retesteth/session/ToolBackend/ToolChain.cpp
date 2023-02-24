@@ -28,7 +28,7 @@ void correctHeaderByToolResponse(BlockHeader& _header, ToolResponse const& _res)
 namespace toolimpl
 {
 ToolChain::ToolChain(
-    EthereumBlockState const& _genesis, spSetChainParamsArgs const& _config, fs::path const& _toolPath, fs::path const& _tmpDir)
+    EthereumBlockState const& _genesis, spSetChainParamsArgs const& _config, fs::path const& _toolPath, fs::path const& _tmpDir, ToolChainGenesis _genesisPolicy)
   : m_initialParams(_config),
     m_engine(_config->sealEngine()),
     m_fork(new FORK(_config->params().atKey("fork"))),
@@ -56,13 +56,17 @@ ToolChain::ToolChain(
             throw test::UpwardsException("Constructing legacy genesis on network which is higher London!");
     }
 
-    // We yet don't know the state root of genesis. Ask the tool to calculate it
-    ToolResponse const res = mineBlockOnTool(_genesis, _genesis, SealEngine::NoReward);
-
     EthereumBlockState genesisFixed(_genesis.header(), _genesis.state(), FH32::zero());
-    genesisFixed.headerUnsafe().getContent().setStateRoot(res.stateRoot());
-    genesisFixed.headerUnsafe().getContent().recalculateHash();
-    genesisFixed.setTotalDifficulty(genesisFixed.header()->difficulty());
+
+    if (_genesisPolicy == ToolChainGenesis::CALCULATE)
+    {
+        // We yet don't know the state root of genesis. Ask the tool to calculate it
+        ToolResponse const res = mineBlockOnTool(_genesis, _genesis, SealEngine::NoReward);
+        genesisFixed.headerUnsafe().getContent().setStateRoot(res.stateRoot());
+        genesisFixed.headerUnsafe().getContent().recalculateHash();
+        genesisFixed.setTotalDifficulty(genesisFixed.header()->difficulty());
+    }
+
     m_blocks.emplace_back(genesisFixed);
 }
 

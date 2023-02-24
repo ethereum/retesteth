@@ -15,14 +15,18 @@ namespace fs = boost::filesystem;
 
 namespace toolimpl
 {
-ToolChainManager::ToolChainManager(spSetChainParamsArgs const& _config, fs::path const& _toolPath, fs::path const& _tmpDir)
+ToolChainManager::ToolChainManager(
+    spSetChainParamsArgs const& _config,
+    fs::path const& _toolPath,
+    fs::path const& _tmpDir,
+    ToolChainGenesis _genesisPolicy)
 {
     m_tmpDir = _tmpDir;
     m_toolPath = _toolPath;
     m_currentChain = 0;
     m_maxChains = 0;
     EthereumBlockState genesis(_config->genesis(), _config->state(), FH32::zero());
-    m_chains[m_currentChain] = spToolChain(new ToolChain(genesis, _config, _toolPath, _tmpDir));
+    m_chains[m_currentChain] = spToolChain(new ToolChain(genesis, _config, _toolPath, _tmpDir, _genesisPolicy));
     m_pendingBlock =
         spEthereumBlockState(new EthereumBlockState(currentChain().lastBlock().header(), _config->state(), FH32::zero()));
     reorganizePendingBlock();

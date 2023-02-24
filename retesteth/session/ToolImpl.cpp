@@ -236,6 +236,19 @@ void ToolImpl::test_setChainParams(spSetChainParamsArgs const& _config)
     ETH_DC_MESSAGE(DC::RPC, "Response test_setChainParams: {false}");
 }
 
+void ToolImpl::test_setChainParamsNoGenesis(spSetChainParamsArgs const& _config)
+{
+    rpcCall("", {});
+    ETH_DC_MESSAGE(DC::RPC, "\nRequest: test_setChainParams \n" + _config->asDataObject()->asJson());
+
+    // Ask tool to calculate genesis header stateRoot for genesisHeader
+    TRYCATCHCALL(
+        m_toolChainManager = GCP_SPointer<ToolChainManager>(new ToolChainManager(_config, m_toolPath, m_tmpDir, ToolChainGenesis::NOTCALCULATE));
+        ETH_DC_MESSAGE(DC::RPC, "Response test_setChainParams: {true}");
+        , "test_setChainParams", CallType::FAILEVERYTHING, DC::RPC)
+    ETH_DC_MESSAGE(DC::RPC, "Response test_setChainParams: {false}");
+}
+
 void ToolImpl::test_rewindToBlock(VALUE const& _blockNr)
 {
     rpcCall("", {});

@@ -27,12 +27,18 @@ private:
     spVALUE m_londonForkBlock;
 };
 
+enum class ToolChainGenesis
+{
+    CALCULATE,
+    NOTCALCULATE
+};
+
 // Manage test blockchains
 class ToolChain : public GCP_SPointerBase
 {
 public:
     ToolChain(EthereumBlockState const& _genesis, spSetChainParamsArgs const& _params, boost::filesystem::path const& _toolPath,
-        boost::filesystem::path const& _tmpDir);
+        boost::filesystem::path const& _tmpDir, ToolChainGenesis _genesisPolicy = ToolChainGenesis::CALCULATE);
 
     // Calculate difficulty from _blockA to _blockB constructor
     ToolChain(EthereumBlockState const& _blockA, EthereumBlockState const& _blockB, FORK const& _fork,

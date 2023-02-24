@@ -40,6 +40,7 @@ public:
 
     // Test
     void test_setChainParams(spSetChainParamsArgs const& _config) override;
+    void test_setChainParamsNoGenesis(spSetChainParamsArgs const& _config) override;
     void test_rewindToBlock(VALUE const& _blockNr) override;
     void test_modifyTimestamp(VALUE const& _timestamp) override;
     MineBlocksResult test_mineBlocks(size_t _number) override;
