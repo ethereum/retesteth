@@ -155,10 +155,8 @@ void verify1559Parent_private(spBlockHeader const& _header, spBlockHeader const&
 
 void verify1559Parent(spBlockHeader const& _header, spBlockHeader const& _parent, ToolChain const& _chain)
 {
-    if (_parent->type() == BlockType::BlockHeaderMerge)
+    if (isBlockPoS(_parent))
         throw test::UpwardsException("Trying to import 1559 block on top of PoS block!");
-    else if (_parent->type() == BlockType::BlockHeaderShanghai)
-        throw test::UpwardsException("Trying to import 1559 block on top of Shanghai block!");
 
     check_blockType(_header->type(), BlockType::BlockHeader1559, "verify1559Parent");
     check_difficultyDelta(_chain, _header, _parent);

@@ -130,6 +130,11 @@ spBlockHeader readBlockHeader(DataObject const& _filledData)
     return spBlockHeader(new BlockHeaderLegacy(_filledData));
 }
 
+bool isBlockPoS(BlockHeader const& _header)
+{
+    return isBlockExportCurrentRandom(_header);
+}
+
 bool isBlockExportCurrentRandom(BlockHeader const& _header)
 {
     return _header.type() == BlockType::BlockHeaderMerge

@@ -15,4 +15,6 @@ bool isBlockExportWithdrawals(BlockHeader const&);
 bool isBlockExportBasefee(BlockHeader const&);
 bool isBlockExportDifficulty(BlockHeader const&);
 
+bool isBlockPoS(BlockHeader const&);
+
 }  // namespace teststruct

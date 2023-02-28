@@ -33,7 +33,8 @@ string const t8ntool_config = R"({
         "Istanbul",
         "Berlin",
         "London",
-        "Merge"
+        "Merge",
+        "Shanghai"
     ],
     "additionalForks" : [
         "FrontierToHomesteadAt5",
@@ -44,7 +45,8 @@ string const t8ntool_config = R"({
         "BerlinToLondonAt5",
         "ArrowGlacier",
         "ArrowGlacierToMergeAtDiffC0000",
-        "GrayGlacier"
+        "GrayGlacier",
+        "MergeToShanghaiAtTime15k"
     ],
     "fillerSkipForks" : [
     ],
@@ -242,7 +244,9 @@ string const t8ntool_config = R"({
       "3675PreMerge1559BlockRejected" : "Trying to import 1559 block on top of PoS block",
       "INPUT_UNMARSHAL_ERROR" : "cannot unmarshal hex",
       "INPUT_UNMARSHAL_SIZE_ERROR" : "failed unmarshaling",
-      "RLP_BODY_UNMARSHAL_ERROR" : "Rlp structure is wrong"
+      "RLP_BODY_UNMARSHAL_ERROR" : "Rlp structure is wrong",
+      "PostMergeUncleHashIsNotEmpty" : "block.uncleHash != empty",
+      "PostMergeDifficultyIsNot0" : "block.difficulty must be 0"
     }
 })";
 
