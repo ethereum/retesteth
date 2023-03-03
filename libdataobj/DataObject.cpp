@@ -352,11 +352,17 @@ void DataObject::performModifier(void (*f)(DataObject&), ModifierOption _opt, st
     }
 }
 
-void DataObject::performVerifier(void (*f)(DataObject const&)) const
+bool DataObject::performSearch(bool (*f)(DataObject const&)) const
 {
+    bool res = true;
     for (auto const& el : m_subObjects)
-        el->performVerifier(f);
-    f(*this);
+    {
+        res = res && !el->performSearch(f);
+        if (false)
+            break;
+    }
+    res = res && !f(*this);
+    return !res;
 }
 
 std::string DataObject::asJsonNoFirstKey() const

@@ -14,6 +14,8 @@
 #include <retesteth/testSuites/blockchain/BlockchainTests.h>
 #include <retesteth/testSuites/statetests/StateTests.h>
 
+#include <libdataobj/ConvertFile.h>
+#include <libdevcore/CommonIO.h>
 
 using namespace std;
 using namespace test::debug;
@@ -304,5 +306,84 @@ void cleanMemory()
 {
     DynamicTestsBoostClean();
 }
+
+string getTestType(string const& _filename)
+{
+    string type = "GeneralStateTests";
+    if (boost::filesystem::exists(_filename))
+    {
+        string s = dev::contentsString(_filename);
+        spDataObject res = dataobject::ConvertJsoncppStringToData(s);
+
+        auto isBlockChainTest = [](DataObject const& _el)
+        {
+            return (_el.getKey() == "blocks") ? true : false;
+        };
+        auto isStateTest = [](DataObject const& _el)
+        {
+            return (_el.getKey() == "env") ? true : false;
+        };
+        if (res->performSearch(isBlockChainTest))
+            return "BlockchainTests";
+        if (res->performSearch(isStateTest))
+            return "GeneralStateTests";
+    }
+    return type;
+}
+
+// Preprocess the args
+const char** preprocessOptions(int& _argc, const char* _argv[])
+{
+    // if options has a /path/to/file.json | file.yml and it is not a --testfile option
+    // make it a --testfile option and attempt to get the type of test and insert -t <suite>
+    short tArgument = -1;
+    short insertTestFile = -1;
+    string testFilename;
+    for (short i = 1; i < _argc; i++)
+    {
+        std::string arg = std::string{_argv[i]};
+        bool isFile = (arg.find(".json") != string::npos || arg.find(".yml") != string::npos);
+        if (isFile && std::string{_argv[i - 1]} != "--testfile")
+        {
+            insertTestFile = i;
+            testFilename = arg;
+        }
+        else if (arg == "-t")
+            tArgument = i;
+    }
+
+    size_t inserts = 0;
+    if (tArgument == -1)
+        inserts += 3;
+    if (insertTestFile != -1)
+        inserts +=1;
+
+    size_t j = 0;
+    const char** argv2 = new const char*[_argc + inserts];
+    argv2[j++] = _argv[0];
+    if (tArgument == -1)
+    {
+        argv2[j++] = "-t";
+
+        string const testType = getTestType(testFilename);
+        const std::string::size_type size = testType.size();
+        char *buffer = new char[size + 1];   //we need extra char for NUL
+        memcpy(buffer, testType.c_str(), size + 1);
+
+        argv2[j++] = buffer;
+        argv2[j++] = "--";
+    }
+
+    for (short i = 1; i < _argc; i++)
+    {
+        if (i == insertTestFile)
+            argv2[j++] = "--testfile";
+        argv2[j++] = _argv[i];
+    }
+
+    _argc += inserts;
+    return argv2;
+}
+
 
 }  // namespace test::main

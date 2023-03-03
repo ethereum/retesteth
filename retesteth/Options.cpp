@@ -315,6 +315,7 @@ Options::Options(int argc, const char** argv)
         dataobject::GCP_SPointer<int>::DISABLETHREADSAFE();
 }
 
+
 Options const& Options::get(int argc, const char** argv)
 {
     static Options instance(argc, argv);

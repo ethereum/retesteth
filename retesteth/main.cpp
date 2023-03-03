@@ -41,15 +41,16 @@ int main(int argc, const char* argv[])
     signal(SIGTERM, &ExitHandler::exitHandler);
     signal(SIGINT, &ExitHandler::exitHandler);
 
-    initializeOptions(argc, argv);
-    expandUnitTestsArg(argc, argv);
-    makeSingleTestFileSuite(argc, argv);
+    auto argv2 = preprocessOptions(argc, argv);
+    initializeOptions(argc, argv2);
+    expandUnitTestsArg(argc, argv2);
+    makeSingleTestFileSuite(argc, argv2);
 
     lookForUnregisteredTestFolders();
-    if (!checkTestSuiteIsKnown(argc, argv))
+    if (!checkTestSuiteIsKnown(argc, argv2))
         return -1;
 
-    int result = runTheBoostTests(argc, argv);
+    int result = runTheBoostTests(argc, argv2);
     cleanMemory();
     ExitHandler::doExit();
     return result;

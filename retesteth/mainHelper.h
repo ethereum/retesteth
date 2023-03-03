@@ -5,6 +5,7 @@
 namespace test::main
 {
 // Pre Processors
+const char** preprocessOptions(int& _argc, const char* _argv[]);
 void initializeOptions(int _argc, const char* _argv[]);
 void expandUnitTestsArg(int _argc, const char* _argv[]);
 void makeSingleTestFileSuite(int _argc, const char* _argv[]);
