@@ -27,6 +27,8 @@ static std::ostringstream strCout;
 std::streambuf* oldCoutStreamBuf;
 std::streambuf* oldCerrStreamBuf;
 std::string const c_sDynamicTestSuiteName = "customTestSuite";
+std::vector<const char*> c_cleanDynamicChars;
+const char** c_argv2 = nullptr;
 
 void runCustomTestFile()
 {
@@ -305,6 +307,10 @@ void lookForUnregisteredTestFolders()
 void cleanMemory()
 {
     DynamicTestsBoostClean();
+    for (size_t i = 0; i < c_cleanDynamicChars.size(); i++)
+        delete [] c_cleanDynamicChars[i];
+    if (c_argv2 != nullptr)
+        delete [] c_argv2;
 }
 
 string getTestType(string const& _filename)
@@ -352,6 +358,9 @@ const char** preprocessOptions(int& _argc, const char* _argv[])
             tArgument = i;
     }
 
+    if (insertTestFile == -1)
+        return _argv;
+
     size_t inserts = 0;
     if (tArgument == -1)
         inserts += 3;
@@ -369,6 +378,7 @@ const char** preprocessOptions(int& _argc, const char* _argv[])
         const std::string::size_type size = testType.size();
         char *buffer = new char[size + 1];   //we need extra char for NUL
         memcpy(buffer, testType.c_str(), size + 1);
+        c_cleanDynamicChars.emplace_back(buffer);
 
         argv2[j++] = buffer;
         argv2[j++] = "--";
@@ -382,6 +392,7 @@ const char** preprocessOptions(int& _argc, const char* _argv[])
     }
 
     _argc += inserts;
+    c_argv2 = argv2;
     return argv2;
 }
 
