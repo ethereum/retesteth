@@ -35,6 +35,8 @@ Debug::Debug()
             }
             else if (flag == "STATS")
                 m_channels[DC::STATS] = true;  // Default test execution stats
+            else if (flag == "STATS2")
+                m_channels[DC::STATS2] = true;
             else if (flag == "STATE")
                 m_channels[DC::STATE] = true;  // Poststate output
             else if (flag == "SOCKET")

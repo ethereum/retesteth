@@ -195,7 +195,6 @@ void BlockMining::executeTransition()
         ETH_DC_MESSAGE(DC::RPC, "Err:\n" + outErrorContent);
         throw test::UpwardsException(outErrorContent.empty() ? (out.empty() ? "Tool failed: " + m_cmd : out) : outErrorContent);
     }
-
     ETH_DC_MESSAGE(DC::RPC, out);
 }
 
