@@ -316,6 +316,24 @@ else
 fi
 )";
 
+string const py_compiler_sh = R"(#!/bin/bash
+if [ -z "$PYSPECS_PATH" ]
+then
+    >&2 echo "Error: env variable 'PYSPECS_PATH' is not set!"
+    exit 1;
+fi
+
+cd $PYSPECS_PATH
+python3 -m venv ./venv/
+source ./venv/bin/activate
+
+SRCPATH=$1
+FILLER=$2
+OUTPUT=$3
+
+tf --filler-path $SRCPATH --output $OUTPUT --test-module $FILLER --no-output-structure
+)";
+
 gent8ntoolcfg::gent8ntoolcfg()
 {
     {
@@ -343,6 +361,13 @@ gent8ntoolcfg::gent8ntoolcfg()
         (*obj)["exec"] = true;
         (*obj)["path"] = "t8ntool/yul.sh";
         (*obj)["content"] = yul_compiler_sh;
+        map_configs.addArrayObject(obj);
+    }
+    {
+        spDataObject obj;
+        (*obj)["exec"] = true;
+        (*obj)["path"] = "pyspecsStart.sh";
+        (*obj)["content"] = py_compiler_sh;
         map_configs.addArrayObject(obj);
     }
     {
