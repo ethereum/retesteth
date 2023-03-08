@@ -15,8 +15,8 @@ HunterGate(
 )
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-project(retesteth VERSION 0.2.3)
-set(VERSION_SUFFIX "postmerge")
+project(retesteth VERSION 0.3.0)
+set(VERSION_SUFFIX "shanghai")
 
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)

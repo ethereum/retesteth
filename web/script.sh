@@ -63,6 +63,7 @@ if [ "$1" = "besu" ] || [ -z "$1" ]; then
     ./gradlew build
     #./gradlew integrationTest
     ./gradlew installDist
+    ./gradlew ethereum:evmtool:installDist
     killall java
 fi
 

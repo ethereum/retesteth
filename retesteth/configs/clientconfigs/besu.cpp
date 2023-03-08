@@ -6,18 +6,18 @@ namespace retesteth::options
 {
 string const besu_config = R"({
     "name" : "Hyperledger Besu on TCP",
-    "socketType" : "tcp",
-    "socketAddress" : [
-        "127.0.0.1:47710",
-        "127.0.0.1:47711",
-        "127.0.0.1:47712",
-        "127.0.0.1:47713"
-        "127.0.0.1:47714",
-        "127.0.0.1:47715",
-        "127.0.0.1:47716",
-        "127.0.0.1:47717"
-    ],
+    "socketType" : "tranition-tool",
+    "socketAddress" : "start.sh",
     "initializeTime" : "5",
+    "checkDifficulty" : true,
+    "calculateDifficulty" : false,
+    "checkBasefee" : true,
+    "calculateBasefee" : false,
+    "checkLogsHash" : true,
+    "support1559" : true,
+    "transactionsAsJson" : false,
+    "tmpDir" : "/dev/shm",
+    "defaultChainID" : 1,
     "forks" : [
         "Frontier",
         "Homestead",
@@ -29,7 +29,8 @@ string const besu_config = R"({
         "Istanbul",
         "Berlin",
         "London",
-        "Merge"
+        "Merge",
+        "Shanghai"
     ],
     "additionalForks" : [
         "FrontierToHomesteadAt5",
@@ -39,14 +40,13 @@ string const besu_config = R"({
         "ByzantiumToConstantinopleFixAt5",
         "BerlinToLondonAt5",
         "ArrowGlacier",
-        "GrayGlacier"
+        "GrayGlacier",
+        "MergeToShanghaiAtTime15k"
     ],
     "fillerSkipForks" : [
         "Merge+3540+3670",
         "Merge+3860",
-        "Merge+3855",
-        "MergeToShanghaiAtTime15k",
-        "Shanghai"
+        "Merge+3855"
     ],
     "exceptions" : {
         "ExtraDataTooBig" : "extra-data too long",
@@ -55,20 +55,34 @@ string const besu_config = R"({
 })";
 
 string const besu_start = R"(#!/bin/sh
-threads=1
-if [ "${1:-0}" -gt 1 ]
-then
-    threads=$1
+if [ $1 = "-v" ]; then
+    besuevm --version
+else
+    stateProvided=0
+    readErrorLog=0
+    errorLogFile=""
+    cmdArgs=""
+    for index in ${1} ${2} ${3} ${4} ${5} ${6} ${7} ${8} ${9} ${10} ${11} ${12} ${13} ${14} ${15} ${16} ${17} ${18} ${19} ${20} ${21} ${22} ${23} ${24} ${25} ${26}; do
+        if [ $index = "--input.alloc" ]; then
+            stateProvided=1
+        fi
+        if [ $readErrorLog -eq 1 ]; then
+            errorLogFile=$index
+            readErrorLog=0
+            continue
+        fi
+        if [ $index = "--output.errorlog" ]; then
+            readErrorLog=1
+            continue
+        fi
+        cmdArgs=$cmdArgs" "$index
+    done
+    if [ $stateProvided -eq 1 ]; then
+        besuevm t8n $cmdArgs 2> $errorLogFile
+    else
+        besuevm t9n $cmdArgs 2> $errorLogFile
+    fi
 fi
-
-mkdir ~/.retesteth/logs
-i=0
-while [ "$i" -lt $threads ]; do
-    tmpdir=$(mktemp -d -t ci-XXXXXXXXXX)
-    file=$(date +"%m-%d-%y-%s")
-    besu retesteth --rpc-http-port $((47710+$i)) --data-path=$tmpdir --logging=DEBUG >> ~/.retesteth/logs/besu-$file &
-    i=$(( i + 1 ))
-done
 )";
 
 string const besu_stop = R"(#!/bin/sh
@@ -95,6 +109,13 @@ genbesucfg::genbesucfg()
         (*obj)["exec"] = true;
         (*obj)["path"] = "besu/stop.sh";
         (*obj)["content"] = besu_stop;
+        map_configs.addArrayObject(obj);
+    }
+    {
+        spDataObject obj;
+        (*obj)["exec"] = true;
+        (*obj)["path"] = "besu/yul.sh";
+        (*obj)["content"] = yul_compiler_sh;
         map_configs.addArrayObject(obj);
     }
 }

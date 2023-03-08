@@ -56,7 +56,7 @@ void checkRedundantExpectSection(std::vector<StateTestFillerExpectSection> const
                     for (int v : _newExpectSection.getValInd())
                     {
                         if (readExpect.checkIndexes(d, g, v))
-                            ETH_ERROR_MESSAGE("StateTestFiller read redundant expect section: \n" + _newExpectSection.initialData().asJson());
+                            ETH_ERROR_MESSAGE("Test filler read redundant expect section: \n" + _newExpectSection.initialData().asJson());
                     }
         }
     }
