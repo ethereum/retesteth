@@ -46,6 +46,7 @@ public:
     // Path to name.sh file for IPC client initialization
     boost::filesystem::path const getShellPath() const { return cfgFile().shell(); }
     boost::filesystem::path const getConfigPath() const { return cfgFile().path(); }
+    std::string getOptionName() const { return m_clientConfigFile->path().parent_path().stem().string(); }
 
     // Functionality
     // Verify FORK is allowed by Fork + AdditionalForks and throw an error if not
