@@ -26,7 +26,7 @@ public:
         static Debug instance;
         return instance;
     }
-    bool flag(DC _channel) const { return m_channels.at(_channel); }
+    bool flag(DC _channel) const;
 
 private:
     Debug();

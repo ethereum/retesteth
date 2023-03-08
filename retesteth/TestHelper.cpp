@@ -68,7 +68,7 @@ spDataObject readYamlData(fs::path const& _file, bool _sort)
     }
 }
 
-vector<fs::path> getFiles(fs::path const& _dirPath, set<string> const _extentionMask, string const& _particularFile)
+vector<fs::path> getFiles(fs::path const& _dirPath, set<string> const& _extentionMask, string const& _particularFile)
 {
     vector<fs::path> files;
     for (auto const& ext : _extentionMask)
