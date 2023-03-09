@@ -49,6 +49,7 @@ void checkGeneratedTest(fs::path const& _filledPath, std::vector<fs::path> const
     std::vector<fs::path>& _outdatedTestFillers,
     std::vector<fs::path>& _verifiedGeneratedTests)
 {
+    auto const& opt = Options::get();
     string message = "Tests are not generated: ";
     for (auto const& filler : _fillers)
     {
@@ -62,9 +63,10 @@ void checkGeneratedTest(fs::path const& _filledPath, std::vector<fs::path> const
             fs::path generatedTestPath = _filledPath / (testName + ".json");
             if (fs::exists(generatedTestPath))
             {
-                if (checkFillerHash(generatedTestPath, filler))
+                // if --filltests is set, mark all tests as outdated
+                if ((opt.filltests && !opt.filloutdated) || checkFillerHash(generatedTestPath, filler))
                 {
-                    if (!Options::get().filloutdated)
+                    if (!opt.filloutdated)
                         message += "\n " + filler.string() + " => " + generatedTestPath.string();
                     if (!outdatedFillerRegistered)
                     {
@@ -76,7 +78,7 @@ void checkGeneratedTest(fs::path const& _filledPath, std::vector<fs::path> const
             }
             else
             {
-                if (!Options::get().filloutdated)
+                if (!opt.filloutdated)
                     message += "\n " + filler.string() + " => " + generatedTestPath.string();
                 if (!outdatedFillerRegistered)
                 {
@@ -87,7 +89,7 @@ void checkGeneratedTest(fs::path const& _filledPath, std::vector<fs::path> const
         }
     }
 
-    if (!Options::get().filloutdated && _outdatedTestFillers.size() > 0)
+    if (!opt.filloutdated && _outdatedTestFillers.size() > 0 && !opt.filltests)
     {
         message += "\n";
         ETH_ERROR_MESSAGE(message);
@@ -161,7 +163,8 @@ void TestSuite::checkFillerExistance(string const& _testFolder,
 
     checkFillersSelection(_allTestFillers, testNameFilter);
 
-    if (!Options::get().forceupdate)
+    auto const& opt = Options::get();
+    if (!opt.forceupdate)
     {
         std::vector<fs::path> verifiedGeneratedTests;
         checkGeneratedTest(filledTestsPath.path(),  _allTestFillers, _outdatedTestFillers, verifiedGeneratedTests);

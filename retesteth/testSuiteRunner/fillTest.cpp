@@ -80,10 +80,14 @@ bool TestSuite::_fillPython(TestFileData& _testData, fs::path const& _fillerTest
     auto const& specsScript = currentConfig.getPySpecsStartScript();
     if (fs::exists(specsScript))
     {
+        string const fillerName = _fillerTestFilePath.stem().string();
+        TestOutputHelper::get().setCurrentTestName(fillerName);
+
         string runcmd = specsScript.c_str();
-        runcmd += " " + _fillerTestFilePath.parent_path().parent_path().string();
-        runcmd += " " + _fillerTestFilePath.stem().string();
-        runcmd += " " + _filledPath.path().parent_path().string();
+        runcmd += " " + _fillerTestFilePath.parent_path().parent_path().string();  // SRCPATH
+        runcmd += " " + fillerName;                                                // FILLER NAME
+        runcmd += " " + _filledPath.path().parent_path().string();                 // OUTPATH
+        runcmd += " " + Options::get().getCurrentConfig().getStartScript().string(); // T8N start
         ETH_DC_MESSAGEC(DC::STATS, string("Generate Python test: ") + _fillerTestFilePath.stem().string(), LogColor::YELLOW);
         ETH_DC_MESSAGE(DC::RPC, string("Generate Python test: ") + runcmd);
 
