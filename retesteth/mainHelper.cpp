@@ -16,10 +16,12 @@
 
 #include <libdataobj/ConvertFile.h>
 #include <libdevcore/CommonIO.h>
+#include <boost/filesystem.hpp>
 
 using namespace std;
 using namespace test::debug;
 using namespace boost::unit_test;
+namespace fs = boost::filesystem;
 
 namespace
 {
@@ -316,10 +318,11 @@ void cleanMemory()
 string getTestType(string const& _filename)
 {
     string type = "GeneralStateTests";
-    if (boost::filesystem::exists(_filename))
+    if (fs::exists(_filename))
     {
-        string s = dev::contentsString(_filename);
-        spDataObject res = dataobject::ConvertJsoncppStringToData(s);
+        spDataObject res = readAutoDataWithoutOptions(_filename);
+        if (res.isEmpty())
+            return type;
 
         auto isBlockChainTest = [](DataObject const& _el)
         {
@@ -337,6 +340,30 @@ string getTestType(string const& _filename)
     return type;
 }
 
+string getTestTArg(fs::path const& _cwd, string const& arg)
+{
+    const vector<string> supportedSuites = {
+        "GeneralStateTests", "BlockchainTests",
+        "GeneralStateTestsFiller", "BlockchainTestsFiller"};
+    string tArg;
+    fs::path cwd = _cwd;
+    while(!test::inArray(supportedSuites, cwd.stem().string()) && !cwd.empty())
+    {
+        tArg.insert(0, cwd.stem().string() + "/");
+        cwd = cwd.parent_path();
+    }
+    if (!cwd.empty())
+    {
+        string headTestSuite = cwd.stem().string();
+        size_t const pos = headTestSuite.find("Filler");
+        if (pos != string::npos)
+            headTestSuite = headTestSuite.erase(pos, 6);
+        tArg.insert(0, headTestSuite + "/");
+    }
+    tArg.insert(tArg.size(), arg);
+    return tArg;
+}
+
 // Preprocess the args
 const char** preprocessOptions(int& _argc, const char* _argv[])
 {
@@ -344,33 +371,48 @@ const char** preprocessOptions(int& _argc, const char* _argv[])
     // make it a --testfile option and attempt to get the type of test and insert -t <suite>
     short tArgument = -1;
     short insertTestFile = -1;
+    short insertTArg = -1;
     string testFilename;
+    auto const cwd = fs::path(fs::current_path());
     for (short i = 1; i < _argc; i++)
     {
         std::string arg = std::string{_argv[i]};
+
         bool isFile = (arg.find(".json") != string::npos || arg.find(".yml") != string::npos);
         if (isFile && std::string{_argv[i - 1]} != "--testfile")
         {
             insertTestFile = i;
             testFilename = arg;
         }
+        else if (fs::exists(cwd / arg) && fs::is_directory(cwd / arg))
+        {
+            testFilename = arg;
+            insertTArg = i;
+        }
         else if (arg == "-t")
             tArgument = i;
     }
 
-    if (insertTestFile == -1)
+    // Do not override existing -t
+    if (tArgument != -1)
+        insertTArg = -1;
+
+    // if there are no inserts return as is
+    if (insertTestFile == -1 && insertTArg == -1)
         return _argv;
 
     size_t inserts = 0;
-    if (tArgument == -1)
+    if (tArgument == -1 && insertTArg == -1)
         inserts += 3;
     if (insertTestFile != -1)
         inserts +=1;
+    if (insertTArg != -1)
+        inserts += 1;
 
     size_t j = 0;
     const char** argv2 = new const char*[_argc + inserts];
     argv2[j++] = _argv[0];
-    if (tArgument == -1)
+    if (tArgument == -1 && insertTArg == -1)
     {
         argv2[j++] = "-t";
 
@@ -388,7 +430,19 @@ const char** preprocessOptions(int& _argc, const char* _argv[])
     {
         if (i == insertTestFile)
             argv2[j++] = "--testfile";
-        argv2[j++] = _argv[i];
+        if (i == insertTArg)
+        {
+            argv2[j++] = "-t";
+            string const arg(_argv[i]);
+            string const testType(getTestTArg(cwd, arg));
+            const std::string::size_type size = testType.size();
+            char *buffer = new char[size + 1];   //we need extra char for NUL
+            memcpy(buffer, testType.c_str(), size + 1);
+            c_cleanDynamicChars.emplace_back(buffer);
+            argv2[j++] = buffer;
+        }
+        else
+            argv2[j++] = _argv[i];
     }
 
     _argc += inserts;

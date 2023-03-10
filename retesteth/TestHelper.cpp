@@ -39,7 +39,7 @@ spDataObject readJsonData(fs::path const& _file, string const& _stopper, bool _a
 {
     try
     {
-        string s = dev::contentsString(_file);
+        string const s = dev::contentsString(_file);
         ETH_ERROR_REQUIRE_MESSAGE(
             s.length() > 0, "Contents of " + _file.string() + " is empty. Trying to parse empty file. (forgot --filltests?)");
         return dataobject::ConvertJsoncppStringToData(s, _stopper, _autosort);
@@ -56,7 +56,7 @@ spDataObject readYamlData(fs::path const& _file, bool _sort)
 {
     try
     {
-        string s = dev::contentsString(_file);
+        string const s = dev::contentsString(_file);
         ETH_ERROR_REQUIRE_MESSAGE(
             s.length() > 0, "Contents of " + _file.string() + " is empty. Trying to parse empty file. (forgot --filltests?)");
         return dataobject::ConvertYamlToData(YAML::Load(s), _sort);
@@ -66,6 +66,26 @@ spDataObject readYamlData(fs::path const& _file, bool _sort)
         ETH_ERROR_MESSAGE(string("\nError when parsing file (") + _file.c_str() + ") " + _ex.what());
         return spDataObject(0);
     }
+}
+
+spDataObject readAutoDataWithoutOptions(boost::filesystem::path const& _file, bool _sort)
+{
+    try
+    {
+        string const s = dev::contentsString(_file);
+        if (s.length() == 0)
+            std::cerr << "Contents of " + _file.string() + " is empty. Trying to parse empty file." << std::endl;
+        if (_file.extension() == ".json")
+            return dataobject::ConvertJsoncppStringToData(s);
+        else if (_file.extension() == ".yml")
+            return dataobject::ConvertYamlToData(YAML::Load(s), _sort);
+        std::cerr << "Unknown test file: " << _file.string() << std::endl;
+    }
+    catch (std::exception const& _ex)
+    {
+        std::cerr << string("\nError when parsing file (") + _file.c_str() + ") " + _ex.what() << std::endl;
+    }
+    return spDataObject(0);
 }
 
 vector<fs::path> getFiles(fs::path const& _dirPath, set<string> const& _extentionMask, string const& _particularFile)

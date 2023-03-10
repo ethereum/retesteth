@@ -227,7 +227,7 @@ void TestSuite::executeFile(boost::filesystem::path const& _file) const
     opt.isLegacyTests = isLegacy || legacyTestSuiteFlag();
 
     if (_file.extension() != ".json")
-        ETH_ERROR_MESSAGE("The generated test must have `.json` format!");
+        ETH_ERROR_MESSAGE("The generated test must have `.json` format! (forgot --filltests?)");
 
     ETH_DC_MESSAGE(DC::TESTLOG, "Read json structure " + string(_file.filename().c_str()));
     spDataObject res = test::readJsonData(_file);
