@@ -358,9 +358,17 @@ string getTestTArg(fs::path const& _cwd, string const& arg)
         size_t const pos = headTestSuite.find("Filler");
         if (pos != string::npos)
             headTestSuite = headTestSuite.erase(pos, 6);
+        else
+        {
+            if (cwd.parent_path().stem() == "BlockchainTests" && headTestSuite == "GeneralStateTests")
+                headTestSuite.insert(0, "BC");
+        }
         tArg.insert(0, headTestSuite + "/");
     }
+
     tArg.insert(tArg.size(), arg);
+    if (arg.at(arg.size()-1) == '/')
+        tArg = tArg.erase(tArg.size() - 1);
     return tArg;
 }
 
@@ -407,7 +415,7 @@ const char** preprocessOptions(int& _argc, const char* _argv[])
     if (insertTestFile != -1)
         inserts +=1;
     if (insertTArg != -1)
-        inserts += 1;
+        inserts += 2;
 
     size_t j = 0;
     const char** argv2 = new const char*[_argc + inserts];
@@ -440,6 +448,7 @@ const char** preprocessOptions(int& _argc, const char* _argv[])
             memcpy(buffer, testType.c_str(), size + 1);
             c_cleanDynamicChars.emplace_back(buffer);
             argv2[j++] = buffer;
+            argv2[j++] = "--";
         }
         else
             argv2[j++] = _argv[i];
