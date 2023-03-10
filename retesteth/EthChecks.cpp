@@ -4,8 +4,10 @@
 #include <retesteth/TestOutputHelper.h>
 #include <boost/algorithm/string.hpp>
 #include <csignal>
+#include <mutex>
 using namespace std;
 
+mutex g_debugFlagAccess;
 namespace test::debug
 {
 Debug::Debug()
@@ -54,6 +56,12 @@ Debug::Debug()
     else
         initializeDefaultChannels();
 };
+
+bool Debug::flag(DC _channel) const
+{
+    std::lock_guard<std::mutex> lock(g_debugFlagAccess);
+    return m_channels.at(_channel);
+}
 
 void Debug::initializeDefaultChannels()
 {

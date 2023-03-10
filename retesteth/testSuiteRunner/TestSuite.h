@@ -28,6 +28,7 @@ namespace test
 {
 extern std::string const c_fillerPostf;
 extern std::string const c_copierPostf;
+extern std::string const c_pythonPostf;
 
 class TestSuite
 {
@@ -37,7 +38,12 @@ protected:
 private:
     // Execute Test.json file
     void executeFile(boost::filesystem::path const& _file) const;
-    std::vector<boost::filesystem::path> checkFillerExistance(std::string const& _testFolder, std::string& testFilter) const;
+    bool verifyFillers(std::string const& _testFolder,
+        std::vector<boost::filesystem::path>& _outdated,
+        std::vector<boost::filesystem::path>& _all) const;
+    void checkFillerExistance(std::string const& _testFolder,
+        std::vector<boost::filesystem::path>& _outdated,
+        std::vector<boost::filesystem::path>& _all) const;
 
     struct BoostPath
     {
@@ -131,6 +137,7 @@ private:
         AbsoluteFilledTestPath const& _outputTestFilePath) const;
     bool _fillJsonYml(testsuite::TestFileData& _testData, boost::filesystem::path const& _fillerTestFilePath,
         AbsoluteFilledTestPath const& _outputTestFilePath, TestSuite::TestSuiteOptions& _opt) const;
+    bool _fillPython(testsuite::TestFileData& _testData, boost::filesystem::path const&, AbsoluteFilledTestPath const&) const;
 };
 
 }  // namespace test

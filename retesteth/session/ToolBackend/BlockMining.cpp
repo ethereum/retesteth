@@ -254,7 +254,8 @@ BlockMining::~BlockMining()
     auto const& t8ntoolcall = Options::get().t8ntoolcall;
     if (!t8ntoolcall.empty())
     {
-        string folder = m_chainRef.fork().asString() + "_block";
+        string folder = Options::get().getCurrentConfig().getOptionName() + "_";
+        folder += m_chainRef.fork().asString() + "_block";
         folder += m_currentBlockRef.header()->number().asDecString() + "_";
         folder += m_currentBlockRef.header()->hash().asString().substr(0, 8);
         auto const from = m_chainRef.tmpDir().string();

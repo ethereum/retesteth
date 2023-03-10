@@ -30,6 +30,8 @@ ClientConfig::ClientConfig(fs::path const& _clientConfigPath) : m_id(ClientConfi
         fs::path configFile = _clientConfigPath / "config";
         ETH_FAIL_REQUIRE_MESSAGE(fs::exists(configFile), string("Client config not found: ") + configFile.c_str());
 
+        m_pyspecsStartPath = _clientConfigPath.parent_path() / "pyspecsStart.sh";
+
         // Script to setup the instance
         fs::path setupScript = _clientConfigPath / "setup.sh";
         if (fs::exists(setupScript))

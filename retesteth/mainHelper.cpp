@@ -16,10 +16,12 @@
 
 #include <libdataobj/ConvertFile.h>
 #include <libdevcore/CommonIO.h>
+#include <boost/filesystem.hpp>
 
 using namespace std;
 using namespace test::debug;
 using namespace boost::unit_test;
+namespace fs = boost::filesystem;
 
 namespace
 {
@@ -316,10 +318,11 @@ void cleanMemory()
 string getTestType(string const& _filename)
 {
     string type = "GeneralStateTests";
-    if (boost::filesystem::exists(_filename))
+    if (fs::exists(_filename))
     {
-        string s = dev::contentsString(_filename);
-        spDataObject res = dataobject::ConvertJsoncppStringToData(s);
+        spDataObject res = readAutoDataWithoutOptions(_filename);
+        if (res.isEmpty())
+            return type;
 
         auto isBlockChainTest = [](DataObject const& _el)
         {
@@ -337,62 +340,150 @@ string getTestType(string const& _filename)
     return type;
 }
 
+string getTestTArg(fs::path const& _cwd, string const& arg)
+{
+    const vector<string> supportedSuites = {
+        "GeneralStateTests", "BlockchainTests",
+        "GeneralStateTestsFiller", "BlockchainTestsFiller"};
+    string tArg;
+    fs::path cwd = _cwd;
+    while(!test::inArray(supportedSuites, cwd.stem().string()) && !cwd.empty())
+    {
+        tArg.insert(0, cwd.stem().string() + "/");
+        cwd = cwd.parent_path();
+    }
+    if (!cwd.empty())
+    {
+        string headTestSuite = cwd.stem().string();
+        size_t const pos = headTestSuite.find("Filler");
+        if (pos != string::npos)
+            headTestSuite = headTestSuite.erase(pos, 6);
+        else
+        {
+            if (cwd.parent_path().stem() == "BlockchainTests" && headTestSuite == "GeneralStateTests")
+                headTestSuite.insert(0, "BC");
+        }
+        tArg.insert(0, headTestSuite + "/");
+    }
+
+    tArg.insert(tArg.size(), arg);
+    if (arg.at(arg.size()-1) == '/')
+        tArg = tArg.erase(tArg.size() - 1);
+    return tArg;
+}
+
 // Preprocess the args
 const char** preprocessOptions(int& _argc, const char* _argv[])
 {
-    // if options has a /path/to/file.json | file.yml and it is not a --testfile option
-    // make it a --testfile option and attempt to get the type of test and insert -t <suite>
-    short tArgument = -1;
-    short insertTestFile = -1;
-    string testFilename;
+    // if file.json is outside of the testpath
+    //    parse "retesteth file.json" ==> "retesteth -t TestSuite -- --testfile file.json"
+    // else
+    //    "retesteth file.json" ==> "retesteth -t TestSuite/Subsuite -- --singletest file.json"
+    // parse "retesteth Folder" ==> "retesteth -t TestSuite/Folder
+
+    // Get Test Path before initializing options
+    fs::path testPath;
+    const char* ptestPath = std::getenv("ETHEREUM_TEST_PATH");
+    if (ptestPath != nullptr)
+        testPath = fs::path(ptestPath);
+    auto const cwd = fs::path(fs::current_path());
+
+    string filenameArg;
+    string directoryArg;
+    bool fileInsideTheTestRepo = false;
+
+    bool hasTArg = false;
+    vector<string> options;
+    options.emplace_back(_argv[0]);
     for (short i = 1; i < _argc; i++)
     {
-        std::string arg = std::string{_argv[i]};
+        string const arg = string{_argv[i]};
+        if (arg == "-t")
+            hasTArg = true;
+
+        if (arg == "--testpath" && i + 1 < _argc)
+            testPath = fs::path(std::string{_argv[i + 1]});
+
         bool isFile = (arg.find(".json") != string::npos || arg.find(".yml") != string::npos);
-        if (isFile && std::string{_argv[i - 1]} != "--testfile")
+        if (isFile && string{_argv[i - 1]} != "--testfile")
         {
-            insertTestFile = i;
-            testFilename = arg;
+            filenameArg = arg;
+            if (!testPath.empty() && fs::relative(cwd, testPath).string().find("..") == string::npos)
+                fileInsideTheTestRepo = true;
         }
-        else if (arg == "-t")
-            tArgument = i;
+        else if (fs::exists(cwd / arg) && fs::is_directory(cwd / arg))
+            directoryArg = arg;
+
+        options.emplace_back(arg);
     }
 
-    if (insertTestFile == -1)
+    if (!hasTArg)
+    {
+        options.insert(options.begin() + 1, "-t");
+        string suite;
+        if (!filenameArg.empty())
+        {
+            if (fileInsideTheTestRepo)
+            {
+                suite = getTestTArg(cwd.parent_path(), cwd.stem().string());
+                for (vector<string>::iterator it = options.begin(); it != options.end(); it++)
+                {
+                    if (*it == filenameArg)
+                    {
+                        (*it) = (fs::path(*it)).stem().string();
+                        options.insert(it, "--singletest");
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                suite = getTestType(filenameArg);
+                for (vector<string>::iterator it = options.begin(); it != options.end(); it++)
+                {
+                    if (*it == filenameArg)
+                    {
+                        options.insert(it, "--testfile");
+                        break;
+                    }
+                }
+            }
+        }
+        else if (!directoryArg.empty())
+        {
+            suite = getTestTArg(cwd, directoryArg);
+            for (vector<string>::iterator it = options.begin(); it != options.end(); it++)
+            {
+                if (*it == directoryArg)
+                {
+                    options.erase(it);
+                    break;
+                }
+            }
+        }
+
+        if (suite.empty())
+            std::cerr << "preprocessOptions:: Error autodetecting -t argument!" << std::endl;
+        options.insert(options.begin() + 2, suite);
+        options.insert(options.begin() + 3, "--");
+    }
+
+    for (auto const& el : options)
+        std::cout << el << " ";
+    std::cout << std::endl;
+
+    if (options.size() == (size_t)_argc)
         return _argv;
-
-    size_t inserts = 0;
-    if (tArgument == -1)
-        inserts += 3;
-    if (insertTestFile != -1)
-        inserts +=1;
-
-    size_t j = 0;
-    const char** argv2 = new const char*[_argc + inserts];
-    argv2[j++] = _argv[0];
-    if (tArgument == -1)
+    size_t i = 0;
+    const char** argv2 = new const char*[options.size()];
+    for (auto const& el : options)
     {
-        argv2[j++] = "-t";
-
-        string const testType = getTestType(testFilename);
-        const std::string::size_type size = testType.size();
-        char *buffer = new char[size + 1];   //we need extra char for NUL
-        memcpy(buffer, testType.c_str(), size + 1);
+        char *buffer = new char[el.size() + 1];   //we need extra char for NUL
+        memcpy(buffer, el.c_str(), el.size() + 1);
         c_cleanDynamicChars.emplace_back(buffer);
-
-        argv2[j++] = buffer;
-        argv2[j++] = "--";
+        argv2[i++] = buffer;
     }
-
-    for (short i = 1; i < _argc; i++)
-    {
-        if (i == insertTestFile)
-            argv2[j++] = "--testfile";
-        argv2[j++] = _argv[i];
-    }
-
-    _argc += inserts;
-    c_argv2 = argv2;
+    _argc = options.size();
     return argv2;
 }
 

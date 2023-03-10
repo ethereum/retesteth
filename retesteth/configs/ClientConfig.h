@@ -46,6 +46,7 @@ public:
     // Path to name.sh file for IPC client initialization
     boost::filesystem::path const getShellPath() const { return cfgFile().shell(); }
     boost::filesystem::path const getConfigPath() const { return cfgFile().path(); }
+    std::string getOptionName() const { return m_clientConfigFile->path().parent_path().stem().string(); }
 
     // Functionality
     // Verify FORK is allowed by Fork + AdditionalForks and throw an error if not
@@ -79,6 +80,7 @@ public:
     boost::filesystem::path const& getSetupScript() const { return m_setupScriptPath; }
     boost::filesystem::path const& getStartScript() const { return m_starterScriptPath; }
     boost::filesystem::path const& getStopperScript() const { return m_stopperScriptPath; }
+    boost::filesystem::path const& getPySpecsStartScript() const { return m_pyspecsStartPath; }
 
     // Replace notations in requests if needed
     void performFieldReplace(DataObject& _data, FieldReplaceDir const& _dir) const;
@@ -97,6 +99,7 @@ private:
     boost::filesystem::path m_setupScriptPath;    ///< Path to setup script (run once before thread exec)
     boost::filesystem::path m_starterScriptPath;  ///< Path to starter script
     boost::filesystem::path m_stopperScriptPath;  ///< Path to stopper script
+    boost::filesystem::path m_pyspecsStartPath;   ///< Path to pyspecs exec script
 };
 
 }  // namespace test

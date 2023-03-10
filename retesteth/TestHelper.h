@@ -23,9 +23,10 @@ Json::Value readJson(boost::filesystem::path const& _path);
 /// Safely read the json file into DataObject
 spDataObject readJsonData(boost::filesystem::path const& _file, std::string const& _stopper = std::string(), bool _autosort = false);
 spDataObject readYamlData(boost::filesystem::path const& _file, bool _sort = false);
+spDataObject readAutoDataWithoutOptions(boost::filesystem::path const& _file, bool _sort = false);
 
 /// Get files from directory
-std::vector<boost::filesystem::path> getFiles(boost::filesystem::path const& _dirPath, std::set<std::string> _extentionMask, std::string const& _particularFile = {});
+std::vector<boost::filesystem::path> getFiles(boost::filesystem::path const& _dirPath, std::set<std::string> const& _extentionMask, std::string const& _particularFile = {});
 
 /// Get test repo path from ETHEREUM_TEST_PATH environment variable
 boost::filesystem::path getTestPath();

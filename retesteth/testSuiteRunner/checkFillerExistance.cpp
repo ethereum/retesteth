@@ -5,6 +5,9 @@
 #include "TestSuiteHelperFunctions.h"
 #include <retesteth/TestOutputHelper.h>
 
+#include <libdevcore/CommonIO.h>
+
+
 using namespace std;
 using namespace test;
 using namespace test::debug;
@@ -37,146 +40,159 @@ TestSuite::AbsoluteFilledTestPath createPathIfNotExist(TestSuite::AbsoluteFilled
     }
     return _path;
 }
-
-std::vector<fs::path> checkIfThereAreUnfilledTests(
-    fs::path const& _fullPathToFillers, vector<fs::path> const& _compiledTests, string const& _testNameFilter)
-{
-    std::vector<fs::path> notFilledTests;
-    vector<fs::path> fillerFiles = test::getFiles(_fullPathToFillers, {".json", ".yml"}, _testNameFilter);
-    if (fillerFiles.size() > _compiledTests.size())
-    {
-        string message = "Tests are not generated: ";
-        for (auto const& filler : fillerFiles)
-        {
-            bool found = false;
-            for (auto const& filled : _compiledTests)
-            {
-                string const fillerName = filler.stem().string();
-                if (fillerName.substr(0, fillerName.size() - 6) == filled.stem().string())
-                {
-                    found = true;
-                    break;
-                }
-            }
-            if (!found)
-            {
-                if (!Options::get().filloutdated)
-                    message += "\n " + string(filler.c_str());
-                notFilledTests.emplace_back(filler);
-            }
-        }
-        if (!Options::get().filloutdated)
-            ETH_ERROR_MESSAGE(message + "\n");
-    }
-    return notFilledTests;
-}
-
-bool fakeFilledTestsIfThereAreNone(
-    vector<fs::path>& _compiledTests, string const& _testNameFilter, fs::path const& _fullPathToFillers)
-{
-    if (_testNameFilter.empty())
-    {
-        // No tests generated, check at least one filler existence
-        vector<fs::path> existingFillers = test::getFiles(_fullPathToFillers, {".json", ".yml"});
-        for (auto const& filler : existingFillers)
-        {
-            // put filler names as if it was actual tests
-            string fillerName(filler.stem().c_str());
-            string fillerSuffix = fillerName.substr(fillerName.size() - 6);
-            if (fillerSuffix == c_fillerPostf || fillerSuffix == c_copierPostf)
-                _compiledTests.emplace_back(fillerName.substr(0, fillerName.size() - 6));
-        }
-        return false;
-    }
-    else
-    {
-        // No tests generated and filter is set, check that filler for filter is exist
-        _compiledTests.emplace_back(fs::path(_testNameFilter));  // put the test name as if it was compiled.
-        return true;
-    }
-    return false;
-}
-
 }  // namespace
 
 namespace test
 {
-std::vector<fs::path> TestSuite::checkFillerExistance(string const& _testFolder, string& testNameFilter) const
+
+void checkGeneratedTest(fs::path const& _filledPath, std::vector<fs::path> const& _fillers,
+    std::vector<fs::path>& _outdatedTestFillers,
+    std::vector<fs::path>& _verifiedGeneratedTests)
 {
-    testNameFilter = getTestNameFilter();
-    std::vector<fs::path> outdatedTests;
-    AbsoluteFilledTestPath filledTestsPath = createPathIfNotExist(getFullPathFilled(_testFolder));
-    vector<fs::path> compiledTests = test::getFiles(filledTestsPath.path(), {".json", ".yml"}, testNameFilter);
-    AbsoluteFillerPath fullPathToFillers = getFullPathFiller(_testFolder);
-
     auto const& opt = Options::get();
-    if (opt.checkhash || opt.filloutdated)
-        outdatedTests = checkIfThereAreUnfilledTests(fullPathToFillers.path(), compiledTests, testNameFilter);
-
-    bool checkFillerWhenFilterIsSetButNoTestsFilled = false;
-    if (compiledTests.size() == 0)
-        checkFillerWhenFilterIsSetButNoTestsFilled =
-            fakeFilledTestsIfThereAreNone(compiledTests, testNameFilter, fullPathToFillers.path());
-
-    for (auto const& test : compiledTests)
+    string message = "Tests are not generated: ";
+    for (auto const& filler : _fillers)
     {
-        fs::path const expectedFillerName = fullPathToFillers.path() / fs::path(test.stem().string() + c_fillerPostf + ".json");
-        fs::path const expectedFillerName2 = fullPathToFillers.path() / fs::path(test.stem().string() + c_fillerPostf + ".yml");
-        fs::path const expectedCopierName = fullPathToFillers.path() / fs::path(test.stem().string() + c_copierPostf + ".json");
+        TestInfo errorInfo("CheckFiller", filler.stem().string());
+        TestOutputHelper::get().setCurrentTestInfo(errorInfo);
 
-        string const exceptionStr =
-            checkFillerWhenFilterIsSetButNoTestsFilled ?
-                "Could not find a filler for provided --singletest filter: '" + test.filename().string() + "'" :
-                "Compiled test folder contains test without Filler: " + test.filename().string();
-
+        bool outdatedFillerRegistered = false;
+        vector<string> generatedTestNames = getGeneratedTestNames(filler);
+        for (auto const& testName : generatedTestNames)
         {
-            TestInfo errorInfo("CheckFillers", test.stem().string());
-            TestOutputHelper::get().setCurrentTestInfo(errorInfo);
-        }
-
-        ETH_ERROR_REQUIRE_MESSAGE(
-            fs::exists(expectedFillerName) || fs::exists(expectedFillerName2) || fs::exists(expectedCopierName), exceptionStr);
-        ETH_ERROR_REQUIRE_MESSAGE(
-            !(fs::exists(expectedFillerName) && fs::exists(expectedFillerName2) && fs::exists(expectedCopierName)),
-            "Src test could either be Filler.json, Filler.yml or Copier.json: " + test.filename().string());
-
-        // Check that filled tests created from actual fillers depenging on a test type
-
-        auto fillerVerifier = [&testNameFilter, &outdatedTests](
-                                  fs::path const& _test, fs::path const& _expectedFillerName, string const& _addPostfix) {
-            auto const& opt = Options::get();
-            if (!opt.filltests || opt.filloutdated)
+            fs::path generatedTestPath = _filledPath / (testName + ".json");
+            if (fs::exists(generatedTestPath))
             {
-                if (checkFillerHash(_test, _expectedFillerName))
-                    outdatedTests.emplace_back(_expectedFillerName);
+                // if --filltests is set, mark all tests as outdated
+                if ((opt.filltests && !opt.filloutdated) || checkFillerHash(generatedTestPath, filler))
+                {
+                    if (!opt.filloutdated)
+                        message += "\n " + filler.string() + " => " + generatedTestPath.string();
+                    if (!outdatedFillerRegistered)
+                    {
+                        _outdatedTestFillers.emplace_back(filler);
+                        outdatedFillerRegistered = true;
+                    }
+                }
+                _verifiedGeneratedTests.emplace_back(generatedTestPath);
             }
-            if (!testNameFilter.empty())
+            else
             {
-                testNameFilter += _addPostfix;
-                return true;
+                if (!opt.filloutdated)
+                    message += "\n " + filler.string() + " => " + generatedTestPath.string();
+                if (!outdatedFillerRegistered)
+                {
+                    _outdatedTestFillers.emplace_back(filler);
+                    outdatedFillerRegistered = true;
+                }
             }
-            return false;
-        };
-
-        if (fs::exists(expectedFillerName))
-        {
-            if (fillerVerifier(test, expectedFillerName, c_fillerPostf))
-                return outdatedTests;
-        }
-        else if (fs::exists(expectedFillerName2))
-        {
-            if (fillerVerifier(test, expectedFillerName2, c_fillerPostf))
-                return outdatedTests;
-        }
-        else if (fs::exists(expectedCopierName))
-        {
-            if (fillerVerifier(test, expectedCopierName, c_copierPostf))
-                return outdatedTests;
         }
     }
 
-    // No compiled test files. Filter is empty
-    return outdatedTests;
+    if (!opt.filloutdated && _outdatedTestFillers.size() > 0 && !opt.filltests)
+    {
+        message += "\n";
+        ETH_ERROR_MESSAGE(message);
+    }
 }
+
+void checkFillersSelection(std::vector<fs::path> const& _allTestFillers, string const& _testNameFilter)
+{
+    if (!_testNameFilter.empty() && _allTestFillers.size() == 0)
+        ETH_ERROR_MESSAGE("Could not find a filler for provided --singletest filter: '" + _testNameFilter + "'");
+
+    std::set<string> fillerNames;
+    std::vector<fs::path> fillersWithSameName;
+    for (auto const& test : _allTestFillers)
+    {
+        if (fillerNames.count(test.stem().string()))
+            fillersWithSameName.emplace_back(test);
+        fillerNames.emplace(test.stem().string());
+    }
+
+    if (fillersWithSameName.size() > 0)
+    {
+        string ambiguousTests;
+        for (auto const& test : fillersWithSameName)
+            ambiguousTests += test.string() + "\n";
+        ETH_ERROR_MESSAGE("Found multiple fillers with the same name. Ambiguous: \n" + ambiguousTests);
+    }
+}
+
+void checkTestsWithoutFiller(std::vector<fs::path> const& _verifiedGeneratedTests, fs::path const& _filledTestsPath)
+{
+    vector<fs::path> compiledTests = test::getFiles(_filledTestsPath, {".json"});
+    for (auto const& verifiedTest : _verifiedGeneratedTests)
+    {
+        auto removed = std::remove_if(compiledTests.begin(), compiledTests.end(),
+            [&verifiedTest](fs::path const& x) { return (x.stem() == verifiedTest.stem());} );
+        compiledTests.erase(removed, compiledTests.end());
+    }
+    if (compiledTests.size() > 0)
+    {
+        string message = "Compiled test folder contains tests without Filler: ";
+        for (auto const& test : compiledTests)
+            message += "\n " + test.string();
+        message += "\n";
+        ETH_ERROR_MESSAGE(message);
+    }
+}
+
+void TestSuite::checkFillerExistance(string const& _testFolder,
+    std::vector<fs::path>& _outdatedTestFillers,
+    std::vector<fs::path>& _allTestFillers) const
+{
+    TestInfo errorInfo("CheckFillers", "");
+    TestOutputHelper::get().setCurrentTestInfo(errorInfo);
+
+    string testNameFilter = getTestNameFilter();
+    AbsoluteFilledTestPath filledTestsPath = createPathIfNotExist(getFullPathFilled(_testFolder));
+    AbsoluteFillerPath fullPathToFillers = getFullPathFiller(_testFolder);
+
+    _allTestFillers = test::getFiles(fullPathToFillers.path(), {".json", ".yml", ".py"}, testNameFilter);
+    if (!testNameFilter.empty())
+    {
+        auto fillerSuffixSelect = test::getFiles(fullPathToFillers.path(), {".json", ".yml"}, testNameFilter + "Filler");
+        for (auto const& el : fillerSuffixSelect)
+            _allTestFillers.emplace_back(el);
+    }
+
+    auto removed = std::remove_if(_allTestFillers.begin(), _allTestFillers.end(),
+        [](fs::path const& x) { return (x.stem() == "__init__");} );
+    _allTestFillers.erase(removed, _allTestFillers.end());
+
+    checkFillersSelection(_allTestFillers, testNameFilter);
+
+    auto const& opt = Options::get();
+    if (!opt.forceupdate)
+    {
+        std::vector<fs::path> verifiedGeneratedTests;
+        checkGeneratedTest(filledTestsPath.path(),  _allTestFillers, _outdatedTestFillers, verifiedGeneratedTests);
+
+        if (testNameFilter.empty())
+            checkTestsWithoutFiller(verifiedGeneratedTests, filledTestsPath.path());
+    }
+}
+
+
+bool TestSuite::verifyFillers(string const& _testFolder,
+    std::vector<fs::path>& _outdatedTestFillers,
+    std::vector<fs::path>& _allTestFillers) const
+{
+    // check that destination folder test files has according Filler file in src folder
+    try
+    {
+        TestOutputHelper::get().setCurrentTestInfo(TestInfo("checkFillerExistance", _testFolder));
+        checkFillerExistance(_testFolder, _outdatedTestFillers, _allTestFillers);
+    }
+    catch (std::exception const&)
+    {
+        TestOutputHelper::get().initTest(1);
+        TestOutputHelper::get().finishTest();
+        return false;
+    }
+    return true;
+}
+
 
 }  // namespace test

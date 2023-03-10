@@ -251,7 +251,9 @@ string const t8ntool_config = R"({
 })";
 
 string const t8ntool_start = R"(#!/bin/sh
-if [ $1 = "-v" ]; then
+if [ $1 = "t8n" ] || [ $1 = "b11r" ]; then
+    evm $1 $2 $3 $4 $5 $6 $7 $8 $9 $10 $11 $12 $13 $14 $15 $16 $17 $18 $19 $20 $21 $22 $23 $24 $25 $26
+elif [ $1 = "-v" ]; then
     evm -v
 else
     stateProvided=0
@@ -330,8 +332,9 @@ source ./venv/bin/activate
 SRCPATH=$1
 FILLER=$2
 OUTPUT=$3
+EVMT8N=$4
 
-tf --filler-path $SRCPATH --output $OUTPUT --test-module $FILLER --no-output-structure
+tf --filler-path $SRCPATH --output $OUTPUT --test-module $FILLER --no-output-structure --evm-bin $EVMT8N
 )";
 
 gent8ntoolcfg::gent8ntoolcfg()
