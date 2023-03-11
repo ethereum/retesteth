@@ -344,7 +344,8 @@ string getTestTArg(fs::path const& _cwd, string const& arg)
 {
     const vector<string> supportedSuites = {
         "GeneralStateTests", "BlockchainTests",
-        "GeneralStateTestsFiller", "BlockchainTestsFiller"};
+        "GeneralStateTestsFiller", "BlockchainTestsFiller",
+        "EOFTests", "EOFTestsFiller"};
     string tArg;
     fs::path cwd = _cwd;
     while(!test::inArray(supportedSuites, cwd.stem().string()) && !cwd.empty())
