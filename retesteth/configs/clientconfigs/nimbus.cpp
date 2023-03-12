@@ -26,7 +26,8 @@ string const nimbus_config = R"({
         "Istanbul",
         "Berlin",
         "London",
-        "Merge"
+        "Merge",
+        "Shanghai"
     ],
     "additionalForks" : [
         "FrontierToHomesteadAt5",
@@ -37,14 +38,13 @@ string const nimbus_config = R"({
         "BerlinToLondonAt5",
         "ArrowGlacier",
         "ArrowGlacierToMergeAtDiffC0000",
-        "GrayGlacier"
+        "GrayGlacier",
+        "MergeToShanghaiAtTime15k"
     ],
     "fillerSkipForks" : [
         "Merge+3540+3670",
         "Merge+3860",
-        "Merge+3855",
-        "MergeToShanghaiAtTime15k",
-        "Shanghai"
+        "Merge+3855"
     ],
     "exceptions" : {
       "AddressTooShort" : "input string too short for common.Address",

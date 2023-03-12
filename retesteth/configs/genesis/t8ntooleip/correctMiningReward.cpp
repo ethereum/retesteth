@@ -26,7 +26,8 @@ const string t8ntooleip_correctMiningReward_config = R"({
     "YOLOv3" :           "2000000000000000000",
     "Aleut"  :           "2000000000000000000",
     "Merge"  :           "0",
-    "Merged"  :          "0"
+    "Merged"  :          "0",
+    "Shanghai"  :          "0"
 })";
 
 gent8ntooleip_genRewardsCfg::gent8ntooleip_genRewardsCfg()
