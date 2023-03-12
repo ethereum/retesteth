@@ -145,7 +145,10 @@ void BlockMining::executeTransition()
     // Convert FrontierToHomesteadAt5 -> Homestead if block > 5, and get reward
     auto tupleRewardFork = prepareReward(m_engine, m_chainRef.fork(), m_currentBlockRef);
     m_cmd += " --state.fork " + std::get<1>(tupleRewardFork).asString();
-    if (m_engine != SealEngine::NoReward)
+
+    if (m_engine == SealEngine::NoReward)
+        m_cmd += " --state.reward 0";
+    else
     {
         if (m_engine == SealEngine::Genesis)
             m_cmd += " --state.reward -1";
