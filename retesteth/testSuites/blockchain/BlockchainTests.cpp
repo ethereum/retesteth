@@ -43,13 +43,10 @@ namespace test
 BLOCKCHAINSUITE_FOLDER_OVERRIDE(BCGeneralStateTestsSuite, "/GeneralStateTests", "/GeneralStateTestsFiller")
 BLOCKCHAINSUITE_FOLDER_OVERRIDE(BCGeneralStateTestsVMSuite, "/GeneralStateTests/VMTests", "/GeneralStateTestsFiller/VMTests")
 BLOCKCHAINSUITE_FOLDER_OVERRIDE(BCGeneralStateTestsShanghaiSuite, "/GeneralStateTests/Shanghai", "/GeneralStateTestsFiller/Shanghai")
-BLOCKCHAINSUITE_FOLDER_OVERRIDE(BCEIPStateTestsSuite, "/GeneralStateTests/EIPTests", "/GeneralStateTestsFiller/EIPTests")
-BLOCKCHAINSUITE_FOLDER_OVERRIDE(BCEIPStateTestsEOFSuite, "/GeneralStateTests/EIPTests/stEOF", "/GeneralStateTestsFiller/EIPTests/stEOF")
 
 BLOCKCHAINSUITE_FOLDER_OVERRIDE(BlockchainTestTransitionSuite, "/TransitionTests", "/BlockchainTestsFiller/TransitionTests")
 BLOCKCHAINSUITE_FOLDER_OVERRIDE(BlockchainTestInvalidSuite, "/InvalidBlocks", "/BlockchainTestsFiller/InvalidBlocks")
 BLOCKCHAINSUITE_FOLDER_OVERRIDE(BlockchainTestValidSuite, "/ValidBlocks", "/BlockchainTestsFiller/ValidBlocks")
-BLOCKCHAINSUITE_FOLDER_OVERRIDE(BlockchainTestEIPSuite, "/EIPTests", "/BlockchainTestsFiller/EIPTests")
 
 
 #define LEGACY_BLOCKCHAINSUITE_FOLDER_OVERRIDE(SUITE, FOLDER, FILLER)   \
@@ -134,12 +131,6 @@ BOOST_AUTO_TEST_CASE(bcExample) {}
 BOOST_AUTO_TEST_CASE(bcEIP1559) {}
 BOOST_AUTO_TEST_CASE(bcEIP3675) {}
 BOOST_AUTO_TEST_SUITE_END()
-
-using BCEIPSuiteFixture = TestFixture<BlockchainTestEIPSuite, DefaultFlags>;
-ETH_REGISTER_DYNAMIC_TEST_SEARCH(BCEIPSuiteFixture, "BlockchainTests/EIPTests")
-BOOST_FIXTURE_TEST_SUITE(EIPTests, BCEIPSuiteFixture)
-BOOST_AUTO_TEST_SUITE_END()
-
 
 using BCInValidSuiteFixture2 = TestFixture<BlockchainTestInvalidSuite, RequireOptionFill>;
 BOOST_FIXTURE_TEST_SUITE(Retesteth, BCInValidSuiteFixture2)
@@ -258,19 +249,6 @@ BOOST_AUTO_TEST_SUITE_END()
 using BCGeneralStateTestsShanghaiFixture = TestFixture<BCGeneralStateTestsShanghaiSuite, RequireOptionAll>;
 ETH_REGISTER_DYNAMIC_TEST_SEARCH(BCGeneralStateTestsShanghaiFixture, "BCGeneralStateTests/Shanghai")
 BOOST_FIXTURE_TEST_SUITE(Shanghai, BCGeneralStateTestsShanghaiFixture)
-BOOST_AUTO_TEST_SUITE_END()
-
-using BCEIPStateSuiteFixture = TestFixture<BCEIPStateTestsSuite, RequireOptionAllNotRefillable>;
-ETH_REGISTER_DYNAMIC_TEST_SEARCH(BCEIPStateSuiteFixture, "BCGeneralStateTests/EIPTests")
-BOOST_FIXTURE_TEST_SUITE(EIPTests, BCEIPStateSuiteFixture)
-BOOST_AUTO_TEST_CASE(stEIP3855) {}
-BOOST_AUTO_TEST_CASE(stEIP3860) {}
-
-using BCEIPStateTestsEOFFixture = TestFixture<BCEIPStateTestsEOFSuite, RequireOptionAll>;
-ETH_REGISTER_DYNAMIC_TEST_SEARCH(BCEIPStateTestsEOFFixture, "BCGeneralStateTests/EIPTests/stEOF")
-BOOST_FIXTURE_TEST_SUITE(stEOF, BCEIPStateTestsEOFFixture)
-BOOST_AUTO_TEST_CASE(stEIP3540) {}
-BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
 
 

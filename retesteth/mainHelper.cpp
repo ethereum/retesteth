@@ -345,7 +345,8 @@ string getTestTArg(fs::path const& _cwd, string const& arg)
     const vector<string> supportedSuites = {
         "GeneralStateTests", "BlockchainTests",
         "GeneralStateTestsFiller", "BlockchainTestsFiller",
-        "EOFTests", "EOFTestsFiller"};
+        "EOFTests", "EOFTestsFiller",
+        "EIPTests", "EIPTestsFiller"};
     string tArg;
     fs::path cwd = _cwd;
     while(!test::inArray(supportedSuites, cwd.stem().string()) && !cwd.empty())
@@ -363,6 +364,8 @@ string getTestTArg(fs::path const& _cwd, string const& arg)
         {
             if (cwd.parent_path().stem() == "BlockchainTests" && headTestSuite == "GeneralStateTests")
                 headTestSuite.insert(0, "BC");
+            if (cwd.parent_path().stem() == "EIPTests" && headTestSuite == "BlockchainTests")
+                headTestSuite.insert(0, "EIPTests/");
         }
         tArg.insert(0, headTestSuite + "/");
     }

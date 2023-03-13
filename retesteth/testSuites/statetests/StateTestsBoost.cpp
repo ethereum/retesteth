@@ -27,11 +27,24 @@ namespace fs = boost::filesystem;
         return TestSuite::FillerPath(fs::path(string("src/GeneralStateTestsFiller") + string(FOLDER + m_fillerPathAdd))); \
     }
 
+#define EIPSUITE_FOLDER_OVERRIDE(SUITE, FOLDER)   \
+    TestSuite::TestPath SUITE::suiteFolder() const  \
+    {                                               \
+        if (Options::get().fillchain)               \
+            return TestSuite::TestPath(fs::path(string("EIPTests/BlockchainTests") + string(FOLDER + m_fillerPathAdd))); \
+        return TestSuite::TestPath(fs::path(string("EIPTests") + string(FOLDER + m_fillerPathAdd))); \
+    }                                               \
+                                                    \
+    TestSuite::FillerPath SUITE::suiteFillerFolder() const \
+    {                                               \
+        return TestSuite::FillerPath(fs::path(string("src/EIPTestsFiller") + string(FOLDER + m_fillerPathAdd))); \
+    }
+
 STATESUITE_FOLDER_OVERRIDE(StateTestSuite, "")
 STATESUITE_FOLDER_OVERRIDE(StateTestVMSuite, "/VMTests")
 STATESUITE_FOLDER_OVERRIDE(StateTestShanghaiSuite, "/Shanghai")
-STATESUITE_FOLDER_OVERRIDE(EIPStateTestSuite, "/EIPTests")
-STATESUITE_FOLDER_OVERRIDE(EIPStateTestEOFSuite, "/EIPTests/stEOF")
+EIPSUITE_FOLDER_OVERRIDE(EIPStateTestSuite, "/StateTests")
+EIPSUITE_FOLDER_OVERRIDE(EIPStateTestEOFSuite, "/StateTests/stEOF")
 
 
 // Legacy Constantinople
@@ -151,19 +164,56 @@ BOOST_AUTO_TEST_CASE(vmPerformance) {}
 BOOST_AUTO_TEST_CASE(vmTests) {}
 BOOST_AUTO_TEST_SUITE_END()
 
-using EIPStateTestsFixture = TestFixture<EIPStateTestSuite, DefaultFlags>;
-ETH_REGISTER_DYNAMIC_TEST_SEARCH(EIPStateTestsFixture, "GeneralStateTests/EIPTests")
-BOOST_FIXTURE_TEST_SUITE(EIPTests, EIPStateTestsFixture)
-BOOST_AUTO_TEST_CASE(stEIP3855) {}
-BOOST_AUTO_TEST_CASE(stEIP3860) {}
-
-using EIPStateTestsEOFFixture = TestFixture<EIPStateTestEOFSuite, DefaultFlags>;
-ETH_REGISTER_DYNAMIC_TEST_SEARCH(EIPStateTestsEOFFixture, "GeneralStateTests/EIPTests/stEOF")
-BOOST_FIXTURE_TEST_SUITE(stEOF, EIPStateTestsEOFFixture)
-BOOST_AUTO_TEST_CASE(stEIP3540) {}
-
-BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
 
 
+#include <retesteth/testSuites/blockchain/BlockchainTests.h>
+#define BCEIPSUITE_FOLDER_OVERRIDE(SUITE, FOLDER, FILLER)   \
+    TestSuite::TestPath SUITE::suiteFolder() const       \
+    {                                                    \
+        return TestSuite::TestPath(fs::path(string("EIPTests" + string(FOLDER) + m_fillerPathAdd))); \
+    }                                                    \
+                                                         \
+    TestSuite::FillerPath SUITE::suiteFillerFolder() const   \
+    {                                                    \
+        return TestSuite::FillerPath(fs::path(string("src/EIPTestsFiller" + string(FILLER) + m_fillerPathAdd)));  \
+    }
+
+BCEIPSUITE_FOLDER_OVERRIDE(BCEIPStateTestsSuite, "/BlockchainTests/StateTests", "/StateTests")
+BCEIPSUITE_FOLDER_OVERRIDE(BCEIPStateTestsEOFSuite, "/BlockchainTests/StateTests/stEOF", "/StateTests/stEOF")
+BCEIPSUITE_FOLDER_OVERRIDE(BlockchainTestEIPSuite, "/BlockchainTests", "/BlockchainTests")
+
+//EIP TESTS
+BOOST_AUTO_TEST_SUITE(EIPTests)
+
+using EIPTestsFixture = TestFixture<EIPStateTestSuite, DefaultFlags>;
+ETH_REGISTER_DYNAMIC_TEST_SEARCH(EIPTestsFixture, "EIPTests/StateTests")
+BOOST_FIXTURE_TEST_SUITE(StateTests, EIPTestsFixture)
+    using EIPStateTestsEOFFixture = TestFixture<EIPStateTestEOFSuite, DefaultFlags>;
+    ETH_REGISTER_DYNAMIC_TEST_SEARCH(EIPStateTestsEOFFixture, "EIPTests/StateTests/stEOF")
+    BOOST_FIXTURE_TEST_SUITE(stEOF, EIPStateTestsEOFFixture)
+        BOOST_AUTO_TEST_CASE(stEIP3540) {}
+    BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
+
+
+using BCEIPSuiteFixture = TestFixture<BlockchainTestEIPSuite, DefaultFlags>;
+ETH_REGISTER_DYNAMIC_TEST_SEARCH(BCEIPSuiteFixture, "EIPTests/BlockchainTests")
+BOOST_FIXTURE_TEST_SUITE(BlockchainTests, BCEIPSuiteFixture)
+
+    using BCEIPStateSuiteFixture = TestFixture<BCEIPStateTestsSuite, RequireOptionAllNotRefillable>;
+    ETH_REGISTER_DYNAMIC_TEST_SEARCH(BCEIPStateSuiteFixture, "EIPTests/BlockchainTests/StateTests")
+    BOOST_FIXTURE_TEST_SUITE(StateTests, BCEIPStateSuiteFixture)
+    BOOST_AUTO_TEST_CASE(stEIP3855) {}
+    BOOST_AUTO_TEST_CASE(stEIP3860) {}
+
+    using BCEIPStateTestsEOFFixture = TestFixture<BCEIPStateTestsEOFSuite, RequireOptionAll>;
+    ETH_REGISTER_DYNAMIC_TEST_SEARCH(BCEIPStateTestsEOFFixture, "EIPTests/BlockchainTests/StateTests/stEOF")
+    BOOST_FIXTURE_TEST_SUITE(stEOF, BCEIPStateTestsEOFFixture)
+    BOOST_AUTO_TEST_CASE(stEIP3540) {}
+    BOOST_AUTO_TEST_SUITE_END()
+    BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END() // EIPTESTS
+
