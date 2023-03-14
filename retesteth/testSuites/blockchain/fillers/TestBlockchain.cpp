@@ -314,7 +314,7 @@ bool TestBlockchain::checkBlockException(SessionInterface const& _session, strin
     else
     {
         std::string const& clientExceptionString =
-            Options::get().getDynamicOptions().getCurrentConfig().translateException(_sBlockException);
+            Options::get().getCurrentConfig().translateException(_sBlockException);
         size_t pos = _session.getLastRPCError().message().find(clientExceptionString);
         if (clientExceptionString.empty())
             pos = string::npos;

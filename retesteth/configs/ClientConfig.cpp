@@ -3,6 +3,8 @@
 #include <retesteth/TestOutputHelper.h>
 #include <retesteth/configs/ClientConfig.h>
 #include <retesteth/testStructures/Common.h>
+#include <retesteth/Constants.h>
+#include <retesteth/Options.h>
 using namespace std;
 using namespace dataobject;
 using namespace test::debug;
@@ -269,11 +271,14 @@ std::string const& ClientConfig::translateException(string const& _exceptionName
     for (auto const& el : suggestions)
         message += el + ", ";
     message += " ...)";
-    ETH_ERROR_MESSAGE("Config::getExceptionString '" + _exceptionName + "' not found in client config `exceptions` section! (" +
-                      cfg.path().c_str() + ")" + message);
+    string const error = "Config::getExceptionString '" + _exceptionName + "' not found in client config `exceptions` section! (" +
+                         cfg.path().c_str() + ")" + message;
+    if (Options::get().filltests)
+        ETH_ERROR_MESSAGE(error);
+    else
+        ETH_WARNING(error);
     // ---
-    static string const notfound = string();
-    return notfound;
+    return C_EMPTY_STR;
 }
 
 // Get Contents of genesis template for specified FORK

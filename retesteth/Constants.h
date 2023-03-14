@@ -5,6 +5,7 @@
 namespace test {
 
 extern std::string C_WITHDRAWALS_EMPTY_ROOT;
+extern std::string C_EMPTY_STR;
 
 namespace teststruct {
 
