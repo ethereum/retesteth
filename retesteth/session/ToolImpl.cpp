@@ -26,9 +26,14 @@ enum class CallType
     catch (UpwardsException const& _ex)                                                                    \
     {                                                                                                      \
         makeRPCError(_ex.what());                                                                          \
-        ETH_DC_MESSAGE(rpclog, string("Response ") + method + ": " + _ex.what());                         \
+        ETH_DC_MESSAGE(rpclog, string("Response ") + method + ": " + _ex.what());                          \
         if (ctype != CallType::DONTFAILONUPWARDS)                                                          \
-            ETH_FAIL_MESSAGE(_ex.what());                                                                  \
+        {                                                                                                  \
+            if (string(_ex.what()).find("exited with 512 code") == string::npos)                           \
+                { ETH_FAIL_MESSAGE(_ex.what()); }                                                          \
+            else                                                                                           \
+                { ETH_ERROR_MESSAGE(_ex.what());}                                                          \
+        }                                                                                                  \
     }                                                                                                      \
     catch (EthError const& _ex)                                                                            \
     {                                                                                                      \
