@@ -346,15 +346,16 @@ void RPCSession::clear()
     closingThreads.clear();
 
     // If not running UnitTests or smth
-    if (Options::getDynamicOptions().activeConfigs() > 0 && Options::getDynamicOptions().currentConfigIsSet())
+    auto const& dynOpt = Options::getDynamicOptions();
+    if (dynOpt.activeConfigs() > 0 && dynOpt.currentConfigIsSet())
     {
-        ClientConfig const& curCFG = Options::getDynamicOptions().getCurrentConfig();
+        ClientConfig const& curCFG = dynOpt.getCurrentConfig();
         if (!curCFG.getStopperScript().empty() && Options::get().nodesoverride.size() == 0)
         {
             int exitCode;
             executeCmd(curCFG.getStopperScript().c_str(), exitCode, ExecCMDWarning::NoWarningNoError);
             ETH_DC_MESSAGE(DC::RPC, curCFG.getStopperScript().c_str());
-            if (!ExitHandler::receivedExitSignal())
+            if (!ExitHandler::receivedExitSignal() && curCFG.cfgFile().socketType() != ClientConfgSocketType::TransitionTool)
             {
                 size_t const initTime = curCFG.cfgFile().initializeTime();
                 size_t const seconds = Options::get().lowcpu ? initTime + 10 : initTime;
