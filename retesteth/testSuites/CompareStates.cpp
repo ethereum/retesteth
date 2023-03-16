@@ -156,7 +156,8 @@ CompareResult compareStorage(Storage const& _expectStorage, Storage const& _remo
             VALUE const& remoteVal = _remoteStorage.atKey(expKey);
             if (remoteVal != expVal)
             {
-                ETH_MARK_ERROR(message + "has incorrect storage [" + expKey.asString() + "] = `" + remoteVal.asString() +
+                ETH_MARK_ERROR(message + "has incorrect storage [" + expKey.asString() + "] = `" +
+                               remoteVal.asString() + "(" + remoteVal.asDecString() + ")" +
                                "`, test expected [" + expKey.asString() + "] = `" + expVal.asString() + "`");
                 result = CompareResult::IncorrectStorage;
             }
@@ -172,7 +173,9 @@ CompareResult compareStorage(Storage const& _expectStorage, Storage const& _remo
             if (!_expectStorage.hasKey(VALUE(el.first)))
                 keys.emplace_back(el.first);
         }
-        storage += "\n [" + keys.at(0) + "] = " + _remoteStorage.atKey(VALUE(keys.at(0))).asString();
+        auto const& remVal = _remoteStorage.atKey(VALUE(keys.at(0)));
+        storage += "\n [" + keys.at(0) + "] = " + remVal.asString();
+        storage += "(" + remVal.asDecString() + ")\n";
 
         ETH_MARK_ERROR(storage);
         result = CompareResult::IncorrectStorage;

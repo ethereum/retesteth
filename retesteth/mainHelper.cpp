@@ -363,9 +363,14 @@ string getTestTArg(fs::path const& _cwd, string const& arg)
         else
         {
             if (cwd.parent_path().stem() == "BlockchainTests" && headTestSuite == "GeneralStateTests")
+            {
                 headTestSuite.insert(0, "BC");
+                if (cwd.parent_path().parent_path().stem() == "Constantinople")
+                    headTestSuite.insert(0, "LegacyTests/Constantinople/");
+            }
             if (cwd.parent_path().stem() == "EIPTests" && headTestSuite == "BlockchainTests")
                 headTestSuite.insert(0, "EIPTests/");
+
         }
         tArg.insert(0, headTestSuite + "/");
     }
