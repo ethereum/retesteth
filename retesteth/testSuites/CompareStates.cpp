@@ -158,7 +158,9 @@ CompareResult compareStorage(Storage const& _expectStorage, Storage const& _remo
             {
                 ETH_MARK_ERROR(message + "has incorrect storage [" + expKey.asString() + "] = `" +
                                remoteVal.asString() + "(" + remoteVal.asDecString() + ")" +
-                               "`, test expected [" + expKey.asString() + "] = `" + expVal.asString() + "`");
+                               "`, test expected [" + expKey.asString() + "] = `" +
+                               expVal.asString() + "(" + expVal.asDecString() + ")" +
+                               "`");
                 result = CompareResult::IncorrectStorage;
             }
         }

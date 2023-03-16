@@ -22,6 +22,7 @@ void removeComments(spDataObject& _obj);
 bool checkFillerHash(boost::filesystem::path const& _compiledTest, boost::filesystem::path const& _sourceTest);
 
 void clearGeneratedTestNamesMap();
+void checkDoubleGeneratedTestNames();
 std::vector<std::string> const& getGeneratedTestNames(boost::filesystem::path const& _filler);
 
 }  // namespace testsuite

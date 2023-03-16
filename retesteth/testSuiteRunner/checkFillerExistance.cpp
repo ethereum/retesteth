@@ -172,6 +172,11 @@ void TestSuite::checkFillerExistance(string const& _testFolder,
         if (testNameFilter.empty())
             checkTestsWithoutFiller(verifiedGeneratedTests, filledTestsPath.path());
     }
+
+    // Fill the names map and check double test names
+    for (auto const& filler : _allTestFillers)
+        getGeneratedTestNames(filler);
+    checkDoubleGeneratedTestNames();
 }
 
 

@@ -107,6 +107,21 @@ void clearGeneratedTestNamesMap()
     C_GeneratedTestsMAP.clear();
 }
 
+void checkDoubleGeneratedTestNames()
+{
+    std::lock_guard<std::mutex> lock(G_GeneratedTestsMap_Mutex);
+    std::set<string> checkedNames;
+    for (auto const& test : C_GeneratedTestsMAP)
+    {
+        for (auto const& name : test.second)
+        {
+            if (checkedNames.count(name))
+                ETH_ERROR_MESSAGE("Filler will produce test name collision (change the name): `" + name + "` in test filler `" + test.first);
+            checkedNames.emplace(name);
+        }
+    }
+}
+
 vector<string> const& getGeneratedTestNames(fs::path const& _filler)
 {
     std::lock_guard<std::mutex> lock(G_GeneratedTestsMap_Mutex);
@@ -148,7 +163,6 @@ vector<string> const& getGeneratedTestNames(fs::path const& _filler)
 
     C_GeneratedTestsMAP.emplace(_filler.stem().string(), generatedTestNames);
     return C_GeneratedTestsMAP.at(_filler.stem().string());
-    //return generatedTestNames;
 }
 
 
