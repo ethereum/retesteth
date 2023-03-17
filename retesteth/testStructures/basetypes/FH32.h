@@ -11,7 +11,7 @@ struct FH32 : FH
     FH32(dev::RLP const& _rlp) : FH(_rlp, 32) {}
     FH32(DataObject const& _data) : FH(_data, 32) {}
     FH32(std::string const& _data) : FH(_data, 32) {}
-    FH32* copy() const { return new FH32(asString()); }
+    FH32* copy() const;
 
     bool isZero() const { return m_data.asString() == zero().asStringBytes(); }
     static FH32 const& zero();

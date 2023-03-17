@@ -12,7 +12,7 @@ struct FH20 : FH
     FH20(dev::RLP const& _rlp) : FH(_rlp, 20) {}
     FH20(DataObject const& _data) : FH(_data, 20) {}
     FH20(std::string const& _data) : FH(_data, 20) {}
-    FH20* copy() const { return new FH20(asString()); }
+    FH20* copy() const;
 
     static FH20 random();
     static FH20 const& zero();

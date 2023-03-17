@@ -42,8 +42,8 @@ void StateTestEnv::initializeFields(DataObject const& _data)
     DataObject tmpD;
     tmpD = "0x00";  // State Tests extra data is 0x00
     m_currentExtraData = spBYTES(new BYTES(tmpD));
-    m_currentNonce = spFH8(new FH8(FH8::zero()));
-    m_currentMixHash = spFH32(new FH32(FH32::zero()));
+    m_currentNonce = spFH8(FH8::zero().copy());
+    m_currentMixHash = spFH32(FH32::zero().copy());
 
     // 1559
     m_currentDifficulty = spVALUE(new VALUE(DataObject("0x00")));

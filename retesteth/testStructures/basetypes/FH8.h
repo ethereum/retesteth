@@ -10,7 +10,7 @@ struct FH8 : FH
     FH8(dev::RLP const& _rlp) : FH(_rlp, 8) {}
     FH8(std::string const& _data) : FH(_data, 8) {}
     FH8(DataObject const& _data) : FH(_data, 8) {}
-    FH8* copy() const { return new FH8(asString()); }
+    FH8* copy() const;
     static FH8 const& zero();
 };
 

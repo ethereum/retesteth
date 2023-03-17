@@ -21,3 +21,8 @@ FH20 FH20::random()
     }
     return FH20(DataObject(std::move(initStr)));
 }
+
+FH20* FH20::copy() const
+{
+    return new FH20(asString());
+}

@@ -287,10 +287,6 @@ else
 fi
 )";
 
-string const besu_stop = R"(#!/bin/sh
-killall -9 java
-)";
-
 genbesucfg::genbesucfg()
 {
     {
@@ -304,13 +300,6 @@ genbesucfg::genbesucfg()
         (*obj)["exec"] = true;
         (*obj)["path"] = "besu/start.sh";
         (*obj)["content"] = besu_start;
-        map_configs.addArrayObject(obj);
-    }
-    {
-        spDataObject obj;
-        (*obj)["exec"] = true;
-        (*obj)["path"] = "besu/stop.sh";
-        (*obj)["content"] = besu_stop;
         map_configs.addArrayObject(obj);
     }
     {

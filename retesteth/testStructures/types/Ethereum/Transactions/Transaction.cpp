@@ -57,7 +57,7 @@ FH20 const& Transaction::sender() const
             catch (std::exception const& _ex)
             {
                 ETH_WARNING("Transaction::sender() const:: error recovering sender! \n" + asDataObject()->asJson());
-                m_sender = spFH20(new FH20(FH20::zero()));
+                m_sender = spFH20(FH20::zero().copy());
                 return m_sender;
             }
         }

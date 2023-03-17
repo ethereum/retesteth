@@ -26,7 +26,7 @@ FH32 RPCImpl::eth_sendRawTransaction(BYTES const& _rlp, VALUE const& _secret)
     if (!m_lastInterfaceError.empty())
     {
         ETH_WARNING("eth_sendRawTransaction:: " + m_lastInterfaceError.message());
-        return FH32(FH32::zero());
+        return FH32::zero();
     }
     return FH32(result.getCContent());
 }
@@ -184,7 +184,7 @@ FH32 RPCImpl::test_importRawBlock(BYTES const& _blockRLP)
     spDataObject const res = rpcCall("test_importRawBlock", {quote(_blockRLP.asString())}, true);
     if (res->type() == DataType::String && res->asString().size() > 2)
         return FH32(res->asString());
-    return FH32(FH32::zero());
+    return FH32::zero();
 }
 
 FH32 RPCImpl::test_getLogHash(FH32 const& _txHash)

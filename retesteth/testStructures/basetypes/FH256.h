@@ -10,7 +10,7 @@ struct FH256 : FH
     FH256(dev::RLP const& _rlp) : FH(_rlp, 256) {}
     FH256(DataObject const& _data) : FH(_data, 256) {}
     FH256(std::string const& _data) : FH(_data, 256) {}
-    FH256* copy() const { return new FH256(asString()); }
+    FH256* copy() const;
 
     static FH256 const& zero();
 };

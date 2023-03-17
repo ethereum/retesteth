@@ -164,8 +164,8 @@ void BlockchainTestFillerEnv::initializeCommonFields(spDataObject const& _data, 
         throw test::UpwardsException("currentGasLimit must be < 0x7fffffffffffffff");
     if (_sEngine == SealEngine::NoProof)
     {
-        m_currentNonce = spFH8(new FH8(FH8::zero()));
-        m_currentMixHash = spFH32(new FH32(FH32::zero()));
+        m_currentNonce = spFH8(FH8::zero().copy());
+        m_currentMixHash = spFH32(FH32::zero().copy());
     }
     else
     {
