@@ -30,7 +30,7 @@ TestBlockchainManager::TestBlockchainManager(
 // Generate block using a client from the filler information
 void TestBlockchainManager::parseBlockFromFiller(BlockchainTestFillerBlock const& _block, bool _generateUncles)
 {
-    ETH_DC_MESSAGEC(DC::TESTLOG, "STARTING A NEW BLOCK: ", LogColor::LIME);
+    ETH_DC_MESSAGEC(DC::RPC, "STARTING A NEW BLOCK: ", LogColor::LIME);
 
     // See if chain reorg is needed. ex: new fork, or remine block
     reorgChains(_block);
@@ -59,7 +59,7 @@ void TestBlockchainManager::parseBlockFromFiller(BlockchainTestFillerBlock const
 
     // Get this block exception on canon chain to later verify it
     FORK const& canonNet = getDefaultChain().getNetwork();
-    m_testBlockRLPs.push_back(std::make_tuple(lastBlock.getRawRLP(), _block.getExpectException(canonNet)));
+    m_testBlockRLPs.emplace_back(std::make_tuple(lastBlock.getRawRLP(), _block.getExpectException(canonNet)));
 }
 
 TestBlockchain& TestBlockchainManager::getDefaultChain()
@@ -88,7 +88,7 @@ void TestBlockchainManager::syncOnRemoteClient(DataObject& _exportBlocksSection)
     if (m_wasAtLeastOneFork)
     {
         // !!! RELY ON _exportBlocksSection has the same block order as m_testBlockRLPs
-        ETH_DC_MESSAGEC(DC::TESTLOG, "IMPORT KNOWN BLOCKS ", LogColor::LIME);
+        ETH_DC_MESSAGEC(DC::RPC, "IMPORT KNOWN BLOCKS ", LogColor::LIME);
         TestBlockchain const& chain = m_mapOfKnownChain.at(m_sDefaultChainName);
         chain.resetChainParams();  // restore canon chain of the test
         size_t ind = 0;
@@ -117,11 +117,11 @@ void TestBlockchainManager::syncOnRemoteClient(DataObject& _exportBlocksSection)
 
 vectorOfSchemeBlock TestBlockchainManager::prepareUncles(BlockchainTestFillerBlock const& _block, string const& _debug)
 {
-    ETH_DC_MESSAGEC(DC::TESTLOG, "Prepare Uncles for the block: " + _debug, LogColor::YELLOW);
+    ETH_DC_MESSAGEC(DC::RPC, "Prepare Uncles for the block: " + _debug, LogColor::YELLOW);
     vectorOfSchemeBlock preparedUncleBlocks;  // Prepared uncles for the current block
     // return block header using uncle overwrite section on uncles array from test
     for (auto const& uncle : _block.uncles())
-        preparedUncleBlocks.push_back(prepareUncle(uncle, preparedUncleBlocks));
+        preparedUncleBlocks.emplace_back(prepareUncle(uncle, preparedUncleBlocks));
     return preparedUncleBlocks;
 }
 
@@ -162,7 +162,7 @@ void TestBlockchainManager::reorgChains(BlockchainTestFillerBlock const& _block)
     if (!sameChain || blockNumberHasDecreased)
     {
         m_wasAtLeastOneFork = true;
-        ETH_DC_MESSAGEC(DC::TESTLOG,
+        ETH_DC_MESSAGEC(DC::RPC,
             "PERFORM REWIND HISTORY:  (current: " + m_sCurrentChainName + ", new: " + newBlockChainName + ")",
             LogColor::YELLOW);
 
@@ -275,6 +275,12 @@ spBlockHeader TestBlockchainManager::prepareUncle(
     // Recalculate uncleHash because we will be checking which uncle hash will be returned by the client
     uncleBlockHeader.getContent().recalculateHash();
     return uncleBlockHeader;
+}
+
+void TestBlockchainManager::performOptionCommandsOnGenesis()
+{
+    TestBlockchain& currentChainMining = getCurrentChain();
+    currentChainMining.performOptionCommandsOnGenesis();
 }
 
 }  // namespace blockchainfiller

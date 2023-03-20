@@ -1,5 +1,5 @@
 #pragma once
-#include "../../basetypes.h"
+#include <retesteth/testStructures/basetypes.h>
 #include "../Ethereum/Storage.h"
 #include <libdataobj/DataObject.h>
 

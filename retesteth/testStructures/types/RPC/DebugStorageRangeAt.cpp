@@ -25,7 +25,7 @@ DebugStorageRangeAt::DebugStorageRangeAt(DataObject const& _data)
         else
         {
             ETH_DC_MESSAGE(DC::LOWLOG, "DebugStorageRangeAt key `nextKey` is not set, use `0x00..00` instead.");
-            m_nextKey = spFH32(new FH32(FH32::zero()));
+            m_nextKey = spFH32(FH32::zero().copy());
         }
     }
     catch (std::exception const& _ex)

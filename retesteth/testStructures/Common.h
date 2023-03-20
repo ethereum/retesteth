@@ -1,8 +1,8 @@
 #pragma once
 #include <retesteth/compiler/Compiler.h>
 #include <libdataobj/DataObject.h>
-#include <retesteth/testStructures/types/Ethereum/BlockHeaderReader.h>
-#include <retesteth/testStructures/types/Ethereum/TransactionReader.h>
+#include <retesteth/testStructures/types/Ethereum/Blocks/BlockHeaderReader.h>
+#include <retesteth/testStructures/types/Ethereum/Transactions/TransactionReader.h>
 #include <map>
 
 namespace test::teststruct
@@ -18,6 +18,7 @@ void mod_keyToLowerCase(DataObject&);
 void mod_valueToCompactEvenHexPrefixed(DataObject&);
 void mod_keyToCompactEvenHexPrefixed(DataObject&);
 void mod_valueInsertZeroXPrefix(DataObject&);
+void mod_valueToFH32(DataObject&);
 void mod_sortKeys(DataObject&);
 long long int hexOrDecStringToInt(std::string const& _str);
 
@@ -74,5 +75,6 @@ void readExpectExceptions(DataObject const& _data, std::map<FORK, std::string>& 
 
 // Convert Secret Key to Public eth key
 spFH20 convertSecretToPublic(spFH32 const& _secret);
+spFH20 convertSecretToPublic(VALUE const& _secret);
 
 }  // namespace teststruct

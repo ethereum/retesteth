@@ -12,6 +12,33 @@ namespace fs = boost::filesystem;
 
 namespace
 {
+
+void removeCommentsFromCode(string& _code)
+{
+    size_t posComment = _code.find("#");
+    while(posComment != string::npos)
+    {
+        size_t posEndl = string::npos;
+        size_t const posEndl1 = _code.find('\n');
+        size_t const posEndl2 = _code.find("\\n");
+        posEndl = min(posEndl1, posEndl2);
+
+        if (posEndl != string::npos)
+        {
+            if (posEndl < posComment)
+            {
+                _code.erase(posEndl, 1);
+                posComment = _code.find("#");
+                continue;
+            }
+            _code.erase(posComment, posEndl - posComment + 1);
+        }
+        else
+            _code.erase(posComment);
+        posComment = _code.find("#");
+    }
+}
+
 string compileLLL(string const& _code)
 {
 #if defined(_WIN32)
@@ -23,7 +50,8 @@ string compileLLL(string const& _code)
     writeFile(path.string(), _code);
     try
     {
-        string result = executeCmd(cmd);
+        int exitCode;
+        string result = executeCmd(cmd, exitCode);
         fs::remove_all(path);
         result = "0x" + result;
         test::compiler::utiles::checkHexHasEvenLength(result);
@@ -55,7 +83,8 @@ bool tryCustomCompiler(string const& _code, string& _compiledCode)
                 string cmd = compiler.second.string() + " " + path.string();
                 writeFile(path.string(), customCode);
 
-                _compiledCode = test::executeCmd(cmd);
+                int exitCode;
+                _compiledCode = test::executeCmd(cmd, exitCode);
                 utiles::checkHexHasEvenLength(_compiledCode);
                 return true;
             }
@@ -99,6 +128,9 @@ void tryKnownCompilers(string const& _code, solContracts const& _preSolidity, st
         if (bRawEndline)
         {
             _compiledCode = _code.substr(pos + c_rawPrefix.length() + 1);
+            test::removeSubChar(_compiledCode, {' ', '-'});
+            removeCommentsFromCode(_compiledCode);
+            test::removeSubChar(_compiledCode, {'\n', 'n', '\\'});
             utiles::checkHexHasEvenLength(_compiledCode);
             found = true;
         }

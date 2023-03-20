@@ -6,6 +6,7 @@
 
 //Suites
 #include <retesteth/testSuites/DifficultyTest.h>
+#include <retesteth/testSuites/EOFTest.h>
 #include <retesteth/testSuites/TransactionTest.h>
 #include <retesteth/testSuites/blockchain/BlockchainTests.h>
 #include <retesteth/testSuites/statetests/StateTests.h>
@@ -34,7 +35,17 @@ test_suite* getSuiteByPathName(std::string const& _suiteName)
     {
         auto const suiteid = suite->get(suiteName);
         if (suiteid != INV_TEST_UNIT_ID)
-            suite = &framework::get<test_suite>(suiteid);
+        {
+            try {
+                suite = &framework::get<test_suite>(suiteid);
+            }
+            catch (std::exception const&)
+            {
+                ETH_WARNING("Pathname `" + _suiteName + "` is not a suite!");
+                return nullptr;
+            }
+
+        }
         else
             return nullptr;
     }
@@ -72,7 +83,7 @@ test_unit_id registerNewTestCase(
 
     string const fullCaseName = string(suiteName) + "/" + _caseName;
     ETH_DC_MESSAGEC(DC::STATS2, "Registering new test case: " + fullCaseName, LogColor::YELLOW);
-    allTestNames.push_back(fullCaseName);
+    allTestNames.emplace_back(fullCaseName);
 
     test_case* tcase = BOOST_TEST_CASE(boost::bind(&TestFixtureBase::execute, fixture.get()));
     tcase->p_name.value = _caseName;
@@ -90,7 +101,7 @@ void registerNewTestSuite(
     string const newSuiteName = _path.stem().string();
     string const fullSuiteName = string(suiteName) + "/" + newSuiteName;
     ETH_DC_MESSAGEC(DC::STATS2, "Registering new test suite: " + fullSuiteName, LogColor::YELLOW);
-    allTestNames.push_back(fullSuiteName);
+    allTestNames.emplace_back(fullSuiteName);
     test_suite* tsuite = BOOST_TEST_SUITE(newSuiteName);
 
     for (auto const& path : subFolders)
@@ -105,7 +116,7 @@ void registerNewTestSuite(
         fixToSuite.second = fullSuiteName;
         registerNewTestCase(allTestNames, fixToSuite, tsuite, casename);
 
-        g_dynamic_test_suite_fixtures.push_back(std::move(fixToSuite));
+        g_dynamic_test_suite_fixtures.emplace_back(std::move(fixToSuite));
     }
     _suite->add(tsuite);
 }
@@ -163,8 +174,7 @@ bool TestChecker::isTimeConsumingTest(std::string const& _testName)
 FixtureRegistrator::FixtureRegistrator(TestFixtureBase* _fixture, string&& _suiteName)
 {
     uPtrTestFixtureBase ptr(_fixture);
-    auto p = std::make_pair(std::move(ptr), std::move(_suiteName));
-    g_dynamic_test_search_fixtures.push_back(std::move(p));
+    g_dynamic_test_search_fixtures.push_back(std::make_pair(std::move(ptr), std::move(_suiteName)));
     delete this;
 }
 
@@ -233,28 +243,42 @@ TestFixture<T, U>::TestFixture(std::set<TestExecution> const& _execFlags) : m_ex
     _execute(_execFlags);
 }
 
+
+#define REGISTER_TEMPLATE(SUITE, FLAG) \
+    template TestFixture<SUITE, FLAG>::TestFixture(std::set<TestExecution> const& _execFlags);
+
 // Difficulty links
-template TestFixture<test::DifficultyTestSuite,test::DefaultFlags>::TestFixture(std::set<TestExecution> const& _execFlags);
+REGISTER_TEMPLATE(DifficultyTestSuite, DefaultFlags)
+REGISTER_TEMPLATE(TransactionTestSuite, DefaultFlags)
 
 // Legacy links
-template TestFixture<test::LegacyConstantinopleBlockchainValidTestSuite,test::NotRefillable>::TestFixture(std::set<TestExecution> const& _execFlags);
-template TestFixture<test::LegacyConstantinopleBlockchainInvalidTestSuite,test::NotRefillable>::TestFixture(std::set<TestExecution> const& _execFlags);
-template TestFixture<test::LegacyConstantinopleBCGeneralStateTestsSuite,test::NotRefillable>::TestFixture(std::set<TestExecution> const& _execFlags);
-template TestFixture<test::LegacyConstantinopleStateTestSuite,test::NotRefillable>::TestFixture(std::set<TestExecution> const& _execFlags);
+REGISTER_TEMPLATE(LegacyConstantinopleBlockchainValidTestSuite, NotRefillable)
+REGISTER_TEMPLATE(LegacyConstantinopleBlockchainInvalidTestSuite, NotRefillable)
+REGISTER_TEMPLATE(LegacyConstantinopleBCGeneralStateTestsSuite, NotRefillable)
+REGISTER_TEMPLATE(LegacyConstantinopleStateTestSuite, NotRefillable)
 
 // BC links
-template TestFixture<test::BCGeneralStateTestsSuite,test::RequireOptionAllNotRefillable>::TestFixture(std::set<TestExecution> const& _execFlags);
-template TestFixture<test::BCGeneralStateTestsVMSuite,test::RequireOptionAll>::TestFixture(std::set<TestExecution> const& _execFlags);
-template TestFixture<test::BlockchainTestTransitionSuite,test::DefaultFlags>::TestFixture(std::set<TestExecution> const& _execFlags);
-template TestFixture<test::BlockchainTestInvalidSuite,test::RequireOptionFill>::TestFixture(std::set<TestExecution> const& _execFlags);
-template TestFixture<test::BlockchainTestInvalidSuite,test::DefaultFlags>::TestFixture(std::set<TestExecution> const& _execFlags);
-template TestFixture<test::BlockchainTestValidSuite,test::DefaultFlags>::TestFixture(std::set<TestExecution> const& _execFlags);
+REGISTER_TEMPLATE(BCGeneralStateTestsSuite, RequireOptionAllNotRefillable)
+REGISTER_TEMPLATE(BCEIPStateTestsSuite, RequireOptionAllNotRefillable)
+REGISTER_TEMPLATE(BCEIPStateTestsEOFSuite, RequireOptionAll)
+
+REGISTER_TEMPLATE(BCGeneralStateTestsVMSuite, RequireOptionAll)
+REGISTER_TEMPLATE(BCGeneralStateTestsShanghaiSuite, RequireOptionAll)
+
+REGISTER_TEMPLATE(BlockchainTestTransitionSuite, DefaultFlags)
+REGISTER_TEMPLATE(BlockchainTestInvalidSuite, RequireOptionFill)
+REGISTER_TEMPLATE(BlockchainTestInvalidSuite, DefaultFlags)
+REGISTER_TEMPLATE(BlockchainTestEIPSuite, DefaultFlags)
+REGISTER_TEMPLATE(BlockchainTestValidSuite, DefaultFlags)
 
 // State link
-template TestFixture<test::StateTestSuite,test::RequireOptionFill>::TestFixture(std::set<TestExecution> const& _execFlags);
-template TestFixture<test::StateTestSuite,test::DefaultFlags>::TestFixture(std::set<TestExecution> const& _execFlags);
-template TestFixture<test::StateTestVMSuite,test::DefaultFlags>::TestFixture(std::set<TestExecution> const& _execFlags);
+REGISTER_TEMPLATE(StateTestSuite, RequireOptionFill)
+REGISTER_TEMPLATE(StateTestSuite, DefaultFlags)
+REGISTER_TEMPLATE(EOFTestSuite, DefaultFlags)
+REGISTER_TEMPLATE(StateTestVMSuite, DefaultFlags)
+REGISTER_TEMPLATE(StateTestShanghaiSuite, DefaultFlags)
 
-template TestFixture<test::TransactionTestSuite,test::DefaultFlags>::TestFixture(std::set<TestExecution> const& _execFlags);
+REGISTER_TEMPLATE(EIPStateTestSuite, DefaultFlags)
+REGISTER_TEMPLATE(EIPStateTestEOFSuite, DefaultFlags)
 
 

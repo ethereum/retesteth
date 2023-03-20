@@ -12,7 +12,6 @@ enum class Report
 extern std::string const c_trHashNotFound;
 bool OptionsAllowTransaction(TransactionInGeneralSection const& _tr);
 void checkUnexecutedTransactions(std::vector<TransactionInGeneralSection> const& _txs, Report _report = Report::WARNING);
-bool hasSkipFork(std::set<FORK> const& _allforks);
 
 void RunTest(StateTestInFilled const& _test);
 spDataObject FillTest(StateTestInFiller const& _test);

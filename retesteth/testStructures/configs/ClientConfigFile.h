@@ -33,10 +33,16 @@ struct ClientConfigFile : GCP_SPointerBase
     std::set<FORK> allowedForks() const;
     std::set<FORK> forkProgressionAsSet() const;
     bool checkLogsHash() const { return m_checkLogsHash; }
+
     bool checkDifficulty() const { return m_checkDifficulty; }
+    bool calculateDifficulty() const { return m_calculateDifficulty; }
+
     bool checkBasefee() const { return m_checkBasefee; }
     bool calculateBasefee() const { return m_calculateBasefee; }
+
+    // ETC classic block format autoconvertion
     bool support1559() const { return m_support1559; }
+    bool transactionsAsJson() const { return m_transactionsAsJson; }
 
     std::map<std::string, std::string> const& exceptions() const { return m_exceptions; }
     std::map<std::string, std::string> const& fieldreplace() const { return m_fieldRaplce; }
@@ -60,9 +66,11 @@ private:
     boost::filesystem::path m_tmpDir;        ///< Path to the temp dir for this config
     bool m_checkLogsHash;                    ///< Enable logsHash verification
     bool m_checkDifficulty;                  ///< Enable difficulty verification
+    bool m_calculateDifficulty;              ///< Retesteth calculate difficulty for the client
     bool m_checkBasefee;                     ///< Enable basefee verifivation
     bool m_calculateBasefee;                 ///< Retesteth calculate basefee value
     bool m_support1559;                      ///< Support EIP1559 headers
+    bool m_transactionsAsJson;               ///< Make T8N txs file as json not rlp
     size_t m_initializeTime;                 ///< Time to start the instance
     std::vector<FORK> m_forks;               ///< Allowed forks as network name
     std::vector<FORK> m_additionalForks;     ///< Allowed forks as network name

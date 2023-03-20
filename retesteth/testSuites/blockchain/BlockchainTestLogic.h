@@ -4,6 +4,7 @@
 
 #pragma once
 #include <libdataobj/DataObject.h>
+#include <retesteth/session/SessionInterface.h>
 #include <retesteth/testStructures/types/BlockchainTests/BlockchainTest.h>
 #include <retesteth/testStructures/types/BlockchainTests/BlockchainTestFiller.h>
 #include <retesteth/testSuiteRunner/TestSuite.h>

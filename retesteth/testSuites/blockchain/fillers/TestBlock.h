@@ -20,11 +20,14 @@ public:
     void registerTestTransaction(spTransaction const& _tr) { m_block.getContent().addTransaction(_tr); }
 
     // Attach Transaction to transaction Execution Order section
-    void registerTransactionSequence(TransactBytesException const& _trTuple) { m_transactionExecOrder.push_back(_trTuple); }
+    void registerTransactionSequence(TransactBytesException const& _trTuple) { m_transactionExecOrder.emplace_back(_trTuple); }
     void nullTransactionSequence() { m_transactionExecOrder.clear(); }
 
     // Attach Uncle header to EthereumBlock (the one described in tests)
     void registerTestUncle(spBlockHeader const& _uncle) { m_block.getContent().addUncle(_uncle); }
+
+    void registerTestWithdrawal(spWithdrawal const& _w) { m_block.getContent().addWithdrawal(_w); }
+
     bool isThereTestHeader() const { return !m_block.isEmpty(); }
     std::vector<spBlockHeader> const& getUncles() const { return m_block->uncles(); }
 

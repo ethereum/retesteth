@@ -35,25 +35,43 @@ spDataObject constructAccountRange(EthereumBlockState const& _block, FH32 const&
     return constructResponse;
 }
 
-spDataObject constructEthGetBlockBy(EthereumBlockState const& _block)
+spDataObject constructEthGetBlockBy(EthereumBlockState const& _block, test::session::Request _request)
 {
+    // Imitate eth_getBlockBy...  rpc response
     spDataObject constructResponse = _block.header()->asDataObject();
 
     spDataObject transactionArray(new DataObject(DataType::Array));
     (*constructResponse).atKeyPointer("transactions") = transactionArray;
-    for (auto const& tr : _block.transactions())
-    {
-        spDataObject fullTransaction = tr->asDataObject();
-        (*fullTransaction)["blockHash"] = _block.header()->hash().asString();  // We don't know the hash its in tool response
-        (*fullTransaction)["blockNumber"] = _block.header()->number().asString();
-        (*fullTransaction)["from"] = FH20::zero().asString();  // Can be recovered from vrs
-        (*fullTransaction)["transactionIndex"] = "0x00";       // Its in tool response
-        (*fullTransaction)["hash"] = tr->hash().asString();
-        (*constructResponse)["transactions"].addArrayObject(fullTransaction);
-    }
-
     spDataObject arr(new DataObject(DataType::Array));
     (*constructResponse).atKeyPointer("uncles") = arr;
+
+    if (_request == test::session::Request::FULLOBJECTS)
+    {
+        for (auto const& tr : _block.transactions())
+        {
+            spDataObject fullTransaction = tr->asDataObject();
+            (*fullTransaction)["blockHash"] = _block.header()->hash().asString();  // We don't know the hash its in tool response
+            (*fullTransaction)["blockNumber"] = _block.header()->number().asString();
+            (*fullTransaction)["from"] = FH20::zero().asString();  // Can be recovered from vrs
+            (*fullTransaction)["transactionIndex"] = "0x00";       // Its in tool response
+            (*fullTransaction)["hash"] = tr->hash().asString();
+            (*constructResponse)["transactions"].addArrayObject(fullTransaction);
+        }
+
+        for (auto const& wt : _block.withdrawals())
+        {
+            (*constructResponse)["withdrawals"].addArrayObject(wt->asDataObject());
+        }
+    }
+    else
+    {
+        for (auto const& tr : _block.transactions())
+        {
+            spDataObject trHash(new DataObject(tr->hash().asString()));
+            (*constructResponse)["transactions"].addArrayObject(trHash);
+        }
+    }
+
     for (auto const& un : _block.uncles())
     {
         spDataObject unHash(new DataObject(un->hash().asString()));
@@ -113,19 +131,22 @@ spDataObject constructStorageRangeAt(
 // RLP Validators
 void verifyBlockRLP(dev::RLP const& _rlp)
 {
+    size_t const blockheader = 0;
+    size_t const transactions = 1;
+    size_t const uncles = 2;
     if (!_rlp.isList())
         throw dev::RLPException("RLP is expected to be list");
 
-    if (!_rlp[0].isList())
+    if (!_rlp[blockheader].isList())
         throw dev::RLPException("BlockHeader RLP is expected to be list");
 
     for (size_t i = 0; i < 15; i++)
     {
-        if (!_rlp[0][i].isData())
+        if (!_rlp[blockheader][i].isData())
             throw dev::RLPException("Blockheader RLP field is not data!");
     }
 
-    for (auto const& tr : _rlp[1])
+    for (auto const& tr : _rlp[transactions])
     {
         if (tr.isList())
         {
@@ -146,7 +167,7 @@ void verifyBlockRLP(dev::RLP const& _rlp)
             throw dev::RLPException("Transaction RLP is expected to be list");
     }
 
-    for (auto const& un : _rlp[2])
+    for (auto const& un : _rlp[uncles])
     {
         if (!un.isList())
             throw dev::RLPException("Uncleheader RLP is expected to be list");

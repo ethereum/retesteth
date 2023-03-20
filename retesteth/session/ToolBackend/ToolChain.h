@@ -27,12 +27,18 @@ private:
     spVALUE m_londonForkBlock;
 };
 
+enum class ToolChainGenesis
+{
+    CALCULATE,
+    NOTCALCULATE
+};
+
 // Manage test blockchains
 class ToolChain : public GCP_SPointerBase
 {
 public:
     ToolChain(EthereumBlockState const& _genesis, spSetChainParamsArgs const& _params, boost::filesystem::path const& _toolPath,
-        boost::filesystem::path const& _tmpDir);
+        boost::filesystem::path const& _tmpDir, ToolChainGenesis _genesisPolicy = ToolChainGenesis::CALCULATE);
 
     // Calculate difficulty from _blockA to _blockB constructor
     ToolChain(EthereumBlockState const& _blockA, EthereumBlockState const& _blockB, FORK const& _fork,
@@ -60,7 +66,7 @@ public:
     void rewindToBlock(size_t _number);
 
     // Used for chain reorg
-    void insertBlock(EthereumBlockState const& _block) { m_blocks.push_back(_block); }
+    void insertBlock(EthereumBlockState const& _block) { m_blocks.emplace_back(_block); }
     boost::filesystem::path const& tmpDir() const { return m_tmpDir; }
 
 private:
@@ -82,6 +88,8 @@ private:
     void checkDifficultyAgainstRetesteth(VALUE const& _toolDifficulty, spBlockHeader const& _pendingHeader);
     void checkBasefeeAgainstRetesteth(VALUE const& _toolBasefee, spBlockHeader const& _pendingHeader, spBlockHeader const& _parentHeader);
     void calculateAndCheckSetBaseFee(VALUE const& _toolBaseFee, spBlockHeader& _pendingHeader, spBlockHeader const& _parentHeader);
+    void setWithdrawalsRoot(FH32 const&, spBlockHeader&);
+    void setAndCheckDifficulty(VALUE const&, spBlockHeader&);
 
     spDataObject coorectTransactionsByToolResponse(ToolResponse const& _res, EthereumBlockState& _pendingFixed,
         EthereumBlockState const& _pendingBlock, Mining _miningReq);

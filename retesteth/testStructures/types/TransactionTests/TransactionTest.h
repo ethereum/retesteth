@@ -1,7 +1,7 @@
 #pragma once
 #include <libdataobj/DataObject.h>
 #include <retesteth/testStructures/configs/FORK.h>
-#include <retesteth/testStructures/types/Ethereum/Transaction.h>
+#include <retesteth/testStructures/types/Ethereum/Transactions/Transaction.h>
 #include <map>
 
 namespace test::teststruct

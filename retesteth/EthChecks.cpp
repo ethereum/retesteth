@@ -4,8 +4,10 @@
 #include <retesteth/TestOutputHelper.h>
 #include <boost/algorithm/string.hpp>
 #include <csignal>
+#include <mutex>
 using namespace std;
 
+mutex g_debugFlagAccess;
 namespace test::debug
 {
 Debug::Debug()
@@ -28,8 +30,15 @@ Debug::Debug()
                 m_channels[DC::RPC] = true;
                 m_channels[DC::WARNING] = true;
             }
+            else if (flag == "RPC2")
+            {
+                m_channels[DC::RPC2] = true;
+                m_channels[DC::WARNING] = true;
+            }
             else if (flag == "STATS")
                 m_channels[DC::STATS] = true;  // Default test execution stats
+            else if (flag == "STATS2")
+                m_channels[DC::STATS2] = true;
             else if (flag == "STATE")
                 m_channels[DC::STATE] = true;  // Poststate output
             else if (flag == "SOCKET")
@@ -47,6 +56,12 @@ Debug::Debug()
     else
         initializeDefaultChannels();
 };
+
+bool Debug::flag(DC _channel) const
+{
+    std::lock_guard<std::mutex> lock(g_debugFlagAccess);
+    return m_channels.at(_channel);
+}
 
 void Debug::initializeDefaultChannels()
 {
@@ -69,7 +84,10 @@ void Debug::initializeDefaultChannels()
     if (verb >= 6)
         m_channels[DC::RPC] = true;
     if (verb >= 7)
+    {
         m_channels[DC::LOWLOG] = true;
+        m_channels[DC::RPC2] = true;
+    }
     if (Options::get().poststate.initialized() || Options::get().statediff.initialized())
         m_channels[DC::STATE] = true;
 }

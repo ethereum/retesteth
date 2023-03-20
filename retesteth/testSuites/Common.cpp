@@ -70,14 +70,14 @@ void printVmTrace(VMtraceinfo const& _info)
         if (!Options::get().vmtraceraw.outpath.empty())
         {
             auto outpath = fs::path(Options::get().vmtraceraw.outpath);
-            ETH_DC_MESSAGE(DC::TESTLOG, "Export vmtraceraw to " + (outpath / _info.trName).string());
+            ETH_DC_MESSAGEC(DC::TESTLOG, "Export vmtraceraw to " + (outpath / _info.trName).string(), LogColor::LIME);
             ret.exportLogs(outpath / _info.trName);
         }
         else
             ret.print();
     }
     else
-        ret.printNice();
+        ret.print();
 
     DataObject state;
     state["stateRoot"] = _info.stateRoot.asString();
@@ -89,7 +89,8 @@ void compareTransactionException(spTransaction const& _tr, MineBlocksResult cons
 {
     if (!_mRes.isRejectData() && !_testException.empty())
     {
-        ETH_WARNING("Looks like client does not support rejected transaction information!");
+        if (Options::get().filltests)
+            ETH_WARNING("Looks like client does not support rejected transaction information!");
         return;
     }
     // Mine a block, execute transaction
@@ -190,7 +191,18 @@ void verifyFilledTestRecursive(DataObject const& _want, DataObject const& _have,
 
 void modifyTransactionChainIDByNetwork(test::Transaction const& _tr, FORK const& _fork)
 {
-    auto const& genesisChainID = Options::getDynamicOptions().getCurrentConfig().getGenesisTemplateChainID();
+    if (Options::get().chainid.initialized())
+    {
+        VALUE const chainID((size_t)Options::get().chainid);
+        if (_tr.getChainID() != chainID)
+        {
+            auto& tr = const_cast<test::Transaction&>(_tr);
+            tr.setChainID(chainID);
+        }
+        return;
+    }
+
+    auto const& genesisChainID = Options::getCurrentConfig().getGenesisTemplateChainID();
     if (genesisChainID.count(_fork))
     {
         VALUE const& chainID = genesisChainID.at(_fork);
@@ -241,7 +253,7 @@ spDataObject storageDiff(Storage const& _pre, Storage const& _post)
 
 spDataObject stateDiff(State const& _pre, State const& _post)
 {
-    spDataObject res;
+    spDataObject res(new DataObject(DataType::Object));
     for (auto const& postAcc : _post.accounts())
     {
         if (_pre.hasAccount(postAcc.first))
@@ -296,5 +308,23 @@ spDataObject stateDiff(State const& _pre, State const& _post)
     }
     return res;
 }
+
+bool hasSkipFork(std::set<FORK> const& _allforks)
+{
+    Options const& opt = Options::get();
+    auto const& skipforks = opt.getCurrentConfig().cfgFile().fillerSkipForks();
+    for (auto const& skipfork : skipforks)
+    {
+        if (_allforks.count(skipfork))
+        {
+            ETH_WARNING(string("Test has unsupported fork `") + skipfork.asString() +
+                        "` allowed to skip, skipping the test from filling!"
+                        + TestOutputHelper::get().testInfo().errorDebug());
+            return true;
+        }
+    }
+    return false;
+}
+
 
 }  // namespace

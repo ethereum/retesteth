@@ -26,7 +26,7 @@ if __name__ == '__main__':
     argLogFile = sys.argv[3]
 
     my_env = os.environ.copy()
-    my_env["JAVA_HOME"] = "/usr/lib/jvm/java-11-openjdk-amd64"
+    my_env["JAVA_HOME"] = "/usr/lib/jvm/java-17-oracle"
 
     logfile = open(argLogFile, 'w')
     proc = subprocess.Popen([argCommand], shell=True, stdout=logfile, stderr=logfile, env = my_env) 

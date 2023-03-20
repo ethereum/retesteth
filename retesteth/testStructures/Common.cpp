@@ -48,6 +48,12 @@ void removeLeadingZeroes(string& _hexStr)
 namespace test::teststruct
 {
 
+spFH20 convertSecretToPublic(VALUE const& _secret)
+{
+    spFH32 secret(new FH32(_secret.asString()));
+    return convertSecretToPublic(secret);
+}
+
 spFH20 convertSecretToPublic(spFH32 const& _secret)
 {
     const dev::Secret secret(_secret->asString());
@@ -80,10 +86,23 @@ void mod_removeComments(DataObject& _obj)
     for (auto& el : _obj.getSubObjectsUnsafe())
     {
         if (el->getKey()[0] == '/' && el->getKey()[1] == '/')
-            keysToRemove.push_back(el->getKey());
+            keysToRemove.emplace_back(el->getKey());
     }
     for (auto const& key : keysToRemove)
         _obj.removeKey(key);
+}
+
+void mod_valueToFH32(DataObject& _obj)
+{
+    if (_obj.type() == DataType::String)
+    {
+        size_t size = _obj.asString().size();
+        if (_obj.asString().substr(0, 2) == "0x")
+        {
+            while (size++ < 66)
+                _obj.asStringUnsafe().insert(2, "0");
+        }
+    }
 }
 
 void mod_valueToCompactEvenHexPrefixed(DataObject& _obj)
@@ -260,7 +279,7 @@ void requireJsonFields(DataObject const& _o, std::string const& _config, std::ma
         if (!_validationMap.count(field->getKey()))
         {
             std::string const comment = "Unexpected field '" + field->getKey() + "' in config: " + _config;
-            ETH_ERROR_MESSAGE(comment + "\n" + _o.asJson());
+            throw test::UpwardsException(comment + "\n" + _o.asJson());
         }
     }
 
@@ -273,7 +292,7 @@ void requireJsonFields(DataObject const& _o, std::string const& _config, std::ma
             if (vmap.second.second == jsonField::Required)
             {
                 std::string const comment = "Expected field '" + vmap.first + "' not found in config: " + _config;
-                ETH_ERROR_MESSAGE(comment + "\n" + _o.asJson());
+                throw test::UpwardsException(comment + "\n" + _o.asJson());
             }
             else if (vmap.second.second == jsonField::Optional)
                 continue;
@@ -297,7 +316,7 @@ void requireJsonFields(DataObject const& _o, std::string const& _config, std::ma
             }
             std::string const comment = "Field '" + vmap.first + "' expected to be `" + sTypes + "`, but set to `" +
                                         DataObject::dataTypeAsString(_o.atKey(vmap.first).type()) + "` in " + _config;
-            ETH_ERROR_MESSAGE(comment + "\n" + _o.asJson());
+            throw test::UpwardsException(comment + "\n" + _o.asJson());
         }
     }
 }

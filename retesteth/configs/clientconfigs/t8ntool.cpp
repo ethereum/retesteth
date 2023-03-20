@@ -8,8 +8,15 @@ string const t8ntool_config = R"({
     "name" : "Ethereum GO on StateTool",
     "socketType" : "tranition-tool",
     "socketAddress" : "start.sh",
-    "checkLogsHash" : true,
+    "initializeTime" : "0",
+    "checkDifficulty" : true,
+    "calculateDifficulty" : false,
     "checkBasefee" : true,
+    "calculateBasefee" : false,
+    "checkLogsHash" : true,
+    "support1559" : true,
+    "transactionsAsJson" : false,
+    "tmpDir" : "/dev/shm",
     "defaultChainID" : 1,
     "customCompilers" : {
         ":yul" : "yul.sh",
@@ -26,7 +33,8 @@ string const t8ntool_config = R"({
         "Istanbul",
         "Berlin",
         "London",
-        "Merge"
+        "Merge",
+        "Shanghai"
     ],
     "additionalForks" : [
         "FrontierToHomesteadAt5",
@@ -37,11 +45,10 @@ string const t8ntool_config = R"({
         "BerlinToLondonAt5",
         "ArrowGlacier",
         "ArrowGlacierToMergeAtDiffC0000",
-        "GrayGlacier"
+        "GrayGlacier",
+        "MergeToShanghaiAtTime15k"
     ],
     "fillerSkipForks" : [
-        "Merge+3540+3670",
-        "Merge+3860"
     ],
     "exceptions" : {
       "AddressTooShort" : "input string too short for common.Address",
@@ -59,6 +66,7 @@ string const t8ntool_config = R"({
       "InvalidData" : "rlp: expected input string or byte for []uint8, decoding into (types.Transaction)(types.LegacyTx).Data",
       "InvalidDifficulty" : "Invalid difficulty:",
       "InvalidDifficulty2" : "Error in field: difficulty",
+      "InvalidWithdrawals" : "Error in field: withdrawalsRoot",
       "InvalidDifficulty_TooLarge" : "Blockheader parse error: VALUE  >u256",
       "InvalidGasLimit" : "Header gasLimit > 0x7fffffffffffffff",
       "InvalidGasLimit2" : "Invalid gaslimit:",
@@ -113,6 +121,8 @@ string const t8ntool_config = R"({
       "TRANSACTION_VALUE_TOOSHORT" : "t8ntool didn't return a transaction with hash",
       "TR_NonceHasMaxValue" : "nonce has max value:",
       "OVERSIZE_RLP" : "Error importing raw rlp block: OversizeRLP",
+      "RLP_BadCast" : "BadCast",
+      "RLP_ExpectedAsList" : "expected to be list",
       "RLP_TooFewElements" : "rlp: too few elements ",
       "RLP_TooManyElements" : "rlp: input list has too many elements ",
       "RLP_InputContainsMoreThanOneValue" : "Error importing raw rlp block: OversizeRLP",
@@ -207,6 +217,8 @@ string const t8ntool_config = R"({
       "1559BlockImportImpossible_TargetGasLow": "gasTarget decreased too much",
       "1559BlockImportImpossible_TargetGasHigh": "gasTarget increased too much",
       "1559BlockImportImpossible_InitialGasLimitInvalid": "Invalid block1559: Initial gasLimit must be",
+      "MergeBlockImportImpossible" : "Trying to import Merge block on top of Shanghai block after transition",
+      "ShanghaiBlockImportImpossible" : "Shanghai block on top of Merge block before transition",
       "TR_IntrinsicGas" : "intrinsic gas too low:",
       "TR_NoFunds" : "insufficient funds for gas * price + value",
       "TR_NoFundsValue" : "insufficient funds for transfer",
@@ -217,6 +229,7 @@ string const t8ntool_config = R"({
       "TR_TypeNotSupported" : "transaction type not supported",
       "TR_TipGtFeeCap": "max priority fee per gas higher than max fee per gas",
       "TR_TooShort": "typed transaction too short",
+      "TR_InitCodeLimitExceeded" : "max initcode size exceeded",
       "1559BaseFeeTooLarge": "TransactionBaseFee convertion error: VALUE  >u256",
       "1559PriorityFeeGreaterThanBaseFee": "maxFeePerGas \u003c maxPriorityFeePerGas",
       "2930AccessListAddressTooLong": "rlp: input string too long for common.Address, decoding into (types.Transaction)(types.AccessListTx).AccessList[0].Address",
@@ -228,25 +241,51 @@ string const t8ntool_config = R"({
       "2930AccessListStorageHashTooLong": "rlp: input string too long for common.Hash, decoding into (types.Transaction)(types.AccessListTx).AccessList[0].StorageKeys[0]",
       "3675PoWBlockRejected" : "Invalid block1559: Chain switched to PoS!",
       "3675PoSBlockRejected" : "Parent (transition) block has not reached TTD",
-      "3675PreMerge1559BlockRejected" : "Trying to import 1559 block on top of PoS block"
+      "3675PreMerge1559BlockRejected" : "Trying to import 1559 block on top of PoS block",
+      "INPUT_UNMARSHAL_ERROR" : "cannot unmarshal hex",
+      "INPUT_UNMARSHAL_SIZE_ERROR" : "failed unmarshaling",
+      "RLP_BODY_UNMARSHAL_ERROR" : "Rlp structure is wrong",
+      "PostMergeUncleHashIsNotEmpty" : "block.uncleHash != empty",
+      "PostMergeDifficultyIsNot0" : "block.difficulty must be 0"
     }
 })";
 
 string const t8ntool_start = R"(#!/bin/sh
-if [ $1 = "-v" ]; then
+
+wevm=$(which evm)
+if [ -z $wevm ]; then
+   >&2 echo "Can't find geth's 'evm' executable alias in the system path!"
+   exit 1
+fi
+
+if [ $1 = "t8n" ] || [ $1 = "b11r" ]; then
+    evm $1 $2 $3 $4 $5 $6 $7 $8 $9 $10 $11 $12 $13 $14 $15 $16 $17 $18 $19 $20 $21 $22 $23 $24 $25 $26
+elif [ $1 = "-v" ]; then
     evm -v
 else
     stateProvided=0
-    for index in ${1} ${2} ${3} ${4} ${5} ${6} ${7} ${8} ${9} ${10} ${11} ${12} ${13} ${14} ${15} ${16} ${17} ${18} ${19} ${20} ; do
+    readErrorLog=0
+    errorLogFile=""
+    cmdArgs=""
+    for index in ${1} ${2} ${3} ${4} ${5} ${6} ${7} ${8} ${9} ${10} ${11} ${12} ${13} ${14} ${15} ${16} ${17} ${18} ${19} ${20} ${21} ${22} ${23} ${24} ${25} ${26}; do
         if [ $index = "--input.alloc" ]; then
             stateProvided=1
-            break
         fi
+        if [ $readErrorLog -eq 1 ]; then
+            errorLogFile=$index
+            readErrorLog=0
+            continue
+        fi
+        if [ $index = "--output.errorlog" ]; then
+            readErrorLog=1
+            continue
+        fi
+        cmdArgs=$cmdArgs" "$index
     done
     if [ $stateProvided -eq 1 ]; then
-        evm t8n ${1} ${2} ${3} ${4} ${5} ${6} ${7} ${8} ${9} ${10} ${11} ${12} ${13} ${14} ${15} ${16} ${17} ${18} ${19} ${20} --verbosity 2
+        evm t8n $cmdArgs --verbosity 2 2> $errorLogFile
     else
-        evm t9n ${1} ${2} ${3} ${4} ${5} ${6} ${7} ${8} ${9} ${10} ${11} ${12} ${13} ${14} ${15} ${16} ${17} ${18} ${19} ${20}
+        evm t9n $cmdArgs 2> $errorLogFile
     fi
 fi
 )";
@@ -271,15 +310,38 @@ echo "0x600360005500"
 # just like described in this file."
 )";
 
-
-string const t8ntool_yulcompiler = R"(#!/bin/sh
+string const yul_compiler_sh = R"(#!/bin/sh
 solc=$(which solc)
 if [ -z $solc ]; then
    >&2 echo "yul.sh \"Yul compilation error: 'solc' not found!\""
    echo "0x"
 else
-    echo 0x`solc --assemble $1 2>/dev/null | grep "Binary representation:" -A 1 | tail -n1`
+    out=$(solc --assemble $1 2>&1)
+    a=$(echo "$out" | grep "Binary representation:" -A 1 | tail -n1)
+    case "$out" in
+    *Error*) >&2 echo "yul.sh \"Yul compilation error: \"\n$out";;
+    *       )  echo 0x$a;;
+    esac
 fi
+)";
+
+string const py_compiler_sh = R"(#!/bin/bash
+if [ -z "$PYSPECS_PATH" ]
+then
+    >&2 echo "Error: env variable 'PYSPECS_PATH' is not set!"
+    exit 1;
+fi
+
+cd $PYSPECS_PATH
+python3 -m venv ./venv/
+source ./venv/bin/activate
+
+SRCPATH=$1
+FILLER=$2
+OUTPUT=$3
+EVMT8N=$4
+
+tf --filler-path $SRCPATH --output $OUTPUT --test-module $FILLER --no-output-structure --evm-bin $EVMT8N
 )";
 
 gent8ntoolcfg::gent8ntoolcfg()
@@ -308,7 +370,14 @@ gent8ntoolcfg::gent8ntoolcfg()
         spDataObject obj;
         (*obj)["exec"] = true;
         (*obj)["path"] = "t8ntool/yul.sh";
-        (*obj)["content"] = t8ntool_yulcompiler;
+        (*obj)["content"] = yul_compiler_sh;
+        map_configs.addArrayObject(obj);
+    }
+    {
+        spDataObject obj;
+        (*obj)["exec"] = true;
+        (*obj)["path"] = "pyspecsStart.sh";
+        (*obj)["content"] = py_compiler_sh;
         map_configs.addArrayObject(obj);
     }
     {
@@ -335,7 +404,7 @@ gent8ntoolcfg::gent8ntoolcfg()
         spDataObject obj;
         (*obj)["exec"] = true;
         (*obj)["path"] = "default/yul.sh";
-        (*obj)["content"] = t8ntool_yulcompiler;
+        (*obj)["content"] = yul_compiler_sh;
         map_configs.addArrayObject(obj);
     }
 }

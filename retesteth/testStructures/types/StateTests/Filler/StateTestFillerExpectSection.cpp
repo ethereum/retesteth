@@ -21,7 +21,7 @@ spDataObject ReplaceValueToIndexesInDataList(spStateTestFillerTransaction const&
             for (auto const& el : dVector)
             {
                 if (el.m_dataLabel == _data.asString())
-                    indexes.push_back(i);
+                    indexes.emplace_back(i);
                 i++;
             }
 

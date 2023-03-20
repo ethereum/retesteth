@@ -55,11 +55,15 @@ if [ "$1" = "besu" ] || [ -z "$1" ]; then
     rm ./build/install/besu/bin/besu
     BESU_HEAD=$(git rev-parse HEAD | cut -c1-7)
     echo "Build besu: "
-    export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
-    # export JAVA_HOME=/usr/lib/jvm/java-14-oracle
+    #export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+    #export JAVA_HOME=/usr/lib/jvm/java-14-oracle
+    export JAVA_HOME=/usr/lib/jvm/java-17-oracle    
+    ./gradlew clean distZip -x test
+    ./gradlew clean
     ./gradlew build
     #./gradlew integrationTest
     ./gradlew installDist
+    ./gradlew ethereum:evmtool:installDist
     killall java
 fi
 
@@ -75,6 +79,19 @@ if [ "$1" = "ethereumjs" ] || [ -z "$1" ]; then
     echo "Build ethereumjs: "
     npm i
     npm run build --workspaces
+fi
+
+if [ "$1" = "nimbus" ] || [ -z "$1" ]; then
+    echo "Fetch nimbus: "
+    cd $BUILDPATH/nimbus-eth1
+    git reset --hard HEAD~1
+    git fetch origin
+    git checkout master
+    git pull
+    rm ./tools/t8n/t8n
+    NIMBUS_HEAD=$(git rev-parse HEAD | cut -c1-7)
+    echo "Build nimbus: "
+    make t8n -j2
 fi
 
 #if [ "$1" = "oewrap" ] || [ -z "$1" ]; then
@@ -155,6 +172,9 @@ runCmd() {
    fi
    if [ "$client" = "oewrap" ]; then
      headinfo="OEWrapper: #$OEWR_HEAD"
+   fi
+   if [ "$client" = "nimbus" ]; then
+     headinfo="Nimbus: #$NIMBUS_HEAD"
    fi
    if [ "$client" = "retesteth" ]; then
      clientcfg=""
@@ -270,6 +290,20 @@ if [ "$cname" = "besu" ] || [ -z "$cname" ]; then
         CMD="-t LegacyTests/Constantinople -- --all --lowcpu -j$threads $arg2"
         runCmd
     fi
+fi
+
+if [ "$cname" = "nimbus" ] || [ -z "$cname" ]; then
+    sleep 10
+    threads=2
+    client="nimbus"
+    CMD="-t GeneralStateTests -- --all -j$threads $arg2"
+    runCmd
+    CMD="-t BlockchainTests -- --all -j$threads $arg2"
+    runCmd
+#    if [ "$arg2" != "--filltests" ]; then
+#        CMD="-t LegacyTests/Constantinople -- --all --lowcpu -j$threads $arg2"
+#        runCmd
+#    fi
 fi
 
 if [ "$cname" = "testeth" ] || [ -z "$cname" ]; then

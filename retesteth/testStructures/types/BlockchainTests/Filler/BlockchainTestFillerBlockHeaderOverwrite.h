@@ -1,7 +1,7 @@
 #pragma once
 #include "../../../basetypes.h"
 #include "../../../configs/FORK.h"
-#include "../../Ethereum/BlockHeaderIncomplete.h"
+#include "../../Ethereum/Blocks/BlockHeaderIncomplete.h"
 #include <libdataobj/DataObject.h>
 
 namespace test
@@ -18,8 +18,10 @@ struct BlockHeaderOverwrite : GCP_SPointerBase
     long long int relTimeStamp() const { return m_relTimeStamp; }
     bool hasBlockHeader() const { return !m_blockHeaderIncomplete.isEmpty(); }
     BlockHeaderIncomplete const& header() const { return m_blockHeaderIncomplete; }
+    bool forceNoWithdrawalsRLP() const { return m_forceNoWithdrawalsRLP; }
 
 private:
+    bool m_forceNoWithdrawalsRLP = false;
     bool m_hasRelTimeStamp = false;
     long long int m_relTimeStamp;
     spBlockHeaderIncomplete m_blockHeaderIncomplete;

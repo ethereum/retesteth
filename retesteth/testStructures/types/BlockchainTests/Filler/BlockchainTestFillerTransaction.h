@@ -1,5 +1,5 @@
 #pragma once
-#include "../../Ethereum/Transaction.h"
+#include "../../Ethereum/Transactions/Transaction.h"
 #include <libdataobj/DataObject.h>
 namespace test
 {

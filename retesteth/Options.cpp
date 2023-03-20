@@ -132,6 +132,8 @@ Options::Options(int argc, const char** argv)
         {
             if (rCurrentTestSuite.find("BCGeneral") != string::npos)
                 return;
+            if (rCurrentTestSuite.find("EOFTests") != string::npos)
+                return;
             BOOST_THROW_EXCEPTION(
                 InvalidOption("Error: `" + _name + "` option requires `-t GeneralStateTests`"));
         }
@@ -157,19 +159,28 @@ Options::Options(int argc, const char** argv)
     ADD_OPTION(getvectors, "--getvectors", []() {
         cout << setw(30) << "--getvectors" << setw(25) << "Output all subunits of the given test (disables execution)\n";
     });
+    ADD_OPTION(t8ntoolcall, "--exportcall", []() {
+        cout << setw(30) << "--exportcall <folder>" << setw(25) << "Export t8ntool exec files to a folder (t8ntool only)\n";
+    });
     ADD_OPTION(statediff, "--statediff", [](){
         cout << setw(30) << "--statediff" << setw(25) << "Print statediff post vs pre\n";
+        cout << setw(30) << "--statediff xtoy" << setw(25) << "Statediff from block 'x' to block 'y'\n";
+        cout << setw(30) << "--statediff x:ytox2:y2" << setw(25) << "Statediff from block 'x', transaction 'y' to block 'x2', transaction 'y2' (require --filltests)\n";
     });
     ADD_OPTION(vmtrace, "--vmtrace", [](){
         cout << setw(30) << "--vmtrace" << setw(25) << "Trace transaction execution\n";
+        cout << setw(30) << "--vmtrace x:y" << setw(25) << "Show vmtrace of block 'x', transaction 'y'\n";
     });
     ADD_OPTIONV(vmtraceraw, "--vmtraceraw", [](){
         cout << setw(30) << "--vmtraceraw" << setw(25) << "Trace transaction execution raw format\n";
+        cout << setw(30) << "--vmtraceraw x:y" << setw(25) << "Show vmtrace in raw format of block 'x', transaction 'y'\n";
         cout << setw(30) << "--vmtraceraw <folder>" << setw(25) << "Trace transactions execution raw format to a given folder\n";
+        cout << setw(30) << "--vmtraceraw x:y <folder>" << setw(25) << "Same as above but combined\n";
         }, [this](){
             vmtrace = true;
-            if (logVerbosity.val < 6 && vmtraceraw.outpath.empty())
-                std::cout << "Warning: --vmtraceraw is defined, but trace is printed with verbosity level 6, which is not set" << std::endl;
+            vmtrace.isBlockSelected = vmtraceraw.isBlockSelected;
+            vmtrace.blockNumber = vmtraceraw.blockNumber;
+            vmtrace.transactionNumber = vmtraceraw.transactionNumber;
     });
     ADD_OPTIONV(vmtrace_nomemory, "--vmtrace.nomemory", [](){
         cout << setw(30) << "--vmtrace.nomemory" << setw(25) << "Disable memory in vmtrace/vmtraceraw\n";
@@ -198,7 +209,7 @@ Options::Options(int argc, const char** argv)
     ADD_OPTIONV(logVerbosity, "--verbosity", [](){
         cout << setw(30) << "--verbosity <level>" << setw(25) << "Set logs verbosity. 0 - silent, 1 - only errors, 2 - informative, >2 - detailed\n";
         cout << setw(30) << "--verbosity <channel>" << setw(25)
-             << "Set logs channels. 'STATS|RPC|TESTLOG|LOWLOG|SOCKET|STATE'\n";
+             << "Set logs channels. 'STATS|RPC|RPC2|TESTLOG|LOWLOG|SOCKET|STATE'\n";
         },[this](){
             // disable all output
             static std::ostringstream strCout;
@@ -255,7 +266,9 @@ Options::Options(int argc, const char** argv)
                 std::cout << "WARNING: `--fillchain` option provided without `--filltests`, activating `--filltests` (did you mean `--filltests`?)\n";
                 filltests = true;
         }});
-
+    ADD_OPTION(chainid, "--chainid", [](){
+        cout << setw(30) << "--chainid" << setw(25) << "Override config chainid when generating transactions\n";
+    });
     ADD_OPTION(showhash, "--showhash", [](){
         cout << setw(30) << "--showhash" << setw(25) << "Show filler hash debug information\n";
     });
@@ -264,7 +277,9 @@ Options::Options(int argc, const char** argv)
     });
     ADD_OPTIONV(poststate, "--poststate", [](){
         cout << setw(30) << "--poststate" << setw(25) << "Debug(6) show test postState hash or fullstate, when used with --filltests export `postState` in StateTests\n";
+        cout << setw(30) << "--poststate x:y" << setw(25) << "Show poststate of block 'x', transaction 'y'\n";
         cout << setw(30) << "--poststate <folder>" << setw(25) << "Same as above plus export test post states into a folder\n";
+        cout << setw(30) << "--poststate x:y <folder>" << setw(25) << "Same as above but combined\n";
         }, [this](){
             fullstate = true;
     });
@@ -299,6 +314,7 @@ Options::Options(int argc, const char** argv)
     if (threadCount == 1)
         dataobject::GCP_SPointer<int>::DISABLETHREADSAFE();
 }
+
 
 Options const& Options::get(int argc, const char** argv)
 {
@@ -463,6 +479,30 @@ int Options::Option::initArgs(list<const char*> const& _argList, list<const char
         return 1;
         break;
     }
+    case ARGS::NONE_OPTIONAL2:
+    {
+        m_inited = true;
+        if (++_arg != _argList.end())
+        {
+            auto const arg = string{(*_arg)};
+            if (arg.substr(0, 1) != "-")
+            {
+                initArg(arg);
+                if (++_arg != _argList.end())
+                {
+                    auto const arg2 = string{(*_arg)};
+                    if (arg2.substr(0, 1) != "-")
+                    {
+                        initArg2(arg2);
+                        return 3;
+                    }
+                }
+                return 2;
+            }
+        }
+        return 1;
+        break;
+    }
     case ARGS::ONEMERGED:
     {
         size_t const optNameLength = m_sOptionName.length();
@@ -566,4 +606,66 @@ void Options::fspath_opt::initArg(std::string const& _arg)
     string_opt::initArg(_arg);
     if (!boost::filesystem::exists(_arg))
         BOOST_THROW_EXCEPTION(InvalidOption("Error: `" + m_sOptionName + "` could not locate file or path: " + _arg));
+}
+
+void Options::statediff_opt::initArg(std::string const& _arg)
+{
+    string const del = "to";
+    size_t const pos1 = _arg.find(":");
+    if (pos1 != string::npos)
+    {
+        size_t const pos2 = _arg.find(del);
+        size_t const pos3 = _arg.find(":", pos1 + 1);
+        if (pos1 != string::npos && pos2 != string::npos && pos3 != string::npos)
+        {
+            isBlockSelected = true;
+            isTransSelected = true;
+            string const block1 = _arg.substr(0, pos1);
+            string const trans1 = _arg.substr(pos1 + 1, pos2 - pos1 - 1);
+            string const block2 = _arg.substr(pos2 + del.size(), pos3 - pos2 - del.size());
+            string const trans2 = _arg.substr(pos3 + 1);
+            firstBlock = atoi(block1.c_str());
+            firstTrnsx = atoi(trans1.c_str());
+            seconBlock = atoi(block2.c_str());
+            seconTrnsx = atoi(trans2.c_str());
+        }
+        else
+            BOOST_THROW_EXCEPTION(InvalidOption("Error: `" + m_sOptionName + "` option arg format is x:ytox2:y2"));
+    }
+    else
+    {
+        size_t const pos2 = _arg.find(del);
+        if (pos2 != string::npos)
+        {
+            isBlockSelected = true;
+            firstTrnsx = 0;
+            seconTrnsx = 0;
+            isTransSelected = false;
+            string const block1 = _arg.substr(0, pos2);
+            string const block2 = _arg.substr(pos2 + del.size(), _arg.size() - pos2 - del.size());
+            firstBlock = atoi(block1.c_str());
+            seconBlock = atoi(block2.c_str());
+        }
+        else
+            BOOST_THROW_EXCEPTION(InvalidOption("Error: `" + m_sOptionName + "` option arg format is xtoy"));
+    }
+
+    if (firstBlock > seconBlock)
+        BOOST_THROW_EXCEPTION(InvalidOption("Error: `" + m_sOptionName + "` option arg format is `xtoy` or `x:ytox2:y2`, where `y >= x` or `x2 >= x`"));
+}
+
+void Options::booloutpathselector_opt::parse2OptionalArgs(std::string const& _arg)
+{
+    // Can take 0 args, act as bool
+    // 1 arg = either path or block selector
+    // 2 arg = path and block selector in any order
+    size_t pos = _arg.find(":");
+    if (pos != string::npos && !isBlockSelected)
+    {
+        blockNumber = atoi(_arg.substr(0, pos).c_str());
+        transactionNumber = atoi(_arg.substr(pos + 1).c_str());
+        isBlockSelected = true;
+    }
+    else
+        outpath = _arg;
 }

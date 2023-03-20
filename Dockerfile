@@ -3,8 +3,9 @@ FROM ubuntu:20.04 as retesteth
 ENV TZ=Etc/UTC
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
+# Get necessary packages
 RUN apt-get update \
-    && apt-get install --yes git cmake g++ make perl psmisc curl python3  \
+    && apt-get install --yes git cmake g++ make perl psmisc curl python3 wget libboost-all-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Retesteth
@@ -21,8 +22,6 @@ RUN mkdir /build && cd /build \
 # Solidity LLLC
 RUN git clone --depth 1 -b master https://github.com/winsvega/solidity.git /solidity
 RUN mkdir /build && cd /build \
-    && apt-get update \
-    && apt-get install --yes libboost-all-dev \
     && cmake /solidity -DCMAKE_BUILD_TYPE=Release -DLLL=1 && make lllc \
     && cp /build/lllc/lllc /bin/lllc \
     && rm -rf /build /solidity /var/cache/* /root/.hunter/*
@@ -33,13 +32,13 @@ RUN mkdir /build && cd /build \
 #    && cmake /solidity -DCMAKE_BUILD_TYPE=Release && make solc \
 #    && cp /build/solc/solc /bin/solc \
 #    && rm -rf /build /solidity /var/cache/* /root/.hunter/*
-RUN apt-get install wget && wget https://github.com/ethereum/solidity/releases/download/v0.8.5/solc-static-linux \
+RUN wget https://github.com/ethereum/solidity/releases/download/v0.8.17/solc-static-linux \
    && cp solc-static-linux /bin/solc \
    && chmod +x /bin/solc
 
 # Geth
 RUN git clone --depth 1 -b master https://github.com/ethereum/go-ethereum.git /geth
-RUN cd /geth && apt-get install wget \
+RUN cd /geth \
     && wget https://dl.google.com/go/go1.19.linux-amd64.tar.gz \
     && tar -xvf go1.19.linux-amd64.tar.gz \
     && mv go /usr/local && ln -s /usr/local/go/bin/go /bin/go \

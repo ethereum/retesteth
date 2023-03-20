@@ -74,9 +74,9 @@ void RPCSession::runNewInstanceOfAClient(thread::id const& _threadID, ClientConf
 
         string command = "bash";
         std::vector<string> args;
-        args.push_back(_config.getShellPath().c_str());
-        args.push_back(tmpDir.string());
-        args.push_back(ipcPath);
+        args.emplace_back(_config.getShellPath().c_str());
+        args.emplace_back(tmpDir.string());
+        args.emplace_back(ipcPath);
 
         int pid = 0;
         test::popenOutput mode =
@@ -225,7 +225,8 @@ void RPCSession::restartScripts(bool _stop)
         size_t const threads = Options::get().threadCount;
         string const start = curCFG.getStartScript().c_str();
         auto cmd = [](string const& _cmd, string const& _args) {
-            test::executeCmd(_cmd + " " + _args, ExecCMDWarning::NoWarning);
+            int exitCode;
+            test::executeCmd(_cmd + " " + _args, exitCode, ExecCMDWarning::NoWarning);
         };
         switch (curCFG.cfgFile().socketType())
         {
@@ -336,10 +337,8 @@ void RPCSession::clear()
     std::lock_guard<std::mutex> lock(g_socketMapMutex);
     std::vector<thread> closingThreads;
     for (auto& element : socketMap)
-    {
-        thread t(closeSession, element.first);
-        closingThreads.push_back(std::move(t));
-    }
+        closingThreads.emplace_back(thread(closeSession, element.first));
+
     for (auto& th : closingThreads)
         th.join();
 
@@ -347,14 +346,16 @@ void RPCSession::clear()
     closingThreads.clear();
 
     // If not running UnitTests or smth
-    if (Options::getDynamicOptions().activeConfigs() > 0 && Options::getDynamicOptions().currentConfigIsSet())
+    auto const& dynOpt = Options::getDynamicOptions();
+    if (dynOpt.activeConfigs() > 0 && dynOpt.currentConfigIsSet())
     {
-        ClientConfig const& curCFG = Options::getDynamicOptions().getCurrentConfig();
+        ClientConfig const& curCFG = dynOpt.getCurrentConfig();
         if (!curCFG.getStopperScript().empty() && Options::get().nodesoverride.size() == 0)
         {
-            executeCmd(curCFG.getStopperScript().c_str(), ExecCMDWarning::NoWarningNoError);
+            int exitCode;
+            executeCmd(curCFG.getStopperScript().c_str(), exitCode, ExecCMDWarning::NoWarningNoError);
             ETH_DC_MESSAGE(DC::RPC, curCFG.getStopperScript().c_str());
-            if (!ExitHandler::receivedExitSignal())
+            if (!ExitHandler::receivedExitSignal() && curCFG.cfgFile().socketType() != ClientConfgSocketType::TransitionTool)
             {
                 size_t const initTime = curCFG.cfgFile().initializeTime();
                 size_t const seconds = Options::get().lowcpu ? initTime + 10 : initTime;

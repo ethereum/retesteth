@@ -45,7 +45,7 @@ struct StateTooBig : UpwardsException
 {
     StateTooBig() : UpwardsException("StateTooBig") {}
 };
-State getRemoteState(test::session::SessionInterface& _session);
+spState getRemoteState(test::session::SessionInterface& _session);
 
 // Check that test has data object
 void checkDataObject(DataObject const& _input);
@@ -94,4 +94,5 @@ void verifyFilledTestRecursive(DataObject const& _want, DataObject const& _have,
 // Configure transaction chainID by current client config
 void modifyTransactionChainIDByNetwork(test::Transaction const& _tr, FORK const& _fork);
 
+bool hasSkipFork(std::set<FORK> const& _allforks);
 }

@@ -70,7 +70,8 @@ static std::map<FORK, FORK> RewardMapForToolBefore5 = {
     {"HomesteadToDaoAt5", "Homestead"},
     {"ByzantiumToConstantinopleFixAt5", "Byzantium"},
     {"BerlinToLondonAt5", "Berlin"},
-    {"ArrowGlacierToMergeAtDiffC0000", "ArrowGlacier"}
+    {"ArrowGlacierToMergeAtDiffC0000", "ArrowGlacier"},
+    {"MergeToShanghaiAtTime15k", "Merge"}
 };
 static std::map<FORK, FORK> RewardMapForToolAfter5 = {
     {"FrontierToHomesteadAt5", "Homestead"},
@@ -79,22 +80,30 @@ static std::map<FORK, FORK> RewardMapForToolAfter5 = {
     {"HomesteadToDaoAt5", "Homestead"},
     {"ByzantiumToConstantinopleFixAt5", "ConstantinopleFix"},
     {"BerlinToLondonAt5", "London"},
-    {"ArrowGlacierToMergeAtDiffC0000", "Merge"}
+    {"ArrowGlacierToMergeAtDiffC0000", "Merge"},
+    {"MergeToShanghaiAtTime15k", "Shanghai"}
 };
 
-std::tuple<VALUE, FORK> prepareReward(SealEngine _engine, FORK const& _fork, VALUE const& _blockNumber, VALUE const& _currentTD)
+std::tuple<VALUE, FORK> prepareReward(SealEngine _engine, FORK const& _fork, EthereumBlockState const& _curBlockRef)
 {
     if (_engine == SealEngine::Ethash)
         ETH_DC_MESSAGE(DC::LOWLOG, "t8ntool backend treat Ethash as NoProof!");
 
     bool isMerge = false;
     bool posTransitionDifficultyNotReached = false;
+    bool timestampTransitionNotReached = false;
     if (_fork.asString() == "ArrowGlacierToMergeAtDiffC0000")
     {
         isMerge = true;
         // The TD here is the one before tool called for mining. so its like n-1 td.
-        if (_currentTD < VALUE(DataObject("0x0C0000")))
+        if (_curBlockRef.totalDifficulty() < VALUE(DataObject("0x0C0000")))
             posTransitionDifficultyNotReached = true;
+    }
+    else if (_fork.asString() == "MergeToShanghaiAtTime15k")
+    {
+        isMerge = true;
+        if (_curBlockRef.header()->timestamp() < 15000)
+            timestampTransitionNotReached = true;
     }
 
     // Setup mining rewards
@@ -118,7 +127,9 @@ std::tuple<VALUE, FORK> prepareReward(SealEngine _engine, FORK const& _fork, VAL
         return {rewards.at(fork).getCContent(), _fork};
     else
     {
-        if ((!isMerge && _blockNumber < 5) || posTransitionDifficultyNotReached)
+        if ((!isMerge && _curBlockRef.header()->number() < 5)
+            || posTransitionDifficultyNotReached
+            || timestampTransitionNotReached)
         {
             if (!RewardMapForToolBefore5.count(fork))
             {

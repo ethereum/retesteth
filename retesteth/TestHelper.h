@@ -23,9 +23,10 @@ Json::Value readJson(boost::filesystem::path const& _path);
 /// Safely read the json file into DataObject
 spDataObject readJsonData(boost::filesystem::path const& _file, std::string const& _stopper = std::string(), bool _autosort = false);
 spDataObject readYamlData(boost::filesystem::path const& _file, bool _sort = false);
+spDataObject readAutoDataWithoutOptions(boost::filesystem::path const& _file, bool _sort = false);
 
 /// Get files from directory
-std::vector<boost::filesystem::path> getFiles(boost::filesystem::path const& _dirPath, std::set<std::string> _extentionMask, std::string const& _particularFile = {});
+std::vector<boost::filesystem::path> getFiles(boost::filesystem::path const& _dirPath, std::set<std::string> const& _extentionMask, std::string const& _particularFile = {});
 
 /// Get test repo path from ETHEREUM_TEST_PATH environment variable
 boost::filesystem::path getTestPath();
@@ -67,7 +68,7 @@ enum class ExecCMDWarning
     NoWarning,
     NoWarningNoError
 };
-std::string executeCmd(std::string const& _command, ExecCMDWarning _warningOnEmpty = ExecCMDWarning::WarningOnEmptyResult);
+std::string executeCmd(std::string const& _command, int& _exitCode, ExecCMDWarning _warningOnEmpty = ExecCMDWarning::WarningOnEmptyResult);
 
 // Return the vector of most looking like as _needles strings from the vector
 std::vector<std::string> levenshteinDistance(
@@ -94,7 +95,9 @@ bool inArray(std::list<T> const& _array, const T& _val)
 /// Explode string into array of strings by `delim`
 std::vector<std::string> explode(std::string const& s, char delim);
 void removeSubChar(std::string& _string, unsigned char _r);
+void removeSubChar(std::string& _string, std::vector<unsigned char> _r);
 std::string makePlussedFork(test::teststruct::FORK const& _net);
+bool isBoostSuite(std::string const& suiteName);
 
 
 /// See what kind of a string is str

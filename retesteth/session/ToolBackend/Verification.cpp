@@ -99,23 +99,38 @@ void verify1559Block(spBlockHeader const& _header, ToolChain const& _chain)
     }
 }
 
-void verifyMergeBlock(spBlockHeader const& _header, ToolChain const& _chain)
+void verifyCommonMergeRules(spBlockHeader const& _header, string const& _msg)
 {
-    (void)_chain;
-    check_blockType(_header->type(), BlockType::BlockHeaderMerge, "verifyMergeBlock");
-
     BlockHeaderMerge const& header = BlockHeaderMerge::castFrom(_header);
 
     /// Verify rules
     /// https://eips.ethereum.org/EIPS/eip-3675
     if (header.uncleHash().asString() != "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347")
-        throw test::UpwardsException("Merge block.uncleHash != empty \n" + header.asDataObject()->asJson());
+        throw test::UpwardsException(_msg + " block.uncleHash != empty \n" + header.asDataObject()->asJson());
     if (header.difficulty() != 0)
-        throw test::UpwardsException("Merge block.difficulty must be 0! ");
+        throw test::UpwardsException(_msg + " block.difficulty must be 0! ");
     if (header.nonce().asString() != "0x0000000000000000")
-        throw test::UpwardsException("Merge block nonce != 0x00..00 \n" + header.asDataObject()->asJson());
+        throw test::UpwardsException(_msg + " block nonce != 0x00..00 \n" + header.asDataObject()->asJson());
     if ((header.extraData().asString().size()-2) / 2 > MAX_EXTRADATA_SIZE_IN_MERGE)
-        throw test::UpwardsException("Merge block extraDataSize > 32bytes \n" + header.asDataObject()->asJson());
+        throw test::UpwardsException(_msg + " block extraDataSize > 32bytes \n" + header.asDataObject()->asJson());
+}
+
+void verifyShanghaiBlock(spBlockHeader const& _header, ToolChain const& _chain)
+{
+    (void)_chain;
+    check_blockType(_header->type(), BlockType::BlockHeaderShanghai, "verifyShanghaiBlock");
+
+    //BlockHeaderShanghai const& header = BlockHeaderShanghai::castFrom(_header);
+    verifyCommonMergeRules(_header, "Shanghai");
+
+    /// Verify shanghai rules
+}
+
+void verifyMergeBlock(spBlockHeader const& _header, ToolChain const& _chain)
+{
+    (void)_chain;
+    check_blockType(_header->type(), BlockType::BlockHeaderMerge, "verifyMergeBlock");
+    verifyCommonMergeRules(_header, "Merge");
 }
 
 void verifyLegacyParent(spBlockHeader const& _header, spBlockHeader const& _parent, ToolChain const& _chain)
@@ -140,8 +155,9 @@ void verify1559Parent_private(spBlockHeader const& _header, spBlockHeader const&
 
 void verify1559Parent(spBlockHeader const& _header, spBlockHeader const& _parent, ToolChain const& _chain)
 {
-    if (_parent->type() == BlockType::BlockHeaderMerge)
+    if (isBlockPoS(_parent))
         throw test::UpwardsException("Trying to import 1559 block on top of PoS block!");
+
     check_blockType(_header->type(), BlockType::BlockHeader1559, "verify1559Parent");
     check_difficultyDelta(_chain, _header, _parent);
 
@@ -173,6 +189,23 @@ void verify1559Parent(spBlockHeader const& _header, spBlockHeader const& _parent
         verify1559Parent_private(_header, _parent, _chain);
 }
 
+void verifyShanghaiParent(spBlockHeader const& _header, spBlockHeader const& _parent, ToolChain const& _chain)
+{
+    check_blockType(_header->type(), BlockType::BlockHeaderShanghai, "verifyShanghaiParent");
+    if (_parent->type() == BlockType::BlockHeaderShanghai)
+        verifyShanghaiBlock(_parent, _chain);
+    else
+    {
+        if (_header->timestamp() >= 15000 && _chain.fork() == "MergeToShanghaiAtTime15k")
+        {
+            if (_parent->type() != BlockType::BlockHeaderMerge)
+                throw test::UpwardsException("Trying to import Shanghai block on top of Merge block before transition!!");
+        }
+        else
+            throw test::UpwardsException("Trying to import Shanghai block on top of Merge block before transition!!");
+    }
+}
+
 void verifyMergeParent(spBlockHeader const& _header, spBlockHeader const& _parent, ToolChain const& _chain, VALUE const& _parentTD)
 {
     /// Verify the rules
@@ -185,6 +218,9 @@ void verifyMergeParent(spBlockHeader const& _header, spBlockHeader const& _paren
 
 
     check_baseFeeDelta(_chain, _header, _parent);
+    if (_parent->type() == BlockType::BlockHeaderShanghai)
+        throw test::UpwardsException("Trying to import Merge block on top of Shanghai block after transition!!");
+
     if (_parent->type() != BlockType::BlockHeaderMerge)
     {
         VALUE const TTD = isTTDDefined ? _chain.params()->params().atKey("terminalTotalDifficulty") : VALUE (DataObject("0xffffffffffffffffffffffffffff"));
@@ -269,8 +305,11 @@ void verifyBlockParent(spBlockHeader const& _header, ToolChain const& _chain)
             case BlockType::BlockHeaderMerge:
                 verifyMergeParent(_header, parentBlock.header(), _chain, parentBlock.totalDifficulty());
                 break;
+            case BlockType::BlockHeaderShanghai:
+                verifyShanghaiParent(_header, parentBlock.header(), _chain);
+                break;
             default:
-                throw test::UpwardsException("Unhandled block type check!");
+                throw test::UpwardsException("verifyBlockParent::Unhandled block type check!");
             }
         }
     }
@@ -299,9 +338,35 @@ void verifyEthereumBlockHeader(spBlockHeader const& _header, ToolChain const& _c
     case BlockType::BlockHeaderMerge:
         verifyMergeBlock(_header, _chain);
         break;
+    case BlockType::BlockHeaderShanghai:
+        verifyShanghaiBlock(_header, _chain);
+        break;
     default:
-        throw test::UpwardsException("Unhandled block type check!");
+        throw test::UpwardsException("verifyEthereumBlockHeader::Unhandled block type check!");
     }
+}
+
+void verifyWithdrawalsRLP(dev::RLP const& _rlp)
+{
+    if (!_rlp.isList())
+        throw dev::RLPException("Withdrawals RLP is expected to be list");
+    for (auto const& wt : _rlp)
+    {
+        if (!wt.isList())
+            throw dev::RLPException("Withdrawals RLP is expected to be list");
+
+        for (size_t i = 0; i < 4; i++)
+        {
+            if (!wt[i].isData())
+                throw dev::RLPException("Rlp structure is wrong: Withdrawals RLP field is not data!");
+        }
+    }
+}
+
+void verifyWithdrawalRecord(spWithdrawal const& _wtRecord)
+{
+    if (_wtRecord->index.getCContent() >= POW2_64)
+        throw test::UpwardsException("Withdrawals Index >= 2**64");
 }
 
 }  // namespace toolimpl

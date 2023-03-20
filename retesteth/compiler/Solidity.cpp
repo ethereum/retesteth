@@ -435,7 +435,8 @@ solContracts compileSolidity(string const& _code)
     fs::path const path(fs::temp_directory_path() / fs::unique_path());
     string const cmd = string("solc --bin-runtime ") + path.string();
     writeFile(path.string(), _code);
-    string result = executeCmd(cmd);
+    int exitCode;
+    string result = executeCmd(cmd, exitCode);
 
     solContracts contracts;
     string const codeNamePrefix = "=======";

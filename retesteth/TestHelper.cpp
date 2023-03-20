@@ -9,9 +9,11 @@
 #include <retesteth/EthChecks.h>
 #include <retesteth/Options.h>
 #include <retesteth/TestHelper.h>
+#include <boost/test/unit_test.hpp>
 
 using namespace std;
 using namespace dev;
+using namespace boost::unit_test;
 namespace fs = boost::filesystem;
 
 namespace  test {
@@ -37,7 +39,7 @@ spDataObject readJsonData(fs::path const& _file, string const& _stopper, bool _a
 {
     try
     {
-        string s = dev::contentsString(_file);
+        string const s = dev::contentsString(_file);
         ETH_ERROR_REQUIRE_MESSAGE(
             s.length() > 0, "Contents of " + _file.string() + " is empty. Trying to parse empty file. (forgot --filltests?)");
         return dataobject::ConvertJsoncppStringToData(s, _stopper, _autosort);
@@ -54,7 +56,7 @@ spDataObject readYamlData(fs::path const& _file, bool _sort)
 {
     try
     {
-        string s = dev::contentsString(_file);
+        string const s = dev::contentsString(_file);
         ETH_ERROR_REQUIRE_MESSAGE(
             s.length() > 0, "Contents of " + _file.string() + " is empty. Trying to parse empty file. (forgot --filltests?)");
         return dataobject::ConvertYamlToData(YAML::Load(s), _sort);
@@ -66,16 +68,36 @@ spDataObject readYamlData(fs::path const& _file, bool _sort)
     }
 }
 
-vector<fs::path> getFiles(fs::path const& _dirPath, set<string> const _extentionMask, string const& _particularFile)
+spDataObject readAutoDataWithoutOptions(boost::filesystem::path const& _file, bool _sort)
+{
+    try
+    {
+        string const s = dev::contentsString(_file);
+        if (s.length() == 0)
+            std::cerr << "Contents of " + _file.string() + " is empty. Trying to parse empty file." << std::endl;
+        if (_file.extension() == ".json")
+            return dataobject::ConvertJsoncppStringToData(s);
+        else if (_file.extension() == ".yml")
+            return dataobject::ConvertYamlToData(YAML::Load(s), _sort);
+        std::cerr << "Unknown test file: " << _file.string() << std::endl;
+    }
+    catch (std::exception const& _ex)
+    {
+        std::cerr << string("\nError when parsing file (") + _file.c_str() + ") " + _ex.what() << std::endl;
+    }
+    return spDataObject(0);
+}
+
+vector<fs::path> getFiles(fs::path const& _dirPath, set<string> const& _extentionMask, string const& _particularFile)
 {
     vector<fs::path> files;
     for (auto const& ext : _extentionMask)
     {
         if (!_particularFile.empty())
         {
-            fs::path file = _dirPath / (_particularFile + ext);
+            fs::path const file = _dirPath / (_particularFile + ext);
             if (fs::exists(file))
-                files.push_back(file);
+                files.emplace_back(file);
         }
         else
         {
@@ -85,7 +107,7 @@ vector<fs::path> getFiles(fs::path const& _dirPath, set<string> const _extention
                 for (fsIterator it(_dirPath); it != fsIterator(); ++it)
                 {
                     if (fs::is_regular_file(it->path()) && it->path().extension() == ext)
-                        files.push_back(it->path());
+                        files.emplace_back(it->path());
                 }
             }
         }
@@ -166,7 +188,7 @@ vector<string> levenshteinDistance(std::string const& _needle, std::vector<std::
     std::sort(distanceMap.begin(), distanceMap.end(),
         [](NameDistance const& _a, NameDistance const& _b) { return _a.second < _b.second; });
     for (size_t i = 0; i < _max && i < distanceMap.size(); i++)
-        ret.push_back(_sVec[distanceMap[i].first]);
+        ret.emplace_back(_sVec[distanceMap[i].first]);
     return ret;
 }
 
@@ -309,8 +331,9 @@ string prepareLLLCVersionString()
         return lllcVersion;
     if (test::checkCmdExist("lllc"))
     {
+        int exitCode;
         string const cmd = "lllc --version";
-        string const result = test::executeCmd(cmd);
+        string const result = test::executeCmd(cmd, exitCode);
         string::size_type const pos = result.rfind("Version");
         if (pos != string::npos)
         {
@@ -333,8 +356,9 @@ string prepareSolidityVersionString()
 
     if (test::checkCmdExist("solc"))
     {
+        int exitCode;
         string const cmd = "solc --version";
-        string const result = test::executeCmd(cmd);
+        string const result = test::executeCmd(cmd, exitCode);
         string const cVersion  = "Version";
         string::size_type const pos = result.rfind(cVersion);
         if (pos != string::npos)
@@ -422,7 +446,7 @@ bool checkCmdExist(std::string const& _command)
 }
 
 mutex g_popenmutex;
-string executeCmd(string const& _command, ExecCMDWarning _warningOnEmpty)
+string executeCmd(string const& _command, int& _exitCode, ExecCMDWarning _warningOnEmpty)
 {
 #if defined(_WIN32)
     BOOST_ERROR("executeCmd() has not been implemented for Windows.");
@@ -456,9 +480,15 @@ string executeCmd(string const& _command, ExecCMDWarning _warningOnEmpty)
         }
     }
 
-    int exitCode = pclose(fp);
-    if (exitCode != 0 && _warningOnEmpty != ExecCMDWarning::NoWarningNoError)
-        ETH_ERROR_MESSAGE("The command '" + _command + "' exited with " + toString(exitCode) + " code.");
+    _exitCode = pclose(fp);
+    if (_exitCode != 0 )
+    {
+        string const msg = "The command '" + _command + "' exited with " + toString(_exitCode) + " code.";
+        if (_warningOnEmpty != ExecCMDWarning::NoWarningNoError)
+            ETH_ERROR_MESSAGE(msg);
+        else
+            return msg;
+    }
     return boost::trim_copy(out);
 #endif
 }
@@ -469,7 +499,7 @@ std::vector<std::string> explode(std::string const& s, char delim)
     std::vector<std::string> result;
     std::istringstream iss(s);
     for (std::string token; std::getline(iss, token, delim);)
-        result.push_back(std::move(token));
+        result.emplace_back(token);
     return result;
 }
 
@@ -709,6 +739,17 @@ RLPStreamU::RLPStreamU(size_t _size) : m_size(_size)
         ETH_FAIL_MESSAGE("RLPStreamU does not support stream of multiple rlp items. It's a mock to wrap 1 transaction.");
 }
 
+void removeSubChar(std::string& _string, std::vector<unsigned char> _r)
+{
+    _string.erase(
+        std::remove_if(_string.begin(), _string.end(), [&_r](unsigned char ch) {
+            for (auto const& charToRemove : _r)
+                if (ch == charToRemove)
+                    return true;
+            return false;
+        }), _string.end());
+}
+
 void removeSubChar(std::string& _string, unsigned char _r)
 {
     _string.erase(
@@ -723,6 +764,31 @@ string makePlussedFork(FORK const& _net)
     if (pos != string::npos)
         return _net.asString().substr(0, pos);
     return string();
+}
+
+bool isBoostSuite(std::string const& suiteName)
+{
+    test_suite const* suite = &boost::unit_test::framework::master_test_suite();
+    auto const allSuites = test::explode(suiteName, '/');
+    for (auto const& suiteName : allSuites)
+    {
+        auto const suiteid = suite->get(suiteName);
+        if (suiteid != INV_TEST_UNIT_ID)
+        {
+            try
+            {
+                suite = &framework::get<test_suite>(suiteid);
+            }
+            catch (std::exception const&)
+            {
+                // asked test case
+                return false;
+            }
+        }
+        else
+            return false;
+    }
+    return true;
 }
 
 }//namespace

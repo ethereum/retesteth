@@ -28,11 +28,11 @@ void checkTestVersion(DataObject const& _info, fs::path const& _compiledTest)
     if (testVersion > retestethVersion())
         ETH_WARNING("Test was filled with newer version of retesteth! "
             "(test: `" + strippedVersion + "` vs retesteth: `" + test::fto_string(retestethVersion()) + "`)"
-            " This might cause failures, please update retesteth!");
+            " This might cause failures, please update retesteth!\n" + _compiledTest.string());
     else if (testVersion < retestethVersion() - 1)
         ETH_WARNING("Test filled with older version of retesteth! "
             "(test: `" + strippedVersion + "` vs retesteth: `" + test::fto_string(retestethVersion()) + "`) "
-            "This might cause failures, please regenerate the test!");
+            "This might cause failures, please regenerate the test!\n" + _compiledTest.string());
 }
 }  // namespace
 

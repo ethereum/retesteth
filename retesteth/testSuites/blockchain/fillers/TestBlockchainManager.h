@@ -25,6 +25,8 @@ public:
     // Import all generated blocks at the same order as they are in tests
     void syncOnRemoteClient(DataObject& _exportBlocksSection) const;
 
+    void performOptionCommandsOnGenesis();
+
 private:
     // Reorg chains on the client if needed for _newBlock that potentially comes from another chain
     void reorgChains(BlockchainTestFillerBlock const& _newBlock);

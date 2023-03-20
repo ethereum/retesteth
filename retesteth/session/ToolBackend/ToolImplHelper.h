@@ -1,6 +1,7 @@
 #pragma once
 #include <libdataobj/DataObject.h>
 #include <retesteth/testStructures/types/Ethereum/EthereumBlock.h>
+#include <retesteth/session/SessionInterface.h>
 
 namespace toolimpl
 {
@@ -15,7 +16,7 @@ spDataObject constructStorageRangeAt(
     EthereumBlockState const& _block, FH20 const& _address, FH32 const& _begin, size_t _maxResult);
 
 // Construct RPC style response
-spDataObject constructEthGetBlockBy(EthereumBlockState const& _block);
+spDataObject constructEthGetBlockBy(EthereumBlockState const& _block, test::session::Request);
 
 // RLP Validators
 void verifyBlockRLP(dev::RLP const& _rlp);

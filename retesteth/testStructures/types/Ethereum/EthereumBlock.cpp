@@ -35,8 +35,11 @@ BYTES const EthereumBlock::getRLP() const
 {
     try
     {
-        // RLP of a block
-        RLPStream stream(3);
+        bool const isExportWithdrawalsRLP =
+            (m_header->type() == BlockType::BlockHeaderShanghai || m_forceWithdrawalsRLP)
+            && !m_forceNoWithdrawalsRLP;
+
+        RLPStream stream(isExportWithdrawalsRLP ? 4 : 3);
         stream.appendRaw(m_header->asRLPStream().out());
 
         // Transaction list
@@ -50,6 +53,15 @@ BYTES const EthereumBlock::getRLP() const
         for (auto const& un : m_uncles)
             uncleList.appendRaw(un->asRLPStream().out());
         stream.appendRaw(uncleList.out());
+
+        // Withdrawals
+        if (isExportWithdrawalsRLP)
+        {
+            RLPStream withdrawalsList(m_withdrawals.size());
+            for (auto const& wt : m_withdrawals)
+                withdrawalsList.appendRaw(wt->asRLPStream().out());
+            stream.appendRaw(withdrawalsList.out());
+        }
 
         return BYTES(dev::toHexPrefixed(stream.out()));
     }
@@ -65,8 +77,8 @@ DebugVMTrace const& EthereumBlockState::getTrTrace(FH32 const& _hash) const
     if (m_transactionsTrace.count(_hash))
         return m_transactionsTrace.at(_hash);
     else
-        ETH_ERROR_MESSAGE("Transaction trace not found! (" + _hash.asString() + ")");
-    static DebugVMTrace empty("", "", FH32::zero(), "");
+        ETH_WARNING("Transaction trace not found! (" + _hash.asString() + ")");
+    static DebugVMTrace empty;
     return empty;
 }
 

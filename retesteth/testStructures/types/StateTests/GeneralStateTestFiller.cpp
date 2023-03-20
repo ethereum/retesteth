@@ -56,7 +56,7 @@ void checkRedundantExpectSection(std::vector<StateTestFillerExpectSection> const
                     for (int v : _newExpectSection.getValInd())
                     {
                         if (readExpect.checkIndexes(d, g, v))
-                            ETH_ERROR_MESSAGE("StateTestFiller read redundant expect section: \n" + _newExpectSection.initialData().asJson());
+                            ETH_ERROR_MESSAGE("Test filler read redundant expect section: \n" + _newExpectSection.initialData().asJson());
                     }
         }
     }
@@ -74,7 +74,7 @@ GeneralStateTestFiller::GeneralStateTestFiller(spDataObject& _data)
         for (auto& el : _data.getContent().getSubObjectsUnsafe())
         {
             TestOutputHelper::get().setCurrentTestInfo(TestInfo("GeneralStateTestFiller", el->getKey()));
-            m_tests.push_back(StateTestInFiller(el));
+            m_tests.emplace_back(StateTestInFiller(el));
         }
     }
     catch (DataObjectException const& _ex)
@@ -102,7 +102,7 @@ StateTestInFiller::StateTestInFiller(spDataObject& _data)
         if (_data->count("exceptions"))
         {
             for (size_t i = _data->atKey("exceptions").getSubObjects().size(); i > 0; i--)
-                m_exceptions.push_back(_data->atKey("exceptions").getSubObjects().at(i - 1)->asString());
+                m_exceptions.emplace_back(_data->atKey("exceptions").getSubObjects().at(i - 1)->asString());
         }
         TestOutputHelper::get().setUnitTestExceptions(m_exceptions);
 
@@ -120,12 +120,14 @@ StateTestInFiller::StateTestInFiller(spDataObject& _data)
         m_pre = spState(new State(MOVE(_data, "pre")));
         m_transaction = spStateTestFillerTransaction(new StateTestFillerTransaction(MOVE(_data, "transaction")));
 
-        for (auto& el : (*_data).atKeyUnsafe("expect").getSubObjectsUnsafe())
+        string const c_expect = "expect";
+        m_expectSections.reserve((*_data).atKey(c_expect).getSubObjects().size());
+        for (auto& el : (*_data).atKeyUnsafe(c_expect).getSubObjectsUnsafe())
         {
             StateTestFillerExpectSection newSection(dataobject::move(el), m_transaction);
             checkRedundantExpectSection(m_expectSections, newSection);
             checkCoinbaseInExpectSection(newSection, m_env);
-            m_expectSections.push_back(newSection);
+            m_expectSections.emplace_back(newSection);
         }
         ETH_ERROR_REQUIRE_MESSAGE(m_expectSections.size() > 0, "StateTestFiller require expect sections!");
 

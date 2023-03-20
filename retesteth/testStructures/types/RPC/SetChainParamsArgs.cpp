@@ -1,5 +1,6 @@
 #include "SetChainParamsArgs.h"
 #include <retesteth/testStructures/Common.h>
+#include <retesteth/Constants.h>
 
 using namespace dataobject;
 using namespace test::teststruct;
@@ -20,7 +21,12 @@ spSetChainParamsArgsGenesis readGenesis(DataObject const& _data)
     if (_data.count("baseFeePerGas"))
     {
         if (_data.count("currentRandom"))
-            return spSetChainParamsArgsGenesis(new SetChainParamsArgsGenesisMerge(_data));
+        {
+            if (_data.count("withdrawalsRoot"))
+                return spSetChainParamsArgsGenesis(new SetChainParamsArgsGenesisShanghai(_data));
+            else
+                return spSetChainParamsArgsGenesis(new SetChainParamsArgsGenesisMerge(_data));
+        }
         else
             return spSetChainParamsArgsGenesis(new SetChainParamsArgsGenesis1559(_data));
     }
@@ -81,6 +87,23 @@ SetChainParamsArgsGenesisMerge::SetChainParamsArgsGenesisMerge(DataObject const&
         });
 }
 
+SetChainParamsArgsGenesisShanghai::SetChainParamsArgsGenesisShanghai(DataObject const& _data)
+  : SetChainParamsArgsGenesis(_data, false)
+{
+    REQUIRE_JSONFIELDS(_data, "SetChainParamsArgs::genesis(Shanghai) ",
+        {
+            {"author", {{DataType::String}, jsonField::Required}},
+            {"gasLimit", {{DataType::String}, jsonField::Required}},
+            {"baseFeePerGas", {{DataType::String}, jsonField::Required}},
+            {"currentRandom", {{DataType::String}, jsonField::Required}},
+            {"withdrawalsRoot", {{DataType::String}, jsonField::Required}},
+            {"extraData", {{DataType::String}, jsonField::Required}},
+            {"timestamp", {{DataType::String}, jsonField::Required}},
+            {"nonce", {{DataType::String}, jsonField::Required}},
+            {"mixHash", {{DataType::String}, jsonField::Required}}
+        });
+}
+
 SetChainParamsArgs::SetChainParamsArgs(spDataObject& _data)
 {
     requireSetChainParamsScheme(_data);
@@ -103,11 +126,15 @@ spDataObject SetChainParamsArgs::asDataObject() const
     (*out)["genesis"]["difficulty"] = m_genesis->difficulty().asString();
     (*out)["genesis"]["gasLimit"] = m_genesis->gasLimit().asString();
 
-    if (m_genesis->type() == BlockType::BlockHeader1559
-        || m_genesis->type() == BlockType::BlockHeaderMerge)
+    if (isBlockExportBasefee(m_genesis))
     {
         BlockHeader1559 const& newbl = BlockHeader1559::castFrom(m_genesis);
         (*out)["genesis"]["baseFeePerGas"] = newbl.baseFee().asString();
+        if (isBlockExportWithdrawals(m_genesis))
+        {
+            BlockHeaderShanghai const& newbl = BlockHeaderShanghai::castFrom(m_genesis);
+            (*out)["genesis"]["withdrawalsRoot"] = newbl.withdrawalsRoot().asString();
+        }
     }
 
     (*out)["genesis"]["extraData"] = m_genesis->extraData().asString();
@@ -132,9 +159,9 @@ spDataObject SetChainParamsArgsGenesis::buildCommonBlockHeader() const
     fullBlockHeader["bloom"] = FH256::zero().asString();
     fullBlockHeader["gasUsed"] = "0x00";
     fullBlockHeader["number"] = "0x00";
-    fullBlockHeader["receiptTrie"] = "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421";
+    fullBlockHeader["receiptTrie"] = C_WITHDRAWALS_EMPTY_ROOT;
     fullBlockHeader["stateRoot"] = FH32::zero().asString();
-    fullBlockHeader["transactionsTrie"] = "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421";
+    fullBlockHeader["transactionsTrie"] = C_WITHDRAWALS_EMPTY_ROOT;
     fullBlockHeader["uncleHash"] = "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347";
     fullBlockHeader["parentHash"] = FH32::zero().asString();
     return _fullBlockHeader;
@@ -162,6 +189,17 @@ spBlockHeader SetChainParamsArgsGenesisMerge::constructBlockHeader() const
     (*header)["difficulty"] = "0x00";
     auto const curRandomU256 = dev::u256(m_dataRef.atKey("currentRandom").asString());
     (*header)["mixHash"] = dev::toCompactHexPrefixed(curRandomU256, 32);
+    return readBlockHeader(header);
+}
+
+spBlockHeader SetChainParamsArgsGenesisShanghai::constructBlockHeader() const
+{
+    spDataObject header = buildCommonBlockHeader();
+    (*header)["baseFeePerGas"] = m_dataRef.atKey("baseFeePerGas").asString();
+    (*header)["difficulty"] = "0x00";
+    auto const curRandomU256 = dev::u256(m_dataRef.atKey("currentRandom").asString());
+    (*header)["mixHash"] = dev::toCompactHexPrefixed(curRandomU256, 32);
+    (*header)["withdrawalsRoot"] = m_dataRef.atKey("withdrawalsRoot").asString();
     return readBlockHeader(header);
 }
 

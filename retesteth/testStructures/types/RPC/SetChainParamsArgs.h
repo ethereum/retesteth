@@ -1,6 +1,6 @@
 #pragma once
-#include "../Ethereum/BlockHeader.h"
-#include "../Ethereum/BlockHeader1559.h"
+#include "../Ethereum/Blocks/BlockHeader.h"
+#include "../Ethereum/Blocks/BlockHeader1559.h"
 #include "../Ethereum/State.h"
 #include <libdataobj/DataObject.h>
 
@@ -45,6 +45,11 @@ struct SetChainParamsArgsGenesis1559 : SetChainParamsArgsGenesis
 struct SetChainParamsArgsGenesisMerge : SetChainParamsArgsGenesis
 {
     SetChainParamsArgsGenesisMerge(DataObject const&);
+    spBlockHeader constructBlockHeader() const override;
+};
+struct SetChainParamsArgsGenesisShanghai : SetChainParamsArgsGenesis
+{
+    SetChainParamsArgsGenesisShanghai(DataObject const&);
     spBlockHeader constructBlockHeader() const override;
 };
 

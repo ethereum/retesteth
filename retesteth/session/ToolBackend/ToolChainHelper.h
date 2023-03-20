@@ -1,6 +1,6 @@
 #pragma once
 #include "ToolChain.h"
-#include <retesteth/testStructures/types/Ethereum/BlockHeader.h>
+#include <retesteth/testStructures/types/Ethereum/Blocks/BlockHeader.h>
 
 namespace toolimpl
 {
@@ -18,7 +18,7 @@ struct ChainOperationParams
     dev::bigint constantinopleForkBlock;
     dev::bigint londonForkBlock;
 };
-std::tuple<VALUE, FORK> prepareReward(SealEngine _engine, FORK const& _fork, VALUE const& _blockNumber, VALUE const& _currentTD);
+std::tuple<VALUE, FORK> prepareReward(SealEngine _engine, FORK const& _fork, EthereumBlockState const&);
 VALUE calculateGasLimit(VALUE const& _parentGasLimit, VALUE const& _parentGasUsed);
 VALUE calculateEthashDifficulty(
     ChainOperationParams const& _chainParams, BlockHeader const& _bi, BlockHeader const& _parent);

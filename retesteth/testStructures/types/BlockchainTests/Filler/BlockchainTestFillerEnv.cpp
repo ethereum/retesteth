@@ -1,6 +1,7 @@
 #include "BlockchainTestFillerEnv.h"
 #include <retesteth/EthChecks.h>
 #include <retesteth/testStructures/Common.h>
+#include <retesteth/Constants.h>
 using namespace std;
 using namespace dataobject;
 using namespace test::teststruct;
@@ -89,6 +90,35 @@ void requireMergeBlockchainHeader(spDataObject const& _data)
             {"uncleHash", {{DataType::String}, jsonField::Optional}}});
 }
 
+void requireShanghaiBlockchainHeader(spDataObject const& _data)
+{
+    REQUIRE_JSONFIELDS(_data, "GenesisBlockHeader(BlockchainTestFillerEnvShanghai) " + _data->getKey(),
+        {{"bloom", {{DataType::String}, jsonField::Optional}},
+            {"logsBloom", {{DataType::String}, jsonField::Optional}},
+            {"coinbase", {{DataType::String}, jsonField::Optional}},
+            {"author", {{DataType::String}, jsonField::Optional}},
+            {"miner", {{DataType::String}, jsonField::Optional}},
+            {"difficulty", {{DataType::String}, jsonField::Required}},
+            {"extraData", {{DataType::String}, jsonField::Required}},
+            {"gasLimit", {{DataType::String}, jsonField::Required}},
+            {"baseFeePerGas", {{DataType::String}, jsonField::Required}},
+            {"gasUsed", {{DataType::String}, jsonField::Required}},
+            {"hash", {{DataType::String}, jsonField::Optional}},
+            {"mixHash", {{DataType::String}, jsonField::Optional}},
+            {"nonce", {{DataType::String}, jsonField::Optional}},
+            {"number", {{DataType::String}, jsonField::Required}},
+            {"parentHash", {{DataType::String}, jsonField::Required}},
+            {"receiptTrie", {{DataType::String}, jsonField::Optional}},
+            {"receiptsRoot", {{DataType::String}, jsonField::Optional}},
+            {"stateRoot", {{DataType::String}, jsonField::Required}},
+            {"timestamp", {{DataType::String}, jsonField::Required}},
+            {"transactionsTrie", {{DataType::String}, jsonField::Optional}},
+            {"transactionsRoot", {{DataType::String}, jsonField::Optional}},
+            {"withdrawalsRoot", {{DataType::String}, jsonField::Required}},
+            {"sha3Uncles", {{DataType::String}, jsonField::Optional}},
+            {"uncleHash", {{DataType::String}, jsonField::Optional}}});
+}
+
 void convertDecFieldsToHex(spDataObject& _data)
 {
     (*_data).atKeyUnsafe("coinbase").performModifier(mod_valueInsertZeroXPrefix);
@@ -119,9 +149,7 @@ spDataObject formatRawDataToRPCformat(spDataObject& _data)
 
 }
 
-namespace test
-{
-namespace teststruct
+namespace test::teststruct
 {
 
 void BlockchainTestFillerEnv::initializeCommonFields(spDataObject const& _data, SealEngine _sEngine)
@@ -136,8 +164,8 @@ void BlockchainTestFillerEnv::initializeCommonFields(spDataObject const& _data, 
         throw test::UpwardsException("currentGasLimit must be < 0x7fffffffffffffff");
     if (_sEngine == SealEngine::NoProof)
     {
-        m_currentNonce = spFH8(new FH8(FH8::zero()));
-        m_currentMixHash = spFH32(new FH32(FH32::zero()));
+        m_currentNonce = spFH8(FH8::zero().copy());
+        m_currentMixHash = spFH32(FH32::zero().copy());
     }
     else
     {
@@ -149,6 +177,12 @@ void BlockchainTestFillerEnv::initializeCommonFields(spDataObject const& _data, 
     m_currentBaseFee = spVALUE(new VALUE(DataObject("0x10")));
     auto const& difficulty = m_currentDifficulty->asString();
     m_currentRandom = spFH32(new FH32(dev::toCompactHexPrefixed(dev::u256(difficulty), 32)));
+    m_currentWithdrawalsRoot = spFH32(new FH32(DataObject(C_WITHDRAWALS_EMPTY_ROOT)));
+}
+
+void BlockchainTestFillerEnvShanghai::initializeShanghaiFields(DataObject const& _data)
+{
+    m_currentWithdrawalsRoot = spFH32(new FH32(_data.atKey("withdrawalsRoot")));
 }
 
 void BlockchainTestFillerEnvMerge::initializeMergeFields(DataObject const& _data)
@@ -166,6 +200,24 @@ void BlockchainTestFillerEnv1559::initialize1559Fields(DataObject const& _data)
 void BlockchainTestFillerEnvLegacy::initializeLegacyFields(DataObject const& _data)
 {
     m_currentDifficulty = spVALUE(new VALUE(_data.atKey("difficulty")));
+}
+
+BlockchainTestFillerEnvShanghai::BlockchainTestFillerEnvShanghai(spDataObjectMove _data, SealEngine _sEngine)
+    : BlockchainTestFillerEnvMerge()
+{
+    try {
+        m_raw = _data.getPointer();
+        requireShanghaiBlockchainHeader(m_raw);
+        convertDecFieldsToHex(m_raw);
+        initializeCommonFields(m_raw, _sEngine);
+        initializeMergeFields(m_raw);
+        initializeShanghaiFields(m_raw);
+        m_raw = formatRawDataToRPCformat(m_raw);
+    }
+    catch (std::exception const& _ex)
+    {
+        throw UpwardsException(string("BlockchainTestFillerEnv(Shanghai) convertion error: ") + _ex.what());
+    }
 }
 
 BlockchainTestFillerEnvMerge::BlockchainTestFillerEnvMerge(spDataObjectMove _data, SealEngine _sEngine)
@@ -217,5 +269,23 @@ BlockchainTestFillerEnvLegacy::BlockchainTestFillerEnvLegacy(spDataObjectMove _d
     }
 }
 
+BlockchainTestFillerEnv* readBlockchainFillerTestEnv(spDataObjectMove _data, SealEngine _sEngine)
+{
+    auto const& data = _data.getPointer();
+    if (data->count("baseFeePerGas"))
+    {
+        spDataObject diff = data->atKey("difficulty").copy();
+        (*diff).performModifier(mod_valueToCompactEvenHexPrefixed);
+        if (VALUE(diff->asString()) != 0)
+            return new BlockchainTestFillerEnv1559(_data, _sEngine);
+        else
+        {
+            if (data->count("withdrawalsRoot"))
+                return new BlockchainTestFillerEnvShanghai(_data, _sEngine);
+            else
+                return new BlockchainTestFillerEnvMerge(_data, _sEngine);
+        }
+    }
+    return new BlockchainTestFillerEnvLegacy(_data, _sEngine);
+}
 }  // namespace teststruct
-}  // namespace test

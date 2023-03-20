@@ -28,122 +28,66 @@ namespace fs = boost::filesystem;
 
 namespace test
 {
-/// !!! DataObject return without reference!!! must be SP!!!
-spDataObject BlockchainTestTransitionSuite::doTests(spDataObject& _input, TestSuiteOptions& _opt) const
-{
-    _opt.allowInvalidBlocks = true;
-    return DoTests(_input, _opt);
-}
 
-spDataObject BlockchainTestInvalidSuite::doTests(spDataObject& _input, TestSuiteOptions& _opt) const
-{
-    _opt.allowInvalidBlocks = true;
-    return DoTests(_input, _opt);
-}
+#define BLOCKCHAINSUITE_FOLDER_OVERRIDE(SUITE, FOLDER, FILLER)   \
+    TestSuite::TestPath SUITE::suiteFolder() const       \
+    {                                                    \
+        return TestSuite::TestPath(fs::path(string("BlockchainTests" + string(FOLDER) + m_fillerPathAdd))); \
+    }                                                    \
+                                                         \
+    TestSuite::FillerPath SUITE::suiteFillerFolder() const   \
+    {                                                    \
+        return TestSuite::FillerPath(fs::path(string("src" + string(FILLER) + m_fillerPathAdd)));  \
+    }
 
-spDataObject BlockchainTestValidSuite::doTests(spDataObject& _input, TestSuiteOptions& _opt) const
-{
-    _opt.allowInvalidBlocks = false;
-    return DoTests(_input, _opt);
-}
+BLOCKCHAINSUITE_FOLDER_OVERRIDE(BCGeneralStateTestsSuite, "/GeneralStateTests", "/GeneralStateTestsFiller")
+BLOCKCHAINSUITE_FOLDER_OVERRIDE(BCGeneralStateTestsVMSuite, "/GeneralStateTests/VMTests", "/GeneralStateTestsFiller/VMTests")
+BLOCKCHAINSUITE_FOLDER_OVERRIDE(BCGeneralStateTestsShanghaiSuite, "/GeneralStateTests/Shanghai", "/GeneralStateTestsFiller/Shanghai")
 
-spDataObject LegacyConstantinopleBlockchainInvalidTestSuite::doTests(spDataObject& _input, TestSuiteOptions& _opt) const
-{
-    _opt.allowInvalidBlocks = true;
-    _opt.isLegacyTests = true;
-    return DoTests(_input, _opt);
-}
+BLOCKCHAINSUITE_FOLDER_OVERRIDE(BlockchainTestTransitionSuite, "/TransitionTests", "/BlockchainTestsFiller/TransitionTests")
+BLOCKCHAINSUITE_FOLDER_OVERRIDE(BlockchainTestInvalidSuite, "/InvalidBlocks", "/BlockchainTestsFiller/InvalidBlocks")
+BLOCKCHAINSUITE_FOLDER_OVERRIDE(BlockchainTestValidSuite, "/ValidBlocks", "/BlockchainTestsFiller/ValidBlocks")
 
-spDataObject LegacyConstantinopleBlockchainValidTestSuite::doTests(spDataObject& _input, TestSuiteOptions& _opt) const
-{
-    _opt.allowInvalidBlocks = false;
-    _opt.isLegacyTests = true;
-    return DoTests(_input, _opt);
-}
 
-spDataObject LegacyConstantinopleBCGeneralStateTestsSuite::doTests(spDataObject& _input, TestSuiteOptions& _opt) const
-{
-    _opt.isLegacyTests = true;
-    return DoTests(_input, _opt);
-}
+#define LEGACY_BLOCKCHAINSUITE_FOLDER_OVERRIDE(SUITE, FOLDER, FILLER)   \
+    TestSuite::TestPath SUITE::suiteFolder() const       \
+    {                                                    \
+        return TestSuite::TestPath(fs::path(string("LegacyTests" + string(FOLDER)))); \
+    }                                                    \
+                                                         \
+    TestSuite::FillerPath SUITE::suiteFillerFolder() const   \
+    {                                                    \
+        return TestSuite::FillerPath(fs::path(string("src/LegacyTests" + string(FILLER))));  \
+    }
 
-TestSuite::TestPath BlockchainTestValidSuite::suiteFolder() const
-{
-    return TestSuite::TestPath(fs::path("BlockchainTests") / string("ValidBlocks" + m_fillerPathAdd));
-}
+LEGACY_BLOCKCHAINSUITE_FOLDER_OVERRIDE(LegacyConstantinopleBCGeneralStateTestsSuite,
+    "/Constantinople/BlockchainTests/GeneralStateTests",
+    "/Constantinople/BlockchainTestsFiller/GeneralStateTests")
+LEGACY_BLOCKCHAINSUITE_FOLDER_OVERRIDE(LegacyConstantinopleBlockchainInvalidTestSuite,
+    "/Constantinople/BlockchainTests/InvalidBlocks",
+    "/Constantinople/BlockchainTestsFiller/InvalidBlocks")
+LEGACY_BLOCKCHAINSUITE_FOLDER_OVERRIDE(LegacyConstantinopleBlockchainValidTestSuite,
+    "/Constantinople/BlockchainTests/ValidBlocks",
+    "/Constantinople/BlockchainTestsFiller/ValidBlocks")
 
-TestSuite::FillerPath BlockchainTestValidSuite::suiteFillerFolder() const
-{
-    return TestSuite::FillerPath(fs::path("src") / "BlockchainTestsFiller" / string("ValidBlocks" + m_fillerPathAdd));
-}
 
-TestSuite::TestPath BlockchainTestInvalidSuite::suiteFolder() const
-{
-    return TestSuite::TestPath(fs::path("BlockchainTests") / string("InvalidBlocks" + m_fillerPathAdd));
-}
+#define BLOCKCHAINSUITE_DOTESTS_OVERRIDE(SUITE, FUNC)   \
+    spDataObject SUITE::doTests(spDataObject& _input, TestSuiteOptions& _opt) const \
+    {                                                   \
+        FUNC                                            \
+        return DoTests(_input, _opt);                   \
+    }
 
-TestSuite::FillerPath BlockchainTestInvalidSuite::suiteFillerFolder() const
-{
-    return TestSuite::FillerPath(fs::path("src") / "BlockchainTestsFiller" / string("InvalidBlocks" + m_fillerPathAdd));
-}
-
-TestSuite::TestPath BlockchainTestTransitionSuite::suiteFolder() const
-{
-    return TestSuite::TestPath(fs::path("BlockchainTests") / string("TransitionTests" + m_fillerPathAdd));
-}
-
-TestSuite::FillerPath BlockchainTestTransitionSuite::suiteFillerFolder() const
-{
-    return TestSuite::FillerPath(fs::path("src") / "BlockchainTestsFiller" / string("TransitionTests" + m_fillerPathAdd));
-}
-
-TestSuite::TestPath BCGeneralStateTestsSuite::suiteFolder() const
-{
-    return TestSuite::TestPath(fs::path("BlockchainTests") / string("GeneralStateTests" + m_fillerPathAdd));
-}
-
-TestSuite::FillerPath BCGeneralStateTestsSuite::suiteFillerFolder() const
-{
-    return TestSuite::FillerPath(fs::path("src") / fs::path("GeneralStateTestsFiller" + m_fillerPathAdd));
-}
-
-spDataObject BCGeneralStateTestsVMSuite::doTests(spDataObject& _input, TestSuiteOptions& _opt) const
-{
-    // Register subtest as finished test case. because each folder is treated as test case folder
-    test::TestOutputHelper::get().markTestFolderAsFinished(getFullPathFiller("VMTests").parent_path(), "VMTests");
-    return BCGeneralStateTestsSuite::doTests(_input, _opt);
-}
-
-spDataObject BCGeneralStateTestsSuite::doTests(spDataObject& _input, TestSuiteOptions& _opt) const
-{
-    // Register subtest as finished test case. because each folder is treated as test case folder
-    test::TestOutputHelper::get().markTestFolderAsFinished(getFullPathFiller("VMTests").parent_path(), "VMTests");
-    test::TestOutputHelper::get().markTestFolderAsFinished(
-        getFullPathFiller("stExpectSection").parent_path(), "stExpectSection");
-    return BlockchainTestValidSuite::doTests(_input, _opt);
-}
-
-TestSuite::TestPath BCGeneralStateTestsVMSuite::suiteFolder() const
-{
-    return TestSuite::TestPath(fs::path("BlockchainTests") / "GeneralStateTests" / string("VMTests" + m_fillerPathAdd));
-}
-
-TestSuite::FillerPath BCGeneralStateTestsVMSuite::suiteFillerFolder() const
-{
-    return TestSuite::FillerPath(fs::path("src") / fs::path("GeneralStateTestsFiller") / string("VMTests" + m_fillerPathAdd));
-}
-
-TestSuite::TestPath LegacyConstantinopleBCGeneralStateTestsSuite::suiteFolder() const
-{
-    return TestSuite::TestPath(
-        fs::path("LegacyTests") / "Constantinople" / "BlockchainTests" / "GeneralStateTests");
-}
-
-TestSuite::FillerPath LegacyConstantinopleBCGeneralStateTestsSuite::suiteFillerFolder() const
-{
-    return TestSuite::FillerPath(fs::path("src") / "LegacyTests" / "Constantinople" /
-                                 "BlockchainTestsFiller" / "GeneralStateTests");
-}
+BLOCKCHAINSUITE_DOTESTS_OVERRIDE(BlockchainTestTransitionSuite, _opt.allowInvalidBlocks = true;)
+BLOCKCHAINSUITE_DOTESTS_OVERRIDE(BlockchainTestInvalidSuite, _opt.allowInvalidBlocks = true;)
+BLOCKCHAINSUITE_DOTESTS_OVERRIDE(BlockchainTestValidSuite, _opt.allowInvalidBlocks = false;)
+BLOCKCHAINSUITE_DOTESTS_OVERRIDE(LegacyConstantinopleBlockchainInvalidTestSuite,
+                                 _opt.allowInvalidBlocks = true;
+                                 _opt.isLegacyTests = true;)
+BLOCKCHAINSUITE_DOTESTS_OVERRIDE(LegacyConstantinopleBlockchainValidTestSuite,
+                                 _opt.allowInvalidBlocks = false;
+                                 _opt.isLegacyTests = true;)
+BLOCKCHAINSUITE_DOTESTS_OVERRIDE(LegacyConstantinopleBCGeneralStateTestsSuite, _opt.isLegacyTests = true;)
 
 }  // Namespace Close
 
@@ -282,14 +226,9 @@ BOOST_AUTO_TEST_CASE(stChainId) {}
 BOOST_AUTO_TEST_CASE(stSLoadTest) {}
 BOOST_AUTO_TEST_CASE(stSelfBalance) {}
 BOOST_AUTO_TEST_CASE(stStaticFlagEnabled) {}
-BOOST_AUTO_TEST_CASE(stSubroutine) {}
-BOOST_AUTO_TEST_CASE(stEIP2537) {}
 BOOST_AUTO_TEST_CASE(stEIP2930) {}
 BOOST_AUTO_TEST_CASE(stEIP1559) {}
 BOOST_AUTO_TEST_CASE(stEIP3607) {}
-BOOST_AUTO_TEST_CASE(stEIP3540) {}
-BOOST_AUTO_TEST_CASE(stEIP3670) {}
-BOOST_AUTO_TEST_CASE(stEIP3860) {}
 
 // Heavy
 BOOST_AUTO_TEST_CASE(stTimeConsuming) {}
@@ -305,5 +244,12 @@ BOOST_AUTO_TEST_CASE(vmLogTest) {}
 BOOST_AUTO_TEST_CASE(vmPerformance) {}
 BOOST_AUTO_TEST_CASE(vmTests) {}
 BOOST_AUTO_TEST_SUITE_END()
+
+// Shanghai tests
+using BCGeneralStateTestsShanghaiFixture = TestFixture<BCGeneralStateTestsShanghaiSuite, RequireOptionAll>;
+ETH_REGISTER_DYNAMIC_TEST_SEARCH(BCGeneralStateTestsShanghaiFixture, "BCGeneralStateTests/Shanghai")
+BOOST_FIXTURE_TEST_SUITE(Shanghai, BCGeneralStateTestsShanghaiFixture)
+BOOST_AUTO_TEST_SUITE_END()
+
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -15,8 +15,8 @@ HunterGate(
 )
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-project(retesteth VERSION 0.2.3)
-set(VERSION_SUFFIX "postmerge")
+project(retesteth VERSION 0.3.0)
+set(VERSION_SUFFIX "shanghai")
 
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)
@@ -40,22 +40,6 @@ message(STATUS "[retesteth] Boost include: `${Boost_INCLUDE_DIR}`")
 hunter_add_package(yaml-cpp)
 find_package(yaml-cpp CONFIG REQUIRED)
 
-IF (NOT LOCALDEPS MATCHES ".*CRYPTOPP")
-    hunter_add_package(cryptopp)
-    find_package(cryptopp CONFIG REQUIRED)
-    set(CRYPTOPP_LINK "cryptopp-static")
-ELSE()
-    message(STATUS "[retesteth] LOCALDEPS=CRYPTOPP looking for locally installed version")
-    find_package(cryptopp MODULE REQUIRED)
-    message(STATUS "[retesteth] cryptopp libdir: `${CRYPTOPP_LIBRARIES}`")
-    message(STATUS "[retesteth] cryptopp include: `${CRYPTOPP_INCLUDE_DIRS}`")
-    set(CRYPTOPP_LINK ${CRYPTOPP_LIBRARIES})
-ENDIF()
-
-
-hunter_add_package(libscrypt)
-find_package(libscrypt CONFIG REQUIRED)
-
 # Silence cmake warnings on newer versions
 if (POLICY CMP0074)
     cmake_policy(SET CMP0074 NEW)   # Use download timestamp for remote objects
@@ -76,7 +60,6 @@ include(EthDependencies)
 include(EthCompilerSettings)
 
 include(ProjectSecp256k1)
-include(ProjectLibFF)
 configure_project()
 
 if(JSONCPP)

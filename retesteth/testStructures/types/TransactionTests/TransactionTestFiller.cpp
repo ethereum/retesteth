@@ -15,10 +15,11 @@ TransactionTestFiller::TransactionTestFiller(spDataObject& _data)
             TestOutputHelper::get().get().testFile().string() + " A test file must contain an object value (json/yaml).");
         ETH_ERROR_REQUIRE_MESSAGE(_data->getSubObjects().size() >= 1,
             TestOutputHelper::get().get().testFile().string() + " A test file must contain at least one test!");
+        m_tests.reserve(_data->getSubObjects().size());
         for (auto& el : _data.getContent().getSubObjectsUnsafe())
         {
             TestOutputHelper::get().setCurrentTestInfo(TestInfo("TransactionTestFiller", el->getKey()));
-            m_tests.push_back(TransactionTestInFiller(el));
+            m_tests.emplace_back(TransactionTestInFiller(el));
         }
     }
     catch (DataObjectException const& _ex)
@@ -42,10 +43,13 @@ TransactionTestInFiller::TransactionTestInFiller(spDataObject& _data)
         if (_data->count("_info"))
             m_info = GCP_SPointer<InfoIncomplete>(new InfoIncomplete(MOVE(_data, "_info")));
 
-        if (_data->count("additionalForks"))
+        string const c_additionalForks = "additionalForks";
+        if (_data->count(c_additionalForks))
         {
-            for (auto const& additionalFork : _data->atKey("additionalForks").getSubObjects())
-                m_additionalForks.push_back(FORK(additionalFork));
+            auto const& forkObjects = _data->atKey(c_additionalForks).getSubObjects();
+            m_additionalForks.reserve(forkObjects.size());
+            for (auto const& additionalFork : forkObjects)
+                m_additionalForks.emplace_back(FORK(additionalFork));
         }
 
         readExpectExceptions(_data->atKey("expectException"), m_expectExceptions);

@@ -49,10 +49,12 @@ GeneralStateTest::GeneralStateTest(spDataObject& _data)
             TestOutputHelper::get().get().testFile().string() + " A test file must contain an object value (json/yaml).");
         ETH_ERROR_REQUIRE_MESSAGE(_data->getSubObjects().size() == 1,
             TestOutputHelper::get().get().testFile().string() + " A test file must contain exactly one test!");
+
+        m_tests.reserve(_data.getContent().getSubObjects().size());
         for (auto& el : _data.getContent().getSubObjectsUnsafe())
         {
             TestOutputHelper::get().setCurrentTestInfo(TestInfo("GeneralStateTest", el->getKey()));
-            m_tests.push_back(StateTestInFilled(el));
+            m_tests.emplace_back(StateTestInFilled(el));
         }
     }
     catch (DataObjectException const& _ex)
@@ -75,7 +77,7 @@ StateTestInFilled::StateTestInFilled(spDataObject& _data)
     if (_data->count("exceptions"))
     {
         for (size_t i = _data->atKey("exceptions").getSubObjects().size(); i > 0; i--)
-            m_exceptions.push_back(_data->atKey("exceptions").getSubObjects().at(i - 1)->asString());
+            m_exceptions.emplace_back(_data->atKey("exceptions").getSubObjects().at(i - 1)->asString());
     }
 
     m_info = GCP_SPointer<Info>(new Info(_data->atKey("_info")));
@@ -98,8 +100,9 @@ StateTestInFilled::StateTestInFilled(spDataObject& _data)
     for (auto const& elFork : _data->atKey("post").getSubObjects())
     {
         StateTestPostResults res;
+        res.reserve(elFork->getSubObjects().size());
         for (auto const& elForkResults : elFork->getSubObjects())
-            res.push_back(StateTestPostResult(elForkResults));
+            res.emplace_back(StateTestPostResult(elForkResults));
         if (m_post.count(FORK(elFork->getKey())))
             ETH_ERROR_MESSAGE("StateTest post section has multiple results for the same fork!");
         m_post[FORK(elFork->getKey())] = res;

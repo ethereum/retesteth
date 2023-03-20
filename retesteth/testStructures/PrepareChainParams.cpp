@@ -61,22 +61,38 @@ spDataObject prepareGenesisSubsection(StateTestEnvBase const& _env, ParamsContex
     {
         (*genesis).removeKey("baseFeePerGas");
         (*genesis).removeKey("currentRandom");
+        (*genesis).removeKey("withdrawalsRoot");
         return genesis;
     }
+
+    auto londify = [&_env, &_context](DataObject& _genesis){
+        _genesis["baseFeePerGas"] = calculateGenesisBaseFee(_env.currentBaseFee(), _context);
+    };
+
+    auto mergify = [&_env](DataObject& _genesis){
+        _genesis.removeKey("difficulty");
+        _genesis["currentRandom"] = _env.currentRandom().asString();
+        auto const randomH32 = dev::toCompactHexPrefixed(dev::u256(_genesis["currentRandom"].asString()), 32);
+        _genesis["mixHash"] = randomH32;
+    };
 
     if (!netIsAdditional)
     {
         bool knowLondon = cfg.checkForkInProgression("London");
         if (knowLondon && compareFork(net, CMP::ge, FORK("London")))
-            (*genesis)["baseFeePerGas"] = calculateGenesisBaseFee(_env.currentBaseFee(), _context);
+            londify(genesis.getContent());
 
         bool knowMerge = cfg.checkForkInProgression("Merge");
         if (knowMerge && compareFork(net, CMP::ge, FORK("Merge")))
         {
-            (*genesis).removeKey("difficulty");
-            (*genesis)["currentRandom"] = _env.currentRandom().asString();
-            auto const randomH32 = dev::toCompactHexPrefixed(dev::u256((*genesis)["currentRandom"].asString()), 32);
-            (*genesis)["mixHash"] = randomH32;
+            mergify(genesis.getContent());
+        }
+
+        bool knowShaghai = cfg.checkForkInProgression("Shanghai");
+        if (knowShaghai && compareFork(net, CMP::ge, FORK("Shanghai")))
+        {
+            mergify(genesis.getContent());
+            (*genesis)["withdrawalsRoot"] = _env.currentWithdrawalsRoot().asString();
         }
     }
     else
@@ -84,16 +100,35 @@ spDataObject prepareGenesisSubsection(StateTestEnvBase const& _env, ParamsContex
         // Net Is Additional, probably special transition net.
         // Can't get rid of this hardcode configs :(((
         if (_net == FORK("ArrowGlacierToMergeAtDiffC0000") || _net == FORK("ArrowGlacier"))
-            (*genesis)["baseFeePerGas"] = calculateGenesisBaseFee(_env.currentBaseFee(), _context);
-
+            londify(genesis.getContent());
+        else if (_net == FORK("MergeToShanghaiAtTime15k"))
+        {
+            londify(genesis.getContent());
+            mergify(genesis.getContent());
+        }
     }
     return genesis;
-}}
+}
 
-
-namespace test
+void overrideChainIDByOptions(spDataObject& _genesis)
 {
-namespace teststruct
+    if (Options::get().chainid.initialized())
+    {
+        if ((*_genesis).count("params"))
+        {
+            string const chainIDOverride = dev::toCompactHexPrefixed((size_t)Options::get().chainid);
+            if ((*_genesis).atKey("params").count("chainID"))
+                (*_genesis).atKeyUnsafe("params").atKeyUnsafe("chainID") = chainIDOverride;
+            else
+                (*_genesis).atKeyUnsafe("params")["chainID"] = chainIDOverride;
+        }
+    }
+}
+
+}
+
+
+namespace test::teststruct
 {
 spSetChainParamsArgs prepareChainParams(
     FORK const& _net, SealEngine _engine, State const& _state, StateTestEnvBase const& _env, ParamsContext _context)
@@ -103,6 +138,8 @@ spSetChainParamsArgs prepareChainParams(
 
     spDataObject genesis;
     (*genesis).copyFrom(cfg.getGenesisTemplate(_net).getCContent()); // TODO need copy?
+    overrideChainIDByOptions(genesis);
+
     (*genesis)["sealEngine"] = sealEngineToStr(_engine);
     (*genesis).atKeyPointer("genesis") = prepareGenesisSubsection(_env, _context, _net);
 
@@ -113,4 +150,3 @@ spSetChainParamsArgs prepareChainParams(
 }
 
 }  // namespace teststruct
-}  // namespace test

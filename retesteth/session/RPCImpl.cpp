@@ -26,7 +26,7 @@ FH32 RPCImpl::eth_sendRawTransaction(BYTES const& _rlp, VALUE const& _secret)
     if (!m_lastInterfaceError.empty())
     {
         ETH_WARNING("eth_sendRawTransaction:: " + m_lastInterfaceError.message());
-        return FH32(FH32::zero());
+        return FH32::zero();
     }
     return FH32(result.getCContent());
 }
@@ -53,20 +53,20 @@ VALUE RPCImpl::eth_blockNumber()
     return VALUE(rpcCall("eth_blockNumber", {}).getCContent());
 }
 
-EthGetBlockBy RPCImpl::eth_getBlockByHash(FH32 const& _hash, Request _fullObjects)
+spEthGetBlockBy RPCImpl::eth_getBlockByHash(FH32 const& _hash, Request _fullObjects)
 {
     spDataObject response = rpcCall("eth_getBlockByHash", {quote(_hash.asString()), _fullObjects == Request::FULLOBJECTS ? "true" : "false"});
     ClientConfig const& cfg = Options::getCurrentConfig();
     cfg.performFieldReplace(*response, FieldReplaceDir::ClientToRetesteth);
-    return EthGetBlockBy(response);
+    return spEthGetBlockBy(new EthGetBlockBy(response));
 }
 
-EthGetBlockBy RPCImpl::eth_getBlockByNumber(VALUE const& _blockNumber, Request _fullObjects)
+spEthGetBlockBy RPCImpl::eth_getBlockByNumber(VALUE const& _blockNumber, Request _fullObjects)
 {
     spDataObject response = rpcCall("eth_getBlockByNumber", {quote(_blockNumber.asString()), _fullObjects == Request::FULLOBJECTS ? "true" : "false"});
     ClientConfig const& cfg = Options::getCurrentConfig();
     cfg.performFieldReplace(*response, FieldReplaceDir::ClientToRetesteth);
-    return EthGetBlockBy(response);
+    return spEthGetBlockBy(new EthGetBlockBy(response));
 }
 
 spBYTES RPCImpl::eth_getCode(FH20 const& _address, VALUE const& _blockNumber)
@@ -124,11 +124,17 @@ DebugVMTrace RPCImpl::debug_traceTransaction(FH32 const& _trHash)
 {
     (void)_trHash;
     ETH_FAIL_MESSAGE("RPCImpl::debug_traceTransaction is not implemented!");
-    static DebugVMTrace empty("", "", FH32::zero(), "");
+    static DebugVMTrace empty;
     return empty;
 }
 
 // Test
+void RPCImpl::test_setChainParamsNoGenesis(spSetChainParamsArgs const& _config)
+{
+    (void) _config;
+    ETH_FAIL_MESSAGE("RPCImpl::test_setChainParamsNoGenesis is not implemented!");
+}
+
 void RPCImpl::test_setChainParams(spSetChainParamsArgs const& _config)
 {
     RPCSession::currentCfgCountTestRun();
@@ -178,12 +184,18 @@ FH32 RPCImpl::test_importRawBlock(BYTES const& _blockRLP)
     spDataObject const res = rpcCall("test_importRawBlock", {quote(_blockRLP.asString())}, true);
     if (res->type() == DataType::String && res->asString().size() > 2)
         return FH32(res->asString());
-    return FH32(FH32::zero());
+    return FH32::zero();
 }
 
 FH32 RPCImpl::test_getLogHash(FH32 const& _txHash)
 {
     return FH32(rpcCall("test_getLogHash", {quote(_txHash.asString())}));
+}
+
+void RPCImpl::test_registerWithdrawal(BYTES const& _rlp)
+{
+    (void) _rlp;
+    ETH_FAIL_MESSAGE("RPCImpl::test_registerWithdrawal is not implemented!");
 }
 
 TestRawTransaction RPCImpl::test_rawTransaction(BYTES const& _rlp, FORK const& _fork)

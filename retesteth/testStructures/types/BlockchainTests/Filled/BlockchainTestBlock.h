@@ -1,7 +1,8 @@
 #pragma once
 #include "../../../basetypes.h"
-#include "../../Ethereum/BlockHeader.h"
-#include "../../Ethereum/Transaction.h"
+#include "../../Ethereum/Blocks/BlockHeader.h"
+#include "../../Ethereum/Transactions/Transaction.h"
+#include <retesteth/testStructures/types/Ethereum/Withdrawals.h>
 #include <libdataobj/DataObject.h>
 
 namespace test::teststruct
@@ -19,6 +20,7 @@ struct BlockchainTestBlock : GCP_SPointerBase
 
     std::vector<spBlockHeader> const& uncles() const { return m_uncles; }
     std::vector<spTransaction> const& transactions() const { return m_transactions; }
+    std::vector<spWithdrawal> const& withdrawals() const { return m_withdrawals; }
     std::vector<TransactionException> const& transactionSequence() const { return m_transactionSequence; }
 
 private:
@@ -29,6 +31,7 @@ private:
     spBlockHeader m_blockHeader;
     std::vector<spBlockHeader> m_uncles;
     std::vector<spTransaction> m_transactions;
+    std::vector<spWithdrawal> m_withdrawals;
     std::vector<TransactionException> m_transactionSequence;
     spBYTES m_rlp;
 };

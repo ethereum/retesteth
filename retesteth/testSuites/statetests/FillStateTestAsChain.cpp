@@ -21,7 +21,6 @@ spDataObject FillTestAsBlockchain(StateTestInFiller const& _test)
     SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
     std::vector<TransactionInGeneralSection> txs = _test.GeneralTr().buildTransactions();
 
-
     auto const allforks = _test.getAllForksFromExpectSections();
     if (hasSkipFork(allforks))
         return spDataObject(new DataObject(DataType::Null));
@@ -83,9 +82,9 @@ spDataObject FillTestAsBlockchain(StateTestInFiller const& _test)
 
                     try
                     {
-                        State postState(getRemoteState(session));
+                        spState postState = getRemoteState(session);
                         compareStates(mexpect, postState);
-                        (*aBlockchainTest).atKeyPointer("postState") = postState.asDataObject();
+                        (*aBlockchainTest).atKeyPointer("postState") = postState->asDataObject();
                     }
                     catch (StateTooBig const&)
                     {
@@ -110,6 +109,8 @@ spDataObject FillTestAsBlockchain(StateTestInFiller const& _test)
                             (*block)["transactions"].atLastElementUnsafe()["sender"] = sender->asString();
                     }
                     (*block).atKeyPointer("uncleHeaders") = spDataObject(new DataObject(DataType::Array));
+                    if (isBlockExportWithdrawals(remoteBlock.header()))
+                        (*block).atKeyPointer("withdrawals") = spDataObject(new DataObject(DataType::Array));
 
                     if (!testException.empty())
                     {
@@ -125,7 +126,7 @@ spDataObject FillTestAsBlockchain(StateTestInFiller const& _test)
                     dataPostfix += "_" + fork.asString();
 
                     if (filledTest->count(_test.testName() + dataPostfix))
-                        ETH_ERROR_MESSAGE("The test filler contain redundant expect section: " + _test.testName() +
+                        ETH_ERROR_MESSAGE("Test filler read redundant expect section: " + _test.testName() +
                                           dataPostfix + " (" + tr.transaction()->dataLabel() + ")");
 
                     verifyFilledTest(_test.unitTestVerifyBC(), aBlockchainTest, fork);

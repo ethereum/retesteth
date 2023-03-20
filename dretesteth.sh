@@ -16,6 +16,7 @@ testpaths=0
 testpath="notfound"
 argstring=""
 clientsopt=0
+helpversion=0
 for var in "$@"
 do
     if [ "$var" = "--" ]; then
@@ -23,9 +24,10 @@ do
         argstring=$argstring" "$var
         continue
     fi
-    if [ "$var" = "--help" ]; then
+    if [ "$var" = "--help" ] || [ "$var" = "--version" ]; then
         argstring=$argstring" "$var
         testpath=""
+        helpversion=1
         break;
     fi
     if [ "$var" = "--testpath" ] && [ "$separator" -eq "1" ]; then
@@ -53,4 +55,8 @@ if [ "$testpath" = "notfound" ]; then
    exit 1
 fi
 
-docker run -v $testpath:/tests retesteth $argstring --testpath /tests $defaultclient
+if [ "$helpversion" -eq 1 ]; then
+    docker run retesteth $argstring
+else
+    docker run -v $testpath:/tests retesteth $argstring --testpath /tests $defaultclient
+fi

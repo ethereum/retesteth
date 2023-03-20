@@ -14,7 +14,7 @@ namespace toolimpl
 class ToolChainManager : public GCP_SPointerBase
 {
 public:
-    ToolChainManager(spSetChainParamsArgs const& _config, boost::filesystem::path const& _toolPath, boost::filesystem::path const& _tmpDir);
+    ToolChainManager(spSetChainParamsArgs const& _config, boost::filesystem::path const& _toolPath, boost::filesystem::path const& _tmpDir, ToolChainGenesis _genesisPolicy = ToolChainGenesis::CALCULATE);
     void addPendingTransaction(spTransaction const& _tr) { m_pendingBlock.getContent().addTransaction(_tr); }
 
     ToolChain const& currentChain() const
@@ -30,6 +30,7 @@ public:
     EthereumBlockState const& blockByHash(FH32 const& _hash) const;
     void rewindToBlock(VALUE const& _number);
     void modifyTimestamp(VALUE const& _time);
+    void registerWithdrawal(BYTES const& _wt);
 
     // Transaction tests
     static TestRawTransaction test_rawTransaction(
@@ -62,8 +63,10 @@ private:
     boost::filesystem::path m_toolPath;
 
 private:
+    void transitionPendingBlock(EthereumBlockState const&);
     void init1559PendingBlock(EthereumBlockState const&);
     void initMergePendingBlock(EthereumBlockState const&);
+    void initShanghaiPendingBlock(EthereumBlockState const&);
     bool isTerminalPoWBlock();
 };
 

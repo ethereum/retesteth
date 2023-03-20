@@ -32,6 +32,13 @@ string const ethereumjs_config = R"({
        "BerlinToLondonAt5",
        "ArrowGlacier"
     ],
+    "fillerSkipForks" : [
+        "Merge+3540+3670",
+        "Merge+3860",
+        "Merge+3855",
+        "MergeToShanghaiAtTime15k",
+        "Shanghai"
+    ],
     "exceptions":{
        "AddressTooShort":"",
        "AddressTooLong":"",

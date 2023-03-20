@@ -5,6 +5,8 @@
 namespace retesteth::options
 {
 extern dataobject::DataObject map_configs;
+extern std::string const yul_compiler_sh;
+extern std::string const t8ntool_start;
 
 #define REGISTER(X) \
     class gen##X { public: gen##X(); };
@@ -14,13 +16,17 @@ extern dataobject::DataObject map_configs;
 #define DECLARE_T8NTOOL(X) \
   FOR_EACH(X, t8ntoolcfg, RewardsCfg, FrontierCfg, HomesteadCfg, EIP150Cfg, EIP158Cfg, ByzantiumCfg, \
     ConstantinopleCfg, ConstantinopleFixCfg, IstanbulCfg, BerlinCfg, LondonCfg, MergeCfg, \
-    ArrowGlacierCfg, GrayGlacierCfg, ArrowGlacierToMergeAtDiffC0000Cfg, \
+    ShanghaiCfg, \
+    ArrowGlacierCfg, GrayGlacierCfg, ArrowGlacierToMergeAtDiffC0000Cfg, MergeToShanghaiAtTime15kCfg, \
     FrontierToHomesteadCfg, HomesteadToDaoCfg, HomesteadToEIP150Cfg, EIP158ToByzantiumCfg, \
     ByzantiumToConstantinopleFixCfg, BerlinToLondonCfg )
 
 #define DECLARE_ETC(X) \
   FOR_EACH(X, etccfg, RewardsCfgETC, AtlantisCfgETC, AghartaCfgETC, PhoenixCfgETC, MagnetoCfgETC, \
     MystiqueCfgETC)
+
+#define DECLARE_NIMBUS(X) \
+  FOR_EACH(X, nimbuscfg, RewardsCfgNIMBUS, MergeCfgNIMBUS)
 
 #define DECLARE_ETCTR(X) \
   FOR_EACH(X, etctranslatecfg, RewardsCfgETCTR, ByzantiumCfgETCTR, ConstantinopleCfgETCTR, ConstantinopleFixCfgETCTR, \
@@ -35,6 +41,9 @@ extern dataobject::DataObject map_configs;
 #define DECLARE_BESU(X) \
   FOR_EACH(X, besucfg)
 
+#define DECLARE_EVMONE(X) \
+  FOR_EACH(X, evmonecfg)
+
 #define DECLARE_T8NTOOL_EIP(X) \
   FOR_EACH(X, t8ntooleipcfg, t8ntooleip_genRewardsCfg, t8ntooleip_genLondon1884Cfg)
 
@@ -48,10 +57,12 @@ extern dataobject::DataObject map_configs;
 // Main Configs (T8NTOOL is the base config that puts in to default for other clients as well)
 DECLARE_T8NTOOL(REGISTER)
 DECLARE_BESU(REGISTER)
+DECLARE_EVMONE(REGISTER)
 DECLARE_ETC(REGISTER)
 DECLARE_ETCTR(REGISTER)
 DECLARE_OEWRAP(REGISTER)
 DECLARE_ETHJS(REGISTER)
+DECLARE_NIMBUS(REGISTER)
 
 // Example configs
 DECLARE_T8NTOOL_EIP(REGISTER)
@@ -65,10 +76,12 @@ public:
     OptionsInit() {
         DECLARE_T8NTOOL(INIT)
         DECLARE_BESU(INIT)
+        DECLARE_EVMONE(INIT)
         DECLARE_ETC(INIT)
         DECLARE_ETCTR(INIT)
         DECLARE_OEWRAP(INIT)
         DECLARE_ETHJS(INIT)
+        DECLARE_NIMBUS(INIT)
 
         DECLARE_T8NTOOL_EIP(INIT)
         DECLARE_ALETH(INIT)

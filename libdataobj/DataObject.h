@@ -105,7 +105,7 @@ public:
     };
     void performModifier(void (*f)(DataObject&), ModifierOption _opt = ModifierOption::RECURSIVE,
         std::set<std::string> const& _exceptionKeys = {});
-    void performVerifier(void (*f)(DataObject const&)) const;
+    bool performSearch(bool (*f)(DataObject const&)) const;
 
     void clear(DataType _type = DataType::NotInitialized);
 

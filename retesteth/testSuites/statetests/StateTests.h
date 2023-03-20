@@ -25,6 +25,7 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace test
 {
+
 class StateTestSuite : public TestSuite
 {
 public:
@@ -43,11 +44,18 @@ public:
     TestSuite::FillerPath suiteFillerFolder() const override;
 };
 
-class StateTestVMSuite : public StateTestSuite
-{
-public:
-    TestSuite::TestPath suiteFolder() const override;
-    TestSuite::FillerPath suiteFillerFolder() const override;
-};
+
+#define REGISTER_STATESUITE(NAME)           \
+    class NAME : public StateTestSuite      \
+    {                                       \
+    public:                                 \
+        TestSuite::TestPath suiteFolder() const override;        \
+        TestSuite::FillerPath suiteFillerFolder() const override;\
+    };
+
+REGISTER_STATESUITE(StateTestVMSuite)
+REGISTER_STATESUITE(StateTestShanghaiSuite)
+REGISTER_STATESUITE(EIPStateTestSuite)
+REGISTER_STATESUITE(EIPStateTestEOFSuite)
 
 }  // namespace test

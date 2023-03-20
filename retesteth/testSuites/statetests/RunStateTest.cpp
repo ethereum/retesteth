@@ -63,9 +63,19 @@ void performValidations(StateTestExecInfo const& _info, FH32 const& _trHash)
     if (!expectedBytesPtr.isEmpty())
     {
         if (tr.transaction()->getRawBytes().asString() != expectedBytesPtr->asString())
-            ETH_ERROR_MESSAGE(string("TxBytes mismatch: test transaction section does not match txbytes in post section! ") +
-                              "\n Constructed: " + expectedBytesPtr->asString() + "\n vs \n " +
-                              tr.transaction()->getRawBytes().asString());
+        {
+            string const msg = string("TxBytes mismatch: test transaction section does not match txbytes in post section! ") +
+                               "\n Constructed: " + expectedBytesPtr->asString() + "\n vs \n " +
+                               tr.transaction()->getRawBytes().asString();
+            if (Options::get().chainid.initialized())
+            {
+                ETH_DC_MESSAGE(DC::LOWLOG, msg);
+            }
+            else
+            {
+                ETH_ERROR_MESSAGE(msg);
+            }
+        }
     }
 
     // Validate log hash
@@ -88,7 +98,7 @@ void performPostState(StateTestExecInfo const& _info)
         auto& tr = _info.tr;                   // Built transaction
         auto const& network = _info.network;   // Current network (forkname)
 
-        auto const remStateJson = getRemoteState(session).asDataObject()->asJson();
+        auto const remStateJson = getRemoteState(session)->asDataObject()->asJson();
         ETH_DC_MESSAGE(DC::STATE,
             "\nRunning test State Dump:" + TestOutputHelper::get().testInfo().errorDebug() + cDefault + " \n" + remStateJson);
         if (!Options::get().poststate.outpath.empty())
@@ -143,7 +153,7 @@ void performTransaction(StateTestExecInfo const& _info)
 
     if (actualHash != expectedPostHash)
     {
-        ETH_DC_MESSAGE(DC::TESTLOG, "\nState Dump: \n" + getRemoteState(session).asDataObject()->asJson());
+        ETH_DC_MESSAGE(DC::TESTLOG, "\nState Dump: \n" + getRemoteState(session)->asDataObject()->asJson());
         ETH_ERROR_MESSAGE("Post hash mismatch remote: " + actualHash.asString() + ", expected: " + expectedPostHash.asString());
     }
     performValidations(_info, trHash);
@@ -190,7 +200,7 @@ void RunTest(StateTestInFilled const& _test)
         TestOutputHelper::get().setCurrentTestInfo(errorInfo);
 
         auto p = prepareChainParams(network, SealEngine::NoReward, _test.Pre(), _test.Env(), ParamsContext::StateTests);
-        session.test_setChainParams(p);
+        session.test_setChainParamsNoGenesis(p);
 
         // Read all results for a specific fork
         for (StateTestPostResult const& result : post.second)

@@ -1,4 +1,5 @@
 #include "ToolResponse.h"
+#include "Constants.h"
 #include <retesteth/testStructures/Common.h>
 
 namespace test::teststruct
@@ -13,6 +14,7 @@ ToolResponse::ToolResponse(DataObject const& _data)
             {"logsBloom", {{DataType::String}, jsonField::Required}},
             {"currentDifficulty", {{DataType::String, DataType::Null}, jsonField::Required}},
             {"currentBaseFee", {{DataType::String, DataType::Null}, jsonField::Optional}},
+            {"withdrawalsRoot", {{DataType::String}, jsonField::Optional}},
             {"rejected", {{DataType::Array}, jsonField::Optional}},
             {"gasUsed", {{DataType::String}, jsonField::Optional}},
             {"receipts", {{DataType::Array}, jsonField::Required}}});
@@ -23,23 +25,27 @@ ToolResponse::ToolResponse(DataObject const& _data)
     m_logsHash = spFH32(new FH32(_data.atKey("logsHash")));
     m_logsBloom = spFH256(new FH256(_data.atKey("logsBloom")));
 
+    m_currentDifficulty = spVALUE(new VALUE(0));
     if (_data.atKey("currentDifficulty").type() != DataType::Null)
         m_currentDifficulty = spVALUE(new VALUE(_data.atKey("currentDifficulty")));
-    else
-        m_currentDifficulty = spVALUE(new VALUE(0));
 
+    m_currentBasefee = spVALUE(new VALUE(0));
     if (_data.count("currentBaseFee"))
         m_currentBasefee = spVALUE(new VALUE(_data.atKey("currentBaseFee")));
-    else
-        m_currentBasefee = spVALUE(new VALUE(0));
 
-    for (auto const& el : _data.atKey("receipts").getSubObjects())
-        m_receipts.push_back(ToolResponseReceipt(el));
+    m_withdrawalsRoot = spFH32(new FH32(C_WITHDRAWALS_EMPTY_ROOT));
+    if (_data.count("withdrawalsRoot"))
+        m_withdrawalsRoot = spFH32(new FH32(_data.atKey("withdrawalsRoot")));
+
+    auto const& receipts = _data.atKey("receipts").getSubObjects();
+    m_receipts.reserve(receipts.size());
+    for (auto const& el : receipts)
+        m_receipts.emplace_back(ToolResponseReceipt(el));
 
     if (_data.count("rejected"))
     {
         for (auto const& el : _data.atKey("rejected").getSubObjects())
-            m_rejectedTransactions.push_back(ToolResponseRejected(el));
+            m_rejectedTransactions.emplace_back(ToolResponseRejected(el));
     }
 }
 

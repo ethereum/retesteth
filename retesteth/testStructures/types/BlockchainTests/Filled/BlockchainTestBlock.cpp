@@ -14,6 +14,7 @@ BlockchainTestBlock::BlockchainTestBlock(spDataObject& _data)
                 {"chainname", {{DataType::String}, jsonField::Optional}},    // User information
                 {"blocknumber", {{DataType::String}, jsonField::Optional}},  // User information
                 {"transactions", {{DataType::Array}, jsonField::Optional}},
+                {"withdrawals", {{DataType::Array}, jsonField::Optional}},
                 {"transactionSequence", {{DataType::Array}, jsonField::Optional}},
                 {"uncleHeaders", {{DataType::Array}, jsonField::Optional}},
                 {"expectException", {{DataType::String}, jsonField::Optional}},                   // User information
@@ -42,7 +43,13 @@ BlockchainTestBlock::BlockchainTestBlock(spDataObject& _data)
             m_blockHeader = readBlockHeader(_data->atKey("blockHeader"));
 
             for (auto& tr : _data.getContent().atKeyUnsafe("transactions").getSubObjectsUnsafe())
-                m_transactions.push_back(readTransaction(dataobject::move(tr)));
+                m_transactions.emplace_back(readTransaction(dataobject::move(tr)));
+
+            if (_data->count("withdrawals"))
+            {
+                for (auto const& wt : _data->atKey("withdrawals").getSubObjects())
+                    m_withdrawals.emplace_back(spWithdrawal(new Withdrawal(wt)));
+            }
 
             if (_data->count("transactionSequence"))
             {
@@ -55,7 +62,7 @@ BlockchainTestBlock::BlockchainTestBlock(spDataObject& _data)
             }
 
             for (auto const& un : _data->atKey("uncleHeaders").getSubObjects())
-                m_uncles.push_back(readBlockHeader(un));
+                m_uncles.emplace_back(readBlockHeader(un));
         }
         m_rlp = spBYTES(new BYTES(_data->atKey("rlp").asString()));
     }

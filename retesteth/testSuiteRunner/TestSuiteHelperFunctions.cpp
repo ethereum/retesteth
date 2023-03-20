@@ -3,6 +3,8 @@
 #include <retesteth/EthChecks.h>
 #include <retesteth/TestHelper.h>
 #include <retesteth/TestOutputHelper.h>
+#include <retesteth/testSuiteRunner/TestSuite.h>
+#include <libdevcore/CommonIO.h>
 
 using namespace dev;
 using namespace std;
@@ -28,8 +30,10 @@ TestFileData readTestFile(fs::path const& _testFileName)
         testData.data = test::readJsonData(_testFileName, string(), bSortOnLoad);
     else if (_testFileName.extension() == ".yml")
         testData.data = test::readYamlData(_testFileName, bSortOnLoad);
+    else if (_testFileName.extension() == ".py")
+        testData.data = spDataObject(new DataObject(dev::contentsString(_testFileName)));
     else
-        ETH_ERROR_MESSAGE("Unknown test format!" + test::TestOutputHelper::get().testFile().string());
+        ETH_ERROR_MESSAGE("Unknown test format! \n" + _testFileName.string());
     ETH_DC_MESSAGE(DC::TESTLOG, "Read json structure finish");
 
     // Do not calculate the hash on Legacy tests unless --checkhash option provided
@@ -78,7 +82,7 @@ void removeComments(spDataObject& _obj)
         {
             if (element->getKey().substr(0, 2) == "//")
             {
-                removeKeysList.push_back(element->getKey());
+                removeKeysList.emplace_back(element->getKey());
                 continue;
             }
             removeComments(element);
@@ -92,5 +96,74 @@ void removeComments(spDataObject& _obj)
             removeComments(element);
     }
 }
+
+
+typedef vector<string> VectorString;
+std::map<string, VectorString> C_GeneratedTestsMAP;
+std::mutex G_GeneratedTestsMap_Mutex;
+void clearGeneratedTestNamesMap()
+{
+    std::lock_guard<std::mutex> lock(G_GeneratedTestsMap_Mutex);
+    C_GeneratedTestsMAP.clear();
+}
+
+void checkDoubleGeneratedTestNames()
+{
+    std::lock_guard<std::mutex> lock(G_GeneratedTestsMap_Mutex);
+    std::set<string> checkedNames;
+    for (auto const& test : C_GeneratedTestsMAP)
+    {
+        for (auto const& name : test.second)
+        {
+            if (checkedNames.count(name))
+                ETH_ERROR_MESSAGE("Filler will produce test name collision (change the name): `" + name + "` in test filler `" + test.first);
+            checkedNames.emplace(name);
+        }
+    }
+}
+
+vector<string> const& getGeneratedTestNames(fs::path const& _filler)
+{
+    std::lock_guard<std::mutex> lock(G_GeneratedTestsMap_Mutex);
+    if (C_GeneratedTestsMAP.count(_filler.stem().string()))
+        return C_GeneratedTestsMAP.at(_filler.stem().string());
+
+    vector<string> generatedTestNames;
+    if (_filler.extension() == ".json" || _filler.extension() == ".yml")
+    {
+        string fillerName = _filler.stem().string();
+        if (fillerName.find(c_fillerPostf) != string::npos)
+            fillerName = fillerName.substr(0, fillerName.length() - c_fillerPostf.size());
+        else if (fillerName.find(c_copierPostf) != string::npos)
+            fillerName = fillerName.substr(0, fillerName.length() - c_copierPostf.size());
+        generatedTestNames.emplace_back(fillerName);
+    }
+    else if (_filler.extension() == ".py")
+    {
+        // Get filled test names from .py filler
+        size_t pos = 0;
+        string pythonSrc = dev::contentsString(_filler);
+        size_t foundPos = pythonSrc.find("def test_", pos);
+        while (foundPos != string::npos)
+        {
+            size_t endSelectionPos = pythonSrc.find("(", foundPos);
+            if (endSelectionPos != string::npos)
+            {
+                string pythonTestname = pythonSrc.substr(foundPos + 9, endSelectionPos - foundPos - 9);
+                generatedTestNames.emplace_back(pythonTestname);
+            }
+            pos = foundPos + 1;
+            foundPos = pythonSrc.find("def test_", pos);
+        }
+    }
+    else
+    {
+        ETH_ERROR_MESSAGE("getGeneratedTestNames:: unknown filler extension: \n" + _filler.string());
+    }
+
+    C_GeneratedTestsMAP.emplace(_filler.stem().string(), generatedTestNames);
+    return C_GeneratedTestsMAP.at(_filler.stem().string());
+}
+
 
 }  // namespace testsuite

@@ -14,6 +14,7 @@ private:
     {
         NONE,
         NONE_OPTIONAL,
+        NONE_OPTIONAL2,
         ONE,
         ONEMERGED
     };
@@ -36,6 +37,7 @@ private:
 
     protected:
         virtual void initArg(std::string const& _arg) = 0;
+        virtual void initArg2(std::string const&){};
         Option(){};
         std::string m_sOptionHelp;
         std::string m_sOptionName;
@@ -91,6 +93,35 @@ private:
 
     protected:
         void initArg(std::string const& _arg) override { outpath = _arg; }
+    };
+
+    struct statediff_opt : public bool_opt
+    {
+        statediff_opt(bool _arg) : bool_opt(_arg) { m_argType = ARGS::NONE_OPTIONAL; }
+        operator bool() const { return m_inited; }
+        bool isBlockSelected = false;
+        bool isTransSelected = false;
+        size_t firstBlock;
+        size_t firstTrnsx;
+        size_t seconBlock;
+        size_t seconTrnsx;
+
+    protected:
+        void initArg(std::string const& _arg) override;
+    };
+
+    struct booloutpathselector_opt : public booloutpath_opt
+    {
+        booloutpathselector_opt(bool _arg) : booloutpath_opt(_arg) { m_argType = ARGS::NONE_OPTIONAL2; }
+        operator bool() const { return m_inited; }
+        size_t blockNumber;
+        size_t transactionNumber;
+        bool isBlockSelected = false;
+
+    protected:
+        void initArg(std::string const& _arg) override { parse2OptionalArgs(_arg); }
+        void initArg2(std::string const& _arg) override { parse2OptionalArgs(_arg); }
+        void parse2OptionalArgs(std::string const& _arg);
     };
 
     struct string_opt : public Option, std::string
@@ -185,9 +216,9 @@ public:
     int_opt trGasIndex= -1;
     int_opt trValueIndex = -1;
     bool_opt getvectors = false;
-    bool_opt vmtrace = false;
-    bool_opt statediff = false;
-    booloutpath_opt vmtraceraw = false;
+    booloutpathselector_opt vmtrace = false;
+    statediff_opt statediff = false;
+    booloutpathselector_opt vmtraceraw = false;
     bool_opt vmtrace_nomemory = false;
     bool_opt vmtrace_nostack = false;
     bool_opt vmtrace_noreturndata = false;
@@ -198,6 +229,7 @@ public:
     bool_opt exectimelog = false;
     bool_opt enableClientsOutput = false;
     bool_opt travisOutThread = false;
+    string_opt t8ntoolcall;
 
     // Additional Tests
     bool_opt all = false;
@@ -208,9 +240,10 @@ public:
     bool_opt filloutdated = false;
     bool_opt fillvmtrace = false;
     bool_opt fillchain = false;
+    sizet_opt chainid = 1;
     bool_opt showhash = false;
     bool_opt checkhash = false;
-    booloutpath_opt poststate = false;
+    booloutpathselector_opt poststate = false;
     bool_opt fullstate = false;
     bool_opt forceupdate = false;
     static bool isLegacy();

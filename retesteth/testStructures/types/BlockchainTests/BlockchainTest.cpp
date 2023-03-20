@@ -18,7 +18,12 @@ BlockchainTestEnv* readBlockchainTestEnv(DataObject const& _data)
         if (VALUE(diff->asString()) != 0)
             return new BlockchainTestEnv1559(_data);
         else
-            return new BlockchainTestEnvMerge(_data);
+        {
+            if (_data.count("withdrawalsRoot"))
+                return new BlockchainTestEnvShanghai(_data);
+            else
+                return new BlockchainTestEnvMerge(_data);
+        }
         return new BlockchainTestEnv1559(_data);
     }
     return new BlockchainTestEnvLegacy(_data);
@@ -60,14 +65,17 @@ BlockchainTestInFilled::BlockchainTestInFilled(spDataObject& _data)
         else
             m_postHash = spFH32(new FH32(_data->atKey("postStateHash")));
 
-        for (auto& el : _data.getContent().atKeyUnsafe("blocks").getSubObjectsUnsafe())
-            m_blocks.push_back(BlockchainTestBlock(el));
+        string const c_blocks = "blocks";
+        m_blocks.reserve(_data->atKey(c_blocks).getSubObjects().size());
+        for (auto& el : _data.getContent().atKeyUnsafe(c_blocks).getSubObjectsUnsafe())
+            m_blocks.emplace_back(BlockchainTestBlock(el));
+
         m_lastBlockHash = spFH32(new FH32(_data->atKey("lastblockhash")));
 
         if (_data->count("exceptions"))
         {
             for (size_t i = _data->atKey("exceptions").getSubObjects().size(); i > 0; i--)
-                m_exceptions.push_back(_data->atKey("exceptions").getSubObjects().at(i - 1)->asString());
+                m_exceptions.emplace_back(_data->atKey("exceptions").getSubObjects().at(i - 1)->asString());
         }
     }
     catch (std::exception const& _ex)
@@ -84,10 +92,12 @@ BlockchainTest::BlockchainTest(spDataObject& _data)
             TestOutputHelper::get().get().testFile().string() + " A test file must contain an object value (json/yaml).");
         ETH_ERROR_REQUIRE_MESSAGE(_data->getSubObjects().size() >= 1,
             TestOutputHelper::get().get().testFile().string() + " A test file must contain at least one test!");
+
+        m_tests.reserve(_data->getSubObjects().size());
         for (auto& el : (*_data).getSubObjectsUnsafe())
         {
             TestOutputHelper::get().setCurrentTestInfo(TestInfo("BlockchainTest", el->getKey()));
-            m_tests.push_back(BlockchainTestInFilled(el));
+            m_tests.emplace_back(BlockchainTestInFilled(el));
         }
     }
     catch (DataObjectException const& _ex)

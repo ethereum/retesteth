@@ -5,6 +5,8 @@
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/SHA3.h>
 #include <retesteth/TestHelper.h>
+#include <retesteth/Options.h>
+#include <retesteth/Constants.h>
 using namespace std;
 using namespace dev;
 using namespace test;
@@ -13,14 +15,18 @@ namespace fs = boost::filesystem;
 
 namespace toolimpl
 {
-ToolChainManager::ToolChainManager(spSetChainParamsArgs const& _config, fs::path const& _toolPath, fs::path const& _tmpDir)
+ToolChainManager::ToolChainManager(
+    spSetChainParamsArgs const& _config,
+    fs::path const& _toolPath,
+    fs::path const& _tmpDir,
+    ToolChainGenesis _genesisPolicy)
 {
     m_tmpDir = _tmpDir;
     m_toolPath = _toolPath;
     m_currentChain = 0;
     m_maxChains = 0;
     EthereumBlockState genesis(_config->genesis(), _config->state(), FH32::zero());
-    m_chains[m_currentChain] = spToolChain(new ToolChain(genesis, _config, _toolPath, _tmpDir));
+    m_chains[m_currentChain] = spToolChain(new ToolChain(genesis, _config, _toolPath, _tmpDir, _genesisPolicy));
     m_pendingBlock =
         spEthereumBlockState(new EthereumBlockState(currentChain().lastBlock().header(), _config->state(), FH32::zero()));
     reorganizePendingBlock();
@@ -50,16 +56,12 @@ void ToolChainManager::rewindToBlock(VALUE const& _number)
 void ToolChainManager::reorganizePendingBlock()
 {
     EthereumBlockState const& bl = currentChain().lastBlock();
-    if (currentChain().fork() == "BerlinToLondonAt5" && bl.header()->number() == 4)
-        init1559PendingBlock(bl);
-    else if (currentChain().fork() == "ArrowGlacierToMergeAtDiffC0000" && isTerminalPoWBlock())
-        initMergePendingBlock(bl);
-    else
-        m_pendingBlock = spEthereumBlockState(new EthereumBlockState(bl.header(), bl.state(), bl.logHash()));
+    transitionPendingBlock(bl);
 
     BlockHeader& header = m_pendingBlock.getContent().headerUnsafe().getContent();
     header.setNumber(bl.header()->number() + 1);
     m_pendingBlock.getContent().setTotalDifficulty(currentChain().lastBlock().totalDifficulty());
+    m_pendingBlock.getContent().clear();
 
     // Because aleth and geth+retesteth does this, but better be empty extraData
     header.setExtraData(bl.header()->extraData());
@@ -67,14 +69,19 @@ void ToolChainManager::reorganizePendingBlock()
         header.setExtraData(BYTES(DataObject("0x64616f2d686172642d666f726b")));
     header.setParentHash(currentChain().lastBlock().header()->hash());
 
-    bool isParent1559 = currentChain().lastBlock().header()->type() == BlockType::BlockHeader1559;
-    bool isParentMerge = currentChain().lastBlock().header()->type() == BlockType::BlockHeaderMerge;
-    if (isParent1559 || isParentMerge)
+    if (isBlockExportBasefee(currentChain().lastBlock().header()))
     {
         BlockHeader1559& header1559 = BlockHeader1559::castFrom(header);
         ChainOperationParams params = ChainOperationParams::defaultParams(currentChain().toolParams());
         VALUE newFee = calculateEIP1559BaseFee(params, m_pendingBlock->header(), currentChain().lastBlock().header());
         header1559.setBaseFee(VALUE(newFee));
+    }
+
+    if (isBlockExportDifficulty(header) && Options::getCurrentConfig().cfgFile().calculateDifficulty())
+    {
+        ChainOperationParams params = ChainOperationParams::defaultParams(currentChain().toolParams());
+        VALUE retestethDifficulty = calculateEthashDifficulty(params, m_pendingBlock->header(), currentChain().lastBlock().header());
+        header.setDifficulty(retestethDifficulty);
     }
 }
 
@@ -100,6 +107,8 @@ EthereumBlockState const& ToolChainManager::blockByHash(FH32 const& _hash) const
 void ToolChainManager::modifyTimestamp(VALUE const& _time)
 {
     m_pendingBlock.getContent().headerUnsafe().getContent().setTimestamp(_time);
+    if (currentChain().fork() == "MergeToShanghaiAtTime15k" && m_pendingBlock->header()->timestamp() >= 15000)
+        initShanghaiPendingBlock(m_pendingBlock);
 }
 
 // Import Raw Block via t8ntool
@@ -148,6 +157,19 @@ FH32 ToolChainManager::importRawBlock(BYTES const& _rlp)
             m_pendingBlock.getContent().addUncle(un);
         }
 
+        // TODO verify withdrawals rlp signature and block size
+        if (isBlockExportWithdrawals(header))
+        {
+            verifyWithdrawalsRLP(rlp[3]);
+            for (auto const& wtRLP : rlp[3].toList())
+            {
+                if (wtRLP.itemCount() != 4)
+                    throw dev::RLPException("Rlp structure is wrong: Withdrawals RLP does not have 4 elements!");
+                spWithdrawal wt(new Withdrawal(wtRLP));
+                m_pendingBlock.getContent().addWithdrawal(wt);
+            }
+        }
+
         mineBlocks(1, ToolChain::Mining::RequireValid);
         FH32 const importedHash = lastBlock().header()->hash();
         if (importedHash != header->hash())
@@ -167,6 +189,7 @@ FH32 ToolChainManager::importRawBlock(BYTES const& _rlp)
     catch (std::exception const& _ex)
     {
         reorganizeChainForTotalDifficulty();
+        m_pendingBlock.getContent().clear();
         throw test::UpwardsException(string("Error importing raw rlp block: ") + _ex.what());
     }
 }
@@ -218,6 +241,21 @@ void ToolChainManager::reorganizeChainForTotalDifficulty()
     }
 }
 
+void ToolChainManager::registerWithdrawal(BYTES const& _wt)
+{
+    try
+    {
+        dev::bytes decodeRLP = sfromHex(_wt.asString());
+        dev::RLP rlp(decodeRLP, dev::RLP::VeryStrict);
+        spWithdrawal wt(new Withdrawal(rlp));
+        m_pendingBlock.getContent().addWithdrawal(wt);
+    }
+    catch(std::exception const& _ex)
+    {
+        throw test::UpwardsException(string("Error importing rlp of withdrawal: ") + _ex.what());
+    }
+}
+
 TestRawTransaction ToolChainManager::test_rawTransaction(
     BYTES const& _rlp, FORK const& _fork, fs::path const& _toolPath, fs::path const& _tmpDir)
 {
@@ -226,7 +264,8 @@ TestRawTransaction ToolChainManager::test_rawTransaction(
     out["result"] = true;
 
     // Prepare transaction file
-    fs::path txsPath = _tmpDir / "tx.rlp";
+    fs::path const txsPath = _tmpDir / "tx.rlp";
+    fs::path const errorLog = _tmpDir / "error.txt";
 
     // Rlp list header builder for given data
     test::RLPStreamU txsout(1);
@@ -245,9 +284,11 @@ TestRawTransaction ToolChainManager::test_rawTransaction(
     string cmd = _toolPath.string();
     cmd += " --input.txs " + txsPath.string();
     cmd += " --state.fork " + _fork.asString();
-    cmd += " 2>&1";
+    cmd += " --output.errorlog " + errorLog.string();
+
     ETH_DC_MESSAGE(DC::RPC, cmd);
-    string response = test::executeCmd(cmd, ExecCMDWarning::NoWarningNoError);
+    int exitCode;
+    string response = test::executeCmd(cmd, exitCode, ExecCMDWarning::NoWarningNoError);
 
 
     ETH_DC_MESSAGE(DC::RPC, "T9N Response:\n" + response);
@@ -258,14 +299,17 @@ TestRawTransaction ToolChainManager::test_rawTransaction(
     {
         res = dataobject::ConvertJsoncppStringToData(response);
     }
-    catch (std::exception const& _ex) {
+    catch (std::exception const& _ex)
+    {
         if (string(_ex.what()).find("can't read json") != string::npos)
         {
             // Unable to read json. treat response as exceptional failure on wrong input
-            ETH_WARNING("t9n returned invalid json, probably failed on input!");
+            if (Options::get().filltests)
+                ETH_WARNING("t9n returned invalid json, probably failed on input!");
             res = spDataObject(new DataObject(DataType::Array));
             spDataObject errObj;
-            (*errObj)["error"] = response;
+            string const outErrorContent = dev::contentsString(errorLog.string());
+            (*errObj)["error"] = outErrorContent;
             (*res).addSubObject(errObj);
             ETH_DC_MESSAGE(DC::RPC, "T9N Response reconstructed:\n" + res->asJson());
             errorCaught = true;
@@ -392,6 +436,38 @@ void ToolChainManager::initMergePendingBlock(EthereumBlockState const& _lastBloc
 
     spBlockHeader newPending(new BlockHeaderMerge(parentData));
     m_pendingBlock = spEthereumBlockState(new EthereumBlockState(newPending, _lastBlock.state(), _lastBlock.logHash()));
+}
+
+void ToolChainManager::initShanghaiPendingBlock(EthereumBlockState const& _lastBlock)
+{
+    spDataObject parentData = _lastBlock.header()->asDataObject();
+    (*parentData)["withdrawalsRoot"] = C_WITHDRAWALS_EMPTY_ROOT;
+    spBlockHeader newPending(new BlockHeaderShanghai(parentData));
+    m_pendingBlock = spEthereumBlockState(new EthereumBlockState(newPending, _lastBlock.state(), _lastBlock.logHash()));
+}
+
+void ToolChainManager::transitionPendingBlock(EthereumBlockState const& _bl)
+{
+    auto const updatePending = [this, &_bl](){
+        m_pendingBlock = spEthereumBlockState(new EthereumBlockState(_bl.header(), _bl.state(), _bl.logHash()));
+    };
+
+    // Transform pending block to new network
+    if (_bl.header()->number() == 4)
+    {
+        if (currentChain().fork() == "BerlinToLondonAt5")
+        {
+            init1559PendingBlock(_bl);
+            return;
+        }
+    }
+
+    if (currentChain().fork() == "MergeToShanghaiAtTime15k" && m_pendingBlock->header()->timestamp() >= 15000)
+        initShanghaiPendingBlock(_bl);
+    else if (currentChain().fork() == "ArrowGlacierToMergeAtDiffC0000" && isTerminalPoWBlock())
+        initMergePendingBlock(_bl);
+    else
+        updatePending();
 }
 
 }  // namespace toolimpl

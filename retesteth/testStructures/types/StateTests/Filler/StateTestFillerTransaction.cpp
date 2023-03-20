@@ -16,6 +16,7 @@ void require1559TransactionScheme(spDataObject const& _data)
             {"nonce", {{DataType::String}, jsonField::Required}},
             {"value", {{DataType::Array}, jsonField::Required}},
             {"to", {{DataType::String}, jsonField::Required}},
+            {"sender", {{DataType::String}, jsonField::Optional}},
             {"maxFeePerGas", {{DataType::String}, jsonField::Required}},
             {"maxPriorityFeePerGas", {{DataType::String}, jsonField::Required}},
             {"secretKey", {{DataType::String}, jsonField::Required}}});
@@ -31,6 +32,7 @@ void requireLegacyTransctionScheme(spDataObject const& _data)
             {"nonce", {{DataType::String}, jsonField::Required}},
             {"value", {{DataType::Array}, jsonField::Required}},
             {"to", {{DataType::String}, jsonField::Required}},
+            {"sender", {{DataType::String}, jsonField::Optional}},
             {"secretKey", {{DataType::String}, jsonField::Required}}});
 }
 }
@@ -68,7 +70,9 @@ StateTestFillerTransaction::StateTestFillerTransaction(spDataObjectMove _data)
         (*m_rawData)["sender"] = m_publicKey->asString();
 
         m_nonce = spVALUE(new VALUE(m_rawData->atKey("nonce")));
-        for (auto& dataEl : (*m_rawData).atKeyUnsafe("data").getSubObjectsUnsafe())
+        string const c_data = "data";
+        m_databox.reserve(m_rawData->atKey(c_data).getSubObjects().size());
+        for (auto& dataEl : (*m_rawData).atKeyUnsafe(c_data).getSubObjectsUnsafe())
         {
             spAccessList accessList;
             spDataObject actualDataField;
@@ -106,12 +110,12 @@ StateTestFillerTransaction::StateTestFillerTransaction(spDataObjectMove _data)
             }
             (*actualDataField).setString(test::compiler::replaceCode(rawData));
             // ---
-            m_databox.push_back(Databox(BYTES(actualDataField.getContent()), label, rawData.substr(0, 20), accessList));
+            m_databox.emplace_back(Databox(BYTES(actualDataField.getContent()), label, rawData.substr(0, 30), accessList));
         }
         for (auto const& el : m_rawData->atKey("gasLimit").getSubObjects())
-            m_gasLimit.push_back(el.getCContent());
+            m_gasLimit.emplace_back(el.getCContent());
         for (auto const& el : m_rawData->atKey("value").getSubObjects())
-            m_value.push_back(el.getCContent());
+            m_value.emplace_back(el.getCContent());
 
         if (m_rawData->count("maxFeePerGas") || m_rawData->count("maxPriorityFeePerGas"))
         {

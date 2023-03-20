@@ -46,18 +46,17 @@ string getTestNameFromFillerFilename(fs::path const& _fillerTestFilePath)
     size_t pos = fillerName.rfind(c_fillerPostf);
     if (pos != string::npos)
         return fillerName.substr(0, pos);
-    else
-    {
-        pos = fillerName.rfind(c_copierPostf);
-        if (pos != string::npos)
-            return fillerName.substr(0, pos);
-        else
-        {
-            static string const requireStr = " require: Filler.json/Filler.yml/Copier.json";
-            ETH_FAIL_REQUIRE_MESSAGE(
-                false, "Incorrect file suffix in the filler folder! " + _fillerTestFilePath.string() + requireStr);
-        }
-    }
+
+    pos = fillerName.rfind(c_copierPostf);
+    if (pos != string::npos)
+        return fillerName.substr(0, pos);
+
+    if (_fillerTestFilePath.extension() == c_pythonPostf)
+        return fillerName;
+
+    static string const requireStr = " require: Filler.json/Filler.yml/Copier.json/.py";
+    ETH_FAIL_REQUIRE_MESSAGE(
+        false, "Incorrect file suffix in the filler folder! " + _fillerTestFilePath.string() + requireStr);
     return fillerName;
 }
 }  // namespace
@@ -68,30 +67,22 @@ namespace test
 void TestSuite::runAllTestsInFolder(string const& _testFolder) const
 {
     Options::getDynamicOptions().getClientConfigs();
-    if (ExitHandler::receivedExitSignal())
-        return;
+    CHECKEXIT
 
-    // check that destination folder test files has according Filler file in src folder
-    string filter;
-    std::vector<fs::path> outdatedTests;
-    try
-    {
-        TestOutputHelper::get().setCurrentTestInfo(TestInfo("checkFillerExistance", _testFolder));
-        outdatedTests = checkFillerExistance(_testFolder, filter);
-    }
-    catch (std::exception const&)
-    {
-        TestOutputHelper::get().initTest(1);
-        TestOutputHelper::get().finishTest();
+    clearGeneratedTestNamesMap();
+    std::vector<fs::path> outdatedTestFillers;
+    std::vector<fs::path> allTestFillers;
+    if (!verifyFillers(_testFolder, outdatedTestFillers, allTestFillers))
         return;
-    }
 
     // run all tests
     AbsoluteFillerPath fillerPath = getFullPathFiller(_testFolder);
     if (!fs::exists(fillerPath.path()))
         ETH_WARNING(string(fillerPath.path().c_str()) + " does not exist!");
-    vector<fs::path> const testFillers =
-        Options::get().filloutdated ? outdatedTests : test::getFiles(fillerPath.path(), {".json", ".yml"}, filter);
+
+    vector<fs::path> const& testFillers = Options::get().filloutdated ?
+                                          outdatedTestFillers : allTestFillers;
+
     if (testFillers.size() == 0)
     {
         TestOutputHelper::get().currentTestRunPP();
@@ -177,14 +168,28 @@ void TestSuite::_executeTest(string const& _testFolder, fs::path const& _fillerT
         wereFillerErrors = _fillTest(_opt, _fillerTestFilePath, filledTestPath.path());
 
     bool disableSecondRun = false;
-    if (!Options::get().getGStateTransactionFilter().empty() && Options::get().filltests)
+    auto noSecondRunConditions = [](){
+        bool condition = true;
+        auto const& opt = Options::get();
+        condition = condition && opt.getGStateTransactionFilter().empty();
+        condition = condition && !opt.vmtrace.initialized();
+        condition = condition && !opt.singleTestNet.initialized();
+        condition = condition && !opt.poststate.initialized();
+        condition = condition && !opt.statediff.initialized();
+        return !condition;
+    };
+    if (noSecondRunConditions() && Options::get().filltests)
     {
-        ETH_WARNING("GState transaction filter is set. Disabling generated test run!");
+        ETH_WARNING("Test filter or log is set. Disabling generated test run!");
         disableSecondRun = true;
     }
 
     if (!wereFillerErrors && !disableSecondRun)
-        _runTest(filledTestPath);
+    {
+        auto const generatedFiles = getGeneratedTestNames(_fillerTestFilePath);
+        for (auto const& name : generatedFiles)
+            _runTest(filledTestPath.path().parent_path() / (name + ".json"));
+    }
 
     RPCSession::sessionEnd(TestOutputHelper::getThreadID(), RPCSession::SessionStatus::HasFinished);
 }
@@ -222,7 +227,7 @@ void TestSuite::executeFile(boost::filesystem::path const& _file) const
     opt.isLegacyTests = isLegacy || legacyTestSuiteFlag();
 
     if (_file.extension() != ".json")
-        ETH_ERROR_MESSAGE("The generated test must have `.json` format!");
+        ETH_ERROR_MESSAGE("The generated test must have `.json` format! (forgot --filltests?)");
 
     ETH_DC_MESSAGE(DC::TESTLOG, "Read json structure " + string(_file.filename().c_str()));
     spDataObject res = test::readJsonData(_file);

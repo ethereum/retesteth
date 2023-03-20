@@ -1,6 +1,7 @@
 #include "StateTestEnv.h"
 #include <retesteth/EthChecks.h>
 #include <retesteth/testStructures/Common.h>
+#include <retesteth/Constants.h>
 
 using namespace std;
 using namespace dataobject;
@@ -41,8 +42,8 @@ void StateTestEnv::initializeFields(DataObject const& _data)
     DataObject tmpD;
     tmpD = "0x00";  // State Tests extra data is 0x00
     m_currentExtraData = spBYTES(new BYTES(tmpD));
-    m_currentNonce = spFH8(new FH8(FH8::zero()));
-    m_currentMixHash = spFH32(new FH32(FH32::zero()));
+    m_currentNonce = spFH8(FH8::zero().copy());
+    m_currentMixHash = spFH32(FH32::zero().copy());
 
     // 1559
     m_currentDifficulty = spVALUE(new VALUE(DataObject("0x00")));
@@ -57,6 +58,8 @@ void StateTestEnv::initializeFields(DataObject const& _data)
     m_currentRandom = spFH32(FH32::zero().copy());
     if (_data.count("currentRandom"))
         m_currentRandom = spFH32(new FH32(_data.atKey("currentRandom")));
+
+    m_currentWithdrawalsRoot = spFH32(new FH32(DataObject(C_WITHDRAWALS_EMPTY_ROOT)));
 }
 
 

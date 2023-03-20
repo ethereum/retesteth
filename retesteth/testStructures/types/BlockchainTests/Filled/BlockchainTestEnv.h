@@ -2,9 +2,7 @@
 #include <retesteth/testStructures/types/StateTests/Base/StateTestEnvBase.h>
 #include <libdataobj/DataObject.h>
 
-namespace test
-{
-namespace teststruct
+namespace test::teststruct
 {
 // Blockchain test does not have Env section
 // This represent env section consructed from blockchain test genesis header
@@ -42,6 +40,18 @@ struct BlockchainTestEnvMerge : BlockchainTestEnv
 
 protected:
     void initializeMergeFields(DataObject const&);
+    BlockchainTestEnvMerge(){};
+
+private:
+    void define() const override {}
+};
+
+struct BlockchainTestEnvShanghai : BlockchainTestEnvMerge
+{
+    BlockchainTestEnvShanghai(DataObject const& _data);
+
+protected:
+    void initializeShanghaiFields(DataObject const&);
 
 private:
     void define() const override {}
@@ -51,4 +61,3 @@ typedef GCP_SPointer<BlockchainTestEnv> spBlockchainTestEnv;
 
 
 }  // namespace teststruct
-}  // namespace test
