@@ -42,6 +42,7 @@ bool checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
 {
     bool isTestOutdated = false;
     ETH_DC_MESSAGE(DC::TESTLOG, string("Check `") + _compiledTest.c_str() + "` hash");
+    ETH_DC_MESSAGE(DC::TESTLOG, string("SrcFile `") + _sourceTest.c_str() + "`");
     TestFileData fillerData = readTestFile(_sourceTest);
 
     // If no hash calculated, skip the hash check
