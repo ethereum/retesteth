@@ -48,8 +48,13 @@ if (POLICY CMP0135)
     cmake_policy(SET CMP0135 NEW)   # Use provided package_ROOT variables
 endif()
 
-hunter_add_package(CURL)
-find_package(CURL CONFIG REQUIRED)
+IF (NOT LOCALDEPS MATCHES ".*CURL")
+    hunter_add_package(CURL)
+    find_package(CURL CONFIG REQUIRED)
+ELSE()
+    message(STATUS "[retesteth] LOCALDEPS=CURL looking for locally installed version")
+    find_package(CURL CONFIG REQUIRED)
+ENDIF()
 
 
 #Cmake files configuration
