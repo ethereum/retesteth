@@ -413,7 +413,8 @@ const char** preprocessOptions(int& _argc, const char* _argv[])
         if (arg == "--testpath" && i + 1 < _argc)
             testPath = fs::path(std::string{_argv[i + 1]});
 
-        bool isFile = (arg.find(".json") != string::npos || arg.find(".yml") != string::npos);
+        bool isFile = (arg.find(".json") != string::npos || arg.find(".yml") != string::npos
+                    || arg.find(".py") != string::npos);
         if (isFile && string{_argv[i - 1]} != "--testfile")
         {
             filenameArg = arg;

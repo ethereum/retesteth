@@ -302,7 +302,12 @@ spDataObject ToolChain::coorectTransactionsByToolResponse(
                 ETH_DC_MESSAGE(DC::LOWLOG, message);
             }
             else
+            {
+                ETH_DC_MESSAGE(DC::RPC, "Transactions not allowed to fail!");
+                if (rejectedInfoFound)
+                    throw test::UpwardsException((*miningResult)["rejectedTransactions"].atLastElement().atKey("error").asString());
                 throw test::UpwardsException(message);
+            }
         }
         index++;
     }
@@ -330,7 +335,8 @@ void ToolChain::additionalHeaderVerification(
                                      _pendingBlock.header()->number().asString() +
                                      " != " + _pendingFixed.header()->number().asString() + ")");
 
-    if (_miningReq == Mining::RequireValid)  // called on rawRLP import
+      // called on rawRLP import
+    if (_miningReq == Mining::RequireValid)
     {
         if (m_fork.getContent().asString() == "HomesteadToDaoAt5" && _pendingFixed.header()->number() > 4 &&
             _pendingFixed.header()->number() < 19 &&

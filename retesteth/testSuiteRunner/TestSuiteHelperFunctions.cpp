@@ -110,15 +110,30 @@ void clearGeneratedTestNamesMap()
 void checkDoubleGeneratedTestNames()
 {
     std::lock_guard<std::mutex> lock(G_GeneratedTestsMap_Mutex);
+
+    typedef std::set<string> SetOfString;
+    std::map<string, SetOfString> verifiedMap;
+
     std::set<string> checkedNames;
     for (auto const& test : C_GeneratedTestsMAP)
     {
+        SetOfString localNames;
         for (auto const& name : test.second)
         {
+            string sPrevious;
+            for (auto const& previousTest : verifiedMap)
+            {
+                if (previousTest.second.count(name))
+                    sPrevious = "Previous occurance in test filler: `" + previousTest.first + "`";
+            }
             if (checkedNames.count(name))
-                ETH_ERROR_MESSAGE("Filler will produce test name collision (change the name): `" + name + "` in test filler `" + test.first);
+                ETH_ERROR_MESSAGE("Filler will produce test name collision (change the name): `" +
+                                  name + "` in test filler `" + test.first + "`\n" + sPrevious);
+
             checkedNames.emplace(name);
+            localNames.emplace(name);
         }
+        verifiedMap.emplace(test.first, localNames);
     }
 }
 

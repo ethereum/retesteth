@@ -186,9 +186,19 @@ void TestSuite::_executeTest(string const& _testFolder, fs::path const& _fillerT
 
     if (!wereFillerErrors && !disableSecondRun)
     {
+        auto const& opt = Options::get();
         auto const generatedFiles = getGeneratedTestNames(_fillerTestFilePath);
-        for (auto const& name : generatedFiles)
-            _runTest(filledTestPath.path().parent_path() / (name + ".json"));
+        if (_fillerTestFilePath.extension() == ".py" && opt.singletest.initialized()
+            && !opt.filltests)
+        {
+            // Select single test from python generated tests
+            _runTest(filledTestPath.path().parent_path() / (opt.singletest.name + ".json"));
+        }
+        else
+        {
+            for (auto const& name : generatedFiles)
+                _runTest(filledTestPath.path().parent_path() / (name + ".json"));
+        }
     }
 
     RPCSession::sessionEnd(TestOutputHelper::getThreadID(), RPCSession::SessionStatus::HasFinished);
@@ -229,7 +239,9 @@ void TestSuite::executeFile(boost::filesystem::path const& _file) const
     if (_file.extension() != ".json")
         ETH_ERROR_MESSAGE("The generated test must have `.json` format! (forgot --filltests?)");
 
-    ETH_DC_MESSAGE(DC::TESTLOG, "Read json structure " + string(_file.filename().c_str()));
+    ETH_DC_MESSAGE(DC::TESTLOG, "Read json structure " + _file.filename().string());
+    TestOutputHelper::get().setCurrentTestInfo(
+        TestInfo("Read json structure: "  + _file.filename().string()));
     spDataObject res = test::readJsonData(_file);
     ETH_DC_MESSAGE(DC::TESTLOG, "Read json finish");
     doTests(res, opt);

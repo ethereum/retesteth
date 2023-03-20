@@ -134,6 +134,7 @@ FH32 ToolChainManager::importRawBlock(BYTES const& _rlp)
         m_pendingBlock = spEthereumBlockState(new EthereumBlockState(header, lastBlock().state(), FH32::zero()));
         m_pendingBlock.getContent().setTotalDifficulty(lastBlock().totalDifficulty());
 
+        ETH_DC_MESSAGE(DC::RPC, "RLP transaction number: " + test::fto_string(rlp[1].toList().size()));
         for (auto const& trRLP : rlp[1].toList())
         {
             spTransaction spTr = readTransaction(trRLP);

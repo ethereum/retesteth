@@ -96,7 +96,7 @@ void checkGeneratedTest(fs::path const& _filledPath, std::vector<fs::path> const
     }
 }
 
-void checkFillersSelection(std::vector<fs::path> const& _allTestFillers, string const& _testNameFilter)
+void checkFillersNotWithTheSameName(std::vector<fs::path> const& _allTestFillers, string const& _testNameFilter)
 {
     if (!_testNameFilter.empty() && _allTestFillers.size() == 0)
         ETH_ERROR_MESSAGE("Could not find a filler for provided --singletest filter: '" + _testNameFilter + "'");
@@ -119,7 +119,7 @@ void checkFillersSelection(std::vector<fs::path> const& _allTestFillers, string 
     }
 }
 
-void checkTestsWithoutFiller(std::vector<fs::path> const& _verifiedGeneratedTests, fs::path const& _filledTestsPath)
+void checkThatNoTestsWithoutFiller(std::vector<fs::path> const& _verifiedGeneratedTests, fs::path const& _filledTestsPath)
 {
     vector<fs::path> compiledTests = test::getFiles(_filledTestsPath, {".json"});
     for (auto const& verifiedTest : _verifiedGeneratedTests)
@@ -138,6 +138,71 @@ void checkTestsWithoutFiller(std::vector<fs::path> const& _verifiedGeneratedTest
     }
 }
 
+void removePythonTechnicalFiles(std::vector<fs::path>& _allTestFillers)
+{
+    auto removed = std::remove_if(_allTestFillers.begin(), _allTestFillers.end(),
+        [](fs::path const& x) { return (x.stem() == "__init__");} );
+    _allTestFillers.erase(removed, _allTestFillers.end());
+}
+
+void getFillers(
+    TestSuite::AbsoluteFillerPath const& _fullPathToFillers,
+    string const& _testNameFilter,
+    std::vector<fs::path>& _allTestFillers)
+{
+    _allTestFillers = test::getFiles(_fullPathToFillers.path(), {".json", ".yml", ".py"}, _testNameFilter);
+    if (!_testNameFilter.empty())
+    {
+        auto fillerSuffixSelect = test::getFiles(_fullPathToFillers.path(), {".json", ".yml"}, _testNameFilter + "Filler");
+        for (auto const& el : fillerSuffixSelect)
+            _allTestFillers.emplace_back(el);
+
+        if (_allTestFillers.size() == 0)
+        {
+            // If still not find, check inside python files
+            bool foundInPythons = false;
+            auto pythonFillers = test::getFiles(_fullPathToFillers.path(), {".py"});
+            for (auto const& pythonFiller : pythonFillers)
+            {
+                auto const testNames = getGeneratedTestNames(pythonFiller);
+                for (size_t i = 0; i < testNames.size(); i++)
+                {
+                    if (testNames.at(i) == _testNameFilter)
+                    {
+                        _allTestFillers.emplace_back(pythonFiller);
+                        foundInPythons = true;
+                        break;
+                    }
+                }
+                if (foundInPythons)
+                    break;
+            }
+        }
+    }
+}
+
+void checkGeneratedTestNameCollisions(
+    TestSuite::AbsoluteFillerPath const& _fullPathToFillers,
+    std::vector<fs::path> const& _allTestFillers,
+    string const& _testNameFilter)
+{
+    // Fill the names map and check double test names
+    if (_testNameFilter.empty())
+    {
+        for (auto const& filler : _allTestFillers)
+            getGeneratedTestNames(filler);
+    }
+    else
+    {
+        // Check all fillers even if --singletest provided
+        std::vector<fs::path> allTestFillers;
+        getFillers(_fullPathToFillers, "", allTestFillers);
+        for (auto const& filler : allTestFillers)
+            getGeneratedTestNames(filler);
+    }
+    checkDoubleGeneratedTestNames();
+}
+
 void TestSuite::checkFillerExistance(string const& _testFolder,
     std::vector<fs::path>& _outdatedTestFillers,
     std::vector<fs::path>& _allTestFillers) const
@@ -149,34 +214,21 @@ void TestSuite::checkFillerExistance(string const& _testFolder,
     AbsoluteFilledTestPath filledTestsPath = createPathIfNotExist(getFullPathFilled(_testFolder));
     AbsoluteFillerPath fullPathToFillers = getFullPathFiller(_testFolder);
 
-    _allTestFillers = test::getFiles(fullPathToFillers.path(), {".json", ".yml", ".py"}, testNameFilter);
-    if (!testNameFilter.empty())
+    getFillers(fullPathToFillers, testNameFilter, _allTestFillers);
+    removePythonTechnicalFiles(_allTestFillers);
+    checkFillersNotWithTheSameName(_allTestFillers, testNameFilter);
+
+    if (!Options::get().forceupdate)
     {
-        auto fillerSuffixSelect = test::getFiles(fullPathToFillers.path(), {".json", ".yml"}, testNameFilter + "Filler");
-        for (auto const& el : fillerSuffixSelect)
-            _allTestFillers.emplace_back(el);
-    }
-
-    auto removed = std::remove_if(_allTestFillers.begin(), _allTestFillers.end(),
-        [](fs::path const& x) { return (x.stem() == "__init__");} );
-    _allTestFillers.erase(removed, _allTestFillers.end());
-
-    checkFillersSelection(_allTestFillers, testNameFilter);
-
-    auto const& opt = Options::get();
-    if (!opt.forceupdate)
-    {
+        // Check Hashes and Tests without fillers
         std::vector<fs::path> verifiedGeneratedTests;
         checkGeneratedTest(filledTestsPath.path(),  _allTestFillers, _outdatedTestFillers, verifiedGeneratedTests);
 
         if (testNameFilter.empty())
-            checkTestsWithoutFiller(verifiedGeneratedTests, filledTestsPath.path());
+            checkThatNoTestsWithoutFiller(verifiedGeneratedTests, filledTestsPath.path());
     }
 
-    // Fill the names map and check double test names
-    for (auto const& filler : _allTestFillers)
-        getGeneratedTestNames(filler);
-    checkDoubleGeneratedTestNames();
+    checkGeneratedTestNameCollisions(fullPathToFillers, _allTestFillers, testNameFilter);
 }
 
 
