@@ -113,7 +113,7 @@ string const t8ntool_config = R"({
       "UncleIsBrother" : "Uncle is brother!",
       "OutOfGas" : "out of gas",
       "SenderNotEOA" : "sender not an eoa:",
-      "IntrinsicGas" : "t8ntool didn't return a transaction with hash",
+      "IntrinsicGas" : "intrinsic gas too low",
       "ExtraDataIncorrectDAO" : "BlockHeader require Dao ExtraData!",
       "InvalidTransactionVRS" : "t8ntool didn't return a transaction with hash",
       "BLOCKHEADER_VALUE_TOOLARGE" : "Blockheader parse error: VALUE  >u256",
@@ -338,10 +338,21 @@ source ./venv/bin/activate
 
 SRCPATH=$1
 FILLER=$2
-OUTPUT=$3
-EVMT8N=$4
+TESTCA=$3
+OUTPUT=$4
+EVMT8N=$5
+FORCER=$6
 
-tf --filler-path $SRCPATH --output $OUTPUT --test-module $FILLER --no-output-structure --evm-bin $EVMT8N
+ADDFLAGS=""
+if [ "$TESTCA" != "null" ]; then
+    ADDFLAGS="$ADDFLAGS --test-case $TESTCA"
+fi
+if [ "$FORCER" != "null" ]; then
+    ADDFLAGS="$ADDFLAGS --force-refill"
+fi
+
+tf --filler-path $SRCPATH --output $OUTPUT --test-module $FILLER $ADDFLAGS --no-output-structure --evm-bin $EVMT8N
+
 )";
 
 gent8ntoolcfg::gent8ntoolcfg()
