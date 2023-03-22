@@ -22,13 +22,8 @@ BlockchainTestRunner::BlockchainTestRunner(BlockchainTestInFilled const& _test, 
 bool BlockchainTestRunner::validateFork(string const& _testName, FORK const& _net)
 {
     ClientConfig const& cfg = Options::get().getDynamicOptions().getCurrentConfig();
-    bool fillerSkipFork = cfg.checkForkSkipOnFiller(_net);
-    if (!cfg.validateForkAllowed(_net, false) || fillerSkipFork)
-    {
-        if (fillerSkipFork)
-            ETH_WARNING("Skipping unsupported fork: " + _net.asString() + " in " + _testName);
+    if (!cfg.validateForkAllowed(_net, false) || networkSkip(_net, _testName))
         return false;
-    }
     return true;
 }
 

@@ -182,17 +182,10 @@ void RunTest(StateTestInFilled const& _test)
     for (auto const& post : _test.Post())
     {
         FORK const& network = post.first;
-        Options const& opt = Options::get();
-
-        bool skipedFork = opt.getCurrentConfig().checkForkSkipOnFiller(network);
-        bool allowedFork = opt.getCurrentConfig().checkForkAllowed(network);
-        bool singleNetDeny = (!opt.singleTestNet.empty() && opt.singleTestNet != network.asString());
-        if ( singleNetDeny || !allowedFork || skipedFork)
+        if (networkSkip(network, _test.testName()))
         {
             for (TransactionInGeneralSection& tr : txs)
                 tr.markSkipped();
-            if ((!allowedFork || skipedFork) && !singleNetDeny)
-                ETH_WARNING("Skipping unsupported fork: " + network.asString() + " in " + _test.testName());
             continue;
         }
 

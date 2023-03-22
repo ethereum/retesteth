@@ -94,6 +94,7 @@ bool inArray(std::list<T> const& _array, const T& _val)
 
 /// Explode string into array of strings by `delim`
 std::vector<std::string> explode(std::string const& s, char delim);
+std::set<std::string> explodeIntoSet(std::string const& s, char delim);
 void removeSubChar(std::string& _string, unsigned char _r);
 void removeSubChar(std::string& _string, std::vector<unsigned char> _r);
 std::string makePlussedFork(test::teststruct::FORK const& _net);

@@ -370,8 +370,8 @@ void ToolChain::calculateAndSetTotalDifficulty(EthereumBlockState& _pendingFixed
         totalDifficulty = m_blocks.at(m_blocks.size() - 1).totalDifficulty();
     _pendingFixed.setTotalDifficulty(totalDifficulty + _pendingFixed.header()->difficulty());
 
-    ETH_DC_MESSAGE(DC::TESTLOG, "New block N: " + to_string(m_blocks.size()));
-    ETH_DC_MESSAGE(DC::TESTLOG, "New block TD: " + totalDifficulty.asDecString() + " + " +
+    ETH_DC_MESSAGE(DC::LOWLOG, "New block N: " + to_string(m_blocks.size()));
+    ETH_DC_MESSAGE(DC::LOWLOG, "New block TD: " + totalDifficulty.asDecString() + " + " +
                                     _pendingFixed.header()->difficulty().asDecString() + " = " +
                                     _pendingFixed.totalDifficulty().asDecString());
 }

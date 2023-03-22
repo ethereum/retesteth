@@ -502,6 +502,15 @@ std::vector<std::string> explode(std::string const& s, char delim)
         result.emplace_back(token);
     return result;
 }
+std::set<std::string> explodeIntoSet(std::string const& s, char delim)
+{
+    std::set<std::string> result;
+    std::istringstream iss(s);
+    for (std::string token; std::getline(iss, token, delim);)
+        result.emplace(token);
+    return result;
+
+}
 
 #define READ   0
 #define WRITE  1
