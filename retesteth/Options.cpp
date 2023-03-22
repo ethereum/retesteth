@@ -123,8 +123,16 @@ Options::Options(int argc, const char** argv)
              << "Run on a single test. `Testname` is filename without Filler.json\n";
         cout << setw(40) << "--singletest <TestName>/<Subtest>" << setw(0) << "`Subtest` is a test name inside the file\n";
     });
-    ADD_OPTION(singleTestNet, "--singlenet", [](){
-        cout << setw(40) << "--singlenet <ForkName>" << setw(0) << "Run only specific fork configuration\n";
+    ADD_OPTIONV(singleTestNet, "--singlenet", [](){
+        cout << setw(40) << "--singlenet <ForkName>" << setw(0) << "Run only specific fork configuration(s)\n";
+        },[this](){
+            if (singleTestNet.find(">") != string::npos || singleTestNet.find(",") != string::npos ||
+                singleTestNet.find("<") != string::npos)
+            {
+                runOnlyNets.overrideInitArg(singleTestNet);
+                singleTestNet.assign(string());
+                singleTestNet.deInitialize();
+            }
     });
 
     auto stateTestOnly = [this](string const& _name){

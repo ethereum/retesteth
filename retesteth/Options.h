@@ -28,6 +28,8 @@ private:
         void setBeforeSeparator() { m_allowBeforeSeparator = true; }
         void setOverrideOption() { m_optionOverrides = true; }
         void tryInit(std::list<const char*>& _argList);
+        void overrideInitArg(std::string const& _arg) { m_inited = true; initArg(_arg); }
+        void deInitialize() { m_inited = false; }
         void printHelp();
         void validate() const;
     private:
@@ -210,6 +212,7 @@ public:
     string_opt singleTestOutFile;
     singletest_opt singletest;
     string_opt singleTestNet;
+    string_opt runOnlyNets;
 
     // Debugging
     dataind_opt trData;
@@ -262,8 +265,10 @@ public:
         void setCurrentConfig(ClientConfig const& _config);
         size_t activeConfigs() const;
         bool currentConfigIsSet() const;
+        std::set<FORK> const& runOnlyNetworks() const { return m_runOnlyNetworks; }
 
     private:
+        std::set<FORK> m_runOnlyNetworks;
         std::vector<ClientConfig> m_clientConfigs;
         test::ClientConfigID m_currentConfigID = test::ClientConfigID::null();
     };

@@ -28,7 +28,7 @@ spDataObject FillTest(BlockchainTestInFiller const& _test, TestSuite::TestSuiteO
     for (FORK const& net : allForks)
     {
         CHECKEXITR(result)
-        if (filler.checkSinglenet(net))
+        if (networkSkip(net, _test.testName()))
             continue;
 
         for (auto const& expect : _test.expects())

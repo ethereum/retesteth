@@ -326,5 +326,23 @@ bool hasSkipFork(std::set<FORK> const& _allforks)
     return false;
 }
 
+bool networkSkip(FORK const& _net, string const& _testName)
+{
+    auto const& opt = Options::get();
+    auto const& conf = opt.getCurrentConfig();
+    bool const skipedFork = conf.checkForkSkipOnFiller(_net);
+    bool const allowedFork = conf.checkForkAllowed(_net);
+    bool singleNetDeny = (!opt.singleTestNet.empty() && opt.singleTestNet != _net.asString());
+    if (opt.runOnlyNets.initialized())
+        singleNetDeny = !Options::getDynamicOptions().runOnlyNetworks().count(_net);
+    if (singleNetDeny || !allowedFork || skipedFork)
+    {
+        if ((!allowedFork || skipedFork) && !singleNetDeny)
+            ETH_WARNING("Skipping unsupported fork: " + _net.asString() + " in " + _testName);
+        return true;
+    }
+    return false;
+}
+
 
 }  // namespace

@@ -145,6 +145,8 @@ spDataObject performTransaction(StateTestFillerExecInfo const& _info)
     }
 
     session.test_rewindToBlock(VALUE(0));
+    ETH_DC_MESSAGE(DC::TESTLOG, "Executed: d: " + to_string(tr.dataInd()) + ", g: " + to_string(tr.gasInd()) +
+                                ", v: " + to_string(tr.valueInd()) + ", fork: " + fork.asString());
     return transactionResults;
 }
 
@@ -176,10 +178,7 @@ spDataObject FillTest(StateTestInFiller const& _test)
 
     for (auto const& fork : allforks)
     {
-        Options const& opt = Options::get();
-        bool allowedFork = !opt.getCurrentConfig().checkForkAllowed(fork);
-
-        if ((!opt.singleTestNet.empty() && FORK(opt.singleTestNet) != fork) || allowedFork)
+        if (networkSkip(fork, _test.testName()))
         {
             for (TransactionInGeneralSection& tr : txs)
                 tr.markSkipped();

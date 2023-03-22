@@ -18,12 +18,6 @@ BlockchainTestFillerRunner::BlockchainTestFillerRunner(BlockchainTestInFiller co
     ETH_DC_MESSAGE(DC::TESTLOG, "Filling " + _test.testName());
 }
 
-bool BlockchainTestFillerRunner::checkSinglenet(FORK const& _net) const
-{
-    auto const& opt = Options::get();
-    return (!opt.singleTestNet.empty() && _net.asString() != opt.singleTestNet);
-}
-
 spDataObject BlockchainTestFillerRunner::makeNewBCTestForNet(FORK const& _net)
 {
     // Construct filled blockchain test fields

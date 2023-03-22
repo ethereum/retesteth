@@ -13,7 +13,6 @@ public:
     ~BlockchainTestFillerRunner() {};
     dataobject::spDataObject result() { return m_result; }
 
-    bool checkSinglenet(teststruct::FORK const& _net) const;
     dataobject::spDataObject makeNewBCTestForNet(teststruct::FORK const& _net);
     TestBlockchainManager makeTestChainManager(teststruct::FORK const& _net);
     void makeGenesis(spDataObject& _filler, TestBlockchainManager& _testchain) const;
