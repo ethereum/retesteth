@@ -324,23 +324,35 @@ Options::Options(int argc, const char** argv)
 }
 
 mutex g_optionsOverride;
-Options const* optionsOverride = nullptr;
+bool TestOptions::m_isOverride = false;
+Options const* TestOptions::m_global_test_opt = nullptr;
 void TestOptions::overrideMainOptions() const
 {
     std::lock_guard<std::mutex> lock(g_optionsOverride);
-    optionsOverride = &m_opt;
+    m_isOverride = true;
+    m_global_test_opt = &m_opt;
+}
+Options const& TestOptions::getOverride()
+{
+    std::lock_guard<std::mutex> lock(g_optionsOverride);
+    return *m_global_test_opt;
+}
+
+bool TestOptions::isOverride()
+{
+    std::lock_guard<std::mutex> lock(g_optionsOverride);
+    return m_isOverride;
 }
 
 Options const& Options::get(int argc, const char** argv)
 {
     static Options instance(argc, argv);
-#if defined(UNITTESTS) || defined(__DEBUG__)
+    #if defined(UNITTESTS) || defined(__DEBUG__)
     {
-        std::lock_guard<std::mutex> lock(g_optionsOverride);
-        if (optionsOverride != nullptr)
-            return *optionsOverride;
+        if (TestOptions::isOverride())
+            return TestOptions::getOverride();
     }
-#endif
+    #endif
     return instance;
 }
 

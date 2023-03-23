@@ -21,11 +21,7 @@ enum DC
 class Debug
 {
 public:
-    static Debug const& get()
-    {
-        static Debug instance;
-        return instance;
-    }
+    static Debug const& get();
     bool flag(DC _channel) const;
 
 private:

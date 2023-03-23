@@ -297,8 +297,12 @@ public:
     Options const& get() { return m_opt; }
     void overrideMainOptions() const;
 
+    static bool isOverride();
+    static Options const& getOverride();
 private:
     Options m_opt;
+    static bool m_isOverride;
+    static Options const* m_global_test_opt;
 };
 
 } //namespace test
