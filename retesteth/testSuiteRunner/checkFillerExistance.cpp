@@ -50,7 +50,7 @@ void checkGeneratedTest(fs::path const& _filledPath, std::vector<fs::path> const
     std::vector<fs::path>& _verifiedGeneratedTests)
 {
     auto const& opt = Options::get();
-    string message = "Tests are not generated: ";
+    string message = "Tests are not generated (forgot --filltests?): ";
     for (auto const& filler : _fillers)
     {
         TestInfo errorInfo("CheckFiller", filler.stem().string());

@@ -4,6 +4,13 @@ set(CMAKE_TOOLCHAIN_FILE ${CMAKE_SOURCE_DIR}/toolchain.cmake)
 
 include("./cmake/Hunter/HunterGate.cmake")
 
+if (NOT "${CMAKE_BUILD_TYPE}" STREQUAL "Release")
+    add_compile_definitions("__DEBUG__")
+endif()
+if (${UNITTESTS})
+    add_compile_definitions("UNITTESTS")
+endif()
+
 set(HUNTER_CONFIGURATION_TYPES Release)
 set(HUNTER_JOBS_NUMBER 4 CACHE STRING "Hunter jobs number")
 set(HUNTER_CACHE_SERVERS "https://github.com/ethereum/hunter-cache" CACHE STRING "Hunter cache servers")
