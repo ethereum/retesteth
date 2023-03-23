@@ -33,7 +33,7 @@ ToolResponse::ToolResponse(DataObject const& _data)
     if (_data.count("currentBaseFee"))
         m_currentBasefee = spVALUE(new VALUE(_data.atKey("currentBaseFee")));
 
-    m_withdrawalsRoot = spFH32(new FH32(C_WITHDRAWALS_EMPTY_ROOT));
+    m_withdrawalsRoot = spFH32(new FH32(C_FH32_ZERO));
     if (_data.count("withdrawalsRoot"))
         m_withdrawalsRoot = spFH32(new FH32(_data.atKey("withdrawalsRoot")));
 

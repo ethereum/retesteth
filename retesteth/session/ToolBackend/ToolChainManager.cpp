@@ -159,7 +159,7 @@ FH32 ToolChainManager::importRawBlock(BYTES const& _rlp)
         }
 
         // TODO verify withdrawals rlp signature and block size
-        if (isBlockExportWithdrawals(header))
+        if (rlp.itemCount() > 3 || isBlockExportWithdrawals(header))
         {
             verifyWithdrawalsRLP(rlp[3]);
             for (auto const& wtRLP : rlp[3].toList())
