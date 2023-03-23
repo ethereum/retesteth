@@ -285,9 +285,9 @@ Options::Options(int argc, const char** argv)
     });
     ADD_OPTIONV(poststate, "--poststate", [](){
         cout << setw(30) << "--poststate" << setw(25) << "Debug(6) show test postState hash or fullstate, when used with --filltests export `postState` in StateTests\n";
-        cout << setw(30) << "--poststate x:y" << setw(25) << "Show poststate of block 'x', transaction 'y'\n";
+        cout << setw(30) << "--poststate bl:tx" << setw(25) << "Show poststate of block number 'bl', transaction index 'tx' (from 0)\n";
         cout << setw(30) << "--poststate <folder>" << setw(25) << "Same as above plus export test post states into a folder\n";
-        cout << setw(30) << "--poststate x:y <folder>" << setw(25) << "Same as above but combined\n";
+        cout << setw(30) << "--poststate bl:tx <folder>" << setw(25) << "Same as above but combined\n";
         }, [this](){
             fullstate = true;
     });
