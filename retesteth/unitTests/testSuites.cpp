@@ -7,6 +7,7 @@
 #include <retesteth/testSuites/blockchain/BlockchainTests.h>
 #include <retesteth/testStructures/types/StateTests/GeneralStateTest.h>
 #include <libdataobj/ConvertFile.h>
+#include <libdevcore/SHA3.h>
 
 using namespace std;
 using namespace dev;
@@ -152,6 +153,30 @@ BOOST_AUTO_TEST_CASE(fill_BlockchainTest_poststate_blockTx)
     BOOST_CHECK(pos == string::npos);
 }
 
+
+BOOST_AUTO_TEST_CASE(fill_BlockchainTest_statediff_blockblock)
+{
+    const char* argv[] = {"./retesteth", "--", "--singlenet", "London", "--statediff", "0to1", "--filltests" };
+    OPTIONS_OVERRIDE(argv);
+    interceptOutput();
+    executeSample<BlockchainTestValidSuite>(c_sampleBlockchainTestFiller, Mode::FILL);
+    restoreOutput();
+
+    size_t pos1 = strCout.str().find("{");
+    size_t pos2 = strCout.str().rfind("}");
+    BOOST_CHECK(pos1 != string::npos && pos2 != string::npos);
+
+    auto data = dataobject::ConvertJsoncppStringToData(strCout.str().substr(pos1, pos2 - pos1 + 1));
+    string sha3 = dev::toCompactHexPrefixed(dev::sha3(data->asJson(0, false)));
+    BOOST_CHECK(sha3 == "0x68cc7add36815d3592e0bf543355ca077060b8ab2c9afcb9ce37ee271754d621");
+
+    // Only one state Dump
+    size_t pos = strCout.str().find("State Diff:");
+    BOOST_CHECK(pos != string::npos);
+    pos = strCout.str().find("State Diff:", pos + 2);
+    BOOST_CHECK(pos == string::npos);
+}
+
 BOOST_AUTO_TEST_CASE(run_BlockchainTest_poststate_blockTx)
 {
     const char* argv[] = {"./retesteth", "--", "--singlenet", "London", "--poststate", "2:0" };
@@ -161,10 +186,11 @@ BOOST_AUTO_TEST_CASE(run_BlockchainTest_poststate_blockTx)
     restoreOutput();
 
     // State Dump is correct for bl:tx selection
-    BOOST_CHECK(strCout.str().find(R"("nonce" : "0x02")") != string::npos);
+    BOOST_CHECK(strCout.str().find(R"("nonce" : "0x03")") != string::npos);
     BOOST_CHECK(strCout.str().find(R"("storage" : {
             "0x01" : "0x01",
-            "0x02" : "0x01"
+            "0x02" : "0x01",
+            "0x03" : "0x01"
         })") != string::npos);
 
     // Only one state Dump
