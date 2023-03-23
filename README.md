@@ -1,7 +1,27 @@
 # retesteth
-testeth via RPC (wiki: https://github.com/ethereum/retesteth/wiki)
-tests execution/generation via transition tool (https://ethereum-tests.readthedocs.io/en/latest/t8ntool-ref.html)
+tests execution/generation via transition tool (t8n) (https://ethereum-tests.readthedocs.io/en/latest/t8ntool-ref.html)  
 (Execution stats: http://retesteth.ethdevops.io/)
+
+# Usage
+If installed in the system, simply navigate to [ethereum/tests](https://github.com/ethereum/tests)  
+Need supported client's t8n alises in the system path.
+To generate complex test need [solc](https://github.com/ethereum/solidity/releases/tag/v0.8.17), [lllc](https://github.com/winsvega/solidity) in the system path.
+
+Execute test:
+```
+retesteth test.json     
+```
+
+Generate test:
+```
+retesteth testFiller.json --filltests
+```
+
+Debug options: `--vmtrace, --statediff, --poststate` and many more.  
+`retesteth --help` for more info and documentation: https://ethereum-tests.readthedocs.io  
+
+Or docker version:
+http://retesteth.ethdevops.io/release/0.3.0-shanghai/dretesteth-0.3.0-shanghai.tar
 
 * A test generation tool for the test fillers https://github.com/ethereum/tests/tree/develop/src
 * Building instruction for beginners: [retesteth + solidity build](https://github.com/ethereum/retesteth#building-instructions-for-beginners)
@@ -10,25 +30,19 @@ tests execution/generation via transition tool (https://ethereum-tests.readthedo
 # The Goal
 
 * A test tool that would be capable of running current Blockchain/State tests against any client
-* On client side use test RPC or transition tool executable which exports client core logic of transaction execution on given state
-* Filling existing tests (generating post state from *Filler.json instruction files) using the above and any existing client
-* Running request - response tests with a provided client on localhost
+* On client side use transition tool executable which exports client core logic of transaction execution on given state
+* Filling existing tests (generating post state from *Filler.json/yml/py instruction files) using the above and any existing client
+* Running request - response tests with a provided client
 * Bunch tests execution with many clients with many threads
 * A minimum set of additional RPC methods for client to negotiate with the tool: https://github.com/ethereum/retesteth/wiki/RPC-Methods
 * Or a simple transition tool that is also usefull for transaction debugging: https://ethereum-tests.readthedocs.io/en/latest/t8ntool-ref.html
 
 # Current progress
 
-* done: State tests execution and filling was done as PoC on Ethereum cpp client (aleth)
-* done: Tests execution using threads on localhost with multiple instances of a client (geth + aleth)
-* done: Develop minimum set of RPC methods that are to be implemented on other clients and could be used to run tests via RPC
-* done: PoC Running Blockchain tests using geth client
-* done: Implement a set of PoC methods in other client then aleth
-* done: Refactoring and stability when generating GeneralStateTests
-* done: Blockchain test generation support
-* done: Use retesteth to produce fork tests with geth/besu
-* done: Refactor the code, improve stability
-* now: Support and development, support teams
+* geth t8n supported
+* ethereumjs t8n supported
+* nimbus t8n supported
+* besu t8n [maintanence]
 
 # Building instructions
 Ubuntu (retesteth):
