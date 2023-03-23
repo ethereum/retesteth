@@ -4,6 +4,7 @@
 #include <retesteth/TestHelper.h>
 #include <retesteth/TestOutputHelper.h>
 #include <retesteth/testSuites/statetests/StateTests.h>
+#include <retesteth/testSuites/blockchain/BlockchainTests.h>
 #include <retesteth/testStructures/types/StateTests/GeneralStateTest.h>
 #include <libdataobj/ConvertFile.h>
 
@@ -64,13 +65,20 @@ enum class Mode
 template <class T>
 spDataObject executeSample(string const& _sample, Mode _filling = Mode::RUN)
 {
-    T suite;
-    TestSuite::TestSuiteOptions suiteOpt;
-    suiteOpt.doFilling = (_filling == Mode::FILL);
-    spDataObject input = dataobject::ConvertJsoncppStringToData(_sample);
-    spDataObject output = suite.doTests(input, suiteOpt);
-    fixInfoSection(output);
-    return output;
+    try
+    {
+        T suite;
+        TestSuite::TestSuiteOptions suiteOpt;
+        suiteOpt.doFilling = (_filling == Mode::FILL);
+        spDataObject input = dataobject::ConvertJsoncppStringToData(_sample);
+        spDataObject output = suite.doTests(input, suiteOpt);
+        fixInfoSection(output);
+        return output;
+    }
+    catch (std::exception const& _ex) {
+        BOOST_ERROR(_ex.what());
+    }
+    return spDataObject(0);
 }
 
 BOOST_FIXTURE_TEST_SUITE(TestSuites, TestOutputHelperFixture)
@@ -78,7 +86,7 @@ BOOST_FIXTURE_TEST_SUITE(TestSuites, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(fill_StateTest_multisinglenet)
 {
-    const char* argv[] = {"./retesteth", "--", "--singlenet", ">=Merge"};
+    const char* argv[] = {"./retesteth", "--", "--singlenet", ">=Merge", "--filltests"};
     OPTIONS_OVERRIDE(argv);
     auto res = executeSample<StateTestSuite>(c_sampleStateTestFiller, Mode::FILL);
     auto const test = GeneralStateTest(res).tests().at(0);
@@ -87,6 +95,131 @@ BOOST_AUTO_TEST_CASE(fill_StateTest_multisinglenet)
     BOOST_CHECK(!test.Post().count("London"));
     BOOST_CHECK(test.Post().count("Merge"));
     BOOST_CHECK(test.Post().count("Shanghai"));
+}
+
+BOOST_AUTO_TEST_CASE(fill_StateTest_singlenet)
+{
+    const char* argv[] = {"./retesteth", "--", "--singlenet", "Merge", "--filltests"};
+    OPTIONS_OVERRIDE(argv);
+    auto res = executeSample<StateTestSuite>(c_sampleStateTestFiller, Mode::FILL);
+    auto const test = GeneralStateTest(res).tests().at(0);
+
+    BOOST_CHECK(!test.Post().count("Berlin"));
+    BOOST_CHECK(!test.Post().count("London"));
+    BOOST_CHECK(test.Post().count("Merge"));
+    BOOST_CHECK(!test.Post().count("Shanghai"));
+}
+
+BOOST_AUTO_TEST_CASE(fill_BlockchainTest_poststate_wrongTx)
+{
+    const char* argv[] = {"./retesteth", "--", "--singlenet", "London", "--poststate", "2:10", "--filltests" };
+    OPTIONS_OVERRIDE(argv);
+    interceptOutput();
+    executeSample<BlockchainTestValidSuite>(c_sampleBlockchainTestFiller, Mode::FILL);
+    restoreOutput();
+    BOOST_CHECK(strCout.str().find("State Dump") == string::npos);
+}
+
+BOOST_AUTO_TEST_CASE(fill_BlockchainTest_poststate_wrongBlock)
+{
+    const char* argv[] = {"./retesteth", "--", "--singlenet", "London", "--poststate", "3:0", "--filltests" };
+    OPTIONS_OVERRIDE(argv);
+    interceptOutput();
+    executeSample<BlockchainTestValidSuite>(c_sampleBlockchainTestFiller, Mode::FILL);
+    restoreOutput();
+    BOOST_CHECK(strCout.str().find("State Dump") == string::npos);
+}
+
+BOOST_AUTO_TEST_CASE(fill_BlockchainTest_poststate_blockTx)
+{
+    const char* argv[] = {"./retesteth", "--", "--singlenet", "London", "--poststate", "2:0", "--filltests" };
+    OPTIONS_OVERRIDE(argv);
+    interceptOutput();
+    executeSample<BlockchainTestValidSuite>(c_sampleBlockchainTestFiller, Mode::FILL);
+    restoreOutput();
+
+    // State Dump is correct for bl:tx selection
+    BOOST_CHECK(strCout.str().find(R"("nonce" : "0x02")") != string::npos);
+    BOOST_CHECK(strCout.str().find(R"("storage" : {
+            "0x01" : "0x01",
+            "0x02" : "0x01"
+        })") != string::npos);
+
+    // Only one state Dump
+    size_t pos = strCout.str().find("State Dump:");
+    BOOST_CHECK(pos != string::npos);
+    pos = strCout.str().find("State Dump:", pos + 2);
+    BOOST_CHECK(pos == string::npos);
+}
+
+BOOST_AUTO_TEST_CASE(run_BlockchainTest_poststate_blockTx)
+{
+    const char* argv[] = {"./retesteth", "--", "--singlenet", "London", "--poststate", "2:0" };
+    OPTIONS_OVERRIDE(argv);
+    interceptOutput();
+    executeSample<BlockchainTestValidSuite>(c_sampleBlockchainTestFilled, Mode::RUN);
+    restoreOutput();
+
+    // State Dump is correct for bl:tx selection
+    BOOST_CHECK(strCout.str().find(R"("nonce" : "0x02")") != string::npos);
+    BOOST_CHECK(strCout.str().find(R"("storage" : {
+            "0x01" : "0x01",
+            "0x02" : "0x01"
+        })") != string::npos);
+
+    // Only one state Dump
+    size_t pos = strCout.str().find("State Dump:");
+    BOOST_CHECK(pos != string::npos);
+    pos = strCout.str().find("State Dump:", pos + 2);
+    BOOST_CHECK(pos == string::npos);
+}
+
+BOOST_AUTO_TEST_CASE(fill_BlockchainTest_poststate)
+{
+    const char* argv[] = {"./retesteth", "--", "--singlenet", "London", "--poststate", "--filltests" };
+    OPTIONS_OVERRIDE(argv);
+    interceptOutput();
+    executeSample<BlockchainTestValidSuite>(c_sampleBlockchainTestFiller, Mode::FILL);
+    restoreOutput();
+
+    // State Dump is correct for bl:tx selection
+    BOOST_CHECK(strCout.str().find(R"("nonce" : "0x04")") != string::npos);
+    BOOST_CHECK(strCout.str().find(R"("storage" : {
+            "0x01" : "0x01",
+            "0x02" : "0x01",
+            "0x03" : "0x01",
+            "0x05" : "0x01"
+        })") != string::npos);
+
+    // Only one state Dump
+    size_t pos = strCout.str().find("State Dump:");
+    BOOST_CHECK(pos != string::npos);
+    pos = strCout.str().find("State Dump:", pos + 2);
+    BOOST_CHECK(pos == string::npos);
+}
+
+BOOST_AUTO_TEST_CASE(run_BlockchainTest_poststate)
+{
+    const char* argv[] = {"./retesteth", "--", "--singlenet", "London", "--poststate" };
+    OPTIONS_OVERRIDE(argv);
+    interceptOutput();
+    executeSample<BlockchainTestValidSuite>(c_sampleBlockchainTestFilled, Mode::RUN);
+    restoreOutput();
+
+    // State Dump is correct for bl:tx selection
+    BOOST_CHECK(strCout.str().find(R"("nonce" : "0x04")") != string::npos);
+    BOOST_CHECK(strCout.str().find(R"("storage" : {
+            "0x01" : "0x01",
+            "0x02" : "0x01",
+            "0x03" : "0x01",
+            "0x05" : "0x01"
+        })") != string::npos);
+
+    // Only one state Dump
+    size_t pos = strCout.str().find("State Dump:");
+    BOOST_CHECK(pos != string::npos);
+    pos = strCout.str().find("State Dump:", pos + 2);
+    BOOST_CHECK(pos == string::npos);
 }
 
 BOOST_AUTO_TEST_CASE(run_StateTest_multisinglenet)
@@ -101,6 +234,20 @@ BOOST_AUTO_TEST_CASE(run_StateTest_multisinglenet)
     BOOST_CHECK(strCout.str().find("fork: London") == string::npos);
     BOOST_CHECK(strCout.str().find("fork: Merge") != string::npos);
     BOOST_CHECK(strCout.str().find("fork: Shanghai") != string::npos);
+}
+
+BOOST_AUTO_TEST_CASE(run_StateTest_singlenet)
+{
+    const char* argv[] = {"./retesteth", "--", "--singlenet", "Merge", "--verbosity", "5"};
+    OPTIONS_OVERRIDE(argv);
+    interceptOutput();
+    executeSample<StateTestSuite>(c_sampleStateTestFilled, Mode::RUN);
+    restoreOutput();
+
+    BOOST_CHECK(strCout.str().find("fork: Berlin") == string::npos);
+    BOOST_CHECK(strCout.str().find("fork: London") == string::npos);
+    BOOST_CHECK(strCout.str().find("fork: Merge") != string::npos);
+    BOOST_CHECK(strCout.str().find("fork: Shanghai") == string::npos);
 }
 
 #endif
