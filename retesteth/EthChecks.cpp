@@ -10,6 +10,24 @@ using namespace std;
 mutex g_debugFlagAccess;
 namespace test::debug
 {
+
+Debug const& Debug::get()
+{
+    static Debug instance;
+    #if defined(UNITTESTS) || defined(__DEBUG__)
+    {
+        if (TestOptions::isOverride())
+        {
+            static Debug* instance;
+            // Reinitialize debug with test options
+            instance = new Debug();
+            return *instance;
+        }
+    }
+    #endif
+    return instance;
+}
+
 Debug::Debug()
 {
     for (int channel = DC::RPC; channel != DC::LOWLOG; channel++)
