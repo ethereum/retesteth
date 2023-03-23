@@ -290,4 +290,15 @@ private:
     std::vector<Option*> m_options;
 };
 
+class TestOptions
+{
+public:
+    TestOptions(int argc = 0, const char** argv = 0) : m_opt(argc, argv) {}
+    Options const& get() { return m_opt; }
+    void overrideMainOptions() const;
+
+private:
+    Options m_opt;
+};
+
 } //namespace test

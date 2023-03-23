@@ -123,7 +123,7 @@ void expandUnitTestsArg(int _argc, const char* _argv[])
         {
             _argv[i + 1] =
                 "LLLCSuite,SOLCSuite,DataObjectTestSuite,EthObjectsSuite,OptionsSuite,TestHelperSuite,ExpectSectionSuite,"
-                "trDataCompileSuite,StructTest,MemoryLeak";
+                "trDataCompileSuite,StructTest,MemoryLeak,TestSuites";
             break;
         }
     }
