@@ -219,7 +219,7 @@ void ToolChain::setAndCheckDifficulty(VALUE const& _difficulty, spBlockHeader& _
 
 void ToolChain::setWithdrawalsRoot(FH32 const& _withdrawalsRoot, spBlockHeader& _pendingHeader)
 {
-    if (isBlockExportWithdrawals(_pendingHeader))
+    if (!_withdrawalsRoot.isZero())
     {
         BlockHeaderShanghai& pendingFixedShanghaiHeader = BlockHeaderShanghai::castFrom(_pendingHeader.getContent());
         pendingFixedShanghaiHeader.setWithdrawalsRoot(_withdrawalsRoot);

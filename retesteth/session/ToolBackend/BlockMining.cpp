@@ -48,7 +48,7 @@ void BlockMining::prepareEnvFile()
     if (isBlockExportCurrentRandom(currentBlockH))
         (*envData)["currentRandom"] = currentBlockH->mixHash().asString();
 
-    if (isBlockExportWithdrawals(currentBlockH))
+    if (isBlockExportWithdrawals(currentBlockH) || m_currentBlockRef.withdrawals().size())
     {
         (*envData).atKeyPointer("withdrawals") = spDataObject(new DataObject(DataType::Array));
         for (auto const& wt : m_currentBlockRef.withdrawals())
