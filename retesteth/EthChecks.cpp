@@ -18,8 +18,10 @@ Debug const& Debug::get()
     {
         if (TestOptions::isOverride())
         {
-            static Debug* instance;
+            static Debug* instance = nullptr;
             // Reinitialize debug with test options
+            if (instance != nullptr)
+                delete instance;
             instance = new Debug();
             return *instance;
         }

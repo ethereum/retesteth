@@ -46,9 +46,9 @@ GeneralStateTest::GeneralStateTest(spDataObject& _data)
     try
     {
         ETH_ERROR_REQUIRE_MESSAGE(_data->type() == DataType::Object,
-            TestOutputHelper::get().get().testFile().string() + " A test file must contain an object value (json/yaml).");
+            TestOutputHelper::get().testFile().string() + " A test file must contain an object value (json/yaml).");
         ETH_ERROR_REQUIRE_MESSAGE(_data->getSubObjects().size() == 1,
-            TestOutputHelper::get().get().testFile().string() + " A test file must contain exactly one test!");
+            TestOutputHelper::get().testFile().string() + " A test file must contain exactly one test!");
 
         m_tests.reserve(_data.getContent().getSubObjects().size());
         for (auto& el : _data.getContent().getSubObjectsUnsafe())
