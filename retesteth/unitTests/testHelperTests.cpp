@@ -37,23 +37,40 @@ bool hasNetwork(std::vector<FORK> const& _container, FORK const& _net)
             return true;
     return false;
 }
-static vector<FORK> exampleNets = {FORK("Frontier"), FORK("Homestead"), FORK("EIP150"), FORK("EIP158"), FORK("Byzantium"),
-    FORK("Constantinople"), FORK("ConstantinopleFix")};
+static vector<FORK> exampleNets =
+    {
+        FORK("Frontier"),
+        FORK("Homestead"),
+        FORK("EIP150"),
+        FORK("EIP158"),
+        FORK("Byzantium"),
+        FORK("Constantinople"),
+        FORK("ConstantinopleFix")
+    };
 
 class Initializer : public TestOutputHelperFixture
 {
 public:
     Initializer()
     {
-        for (auto const& config : Options::getDynamicOptions().getClientConfigs())
-        {
-            Options::getDynamicOptions().setCurrentConfig(config);
-            vector<FORK> const& forks = Options::getCurrentConfig().cfgFile().forks();
-            vector<FORK>& forksCheat = const_cast<vector<FORK>&>(forks);
-            forksCheat = exampleNets;
-            break;
-        }
+        auto const& configs = Options::getDynamicOptions().getClientConfigs();
+        BOOST_CHECK(configs.size() > 0);
+        auto const& config = configs.at(0);
+        Options::getDynamicOptions().setCurrentConfig(config);
+        vector<FORK> const& forks = Options::getCurrentConfig().cfgFile().forks();
+        forksBackup = forks;
+        vector<FORK>& forksCheat = const_cast<vector<FORK>&>(forks);
+        forksCheat = exampleNets;
     }
+    ~Initializer()
+    {
+        // force config unload as we messed it up
+        std::vector<ClientConfig> const& configs = Options::getDynamicOptions().getClientConfigs();
+        std::vector<ClientConfig>& configsCheat = const_cast<std::vector<ClientConfig>&>(configs);
+        configsCheat.clear();
+    }
+private:
+    vector<FORK> forksBackup;
 };
 
 }  // namespace

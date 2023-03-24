@@ -260,7 +260,7 @@ public:
     struct DynamicOptions
     {
         DynamicOptions() {}
-        std::vector<ClientConfig> const& getClientConfigs();
+        std::vector<ClientConfig> const& getClientConfigs() const;
         ClientConfig const& getCurrentConfig() const;
         void setCurrentConfig(ClientConfig const& _config);
         size_t activeConfigs() const;
@@ -269,7 +269,7 @@ public:
 
     private:
         std::set<FORK> m_runOnlyNetworks;
-        std::vector<ClientConfig> m_clientConfigs;
+        mutable std::vector<ClientConfig> m_clientConfigs;
         test::ClientConfigID m_currentConfigID = test::ClientConfigID::null();
     };
 
@@ -296,6 +296,7 @@ public:
     TestOptions(int argc = 0, const char** argv = 0) : m_opt(argc, argv) {}
     Options const& get() { return m_opt; }
     void overrideMainOptions() const;
+    ~TestOptions();
 
     static bool isOverride();
     static Options const& getOverride();

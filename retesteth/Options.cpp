@@ -332,6 +332,14 @@ void TestOptions::overrideMainOptions() const
     m_isOverride = true;
     m_global_test_opt = &m_opt;
 }
+
+TestOptions::~TestOptions()
+{
+    std::lock_guard<std::mutex> lock(g_optionsOverride);
+    m_isOverride = false;
+    m_global_test_opt = nullptr;
+}
+
 Options const& TestOptions::getOverride()
 {
     std::lock_guard<std::mutex> lock(g_optionsOverride);

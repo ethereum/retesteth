@@ -6,9 +6,6 @@ using namespace std;
 using namespace test::teststruct;
 namespace fs = boost::filesystem;
 
-std::mutex g_allowedForks_static_var;
-std::mutex g_forkProgressionAsSet_static_var;
-
 namespace
 {
 void requireJsonFileStructure(DataObject const& _data)
@@ -260,32 +257,28 @@ std::vector<IPADDRESS> const& ClientConfigFile::socketAdresses() const
     return m_socketAddress;
 }
 
-std::set<FORK> ClientConfigFile::allowedForks() const
+std::set<FORK> const& ClientConfigFile::allowedForks() const
 {
-    std::lock_guard<std::mutex> lock(g_allowedForks_static_var);
-    static std::set<FORK> out;
-    if (out.size() == 0)
+    if (m_allowedForks.size() == 0)
     {
         for (auto const& el : m_forks)
-            out.insert(el);
+            m_allowedForks.insert(el);
         for (auto const& el : m_additionalForks)
-            out.insert(el);
+            m_allowedForks.insert(el);
         for (auto const& el : m_skipForks)
-            out.insert(el);
+            m_allowedForks.insert(el);
     }
-    return out;
+    return m_allowedForks;
 }
 
-std::set<FORK> ClientConfigFile::forkProgressionAsSet() const
+std::set<FORK> const& ClientConfigFile::forkProgressionAsSet() const
 {
-    std::lock_guard<std::mutex> lock(g_forkProgressionAsSet_static_var);
-    static std::set<FORK> out;
-    if (out.size() == 0)
+    if (m_forkProgressionAsSet.size() == 0)
     {
         for (auto const& el : m_forks)
-            out.insert(el);
+            m_forkProgressionAsSet.insert(el);
     }
-    return out;
+    return m_forkProgressionAsSet;
 }
 
 

@@ -30,8 +30,8 @@ struct ClientConfigFile : GCP_SPointerBase
     std::vector<FORK> const& forks() const { return m_forks; }
     std::vector<FORK> const& additionalForks() const { return m_additionalForks; }
     std::vector<FORK> const& fillerSkipForks() const { return m_skipForks; }
-    std::set<FORK> allowedForks() const;
-    std::set<FORK> forkProgressionAsSet() const;
+    std::set<FORK> const& allowedForks() const;
+    std::set<FORK> const& forkProgressionAsSet() const;
     bool checkLogsHash() const { return m_checkLogsHash; }
 
     bool checkDifficulty() const { return m_checkDifficulty; }
@@ -81,6 +81,10 @@ private:
     // Additional values
     boost::filesystem::path m_configFilePath;  ///< Path to the config file
     boost::filesystem::path m_pathToExecFile;  ///< Path to cmd that runs the client instance (for t8ntool)
+private:
+    // Optimisations
+    mutable std::set<FORK> m_forkProgressionAsSet;
+    mutable std::set<FORK> m_allowedForks;
 };
 
 

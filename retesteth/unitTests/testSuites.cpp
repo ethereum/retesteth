@@ -34,10 +34,12 @@ void restoreOutput()
 }
 
 #define OPTIONS_OVERRIDE(ARGV) \
-    TestOptions opt(std::size(ARGV), ARGV); \
-    opt.overrideMainOptions();              \
-    auto const& config = Options::getDynamicOptions().getClientConfigs().at(0);  \
-    Options::getDynamicOptions().setCurrentConfig(config);
+    TestOptions opt(std::size(ARGV), ARGV);                     \
+    opt.overrideMainOptions();                                  \
+    auto& dopt = Options::getDynamicOptions();                  \
+    BOOST_CHECK(dopt.getClientConfigs().size() > 0);            \
+    auto const& config = dopt.getClientConfigs().at(0);         \
+    dopt.setCurrentConfig(config);
 
 void fixInfoSection(spDataObject _test)
 {
@@ -89,6 +91,7 @@ BOOST_AUTO_TEST_CASE(fill_StateTest_multisinglenet)
 {
     const char* argv[] = {"./retesteth", "--", "--singlenet", ">=Merge", "--filltests"};
     OPTIONS_OVERRIDE(argv);
+
     auto res = executeSample<StateTestSuite>(c_sampleStateTestFiller, Mode::FILL);
     auto const test = GeneralStateTest(res).tests().at(0);
 
@@ -103,6 +106,7 @@ BOOST_AUTO_TEST_CASE(fill_StateTest_singlenet)
     const char* argv[] = {"./retesteth", "--", "--singlenet", "Merge", "--filltests"};
     OPTIONS_OVERRIDE(argv);
     auto res = executeSample<StateTestSuite>(c_sampleStateTestFiller, Mode::FILL);
+    BOOST_CHECK(!res.isEmpty());
     auto const test = GeneralStateTest(res).tests().at(0);
 
     BOOST_CHECK(!test.Post().count("Berlin"));

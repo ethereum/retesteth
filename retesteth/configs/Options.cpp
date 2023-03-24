@@ -110,7 +110,7 @@ void Options::DynamicOptions::setCurrentConfig(ClientConfig const& _config)
     }
 }
 
-std::vector<ClientConfig> const& Options::DynamicOptions::getClientConfigs()
+std::vector<ClientConfig> const& Options::DynamicOptions::getClientConfigs() const
 {
     // if no Configs initialized, initialize the configs
     // Because can not initialize the configs while loading Options up
