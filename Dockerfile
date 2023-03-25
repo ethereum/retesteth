@@ -1,12 +1,18 @@
 FROM ubuntu:20.04 as retesteth
 
-ARG BESU=""
-ARG GETH=""
-ARG NIMBUS=""
-ARG ETHEREUMJS=""
+ARG BESU_SRC=""
+ARG ETEREUMJS_SRC="https://github.com/ethereumjs/ethereumjs-monorepo.git"
+ARG RETESTETH_SRC="https://github.com/ethereum/retesteth.git"
+ARG GETH_SRC="https://github.com/ethereum/go-ethereum.git"
+ARG NIMBUS_SRC="https://github.com/status-im/nimbus-eth1.git"
+
+ARG BESU="master"
+ARG GETH="master"
+ARG NIMBUS="master"
+ARG ETHEREUMJS="master"
+ARG RETESTETH="develop"
+
 SHELL ["/bin/bash", "-c"]
-
-
 ENV TZ=Etc/UTC
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
@@ -20,17 +26,16 @@ RUN apt-get update \
     && apt-get install --yes libboost-filesystem-dev libboost-system-dev libboost-program-options-dev libboost-test-dev \
     && rm -rf /var/lib/apt/lists/*
 RUN rm /usr/bin/python3 && ln -s /usr/bin/python3.10 /usr/bin/python3
-#  libboost-all-dev
 
 
 # Retesteth
 # ADD . /retesteth
-#RUN git clone --depth 1 -b master https://github.com/ethereum/retesteth.git /retesteth
-#RUN mkdir /build && cd /build \
-#    && cmake /retesteth -DCMAKE_BUILD_TYPE=Release \
-#    && make -j8 \
-#    && cp /build/retesteth/retesteth /usr/bin/retesteth \
-#    && rm -rf /build /retesteth /var/cache/* /root/.hunter/*
+RUN git clone $RETESTETH_SRC /retesteth
+RUN cd /retesteth && git fetch && git checkout $RETESTETH && mkdir /build && cd /build \
+    && cmake /retesteth -DCMAKE_BUILD_TYPE=Release \
+    && make -j8 \
+    && cp /build/retesteth/retesteth /usr/bin/retesteth \
+    && rm -rf /build /retesteth /var/cache/* /root/.hunter/*
 
 # Tests
 #RUN git clone --depth 1 -b master https://github.com/ethereum/tests /tests
@@ -56,8 +61,8 @@ RUN cd /execution-spec-tests \
 
 # Geth
 RUN test -n "$GETH" \
-     && git clone --depth 1 -b master https://github.com/ethereum/go-ethereum.git /geth \
-     && cd /geth \
+     && git clone $GETH_SRC /geth \
+     && cd /geth && git fetch && git checkout $GETH \
      && wget https://dl.google.com/go/go1.19.linux-amd64.tar.gz \
      && tar -xvf go1.19.linux-amd64.tar.gz \
      && mv go /usr/local && ln -s /usr/local/go/bin/go /bin/go \
@@ -71,8 +76,8 @@ RUN test -n "$NIMBUS" \
      && apt-get update \
      && apt-get install --yes librocksdb-dev \
      && rm -rf /var/lib/apt/lists/* \
-     && git clone --recursive --depth 1 -b master https://github.com/status-im/nimbus-eth1.git /nimbus \
-     && cd /nimbus && make t8n \
+     && git clone --recursive $NIMBUS_SRC /nimbus \
+     && cd /nimbus && git fetch && git checkout $NIMBUS && make t8n \
      && cp /nimbus/tools/t8n/t8n /bin/evm_nimbus \
      && rm -rf /nimbus \
     || echo "Nimbus is empty"
@@ -82,8 +87,9 @@ RUN test -n "$ETHEREUMJS" \
      && wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash \
      && . ~/.nvm/nvm.sh \
      && nvm install 19 && nvm alias default 19 && nvm use default \
-     && git clone --depth 1 -b master https://github.com/ethereumjs/ethereumjs-monorepo.git /ethereumjs \
-     && cd /ethereumjs && npm i && npm run build --workspaces \
+     && cp -r ~/.nvm/versions/node/v19*/* /usr \
+     && git clone $ETEREUMJS_SRC /ethereumjs \
+     && cd /ethereumjs && git fetch && git checkout $ETHEREUMJS && npm i && npm run build --workspaces \
     || echo "Ethereumjs is empty"
 
 ENTRYPOINT ["/usr/bin/retesteth"]
