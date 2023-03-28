@@ -8,7 +8,9 @@ installImage() {
 
     if [ "$SCRIPT" != "/usr/bin/$SCRIPT_NAME" ]; then
       sudo ln -s "$SCRIPT" "/usr/bin/$SCRIPT_NAME_LINK"
+      sudo ln -s "$SCRIPT" "/usr/bin/dr"
       echo "Added link /usr/bin/$SCRIPT_NAME_LINK >> $SCRIPT"
+      echo "Added link /usr/bin/dr >> $SCRIPT"
     fi
     exit 0
 }
@@ -53,7 +55,6 @@ esac
 
 
 # Parse arguments and intercept --testpath argument for docker
-separator=0
 testpaths=0
 argstring=""
 clientsopt=0
@@ -62,7 +63,6 @@ cwd=$(pwd)
 for var in "$@"
 do
     if [ "$var" = "--" ]; then
-        separator=1
         argstring=$argstring" "$var
         continue
     fi
@@ -81,7 +81,7 @@ do
         testpath=$var
         continue
     fi
-    if [ "$var" = "--clients" ] && [ "$separator" -eq "1" ]; then
+    if [ "$var" = "--clients" ]; then
         clientsopt=1
     fi
     argstring=$argstring" "$var
