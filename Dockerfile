@@ -65,8 +65,8 @@ RUN cd /execution-spec-tests && git fetch && git checkout $PYSPECS \
     && python3 -m venv ./venv/ \
     && source ./venv/bin/activate \
     && pip install -e . \
-    && wget https://github.com/ethereum/retesteth/blob/develop/web/tfinit.sh \
-    && tfinit.sh /usr/bin/tfinit.sh \
+    && wget https://raw.githubusercontent.com/ethereum/retesteth/develop/web/tfinit.sh \
+    && cp tfinit.sh /usr/bin/tfinit.sh \
     && chmod +x /usr/bin/tfinit.sh
 
 
@@ -107,9 +107,12 @@ RUN test -n "$ETHEREUMJS" \
 RUN test -n "$BESU" \
      && git clone $BESU_SRC /besu \
      && cd /besu && git fetch && git checkout $BESU \
-     && ./gradlew build && ./gradlew installDist && ./gradlew ethereum:evmtool:installDist \
-     && cp /besu/ethereum/evmtool/build/install/evmtool/bin/evm /bin/besuevm \
+     && ./gradlew build \
+    || echo "Besu is empty"
+
+RUN test -n "$BESU" \
+     && cd /besu && ./gradlew ethereum:evmtool:installDist \
+     && ln -s /besu/ethereum/evmtool/build/install/evmtool/bin/evm /usr/bin/besuevm \
     || echo "Besu is empty"
 
 ENTRYPOINT ["/usr/bin/retesteth"]
-#ENTRYPOINT ["/usr/bin/tfinit.sh"]
