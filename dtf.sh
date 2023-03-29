@@ -8,22 +8,15 @@ installImage() {
 
     if [ "$SCRIPT" != "/usr/bin/$SCRIPT_NAME" ]; then
       sudo ln -s "$SCRIPT" "/usr/bin/$SCRIPT_NAME_LINK"
+      sudo ln -s "$SCRIPT" "/usr/bin/dr"
       echo "Added link /usr/bin/$SCRIPT_NAME_LINK >> $SCRIPT"
-      if [ "$SCRIPT_NAME" = "dretesteth.sh" ]; then
-        sudo ln -s "$SCRIPT" "/usr/bin/dr"
-        echo "Added link /usr/bin/dr >> $SCRIPT"
-      fi
+      echo "Added link /usr/bin/dr >> $SCRIPT"
     fi
     exit 0
 }
 
 buildImage () {
     docker build -t retesteth .
-    exit 0
-}
-
-rebuildImage () {
-    docker build --no-cache -t retesteth .
     exit 0
 }
 
@@ -50,9 +43,6 @@ case $1 in
     "build")
         buildImage
         ;;
-    "rebuild")
-        rebuildImage
-        ;;
     "install")
         installImage
         ;;
@@ -61,65 +51,6 @@ case $1 in
         ;;
 esac
 
-
-# Pyspecs
-SCRIPT=$(readlink -f "$0")
-SCRIPT_NAME=$(basename "$SCRIPT")
-if [ "$SCRIPT_NAME" = "dtf.sh" ]; then
-    clientsopt=0
-    argstring=""
-    for var in "$@"
-    do
-        if [ "$var" = "--clients" ]; then
-            clientsopt=1
-            continue
-        fi
-        if [ "$clientsopt" -eq "1" ]; then
-            clientsopt=0
-            binpath=""
-            if [ "$var" = "geth" ]; then
-                binpath="/bin/evm"
-            fi
-            if [ "$var" = "nimbus" ]; then
-                binpath="/bin/evm_nimbus"
-            fi
-            if [ "$var" = "besu" ]; then
-                binpath="/usr/bin/besuevm"
-            fi
-            if [ "$var" = "ethereumjs" ]; then
-                echo "ethereumjs no supported yet"
-                binpath=""
-                exit 1
-            fi
-            argstring=$argstring" --evm-bin "$binpath
-            continue
-        fi
-        if [ "$var" = "--testpath" ]; then
-            testpaths=1
-            continue
-        fi
-        if [ "$testpaths" -eq "1" ]; then
-            testpaths=0
-            testpath=$var
-            continue
-        fi
-        argstring=$argstring" "$var
-    done
-
-    if [ "$testpath" = "notfound" ]; then
-       echo "Please set up the --testpath option! (ex: './dtf.sh --testpath /data/execution-spec-tests')"
-       exit 1
-    fi
-
-    if [[ "$cwd" == "$testpath"* ]]; then
-      dockerwdir="/tests${cwd/$testpath/}"
-    else
-      dockerwdir="/"
-    fi
-
-    docker run --entrypoint /usr/bin/tfinit.sh -it -w $dockerwdir -e ETHEREUMJS_PATH=/ethereumjs -e PYSPECS_PATH=/execution-spec-tests -v $testpath:/tests retesteth $argstring
-    exit 0
-fi
 
 
 
