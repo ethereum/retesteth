@@ -40,7 +40,7 @@ RUN test -n "$RETESTETH" \
     && make -j8 \
     && cp /build/retesteth/retesteth /usr/bin/retesteth \
     && rm -rf /build /retesteth /var/cache/* /root/.hunter/* \
-    || echo "Retesteth is empty"
+    || echo "Retesteth is empty" > /usr/bin/retesteth
 
 # Tests
 #RUN git clone --depth 1 -b master https://github.com/ethereum/tests /tests

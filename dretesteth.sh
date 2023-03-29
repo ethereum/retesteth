@@ -67,6 +67,7 @@ SCRIPT=$(readlink -f "$0")
 SCRIPT_NAME=$(basename "$SCRIPT")
 if [ "$SCRIPT_NAME" = "dtf.sh" ]; then
     clientsopt=0
+    testpaths=0
     argstring=""
     for var in "$@"
     do
@@ -101,6 +102,12 @@ if [ "$SCRIPT_NAME" = "dtf.sh" ]; then
         if [ "$testpaths" -eq "1" ]; then
             testpaths=0
             testpath=$var
+            continue
+        fi
+
+        if [[ "$var" == *"--filler-path"* ]] || [[ "$var" == *"--output"* ]]; then
+            corrected=${var/=/=/tests/}
+            argstring=$argstring" "$corrected
             continue
         fi
         argstring=$argstring" "$var
