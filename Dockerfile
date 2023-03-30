@@ -6,6 +6,7 @@ ARG ETEREUMJS_SRC="https://github.com/ethereumjs/ethereumjs-monorepo.git"
 ARG RETESTETH_SRC="https://github.com/ethereum/retesteth.git"
 ARG GETH_SRC="https://github.com/ethereum/go-ethereum.git"
 ARG NIMBUS_SRC="https://github.com/status-im/nimbus-eth1.git"
+ARG EVMONE_SRC="https://github.com/ethereum/evmone.git"
 
 ARG BESU="main"
 ARG GETH="master"
@@ -13,6 +14,7 @@ ARG NIMBUS="master"
 ARG ETHEREUMJS="master"
 ARG RETESTETH="develop"
 ARG PYSPECS="main"
+ARG EVMONE="master"
 
 SHELL ["/bin/bash", "-c"]
 ENV TZ=Etc/UTC
@@ -24,23 +26,15 @@ RUN apt-get update \
     && add-apt-repository -y ppa:ubuntu-toolchain-r/test \
     && add-apt-repository -y ppa:deadsnakes/ppa  \
     && add-apt-repository ppa:linuxuprising/java \
-    && apt-get install --yes git cmake make perl psmisc curl wget gcc-11 python3.10 python3.10-venv python3-pip python3-dev \
+    && apt-get install --yes git cmake make perl psmisc curl wget gcc-11 g++-11 python3.10 python3.10-venv python3-pip python3-dev \
     && apt-get install --yes libboost-filesystem-dev libboost-system-dev libboost-program-options-dev libboost-test-dev \
     && echo oracle-java17-installer shared/accepted-oracle-license-v1-3 select true | /usr/bin/debconf-set-selections  \
     && apt-get install --yes oracle-java17-installer oracle-java17-set-default \
     && rm -rf /var/lib/apt/lists/*
-RUN rm /usr/bin/python3 && ln -s /usr/bin/python3.10 /usr/bin/python3
-
-
-# Retesteth
-RUN test -n "$RETESTETH" \
-    && git clone $RETESTETH_SRC /retesteth \
-    && cd /retesteth && git fetch && git checkout $RETESTETH && mkdir /build && cd /build \
-    && cmake /retesteth -DCMAKE_BUILD_TYPE=Release \
-    && make -j8 \
-    && cp /build/retesteth/retesteth /usr/bin/retesteth \
-    && rm -rf /build /retesteth /var/cache/* /root/.hunter/* \
-    || echo "Retesteth is empty" > /usr/bin/retesteth
+RUN rm /usr/bin/python3 && ln -s /usr/bin/python3.10 /usr/bin/python3 \
+    && rm /usr/bin/gcc && rm /usr/bin/g++ \
+    && ln -s /usr/bin/gcc-11 /usr/bin/gcc \
+    && ln -s /usr/bin/g++-11 /usr/bin/g++
 
 # Tests
 #RUN git clone --depth 1 -b master https://github.com/ethereum/tests /tests
@@ -114,5 +108,25 @@ RUN test -n "$BESU" \
      && cd /besu && ./gradlew ethereum:evmtool:installDist \
      && ln -s /besu/ethereum/evmtool/build/install/evmtool/bin/evm /usr/bin/besuevm \
     || echo "Besu is empty"
+
+# Evmone
+RUN test -n "$EVMONE" \
+     && git clone --recursive $EVMONE_SRC /evmone \
+     && cd /evmone && git fetch && git checkout $evmone \
+     && cmake -S . -B build -DEVMONE_TESTING=ON \
+     && cmake --build build \
+     && ln -s /evmone/build/bin/evmone-t8n /usr/bin/evmone \
+     && rm -rf /var/cache/* /root/.hunter/* \
+    || echo "Evmone is empty"
+
+# Retesteth
+RUN test -n "$RETESTETH" \
+    && git clone $RETESTETH_SRC /retesteth \
+    && cd /retesteth && git fetch && git checkout $RETESTETH && mkdir /build && cd /build \
+    && cmake /retesteth -DCMAKE_BUILD_TYPE=Release \
+    && make -j2 \
+    && cp /build/retesteth/retesteth /usr/bin/retesteth \
+    && rm -rf /build /retesteth /var/cache/* /root/.hunter/* \
+    || echo "Retesteth is empty" > /usr/bin/retesteth
 
 ENTRYPOINT ["/usr/bin/retesteth"]
