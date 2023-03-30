@@ -8,6 +8,7 @@ ARG GETH_SRC="https://github.com/ethereum/go-ethereum.git"
 ARG NIMBUS_SRC="https://github.com/status-im/nimbus-eth1.git"
 ARG EVMONE_SRC="https://github.com/ethereum/evmone.git"
 
+# Leave empty to disable the build, can point to commit hash as well
 ARG BESU="main"
 ARG GETH="master"
 ARG NIMBUS="master"
