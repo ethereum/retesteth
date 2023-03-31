@@ -190,9 +190,6 @@ bool TestSuite::_fillTest(TestSuite::TestSuiteOptions& _opt, fs::path const& _fi
     bool wereErrors = false;
     _opt.doFilling = true;
     TestOutputHelper::get().setCurrentTestFile(_fillerTestFilePath);
-
-    // TODO we already read this file when checking filler hash updated
-    // maybe store it in some map ?? but then a lot of tests in memory
     TestFileData testData = readFillerTestFile(_fillerTestFilePath);
 
     bool const isPy = (_fillerTestFilePath.extension() == ".py");
