@@ -79,20 +79,16 @@ GCP_SPointer<EthGetBlockBy> TestBlockchain::mineBlock(
     GCP_SPointer<EthGetBlockBy> remoteBlock;
     if (!minedBlockHash.isEmpty())
     {
+        // If after modifications block import succeed
         if (minedBlockHash.getCContent() != FH32::zero())
-        {
-            // If after modifications block import succeed
-            remoteBlock = GCP_SPointer<EthGetBlockBy>(
-                new EthGetBlockBy((m_session.eth_getBlockByHash(minedBlockHash.getContent(), Request::FULLOBJECTS))));
-        }
+            remoteBlock = m_session.eth_getBlockByHash(minedBlockHash.getContent(), Request::FULLOBJECTS);
         else
             return remoteBlock;  // after modifications block import failed. but that was expected.
     }
     else
     {
         // There was no block modifications, it is just a regular mining
-        remoteBlock = GCP_SPointer<EthGetBlockBy>(
-            new EthGetBlockBy((m_session.eth_getBlockByNumber(latestBlockNumber, Request::FULLOBJECTS))));
+        remoteBlock = m_session.eth_getBlockByNumber(latestBlockNumber, Request::FULLOBJECTS);
         _rawRLP = remoteBlock->getRLPHeaderTransactions();
     }
 

@@ -346,7 +346,8 @@ string getTestTArg(fs::path const& _cwd, string const& arg)
         "GeneralStateTests", "BlockchainTests",
         "GeneralStateTestsFiller", "BlockchainTestsFiller",
         "EOFTests", "EOFTestsFiller",
-        "EIPTests", "EIPTestsFiller"};
+        "EIPTests", "EIPTestsFiller",
+        "TransactionTests", "TransactionTestsFiller"};
     string tArg;
     fs::path cwd = _cwd;
     while(!test::inArray(supportedSuites, cwd.stem().string()) && !cwd.empty())

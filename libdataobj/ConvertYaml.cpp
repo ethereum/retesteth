@@ -52,7 +52,12 @@ spDataObject ConvertYamlToData(YAML::Node const& _node, bool _sort)
         if (_sort)
             (*jObject).setAutosort(true);
         for (auto const& i : _node)
-            (*jObject).addSubObject(i.first.as<string>(), ConvertYamlToData(i.second, _sort));
+        {
+            auto const key = i.first.as<string>();
+            if (jObject->count(key))
+                throw DataObjectException() << "parsing .yml encountered dublicated key `" + key + "`";
+            (*jObject).addSubObject(key, ConvertYamlToData(i.second, _sort));
+        }
         return jObject;
     }
 
@@ -66,8 +71,7 @@ spDataObject ConvertYamlToData(YAML::Node const& _node, bool _sort)
         return jArray;
     }
 
-    // Make it an exception!
-    std::cerr << "Error parsing YAML node. Element type not defined! " + yamlTypeAsString(_node.Type());
+    throw DataObjectException() << "Error parsing YAML node. Element type not defined! " + yamlTypeAsString(_node.Type());
     return spDataObject(new DataObject(DataType::Null));
 }
 
