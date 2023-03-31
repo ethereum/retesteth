@@ -494,6 +494,7 @@ const char** preprocessOptions(int& _argc, const char* _argv[])
         argv2[i++] = buffer;
     }
     _argc = options.size();
+    c_argv2 = argv2;
     return argv2;
 }
 

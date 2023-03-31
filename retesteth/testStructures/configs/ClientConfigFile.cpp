@@ -179,9 +179,11 @@ void ClientConfigFile::initWithData(DataObject const& _data)
     {
         if (el->asString()[0] == '/' && el->asString()[1] == '/')
             continue;
-        if (test::inArray(m_forks, FORK(el)))
+        FORK const fork(el);
+        if (test::inArray(m_forks, fork))
             ETH_ERROR_MESSAGE(sErrorPath + "`forks` section contain dublicate element: " + el->asString());
-        m_forks.emplace_back(FORK(el));
+        m_forks.emplace_back(fork);
+        m_forkProgressionAsSet.insert(fork);
     }
 
     // Read additionalForks are allowed fork names to run on this client, but not used in translation
@@ -206,6 +208,14 @@ void ClientConfigFile::initWithData(DataObject const& _data)
             m_skipForks.emplace_back(FORK(el));
         }
     }
+
+    // Build allowed forks
+    for (auto const& el : m_forks)
+        m_allowedForks.insert(el);
+    for (auto const& el : m_additionalForks)
+        m_allowedForks.insert(el);
+    for (auto const& el : m_skipForks)
+        m_allowedForks.insert(el);
 
     // When client used to fill up tests this map translate exceptionsID in test to exception string
     // returned from client
@@ -259,25 +269,11 @@ std::vector<IPADDRESS> const& ClientConfigFile::socketAdresses() const
 
 std::set<FORK> const& ClientConfigFile::allowedForks() const
 {
-    if (m_allowedForks.size() == 0)
-    {
-        for (auto const& el : m_forks)
-            m_allowedForks.insert(el);
-        for (auto const& el : m_additionalForks)
-            m_allowedForks.insert(el);
-        for (auto const& el : m_skipForks)
-            m_allowedForks.insert(el);
-    }
     return m_allowedForks;
 }
 
 std::set<FORK> const& ClientConfigFile::forkProgressionAsSet() const
 {
-    if (m_forkProgressionAsSet.size() == 0)
-    {
-        for (auto const& el : m_forks)
-            m_forkProgressionAsSet.insert(el);
-    }
     return m_forkProgressionAsSet;
 }
 
