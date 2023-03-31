@@ -171,6 +171,7 @@ BOOST_AUTO_TEST_CASE(fill_BlockchainTest_statediff_blockblock)
     BOOST_CHECK(pos1 != string::npos && pos2 != string::npos);
 
     auto data = dataobject::ConvertJsoncppStringToData(strCout.str().substr(pos1, pos2 - pos1 + 1));
+    // {"NEW: 0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba":{"code":"0x","nonce":"0x00 (0)","balance":"0x1bc16d674f285972 (2000000000006314354)","storage":{}},"0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b":{"balance":"0x016345785d8a0000 -> 0x016345785d206960 (100000000000000000 -> 99999999993080160)","nonce":"0x00 -> 0x01 (0 -> 1)"},"0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b":{"storage":{"0x01":"0x -> 0x01 (0x -> 1)"}}}
     string sha3 = dev::toCompactHexPrefixed(dev::sha3(data->asJson(0, false)));
     BOOST_CHECK(sha3 == "0x68cc7add36815d3592e0bf543355ca077060b8ab2c9afcb9ce37ee271754d621");
 

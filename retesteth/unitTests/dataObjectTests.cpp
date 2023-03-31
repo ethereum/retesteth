@@ -370,7 +370,7 @@ BOOST_AUTO_TEST_CASE(dataobject_readJson7)
     BOOST_CHECK(dObj->asJson(0, false) == res);
 }
 
-BOOST_AUTO_TEST_CASE(dataobject_readJson8)
+BOOST_AUTO_TEST_CASE(dataobject_readJson_doublefields)
 {
     string data = R"(
         {
@@ -385,8 +385,64 @@ BOOST_AUTO_TEST_CASE(dataobject_readJson8)
         }
     )";
 
-    spDataObject dObj = ConvertJsoncppStringToData(data);
-    BOOST_CHECK(dObj->asJson(0, false) == "{\"code\":\"}\"}");
+    try
+    {
+        spDataObject dObj = ConvertJsoncppStringToData(data);
+        BOOST_CHECK(dObj->asJson(0, false) == "{\"code\":\"}\"}");
+    }
+    catch (std::exception const& _ex)
+    {
+        BOOST_CHECK(string(_ex.what()).find("Reading json with dublicate fields") != string::npos);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(dataobject_readJson_doublefields_allowComments)
+{
+    string data = R"(
+        {
+            "code" :"pragma solidity ^0.4.0;",
+            "code" :"contract suicideContract",
+            "code" :"{",
+            "code" :"    function run",
+            "code" :"    {",
+            "code" :"        suicide 0x1000000000000000000000000000000000000001;",
+            "code" :"    }",
+            "code" :"}"
+        }
+    )";
+
+    try
+    {
+        dataobject::CJOptions opt;
+        opt.jsonParse = CJOptions::JsonParse::ALLOW_COMMENTS;
+        spDataObject dObj = ConvertJsoncppStringToData(data, opt);
+        BOOST_CHECK(dObj->asJson(0, false) == "{\"code\":\"}\"}");
+    }
+    catch (std::exception const& _ex)
+    {
+        BOOST_CHECK(string(_ex.what()).find("Reading json with dublicate fields") != string::npos);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(dataobject_readJson_doublefields_allowComments_actualComments)
+{
+    string data = R"(
+        {
+            "//code" :"pragma solidity ^0.4.0;",
+            "//code" :"contract suicideContract",
+            "//code" :"{",
+            "//code" :"    function run",
+            "//code" :"    {",
+            "//code" :"        suicide 0x1000000000000000000000000000000000000001;",
+            "//code" :"    }",
+            "code" :"}"
+        }
+    )";
+
+    dataobject::CJOptions opt;
+    opt.jsonParse = CJOptions::JsonParse::ALLOW_COMMENTS;
+    spDataObject dObj = ConvertJsoncppStringToData(data, opt);
+    BOOST_CHECK(dObj->asJson(0, false) == "{\"//code\":\"    }\",\"code\":\"}\"}");
 }
 
 BOOST_AUTO_TEST_CASE(dataobject_readJson9)
@@ -476,11 +532,6 @@ BOOST_AUTO_TEST_CASE(dataobject_readJson13)
        "expect" : [
         {
               "result" : {
-                  "0x0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
-                      "storage" : {
-                          "0x02" : "0"
-                      }
-                  },
                   "0x0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
                   }
              }
@@ -808,7 +859,6 @@ BOOST_AUTO_TEST_CASE(dataobject_jsonOrder)
     data["aa2"] = "2";
     data["aa70"] = "7";
     data["aa8"] = "8";
-    std::cerr << data.asJson(0) << std::endl;
     BOOST_CHECK(data.asJson(0, false) ==
                 "{\"aa1\":\"1\",\"aa2\":\"2\",\"aa3\":\"3\",\"aa31\":\"3\",\"aa5\":\"5\",\"aa7\":"
                 "\"7\",\"aa70\":\"7\",\"aa8\":\"8\"}");
@@ -887,24 +937,7 @@ BOOST_AUTO_TEST_CASE(dataobject_besuresponse)
     BOOST_CHECK(dObj->asJson(0, false) == expectedParse);
 }
 
-BOOST_AUTO_TEST_CASE(dataobject_doublefields_warning)
-{
-    string const data = R"(
-    {
-        "balance" : "1000000000000000000",
-        "nonce" : "0",
-        "nonce" : "1",
-        "code" : "0x606060405260e060020a600035046309e587a58114610031578063c04062261461004d578063dd4f1f2a1461005a575b005b61002f3373ffffffffffffffffffffffffffffffffffffffff16ff5b6100f5600061010961005e565b61002f5b60003090508073ffffffffffffffffffffffffffffffffffffffff166309e587a56040518160e060020a0281526004018090506000604051808303816000876161da5a03f1156100025750604080517f09e587a500000000000000000000000000000000000000000000000000000000815290516004828101926000929190829003018183876161da5a03f1156100025750505050565b604080519115158252519081900360200190f35b5060019056",
-        "storage" : {
-        }
-    })";
-    CJOptions opt;
-    opt.autosort = true;
-    spDataObject dObj = ConvertJsoncppStringToData(data, opt);
-    BOOST_CHECK(dObj->atKey("nonce").asString() == "1");
-}
-
-BOOST_AUTO_TEST_CASE(dataobject_doublefields_comment)
+BOOST_AUTO_TEST_CASE(dataobject_doublefields_comments_allowed)
 {
     string const data = R"(
     {
@@ -917,8 +950,34 @@ BOOST_AUTO_TEST_CASE(dataobject_doublefields_comment)
     })";
     CJOptions opt;
     opt.autosort = true;
+    opt.jsonParse = CJOptions::JsonParse::ALLOW_COMMENTS;
     spDataObject dObj = ConvertJsoncppStringToData(data, opt);
     BOOST_CHECK(dObj->atKey("//nonce").asString() == "1");
+}
+
+BOOST_AUTO_TEST_CASE(dataobject_doublefields_comments_disabled)
+{
+    string const data = R"(
+    {
+        "balance" : "1000000000000000000",
+        "//nonce" : "0",
+        "//nonce" : "1",
+        "code" : "0x606060405260e060020a600035046309e587a58114610031578063c04062261461004d578063dd4f1f2a1461005a575b005b61002f3373ffffffffffffffffffffffffffffffffffffffff16ff5b6100f5600061010961005e565b61002f5b60003090508073ffffffffffffffffffffffffffffffffffffffff166309e587a56040518160e060020a0281526004018090506000604051808303816000876161da5a03f1156100025750604080517f09e587a500000000000000000000000000000000000000000000000000000000815290516004828101926000929190829003018183876161da5a03f1156100025750505050565b604080519115158252519081900360200190f35b5060019056",
+        "storage" : {
+        }
+    })";
+
+    try
+    {
+        CJOptions opt;
+        opt.autosort = true;
+        spDataObject dObj = ConvertJsoncppStringToData(data, opt);
+        BOOST_CHECK(dObj->atKey("//nonce").asString() == "1");
+    }
+    catch (std::exception const& _ex)
+    {
+        BOOST_CHECK(string(_ex.what()).find("Reading json with dublicate fields") != string::npos);
+    }
 }
 
 

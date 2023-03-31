@@ -2,6 +2,7 @@
 #include "Options.h"
 #include "TestHelper.h"
 #include "TestSuiteHelperFunctions.h"
+//#include <libdevcore/CommonIO.h>
 
 using namespace std;
 using namespace dev;
@@ -81,6 +82,15 @@ bool checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
                 {
                     sourceHashStr = sourceHash.hex();
                     fillerHashStr = fillerData.hash.hex();
+
+                    // Correct the generated hash
+                    //auto file = dev::contentsString(_compiledTest.string());
+                    //size_t pos = file.find(sourceHashStr);
+                    //if (pos != string::npos)
+                    //{
+                    //    file = file.replace(pos, sourceHashStr.size(), fillerHashStr);
+                    //    dev::writeFile(_compiledTest.string(), file);
+                    //}
                 }
                 else
                 {

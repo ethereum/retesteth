@@ -347,9 +347,23 @@ string getTestTArg(fs::path const& _cwd, string const& arg)
         "GeneralStateTestsFiller", "BlockchainTestsFiller",
         "EOFTests", "EOFTestsFiller",
         "EIPTests", "EIPTestsFiller",
-        "TransactionTests", "TransactionTestsFiller"};
+        "TransactionTests", "TransactionTestsFiller",
+        "LegacyTests"
+    };
+    string cArg = arg;
+    if (cArg.size() > 1 && cArg.at(cArg.size() - 1) == '/')
+        cArg = cArg.erase(cArg.size() - 1);
+
     string tArg;
     fs::path cwd = _cwd;
+    bool stepinfolder = false;
+    if (test::inArray(supportedSuites, cArg))
+    {
+        stepinfolder = true;
+        if (fs::exists(cwd / cArg))
+            cwd = cwd / cArg;
+    }
+
     while(!test::inArray(supportedSuites, cwd.stem().string()) && !cwd.empty())
     {
         tArg.insert(0, cwd.stem().string() + "/");
@@ -369,16 +383,19 @@ string getTestTArg(fs::path const& _cwd, string const& arg)
                 if (cwd.parent_path().parent_path().stem() == "Constantinople")
                     headTestSuite.insert(0, "LegacyTests/Constantinople/");
             }
-            if (cwd.parent_path().stem() == "EIPTests" && headTestSuite == "BlockchainTests")
+            else if (cwd.parent_path().stem() == "EIPTests" && headTestSuite == "BlockchainTests")
                 headTestSuite.insert(0, "EIPTests/");
-
+            else if (cwd.parent_path().stem() == "Constantinople")
+                headTestSuite.insert(0, "LegacyTests/Constantinople/");
         }
-        tArg.insert(0, headTestSuite + "/");
+        if (stepinfolder)
+            tArg.insert(0, headTestSuite);
+        else
+            tArg.insert(0, headTestSuite  + "/");
     }
 
-    tArg.insert(tArg.size(), arg);
-    if (arg.at(arg.size()-1) == '/')
-        tArg = tArg.erase(tArg.size() - 1);
+    if (!stepinfolder)
+        tArg.insert(tArg.size(), cArg);
     return tArg;
 }
 
