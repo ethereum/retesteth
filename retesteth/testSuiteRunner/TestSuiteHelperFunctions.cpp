@@ -13,7 +13,7 @@ namespace fs = boost::filesystem;
 
 namespace test::testsuite
 {
-TestFileData readTestFile(fs::path const& _testFileName)
+TestFileData readFillerTestFile(fs::path const& _testFileName)
 {
     // Legacy hash validation require to sort json data upon load, thats the old algo used to calculate hash
     // Avoid time consuming legacy tests hash validation if there is no --checkhash option
@@ -27,7 +27,12 @@ TestFileData readTestFile(fs::path const& _testFileName)
     ETH_DC_MESSAGE(DC::TESTLOG, "Read json structure " + string(_testFileName.filename().c_str()));
     TestFileData testData;
     if (_testFileName.extension() == ".json")
-        testData.data = test::readJsonData(_testFileName, string(), bSortOnLoad);
+    {
+        CJOptions opt;
+        opt.autosort = bSortOnLoad;
+        opt.jsonParse = CJOptions::JsonParse::ALLOW_COMMENTS;
+        testData.data = test::readJsonData(_testFileName, opt);
+    }
     else if (_testFileName.extension() == ".yml")
         testData.data = test::readYamlData(_testFileName, bSortOnLoad);
     else if (_testFileName.extension() == ".py")

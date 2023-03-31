@@ -139,14 +139,14 @@ bool checkExcessiveComa(string const& _input, size_t _i)
 // bacuse Json::Reader::parse has a memory leak and eat too much memory on big files
 
 /// Convert Json object represented as string to DataObject
-spDataObject ConvertJsoncppStringToData(string const& _input, string const& _stopper, bool _autosort)
+spDataObject ConvertJsoncppStringToData(string const& _input, CJOptions const& _opt)
 {
     if (_input.size() < 2 || _input.find("{") == string::npos || _input.find("}") == string::npos)
         throw DataObjectException() << "ConvertJsoncppStringToData can't read json structure in file: `" + _input.substr(0, 50);
 
     std::vector<DataObject*> applyDepth;  // indexes at root array of objects that we are reading into
     spDataObject root;
-    root.getContent().setAutosort(_autosort);
+    root.getContent().setAutosort(_opt.autosort);
     DataObject* actualRoot = &root.getContent();
     bool keyEncountered = false;
 
@@ -188,16 +188,24 @@ spDataObject ConvertJsoncppStringToData(string const& _input, string const& _sto
                 applyDepth.push_back(actualRoot);
                 if (actualRoot->count(key))
                 {
-                    if (key.size() > 2 && key.at(0) != '/' && key.at(1) != '/')
-                        std::cout << "ConvertJsoncppStringToData::Warning: Reading json with dublicate fields: `"
-                                  << key << "` around: " << printDebug(i) << "\nusing the last value as default" << std::endl;
+                    bool allowedComment = false;
+                    if (_opt.jsonParse == CJOptions::JsonParse::ALLOW_COMMENTS
+                        && key.size() > 2 && key.at(0) == '/' && key.at(1) == '/')
+                        allowedComment = true;
+
+                    if (_opt.jsonParse == CJOptions::JsonParse::STRICT_JSON || !allowedComment)
+                    {
+                        throw DataObjectException() << errorPrefix
+                              + "ConvertJsoncppStringToData::Error: Reading json with dublicate fields: `"
+                              + key + "` around: " + printDebug(i) + "\n";
+                    }
                     actualRoot = &actualRoot->atKeyPointerUnsafe(key).getContent();
                     actualRoot->clearSubobjects();
                     continue;
                 }
 
                 actualRoot = &actualRoot->addSubObject(obj);
-                actualRoot->setAutosort(_autosort);
+                actualRoot->setAutosort(_opt.autosort);
                 continue;
             }
             else
@@ -241,7 +249,7 @@ spDataObject ConvertJsoncppStringToData(string const& _input, string const& _sto
             if (actualRoot->type() == DataType::Array || actualRoot->type() == DataType::Object)
             {
                 spDataObject newObj(new DataObject(DataType::Array));
-                (*newObj).setAutosort(_autosort);
+                (*newObj).setAutosort(_opt.autosort);
                 applyDepth.push_back(actualRoot);
                 actualRoot = &actualRoot->addSubObject(newObj);
 
@@ -268,7 +276,7 @@ spDataObject ConvertJsoncppStringToData(string const& _input, string const& _sto
                 throw DataObjectException()
                     << "expected '}' closing the object! around: " + printDebug(i) + ", got: `" + _input.at(i) + "'";
 
-            if (!_stopper.empty() && actualRoot->getKey() == _stopper)
+            if (!_opt.stopper.empty() && actualRoot->getKey() == _opt.stopper)
                 return root;
 
             if (applyDepth.size() == 0)

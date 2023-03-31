@@ -43,13 +43,15 @@ bool checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
     bool isTestOutdated = false;
     ETH_DC_MESSAGE(DC::TESTLOG, string("Check `") + _compiledTest.c_str() + "` hash");
     ETH_DC_MESSAGE(DC::TESTLOG, string("SrcFile `") + _sourceTest.c_str() + "`");
-    TestFileData fillerData = readTestFile(_sourceTest);
+    TestFileData fillerData = readFillerTestFile(_sourceTest);
 
     // If no hash calculated, skip the hash check
     if (!fillerData.hashCalculated)
         return isTestOutdated;
 
-    spDataObject compiledTestFileData = test::readJsonData(_compiledTest, "_info");
+    CJOptions opt;
+    opt.stopper = "_info";
+    spDataObject compiledTestFileData = test::readJsonData(_compiledTest, opt);
     for (auto const& test : compiledTestFileData->getSubObjects())
     {
         DataObject const& testRef = test.getCContent();

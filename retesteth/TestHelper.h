@@ -7,6 +7,7 @@
 #include <json/json.h>
 #endif
 #include <libdataobj/DataObject.h>
+#include <libdataobj/ConvertFile.h>
 #include <retesteth/compiler/Compiler.h>
 #include <retesteth/testStructures/basetypes/BYTES.h>
 #include <retesteth/testStructures/configs/FORK.h>
@@ -21,7 +22,7 @@ Json::Value readJson(boost::filesystem::path const& _path);
 #endif
 
 /// Safely read the json file into DataObject
-spDataObject readJsonData(boost::filesystem::path const& _file, std::string const& _stopper = std::string(), bool _autosort = false);
+spDataObject readJsonData(boost::filesystem::path const& _file, dataobject::CJOptions const& _opt = CJOptions());
 spDataObject readYamlData(boost::filesystem::path const& _file, bool _sort = false);
 spDataObject readAutoDataWithoutOptions(boost::filesystem::path const& _file, bool _sort = false);
 

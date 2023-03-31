@@ -243,7 +243,7 @@ spDataObject RPCImpl::rpcCall(
     string reply = m_socket.sendRequest(request, validator);
     ETH_DC_MESSAGE(DC::RPC, "Reply: `" + reply + "`");
 
-    spDataObject result = ConvertJsoncppStringToData(reply, string(), false);
+    spDataObject result = ConvertJsoncppStringToData(reply);
     if (result->count("error"))
         (*result)["result"] = "";
 

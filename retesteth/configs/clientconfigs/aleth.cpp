@@ -34,7 +34,6 @@ string const aleth_config = R"({
         "InvalidNumber" : "Invalid number",
         "InvalidTimestamp" : "Invalid timestamp",
         "InvalidLogBloom" : "Invalid log bloom",
-        "InvalidStateRoot" : "Invalid state root",
         "InvalidGasLimit2" : "Invalid Block GasLimit",
         "InvalidGasUsed" : "Invalid gas used",
         "InvalidBlockMixHash" : "Invalid block nonce",

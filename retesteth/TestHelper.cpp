@@ -35,14 +35,14 @@ Json::Value readJson(fs::path const& _file)
 #endif
 
 /// Safely read the json file into DataObject
-spDataObject readJsonData(fs::path const& _file, string const& _stopper, bool _autosort)
+spDataObject readJsonData(fs::path const& _file, CJOptions const& _opt)
 {
     try
     {
         string const s = dev::contentsString(_file);
         ETH_ERROR_REQUIRE_MESSAGE(
             s.length() > 0, "Contents of " + _file.string() + " is empty. Trying to parse empty file. (forgot --filltests?)");
-        return dataobject::ConvertJsoncppStringToData(s, _stopper, _autosort);
+        return dataobject::ConvertJsoncppStringToData(s, _opt);
     }
     catch (std::exception const& _ex)
     {

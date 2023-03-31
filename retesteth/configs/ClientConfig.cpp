@@ -102,7 +102,9 @@ ClientConfig::ClientConfig(fs::path const& _clientConfigPath) : m_id(ClientConfi
         m_correctMiningRewardPath = genesisTemplatePath / "correctMiningReward.json";
         ETH_FAIL_REQUIRE_MESSAGE(fs::exists(m_correctMiningRewardPath),
             "correctMiningReward.json client config not found!");
-        spDataObject correctMiningReward = test::readJsonData(m_correctMiningRewardPath);
+        CJOptions opt;
+        opt.jsonParse = CJOptions::JsonParse::ALLOW_COMMENTS;
+        spDataObject correctMiningReward = test::readJsonData(m_correctMiningRewardPath, opt);
         correctMiningReward.getContent().performModifier(mod_removeComments);
         correctMiningReward.getContent().performModifier(mod_valueToCompactEvenHexPrefixed);
         for (auto const& el : cfgFile().forks())

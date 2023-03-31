@@ -193,7 +193,7 @@ bool TestSuite::_fillTest(TestSuite::TestSuiteOptions& _opt, fs::path const& _fi
 
     // TODO we already read this file when checking filler hash updated
     // maybe store it in some map ?? but then a lot of tests in memory
-    TestFileData testData = readTestFile(_fillerTestFilePath);
+    TestFileData testData = readFillerTestFile(_fillerTestFilePath);
 
     bool const isPy = (_fillerTestFilePath.extension() == ".py");
     bool const isCopier = (_fillerTestFilePath.stem().string().rfind(c_copierPostf) != string::npos);
