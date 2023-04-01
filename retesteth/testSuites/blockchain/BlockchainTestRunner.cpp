@@ -233,8 +233,26 @@ void BlockchainTestRunner::validateTransactions(BlockchainTestBlock const& _tblo
 
         BYTES const testTr = tr->getRawBytes();
         BYTES const remoteTr = clientTr.transaction()->getRawBytes();
+        bool isRemoteTrEqualTestTr = remoteTr == testTr;
+        if (!isRemoteTrEqualTestTr)
+        {
+            auto origSender = tr->sender();
 
-        ETH_ERROR_REQUIRE_MESSAGE(remoteTr == testTr, "Error checking remote transaction, remote tr `" + remoteTr.asString() +
+            // Try a different v|chainid formula for legacy transaction
+            spDataObject data = tr->asDataObject();
+            (*data).atKeyUnsafe("v") = clientTr.transaction()->v().asString();
+            (*data).atKeyUnsafe("r") = clientTr.transaction()->r().asString();
+            (*data).atKeyUnsafe("s") = clientTr.transaction()->s().asString();
+
+            auto newTestTr = readTransaction(dataobject::move(data));
+            ETH_ERROR_REQUIRE_MESSAGE(newTestTr->sender() == origSender, "Error checking remote transaction: can't recover the same sender with remote vrs!");
+
+            BYTES& testTrCheat = const_cast<BYTES&>(testTr);
+            testTrCheat = newTestTr->getRawBytes();
+            isRemoteTrEqualTestTr = remoteTr == testTrCheat;
+        }
+
+        ETH_ERROR_REQUIRE_MESSAGE(isRemoteTrEqualTestTr, "Error checking remote transaction, remote tr `" + remoteTr.asString() +
                                                           "` is different to test tr `" + testTr.asString() + "`)");
     }
 }

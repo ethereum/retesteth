@@ -38,7 +38,8 @@ FH20 const& Transaction::sender() const
             try
             {
                 bool const legacyV = (type() == TransactionType::LEGACY && m_chainID->asBigInt() == 1);
-                dev::byte const v(legacyV ? m_v->asBigInt() - 27 : m_v->asBigInt());
+                bool const oldLegacyV = legacyV && (m_v->asDecString() == "27" || m_v->asDecString() == "28");
+                dev::byte const v(legacyV ? (oldLegacyV ? m_v->asBigInt() - 27 : m_v->asBigInt() - 37) : m_v->asBigInt());
 
                 DataObject rs;
                 rs["r"] = m_r->asString();
