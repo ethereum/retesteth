@@ -383,7 +383,8 @@ string getTestTArg(fs::path const& _cwd, string const& arg)
                 if (cwd.parent_path().parent_path().stem() == "Constantinople")
                     headTestSuite.insert(0, "LegacyTests/Constantinople/");
             }
-            else if (cwd.parent_path().stem() == "EIPTests" && headTestSuite == "BlockchainTests")
+            else if ((cwd.parent_path().stem() == "EIPTests" || cwd.parent_path().stem() == "EIPTestsFiller")
+                     && headTestSuite == "BlockchainTests")
                 headTestSuite.insert(0, "EIPTests/");
             else if (cwd.parent_path().stem() == "Constantinople")
                 headTestSuite.insert(0, "LegacyTests/Constantinople/");
@@ -402,6 +403,12 @@ string getTestTArg(fs::path const& _cwd, string const& arg)
 // Preprocess the args
 const char** preprocessOptions(int& _argc, const char* _argv[])
 {
+    for (short i = 1; i < _argc; i++)
+    {
+        string const arg = string{_argv[i]};
+        if (arg == "--help" || arg == "--version")
+            return _argv;
+    }
     // if file.json is outside of the testpath
     //    parse "retesteth file.json" ==> "retesteth -t TestSuite -- --testfile file.json"
     // else
