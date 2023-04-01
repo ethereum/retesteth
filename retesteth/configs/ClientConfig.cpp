@@ -275,10 +275,7 @@ std::string const& ClientConfig::translateException(string const& _exceptionName
     message += " ...)";
     string const error = "Config::getExceptionString '" + _exceptionName + "' not found in client config `exceptions` section! (" +
                          cfg.path().c_str() + ")" + message;
-    if (Options::get().filltests)
-        ETH_ERROR_MESSAGE(error);
-    else
-        ETH_WARNING(error);
+    ETH_ERROR_MESSAGE(error);
     // ---
     return C_EMPTY_STR;
 }

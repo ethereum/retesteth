@@ -298,7 +298,7 @@ FH32 TestBlockchain::postmineBlockHeader(BlockchainTestFillerBlock const& _block
 }
 
 // Returns true if the block is valid
-bool TestBlockchain::checkBlockException(SessionInterface const& _session, string const& _sBlockException)
+bool TestBlockchain::checkBlockException(SessionInterface const& _session, string const& _sBlockException, bool _required)
 {
     // Check malicious block import exception
     // Relies on that previous block import was exactly this block !!!
@@ -309,15 +309,34 @@ bool TestBlockchain::checkBlockException(SessionInterface const& _session, strin
     }
     else
     {
-        std::string const& clientExceptionString =
-            Options::get().getCurrentConfig().translateException(_sBlockException);
-        size_t pos = _session.getLastRPCError().message().find(clientExceptionString);
-        if (clientExceptionString.empty())
-            pos = string::npos;
-        ETH_ERROR_REQUIRE_MESSAGE(pos != string::npos,
-            cYellow + _sBlockException + cRed + " Not found in client response to postmine block tweak!" +
-                "\nImport result of postmine block: \n'" + cYellow + _session.getLastRPCError().message() + cRed +
-                "',\n Test Expected: \n'" + cYellow + clientExceptionString + cRed + "'\n");
+        auto const& cfg = Options::get().getCurrentConfig();
+        if (_required)
+        {
+            string const& clientExceptionString = cfg.translateException(_sBlockException);
+            size_t pos = _session.getLastRPCError().message().find(clientExceptionString);
+            if (clientExceptionString.empty())
+                pos = string::npos;
+            ETH_ERROR_REQUIRE_MESSAGE(pos != string::npos,
+                cYellow + _sBlockException + cRed + " Not found in client response to postmine block tweak!" +
+                    "\nImport result of postmine block: \n'" + cYellow + _session.getLastRPCError().message() + cRed +
+                    "',\n Test Expected: \n'" + cYellow + clientExceptionString + cRed + "'\n");
+        }
+        else
+        {
+            bool knowException = cfg.cfgFile().exceptions().count(_sBlockException);
+            string const& clientExceptionString = knowException ? cfg.translateException(_sBlockException) : _sBlockException;
+            size_t pos = _session.getLastRPCError().message().find(clientExceptionString);
+            if (clientExceptionString.empty())
+                pos = string::npos;
+
+            if (pos == string::npos)
+            {
+                ETH_WARNING(
+                    cYellow + _sBlockException + cDefault + " Not found in client response to postmine block tweak!" +
+                    "\nImport result of postmine block: \n'" + cYellow + _session.getLastRPCError().message() + cDefault +
+                    "',\n Test Expected: \n'" + cYellow + clientExceptionString + cDefault + "'\n");
+            }
+        }
         return false;  // block is not valid
     }
     return true;  // block is valid

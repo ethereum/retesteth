@@ -121,7 +121,7 @@ bool BlockchainTestRunner::checkLastRPCBlockException(BlockchainTestBlock const&
         {
             string const& sBlockException = _tblock.getExpectException();
             if (!sBlockException.empty())
-                blockchainfiller::TestBlockchain::checkBlockException(m_session, sBlockException);
+                blockchainfiller::TestBlockchain::checkBlockException(m_session, sBlockException, false);
         }
         return true;
     }
