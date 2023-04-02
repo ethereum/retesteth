@@ -45,7 +45,7 @@ public:
 
     // Verify post-import exceptin according to expectException section in test
     // Return true if block is valid, false if block is not valid
-    static bool checkBlockException(session::SessionInterface const& _session, std::string const& _sBlockException, bool _required = true);
+    static bool checkBlockException(session::SessionInterface const& _session, std::string const& _sBlockException);
 
     void performOptionCommandsOnGenesis();
 
