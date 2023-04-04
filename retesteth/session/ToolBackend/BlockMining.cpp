@@ -57,7 +57,7 @@ void BlockMining::prepareEnvFile()
 
     if (isBlockExportBasefee(parentBlcokH))
     {
-        if (!cfgFile.calculateBasefee())
+        if (!cfgFile.calculateBasefee() && currentBlockH->number() != 0)
         {
             (*envData).removeKey("currentBaseFee");
             BlockHeader1559 const& h1559 = (BlockHeader1559 const&) parentBlcokH.getCContent();
