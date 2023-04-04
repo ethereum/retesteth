@@ -154,6 +154,19 @@ void mod_keyToCompactEvenHexPrefixed(DataObject& _obj)
 }
 
 // Remove leading zeros from hex values leaving 0x0004 - > 0x4
+void mod_removeBigIntHint(DataObject& _obj)
+{
+    if (_obj.type() == DataType::String)
+    {
+        static string const bigintSer = "0x:bigint ";
+        string& value = _obj.asStringUnsafe();
+        size_t isBigInt = value.find(bigintSer);
+        if (isBigInt != string::npos)
+            value.erase(isBigInt, bigintSer.size());
+    }
+}
+
+// Remove leading zeros from hex values leaving 0x0004 - > 0x4
 void mod_removeLeadingZerosFromHexValues(DataObject& _obj)
 {
     if (_obj.type() == DataType::String)

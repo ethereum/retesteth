@@ -42,6 +42,8 @@ spDataObject Withdrawal::asDataObject(ExportOrder _order) const
     if (_order == ExportOrder::ToolStyle)
         (*ret).performModifier(mod_removeLeadingZerosFromHexValues);
     (*ret)["address"] = address->asString();
+    if (_order == ExportOrder::ToolStyle)
+        (*ret).performModifier(mod_removeBigIntHint);
     return ret;
 }
 

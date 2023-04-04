@@ -9,6 +9,7 @@ namespace test::teststruct
 {
 
 // DataObject converters. Mostly Dec -> Hex, json data convertation
+void mod_removeBigIntHint(DataObject&);
 void mod_removeLeadingZerosFromHexValues(DataObject&);
 void mod_removeLeadingZerosFromHexValueEVEN(DataObject&);
 void mod_removeLeadingZerosFromHexKeyEVEN(DataObject&);
