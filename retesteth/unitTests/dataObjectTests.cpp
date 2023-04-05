@@ -284,8 +284,7 @@ BOOST_AUTO_TEST_CASE(dataobject_readJson5b)
         }
     )";
 
-    CJOptions opt;
-    opt.stopper = "key";
+    CJOptions opt { .stopper = "key" };
     spDataObject dObj = ConvertJsoncppStringToData(data, opt);
     BOOST_CHECK(dObj->asJson(0, false) == "{\"name\":{\"key\":[12,34]}}");
 }
@@ -413,8 +412,7 @@ BOOST_AUTO_TEST_CASE(dataobject_readJson_doublefields_allowComments)
 
     try
     {
-        dataobject::CJOptions opt;
-        opt.jsonParse = CJOptions::JsonParse::ALLOW_COMMENTS;
+        dataobject::CJOptions opt { .jsonParse = CJOptions::JsonParse::ALLOW_COMMENTS };
         spDataObject dObj = ConvertJsoncppStringToData(data, opt);
         BOOST_CHECK(dObj->asJson(0, false) == "{\"code\":\"}\"}");
     }
@@ -439,8 +437,7 @@ BOOST_AUTO_TEST_CASE(dataobject_readJson_doublefields_allowComments_actualCommen
         }
     )";
 
-    dataobject::CJOptions opt;
-    opt.jsonParse = CJOptions::JsonParse::ALLOW_COMMENTS;
+    dataobject::CJOptions opt { .jsonParse =  CJOptions::JsonParse::ALLOW_COMMENTS };
     spDataObject dObj = ConvertJsoncppStringToData(data, opt);
     BOOST_CHECK(dObj->asJson(0, false) == "{\"//code\":\"    }\",\"code\":\"}\"}");
 }
@@ -841,8 +838,7 @@ BOOST_AUTO_TEST_CASE(dataobject_jsonOrder2)
         "storage" : {
         }
     })";
-    CJOptions opt;
-    opt.autosort = true;
+    CJOptions opt { .autosort = true };
     spDataObject dObj = ConvertJsoncppStringToData(data, opt);
     BOOST_CHECK(dObj->at(dObj->getSubObjects().size() - 2).getKey() == "nonce");
 }
@@ -897,8 +893,7 @@ BOOST_AUTO_TEST_CASE(dataobject_arrayhell)
                     ]
                 ]
     })";
-    CJOptions opt;
-    opt.autosort = true;
+    CJOptions opt { .autosort = true };
     spDataObject dObj = ConvertJsoncppStringToData(data, opt);
 }
 
@@ -928,8 +923,7 @@ BOOST_AUTO_TEST_CASE(dataobject_besuresponse)
             } ]
           }
         })";
-    CJOptions opt;
-    opt.autosort = true;
+    CJOptions opt = { .autosort = true };
     spDataObject dObj = ConvertJsoncppStringToData(data, opt);
     string const expectedParse =
         R"({"result":{"transactions":[{"blockHash":"0xac7b82af234ef01bf4d24a3b9c22c2de091c6f71ec04d51ff23bd780533d999f","blockNumber":"0x1","chainId":null,"from":"0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b","gas":"0x7a120","gasPrice":"0xa","hash":"0x225117089dee26945644798e2c64d3117f55c95c7cf5509f7176de4b3af5202d","input":"0x604b80600c6000396000f3007c01000000000000000000000000000000000000000000000000000000006000350463cbf0b0c08114602d57005b60006004358073ffffffffffffffffffffffffffffffffffffffff16ff","nonce":"0x0","publicKey":"0x3a514176466fa815ed481ffad09110a2d344f6c9b78c1d14afc351c3a51be33d8072e77939dc03ba44790779b7a1025baf3003f6732430e20cd9b76d953391b3","r":"0xe7d3c664c49aa9f5ce4eb76c8547450466262a78bd093160f492ea0853c68e9","raw":"0xf8a5800a8307a1208081ffb857604b80600c6000396000f3007c01000000000000000000000000000000000000000000000000000000006000350463cbf0b0c08114602d57005b60006004358073ffffffffffffffffffffffffffffffffffffffff16ff1ca00e7d3c664c49aa9f5ce4eb76c8547450466262a78bd093160f492ea0853c68e9a03f843e72210ff1da4fd9e375339872bcf0fad05c014e280ffc755e173700dd62","s":"0x3f843e72210ff1da4fd9e375339872bcf0fad05c014e280ffc755e173700dd62","to":null,"transactionIndex":"0x0","v":"0x1c","value":"0xff"}]}})";
@@ -948,9 +942,7 @@ BOOST_AUTO_TEST_CASE(dataobject_doublefields_comments_allowed)
         "storage" : {
         }
     })";
-    CJOptions opt;
-    opt.autosort = true;
-    opt.jsonParse = CJOptions::JsonParse::ALLOW_COMMENTS;
+    CJOptions opt = { .jsonParse = CJOptions::JsonParse::ALLOW_COMMENTS, .autosort = true };
     spDataObject dObj = ConvertJsoncppStringToData(data, opt);
     BOOST_CHECK(dObj->atKey("//nonce").asString() == "1");
 }
@@ -969,8 +961,7 @@ BOOST_AUTO_TEST_CASE(dataobject_doublefields_comments_disabled)
 
     try
     {
-        CJOptions opt;
-        opt.autosort = true;
+        CJOptions opt = { .autosort = true };
         spDataObject dObj = ConvertJsoncppStringToData(data, opt);
         BOOST_CHECK(dObj->atKey("//nonce").asString() == "1");
     }

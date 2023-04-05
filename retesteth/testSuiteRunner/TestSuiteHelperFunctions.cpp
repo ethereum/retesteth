@@ -28,9 +28,7 @@ TestFileData readFillerTestFile(fs::path const& _testFileName)
     TestFileData testData;
     if (_testFileName.extension() == ".json")
     {
-        CJOptions opt;
-        opt.autosort = bSortOnLoad;
-        opt.jsonParse = CJOptions::JsonParse::ALLOW_COMMENTS;
+        CJOptions opt { .jsonParse = CJOptions::JsonParse::ALLOW_COMMENTS, .autosort = bSortOnLoad,};
         testData.data = test::readJsonData(_testFileName, opt);
     }
     else if (_testFileName.extension() == ".yml")

@@ -50,8 +50,7 @@ bool checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
     if (!fillerData.hashCalculated)
         return isTestOutdated;
 
-    CJOptions opt;
-    opt.stopper = "_info";
+    CJOptions opt { .stopper = "_info" };
     spDataObject compiledTestFileData = test::readJsonData(_compiledTest, opt);
     for (auto const& test : compiledTestFileData->getSubObjects())
     {
