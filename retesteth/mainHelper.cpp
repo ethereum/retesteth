@@ -403,11 +403,19 @@ string getTestTArg(fs::path const& _cwd, string const& arg)
 // Preprocess the args
 const char** preprocessOptions(int& _argc, const char* _argv[])
 {
+    // Get Test Path before initializing options
+    fs::path testPath;
+    const char* ptestPath = std::getenv("ETHEREUM_TEST_PATH");
+    if (ptestPath != nullptr)
+        testPath = fs::path(ptestPath);
+
     for (short i = 1; i < _argc; i++)
     {
         string const arg = string{_argv[i]};
         if (arg == "--help" || arg == "--version")
             return _argv;
+        if (arg == "--testpath" && i + 1 < _argc)
+            testPath = fs::path(std::string{_argv[i + 1]});
     }
     // if file.json is outside of the testpath
     //    parse "retesteth file.json" ==> "retesteth -t TestSuite -- --testfile file.json"
@@ -415,13 +423,7 @@ const char** preprocessOptions(int& _argc, const char* _argv[])
     //    "retesteth file.json" ==> "retesteth -t TestSuite/Subsuite -- --singletest file.json"
     // parse "retesteth Folder" ==> "retesteth -t TestSuite/Folder
 
-    // Get Test Path before initializing options
-    fs::path testPath;
-    const char* ptestPath = std::getenv("ETHEREUM_TEST_PATH");
-    if (ptestPath != nullptr)
-        testPath = fs::path(ptestPath);
     auto const cwd = fs::path(fs::current_path());
-
     string filenameArg;
     string directoryArg;
     bool fileInsideTheTestRepo = false;
@@ -434,9 +436,6 @@ const char** preprocessOptions(int& _argc, const char* _argv[])
         string const arg = string{_argv[i]};
         if (arg == "-t")
             hasTArg = true;
-
-        if (arg == "--testpath" && i + 1 < _argc)
-            testPath = fs::path(std::string{_argv[i + 1]});
 
         bool isFile = (arg.find(".json") != string::npos || arg.find(".yml") != string::npos
                     || arg.find(".py") != string::npos);
