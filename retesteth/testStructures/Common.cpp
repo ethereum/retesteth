@@ -450,6 +450,8 @@ void readExpectExceptions(DataObject const& _data, std::map<FORK, string>& _out)
         // Parse ">=Frontier" : "EXCEPTION"
         ClientConfig const& cfg = Options::get().getDynamicOptions().getCurrentConfig();
         std::set<string> forksString = {rec->getKey()};
+        if (rec->getKey().size() < 3)
+            ETH_ERROR_MESSAGE("readExpectExceptions:: Dataobject key as fork is too short around: " + _data.asJson());
         std::vector<FORK> parsedForks = cfg.translateNetworks(forksString);
         for (auto const& el : parsedForks)
             _out.emplace(el, rec->asString());

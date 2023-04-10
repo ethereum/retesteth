@@ -204,6 +204,14 @@ TestRawTransaction RPCImpl::test_rawTransaction(BYTES const& _rlp, FORK const& _
     return TestRawTransaction(res);
 }
 
+std::string RPCImpl::test_rawEOFCode(BYTES const& _code, FORK const& _fork)
+{
+    (void) _code;
+    (void) _fork;
+    ETH_FAIL_MESSAGE("RPCImpl::test_rawEOFCode is not implemented!");
+    return string();
+}
+
 VALUE RPCImpl::test_calculateDifficulty(FORK const& _fork, VALUE const& _blockNumber, VALUE const& _parentTimestamp,
     VALUE const& _parentDifficulty, VALUE const& _currentTimestamp, VALUE const& _uncleNumber)
 {

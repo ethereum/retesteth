@@ -331,6 +331,20 @@ TestRawTransaction ToolImpl::test_rawTransaction(BYTES const& _rlp, FORK const& 
     return TestRawTransaction(DataObject());
 }
 
+std::string ToolImpl::test_rawEOFCode(BYTES const& _code, FORK const& _fork)
+{
+    auto const& genesisSetupInTool = Options::getCurrentConfig().getGenesisTemplate(_fork);
+    FORK t8nForkName(genesisSetupInTool.getCContent().atKey("params").atKey("fork").asString());
+
+    rpcCall("", {});
+    TRYCATCHCALL(
+        ETH_DC_MESSAGE(DC::RPC, "\nRequest: test_rawEOFCode '" + _code.asString().substr(0, 50) + "', Fork: `" + t8nForkName.asString());
+        string res = ToolChainManager::test_rawEOFCode(_code, t8nForkName, m_toolPath, m_tmpDir);
+        return res;
+        , "test_rawTransaction", CallType::DONTFAILONUPWARDS, DC::RPC)
+    return string();
+}
+
 void ToolImpl::test_registerWithdrawal(BYTES const& _rlp)
 {
     rpcCall("", {});
