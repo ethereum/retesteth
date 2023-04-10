@@ -3,6 +3,7 @@
 #include <retesteth/EthChecks.h>
 #include <retesteth/Options.h>
 #include <retesteth/testStructures/Common.h>
+#include <retesteth/Constants.h>
 using namespace std;
 using namespace test::compiler;
 
@@ -156,6 +157,13 @@ bool StateTestFillerExpectSection::checkIndexes(int _dInd, int _gInd, int _vInd)
 void StateTestFillerExpectSection::correctMiningReward(FH20 const& _coinbase, VALUE const& _reward)
 {
     m_result.getContent().correctMiningReward(_coinbase, _reward);
+}
+
+std::string const& StateTestFillerExpectSection::getExpectException(FORK const& _net) const
+{
+    if (m_expectExceptions.count(_net))
+        return m_expectExceptions.at(_net);
+    return C_EMPTY_STR;
 }
 
 }  // namespace teststruct
