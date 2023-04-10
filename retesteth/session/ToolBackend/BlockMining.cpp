@@ -207,6 +207,7 @@ ToolResponse BlockMining::readResult()
     string const outAllocPathContent = dev::contentsString(m_outAllocPath.string());
     ETH_DC_MESSAGE(DC::RPC, "Res:\n" + outPathContent);
     ETH_DC_MESSAGE(DC::RPC, "RAlloc:\n" + outAllocPathContent);
+    ETH_DC_MESSAGEC(DC::RPC, "Tool log: \n" + dev::contentsString(m_outErrorPath.string()), LogColor::YELLOW);
 
     if (outPathContent.empty())
     {
