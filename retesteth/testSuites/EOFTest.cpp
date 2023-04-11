@@ -34,6 +34,9 @@ spDataObject FillTest(EOFTestInFiller const& _test)
         (*vectorOut).atKeyPointer("results") = sDataObject(DataType::Object);
         for(auto const& fork : _test.Forks())
         {
+            if (networkSkip(fork, _test.testName()))
+                continue;
+
             spDataObject forkResult;
             (*forkResult).setKey(fork.asString());
             auto const& dataOpt = Options::get().trData;
@@ -41,6 +44,7 @@ spDataObject FillTest(EOFTestInFiller const& _test)
                 continue;
 
             TestInfo errorInfo(fork.asString(), (int)dataInd, -1, -1);
+            errorInfo.setTrDataDebug(testVector.dataPreview());
             TestOutputHelper::get().setCurrentTestInfo(errorInfo);
 
             string res = session.test_rawEOFCode(testVector.data(), fork);
@@ -74,6 +78,9 @@ void RunTest(EOFTestInFilled const& _test)
     {
         for (auto const& [fork, exception] : vec.getResultForks())
         {
+            if (networkSkip(fork, _test.testName()))
+                continue;
+
             TestOutputHelper::get().setCurrentTestInfo(TestInfo(vectorName + "/" + fork.asString()));
             string const res = session.test_rawEOFCode(vec.data(), fork);
             compareEOFException(vec.data(), res, exception);

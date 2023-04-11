@@ -18,9 +18,9 @@ string ToolChainManager::test_rawEOFCode(
 
     string cmd = _toolPath.string();
     cmd += " eof";
+    cmd += " --state.fork " + _fork.asString();
     cmd += " --hex " + _code.asString();
     cmd += " 2>" + errorLog.string();
-    //cmd += " --state.fork " + _fork.asString();
 
     ETH_DC_MESSAGE(DC::RPC, cmd);
     int exitCode;

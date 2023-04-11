@@ -12,8 +12,10 @@ struct EOFTestVectorInFiller
     EOFTestVectorInFiller(dataobject::spDataObject&);
     std::string const& getExpectException(FORK const& _net) const;
     BYTES const& data() const { return m_data.getCContent(); }
+    std::string const& dataPreview() const { return m_dataPreview; }
 private:
     spBYTES m_data;
+    std::string m_dataPreview;
     std::map<FORK, std::string> m_expectExceptions;
 };
 
