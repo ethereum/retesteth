@@ -310,13 +310,18 @@ bool pathHasTests(fs::path const& _path)
     {
         // if the extention of a test file
         if (fs::is_regular_file(it->path()) &&
-            (it->path().extension() == ".json" || it->path().extension() == ".yml"))
+            (it->path().extension() == ".json" || it->path().extension() == ".yml"
+                || it->path().extension() == ".py"))
         {
             // if the filename ends with Filler/Copier type
             std::string const name = it->path().stem().filename().string();
             std::string const suffix =
                 (name.length() > 7) ? name.substr(name.length() - 6) : string();
             if (suffix == "Filler" || suffix == "Copier")
+                return true;
+
+            // if its python test
+            if (it->path().extension() == ".py" && name != "__init__")
                 return true;
         }
     }
