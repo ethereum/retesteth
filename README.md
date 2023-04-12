@@ -56,14 +56,14 @@ Web interface: http://retesteth.ethdevops.io/web/
    ```
 
 1. Edit `dretesteth.sh` and setup local path to the [test](https://github.com/ethereum/tests) repo so not to type `--testpath`.  
-   Navigate to the testpath folder test. And use retesteth normally:
+   Navigate to the testpath folder test. And use retesteth normally (`dr` will be linked to `dretesteth.sh` after `dretesteth.sh install` command):
 
    ```
-   dretesteth.sh test.json
-   dretesteth.sh testFiller.json --filltests --clients besu|evmone|ethereumjs|nimbus|t8ntool(default)
-   dretesteth.sh testfolder
-   dretesteth.sh -t GeneralStateTest
-   dretesteth.sh -t BlockchainTests
+   dr test.json
+   dr testFiller.json --filltests --clients besu|evmone|ethereumjs|nimbus|t8ntool(default)
+   dr testfolder
+   dr -t GeneralStateTest
+   dr -t BlockchainTests
    dretesteth.sh --help
    ```
 
