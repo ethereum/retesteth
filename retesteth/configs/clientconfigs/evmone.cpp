@@ -32,7 +32,8 @@ string const evmone_config = R"({
         "Istanbul",
         "Berlin",
         "London",
-        "Merge"
+        "Merge",
+        "Shanghai"
     ],
     "additionalForks" : [
         "FrontierToHomesteadAt5",
@@ -43,7 +44,8 @@ string const evmone_config = R"({
         "BerlinToLondonAt5",
         "ArrowGlacier",
         "ArrowGlacierToMergeAtDiffC0000",
-        "GrayGlacier"
+        "GrayGlacier",
+        "MergeToShanghaiAtTime15k"
     ],
     "fillerSkipForks" : [
     ],
