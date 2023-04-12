@@ -211,7 +211,7 @@ spDataObject FillTest(StateTestInFiller const& _test)
                     TestOutputHelper::get().setCurrentTestInfo(errorInfo);
 
                     bool expectChekIndexes = expect.checkIndexes(tr.dataInd(), tr.gasInd(), tr.valueInd());
-                    if (!OptionsAllowTransaction(tr))
+                    if (!optionsAllowTransaction(tr))
                     {
                         tr.markSkipped();
 

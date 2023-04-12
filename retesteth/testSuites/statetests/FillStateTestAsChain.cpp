@@ -39,7 +39,7 @@ spDataObject FillTestAsBlockchain(StateTestInFiller const& _test)
                     TestInfo errorInfo(fork.asString(), tr.dataInd(), tr.gasInd(), tr.valueInd());
                     TestOutputHelper::get().setCurrentTestInfo(errorInfo);
 
-                    if (networkSkip(fork, _test.testName()) || !OptionsAllowTransaction(tr))
+                    if (networkSkip(fork, _test.testName()) || !optionsAllowTransaction(tr))
                     {
                         tr.markSkipped();
                         continue;
