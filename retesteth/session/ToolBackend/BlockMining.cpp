@@ -108,7 +108,9 @@ void BlockMining::prepareTxnFile()
         dev::RLPStream txsout(m_currentBlockRef.transactions().size());
         for (auto const& tr : m_currentBlockRef.transactions())
             txsout.appendRaw(tr->asRLPStream().out());
-        m_txsPathContent =  "\"" + dev::toString(txsout.out()) + "\"";
+        m_txsPathContent =  "\"";
+        m_txsPathContent += dev::toString(txsout.out());
+        m_txsPathContent += "\"";
         writeFile(m_txsPath.string(), m_txsPathContent);
     }
     else
