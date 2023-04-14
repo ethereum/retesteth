@@ -170,6 +170,8 @@ private:
 
 template <class T>
 spDataObject sDataObject(T _arg) { return spDataObject(new DataObject(_arg)); }
+template <class T, class T2>
+spDataObject sDataObject(T _arg, T2 _arg2) { return spDataObject(new DataObject(_arg, _arg2)); }
 
 // Can help to keep incapsulation
 // DataObject move requester, require the memory pointer to be irreversably moved into it
