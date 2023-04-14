@@ -20,6 +20,7 @@ private:
     void performPostState(TransactionInGeneralSection& _tr, FORK const& _network);
     void performStateDiff();
     void performValidations(TransactionInGeneralSection& _tr, StateTestPostResult const& _result);
+    std::string makeFilename(TransactionInGeneralSection& _tr, FORK const& _network);
 private:
     StateTestInFilled const& m_test;
     test::session::SessionInterface& m_session;

@@ -118,8 +118,7 @@ void StateTestRunner::performVMTrace(TransactionInGeneralSection& _tr, FH32 cons
     if (Options::get().vmtrace && !Options::get().filltests)
     {
         auto const& trHash = _tr.reportedHash();
-        string const testNameOut = m_test.testName() + "_d" + _tr.dataIndS() + "g" + _tr.gasIndS() + "v" + _tr.valueIndS() + "_" +
-                                   _network.asString() + "_" + trHash.asString() + ".txt";
+        string const testNameOut = makeFilename(_tr, _network);
         VMtraceinfo info(m_session, trHash, _remoteStateHash, testNameOut);
         printVmTrace(info);
     }
@@ -134,11 +133,27 @@ void StateTestRunner::performPostState(TransactionInGeneralSection& _tr, FORK co
             "\nRunning test State Dump:" + TestOutputHelper::get().testInfo().errorDebug() + cDefault + " \n" + remStateJson);
         if (!Options::get().poststate.outpath.empty())
         {
-            string testNameOut = m_test.testName() + "_d" + _tr.dataIndS() + "g" + _tr.gasIndS() + "v" + _tr.valueIndS();
-            testNameOut += "_" + _network.asString() + ".txt";
+            string const testNameOut = makeFilename(_tr, _network);
             dev::writeFile(fs::path(Options::get().poststate.outpath) / testNameOut, dev::asBytes(remStateJson));
         }
     }
+}
+
+std::string StateTestRunner::makeFilename(TransactionInGeneralSection& _tr, FORK const& _network)
+{
+    string testNameOut = m_test.testName();
+    testNameOut += "_d";
+    testNameOut += _tr.dataIndS();
+    testNameOut += "g";
+    testNameOut += _tr.gasIndS();
+    testNameOut += "v";
+    testNameOut += _tr.valueIndS();
+    testNameOut += "_";
+    testNameOut += _network.asString();
+    testNameOut += "_";
+    testNameOut += _tr.reportedHash().asString();
+    testNameOut += ".txt";
+    return testNameOut;
 }
 
 void StateTestRunner::performStateDiff()
