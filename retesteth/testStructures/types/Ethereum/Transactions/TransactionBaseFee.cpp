@@ -250,6 +250,7 @@ const spDataObject TransactionBaseFee::asDataObject(ExportOrder _order) const
             (*out)["secretKey"] = m_secretKey->asString();
     }
     (*out).atKeyPointer("accessList") = m_accessList->asDataObject();
+    (*out).performModifier(mod_removeBigIntHint);
     return out;
 }
 

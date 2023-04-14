@@ -227,6 +227,7 @@ const spDataObject TransactionLegacy::asDataObject(ExportOrder _order) const
         (*out).renameKey("data", "input");
         if (!m_secretKey.isEmpty() && m_secretKey.getCContent() != 0)
             (*out)["secretKey"] = m_secretKey->asString();
+        (*out).performModifier(mod_removeBigIntHint);
     }
 
     return out;
