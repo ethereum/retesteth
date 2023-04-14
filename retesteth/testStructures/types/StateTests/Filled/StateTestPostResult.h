@@ -2,9 +2,7 @@
 #include "../../../basetypes.h"
 #include <libdataobj/DataObject.h>
 
-namespace test
-{
-namespace teststruct
+namespace test::teststruct
 {
 struct StateTestPostResult : GCP_SPointerBase
 {
@@ -39,4 +37,3 @@ private:
 typedef std::vector<StateTestPostResult> StateTestPostResults;
 
 }  // namespace teststruct
-}  // namespace test

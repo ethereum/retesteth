@@ -666,6 +666,18 @@ fs::path createUniqueTmpDirectory() {
     }
 }
 
+size_t substrCount(std::string const& _str, std::string const& _needle)
+{
+    size_t count = 0;
+    size_t pos = _str.find(_needle);
+    while (pos != string::npos)
+    {
+        pos = _str.find(_needle, pos + 1);
+        count++;
+    }
+    return count;
+}
+
 // RLPStream emulator
 void RLPStreamU::appendString(string const& _data)
 {
