@@ -18,7 +18,7 @@ spDataObject FillTest(StateTestInFiller const& _test)
 {
     auto const allforks = _test.getAllForksFromExpectSections();
     if (hasSkipFork(allforks))
-        return spDataObject(new DataObject(DataType::Null));
+        return sDataObject(DataType::Null);
 
     StateTestFillerRunner runner(_test);
     for (auto const& fork : allforks)

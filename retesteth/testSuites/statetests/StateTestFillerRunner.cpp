@@ -22,7 +22,6 @@ StateTestFillerRunner::StateTestFillerRunner(StateTestInFiller const& _test)
     m_session(RPCSession::instance(TestOutputHelper::getThreadID()))
 {
     TestOutputHelper::get().setCurrentTestName(_test.testName());
-    TestOutputHelper::get().setUnitTestExceptions(_test.unitTestExceptions());
 
     if (m_test.hasInfo())
         (*m_filledTest).atKeyPointer("_info") = _test.Info().rawData();
