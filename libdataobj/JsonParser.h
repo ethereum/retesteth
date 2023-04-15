@@ -20,17 +20,17 @@ private:
     };
 private:
     void keyEncountered() { m_keyEncountered = true; }
-    std::string printDebug(size_t _i);
+    std::string printDebug(size_t const& _i);
     bool isEmptyChar(char const& _char) const;
     RET tryParseKeyValue(size_t& _i);
-    RET tryParseArrayBegin(size_t _i);
+    RET tryParseArrayBegin(size_t const& _i);
     RET tryParseArrayEnd(size_t& _i, bool);
     RET tryParseDigitBoolNull(size_t& _i);
 
 private:
     // Work with iterator i
-    bool checkExcessiveComaBefore(size_t _i) const;
-    size_t skipSpaces(size_t _i) const;
+    bool checkExcessiveComaBefore(size_t const& _i) const;
+    size_t skipSpaces(size_t const& _i) const;
     std::string parseKeyValue(size_t& _i) const;
     bool readBoolOrNull(size_t& _i, bool& _result, bool& _readNull) const;
     bool readDigit(size_t& _i, int& _result) const;

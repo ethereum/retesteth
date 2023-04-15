@@ -17,7 +17,7 @@ JsonParser::JsonParser(std::string const& _input, CJOptions const& _opt)
     m_actualRoot = &m_root.getContent();
 }
 
-string JsonParser::printDebug(size_t _i)
+string JsonParser::printDebug(size_t const& _i)
 {
     static const short c_debugSize = 120;
     string debug;
@@ -120,7 +120,7 @@ JsonParser::RET JsonParser::tryParseKeyValue(size_t& _i)
     return RET::GOON;
 }
 
-JsonParser::RET JsonParser::tryParseArrayBegin(size_t _i)
+JsonParser::RET JsonParser::tryParseArrayBegin(size_t const& _i)
 {
     if (m_input.at(_i) == '{')
     {
@@ -255,7 +255,7 @@ bool JsonParser::isEmptyChar(char const& _char) const
     return false;
 }
 
-size_t JsonParser::skipSpaces(size_t _i) const
+size_t JsonParser::skipSpaces(size_t const& _i) const
 {
     size_t i = _i;
     for (; i < m_input.length(); i++)
@@ -361,7 +361,7 @@ bool JsonParser::readDigit(size_t& _i, int& _result) const
     return false;
 }
 
-bool JsonParser::checkExcessiveComaBefore(size_t _i) const
+bool JsonParser::checkExcessiveComaBefore(size_t const& _i) const
 {
     if (_i < 1)
         return false;
