@@ -250,9 +250,8 @@ JsonParser::RET JsonParser::tryParseDigitBoolNull(size_t& _i)
 
 bool JsonParser::isEmptyChar(char const& _char) const
 {
-    if (_char == ' ' || _char == '\n' || _char == '\r' || _char == '\t')
-        return true;
-    return false;
+    static constexpr char emptyChars[] = {' ', '\n', '\r', '\t'};
+    return std::any_of(std::begin(emptyChars), std::end(emptyChars), [_char](char c) { return c == _char; });
 }
 
 size_t JsonParser::skipSpaces(size_t const& _i) const
