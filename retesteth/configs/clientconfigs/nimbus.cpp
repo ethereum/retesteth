@@ -47,6 +47,11 @@ string const nimbus_config = R"({
         "Merge+3855"
     ],
     "exceptions" : {
+      "PYSPECS EXCEPTIONS: ": "",
+      "Transaction without funds" : "processTransaction failed",
+      "intrinsic gas too low" : "processTransaction failed",
+      "max initcode size exceeded" : "processTransaction failed",
+
       "AddressTooShort" : "input string too short for common.Address",
       "AddressTooLong" : "rlp: input string too long for common.Address, decoding into (types.Transaction)(types.LegacyTx).To",
       "NonceMax" : "nonce exceeds 2^64-1",
