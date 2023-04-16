@@ -67,7 +67,7 @@ JsonParser::RET JsonParser::tryParseKeyValue(size_t& _i)
         {
             if (m_keyEncountered)
                 throw DataObjectException() << errorPrefix + "attempt to set key multiple times! "
-                                                   "(like \"key\" : \"key\" : \"value\") around: " + printDebug(_i);
+                                  "(like \"key\" : \"key\" : \"value\") around: " + printDebug(_i);
 
             m_keyEncountered = true;
             if (m_actualRoot->type() == DataType::Array)
@@ -86,8 +86,8 @@ JsonParser::RET JsonParser::tryParseKeyValue(size_t& _i)
                 if (m_opt.jsonParse == CJOptions::JsonParse::STRICT_JSON || !allowedComment)
                 {
                     throw DataObjectException() << errorPrefix
-                                                       + "ConvertJsoncppStringToData::Error: Reading json with dublicate fields: `"
-                                                       + key + "` around: " + printDebug(_i) + "\n";
+                       + "ConvertJsoncppStringToData::Error: Reading json with dublicate fields: `"
+                       + key + "` around: " + printDebug(_i) + "\n";
                 }
                 m_actualRoot = &m_actualRoot->atKeyPointerUnsafe(key).getContent();
                 m_actualRoot->clearSubobjects();
@@ -256,15 +256,8 @@ bool JsonParser::isEmptyChar(char const& _char) const
 
 size_t JsonParser::skipSpaces(size_t const& _i) const
 {
-    size_t i = _i;
-    for (; i < m_input.length(); i++)
-    {
-        if (isEmptyChar(m_input[i]))
-            continue;
-        else
-            return i;
-    }
-    return i;
+    auto const it = std::find_if_not(m_input.begin() + _i, m_input.end(), [this](char c) { return isEmptyChar(c); });
+    return std::distance(m_input.begin(), it);
 }
 
 string JsonParser::parseKeyValue(size_t& _i) const
