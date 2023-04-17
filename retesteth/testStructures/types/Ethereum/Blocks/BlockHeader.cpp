@@ -8,16 +8,12 @@ std::string BlockHeader::TypeToString(BlockType _t)
 {
     switch (_t)
     {
-    case BlockType::BlockHeader1559:
-        return "BlockHeader1559";
-    case BlockType::BlockHeaderLegacy:
-        return "BlockHeaderLegacy";
-    case BlockType::BlockHeaderMerge:
-        return "BlockHeaderMerge";
-    case BlockType::BlockHeaderShanghai:
-        return "BlockHeaderShanghai";
-    default:
-        return "UnparsedBlockType";
+        using enum BlockType;
+        case BlockHeader1559: return "BlockHeader1559";
+        case BlockHeaderLegacy: return "BlockHeaderLegacy";
+        case BlockHeaderMerge: return "BlockHeaderMerge";
+        case BlockHeaderShanghai: return "BlockHeaderShanghai";
+        default: return "UnparsedBlockType";
     }
     return "UnparsedBlockType";
 }
@@ -26,16 +22,12 @@ std::string BlockHeader::BlockTypeToString(BlockType _bl)
 {
     switch (_bl)
     {
-    case BlockType::BlockHeader1559:
-        return "BlockHeader1559";
-    case BlockType::BlockHeaderLegacy:
-        return "BlockHeaderLegacy";
-    case BlockType::BlockHeaderMerge:
-        return "BlockHeaderMerge";
-    case BlockType::BlockHeaderShanghai:
-        return "BlockHeaderShanghai";
-    default:
-        return "BlockHeaderUndefined";
+        using enum BlockType;
+        case BlockHeader1559: return "BlockHeader1559";
+        case BlockHeaderLegacy: return "BlockHeaderLegacy";
+        case BlockHeaderMerge: return "BlockHeaderMerge";
+        case BlockHeaderShanghai: return "BlockHeaderShanghai";
+        default: return "BlockHeaderUndefined";
     };
     return "BlockHEaderUndefined";
 }
@@ -50,5 +42,7 @@ bool BlockHeader::hasUncles() const
 {
     return m_sha3Uncles->asString() != "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347";
 }
+
+
 
 }  // namespace test::teststruct

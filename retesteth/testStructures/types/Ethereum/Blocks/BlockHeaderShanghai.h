@@ -23,6 +23,7 @@ struct BlockHeaderShanghai : BlockHeaderMerge
 
 protected:
     void fromData(DataObject const&) override;
+    void checkDataScheme(DataObject const&) override;
 
     spFH32 m_withdrawalsRoot;
     BlockHeaderShanghai(){};

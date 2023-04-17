@@ -69,6 +69,7 @@ struct BlockHeader : GCP_SPointerBase
 protected:
     BlockHeader() {}
     virtual void fromData(DataObject const&) = 0;
+    virtual void checkDataScheme(DataObject const&) = 0;
 
     // Common
     spFH32 m_stateRoot;

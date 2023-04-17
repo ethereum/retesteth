@@ -28,6 +28,7 @@ struct BlockHeader1559 : BlockHeader
 protected:
     BlockHeader1559(){};
     void fromData(DataObject const&) override;
+    void checkDataScheme(DataObject const&) override;
 
     // Ethereum eip1559 blockheader fields
     spVALUE m_baseFee;
