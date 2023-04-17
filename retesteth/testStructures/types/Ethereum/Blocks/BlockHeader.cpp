@@ -13,11 +13,10 @@ std::string BlockHeader::BlockTypeToString(BlockType _bl)
 {
     switch (_bl)
     {
-        using enum BlockType;
-        case BlockHeader1559: return "BlockHeader1559";
-        case BlockHeaderLegacy: return "BlockHeaderLegacy";
-        case BlockHeaderMerge: return "BlockHeaderMerge";
-        case BlockHeaderShanghai: return "BlockHeaderShanghai";
+        case BlockType::BlockHeader1559: return "BlockHeader1559";
+        case BlockType::BlockHeaderLegacy: return "BlockHeaderLegacy";
+        case BlockType::BlockHeaderMerge: return "BlockHeaderMerge";
+        case BlockType::BlockHeaderShanghai: return "BlockHeaderShanghai";
         default: return "UnparsedBlockType";
     };
     return "UnparsedBlockType";

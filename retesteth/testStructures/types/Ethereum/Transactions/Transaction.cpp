@@ -15,10 +15,9 @@ std::string Transaction::TransactionTypeToString(TransactionType _bl)
 {
     switch (_bl)
     {
-        using enum TransactionType;
-        case LEGACY: return "LegacyTransaction";
-        case ACCESSLIST: return "AccessListTransaction";
-        case BASEFEE: return "BasefeeTransaction";
+        case TransactionType::LEGACY: return "LegacyTransaction";
+        case TransactionType::ACCESSLIST: return "AccessListTransaction";
+        case TransactionType::BASEFEE: return "BasefeeTransaction";
         default: return "UnparsedTransactionType";
     };
     return "UnparsedTransactionType";
