@@ -96,49 +96,14 @@ BlockHeaderShanghai::BlockHeaderShanghai(dev::RLP const& _rlp)
 
 spDataObject BlockHeaderShanghai::asDataObject() const
 {
-    spDataObject out;
-    (*out)["bloom"] = m_logsBloom->asString();
-    (*out)["coinbase"] = m_author->asString();
-    (*out)["difficulty"] = m_difficulty->asString();
-    (*out)["extraData"] = m_extraData->asString();
-    (*out)["gasLimit"] = m_gasLimit->asString();
-    (*out)["gasUsed"] = m_gasUsed->asString();
-    (*out)["hash"] = m_hash->asString();
-    (*out)["mixHash"] = m_mixHash->asString();
-    (*out)["nonce"] = m_nonce->asString();
-    (*out)["number"] = m_number->asString();
-    (*out)["parentHash"] = m_parentHash->asString();
-    (*out)["receiptTrie"] = m_receiptsRoot->asString();
-    (*out)["stateRoot"] = m_stateRoot->asString();
-    (*out)["timestamp"] = m_timestamp->asString();
-    (*out)["transactionsTrie"] = m_transactionsRoot->asString();
-    (*out)["uncleHash"] = m_sha3Uncles->asString();
-    (*out)["baseFeePerGas"] = m_baseFee->asString();
+    spDataObject out = BlockHeaderMerge::asDataObject();
     (*out)["withdrawalsRoot"] = m_withdrawalsRoot->asString();
     return out;
 }
 
 const RLPStream BlockHeaderShanghai::asRLPStream() const
 {
-    RLPStream header;
-    header.appendList(17);
-
-    header << h256(m_parentHash->asString());
-    header << h256(m_sha3Uncles->asString());
-    header << Address(m_author->asString());
-    header << h256(m_stateRoot->asString());
-    header << h256(m_transactionsRoot->asString());
-    header << h256(m_receiptsRoot->asString());
-    header << h2048(m_logsBloom->asString());
-    header << m_difficulty->asBigInt();
-    header << m_number->asBigInt();
-    header << m_gasLimit->asBigInt();
-    header << m_gasUsed->asBigInt();
-    header << m_timestamp->asBigInt();
-    header << test::sfromHex(m_extraData->asString());
-    header << h256(m_mixHash->asString());
-    header << h64(m_nonce->asString());
-    header << m_baseFee->asBigInt();
+    RLPStream header = BlockHeaderMerge::asRLPStream();
     header << h256(m_withdrawalsRoot->asString());
     return header;
 }

@@ -28,6 +28,7 @@ protected:
     virtual void checkDataScheme(DataObject const&) override;
     virtual void _fromData(DataObject const&) override;
     virtual size_t _fromRLP(dev::RLP const&) override;
+    virtual size_t _rlpHeaderSize() const override { return 15; }
 };
 
 typedef GCP_SPointer<BlockHeaderLegacy> spBlockHeaderLegacy;

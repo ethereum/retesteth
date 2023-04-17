@@ -13,7 +13,7 @@ struct BlockHeaderMerge : BlockHeader1559
     BlockHeaderMerge(DataObject const& _in) : BlockHeader1559(_in) {}
     BlockHeaderMerge(dev::RLP const& _in) : BlockHeader1559(_in) {}
 
-    BlockType type() const override { return BlockType::BlockHeaderMerge; }
+    virtual BlockType type() const override { return BlockType::BlockHeaderMerge; }
 
     static BlockHeaderMerge const& castFrom(spBlockHeader const& _from);
     static BlockHeaderMerge& castFrom(BlockHeader& _from);

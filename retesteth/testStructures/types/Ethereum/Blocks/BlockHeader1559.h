@@ -13,9 +13,9 @@ struct BlockHeader1559 : BlockHeaderLegacy
     BlockHeader1559(DataObject const& _data) { fromData(_data); };
     BlockHeader1559(dev::RLP const&);
 
-    spDataObject asDataObject() const override;
-    dev::RLPStream const asRLPStream() const override;
-    BlockType type() const override { return BlockType::BlockHeader1559; }
+    virtual spDataObject asDataObject() const override;
+    virtual dev::RLPStream const asRLPStream() const override;
+    virtual BlockType type() const override { return BlockType::BlockHeader1559; }
 
     // Unique fields
     VALUE const& baseFee() const { return m_baseFee; }
@@ -31,6 +31,7 @@ protected:
     virtual void checkDataScheme(DataObject const&) override;
     virtual void _fromData(DataObject const&) override;
     virtual size_t _fromRLP(dev::RLP const&) override;
+    virtual size_t _rlpHeaderSize() const override { return 16; }
 
     // Ethereum eip1559 blockheader fields
     spVALUE m_baseFee;

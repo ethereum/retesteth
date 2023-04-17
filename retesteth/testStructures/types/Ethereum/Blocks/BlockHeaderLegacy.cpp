@@ -160,7 +160,7 @@ spDataObject BlockHeaderLegacy::asDataObject() const
 const RLPStream BlockHeaderLegacy::asRLPStream() const
 {
     RLPStream header;
-    header.appendList(15);
+    header.appendList(_rlpHeaderSize());
 
     header << h256(m_parentHash->asString());
     header << h256(m_sha3Uncles->asString());
