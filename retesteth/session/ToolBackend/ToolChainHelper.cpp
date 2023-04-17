@@ -36,29 +36,29 @@ ToolParams::ToolParams(DataObject const& _data)
 
     const bigint unreachable = 10000000000;
     if (_data.count("homesteadForkBlock"))
-        m_homesteadForkBlock = spVALUE(new VALUE(_data.atKey("homesteadForkBlock")));
+        m_homesteadForkBlock = sVALUE(_data.atKey("homesteadForkBlock"));
     else
-        m_homesteadForkBlock = spVALUE(new VALUE(unreachable));
+        m_homesteadForkBlock = sVALUE(unreachable);
 
     if (_data.count("byzantiumForkBlock"))
-        m_byzantiumForkBlock = spVALUE(new VALUE(_data.atKey("byzantiumForkBlock")));
+        m_byzantiumForkBlock = sVALUE(_data.atKey("byzantiumForkBlock"));
     else
-        m_byzantiumForkBlock = spVALUE(new VALUE(unreachable));
+        m_byzantiumForkBlock = sVALUE(unreachable);
 
     if (_data.count("constantinopleForkBlock"))
-        m_constantinopleForkBlock = spVALUE(new VALUE(_data.atKey("constantinopleForkBlock")));
+        m_constantinopleForkBlock = sVALUE(_data.atKey("constantinopleForkBlock"));
     else
-        m_constantinopleForkBlock = spVALUE(new VALUE(unreachable));
+        m_constantinopleForkBlock = sVALUE(unreachable);
 
     if (_data.count("muirGlacierForkBlock"))
-        m_muirGlacierForkBlock = spVALUE(new VALUE(_data.atKey("muirGlacierForkBlock")));
+        m_muirGlacierForkBlock = sVALUE(_data.atKey("muirGlacierForkBlock"));
     else
-        m_muirGlacierForkBlock = spVALUE(new VALUE(unreachable));
+        m_muirGlacierForkBlock = sVALUE(unreachable);
 
     if (_data.count("londonForkBlock"))
-        m_londonForkBlock = spVALUE(new VALUE(_data.atKey("londonForkBlock")));
+        m_londonForkBlock = sVALUE(_data.atKey("londonForkBlock"));
     else
-        m_londonForkBlock = spVALUE(new VALUE(unreachable));
+        m_londonForkBlock = sVALUE(unreachable);
 }
 
 // We simulate the client backend side here, so thats why number5 is hardcoded
@@ -158,9 +158,10 @@ std::tuple<VALUE, FORK> prepareReward(SealEngine _engine, FORK const& _fork, Eth
 
 VALUE calculateGasLimit(VALUE const& _parentGasLimit, VALUE const& _parentGasUsed)
 {
-    static bigint gasFloorTarget = 3141562;  //_gasFloorTarget == Invalid256 ? 3141562 : _gasFloorTarget;
-    bigint gasLimit = _parentGasLimit.asBigInt();
-    static bigint boundDivisor = bigint("0x0400");
+    //_gasFloorTarget == Invalid256 ? 3141562 : _gasFloorTarget;
+    static const bigint gasFloorTarget = 3141562;
+    const bigint gasLimit = _parentGasLimit.asBigInt();
+    static const bigint boundDivisor = bigint("0x0400");
     if (gasLimit < gasFloorTarget)
         return min<bigint>(gasFloorTarget, gasLimit + gasLimit / boundDivisor - 1);
     else
@@ -183,13 +184,12 @@ State restoreFullState(DataObject& _toolState)
         if (accTool.count("storage"))
             acc.atKeyPointer("storage") = accTool.atKeyPointerUnsafe("storage");
         else
-            acc.atKeyPointer("storage") = spDataObject(new DataObject(DataType::Object));
+            acc.atKeyPointer("storage") = sDataObject(DataType::Object);
         for (auto& storageRecord : acc.atKeyUnsafe("storage").getSubObjectsUnsafe())
         {
             storageRecord.getContent().performModifier(mod_removeLeadingZerosFromHexValueEVEN);
             storageRecord.getContent().performModifier(mod_removeLeadingZerosFromHexKeyEVEN);
         }
-        //fullState[accTool.getKey()] = acc;
     }
     return State(dataobject::move(fullState));
 }
