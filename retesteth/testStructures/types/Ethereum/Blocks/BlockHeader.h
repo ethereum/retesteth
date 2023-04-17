@@ -69,7 +69,7 @@ struct BlockHeader : GCP_SPointerBase
 protected:
     BlockHeader() {}
     virtual void fromData(DataObject const&) = 0;
-    virtual void checkDataScheme(DataObject const&) = 0;
+    virtual void checkDataScheme(DataObject const&) const = 0;
     virtual void _fromData(DataObject const&) = 0;
     virtual size_t _fromRLP(dev::RLP const&) = 0;
     virtual size_t _rlpHeaderSize() const = 0;

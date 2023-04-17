@@ -12,45 +12,45 @@ using namespace dev;
 
 namespace test::teststruct
 {
-TransactionAccessList::TransactionAccessList(DataObject const& _data) : TransactionLegacy()
+
+void TransactionAccessList::checkDataScheme(DataObject const& _data) const
 {
-    fromDataObject(_data);
+    REQUIRE_JSONFIELDS(_data, "TransactionAccessList " + _data.getKey(),
+        {
+            {"data", {{DataType::String}, jsonField::Required}},
+            {"gasPrice", {{DataType::String}, jsonField::Required}},
+            {"gasLimit", {{DataType::String}, jsonField::Required}},
+            {"nonce", {{DataType::String}, jsonField::Required}},
+            {"value", {{DataType::String}, jsonField::Required}},
+            {"to", {{DataType::String, DataType::Null}, jsonField::Required}},
+            {"secretKey", {{DataType::String}, jsonField::Optional}},
+            {"sender", {{DataType::String}, jsonField::Optional}},
+            {"v", {{DataType::String}, jsonField::Optional}},
+            {"r", {{DataType::String}, jsonField::Optional}},
+            {"s", {{DataType::String}, jsonField::Optional}},
+
+            // Transaction type 1
+            {"type", {{DataType::String}, jsonField::Optional}},
+            {"chainId", {{DataType::String, DataType::Null}, jsonField::Optional}},
+            {"accessList", {{DataType::Array}, jsonField::Required}},
+
+            {"publicKey", {{DataType::String}, jsonField::Optional}},  // Besu EthGetBlockBy transaction
+            {"raw", {{DataType::String}, jsonField::Optional}},        // Besu EthGetBlockBy transaction
+
+            {"blockHash", {{DataType::String}, jsonField::Optional}},         // EthGetBlockBy transaction
+            {"blockNumber", {{DataType::String}, jsonField::Optional}},       // EthGetBlockBy transaction
+            {"from", {{DataType::String}, jsonField::Optional}},              // EthGetBlockBy transaction
+            {"hash", {{DataType::String}, jsonField::Optional}},              // EthGetBlockBy transaction
+            {"transactionIndex", {{DataType::String}, jsonField::Optional}},  // EthGetBlockBy transaction
+            {"expectException", {{DataType::Object}, jsonField::Optional}}    // BlockchainTest filling
+        });
 }
 
 void TransactionAccessList::fromDataObject(DataObject const& _data)
 {
     try
     {
-        REQUIRE_JSONFIELDS(_data, "TransactionAccessList " + _data.getKey(),
-            {
-                {"data", {{DataType::String}, jsonField::Required}},
-                {"gasPrice", {{DataType::String}, jsonField::Required}},
-                {"gasLimit", {{DataType::String}, jsonField::Required}},
-                {"nonce", {{DataType::String}, jsonField::Required}},
-                {"value", {{DataType::String}, jsonField::Required}},
-                {"to", {{DataType::String, DataType::Null}, jsonField::Required}},
-                {"secretKey", {{DataType::String}, jsonField::Optional}},
-                {"sender", {{DataType::String}, jsonField::Optional}},
-                {"v", {{DataType::String}, jsonField::Optional}},
-                {"r", {{DataType::String}, jsonField::Optional}},
-                {"s", {{DataType::String}, jsonField::Optional}},
-
-                // Transaction type 1
-                {"type", {{DataType::String}, jsonField::Optional}},
-                {"chainId", {{DataType::String, DataType::Null}, jsonField::Optional}},
-                {"accessList", {{DataType::Array}, jsonField::Required}},
-
-                {"publicKey", {{DataType::String}, jsonField::Optional}},  // Besu EthGetBlockBy transaction
-                {"raw", {{DataType::String}, jsonField::Optional}},        // Besu EthGetBlockBy transaction
-
-                {"blockHash", {{DataType::String}, jsonField::Optional}},         // EthGetBlockBy transaction
-                {"blockNumber", {{DataType::String}, jsonField::Optional}},       // EthGetBlockBy transaction
-                {"from", {{DataType::String}, jsonField::Optional}},              // EthGetBlockBy transaction
-                {"hash", {{DataType::String}, jsonField::Optional}},              // EthGetBlockBy transaction
-                {"transactionIndex", {{DataType::String}, jsonField::Optional}},  // EthGetBlockBy transaction
-                {"expectException", {{DataType::Object}, jsonField::Optional}}    // BlockchainTest filling
-            });
-
+        checkDataScheme(_data);
         m_accessList = spAccessList(new AccessList(_data.atKey("accessList")));
 
         m_data = spBYTES(new BYTES(_data.atKey("data")));

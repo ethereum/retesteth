@@ -3,9 +3,7 @@
 #include <libdevcore/RLP.h>
 #include <libdataobj/DataObject.h>
 
-namespace test
-{
-namespace teststruct
+namespace test::teststruct
 {
 
 enum class TransactionType
@@ -59,6 +57,8 @@ protected:
     virtual void streamHeader(dev::RLPStream& _stream) const = 0;
     virtual void rebuildRLP() = 0;
 
+    virtual void checkDataScheme(DataObject const&) const = 0;
+
 protected:
     Transaction();
     spBYTES m_data;
@@ -90,4 +90,3 @@ protected:
 typedef GCP_SPointer<Transaction> spTransaction;
 
 }  // namespace teststruct
-}  // namespace test

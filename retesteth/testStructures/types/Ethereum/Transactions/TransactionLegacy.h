@@ -4,14 +4,12 @@
 #include <libdevcore/RLP.h>
 #include <libdataobj/DataObject.h>
 
-namespace test
-{
-namespace teststruct
+namespace test::teststruct
 {
 
 struct TransactionLegacy : Transaction
 {
-    TransactionLegacy(DataObject const&);
+    TransactionLegacy(DataObject const& _data) : Transaction() { fromDataObject(_data); }
     TransactionLegacy(BYTES const&);
     TransactionLegacy(dev::RLP const&);
 
@@ -32,10 +30,11 @@ protected:
     virtual void streamHeader(dev::RLPStream& _stream) const override;
     virtual void rebuildRLP() override;
 
+    virtual void checkDataScheme(DataObject const&) const override;
+
     spVALUE m_gasPrice;
 };
 
 typedef GCP_SPointer<TransactionLegacy> spTransactionLegacy;
 
 }  // namespace teststruct
-}  // namespace test

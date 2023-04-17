@@ -9,7 +9,7 @@ namespace teststruct
 
 struct TransactionAccessList : TransactionLegacy
 {
-    TransactionAccessList(DataObject const&);
+    TransactionAccessList(DataObject const& _data) : TransactionLegacy() { fromDataObject(_data); }
     TransactionAccessList(BYTES const&);
     TransactionAccessList(dev::RLP const&);
 
@@ -20,12 +20,14 @@ protected:
     TransactionAccessList() {}
 
     // Override protected interface
-    void fromRLP(dev::RLP const&) override;
-    void fromDataObject(DataObject const&) override;
-    dev::h256 buildVRSHash() const override;
-    void buildVRS() override;
-    void streamHeader(dev::RLPStream& _stream) const override;
-    void rebuildRLP() override;
+    virtual void fromRLP(dev::RLP const&) override;
+    virtual void fromDataObject(DataObject const&) override;
+    virtual dev::h256 buildVRSHash() const override;
+    virtual void buildVRS() override;
+    virtual void streamHeader(dev::RLPStream& _stream) const override;
+    virtual void rebuildRLP() override;
+
+    virtual void checkDataScheme(DataObject const&) const override;
 
     // Transaction access list specific field
     spAccessList m_accessList;

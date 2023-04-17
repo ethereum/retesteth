@@ -11,7 +11,7 @@ using namespace test::debug;
 namespace test::teststruct
 {
 
-void BlockHeaderShanghai::checkDataScheme(DataObject const& _data)
+void BlockHeaderShanghai::checkDataScheme(DataObject const& _data) const
 {
     // Allowed fields for this structure
     REQUIRE_JSONFIELDS(_data, "BlockHeader1559 " + _data.getKey(),

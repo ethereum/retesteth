@@ -23,7 +23,7 @@ struct BlockHeaderShanghai : BlockHeaderMerge
 
 protected:
     virtual void fromData(DataObject const&) override;
-    virtual void checkDataScheme(DataObject const&) override;
+    virtual void checkDataScheme(DataObject const&) const override;
     virtual void _fromData(DataObject const&) override;
     virtual size_t _fromRLP(dev::RLP const&) override;
     virtual size_t _rlpHeaderSize() const override { return 17; }

@@ -10,7 +10,7 @@ using namespace test::debug;
 namespace test::teststruct
 {
 
-void BlockHeader1559::checkDataScheme(DataObject const& _data)
+void BlockHeader1559::checkDataScheme(DataObject const& _data) const
 {
     // Allowed fields for this structure
     REQUIRE_JSONFIELDS(_data, "BlockHeader1559 " + _data.getKey(),
