@@ -48,50 +48,18 @@ void BlockHeader1559::checkDataScheme(DataObject const& _data)
         });
 }
 
+void BlockHeader1559::_fromData(DataObject const& _data)
+{
+    BlockHeaderLegacy::_fromData(_data);
+    m_baseFee = spVALUE(new VALUE(_data.atKey("baseFeePerGas")));
+}
+
 void BlockHeader1559::fromData(DataObject const& _data)
 {
     try
     {
         checkDataScheme(_data);
-
-        string const akey = _data.count("author") ? "author" :
-                            _data.count("miner") ? "miner" : "coinbase";
-        m_author = spFH20(new FH20(_data.atKey(akey)));
-        m_difficulty = spVALUE(new VALUE(_data.atKey("difficulty")));
-        m_extraData = spBYTES(new BYTES(_data.atKey("extraData")));
-        m_gasLimit = spVALUE(new VALUE(_data.atKey("gasLimit")));
-
-        m_baseFee = spVALUE(new VALUE(_data.atKey("baseFeePerGas")));
-        m_gasUsed = spVALUE(new VALUE(_data.atKey("gasUsed")));
-        if (_data.count("hash"))
-            m_hash = spFH32(new FH32(_data.atKey("hash")));
-        string const bkey = _data.count("logsBloom") ? "logsBloom" : "bloom";
-        m_logsBloom = spFH256(new FH256(_data.atKey(bkey)));
-
-        if (_data.count("nonce"))
-        {
-            m_mixHash = spFH32(new FH32(_data.atKey("mixHash")));
-            m_nonce = spFH8(new FH8(_data.atKey("nonce")));
-        }
-        else
-        {
-            ETH_DC_MESSAGE(DC::TESTLOG, "BlockHeader `mixHash` is not defined. Using default `0x00..00` value!");
-            m_mixHash = spFH32(FH32::zero().copy());
-            m_nonce = spFH8(FH8::zero().copy());
-        }
-
-        m_number = spVALUE(new VALUE(_data.atKey("number")));
-        m_parentHash = spFH32(new FH32(_data.atKey("parentHash")));
-        string const rkey = _data.count("receiptsRoot") ? "receiptsRoot" : "receiptTrie";
-        m_receiptsRoot = spFH32(new FH32(_data.atKey(rkey)));
-        string const ukey = _data.count("sha3Uncles") ? "sha3Uncles" : "uncleHash";
-        m_sha3Uncles = spFH32(new FH32(_data.atKey(ukey)));
-        m_stateRoot = spFH32(new FH32(_data.atKey("stateRoot")));
-        m_timestamp = spVALUE(new VALUE(_data.atKey("timestamp")));
-        string const tkey = _data.count("transactionsRoot") ? "transactionsRoot" : "transactionsTrie";
-        m_transactionsRoot = spFH32(new FH32(_data.atKey(tkey)));
-
-        // Manual hash calculation
+        _fromData(_data);
         if (m_hash.isEmpty())
             recalculateHash();
     }
@@ -99,11 +67,6 @@ void BlockHeader1559::fromData(DataObject const& _data)
     {
         throw test::UpwardsException(string("Blockheader1559 parse error: ") + _ex.what());
     }
-}
-
-BlockHeader1559::BlockHeader1559(DataObject const& _data)
-{
-    fromData(_data);
 }
 
 BlockHeader1559::BlockHeader1559(dev::RLP const& _rlp)

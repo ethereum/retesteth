@@ -1,6 +1,6 @@
 #pragma once
 #include <retesteth/testStructures/basetypes.h>
-#include "BlockHeader.h"
+#include "BlockHeaderLegacy.h"
 #include <libdevcore/RLP.h>
 #include <libdataobj/DataObject.h>
 
@@ -8,9 +8,9 @@ namespace test
 {
 namespace teststruct
 {
-struct BlockHeader1559 : BlockHeader
+struct BlockHeader1559 : BlockHeaderLegacy
 {
-    BlockHeader1559(DataObject const&);
+    BlockHeader1559(DataObject const& _data) { fromData(_data); };
     BlockHeader1559(dev::RLP const&);
 
     spDataObject asDataObject() const override;
@@ -29,6 +29,7 @@ protected:
     BlockHeader1559(){};
     void fromData(DataObject const&) override;
     void checkDataScheme(DataObject const&) override;
+    void _fromData(DataObject const&) override;
 
     // Ethereum eip1559 blockheader fields
     spVALUE m_baseFee;

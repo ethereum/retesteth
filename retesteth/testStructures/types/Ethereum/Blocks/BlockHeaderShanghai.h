@@ -8,7 +8,7 @@ namespace test::teststruct
 {
 struct BlockHeaderShanghai : BlockHeaderMerge
 {
-    BlockHeaderShanghai(DataObject const& _in);
+    BlockHeaderShanghai(DataObject const& _in) { fromData(_in); };
     BlockHeaderShanghai(dev::RLP const& _in);
 
     spDataObject asDataObject() const override;
@@ -24,6 +24,7 @@ struct BlockHeaderShanghai : BlockHeaderMerge
 protected:
     void fromData(DataObject const&) override;
     void checkDataScheme(DataObject const&) override;
+    void _fromData(DataObject const&) override;
 
     spFH32 m_withdrawalsRoot;
     BlockHeaderShanghai(){};

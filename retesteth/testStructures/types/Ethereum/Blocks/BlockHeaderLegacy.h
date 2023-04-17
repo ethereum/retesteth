@@ -26,6 +26,7 @@ protected:
     BlockHeaderLegacy() {}
     virtual void fromData(DataObject const&) override;
     virtual void checkDataScheme(DataObject const&) override;
+    virtual void _fromData(DataObject const&) override;
 };
 
 typedef GCP_SPointer<BlockHeaderLegacy> spBlockHeaderLegacy;
