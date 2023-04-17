@@ -47,5 +47,16 @@ const string c_transactionsTrie = "transactionsTrie";
 const string c_baseFeePerGas = "baseFeePerGas";
 const string c_withdrawalsRoot = "withdrawalsRoot";
 
+// Transactions
+const string c_data = "data";
+const std::string c_gasPrice = "gasPrice";
+const std::string c_value = "value";
+const std::string c_to = "to";
+const std::string c_secretKey = "secretKey";
+const std::string c_sender = "sender";
+const std::string c_v = "v";
+const std::string c_r = "r";
+const std::string c_s = "s";
+
 }}}
 

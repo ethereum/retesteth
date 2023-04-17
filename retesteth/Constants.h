@@ -42,4 +42,15 @@ extern const std::string c_transactionsTrie;
 extern const std::string c_baseFeePerGas;
 extern const std::string c_withdrawalsRoot;
 
+// Transactions
+extern const std::string c_data;
+extern const std::string c_gasPrice;
+extern const std::string c_value;
+extern const std::string c_to;
+extern const std::string c_secretKey;
+extern const std::string c_sender;
+extern const std::string c_v;
+extern const std::string c_r;
+extern const std::string c_s;
+
 }}}
