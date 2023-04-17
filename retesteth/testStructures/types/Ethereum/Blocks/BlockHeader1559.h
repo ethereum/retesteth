@@ -27,9 +27,10 @@ struct BlockHeader1559 : BlockHeaderLegacy
 
 protected:
     BlockHeader1559(){};
-    void fromData(DataObject const&) override;
-    void checkDataScheme(DataObject const&) override;
-    void _fromData(DataObject const&) override;
+    virtual void fromData(DataObject const&) override;
+    virtual void checkDataScheme(DataObject const&) override;
+    virtual void _fromData(DataObject const&) override;
+    virtual size_t _fromRLP(dev::RLP const&) override;
 
     // Ethereum eip1559 blockheader fields
     spVALUE m_baseFee;

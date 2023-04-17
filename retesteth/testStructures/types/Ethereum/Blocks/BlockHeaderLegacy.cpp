@@ -100,12 +100,7 @@ void BlockHeaderLegacy::fromData(DataObject const& _data)
     }
 }
 
-BlockHeaderLegacy::BlockHeaderLegacy(DataObject const& _data)
-{
-    fromData(_data);
-}
-
-BlockHeaderLegacy::BlockHeaderLegacy(dev::RLP const& _rlp)
+size_t BlockHeaderLegacy::_fromRLP(dev::RLP const& _rlp)
 {
     // 0 - parentHash           // 8 - number
     // 1 - uncleHash            // 9 - gasLimit
@@ -131,6 +126,12 @@ BlockHeaderLegacy::BlockHeaderLegacy(dev::RLP const& _rlp)
     m_extraData = spBYTES(new BYTES(_rlp[i++]));
     m_mixHash = spFH32(new FH32(_rlp[i++]));
     m_nonce = spFH8(new FH8(_rlp[i++]));
+    return i;
+}
+
+BlockHeaderLegacy::BlockHeaderLegacy(dev::RLP const& _rlp)
+{
+    _fromRLP(_rlp);
     recalculateHash();
 }
 

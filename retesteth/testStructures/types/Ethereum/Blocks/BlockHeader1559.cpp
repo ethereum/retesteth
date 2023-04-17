@@ -69,7 +69,7 @@ void BlockHeader1559::fromData(DataObject const& _data)
     }
 }
 
-BlockHeader1559::BlockHeader1559(dev::RLP const& _rlp)
+size_t BlockHeader1559::_fromRLP(dev::RLP const& _rlp)
 {
     // 0 - parentHash           // 8 - number
     // 1 - uncleHash            // 9 - gasLimit
@@ -79,23 +79,14 @@ BlockHeader1559::BlockHeader1559(dev::RLP const& _rlp)
     // 5 - receiptTrie          // 13 - mixHash
     // 6 - bloom                // 14 - nonce
     // 7 - difficulty           // 15 - baseFee
-    size_t i = 0;
-    m_parentHash = spFH32(new FH32(_rlp[i++]));
-    m_sha3Uncles = spFH32(new FH32(_rlp[i++]));
-    m_author = spFH20(new FH20(_rlp[i++]));
-    m_stateRoot = spFH32(new FH32(_rlp[i++]));
-    m_transactionsRoot = spFH32(new FH32(_rlp[i++]));
-    m_receiptsRoot = spFH32(new FH32(_rlp[i++]));
-    m_logsBloom = spFH256(new FH256(_rlp[i++]));
-    m_difficulty = spVALUE(new VALUE(_rlp[i++]));
-    m_number = spVALUE(new VALUE(_rlp[i++]));
-    m_gasLimit = spVALUE(new VALUE(_rlp[i++]));
-    m_gasUsed = spVALUE(new VALUE(_rlp[i++]));
-    m_timestamp = spVALUE(new VALUE(_rlp[i++]));
-    m_extraData = spBYTES(new BYTES(_rlp[i++]));
-    m_mixHash = spFH32(new FH32(_rlp[i++]));
-    m_nonce = spFH8(new FH8(_rlp[i++]));
+    size_t i = BlockHeaderLegacy::_fromRLP(_rlp);
     m_baseFee = spVALUE(new VALUE(_rlp[i++]));
+    return i;
+}
+
+BlockHeader1559::BlockHeader1559(dev::RLP const& _rlp)
+{
+    _fromRLP(_rlp);
     recalculateHash();
 }
 
