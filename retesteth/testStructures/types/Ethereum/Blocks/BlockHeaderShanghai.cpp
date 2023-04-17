@@ -57,21 +57,6 @@ void BlockHeaderShanghai::_fromData(DataObject const& _data)
     m_withdrawalsRoot = spFH32(new FH32(_data.atKey("withdrawalsRoot")));
 }
 
-void BlockHeaderShanghai::fromData(DataObject const& _data)
-{
-    try
-    {
-        checkDataScheme(_data);
-        _fromData(_data);
-        if (m_hash.isEmpty())
-            recalculateHash();
-    }
-    catch (std::exception const& _ex)
-    {
-        throw test::UpwardsException(string("BlockheaderShanghai parse error: ") + _ex.what());
-    }
-}
-
 size_t BlockHeaderShanghai::_fromRLP(dev::RLP const& _rlp)
 {
     // 0 - parentHash           // 8 - number

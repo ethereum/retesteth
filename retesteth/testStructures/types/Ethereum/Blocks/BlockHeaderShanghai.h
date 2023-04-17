@@ -22,7 +22,6 @@ struct BlockHeaderShanghai : BlockHeaderMerge
     static BlockHeaderShanghai& castFrom(BlockHeader& _from);
 
 protected:
-    virtual void fromData(DataObject const&) override;
     virtual void checkDataScheme(DataObject const&) const override;
     virtual void _fromData(DataObject const&) override;
     virtual size_t _fromRLP(dev::RLP const&) override;

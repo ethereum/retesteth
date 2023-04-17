@@ -16,7 +16,7 @@ enum class BlockType
 // Ethereum blockheader interface
 struct BlockHeader : GCP_SPointerBase
 {
-    static std::string TypeToString(BlockType _t);
+    static std::string BlockTypeToString(BlockType _t);
     virtual ~BlockHeader(){/* all smart pointers */};
 
     virtual spDataObject asDataObject() const = 0;
@@ -25,7 +25,6 @@ struct BlockHeader : GCP_SPointerBase
 
     bool operator==(BlockHeader const& _rhs) const { return asDataObject() == _rhs.asDataObject(); }
     bool operator!=(BlockHeader const& _rhs) const { return !(*this == _rhs); }
-    static std::string BlockTypeToString(BlockType _bl);
 
     void recalculateHash();
     bool hasUncles() const;
@@ -68,7 +67,7 @@ struct BlockHeader : GCP_SPointerBase
 
 protected:
     BlockHeader() {}
-    virtual void fromData(DataObject const&) = 0;
+    void fromData(DataObject const&);
     virtual void checkDataScheme(DataObject const&) const = 0;
     virtual void _fromData(DataObject const&) = 0;
     virtual size_t _fromRLP(dev::RLP const&) = 0;

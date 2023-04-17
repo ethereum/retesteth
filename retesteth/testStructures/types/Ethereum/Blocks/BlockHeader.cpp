@@ -2,22 +2,12 @@
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/SHA3.h>
 #include <retesteth/Constants.h>
+#include <retesteth/EthChecks.h>
+
+using namespace std;
 
 namespace test::teststruct
 {
-std::string BlockHeader::TypeToString(BlockType _t)
-{
-    switch (_t)
-    {
-        using enum BlockType;
-        case BlockHeader1559: return "BlockHeader1559";
-        case BlockHeaderLegacy: return "BlockHeaderLegacy";
-        case BlockHeaderMerge: return "BlockHeaderMerge";
-        case BlockHeaderShanghai: return "BlockHeaderShanghai";
-        default: return "UnparsedBlockType";
-    }
-    return "UnparsedBlockType";
-}
 
 std::string BlockHeader::BlockTypeToString(BlockType _bl)
 {
@@ -28,9 +18,9 @@ std::string BlockHeader::BlockTypeToString(BlockType _bl)
         case BlockHeaderLegacy: return "BlockHeaderLegacy";
         case BlockHeaderMerge: return "BlockHeaderMerge";
         case BlockHeaderShanghai: return "BlockHeaderShanghai";
-        default: return "BlockHeaderUndefined";
+        default: return "UnparsedBlockType";
     };
-    return "BlockHEaderUndefined";
+    return "UnparsedBlockType";
 }
 
 void BlockHeader::recalculateHash()
@@ -44,6 +34,20 @@ bool BlockHeader::hasUncles() const
     return m_sha3Uncles->asString() != C_EMPTY_LIST_HASH;
 }
 
+void BlockHeader::fromData(DataObject const& _data)
+{
+    try
+    {
+        checkDataScheme(_data);
+        _fromData(_data);
+        if (m_hash.isEmpty())
+            recalculateHash();
+    }
+    catch (std::exception const& _ex)
+    {
+        throw test::UpwardsException(BlockTypeToString(type()) + string(" parse error: ") + _ex.what());
+    }
+}
 
 
 }  // namespace test::teststruct

@@ -54,21 +54,6 @@ void BlockHeader1559::_fromData(DataObject const& _data)
     m_baseFee = spVALUE(new VALUE(_data.atKey("baseFeePerGas")));
 }
 
-void BlockHeader1559::fromData(DataObject const& _data)
-{
-    try
-    {
-        checkDataScheme(_data);
-        _fromData(_data);
-        if (m_hash.isEmpty())
-            recalculateHash();
-    }
-    catch (std::exception const& _ex)
-    {
-        throw test::UpwardsException(string("Blockheader1559 parse error: ") + _ex.what());
-    }
-}
-
 size_t BlockHeader1559::_fromRLP(dev::RLP const& _rlp)
 {
     // 0 - parentHash           // 8 - number
@@ -111,7 +96,7 @@ BlockHeader1559& BlockHeader1559::castFrom(BlockHeader& _from)
         if (_from.type() != BlockType::BlockHeader1559 &&
             _from.type() != BlockType::BlockHeaderMerge &&
             _from.type() != BlockType::BlockHeaderShanghai)
-            ETH_FAIL_MESSAGE("BlockHeader1559::castFrom() got wrong block type! `" + BlockHeader::TypeToString(_from.type()));
+            ETH_FAIL_MESSAGE("BlockHeader1559::castFrom() got wrong block type! `" + BlockHeader::BlockTypeToString(_from.type()));
         return dynamic_cast<BlockHeader1559&>(_from);
     }
     catch (...)
@@ -128,7 +113,7 @@ BlockHeader1559 const& BlockHeader1559::castFrom(spBlockHeader const& _from)
         if (_from->type() != BlockType::BlockHeader1559 &&
             _from->type() != BlockType::BlockHeaderMerge &&
             _from->type() != BlockType::BlockHeaderShanghai)
-            ETH_FAIL_MESSAGE("BlockHeader1559::castFrom() got wrong block type! `" + BlockHeader::TypeToString(_from->type()));
+            ETH_FAIL_MESSAGE("BlockHeader1559::castFrom() got wrong block type! `" + BlockHeader::BlockTypeToString(_from->type()));
         return dynamic_cast<BlockHeader1559 const&>(_from.getCContent());
     }
     catch (...)
