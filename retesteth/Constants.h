@@ -39,5 +39,7 @@ extern const std::string c_stateRoot;
 extern const std::string c_timestamp;
 extern const std::string c_transactionsRoot;
 extern const std::string c_transactionsTrie;
+extern const std::string c_baseFeePerGas;
+extern const std::string c_withdrawalsRoot;
 
 }}}

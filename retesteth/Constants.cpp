@@ -44,6 +44,8 @@ const string c_stateRoot = "stateRoot";
 const string c_timestamp = "timestamp";
 const string c_transactionsRoot = "transactionsRoot";
 const string c_transactionsTrie = "transactionsTrie";
+const string c_baseFeePerGas = "baseFeePerGas";
+const string c_withdrawalsRoot = "withdrawalsRoot";
 
 }}}
 
