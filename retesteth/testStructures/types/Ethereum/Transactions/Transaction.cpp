@@ -4,10 +4,25 @@
 #include <libdevcrypto/Common.h>
 #include <retesteth/testStructures/Common.h>
 
+using namespace std;
 using namespace test;
 using namespace test::debug;
 namespace test::teststruct
 {
+
+std::string Transaction::TransactionTypeToString(TransactionType _bl)
+{
+    switch (_bl)
+    {
+        using enum TransactionType;
+        case LEGACY: return "LegacyTransaction";
+        case ACCESSLIST: return "AccessListTransaction";
+        case BASEFEE: return "BasefeeTransaction";
+        default: return "UnparsedTransactionType";
+    };
+    return "UnparsedTransactionType";
+}
+
 
 void Transaction::setChainID(VALUE const& _chainID) {
     if (m_secretKey.getCContent() != 0)
@@ -22,6 +37,37 @@ void Transaction::setChainID(VALUE const& _chainID) {
 Transaction::Transaction()
 {
     m_chainID = spVALUE(new VALUE(Options::get().getCurrentConfig().cfgFile().defaultChainID()));
+}
+
+void Transaction::fromDataObject(DataObject const& _data)
+{
+    try
+    {
+        checkDataScheme(_data);
+        _fromData(_data);
+        makeSignature(_data);
+    }
+    catch (std::exception const& _ex)
+    {
+        throw UpwardsException(string(TransactionTypeToString(type()) + string(" convertion error: ") + _ex.what() + _data.asJson()));
+    }
+}
+
+
+void Transaction::makeSignature(DataObject const& _data)
+{
+    if (_data.count("secretKey"))
+    {
+        setSecret(_data.atKey("secretKey"));
+        buildVRS();
+    }
+    else
+    {
+        m_v = spVALUE(new VALUE(_data.atKey("v")));
+        m_r = spVALUE(new VALUE(_data.atKey("r")));
+        m_s = spVALUE(new VALUE(_data.atKey("s")));
+        rebuildRLP();
+    }
 }
 
 FH20 const& Transaction::sender() const

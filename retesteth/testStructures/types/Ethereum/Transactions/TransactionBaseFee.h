@@ -17,13 +17,13 @@ struct TransactionBaseFee : Transaction
 
 private:
     virtual void fromRLP(dev::RLP const&) override;
-    virtual void fromDataObject(DataObject const&) override;
     virtual dev::h256 buildVRSHash() const override;
     virtual void buildVRS() override;
     virtual void streamHeader(dev::RLPStream& _stream) const override;
     virtual void rebuildRLP() override;
 
     virtual void checkDataScheme(DataObject const&) const override;
+    virtual void _fromData(DataObject const&) override;
 
     spAccessList m_accessList;
     spVALUE m_maxFeePerGas;

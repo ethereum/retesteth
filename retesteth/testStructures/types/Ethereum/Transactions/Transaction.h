@@ -15,6 +15,8 @@ enum class TransactionType
 
 struct Transaction : GCP_SPointerBase
 {
+    static std::string TransactionTypeToString(TransactionType _t);
+
     // Transaction Interface
     virtual TransactionType type() const = 0;
     virtual const spDataObject asDataObject(ExportOrder _order = ExportOrder::Default) const = 0;
@@ -50,7 +52,7 @@ struct Transaction : GCP_SPointerBase
 
 protected:
     // Potected transaction interface
-    virtual void fromDataObject(DataObject const&) = 0;
+    void fromDataObject(DataObject const&);
     virtual void fromRLP(dev::RLP const&) = 0;
     virtual dev::h256 buildVRSHash() const = 0;
     virtual void buildVRS() = 0;
@@ -58,6 +60,8 @@ protected:
     virtual void rebuildRLP() = 0;
 
     virtual void checkDataScheme(DataObject const&) const = 0;
+    virtual void _fromData(DataObject const&) = 0;
+    void makeSignature(DataObject const&);
 
 protected:
     Transaction();

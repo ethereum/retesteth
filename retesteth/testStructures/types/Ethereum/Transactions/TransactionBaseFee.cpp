@@ -51,50 +51,28 @@ void TransactionBaseFee::checkDataScheme(DataObject const& _data) const
         });
 }
 
-void TransactionBaseFee::fromDataObject(DataObject const& _data)
+void TransactionBaseFee::_fromData(DataObject const& _data)
 {
-    try
+    m_accessList = spAccessList(new AccessList(_data.atKey("accessList")));
+    m_maxFeePerGas = spVALUE(new VALUE(_data.atKey("maxFeePerGas")));
+    m_maxPriorityFeePerGas = spVALUE(new VALUE(_data.atKey("maxPriorityFeePerGas")));
+
+    m_data = spBYTES(new BYTES(_data.atKey("data")));
+    m_gasLimit = spVALUE(new VALUE(_data.atKey("gasLimit")));
+    m_nonce = spVALUE(new VALUE(_data.atKey("nonce")));
+    m_value = spVALUE(new VALUE(_data.atKey("value")));
+    if (_data.count("sender"))
+        m_sender = spFH20(new FH20(_data.atKey("sender")));
+
+    if (_data.count("chainId"))
+        m_chainID = spVALUE(new VALUE(_data.atKey("chainId")));
+
+    if (_data.atKey("to").type() == DataType::Null || _data.atKey("to").asString().empty())
+        m_creation = true;
+    else
     {
-        checkDataScheme(_data);
-
-        m_accessList = spAccessList(new AccessList(_data.atKey("accessList")));
-        m_maxFeePerGas = spVALUE(new VALUE(_data.atKey("maxFeePerGas")));
-        m_maxPriorityFeePerGas = spVALUE(new VALUE(_data.atKey("maxPriorityFeePerGas")));
-
-        m_data = spBYTES(new BYTES(_data.atKey("data")));
-        m_gasLimit = spVALUE(new VALUE(_data.atKey("gasLimit")));
-        m_nonce = spVALUE(new VALUE(_data.atKey("nonce")));
-        m_value = spVALUE(new VALUE(_data.atKey("value")));
-        if (_data.count("sender"))
-            m_sender = spFH20(new FH20(_data.atKey("sender")));
-
-        if (_data.count("chainId"))
-            m_chainID = spVALUE(new VALUE(_data.atKey("chainId")));
-
-        if (_data.atKey("to").type() == DataType::Null || _data.atKey("to").asString().empty())
-            m_creation = true;
-        else
-        {
-            m_creation = false;
-            m_to = spFH20(new FH20(_data.atKey("to")));
-        }
-
-        if (_data.count("secretKey"))
-        {
-            setSecret(_data.atKey("secretKey"));
-            buildVRS();
-        }
-        else
-        {
-            m_v = spVALUE(new VALUE(_data.atKey("v")));
-            m_r = spVALUE(new VALUE(_data.atKey("r")));
-            m_s = spVALUE(new VALUE(_data.atKey("s")));
-            rebuildRLP();
-        }
-    }
-    catch (std::exception const& _ex)
-    {
-        throw UpwardsException(string("TransactionBaseFee convertion error: ") + _ex.what() + _data.asJson());
+        m_creation = false;
+        m_to = spFH20(new FH20(_data.atKey("to")));
     }
 }
 
