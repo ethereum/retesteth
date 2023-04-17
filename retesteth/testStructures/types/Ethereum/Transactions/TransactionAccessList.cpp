@@ -118,39 +118,22 @@ dev::h256 TransactionAccessList::buildVRSHash() const
 
 void TransactionAccessList::buildVRS()
 {
-    const dev::h256 hash = buildVRSHash();
-    const dev::Secret secret(m_secretKey->asString());
-    dev::Signature sig = dev::sign(secret, hash);
-    dev::SignatureStruct sigStruct = *(dev::SignatureStruct const*)&sig;
-    ETH_FAIL_REQUIRE_MESSAGE(
-        sigStruct.isValid(), TestOutputHelper::get().testName() + " Could not construct transaction signature!");
-
-    m_v = spVALUE(new VALUE(dev::toCompactHexPrefixed(dev::u256(sigStruct.v), 1)));
-    m_r = spVALUE(new VALUE(dev::toCompactHexPrefixed(dev::u256(sigStruct.r))));
-    m_s = spVALUE(new VALUE(dev::toCompactHexPrefixed(dev::u256(sigStruct.s))));
-    rebuildRLP();
+    Transaction::buildVRS();
 }
 
 void TransactionAccessList::streamHeader(dev::RLPStream& _s) const
 {
     // rlp([chainId, nonce, gasPrice, gasLimit, to, value, data, access_list, yParity, senderR, senderS])
     _s << m_chainID->asBigInt();
-    _s << nonce().serializeRLP();
-    _s << gasPrice().serializeRLP();
-    _s << gasLimit().serializeRLP();
-    if (Transaction::isCreation())
-        _s << "";
-    else
-        _s << to().serializeRLP();
-    _s << value().serializeRLP();
-    _s << test::sfromHex(data().asString());
+
+    TransactionLegacy::streamHeader(_s);
 
     // Access Listist
     dev::RLPStream accessList(m_accessList->list().size());
     for (auto const& el : m_accessList->list())
         accessList.appendRaw(el->asRLPStream().out());
-
     _s.appendRaw(accessList.out());
+
 }
 
 const spDataObject TransactionAccessList::asDataObject(ExportOrder _order) const
@@ -179,7 +162,7 @@ void TransactionAccessList::rebuildRLP()
     // RLP(01 + tr.rlp)
     dev::RLPStream wrapper;
     dev::RLPStream out;
-    out.appendList(11);
+    out.appendList(_rlpHeaderSize());
     streamHeader(out);
     out << v().serializeRLP();
     out << r().serializeRLP();

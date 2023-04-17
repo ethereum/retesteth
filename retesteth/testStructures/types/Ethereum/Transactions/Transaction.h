@@ -57,7 +57,7 @@ protected:
 
     virtual void fromRLP(dev::RLP const&) = 0;
     virtual dev::h256 buildVRSHash() const = 0;
-    virtual void buildVRS() = 0;
+    virtual void buildVRS();
     virtual void streamHeader(dev::RLPStream& _stream) const = 0;
     virtual void rebuildRLP() = 0;
 

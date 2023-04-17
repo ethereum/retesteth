@@ -138,26 +138,12 @@ dev::h256 TransactionBaseFee::buildVRSHash() const
     return dev::sha3(outa);
 }
 
-void TransactionBaseFee::buildVRS()
-{
-    const dev::Secret secret(m_secretKey->asString());
-    const dev::h256 hash = buildVRSHash();
-    dev::Signature sig = dev::sign(secret, hash);
-    dev::SignatureStruct sigStruct = *(dev::SignatureStruct const*)&sig;
-    ETH_FAIL_REQUIRE_MESSAGE(
-        sigStruct.isValid(), TestOutputHelper::get().testName() + " Could not construct transaction signature!");
-
-    m_v = spVALUE(new VALUE(dev::toCompactHexPrefixed(dev::u256(sigStruct.v), 1)));
-    m_r = spVALUE(new VALUE(dev::toCompactHexPrefixed(dev::u256(sigStruct.r))));
-    m_s = spVALUE(new VALUE(dev::toCompactHexPrefixed(dev::u256(sigStruct.s))));
-    rebuildRLP();
-}
-
 void TransactionBaseFee::streamHeader(dev::RLPStream& _s) const
 {
     // rlp([chainId, nonce, maxPriorityFeePerGas, maxFeePerGas, gasLimit, to, value, data, access_list, signatureYParity,
     // signatureR, signatureS])
     _s << m_chainID->asBigInt();
+
     _s << nonce().serializeRLP();
     _s << m_maxPriorityFeePerGas->serializeRLP();
     _s << m_maxFeePerGas->serializeRLP();
@@ -240,7 +226,7 @@ void TransactionBaseFee::rebuildRLP()
     // RLP(02 + tr.rlp)
     dev::RLPStream wrapper;
     dev::RLPStream out;
-    out.appendList(12);
+    out.appendList(_rlpHeaderSize());
     TransactionBaseFee::streamHeader(out);
     out << v().serializeRLP();
     out << r().serializeRLP();

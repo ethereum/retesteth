@@ -218,7 +218,7 @@ const spDataObject TransactionLegacy::asDataObject(ExportOrder _order) const
 void TransactionLegacy::rebuildRLP()
 {
     dev::RLPStream out;
-    out.appendList(9);
+    out.appendList(_rlpHeaderSize());
     streamHeader(out);
     out << v().serializeRLP();
     out << r().serializeRLP();

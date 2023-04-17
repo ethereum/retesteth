@@ -3,6 +3,7 @@
 #include <EthChecks.h>
 #include <libdevcrypto/Common.h>
 #include <retesteth/testStructures/Common.h>
+#include <retesteth/TestOutputHelper.h>
 
 using namespace std;
 using namespace test;
@@ -68,6 +69,21 @@ void Transaction::makeSignature(DataObject const& _data)
         m_s = spVALUE(new VALUE(_data.atKey("s")));
         rebuildRLP();
     }
+}
+
+void Transaction::buildVRS()
+{
+    const dev::h256 hash = buildVRSHash();
+    const dev::Secret secret(m_secretKey->asString());
+    dev::Signature sig = dev::sign(secret, hash);
+    dev::SignatureStruct sigStruct = *(dev::SignatureStruct const*)&sig;
+    ETH_FAIL_REQUIRE_MESSAGE(
+        sigStruct.isValid(), TestOutputHelper::get().testName() + " Could not construct transaction signature!");
+
+    m_v = spVALUE(new VALUE(dev::toCompactHexPrefixed(dev::u256(sigStruct.v), 1)));
+    m_r = spVALUE(new VALUE(dev::toCompactHexPrefixed(dev::u256(sigStruct.r))));
+    m_s = spVALUE(new VALUE(dev::toCompactHexPrefixed(dev::u256(sigStruct.s))));
+    rebuildRLP();
 }
 
 FH20 const& Transaction::sender() const
