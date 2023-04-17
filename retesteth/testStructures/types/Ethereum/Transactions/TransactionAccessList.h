@@ -28,6 +28,7 @@ protected:
 
     virtual void checkDataScheme(DataObject const&) const override;
     virtual void _fromData(DataObject const&) override;
+    virtual size_t _rlpHeaderSize() const override { return 11; }
 
     // Transaction access list specific field
     spAccessList m_accessList;

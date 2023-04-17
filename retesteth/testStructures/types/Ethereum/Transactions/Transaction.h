@@ -53,6 +53,8 @@ struct Transaction : GCP_SPointerBase
 protected:
     // Potected transaction interface
     void fromDataObject(DataObject const&);
+    void makeSignature(DataObject const&);
+
     virtual void fromRLP(dev::RLP const&) = 0;
     virtual dev::h256 buildVRSHash() const = 0;
     virtual void buildVRS() = 0;
@@ -61,7 +63,8 @@ protected:
 
     virtual void checkDataScheme(DataObject const&) const = 0;
     virtual void _fromData(DataObject const&) = 0;
-    void makeSignature(DataObject const&);
+
+    virtual size_t _rlpHeaderSize() const = 0;
 
 protected:
     Transaction();

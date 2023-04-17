@@ -31,6 +31,7 @@ protected:
 
     virtual void checkDataScheme(DataObject const&) const override;
     virtual void _fromData(DataObject const&) override;
+    virtual size_t _rlpHeaderSize() const override { return 9; }
 
     spVALUE m_gasPrice;
 };

@@ -24,6 +24,7 @@ private:
 
     virtual void checkDataScheme(DataObject const&) const override;
     virtual void _fromData(DataObject const&) override;
+    virtual size_t _rlpHeaderSize() const override { return 12; }
 
     spAccessList m_accessList;
     spVALUE m_maxFeePerGas;

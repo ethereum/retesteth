@@ -66,8 +66,10 @@ TransactionAccessList::TransactionAccessList(BYTES const& _rlp) : TransactionLeg
 
 void TransactionAccessList::fromRLP(dev::RLP const& _rlp)
 {
-    if (_rlp.itemCount() != 11)
-        throw test::UpwardsException("TransactionAccessList::fromRLP(RLP) expected to have exactly 10 elements!");
+    if (_rlp.itemCount() != _rlpHeaderSize())
+        throw test::UpwardsException(TransactionTypeToString(type())
+                                     + "::fromRLP(RLP) expected to have exactly "
+                                     + test::fto_string(_rlpHeaderSize()) + " elements!");
 
     // 0 - chainID
     // 1 - nonce        4 - to      7 - v

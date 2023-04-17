@@ -90,8 +90,10 @@ TransactionBaseFee::TransactionBaseFee(BYTES const& _rlp) : Transaction()
 
 void TransactionBaseFee::fromRLP(dev::RLP const& _rlp)
 {
-    if (_rlp.itemCount() != 12)
-        throw test::UpwardsException("TransactionBaseFee::fromRLP(RLP) expected to have exactly 11 elements!");
+    if (_rlp.itemCount() != _rlpHeaderSize())
+        throw test::UpwardsException(TransactionTypeToString(type())
+                                     + "::fromRLP(RLP) expected to have exactly "
+                                     + test::fto_string(_rlpHeaderSize()) + " elements!");
 
     size_t i = 0;
     m_chainID = spVALUE(new VALUE(_rlp[i++]));
