@@ -5,11 +5,11 @@
 
 namespace test::teststruct
 {
-struct FH : GCP_SPointerBase
+struct FH : dataobject::GCP_SPointerBase
 {
     FH(dev::RLP const& _rlp, size_t _scale);
     FH(std::string const&, size_t _scale);
-    FH(DataObject const&, size_t _scale);  // Does not require to move smart pointer here as this structure changes a lot
+    FH(dataobject::DataObject const&, size_t _scale);  // Does not require to move smart pointer here as this structure changes a lot
 
     std::string const& asString() const;
     dev::bytes const& serializeRLP() const;
@@ -26,7 +26,7 @@ private:
     void _initialize(std::string const& _s, std::string const& _k = std::string());
 
 protected:
-    BYTES m_data = BYTES(DataObject("0x00"));
+    BYTES m_data = BYTES(dataobject::DataObject("0x00"));
     size_t m_scale;
     bool m_isCorrectHash = true;
     mutable std::string m_dataStrZeroXCache;

@@ -2,10 +2,12 @@
 #include <retesteth/EthChecks.h>
 #include <retesteth/TestHelper.h>
 #include <retesteth/testStructures/Common.h>
+#include <retesteth/Constants.h>
 
 using namespace dev;
 using namespace std;
 using namespace test::debug;
+using namespace test::teststruct::constnames;
 
 namespace test::teststruct
 {
@@ -15,28 +17,28 @@ void BlockHeaderLegacy::checkDataScheme(DataObject const& _data) const
     // Allowed fields for this structure
     REQUIRE_JSONFIELDS(_data, "BlockHeaderLegacy " + _data.getKey(),
         {
-            {"bloom", {{DataType::String}, jsonField::Optional}},
-            {"logsBloom", {{DataType::String}, jsonField::Optional}},
-            {"coinbase", {{DataType::String}, jsonField::Optional}},
-            {"author", {{DataType::String}, jsonField::Optional}},
-            {"miner", {{DataType::String}, jsonField::Optional}},
-            {"difficulty", {{DataType::String}, jsonField::Required}},
-            {"extraData", {{DataType::String}, jsonField::Required}},
-            {"gasLimit", {{DataType::String}, jsonField::Required}},
-            {"gasUsed", {{DataType::String}, jsonField::Required}},
-            {"hash", {{DataType::String}, jsonField::Optional}},
-            {"mixHash", {{DataType::String}, jsonField::Optional}},
-            {"nonce", {{DataType::String}, jsonField::Optional}},
-            {"number", {{DataType::String}, jsonField::Required}},
-            {"parentHash", {{DataType::String}, jsonField::Required}},
-            {"receiptTrie", {{DataType::String}, jsonField::Optional}},
-            {"receiptsRoot", {{DataType::String}, jsonField::Optional}},
-            {"stateRoot", {{DataType::String}, jsonField::Required}},
-            {"timestamp", {{DataType::String}, jsonField::Required}},
-            {"transactionsTrie", {{DataType::String}, jsonField::Optional}},
-            {"transactionsRoot", {{DataType::String}, jsonField::Optional}},
-            {"sha3Uncles", {{DataType::String}, jsonField::Optional}},
-            {"uncleHash", {{DataType::String}, jsonField::Optional}},
+            {c_bloom, {{DataType::String}, jsonField::Optional}},
+            {c_logsBloom, {{DataType::String}, jsonField::Optional}},
+            {c_coinbase, {{DataType::String}, jsonField::Optional}},
+            {c_author, {{DataType::String}, jsonField::Optional}},
+            {c_miner, {{DataType::String}, jsonField::Optional}},
+            {c_difficulty, {{DataType::String}, jsonField::Required}},
+            {c_extraData, {{DataType::String}, jsonField::Required}},
+            {c_gasLimit, {{DataType::String}, jsonField::Required}},
+            {c_gasUsed, {{DataType::String}, jsonField::Required}},
+            {c_hash, {{DataType::String}, jsonField::Optional}},
+            {c_mixHash, {{DataType::String}, jsonField::Optional}},
+            {c_nonce, {{DataType::String}, jsonField::Optional}},
+            {c_number, {{DataType::String}, jsonField::Required}},
+            {c_parentHash, {{DataType::String}, jsonField::Required}},
+            {c_receiptTrie, {{DataType::String}, jsonField::Optional}},
+            {c_receiptsRoot, {{DataType::String}, jsonField::Optional}},
+            {c_stateRoot, {{DataType::String}, jsonField::Required}},
+            {c_timestamp, {{DataType::String}, jsonField::Required}},
+            {c_transactionsTrie, {{DataType::String}, jsonField::Optional}},
+            {c_transactionsRoot, {{DataType::String}, jsonField::Optional}},
+            {c_sha3Uncles, {{DataType::String}, jsonField::Optional}},
+            {c_uncleHash, {{DataType::String}, jsonField::Optional}},
             {"rejectedTransactions", {{DataType::Array}, jsonField::Optional}},   // EthGetBlockBy test debug field
             {"seedHash", {{DataType::String}, jsonField::Optional}},         // EthGetBlockBy aleth field
             {"boundary", {{DataType::String}, jsonField::Optional}},         // EthGetBlockBy aleth field
@@ -49,22 +51,22 @@ void BlockHeaderLegacy::checkDataScheme(DataObject const& _data) const
 
 void BlockHeaderLegacy::_fromData(DataObject const& _data)
 {
-    string const akey = _data.count("author") ? "author"
-                       : _data.count("miner") ? "miner" : "coinbase";
-    m_author = spFH20(new FH20(_data.atKey(akey)));
-    m_difficulty = spVALUE(new VALUE(_data.atKey("difficulty")));
-    m_extraData = spBYTES(new BYTES(_data.atKey("extraData")));
-    m_gasLimit = spVALUE(new VALUE(_data.atKey("gasLimit")));
-    m_gasUsed = spVALUE(new VALUE(_data.atKey("gasUsed")));
-    if (_data.count("hash"))
-        m_hash = spFH32(new FH32(_data.atKey("hash")));
-    string const bkey = _data.count("logsBloom") ? "logsBloom" : "bloom";
-    m_logsBloom = spFH256(new FH256(_data.atKey(bkey)));
+    string const& akey = _data.count(c_author) ? c_author
+                       : _data.count(c_miner) ? c_miner : c_coinbase;
+    m_author = sFH20(_data.atKey(akey));
+    m_difficulty = sVALUE(_data.atKey(c_difficulty));
+    m_extraData = sBYTES(_data.atKey(c_extraData));
+    m_gasLimit = sVALUE(_data.atKey(c_gasLimit));
+    m_gasUsed = sVALUE(_data.atKey(c_gasUsed));
+    if (_data.count(c_hash))
+        m_hash = sFH32(_data.atKey(c_hash));
+    string const& bkey = _data.count(c_logsBloom) ? c_logsBloom : c_bloom;
+    m_logsBloom = sFH256(_data.atKey(bkey));
 
-    if (_data.count("nonce"))
+    if (_data.count(c_nonce))
     {
-        m_mixHash = spFH32(new FH32(_data.atKey("mixHash")));
-        m_nonce = spFH8(new FH8(_data.atKey("nonce")));
+        m_mixHash = sFH32(_data.atKey(c_mixHash));
+        m_nonce = sFH8(_data.atKey(c_nonce));
     }
     else
     {
@@ -73,16 +75,16 @@ void BlockHeaderLegacy::_fromData(DataObject const& _data)
         m_nonce = spFH8(FH8::zero().copy());
     }
 
-    m_number = spVALUE(new VALUE(_data.atKey("number")));
-    m_parentHash = spFH32(new FH32(_data.atKey("parentHash")));
-    string const rkey = _data.count("receiptsRoot") ? "receiptsRoot" : "receiptTrie";
-    m_receiptsRoot = spFH32(new FH32(_data.atKey(rkey)));
-    string const ukey = _data.count("sha3Uncles") ? "sha3Uncles" : "uncleHash";
-    m_sha3Uncles = spFH32(new FH32(_data.atKey(ukey)));
-    m_stateRoot = spFH32(new FH32(_data.atKey("stateRoot")));
-    m_timestamp = spVALUE(new VALUE(_data.atKey("timestamp")));
-    string const tkey = _data.count("transactionsRoot") ? "transactionsRoot" : "transactionsTrie";
-    m_transactionsRoot = spFH32(new FH32(_data.atKey(tkey)));
+    m_number = sVALUE(_data.atKey(c_number));
+    m_parentHash = sFH32(_data.atKey(c_parentHash));
+    string const& rkey = _data.count(c_receiptsRoot) ? c_receiptsRoot : c_receiptTrie;
+    m_receiptsRoot = sFH32(_data.atKey(rkey));
+    string const& ukey = _data.count(c_sha3Uncles) ? c_sha3Uncles : c_uncleHash;
+    m_sha3Uncles = sFH32(_data.atKey(ukey));
+    m_stateRoot = sFH32(_data.atKey(c_stateRoot));
+    m_timestamp = sVALUE(_data.atKey(c_timestamp));
+    string const& tkey = _data.count(c_transactionsRoot) ? c_transactionsRoot : c_transactionsTrie;
+    m_transactionsRoot = sFH32(_data.atKey(tkey));
 }
 
 size_t BlockHeaderLegacy::_fromRLP(dev::RLP const& _rlp)
@@ -123,22 +125,22 @@ BlockHeaderLegacy::BlockHeaderLegacy(dev::RLP const& _rlp)
 spDataObject BlockHeaderLegacy::asDataObject() const
 {
     spDataObject out;
-    (*out)["bloom"] = m_logsBloom->asString();
-    (*out)["coinbase"] = m_author->asString();
-    (*out)["difficulty"] = m_difficulty->asString();
-    (*out)["extraData"] = m_extraData->asString();
-    (*out)["gasLimit"] = m_gasLimit->asString();
-    (*out)["gasUsed"] = m_gasUsed->asString();
-    (*out)["hash"] = m_hash->asString();
-    (*out)["mixHash"] = m_mixHash->asString();
-    (*out)["nonce"] = m_nonce->asString();
-    (*out)["number"] = m_number->asString();
-    (*out)["parentHash"] = m_parentHash->asString();
-    (*out)["receiptTrie"] = m_receiptsRoot->asString();
-    (*out)["stateRoot"] = m_stateRoot->asString();
-    (*out)["timestamp"] = m_timestamp->asString();
-    (*out)["transactionsTrie"] = m_transactionsRoot->asString();
-    (*out)["uncleHash"] = m_sha3Uncles->asString();
+    (*out)[c_bloom] = m_logsBloom->asString();
+    (*out)[c_coinbase] = m_author->asString();
+    (*out)[c_difficulty] = m_difficulty->asString();
+    (*out)[c_extraData] = m_extraData->asString();
+    (*out)[c_gasLimit] = m_gasLimit->asString();
+    (*out)[c_gasUsed] = m_gasUsed->asString();
+    (*out)[c_hash] = m_hash->asString();
+    (*out)[c_mixHash] = m_mixHash->asString();
+    (*out)[c_nonce] = m_nonce->asString();
+    (*out)[c_number] = m_number->asString();
+    (*out)[c_parentHash] = m_parentHash->asString();
+    (*out)[c_receiptTrie] = m_receiptsRoot->asString();
+    (*out)[c_stateRoot] = m_stateRoot->asString();
+    (*out)[c_timestamp] = m_timestamp->asString();
+    (*out)[c_transactionsTrie] = m_transactionsRoot->asString();
+    (*out)[c_uncleHash] = m_sha3Uncles->asString();
     return out;
 }
 

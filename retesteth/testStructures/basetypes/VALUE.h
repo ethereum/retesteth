@@ -5,19 +5,18 @@
 
 namespace test::teststruct
 {
-using namespace dataobject;
 
 // Validate and manage the type of VALUE (bigInt)
 // Deserialized from string of "0x1122...32", "123343"
 // Can be limited by _limit max value
 
-struct VALUE : GCP_SPointerBase
+struct VALUE : dataobject::GCP_SPointerBase
 {
     // TODO ideally separate bigint logic into another class that behave exactly the same as VALUE but with exceptions
     VALUE(dev::RLP const& _rlp);
     VALUE(dev::bigint const&);
     VALUE(int);
-    VALUE(DataObject const&);  // Does not require to move smart pointer here as this structure changes a lot
+    VALUE(dataobject::DataObject const&);  // Does not require to move smart pointer here as this structure changes a lot
     VALUE* copy() const { return new VALUE(m_data); }
 
     bool operator<(long long _rhs) const { return m_data < _rhs; }
@@ -73,7 +72,9 @@ private:
     mutable std::string m_dataStrBigIntCache;
 };
 
-typedef GCP_SPointer<VALUE> spVALUE;
+typedef dataobject::GCP_SPointer<VALUE> spVALUE;
+template <class T>
+spVALUE sVALUE(T const& _arg) { return spVALUE(new VALUE(_arg)); }
 
 
 }  // namespace teststruct
