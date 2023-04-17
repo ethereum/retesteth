@@ -1,5 +1,6 @@
 #include <retesteth/session/ToolBackend/ToolChainManager.h>
 #include <retesteth/testStructures/basetypes.h>
+#include <retesteth/Constants.h>
 using namespace std;
 using namespace test;
 using namespace test::debug;
@@ -43,7 +44,7 @@ VALUE ToolChainManager::test_calculateDifficulty(FORK const& _fork, VALUE const&
     if (_uncleNumber > 0)
         headerA.setUnclesHash(FH32("0x2dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347"));
     else
-        headerA.setUnclesHash(FH32("0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347"));
+        headerA.setUnclesHash(FH32(C_EMPTY_LIST_HASH));
 
     BlockHeader& headerB = blockB.headerUnsafe().getContent();
     headerB.setTimestamp(_currentTimestamp);
@@ -88,7 +89,7 @@ DifficultyStatic const& prepareEthereumBlockStateTemplate()
         headerAData["receiptTrie"] = "0xb34b65874cf7cb8358930db57604b2f6610f98c25f2b5822cc25adee7f181ff5";
         headerAData["stateRoot"] = "0xf17157ed407eb909de943044b712ab5db7f48c3557e3a3d8e17b1d8b426a1916";
         headerAData["transactionsTrie"] = "0x174ccc4f3050aca8eb96ee492d7f77c48698de3988b3a422e2bc6974348182c0";
-        headerAData["uncleHash"] = "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347";
+        headerAData["uncleHash"] = C_EMPTY_LIST_HASH;
         headerAData["difficulty"] = "0x131415";
         headerAData["number"] = "0x01";
         headerAData["timestamp"] = "0x00";

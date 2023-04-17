@@ -1,5 +1,6 @@
 #include "StateTestPostResult.h"
 #include <retesteth/testStructures/Common.h>
+#include <retesteth/Constants.h>
 
 namespace test::teststruct
 {
@@ -38,6 +39,14 @@ spDataObject StateTestPostResult::asDataObject() const
     (*res)["indexes"]["gas"] = m_gasInd;
     (*res)["indexes"]["value"] = m_valInd;
     return res;
+}
+
+FH32 const& StateTestPostResult::logs() const
+{
+    static FH32 emptyLogs(C_EMPTY_LIST_HASH);
+    if (m_log.isEmpty())
+        return emptyLogs;
+    return m_log;
 }
 
 }  // namespace teststruct

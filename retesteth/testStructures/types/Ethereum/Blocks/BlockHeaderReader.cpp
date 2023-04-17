@@ -1,8 +1,10 @@
 #include "BlockHeaderReader.h"
 #include <retesteth/EthChecks.h>
+#include <retesteth/Constants.h>
 
 using namespace std;
 using namespace dataobject;
+using namespace test;
 using namespace test::teststruct;
 
 namespace  {
@@ -24,7 +26,7 @@ bool isHeaderMerge(DataObject const& _filledData)
         uncleHashName = "uncleHash";
 
     // https://eips.ethereum.org/EIPS/eip-3675
-    static const FH32 mergeUncleHash("0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347");
+    static const FH32 mergeUncleHash(C_EMPTY_LIST_HASH);
     if (VALUE(_filledData.atKey("difficulty")) == 0
         && FH32(_filledData.atKey(uncleHashName)) == mergeUncleHash
         && FH8(_filledData.atKey("nonce")) == FH8::zero())
@@ -69,7 +71,7 @@ bool isHeaderMerge(dev::RLP const& _rlp)
     // 7 - difficulty           // 15 - baseFee
 
     // https://eips.ethereum.org/EIPS/eip-3675
-    static const FH32 mergeUncleHash("0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347");
+    static const FH32 mergeUncleHash(C_EMPTY_LIST_HASH);
     if (VALUE(_rlp[7]) == 0
         && FH32(_rlp[1]) == mergeUncleHash
         && FH8(_rlp[14]) == FH8::zero())

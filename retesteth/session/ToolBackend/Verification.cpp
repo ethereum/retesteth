@@ -1,9 +1,11 @@
 #include "Verification.h"
 #include "retesteth/Options.h"
+#include <retesteth/Constants.h>
 using namespace toolimpl;
 using namespace test::debug;
 using namespace std;
 using namespace dev;
+using namespace test;
 
 namespace {
 
@@ -105,7 +107,7 @@ void verifyCommonMergeRules(spBlockHeader const& _header, string const& _msg)
 
     /// Verify rules
     /// https://eips.ethereum.org/EIPS/eip-3675
-    if (header.uncleHash().asString() != "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347")
+    if (header.uncleHash().asString() != C_EMPTY_LIST_HASH)
         throw test::UpwardsException(_msg + " block.uncleHash != empty \n" + header.asDataObject()->asJson());
     if (header.difficulty() != 0)
         throw test::UpwardsException(_msg + " block.difficulty must be 0! ");

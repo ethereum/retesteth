@@ -162,7 +162,7 @@ spDataObject SetChainParamsArgsGenesis::buildCommonBlockHeader() const
     fullBlockHeader["receiptTrie"] = C_WITHDRAWALS_EMPTY_ROOT;
     fullBlockHeader["stateRoot"] = FH32::zero().asString();
     fullBlockHeader["transactionsTrie"] = C_WITHDRAWALS_EMPTY_ROOT;
-    fullBlockHeader["uncleHash"] = "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347";
+    fullBlockHeader["uncleHash"] = C_EMPTY_LIST_HASH;
     fullBlockHeader["parentHash"] = FH32::zero().asString();
     return _fullBlockHeader;
 }

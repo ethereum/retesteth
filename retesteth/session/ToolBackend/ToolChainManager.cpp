@@ -300,10 +300,10 @@ void ToolChainManager::initMergePendingBlock(EthereumBlockState const& _lastBloc
     // Switch default mining to Merge POS blocks
     // https://eips.ethereum.org/EIPS/eip-3675
     spDataObject parentData = _lastBlock.header()->asDataObject();
-    (*parentData)["uncleHash"] = "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347";
+    (*parentData)["uncleHash"] = C_EMPTY_LIST_HASH;
     (*parentData)["difficulty"] = "0x00";
-    (*parentData)["mixHash"] = "0x0000000000000000000000000000000000000000000000000000000000000000";
-    (*parentData)["nonce"] = "0x0000000000000000";
+    (*parentData)["mixHash"] = C_FH32_ZERO.asString();
+    (*parentData)["nonce"] = C_FH8_ZERO.asString();
 
     spBlockHeader newPending(new BlockHeaderMerge(parentData));
     m_pendingBlock = spEthereumBlockState(new EthereumBlockState(newPending, _lastBlock.state(), _lastBlock.logHash()));

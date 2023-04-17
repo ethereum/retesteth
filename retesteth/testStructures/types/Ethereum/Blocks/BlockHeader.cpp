@@ -1,6 +1,7 @@
 #include "BlockHeader.h"
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/SHA3.h>
+#include <retesteth/Constants.h>
 
 namespace test::teststruct
 {
@@ -40,7 +41,7 @@ void BlockHeader::recalculateHash()
 
 bool BlockHeader::hasUncles() const
 {
-    return m_sha3Uncles->asString() != "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347";
+    return m_sha3Uncles->asString() != C_EMPTY_LIST_HASH;
 }
 
 
