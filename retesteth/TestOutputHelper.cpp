@@ -42,7 +42,8 @@ static std::map<fs::path, FolderNameSet> finishedTestFoldersMap;
 // static std::map<fs::path, FolderNameSet> exceptionTestFoldersMap;
 void checkUnfinishedTestFolders();  // Checkup that all test folders are active during the test run
 
-typedef std::pair<double, std::string> execTimeName;
+typedef std::pair<double, std::string> cpuTimeName;
+typedef std::pair<double, cpuTimeName> execTimeName;
 static std::vector<execTimeName> execTimeResults;
 static int execTotalErrors = 0;
 static std::map<thread::id, TestOutputHelper> helperThreadMap;  // threadID => outputHelper
@@ -156,11 +157,13 @@ void TestOutputHelper::initTest(size_t _maxTests)
     m_currentTestName = string();
     m_currentTestFileName = string();
     m_timer = Timer();
+    m_timerCPU = CPUTimer();
     if (_maxTests != 0 && !Options::get().singleTestFile.initialized())
     {
         string testOutOf = "(" + test::fto_string(++m_currentTestRun) + " of " + test::fto_string(totalTestsNumber) + ")";
         ETH_DC_MESSAGE(DC::STATS, "Test Case \"" + TestInfo::caseName() + "\": " + testOutOf);
         m_timer.restart();
+        m_timerCPU.restart();
     }
     m_maxTests = _maxTests;
     m_currTest = 0;
@@ -198,8 +201,13 @@ void TestOutputHelper::finishTest()
         std::cout << "Tests finished: " << m_currTest << std::endl;
         execTimeName res;
         res.first = m_timer.elapsed();
-        res.second = TestInfo::caseName();
-        std::cout << res.second + " time: " + fto_string(res.first) << "\n";
+        res.second = {m_timerCPU.elapsed(), TestInfo::caseName()};
+        auto const& time = res.first;
+        auto const& cputime = res.second.first;
+        std::cout << res.second.second + " time: " + fto_string(time) + ","
+                  << " cputime: " + fto_string(cputime) + ","
+                  << " efficenty: " + fto_string((int)floor(100 * cputime / time)) + "%"
+                  << "\n";
         std::lock_guard<std::mutex> lock(g_execTimeResults);
         execTimeResults.emplace_back(res);
     }
@@ -239,10 +247,14 @@ void TestOutputHelper::printTestExecStats()
     {
         std::lock_guard<std::mutex> lock(g_execTimeResults);
         double totalTime = 0;
+        double totalTimeCPU = 0;
         std::cout << std::left;
         std::sort(execTimeResults.begin(), execTimeResults.end(), [](execTimeName _a, execTimeName _b) { return (_b.first < _a.first); });
         for (size_t i = 0; i < execTimeResults.size(); i++)
+        {
             totalTime += execTimeResults[i].first;
+            totalTimeCPU += execTimeResults[i].second.first;
+        }
         std::cout << std::endl << "*** Execution time stats" << std::endl;
         {
             std::lock_guard<std::mutex> lock2(g_totalTestsRun);
@@ -251,9 +263,21 @@ void TestOutputHelper::printTestExecStats()
             else
                 ETH_STDERROR_MESSAGE("*** Total Tests Run: " + fto_string(totalTestsRun) + "\n");
         }
-        std::cout << setw(45) << "Total Time: " << setw(25) << "     : " + fto_string(totalTime) << "\n";
+        std::cout << setw(45) << "Total Time: "
+                  << setw(20) << "     : " + fto_string(totalTime)
+                  << setw(24) << "        : " + fto_string(totalTimeCPU)
+                  << "          : " + fto_string((int)floor(100 * totalTimeCPU / totalTime)) + "%"
+                  << "\n";
         for (size_t i = 0; i < execTimeResults.size(); i++)
-            std::cout << setw(45) << execTimeResults[i].second << setw(25) << " time: " + fto_string(execTimeResults[i].first) << "\n";
+        {
+            auto const& totalTime = execTimeResults[i].first;
+            auto const& cputime = execTimeResults[i].second.first;
+            std::cout << setw(45) << execTimeResults[i].second.second
+                      << setw(20) << " time: " + fto_string(totalTime)
+                      << setw(24) << " cputime: " + fto_string(cputime)
+                      << " efficency: " + fto_string((int)floor(100 * cputime / totalTime)) + "%"
+                      << "\n";
+        }
         std::cout << "\n";
     }
     else

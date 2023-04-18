@@ -132,6 +132,7 @@ private:
 
 private:
     dev::Timer m_timer;
+    dev::CPUTimer m_timerCPU;
     size_t m_currTest;
     size_t m_maxTests;
     std::string m_currentTestName;

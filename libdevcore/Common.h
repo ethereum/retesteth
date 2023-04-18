@@ -8,6 +8,7 @@
 #include <functional>
 #include <string>
 #include <chrono>
+#include <ctime>
 #pragma warning(push)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
@@ -119,6 +120,22 @@ public:
 
 private:
 	std::chrono::high_resolution_clock::time_point m_t;
+};
+
+class CPUTimer
+{
+public:
+    CPUTimer(){ restart(); }
+    void restart() { m_start = std::clock(); }
+    double elapsed()
+    {
+        m_end = std::clock();
+        double const elapsedMs =  1000.0 * (m_end - m_start) / CLOCKS_PER_SEC;
+        return elapsedMs / 1000.0;
+    }
+private:
+    std::clock_t m_start;
+    std::clock_t m_end;
 };
 
 }
