@@ -13,40 +13,32 @@ DataObject::DataObject() { m_type = DataType::NotInitialized; }
 DataObject::DataObject(DataType _type) { m_type = _type; }
 
 /// Define dataobject of string
-DataObject::DataObject(std::string&& _str) : m_strVal(std::move(_str)) { m_type = DataType::String; }
-DataObject::DataObject(std::string const& _str) : m_strVal(_str) { m_type = DataType::String; }
+DataObject::DataObject(std::string&& _str) : m_value(std::move(_str)) { m_type = DataType::String; }
+DataObject::DataObject(std::string const& _str) : m_value(_str) { m_type = DataType::String; }
 
 /// Define dataobject[_key] = string
 DataObject::DataObject(std::string&& _key, std::string&& _str)
-  : m_strKey(std::move(_key)), m_strVal(std::move(_str))
+  : m_strKey(std::move(_key)), m_value(std::move(_str))
 {
     m_type = DataType::String;
 }
 DataObject::DataObject(std::string const& _key, std::string const& _str)
-  : m_strKey(_key), m_strVal(_str)
+  : m_strKey(_key), m_value(_str)
 {
     m_type = DataType::String;
 }
 
 DataObject::DataObject(std::string&& _key, int _val)
-  : m_strKey(std::move(_key)), m_intVal(_val)
+  : m_strKey(std::move(_key)), m_value(_val)
 {
     m_type = DataType::Integer;
 }
 
 /// Define dataobject of int
-DataObject::DataObject(int _int)
-  : m_intVal(_int)
-{
-    m_type = DataType::Integer;
-}
+DataObject::DataObject(int _int) : m_value(_int) { m_type = DataType::Integer; }
 
 /// Define dataobject of bool
-DataObject::DataObject(DataType type, bool _bool)
-  : m_boolVal(_bool)
-{
-    m_type = type;
-}
+DataObject::DataObject(DataType type, bool _bool) : m_value(_bool) { m_type = type; }
 
 /// Get dataobject type
 DataType DataObject::type() const { return m_type; }
@@ -112,26 +104,41 @@ bool DataObject::count(std::string const& _key) const
 std::string const& DataObject::asString() const
 {
     _assert(m_type == DataType::String, "m_type == DataType::String (DataObject::asString())");
-    return m_strVal;
+    return std::get<std::string>(m_value);
 }
 std::string& DataObject::asStringUnsafe()
 {
     _assert(m_type == DataType::String, "m_type == DataType::String (DataObject::asStringUnsafe())");
-    return m_strVal;
+    return std::get<std::string>(m_value);
+}
+
+std::string const DataObject::asStringAnyway() const
+{
+    switch(m_type)
+    {
+    case DataType::String: return asString();
+    case DataType::Integer: return to_string(asInt());
+    case DataType::Bool: return asBool() ? "true" : "false";
+    case DataType::Array: return "Array";
+    case DataType::Object: return "Object";
+    case DataType::Null: return "Null";
+    case DataType::NotInitialized: return "Not initialized";
+    default: return "N/A";
+    }
 }
 
 /// Get int value
 int DataObject::asInt() const
 {
     _assert(m_type == DataType::Integer, "m_type == DataType::Integer (DataObject::asInt())");
-    return m_intVal;
+    return std::get<int>(m_value);
 }
 
 /// Get bool value
 bool DataObject::asBool() const
 {
     _assert(m_type == DataType::Bool, "m_type == DataType::Bool (DataObject::asBool())");
-    return m_boolVal;
+    return std::get<bool>(m_value);
 }
 
 /// Set position in vector of the subobject with _key
@@ -173,13 +180,13 @@ void DataObject::replace(DataObject const& _value)
     switch (_value.type())
     {
     case DataType::String:
-        m_strVal = _value.asString();
+        m_value = _value.asString();
         break;
     case DataType::Integer:
-        m_intVal = _value.asInt();
+        m_value = _value.asInt();
         break;
     case DataType::Bool:
-        m_boolVal = _value.asBool();
+        m_value = _value.asBool();
         break;
     default:
         break;
@@ -325,9 +332,8 @@ void DataObject::removeKey(std::string const& _key)
 
 void DataObject::clear(DataType _type)
 {
-    m_intVal = 0;
+    m_value = false;
     m_strKey = "";
-    m_strVal = "";
     m_subObjects.clear();
     m_subObjectKeys.clear();
     m_type = _type;
@@ -474,7 +480,7 @@ std::string DataObject::asJson(int level, bool pretty, bool nokey) const
         }
 
         //  threat special chars
-        for (auto const& ch: m_strVal)
+        for (auto const& ch: asString())
         {
             if (ch == 10)
                 buffer += "\\n";
@@ -494,7 +500,7 @@ std::string DataObject::asJson(int level, bool pretty, bool nokey) const
             else
                 out << "\"" << m_strKey << "\":";
         }
-        out << m_intVal;
+        out << std::get<int>(m_value);;
         break;
     case DataType::Bool:
         printLevel();
@@ -505,7 +511,7 @@ std::string DataObject::asJson(int level, bool pretty, bool nokey) const
             else
                 out << "\"" << m_strKey << "\":";
         }
-        if (m_boolVal)
+        if (std::get<bool>(m_value))
             out << "true";
         else
             out << "false";
@@ -662,7 +668,7 @@ void DataObject::setString(string&& _value)
     _assert(m_type == DataType::String || m_type == DataType::NotInitialized,
         "In DataObject=(string) DataObject must be string or NotInitialized!");
     m_type = DataType::String;
-    m_strVal = std::move(_value);
+    m_value = std::move(_value);
 }
 
 void DataObject::setInt(int _value)
@@ -670,7 +676,7 @@ void DataObject::setInt(int _value)
     _assert(m_type == DataType::Integer || m_type == DataType::NotInitialized,
         "In DataObject=(int) DataObject must be int or NotInitialized!");
     m_type = DataType::Integer;
-    m_intVal = _value;
+    m_value = _value;
 }
 
 void DataObject::setBool(bool _value)
@@ -678,7 +684,7 @@ void DataObject::setBool(bool _value)
     _assert(m_type == DataType::Bool || m_type == DataType::NotInitialized,
         "In DataObject:setBool(bool) DataObject must be bool or NotInitialized!");
     m_type = DataType::Bool;
-    m_boolVal = _value;
+    m_value = _value;
 }
 
 void DataObject::copyFrom(DataObject const& _other)
@@ -690,9 +696,9 @@ void DataObject::copyFrom(DataObject const& _other)
 
     switch (m_type)
     {
-    case String: m_strVal = _other.asString(); break;
-    case Integer: m_intVal = _other.asInt(); break;
-    case Bool: m_boolVal = _other.asBool(); break;
+    case String: m_value = _other.asString(); break;
+    case Integer: m_value = _other.asInt(); break;
+    case Bool: m_value = _other.asBool(); break;
     case Array:
         for (auto const& el : _other.getSubObjects())
         {
@@ -719,9 +725,9 @@ spDataObject DataObject::copy() const
         (*c).setKey(string(m_strKey));
     switch(m_type)
     {
-    case String: (*c).setString(string(m_strVal)); break;
-    case Integer: (*c).setInt(m_intVal); break;
-    case Bool: (*c).setBool(m_boolVal); break;
+    case String: (*c).setString(string(asString())); break;
+    case Integer: (*c).setInt(asInt()); break;
+    case Bool: (*c).setBool(asBool()); break;
     case Array:
         for (size_t i = 0; i < m_subObjects.size(); i++)
         {
@@ -861,7 +867,7 @@ DataObject& DataObject::operator=(std::string&& _value)
     _assert(m_type == DataType::String || m_type == DataType::NotInitialized,
         "In DataObject=(string) DataObject must be string or NotInitialized!");
     m_type = DataType::String;
-    m_strVal = std::move(_value);
+    m_value = std::move(_value);
     return *this;
 }
 
@@ -870,7 +876,7 @@ DataObject& DataObject::operator=(std::string const& _value)
     _assert(m_type == DataType::String || m_type == DataType::NotInitialized,
         "In DataObject=(string) DataObject must be string or NotInitialized!");
     m_type = DataType::String;
-    m_strVal = _value;
+    m_value = _value;
     return *this;
 }
 

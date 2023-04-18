@@ -5,6 +5,7 @@
 #include <set>
 #include <string>
 #include <vector>
+#include <variant>
 
 namespace dataobject
 {
@@ -65,6 +66,7 @@ public:
 
     std::string const& asString() const;
     std::string& asStringUnsafe();
+    std::string const asStringAnyway() const;
 
     int asInt() const;
     bool asBool() const;
@@ -137,10 +139,7 @@ private:
     std::string m_strKey;
     bool m_allowOverwrite = false;  // allow overwrite elements
     bool m_autosort = false;
-
-    std::string m_strVal;
-    bool m_boolVal;
-    int m_intVal;
+    std::variant<bool, std::string, int> m_value;
 
     void (*m_verifier)(DataObject&) = 0;
 };
@@ -193,4 +192,5 @@ spDataObjectMove move(spDataObject& _obj);
 // Find index that _key should take place in when being added to ordered _objects by key
 // Heavy function, use only on export when need to construct json with sorted keys
 size_t findOrderedKeyPosition(std::string const& _key, std::vector<spDataObject> const& _objects);
+
 }
