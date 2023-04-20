@@ -10,7 +10,6 @@
 namespace dataobject
 {
 
-//std::variant<bool, std::string, int, DataArray> m_value;
 enum DataType
 {
     NotInitialized,
@@ -133,7 +132,7 @@ private:
     std::map<std::string, spDataObject>& _getSubObjectKeysUnsafe();
 
     std::string m_strKey;
-    bool m_allowOverwrite = false;  // allow overwrite elements
+    bool m_allowOverwrite = false;
     bool m_autosort = false;
 
     typedef std::vector<spDataObject> VecSpData;
