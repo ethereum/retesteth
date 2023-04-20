@@ -42,21 +42,29 @@ VALUE::VALUE(int _data)
     m_data = dev::bigint(_data);
 }
 
+VALUE::VALUE(string const& _data)
+{
+    _fromString(_data);
+}
+
 VALUE::VALUE(DataObject const& _data)
 {
     if (_data.type() == DataType::Integer)
         m_data = _data.asInt();
     else
+        _fromString(_data.asString(), _data.getKey());
+}
+
+void VALUE::_fromString(std::string const& _data, std::string const& _hintkey)
+{
+    string const withoutKeyWord = verifyHexString(_data, _hintkey);
+    if (withoutKeyWord.size())
     {
-        string const withoutKeyWord = verifyHexString(_data.asString(), _data.getKey());
-        if (withoutKeyWord.size())
-        {
-            m_bigint = true;
-            m_data = dev::bigint(withoutKeyWord);
-        }
-        else
-            m_data = dev::bigint(_data.asString());
+        m_bigint = true;
+        m_data = dev::bigint(withoutKeyWord);
     }
+    else
+        m_data = dev::bigint(_data);
 }
 
 string VALUE::verifyHexString(std::string const& _s, std::string const& _k) const

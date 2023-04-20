@@ -114,7 +114,7 @@ DifficultyRange::DifficultyRange(DataObject& _data)
         if (vBegin > vEnd)
             throw test::UpwardsException("Parsing DifficultyRange `" + _data.getKey() + "` begin > end!");
 
-        auto const steps = ((vEnd - vBegin) / dStep);
+        VALUE const steps = ((vEnd - vBegin) / VALUE(dStep));
         if (steps > 100)
             throw test::UpwardsException("Parsing DifficultyRange `" + _data.getKey() + "` has too many steps (>100): " + steps.asDecString());
 

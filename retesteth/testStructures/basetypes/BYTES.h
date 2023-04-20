@@ -11,7 +11,8 @@ struct BYTES : dataobject::GCP_SPointerBase
 {
     explicit BYTES(dev::RLP const& _rlp);
     explicit BYTES(dataobject::DataObject const&);
-    BYTES* copy() const { return new BYTES(dataobject::DataObject(m_data)); }
+    explicit BYTES(std::string const&);
+    BYTES* copy() const { return new BYTES(m_data); }
 
     std::string const& asString() const { return m_data; }
     size_t firstByte() const;

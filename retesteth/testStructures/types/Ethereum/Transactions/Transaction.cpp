@@ -58,14 +58,14 @@ void Transaction::makeSignature(DataObject const& _data)
 {
     if (_data.count("secretKey"))
     {
-        setSecret(_data.atKey("secretKey"));
+        setSecret(VALUE(_data.atKey("secretKey")));
         buildVRS();
     }
     else
     {
-        m_v = spVALUE(new VALUE(_data.atKey("v")));
-        m_r = spVALUE(new VALUE(_data.atKey("r")));
-        m_s = spVALUE(new VALUE(_data.atKey("s")));
+        m_v = sVALUE(_data.atKey("v"));
+        m_r = sVALUE(_data.atKey("r"));
+        m_s = sVALUE(_data.atKey("s"));
         rebuildRLP();
     }
 }

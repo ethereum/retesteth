@@ -26,7 +26,7 @@ private:
     void _initialize(std::string const& _s, std::string const& _k = std::string());
 
 protected:
-    BYTES m_data = BYTES(dataobject::DataObject("0x00"));
+    BYTES m_data = BYTES("0x00");
     size_t m_scale;
     bool m_isCorrectHash = true;
     mutable std::string m_dataStrZeroXCache;

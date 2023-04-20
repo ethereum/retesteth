@@ -13,10 +13,11 @@ namespace test::teststruct
 struct VALUE : dataobject::GCP_SPointerBase
 {
     // TODO ideally separate bigint logic into another class that behave exactly the same as VALUE but with exceptions
-    VALUE(dev::RLP const& _rlp);
+    explicit VALUE(dev::RLP const& _rlp);
     VALUE(dev::bigint const&);
     VALUE(int);
-    VALUE(dataobject::DataObject const&);  // Does not require to move smart pointer here as this structure changes a lot
+    explicit VALUE(dataobject::DataObject const&);  // Does not require to move smart pointer here as this structure changes a lot
+    explicit VALUE(std::string const&);
     VALUE* copy() const { return new VALUE(m_data); }
 
     bool operator<(long long _rhs) const { return m_data < _rhs; }
@@ -55,6 +56,7 @@ struct VALUE : dataobject::GCP_SPointerBase
 
 private:
     VALUE() {}
+    void _fromString(std::string const& _data, std::string const& _hintkey = std::string());
     std::string verifyHexString(std::string const& _s, std::string const& _k = std::string()) const;
     void calculateCache() const;
     dev::bigint m_data;

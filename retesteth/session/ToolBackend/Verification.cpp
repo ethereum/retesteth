@@ -95,7 +95,7 @@ void verify1559Block(spBlockHeader const& _header, ToolChain const& _chain)
         if (!isTTDDefined)
             throw test::UpwardsException("terminalTotalDifficulty is not defined in chain params: \n" + _chain.params()->params().asJson());
 
-        VALUE const TTD = _chain.params()->params().atKey("terminalTotalDifficulty");
+        VALUE const TTD (_chain.params()->params().atKey("terminalTotalDifficulty"));
         if (_chain.lastBlock().totalDifficulty() >=  TTD)
             throw test::UpwardsException() << "Invalid block1559: Chain switched to PoS!";
     }
@@ -225,7 +225,7 @@ void verifyMergeParent(spBlockHeader const& _header, spBlockHeader const& _paren
 
     if (_parent->type() != BlockType::BlockHeaderMerge)
     {
-        VALUE const TTD = isTTDDefined ? _chain.params()->params().atKey("terminalTotalDifficulty") : VALUE (DataObject("0xffffffffffffffffffffffffffff"));
+        VALUE const TTD = isTTDDefined ? VALUE(_chain.params()->params().atKey("terminalTotalDifficulty")) : VALUE ("0xffffffffffffffffffffffffffff");
         if (_parentTD < TTD)
             throw test::UpwardsException("Parent (transition) block has not reached TTD (" + _parentTD.asString() +
                                          " < " + TTD.asString() + ") but current block set to PoS format! \nParent: \n" +

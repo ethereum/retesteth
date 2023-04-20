@@ -216,7 +216,7 @@ void Options::vecstr_opt::initArg(std::string const& _arg)
 void Options::vecaddr_opt::initArg(std::string const& _arg)
 {
     for (auto const& el : explode(_arg, ','))
-        m_vector.push_back(IPADDRESS(el));
+        m_vector.push_back(IPADDRESS(DataObject(el)));
 }
 
 void Options::singletest_opt::initArg(std::string const& _arg)
