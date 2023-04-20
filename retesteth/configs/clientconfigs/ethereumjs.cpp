@@ -4,6 +4,10 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
+
+genethereumjscfg::genethereumjscfg()
+{
+
 string const ethereumjs_config = R"({
     "name":"EthereumJS Transition Tool",
     "socketType":"tranition-tool",
@@ -239,8 +243,6 @@ string const ethereumjs_stop = R"(#!/bin/sh
 killall node
 )";
 
-genethereumjscfg::genethereumjscfg()
-{
     {
         spDataObject obj;
         (*obj)["path"] = "ethereumjs/config";

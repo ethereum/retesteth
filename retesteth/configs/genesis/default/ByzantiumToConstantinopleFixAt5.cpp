@@ -4,6 +4,9 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
+genByzantiumToConstantinopleFixCfg::genByzantiumToConstantinopleFixCfg()
+{
+
 const string t8ntool_ByzantiumToConstantinopleFixAt5_config = R"({
     "params" : {
         "fork" : "ByzantiumToConstantinopleFixAt5",
@@ -16,8 +19,7 @@ const string t8ntool_ByzantiumToConstantinopleFixAt5_config = R"({
     }
 })";
 
-genByzantiumToConstantinopleFixCfg::genByzantiumToConstantinopleFixCfg()
-{
+
     spDataObject obj2;
     (*obj2)["path"] = "default/genesis/ByzantiumToConstantinopleFixAt5.json";
     (*obj2)["content"] = t8ntool_ByzantiumToConstantinopleFixAt5_config;

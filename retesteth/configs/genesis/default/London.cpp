@@ -4,6 +4,10 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
+
+genLondonCfg::genLondonCfg()
+{
+
 const string t8ntool_London_config = R"({
     "params" : {
         "fork" : "London",
@@ -16,8 +20,7 @@ const string t8ntool_London_config = R"({
     }
 })";
 
-genLondonCfg::genLondonCfg()
-{
+
     spDataObject obj2;
     (*obj2)["path"] = "default/genesis/London.json";
     (*obj2)["content"] = t8ntool_London_config;

@@ -4,6 +4,10 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
+
+genevmonecfg::genevmonecfg()
+{
+
 string const evmone_config = R"({
     "name" : "EVMONE on StateTool",
     "socketType" : "tranition-tool",
@@ -241,7 +245,26 @@ string const evmone_config = R"({
       "3675PreMerge1559BlockRejected" : "Trying to import 1559 block on top of PoS block",
       "INPUT_UNMARSHAL_ERROR" : "cannot unmarshal hex",
       "INPUT_UNMARSHAL_SIZE_ERROR" : "failed unmarshaling",
-      "RLP_BODY_UNMARSHAL_ERROR" : "Rlp structure is wrong"
+      "RLP_BODY_UNMARSHAL_ERROR" : "Rlp structure is wrong",
+      "EOF_ConflictingStackHeight": "err: stack_height_mismatch",
+      "EOF_StackUnderflow" : "err: stack_underflow",
+      "EOF_InvalidCodeTermination" : "err: no_terminating_instruction",
+      "EOF_MaxStackHeightExceeded" : "err: max_stack_height_above_limit",
+      "EOF_UnreachableCode": "err: unreachable_instructions",
+      "EOF_InvalidCode": "err: invalid_code",
+      "EOF_TruncatedImmediate": "err: truncated_instruction",
+      "EOF_InvalidJumpDestination": "err: invalid_rjump_destination",
+      "EOF_InvalidJumpTableCount": "err: invalid_rjumpv_count",
+      "EOF_TypeSectionMissing": "err: type_section_missing",
+      "EOF_CodeSectionMissing": "err: code_section_missing",
+      "EOF_InvalidTypeSectionSize": "err: invalid_type_section_size",
+      "EOF_InvalidFirstSectionType": "err: invalid_first_section_type",
+      "EOF_TooManyCodeSections": "err: too_many_code_sections",
+      "EOF_InvalidCodeSectionIndex": "err: invalid_code_section_index",
+      "EOF_UndefinedInstruction": "err: undefined_instruction",
+      "EOF_ZeroSectionSize": "err: zero_section_size",
+      "EOF_NonEmptyStackOnTerminatingInstruction": "err: non_empty_stack_on_terminating_instruction",
+      "EOF_InvalidSectionBodiesSize": "err: invalid_section_bodies_size"
     }
 })";
 
@@ -285,8 +308,7 @@ else
 fi
 )";
 
-genevmonecfg::genevmonecfg()
-{
+
     {
         spDataObject obj;
         (*obj)["path"] = "evmone/config";

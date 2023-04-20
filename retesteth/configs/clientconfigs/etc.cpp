@@ -4,6 +4,10 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
+
+genetccfg::genetccfg()
+{
+
 string const etc_config = R"({
     "name" : "Ethereum Classic core-geth on StateTool",
     "socketType" : "tranition-tool",
@@ -282,9 +286,6 @@ echo "0x600360005500"
 # just like described in this file."
 )";
 
-
-genetccfg::genetccfg()
-{
     {
         spDataObject obj;
         (*obj)["path"] = "etc/config";

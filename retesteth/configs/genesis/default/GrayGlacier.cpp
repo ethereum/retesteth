@@ -4,6 +4,10 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
+
+genGrayGlacierCfg::genGrayGlacierCfg()
+{
+
 const string t8ntool_GrayGlacier_config = R"({
     "params" : {
         "fork" : "GrayGlacier",
@@ -16,8 +20,7 @@ const string t8ntool_GrayGlacier_config = R"({
     }
 })";
 
-genGrayGlacierCfg::genGrayGlacierCfg()
-{
+
     spDataObject obj2(new DataObject());
     (*obj2)["path"] = "default/genesis/GrayGlacier.json";
     (*obj2)["content"] = t8ntool_GrayGlacier_config;

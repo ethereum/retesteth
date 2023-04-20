@@ -4,6 +4,10 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
+
+genbesucfg::genbesucfg()
+{
+
 string const besu_config = R"({
     "name" : "Hyperledger Besu on TCP",
     "socketType" : "tranition-tool",
@@ -285,8 +289,6 @@ else
 fi
 )";
 
-genbesucfg::genbesucfg()
-{
     {
         spDataObject obj;
         (*obj)["path"] = "besu/config";

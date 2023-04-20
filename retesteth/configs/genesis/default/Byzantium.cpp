@@ -4,6 +4,9 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
+genByzantiumCfg::genByzantiumCfg()
+{
+
 const string t8ntool_Byzantium_config = R"({
     "params" : {
         "fork" : "Byzantium",
@@ -15,8 +18,7 @@ const string t8ntool_Byzantium_config = R"({
     }
 })";
 
-genByzantiumCfg::genByzantiumCfg()
-{
+
     spDataObject obj2;
     (*obj2)["path"] = "default/genesis/Byzantium.json";
     (*obj2)["content"] = t8ntool_Byzantium_config;

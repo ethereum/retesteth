@@ -4,6 +4,8 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
+genRewardsCfgETCTR::genRewardsCfgETCTR()
+{
 const string t8ntool_correctMiningReward_config = R"({
     "//comment" : "State Tests does not calculate mining reward in post conditions, so when filling a blockchain test out of it, the mining reward must be set",
     "Frontier":          "5000000000000000000",
@@ -26,8 +28,6 @@ const string t8ntool_correctMiningReward_config = R"({
     "ETC_Mystique" :     "3200000000000000000"
 })";
 
-genRewardsCfgETCTR::genRewardsCfgETCTR()
-{
     spDataObject obj2;
     (*obj2)["path"] = "etctranslate/genesis/correctMiningReward.json";
     (*obj2)["content"] = t8ntool_correctMiningReward_config;

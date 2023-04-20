@@ -4,6 +4,65 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
+
+string const yul_compiler_sh = R"(#!/bin/sh
+solc=$(which solc)
+if [ -z $solc ]; then
+   >&2 echo "yul.sh \"Yul compilation error: 'solc' not found!\""
+   echo "0x"
+else
+    out=$(solc --assemble $1 2>&1)
+    a=$(echo "$out" | grep "Binary representation:" -A 1 | tail -n1)
+    case "$out" in
+    *Error*) >&2 echo "yul.sh \"Yul compilation error: \"\n$out";;
+    *       )  echo 0x$a;;
+    esac
+fi
+)";
+
+string const t8ntool_start = R"(#!/bin/sh
+
+wevm=$(which evm)
+if [ -z $wevm ]; then
+   >&2 echo "Can't find geth's 'evm' executable alias in the system path!"
+   exit 1
+fi
+
+if [ $1 = "t8n" ] || [ $1 = "b11r" ]; then
+    evm $1 $2 $3 $4 $5 $6 $7 $8 $9 $10 $11 $12 $13 $14 $15 $16 $17 $18 $19 $20 $21 $22 $23 $24 $25 $26
+elif [ $1 = "-v" ]; then
+    evm -v
+else
+    stateProvided=0
+    readErrorLog=0
+    errorLogFile=""
+    cmdArgs=""
+    for index in ${1} ${2} ${3} ${4} ${5} ${6} ${7} ${8} ${9} ${10} ${11} ${12} ${13} ${14} ${15} ${16} ${17} ${18} ${19} ${20} ${21} ${22} ${23} ${24} ${25} ${26}; do
+        if [ $index = "--input.alloc" ]; then
+            stateProvided=1
+        fi
+        if [ $readErrorLog -eq 1 ]; then
+            errorLogFile=$index
+            readErrorLog=0
+            continue
+        fi
+        if [ $index = "--output.errorlog" ]; then
+            readErrorLog=1
+            continue
+        fi
+        cmdArgs=$cmdArgs" "$index
+    done
+    if [ $stateProvided -eq 1 ]; then
+        evm t8n $cmdArgs --verbosity 2 2> $errorLogFile
+    else
+        evm t9n $cmdArgs 2> $errorLogFile
+    fi
+fi
+)";
+
+gent8ntoolcfg::gent8ntoolcfg()
+{
+
 string const t8ntool_config = R"({
     "name" : "Ethereum GO on StateTool",
     "socketType" : "tranition-tool",
@@ -251,46 +310,6 @@ string const t8ntool_config = R"({
     }
 })";
 
-string const t8ntool_start = R"(#!/bin/sh
-
-wevm=$(which evm)
-if [ -z $wevm ]; then
-   >&2 echo "Can't find geth's 'evm' executable alias in the system path!"
-   exit 1
-fi
-
-if [ $1 = "t8n" ] || [ $1 = "b11r" ]; then
-    evm $1 $2 $3 $4 $5 $6 $7 $8 $9 $10 $11 $12 $13 $14 $15 $16 $17 $18 $19 $20 $21 $22 $23 $24 $25 $26
-elif [ $1 = "-v" ]; then
-    evm -v
-else
-    stateProvided=0
-    readErrorLog=0
-    errorLogFile=""
-    cmdArgs=""
-    for index in ${1} ${2} ${3} ${4} ${5} ${6} ${7} ${8} ${9} ${10} ${11} ${12} ${13} ${14} ${15} ${16} ${17} ${18} ${19} ${20} ${21} ${22} ${23} ${24} ${25} ${26}; do
-        if [ $index = "--input.alloc" ]; then
-            stateProvided=1
-        fi
-        if [ $readErrorLog -eq 1 ]; then
-            errorLogFile=$index
-            readErrorLog=0
-            continue
-        fi
-        if [ $index = "--output.errorlog" ]; then
-            readErrorLog=1
-            continue
-        fi
-        cmdArgs=$cmdArgs" "$index
-    done
-    if [ $stateProvided -eq 1 ]; then
-        evm t8n $cmdArgs --verbosity 2 2> $errorLogFile
-    else
-        evm t9n $cmdArgs 2> $errorLogFile
-    fi
-fi
-)";
-
 string const t8ntool_customcompiler = R"(#!/bin/sh
 # You can call a custom executable here
 # The code src comes in argument $1 as a path to a file containg the code
@@ -309,21 +328,6 @@ echo "0x600360005500"
 # Where :keyword would be looked in test's Filler files
 # And myscript.sh located in the system or .retesteth/default/myscript.sh with a call to your custom tool
 # just like described in this file."
-)";
-
-string const yul_compiler_sh = R"(#!/bin/sh
-solc=$(which solc)
-if [ -z $solc ]; then
-   >&2 echo "yul.sh \"Yul compilation error: 'solc' not found!\""
-   echo "0x"
-else
-    out=$(solc --assemble $1 2>&1)
-    a=$(echo "$out" | grep "Binary representation:" -A 1 | tail -n1)
-    case "$out" in
-    *Error*) >&2 echo "yul.sh \"Yul compilation error: \"\n$out";;
-    *       )  echo 0x$a;;
-    esac
-fi
 )";
 
 string const py_compiler_sh = R"(#!/bin/bash
@@ -356,8 +360,6 @@ tf --filler-path $SRCPATH --output $OUTPUT --test-module $FILLER $ADDFLAGS --no-
 
 )";
 
-gent8ntoolcfg::gent8ntoolcfg()
-{
     {
         spDataObject obj;
         (*obj)["path"] = "t8ntool/config";

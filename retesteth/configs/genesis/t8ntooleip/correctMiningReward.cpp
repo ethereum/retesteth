@@ -4,6 +4,8 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
+gent8ntooleip_genRewardsCfg::gent8ntooleip_genRewardsCfg()
+{
 const string t8ntooleip_correctMiningReward_config = R"({
     "//comment" : "State Tests does not calculate mining reward in post conditions, so when filling a blockchain test out of it, the mining reward must be set",
     "Frontier":          "5000000000000000000",
@@ -30,8 +32,6 @@ const string t8ntooleip_correctMiningReward_config = R"({
     "Shanghai"  :          "0"
 })";
 
-gent8ntooleip_genRewardsCfg::gent8ntooleip_genRewardsCfg()
-{
     spDataObject obj2;
     (*obj2)["path"] = "t8ntooleip/genesis/correctMiningReward.json";
     (*obj2)["content"] = t8ntooleip_correctMiningReward_config;

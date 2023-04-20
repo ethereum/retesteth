@@ -4,6 +4,10 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
+
+genAtlantisCfgETC::genAtlantisCfgETC()
+{
+
 const string rpc_Byzantium_config = R"({
     "params" : {
         "homesteadForkBlock" : "0x00",
@@ -25,8 +29,6 @@ const string etc_Atlantis_config = R"({
     }
 })";
 
-genAtlantisCfgETC::genAtlantisCfgETC()
-{
     spDataObject obj;
     (*obj)["path"] = "besuetc/genesis/ETC_Atlantis.json";
     (*obj)["content"] = rpc_Byzantium_config;

@@ -4,6 +4,10 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
+
+genetctranslatecfg::genetctranslatecfg()
+{
+
 string const etctr_config = R"({
     "name" : "Ethereum Classic Translate core-geth on StateTool",
     "socketType" : "tranition-tool",
@@ -270,9 +274,6 @@ echo "0x600360005500"
 # just like described in this file."
 )";
 
-
-genetctranslatecfg::genetctranslatecfg()
-{
     {
         spDataObject obj;
         (*obj)["path"] = "etctranslate/config";

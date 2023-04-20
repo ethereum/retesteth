@@ -4,6 +4,9 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
+genFrontierCfg::genFrontierCfg()
+{
+
 const string t8ntool_Frontier_config = R"({
     "params" : {
         "fork" : "Frontier",
@@ -13,8 +16,6 @@ const string t8ntool_Frontier_config = R"({
     }
 })";
 
-genFrontierCfg::genFrontierCfg()
-{
     spDataObject obj2;
     (*obj2)["path"] = "default/genesis/Frontier.json";
     (*obj2)["content"] = t8ntool_Frontier_config;

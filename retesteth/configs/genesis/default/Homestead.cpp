@@ -4,6 +4,10 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
+
+genHomesteadCfg::genHomesteadCfg()
+{
+
 const string t8ntool_Homestead_config = R"({
     "params" : {
         "fork" : "Homestead",
@@ -14,8 +18,6 @@ const string t8ntool_Homestead_config = R"({
     }
 })";
 
-genHomesteadCfg::genHomesteadCfg()
-{
     spDataObject obj2;
     (*obj2)["path"] = "default/genesis/Homestead.json";
     (*obj2)["content"] = t8ntool_Homestead_config;

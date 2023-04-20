@@ -4,6 +4,9 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
+genMergeCfg::genMergeCfg()
+{
+
 const string t8ntool_Merge_config = R"({
     "params" : {
         "fork" : "Merge",
@@ -17,8 +20,6 @@ const string t8ntool_Merge_config = R"({
     }
 })";
 
-genMergeCfg::genMergeCfg()
-{
     {
         spDataObject obj;
         (*obj)["path"] = "default/genesis/Merge.json";

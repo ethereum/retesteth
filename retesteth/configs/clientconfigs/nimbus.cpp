@@ -4,6 +4,9 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
+gennimbuscfg::gennimbuscfg()
+{
+
 string const nimbus_config = R"({
     "name" : "Ethereum NIMBUS on StateTool",
     "socketType" : "tranition-tool",
@@ -309,8 +312,6 @@ echo "0x600360005500"
 # just like described in this file."
 )";
 
-gennimbuscfg::gennimbuscfg()
-{
     {
         spDataObject obj;
         (*obj)["path"] = "nimbus/config";

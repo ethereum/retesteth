@@ -4,6 +4,9 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
+genBerlinToLondonCfg::genBerlinToLondonCfg()
+{
+
 const string t8ntool_BerlinToLondonAt5_config = R"({
     "params" : {
         "fork" : "BerlinToLondonAt5",
@@ -17,8 +20,6 @@ const string t8ntool_BerlinToLondonAt5_config = R"({
     }
 })";
 
-genBerlinToLondonCfg::genBerlinToLondonCfg()
-{
     {
         spDataObject obj;
         (*obj)["path"] = "default/genesis/BerlinToLondonAt5.json";

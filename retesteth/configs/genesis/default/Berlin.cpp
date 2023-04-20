@@ -4,6 +4,9 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
+genBerlinCfg::genBerlinCfg()
+{
+
 const string t8ntool_Berlin_config = R"({
     "params" : {
         "fork" : "Berlin",
@@ -16,8 +19,7 @@ const string t8ntool_Berlin_config = R"({
     }
 })";
 
-genBerlinCfg::genBerlinCfg()
-{
+
     spDataObject obj2;
     (*obj2)["path"] = "default/genesis/Berlin.json";
     (*obj2)["content"] = t8ntool_Berlin_config;
