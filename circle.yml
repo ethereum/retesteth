@@ -193,9 +193,9 @@ jobs:
       - image: ethereum/cpp-build-env:18-clang-11
     steps: *linux-steps
 
-  Linux-GCC9-Debug:
+  Linux-GCC9:
     environment:
-      - BUILD_TYPE: Debug
+      - BUILD_TYPE: Release
       - CXX: g++-9
       - CC:  gcc-9
       - GCOV: gcov-9
@@ -241,4 +241,4 @@ workflows:
       - macOS-XCode12
       - macOS-XCode14
       - Linux-Clang11
-      - Linux-GCC9-Debug
+      - Linux-GCC9
