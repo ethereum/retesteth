@@ -816,8 +816,6 @@ bool DataObject::operator==(DataObject const& _value) const
         (isArray() && getSubObjects().size() != _value.getSubObjects().size()))
         return false;
     bool equal = true;
-    equal = type() == _value.type();
-    equal = getKey() == _value.getKey();
     switch (type())
     {
     case DataType::Bool:
@@ -830,7 +828,6 @@ bool DataObject::operator==(DataObject const& _value) const
         equal = asString() == _value.asString();
         break;
     case DataType::Array:
-        equal = getSubObjects().size() == _value.getSubObjects().size();
         for (size_t i = 0; i < getSubObjects().size(); i++)
         {
             equal = getSubObjects().at(i).getCContent() == _value.getSubObjects().at(i).getCContent();
@@ -839,7 +836,6 @@ bool DataObject::operator==(DataObject const& _value) const
         }
         break;
     case DataType::Object:
-        equal = getSubObjects().size() == _value.getSubObjects().size();
         for (size_t i = 0; i < getSubObjects().size(); i++)
         {
             equal = getSubObjects().at(i).getCContent() == _value.getSubObjects().at(i).getCContent();
