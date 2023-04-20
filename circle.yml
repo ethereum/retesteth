@@ -31,7 +31,7 @@ defaults:
       name: "ConfigureMac"
       working_directory: ~/build
       command: |
-        cmake ../project -G "$GENERATOR" -DCMAKE_BUILD_TYPE=$BUILD_TYPE $CMAKE_OPTIONS -DCMAKE_TOOLCHAIN_FILE=~/project/toolchain.cmake
+        cmake ../project -DCMAKE_BUILD_TYPE=$BUILD_TYPE $CMAKE_OPTIONS -DCMAKE_TOOLCHAIN_FILE=~/project/toolchain.cmake
 
   build: &build
     run:

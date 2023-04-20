@@ -16,6 +16,12 @@ DataObject::DataObject(DataType _type)
         _initArray(_type);
     else if (_type == DataType::Null)
         m_value = DataNull();
+    else if (_type == DataType::String)
+        m_value = "";
+    else if (_type == DataType::Integer)
+        m_value = 0;
+    else if (_type == DataType::Bool)
+        m_value = false;
 }
 
 /// Define dataobject of string
@@ -91,7 +97,7 @@ std::map<string, spDataObject>& DataObject::_getSubObjectKeysUnsafe()
         return std::get<DataObjecto>(m_value).second;
     if (type() == DataType::Array)
         return std::get<1>(std::get<DataArray>(m_value));
-    return emptyMap;
+    return emptyMap; // Dangerous, Not Thread Safe, should never be here
 }
 
 /// Get ref vector of subobjects
@@ -137,8 +143,6 @@ void DataObject::setSubObjectKey(size_t _index, std::string&& _key)
 /// look if there is a subobject with _key
 bool DataObject::count(std::string const& _key) const
 {
-    if (!isArray())
-        return false;
     auto const& subObjectKeys = getSubObjectKeys();
     return subObjectKeys.count(_key);
 }
@@ -210,7 +214,7 @@ void DataObject::setKeyPos(std::string const& _key, size_t _pos)
             }
         }
 
-    spDataObject data = subObjects.at(elementPos);
+    spDataObject const data = subObjects.at(elementPos);
     subObjects.erase(subObjects.begin() + elementPos);
     if (_pos >= subObjects.size())
         subObjects.push_back(data);
@@ -222,6 +226,7 @@ void DataObject::setKeyPos(std::string const& _key, size_t _pos)
 /// replace this object with _value
 void DataObject::replace(DataObject const& _value)
 {
+    clear();
     m_strKey = _value.getKey();
     switch (_value.type())
     {
@@ -239,6 +244,9 @@ void DataObject::replace(DataObject const& _value)
         break;
     case DataType::Array:
         m_value = std::tuple{_value.getSubObjects(), _value.getSubObjectKeys()};
+        break;
+    case DataType::Null:
+        m_value = DataNull();
         break;
     default:
         break;
@@ -263,7 +271,6 @@ DataObjectK& DataObjectK::operator=(spDataObject const& _value)
 
 spDataObject& DataObject::atKeyPointerUnsafe(std::string const& _key)
 {
-    _assert(isArray());
     auto& subObjectKeys = _getSubObjectKeysUnsafe();
     if (subObjectKeys.count(_key))
         return subObjectKeys.at(_key);
@@ -278,7 +285,6 @@ DataObjectK DataObject::atKeyPointer(std::string const& _key)
 
 DataObject const& DataObject::atKey(std::string const& _key) const
 {
-    _assert(isArray());
     auto const& subObjectKeys = getSubObjectKeys();
     if (subObjectKeys.count(_key))
         return subObjectKeys.at(_key).getCContent();
@@ -290,7 +296,6 @@ DataObject const& DataObject::atKey(std::string const& _key) const
 
 DataObject& DataObject::atKeyUnsafe(std::string const& _key)
 {
-    _assert(isArray());
     auto& subObjectKeys = _getSubObjectKeysUnsafe();
     if (subObjectKeys.count(_key))
         return subObjectKeys.at(_key).getContent();
@@ -301,7 +306,6 @@ DataObject& DataObject::atKeyUnsafe(std::string const& _key)
 
 DataObject const& DataObject::at(size_t _pos) const
 {
-    _assert(isArray());
     auto const& subObjects = getSubObjects();
     _assert((size_t)_pos < subObjects.size(), "DataObject::at(int) out of range!");
     return subObjects[_pos];
@@ -309,7 +313,6 @@ DataObject const& DataObject::at(size_t _pos) const
 
 DataObject& DataObject::atUnsafe(size_t _pos)
 {
-    _assert(isArray());
     auto& subObjects = getSubObjectsUnsafe();
     _assert((size_t)_pos < subObjects.size(), "DataObject::atUnsafe(int) out of range!");
     return subObjects[_pos].getContent();
@@ -317,7 +320,6 @@ DataObject& DataObject::atUnsafe(size_t _pos)
 
 DataObject const& DataObject::atLastElement() const
 {
-    _assert(isArray());
     auto const& subObjects = getSubObjects();
     static const string c_assert = "atLastElement()";
     _assert(subObjects.size() > 0, c_assert);
@@ -326,7 +328,6 @@ DataObject const& DataObject::atLastElement() const
 
 DataObject& DataObject::atLastElementUnsafe()
 {
-    _assert(isArray());
     auto& subObjects = getSubObjectsUnsafe();
     static const string c_assert = "atLastElementUnsafe()";
     _assert(subObjects.size() > 0, c_assert);
@@ -760,7 +761,8 @@ spDataObject DataObject::copy() const
             (*c).addSubObject(copy);
         }
     break;
-    case Null: break;
+    case Null:
+        break;
     case NotInitialized: break;
     }
     return c;
