@@ -101,7 +101,6 @@ public:
     DataObject const& atLastElement() const;
     DataObject& atLastElementUnsafe();
 
-    void setVerifier(void (*f)(DataObject&));
     enum ModifierOption
     {
         RECURSIVE,
@@ -117,10 +116,8 @@ public:
     std::string asJson(int level = 0, bool pretty = true, bool nokey = false) const;
     static std::string dataTypeAsString(DataType _type);
 
-    void setOverwrite(bool _overwrite) { m_allowOverwrite = _overwrite; }
-    void setAutosort(bool _sort) { m_autosort = _sort; m_allowOverwrite = true; }
-    bool isOverwritable() const { return m_allowOverwrite; }
-    bool isAutosort() const { return m_autosort; }
+    constexpr void setAutosort(bool _sort) { m_autosort = _sort; }
+    constexpr bool isAutosort() const { return m_autosort; }
     bool isArray() const { return type() == DataType::Object || type() == DataType::Array; }
     void clearSubobjects(DataType _t = DataType::NotInitialized);
 
@@ -132,7 +129,6 @@ private:
     std::map<std::string, spDataObject>& _getSubObjectKeysUnsafe();
 
     std::string m_strKey;
-    bool m_allowOverwrite = false;
     bool m_autosort = false;
 
     typedef std::vector<spDataObject> VecSpData;
@@ -142,8 +138,6 @@ private:
     struct DataNull {};
     typedef std::variant<std::monostate, bool, std::string, int, DataObjecto, DataArray, DataNull> DataVariant;
     DataVariant m_value;
-
-    void (*m_verifier)(DataObject&) = 0;
 };
 
 // Default DataObject pointer allocator so not to type 'new DataObject()' each time

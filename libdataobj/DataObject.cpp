@@ -210,14 +210,12 @@ void DataObject::setKeyPos(std::string const& _key, size_t _pos)
             }
         }
 
-    setOverwrite(true);
     spDataObject data = subObjects.at(elementPos);
     subObjects.erase(subObjects.begin() + elementPos);
     if (_pos >= subObjects.size())
         subObjects.push_back(data);
     else
         subObjects.insert(subObjects.begin() + _pos, 1, data);
-    setOverwrite(false);
 }
 
 
@@ -246,7 +244,6 @@ void DataObject::replace(DataObject const& _value)
         break;
     }
 
-    m_allowOverwrite = _value.isOverwritable();
     setAutosort(_value.isAutosort());
 }
 
@@ -378,10 +375,8 @@ void DataObject::removeKey(std::string const& _key)
     {
         if ((*it)->getKey() == _key)
         {
-            setOverwrite(true);
             subObjects.erase(it);
             subObjectKeys.erase(_key);
-            setOverwrite(false);
             break;
         }
     }
@@ -396,12 +391,6 @@ void DataObject::clear(DataType _type)
     std::swap(m_value, emptyVariant);
     if (_type == DataType::Object || _type == DataType::Array)
         _initArray(_type);
-}
-
-void DataObject::setVerifier(void (*f)(DataObject&))
-{
-    m_verifier = f;
-    m_verifier(*this);
 }
 
 void DataObject::performModifier(void (*f)(DataObject&), ModifierOption _opt, std::set<string> const& _exceptionKeys)
@@ -656,7 +645,6 @@ DataObject& DataObject::_addSubObject(spDataObject const& _obj, string&& _keyOve
             setSubObjectKey(pos, std::forward<string&&>(_keyOverwrite));
         else
             setSubObjectKey(pos, string(_obj->getKey()));
-        subObjects.at(pos).getContent().setOverwrite(m_allowOverwrite);
         subObjects.at(pos).getContent().setAutosort(m_autosort);
     }
     else
@@ -668,17 +656,12 @@ DataObject& DataObject::_addSubObject(spDataObject const& _obj, string&& _keyOve
         if (pos == subObjects.size())
             subObjects.push_back(_obj);
         else
-        {
-            setOverwrite(true);
             subObjects.insert(subObjects.begin() + pos, 1, _obj);
-            setOverwrite(false);
-        }
 
         if (!_keyOverwrite.empty())
             subObjects.at(pos).getContent().setKey(std::forward<string&&>(_keyOverwrite));
         else
             subObjects.at(pos).getContent().setKey(string(_obj->getKey()));
-        subObjects.at(pos).getContent().setOverwrite(true);
         subObjects.at(pos).getContent().setAutosort(m_autosort);
     }
     auto& subObjects = getSubObjectsUnsafe();
