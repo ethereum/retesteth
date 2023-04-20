@@ -207,13 +207,16 @@ void mod_valueInsertZeroXPrefix(DataObject& _obj)
 
 void mod_sortKeys(DataObject& _obj)
 {
-    std::map<string, spDataObject> const map = _obj.getSubObjectKeys();
-    if (map.size() > 1)
+    if (_obj.isArray())
     {
-        _obj.clearSubobjects();
-        _obj.setAutosort(true);
-        for (auto const& el : map)
-            _obj.atKeyPointer(el.second->getKey()) = el.second;
+        std::map<string, spDataObject> const map = _obj.getSubObjectKeys();
+        if (map.size() > 1)
+        {
+            _obj.clearSubobjects();
+            _obj.setAutosort(true);
+            for (auto const& el : map)
+                _obj.atKeyPointer(el.second->getKey()) = el.second;
+        }
     }
 }
 

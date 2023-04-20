@@ -42,7 +42,7 @@ private:
 
 
 public:
-    GCP_SPointerBase() : _nRef(0), _isEmpty(false) {}
+    constexpr GCP_SPointerBase() : _nRef(0), _isEmpty(false) {}
     template <class T>
     friend class GCP_SPointer;
 };

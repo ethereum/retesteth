@@ -21,6 +21,7 @@
 #include <libdataobj/ConvertFile.h>
 #include <retesteth/TestOutputHelper.h>
 #include <retesteth/testSuites/Common.h>
+#include <libdevcore/SHA3.h>
 
 using namespace std;
 using namespace dev;
@@ -971,5 +972,61 @@ BOOST_AUTO_TEST_CASE(dataobject_doublefields_comments_disabled)
     }
 }
 
+BOOST_AUTO_TEST_CASE(dataobject_accessArray)
+{
+    // Access not an array
+    spDataObject obj;
+    auto const& vec = obj->getSubObjects();
+    BOOST_CHECK(vec.size() == 0);
+    auto const& map = obj->getSubObjectKeys();
+    BOOST_CHECK(map.size() == 0);
+
+    auto& vecU = (*obj).getSubObjectsUnsafe();
+    BOOST_CHECK(vecU.size() == 0);
+}
+
+BOOST_AUTO_TEST_CASE(dataobject_copy)
+{
+    string const data = R"(
+    {
+        "intfield" : 123,
+        "string" : "somstring",
+        "bool" : true,
+        "null" : null,
+        "array" : [
+            "element1",
+            "element2"
+        ],
+        "object" : {
+            "intfield" : -123,
+            "string" : "somstring",
+            "bool" : true
+        },
+        "array2" : [
+            1,
+            -2
+        ]
+    })";
+    CJOptions opt = { .jsonParse = CJOptions::JsonParse::ALLOW_COMMENTS, .autosort = true };
+    spDataObject dObj = ConvertJsoncppStringToData(data, opt);
+    BOOST_CHECK(dev::toHexPrefixed(dev::sha3(dObj->asJson(0, false))) == "0xfea9954b38d3afe471538b8854d63628570c1b68cf1c403e3b75a3263f7d4e3a");
+
+    spDataObject dObj2 = dObj->copy();
+    BOOST_CHECK(dObj->asJson(0, false) == dObj2->asJson(0, false));
+    (*dObj).atKeyUnsafe("string") = "newString";
+    BOOST_CHECK(dObj->asJson(0, false) != dObj2->asJson(0, false));
+
+    (*dObj).atKeyUnsafe("string") = "somstring";
+    (*dObj2).copyFrom(dObj);
+    BOOST_CHECK(dObj->asJson(0, false) == dObj2->asJson(0, false));
+    (*dObj).atKeyUnsafe("string") = "newString";
+    BOOST_CHECK(dObj->asJson(0, false) != dObj2->asJson(0, false));
+}
+
+BOOST_AUTO_TEST_CASE(dataobject_defaultType)
+{
+    spDataObject obj;
+    BOOST_CHECK(DataObject::dataTypeAsString(obj->type()) == "notinit");
+}
 
 BOOST_AUTO_TEST_SUITE_END()

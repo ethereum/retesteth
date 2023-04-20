@@ -9,15 +9,17 @@
 
 namespace dataobject
 {
+
+//std::variant<bool, std::string, int, DataArray> m_value;
 enum DataType
 {
+    NotInitialized,
+    Bool,
     String,
     Integer,
-    Bool,
-    Array,
     Object,
-    Null,
-    NotInitialized
+    Array,
+    Null
 };
 
 class DataObjectK;
@@ -31,19 +33,20 @@ class DataObject : public GCP_SPointerBase
 public:
     DataObject();
     DataObject(DataObject const&) = delete;
-    DataObject(DataType _type);
+    explicit DataObject(DataType _type);
     DataObject(DataType _type, bool _bool);
 
     // DataObject(str)
-    DataObject(std::string&& _str);
-    DataObject(std::string const& _str);
+    explicit DataObject(int _int);
+    explicit DataObject(std::string&& _str);
+    explicit DataObject(std::string const& _str);
 
     // DataObject(key)
     DataObject(std::string&& _key, std::string&& _str);
     DataObject(std::string const& _key, std::string const& _str);
     DataObject(std::string&& _key, int _val);
 
-    DataObject(int _int);
+
     DataType type() const;
     void setKey(std::string&& _key);
     void setKey(std::string const& _key);
@@ -119,27 +122,27 @@ public:
     void setAutosort(bool _sort) { m_autosort = _sort; m_allowOverwrite = true; }
     bool isOverwritable() const { return m_allowOverwrite; }
     bool isAutosort() const { return m_autosort; }
-    void clearSubobjects(DataType _type = DataType::NotInitialized)
-    {
-        m_subObjects.clear();
-        m_subObjectKeys.clear();
-        m_type = _type;
-    }
+    bool isArray() const { return type() == DataType::Object || type() == DataType::Array; }
+    void clearSubobjects(DataType _t = DataType::NotInitialized);
 
 private:
     DataObject& _addSubObject(spDataObject const& _obj, std::string&& _keyOverwrite = std::string());
     void _assert(bool _flag, std::string const& _comment = std::string()) const;
+    void _initArray(DataType _type);
+    constexpr bool _isNotInit() const;
+    std::map<std::string, spDataObject>& _getSubObjectKeysUnsafe();
 
-    // Use vector here to be able to quickly find insert position
-    // of objects to be ordered by it's key with findOrderedKeyPosition
-    std::vector<spDataObject> m_subObjects;
-    std::map<std::string, spDataObject> m_subObjectKeys;
-
-    DataType m_type;
     std::string m_strKey;
     bool m_allowOverwrite = false;  // allow overwrite elements
     bool m_autosort = false;
-    std::variant<bool, std::string, int> m_value;
+
+    typedef std::vector<spDataObject> VecSpData;
+    typedef std::map<std::string, spDataObject> MapKeyToObject;
+    typedef std::pair<VecSpData, MapKeyToObject> DataObjecto;
+    typedef std::tuple<VecSpData, MapKeyToObject> DataArray;
+    struct DataNull {};
+    typedef std::variant<std::monostate, bool, std::string, int, DataObjecto, DataArray, DataNull> DataVariant;
+    DataVariant m_value;
 
     void (*m_verifier)(DataObject&) = 0;
 };
