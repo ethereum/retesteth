@@ -24,7 +24,7 @@ defaults:
       # (ninja is using relative paths otherwise).
       working_directory: ~/build
       command: |
-        cmake ../project -G "$GENERATOR" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCOVERAGE=OFF $CMAKE_OPTIONS
+        cmake ../project -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCOVERAGE=OFF $CMAKE_OPTIONS
 
   configureMac: &configureMac
     run:
@@ -37,7 +37,7 @@ defaults:
     run:
       name: "Build"
       working_directory: ~/build
-      command: cmake --build . -- -j $BUILD_PARALLEL_JOBS
+      command: make -j $BUILD_PARALLEL_JOBS
 
   linuxInstallGO: &linuxInstallGO
     run:
