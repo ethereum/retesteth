@@ -90,6 +90,12 @@ defaults:
       path: ~/build/retesteth
       destination: retesteth
 
+  store-log: &store-log
+    store_artifacts:
+      path: /home/builder/build/deps/src/secp256k1-stamp
+      destination: log
+
+
   upload-coverage-data: &upload-coverage-data
     run:
       name: "Upload coverage data"
@@ -144,6 +150,7 @@ defaults:
     - *linuxInstallGO
     - *build
     - *store-retesteth
+    - *store-log
     - *test
     - *test-retesteth
 #    - *upload-coverage-data
@@ -172,6 +179,7 @@ defaults:
 #      - *install-solidity-mac
       - *build
       - *store-retesteth
+      - *store-log
       - *test
       - *test-retesteth
 #      - *upload-coverage-data
@@ -209,6 +217,19 @@ jobs:
       - image: ethereum/cpp-build-env:18-gcc-9
     steps: *linux-steps
 
+  Linux-GCC12:
+    environment:
+      - BUILD_TYPE: Release
+      - CXX: g++-12
+      - CC:  gcc-12
+      - GCOV: gcov-12
+      - GENERATOR: Ninja
+      - BUILD_PARALLEL_JOBS: 4
+      - TEST_PARALLEL_JOBS: 4
+    docker:
+      - image: ethereum/cpp-build-env:19-gcc-12
+    steps: *linux-steps
+
   macOS-XCode14:
     environment:
       - BUILD_TYPE: Release
@@ -220,17 +241,6 @@ jobs:
       xcode: "14.0.1"
     steps: *mac-steps
 
-  macOS-XCode12:
-    environment:
-      - BUILD_TYPE: Release
-      - CXX: clang++
-      - GENERATOR: Ninja
-      - BUILD_PARALLEL_JOBS: 8
-      - TEST_PARALLEL_JOBS: 8
-    macos:
-      xcode: "12.5.1"
-    steps: *mac-steps
-
 # TODO: Run GCC6 build only in develop branch.
 # TODO: Enabled nightly builds and add more configs.
 # TODO: Separate builds from testing jobs.
@@ -238,7 +248,7 @@ workflows:
   version: 2
   cpp-ethereum:
     jobs:
-      - macOS-XCode12
       - macOS-XCode14
       - Linux-Clang11
       - Linux-GCC9
+      - Linux-GCC12
