@@ -127,15 +127,11 @@ void mod_keyToCompactEvenHexPrefixed(DataObject& _obj)
 {
     try
     {
-        if (!(_obj.getKey()[0] == '0' && _obj.getKey()[1] == 'x'))
-            _obj.setKey(toCompactHexPrefixed(_obj.getKey(), 1));
+        string const& key = _obj.getKey();
+        if (key.size() <= 2 || !(key.at(0) == '0' && key.at(1) == 'x'))
+            _obj.setKey(toCompactHexPrefixed(key, 1));
         else
-        {
-            if (_obj.getKey().size() == 2)
-                _obj.getKeyUnsafe().insert(2, "00");
-            else
-                _obj.performModifier(mod_removeLeadingZerosFromHexKeyEVEN);
-        }
+            _obj.performModifier(mod_removeLeadingZerosFromHexKeyEVEN);
     }
     catch (std::exception const& _ex)
     {
