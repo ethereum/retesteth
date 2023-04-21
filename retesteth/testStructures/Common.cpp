@@ -363,7 +363,7 @@ string compareBlockHeaders(DataObject const& _blockA, DataObject const& _blockB,
             message += cYellow + el.getKey() + cRed + " ";
         if (el.asString() != testHeaderField)
         {
-            if (el.getKey() != "hash")
+            if (el.getKey() != c_hash)
             {
                 if (_whatField.empty())
                     _whatField = el.getKey();
@@ -379,7 +379,7 @@ string compareBlockHeaders(DataObject const& _blockA, DataObject const& _blockB,
             message += el.asString() + " vs " + testHeaderField + "\n";
     }
     if (_whatField.empty() && errorInHashField)
-        _whatField = "hash";
+        _whatField = c_hash;
     return message;
 }
 
@@ -389,10 +389,10 @@ void readExpectExceptions(DataObject const& _data, std::map<FORK, string>& _out)
     {
         // Parse ">=Frontier" : "EXCEPTION"
         ClientConfig const& cfg = Options::get().getDynamicOptions().getCurrentConfig();
-        std::set<string> forksString = {rec->getKey()};
+        const std::set<string> forksString = {rec->getKey()};
         if (rec->getKey().size() < 3)
             ETH_ERROR_MESSAGE("readExpectExceptions:: Dataobject key as fork is too short around: " + _data.asJson());
-        std::vector<FORK> parsedForks = cfg.translateNetworks(forksString);
+        const std::vector<FORK> parsedForks = cfg.translateNetworks(forksString);
         for (auto const& el : parsedForks)
             _out.emplace(el, rec->asString());
     }
@@ -401,18 +401,18 @@ void readExpectExceptions(DataObject const& _data, std::map<FORK, string>& _out)
 void convertDecTransactionToHex(spDataObject& _data)
 {
     DataObject& data = _data.getContent();
-    data.performModifier(mod_valueToCompactEvenHexPrefixed, DataObject::ModifierOption::RECURSIVE, {"data", "to"});
+    data.performModifier(mod_valueToCompactEvenHexPrefixed, DataObject::ModifierOption::RECURSIVE, {c_data, c_to});
 
     // fix 0x prefix on 'to' key
-    string& to = data.atKeyUnsafe("to").asStringUnsafe();
+    string& to = data.atKeyUnsafe(c_to).asStringUnsafe();
     if (to.size() > 1 && to.at(1) != 'x')
         to.insert(0, "0x");
 
     // Compile LLL in transaction data into byte code if not already
-    data["data"] = test::compiler::replaceCode(data.atKey("data").asString());
+    data[c_data] = test::compiler::replaceCode(data.atKey(c_data).asString());
 
-    data["data"].performModifier(mod_valueToLowerCase);
-    data["to"].performModifier(mod_valueToLowerCase);
+    data[c_data].performModifier(mod_valueToLowerCase);
+    data[c_to].performModifier(mod_valueToLowerCase);
 }
 
 }  // namespace teststruct

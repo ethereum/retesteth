@@ -46,7 +46,7 @@ DebugVMTrace::DebugVMTraceRaw::DebugVMTraceRaw(string const& _info, fs::path con
     }
 }
 
-void DebugVMTrace::DebugVMTraceRaw::print()
+void DebugVMTrace::DebugVMTraceRaw::print() const
 {
     ETH_DC_MESSAGE(DC::DEFAULT, m_infoString);
     ETH_DC_MESSAGE(DC::DEFAULT, m_rawUnparsedLogs);
@@ -121,7 +121,7 @@ DebugVMTrace::DebugVMTrace(string const& _info, fs::path const& _logs)
 }
 
 
-void DebugVMTrace::DebugVMTraceNice::print()
+void DebugVMTrace::DebugVMTraceNice::print() const
 {
     ETH_DC_MESSAGE(DC::DEFAULT, m_infoString);
     if (m_log.size() == 0)
@@ -195,7 +195,7 @@ DebugVMTrace::~DebugVMTrace()
     }
 }
 
-void DebugVMTrace::exportLogs(fs::path const& _folder)
+void DebugVMTrace::exportLogs(fs::path const& _folder) const
 {
     try
     {
@@ -223,7 +223,7 @@ std::vector<VMLogRecord> const& DebugVMTrace::getLog()
     return m_impl->getLog();
 }
 
-void DebugVMTrace::print()
+void DebugVMTrace::print() const
 {
     if (m_impl)
         m_impl->print();

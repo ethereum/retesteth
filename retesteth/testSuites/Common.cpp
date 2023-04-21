@@ -43,7 +43,7 @@ void checkTestNameIsEqualToFileName(string const& _testName)
 {
     if (!TestOutputHelper::get().testFile().empty())
     {
-        string const tFileName = TestOutputHelper::get().testFile().stem().string();
+        const string tFileName = TestOutputHelper::get().testFile().stem().string();
         ETH_ERROR_REQUIRE_MESSAGE(_testName + "Filler" == tFileName,
             TestOutputHelper::get().testFile().string() +
                 " contains a test with a different name '" + _testName + "'");
@@ -53,23 +53,26 @@ void checkTestNameIsEqualToFileName(string const& _testName)
 void checkTestNameIsEqualToFileName(DataObject const& _input)
 {
     if (!TestOutputHelper::get().testFile().empty())
-        ETH_ERROR_REQUIRE_MESSAGE(_input.getSubObjects().at(0)->getKey() + "Filler" ==
-                                      TestOutputHelper::get().testFile().stem().string(),
-            TestOutputHelper::get().testFile().string() +
-                " contains a test with a different name '" + _input.getSubObjects().at(0)->getKey() +
-                "'");
+    {
+        auto const& testfile = TestOutputHelper::get().testFile();
+        auto const& key = _input.getSubObjects().at(0)->getKey();
+        ETH_ERROR_REQUIRE_MESSAGE(
+             key + "Filler" == testfile.stem().string(),
+            testfile.string() + " contains a test with a different name '" + key + "'");
+    }
 }
 
 void printVmTrace(VMtraceinfo const& _info)
 {
-    DebugVMTrace ret(_info.session.debug_traceTransaction(_info.trHash));
+    const DebugVMTrace ret(_info.session.debug_traceTransaction(_info.trHash));
 
     ETH_DC_MESSAGE(DC::TESTLOG, "------------------------");
-    if (Options::get().vmtraceraw)
+    auto const& vmtraceraw = Options::get().vmtraceraw;
+    if (vmtraceraw)
     {
-        if (!Options::get().vmtraceraw.outpath.empty())
+        if (!vmtraceraw.outpath.empty())
         {
-            auto outpath = fs::path(Options::get().vmtraceraw.outpath);
+            auto const outpath = fs::path(vmtraceraw.outpath);
             ETH_DC_MESSAGEC(DC::TESTLOG, "Export vmtraceraw to " + (outpath / _info.trName).string(), LogColor::LIME);
             ret.exportLogs(outpath / _info.trName);
         }
