@@ -23,11 +23,6 @@ void mod_valueToFH32(DataObject&);
 void mod_sortKeys(DataObject&);
 long long int hexOrDecStringToInt(std::string const& _str);
 
-// Check the presents of fields in a DataObject with a validation map
-typedef std::set<DataType> possibleType;
-void requireJsonFields(DataObject const& _o, std::string const& _section,
-    std::map<std::string, possibleType> const& _validationMap, bool _fail = false);
-
 enum jsonField
 {
     Required,

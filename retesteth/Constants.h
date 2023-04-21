@@ -54,4 +54,9 @@ extern const std::string c_v;
 extern const std::string c_r;
 extern const std::string c_s;
 
+// State
+extern const std::string c_code;
+extern const std::string c_balance;
+extern const std::string c_storage;
+
 }}}

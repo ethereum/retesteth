@@ -50,14 +50,18 @@ const string c_withdrawalsRoot = "withdrawalsRoot";
 
 // Transactions
 const string c_data = "data";
-const std::string c_gasPrice = "gasPrice";
-const std::string c_value = "value";
-const std::string c_to = "to";
-const std::string c_secretKey = "secretKey";
-const std::string c_sender = "sender";
-const std::string c_v = "v";
-const std::string c_r = "r";
-const std::string c_s = "s";
+const string c_gasPrice = "gasPrice";
+const string c_value = "value";
+const string c_to = "to";
+const string c_secretKey = "secretKey";
+const string c_sender = "sender";
+const string c_v = "v";
+const string c_r = "r";
+const string c_s = "s";
+
+const string c_code = "code";
+const string c_balance = "balance";
+const string c_storage = "storage";
 
 }}}
 

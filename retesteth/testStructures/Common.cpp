@@ -4,12 +4,14 @@
 #include "TestOutputHelper.h"
 #include <retesteth/Options.h>
 #include <libdevcrypto/Common.h>
+#include <retesteth/Constants.h>
 
 using namespace std;
 using namespace test;
 using namespace test::debug;
 using namespace dev;
 using namespace test::teststruct;
+using namespace test::teststruct::constnames;
 using namespace test::compiler;
 
 namespace
@@ -220,58 +222,6 @@ long long int hexOrDecStringToInt(string const& _str)
     return res;
 }
 
-void requireJsonFields(
-    DataObject const& _o, std::string const& _section, std::map<std::string, possibleType> const& _validationMap, bool _fail)
-{
-    // check for unexpected fiedls
-    for (auto const& field : _o.getSubObjects())
-    {
-        string const message = "'" + field->getKey() + "' should not be declared in '" + _section + "' section!";
-        if (_fail)
-        {
-            ETH_FAIL_REQUIRE_MESSAGE(_validationMap.count(field->getKey()), message);
-        }
-        else
-        {
-            ETH_ERROR_REQUIRE_MESSAGE(_validationMap.count(field->getKey()), message);
-        }
-    }
-
-    // check field types with validation map
-    for (auto const& vmap : _validationMap)
-    {
-        string const message = vmap.first + " not found in " + _section + " section! " + TestOutputHelper::get().testName();
-        if (_fail)
-        {
-            ETH_FAIL_REQUIRE_MESSAGE(_o.count(vmap.first) > 0, message);
-        }
-        else
-        {
-            ETH_ERROR_REQUIRE_MESSAGE(_o.count(vmap.first) > 0, message);
-        }
-        bool matched = false;
-        std::string sTypes;
-        for (auto const& type : vmap.second)
-        {
-            if (sTypes.size())
-                sTypes += " or ";
-            sTypes += DataObject::dataTypeAsString(type);
-            if (_o.atKey(vmap.first).type() == type)
-                matched = true;
-        }
-        if (matched == false)
-        {
-            std::string comment = _section + " '" + vmap.first + "' expected to be '" + sTypes + "', but set to: '" +
-                                  DataObject::dataTypeAsString(_o.atKey(vmap.first).type()) + "' in " +
-                                  TestOutputHelper::get().testName();
-            if (_fail)
-                ETH_FAIL_MESSAGE(comment + "\n" + _o.asJson());
-            else
-                ETH_ERROR_MESSAGE(comment + "\n" + _o.asJson());
-        }
-    }
-}
-
 void requireJsonFields(DataObject const& _o, std::string const& _config, std::map<std::string, jsonType> const& _validationMap)
 {
     // check for unexpected fiedls
@@ -332,24 +282,25 @@ void convertDecStateToHex(spDataObject& _data, solContracts const& _preSolidity,
     {
         DataObject& acc = acc2.getContent();
         if (acc.getKey()[1] != 'x')
-            acc.setKey("0x" + acc.getKey());
+            acc.getKeyUnsafe().insert(0, "0x");
         acc.performModifier(mod_keyToLowerCase);
 
-        if (acc.count("code"))
+        if (acc.count(c_code))
         {
+            auto const& code = acc.atKey(c_code).asString();
             if (_compileCode == StateToHex::COMPILECODE)
-                acc["code"].setString(test::compiler::replaceCode(acc.atKey("code").asString(), _preSolidity));
-            if (acc.atKey("code").asString().empty())
-                acc["code"] = "0x" + acc.atKey("code").asString();
+                acc[c_code].setString(test::compiler::replaceCode(code, _preSolidity));
+            if (code.empty())
+                acc[c_code].asStringUnsafe().insert(0, "0x");
         }
 
-        if (acc.count("nonce"))
-            acc["nonce"].performModifier(mod_valueToCompactEvenHexPrefixed);
-        if (acc.count("balance"))
-            acc["balance"].performModifier(mod_valueToCompactEvenHexPrefixed);
-        if (acc.count("storage"))
+        if (acc.count(c_nonce))
+            acc[c_nonce].performModifier(mod_valueToCompactEvenHexPrefixed);
+        if (acc.count(c_balance))
+            acc[c_balance].performModifier(mod_valueToCompactEvenHexPrefixed);
+        if (acc.count(c_storage))
         {
-            for (auto& rec : acc["storage"].getSubObjectsUnsafe())
+            for (auto& rec : acc[c_storage].getSubObjectsUnsafe())
             {
                 rec.getContent().performModifier(mod_keyToCompactEvenHexPrefixed);
                 rec.getContent().performModifier(mod_valueToCompactEvenHexPrefixed);
@@ -369,22 +320,23 @@ spDataObject convertDecBlockheaderIncompleteToHex(DataObject const& _data)
     (*tmpD).removeKey("RelTimestamp");     // BlockchainTestFiller fields
     (*tmpD).removeKey("chainname");        // BlockchainTestFiller fields
 
-    std::vector<string> hashKeys = {"parentHash", "coinbase", "bloom"};
+    static const std::vector<string> hashKeys = {c_parentHash, c_coinbase, c_bloom};
     for (auto const& key : hashKeys)
         if (_data.count(key))
         {
-            if (_data.atKey(key).asString().size() > 1 && _data.atKey(key).asString()[1] != 'x')
-                (*tmpD)[key] = "0x" + _data.atKey(key).asString();
+            auto const& data = _data.atKey(key).asString();
+            if (data.size() > 1 && data.at(1) != 'x')
+                (*tmpD)[key] = "0x" + data;
         }
 
-    std::vector<string> valueKeys = {
-        "difficulty",
-        "gasLimit",
-        "baseFeePerGas",
-        "gasUsed",
-        "nonce",
-        "number",
-        "timestamp"
+    static const std::vector<string> valueKeys = {
+        c_difficulty,
+        c_gasLimit,
+        c_baseFeePerGas,
+        c_gasUsed,
+        c_nonce,
+        c_number,
+        c_timestamp
     };
     for (auto const& key : valueKeys)
         if (_data.count(key))
