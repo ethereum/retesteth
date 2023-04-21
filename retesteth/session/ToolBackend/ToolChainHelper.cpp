@@ -2,12 +2,14 @@
 #include <TestHelper.h>
 #include <retesteth/Options.h>
 #include <retesteth/testStructures/Common.h>
+#include <retesteth/Constants.h>
 using namespace dev;
 using namespace test;
 using namespace std;
 using namespace test::debug;
 using namespace teststruct;
 using namespace dataobject;
+using namespace test::teststruct::constnames;
 namespace fs = boost::filesystem;
 
 namespace  {
@@ -171,27 +173,27 @@ VALUE calculateGasLimit(VALUE const& _parentGasLimit, VALUE const& _parentGasUse
 
 // Because tool report incomplete state. restore missing fields with zeros
 // Also remove leading zeros in storage
-State restoreFullState(DataObject& _toolState)
+spState restoreFullState(DataObject& _toolState)
 {
     spDataObject fullState;
     for (auto& accTool2 : _toolState.getSubObjectsUnsafe())
     {
         DataObject& accTool = accTool2.getContent();
         DataObject& acc = fullState.getContent()[accTool.getKey()];
-        acc["balance"] = accTool.count("balance") ? accTool.atKey("balance").asString() : "0x00";
-        acc["nonce"] = accTool.count("nonce") ? accTool.atKey("nonce").asString() : "0x00";
-        acc["code"] = accTool.count("code") ? accTool.atKey("code").asString() : "0x";
-        if (accTool.count("storage"))
-            acc.atKeyPointer("storage") = accTool.atKeyPointerUnsafe("storage");
+        acc[c_balance] = accTool.count(c_balance) ? accTool.atKey(c_balance).asString() : "0x00";
+        acc[c_nonce] = accTool.count(c_nonce) ? accTool.atKey(c_nonce).asString() : "0x00";
+        acc[c_code] = accTool.count(c_code) ? accTool.atKey(c_code).asString() : "0x";
+        if (accTool.count(c_storage))
+            acc.atKeyPointer(c_storage) = accTool.atKeyPointerUnsafe(c_storage);
         else
-            acc.atKeyPointer("storage") = sDataObject(DataType::Object);
-        for (auto& storageRecord : acc.atKeyUnsafe("storage").getSubObjectsUnsafe())
+            acc.atKeyPointer(c_storage) = sDataObject(DataType::Object);
+        for (auto& storageRecord : acc.atKeyUnsafe(c_storage).getSubObjectsUnsafe())
         {
             storageRecord.getContent().performModifier(mod_removeLeadingZerosFromHexValueEVEN);
             storageRecord.getContent().performModifier(mod_removeLeadingZerosFromHexKeyEVEN);
         }
     }
-    return State(dataobject::move(fullState));
+    return spState(new State(dataobject::move(fullState)));
 }
 
 ChainOperationParams ChainOperationParams::defaultParams(ToolParams const& _params)

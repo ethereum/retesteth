@@ -159,7 +159,6 @@ FH32 ToolChainManager::importRawBlock(BYTES const& _rlp)
             m_pendingBlock.getContent().addUncle(un);
         }
 
-        // TODO verify withdrawals rlp signature and block size
         if (rlp.itemCount() > 3 || isBlockExportWithdrawals(header))
         {
             verifyWithdrawalsRLP(rlp[3]);
@@ -192,7 +191,8 @@ FH32 ToolChainManager::importRawBlock(BYTES const& _rlp)
     {
         reorganizeChainForTotalDifficulty();
         m_pendingBlock.getContent().clear();
-        throw test::UpwardsException(string("Error importing raw rlp block: ") + _ex.what());
+        static const string exception = "Error importing raw rlp block: ";
+        throw test::UpwardsException(exception + _ex.what());
     }
 }
 

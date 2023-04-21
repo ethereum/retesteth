@@ -50,7 +50,7 @@ void BlockMining::prepareEnvFile()
 
     if (isBlockExportWithdrawals(currentBlockH) || m_currentBlockRef.withdrawals().size())
     {
-        (*envData).atKeyPointer("withdrawals") = spDataObject(new DataObject(DataType::Array));
+        (*envData).atKeyPointer("withdrawals") = sDataObject(DataType::Array);
         for (auto const& wt : m_currentBlockRef.withdrawals())
             (*envData)["withdrawals"].addArrayObject(wt->asDataObject(ExportOrder::ToolStyle));
     }
@@ -205,20 +205,20 @@ void BlockMining::executeTransition()
 
 ToolResponse BlockMining::readResult()
 {
-    string const outPathContent = dev::contentsString(m_outPath.string());
-    string const outAllocPathContent = dev::contentsString(m_outAllocPath.string());
+    const string outPathContent = dev::contentsString(m_outPath.string());
+    const string outAllocPathContent = dev::contentsString(m_outAllocPath.string());
     ETH_DC_MESSAGE(DC::RPC, "Res:\n" + outPathContent);
     ETH_DC_MESSAGE(DC::RPC, "RAlloc:\n" + outAllocPathContent);
     ETH_DC_MESSAGEC(DC::RPC, "Tool log: \n" + dev::contentsString(m_outErrorPath.string()), LogColor::YELLOW);
 
     if (outPathContent.empty())
     {
-        string const outErrorContent = dev::contentsString(m_outErrorPath.string());
+        const string outErrorContent = dev::contentsString(m_outErrorPath.string());
         ETH_ERROR_MESSAGE("Tool returned empty file: " + m_outPath.string() + "\n" + outErrorContent);
     }
     if (outAllocPathContent.empty())
     {
-        string const outErrorContent = dev::contentsString(m_outErrorPath.string());
+        const string outErrorContent = dev::contentsString(m_outErrorPath.string());
         ETH_ERROR_MESSAGE("Tool returned empty file: " + m_outAllocPath.string() + "\n" + outErrorContent);
     }
 
@@ -227,7 +227,7 @@ ToolResponse BlockMining::readResult()
     spDataObject returnState = ConvertJsoncppStringToData(outAllocPathContent);
     toolResponse.attachState(restoreFullState(returnState.getContent()));
 
-    bool traceCondition = Options::get().vmtrace && m_currentBlockRef.header()->number() != 0;
+    const bool traceCondition = Options::get().vmtrace && m_currentBlockRef.header()->number() != 0;
     if (traceCondition)
         traceTransactions(toolResponse);
 
