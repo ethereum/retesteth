@@ -9,9 +9,7 @@ using namespace dev;
 using namespace test::teststruct;
 std::mutex g_cacheAccessMutexValue;
 
-namespace test
-{
-namespace teststruct
+namespace test::teststruct
 {
 // if int  make u256(int)
 // if sring
@@ -181,4 +179,3 @@ void VALUE::calculateCache() const
 }
 
 }  // namespace teststruct
-}  // namespace test

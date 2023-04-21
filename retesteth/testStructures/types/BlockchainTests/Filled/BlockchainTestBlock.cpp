@@ -64,7 +64,7 @@ BlockchainTestBlock::BlockchainTestBlock(spDataObject& _data)
             for (auto const& un : _data->atKey("uncleHeaders").getSubObjects())
                 m_uncles.emplace_back(readBlockHeader(un));
         }
-        m_rlp = spBYTES(new BYTES(_data->atKey("rlp").asString()));
+        m_rlp = sBYTES(_data->atKey("rlp").asString());
     }
     catch (std::exception const& _ex)
     {
