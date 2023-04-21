@@ -195,9 +195,9 @@ vector<string> levenshteinDistance(std::string const& _needle, std::vector<std::
 std::mutex g_strFindMutex;
 DigitsType stringIntegerType(std::string const& _string, bool _wasPrefix)
 {
-    if (_string[0] == '0' && _string[1] == 'x' && !_wasPrefix)
+    if (_string.size() >= 2 && _string.at(0) == '0' && _string.at(1) == 'x' && !_wasPrefix)
     {
-        DigitsType substringType = stringIntegerType(_string, true);
+        const DigitsType substringType = stringIntegerType(_string, true);
         if (substringType == DigitsType::Hex)
             return DigitsType::HexPrefixed;
 
@@ -217,10 +217,10 @@ DigitsType stringIntegerType(std::string const& _string, bool _wasPrefix)
     std::lock_guard<std::mutex> lock(g_strFindMutex);  // string.find is not thread safe + static
     for (size_t i = _wasPrefix ? 2 : 0; i < _string.length(); i++)
     {
-        if (!isxdigit(_string[i]))
+        if (!isxdigit(_string.at(i)))
             return DigitsType::String;
 
-        if (isDecimalOnly && !isdigit(_string[i]))
+        if (isDecimalOnly && !isdigit(_string.at(i)))
             isDecimalOnly = false;
     }
 

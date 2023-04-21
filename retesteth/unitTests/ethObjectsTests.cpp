@@ -240,6 +240,43 @@ BOOST_AUTO_TEST_CASE(object_stringIntegerType_otherTypes)
     BOOST_CHECK(stringIntegerType("11223344abcdeffzz") == DigitsType::String);
 }
 
+BOOST_AUTO_TEST_CASE(object_stringIntegerType)
+{
+    BOOST_CHECK(test::stringIntegerType("0") == DigitsType::Decimal);
+    BOOST_CHECK(test::stringIntegerType("0123") == DigitsType::Decimal);
+    BOOST_CHECK(test::stringIntegerType("00123") == DigitsType::Decimal);
+    BOOST_CHECK(test::stringIntegerType("123") == DigitsType::Decimal);
+
+    BOOST_CHECK(test::stringIntegerType("12a3") == DigitsType::Hex);
+    BOOST_CHECK(test::stringIntegerType("02a3") == DigitsType::Hex);
+    BOOST_CHECK(test::stringIntegerType("00a3") == DigitsType::Hex);
+
+    BOOST_CHECK(test::stringIntegerType("0x12a3") == DigitsType::HexPrefixed);
+    BOOST_CHECK(test::stringIntegerType("0x02a3") == DigitsType::HexPrefixed);
+    BOOST_CHECK(test::stringIntegerType("0x00a3") == DigitsType::HexPrefixed);
+    BOOST_CHECK(test::stringIntegerType("0x12a3", true) == DigitsType::Hex);
+    BOOST_CHECK(test::stringIntegerType("0x02a3", true) == DigitsType::Hex);
+    BOOST_CHECK(test::stringIntegerType("0x00a3", true) == DigitsType::Hex);
+
+    BOOST_CHECK(test::stringIntegerType("2a3") == DigitsType::UnEvenHex);
+    BOOST_CHECK(test::stringIntegerType("0a3") == DigitsType::UnEvenHex);
+    BOOST_CHECK(test::stringIntegerType("00a") == DigitsType::UnEvenHex);
+    BOOST_CHECK(test::stringIntegerType("2a3", true) == DigitsType::Decimal);
+    BOOST_CHECK(test::stringIntegerType("0a3", true) == DigitsType::Decimal);
+    BOOST_CHECK(test::stringIntegerType("00a", true) == DigitsType::UnEvenHex);
+
+    BOOST_CHECK(test::stringIntegerType("0x2a3") == DigitsType::UnEvenHexPrefixed);
+    BOOST_CHECK(test::stringIntegerType("0x0a3") == DigitsType::UnEvenHexPrefixed);
+    BOOST_CHECK(test::stringIntegerType("0x00a") == DigitsType::UnEvenHexPrefixed);
+    BOOST_CHECK(test::stringIntegerType("0x2a3", true) == DigitsType::UnEvenHex);
+    BOOST_CHECK(test::stringIntegerType("0x0a3", true) == DigitsType::UnEvenHex);
+    BOOST_CHECK(test::stringIntegerType("0x00a", true) == DigitsType::UnEvenHex);
+
+    BOOST_CHECK(test::stringIntegerType("0x2s3") == DigitsType::String);
+    BOOST_CHECK(test::stringIntegerType("2s3") == DigitsType::String);
+    BOOST_CHECK(test::stringIntegerType("0a3s") == DigitsType::String);
+    BOOST_CHECK(test::stringIntegerType("000as") == DigitsType::String);
+}
 
 void testCompareResult(spDataObject& _exp, spDataObject& _post, CompareResult _expResult, size_t _errCount = 2)
 {
