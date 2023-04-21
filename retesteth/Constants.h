@@ -7,6 +7,7 @@ namespace test {
 extern const std::string C_WITHDRAWALS_EMPTY_ROOT;
 extern const std::string C_EMPTY_LIST_HASH;
 extern const std::string C_EMPTY_STR;
+extern const std::string C_BIGINT_PREFIX;
 
 namespace teststruct {
 

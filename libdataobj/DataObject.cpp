@@ -17,7 +17,7 @@ DataObject::DataObject(DataType _type)
     else if (_type == DataType::Null)
         m_value = DataNull();
     else if (_type == DataType::String)
-        m_value = "";
+        m_value = string();
     else if (_type == DataType::Integer)
         m_value = 0;
     else if (_type == DataType::Bool)
