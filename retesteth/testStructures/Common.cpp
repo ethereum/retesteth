@@ -34,7 +34,7 @@ void removeLeadingZeroesIfHex(string& _hexStr)
     if (_hexStr.size() <= 2 || _hexStr.at(0) != '0' || _hexStr.at(1) != 'x')
         return;
 
-    auto it = std::find_if_not(_hexStr.begin() + 2, _hexStr.end() - 1, [](char c) { return c == '0'; });
+    auto const it = std::find_if_not(_hexStr.begin() + 2, _hexStr.end() - 1, [](char c) { return c == '0'; });
     _hexStr.erase(_hexStr.begin() + 2, it);
 }
 
@@ -46,14 +46,14 @@ namespace test::teststruct
 
 spFH20 convertSecretToPublic(VALUE const& _secret)
 {
-    spFH32 secret(new FH32(_secret.asString()));
+    spFH32 secret = sFH32(_secret.asString());
     return convertSecretToPublic(secret);
 }
 
 spFH20 convertSecretToPublic(spFH32 const& _secret)
 {
     const dev::Secret secret(_secret->asString());
-    return spFH20(new FH20("0x" + dev::toAddress(dev::toPublic(secret)).hex()));
+    return sFH20("0x" + dev::toAddress(dev::toPublic(secret)).hex());
 }
 
 // DataObject modifiers
@@ -92,11 +92,11 @@ void mod_valueToFH32(DataObject& _obj)
 {
     if (_obj.type() == DataType::String)
     {
-        size_t size = _obj.asString().size();
-        if (_obj.asString().substr(0, 2) == "0x")
+        const string& str = _obj.asString();
+        if (str.substr(0, 2) == "0x")
         {
-            while (size++ < 66)
-                _obj.asStringUnsafe().insert(2, "0");
+            const size_t paddingCount = 66 - str.size();
+            _obj.asStringUnsafe().insert(2, string(paddingCount, '0'));
         }
     }
 }
