@@ -39,7 +39,7 @@ spDataObject readJsonData(fs::path const& _file, CJOptions const& _opt)
 {
     try
     {
-        string const s = dev::contentsString(_file);
+        const string s = dev::contentsString(_file);
         ETH_ERROR_REQUIRE_MESSAGE(
             s.length() > 0, "Contents of " + _file.string() + " is empty. Trying to parse empty file. (forgot --filltests?)");
         return dataobject::ConvertJsoncppStringToData(s, _opt);
@@ -56,7 +56,7 @@ spDataObject readYamlData(fs::path const& _file, bool _sort)
 {
     try
     {
-        string const s = dev::contentsString(_file);
+        const string s = dev::contentsString(_file);
         ETH_ERROR_REQUIRE_MESSAGE(
             s.length() > 0, "Contents of " + _file.string() + " is empty. Trying to parse empty file. (forgot --filltests?)");
         return dataobject::ConvertYamlToData(YAML::Load(s), _sort);
@@ -72,7 +72,7 @@ spDataObject readAutoDataWithoutOptions(boost::filesystem::path const& _file, bo
 {
     try
     {
-        string const s = dev::contentsString(_file);
+        const string s = dev::contentsString(_file);
         if (s.length() == 0)
             std::cerr << "Contents of " + _file.string() + " is empty. Trying to parse empty file." << std::endl;
         if (_file.extension() == ".json")
@@ -95,7 +95,7 @@ vector<fs::path> getFiles(fs::path const& _dirPath, set<string> const& _extentio
     {
         if (!_particularFile.empty())
         {
-            fs::path const file = _dirPath / (_particularFile + ext);
+            const fs::path file = _dirPath / (_particularFile + ext);
             if (fs::exists(file))
                 files.emplace_back(file);
         }
@@ -167,7 +167,7 @@ size_t levenshteinDistance(char const* _s, size_t _n, char const* _t, size_t _m)
         }
     }
 
-    size_t r = d[_n * _m - 1];
+    const size_t r = d[_n * _m - 1];
     delete[] d;
     return r;
 }
@@ -182,7 +182,7 @@ vector<string> levenshteinDistance(std::string const& _needle, std::vector<std::
     std::vector<NameDistance> distanceMap;
     for (auto const& it : _sVec)
     {
-        int const dist = levenshteinDistance(_needle.c_str(), _needle.size(), it.c_str(), it.size());
+        const int dist = levenshteinDistance(_needle.c_str(), _needle.size(), it.c_str(), it.size());
         distanceMap.emplace_back(allTestsElementIndex++, dist);
     }
     std::sort(distanceMap.begin(), distanceMap.end(),
@@ -253,20 +253,20 @@ void parseJsonStrValueIntoSet(DataObject const& _json, set<string>& _out)
 void parseJsonIntValueIntoSet(DataObject const& _json, set<int>& _out)
 {
     auto parseRange = [&_out](DataObject const& a) {
-        string const& s = a.asString();
-        size_t delimeter = s.find('-');
+        const string& s = a.asString();
+        const size_t delimeter = s.find('-');
         if (delimeter != string::npos)
         {
-            string const firstPartString = s.substr(0, delimeter);
+            const string firstPartString = s.substr(0, delimeter);
             if (stringIntegerType(firstPartString) != DigitsType::Decimal)
                 ETH_ERROR_MESSAGE("parseJsonIntValueIntoSet require x to be decimal in `x-y` range! `" + firstPartString);
 
-            string const secondPartString = s.substr(delimeter + 1);
+            const string secondPartString = s.substr(delimeter + 1);
             if (stringIntegerType(secondPartString) != DigitsType::Decimal)
                 ETH_ERROR_MESSAGE("parseJsonIntValueIntoSet require y to be decimal in `x-y` range! `" + secondPartString);
 
-            size_t const indexStart = atoi(firstPartString.c_str());
-            size_t const indexEnd = atoi(secondPartString.c_str());
+            const size_t indexStart = atoi(firstPartString.c_str());
+            const size_t indexEnd = atoi(secondPartString.c_str());
             for (size_t i = indexStart; i <= indexEnd; i++)
                 _out.emplace(i);
         }
@@ -303,7 +303,7 @@ void parseJsonIntValueIntoSet(DataObject const& _json, set<int>& _out)
 string prepareVersionString()
 {
     // cpp-1.3.0+commit.6be76b64.Linux.g++
-    string commit(DEV_QUOTED(ETH_COMMIT_HASH));
+    const string commit(DEV_QUOTED(ETH_COMMIT_HASH));
     string version = "retesteth-" + string(ETH_PROJECT_VERSION) + "-" + string(ETH_VERSION_SUFFIX);
     version += "+commit." + commit.substr(0, 8);
     version += "." + string(DEV_QUOTED(ETH_BUILD_OS)) + "." + string(DEV_QUOTED(ETH_BUILD_COMPILER));
@@ -332,9 +332,9 @@ string prepareLLLCVersionString()
     if (test::checkCmdExist("lllc"))
     {
         int exitCode;
-        string const cmd = "lllc --version";
-        string const result = test::executeCmd(cmd, exitCode);
-        string::size_type const pos = result.rfind("Version");
+        const string cmd = "lllc --version";
+        const string result = test::executeCmd(cmd, exitCode);
+        const string::size_type pos = result.rfind("Version");
         if (pos != string::npos)
         {
             lllcVersion = result.substr(pos, result.length());
@@ -357,15 +357,15 @@ string prepareSolidityVersionString()
     if (test::checkCmdExist("solc"))
     {
         int exitCode;
-        string const cmd = "solc --version";
-        string const result = test::executeCmd(cmd, exitCode);
-        string const cVersion  = "Version";
-        string::size_type const pos = result.rfind(cVersion);
+        const string cmd = "solc --version";
+        const string result = test::executeCmd(cmd, exitCode);
+        const string cVersion  = "Version";
+        const string::size_type pos = result.rfind(cVersion);
         if (pos != string::npos)
         {
             solcVersion = result.substr(pos, result.length());
             string number;
-            string const numberDirty = solcVersion.substr(cVersion.length(), 15);
+            const string numberDirty = solcVersion.substr(cVersion.length(), 15);
             for (auto const& chr : numberDirty)
             {
                 if (std::isdigit(chr))
@@ -438,8 +438,8 @@ bool checkCmdExist(std::string const& _command)
     else
         cmd = _command;
 
-    string const checkCmd = string("which " + cmd + " > /dev/null 2>&1");
-    bool const checkBoost = fs::exists(cmd);
+    const string checkCmd = string("which " + cmd + " > /dev/null 2>&1");
+    const bool checkBoost = fs::exists(cmd);
     if (!checkBoost && system(checkCmd.c_str()))
         return false;
     return true;
@@ -483,7 +483,7 @@ string executeCmd(string const& _command, int& _exitCode, ExecCMDWarning _warnin
     _exitCode = pclose(fp);
     if (_exitCode != 0 )
     {
-        string const msg = "The command '" + _command + "' exited with " + toString(_exitCode) + " code.";
+        const string msg = "The command '" + _command + "' exited with " + toString(_exitCode) + " code.";
         if (_warningOnEmpty != ExecCMDWarning::NoWarningNoError)
             ETH_ERROR_MESSAGE(msg);
         else
@@ -632,7 +632,7 @@ FILE* popen2(string const& _command, vector<string> const& _args, string const& 
 std::mutex g_pclosemutex;
 int pclose2(FILE* _fp, pid_t _pid)
 {
-    string cmd = "kill " + toString((long)_pid);
+    const string cmd = "kill " + toString((long)_pid);
     std::lock_guard<std::mutex> lock(g_pclosemutex);
     if (_fp)
         pclose(_fp);
@@ -643,8 +643,8 @@ int pclose2(FILE* _fp, pid_t _pid)
 std::mutex g_createUniqueTmpDirectory;
 fs::path createUniqueTmpDirectory() {
     std::lock_guard<std::mutex> lock(g_createUniqueTmpDirectory);
-    boost::uuids::uuid uuid = boost::uuids::random_generator()();
-    string uuidStr = boost::lexical_cast<string>(uuid);
+    const boost::uuids::uuid uuid = boost::uuids::random_generator()();
+    const string uuidStr = boost::lexical_cast<string>(uuid);
 
     static auto tpath = fs::exists("/dev/shm") ? fs::path("/dev/shm") : fs::temp_directory_path();
     auto const& tmpDir = Options::getCurrentConfig().cfgFile().tmpDir();
@@ -731,12 +731,12 @@ string RLPStreamU::outHeader() const
             auto const lengthOfTheString = dev::toCompactHex(payloadSize);
             auto const lengthInBytesOfTheLengthOfTheStringInBinaryForm = lengthOfTheString.size() / 2;
 
-            size_t const wrappedStringHeader = 183 + lengthInBytesOfTheLengthOfTheStringInBinaryForm;
+            const size_t wrappedStringHeader = 183 + lengthInBytesOfTheLengthOfTheStringInBinaryForm;
             wrappedStringHeaderStr = dev::toCompactHex(wrappedStringHeader) + lengthOfTheString;
         }
         else
         {
-            size_t wrappedStringHeader = 128 + payloadSize;
+            const size_t wrappedStringHeader = 128 + payloadSize;
             wrappedStringHeaderStr = dev::toCompactHex(wrappedStringHeader);
         }
         payloadSize += wrappedStringHeaderStr.size() / 2;
@@ -781,7 +781,7 @@ void removeSubChar(std::string& _string, unsigned char _r)
 
 string makePlussedFork(FORK const& _net)
 {
-    size_t pos = _net.asString().find("+");
+    const size_t pos = _net.asString().find("+");
     if (pos != string::npos)
         return _net.asString().substr(0, pos);
     return string();
@@ -789,7 +789,7 @@ string makePlussedFork(FORK const& _net)
 
 bool isBoostSuite(std::string const& suiteName)
 {
-    test_suite const* suite = &boost::unit_test::framework::master_test_suite();
+    const test_suite* suite = &boost::unit_test::framework::master_test_suite();
     auto const allSuites = test::explode(suiteName, '/');
     for (auto const& suiteName : allSuites)
     {
