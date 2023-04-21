@@ -31,18 +31,11 @@ bool isHexDigitsType(DigitsType _dtype)
 
 void removeLeadingZeroesIfHex(string& _hexStr)
 {
-    if (_hexStr.size() < 2 || _hexStr.at(0) != '0' || _hexStr.at(1) != 'x')
+    if (_hexStr.size() <= 2 || _hexStr.at(0) != '0' || _hexStr.at(1) != 'x')
         return;
 
-    size_t i = 0;
-    for (i = 2; i < _hexStr.length() - 1; i++)
-    {
-        if (_hexStr.at(i) == '0')
-            continue;
-        else
-            break;
-    }
-    _hexStr = "0x" + _hexStr.substr(i);
+    auto it = std::find_if_not(_hexStr.begin() + 2, _hexStr.end() - 1, [](char c) { return c == '0'; });
+    _hexStr.erase(_hexStr.begin() + 2, it);
 }
 
 }  // namespace
@@ -114,19 +107,14 @@ void mod_valueToCompactEvenHexPrefixed(DataObject& _obj)
     {
         try
         {
-            if (!(_obj.asString()[0] == '0' && _obj.asString()[1] == 'x'))
+            string& str = _obj.asStringUnsafe();
+            if (str.size() <= 2 || !(str.at(0) == '0' && str.at(1) == 'x'))
             {
-                string src = _obj.asString();
-                src.erase(std::remove(src.begin(), src.end(), '_'), src.end());
-                _obj.setString(toCompactHexPrefixed(src, 1));
+                str.erase(std::remove(str.begin(), str.end(), '_'), str.end());
+                _obj.setString(toCompactHexPrefixed(str, 1));
             }
             else
-            {
-                if (_obj.asString().size() == 2)
-                    _obj.asStringUnsafe().insert(2, "00");
-                else
-                    _obj.performModifier(mod_removeLeadingZerosFromHexValueEVEN);
-            }
+                _obj.performModifier(mod_removeLeadingZerosFromHexValueEVEN);
         }
         catch (std::exception const& _ex)
         {

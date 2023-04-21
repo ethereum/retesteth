@@ -1146,5 +1146,47 @@ BOOST_AUTO_TEST_CASE(dataobject_removeLeadingZerosFromHexValues)
     BOOST_CHECK(obj->asString() == "00012235");
 }
 
+BOOST_AUTO_TEST_CASE(dataobject_valueToCompactEvenHexPrefixed)
+{
+    spDataObject obj = sDataObject("10");
+    (*obj).performModifier(mod_valueToCompactEvenHexPrefixed);
+    BOOST_CHECK(obj->asString() == "0x0a");
+
+    (*obj).setString("10_00");
+    (*obj).performModifier(mod_valueToCompactEvenHexPrefixed);
+    BOOST_CHECK(obj->asString() == "0x03e8");
+
+    (*obj).setString("5");
+    (*obj).performModifier(mod_valueToCompactEvenHexPrefixed);
+    BOOST_CHECK(obj->asString() == "0x05");
+
+    (*obj).setString("005");
+    (*obj).performModifier(mod_valueToCompactEvenHexPrefixed);
+    BOOST_CHECK(obj->asString() == "0x05");
+
+    (*obj).setString("0");
+    (*obj).performModifier(mod_valueToCompactEvenHexPrefixed);
+    BOOST_CHECK(obj->asString() == "0x00");
+
+    (*obj).setString("0x01");
+    (*obj).performModifier(mod_valueToCompactEvenHexPrefixed);
+    BOOST_CHECK(obj->asString() == "0x01");
+
+    (*obj).setString("0x00");
+    (*obj).performModifier(mod_valueToCompactEvenHexPrefixed);
+    BOOST_CHECK(obj->asString() == "0x00");
+
+    (*obj).setString("0x001");
+    (*obj).performModifier(mod_valueToCompactEvenHexPrefixed);
+    BOOST_CHECK(obj->asString() == "0x01");
+
+    (*obj).setString("0x1");
+    (*obj).performModifier(mod_valueToCompactEvenHexPrefixed);
+    BOOST_CHECK(obj->asString() == "0x01");
+
+    (*obj).setString("0x");
+    (*obj).performModifier(mod_valueToCompactEvenHexPrefixed);
+    BOOST_CHECK(obj->asString() == "0x00");
+}
 
 BOOST_AUTO_TEST_SUITE_END()
