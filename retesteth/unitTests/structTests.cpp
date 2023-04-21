@@ -125,6 +125,12 @@ BOOST_AUTO_TEST_CASE(value_notPrefixed)
 
 BOOST_AUTO_TEST_CASE(value_leadingZero)
 {
+    { VALUE a(DataObject("0x0")); }
+    { VALUE a(DataObject("0x00")); }
+    { VALUE a(DataObject("0x100")); }
+
+    checkException([]() { VALUE a(DataObject("0x000")); }, "has leading 0");
+    checkException([]() { VALUE a(DataObject("0x002")); }, "has leading 0");
     checkException([]() { VALUE a(DataObject("0x0002")); }, "has leading 0");
     checkException([]() { VALUE a(DataObject("0x0001000000000000000000000000000000000000000000000000000000000000000001")); },
         "has leading 0");

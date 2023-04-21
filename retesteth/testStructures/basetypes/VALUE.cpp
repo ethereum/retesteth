@@ -68,36 +68,40 @@ void VALUE::_fromString(std::string const& _data, std::string const& _hintkey)
 
 string VALUE::verifyHexString(std::string const& _s, std::string const& _k) const
 {
-    string const& prefix = C_BIGINT_PREFIX;
+    string const& bigIntPrefix = C_BIGINT_PREFIX;
     string const suffix = _k.empty() ? _k : " (key: " + _k + " )";
 
-    size_t pos = 0;
-    if (auto foundPos = _s.find(prefix); foundPos != string::npos)
-        pos = foundPos + prefix.size();
+    size_t bigIntOffset = 0;
+    if (auto foundPos = _s.find(bigIntPrefix); foundPos != string::npos)
+        bigIntOffset = foundPos + bigIntPrefix.size();
 
-    if (_s.size() - pos < 2)
+    if (_s.size() < 2 || _s.size() - bigIntOffset < 2)
         throw test::UpwardsException("VALUE element must be at least 0x prefix" + suffix);
 
-    if (_s[0 + pos] == '0' && _s[1 + pos] == 'x')
+    if (_s.at(0 + bigIntOffset) == '0' && _s.at(1 + bigIntOffset) == 'x')
     {
-        if (pos == 0)
+        if (bigIntOffset == 0)
         {
-            size_t const fixedsize = _s.size() - pos;
-            if (fixedsize - pos == 2)
+            if (_s.size() == 2)
                 throw test::UpwardsException("VALUE set as empty byte string: `" + _s + "`" + suffix);
 
-            // don't allow 0x001, but allow 0x0, 0x00
-            if ((_s[2 + pos] == '0' && fixedsize % 2 == 1 && fixedsize != 3) ||
-                (_s[2 + pos] == '0' && _s[3 + pos] == '0' && fixedsize % 2 == 0 && fixedsize > 4))
+            // Allow 0x0 and 0x00 but don't allow 0x012, 0x000
+            const bool hasFirstZero = _s.size() > 2 && _s.at(2) == '0';
+            const bool hasSecondZero = _s.size() > 3 && _s.at(3) == '0';
+
+            if (_s.size() % 2 == 0 && _s.size() > 4 && hasFirstZero && hasSecondZero)
                 throw test::UpwardsException("VALUE has leading 0 `" + _s + "`" + suffix);
 
-            else if (fixedsize > 64 + 2)
+            if (_s.size() % 2 == 1 && _s.size() > 3 && hasFirstZero)
+                throw test::UpwardsException("VALUE has leading 0 `" + _s + "`" + suffix);
+
+            if (_s.size() > 64 + 2)
                 throw test::UpwardsException("VALUE  >u256 `" + _s + "`" + suffix);
         }
         else
         {
             m_prefixedZeros = 0;
-            const string ret = _s.substr(pos);
+            const string ret = _s.substr(bigIntOffset);
             if (ret.size() == 2)
                 m_bigintEmpty = true;
 
