@@ -70,7 +70,7 @@ private:
     bool m_bigint = false;
     mutable bool m_bigintEmpty = false;
     mutable dev::bytes m_bytesBigIntData;
-    mutable size_t m_prefixedZeros = 0;
+    mutable unsigned short m_prefixedZeros = 0;
     mutable std::string m_dataStrBigIntCache;
 };
 

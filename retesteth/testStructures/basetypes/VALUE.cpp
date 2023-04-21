@@ -2,6 +2,7 @@
 #include <libdevcore/CommonIO.h>
 #include <retesteth/EthChecks.h>
 #include <retesteth/TestHelper.h>
+#include <retesteth/Constants.h>
 
 using namespace std;
 using namespace dev;
@@ -69,14 +70,12 @@ void VALUE::_fromString(std::string const& _data, std::string const& _hintkey)
 
 string VALUE::verifyHexString(std::string const& _s, std::string const& _k) const
 {
+    string const& prefix = C_BIGINT_PREFIX;
     string const suffix = _k.empty() ? _k : " (key: " + _k + " )";
 
-    static string const prefix = "0x:bigint ";
-    size_t pos = _s.find(prefix);
-    if (pos != string::npos)
-        pos = pos + prefix.size();
-    else
-        pos = 0;
+    size_t pos = 0;
+    if (auto foundPos = _s.find(prefix); foundPos != string::npos)
+        pos = foundPos + prefix.size();
 
     if (_s.size() - pos < 2)
         throw test::UpwardsException("VALUE element must be at least 0x prefix" + suffix);
@@ -161,17 +160,16 @@ void VALUE::calculateCache() const
 
         if (m_bigint)
         {
-            size_t existingZero = 0;
-            string prefixedZero;
-            if (m_dataStrZeroXCache.size() > 2 && m_dataStrZeroXCache.at(0) == '0' && m_prefixedZeros > 0)
-                existingZero = 1;
-            for (size_t i = 0; i < m_prefixedZeros - existingZero; i += 1)
-                prefixedZero.insert(0, "0");
+            unsigned short addZeroesNumber = m_prefixedZeros;
+            if (m_dataStrZeroXCache.size() > 2 && m_dataStrZeroXCache.at(0) == '0' && addZeroesNumber > 0)
+                addZeroesNumber -= 1;
+            string prefixedZero(addZeroesNumber, '0');
 
             m_dataStrBigIntCache = m_dataStrZeroXCache;
             m_dataStrZeroXCache.insert(0, "0x");
             m_dataStrBigIntCache.insert(0, prefixedZero);
-            m_dataStrBigIntCache.insert(0, "0x:bigint 0x");
+            m_dataStrBigIntCache.insert(0, C_BIGINT_PREFIX);
+            m_dataStrBigIntCache.insert(0, "0x");
             m_bytesBigIntData = test::sfromHex(prefixedZero) + test::sfromHex(m_dataStrZeroXCache);
         }
         else
