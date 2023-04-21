@@ -206,7 +206,7 @@ void TestOutputHelper::finishTest()
         auto const& cputime = res.second.first;
         std::cout << res.second.second + " time: " + fto_string(time) + ","
                   << " cputime: " + fto_string(cputime) + ","
-                  << " efficenty: " + fto_string((int)floor(100 * cputime / time)) + "%"
+                  << " efficenty: " + fto_string((int)floor(100 * cputime / std::max(1., time))) + "%"
                   << "\n";
         std::lock_guard<std::mutex> lock(g_execTimeResults);
         execTimeResults.emplace_back(res);
@@ -275,7 +275,7 @@ void TestOutputHelper::printTestExecStats()
             std::cout << setw(45) << execTimeResults[i].second.second
                       << setw(20) << " time: " + fto_string(totalTime)
                       << setw(24) << " cputime: " + fto_string(cputime)
-                      << " efficency: " + fto_string((int)floor(100 * cputime / totalTime)) + "%"
+                      << " efficency: " + fto_string((int)floor(100 * cputime / std::max(1., totalTime))) + "%"
                       << "\n";
         }
         std::cout << "\n";
@@ -283,7 +283,7 @@ void TestOutputHelper::printTestExecStats()
     else
     {
         std::lock_guard<std::mutex> lock(g_totalTestsRun);
-        string message = "*** Total Tests Run: " + fto_string(totalTestsRun) + "\n";
+        const string message = "*** Total Tests Run: " + fto_string(totalTestsRun) + "\n";
         if (totalTestsRun > 0)
             ETH_STDOUT_MESSAGE(message);
         else
