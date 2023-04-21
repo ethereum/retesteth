@@ -2,8 +2,10 @@
 #include <retesteth/Options.h>
 #include <retesteth/TestHelper.h>
 #include <retesteth/TestOutputHelper.h>
+#include <retesteth/Constants.h>
 using namespace std;
 using namespace test::debug;
+using namespace test::teststruct::constnames;
 namespace fs = boost::filesystem;
 
 namespace test
@@ -254,10 +256,11 @@ spDataObject storageDiff(Storage const& _pre, Storage const& _post)
         if (_pre.hasKey(postKey))
         {
             // old key changed
-            if (_pre.atKey(postKey) != postValue)
+            auto const& preAtPostKey = _pre.atKey(postKey);
+            if (preAtPostKey != postValue)
             {
-                auto const msg = _pre.atKey(postKey).asString() + " -> " + postValue->asString() + " (" +
-                                 _pre.atKey(postKey).asDecString() + " -> " + postValue->asDecString() + ")";
+                auto const msg = preAtPostKey.asString() + " -> " + postValue->asString() + " (" +
+                                 preAtPostKey.asDecString() + " -> " + postValue->asDecString() + ")";
                 (*res)[postKey->asString()] = msg;
             }
         }
@@ -290,23 +293,33 @@ spDataObject stateDiff(State const& _pre, State const& _post)
             // check for updates
             auto const& accPre = _pre.getAccount(postAcc.first);
             auto const& accPost = postAcc.second;
-            if (accPre.balance() != accPost->balance())
+
+            auto const& preBalance = accPre.balance();
+            auto const& postBalance = accPost->balance();
+            if (preBalance != postBalance)
             {
-                auto const msg = accPre.balance().asString() + " -> " + accPost->balance().asString() + " (" +
-                                 accPre.balance().asDecString() + " -> " + accPost->balance().asDecString() + ")";
-                (*res)[postAcc.first.asString()]["balance"] = msg;
+                auto const msg = preBalance.asString() + " -> " + postBalance.asString() + " (" +
+                                 preBalance.asDecString() + " -> " + postBalance.asDecString() + ")";
+                (*res)[postAcc.first.asString()][c_balance] = msg;
             }
-            if (accPre.nonce() != accPost->nonce())
+
+            auto const& preNonce = accPre.nonce();
+            auto const& postNonce = accPost->nonce();
+            if (preNonce != postNonce)
             {
-                auto const msg = accPre.nonce().asString() + " -> " + accPost->nonce().asString() + " (" +
-                                 accPre.nonce().asDecString() + " -> " + accPost->nonce().asDecString() + ")";
-                (*res)[postAcc.first.asString()]["nonce"] = msg;
+                auto const msg = preNonce.asString() + " -> " + postNonce.asString() + " (" +
+                                 preNonce.asDecString() + " -> " + postNonce.asDecString() + ")";
+                (*res)[postAcc.first.asString()][c_nonce] = msg;
             }
-            if (accPre.code() != accPost->code())
-                (*res)[postAcc.first.asString()]["code"] = accPre.code().asString() + " -> " + accPost->code().asString();
+
+            auto const& preCode = accPre.code();
+            auto const& postCode = accPost->code();
+            if (preCode != postCode)
+                (*res)[postAcc.first.asString()][c_code] = preCode.asString() + " -> " + postCode.asString();
+
             auto const storageDiffRes = storageDiff(accPre.storage(), accPost->storage());
             if (storageDiffRes->getSubObjects().size())
-                (*res)[postAcc.first.asString()].atKeyPointer("storage") = storageDiffRes;
+                (*res)[postAcc.first.asString()].atKeyPointer(c_storage) = storageDiffRes;
         }
         else
         {
@@ -315,11 +328,11 @@ spDataObject stateDiff(State const& _pre, State const& _post)
             (*res).atKeyPointer(key) = postAcc.second->asDataObject()->copy();
 
             // Print dec values
-            VALUE balance((*res).atKey(key).atKey("balance"));
-            (*res).atKeyUnsafe(key)["balance"] = balance.asString() + " (" + balance.asDecString() + ")";
-            VALUE nonce((*res).atKey(key).atKey("nonce"));
-            (*res).atKeyUnsafe(key)["nonce"] = nonce.asString() + " (" + nonce.asDecString() + ")";
-            for (auto& el : (*res).atKeyUnsafe(key).atKeyUnsafe("storage").getSubObjectsUnsafe())
+            VALUE balance((*res).atKey(key).atKey(c_balance));
+            (*res).atKeyUnsafe(key)[c_balance] = balance.asString() + " (" + balance.asDecString() + ")";
+            VALUE nonce((*res).atKey(key).atKey(c_nonce));
+            (*res).atKeyUnsafe(key)[c_nonce] = nonce.asString() + " (" + nonce.asDecString() + ")";
+            for (auto& el : (*res).atKeyUnsafe(key).atKeyUnsafe(c_storage).getSubObjectsUnsafe())
             {
                 VALUE val(el->asString());
                 el.getContent().setString(val.asString() + " (" + val.asDecString() + ")");
