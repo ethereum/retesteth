@@ -21,6 +21,7 @@
 #include <libdataobj/ConvertFile.h>
 #include <retesteth/TestOutputHelper.h>
 #include <retesteth/testSuites/Common.h>
+#include <retesteth/testStructures/Common.h>
 #include <libdevcore/SHA3.h>
 
 using namespace std;
@@ -1028,5 +1029,122 @@ BOOST_AUTO_TEST_CASE(dataobject_defaultType)
     spDataObject obj;
     BOOST_CHECK(DataObject::dataTypeAsString(obj->type()) == "notinit");
 }
+
+BOOST_AUTO_TEST_CASE(dataobject_removeLeadingZerosFromHexValueEVEN)
+{
+    spDataObject obj = sDataObject("0x0000112233");
+    (*obj).setKey("0x0000112233");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValueEVEN);
+    (*obj).performModifier(mod_removeLeadingZerosFromHexKeyEVEN);
+    BOOST_CHECK(obj->asString() == "0x112233");
+    BOOST_CHECK(obj->getKey() == "0x112233");
+
+    (*obj).setString("0x000112234");
+    (*obj).setKey("0x000112234");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValueEVEN);
+    (*obj).performModifier(mod_removeLeadingZerosFromHexKeyEVEN);
+    BOOST_CHECK(obj->asString() == "0x112234");
+    BOOST_CHECK(obj->getKey() == "0x112234");
+
+    (*obj).setString("0x00012235");
+    (*obj).setKey("0x00012235");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValueEVEN);
+    (*obj).performModifier(mod_removeLeadingZerosFromHexKeyEVEN);
+    BOOST_CHECK(obj->asString() == "0x012235");
+    BOOST_CHECK(obj->getKey() == "0x012235");
+
+    (*obj).setString("0x01");
+    (*obj).setKey("0x01");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValueEVEN);
+    (*obj).performModifier(mod_removeLeadingZerosFromHexKeyEVEN);
+    BOOST_CHECK(obj->asString() == "0x01");
+    BOOST_CHECK(obj->getKey() == "0x01");
+
+    (*obj).setString("0x11");
+    (*obj).setKey("0x11");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValueEVEN);
+    (*obj).performModifier(mod_removeLeadingZerosFromHexKeyEVEN);
+    BOOST_CHECK(obj->asString() == "0x11");
+    BOOST_CHECK(obj->getKey() == "0x11");
+
+    (*obj).setString("0x1");
+    (*obj).setKey("0x1");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValueEVEN);
+    (*obj).performModifier(mod_removeLeadingZerosFromHexKeyEVEN);
+    BOOST_CHECK(obj->asString() == "0x01");
+    BOOST_CHECK(obj->getKey() == "0x01");
+
+    (*obj).setString("0x");
+    (*obj).setKey("0x");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValueEVEN);
+    (*obj).performModifier(mod_removeLeadingZerosFromHexKeyEVEN);
+    BOOST_CHECK(obj->asString() == "0x");
+    BOOST_CHECK(obj->getKey() == "0x");
+
+    (*obj).setString("0");
+    (*obj).setKey("0");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValueEVEN);
+    (*obj).performModifier(mod_removeLeadingZerosFromHexKeyEVEN);
+    BOOST_CHECK(obj->asString() == "0");
+    BOOST_CHECK(obj->getKey() == "0");
+
+    (*obj).setString("");
+    (*obj).setKey("");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValueEVEN);
+    (*obj).performModifier(mod_removeLeadingZerosFromHexKeyEVEN);
+    BOOST_CHECK(obj->asString() == "");
+    BOOST_CHECK(obj->getKey() == "");
+
+    (*obj).setString("00012235");
+    (*obj).setKey("00012235");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValueEVEN);
+    (*obj).performModifier(mod_removeLeadingZerosFromHexKeyEVEN);
+    BOOST_CHECK(obj->asString() == "00012235");
+    BOOST_CHECK(obj->getKey() == "00012235");
+}
+
+BOOST_AUTO_TEST_CASE(dataobject_removeLeadingZerosFromHexValues)
+{
+    spDataObject obj = sDataObject("0x0000112233");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValues);
+    BOOST_CHECK(obj->asString() == "0x112233");
+
+    (*obj).setString("0x000112234");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValues);
+    BOOST_CHECK(obj->asString() == "0x112234");
+
+    (*obj).setString("0x00012235");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValues);
+    BOOST_CHECK(obj->asString() == "0x12235");
+
+    (*obj).setString("0x01");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValues);
+    BOOST_CHECK(obj->asString() == "0x1");
+
+    (*obj).setString("0x11");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValues);
+    BOOST_CHECK(obj->asString() == "0x11");
+
+    (*obj).setString("0x1");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValues);
+    BOOST_CHECK(obj->asString() == "0x1");
+
+    (*obj).setString("0x");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValues);
+    BOOST_CHECK(obj->asString() == "0x");
+
+    (*obj).setString("0");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValues);
+    BOOST_CHECK(obj->asString() == "0");
+
+    (*obj).setString("");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValues);
+    BOOST_CHECK(obj->asString() == "");
+
+    (*obj).setString("00012235");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValues);
+    BOOST_CHECK(obj->asString() == "00012235");
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -18,7 +18,7 @@ namespace
 string toCompactHexPrefixed(string const& _str, size_t _minSize)
 {
     string prefix = string();
-    DigitsType t = stringIntegerType(_str);
+    const DigitsType t = stringIntegerType(_str);
     if (t == DigitsType::Hex || t == DigitsType::UnEvenHex)
         prefix = "0x";
     return dev::toCompactHexPrefixed(u256(prefix + _str), _minSize);
@@ -29,8 +29,11 @@ bool isHexDigitsType(DigitsType _dtype)
     return (_dtype == DigitsType::HexPrefixed || _dtype == DigitsType::UnEvenHexPrefixed);
 }
 
-void removeLeadingZeroes(string& _hexStr)
+void removeLeadingZeroesIfHex(string& _hexStr)
 {
+    if (_hexStr.size() < 2 || _hexStr.at(0) != '0' || _hexStr.at(1) != 'x')
+        return;
+
     size_t i = 0;
     for (i = 2; i < _hexStr.length() - 1; i++)
     {
@@ -171,9 +174,8 @@ void mod_removeLeadingZerosFromHexValues(DataObject& _obj)
 {
     if (_obj.type() == DataType::String)
     {
-        string str = _obj.asString();
-        removeLeadingZeroes(str);
-        _obj.setString(std::move(str));
+        string& str = _obj.asStringUnsafe();
+        removeLeadingZeroesIfHex(str);
     }
 }
 
@@ -183,25 +185,24 @@ void mod_removeLeadingZerosFromHexValueEVEN(DataObject& _obj)
     mod_removeLeadingZerosFromHexValues(_obj);
     if (_obj.type() == DataType::String)
     {
-        DigitsType t = stringIntegerType(_obj.asString());
+        const DigitsType t = stringIntegerType(_obj.asString());
         if (t == DigitsType::UnEvenHexPrefixed)
-            _obj.setString("0x0" + _obj.asString().substr(2));
+            _obj.asStringUnsafe().replace(0, 2, "0x0", 3);
     }
 }
 
 void mod_removeLeadingZerosFromHexKeyEVEN(DataObject& _obj)
 {
-    string str = _obj.getKey();
-    removeLeadingZeroes(str);
-    DigitsType t = stringIntegerType(str);
+    string& str = _obj.getKeyUnsafe();
+    removeLeadingZeroesIfHex(str);
+    const DigitsType t = stringIntegerType(str);
     if (t == DigitsType::UnEvenHexPrefixed)
-        str = "0x0" + str.substr(2);
-    _obj.setKey(str);
+        str.replace(0, 2, "0x0", 3);
 }
 
 void mod_valueInsertZeroXPrefix(DataObject& _obj)
 {
-    if (_obj.asString().size() > 1 && _obj.asString()[1] != 'x')
+    if (_obj.asString().size() > 1 && _obj.asString().at(1) != 'x')
         _obj.asStringUnsafe().insert(0, "0x");
 }
 
