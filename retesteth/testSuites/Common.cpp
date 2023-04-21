@@ -195,7 +195,9 @@ void verifyFilledTestRecursive(DataObject const& _want, DataObject const& _have,
             if (_have.getSubObjects().size() <= k)
                 ETH_ERROR_MESSAGE("verify: filled test missing expected array element: " +
                                   _debug + "`" + el->asJson() + "`");
-            _debug += "[" + test::fto_string(k) + "] -> ";
+            _debug += "[";
+            _debug += test::fto_string(k);
+            _debug += "] -> ";
             verifyFilledTestRecursive(el, _have.at(k), _debug);
         }
         k++;
