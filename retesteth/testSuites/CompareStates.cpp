@@ -177,7 +177,9 @@ CompareResult compareStorage(Storage const& _expectStorage, Storage const& _remo
         }
         auto const& remVal = _remoteStorage.atKey(VALUE(keys.at(0)));
         storage += "\n [" + keys.at(0) + "] = " + remVal.asString();
-        storage += "(" + remVal.asDecString() + ")\n";
+        storage += "(";
+        storage += remVal.asDecString();
+        storage += ")\n";
 
         ETH_MARK_ERROR(storage);
         result = CompareResult::IncorrectStorage;
