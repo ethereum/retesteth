@@ -141,12 +141,18 @@ BOOST_AUTO_TEST_CASE(value_asString_leading0)
     for (const auto& el : tests)
     {
         const auto& asStr2 = std::get<3>(el);
-        const auto it = std::ranges::find_if(tests, [&](const auto& el2)
-            {
-                return std::get<0>(el2) == asStr2;
-            });
+        bool found = false;
 
-        BOOST_CHECK_MESSAGE(it != tests.end(), "Deserialized key " + asStr2 + " not tested!");
+        for (const auto& el2 : tests)
+        {
+            if (std::get<0>(el2) == asStr2)
+            {
+                found = true;
+                break;
+            }
+        }
+
+        BOOST_CHECK_MESSAGE(found, "Deserialized key " + asStr2 + " not tested!");
     }
 }
 
