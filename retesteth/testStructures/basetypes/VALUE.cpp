@@ -143,7 +143,9 @@ void VALUE::calculateCache() const
         }
         else
         {
-            if (m_prefixedZeroBytes > 0)
+            if (m_bigintEmpty)
+                m_dataStr="";
+            else if (m_prefixedZeroBytes > 0)
             {
                 string const padding(m_prefixedZeroBytes * 2, '0');
                 m_dataStr.insert(0, padding);

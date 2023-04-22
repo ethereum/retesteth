@@ -68,7 +68,87 @@ void checkSerializeBigint(T const& _before, string const& _rlpForm, string const
     // check that 0x:bigint 0x00 encode into rlp 00 and not 80
 }
 
+typedef std::tuple<string,string,string,string> AsStringTuple;
+void verifyAsString(AsStringTuple const& _expectMap)
+{
+    auto const& constr = std::get<0>(_expectMap);
+    auto const& asStr1 = std::get<1>(_expectMap);
+    auto const& asRLP1 = std::get<2>(_expectMap);
+    auto const& asStr2 = std::get<3>(_expectMap);
+    auto const& label = constr;
+
+    VALUE v(constr);
+    BOOST_CHECK_MESSAGE(v.asString() == asStr1, "\n" + label
+                    + "::VALUE(" + constr + ").asString() " + v.asString() + " != " + asStr1);
+
+    RLPStream sout(1);
+    sout << v.serializeRLP();
+    auto out = sout.out();
+    auto const rlp1 = toHexPrefixed(out);
+    BOOST_CHECK_MESSAGE(rlp1 == asRLP1, "\n" + label
+                    + "::VALUE(" + constr + ").asRlp()(" + rlp1 + ") != " + asRLP1);
+
+    RLP rlp(out);
+    VALUE v2(rlp[0]);
+    BOOST_CHECK_MESSAGE(v2.asString() == asStr2, "\n" + label
+                    + "::VALUE(rlp" + asRLP1 + ").asString() "+ v2.asString() + " != " + asStr2);
+}
+
 BOOST_FIXTURE_TEST_SUITE(StructTest, Initializer)
+
+BOOST_AUTO_TEST_CASE(value_asString_leading0)
+{
+    // constr -> asString -> RLP -> asString
+    std::vector<AsStringTuple> tests = {
+        {"0x0",  "0x00", "0xc180", "0x00"},
+        {"0x00", "0x00", "0xc180", "0x00"},
+
+        {"0x:bigint 0x0",  "0x:bigint 0x00", "0xc100", "0x00"},
+        {"0x:bigint 0x00", "0x:bigint 0x00", "0xc100", "0x00"},
+        {"0x:bigint 0x",   "0x:bigint 0x",   "0xc180", "0x00"},
+
+        {"0x1",  "0x01", "0xc101", "0x01"},
+        {"0x01", "0x01", "0xc101", "0x01"},
+        {"0x11", "0x11", "0xc111", "0x11"},
+        {"0x11", "0x11", "0xc111", "0x11"},
+        {"0x0111", "0x0111", "0xc3820111", "0x0111"},
+
+        {"0x:bigint 0x000",  "0x:bigint 0x0000", "0xc3820000", "0x:bigint 0x0000"},
+        {"0x:bigint 0x0000", "0x:bigint 0x0000", "0xc3820000", "0x:bigint 0x0000"},
+        {"0x:bigint 0x001",  "0x:bigint 0x0001", "0xc3820001", "0x:bigint 0x0001"},
+        {"0x:bigint 0x0001", "0x:bigint 0x0001", "0xc3820001", "0x:bigint 0x0001"},
+
+        {"0x:bigint 0x00000",  "0x:bigint 0x000000", "0xc483000000", "0x:bigint 0x000000"},
+        {"0x:bigint 0x000000", "0x:bigint 0x000000", "0xc483000000", "0x:bigint 0x000000"},
+        {"0x:bigint 0x00001",  "0x:bigint 0x000001", "0xc483000001", "0x:bigint 0x000001"},
+        {"0x:bigint 0x000001", "0x:bigint 0x000001", "0xc483000001", "0x:bigint 0x000001"},
+
+        {"0x:bigint 0x11", "0x:bigint 0x11", "0xc111", "0x11"},
+        {"0x:bigint 0x011",  "0x:bigint 0x0011", "0xc3820011", "0x:bigint 0x0011"},
+        {"0x:bigint 0x0011", "0x:bigint 0x0011", "0xc3820011", "0x:bigint 0x0011"},
+        {"0x:bigint 0x111",  "0x:bigint 0x0111", "0xc3820111", "0x0111"},
+        {"0x:bigint 0x0111", "0x:bigint 0x0111", "0xc3820111", "0x0111"},
+
+        {"0x:bigint 0x0011", "0x:bigint 0x0011", "0xc3820011", "0x:bigint 0x0011"},
+        {"0x:bigint 0x00011",  "0x:bigint 0x000011", "0xc483000011", "0x:bigint 0x000011"},
+        {"0x:bigint 0x000011", "0x:bigint 0x000011", "0xc483000011", "0x:bigint 0x000011"},
+        {"0x:bigint 0x00111",  "0x:bigint 0x000111", "0xc483000111", "0x:bigint 0x000111"},
+        {"0x:bigint 0x000111", "0x:bigint 0x000111", "0xc483000111", "0x:bigint 0x000111"},
+    };
+    for (auto const& el : tests)
+        verifyAsString(el);
+
+    for (const auto& el : tests)
+    {
+        const auto& asStr2 = std::get<3>(el);
+        const auto it = std::ranges::find_if(tests, [&](const auto& el2)
+            {
+                return std::get<0>(el2) == asStr2;
+            });
+
+        BOOST_CHECK_MESSAGE(it != tests.end(), "Deserialized key " + asStr2 + " not tested!");
+    }
+}
 
 BOOST_AUTO_TEST_CASE(value_normal)
 {
