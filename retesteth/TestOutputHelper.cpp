@@ -266,7 +266,7 @@ void TestOutputHelper::printTestExecStats()
         std::cout << setw(45) << "Total Time: "
                   << setw(20) << "     : " + fto_string(totalTime)
                   << setw(24) << "        : " + fto_string(totalTimeCPU)
-                  << "          : " + fto_string((int)floor(100 * totalTimeCPU / totalTime)) + "%"
+                  << "          : " + fto_string((int)floor(100 * totalTimeCPU / std::max(1., totalTime))) + "%"
                   << "\n";
         for (size_t i = 0; i < execTimeResults.size(); i++)
         {
