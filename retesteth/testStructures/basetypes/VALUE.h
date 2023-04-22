@@ -59,19 +59,18 @@ private:
     void _fromString(std::string const& _data, std::string const& _hintkey = std::string());
     std::string verifyHexString(std::string const& _s, std::string const& _k = std::string()) const;
     void calculateCache() const;
+    size_t _countPrefixedBytes(std::string const&) const;
     dev::bigint m_data;
 
     // Optimizations
     mutable bool m_dirty = true;
-    mutable std::string m_dataStrZeroXCache;
+    mutable std::string m_dataStr;
     mutable dev::bytes m_bytesData;
 
     // Bigint specific
     bool m_bigint = false;
     mutable bool m_bigintEmpty = false;
-    mutable dev::bytes m_bytesBigIntData;
-    mutable unsigned short m_prefixedZeros = 0;
-    mutable std::string m_dataStrBigIntCache;
+    mutable size_t m_prefixedZeroBytes = 0;
 };
 
 typedef dataobject::GCP_SPointer<VALUE> spVALUE;

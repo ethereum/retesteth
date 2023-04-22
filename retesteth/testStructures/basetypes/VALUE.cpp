@@ -21,16 +21,9 @@ VALUE::VALUE(dev::RLP const& _rlp)
 {
     std::ostringstream stream;
     stream << _rlp.toBytes();
-    auto const str = stream.str();
-    for (size_t i = 2; i < str.size() - 2; i++)
-    {
-        if (str.at(i) == '0')
-            m_prefixedZeros++;
-        else
-            break;
-    }
-
-    m_bigint = (str.size() > 64 + 2) || m_prefixedZeros >= 2;
+    auto const& str = stream.str();
+    m_prefixedZeroBytes = _countPrefixedBytes(str);
+    m_bigint = (str.size() > 64 + 2) || m_prefixedZeroBytes >= 1;
     m_data = dev::bigint(str);
 }
 
@@ -100,21 +93,12 @@ string VALUE::verifyHexString(std::string const& _s, std::string const& _k) cons
         }
         else
         {
-            m_prefixedZeros = 0;
             const string ret = _s.substr(bigIntOffset);
             if (ret.size() == 2)
                 m_bigintEmpty = true;
 
-            for (size_t i = 2; i < ret.size() - 2; i++)
-            {
-                if (ret.at(i) == '0')
-                    m_prefixedZeros++;
-                else
-                    break;
-            }
-
-            // Indicates bigint
-            return ret;
+            m_prefixedZeroBytes = _countPrefixedBytes(ret);
+            return ret; // Indicates bigint
         }
     }
     else
@@ -131,14 +115,12 @@ string VALUE::asDecString() const
 string const& VALUE::asString() const
 {
     calculateCache();
-    return m_bigint ? m_dataStrBigIntCache : m_dataStrZeroXCache;
+    return m_dataStr;
 }
 
 dev::bytes const& VALUE::serializeRLP() const
 {
     calculateCache();
-    if (m_bigint)
-        return m_bytesBigIntData;
     return m_bytesData;
 }
 
@@ -148,38 +130,53 @@ void VALUE::calculateCache() const
     if (m_dirty)
     {
         m_dirty = false;
-        string& ret = m_dataStrZeroXCache;
 
-        if (m_bigintEmpty)
-            ret = "";
-        else
+        m_dataStr = m_data.str(0, std::ios_base::hex);
+        if (m_dataStr.size() % 2 != 0)
+            m_dataStr.insert(0, "0");
+        test::strToLower(m_dataStr);
+
+        if (!m_bigint)
         {
-            ret = m_data.str(0, std::ios_base::hex);
-            if (ret.size() % 2 != 0)
-                ret.insert(0, "0");
-            test::strToLower(ret);
-        }
-
-        if (m_bigint)
-        {
-            unsigned short addZeroesNumber = m_prefixedZeros;
-            if (m_dataStrZeroXCache.size() > 2 && m_dataStrZeroXCache.at(0) == '0' && addZeroesNumber > 0)
-                addZeroesNumber -= 1;
-            string prefixedZero(addZeroesNumber, '0');
-
-            m_dataStrBigIntCache = m_dataStrZeroXCache;
-            m_dataStrZeroXCache.insert(0, "0x");
-            m_dataStrBigIntCache.insert(0, prefixedZero);
-            m_dataStrBigIntCache.insert(0, C_BIGINT_PREFIX);
-            m_dataStrBigIntCache.insert(0, "0x");
-            m_bytesBigIntData = test::sfromHex(prefixedZero) + test::sfromHex(m_dataStrZeroXCache);
+            m_dataStr.insert(0, "0x");
+            m_bytesData = (m_data == 0) ? test::sfromHex("") : test::sfromHex(m_dataStr);
         }
         else
         {
-            m_dataStrZeroXCache.insert(0, "0x");
-            m_bytesData = (m_data == 0) ? test::sfromHex("") : test::sfromHex(m_dataStrZeroXCache);
+            if (m_prefixedZeroBytes > 0)
+            {
+                string const padding(m_prefixedZeroBytes * 2, '0');
+                m_dataStr.insert(0, padding);
+            }
+            m_dataStr.insert(0, "0x");
+            m_bytesData = m_bigintEmpty ? test::sfromHex("") : test::sfromHex(m_dataStr);
+            m_dataStr.insert(0, C_BIGINT_PREFIX);
         }
     }
 }
+
+size_t VALUE::_countPrefixedBytes(std::string const& _str) const
+{
+    if (_str.size() < 5) // 0x00 does not count
+        return 0;
+
+    size_t zeros = 0;
+    for (string::const_iterator it = _str.begin() + 2; it != _str.end() - 2; it++)
+    {
+        if ((*it) == '0')
+            zeros++;
+        else
+        {
+            // 0x000122 => "0x000122" (1 byte, 2 zeros)
+            // 0x0001122 => "0x00001122 (2 byte, 3 zeros)
+            // 0x00001122 => "0x00001122 (2 byte, 4 zeros)
+            if (zeros % 2 == 1 && zeros > 0)
+                zeros--;
+            break;
+        }
+    }
+    return std::ceil((double)zeros / 2);
+}
+
 
 }  // namespace teststruct

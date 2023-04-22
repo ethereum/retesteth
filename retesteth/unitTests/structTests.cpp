@@ -39,10 +39,10 @@ void checkException(std::function<void()> _job, string const& _exStr)
 }
 
 template <class T>
-void checkSerializeBigint(T const& _a, string const& _rlpForm, string const& _expectedAfter = string())
+void checkSerializeBigint(T const& _before, string const& _rlpForm, string const& _expectedAfter = string())
 {
     RLPStream sout(1);
-    sout << _a.serializeRLP();
+    sout << _before.serializeRLP();
 
     auto out = sout.out();
     ETH_ERROR_REQUIRE_MESSAGE(
@@ -50,16 +50,20 @@ void checkSerializeBigint(T const& _a, string const& _rlpForm, string const& _ex
 
     size_t i = 0;
     RLP rlp(out);
-    T aa(rlp[i++]);
+    T after(rlp[i++]);
 
-    if (!_expectedAfter.empty())
+    if (_expectedAfter.empty())
     {
-        ETH_ERROR_REQUIRE_MESSAGE(aa.asString() == _expectedAfter,
-            "Var Serialize (before != after, expectedafter) " + _a.asString() + " != " + aa.asString() + ", " + _expectedAfter);
+        ETH_ERROR_REQUIRE_MESSAGE(
+            after.asString() == _before.asString(), "Var Serialize (before != after) "
+                + _before.asString() + " != " + after.asString());
     }
     else
-        ETH_ERROR_REQUIRE_MESSAGE(
-            aa.asString() == _a.asString(), "Var Serialize (before != after) " + _a.asString() + " != " + aa.asString());
+    {
+        ETH_ERROR_REQUIRE_MESSAGE(after.asString() == _expectedAfter,
+            "Var Serialize (before != after, expectedafter) "
+                + _before.asString() + " != " + after.asString() + ", " + _expectedAfter);
+    }
 
     // check that 0x:bigint 0x00 encode into rlp 00 and not 80
 }
@@ -102,8 +106,8 @@ BOOST_AUTO_TEST_CASE(value_normal)
     auto out = sout.out();
     auto out2 = sout2.out();
     auto outbigint = soutBigint.out();
-    // std::cerr << toHexPrefixed(out) << std::endl;
-    ETH_ERROR_REQUIRE_MESSAGE(toHexPrefixed(out) == "0xcf821122010180802286112233445500", "RLP Serialize different to expected: `" + toHexPrefixed(out));
+    string const expected = "0xcf821122010180802286112233445500";
+    ETH_ERROR_REQUIRE_MESSAGE(toHexPrefixed(out) == expected, "RLP Serialize different to expected: `" + toHexPrefixed(out) + "` != `" + expected);
     ETH_ERROR_REQUIRE_MESSAGE(toHexPrefixed(out) == toHexPrefixed(out2), "RLP (serializeRLP != asBigInt) " + toHexPrefixed(out) + " != " + toHexPrefixed(out2));
     ETH_ERROR_REQUIRE_MESSAGE(toHexPrefixed(out) == toHexPrefixed(outbigint), "RLP (serializeRLP != bigint serializeRLP) " + toHexPrefixed(out) + " != " + toHexPrefixed(outbigint));
     ETH_ERROR_REQUIRE_MESSAGE(toHexPrefixed(out2) == toHexPrefixed(outbigint), "RLP (asBigInt != bigint serializeRLP) " + toHexPrefixed(out2) + " != " + toHexPrefixed(outbigint));
@@ -123,9 +127,37 @@ BOOST_AUTO_TEST_CASE(value_notPrefixed)
     checkException([]() { VALUE a(DataObject("1122")); }, "is not prefixed hex");
 }
 
+BOOST_AUTO_TEST_CASE(value_asString)
+{
+    {
+        VALUE a(DataObject("0x0"));
+        checkSerializeBigint(a, "0xc180");
+        VALUE a2(DataObject("0x00"));
+        checkSerializeBigint(a2, "0xc180");
+        VALUE a3(DataObject("0x1"));
+        checkSerializeBigint(a3, "0xc101", "0x01");
+    }
+
+    {
+        VALUE a(DataObject("0x:bigint 0x0"));
+        checkSerializeBigint(a, "0xc100", "0x00");
+        VALUE a2(DataObject("0x:bigint 0x00"));
+        checkSerializeBigint(a2, "0xc100", "0x00");
+    }
+
+    checkException([]() { VALUE a(DataObject("0x001")); }, "has leading 0");
+    checkException([]() { VALUE a(DataObject("0x:bigint  0x000")); }, "is not prefixed");
+    checkException([]() { VALUE a(DataObject("0x 000")); }, "Unexpected content");
+    checkException([]() { VALUE a(DataObject("0x0x000")); }, "has leading 0");
+    checkException([]() { VALUE a(DataObject("0x0x0000")); }, "Unexpected content");
+    checkException([]() { VALUE a(DataObject("0xx000")); }, "Unexpected content");
+    checkException([]() { VALUE a(DataObject("0x:bigint 0x 000")); }, "Unexpected content");
+    checkException([]() { VALUE a(DataObject("0x:bigint0x000")); }, "Unexpected content");
+}
+
 BOOST_AUTO_TEST_CASE(value_leadingZero)
 {
-    { VALUE a(DataObject("0x0")); }
+    { VALUE a(DataObject("0x0"));}
     { VALUE a(DataObject("0x00")); }
     { VALUE a(DataObject("0x100")); }
 
@@ -167,11 +199,57 @@ BOOST_AUTO_TEST_CASE(valueb_emptyString)
 
 BOOST_AUTO_TEST_CASE(valueb_prefixed00)
 {
-    VALUE a(DataObject("0x:bigint 0x0022"));
-    checkSerializeBigint(a, "0xc3820022");
+    {
+        VALUE a(DataObject("0x:bigint 0x022"));
+        checkSerializeBigint(a, "0xc3820022", "0x:bigint 0x0022");
+        VALUE a2(DataObject("0x:bigint 0x002"));
+        checkSerializeBigint(a2, "0xc3820002", "0x:bigint 0x0002");
+    }
 
+    {
+        VALUE a(DataObject("0x:bigint 0x0022"));
+        checkSerializeBigint(a,  "0xc3820022");
+        VALUE a2(DataObject("0x:bigint 0x0002"));
+        checkSerializeBigint(a2,  "0xc3820002");
+    }
+
+    {
+        VALUE a(DataObject("0x:bigint 0x00022"));
+        checkSerializeBigint(a, "0xc483000022", "0x:bigint 0x000022");
+        VALUE a2(DataObject("0x:bigint 0x00122"));
+        checkSerializeBigint(a2, "0xc483000122", "0x:bigint 0x000122");
+    }
+
+    {
+        VALUE a(DataObject("0x:bigint 0x000022"));
+        checkSerializeBigint(a,  "0xc483000022");
+        VALUE a2(DataObject("0x:bigint 0x0000022"));
+        checkSerializeBigint(a2, "0xc58400000022", "0x:bigint 0x00000022");
+        VALUE a3(DataObject("0x:bigint 0x000002"));
+        checkSerializeBigint(a3, "0xc483000002");
+    }
+
+    {
+        VALUE a(DataObject("0x:bigint 0x0"));
+        checkSerializeBigint(a,  "0xc100", "0x00");
+        VALUE a2(DataObject("0x:bigint 0x00"));
+        checkSerializeBigint(a2,  "0xc100", "0x00");
+        VALUE a3(DataObject("0x:bigint 0x000"));
+        checkSerializeBigint(a3,  "0xc3820000");
+        VALUE a4(DataObject("0x:bigint 0x0000"));
+        checkSerializeBigint(a4,  "0xc3820000");
+        VALUE a5(DataObject("0x:bigint 0x11122334455667788991011121314151617181920212223242526272829303132"));
+        checkSerializeBigint(a5,  "0xe2a1011122334455667788991011121314151617181920212223242526272829303132");
+    }
+
+    //0x0001000000000000000000000000000000000000000000000000000000000000000001
+    //0x1122334455667788991011121314151617181920212223242526272829303132333435
     VALUE b(DataObject(" 0x:bigint 0x0001000000000000000000000000000000000000000000000000000000000000000001"));
     checkSerializeBigint(b, "0xe4a30001000000000000000000000000000000000000000000000000000000000000000001");
+
+    VALUE c(DataObject("0x:bigint 0x10000000000000000000000000000000000000000000000000000000000000001"));
+    checkSerializeBigint(c, "0xe2a1010000000000000000000000000000000000000000000000000000000000000001",
+                      "0x:bigint 0x010000000000000000000000000000000000000000000000000000000000000001");
 }
 
 BOOST_AUTO_TEST_CASE(valueb_normal)
@@ -402,6 +480,38 @@ BOOST_AUTO_TEST_CASE(transactionLegacy_vbigint_serialization)
     BYTES const& trSerialized = spTr->getRawBytes();
     ETH_ERROR_REQUIRE_MESSAGE(trSerialized.asString() ==
                                   "0xf859010a83112233801184001122338901000000000000001ba048b55bfa915ac795c431978d8a6a992b628d557da5ff759b307d495a36649353a01fffd310ac743f371de3b9f7f9cb56c0b28ad43601b4ab949f53faa07bd2c804",
+        "Transaction rawBytes different: " + trSerialized.asString());
+
+    spTransaction spTr2 = readTransaction(trSerialized);
+    auto const trRead2 = spTr2->asDataObject()->asJson(0, false);
+    ETH_ERROR_REQUIRE_MESSAGE(
+        trRead == trRead2, "Transaction deserialized read different (before != after) " + trRead + " != " + trRead2);
+    ETH_ERROR_REQUIRE_MESSAGE(spTr->hash() == spTr2->hash(), "Transaction deserialized hash is different (before != after) " + spTr->hash().asString() + " != " + spTr2->hash().asString())
+}
+
+BOOST_AUTO_TEST_CASE(transactionLegacy_bigint_serialization)
+{
+    spDataObject tr;
+    (*tr)["data"] = "0x00112233";
+    (*tr)["gasLimit"] = "0x112233";
+    (*tr)["gasPrice"] = "0x:bigint 0x110000000000000000000000000000000000000000000000000000000000000001";
+    (*tr)["nonce"] = "0x0122";
+    (*tr)["to"] = "";
+    (*tr)["value"] = "0x:bigint 0x10000000000000000000000000000000000000000000000000000000000000001";
+    (*tr)["v"] = "0x1b";
+    (*tr)["r"] = "0x48b55bfa915ac795c431978d8a6a992b628d557da5ff759b307d495a36649353";
+    (*tr)["s"] = "0x1fffd310ac743f371de3b9f7f9cb56c0b28ad43601b4ab949f53faa07bd2c804";
+    spTransaction spTr = readTransaction(dataobject::move(tr));
+
+    auto const trRead = spTr->asDataObject()->asJson(0, false);
+    const string expectedRead =
+        R"({"data":"0x00112233","gasLimit":"0x112233","gasPrice":"0x:bigint 0x110000000000000000000000000000000000000000000000000000000000000001","nonce":"0x0122","to":"","value":"0x:bigint 0x010000000000000000000000000000000000000000000000000000000000000001","v":"0x1b","r":"0x48b55bfa915ac795c431978d8a6a992b628d557da5ff759b307d495a36649353","s":"0x1fffd310ac743f371de3b9f7f9cb56c0b28ad43601b4ab949f53faa07bd2c804"})";
+
+    ETH_ERROR_REQUIRE_MESSAGE(trRead == expectedRead, "Transaction read different to expected '" + trRead + "'");
+
+    BYTES const& trSerialized = spTr->getRawBytes();
+    ETH_ERROR_REQUIRE_MESSAGE(trSerialized.asString() ==
+        "0xf894820122a11100000000000000000000000000000000000000000000000000000000000000018311223380a101000000000000000000000000000000000000000000000000000000000000000184001122331ba048b55bfa915ac795c431978d8a6a992b628d557da5ff759b307d495a36649353a01fffd310ac743f371de3b9f7f9cb56c0b28ad43601b4ab949f53faa07bd2c804",
         "Transaction rawBytes different: " + trSerialized.asString());
 
     spTransaction spTr2 = readTransaction(trSerialized);
