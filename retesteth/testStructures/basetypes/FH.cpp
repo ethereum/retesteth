@@ -1,6 +1,6 @@
 #include "../Common.h"
 #include <retesteth/EthChecks.h>
-#include <retesteth/TestHelper.h>
+#include <retesteth/helpers/TestHelper.h>
 #include <retesteth/Constants.h>
 using namespace test;
 using namespace test::teststruct;

@@ -20,7 +20,7 @@
 
 #include "Options.h"
 #include <boost/algorithm/string.hpp>
-#include <retesteth/TestHelper.h>
+#include <retesteth/helpers/TestHelper.h>
 #include <boost/test/unit_test.hpp>
 
 using namespace std;

@@ -1,7 +1,7 @@
 #include "StateTestsHelper.h"
 #include "StateTestFillerRunner.h"
 #include <retesteth/session/Session.h>
-#include <retesteth/TestOutputHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
 #include <retesteth/testSuites/Common.h>
 #include <retesteth/testStructures/PrepareChainParams.h>
 #include <retesteth/ExitHandler.h>

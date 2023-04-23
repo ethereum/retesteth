@@ -1,6 +1,6 @@
 #include <libdevcore/CommonIO.h>
 #include <retesteth/EthChecks.h>
-#include <retesteth/TestHelper.h>
+#include <retesteth/helpers/TestHelper.h>
 using namespace test::teststruct;
 using namespace dev;
 using namespace std;

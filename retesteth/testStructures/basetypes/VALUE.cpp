@@ -1,7 +1,7 @@
 #include "VALUE.h"
 #include <libdevcore/CommonIO.h>
 #include <retesteth/EthChecks.h>
-#include <retesteth/TestHelper.h>
+#include <retesteth/helpers/TestHelper.h>
 #include <retesteth/Constants.h>
 
 using namespace std;

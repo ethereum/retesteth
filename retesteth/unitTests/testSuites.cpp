@@ -1,8 +1,8 @@
 #include "testSuites.h"
 #include <retesteth/EthChecks.h>
 #include <retesteth/Options.h>
-#include <retesteth/TestHelper.h>
-#include <retesteth/TestOutputHelper.h>
+#include <retesteth/helpers/TestHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
 #include <retesteth/testSuites/statetests/StateTests.h>
 #include <retesteth/testSuites/blockchain/BlockchainTests.h>
 #include <retesteth/testStructures/types/StateTests/GeneralStateTest.h>

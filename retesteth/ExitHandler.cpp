@@ -1,5 +1,5 @@
 #include <retesteth/ExitHandler.h>
-#include <retesteth/TestOutputHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
 #include <retesteth/session/Session.h>
 using namespace test;
 using namespace test::session;

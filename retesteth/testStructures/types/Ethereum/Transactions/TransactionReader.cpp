@@ -2,7 +2,7 @@
 #include "TransactionAccessList.h"
 #include "TransactionBaseFee.h"
 #include <retesteth/EthChecks.h>
-#include <retesteth/TestHelper.h>
+#include <retesteth/helpers/TestHelper.h>
 
 using namespace std;
 using namespace dataobject;

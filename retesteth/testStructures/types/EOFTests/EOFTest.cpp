@@ -1,5 +1,5 @@
 #include "EOFTest.h"
-#include <retesteth/TestOutputHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
 #include <retesteth/EthChecks.h>
 #include <retesteth/testSuites/Common.h>
 using namespace std;

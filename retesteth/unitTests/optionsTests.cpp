@@ -1,5 +1,5 @@
 #include <retesteth/Options.h>
-#include <retesteth/TestOutputHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
 
 using namespace std;
 using namespace dev;

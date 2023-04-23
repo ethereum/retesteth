@@ -1,5 +1,5 @@
 #include "StateTestFillerExpectSection.h"
-#include <TestHelper.h>
+#include <retesteth/helpers/TestHelper.h>
 #include <retesteth/EthChecks.h>
 #include <retesteth/Options.h>
 #include <retesteth/testStructures/Common.h>

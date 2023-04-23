@@ -1,12 +1,12 @@
 #include "EOFTest.h"
-#include <retesteth/TestOutputHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
 #include <retesteth/testStructures/types/EOFTests/EOFTestFiller.h>
 #include <retesteth/testStructures/types/EOFTests/EOFTest.h>
 #include <retesteth/testSuites/Common.h>
 #include <retesteth/Options.h>
 #include <retesteth/session/SessionInterface.h>
-#include <retesteth/TestOutputHelper.h>
-#include <retesteth/TestHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
+#include <retesteth/helpers/TestHelper.h>
 #include <retesteth/ExitHandler.h>
 
 using namespace std;

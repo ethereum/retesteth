@@ -1,6 +1,6 @@
 #include "TestBlockchain.h"
 #include <retesteth/Options.h>
-#include <retesteth/TestHelper.h>
+#include <retesteth/helpers/TestHelper.h>
 #include <retesteth/testStructures/PrepareChainParams.h>
 #include <retesteth/testSuites/Common.h>
 #include "../Common.h"

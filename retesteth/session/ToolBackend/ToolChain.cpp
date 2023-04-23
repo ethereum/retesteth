@@ -1,7 +1,7 @@
 #include "BlockMining.h"
 #include "Verification.h"
 #include <Options.h>
-#include <retesteth/TestHelper.h>
+#include <retesteth/helpers/TestHelper.h>
 #include <testStructures/Common.h>
 
 using namespace dev;

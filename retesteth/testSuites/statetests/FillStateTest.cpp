@@ -1,6 +1,6 @@
 ﻿#include "StateTestsHelper.h"
 #include "StateTestFillerRunner.h"
-#include "TestOutputHelper.h"
+#include <retesteth/helpers/TestOutputHelper.h>
 #include "Options.h"
 #include "session/Session.h"
 #include "testSuites/Common.h"

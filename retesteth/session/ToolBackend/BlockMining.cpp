@@ -3,8 +3,8 @@
 #include "ToolChainHelper.h"
 #include "libdataobj/ConvertFile.h"
 #include <libdevcore/CommonIO.h>
-#include <retesteth/TestHelper.h>
-#include <retesteth/TestOutputHelper.h>
+#include <retesteth/helpers/TestHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
 #include <retesteth/testStructures/Common.h>
 #include <testStructures/types/BlockchainTests/BlockchainTestFiller.h>
 #include <regex>

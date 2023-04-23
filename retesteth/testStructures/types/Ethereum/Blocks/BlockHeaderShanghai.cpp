@@ -1,6 +1,6 @@
 #include "BlockHeaderShanghai.h"
 #include <libdevcore/Address.h>
-#include <retesteth/TestHelper.h>
+#include <retesteth/helpers/TestHelper.h>
 #include <retesteth/EthChecks.h>
 #include <retesteth/testStructures/Common.h>
 #include <retesteth/Constants.h>

@@ -1,7 +1,7 @@
 #include "Common.h"
 #include "EthChecks.h"
-#include "TestHelper.h"
-#include "TestOutputHelper.h"
+#include <retesteth/helpers/TestHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
 #include <retesteth/Options.h>
 #include <libdevcrypto/Common.h>
 #include <retesteth/Constants.h>

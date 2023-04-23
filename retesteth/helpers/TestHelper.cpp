@@ -8,7 +8,7 @@
 #include <libdevcore/CommonIO.h>
 #include <retesteth/EthChecks.h>
 #include <retesteth/Options.h>
-#include <retesteth/TestHelper.h>
+#include <retesteth/helpers/TestHelper.h>
 #include <boost/test/unit_test.hpp>
 
 using namespace std;

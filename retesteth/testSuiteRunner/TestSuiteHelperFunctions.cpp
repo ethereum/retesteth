@@ -1,8 +1,8 @@
 #include "TestSuiteHelperFunctions.h"
 #include "Options.h"
 #include <retesteth/EthChecks.h>
-#include <retesteth/TestHelper.h>
-#include <retesteth/TestOutputHelper.h>
+#include <retesteth/helpers/TestHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
 #include <retesteth/testSuiteRunner/TestSuite.h>
 #include <libdevcore/CommonIO.h>
 

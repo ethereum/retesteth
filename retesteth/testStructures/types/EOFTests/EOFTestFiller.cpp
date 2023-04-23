@@ -1,6 +1,6 @@
 #include "EOFTestFiller.h"
 #include <retesteth/EthChecks.h>
-#include <retesteth/TestOutputHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
 #include <retesteth/Constants.h>
 #include <retesteth/testStructures/Common.h>
 #include <retesteth/Options.h>

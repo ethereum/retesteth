@@ -1,7 +1,7 @@
 #include <retesteth/session/ToolBackend/ToolChainManager.h>
 #include <retesteth/testStructures/basetypes.h>
 #include <libdevcore/CommonIO.h>
-#include <retesteth/TestHelper.h>
+#include <retesteth/helpers/TestHelper.h>
 using namespace std;
 using namespace dev;
 using namespace test;

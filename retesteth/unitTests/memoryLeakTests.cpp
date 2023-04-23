@@ -1,4 +1,4 @@
-#include <retesteth/TestOutputHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
 #include <libdataobj/ConvertFile.h>
 #include <retesteth/testStructures/structures.h>
 

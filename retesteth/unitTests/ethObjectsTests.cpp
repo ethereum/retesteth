@@ -19,8 +19,8 @@
  */
 
 #include <libdataobj/ConvertFile.h>
-#include <retesteth/TestHelper.h>
-#include <retesteth/TestOutputHelper.h>
+#include <retesteth/helpers/TestHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
 #include <retesteth/testSuites/Common.h>
 
 using namespace std;

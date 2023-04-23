@@ -1,5 +1,5 @@
 #include "Options.h"
-#include <retesteth/TestHelper.h>
+#include <retesteth/helpers/TestHelper.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/test/unit_test.hpp>
 

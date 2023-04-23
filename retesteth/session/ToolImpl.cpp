@@ -1,6 +1,6 @@
 #include "ToolBackend/ToolImplHelper.h"
 #include <retesteth/Options.h>
-#include <retesteth/TestHelper.h>
+#include <retesteth/helpers/TestHelper.h>
 #include <retesteth/session/ToolImpl.h>
 
 using namespace test;

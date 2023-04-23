@@ -1,6 +1,6 @@
 #include "BlockchainTest.h"
 #include <retesteth/EthChecks.h>
-#include <retesteth/TestOutputHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
 #include <retesteth/testStructures/Common.h>
 #include <boost/test/framework.hpp>
 

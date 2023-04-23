@@ -1,5 +1,5 @@
-#include <TestHelper.h>
-#include <TestOutputHelper.h>
+#include <retesteth/helpers/TestHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
 #include <retesteth/testStructures/Common.h>
 #include <retesteth/Options.h>
 

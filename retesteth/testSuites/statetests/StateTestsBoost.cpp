@@ -1,5 +1,5 @@
-#include "retesteth/TestHelper.h"
-#include "retesteth/TestOutputHelper.h"
+#include "retesteth/helpers/TestHelper.h"
+#include "retesteth/helpers/TestOutputHelper.h"
 #include "retesteth/testSuites/TestFixtures.h"
 #include "retesteth/testSuites/statetests/StateTests.h"
 #include "libdataobj/DataObject.h"

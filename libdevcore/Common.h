@@ -127,15 +127,14 @@ class CPUTimer
 public:
     CPUTimer(){ restart(); }
     void restart() { m_start = std::clock(); }
-    double elapsed()
+    double elapsed() const
     {
-        m_end = std::clock();
-        double const elapsedMs =  1000.0 * (m_end - m_start) / CLOCKS_PER_SEC;
+        std::clock_t end = std::clock();
+        double const elapsedMs =  1000.0 * (end - m_start) / CLOCKS_PER_SEC;
         return elapsedMs / 1000.0;
     }
 private:
     std::clock_t m_start;
-    std::clock_t m_end;
 };
 
 }

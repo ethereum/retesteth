@@ -3,7 +3,7 @@
 #include <retesteth/session/ToolBackend/ToolChainManager.h>
 #include <retesteth/Options.h>
 #include <retesteth/EthChecks.h>
-#include <retesteth/TestHelper.h>
+#include <retesteth/helpers/TestHelper.h>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/SHA3.h>
 using namespace std;

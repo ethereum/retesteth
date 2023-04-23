@@ -1,5 +1,5 @@
 #include "ToolImplHelper.h"
-#include <retesteth/TestHelper.h>
+#include <retesteth/helpers/TestHelper.h>
 #include <retesteth/testStructures/Common.h>
 using namespace test;
 using namespace test::debug;

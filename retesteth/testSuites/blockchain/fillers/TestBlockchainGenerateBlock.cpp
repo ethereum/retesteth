@@ -2,7 +2,7 @@
 #include <retesteth/testSuites/Common.h>
 #include <retesteth/Options.h>
 #include <retesteth/testSuites/blockchain/Common.h>
-#include <retesteth/TestHelper.h>
+#include <retesteth/helpers/TestHelper.h>
 using namespace std;
 using namespace test::debug;
 using namespace test::session;

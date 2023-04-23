@@ -1,7 +1,7 @@
 #include "Common.h"
 #include <retesteth/Options.h>
-#include <retesteth/TestHelper.h>
-#include <retesteth/TestOutputHelper.h>
+#include <retesteth/helpers/TestHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
 #include <retesteth/Constants.h>
 using namespace std;
 using namespace test::debug;

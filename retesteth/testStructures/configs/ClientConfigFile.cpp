@@ -1,7 +1,7 @@
 #include "ClientConfigFile.h"
 #include <testStructures/Common.h>
 #include <retesteth/EthChecks.h>
-#include <retesteth/TestHelper.h>
+#include <retesteth/helpers/TestHelper.h>
 using namespace std;
 using namespace test::teststruct;
 namespace fs = boost::filesystem;

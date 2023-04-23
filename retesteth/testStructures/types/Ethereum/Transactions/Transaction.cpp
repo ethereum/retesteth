@@ -3,7 +3,7 @@
 #include <EthChecks.h>
 #include <libdevcrypto/Common.h>
 #include <retesteth/testStructures/Common.h>
-#include <retesteth/TestOutputHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
 
 using namespace std;
 using namespace test;

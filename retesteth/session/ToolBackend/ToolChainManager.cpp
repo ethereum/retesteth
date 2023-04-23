@@ -4,7 +4,7 @@
 #include <libdataobj/ConvertFile.h>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/SHA3.h>
-#include <retesteth/TestHelper.h>
+#include <retesteth/helpers/TestHelper.h>
 #include <retesteth/Options.h>
 #include <retesteth/Constants.h>
 using namespace std;

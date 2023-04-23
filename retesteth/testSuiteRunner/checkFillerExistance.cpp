@@ -1,9 +1,9 @@
 #include "EthChecks.h"
 #include "Options.h"
-#include "TestHelper.h"
+#include <retesteth/helpers/TestHelper.h>
 #include "TestSuite.h"
 #include "TestSuiteHelperFunctions.h"
-#include <retesteth/TestOutputHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
 
 #include <libdevcore/CommonIO.h>
 

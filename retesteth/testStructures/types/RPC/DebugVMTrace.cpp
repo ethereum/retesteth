@@ -1,6 +1,6 @@
 #include "DebugVMTrace.h"
 #include <EthChecks.h>
-#include <TestHelper.h>
+#include <retesteth/helpers/TestHelper.h>
 #include <libdataobj/ConvertFile.h>
 #include <testStructures/Common.h>
 #include <boost/filesystem/fstream.hpp>

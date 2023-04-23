@@ -1,4 +1,4 @@
-#include "TestHelper.h"
+#include <retesteth/helpers/TestHelper.h>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/SHA3.h>
 #include <retesteth/EthChecks.h>
