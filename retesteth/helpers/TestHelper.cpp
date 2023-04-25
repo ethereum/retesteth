@@ -432,7 +432,7 @@ void strToLower(string& _input)
 bool checkCmdExist(std::string const& _command)
 {
     string cmd;
-    size_t pos = _command.find_first_of(" ");
+    const size_t pos = _command.find_first_of(" ");
     if (pos != string::npos)
         cmd = _command.substr(0, pos);
     else
@@ -455,6 +455,8 @@ string executeCmd(string const& _command, int& _exitCode, ExecCMDWarning _warnin
     string out;
     char output[1024];
     ETH_FAIL_REQUIRE_MESSAGE(!_command.empty(), "executeCmd: empty argument!");
+
+    // TODO: do this check only once and remember that it exist? syscalls are expensive
     if (!test::checkCmdExist(_command))
         ETH_FAIL_MESSAGE("Command `" + _command + "` does not found!");
 

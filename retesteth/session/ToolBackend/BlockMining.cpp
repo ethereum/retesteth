@@ -192,7 +192,9 @@ void BlockMining::executeTransition()
     ETH_DC_MESSAGE(DC::RPC, "Env:\n" + m_envPathContent);
 
     int exitcode;
+    TestOutputHelper::get().timer().startSubcallTimer();
     string out = test::executeCmd(m_cmd, exitcode, ExecCMDWarning::NoWarningNoError);
+    TestOutputHelper::get().timer().finishSubcallTimer();
     ETH_DC_MESSAGE(DC::RPC, m_cmd);
     if (exitcode != 0)
     {

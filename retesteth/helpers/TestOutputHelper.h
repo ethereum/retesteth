@@ -43,6 +43,7 @@ public:
     // Has to be called before execution of every test.
     void showProgress();
     void finishTest();
+    TestOutputTimer& timer() { return m_timer; }
 
     bool markError(std::string const& _message);
     void unmarkLastError();

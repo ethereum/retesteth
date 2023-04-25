@@ -154,6 +154,7 @@ void TestOutputHelper::initTest(size_t _maxTests)
     m_currentTestName = string();
     m_currentTestFileName = string();
     m_timer = TestOutputTimer();
+    TestOutputTimer::resetT8NTime();
     if (_maxTests != 0 && !Options::get().singleTestFile.initialized())
     {
         const string testOutOf = "(" + test::fto_string(++m_currentTestRun) + " of " + test::fto_string(totalTestsNumber) + ")";
