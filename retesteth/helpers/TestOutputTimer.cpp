@@ -66,6 +66,15 @@ void TestOutputTimer::printFinishTest(string const& _testName) const
     execTimeResults.emplace_back(res);
 }
 
+string makeTimePercent(double _time, double _totalTime)
+{
+    std::ostringstream out;
+    out << std::fixed << setprecision(2);
+    out << setw(7) << _time;
+    out << " (" << (int)floor(100 * _time / std::max(1., _totalTime)) << "%)";
+    return out.str();
+}
+
 void TestOutputTimer::printTotalTimes()
 {
     std::lock_guard<std::mutex> lock(g_execTimeResults);
@@ -85,12 +94,10 @@ void TestOutputTimer::printTotalTimes()
     }
     std::cout << "*** Execution time stats" << std::endl;
     std::cout << std::fixed << setprecision(2)
-              << setw(35) << "Total Time: "
-              << "     : "   << setw(6) << totalTime
-              << "        : "<< setw(6) << totalTimeCPU
-              << "(" << (int)floor(100 * totalTimeCPU / std::max(1., totalTime)) << "%)"
-              << "        : "<< setw(6) << totalTimeT8N
-              << "(" << (int)floor(100 * totalTimeT8N / std::max(1., totalTime)) << "%)"
+              << setw(37) << "Total Time: "
+              << "     : "   << setw(8) << totalTime
+              << "        : "<< setw(18) << makeTimePercent(totalTimeCPU, totalTime)
+              << "        : "<< setw(8) << makeTimePercent(totalTimeT8N, totalTime)
               << "\n";
     for (size_t i = 0; i < execTimeResults.size(); i++)
     {
@@ -99,12 +106,10 @@ void TestOutputTimer::printTotalTimes()
         auto const& cputime = std::get<2>(execTimeResults[i]);
         auto const& t8ntime = std::get<3>(execTimeResults[i]);
         std::cout << std::fixed << setprecision(2)
-                  << setw(35) << test
-                  << " time: "    << setw(6) << totalTime
-                  << " cputime: " << setw(6) << cputime
-                  << "(" << (int)floor(100 * cputime / std::max(1., totalTime)) << "%)"
-                  << " t8ntime: " << setw(6) << t8ntime
-                  << "(" << (int)floor(100 * t8ntime / std::max(1., totalTime)) << "%)"
+                  << setw(37) << test
+                  << " time: "    << setw(8) << totalTime
+                  << " cputime: " << setw(18) << makeTimePercent(cputime, totalTime)
+                  << " t8ntime: " << setw(8) << makeTimePercent(t8ntime, totalTime)
                   << "\n";
     }
     std::cout << "\n";
