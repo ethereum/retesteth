@@ -58,5 +58,7 @@ extern const std::string c_s;
 extern const std::string c_code;
 extern const std::string c_balance;
 extern const std::string c_storage;
+extern const std::string c_transactionHash;
+extern const std::string c_blockHash;
 
 }}}

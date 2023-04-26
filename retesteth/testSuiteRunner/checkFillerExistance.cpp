@@ -157,6 +157,10 @@ void getFillers(
         for (auto const& el : fillerSuffixSelect)
             _allTestFillers.emplace_back(el);
 
+        auto fillerSuffixSelectC = test::getFiles(_fullPathToFillers.path(), {".json"}, _testNameFilter + "Copier");
+        for (auto const& el : fillerSuffixSelectC)
+            _allTestFillers.emplace_back(el);
+
         if (_allTestFillers.size() == 0)
         {
             // If still not find, check inside python files

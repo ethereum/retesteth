@@ -291,6 +291,7 @@ string const t8ntool_config = R"({
       "TR_TipGtFeeCap": "max priority fee per gas higher than max fee per gas",
       "TR_TooShort": "typed transaction too short",
       "TR_InitCodeLimitExceeded" : "max initcode size exceeded",
+      "TR_BlobDecodeError" : "expected input list for types.BlobTx",
       "1559BaseFeeTooLarge": "TransactionBaseFee convertion error: VALUE  >u256",
       "1559PriorityFeeGreaterThanBaseFee": "maxFeePerGas \u003c maxPriorityFeePerGas",
       "2930AccessListAddressTooLong": "rlp: input string too long for common.Address, decoding into (types.Transaction)(types.AccessListTx).AccessList[0].Address",
