@@ -14,7 +14,7 @@ SSZStream& SSZStream::operator<<(BitVector const& _value)
             m_out[offset + i / BITS_PER_BYTE] |= (1 << (i % BITS_PER_BYTE));
         }
     }
-    m_out[offset + numBits / BITS_PER_BYTE] |= (1 << (numBits % BITS_PER_BYTE));
+    //m_out[offset + numBits / BITS_PER_BYTE] |= (1 << (numBits % BITS_PER_BYTE));
     return *this;
 }
 

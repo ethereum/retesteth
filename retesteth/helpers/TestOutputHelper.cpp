@@ -157,7 +157,11 @@ void TestOutputHelper::initTest(size_t _maxTests)
     TestOutputTimer::resetT8NTime();
     if (_maxTests != 0 && !Options::get().singleTestFile.initialized())
     {
-        const string testOutOf = "(" + test::fto_string(++m_currentTestRun) + " of " + test::fto_string(totalTestsNumber) + ")";
+        string testOutOf = "(";
+        testOutOf += test::fto_string(++m_currentTestRun);
+        testOutOf += " of ";
+        testOutOf += test::fto_string(totalTestsNumber);
+        testOutOf += ")";
         ETH_DC_MESSAGE(DC::STATS, "Test Case \"" + TestInfo::caseName() + "\": " + testOutOf);
     }
     m_maxTests = _maxTests;
