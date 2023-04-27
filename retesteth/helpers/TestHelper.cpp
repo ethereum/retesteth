@@ -457,8 +457,8 @@ string executeCmd(string const& _command, int& _exitCode, ExecCMDWarning _warnin
     ETH_FAIL_REQUIRE_MESSAGE(!_command.empty(), "executeCmd: empty argument!");
 
     // TODO: do this check only once and remember that it exist? syscalls are expensive
-    if (!test::checkCmdExist(_command))
-        ETH_FAIL_MESSAGE("Command `" + _command + "` does not found!");
+    //if (!test::checkCmdExist(_command))
+    //    ETH_FAIL_MESSAGE("Command `" + _command + "` does not found!");
 
     FILE* fp;
     {
