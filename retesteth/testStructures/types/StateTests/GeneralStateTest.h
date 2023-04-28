@@ -18,6 +18,7 @@ struct StateTestInFilled : GCP_SPointerBase
     State const& Pre() const { return m_pre; }
     StateTestTransaction const& GeneralTr() const { return m_transaction; }
     std::map<FORK, StateTestPostResults> const& Post() const { return m_post; }
+    bool hasBigInt() const { return m_hasBigInt; }
 
     std::vector<std::string> const& unitTestExceptions() const { return m_exceptions; }
 
@@ -28,6 +29,7 @@ private:
     GCP_SPointer<StateTestEnv> m_env;
     spState m_pre;
     GCP_SPointer<StateTestTransaction> m_transaction;
+    bool m_hasBigInt = false;
     std::map<FORK, StateTestPostResults> m_post;
     std::vector<std::string> m_exceptions;
 };

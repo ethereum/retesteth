@@ -9,6 +9,7 @@ class StateTestRunner
 {
 public:
     StateTestRunner(StateTestInFilled const& _test);
+    bool checkBigintSkip();
     bool checkNetworkSkip(FORK const&);
     void prepareChainParams(FORK const&);
     std::vector<TransactionInGeneralSection>& txs() { return m_txs; }

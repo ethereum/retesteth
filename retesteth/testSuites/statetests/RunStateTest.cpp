@@ -13,6 +13,7 @@ void RunTest(StateTestInFilled const& _test)
     CHECKEXIT
     StateTestRunner runner(_test);
 
+    if (!runner.checkBigintSkip())
     for (auto const& [network, postResults] : _test.Post())
     {
         CHECKEXIT

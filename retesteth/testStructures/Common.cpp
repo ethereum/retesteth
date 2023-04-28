@@ -415,4 +415,11 @@ void convertDecTransactionToHex(spDataObject& _data)
     data[c_to].performModifier(mod_valueToLowerCase);
 }
 
+bool src_findBigInt(DataObject const& el)
+{
+    if (el.type() == DataType::String && el.asString().find(C_BIGINT_PREFIX) != string::npos)
+        return true;
+    return false;
+}
+
 }  // namespace teststruct

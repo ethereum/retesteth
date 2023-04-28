@@ -19,6 +19,7 @@ string const evmone_config = R"({
     "calculateBasefee" : false,
     "checkLogsHash" : true,
     "support1559" : true,
+    "supportBigint" : false,
     "transactionsAsJson" : true,
     "tmpDir" : "/dev/shm",
     "defaultChainID" : 1,

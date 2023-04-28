@@ -42,6 +42,7 @@ struct ClientConfigFile : GCP_SPointerBase
 
     // ETC classic block format autoconvertion
     bool support1559() const { return m_support1559; }
+    bool supportBigint() const { return m_supportBigint; }
     bool transactionsAsJson() const { return m_transactionsAsJson; }
 
     std::map<std::string, std::string> const& exceptions() const { return m_exceptions; }
@@ -70,6 +71,7 @@ private:
     bool m_checkBasefee;                     ///< Enable basefee verifivation
     bool m_calculateBasefee;                 ///< Retesteth calculate basefee value
     bool m_support1559;                      ///< Support EIP1559 headers
+    bool m_supportBigint;                    ///< Support malicious oversize data encodings for tests
     bool m_transactionsAsJson;               ///< Make T8N txs file as json not rlp
     size_t m_initializeTime;                 ///< Time to start the instance
     std::vector<FORK> m_forks;               ///< Allowed forks as network name

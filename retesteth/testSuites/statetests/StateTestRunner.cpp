@@ -47,6 +47,19 @@ std::vector<TransactionInGeneralSection> StateTestRunner::buildTransactionsWithL
     return txs;
 }
 
+bool StateTestRunner::checkBigintSkip()
+{
+    bool bigIntSupport = Options::getCurrentConfig().cfgFile().supportBigint();
+    if (!bigIntSupport && m_test.hasBigInt())
+    {
+        ETH_WARNING("Skipping test that has bigint: " + m_test.testName());
+        for (TransactionInGeneralSection& tr : m_txs)
+            tr.markSkipped();
+        return true;
+    }
+    return false;
+}
+
 bool StateTestRunner::checkNetworkSkip(FORK const& _network)
 {
     if (networkSkip(_network, m_test.testName()))

@@ -74,6 +74,7 @@ string const t8ntool_config = R"({
     "calculateBasefee" : false,
     "checkLogsHash" : true,
     "support1559" : true,
+    "supportBigint" : true,
     "transactionsAsJson" : false,
     "tmpDir" : "/dev/shm",
     "defaultChainID" : 1,

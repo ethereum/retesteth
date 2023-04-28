@@ -23,6 +23,7 @@ void requireJsonFileStructure(DataObject const& _data)
             {"checkDifficulty", {{DataType::Bool}, jsonField::Optional}},
             {"calculateDifficulty", {{DataType::Bool}, jsonField::Optional}},
             {"support1559", {{DataType::Bool}, jsonField::Optional}},
+            {"supportBigint", {{DataType::Bool}, jsonField::Optional}},
             {"checkBasefee", {{DataType::Bool}, jsonField::Optional}},
             {"calculateBasefee", {{DataType::Bool}, jsonField::Optional}},
             {"defaultChainID", {{DataType::Integer}, jsonField::Optional}},
@@ -158,6 +159,10 @@ void ClientConfigFile::initWithData(DataObject const& _data)
     m_support1559 = true;
     if (_data.count("support1559"))
         m_support1559 = _data.atKey("support1559").asBool();
+
+    m_supportBigint = true;
+    if (_data.count("supportBigint"))
+        m_supportBigint = _data.atKey("supportBigint").asBool();
 
     m_transactionsAsJson = false;
     if (_data.count("transactionsAsJson"))
