@@ -2,6 +2,7 @@
 #if defined(UNITTESTS) || defined(__DEBUG__)
 
 #include <vector>
+#include <list>
 #include <stdint.h>
 #include <boost/multiprecision/cpp_int.hpp>
 
@@ -12,6 +13,7 @@ using byte = uint8_t;
 using bytes = std::vector<byte>;
 
 using BitVector = std::vector<bit>;
+using BitList = std::list<bit>;
 using u128 =  boost::multiprecision::number<boost::multiprecision::cpp_int_backend<128, 128, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void>>;
 using u256 =  boost::multiprecision::number<boost::multiprecision::cpp_int_backend<256, 256, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void>>;
 
@@ -29,6 +31,7 @@ public:
     SSZStream& operator<<(ssz::u128 const& _value) { addIntegral(_value, 16); return *this; }
     SSZStream& operator<<(ssz::u256 const& _value) { addIntegral(_value, 32); return *this; }
     SSZStream& operator<<(BitVector const& _value);
+    SSZStream& operator<<(BitList const& _value);
 
     bytes const& data() const { return m_out; }
 

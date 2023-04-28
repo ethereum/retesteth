@@ -9,12 +9,29 @@ SSZStream& SSZStream::operator<<(BitVector const& _value)
     const size_t offset = m_out.size();
     m_out.resize(m_out.size() + numBytes);
 
-    for (size_t i = 0; i < numBits; i++) {
-        if (_value[i]) {
+    for (size_t i = 0; i < numBits; i++)
+    {
+        if (_value[i])
             m_out[offset + i / BITS_PER_BYTE] |= (1 << (i % BITS_PER_BYTE));
-        }
     }
-    //m_out[offset + numBits / BITS_PER_BYTE] |= (1 << (numBits % BITS_PER_BYTE));
+    return *this;
+}
+
+SSZStream& SSZStream::operator<<(BitList const& _value)
+{
+    const size_t numBits = _value.size();
+    const size_t numBytes = (numBits + 7) / BITS_PER_BYTE;
+    const size_t offset = m_out.size();
+    m_out.resize(m_out.size() + numBytes);
+
+    size_t i = 0;
+    for (auto const& el : _value)
+    {
+        if (el)
+            m_out[offset + i / BITS_PER_BYTE] |= (1 << (i % BITS_PER_BYTE));
+        i++;
+    }
+    m_out[offset + numBits / BITS_PER_BYTE] |= (1 << (numBits % BITS_PER_BYTE));
     return *this;
 }
 

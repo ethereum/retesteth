@@ -13,86 +13,94 @@ using namespace ssz;
 using namespace dataobject;
 namespace fs = boost::filesystem;
 
-template <class type>
-void streamUintString(SSZStream& _s, DataObject const& _test, type _max, bool& _error)
+const dev::u256 UINT256_MAX("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+
+template <class Type, class DataType = string>
+void streamUintString(SSZStream& _s, DataType const& _data, string const& _type, Type _max, bool& _error)
 {
-    auto const& testType = _test.atKey("inType").asString();
-    if (std::is_same_v<type, uint8_t> && testType != "uint8")
+    auto const& testType = _type;
+    if (std::is_same_v<Type, uint8_t> && testType != "uint8")
         return;
-    if (std::is_same_v<type, uint16_t> && testType != "uint16")
+    if (std::is_same_v<Type, uint16_t> && testType != "uint16")
         return;
-    if (std::is_same_v<type, uint32_t> && testType != "uint32")
+    if (std::is_same_v<Type, uint32_t> && testType != "uint32")
         return;
-    if (std::is_same_v<type, uint64_t> && testType != "uint64")
+    if (std::is_same_v<Type, uint64_t> && testType != "uint64")
         return;
-    if (std::is_same_v<type, dev::u128> && testType != "uint128")
+    if (std::is_same_v<Type, dev::u128> && testType != "uint128")
         return;
-    if (std::is_same_v<type, dev::u256> && testType != "uint256")
+    if (std::is_same_v<Type, dev::u256> && testType != "uint256")
         return;
-    auto const val = dev::bigint(_test.atKey("in").asString());
+    auto const val = dev::bigint(_data);
     if (val > _max)
         _error = true;
-    _s << (type)val;
+    _s << (Type)val;
 }
 
 void tryBasicUints(SSZStream& _s, DataObject const& _test, bool& _error)
 {
-    streamUintString<uint8_t>(_s, _test, UINT8_MAX, _error);
-    streamUintString<uint16_t>(_s, _test, UINT16_MAX, _error);
-    streamUintString<uint32_t>(_s, _test, UINT32_MAX, _error);
-    streamUintString<uint64_t>(_s, _test, UINT64_MAX, _error);
-    streamUintString<dev::u128>(_s, _test, UINT128_MAX, _error);
-    streamUintString<dev::u256>(_s, _test, dev::u256("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"), _error);
+    if (_test.atKey("in").type() != DataType::String)
+        return;
+    auto const& type = _test.atKey("inType").asString();
+    auto const& data = _test.atKey("in").asString();
+    streamUintString<uint8_t>(_s, data, type, UINT8_MAX, _error);
+    streamUintString<uint16_t>(_s, data, type, UINT16_MAX, _error);
+    streamUintString<uint32_t>(_s, data, type, UINT32_MAX, _error);
+    streamUintString<uint64_t>(_s, data, type, UINT64_MAX, _error);
+    streamUintString<dev::u128>(_s, data, type, UINT128_MAX, _error);
+    streamUintString<dev::u256>(_s, data, type, UINT256_MAX, _error);
+}
+
+void tryBasicVectors(SSZStream& _s, DataObject const& _test, bool& _error)
+{
+    auto const& inputType = _test.atKey("inType").asString();
+    const size_t pos = inputType.find("vector");
+    if (pos + 7 > inputType.size())
+        return;
+    if (pos != string::npos)
+    {
+        const string type = inputType.substr(pos + 7);
+        for (auto const& el : _test.atKey("in").getSubObjects())
+        {
+            if (type == "bool")
+                _s << el->asBool();
+            else if (type == "uint8")
+                streamUintString<uint8_t, int>(_s, el->asInt(), type, UINT8_MAX, _error);
+            else if (type == "uint16")
+                streamUintString<uint16_t, int>(_s, el->asInt(), type, UINT16_MAX, _error);
+            else if (type == "uint32")
+                streamUintString<uint32_t>(_s, el->asString(), type, UINT32_MAX, _error);
+            else if (type == "uint64")
+                streamUintString<uint64_t>(_s, el->asString(), type, UINT64_MAX, _error);
+            else if (type == "uint128")
+                streamUintString<dev::u128>(_s, el->asString(), type, UINT128_MAX, _error);
+            else if (type == "uint256")
+                streamUintString<dev::u256>(_s, el->asString(), type, UINT256_MAX, _error);
+        }
+    }
 }
 
 void readTestEncoding(SSZStream& _s, DataObject const& _test, bool& _error)
 {
     tryBasicUints(_s, _test, _error);
+    tryBasicVectors(_s, _test, _error);
 
     auto const& inputType = _test.atKey("inType").asString();
     if (inputType == "bool")
         _s << _test.atKey("in").asBool();
-    if (inputType == "vector_bool")
-    {
-        for (auto const& el : _test.atKey("in").getSubObjects())
-            _s << el->asBool();
-    }
-    if (inputType == "vector_uint8")
-    {
-        for (auto const& el : _test.atKey("in").getSubObjects())
-            _s << (uint8_t)el->asInt();
-    }
-    if (inputType == "vector_uint16")
-    {
-        for (auto const& el : _test.atKey("in").getSubObjects())
-            _s << (uint16_t)el->asInt();
-    }
-    if (inputType == "vector_uint32")
-    {
-        for (auto const& el : _test.atKey("in").getSubObjects())
-            _s << (uint32_t)el->asInt();
-    }
-    if (inputType == "vector_uint64")
-    {
-        for (auto const& el : _test.atKey("in").getSubObjects())
-            _s << (uint64_t)dev::bigint(el->asString());
-    }
-    if (inputType == "vector_uint128")
-    {
-        for (auto const& el : _test.atKey("in").getSubObjects())
-            _s << (ssz::u128)dev::bigint(el->asString());
-    }
-    if (inputType == "vector_uint256")
-    {
-        for (auto const& el : _test.atKey("in").getSubObjects())
-            _s << (ssz::u256)dev::bigint(el->asString());
-    }
     if (inputType == "bitvector")
     {
         BitVector vec;
         for (auto const& el : _test.atKey("in").getSubObjects())
             vec.emplace_back(el->asBool());
         _s << vec;
+    }
+    if (inputType == "bitlist")
+    {
+        BitList lst;
+        for (auto const& el : _test.atKey("in").getSubObjects())
+            lst.emplace_back(el->asBool());
+        _s << lst;
     }
 }
 
@@ -140,6 +148,13 @@ BOOST_AUTO_TEST_CASE(ssz_bitvector)
 {
     // https://www.ssz.dev/visualizer
     for (auto const& test : test::getFiles(getTestPath()/ "SSZTests/bitvector", {".json"}))
+        runSerializationCheck(test);
+}
+
+BOOST_AUTO_TEST_CASE(ssz_bitlist)
+{
+    // https://www.ssz.dev/visualizer
+    for (auto const& test : test::getFiles(getTestPath()/ "SSZTests/bitlist", {".json"}))
         runSerializationCheck(test);
 }
 BOOST_AUTO_TEST_SUITE_END()
