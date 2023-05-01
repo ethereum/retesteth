@@ -19,6 +19,8 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
         return;
 
     BlockchainTestRunner runner(_test, _opt);
+    if (runner.checkBigIntSkip())
+        return;
     runner.setChainParams();
     runner.performOptionCommandsOnGenesis();
 

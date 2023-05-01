@@ -33,6 +33,8 @@ struct BlockchainTestFillerBlock : GCP_SPointerBase
     bool hasNumber() const { return !m_blockNumber.isEmpty(); }
     VALUE const& number() const { return m_blockNumber; }
 
+    bool hasBigInt() const { return m_hasBigInt; }
+
     // BlockHeader overwrite section to replace some fields in the header for testing purposes
     bool hasBlockHeaderOverwrite(FORK const& _fork) const { return m_overwriteHeaderByForkMap.count(_fork); }
     BlockHeaderOverwrite const& getHeaderOverwrite(FORK const& _fork) const
@@ -81,6 +83,7 @@ private:
     spBYTES m_rlp;
     spVALUE m_blockNumber;
     spFORK m_network;
+    bool m_hasBigInt = false;
     bool m_doNotImportOnClient = false;
 
     std::vector<BlockchainTestFillerUncle> m_uncles;

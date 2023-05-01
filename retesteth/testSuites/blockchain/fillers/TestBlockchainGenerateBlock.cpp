@@ -54,6 +54,7 @@ void TestBlockchain::generateBlock(
         if (_generateUncles)
             newBlock.setNextBlockForked(mineNextBlockAndRevert());
 
+        newBlock.setHasBigInt(_block.hasBigInt());
         m_blocks.emplace_back(newBlock);
     }
 }
@@ -92,6 +93,7 @@ void TestBlockchain::_generateBlock_RegisterInvalidBlock(BlockchainTestFillerBlo
     TestBlock newBlock(_rawRLP, _block.chainName(), newBlockNet, m_blocks.size());
     newBlock.registerTestExceptios(_block.getExpectException(m_network));
     newBlock.setDoNotExport(_block.isDoNotImportOnClient());
+    newBlock.setHasBigInt(_block.hasBigInt());
     m_blocks.emplace_back(newBlock);
 }
 

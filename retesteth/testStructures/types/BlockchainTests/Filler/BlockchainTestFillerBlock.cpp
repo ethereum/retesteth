@@ -23,6 +23,7 @@ BlockchainTestFillerBlock::BlockchainTestFillerBlock(spDataObject& _data, NonceM
                 {"expectException", {{DataType::Object}, jsonField::Optional}},
                 {"blockHeader", {{DataType::Object}, jsonField::Optional}}});
 
+        m_hasBigInt = _data->performSearch(src_findBigInt);
         if (_data->count("rlp"))
         {
             m_rlp = spBYTES(new BYTES(_data->atKey("rlp")));

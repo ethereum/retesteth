@@ -410,19 +410,16 @@ void DataObject::performModifier(void (*f)(DataObject&), ModifierOption _opt, st
 
 bool DataObject::performSearch(bool (*f)(DataObject const&)) const
 {
-    bool res = true;
     if (isArray())
     {
         auto const& subObjects = getSubObjects();
         for (auto const& el : subObjects)
         {
-            res = res && !el->performSearch(f);
-            if (false)
-                break;
+            if (el->performSearch(f))
+                return true;
         }
     }
-    res = res && !f(*this);
-    return !res;
+    return f(*this);
 }
 
 std::string DataObject::asJsonNoFirstKey() const

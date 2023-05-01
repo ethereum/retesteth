@@ -65,10 +65,15 @@ BlockchainTestInFilled::BlockchainTestInFilled(spDataObject& _data)
         else
             m_postHash = spFH32(new FH32(_data->atKey("postStateHash")));
 
+        m_hasBigInt = false;
         string const c_blocks = "blocks";
         m_blocks.reserve(_data->atKey(c_blocks).getSubObjects().size());
         for (auto& el : _data.getContent().atKeyUnsafe(c_blocks).getSubObjectsUnsafe())
+        {
+            if (el->count("hasBigInt"))
+                m_hasBigInt = true;
             m_blocks.emplace_back(BlockchainTestBlock(el));
+        }
 
         m_lastBlockHash = spFH32(new FH32(_data->atKey("lastblockhash")));
 

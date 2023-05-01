@@ -13,6 +13,7 @@ string const nimbus_config = R"({
     "socketAddress" : "start.sh",
     "checkLogsHash" : true,
     "checkBasefee" : true,
+    "supportBigint" : false,
     "defaultChainID" : 1,
     "customCompilers" : {
         ":yul" : "yul.sh",

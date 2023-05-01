@@ -27,6 +27,17 @@ bool BlockchainTestRunner::validateFork(string const& _testName, FORK const& _ne
     return true;
 }
 
+bool BlockchainTestRunner::checkBigIntSkip() const
+{
+    bool bigIntSupport = Options::getCurrentConfig().cfgFile().supportBigint();
+    if (!bigIntSupport && m_test.hasBigInt())
+    {
+        ETH_WARNING("Skipping test that has bigint: " + m_test.testName());
+        return true;
+    }
+    return false;
+}
+
 bool BlockchainTestRunner::abortBlock() const
 {
     auto const& opt = Options::get();

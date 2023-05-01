@@ -46,7 +46,9 @@ public:
 
     // Block might be flagged not to be exported to the final test
     void setDoNotExport(bool _flag) { m_doNotExport = _flag; }
+    void setHasBigInt(bool _flag) { m_hasBigInt = _flag; }
     bool isDoNotExport() const { return m_doNotExport; }
+    bool hasBigInt() const { return m_hasBigInt; }
 
     spDataObject asDataObject() const;
 
@@ -63,6 +65,7 @@ private:
     spVALUE m_blockNumber;
     spBYTES m_rawRLP;
     bool m_doNotExport;
+    bool m_hasBigInt = false;
 
     // A block mined in paralel representing an uncle (it has the same blocknumber)
     spBlockHeader m_nextBlockForked;  // Hypothetical next block for uncles
