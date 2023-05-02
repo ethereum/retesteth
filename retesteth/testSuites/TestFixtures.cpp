@@ -270,6 +270,7 @@ REGISTER_TEMPLATE(BlockchainTestInvalidSuite, RequireOptionFill)
 REGISTER_TEMPLATE(BlockchainTestInvalidSuite, DefaultFlags)
 REGISTER_TEMPLATE(BlockchainTestPyspecSuite, DefaultFlags)
 REGISTER_TEMPLATE(BlockchainTestEIPSuite, DefaultFlags)
+REGISTER_TEMPLATE(BlockchainTestEIPPyspecSuite, DefaultFlags)
 REGISTER_TEMPLATE(BlockchainTestValidSuite, DefaultFlags)
 
 // State link

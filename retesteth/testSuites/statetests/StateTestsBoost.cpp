@@ -182,9 +182,16 @@ BOOST_AUTO_TEST_SUITE_END()
 BCEIPSUITE_FOLDER_OVERRIDE(BCEIPStateTestsSuite, "/BlockchainTests/StateTests", "/StateTests")
 BCEIPSUITE_FOLDER_OVERRIDE(BCEIPStateTestsEOFSuite, "/BlockchainTests/StateTests/stEOF", "/StateTests/stEOF")
 BCEIPSUITE_FOLDER_OVERRIDE(BlockchainTestEIPSuite, "/BlockchainTests", "/BlockchainTests")
+BCEIPSUITE_FOLDER_OVERRIDE(BlockchainTestEIPPyspecSuite, "/Pyspecs", "/Pyspecs")
 
 //EIP TESTS
 BOOST_AUTO_TEST_SUITE(EIPTests)
+
+using EIPPyspecFixture = TestFixture<BlockchainTestEIPPyspecSuite, DefaultFlags>;
+ETH_REGISTER_DYNAMIC_TEST_SEARCH(EIPPyspecFixture, "EIPTests/Pyspecs")
+BOOST_FIXTURE_TEST_SUITE(Pyspecs, EIPPyspecFixture)
+BOOST_AUTO_TEST_SUITE_END()
+
 
 using EIPTestsFixture = TestFixture<EIPStateTestSuite, DefaultFlags>;
 ETH_REGISTER_DYNAMIC_TEST_SEARCH(EIPTestsFixture, "EIPTests/StateTests")
@@ -200,18 +207,16 @@ BOOST_AUTO_TEST_SUITE_END()
 using BCEIPSuiteFixture = TestFixture<BlockchainTestEIPSuite, DefaultFlags>;
 ETH_REGISTER_DYNAMIC_TEST_SEARCH(BCEIPSuiteFixture, "EIPTests/BlockchainTests")
 BOOST_FIXTURE_TEST_SUITE(BlockchainTests, BCEIPSuiteFixture)
-
     using BCEIPStateSuiteFixture = TestFixture<BCEIPStateTestsSuite, RequireOptionAllNotRefillable>;
     ETH_REGISTER_DYNAMIC_TEST_SEARCH(BCEIPStateSuiteFixture, "EIPTests/BlockchainTests/StateTests")
     BOOST_FIXTURE_TEST_SUITE(StateTests, BCEIPStateSuiteFixture)
     BOOST_AUTO_TEST_CASE(stEIP3855) {}
     BOOST_AUTO_TEST_CASE(stEIP3860) {}
-
-    using BCEIPStateTestsEOFFixture = TestFixture<BCEIPStateTestsEOFSuite, RequireOptionAll>;
-    ETH_REGISTER_DYNAMIC_TEST_SEARCH(BCEIPStateTestsEOFFixture, "EIPTests/BlockchainTests/StateTests/stEOF")
-    BOOST_FIXTURE_TEST_SUITE(stEOF, BCEIPStateTestsEOFFixture)
-    BOOST_AUTO_TEST_CASE(stEIP3540) {}
-    BOOST_AUTO_TEST_SUITE_END()
+        using BCEIPStateTestsEOFFixture = TestFixture<BCEIPStateTestsEOFSuite, RequireOptionAll>;
+        ETH_REGISTER_DYNAMIC_TEST_SEARCH(BCEIPStateTestsEOFFixture, "EIPTests/BlockchainTests/StateTests/stEOF")
+        BOOST_FIXTURE_TEST_SUITE(stEOF, BCEIPStateTestsEOFFixture)
+        BOOST_AUTO_TEST_CASE(stEIP3540) {}
+        BOOST_AUTO_TEST_SUITE_END()
     BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
 
