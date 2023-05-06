@@ -64,6 +64,7 @@ ssz::SSZ::SSZ(bytes const& _data, DataObject const& _scheme)
     switch (t)
     {
     case Bitlist:
+        m_out.copyFrom(sDataObject(DataType::Array));
         for (auto const& el : decodeBitList(_data, size))
             m_out.addArrayObject(sDataObject(DataType::Bool, el));
         break;

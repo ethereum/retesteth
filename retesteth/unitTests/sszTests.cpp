@@ -147,8 +147,12 @@ void runDeserialization(DataObject const& _test)
     catch (std::exception const& _ex)
     {
         auto const& in = _test.atKey("in");
-        if (in.type() == DataType::String && in.asString() != "error")
-            BOOST_ERROR(string() + "Deserialization cought unexpected exception: " + _ex.what());
+
+        const bool errorExpected = in.type() == DataType::String && in.asString() == "error";
+        if (!errorExpected)
+            BOOST_ERROR(string() + "\nDeserialization cought unexpected exception: " + _ex.what());
+        else
+            std::cout << _ex.what() << std::endl;
     }
 }
 

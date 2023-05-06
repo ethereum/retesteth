@@ -31,9 +31,8 @@ namespace encoding
 BitList decodeBitList(bytes const& _input, size_t _size)
 {
     const size_t numBytes = _input.size();
-    const size_t numBits = numBytes * BITS_PER_BYTE;  // Assuming 8 bits per byte
+    const size_t numBits = numBytes * BITS_PER_BYTE;
 
-    // Create a new BitList object
     BitList result;
 
     // Iterate through the input bytes and populate the BitList
@@ -44,20 +43,20 @@ BitList decodeBitList(bytes const& _input, size_t _size)
 
         // Check if the bit is set in the input bytes
         const bool bitSet = _input[byteIndex] & (1 << bitPosition);
-
         if (result.size() >= _size)
         {
+            // Check last bit
             if (bitSet != true)
-                throw std::invalid_argument("decodeBitList expected a finalizing list byte `01` at the end!");
+                throw std::invalid_argument("decodeBitList expected a finalizing list bit `1` at the end!");
+            // check rest bits are 0 and no more bytes follow
             return result;
         }
 
-        // Add the bit to the BitList
         if (result.size() < _size)
             result.push_back(bitSet);
     }
 
-    throw std::invalid_argument("decodeBitList expected a finalizing list byte at the end!");
+    throw std::invalid_argument("decodeBitList expected a finalizing list bit `1` at the end, but the input finished!");
     return result;
 }
 

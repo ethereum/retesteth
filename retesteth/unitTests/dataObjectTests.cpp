@@ -1256,5 +1256,23 @@ BOOST_AUTO_TEST_CASE(dataobject_mod_valueToFH32)
     BOOST_CHECK(obj->asString() == "0x0000000000000000000000000000000000000000000000001000010000000000");
 }
 
+BOOST_AUTO_TEST_CASE(dataobject_copyFrom_emptyArray)
+{
+    {
+    DataObject orig(DataType::Array);
+    BOOST_CHECK(orig.type() == DataType::Array);
+    DataObject copy;
+    copy.copyFrom(orig);
+    BOOST_CHECK(copy.type() == DataType::Array);
+    }
+
+    {
+    DataObject orig(DataType::Object);
+    BOOST_CHECK(orig.type() == DataType::Object);
+    DataObject copy;
+    copy.copyFrom(orig);
+    BOOST_CHECK(copy.type() == DataType::Object);
+    }
+}
 
 BOOST_AUTO_TEST_SUITE_END()

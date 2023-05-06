@@ -716,6 +716,7 @@ void DataObject::copyFrom(DataObject const& _other)
     case Integer: m_value = _other.asInt(); break;
     case Bool: m_value = _other.asBool(); break;
     case Array:
+        _initArray(DataType::Array);
         for (auto const& el : _other.getSubObjects())
         {
             spDataObject copy = el->copy();
@@ -723,6 +724,7 @@ void DataObject::copyFrom(DataObject const& _other)
         }
         break;
     case Object:
+        _initArray(DataType::Object);
         for (auto const& el : _other.getSubObjects())
         {
             spDataObject copy = el->copy();
