@@ -59,6 +59,12 @@ const string c_sender = "sender";
 const string c_v = "v";
 const string c_r = "r";
 const string c_s = "s";
+const string c_maxFeePerGas = "maxFeePerGas";
+const string c_maxPriorityFeePerGas = "maxPriorityFeePerGas";
+const string c_maxFeePerDataGas = "maxFeePerDataGas";
+const string c_blobVersionedHashes = "blobVersionedHashes";
+const string c_accessLists = "accessLists";
+const string c_accessList = "accessList";
 
 const string c_code = "code";
 const string c_balance = "balance";

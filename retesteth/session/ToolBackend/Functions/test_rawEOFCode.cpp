@@ -28,7 +28,7 @@ string ToolChainManager::test_rawEOFCode(
     if (exitCode != 0)
     {
         string const outErrorContent = dev::contentsString(errorLog.string());
-        ETH_DC_MESSAGE(DC::RPC, "Err:\n" + outErrorContent);
+        ETH_DC_MESSAGE(DC::RPC, "Tool Error:\n" + outErrorContent);
         return outErrorContent;
         //throw test::UpwardsException(errorLog.empty() ? (response.empty() ? "Tool failed: " + cmd : response) : outErrorContent);
     }

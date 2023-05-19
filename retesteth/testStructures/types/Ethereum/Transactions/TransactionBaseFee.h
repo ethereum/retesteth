@@ -2,10 +2,9 @@
 #include "Transaction.h"
 #include <retesteth/testStructures/types/StateTests/Base/AccessList.h>
 
-namespace test
+namespace test::teststruct
 {
-namespace teststruct
-{
+
 struct TransactionBaseFee : Transaction
 {
     TransactionBaseFee(DataObject const& _data) : Transaction() { fromDataObject(_data); }
@@ -15,7 +14,8 @@ struct TransactionBaseFee : Transaction
     spDataObject const asDataObject(ExportOrder _order = ExportOrder::Default) const override;
     TransactionType type() const override { return TransactionType::BASEFEE; }
 
-private:
+protected:
+    TransactionBaseFee() : Transaction() {}
     virtual void fromRLP(dev::RLP const&) override;
     virtual dev::h256 buildVRSHash() const override;
     virtual void streamHeader(dev::RLPStream& _stream) const override;
@@ -33,4 +33,3 @@ private:
 typedef GCP_SPointer<TransactionBaseFee> spTransactionBaseFee;
 
 }  // namespace teststruct
-}  // namespace test

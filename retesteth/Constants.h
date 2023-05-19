@@ -54,6 +54,12 @@ extern const std::string c_sender;
 extern const std::string c_v;
 extern const std::string c_r;
 extern const std::string c_s;
+extern const std::string c_maxFeePerGas;
+extern const std::string c_maxPriorityFeePerGas;
+extern const std::string c_maxFeePerDataGas;
+extern const std::string c_blobVersionedHashes;
+extern const std::string c_accessLists;
+extern const std::string c_accessList;
 
 // State
 extern const std::string c_code;

@@ -18,6 +18,7 @@ std::string Transaction::TransactionTypeToString(TransactionType _bl)
         case TransactionType::LEGACY: return "LegacyTransaction";
         case TransactionType::ACCESSLIST: return "AccessListTransaction";
         case TransactionType::BASEFEE: return "BasefeeTransaction";
+        case TransactionType::BLOB: return "BlobTransaction";
         default: return "UnparsedTransactionType";
     };
     return "UnparsedTransactionType";
@@ -36,7 +37,7 @@ void Transaction::setChainID(VALUE const& _chainID) {
 
 Transaction::Transaction()
 {
-    m_chainID = spVALUE(new VALUE(Options::get().getCurrentConfig().cfgFile().defaultChainID()));
+    m_chainID = sVALUE(Options::get().getCurrentConfig().cfgFile().defaultChainID());
 }
 
 void Transaction::fromDataObject(DataObject const& _data)
@@ -79,9 +80,9 @@ void Transaction::buildVRS()
     ETH_FAIL_REQUIRE_MESSAGE(
         sigStruct.isValid(), TestOutputHelper::get().testName() + " Could not construct transaction signature!");
 
-    m_v = spVALUE(new VALUE(dev::toCompactHexPrefixed(dev::u256(sigStruct.v), 1)));
-    m_r = spVALUE(new VALUE(dev::toCompactHexPrefixed(dev::u256(sigStruct.r))));
-    m_s = spVALUE(new VALUE(dev::toCompactHexPrefixed(dev::u256(sigStruct.s))));
+    m_v = sVALUE(dev::toCompactHexPrefixed(dev::u256(sigStruct.v), 1));
+    m_r = sVALUE(dev::toCompactHexPrefixed(dev::u256(sigStruct.r)));
+    m_s = sVALUE(dev::toCompactHexPrefixed(dev::u256(sigStruct.s)));
     rebuildRLP();
 }
 

@@ -44,6 +44,10 @@ protected:
     // type 0x02 transaction
     spVALUE m_maxFeePerGas;
     spVALUE m_maxPriorityFeePerGas;
+
+    // type 0x03 transaction
+    spVALUE m_maxFeePerDataGas;
+    std::vector<FH32> m_blobVersionedHashes;
 };
 
 }  // namespace teststruct

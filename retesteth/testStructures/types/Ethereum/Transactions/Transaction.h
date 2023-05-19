@@ -10,7 +10,8 @@ enum class TransactionType
 {
     LEGACY,
     ACCESSLIST,
-    BASEFEE
+    BASEFEE,
+    BLOB
 };
 
 struct Transaction : GCP_SPointerBase
