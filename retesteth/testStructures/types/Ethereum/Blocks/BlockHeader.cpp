@@ -17,6 +17,7 @@ std::string BlockHeader::BlockTypeToString(BlockType _bl)
         case BlockType::BlockHeaderLegacy: return "BlockHeaderLegacy";
         case BlockType::BlockHeaderMerge: return "BlockHeaderMerge";
         case BlockType::BlockHeaderShanghai: return "BlockHeaderShanghai";
+        case BlockType::BlockHeader4844: return "BlockHeader4844";
         default: return "UnparsedBlockType";
     };
     return "UnparsedBlockType";

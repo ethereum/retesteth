@@ -52,7 +52,8 @@ ToolChain::ToolChain(
         if (compareFork(m_fork, CMP::ge, FORK("London"))
             && genesisHeaderType != BlockType::BlockHeader1559
             && genesisHeaderType != BlockType::BlockHeaderMerge
-            && genesisHeaderType != BlockType::BlockHeaderShanghai)
+            && genesisHeaderType != BlockType::BlockHeaderShanghai
+            && genesisHeaderType != BlockType::BlockHeader4844)
             throw test::UpwardsException("Constructing legacy genesis on network which is higher London!");
     }
 
@@ -129,6 +130,7 @@ spDataObject const ToolChain::mineBlock(EthereumBlockState const& _pendingBlock,
     setAndCheckDifficulty(res.currentDifficulty(), pendingFixedHeader);
     calculateAndCheckSetBaseFee(res.currentBasefee(), pendingFixedHeader, lastBlock().header());
     setWithdrawalsRoot(res.withdrawalsRoot(), pendingFixedHeader);
+    setExcessDataGas(res.currentExcessDataGas(), pendingFixedHeader);
 
     spDataObject miningResult;
     miningResult = coorectTransactionsByToolResponse(res, pendingFixed, _pendingBlock, _req);
@@ -223,6 +225,15 @@ void ToolChain::setWithdrawalsRoot(FH32 const& _withdrawalsRoot, spBlockHeader& 
     {
         BlockHeaderShanghai& pendingFixedShanghaiHeader = BlockHeaderShanghai::castFrom(_pendingHeader.getContent());
         pendingFixedShanghaiHeader.setWithdrawalsRoot(_withdrawalsRoot);
+    }
+}
+
+void ToolChain::setExcessDataGas(VALUE const& _excessDataGas, spBlockHeader& _pendingHeader)
+{
+    if (_pendingHeader->type() == BlockType::BlockHeader4844)
+    {
+        BlockHeader4844& pendingFixed4844Header = BlockHeader4844::castFrom(_pendingHeader.getContent());
+        pendingFixed4844Header.setExcessDataGas(_excessDataGas);
     }
 }
 

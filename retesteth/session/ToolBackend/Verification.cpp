@@ -126,6 +126,18 @@ void verifyShanghaiBlock(spBlockHeader const& _header, ToolChain const& _chain)
     verifyCommonMergeRules(_header, "Shanghai");
 
     /// Verify shanghai rules
+    // Withdrawals root is just a hash. no changes
+}
+
+void verify4844Block(spBlockHeader const& _header, ToolChain const& _chain)
+{
+    (void)_chain;
+    check_blockType(_header->type(), BlockType::BlockHeader4844, "verify4844Block");
+
+    //BlockHeaderShanghai const& header = BlockHeaderShanghai::castFrom(_header);
+    verifyCommonMergeRules(_header, "4844");
+
+    /// Verify 4844 rules
 }
 
 void verifyMergeBlock(spBlockHeader const& _header, ToolChain const& _chain)
@@ -208,6 +220,23 @@ void verifyShanghaiParent(spBlockHeader const& _header, spBlockHeader const& _pa
     }
 }
 
+void verify4844Parent(spBlockHeader const& _header, spBlockHeader const& _parent, ToolChain const& _chain)
+{
+    check_blockType(_header->type(), BlockType::BlockHeader4844, "verify4844Parent");
+    if (_parent->type() == BlockType::BlockHeader4844)
+        verify4844Block(_parent, _chain);
+    else
+    {
+        if (_header->timestamp() >= 15000 && _chain.fork() == "ShanghaiToCancunAtTime15k")
+        {
+            if (_parent->type() != BlockType::BlockHeaderShanghai)
+                throw test::UpwardsException("Trying to import Cancun block on top of Shanghai block before transition!!");
+        }
+        else
+            throw test::UpwardsException("Trying to import Cancun block on top of Shanghai block before transition!!");
+    }
+}
+
 void verifyMergeParent(spBlockHeader const& _header, spBlockHeader const& _parent, ToolChain const& _chain, VALUE const& _parentTD)
 {
     /// Verify the rules
@@ -250,8 +279,8 @@ void verifyCommonBlock(spBlockHeader const& _header, ToolChain const& _chain)
         throw test::UpwardsException("BlockHeader require Dao ExtraData! (0x64616f2d686172642d666f726b)");
 
     // Check gasLimit
-    if (header.gasLimit() > dev::bigint("0x7fffffffffffffff"))
-        throw test::UpwardsException("Header gasLimit > 0x7fffffffffffffff");
+    //if (header.gasLimit() > dev::bigint("0x7fffffffffffffff"))
+    //    throw test::UpwardsException("Header gasLimit > 0x7fffffffffffffff");
 
     check_gasUsed(header, "verifyCommonBlock: ");
 }
@@ -310,6 +339,9 @@ void verifyBlockParent(spBlockHeader const& _header, ToolChain const& _chain)
             case BlockType::BlockHeaderShanghai:
                 verifyShanghaiParent(_header, parentBlock.header(), _chain);
                 break;
+            case BlockType::BlockHeader4844:
+                verify4844Parent(_header, parentBlock.header(), _chain);
+                break;
             default:
                 throw test::UpwardsException("verifyBlockParent::Unhandled block type check!");
             }
@@ -342,6 +374,9 @@ void verifyEthereumBlockHeader(spBlockHeader const& _header, ToolChain const& _c
         break;
     case BlockType::BlockHeaderShanghai:
         verifyShanghaiBlock(_header, _chain);
+        break;
+    case BlockType::BlockHeader4844:
+        verify4844Block(_header, _chain);
         break;
     default:
         throw test::UpwardsException("verifyEthereumBlockHeader::Unhandled block type check!");

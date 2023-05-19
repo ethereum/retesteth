@@ -2,25 +2,32 @@
 #include <retesteth/EthChecks.h>
 #include <retesteth/helpers/TestOutputHelper.h>
 #include <retesteth/testStructures/Common.h>
+#include <retesteth/Constants.h>
 #include <boost/test/framework.hpp>
 
 using namespace std;
 using namespace test::teststruct;
+using namespace test::teststruct::constnames;
 
 namespace
 {
 BlockchainTestEnv* readBlockchainTestEnv(DataObject const& _data)
 {
-    if (_data.count("baseFeePerGas"))
+    if (_data.count(c_baseFeePerGas))
     {
-        spDataObject diff = _data.atKey("difficulty").copy();
+        spDataObject diff = _data.atKey(c_difficulty).copy();
         (*diff).performModifier(mod_valueToCompactEvenHexPrefixed);
         if (VALUE(diff->asString()) != 0)
             return new BlockchainTestEnv1559(_data);
         else
         {
-            if (_data.count("withdrawalsRoot"))
-                return new BlockchainTestEnvShanghai(_data);
+            if (_data.count(c_withdrawalsRoot))
+            {
+                if (_data.count(c_excessDataGas))
+                    return new BlockchainTestEnv4844(_data);
+                else
+                    return new BlockchainTestEnvShanghai(_data);
+            }
             else
                 return new BlockchainTestEnvMerge(_data);
         }

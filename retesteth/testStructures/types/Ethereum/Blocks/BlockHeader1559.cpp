@@ -91,13 +91,22 @@ const RLPStream BlockHeader1559::asRLPStream() const
     return header;
 }
 
+namespace  {
+inline bool isChild(BlockType _t)
+{
+    // Can't use compareFork function here because of EthereumClassic and custom fork names
+    return _t != BlockType::BlockHeader1559 &&
+           _t != BlockType::BlockHeaderMerge &&
+           _t != BlockType::BlockHeaderShanghai &&
+           _t != BlockType::BlockHeader4844;
+}
+}
+
 BlockHeader1559& BlockHeader1559::castFrom(BlockHeader& _from)
 {
     try
     {
-        if (_from.type() != BlockType::BlockHeader1559 &&
-            _from.type() != BlockType::BlockHeaderMerge &&
-            _from.type() != BlockType::BlockHeaderShanghai)
+        if (isChild(_from.type()))
             ETH_FAIL_MESSAGE("BlockHeader1559::castFrom() got wrong block type! `" + BlockHeader::BlockTypeToString(_from.type()));
         return dynamic_cast<BlockHeader1559&>(_from);
     }
@@ -112,10 +121,9 @@ BlockHeader1559 const& BlockHeader1559::castFrom(spBlockHeader const& _from)
 {
     try
     {
-        if (_from->type() != BlockType::BlockHeader1559 &&
-            _from->type() != BlockType::BlockHeaderMerge &&
-            _from->type() != BlockType::BlockHeaderShanghai)
-            ETH_FAIL_MESSAGE("BlockHeader1559::castFrom() got wrong block type! `" + BlockHeader::BlockTypeToString(_from->type()));
+        if (isChild(_from->type()))
+            ETH_FAIL_MESSAGE("BlockHeader1559::castFrom() got wrong block type! `" + BlockHeader::BlockTypeToString(_from->type())
+                + "\n" + _from->asDataObject()->asJson());
         return dynamic_cast<BlockHeader1559 const&>(_from.getCContent());
     }
     catch (...)

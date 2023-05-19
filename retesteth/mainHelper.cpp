@@ -397,6 +397,9 @@ string getTestTArg(fs::path const& _cwd, string const& arg)
 
     if (!stepinfolder)
         tArg.insert(tArg.size(), cArg);
+
+    if (tArg == "BlockchainTests/InvalidBlocks/bcExpectSection")
+        tArg = "BlockchainTests/Retesteth/bcExpectSection";
     return tArg;
 }
 

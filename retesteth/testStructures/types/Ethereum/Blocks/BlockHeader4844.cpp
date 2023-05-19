@@ -1,4 +1,4 @@
-#include "BlockHeaderShanghai.h"
+#include "BlockHeader4844.h"
 #include <libdevcore/Address.h>
 #include <retesteth/helpers/TestHelper.h>
 #include <retesteth/EthChecks.h>
@@ -13,10 +13,10 @@ using namespace test::teststruct::constnames;
 namespace test::teststruct
 {
 
-void BlockHeaderShanghai::checkDataScheme(DataObject const& _data) const
+void BlockHeader4844::checkDataScheme(DataObject const& _data) const
 {
     // Allowed fields for this structure
-    REQUIRE_JSONFIELDS(_data, "BlockHeaderShanghai " + _data.getKey(),
+    REQUIRE_JSONFIELDS(_data, "BlockHeader4844 " + _data.getKey(),
         {
             {c_bloom, {{DataType::String}, jsonField::Optional}},
             {c_logsBloom, {{DataType::String}, jsonField::Optional}},
@@ -42,6 +42,7 @@ void BlockHeaderShanghai::checkDataScheme(DataObject const& _data) const
             {c_sha3Uncles, {{DataType::String}, jsonField::Optional}},
             {c_uncleHash, {{DataType::String}, jsonField::Optional}},
             {c_withdrawalsRoot, {{DataType::String}, jsonField::Required}},
+            {c_excessDataGas, {{DataType::String}, jsonField::Required}},
             {"rejectedTransactions", {{DataType::Array}, jsonField::Optional}},   // EthGetBlockBy test debug field
             {"seedHash", {{DataType::String}, jsonField::Optional}},         // EthGetBlockBy aleth field
             {"boundary", {{DataType::String}, jsonField::Optional}},         // EthGetBlockBy aleth field
@@ -53,13 +54,13 @@ void BlockHeaderShanghai::checkDataScheme(DataObject const& _data) const
         });
 }
 
-void BlockHeaderShanghai::_fromData(DataObject const& _data)
+void BlockHeader4844::_fromData(DataObject const& _data)
 {
-    BlockHeaderMerge::_fromData(_data);
-    m_withdrawalsRoot = sFH32(_data.atKey(c_withdrawalsRoot));
+    BlockHeaderShanghai::_fromData(_data);
+    m_excessDataGas = sVALUE(_data.atKey(c_excessDataGas));
 }
 
-size_t BlockHeaderShanghai::_fromRLP(dev::RLP const& _rlp)
+size_t BlockHeader4844::_fromRLP(dev::RLP const& _rlp)
 {
     // 0 - parentHash           // 8 - number
     // 1 - uncleHash            // 9 - gasLimit
@@ -69,69 +70,69 @@ size_t BlockHeaderShanghai::_fromRLP(dev::RLP const& _rlp)
     // 5 - receiptTrie          // 13 - mixHash
     // 6 - bloom                // 14 - nonce
     // 7 - difficulty           // 15 - baseFee
-    // 16 - withdrawals root
-    size_t i = BlockHeaderMerge::_fromRLP(_rlp);
-    m_withdrawalsRoot = spFH32(new FH32(_rlp[i++]));
+    // 16 - withdrawals root    // 17 - excessDataGas
+    size_t i = BlockHeaderShanghai::_fromRLP(_rlp);
+    m_excessDataGas = sVALUE(_rlp[i++]);
     return i;
 }
 
-BlockHeaderShanghai::BlockHeaderShanghai(dev::RLP const& _rlp)
+BlockHeader4844::BlockHeader4844(dev::RLP const& _rlp)
 {
     _fromRLP(_rlp);
     recalculateHash();
 }
 
-spDataObject BlockHeaderShanghai::asDataObject() const
+spDataObject BlockHeader4844::asDataObject() const
 {
-    spDataObject out = BlockHeaderMerge::asDataObject();
-    (*out)[c_withdrawalsRoot] = m_withdrawalsRoot->asString();
+    spDataObject out = BlockHeaderShanghai::asDataObject();
+    (*out)[c_excessDataGas] = m_excessDataGas->asString();
     return out;
 }
 
-const RLPStream BlockHeaderShanghai::asRLPStream() const
+const RLPStream BlockHeader4844::asRLPStream() const
 {
-    RLPStream header = BlockHeaderMerge::asRLPStream();
-    header << h256(m_withdrawalsRoot->asString());
+    RLPStream header = BlockHeaderShanghai::asRLPStream();
+    header << m_excessDataGas->asBigInt();
     return header;
 }
+
 
 namespace  {
 inline bool isChild(BlockType _t)
 {
     // Can't use compareFork function here because of EthereumClassic and custom fork names
-    return _t != BlockType::BlockHeaderShanghai &&
-           _t != BlockType::BlockHeader4844;
+    return _t != BlockType::BlockHeader4844;
 }
 }
 
-BlockHeaderShanghai& BlockHeaderShanghai::castFrom(BlockHeader& _from)
+BlockHeader4844& BlockHeader4844::castFrom(BlockHeader& _from)
 {
     try
     {
         if (isChild(_from.type()))
-            ETH_FAIL_MESSAGE("BlockHeaderShanghai::castFrom() got wrong block type!");
-        return dynamic_cast<BlockHeaderShanghai&>(_from);
+            ETH_FAIL_MESSAGE("BlockHeader4844::castFrom() got wrong block type!");
+        return dynamic_cast<BlockHeader4844&>(_from);
     }
     catch (...)
     {
-        ETH_FAIL_MESSAGE("BlockHeaderShanghai::castFrom() failed!");
+        ETH_FAIL_MESSAGE("BlockHeader4844::castFrom() failed!");
     }
-    return dynamic_cast<BlockHeaderShanghai&>(_from);
+    return dynamic_cast<BlockHeader4844&>(_from);
 }
 
-BlockHeaderShanghai const& BlockHeaderShanghai::castFrom(spBlockHeader const& _from)
+BlockHeader4844 const& BlockHeader4844::castFrom(spBlockHeader const& _from)
 {
     try
     {
         if (isChild(_from->type()))
-            ETH_FAIL_MESSAGE("BlockHeaderShanghai::castFrom() got wrong block type!");
-        return dynamic_cast<BlockHeaderShanghai const&>(_from.getCContent());
+            ETH_FAIL_MESSAGE("BlockHeader4844::castFrom() got wrong block type!");
+        return dynamic_cast<BlockHeader4844 const&>(_from.getCContent());
     }
     catch (...)
     {
-        ETH_FAIL_MESSAGE("BlockHeaderShanghai::castFrom() failed!");
+        ETH_FAIL_MESSAGE("BlockHeader4844::castFrom() failed!");
     }
-    spBlockHeaderShanghai foo(new BlockHeaderShanghai(DataObject()));
+    spBlockHeader4844 foo(new BlockHeader4844(DataObject()));
     return foo.getCContent();
 }
 

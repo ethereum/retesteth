@@ -4,6 +4,7 @@
 
 using namespace dataobject;
 using namespace test::teststruct;
+using namespace test::teststruct::constnames;
 
 namespace
 {
@@ -18,12 +19,17 @@ void requireSetChainParamsScheme(DataObject const& _data)
 
 spSetChainParamsArgsGenesis readGenesis(DataObject const& _data)
 {
-    if (_data.count("baseFeePerGas"))
+    if (_data.count(c_baseFeePerGas))
     {
         if (_data.count("currentRandom"))
         {
-            if (_data.count("withdrawalsRoot"))
-                return spSetChainParamsArgsGenesis(new SetChainParamsArgsGenesisShanghai(_data));
+            if (_data.count(c_withdrawalsRoot))
+            {
+                if (_data.count("currentExcessDataGas"))
+                    return spSetChainParamsArgsGenesis(new SetChainParamsArgsGenesis4844(_data));
+                else
+                    return spSetChainParamsArgsGenesis(new SetChainParamsArgsGenesisShanghai(_data));
+            }
             else
                 return spSetChainParamsArgsGenesis(new SetChainParamsArgsGenesisMerge(_data));
         }
@@ -35,9 +41,7 @@ spSetChainParamsArgsGenesis readGenesis(DataObject const& _data)
 
 }
 
-namespace test
-{
-namespace teststruct
+namespace test::teststruct
 {
 
 SetChainParamsArgsGenesis::SetChainParamsArgsGenesis(DataObject const& _data)
@@ -104,6 +108,24 @@ SetChainParamsArgsGenesisShanghai::SetChainParamsArgsGenesisShanghai(DataObject 
         });
 }
 
+SetChainParamsArgsGenesis4844::SetChainParamsArgsGenesis4844(DataObject const& _data)
+  : SetChainParamsArgsGenesis(_data, false)
+{
+    REQUIRE_JSONFIELDS(_data, "SetChainParamsArgs::genesis(4844 Cancun) ",
+        {
+            {"author", {{DataType::String}, jsonField::Required}},
+            {"gasLimit", {{DataType::String}, jsonField::Required}},
+            {"baseFeePerGas", {{DataType::String}, jsonField::Required}},
+            {"currentRandom", {{DataType::String}, jsonField::Required}},
+            {"withdrawalsRoot", {{DataType::String}, jsonField::Required}},
+            {"extraData", {{DataType::String}, jsonField::Required}},
+            {"timestamp", {{DataType::String}, jsonField::Required}},
+            {"nonce", {{DataType::String}, jsonField::Required}},
+            {"mixHash", {{DataType::String}, jsonField::Required}},
+            {"currentExcessDataGas", {{DataType::String}, jsonField::Required}}
+        });
+}
+
 SetChainParamsArgs::SetChainParamsArgs(spDataObject& _data)
 {
     requireSetChainParamsScheme(_data);
@@ -122,25 +144,25 @@ spDataObject SetChainParamsArgs::asDataObject() const
     (*out)["params"].copyFrom(m_params);
     (*out).atKeyPointer("accounts") = m_preState->asDataObject();
     (*out)["sealEngine"] = sealEngineToStr(m_sealEngine);
-    (*out)["genesis"]["author"] = m_genesis->author().asString();
-    (*out)["genesis"]["difficulty"] = m_genesis->difficulty().asString();
-    (*out)["genesis"]["gasLimit"] = m_genesis->gasLimit().asString();
+    (*out)["genesis"][c_author] = m_genesis->author().asString();
+    (*out)["genesis"][c_difficulty] = m_genesis->difficulty().asString();
+    (*out)["genesis"][c_gasLimit] = m_genesis->gasLimit().asString();
 
     if (isBlockExportBasefee(m_genesis))
     {
         BlockHeader1559 const& newbl = BlockHeader1559::castFrom(m_genesis);
-        (*out)["genesis"]["baseFeePerGas"] = newbl.baseFee().asString();
+        (*out)["genesis"][c_baseFeePerGas] = newbl.baseFee().asString();
         if (isBlockExportWithdrawals(m_genesis))
         {
             BlockHeaderShanghai const& newbl = BlockHeaderShanghai::castFrom(m_genesis);
-            (*out)["genesis"]["withdrawalsRoot"] = newbl.withdrawalsRoot().asString();
+            (*out)["genesis"][c_withdrawalsRoot] = newbl.withdrawalsRoot().asString();
         }
     }
 
-    (*out)["genesis"]["extraData"] = m_genesis->extraData().asString();
-    (*out)["genesis"]["timestamp"] = m_genesis->timestamp().asString();
-    (*out)["genesis"]["nonce"] = m_genesis->nonce().asString();
-    (*out)["genesis"]["mixHash"] = m_genesis->mixHash().asString();
+    (*out)["genesis"][c_extraData] = m_genesis->extraData().asString();
+    (*out)["genesis"][c_timestamp] = m_genesis->timestamp().asString();
+    (*out)["genesis"][c_nonce] = m_genesis->nonce().asString();
+    (*out)["genesis"][c_mixHash] = m_genesis->mixHash().asString();
     return out;
 }
 
@@ -148,60 +170,77 @@ spDataObject SetChainParamsArgsGenesis::buildCommonBlockHeader() const
 {
     spDataObject _fullBlockHeader;
     DataObject& fullBlockHeader = _fullBlockHeader.getContent();
-    fullBlockHeader["author"] = m_dataRef.atKey("author").asString();
-    fullBlockHeader["gasLimit"] = m_dataRef.atKey("gasLimit").asString();
-    fullBlockHeader["extraData"] = m_dataRef.atKey("extraData").asString();
-    fullBlockHeader["timestamp"] = m_dataRef.atKey("timestamp").asString();
-    fullBlockHeader["nonce"] = m_dataRef.atKey("nonce").asString();
-    fullBlockHeader["mixHash"] = m_dataRef.atKey("mixHash").asString();
+    fullBlockHeader[c_author] = m_dataRef.atKey(c_author).asString();
+    fullBlockHeader[c_gasLimit] = m_dataRef.atKey(c_gasLimit).asString();
+    fullBlockHeader[c_extraData] = m_dataRef.atKey(c_extraData).asString();
+    fullBlockHeader[c_timestamp] = m_dataRef.atKey(c_timestamp).asString();
+    fullBlockHeader[c_nonce] = m_dataRef.atKey(c_nonce).asString();
+    fullBlockHeader[c_mixHash] = m_dataRef.atKey(c_mixHash).asString();
 
     // Fields that are ommited in RPC setChainParams, use default fields of empty block
-    fullBlockHeader["bloom"] = FH256::zero().asString();
-    fullBlockHeader["gasUsed"] = "0x00";
-    fullBlockHeader["number"] = "0x00";
-    fullBlockHeader["receiptTrie"] = C_WITHDRAWALS_EMPTY_ROOT;
-    fullBlockHeader["stateRoot"] = FH32::zero().asString();
-    fullBlockHeader["transactionsTrie"] = C_WITHDRAWALS_EMPTY_ROOT;
-    fullBlockHeader["uncleHash"] = C_EMPTY_LIST_HASH;
-    fullBlockHeader["parentHash"] = FH32::zero().asString();
+    fullBlockHeader[c_bloom] = FH256::zero().asString();
+    fullBlockHeader[c_gasUsed] = "0x00";
+    fullBlockHeader[c_number] = "0x00";
+    fullBlockHeader[c_receiptTrie] = C_WITHDRAWALS_EMPTY_ROOT;
+    fullBlockHeader[c_stateRoot] = FH32::zero().asString();
+    fullBlockHeader[c_transactionsTrie] = C_WITHDRAWALS_EMPTY_ROOT;
+    fullBlockHeader[c_uncleHash] = C_EMPTY_LIST_HASH;
+    fullBlockHeader[c_parentHash] = FH32::zero().asString();
     return _fullBlockHeader;
 }
 
 spBlockHeader SetChainParamsArgsGenesis::constructBlockHeader() const
 {
-    spDataObject header = buildCommonBlockHeader();
-    (*header)["difficulty"] = m_dataRef.atKey("difficulty").asString();
+    spDataObject header = _constructBlockHeader();
     return readBlockHeader(header);
 }
 
-spBlockHeader SetChainParamsArgsGenesis1559::constructBlockHeader() const
+spDataObject SetChainParamsArgsGenesis::_constructBlockHeader() const
 {
     spDataObject header = buildCommonBlockHeader();
-    (*header)["difficulty"] = m_dataRef.atKey("difficulty").asString();
-    (*header)["baseFeePerGas"] = m_dataRef.atKey("baseFeePerGas").asString();
-    return readBlockHeader(header);
+    (*header)[c_difficulty] = m_dataRef.atKey(c_difficulty).asString();
+    return header;
 }
 
-spBlockHeader SetChainParamsArgsGenesisMerge::constructBlockHeader() const
+spDataObject SetChainParamsArgsGenesis1559::_constructBlockHeader() const
 {
     spDataObject header = buildCommonBlockHeader();
-    (*header)["baseFeePerGas"] = m_dataRef.atKey("baseFeePerGas").asString();
-    (*header)["difficulty"] = "0x00";
+    (*header)[c_difficulty] = m_dataRef.atKey(c_difficulty).asString();
+    (*header)[c_baseFeePerGas] = m_dataRef.atKey(c_baseFeePerGas).asString();
+    return header;
+}
+
+spDataObject SetChainParamsArgsGenesisMerge::_constructBlockHeader() const
+{
+    spDataObject header = buildCommonBlockHeader();
+    (*header)[c_difficulty] = "0x00";
     auto const curRandomU256 = dev::u256(m_dataRef.atKey("currentRandom").asString());
-    (*header)["mixHash"] = dev::toCompactHexPrefixed(curRandomU256, 32);
-    return readBlockHeader(header);
+    (*header)[c_mixHash] = dev::toCompactHexPrefixed(curRandomU256, 32);
+    (*header)[c_baseFeePerGas] = m_dataRef.atKey(c_baseFeePerGas).asString();
+    return header;
 }
 
-spBlockHeader SetChainParamsArgsGenesisShanghai::constructBlockHeader() const
+spDataObject SetChainParamsArgsGenesisShanghai::_constructBlockHeader() const
 {
     spDataObject header = buildCommonBlockHeader();
-    (*header)["baseFeePerGas"] = m_dataRef.atKey("baseFeePerGas").asString();
-    (*header)["difficulty"] = "0x00";
+    (*header)[c_difficulty] = "0x00";
     auto const curRandomU256 = dev::u256(m_dataRef.atKey("currentRandom").asString());
-    (*header)["mixHash"] = dev::toCompactHexPrefixed(curRandomU256, 32);
-    (*header)["withdrawalsRoot"] = m_dataRef.atKey("withdrawalsRoot").asString();
-    return readBlockHeader(header);
+    (*header)[c_mixHash] = dev::toCompactHexPrefixed(curRandomU256, 32);
+    (*header)[c_baseFeePerGas] = m_dataRef.atKey(c_baseFeePerGas).asString();
+    (*header)[c_withdrawalsRoot] = m_dataRef.atKey(c_withdrawalsRoot).asString();
+    return header;
+}
+
+spDataObject SetChainParamsArgsGenesis4844::_constructBlockHeader() const
+{
+    spDataObject header = buildCommonBlockHeader();
+    (*header)[c_difficulty] = "0x00";
+    auto const curRandomU256 = dev::u256(m_dataRef.atKey("currentRandom").asString());
+    (*header)[c_mixHash] = dev::toCompactHexPrefixed(curRandomU256, 32);
+    (*header)[c_baseFeePerGas] = m_dataRef.atKey(c_baseFeePerGas).asString();
+    (*header)[c_withdrawalsRoot] = m_dataRef.atKey(c_withdrawalsRoot).asString();
+    (*header)[c_excessDataGas] = m_dataRef.atKey("currentExcessDataGas").asString();
+    return header;
 }
 
 }  // namespace teststruct
-}  // namespace test

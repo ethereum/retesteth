@@ -10,7 +10,8 @@ enum class BlockType
     BlockHeaderLegacy,
     BlockHeader1559,
     BlockHeaderMerge,
-    BlockHeaderShanghai
+    BlockHeaderShanghai,
+    BlockHeader4844
 };
 
 // Ethereum blockheader interface

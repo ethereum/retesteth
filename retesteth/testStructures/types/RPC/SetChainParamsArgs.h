@@ -4,10 +4,9 @@
 #include "../Ethereum/State.h"
 #include <libdataobj/DataObject.h>
 
-namespace test
+namespace test::teststruct
 {
-namespace teststruct
-{
+
 struct SetChainParamsArgs : GCP_SPointerBase
 {
     SetChainParamsArgs(spDataObject& _data);
@@ -29,32 +28,41 @@ protected:
 struct SetChainParamsArgsGenesis : GCP_SPointerBase
 {
     SetChainParamsArgsGenesis(DataObject const&);
-    virtual spBlockHeader constructBlockHeader() const;
+    spBlockHeader constructBlockHeader() const;
     virtual ~SetChainParamsArgsGenesis() {}
 
 protected:
-    SetChainParamsArgsGenesis(DataObject const& _data, bool) : m_dataRef(_data){};
+    SetChainParamsArgsGenesis(DataObject const& _data, bool) : m_dataRef(_data){}
     DataObject const& m_dataRef;
     spDataObject buildCommonBlockHeader() const;
+    virtual spDataObject _constructBlockHeader() const;
 };
 struct SetChainParamsArgsGenesis1559 : SetChainParamsArgsGenesis
 {
     SetChainParamsArgsGenesis1559(DataObject const&);
-    spBlockHeader constructBlockHeader() const override;
+protected:
+    virtual spDataObject _constructBlockHeader() const override;
 };
 struct SetChainParamsArgsGenesisMerge : SetChainParamsArgsGenesis
 {
     SetChainParamsArgsGenesisMerge(DataObject const&);
-    spBlockHeader constructBlockHeader() const override;
+protected:
+    virtual spDataObject _constructBlockHeader() const override;
 };
 struct SetChainParamsArgsGenesisShanghai : SetChainParamsArgsGenesis
 {
     SetChainParamsArgsGenesisShanghai(DataObject const&);
-    spBlockHeader constructBlockHeader() const override;
+protected:
+    virtual spDataObject _constructBlockHeader() const override;
+};
+struct SetChainParamsArgsGenesis4844 : SetChainParamsArgsGenesis
+{
+    SetChainParamsArgsGenesis4844(DataObject const&);
+protected:
+    virtual spDataObject _constructBlockHeader() const override;
 };
 
 typedef GCP_SPointer<SetChainParamsArgs> spSetChainParamsArgs;
 typedef GCP_SPointer<SetChainParamsArgsGenesis> spSetChainParamsArgsGenesis;
 
 }  // namespace teststruct
-}  // namespace test
