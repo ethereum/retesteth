@@ -4,6 +4,9 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
+genMagnetoCfgETC::genMagnetoCfgETC()
+{
+
 const string rpc_Magneto_config = R"({
     "params" : {
         "homesteadForkBlock" : "0x00",
@@ -28,8 +31,6 @@ const string etc_Magneto_config = R"({
     }
 })";
 
-genMagnetoCfgETC::genMagnetoCfgETC()
-{
     spDataObject obj;
     (*obj)["path"] = "besuetc/genesis/ETC_Magneto.json";
     (*obj)["content"] = rpc_Magneto_config;

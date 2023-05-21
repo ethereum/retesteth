@@ -4,6 +4,10 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
+
+genoewrapcfg::genoewrapcfg()
+{
+
 string const oewrap_config = R"({
     "name" : "Openethereum-evm wrapper as StateTool",
     "socketType" : "tranition-tool",
@@ -489,8 +493,6 @@ else
 fi
 )";
 
-genoewrapcfg::genoewrapcfg()
-{
     {
         spDataObject obj;
         (*obj)["path"] = "oewrap/config";

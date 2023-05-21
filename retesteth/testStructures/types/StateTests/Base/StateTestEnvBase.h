@@ -2,9 +2,7 @@
 #include "../../../basetypes.h"
 #include <libdataobj/DataObject.h>
 
-namespace test
-{
-namespace teststruct
+namespace test::teststruct
 {
 
 // Base logic for State Test Env section
@@ -30,6 +28,7 @@ struct StateTestEnvBase : GCP_SPointerBase
     VALUE const& currentDifficulty() const { return m_currentDifficulty; }
 
     FH32 const& currentWithdrawalsRoot() const { return m_currentWithdrawalsRoot; }
+    VALUE const& currentExcessDataGas() const { return m_currentExcessDataGas; }
 
 protected:
     StateTestEnvBase() {}
@@ -53,8 +52,10 @@ protected:
 
     // Shaghai
     spFH32 m_currentWithdrawalsRoot;
+
+    // 4844
+    spVALUE m_currentExcessDataGas;
 };
 
 
 }  // namespace teststruct
-}  // namespace test

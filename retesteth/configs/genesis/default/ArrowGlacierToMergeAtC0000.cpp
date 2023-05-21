@@ -4,6 +4,9 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
+genArrowGlacierToMergeAtDiffC0000Cfg::genArrowGlacierToMergeAtDiffC0000Cfg()
+{
+
 const string t8ntool_ArrowGlacierToMergeAtDiffC0000_config = R"({
     "params" : {
         "fork" : "ArrowGlacierToMergeAtDiffC0000",
@@ -17,8 +20,7 @@ const string t8ntool_ArrowGlacierToMergeAtDiffC0000_config = R"({
     }
 })";
 
-genArrowGlacierToMergeAtDiffC0000Cfg::genArrowGlacierToMergeAtDiffC0000Cfg()
-{
+
     spDataObject obj2(new DataObject());
     (*obj2)["path"] = "default/genesis/ArrowGlacierToMergeAtDiffC0000.json";
     (*obj2)["content"] = t8ntool_ArrowGlacierToMergeAtDiffC0000_config;

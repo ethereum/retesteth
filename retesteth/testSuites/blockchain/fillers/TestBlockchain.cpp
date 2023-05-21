@@ -1,6 +1,6 @@
 #include "TestBlockchain.h"
 #include <retesteth/Options.h>
-#include <retesteth/TestHelper.h>
+#include <retesteth/helpers/TestHelper.h>
 #include <retesteth/testStructures/PrepareChainParams.h>
 #include <retesteth/testSuites/Common.h>
 #include "../Common.h"
@@ -79,20 +79,16 @@ GCP_SPointer<EthGetBlockBy> TestBlockchain::mineBlock(
     GCP_SPointer<EthGetBlockBy> remoteBlock;
     if (!minedBlockHash.isEmpty())
     {
+        // If after modifications block import succeed
         if (minedBlockHash.getCContent() != FH32::zero())
-        {
-            // If after modifications block import succeed
-            remoteBlock = GCP_SPointer<EthGetBlockBy>(
-                new EthGetBlockBy((m_session.eth_getBlockByHash(minedBlockHash.getContent(), Request::FULLOBJECTS))));
-        }
+            remoteBlock = m_session.eth_getBlockByHash(minedBlockHash.getContent(), Request::FULLOBJECTS);
         else
             return remoteBlock;  // after modifications block import failed. but that was expected.
     }
     else
     {
         // There was no block modifications, it is just a regular mining
-        remoteBlock = GCP_SPointer<EthGetBlockBy>(
-            new EthGetBlockBy((m_session.eth_getBlockByNumber(latestBlockNumber, Request::FULLOBJECTS))));
+        remoteBlock = m_session.eth_getBlockByNumber(latestBlockNumber, Request::FULLOBJECTS);
         _rawRLP = remoteBlock->getRLPHeaderTransactions();
     }
 
@@ -313,8 +309,8 @@ bool TestBlockchain::checkBlockException(SessionInterface const& _session, strin
     }
     else
     {
-        std::string const& clientExceptionString =
-            Options::get().getCurrentConfig().translateException(_sBlockException);
+        auto const& cfg = Options::get().getCurrentConfig();
+        string const& clientExceptionString = cfg.translateException(_sBlockException);
         size_t pos = _session.getLastRPCError().message().find(clientExceptionString);
         if (clientExceptionString.empty())
             pos = string::npos;

@@ -75,6 +75,7 @@ public:
     virtual FH32 test_getLogHash(FH32 const& _txHash) = 0;
     virtual void test_registerWithdrawal(BYTES const& _rlp) = 0;
     virtual TestRawTransaction test_rawTransaction(BYTES const& _rlp, FORK const& _fork) = 0;
+    virtual std::string test_rawEOFCode(BYTES const& _code, FORK const& _fork) = 0;
     virtual VALUE test_calculateDifficulty(FORK const& _fork, VALUE const& _blockNumber, VALUE const& _parentTimestamp,
         VALUE const& _parentDifficulty, VALUE const& _currentTimestamp, VALUE const& _uncleNumber) = 0;
 

@@ -3,7 +3,7 @@
 #include <retesteth/EthChecks.h>
 #include <retesteth/ExitHandler.h>
 #include <retesteth/Options.h>
-#include <retesteth/TestOutputHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
 using namespace std;
 using namespace test;
 using namespace test::debug;
@@ -19,6 +19,8 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
         return;
 
     BlockchainTestRunner runner(_test, _opt);
+    if (runner.checkBigIntSkip())
+        return;
     runner.setChainParams();
     runner.performOptionCommandsOnGenesis();
 

@@ -1,9 +1,11 @@
 #include "Common.h"
 #include <retesteth/Options.h>
-#include <retesteth/TestHelper.h>
-#include <retesteth/TestOutputHelper.h>
+#include <retesteth/helpers/TestHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
+#include <retesteth/Constants.h>
 using namespace std;
 using namespace test::debug;
+using namespace test::teststruct::constnames;
 namespace fs = boost::filesystem;
 
 namespace test
@@ -43,7 +45,7 @@ void checkTestNameIsEqualToFileName(string const& _testName)
 {
     if (!TestOutputHelper::get().testFile().empty())
     {
-        string const tFileName = TestOutputHelper::get().testFile().stem().string();
+        const string tFileName = TestOutputHelper::get().testFile().stem().string();
         ETH_ERROR_REQUIRE_MESSAGE(_testName + "Filler" == tFileName,
             TestOutputHelper::get().testFile().string() +
                 " contains a test with a different name '" + _testName + "'");
@@ -53,23 +55,26 @@ void checkTestNameIsEqualToFileName(string const& _testName)
 void checkTestNameIsEqualToFileName(DataObject const& _input)
 {
     if (!TestOutputHelper::get().testFile().empty())
-        ETH_ERROR_REQUIRE_MESSAGE(_input.getSubObjects().at(0)->getKey() + "Filler" ==
-                                      TestOutputHelper::get().testFile().stem().string(),
-            TestOutputHelper::get().testFile().string() +
-                " contains a test with a different name '" + _input.getSubObjects().at(0)->getKey() +
-                "'");
+    {
+        auto const& testfile = TestOutputHelper::get().testFile();
+        auto const& key = _input.getSubObjects().at(0)->getKey();
+        ETH_ERROR_REQUIRE_MESSAGE(
+             key + "Filler" == testfile.stem().string(),
+            testfile.string() + " contains a test with a different name '" + key + "'");
+    }
 }
 
 void printVmTrace(VMtraceinfo const& _info)
 {
-    DebugVMTrace ret(_info.session.debug_traceTransaction(_info.trHash));
+    const DebugVMTrace ret(_info.session.debug_traceTransaction(_info.trHash));
 
     ETH_DC_MESSAGE(DC::TESTLOG, "------------------------");
-    if (Options::get().vmtraceraw)
+    auto const& vmtraceraw = Options::get().vmtraceraw;
+    if (vmtraceraw)
     {
-        if (!Options::get().vmtraceraw.outpath.empty())
+        if (!vmtraceraw.outpath.empty())
         {
-            auto outpath = fs::path(Options::get().vmtraceraw.outpath);
+            auto const outpath = fs::path(vmtraceraw.outpath);
             ETH_DC_MESSAGEC(DC::TESTLOG, "Export vmtraceraw to " + (outpath / _info.trName).string(), LogColor::LIME);
             ret.exportLogs(outpath / _info.trName);
         }
@@ -113,6 +118,30 @@ void compareTransactionException(spTransaction const& _tr, MineBlocksResult cons
                "Expected reason: `" + expectedReason + "` (" + _testException + ")\n" +
                "Client reason: `" + remoteException
               );
+        }
+    }
+}
+
+void compareEOFException(BYTES const& _code, std::string const& _mRes, std::string const& _testException)
+{
+    string const remoteException = _mRes == "ok." ? "" : _mRes;
+    if (!_testException.empty() && remoteException.empty())
+        ETH_ERROR_MESSAGE("Client didn't reject EOF code: (" + _code.asString() + ")" +
+                          "\nTest Expected: " + _testException);
+    if (_testException.empty() && !remoteException.empty())
+        ETH_ERROR_MESSAGE("Client reject EOF code expected to be valid: (" + _code.asString() + ")" +
+                          "\nReason: " + remoteException);
+
+    if (!_testException.empty() && !remoteException.empty())
+    {
+        string const& expectedReason = Options::getCurrentConfig().translateException(_testException);
+        if (remoteException.find(expectedReason) == string::npos)
+        {
+            ETH_WARNING(_code.asString());
+            ETH_ERROR_MESSAGE(string("EOF code rejected but due to a different reason: \n") +
+                              "Expected reason: `" + expectedReason + "` (" + _testException + ")\n" +
+                              "Client reason: `" + remoteException
+                );
         }
     }
 }
@@ -171,7 +200,9 @@ void verifyFilledTestRecursive(DataObject const& _want, DataObject const& _have,
             if (_have.getSubObjects().size() <= k)
                 ETH_ERROR_MESSAGE("verify: filled test missing expected array element: " +
                                   _debug + "`" + el->asJson() + "`");
-            _debug += "[" + test::fto_string(k) + "] -> ";
+            _debug += "[";
+            _debug += test::fto_string(k);
+            _debug += "] -> ";
             verifyFilledTestRecursive(el, _have.at(k), _debug);
         }
         k++;
@@ -225,10 +256,11 @@ spDataObject storageDiff(Storage const& _pre, Storage const& _post)
         if (_pre.hasKey(postKey))
         {
             // old key changed
-            if (_pre.atKey(postKey) != postValue)
+            auto const& preAtPostKey = _pre.atKey(postKey);
+            if (preAtPostKey != postValue)
             {
-                auto const msg = _pre.atKey(postKey).asString() + " -> " + postValue->asString() + " (" +
-                                 _pre.atKey(postKey).asDecString() + " -> " + postValue->asDecString() + ")";
+                auto const msg = preAtPostKey.asString() + " -> " + postValue->asString() + " (" +
+                                 preAtPostKey.asDecString() + " -> " + postValue->asDecString() + ")";
                 (*res)[postKey->asString()] = msg;
             }
         }
@@ -261,23 +293,33 @@ spDataObject stateDiff(State const& _pre, State const& _post)
             // check for updates
             auto const& accPre = _pre.getAccount(postAcc.first);
             auto const& accPost = postAcc.second;
-            if (accPre.balance() != accPost->balance())
+
+            auto const& preBalance = accPre.balance();
+            auto const& postBalance = accPost->balance();
+            if (preBalance != postBalance)
             {
-                auto const msg = accPre.balance().asString() + " -> " + accPost->balance().asString() + " (" +
-                                 accPre.balance().asDecString() + " -> " + accPost->balance().asDecString() + ")";
-                (*res)[postAcc.first.asString()]["balance"] = msg;
+                auto const msg = preBalance.asString() + " -> " + postBalance.asString() + " (" +
+                                 preBalance.asDecString() + " -> " + postBalance.asDecString() + ")";
+                (*res)[postAcc.first.asString()][c_balance] = msg;
             }
-            if (accPre.nonce() != accPost->nonce())
+
+            auto const& preNonce = accPre.nonce();
+            auto const& postNonce = accPost->nonce();
+            if (preNonce != postNonce)
             {
-                auto const msg = accPre.nonce().asString() + " -> " + accPost->nonce().asString() + " (" +
-                                 accPre.nonce().asDecString() + " -> " + accPost->nonce().asDecString() + ")";
-                (*res)[postAcc.first.asString()]["nonce"] = msg;
+                auto const msg = preNonce.asString() + " -> " + postNonce.asString() + " (" +
+                                 preNonce.asDecString() + " -> " + postNonce.asDecString() + ")";
+                (*res)[postAcc.first.asString()][c_nonce] = msg;
             }
-            if (accPre.code() != accPost->code())
-                (*res)[postAcc.first.asString()]["code"] = accPre.code().asString() + " -> " + accPost->code().asString();
+
+            auto const& preCode = accPre.code();
+            auto const& postCode = accPost->code();
+            if (preCode != postCode)
+                (*res)[postAcc.first.asString()][c_code] = preCode.asString() + " -> " + postCode.asString();
+
             auto const storageDiffRes = storageDiff(accPre.storage(), accPost->storage());
             if (storageDiffRes->getSubObjects().size())
-                (*res)[postAcc.first.asString()].atKeyPointer("storage") = storageDiffRes;
+                (*res)[postAcc.first.asString()].atKeyPointer(c_storage) = storageDiffRes;
         }
         else
         {
@@ -286,11 +328,11 @@ spDataObject stateDiff(State const& _pre, State const& _post)
             (*res).atKeyPointer(key) = postAcc.second->asDataObject()->copy();
 
             // Print dec values
-            VALUE balance((*res).atKey(key).atKey("balance"));
-            (*res).atKeyUnsafe(key)["balance"] = balance.asString() + " (" + balance.asDecString() + ")";
-            VALUE nonce((*res).atKey(key).atKey("nonce"));
-            (*res).atKeyUnsafe(key)["nonce"] = nonce.asString() + " (" + nonce.asDecString() + ")";
-            for (auto& el : (*res).atKeyUnsafe(key).atKeyUnsafe("storage").getSubObjectsUnsafe())
+            VALUE balance((*res).atKey(key).atKey(c_balance));
+            (*res).atKeyUnsafe(key)[c_balance] = balance.asString() + " (" + balance.asDecString() + ")";
+            VALUE nonce((*res).atKey(key).atKey(c_nonce));
+            (*res).atKeyUnsafe(key)[c_nonce] = nonce.asString() + " (" + nonce.asDecString() + ")";
+            for (auto& el : (*res).atKeyUnsafe(key).atKeyUnsafe(c_storage).getSubObjectsUnsafe())
             {
                 VALUE val(el->asString());
                 el.getContent().setString(val.asString() + " (" + val.asDecString() + ")");
@@ -322,6 +364,24 @@ bool hasSkipFork(std::set<FORK> const& _allforks)
                         + TestOutputHelper::get().testInfo().errorDebug());
             return true;
         }
+    }
+    return false;
+}
+
+bool networkSkip(FORK const& _net, string const& _testName)
+{
+    auto const& opt = Options::get();
+    auto const& conf = opt.getCurrentConfig();
+    bool const skipedFork = conf.checkForkSkipOnFiller(_net);
+    bool const allowedFork = conf.checkForkAllowed(_net);
+    bool singleNetDeny = (!opt.singleTestNet.empty() && opt.singleTestNet != _net.asString());
+    if (opt.runOnlyNets.initialized())
+        singleNetDeny = !Options::getDynamicOptions().runOnlyNetworks().count(_net);
+    if (singleNetDeny || !allowedFork || skipedFork)
+    {
+        if ((!allowedFork || skipedFork) && !singleNetDeny)
+            ETH_WARNING("Skipping unsupported fork: " + _net.asString() + " in " + _testName);
+        return true;
     }
     return false;
 }

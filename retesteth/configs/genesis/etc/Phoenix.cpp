@@ -4,6 +4,9 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
+genPhoenixCfgETC::genPhoenixCfgETC()
+{
+
 const string rpc_Phoenix_config = R"({
     "params" : {
         "homesteadForkBlock" : "0x00",
@@ -27,8 +30,6 @@ const string etc_Phoenix_config = R"({
     }
 })";
 
-genPhoenixCfgETC::genPhoenixCfgETC()
-{
     spDataObject obj;
     (*obj)["path"] = "besuetc/genesis/ETC_Phoenix.json";
     (*obj)["content"] = rpc_Phoenix_config;

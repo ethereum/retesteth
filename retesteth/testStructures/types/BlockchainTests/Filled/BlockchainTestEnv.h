@@ -52,6 +52,18 @@ struct BlockchainTestEnvShanghai : BlockchainTestEnvMerge
 
 protected:
     void initializeShanghaiFields(DataObject const&);
+    BlockchainTestEnvShanghai(){};
+
+private:
+    void define() const override {}
+};
+
+struct BlockchainTestEnv4844 : BlockchainTestEnvShanghai
+{
+    BlockchainTestEnv4844(DataObject const& _data);
+
+protected:
+    void initialize4844Fields(DataObject const&);
 
 private:
     void define() const override {}

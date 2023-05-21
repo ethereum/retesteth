@@ -4,7 +4,8 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
-
+genMergeCfgNIMBUS::genMergeCfgNIMBUS()
+{
 const string nimbus_Merge_config = R"({
     "params" : {
         "fork" : "Merge",
@@ -18,8 +19,6 @@ const string nimbus_Merge_config = R"({
     }
 })";
 
-genMergeCfgNIMBUS::genMergeCfgNIMBUS()
-{
     {
         spDataObject obj;
         (*obj)["path"] = "nimbus/genesis/Merge.json";

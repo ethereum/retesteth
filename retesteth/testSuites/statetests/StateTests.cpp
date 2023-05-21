@@ -24,7 +24,7 @@
 #include "StateTests.h"
 #include "StateTestsHelper.h"
 #include <retesteth/Options.h>
-#include <retesteth/TestOutputHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
 #include <retesteth/testStructures/structures.h>
 #include <retesteth/testSuites/Common.h>
 #include <retesteth/testSuites/blockchain/BlockchainTests.h>

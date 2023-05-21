@@ -19,8 +19,10 @@
  */
 
 #include <libdataobj/ConvertFile.h>
-#include <retesteth/TestOutputHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
 #include <retesteth/testSuites/Common.h>
+#include <retesteth/testStructures/Common.h>
+#include <libdevcore/SHA3.h>
 
 using namespace std;
 using namespace dev;
@@ -284,7 +286,8 @@ BOOST_AUTO_TEST_CASE(dataobject_readJson5b)
         }
     )";
 
-    spDataObject dObj = ConvertJsoncppStringToData(data, "key");
+    CJOptions opt { .stopper = "key" };
+    spDataObject dObj = ConvertJsoncppStringToData(data, opt);
     BOOST_CHECK(dObj->asJson(0, false) == "{\"name\":{\"key\":[12,34]}}");
 }
 
@@ -368,7 +371,7 @@ BOOST_AUTO_TEST_CASE(dataobject_readJson7)
     BOOST_CHECK(dObj->asJson(0, false) == res);
 }
 
-BOOST_AUTO_TEST_CASE(dataobject_readJson8)
+BOOST_AUTO_TEST_CASE(dataobject_readJson_doublefields)
 {
     string data = R"(
         {
@@ -383,8 +386,62 @@ BOOST_AUTO_TEST_CASE(dataobject_readJson8)
         }
     )";
 
-    spDataObject dObj = ConvertJsoncppStringToData(data);
-    BOOST_CHECK(dObj->asJson(0, false) == "{\"code\":\"}\"}");
+    try
+    {
+        spDataObject dObj = ConvertJsoncppStringToData(data);
+        BOOST_CHECK(dObj->asJson(0, false) == "{\"code\":\"}\"}");
+    }
+    catch (std::exception const& _ex)
+    {
+        BOOST_CHECK(string(_ex.what()).find("Reading json with dublicate fields") != string::npos);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(dataobject_readJson_doublefields_allowComments)
+{
+    string data = R"(
+        {
+            "code" :"pragma solidity ^0.4.0;",
+            "code" :"contract suicideContract",
+            "code" :"{",
+            "code" :"    function run",
+            "code" :"    {",
+            "code" :"        suicide 0x1000000000000000000000000000000000000001;",
+            "code" :"    }",
+            "code" :"}"
+        }
+    )";
+
+    try
+    {
+        dataobject::CJOptions opt { .jsonParse = CJOptions::JsonParse::ALLOW_COMMENTS };
+        spDataObject dObj = ConvertJsoncppStringToData(data, opt);
+        BOOST_CHECK(dObj->asJson(0, false) == "{\"code\":\"}\"}");
+    }
+    catch (std::exception const& _ex)
+    {
+        BOOST_CHECK(string(_ex.what()).find("Reading json with dublicate fields") != string::npos);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(dataobject_readJson_doublefields_allowComments_actualComments)
+{
+    string data = R"(
+        {
+            "//code" :"pragma solidity ^0.4.0;",
+            "//code" :"contract suicideContract",
+            "//code" :"{",
+            "//code" :"    function run",
+            "//code" :"    {",
+            "//code" :"        suicide 0x1000000000000000000000000000000000000001;",
+            "//code" :"    }",
+            "code" :"}"
+        }
+    )";
+
+    dataobject::CJOptions opt { .jsonParse =  CJOptions::JsonParse::ALLOW_COMMENTS };
+    spDataObject dObj = ConvertJsoncppStringToData(data, opt);
+    BOOST_CHECK(dObj->asJson(0, false) == "{\"//code\":\"    }\",\"code\":\"}\"}");
 }
 
 BOOST_AUTO_TEST_CASE(dataobject_readJson9)
@@ -474,11 +531,6 @@ BOOST_AUTO_TEST_CASE(dataobject_readJson13)
        "expect" : [
         {
               "result" : {
-                  "0x0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
-                      "storage" : {
-                          "0x02" : "0"
-                      }
-                  },
                   "0x0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
                   }
              }
@@ -788,7 +840,8 @@ BOOST_AUTO_TEST_CASE(dataobject_jsonOrder2)
         "storage" : {
         }
     })";
-    spDataObject dObj = ConvertJsoncppStringToData(data, string(), true);
+    CJOptions opt { .autosort = true };
+    spDataObject dObj = ConvertJsoncppStringToData(data, opt);
     BOOST_CHECK(dObj->at(dObj->getSubObjects().size() - 2).getKey() == "nonce");
 }
 
@@ -804,7 +857,6 @@ BOOST_AUTO_TEST_CASE(dataobject_jsonOrder)
     data["aa2"] = "2";
     data["aa70"] = "7";
     data["aa8"] = "8";
-    std::cerr << data.asJson(0) << std::endl;
     BOOST_CHECK(data.asJson(0, false) ==
                 "{\"aa1\":\"1\",\"aa2\":\"2\",\"aa3\":\"3\",\"aa31\":\"3\",\"aa5\":\"5\",\"aa7\":"
                 "\"7\",\"aa70\":\"7\",\"aa8\":\"8\"}");
@@ -843,7 +895,8 @@ BOOST_AUTO_TEST_CASE(dataobject_arrayhell)
                     ]
                 ]
     })";
-    spDataObject dObj = ConvertJsoncppStringToData(data, string(), true);
+    CJOptions opt { .autosort = true };
+    spDataObject dObj = ConvertJsoncppStringToData(data, opt);
 }
 
 BOOST_AUTO_TEST_CASE(dataobject_besuresponse)
@@ -872,11 +925,354 @@ BOOST_AUTO_TEST_CASE(dataobject_besuresponse)
             } ]
           }
         })";
-    spDataObject dObj = ConvertJsoncppStringToData(data, string(), true);
+    CJOptions opt = { .autosort = true };
+    spDataObject dObj = ConvertJsoncppStringToData(data, opt);
     string const expectedParse =
         R"({"result":{"transactions":[{"blockHash":"0xac7b82af234ef01bf4d24a3b9c22c2de091c6f71ec04d51ff23bd780533d999f","blockNumber":"0x1","chainId":null,"from":"0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b","gas":"0x7a120","gasPrice":"0xa","hash":"0x225117089dee26945644798e2c64d3117f55c95c7cf5509f7176de4b3af5202d","input":"0x604b80600c6000396000f3007c01000000000000000000000000000000000000000000000000000000006000350463cbf0b0c08114602d57005b60006004358073ffffffffffffffffffffffffffffffffffffffff16ff","nonce":"0x0","publicKey":"0x3a514176466fa815ed481ffad09110a2d344f6c9b78c1d14afc351c3a51be33d8072e77939dc03ba44790779b7a1025baf3003f6732430e20cd9b76d953391b3","r":"0xe7d3c664c49aa9f5ce4eb76c8547450466262a78bd093160f492ea0853c68e9","raw":"0xf8a5800a8307a1208081ffb857604b80600c6000396000f3007c01000000000000000000000000000000000000000000000000000000006000350463cbf0b0c08114602d57005b60006004358073ffffffffffffffffffffffffffffffffffffffff16ff1ca00e7d3c664c49aa9f5ce4eb76c8547450466262a78bd093160f492ea0853c68e9a03f843e72210ff1da4fd9e375339872bcf0fad05c014e280ffc755e173700dd62","s":"0x3f843e72210ff1da4fd9e375339872bcf0fad05c014e280ffc755e173700dd62","to":null,"transactionIndex":"0x0","v":"0x1c","value":"0xff"}]}})";
 
     BOOST_CHECK(dObj->asJson(0, false) == expectedParse);
+}
+
+BOOST_AUTO_TEST_CASE(dataobject_doublefields_comments_allowed)
+{
+    string const data = R"(
+    {
+        "balance" : "1000000000000000000",
+        "//nonce" : "0",
+        "//nonce" : "1",
+        "code" : "0x606060405260e060020a600035046309e587a58114610031578063c04062261461004d578063dd4f1f2a1461005a575b005b61002f3373ffffffffffffffffffffffffffffffffffffffff16ff5b6100f5600061010961005e565b61002f5b60003090508073ffffffffffffffffffffffffffffffffffffffff166309e587a56040518160e060020a0281526004018090506000604051808303816000876161da5a03f1156100025750604080517f09e587a500000000000000000000000000000000000000000000000000000000815290516004828101926000929190829003018183876161da5a03f1156100025750505050565b604080519115158252519081900360200190f35b5060019056",
+        "storage" : {
+        }
+    })";
+    CJOptions opt = { .jsonParse = CJOptions::JsonParse::ALLOW_COMMENTS, .autosort = true };
+    spDataObject dObj = ConvertJsoncppStringToData(data, opt);
+    BOOST_CHECK(dObj->atKey("//nonce").asString() == "1");
+}
+
+BOOST_AUTO_TEST_CASE(dataobject_doublefields_comments_disabled)
+{
+    string const data = R"(
+    {
+        "balance" : "1000000000000000000",
+        "//nonce" : "0",
+        "//nonce" : "1",
+        "code" : "0x606060405260e060020a600035046309e587a58114610031578063c04062261461004d578063dd4f1f2a1461005a575b005b61002f3373ffffffffffffffffffffffffffffffffffffffff16ff5b6100f5600061010961005e565b61002f5b60003090508073ffffffffffffffffffffffffffffffffffffffff166309e587a56040518160e060020a0281526004018090506000604051808303816000876161da5a03f1156100025750604080517f09e587a500000000000000000000000000000000000000000000000000000000815290516004828101926000929190829003018183876161da5a03f1156100025750505050565b604080519115158252519081900360200190f35b5060019056",
+        "storage" : {
+        }
+    })";
+
+    try
+    {
+        CJOptions opt = { .autosort = true };
+        spDataObject dObj = ConvertJsoncppStringToData(data, opt);
+        BOOST_CHECK(dObj->atKey("//nonce").asString() == "1");
+    }
+    catch (std::exception const& _ex)
+    {
+        BOOST_CHECK(string(_ex.what()).find("Reading json with dublicate fields") != string::npos);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(dataobject_accessArray)
+{
+    // Access not an array
+    spDataObject obj;
+    auto const& vec = obj->getSubObjects();
+    BOOST_CHECK(vec.size() == 0);
+    auto const& map = obj->getSubObjectKeys();
+    BOOST_CHECK(map.size() == 0);
+
+    auto& vecU = (*obj).getSubObjectsUnsafe();
+    BOOST_CHECK(vecU.size() == 0);
+}
+
+BOOST_AUTO_TEST_CASE(dataobject_copy)
+{
+    string const data = R"(
+    {
+        "intfield" : 123,
+        "string" : "somstring",
+        "bool" : true,
+        "null" : null,
+        "array" : [
+            "element1",
+            "element2"
+        ],
+        "object" : {
+            "intfield" : -123,
+            "string" : "somstring",
+            "bool" : true
+        },
+        "array2" : [
+            1,
+            -2
+        ]
+    })";
+    CJOptions opt = { .jsonParse = CJOptions::JsonParse::ALLOW_COMMENTS, .autosort = true };
+    spDataObject dObj = ConvertJsoncppStringToData(data, opt);
+    BOOST_CHECK(dev::toHexPrefixed(dev::sha3(dObj->asJson(0, false))) == "0xfea9954b38d3afe471538b8854d63628570c1b68cf1c403e3b75a3263f7d4e3a");
+
+    spDataObject dObj2 = dObj->copy();
+    BOOST_CHECK(dObj->asJson(0, false) == dObj2->asJson(0, false));
+    (*dObj).atKeyUnsafe("string") = "newString";
+    BOOST_CHECK(dObj->asJson(0, false) != dObj2->asJson(0, false));
+
+    (*dObj).atKeyUnsafe("string") = "somstring";
+    (*dObj2).copyFrom(dObj);
+    BOOST_CHECK(dObj->asJson(0, false) == dObj2->asJson(0, false));
+    (*dObj).atKeyUnsafe("string") = "newString";
+    BOOST_CHECK(dObj->asJson(0, false) != dObj2->asJson(0, false));
+}
+
+BOOST_AUTO_TEST_CASE(dataobject_defaultType)
+{
+    spDataObject obj;
+    BOOST_CHECK(DataObject::dataTypeAsString(obj->type()) == "notinit");
+}
+
+BOOST_AUTO_TEST_CASE(dataobject_removeLeadingZerosFromHexValueEVEN)
+{
+    spDataObject obj = sDataObject("0x0000112233");
+    (*obj).setKey("0x0000112233");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValueEVEN);
+    (*obj).performModifier(mod_removeLeadingZerosFromHexKeyEVEN);
+    BOOST_CHECK(obj->asString() == "0x112233");
+    BOOST_CHECK(obj->getKey() == "0x112233");
+
+    (*obj).setString("0x000112234");
+    (*obj).setKey("0x000112234");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValueEVEN);
+    (*obj).performModifier(mod_removeLeadingZerosFromHexKeyEVEN);
+    BOOST_CHECK(obj->asString() == "0x112234");
+    BOOST_CHECK(obj->getKey() == "0x112234");
+
+    (*obj).setString("0x00012235");
+    (*obj).setKey("0x00012235");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValueEVEN);
+    (*obj).performModifier(mod_removeLeadingZerosFromHexKeyEVEN);
+    BOOST_CHECK(obj->asString() == "0x012235");
+    BOOST_CHECK(obj->getKey() == "0x012235");
+
+    (*obj).setString("0x01");
+    (*obj).setKey("0x01");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValueEVEN);
+    (*obj).performModifier(mod_removeLeadingZerosFromHexKeyEVEN);
+    BOOST_CHECK(obj->asString() == "0x01");
+    BOOST_CHECK(obj->getKey() == "0x01");
+
+    (*obj).setString("0x11");
+    (*obj).setKey("0x11");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValueEVEN);
+    (*obj).performModifier(mod_removeLeadingZerosFromHexKeyEVEN);
+    BOOST_CHECK(obj->asString() == "0x11");
+    BOOST_CHECK(obj->getKey() == "0x11");
+
+    (*obj).setString("0x1");
+    (*obj).setKey("0x1");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValueEVEN);
+    (*obj).performModifier(mod_removeLeadingZerosFromHexKeyEVEN);
+    BOOST_CHECK(obj->asString() == "0x01");
+    BOOST_CHECK(obj->getKey() == "0x01");
+
+    (*obj).setString("0x");
+    (*obj).setKey("0x");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValueEVEN);
+    (*obj).performModifier(mod_removeLeadingZerosFromHexKeyEVEN);
+    BOOST_CHECK(obj->asString() == "0x");
+    BOOST_CHECK(obj->getKey() == "0x");
+
+    (*obj).setString("0");
+    (*obj).setKey("0");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValueEVEN);
+    (*obj).performModifier(mod_removeLeadingZerosFromHexKeyEVEN);
+    BOOST_CHECK(obj->asString() == "0");
+    BOOST_CHECK(obj->getKey() == "0");
+
+    (*obj).setString("");
+    (*obj).setKey("");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValueEVEN);
+    (*obj).performModifier(mod_removeLeadingZerosFromHexKeyEVEN);
+    BOOST_CHECK(obj->asString() == "");
+    BOOST_CHECK(obj->getKey() == "");
+
+    (*obj).setString("00012235");
+    (*obj).setKey("00012235");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValueEVEN);
+    (*obj).performModifier(mod_removeLeadingZerosFromHexKeyEVEN);
+    BOOST_CHECK(obj->asString() == "00012235");
+    BOOST_CHECK(obj->getKey() == "00012235");
+}
+
+BOOST_AUTO_TEST_CASE(dataobject_removeLeadingZerosFromHexValues)
+{
+    spDataObject obj = sDataObject("0x0000112233");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValues);
+    BOOST_CHECK(obj->asString() == "0x112233");
+
+    (*obj).setString("0x000112234");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValues);
+    BOOST_CHECK(obj->asString() == "0x112234");
+
+    (*obj).setString("0x00012235");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValues);
+    BOOST_CHECK(obj->asString() == "0x12235");
+
+    (*obj).setString("0x01");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValues);
+    BOOST_CHECK(obj->asString() == "0x1");
+
+    (*obj).setString("0x11");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValues);
+    BOOST_CHECK(obj->asString() == "0x11");
+
+    (*obj).setString("0x1");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValues);
+    BOOST_CHECK(obj->asString() == "0x1");
+
+    (*obj).setString("0x");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValues);
+    BOOST_CHECK(obj->asString() == "0x");
+
+    (*obj).setString("0");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValues);
+    BOOST_CHECK(obj->asString() == "0");
+
+    (*obj).setString("");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValues);
+    BOOST_CHECK(obj->asString() == "");
+
+    (*obj).setString("00012235");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValues);
+    BOOST_CHECK(obj->asString() == "00012235");
+}
+
+BOOST_AUTO_TEST_CASE(dataobject_valueToCompactEvenHexPrefixed)
+{
+    spDataObject obj = sDataObject("10");
+    (*obj).performModifier(mod_valueToCompactEvenHexPrefixed);
+    BOOST_CHECK(obj->asString() == "0x0a");
+
+    (*obj).setString("10_00");
+    (*obj).performModifier(mod_valueToCompactEvenHexPrefixed);
+    BOOST_CHECK(obj->asString() == "0x03e8");
+
+    (*obj).setString("5");
+    (*obj).performModifier(mod_valueToCompactEvenHexPrefixed);
+    BOOST_CHECK(obj->asString() == "0x05");
+
+    (*obj).setString("005");
+    (*obj).performModifier(mod_valueToCompactEvenHexPrefixed);
+    BOOST_CHECK(obj->asString() == "0x05");
+
+    (*obj).setString("0");
+    (*obj).performModifier(mod_valueToCompactEvenHexPrefixed);
+    BOOST_CHECK(obj->asString() == "0x00");
+
+    (*obj).setString("0x01");
+    (*obj).performModifier(mod_valueToCompactEvenHexPrefixed);
+    BOOST_CHECK(obj->asString() == "0x01");
+
+    (*obj).setString("0x00");
+    (*obj).performModifier(mod_valueToCompactEvenHexPrefixed);
+    BOOST_CHECK(obj->asString() == "0x00");
+
+    (*obj).setString("0x001");
+    (*obj).performModifier(mod_valueToCompactEvenHexPrefixed);
+    BOOST_CHECK(obj->asString() == "0x01");
+
+    (*obj).setString("0x1");
+    (*obj).performModifier(mod_valueToCompactEvenHexPrefixed);
+    BOOST_CHECK(obj->asString() == "0x01");
+
+    (*obj).setString("0x");
+    (*obj).performModifier(mod_valueToCompactEvenHexPrefixed);
+    BOOST_CHECK(obj->asString() == "0x00");
+}
+
+BOOST_AUTO_TEST_CASE(dataobject_keyToCompactEvenHexPrefixed)
+{
+    spDataObject obj;
+    (*obj).setKey("10");
+    (*obj).performModifier(mod_keyToCompactEvenHexPrefixed);
+    BOOST_CHECK(obj->getKey() == "0x0a");
+
+    (*obj).setKey("5");
+    (*obj).performModifier(mod_keyToCompactEvenHexPrefixed);
+    BOOST_CHECK(obj->getKey() == "0x05");
+
+    (*obj).setKey("005");
+    (*obj).performModifier(mod_keyToCompactEvenHexPrefixed);
+    BOOST_CHECK(obj->getKey() == "0x05");
+
+    (*obj).setKey("0");
+    (*obj).performModifier(mod_keyToCompactEvenHexPrefixed);
+    BOOST_CHECK(obj->getKey() == "0x00");
+
+    (*obj).setKey("0x01");
+    (*obj).performModifier(mod_keyToCompactEvenHexPrefixed);
+    BOOST_CHECK(obj->getKey() == "0x01");
+
+    (*obj).setKey("0x00");
+    (*obj).performModifier(mod_keyToCompactEvenHexPrefixed);
+    BOOST_CHECK(obj->getKey() == "0x00");
+
+    (*obj).setKey("0x001");
+    (*obj).performModifier(mod_keyToCompactEvenHexPrefixed);
+    BOOST_CHECK(obj->getKey() == "0x01");
+
+    (*obj).setKey("0x1");
+    (*obj).performModifier(mod_keyToCompactEvenHexPrefixed);
+    BOOST_CHECK(obj->getKey() == "0x01");
+
+    (*obj).setKey("0x");
+    (*obj).performModifier(mod_keyToCompactEvenHexPrefixed);
+    BOOST_CHECK(obj->getKey() == "0x00");
+}
+
+BOOST_AUTO_TEST_CASE(dataobject_mod_valueToFH32)
+{
+    spDataObject obj = sDataObject("0x01");
+    (*obj).performModifier(mod_valueToFH32);
+    BOOST_CHECK(obj->asString() == "0x0000000000000000000000000000000000000000000000000000000000000001");
+
+    (*obj).setString("0x");
+    (*obj).performModifier(mod_valueToFH32);
+    BOOST_CHECK(obj->asString() == "0x0000000000000000000000000000000000000000000000000000000000000000");
+
+    (*obj).setString("0x0000000000000000000000000000000000000000000000000000000000000000");
+    (*obj).performModifier(mod_valueToFH32);
+    BOOST_CHECK(obj->asString() == "0x0000000000000000000000000000000000000000000000000000000000000000");
+
+    (*obj).setString("0x1000000000000000000000000000000000000000000000000000000000000000");
+    (*obj).performModifier(mod_valueToFH32);
+    BOOST_CHECK(obj->asString() == "0x1000000000000000000000000000000000000000000000000000000000000000");
+
+    (*obj).setString("0x0000010000000000");
+    (*obj).performModifier(mod_valueToFH32);
+    BOOST_CHECK(obj->asString() == "0x0000000000000000000000000000000000000000000000000000010000000000");
+
+    (*obj).setString("0x1000010000000000");
+    (*obj).performModifier(mod_valueToFH32);
+    BOOST_CHECK(obj->asString() == "0x0000000000000000000000000000000000000000000000001000010000000000");
+}
+
+BOOST_AUTO_TEST_CASE(dataobject_copyFrom_emptyArray)
+{
+    {
+    DataObject orig(DataType::Array);
+    BOOST_CHECK(orig.type() == DataType::Array);
+    DataObject copy;
+    copy.copyFrom(orig);
+    BOOST_CHECK(copy.type() == DataType::Array);
+    }
+
+    {
+    DataObject orig(DataType::Object);
+    BOOST_CHECK(orig.type() == DataType::Object);
+    DataObject copy;
+    copy.copyFrom(orig);
+    BOOST_CHECK(copy.type() == DataType::Object);
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

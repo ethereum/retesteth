@@ -4,6 +4,9 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
+genHomesteadToDaoCfg::genHomesteadToDaoCfg()
+{
+
 const string t8ntool_HomesteadToDaoAt5_config = R"({
     "params" : {
         "fork" : "HomesteadToDaoAt5",
@@ -14,8 +17,6 @@ const string t8ntool_HomesteadToDaoAt5_config = R"({
     }
 })";
 
-genHomesteadToDaoCfg::genHomesteadToDaoCfg()
-{
     spDataObject obj2;
     (*obj2)["path"] = "default/genesis/HomesteadToDaoAt5.json";
     (*obj2)["content"] = t8ntool_HomesteadToDaoAt5_config;

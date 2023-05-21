@@ -2,8 +2,8 @@
 #include <EthChecks.h>
 #include <ExitHandler.h>
 #include <Options.h>
-#include <TestHelper.h>
-#include <TestOutputHelper.h>
+#include <retesteth/helpers/TestHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
 #include <mainHelper.h>
 #include <iostream>
 #include <sstream>
@@ -123,7 +123,7 @@ void expandUnitTestsArg(int _argc, const char* _argv[])
         {
             _argv[i + 1] =
                 "LLLCSuite,SOLCSuite,DataObjectTestSuite,EthObjectsSuite,OptionsSuite,TestHelperSuite,ExpectSectionSuite,"
-                "trDataCompileSuite,StructTest,MemoryLeak";
+                "trDataCompileSuite,StructTest,MemoryLeak,TestSuites";
             break;
         }
     }
@@ -346,9 +346,24 @@ string getTestTArg(fs::path const& _cwd, string const& arg)
         "GeneralStateTests", "BlockchainTests",
         "GeneralStateTestsFiller", "BlockchainTestsFiller",
         "EOFTests", "EOFTestsFiller",
-        "EIPTests", "EIPTestsFiller"};
+        "EIPTests", "EIPTestsFiller",
+        "TransactionTests", "TransactionTestsFiller",
+        "LegacyTests"
+    };
+    string cArg = arg;
+    if (cArg.size() > 1 && cArg.at(cArg.size() - 1) == '/')
+        cArg = cArg.erase(cArg.size() - 1);
+
     string tArg;
     fs::path cwd = _cwd;
+    bool stepinfolder = false;
+    if (test::inArray(supportedSuites, cArg))
+    {
+        stepinfolder = true;
+        if (fs::exists(cwd / cArg))
+            cwd = cwd / cArg;
+    }
+
     while(!test::inArray(supportedSuites, cwd.stem().string()) && !cwd.empty())
     {
         tArg.insert(0, cwd.stem().string() + "/");
@@ -368,35 +383,50 @@ string getTestTArg(fs::path const& _cwd, string const& arg)
                 if (cwd.parent_path().parent_path().stem() == "Constantinople")
                     headTestSuite.insert(0, "LegacyTests/Constantinople/");
             }
-            if (cwd.parent_path().stem() == "EIPTests" && headTestSuite == "BlockchainTests")
+            else if ((cwd.parent_path().stem() == "EIPTests" || cwd.parent_path().stem() == "EIPTestsFiller")
+                     && headTestSuite == "BlockchainTests")
                 headTestSuite.insert(0, "EIPTests/");
-
+            else if (cwd.parent_path().stem() == "Constantinople")
+                headTestSuite.insert(0, "LegacyTests/Constantinople/");
         }
-        tArg.insert(0, headTestSuite + "/");
+        if (stepinfolder)
+            tArg.insert(0, headTestSuite);
+        else
+            tArg.insert(0, headTestSuite  + "/");
     }
 
-    tArg.insert(tArg.size(), arg);
-    if (arg.at(arg.size()-1) == '/')
-        tArg = tArg.erase(tArg.size() - 1);
+    if (!stepinfolder)
+        tArg.insert(tArg.size(), cArg);
+
+    if (tArg == "BlockchainTests/InvalidBlocks/bcExpectSection")
+        tArg = "BlockchainTests/Retesteth/bcExpectSection";
     return tArg;
 }
 
 // Preprocess the args
 const char** preprocessOptions(int& _argc, const char* _argv[])
 {
+    // Get Test Path before initializing options
+    fs::path testPath;
+    const char* ptestPath = std::getenv("ETHEREUM_TEST_PATH");
+    if (ptestPath != nullptr)
+        testPath = fs::path(ptestPath);
+
+    for (short i = 1; i < _argc; i++)
+    {
+        string const arg = string{_argv[i]};
+        if (arg == "--help" || arg == "--version")
+            return _argv;
+        if (arg == "--testpath" && i + 1 < _argc)
+            testPath = fs::path(std::string{_argv[i + 1]});
+    }
     // if file.json is outside of the testpath
     //    parse "retesteth file.json" ==> "retesteth -t TestSuite -- --testfile file.json"
     // else
     //    "retesteth file.json" ==> "retesteth -t TestSuite/Subsuite -- --singletest file.json"
     // parse "retesteth Folder" ==> "retesteth -t TestSuite/Folder
 
-    // Get Test Path before initializing options
-    fs::path testPath;
-    const char* ptestPath = std::getenv("ETHEREUM_TEST_PATH");
-    if (ptestPath != nullptr)
-        testPath = fs::path(ptestPath);
     auto const cwd = fs::path(fs::current_path());
-
     string filenameArg;
     string directoryArg;
     bool fileInsideTheTestRepo = false;
@@ -410,10 +440,8 @@ const char** preprocessOptions(int& _argc, const char* _argv[])
         if (arg == "-t")
             hasTArg = true;
 
-        if (arg == "--testpath" && i + 1 < _argc)
-            testPath = fs::path(std::string{_argv[i + 1]});
-
-        bool isFile = (arg.find(".json") != string::npos || arg.find(".yml") != string::npos);
+        bool isFile = (arg.find(".json") != string::npos || arg.find(".yml") != string::npos
+                    || arg.find(".py") != string::npos);
         if (isFile && string{_argv[i - 1]} != "--testfile")
         {
             filenameArg = arg;
@@ -493,6 +521,7 @@ const char** preprocessOptions(int& _argc, const char* _argv[])
         argv2[i++] = buffer;
     }
     _argc = options.size();
+    c_argv2 = argv2;
     return argv2;
 }
 

@@ -2,9 +2,7 @@
 #include "../../../basetypes.h"
 #include "../Base/StateTestTransactionBase.h"
 #include <libdataobj/DataObject.h>
-namespace test
-{
-namespace teststruct
+namespace test::teststruct
 {
 // Sructure to store JSON data from test
 // Indicates that Transaction is read from StateTest filler
@@ -18,4 +16,3 @@ struct StateTestFillerTransaction : StateTestTransactionBase
 typedef GCP_SPointer<StateTestFillerTransaction> spStateTestFillerTransaction;
 
 }  // namespace teststruct
-}  // namespace test

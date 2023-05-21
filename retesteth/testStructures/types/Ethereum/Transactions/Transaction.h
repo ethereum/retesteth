@@ -3,20 +3,21 @@
 #include <libdevcore/RLP.h>
 #include <libdataobj/DataObject.h>
 
-namespace test
-{
-namespace teststruct
+namespace test::teststruct
 {
 
 enum class TransactionType
 {
     LEGACY,
     ACCESSLIST,
-    BASEFEE
+    BASEFEE,
+    BLOB
 };
 
 struct Transaction : GCP_SPointerBase
 {
+    static std::string TransactionTypeToString(TransactionType _t);
+
     // Transaction Interface
     virtual TransactionType type() const = 0;
     virtual const spDataObject asDataObject(ExportOrder _order = ExportOrder::Default) const = 0;
@@ -52,12 +53,19 @@ struct Transaction : GCP_SPointerBase
 
 protected:
     // Potected transaction interface
-    virtual void fromDataObject(DataObject const&) = 0;
+    void fromDataObject(DataObject const&);
+    void makeSignature(DataObject const&);
+
     virtual void fromRLP(dev::RLP const&) = 0;
     virtual dev::h256 buildVRSHash() const = 0;
-    virtual void buildVRS() = 0;
+    virtual void buildVRS();
     virtual void streamHeader(dev::RLPStream& _stream) const = 0;
     virtual void rebuildRLP() = 0;
+
+    virtual void checkDataScheme(DataObject const&) const = 0;
+    virtual void _fromData(DataObject const&) = 0;
+
+    virtual size_t _rlpHeaderSize() const = 0;
 
 protected:
     Transaction();
@@ -90,4 +98,3 @@ protected:
 typedef GCP_SPointer<Transaction> spTransaction;
 
 }  // namespace teststruct
-}  // namespace test

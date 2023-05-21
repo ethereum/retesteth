@@ -1,166 +1,162 @@
 # retesteth
-tests execution/generation via transition tool (t8n) (https://ethereum-tests.readthedocs.io/en/latest/t8ntool-ref.html)  
-(Execution stats: http://retesteth.ethdevops.io/)
 
-# Usage
-If installed in the system, simply navigate to [ethereum/tests](https://github.com/ethereum/tests)  
-Need supported client's t8n alises in the system path.
-To generate complex test need [solc](https://github.com/ethereum/solidity/releases/tag/v0.8.17), [lllc](https://github.com/winsvega/solidity) in the system path.
+A test generaion tool for the test fillers https://github.com/ethereum/tests/tree/develop/src  
+Using state transition tool [t8n](https://ethereum-tests.readthedocs.io/en/latest/t8ntool-ref.html)  
+More t8n spec docs: https://github.com/ethereum/go-ethereum/tree/master/cmd/evm  
+Execution stats: http://retesteth.ethdevops.io/  
+Web interface: http://retesteth.ethdevops.io/web/
 
-Execute test:
+# Supported clients / evm's
+- [geth](https://github.com/ethereum/go-ethereum)   
+- [besu](https://github.com/hyperledger/besu)   
+- [nimbus](https://github.com/status-im/nimbus-eth1)  
+- [evmone](https://github.com/ethereum/evmone.git)  
+- [ethereumjs](https://github.com/ethereumjs/ethereumjs-monorepo.git)  
+- [coregeth](https://github.com/etclabscore/core-geth) (etc | etctranslate configs)  
+
+# Docker Instructions
+
+1. Download docker scripts: 
+   - [`Dockerfile`](https://raw.githubusercontent.com/ethereum/retesteth/develop/Dockerfile)
+   - [`dretesteth.sh`](https://raw.githubusercontent.com/ethereum/retesteth/develop/dretesteth.sh)
+
+   To use [the pyspec tf generator]() instead of retesteth in the docker, rename the `dretesteth.sh` to `dtf.sh`.
+   
+   **Note:** It is best to put these files in their own directory.
+   The reason is that any files in the same directory, including subdirectories, will be added to the docker container, slowing things down.
+
+1. To setup the clients required, edit the args in Dockerfile script.
+   Setup github repo and branch/commit hash to build from. Leaving an empty `""` field will disable the client build in the Docker
+
+   ```
+   ARG BESU_SRC="https://github.com/hyperledger/besu.git"
+   ARG PYSPECS_SRC="https://github.com/ethereum/execution-spec-tests"
+   ARG ETEREUMJS_SRC="https://github.com/ethereumjs/ethereumjs-monorepo.git"
+   ARG RETESTETH_SRC="https://github.com/ethereum/retesteth.git"
+   ARG GETH_SRC="https://github.com/ethereum/go-ethereum.git"
+   ARG NIMBUS_SRC="https://github.com/status-im/nimbus-eth1.git"
+   ARG EVMONE_SRC="https://github.com/ethereum/evmone.git"
+
+   # Leave empty to disable the build, can point to commit hash as well
+   ARG BESU="main"
+   ARG GETH="master"
+   ARG NIMBUS="master"
+   ARG ETHEREUMJS="master"
+   ARG RETESTETH="develop"
+   ARG PYSPECS="main"
+   ARG EVMONE="master"
+   ```
+
+1. Build docker locally (if building all clients, ~10 gb space required):
+
+   ```
+   chmod +x ./dretesteth.sh
+   ./dretesteth.sh build
+   ./dretesteth.sh install
+   ```
+
+1. Edit `dretesteth.sh` and setup local path to the [test](https://github.com/ethereum/tests) repo so not to type `--testpath`.  
+   Navigate to the testpath folder test. And use retesteth normally (`dr` will be linked to `dretesteth.sh` after `dretesteth.sh install` command):
+
+   ```
+   dr test.json
+   dr testFiller.json --filltests --clients besu|evmone|ethereumjs|nimbus|t8ntool(default)
+   dr testfolder
+   dr -t GeneralStateTest
+   dr -t BlockchainTests
+   dretesteth.sh --help
+   ```
+
+   The command will run retesteth and clients from the docker container but using local tests.
+   Useful options (see `--help`):
+
+   ```
+   --statediff
+   --poststate
+   --vmtraceraw | --vmtrace
+   --singlenet
+   ```
+
+   See the [usage tutorial](https://ethereum-tests.readthedocs.io/en/latest/retesteth-tutorial.html)
+
+# Building locally
+
+## Basic deps
+g++-11 / g++-9 required  
+Make sure `cmake` version is higher than VERSION 3.9.3, otherwise install `cmake` from a different source
+
+```sh
+sudo apt-cache policy cmake
+sudo apt-get update
+sudo apt-get install git g++ build-essential cmake
 ```
-retesteth test.json     
-```
 
-Generate test:
-```
-retesteth testFiller.json --filltests
-```
+## Retesteth
 
-Debug options: `--vmtrace, --statediff, --poststate` and many more.  
-`retesteth --help` for more info and documentation: https://ethereum-tests.readthedocs.io  
-
-Or docker version:
-http://retesteth.ethdevops.io/release/0.3.0-shanghai/dretesteth-0.3.0-shanghai.tar
-
-* A test generation tool for the test fillers https://github.com/ethereum/tests/tree/develop/src
-* Building instruction for beginners: [retesteth + solidity build](https://github.com/ethereum/retesteth#building-instructions-for-beginners)
-* [Usage tutorial](https://ethereum-tests.readthedocs.io/en/latest/retesteth-tutorial.html)
-
-# The Goal
-
-* A test tool that would be capable of running current Blockchain/State tests against any client
-* On client side use transition tool executable which exports client core logic of transaction execution on given state
-* Filling existing tests (generating post state from *Filler.json/yml/py instruction files) using the above and any existing client
-* Running request - response tests with a provided client
-* Bunch tests execution with many clients with many threads
-* A minimum set of additional RPC methods for client to negotiate with the tool: https://github.com/ethereum/retesteth/wiki/RPC-Methods
-* Or a simple transition tool that is also usefull for transaction debugging: https://ethereum-tests.readthedocs.io/en/latest/t8ntool-ref.html
-
-# Current progress
-
-* geth t8n supported
-* ethereumjs t8n supported
-* nimbus t8n supported
-* besu t8n [maintanence]
-
-# Building instructions
-Ubuntu (retesteth):
-```
-git clone git@github.com:ethereum/retesteth.git
-cd retesteth
-mkdir build
-cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release
+```sh
+git clone https://github.com/ethereum/retesteth.git
+cd retesteth && git checkout develop
+mkdir build && cd build
+cmake ..
 make -j4
 ```
 
-MacOS (retesteth + tests + geth):
-```
-HOMEBREW_NO_AUTO_UPDATE=1 brew install -q cmake ninja git go@1.16
-git clone --depth 1 https://github.com/ethereum/go-ethereum.git
-git clone --depth 1 https://github.com/ethereum/tests.git
-cd go-ethereum
-make all
-ln -s ./build/bin/evm /usr/local/bin/evm
-cd ..
-git clone https://github.com/ethereum/retesteth.git
-cd retesteth
-mkdir build
-cd build
-cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../toolchain.cmake
-cmake --build .
-
-```
-
-MacOS / Ubuntu dependecy issues:
-If one of the following dependecies is failing to autoinstall, some times due to outdated version or fails to build on OS, you can install it locally from a version that works (newer) and select in `-DLOCALDEPS` flag
-```
-rm -r /root/.hunter
-rm CMakeCache.txt
-cmake .. -DLOCALDEPS="BOOST"
-```
-
-Try building instruction for beginners: [retesteth + solidity build](https://github.com/ethereum/retesteth#building-instructions-for-beginners)
-
-
-# Usage
-Wiki: https://github.com/ethereum/retesteth/wiki
-Requires to have a client installed on your system. Read the wiki page on detailed instruction on how to configure your client to work with `retesteth`
-https://github.com/ethereum/retesteth/wiki/Add-client-configuration-to-Retesteth
-```bash
-./retesteth -t GeneralStateTests -- --testpath "your path to ethereum/tests repo"
-```
-
-# Docker instructions
-See: https://github.com/ethereum/retesteth/wiki/Docker-instructions
-
-# RPC Methods
-See: https://github.com/ethereum/retesteth/wiki/RPC-Methods
-
-# Contact
-Telegram: @wdimitry
-
-# Building instructions for beginners
-## Dependencies
-
-#### GIT
-```
-sudo apt-get update
-sudo apt-get install git g++ build-essential
-```
-#### Cmake
-Make sure the version is higher than VERSION 3.9.3, otherwise install cmake from a different source
-```
-sudo apt-cache policy cmake
-sudo apt-get install cmake
-```
-
-#### Retesteth
-```
-cd ~
-mkdir Ethereum
-cd Ethereum
-git clone https://github.com/ethereum/retesteth.git
-cd retesteth
-mkdir build
-cd build
-cmake ..
-```
-
-Now you should see the successful build files generation result:
+You should see the successful build files generation result after (`cmake ..` command): 
 ```
 Configuring done
 -- Generating done
--- Build files have been written
+-- Build files have been written 
 ```
 
-Run the build command to compile:
--j threadCount to optimize the build speed. Depending on your processor threads it will increase the building speed.
+
+## Test clients
+
+Setup at least one client (default is `geth`).
+Compile required clients locally.
+Use [Dockerfile](https://github.com/ethereum/retesteth/blob/develop/Dockerfile) as a hint to setup the clients or visit official page for instructions.
+
+Retesteth is looking for client's t8n aliases in the PATH, copy or link them in the system:
 ```
-make -j4
-```
-
-#### Solidity
-
-check the available boost version by
-`sudo apt-cache policy libboost-all-dev`
-
-install boost dependency boost if version >=1.65
-`sudo apt-get install libboost-all-dev`
-
-Solidity building instructions:
-
-```
-cd ~
-cd Ethereum
-git clone https://github.com/ethereum/solidity.git
-cd solidity
-git checkout 8f2595957bfc0f3cd18ca29240dabcd6b2122dfd
-mkdir build
-cd build
-cmake .. -DLLL=1
-make lllc -j4
+cp /geth/build/bin/evm /bin/evm
+cp /nimbus/tools/t8n/t8n /bin/evm_nimbus
+ln -s /besu/ethereum/evmtool/build/install/evmtool/bin/evm /usr/bin/besuevm
+ln -s /evmone/build/bin/evmone-t8n /usr/bin/evmone
 ```
 
-### DONE!
+Setup evn vars: 
+```
+ETHEREUMJS_PATH env var is required for ethereumjs client
+PYSPECS_PATH env var to generate .py test fillers (https://github.com/ethereum/execution-spec-tests)
+ETHEREUM_TEST_PATH env to setup default path to the test repo (so not to type --testpath)
+```
+
+## LLLC to compile LLL basic code in the test fillers
+
+`lllc` compiles [Lisp Like Language](https://media.consensys.net/an-introduction-to-lll-for-ethereum-smart-contract-development-e26e38ea6c23), an old Ethereum smart contract language that is still in use in tests.
+
+```
+apt-get install --yes libboost-filesystem-dev libboost-system-dev libboost-program-options-dev libboost-test-dev
+git clone --depth 1 -b master https://github.com/winsvega/solidity.git /solidity
+mkdir /build && cd /build
+cmake /solidity -DCMAKE_BUILD_TYPE=Release -DLLL=1 && make lllc
+cp /build/lllc/lllc /bin/lllc
+```
+
+Optionally clean the cache:
+```
+rm -rf /build /solidity /var/cache/* /root/.hunter/*  
+```
+
+## Solidity to compile solidity and yul code in the test fillers
+```
+wget https://github.com/ethereum/solidity/releases/download/v0.8.17/solc-static-linux
+cp solc-static-linux /usr/bin/solc
+chmod +x /usr/bin/solc
+```
+
+# Installing on MacOS
+See https://github.com/ethereum/retesteth/blob/develop/circle.yml file as a hint.  
+use `cmake .. -DLOCALDEPS=BOOST` to disable hunter boost autoinstall to use locally installed version of BOOST (if there are issues with boost)
+
+# Contact if any question:
+Telegram: @wdimitry

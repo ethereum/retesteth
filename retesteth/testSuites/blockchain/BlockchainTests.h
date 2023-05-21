@@ -35,6 +35,8 @@ REGISTER_SUITE_OVERRIDE(BlockchainTestInvalidSuite, TestSuite,)
 REGISTER_SUITE_OVERRIDE(BlockchainTestTransitionSuite, TestSuite,)
 
 REGISTER_SUITE(BlockchainTestEIPSuite, BlockchainTestInvalidSuite)
+REGISTER_SUITE(BlockchainTestPyspecSuite, BlockchainTestInvalidSuite)
+REGISTER_SUITE(BlockchainTestEIPPyspecSuite, BlockchainTestInvalidSuite)
 REGISTER_SUITE(BCGeneralStateTestsSuite, BlockchainTestValidSuite)
 REGISTER_SUITE(BCGeneralStateTestsVMSuite, BCGeneralStateTestsSuite)
 REGISTER_SUITE(BCGeneralStateTestsShanghaiSuite, BCGeneralStateTestsSuite)

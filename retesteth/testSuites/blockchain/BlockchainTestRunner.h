@@ -13,6 +13,7 @@ public:
     BlockchainTestRunner(teststruct::BlockchainTestInFilled const&, TestSuite::TestSuiteOptions const&);
     ~BlockchainTestRunner();
     static bool validateFork(std::string const& _testname, teststruct::FORK const& _net);
+    bool checkBigIntSkip() const;
     bool abortBlock() const;
     void incrementBlockAndSetTestInfo();
     void setChainParams();

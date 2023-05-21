@@ -30,6 +30,7 @@ EthGetBlockBy::EthGetBlockBy(spDataObject& _data)
                 {"timestamp", {{DataType::String}, jsonField::Required}},
                 {"transactionsRoot", {{DataType::String}, jsonField::Required}},
                 {"withdrawalsRoot", {{DataType::String}, jsonField::Optional}},        //Shanghai field
+                {"excessDataGas", {{DataType::String}, jsonField::Optional}},          //Cancun field
                 {"sha3Uncles", {{DataType::String}, jsonField::Required}},
                 {"seedHash", {{DataType::String}, jsonField::Optional}},               //Aleth field
                 {"boundary", {{DataType::String}, jsonField::Optional}},               //Aleth field

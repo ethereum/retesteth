@@ -2,6 +2,8 @@
 BUILDPATH="/data"
 WEBPATH="/data/web"
 HOMEPATH="/home/ubuntu"
+ARGCLIENT=$1
+ARGBUILD=$2
 
 
 # Prepare build info
@@ -15,18 +17,22 @@ git pull
 git submodule update --init
 TEST_HEAD=$(git rev-parse HEAD | cut -c1-7)
 
+
+if [ "$ARGBUILD" != "norebuild" ]; then
+
 echo "Fetch retesteth: "
 cd $BUILDPATH/retesteth
 git reset --hard HEAD~100
 git fetch origin
 git checkout develop
+#git checkout 6d1b4c2 #transaction cache
 git pull
 rm -r ./build
 rm -r $HOMEPATH/.retesteth/
 RETESTETH_HEAD=$(git rev-parse HEAD | cut -c1-7)
 echo "Build retesteth: "
 mkdir build
-cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DSANITIZE="" && make
+cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DSANITIZE="" -DUNITTESTS="1" && make
 #cd build && cmake .. -DCMAKE_BUILD_TYPE=Debug -DSANITIZE=thread && make
 #cd build && cmake .. -DCMAKE_BUILD_TYPE=Debug -DSANITIZE=address && make
 
@@ -36,6 +42,7 @@ if [ "$1" = "geth" ] || [ "$1" = "t8ntool" ] || [ -z "$1" ]; then
     git reset --hard HEAD~100
     git fetch origin
     git checkout master
+ #   git checkout 60e30a9
     git pull
     rm ./build/bin/geth
     rm ./build/bin/evm
@@ -51,18 +58,20 @@ if [ "$1" = "besu" ] || [ -z "$1" ]; then
     git reset --hard HEAD~1
     git fetch origin
     git checkout main
+#    git fetch shemnon
+#    git checkout shemnon/t8n
     git pull
     rm ./build/install/besu/bin/besu
+    rm ./ethereum/evmtool/build/install/evmtool/bin/evm
     BESU_HEAD=$(git rev-parse HEAD | cut -c1-7)
     echo "Build besu: "
-    #export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
-    #export JAVA_HOME=/usr/lib/jvm/java-14-oracle
-    export JAVA_HOME=/usr/lib/jvm/java-17-oracle    
+    # export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+    # export JAVA_HOME=/usr/lib/jvm/java-14-oracle
+    export JAVA_HOME=/usr/lib/jvm/java-17-oracle
     ./gradlew clean distZip -x test
-    ./gradlew clean
     ./gradlew build
     #./gradlew integrationTest
-    ./gradlew installDist
+    #./gradlew installDist
     ./gradlew ethereum:evmtool:installDist
     killall java
 fi
@@ -77,6 +86,7 @@ if [ "$1" = "ethereumjs" ] || [ -z "$1" ]; then
     git pull
     ETHEREUMJS_HEAD=$(git rev-parse HEAD | cut -c1-7)
     echo "Build ethereumjs: "
+    nvm use 19
     npm i
     npm run build --workspaces
 fi
@@ -84,15 +94,18 @@ fi
 if [ "$1" = "nimbus" ] || [ -z "$1" ]; then
     echo "Fetch nimbus: "
     cd $BUILDPATH/nimbus-eth1
+    rm -r vendor
     git reset --hard HEAD~1
     git fetch origin
     git checkout master
     git pull
+    git submodule update --recursive
     rm ./tools/t8n/t8n
     NIMBUS_HEAD=$(git rev-parse HEAD | cut -c1-7)
     echo "Build nimbus: "
     make t8n -j2
 fi
+
 
 #if [ "$1" = "oewrap" ] || [ -z "$1" ]; then
 #    echo "Fetch open-ethereum: "
@@ -112,17 +125,18 @@ fi
 if [ "$1" = "aleth" ] || [ "$1" = "testeth" ] || [ -z "$1" ]; then
     echo "Fetch aleth: "
     cd $BUILDPATH/aleth/build
-    git reset --hard HEAD~1
-    git fetch winsvega
-    git checkout winsvega/updatetests2
-    git pull
-    rm ./aleth/aleth
-    rm ./test/testeth
+#    git reset --hard HEAD~1
+#    git fetch winsvega
+#    git checkout winsvega/updatetests2
+#    git pull
+#    rm ./aleth/aleth
+#    rm ./test/testeth
     ALETH_HEAD=$(git rev-parse HEAD | cut -c1-7)
-    echo "Build aleth: "
-    cmake .. -DCMAKE_BUILD_TYPE=Release
-    make
+#    echo "Build aleth: "
+#    cmake .. -DCMAKE_BUILD_TYPE=Release
+#    make
 fi
+fi #ARGREBUILD
 
 TIMESTAMP=$(date +%Y-%m-%d)
 cleanMem() {
@@ -136,6 +150,7 @@ cleanMem() {
  killall -9 java
  killall python
  killall node
+ killall nimbus
  sleep 10
 }
 
@@ -167,6 +182,9 @@ runCmd() {
    if [ "$client" = "t8ntool" ]; then
      headinfo="GethTool: #$GETHTool_HEAD"
    fi
+   if [ "$client" = "t8ntooleip" ]; then
+     headinfo="GethTool: #$GETHTool_HEAD"
+   fi
    if [ "$client" = "ethereumjs" ]; then
      headinfo="EthJSTool: #$ETHEREUMJS_HEAD"
    fi
@@ -179,6 +197,9 @@ runCmd() {
    if [ "$client" = "retesteth" ]; then
      clientcfg=""
    fi
+   if [ "$client" = "dretesteth" ]; then
+     clientcfg=""
+   fi
  done
  sleep 20
 
@@ -187,6 +208,8 @@ runCmd() {
     $BUILDPATH/aleth/build/test/testeth $CMD --exectimelog --testpath $BUILDPATH/tests &> $logdir/$logname
  elif [ "$client" = "retesteth" ]; then  
     $BUILDPATH/retesteth/build/retesteth/retesteth $CMD --nologcolor --exectimelog $clientcfg --testpath $BUILDPATH/tests &> $logdir/$logname        
+ elif [ "$client" = "dretesteth" ]; then
+    $BUILDPATH/retesteth/dretesteth.sh $CMD --nologcolor --exectimelog $clientcfg --testpath $BUILDPATH/tests &> $logdir/$logname         
  else
     echo "$BUILDPATH/memlogpid.py $BUILDPATH/retesteth/build/retesteth/retesteth $CMD --nologcolor --exectimelog $clientcfg --testpath $BUILDPATH/tests $logdir/$logname $logdir/$memlogname"
     python $BUILDPATH/memlogpid.py "$BUILDPATH/retesteth/build/retesteth/retesteth $CMD --nologcolor --exectimelog $clientcfg --testpath $BUILDPATH/tests" $logdir/$memlogname $logdir/$logname
@@ -226,6 +249,9 @@ runCmd() {
 #Comands
 cname=$1
 arg2=$2
+if [ "$ARGBUILD" = "norebuild" ]; then
+  arg2=""
+fi
 
 if [ "$cname" = "retesteth" ] || [ -z "$cname" ]; then
     threads=1
@@ -278,19 +304,19 @@ fi
 #fi
 
 
-if [ "$cname" = "besu" ] || [ -z "$cname" ]; then
-    sleep 10
-    threads=1
-    client="besu"
-    CMD="-t GeneralStateTests -- --all --lowcpu -j$threads $arg2"
-    runCmd
-    CMD="-t BlockchainTests -- --all --lowcpu -j$threads $arg2"
-    runCmd
-    if [ "$arg2" != "--filltests" ]; then
-        CMD="-t LegacyTests/Constantinople -- --all --lowcpu -j$threads $arg2"
-        runCmd
-    fi
-fi
+#if [ "$cname" = "besu" ] || [ -z "$cname" ]; then
+#    sleep 10
+#    threads=1
+#    client="besu"
+#    CMD="-t GeneralStateTests -- --all -j$threads $arg2"
+#    runCmd
+#    CMD="-t BlockchainTests -- --all -j$threads $arg2"
+#    runCmd
+#    if [ "$arg2" != "--filltests" ]; then
+#        CMD="-t LegacyTests/Constantinople -- --all -j$threads $arg2"
+#        runCmd
+#    fi
+#fi
 
 if [ "$cname" = "nimbus" ] || [ -z "$cname" ]; then
     sleep 10
@@ -300,11 +326,12 @@ if [ "$cname" = "nimbus" ] || [ -z "$cname" ]; then
     runCmd
     CMD="-t BlockchainTests -- --all -j$threads $arg2"
     runCmd
-#    if [ "$arg2" != "--filltests" ]; then
-#        CMD="-t LegacyTests/Constantinople -- --all --lowcpu -j$threads $arg2"
-#        runCmd
-#    fi
+    if [ "$arg2" != "--filltests" ]; then
+        CMD="-t LegacyTests/Constantinople -- --all -j$threads $arg2"
+        runCmd
+    fi
 fi
+
 
 if [ "$cname" = "testeth" ] || [ -z "$cname" ]; then
     threads=1
@@ -335,6 +362,26 @@ if [ "$cname" = "ethereumjs" ] || [ -z "$cname" ]; then
 #        CMD="-t LegacyTests/Constantinople -- --all --lowcpu -j$threads $arg2"
 #        runCmd
 #    fi
+fi
+
+if [ "$cname" = "dretesteth" ] || [ -z "$cname" ]; then
+    sleep 10
+    cd $BUILDPATH/retesteth
+    ./dretesteth clean
+    ./dretesteth build
+    sleep 10
+    threads=1
+    client="dretesteth"
+    CMD="-t GeneralStateTests/stExample -- --singletest add11 --clients t8ntool -j$threads $arg2"
+    runCmd
+    CMD="-t GeneralStateTests/stExample -- --singletest add11 --clients besu -j$threads $arg2"
+    runCmd
+    CMD="-t GeneralStateTests/stExample -- --singletest add11 --clients ethereumjs -j$threads $arg2"
+    runCmd
+    CMD="-t GeneralStateTests/stExample -- --singletest add11 --clients nimbus -j$threads $arg2"
+    runCmd
+    CMD="-t GeneralStateTests/stExample -- --singletest add11 --clients evmone -j$threads $arg2"
+    runCmd
 fi
 
 #cp $HOMEPATH/.retesteth/logs/* $WEBPATH/web/logs

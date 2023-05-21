@@ -1,6 +1,6 @@
 #include <retesteth/EthChecks.h>
-#include <retesteth/TestHelper.h>
-#include <retesteth/TestOutputHelper.h>
+#include <retesteth/helpers/TestHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
 #include <retesteth/configs/ClientConfig.h>
 #include <retesteth/testStructures/Common.h>
 #include <retesteth/Constants.h>
@@ -102,7 +102,9 @@ ClientConfig::ClientConfig(fs::path const& _clientConfigPath) : m_id(ClientConfi
         m_correctMiningRewardPath = genesisTemplatePath / "correctMiningReward.json";
         ETH_FAIL_REQUIRE_MESSAGE(fs::exists(m_correctMiningRewardPath),
             "correctMiningReward.json client config not found!");
-        spDataObject correctMiningReward = test::readJsonData(m_correctMiningRewardPath);
+
+        CJOptions opt { .jsonParse = CJOptions::JsonParse::ALLOW_COMMENTS };
+        spDataObject correctMiningReward = test::readJsonData(m_correctMiningRewardPath, opt);
         correctMiningReward.getContent().performModifier(mod_removeComments);
         correctMiningReward.getContent().performModifier(mod_valueToCompactEvenHexPrefixed);
         for (auto const& el : cfgFile().forks())
@@ -191,6 +193,8 @@ void ClientConfig::translateNetworks(set<string> const& _networks, std::vector<F
 
     for (auto const& net : _networks)
     {
+        if (net.size() < 1)
+            ETH_ERROR_MESSAGE("ClientConfig::translateNetworks:: Given net is too short `" + net + "`");
         std::vector<FORK> const& forkOrder = _netOrder;
         string possibleNet = net.substr(1, net.length() - 1);
         vector<FORK>::const_iterator it = std::find(forkOrder.begin(), forkOrder.end(), possibleNet);
@@ -273,10 +277,9 @@ std::string const& ClientConfig::translateException(string const& _exceptionName
     message += " ...)";
     string const error = "Config::getExceptionString '" + _exceptionName + "' not found in client config `exceptions` section! (" +
                          cfg.path().c_str() + ")" + message;
-    if (Options::get().filltests)
-        ETH_ERROR_MESSAGE(error);
-    else
-        ETH_WARNING(error);
+    ETH_DC_MESSAGE(DC::STATS2, error);
+    return _exceptionName;
+
     // ---
     return C_EMPTY_STR;
 }

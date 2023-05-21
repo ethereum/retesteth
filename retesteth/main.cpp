@@ -5,7 +5,6 @@
 #include <retesteth/ExitHandler.h>
 #include <boost/test/included/unit_test.hpp>
 #include <thread>
-
 using namespace std;
 using namespace boost::unit_test;
 using namespace test::main;

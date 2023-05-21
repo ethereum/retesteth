@@ -1,7 +1,7 @@
 #include <retesteth/EthChecks.h>
 #include <retesteth/Options.h>
-#include <retesteth/TestHelper.h>
-#include <retesteth/TestOutputHelper.h>
+#include <retesteth/helpers/TestHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
 #include <boost/bind/bind.hpp>
 
 //Suites
@@ -268,7 +268,9 @@ REGISTER_TEMPLATE(BCGeneralStateTestsShanghaiSuite, RequireOptionAll)
 REGISTER_TEMPLATE(BlockchainTestTransitionSuite, DefaultFlags)
 REGISTER_TEMPLATE(BlockchainTestInvalidSuite, RequireOptionFill)
 REGISTER_TEMPLATE(BlockchainTestInvalidSuite, DefaultFlags)
+REGISTER_TEMPLATE(BlockchainTestPyspecSuite, DefaultFlags)
 REGISTER_TEMPLATE(BlockchainTestEIPSuite, DefaultFlags)
+REGISTER_TEMPLATE(BlockchainTestEIPPyspecSuite, DefaultFlags)
 REGISTER_TEMPLATE(BlockchainTestValidSuite, DefaultFlags)
 
 // State link

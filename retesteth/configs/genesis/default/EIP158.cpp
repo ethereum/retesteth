@@ -4,6 +4,10 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
+
+genEIP158Cfg::genEIP158Cfg()
+{
+
 const string t8ntool_EIP158_config = R"({
     "params" : {
         "fork" : "EIP158",
@@ -14,8 +18,6 @@ const string t8ntool_EIP158_config = R"({
     }
 })";
 
-genEIP158Cfg::genEIP158Cfg()
-{
     spDataObject obj2;
     (*obj2)["path"] = "default/genesis/EIP158.json";
     (*obj2)["content"] = t8ntool_EIP158_config;

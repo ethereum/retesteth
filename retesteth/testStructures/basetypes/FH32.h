@@ -9,7 +9,7 @@ namespace test::teststruct
 struct FH32 : FH
 {
     FH32(dev::RLP const& _rlp) : FH(_rlp, 32) {}
-    FH32(DataObject const& _data) : FH(_data, 32) {}
+    FH32(dataobject::DataObject const& _data) : FH(_data, 32) {}
     FH32(std::string const& _data) : FH(_data, 32) {}
     FH32* copy() const;
 
@@ -17,6 +17,9 @@ struct FH32 : FH
     static FH32 const& zero();
 };
 
-typedef GCP_SPointer<FH32> spFH32;
+typedef dataobject::GCP_SPointer<FH32> spFH32;
+template <class T>
+spFH32 sFH32(T const& _arg) { return spFH32(new FH32(_arg)); }
+
 
 }  // namespace teststruct

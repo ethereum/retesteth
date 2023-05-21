@@ -3,8 +3,8 @@
 #include "ToolChainHelper.h"
 #include "libdataobj/ConvertFile.h"
 #include <libdevcore/CommonIO.h>
-#include <retesteth/TestHelper.h>
-#include <retesteth/TestOutputHelper.h>
+#include <retesteth/helpers/TestHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
 #include <retesteth/testStructures/Common.h>
 #include <testStructures/types/BlockchainTests/BlockchainTestFiller.h>
 #include <regex>
@@ -48,16 +48,16 @@ void BlockMining::prepareEnvFile()
     if (isBlockExportCurrentRandom(currentBlockH))
         (*envData)["currentRandom"] = currentBlockH->mixHash().asString();
 
-    if (isBlockExportWithdrawals(currentBlockH))
+    if (isBlockExportWithdrawals(currentBlockH) || m_currentBlockRef.withdrawals().size())
     {
-        (*envData).atKeyPointer("withdrawals") = spDataObject(new DataObject(DataType::Array));
+        (*envData).atKeyPointer("withdrawals") = sDataObject(DataType::Array);
         for (auto const& wt : m_currentBlockRef.withdrawals())
             (*envData)["withdrawals"].addArrayObject(wt->asDataObject(ExportOrder::ToolStyle));
     }
 
     if (isBlockExportBasefee(parentBlcokH))
     {
-        if (!cfgFile.calculateBasefee())
+        if (!cfgFile.calculateBasefee() && currentBlockH->number() != 0)
         {
             (*envData).removeKey("currentBaseFee");
             BlockHeader1559 const& h1559 = (BlockHeader1559 const&) parentBlcokH.getCContent();
@@ -108,7 +108,9 @@ void BlockMining::prepareTxnFile()
         dev::RLPStream txsout(m_currentBlockRef.transactions().size());
         for (auto const& tr : m_currentBlockRef.transactions())
             txsout.appendRaw(tr->asRLPStream().out());
-        m_txsPathContent =  "\"" + dev::toString(txsout.out()) + "\"";
+        m_txsPathContent =  "\"";
+        m_txsPathContent += dev::toString(txsout.out());
+        m_txsPathContent += "\"";
         writeFile(m_txsPath.string(), m_txsPathContent);
     }
     else
@@ -190,12 +192,14 @@ void BlockMining::executeTransition()
     ETH_DC_MESSAGE(DC::RPC, "Env:\n" + m_envPathContent);
 
     int exitcode;
+    TestOutputHelper::get().timer().startSubcallTimer();
     string out = test::executeCmd(m_cmd, exitcode, ExecCMDWarning::NoWarningNoError);
+    TestOutputHelper::get().timer().finishSubcallTimer();
     ETH_DC_MESSAGE(DC::RPC, m_cmd);
     if (exitcode != 0)
     {
         string const outErrorContent = dev::contentsString(m_outErrorPath.string());
-        ETH_DC_MESSAGE(DC::RPC, "Err:\n" + outErrorContent);
+        ETH_DC_MESSAGE(DC::RPC, "Tool Error:\n" + outErrorContent);
         throw test::UpwardsException(outErrorContent.empty() ? (out.empty() ? "Tool failed: " + m_cmd : out) : outErrorContent);
     }
     ETH_DC_MESSAGE(DC::RPC, out);
@@ -203,19 +207,20 @@ void BlockMining::executeTransition()
 
 ToolResponse BlockMining::readResult()
 {
-    string const outPathContent = dev::contentsString(m_outPath.string());
-    string const outAllocPathContent = dev::contentsString(m_outAllocPath.string());
+    const string outPathContent = dev::contentsString(m_outPath.string());
+    const string outAllocPathContent = dev::contentsString(m_outAllocPath.string());
     ETH_DC_MESSAGE(DC::RPC, "Res:\n" + outPathContent);
     ETH_DC_MESSAGE(DC::RPC, "RAlloc:\n" + outAllocPathContent);
+    ETH_DC_MESSAGEC(DC::RPC, "Tool log: \n" + dev::contentsString(m_outErrorPath.string()), LogColor::YELLOW);
 
     if (outPathContent.empty())
     {
-        string const outErrorContent = dev::contentsString(m_outErrorPath.string());
+        const string outErrorContent = dev::contentsString(m_outErrorPath.string());
         ETH_ERROR_MESSAGE("Tool returned empty file: " + m_outPath.string() + "\n" + outErrorContent);
     }
     if (outAllocPathContent.empty())
     {
-        string const outErrorContent = dev::contentsString(m_outErrorPath.string());
+        const string outErrorContent = dev::contentsString(m_outErrorPath.string());
         ETH_ERROR_MESSAGE("Tool returned empty file: " + m_outAllocPath.string() + "\n" + outErrorContent);
     }
 
@@ -224,7 +229,7 @@ ToolResponse BlockMining::readResult()
     spDataObject returnState = ConvertJsoncppStringToData(outAllocPathContent);
     toolResponse.attachState(restoreFullState(returnState.getContent()));
 
-    bool traceCondition = Options::get().vmtrace && m_currentBlockRef.header()->number() != 0;
+    const bool traceCondition = Options::get().vmtrace && m_currentBlockRef.header()->number() != 0;
     if (traceCondition)
         traceTransactions(toolResponse);
 

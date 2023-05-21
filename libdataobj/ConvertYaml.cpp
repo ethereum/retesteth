@@ -1,14 +1,13 @@
 #include "ConvertYaml.h"
 #include <iostream>
 using namespace std;
-
-namespace  {
-    string const YML_INT_TAG = "tag:yaml.org,2002:int";
-    string const YML_BOOL_TAG = "tag:yaml.org,2002:bool";
-}
+using namespace dataobject::ymlinternal;
 
 namespace dataobject
 {
+
+string const ymlinternal::YML_INT_TAG = "tag:yaml.org,2002:int";
+string const ymlinternal::YML_BOOL_TAG = "tag:yaml.org,2002:bool";
 
 std::string yamlTypeAsString(YAML::NodeType::value _type)
 {
@@ -34,31 +33,36 @@ std::string yamlTypeAsString(YAML::NodeType::value _type)
 spDataObject ConvertYamlToData(YAML::Node const& _node, bool _sort)
 {
     if (_node.IsNull())
-        return spDataObject(new DataObject(DataType::Null));
+        return sDataObject(DataType::Null);
 
     if (_node.IsScalar())
     {
         if (_node.Tag() == YML_INT_TAG)
-            return spDataObject(new DataObject(_node.as<int>()));
+            return sDataObject(_node.as<int>());
         else if (_node.Tag() == YML_BOOL_TAG)
-            return spDataObject(new DataObject(DataType::Bool, _node.as<bool>()));
+            return sDataObject(DataType::Bool, _node.as<bool>());
         else
-            return spDataObject(new DataObject(_node.as<string>()));
+            return sDataObject(_node.as<string>());
     }
 
     if (_node.IsMap())
     {
-        spDataObject jObject(new DataObject(DataType::Object));
+        spDataObject jObject = sDataObject(DataType::Object);
         if (_sort)
             (*jObject).setAutosort(true);
         for (auto const& i : _node)
-            (*jObject).addSubObject(i.first.as<string>(), ConvertYamlToData(i.second, _sort));
+        {
+            auto const key = i.first.as<string>();
+            if (jObject->count(key))
+                throw DataObjectException() << "parsing .yml encountered dublicated key `" + key + "`";
+            (*jObject).addSubObject(key, ConvertYamlToData(i.second, _sort));
+        }
         return jObject;
     }
 
     if (_node.IsSequence())
     {
-        spDataObject jArray(new DataObject(DataType::Array));
+        spDataObject jArray = sDataObject(DataType::Array);
         if (_sort)
             (*jArray).setAutosort(true);
         for (size_t i = 0; i < _node.size(); i++)
@@ -66,9 +70,8 @@ spDataObject ConvertYamlToData(YAML::Node const& _node, bool _sort)
         return jArray;
     }
 
-    // Make it an exception!
-    std::cerr << "Error parsing YAML node. Element type not defined! " + yamlTypeAsString(_node.Type());
-    return spDataObject(new DataObject(DataType::Null));
+    throw DataObjectException() << "Error parsing YAML node. Element type not defined! " + yamlTypeAsString(_node.Type());
+    return sDataObject(DataType::Null);
 }
 
 }//namespace

@@ -4,6 +4,9 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
+genRewardsCfgETC::genRewardsCfgETC()
+{
+
 const string etc_correctMiningReward_config = R"({
     "//comment" : "State Tests does not calculate mining reward in post conditions, so when filling a blockchain test out of it, the mining reward must be set",
     "Frontier":          "5000000000000000000",
@@ -20,8 +23,6 @@ const string etc_correctMiningReward_config = R"({
 })";
 
 
-genRewardsCfgETC::genRewardsCfgETC()
-{
     spDataObject obj;
     (*obj)["path"] = "besuetc/genesis/correctMiningReward.json";
     (*obj)["content"] = etc_correctMiningReward_config;

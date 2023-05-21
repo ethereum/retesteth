@@ -15,6 +15,7 @@ BlockchainTestBlock::BlockchainTestBlock(spDataObject& _data)
                 {"blocknumber", {{DataType::String}, jsonField::Optional}},  // User information
                 {"transactions", {{DataType::Array}, jsonField::Optional}},
                 {"withdrawals", {{DataType::Array}, jsonField::Optional}},
+                {"hasBigInt", {{DataType::String}, jsonField::Optional}},
                 {"transactionSequence", {{DataType::Array}, jsonField::Optional}},
                 {"uncleHeaders", {{DataType::Array}, jsonField::Optional}},
                 {"expectException", {{DataType::String}, jsonField::Optional}},                   // User information
@@ -64,7 +65,7 @@ BlockchainTestBlock::BlockchainTestBlock(spDataObject& _data)
             for (auto const& un : _data->atKey("uncleHeaders").getSubObjects())
                 m_uncles.emplace_back(readBlockHeader(un));
         }
-        m_rlp = spBYTES(new BYTES(_data->atKey("rlp").asString()));
+        m_rlp = sBYTES(_data->atKey("rlp").asString());
     }
     catch (std::exception const& _ex)
     {

@@ -20,7 +20,7 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "BlockchainTests.h"
 #include "BlockchainTestLogic.h"
-#include <retesteth/TestOutputHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
 
 using namespace std;
 using namespace test;
@@ -47,6 +47,7 @@ BLOCKCHAINSUITE_FOLDER_OVERRIDE(BCGeneralStateTestsShanghaiSuite, "/GeneralState
 BLOCKCHAINSUITE_FOLDER_OVERRIDE(BlockchainTestTransitionSuite, "/TransitionTests", "/BlockchainTestsFiller/TransitionTests")
 BLOCKCHAINSUITE_FOLDER_OVERRIDE(BlockchainTestInvalidSuite, "/InvalidBlocks", "/BlockchainTestsFiller/InvalidBlocks")
 BLOCKCHAINSUITE_FOLDER_OVERRIDE(BlockchainTestValidSuite, "/ValidBlocks", "/BlockchainTestsFiller/ValidBlocks")
+BLOCKCHAINSUITE_FOLDER_OVERRIDE(BlockchainTestPyspecSuite, "/Pyspecs", "/BlockchainTestsFiller/Pyspecs")
 
 
 #define LEGACY_BLOCKCHAINSUITE_FOLDER_OVERRIDE(SUITE, FOLDER, FILLER)   \
@@ -94,26 +95,31 @@ BLOCKCHAINSUITE_DOTESTS_OVERRIDE(LegacyConstantinopleBCGeneralStateTestsSuite, _
 
 BOOST_AUTO_TEST_SUITE(BlockchainTests)
 
+using BCPyspecSuiteFixture = TestFixture<BlockchainTestPyspecSuite, DefaultFlags>;
+ETH_REGISTER_DYNAMIC_TEST_SEARCH(BCPyspecSuiteFixture, "BlockchainTests/Pyspecs")
+BOOST_FIXTURE_TEST_SUITE(Pyspecs, BCPyspecSuiteFixture)
+BOOST_AUTO_TEST_SUITE_END() // Pyspecs
+
+
 // Tests that contain only valid blocks and check that import is correct
 using BCValidSuiteFixture = TestFixture<BlockchainTestValidSuite, DefaultFlags>;
 ETH_REGISTER_DYNAMIC_TEST_SEARCH(BCValidSuiteFixture, "BlockchainTests/ValidBlocks")
 BOOST_FIXTURE_TEST_SUITE(ValidBlocks, BCValidSuiteFixture)
-BOOST_AUTO_TEST_CASE(bcBlockGasLimitTest) {}
-BOOST_AUTO_TEST_CASE(bcExploitTest) {}
-BOOST_AUTO_TEST_CASE(bcForkStressTest) {}
-BOOST_AUTO_TEST_CASE(bcGasPricerTest) {}
-BOOST_AUTO_TEST_CASE(bcMultiChainTest) {}
-BOOST_AUTO_TEST_CASE(bcRandomBlockhashTest) {}
-BOOST_AUTO_TEST_CASE(bcStateTests) {}
-BOOST_AUTO_TEST_CASE(bcTotalDifficultyTest) {}
-BOOST_AUTO_TEST_CASE(bcUncleSpecialTests) {}
-BOOST_AUTO_TEST_CASE(bcUncleTest) {}
-BOOST_AUTO_TEST_CASE(bcValidBlockTest) {}
-BOOST_AUTO_TEST_CASE(bcWalletTest) {}
-BOOST_AUTO_TEST_CASE(bcExample) {}
-BOOST_AUTO_TEST_CASE(bcEIP1559) {}
-BOOST_AUTO_TEST_CASE(bcEIP3675) {}
-
+    BOOST_AUTO_TEST_CASE(bcBlockGasLimitTest) {}
+    BOOST_AUTO_TEST_CASE(bcExploitTest) {}
+    BOOST_AUTO_TEST_CASE(bcForkStressTest) {}
+    BOOST_AUTO_TEST_CASE(bcGasPricerTest) {}
+    BOOST_AUTO_TEST_CASE(bcMultiChainTest) {}
+    BOOST_AUTO_TEST_CASE(bcRandomBlockhashTest) {}
+    BOOST_AUTO_TEST_CASE(bcStateTests) {}
+    BOOST_AUTO_TEST_CASE(bcTotalDifficultyTest) {}
+    BOOST_AUTO_TEST_CASE(bcUncleSpecialTests) {}
+    BOOST_AUTO_TEST_CASE(bcUncleTest) {}
+    BOOST_AUTO_TEST_CASE(bcValidBlockTest) {}
+    BOOST_AUTO_TEST_CASE(bcWalletTest) {}
+    BOOST_AUTO_TEST_CASE(bcExample) {}
+    BOOST_AUTO_TEST_CASE(bcEIP1559) {}
+    BOOST_AUTO_TEST_CASE(bcEIP3675) {}
 BOOST_AUTO_TEST_SUITE_END() // ValidBlocks
 
 // Tests that might have invalid blocks and check that those are rejected

@@ -3,6 +3,7 @@
 #include "BlockHeaderLegacy.h"
 #include "BlockHeaderMerge.h"
 #include "BlockHeaderShanghai.h"
+#include "BlockHeader4844.h"
 
 namespace test::teststruct
 {

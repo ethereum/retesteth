@@ -4,6 +4,9 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
+genShanghaiCfg::genShanghaiCfg()
+{
+
 const string t8ntool_Shanghai_config = R"({
     "params" : {
         "fork" : "Shanghai",
@@ -17,8 +20,6 @@ const string t8ntool_Shanghai_config = R"({
     }
 })";
 
-genShanghaiCfg::genShanghaiCfg()
-{
     {
         spDataObject obj;
         (*obj)["path"] = "default/genesis/Shanghai.json";

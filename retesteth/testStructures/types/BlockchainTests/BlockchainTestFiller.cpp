@@ -1,6 +1,6 @@
 #include "BlockchainTestFiller.h"
 #include <retesteth/EthChecks.h>
-#include <retesteth/TestOutputHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
 #include <retesteth/testStructures/Common.h>
 
 using namespace std;

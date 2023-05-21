@@ -1,5 +1,7 @@
 #include "ToolResponseReceipt.h"
 #include <retesteth/testStructures/Common.h>
+#include <retesteth/Constants.h>
+using namespace test::teststruct::constnames;
 
 namespace test::teststruct
 {
@@ -15,12 +17,13 @@ ToolResponseReceipt::ToolResponseReceipt(DataObject const& _data)
             {"transactionHash", {{DataType::String}, jsonField::Required}},
             {"contractAddress", {{DataType::String}, jsonField::Required}},
             {"gasUsed", {{DataType::String}, jsonField::Required}},
+            {"effectiveGasPrice", {{DataType::Null}, jsonField::Optional}},
             {"blockHash", {{DataType::String}, jsonField::Required}},
             {"transactionIndex", {{DataType::String}, jsonField::Required}}});
 
-    m_trHash = spFH32(new FH32(_data.atKey("transactionHash")));
-    m_blockHash = spFH32(new FH32(_data.atKey("blockHash")));
-    m_trGasUsed = spVALUE(new VALUE(_data.atKey("gasUsed")));
+    m_trHash = sFH32(_data.atKey(c_transactionHash));
+    m_blockHash = sFH32(_data.atKey(c_blockHash));
+    m_trGasUsed = sVALUE(_data.atKey(c_gasUsed));
 }
 
 

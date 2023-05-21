@@ -4,6 +4,9 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
+genMystiqueCfgETC::genMystiqueCfgETC()
+{
+
 const string rpc_Mystique_config = R"({
     "params" : {
         "homesteadForkBlock" : "0x00",
@@ -29,8 +32,6 @@ const string etc_Mystique_config = R"({
     }
 })";
 
-genMystiqueCfgETC::genMystiqueCfgETC()
-{
     spDataObject obj;
     (*obj)["path"] = "besuetc/genesis/ETC_Mystique.json";
     (*obj)["content"] = rpc_Mystique_config;

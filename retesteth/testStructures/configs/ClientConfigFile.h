@@ -30,8 +30,8 @@ struct ClientConfigFile : GCP_SPointerBase
     std::vector<FORK> const& forks() const { return m_forks; }
     std::vector<FORK> const& additionalForks() const { return m_additionalForks; }
     std::vector<FORK> const& fillerSkipForks() const { return m_skipForks; }
-    std::set<FORK> allowedForks() const;
-    std::set<FORK> forkProgressionAsSet() const;
+    std::set<FORK> const& allowedForks() const;
+    std::set<FORK> const& forkProgressionAsSet() const;
     bool checkLogsHash() const { return m_checkLogsHash; }
 
     bool checkDifficulty() const { return m_checkDifficulty; }
@@ -42,6 +42,7 @@ struct ClientConfigFile : GCP_SPointerBase
 
     // ETC classic block format autoconvertion
     bool support1559() const { return m_support1559; }
+    bool supportBigint() const { return m_supportBigint; }
     bool transactionsAsJson() const { return m_transactionsAsJson; }
 
     std::map<std::string, std::string> const& exceptions() const { return m_exceptions; }
@@ -70,6 +71,7 @@ private:
     bool m_checkBasefee;                     ///< Enable basefee verifivation
     bool m_calculateBasefee;                 ///< Retesteth calculate basefee value
     bool m_support1559;                      ///< Support EIP1559 headers
+    bool m_supportBigint;                    ///< Support malicious oversize data encodings for tests
     bool m_transactionsAsJson;               ///< Make T8N txs file as json not rlp
     size_t m_initializeTime;                 ///< Time to start the instance
     std::vector<FORK> m_forks;               ///< Allowed forks as network name
@@ -81,6 +83,10 @@ private:
     // Additional values
     boost::filesystem::path m_configFilePath;  ///< Path to the config file
     boost::filesystem::path m_pathToExecFile;  ///< Path to cmd that runs the client instance (for t8ntool)
+private:
+    // Optimisations
+    mutable std::set<FORK> m_forkProgressionAsSet;
+    mutable std::set<FORK> m_allowedForks;
 };
 
 

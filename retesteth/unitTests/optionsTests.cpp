@@ -1,22 +1,9 @@
 #include <retesteth/Options.h>
-#include <retesteth/TestOutputHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
 
 using namespace std;
 using namespace dev;
 using namespace test;
-
-namespace test
-{
-class TestOptions
-{
-public:
-    TestOptions(int argc = 0, const char** argv = 0) : m_opt(argc, argv) {}
-    Options const& get() { return m_opt; }
-
-private:
-    Options m_opt;
-};
-}  // namespace test
 
 BOOST_FIXTURE_TEST_SUITE(OptionsSuite, TestOutputHelperFixture)
 
@@ -258,6 +245,39 @@ BOOST_AUTO_TEST_CASE(options_singletestAsB)
     BOOST_CHECK(opt.get().singletest.initialized() == true);
     BOOST_CHECK(opt.get().singletest.name == "filename");
     BOOST_CHECK(opt.get().singletest.subname == "testname");
+}
+
+BOOST_AUTO_TEST_CASE(options_singlenetMultiple)
+{
+    {
+        const char* argv[] = {"./retesteth", "--", "--singlenet", ">=Berlin"};
+        TestOptions opt(std::size(argv), argv);
+        BOOST_CHECK(opt.get().singleTestNet.initialized() == false);
+        BOOST_CHECK(opt.get().runOnlyNets.initialized() == true);
+        BOOST_CHECK(opt.get().runOnlyNets == ">=Berlin");
+    }
+    {
+        const char* argv[] = {"./retesteth", "--", "--singlenet", "<Berlin"};
+        TestOptions opt(std::size(argv), argv);
+        BOOST_CHECK(opt.get().singleTestNet.initialized() == false);
+        BOOST_CHECK(opt.get().runOnlyNets.initialized() == true);
+        BOOST_CHECK(opt.get().runOnlyNets == "<Berlin");
+    }
+    {
+        const char* argv[] = {"./retesteth", "--", "--singlenet", "Berlin,London"};
+        TestOptions opt(std::size(argv), argv);
+        BOOST_CHECK(opt.get().singleTestNet.initialized() == false);
+        BOOST_CHECK(opt.get().runOnlyNets.initialized() == true);
+        BOOST_CHECK(opt.get().runOnlyNets == "Berlin,London");
+    }
+    {
+        const char* argv[] = {"./retesteth", "--", "--singlenet", "Berlin"};
+        TestOptions opt(std::size(argv), argv);
+        BOOST_CHECK(opt.get().singleTestNet.initialized() == true);
+        BOOST_CHECK(opt.get().singleTestNet == "Berlin");
+        BOOST_CHECK(opt.get().runOnlyNets.initialized() == false);
+        BOOST_CHECK(opt.get().runOnlyNets.empty());
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

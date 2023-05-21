@@ -1,4 +1,4 @@
-#include <TestOutputHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
 #include <retesteth/testStructures/Common.h>
 #include "EthChecks.h"
 #include "TransactionTestFiller.h"

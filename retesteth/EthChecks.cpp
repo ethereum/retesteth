@@ -1,7 +1,7 @@
 #include <retesteth/EthChecks.h>
 #include <retesteth/ExitHandler.h>
 #include <retesteth/Options.h>
-#include <retesteth/TestOutputHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
 #include <boost/algorithm/string.hpp>
 #include <csignal>
 #include <mutex>
@@ -10,6 +10,26 @@ using namespace std;
 mutex g_debugFlagAccess;
 namespace test::debug
 {
+
+Debug const& Debug::get()
+{
+    static Debug instance;
+    #if defined(UNITTESTS) || defined(__DEBUG__)
+    {
+        if (TestOptions::isOverride())
+        {
+            static Debug* instance = nullptr;
+            // Reinitialize debug with test options
+            if (instance != nullptr)
+                delete instance;
+            instance = new Debug();
+            return *instance;
+        }
+    }
+    #endif
+    return instance;
+}
+
 Debug::Debug()
 {
     for (int channel = DC::RPC; channel != DC::LOWLOG; channel++)
@@ -76,15 +96,14 @@ void Debug::initializeDefaultChannels()
     if (verb >= 2)
         m_channels[DC::STATS2] = true;
     if (verb >= 3)
-        m_channels[DC::TESTLOG] = true;
-    if (verb >= 4)
-        m_channels[DC::SOCKET] = true;
+        m_channels[DC::TESTLOG] = true; 
     if (verb >= 5)
         m_channels[DC::STATE] = true;
     if (verb >= 6)
         m_channels[DC::RPC] = true;
     if (verb >= 7)
     {
+        m_channels[DC::SOCKET] = true;
         m_channels[DC::LOWLOG] = true;
         m_channels[DC::RPC2] = true;
     }

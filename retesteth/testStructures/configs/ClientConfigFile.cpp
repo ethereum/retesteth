@@ -1,13 +1,10 @@
 #include "ClientConfigFile.h"
 #include <testStructures/Common.h>
 #include <retesteth/EthChecks.h>
-#include <retesteth/TestHelper.h>
+#include <retesteth/helpers/TestHelper.h>
 using namespace std;
 using namespace test::teststruct;
 namespace fs = boost::filesystem;
-
-std::mutex g_allowedForks_static_var;
-std::mutex g_forkProgressionAsSet_static_var;
 
 namespace
 {
@@ -26,6 +23,7 @@ void requireJsonFileStructure(DataObject const& _data)
             {"checkDifficulty", {{DataType::Bool}, jsonField::Optional}},
             {"calculateDifficulty", {{DataType::Bool}, jsonField::Optional}},
             {"support1559", {{DataType::Bool}, jsonField::Optional}},
+            {"supportBigint", {{DataType::Bool}, jsonField::Optional}},
             {"checkBasefee", {{DataType::Bool}, jsonField::Optional}},
             {"calculateBasefee", {{DataType::Bool}, jsonField::Optional}},
             {"defaultChainID", {{DataType::Integer}, jsonField::Optional}},
@@ -162,6 +160,10 @@ void ClientConfigFile::initWithData(DataObject const& _data)
     if (_data.count("support1559"))
         m_support1559 = _data.atKey("support1559").asBool();
 
+    m_supportBigint = true;
+    if (_data.count("supportBigint"))
+        m_supportBigint = _data.atKey("supportBigint").asBool();
+
     m_transactionsAsJson = false;
     if (_data.count("transactionsAsJson"))
         m_transactionsAsJson = _data.atKey("transactionsAsJson").asBool();
@@ -182,9 +184,11 @@ void ClientConfigFile::initWithData(DataObject const& _data)
     {
         if (el->asString()[0] == '/' && el->asString()[1] == '/')
             continue;
-        if (test::inArray(m_forks, FORK(el)))
+        FORK const fork(el);
+        if (test::inArray(m_forks, fork))
             ETH_ERROR_MESSAGE(sErrorPath + "`forks` section contain dublicate element: " + el->asString());
-        m_forks.emplace_back(FORK(el));
+        m_forks.emplace_back(fork);
+        m_forkProgressionAsSet.insert(fork);
     }
 
     // Read additionalForks are allowed fork names to run on this client, but not used in translation
@@ -209,6 +213,14 @@ void ClientConfigFile::initWithData(DataObject const& _data)
             m_skipForks.emplace_back(FORK(el));
         }
     }
+
+    // Build allowed forks
+    for (auto const& el : m_forks)
+        m_allowedForks.insert(el);
+    for (auto const& el : m_additionalForks)
+        m_allowedForks.insert(el);
+    for (auto const& el : m_skipForks)
+        m_allowedForks.insert(el);
 
     // When client used to fill up tests this map translate exceptionsID in test to exception string
     // returned from client
@@ -260,32 +272,14 @@ std::vector<IPADDRESS> const& ClientConfigFile::socketAdresses() const
     return m_socketAddress;
 }
 
-std::set<FORK> ClientConfigFile::allowedForks() const
+std::set<FORK> const& ClientConfigFile::allowedForks() const
 {
-    std::lock_guard<std::mutex> lock(g_allowedForks_static_var);
-    static std::set<FORK> out;
-    if (out.size() == 0)
-    {
-        for (auto const& el : m_forks)
-            out.insert(el);
-        for (auto const& el : m_additionalForks)
-            out.insert(el);
-        for (auto const& el : m_skipForks)
-            out.insert(el);
-    }
-    return out;
+    return m_allowedForks;
 }
 
-std::set<FORK> ClientConfigFile::forkProgressionAsSet() const
+std::set<FORK> const& ClientConfigFile::forkProgressionAsSet() const
 {
-    std::lock_guard<std::mutex> lock(g_forkProgressionAsSet_static_var);
-    static std::set<FORK> out;
-    if (out.size() == 0)
-    {
-        for (auto const& el : m_forks)
-            out.insert(el);
-    }
-    return out;
+    return m_forkProgressionAsSet;
 }
 
 

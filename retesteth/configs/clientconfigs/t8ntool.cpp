@@ -4,6 +4,65 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
+
+string const yul_compiler_sh = R"(#!/bin/sh
+solc=$(which solc)
+if [ -z $solc ]; then
+   >&2 echo "yul.sh \"Yul compilation error: 'solc' not found!\""
+   echo "0x"
+else
+    out=$(solc --assemble $1 2>&1)
+    a=$(echo "$out" | grep "Binary representation:" -A 1 | tail -n1)
+    case "$out" in
+    *Error*) >&2 echo "yul.sh \"Yul compilation error: \"\n$out";;
+    *       )  echo 0x$a;;
+    esac
+fi
+)";
+
+string const t8ntool_start = R"(#!/bin/sh
+
+wevm=$(which evm)
+if [ -z $wevm ]; then
+   >&2 echo "Can't find geth's 'evm' executable alias in the system path!"
+   exit 1
+fi
+
+if [ $1 = "t8n" ] || [ $1 = "b11r" ]; then
+    evm $1 $2 $3 $4 $5 $6 $7 $8 $9 $10 $11 $12 $13 $14 $15 $16 $17 $18 $19 $20 $21 $22 $23 $24 $25 $26
+elif [ $1 = "-v" ]; then
+    evm -v
+else
+    stateProvided=0
+    readErrorLog=0
+    errorLogFile=""
+    cmdArgs=""
+    for index in ${1} ${2} ${3} ${4} ${5} ${6} ${7} ${8} ${9} ${10} ${11} ${12} ${13} ${14} ${15} ${16} ${17} ${18} ${19} ${20} ${21} ${22} ${23} ${24} ${25} ${26}; do
+        if [ $index = "--input.alloc" ]; then
+            stateProvided=1
+        fi
+        if [ $readErrorLog -eq 1 ]; then
+            errorLogFile=$index
+            readErrorLog=0
+            continue
+        fi
+        if [ $index = "--output.errorlog" ]; then
+            readErrorLog=1
+            continue
+        fi
+        cmdArgs=$cmdArgs" "$index
+    done
+    if [ $stateProvided -eq 1 ]; then
+        evm t8n $cmdArgs --verbosity 2 2> $errorLogFile
+    else
+        evm t9n $cmdArgs 2> $errorLogFile
+    fi
+fi
+)";
+
+gent8ntoolcfg::gent8ntoolcfg()
+{
+
 string const t8ntool_config = R"({
     "name" : "Ethereum GO on StateTool",
     "socketType" : "tranition-tool",
@@ -15,6 +74,7 @@ string const t8ntool_config = R"({
     "calculateBasefee" : false,
     "checkLogsHash" : true,
     "support1559" : true,
+    "supportBigint" : true,
     "transactionsAsJson" : false,
     "tmpDir" : "/dev/shm",
     "defaultChainID" : 1,
@@ -51,6 +111,9 @@ string const t8ntool_config = R"({
     "fillerSkipForks" : [
     ],
     "exceptions" : {
+      "PYSPECS_EXCEPTIONS" : "",
+      "Transaction without funds" : "insufficient funds for gas * price + value",
+
       "AddressTooShort" : "input string too short for common.Address",
       "AddressTooLong" : "rlp: input string too long for common.Address, decoding into (types.Transaction)(types.LegacyTx).To",
       "NonceMax" : "nonce exceeds 2^64-1",
@@ -61,7 +124,6 @@ string const t8ntool_config = R"({
       "InvalidS" : "rlp: expected input string or byte for *big.Int, decoding into (types.Transaction)(types.LegacyTx).S",
       "InvalidChainID" : "invalid chain id for signer",
       "ECRecoveryFail" : "recovery failed",
-      "InvalidStateRoot" : "",
       "ExtraDataTooBig" : "Error importing raw rlp block: Header extraData > 32 bytes",
       "InvalidData" : "rlp: expected input string or byte for []uint8, decoding into (types.Transaction)(types.LegacyTx).Data",
       "InvalidDifficulty" : "Invalid difficulty:",
@@ -113,7 +175,7 @@ string const t8ntool_config = R"({
       "UncleIsBrother" : "Uncle is brother!",
       "OutOfGas" : "out of gas",
       "SenderNotEOA" : "sender not an eoa:",
-      "IntrinsicGas" : "t8ntool didn't return a transaction with hash",
+      "IntrinsicGas" : "intrinsic gas too low",
       "ExtraDataIncorrectDAO" : "BlockHeader require Dao ExtraData!",
       "InvalidTransactionVRS" : "t8ntool didn't return a transaction with hash",
       "BLOCKHEADER_VALUE_TOOLARGE" : "Blockheader parse error: VALUE  >u256",
@@ -230,11 +292,11 @@ string const t8ntool_config = R"({
       "TR_TipGtFeeCap": "max priority fee per gas higher than max fee per gas",
       "TR_TooShort": "typed transaction too short",
       "TR_InitCodeLimitExceeded" : "max initcode size exceeded",
+      "TR_BlobDecodeError" : "expected input list for types.BlobTx",
       "1559BaseFeeTooLarge": "TransactionBaseFee convertion error: VALUE  >u256",
       "1559PriorityFeeGreaterThanBaseFee": "maxFeePerGas \u003c maxPriorityFeePerGas",
       "2930AccessListAddressTooLong": "rlp: input string too long for common.Address, decoding into (types.Transaction)(types.AccessListTx).AccessList[0].Address",
       "2930AccessListAddressTooShort": "rlp: input string too short for common.Address, decoding into (types.Transaction)(types.AccessListTx).AccessList[0].Address",
-      "2930AccessListStorageHashTooLong": "rlp: input string too long for common.Hash, decoding into (types.Transaction)(types.AccessListTx).AccessList[0].StorageKeys[0]",
       "1559LeadingZerosBaseFee": "rlp: non-canonical integer (leading zero bytes) for *big.Int, decoding into (types.Transaction)(types.DynamicFeeTx).GasFeeCap",
       "1559LeadingZerosPriorityFee":  "rlp: non-canonical integer (leading zero bytes) for *big.Int, decoding into (types.Transaction)(types.DynamicFeeTx).GasTipCap",
       "2930AccessListStorageHashTooShort": "rlp: input string too short for common.Hash, decoding into (types.Transaction)(types.AccessListTx).AccessList[0].StorageKeys[0]",
@@ -249,46 +311,6 @@ string const t8ntool_config = R"({
       "PostMergeDifficultyIsNot0" : "block.difficulty must be 0"
     }
 })";
-
-string const t8ntool_start = R"(#!/bin/sh
-
-wevm=$(which evm)
-if [ -z $wevm ]; then
-   >&2 echo "Can't find geth's 'evm' executable alias in the system path!"
-   exit 1
-fi
-
-if [ $1 = "t8n" ] || [ $1 = "b11r" ]; then
-    evm $1 $2 $3 $4 $5 $6 $7 $8 $9 $10 $11 $12 $13 $14 $15 $16 $17 $18 $19 $20 $21 $22 $23 $24 $25 $26
-elif [ $1 = "-v" ]; then
-    evm -v
-else
-    stateProvided=0
-    readErrorLog=0
-    errorLogFile=""
-    cmdArgs=""
-    for index in ${1} ${2} ${3} ${4} ${5} ${6} ${7} ${8} ${9} ${10} ${11} ${12} ${13} ${14} ${15} ${16} ${17} ${18} ${19} ${20} ${21} ${22} ${23} ${24} ${25} ${26}; do
-        if [ $index = "--input.alloc" ]; then
-            stateProvided=1
-        fi
-        if [ $readErrorLog -eq 1 ]; then
-            errorLogFile=$index
-            readErrorLog=0
-            continue
-        fi
-        if [ $index = "--output.errorlog" ]; then
-            readErrorLog=1
-            continue
-        fi
-        cmdArgs=$cmdArgs" "$index
-    done
-    if [ $stateProvided -eq 1 ]; then
-        evm t8n $cmdArgs --verbosity 2 2> $errorLogFile
-    else
-        evm t9n $cmdArgs 2> $errorLogFile
-    fi
-fi
-)";
 
 string const t8ntool_customcompiler = R"(#!/bin/sh
 # You can call a custom executable here
@@ -310,21 +332,6 @@ echo "0x600360005500"
 # just like described in this file."
 )";
 
-string const yul_compiler_sh = R"(#!/bin/sh
-solc=$(which solc)
-if [ -z $solc ]; then
-   >&2 echo "yul.sh \"Yul compilation error: 'solc' not found!\""
-   echo "0x"
-else
-    out=$(solc --assemble $1 2>&1)
-    a=$(echo "$out" | grep "Binary representation:" -A 1 | tail -n1)
-    case "$out" in
-    *Error*) >&2 echo "yul.sh \"Yul compilation error: \"\n$out";;
-    *       )  echo 0x$a;;
-    esac
-fi
-)";
-
 string const py_compiler_sh = R"(#!/bin/bash
 if [ -z "$PYSPECS_PATH" ]
 then
@@ -338,14 +345,23 @@ source ./venv/bin/activate
 
 SRCPATH=$1
 FILLER=$2
-OUTPUT=$3
-EVMT8N=$4
+TESTCA=$3
+OUTPUT=$4
+EVMT8N=$5
+FORCER=$6
 
-tf --filler-path $SRCPATH --output $OUTPUT --test-module $FILLER --no-output-structure --evm-bin $EVMT8N
+ADDFLAGS=""
+if [ "$TESTCA" != "null" ]; then
+    ADDFLAGS="$ADDFLAGS --test-case $TESTCA"
+fi
+if [ "$FORCER" != "null" ]; then
+    ADDFLAGS="$ADDFLAGS --force-refill"
+fi
+
+tf --filler-path $SRCPATH --output $OUTPUT --test-module $FILLER $ADDFLAGS --no-output-structure --evm-bin $EVMT8N
+
 )";
 
-gent8ntoolcfg::gent8ntoolcfg()
-{
     {
         spDataObject obj;
         (*obj)["path"] = "t8ntool/config";

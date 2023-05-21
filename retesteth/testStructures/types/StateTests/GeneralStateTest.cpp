@@ -1,7 +1,7 @@
 #include "GeneralStateTest.h"
 #include <retesteth/EthChecks.h>
-#include <retesteth/TestHelper.h>
-#include <retesteth/TestOutputHelper.h>
+#include <retesteth/helpers/TestHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
 #include <retesteth/testStructures/Common.h>
 
 using namespace std;
@@ -46,9 +46,9 @@ GeneralStateTest::GeneralStateTest(spDataObject& _data)
     try
     {
         ETH_ERROR_REQUIRE_MESSAGE(_data->type() == DataType::Object,
-            TestOutputHelper::get().get().testFile().string() + " A test file must contain an object value (json/yaml).");
+            TestOutputHelper::get().testFile().string() + " A test file must contain an object value (json/yaml).");
         ETH_ERROR_REQUIRE_MESSAGE(_data->getSubObjects().size() == 1,
-            TestOutputHelper::get().get().testFile().string() + " A test file must contain exactly one test!");
+            TestOutputHelper::get().testFile().string() + " A test file must contain exactly one test!");
 
         m_tests.reserve(_data.getContent().getSubObjects().size());
         for (auto& el : _data.getContent().getSubObjectsUnsafe())
@@ -96,7 +96,9 @@ StateTestInFilled::StateTestInFilled(spDataObject& _data)
     // -- REMOVE THIS, FIX THE TESTS
     m_pre = spState(new State(MOVE(_data, "pre")));
 
+    m_hasBigInt = _data->atKey("transaction").performSearch(src_findBigInt);
     m_transaction = GCP_SPointer<StateTestTransaction>(new StateTestTransaction(_data->atKey("transaction")));
+
     for (auto const& elFork : _data->atKey("post").getSubObjects())
     {
         StateTestPostResults res;

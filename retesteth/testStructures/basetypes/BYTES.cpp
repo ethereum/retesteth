@@ -1,6 +1,6 @@
 #include <libdevcore/CommonIO.h>
 #include <retesteth/EthChecks.h>
-#include <retesteth/TestHelper.h>
+#include <retesteth/helpers/TestHelper.h>
 using namespace test::teststruct;
 using namespace dev;
 using namespace std;
@@ -34,6 +34,16 @@ BYTES::BYTES(DataObject const& _data)
     string const& v = _data.asString();
     if (v.size() < 2 || v[0] != '0' || v[1] != 'x')
         ETH_ERROR_MESSAGE("Key `" + k + "` is not BYTES `" + v + "`");
+    m_data = v.substr(2);
+    toLowerHexStr(m_data);
+    m_data = "0x" + m_data;
+}
+
+BYTES::BYTES(string const& _data)
+{
+    string const& v = _data;
+    if (v.size() < 2 || v[0] != '0' || v[1] != 'x')
+        ETH_ERROR_MESSAGE("Bytes are not BYTES `" + v + "`");
     m_data = v.substr(2);
     toLowerHexStr(m_data);
     m_data = "0x" + m_data;

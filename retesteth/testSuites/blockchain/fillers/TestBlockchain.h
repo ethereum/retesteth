@@ -1,6 +1,6 @@
 #pragma once
 #include "TestBlock.h"
-#include <retesteth/TestOutputHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
 #include <retesteth/session/Session.h>
 #include <retesteth/testStructures/Common.h>
 #include <string>

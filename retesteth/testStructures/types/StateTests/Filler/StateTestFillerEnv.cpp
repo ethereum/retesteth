@@ -32,10 +32,9 @@ void convertEnvDecFieldsToHex(spDataObject& _data)
 }  // namespace
 
 
-namespace test
+namespace test::teststruct
 {
-namespace teststruct
-{
+
 StateTestFillerEnv::StateTestFillerEnv(spDataObjectMove _data)
 {
     try
@@ -53,43 +52,46 @@ StateTestFillerEnv::StateTestFillerEnv(spDataObjectMove _data)
 
 void StateTestFillerEnv::initializeFields(spDataObject const& _data)
 {
-    m_currentNumber = spVALUE(new VALUE(_data->atKey("currentNumber")));
-    m_currentCoinbase = spFH20(new FH20(_data->atKey("currentCoinbase")));
+    m_currentNumber = sVALUE(_data->atKey("currentNumber"));
+    m_currentCoinbase = sFH20(_data->atKey("currentCoinbase"));
 
     // Indicates first block timestamp in StateTests
-    m_currentTimestamp = spVALUE(new VALUE(_data->atKey("currentTimestamp")));
+    m_currentTimestamp = sVALUE(_data->atKey("currentTimestamp"));
     // Indicates zero block timestamp in StateTests
-    m_genesisTimestamp = spVALUE(new VALUE(0));
+    m_genesisTimestamp = sVALUE(0);
 
-    m_previousHash = spFH32(new FH32(_data->atKey("previousHash")));
+    m_previousHash = sFH32(_data->atKey("previousHash"));
 
     spDataObject tmpD(new DataObject("0x00"));  // State Tests extra data is 0x00
-    m_currentExtraData = spBYTES(new BYTES(tmpD));
+    m_currentExtraData = sBYTES(tmpD);
     m_currentNonce = spFH8(FH8::zero().copy());
     m_currentMixHash = spFH32(FH32::zero().copy());
-    m_currentGasLimit = spVALUE(new VALUE(_data->atKey("currentGasLimit")));
+    m_currentGasLimit = sVALUE(_data->atKey("currentGasLimit"));
     if (m_currentGasLimit.getCContent() > dev::bigint("0x7fffffffffffffff"))
         throw test::UpwardsException("currentGasLimit > 0x7fffffffffffffff");
 
     // 1559
-    m_currentDifficulty = spVALUE(new VALUE(DataObject("0x020000")));
-    m_currentBaseFee = spVALUE(new VALUE(DataObject("0x0a")));
+    m_currentDifficulty = sVALUE(DataObject("0x020000"));
+    m_currentBaseFee = sVALUE(DataObject("0x0a"));
 
     if (_data->count("currentDifficulty"))
-        m_currentDifficulty = spVALUE(new VALUE(_data->atKey("currentDifficulty")));
+        m_currentDifficulty = sVALUE(_data->atKey("currentDifficulty"));
 
     if (_data->count("currentBaseFee"))
-        m_currentBaseFee = spVALUE(new VALUE(_data->atKey("currentBaseFee")));
+        m_currentBaseFee = sVALUE(_data->atKey("currentBaseFee"));
 
     // Merge
     auto const& difficulty = m_currentDifficulty->asString();
-    m_currentRandom = spFH32(new FH32(dev::toCompactHexPrefixed(dev::u256(difficulty), 32)));
+    m_currentRandom = sFH32(dev::toCompactHexPrefixed(dev::u256(difficulty), 32));
 
     if (_data->count("currentRandom"))
-        m_currentRandom = spFH32(new FH32(_data->atKey("currentRandom")));
+        m_currentRandom = sFH32(_data->atKey("currentRandom"));
 
     // Shanghai
-    m_currentWithdrawalsRoot = spFH32(new FH32(DataObject(C_WITHDRAWALS_EMPTY_ROOT)));
+    m_currentWithdrawalsRoot = sFH32(DataObject(C_WITHDRAWALS_EMPTY_ROOT));
+
+    // Cancun
+    m_currentExcessDataGas = sVALUE(0);
 }
 
 spDataObject const& StateTestFillerEnv::asDataObject() const
@@ -109,4 +111,3 @@ spDataObject const& StateTestFillerEnv::asDataObject() const
 }
 
 }  // namespace teststruct
-}  // namespace test

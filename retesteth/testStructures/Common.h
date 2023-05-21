@@ -9,6 +9,7 @@ namespace test::teststruct
 {
 
 // DataObject converters. Mostly Dec -> Hex, json data convertation
+void mod_removeBigIntHint(DataObject&);
 void mod_removeLeadingZerosFromHexValues(DataObject&);
 void mod_removeLeadingZerosFromHexValueEVEN(DataObject&);
 void mod_removeLeadingZerosFromHexKeyEVEN(DataObject&);
@@ -20,12 +21,9 @@ void mod_keyToCompactEvenHexPrefixed(DataObject&);
 void mod_valueInsertZeroXPrefix(DataObject&);
 void mod_valueToFH32(DataObject&);
 void mod_sortKeys(DataObject&);
-long long int hexOrDecStringToInt(std::string const& _str);
+bool src_findBigInt(DataObject const& el);
 
-// Check the presents of fields in a DataObject with a validation map
-typedef std::set<DataType> possibleType;
-void requireJsonFields(DataObject const& _o, std::string const& _section,
-    std::map<std::string, possibleType> const& _validationMap, bool _fail = false);
+long long int hexOrDecStringToInt(std::string const& _str);
 
 enum jsonField
 {

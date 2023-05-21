@@ -1,8 +1,8 @@
 #include "TestSuiteHelperFunctions.h"
 #include "Options.h"
 #include <retesteth/EthChecks.h>
-#include <retesteth/TestHelper.h>
-#include <retesteth/TestOutputHelper.h>
+#include <retesteth/helpers/TestHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
 #include <retesteth/testSuiteRunner/TestSuite.h>
 #include <libdevcore/CommonIO.h>
 
@@ -13,7 +13,7 @@ namespace fs = boost::filesystem;
 
 namespace test::testsuite
 {
-TestFileData readTestFile(fs::path const& _testFileName)
+TestFileData readFillerTestFile(fs::path const& _testFileName)
 {
     // Legacy hash validation require to sort json data upon load, thats the old algo used to calculate hash
     // Avoid time consuming legacy tests hash validation if there is no --checkhash option
@@ -27,7 +27,10 @@ TestFileData readTestFile(fs::path const& _testFileName)
     ETH_DC_MESSAGE(DC::TESTLOG, "Read json structure " + string(_testFileName.filename().c_str()));
     TestFileData testData;
     if (_testFileName.extension() == ".json")
-        testData.data = test::readJsonData(_testFileName, string(), bSortOnLoad);
+    {
+        CJOptions opt { .jsonParse = CJOptions::JsonParse::ALLOW_COMMENTS, .autosort = bSortOnLoad,};
+        testData.data = test::readJsonData(_testFileName, opt);
+    }
     else if (_testFileName.extension() == ".yml")
         testData.data = test::readYamlData(_testFileName, bSortOnLoad);
     else if (_testFileName.extension() == ".py")
@@ -110,15 +113,30 @@ void clearGeneratedTestNamesMap()
 void checkDoubleGeneratedTestNames()
 {
     std::lock_guard<std::mutex> lock(G_GeneratedTestsMap_Mutex);
+
+    typedef std::set<string> SetOfString;
+    std::map<string, SetOfString> verifiedMap;
+
     std::set<string> checkedNames;
     for (auto const& test : C_GeneratedTestsMAP)
     {
+        SetOfString localNames;
         for (auto const& name : test.second)
         {
+            string sPrevious;
+            for (auto const& previousTest : verifiedMap)
+            {
+                if (previousTest.second.count(name))
+                    sPrevious = "Previous occurance in test filler: `" + previousTest.first + "`";
+            }
             if (checkedNames.count(name))
-                ETH_ERROR_MESSAGE("Filler will produce test name collision (change the name): `" + name + "` in test filler `" + test.first);
+                ETH_ERROR_MESSAGE("Filler will produce test name collision (change the name): `" +
+                                  name + "` in test filler `" + test.first + "`\n" + sPrevious);
+
             checkedNames.emplace(name);
+            localNames.emplace(name);
         }
+        verifiedMap.emplace(test.first, localNames);
     }
 }
 

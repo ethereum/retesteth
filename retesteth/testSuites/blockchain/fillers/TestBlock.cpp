@@ -59,6 +59,8 @@ spDataObject TestBlock::asDataObject() const
     }
 
     res["rlp"] = m_rawRLP->asString();
+    if (m_hasBigInt)
+        res["hasBigInt"] = "true";
     return _res;
 }
 }  // namespace test::blockchainfiller

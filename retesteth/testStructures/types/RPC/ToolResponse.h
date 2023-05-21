@@ -20,6 +20,7 @@ struct ToolResponse
     FH256 const& logsBloom() const { return m_logsBloom; }
     VALUE const& currentDifficulty() const { return m_currentDifficulty; }
     VALUE const& currentBasefee() const { return m_currentBasefee; }
+    VALUE const& currentExcessDataGas() const { return m_currentExcessDataGas; }
     FH32 const& withdrawalsRoot() const { return m_withdrawalsRoot;}
     VALUE totalGasUsed() const
     {
@@ -32,7 +33,7 @@ struct ToolResponse
     std::vector<ToolResponseReceipt> const& receipts() const { return m_receipts; }
 
     // Tool export the state separately
-    void attachState(State const& _state) { m_stateResponse = spState(new State(_state)); }
+    void attachState(spState _state) { m_stateResponse = _state; }
     void attachDebugTrace(FH32 const& _trHash, spDebugVMTrace const& _debug) { m_debugTrace[_trHash] = _debug; }
     std::map<FH32, spDebugVMTrace> const& debugTrace() const { return m_debugTrace; }
     std::vector<ToolResponseRejected> const& rejected() const { return m_rejectedTransactions; }
@@ -46,6 +47,7 @@ private:
     spFH256 m_logsBloom;
     spVALUE m_currentDifficulty;
     spVALUE m_currentBasefee;
+    spVALUE m_currentExcessDataGas;
     spFH32 m_withdrawalsRoot;
     std::vector<ToolResponseReceipt> m_receipts;
     spState m_stateResponse;

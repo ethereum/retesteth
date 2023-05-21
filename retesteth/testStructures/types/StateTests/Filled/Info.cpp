@@ -25,6 +25,8 @@ namespace
                 {{"comment", {{DataType::String}, jsonField::Required}},
                     {"filling-block-build-tool", {{DataType::String}, jsonField::Optional}},
                     {"filling-transition-tool", {{DataType::String}, jsonField::Optional}},
+                    {"reference-spec", {{DataType::String}, jsonField::Optional}},
+                    {"reference-spec-version", {{DataType::String}, jsonField::Optional}},
                     {"filling-rpc-server", {{DataType::String}, jsonField::Required}},
                     {"filling-tool-version", {{DataType::String}, jsonField::Required}},
                     {"lllcversion", {{DataType::String}, jsonField::Required}},

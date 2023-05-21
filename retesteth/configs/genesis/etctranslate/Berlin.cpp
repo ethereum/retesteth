@@ -4,6 +4,9 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
+genBerlinCfgETCTR::genBerlinCfgETCTR()
+{
+
 const string t8ntool_Berlin_config = R"({
     "params" : {
         "fork" : "ETC_Magneto",
@@ -16,8 +19,6 @@ const string t8ntool_Berlin_config = R"({
     }
 })";
 
-genBerlinCfgETCTR::genBerlinCfgETCTR()
-{
     spDataObject obj2;
     (*obj2)["path"] = "etctranslate/genesis/Berlin.json";
     (*obj2)["content"] = t8ntool_Berlin_config;

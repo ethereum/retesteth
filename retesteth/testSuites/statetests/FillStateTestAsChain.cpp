@@ -1,5 +1,5 @@
 ﻿#include "StateTestsHelper.h"
-#include "TestOutputHelper.h"
+#include <retesteth/helpers/TestOutputHelper.h>
 #include "Options.h"
 #include "session/Session.h"
 #include "testSuites/Common.h"
@@ -39,7 +39,7 @@ spDataObject FillTestAsBlockchain(StateTestInFiller const& _test)
                     TestInfo errorInfo(fork.asString(), tr.dataInd(), tr.gasInd(), tr.valueInd());
                     TestOutputHelper::get().setCurrentTestInfo(errorInfo);
 
-                    if (!OptionsAllowTransaction(tr))
+                    if (networkSkip(fork, _test.testName()) || !optionsAllowTransaction(tr))
                     {
                         tr.markSkipped();
                         continue;

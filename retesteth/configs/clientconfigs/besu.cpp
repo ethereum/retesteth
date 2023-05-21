@@ -4,6 +4,10 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
+
+genbesucfg::genbesucfg()
+{
+
 string const besu_config = R"({
     "name" : "Hyperledger Besu on TCP",
     "socketType" : "tranition-tool",
@@ -59,7 +63,6 @@ string const besu_config = R"({
       "InvalidS" : "rlp: expected input string or byte for *big.Int, decoding into (types.Transaction)(types.LegacyTx).S",
       "InvalidChainID" : "invalid chain id for signer",
       "ECRecoveryFail" : "recovery failed",
-      "InvalidStateRoot" : "",
       "ExtraDataTooBig" : "Error importing raw rlp block: Header extraData > 32 bytes",
       "InvalidData" : "rlp: expected input string or byte for []uint8, decoding into (types.Transaction)(types.LegacyTx).Data",
       "InvalidDifficulty" : "Invalid difficulty:",
@@ -217,14 +220,14 @@ string const besu_config = R"({
       "1559BlockImportImpossible_InitialGasLimitInvalid": "Invalid block1559: Initial gasLimit must be",
       "MergeBlockImportImpossible" : "Trying to import Merge block on top of Shanghai block after transition",
       "ShanghaiBlockImportImpossible" : "Shanghai block on top of Merge block before transition",
-      "TR_IntrinsicGas" : "intrinsic gas too low:",
+      "TR_IntrinsicGas" : "intrinsic gas cost",
       "TR_NoFunds" : "insufficient funds for gas * price + value",
       "TR_NoFundsValue" : "insufficient funds for transfer",
       "TR_FeeCapLessThanBlocks" : "max fee per gas less than block base fee",
       "TR_GasLimitReached" : "gas limit reached",
       "TR_NonceTooHigh" : "nonce too high",
       "TR_NonceTooLow" : "nonce too low",
-      "TR_TypeNotSupported" : "transaction type not supported",
+      "TR_TypeNotSupported" : "is invalid, accepted transaction types are",
       "TR_TipGtFeeCap": "max priority fee per gas higher than max fee per gas",
       "TR_TooShort": "typed transaction too short",
       "TR_InitCodeLimitExceeded" : "max initcode size exceeded",
@@ -232,7 +235,6 @@ string const besu_config = R"({
       "1559PriorityFeeGreaterThanBaseFee": "maxFeePerGas \u003c maxPriorityFeePerGas",
       "2930AccessListAddressTooLong": "rlp: input string too long for common.Address, decoding into (types.Transaction)(types.AccessListTx).AccessList[0].Address",
       "2930AccessListAddressTooShort": "rlp: input string too short for common.Address, decoding into (types.Transaction)(types.AccessListTx).AccessList[0].Address",
-      "2930AccessListStorageHashTooLong": "rlp: input string too long for common.Hash, decoding into (types.Transaction)(types.AccessListTx).AccessList[0].StorageKeys[0]",
       "1559LeadingZerosBaseFee": "rlp: non-canonical integer (leading zero bytes) for *big.Int, decoding into (types.Transaction)(types.DynamicFeeTx).GasFeeCap",
       "1559LeadingZerosPriorityFee":  "rlp: non-canonical integer (leading zero bytes) for *big.Int, decoding into (types.Transaction)(types.DynamicFeeTx).GasTipCap",
       "2930AccessListStorageHashTooShort": "rlp: input string too short for common.Hash, decoding into (types.Transaction)(types.AccessListTx).AccessList[0].StorageKeys[0]",
@@ -287,8 +289,6 @@ else
 fi
 )";
 
-genbesucfg::genbesucfg()
-{
     {
         spDataObject obj;
         (*obj)["path"] = "besu/config";

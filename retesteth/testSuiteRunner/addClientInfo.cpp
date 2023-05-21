@@ -1,8 +1,8 @@
 #include "TestSuiteHelperFunctions.h"
 #include <libdevcore/CommonIO.h>
 #include <retesteth/Options.h>
-#include <retesteth/TestHelper.h>
-#include <retesteth/TestOutputHelper.h>
+#include <retesteth/helpers/TestHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
 #include <retesteth/session/Session.h>
 
 using namespace std;

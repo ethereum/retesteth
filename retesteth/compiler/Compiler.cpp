@@ -1,8 +1,8 @@
 #include "Options.h"
-#include "TestHelper.h"
+#include <retesteth/helpers/TestHelper.h>
 #include <libdevcore/CommonIO.h>
 #include <retesteth/EthChecks.h>
-#include <retesteth/TestOutputHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
 using namespace dev;
 using namespace test;
 using namespace std;

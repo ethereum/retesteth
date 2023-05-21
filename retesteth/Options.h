@@ -28,6 +28,8 @@ private:
         void setBeforeSeparator() { m_allowBeforeSeparator = true; }
         void setOverrideOption() { m_optionOverrides = true; }
         void tryInit(std::list<const char*>& _argList);
+        void overrideInitArg(std::string const& _arg) { m_inited = true; initArg(_arg); }
+        void deInitialize() { m_inited = false; }
         void printHelp();
         void validate() const;
     private:
@@ -210,6 +212,7 @@ public:
     string_opt singleTestOutFile;
     singletest_opt singletest;
     string_opt singleTestNet;
+    string_opt runOnlyNets;
 
     // Debugging
     dataind_opt trData;
@@ -257,14 +260,16 @@ public:
     struct DynamicOptions
     {
         DynamicOptions() {}
-        std::vector<ClientConfig> const& getClientConfigs();
+        std::vector<ClientConfig> const& getClientConfigs() const;
         ClientConfig const& getCurrentConfig() const;
         void setCurrentConfig(ClientConfig const& _config);
         size_t activeConfigs() const;
         bool currentConfigIsSet() const;
+        std::set<FORK> const& runOnlyNetworks() const { return m_runOnlyNetworks; }
 
     private:
-        std::vector<ClientConfig> m_clientConfigs;
+        std::set<FORK> m_runOnlyNetworks;
+        mutable std::vector<ClientConfig> m_clientConfigs;
         test::ClientConfigID m_currentConfigID = test::ClientConfigID::null();
     };
 
@@ -283,6 +288,22 @@ private:
     static DynamicOptions m_dynamicOptions;
     friend class TestOptions;
     std::vector<Option*> m_options;
+};
+
+class TestOptions
+{
+public:
+    TestOptions(int argc = 0, const char** argv = 0) : m_opt(argc, argv) {}
+    Options const& get() { return m_opt; }
+    void overrideMainOptions() const;
+    ~TestOptions();
+
+    static bool isOverride();
+    static Options const& getOverride();
+private:
+    Options m_opt;
+    static bool m_isOverride;
+    static Options const* m_global_test_opt;
 };
 
 } //namespace test

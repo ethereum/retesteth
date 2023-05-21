@@ -36,7 +36,7 @@ BYTES const EthereumBlock::getRLP() const
     try
     {
         bool const isExportWithdrawalsRLP =
-            (m_header->type() == BlockType::BlockHeaderShanghai || m_forceWithdrawalsRLP)
+            (isBlockExportWithdrawals(m_header) || m_forceWithdrawalsRLP)
             && !m_forceNoWithdrawalsRLP;
 
         RLPStream stream(isExportWithdrawalsRLP ? 4 : 3);

@@ -7,6 +7,7 @@
 #include <json/json.h>
 #endif
 #include <libdataobj/DataObject.h>
+#include <libdataobj/ConvertFile.h>
 #include <retesteth/compiler/Compiler.h>
 #include <retesteth/testStructures/basetypes/BYTES.h>
 #include <retesteth/testStructures/configs/FORK.h>
@@ -21,7 +22,7 @@ Json::Value readJson(boost::filesystem::path const& _path);
 #endif
 
 /// Safely read the json file into DataObject
-spDataObject readJsonData(boost::filesystem::path const& _file, std::string const& _stopper = std::string(), bool _autosort = false);
+spDataObject readJsonData(boost::filesystem::path const& _file, dataobject::CJOptions const& _opt = CJOptions());
 spDataObject readYamlData(boost::filesystem::path const& _file, bool _sort = false);
 spDataObject readAutoDataWithoutOptions(boost::filesystem::path const& _file, bool _sort = false);
 
@@ -94,10 +95,12 @@ bool inArray(std::list<T> const& _array, const T& _val)
 
 /// Explode string into array of strings by `delim`
 std::vector<std::string> explode(std::string const& s, char delim);
+std::set<std::string> explodeIntoSet(std::string const& s, char delim);
 void removeSubChar(std::string& _string, unsigned char _r);
 void removeSubChar(std::string& _string, std::vector<unsigned char> _r);
 std::string makePlussedFork(test::teststruct::FORK const& _net);
 bool isBoostSuite(std::string const& suiteName);
+size_t substrCount(std::string const& _str, std::string const& _needle);
 
 
 /// See what kind of a string is str

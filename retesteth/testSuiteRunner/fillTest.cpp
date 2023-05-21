@@ -1,5 +1,5 @@
-#include "TestHelper.h"
-#include "TestOutputHelper.h"
+#include <retesteth/helpers/TestHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
 #include "TestSuiteHelperFunctions.h"
 #include "testSuiteRunner/TestSuite.h"
 #include <Options.h>
@@ -83,11 +83,30 @@ bool TestSuite::_fillPython(TestFileData& _testData, fs::path const& _fillerTest
         string const fillerName = _fillerTestFilePath.stem().string();
         TestOutputHelper::get().setCurrentTestName(fillerName);
 
+        /*
+        SRCPATH=$1
+        FILLER=$2
+        TESTCA=$3
+        OUTPUT=$4
+        EVMT8N=$5
+        FORCER=$6
+        */
+
+        auto const& opt = Options::get();
         string runcmd = specsScript.c_str();
         runcmd += " " + _fillerTestFilePath.parent_path().parent_path().string();  // SRCPATH
         runcmd += " " + fillerName;                                                // FILLER NAME
+        if (opt.singletest.initialized() && !opt.singletest.subname.empty())
+            runcmd += " " + opt.singletest.subname;
+        else
+            runcmd += " null";                                                     // TEST CASE NAME
         runcmd += " " + _filledPath.path().parent_path().string();                 // OUTPATH
-        runcmd += " " + Options::get().getCurrentConfig().getStartScript().string(); // T8N start
+        runcmd += " " + opt.getCurrentConfig().getStartScript().string();          // T8N start
+        if (opt.forceupdate)
+            runcmd += " --force-refill";
+        else
+            runcmd += " null";
+
         ETH_DC_MESSAGEC(DC::STATS, string("Generate Python test: ") + _fillerTestFilePath.stem().string(), LogColor::YELLOW);
         ETH_DC_MESSAGE(DC::RPC, string("Generate Python test: ") + runcmd);
 
@@ -103,7 +122,10 @@ bool TestSuite::_fillPython(TestFileData& _testData, fs::path const& _fillerTest
             return wereErrors;
         }
         else
+        {
             updatePythonTestInfo(_testData, _fillerTestFilePath, _filledPath.path().parent_path());
+            TestOutputHelper::get().registerTestRunSuccess();
+        }
         return wereErrors;
     }
     else
@@ -168,10 +190,7 @@ bool TestSuite::_fillTest(TestSuite::TestSuiteOptions& _opt, fs::path const& _fi
     bool wereErrors = false;
     _opt.doFilling = true;
     TestOutputHelper::get().setCurrentTestFile(_fillerTestFilePath);
-
-    // TODO we already read this file when checking filler hash updated
-    // maybe store it in some map ?? but then a lot of tests in memory
-    TestFileData testData = readTestFile(_fillerTestFilePath);
+    TestFileData testData = readFillerTestFile(_fillerTestFilePath);
 
     bool const isPy = (_fillerTestFilePath.extension() == ".py");
     bool const isCopier = (_fillerTestFilePath.stem().string().rfind(c_copierPostf) != string::npos);

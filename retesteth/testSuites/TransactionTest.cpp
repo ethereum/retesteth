@@ -3,7 +3,7 @@
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/SHA3.h>
 #include <retesteth/ExitHandler.h>
-#include <retesteth/TestOutputHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
 #include <retesteth/testStructures/types/Ethereum/Transactions/TransactionLegacy.h>
 #include <retesteth/testStructures/types/TransactionTests/TransactionTest.h>
 #include <retesteth/testStructures/types/TransactionTests/TransactionTestFiller.h>
@@ -29,23 +29,18 @@ spDataObject FillTest(TransactionTestInFiller const& _test)
     std::set<FORK> executionForks;
     for (auto const& fork : Options::getCurrentConfig().cfgFile().forks())
         executionForks.emplace(fork);
-
     for (auto const& fork : _test.additionalForks())
-    {
-        auto const& opt = Options::getCurrentConfig();
-        if (opt.checkForkAllowed(fork) && !opt.checkForkSkipOnFiller(fork))
-            executionForks.emplace(fork);
-        else
-            ETH_WARNING("Client config does not support fork `" + fork.asString() + "`, skipping test generation!");
-    }
+        executionForks.emplace(fork);
+    if (hasSkipFork(executionForks))
+        return spDataObject(new DataObject(DataType::Null));
+
 
     for (auto const& fork : executionForks)
     {
         if (ExitHandler::receivedExitSignal())
             break;
 
-        Options const& opt = Options::get();
-        if (!opt.singleTestNet.empty() && FORK(opt.singleTestNet) != fork)
+        if (networkSkip(fork, _test.testName()))
             continue;
 
         TestRawTransaction res = session.test_rawTransaction(_test.transaction()->getRawBytes(), fork);
@@ -77,16 +72,8 @@ void RunTest(TransactionTestInFilled const& _test)
         if (ExitHandler::receivedExitSignal())
             break;
 
-        Options const& opt = Options::get();
-        if (!opt.singleTestNet.empty() && FORK(opt.singleTestNet) != fork)
+        if (networkSkip(fork, _test.testName()))
             continue;
-
-        auto const& cfg = Options::getCurrentConfig();
-        if (!cfg.checkForkAllowed(fork) || cfg.checkForkSkipOnFiller(fork))
-        {
-            ETH_WARNING("Client config does not support fork `" + fork.asString() + "`, skipping test!");
-            continue;
-        }
 
         TestRawTransaction res = session.test_rawTransaction(_test.rlp(), fork);
         if (_test.transaction().isEmpty())

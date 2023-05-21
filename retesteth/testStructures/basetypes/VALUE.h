@@ -5,19 +5,19 @@
 
 namespace test::teststruct
 {
-using namespace dataobject;
 
 // Validate and manage the type of VALUE (bigInt)
 // Deserialized from string of "0x1122...32", "123343"
 // Can be limited by _limit max value
 
-struct VALUE : GCP_SPointerBase
+struct VALUE : dataobject::GCP_SPointerBase
 {
     // TODO ideally separate bigint logic into another class that behave exactly the same as VALUE but with exceptions
-    VALUE(dev::RLP const& _rlp);
+    explicit VALUE(dev::RLP const& _rlp);
     VALUE(dev::bigint const&);
     VALUE(int);
-    VALUE(DataObject const&);  // Does not require to move smart pointer here as this structure changes a lot
+    explicit VALUE(dataobject::DataObject const&);  // Does not require to move smart pointer here as this structure changes a lot
+    explicit VALUE(std::string const&);
     VALUE* copy() const { return new VALUE(m_data); }
 
     bool operator<(long long _rhs) const { return m_data < _rhs; }
@@ -56,24 +56,26 @@ struct VALUE : GCP_SPointerBase
 
 private:
     VALUE() {}
+    void _fromString(std::string const& _data, std::string const& _hintkey = std::string());
     std::string verifyHexString(std::string const& _s, std::string const& _k = std::string()) const;
     void calculateCache() const;
+    size_t _countPrefixedBytes(std::string const&) const;
     dev::bigint m_data;
 
     // Optimizations
     mutable bool m_dirty = true;
-    mutable std::string m_dataStrZeroXCache;
+    mutable std::string m_dataStr;
     mutable dev::bytes m_bytesData;
 
     // Bigint specific
     bool m_bigint = false;
     mutable bool m_bigintEmpty = false;
-    mutable dev::bytes m_bytesBigIntData;
-    mutable size_t m_prefixedZeros = 0;
-    mutable std::string m_dataStrBigIntCache;
+    mutable size_t m_prefixedZeroBytes = 0;
 };
 
-typedef GCP_SPointer<VALUE> spVALUE;
+typedef dataobject::GCP_SPointer<VALUE> spVALUE;
+template <class T>
+spVALUE sVALUE(T const& _arg) { return spVALUE(new VALUE(_arg)); }
 
 
 }  // namespace teststruct

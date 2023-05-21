@@ -1,7 +1,8 @@
 #include "EthChecks.h"
 #include "Options.h"
-#include "TestHelper.h"
+#include <retesteth/helpers/TestHelper.h>
 #include "TestSuiteHelperFunctions.h"
+//#include <libdevcore/CommonIO.h>
 
 using namespace std;
 using namespace dev;
@@ -42,13 +43,15 @@ bool checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
 {
     bool isTestOutdated = false;
     ETH_DC_MESSAGE(DC::TESTLOG, string("Check `") + _compiledTest.c_str() + "` hash");
-    TestFileData fillerData = readTestFile(_sourceTest);
+    ETH_DC_MESSAGE(DC::TESTLOG, string("SrcFile `") + _sourceTest.c_str() + "`");
+    TestFileData fillerData = readFillerTestFile(_sourceTest);
 
     // If no hash calculated, skip the hash check
     if (!fillerData.hashCalculated)
         return isTestOutdated;
 
-    spDataObject compiledTestFileData = test::readJsonData(_compiledTest, "_info");
+    CJOptions opt { .stopper = "_info" };
+    spDataObject compiledTestFileData = test::readJsonData(_compiledTest, opt);
     for (auto const& test : compiledTestFileData->getSubObjects())
     {
         DataObject const& testRef = test.getCContent();
@@ -78,6 +81,15 @@ bool checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
                 {
                     sourceHashStr = sourceHash.hex();
                     fillerHashStr = fillerData.hash.hex();
+
+                    // Correct the generated hash
+                    //auto file = dev::contentsString(_compiledTest.string());
+                    //size_t pos = file.find(sourceHashStr);
+                    //if (pos != string::npos)
+                    //{
+                    //    file = file.replace(pos, sourceHashStr.size(), fillerHashStr);
+                    //    dev::writeFile(_compiledTest.string(), file);
+                    //}
                 }
                 else
                 {

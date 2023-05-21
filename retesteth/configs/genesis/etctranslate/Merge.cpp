@@ -4,6 +4,8 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
+genMergeCfgETCTR::genMergeCfgETCTR()
+{
 const string t8ntool_Merge_config = R"({
     "params" : {
         "fork" : "ETC_Mystique",
@@ -17,8 +19,6 @@ const string t8ntool_Merge_config = R"({
     }
 })";
 
-genMergeCfgETCTR::genMergeCfgETCTR()
-{
     {
         spDataObject obj;
         (*obj)["path"] = "etctranslate/genesis/Merge.json";

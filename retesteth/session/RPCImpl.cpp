@@ -2,8 +2,8 @@
 #include <retesteth/EthChecks.h>
 #include <retesteth/ExitHandler.h>
 #include <retesteth/Options.h>
-#include <retesteth/TestHelper.h>
-#include <retesteth/TestOutputHelper.h>
+#include <retesteth/helpers/TestHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
 #include <retesteth/session/RPCImpl.h>
 #include <retesteth/session/Session.h>
 
@@ -204,6 +204,14 @@ TestRawTransaction RPCImpl::test_rawTransaction(BYTES const& _rlp, FORK const& _
     return TestRawTransaction(res);
 }
 
+std::string RPCImpl::test_rawEOFCode(BYTES const& _code, FORK const& _fork)
+{
+    (void) _code;
+    (void) _fork;
+    ETH_FAIL_MESSAGE("RPCImpl::test_rawEOFCode is not implemented!");
+    return string();
+}
+
 VALUE RPCImpl::test_calculateDifficulty(FORK const& _fork, VALUE const& _blockNumber, VALUE const& _parentTimestamp,
     VALUE const& _parentDifficulty, VALUE const& _currentTimestamp, VALUE const& _uncleNumber)
 {
@@ -243,7 +251,7 @@ spDataObject RPCImpl::rpcCall(
     string reply = m_socket.sendRequest(request, validator);
     ETH_DC_MESSAGE(DC::RPC, "Reply: `" + reply + "`");
 
-    spDataObject result = ConvertJsoncppStringToData(reply, string(), false);
+    spDataObject result = ConvertJsoncppStringToData(reply);
     if (result->count("error"))
         (*result)["result"] = "";
 

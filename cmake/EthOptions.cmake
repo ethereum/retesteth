@@ -10,6 +10,7 @@ macro(configure_project)
     # Features:
     option(FASTCTEST "Enable fast ctest" OFF)
     option(JSONCPP "Enable jsoncpp for .json hash debugging (--showhash)" OFF)
+    option(UNITTESTS "Enable complex unit tests" OFF)
 
     # components
   

@@ -1,6 +1,6 @@
 #include <libdataobj/ConvertFile.h>
 #include <retesteth/Options.h>
-#include <retesteth/TestOutputHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
 #include <testStructures/types/StateTests/Filler/StateTestFillerTransaction.h>
 
 using namespace std;

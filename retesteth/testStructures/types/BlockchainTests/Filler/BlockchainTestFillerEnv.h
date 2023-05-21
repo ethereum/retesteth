@@ -56,9 +56,21 @@ struct BlockchainTestFillerEnvShanghai : BlockchainTestFillerEnvMerge
 
 protected:
     void initializeShanghaiFields(DataObject const&);
+    BlockchainTestFillerEnvShanghai(){};
 private:
     void define() const override {}
 };
+
+struct BlockchainTestFillerEnv4844 : BlockchainTestFillerEnvShanghai
+{
+    BlockchainTestFillerEnv4844(spDataObjectMove _data, SealEngine _sEngine);
+
+protected:
+    void initialize4844Fields(DataObject const&);
+private:
+    void define() const override {}
+};
+
 
 
 typedef GCP_SPointer<BlockchainTestFillerEnv> spBlockchainTestFillerEnv;

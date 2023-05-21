@@ -4,6 +4,7 @@
 #include <retesteth/EthChecks.h>
 #include <retesteth/Options.h>
 #include <retesteth/configs/Options.h>
+#include <retesteth/helpers/TestHelper.h>
 
 using namespace std;
 using namespace test;
@@ -77,6 +78,7 @@ ClientConfig const& Options::DynamicOptions::getCurrentConfig() const
 
 void Options::DynamicOptions::setCurrentConfig(ClientConfig const& _config)
 {
+    auto const& opt = Options::get();
     ETH_FAIL_REQUIRE_MESSAGE(getClientConfigs().size() > 0, "No client configs provided!");
     bool found = false;
     for (auto& cfg : m_clientConfigs)
@@ -93,12 +95,22 @@ void Options::DynamicOptions::setCurrentConfig(ClientConfig const& _config)
     m_currentConfigID = _config.getId();
 
     // Verify singleTestNet for the current config
-    string const& net = Options::get().singleTestNet;
+    string const& net = opt.singleTestNet;
     if (!net.empty())
         _config.validateForkAllowed(FORK(net));
+
+    // Set runOnlyNetworks
+    m_runOnlyNetworks.clear();
+    if (!opt.runOnlyNets.empty())
+    {
+        auto const setOfNets = test::explodeIntoSet(opt.runOnlyNets, ',');
+        auto const vectrTranslated = _config.translateNetworks(setOfNets);
+        for (auto const& net : vectrTranslated)
+            m_runOnlyNetworks.emplace(net);
+    }
 }
 
-std::vector<ClientConfig> const& Options::DynamicOptions::getClientConfigs()
+std::vector<ClientConfig> const& Options::DynamicOptions::getClientConfigs() const
 {
     // if no Configs initialized, initialize the configs
     // Because can not initialize the configs while loading Options up

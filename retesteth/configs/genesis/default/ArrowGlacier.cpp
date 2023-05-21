@@ -4,6 +4,10 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
+
+genArrowGlacierCfg::genArrowGlacierCfg()
+{
+
 const string t8ntool_ArrowGlacier_config = R"({
     "params" : {
         "fork" : "ArrowGlacier",
@@ -16,8 +20,7 @@ const string t8ntool_ArrowGlacier_config = R"({
     }
 })";
 
-genArrowGlacierCfg::genArrowGlacierCfg()
-{
+
     spDataObject obj2(new DataObject());
     (*obj2)["path"] = "default/genesis/ArrowGlacier.json";
     (*obj2)["content"] = t8ntool_ArrowGlacier_config;

@@ -1,43 +1,26 @@
 #include "BlockHeader.h"
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/SHA3.h>
+#include <retesteth/Constants.h>
+#include <retesteth/EthChecks.h>
+
+using namespace std;
 
 namespace test::teststruct
 {
-std::string BlockHeader::TypeToString(BlockType _t)
-{
-    switch (_t)
-    {
-    case BlockType::BlockHeader1559:
-        return "BlockHeader1559";
-    case BlockType::BlockHeaderLegacy:
-        return "BlockHeaderLegacy";
-    case BlockType::BlockHeaderMerge:
-        return "BlockHeaderMerge";
-    case BlockType::BlockHeaderShanghai:
-        return "BlockHeaderShanghai";
-    default:
-        return "UnparsedBlockType";
-    }
-    return "UnparsedBlockType";
-}
 
 std::string BlockHeader::BlockTypeToString(BlockType _bl)
 {
     switch (_bl)
     {
-    case BlockType::BlockHeader1559:
-        return "BlockHeader1559";
-    case BlockType::BlockHeaderLegacy:
-        return "BlockHeaderLegacy";
-    case BlockType::BlockHeaderMerge:
-        return "BlockHeaderMerge";
-    case BlockType::BlockHeaderShanghai:
-        return "BlockHeaderShanghai";
-    default:
-        return "BlockHeaderUndefined";
+        case BlockType::BlockHeader1559: return "BlockHeader1559";
+        case BlockType::BlockHeaderLegacy: return "BlockHeaderLegacy";
+        case BlockType::BlockHeaderMerge: return "BlockHeaderMerge";
+        case BlockType::BlockHeaderShanghai: return "BlockHeaderShanghai";
+        case BlockType::BlockHeader4844: return "BlockHeader4844";
+        default: return "UnparsedBlockType";
     };
-    return "BlockHEaderUndefined";
+    return "UnparsedBlockType";
 }
 
 void BlockHeader::recalculateHash()
@@ -48,7 +31,23 @@ void BlockHeader::recalculateHash()
 
 bool BlockHeader::hasUncles() const
 {
-    return m_sha3Uncles->asString() != "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347";
+    return m_sha3Uncles->asString() != C_EMPTY_LIST_HASH;
 }
+
+void BlockHeader::fromData(DataObject const& _data)
+{
+    try
+    {
+        checkDataScheme(_data);
+        _fromData(_data);
+        if (m_hash.isEmpty())
+            recalculateHash();
+    }
+    catch (std::exception const& _ex)
+    {
+        throw test::UpwardsException(BlockTypeToString(type()) + string(" parse error: ") + _ex.what());
+    }
+}
+
 
 }  // namespace test::teststruct

@@ -4,12 +4,16 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
+gennimbuscfg::gennimbuscfg()
+{
+
 string const nimbus_config = R"({
     "name" : "Ethereum NIMBUS on StateTool",
     "socketType" : "tranition-tool",
     "socketAddress" : "start.sh",
     "checkLogsHash" : true,
     "checkBasefee" : true,
+    "supportBigint" : false,
     "defaultChainID" : 1,
     "customCompilers" : {
         ":yul" : "yul.sh",
@@ -47,6 +51,11 @@ string const nimbus_config = R"({
         "Merge+3855"
     ],
     "exceptions" : {
+      "PYSPECS EXCEPTIONS: ": "",
+      "Transaction without funds" : "processTransaction failed",
+      "intrinsic gas too low" : "processTransaction failed",
+      "max initcode size exceeded" : "processTransaction failed",
+
       "AddressTooShort" : "input string too short for common.Address",
       "AddressTooLong" : "rlp: input string too long for common.Address, decoding into (types.Transaction)(types.LegacyTx).To",
       "NonceMax" : "nonce exceeds 2^64-1",
@@ -57,7 +66,6 @@ string const nimbus_config = R"({
       "InvalidS" : "rlp: expected input string or byte for *big.Int, decoding into (types.Transaction)(types.LegacyTx).S",
       "InvalidChainID" : "invalid chain id for signer",
       "ECRecoveryFail" : "recovery failed",
-      "InvalidStateRoot" : "",
       "ExtraDataTooBig" : "Error importing raw rlp block: Header extraData > 32 bytes",
       "InvalidData" : "rlp: expected input string or byte for []uint8, decoding into (types.Transaction)(types.LegacyTx).Data",
       "InvalidDifficulty" : "Invalid difficulty:",
@@ -109,7 +117,7 @@ string const nimbus_config = R"({
       "UncleIsBrother" : "Uncle is brother!",
       "OutOfGas" : "out of gas",
       "SenderNotEOA" : "processTransaction failed",
-      "IntrinsicGas" : "t8ntool didn't return a transaction with hash",
+      "IntrinsicGas" : "processTransaction failed",
       "ExtraDataIncorrectDAO" : "BlockHeader require Dao ExtraData!",
       "InvalidTransactionVRS" : "t8ntool didn't return a transaction with hash",
       "BLOCKHEADER_VALUE_TOOLARGE" : "Blockheader parse error: VALUE  >u256",
@@ -213,6 +221,8 @@ string const nimbus_config = R"({
       "1559BlockImportImpossible_TargetGasLow": "gasTarget decreased too much",
       "1559BlockImportImpossible_TargetGasHigh": "gasTarget increased too much",
       "1559BlockImportImpossible_InitialGasLimitInvalid": "Invalid block1559: Initial gasLimit must be",
+      "MergeBlockImportImpossible" : "Trying to import Merge block on top of Shanghai block after transition",
+      "ShanghaiBlockImportImpossible" : "Shanghai block on top of Merge block before transition",
       "TR_IntrinsicGas" : "processTransaction failed",
       "TR_NoFunds" : "",
       "TR_NoFundsValue" : "processTransaction failed",
@@ -228,7 +238,6 @@ string const nimbus_config = R"({
       "1559PriorityFeeGreaterThanBaseFee": "maxFeePerGas \u003c maxPriorityFeePerGas",
       "2930AccessListAddressTooLong": "rlp: input string too long for common.Address, decoding into (types.Transaction)(types.AccessListTx).AccessList[0].Address",
       "2930AccessListAddressTooShort": "rlp: input string too short for common.Address, decoding into (types.Transaction)(types.AccessListTx).AccessList[0].Address",
-      "2930AccessListStorageHashTooLong": "rlp: input string too long for common.Hash, decoding into (types.Transaction)(types.AccessListTx).AccessList[0].StorageKeys[0]",
       "1559LeadingZerosBaseFee": "rlp: non-canonical integer (leading zero bytes) for *big.Int, decoding into (types.Transaction)(types.DynamicFeeTx).GasFeeCap",
       "1559LeadingZerosPriorityFee":  "rlp: non-canonical integer (leading zero bytes) for *big.Int, decoding into (types.Transaction)(types.DynamicFeeTx).GasTipCap",
       "2930AccessListStorageHashTooShort": "rlp: input string too short for common.Hash, decoding into (types.Transaction)(types.AccessListTx).AccessList[0].StorageKeys[0]",
@@ -237,7 +246,7 @@ string const nimbus_config = R"({
       "3675PoSBlockRejected" : "Parent (transition) block has not reached TTD",
       "3675PreMerge1559BlockRejected" : "Trying to import 1559 block on top of PoS block",
       "INPUT_UNMARSHAL_ERROR" : "cannot unmarshal hex",
-      "INPUT_UNMARSHAL_SIZE_ERROR" : "failed unmarshaling",
+      "INPUT_UNMARSHAL_SIZE_ERROR" : "hex string",
       "RLP_BODY_UNMARSHAL_ERROR" : "Rlp structure is wrong",
       "PostMergeUncleHashIsNotEmpty" : "block.uncleHash != empty",
       "PostMergeDifficultyIsNot0" : "block.difficulty must be 0"
@@ -304,8 +313,6 @@ echo "0x600360005500"
 # just like described in this file."
 )";
 
-gennimbuscfg::gennimbuscfg()
-{
     {
         spDataObject obj;
         (*obj)["path"] = "nimbus/config";

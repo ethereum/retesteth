@@ -85,6 +85,7 @@ void printVmTrace(VMtraceinfo const& _info);
 
 // Validate transaction exception
 void compareTransactionException(spTransaction const& _tr, MineBlocksResult const& _mRes, std::string const& _testException);
+void compareEOFException(BYTES const& _code, std::string const& _mRes, std::string const& _testException);
 
 // Verify filled json structures
 void verifyFilledTest(DataObject const& _want, DataObject const& _have);
@@ -95,4 +96,5 @@ void verifyFilledTestRecursive(DataObject const& _want, DataObject const& _have,
 void modifyTransactionChainIDByNetwork(test::Transaction const& _tr, FORK const& _fork);
 
 bool hasSkipFork(std::set<FORK> const& _allforks);
+bool networkSkip(FORK const& _net, std::string const& _testName);
 }

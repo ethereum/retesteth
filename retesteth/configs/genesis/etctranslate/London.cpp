@@ -4,6 +4,8 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
+genLondonCfgETCTR::genLondonCfgETCTR()
+{
 const string t8ntool_London_config = R"({
     "params" : {
         "fork" : "ETC_Mystique",
@@ -16,8 +18,6 @@ const string t8ntool_London_config = R"({
     }
 })";
 
-genLondonCfgETCTR::genLondonCfgETCTR()
-{
     spDataObject obj2;
     (*obj2)["path"] = "etctranslate/genesis/London.json";
     (*obj2)["content"] = t8ntool_London_config;

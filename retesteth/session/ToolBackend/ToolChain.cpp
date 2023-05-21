@@ -1,7 +1,7 @@
 #include "BlockMining.h"
 #include "Verification.h"
 #include <Options.h>
-#include <retesteth/TestHelper.h>
+#include <retesteth/helpers/TestHelper.h>
 #include <testStructures/Common.h>
 
 using namespace dev;
@@ -52,7 +52,8 @@ ToolChain::ToolChain(
         if (compareFork(m_fork, CMP::ge, FORK("London"))
             && genesisHeaderType != BlockType::BlockHeader1559
             && genesisHeaderType != BlockType::BlockHeaderMerge
-            && genesisHeaderType != BlockType::BlockHeaderShanghai)
+            && genesisHeaderType != BlockType::BlockHeaderShanghai
+            && genesisHeaderType != BlockType::BlockHeader4844)
             throw test::UpwardsException("Constructing legacy genesis on network which is higher London!");
     }
 
@@ -129,6 +130,7 @@ spDataObject const ToolChain::mineBlock(EthereumBlockState const& _pendingBlock,
     setAndCheckDifficulty(res.currentDifficulty(), pendingFixedHeader);
     calculateAndCheckSetBaseFee(res.currentBasefee(), pendingFixedHeader, lastBlock().header());
     setWithdrawalsRoot(res.withdrawalsRoot(), pendingFixedHeader);
+    setExcessDataGas(res.currentExcessDataGas(), pendingFixedHeader);
 
     spDataObject miningResult;
     miningResult = coorectTransactionsByToolResponse(res, pendingFixed, _pendingBlock, _req);
@@ -219,10 +221,19 @@ void ToolChain::setAndCheckDifficulty(VALUE const& _difficulty, spBlockHeader& _
 
 void ToolChain::setWithdrawalsRoot(FH32 const& _withdrawalsRoot, spBlockHeader& _pendingHeader)
 {
-    if (isBlockExportWithdrawals(_pendingHeader))
+    if (!_withdrawalsRoot.isZero())
     {
         BlockHeaderShanghai& pendingFixedShanghaiHeader = BlockHeaderShanghai::castFrom(_pendingHeader.getContent());
         pendingFixedShanghaiHeader.setWithdrawalsRoot(_withdrawalsRoot);
+    }
+}
+
+void ToolChain::setExcessDataGas(VALUE const& _excessDataGas, spBlockHeader& _pendingHeader)
+{
+    if (_pendingHeader->type() == BlockType::BlockHeader4844)
+    {
+        BlockHeader4844& pendingFixed4844Header = BlockHeader4844::castFrom(_pendingHeader.getContent());
+        pendingFixed4844Header.setExcessDataGas(_excessDataGas);
     }
 }
 
@@ -302,7 +313,12 @@ spDataObject ToolChain::coorectTransactionsByToolResponse(
                 ETH_DC_MESSAGE(DC::LOWLOG, message);
             }
             else
+            {
+                ETH_DC_MESSAGE(DC::RPC, "Transactions not allowed to fail!");
+                if (rejectedInfoFound)
+                    throw test::UpwardsException((*miningResult)["rejectedTransactions"].atLastElement().atKey("error").asString());
                 throw test::UpwardsException(message);
+            }
         }
         index++;
     }
@@ -330,7 +346,8 @@ void ToolChain::additionalHeaderVerification(
                                      _pendingBlock.header()->number().asString() +
                                      " != " + _pendingFixed.header()->number().asString() + ")");
 
-    if (_miningReq == Mining::RequireValid)  // called on rawRLP import
+      // called on rawRLP import
+    if (_miningReq == Mining::RequireValid)
     {
         if (m_fork.getContent().asString() == "HomesteadToDaoAt5" && _pendingFixed.header()->number() > 4 &&
             _pendingFixed.header()->number() < 19 &&
@@ -364,8 +381,8 @@ void ToolChain::calculateAndSetTotalDifficulty(EthereumBlockState& _pendingFixed
         totalDifficulty = m_blocks.at(m_blocks.size() - 1).totalDifficulty();
     _pendingFixed.setTotalDifficulty(totalDifficulty + _pendingFixed.header()->difficulty());
 
-    ETH_DC_MESSAGE(DC::TESTLOG, "New block N: " + to_string(m_blocks.size()));
-    ETH_DC_MESSAGE(DC::TESTLOG, "New block TD: " + totalDifficulty.asDecString() + " + " +
+    ETH_DC_MESSAGE(DC::LOWLOG, "New block N: " + to_string(m_blocks.size()));
+    ETH_DC_MESSAGE(DC::LOWLOG, "New block TD: " + totalDifficulty.asDecString() + " + " +
                                     _pendingFixed.header()->difficulty().asDecString() + " = " +
                                     _pendingFixed.totalDifficulty().asDecString());
 }

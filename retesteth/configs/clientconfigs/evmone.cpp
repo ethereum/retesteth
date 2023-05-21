@@ -4,6 +4,10 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
+
+genevmonecfg::genevmonecfg()
+{
+
 string const evmone_config = R"({
     "name" : "EVMONE on StateTool",
     "socketType" : "tranition-tool",
@@ -15,6 +19,7 @@ string const evmone_config = R"({
     "calculateBasefee" : false,
     "checkLogsHash" : true,
     "support1559" : true,
+    "supportBigint" : false,
     "transactionsAsJson" : true,
     "tmpDir" : "/dev/shm",
     "defaultChainID" : 1,
@@ -32,7 +37,8 @@ string const evmone_config = R"({
         "Istanbul",
         "Berlin",
         "London",
-        "Merge"
+        "Merge",
+        "Shanghai"
     ],
     "additionalForks" : [
         "FrontierToHomesteadAt5",
@@ -43,7 +49,8 @@ string const evmone_config = R"({
         "BerlinToLondonAt5",
         "ArrowGlacier",
         "ArrowGlacierToMergeAtDiffC0000",
-        "GrayGlacier"
+        "GrayGlacier",
+        "MergeToShanghaiAtTime15k"
     ],
     "fillerSkipForks" : [
     ],
@@ -58,7 +65,6 @@ string const evmone_config = R"({
       "InvalidS" : "rlp: expected input string or byte for *big.Int, decoding into (types.Transaction)(types.LegacyTx).S",
       "InvalidChainID" : "invalid chain id for signer",
       "ECRecoveryFail" : "recovery failed",
-      "InvalidStateRoot" : "",
       "ExtraDataTooBig" : "Error importing raw rlp block: Header extraData > 32 bytes",
       "InvalidData" : "rlp: expected input string or byte for []uint8, decoding into (types.Transaction)(types.LegacyTx).Data",
       "InvalidDifficulty" : "Invalid difficulty:",
@@ -231,7 +237,6 @@ string const evmone_config = R"({
       "1559PriorityFeeGreaterThanBaseFee": "maxFeePerGas \u003c maxPriorityFeePerGas",
       "2930AccessListAddressTooLong": "rlp: input string too long for common.Address, decoding into (types.Transaction)(types.AccessListTx).AccessList[0].Address",
       "2930AccessListAddressTooShort": "rlp: input string too short for common.Address, decoding into (types.Transaction)(types.AccessListTx).AccessList[0].Address",
-      "2930AccessListStorageHashTooLong": "rlp: input string too long for common.Hash, decoding into (types.Transaction)(types.AccessListTx).AccessList[0].StorageKeys[0]",
       "1559LeadingZerosBaseFee": "rlp: non-canonical integer (leading zero bytes) for *big.Int, decoding into (types.Transaction)(types.DynamicFeeTx).GasFeeCap",
       "1559LeadingZerosPriorityFee":  "rlp: non-canonical integer (leading zero bytes) for *big.Int, decoding into (types.Transaction)(types.DynamicFeeTx).GasTipCap",
       "2930AccessListStorageHashTooShort": "rlp: input string too short for common.Hash, decoding into (types.Transaction)(types.AccessListTx).AccessList[0].StorageKeys[0]",
@@ -241,7 +246,26 @@ string const evmone_config = R"({
       "3675PreMerge1559BlockRejected" : "Trying to import 1559 block on top of PoS block",
       "INPUT_UNMARSHAL_ERROR" : "cannot unmarshal hex",
       "INPUT_UNMARSHAL_SIZE_ERROR" : "failed unmarshaling",
-      "RLP_BODY_UNMARSHAL_ERROR" : "Rlp structure is wrong"
+      "RLP_BODY_UNMARSHAL_ERROR" : "Rlp structure is wrong",
+      "EOF_ConflictingStackHeight": "err: stack_height_mismatch",
+      "EOF_StackUnderflow" : "err: stack_underflow",
+      "EOF_InvalidCodeTermination" : "err: no_terminating_instruction",
+      "EOF_MaxStackHeightExceeded" : "err: max_stack_height_above_limit",
+      "EOF_UnreachableCode": "err: unreachable_instructions",
+      "EOF_InvalidCode": "err: invalid_code",
+      "EOF_TruncatedImmediate": "err: truncated_instruction",
+      "EOF_InvalidJumpDestination": "err: invalid_rjump_destination",
+      "EOF_InvalidJumpTableCount": "err: invalid_rjumpv_count",
+      "EOF_TypeSectionMissing": "err: type_section_missing",
+      "EOF_CodeSectionMissing": "err: code_section_missing",
+      "EOF_InvalidTypeSectionSize": "err: invalid_type_section_size",
+      "EOF_InvalidFirstSectionType": "err: invalid_first_section_type",
+      "EOF_TooManyCodeSections": "err: too_many_code_sections",
+      "EOF_InvalidCodeSectionIndex": "err: invalid_code_section_index",
+      "EOF_UndefinedInstruction": "err: undefined_instruction",
+      "EOF_ZeroSectionSize": "err: zero_section_size",
+      "EOF_NonEmptyStackOnTerminatingInstruction": "err: non_empty_stack_on_terminating_instruction",
+      "EOF_InvalidSectionBodiesSize": "err: invalid_section_bodies_size"
     }
 })";
 
@@ -285,8 +309,7 @@ else
 fi
 )";
 
-genevmonecfg::genevmonecfg()
-{
+
     {
         spDataObject obj;
         (*obj)["path"] = "evmone/config";

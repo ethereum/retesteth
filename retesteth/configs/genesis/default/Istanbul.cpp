@@ -4,6 +4,9 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
+genIstanbulCfg::genIstanbulCfg()
+{
+
 const string t8ntool_Istanbul_config = R"({
     "params" : {
         "fork" : "Istanbul",
@@ -16,8 +19,6 @@ const string t8ntool_Istanbul_config = R"({
     }
 })";
 
-genIstanbulCfg::genIstanbulCfg()
-{
     spDataObject obj2;
     (*obj2)["path"] = "default/genesis/Istanbul.json";
     (*obj2)["content"] = t8ntool_Istanbul_config;

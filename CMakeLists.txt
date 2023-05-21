@@ -4,6 +4,13 @@ set(CMAKE_TOOLCHAIN_FILE ${CMAKE_SOURCE_DIR}/toolchain.cmake)
 
 include("./cmake/Hunter/HunterGate.cmake")
 
+if (NOT "${CMAKE_BUILD_TYPE}" STREQUAL "Release")
+    add_compile_definitions("__DEBUG__")
+endif()
+if (${UNITTESTS})
+    add_compile_definitions("UNITTESTS")
+endif()
+
 set(HUNTER_CONFIGURATION_TYPES Release)
 set(HUNTER_JOBS_NUMBER 4 CACHE STRING "Hunter jobs number")
 set(HUNTER_CACHE_SERVERS "https://github.com/ethereum/hunter-cache" CACHE STRING "Hunter cache servers")
@@ -15,7 +22,7 @@ HunterGate(
 )
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-project(retesteth VERSION 0.3.0)
+project(retesteth VERSION 0.3.1)
 set(VERSION_SUFFIX "shanghai")
 
 set(Boost_USE_STATIC_LIBS ON)
@@ -48,8 +55,13 @@ if (POLICY CMP0135)
     cmake_policy(SET CMP0135 NEW)   # Use provided package_ROOT variables
 endif()
 
-hunter_add_package(CURL)
-find_package(CURL CONFIG REQUIRED)
+IF (NOT LOCALDEPS MATCHES ".*CURL")
+    hunter_add_package(CURL)
+    find_package(CURL CONFIG REQUIRED)
+ELSE()
+    message(STATUS "[retesteth] LOCALDEPS=CURL looking for locally installed version")
+    find_package(CURL CONFIG REQUIRED)
+ENDIF()
 
 
 #Cmake files configuration
@@ -70,4 +82,8 @@ endif()
 add_subdirectory(libdevcore)
 add_subdirectory(libdevcrypto)
 add_subdirectory(libdataobj)
+if (${UNITTESTS})
+    set(LIBSSZ ssz)
+    add_subdirectory(libssz)
+endif()
 add_subdirectory(retesteth)

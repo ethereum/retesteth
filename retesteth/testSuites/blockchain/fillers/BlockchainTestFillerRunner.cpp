@@ -1,6 +1,6 @@
 #include "TestBlockchainManager.h"
 #include "BlockchainTestFillerRunner.h"
-#include <retesteth/TestOutputHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
 #include <retesteth/EthChecks.h>
 #include <retesteth/session/Session.h>
 #include <retesteth/Options.h>
@@ -16,12 +16,6 @@ BlockchainTestFillerRunner::BlockchainTestFillerRunner(BlockchainTestInFiller co
   : m_test(_test), m_session(RPCSession::instance(TestOutputHelper::getThreadID()))
 {
     ETH_DC_MESSAGE(DC::TESTLOG, "Filling " + _test.testName());
-}
-
-bool BlockchainTestFillerRunner::checkSinglenet(FORK const& _net) const
-{
-    auto const& opt = Options::get();
-    return (!opt.singleTestNet.empty() && _net.asString() != opt.singleTestNet);
 }
 
 spDataObject BlockchainTestFillerRunner::makeNewBCTestForNet(FORK const& _net)

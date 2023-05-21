@@ -3,7 +3,7 @@
 #include <retesteth/EthChecks.h>
 #include <retesteth/ExitHandler.h>
 #include <retesteth/Options.h>
-#include <retesteth/TestOutputHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
 #include <retesteth/testStructures/PrepareChainParams.h>
 #include <retesteth/testSuites/Common.h>
 #include <retesteth/testSuites/blockchain/fillers/TestBlockchainManager.h>
@@ -22,14 +22,20 @@ BlockchainTestRunner::BlockchainTestRunner(BlockchainTestInFilled const& _test, 
 bool BlockchainTestRunner::validateFork(string const& _testName, FORK const& _net)
 {
     ClientConfig const& cfg = Options::get().getDynamicOptions().getCurrentConfig();
-    bool fillerSkipFork = cfg.checkForkSkipOnFiller(_net);
-    if (!cfg.validateForkAllowed(_net, false) || fillerSkipFork)
-    {
-        if (fillerSkipFork)
-            ETH_WARNING("Skipping unsupported fork: " + _net.asString() + " in " + _testName);
+    if (!cfg.validateForkAllowed(_net, false) || networkSkip(_net, _testName))
         return false;
-    }
     return true;
+}
+
+bool BlockchainTestRunner::checkBigIntSkip() const
+{
+    bool bigIntSupport = Options::getCurrentConfig().cfgFile().supportBigint();
+    if (!bigIntSupport && m_test.hasBigInt())
+    {
+        ETH_WARNING("Skipping test that has bigint: " + m_test.testName());
+        return true;
+    }
+    return false;
 }
 
 bool BlockchainTestRunner::abortBlock() const
@@ -238,8 +244,26 @@ void BlockchainTestRunner::validateTransactions(BlockchainTestBlock const& _tblo
 
         BYTES const testTr = tr->getRawBytes();
         BYTES const remoteTr = clientTr.transaction()->getRawBytes();
+        bool isRemoteTrEqualTestTr = remoteTr == testTr;
+        if (!isRemoteTrEqualTestTr)
+        {
+            auto origSender = tr->sender();
 
-        ETH_ERROR_REQUIRE_MESSAGE(remoteTr == testTr, "Error checking remote transaction, remote tr `" + remoteTr.asString() +
+            // Try a different v|chainid formula for legacy transaction
+            spDataObject data = tr->asDataObject();
+            (*data).atKeyUnsafe("v") = clientTr.transaction()->v().asString();
+            (*data).atKeyUnsafe("r") = clientTr.transaction()->r().asString();
+            (*data).atKeyUnsafe("s") = clientTr.transaction()->s().asString();
+
+            auto newTestTr = readTransaction(dataobject::move(data));
+            ETH_ERROR_REQUIRE_MESSAGE(newTestTr->sender() == origSender, "Error checking remote transaction: can't recover the same sender with remote vrs!");
+
+            BYTES& testTrCheat = const_cast<BYTES&>(testTr);
+            testTrCheat = newTestTr->getRawBytes();
+            isRemoteTrEqualTestTr = remoteTr == testTrCheat;
+        }
+
+        ETH_ERROR_REQUIRE_MESSAGE(isRemoteTrEqualTestTr, "Error checking remote transaction, remote tr `" + remoteTr.asString() +
                                                           "` is different to test tr `" + testTr.asString() + "`)");
     }
 }

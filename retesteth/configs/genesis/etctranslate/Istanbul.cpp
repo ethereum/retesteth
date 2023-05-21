@@ -4,6 +4,8 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
+genIstanbulCfgETCTR::genIstanbulCfgETCTR()
+{
 const string t8ntool_Istanbul_config = R"({
     "params" : {
         "fork" : "ETC_Phoenix",
@@ -16,8 +18,6 @@ const string t8ntool_Istanbul_config = R"({
     }
 })";
 
-genIstanbulCfgETCTR::genIstanbulCfgETCTR()
-{
     spDataObject obj2;
     (*obj2)["path"] = "etctranslate/genesis/Istanbul.json";
     (*obj2)["content"] = t8ntool_Istanbul_config;
