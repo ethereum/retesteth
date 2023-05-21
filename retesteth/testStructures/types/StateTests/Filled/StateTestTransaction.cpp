@@ -67,14 +67,21 @@ StateTestTransaction::StateTestTransaction(DataObject const& _data)
         if (_data.count(c_maxFeePerGas) || _data.count(c_maxPriorityFeePerGas))
         {
             if (_data.count(c_maxFeePerDataGas) || _data.count(c_blobVersionedHashes))
+            {
                 requireBlobTransactionScheme(_data);
+                m_maxFeePerDataGas = sVALUE(_data.atKey(c_maxFeePerDataGas));
+                for (auto const& el : _data.atKey(c_blobVersionedHashes).getSubObjects())
+                    m_blobVersionedHashes.emplace_back(FH32(el));
+
+                m_maxFeePerGas = sVALUE(_data.atKey(c_maxFeePerGas));
+                m_maxPriorityFeePerGas = sVALUE(_data.atKey(c_maxPriorityFeePerGas));
+            }
             else
+            {
                 require1559TransactionScheme(_data);
-            m_maxFeePerGas = sVALUE(_data.atKey(c_maxFeePerGas));
-            m_maxPriorityFeePerGas = sVALUE(_data.atKey(c_maxPriorityFeePerGas));
-            m_maxFeePerDataGas = sVALUE(_data.atKey(c_maxFeePerDataGas));
-            for (auto const& el : _data.atKey(c_blobVersionedHashes).getSubObjects())
-                m_blobVersionedHashes.emplace_back(FH32(el));
+                m_maxFeePerGas = sVALUE(_data.atKey(c_maxFeePerGas));
+                m_maxPriorityFeePerGas = sVALUE(_data.atKey(c_maxPriorityFeePerGas));
+            }
         }
         else
         {
