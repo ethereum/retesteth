@@ -279,8 +279,8 @@ void verifyCommonBlock(spBlockHeader const& _header, ToolChain const& _chain)
         throw test::UpwardsException("BlockHeader require Dao ExtraData! (0x64616f2d686172642d666f726b)");
 
     // Check gasLimit
-    //if (header.gasLimit() > dev::bigint("0x7fffffffffffffff"))
-    //    throw test::UpwardsException("Header gasLimit > 0x7fffffffffffffff");
+    if (header.gasLimit() > dev::bigint("0x7fffffffffffffff"))
+        throw test::UpwardsException("Header gasLimit > 0x7fffffffffffffff");
 
     check_gasUsed(header, "verifyCommonBlock: ");
 }

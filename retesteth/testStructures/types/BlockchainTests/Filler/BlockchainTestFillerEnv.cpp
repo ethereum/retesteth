@@ -192,7 +192,7 @@ void BlockchainTestFillerEnv::initializeCommonFields(spDataObject const& _data, 
     m_currentCoinbase = sFH20(_data->atKey(c_coinbase));
     m_currentGasLimit = sVALUE(_data->atKey(c_gasLimit));
     if (m_currentGasLimit.getCContent() > dev::bigint("0x7fffffffffffffff"))
-        throw test::UpwardsException("currentGasLimit must be < 0x7fffffffffffffff");
+        ETH_WARNING("currentGasLimit must be <= 0x7fffffffffffffff");
     if (_sEngine == SealEngine::NoProof)
     {
         m_currentNonce = spFH8(FH8::zero().copy());
