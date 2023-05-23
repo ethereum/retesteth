@@ -160,6 +160,8 @@ void convertDecFieldsToHex(spDataObject& _data)
     (*_data).atKeyUnsafe(c_parentHash).performModifier(mod_valueInsertZeroXPrefix);
     if (_data->count(c_baseFeePerGas))
         (*_data).atKeyUnsafe(c_baseFeePerGas).performModifier(mod_valueToCompactEvenHexPrefixed);
+    if (_data->count(c_excessDataGas))
+        (*_data).atKeyUnsafe(c_excessDataGas).performModifier(mod_valueToCompactEvenHexPrefixed);
     (*_data).performModifier(mod_valueToLowerCase);
 }
 
@@ -173,8 +175,10 @@ spDataObject formatRawDataToRPCformat(spDataObject& _data)
     (*out).atKeyPointer("currentTimestamp") = (*_data).atKeyPointerUnsafe(c_timestamp);
     (*out).atKeyPointer("currentGasLimit") = (*_data).atKeyPointerUnsafe(c_gasLimit);
     (*out).atKeyPointer("previousHash") = (*_data).atKeyPointerUnsafe(c_parentHash);
-    if (_data->count("baseFeePerGas"))
+    if (_data->count(c_baseFeePerGas))
         (*out).atKeyPointer("currentBaseFee") = (*_data).atKeyPointerUnsafe(c_baseFeePerGas);
+    if (_data->count(c_excessDataGas))
+        (*out).atKeyPointer("currentExcessDataGas") = (*_data).atKeyPointerUnsafe(c_excessDataGas);
     return out;
 }
 

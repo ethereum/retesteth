@@ -307,7 +307,7 @@ spDataObject ToolChain::coorectTransactionsByToolResponse(
                 }
             }
             if (!rejectedInfoFound)
-                ETH_ERROR_MESSAGE("tool didn't provide information about rejected transaction");
+                ETH_ERROR_MESSAGE("tool didn't provide information about rejected/not found transaction: " + tr->hash().asString() + "\n");
             if (_miningReq == Mining::AllowFailTransactions)
             {
                 ETH_DC_MESSAGE(DC::LOWLOG, message);

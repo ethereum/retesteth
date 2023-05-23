@@ -125,7 +125,6 @@ dev::h256 TransactionBlob::buildVRSHash() const
     dev::RLPStream stream;
     stream.appendList(11);
     streamHeader(stream);
-
     // Alter output with prefixed 03 byte + tr.rlp
     dev::bytes outa = stream.out();
     outa.insert(outa.begin(), dev::byte(3));  // txType
@@ -172,8 +171,11 @@ const spDataObject TransactionBlob::asDataObject(ExportOrder _order) const
         (*out)["blobVersionedHashes"].addArrayObject(sDataObject(el.asString()));
 
     if (_order == ExportOrder::ToolStyle)
+    {
         (*out)["type"] = "0x3";
-
+        (*out).performModifier(mod_removeLeadingZerosFromHexValues, DataObject::ModifierOption::RECURSIVE,
+            {"data", "to", "input", "address", "hash", "storageKeys", "sender"});
+    }
     (*out).performModifier(mod_removeBigIntHint);
     return out;
 }

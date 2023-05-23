@@ -164,6 +164,11 @@ bool isBlockExportCurrentRandom(BlockHeader const& _header)
            || _header.type() == BlockType::BlockHeader4844;
 }
 
+bool isBlockExportExcessDataGas(BlockHeader const& _header)
+{
+    return _header.type() == BlockType::BlockHeader4844;
+}
+
 bool isBlockExportWithdrawals(BlockHeader const& _header)
 {
     return _header.type() == BlockType::BlockHeaderShanghai

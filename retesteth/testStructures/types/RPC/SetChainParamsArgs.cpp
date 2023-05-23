@@ -157,6 +157,11 @@ spDataObject SetChainParamsArgs::asDataObject() const
             BlockHeaderShanghai const& newbl = BlockHeaderShanghai::castFrom(m_genesis);
             (*out)["genesis"][c_withdrawalsRoot] = newbl.withdrawalsRoot().asString();
         }
+        if (isBlockExportExcessDataGas(m_genesis))
+        {
+            BlockHeader4844 const& newbl = BlockHeader4844::castFrom(m_genesis);
+            (*out)["genesis"]["currentExcessDataGas"] = newbl.excessDataGas().asString();
+        }
     }
 
     (*out)["genesis"][c_extraData] = m_genesis->extraData().asString();
