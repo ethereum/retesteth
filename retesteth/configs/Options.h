@@ -23,7 +23,7 @@ extern std::string const t8ntool_start;
 
 #define DECLARE_ETC(X) \
   FOR_EACH(X, etccfg, RewardsCfgETC, AtlantisCfgETC, AghartaCfgETC, PhoenixCfgETC, MagnetoCfgETC, \
-    MystiqueCfgETC)
+    MystiqueCfgETC, Mystique2CfgETC, Mystique3CfgETC)
 
 #define DECLARE_NIMBUS(X) \
   FOR_EACH(X, nimbuscfg, RewardsCfgNIMBUS, MergeCfgNIMBUS)
