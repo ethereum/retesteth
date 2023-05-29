@@ -29,7 +29,9 @@ string const etc_config = R"({
         "ETC_Agharta",
         "ETC_Phoenix",
         "ETC_Magneto",
-        "ETC_Mystique"
+        "ETC_Mystique",
+        "ETC_Mystique2",
+        "ETC_Mystique3"
     ],
     "additionalForks" : [
     ],
