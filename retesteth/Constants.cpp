@@ -70,7 +70,7 @@ const string c_code = "code";
 const string c_balance = "balance";
 const string c_storage = "storage";
 const string c_transactionHash = "transactionHash";
-const string c_blockHash = "transactionHash";
+const string c_blockHash = "blockHash";
 
 }}}
 

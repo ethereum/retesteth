@@ -33,7 +33,7 @@ ToolResponse::ToolResponse(DataObject const& _data)
         m_currentDifficulty = sVALUE(_data.atKey("currentDifficulty"));
 
     m_currentBasefee = sVALUE(0);
-    if (_data.count("currentBaseFee"))
+    if (_data.count("currentBaseFee") && _data.atKey("currentBaseFee").type() != DataType::Null)
         m_currentBasefee = sVALUE(_data.atKey("currentBaseFee"));
 
     m_currentExcessDataGas = sVALUE(0);

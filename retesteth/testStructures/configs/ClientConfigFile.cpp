@@ -27,6 +27,7 @@ void requireJsonFileStructure(DataObject const& _data)
             {"checkBasefee", {{DataType::Bool}, jsonField::Optional}},
             {"calculateBasefee", {{DataType::Bool}, jsonField::Optional}},
             {"defaultChainID", {{DataType::Integer}, jsonField::Optional}},
+            {"continueOnErrors", {{DataType::Bool}, jsonField::Optional}},
             {"forks", {{DataType::Array}, jsonField::Required}},
             {"additionalForks", {{DataType::Array}, jsonField::Required}},
             {"fillerSkipForks", {{DataType::Array}, jsonField::Optional}},
@@ -35,9 +36,7 @@ void requireJsonFileStructure(DataObject const& _data)
 }
 }  // namespace
 
-namespace test
-{
-namespace teststruct
+namespace test::teststruct
 {
 ClientConfigFile::ClientConfigFile(DataObject const& _data)
 {
@@ -168,6 +167,10 @@ void ClientConfigFile::initWithData(DataObject const& _data)
     if (_data.count("transactionsAsJson"))
         m_transactionsAsJson = _data.atKey("transactionsAsJson").asBool();
 
+    m_continueOnErrors = false;
+    if (_data.count("continueOnErrors"))
+        m_continueOnErrors = _data.atKey("continueOnErrors").asBool();
+
     if (_data.count("tmpDir"))
     {
         m_tmpDir = fs::path(_data.atKey("tmpDir").asString());
@@ -284,4 +287,3 @@ std::set<FORK> const& ClientConfigFile::forkProgressionAsSet() const
 
 
 }  // namespace teststruct
-}  // namespace test

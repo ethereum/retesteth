@@ -29,10 +29,12 @@ enum class CallType
         ETH_DC_MESSAGE(rpclog, string("Response ") + method + ": " + _ex.what());                          \
         if (ctype != CallType::DONTFAILONUPWARDS)                                                          \
         {                                                                                                  \
-            if (string(_ex.what()).find("exited with 512 code") == string::npos)                           \
-                { ETH_FAIL_MESSAGE(_ex.what()); }                                                          \
-            else                                                                                           \
+            bool const allowErrors = Options::getCurrentConfig().cfgFile().continueOnErrors();             \
+            bool const exit512 = string(_ex.what()).find("exited with 512 code") != string::npos;          \
+            if (allowErrors || exit512)                                                                    \
                 { ETH_ERROR_MESSAGE(_ex.what());}                                                          \
+            else                                                                                           \
+                { ETH_FAIL_MESSAGE(_ex.what()); }                                                          \
         }                                                                                                  \
     }                                                                                                      \
     catch (EthError const& _ex)                                                                            \
