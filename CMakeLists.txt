@@ -4,6 +4,9 @@ set(CMAKE_TOOLCHAIN_FILE ${CMAKE_SOURCE_DIR}/toolchain.cmake)
 
 include("./cmake/Hunter/HunterGate.cmake")
 
+if ("${CMAKE_BUILD_TYPE}" STREQUAL "")
+    set(CMAKE_BUILD_TYPE "Release")
+endif()
 if (NOT "${CMAKE_BUILD_TYPE}" STREQUAL "Release")
     add_compile_definitions("__DEBUG__")
 endif()
