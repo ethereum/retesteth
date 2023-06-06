@@ -29,7 +29,7 @@ extern std::string const t8ntool_start;
   FOR_EACH(X, nimbuscfg, RewardsCfgNIMBUS, MergeCfgNIMBUS)
 
 #define DECLARE_PYT8N(X) \
-  FOR_EACH(X, pyt8ncfg)
+  FOR_EACH(X, pyt8ncfg, RewardsCfgPYT8N, ConstantinopleFixCfgPYT8N)
 
 #define DECLARE_ETCTR(X) \
   FOR_EACH(X, etctranslatecfg, RewardsCfgETCTR, ByzantiumCfgETCTR, ConstantinopleCfgETCTR, ConstantinopleFixCfgETCTR, \

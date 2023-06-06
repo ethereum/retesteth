@@ -79,7 +79,6 @@ string const pyt8n_config = R"({
         "EIP150",
         "EIP158",
         "Byzantium",
-        "Constantinople",
         "ConstantinopleFix",
         "Istanbul",
         "Berlin",
