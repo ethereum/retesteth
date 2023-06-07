@@ -216,6 +216,7 @@ string const ethereumjs_config = R"({
        "TR_TypeNotSupported":"",
        "TR_TipGtFeeCap":"",
        "TR_TooShort":"",
+       "TR_InitCodeLimitExceeded" : "the initcode size of this transaction is too large",
        "1559BaseFeeTooLarge":"",
        "1559PriorityFeeGreaterThanBaseFee":"",
        "2930AccessListAddressTooLong":"",
