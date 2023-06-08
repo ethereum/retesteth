@@ -224,7 +224,7 @@ string const nimbus_config = R"({
       "MergeBlockImportImpossible" : "Trying to import Merge block on top of Shanghai block after transition",
       "ShanghaiBlockImportImpossible" : "Shanghai block on top of Merge block before transition",
       "TR_IntrinsicGas" : "processTransaction failed",
-      "TR_NoFunds" : "",
+      "TR_NoFunds" : "processTransaction failed",
       "TR_NoFundsValue" : "processTransaction failed",
       "TR_FeeCapLessThanBlocks" : "processTransaction failed",
       "TR_GasLimitReached" : "processTransaction failed",
