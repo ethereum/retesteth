@@ -31,7 +31,8 @@ string const nimbus_config = R"({
         "Berlin",
         "London",
         "Merge",
-        "Shanghai"
+        "Shanghai",
+        "Cancun"
     ],
     "additionalForks" : [
         "FrontierToHomesteadAt5",
@@ -225,6 +226,7 @@ string const nimbus_config = R"({
       "ShanghaiBlockImportImpossible" : "Shanghai block on top of Merge block before transition",
       "TR_IntrinsicGas" : "processTransaction failed",
       "TR_NoFunds" : "processTransaction failed",
+      "TR_NoFundsX" : "larger than expected Int value",
       "TR_NoFundsValue" : "processTransaction failed",
       "TR_FeeCapLessThanBlocks" : "processTransaction failed",
       "TR_GasLimitReached" : "processTransaction failed",

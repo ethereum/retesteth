@@ -208,6 +208,7 @@ string const ethereumjs_config = R"({
        "1559BlockImportImpossible_InitialGasLimitInvalid":"",
        "TR_IntrinsicGas":"",
        "TR_NoFunds":"",
+       "TR_NoFundsX":"",
        "TR_NoFundsValue":"",
        "TR_FeeCapLessThanBlocks":"",
        "TR_GasLimitReached":"",

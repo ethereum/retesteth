@@ -204,6 +204,7 @@ string const etctr_config = R"({
       "1559BlockImportImpossible_InitialGasLimitInvalid": "Invalid block1559: Initial gasLimit must be",
       "TR_IntrinsicGas" : "intrinsic gas too low:",
       "TR_NoFunds" : "insufficient funds for gas * price + value",
+      "TR_NoFundsX" : "insufficient funds for gas * price + value",
       "TR_NoFundsValue" : "insufficient funds for transfer",
       "TR_FeeCapLessThanBlocks" : "max fee per gas less than block base fee",
       "TR_GasLimitReached" : "gas limit reached",

@@ -224,6 +224,7 @@ string const evmone_config = R"({
       "ShanghaiBlockImportImpossible" : "Shanghai block on top of Merge block before transition",
       "TR_IntrinsicGas" : "intrinsic gas too low:",
       "TR_NoFunds" : "insufficient funds for gas * price + value",
+      "TR_NoFundsX" : "insufficient funds for gas * price + value",
       "TR_NoFundsValue" : "insufficient funds for transfer",
       "TR_FeeCapLessThanBlocks" : "max fee per gas less than block base fee",
       "TR_GasLimitReached" : "gas limit reached",

@@ -110,11 +110,14 @@ ClientConfig::ClientConfig(fs::path const& _clientConfigPath) : m_id(ClientConfi
         for (auto const& el : cfgFile().forks())
         {
             if (!correctMiningReward->count(el.asString()))
-                ETH_FAIL_MESSAGE("Correct mining reward missing block reward record for fork: `" +
-                                 el.asString() + "` (" + m_correctMiningRewardPath.string() + ")");
+            {
+                (*correctMiningReward)[el.asString()] = "0x00";
+                ETH_DC_MESSAGE(DC::STATS2, "Correct mining reward init default reward '0' for fork: `" +
+                            el.asString() + "` (" + m_correctMiningRewardPath.string() + ")");
+            }
         }
         for (auto const& el : correctMiningReward->getSubObjects())
-            m_correctReward[el->getKey()] = spVALUE(new VALUE(correctMiningReward->atKey(el->getKey())));
+            m_correctReward[el->getKey()] = sVALUE(correctMiningReward->atKey(el->getKey()));
     }
     catch (std::exception const& _ex)
     {
