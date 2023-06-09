@@ -48,6 +48,7 @@ const string c_transactionsTrie = "transactionsTrie";
 const string c_baseFeePerGas = "baseFeePerGas";
 const string c_withdrawalsRoot = "withdrawalsRoot";
 const string c_excessDataGas = "excessDataGas";
+const string c_dataGasUsed = "dataGasUsed";
 
 // Transactions
 const string c_data = "data";

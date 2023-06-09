@@ -43,6 +43,7 @@ extern const std::string c_transactionsTrie;
 extern const std::string c_baseFeePerGas;
 extern const std::string c_withdrawalsRoot;
 extern const std::string c_excessDataGas;
+extern const std::string c_dataGasUsed;
 
 // Transactions
 extern const std::string c_data;

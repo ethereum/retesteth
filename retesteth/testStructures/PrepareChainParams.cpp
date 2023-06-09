@@ -86,6 +86,7 @@ spDataObject prepareGenesisSubsection(StateTestEnvBase const& _env, ParamsContex
 
     auto cancunfy = [&_env, &shangfy](DataObject& _genesis){
         shangfy(_genesis);
+        _genesis["currentDataGasUsed"] = _env.currentExcessDataGas().asString();
         _genesis["currentExcessDataGas"] = _env.currentExcessDataGas().asString();
     };
 

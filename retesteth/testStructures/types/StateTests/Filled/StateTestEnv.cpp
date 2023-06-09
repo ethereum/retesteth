@@ -61,6 +61,7 @@ void StateTestEnv::initializeFields(DataObject const& _data)
 
     m_currentWithdrawalsRoot = sFH32(DataObject(C_WITHDRAWALS_EMPTY_ROOT));
     m_currentExcessDataGas = sVALUE(0);
+    m_currentDataGasUsed = sVALUE(0);
 }
 
 

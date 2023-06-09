@@ -122,6 +122,7 @@ SetChainParamsArgsGenesis4844::SetChainParamsArgsGenesis4844(DataObject const& _
             {"timestamp", {{DataType::String}, jsonField::Required}},
             {"nonce", {{DataType::String}, jsonField::Required}},
             {"mixHash", {{DataType::String}, jsonField::Required}},
+            {"currentDataGasUsed", {{DataType::String}, jsonField::Required}},
             {"currentExcessDataGas", {{DataType::String}, jsonField::Required}}
         });
 }
@@ -161,6 +162,7 @@ spDataObject SetChainParamsArgs::asDataObject() const
         {
             BlockHeader4844 const& newbl = BlockHeader4844::castFrom(m_genesis);
             (*out)["genesis"]["currentExcessDataGas"] = newbl.excessDataGas().asString();
+            (*out)["genesis"]["currentDataGasUsed"] = newbl.dataGasUsed().asString();
         }
     }
 
@@ -244,6 +246,7 @@ spDataObject SetChainParamsArgsGenesis4844::_constructBlockHeader() const
     (*header)[c_mixHash] = dev::toCompactHexPrefixed(curRandomU256, 32);
     (*header)[c_baseFeePerGas] = m_dataRef.atKey(c_baseFeePerGas).asString();
     (*header)[c_withdrawalsRoot] = m_dataRef.atKey(c_withdrawalsRoot).asString();
+    (*header)[c_dataGasUsed] =  m_dataRef.atKey("currentDataGasUsed").asString();
     (*header)[c_excessDataGas] = m_dataRef.atKey("currentExcessDataGas").asString();
     return header;
 }

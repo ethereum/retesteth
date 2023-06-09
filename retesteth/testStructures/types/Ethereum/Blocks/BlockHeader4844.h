@@ -17,6 +17,8 @@ struct BlockHeader4844 : BlockHeaderShanghai
 
     VALUE const& excessDataGas() const { return m_excessDataGas; }
     void setExcessDataGas(VALUE const& _v) { m_excessDataGas = spVALUE(_v.copy()); }
+    VALUE const& dataGasUsed() const { return m_dataGasUsed; }
+    void setDataGasUsed(VALUE const& _v) { m_dataGasUsed = spVALUE(_v.copy()); }
 
     static BlockHeader4844 const& castFrom(spBlockHeader const& _from);
     static BlockHeader4844& castFrom(BlockHeader& _from);
@@ -25,9 +27,10 @@ protected:
     virtual void checkDataScheme(DataObject const&) const override;
     virtual void _fromData(DataObject const&) override;
     virtual size_t _fromRLP(dev::RLP const&) override;
-    virtual size_t _rlpHeaderSize() const override { return 18; }
+    virtual size_t _rlpHeaderSize() const override { return 19; }
 
     spVALUE m_excessDataGas;
+    spVALUE m_dataGasUsed;
     BlockHeader4844(){};
 };
 

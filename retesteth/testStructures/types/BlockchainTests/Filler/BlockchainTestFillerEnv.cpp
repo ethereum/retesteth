@@ -145,6 +145,7 @@ void require4844BlockchainHeader(spDataObject const& _data)
             {c_transactionsTrie, {{DataType::String}, jsonField::Optional}},
             {c_transactionsRoot, {{DataType::String}, jsonField::Optional}},
             {c_withdrawalsRoot, {{DataType::String}, jsonField::Required}},
+            {c_dataGasUsed, {{DataType::String}, jsonField::Required}},
             {c_excessDataGas, {{DataType::String}, jsonField::Required}},
             {c_sha3Uncles, {{DataType::String}, jsonField::Optional}},
             {c_uncleHash, {{DataType::String}, jsonField::Optional}}});
@@ -162,6 +163,8 @@ void convertDecFieldsToHex(spDataObject& _data)
         (*_data).atKeyUnsafe(c_baseFeePerGas).performModifier(mod_valueToCompactEvenHexPrefixed);
     if (_data->count(c_excessDataGas))
         (*_data).atKeyUnsafe(c_excessDataGas).performModifier(mod_valueToCompactEvenHexPrefixed);
+    if (_data->count(c_dataGasUsed))
+        (*_data).atKeyUnsafe(c_dataGasUsed).performModifier(mod_valueToCompactEvenHexPrefixed);
     (*_data).performModifier(mod_valueToLowerCase);
 }
 
@@ -179,6 +182,8 @@ spDataObject formatRawDataToRPCformat(spDataObject& _data)
         (*out).atKeyPointer("currentBaseFee") = (*_data).atKeyPointerUnsafe(c_baseFeePerGas);
     if (_data->count(c_excessDataGas))
         (*out).atKeyPointer("currentExcessDataGas") = (*_data).atKeyPointerUnsafe(c_excessDataGas);
+    if (_data->count(c_dataGasUsed))
+        (*out).atKeyPointer("currentDataGasUsed") = (*_data).atKeyPointerUnsafe(c_dataGasUsed);
     return out;
 }
 
@@ -213,12 +218,14 @@ void BlockchainTestFillerEnv::initializeCommonFields(spDataObject const& _data, 
     auto const& difficulty = m_currentDifficulty->asString();
     m_currentRandom = sFH32(dev::toCompactHexPrefixed(dev::u256(difficulty), 32));
     m_currentWithdrawalsRoot = sFH32(DataObject(C_WITHDRAWALS_EMPTY_ROOT));
+    m_currentDataGasUsed = sVALUE(0);
     m_currentExcessDataGas = sVALUE(0);
 }
 
 void BlockchainTestFillerEnv4844::initialize4844Fields(DataObject const& _data)
 {
     m_currentExcessDataGas = sVALUE(_data.atKey(c_excessDataGas));
+    m_currentDataGasUsed = sVALUE(_data.atKey(c_dataGasUsed));
 }
 
 

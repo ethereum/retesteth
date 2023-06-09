@@ -29,6 +29,7 @@ struct StateTestEnvBase : GCP_SPointerBase
 
     FH32 const& currentWithdrawalsRoot() const { return m_currentWithdrawalsRoot; }
     VALUE const& currentExcessDataGas() const { return m_currentExcessDataGas; }
+    VALUE const& currentDataGasUsed() const { return m_currentDataGasUsed; }
 
 protected:
     StateTestEnvBase() {}
@@ -54,6 +55,7 @@ protected:
     spFH32 m_currentWithdrawalsRoot;
 
     // 4844
+    spVALUE m_currentDataGasUsed;
     spVALUE m_currentExcessDataGas;
 };
 

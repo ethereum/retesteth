@@ -71,6 +71,7 @@ void makeEnvExcessDataGas(spDataObject& _envData, spBlockHeader const& _parentBl
             (*_envData).removeKey("currentExcessDataGas");
             BlockHeader4844 const& h4844 = (BlockHeader4844 const&) _parentBlockH.getCContent();
             (*_envData)["parentExcessDataGas"] = h4844.excessDataGas().asString();
+            (*_envData)["parentDataGasUsed"] = h4844.dataGasUsed().asString();
         }
     }
 }

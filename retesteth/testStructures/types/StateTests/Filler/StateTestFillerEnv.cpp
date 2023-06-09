@@ -92,9 +92,12 @@ void StateTestFillerEnv::initializeFields(spDataObject const& _data)
     m_currentWithdrawalsRoot = sFH32(DataObject(C_WITHDRAWALS_EMPTY_ROOT));
 
     // Cancun
+    m_currentDataGasUsed = sVALUE(0);
     m_currentExcessDataGas = sVALUE(0);
     if (_data->count("currentExcessDataGas"))
         m_currentExcessDataGas = sVALUE(_data->atKey("currentExcessDataGas"));
+    if (_data->count("currentDataGasUsed"))
+        m_currentDataGasUsed = sVALUE(_data->atKey("currentDataGasUsed"));
 }
 
 spDataObject const& StateTestFillerEnv::asDataObject() const
