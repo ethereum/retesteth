@@ -18,7 +18,8 @@ void requireStateTestsFillerEnvScheme(spDataObject const& _data)
          {"currentTimestamp", {{DataType::String}, jsonField::Required}},
          {"currentBaseFee", {{DataType::String}, jsonField::Optional}},
          {"currentRandom", {{DataType::String}, jsonField::Optional}},
-         {"currentExcessDataGas", {{DataType::String}, jsonField::Optional}},
+         {"parentExcessDataGas", {{DataType::String}, jsonField::Optional}},
+         {"parentDataGasUsed", {{DataType::String}, jsonField::Optional}},
          {"previousHash", {{DataType::String}, jsonField::Required}}});
 }
 
@@ -94,10 +95,10 @@ void StateTestFillerEnv::initializeFields(spDataObject const& _data)
     // Cancun
     m_currentDataGasUsed = sVALUE(0);
     m_currentExcessDataGas = sVALUE(0);
-    if (_data->count("currentExcessDataGas"))
-        m_currentExcessDataGas = sVALUE(_data->atKey("currentExcessDataGas"));
-    if (_data->count("currentDataGasUsed"))
-        m_currentDataGasUsed = sVALUE(_data->atKey("currentDataGasUsed"));
+    if (_data->count("parentExcessDataGas"))
+        m_currentExcessDataGas = sVALUE(_data->atKey("parentExcessDataGas"));
+    if (_data->count("parentDataGasUsed"))
+        m_currentDataGasUsed = sVALUE(_data->atKey("parentDataGasUsed"));
 }
 
 spDataObject const& StateTestFillerEnv::asDataObject() const

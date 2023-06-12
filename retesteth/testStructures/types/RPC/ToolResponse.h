@@ -21,6 +21,7 @@ struct ToolResponse
     VALUE const& currentDifficulty() const { return m_currentDifficulty; }
     VALUE const& currentBasefee() const { return m_currentBasefee; }
     VALUE const& currentExcessDataGas() const { return m_currentExcessDataGas; }
+    VALUE const& currentDataGasUsed() const { return m_currentDataGasUsed; }
     FH32 const& withdrawalsRoot() const { return m_withdrawalsRoot;}
     VALUE totalGasUsed() const
     {
@@ -48,6 +49,7 @@ private:
     spVALUE m_currentDifficulty;
     spVALUE m_currentBasefee;
     spVALUE m_currentExcessDataGas;
+    spVALUE m_currentDataGasUsed;
     spFH32 m_withdrawalsRoot;
     std::vector<ToolResponseReceipt> m_receipts;
     spState m_stateResponse;

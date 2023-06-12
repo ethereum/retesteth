@@ -16,7 +16,8 @@ ToolResponse::ToolResponse(DataObject const& _data)
             {c_logsBloom, {{DataType::String}, jsonField::Required}},
             {"currentDifficulty", {{DataType::String, DataType::Null}, jsonField::Required}},
             {"currentBaseFee", {{DataType::String, DataType::Null}, jsonField::Optional}},
-            {"currentExcessDataGas", {{DataType::String, DataType::Null}, jsonField::Optional}},
+            {c_dataGasUsed, {{DataType::String}, jsonField::Optional}},
+            {c_excessDataGas, {{DataType::String}, jsonField::Optional}},
             {c_withdrawalsRoot, {{DataType::String}, jsonField::Optional}},
             {"rejected", {{DataType::Array}, jsonField::Optional}},
             {c_gasUsed, {{DataType::String}, jsonField::Optional}},
@@ -37,8 +38,11 @@ ToolResponse::ToolResponse(DataObject const& _data)
         m_currentBasefee = sVALUE(_data.atKey("currentBaseFee"));
 
     m_currentExcessDataGas = sVALUE(0);
-    if (_data.count("currentExcessDataGas"))
-        m_currentExcessDataGas = sVALUE(_data.atKey("currentExcessDataGas"));
+    if (_data.count(c_excessDataGas))
+        m_currentExcessDataGas = sVALUE(_data.atKey(c_excessDataGas));
+    m_currentDataGasUsed = sVALUE(0);
+    if (_data.count(c_dataGasUsed))
+        m_currentDataGasUsed = sVALUE(_data.atKey(c_dataGasUsed));
 
     m_withdrawalsRoot = spFH32(C_FH32_ZERO.copy());
     if (_data.count(c_withdrawalsRoot))

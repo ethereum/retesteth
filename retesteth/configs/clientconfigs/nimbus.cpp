@@ -232,7 +232,7 @@ string const nimbus_config = R"({
       "TR_GasLimitReached" : "processTransaction failed",
       "TR_NonceTooHigh" : "processTransaction failed",
       "TR_NonceTooLow" : "processTransaction failed",
-      "TR_TypeNotSupported" : "processTransaction failed",
+      "TR_TypeNotSupported" : "invalid tx:",
       "TR_TipGtFeeCap": "processTransaction failed",
       "TR_TooShort": "processTransaction failed",
       "TR_InitCodeLimitExceeded" : "processTransaction failed",

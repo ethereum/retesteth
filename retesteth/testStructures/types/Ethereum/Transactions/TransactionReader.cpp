@@ -4,10 +4,12 @@
 #include "TransactionBlob.h"
 #include <retesteth/EthChecks.h>
 #include <retesteth/helpers/TestHelper.h>
+#include <retesteth/Constants.h>
 
 using namespace std;
 using namespace dataobject;
 using namespace test::teststruct;
+using namespace test::teststruct::constnames;
 
 namespace
 {
@@ -95,11 +97,11 @@ spTransaction readTransaction(dev::RLP const& _rlp)
 
 spTransaction readTransaction(spDataObjectMove _filledData)
 {
-    if (_filledData.getPointer()->count("blobVersionedHashes"))
+    if (_filledData.getPointer()->count(c_blobVersionedHashes))
         return spTransaction(new TransactionBlob(_filledData));
-    if (_filledData.getPointer()->count("maxPriorityFeePerGas"))
+    if (_filledData.getPointer()->count(c_maxPriorityFeePerGas))
         return spTransaction(new TransactionBaseFee(_filledData));
-    if (_filledData.getPointer()->count("accessList"))
+    if (_filledData.getPointer()->count(c_accessList))
         return spTransaction(new TransactionAccessList(_filledData));
     return spTransaction(new TransactionLegacy(_filledData));
 }

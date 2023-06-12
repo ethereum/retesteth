@@ -7,9 +7,11 @@
 #include <retesteth/helpers/TestHelper.h>
 #include <retesteth/helpers/TestOutputHelper.h>
 #include <retesteth/testStructures/Common.h>
+#include <retesteth/Constants.h>
 
 using namespace std;
 using namespace dev;
+using namespace test::teststruct::constnames;
 
 namespace test::teststruct
 {
@@ -166,9 +168,10 @@ const spDataObject TransactionBlob::asDataObject(ExportOrder _order) const
 {
     spDataObject out = TransactionBaseFee::asDataObject(_order);
     (*out)["type"] = "0x03";
-    (*out)["maxFeePerDataGas"] = m_maxFeePerDataGas->asString();
+    (*out)[c_maxFeePerDataGas] = m_maxFeePerDataGas->asString();
+    (*out).atKeyPointer(c_blobVersionedHashes) = sDataObject(DataType::Array);
     for (auto const& el : m_blobVersionedHashes)
-        (*out)["blobVersionedHashes"].addArrayObject(sDataObject(el.asString()));
+        (*out)[c_blobVersionedHashes].addArrayObject(sDataObject(el.asString()));
 
     if (_order == ExportOrder::ToolStyle)
     {

@@ -57,6 +57,7 @@ std::vector<TransactionInGeneralSection> StateTestTransactionBase::buildTransact
                     if (!m_maxFeePerDataGas.isEmpty())
                     {
                         (*trData)[c_maxFeePerDataGas] = m_maxFeePerDataGas->asString();
+                        (*trData).atKeyPointer(c_blobVersionedHashes) = sDataObject(DataType::Array);
                         for (auto const& el : m_blobVersionedHashes)
                             (*trData)[c_blobVersionedHashes].addArrayObject(sDataObject(el.asString()));
                     }

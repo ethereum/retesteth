@@ -19,6 +19,8 @@ void requireStateTestEnvScheme(DataObject const& _data)
             {"currentGasLimit", {{DataType::String}, jsonField::Required}},
             {"currentNumber", {{DataType::String}, jsonField::Required}},
             {"currentTimestamp", {{DataType::String}, jsonField::Required}},
+            {"parentExcessDataGas", {{DataType::String}, jsonField::Optional}},
+            {"parentDataGasUsed", {{DataType::String}, jsonField::Optional}},
             {"previousHash", {{DataType::String}, jsonField::Required}}});
 }
 
@@ -59,9 +61,16 @@ void StateTestEnv::initializeFields(DataObject const& _data)
     if (_data.count("currentRandom"))
         m_currentRandom = sFH32(_data.atKey("currentRandom"));
 
+    // Shanghai
     m_currentWithdrawalsRoot = sFH32(DataObject(C_WITHDRAWALS_EMPTY_ROOT));
+
+    // Cancun
     m_currentExcessDataGas = sVALUE(0);
+    if (_data.count("parentExcessDataGas"))
+        m_currentExcessDataGas = sVALUE(_data.atKey("parentExcessDataGas"));
     m_currentDataGasUsed = sVALUE(0);
+    if (_data.count("parentDataGasUsed"))
+        m_currentDataGasUsed = sVALUE(_data.atKey("parentDataGasUsed"));
 }
 
 

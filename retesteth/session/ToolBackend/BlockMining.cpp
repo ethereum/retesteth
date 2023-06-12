@@ -73,6 +73,11 @@ void makeEnvExcessDataGas(spDataObject& _envData, spBlockHeader const& _parentBl
             (*_envData)["parentExcessDataGas"] = h4844.excessDataGas().asString();
             (*_envData)["parentDataGasUsed"] = h4844.dataGasUsed().asString();
         }
+        else
+        {
+            (*_envData).renameKey("currentExcessDataGas", "parentExcessDataGas");
+            (*_envData).renameKey("currentDataGasUsed", "parentDataGasUsed");
+        }
     }
 }
 
