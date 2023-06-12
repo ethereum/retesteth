@@ -83,13 +83,27 @@ void StateTestChainRunner::performTransactionOnExpect(TransactionInGeneralSectio
 
     if (!testException.empty())
     {
+        (*block).clearSubobjects();
         spDataObject trInfo;
         (*trInfo)["valid"] = "false";
         (*trInfo)["rawBytes"] = ethTr->getRawBytes().asString();
         (*trInfo)["exception"] = testException;
         (*block)["transactionSequence"].addArrayObject(trInfo);
+        (*block)["expectException"] = testException;
+
+        EthereumBlock managedBlock(remoteBlock.header());
+        managedBlock.addTransaction(_tr.transaction());
+        (*block)["rlp"] = managedBlock.getRLP().asString();
+        (*m_aBlockchainTest)["blocks"].addArrayObject(block);
+
+        // BUT POST INFO must be of block number 0
+        m_session.test_rewindToBlock(0);
+        EthGetBlockBy remoteBlock(m_session.eth_getBlockByNumber(0, Request::LESSOBJECTS));
+        (*m_aBlockchainTest)["postStateHash"] = remoteBlock.header()->stateRoot().asString();
+        (*m_aBlockchainTest)["lastblockhash"] = remoteBlock.header()->hash().asString();
     }
-    (*m_aBlockchainTest)["blocks"].addArrayObject(block);
+    else
+        (*m_aBlockchainTest)["blocks"].addArrayObject(block);
 }
 
 spStateIncomplete StateTestChainRunner::correctMiningReward(StateTestFillerExpectSection const& _expect, FORK const& _network)
