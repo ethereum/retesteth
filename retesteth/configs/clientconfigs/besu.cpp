@@ -12,7 +12,7 @@ string const besu_config = R"({
     "name" : "Hyperledger Besu on TCP",
     "socketType" : "tranition-tool",
     "socketAddress" : "start.sh",
-    "initializeTime" : "0",
+    "initializeTime" : "3",
     "checkDifficulty" : true,
     "calculateDifficulty" : false,
     "checkBasefee" : true,
@@ -251,6 +251,13 @@ string const besu_config = R"({
     }
 })";
 
+string const besu_setup = R"(#!/bin/sh
+dir=$(pwd)
+cd $BESU_PATH
+ethereum/evmtool/build/install/evmtool/bin/evm t8n-server &> /dev/null &
+cd $dir
+)";
+
 string const besu_start = R"(#!/bin/sh
 wevm=$(which besuevm)
 if [ -z $wevm ]; then
@@ -265,29 +272,61 @@ elif [ $1 = "-v" ]; then
 else
     stateProvided=0
     readErrorLog=0
+    readEnv=0; readAlloc=0; readTxs=0; readFork=0; readReward=0; readChainid=0
+    readOutAlloc=0; readOutResult=0; readOutBasedir=0
     errorLogFile=""
     cmdArgs=""
     for index in ${1} ${2} ${3} ${4} ${5} ${6} ${7} ${8} ${9} ${10} ${11} ${12} ${13} ${14} ${15} ${16} ${17} ${18} ${19} ${20} ${21} ${22} ${23} ${24} ${25} ${26}; do
-        if [ $index = "--input.alloc" ]; then
-            stateProvided=1
-        fi
-        if [ $readErrorLog -eq 1 ]; then
-            errorLogFile=$index
-            readErrorLog=0
-            continue
-        fi
-        if [ $index = "--output.errorlog" ]; then
-            readErrorLog=1
-            continue
-        fi
         cmdArgs=$cmdArgs" "$index
+        if [ $index = "--input.alloc" ]; then stateProvided=1; readAlloc=1; continue; fi
+        if [ $readAlloc -eq 1 ]; then  alloc=`cat $index`; readAlloc=0; continue; fi
+
+        if [ $index = "--output.basedir" ]; then readOutBasedir=1; continue; fi
+        if [ $readOutBasedir -eq 1 ]; then  outbasedir=$index; readOutBasedir=0; continue; fi
+
+        if [ $index = "--output.alloc" ]; then readOutAlloc=1; continue; fi
+        if [ $readOutAlloc -eq 1 ]; then  outalloc=$index; readOutAlloc=0; continue; fi
+
+        if [ $index = "--output.result" ]; then readOutResult=1; continue; fi
+        if [ $readOutResult -eq 1 ]; then  outresult=$index; readOutResult=0; continue; fi
+
+        if [ $index = "--input.txs" ]; then readTxs=1; continue; fi
+        if [ $readTxs -eq 1 ]; then  txs=`cat $index`; readTxs=0; continue; fi
+
+        if [ $index = "--input.env" ]; then readEnv=1; continue; fi
+        if [ $readEnv -eq 1 ]; then  env=`cat $index`; readEnv=0; continue; fi
+
+        if [ $index = "--state.fork" ]; then readFork=1; continue; fi
+        if [ $readFork -eq 1 ]; then  fork=$index; readFork=0; continue; fi
+
+        if [ $index = "--state.reward" ]; then readReward=1; continue; fi
+        if [ $readReward -eq 1 ]; then  reward=$index; readReward=0; continue; fi
+
+        if [ $index = "--state.chainid" ]; then readChainid=1; continue; fi
+        if [ $readChainid -eq 1 ]; then  chainid=$index; readChainid=0; continue; fi
+
+        if [ $index = "--output.errorlog" ]; then readErrorLog=1; continue; fi
+        if [ $readErrorLog -eq 1 ]; then errorLogFile=$index; readErrorLog=0; continue; fi
     done
     if [ $stateProvided -eq 1 ]; then
-        besuevm t8n $cmdArgs 2> $errorLogFile
+
+        state=$(jq -n --arg fork "$fork" --arg reward "$reward" --arg chainid "$chainid" '$ARGS.named' )
+        input=$(jq -n --argjson env "$env" --argjson alloc "$alloc" --arg txs "$txs" '$ARGS.named' )
+
+        req=$(jq -c -n --argjson state "$state" --argjson input "$input" '$ARGS.named')
+        out=$(curl -s --data-raw $req 'http://localhost:3000')
+        echo "$out" | jq '.result' > $outbasedir/$outresult
+        echo "$out" | jq '.alloc' > $outbasedir/$outalloc
+        #>&2 echo $out
+        #besuevm t8n $cmdArgs
     else
         besuevm t9n $cmdArgs 2> $errorLogFile
     fi
 fi
+)";
+
+string const besu_stop = R"(#!/bin/sh
+killall java
 )";
 
     {
@@ -301,6 +340,20 @@ fi
         (*obj)["exec"] = true;
         (*obj)["path"] = "besu/start.sh";
         (*obj)["content"] = besu_start;
+        map_configs.addArrayObject(obj);
+    }
+    {
+        spDataObject obj;
+        (*obj)["exec"] = true;
+        (*obj)["path"] = "besu/setup.sh";
+        (*obj)["content"] = besu_setup;
+        map_configs.addArrayObject(obj);
+    }
+    {
+        spDataObject obj;
+        (*obj)["exec"] = true;
+        (*obj)["path"] = "besu/stop.sh";
+        (*obj)["content"] = besu_stop;
         map_configs.addArrayObject(obj);
     }
     {
