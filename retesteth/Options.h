@@ -263,11 +263,14 @@ public:
         std::vector<ClientConfig> const& getClientConfigs() const;
         ClientConfig const& getCurrentConfig() const;
         void setCurrentConfig(ClientConfig const& _config);
+        void setTestsuiteRunning(bool _arg);
+        bool testSuiteRunning() const;
         size_t activeConfigs() const;
         bool currentConfigIsSet() const;
         std::set<FORK> const& runOnlyNetworks() const { return m_runOnlyNetworks; }
 
     private:
+        bool m_testSuiteRunning = false;
         std::set<FORK> m_runOnlyNetworks;
         mutable std::vector<ClientConfig> m_clientConfigs;
         test::ClientConfigID m_currentConfigID = test::ClientConfigID::null();

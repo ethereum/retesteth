@@ -138,6 +138,7 @@ void TestOutputHelper::setUnitTestExceptions(std::vector<std::string> const& _me
 size_t TestOutputHelper::m_currentTestRun = 0;
 void TestOutputHelper::initTest(size_t _maxTests)
 {
+    Options::getDynamicOptions().setTestsuiteRunning(true);
     static size_t totalTestsNumber = 0;
     if (totalTestsNumber == 0)
     {
