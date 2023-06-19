@@ -317,7 +317,7 @@ bool TestBlockchain::checkBlockException(SessionInterface const& _session, strin
         ETH_ERROR_REQUIRE_MESSAGE(pos != string::npos,
             cYellow + _sBlockException + cRed + " Not found in client response to postmine block tweak!" +
                 "\nImport result of postmine block: \n'" + cYellow + _session.getLastRPCError().message() + cRed +
-                "',\n Test Expected: \n'" + cYellow + clientExceptionString + cRed + "'\n");
+                "',\n Test Expected: (" + _sBlockException + ")\n'" + cYellow + clientExceptionString + cRed + "'\n");
         return false;  // block is not valid
     }
     return true;  // block is valid
