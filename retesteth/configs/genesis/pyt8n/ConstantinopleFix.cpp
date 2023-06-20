@@ -9,7 +9,7 @@ genConstantinopleFixCfgPYT8N::genConstantinopleFixCfgPYT8N()
 
 const string pyt8n_ConstantinopleFix_config = R"({
     "params" : {
-        "fork" : "Constantinople",
+        "fork" : "ConstantinopleFix",
         "constantinopleForkBlock" : "0x00",
         "byzantiumForkBlock" : "0x00",
         "homesteadForkBlock" : "0x00",

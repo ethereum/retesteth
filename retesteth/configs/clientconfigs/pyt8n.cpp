@@ -280,7 +280,7 @@ string const pyt8n_config = R"({
       "TR_GasLimitReached" : "Failed transaction",
       "TR_NonceTooHigh" : "nonce too high",
       "TR_NonceTooLow" : "nonce too low",
-      "TR_TypeNotSupported" : "transaction type not supported",
+      "TR_TypeNotSupported" : "Failed to parse transaction",
       "TR_TipGtFeeCap": "Failed transaction",
       "TR_TooShort": "typed transaction too short",
       "TR_InitCodeLimitExceeded" : "Failed transaction",

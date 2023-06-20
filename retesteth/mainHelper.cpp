@@ -203,7 +203,7 @@ void timeoutThread(std::atomic_bool* _stopTimeout)
                 else
                 {
                     test::TestOutputHelper::get().setCurrentTestInfo(test::TestInfo("Timeout"));
-                    ETH_FAIL_MESSAGE("Test suite execution timeout reached! " + test::fto_string(C_MAX_TESTSUITE_TIMEOUT) + "sec");
+                    ETH_FAIL_MESSAGE("Test suite execution timeout reached! " + test::fto_string(C_MAX_TESTSUITE_TIMEOUT * 2) + "sec");
                 }
             }
         }
