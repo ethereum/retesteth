@@ -72,8 +72,7 @@ RUN test -n "$GETH" \
      && wget https://dl.google.com/go/go1.19.linux-amd64.tar.gz \
      && tar -xvf go1.19.linux-amd64.tar.gz \
      && mv go /usr/local && ln -s /usr/local/go/bin/go /bin/go \
-     && make all && cp /geth/build/bin/evm /bin/evm \
-     && cp /geth/build/bin/geth /bin/geth \
+     && go build ./cmd/evm  && cp evm /bin/evm \
      && rm -rf /geth && rm -rf /usr/local/go \
     || echo "Geth is empty"
 
