@@ -256,6 +256,12 @@ dir=$(pwd)
 cd $BESU_PATH
 ethereum/evmtool/build/install/evmtool/bin/evm t8n-server &> /dev/null &
 cd $dir
+sleep 2
+if ss -tuln | grep -q ':3000'; then
+    1>&2 echo ".retesteth/besu/setup.sh Besu daemon is listening on port 3000"
+else
+    1>&2 echo ".retesteth/besu/setup.sh Besu daemon failed to start, will use besu evm t8n instead"
+fi
 )";
 
 string const besu_start = R"(#!/bin/sh
@@ -273,11 +279,16 @@ else
     stateProvided=0
     readErrorLog=0
     readEnv=0; readAlloc=0; readTxs=0; readFork=0; readReward=0; readChainid=0
-    readOutAlloc=0; readOutResult=0; readOutBasedir=0
+    readOutAlloc=0; readOutResult=0; readOutBasedir=0; skipErrorLog=0
     errorLogFile=""
     cmdArgs=""
     for index in ${1} ${2} ${3} ${4} ${5} ${6} ${7} ${8} ${9} ${10} ${11} ${12} ${13} ${14} ${15} ${16} ${17} ${18} ${19} ${20} ${21} ${22} ${23} ${24} ${25} ${26}; do
-        cmdArgs=$cmdArgs" "$index
+        if [ $index = "--output.errorlog" ]; then skipErrorLog=1; fi
+
+        if [ $skipErrorLog -eq 0 ]; then
+            cmdArgs=$cmdArgs" "$index
+        fi
+
         if [ $index = "--input.alloc" ]; then stateProvided=1; readAlloc=1; continue; fi
         if [ $readAlloc -eq 1 ]; then  alloc=`cat $index`; readAlloc=0; continue; fi
 
@@ -306,19 +317,20 @@ else
         if [ $readChainid -eq 1 ]; then  chainid=$index; readChainid=0; continue; fi
 
         if [ $index = "--output.errorlog" ]; then readErrorLog=1; continue; fi
-        if [ $readErrorLog -eq 1 ]; then errorLogFile=$index; readErrorLog=0; continue; fi
+        if [ $readErrorLog -eq 1 ]; then errorLogFile=$index; readErrorLog=0; skipErrorLog=0; continue; fi
     done
     if [ $stateProvided -eq 1 ]; then
+        if ss -tuln | grep -q ':3000'; then
+            state=$(jq -n --arg fork "$fork" --arg reward "$reward" --arg chainid "$chainid" '$ARGS.named' )
+            input=$(jq -n --argjson env "$env" --argjson alloc "$alloc" --arg txs "$txs" '$ARGS.named' )
 
-        state=$(jq -n --arg fork "$fork" --arg reward "$reward" --arg chainid "$chainid" '$ARGS.named' )
-        input=$(jq -n --argjson env "$env" --argjson alloc "$alloc" --arg txs "$txs" '$ARGS.named' )
-
-        req=$(jq -c -n --argjson state "$state" --argjson input "$input" '$ARGS.named')
-        out=$(curl -s --data-raw $req 'http://localhost:3000')
-        echo "$out" | jq '.result' > $outbasedir/$outresult
-        echo "$out" | jq '.alloc' > $outbasedir/$outalloc
-        #>&2 echo $out
-        #besuevm t8n $cmdArgs
+            req=$(jq -c -n --argjson state "$state" --argjson input "$input" '$ARGS.named')
+            out=$(curl -s --data-raw $req 'http://localhost:3000')
+            echo "$out" | jq '.result' > $outbasedir/$outresult
+            echo "$out" | jq '.alloc' > $outbasedir/$outalloc
+        else
+            besuevm t8n $cmdArgs 2> $errorLogFile
+        fi
     else
         besuevm t9n $cmdArgs 2> $errorLogFile
     fi
