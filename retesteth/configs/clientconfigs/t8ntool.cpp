@@ -307,8 +307,8 @@ string const t8ntool_config = R"({
       "3675PoWBlockRejected" : "Invalid block1559: Chain switched to PoS!",
       "3675PoSBlockRejected" : "Parent (transition) block has not reached TTD",
       "3675PreMerge1559BlockRejected" : "Trying to import 1559 block on top of PoS block",
-      "INPUT_UNMARSHAL_ERROR" : "cannot unmarshal hex",
-      "INPUT_UNMARSHAL_SIZE_ERROR" : "failed unmarshaling",
+      "INPUT_UNMARSHAL_ERROR" : "field >= 2**64",
+      "INPUT_UNMARSHAL_ADDRESS_ERROR" : "not a valid address!",
       "RLP_BODY_UNMARSHAL_ERROR" : "Rlp structure is wrong",
       "PostMergeUncleHashIsNotEmpty" : "block.uncleHash != empty",
       "PostMergeDifficultyIsNot0" : "block.difficulty must be 0"

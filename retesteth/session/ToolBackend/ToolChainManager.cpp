@@ -167,6 +167,7 @@ FH32 ToolChainManager::importRawBlock(BYTES const& _rlp)
                 if (wtRLP.itemCount() != 4)
                     throw dev::RLPException("Rlp structure is wrong: Withdrawals RLP does not have 4 elements!");
                 spWithdrawal wt(new Withdrawal(wtRLP));
+                verifyWithdrawalRecord(wt);
                 m_pendingBlock.getContent().addWithdrawal(wt);
             }
         }

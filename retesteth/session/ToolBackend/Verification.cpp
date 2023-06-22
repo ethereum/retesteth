@@ -403,7 +403,14 @@ void verifyWithdrawalsRLP(dev::RLP const& _rlp)
 void verifyWithdrawalRecord(spWithdrawal const& _wtRecord)
 {
     if (_wtRecord->index.getCContent() >= POW2_64)
-        throw test::UpwardsException("Withdrawals Index >= 2**64");
+        throw test::UpwardsException("Withdrawals Index field >= 2**64");
+    if (_wtRecord->amount.getCContent() >= POW2_64)
+        throw test::UpwardsException("Withdrawals Amount field >= 2**64");
+    if (_wtRecord->validatorIndex.getCContent() >= POW2_64)
+        throw test::UpwardsException("Withdrawals validatorIndex field >= 2**64");
+    auto const& address = _wtRecord->address.getCContent().asString();
+    if (address.find("bigint") != string::npos)
+        throw test::UpwardsException("Withdrawals address field is not a valid address! " + address);
 }
 
 }  // namespace toolimpl
