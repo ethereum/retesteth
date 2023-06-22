@@ -56,6 +56,9 @@ spDataObject ToolImpl::web3_clientVersion()
                 int exitCode;
                 spDataObject res(new DataObject(test::executeCmd(cmd, exitCode)));
                 ETH_DC_MESSAGE(DC::RPC2, "Response: web3_clientVersion " + res->asString());
+                size_t const pos = res->asString().find("\n");
+                if (pos != string::npos)
+                    (*res).asStringUnsafe() = res->asString().substr(0, pos);
                 return res;
         , "web3_clientVersion", CallType::FAILEVERYTHING, DC::RPC2)
     return spDataObject();
