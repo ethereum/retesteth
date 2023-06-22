@@ -162,7 +162,6 @@ StateTestFillerTransaction::StateTestFillerTransaction(spDataObjectMove _data)
         // Export data (m_rawData) is prepared in constructor and then promise that
         // it corresponds to the actual data in the class (class does not change after parsing)
         (*m_rawData).performModifier(mod_valueToLowerCase);
-        size_t index = 0;
         bool atLeastOneNonNullAccessList = false;
         spDataObject exportDatas;
         spDataObject txAccessListData(new DataObject(DataType::Array));
@@ -171,13 +170,12 @@ StateTestFillerTransaction::StateTestFillerTransaction(spDataObjectMove _data)
             spDataObject elb(new DataObject(el.m_data.asString()));
             (*exportDatas).addArrayObject(elb);
             if (el.m_accessList.isEmpty())
-                (*txAccessListData).addArrayObject(spDataObject(new DataObject(DataType::Null)));
+                (*txAccessListData).addArrayObject(sDataObject(DataType::Null));
             else
             {
                 (*txAccessListData).addArrayObject(el.m_accessList->asDataObject());
                 atLeastOneNonNullAccessList = true;
             }
-            index++;
         }
 
         (*exportDatas).setKey(c_data);
