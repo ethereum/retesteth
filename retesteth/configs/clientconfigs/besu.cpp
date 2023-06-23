@@ -257,7 +257,7 @@ cd $BESU_PATH
 ethereum/evmtool/build/install/evmtool/bin/evm t8n-server &> /dev/null &
 cd $dir
 sleep 2
-if ss -tuln | grep -q ':3000'; then
+if lsof -i :3000 | grep -q LISTEN; then
     1>&2 echo ".retesteth/besu/setup.sh Besu daemon is listening on port 3000"
 else
     1>&2 echo ".retesteth/besu/setup.sh Besu daemon failed to start, will use besu evm t8n instead"
@@ -320,7 +320,7 @@ else
         if [ $readErrorLog -eq 1 ]; then errorLogFile=$index; readErrorLog=0; skipErrorLog=0; continue; fi
     done
     if [ $stateProvided -eq 1 ]; then
-        if ss -tuln | grep -q ':3000'; then
+        if lsof -i :3000 | grep -q LISTEN; then
             state=$(jq -n --arg fork "$fork" --arg reward "$reward" --arg chainid "$chainid" '$ARGS.named' )
             input=$(jq -n --argjson env "$env" --argjson alloc "$alloc" --arg txs "$txs" '$ARGS.named' )
 

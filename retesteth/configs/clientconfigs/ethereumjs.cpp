@@ -233,13 +233,21 @@ string const ethereumjs_config = R"({
 })";
 
 string const ethereumjs_start = R"(#!/bin/sh
-curl -X POST -d "${1} ${2} ${3} ${4} ${5} ${6} ${7} ${8} ${9} ${10} ${11} ${12} ${13} ${14} ${15} ${16} ${17} ${18} ${19} ${20}" --silent http://localhost:3000/
+if lsof -i :3000 | grep -q LISTEN; then
+    curl -X POST -d "${1} ${2} ${3} ${4} ${5} ${6} ${7} ${8} ${9} ${10} ${11} ${12} ${13} ${14} ${15} ${16} ${17} ${18} ${19} ${20}" --silent http://localhost:3000/
+fi
 )";
 string const ethereumjs_setup = R"(#!/bin/sh
 dir=$(pwd)
 cd $ETHEREUMJS_PATH/packages/vm
 npx ts-node test/retesteth/transition-cluster.ts &> /dev/null &
 cd $dir
+sleep 2
+if lsof -i :3000 | grep -q LISTEN; then
+    1>&2 echo ".retesteth/ethereumjs/setup.sh Ethereumjs daemon is listening on port 3000"
+else
+    1>&2 echo ".retesteth/ethereumjs/setup.sh Ethereumjs daemon failed to start"
+fi
 )";
 string const ethereumjs_stop = R"(#!/bin/sh
 killall node
