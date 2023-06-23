@@ -58,7 +58,7 @@ ClientConfig::ClientConfig(fs::path const& _clientConfigPath) : m_id(ClientConfi
         if (!fs::exists(genesisTemplatePath))
         {
             genesisTemplatePath = _clientConfigPath.parent_path() / "default" / "genesis";
-            ETH_FAIL_REQUIRE_MESSAGE(fs::exists(genesisTemplatePath), "default/genesis client config not found!");
+            ETH_FAIL_REQUIRE_MESSAGE(fs::exists(genesisTemplatePath), genesisTemplatePath.string() + " client config path not found!");
         }
 
         // Load genesis templates

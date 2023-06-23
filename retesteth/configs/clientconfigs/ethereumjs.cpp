@@ -238,15 +238,26 @@ if lsof -i :3000 | grep -q LISTEN; then
 fi
 )";
 string const ethereumjs_setup = R"(#!/bin/sh
+SNAME=".retesteth/ethereumjs/setup.sh"
+if [ -z "${ETHEREUMJS_PATH}" ]; then
+  1>&2 echo "$SNAME ERROR: Env variable ETHEREUMJS_PATH is either empty or not set!"
+else
+  if [ -d "${ETHEREUMJS_PATH}" ]; then
+    1>&2 echo "$SNAME Using ethereumjs path: '$ETHEREUMJS_PATH'"
+  else
+    echo "$SNAME ERROR: Path '$ETHEREUMJS_PATH' does not exist in the file system"
+  fi
+fi
+
 dir=$(pwd)
 cd $ETHEREUMJS_PATH/packages/vm
 npx ts-node test/retesteth/transition-cluster.ts &> /dev/null &
 cd $dir
 sleep 2
 if lsof -i :3000 | grep -q LISTEN; then
-    1>&2 echo ".retesteth/ethereumjs/setup.sh Ethereumjs daemon is listening on port 3000"
+    1>&2 echo "$SNAME Ethereumjs daemon is listening on port 3000"
 else
-    1>&2 echo ".retesteth/ethereumjs/setup.sh Ethereumjs daemon failed to start"
+    1>&2 echo "$SNAME Ethereumjs daemon failed to start"
 fi
 )";
 string const ethereumjs_stop = R"(#!/bin/sh

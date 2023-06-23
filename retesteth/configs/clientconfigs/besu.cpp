@@ -252,15 +252,27 @@ string const besu_config = R"({
 })";
 
 string const besu_setup = R"(#!/bin/sh
+
+SNAME=".retesteth/besu/setup.sh"
+if [ -z "${BESU_PATH}" ]; then
+  1>&2 echo "$SNAME ERROR: Env variable BESU_PATH is either empty or not set!"
+else
+  if [ -d "${BESU_PATH}" ]; then
+    1>&2 echo "$SNAME Using ethereumjs path: '$BESU_PATH'"
+  else
+    echo "$SNAME ERROR: Path '$BESU_PATH' does not exist in the file system"
+  fi
+fi
+
 dir=$(pwd)
 cd $BESU_PATH
 ethereum/evmtool/build/install/evmtool/bin/evm t8n-server &> /dev/null &
 cd $dir
 sleep 2
 if lsof -i :3000 | grep -q LISTEN; then
-    1>&2 echo ".retesteth/besu/setup.sh Besu daemon is listening on port 3000"
+    1>&2 echo "$SNAME Besu daemon is listening on port 3000"
 else
-    1>&2 echo ".retesteth/besu/setup.sh Besu daemon failed to start, will use besu evm t8n instead"
+    1>&2 echo "$SNAME WARNING: Besu daemon failed to start, will use besu evm t8n instead"
 fi
 )";
 

@@ -137,10 +137,13 @@ std::vector<ClientConfig> const& Options::DynamicOptions::getClientConfigs() con
                 ETH_ERROR_MESSAGE("Missing version file in retesteth configs! `" + homeDir.string());
 
             string version = dev::contentsString(homeDir / "version");
+            version.erase(std::remove(version.begin(), version.end(), '\n'), version.end());
             if (version != prepareRetestethVersion())
+            {
                 ETH_WARNING("Retesteth configs version is different (running: '" +
-                            prepareRetestethVersion() + "' vs config '" + version +
-                            "')! Redeploy the configs by deleting the folder `" + homeDir.string() + "`!");
+                             prepareRetestethVersion() + "' vs config '" + version + "')!");
+                ETH_WARNING("Update configs to the latest by deleting the folder `" + homeDir.string() + "`!");
+            }
         }
         else
             retesteth::options::deployFirstRunConfigs(homeDir);
