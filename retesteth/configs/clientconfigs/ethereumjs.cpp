@@ -251,9 +251,9 @@ fi
 
 dir=$(pwd)
 cd $ETHEREUMJS_PATH/packages/vm
-npx ts-node test/retesteth/transition-cluster.ts &> /dev/null &
+npx ts-node test/retesteth/transition-cluster.cts &> /dev/null &
 cd $dir
-sleep 2
+sleep 4
 if lsof -i :3000 | grep -q LISTEN; then
     1>&2 echo "$SNAME Ethereumjs daemon is listening on port 3000"
 else
