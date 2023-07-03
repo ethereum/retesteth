@@ -31,8 +31,7 @@ string const nimbus_config = R"({
         "Berlin",
         "London",
         "Merge",
-        "Shanghai",
-        "Cancun"
+        "Shanghai"
     ],
     "additionalForks" : [
         "FrontierToHomesteadAt5",
