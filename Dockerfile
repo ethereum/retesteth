@@ -27,7 +27,7 @@ RUN apt-get update \
     && add-apt-repository -y ppa:ubuntu-toolchain-r/test \
     && add-apt-repository -y ppa:deadsnakes/ppa  \
     && add-apt-repository ppa:linuxuprising/java \
-    && apt-get install --yes git cmake make perl psmisc curl wget gcc-11 g++-11 python3.10 python3.10-venv python3-pip python3-dev \
+    && apt-get install --yes lsof git cmake make perl psmisc curl wget gcc-11 g++-11 python3.10 python3.10-venv python3-pip python3-dev \
     && apt-get install --yes libboost-filesystem-dev libboost-system-dev libboost-program-options-dev libboost-test-dev \
     && echo oracle-java17-installer shared/accepted-oracle-license-v1-3 select true | /usr/bin/debconf-set-selections  \
     && apt-get install --yes oracle-java17-installer oracle-java17-set-default \
