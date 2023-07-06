@@ -69,6 +69,8 @@ Debug::Debug()
                 m_channels[DC::LOWLOG] = true;  // Peculiar debug info
             else if (flag == "WARNING")
                 m_channels[DC::WARNING] = true;  // Warning messages
+            else if (flag == "PYSPEC")
+                m_channels[DC::PYSPEC] = true;  // Python script errorlog
             else
                 ETH_STDOUT_MESSAGEC("WARNING: Debug channel `" + flag + "` not found!", cYellow);
         }
@@ -106,6 +108,7 @@ void Debug::initializeDefaultChannels()
         m_channels[DC::SOCKET] = true;
         m_channels[DC::LOWLOG] = true;
         m_channels[DC::RPC2] = true;
+        m_channels[DC::PYSPEC] = true;
     }
     if (Options::get().poststate.initialized() || Options::get().statediff.initialized())
         m_channels[DC::STATE] = true;

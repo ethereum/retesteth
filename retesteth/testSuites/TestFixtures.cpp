@@ -64,13 +64,29 @@ std::vector<fs::path> getSubfolders(fs::path const& _path)
     return subFolders;
 }
 
-bool hasSubfolders(fs::path const& _path)
+bool hasSubfoldersWithFileTypes(fs::path const& _path, string const& _filemask)
 {
     using fsIterator = fs::directory_iterator;
     for (fsIterator it(_path); it != fsIterator(); ++it)
     {
         if (fs::is_directory(*it))
-            return true;
+        {
+            bool foundTest = false;
+            for (fsIterator subit(*it); subit != fsIterator(); ++subit)
+            {
+                string const filename = (*subit).path().string();
+                auto const suffixes = test::explode(_filemask, '|');
+                for (auto const& suffix : suffixes)
+                {
+                    if (filename.find(suffix) != string::npos)
+                    {
+                        foundTest = true;
+                        break;;
+                    }
+                }
+            }
+            return foundTest;
+        }
     }
     return false;
 }
@@ -148,7 +164,7 @@ void test::DynamicTestsBoost(vector<string>& allTestNames)
 
                     if (caseid == INV_TEST_UNIT_ID && !g_exceptionNames.count(caseName))
                     {
-                        if (hasSubfolders(*it))
+                        if (hasSubfoldersWithFileTypes(*it, ".py|Filler.json|Filler.yml"))
                             registerNewTestSuite(allTestNames, fixtureSuite, suite, *it);
                         else
                             registerNewTestCase(allTestNames, fixtureSuite, suite, caseName);
@@ -269,8 +285,24 @@ REGISTER_TEMPLATE(BlockchainTestTransitionSuite, DefaultFlags)
 REGISTER_TEMPLATE(BlockchainTestInvalidSuite, RequireOptionFill)
 REGISTER_TEMPLATE(BlockchainTestInvalidSuite, DefaultFlags)
 REGISTER_TEMPLATE(BlockchainTestPyspecSuite, DefaultFlags)
+    REGISTER_TEMPLATE(BlockchainTestPyspecSuite_frontier, DefaultFlags)
+    REGISTER_TEMPLATE(BlockchainTestPyspecSuite_homestead, DefaultFlags)
+    REGISTER_TEMPLATE(BlockchainTestPyspecSuite_istanbul, DefaultFlags)
+    REGISTER_TEMPLATE(BlockchainTestPyspecSuite_berlin, DefaultFlags)
+    REGISTER_TEMPLATE(BlockchainTestPyspecSuite_merge, DefaultFlags)
+    REGISTER_TEMPLATE(BlockchainTestPyspecSuite_shanghai, DefaultFlags)
+    REGISTER_TEMPLATE(BlockchainTestPyspecSuite_cancun, DefaultFlags)
+
 REGISTER_TEMPLATE(BlockchainTestEIPSuite, DefaultFlags)
 REGISTER_TEMPLATE(BlockchainTestEIPPyspecSuite, DefaultFlags)
+    REGISTER_TEMPLATE(BlockchainTestEIPPyspecSuite_frontier, DefaultFlags)
+    REGISTER_TEMPLATE(BlockchainTestEIPPyspecSuite_homestead, DefaultFlags)
+    REGISTER_TEMPLATE(BlockchainTestEIPPyspecSuite_istanbul, DefaultFlags)
+    REGISTER_TEMPLATE(BlockchainTestEIPPyspecSuite_berlin, DefaultFlags)
+    REGISTER_TEMPLATE(BlockchainTestEIPPyspecSuite_merge, DefaultFlags)
+    REGISTER_TEMPLATE(BlockchainTestEIPPyspecSuite_shanghai, DefaultFlags)
+    REGISTER_TEMPLATE(BlockchainTestEIPPyspecSuite_cancun, DefaultFlags)
+
 REGISTER_TEMPLATE(BlockchainTestValidSuite, DefaultFlags)
 
 // State link

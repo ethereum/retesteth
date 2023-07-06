@@ -73,7 +73,7 @@ string const c_fillerPostf = "Filler";
 string const c_copierPostf = "Copier";
 string const c_pythonPostf = ".py";
 
-bool TestSuite::_fillPython(TestFileData& _testData, fs::path const& _fillerTestFilePath, AbsoluteFilledTestPath const& _filledPath) const
+bool TestSuite::_fillPython(TestFileData& _testData, fs::path const& _fillerTestFilePath, AbsoluteFilledTestPath const& _filledPath, fs::path const& _relativeFillerPath) const
 {
     bool wereErrors = false;
     auto const& currentConfig = Options::getCurrentConfig();
@@ -90,11 +90,12 @@ bool TestSuite::_fillPython(TestFileData& _testData, fs::path const& _fillerTest
         OUTPUT=$4
         EVMT8N=$5
         FORCER=$6
+        DEBUG=$7
         */
 
         auto const& opt = Options::get();
         string runcmd = specsScript.c_str();
-        runcmd += " " + _fillerTestFilePath.parent_path().parent_path().string();  // SRCPATH
+        runcmd += " " + _fillerTestFilePath.string();                              // SRCPATH
         runcmd += " " + fillerName;                                                // FILLER NAME
         if (opt.singletest.initialized() && !opt.singletest.subname.empty())
             runcmd += " " + opt.singletest.subname;
@@ -104,6 +105,10 @@ bool TestSuite::_fillPython(TestFileData& _testData, fs::path const& _fillerTest
         runcmd += " " + opt.getCurrentConfig().getStartScript().string();          // T8N start
         if (opt.forceupdate)
             runcmd += " --force-refill";
+        else
+            runcmd += " null";
+        if (test::debug::Debug::get().flag(DC::PYSPEC))
+            runcmd += " --stderr";
         else
             runcmd += " null";
 
@@ -123,7 +128,7 @@ bool TestSuite::_fillPython(TestFileData& _testData, fs::path const& _fillerTest
         }
         else
         {
-            updatePythonTestInfo(_testData, _fillerTestFilePath, _filledPath.path().parent_path());
+            updatePythonTestInfo(_testData, _relativeFillerPath, _filledPath.path().parent_path());
             TestOutputHelper::get().registerTestRunSuccess();
         }
         return wereErrors;
@@ -192,13 +197,14 @@ bool TestSuite::_fillTest(TestSuite::TestSuiteOptions& _opt, fs::path const& _fi
     TestOutputHelper::get().setCurrentTestFile(_fillerTestFilePath);
     TestFileData testData = readFillerTestFile(_fillerTestFilePath);
 
+    fs::path const testFillerPathRelative =
+        _opt.calculateRelativeSrcPath ? fs::relative(_fillerTestFilePath, getTestPath()) : _fillerTestFilePath;
+
     bool const isPy = (_fillerTestFilePath.extension() == ".py");
     bool const isCopier = (_fillerTestFilePath.stem().string().rfind(c_copierPostf) != string::npos);
     if (isPy)
-        return _fillPython(testData, _fillerTestFilePath, _outputTestFilePath);
+        return _fillPython(testData, _fillerTestFilePath, _outputTestFilePath, testFillerPathRelative);
 
-    fs::path const testFillerPathRelative =
-        _opt.calculateRelativeSrcPath ? fs::relative(_fillerTestFilePath, getTestPath()) : _fillerTestFilePath;
     if (isCopier)
     {
         _fillCopier(testData, testFillerPathRelative, _outputTestFilePath);

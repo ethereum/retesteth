@@ -217,7 +217,7 @@ Options::Options(int argc, const char** argv)
     ADD_OPTIONV(logVerbosity, "--verbosity", [](){
         cout << setw(30) << "--verbosity <level>" << setw(25) << "Set logs verbosity. 0 - silent, 1 - only errors, 2 - informative, >2 - detailed\n";
         cout << setw(30) << "--verbosity <channel>" << setw(25)
-             << "Set logs channels. 'STATS|RPC|RPC2|TESTLOG|LOWLOG|SOCKET|STATE'\n";
+             << "Set logs channels. 'STATS|RPC|RPC2|TESTLOG|LOWLOG|SOCKET|STATE|PYSPEC'\n";
         },[this](){
             // disable all output
             static std::ostringstream strCout;

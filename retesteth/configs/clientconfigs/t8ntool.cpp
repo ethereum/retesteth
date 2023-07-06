@@ -352,17 +352,40 @@ TESTCA=$3
 OUTPUT=$4
 EVMT8N=$5
 FORCER=$6
+DEBUG=$7
+
+testdir="./tests/tmptest"
+mkdir $testdir
+
+parentpath=$(dirname "$SRCPATH")
+cp -r $parentpath/* $testdir
+cp $SRCPATH $testdir/$FILLER.py
+SRCPATH2="$testdir/$FILLER.py"
 
 ADDFLAGS=""
 if [ "$TESTCA" != "null" ]; then
-    ADDFLAGS="$ADDFLAGS --test-case $TESTCA"
+    SRCPATH2="$SRCPATH2::$TESTCA"
 fi
 if [ "$FORCER" != "null" ]; then
     ADDFLAGS="$ADDFLAGS --force-refill"
 fi
 
-tf --filler-path $SRCPATH --output $OUTPUT --test-module $FILLER $ADDFLAGS --no-output-structure --evm-bin $EVMT8N
-
+mkdir ./tests/out
+1>&2 echo "fill -v $SRCPATH2 --output "./tests/out" $ADDFLAGS --evm-bin $EVMT8N --flat-output"
+if [ $DEBUG != "null" ]; then
+    1>&2 fill -v $SRCPATH2 --output "./tests/out" $ADDFLAGS --evm-bin $EVMT8N --flat-output
+else
+    out=$(fill -v $SRCPATH2 --output "./tests/out" $ADDFLAGS --evm-bin $EVMT8N --flat-output)
+    if [[ "$out" == *"failed"* ]]; then
+      1>&2 echo "./retesteth/pyspecsStart.sh Pyspec test generation failed"
+      exit 1
+    fi
+fi
+cp -r ./tests/out/* $OUTPUT
+rm -r ./tests/out
+rm -r $testdir
+rm $SRCPATH2
+exit 0
 )";
 
     {

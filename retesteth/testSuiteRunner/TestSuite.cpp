@@ -55,8 +55,8 @@ string getTestNameFromFillerFilename(fs::path const& _fillerTestFilePath)
         return fillerName;
 
     static string const requireStr = " require: Filler.json/Filler.yml/Copier.json/.py";
-    ETH_FAIL_REQUIRE_MESSAGE(
-        false, "Incorrect file suffix in the filler folder! " + _fillerTestFilePath.string() + requireStr);
+    ETH_FAIL_REQUIRE_MESSAGE(false,
+        "Incorrect file suffix in the filler folder! " + _fillerTestFilePath.string() + requireStr);
     return fillerName;
 }
 }  // namespace
