@@ -123,7 +123,7 @@ bool TestSuite::_fillPython(TestFileData& _testData, fs::path const& _fillerTest
         if (exitcode != 0)
         {
             wereErrors = true;
-            ETH_ERROR_MESSAGE("Python spec failed filling the test: \n" + out);
+            ETH_ERROR_MESSAGE("Python spec failed filling the test (use --verbosity PYSPEC for details): \n" + out);
             return wereErrors;
         }
         else

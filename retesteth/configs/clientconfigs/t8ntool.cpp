@@ -377,14 +377,13 @@ if [ $DEBUG != "null" ]; then
 else
     out=$(fill -v $SRCPATH2 --output "./tests/out" $ADDFLAGS --evm-bin $EVMT8N --flat-output)
     if [[ "$out" == *"failed"* ]]; then
-      1>&2 echo "./retesteth/pyspecsStart.sh Pyspec test generation failed"
+      1>&2 echo "./retesteth/pyspecsStart.sh Pyspec test generation failed (use --verbosity PYSPEC for details) "
       exit 1
     fi
 fi
 cp -r ./tests/out/* $OUTPUT
 rm -r ./tests/out
 rm -r $testdir
-rm $SRCPATH2
 exit 0
 )";
 
