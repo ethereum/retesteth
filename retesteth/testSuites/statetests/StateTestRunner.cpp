@@ -111,7 +111,7 @@ void StateTestRunner::performTransactionOnResult(TransactionInGeneralSection& _t
     FH32 const& remoteStateHash = blockInfo.header()->stateRoot();
 
     performVMTrace(_tr, remoteStateHash, _network);
-    performPostState(_tr, _network);
+    performPostState(_tr, _network, blockInfo);
     performStateDiff(_tr, _network);
 
     if (remoteStateHash != expectedPostHash)
@@ -137,13 +137,14 @@ void StateTestRunner::performVMTrace(TransactionInGeneralSection& _tr, FH32 cons
     }
 }
 
-void StateTestRunner::performPostState(TransactionInGeneralSection& _tr, FORK const& _network)
+void StateTestRunner::performPostState(TransactionInGeneralSection& _tr, FORK const& _network, EthGetBlockBy const& _block)
 {
     if (Options::get().poststate)
     {
         auto const remStateJson = getRemoteState(m_session)->asDataObject()->asJson();
         ETH_DC_MESSAGE(DC::STATE,
             "\nRunning test State Dump:" + TestOutputHelper::get().testInfo().errorDebug() + cDefault + " \n" + remStateJson);
+        ETH_DC_MESSAGE(DC::STATE, "Reported root: " + _block.header()->stateRoot().asString());
         if (!Options::get().poststate.outpath.empty())
         {
             string const testNameOut = makeFilename(_tr, _network);

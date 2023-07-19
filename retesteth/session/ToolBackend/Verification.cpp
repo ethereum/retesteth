@@ -216,7 +216,7 @@ void verifyShanghaiParent(spBlockHeader const& _header, spBlockHeader const& _pa
                 throw test::UpwardsException("Trying to import Shanghai block on top of Merge block before transition!!");
         }
         else
-            throw test::UpwardsException("Trying to import Shanghai block on top of Merge block before transition!!");
+            throw test::UpwardsException("Trying to import Shanghai block on top of block that is not Shanghai!!");
     }
 }
 

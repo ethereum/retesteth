@@ -296,6 +296,7 @@ string const t8ntool_config = R"({
       "TR_TooShort": "typed transaction too short",
       "TR_InitCodeLimitExceeded" : "max initcode size exceeded",
       "TR_BlobDecodeError" : "expected input list for types.BlobTx",
+      "TR_EMPTYBLOB" : "rlp: input string too short for common.Address",
       "1559BaseFeeTooLarge": "TransactionBaseFee convertion error: VALUE  >u256",
       "1559PriorityFeeGreaterThanBaseFee": "maxFeePerGas \u003c maxPriorityFeePerGas",
       "2930AccessListAddressTooLong": "rlp: input string too long for common.Address, decoding into (types.Transaction)(types.AccessListTx).AccessList[0].Address",
@@ -355,6 +356,7 @@ FORCER=$6
 DEBUG=$7
 
 testdir="./tests/tmptest"
+rm -r $testdir
 mkdir $testdir
 
 parentpath=$(dirname "$SRCPATH")
@@ -370,12 +372,13 @@ if [ "$FORCER" != "null" ]; then
     ADDFLAGS="$ADDFLAGS --force-refill"
 fi
 
+rm -r ./tests/out
 mkdir ./tests/out
-1>&2 echo "fill -v $SRCPATH2 --output "./tests/out" $ADDFLAGS --evm-bin $EVMT8N --flat-output"
+1>&2 echo "fill -v $SRCPATH2 --output "./tests/out" $ADDFLAGS --evm-bin $EVMT8N --flat-output --disable-hive"
 if [ $DEBUG != "null" ]; then
-    1>&2 fill -v $SRCPATH2 --output "./tests/out" $ADDFLAGS --evm-bin $EVMT8N --flat-output
+    1>&2 fill -v $SRCPATH2 --output "./tests/out" $ADDFLAGS --evm-bin $EVMT8N --flat-output --disable-hive
 else
-    out=$(fill -v $SRCPATH2 --output "./tests/out" $ADDFLAGS --evm-bin $EVMT8N --flat-output)
+    out=$(fill -v $SRCPATH2 --output "./tests/out" $ADDFLAGS --evm-bin $EVMT8N --flat-output --disable-hive)
     if [[ "$out" == *"failed"* ]]; then
       1>&2 echo "./retesteth/pyspecsStart.sh Pyspec test generation failed (use --verbosity PYSPEC for details) "
       exit 1

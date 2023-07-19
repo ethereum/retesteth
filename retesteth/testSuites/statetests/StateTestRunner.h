@@ -19,7 +19,7 @@ public:
 private:
     std::vector<TransactionInGeneralSection> buildTransactionsWithLabels();
     void performVMTrace(TransactionInGeneralSection& _tr, FH32 const& _remoteStateHash, FORK const& _network);
-    void performPostState(TransactionInGeneralSection& _tr, FORK const& _network);
+    void performPostState(TransactionInGeneralSection& _tr, FORK const& _network, EthGetBlockBy const&);
     void performStateDiff(TransactionInGeneralSection const& _tr, FORK const& _netwrok);
     void performValidations(TransactionInGeneralSection& _tr, StateTestPostResult const& _result);
     std::string makeFilename(TransactionInGeneralSection& _tr, FORK const& _network);
