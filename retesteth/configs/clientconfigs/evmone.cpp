@@ -266,7 +266,8 @@ string const evmone_config = R"({
       "EOF_UndefinedInstruction": "err: undefined_instruction",
       "EOF_ZeroSectionSize": "err: zero_section_size",
       "EOF_NonEmptyStackOnTerminatingInstruction": "err: non_empty_stack_on_terminating_instruction",
-      "EOF_InvalidSectionBodiesSize": "err: invalid_section_bodies_size"
+      "EOF_InvalidSectionBodiesSize": "err: invalid_section_bodies_size",
+      "Transaction without funds" : "insufficient funds for gas * price + value"
     }
 })";
 
