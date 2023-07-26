@@ -240,6 +240,7 @@ string const nimbus_config = R"({
       "TR_EMPTYBLOB" : "there must be at least one blob",
       "TR_BLOBCREATE" : "destination must be not empty",
       "TR_BLOBVERSION_INVALID" : "one of blobVersionedHash has invalid version",
+      "TR_BLOBLIST_OVERSIZE" : "versioned hashes len exceeds",
       "1559BaseFeeTooLarge": "TransactionBaseFee convertion error: VALUE  >u256",
       "1559PriorityFeeGreaterThanBaseFee": "maxFeePerGas \u003c maxPriorityFeePerGas",
       "2930AccessListAddressTooLong": "rlp: input string too long for common.Address, decoding into (types.Transaction)(types.AccessListTx).AccessList[0].Address",

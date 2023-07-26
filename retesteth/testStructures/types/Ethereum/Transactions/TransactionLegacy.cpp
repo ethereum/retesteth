@@ -146,9 +146,17 @@ void TransactionLegacy::streamHeader(dev::RLPStream& _s) const
 dev::h256 TransactionLegacy::buildVRSHash() const
 {
     dev::RLPStream stream;
-    stream.appendList((m_chainID.getCContent() == 1) ? 6 : 9);
+
+    // https://eips.ethereum.org/EIPS/eip-155
+    bool legacyEncoding;
+    if (m_v.isEmpty())
+        legacyEncoding = m_chainID.getCContent() == 1;
+    else
+        legacyEncoding = m_v->asBigInt() < 37;
+
+    stream.appendList(legacyEncoding ? 6 : 9);
     streamHeader(stream);
-    if (m_chainID.getCContent() != 1)
+    if (!legacyEncoding)
     {
         stream << m_chainID->serializeRLP();
         stream << VALUE(0).serializeRLP();

@@ -356,7 +356,9 @@ FORCER=$6
 DEBUG=$7
 
 testdir="./tests/tmptest"
-rm -r $testdir
+if [ -d $testdir ]; then
+    rm -r $testdir
+fi
 mkdir $testdir
 
 parentpath=$(dirname "$SRCPATH")
@@ -372,7 +374,9 @@ if [ "$FORCER" != "null" ]; then
     ADDFLAGS="$ADDFLAGS --force-refill"
 fi
 
-rm -r ./tests/out
+if [ -d ./tests/out ]; then
+    rm -r ./tests/out
+fi
 mkdir ./tests/out
 1>&2 echo "fill -v $SRCPATH2 --output "./tests/out" $ADDFLAGS --evm-bin $EVMT8N --flat-output --disable-hive"
 if [ $DEBUG != "null" ]; then
