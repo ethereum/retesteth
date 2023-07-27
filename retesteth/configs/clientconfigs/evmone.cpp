@@ -55,6 +55,9 @@ string const evmone_config = R"({
     "fillerSkipForks" : [
     ],
     "exceptions" : {
+      "PYSPECS_EXCEPTIONS" : "",
+      "Transaction without funds" : "insufficient funds for gas * price + value",
+
       "AddressTooShort" : "input string too short for common.Address",
       "AddressTooLong" : "rlp: input string too long for common.Address, decoding into (types.Transaction)(types.LegacyTx).To",
       "NonceMax" : "nonce exceeds 2^64-1",
