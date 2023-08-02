@@ -173,10 +173,11 @@ void ClientConfigFile::initWithData(DataObject const& _data)
 
     if (_data.count("tmpDir"))
     {
-        m_tmpDir = fs::path(_data.atKey("tmpDir").asString());
+        string const& tpath = _data.atKey("tmpDir").asString();
+        m_tmpDir = fs::path(tpath);
         if (!fs::exists(m_tmpDir))
         {
-            ETH_WARNING(sErrorPath + "tmpDir location not found! Switching to default.");
+            ETH_WARNING(sErrorPath + "tmpDir ('" + tpath + "') location not found! Switching to default tmpDir location (`/dev/shm` or boost tmp path)");
             m_tmpDir = "";
         }
     }
