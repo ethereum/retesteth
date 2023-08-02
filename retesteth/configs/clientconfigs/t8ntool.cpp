@@ -292,6 +292,7 @@ string const t8ntool_config = R"({
       "TR_NonceTooHigh" : "nonce too high",
       "TR_NonceTooLow" : "nonce too low",
       "TR_TypeNotSupported" : "transaction type not supported",
+      "TR_TypeNotSupportedBlob" : "blob tx used but field env.ExcessBlobGas missing",
       "TR_TipGtFeeCap": "max priority fee per gas higher than max fee per gas",
       "TR_TooShort": "typed transaction too short",
       "TR_InitCodeLimitExceeded" : "max initcode size exceeded",

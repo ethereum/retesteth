@@ -22,7 +22,7 @@ private:
     virtual void _fromData(DataObject const&) override;
     virtual size_t _rlpHeaderSize() const override { return 14; }
 
-    spVALUE m_maxFeePerDataGas;
+    spVALUE m_maxFeePerBlobGas;
     std::vector<FH32> m_blobVersionedHashes;
 };
 

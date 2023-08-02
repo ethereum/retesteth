@@ -22,7 +22,7 @@ void requireBlobTransactionScheme(spDataObject const& _data)
             {c_sender, {{DataType::String}, jsonField::Optional}},
             {c_maxFeePerGas, {{DataType::String}, jsonField::Required}},
             {c_maxPriorityFeePerGas, {{DataType::String}, jsonField::Required}},
-            {c_maxFeePerDataGas, {{DataType::String}, jsonField::Required}},
+            {c_maxFeePerBlobGas, {{DataType::String}, jsonField::Required}},
             {c_blobVersionedHashes, {{DataType::Array}, jsonField::Required}},
             {c_secretKey, {{DataType::String}, jsonField::Required}}});
 }
@@ -63,7 +63,7 @@ StateTestFillerTransaction::StateTestFillerTransaction(spDataObjectMove _data)
     try
     {
         m_rawData = _data.getPointer();
-        if (m_rawData->count(c_maxFeePerDataGas) || m_rawData->count(c_blobVersionedHashes))
+        if (m_rawData->count(c_maxFeePerBlobGas) || m_rawData->count(c_blobVersionedHashes))
             requireBlobTransactionScheme(m_rawData);
         else if (m_rawData->count(c_maxFeePerGas) || m_rawData->count(c_maxPriorityFeePerGas))
             require1559TransactionScheme(m_rawData);
@@ -149,11 +149,11 @@ StateTestFillerTransaction::StateTestFillerTransaction(spDataObjectMove _data)
             m_gasPrice = sVALUE(m_rawData->atKey(c_gasPrice));
         }
 
-        if (m_rawData->count(c_blobVersionedHashes) || m_rawData->count(c_maxFeePerDataGas))
+        if (m_rawData->count(c_blobVersionedHashes) || m_rawData->count(c_maxFeePerBlobGas))
         {
             for (auto const& el : m_rawData->atKey(c_blobVersionedHashes).getSubObjects())
                 m_blobVersionedHashes.emplace_back(FH32(el));
-            m_maxFeePerDataGas = sVALUE(m_rawData->atKey(c_maxFeePerDataGas));
+            m_maxFeePerBlobGas = sVALUE(m_rawData->atKey(c_maxFeePerBlobGas));
         }
 
 

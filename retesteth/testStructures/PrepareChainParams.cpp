@@ -64,7 +64,7 @@ spDataObject prepareGenesisSubsection(StateTestEnvBase const& _env, ParamsContex
         (*genesis).removeKey(c_baseFeePerGas);
         (*genesis).removeKey("currentRandom");
         (*genesis).removeKey(c_withdrawalsRoot);
-        (*genesis).removeKey("currentExcessDataGas");
+        (*genesis).removeKey(c_currentExcessBlobGas);
         return genesis;
     }
 
@@ -86,8 +86,8 @@ spDataObject prepareGenesisSubsection(StateTestEnvBase const& _env, ParamsContex
 
     auto cancunfy = [&_env, &shangfy](DataObject& _genesis){
         shangfy(_genesis);
-        _genesis["currentDataGasUsed"] = _env.currentDataGasUsed().asString();
-        _genesis["currentExcessDataGas"] = _env.currentExcessDataGas().asString();
+        _genesis[c_currentBlobGasUsed] = _env.currentBlobGasUsed().asString();
+        _genesis[c_currentExcessBlobGas] = _env.currentExcessBlobGas().asString();
     };
 
     if (!netIsAdditional)

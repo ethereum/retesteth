@@ -42,7 +42,7 @@ void TransactionBlob::checkDataScheme(DataObject const& _data) const
             {"maxPriorityFeePerGas", {{DataType::String}, jsonField::Required}},
 
             // Transaction type 3
-            {"maxFeePerDataGas", {{DataType::String}, jsonField::Required}},
+            {c_maxFeePerBlobGas, {{DataType::String}, jsonField::Required}},
             {"blobVersionedHashes", {{DataType::Array}, jsonField::Required}},
 
             {"publicKey", {{DataType::String}, jsonField::Optional}},  // Besu EthGetBlockBy transaction
@@ -60,7 +60,7 @@ void TransactionBlob::checkDataScheme(DataObject const& _data) const
 void TransactionBlob::_fromData(DataObject const& _data)
 {
     TransactionBaseFee::_fromData(_data);
-    m_maxFeePerDataGas = sVALUE(_data.atKey("maxFeePerDataGas"));
+    m_maxFeePerBlobGas = sVALUE(_data.atKey(c_maxFeePerBlobGas));
     for (auto const& el : _data.atKey("blobVersionedHashes").getSubObjects())
         m_blobVersionedHashes.emplace_back(FH32(el->asString()));
 }
@@ -108,7 +108,7 @@ void TransactionBlob::fromRLP(dev::RLP const& _rlp)
     m_accessList = spAccessList(new AccessList(_rlp[i++]));
 
     // read blob
-    m_maxFeePerDataGas = sVALUE(_rlp[i++]);
+    m_maxFeePerBlobGas = sVALUE(_rlp[i++]);
 
     auto const& listHashes = _rlp[i++];
     for (auto const& el : listHashes)
@@ -157,7 +157,7 @@ void TransactionBlob::streamHeader(dev::RLPStream& _s) const
 
     _s.appendRaw(accessList.out());
 
-    _s << m_maxFeePerDataGas->serializeRLP();
+    _s << m_maxFeePerBlobGas->serializeRLP();
     dev::RLPStream blobHashes(m_blobVersionedHashes.size());
     for (auto const& el : m_blobVersionedHashes)
         blobHashes.append(el.serializeRLP());
@@ -168,7 +168,7 @@ const spDataObject TransactionBlob::asDataObject(ExportOrder _order) const
 {
     spDataObject out = TransactionBaseFee::asDataObject(_order);
     (*out)["type"] = "0x03";
-    (*out)[c_maxFeePerDataGas] = m_maxFeePerDataGas->asString();
+    (*out)[c_maxFeePerBlobGas] = m_maxFeePerBlobGas->asString();
     (*out).atKeyPointer(c_blobVersionedHashes) = sDataObject(DataType::Array);
     for (auto const& el : m_blobVersionedHashes)
         (*out)[c_blobVersionedHashes].addArrayObject(sDataObject(el.asString()));

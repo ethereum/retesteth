@@ -47,8 +47,12 @@ const string c_transactionsRoot = "transactionsRoot";
 const string c_transactionsTrie = "transactionsTrie";
 const string c_baseFeePerGas = "baseFeePerGas";
 const string c_withdrawalsRoot = "withdrawalsRoot";
-const string c_excessDataGas = "excessDataGas";
-const string c_dataGasUsed = "dataGasUsed";
+const string c_excessBlobGas = "excessBlobGas";
+const string c_blobGasUsed = "blobGasUsed";
+const string c_currentExcessBlobGas = "currentExcessBlobGas";
+const string c_parentExcessBlobGas = "parentExcessBlobGas";
+const string c_currentBlobGasUsed = "currentBlobGasUsed";
+const string c_parentBlobGasUsed = "parentBlobGasUsed";
 
 // Transactions
 const string c_data = "data";
@@ -62,7 +66,7 @@ const string c_r = "r";
 const string c_s = "s";
 const string c_maxFeePerGas = "maxFeePerGas";
 const string c_maxPriorityFeePerGas = "maxPriorityFeePerGas";
-const string c_maxFeePerDataGas = "maxFeePerDataGas";
+const string c_maxFeePerBlobGas = "maxFeePerBlobGas";
 const string c_blobVersionedHashes = "blobVersionedHashes";
 const string c_accessLists = "accessLists";
 const string c_accessList = "accessList";

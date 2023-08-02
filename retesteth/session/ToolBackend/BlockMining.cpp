@@ -7,6 +7,7 @@
 #include <retesteth/helpers/TestOutputHelper.h>
 #include <retesteth/testStructures/Common.h>
 #include <testStructures/types/BlockchainTests/BlockchainTestFiller.h>
+#include <retesteth/Constants.h>
 #include <regex>
 
 using namespace std;
@@ -15,6 +16,7 @@ using namespace test;
 using namespace test::debug;
 using namespace dataobject;
 using namespace test::teststruct;
+using namespace test::constnames;
 namespace fs = boost::filesystem;
 
 namespace  {
@@ -62,21 +64,21 @@ void makeEnvBasefee(spDataObject& _envData, spBlockHeader const& _parentBlockH, 
     }
 }
 
-void makeEnvExcessDataGas(spDataObject& _envData, spBlockHeader const& _parentBlockH, spBlockHeader const& _currentBlockH)
+void makeEnvExcessBlobGas(spDataObject& _envData, spBlockHeader const& _parentBlockH, spBlockHeader const& _currentBlockH)
 {
-    if (isBlockExportExcessDataGas(_currentBlockH))
+    if (isBlockExportExcessBlobGas(_currentBlockH))
     {
         if (_currentBlockH->number() != 0)
         {
-            (*_envData).removeKey("currentExcessDataGas");
+            (*_envData).removeKey(c_currentExcessBlobGas);
             BlockHeader4844 const& h4844 = (BlockHeader4844 const&) _parentBlockH.getCContent();
-            (*_envData)["parentExcessDataGas"] = h4844.excessDataGas().asString();
-            (*_envData)["parentDataGasUsed"] = h4844.dataGasUsed().asString();
+            (*_envData)[c_parentExcessBlobGas] = h4844.excessBlobGas().asString();
+            (*_envData)[c_parentBlobGasUsed] = h4844.blobGasUsed().asString();
         }
         else
         {
-            (*_envData).renameKey("currentExcessDataGas", "parentExcessDataGas");
-            (*_envData).renameKey("currentDataGasUsed", "parentDataGasUsed");
+            (*_envData).renameKey(c_currentExcessBlobGas, string(c_parentExcessBlobGas));
+            (*_envData).renameKey(c_currentBlobGasUsed, string(c_parentBlobGasUsed));
         }
     }
 }
@@ -118,7 +120,7 @@ void BlockMining::prepareEnvFile()
         (*envData)["currentRandom"] = currentBlockH->mixHash().asString();
     makeEnvWithdrawals(envData, m_currentBlockRef);
     makeEnvBasefee(envData, parentBlockH, currentBlockH);
-    makeEnvExcessDataGas(envData, parentBlockH, currentBlockH);
+    makeEnvExcessBlobGas(envData, parentBlockH, currentBlockH);
     makeEnvOmmers(envData, m_currentBlockRef, m_chainRef);
 
     // Options Hook

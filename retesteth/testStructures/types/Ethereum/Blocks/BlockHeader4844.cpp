@@ -42,8 +42,8 @@ void BlockHeader4844::checkDataScheme(DataObject const& _data) const
             {c_sha3Uncles, {{DataType::String}, jsonField::Optional}},
             {c_uncleHash, {{DataType::String}, jsonField::Optional}},
             {c_withdrawalsRoot, {{DataType::String}, jsonField::Required}},
-            {c_dataGasUsed, {{DataType::String}, jsonField::Required}},
-            {c_excessDataGas, {{DataType::String}, jsonField::Required}},
+            {c_blobGasUsed, {{DataType::String}, jsonField::Required}},
+            {c_excessBlobGas, {{DataType::String}, jsonField::Required}},
             {"rejectedTransactions", {{DataType::Array}, jsonField::Optional}},   // EthGetBlockBy test debug field
             {"seedHash", {{DataType::String}, jsonField::Optional}},         // EthGetBlockBy aleth field
             {"boundary", {{DataType::String}, jsonField::Optional}},         // EthGetBlockBy aleth field
@@ -58,8 +58,8 @@ void BlockHeader4844::checkDataScheme(DataObject const& _data) const
 void BlockHeader4844::_fromData(DataObject const& _data)
 {
     BlockHeaderShanghai::_fromData(_data);
-    m_dataGasUsed = sVALUE(_data.atKey(c_dataGasUsed));
-    m_excessDataGas = sVALUE(_data.atKey(c_excessDataGas));
+    m_blobGasUsed = sVALUE(_data.atKey(c_blobGasUsed));
+    m_excessBlobGas = sVALUE(_data.atKey(c_excessBlobGas));
 }
 
 size_t BlockHeader4844::_fromRLP(dev::RLP const& _rlp)
@@ -72,10 +72,10 @@ size_t BlockHeader4844::_fromRLP(dev::RLP const& _rlp)
     // 5 - receiptTrie          // 13 - mixHash
     // 6 - bloom                // 14 - nonce
     // 7 - difficulty           // 15 - baseFee
-    // 16 - withdrawals root    // 17 - excessDataGas
+    // 16 - withdrawals root    // 17 - excessBlobGas
     size_t i = BlockHeaderShanghai::_fromRLP(_rlp);
-    m_dataGasUsed = sVALUE(_rlp[i++]);
-    m_excessDataGas = sVALUE(_rlp[i++]);
+    m_blobGasUsed = sVALUE(_rlp[i++]);
+    m_excessBlobGas = sVALUE(_rlp[i++]);
     return i;
 }
 
@@ -88,16 +88,16 @@ BlockHeader4844::BlockHeader4844(dev::RLP const& _rlp)
 spDataObject BlockHeader4844::asDataObject() const
 {
     spDataObject out = BlockHeaderShanghai::asDataObject();
-    (*out)[c_dataGasUsed] = m_dataGasUsed->asString();
-    (*out)[c_excessDataGas] = m_excessDataGas->asString();
+    (*out)[c_blobGasUsed] = m_blobGasUsed->asString();
+    (*out)[c_excessBlobGas] = m_excessBlobGas->asString();
     return out;
 }
 
 const RLPStream BlockHeader4844::asRLPStream() const
 {
     RLPStream header = BlockHeaderShanghai::asRLPStream();
-    header << m_dataGasUsed->serializeRLP();
-    header << m_excessDataGas->serializeRLP();
+    header << m_blobGasUsed->serializeRLP();
+    header << m_excessBlobGas->serializeRLP();
     return header;
 }
 

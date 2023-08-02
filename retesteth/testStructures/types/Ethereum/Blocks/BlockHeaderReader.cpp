@@ -13,14 +13,14 @@ namespace  {
 
 bool isHeader4844(DataObject const& _filledData)
 {
-    if (_filledData.count(c_excessDataGas))
+    if (_filledData.count(c_excessBlobGas))
         return true;
     return false;
 }
 
 bool isHeaderShanghai(DataObject const& _filledData)
 {
-    if (_filledData.count(c_withdrawalsRoot) && !_filledData.count(c_excessDataGas))
+    if (_filledData.count(c_withdrawalsRoot) && !_filledData.count(c_excessBlobGas))
         return true;
     return false;
 }
@@ -164,7 +164,7 @@ bool isBlockExportCurrentRandom(BlockHeader const& _header)
            || _header.type() == BlockType::BlockHeader4844;
 }
 
-bool isBlockExportExcessDataGas(BlockHeader const& _header)
+bool isBlockExportExcessBlobGas(BlockHeader const& _header)
 {
     return _header.type() == BlockType::BlockHeader4844;
 }

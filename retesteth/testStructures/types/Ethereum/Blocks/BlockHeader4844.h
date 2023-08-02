@@ -15,10 +15,10 @@ struct BlockHeader4844 : BlockHeaderShanghai
     virtual dev::RLPStream const asRLPStream() const override;
     virtual BlockType type() const override { return BlockType::BlockHeader4844; }
 
-    VALUE const& excessDataGas() const { return m_excessDataGas; }
-    void setExcessDataGas(VALUE const& _v) { m_excessDataGas = spVALUE(_v.copy()); }
-    VALUE const& dataGasUsed() const { return m_dataGasUsed; }
-    void setDataGasUsed(VALUE const& _v) { m_dataGasUsed = spVALUE(_v.copy()); }
+    VALUE const& excessBlobGas() const { return m_excessBlobGas; }
+    void setExcessBlobGas(VALUE const& _v) { m_excessBlobGas = spVALUE(_v.copy()); }
+    VALUE const& blobGasUsed() const { return m_blobGasUsed; }
+    void setBlobGasUsed(VALUE const& _v) { m_blobGasUsed = spVALUE(_v.copy()); }
 
     static BlockHeader4844 const& castFrom(spBlockHeader const& _from);
     static BlockHeader4844& castFrom(BlockHeader& _from);
@@ -29,8 +29,8 @@ protected:
     virtual size_t _fromRLP(dev::RLP const&) override;
     virtual size_t _rlpHeaderSize() const override { return 19; }
 
-    spVALUE m_excessDataGas;
-    spVALUE m_dataGasUsed;
+    spVALUE m_excessBlobGas;
+    spVALUE m_blobGasUsed;
     BlockHeader4844(){};
 };
 

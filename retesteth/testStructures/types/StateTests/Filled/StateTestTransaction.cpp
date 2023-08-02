@@ -35,7 +35,7 @@ void requireBlobTransactionScheme(DataObject const& _data)
             {c_to, {{DataType::String}, jsonField::Required}},
             {c_maxFeePerGas, {{DataType::String}, jsonField::Required}},
             {c_maxPriorityFeePerGas, {{DataType::String}, jsonField::Required}},
-            {c_maxFeePerDataGas, {{DataType::String}, jsonField::Required}},
+            {c_maxFeePerBlobGas, {{DataType::String}, jsonField::Required}},
             {c_blobVersionedHashes, {{DataType::Array}, jsonField::Required}},
             {c_secretKey, {{DataType::String}, jsonField::Required}},
             {c_sender, {{DataType::String}, jsonField::Optional}}
@@ -66,10 +66,10 @@ StateTestTransaction::StateTestTransaction(DataObject const& _data)
     {
         if (_data.count(c_maxFeePerGas) || _data.count(c_maxPriorityFeePerGas))
         {
-            if (_data.count(c_maxFeePerDataGas) || _data.count(c_blobVersionedHashes))
+            if (_data.count(c_maxFeePerBlobGas) || _data.count(c_blobVersionedHashes))
             {
                 requireBlobTransactionScheme(_data);
-                m_maxFeePerDataGas = sVALUE(_data.atKey(c_maxFeePerDataGas));
+                m_maxFeePerBlobGas = sVALUE(_data.atKey(c_maxFeePerBlobGas));
                 for (auto const& el : _data.atKey(c_blobVersionedHashes).getSubObjects())
                     m_blobVersionedHashes.emplace_back(FH32(el));
 

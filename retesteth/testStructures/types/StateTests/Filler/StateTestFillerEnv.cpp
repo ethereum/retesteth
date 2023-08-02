@@ -6,6 +6,7 @@
 using namespace std;
 using namespace dataobject;
 using namespace test::teststruct;
+using namespace test::teststruct::constnames;
 namespace
 {
 void requireStateTestsFillerEnvScheme(spDataObject const& _data)
@@ -18,8 +19,8 @@ void requireStateTestsFillerEnvScheme(spDataObject const& _data)
          {"currentTimestamp", {{DataType::String}, jsonField::Required}},
          {"currentBaseFee", {{DataType::String}, jsonField::Optional}},
          {"currentRandom", {{DataType::String}, jsonField::Optional}},
-         {"parentExcessDataGas", {{DataType::String}, jsonField::Optional}},
-         {"parentDataGasUsed", {{DataType::String}, jsonField::Optional}},
+         {c_parentExcessBlobGas, {{DataType::String}, jsonField::Optional}},
+         {c_parentBlobGasUsed, {{DataType::String}, jsonField::Optional}},
          {"previousHash", {{DataType::String}, jsonField::Required}}});
 }
 
@@ -93,12 +94,12 @@ void StateTestFillerEnv::initializeFields(spDataObject const& _data)
     m_currentWithdrawalsRoot = sFH32(DataObject(C_WITHDRAWALS_EMPTY_ROOT));
 
     // Cancun
-    m_currentDataGasUsed = sVALUE(0);
-    m_currentExcessDataGas = sVALUE(0);
-    if (_data->count("parentExcessDataGas"))
-        m_currentExcessDataGas = sVALUE(_data->atKey("parentExcessDataGas"));
-    if (_data->count("parentDataGasUsed"))
-        m_currentDataGasUsed = sVALUE(_data->atKey("parentDataGasUsed"));
+    m_currentBlobGasUsed = sVALUE(0);
+    m_currentExcessBlobGas = sVALUE(0);
+    if (_data->count(c_parentExcessBlobGas))
+        m_currentExcessBlobGas = sVALUE(_data->atKey(c_parentExcessBlobGas));
+    if (_data->count(c_parentBlobGasUsed))
+        m_currentBlobGasUsed = sVALUE(_data->atKey(c_parentBlobGasUsed));
 }
 
 spDataObject const& StateTestFillerEnv::asDataObject() const
