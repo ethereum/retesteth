@@ -67,7 +67,7 @@ bool isHeaderShanghai(dev::RLP const& _rlp)
 
 bool isHeader4844(dev::RLP const& _rlp)
 {
-    return (_rlp.itemCount() == 19);
+    return (_rlp.itemCount() == 20);
 }
 
 

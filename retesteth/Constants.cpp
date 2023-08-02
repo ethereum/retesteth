@@ -47,12 +47,14 @@ const string c_transactionsRoot = "transactionsRoot";
 const string c_transactionsTrie = "transactionsTrie";
 const string c_baseFeePerGas = "baseFeePerGas";
 const string c_withdrawalsRoot = "withdrawalsRoot";
+const string c_beaconRoot = "beaconRoot";
 const string c_excessBlobGas = "excessBlobGas";
 const string c_blobGasUsed = "blobGasUsed";
 const string c_currentExcessBlobGas = "currentExcessBlobGas";
 const string c_parentExcessBlobGas = "parentExcessBlobGas";
 const string c_currentBlobGasUsed = "currentBlobGasUsed";
 const string c_parentBlobGasUsed = "parentBlobGasUsed";
+const string c_currentBeaconRoot = "currentBeaconRoot";
 
 // Transactions
 const string c_data = "data";

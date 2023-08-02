@@ -147,6 +147,7 @@ void require4844BlockchainHeader(spDataObject const& _data)
             {c_withdrawalsRoot, {{DataType::String}, jsonField::Required}},
             {c_blobGasUsed, {{DataType::String}, jsonField::Required}},
             {c_excessBlobGas, {{DataType::String}, jsonField::Required}},
+            {c_beaconRoot, {{DataType::String}, jsonField::Required}},
             {c_sha3Uncles, {{DataType::String}, jsonField::Optional}},
             {c_uncleHash, {{DataType::String}, jsonField::Optional}}});
 }
@@ -184,6 +185,8 @@ spDataObject formatRawDataToRPCformat(spDataObject& _data)
         (*out).atKeyPointer(c_currentExcessBlobGas) = (*_data).atKeyPointerUnsafe(c_excessBlobGas);
     if (_data->count(c_blobGasUsed))
         (*out).atKeyPointer(c_currentBlobGasUsed) = (*_data).atKeyPointerUnsafe(c_blobGasUsed);
+    if (_data->count(c_beaconRoot))
+        (*out).atKeyPointer(c_currentBeaconRoot) = (*_data).atKeyPointerUnsafe(c_beaconRoot);
     return out;
 }
 
@@ -220,12 +223,14 @@ void BlockchainTestFillerEnv::initializeCommonFields(spDataObject const& _data, 
     m_currentWithdrawalsRoot = sFH32(DataObject(C_WITHDRAWALS_EMPTY_ROOT));
     m_currentBlobGasUsed = sVALUE(0);
     m_currentExcessBlobGas = sVALUE(0);
+    m_currentBeaconRoot = spFH32(FH32::zero().copy());
 }
 
 void BlockchainTestFillerEnv4844::initialize4844Fields(DataObject const& _data)
 {
     m_currentExcessBlobGas = sVALUE(_data.atKey(c_excessBlobGas));
     m_currentBlobGasUsed = sVALUE(_data.atKey(c_blobGasUsed));
+    m_currentBeaconRoot = sFH32(_data.atKey(c_beaconRoot));
 }
 
 

@@ -19,6 +19,8 @@ struct BlockHeader4844 : BlockHeaderShanghai
     void setExcessBlobGas(VALUE const& _v) { m_excessBlobGas = spVALUE(_v.copy()); }
     VALUE const& blobGasUsed() const { return m_blobGasUsed; }
     void setBlobGasUsed(VALUE const& _v) { m_blobGasUsed = spVALUE(_v.copy()); }
+    FH32 const& beaconRoot() const { return m_beaconRoot; }
+    void setBeaconRoot(FH32 const& _v) { m_beaconRoot = spFH32(_v.copy()); }
 
     static BlockHeader4844 const& castFrom(spBlockHeader const& _from);
     static BlockHeader4844& castFrom(BlockHeader& _from);
@@ -27,10 +29,11 @@ protected:
     virtual void checkDataScheme(DataObject const&) const override;
     virtual void _fromData(DataObject const&) override;
     virtual size_t _fromRLP(dev::RLP const&) override;
-    virtual size_t _rlpHeaderSize() const override { return 19; }
+    virtual size_t _rlpHeaderSize() const override { return 20; }
 
     spVALUE m_excessBlobGas;
     spVALUE m_blobGasUsed;
+    spFH32 m_beaconRoot;
     BlockHeader4844(){};
 };
 

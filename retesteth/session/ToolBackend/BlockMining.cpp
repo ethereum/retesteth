@@ -68,12 +68,16 @@ void makeEnvExcessBlobGas(spDataObject& _envData, spBlockHeader const& _parentBl
 {
     if (isBlockExportExcessBlobGas(_currentBlockH))
     {
+        BlockHeader4844 const& ch4844 = (BlockHeader4844 const&) _currentBlockH.getCContent();
+        (*_envData)[c_beaconRoot] = ch4844.beaconRoot().asString();
+
         if (_currentBlockH->number() != 0)
         {
             (*_envData).removeKey(c_currentExcessBlobGas);
             BlockHeader4844 const& h4844 = (BlockHeader4844 const&) _parentBlockH.getCContent();
             (*_envData)[c_parentExcessBlobGas] = h4844.excessBlobGas().asString();
             (*_envData)[c_parentBlobGasUsed] = h4844.blobGasUsed().asString();
+
         }
         else
         {

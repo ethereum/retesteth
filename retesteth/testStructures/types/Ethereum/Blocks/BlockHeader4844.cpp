@@ -44,6 +44,7 @@ void BlockHeader4844::checkDataScheme(DataObject const& _data) const
             {c_withdrawalsRoot, {{DataType::String}, jsonField::Required}},
             {c_blobGasUsed, {{DataType::String}, jsonField::Required}},
             {c_excessBlobGas, {{DataType::String}, jsonField::Required}},
+            {c_beaconRoot, {{DataType::String}, jsonField::Required}},
             {"rejectedTransactions", {{DataType::Array}, jsonField::Optional}},   // EthGetBlockBy test debug field
             {"seedHash", {{DataType::String}, jsonField::Optional}},         // EthGetBlockBy aleth field
             {"boundary", {{DataType::String}, jsonField::Optional}},         // EthGetBlockBy aleth field
@@ -60,6 +61,7 @@ void BlockHeader4844::_fromData(DataObject const& _data)
     BlockHeaderShanghai::_fromData(_data);
     m_blobGasUsed = sVALUE(_data.atKey(c_blobGasUsed));
     m_excessBlobGas = sVALUE(_data.atKey(c_excessBlobGas));
+    m_beaconRoot = sFH32(_data.atKey(c_beaconRoot));
 }
 
 size_t BlockHeader4844::_fromRLP(dev::RLP const& _rlp)
@@ -71,11 +73,13 @@ size_t BlockHeader4844::_fromRLP(dev::RLP const& _rlp)
     // 4 - transactionTrie      // 12 - extraData
     // 5 - receiptTrie          // 13 - mixHash
     // 6 - bloom                // 14 - nonce
-    // 7 - difficulty           // 15 - baseFee
+    // 7 - difficulty            // 15 - baseFee
     // 16 - withdrawals root    // 17 - excessBlobGas
+    // 18 - BlobGasUsed         // 19 - beaconRoot
     size_t i = BlockHeaderShanghai::_fromRLP(_rlp);
     m_blobGasUsed = sVALUE(_rlp[i++]);
     m_excessBlobGas = sVALUE(_rlp[i++]);
+    m_beaconRoot = sFH32(_rlp[i++]);
     return i;
 }
 
@@ -90,6 +94,7 @@ spDataObject BlockHeader4844::asDataObject() const
     spDataObject out = BlockHeaderShanghai::asDataObject();
     (*out)[c_blobGasUsed] = m_blobGasUsed->asString();
     (*out)[c_excessBlobGas] = m_excessBlobGas->asString();
+    (*out)[c_beaconRoot] = m_beaconRoot->asString();
     return out;
 }
 
@@ -98,6 +103,7 @@ const RLPStream BlockHeader4844::asRLPStream() const
     RLPStream header = BlockHeaderShanghai::asRLPStream();
     header << m_blobGasUsed->serializeRLP();
     header << m_excessBlobGas->serializeRLP();
+    header << m_beaconRoot->serializeRLP();
     return header;
 }
 

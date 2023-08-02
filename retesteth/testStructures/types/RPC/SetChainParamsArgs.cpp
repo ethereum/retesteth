@@ -123,7 +123,8 @@ SetChainParamsArgsGenesis4844::SetChainParamsArgsGenesis4844(DataObject const& _
             {"nonce", {{DataType::String}, jsonField::Required}},
             {"mixHash", {{DataType::String}, jsonField::Required}},
             {c_currentBlobGasUsed, {{DataType::String}, jsonField::Required}},
-            {c_currentExcessBlobGas, {{DataType::String}, jsonField::Required}}
+            {c_currentExcessBlobGas, {{DataType::String}, jsonField::Required}},
+            {c_currentBeaconRoot, {{DataType::String}, jsonField::Required}}
         });
 }
 
@@ -163,6 +164,7 @@ spDataObject SetChainParamsArgs::asDataObject() const
             BlockHeader4844 const& newbl = BlockHeader4844::castFrom(m_genesis);
             (*out)["genesis"][c_currentExcessBlobGas] = newbl.excessBlobGas().asString();
             (*out)["genesis"][c_currentBlobGasUsed] = newbl.blobGasUsed().asString();
+            (*out)["genesis"][c_currentBeaconRoot] = newbl.beaconRoot().asString();
         }
     }
 
@@ -248,6 +250,7 @@ spDataObject SetChainParamsArgsGenesis4844::_constructBlockHeader() const
     (*header)[c_withdrawalsRoot] = m_dataRef.atKey(c_withdrawalsRoot).asString();
     (*header)[c_blobGasUsed] =  m_dataRef.atKey(c_currentBlobGasUsed).asString();
     (*header)[c_excessBlobGas] = m_dataRef.atKey(c_currentExcessBlobGas).asString();
+    (*header)[c_beaconRoot] = m_dataRef.atKey(c_currentBeaconRoot).asString();
     return header;
 }
 

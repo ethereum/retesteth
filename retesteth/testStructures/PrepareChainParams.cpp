@@ -88,6 +88,7 @@ spDataObject prepareGenesisSubsection(StateTestEnvBase const& _env, ParamsContex
         shangfy(_genesis);
         _genesis[c_currentBlobGasUsed] = _env.currentBlobGasUsed().asString();
         _genesis[c_currentExcessBlobGas] = _env.currentExcessBlobGas().asString();
+        _genesis[c_currentBeaconRoot] = _env.currentBeaconRoot().asString();
     };
 
     if (!netIsAdditional)

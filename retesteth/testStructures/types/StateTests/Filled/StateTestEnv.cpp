@@ -22,6 +22,7 @@ void requireStateTestEnvScheme(DataObject const& _data)
             {"currentTimestamp", {{DataType::String}, jsonField::Required}},
             {c_parentExcessBlobGas, {{DataType::String}, jsonField::Optional}},
             {c_parentBlobGasUsed, {{DataType::String}, jsonField::Optional}},
+            {c_currentBeaconRoot, {{DataType::String}, jsonField::Optional}},
             {"previousHash", {{DataType::String}, jsonField::Required}}});
 }
 
@@ -72,6 +73,9 @@ void StateTestEnv::initializeFields(DataObject const& _data)
     m_currentBlobGasUsed = sVALUE(0);
     if (_data.count(c_parentBlobGasUsed))
         m_currentBlobGasUsed = sVALUE(_data.atKey(c_parentBlobGasUsed));
+    m_currentBeaconRoot = spFH32(FH32::zero().copy());
+    if (_data.count(c_currentBeaconRoot))
+        m_currentBeaconRoot = sFH32(_data.atKey(c_currentBeaconRoot));
 }
 
 

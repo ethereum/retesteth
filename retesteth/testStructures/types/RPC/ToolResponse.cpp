@@ -21,6 +21,7 @@ ToolResponse::ToolResponse(DataObject const& _data)
             {c_withdrawalsRoot, {{DataType::String}, jsonField::Optional}},
             {"rejected", {{DataType::Array}, jsonField::Optional}},
             {c_gasUsed, {{DataType::String}, jsonField::Optional}},
+            {c_blobGasUsed, {{DataType::String, DataType::Null}, jsonField::Optional}},
             {"receipts", {{DataType::Array}, jsonField::Required}}});
 
     m_stateRoot = sFH32(_data.atKey(c_stateRoot));
@@ -40,8 +41,11 @@ ToolResponse::ToolResponse(DataObject const& _data)
     m_currentExcessBlobGas = sVALUE(0);
     if (_data.count(c_excessBlobGas))
         m_currentExcessBlobGas = sVALUE(_data.atKey(c_excessBlobGas));
+
     m_currentBlobGasUsed = sVALUE(0);
-    if (_data.count(c_blobGasUsed))
+    if (_data.count(c_currentBlobGasUsed) && _data.atKey(c_currentBlobGasUsed).type() != DataType::Null)
+        m_currentBlobGasUsed = sVALUE(_data.atKey(c_currentBlobGasUsed));
+    if (_data.count(c_blobGasUsed) && _data.atKey(c_blobGasUsed).type() != DataType::Null)
         m_currentBlobGasUsed = sVALUE(_data.atKey(c_blobGasUsed));
 
     m_withdrawalsRoot = spFH32(C_FH32_ZERO.copy());
