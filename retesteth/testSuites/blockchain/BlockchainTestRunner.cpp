@@ -336,9 +336,16 @@ void BlockchainTestRunner::performFinalStateDiff()
     auto const& statediff = Options::get().statediff;
     if (statediff.initialized() && !statediff.isBlockSelected)
     {
-        auto const diff = test::stateDiff(m_test.Pre(), getRemoteState(m_session))->asJson();
-        ETH_DC_MESSAGE(DC::STATE,
-            "\nRunning BC test State Diff:" + TestOutputHelper::get().testInfo().errorDebug() + cDefault + " \n" + diff);
+        try
+        {
+            auto const diff = test::stateDiff(m_test.Pre(), getRemoteState(m_session))->asJson();
+            ETH_DC_MESSAGE(DC::STATE,
+                "\nRunning BC test State Diff:" + TestOutputHelper::get().testInfo().errorDebug() + cDefault + " \n" + diff);
+        }
+        catch (StateTooBig const& _ex)
+        {
+            ETH_WARNING("Could not print --statediff as the state reported is too big!");
+        }
     }
 }
 

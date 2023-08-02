@@ -298,6 +298,7 @@ string const t8ntool_config = R"({
       "TR_InitCodeLimitExceeded" : "max initcode size exceeded",
       "TR_BlobDecodeError" : "expected input list for types.BlobTx",
       "TR_EMPTYBLOB" : "rlp: input string too short for common.Address",
+      "TR_BLOBVERSION_INVALID" : "unversioned blob hash",
       "1559BaseFeeTooLarge": "TransactionBaseFee convertion error: VALUE  >u256",
       "1559PriorityFeeGreaterThanBaseFee": "maxFeePerGas \u003c maxPriorityFeePerGas",
       "2930AccessListAddressTooLong": "rlp: input string too long for common.Address, decoding into (types.Transaction)(types.AccessListTx).AccessList[0].Address",
