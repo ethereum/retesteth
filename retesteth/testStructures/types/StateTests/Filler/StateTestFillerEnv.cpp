@@ -119,6 +119,12 @@ spDataObject const& StateTestFillerEnv::asDataObject() const
     if (!raw->count("currentDifficulty"))
         (*raw)["currentDifficulty"] = m_currentDifficulty.getCContent().asString();
 
+    if (!raw->count("currentWithdrawalsRoot"))
+        (*raw)["currentWithdrawalsRoot"] = m_currentWithdrawalsRoot.getCContent().asString();
+
+    if (!raw->count("currentBeaconRoot"))
+        (*raw)["currentBeaconRoot"] = m_currentBeaconRoot.getCContent().asString();
+
     return raw;
 }
 

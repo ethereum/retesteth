@@ -417,6 +417,8 @@ string getTestTArg(fs::path const& _cwd, string const& arg)
 
     if (tArg == "BlockchainTests/InvalidBlocks/bcExpectSection")
         tArg = "BlockchainTests/Retesteth/bcExpectSection";
+    if (tArg == "GeneralStateTests/stExpectSection")
+        tArg = "GeneralStateTests/Retesteth";
     return tArg;
 }
 
