@@ -78,9 +78,18 @@ bool tryCustomCompiler(string const& _code, string& _compiledCode)
             char afterPrefix = _code[pos + compiler.first.length()];
             if ((afterPrefix == ' ' || afterPrefix == '\n'))
             {
-                string const customCode = _code.substr(pos + compiler.first.length() + 1);
+                size_t codeStartPos = pos + compiler.first.length() + 1;
+                string arg;
+                if (afterPrefix == ' ')
+                {
+                    size_t i = codeStartPos;
+                    for (; i < _code.size() && _code.at(i) != '\n' && _code.at(i) != ' '; i++)
+                        arg += _code.at(i);
+                    codeStartPos = codeStartPos + arg.size();
+                }
+                string const customCode = _code.substr(codeStartPos);
                 fs::path path(fs::temp_directory_path() / fs::unique_path());
-                string cmd = compiler.second.string() + " " + path.string();
+                string cmd = compiler.second.string() + " " + path.string() + " " + arg;
                 writeFile(path.string(), customCode);
 
                 int exitCode;
