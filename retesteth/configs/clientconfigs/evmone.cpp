@@ -119,7 +119,7 @@ string const evmone_config = R"({
       "UncleIsBrother" : "Uncle is brother!",
       "OutOfGas" : "out of gas",
       "SenderNotEOA" : "sender not an eoa:",
-      "IntrinsicGas" : "t8ntool didn't return a transaction with hash",
+      "IntrinsicGas" : "intrinsic gas too low:",
       "ExtraDataIncorrectDAO" : "BlockHeader require Dao ExtraData!",
       "InvalidTransactionVRS" : "t8ntool didn't return a transaction with hash",
       "BLOCKHEADER_VALUE_TOOLARGE" : "Blockheader parse error: VALUE  >u256",
@@ -231,6 +231,7 @@ string const evmone_config = R"({
       "TR_NoFundsValue" : "insufficient funds for transfer",
       "TR_FeeCapLessThanBlocks" : "max fee per gas less than block base fee",
       "TR_GasLimitReached" : "gas limit reached",
+      "TR_FeeCapLessThanBlocksORGasLimitReached" : "gas limit reached",
       "TR_NonceTooHigh" : "nonce too high",
       "TR_NonceTooLow" : "nonce too low",
       "TR_TypeNotSupported" : "transaction type not supported",
@@ -269,7 +270,9 @@ string const evmone_config = R"({
       "EOF_UndefinedInstruction": "err: undefined_instruction",
       "EOF_ZeroSectionSize": "err: zero_section_size",
       "EOF_NonEmptyStackOnTerminatingInstruction": "err: non_empty_stack_on_terminating_instruction",
-      "EOF_InvalidSectionBodiesSize": "err: invalid_section_bodies_size"
+      "EOF_InvalidSectionBodiesSize": "err: invalid_section_bodies_size",
+      "PostMergeUncleHashIsNotEmpty" : "block.uncleHash != empty",
+      "PostMergeDifficultyIsNot0" : "block.difficulty must be 0"
     }
 })";
 
