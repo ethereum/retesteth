@@ -814,4 +814,25 @@ bool isBoostSuite(std::string const& suiteName)
     return true;
 }
 
+std::vector<std::string> parseArgsFromStringIntoArray(std::string const& _stream, size_t& _pos, const char _delim)
+{
+    string arg;
+    std::vector<std::string> args;
+    for (; _pos < _stream.size()
+           && _stream.at(_pos) != '\n'
+           && _stream.at(_pos) != '{'; _pos++)
+    {
+        if (_stream.at(_pos) == _delim)
+        {
+            args.emplace_back(arg);
+            arg = string();
+            continue;
+        }
+        arg += _stream.at(_pos);
+    }
+    if (!arg.empty())
+        args.emplace_back(arg);
+    return args;
+}
+
 }//namespace

@@ -93,6 +93,8 @@ bool inArray(std::list<T> const& _array, const T& _val)
     return true;
 }
 
+std::vector<std::string> parseArgsFromStringIntoArray(std::string const& _stream, size_t& _pos, const char _delim = ' ');
+
 /// Explode string into array of strings by `delim`
 std::vector<std::string> explode(std::string const& s, char delim);
 std::set<std::string> explodeIntoSet(std::string const& s, char delim);

@@ -82,10 +82,9 @@ bool tryCustomCompiler(string const& _code, string& _compiledCode)
                 string arg;
                 if (afterPrefix == ' ')
                 {
-                    size_t i = codeStartPos;
-                    for (; i < _code.size() && _code.at(i) != '\n' && _code.at(i) != ' '; i++)
-                        arg += _code.at(i);
-                    codeStartPos = codeStartPos + arg.size();
+                    auto const argArr = parseArgsFromStringIntoArray(_code, codeStartPos);
+                    for (auto const& el : argArr)
+                        arg += el + " ";
                 }
                 string const customCode = _code.substr(codeStartPos);
                 fs::path path(fs::temp_directory_path() / fs::unique_path());
@@ -203,6 +202,9 @@ string replaceCode(string const& _code, solContracts const& _preSolidity)
     bool customCompilerWorked = tryCustomCompiler(_code, compiledCode);
     if (!customCompilerWorked)
         tryKnownCompilers(_code, _preSolidity, compiledCode);
+
+    if (compiledCode == "0x")
+        ETH_WARNING("replaceCode returned empty bytecode `0x` tying to compile " + TestOutputHelper::get().testInfo().errorDebug() +  "\n" + _code);
 
     if (_code.size() > 0)
         ETH_FAIL_REQUIRE_MESSAGE(
