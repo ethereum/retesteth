@@ -285,7 +285,7 @@ string const t8ntool_config = R"({
       "MergeBlockImportImpossible" : "Trying to import Merge block on top of Shanghai block after transition",
       "ShanghaiBlockImportImpossible" : "Trying to import Shanghai block on top of block that is not Shanghai!!",
       "TR_IntrinsicGas" : "intrinsic gas too low:",
-      "TR_RLP_WRONGVALUE" : "Unsigned integer expected",
+      "TR_RLP_WRONGVALUE" : "insufficient funds for gas",
       "TR_NoFunds" : "insufficient funds for gas * price + value",
       "TR_NoFundsX" : "insufficient funds for gas * price + value",
       "TR_NoFundsValue" : "insufficient funds for transfer",
