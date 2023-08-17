@@ -69,7 +69,7 @@ void makeEnvExcessBlobGas(spDataObject& _envData, spBlockHeader const& _parentBl
     if (isBlockExportExcessBlobGas(_currentBlockH))
     {
         BlockHeader4844 const& ch4844 = BlockHeader4844::castFrom(_currentBlockH);
-        (*_envData)["beaconRoot"] = ch4844.parentBeaconBlockRoot().asString();
+        (*_envData)[c_parentBeaconBlockRoot] = ch4844.parentBeaconBlockRoot().asString();
 
         if (_currentBlockH->number() != 0)
         {
