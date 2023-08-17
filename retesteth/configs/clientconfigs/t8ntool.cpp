@@ -118,7 +118,10 @@ string const t8ntool_config = R"({
       "PYSPECS_EXCEPTIONS" : "",
       "Transaction without funds" : "insufficient funds for gas * price + value",
       "invalid excess blob gas" : "Error in field: excessBlobGas",
+      "invalid excessBlobGas" : "Error in field: excessBlobGas",
       "invalid blob gas used" : "Error in field: blobGasUsed",
+      "Invalid params" : "unknown block type",
+      "invalid transaction" : "expected to have exactly 14 elements",
 
       "AddressTooShort" : "input string too short for common.Address",
       "AddressTooLong" : "rlp: input string too long for common.Address, decoding into (types.Transaction)(types.LegacyTx).To",
@@ -364,8 +367,8 @@ FORCER=$6
 DEBUG=$7
 
 genUID=$(uuidgen)
-testdir="./tests/tmptest_${genUID:0:8}"
-testout="./tests/out_${genUID:0:8}"
+testdir="./tests/tmptest_${genUID//-/_}"
+testout="./tests/out_${genUID//-/_}"
 
 if [ -d $testdir ]; then
     rm -r $testdir

@@ -53,7 +53,7 @@ void updatePythonTestInfo(TestFileData& _testData, fs::path const& _pythonFiller
         fs::path const outputTestFilePath = _filledFolder / (generatedTest + ".json");
         string const res = dev::contentsString(outputTestFilePath);
         if (res.empty())
-            ETH_ERROR_MESSAGE("Can't open expected python produced test: " + outputTestFilePath.string());
+            ETH_WARNING("!!! Can't open expected python produced test (Check that it is marked as skipped in .py): " + outputTestFilePath.string());
         spDataObject output = dataobject::ConvertJsoncppStringToData(res);
         bool update =
             addClientInfoIfUpdate(output.getContent(), _pythonFiller, _testData.hash, outputTestFilePath);
