@@ -168,7 +168,25 @@ vector<string> const& getGeneratedTestNames(fs::path const& _filler)
             if (endSelectionPos != string::npos)
             {
                 string pythonTestname = pythonSrc.substr(foundPos + 9, endSelectionPos - foundPos - 9);
-                generatedTestNames.emplace_back(pythonTestname);
+
+                size_t foundSkipPos = pythonSrc.rfind("@pytest.mark.skip", foundPos);
+                if (foundSkipPos != string::npos)
+                {
+                    size_t foundPreviuosTest = pythonSrc.rfind("def test_", foundPos - 1);
+                    if (foundPreviuosTest != string::npos)
+                    {
+                        if (foundPreviuosTest <= foundSkipPos)
+                        {
+                            ETH_WARNING("Pyspec marked test as skipped: " + pythonTestname);
+                        }
+                        else
+                            generatedTestNames.emplace_back(pythonTestname);
+                    }
+                    else
+                        ETH_WARNING("Pyspec marked test as skipped: " + pythonTestname);
+                }
+                else
+                    generatedTestNames.emplace_back(pythonTestname);
             }
             pos = foundPos + 1;
             foundPos = pythonSrc.find("def test_", pos);
