@@ -397,7 +397,7 @@ if [ $DEBUG != "null" ]; then
     1>&2 fill -v $SRCPATH2 --output "$testout" $ADDFLAGS --evm-bin $EVMT8N --flat-output --disable-hive
 else
     out=$(fill -v $SRCPATH2 --output "$testout" $ADDFLAGS --evm-bin $EVMT8N --flat-output --disable-hive)
-    if [[ "$out" == *"failed"* ]]; then
+    if [[ "$out" == *" failed"* ]]; then
       1>&2 echo "./retesteth/pyspecsStart.sh Pyspec test generation failed (use --verbosity PYSPEC for details) "
       exit 1
     fi
