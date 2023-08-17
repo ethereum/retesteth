@@ -258,7 +258,7 @@ if [ -z "${BESU_PATH}" ]; then
   1>&2 echo "$SNAME ERROR: Env variable BESU_PATH is either empty or not set!"
 else
   if [ -d "${BESU_PATH}" ]; then
-    1>&2 echo "$SNAME Using ethereumjs path: '$BESU_PATH'"
+    1>&2 echo "$SNAME Using besu path: '$BESU_PATH'"
   else
     echo "$SNAME ERROR: Path '$BESU_PATH' does not exist in the file system"
   fi
