@@ -19,8 +19,8 @@ struct BlockHeader4844 : BlockHeaderShanghai
     void setExcessBlobGas(VALUE const& _v) { m_excessBlobGas = spVALUE(_v.copy()); }
     VALUE const& blobGasUsed() const { return m_blobGasUsed; }
     void setBlobGasUsed(VALUE const& _v) { m_blobGasUsed = spVALUE(_v.copy()); }
-    FH32 const& beaconRoot() const { return m_beaconRoot; }
-    void setBeaconRoot(FH32 const& _v) { m_beaconRoot = spFH32(_v.copy()); }
+    FH32 const& parentBeaconBlockRoot() const { return m_parentBeaconBlockRoot; }
+    void setParentBeaconBlockRoot(FH32 const& _v) { m_parentBeaconBlockRoot = spFH32(_v.copy()); }
 
     static BlockHeader4844 const& castFrom(spBlockHeader const& _from);
     static BlockHeader4844& castFrom(BlockHeader& _from);
@@ -33,7 +33,7 @@ protected:
 
     spVALUE m_excessBlobGas;
     spVALUE m_blobGasUsed;
-    spFH32 m_beaconRoot;
+    spFH32 m_parentBeaconBlockRoot;
     BlockHeader4844(){};
 };
 

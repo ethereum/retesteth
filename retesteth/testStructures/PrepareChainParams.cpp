@@ -120,6 +120,12 @@ spDataObject prepareGenesisSubsection(StateTestEnvBase const& _env, ParamsContex
             londify(genesis.getContent());
             mergify(genesis.getContent());
         }
+        else if (_net == FORK("ShanghaiToCancunAtTime15k"))
+        {
+            londify(genesis.getContent());
+            mergify(genesis.getContent());
+            shangfy(genesis.getContent());;
+        }
     }
     return genesis;
 }

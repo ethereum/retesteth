@@ -42,7 +42,7 @@ extern const std::string c_transactionsRoot;
 extern const std::string c_transactionsTrie;
 extern const std::string c_baseFeePerGas;
 extern const std::string c_withdrawalsRoot;
-extern const std::string c_beaconRoot;
+extern const std::string c_parentBeaconBlockRoot;
 extern const std::string c_excessBlobGas;
 extern const std::string c_blobGasUsed;
 extern const std::string c_currentExcessBlobGas;

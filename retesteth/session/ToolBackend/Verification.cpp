@@ -233,7 +233,7 @@ void verify4844Parent(spBlockHeader const& _header, spBlockHeader const& _parent
                 throw test::UpwardsException("Trying to import Cancun block on top of Shanghai block before transition!!");
         }
         else
-            throw test::UpwardsException("Trying to import Cancun block on top of Shanghai block before transition!!");
+            throw test::UpwardsException("Trying to import Cancun block on top of block that is not Cancun!!");
     }
 }
 

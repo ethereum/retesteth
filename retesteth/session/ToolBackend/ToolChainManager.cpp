@@ -110,6 +110,8 @@ void ToolChainManager::modifyTimestamp(VALUE const& _time)
     m_pendingBlock.getContent().headerUnsafe().getContent().setTimestamp(_time);
     if (currentChain().fork() == "MergeToShanghaiAtTime15k" && m_pendingBlock->header()->timestamp() >= 15000)
         initShanghaiPendingBlock(m_pendingBlock);
+    if (currentChain().fork() == "ShanghaiToCancunAtTime15k" && m_pendingBlock->header()->timestamp() >= 15000)
+        initCancunPendingBlock(m_pendingBlock);
 }
 
 // Import Raw Block via t8ntool
@@ -319,6 +321,16 @@ void ToolChainManager::initShanghaiPendingBlock(EthereumBlockState const& _lastB
     m_pendingBlock = spEthereumBlockState(new EthereumBlockState(newPending, _lastBlock.state(), _lastBlock.logHash()));
 }
 
+void ToolChainManager::initCancunPendingBlock(EthereumBlockState const& _lastBlock)
+{
+    spDataObject parentData = _lastBlock.header()->asDataObject();
+    (*parentData)[c_blobGasUsed] = "0x00";
+    (*parentData)[c_excessBlobGas] = "0x00";
+    (*parentData)[c_parentBeaconBlockRoot] = FH32::zero().asString();
+    spBlockHeader newPending(new BlockHeader4844(parentData));
+    m_pendingBlock = spEthereumBlockState(new EthereumBlockState(newPending, _lastBlock.state(), _lastBlock.logHash()));
+}
+
 void ToolChainManager::transitionPendingBlock(EthereumBlockState const& _bl)
 {
     auto const updatePending = [this, &_bl](){
@@ -337,6 +349,8 @@ void ToolChainManager::transitionPendingBlock(EthereumBlockState const& _bl)
 
     if (currentChain().fork() == "MergeToShanghaiAtTime15k" && m_pendingBlock->header()->timestamp() >= 15000)
         initShanghaiPendingBlock(_bl);
+    else if (currentChain().fork() == "ShanghaiToCancunAtTime15k" && m_pendingBlock->header()->timestamp() >= 15000)
+        initCancunPendingBlock(_bl);
     else if (currentChain().fork() == "ArrowGlacierToMergeAtDiffC0000" && isTerminalPoWBlock())
         initMergePendingBlock(_bl);
     else

@@ -18,6 +18,7 @@ extern std::string const t8ntool_start;
     ConstantinopleCfg, ConstantinopleFixCfg, IstanbulCfg, BerlinCfg, LondonCfg, MergeCfg, \
     ShanghaiCfg, CancunCfg, \
     ArrowGlacierCfg, GrayGlacierCfg, ArrowGlacierToMergeAtDiffC0000Cfg, MergeToShanghaiAtTime15kCfg, \
+    ShanghaiToCancunAtTime15kCfg, \
     FrontierToHomesteadCfg, HomesteadToDaoCfg, HomesteadToEIP150Cfg, EIP158ToByzantiumCfg, \
     ByzantiumToConstantinopleFixCfg, BerlinToLondonCfg )
 

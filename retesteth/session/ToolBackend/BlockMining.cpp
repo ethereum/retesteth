@@ -64,20 +64,29 @@ void makeEnvBasefee(spDataObject& _envData, spBlockHeader const& _parentBlockH, 
     }
 }
 
-void makeEnvExcessBlobGas(spDataObject& _envData, spBlockHeader const& _parentBlockH, spBlockHeader const& _currentBlockH)
+void makeEnvExcessBlobGas(spDataObject& _envData, spBlockHeader const& _parentBlockH, spBlockHeader const& _currentBlockH, FORK const& _fork)
 {
     if (isBlockExportExcessBlobGas(_currentBlockH))
     {
-        BlockHeader4844 const& ch4844 = (BlockHeader4844 const&) _currentBlockH.getCContent();
-        (*_envData)[c_beaconRoot] = ch4844.beaconRoot().asString();
+        BlockHeader4844 const& ch4844 = BlockHeader4844::castFrom(_currentBlockH);
+        (*_envData)["beaconRoot"] = ch4844.parentBeaconBlockRoot().asString();
 
         if (_currentBlockH->number() != 0)
         {
             (*_envData).removeKey(c_currentExcessBlobGas);
-            BlockHeader4844 const& h4844 = (BlockHeader4844 const&) _parentBlockH.getCContent();
-            (*_envData)[c_parentExcessBlobGas] = h4844.excessBlobGas().asString();
-            (*_envData)[c_parentBlobGasUsed] = h4844.blobGasUsed().asString();
-
+            (*_envData).removeKey(c_currentBlobGasUsed);
+            if (_fork == "ShanghaiToCancunAtTime15k" && _parentBlockH->type() != BlockType::BlockHeader4844)
+            {
+                BlockHeader4844 const& h4844 = BlockHeader4844::castFrom(_currentBlockH);
+                (*_envData)[c_parentExcessBlobGas] = h4844.excessBlobGas().asString();
+                (*_envData)[c_parentBlobGasUsed] = h4844.blobGasUsed().asString();
+            }
+            else
+            {
+                BlockHeader4844 const& h4844 = BlockHeader4844::castFrom(_parentBlockH);
+                (*_envData)[c_parentExcessBlobGas] = h4844.excessBlobGas().asString();
+                (*_envData)[c_parentBlobGasUsed] = h4844.blobGasUsed().asString();
+            }
         }
         else
         {
@@ -118,14 +127,14 @@ void BlockMining::prepareEnvFile()
     auto spHeader = currentBlockH->asDataObject();
     spBlockchainTestFillerEnv env(readBlockchainFillerTestEnv(dataobject::move(spHeader), m_chainRef.engine()));
     spDataObject& envData = const_cast<spDataObject&>(env->asDataObject());
-
     makeEnvDifficulty(envData, parentBlockH, currentBlockH);
     if (isBlockExportCurrentRandom(currentBlockH))
         (*envData)["currentRandom"] = currentBlockH->mixHash().asString();
     makeEnvWithdrawals(envData, m_currentBlockRef);
     makeEnvBasefee(envData, parentBlockH, currentBlockH);
-    makeEnvExcessBlobGas(envData, parentBlockH, currentBlockH);
+    makeEnvExcessBlobGas(envData, parentBlockH, currentBlockH, m_chainRef.fork());
     makeEnvOmmers(envData, m_currentBlockRef, m_chainRef);
+
 
     // Options Hook
     Options::getCurrentConfig().performFieldReplace(envData.getContent(), FieldReplaceDir::RetestethToClient);

@@ -109,13 +109,16 @@ string const t8ntool_config = R"({
         "ArrowGlacier",
         "ArrowGlacierToMergeAtDiffC0000",
         "GrayGlacier",
-        "MergeToShanghaiAtTime15k"
+        "MergeToShanghaiAtTime15k",
+        "ShanghaiToCancunAtTime15k"
     ],
     "fillerSkipForks" : [
     ],
     "exceptions" : {
       "PYSPECS_EXCEPTIONS" : "",
       "Transaction without funds" : "insufficient funds for gas * price + value",
+      "invalid excess blob gas" : "Error in field: excessBlobGas",
+      "invalid blob gas used" : "Error in field: blobGasUsed",
 
       "AddressTooShort" : "input string too short for common.Address",
       "AddressTooLong" : "rlp: input string too long for common.Address, decoding into (types.Transaction)(types.LegacyTx).To",
@@ -360,7 +363,10 @@ EVMT8N=$5
 FORCER=$6
 DEBUG=$7
 
-testdir="./tests/tmptest"
+genUID=$(uuidgen)
+testdir="./tests/tmptest_${genUID:0:8}"
+testout="./tests/out_${genUID:0:8}"
+
 if [ -d $testdir ]; then
     rm -r $testdir
 fi
@@ -379,22 +385,22 @@ if [ "$FORCER" != "null" ]; then
     ADDFLAGS="$ADDFLAGS --force-refill"
 fi
 
-if [ -d ./tests/out ]; then
-    rm -r ./tests/out
+if [ -d $testout ]; then
+    rm -r $testout
 fi
-mkdir ./tests/out
-1>&2 echo "fill -v $SRCPATH2 --output "./tests/out" $ADDFLAGS --evm-bin $EVMT8N --flat-output --disable-hive"
+mkdir $testout
+1>&2 echo "fill -v $SRCPATH2 --output "$testout" $ADDFLAGS --evm-bin $EVMT8N --flat-output --disable-hive"
 if [ $DEBUG != "null" ]; then
-    1>&2 fill -v $SRCPATH2 --output "./tests/out" $ADDFLAGS --evm-bin $EVMT8N --flat-output --disable-hive
+    1>&2 fill -v $SRCPATH2 --output "$testout" $ADDFLAGS --evm-bin $EVMT8N --flat-output --disable-hive
 else
-    out=$(fill -v $SRCPATH2 --output "./tests/out" $ADDFLAGS --evm-bin $EVMT8N --flat-output --disable-hive)
+    out=$(fill -v $SRCPATH2 --output "$testout" $ADDFLAGS --evm-bin $EVMT8N --flat-output --disable-hive)
     if [[ "$out" == *"failed"* ]]; then
       1>&2 echo "./retesteth/pyspecsStart.sh Pyspec test generation failed (use --verbosity PYSPEC for details) "
       exit 1
     fi
 fi
-cp -r ./tests/out/* $OUTPUT
-rm -r ./tests/out
+cp -r $testout/* $OUTPUT
+rm -r $testout
 rm -r $testdir
 exit 0
 )";

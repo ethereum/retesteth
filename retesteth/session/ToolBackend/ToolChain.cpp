@@ -114,6 +114,7 @@ spDataObject const ToolChain::mineBlock(EthereumBlockState const& _pendingBlock,
 {
     // Ask the tool to calculate post state and block header
     // With current chain information, txs from pending block
+
     ToolResponse const res = mineBlockOnTool(_pendingBlock, _parentBlock, m_engine);
     ETH_DC_MESSAGE(
         DC::TESTLOG, "ToolChain::mineBlock of new block: " + BlockHeader::BlockTypeToString(_pendingBlock.header()->type()));

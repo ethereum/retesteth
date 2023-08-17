@@ -73,7 +73,8 @@ static std::map<FORK, FORK> RewardMapForToolBefore5 = {
     {"ByzantiumToConstantinopleFixAt5", "Byzantium"},
     {"BerlinToLondonAt5", "Berlin"},
     {"ArrowGlacierToMergeAtDiffC0000", "ArrowGlacier"},
-    {"MergeToShanghaiAtTime15k", "Merge"}
+    {"MergeToShanghaiAtTime15k", "Merge"},
+    {"ShanghaiToCancunAtTime15k", "Shanghai"}
 };
 static std::map<FORK, FORK> RewardMapForToolAfter5 = {
     {"FrontierToHomesteadAt5", "Homestead"},
@@ -83,7 +84,8 @@ static std::map<FORK, FORK> RewardMapForToolAfter5 = {
     {"ByzantiumToConstantinopleFixAt5", "ConstantinopleFix"},
     {"BerlinToLondonAt5", "London"},
     {"ArrowGlacierToMergeAtDiffC0000", "Merge"},
-    {"MergeToShanghaiAtTime15k", "Shanghai"}
+    {"MergeToShanghaiAtTime15k", "Shanghai"},
+    {"ShanghaiToCancunAtTime15k", "Cancun"}
 };
 
 std::tuple<VALUE, FORK> prepareReward(SealEngine _engine, FORK const& _fork, EthereumBlockState const& _curBlockRef)
@@ -101,7 +103,8 @@ std::tuple<VALUE, FORK> prepareReward(SealEngine _engine, FORK const& _fork, Eth
         if (_curBlockRef.totalDifficulty() < VALUE(DataObject("0x0C0000")))
             posTransitionDifficultyNotReached = true;
     }
-    else if (_fork.asString() == "MergeToShanghaiAtTime15k")
+    else if (_fork.asString() == "MergeToShanghaiAtTime15k"
+             || _fork.asString() == "ShanghaiToCancunAtTime15k")
     {
         isMerge = true;
         if (_curBlockRef.header()->timestamp() < 15000)

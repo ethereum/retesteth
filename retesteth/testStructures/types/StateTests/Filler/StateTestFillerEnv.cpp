@@ -95,8 +95,8 @@ void StateTestFillerEnv::initializeFields(spDataObject const& _data)
     m_currentWithdrawalsRoot = sFH32(DataObject(C_WITHDRAWALS_EMPTY_ROOT));
 
     // Cancun
-    m_currentBlobGasUsed = sVALUE(0);
-    m_currentExcessBlobGas = sVALUE(0);
+    m_currentBlobGasUsed = sVALUE(DataObject("0x00"));
+    m_currentExcessBlobGas = sVALUE(DataObject("0x00"));
     m_currentBeaconRoot = spFH32(FH32::zero().copy());
     if (_data->count(c_parentExcessBlobGas))
         m_currentExcessBlobGas = sVALUE(_data->atKey(c_parentExcessBlobGas));

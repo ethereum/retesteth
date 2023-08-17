@@ -71,6 +71,7 @@ private:
     void init1559PendingBlock(EthereumBlockState const&);
     void initMergePendingBlock(EthereumBlockState const&);
     void initShanghaiPendingBlock(EthereumBlockState const&);
+    void initCancunPendingBlock(EthereumBlockState const&);
     bool isTerminalPoWBlock();
 };
 
