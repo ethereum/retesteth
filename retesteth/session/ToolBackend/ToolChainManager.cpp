@@ -7,6 +7,7 @@
 #include <retesteth/helpers/TestHelper.h>
 #include <retesteth/Options.h>
 #include <retesteth/Constants.h>
+#include <retesteth/testStructures/types/Ethereum/Transactions/TransactionBlob.h>
 using namespace std;
 using namespace dev;
 using namespace test;
@@ -138,9 +139,17 @@ FH32 ToolChainManager::importRawBlock(BYTES const& _rlp)
         m_pendingBlock.getContent().setTotalDifficulty(lastBlock().totalDifficulty());
 
         ETH_DC_MESSAGE(DC::RPC, "RLP transaction number: " + test::fto_string(rlp[1].toList().size()));
+        size_t blobCount = 0;
         for (auto const& trRLP : rlp[1].toList())
         {
             spTransaction spTr = readTransaction(trRLP);
+            if (spTr->type() == TransactionType::BLOB)
+            {
+                TransactionBlob const& blobtx = dynamic_cast<TransactionBlob const&>(spTr.getContent());
+                blobCount += blobtx.blobs().size();
+                if (blobCount >= 7)
+                    throw test::UpwardsException("Block has invalid number of blobs in txs >=7!");
+            }
             ETH_DC_MESSAGE(DC::RPC, spTr->asDataObject()->asJson());
             addPendingTransaction(spTr);
         }

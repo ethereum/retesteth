@@ -11,6 +11,8 @@ struct TransactionBlob : TransactionBaseFee
 
     spDataObject const asDataObject(ExportOrder _order = ExportOrder::Default) const override;
     TransactionType type() const override { return TransactionType::BLOB; }
+    std::vector<FH32> const& blobs() const { return m_blobVersionedHashes; }
+    VALUE const& maxFeePerBlobGas() const { return m_maxFeePerBlobGas; }
 
 private:
     virtual void fromRLP(dev::RLP const&) override;
