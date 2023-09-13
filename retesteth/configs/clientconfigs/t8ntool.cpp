@@ -379,6 +379,8 @@ OUTPUT=$4
 EVMT8N=$5
 FORCER=$6
 DEBUG=$7
+FROMF=$8
+UNTIF=$9
 
 mkdir "./tests/tmp"
 genUID=$(uuidgen)
@@ -407,11 +409,11 @@ if [ -d $testout ]; then
     rm -r $testout
 fi
 mkdir $testout
-1>&2 echo "fill -v $SRCPATH2 --output "$testout" $ADDFLAGS --evm-bin $EVMT8N --flat-output --disable-hive"
+1>&2 echo "fill -v $SRCPATH2 --output "$testout" $ADDFLAGS --evm-bin $EVMT8N --flat-output --disable-hive --from=$FROMF --until=$UNTIF"
 if [ $DEBUG != "null" ]; then
-    1>&2 fill -v $SRCPATH2 --output "$testout" $ADDFLAGS --evm-bin $EVMT8N --flat-output --disable-hive
+    1>&2 fill -v $SRCPATH2 --output "$testout" $ADDFLAGS --evm-bin $EVMT8N --flat-output --disable-hive --from=$FROMF --until=$UNTIF
 else
-    out=$(fill -v $SRCPATH2 --output "$testout" $ADDFLAGS --evm-bin $EVMT8N --flat-output --disable-hive)
+    out=$(fill -v $SRCPATH2 --output "$testout" $ADDFLAGS --evm-bin $EVMT8N --flat-output --disable-hive --from=$FROMF --until=$UNTIF)
     if [[ "$out" == *" failed"* ]]; then
       1>&2 echo "./retesteth/pyspecsStart.sh Pyspec test generation failed (use --verbosity PYSPEC for details) "
       exit 1

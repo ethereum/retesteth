@@ -45,8 +45,6 @@ fs::path prepareOutputFileName(fs::path const& _file)
 
 void updatePythonTestInfo(TestFileData& _testData, fs::path const& _pythonFiller, fs::path const& _filledFolder)
 {
-    // TODO double calling this function (getGeneratedTestNames)
-    // can make a global map
     auto const testNames = getGeneratedTestNames(_pythonFiller);
     for (auto const& generatedTest : testNames)
     {
@@ -114,9 +112,12 @@ bool TestSuite::_fillPython(TestFileData& _testData, fs::path const& _fillerTest
             runcmd += " --stderr";
         else
             runcmd += " null";
+        auto const& forks = Options::getCurrentConfig().cfgFile().forks();
+        runcmd += " " + forks.at(0).asString() + " " + forks.at(forks.size() - 1).asString();
 
         ETH_DC_MESSAGEC(DC::STATS, string("Generate Python test: ") + _fillerTestFilePath.stem().string(), LogColor::YELLOW);
         ETH_DC_MESSAGE(DC::RPC, string("Generate Python test: ") + runcmd);
+        ETH_DC_MESSAGE(DC::PYSPEC, string("Generate Python test: ") + runcmd);
 
         int exitcode;
         string out = test::executeCmd(runcmd, exitcode, ExecCMDWarning::NoWarningNoError);
