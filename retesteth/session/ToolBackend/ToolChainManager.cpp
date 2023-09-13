@@ -148,7 +148,7 @@ FH32 ToolChainManager::importRawBlock(BYTES const& _rlp)
                 TransactionBlob const& blobtx = dynamic_cast<TransactionBlob const&>(spTr.getContent());
                 blobCount += blobtx.blobs().size();
                 if (blobCount >= 7)
-                    throw test::UpwardsException("Block has invalid number of blobs in txs >=7!");
+                    throw test::UpwardsException("versioned hashes len exceeds, Block has invalid number of blobs in txs >=7!");
             }
             ETH_DC_MESSAGE(DC::RPC, spTr->asDataObject()->asJson());
             addPendingTransaction(spTr);

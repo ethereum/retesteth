@@ -117,20 +117,23 @@ string const t8ntool_config = R"({
     "exceptions" : {
       "PYSPECS_EXCEPTIONS" : "",
       "Transaction without funds" : "insufficient funds for gas * price + value",
+      "insufficient account balance" : "insufficient funds for gas * price + value",
       "invalid excess blob gas" : "Error in field: excessBlobGas",
       "invalid excessBlobGas" : "Error in field: excessBlobGas",
       "invalid blob gas used" : "Error in field: blobGasUsed",
-      "Invalid params" : "blob tx used but field env.ExcessBlobGas missing",
+      "invalid pre fork blob fields" : "unknown block type!",
+      "blob fields missing post fork" : "unknown block type!",
       "invalid transaction" : "expected to have exactly 14 elements",
-      "invalid_versioned_hash" : "hash version mismatch",
-      "zero_blob_tx" : "blob transaction missing blob hashes",
+      "invalid blob versioned hash" : "hash version mismatch",
+      "zero blob tx" : "blob transaction missing blob hashes",
       "insufficient_account_balance" : "Error importing raw rlp block",
       "invalid_blob_count" : "Block has invalid number of blobs in txs >=7!",
       "insufficient max fee per blob gas" : "max fee per blob gas less than block blob gas fee",
       "insufficient max fee per gas" : "max fee per gas less than block base fee",
       "invalid max fee per blob gas" : "max fee per blob gas less than block blob gas fee",
       "too_many_blobs_tx" : "block max blob gas exceeded",
-      "too_many_blobs" : "Block has invalid number of blobs in txs >=7!",
+      "too many blobs" : "Block has invalid number of blobs in txs >=7!",
+      "tx type 3 not allowed pre-Cancun" : "blob tx used but field env.ExcessBlobGas missing",
 
       "AddressTooShort" : "input string too short for common.Address",
       "AddressTooLong" : "rlp: input string too long for common.Address, decoding into (types.Transaction)(types.LegacyTx).To",
@@ -304,8 +307,10 @@ string const t8ntool_config = R"({
       "TR_NoFunds" : "insufficient funds for gas * price + value",
       "TR_NoFundsX" : "insufficient funds for gas * price + value",
       "TR_NoFundsValue" : "insufficient funds for transfer",
+      "TR_NoFundsOrGas" : "insufficient funds for gas * price + value",
       "TR_FeeCapLessThanBlocks" : "max fee per gas less than block base fee",
       "TR_FeeCapLessThanBlocksORGasLimitReached" : "max fee per gas less than block base fee",
+      "TR_FeeCapLessThanBlocksORNoFunds" : "max fee per gas less than block base fee",
       "TR_GasLimitReached" : "gas limit reached",
       "TR_NonceTooHigh" : "nonce too high",
       "TR_NonceTooLow" : "nonce too low",
@@ -375,9 +380,10 @@ EVMT8N=$5
 FORCER=$6
 DEBUG=$7
 
+mkdir "./tests/tmp"
 genUID=$(uuidgen)
-testdir="./tests/tmptest_${genUID//-/_}"
-testout="./tests/out_${genUID//-/_}"
+testdir="./tests/tmp/tmptest_${genUID//-/_}"
+testout="./tests/tmp/out_${genUID//-/_}"
 
 if [ -d $testdir ]; then
     rm -r $testdir
@@ -414,6 +420,7 @@ fi
 cp -r $testout/* $OUTPUT
 rm -r $testout
 rm -r $testdir
+rm -r "./tests/tmp"
 exit 0
 )";
 
