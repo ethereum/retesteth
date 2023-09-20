@@ -270,7 +270,7 @@ dir=$(pwd)
 cd $BESU_PATH
 ethereum/evmtool/build/install/evmtool/bin/evm t8n-server &> /dev/null &
 cd $dir
-sleep 2
+sleep 4
 if lsof -i :3000 | grep -q LISTEN; then
     1>&2 echo "$SNAME Besu daemon is listening on port 3000"
 else
