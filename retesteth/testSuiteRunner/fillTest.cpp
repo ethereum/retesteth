@@ -112,8 +112,18 @@ bool TestSuite::_fillPython(TestFileData& _testData, fs::path const& _fillerTest
             runcmd += " --stderr";
         else
             runcmd += " null";
-        auto const& forks = Options::getCurrentConfig().cfgFile().forks();
-        runcmd += " " + forks.at(0).asString() + " " + forks.at(forks.size() - 1).asString();
+
+        // Forks selector
+        if (Options::get().singleTestNet.initialized())
+        {
+            auto const& singlenet = Options::get().singleTestNet;
+            runcmd += " " + singlenet + " " + singlenet;
+        }
+        else
+        {
+            auto const& forks = Options::getCurrentConfig().cfgFile().forks();
+            runcmd += " " + forks.at(0).asString() + " " + forks.at(forks.size() - 1).asString();
+        }
 
         ETH_DC_MESSAGEC(DC::STATS, string("Generate Python test: ") + _fillerTestFilePath.stem().string(), LogColor::YELLOW);
         ETH_DC_MESSAGE(DC::RPC, string("Generate Python test: ") + runcmd);
