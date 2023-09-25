@@ -14,7 +14,8 @@ struct BlockchainTestBlock : GCP_SPointerBase
 {
     BlockchainTestBlock(spDataObject&);
     BYTES const& rlp() const { return m_rlp; }
-    bool expectedInvalid() const { return m_blockHeader.isEmpty(); }
+    bool expectedInvalid() const { return m_hasRlpDecoded || m_blockHeader.isEmpty(); }
+    bool hasRlpDecoded() const { return m_hasRlpDecoded; }
     spBlockHeader const& header() const { return m_blockHeader; }
     std::string const& getExpectException() const { return m_exception; }
 
@@ -25,6 +26,7 @@ struct BlockchainTestBlock : GCP_SPointerBase
 
 private:
     BlockchainTestBlock() {}
+    bool m_hasRlpDecoded = false;
     std::string m_chainName;
     std::string m_exception;
     spVALUE m_blockNumber;

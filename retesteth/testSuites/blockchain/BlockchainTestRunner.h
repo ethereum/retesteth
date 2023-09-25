@@ -24,6 +24,8 @@ public:
     bool checkLastRPCBlockException(teststruct::BlockchainTestBlock const&);
     void performOptionCommandsOnGenesis();
     void performOptionCommands(teststruct::BlockchainTestBlock const&, teststruct::EthGetBlockBy const&);
+
+    void validateRlpDecodedInInvalidBlocks(teststruct::BlockchainTestBlock const&);
     void validateBlockHeader(teststruct::BlockchainTestBlock const&, teststruct::EthGetBlockBy const&);
     void validateUncles(teststruct::BlockchainTestBlock const&, teststruct::EthGetBlockBy const&);
     void validateTransactions(teststruct::BlockchainTestBlock const&, teststruct::EthGetBlockBy const&);
