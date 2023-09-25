@@ -6,19 +6,31 @@ namespace retesteth::options
 {
 
 string const pyt8n_setup = R"(#!/bin/bash
-    cd ~/Ethereum/execution-specs
-    python3.10 -m venv venv
+    SNAME=".retesteth/pyt8n/setup.sh"
+    if [ -z "${PYT8N_PATH}" ]; then
+      1>&2 echo "$SNAME ERROR: Env variable PYT8N_PATH is either empty or not set!"
+    else
+      if [ -d "${PYT8N_PATH}" ]; then
+        1>&2 echo "$SNAME Using pyt8n path: '$PYT8N_PATH'"
+      else
+        echo "$SNAME ERROR: Path '$PYT8N_PATH' does not exist in the file system"
+      fi
+    fi
+
+    cd $PYT8N_PATH
+    python3 -m venv venv
     source venv/bin/activate
     pip install -e .
+    sleep 5
 )";
 
 string const pyt8n_start = R"(#!/bin/bash
 
-cd ~/Ethereum/execution-specs
-python3.10 -m venv venv
+cd $PYT8N_PATH
+python3 -m venv venv
 source venv/bin/activate
 cd ./src/ethereum_spec_tools/
-cmd="python3.10 -m evm_tools t8n"
+cmd="python3 -m evm_tools t8n"
 
 if [ $1 = "t8n" ] || [ $1 = "b11r" ]; then
     $($cmd $1 $2 $3 $4 $5 $6 $7 $8 $9 $10 $11 $12 $13 $14 $15 $16 $17 $18 $19 $20 $21 $22 $23 $24 $25 $26)
