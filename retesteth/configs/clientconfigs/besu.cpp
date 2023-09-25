@@ -316,7 +316,7 @@ else
         if [ $readOutResult -eq 1 ]; then  outresult=$index; readOutResult=0; continue; fi
 
         if [ $index = "--input.txs" ]; then readTxs=1; continue; fi
-        if [ $readTxs -eq 1 ]; then  txs=`cat $index`; readTxs=0; continue; fi
+        if [ $readTxs -eq 1 ]; then  txs=`cat $index | sed 's/"//g'`; readTxs=0; continue; fi
 
         if [ $index = "--input.env" ]; then readEnv=1; continue; fi
         if [ $readEnv -eq 1 ]; then  env=`cat $index`; readEnv=0; continue; fi

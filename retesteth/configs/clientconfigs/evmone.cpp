@@ -44,7 +44,6 @@ string const evmone_config = R"({
         "FrontierToHomesteadAt5",
         "HomesteadToEIP150At5",
         "EIP158ToByzantiumAt5",
-        "HomesteadToDaoAt5",
         "ByzantiumToConstantinopleFixAt5",
         "BerlinToLondonAt5",
         "ArrowGlacier",
@@ -53,6 +52,7 @@ string const evmone_config = R"({
         "MergeToShanghaiAtTime15k"
     ],
     "fillerSkipForks" : [
+        "HomesteadToDaoAt5"
     ],
     "exceptions" : {
       "PYSPECS_EXCEPTIONS" : "",
