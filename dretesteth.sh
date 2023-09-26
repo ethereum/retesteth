@@ -152,7 +152,7 @@ if [ "$SCRIPT_NAME" = "dtf.sh" ]; then
       dockerwdir="/"
     fi
 
-    docker run --entrypoint /usr/bin/tfinit.sh -it -w $dockerwdir -e BESU_PATH=/besu -e ETHEREUMJS_PATH=/ethereumjs -e PYSPECS_PATH=/execution-spec-tests -v $testpath:/tests retesteth $argstring
+    docker run --entrypoint /usr/bin/tfinit.sh -it -w $dockerwdir -e BESU_PATH=/besu -e ETHEREUMJS_PATH=/ethereumjs -e PYSPECS_PATH=/execution-spec-tests -e PYT8N_PATH=/pyt8n -v $testpath:/tests retesteth $argstring
     exit 0
 fi
 
@@ -210,5 +210,5 @@ fi
 if [ "$helpversion" -eq 1 ]; then
     docker run retesteth $argstring
 else
-    docker run -w $dockerwdir -e BESU_PATH=/besu -e ETHEREUMJS_PATH=/ethereumjs -e PYSPECS_PATH=/execution-spec-tests -v $testpath:/tests retesteth $argstring --testpath /tests $defaultclient
+    docker run -w $dockerwdir -e BESU_PATH=/besu -e ETHEREUMJS_PATH=/ethereumjs -e PYSPECS_PATH=/execution-spec-tests -e PYT8N_PATH=/pyt8n -v $testpath:/tests retesteth $argstring --testpath /tests $defaultclient
 fi

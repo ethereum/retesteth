@@ -7,6 +7,7 @@ ARG RETESTETH_SRC="https://github.com/ethereum/retesteth.git"
 ARG GETH_SRC="https://github.com/ethereum/go-ethereum.git"
 ARG NIMBUS_SRC="https://github.com/status-im/nimbus-eth1.git"
 ARG EVMONE_SRC="https://github.com/ethereum/evmone.git"
+ARG PYT8N_SRC="https://github.com/ethereum/execution-specs.git"
 
 # Leave empty to disable the build, can point to commit hash as well
 ARG BESU="main"
@@ -16,6 +17,7 @@ ARG ETHEREUMJS="master"
 ARG RETESTETH="develop"
 ARG PYSPECS="main"
 ARG EVMONE="master"
+ARG PYT8N="master"
 
 SHELL ["/bin/bash", "-c"]
 ENV TZ=Etc/UTC
@@ -64,6 +66,14 @@ RUN cd /execution-spec-tests && git fetch && git checkout $PYSPECS \
     && cp tfinit.sh /usr/bin/tfinit.sh \
     && chmod +x /usr/bin/tfinit.sh
 
+# PYT8N
+RUN test -n "$PYT8N" \
+     && git clone $PYT8N_SRC /pyt8n \
+     && cd /pyt8n && git fetch && git checkout $PYT8N \
+     && python3 -m venv ./venv/ \
+     && source ./venv/bin/activate \
+     && pip install -e . \
+    || echo "Pyt8n is empty"
 
 # Geth
 RUN test -n "$GETH" \
