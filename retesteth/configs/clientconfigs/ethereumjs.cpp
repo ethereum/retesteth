@@ -211,7 +211,7 @@ string const ethereumjs_config = R"({
        "TR_NoFunds":"doesn't have enough funds to send tx",
        "TR_NoFundsX":"gas limit * gasPrice cannot exceed MAX_INTEGER",
        "TR_NoFundsValue":"",
-       "TR_NoFundsOrGas" : "insufficient funds for gas * price + value",
+       "TR_NoFundsOrGas" : "base fee exceeds gas limit",
        "TR_FeeCapLessThanBlocks":"is less than the block's baseFeePerGas",
        "TR_FeeCapLessThanBlocksORNoFunds" : "is less than the block's baseFeePerGas",
        "TR_GasLimitReached":"tx has a higher gas limit than the remaining gas in the block",
