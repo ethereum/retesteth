@@ -445,9 +445,10 @@ const char** preprocessOptions(int& _argc, const char* _argv[])
     //    "retesteth file.json" ==> "retesteth -t TestSuite/Subsuite -- --singletest file.json"
     // parse "retesteth Folder" ==> "retesteth -t TestSuite/Folder
 
-    auto const cwd = fs::path(fs::current_path());
+    auto cwd = fs::path(fs::current_path());
     string filenameArg;
     string directoryArg;
+    string directoryArgFull;
     bool fileInsideTheTestRepo = false;
 
     bool hasTArg = false;
@@ -469,6 +470,13 @@ const char** preprocessOptions(int& _argc, const char* _argv[])
         }
         else if (fs::exists(cwd / arg) && fs::is_directory(cwd / arg))
             directoryArg = arg;
+        else if (fs::exists(arg) && fs::is_directory(arg))
+        {
+            auto const& argPath = fs::path(arg);
+            cwd = argPath.parent_path();
+            directoryArg = argPath.stem().string();
+            directoryArgFull = arg;
+        }
 
         options.emplace_back(arg);
     }
@@ -510,7 +518,7 @@ const char** preprocessOptions(int& _argc, const char* _argv[])
             suite = getTestTArg(cwd, directoryArg);
             for (vector<string>::iterator it = options.begin(); it != options.end(); it++)
             {
-                if (*it == directoryArg)
+                if (*it == directoryArg || *it == directoryArgFull)
                 {
                     options.erase(it);
                     break;
