@@ -238,7 +238,7 @@ jobs:
       - BUILD_PARALLEL_JOBS: 4
       - TEST_PARALLEL_JOBS: 4
     macos:
-      xcode: "14.0.1"
+      xcode: "14.2.0"
     steps: *mac-steps
 
 # TODO: Run GCC6 build only in develop branch.
