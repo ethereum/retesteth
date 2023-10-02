@@ -166,6 +166,25 @@ CompareResult compareStorage(Storage const& _expectStorage, Storage const& _remo
         }
     }
 
+    if (_expectStorage.getKeys().size() == _remoteStorage.getKeys().size())
+    {
+        string storage = message + " has storage records that are not checked by expected storage!";
+        for (auto const& element : _remoteStorage.getKeys())
+        {
+            VALUE const& remKey = std::get<0>(element.second);
+            auto const& remVal = std::get<1>(element.second);
+            storage += "\n [" + remKey.asDecString() + "] = " + remVal->asString();
+            storage += "(";
+            storage += remVal->asDecString();
+            storage += ")\n";
+            if (!_expectStorage.hasKey(remKey))
+            {
+                ETH_MARK_ERROR(storage);
+                result = CompareResult::IncorrectStorage;
+            }
+        }
+    }
+
     if (_expectStorage.getKeys().size() < _remoteStorage.getKeys().size())
     {
         string storage = message + " has more storage records than expected!";

@@ -204,7 +204,7 @@ string replaceCode(string const& _code, solContracts const& _preSolidity)
         tryKnownCompilers(_code, _preSolidity, compiledCode);
 
     if (compiledCode == "0x")
-        ETH_WARNING("replaceCode returned empty bytecode `0x` tying to compile " + TestOutputHelper::get().testInfo().errorDebug() +  "\n" + _code);
+        ETH_WARNING("replaceCode returned empty bytecode `0x` trying to compile " + TestOutputHelper::get().testInfo().errorDebug() +  "\n" + _code);
 
     if (_code.size() > 0)
         ETH_FAIL_REQUIRE_MESSAGE(
