@@ -409,11 +409,11 @@ if [ -d $testout ]; then
     rm -r $testout
 fi
 mkdir $testout
-1>&2 echo "fill -v $SRCPATH2 --output "$testout" $ADDFLAGS --evm-bin $EVMT8N --flat-output --disable-hive --from=$FROMF --until=$UNTIF"
+1>&2 echo "fill -v $SRCPATH2 --output "$testout" $ADDFLAGS --evm-bin $EVMT8N --flat-output --from=$FROMF --until=$UNTIF"
 if [ $DEBUG != "null" ]; then
-    1>&2 fill -v $SRCPATH2 --output "$testout" $ADDFLAGS --evm-bin $EVMT8N --flat-output --disable-hive --from=$FROMF --until=$UNTIF
+    1>&2 fill -v $SRCPATH2 --output "$testout" $ADDFLAGS --evm-bin $EVMT8N --flat-output --from=$FROMF --until=$UNTIF
 else
-    out=$(fill -v $SRCPATH2 --output "$testout" $ADDFLAGS --evm-bin $EVMT8N --flat-output --disable-hive --from=$FROMF --until=$UNTIF)
+    out=$(fill -v $SRCPATH2 --output "$testout" $ADDFLAGS --evm-bin $EVMT8N --flat-output --from=$FROMF --until=$UNTIF)
     if [[ "$out" == *" failed"* ]]; then
       1>&2 echo "./retesteth/pyspecsStart.sh Pyspec test generation failed (use --verbosity PYSPEC for details) "
       exit 1
