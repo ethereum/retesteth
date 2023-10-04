@@ -422,4 +422,10 @@ bool src_findBigInt(DataObject const& el)
     return false;
 }
 
+void mod_changeValueAnyToBigint00(DataObject& _el)
+{
+    if (_el.type() == DataType::String && _el.asString() == "ANY")
+        _el.setString("0x:bigint 0x00");
+}
+
 }  // namespace teststruct

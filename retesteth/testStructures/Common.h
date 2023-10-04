@@ -21,6 +21,7 @@ void mod_keyToCompactEvenHexPrefixed(DataObject&);
 void mod_valueInsertZeroXPrefix(DataObject&);
 void mod_valueToFH32(DataObject&);
 void mod_sortKeys(DataObject&);
+void mod_changeValueAnyToBigint00(DataObject&);
 bool src_findBigInt(DataObject const& el);
 
 long long int hexOrDecStringToInt(std::string const& _str);

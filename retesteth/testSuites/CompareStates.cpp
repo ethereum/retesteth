@@ -154,7 +154,8 @@ CompareResult compareStorage(Storage const& _expectStorage, Storage const& _remo
         else if (_remoteStorage.hasKey(expKey))
         {
             VALUE const& remoteVal = _remoteStorage.atKey(expKey);
-            if (remoteVal != expVal)
+            // Treat expVal as ANY allowed value if it has bigint prefix
+            if (remoteVal != expVal && !expVal.isBigInt())
             {
                 ETH_MARK_ERROR(message + "has incorrect storage [" + expKey.asString() + "] = `" +
                                remoteVal.asString() + "(" + remoteVal.asDecString() + ")" +
