@@ -74,7 +74,7 @@ BlockchainTestBlock::BlockchainTestBlock(spDataObject& _data)
                 ETH_ERROR_MESSAGE("Invalid block has blockHeader outside of rlp_decoded!");
             if (_data->count("transactions"))
                 ETH_ERROR_MESSAGE("Invalid block has transactions outside of rlp_decoded!");
-            if (_data->count("uncles"))
+            if (_data->count("uncleHeaders"))
                 ETH_ERROR_MESSAGE("Invalid block has uncles outside of rlp_decoded!");
             if (_data->count("withdrawals"))
                 ETH_ERROR_MESSAGE("Invalid block has withdrawals outside of rlp_decoded!");
@@ -84,13 +84,13 @@ BlockchainTestBlock::BlockchainTestBlock(spDataObject& _data)
             REQUIRE_JSONFIELDS(rlpDecoded, "BlockchainTestBlock::rlp_decoded",
             {{"blockHeader", {{DataType::Object}, jsonField::Required}},
              {"transactions", {{DataType::Array}, jsonField::Required}},
-             {"uncles", {{DataType::Array}, jsonField::Required}},
+             {"uncleHeaders", {{DataType::Array}, jsonField::Required}},
             {"withdrawals", {{DataType::Array}, jsonField::Required}}});
 
             m_blockHeader = readBlockHeader(rlpDecoded.atKey("blockHeader"));
             for (auto& el : rlpDecoded.atKeyUnsafe("transactions").getSubObjectsUnsafe())
                 m_transactions.emplace_back(readTransaction(dataobject::move(el)));
-            for (auto const& el : rlpDecoded.atKey("uncles").getSubObjects())
+            for (auto const& el : rlpDecoded.atKey("uncleHeaders").getSubObjects())
                 m_uncles.emplace_back(readBlockHeader(el));
             for (auto const& el : rlpDecoded.atKey("withdrawals").getSubObjects())
                 m_withdrawals.emplace_back(spWithdrawal(new Withdrawal(el)));
