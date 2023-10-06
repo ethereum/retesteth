@@ -231,7 +231,7 @@ void ToolChain::setWithdrawalsRoot(FH32 const& _withdrawalsRoot, spBlockHeader& 
 
 void ToolChain::setExcessBlobGasAndGasUsed(ToolResponse const& _res, spBlockHeader& _pendingHeader)
 {
-    if (_pendingHeader->type() == BlockType::BlockHeader4844)
+    if (isBlockExportExcessBlobGas(_pendingHeader))
     {
         BlockHeader4844& pendingFixed4844Header = BlockHeader4844::castFrom(_pendingHeader.getContent());
         pendingFixed4844Header.setExcessBlobGas(_res.currentExcessBlobGas());
@@ -241,14 +241,7 @@ void ToolChain::setExcessBlobGasAndGasUsed(ToolResponse const& _res, spBlockHead
 
 void ToolChain::calculateAndCheckSetBaseFee(VALUE const& _toolBaseFee, spBlockHeader& _pendingHeader, spBlockHeader const& _parentHeader)
 {
-    auto const pendingHeaderType = _pendingHeader.getCContent().type();
-    bool const isOn1559 = pendingHeaderType == BlockType::BlockHeader1559 && _parentHeader->type() == BlockType::BlockHeader1559;
-    bool const isOn1559ToMerge = pendingHeaderType == BlockType::BlockHeaderMerge && _parentHeader->type() == BlockType::BlockHeader1559;
-    bool const isOnMerge = pendingHeaderType == BlockType::BlockHeaderMerge && _parentHeader->type() == BlockType::BlockHeaderMerge;
-    bool const isOnShanghai = pendingHeaderType == BlockType::BlockHeaderShanghai;
-
-    // Calculate new baseFee
-    if (isOn1559 || isOn1559ToMerge || isOnMerge || isOnShanghai)
+    if (isBlockExportBasefee(_pendingHeader))
     {
         BlockHeader1559& pendingFixed1559Header = BlockHeader1559::castFrom(_pendingHeader.getContent());
 
@@ -256,6 +249,7 @@ void ToolChain::calculateAndCheckSetBaseFee(VALUE const& _toolBaseFee, spBlockHe
         {
             // If the tool does not return basefee in result file, the value is set 0, we need to corret it
             ChainOperationParams params = ChainOperationParams::defaultParams(toolParams());
+
             VALUE retestethBaseFee = calculateEIP1559BaseFee(params, _pendingHeader, _parentHeader);
             pendingFixed1559Header.setBaseFee(retestethBaseFee);
         }

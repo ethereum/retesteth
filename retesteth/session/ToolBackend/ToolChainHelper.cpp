@@ -286,14 +286,14 @@ VALUE calculateEthashDifficulty(
 
 VALUE calculateEIP1559BaseFee(ChainOperationParams const& _chainParams, spBlockHeader const& _bi, spBlockHeader const& _parent)
 {
+    if (_bi->number().asBigInt() == _chainParams.londonForkBlock)
+        return INITIAL_BASE_FEE;
+
     VALUE expectedBaseFee(0);
     BlockHeader1559 const& parent = BlockHeader1559::castFrom(_parent);
-
     VALUE const parentGasTarget = parent.gasLimit() / ELASTICITY_MULTIPLIER;
 
-    if (_bi->number().asBigInt() == _chainParams.londonForkBlock)
-        expectedBaseFee = INITIAL_BASE_FEE;
-    else if (parent.gasUsed() == parentGasTarget)
+    if (parent.gasUsed() == parentGasTarget)
         expectedBaseFee = parent.baseFee().asBigInt();
     else if (parent.gasUsed() > parentGasTarget)
     {
