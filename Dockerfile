@@ -52,7 +52,7 @@ RUN test -n "$RETESTETH" \
     || echo "Retesteth is empty, skip LLLC"
 
 # Solidity solc
-RUN wget https://github.com/ethereum/solidity/releases/download/v0.8.17/solc-static-linux \
+RUN wget https://github.com/ethereum/solidity/releases/download/v0.8.21/solc-static-linux \
    && cp solc-static-linux /bin/solc \
    && chmod +x /bin/solc
 
