@@ -79,8 +79,8 @@ RUN test -n "$PYT8N" \
 RUN test -n "$GETH" \
      && git clone $GETH_SRC /geth \
      && cd /geth && git fetch && git checkout $GETH \
-     && wget https://dl.google.com/go/go1.19.linux-amd64.tar.gz \
-     && tar -xvf go1.19.linux-amd64.tar.gz \
+     && wget https://dl.google.com/go/go1.20.linux-amd64.tar.gz \
+     && tar -xvf go1.20.linux-amd64.tar.gz \
      && mv go /usr/local && ln -s /usr/local/go/bin/go /bin/go \
      && go build ./cmd/evm  && cp evm /bin/evm \
      && rm -rf /geth && rm -rf /usr/local/go \
