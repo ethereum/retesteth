@@ -273,6 +273,8 @@ public:
         bool currentConfigIsSet() const;
         std::set<FORK> const& runOnlyNetworks() const { return m_runOnlyNetworks; }
 
+        bool pythonTestRunning = false;
+
     private:
         bool m_testSuiteRunning = false;
         std::set<FORK> m_runOnlyNetworks;

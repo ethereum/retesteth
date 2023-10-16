@@ -115,8 +115,13 @@ spDataObject DoTests(spDataObject& _input, TestSuite::TestSuiteOptions& _opt)
             // Select test by name if --singletest and --singlenet is set
             if (Options::get().singletest.initialized())
             {
-                if (!Options::get().singletest.subname.empty() && bcTest.testName() != Options::get().singletest.subname)
-                    continue;
+                // If we run python test from .py do not select by subtest
+                if (!Options::getDynamicOptions().pythonTestRunning)
+                {
+                    if (!Options::get().singletest.subname.empty()
+                        && bcTest.testName() != Options::get().singletest.subname)
+                        continue;
+                }
             }
 
             if (!Options::get().singleTestNet.empty())
