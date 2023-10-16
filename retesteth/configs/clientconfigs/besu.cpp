@@ -287,6 +287,9 @@ fi
 
 if [ $1 = "t8n" ] || [ $1 = "b11r" ]; then
     besuevm $1 $2 $3 $4 $5 $6 $7 $8 $9 $10 $11 $12 $13 $14 $15 $16 $17 $18 $19 $20 $21 $22 $23 $24 $25 $26
+elif [ $1 = "t8n-server" ]; then
+    besuevm $1 $2 $3 $4 $5 &
+    exit 0
 elif [ $1 = "-v" ]; then
     besuevm --version
 else
