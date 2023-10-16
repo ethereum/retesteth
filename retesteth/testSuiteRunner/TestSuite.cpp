@@ -192,7 +192,13 @@ void TestSuite::_executeTest(string const& _testFolder, fs::path const& _fillerT
             && !opt.filltests)
         {
             // Select single test from python generated tests
-            _runTest(filledTestPath.path().parent_path() / (opt.singletest.name + ".json"));
+            if (opt.singletest.name == _fillerTestFilePath.stem())
+            {
+                for (auto const& name : generatedFiles)
+                    _runTest(filledTestPath.path().parent_path() / (name + ".json"));
+            }
+            else
+                _runTest(filledTestPath.path().parent_path() / (opt.singletest.name + ".json"));
         }
         else
         {
