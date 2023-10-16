@@ -311,7 +311,11 @@ else
         cmdArgs=$cmdArgs" "$index
     done
     if [ $stateProvided -eq 1 ]; then
-        evmone $cmdArgs --verbosity 2 2> $errorLogFile
+        if [ -z $errorLogFile ]; then
+            evmone $cmdArgs --verbosity 2
+        else
+            evmone $cmdArgs --verbosity 2 2> $errorLogFile
+        fi
     else
         evmone t9n $cmdArgs 2> $errorLogFile
     fi
