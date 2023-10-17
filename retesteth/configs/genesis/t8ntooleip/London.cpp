@@ -4,6 +4,9 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
+gent8ntooleip_genLondon1884Cfg::gent8ntooleip_genLondon1884Cfg()
+{
+
 const string t8ntooleip_London1884_config = R"({
     "params" : {
         "fork" : "London+1884",
@@ -15,8 +18,6 @@ const string t8ntooleip_London1884_config = R"({
     }
 })";
 
-gent8ntooleip_genLondon1884Cfg::gent8ntooleip_genLondon1884Cfg()
-{
     spDataObject obj2;
     (*obj2)["path"] = "t8ntooleip/genesis/London+1884.json";
     (*obj2)["content"] = t8ntooleip_London1884_config;

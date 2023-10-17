@@ -1,6 +1,6 @@
 #include "Common.h"
 #include <retesteth/Options.h>
-#include <retesteth/TestOutputHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
 using namespace std;
 using namespace test::debug;
 using namespace test::session;
@@ -154,13 +154,33 @@ CompareResult compareStorage(Storage const& _expectStorage, Storage const& _remo
         else if (_remoteStorage.hasKey(expKey))
         {
             VALUE const& remoteVal = _remoteStorage.atKey(expKey);
-            if (remoteVal != expVal)
+            // Treat expVal as ANY allowed value if it has bigint prefix
+            if (remoteVal != expVal && !expVal.isBigInt())
             {
                 ETH_MARK_ERROR(message + "has incorrect storage [" + expKey.asString() + "] = `" +
                                remoteVal.asString() + "(" + remoteVal.asDecString() + ")" +
                                "`, test expected [" + expKey.asString() + "] = `" +
                                expVal.asString() + "(" + expVal.asDecString() + ")" +
                                "`");
+                result = CompareResult::IncorrectStorage;
+            }
+        }
+    }
+
+    if (_expectStorage.getKeys().size() == _remoteStorage.getKeys().size())
+    {
+        string storage = message + " has storage records that are not checked by expected storage!";
+        for (auto const& element : _remoteStorage.getKeys())
+        {
+            VALUE const& remKey = std::get<0>(element.second);
+            auto const& remVal = std::get<1>(element.second);
+            storage += "\n [" + remKey.asDecString() + "] = " + remVal->asString();
+            storage += "(";
+            storage += remVal->asDecString();
+            storage += ")\n";
+            if (!_expectStorage.hasKey(remKey))
+            {
+                ETH_MARK_ERROR(storage);
                 result = CompareResult::IncorrectStorage;
             }
         }
@@ -177,7 +197,9 @@ CompareResult compareStorage(Storage const& _expectStorage, Storage const& _remo
         }
         auto const& remVal = _remoteStorage.atKey(VALUE(keys.at(0)));
         storage += "\n [" + keys.at(0) + "] = " + remVal.asString();
-        storage += "(" + remVal.asDecString() + ")\n";
+        storage += "(";
+        storage += remVal.asDecString();
+        storage += ")\n";
 
         ETH_MARK_ERROR(storage);
         result = CompareResult::IncorrectStorage;

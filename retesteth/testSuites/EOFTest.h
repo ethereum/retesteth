@@ -6,10 +6,9 @@
 
 namespace test
 {
-class EOFTestSuite : public StateTestSuite
+class EOFTestSuite : public TestSuite
 {
 public:
-    EOFTestSuite() : StateTestSuite(){};
     dataobject::spDataObject doTests(dataobject::spDataObject& _input, TestSuiteOptions& _opt) const override;
     TestSuite::TestPath suiteFolder() const override;
     TestSuite::FillerPath suiteFillerFolder() const override;

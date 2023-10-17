@@ -2,7 +2,7 @@
 #include <retesteth/testSuites/Common.h>
 #include <retesteth/Options.h>
 #include <retesteth/testSuites/blockchain/Common.h>
-#include <retesteth/TestHelper.h>
+#include <retesteth/helpers/TestHelper.h>
 using namespace std;
 using namespace test::debug;
 using namespace test::session;
@@ -54,6 +54,7 @@ void TestBlockchain::generateBlock(
         if (_generateUncles)
             newBlock.setNextBlockForked(mineNextBlockAndRevert());
 
+        newBlock.setHasBigInt(_block.hasBigInt());
         m_blocks.emplace_back(newBlock);
     }
 }
@@ -92,6 +93,7 @@ void TestBlockchain::_generateBlock_RegisterInvalidBlock(BlockchainTestFillerBlo
     TestBlock newBlock(_rawRLP, _block.chainName(), newBlockNet, m_blocks.size());
     newBlock.registerTestExceptios(_block.getExpectException(m_network));
     newBlock.setDoNotExport(_block.isDoNotImportOnClient());
+    newBlock.setHasBigInt(_block.hasBigInt());
     m_blocks.emplace_back(newBlock);
 }
 

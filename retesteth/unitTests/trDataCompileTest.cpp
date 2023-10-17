@@ -1,11 +1,24 @@
 #include <libdataobj/ConvertFile.h>
 #include <retesteth/Options.h>
-#include <retesteth/TestOutputHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
 #include <testStructures/types/StateTests/Filler/StateTestFillerTransaction.h>
 
 using namespace std;
 using namespace test;
 using namespace dataobject;
+
+class Initializer : public TestOutputHelperFixture
+{
+public:
+    Initializer()
+    {
+        for (auto const& config : Options::getDynamicOptions().getClientConfigs())
+        {
+            Options::getDynamicOptions().setCurrentConfig(config);
+            break;
+        }
+    }
+};
 
 string const transactionCommon = R"(
     "gasLimit" : ["400000"],
@@ -31,7 +44,7 @@ StateTestFillerTransaction makeTransaction(std::vector<string> const& _data)
     return StateTestFillerTransaction(dataobject::move(p));
 }
 
-BOOST_FIXTURE_TEST_SUITE(trDataCompileSuite, TestOutputHelperFixture)
+BOOST_FIXTURE_TEST_SUITE(trDataCompileSuite, Initializer)
 
 BOOST_AUTO_TEST_CASE(compileRaw)
 {

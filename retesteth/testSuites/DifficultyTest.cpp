@@ -1,11 +1,11 @@
 #include "DifficultyTest.h"
 #include "retesteth/testSuites/TestFixtures.h"
-#include <retesteth/TestOutputHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
 #include <retesteth/testSuites/Common.h>
 #include <retesteth/testStructures/types/DifficultyTests/DifficultyTest.h>
 #include <retesteth/testStructures/types/DifficultyTests/DifficultyTestFiller.h>
 #include <retesteth/Options.h>
-#include <retesteth/TestHelper.h>
+#include <retesteth/helpers/TestHelper.h>
 #include <retesteth/ExitHandler.h>
 
 using namespace std;

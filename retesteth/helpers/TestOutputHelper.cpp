@@ -22,8 +22,8 @@
 #include <libdevcore/include.h>
 #include <retesteth/EthChecks.h>
 #include <retesteth/Options.h>
-#include <retesteth/TestHelper.h>
-#include <retesteth/TestOutputHelper.h>
+#include <retesteth/helpers/TestHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
 
 using namespace std;
 using namespace dev;
@@ -42,8 +42,6 @@ static std::map<fs::path, FolderNameSet> finishedTestFoldersMap;
 // static std::map<fs::path, FolderNameSet> exceptionTestFoldersMap;
 void checkUnfinishedTestFolders();  // Checkup that all test folders are active during the test run
 
-typedef std::pair<double, std::string> execTimeName;
-static std::vector<execTimeName> execTimeResults;
 static int execTotalErrors = 0;
 static std::map<thread::id, TestOutputHelper> helperThreadMap;  // threadID => outputHelper
 mutex g_totalTestsRun;
@@ -140,6 +138,7 @@ void TestOutputHelper::setUnitTestExceptions(std::vector<std::string> const& _me
 size_t TestOutputHelper::m_currentTestRun = 0;
 void TestOutputHelper::initTest(size_t _maxTests)
 {
+    Options::getDynamicOptions().setTestsuiteRunning(true);
     static size_t totalTestsNumber = 0;
     if (totalTestsNumber == 0)
     {
@@ -155,12 +154,16 @@ void TestOutputHelper::initTest(size_t _maxTests)
     //_maxTests = 0 means this function is called from testing thread
     m_currentTestName = string();
     m_currentTestFileName = string();
-    m_timer = Timer();
+    m_timer = TestOutputTimer();
+    TestOutputTimer::resetT8NTime();
     if (_maxTests != 0 && !Options::get().singleTestFile.initialized())
     {
-        string testOutOf = "(" + test::fto_string(++m_currentTestRun) + " of " + test::fto_string(totalTestsNumber) + ")";
+        string testOutOf = "(";
+        testOutOf += test::fto_string(++m_currentTestRun);
+        testOutOf += " of ";
+        testOutOf += test::fto_string(totalTestsNumber);
+        testOutOf += ")";
         ETH_DC_MESSAGE(DC::STATS, "Test Case \"" + TestInfo::caseName() + "\": " + testOutOf);
-        m_timer.restart();
     }
     m_maxTests = _maxTests;
     m_currTest = 0;
@@ -189,19 +192,13 @@ void TestOutputHelper::showProgress()
     }
 }
 
-std::mutex g_execTimeResults;
 void TestOutputHelper::finishTest()
 {
     auto const& opt = Options::get();
     if (opt.exectimelog && !opt.singleTestFile.initialized())
     {
         std::cout << "Tests finished: " << m_currTest << std::endl;
-        execTimeName res;
-        res.first = m_timer.elapsed();
-        res.second = TestInfo::caseName();
-        std::cout << res.second + " time: " + fto_string(res.first) << "\n";
-        std::lock_guard<std::mutex> lock(g_execTimeResults);
-        execTimeResults.emplace_back(res);
+        m_timer.printFinishTest(TestInfo::caseName());
     }
     printBoostError();  // !! could delete instance of TestOutputHelper !!
 }
@@ -235,36 +232,17 @@ void TestOutputHelper::printTestExecStats()
     if (!opt.singleTestFile.initialized())
         checkUnfinishedTestFolders();
 
-    if (Options::get().exectimelog)
-    {
-        std::lock_guard<std::mutex> lock(g_execTimeResults);
-        double totalTime = 0;
-        std::cout << std::left;
-        std::sort(execTimeResults.begin(), execTimeResults.end(), [](execTimeName _a, execTimeName _b) { return (_b.first < _a.first); });
-        for (size_t i = 0; i < execTimeResults.size(); i++)
-            totalTime += execTimeResults[i].first;
-        std::cout << std::endl << "*** Execution time stats" << std::endl;
-        {
-            std::lock_guard<std::mutex> lock2(g_totalTestsRun);
-            if (totalTestsRun > 0)
-                std::cout << setw(45) << "Total Tests: " << setw(25) << "     : " + fto_string(totalTestsRun) << "\n";
-            else
-                ETH_STDERROR_MESSAGE("*** Total Tests Run: " + fto_string(totalTestsRun) + "\n");
-        }
-        std::cout << setw(45) << "Total Time: " << setw(25) << "     : " + fto_string(totalTime) << "\n";
-        for (size_t i = 0; i < execTimeResults.size(); i++)
-            std::cout << setw(45) << execTimeResults[i].second << setw(25) << " time: " + fto_string(execTimeResults[i].first) << "\n";
-        std::cout << "\n";
-    }
-    else
     {
         std::lock_guard<std::mutex> lock(g_totalTestsRun);
-        string message = "*** Total Tests Run: " + fto_string(totalTestsRun) + "\n";
+        const string message = "*** Total Tests Run: " + fto_string(totalTestsRun) + "\n";
         if (totalTestsRun > 0)
             ETH_STDOUT_MESSAGE(message);
         else
             ETH_STDERROR_MESSAGE(message);
     }
+
+    if (Options::get().exectimelog)
+        TestOutputTimer::printTotalTimes();
 
     bool wereExecErrors = false;
     {
@@ -285,12 +263,6 @@ void TestOutputHelper::printTestExecStats()
         for (auto const& error : s_failedTestsMap)
             std::cout << "info:" << error.second << std::endl;
     }
-
-    {
-        std::lock_guard<std::mutex> lock(g_execTimeResults);
-        execTimeResults.clear();
-    }
-
     {
         std::lock_guard<std::mutex> lock(g_execTotalErrors);
         execTotalErrors = 0;
@@ -310,13 +282,18 @@ bool pathHasTests(fs::path const& _path)
     {
         // if the extention of a test file
         if (fs::is_regular_file(it->path()) &&
-            (it->path().extension() == ".json" || it->path().extension() == ".yml"))
+            (it->path().extension() == ".json" || it->path().extension() == ".yml"
+                || it->path().extension() == ".py"))
         {
             // if the filename ends with Filler/Copier type
             std::string const name = it->path().stem().filename().string();
             std::string const suffix =
                 (name.length() > 7) ? name.substr(name.length() - 6) : string();
             if (suffix == "Filler" || suffix == "Copier")
+                return true;
+
+            // if its python test
+            if (it->path().extension() == ".py" && name != "__init__")
                 return true;
         }
     }
@@ -411,66 +388,6 @@ void TestOutputHelper::markTestFolderAsFinished(
 {
     std::lock_guard<std::mutex> lock(g_finishedTestFoldersMapMutex);
     finishedTestFoldersMap[_suitePath].emplace(_folderName);
-}
-
-TestInfo::TestInfo(std::string const& _info, std::string const& _testName) : m_sFork(_info)
-{
-    namespace framework = boost::unit_test::framework;
-    m_isGeneralTestInfo = true;
-    m_currentTestCaseName = makeTestCaseName();
-
-    if (!_testName.empty())
-        TestOutputHelper::get().setCurrentTestName(_testName);
-}
-
-std::string TestInfo::errorDebug() const
-{
-    if (m_sFork.empty())
-        return "";
-
-    string message;
-    bool nologcolor = Options::get().nologcolor;
-    if (!nologcolor)
-        message = cYellow;
-    message += " (" + m_currentTestCaseName + "/" + TestOutputHelper::get().testName();
-
-    if (!m_isGeneralTestInfo)
-    {
-        message += ", fork: " + m_sFork;
-        if (!m_sChainName.empty())
-            message += ", chain: " + m_sChainName;
-    }
-    else
-        message += ", step: " + m_sFork;
-
-    if (m_isBlockchainTestInfo)
-        message += ", block: " + to_string(m_blockNumber);
-    else if (m_isStateTransactionInfo)
-        message += ", TrInfo: d: " + to_string(m_trD) + ", g: " + to_string(m_trG) + ", v: " + to_string(m_trV);
-
-    if (!m_sTransactionData.empty())
-        message += ", TrData: `" + m_sTransactionData + "`";
-
-    if (nologcolor)
-        return message + ")";
-    return message + ")" + cDefault;
-}
-
-string TestInfo::makeTestCaseName() const
-{
-    string name;
-    auto const& boostTCase = framework::current_test_case();
-    try
-    {
-        auto const& boostSuite = framework::get<test_suite>(boostTCase.p_parent_id);
-        name = boostSuite.p_name.get() + "/";
-    }
-    catch (std::exception const&)
-    {
-        ETH_WARNING("Error getting parent suite from boost!" + boostTCase.p_name.get());
-    }
-
-    return name + boostTCase.p_name.get();
 }
 
 void TestOutputHelper::addTestVector(std::string&& _str)

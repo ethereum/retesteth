@@ -14,6 +14,8 @@ int runTheBoostTests(int _argc, const char* _argv[]);
 
 void lookForUnregisteredTestFolders();
 void cleanMemory();
+void registerBuffer(char*);
+void registerFakeArgs(const char**);
 
 void travisOut(std::atomic_bool* _stopTravisOut);
 void timeoutThread(std::atomic_bool* _stopTimeout);

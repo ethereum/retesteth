@@ -2,8 +2,8 @@
 #include <retesteth/EthChecks.h>
 #include <retesteth/ExitHandler.h>
 #include <retesteth/Options.h>
-#include <retesteth/TestHelper.h>
-#include <retesteth/TestOutputHelper.h>
+#include <retesteth/helpers/TestHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
 #include <retesteth/session/RPCImpl.h>
 #include <retesteth/session/Session.h>
 
@@ -202,6 +202,14 @@ TestRawTransaction RPCImpl::test_rawTransaction(BYTES const& _rlp, FORK const& _
 {
     spDataObject const res = rpcCall("test_rawTransaction", {quote(_rlp.asString()), quote(_fork.asString())});
     return TestRawTransaction(res);
+}
+
+std::string RPCImpl::test_rawEOFCode(BYTES const& _code, FORK const& _fork)
+{
+    (void) _code;
+    (void) _fork;
+    ETH_FAIL_MESSAGE("RPCImpl::test_rawEOFCode is not implemented!");
+    return string();
 }
 
 VALUE RPCImpl::test_calculateDifficulty(FORK const& _fork, VALUE const& _blockNumber, VALUE const& _parentTimestamp,

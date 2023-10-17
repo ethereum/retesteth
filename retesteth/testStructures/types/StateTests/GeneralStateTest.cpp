@@ -1,7 +1,7 @@
 #include "GeneralStateTest.h"
 #include <retesteth/EthChecks.h>
-#include <retesteth/TestHelper.h>
-#include <retesteth/TestOutputHelper.h>
+#include <retesteth/helpers/TestHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
 #include <retesteth/testStructures/Common.h>
 
 using namespace std;
@@ -96,7 +96,9 @@ StateTestInFilled::StateTestInFilled(spDataObject& _data)
     // -- REMOVE THIS, FIX THE TESTS
     m_pre = spState(new State(MOVE(_data, "pre")));
 
+    m_hasBigInt = _data->atKey("transaction").performSearch(src_findBigInt);
     m_transaction = GCP_SPointer<StateTestTransaction>(new StateTestTransaction(_data->atKey("transaction")));
+
     for (auto const& elFork : _data->atKey("post").getSubObjects())
     {
         StateTestPostResults res;

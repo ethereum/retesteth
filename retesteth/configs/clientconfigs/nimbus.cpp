@@ -4,12 +4,16 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
+gennimbuscfg::gennimbuscfg()
+{
+
 string const nimbus_config = R"({
     "name" : "Ethereum NIMBUS on StateTool",
     "socketType" : "tranition-tool",
     "socketAddress" : "start.sh",
     "checkLogsHash" : true,
     "checkBasefee" : true,
+    "supportBigint" : true,
     "defaultChainID" : 1,
     "customCompilers" : {
         ":yul" : "yul.sh",
@@ -47,6 +51,11 @@ string const nimbus_config = R"({
         "Merge+3855"
     ],
     "exceptions" : {
+      "PYSPECS EXCEPTIONS: ": "",
+      "Transaction without funds" : "not enough cash",
+      "intrinsic gas too low" : "not enough gas to perform calculation",
+      "max initcode size exceeded" : "initcode size exceeds maximum",
+
       "AddressTooShort" : "input string too short for common.Address",
       "AddressTooLong" : "rlp: input string too long for common.Address, decoding into (types.Transaction)(types.LegacyTx).To",
       "NonceMax" : "nonce exceeds 2^64-1",
@@ -107,14 +116,14 @@ string const nimbus_config = R"({
       "TooManyUncles" : "Too many uncles!",
       "UncleIsBrother" : "Uncle is brother!",
       "OutOfGas" : "out of gas",
-      "SenderNotEOA" : "processTransaction failed",
-      "IntrinsicGas" : "processTransaction failed",
+      "SenderNotEOA" : "sender is not an EOA",
+      "IntrinsicGas" : "not enough gas to perform calculation",
       "ExtraDataIncorrectDAO" : "BlockHeader require Dao ExtraData!",
       "InvalidTransactionVRS" : "t8ntool didn't return a transaction with hash",
       "BLOCKHEADER_VALUE_TOOLARGE" : "Blockheader parse error: VALUE  >u256",
       "TRANSACTION_VALUE_TOOLARGE" : "TransactionLegacy convertion error: VALUE  >u256",
       "TRANSACTION_VALUE_TOOSHORT" : "t8ntool didn't return a transaction with hash",
-      "TR_NonceHasMaxValue" : "processTransaction failed",
+      "TR_NonceHasMaxValue" : "nonce at maximum",
       "OVERSIZE_RLP" : "Error importing raw rlp block: OversizeRLP",
       "RLP_BadCast" : "BadCast",
       "RLP_ExpectedAsList" : "expected to be list",
@@ -213,18 +222,27 @@ string const nimbus_config = R"({
       "1559BlockImportImpossible_TargetGasHigh": "gasTarget increased too much",
       "1559BlockImportImpossible_InitialGasLimitInvalid": "Invalid block1559: Initial gasLimit must be",
       "MergeBlockImportImpossible" : "Trying to import Merge block on top of Shanghai block after transition",
-      "ShanghaiBlockImportImpossible" : "Shanghai block on top of Merge block before transition",
-      "TR_IntrinsicGas" : "processTransaction failed",
-      "TR_NoFunds" : "",
+      "ShanghaiBlockImportImpossible" : "Trying to import Shanghai block on top of block that is not Shanghai!!",
+      "TR_IntrinsicGas" : "not enough gas to perform calculation",
+      "TR_RLP_WRONGVALUE" : "Unsigned integer expected",
+      "TR_NoFunds" : "not enough cash",
+      "TR_NoFundsX" : "larger than expected Int value",
       "TR_NoFundsValue" : "processTransaction failed",
-      "TR_FeeCapLessThanBlocks" : "processTransaction failed",
-      "TR_GasLimitReached" : "processTransaction failed",
-      "TR_NonceTooHigh" : "processTransaction failed",
-      "TR_NonceTooLow" : "processTransaction failed",
-      "TR_TypeNotSupported" : "processTransaction failed",
-      "TR_TipGtFeeCap": "processTransaction failed",
+      "TR_NoFundsOrGas" : "not enough gas to perform calculation",
+      "TR_FeeCapLessThanBlocks" : "maxFee is smaller than baseFee",
+      "TR_FeeCapLessThanBlocksORGasLimitReached" : "gas limit reached",
+      "TR_FeeCapLessThanBlocksORNoFunds" : "not enough gas to perform calculation",
+      "TR_GasLimitReached" : "gas limit reached",
+      "TR_NonceTooHigh" : "invalid tx: account nonce mismatch",
+      "TR_NonceTooLow" : "invalid tx: account nonce mismatch",
+      "TR_TypeNotSupported" : "invalid tx:",
+      "TR_TipGtFeeCap": "maxFee is smaller than maPriorityFee",
       "TR_TooShort": "processTransaction failed",
-      "TR_InitCodeLimitExceeded" : "processTransaction failed",
+      "TR_InitCodeLimitExceeded" : "initcode size exceeds maximum",
+      "TR_EMPTYBLOB" : "there must be at least one blob",
+      "TR_BLOBCREATE" : "destination must be not empty",
+      "TR_BLOBVERSION_INVALID" : "one of blobVersionedHash has invalid version",
+      "TR_BLOBLIST_OVERSIZE" : "versioned hashes len exceeds",
       "1559BaseFeeTooLarge": "TransactionBaseFee convertion error: VALUE  >u256",
       "1559PriorityFeeGreaterThanBaseFee": "maxFeePerGas \u003c maxPriorityFeePerGas",
       "2930AccessListAddressTooLong": "rlp: input string too long for common.Address, decoding into (types.Transaction)(types.AccessListTx).AccessList[0].Address",
@@ -236,8 +254,8 @@ string const nimbus_config = R"({
       "3675PoWBlockRejected" : "Invalid block1559: Chain switched to PoS!",
       "3675PoSBlockRejected" : "Parent (transition) block has not reached TTD",
       "3675PreMerge1559BlockRejected" : "Trying to import 1559 block on top of PoS block",
-      "INPUT_UNMARSHAL_ERROR" : "cannot unmarshal hex",
-      "INPUT_UNMARSHAL_SIZE_ERROR" : "hex string",
+      "INPUT_UNMARSHAL_ERROR" : "field >= 2**64",
+      "INPUT_UNMARSHAL_ADDRESS_ERROR" : "not a valid address!",
       "RLP_BODY_UNMARSHAL_ERROR" : "Rlp structure is wrong",
       "PostMergeUncleHashIsNotEmpty" : "block.uncleHash != empty",
       "PostMergeDifficultyIsNot0" : "block.difficulty must be 0"
@@ -253,13 +271,13 @@ if [ -z $wevm ]; then
 fi
 
 if [ $1 = "t8n" ] || [ $1 = "b11r" ]; then
-    evm_nimbus $1 $2 $3 $4 $5 $6 $7 $8 $9 $10 $11 $12 $13 $14 $15 $16 $17 $18 $19 $20 $21 $22 $23 $24 $25 $26
+    evm_nimbus $2 $3 $4 $5 $6 $7 $8 $9 $10 $11 $12 $13 $14 $15 $16 $17 $18 $19 $20 $21 $22 $23 $24 $25 $26
 elif [ $1 = "-v" ]; then
     evm_nimbus --version
 else
     stateProvided=0
     readErrorLog=0
-    errorLogFile=""
+    errorLogFile="/dev/null"
     cmdArgs=""
     for index in ${1} ${2} ${3} ${4} ${5} ${6} ${7} ${8} ${9} ${10} ${11} ${12} ${13} ${14} ${15} ${16} ${17} ${18} ${19} ${20} ${21} ${22} ${23} ${24} ${25} ${26}; do
         if [ $index = "--input.alloc" ]; then
@@ -304,8 +322,6 @@ echo "0x600360005500"
 # just like described in this file."
 )";
 
-gennimbuscfg::gennimbuscfg()
-{
     {
         spDataObject obj;
         (*obj)["path"] = "nimbus/config";

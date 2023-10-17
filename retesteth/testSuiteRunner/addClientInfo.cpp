@@ -1,8 +1,8 @@
 #include "TestSuiteHelperFunctions.h"
 #include <libdevcore/CommonIO.h>
 #include <retesteth/Options.h>
-#include <retesteth/TestHelper.h>
-#include <retesteth/TestOutputHelper.h>
+#include <retesteth/helpers/TestHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
 #include <retesteth/session/Session.h>
 
 using namespace std;
@@ -86,6 +86,7 @@ bool addClientInfoIfUpdate(DataObject& _newFilledTestData, fs::path const& _test
         (*newTestClientInfo)["filling-tool-version"] = test::prepareVersionString();
         (*newTestClientInfo)["lllcversion"] = test::prepareLLLCVersionString();
         (*newTestClientInfo)["solidity"] = test::prepareSolidityVersionString();
+
         (*newTestClientInfo)["source"] = _testSourcePath.string();
         if (newTestClientInfo->count("labels"))
             (*newTestClientInfo).setKeyPos("labels", newTestClientInfo->getSubObjects().size() - 1);

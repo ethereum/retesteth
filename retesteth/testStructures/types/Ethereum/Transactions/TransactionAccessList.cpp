@@ -4,91 +4,52 @@
 #include <libdevcrypto/Common.h>
 #include <retesteth/EthChecks.h>
 #include <retesteth/Options.h>
-#include <retesteth/TestHelper.h>
-#include <retesteth/TestOutputHelper.h>
+#include <retesteth/helpers/TestHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
 #include <retesteth/testStructures/Common.h>
 using namespace std;
 using namespace dev;
 
 namespace test::teststruct
 {
-TransactionAccessList::TransactionAccessList(DataObject const& _data) : TransactionLegacy()
+
+void TransactionAccessList::checkDataScheme(DataObject const& _data) const
 {
-    fromDataObject(_data);
+    REQUIRE_JSONFIELDS(_data, "TransactionAccessList " + _data.getKey(),
+        {
+            {"data", {{DataType::String}, jsonField::Required}},
+            {"gasPrice", {{DataType::String}, jsonField::Required}},
+            {"gasLimit", {{DataType::String}, jsonField::Required}},
+            {"nonce", {{DataType::String}, jsonField::Required}},
+            {"value", {{DataType::String}, jsonField::Required}},
+            {"to", {{DataType::String, DataType::Null}, jsonField::Required}},
+            {"secretKey", {{DataType::String}, jsonField::Optional}},
+            {"sender", {{DataType::String}, jsonField::Optional}},
+            {"v", {{DataType::String}, jsonField::Optional}},
+            {"r", {{DataType::String}, jsonField::Optional}},
+            {"s", {{DataType::String}, jsonField::Optional}},
+
+            // Transaction type 1
+            {"type", {{DataType::String}, jsonField::Optional}},
+            {"chainId", {{DataType::String, DataType::Null}, jsonField::Optional}},
+            {"accessList", {{DataType::Array}, jsonField::Required}},
+
+            {"publicKey", {{DataType::String}, jsonField::Optional}},  // Besu EthGetBlockBy transaction
+            {"raw", {{DataType::String}, jsonField::Optional}},        // Besu EthGetBlockBy transaction
+
+            {"blockHash", {{DataType::String}, jsonField::Optional}},         // EthGetBlockBy transaction
+            {"blockNumber", {{DataType::String}, jsonField::Optional}},       // EthGetBlockBy transaction
+            {"from", {{DataType::String}, jsonField::Optional}},              // EthGetBlockBy transaction
+            {"hash", {{DataType::String}, jsonField::Optional}},              // EthGetBlockBy transaction
+            {"transactionIndex", {{DataType::String}, jsonField::Optional}},  // EthGetBlockBy transaction
+            {"expectException", {{DataType::Object}, jsonField::Optional}}    // BlockchainTest filling
+        });
 }
 
-void TransactionAccessList::fromDataObject(DataObject const& _data)
+void TransactionAccessList::_fromData(DataObject const& _data)
 {
-    try
-    {
-        REQUIRE_JSONFIELDS(_data, "TransactionAccessList " + _data.getKey(),
-            {
-                {"data", {{DataType::String}, jsonField::Required}},
-                {"gasPrice", {{DataType::String}, jsonField::Required}},
-                {"gasLimit", {{DataType::String}, jsonField::Required}},
-                {"nonce", {{DataType::String}, jsonField::Required}},
-                {"value", {{DataType::String}, jsonField::Required}},
-                {"to", {{DataType::String, DataType::Null}, jsonField::Required}},
-                {"secretKey", {{DataType::String}, jsonField::Optional}},
-                {"sender", {{DataType::String}, jsonField::Optional}},
-                {"v", {{DataType::String}, jsonField::Optional}},
-                {"r", {{DataType::String}, jsonField::Optional}},
-                {"s", {{DataType::String}, jsonField::Optional}},
-
-                // Transaction type 1
-                {"type", {{DataType::String}, jsonField::Optional}},
-                {"chainId", {{DataType::String, DataType::Null}, jsonField::Optional}},
-                {"accessList", {{DataType::Array}, jsonField::Required}},
-
-                {"publicKey", {{DataType::String}, jsonField::Optional}},  // Besu EthGetBlockBy transaction
-                {"raw", {{DataType::String}, jsonField::Optional}},        // Besu EthGetBlockBy transaction
-
-                {"blockHash", {{DataType::String}, jsonField::Optional}},         // EthGetBlockBy transaction
-                {"blockNumber", {{DataType::String}, jsonField::Optional}},       // EthGetBlockBy transaction
-                {"from", {{DataType::String}, jsonField::Optional}},              // EthGetBlockBy transaction
-                {"hash", {{DataType::String}, jsonField::Optional}},              // EthGetBlockBy transaction
-                {"transactionIndex", {{DataType::String}, jsonField::Optional}},  // EthGetBlockBy transaction
-                {"expectException", {{DataType::Object}, jsonField::Optional}}    // BlockchainTest filling
-            });
-
-        m_accessList = spAccessList(new AccessList(_data.atKey("accessList")));
-
-        m_data = spBYTES(new BYTES(_data.atKey("data")));
-        m_gasLimit = spVALUE(new VALUE(_data.atKey("gasLimit")));
-        m_gasPrice = spVALUE(new VALUE(_data.atKey("gasPrice")));
-        m_nonce = spVALUE(new VALUE(_data.atKey("nonce")));
-        m_value = spVALUE(new VALUE(_data.atKey("value")));
-        if (_data.count("sender"))
-            m_sender = spFH20(new FH20(_data.atKey("sender")));
-
-        if (_data.count("chainId"))
-            m_chainID = spVALUE(new VALUE(_data.atKey("chainId")));
-
-        if (_data.atKey("to").type() == DataType::Null || _data.atKey("to").asString().empty())
-            m_creation = true;
-        else
-        {
-            m_creation = false;
-            m_to = spFH20(new FH20(_data.atKey("to")));
-        }
-
-        if (_data.count("secretKey"))
-        {
-            setSecret(_data.atKey("secretKey"));
-            buildVRS();
-        }
-        else
-        {
-            m_v = spVALUE(new VALUE(_data.atKey("v")));
-            m_r = spVALUE(new VALUE(_data.atKey("r")));
-            m_s = spVALUE(new VALUE(_data.atKey("s")));
-            rebuildRLP();
-        }
-    }
-    catch (std::exception const& _ex)
-    {
-        throw UpwardsException(string("TransactionAccessList convertion error: ") + _ex.what() + _data.asJson());
-    }
+    TransactionLegacy::_fromData(_data);
+    m_accessList = spAccessList(new AccessList(_data.atKey("accessList")));
 }
 
 TransactionAccessList::TransactionAccessList(dev::RLP const& _rlp) : TransactionLegacy()
@@ -105,8 +66,10 @@ TransactionAccessList::TransactionAccessList(BYTES const& _rlp) : TransactionLeg
 
 void TransactionAccessList::fromRLP(dev::RLP const& _rlp)
 {
-    if (_rlp.itemCount() != 11)
-        throw test::UpwardsException("TransactionAccessList::fromRLP(RLP) expected to have exactly 10 elements!");
+    if (_rlp.itemCount() != _rlpHeaderSize())
+        throw test::UpwardsException(TransactionTypeToString(type())
+                                     + "::fromRLP(RLP) expected to have exactly "
+                                     + test::fto_string(_rlpHeaderSize()) + " elements!");
 
     // 0 - chainID
     // 1 - nonce        4 - to      7 - v
@@ -155,39 +118,22 @@ dev::h256 TransactionAccessList::buildVRSHash() const
 
 void TransactionAccessList::buildVRS()
 {
-    const dev::h256 hash = buildVRSHash();
-    const dev::Secret secret(m_secretKey->asString());
-    dev::Signature sig = dev::sign(secret, hash);
-    dev::SignatureStruct sigStruct = *(dev::SignatureStruct const*)&sig;
-    ETH_FAIL_REQUIRE_MESSAGE(
-        sigStruct.isValid(), TestOutputHelper::get().testName() + " Could not construct transaction signature!");
-
-    m_v = spVALUE(new VALUE(dev::toCompactHexPrefixed(dev::u256(sigStruct.v), 1)));
-    m_r = spVALUE(new VALUE(dev::toCompactHexPrefixed(dev::u256(sigStruct.r))));
-    m_s = spVALUE(new VALUE(dev::toCompactHexPrefixed(dev::u256(sigStruct.s))));
-    rebuildRLP();
+    Transaction::buildVRS();
 }
 
 void TransactionAccessList::streamHeader(dev::RLPStream& _s) const
 {
     // rlp([chainId, nonce, gasPrice, gasLimit, to, value, data, access_list, yParity, senderR, senderS])
     _s << m_chainID->asBigInt();
-    _s << nonce().serializeRLP();
-    _s << gasPrice().serializeRLP();
-    _s << gasLimit().serializeRLP();
-    if (Transaction::isCreation())
-        _s << "";
-    else
-        _s << to().serializeRLP();
-    _s << value().serializeRLP();
-    _s << test::sfromHex(data().asString());
+
+    TransactionLegacy::streamHeader(_s);
 
     // Access Listist
     dev::RLPStream accessList(m_accessList->list().size());
     for (auto const& el : m_accessList->list())
         accessList.appendRaw(el->asRLPStream().out());
-
     _s.appendRaw(accessList.out());
+
 }
 
 const spDataObject TransactionAccessList::asDataObject(ExportOrder _order) const
@@ -206,6 +152,7 @@ const spDataObject TransactionAccessList::asDataObject(ExportOrder _order) const
         (*out)["type"] = "0x1";
         if (!m_secretKey.isEmpty() && m_secretKey.getCContent() != 0)
             (*out)["secretKey"] = m_secretKey->asString();
+        (*out).performModifier(mod_removeBigIntHint);
     }
     return out;
 }
@@ -215,7 +162,7 @@ void TransactionAccessList::rebuildRLP()
     // RLP(01 + tr.rlp)
     dev::RLPStream wrapper;
     dev::RLPStream out;
-    out.appendList(11);
+    out.appendList(_rlpHeaderSize());
     streamHeader(out);
     out << v().serializeRLP();
     out << r().serializeRLP();

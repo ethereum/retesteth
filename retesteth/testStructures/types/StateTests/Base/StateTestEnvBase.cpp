@@ -1,7 +1,5 @@
 #include "StateTestEnvBase.h"
-namespace test
-{
-namespace teststruct
+namespace test::teststruct
 {
 
 spDataObject const& StateTestEnvBase::asDataObject() const
@@ -11,4 +9,3 @@ spDataObject const& StateTestEnvBase::asDataObject() const
 }
 
 }  // namespace teststruct
-}  // namespace test

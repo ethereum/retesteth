@@ -4,7 +4,8 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
-
+genRewardsCfgNIMBUS::genRewardsCfgNIMBUS()
+{
 const string nimbus_correctMiningReward_config = R"({
     "//comment" : "State Tests does not calculate mining reward in post conditions, so when filling a blockchain test out of it, the mining reward must be set",
     "Frontier":          "5000000000000000000",
@@ -27,11 +28,10 @@ const string nimbus_correctMiningReward_config = R"({
     "Aleut"  :           "2000000000000000000",
     "Merge"  :           "0",
     "Merged"  :          "0",
-    "Shanghai"  :        "0"
+    "Shanghai"  :        "0",
+    "Cancun" : "0"
 })";
 
-genRewardsCfgNIMBUS::genRewardsCfgNIMBUS()
-{
     spDataObject obj;
     (*obj)["path"] = "nimbus/genesis/correctMiningReward.json";
     (*obj)["content"] = nimbus_correctMiningReward_config;

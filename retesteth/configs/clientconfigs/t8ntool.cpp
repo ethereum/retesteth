@@ -4,6 +4,68 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
+
+string const yul_compiler_sh = R"(#!/bin/sh
+solc=$(which solc)
+if [ -z $solc ]; then
+   >&2 echo "yul.sh \"Yul compilation error: 'solc' not found!\""
+   echo "0x"
+else
+    if [ ! -z $2 ]; then
+        evmversion="--evm-version $2"
+    fi
+    out=$(solc $evmversion --assemble $1 2>&1)
+    a=$(echo "$out" | grep "Binary representation:" -A 1 | tail -n1)
+    case "$out" in
+    *Error*) >&2 echo "yul.sh \"Yul compilation error: \"\n$out";;
+    *       )  echo 0x$a;;
+    esac
+fi
+)";
+
+string const t8ntool_start = R"(#!/bin/sh
+
+wevm=$(which evm)
+if [ -z $wevm ]; then
+   >&2 echo "Can't find geth's 'evm' executable alias in the system path!"
+   exit 1
+fi
+
+if [ $1 = "eof" ] || [ $1 = "t8n" ] || [ $1 = "b11r" ]; then
+    evm $1 $2 $3 $4 $5 $6 $7 $8 $9 $10 $11 $12 $13 $14 $15 $16 $17 $18 $19 $20 $21 $22 $23 $24 $25 $26
+elif [ $1 = "-v" ]; then
+    evm -v
+else
+    stateProvided=0
+    readErrorLog=0
+    errorLogFile=""
+    cmdArgs=""
+    for index in ${1} ${2} ${3} ${4} ${5} ${6} ${7} ${8} ${9} ${10} ${11} ${12} ${13} ${14} ${15} ${16} ${17} ${18} ${19} ${20} ${21} ${22} ${23} ${24} ${25} ${26}; do
+        if [ $index = "--input.alloc" ]; then
+            stateProvided=1
+        fi
+        if [ $readErrorLog -eq 1 ]; then
+            errorLogFile=$index
+            readErrorLog=0
+            continue
+        fi
+        if [ $index = "--output.errorlog" ]; then
+            readErrorLog=1
+            continue
+        fi
+        cmdArgs=$cmdArgs" "$index
+    done
+    if [ $stateProvided -eq 1 ]; then
+        evm t8n $cmdArgs --verbosity 2 2> $errorLogFile
+    else
+        evm t9n $cmdArgs 2> $errorLogFile
+    fi
+fi
+)";
+
+gent8ntoolcfg::gent8ntoolcfg()
+{
+
 string const t8ntool_config = R"({
     "name" : "Ethereum GO on StateTool",
     "socketType" : "tranition-tool",
@@ -15,6 +77,7 @@ string const t8ntool_config = R"({
     "calculateBasefee" : false,
     "checkLogsHash" : true,
     "support1559" : true,
+    "supportBigint" : true,
     "transactionsAsJson" : false,
     "tmpDir" : "/dev/shm",
     "defaultChainID" : 1,
@@ -46,13 +109,31 @@ string const t8ntool_config = R"({
         "ArrowGlacier",
         "ArrowGlacierToMergeAtDiffC0000",
         "GrayGlacier",
-        "MergeToShanghaiAtTime15k"
+        "MergeToShanghaiAtTime15k",
+        "ShanghaiToCancunAtTime15k"
     ],
     "fillerSkipForks" : [
     ],
     "exceptions" : {
       "PYSPECS_EXCEPTIONS" : "",
       "Transaction without funds" : "insufficient funds for gas * price + value",
+      "insufficient account balance" : "insufficient funds for gas * price + value",
+      "invalid excess blob gas" : "Error in field: excessBlobGas",
+      "invalid excessBlobGas" : "Error in field: excessBlobGas",
+      "invalid blob gas used" : "Error in field: blobGasUsed",
+      "invalid pre fork blob fields" : "unknown block type!",
+      "blob fields missing post fork" : "unknown block type!",
+      "invalid transaction" : "expected to have exactly 14 elements",
+      "invalid blob versioned hash" : "hash version mismatch",
+      "zero blob tx" : "blob transaction missing blob hashes",
+      "insufficient_account_balance" : "Error importing raw rlp block",
+      "invalid_blob_count" : "Block has invalid number of blobs in txs >=7!",
+      "insufficient max fee per blob gas" : "max fee per blob gas less than block blob gas fee",
+      "insufficient max fee per gas" : "max fee per gas less than block base fee",
+      "invalid max fee per blob gas" : "max fee per blob gas less than block blob gas fee",
+      "too_many_blobs_tx" : "block max blob gas exceeded",
+      "too many blobs" : "Block has invalid number of blobs in txs >=7!",
+      "tx type 3 not allowed pre-Cancun" : "blob tx used but field env.ExcessBlobGas missing",
 
       "AddressTooShort" : "input string too short for common.Address",
       "AddressTooLong" : "rlp: input string too long for common.Address, decoding into (types.Transaction)(types.LegacyTx).To",
@@ -220,18 +301,27 @@ string const t8ntool_config = R"({
       "1559BlockImportImpossible_TargetGasHigh": "gasTarget increased too much",
       "1559BlockImportImpossible_InitialGasLimitInvalid": "Invalid block1559: Initial gasLimit must be",
       "MergeBlockImportImpossible" : "Trying to import Merge block on top of Shanghai block after transition",
-      "ShanghaiBlockImportImpossible" : "Shanghai block on top of Merge block before transition",
+      "ShanghaiBlockImportImpossible" : "Trying to import Shanghai block on top of block that is not Shanghai!!",
       "TR_IntrinsicGas" : "intrinsic gas too low:",
+      "TR_RLP_WRONGVALUE" : "insufficient funds for gas",
       "TR_NoFunds" : "insufficient funds for gas * price + value",
+      "TR_NoFundsX" : "insufficient funds for gas * price + value",
       "TR_NoFundsValue" : "insufficient funds for transfer",
+      "TR_NoFundsOrGas" : "insufficient funds for gas * price + value",
       "TR_FeeCapLessThanBlocks" : "max fee per gas less than block base fee",
+      "TR_FeeCapLessThanBlocksORGasLimitReached" : "max fee per gas less than block base fee",
+      "TR_FeeCapLessThanBlocksORNoFunds" : "max fee per gas less than block base fee",
       "TR_GasLimitReached" : "gas limit reached",
       "TR_NonceTooHigh" : "nonce too high",
       "TR_NonceTooLow" : "nonce too low",
       "TR_TypeNotSupported" : "transaction type not supported",
+      "TR_TypeNotSupportedBlob" : "blob tx used but field env.ExcessBlobGas missing",
       "TR_TipGtFeeCap": "max priority fee per gas higher than max fee per gas",
       "TR_TooShort": "typed transaction too short",
       "TR_InitCodeLimitExceeded" : "max initcode size exceeded",
+      "TR_BlobDecodeError" : "expected List",
+      "TR_EMPTYBLOB" : "rlp: input string too short for common.Address",
+      "TR_BLOBVERSION_INVALID" : "unversioned blob hash",
       "1559BaseFeeTooLarge": "TransactionBaseFee convertion error: VALUE  >u256",
       "1559PriorityFeeGreaterThanBaseFee": "maxFeePerGas \u003c maxPriorityFeePerGas",
       "2930AccessListAddressTooLong": "rlp: input string too long for common.Address, decoding into (types.Transaction)(types.AccessListTx).AccessList[0].Address",
@@ -243,53 +333,13 @@ string const t8ntool_config = R"({
       "3675PoWBlockRejected" : "Invalid block1559: Chain switched to PoS!",
       "3675PoSBlockRejected" : "Parent (transition) block has not reached TTD",
       "3675PreMerge1559BlockRejected" : "Trying to import 1559 block on top of PoS block",
-      "INPUT_UNMARSHAL_ERROR" : "cannot unmarshal hex",
-      "INPUT_UNMARSHAL_SIZE_ERROR" : "failed unmarshaling",
+      "INPUT_UNMARSHAL_ERROR" : "field >= 2**64",
+      "INPUT_UNMARSHAL_ADDRESS_ERROR" : "not a valid address!",
       "RLP_BODY_UNMARSHAL_ERROR" : "Rlp structure is wrong",
       "PostMergeUncleHashIsNotEmpty" : "block.uncleHash != empty",
       "PostMergeDifficultyIsNot0" : "block.difficulty must be 0"
     }
 })";
-
-string const t8ntool_start = R"(#!/bin/sh
-
-wevm=$(which evm)
-if [ -z $wevm ]; then
-   >&2 echo "Can't find geth's 'evm' executable alias in the system path!"
-   exit 1
-fi
-
-if [ $1 = "t8n" ] || [ $1 = "b11r" ]; then
-    evm $1 $2 $3 $4 $5 $6 $7 $8 $9 $10 $11 $12 $13 $14 $15 $16 $17 $18 $19 $20 $21 $22 $23 $24 $25 $26
-elif [ $1 = "-v" ]; then
-    evm -v
-else
-    stateProvided=0
-    readErrorLog=0
-    errorLogFile=""
-    cmdArgs=""
-    for index in ${1} ${2} ${3} ${4} ${5} ${6} ${7} ${8} ${9} ${10} ${11} ${12} ${13} ${14} ${15} ${16} ${17} ${18} ${19} ${20} ${21} ${22} ${23} ${24} ${25} ${26}; do
-        if [ $index = "--input.alloc" ]; then
-            stateProvided=1
-        fi
-        if [ $readErrorLog -eq 1 ]; then
-            errorLogFile=$index
-            readErrorLog=0
-            continue
-        fi
-        if [ $index = "--output.errorlog" ]; then
-            readErrorLog=1
-            continue
-        fi
-        cmdArgs=$cmdArgs" "$index
-    done
-    if [ $stateProvided -eq 1 ]; then
-        evm t8n $cmdArgs --verbosity 2 2> $errorLogFile
-    else
-        evm t9n $cmdArgs 2> $errorLogFile
-    fi
-fi
-)";
 
 string const t8ntool_customcompiler = R"(#!/bin/sh
 # You can call a custom executable here
@@ -311,21 +361,6 @@ echo "0x600360005500"
 # just like described in this file."
 )";
 
-string const yul_compiler_sh = R"(#!/bin/sh
-solc=$(which solc)
-if [ -z $solc ]; then
-   >&2 echo "yul.sh \"Yul compilation error: 'solc' not found!\""
-   echo "0x"
-else
-    out=$(solc --assemble $1 2>&1)
-    a=$(echo "$out" | grep "Binary representation:" -A 1 | tail -n1)
-    case "$out" in
-    *Error*) >&2 echo "yul.sh \"Yul compilation error: \"\n$out";;
-    *       )  echo 0x$a;;
-    esac
-fi
-)";
-
 string const py_compiler_sh = R"(#!/bin/bash
 if [ -z "$PYSPECS_PATH" ]
 then
@@ -343,21 +378,54 @@ TESTCA=$3
 OUTPUT=$4
 EVMT8N=$5
 FORCER=$6
+DEBUG=$7
+FROMF=$8
+UNTIF=$9
+
+mkdir "./tests/tmp"
+genUID=$(uuidgen)
+testdir="./tests/tmp/tmptest_${genUID//-/_}"
+testout="./tests/tmp/out_${genUID//-/_}"
+
+if [ -d $testdir ]; then
+    rm -r $testdir
+fi
+mkdir $testdir
+
+parentpath=$(dirname "$SRCPATH")
+cp -r $parentpath/* $testdir
+cp $SRCPATH $testdir/$FILLER.py
+SRCPATH2="$testdir/$FILLER.py"
 
 ADDFLAGS=""
 if [ "$TESTCA" != "null" ]; then
-    ADDFLAGS="$ADDFLAGS --test-case $TESTCA"
+    SRCPATH2="$SRCPATH2::$TESTCA"
 fi
 if [ "$FORCER" != "null" ]; then
     ADDFLAGS="$ADDFLAGS --force-refill"
 fi
 
-tf --filler-path $SRCPATH --output $OUTPUT --test-module $FILLER $ADDFLAGS --no-output-structure --evm-bin $EVMT8N
-
+if [ -d $testout ]; then
+    rm -r $testout
+fi
+mkdir $testout
+1>&2 echo "fill -v $SRCPATH2 --output "$testout" $ADDFLAGS --evm-bin $EVMT8N --flat-output --from=$FROMF --until=$UNTIF"
+if [ $DEBUG != "null" ]; then
+    1>&2 fill -v $SRCPATH2 --output "$testout" $ADDFLAGS --evm-bin $EVMT8N --flat-output --from=$FROMF --until=$UNTIF
+else
+    out=$(fill -v $SRCPATH2 --output "$testout" $ADDFLAGS --evm-bin $EVMT8N --flat-output --from=$FROMF --until=$UNTIF)
+    if [[ "$out" == *" failed"* ]]; then
+      1>&2 echo "./retesteth/pyspecsStart.sh Pyspec test generation failed (use --verbosity PYSPEC for details) "
+      exit 1
+    fi
+fi
+cp -r $testout/* $OUTPUT
+rm -r $testout
+rm -r $testdir
+rm -r "./tests/tmp"
+exit 0
 )";
 
-gent8ntoolcfg::gent8ntoolcfg()
-{
     {
         spDataObject obj;
         (*obj)["path"] = "t8ntool/config";

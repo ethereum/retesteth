@@ -1,12 +1,15 @@
 #include "TransactionReader.h"
 #include "TransactionAccessList.h"
 #include "TransactionBaseFee.h"
+#include "TransactionBlob.h"
 #include <retesteth/EthChecks.h>
-#include <retesteth/TestHelper.h>
+#include <retesteth/helpers/TestHelper.h>
+#include <retesteth/Constants.h>
 
 using namespace std;
 using namespace dataobject;
 using namespace test::teststruct;
+using namespace test::teststruct::constnames;
 
 namespace
 {
@@ -24,6 +27,9 @@ spTransaction _readTransaction(TransactionType _t, dev::RLP const& _rlp)
         break;
     case TransactionType::BASEFEE:
         spTr = spTransaction(new TransactionBaseFee(_rlp));
+        break;
+    case TransactionType::BLOB:
+        spTr = spTransaction(new TransactionBlob(_rlp));
         break;
     }
     return spTr;
@@ -78,6 +84,8 @@ spTransaction readTransaction(dev::RLP const& _rlp)
             return _readTransaction(TransactionType::ACCESSLIST, realRLP);
         case 2:
             return _readTransaction(TransactionType::BASEFEE, realRLP);
+        case 3:
+            return _readTransaction(TransactionType::BLOB, realRLP);
         default:
             throw test::UpwardsException("readTransaction(dev::RLP const& _rlp) unknown transaction type!");
         }
@@ -89,9 +97,11 @@ spTransaction readTransaction(dev::RLP const& _rlp)
 
 spTransaction readTransaction(spDataObjectMove _filledData)
 {
-    if (_filledData.getPointer()->count("maxPriorityFeePerGas"))
+    if (_filledData.getPointer()->count(c_blobVersionedHashes))
+        return spTransaction(new TransactionBlob(_filledData));
+    if (_filledData.getPointer()->count(c_maxPriorityFeePerGas))
         return spTransaction(new TransactionBaseFee(_filledData));
-    if (_filledData.getPointer()->count("accessList"))
+    if (_filledData.getPointer()->count(c_accessList))
         return spTransaction(new TransactionAccessList(_filledData));
     return spTransaction(new TransactionLegacy(_filledData));
 }

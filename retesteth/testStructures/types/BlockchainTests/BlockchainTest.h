@@ -24,6 +24,7 @@ struct BlockchainTestInFilled : GCP_SPointerBase
     State const& Pre() const { return m_pre; }
 
     bool isFullState() const { return !m_post.isEmpty(); }
+    bool hasBigInt() const { return m_hasBigInt; }
     State const& Post() const { return m_post; }
     FH32 const& PostHash() const { return m_postHash; }
     FH32 const& lastBlockHash() const { return m_lastBlockHash; }
@@ -45,6 +46,7 @@ private:
     spState m_post;
     spFH32 m_postHash;
     spFH32 m_lastBlockHash;
+    bool m_hasBigInt = false;
 
     std::vector<std::string> m_exceptions;
 };

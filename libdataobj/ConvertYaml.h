@@ -8,4 +8,9 @@ std::string yamlTypeAsString(YAML::NodeType::value _type);
 
 /// Convert Yaml object to DataObject
 spDataObject ConvertYamlToData(YAML::Node const& _input, bool _sort = false);
+
+namespace ymlinternal {
+extern const std::string YML_INT_TAG;
+extern const std::string YML_BOOL_TAG;
+}
 }

@@ -1,87 +1,89 @@
 #include "BlockHeaderIncomplete.h"
 #include <retesteth/EthChecks.h>
-#include <retesteth/TestHelper.h>
+#include <retesteth/helpers/TestHelper.h>
 #include <retesteth/testStructures/Common.h>
+#include <retesteth/Constants.h>
 
 using namespace dev;
 using namespace std;
 using namespace dataobject;
+using namespace test::teststruct::constnames;
 
 namespace test::teststruct
 {
 BlockHeaderIncomplete::BlockHeaderIncomplete(DataObject const& _data)
 {
     REQUIRE_JSONFIELDS(_data, "BlockHeaderIncomplete " + _data.getKey(),
-        {{"bloom", {{DataType::String}, jsonField::Optional}},
-            {"coinbase", {{DataType::String}, jsonField::Optional}},
-            {"difficulty", {{DataType::String}, jsonField::Optional}},
-            {"extraData", {{DataType::String}, jsonField::Optional}},
-            {"gasLimit", {{DataType::String}, jsonField::Optional}},
-            {"baseFeePerGas", {{DataType::String}, jsonField::Optional}},
-            {"withdrawalsRoot", {{DataType::String}, jsonField::Optional}},
-            {"gasUsed", {{DataType::String}, jsonField::Optional}},
-            {"hash", {{DataType::String}, jsonField::Optional}},
-            {"mixHash", {{DataType::String}, jsonField::Optional}},
-            {"nonce", {{DataType::String}, jsonField::Optional}},
-            {"number", {{DataType::String}, jsonField::Optional}},
-            {"parentHash", {{DataType::String}, jsonField::Optional}},
-            {"receiptTrie", {{DataType::String}, jsonField::Optional}},
-            {"stateRoot", {{DataType::String}, jsonField::Optional}},
-            {"timestamp", {{DataType::String}, jsonField::Optional}},
-            {"transactionsTrie", {{DataType::String}, jsonField::Optional}},
+        {{c_bloom, {{DataType::String}, jsonField::Optional}},
+            {c_coinbase, {{DataType::String}, jsonField::Optional}},
+            {c_difficulty, {{DataType::String}, jsonField::Optional}},
+            {c_extraData, {{DataType::String}, jsonField::Optional}},
+            {c_gasLimit, {{DataType::String}, jsonField::Optional}},
+            {c_baseFeePerGas, {{DataType::String}, jsonField::Optional}},
+            {c_withdrawalsRoot, {{DataType::String}, jsonField::Optional}},
+            {c_gasUsed, {{DataType::String}, jsonField::Optional}},
+            {c_hash, {{DataType::String}, jsonField::Optional}},
+            {c_mixHash, {{DataType::String}, jsonField::Optional}},
+            {c_nonce, {{DataType::String}, jsonField::Optional}},
+            {c_number, {{DataType::String}, jsonField::Optional}},
+            {c_parentHash, {{DataType::String}, jsonField::Optional}},
+            {c_receiptTrie, {{DataType::String}, jsonField::Optional}},
+            {c_stateRoot, {{DataType::String}, jsonField::Optional}},
+            {c_timestamp, {{DataType::String}, jsonField::Optional}},
+            {c_transactionsTrie, {{DataType::String}, jsonField::Optional}},
             {"remove", {{DataType::Array}, jsonField::Optional}},
             {"forceNoWithdrawalsRLP", {{DataType::String}, jsonField::Optional}},
             {"uncleHash", {{DataType::String}, jsonField::Optional}}});
 
-    string const akey = _data.count("author") ? "author" : "coinbase";
+    string const& akey = _data.count(c_author) ? c_author : c_coinbase;
     if (_data.count(akey))
-        m_author = spFH20(new FH20(_data.atKey(akey)));
-    if (_data.count("difficulty"))
-        m_difficulty = spVALUE(new VALUE(_data.atKey("difficulty")));
-    if (_data.count("extraData"))
-        m_extraData = spBYTES(new BYTES(_data.atKey("extraData")));
-    if (_data.count("gasLimit"))
-        m_gasLimit = spVALUE(new VALUE(_data.atKey("gasLimit")));
-    if (_data.count("gasUsed"))
-        m_gasUsed = spVALUE(new VALUE(_data.atKey("gasUsed")));
-    if (_data.count("hash"))
-        m_hash = spFH32(new FH32(_data.atKey("hash")));
+        m_author = sFH20(_data.atKey(akey));
+    if (_data.count(c_difficulty))
+        m_difficulty = sVALUE(_data.atKey(c_difficulty));
+    if (_data.count(c_extraData))
+        m_extraData = sBYTES(_data.atKey(c_extraData));
+    if (_data.count(c_gasLimit))
+        m_gasLimit = sVALUE(_data.atKey(c_gasLimit));
+    if (_data.count(c_gasUsed))
+        m_gasUsed = sVALUE(_data.atKey(c_gasUsed));
+    if (_data.count(c_hash))
+        m_hash = sFH32(_data.atKey(c_hash));
 
-    string const bkey = _data.count("logsBloom") ? "logsBloom" : "bloom";
+    string const& bkey = _data.count(c_logsBloom) ? c_logsBloom : c_bloom;
     if (_data.count(bkey))
-        m_logsBloom = spFH256(new FH256(_data.atKey(bkey)));
+        m_logsBloom = sFH256(_data.atKey(bkey));
 
-    if (_data.count("mixHash"))
-        m_mixHash = spFH32(new FH32(_data.atKey("mixHash")));
-    if (_data.count("nonce"))
-        m_nonce = spFH8(new FH8(_data.atKey("nonce")));
-    if (_data.count("number"))
-        m_number = spVALUE(new VALUE(_data.atKey("number")));
-    if (_data.count("parentHash"))
-        m_parentHash = spFH32(new FH32(_data.atKey("parentHash")));
+    if (_data.count(c_mixHash))
+        m_mixHash = sFH32(_data.atKey(c_mixHash));
+    if (_data.count(c_nonce))
+        m_nonce = sFH8(_data.atKey(c_nonce));
+    if (_data.count(c_number))
+        m_number = sVALUE(_data.atKey(c_number));
+    if (_data.count(c_parentHash))
+        m_parentHash = sFH32(_data.atKey(c_parentHash));
 
-    string const rkey = _data.count("receiptsRoot") ? "receiptsRoot" : "receiptTrie";
+    string const& rkey = _data.count(c_receiptsRoot) ? c_receiptsRoot : c_receiptTrie;
     if (_data.count(rkey))
-        m_receiptsRoot = spFH32(new FH32(_data.atKey(rkey)));
+        m_receiptsRoot = sFH32(_data.atKey(rkey));
 
-    string const ukey = _data.count("sha3Uncles") ? "sha3Uncles" : "uncleHash";
+    string const& ukey = _data.count(c_sha3Uncles) ? c_sha3Uncles : c_uncleHash;
     if (_data.count(ukey))
-        m_sha3Uncles = spFH32(new FH32(_data.atKey(ukey)));
+        m_sha3Uncles = sFH32(_data.atKey(ukey));
 
-    if (_data.count("stateRoot"))
-        m_stateRoot = spFH32(new FH32(_data.atKey("stateRoot")));
-    if (_data.count("timestamp"))
-        m_timestamp = spVALUE(new VALUE(_data.atKey("timestamp")));
+    if (_data.count(c_stateRoot))
+        m_stateRoot = sFH32(_data.atKey(c_stateRoot));
+    if (_data.count(c_timestamp))
+        m_timestamp = sVALUE(_data.atKey(c_timestamp));
 
-    string const tkey = _data.count("transactionsRoot") ? "transactionsRoot" : "transactionsTrie";
+    string const& tkey = _data.count(c_transactionsRoot) ? c_transactionsRoot : c_transactionsTrie;
     if (_data.count(tkey))
-        m_transactionsRoot = spFH32(new FH32(_data.atKey(tkey)));
+        m_transactionsRoot = sFH32(_data.atKey(tkey));
 
-    if (_data.count("baseFeePerGas"))
-        m_baseFee = spVALUE(new VALUE(_data.atKey("baseFeePerGas")));
+    if (_data.count(c_baseFeePerGas))
+        m_baseFee = sVALUE(_data.atKey(c_baseFeePerGas));
 
-    if (_data.count("withdrawalsRoot"))
-        m_withdrawalsRoot = spFH32(new FH32(_data.atKey("withdrawalsRoot")));
+    if (_data.count(c_withdrawalsRoot))
+        m_withdrawalsRoot = sFH32(_data.atKey(c_withdrawalsRoot));
 
     if (_data.count("remove"))
         test::parseJsonStrValueIntoSet(_data.atKey("remove"), m_removeKeys);
@@ -101,41 +103,41 @@ spBlockHeader BlockHeaderIncomplete::overwriteBlockHeader(spBlockHeader const& _
     spDataObject _overwrite = _header->asDataObject();
     DataObject& overwrite = _overwrite.getContent();
     if (!m_author.isEmpty())
-        overwrite["author"] = m_author->asString();
+        overwrite[c_author] = m_author->asString();
     if (!m_difficulty.isEmpty())
-        overwrite["difficulty"] = m_difficulty->asString();
+        overwrite[c_difficulty] = m_difficulty->asString();
     if (!m_extraData.isEmpty())
-        overwrite["extraData"] = m_extraData->asString();
+        overwrite[c_extraData] = m_extraData->asString();
     if (!m_gasLimit.isEmpty())
-        overwrite["gasLimit"] = m_gasLimit->asString();
+        overwrite[c_gasLimit] = m_gasLimit->asString();
     if (!m_gasUsed.isEmpty())
-        overwrite["gasUsed"] = m_gasUsed->asString();
+        overwrite[c_gasUsed] = m_gasUsed->asString();
     if (!m_logsBloom.isEmpty())
-        overwrite["logsBloom"] = m_logsBloom->asString();
+        overwrite[c_logsBloom] = m_logsBloom->asString();
     if (!m_mixHash.isEmpty())
-        overwrite["mixHash"] = m_mixHash->asString();
+        overwrite[c_mixHash] = m_mixHash->asString();
     if (!m_nonce.isEmpty())
-        overwrite["nonce"] = m_nonce->asString();
+        overwrite[c_nonce] = m_nonce->asString();
     if (!m_number.isEmpty())
-        overwrite["number"] = m_number->asString();
+        overwrite[c_number] = m_number->asString();
     if (!m_parentHash.isEmpty())
-        overwrite["parentHash"] = m_parentHash->asString();
+        overwrite[c_parentHash] = m_parentHash->asString();
     if (!m_receiptsRoot.isEmpty())
-        overwrite["receiptsRoot"] = m_receiptsRoot->asString();
+        overwrite[c_receiptsRoot] = m_receiptsRoot->asString();
     if (!m_sha3Uncles.isEmpty())
-        overwrite["sha3Uncles"] = m_sha3Uncles->asString();
+        overwrite[c_sha3Uncles] = m_sha3Uncles->asString();
     if (!m_stateRoot.isEmpty())
-        overwrite["stateRoot"] = m_stateRoot->asString();
+        overwrite[c_stateRoot] = m_stateRoot->asString();
     if (!m_timestamp.isEmpty())
-        overwrite["timestamp"] = m_timestamp->asString();
+        overwrite[c_timestamp] = m_timestamp->asString();
     if (!m_transactionsRoot.isEmpty())
-        overwrite["transactionsRoot"] = m_transactionsRoot->asString();
+        overwrite[c_transactionsRoot] = m_transactionsRoot->asString();
     if (!m_hash.isEmpty())
-        overwrite["hash"] = m_hash->asString();
+        overwrite[c_hash] = m_hash->asString();
     if (!m_baseFee.isEmpty())
-        overwrite["baseFeePerGas"] = m_baseFee->asString();
+        overwrite[c_baseFeePerGas] = m_baseFee->asString();
     if (!m_withdrawalsRoot.isEmpty())
-        overwrite["withdrawalsRoot"] = m_withdrawalsRoot->asString();
+        overwrite[c_withdrawalsRoot] = m_withdrawalsRoot->asString();
 
     overwrite.removeKey("updatePoW");  // deprecated key
     for (auto const& el : m_removeKeys)

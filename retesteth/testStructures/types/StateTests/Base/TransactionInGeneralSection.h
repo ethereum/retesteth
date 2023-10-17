@@ -21,11 +21,14 @@ struct TransactionInGeneralSection
     bool getSkipped() const { return m_skipped; }
     void markExecuted() { m_executed = true; }
     void markSkipped() { m_skipped = true; }
+    FH32 const& reportedHash() const { return m_reportedHash; }
     spTransaction const& transaction() const { return m_tr; }
     void assignTransactionLabel(std::string const& _label);
+    void assignTransactionHash(FH32 const& _hash) { m_reportedHash = _hash; }
 
 private:
     spTransaction m_tr;
+    FH32 m_reportedHash = FH32::zero();
     struct DataIndex
     {
         // Keep the index box size_t and string representations for faster debug

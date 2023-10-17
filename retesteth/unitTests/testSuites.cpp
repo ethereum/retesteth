@@ -1,8 +1,8 @@
 #include "testSuites.h"
 #include <retesteth/EthChecks.h>
 #include <retesteth/Options.h>
-#include <retesteth/TestHelper.h>
-#include <retesteth/TestOutputHelper.h>
+#include <retesteth/helpers/TestHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
 #include <retesteth/testSuites/statetests/StateTests.h>
 #include <retesteth/testSuites/blockchain/BlockchainTests.h>
 #include <retesteth/testStructures/types/StateTests/GeneralStateTest.h>
@@ -97,8 +97,18 @@ BOOST_AUTO_TEST_CASE(fill_StateTest_multisinglenet)
 
     BOOST_CHECK(!test.Post().count("Berlin"));
     BOOST_CHECK(!test.Post().count("London"));
+    BOOST_CHECK(!test.Post().count("Berlin+1153"));
     BOOST_CHECK(test.Post().count("Merge"));
     BOOST_CHECK(test.Post().count("Shanghai"));
+
+    auto const mergePost = test.Post().at("Merge");
+    BOOST_CHECK(mergePost.size() == 1);
+
+    spDataObject mergePostData = mergePost.at(0).asDataObject();
+    BOOST_CHECK(mergePostData->count("indexes"));
+    BOOST_CHECK(mergePostData->count("hash"));
+    BOOST_CHECK(mergePostData->count("txbytes"));
+    BOOST_CHECK(mergePostData->count("logs"));
 }
 
 BOOST_AUTO_TEST_CASE(fill_StateTest_singlenet)
@@ -111,8 +121,40 @@ BOOST_AUTO_TEST_CASE(fill_StateTest_singlenet)
 
     BOOST_CHECK(!test.Post().count("Berlin"));
     BOOST_CHECK(!test.Post().count("London"));
+    BOOST_CHECK(!test.Post().count("Berlin+1153"));
     BOOST_CHECK(test.Post().count("Merge"));
     BOOST_CHECK(!test.Post().count("Shanghai"));
+}
+
+BOOST_AUTO_TEST_CASE(fill_StateTest_poststate)
+{
+    const char* argv[] = {"./retesteth", "--", "--poststate", "--filltests"};
+    OPTIONS_OVERRIDE(argv);
+    interceptOutput();
+    auto res = executeSample<StateTestSuite>(c_sampleStateTestFiller, Mode::FILL);
+    restoreOutput();
+    BOOST_CHECK(!res.isEmpty());
+    auto const test = GeneralStateTest(res).tests().at(0);
+
+    size_t expected = 5;
+    if (Options::getCurrentConfig().checkForkInProgression("Cancun"))
+        expected++;
+    BOOST_CHECK(substrCount(strCout.str(), "State Dump") == expected);
+}
+
+BOOST_AUTO_TEST_CASE(fill_StateTest_statediff)
+{
+    const char* argv[] = {"./retesteth", "--", "--statediff", "--filltests", "--singlenet", "Shanghai"};
+    OPTIONS_OVERRIDE(argv);
+    interceptOutput();
+    auto res = executeSample<StateTestSuite>(c_sampleStateTestFiller, Mode::FILL);
+    restoreOutput();
+    BOOST_CHECK(!res.isEmpty());
+    auto const test = GeneralStateTest(res).tests().at(0);
+    BOOST_CHECK(strCout.str().find("0x -> 0x02 (0x -> 2)") != string::npos);
+    BOOST_CHECK(strCout.str().find("0x00 -> 0x01 (0 -> 1)") != string::npos);
+    BOOST_CHECK(strCout.str().find("1000000000000000000 -> 1000000000000100000") != string::npos);
+    BOOST_CHECK(strCout.str().find("1000000000000000000 -> 999999999999468880") != string::npos);
 }
 
 BOOST_AUTO_TEST_CASE(fill_BlockchainTest_poststate_wrongTx)

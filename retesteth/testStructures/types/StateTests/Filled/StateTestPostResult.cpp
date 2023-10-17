@@ -1,9 +1,8 @@
 #include "StateTestPostResult.h"
 #include <retesteth/testStructures/Common.h>
+#include <retesteth/Constants.h>
 
-namespace test
-{
-namespace teststruct
+namespace test::teststruct
 {
 StateTestPostResult::StateTestPostResult(DataObject const& _data)
 {
@@ -32,6 +31,7 @@ StateTestPostResult::StateTestPostResult(DataObject const& _data)
 spDataObject StateTestPostResult::asDataObject() const
 {
     spDataObject res;
+    (*res)["txbytes"] = m_txbytes->asString();
     (*res)["hash"] = m_hash->asString();
     if (!m_log.isEmpty())
         (*res)["logs"] = m_log->asString();
@@ -41,5 +41,12 @@ spDataObject StateTestPostResult::asDataObject() const
     return res;
 }
 
+FH32 const& StateTestPostResult::logs() const
+{
+    static FH32 emptyLogs(C_EMPTY_LIST_HASH);
+    if (m_log.isEmpty())
+        return emptyLogs;
+    return m_log;
+}
+
 }  // namespace teststruct
-}  // namespace test

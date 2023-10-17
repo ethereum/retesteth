@@ -4,6 +4,10 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
+
+genetccfg::genetccfg()
+{
+
 string const etc_config = R"({
     "name" : "Ethereum Classic core-geth on StateTool",
     "socketType" : "tranition-tool",
@@ -25,7 +29,9 @@ string const etc_config = R"({
         "ETC_Agharta",
         "ETC_Phoenix",
         "ETC_Magneto",
-        "ETC_Mystique"
+        "ETC_Mystique",
+        "ETC_Mystique2",
+        "ETC_Mystique3"
     ],
     "additionalForks" : [
     ],
@@ -200,8 +206,11 @@ string const etc_config = R"({
       "1559BlockImportImpossible_InitialGasLimitInvalid": "Invalid block1559: Initial gasLimit must be",
       "TR_IntrinsicGas" : "intrinsic gas too low:",
       "TR_NoFunds" : "insufficient funds for gas * price + value",
+      "TR_NoFundsX" : "insufficient funds for gas * price + value",
       "TR_NoFundsValue" : "insufficient funds for transfer",
+      "TR_NoFundsOrGas" : "insufficient funds for gas * price + value",
       "TR_FeeCapLessThanBlocks" : "max fee per gas less than block base fee",
+      "TR_FeeCapLessThanBlocksORNoFunds" : "max fee per gas less than block base fee",
       "TR_GasLimitReached" : "gas limit reached",
       "TR_NonceTooHigh" : "nonce too high",
       "TR_NonceTooLow" : "nonce too low",
@@ -282,9 +291,6 @@ echo "0x600360005500"
 # just like described in this file."
 )";
 
-
-genetccfg::genetccfg()
-{
     {
         spDataObject obj;
         (*obj)["path"] = "etc/config";

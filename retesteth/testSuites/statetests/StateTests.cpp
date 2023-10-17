@@ -24,7 +24,7 @@
 #include "StateTests.h"
 #include "StateTestsHelper.h"
 #include <retesteth/Options.h>
-#include <retesteth/TestOutputHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
 #include <retesteth/testStructures/structures.h>
 #include <retesteth/testSuites/Common.h>
 #include <retesteth/testSuites/blockchain/BlockchainTests.h>
@@ -67,7 +67,7 @@ spDataObject StateTestSuite::doTests(spDataObject& _input, TestSuiteOptions& _op
     {
         if (Options::get().fillchain)
         {
-            BlockchainTestValidSuite bcTestSuite;
+            BlockchainTestInvalidSuite bcTestSuite;
             bcTestSuite.doTests(_input, _opt);
         }
         else

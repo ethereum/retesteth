@@ -24,28 +24,28 @@ defaults:
       # (ninja is using relative paths otherwise).
       working_directory: ~/build
       command: |
-        cmake ../project -G "$GENERATOR" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCOVERAGE=OFF $CMAKE_OPTIONS
+        cmake ../project -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCOVERAGE=OFF $CMAKE_OPTIONS
 
   configureMac: &configureMac
     run:
       name: "ConfigureMac"
       working_directory: ~/build
       command: |
-        cmake ../project -G "$GENERATOR" -DCMAKE_BUILD_TYPE=$BUILD_TYPE $CMAKE_OPTIONS -DCMAKE_TOOLCHAIN_FILE=~/project/toolchain.cmake
+        cmake ../project -DCMAKE_BUILD_TYPE=$BUILD_TYPE $CMAKE_OPTIONS -DCMAKE_TOOLCHAIN_FILE=~/project/toolchain.cmake
 
   build: &build
     run:
       name: "Build"
       working_directory: ~/build
-      command: cmake --build . -- -j $BUILD_PARALLEL_JOBS
+      command: make -j $BUILD_PARALLEL_JOBS
 
   linuxInstallGO: &linuxInstallGO
     run:
       name: "LinuxInstallGO and Tests"
       working_directory: ~/project
       command: |
-          curl -L --output go1.19.linux-amd64.tar.gz "https://dl.google.com/go/go1.19.linux-amd64.tar.gz"
-          tar -xf go1.19.linux-amd64.tar.gz
+          curl -L --output go1.20.linux-amd64.tar.gz "https://dl.google.com/go/go1.20.linux-amd64.tar.gz"
+          tar -xf go1.20.linux-amd64.tar.gz
           sudo mv go /usr/local
           sudo ln -s /usr/local/go/bin/go /usr/local/bin/go
           git clone --depth 1 https://github.com/ethereum/go-ethereum.git
@@ -89,6 +89,12 @@ defaults:
     store_artifacts:
       path: ~/build/retesteth
       destination: retesteth
+
+  store-log: &store-log
+    store_artifacts:
+      path: /home/builder/build/deps/src/secp256k1-stamp
+      destination: log
+
 
   upload-coverage-data: &upload-coverage-data
     run:
@@ -144,6 +150,7 @@ defaults:
     - *linuxInstallGO
     - *build
     - *store-retesteth
+    - *store-log
     - *test
     - *test-retesteth
 #    - *upload-coverage-data
@@ -158,9 +165,9 @@ defaults:
             git clone --depth 1 https://github.com/ethereum/go-ethereum.git
             git clone --depth 1 https://github.com/ethereum/tests.git
 
-            curl -L https://go.dev/dl/go1.19.1.darwin-amd64.pkg -o go1.19.pkg
-            chmod +x go1.19.pkg
-            sudo installer -pkg go1.19.pkg -target /
+            curl -L https://go.dev/dl/go1.20.1.darwin-amd64.pkg -o go1.20.pkg
+            chmod +x go1.20.pkg
+            sudo installer -pkg go1.20.pkg -target /
             sudo ln -s /usr/local/go/bin/go /usr/local/bin
 
             cd go-ethereum
@@ -172,6 +179,7 @@ defaults:
 #      - *install-solidity-mac
       - *build
       - *store-retesteth
+      - *store-log
       - *test
       - *test-retesteth
 #      - *upload-coverage-data
@@ -193,9 +201,9 @@ jobs:
       - image: ethereum/cpp-build-env:18-clang-11
     steps: *linux-steps
 
-  Linux-GCC9-Debug:
+  Linux-GCC9:
     environment:
-      - BUILD_TYPE: Debug
+      - BUILD_TYPE: Release
       - CXX: g++-9
       - CC:  gcc-9
       - GCOV: gcov-9
@@ -209,6 +217,19 @@ jobs:
       - image: ethereum/cpp-build-env:18-gcc-9
     steps: *linux-steps
 
+  Linux-GCC12:
+    environment:
+      - BUILD_TYPE: Release
+      - CXX: g++-12
+      - CC:  gcc-12
+      - GCOV: gcov-12
+      - GENERATOR: Ninja
+      - BUILD_PARALLEL_JOBS: 4
+      - TEST_PARALLEL_JOBS: 4
+    docker:
+      - image: ethereum/cpp-build-env:19-gcc-12
+    steps: *linux-steps
+
   macOS-XCode14:
     environment:
       - BUILD_TYPE: Release
@@ -217,18 +238,7 @@ jobs:
       - BUILD_PARALLEL_JOBS: 4
       - TEST_PARALLEL_JOBS: 4
     macos:
-      xcode: "14.0.1"
-    steps: *mac-steps
-
-  macOS-XCode12:
-    environment:
-      - BUILD_TYPE: Release
-      - CXX: clang++
-      - GENERATOR: Ninja
-      - BUILD_PARALLEL_JOBS: 8
-      - TEST_PARALLEL_JOBS: 8
-    macos:
-      xcode: "12.5.1"
+      xcode: "14.2.0"
     steps: *mac-steps
 
 # TODO: Run GCC6 build only in develop branch.
@@ -238,7 +248,7 @@ workflows:
   version: 2
   cpp-ethereum:
     jobs:
-      - macOS-XCode12
       - macOS-XCode14
       - Linux-Clang11
-      - Linux-GCC9-Debug
+      - Linux-GCC9
+      - Linux-GCC12

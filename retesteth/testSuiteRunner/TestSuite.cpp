@@ -23,8 +23,8 @@
 #include <retesteth/EthChecks.h>
 #include <retesteth/ExitHandler.h>
 #include <retesteth/Options.h>
-#include <retesteth/TestHelper.h>
-#include <retesteth/TestOutputHelper.h>
+#include <retesteth/helpers/TestHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
 #include <retesteth/session/Session.h>
 #include <retesteth/session/ThreadManager.h>
 #include <retesteth/testSuiteRunner/TestSuite.h>
@@ -55,8 +55,8 @@ string getTestNameFromFillerFilename(fs::path const& _fillerTestFilePath)
         return fillerName;
 
     static string const requireStr = " require: Filler.json/Filler.yml/Copier.json/.py";
-    ETH_FAIL_REQUIRE_MESSAGE(
-        false, "Incorrect file suffix in the filler folder! " + _fillerTestFilePath.string() + requireStr);
+    ETH_FAIL_REQUIRE_MESSAGE(false,
+        "Incorrect file suffix in the filler folder! " + _fillerTestFilePath.string() + requireStr);
     return fillerName;
 }
 }  // namespace
@@ -184,6 +184,7 @@ void TestSuite::_executeTest(string const& _testFolder, fs::path const& _fillerT
         disableSecondRun = true;
     }
 
+    Options::getDynamicOptions().pythonTestRunning = false;
     if (!wereFillerErrors && !disableSecondRun)
     {
         auto const& opt = Options::get();
@@ -192,7 +193,23 @@ void TestSuite::_executeTest(string const& _testFolder, fs::path const& _fillerT
             && !opt.filltests)
         {
             // Select single test from python generated tests
-            _runTest(filledTestPath.path().parent_path() / (opt.singletest.name + ".json"));
+            if (opt.singletest.name == _fillerTestFilePath.stem())
+            {
+                for (auto const& name : generatedFiles)
+                {
+                    if (!opt.singletest.subname.empty())
+                    {
+                        // substract `test_` prefix
+                        string const pyFilledName = opt.singletest.subname.substr(5);
+                        if (name != pyFilledName)
+                            continue;
+                    }
+                    Options::getDynamicOptions().pythonTestRunning = true;
+                    _runTest(filledTestPath.path().parent_path() / (name + ".json"));
+                }
+            }
+            else
+                _runTest(filledTestPath.path().parent_path() / (opt.singletest.name + ".json"));
         }
         else
         {

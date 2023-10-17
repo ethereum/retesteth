@@ -1,39 +1,58 @@
 #include "StateTestFillerTransaction.h"
 #include <retesteth/EthChecks.h>
 #include <retesteth/testStructures/Common.h>
+#include <retesteth/Constants.h>
 
 using namespace std;
 using namespace dataobject;
 using namespace test::teststruct;
+using namespace test::teststruct::constnames;
 
 namespace
 {
+
+void requireBlobTransactionScheme(spDataObject const& _data)
+{
+    REQUIRE_JSONFIELDS(_data, "StateTestFillerTransaction " + _data->getKey(),
+        {{c_data, {{DataType::Array}, jsonField::Required}},
+            {c_gasLimit, {{DataType::Array}, jsonField::Required}},
+            {c_nonce, {{DataType::String}, jsonField::Required}},
+            {c_value, {{DataType::Array}, jsonField::Required}},
+            {c_to, {{DataType::String}, jsonField::Required}},
+            {c_sender, {{DataType::String}, jsonField::Optional}},
+            {c_maxFeePerGas, {{DataType::String}, jsonField::Required}},
+            {c_maxPriorityFeePerGas, {{DataType::String}, jsonField::Required}},
+            {c_maxFeePerBlobGas, {{DataType::String}, jsonField::Required}},
+            {c_blobVersionedHashes, {{DataType::Array}, jsonField::Required}},
+            {c_secretKey, {{DataType::String}, jsonField::Required}}});
+}
+
 void require1559TransactionScheme(spDataObject const& _data)
 {
     REQUIRE_JSONFIELDS(_data, "StateTestFillerTransaction " + _data->getKey(),
-        {{"data", {{DataType::Array}, jsonField::Required}},
-            {"gasLimit", {{DataType::Array}, jsonField::Required}},
-            {"nonce", {{DataType::String}, jsonField::Required}},
-            {"value", {{DataType::Array}, jsonField::Required}},
-            {"to", {{DataType::String}, jsonField::Required}},
-            {"sender", {{DataType::String}, jsonField::Optional}},
-            {"maxFeePerGas", {{DataType::String}, jsonField::Required}},
-            {"maxPriorityFeePerGas", {{DataType::String}, jsonField::Required}},
-            {"secretKey", {{DataType::String}, jsonField::Required}}});
+        {{c_data, {{DataType::Array}, jsonField::Required}},
+            {c_gasLimit, {{DataType::Array}, jsonField::Required}},
+            {c_nonce, {{DataType::String}, jsonField::Required}},
+            {c_value, {{DataType::Array}, jsonField::Required}},
+            {c_to, {{DataType::String}, jsonField::Required}},
+            {c_sender, {{DataType::String}, jsonField::Optional}},
+            {c_maxFeePerGas, {{DataType::String}, jsonField::Required}},
+            {c_maxPriorityFeePerGas, {{DataType::String}, jsonField::Required}},
+            {c_secretKey, {{DataType::String}, jsonField::Required}}});
 }
 
 void requireLegacyTransctionScheme(spDataObject const& _data)
 {
     // LEGACY TRANSACTION TEMPLATE (gtest FILLER)
     REQUIRE_JSONFIELDS(_data, "StateTestFillerTransaction " + _data->getKey(),
-        {{"data", {{DataType::Array}, jsonField::Required}},
-            {"gasLimit", {{DataType::Array}, jsonField::Required}},
-            {"gasPrice", {{DataType::String}, jsonField::Required}},
-            {"nonce", {{DataType::String}, jsonField::Required}},
-            {"value", {{DataType::Array}, jsonField::Required}},
-            {"to", {{DataType::String}, jsonField::Required}},
-            {"sender", {{DataType::String}, jsonField::Optional}},
-            {"secretKey", {{DataType::String}, jsonField::Required}}});
+        {{c_data, {{DataType::Array}, jsonField::Required}},
+            {c_gasLimit, {{DataType::Array}, jsonField::Required}},
+            {c_gasPrice, {{DataType::String}, jsonField::Required}},
+            {c_nonce, {{DataType::String}, jsonField::Required}},
+            {c_value, {{DataType::Array}, jsonField::Required}},
+            {c_to, {{DataType::String}, jsonField::Required}},
+            {c_sender, {{DataType::String}, jsonField::Optional}},
+            {c_secretKey, {{DataType::String}, jsonField::Required}}});
 }
 }
 
@@ -44,7 +63,9 @@ StateTestFillerTransaction::StateTestFillerTransaction(spDataObjectMove _data)
     try
     {
         m_rawData = _data.getPointer();
-        if (m_rawData->count("maxFeePerGas") || m_rawData->count("maxPriorityFeePerGas"))
+        if (m_rawData->count(c_maxFeePerBlobGas) || m_rawData->count(c_blobVersionedHashes))
+            requireBlobTransactionScheme(m_rawData);
+        else if (m_rawData->count(c_maxFeePerGas) || m_rawData->count(c_maxPriorityFeePerGas))
             require1559TransactionScheme(m_rawData);
         else
             requireLegacyTransctionScheme(m_rawData);
@@ -53,24 +74,23 @@ StateTestFillerTransaction::StateTestFillerTransaction(spDataObjectMove _data)
         // The VALUE fields can be decimal -> convert it to hex
         // The data field can be LLL or other code -> compile it to BYTES
         (*m_rawData).performModifier(mod_valueToCompactEvenHexPrefixed, DataObject::ModifierOption::RECURSIVE, {"data", "to", "secretKey"});
-        if (m_rawData->count("secretKey"))
-            (*m_rawData).atKeyUnsafe("secretKey").performModifier(mod_valueInsertZeroXPrefix);
+        if (m_rawData->count(c_secretKey))
+            (*m_rawData).atKeyUnsafe(c_secretKey).performModifier(mod_valueInsertZeroXPrefix);
 
-        if (m_rawData->atKey("to").asString().empty())
+        if (m_rawData->atKey(c_to).asString().empty())
             m_creation = true;
         else
         {
             m_creation = false;
-            (*m_rawData).atKeyUnsafe("to").performModifier(mod_valueInsertZeroXPrefix);
-            m_to = spFH20(new FH20(m_rawData->atKey("to")));
+            (*m_rawData).atKeyUnsafe(c_to).performModifier(mod_valueInsertZeroXPrefix);
+            m_to = sFH20(m_rawData->atKey(c_to));
         }
 
-        m_secretKey = spFH32(new FH32(m_rawData->atKey("secretKey")));
+        m_secretKey = sFH32(m_rawData->atKey(c_secretKey));
         m_publicKey = convertSecretToPublic(m_secretKey);
-        (*m_rawData)["sender"] = m_publicKey->asString();
+        (*m_rawData)[c_sender] = m_publicKey->asString();
 
-        m_nonce = spVALUE(new VALUE(m_rawData->atKey("nonce")));
-        string const c_data = "data";
+        m_nonce = sVALUE(m_rawData->atKey(c_nonce));
         m_databox.reserve(m_rawData->atKey(c_data).getSubObjects().size());
         for (auto& dataEl : (*m_rawData).atKeyUnsafe(c_data).getSubObjectsUnsafe())
         {
@@ -79,11 +99,11 @@ StateTestFillerTransaction::StateTestFillerTransaction(spDataObjectMove _data)
             if (dataEl->type() == DataType::Object)
             {
                 REQUIRE_JSONFIELDS(dataEl, "StateTestFillerTransaction::dataWithList " + m_rawData->getKey(),
-                    {{"data", {{DataType::String}, jsonField::Required}},
-                     {"accessList", {{DataType::Array}, jsonField::Required}}});
+                    {{c_data, {{DataType::String}, jsonField::Required}},
+                     {c_accessList, {{DataType::Array}, jsonField::Required}}});
 
-                actualDataField = (*dataEl).atKeyPointerUnsafe("data");
-                accessList = spAccessList(new AccessList(dataEl->atKey("accessList")));
+                actualDataField = (*dataEl).atKeyPointerUnsafe(c_data);
+                accessList = spAccessList(new AccessList(dataEl->atKey(c_accessList)));
             }
             else
                 actualDataField = dataEl;
@@ -112,21 +132,28 @@ StateTestFillerTransaction::StateTestFillerTransaction(spDataObjectMove _data)
             // ---
             m_databox.emplace_back(Databox(BYTES(actualDataField.getContent()), label, rawData.substr(0, 30), accessList));
         }
-        for (auto const& el : m_rawData->atKey("gasLimit").getSubObjects())
+        for (auto const& el : m_rawData->atKey(c_gasLimit).getSubObjects())
             m_gasLimit.emplace_back(el.getCContent());
-        for (auto const& el : m_rawData->atKey("value").getSubObjects())
+        for (auto const& el : m_rawData->atKey(c_value).getSubObjects())
             m_value.emplace_back(el.getCContent());
 
-        if (m_rawData->count("maxFeePerGas") || m_rawData->count("maxPriorityFeePerGas"))
+        if (m_rawData->count(c_maxFeePerGas) || m_rawData->count(c_maxPriorityFeePerGas))
         {
             // EIP 1559 TRANSACTION TEMPLATE (gtest FILLER)
-            m_maxFeePerGas = spVALUE(new VALUE(m_rawData->atKey("maxFeePerGas")));
-            m_maxPriorityFeePerGas = spVALUE(new VALUE(m_rawData->atKey("maxPriorityFeePerGas")));
+            m_maxFeePerGas = sVALUE(m_rawData->atKey(c_maxFeePerGas));
+            m_maxPriorityFeePerGas = sVALUE(m_rawData->atKey(c_maxPriorityFeePerGas));
         }
         else
         {
             // LEGACY TRANSACTION TEMPLATE (gtest FILLER)
-            m_gasPrice = spVALUE(new VALUE(m_rawData->atKey("gasPrice")));
+            m_gasPrice = sVALUE(m_rawData->atKey(c_gasPrice));
+        }
+
+        if (m_rawData->count(c_blobVersionedHashes) || m_rawData->count(c_maxFeePerBlobGas))
+        {
+            for (auto const& el : m_rawData->atKey(c_blobVersionedHashes).getSubObjects())
+                m_blobVersionedHashes.emplace_back(FH32(el));
+            m_maxFeePerBlobGas = sVALUE(m_rawData->atKey(c_maxFeePerBlobGas));
         }
 
 
@@ -135,7 +162,6 @@ StateTestFillerTransaction::StateTestFillerTransaction(spDataObjectMove _data)
         // Export data (m_rawData) is prepared in constructor and then promise that
         // it corresponds to the actual data in the class (class does not change after parsing)
         (*m_rawData).performModifier(mod_valueToLowerCase);
-        size_t index = 0;
         bool atLeastOneNonNullAccessList = false;
         spDataObject exportDatas;
         spDataObject txAccessListData(new DataObject(DataType::Array));
@@ -144,19 +170,18 @@ StateTestFillerTransaction::StateTestFillerTransaction(spDataObjectMove _data)
             spDataObject elb(new DataObject(el.m_data.asString()));
             (*exportDatas).addArrayObject(elb);
             if (el.m_accessList.isEmpty())
-                (*txAccessListData).addArrayObject(spDataObject(new DataObject(DataType::Null)));
+                (*txAccessListData).addArrayObject(sDataObject(DataType::Null));
             else
             {
                 (*txAccessListData).addArrayObject(el.m_accessList->asDataObject());
                 atLeastOneNonNullAccessList = true;
             }
-            index++;
         }
 
-        (*exportDatas).setKey("data");
-        (*m_rawData).atKeyPointer("data") = exportDatas;
+        (*exportDatas).setKey(c_data);
+        (*m_rawData).atKeyPointer(c_data) = exportDatas;
         if (atLeastOneNonNullAccessList)
-            (*m_rawData).atKeyPointer("accessLists") = txAccessListData;
+            (*m_rawData).atKeyPointer(c_accessLists) = txAccessListData;
 
         if (!m_maxFeePerGas.isEmpty() || !m_maxPriorityFeePerGas.isEmpty())
         {

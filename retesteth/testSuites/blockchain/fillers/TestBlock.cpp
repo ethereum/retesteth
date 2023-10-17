@@ -1,4 +1,5 @@
 #include "TestBlock.h"
+#include <retesteth/helpers/TestHelper.h>
 using namespace std;
 
 namespace test::blockchainfiller
@@ -10,6 +11,36 @@ TestBlock::TestBlock(BYTES const& _rlp, string const& _chainName, FORK const& _c
     m_blockNumber = spVALUE(_number.copy());
     m_chainNet = spFORK(new FORK(_chainNet.asString()));
     m_rawRLP = spBYTES(_rlp.copy());
+}
+
+void exportBlockRLPToJson(spBYTES const& _rawRLP, DataObject& _res)
+{
+    dev::bytes const decodeRLP = sfromHex(_rawRLP->asString());
+    dev::RLP const rlp(decodeRLP, dev::RLP::VeryStrict);
+    spBlockHeader blockH = readBlockHeader(rlp[0]);
+
+    _res["rlp_decoded"].atKeyPointer("blockHeader") = blockH->asDataObject();
+    _res["rlp_decoded"].atKeyPointer("transactions") = sDataObject(DataType::Array);
+    for (auto const& trRLP : rlp[1].toList())
+    {
+        spTransaction spTr = readTransaction(trRLP);
+        _res["rlp_decoded"]["transactions"].addArrayObject(spTr->asDataObject());
+    }
+    _res["rlp_decoded"].atKeyPointer("uncles") = sDataObject(DataType::Array);
+    for (auto const& unRLP : rlp[2].toList())
+    {
+        spBlockHeader spUn = readBlockHeader(unRLP);
+        _res["rlp_decoded"]["uncles"].addArrayObject(spUn->asDataObject());
+    }
+    _res["rlp_decoded"].atKeyPointer("withdrawals") = sDataObject(DataType::Array);
+    if (rlp.itemCount() > 3)
+    {
+        for (auto const& wtRLP : rlp[3].toList())
+        {
+            spWithdrawal wt(new Withdrawal(wtRLP));
+            _res["rlp_decoded"]["withdrawals"].addArrayObject(wt->asDataObject());
+        }
+    }
 }
 
 spDataObject TestBlock::asDataObject() const
@@ -57,8 +88,21 @@ spDataObject TestBlock::asDataObject() const
             res["transactionSequence"].addArrayObject(_trInfo);
         }
     }
+    else
+    {
+        try
+        {
+            exportBlockRLPToJson(m_rawRLP, res);
+        }
+        catch (std::exception const& _ex)
+        {
+            ETH_ERROR_MESSAGE(string() + "Failed to parse invalid block's RLP, make sure the RLP structure is valid! " + _ex.what());
+        }
+    }
 
     res["rlp"] = m_rawRLP->asString();
+    if (m_hasBigInt)
+        res["hasBigInt"] = "true";
     return _res;
 }
 }  // namespace test::blockchainfiller

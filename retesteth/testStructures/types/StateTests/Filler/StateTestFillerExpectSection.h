@@ -25,17 +25,13 @@ struct StateTestFillerExpectSection
     void correctMiningReward(FH20 const& _coinbase, VALUE const& _reward);
 
     // Get expect exception for transaction
-    std::string const& getExpectException(FORK const& _net) const
-    {
-        static std::string emptyString = std::string();  // mutex ??
-        if (m_expectExceptions.count(_net))
-            return m_expectExceptions.at(_net);
-        return emptyString;
-    }
-
+    std::string const& getExpectException(FORK const& _net) const;
     std::set<int> const& getDataInd() const {return  m_dataInd; }
     std::set<int> const& getGasInd() const {return  m_gasInd; }
     std::set<int> const& getValInd() const {return  m_valInd; }
+
+private:
+    void parseExpectSectionIndexes(spStateTestFillerTransaction const&);
 
 private:
     std::set<int> m_dataInd;

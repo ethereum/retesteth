@@ -45,6 +45,31 @@ cleanDocker () {
     exit 0
 }
 
+lllc () {
+    testpath=""
+    testpaths=0
+    argstring=""
+    for var in "$@"
+    do
+        if [ "$var" = "--testpath" ]; then
+            testpaths=1
+            continue
+        fi
+        if [ "$testpaths" -eq "1" ]; then
+            testpaths=0
+            testpath=$var
+            continue
+        fi
+        argstring=$argstring" "$var
+    done
+    if [ -z $testpath ]; then
+        echo "Provide --testpath var'to mount into docker '/test'"
+        exit 1
+    fi
+    docker run --entrypoint /bin/lllc -it -v $testpath:/tests -w /tests retesteth $argstring
+    exit 0
+}
+
 
 case $1 in
     "build")
@@ -58,6 +83,9 @@ case $1 in
         ;;
     "clean")
         cleanDocker
+        ;;
+    "lllc")
+        lllc $2 $3 $4 $5 $6 $7 $8
         ;;
 esac
 
@@ -124,7 +152,7 @@ if [ "$SCRIPT_NAME" = "dtf.sh" ]; then
       dockerwdir="/"
     fi
 
-    docker run --entrypoint /usr/bin/tfinit.sh -it -w $dockerwdir -e ETHEREUMJS_PATH=/ethereumjs -e PYSPECS_PATH=/execution-spec-tests -v $testpath:/tests retesteth $argstring
+    docker run --entrypoint /usr/bin/tfinit.sh -it -w $dockerwdir -e BESU_PATH=/besu -e ETHEREUMJS_PATH=/ethereumjs -e PYSPECS_PATH=/execution-spec-tests -e PYT8N_PATH=/pyt8n -v $testpath:/tests retesteth $argstring
     exit 0
 fi
 
@@ -182,5 +210,5 @@ fi
 if [ "$helpversion" -eq 1 ]; then
     docker run retesteth $argstring
 else
-    docker run -w $dockerwdir -e ETHEREUMJS_PATH=/ethereumjs -e PYSPECS_PATH=/execution-spec-tests -v $testpath:/tests retesteth $argstring --testpath /tests $defaultclient
+    docker run -w $dockerwdir -e BESU_PATH=/besu -e ETHEREUMJS_PATH=/ethereumjs -e PYSPECS_PATH=/execution-spec-tests -e PYT8N_PATH=/pyt8n -v $testpath:/tests retesteth $argstring --testpath /tests $defaultclient
 fi

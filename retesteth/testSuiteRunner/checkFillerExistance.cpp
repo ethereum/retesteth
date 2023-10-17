@@ -1,9 +1,9 @@
 #include "EthChecks.h"
 #include "Options.h"
-#include "TestHelper.h"
+#include <retesteth/helpers/TestHelper.h>
 #include "TestSuite.h"
 #include "TestSuiteHelperFunctions.h"
-#include <retesteth/TestOutputHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
 
 #include <libdevcore/CommonIO.h>
 
@@ -155,6 +155,10 @@ void getFillers(
     {
         auto fillerSuffixSelect = test::getFiles(_fullPathToFillers.path(), {".json", ".yml"}, _testNameFilter + "Filler");
         for (auto const& el : fillerSuffixSelect)
+            _allTestFillers.emplace_back(el);
+
+        auto fillerSuffixSelectC = test::getFiles(_fullPathToFillers.path(), {".json"}, _testNameFilter + "Copier");
+        for (auto const& el : fillerSuffixSelectC)
             _allTestFillers.emplace_back(el);
 
         if (_allTestFillers.size() == 0)

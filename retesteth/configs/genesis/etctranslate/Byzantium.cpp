@@ -4,6 +4,9 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
+genByzantiumCfgETCTR::genByzantiumCfgETCTR()
+{
+
 const string t8ntool_Byzantium_config = R"({
     "params" : {
         "fork" : "ETC_Atlantis",
@@ -15,8 +18,6 @@ const string t8ntool_Byzantium_config = R"({
     }
 })";
 
-genByzantiumCfgETCTR::genByzantiumCfgETCTR()
-{
     spDataObject obj2;
     (*obj2)["path"] = "etctranslate/genesis/Byzantium.json";
     (*obj2)["content"] = t8ntool_Byzantium_config;

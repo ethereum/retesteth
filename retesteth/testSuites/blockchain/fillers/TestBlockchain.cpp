@@ -1,6 +1,6 @@
 #include "TestBlockchain.h"
 #include <retesteth/Options.h>
-#include <retesteth/TestHelper.h>
+#include <retesteth/helpers/TestHelper.h>
 #include <retesteth/testStructures/PrepareChainParams.h>
 #include <retesteth/testSuites/Common.h>
 #include "../Common.h"
@@ -113,7 +113,7 @@ GCP_SPointer<EthGetBlockBy> TestBlockchain::mineBlock(
             else
             {
                string const& expectedReason = Options::getCurrentConfig().translateException(exception);
-               if (reason.find(expectedReason) == string::npos)
+               if (reason.find(expectedReason) == string::npos || expectedReason.empty())
                {
                    ETH_WARNING(trInTest.tr().asDataObject()->asJson());
                    ETH_ERROR_MESSAGE(string("Transaction rejecetd but due to a different reason: \n") +

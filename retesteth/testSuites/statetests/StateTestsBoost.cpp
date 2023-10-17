@@ -1,5 +1,5 @@
-#include "retesteth/TestHelper.h"
-#include "retesteth/TestOutputHelper.h"
+#include "retesteth/helpers/TestHelper.h"
+#include "retesteth/helpers/TestOutputHelper.h"
 #include "retesteth/testSuites/TestFixtures.h"
 #include "retesteth/testSuites/statetests/StateTests.h"
 #include "libdataobj/DataObject.h"
@@ -183,8 +183,51 @@ BCEIPSUITE_FOLDER_OVERRIDE(BCEIPStateTestsSuite, "/BlockchainTests/StateTests", 
 BCEIPSUITE_FOLDER_OVERRIDE(BCEIPStateTestsEOFSuite, "/BlockchainTests/StateTests/stEOF", "/StateTests/stEOF")
 BCEIPSUITE_FOLDER_OVERRIDE(BlockchainTestEIPSuite, "/BlockchainTests", "/BlockchainTests")
 
+BCEIPSUITE_FOLDER_OVERRIDE(BlockchainTestEIPPyspecSuite, "/Pyspecs", "/Pyspecs")
+    BCEIPSUITE_FOLDER_OVERRIDE(BlockchainTestEIPPyspecSuite_frontier, "/Pyspecs/frontier", "/Pyspecs/frontier")
+    BCEIPSUITE_FOLDER_OVERRIDE(BlockchainTestEIPPyspecSuite_homestead, "/Pyspecs/homestead", "/Pyspecs/homestead")
+    BCEIPSUITE_FOLDER_OVERRIDE(BlockchainTestEIPPyspecSuite_istanbul, "/Pyspecs/istanbul", "/Pyspecs/istanbul")
+    BCEIPSUITE_FOLDER_OVERRIDE(BlockchainTestEIPPyspecSuite_berlin, "/Pyspecs/berlin", "/Pyspecs/berlin")
+    BCEIPSUITE_FOLDER_OVERRIDE(BlockchainTestEIPPyspecSuite_merge, "/Pyspecs/merge", "/Pyspecs/merge")
+    BCEIPSUITE_FOLDER_OVERRIDE(BlockchainTestEIPPyspecSuite_shanghai, "/Pyspecs/shanghai", "/Pyspecs/shanghai")
+    BCEIPSUITE_FOLDER_OVERRIDE(BlockchainTestEIPPyspecSuite_cancun, "/Pyspecs/cancun", "/Pyspecs/cancun")
+
 //EIP TESTS
 BOOST_AUTO_TEST_SUITE(EIPTests)
+
+using EIPPyspecFixture = TestFixture<BlockchainTestEIPPyspecSuite, DefaultFlags>;
+//ETH_REGISTER_DYNAMIC_TEST_SEARCH(EIPPyspecFixture, "EIPTests/Pyspecs")
+BOOST_FIXTURE_TEST_SUITE(Pyspecs, EIPPyspecFixture)
+    using EIPPyspecSuiteFixture_frontier = TestFixture<BlockchainTestEIPPyspecSuite_frontier, DefaultFlags>;
+    ETH_REGISTER_DYNAMIC_TEST_SEARCH(EIPPyspecSuiteFixture_frontier, "EIPTests/Pyspecs/frontier")
+    BOOST_FIXTURE_TEST_SUITE(frontier, EIPPyspecSuiteFixture_frontier)
+    BOOST_AUTO_TEST_SUITE_END()
+    using EIPPyspecSuiteFixture_homestead = TestFixture<BlockchainTestEIPPyspecSuite_homestead, DefaultFlags>;
+    ETH_REGISTER_DYNAMIC_TEST_SEARCH(EIPPyspecSuiteFixture_homestead, "EIPTests/Pyspecs/homestead")
+    BOOST_FIXTURE_TEST_SUITE(homestead, EIPPyspecSuiteFixture_homestead)
+    BOOST_AUTO_TEST_SUITE_END()
+    using EIPPyspecSuiteFixture_istanbul = TestFixture<BlockchainTestEIPPyspecSuite_istanbul, DefaultFlags>;
+    ETH_REGISTER_DYNAMIC_TEST_SEARCH(EIPPyspecSuiteFixture_istanbul, "EIPTests/Pyspecs/istanbul")
+    BOOST_FIXTURE_TEST_SUITE(istanbul, EIPPyspecSuiteFixture_istanbul)
+    BOOST_AUTO_TEST_SUITE_END()
+    using EIPPyspecSuiteFixture_berlin = TestFixture<BlockchainTestEIPPyspecSuite_berlin, DefaultFlags>;
+    ETH_REGISTER_DYNAMIC_TEST_SEARCH(EIPPyspecSuiteFixture_berlin, "EIPTests/Pyspecs/berlin")
+    BOOST_FIXTURE_TEST_SUITE(berlin, EIPPyspecSuiteFixture_berlin)
+    BOOST_AUTO_TEST_SUITE_END()
+    using EIPPyspecSuiteFixture_merge = TestFixture<BlockchainTestEIPPyspecSuite_merge, DefaultFlags>;
+    ETH_REGISTER_DYNAMIC_TEST_SEARCH(EIPPyspecSuiteFixture_merge, "EIPTests/Pyspecs/merge")
+    BOOST_FIXTURE_TEST_SUITE(merge, EIPPyspecSuiteFixture_merge)
+    BOOST_AUTO_TEST_SUITE_END()
+    using EIPPyspecSuiteFixture_shanghai = TestFixture<BlockchainTestEIPPyspecSuite_shanghai, DefaultFlags>;
+    ETH_REGISTER_DYNAMIC_TEST_SEARCH(EIPPyspecSuiteFixture_shanghai, "EIPTests/Pyspecs/shanghai")
+    BOOST_FIXTURE_TEST_SUITE(shanghai, EIPPyspecSuiteFixture_shanghai)
+    BOOST_AUTO_TEST_SUITE_END()
+    using EIPPyspecSuiteFixture_cancun = TestFixture<BlockchainTestEIPPyspecSuite_cancun, DefaultFlags>;
+    ETH_REGISTER_DYNAMIC_TEST_SEARCH(EIPPyspecSuiteFixture_cancun, "EIPTests/Pyspecs/cancun")
+    BOOST_FIXTURE_TEST_SUITE(cancun, EIPPyspecSuiteFixture_cancun)
+    BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE_END()
+
 
 using EIPTestsFixture = TestFixture<EIPStateTestSuite, DefaultFlags>;
 ETH_REGISTER_DYNAMIC_TEST_SEARCH(EIPTestsFixture, "EIPTests/StateTests")
@@ -200,18 +243,16 @@ BOOST_AUTO_TEST_SUITE_END()
 using BCEIPSuiteFixture = TestFixture<BlockchainTestEIPSuite, DefaultFlags>;
 ETH_REGISTER_DYNAMIC_TEST_SEARCH(BCEIPSuiteFixture, "EIPTests/BlockchainTests")
 BOOST_FIXTURE_TEST_SUITE(BlockchainTests, BCEIPSuiteFixture)
-
     using BCEIPStateSuiteFixture = TestFixture<BCEIPStateTestsSuite, RequireOptionAllNotRefillable>;
     ETH_REGISTER_DYNAMIC_TEST_SEARCH(BCEIPStateSuiteFixture, "EIPTests/BlockchainTests/StateTests")
     BOOST_FIXTURE_TEST_SUITE(StateTests, BCEIPStateSuiteFixture)
     BOOST_AUTO_TEST_CASE(stEIP3855) {}
     BOOST_AUTO_TEST_CASE(stEIP3860) {}
-
-    using BCEIPStateTestsEOFFixture = TestFixture<BCEIPStateTestsEOFSuite, RequireOptionAll>;
-    ETH_REGISTER_DYNAMIC_TEST_SEARCH(BCEIPStateTestsEOFFixture, "EIPTests/BlockchainTests/StateTests/stEOF")
-    BOOST_FIXTURE_TEST_SUITE(stEOF, BCEIPStateTestsEOFFixture)
-    BOOST_AUTO_TEST_CASE(stEIP3540) {}
-    BOOST_AUTO_TEST_SUITE_END()
+        using BCEIPStateTestsEOFFixture = TestFixture<BCEIPStateTestsEOFSuite, RequireOptionAll>;
+        ETH_REGISTER_DYNAMIC_TEST_SEARCH(BCEIPStateTestsEOFFixture, "EIPTests/BlockchainTests/StateTests/stEOF")
+        BOOST_FIXTURE_TEST_SUITE(stEOF, BCEIPStateTestsEOFFixture)
+        BOOST_AUTO_TEST_CASE(stEIP3540) {}
+        BOOST_AUTO_TEST_SUITE_END()
     BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
 

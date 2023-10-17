@@ -4,6 +4,10 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
+
+genFrontierToHomesteadCfg::genFrontierToHomesteadCfg()
+{
+
 const string t8ntool_FrontierToHomesteadAt5_config = R"({
     "params" : {
         "fork" : "FrontierToHomesteadAt5",
@@ -14,8 +18,6 @@ const string t8ntool_FrontierToHomesteadAt5_config = R"({
     }
 })";
 
-genFrontierToHomesteadCfg::genFrontierToHomesteadCfg()
-{
     spDataObject obj2;
     (*obj2)["path"] = "default/genesis/FrontierToHomesteadAt5.json";
     (*obj2)["content"] = t8ntool_FrontierToHomesteadAt5_config;

@@ -36,6 +36,10 @@ public:
     static TestRawTransaction test_rawTransaction(
         BYTES const& _rlp, FORK const& _fork, boost::filesystem::path const& _toolPath, boost::filesystem::path const& _tmpDir);
 
+    // EOF tests
+    static std::string test_rawEOFCode(
+        BYTES const& _code, FORK const& _fork, boost::filesystem::path const& _toolPath, boost::filesystem::path const& _tmpDir);
+
     // Difficulty tests
     static VALUE test_calculateDifficulty(FORK const& _fork, VALUE const& _blockNumber, VALUE const& _parentTimestamp,
         VALUE const& _parentDifficulty, VALUE const& _currentTimestamp, VALUE const& _uncleNumber,
@@ -67,6 +71,7 @@ private:
     void init1559PendingBlock(EthereumBlockState const&);
     void initMergePendingBlock(EthereumBlockState const&);
     void initShanghaiPendingBlock(EthereumBlockState const&);
+    void initCancunPendingBlock(EthereumBlockState const&);
     bool isTerminalPoWBlock();
 };
 

@@ -137,7 +137,8 @@ private:
         AbsoluteFilledTestPath const& _outputTestFilePath) const;
     bool _fillJsonYml(testsuite::TestFileData& _testData, boost::filesystem::path const& _fillerTestFilePath,
         AbsoluteFilledTestPath const& _outputTestFilePath, TestSuite::TestSuiteOptions& _opt) const;
-    bool _fillPython(testsuite::TestFileData& _testData, boost::filesystem::path const&, AbsoluteFilledTestPath const&) const;
+    bool _fillPython(testsuite::TestFileData& _testData, boost::filesystem::path const&, AbsoluteFilledTestPath const&,
+        boost::filesystem::path const&) const;
 };
 
 }  // namespace test

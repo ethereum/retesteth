@@ -1,5 +1,5 @@
 #include "TransactionInGeneralSection.h"
-#include <retesteth/TestHelper.h>
+#include <retesteth/helpers/TestHelper.h>
 #include <retesteth/testStructures/types/Ethereum/Transactions/TransactionReader.h>
 
 using namespace std;

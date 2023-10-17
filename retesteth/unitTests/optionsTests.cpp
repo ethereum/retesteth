@@ -1,5 +1,5 @@
 #include <retesteth/Options.h>
-#include <retesteth/TestOutputHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
 
 using namespace std;
 using namespace dev;
@@ -277,6 +277,20 @@ BOOST_AUTO_TEST_CASE(options_singlenetMultiple)
         BOOST_CHECK(opt.get().singleTestNet == "Berlin");
         BOOST_CHECK(opt.get().runOnlyNets.initialized() == false);
         BOOST_CHECK(opt.get().runOnlyNets.empty());
+    }
+}
+
+BOOST_AUTO_TEST_CASE(options_statediff_froktofork)
+{
+    {
+        const char* argv[] = {"./retesteth", "--", "--statediff", "Berlin--Merge"};
+        TestOptions opt(std::size(argv), argv);
+        BOOST_CHECK(opt.get().statediff.initialized() == true);
+        BOOST_CHECK(opt.get().statediff.isBlockSelected == false);
+        BOOST_CHECK(opt.get().statediff.isTransSelected == false);
+        BOOST_CHECK(opt.get().statediff.isForkSelected == true);
+        BOOST_CHECK(opt.get().statediff.firstFork == "Berlin");
+        BOOST_CHECK(opt.get().statediff.seconFork == "Merge");
     }
 }
 

@@ -2,8 +2,8 @@
 #include <retesteth/Options.h>
 #include <retesteth/testSuites/Common.h>
 #include <retesteth/EthChecks.h>
-#include <retesteth/TestOutputHelper.h>
-#include <retesteth/TestHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
+#include <retesteth/helpers/TestHelper.h>
 #include <libdevcore/CommonIO.h>
 using namespace std;
 using namespace dev;

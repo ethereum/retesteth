@@ -1,10 +1,12 @@
 #include "PrepareChainParams.h"
 #include <retesteth/Options.h>
-#include <retesteth/TestHelper.h>
+#include <retesteth/helpers/TestHelper.h>
+#include <retesteth/Constants.h>
 
 using namespace std;
 using namespace test;
 using namespace test::teststruct;
+using namespace test::teststruct::constnames;
 
 namespace  {
 string calculateGenesisBaseFee(VALUE const& _currentBaseFee, ParamsContext _context)
@@ -33,13 +35,13 @@ spDataObject prepareGenesisSubsection(StateTestEnvBase const& _env, ParamsContex
 
     // Build up RPC setChainParams genesis section
     spDataObject genesis;
-    (*genesis)["author"] = _env.currentCoinbase().asString();
-    (*genesis)["gasLimit"] = _env.currentGasLimit().asString();
-    (*genesis)["extraData"] = _env.currentExtraData().asString();
-    (*genesis)["timestamp"] = _env.currentTimestamp().asString();
-    (*genesis)["nonce"] = _env.currentNonce().asString();
-    (*genesis)["mixHash"] = _env.currentMixHash().asString();
-    (*genesis)["difficulty"] = _env.currentDifficulty().asString();
+    (*genesis)[c_author] = _env.currentCoinbase().asString();
+    (*genesis)[c_gasLimit] = _env.currentGasLimit().asString();
+    (*genesis)[c_extraData] = _env.currentExtraData().asString();
+    (*genesis)[c_timestamp] = _env.currentTimestamp().asString();
+    (*genesis)[c_nonce] = _env.currentNonce().asString();
+    (*genesis)[c_mixHash] = _env.currentMixHash().asString();
+    (*genesis)[c_difficulty] = _env.currentDifficulty().asString();
 
     FORK net = _net;
     if (netIsAdditional)
@@ -59,21 +61,34 @@ spDataObject prepareGenesisSubsection(StateTestEnvBase const& _env, ParamsContex
 
     if (!cfg.cfgFile().support1559())
     {
-        (*genesis).removeKey("baseFeePerGas");
+        (*genesis).removeKey(c_baseFeePerGas);
         (*genesis).removeKey("currentRandom");
-        (*genesis).removeKey("withdrawalsRoot");
+        (*genesis).removeKey(c_withdrawalsRoot);
+        (*genesis).removeKey(c_currentExcessBlobGas);
         return genesis;
     }
 
     auto londify = [&_env, &_context](DataObject& _genesis){
-        _genesis["baseFeePerGas"] = calculateGenesisBaseFee(_env.currentBaseFee(), _context);
+        _genesis[c_baseFeePerGas] = calculateGenesisBaseFee(_env.currentBaseFee(), _context);
     };
 
     auto mergify = [&_env](DataObject& _genesis){
-        _genesis.removeKey("difficulty");
+        _genesis.removeKey(c_difficulty);
         _genesis["currentRandom"] = _env.currentRandom().asString();
         auto const randomH32 = dev::toCompactHexPrefixed(dev::u256(_genesis["currentRandom"].asString()), 32);
-        _genesis["mixHash"] = randomH32;
+        _genesis[c_mixHash] = randomH32;
+    };
+
+    auto shangfy = [&_env, &mergify](DataObject& _genesis){
+        mergify(_genesis);
+        _genesis[c_withdrawalsRoot] = _env.currentWithdrawalsRoot().asString();
+    };
+
+    auto cancunfy = [&_env, &shangfy](DataObject& _genesis){
+        shangfy(_genesis);
+        _genesis[c_currentBlobGasUsed] = _env.currentBlobGasUsed().asString();
+        _genesis[c_currentExcessBlobGas] = _env.currentExcessBlobGas().asString();
+        _genesis[c_currentBeaconRoot] = _env.currentBeaconRoot().asString();
     };
 
     if (!netIsAdditional)
@@ -84,16 +99,15 @@ spDataObject prepareGenesisSubsection(StateTestEnvBase const& _env, ParamsContex
 
         bool knowMerge = cfg.checkForkInProgression("Merge");
         if (knowMerge && compareFork(net, CMP::ge, FORK("Merge")))
-        {
             mergify(genesis.getContent());
-        }
 
         bool knowShaghai = cfg.checkForkInProgression("Shanghai");
         if (knowShaghai && compareFork(net, CMP::ge, FORK("Shanghai")))
-        {
-            mergify(genesis.getContent());
-            (*genesis)["withdrawalsRoot"] = _env.currentWithdrawalsRoot().asString();
-        }
+            shangfy(genesis.getContent());
+
+        bool knowCancun = cfg.checkForkInProgression("Cancun");
+        if (knowCancun && compareFork(net, CMP::ge, FORK("Cancun")))
+            cancunfy(genesis.getContent());
     }
     else
     {
@@ -105,6 +119,12 @@ spDataObject prepareGenesisSubsection(StateTestEnvBase const& _env, ParamsContex
         {
             londify(genesis.getContent());
             mergify(genesis.getContent());
+        }
+        else if (_net == FORK("ShanghaiToCancunAtTime15k"))
+        {
+            londify(genesis.getContent());
+            mergify(genesis.getContent());
+            shangfy(genesis.getContent());;
         }
     }
     return genesis;

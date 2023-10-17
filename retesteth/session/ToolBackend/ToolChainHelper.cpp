@@ -1,13 +1,15 @@
 #include "Verification.h"
-#include <TestHelper.h>
+#include <retesteth/helpers/TestHelper.h>
 #include <retesteth/Options.h>
 #include <retesteth/testStructures/Common.h>
+#include <retesteth/Constants.h>
 using namespace dev;
 using namespace test;
 using namespace std;
 using namespace test::debug;
 using namespace teststruct;
 using namespace dataobject;
+using namespace test::teststruct::constnames;
 namespace fs = boost::filesystem;
 
 namespace  {
@@ -36,29 +38,29 @@ ToolParams::ToolParams(DataObject const& _data)
 
     const bigint unreachable = 10000000000;
     if (_data.count("homesteadForkBlock"))
-        m_homesteadForkBlock = spVALUE(new VALUE(_data.atKey("homesteadForkBlock")));
+        m_homesteadForkBlock = sVALUE(_data.atKey("homesteadForkBlock"));
     else
-        m_homesteadForkBlock = spVALUE(new VALUE(unreachable));
+        m_homesteadForkBlock = sVALUE(unreachable);
 
     if (_data.count("byzantiumForkBlock"))
-        m_byzantiumForkBlock = spVALUE(new VALUE(_data.atKey("byzantiumForkBlock")));
+        m_byzantiumForkBlock = sVALUE(_data.atKey("byzantiumForkBlock"));
     else
-        m_byzantiumForkBlock = spVALUE(new VALUE(unreachable));
+        m_byzantiumForkBlock = sVALUE(unreachable);
 
     if (_data.count("constantinopleForkBlock"))
-        m_constantinopleForkBlock = spVALUE(new VALUE(_data.atKey("constantinopleForkBlock")));
+        m_constantinopleForkBlock = sVALUE(_data.atKey("constantinopleForkBlock"));
     else
-        m_constantinopleForkBlock = spVALUE(new VALUE(unreachable));
+        m_constantinopleForkBlock = sVALUE(unreachable);
 
     if (_data.count("muirGlacierForkBlock"))
-        m_muirGlacierForkBlock = spVALUE(new VALUE(_data.atKey("muirGlacierForkBlock")));
+        m_muirGlacierForkBlock = sVALUE(_data.atKey("muirGlacierForkBlock"));
     else
-        m_muirGlacierForkBlock = spVALUE(new VALUE(unreachable));
+        m_muirGlacierForkBlock = sVALUE(unreachable);
 
     if (_data.count("londonForkBlock"))
-        m_londonForkBlock = spVALUE(new VALUE(_data.atKey("londonForkBlock")));
+        m_londonForkBlock = sVALUE(_data.atKey("londonForkBlock"));
     else
-        m_londonForkBlock = spVALUE(new VALUE(unreachable));
+        m_londonForkBlock = sVALUE(unreachable);
 }
 
 // We simulate the client backend side here, so thats why number5 is hardcoded
@@ -71,7 +73,8 @@ static std::map<FORK, FORK> RewardMapForToolBefore5 = {
     {"ByzantiumToConstantinopleFixAt5", "Byzantium"},
     {"BerlinToLondonAt5", "Berlin"},
     {"ArrowGlacierToMergeAtDiffC0000", "ArrowGlacier"},
-    {"MergeToShanghaiAtTime15k", "Merge"}
+    {"MergeToShanghaiAtTime15k", "Merge"},
+    {"ShanghaiToCancunAtTime15k", "Shanghai"}
 };
 static std::map<FORK, FORK> RewardMapForToolAfter5 = {
     {"FrontierToHomesteadAt5", "Homestead"},
@@ -81,7 +84,8 @@ static std::map<FORK, FORK> RewardMapForToolAfter5 = {
     {"ByzantiumToConstantinopleFixAt5", "ConstantinopleFix"},
     {"BerlinToLondonAt5", "London"},
     {"ArrowGlacierToMergeAtDiffC0000", "Merge"},
-    {"MergeToShanghaiAtTime15k", "Shanghai"}
+    {"MergeToShanghaiAtTime15k", "Shanghai"},
+    {"ShanghaiToCancunAtTime15k", "Cancun"}
 };
 
 std::tuple<VALUE, FORK> prepareReward(SealEngine _engine, FORK const& _fork, EthereumBlockState const& _curBlockRef)
@@ -99,7 +103,8 @@ std::tuple<VALUE, FORK> prepareReward(SealEngine _engine, FORK const& _fork, Eth
         if (_curBlockRef.totalDifficulty() < VALUE(DataObject("0x0C0000")))
             posTransitionDifficultyNotReached = true;
     }
-    else if (_fork.asString() == "MergeToShanghaiAtTime15k")
+    else if (_fork.asString() == "MergeToShanghaiAtTime15k"
+             || _fork.asString() == "ShanghaiToCancunAtTime15k")
     {
         isMerge = true;
         if (_curBlockRef.header()->timestamp() < 15000)
@@ -158,9 +163,10 @@ std::tuple<VALUE, FORK> prepareReward(SealEngine _engine, FORK const& _fork, Eth
 
 VALUE calculateGasLimit(VALUE const& _parentGasLimit, VALUE const& _parentGasUsed)
 {
-    static bigint gasFloorTarget = 3141562;  //_gasFloorTarget == Invalid256 ? 3141562 : _gasFloorTarget;
-    bigint gasLimit = _parentGasLimit.asBigInt();
-    static bigint boundDivisor = bigint("0x0400");
+    //_gasFloorTarget == Invalid256 ? 3141562 : _gasFloorTarget;
+    static const bigint gasFloorTarget = 3141562;
+    const bigint gasLimit = _parentGasLimit.asBigInt();
+    static const bigint boundDivisor = bigint("0x0400");
     if (gasLimit < gasFloorTarget)
         return min<bigint>(gasFloorTarget, gasLimit + gasLimit / boundDivisor - 1);
     else
@@ -170,28 +176,27 @@ VALUE calculateGasLimit(VALUE const& _parentGasLimit, VALUE const& _parentGasUse
 
 // Because tool report incomplete state. restore missing fields with zeros
 // Also remove leading zeros in storage
-State restoreFullState(DataObject& _toolState)
+spState restoreFullState(DataObject& _toolState)
 {
     spDataObject fullState;
     for (auto& accTool2 : _toolState.getSubObjectsUnsafe())
     {
         DataObject& accTool = accTool2.getContent();
         DataObject& acc = fullState.getContent()[accTool.getKey()];
-        acc["balance"] = accTool.count("balance") ? accTool.atKey("balance").asString() : "0x00";
-        acc["nonce"] = accTool.count("nonce") ? accTool.atKey("nonce").asString() : "0x00";
-        acc["code"] = accTool.count("code") ? accTool.atKey("code").asString() : "0x";
-        if (accTool.count("storage"))
-            acc.atKeyPointer("storage") = accTool.atKeyPointerUnsafe("storage");
+        acc[c_balance] = accTool.count(c_balance) ? accTool.atKey(c_balance).asString() : "0x00";
+        acc[c_nonce] = accTool.count(c_nonce) ? accTool.atKey(c_nonce).asString() : "0x00";
+        acc[c_code] = accTool.count(c_code) ? accTool.atKey(c_code).asString() : "0x";
+        if (accTool.count(c_storage))
+            acc.atKeyPointer(c_storage) = accTool.atKeyPointerUnsafe(c_storage);
         else
-            acc.atKeyPointer("storage") = spDataObject(new DataObject(DataType::Object));
-        for (auto& storageRecord : acc.atKeyUnsafe("storage").getSubObjectsUnsafe())
+            acc.atKeyPointer(c_storage) = sDataObject(DataType::Object);
+        for (auto& storageRecord : acc.atKeyUnsafe(c_storage).getSubObjectsUnsafe())
         {
             storageRecord.getContent().performModifier(mod_removeLeadingZerosFromHexValueEVEN);
             storageRecord.getContent().performModifier(mod_removeLeadingZerosFromHexKeyEVEN);
         }
-        //fullState[accTool.getKey()] = acc;
     }
-    return State(dataobject::move(fullState));
+    return spState(new State(dataobject::move(fullState)));
 }
 
 ChainOperationParams ChainOperationParams::defaultParams(ToolParams const& _params)
@@ -281,14 +286,14 @@ VALUE calculateEthashDifficulty(
 
 VALUE calculateEIP1559BaseFee(ChainOperationParams const& _chainParams, spBlockHeader const& _bi, spBlockHeader const& _parent)
 {
+    if (_bi->number().asBigInt() == _chainParams.londonForkBlock)
+        return INITIAL_BASE_FEE;
+
     VALUE expectedBaseFee(0);
     BlockHeader1559 const& parent = BlockHeader1559::castFrom(_parent);
-
     VALUE const parentGasTarget = parent.gasLimit() / ELASTICITY_MULTIPLIER;
 
-    if (_bi->number().asBigInt() == _chainParams.londonForkBlock)
-        expectedBaseFee = INITIAL_BASE_FEE;
-    else if (parent.gasUsed() == parentGasTarget)
+    if (parent.gasUsed() == parentGasTarget)
         expectedBaseFee = parent.baseFee().asBigInt();
     else if (parent.gasUsed() > parentGasTarget)
     {

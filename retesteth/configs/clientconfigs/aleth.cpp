@@ -4,6 +4,10 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
+
+genalethcfg::genalethcfg()
+{
+
 string const aleth_config = R"({
     "name" : "Ethereum cpp-client",
     "socketType" : "ipc",
@@ -69,9 +73,6 @@ string const aleth_stop_sh = R"(#!/bin/bash
 killall aleth
 )";
 
-
-genalethcfg::genalethcfg()
-{
     {
         spDataObject obj;
         (*obj)["path"] = "aleth/config";

@@ -4,6 +4,8 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
+gent8ntooleipcfg::gent8ntooleipcfg()
+{
 
 string const t8ntooleip_config = R"({
     "name" : "Ethereum GO on StateTool",
@@ -241,9 +243,6 @@ string const t8ntooleip_config = R"({
     }
 })";
 
-
-gent8ntooleipcfg::gent8ntooleipcfg()
-{
     {
         spDataObject obj;
         (*obj)["path"] = "t8ntooleip/config";

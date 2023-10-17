@@ -4,6 +4,9 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
+genConstantinopleCfgETCTR::genConstantinopleCfgETCTR()
+{
+
 const string t8ntool_Constantinople_config = R"({
     "params" : {
         "fork" : "ETC_Agharta",
@@ -16,8 +19,6 @@ const string t8ntool_Constantinople_config = R"({
     }
 })";
 
-genConstantinopleCfgETCTR::genConstantinopleCfgETCTR()
-{
     spDataObject obj2;
     (*obj2)["path"] = "etctranslate/genesis/Constantinople.json";
     (*obj2)["content"] = t8ntool_Constantinople_config;

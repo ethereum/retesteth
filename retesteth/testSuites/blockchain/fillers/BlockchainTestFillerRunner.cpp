@@ -1,6 +1,6 @@
 #include "TestBlockchainManager.h"
 #include "BlockchainTestFillerRunner.h"
-#include <retesteth/TestOutputHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
 #include <retesteth/EthChecks.h>
 #include <retesteth/session/Session.h>
 #include <retesteth/Options.h>

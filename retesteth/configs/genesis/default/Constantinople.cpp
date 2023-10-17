@@ -4,6 +4,9 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
+genConstantinopleCfg::genConstantinopleCfg()
+{
+
 const string t8ntool_Constantinople_config = R"({
     "params" : {
         "fork" : "Constantinople",
@@ -16,8 +19,6 @@ const string t8ntool_Constantinople_config = R"({
     }
 })";
 
-genConstantinopleCfg::genConstantinopleCfg()
-{
     spDataObject obj2;
     (*obj2)["path"] = "default/genesis/Constantinople.json";
     (*obj2)["content"] = t8ntool_Constantinople_config;

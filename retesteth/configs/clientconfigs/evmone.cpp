@@ -4,6 +4,10 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
+
+genevmonecfg::genevmonecfg()
+{
+
 string const evmone_config = R"({
     "name" : "EVMONE on StateTool",
     "socketType" : "tranition-tool",
@@ -15,6 +19,7 @@ string const evmone_config = R"({
     "calculateBasefee" : false,
     "checkLogsHash" : true,
     "support1559" : true,
+    "supportBigint" : false,
     "transactionsAsJson" : true,
     "tmpDir" : "/dev/shm",
     "defaultChainID" : 1,
@@ -32,22 +37,27 @@ string const evmone_config = R"({
         "Istanbul",
         "Berlin",
         "London",
-        "Merge"
+        "Merge",
+        "Shanghai"
     ],
     "additionalForks" : [
         "FrontierToHomesteadAt5",
         "HomesteadToEIP150At5",
         "EIP158ToByzantiumAt5",
-        "HomesteadToDaoAt5",
         "ByzantiumToConstantinopleFixAt5",
         "BerlinToLondonAt5",
         "ArrowGlacier",
         "ArrowGlacierToMergeAtDiffC0000",
-        "GrayGlacier"
+        "GrayGlacier",
+        "MergeToShanghaiAtTime15k"
     ],
     "fillerSkipForks" : [
+        "HomesteadToDaoAt5"
     ],
     "exceptions" : {
+      "PYSPECS_EXCEPTIONS" : "",
+      "Transaction without funds" : "insufficient funds for gas * price + value",
+
       "AddressTooShort" : "input string too short for common.Address",
       "AddressTooLong" : "rlp: input string too long for common.Address, decoding into (types.Transaction)(types.LegacyTx).To",
       "NonceMax" : "nonce exceeds 2^64-1",
@@ -109,7 +119,7 @@ string const evmone_config = R"({
       "UncleIsBrother" : "Uncle is brother!",
       "OutOfGas" : "out of gas",
       "SenderNotEOA" : "sender not an eoa:",
-      "IntrinsicGas" : "t8ntool didn't return a transaction with hash",
+      "IntrinsicGas" : "intrinsic gas too low:",
       "ExtraDataIncorrectDAO" : "BlockHeader require Dao ExtraData!",
       "InvalidTransactionVRS" : "t8ntool didn't return a transaction with hash",
       "BLOCKHEADER_VALUE_TOOLARGE" : "Blockheader parse error: VALUE  >u256",
@@ -214,12 +224,16 @@ string const evmone_config = R"({
       "1559BlockImportImpossible_TargetGasHigh": "gasTarget increased too much",
       "1559BlockImportImpossible_InitialGasLimitInvalid": "Invalid block1559: Initial gasLimit must be",
       "MergeBlockImportImpossible" : "Trying to import Merge block on top of Shanghai block after transition",
-      "ShanghaiBlockImportImpossible" : "Shanghai block on top of Merge block before transition",
+      "ShanghaiBlockImportImpossible" : "Trying to import Shanghai block on top of block that is not Shanghai!!",
       "TR_IntrinsicGas" : "intrinsic gas too low:",
       "TR_NoFunds" : "insufficient funds for gas * price + value",
+      "TR_NoFundsX" : "insufficient funds for gas * price + value",
       "TR_NoFundsValue" : "insufficient funds for transfer",
+      "TR_NoFundsOrGas" : "insufficient funds for gas * price + value",
       "TR_FeeCapLessThanBlocks" : "max fee per gas less than block base fee",
       "TR_GasLimitReached" : "gas limit reached",
+      "TR_FeeCapLessThanBlocksORGasLimitReached" : "gas limit reached",
+      "TR_FeeCapLessThanBlocksORNoFunds" : "max fee per gas less than block base fee",
       "TR_NonceTooHigh" : "nonce too high",
       "TR_NonceTooLow" : "nonce too low",
       "TR_TypeNotSupported" : "transaction type not supported",
@@ -239,7 +253,28 @@ string const evmone_config = R"({
       "3675PreMerge1559BlockRejected" : "Trying to import 1559 block on top of PoS block",
       "INPUT_UNMARSHAL_ERROR" : "cannot unmarshal hex",
       "INPUT_UNMARSHAL_SIZE_ERROR" : "failed unmarshaling",
-      "RLP_BODY_UNMARSHAL_ERROR" : "Rlp structure is wrong"
+      "RLP_BODY_UNMARSHAL_ERROR" : "Rlp structure is wrong",
+      "EOF_ConflictingStackHeight": "err: stack_height_mismatch",
+      "EOF_StackUnderflow" : "err: stack_underflow",
+      "EOF_InvalidCodeTermination" : "err: no_terminating_instruction",
+      "EOF_MaxStackHeightExceeded" : "err: max_stack_height_above_limit",
+      "EOF_UnreachableCode": "err: unreachable_instructions",
+      "EOF_InvalidCode": "err: invalid_code",
+      "EOF_TruncatedImmediate": "err: truncated_instruction",
+      "EOF_InvalidJumpDestination": "err: invalid_rjump_destination",
+      "EOF_InvalidJumpTableCount": "err: invalid_rjumpv_count",
+      "EOF_TypeSectionMissing": "err: type_section_missing",
+      "EOF_CodeSectionMissing": "err: code_section_missing",
+      "EOF_InvalidTypeSectionSize": "err: invalid_type_section_size",
+      "EOF_InvalidFirstSectionType": "err: invalid_first_section_type",
+      "EOF_TooManyCodeSections": "err: too_many_code_sections",
+      "EOF_InvalidCodeSectionIndex": "err: invalid_code_section_index",
+      "EOF_UndefinedInstruction": "err: undefined_instruction",
+      "EOF_ZeroSectionSize": "err: zero_section_size",
+      "EOF_NonEmptyStackOnTerminatingInstruction": "err: non_empty_stack_on_terminating_instruction",
+      "EOF_InvalidSectionBodiesSize": "err: invalid_section_bodies_size",
+      "PostMergeUncleHashIsNotEmpty" : "block.uncleHash != empty",
+      "PostMergeDifficultyIsNot0" : "block.difficulty must be 0"
     }
 })";
 
@@ -251,7 +286,7 @@ if [ -z $wevm ]; then
    exit 1
 fi
 
-if [ $1 = "t8n" ] || [ $1 = "b11r" ]; then
+if [ $1 = "eof" ] || [ $1 = "t8n" ] || [ $1 = "b11r" ]; then
     evmone $1 $2 $3 $4 $5 $6 $7 $8 $9 $10 $11 $12 $13 $14 $15 $16 $17 $18 $19 $20 $21 $22 $23 $24 $25 $26
 elif [ $1 = "-v" ]; then
     evmone -v
@@ -276,15 +311,18 @@ else
         cmdArgs=$cmdArgs" "$index
     done
     if [ $stateProvided -eq 1 ]; then
-        evmone $cmdArgs --verbosity 2 2> $errorLogFile
+        if [ -z $errorLogFile ]; then
+            evmone $cmdArgs --verbosity 2
+        else
+            evmone $cmdArgs --verbosity 2 2> $errorLogFile
+        fi
     else
         evmone t9n $cmdArgs 2> $errorLogFile
     fi
 fi
 )";
 
-genevmonecfg::genevmonecfg()
-{
+
     {
         spDataObject obj;
         (*obj)["path"] = "evmone/config";

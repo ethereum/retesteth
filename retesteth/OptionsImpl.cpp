@@ -1,5 +1,5 @@
 #include "Options.h"
-#include <retesteth/TestHelper.h>
+#include <retesteth/helpers/TestHelper.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/test/unit_test.hpp>
 
@@ -216,7 +216,7 @@ void Options::vecstr_opt::initArg(std::string const& _arg)
 void Options::vecaddr_opt::initArg(std::string const& _arg)
 {
     for (auto const& el : explode(_arg, ','))
-        m_vector.push_back(IPADDRESS(el));
+        m_vector.push_back(IPADDRESS(DataObject(el)));
 }
 
 void Options::singletest_opt::initArg(std::string const& _arg)
@@ -264,6 +264,18 @@ void Options::fspath_opt::initArg(std::string const& _arg)
 
 void Options::statediff_opt::initArg(std::string const& _arg)
 {
+    string const forkDel = "--";
+    size_t const pos0 = _arg.find(forkDel);
+    if (pos0 != string::npos)
+    {
+        // Parse --statediff Fork--Fork
+        isForkSelected = true;
+        firstFork = _arg.substr(0, pos0);
+        seconFork = _arg.substr(pos0 + forkDel.size());
+        return;
+    }
+
+    // Parse --statediff xtoy or --statediff x:ytox2:y2 (Block:Tx selection)
     string const del = "to";
     size_t const pos1 = _arg.find(":");
     if (pos1 != string::npos)

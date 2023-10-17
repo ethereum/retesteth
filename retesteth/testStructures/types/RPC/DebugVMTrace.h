@@ -12,7 +12,7 @@ private:
     class DebugVMTraceImplInterface
     {
     public:
-        virtual void print() = 0;
+        virtual void print() const = 0;
         std::vector<VMLogRecord> const& getLog() const { return m_log; };
         virtual ~DebugVMTraceImplInterface(){}
     protected:
@@ -23,7 +23,7 @@ private:
     {
     public:
         DebugVMTraceRaw(std::string const& _info, boost::filesystem::path const&);
-        void print() override;
+        void print() const override;
     private:
         std::string m_rawUnparsedLogs;
     };
@@ -31,7 +31,7 @@ private:
     {
     public:
         DebugVMTraceNice(std::string const& _info, boost::filesystem::path const&);
-        void print() override;
+        void print() const override;
     private:
         void readLog(std::string const&);
         bool m_limitReached = false;
@@ -41,8 +41,8 @@ private:
 public:
     DebugVMTrace() {}  // for tuples
     DebugVMTrace(std::string const& _info, boost::filesystem::path const& _logs);
-    void print();
-    void exportLogs(boost::filesystem::path const& _folder);
+    void print() const;
+    void exportLogs(boost::filesystem::path const& _folder) const;
     std::vector<VMLogRecord> const& getLog();
     ~DebugVMTrace();
 

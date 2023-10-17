@@ -1,9 +1,11 @@
 #include "Verification.h"
 #include "retesteth/Options.h"
+#include <retesteth/Constants.h>
 using namespace toolimpl;
 using namespace test::debug;
 using namespace std;
 using namespace dev;
+using namespace test;
 
 namespace {
 
@@ -93,7 +95,7 @@ void verify1559Block(spBlockHeader const& _header, ToolChain const& _chain)
         if (!isTTDDefined)
             throw test::UpwardsException("terminalTotalDifficulty is not defined in chain params: \n" + _chain.params()->params().asJson());
 
-        VALUE const TTD = _chain.params()->params().atKey("terminalTotalDifficulty");
+        VALUE const TTD (_chain.params()->params().atKey("terminalTotalDifficulty"));
         if (_chain.lastBlock().totalDifficulty() >=  TTD)
             throw test::UpwardsException() << "Invalid block1559: Chain switched to PoS!";
     }
@@ -105,7 +107,7 @@ void verifyCommonMergeRules(spBlockHeader const& _header, string const& _msg)
 
     /// Verify rules
     /// https://eips.ethereum.org/EIPS/eip-3675
-    if (header.uncleHash().asString() != "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347")
+    if (header.uncleHash().asString() != C_EMPTY_LIST_HASH)
         throw test::UpwardsException(_msg + " block.uncleHash != empty \n" + header.asDataObject()->asJson());
     if (header.difficulty() != 0)
         throw test::UpwardsException(_msg + " block.difficulty must be 0! ");
@@ -124,6 +126,18 @@ void verifyShanghaiBlock(spBlockHeader const& _header, ToolChain const& _chain)
     verifyCommonMergeRules(_header, "Shanghai");
 
     /// Verify shanghai rules
+    // Withdrawals root is just a hash. no changes
+}
+
+void verify4844Block(spBlockHeader const& _header, ToolChain const& _chain)
+{
+    (void)_chain;
+    check_blockType(_header->type(), BlockType::BlockHeader4844, "verify4844Block");
+
+    //BlockHeaderShanghai const& header = BlockHeaderShanghai::castFrom(_header);
+    verifyCommonMergeRules(_header, "4844");
+
+    /// Verify 4844 rules
 }
 
 void verifyMergeBlock(spBlockHeader const& _header, ToolChain const& _chain)
@@ -202,7 +216,24 @@ void verifyShanghaiParent(spBlockHeader const& _header, spBlockHeader const& _pa
                 throw test::UpwardsException("Trying to import Shanghai block on top of Merge block before transition!!");
         }
         else
-            throw test::UpwardsException("Trying to import Shanghai block on top of Merge block before transition!!");
+            throw test::UpwardsException("Trying to import Shanghai block on top of block that is not Shanghai!!");
+    }
+}
+
+void verify4844Parent(spBlockHeader const& _header, spBlockHeader const& _parent, ToolChain const& _chain)
+{
+    check_blockType(_header->type(), BlockType::BlockHeader4844, "verify4844Parent");
+    if (_parent->type() == BlockType::BlockHeader4844)
+        verify4844Block(_parent, _chain);
+    else
+    {
+        if (_header->timestamp() >= 15000 && _chain.fork() == "ShanghaiToCancunAtTime15k")
+        {
+            if (_parent->type() != BlockType::BlockHeaderShanghai)
+                throw test::UpwardsException("Trying to import Cancun block on top of Shanghai block before transition!!");
+        }
+        else
+            throw test::UpwardsException("Trying to import Cancun block on top of block that is not Cancun!!");
     }
 }
 
@@ -223,7 +254,7 @@ void verifyMergeParent(spBlockHeader const& _header, spBlockHeader const& _paren
 
     if (_parent->type() != BlockType::BlockHeaderMerge)
     {
-        VALUE const TTD = isTTDDefined ? _chain.params()->params().atKey("terminalTotalDifficulty") : VALUE (DataObject("0xffffffffffffffffffffffffffff"));
+        VALUE const TTD = isTTDDefined ? VALUE(_chain.params()->params().atKey("terminalTotalDifficulty")) : VALUE ("0xffffffffffffffffffffffffffff");
         if (_parentTD < TTD)
             throw test::UpwardsException("Parent (transition) block has not reached TTD (" + _parentTD.asString() +
                                          " < " + TTD.asString() + ") but current block set to PoS format! \nParent: \n" +
@@ -308,6 +339,9 @@ void verifyBlockParent(spBlockHeader const& _header, ToolChain const& _chain)
             case BlockType::BlockHeaderShanghai:
                 verifyShanghaiParent(_header, parentBlock.header(), _chain);
                 break;
+            case BlockType::BlockHeader4844:
+                verify4844Parent(_header, parentBlock.header(), _chain);
+                break;
             default:
                 throw test::UpwardsException("verifyBlockParent::Unhandled block type check!");
             }
@@ -341,6 +375,9 @@ void verifyEthereumBlockHeader(spBlockHeader const& _header, ToolChain const& _c
     case BlockType::BlockHeaderShanghai:
         verifyShanghaiBlock(_header, _chain);
         break;
+    case BlockType::BlockHeader4844:
+        verify4844Block(_header, _chain);
+        break;
     default:
         throw test::UpwardsException("verifyEthereumBlockHeader::Unhandled block type check!");
     }
@@ -366,7 +403,14 @@ void verifyWithdrawalsRLP(dev::RLP const& _rlp)
 void verifyWithdrawalRecord(spWithdrawal const& _wtRecord)
 {
     if (_wtRecord->index.getCContent() >= POW2_64)
-        throw test::UpwardsException("Withdrawals Index >= 2**64");
+        throw test::UpwardsException("Withdrawals Index field >= 2**64");
+    if (_wtRecord->amount.getCContent() >= POW2_64)
+        throw test::UpwardsException("Withdrawals Amount field >= 2**64");
+    if (_wtRecord->validatorIndex.getCContent() >= POW2_64)
+        throw test::UpwardsException("Withdrawals validatorIndex field >= 2**64");
+    auto const& address = _wtRecord->address.getCContent().asString();
+    if (address.find("bigint") != string::npos)
+        throw test::UpwardsException("Withdrawals address field is not a valid address! " + address);
 }
 
 }  // namespace toolimpl

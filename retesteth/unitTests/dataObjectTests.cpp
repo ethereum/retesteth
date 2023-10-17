@@ -19,8 +19,10 @@
  */
 
 #include <libdataobj/ConvertFile.h>
-#include <retesteth/TestOutputHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
 #include <retesteth/testSuites/Common.h>
+#include <retesteth/testStructures/Common.h>
+#include <libdevcore/SHA3.h>
 
 using namespace std;
 using namespace dev;
@@ -971,5 +973,306 @@ BOOST_AUTO_TEST_CASE(dataobject_doublefields_comments_disabled)
     }
 }
 
+BOOST_AUTO_TEST_CASE(dataobject_accessArray)
+{
+    // Access not an array
+    spDataObject obj;
+    auto const& vec = obj->getSubObjects();
+    BOOST_CHECK(vec.size() == 0);
+    auto const& map = obj->getSubObjectKeys();
+    BOOST_CHECK(map.size() == 0);
+
+    auto& vecU = (*obj).getSubObjectsUnsafe();
+    BOOST_CHECK(vecU.size() == 0);
+}
+
+BOOST_AUTO_TEST_CASE(dataobject_copy)
+{
+    string const data = R"(
+    {
+        "intfield" : 123,
+        "string" : "somstring",
+        "bool" : true,
+        "null" : null,
+        "array" : [
+            "element1",
+            "element2"
+        ],
+        "object" : {
+            "intfield" : -123,
+            "string" : "somstring",
+            "bool" : true
+        },
+        "array2" : [
+            1,
+            -2
+        ]
+    })";
+    CJOptions opt = { .jsonParse = CJOptions::JsonParse::ALLOW_COMMENTS, .autosort = true };
+    spDataObject dObj = ConvertJsoncppStringToData(data, opt);
+    BOOST_CHECK(dev::toHexPrefixed(dev::sha3(dObj->asJson(0, false))) == "0xfea9954b38d3afe471538b8854d63628570c1b68cf1c403e3b75a3263f7d4e3a");
+
+    spDataObject dObj2 = dObj->copy();
+    BOOST_CHECK(dObj->asJson(0, false) == dObj2->asJson(0, false));
+    (*dObj).atKeyUnsafe("string") = "newString";
+    BOOST_CHECK(dObj->asJson(0, false) != dObj2->asJson(0, false));
+
+    (*dObj).atKeyUnsafe("string") = "somstring";
+    (*dObj2).copyFrom(dObj);
+    BOOST_CHECK(dObj->asJson(0, false) == dObj2->asJson(0, false));
+    (*dObj).atKeyUnsafe("string") = "newString";
+    BOOST_CHECK(dObj->asJson(0, false) != dObj2->asJson(0, false));
+}
+
+BOOST_AUTO_TEST_CASE(dataobject_defaultType)
+{
+    spDataObject obj;
+    BOOST_CHECK(DataObject::dataTypeAsString(obj->type()) == "notinit");
+}
+
+BOOST_AUTO_TEST_CASE(dataobject_removeLeadingZerosFromHexValueEVEN)
+{
+    spDataObject obj = sDataObject("0x0000112233");
+    (*obj).setKey("0x0000112233");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValueEVEN);
+    (*obj).performModifier(mod_removeLeadingZerosFromHexKeyEVEN);
+    BOOST_CHECK(obj->asString() == "0x112233");
+    BOOST_CHECK(obj->getKey() == "0x112233");
+
+    (*obj).setString("0x000112234");
+    (*obj).setKey("0x000112234");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValueEVEN);
+    (*obj).performModifier(mod_removeLeadingZerosFromHexKeyEVEN);
+    BOOST_CHECK(obj->asString() == "0x112234");
+    BOOST_CHECK(obj->getKey() == "0x112234");
+
+    (*obj).setString("0x00012235");
+    (*obj).setKey("0x00012235");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValueEVEN);
+    (*obj).performModifier(mod_removeLeadingZerosFromHexKeyEVEN);
+    BOOST_CHECK(obj->asString() == "0x012235");
+    BOOST_CHECK(obj->getKey() == "0x012235");
+
+    (*obj).setString("0x01");
+    (*obj).setKey("0x01");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValueEVEN);
+    (*obj).performModifier(mod_removeLeadingZerosFromHexKeyEVEN);
+    BOOST_CHECK(obj->asString() == "0x01");
+    BOOST_CHECK(obj->getKey() == "0x01");
+
+    (*obj).setString("0x11");
+    (*obj).setKey("0x11");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValueEVEN);
+    (*obj).performModifier(mod_removeLeadingZerosFromHexKeyEVEN);
+    BOOST_CHECK(obj->asString() == "0x11");
+    BOOST_CHECK(obj->getKey() == "0x11");
+
+    (*obj).setString("0x1");
+    (*obj).setKey("0x1");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValueEVEN);
+    (*obj).performModifier(mod_removeLeadingZerosFromHexKeyEVEN);
+    BOOST_CHECK(obj->asString() == "0x01");
+    BOOST_CHECK(obj->getKey() == "0x01");
+
+    (*obj).setString("0x");
+    (*obj).setKey("0x");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValueEVEN);
+    (*obj).performModifier(mod_removeLeadingZerosFromHexKeyEVEN);
+    BOOST_CHECK(obj->asString() == "0x");
+    BOOST_CHECK(obj->getKey() == "0x");
+
+    (*obj).setString("0");
+    (*obj).setKey("0");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValueEVEN);
+    (*obj).performModifier(mod_removeLeadingZerosFromHexKeyEVEN);
+    BOOST_CHECK(obj->asString() == "0");
+    BOOST_CHECK(obj->getKey() == "0");
+
+    (*obj).setString("");
+    (*obj).setKey("");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValueEVEN);
+    (*obj).performModifier(mod_removeLeadingZerosFromHexKeyEVEN);
+    BOOST_CHECK(obj->asString() == "");
+    BOOST_CHECK(obj->getKey() == "");
+
+    (*obj).setString("00012235");
+    (*obj).setKey("00012235");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValueEVEN);
+    (*obj).performModifier(mod_removeLeadingZerosFromHexKeyEVEN);
+    BOOST_CHECK(obj->asString() == "00012235");
+    BOOST_CHECK(obj->getKey() == "00012235");
+}
+
+BOOST_AUTO_TEST_CASE(dataobject_removeLeadingZerosFromHexValues)
+{
+    spDataObject obj = sDataObject("0x0000112233");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValues);
+    BOOST_CHECK(obj->asString() == "0x112233");
+
+    (*obj).setString("0x000112234");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValues);
+    BOOST_CHECK(obj->asString() == "0x112234");
+
+    (*obj).setString("0x00012235");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValues);
+    BOOST_CHECK(obj->asString() == "0x12235");
+
+    (*obj).setString("0x01");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValues);
+    BOOST_CHECK(obj->asString() == "0x1");
+
+    (*obj).setString("0x11");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValues);
+    BOOST_CHECK(obj->asString() == "0x11");
+
+    (*obj).setString("0x1");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValues);
+    BOOST_CHECK(obj->asString() == "0x1");
+
+    (*obj).setString("0x");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValues);
+    BOOST_CHECK(obj->asString() == "0x");
+
+    (*obj).setString("0");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValues);
+    BOOST_CHECK(obj->asString() == "0");
+
+    (*obj).setString("");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValues);
+    BOOST_CHECK(obj->asString() == "");
+
+    (*obj).setString("00012235");
+    (*obj).performModifier(mod_removeLeadingZerosFromHexValues);
+    BOOST_CHECK(obj->asString() == "00012235");
+}
+
+BOOST_AUTO_TEST_CASE(dataobject_valueToCompactEvenHexPrefixed)
+{
+    spDataObject obj = sDataObject("10");
+    (*obj).performModifier(mod_valueToCompactEvenHexPrefixed);
+    BOOST_CHECK(obj->asString() == "0x0a");
+
+    (*obj).setString("10_00");
+    (*obj).performModifier(mod_valueToCompactEvenHexPrefixed);
+    BOOST_CHECK(obj->asString() == "0x03e8");
+
+    (*obj).setString("5");
+    (*obj).performModifier(mod_valueToCompactEvenHexPrefixed);
+    BOOST_CHECK(obj->asString() == "0x05");
+
+    (*obj).setString("005");
+    (*obj).performModifier(mod_valueToCompactEvenHexPrefixed);
+    BOOST_CHECK(obj->asString() == "0x05");
+
+    (*obj).setString("0");
+    (*obj).performModifier(mod_valueToCompactEvenHexPrefixed);
+    BOOST_CHECK(obj->asString() == "0x00");
+
+    (*obj).setString("0x01");
+    (*obj).performModifier(mod_valueToCompactEvenHexPrefixed);
+    BOOST_CHECK(obj->asString() == "0x01");
+
+    (*obj).setString("0x00");
+    (*obj).performModifier(mod_valueToCompactEvenHexPrefixed);
+    BOOST_CHECK(obj->asString() == "0x00");
+
+    (*obj).setString("0x001");
+    (*obj).performModifier(mod_valueToCompactEvenHexPrefixed);
+    BOOST_CHECK(obj->asString() == "0x01");
+
+    (*obj).setString("0x1");
+    (*obj).performModifier(mod_valueToCompactEvenHexPrefixed);
+    BOOST_CHECK(obj->asString() == "0x01");
+
+    (*obj).setString("0x");
+    (*obj).performModifier(mod_valueToCompactEvenHexPrefixed);
+    BOOST_CHECK(obj->asString() == "0x00");
+}
+
+BOOST_AUTO_TEST_CASE(dataobject_keyToCompactEvenHexPrefixed)
+{
+    spDataObject obj;
+    (*obj).setKey("10");
+    (*obj).performModifier(mod_keyToCompactEvenHexPrefixed);
+    BOOST_CHECK(obj->getKey() == "0x0a");
+
+    (*obj).setKey("5");
+    (*obj).performModifier(mod_keyToCompactEvenHexPrefixed);
+    BOOST_CHECK(obj->getKey() == "0x05");
+
+    (*obj).setKey("005");
+    (*obj).performModifier(mod_keyToCompactEvenHexPrefixed);
+    BOOST_CHECK(obj->getKey() == "0x05");
+
+    (*obj).setKey("0");
+    (*obj).performModifier(mod_keyToCompactEvenHexPrefixed);
+    BOOST_CHECK(obj->getKey() == "0x00");
+
+    (*obj).setKey("0x01");
+    (*obj).performModifier(mod_keyToCompactEvenHexPrefixed);
+    BOOST_CHECK(obj->getKey() == "0x01");
+
+    (*obj).setKey("0x00");
+    (*obj).performModifier(mod_keyToCompactEvenHexPrefixed);
+    BOOST_CHECK(obj->getKey() == "0x00");
+
+    (*obj).setKey("0x001");
+    (*obj).performModifier(mod_keyToCompactEvenHexPrefixed);
+    BOOST_CHECK(obj->getKey() == "0x01");
+
+    (*obj).setKey("0x1");
+    (*obj).performModifier(mod_keyToCompactEvenHexPrefixed);
+    BOOST_CHECK(obj->getKey() == "0x01");
+
+    (*obj).setKey("0x");
+    (*obj).performModifier(mod_keyToCompactEvenHexPrefixed);
+    BOOST_CHECK(obj->getKey() == "0x00");
+}
+
+BOOST_AUTO_TEST_CASE(dataobject_mod_valueToFH32)
+{
+    spDataObject obj = sDataObject("0x01");
+    (*obj).performModifier(mod_valueToFH32);
+    BOOST_CHECK(obj->asString() == "0x0000000000000000000000000000000000000000000000000000000000000001");
+
+    (*obj).setString("0x");
+    (*obj).performModifier(mod_valueToFH32);
+    BOOST_CHECK(obj->asString() == "0x0000000000000000000000000000000000000000000000000000000000000000");
+
+    (*obj).setString("0x0000000000000000000000000000000000000000000000000000000000000000");
+    (*obj).performModifier(mod_valueToFH32);
+    BOOST_CHECK(obj->asString() == "0x0000000000000000000000000000000000000000000000000000000000000000");
+
+    (*obj).setString("0x1000000000000000000000000000000000000000000000000000000000000000");
+    (*obj).performModifier(mod_valueToFH32);
+    BOOST_CHECK(obj->asString() == "0x1000000000000000000000000000000000000000000000000000000000000000");
+
+    (*obj).setString("0x0000010000000000");
+    (*obj).performModifier(mod_valueToFH32);
+    BOOST_CHECK(obj->asString() == "0x0000000000000000000000000000000000000000000000000000010000000000");
+
+    (*obj).setString("0x1000010000000000");
+    (*obj).performModifier(mod_valueToFH32);
+    BOOST_CHECK(obj->asString() == "0x0000000000000000000000000000000000000000000000001000010000000000");
+}
+
+BOOST_AUTO_TEST_CASE(dataobject_copyFrom_emptyArray)
+{
+    {
+    DataObject orig(DataType::Array);
+    BOOST_CHECK(orig.type() == DataType::Array);
+    DataObject copy;
+    copy.copyFrom(orig);
+    BOOST_CHECK(copy.type() == DataType::Array);
+    }
+
+    {
+    DataObject orig(DataType::Object);
+    BOOST_CHECK(orig.type() == DataType::Object);
+    DataObject copy;
+    copy.copyFrom(orig);
+    BOOST_CHECK(copy.type() == DataType::Object);
+    }
+}
 
 BOOST_AUTO_TEST_SUITE_END()

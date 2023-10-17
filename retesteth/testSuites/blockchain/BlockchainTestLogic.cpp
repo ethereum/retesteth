@@ -3,7 +3,7 @@
 #include <retesteth/EthChecks.h>
 #include <retesteth/ExitHandler.h>
 #include <retesteth/Options.h>
-#include <retesteth/TestOutputHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
 using namespace std;
 using namespace test;
 using namespace test::debug;
@@ -19,6 +19,8 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
         return;
 
     BlockchainTestRunner runner(_test, _opt);
+    if (runner.checkBigIntSkip())
+        return;
     runner.setChainParams();
     runner.performOptionCommandsOnGenesis();
 
@@ -30,6 +32,7 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
 
         runner.incrementBlockAndSetTestInfo();
         runner.validateTransactionSequence(tblock);
+        runner.validateRlpDecodedInInvalidBlocks(tblock);
 
         auto const blHash = runner.mineBlock(tblock.rlp());
         if (runner.checkLastRPCBlockException(tblock))
@@ -112,8 +115,13 @@ spDataObject DoTests(spDataObject& _input, TestSuite::TestSuiteOptions& _opt)
             // Select test by name if --singletest and --singlenet is set
             if (Options::get().singletest.initialized())
             {
-                if (!Options::get().singletest.subname.empty() && bcTest.testName() != Options::get().singletest.subname)
-                    continue;
+                // If we run python test from .py do not select by subtest
+                if (!Options::getDynamicOptions().pythonTestRunning)
+                {
+                    if (!Options::get().singletest.subname.empty()
+                        && bcTest.testName() != Options::get().singletest.subname)
+                        continue;
+                }
             }
 
             if (!Options::get().singleTestNet.empty())

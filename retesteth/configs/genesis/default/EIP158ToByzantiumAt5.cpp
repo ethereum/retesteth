@@ -4,6 +4,9 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
+genEIP158ToByzantiumCfg::genEIP158ToByzantiumCfg()
+{
+
 const string t8ntool_EIP158ToByzantiumAt5_config = R"({
     "params" : {
         "fork" : "EIP158ToByzantiumAt5",
@@ -15,8 +18,6 @@ const string t8ntool_EIP158ToByzantiumAt5_config = R"({
     }
 })";
 
-genEIP158ToByzantiumCfg::genEIP158ToByzantiumCfg()
-{
     spDataObject obj2;
     (*obj2)["path"] = "default/genesis/EIP158ToByzantiumAt5.json";
     (*obj2)["content"] = t8ntool_EIP158ToByzantiumAt5_config;

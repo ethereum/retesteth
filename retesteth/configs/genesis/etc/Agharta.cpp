@@ -4,6 +4,9 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
+genAghartaCfgETC::genAghartaCfgETC()
+{
+
 const string rpc_Agharta_config = R"({
     "params" : {
         "homesteadForkBlock" : "0x00",
@@ -26,8 +29,6 @@ const string etc_Agharta_config = R"({
     }
 })";
 
-genAghartaCfgETC::genAghartaCfgETC()
-{
     spDataObject obj;
     (*obj)["path"] = "besuetc/genesis/ETC_Agharta.json";
     (*obj)["content"] = rpc_Agharta_config;

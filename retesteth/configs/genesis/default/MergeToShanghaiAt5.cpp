@@ -4,6 +4,9 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
+genMergeToShanghaiAtTime15kCfg::genMergeToShanghaiAtTime15kCfg()
+{
+
 const string t8ntool_MergeToShanghaiAtTime15k_config = R"({
     "params" : {
         "fork" : "MergeToShanghaiAtTime15k",
@@ -17,8 +20,6 @@ const string t8ntool_MergeToShanghaiAtTime15k_config = R"({
     }
 })";
 
-genMergeToShanghaiAtTime15kCfg::genMergeToShanghaiAtTime15kCfg()
-{
     spDataObject obj2(new DataObject());
     (*obj2)["path"] = "default/genesis/MergeToShanghaiAtTime15k.json";
     (*obj2)["content"] = t8ntool_MergeToShanghaiAtTime15k_config;

@@ -1,8 +1,8 @@
 #include "Options.h"
-#include "TestHelper.h"
+#include <retesteth/helpers/TestHelper.h>
 #include <libdevcore/CommonIO.h>
 #include <retesteth/EthChecks.h>
-#include <retesteth/TestOutputHelper.h>
+#include <retesteth/helpers/TestOutputHelper.h>
 using namespace dev;
 using namespace test;
 using namespace std;
@@ -78,9 +78,17 @@ bool tryCustomCompiler(string const& _code, string& _compiledCode)
             char afterPrefix = _code[pos + compiler.first.length()];
             if ((afterPrefix == ' ' || afterPrefix == '\n'))
             {
-                string const customCode = _code.substr(pos + compiler.first.length() + 1);
+                size_t codeStartPos = pos + compiler.first.length() + 1;
+                string arg;
+                if (afterPrefix == ' ')
+                {
+                    auto const argArr = parseArgsFromStringIntoArray(_code, codeStartPos);
+                    for (auto const& el : argArr)
+                        arg += el + " ";
+                }
+                string const customCode = _code.substr(codeStartPos);
                 fs::path path(fs::temp_directory_path() / fs::unique_path());
-                string cmd = compiler.second.string() + " " + path.string();
+                string cmd = compiler.second.string() + " " + path.string() + " " + arg;
                 writeFile(path.string(), customCode);
 
                 int exitCode;
@@ -194,6 +202,9 @@ string replaceCode(string const& _code, solContracts const& _preSolidity)
     bool customCompilerWorked = tryCustomCompiler(_code, compiledCode);
     if (!customCompilerWorked)
         tryKnownCompilers(_code, _preSolidity, compiledCode);
+
+    if (compiledCode == "0x")
+        ETH_WARNING("replaceCode returned empty bytecode `0x` trying to compile " + TestOutputHelper::get().testInfo().errorDebug() +  "\n" + _code);
 
     if (_code.size() > 0)
         ETH_FAIL_REQUIRE_MESSAGE(
