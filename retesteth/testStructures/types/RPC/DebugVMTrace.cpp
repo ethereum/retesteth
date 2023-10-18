@@ -153,7 +153,7 @@ void DebugVMTrace::DebugVMTraceNice::print() const
                   << setw(10) << maxGas - el.gas->asBigInt()
                   << setw(10) << el.gas->asDecString();
 
-        const size_t c_stackPreviewSize = 10;
+        const size_t c_stackPreviewSize = 70;
         if (el.stack.size())
             std::cout << setw(5) <<  el.stack.size() << ":[";
         for (auto const& stackEl : el.stack)

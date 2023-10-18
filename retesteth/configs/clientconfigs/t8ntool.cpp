@@ -11,10 +11,16 @@ if [ -z $solc ]; then
    >&2 echo "yul.sh \"Yul compilation error: 'solc' not found!\""
    echo "0x"
 else
+
     if [ ! -z $2 ]; then
         evmversion="--evm-version $2"
     fi
-    out=$(solc $evmversion --strict-assembly --optimize --yul-optimizations=":" $1 2>&1)
+    if [ -z $3 ]; then
+        out=$(solc $evmversion --strict-assembly --optimize --yul-optimizations=":" $1 2>&1)
+    else
+        out=$(solc $evmversion --strict-assembly $1 2>&1)
+    fi
+
     a=$(echo "$out" | grep "Binary representation:" -A 1 | tail -n1)
     case "$out" in
     *Error*) >&2 echo "yul.sh \"Yul compilation error: \"\n$out";;
