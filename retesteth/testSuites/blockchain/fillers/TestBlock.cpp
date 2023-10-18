@@ -26,11 +26,11 @@ void exportBlockRLPToJson(spBYTES const& _rawRLP, DataObject& _res)
         spTransaction spTr = readTransaction(trRLP);
         _res["rlp_decoded"]["transactions"].addArrayObject(spTr->asDataObject());
     }
-    _res["rlp_decoded"].atKeyPointer("uncles") = sDataObject(DataType::Array);
+    _res["rlp_decoded"].atKeyPointer("uncleHeaders") = sDataObject(DataType::Array);
     for (auto const& unRLP : rlp[2].toList())
     {
         spBlockHeader spUn = readBlockHeader(unRLP);
-        _res["rlp_decoded"]["uncles"].addArrayObject(spUn->asDataObject());
+        _res["rlp_decoded"]["uncleHeaders"].addArrayObject(spUn->asDataObject());
     }
     _res["rlp_decoded"].atKeyPointer("withdrawals") = sDataObject(DataType::Array);
     if (rlp.itemCount() > 3)

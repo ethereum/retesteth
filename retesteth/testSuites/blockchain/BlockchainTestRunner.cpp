@@ -74,9 +74,14 @@ void BlockchainTestRunner::validateTransactionSequence(BlockchainTestBlock const
             m_session.test_modifyTimestamp(_tblock.header()->timestamp());
         }
         else
-            ETH_WARNING(
-                "Skipping invalid transaction exception check in reorg block! (calling rewind not good when running the test, "
-                "use filltests instead)");
+        {
+            if (!Options::get().filltests)
+            {
+                ETH_WARNING(
+                    "Skipping invalid transaction exception check in reorg block! "
+                    "(calling rewind not good when running the test, use filltests instead)");
+            }
+        }
     }
     for (auto const& el : _tblock.transactionSequence())
     {
