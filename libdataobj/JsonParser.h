@@ -20,7 +20,7 @@ private:
     };
 private:
     void keyEncountered() { m_keyEncountered = true; }
-    std::string printDebug(size_t const& _i);
+    std::string printDebug(size_t const& _i) const;
     bool isEmptyChar(char const& _char) const;
     RET tryParseKeyValue(size_t& _i);
     RET tryParseArrayBegin(size_t const& _i);
@@ -34,6 +34,7 @@ private:
     std::string parseKeyValue(size_t& _i) const;
     bool readBoolOrNull(size_t& _i, bool& _result, bool& _readNull) const;
     bool readDigit(size_t& _i, int& _result) const;
+    void checkJsonCommaEnding(size_t& _i) const;
 private:
     std::string const& m_input;
     CJOptions const m_opt;
