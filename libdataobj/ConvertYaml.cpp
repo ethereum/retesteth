@@ -42,14 +42,7 @@ spDataObject ConvertYamlToData(YAML::Node const& _node, bool _sort)
         else if (_node.Tag() == YML_BOOL_TAG)
             return sDataObject(DataType::Bool, _node.as<bool>());
         else
-        {
-            auto data = sDataObject(_node.as<string>());
-            auto& str = data.getContent().asStringUnsafe();
-            // json string format does not support `"` char
-            // it must be replaced or escaped
-            std::replace(str.begin(), str.end(), '"', '\'');
-            return data;
-        }
+            return sDataObject(_node.as<string>());
     }
 
     if (_node.IsMap())
