@@ -33,7 +33,7 @@ RUN apt-get update \
     && apt-get install --yes libboost-filesystem-dev libboost-system-dev libboost-program-options-dev libboost-test-dev \
     && echo oracle-java17-installer shared/accepted-oracle-license-v1-3 select true | /usr/bin/debconf-set-selections  \
     && apt-get install --yes oracle-java17-installer oracle-java17-set-default \
-    && apt-get install --yes util-linux \
+    && apt-get install --yes uuid-runtime \
     && rm -rf /var/lib/apt/lists/*
 RUN rm /usr/bin/python3 && ln -s /usr/bin/python3.10 /usr/bin/python3 \
     && rm /usr/bin/gcc && rm /usr/bin/g++ \
