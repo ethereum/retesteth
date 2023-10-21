@@ -408,7 +408,7 @@ if [ "$TESTCA" != "null" ]; then
     SRCPATH2="$SRCPATH2::$TESTCA"
 fi
 if [ "$FORCER" != "null" ]; then
-    ADDFLAGS="$ADDFLAGS --force-refill"
+    ADDFLAGS="$ADDFLAGS"
 fi
 
 if [ -d $testout ]; then

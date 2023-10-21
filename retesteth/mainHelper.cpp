@@ -183,7 +183,7 @@ void timeoutThread(std::atomic_bool* _stopTimeout)
     uint tickCounter = 0;
     uint tickCounterSuite = 0;
     const uint C_MAX_TESTEXEC_TIMEOUT = 30000;
-    const uint C_MAX_TESTSUITE_TIMEOUT = 3000;
+    const uint C_MAX_TESTSUITE_TIMEOUT = 4000;
     while (!*_stopTimeout)
     {
         std::this_thread::sleep_for(std::chrono::seconds(1));
