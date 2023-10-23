@@ -41,7 +41,7 @@ private:
 
     std::vector<DataObject*> m_applyDepth;  // indexes at root array of objects that we are reading into
     spDataObject m_root;
-    DataObject* m_actualRoot;
+    DataObject* m_actualRoot = nullptr;
     bool m_keyEncountered = false;
     std::string const errorPrefix = "Error parsing json: ";
 };

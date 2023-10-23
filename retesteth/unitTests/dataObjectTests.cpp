@@ -112,7 +112,7 @@ bool tryParseJson(string const& _data)
     }
     catch (DataObjectException const& _ex)
     {
-        std::cout << _ex.what() << std::endl;
+        // std::cout << _ex.what() << std::endl;
         return false;
     }
     return true;

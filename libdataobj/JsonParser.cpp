@@ -13,6 +13,7 @@ JsonParser::JsonParser(std::string const& _input, CJOptions const& _opt)
     if (_input.size() < 2 || _input.find("{") == string::npos || _input.rfind("}") == string::npos)
         throw DataObjectException() << "ConvertJsoncppStringToData can't read json structure in file: `" + _input.substr(0, 50);
 
+    m_applyDepth.clear();
     m_root.getContent().setAutosort(_opt.autosort);
     m_actualRoot = &m_root.getContent();
 }
@@ -72,6 +73,7 @@ JsonParser::RET JsonParser::tryParseKeyValue(size_t& _i)
     {
         spDataObject obj;
         string key = parseKeyValue(_i);
+
         _i = skipSpaces(_i);
         if (m_input.at(_i) == ':')
         {
@@ -275,15 +277,15 @@ string JsonParser::parseKeyValue(size_t& _i) const
 
     bool escapeChar = true;
     size_t endPos = m_input.find('"', _i + 1);
-    while (escapeChar)
-    {
-        escapeChar = (m_input[endPos - 1] == '\\');
-        if (escapeChar)
-            endPos = m_input.find('"', endPos + 1);
-    }
-
     if (endPos != string::npos)
     {
+        while (escapeChar)
+        {
+            escapeChar = (m_input[endPos - 1] == '\\');
+            if (escapeChar)
+                endPos = m_input.find('"', endPos + 1);
+        }
+
         const string key = m_input.substr(_i + 1, endPos - _i - 1);
         _i = endPos + 1;
         return key;
