@@ -46,6 +46,7 @@ public:
     TestOutputTimer& timer() { return m_timer; }
 
     bool markError(std::string const& _message);
+    void markWarning(std::string const& _message);
     void unmarkLastError();
     const std::string c_exception_any = "ANY EXCEPTION";
 
@@ -83,6 +84,7 @@ public:
 private:
     TestOutputHelper() {}
     void printBoostError();
+    bool _unmarkExpectedExceptionForTest(std::string const&);
 
 private:
     TestOutputTimer m_timer;

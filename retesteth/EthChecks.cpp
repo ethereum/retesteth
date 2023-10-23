@@ -130,6 +130,7 @@ namespace logmessage
 {
 void eth_warning_message(std::string const& _message)
 {
+    TestOutputHelper::get().markWarning(_message);
     if (Options::get().nologcolor)
     {
         ETH_DC_MESSAGE(DC::WARNING, "WARNING: " + _message);

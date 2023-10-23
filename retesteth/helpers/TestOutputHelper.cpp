@@ -46,9 +46,11 @@ static int execTotalErrors = 0;
 static std::map<thread::id, TestOutputHelper> helperThreadMap;  // threadID => outputHelper
 mutex g_totalTestsRun;
 mutex g_failedTestsMap;
+mutex g_warningTests;
 mutex g_execTotalErrors;
 static int totalTestsRun = 0;
 static std::map<std::string, std::string> s_failedTestsMap;
+static std::vector<std::string> s_warningTests;
 
 mutex g_helperThreadMapMutex;
 TestOutputHelper& TestOutputHelper::get()
@@ -66,7 +68,14 @@ TestOutputHelper& TestOutputHelper::get()
     return helperThreadMap.at(tID);
 }
 
-bool TestOutputHelper::markError(std::string const& _message)
+void TestOutputHelper::markWarning(std::string const& _message)
+{
+    string const testDebugInfo = m_testInfo.errorDebug();
+    std::lock_guard<std::mutex> lock(g_warningTests);
+    s_warningTests.emplace_back(_message + testDebugInfo);
+}
+
+bool TestOutputHelper::_unmarkExpectedExceptionForTest(std::string const& _message)
 {
     // We might have an expected exceptions to happen. See if it is like that
     if (m_expected_UnitTestExceptions.size() > 0)
@@ -94,7 +103,7 @@ bool TestOutputHelper::markError(std::string const& _message)
             rmessage.find(allowedException) != string::npos)
         {
             m_expected_UnitTestExceptions.pop_back();
-            return false;
+            return true;
         }
         else
         {
@@ -105,6 +114,13 @@ bool TestOutputHelper::markError(std::string const& _message)
                                  allowedException + "\n--------\n");
         }
     }
+    return false;
+}
+
+bool TestOutputHelper::markError(std::string const& _message)
+{
+    if (_unmarkExpectedExceptionForTest(_message))
+        return false;
 
     // Mark the error
     string const testDebugInfo = m_testInfo.errorDebug();
@@ -226,24 +242,8 @@ void TestOutputHelper::printBoostError()
     // helperThreadMap.clear(); !!! could not delete TestHelper from TestHelper destructor !!!
 }
 
-void TestOutputHelper::printTestExecStats()
+void _printTotalErrors()
 {
-    auto const& opt = Options::get();
-    if (!opt.singleTestFile.initialized())
-        checkUnfinishedTestFolders();
-
-    {
-        std::lock_guard<std::mutex> lock(g_totalTestsRun);
-        const string message = "*** Total Tests Run: " + fto_string(totalTestsRun) + "\n";
-        if (totalTestsRun > 0)
-            ETH_STDOUT_MESSAGE(message);
-        else
-            ETH_STDERROR_MESSAGE(message);
-    }
-
-    if (Options::get().exectimelog)
-        TestOutputTimer::printTotalTimes();
-
     bool wereExecErrors = false;
     {
         std::lock_guard<std::mutex> lock(g_execTotalErrors);
@@ -267,6 +267,42 @@ void TestOutputHelper::printTestExecStats()
         std::lock_guard<std::mutex> lock(g_execTotalErrors);
         execTotalErrors = 0;
     }
+}
+
+void _printTotalWarnings()
+{
+    std::lock_guard<std::mutex> lock(g_warningTests);
+    if (s_warningTests.size())
+    {
+        ETH_STDOUT_MESSAGE("\n--------");
+        ETH_STDOUT_MESSAGE("*** TOTAL WARNINGS DETECTED: " + toString(s_warningTests.size()) +
+                           " warnings during all test execution!");
+        ETH_STDOUT_MESSAGE("--------");
+        for (auto const& warning : s_warningTests)
+            std::cout << "info: " << warning << std::endl;
+    }
+}
+
+void TestOutputHelper::printTestExecStats()
+{
+    auto const& opt = Options::get();
+    if (!opt.singleTestFile.initialized())
+        checkUnfinishedTestFolders();
+
+    {
+        std::lock_guard<std::mutex> lock(g_totalTestsRun);
+        const string message = "*** Total Tests Run: " + fto_string(totalTestsRun) + "\n";
+        if (totalTestsRun > 0)
+            ETH_STDOUT_MESSAGE(message);
+        else
+            ETH_STDERROR_MESSAGE(message);
+    }
+
+    if (Options::get().exectimelog)
+        TestOutputTimer::printTotalTimes();
+
+    _printTotalWarnings();
+    _printTotalErrors();
 }
 
 thread::id TestOutputHelper::getThreadID()
