@@ -55,9 +55,8 @@ string getTestNameFromFillerFilename(fs::path const& _fillerTestFilePath)
         return fillerName;
 
     static string const requireStr = " require: Filler.json/Filler.yml/Copier.json/.py";
-    ETH_FAIL_REQUIRE_MESSAGE(false,
-        "Incorrect file suffix in the filler folder! " + _fillerTestFilePath.string() + requireStr);
-    return fillerName;
+    ETH_WARNING("Incorrect file suffix in the filler folder! " + _fillerTestFilePath.string() + requireStr);
+    return string();
 }
 }  // namespace
 
@@ -158,6 +157,13 @@ void TestSuite::_executeTest(string const& _testFolder, fs::path const& _fillerT
 
     // Construct output test file name
     string const testName = getTestNameFromFillerFilename(_fillerTestFilePath);
+    if (testName.empty()) // allow files that are not tests
+    {
+        ETH_WARNING("Skipping unsupported file: " + _fillerTestFilePath.string());
+        RPCSession::sessionEnd(TestOutputHelper::getThreadID(), RPCSession::SessionStatus::HasFinished);
+        return;
+    }
+
     size_t const threadID = std::hash<std::thread::id>()(TestOutputHelper::getThreadID());
     ETH_DC_MESSAGE(DC::STATS2, "Running " + testName + ": " + "(" + test::fto_string(threadID) + ")");
     AbsoluteFilledTestPath const filledTestPath = getFullPathFilled(_testFolder).path() / fs::path(testName + ".json");

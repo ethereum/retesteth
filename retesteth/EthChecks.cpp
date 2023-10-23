@@ -70,7 +70,10 @@ Debug::Debug()
             else if (flag == "WARNING")
                 m_channels[DC::WARNING] = true;  // Warning messages
             else if (flag == "PYSPEC")
+            {
                 m_channels[DC::PYSPEC] = true;  // Python script errorlog
+                m_channels[DC::WARNING] = true;
+            }
             else
                 ETH_STDOUT_MESSAGEC("WARNING: Debug channel `" + flag + "` not found!", cYellow);
         }

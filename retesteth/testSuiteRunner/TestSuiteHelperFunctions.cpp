@@ -151,10 +151,17 @@ vector<string> const& getGeneratedTestNames(fs::path const& _filler)
     {
         string fillerName = _filler.stem().string();
         if (fillerName.find(c_fillerPostf) != string::npos)
+        {
             fillerName = fillerName.substr(0, fillerName.length() - c_fillerPostf.size());
+            generatedTestNames.emplace_back(fillerName);
+        }
         else if (fillerName.find(c_copierPostf) != string::npos)
+        {
             fillerName = fillerName.substr(0, fillerName.length() - c_copierPostf.size());
-        generatedTestNames.emplace_back(fillerName);
+            generatedTestNames.emplace_back(fillerName);
+        }
+        else
+            ETH_WARNING("Skipping unsupported test file: " + _filler.string());
     }
     else if (_filler.extension() == ".py")
     {
