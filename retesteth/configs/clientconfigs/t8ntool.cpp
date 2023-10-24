@@ -330,6 +330,7 @@ string const t8ntool_config = R"({
       "TR_EMPTYBLOB" : "blob transaction missing blob hashes",
       "TR_BLOBCREATE" : "rlp: input string too short for common.Address",
       "TR_BLOBVERSION_INVALID" : "hash version mismatch",
+      "TR_BLOBLIST_OVERSIZE" : "would exceed maximum allowance",
       "1559BaseFeeTooLarge": "TransactionBaseFee convertion error: VALUE  >u256",
       "1559PriorityFeeGreaterThanBaseFee": "maxFeePerGas \u003c maxPriorityFeePerGas",
       "2930AccessListAddressTooLong": "rlp: input string too long for common.Address, decoding into (types.Transaction)(types.AccessListTx).AccessList[0].Address",

@@ -37,7 +37,8 @@ string const ethereumjs_config = R"({
        "ByzantiumToConstantinopleFixAt5",
        "BerlinToLondonAt5",
        "ArrowGlacier",
-       "MergeToShanghaiAtTime15k"
+       "MergeToShanghaiAtTime15k",
+       "ShanghaiToCancunAtTime15k"
     ],
     "fillerSkipForks" : [
         "Merge+3540+3670",

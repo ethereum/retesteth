@@ -46,7 +46,8 @@ string const besu_config = R"({
         "BerlinToLondonAt5",
         "ArrowGlacier",
         "GrayGlacier",
-        "MergeToShanghaiAtTime15k"
+        "MergeToShanghaiAtTime15k",
+        "ShanghaiToCancunAtTime15k"
     ],
     "fillerSkipForks" : [
         "Merge+3540+3670",
