@@ -116,6 +116,7 @@ string const besu_config = R"({
       "UncleIsBrother" : "Uncle is brother!",
       "OutOfGas" : "out of gas",
       "SenderNotEOA" : "sender not an eoa:",
+      "SenderNotEOAorNoCASH" : "sender not an eoa:",
       "IntrinsicGas" : "t8ntool didn't return a transaction with hash",
       "ExtraDataIncorrectDAO" : "BlockHeader require Dao ExtraData!",
       "InvalidTransactionVRS" : "t8ntool didn't return a transaction with hash",

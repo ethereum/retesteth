@@ -121,6 +121,7 @@ string const evmone_config = R"({
       "UncleIsBrother" : "Uncle is brother!",
       "OutOfGas" : "out of gas",
       "SenderNotEOA" : "sender not an eoa:",
+      "SenderNotEOAorNoCASH" : "sender not an eoa:",
       "IntrinsicGas" : "intrinsic gas too low:",
       "ExtraDataIncorrectDAO" : "BlockHeader require Dao ExtraData!",
       "InvalidTransactionVRS" : "t8ntool didn't return a transaction with hash",

@@ -119,6 +119,7 @@ string const nimbus_config = R"({
       "UncleIsBrother" : "Uncle is brother!",
       "OutOfGas" : "out of gas",
       "SenderNotEOA" : "sender is not an EOA",
+      "SenderNotEOAorNoCASH" : "not enough cash",
       "IntrinsicGas" : "not enough gas to perform calculation",
       "ExtraDataIncorrectDAO" : "BlockHeader require Dao ExtraData!",
       "InvalidTransactionVRS" : "t8ntool didn't return a transaction with hash",

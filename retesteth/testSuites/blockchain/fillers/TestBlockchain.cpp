@@ -60,9 +60,12 @@ GCP_SPointer<EthGetBlockBy> TestBlockchain::mineBlock(
     MineBlocksResult const miningRes = m_session.test_mineBlocks(1);
     VALUE latestBlockNumber(m_session.eth_blockNumber());
 
+
     spFH32 minedBlockHash;
-    if (_blockInTest.hasBlockHeaderOverwrite(m_network) || _blockInTest.uncles().size() > 0 ||
-        !clientSupportWithdrawalsRPC())
+    if (_blockInTest.hasBlockHeaderOverwrite(m_network)
+        || _blockInTest.uncles().size() > 0
+        || !clientSupportWithdrawalsRPC()
+        || miningRes.rejectedTxCount() > 0)
     {
         // Need to overwrite the blockheader of a mined block with either blockHeader or uncles
         // Then import it again and see what client says, because mining with uncles not supported
@@ -251,8 +254,15 @@ FH32 TestBlockchain::postmineBlockHeader(BlockchainTestFillerBlock const& _block
     // test and reimport it to the client in order to trigger an exception in the client
     EthGetBlockBy remoteBlock(m_session.eth_getBlockByNumber(_latestBlockNumber, Request::FULLOBJECTS));
     EthereumBlock managedBlock(remoteBlock.header());
-    for (auto const& tr : remoteBlock.transactions())  // + invalid transactions?
+    for (auto const& tr : remoteBlock.transactions())
         managedBlock.addTransaction(tr->transaction());
+
+    // Register invalid transactions in postmine
+    for (auto const& tr : _blockInTest.transactions())
+    {
+        if (!managedBlock.hasTransaction(tr.tr().hash()))
+            managedBlock.addTransaction(tr.trPointer());
+    }
 
     // Attach test-generated uncle to a block and then reimport it again
     for (auto const& un : _uncles)

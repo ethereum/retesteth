@@ -188,6 +188,7 @@ string const pyt8n_config = R"({
       "UncleIsBrother" : "Uncle is brother!",
       "OutOfGas" : "out of gas",
       "SenderNotEOA" : "Failed transaction",
+      "SenderNotEOAorNoCASH" : "Failed transaction",
       "IntrinsicGas" : "intrinsic gas too low",
       "ExtraDataIncorrectDAO" : "BlockHeader require Dao ExtraData!",
       "InvalidTransactionVRS" : "t8ntool didn't return a transaction with hash",

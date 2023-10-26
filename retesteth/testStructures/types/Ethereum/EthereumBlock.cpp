@@ -82,4 +82,14 @@ DebugVMTrace const& EthereumBlockState::getTrTrace(FH32 const& _hash) const
     return empty;
 }
 
+bool EthereumBlock::hasTransaction(FH32 const& _hash) const
+{
+    for (auto const& tr : m_transactions)
+    {
+        if (tr->hash() == _hash)
+            return true;
+    }
+    return false;
+}
+
 }  // namespace teststruct

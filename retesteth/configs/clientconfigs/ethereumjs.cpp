@@ -106,6 +106,7 @@ string const ethereumjs_config = R"({
        "UncleIsBrother":"",
        "OutOfGas":"",
        "SenderNotEOA":"invalid sender address, address is not EOA",
+       "SenderNotEOAorNoCASH" : "invalid sender address, address is not EOA",
        "IntrinsicGas":"base fee exceeds gas limit",
        "TR_RLP_WRONGVALUE" : "value cannot exceed MAX_INTEGER",
        "ExtraDataIncorrectDAO":"",
