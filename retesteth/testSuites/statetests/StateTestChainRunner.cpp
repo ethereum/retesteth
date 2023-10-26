@@ -5,6 +5,7 @@
 #include <retesteth/helpers/TestOutputHelper.h>
 #include <retesteth/testSuites/Common.h>
 #include <retesteth/testStructures/PrepareChainParams.h>
+#include <retesteth/testSuites/blockchain/fillers/TestBlock.h>
 
 using namespace std;
 using namespace test;
@@ -94,6 +95,7 @@ void StateTestChainRunner::performTransactionOnExpect(TransactionInGeneralSectio
         EthereumBlock managedBlock(remoteBlock.header());
         managedBlock.addTransaction(_tr.transaction());
         (*block)["rlp"] = managedBlock.getRLP().asString();
+        blockchainfiller::TestBlock::exportRLPDecodedToData(managedBlock.getRLP(), *block);
         (*m_aBlockchainTest)["blocks"].addArrayObject(block);
 
         // BUT POST INFO must be of block number 0

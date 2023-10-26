@@ -13,9 +13,9 @@ TestBlock::TestBlock(BYTES const& _rlp, string const& _chainName, FORK const& _c
     m_rawRLP = spBYTES(_rlp.copy());
 }
 
-void exportBlockRLPToJson(spBYTES const& _rawRLP, DataObject& _res)
+void TestBlock::exportRLPDecodedToData(BYTES const& _rawRLP, DataObject& _res)
 {
-    dev::bytes const decodeRLP = sfromHex(_rawRLP->asString());
+    dev::bytes const decodeRLP = sfromHex(_rawRLP.asString());
     dev::RLP const rlp(decodeRLP, dev::RLP::VeryStrict);
     spBlockHeader blockH = readBlockHeader(rlp[0]);
 
@@ -92,7 +92,7 @@ spDataObject TestBlock::asDataObject() const
     {
         try
         {
-            exportBlockRLPToJson(m_rawRLP, res);
+            TestBlock::exportRLPDecodedToData(m_rawRLP, res);
         }
         catch (std::exception const& _ex)
         {
