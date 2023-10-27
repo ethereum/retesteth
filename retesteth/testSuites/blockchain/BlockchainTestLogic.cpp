@@ -116,7 +116,7 @@ spDataObject DoTests(spDataObject& _input, TestSuite::TestSuiteOptions& _opt)
             if (Options::get().singletest.initialized())
             {
                 // If we run python test from .py do not select by subtest
-                if (!Options::getDynamicOptions().pythonTestRunning)
+                if (!TestOutputHelper::get().getPythonTestFlag())
                 {
                     if (!Options::get().singletest.subname.empty()
                         && bcTest.testName() != Options::get().singletest.subname)

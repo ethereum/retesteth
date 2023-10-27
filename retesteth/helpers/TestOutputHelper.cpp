@@ -168,6 +168,7 @@ void TestOutputHelper::initTest(size_t _maxTests)
     }
 
     //_maxTests = 0 means this function is called from testing thread
+    m_pythonTestRunning = false;
     m_currentTestName = string();
     m_currentTestFileName = string();
     m_timer = TestOutputTimer();

@@ -190,7 +190,7 @@ void TestSuite::_executeTest(string const& _testFolder, fs::path const& _fillerT
         disableSecondRun = true;
     }
 
-    Options::getDynamicOptions().pythonTestRunning = false;
+    TestOutputHelper::get().setPythonTestFlag(false);
     if (!wereFillerErrors && !disableSecondRun)
     {
         auto const& opt = Options::get();
@@ -210,7 +210,7 @@ void TestSuite::_executeTest(string const& _testFolder, fs::path const& _fillerT
                         if (name != pyFilledName)
                             continue;
                     }
-                    Options::getDynamicOptions().pythonTestRunning = true;
+                    TestOutputHelper::get().setPythonTestFlag(true);
                     _runTest(filledTestPath.path().parent_path() / (name + ".json"));
                 }
             }
