@@ -7,7 +7,6 @@
 #include <retesteth/helpers/TestHelper.h>
 #include <retesteth/Options.h>
 #include <retesteth/Constants.h>
-#include <retesteth/testStructures/types/Ethereum/Transactions/TransactionBlob.h>
 using namespace std;
 using namespace dev;
 using namespace test;
@@ -113,99 +112,6 @@ void ToolChainManager::modifyTimestamp(VALUE const& _time)
         initShanghaiPendingBlock(m_pendingBlock);
     if (currentChain().fork() == "ShanghaiToCancunAtTime15k" && m_pendingBlock->header()->timestamp() >= 15000)
         initCancunPendingBlock(m_pendingBlock);
-}
-
-// Import Raw Block via t8ntool
-FH32 ToolChainManager::importRawBlock(BYTES const& _rlp)
-{
-    try
-    {
-        dev::bytes const decodeRLP = sfromHex(_rlp.asString());
-        dev::RLP const rlp(decodeRLP, dev::RLP::VeryStrict);
-        toolimpl::verifyBlockRLP(rlp);
-
-        spBlockHeader header = readBlockHeader(rlp[0]);
-        ETH_DC_MESSAGE(DC::RPC, header->asDataObject()->asJson());
-        for (auto const& chain : m_chains)
-            for (auto const& bl : chain.second->blocks())
-                if (bl.header()->hash() == header->hash())
-                    ETH_WARNING("Block with hash: `" + header->hash().asString() + "` already in chain!");
-
-        // Check that we know the parent and prepare head to be the parentHeader of _rlp block
-        reorganizeChainForParent(header->parentHash());
-        verifyEthereumBlockHeader(header, currentChain());
-
-        m_pendingBlock = spEthereumBlockState(new EthereumBlockState(header, lastBlock().state(), FH32::zero()));
-        m_pendingBlock.getContent().setTotalDifficulty(lastBlock().totalDifficulty());
-
-        ETH_DC_MESSAGE(DC::RPC, "RLP transaction number: " + test::fto_string(rlp[1].toList().size()));
-        size_t blobCount = 0;
-        for (auto const& trRLP : rlp[1].toList())
-        {
-            spTransaction spTr = readTransaction(trRLP);
-            if (spTr->type() == TransactionType::BLOB)
-            {
-                TransactionBlob const& blobtx = dynamic_cast<TransactionBlob const&>(spTr.getContent());
-                blobCount += blobtx.blobs().size();
-                if (blobCount >= 7)
-                    throw test::UpwardsException("versioned hashes len exceeds, Block has invalid number of blobs in txs >=7!");
-            }
-            ETH_DC_MESSAGE(DC::RPC, spTr->asDataObject()->asJson());
-            addPendingTransaction(spTr);
-        }
-
-        if (rlp[2].toList().size() > 2)
-            throw test::UpwardsException("Too many uncles!");
-
-        for (auto const& unRLP : rlp[2].toList())
-        {
-            spBlockHeader un = readBlockHeader(unRLP);
-            verifyEthereumBlockHeader(un, currentChain());
-            if (un->number() >= header->number() ||
-                un->number() + 7 <= header->number())
-                throw test::UpwardsException("Uncle number is wrong!");
-            for (auto const& pun : m_pendingBlock->uncles())
-                if (pun->hash() == un->hash())
-                    throw test::UpwardsException("Uncle is brother!");
-            m_pendingBlock.getContent().addUncle(un);
-        }
-
-        if (rlp.itemCount() > 3 || isBlockExportWithdrawals(header))
-        {
-            verifyWithdrawalsRLP(rlp[3]);
-            for (auto const& wtRLP : rlp[3].toList())
-            {
-                if (wtRLP.itemCount() != 4)
-                    throw dev::RLPException("Rlp structure is wrong: Withdrawals RLP does not have 4 elements!");
-                spWithdrawal wt(new Withdrawal(wtRLP));
-                verifyWithdrawalRecord(wt);
-                m_pendingBlock.getContent().addWithdrawal(wt);
-            }
-        }
-
-        mineBlocks(1, ToolChain::Mining::RequireValid);
-        FH32 const importedHash = lastBlock().header()->hash();
-        if (importedHash != header->hash())
-        {
-            string errField;
-            string message = "t8ntool constructed HEADER vs rawRLP HEADER: \n";
-            message += compareBlockHeaders(
-                lastBlock().header()->asDataObject(), header->asDataObject(), errField);
-            ETH_ERROR_MESSAGE(string("Imported block hash != rawRLP hash ") + "(" + importedHash.asString() +
-                              " != " + header->hash().asString() + ")" + "\n " + message);
-        }
-
-        reorganizeChainForTotalDifficulty();
-        reorganizePendingBlock();
-        return importedHash;
-    }
-    catch (std::exception const& _ex)
-    {
-        reorganizeChainForTotalDifficulty();
-        m_pendingBlock.getContent().clear();
-        static const string exception = "Error importing raw rlp block: ";
-        throw test::UpwardsException(exception + _ex.what());
-    }
 }
 
 void ToolChainManager::reorganizeChainForParent(FH32 const& _parentHash)
@@ -364,6 +270,16 @@ void ToolChainManager::transitionPendingBlock(EthereumBlockState const& _bl)
         initMergePendingBlock(_bl);
     else
         updatePending();
+}
+
+bool ToolChainManager::isMergeChain() const
+{
+    assert(m_chains.size() > 0);
+
+    auto const& defaultChain = m_chains.at(0).getCContent();
+    assert(defaultChain.blocks().size() > 0);
+    auto const& genesisDifficulty = defaultChain.blocks().at(0).header()->difficulty();
+    return (genesisDifficulty == 0);
 }
 
 }  // namespace toolimpl

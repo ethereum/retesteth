@@ -57,6 +57,8 @@ private:
     void reorganizeChainForParent(FH32 const& _parentHash);
     void reorganizeChainForTotalDifficulty();
     void reorganizePendingBlock();
+    bool isMergeChain() const;
+
 
     std::map<size_t, spToolChain> m_chains;
     size_t m_currentChain;
@@ -73,6 +75,13 @@ private:
     void initShanghaiPendingBlock(EthereumBlockState const&);
     void initCancunPendingBlock(EthereumBlockState const&);
     bool isTerminalPoWBlock();
+
+private:
+    spBlockHeader _irb_verifyAndSetHeader(dev::RLP const&);
+    void _irb_verifyAndSetTransactions(dev::RLP const&);
+    void _irb_verifyAndSetUncles(dev::RLP const&, spBlockHeader const&);
+    void _irb_verifyAndSetWithdrawals(dev::RLP const&, spBlockHeader const&);
+    FH32 _irb_compareT8NBlockToRawRLP(spBlockHeader const&);
 };
 
 }  // namespace toolimpl
