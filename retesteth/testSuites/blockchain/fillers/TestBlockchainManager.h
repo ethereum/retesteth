@@ -17,7 +17,7 @@ public:
         BlockchainTestFillerEnv const& _genesisEnv, State const& _genesisPre, SealEngine _engine, FORK const& _network);
 
     // Perform block generation logic by parsing the filler file section
-    void parseBlockFromFiller(BlockchainTestFillerBlock const& _block, bool _generateUncles);
+    std::vector<spDataObject> parseBlockFromFiller(BlockchainTestFillerBlock const& _block, bool _generateUncles);
 
     // Return the last block from the current chain (not the top of all chains)
     TestBlock const& getLastBlock();
@@ -26,6 +26,10 @@ public:
     void syncOnRemoteClient(DataObject& _exportBlocksSection) const;
 
     void performOptionCommandsOnGenesis();
+
+private:
+    std::vector<spDataObject> _generateBlocksFromFillerTestBlock(BlockchainTestFillerBlock const&, vectorOfSchemeBlock const&, bool _generateUncles);
+    void _makeTheFilledBlockFromFiller(BlockchainTestFillerBlock const&, vectorOfSchemeBlock const&, bool _generateUncles);
 
 private:
     // Reorg chains on the client if needed for _newBlock that potentially comes from another chain
