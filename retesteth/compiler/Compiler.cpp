@@ -80,13 +80,19 @@ bool tryCustomCompiler(string const& _code, string& _compiledCode)
             {
                 size_t codeStartPos = pos + compilerPrefix.length() + 1;
                 string arg;
+                string nativeArg;
                 if (afterPrefix == ' ')
                 {
                     auto const argArr = parseArgsFromStringIntoArray(_code, codeStartPos);
                     for (auto const& el : argArr)
-                        arg += el + " ";
+                    {
+                        if (el == "object" || el == "\"C\"")
+                            nativeArg += el + " "; // Special case for native yul args
+                        else
+                            arg += el + " ";
+                    }
                 }
-                string const customCode = _code.substr(codeStartPos);
+                string const customCode = nativeArg + _code.substr(codeStartPos);
                 fs::path path(fs::temp_directory_path() / fs::unique_path());
                 string cmd = compilerScript.string() + " " + path.string() + " " + arg;
                 writeFile(path.string(), customCode);
