@@ -163,6 +163,7 @@ std::tuple<OptionsVector, ParsedOptions> preparseOptions(int& _argc, const char*
     ParsedOptions optInfo;
     vector<string> options;
 
+    bool copyTestPathOption = false;
     optInfo.cwd = fs::path(fs::current_path());
     options.emplace_back(_argv[0]);
     for (short i = 1; i < _argc; i++)
@@ -171,6 +172,17 @@ std::tuple<OptionsVector, ParsedOptions> preparseOptions(int& _argc, const char*
 
         if (arg == "-t")
             optInfo.hasTArg = true;
+
+        // Copy "--testpath path" as is
+        if (arg == "--testpath" || copyTestPathOption)
+        {
+            if (arg == "--testpath")
+                copyTestPathOption = true;
+            else
+                copyTestPathOption = false;
+            options.emplace_back(arg);
+            continue;
+        }
 
         bool isFile = (arg.find(".json") != string::npos || arg.find(".yml") != string::npos
                        || arg.find(".py") != string::npos);
