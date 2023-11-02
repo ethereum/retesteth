@@ -111,10 +111,11 @@ void compareTransactionException(spTransaction const& _tr, MineBlocksResult cons
     if (!_testException.empty() && !remoteException.empty())
     {
         string const& expectedReason = Options::getCurrentConfig().translateException(_testException);
-        if (remoteException.find(expectedReason) == string::npos)
+        if (remoteException.find(expectedReason) == string::npos || expectedReason.empty())
         {
-            ETH_WARNING(_tr->asDataObject()->asJson());
-            ETH_ERROR_MESSAGE(string("Transaction rejected but due to a different reason: \n") +
+            string const error = "Transaction rejected but due to a different reason: \n";
+            ETH_WARNING(error + _tr->asDataObject()->asJson());
+            ETH_ERROR_MESSAGE(error +
                "Expected reason: `" + expectedReason + "` (" + _testException + ")\n" +
                "Client reason: `" + remoteException
               );
@@ -135,7 +136,7 @@ void compareEOFException(BYTES const& _code, std::string const& _mRes, std::stri
     if (!_testException.empty() && !remoteException.empty())
     {
         string const& expectedReason = Options::getCurrentConfig().translateException(_testException);
-        if (remoteException.find(expectedReason) == string::npos)
+        if (remoteException.find(expectedReason) == string::npos || expectedReason.empty())
         {
             ETH_WARNING(_code.asString());
             ETH_ERROR_MESSAGE(string("EOF code rejected but due to a different reason: \n") +

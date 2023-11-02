@@ -27,8 +27,71 @@ TestBlockchainManager::TestBlockchainManager(
         TestBlockchain(_genesisEnv, _genesisPre, _engine, _network, m_sCurrentChainName, RegenerateGenesis::TRUE));
 }
 
+// Generate the block
+void TestBlockchainManager::_makeTheFilledBlockFromFiller(BlockchainTestFillerBlock const& _block, vectorOfSchemeBlock const& _unclesPrepared, bool _generateUncles)
+{
+    TestBlockchain& currentChainMining = getCurrentChain();
+    currentChainMining.generateBlock(_block, _unclesPrepared, _generateUncles);
+
+    // Remeber the generated block in exact order as in the test
+    TestBlock const& lastBlock = getLastBlock();
+
+    // Get this block exception on canon chain to later verify it
+    FORK const& canonNet = getDefaultChain().getNetwork();
+    m_testBlockRLPs.emplace_back(std::make_tuple(lastBlock.getRawRLP(), _block.getExpectException(canonNet)));
+}
+
+std::vector<spDataObject> TestBlockchainManager::_generateBlocksFromFillerTestBlock(BlockchainTestFillerBlock const& _block, vectorOfSchemeBlock const& _unclesPrepared, bool _generateUncles)
+{
+    std::vector<spDataObject> blockJsons;
+    TestBlockchain& currentChainMining = getCurrentChain();
+    std::vector<BlockchainTestFillerTransaction const*> validTransactions;
+
+    for (BlockchainTestFillerTransaction const& tr : _block.transactions())
+    {
+        // If not exception on current chain network, build a valid transacions
+        auto const& currentFork = currentChainMining.getNetwork();
+        auto const& trException = tr.getExpectException(currentFork);
+        if (trException.empty())
+        {
+            validTransactions.emplace_back(&tr);
+        }
+        else
+        {
+            BlockchainTestFillerBlock validBlockSoFar(_block, true);
+
+            if (!_block.isDoNotStackValidTrxs())
+                for (auto const& tr : validTransactions)
+                    validBlockSoFar.addTransaction(*tr);
+
+            // add next invalid transaction
+            validBlockSoFar.addTransaction(tr);
+            validBlockSoFar.addException(currentFork, trException);
+
+            _makeTheFilledBlockFromFiller(validBlockSoFar, _unclesPrepared, _generateUncles);
+
+            // If block is not disabled for testing purposes
+            // Get the json output of a constructed block for the test (includes rlp)
+            if (!getLastBlock().isDoNotExport())
+                blockJsons.emplace_back(getLastBlock().asDataObject());
+        }
+    }
+
+    // Make the last block of only valid transactions
+    BlockchainTestFillerBlock validBlockSoFar(_block, true);
+    for (auto const& tr : validTransactions)
+        validBlockSoFar.addTransaction(*tr);
+    _makeTheFilledBlockFromFiller(validBlockSoFar, _unclesPrepared, _generateUncles);
+
+    // If block is not disabled for testing purposes
+    // Get the json output of a constructed block for the test (includes rlp)
+    if (!getLastBlock().isDoNotExport())
+        blockJsons.emplace_back(getLastBlock().asDataObject());
+    return blockJsons;
+}
+
 // Generate block using a client from the filler information
-void TestBlockchainManager::parseBlockFromFiller(BlockchainTestFillerBlock const& _block, bool _generateUncles)
+std::vector<spDataObject> TestBlockchainManager::parseBlockFromFiller(BlockchainTestFillerBlock const& _block, bool _generateUncles)
 {
     ETH_DC_MESSAGEC(DC::RPC, "STARTING A NEW BLOCK: ", LogColor::LIME);
 
@@ -51,6 +114,18 @@ void TestBlockchainManager::parseBlockFromFiller(BlockchainTestFillerBlock const
     // Generate UncleHeaders if we need it
     vectorOfSchemeBlock unclesPrepared = _generateUncles ? prepareUncles(_block, sDebug) : vectorOfSchemeBlock();
 
+    size_t invalidTxs = 0;
+    for (auto const& tr : _block.transactions())
+    {
+        auto const& currentFork = currentChainMining.getNetwork();
+        auto const& trException = tr.getExpectException(currentFork);
+        if (!trException.empty() && _block.getExpectException(currentFork).empty() && ++invalidTxs == 2)
+        {
+            ETH_DC_MESSAGE(DC::STATS2, "Block has multiple invalid transactions, will construct many test blocks instead of tr sequence!");
+            return _generateBlocksFromFillerTestBlock(_block, unclesPrepared, _generateUncles);
+        }
+    }
+
     // Generate the block
     currentChainMining.generateBlock(_block, unclesPrepared, _generateUncles);
 
@@ -60,6 +135,9 @@ void TestBlockchainManager::parseBlockFromFiller(BlockchainTestFillerBlock const
     // Get this block exception on canon chain to later verify it
     FORK const& canonNet = getDefaultChain().getNetwork();
     m_testBlockRLPs.emplace_back(std::make_tuple(lastBlock.getRawRLP(), _block.getExpectException(canonNet)));
+    if (!lastBlock.isDoNotExport())
+        return {lastBlock.asDataObject()};
+    return {};
 }
 
 TestBlockchain& TestBlockchainManager::getDefaultChain()

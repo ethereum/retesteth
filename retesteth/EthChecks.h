@@ -15,6 +15,7 @@ enum DC
     STATE,
     WARNING,
     TESTLOG,
+    PYSPEC,
     LOWLOG
 };
 

@@ -23,7 +23,6 @@ namespace
         {
             REQUIRE_JSONFIELDS(_data, "Info " + _data.getKey(),
                 {{"comment", {{DataType::String}, jsonField::Required}},
-                    {"filling-block-build-tool", {{DataType::String}, jsonField::Optional}},
                     {"filling-transition-tool", {{DataType::String}, jsonField::Optional}},
                     {"reference-spec", {{DataType::String}, jsonField::Optional}},
                     {"reference-spec-version", {{DataType::String}, jsonField::Optional}},

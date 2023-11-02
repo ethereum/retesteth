@@ -67,7 +67,7 @@ spDataObject StateTestSuite::doTests(spDataObject& _input, TestSuiteOptions& _op
     {
         if (Options::get().fillchain)
         {
-            BlockchainTestValidSuite bcTestSuite;
+            BlockchainTestInvalidSuite bcTestSuite;
             bcTestSuite.doTests(_input, _opt);
         }
         else

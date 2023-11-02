@@ -177,18 +177,35 @@ void travisOut(std::atomic_bool* _stopTravisOut)
             break;
     }
 }
+
 void timeoutThread(std::atomic_bool* _stopTimeout)
 {
     uint tickCounter = 0;
-    const uint C_MAX_TESTEXEC_TIMEOUT = 36000;
+    uint tickCounterSuite = 0;
+    const uint C_MAX_TESTEXEC_TIMEOUT = 30000;
+    const uint C_MAX_TESTSUITE_TIMEOUT = 4000;
     while (!*_stopTimeout)
     {
         std::this_thread::sleep_for(std::chrono::seconds(1));
-        ++tickCounter;
-        if (tickCounter > C_MAX_TESTEXEC_TIMEOUT)
+        if (++tickCounter > C_MAX_TESTEXEC_TIMEOUT)
         {
             test::TestOutputHelper::get().setCurrentTestInfo(test::TestInfo("Timeout"));
             ETH_FAIL_MESSAGE("Test execution timeout reached! " + test::fto_string(C_MAX_TESTEXEC_TIMEOUT) + "sec");
+        }
+        if (++tickCounterSuite > C_MAX_TESTSUITE_TIMEOUT)
+        {
+            tickCounterSuite = 0;
+            auto& dynOpt = Options::getDynamicOptions();
+            if (dynOpt.currentConfigIsSet())
+            {
+                if (dynOpt.testSuiteRunning())
+                    dynOpt.setTestsuiteRunning(false);
+                else
+                {
+                    test::TestOutputHelper::get().setCurrentTestInfo(test::TestInfo("Timeout"));
+                    ETH_FAIL_MESSAGE("Test suite execution timeout reached! " + test::fto_string(C_MAX_TESTSUITE_TIMEOUT * 2) + "sec");
+                }
+            }
         }
         if (ExitHandler::receivedExitSignal())
             break;
@@ -315,215 +332,14 @@ void cleanMemory()
         delete [] c_argv2;
 }
 
-string getTestType(string const& _filename)
+void registerBuffer(char* _buffer)
 {
-    string type = "GeneralStateTests";
-    if (fs::exists(_filename))
-    {
-        spDataObject res = readAutoDataWithoutOptions(_filename);
-        if (res.isEmpty())
-            return type;
-
-        auto isBlockChainTest = [](DataObject const& _el)
-        {
-            return (_el.getKey() == "blocks") ? true : false;
-        };
-        auto isStateTest = [](DataObject const& _el)
-        {
-            return (_el.getKey() == "env") ? true : false;
-        };
-        if (res->performSearch(isBlockChainTest))
-            return "BlockchainTests";
-        if (res->performSearch(isStateTest))
-            return "GeneralStateTests";
-    }
-    return type;
+    c_cleanDynamicChars.emplace_back(_buffer);
 }
 
-string getTestTArg(fs::path const& _cwd, string const& arg)
+void registerFakeArgs(const char** _argv)
 {
-    const vector<string> supportedSuites = {
-        "GeneralStateTests", "BlockchainTests",
-        "GeneralStateTestsFiller", "BlockchainTestsFiller",
-        "EOFTests", "EOFTestsFiller",
-        "EIPTests", "EIPTestsFiller",
-        "TransactionTests", "TransactionTestsFiller",
-        "LegacyTests"
-    };
-    string cArg = arg;
-    if (cArg.size() > 1 && cArg.at(cArg.size() - 1) == '/')
-        cArg = cArg.erase(cArg.size() - 1);
-
-    string tArg;
-    fs::path cwd = _cwd;
-    bool stepinfolder = false;
-    if (test::inArray(supportedSuites, cArg))
-    {
-        stepinfolder = true;
-        if (fs::exists(cwd / cArg))
-            cwd = cwd / cArg;
-    }
-
-    while(!test::inArray(supportedSuites, cwd.stem().string()) && !cwd.empty())
-    {
-        tArg.insert(0, cwd.stem().string() + "/");
-        cwd = cwd.parent_path();
-    }
-    if (!cwd.empty())
-    {
-        string headTestSuite = cwd.stem().string();
-        size_t const pos = headTestSuite.find("Filler");
-        if (pos != string::npos)
-            headTestSuite = headTestSuite.erase(pos, 6);
-        else
-        {
-            if (cwd.parent_path().stem() == "BlockchainTests" && headTestSuite == "GeneralStateTests")
-            {
-                headTestSuite.insert(0, "BC");
-                if (cwd.parent_path().parent_path().stem() == "Constantinople")
-                    headTestSuite.insert(0, "LegacyTests/Constantinople/");
-            }
-            else if ((cwd.parent_path().stem() == "EIPTests" || cwd.parent_path().stem() == "EIPTestsFiller")
-                     && headTestSuite == "BlockchainTests")
-                headTestSuite.insert(0, "EIPTests/");
-            else if (cwd.parent_path().stem() == "Constantinople")
-                headTestSuite.insert(0, "LegacyTests/Constantinople/");
-        }
-        if (stepinfolder)
-            tArg.insert(0, headTestSuite);
-        else
-            tArg.insert(0, headTestSuite  + "/");
-    }
-
-    if (!stepinfolder)
-        tArg.insert(tArg.size(), cArg);
-
-    if (tArg == "BlockchainTests/InvalidBlocks/bcExpectSection")
-        tArg = "BlockchainTests/Retesteth/bcExpectSection";
-    return tArg;
+    c_argv2 = _argv;
 }
-
-// Preprocess the args
-const char** preprocessOptions(int& _argc, const char* _argv[])
-{
-    // Get Test Path before initializing options
-    fs::path testPath;
-    const char* ptestPath = std::getenv("ETHEREUM_TEST_PATH");
-    if (ptestPath != nullptr)
-        testPath = fs::path(ptestPath);
-
-    for (short i = 1; i < _argc; i++)
-    {
-        string const arg = string{_argv[i]};
-        if (arg == "--help" || arg == "--version")
-            return _argv;
-        if (arg == "--testpath" && i + 1 < _argc)
-            testPath = fs::path(std::string{_argv[i + 1]});
-    }
-    // if file.json is outside of the testpath
-    //    parse "retesteth file.json" ==> "retesteth -t TestSuite -- --testfile file.json"
-    // else
-    //    "retesteth file.json" ==> "retesteth -t TestSuite/Subsuite -- --singletest file.json"
-    // parse "retesteth Folder" ==> "retesteth -t TestSuite/Folder
-
-    auto const cwd = fs::path(fs::current_path());
-    string filenameArg;
-    string directoryArg;
-    bool fileInsideTheTestRepo = false;
-
-    bool hasTArg = false;
-    vector<string> options;
-    options.emplace_back(_argv[0]);
-    for (short i = 1; i < _argc; i++)
-    {
-        string const arg = string{_argv[i]};
-        if (arg == "-t")
-            hasTArg = true;
-
-        bool isFile = (arg.find(".json") != string::npos || arg.find(".yml") != string::npos
-                    || arg.find(".py") != string::npos);
-        if (isFile && string{_argv[i - 1]} != "--testfile")
-        {
-            filenameArg = arg;
-            if (!testPath.empty() && fs::relative(cwd, testPath).string().find("..") == string::npos)
-                fileInsideTheTestRepo = true;
-        }
-        else if (fs::exists(cwd / arg) && fs::is_directory(cwd / arg))
-            directoryArg = arg;
-
-        options.emplace_back(arg);
-    }
-
-    if (!hasTArg)
-    {
-        options.insert(options.begin() + 1, "-t");
-        string suite;
-        if (!filenameArg.empty())
-        {
-            if (fileInsideTheTestRepo)
-            {
-                suite = getTestTArg(cwd.parent_path(), cwd.stem().string());
-                for (vector<string>::iterator it = options.begin(); it != options.end(); it++)
-                {
-                    if (*it == filenameArg)
-                    {
-                        (*it) = (fs::path(*it)).stem().string();
-                        options.insert(it, "--singletest");
-                        break;
-                    }
-                }
-            }
-            else
-            {
-                suite = getTestType(filenameArg);
-                for (vector<string>::iterator it = options.begin(); it != options.end(); it++)
-                {
-                    if (*it == filenameArg)
-                    {
-                        options.insert(it, "--testfile");
-                        break;
-                    }
-                }
-            }
-        }
-        else if (!directoryArg.empty())
-        {
-            suite = getTestTArg(cwd, directoryArg);
-            for (vector<string>::iterator it = options.begin(); it != options.end(); it++)
-            {
-                if (*it == directoryArg)
-                {
-                    options.erase(it);
-                    break;
-                }
-            }
-        }
-
-        if (suite.empty())
-            std::cerr << "preprocessOptions:: Error autodetecting -t argument!" << std::endl;
-        options.insert(options.begin() + 2, suite);
-        options.insert(options.begin() + 3, "--");
-    }
-
-    for (auto const& el : options)
-        std::cout << el << " ";
-    std::cout << std::endl;
-
-    if (options.size() == (size_t)_argc)
-        return _argv;
-    size_t i = 0;
-    const char** argv2 = new const char*[options.size()];
-    for (auto const& el : options)
-    {
-        char *buffer = new char[el.size() + 1];   //we need extra char for NUL
-        memcpy(buffer, el.c_str(), el.size() + 1);
-        c_cleanDynamicChars.emplace_back(buffer);
-        argv2[i++] = buffer;
-    }
-    _argc = options.size();
-    c_argv2 = argv2;
-    return argv2;
-}
-
 
 }  // namespace test::main

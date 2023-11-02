@@ -26,7 +26,8 @@ string const ethereumjs_config = R"({
        "Berlin",
        "London",
        "Merge",
-       "Shanghai"
+       "Shanghai",
+       "Cancun"
     ],
     "additionalForks":[
        "FrontierToHomesteadAt5",
@@ -36,7 +37,8 @@ string const ethereumjs_config = R"({
        "ByzantiumToConstantinopleFixAt5",
        "BerlinToLondonAt5",
        "ArrowGlacier",
-       "MergeToShanghaiAtTime15k"
+       "MergeToShanghaiAtTime15k",
+       "ShanghaiToCancunAtTime15k"
     ],
     "fillerSkipForks" : [
         "Merge+3540+3670",
@@ -103,14 +105,16 @@ string const ethereumjs_config = R"({
        "TooManyUncles":"",
        "UncleIsBrother":"",
        "OutOfGas":"",
-       "SenderNotEOA":"",
-       "IntrinsicGas":"",
+       "SenderNotEOA":"invalid sender address, address is not EOA",
+       "SenderNotEOAorNoCASH" : "invalid sender address, address is not EOA",
+       "IntrinsicGas":"base fee exceeds gas limit",
+       "TR_RLP_WRONGVALUE" : "value cannot exceed MAX_INTEGER",
        "ExtraDataIncorrectDAO":"",
        "InvalidTransactionVRS":"",
        "BLOCKHEADER_VALUE_TOOLARGE":"",
        "TRANSACTION_VALUE_TOOLARGE":"",
        "TRANSACTION_VALUE_TOOSHORT":"",
-       "TR_NonceHasMaxValue":"",
+       "TR_NonceHasMaxValue":"nonce cannot equal or exceed MAX_UINT64",
        "OVERSIZE_RLP":"",
        "RLP_TooFewElements":"",
        "RLP_TooManyElements":"",
@@ -206,16 +210,20 @@ string const ethereumjs_config = R"({
        "1559BlockImportImpossible_TargetGasLow":"",
        "1559BlockImportImpossible_TargetGasHigh":"",
        "1559BlockImportImpossible_InitialGasLimitInvalid":"",
-       "TR_IntrinsicGas":"",
-       "TR_NoFunds":"",
+       "TR_IntrinsicGas":"base fee exceeds gas limit",
+       "TR_NoFunds":"doesn't have enough funds to send tx",
+       "TR_NoFundsX":"gas limit * gasPrice cannot exceed MAX_INTEGER",
        "TR_NoFundsValue":"",
-       "TR_FeeCapLessThanBlocks":"",
-       "TR_GasLimitReached":"",
+       "TR_NoFundsOrGas" : "base fee exceeds gas limit",
+       "TR_FeeCapLessThanBlocks":"is less than the block's baseFeePerGas",
+       "TR_FeeCapLessThanBlocksORNoFunds" : "is less than the block's baseFeePerGas",
+       "TR_GasLimitReached":"tx has a higher gas limit than the remaining gas in the block",
        "TR_NonceTooHigh":"",
        "TR_NonceTooLow":"",
-       "TR_TypeNotSupported":"",
-       "TR_TipGtFeeCap":"",
+       "TR_TypeNotSupported":"not enabled",
+       "TR_TipGtFeeCap":"maxFeePerGas cannot be less than maxPriorityFeePerGas",
        "TR_TooShort":"",
+       "TR_InitCodeLimitExceeded" : "the initcode size of this transaction is too large",
        "1559BaseFeeTooLarge":"",
        "1559PriorityFeeGreaterThanBaseFee":"",
        "2930AccessListAddressTooLong":"",
@@ -231,13 +239,32 @@ string const ethereumjs_config = R"({
 })";
 
 string const ethereumjs_start = R"(#!/bin/sh
-curl -X POST -d "${1} ${2} ${3} ${4} ${5} ${6} ${7} ${8} ${9} ${10} ${11} ${12} ${13} ${14} ${15} ${16} ${17} ${18} ${19} ${20}" --silent http://localhost:3000/
+if lsof -i :3000 | grep -q LISTEN; then
+    curl -X POST -d "${1} ${2} ${3} ${4} ${5} ${6} ${7} ${8} ${9} ${10} ${11} ${12} ${13} ${14} ${15} ${16} ${17} ${18} ${19} ${20}" --silent http://localhost:3000/
+fi
 )";
 string const ethereumjs_setup = R"(#!/bin/sh
+SNAME=".retesteth/ethereumjs/setup.sh"
+if [ -z "${ETHEREUMJS_PATH}" ]; then
+  1>&2 echo "$SNAME ERROR: Env variable ETHEREUMJS_PATH is either empty or not set!"
+else
+  if [ -d "${ETHEREUMJS_PATH}" ]; then
+    1>&2 echo "$SNAME Using ethereumjs path: '$ETHEREUMJS_PATH'"
+  else
+    echo "$SNAME ERROR: Path '$ETHEREUMJS_PATH' does not exist in the file system"
+  fi
+fi
+
 dir=$(pwd)
 cd $ETHEREUMJS_PATH/packages/vm
-npx ts-node test/retesteth/transition-cluster.ts &> /dev/null &
+npx ts-node test/retesteth/transition-cluster.cts &> /dev/null &
 cd $dir
+sleep 4
+if lsof -i :3000 | grep -q LISTEN; then
+    1>&2 echo "$SNAME Ethereumjs daemon is listening on port 3000"
+else
+    1>&2 echo "$SNAME Ethereumjs daemon failed to start"
+fi
 )";
 string const ethereumjs_stop = R"(#!/bin/sh
 killall node

@@ -92,37 +92,8 @@ StateTestFillerExpectSection::StateTestFillerExpectSection(spDataObjectMove _dat
                 {"expectException", {{DataType::Object}, jsonField::Optional}},
                 {"result", {{DataType::Object}, jsonField::Required}}});
 
-        // Parse Indexes
-        if (m_initialData->count("indexes"))
-        {
-            if (m_initialData->atKey("indexes").count("data"))
-            {
-                spDataObject dataIndexes = ReplaceValueToIndexesInDataList(_gtr, m_initialData->atKey("indexes").atKey("data"));
-                parseJsonIntValueIntoSet(dataIndexes, m_dataInd);
-            }
-            else
-                m_dataInd.emplace(-1);
+        parseExpectSectionIndexes(_gtr);
 
-            if (m_initialData->atKey("indexes").count("gas"))
-                parseJsonIntValueIntoSet(m_initialData->atKey("indexes").atKey("gas"), m_gasInd);
-            else
-                m_gasInd.emplace(-1);
-
-            if (m_initialData->atKey("indexes").count("value"))
-                parseJsonIntValueIntoSet(m_initialData->atKey("indexes").atKey("value"), m_valInd);
-            else
-                m_valInd.emplace(-1);
-        }
-        else
-        {
-            m_dataInd.emplace(-1);
-            m_gasInd.emplace(-1);
-            m_valInd.emplace(-1);
-        }
-
-        ETH_ERROR_REQUIRE_MESSAGE(m_dataInd.size() > 0, "Expect section `indexes::data` is empty!");
-        ETH_ERROR_REQUIRE_MESSAGE(m_gasInd.size() > 0, "Expect section `indexes::gas` is empty!");
-        ETH_ERROR_REQUIRE_MESSAGE(m_valInd.size() > 0, "Expect section `indexes::value` is empty!");
 
         // get allowed networks for this expect section
         std::set<string> forks;
@@ -133,7 +104,9 @@ StateTestFillerExpectSection::StateTestFillerExpectSection(spDataObjectMove _dat
         ClientConfig const& cfg = Options::get().getDynamicOptions().getCurrentConfig();
         m_forks = cfg.translateNetworks(forks);
 
-        convertDecStateToHex((*m_initialData).atKeyPointerUnsafe("result"), solContracts(), StateToHex::NOCOMPILECODE);
+        auto& result = (*m_initialData).atKeyPointerUnsafe("result");
+        result.getContent().performModifier(mod_changeValueAnyToBigint00);
+        convertDecStateToHex(result, solContracts(), StateToHex::NOCOMPILECODE);
         m_result = GCP_SPointer<StateIncomplete>(new StateIncomplete(MOVE(m_initialData, "result")));
 
         if (m_initialData->count("expectException"))
@@ -164,6 +137,40 @@ std::string const& StateTestFillerExpectSection::getExpectException(FORK const& 
     if (m_expectExceptions.count(_net))
         return m_expectExceptions.at(_net);
     return C_EMPTY_STR;
+}
+
+void StateTestFillerExpectSection::parseExpectSectionIndexes(spStateTestFillerTransaction const& _gtr)
+{
+    if (m_initialData->count("indexes"))
+    {
+        if (m_initialData->atKey("indexes").count("data"))
+        {
+            spDataObject dataIndexes = ReplaceValueToIndexesInDataList(_gtr, m_initialData->atKey("indexes").atKey("data"));
+            parseJsonIntValueIntoSet(dataIndexes, m_dataInd);
+        }
+        else
+            m_dataInd.emplace(-1);
+
+        if (m_initialData->atKey("indexes").count("gas"))
+            parseJsonIntValueIntoSet(m_initialData->atKey("indexes").atKey("gas"), m_gasInd);
+        else
+            m_gasInd.emplace(-1);
+
+        if (m_initialData->atKey("indexes").count("value"))
+            parseJsonIntValueIntoSet(m_initialData->atKey("indexes").atKey("value"), m_valInd);
+        else
+            m_valInd.emplace(-1);
+    }
+    else
+    {
+        m_dataInd.emplace(-1);
+        m_gasInd.emplace(-1);
+        m_valInd.emplace(-1);
+    }
+
+    ETH_ERROR_REQUIRE_MESSAGE(m_dataInd.size() > 0, "Expect section `indexes::data` is empty!");
+    ETH_ERROR_REQUIRE_MESSAGE(m_gasInd.size() > 0, "Expect section `indexes::gas` is empty!");
+    ETH_ERROR_REQUIRE_MESSAGE(m_valInd.size() > 0, "Expect section `indexes::value` is empty!");
 }
 
 }  // namespace teststruct

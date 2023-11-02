@@ -13,6 +13,7 @@ BlockchainTestBlock::BlockchainTestBlock(spDataObject& _data)
             {{"rlp", {{DataType::String}, jsonField::Required}},
                 {"chainname", {{DataType::String}, jsonField::Optional}},    // User information
                 {"blocknumber", {{DataType::String}, jsonField::Optional}},  // User information
+                {"rlp_decoded", {{DataType::Object}, jsonField::Optional}},  // Decoding of invalid blocks
                 {"transactions", {{DataType::Array}, jsonField::Optional}},
                 {"withdrawals", {{DataType::Array}, jsonField::Optional}},
                 {"hasBigInt", {{DataType::String}, jsonField::Optional}},
@@ -66,6 +67,34 @@ BlockchainTestBlock::BlockchainTestBlock(spDataObject& _data)
                 m_uncles.emplace_back(readBlockHeader(un));
         }
         m_rlp = sBYTES(_data->atKey("rlp").asString());
+
+        if (_data->count("rlp_decoded"))
+        {
+            if (_data->count("blockHeader"))
+                ETH_ERROR_MESSAGE("Invalid block has blockHeader outside of rlp_decoded!");
+            if (_data->count("transactions"))
+                ETH_ERROR_MESSAGE("Invalid block has transactions outside of rlp_decoded!");
+            if (_data->count("uncleHeaders"))
+                ETH_ERROR_MESSAGE("Invalid block has uncles outside of rlp_decoded!");
+            if (_data->count("withdrawals"))
+                ETH_ERROR_MESSAGE("Invalid block has withdrawals outside of rlp_decoded!");
+
+            auto& rlpDecoded = _data.getContent().atKeyUnsafe("rlp_decoded");
+            m_hasRlpDecoded = true;
+            REQUIRE_JSONFIELDS(rlpDecoded, "BlockchainTestBlock::rlp_decoded",
+            {{"blockHeader", {{DataType::Object}, jsonField::Required}},
+             {"transactions", {{DataType::Array}, jsonField::Required}},
+             {"uncleHeaders", {{DataType::Array}, jsonField::Required}},
+            {"withdrawals", {{DataType::Array}, jsonField::Required}}});
+
+            m_blockHeader = readBlockHeader(rlpDecoded.atKey("blockHeader"));
+            for (auto& el : rlpDecoded.atKeyUnsafe("transactions").getSubObjectsUnsafe())
+                m_transactions.emplace_back(readTransaction(dataobject::move(el)));
+            for (auto const& el : rlpDecoded.atKey("uncleHeaders").getSubObjects())
+                m_uncles.emplace_back(readBlockHeader(el));
+            for (auto const& el : rlpDecoded.atKey("withdrawals").getSubObjects())
+                m_withdrawals.emplace_back(spWithdrawal(new Withdrawal(el)));
+        }
     }
     catch (std::exception const& _ex)
     {

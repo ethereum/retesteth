@@ -29,10 +29,12 @@ enum class CallType
         ETH_DC_MESSAGE(rpclog, string("Response ") + method + ": " + _ex.what());                          \
         if (ctype != CallType::DONTFAILONUPWARDS)                                                          \
         {                                                                                                  \
-            if (string(_ex.what()).find("exited with 512 code") == string::npos)                           \
-                { ETH_FAIL_MESSAGE(_ex.what()); }                                                          \
-            else                                                                                           \
+            bool const allowErrors = Options::getCurrentConfig().cfgFile().continueOnErrors();             \
+            bool const exit512 = string(_ex.what()).find("exited with 512 code") != string::npos;          \
+            if (allowErrors || exit512)                                                                    \
                 { ETH_ERROR_MESSAGE(_ex.what());}                                                          \
+            else                                                                                           \
+                { ETH_FAIL_MESSAGE(_ex.what()); }                                                          \
         }                                                                                                  \
     }                                                                                                      \
     catch (EthError const& _ex)                                                                            \
@@ -54,6 +56,9 @@ spDataObject ToolImpl::web3_clientVersion()
                 int exitCode;
                 spDataObject res(new DataObject(test::executeCmd(cmd, exitCode)));
                 ETH_DC_MESSAGE(DC::RPC2, "Response: web3_clientVersion " + res->asString());
+                size_t const pos = res->asString().find("\n");
+                if (pos != string::npos)
+                    (*res).asStringUnsafe() = res->asString().substr(0, pos);
                 return res;
         , "web3_clientVersion", CallType::FAILEVERYTHING, DC::RPC2)
     return spDataObject();

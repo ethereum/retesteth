@@ -97,16 +97,16 @@ void StateTestFillerRunner::performTransactionOnExpect(TransactionInGeneralSecti
     compareTransactionException(ethTr, mRes, testException);
 
     VALUE latestBlockN(m_session.eth_blockNumber());
-    EthGetBlockBy blockInfo(m_session.eth_getBlockByNumber(latestBlockN, Request::LESSOBJECTS));
-    if (!blockInfo.hasTransaction(trHash) && testException.empty())
+    EthGetBlockBy remoteBlock(m_session.eth_getBlockByNumber(latestBlockN, Request::LESSOBJECTS));
+    if (!remoteBlock.hasTransaction(trHash) && testException.empty())
         ETH_ERROR_MESSAGE("StateTest::FillTest: " + c_trHashNotFound);
 
     _tr.markExecuted();
     _tr.assignTransactionHash(trHash);
 
-    performPoststate(blockInfo);
+    performPoststate(remoteBlock);
     performStatediff();
-    performVmtrace(blockInfo, _tr, _network);
+    performVmtrace(remoteBlock, _tr, _network);
     string const vmTraceStr = performVmtraceAnalys(trHash, _expect, _network);
 
     spDataObject transactionResults;
@@ -128,7 +128,7 @@ void StateTestFillerRunner::performTransactionOnExpect(TransactionInGeneralSecti
     (*indexes)["value"] = _tr.valueInd();
 
     (*transactionResults).atKeyPointer("indexes") = indexes;
-    (*transactionResults)["hash"] = blockInfo.header()->stateRoot().asString();
+    (*transactionResults)["hash"] = remoteBlock.header()->stateRoot().asString();
     (*transactionResults)["txbytes"] = ethTr->getRawBytes().asString();
     if (!vmTraceStr.empty())
         (*transactionResults)["txtrace"] = "0x" + vmTraceStr;

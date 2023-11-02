@@ -213,7 +213,7 @@ BOOST_AUTO_TEST_CASE(expectIndexesArrayValueMultiple)
     const string sTr = R"(
             {
                 "data" : [
-                    ":raw 0x11223341"
+                    ":raw 0x11223341",
                     ":label second :raw 0x11223344",
                     ":label second :raw 0x11223344"
                 ],
@@ -238,7 +238,7 @@ BOOST_AUTO_TEST_CASE(expectIndexesRange)
     const string sTr = R"(
             {
                 "data" : [
-                    ":raw 0x11223341"
+                    ":raw 0x11223341",
                     ":raw 0x11223344",
                     ":raw 0x11223344"
                 ],
@@ -263,7 +263,7 @@ BOOST_AUTO_TEST_CASE(expectIndexesRangeWrong)
     const string sTr = R"(
             {
                 "data" : [
-                    ":raw 0x11223341"
+                    ":raw 0x11223341",
                     ":raw 0x11223344",
                     ":raw 0x11223344"
                 ],
@@ -293,7 +293,7 @@ BOOST_AUTO_TEST_CASE(expectIndexesRangeArray)
     const string sTr = R"(
             {
                 "data" : [
-                    ":raw 0x11223341"
+                    ":raw 0x11223341",
                     ":raw 0x11223344",
                     ":raw 0x11223344"
                 ],
@@ -322,7 +322,7 @@ BOOST_AUTO_TEST_CASE(expectIndexesArrayNormal)
     const string sTr = R"(
             {
                 "data" : [
-                    ":raw 0x11223341"
+                    ":raw 0x11223341",
                     ":raw 0x11223344",
                     ":raw 0x11223344"
                 ],
@@ -349,7 +349,7 @@ BOOST_AUTO_TEST_CASE(expectIndexesArrayValueNotFound)
     const string sTr = R"(
             {
                 "data" : [
-                    ":raw 0x11223341"
+                    ":raw 0x11223341",
                     ":label second :raw 0x11223344",
                     ":raw 0x11223344"
                 ],

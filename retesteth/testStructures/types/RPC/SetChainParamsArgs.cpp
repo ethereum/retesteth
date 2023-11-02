@@ -25,7 +25,7 @@ spSetChainParamsArgsGenesis readGenesis(DataObject const& _data)
         {
             if (_data.count(c_withdrawalsRoot))
             {
-                if (_data.count("currentExcessDataGas"))
+                if (_data.count(c_currentExcessBlobGas))
                     return spSetChainParamsArgsGenesis(new SetChainParamsArgsGenesis4844(_data));
                 else
                     return spSetChainParamsArgsGenesis(new SetChainParamsArgsGenesisShanghai(_data));
@@ -122,7 +122,9 @@ SetChainParamsArgsGenesis4844::SetChainParamsArgsGenesis4844(DataObject const& _
             {"timestamp", {{DataType::String}, jsonField::Required}},
             {"nonce", {{DataType::String}, jsonField::Required}},
             {"mixHash", {{DataType::String}, jsonField::Required}},
-            {"currentExcessDataGas", {{DataType::String}, jsonField::Required}}
+            {c_currentBlobGasUsed, {{DataType::String}, jsonField::Required}},
+            {c_currentExcessBlobGas, {{DataType::String}, jsonField::Required}},
+            {c_currentBeaconRoot, {{DataType::String}, jsonField::Required}}
         });
 }
 
@@ -156,6 +158,13 @@ spDataObject SetChainParamsArgs::asDataObject() const
         {
             BlockHeaderShanghai const& newbl = BlockHeaderShanghai::castFrom(m_genesis);
             (*out)["genesis"][c_withdrawalsRoot] = newbl.withdrawalsRoot().asString();
+        }
+        if (isBlockExportExcessBlobGas(m_genesis))
+        {
+            BlockHeader4844 const& newbl = BlockHeader4844::castFrom(m_genesis);
+            (*out)["genesis"][c_currentExcessBlobGas] = newbl.excessBlobGas().asString();
+            (*out)["genesis"][c_currentBlobGasUsed] = newbl.blobGasUsed().asString();
+            (*out)["genesis"][c_currentBeaconRoot] = newbl.parentBeaconBlockRoot().asString();
         }
     }
 
@@ -239,7 +248,9 @@ spDataObject SetChainParamsArgsGenesis4844::_constructBlockHeader() const
     (*header)[c_mixHash] = dev::toCompactHexPrefixed(curRandomU256, 32);
     (*header)[c_baseFeePerGas] = m_dataRef.atKey(c_baseFeePerGas).asString();
     (*header)[c_withdrawalsRoot] = m_dataRef.atKey(c_withdrawalsRoot).asString();
-    (*header)[c_excessDataGas] = m_dataRef.atKey("currentExcessDataGas").asString();
+    (*header)[c_blobGasUsed] =  m_dataRef.atKey(c_currentBlobGasUsed).asString();
+    (*header)[c_excessBlobGas] = m_dataRef.atKey(c_currentExcessBlobGas).asString();
+    (*header)[c_parentBeaconBlockRoot] = m_dataRef.atKey(c_currentBeaconRoot).asString();
     return header;
 }
 

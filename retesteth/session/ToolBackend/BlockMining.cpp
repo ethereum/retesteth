@@ -7,6 +7,7 @@
 #include <retesteth/helpers/TestOutputHelper.h>
 #include <retesteth/testStructures/Common.h>
 #include <testStructures/types/BlockchainTests/BlockchainTestFiller.h>
+#include <retesteth/Constants.h>
 #include <regex>
 
 using namespace std;
@@ -15,72 +16,125 @@ using namespace test;
 using namespace test::debug;
 using namespace dataobject;
 using namespace test::teststruct;
+using namespace test::constnames;
 namespace fs = boost::filesystem;
+
+namespace  {
+void makeEnvDifficulty(spDataObject& _envData, spBlockHeader const& _parentBlockH, spBlockHeader const& _currentBlockH)
+{
+    auto const& cfgFile = Options::getCurrentConfig().cfgFile();
+    if (_parentBlockH->number() != _currentBlockH->number())
+    {
+        if (_parentBlockH->hash() != _currentBlockH->parentHash())
+            ETH_ERROR_MESSAGE("ToolChain::mineBlockOnTool: provided parent block != pending parent block hash!");
+
+        if (!cfgFile.calculateDifficulty())
+        {
+            (*_envData).removeKey("currentDifficulty");
+            (*_envData)["parentTimestamp"] = _parentBlockH->timestamp().asString();
+            (*_envData)["parentDifficulty"] = _parentBlockH->difficulty().asString();
+            (*_envData)["parentUncleHash"] = _parentBlockH->uncleHash().asString();
+        }
+    }
+}
+
+void makeEnvWithdrawals(spDataObject& _envData, EthereumBlockState const& _currentBlockRef)
+{
+    if (isBlockExportWithdrawals(_currentBlockRef.header()) || _currentBlockRef.withdrawals().size())
+    {
+        (*_envData).atKeyPointer("withdrawals") = sDataObject(DataType::Array);
+        for (auto const& wt : _currentBlockRef.withdrawals())
+            (*_envData)["withdrawals"].addArrayObject(wt->asDataObject(ExportOrder::ToolStyle));
+    }
+}
+
+void makeEnvBasefee(spDataObject& _envData, spBlockHeader const& _parentBlockH, spBlockHeader const& _currentBlockH)
+{
+    auto const& cfgFile = Options::getCurrentConfig().cfgFile();
+    if (isBlockExportBasefee(_parentBlockH))
+    {
+        if (!cfgFile.calculateBasefee() && _currentBlockH->number() != 0)
+        {
+            (*_envData).removeKey("currentBaseFee");
+            BlockHeader1559 const& h1559 = (BlockHeader1559 const&) _parentBlockH.getCContent();
+            (*_envData)["parentBaseFee"] = h1559.baseFee().asString();
+            (*_envData)["parentGasUsed"] = h1559.gasUsed().asString();
+            (*_envData)["parentGasLimit"] = h1559.gasLimit().asString();
+        }
+    }
+}
+
+void makeEnvExcessBlobGas(spDataObject& _envData, spBlockHeader const& _parentBlockH, spBlockHeader const& _currentBlockH, FORK const& _fork)
+{
+    if (isBlockExportExcessBlobGas(_currentBlockH))
+    {
+        BlockHeader4844 const& ch4844 = BlockHeader4844::castFrom(_currentBlockH);
+        (*_envData)[c_parentBeaconBlockRoot] = ch4844.parentBeaconBlockRoot().asString();
+
+        if (_currentBlockH->number() != 0)
+        {
+            (*_envData).removeKey(c_currentExcessBlobGas);
+            (*_envData).removeKey(c_currentBlobGasUsed);
+            if (_fork == "ShanghaiToCancunAtTime15k" && _parentBlockH->type() != BlockType::BlockHeader4844)
+            {
+                BlockHeader4844 const& h4844 = BlockHeader4844::castFrom(_currentBlockH);
+                (*_envData)[c_currentExcessBlobGas] = h4844.excessBlobGas().asString();
+                (*_envData)[c_currentBlobGasUsed] = h4844.blobGasUsed().asString();
+            }
+            else
+            {
+                BlockHeader4844 const& h4844 = BlockHeader4844::castFrom(_parentBlockH);
+                (*_envData)[c_parentExcessBlobGas] = h4844.excessBlobGas().asString();
+                (*_envData)[c_parentBlobGasUsed] = h4844.blobGasUsed().asString();
+            }
+        }
+        else
+        {
+            (*_envData).renameKey(c_currentExcessBlobGas, string(c_parentExcessBlobGas));
+            (*_envData).renameKey(c_currentBlobGasUsed, string(c_parentBlobGasUsed));
+        }
+    }
+}
+
+void makeEnvOmmers(spDataObject& _envData, EthereumBlockState const& _currentBlockRef, toolimpl::ToolChain const& _chainRef)
+{
+    // BlockHeader hash information for tool mining
+    size_t k = 0;
+    for (auto const& bl : _chainRef.blocks())
+        (*_envData)["blockHashes"][fto_string(k++)] = bl.header()->hash().asString();
+    for (auto const& un : _currentBlockRef.uncles())
+    {
+        spDataObject uncle;
+        int delta = (int)(_currentBlockRef.header()->number() - un->number()).asBigInt();
+        if (delta < 1)
+            throw test::UpwardsException("Uncle header delta is < 1");
+        (*uncle)["delta"] = delta;
+        (*uncle)["address"] = un->author().asString();
+        (*_envData)["ommers"].addArrayObject(uncle);
+    }
+}
+}
 
 namespace toolimpl
 {
 void BlockMining::prepareEnvFile()
 {
     m_envPath = m_chainRef.tmpDir() / "env.json";
-    auto const& cfgFile = Options::getCurrentConfig().cfgFile();
 
-    auto const& parentBlcokH = m_parentBlockRef.header();
+    auto const& parentBlockH = m_parentBlockRef.header();
     auto const& currentBlockH = m_currentBlockRef.header();
 
     auto spHeader = currentBlockH->asDataObject();
     spBlockchainTestFillerEnv env(readBlockchainFillerTestEnv(dataobject::move(spHeader), m_chainRef.engine()));
     spDataObject& envData = const_cast<spDataObject&>(env->asDataObject());
-
-    if (parentBlcokH->number() != currentBlockH->number())
-    {
-        if (parentBlcokH->hash() != currentBlockH->parentHash())
-            ETH_ERROR_MESSAGE("ToolChain::mineBlockOnTool: provided parent block != pending parent block hash!");
-
-        if (!cfgFile.calculateDifficulty())
-        {
-            (*envData).removeKey("currentDifficulty");
-            (*envData)["parentTimestamp"] = parentBlcokH->timestamp().asString();
-            (*envData)["parentDifficulty"] = parentBlcokH->difficulty().asString();
-            (*envData)["parentUncleHash"] = parentBlcokH->uncleHash().asString();
-        }
-    }
-
+    makeEnvDifficulty(envData, parentBlockH, currentBlockH);
     if (isBlockExportCurrentRandom(currentBlockH))
         (*envData)["currentRandom"] = currentBlockH->mixHash().asString();
+    makeEnvWithdrawals(envData, m_currentBlockRef);
+    makeEnvBasefee(envData, parentBlockH, currentBlockH);
+    makeEnvExcessBlobGas(envData, parentBlockH, currentBlockH, m_chainRef.fork());
+    makeEnvOmmers(envData, m_currentBlockRef, m_chainRef);
 
-    if (isBlockExportWithdrawals(currentBlockH) || m_currentBlockRef.withdrawals().size())
-    {
-        (*envData).atKeyPointer("withdrawals") = sDataObject(DataType::Array);
-        for (auto const& wt : m_currentBlockRef.withdrawals())
-            (*envData)["withdrawals"].addArrayObject(wt->asDataObject(ExportOrder::ToolStyle));
-    }
-
-    if (isBlockExportBasefee(parentBlcokH))
-    {
-        if (!cfgFile.calculateBasefee() && currentBlockH->number() != 0)
-        {
-            (*envData).removeKey("currentBaseFee");
-            BlockHeader1559 const& h1559 = (BlockHeader1559 const&) parentBlcokH.getCContent();
-            (*envData)["parentBaseFee"] = h1559.baseFee().asString();
-            (*envData)["parentGasUsed"] = h1559.gasUsed().asString();
-            (*envData)["parentGasLimit"] = h1559.gasLimit().asString();
-        }
-    }
-
-    // BlockHeader hash information for tool mining
-    size_t k = 0;
-    for (auto const& bl : m_chainRef.blocks())
-        (*envData)["blockHashes"][fto_string(k++)] = bl.header()->hash().asString();
-    for (auto const& un : m_currentBlockRef.uncles())
-    {
-        spDataObject uncle;
-        int delta = (int)(currentBlockH->number() - un->number()).asBigInt();
-        if (delta < 1)
-            throw test::UpwardsException("Uncle header delta is < 1");
-        (*uncle)["delta"] = delta;
-        (*uncle)["address"] = un->author().asString();
-        (*envData)["ommers"].addArrayObject(uncle);
-    }
 
     // Options Hook
     Options::getCurrentConfig().performFieldReplace(envData.getContent(), FieldReplaceDir::RetestethToClient);

@@ -4,6 +4,9 @@ set(CMAKE_TOOLCHAIN_FILE ${CMAKE_SOURCE_DIR}/toolchain.cmake)
 
 include("./cmake/Hunter/HunterGate.cmake")
 
+if ("${CMAKE_BUILD_TYPE}" STREQUAL "")
+    set(CMAKE_BUILD_TYPE "Release")
+endif()
 if (NOT "${CMAKE_BUILD_TYPE}" STREQUAL "Release")
     add_compile_definitions("__DEBUG__")
 endif()
@@ -23,7 +26,7 @@ HunterGate(
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 project(retesteth VERSION 0.3.1)
-set(VERSION_SUFFIX "shanghai")
+set(VERSION_SUFFIX "cancun")
 
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)

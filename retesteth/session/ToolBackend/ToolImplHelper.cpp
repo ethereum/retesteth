@@ -155,9 +155,9 @@ void verifyBlockRLP(dev::RLP const& _rlp)
         }
         else if (tr.isData())
         {
-            // Transaction type 1 is allowed
-            if ((int)tr.payload()[0] != 1 && (int)tr.payload()[0] != 2)
-                throw dev::RLPException("Transaction RLP is expected to be list");
+            const size_t trType = (size_t)tr.payload()[0];
+            if (trType > 3)
+                throw dev::RLPException("Transaction RLP is expected to be list (Type not supported)");
         }
         else
             throw dev::RLPException("Transaction RLP is expected to be list");

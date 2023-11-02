@@ -54,9 +54,10 @@ std::vector<TransactionInGeneralSection> StateTestTransactionBase::buildTransact
                         ETH_FAIL_MESSAGE("BaseFeeTransaction must have access list!");
 
                     // Type 0x03 transaction fields
-                    if (!m_maxFeePerDataGas.isEmpty())
+                    if (!m_maxFeePerBlobGas.isEmpty())
                     {
-                        (*trData)[c_maxFeePerDataGas] = m_maxFeePerDataGas->asString();
+                        (*trData)[c_maxFeePerBlobGas] = m_maxFeePerBlobGas->asString();
+                        (*trData).atKeyPointer(c_blobVersionedHashes) = sDataObject(DataType::Array);
                         for (auto const& el : m_blobVersionedHashes)
                             (*trData)[c_blobVersionedHashes].addArrayObject(sDataObject(el.asString()));
                     }

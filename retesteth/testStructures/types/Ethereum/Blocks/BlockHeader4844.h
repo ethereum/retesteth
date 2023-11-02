@@ -15,8 +15,12 @@ struct BlockHeader4844 : BlockHeaderShanghai
     virtual dev::RLPStream const asRLPStream() const override;
     virtual BlockType type() const override { return BlockType::BlockHeader4844; }
 
-    VALUE const& excessDataGas() const { return m_excessDataGas; }
-    void setExcessDataGas(VALUE const& _v) { m_excessDataGas = spVALUE(_v.copy()); }
+    VALUE const& excessBlobGas() const { return m_excessBlobGas; }
+    void setExcessBlobGas(VALUE const& _v) { m_excessBlobGas = spVALUE(_v.copy()); }
+    VALUE const& blobGasUsed() const { return m_blobGasUsed; }
+    void setBlobGasUsed(VALUE const& _v) { m_blobGasUsed = spVALUE(_v.copy()); }
+    FH32 const& parentBeaconBlockRoot() const { return m_parentBeaconBlockRoot; }
+    void setParentBeaconBlockRoot(FH32 const& _v) { m_parentBeaconBlockRoot = spFH32(_v.copy()); }
 
     static BlockHeader4844 const& castFrom(spBlockHeader const& _from);
     static BlockHeader4844& castFrom(BlockHeader& _from);
@@ -25,9 +29,11 @@ protected:
     virtual void checkDataScheme(DataObject const&) const override;
     virtual void _fromData(DataObject const&) override;
     virtual size_t _fromRLP(dev::RLP const&) override;
-    virtual size_t _rlpHeaderSize() const override { return 18; }
+    virtual size_t _rlpHeaderSize() const override { return 20; }
 
-    spVALUE m_excessDataGas;
+    spVALUE m_excessBlobGas;
+    spVALUE m_blobGasUsed;
+    spFH32 m_parentBeaconBlockRoot;
     BlockHeader4844(){};
 };
 

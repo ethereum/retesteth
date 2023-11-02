@@ -51,6 +51,7 @@ public:
     bool hasBigInt() const { return m_hasBigInt; }
 
     spDataObject asDataObject() const;
+    static void exportRLPDecodedToData(BYTES const& _rawRLP, DataObject& _res);
 
 private:
     TestBlock() {}

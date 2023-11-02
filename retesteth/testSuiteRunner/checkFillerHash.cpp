@@ -96,7 +96,7 @@ bool checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
                     sourceHashStr = sourceHash.hex().substr(0, 4);
                     fillerHashStr = fillerData.hash.hex().substr(0, 4);
                 }
-                ETH_ERROR_MESSAGE("Test " + _compiledTest.string() + " is outdated. Filler hash is different! " + "('" +
+                ETH_MARK_ERROR("Test " + _compiledTest.string() + " is outdated. Filler hash is different! " + "('" +
                                   sourceHashStr + "' != '" + fillerHashStr + "') ");
             }
         }

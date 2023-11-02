@@ -283,6 +283,11 @@ SessionInterface& RPCSession::instance(thread::id const& _threadID)
         ETH_DC_MESSAGE(DC::SOCKET, "Run new connection session for `" + test::fto_string(threadID) + "`");
         runNewInstanceOfAClient(_threadID, Options::getDynamicOptions().getCurrentConfig());
         ETH_DC_MESSAGE(DC::SOCKET, "New instance started");
+        if (!Options::get().checkhash && socketMap.count(_threadID))
+        {
+            auto& impl = socketMap.at(_threadID).session.get()->getImplementation();
+            ETH_DC_MESSAGE(DC::STATS, "Instantiated: " + impl.web3_clientVersion()->asJson(0, false));
+        }
     }
 
     ETH_FAIL_REQUIRE_MESSAGE(socketMap.size() <= Options::get().threadCount,

@@ -104,7 +104,19 @@ BOOST_AUTO_TEST_CASE(dataobject_EscapeChars)
     }
 }
 
-
+bool tryParseJson(string const& _data)
+{
+    try
+    {
+        ConvertJsoncppStringToData(_data);
+    }
+    catch (DataObjectException const& _ex)
+    {
+        // std::cout << _ex.what() << std::endl;
+        return false;
+    }
+    return true;
+}
 BOOST_AUTO_TEST_CASE(dataobject_invalidJson1)
 {
     string data = R"(
@@ -112,14 +124,8 @@ BOOST_AUTO_TEST_CASE(dataobject_invalidJson1)
             "name" : {
         }
     )";
-    try
-    {
-        ConvertJsoncppStringToData(data);
-    }
-    catch (DataObjectException const&)
-    {
+    if (!tryParseJson(data))
         return;
-    }
     BOOST_ERROR("Expected DataObject exception when parsing json!");
 }
 
@@ -130,14 +136,8 @@ BOOST_AUTO_TEST_CASE(dataobject_invalidJson2)
             "name" : {]
         }
     )";
-    try
-    {
-        ConvertJsoncppStringToData(data);
-    }
-    catch (DataObjectException const&)
-    {
+    if (!tryParseJson(data))
         return;
-    }
     BOOST_ERROR("Expected DataObject exception when parsing json!");
 }
 
@@ -148,14 +148,8 @@ BOOST_AUTO_TEST_CASE(dataobject_invalidJson3)
             "name" : {}
         ]
     )";
-    try
-    {
-        ConvertJsoncppStringToData(data);
-    }
-    catch (DataObjectException const&)
-    {
+    if (!tryParseJson(data))
         return;
-    }
     BOOST_ERROR("Expected DataObject exception when parsing json!");
 }
 
@@ -166,14 +160,8 @@ BOOST_AUTO_TEST_CASE(dataobject_invalidJson4)
             "name" : "value" : "attempt another value"
         }
     )";
-    try
-    {
-        ConvertJsoncppStringToData(data);
-    }
-    catch (DataObjectException const&)
-    {
+    if (!tryParseJson(data))
         return;
-    }
     BOOST_ERROR("Expected DataObject exception when parsing json!");
 }
 
@@ -184,14 +172,56 @@ BOOST_AUTO_TEST_CASE(dataobject_invalidJson5)
             "name" : [ "element" ] : "attempt another value"
         }
     )";
-    try
-    {
-        ConvertJsoncppStringToData(data);
-    }
-    catch (DataObjectException const&)
-    {
+    if (!tryParseJson(data))
         return;
-    }
+    BOOST_ERROR("Expected DataObject exception when parsing json!");
+}
+
+BOOST_AUTO_TEST_CASE(dataobject_invalidJson6)
+{
+    string data = R"(
+        {
+            "account" : {
+                "balance" : "0",
+                "code" : ""
+                "nonce" : "0"
+            }
+        }
+    )";
+    if (!tryParseJson(data))
+        return;
+    BOOST_ERROR("Expected DataObject exception when parsing json!");
+}
+
+BOOST_AUTO_TEST_CASE(dataobject_invalidJson7)
+{
+    string data = R"(
+        {
+            "account" : {
+                "balance" : "0",
+                "code" : "",
+                "nonce" : "0
+            }
+        }
+    )";
+    if (!tryParseJson(data))
+        return;
+    BOOST_ERROR("Expected DataObject exception when parsing json!");
+}
+
+BOOST_AUTO_TEST_CASE(dataobject_invalidJson8)
+{
+    string data = R"(
+        {
+            [
+                "a",
+                "b",
+                "c
+            }
+        }
+    )";
+    if (!tryParseJson(data))
+        return;
     BOOST_ERROR("Expected DataObject exception when parsing json!");
 }
 

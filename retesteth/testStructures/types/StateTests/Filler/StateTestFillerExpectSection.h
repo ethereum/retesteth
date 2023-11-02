@@ -31,6 +31,9 @@ struct StateTestFillerExpectSection
     std::set<int> const& getValInd() const {return  m_valInd; }
 
 private:
+    void parseExpectSectionIndexes(spStateTestFillerTransaction const&);
+
+private:
     std::set<int> m_dataInd;
     std::set<int> m_gasInd;
     std::set<int> m_valInd;

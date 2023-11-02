@@ -523,14 +523,11 @@ std::string DataObject::asJson(int level, bool pretty, bool nokey) const
         break;
     case DataType::String:
         printLevel();
-        if (pretty)
+        if (!m_strKey.empty() && !nokey)
         {
-            if (!m_strKey.empty() && !nokey)
+            if(pretty)
                 out << "\"" << m_strKey << "\" : ";
-        }
-        else
-        {
-            if (!m_strKey.empty() && !nokey)
+            else
                 out << "\"" << m_strKey << "\":";
         }
 
@@ -541,6 +538,11 @@ std::string DataObject::asJson(int level, bool pretty, bool nokey) const
                 buffer += "\\n";
             else if (ch == 9)
                 buffer += "\\t";
+            else if (ch == '"')
+            {
+                buffer += "\\";
+                buffer += "\"";
+            }
             else
                 buffer += ch;
         }

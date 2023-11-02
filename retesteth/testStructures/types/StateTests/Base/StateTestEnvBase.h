@@ -28,7 +28,9 @@ struct StateTestEnvBase : GCP_SPointerBase
     VALUE const& currentDifficulty() const { return m_currentDifficulty; }
 
     FH32 const& currentWithdrawalsRoot() const { return m_currentWithdrawalsRoot; }
-    VALUE const& currentExcessDataGas() const { return m_currentExcessDataGas; }
+    VALUE const& currentExcessBlobGas() const { return m_currentExcessBlobGas; }
+    VALUE const& currentBlobGasUsed() const { return m_currentBlobGasUsed; }
+    FH32 const& currentBeaconRoot() const { return m_currentBeaconRoot; }
 
 protected:
     StateTestEnvBase() {}
@@ -54,7 +56,9 @@ protected:
     spFH32 m_currentWithdrawalsRoot;
 
     // 4844
-    spVALUE m_currentExcessDataGas;
+    spVALUE m_currentBlobGasUsed;
+    spVALUE m_currentExcessBlobGas;
+    spFH32 m_currentBeaconRoot;
 };
 
 

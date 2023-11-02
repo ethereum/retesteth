@@ -27,10 +27,11 @@
 #define internal_FOR_EACH_23(what, x, ...) what(x);internal_MY_EXPAND(internal_FOR_EACH_22(what, __VA_ARGS__))
 #define internal_FOR_EACH_24(what, x, ...) what(x);internal_MY_EXPAND(internal_FOR_EACH_23(what, __VA_ARGS__))
 #define internal_FOR_EACH_25(what, x, ...) what(x);internal_MY_EXPAND(internal_FOR_EACH_24(what, __VA_ARGS__))
+#define internal_FOR_EACH_26(what, x, ...) what(x);internal_MY_EXPAND(internal_FOR_EACH_25(what, __VA_ARGS__))
 #define internal_FOR_EACH_NARG(...) internal_FOR_EACH_NARG_(__VA_ARGS__, internal_FOR_EACH_RSEQ_N())
 #define internal_FOR_EACH_NARG_(...) internal_MY_EXPAND(internal_FOR_EACH_ARG_N(__VA_ARGS__))
-#define internal_FOR_EACH_ARG_N(_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,_11,_12,_13,_14,_15,_16,_17,_18,_19,_20,_21,_22,_23,_24,_25, N, ...) N
-#define internal_FOR_EACH_RSEQ_N() 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0
+#define internal_FOR_EACH_ARG_N(_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,_11,_12,_13,_14,_15,_16,_17,_18,_19,_20,_21,_22,_23,_24,_25,_26, N, ...) N
+#define internal_FOR_EACH_RSEQ_N() 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0
 #define internal_MY_CONCATENATE(x,y) x##y
 #define internal_FOR_EACH_(N, what, ...) internal_MY_EXPAND(internal_MY_CONCATENATE(internal_FOR_EACH_, N)(what, __VA_ARGS__))
 #define FOR_EACH(what, ...) internal_FOR_EACH_(internal_FOR_EACH_NARG(__VA_ARGS__), what, __VA_ARGS__)

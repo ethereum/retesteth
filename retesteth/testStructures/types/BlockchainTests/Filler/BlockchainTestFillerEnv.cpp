@@ -145,7 +145,9 @@ void require4844BlockchainHeader(spDataObject const& _data)
             {c_transactionsTrie, {{DataType::String}, jsonField::Optional}},
             {c_transactionsRoot, {{DataType::String}, jsonField::Optional}},
             {c_withdrawalsRoot, {{DataType::String}, jsonField::Required}},
-            {c_excessDataGas, {{DataType::String}, jsonField::Required}},
+            {c_blobGasUsed, {{DataType::String}, jsonField::Required}},
+            {c_excessBlobGas, {{DataType::String}, jsonField::Required}},
+            {c_parentBeaconBlockRoot, {{DataType::String}, jsonField::Required}},
             {c_sha3Uncles, {{DataType::String}, jsonField::Optional}},
             {c_uncleHash, {{DataType::String}, jsonField::Optional}}});
 }
@@ -160,6 +162,10 @@ void convertDecFieldsToHex(spDataObject& _data)
     (*_data).atKeyUnsafe(c_parentHash).performModifier(mod_valueInsertZeroXPrefix);
     if (_data->count(c_baseFeePerGas))
         (*_data).atKeyUnsafe(c_baseFeePerGas).performModifier(mod_valueToCompactEvenHexPrefixed);
+    if (_data->count(c_excessBlobGas))
+        (*_data).atKeyUnsafe(c_excessBlobGas).performModifier(mod_valueToCompactEvenHexPrefixed);
+    if (_data->count(c_blobGasUsed))
+        (*_data).atKeyUnsafe(c_blobGasUsed).performModifier(mod_valueToCompactEvenHexPrefixed);
     (*_data).performModifier(mod_valueToLowerCase);
 }
 
@@ -173,8 +179,14 @@ spDataObject formatRawDataToRPCformat(spDataObject& _data)
     (*out).atKeyPointer("currentTimestamp") = (*_data).atKeyPointerUnsafe(c_timestamp);
     (*out).atKeyPointer("currentGasLimit") = (*_data).atKeyPointerUnsafe(c_gasLimit);
     (*out).atKeyPointer("previousHash") = (*_data).atKeyPointerUnsafe(c_parentHash);
-    if (_data->count("baseFeePerGas"))
+    if (_data->count(c_baseFeePerGas))
         (*out).atKeyPointer("currentBaseFee") = (*_data).atKeyPointerUnsafe(c_baseFeePerGas);
+    if (_data->count(c_excessBlobGas))
+        (*out).atKeyPointer(c_currentExcessBlobGas) = (*_data).atKeyPointerUnsafe(c_excessBlobGas);
+    if (_data->count(c_blobGasUsed))
+        (*out).atKeyPointer(c_currentBlobGasUsed) = (*_data).atKeyPointerUnsafe(c_blobGasUsed);
+    if (_data->count(c_parentBeaconBlockRoot))
+        (*out).atKeyPointer(c_currentBeaconRoot) = (*_data).atKeyPointerUnsafe(c_parentBeaconBlockRoot);
     return out;
 }
 
@@ -192,7 +204,7 @@ void BlockchainTestFillerEnv::initializeCommonFields(spDataObject const& _data, 
     m_currentCoinbase = sFH20(_data->atKey(c_coinbase));
     m_currentGasLimit = sVALUE(_data->atKey(c_gasLimit));
     if (m_currentGasLimit.getCContent() > dev::bigint("0x7fffffffffffffff"))
-        throw test::UpwardsException("currentGasLimit must be < 0x7fffffffffffffff");
+        ETH_WARNING("currentGasLimit must be <= 0x7fffffffffffffff");
     if (_sEngine == SealEngine::NoProof)
     {
         m_currentNonce = spFH8(FH8::zero().copy());
@@ -209,12 +221,16 @@ void BlockchainTestFillerEnv::initializeCommonFields(spDataObject const& _data, 
     auto const& difficulty = m_currentDifficulty->asString();
     m_currentRandom = sFH32(dev::toCompactHexPrefixed(dev::u256(difficulty), 32));
     m_currentWithdrawalsRoot = sFH32(DataObject(C_WITHDRAWALS_EMPTY_ROOT));
-    m_currentExcessDataGas = sVALUE(0);
+    m_currentBlobGasUsed = sVALUE(DataObject("0x00"));
+    m_currentExcessBlobGas = sVALUE(DataObject("0x00"));
+    m_currentBeaconRoot = spFH32(FH32::zero().copy());
 }
 
 void BlockchainTestFillerEnv4844::initialize4844Fields(DataObject const& _data)
 {
-    m_currentExcessDataGas = sVALUE(_data.atKey(c_excessDataGas));
+    m_currentExcessBlobGas = sVALUE(_data.atKey(c_excessBlobGas));
+    m_currentBlobGasUsed = sVALUE(_data.atKey(c_blobGasUsed));
+    m_currentBeaconRoot = sFH32(_data.atKey(c_parentBeaconBlockRoot));
 }
 
 
@@ -339,7 +355,7 @@ BlockchainTestFillerEnv* readBlockchainFillerTestEnv(spDataObjectMove _data, Sea
         {
             if (data->count(c_withdrawalsRoot))
             {
-                if (data->count(c_excessDataGas))
+                if (data->count(c_excessBlobGas))
                     return new BlockchainTestFillerEnv4844(_data, _sEngine);
                 else
                     return new BlockchainTestFillerEnvShanghai(_data, _sEngine);

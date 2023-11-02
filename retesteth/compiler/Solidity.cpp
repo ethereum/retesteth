@@ -432,8 +432,20 @@ solContracts compileSolidity(string const& _code)
     BOOST_ERROR("Solidity compilation only supported on posix systems.");
     return "";
 #else
+    string evmVersion;
+    string const versionComment = "RETESTETH_SOLC_EVM_VERSION=";
+    size_t pos = _code.find(versionComment);
+    if (pos != string::npos)
+    {
+        size_t const endl = _code.find('\n', pos + versionComment.size());
+        if (endl != string::npos)
+        {
+            evmVersion = "--evm-version ";
+            evmVersion += _code.substr(pos + versionComment.size(), endl - pos - versionComment.size());
+        }
+    }
     fs::path const path(fs::temp_directory_path() / fs::unique_path());
-    string const cmd = string("solc --bin-runtime ") + path.string();
+    string const cmd = string("solc " + evmVersion + " --bin-runtime ") + path.string();
     writeFile(path.string(), _code);
     int exitCode;
     string result = executeCmd(cmd, exitCode);
@@ -442,7 +454,7 @@ solContracts compileSolidity(string const& _code)
     string const codeNamePrefix = "=======";
     string const codeBytePrefix = "Binary of the runtime part:";
 
-    size_t pos = result.find(codeNamePrefix);
+    pos = result.find(codeNamePrefix);
     while (pos != string::npos)
     {
         // Contract name ======= /tmp/ad01-b64d-321b-c636:TokenCreator =======

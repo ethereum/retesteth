@@ -37,6 +37,7 @@ struct MineBlocksResult
     }
 
     bool isRejectData() const { return m_isRejectData; }
+    size_t rejectedTxCount() const { return m_rejectedTransactions.size(); }
 
     std::string const& getTrException(FH32 const& _hash) const
     {

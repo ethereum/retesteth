@@ -135,7 +135,11 @@ BOOST_AUTO_TEST_CASE(fill_StateTest_poststate)
     restoreOutput();
     BOOST_CHECK(!res.isEmpty());
     auto const test = GeneralStateTest(res).tests().at(0);
-    BOOST_CHECK(substrCount(strCout.str(), "State Dump") == 5);
+
+    size_t expected = 5;
+    if (Options::getCurrentConfig().checkForkInProgression("Cancun"))
+        expected++;
+    BOOST_CHECK(substrCount(strCout.str(), "State Dump") == expected);
 }
 
 BOOST_AUTO_TEST_CASE(fill_StateTest_statediff)

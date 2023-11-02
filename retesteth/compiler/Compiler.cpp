@@ -70,17 +70,31 @@ string compileLLL(string const& _code)
 bool tryCustomCompiler(string const& _code, string& _compiledCode)
 {
     auto const& compilers = Options::getCurrentConfig().cfgFile().customCompilers();
-    for (auto const& compiler : compilers)
+    for (auto const& [compilerPrefix, compilerScript] : compilers)
     {
-        if (_code.find(compiler.first) != string::npos)
+        if (_code.find(compilerPrefix) != string::npos)
         {
-            size_t const pos = _code.find(compiler.first);
-            char afterPrefix = _code[pos + compiler.first.length()];
+            size_t const pos = _code.find(compilerPrefix);
+            char afterPrefix = _code[pos + compilerPrefix.length()];
             if ((afterPrefix == ' ' || afterPrefix == '\n'))
             {
-                string const customCode = _code.substr(pos + compiler.first.length() + 1);
+                size_t codeStartPos = pos + compilerPrefix.length() + 1;
+                string arg;
+                string nativeArg;
+                if (afterPrefix == ' ')
+                {
+                    auto const argArr = parseArgsFromStringIntoArray(_code, codeStartPos);
+                    for (auto const& el : argArr)
+                    {
+                        if (el == "object" || el == "\"C\"")
+                            nativeArg += el + " "; // Special case for native yul args
+                        else
+                            arg += el + " ";
+                    }
+                }
+                string const customCode = nativeArg + _code.substr(codeStartPos);
                 fs::path path(fs::temp_directory_path() / fs::unique_path());
-                string cmd = compiler.second.string() + " " + path.string();
+                string cmd = compilerScript.string() + " " + path.string() + " " + arg;
                 writeFile(path.string(), customCode);
 
                 int exitCode;
@@ -194,6 +208,9 @@ string replaceCode(string const& _code, solContracts const& _preSolidity)
     bool customCompilerWorked = tryCustomCompiler(_code, compiledCode);
     if (!customCompilerWorked)
         tryKnownCompilers(_code, _preSolidity, compiledCode);
+
+    if (compiledCode == "0x")
+        ETH_WARNING("replaceCode returned empty bytecode `0x` trying to compile " + TestOutputHelper::get().testInfo().errorDebug() +  "\n" + _code);
 
     if (_code.size() > 0)
         ETH_FAIL_REQUIRE_MESSAGE(

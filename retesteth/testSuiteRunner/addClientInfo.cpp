@@ -86,6 +86,7 @@ bool addClientInfoIfUpdate(DataObject& _newFilledTestData, fs::path const& _test
         (*newTestClientInfo)["filling-tool-version"] = test::prepareVersionString();
         (*newTestClientInfo)["lllcversion"] = test::prepareLLLCVersionString();
         (*newTestClientInfo)["solidity"] = test::prepareSolidityVersionString();
+
         (*newTestClientInfo)["source"] = _testSourcePath.string();
         if (newTestClientInfo->count("labels"))
             (*newTestClientInfo).setKeyPos("labels", newTestClientInfo->getSubObjects().size() - 1);

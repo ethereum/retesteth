@@ -11,7 +11,16 @@ if [ -z $solc ]; then
    >&2 echo "yul.sh \"Yul compilation error: 'solc' not found!\""
    echo "0x"
 else
-    out=$(solc --assemble $1 2>&1)
+
+    if [ ! -z $2 ]; then
+        evmversion="--evm-version $2"
+    fi
+    if [ -z $3 ]; then
+        out=$(solc $evmversion --strict-assembly --optimize --yul-optimizations=":" $1 2>&1)
+    else
+        out=$(solc $evmversion --strict-assembly $1 2>&1)
+    fi
+
     a=$(echo "$out" | grep "Binary representation:" -A 1 | tail -n1)
     case "$out" in
     *Error*) >&2 echo "yul.sh \"Yul compilation error: \"\n$out";;
@@ -28,7 +37,7 @@ if [ -z $wevm ]; then
    exit 1
 fi
 
-if [ $1 = "t8n" ] || [ $1 = "b11r" ]; then
+if [ $1 = "eof" ] || [ $1 = "t8n" ] || [ $1 = "b11r" ]; then
     evm $1 $2 $3 $4 $5 $6 $7 $8 $9 $10 $11 $12 $13 $14 $15 $16 $17 $18 $19 $20 $21 $22 $23 $24 $25 $26
 elif [ $1 = "-v" ]; then
     evm -v
@@ -94,7 +103,8 @@ string const t8ntool_config = R"({
         "Berlin",
         "London",
         "Merge",
-        "Shanghai"
+        "Shanghai",
+        "Cancun"
     ],
     "additionalForks" : [
         "FrontierToHomesteadAt5",
@@ -106,13 +116,31 @@ string const t8ntool_config = R"({
         "ArrowGlacier",
         "ArrowGlacierToMergeAtDiffC0000",
         "GrayGlacier",
-        "MergeToShanghaiAtTime15k"
+        "MergeToShanghaiAtTime15k",
+        "ShanghaiToCancunAtTime15k"
     ],
     "fillerSkipForks" : [
     ],
     "exceptions" : {
       "PYSPECS_EXCEPTIONS" : "",
       "Transaction without funds" : "insufficient funds for gas * price + value",
+      "insufficient account balance" : "insufficient funds for gas * price + value",
+      "invalid excess blob gas" : "Error in field: excessBlobGas",
+      "invalid excessBlobGas" : "Error in field: excessBlobGas",
+      "invalid blob gas used" : "Error in field: blobGasUsed",
+      "invalid pre fork blob fields" : "unknown block type!",
+      "blob fields missing post fork" : "unknown block type!",
+      "invalid transaction" : "expected to have exactly 14 elements",
+      "invalid blob versioned hash" : "hash version mismatch",
+      "zero blob tx" : "blob transaction missing blob hashes",
+      "insufficient_account_balance" : "Error importing raw rlp block",
+      "invalid_blob_count" : "Block has invalid number of blobs in txs >=7!",
+      "insufficient max fee per blob gas" : "max fee per blob gas less than block blob gas fee",
+      "insufficient max fee per gas" : "max fee per gas less than block base fee",
+      "invalid max fee per blob gas" : "max fee per blob gas less than block blob gas fee",
+      "too_many_blobs_tx" : "block max blob gas exceeded",
+      "too many blobs" : "Block has invalid number of blobs in txs >=7!",
+      "tx type 3 not allowed pre-Cancun" : "blob tx used but field env.ExcessBlobGas missing",
 
       "AddressTooShort" : "input string too short for common.Address",
       "AddressTooLong" : "rlp: input string too long for common.Address, decoding into (types.Transaction)(types.LegacyTx).To",
@@ -175,6 +203,7 @@ string const t8ntool_config = R"({
       "UncleIsBrother" : "Uncle is brother!",
       "OutOfGas" : "out of gas",
       "SenderNotEOA" : "sender not an eoa:",
+      "SenderNotEOAorNoCASH" : "sender not an eoa:",
       "IntrinsicGas" : "intrinsic gas too low",
       "ExtraDataIncorrectDAO" : "BlockHeader require Dao ExtraData!",
       "InvalidTransactionVRS" : "t8ntool didn't return a transaction with hash",
@@ -280,19 +309,29 @@ string const t8ntool_config = R"({
       "1559BlockImportImpossible_TargetGasHigh": "gasTarget increased too much",
       "1559BlockImportImpossible_InitialGasLimitInvalid": "Invalid block1559: Initial gasLimit must be",
       "MergeBlockImportImpossible" : "Trying to import Merge block on top of Shanghai block after transition",
-      "ShanghaiBlockImportImpossible" : "Shanghai block on top of Merge block before transition",
+      "ShanghaiBlockImportImpossible" : "Trying to import Shanghai block on top of block that is not Shanghai!!",
       "TR_IntrinsicGas" : "intrinsic gas too low:",
+      "TR_RLP_WRONGVALUE" : "insufficient funds for gas",
       "TR_NoFunds" : "insufficient funds for gas * price + value",
+      "TR_NoFundsX" : "insufficient funds for gas * price + value",
       "TR_NoFundsValue" : "insufficient funds for transfer",
+      "TR_NoFundsOrGas" : "insufficient funds for gas * price + value",
       "TR_FeeCapLessThanBlocks" : "max fee per gas less than block base fee",
+      "TR_FeeCapLessThanBlocksORGasLimitReached" : "max fee per gas less than block base fee",
+      "TR_FeeCapLessThanBlocksORNoFunds" : "max fee per gas less than block base fee",
       "TR_GasLimitReached" : "gas limit reached",
       "TR_NonceTooHigh" : "nonce too high",
       "TR_NonceTooLow" : "nonce too low",
       "TR_TypeNotSupported" : "transaction type not supported",
+      "TR_TypeNotSupportedBlob" : "blob tx used but field env.ExcessBlobGas missing",
       "TR_TipGtFeeCap": "max priority fee per gas higher than max fee per gas",
       "TR_TooShort": "typed transaction too short",
       "TR_InitCodeLimitExceeded" : "max initcode size exceeded",
-      "TR_BlobDecodeError" : "expected input list for types.BlobTx",
+      "TR_BlobDecodeError" : "expected List",
+      "TR_EMPTYBLOB" : "blob transaction missing blob hashes",
+      "TR_BLOBCREATE" : "rlp: input string too short for common.Address",
+      "TR_BLOBVERSION_INVALID" : "hash version mismatch",
+      "TR_BLOBLIST_OVERSIZE" : "would exceed maximum allowance",
       "1559BaseFeeTooLarge": "TransactionBaseFee convertion error: VALUE  >u256",
       "1559PriorityFeeGreaterThanBaseFee": "maxFeePerGas \u003c maxPriorityFeePerGas",
       "2930AccessListAddressTooLong": "rlp: input string too long for common.Address, decoding into (types.Transaction)(types.AccessListTx).AccessList[0].Address",
@@ -304,8 +343,8 @@ string const t8ntool_config = R"({
       "3675PoWBlockRejected" : "Invalid block1559: Chain switched to PoS!",
       "3675PoSBlockRejected" : "Parent (transition) block has not reached TTD",
       "3675PreMerge1559BlockRejected" : "Trying to import 1559 block on top of PoS block",
-      "INPUT_UNMARSHAL_ERROR" : "cannot unmarshal hex",
-      "INPUT_UNMARSHAL_SIZE_ERROR" : "failed unmarshaling",
+      "INPUT_UNMARSHAL_ERROR" : "field >= 2**64",
+      "INPUT_UNMARSHAL_ADDRESS_ERROR" : "not a valid address!",
       "RLP_BODY_UNMARSHAL_ERROR" : "Rlp structure is wrong",
       "PostMergeUncleHashIsNotEmpty" : "block.uncleHash != empty",
       "PostMergeDifficultyIsNot0" : "block.difficulty must be 0"
@@ -349,17 +388,52 @@ TESTCA=$3
 OUTPUT=$4
 EVMT8N=$5
 FORCER=$6
+DEBUG=$7
+FROMF=$8
+UNTIF=$9
+
+mkdir "./tests/tmp"
+genUID=$(uuidgen)
+testdir="./tests/tmp/tmptest_${genUID//-/_}"
+testout="./tests/tmp/out_${genUID//-/_}"
+
+if [ -d $testdir ]; then
+    rm -r $testdir
+fi
+mkdir $testdir
+
+parentpath=$(dirname "$SRCPATH")
+cp -r $parentpath/* $testdir
+cp $SRCPATH $testdir/$FILLER.py
+SRCPATH2="$testdir/$FILLER.py"
 
 ADDFLAGS=""
 if [ "$TESTCA" != "null" ]; then
-    ADDFLAGS="$ADDFLAGS --test-case $TESTCA"
+    SRCPATH2="$SRCPATH2::$TESTCA"
 fi
 if [ "$FORCER" != "null" ]; then
-    ADDFLAGS="$ADDFLAGS --force-refill"
+    ADDFLAGS="$ADDFLAGS"
 fi
 
-tf --filler-path $SRCPATH --output $OUTPUT --test-module $FILLER $ADDFLAGS --no-output-structure --evm-bin $EVMT8N
-
+if [ -d $testout ]; then
+    rm -r $testout
+fi
+mkdir $testout
+1>&2 echo "fill -v $SRCPATH2 --output "$testout" $ADDFLAGS --evm-bin $EVMT8N --flat-output --from=$FROMF --until=$UNTIF"
+if [ $DEBUG != "null" ]; then
+    1>&2 fill -v $SRCPATH2 --output "$testout" $ADDFLAGS --evm-bin $EVMT8N --flat-output --from=$FROMF --until=$UNTIF
+else
+    out=$(fill -v $SRCPATH2 --output "$testout" $ADDFLAGS --evm-bin $EVMT8N --flat-output --from=$FROMF --until=$UNTIF 2>&1)
+    if [[ "$out" == *" failed"* ]] || [[ "$out" == *"ERROR"* ]]; then
+      1>&2 echo "./retesteth/pyspecsStart.sh Pyspec test generation failed (use --verbosity PYSPEC for details) "
+      exit 1
+    fi
+fi
+cp -r $testout/* $OUTPUT
+rm -r $testout
+rm -r $testdir
+rm -r "./tests/tmp"
+exit 0
 )";
 
     {

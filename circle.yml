@@ -44,8 +44,8 @@ defaults:
       name: "LinuxInstallGO and Tests"
       working_directory: ~/project
       command: |
-          curl -L --output go1.19.linux-amd64.tar.gz "https://dl.google.com/go/go1.19.linux-amd64.tar.gz"
-          tar -xf go1.19.linux-amd64.tar.gz
+          curl -L --output go1.20.linux-amd64.tar.gz "https://dl.google.com/go/go1.20.linux-amd64.tar.gz"
+          tar -xf go1.20.linux-amd64.tar.gz
           sudo mv go /usr/local
           sudo ln -s /usr/local/go/bin/go /usr/local/bin/go
           git clone --depth 1 https://github.com/ethereum/go-ethereum.git
@@ -165,9 +165,9 @@ defaults:
             git clone --depth 1 https://github.com/ethereum/go-ethereum.git
             git clone --depth 1 https://github.com/ethereum/tests.git
 
-            curl -L https://go.dev/dl/go1.19.1.darwin-amd64.pkg -o go1.19.pkg
-            chmod +x go1.19.pkg
-            sudo installer -pkg go1.19.pkg -target /
+            curl -L https://go.dev/dl/go1.20.1.darwin-amd64.pkg -o go1.20.pkg
+            chmod +x go1.20.pkg
+            sudo installer -pkg go1.20.pkg -target /
             sudo ln -s /usr/local/go/bin/go /usr/local/bin
 
             cd go-ethereum
@@ -238,7 +238,7 @@ jobs:
       - BUILD_PARALLEL_JOBS: 4
       - TEST_PARALLEL_JOBS: 4
     macos:
-      xcode: "14.0.1"
+      xcode: "14.2.0"
     steps: *mac-steps
 
 # TODO: Run GCC6 build only in develop branch.

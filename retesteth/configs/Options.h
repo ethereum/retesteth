@@ -18,15 +18,19 @@ extern std::string const t8ntool_start;
     ConstantinopleCfg, ConstantinopleFixCfg, IstanbulCfg, BerlinCfg, LondonCfg, MergeCfg, \
     ShanghaiCfg, CancunCfg, \
     ArrowGlacierCfg, GrayGlacierCfg, ArrowGlacierToMergeAtDiffC0000Cfg, MergeToShanghaiAtTime15kCfg, \
+    ShanghaiToCancunAtTime15kCfg, \
     FrontierToHomesteadCfg, HomesteadToDaoCfg, HomesteadToEIP150Cfg, EIP158ToByzantiumCfg, \
     ByzantiumToConstantinopleFixCfg, BerlinToLondonCfg )
 
 #define DECLARE_ETC(X) \
   FOR_EACH(X, etccfg, RewardsCfgETC, AtlantisCfgETC, AghartaCfgETC, PhoenixCfgETC, MagnetoCfgETC, \
-    MystiqueCfgETC)
+    MystiqueCfgETC, Mystique2CfgETC, Mystique3CfgETC)
 
 #define DECLARE_NIMBUS(X) \
   FOR_EACH(X, nimbuscfg, RewardsCfgNIMBUS, MergeCfgNIMBUS)
+
+#define DECLARE_PYT8N(X) \
+  FOR_EACH(X, pyt8ncfg, RewardsCfgPYT8N, ConstantinopleFixCfgPYT8N)
 
 #define DECLARE_ETCTR(X) \
   FOR_EACH(X, etctranslatecfg, RewardsCfgETCTR, ByzantiumCfgETCTR, ConstantinopleCfgETCTR, ConstantinopleFixCfgETCTR, \
@@ -63,6 +67,7 @@ DECLARE_ETCTR(REGISTER)
 DECLARE_OEWRAP(REGISTER)
 DECLARE_ETHJS(REGISTER)
 DECLARE_NIMBUS(REGISTER)
+DECLARE_PYT8N(REGISTER)
 
 // Example configs
 DECLARE_T8NTOOL_EIP(REGISTER)
@@ -82,6 +87,7 @@ public:
         DECLARE_OEWRAP(INIT)
         DECLARE_ETHJS(INIT)
         DECLARE_NIMBUS(INIT)
+        DECLARE_PYT8N(INIT)
 
         DECLARE_T8NTOOL_EIP(INIT)
         DECLARE_ALETH(INIT)

@@ -47,7 +47,15 @@ BLOCKCHAINSUITE_FOLDER_OVERRIDE(BCGeneralStateTestsShanghaiSuite, "/GeneralState
 BLOCKCHAINSUITE_FOLDER_OVERRIDE(BlockchainTestTransitionSuite, "/TransitionTests", "/BlockchainTestsFiller/TransitionTests")
 BLOCKCHAINSUITE_FOLDER_OVERRIDE(BlockchainTestInvalidSuite, "/InvalidBlocks", "/BlockchainTestsFiller/InvalidBlocks")
 BLOCKCHAINSUITE_FOLDER_OVERRIDE(BlockchainTestValidSuite, "/ValidBlocks", "/BlockchainTestsFiller/ValidBlocks")
-BLOCKCHAINSUITE_FOLDER_OVERRIDE(BlockchainTestPyspecSuite, "/Pyspecs", "/BlockchainTestsFiller/Pyspecs")
+
+BLOCKCHAINSUITE_FOLDER_OVERRIDE(BlockchainTestPyspecSuite, "/Pyspecs", "/BlockchainTestsFiller/Pyspecs/")
+BLOCKCHAINSUITE_FOLDER_OVERRIDE(BlockchainTestPyspecSuite_frontier, "/Pyspecs/frontier", "/BlockchainTestsFiller/Pyspecs/frontier")
+BLOCKCHAINSUITE_FOLDER_OVERRIDE(BlockchainTestPyspecSuite_homestead, "/Pyspecs/homestead", "/BlockchainTestsFiller/Pyspecs/homestead")
+BLOCKCHAINSUITE_FOLDER_OVERRIDE(BlockchainTestPyspecSuite_istanbul, "/Pyspecs/istanbul", "/BlockchainTestsFiller/Pyspecs/istanbul")
+BLOCKCHAINSUITE_FOLDER_OVERRIDE(BlockchainTestPyspecSuite_berlin, "/Pyspecs/berlin", "/BlockchainTestsFiller/Pyspecs/berlin")
+BLOCKCHAINSUITE_FOLDER_OVERRIDE(BlockchainTestPyspecSuite_merge, "/Pyspecs/merge", "/BlockchainTestsFiller/Pyspecs/merge")
+BLOCKCHAINSUITE_FOLDER_OVERRIDE(BlockchainTestPyspecSuite_shanghai, "/Pyspecs/shanghai", "/BlockchainTestsFiller/Pyspecs/shanghai")
+BLOCKCHAINSUITE_FOLDER_OVERRIDE(BlockchainTestPyspecSuite_cancun, "/Pyspecs/cancun", "/BlockchainTestsFiller/Pyspecs/cancun")
 
 
 #define LEGACY_BLOCKCHAINSUITE_FOLDER_OVERRIDE(SUITE, FOLDER, FILLER)   \
@@ -96,8 +104,36 @@ BLOCKCHAINSUITE_DOTESTS_OVERRIDE(LegacyConstantinopleBCGeneralStateTestsSuite, _
 BOOST_AUTO_TEST_SUITE(BlockchainTests)
 
 using BCPyspecSuiteFixture = TestFixture<BlockchainTestPyspecSuite, DefaultFlags>;
-ETH_REGISTER_DYNAMIC_TEST_SEARCH(BCPyspecSuiteFixture, "BlockchainTests/Pyspecs")
+//ETH_REGISTER_DYNAMIC_TEST_SEARCH(BCPyspecSuiteFixture, "BlockchainTests/Pyspecs")
 BOOST_FIXTURE_TEST_SUITE(Pyspecs, BCPyspecSuiteFixture)
+    using BCPyspecSuiteFixture_frontier = TestFixture<BlockchainTestPyspecSuite_frontier, DefaultFlags>;
+    ETH_REGISTER_DYNAMIC_TEST_SEARCH(BCPyspecSuiteFixture_frontier, "BlockchainTests/Pyspecs/frontier")
+    BOOST_FIXTURE_TEST_SUITE(frontier, BCPyspecSuiteFixture_frontier)
+    BOOST_AUTO_TEST_SUITE_END()
+    using BCPyspecSuiteFixture_homestead = TestFixture<BlockchainTestPyspecSuite_homestead, DefaultFlags>;
+    ETH_REGISTER_DYNAMIC_TEST_SEARCH(BCPyspecSuiteFixture_homestead, "BlockchainTests/Pyspecs/homestead")
+    BOOST_FIXTURE_TEST_SUITE(homestead, BCPyspecSuiteFixture_homestead)
+    BOOST_AUTO_TEST_SUITE_END()
+    using BCPyspecSuiteFixture_istanbul = TestFixture<BlockchainTestPyspecSuite_istanbul, DefaultFlags>;
+    ETH_REGISTER_DYNAMIC_TEST_SEARCH(BCPyspecSuiteFixture_istanbul, "BlockchainTests/Pyspecs/istanbul")
+    BOOST_FIXTURE_TEST_SUITE(istanbul, BCPyspecSuiteFixture_istanbul)
+    BOOST_AUTO_TEST_SUITE_END()
+    using BCPyspecSuiteFixture_berlin = TestFixture<BlockchainTestPyspecSuite_berlin, DefaultFlags>;
+    ETH_REGISTER_DYNAMIC_TEST_SEARCH(BCPyspecSuiteFixture_berlin, "BlockchainTests/Pyspecs/berlin")
+    BOOST_FIXTURE_TEST_SUITE(berlin, BCPyspecSuiteFixture_berlin)
+    BOOST_AUTO_TEST_SUITE_END()
+    using BCPyspecSuiteFixture_merge = TestFixture<BlockchainTestPyspecSuite_merge, DefaultFlags>;
+    ETH_REGISTER_DYNAMIC_TEST_SEARCH(BCPyspecSuiteFixture_merge, "BlockchainTests/Pyspecs/merge")
+    BOOST_FIXTURE_TEST_SUITE(merge, BCPyspecSuiteFixture_merge)
+    BOOST_AUTO_TEST_SUITE_END()
+    using BCPyspecSuiteFixture_shanghai = TestFixture<BlockchainTestPyspecSuite_shanghai, DefaultFlags>;
+    ETH_REGISTER_DYNAMIC_TEST_SEARCH(BCPyspecSuiteFixture_shanghai, "BlockchainTests/Pyspecs/shanghai")
+    BOOST_FIXTURE_TEST_SUITE(shanghai, BCPyspecSuiteFixture_shanghai)
+    BOOST_AUTO_TEST_SUITE_END()
+    using BCPyspecSuiteFixture_cancun = TestFixture<BlockchainTestPyspecSuite_cancun, DefaultFlags>;
+    ETH_REGISTER_DYNAMIC_TEST_SEARCH(BCPyspecSuiteFixture_cancun, "BlockchainTests/Pyspecs/cancun")
+    BOOST_FIXTURE_TEST_SUITE(cancun, BCPyspecSuiteFixture_cancun)
+    BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END() // Pyspecs
 
 

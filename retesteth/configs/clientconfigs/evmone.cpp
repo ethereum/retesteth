@@ -38,23 +38,28 @@ string const evmone_config = R"({
         "Berlin",
         "London",
         "Merge",
-        "Shanghai"
+        "Shanghai",
+        "Cancun"
     ],
     "additionalForks" : [
         "FrontierToHomesteadAt5",
         "HomesteadToEIP150At5",
         "EIP158ToByzantiumAt5",
-        "HomesteadToDaoAt5",
         "ByzantiumToConstantinopleFixAt5",
         "BerlinToLondonAt5",
         "ArrowGlacier",
         "ArrowGlacierToMergeAtDiffC0000",
         "GrayGlacier",
-        "MergeToShanghaiAtTime15k"
+        "MergeToShanghaiAtTime15k",
+        "ShanghaiToCancunAtTime15k"
     ],
     "fillerSkipForks" : [
+        "HomesteadToDaoAt5"
     ],
     "exceptions" : {
+      "PYSPECS_EXCEPTIONS" : "",
+      "Transaction without funds" : "insufficient funds for gas * price + value",
+
       "AddressTooShort" : "input string too short for common.Address",
       "AddressTooLong" : "rlp: input string too long for common.Address, decoding into (types.Transaction)(types.LegacyTx).To",
       "NonceMax" : "nonce exceeds 2^64-1",
@@ -116,7 +121,8 @@ string const evmone_config = R"({
       "UncleIsBrother" : "Uncle is brother!",
       "OutOfGas" : "out of gas",
       "SenderNotEOA" : "sender not an eoa:",
-      "IntrinsicGas" : "t8ntool didn't return a transaction with hash",
+      "SenderNotEOAorNoCASH" : "sender not an eoa:",
+      "IntrinsicGas" : "intrinsic gas too low:",
       "ExtraDataIncorrectDAO" : "BlockHeader require Dao ExtraData!",
       "InvalidTransactionVRS" : "t8ntool didn't return a transaction with hash",
       "BLOCKHEADER_VALUE_TOOLARGE" : "Blockheader parse error: VALUE  >u256",
@@ -221,12 +227,16 @@ string const evmone_config = R"({
       "1559BlockImportImpossible_TargetGasHigh": "gasTarget increased too much",
       "1559BlockImportImpossible_InitialGasLimitInvalid": "Invalid block1559: Initial gasLimit must be",
       "MergeBlockImportImpossible" : "Trying to import Merge block on top of Shanghai block after transition",
-      "ShanghaiBlockImportImpossible" : "Shanghai block on top of Merge block before transition",
+      "ShanghaiBlockImportImpossible" : "Trying to import Shanghai block on top of block that is not Shanghai!!",
       "TR_IntrinsicGas" : "intrinsic gas too low:",
       "TR_NoFunds" : "insufficient funds for gas * price + value",
+      "TR_NoFundsX" : "insufficient funds for gas * price + value",
       "TR_NoFundsValue" : "insufficient funds for transfer",
+      "TR_NoFundsOrGas" : "insufficient funds for gas * price + value",
       "TR_FeeCapLessThanBlocks" : "max fee per gas less than block base fee",
       "TR_GasLimitReached" : "gas limit reached",
+      "TR_FeeCapLessThanBlocksORGasLimitReached" : "gas limit reached",
+      "TR_FeeCapLessThanBlocksORNoFunds" : "max fee per gas less than block base fee",
       "TR_NonceTooHigh" : "nonce too high",
       "TR_NonceTooLow" : "nonce too low",
       "TR_TypeNotSupported" : "transaction type not supported",
@@ -265,7 +275,9 @@ string const evmone_config = R"({
       "EOF_UndefinedInstruction": "err: undefined_instruction",
       "EOF_ZeroSectionSize": "err: zero_section_size",
       "EOF_NonEmptyStackOnTerminatingInstruction": "err: non_empty_stack_on_terminating_instruction",
-      "EOF_InvalidSectionBodiesSize": "err: invalid_section_bodies_size"
+      "EOF_InvalidSectionBodiesSize": "err: invalid_section_bodies_size",
+      "PostMergeUncleHashIsNotEmpty" : "block.uncleHash != empty",
+      "PostMergeDifficultyIsNot0" : "block.difficulty must be 0"
     }
 })";
 
@@ -277,7 +289,7 @@ if [ -z $wevm ]; then
    exit 1
 fi
 
-if [ $1 = "t8n" ] || [ $1 = "b11r" ]; then
+if [ $1 = "eof" ] || [ $1 = "t8n" ] || [ $1 = "b11r" ]; then
     evmone $1 $2 $3 $4 $5 $6 $7 $8 $9 $10 $11 $12 $13 $14 $15 $16 $17 $18 $19 $20 $21 $22 $23 $24 $25 $26
 elif [ $1 = "-v" ]; then
     evmone -v
@@ -302,7 +314,11 @@ else
         cmdArgs=$cmdArgs" "$index
     done
     if [ $stateProvided -eq 1 ]; then
-        evmone $cmdArgs --verbosity 2 2> $errorLogFile
+        if [ -z $errorLogFile ]; then
+            evmone $cmdArgs --verbosity 2
+        else
+            evmone $cmdArgs --verbosity 2 2> $errorLogFile
+        fi
     else
         evmone t9n $cmdArgs 2> $errorLogFile
     fi

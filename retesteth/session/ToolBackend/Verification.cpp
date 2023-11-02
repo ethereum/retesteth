@@ -216,7 +216,7 @@ void verifyShanghaiParent(spBlockHeader const& _header, spBlockHeader const& _pa
                 throw test::UpwardsException("Trying to import Shanghai block on top of Merge block before transition!!");
         }
         else
-            throw test::UpwardsException("Trying to import Shanghai block on top of Merge block before transition!!");
+            throw test::UpwardsException("Trying to import Shanghai block on top of block that is not Shanghai!!");
     }
 }
 
@@ -233,7 +233,7 @@ void verify4844Parent(spBlockHeader const& _header, spBlockHeader const& _parent
                 throw test::UpwardsException("Trying to import Cancun block on top of Shanghai block before transition!!");
         }
         else
-            throw test::UpwardsException("Trying to import Cancun block on top of Shanghai block before transition!!");
+            throw test::UpwardsException("Trying to import Cancun block on top of block that is not Cancun!!");
     }
 }
 
@@ -279,8 +279,8 @@ void verifyCommonBlock(spBlockHeader const& _header, ToolChain const& _chain)
         throw test::UpwardsException("BlockHeader require Dao ExtraData! (0x64616f2d686172642d666f726b)");
 
     // Check gasLimit
-    //if (header.gasLimit() > dev::bigint("0x7fffffffffffffff"))
-    //    throw test::UpwardsException("Header gasLimit > 0x7fffffffffffffff");
+    if (header.gasLimit() > dev::bigint("0x7fffffffffffffff"))
+        throw test::UpwardsException("Header gasLimit > 0x7fffffffffffffff");
 
     check_gasUsed(header, "verifyCommonBlock: ");
 }
@@ -403,7 +403,14 @@ void verifyWithdrawalsRLP(dev::RLP const& _rlp)
 void verifyWithdrawalRecord(spWithdrawal const& _wtRecord)
 {
     if (_wtRecord->index.getCContent() >= POW2_64)
-        throw test::UpwardsException("Withdrawals Index >= 2**64");
+        throw test::UpwardsException("Withdrawals Index field >= 2**64");
+    if (_wtRecord->amount.getCContent() >= POW2_64)
+        throw test::UpwardsException("Withdrawals Amount field >= 2**64");
+    if (_wtRecord->validatorIndex.getCContent() >= POW2_64)
+        throw test::UpwardsException("Withdrawals validatorIndex field >= 2**64");
+    auto const& address = _wtRecord->address.getCContent().asString();
+    if (address.find("bigint") != string::npos)
+        throw test::UpwardsException("Withdrawals address field is not a valid address! " + address);
 }
 
 }  // namespace toolimpl

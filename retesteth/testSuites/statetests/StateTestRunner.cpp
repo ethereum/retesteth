@@ -111,8 +111,8 @@ void StateTestRunner::performTransactionOnResult(TransactionInGeneralSection& _t
     FH32 const& remoteStateHash = blockInfo.header()->stateRoot();
 
     performVMTrace(_tr, remoteStateHash, _network);
-    performPostState(_tr, _network);
-    performStateDiff();
+    performPostState(_tr, _network, blockInfo);
+    performStateDiff(_tr, _network);
 
     if (remoteStateHash != expectedPostHash)
     {
@@ -137,13 +137,14 @@ void StateTestRunner::performVMTrace(TransactionInGeneralSection& _tr, FH32 cons
     }
 }
 
-void StateTestRunner::performPostState(TransactionInGeneralSection& _tr, FORK const& _network)
+void StateTestRunner::performPostState(TransactionInGeneralSection& _tr, FORK const& _network, EthGetBlockBy const& _block)
 {
     if (Options::get().poststate)
     {
         auto const remStateJson = getRemoteState(m_session)->asDataObject()->asJson();
         ETH_DC_MESSAGE(DC::STATE,
             "\nRunning test State Dump:" + TestOutputHelper::get().testInfo().errorDebug() + cDefault + " \n" + remStateJson);
+        ETH_DC_MESSAGE(DC::STATE, "Reported root: " + _block.header()->stateRoot().asString());
         if (!Options::get().poststate.outpath.empty())
         {
             string const testNameOut = makeFilename(_tr, _network);
@@ -169,13 +170,47 @@ std::string StateTestRunner::makeFilename(TransactionInGeneralSection& _tr, FORK
     return testNameOut;
 }
 
-void StateTestRunner::performStateDiff()
+void StateTestRunner::performStateDiff(TransactionInGeneralSection const& _tr, FORK const& _network)
 {
-    if (Options::get().statediff)
+    auto const& opt = Options::get();
+    if (opt.statediff)
     {
-        auto const stateDiffJson = stateDiff(m_test.Pre(), getRemoteState(m_session))->asJson();
-        ETH_DC_MESSAGE(DC::STATE,
-            "\nRunning test State Diff:" + TestOutputHelper::get().testInfo().errorDebug() + cDefault + " \n" + stateDiffJson);
+        if (opt.statediff.isForkSelected)
+        {
+            string const resKey = "d" + _tr.dataIndS() +
+                                  "g" + _tr.gasIndS() +
+                                  "v" + _tr.valueIndS();
+            if (!m_trpostresults.count(resKey))
+            {
+                TrPostResults res {spState(nullptr), spState(nullptr)};
+                m_trpostresults.emplace(resKey, res);
+            }
+
+            TrPostResults& results = m_trpostresults.at(resKey);
+            auto& statediffA = std::get<0>(results);
+            auto& statediffB = std::get<1>(results);
+
+            if (opt.statediff.firstFork == _network.asString() && statediffA.isEmpty())
+                statediffA = getRemoteState(m_session);
+            if (opt.statediff.seconFork == _network.asString() && statediffB.isEmpty())
+                statediffB = getRemoteState(m_session);
+
+            if (!statediffA.isEmpty() && !statediffB.isEmpty())
+            {
+                auto const stateDiffJson = stateDiff(statediffA, statediffB)->asJson();
+                ETH_DC_MESSAGE(DC::STATE,
+                    "\nRunning test State Diff (" + opt.statediff.firstFork + " to " + opt.statediff.seconFork + "):" +
+                    TestOutputHelper::get().testInfo().errorDebug() + cDefault + " \n" + stateDiffJson);
+                statediffA.null();
+                statediffB.null();
+            }
+        }
+        else
+        {
+            auto const stateDiffJson = stateDiff(m_test.Pre(), getRemoteState(m_session))->asJson();
+            ETH_DC_MESSAGE(DC::STATE,
+                "\nRunning test State Diff:" + TestOutputHelper::get().testInfo().errorDebug() + cDefault + " \n" + stateDiffJson);
+        }
     }
 }
 

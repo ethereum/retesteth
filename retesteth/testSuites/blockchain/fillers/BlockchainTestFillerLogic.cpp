@@ -54,12 +54,9 @@ spDataObject FillTest(BlockchainTestInFiller const& _test, TestSuite::TestSuiteO
 
                     // Generate a test block from filler block section
                     // Asks remote client to generate all the uncles and hashes for it
-                    testchain.parseBlockFromFiller(block, _test.hasUnclesInTest());
-
-                    // If block is not disabled for testing purposes
-                    // Get the json output of a constructed block for the test (includes rlp)
-                    if (!testchain.getLastBlock().isDoNotExport())
-                        (*filledTest)["blocks"].addArrayObject(testchain.getLastBlock().asDataObject());
+                    std::vector<spDataObject> constructedBlocks = testchain.parseBlockFromFiller(block, _test.hasUnclesInTest());
+                    for (auto const& blockJson : constructedBlocks)
+                        (*filledTest)["blocks"].addArrayObject(blockJson);
                 }
 
                 // Import blocks that have been rewinded with the chain switch

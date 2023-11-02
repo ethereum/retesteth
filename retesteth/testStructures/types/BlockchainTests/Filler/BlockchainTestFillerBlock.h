@@ -16,6 +16,7 @@ namespace teststruct
 struct BlockchainTestFillerBlock : GCP_SPointerBase
 {
     BlockchainTestFillerBlock(spDataObject&, NonceMap&);
+    BlockchainTestFillerBlock(BlockchainTestFillerBlock const& _other, bool _managed);
 
     // Block can be represented as raw RLP without any of other fields
     // other then BlockHeader with expected exceptions
@@ -76,6 +77,14 @@ struct BlockchainTestFillerBlock : GCP_SPointerBase
     }
 
     bool isDoNotImportOnClient() const { return m_doNotImportOnClient; }
+    bool isDoNotStackValidTrxs() const { return m_doNotStackValidTrxs; }
+
+// Managed block logic
+public:
+    std::map<FORK, std::string> const& getExpectExceptions() const { return m_expectExceptions; }
+    std::map<FORK, spBlockHeaderOverwrite> const& getHeaderOverwriteMap() const { return m_overwriteHeaderByForkMap; }
+    void addTransaction(BlockchainTestFillerTransaction const& _tr) { m_transactions.emplace_back(_tr); }
+    void addException(FORK const& _net, std::string const& _ex);
 
 private:
     BlockchainTestFillerBlock() {}
@@ -85,6 +94,7 @@ private:
     spFORK m_network;
     bool m_hasBigInt = false;
     bool m_doNotImportOnClient = false;
+    bool m_doNotStackValidTrxs = false;
 
     std::vector<BlockchainTestFillerUncle> m_uncles;
     std::vector<BlockchainTestFillerTransaction> m_transactions;

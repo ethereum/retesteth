@@ -145,7 +145,9 @@ void require4844BlockchainHeader(DataObject const& _data)
             {c_transactionsTrie, {{DataType::String}, jsonField::Optional}},
             {c_transactionsRoot, {{DataType::String}, jsonField::Optional}},
             {c_withdrawalsRoot, {{DataType::String}, jsonField::Required}},
-            {c_excessDataGas, {{DataType::String}, jsonField::Required}},
+            {c_blobGasUsed, {{DataType::String}, jsonField::Required}},
+            {c_excessBlobGas, {{DataType::String}, jsonField::Required}},
+            {c_parentBeaconBlockRoot, {{DataType::String}, jsonField::Required}},
             {c_sha3Uncles, {{DataType::String}, jsonField::Optional}},
             {c_uncleHash, {{DataType::String}, jsonField::Optional}}});
 }
@@ -157,7 +159,9 @@ namespace test::teststruct
 
 void BlockchainTestEnv4844::initialize4844Fields(DataObject const& _data)
 {
-    m_currentExcessDataGas = sVALUE(_data.atKey(c_excessDataGas));
+    m_currentExcessBlobGas = sVALUE(_data.atKey(c_excessBlobGas));
+    m_currentBlobGasUsed = sVALUE(_data.atKey(c_blobGasUsed));
+    m_currentBeaconRoot = sFH32(_data.atKey(c_parentBeaconBlockRoot));
 }
 
 void BlockchainTestEnvShanghai::initializeShanghaiFields(DataObject const& _data)

@@ -7,6 +7,7 @@
 #include <retesteth/testStructures/PrepareChainParams.h>
 #include <retesteth/testSuites/Common.h>
 #include <retesteth/testSuites/blockchain/fillers/TestBlockchainManager.h>
+#include <retesteth/helpers/TestHelper.h>
 
 using namespace std;
 using namespace test;
@@ -73,9 +74,14 @@ void BlockchainTestRunner::validateTransactionSequence(BlockchainTestBlock const
             m_session.test_modifyTimestamp(_tblock.header()->timestamp());
         }
         else
-            ETH_WARNING(
-                "Skipping invalid transaction exception check in reorg block! (calling rewind not good when running the test, "
-                "use filltests instead)");
+        {
+            if (!Options::get().filltests)
+            {
+                ETH_WARNING(
+                    "Skipping invalid transaction exception check in reorg block! "
+                    "(calling rewind not good when running the test, use filltests instead)");
+            }
+        }
     }
     for (auto const& el : _tblock.transactionSequence())
     {
@@ -190,6 +196,7 @@ void BlockchainTestRunner::validateBlockHeader(BlockchainTestBlock const& _tbloc
     // string const jsonHeader = inTestHeader.type() == DataType::Null ?
     //                              bdata.atKey("blockHeader").asJson() :
     //                              "(adjusted)" + inTestHeader.asJson();
+
     string message;
     if (!condition)
     {
@@ -199,6 +206,7 @@ void BlockchainTestRunner::validateBlockHeader(BlockchainTestBlock const& _tbloc
     }
     ETH_ERROR_REQUIRE_MESSAGE(
         condition, "Client report different blockheader after importing the rlp than expected by test! \n" + message);
+
 }
 
 void BlockchainTestRunner::validateUncles(BlockchainTestBlock const& _tblock, EthGetBlockBy const& _latestBlock)
@@ -336,9 +344,16 @@ void BlockchainTestRunner::performFinalStateDiff()
     auto const& statediff = Options::get().statediff;
     if (statediff.initialized() && !statediff.isBlockSelected)
     {
-        auto const diff = test::stateDiff(m_test.Pre(), getRemoteState(m_session))->asJson();
-        ETH_DC_MESSAGE(DC::STATE,
-            "\nRunning BC test State Diff:" + TestOutputHelper::get().testInfo().errorDebug() + cDefault + " \n" + diff);
+        try
+        {
+            auto const diff = test::stateDiff(m_test.Pre(), getRemoteState(m_session))->asJson();
+            ETH_DC_MESSAGE(DC::STATE,
+                "\nRunning BC test State Diff:" + TestOutputHelper::get().testInfo().errorDebug() + cDefault + " \n" + diff);
+        }
+        catch (StateTooBig const& _ex)
+        {
+            ETH_WARNING("Could not print --statediff as the state reported is too big!");
+        }
     }
 }
 
@@ -355,4 +370,99 @@ BlockchainTestRunner::~BlockchainTestRunner()
 {
     if (m_triedStateDiff)
         showWarningIfStatediffNotFound(m_stateDiffStateA, m_stateDiffStateB);
+}
+
+void _compareRLPvsRLPDecodedHeaders(DataObject const& _rlpHeader, DataObject const& _rlpDecodedHeader)
+{
+    bool condition = _rlpHeader.asJson(0, false) == _rlpDecodedHeader.asJson(0, false);
+    string message;
+    if (!condition)
+    {
+        string errField;
+        message = "invalid block rlp HEADER vs rlp_decoded HEADER: \n";
+        message += compareBlockHeaders(_rlpHeader, _rlpDecodedHeader, errField);
+    }
+    ETH_ERROR_REQUIRE_MESSAGE(
+        condition, "Test's invalid block RLP has different blockheader compared to decoded_rlp header! \n" + message);
+
+}
+
+void _validateRlpDecodedInInvalidBlocks(teststruct::BlockchainTestBlock const& _tBlock)
+{
+    dev::bytes const decodeRLP = sfromHex(_tBlock.rlp().asString());
+    dev::RLP const rlp(decodeRLP, dev::RLP::VeryStrict);
+
+    // RLP header vs rlp_decoded HEADER
+    spBlockHeader blockH = readBlockHeader(rlp[0]);
+    _compareRLPvsRLPDecodedHeaders(blockH->asDataObject(), _tBlock.header()->asDataObject());
+
+    // RLP txs vs rlp_decoded txs
+    if (rlp[1].toList().size() != _tBlock.transactions().size())
+        ETH_ERROR_MESSAGE("invalid block rlp tx.size() != rlp_decoded tx.size()!");
+
+    size_t i = 0;
+    for (auto const& trRLP : rlp[1].toList())
+    {
+        spTransaction spRlpTr = readTransaction(trRLP);
+        auto const& decoded_tr = _tBlock.transactions().at(i++);
+        if (decoded_tr->getRawBytes() != spRlpTr->getRawBytes())
+        {
+            ETH_ERROR_MESSAGE("Error checking invalid block rlp.tx vs rlp_decoded tr `"
+                              + spRlpTr->asDataObject()->asJson() + "` \nis different to rlp_decoded tr \n`"
+                              + decoded_tr->asDataObject()->asJson() + "`)");
+        }
+    }
+
+    if (rlp[2].toList().size() != _tBlock.uncles().size())
+        ETH_ERROR_MESSAGE("invalid block rlp uncle.size() != rlp_decoded uncle.size()!");
+    i = 0;
+    for (auto const& unRLP : rlp[2].toList())
+    {
+        spBlockHeader spUn = readBlockHeader(unRLP);
+        spBlockHeader decoded_un = _tBlock.uncles().at(i++);
+        _compareRLPvsRLPDecodedHeaders(spUn->asDataObject(), decoded_un->asDataObject());
+    }
+
+    if (_tBlock.withdrawals().size() && rlp.itemCount() <= 3)
+        ETH_ERROR_MESSAGE("invalid block rlp withdrawals non exist != rlp_decoded withdrawals.size()!");
+
+    i = 0;
+    if (rlp.itemCount() > 3)
+    {
+        if (_tBlock.withdrawals().size() != rlp[3].toList().size())
+            ETH_ERROR_MESSAGE("invalid block rlp withdrawals.size() != rlp_decoded withdrawals.size()!");
+        for (auto const& wtRLP : rlp[3].toList())
+        {
+            spWithdrawal wt(new Withdrawal(wtRLP));
+            spWithdrawal decoded_wt = _tBlock.withdrawals().at(i++);
+            auto const wtData = wt->asDataObject();
+            auto const decoded_wtData = decoded_wt->asDataObject();
+            if (wtData->asJson(0, false) != decoded_wtData->asJson(0, false))
+            {
+                ETH_ERROR_MESSAGE("Error checking invalid block rlp.withdrawals vs rlp_decoded withdrawals `"
+                                  + wtData->asJson() + "` \nis different to rlp_decoded wt \n`"
+                                  + decoded_wtData->asJson() + "`)");
+            }
+        }
+    }
+
+}
+
+void BlockchainTestRunner::validateRlpDecodedInInvalidBlocks(teststruct::BlockchainTestBlock const& _tBlock)
+{
+    if (_tBlock.hasRlpDecoded())
+    {
+        try
+        {
+            _validateRlpDecodedInInvalidBlocks(_tBlock);
+        }
+        catch (EthError const& _ex)
+        {
+            // continue
+        }
+        catch (std::exception const& _ex)
+        {
+            throw UpwardsException(string() + "Failed to verify rlp vs rlp_decoded in filled block: " + _ex.what());
+        }
+    }
 }

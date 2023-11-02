@@ -42,7 +42,14 @@ extern const std::string c_transactionsRoot;
 extern const std::string c_transactionsTrie;
 extern const std::string c_baseFeePerGas;
 extern const std::string c_withdrawalsRoot;
-extern const std::string c_excessDataGas;
+extern const std::string c_parentBeaconBlockRoot;
+extern const std::string c_excessBlobGas;
+extern const std::string c_blobGasUsed;
+extern const std::string c_currentExcessBlobGas;
+extern const std::string c_currentBeaconRoot;
+extern const std::string c_parentExcessBlobGas;
+extern const std::string c_currentBlobGasUsed;
+extern const std::string c_parentBlobGasUsed;
 
 // Transactions
 extern const std::string c_data;
@@ -56,7 +63,7 @@ extern const std::string c_r;
 extern const std::string c_s;
 extern const std::string c_maxFeePerGas;
 extern const std::string c_maxPriorityFeePerGas;
-extern const std::string c_maxFeePerDataGas;
+extern const std::string c_maxFeePerBlobGas;
 extern const std::string c_blobVersionedHashes;
 extern const std::string c_accessLists;
 extern const std::string c_accessList;

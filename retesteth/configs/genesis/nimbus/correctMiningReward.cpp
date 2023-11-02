@@ -28,7 +28,8 @@ const string nimbus_correctMiningReward_config = R"({
     "Aleut"  :           "2000000000000000000",
     "Merge"  :           "0",
     "Merged"  :          "0",
-    "Shanghai"  :        "0"
+    "Shanghai"  :        "0",
+    "Cancun" : "0"
 })";
 
     spDataObject obj;

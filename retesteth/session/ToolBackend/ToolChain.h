@@ -89,7 +89,7 @@ private:
     void checkBasefeeAgainstRetesteth(VALUE const& _toolBasefee, spBlockHeader const& _pendingHeader, spBlockHeader const& _parentHeader);
     void calculateAndCheckSetBaseFee(VALUE const& _toolBaseFee, spBlockHeader& _pendingHeader, spBlockHeader const& _parentHeader);
     void setWithdrawalsRoot(FH32 const&, spBlockHeader&);
-    void setExcessDataGas(VALUE const&, spBlockHeader&);
+    void setExcessBlobGasAndGasUsed(ToolResponse const&, spBlockHeader&);
     void setAndCheckDifficulty(VALUE const&, spBlockHeader&);
 
     spDataObject coorectTransactionsByToolResponse(ToolResponse const& _res, EthereumBlockState& _pendingFixed,

@@ -13,11 +13,12 @@ JsonParser::JsonParser(std::string const& _input, CJOptions const& _opt)
     if (_input.size() < 2 || _input.find("{") == string::npos || _input.rfind("}") == string::npos)
         throw DataObjectException() << "ConvertJsoncppStringToData can't read json structure in file: `" + _input.substr(0, 50);
 
+    m_applyDepth.clear();
     m_root.getContent().setAutosort(_opt.autosort);
     m_actualRoot = &m_root.getContent();
 }
 
-string JsonParser::printDebug(size_t const& _i)
+string JsonParser::printDebug(size_t const& _i) const
 {
     static const short c_debugSize = 120;
     string debug;
@@ -55,6 +56,16 @@ void JsonParser::parse()
     }
 }
 
+void JsonParser::checkJsonCommaEnding(size_t& _i) const
+{
+    if (m_input.at(_i) == '}' || m_input.at(_i) == ']')
+        _i--;  // because cycle iteration we need to process ending clouse
+    else if (m_input.at(_i) != ',')
+        throw DataObjectException() << errorPrefix
+            + "Dataobject array/object expected ',' when listing elements, but got `" + m_input.at(_i) + "`"
+            + "around: " + printDebug(_i);
+}
+
 JsonParser::RET JsonParser::tryParseKeyValue(size_t& _i)
 {
     const bool escapeChar = (_i > 0 && m_input.at(_i - 1) == '\\');
@@ -62,6 +73,7 @@ JsonParser::RET JsonParser::tryParseKeyValue(size_t& _i)
     {
         spDataObject obj;
         string key = parseKeyValue(_i);
+
         _i = skipSpaces(_i);
         if (m_input.at(_i) == ':')
         {
@@ -104,14 +116,12 @@ JsonParser::RET JsonParser::tryParseKeyValue(size_t& _i)
             if (m_actualRoot->type() == DataType::Array)
             {
                 m_actualRoot->addArrayObject(sDataObject(std::move(key)));
-                if (m_input.at(_i) != ',')
-                    _i--;  // because cycle iteration we need to process ending clouse
+                checkJsonCommaEnding(_i);
                 return RET::CONTINUE;
             }
             else
                 m_actualRoot->setString(std::move(key));
-            if (m_input.at(_i) != ',')
-                _i--;  // because cycle iteration we need to process ending clouse
+            checkJsonCommaEnding(_i);
             m_actualRoot = m_applyDepth.at(m_applyDepth.size() - 1);
             m_applyDepth.pop_back();
             return RET::CONTINUE;
@@ -263,25 +273,25 @@ size_t JsonParser::skipSpaces(size_t const& _i) const
 string JsonParser::parseKeyValue(size_t& _i) const
 {
     if (_i + 1 > m_input.size())
-        throw DataObjectException() << errorPrefix + "reached EOF before reading char: `\"`";
+        throw DataObjectException() << errorPrefix + "reached EOF before reading char: `\"` around: " + printDebug(_i);
 
     bool escapeChar = true;
     size_t endPos = m_input.find('"', _i + 1);
-    while (escapeChar)
-    {
-        escapeChar = (m_input[endPos - 1] == '\\');
-        if (escapeChar)
-            endPos = m_input.find('"', endPos + 1);
-    }
-
     if (endPos != string::npos)
     {
+        while (escapeChar)
+        {
+            escapeChar = (m_input[endPos - 1] == '\\');
+            if (escapeChar)
+                endPos = m_input.find('"', endPos + 1);
+        }
+
         const string key = m_input.substr(_i + 1, endPos - _i - 1);
         _i = endPos + 1;
         return key;
     }
     else
-        throw DataObjectException() << errorPrefix + "not found key ending char: `\"`";
+        throw DataObjectException() << errorPrefix + "not found key ending char: `\"` around: " + printDebug(_i);
     return string();
 }
 

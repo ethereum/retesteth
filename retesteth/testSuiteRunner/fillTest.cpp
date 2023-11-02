@@ -45,15 +45,16 @@ fs::path prepareOutputFileName(fs::path const& _file)
 
 void updatePythonTestInfo(TestFileData& _testData, fs::path const& _pythonFiller, fs::path const& _filledFolder)
 {
-    // TODO double calling this function (getGeneratedTestNames)
-    // can make a global map
     auto const testNames = getGeneratedTestNames(_pythonFiller);
     for (auto const& generatedTest : testNames)
     {
         fs::path const outputTestFilePath = _filledFolder / (generatedTest + ".json");
         string const res = dev::contentsString(outputTestFilePath);
         if (res.empty())
-            ETH_ERROR_MESSAGE("Can't open expected python produced test: " + outputTestFilePath.string());
+        {
+            ETH_WARNING("!!! Can't open expected python produced test (Check that it is marked as skipped in .py): " + outputTestFilePath.string());
+            continue;
+        }
         spDataObject output = dataobject::ConvertJsoncppStringToData(res);
         bool update =
             addClientInfoIfUpdate(output.getContent(), _pythonFiller, _testData.hash, outputTestFilePath);
@@ -73,7 +74,7 @@ string const c_fillerPostf = "Filler";
 string const c_copierPostf = "Copier";
 string const c_pythonPostf = ".py";
 
-bool TestSuite::_fillPython(TestFileData& _testData, fs::path const& _fillerTestFilePath, AbsoluteFilledTestPath const& _filledPath) const
+bool TestSuite::_fillPython(TestFileData& _testData, fs::path const& _fillerTestFilePath, AbsoluteFilledTestPath const& _filledPath, fs::path const& _relativeFillerPath) const
 {
     bool wereErrors = false;
     auto const& currentConfig = Options::getCurrentConfig();
@@ -90,11 +91,12 @@ bool TestSuite::_fillPython(TestFileData& _testData, fs::path const& _fillerTest
         OUTPUT=$4
         EVMT8N=$5
         FORCER=$6
+        DEBUG=$7
         */
 
         auto const& opt = Options::get();
         string runcmd = specsScript.c_str();
-        runcmd += " " + _fillerTestFilePath.parent_path().parent_path().string();  // SRCPATH
+        runcmd += " " + _fillerTestFilePath.string();                              // SRCPATH
         runcmd += " " + fillerName;                                                // FILLER NAME
         if (opt.singletest.initialized() && !opt.singletest.subname.empty())
             runcmd += " " + opt.singletest.subname;
@@ -106,9 +108,26 @@ bool TestSuite::_fillPython(TestFileData& _testData, fs::path const& _fillerTest
             runcmd += " --force-refill";
         else
             runcmd += " null";
+        if (test::debug::Debug::get().flag(DC::PYSPEC))
+            runcmd += " --stderr";
+        else
+            runcmd += " null";
+
+        // Forks selector
+        if (Options::get().singleTestNet.initialized())
+        {
+            auto const& singlenet = Options::get().singleTestNet;
+            runcmd += " " + singlenet + " " + singlenet;
+        }
+        else
+        {
+            auto const& forks = Options::getCurrentConfig().cfgFile().forks();
+            runcmd += " " + forks.at(0).asString() + " " + forks.at(forks.size() - 1).asString();
+        }
 
         ETH_DC_MESSAGEC(DC::STATS, string("Generate Python test: ") + _fillerTestFilePath.stem().string(), LogColor::YELLOW);
         ETH_DC_MESSAGE(DC::RPC, string("Generate Python test: ") + runcmd);
+        ETH_DC_MESSAGE(DC::PYSPEC, string("Generate Python test: ") + runcmd);
 
         int exitcode;
         string out = test::executeCmd(runcmd, exitcode, ExecCMDWarning::NoWarningNoError);
@@ -118,12 +137,12 @@ bool TestSuite::_fillPython(TestFileData& _testData, fs::path const& _fillerTest
         if (exitcode != 0)
         {
             wereErrors = true;
-            ETH_ERROR_MESSAGE("Python spec failed filling the test: \n" + out);
+            ETH_ERROR_MESSAGE("Python spec failed filling the test (use --verbosity PYSPEC for details): \n" + out);
             return wereErrors;
         }
         else
         {
-            updatePythonTestInfo(_testData, _fillerTestFilePath, _filledPath.path().parent_path());
+            updatePythonTestInfo(_testData, _relativeFillerPath, _filledPath.path().parent_path());
             TestOutputHelper::get().registerTestRunSuccess();
         }
         return wereErrors;
@@ -192,13 +211,14 @@ bool TestSuite::_fillTest(TestSuite::TestSuiteOptions& _opt, fs::path const& _fi
     TestOutputHelper::get().setCurrentTestFile(_fillerTestFilePath);
     TestFileData testData = readFillerTestFile(_fillerTestFilePath);
 
+    fs::path const testFillerPathRelative =
+        _opt.calculateRelativeSrcPath ? fs::relative(_fillerTestFilePath, getTestPath()) : _fillerTestFilePath;
+
     bool const isPy = (_fillerTestFilePath.extension() == ".py");
     bool const isCopier = (_fillerTestFilePath.stem().string().rfind(c_copierPostf) != string::npos);
     if (isPy)
-        return _fillPython(testData, _fillerTestFilePath, _outputTestFilePath);
+        return _fillPython(testData, _fillerTestFilePath, _outputTestFilePath, testFillerPathRelative);
 
-    fs::path const testFillerPathRelative =
-        _opt.calculateRelativeSrcPath ? fs::relative(_fillerTestFilePath, getTestPath()) : _fillerTestFilePath;
     if (isCopier)
     {
         _fillCopier(testData, testFillerPathRelative, _outputTestFilePath);

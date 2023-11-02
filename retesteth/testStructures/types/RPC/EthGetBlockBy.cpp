@@ -1,9 +1,11 @@
 #include "EthGetBlockBy.h"
 #include "../Ethereum/EthereumBlock.h"
 #include <retesteth/testStructures/Common.h>
+#include <retesteth/Constants.h>
 
 using namespace std;
 using namespace dev;
+using namespace test::teststruct::constnames;
 
 namespace test::teststruct
 {
@@ -12,25 +14,27 @@ EthGetBlockBy::EthGetBlockBy(spDataObject& _data)
     try
     {
         REQUIRE_JSONFIELDS(_data, "EthGetBlockBy " + _data->getKey(),
-            {{"logsBloom", {{DataType::String}, jsonField::Required}},
-                {"author", {{DataType::String}, jsonField::Optional}},                 //Geth return field
+            {{c_logsBloom, {{DataType::String}, jsonField::Required}},
+                {c_author, {{DataType::String}, jsonField::Optional}},                 //Geth return field
                 {"miner", {{DataType::String}, jsonField::Required}},
-                {"difficulty", {{DataType::String}, jsonField::Required}},
-                {"extraData", {{DataType::String}, jsonField::Required}},
-                {"gasLimit", {{DataType::String}, jsonField::Optional}},
-                {"baseFeePerGas", {{DataType::String}, jsonField::Optional}},
-                {"gasUsed", {{DataType::String}, jsonField::Required}},
-                {"hash", {{DataType::String}, jsonField::Required}},
-                {"mixHash", {{DataType::String}, jsonField::Optional}},
-                {"nonce", {{DataType::String}, jsonField::Optional}},
-                {"number", {{DataType::String}, jsonField::Required}},
-                {"parentHash", {{DataType::String}, jsonField::Required}},
-                {"receiptsRoot", {{DataType::String}, jsonField::Required}},
-                {"stateRoot", {{DataType::String}, jsonField::Required}},
-                {"timestamp", {{DataType::String}, jsonField::Required}},
-                {"transactionsRoot", {{DataType::String}, jsonField::Required}},
-                {"withdrawalsRoot", {{DataType::String}, jsonField::Optional}},        //Shanghai field
-                {"excessDataGas", {{DataType::String}, jsonField::Optional}},          //Cancun field
+                {c_difficulty, {{DataType::String}, jsonField::Required}},
+                {c_extraData, {{DataType::String}, jsonField::Required}},
+                {c_gasLimit, {{DataType::String}, jsonField::Optional}},
+                {c_baseFeePerGas, {{DataType::String}, jsonField::Optional}},
+                {c_gasUsed, {{DataType::String}, jsonField::Required}},
+                {c_hash, {{DataType::String}, jsonField::Required}},
+                {c_mixHash, {{DataType::String}, jsonField::Optional}},
+                {c_nonce, {{DataType::String}, jsonField::Optional}},
+                {c_number, {{DataType::String}, jsonField::Required}},
+                {c_parentHash, {{DataType::String}, jsonField::Required}},
+                {c_receiptsRoot, {{DataType::String}, jsonField::Required}},
+                {c_stateRoot, {{DataType::String}, jsonField::Required}},
+                {c_timestamp, {{DataType::String}, jsonField::Required}},
+                {c_transactionsRoot, {{DataType::String}, jsonField::Required}},
+                {c_withdrawalsRoot, {{DataType::String}, jsonField::Optional}},        //Shanghai field
+                {c_excessBlobGas, {{DataType::String}, jsonField::Optional}},          //Cancun field
+                {c_blobGasUsed, {{DataType::String}, jsonField::Optional}},            //Cancun field
+                {c_parentBeaconBlockRoot, {{DataType::String}, jsonField::Optional}},             //Cancun field
                 {"sha3Uncles", {{DataType::String}, jsonField::Required}},
                 {"seedHash", {{DataType::String}, jsonField::Optional}},               //Aleth field
                 {"boundary", {{DataType::String}, jsonField::Optional}},               //Aleth field

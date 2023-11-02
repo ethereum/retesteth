@@ -65,6 +65,18 @@ bool Options::DynamicOptions::currentConfigIsSet() const
     return m_currentConfigID.id() != ClientConfigID::null().id();
 }
 
+std::mutex g_testSuite_timeout;
+void Options::DynamicOptions::setTestsuiteRunning(bool _arg)
+{
+    std::lock_guard<std::mutex> lock(g_testSuite_timeout);
+    m_testSuiteRunning = _arg;
+}
+bool Options::DynamicOptions::testSuiteRunning() const
+{
+    std::lock_guard<std::mutex> lock(g_testSuite_timeout);
+    return m_testSuiteRunning;
+}
+
 ClientConfig const& Options::DynamicOptions::getCurrentConfig() const
 {
     for (auto const& cfg : m_clientConfigs)
@@ -125,10 +137,13 @@ std::vector<ClientConfig> const& Options::DynamicOptions::getClientConfigs() con
                 ETH_ERROR_MESSAGE("Missing version file in retesteth configs! `" + homeDir.string());
 
             string version = dev::contentsString(homeDir / "version");
+            version.erase(std::remove(version.begin(), version.end(), '\n'), version.end());
             if (version != prepareRetestethVersion())
+            {
                 ETH_WARNING("Retesteth configs version is different (running: '" +
-                            prepareRetestethVersion() + "' vs config '" + version +
-                            "')! Redeploy the configs by deleting the folder `" + homeDir.string() + "`!");
+                             prepareRetestethVersion() + "' vs config '" + version + "')!");
+                ETH_WARNING("Update configs to the latest by deleting the folder `" + homeDir.string() + "`!");
+            }
         }
         else
             retesteth::options::deployFirstRunConfigs(homeDir);

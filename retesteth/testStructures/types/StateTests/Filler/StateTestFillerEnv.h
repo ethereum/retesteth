@@ -2,9 +2,7 @@
 #include "../Base/StateTestEnvBase.h"
 #include <libdataobj/DataObject.h>
 
-namespace test
-{
-namespace teststruct
+namespace test::teststruct
 {
 // Filler constructor of Env converts all dec fields to hex
 // In State test, Env define timestamp of the first block
@@ -24,4 +22,3 @@ private:
 
 
 }  // namespace teststruct
-}  // namespace test

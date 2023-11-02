@@ -46,6 +46,7 @@ public:
     TestOutputTimer& timer() { return m_timer; }
 
     bool markError(std::string const& _message);
+    void markWarning(std::string const& _message);
     void unmarkLastError();
     const std::string c_exception_any = "ANY EXCEPTION";
 
@@ -59,12 +60,14 @@ public:
 
     std::vector<std::string> const& getErrors() const { return m_errors;}
     void resetErrors() { m_errors.clear(); }
+    void setPythonTestFlag(bool _flag) { m_pythonTestRunning = _flag; }
     void setCurrentTestFile(boost::filesystem::path const& _name) { m_currentTestFileName = _name; }
     void setCurrentTestName(std::string const& _name) { m_currentTestName = _name; }
     void setCurrentTestInfo(TestInfo const& _info) { m_testInfo = _info; }
     TestInfo const& testInfo() const { return m_testInfo; }
     std::string const& testName() const { return m_currentTestName; }
     boost::filesystem::path const& testFile() const { return m_currentTestFileName; }
+    bool getPythonTestFlag() const { return m_pythonTestRunning; }
     static void printTestExecStats();
     static void registerTestRunSuccess();
     static void currentTestRunPP() { m_currentTestRun++; };
@@ -83,8 +86,10 @@ public:
 private:
     TestOutputHelper() {}
     void printBoostError();
+    bool _unmarkExpectedExceptionForTest(std::string const&);
 
 private:
+    bool m_pythonTestRunning = false;
     TestOutputTimer m_timer;
     size_t m_currTest;
     size_t m_maxTests;

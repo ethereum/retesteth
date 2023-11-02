@@ -11,6 +11,7 @@ spBlockHeader readBlockHeader(DataObject const& _data);
 spBlockHeader readBlockHeader(dev::RLP const& _rlp);
 
 // Block Serialization conditions
+bool isBlockExportExcessBlobGas(BlockHeader const&);
 bool isBlockExportCurrentRandom(BlockHeader const&);
 bool isBlockExportWithdrawals(BlockHeader const&);
 bool isBlockExportBasefee(BlockHeader const&);

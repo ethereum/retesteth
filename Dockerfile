@@ -7,6 +7,7 @@ ARG RETESTETH_SRC="https://github.com/ethereum/retesteth.git"
 ARG GETH_SRC="https://github.com/ethereum/go-ethereum.git"
 ARG NIMBUS_SRC="https://github.com/status-im/nimbus-eth1.git"
 ARG EVMONE_SRC="https://github.com/ethereum/evmone.git"
+ARG PYT8N_SRC="https://github.com/ethereum/execution-specs.git"
 
 # Leave empty to disable the build, can point to commit hash as well
 ARG BESU="main"
@@ -16,6 +17,7 @@ ARG ETHEREUMJS="master"
 ARG RETESTETH="develop"
 ARG PYSPECS="main"
 ARG EVMONE="master"
+ARG PYT8N="master"
 
 SHELL ["/bin/bash", "-c"]
 ENV TZ=Etc/UTC
@@ -27,10 +29,11 @@ RUN apt-get update \
     && add-apt-repository -y ppa:ubuntu-toolchain-r/test \
     && add-apt-repository -y ppa:deadsnakes/ppa  \
     && add-apt-repository ppa:linuxuprising/java \
-    && apt-get install --yes git cmake make perl psmisc curl wget gcc-11 g++-11 python3.10 python3.10-venv python3-pip python3-dev \
+    && apt-get install --yes jq lsof git cmake make perl psmisc curl wget gcc-11 g++-11 python3.10 python3.10-venv python3-pip python3-dev \
     && apt-get install --yes libboost-filesystem-dev libboost-system-dev libboost-program-options-dev libboost-test-dev \
     && echo oracle-java17-installer shared/accepted-oracle-license-v1-3 select true | /usr/bin/debconf-set-selections  \
     && apt-get install --yes oracle-java17-installer oracle-java17-set-default \
+    && apt-get install --yes uuid-runtime \
     && rm -rf /var/lib/apt/lists/*
 RUN rm /usr/bin/python3 && ln -s /usr/bin/python3.10 /usr/bin/python3 \
     && rm /usr/bin/gcc && rm /usr/bin/g++ \
@@ -50,7 +53,7 @@ RUN test -n "$RETESTETH" \
     || echo "Retesteth is empty, skip LLLC"
 
 # Solidity solc
-RUN wget https://github.com/ethereum/solidity/releases/download/v0.8.17/solc-static-linux \
+RUN wget https://github.com/ethereum/solidity/releases/download/v0.8.21/solc-static-linux \
    && cp solc-static-linux /bin/solc \
    && chmod +x /bin/solc
 
@@ -64,16 +67,23 @@ RUN cd /execution-spec-tests && git fetch && git checkout $PYSPECS \
     && cp tfinit.sh /usr/bin/tfinit.sh \
     && chmod +x /usr/bin/tfinit.sh
 
+# PYT8N
+RUN test -n "$PYT8N" \
+     && git clone $PYT8N_SRC /pyt8n \
+     && cd /pyt8n && git fetch && git checkout $PYT8N \
+     && python3 -m venv ./venv/ \
+     && source ./venv/bin/activate \
+     && pip install -e . \
+    || echo "Pyt8n is empty"
 
 # Geth
 RUN test -n "$GETH" \
      && git clone $GETH_SRC /geth \
      && cd /geth && git fetch && git checkout $GETH \
-     && wget https://dl.google.com/go/go1.19.linux-amd64.tar.gz \
-     && tar -xvf go1.19.linux-amd64.tar.gz \
+     && wget https://dl.google.com/go/go1.20.linux-amd64.tar.gz \
+     && tar -xvf go1.20.linux-amd64.tar.gz \
      && mv go /usr/local && ln -s /usr/local/go/bin/go /bin/go \
-     && make all && cp /geth/build/bin/evm /bin/evm \
-     && cp /geth/build/bin/geth /bin/geth \
+     && go build ./cmd/evm  && cp evm /bin/evm \
      && rm -rf /geth && rm -rf /usr/local/go \
     || echo "Geth is empty"
 

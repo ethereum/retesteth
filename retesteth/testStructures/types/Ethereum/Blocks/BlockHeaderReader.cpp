@@ -13,14 +13,14 @@ namespace  {
 
 bool isHeader4844(DataObject const& _filledData)
 {
-    if (_filledData.count(c_excessDataGas))
+    if (_filledData.count(c_excessBlobGas))
         return true;
     return false;
 }
 
 bool isHeaderShanghai(DataObject const& _filledData)
 {
-    if (_filledData.count(c_withdrawalsRoot) && !_filledData.count(c_excessDataGas))
+    if (_filledData.count(c_withdrawalsRoot) && !_filledData.count(c_excessBlobGas))
         return true;
     return false;
 }
@@ -67,7 +67,7 @@ bool isHeaderShanghai(dev::RLP const& _rlp)
 
 bool isHeader4844(dev::RLP const& _rlp)
 {
-    return (_rlp.itemCount() == 18);
+    return (_rlp.itemCount() == 20);
 }
 
 
@@ -127,8 +127,7 @@ spBlockHeader readBlockHeader(dev::RLP const& _rlp)
     if (isHeader4844(_rlp))
         return spBlockHeader(new BlockHeader4844(_rlp));
 
-    ETH_ERROR_MESSAGE("readBlockHeader: unknown block type! /n" + dev::asString(_rlp.toBytes()));
-    return spBlockHeader(new BlockHeaderLegacy(_rlp));
+    throw test::UpwardsException("readBlockHeader(RLP): unknown block type! \n" + dev::asString(_rlp.toBytes()));
 }
 
 spBlockHeader readBlockHeader(DataObject const& _filledData)
@@ -148,7 +147,7 @@ spBlockHeader readBlockHeader(DataObject const& _filledData)
     if (isHeader4844(_filledData))
         return spBlockHeader(new BlockHeader4844(_filledData));
 
-    ETH_ERROR_MESSAGE("readBlockHeader: unknown block type! /n" + _filledData.asJson());
+    ETH_ERROR_MESSAGE("readBlockHeader(DATA): unknown block type! \n" + _filledData.asJson());
     return spBlockHeader(new BlockHeaderLegacy(_filledData));
 }
 
@@ -162,6 +161,11 @@ bool isBlockExportCurrentRandom(BlockHeader const& _header)
     return _header.type() == BlockType::BlockHeaderMerge
            || _header.type() == BlockType::BlockHeaderShanghai
            || _header.type() == BlockType::BlockHeader4844;
+}
+
+bool isBlockExportExcessBlobGas(BlockHeader const& _header)
+{
+    return _header.type() == BlockType::BlockHeader4844;
 }
 
 bool isBlockExportWithdrawals(BlockHeader const& _header)

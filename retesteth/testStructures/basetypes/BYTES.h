@@ -15,6 +15,7 @@ struct BYTES : dataobject::GCP_SPointerBase
     BYTES* copy() const { return new BYTES(m_data); }
 
     std::string const& asString() const { return m_data; }
+    std::string& asStringUnsafe() { return m_data; }
     size_t firstByte() const;
     bool operator!=(BYTES const& _rhs) const { return m_data != _rhs.asString(); }
     bool operator==(BYTES const& _rhs) const { return m_data == _rhs.asString(); }
