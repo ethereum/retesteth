@@ -163,7 +163,7 @@ std::tuple<OptionsVector, ParsedOptions> preparseOptions(int& _argc, const char*
     ParsedOptions optInfo;
     vector<string> options;
 
-    bool copyTestPathOption = false;
+    bool fileOptionParsed = false;
     optInfo.cwd = fs::path(fs::current_path());
     options.emplace_back(_argv[0]);
     for (short i = 1; i < _argc; i++)
@@ -173,39 +173,36 @@ std::tuple<OptionsVector, ParsedOptions> preparseOptions(int& _argc, const char*
         if (arg == "-t")
             optInfo.hasTArg = true;
 
-        // Copy "--testpath path" as is
-        if (arg == "--testpath" || copyTestPathOption)
+        if (!fileOptionParsed)
         {
-            if (arg == "--testpath")
-                copyTestPathOption = true;
-            else
-                copyTestPathOption = false;
-            options.emplace_back(arg);
-            continue;
-        }
+            bool isFile = (arg.find(".json") != string::npos || arg.find(".yml") != string::npos
+                           || arg.find(".py") != string::npos);
 
-        bool isFile = (arg.find(".json") != string::npos || arg.find(".yml") != string::npos
-                       || arg.find(".py") != string::npos);
+            if (isFile && string{_argv[i - 1]} != "--testfile")
+            {
+                fileOptionParsed = true;
+                optInfo.filenameArg = arg;
 
-        if (isFile && string{_argv[i - 1]} != "--testfile")
-        {
-            optInfo.filenameArg = arg;
+                size_t subtestPos = arg.find("::");
+                if (subtestPos != string::npos)
+                    optInfo.subtestArg = arg.substr(subtestPos + 2);
 
-            size_t subtestPos = arg.find("::");
-            if (subtestPos != string::npos)
-                optInfo.subtestArg = arg.substr(subtestPos + 2);
-
-            if (!testPath.empty() && fs::relative(optInfo.cwd, testPath).string().find("..") == string::npos)
-                optInfo.fileInsideTheTestRepo = true;
-        }
-        else if (fs::exists(optInfo.cwd / arg) && fs::is_directory(optInfo.cwd / arg))
-            optInfo.directoryArg = arg;
-        else if (fs::exists(arg) && fs::is_directory(arg))
-        {
-            auto const& argPath = fs::path(arg);
-            optInfo.cwd = argPath.parent_path();
-            optInfo.directoryArg = argPath.stem().string();
-            optInfo.directoryArgFull = arg;
+                if (!testPath.empty() && fs::relative(optInfo.cwd, testPath).string().find("..") == string::npos)
+                    optInfo.fileInsideTheTestRepo = true;
+            }
+            else if (fs::exists(optInfo.cwd / arg) && fs::is_directory(optInfo.cwd / arg))
+            {
+                optInfo.directoryArg = arg;
+                fileOptionParsed = true;
+            }
+            else if (fs::exists(arg) && fs::is_directory(arg))
+            {
+                fileOptionParsed = true;
+                auto const& argPath = fs::path(arg);
+                optInfo.cwd = argPath.parent_path();
+                optInfo.directoryArg = argPath.stem().string();
+                optInfo.directoryArgFull = arg;
+            }
         }
 
         options.emplace_back(arg);
