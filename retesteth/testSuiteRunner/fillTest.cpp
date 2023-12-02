@@ -74,6 +74,65 @@ string const c_fillerPostf = "Filler";
 string const c_copierPostf = "Copier";
 string const c_pythonPostf = ".py";
 
+string makePyScriptCMDArgs(fs::path const& _fillerTestFilePath, TestSuite::AbsoluteFilledTestPath const& _filledPath)
+{
+    /*
+        SRCPATH=$1
+        FILLER=$2
+        TESTCA=$3
+        OUTPUT=$4
+        EVMT8N=$5
+        FORCER=$6
+        DEBUG=$7
+        FROMF=$8
+        UNTIF=$9
+        EXPRTCALL=$10
+    */
+
+    auto const& opt = Options::get();
+    string const fillerName = _fillerTestFilePath.stem().string();
+    auto const& currentConfig = Options::getCurrentConfig();
+    auto const& specsScript = currentConfig.getPySpecsStartScript();
+    string runcmd = specsScript.c_str();
+    runcmd += " " + _fillerTestFilePath.string();                              // SRCPATH
+    runcmd += " " + fillerName;                                                // FILLER NAME
+    if (opt.singletest.initialized() && !opt.singletest.subname.empty())
+        runcmd += " " + opt.singletest.subname;
+    else
+        runcmd += " null";                                                     // TEST CASE NAME
+    runcmd += " " + _filledPath.path().parent_path().string();                 // OUTPATH
+    runcmd += " " + opt.getCurrentConfig().getStartScript().string();          // T8N start
+    if (opt.forceupdate)
+        runcmd += " --force-refill";
+    else
+        runcmd += " null";
+    if (test::debug::Debug::get().flag(DC::PYSPEC))
+        runcmd += " --stderr";
+    else
+        runcmd += " null";
+
+    // Forks selector
+    if (Options::get().singleTestNet.initialized())
+    {
+        auto const& singlenet = Options::get().singleTestNet;
+        runcmd += " " + singlenet + " " + singlenet;
+    }
+    else
+    {
+        auto const& forks = Options::getCurrentConfig().cfgFile().forks();
+        runcmd += " " + forks.at(0).asString() + " " + forks.at(forks.size() - 1).asString();
+    }
+
+    // Export call
+    if (!Options::get().t8ntoolcall.empty())
+    {
+        runcmd += " " + Options::get().t8ntoolcall;
+    }
+    else
+        runcmd += " null";
+    return runcmd;
+}
+
 bool TestSuite::_fillPython(TestFileData& _testData, fs::path const& _fillerTestFilePath, AbsoluteFilledTestPath const& _filledPath, fs::path const& _relativeFillerPath) const
 {
     bool wereErrors = false;
@@ -84,46 +143,7 @@ bool TestSuite::_fillPython(TestFileData& _testData, fs::path const& _fillerTest
         string const fillerName = _fillerTestFilePath.stem().string();
         TestOutputHelper::get().setCurrentTestName(fillerName);
 
-        /*
-        SRCPATH=$1
-        FILLER=$2
-        TESTCA=$3
-        OUTPUT=$4
-        EVMT8N=$5
-        FORCER=$6
-        DEBUG=$7
-        */
-
-        auto const& opt = Options::get();
-        string runcmd = specsScript.c_str();
-        runcmd += " " + _fillerTestFilePath.string();                              // SRCPATH
-        runcmd += " " + fillerName;                                                // FILLER NAME
-        if (opt.singletest.initialized() && !opt.singletest.subname.empty())
-            runcmd += " " + opt.singletest.subname;
-        else
-            runcmd += " null";                                                     // TEST CASE NAME
-        runcmd += " " + _filledPath.path().parent_path().string();                 // OUTPATH
-        runcmd += " " + opt.getCurrentConfig().getStartScript().string();          // T8N start
-        if (opt.forceupdate)
-            runcmd += " --force-refill";
-        else
-            runcmd += " null";
-        if (test::debug::Debug::get().flag(DC::PYSPEC))
-            runcmd += " --stderr";
-        else
-            runcmd += " null";
-
-        // Forks selector
-        if (Options::get().singleTestNet.initialized())
-        {
-            auto const& singlenet = Options::get().singleTestNet;
-            runcmd += " " + singlenet + " " + singlenet;
-        }
-        else
-        {
-            auto const& forks = Options::getCurrentConfig().cfgFile().forks();
-            runcmd += " " + forks.at(0).asString() + " " + forks.at(forks.size() - 1).asString();
-        }
+        string runcmd = makePyScriptCMDArgs(_fillerTestFilePath, _filledPath);
 
         ETH_DC_MESSAGEC(DC::STATS, string("Generate Python test: ") + _fillerTestFilePath.stem().string(), LogColor::YELLOW);
         ETH_DC_MESSAGE(DC::RPC, string("Generate Python test: ") + runcmd);

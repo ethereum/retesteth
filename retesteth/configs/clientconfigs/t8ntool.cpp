@@ -391,6 +391,7 @@ FORCER=$6
 DEBUG=$7
 FROMF=$8
 UNTIF=$9
+EXPRTCALL=${10}
 
 mkdir "./tests/tmp"
 genUID=$(uuidgen)
@@ -413,6 +414,9 @@ if [ "$TESTCA" != "null" ]; then
 fi
 if [ "$FORCER" != "null" ]; then
     ADDFLAGS="$ADDFLAGS"
+fi
+if [ "$EXPRTCALL" != "null" ]; then
+    ADDFLAGS="$ADDFLAGS --debug $EXPRTCALL/pyspec.log --t8n-dump-dir $EXPRTCALL"
 fi
 
 if [ -d $testout ]; then
