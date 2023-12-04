@@ -264,6 +264,16 @@ Options::Options(int argc, const char** argv)
             vmtrace = true;
         });
 
+    ADD_OPTION(convertpy, "--convertpy", [](){
+        cout << setw(30) << "--convertpy" << setw(25) << "Convert state test fillers into .py\n";
+    });
+    convertpy.setValidator([this, stateTestOnly](){
+        stateTestOnly("--convertpy");
+        if (!filltests.initialized())
+        {
+            std::cout << "WARNING: `--convertpy` option provided without `--filltests`, activating `--filltests` (did you mean `--filltests`?)\n";
+            filltests = true;
+        }});
     ADD_OPTION(fillchain, "--fillchain", [](){
         cout << setw(30) << "--fillchain" << setw(25) << "When filling the state tests, fill tests as blockchain instead\n";
     });

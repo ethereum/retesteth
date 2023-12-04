@@ -190,7 +190,16 @@ bool TestSuite::_fillJsonYml(TestFileData& _testData, fs::path const& _fillerTes
     removeComments(_testData.data);
     try
     {
+        _opt.pathToFiller = _fillerTestFilePath;
         spDataObject output = doTests(_testData.data, _opt);
+        if (Options::get().convertpy)
+        {
+            auto testname = _fillerTestFilePath.stem().string();
+            testname.erase(testname.find("Filler"), 6);
+            auto pyFilename = testname + ".py";
+            writeFile(getTestPath() / _fillerTestFilePath.parent_path() / pyFilename, asBytes(output->asString()));
+        }
+
         if (output->type() != DataType::Null)
         {
             bool update =

@@ -61,8 +61,13 @@ public:
 
     struct TestSuiteOptions
     {
-        TestSuiteOptions() : doFilling(false), allowInvalidBlocks(false), isLegacyTests(false), calculateRelativeSrcPath(true)
+        TestSuiteOptions() :
+            doFilling(false),
+            allowInvalidBlocks(false),
+            isLegacyTests(false),
+            calculateRelativeSrcPath(true)
         {}
+        boost::filesystem::path pathToFiller;
         bool doFilling;           // pass the filling flag to doTest function
         bool allowInvalidBlocks;  // allow and check malicious blocks
         bool isLegacyTests;       // running old generated tests
