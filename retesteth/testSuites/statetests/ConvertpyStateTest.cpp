@@ -21,6 +21,7 @@ namespace
 string const testInclude = R"(
 import pytest
 
+from ethereum_test_forks import Fork, Frontier, Homestead, Berlin, London, Shanghai, Merge, Cancun
 from ethereum_test_tools import Account, Code, Environment
 from ethereum_test_tools import StateTestFiller, TestAddress, Transaction
 
@@ -33,11 +34,19 @@ from typing import Any, Mapping, Optional
 
 import pytest
 
+from ethereum_test_forks import Fork, Frontier, Homestead, Berlin, London, Shanghai, Merge, Cancun
 from ethereum_test_tools import Account, Code, Environment
 from ethereum_test_tools import StateTestFiller, TestAddress, Transaction
 
 
-ExpectSectionIndex = namedtuple("ExpectSectionIndex", ["d", "g", "v", "fork"])
+_BaseExpectSectionIndex = namedtuple("ExpectSectionIndex", ["d", "g", "v", "f", "l"])
+
+class ExpectSectionIndex(_BaseExpectSectionIndex):
+    __slots__ = ()  # Optional, to save memory
+
+    def __new__(cls, d, g, v, f, l=None):
+        return super(ExpectSectionIndex, cls).__new__(cls, d, g, v, f, l)
+
 
 class ExpectSection:
     """Manage expected post states for state tests transactions"""
@@ -53,9 +62,12 @@ class ExpectSection:
         """Returns the element associated with the given id, if it exists."""
         for section_ind, section in self.sections:
             if (
-                (tx_ind.d in section_ind.d or section_ind.d == -1)
-                and (tx_ind.g in section_ind.g or section_ind.g == -1)
-                and (tx_ind.v in section_ind.v or section_ind.v == -1)
+                ((tx_ind.l == "" and tx_ind.d in section_ind.d)
+                     or (tx_ind.l != "" and tx_ind.l in section_ind.d)
+                     or -1 in section_ind.d)
+                and (tx_ind.g in section_ind.g or -1 in section_ind.g)
+                and (tx_ind.v in section_ind.v or -1 in section_ind.v)
+                and (tx_ind.f in section_ind.f)
             ):
                 return section
         return None
@@ -99,21 +111,88 @@ string convertComment(StateTestInFiller const& _test, TestSuite::TestSuiteOption
     return string();
 }
 
+string defineDataParameter(StateTestInFiller const& _test)
+{
+    string dataParameters;
+    string datas;
+    auto const& dataVector = _test.GeneralTr().databoxVector();
+    for (size_t i = 0; i < dataVector.size(); i++)
+    {
+        datas += "    (" + to_string(i) + ", "
+                 + "\"" + dataVector.at(i).m_data.asString() + "\", "
+                 + "\"" + dataVector.at(i).m_dataLabel + "\""
+                 + "),\n";
+
+    }
+    datas.erase(datas.rfind(",\n"));
+    dataParameters = "@pytest.mark.parametrize(\"tr_data\", [\n" + datas + "\n])\n";
+    return dataParameters;
+}
+
+string defineGasParameter(StateTestInFiller const& _test)
+{
+    string gasParameters;
+    string gasLimits;
+    auto const& gasVector = _test.GeneralTr().gasLimitVector();
+    for (size_t i = 0; i < gasVector.size(); i++)
+        gasLimits += "    (" + to_string(i) + ", " + gasVector.at(i).asDecString() + "),\n";
+    gasLimits.erase(gasLimits.rfind(",\n"));
+    gasParameters = "@pytest.mark.parametrize(\"tr_gasLimit\", [\n" + gasLimits + "\n])\n";
+    return gasParameters;
+}
+
+string defineValueParameter(StateTestInFiller const& _test)
+{
+    string valueParameters;
+    string values;
+    auto const& valueVector = _test.GeneralTr().valueVector();
+    for (size_t i = 0; i < valueVector.size(); i++)
+        values += "    (" + to_string(i) + ", " + valueVector.at(i).asDecString() + "),\n";
+    values.erase(values.rfind(",\n"));
+    valueParameters = "@pytest.mark.parametrize(\"tr_value\", [\n" + values + "\n])\n";
+    return valueParameters;
+}
+
 string defineForksParameter(StateTestInFiller const& _test)
 {
-    string forks;
+    /*string forks;
     for (auto const& fork : _test.getAllForksFromExpectSections())
         forks += "\"" + fork.asString() + "\", ";
     forks.erase(forks.rfind(','));
 
-    string fork = "@pytest.mark.parametrize(\"fork\", [" + forks + "])\n";
-    return fork;
+    string fork = "@pytest.mark.parametrize(\"fork\", [" + forks + "])\n";*/
+
+    auto allForksInTest = _test.getAllForksFromExpectSections();
+    auto const& allforks = Options::getCurrentConfig().cfgFile().forks();
+    FORK lowestFork("notdefined");
+    for (auto fork : allforks)
+    {
+        // assume the test is chronological fork order
+        if (allForksInTest.count(fork))
+        {
+            lowestFork = fork;
+            break;;
+        }
+    }
+    string forkstr = "@pytest.mark.valid_from(\"" + lowestFork.asString() + "\")\n";
+    return forkstr;
 }
 
 string defineTestName(StateTestInFiller const& _test)
 {
     string res;
-    res += "def test_" + _test.testName() + "_py(state_test: StateTestFiller):\n";
+    res += "def test_" + _test.testName() + "_py(\n";
+    res += "    env: Environment,\n";
+    res += "    pre: dict,\n";
+    if (_test.Expects().size() > 1)
+        res += "    expect: ExpectSection,\n";
+    else
+        res += "    post: dict,\n";
+    res += "    fork: Fork,\n";
+    res += "    tr_data,\n";
+    res += "    tr_gasLimit,\n";
+    res += "    tr_value,\n";
+    res += "    state_test: StateTestFiller):\n";
     return res;
 }
 
@@ -132,49 +211,66 @@ string defineEnvironment(StateTestInFiller const& _test)
 {
     auto const& env = _test.Env();
     string res = R"(
-env = Environment(
-    coinbase=")" + env.currentCoinbase().asString() + R"(",
-    difficulty=)" + env.currentDifficulty().asString() + R"(,
-    gas_limit=)" + env.currentGasLimit().asDecString() + R"(,
-    number=)" + env.currentNumber().asDecString() + R"(,
-    timestamp=)" + env.firstBlockTimestamp().asDecString() + R"(,
-))";
+@pytest.fixture
+def env():  # noqa: D103
+    return Environment(
+        coinbase=")" + env.currentCoinbase().asString() + R"(",
+        difficulty=)" + env.currentDifficulty().asString() + R"(,
+        gas_limit=)" + env.currentGasLimit().asDecString() + R"(,
+        number=)" + env.currentNumber().asDecString() + R"(,
+        timestamp=)" + env.firstBlockTimestamp().asDecString() + R"(,
+    ))";
     res += "\n\n";
     return res;
 }
 
-void defineAccount(string& _res, spAccountBase _acc)
+void defineAccount(string& _res, spAccountBase _acc, size_t _additionalTabs = 0)
 {
     auto const& addr = _acc->address();
     if (_acc->shouldNotExist())
     {
+        _res.insert(_res.end(), 4 * _additionalTabs, ' ');
         _res += "    \"" + addr.asString() + "\": Account.NONEXISTENT,\n";
         return;
     }
 
+    _res.insert(_res.end(), 4 * _additionalTabs, ' ');
     _res += "    \"" + addr.asString() + "\": Account(\n";
     if (_acc->hasBalance())
+    {
+        _res.insert(_res.end(), 4 * _additionalTabs, ' ');
         _res += "        balance=" + _acc->balance().asDecString() + ",\n";
+    }
     if (_acc->hasNonce())
+    {
+        _res.insert(_res.end(), 4 * _additionalTabs, ' ');
         _res += "        nonce=" + _acc->nonce().asDecString() + ",\n";
+    }
     if (_acc->hasCode())
+    {
+        _res.insert(_res.end(), 4 * _additionalTabs, ' ');
         _res += "        code=\"" + _acc->code().asString() + "\",\n";
+    }
     if (_acc->hasStorage())
     {
+        _res.insert(_res.end(), 4 * _additionalTabs, ' ');
         _res += "        storage="
-                + InsertTab(2, _acc->storage().asDataObject()->asJsonNoFirstKey(), true)
+                + InsertTab(2 + _additionalTabs, _acc->storage().asDataObject()->asJsonNoFirstKey(), true)
                 + ",\n";
-        _res.insert(_res.end() - 3, 2, '\t');
+        _res.insert(_res.end() - 3, 8 + 4 * _additionalTabs, ' ');
     }
+    _res.insert(_res.end(), 4 * _additionalTabs, ' ');
     _res += "    ),\n";
 }
 
 string definePre(StateTestInFiller const& _test)
 {
-    string res = "pre = {\n";
+    string res = "@pytest.fixture\n";
+    res += "def pre():  # noqa: D103\n";
+    res += "    return {\n";
     for (auto const& [addr, acc] : _test.Pre().accounts())
-        defineAccount(res, acc);
-    res += "}\n\n";
+        defineAccount(res, acc, 1);
+    res += "    }\n\n";
     return res;
 }
 
@@ -197,42 +293,97 @@ string defineTransactionStructure(spTransaction _tr)
     return res;
 }
 
-string defineOnePostTransaction(StateTestInFiller const& _test)
+string defineTransaction(StateTestInFiller const& _test)
 {
     string res;
     auto txs = _test.GeneralTr().buildTransactions();
     res += defineTransactionStructure(txs.at(0).transaction());
-    for (auto const& tx : txs)
-    {
-        res += "tx.data=\"" + tx.transaction()->data().asString() + "\"\n";
-        res += "tx.gas_limit=" + tx.transaction()->gasLimit().asDecString() + "\n";
-        res += "tx.value=" + tx.transaction()->value().asDecString() + "\n";
-        res += "state_test(env=env, pre=pre, post=post, txs=[tx])\n\n";
-    }
+    res += "dataInd, dataValue, dataLabel = tr_data\n";
+    res += "gasInd, gasValue = tr_gasLimit\n";
+    res += "valueInd, valueValue = tr_value\n\n";
+
+    res += "tx_index = ExpectSectionIndex(d=dataInd, l=dataLabel, g=gasInd, v=valueInd, f=fork)\n";
+    res += "post=expect.get_expect(tx_index)\n\n";
+
+    res += "tx.data=dataValue\n";
+    res += "tx.gas_limit=gasValue\n";
+    res += "tx.value=valueValue\n";
+    res += "state_test(env=env, pre=pre, post=post, txs=[tx])\n\n";
     return res;
 }
 
-string definePostAndTransactions(StateTestInFiller const& _test)
+string defineSinglePost(StateTestInFiller const& _test)
 {
     string res;
-    bool onlyOne = (_test.Expects().size() == 1);
-    if (onlyOne)
-    {
-        res = "post = {\n";
-        for (auto const& [addr, acc] : _test.Expects().at(0).result().accounts())
-            defineAccount(res, acc);
-        res += "}\n\n";
-        res += defineOnePostTransaction(_test);
-    }
-    else
-    {
-        res = "expect_section = ExpectSection()\n";
+    res = "post = {\n";
+    for (auto const& [addr, acc] : _test.Expects().at(0).result().accounts())
+        defineAccount(res, acc);
+    res += "}\n\n";
+    return res;
+}
 
-        for (auto const& expect : _test.Expects())
+string defineExpectPosts(StateTestInFiller const& _test)
+{
+    (void)_test;
+    string res;
+    res = "@pytest.fixture\n";
+    res += "def expect():  # noqa: D103\n";
+    res += "    expect_section = ExpectSection()\n";
+    for (auto const& expect : _test.Expects())
+    {
+
+
+        string dataLabelStr;
+        string dataIndStr;
+        auto const& databox = _test.GeneralTr().databoxVector();
+        for (auto const& dataInd : expect.getDataInd())
         {
-            res += "expect_section.add_expect(ExpectSectionIndex(d=[0], g=[0], v=[0, 1], fork=Shanghai), post_1)";
+            dataIndStr += to_string(dataInd) + ", ";
+            auto const& label = databox.at(dataInd).m_dataLabel;
+            if (!label.empty())
+            {
+                if (dataLabelStr.find(label) == string::npos)
+                    dataLabelStr += "\"" + label + "\", ";
+            }
         }
+        string gasIndStr;
+        for (auto const& gasInd : expect.getGasInd())
+            gasIndStr += to_string(gasInd) + ", ";
+        string valueIndStr;
+        for (auto const& valueInd : expect.getValInd())
+            valueIndStr += to_string(valueInd) + ", ";
+        string forkStr;
+        for (auto const& fork : expect.forks())
+            forkStr += fork.asString() + ", ";
+
+        auto lastDataLabelCommaPos = dataLabelStr.rfind(", ");
+        if (lastDataLabelCommaPos != string::npos)
+            dataLabelStr.erase(lastDataLabelCommaPos, 2);
+
+        dataIndStr.erase(dataIndStr.rfind(", "), 2);
+        gasIndStr.erase(gasIndStr.rfind(", "), 2);
+        valueIndStr.erase(valueIndStr.rfind(", "), 2);
+        forkStr.erase(forkStr.rfind(", "), 2);
+
+        res += "    expect_section.add_expect(\n";
+        res += "        ExpectSectionIndex(\n";
+        if (dataLabelStr.empty())
+            res += "            d=[" + dataIndStr + "],\n";
+        else
+            res += "            d=[" + dataLabelStr + "],\n";
+        res += "            g=[" + gasIndStr + "],\n";
+        res += "            v=[" + valueIndStr + "],\n";
+        res += "            f=[" + forkStr + "]\n";
+        res += "        ),\n";
+
+        res += "        {\n";
+        for (auto const& [addr, acc] : expect.result().accounts())
+            defineAccount(res, acc, 2);
+        res += "        }\n";
+
+        res += "    )\n";
     }
+    res += "    return expect_section\n\n";
     return res;
 }
 
@@ -247,12 +398,22 @@ spDataObject ConvertpyTest(StateTestInFiller const& _test, TestSuite::TestSuiteO
     else
         s += expectInclude + "\n";
 
-    //s += defineForksParameter(_test);
+    s += defineEnvironment(_test);
+    s += definePre(_test);
+    if (_test.Expects().size() == 1)
+        s += defineSinglePost(_test);
+    else
+        s += defineExpectPosts(_test);
+
+
+    s += defineForksParameter(_test);
+    s += defineDataParameter(_test);
+    s += defineGasParameter(_test);
+    s += defineValueParameter(_test);
     s += defineTestName(_test);
+
     s += InsertTab(1, defineCommentAfterTestName(_test));
-    s += InsertTab(1, defineEnvironment(_test));
-    s += InsertTab(1, definePre(_test));
-    s += InsertTab(1, definePostAndTransactions(_test));
+    s += InsertTab(1, defineTransaction(_test));
 
     (void)_test;
     return res;
