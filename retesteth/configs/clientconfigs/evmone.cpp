@@ -14,7 +14,7 @@ string const evmone_config = R"({
     "socketAddress" : "start.sh",
     "initializeTime" : "0",
     "checkDifficulty" : true,
-    "calculateDifficulty" : false,
+    "calculateDifficulty" : true,
     "checkBasefee" : true,
     "calculateBasefee" : false,
     "checkLogsHash" : true,
