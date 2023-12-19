@@ -62,7 +62,7 @@ else
         cmdArgs=$cmdArgs" "$index
     done
     if [ $stateProvided -eq 1 ]; then
-        evm t8n $cmdArgs --verbosity 2 2> $errorLogFile
+        evm --verbosity 2 t8n $cmdArgs 2> $errorLogFile
     else
         evm t9n $cmdArgs 2> $errorLogFile
     fi
@@ -89,7 +89,8 @@ string const t8ntool_config = R"({
     "defaultChainID" : 1,
     "customCompilers" : {
         ":yul" : "yul.sh",
-        ":mycompiler" : "mycompiler.sh"
+        ":mycompiler" : "mycompiler.sh",
+        ":pyopcode" : "pyopcode.sh"
     },
     "forks" : [
         "Frontier",
@@ -440,6 +441,21 @@ rm -r "./tests/tmp"
 exit 0
 )";
 
+
+string const pyopcode_compiler_sh = R"(#!/bin/bash
+#if [ -z "$PYSPECS_PATH" ]
+#then
+#    >&2 echo "Error: env variable 'PYSPECS_PATH' is not set!"
+#    exit 1;
+#fi
+
+cd /home/wins/Ethereum/bytecodetopy/execution-spec-tests
+python3 -m venv ./venv/
+source ./venv/bin/activate
+echo $(evm_bytes_to_python $2)
+
+)";
+
     {
         spDataObject obj;
         (*obj)["path"] = "t8ntool/config";
@@ -458,6 +474,13 @@ exit 0
         (*obj)["exec"] = true;
         (*obj)["path"] = "t8ntool/mycompiler.sh";
         (*obj)["content"] = t8ntool_customcompiler;
+        map_configs.addArrayObject(obj);
+    }
+    {
+        spDataObject obj;
+        (*obj)["exec"] = true;
+        (*obj)["path"] = "t8ntool/pyopcode.sh";
+        (*obj)["content"] = pyopcode_compiler_sh;
         map_configs.addArrayObject(obj);
     }
     {
@@ -492,6 +515,13 @@ exit 0
         (*obj)["exec"] = true;
         (*obj)["path"] = "default/mycompiler.sh";
         (*obj)["content"] = t8ntool_customcompiler;
+        map_configs.addArrayObject(obj);
+    }
+    {
+        spDataObject obj;
+        (*obj)["exec"] = true;
+        (*obj)["path"] = "default/pyopcode.sh";
+        (*obj)["content"] = pyopcode_compiler_sh;
         map_configs.addArrayObject(obj);
     }
     {
