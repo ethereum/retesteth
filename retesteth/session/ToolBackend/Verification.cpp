@@ -138,6 +138,14 @@ void verify4844Block(spBlockHeader const& _header, ToolChain const& _chain)
     verifyCommonMergeRules(_header, "4844");
 
     /// Verify 4844 rules
+    if (_header->number() == 0)
+    {
+        BlockHeader4844 const& header = BlockHeader4844::castFrom(_header);
+        if (header.blobGasUsed().asBigInt() != 0)
+            throw test::UpwardsException("4844 genesis block blobGasUsed != 0 \n" + header.asDataObject()->asJson());
+        if (header.excessBlobGas().asBigInt() != 0)
+            throw test::UpwardsException("4844 genesis block excessBlobGas != 0 \n" + header.asDataObject()->asJson());
+    }
 }
 
 void verifyMergeBlock(spBlockHeader const& _header, ToolChain const& _chain)
