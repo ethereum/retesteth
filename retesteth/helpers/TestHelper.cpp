@@ -87,6 +87,27 @@ spDataObject readAutoDataWithoutOptions(boost::filesystem::path const& _file, bo
     }
     return spDataObject(0);
 }
+vector<fs::path> getFilesRecursive(fs::path const& _dirPath, set<string> const& _extentionMask, string const& _particularFile)
+{
+    vector<fs::path> files;
+    if (!fs::exists(_dirPath))
+        return files;
+
+    for (auto const& file : getFiles(_dirPath, _extentionMask, _particularFile))
+        files.emplace_back(file);
+
+    using fsIterator = fs::directory_iterator;
+    for (fsIterator it(_dirPath); it != fsIterator(); ++it)
+    {
+        if (fs::is_directory(it->path()))
+        {
+            for (auto const& file : getFilesRecursive(*it, _extentionMask, _particularFile))
+                files.emplace_back(file);
+        }
+    }
+
+    return files;
+}
 
 vector<fs::path> getFiles(fs::path const& _dirPath, set<string> const& _extentionMask, string const& _particularFile)
 {
