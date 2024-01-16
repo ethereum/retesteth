@@ -289,7 +289,18 @@ void convertDecStateToHex(spDataObject& _data, solContracts const& _preSolidity,
         {
             auto const& code = acc.atKey(c_code).asString();
             if (_compileCode == StateToHex::COMPILECODE)
+            {
+                if (Options::get().convertpy)
+                    acc["code_raw"] = code;
+
                 acc[c_code].setString(test::compiler::replaceCode(code, _preSolidity));
+
+                if (Options::get().convertpy)
+                {
+                    if (acc["code_raw"].asString() == acc[c_code].asString())
+                        acc.removeKey("code_raw");
+                }
+            }
             if (code.empty())
                 acc[c_code].asStringUnsafe().insert(0, "0x");
         }

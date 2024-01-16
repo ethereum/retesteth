@@ -99,7 +99,6 @@ bool tryCustomCompiler(string const& _code, string& _compiledCode)
 
                 int exitCode;
                 _compiledCode = test::executeCmd(cmd, exitCode);
-                utiles::checkHexHasEvenLength(_compiledCode);
                 return true;
             }
         }
@@ -209,12 +208,26 @@ string replaceCode(string const& _code, solContracts const& _preSolidity)
     if (!customCompilerWorked)
         tryKnownCompilers(_code, _preSolidity, compiledCode);
 
+    utiles::checkHexHasEvenLength(compiledCode);
+
     if (compiledCode == "0x")
         ETH_WARNING("replaceCode returned empty bytecode `0x` trying to compile " + TestOutputHelper::get().testInfo().errorDebug() +  "\n" + _code);
 
     if (_code.size() > 0)
         ETH_FAIL_REQUIRE_MESSAGE(
             compiledCode.size() > 0, "Bytecode is missing! '" + _code + "' " + TestOutputHelper::get().testName());
+    return compiledCode;
+}
+
+
+std::string compilePyopcode(std::string const& _code)
+{
+    if (_code == "")
+        return "";
+    string compiledCode;
+    bool customCompilerWorked = tryCustomCompiler(_code, compiledCode);
+    if (!customCompilerWorked)
+        ETH_WARNING("compilePyopcode didn't work!");
     return compiledCode;
 }
 }  // namespace compiler
