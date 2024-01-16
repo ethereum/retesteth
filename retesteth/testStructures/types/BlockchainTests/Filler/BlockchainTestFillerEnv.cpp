@@ -199,7 +199,6 @@ void BlockchainTestFillerEnv::initializeCommonFields(spDataObject const& _data, 
 {
     m_currentNumber = sVALUE(_data->atKey(c_number));
     m_currentTimestamp = sVALUE(_data->atKey(c_timestamp));
-    m_previousHash = sFH32(_data->atKey(c_parentHash));
     m_currentExtraData = sBYTES(_data->atKey(c_extraData));
     m_currentCoinbase = sFH20(_data->atKey(c_coinbase));
     m_currentGasLimit = sVALUE(_data->atKey(c_gasLimit));

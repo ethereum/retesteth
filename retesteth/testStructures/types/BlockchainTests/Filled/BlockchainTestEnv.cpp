@@ -261,7 +261,6 @@ void BlockchainTestEnv::initializeCommonFields(DataObject const& _data)
 {
     m_currentNumber = sVALUE(_data.atKey(c_number));
     m_currentTimestamp = sVALUE(_data.atKey(c_timestamp));
-    m_previousHash = sFH32(_data.atKey(c_parentHash));
     m_currentExtraData = sBYTES(_data.atKey(c_extraData));
     m_currentNonce = sFH8(_data.atKey(c_nonce));
     m_currentMixHash = sFH32(_data.atKey(c_mixHash));

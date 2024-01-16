@@ -49,7 +49,7 @@ GeneralStateTest::GeneralStateTest(spDataObject& _data)
             TestOutputHelper::get().testFile().string() + " A test file must contain an object value (json/yaml).");
 
         if (_data->getSubObjects().size() != 1)
-            ETH_WARNING(TestOutputHelper::get().testFile().string() + " A test file must contain exactly one test!");
+            ETH_DC_MESSAGE(test::debug::STATS2, TestOutputHelper::get().testFile().string() + " A test file should contain exactly one test!");
 
         m_tests.reserve(_data.getContent().getSubObjects().size());
         for (auto& el : _data.getContent().getSubObjectsUnsafe())

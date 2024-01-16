@@ -19,7 +19,6 @@ struct StateTestEnvBase : GCP_SPointerBase
     BYTES const& currentExtraData() const { return m_currentExtraData; }
     FH8 const& currentNonce() const { return m_currentNonce; }
     FH32 const& currentMixHash() const { return m_currentMixHash; }
-    FH32 const& previousHash() const { return m_previousHash; }
     virtual spDataObject const& asDataObject() const;
     virtual ~StateTestEnvBase() {}
 
@@ -40,7 +39,6 @@ protected:
     spVALUE m_currentGasLimit;
     spVALUE m_currentNumber;
     spVALUE m_currentTimestamp;
-    spFH32 m_previousHash;
     spBYTES m_currentExtraData;
     spFH8 m_currentNonce;
     spFH32 m_currentMixHash;
