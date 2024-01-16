@@ -24,7 +24,7 @@ namespace
 void checkFileIsFiller(fs::path const& _file)
 {
     string fileName = _file.stem().c_str();
-    if (fileName.find("Filler") == string::npos)
+    if (fileName.find("Filler") == string::npos && _file.extension() != ".py")
         ETH_ERROR_MESSAGE("Trying to fill `" + string(_file.c_str()) + "`, but file does not have Filler suffix!");
 }
 
@@ -94,18 +94,35 @@ string makePyScriptCMDArgs(fs::path const& _fillerTestFilePath, TestSuite::Absol
     auto const& currentConfig = Options::getCurrentConfig();
     auto const& specsScript = currentConfig.getPySpecsStartScript();
     string runcmd = specsScript.c_str();
-    runcmd += " " + _fillerTestFilePath.string();                              // SRCPATH
-    runcmd += " " + fillerName;                                                // FILLER NAME
+
+    // SRCPATH
+    runcmd += " " + _fillerTestFilePath.string();
+
+    // FILLER NAME
+    runcmd += " " + fillerName;
+
+    // TEST CASE NAME
     if (opt.singletest.initialized() && !opt.singletest.subname.empty())
         runcmd += " " + opt.singletest.subname;
     else
-        runcmd += " null";                                                     // TEST CASE NAME
-    runcmd += " " + _filledPath.path().parent_path().string();                 // OUTPATH
-    runcmd += " " + opt.getCurrentConfig().getStartScript().string();          // T8N start
+        runcmd += " null";
+
+    // OUTPATH
+    auto filledPath = _filledPath.path().parent_path().string();
+    if (filledPath.empty())
+        filledPath = _fillerTestFilePath.string();
+    runcmd += " " + filledPath;
+
+    // T8N start script
+    runcmd += " " + opt.getCurrentConfig().getStartScript().string();
+
+    // Force test update
     if (opt.forceupdate)
         runcmd += " --force-refill";
     else
         runcmd += " null";
+
+    // Debugging
     if (test::debug::Debug::get().flag(DC::PYSPEC))
         runcmd += " --stderr";
     else

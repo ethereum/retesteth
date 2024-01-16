@@ -47,7 +47,10 @@ void runCustomTestFile()
             else
             {
                 boost::filesystem::path file(opt.singleTestFile);
-                _suite->runTestWithoutFiller(file);
+                if (file.parent_path().empty())
+                    _suite->runTestWithoutFiller(boost::filesystem::current_path() / file);
+                else
+                    _suite->runTestWithoutFiller(file);
             }
         }
     };
