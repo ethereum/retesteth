@@ -115,9 +115,6 @@ Options::Options(int argc, const char** argv)
     ADD_OPTION(singleTestFile, "--testfile", [](){
         cout << setw(40) << "--testfile <TestFile>" << setw(0) << "Run tests from a file. Requires -t <TestSuite>\n";
     });
-    ADD_OPTION(singleTestFile, "--testfolder", [](){
-        cout << setw(40) << "--testfolder <Path>" << setw(0) << "Run all tests from all subfolders of a custom given folder. Requires -t <TestSuite>\n";
-    });
     ADD_OPTION(singleTestOutFile, "--outfile", [](){
         cout << setw(40) << "--outfile <TestFile>" << setw(0) << "When using `--testfile` with `--filltests` output to this file\n";
     });
