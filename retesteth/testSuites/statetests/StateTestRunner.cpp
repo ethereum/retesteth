@@ -222,10 +222,17 @@ void StateTestRunner::performValidations(TransactionInGeneralSection& _tr, State
     if (!expectedBytesPtr.isEmpty())
     {
         auto const& tr = _tr.transaction();
-        if (tr->getRawBytes().asString() != expectedBytesPtr->asString())
+        auto calculated = tr->getRawBytes().asString();
+        auto size_r = _tr.transaction()->r().asString().size();
+        auto size_s = _tr.transaction()->s().asString().size();
+
+        auto signatureRlpLength = size_r + size_s + 2;
+        calculated.erase(calculated.size() - signatureRlpLength, signatureRlpLength);
+
+        if (expectedBytesPtr->asString().find(calculated) == string::npos)
         {
-            string const msg = string("TxBytes mismatch: test transaction section does not match txbytes in post section! ") +
-                               "\n Constructed: " + expectedBytesPtr->asString() + "\n vs \n " +
+            string const msg = string("TxBytes mismatch: test transaction section does not match txbytes in post section (Signature ignored)! ") +
+                               "\n test txbytes: " + expectedBytesPtr->asString() + "\n vs \n " +
                                tr->getRawBytes().asString();
             if (Options::get().chainid.initialized())
             {
@@ -233,7 +240,9 @@ void StateTestRunner::performValidations(TransactionInGeneralSection& _tr, State
             }
             else
             {
-                ETH_ERROR_MESSAGE(msg);
+                // Because pyspecs can produce a signature with different length
+                // Even ignoring it still messes up rlp prefix, so we will get warnings sometimes
+                ETH_WARNING(msg);
             }
         }
     }
