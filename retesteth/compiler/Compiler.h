@@ -40,4 +40,6 @@ std::string replaceCode(std::string const& _code, solContracts const& _preSolidi
 /// compile clean YUL
 std::string compileYul(std::string const& _code);
 
+std::string compilePyopcode(std::string const& _code);
+
 }  // namespace compiler
