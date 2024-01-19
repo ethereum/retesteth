@@ -383,16 +383,17 @@ cd $PYSPECS_PATH
 python3 -m venv ./venv/
 source ./venv/bin/activate
 
-SRCPATH=$1
-FILLER=$2
-TESTCA=$3
-OUTPUT=$4
-EVMT8N=$5
-FORCER=$6
-DEBUG=$7
-FROMF=$8
-UNTIF=$9
-EXPRTCALL=${10}
+SUITETYPE=$1
+SRCPATH=$2
+FILLER=$3
+TESTCA=$4
+OUTPUT=$5
+EVMT8N=$6
+FORCER=$7
+DEBUG=$8
+FROMF=$9
+UNTIF=${10}
+EXPRTCALL=${11}
 
 mkdir "./tests/tmp"
 genUID=$(uuidgen)
@@ -434,7 +435,12 @@ else
       exit 1
     fi
 fi
-cp -r $testout/* $OUTPUT
+
+if [ ! -d $OUTPUT ]; then
+    mkdir $OUTPUT
+fi
+
+cp -r $testout/$SUITETYPE/* $OUTPUT
 rm -r $testout
 rm -r $testdir
 rm -r "./tests/tmp"
