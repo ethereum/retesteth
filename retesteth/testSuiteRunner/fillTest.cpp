@@ -39,7 +39,7 @@ fs::path prepareOutputFileName(fs::path const& _file)
     if (Options::get().singleTestOutFile.initialized())
         outPath = fs::path(Options::get().singleTestOutFile);
     else
-        outPath = _file.parent_path() / fileName;
+        outPath = _file.parent_path() / "filled" / fileName;
     return outPath;
 }
 
@@ -77,16 +77,17 @@ string const c_pythonPostf = ".py";
 string makePyScriptCMDArgs(fs::path const& _fillerTestFilePath, TestSuite::AbsoluteFilledTestPath const& _filledPath)
 {
     /*
-        SRCPATH=$1
-        FILLER=$2
-        TESTCA=$3
-        OUTPUT=$4
-        EVMT8N=$5
-        FORCER=$6
-        DEBUG=$7
-        FROMF=$8
-        UNTIF=$9
-        EXPRTCALL=$10
+        SUITETYPE=$1
+        SRCPATH=$2
+        FILLER=$3
+        TESTCA=$4
+        OUTPUT=$5
+        EVMT8N=$6
+        FORCER=$7
+        DEBUG=$8
+        FROMF=$9
+        UNTIF=$10
+        EXPRTCALL=$11
     */
 
     auto const& opt = Options::get();
@@ -94,6 +95,15 @@ string makePyScriptCMDArgs(fs::path const& _fillerTestFilePath, TestSuite::Absol
     auto const& currentConfig = Options::getCurrentConfig();
     auto const& specsScript = currentConfig.getPySpecsStartScript();
     string runcmd = specsScript.c_str();
+
+    // SUITETYPE
+    auto const tArg = Options::get().rCurrentTestSuite;
+    if (tArg.find("GeneralStateTests") != string::npos)
+        runcmd += Options::get().fillchain ? " blockchain_tests" : " state_tests";
+    else if (tArg.find("BlokchainTests") != string::npos)
+        runcmd += " blockchain_tests";
+    else
+        runcmd += " /";
 
     // SRCPATH
     runcmd += " " + _fillerTestFilePath.string();

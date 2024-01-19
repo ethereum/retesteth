@@ -69,7 +69,7 @@ bool hasSubfoldersWithFileTypes(fs::path const& _path, string const& _filemask)
     using fsIterator = fs::directory_iterator;
     for (fsIterator it(_path); it != fsIterator(); ++it)
     {
-        if (fs::is_directory(*it))
+        if (fs::is_directory(*it) && (*it).path().stem().string() != "__pycache__")
         {
             bool foundTest = false;
             for (fsIterator subit(*it); subit != fsIterator(); ++subit)
