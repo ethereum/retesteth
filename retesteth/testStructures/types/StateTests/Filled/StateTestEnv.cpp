@@ -20,8 +20,7 @@ void requireStateTestEnvScheme(DataObject const& _data)
             {"currentGasLimit", {{DataType::String}, jsonField::Required}},
             {"currentNumber", {{DataType::String}, jsonField::Required}},
             {"currentTimestamp", {{DataType::String}, jsonField::Required}},
-            {c_parentExcessBlobGas, {{DataType::String}, jsonField::Optional}},
-            {c_parentBlobGasUsed, {{DataType::String}, jsonField::Optional}},
+            {c_currentExcessBlobGas, {{DataType::String}, jsonField::Optional}},
             {c_currentBeaconRoot, {{DataType::String}, jsonField::Optional}},
             {"currentWithdrawalsRoot", {{DataType::String}, jsonField::Optional}},
             {"previousHash", {{DataType::String}, jsonField::Required}}});
@@ -67,12 +66,13 @@ void StateTestEnv::initializeFields(DataObject const& _data)
     m_currentWithdrawalsRoot = sFH32(DataObject(C_WITHDRAWALS_EMPTY_ROOT));
 
     // Cancun
-    m_currentExcessBlobGas = sVALUE(DataObject("0x00"));
-    if (_data.count(c_parentExcessBlobGas))
-        m_currentExcessBlobGas = sVALUE(_data.atKey(c_parentExcessBlobGas));
     m_currentBlobGasUsed = sVALUE(DataObject("0x00"));
-    if (_data.count(c_parentBlobGasUsed))
-        m_currentBlobGasUsed = sVALUE(_data.atKey(c_parentBlobGasUsed));
+    m_currentExcessBlobGas = sVALUE(DataObject("0x00"));
+    if (_data.count(c_currentExcessBlobGas))
+        m_currentExcessBlobGas = sVALUE(_data.atKey(c_currentExcessBlobGas));
+    m_currentBlobGasUsed = sVALUE(DataObject("0x00"));
+    //if (_data.count(c_parentBlobGasUsed))
+    //    m_currentBlobGasUsed = sVALUE(_data.atKey(c_parentBlobGasUsed));
     m_currentBeaconRoot = spFH32(FH32::zero().copy());
     if (_data.count(c_currentBeaconRoot))
         m_currentBeaconRoot = sFH32(_data.atKey(c_currentBeaconRoot));
