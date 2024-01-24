@@ -126,7 +126,7 @@ void BlockMining::prepareEnvFile()
 
     auto spHeader = currentBlockH->asDataObject();
     spBlockchainTestFillerEnv env(readBlockchainFillerTestEnv(dataobject::move(spHeader), m_chainRef.engine()));
-    spDataObject& envData = const_cast<spDataObject&>(env->asDataObject());
+    spDataObject envData = env->asDataObject();
     makeEnvDifficulty(envData, parentBlockH, currentBlockH);
     if (isBlockExportCurrentRandom(currentBlockH))
         (*envData)["currentRandom"] = currentBlockH->mixHash().asString();

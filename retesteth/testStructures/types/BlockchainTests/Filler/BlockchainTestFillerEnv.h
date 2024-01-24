@@ -17,10 +17,10 @@ private:
 
 };
 
-
 struct BlockchainTestFillerEnvLegacy : BlockchainTestFillerEnv
 {
     BlockchainTestFillerEnvLegacy(spDataObjectMove _data, SealEngine _sEngine);
+    spDataObject asDataObject() const override;
 
 protected:
     void initializeLegacyFields(DataObject const&);
@@ -31,6 +31,7 @@ private:
 struct BlockchainTestFillerEnv1559 : BlockchainTestFillerEnv
 {
     BlockchainTestFillerEnv1559(spDataObjectMove _data, SealEngine _sEngine);
+    spDataObject asDataObject() const override;
 
 protected:
     void initialize1559Fields(DataObject const&);
@@ -42,6 +43,7 @@ private:
 struct BlockchainTestFillerEnvMerge : BlockchainTestFillerEnv
 {
     BlockchainTestFillerEnvMerge(spDataObjectMove _data, SealEngine _sEngine);
+    spDataObject asDataObject() const override;
 
 protected:
     void initializeMergeFields(DataObject const&);
@@ -53,6 +55,7 @@ private:
 struct BlockchainTestFillerEnvShanghai : BlockchainTestFillerEnvMerge
 {
     BlockchainTestFillerEnvShanghai(spDataObjectMove _data, SealEngine _sEngine);
+    spDataObject asDataObject() const override;
 
 protected:
     void initializeShanghaiFields(DataObject const&);
@@ -64,6 +67,7 @@ private:
 struct BlockchainTestFillerEnv4844 : BlockchainTestFillerEnvShanghai
 {
     BlockchainTestFillerEnv4844(spDataObjectMove _data, SealEngine _sEngine);
+    spDataObject asDataObject() const override;
 
 protected:
     void initialize4844Fields(DataObject const&);

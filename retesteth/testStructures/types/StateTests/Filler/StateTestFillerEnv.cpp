@@ -29,8 +29,6 @@ void convertEnvDecFieldsToHex(spDataObject& _data)
     (*_data).performModifier(mod_valueToCompactEvenHexPrefixed, DataObject::ModifierOption::RECURSIVE,
         {"currentCoinbase", "previousHash", "currentRandom"});
     (*_data).atKeyUnsafe("currentCoinbase").performModifier(mod_valueInsertZeroXPrefix);
-    if (_data->count("previousHash"))
-        (*_data).atKeyUnsafe("previousHash").performModifier(mod_valueInsertZeroXPrefix);
     (*_data).performModifier(mod_valueToLowerCase);
 }
 }  // namespace
@@ -41,16 +39,16 @@ namespace test::teststruct
 
 StateTestFillerEnv::StateTestFillerEnv(spDataObjectMove _data)
 {
+    spDataObject data = _data.getPointer();
     try
     {
-        m_raw = _data.getPointer();
-        requireStateTestsFillerEnvScheme(m_raw);
-        convertEnvDecFieldsToHex(m_raw);
-        initializeFields(m_raw);
+        requireStateTestsFillerEnvScheme(data);
+        convertEnvDecFieldsToHex(data);
+        initializeFields(data);
     }
     catch (std::exception const& _ex)
     {
-        throw UpwardsException(string("StateTestFillerEnv parse error: ") + _ex.what() + m_raw->asJson());
+        throw UpwardsException(string("StateTestFillerEnv parse error: ") + _ex.what() + data->asJson());
     }
 }
 
@@ -103,32 +101,6 @@ void StateTestFillerEnv::initializeFields(spDataObject const& _data)
         m_currentBlobGasUsed = sVALUE(_data->atKey(c_parentBlobGasUsed));
     if (_data->count(c_currentBeaconRoot))
         m_currentBeaconRoot = sFH32(_data->atKey(c_currentBeaconRoot));
-}
-
-spDataObject const& StateTestFillerEnv::asDataObject() const
-{
-    spDataObject const& c_raw = StateTestEnvBase::asDataObject();
-    spDataObject& raw = const_cast<spDataObject&>(c_raw);
-    if (!raw->count("currentBaseFee"))
-        (*raw)["currentBaseFee"] = m_currentBaseFee.getCContent().asString();
-
-    if (!raw->count("currentRandom"))
-        (*raw)["currentRandom"] = m_currentRandom.getCContent().asString();
-
-    if (!raw->count("currentDifficulty"))
-        (*raw)["currentDifficulty"] = m_currentDifficulty.getCContent().asString();
-
-    if (!raw->count("currentWithdrawalsRoot"))
-        (*raw)["currentWithdrawalsRoot"] = m_currentWithdrawalsRoot.getCContent().asString();
-
-    if (!raw->count("currentBeaconRoot"))
-        (*raw)["currentBeaconRoot"] = m_currentBeaconRoot.getCContent().asString();
-
-    if (!raw->count("currentExcessBlobGas"))
-        (*raw)["currentExcessBlobGas"] = m_currentExcessBlobGas.getCContent().asString();
-
-
-    return raw;
 }
 
 }  // namespace teststruct

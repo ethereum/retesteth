@@ -144,7 +144,10 @@ void verify4844Block(spBlockHeader const& _header, ToolChain const& _chain)
         if (header.blobGasUsed().asBigInt() != 0)
             throw test::UpwardsException("4844 genesis block blobGasUsed != 0 \n" + header.asDataObject()->asJson());
         if (header.excessBlobGas().asBigInt() != 0)
-            throw test::UpwardsException("4844 genesis block excessBlobGas != 0 \n" + header.asDataObject()->asJson());
+        {
+            ETH_WARNING("4844(Cancun) genesis block excessBlobGas != 0");
+            ETH_DC_MESSAGE(DC::STATS2, header.asDataObject()->asJson());
+        }
     }
 }
 

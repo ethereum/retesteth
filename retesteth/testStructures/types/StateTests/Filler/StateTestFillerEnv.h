@@ -11,7 +11,6 @@ struct StateTestFillerEnv : StateTestEnvBase
     StateTestFillerEnv(spDataObjectMove);
     VALUE const& currentTimestamp() const override { return m_genesisTimestamp; }
     VALUE const& firstBlockTimestamp() const { return m_currentTimestamp; }
-    spDataObject const& asDataObject() const override;
 
 protected:
     void initializeFields(spDataObject const&);

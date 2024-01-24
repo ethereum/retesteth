@@ -14,8 +14,7 @@ string const c_sampleStateTestFiller = R"({
              "currentDifficulty" : "0x20000",
              "currentGasLimit" : "0xFF112233445566",
              "currentNumber" : "1",
-             "currentTimestamp" : "1000",
-             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
+             "currentTimestamp" : "1000"
         },
        "expect" : [
        {
@@ -104,8 +103,7 @@ string const c_sampleStateTestFilled = R"({
             "currentGasLimit" : "0xff112233445566",
             "currentNumber" : "0x01",
             "currentRandom" : "0x0000000000000000000000000000000000000000000000000000000000020000",
-            "currentTimestamp" : "0x03e8",
-            "previousHash" : "0x5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
+            "currentTimestamp" : "0x03e8"
         },
         "post" : {
             "Berlin" : [
