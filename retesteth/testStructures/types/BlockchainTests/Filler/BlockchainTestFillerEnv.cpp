@@ -168,28 +168,6 @@ void convertDecFieldsToHex(spDataObject& _data)
         (*_data).atKeyUnsafe(c_blobGasUsed).performModifier(mod_valueToCompactEvenHexPrefixed);
     (*_data).performModifier(mod_valueToLowerCase);
 }
-
-spDataObject formatRawDataToRPCformat(spDataObject& _data)
-{
-    // Format the env to RPC format
-    spDataObject out;
-    (*out).atKeyPointer("currentCoinbase") = (*_data).atKeyPointerUnsafe(c_coinbase);
-    (*out).atKeyPointer("currentDifficulty") = (*_data).atKeyPointerUnsafe(c_difficulty);
-    (*out).atKeyPointer("currentNumber") = (*_data).atKeyPointerUnsafe(c_number);
-    (*out).atKeyPointer("currentTimestamp") = (*_data).atKeyPointerUnsafe(c_timestamp);
-    (*out).atKeyPointer("currentGasLimit") = (*_data).atKeyPointerUnsafe(c_gasLimit);
-    (*out).atKeyPointer("previousHash") = (*_data).atKeyPointerUnsafe(c_parentHash);
-    if (_data->count(c_baseFeePerGas))
-        (*out).atKeyPointer("currentBaseFee") = (*_data).atKeyPointerUnsafe(c_baseFeePerGas);
-    if (_data->count(c_excessBlobGas))
-        (*out).atKeyPointer(c_currentExcessBlobGas) = (*_data).atKeyPointerUnsafe(c_excessBlobGas);
-    if (_data->count(c_blobGasUsed))
-        (*out).atKeyPointer(c_currentBlobGasUsed) = (*_data).atKeyPointerUnsafe(c_blobGasUsed);
-    if (_data->count(c_parentBeaconBlockRoot))
-        (*out).atKeyPointer(c_currentBeaconRoot) = (*_data).atKeyPointerUnsafe(c_parentBeaconBlockRoot);
-    return out;
-}
-
 }
 
 namespace test::teststruct
@@ -258,14 +236,13 @@ void BlockchainTestFillerEnvLegacy::initializeLegacyFields(DataObject const& _da
 BlockchainTestFillerEnv4844::BlockchainTestFillerEnv4844(spDataObjectMove _data, SealEngine _sEngine)
 {
     try {
-        m_raw = _data.getPointer();
-        require4844BlockchainHeader(m_raw);
-        convertDecFieldsToHex(m_raw);
-        initializeCommonFields(m_raw, _sEngine);
-        initializeMergeFields(m_raw);
-        initializeShanghaiFields(m_raw);
-        initialize4844Fields(m_raw);
-        m_raw = formatRawDataToRPCformat(m_raw);
+        spDataObject data = _data.getPointer();
+        convertDecFieldsToHex(data);
+        require4844BlockchainHeader(data);
+        initializeCommonFields(data, _sEngine);
+        initializeMergeFields(data);
+        initializeShanghaiFields(data);
+        initialize4844Fields(data);
     }
     catch (std::exception const& _ex)
     {
@@ -273,18 +250,34 @@ BlockchainTestFillerEnv4844::BlockchainTestFillerEnv4844(spDataObjectMove _data,
     }
 }
 
+spDataObject BlockchainTestFillerEnv4844::asDataObject() const
+{
+    spDataObject out;
+    (*out)["currentCoinbase"] = m_currentCoinbase->asString();
+    (*out)["currentDifficulty"] = "0x00";
+    (*out)["currentNumber"] = m_currentNumber->asString();
+    (*out)["currentTimestamp"] = m_currentTimestamp->asString();
+    (*out)["currentGasLimit"] = m_currentGasLimit->asString();
+    (*out)["currentBaseFee"] = m_currentBaseFee->asString();
+    (*out)["currentRandom"] = m_currentRandom->asString();
+    (*out)["currentWithdrawalsRoot"] = m_currentWithdrawalsRoot->asString();
+    (*out)["currentExcessBlobGas"] = m_currentExcessBlobGas->asString();
+    (*out)["currentBlobGasUsed"] = m_currentBlobGasUsed->asString();
+    (*out)["currentBeaconRoot"] = m_currentBeaconRoot->asString();
+    return out;
+}
+
 
 BlockchainTestFillerEnvShanghai::BlockchainTestFillerEnvShanghai(spDataObjectMove _data, SealEngine _sEngine)
     : BlockchainTestFillerEnvMerge()
 {
     try {
-        m_raw = _data.getPointer();
-        requireShanghaiBlockchainHeader(m_raw);
-        convertDecFieldsToHex(m_raw);
-        initializeCommonFields(m_raw, _sEngine);
-        initializeMergeFields(m_raw);
-        initializeShanghaiFields(m_raw);
-        m_raw = formatRawDataToRPCformat(m_raw);
+        spDataObject data = _data.getPointer();
+        requireShanghaiBlockchainHeader(data);
+        convertDecFieldsToHex(data);
+        initializeCommonFields(data, _sEngine);
+        initializeMergeFields(data);
+        initializeShanghaiFields(data);
     }
     catch (std::exception const& _ex)
     {
@@ -292,16 +285,28 @@ BlockchainTestFillerEnvShanghai::BlockchainTestFillerEnvShanghai(spDataObjectMov
     }
 }
 
+spDataObject BlockchainTestFillerEnvShanghai::asDataObject() const
+{
+    spDataObject out;
+    (*out)["currentCoinbase"] = m_currentCoinbase->asString();
+    (*out)["currentDifficulty"] = "0x00";
+    (*out)["currentNumber"] = m_currentNumber->asString();
+    (*out)["currentTimestamp"] = m_currentTimestamp->asString();
+    (*out)["currentGasLimit"] = m_currentGasLimit->asString();
+    (*out)["currentBaseFee"] = m_currentBaseFee->asString();
+    (*out)["currentRandom"] = m_currentRandom->asString();
+    (*out)["currentWithdrawalsRoot"] = m_currentWithdrawalsRoot->asString();
+    return out;
+}
+
 BlockchainTestFillerEnvMerge::BlockchainTestFillerEnvMerge(spDataObjectMove _data, SealEngine _sEngine)
 {
     try {
-
-        m_raw = _data.getPointer();
-        requireMergeBlockchainHeader(m_raw);
-        convertDecFieldsToHex(m_raw);
-        initializeCommonFields(m_raw, _sEngine);
-        initializeMergeFields(m_raw);
-        m_raw = formatRawDataToRPCformat(m_raw);
+        spDataObject data = _data.getPointer();
+        requireMergeBlockchainHeader(data);
+        convertDecFieldsToHex(data);
+        initializeCommonFields(data, _sEngine);
+        initializeMergeFields(data);
     }
     catch (std::exception const& _ex)
     {
@@ -309,15 +314,27 @@ BlockchainTestFillerEnvMerge::BlockchainTestFillerEnvMerge(spDataObjectMove _dat
     }
 }
 
+spDataObject BlockchainTestFillerEnvMerge::asDataObject() const
+{
+    spDataObject out;
+    (*out)["currentCoinbase"] = m_currentCoinbase->asString();
+    (*out)["currentDifficulty"] = "0x00";
+    (*out)["currentNumber"] = m_currentNumber->asString();
+    (*out)["currentTimestamp"] = m_currentTimestamp->asString();
+    (*out)["currentGasLimit"] = m_currentGasLimit->asString();
+    (*out)["currentBaseFee"] = m_currentBaseFee->asString();
+    (*out)["currentRandom"] = m_currentRandom->asString();
+    return out;
+}
+
 BlockchainTestFillerEnv1559::BlockchainTestFillerEnv1559(spDataObjectMove _data, SealEngine _sEngine)
 {
     try {
-        m_raw = _data.getPointer();
-        require1559BlockchainHeader(m_raw);
-        convertDecFieldsToHex(m_raw);
-        initializeCommonFields(m_raw, _sEngine);
-        initialize1559Fields(m_raw);
-        m_raw = formatRawDataToRPCformat(m_raw);
+        spDataObject data = _data.getPointer();
+        require1559BlockchainHeader(data);
+        convertDecFieldsToHex(data);
+        initializeCommonFields(data, _sEngine);
+        initialize1559Fields(data);
     }
     catch (std::exception const& _ex)
     {
@@ -325,20 +342,42 @@ BlockchainTestFillerEnv1559::BlockchainTestFillerEnv1559(spDataObjectMove _data,
     }
 }
 
+spDataObject BlockchainTestFillerEnv1559::asDataObject() const
+{
+    spDataObject out;
+    (*out)["currentCoinbase"] = m_currentCoinbase->asString();
+    (*out)["currentDifficulty"] = m_currentDifficulty->asString();
+    (*out)["currentNumber"] = m_currentNumber->asString();
+    (*out)["currentTimestamp"] = m_currentTimestamp->asString();
+    (*out)["currentGasLimit"] = m_currentGasLimit->asString();
+    (*out)["currentBaseFee"] = m_currentBaseFee->asString();
+    return out;
+}
+
 BlockchainTestFillerEnvLegacy::BlockchainTestFillerEnvLegacy(spDataObjectMove _data, SealEngine _sEngine)
 {
     try {
-        m_raw = _data.getPointer();
-        requireLegacyBlockchainHeader(m_raw);
-        convertDecFieldsToHex(m_raw);
-        initializeCommonFields(m_raw, _sEngine);
-        initializeLegacyFields(m_raw);
-        m_raw = formatRawDataToRPCformat(m_raw);
+        spDataObject data = _data.getPointer();
+        requireLegacyBlockchainHeader(data);
+        convertDecFieldsToHex(data);
+        initializeCommonFields(data, _sEngine);
+        initializeLegacyFields(data);
     }
     catch (std::exception const& _ex)
     {
         throw UpwardsException(string("BlockchainTestFillerEnv(legacy) convertion error: ") + _ex.what());
     }
+}
+
+spDataObject BlockchainTestFillerEnvLegacy::asDataObject() const
+{
+    spDataObject out;
+    (*out)["currentCoinbase"] = m_currentCoinbase->asString();
+    (*out)["currentDifficulty"] = m_currentDifficulty->asString();
+    (*out)["currentNumber"] = m_currentNumber->asString();
+    (*out)["currentTimestamp"] = m_currentTimestamp->asString();
+    (*out)["currentGasLimit"] = m_currentGasLimit->asString();
+    return out;
 }
 
 BlockchainTestFillerEnv* readBlockchainFillerTestEnv(spDataObjectMove _data, SealEngine _sEngine)

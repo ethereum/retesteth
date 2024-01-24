@@ -23,7 +23,7 @@ void requireStateTestEnvScheme(DataObject const& _data)
             {c_currentExcessBlobGas, {{DataType::String}, jsonField::Optional}},
             {c_currentBeaconRoot, {{DataType::String}, jsonField::Optional}},
             {"currentWithdrawalsRoot", {{DataType::String}, jsonField::Optional}},
-            {"previousHash", {{DataType::String}, jsonField::Required}}});
+            {"previousHash", {{DataType::String}, jsonField::Optional}}});
 }
 
 }  // namespace
