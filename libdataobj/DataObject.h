@@ -16,6 +16,7 @@ enum DataType
     Bool,
     String,
     Integer,
+    Double,
     Object,
     Array,
     Null
@@ -25,6 +26,17 @@ class DataObjectK;
 class GCP_SPointerDataObject;
 typedef GCP_SPointerDataObject spDataObject;
 
+class SafeBool
+{
+public:
+    SafeBool(bool value) : m_value(value) {}
+    SafeBool(int) = delete;
+    operator bool() const { return m_value; }
+
+private:
+    bool m_value;
+};
+
 /// DataObject
 /// A data sturcture to manage data from json, yml
 class DataObject : public GCP_SPointerBase
@@ -33,9 +45,11 @@ public:
     DataObject();
     DataObject(DataObject const&) = delete;
     explicit DataObject(DataType _type);
-    DataObject(DataType _type, bool _bool);
+    explicit DataObject(DataType _type, SafeBool _bool);
+    explicit DataObject(DataType _type, int _bool);
+    explicit DataObject(DataType _type, double _bool);
 
-    // DataObject(str)
+    explicit DataObject(double _int);
     explicit DataObject(int _int);
     explicit DataObject(std::string&& _str);
     explicit DataObject(std::string const& _str);
@@ -71,6 +85,7 @@ public:
     std::string const asStringAnyway() const;
 
     int asInt() const;
+    double asDouble() const;
     bool asBool() const;
 
     bool operator==(bool _value) const;
@@ -83,10 +98,13 @@ public:
     void copyFrom(DataObject const& _other);
     DataObject& operator=(std::string&& _value);
     DataObject& operator=(std::string const& _value);
+    DataObject& operator=(size_t _value);
     DataObject& operator=(int _value);
+    DataObject& operator=(double _value);
 
     void setString(std::string&& _value);
     void setInt(int _value);
+    void setDouble(double _value);
     void setBool(bool _value);
     void replace(DataObject const& _value);
     void renameKey(std::string const& _currentKey, std::string&& _newKey);
@@ -136,7 +154,7 @@ private:
     typedef std::pair<VecSpData, MapKeyToObject> DataObjecto;
     typedef std::tuple<VecSpData, MapKeyToObject> DataArray;
     struct DataNull {};
-    typedef std::variant<std::monostate, bool, std::string, int, DataObjecto, DataArray, DataNull> DataVariant;
+    typedef std::variant<std::monostate, bool, std::string, int, double, DataObjecto, DataArray, DataNull> DataVariant;
     DataVariant m_value;
 };
 

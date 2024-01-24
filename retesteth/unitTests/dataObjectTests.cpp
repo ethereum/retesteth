@@ -401,6 +401,25 @@ BOOST_AUTO_TEST_CASE(dataobject_readJson7)
     BOOST_CHECK(dObj->asJson(0, false) == res);
 }
 
+BOOST_AUTO_TEST_CASE(dataobject_readJson8)
+{
+    string data = R"(
+        {
+            "name" : 12.34
+        }
+    )";
+
+    spDataObject dObj = ConvertJsoncppStringToData(data);
+    BOOST_CHECK(dObj->asJson(0, false) == "{\"name\":12.3400}");
+}
+
+BOOST_AUTO_TEST_CASE(dataobject_readJson8a)
+{
+    DataObject dObj;
+    dObj["key"] = 12.34;
+    BOOST_CHECK(dObj.asJson(0, false) == "{\"key\":12.3400}");
+}
+
 BOOST_AUTO_TEST_CASE(dataobject_readJson_doublefields)
 {
     string data = R"(

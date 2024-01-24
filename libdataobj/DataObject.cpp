@@ -3,8 +3,18 @@
 #include <algorithm>
 #include <iostream>
 #include <sstream>
+#include <iomanip>
 using namespace dataobject;
 using namespace std;
+
+namespace {
+    std::string doubleToStringWithPrecision(double value, int precision)
+    {
+        std::ostringstream out;
+        out << std::fixed << std::setprecision(precision) << value;
+        return out.str();
+    };
+}
 
 /// Default dataobject is null
 DataObject::DataObject() {}
@@ -20,13 +30,16 @@ DataObject::DataObject(DataType _type)
         m_value = string();
     else if (_type == DataType::Integer)
         m_value = 0;
+    else if (_type == DataType::Double)
+        m_value = (double)0.0;
     else if (_type == DataType::Bool)
         m_value = false;
 }
 
 /// Define dataobject of string
 DataObject::DataObject(std::string&& _str) : m_value(std::move(_str)) {}
-DataObject::DataObject(std::string const& _str) : m_value(_str) {}
+DataObject::DataObject(std::string const& _str) : m_value(_str)
+{}
 
 /// Define dataobject[_key] = string
 DataObject::DataObject(std::string&& _key, std::string&& _str)
@@ -38,14 +51,47 @@ DataObject::DataObject(std::string const& _key, std::string const& _str)
 {}
 
 DataObject::DataObject(std::string&& _key, int _val)
-  : m_strKey(std::move(_key)), m_value(_val)
-{}
+  : m_strKey(std::move(_key))
+{
+    setInt(_val);
+}
 
 /// Define dataobject of int
-DataObject::DataObject(int _int) : m_value(_int) {}
+DataObject::DataObject(int _int)
+{
+    setInt(_int);
+}
+
+DataObject::DataObject(DataType type, int _int)
+{
+    _assert(type == DataType::Integer, "DataObject(DataType type, int _int) is not initialized as Integer");
+    setInt(_int);
+}
+
+DataObject::DataObject(DataType type, double _double)
+{
+    _assert(type == DataType::Double, "DataObject(DataType type, double _double) is not initialized as Double");
+    setDouble(_double);
+}
 
 /// Define dataobject of bool
-DataObject::DataObject(DataType type, bool _bool) : m_value(_bool) { _assert(type == DataType::Bool); }
+DataObject::DataObject(DataType type, SafeBool _bool)
+{
+    string stype;
+    switch(type)
+    {
+    case DataType::Integer: stype = "INTEGER"; break;
+    case DataType::Array: stype = "Array"; break;
+    case DataType::Bool: stype = "Bool"; break;
+    case DataType::Double: stype = "Double"; break;
+    case DataType::NotInitialized: stype = "NotInit"; break;
+    case DataType::Null: stype = "Null"; break;
+    case DataType::String: stype = "String"; break;
+    case DataType::Object: stype = "Object"; break;
+    }
+    _assert(type == DataType::Bool, "DataObject(DataType type, bool _bool) is not initialized as Bool, requested " + stype);
+    setBool(_bool);
+}
 
 /// Get dataobject type
 DataType DataObject::type() const
@@ -167,6 +213,7 @@ std::string const DataObject::asStringAnyway() const
     {
     case DataType::String: return asString();
     case DataType::Integer: return to_string(asInt());
+    case DataType::Double: return doubleToStringWithPrecision(asDouble(), 4);
     case DataType::Bool: return asBool() ? "true" : "false";
     case DataType::Object: return "Object";
     case DataType::Array: return "Array";
@@ -182,6 +229,14 @@ int DataObject::asInt() const
     static const string c_errorAssert = "m_type == DataType::Integer (DataObject::asInt())";
     _assert(type() == DataType::Integer, c_errorAssert);
     return std::get<int>(m_value);
+}
+
+/// Get int value
+double DataObject::asDouble() const
+{
+    static const string c_errorAssert = "m_type == DataType::Double (DataObject::asDouble())";
+    _assert(type() == DataType::Double, c_errorAssert);
+    return std::get<double>(m_value);
 }
 
 /// Get bool value
@@ -235,6 +290,9 @@ void DataObject::replace(DataObject const& _value)
         break;
     case DataType::Integer:
         m_value = _value.asInt();
+        break;
+    case DataType::Double:
+        m_value = _value.asDouble();
         break;
     case DataType::Bool:
         m_value = _value.asBool();
@@ -548,6 +606,17 @@ std::string DataObject::asJson(int level, bool pretty, bool nokey) const
         }
         out << "\"" << buffer << "\"";
         break;
+    case DataType::Double:
+        printLevel();
+        if (!m_strKey.empty() && !nokey)
+        {
+            if (pretty)
+                out << "\"" << m_strKey << "\" : ";
+            else
+                out << "\"" << m_strKey << "\":";
+        }
+        out << doubleToStringWithPrecision(std::get<double>(m_value), 4);
+        break;
     case DataType::Integer:
         printLevel();
         if (!m_strKey.empty() && !nokey)
@@ -557,7 +626,7 @@ std::string DataObject::asJson(int level, bool pretty, bool nokey) const
             else
                 out << "\"" << m_strKey << "\":";
         }
-        out << std::get<int>(m_value);;
+        out << std::get<int>(m_value);
         break;
     case DataType::Bool:
         printLevel();
@@ -588,6 +657,8 @@ std::string DataObject::dataTypeAsString(DataType _type)
         return "string";
     case Integer:
         return "int";
+    case Double:
+        return "double";
     case Array:
         return "array";
     case Bool:
@@ -699,11 +770,18 @@ void DataObject::setInt(int _value)
     m_value = _value;
 }
 
+void DataObject::setDouble(double _value)
+{
+    static const string c_assert = "In DataObject=(double) DataObject must be double or NotInitialized!";
+    _assert(type() == DataType::Double || type() == DataType::NotInitialized, c_assert);
+    m_value = _value;
+}
+
 void DataObject::setBool(bool _value)
 {
     static const string c_assert = "In DataObject:setBool(bool) DataObject must be bool or NotInitialized!";
     _assert(type() == DataType::Bool || type() == DataType::NotInitialized, c_assert);
-    m_value = _value;
+    m_value = (bool)_value;
 }
 
 void DataObject::copyFrom(DataObject const& _other)
@@ -716,6 +794,7 @@ void DataObject::copyFrom(DataObject const& _other)
     {
     case String: m_value = _other.asString(); break;
     case Integer: m_value = _other.asInt(); break;
+    case Double: m_value = _other.asDouble(); break;
     case Bool: m_value = _other.asBool(); break;
     case Array:
         _initArray(DataType::Array);
@@ -747,6 +826,7 @@ spDataObject DataObject::copy() const
     {
     case String: (*c).setString(string(asString())); break;
     case Integer: (*c).setInt(asInt()); break;
+    case Double: (*c).setDouble(asDouble()); break;
     case Bool: (*c).setBool(asBool()); break;
     case Array:
         for (size_t i = 0; i < getSubObjects().size(); i++)
@@ -810,6 +890,9 @@ bool DataObject::operator==(DataObject const& _value) const
     case DataType::Integer:
         equal = asInt() == _value.asInt();
         break;
+    case DataType::Double:
+        equal = asStringAnyway() == _value.asStringAnyway();
+        break;
     case DataType::String:
         equal = asString() == _value.asString();
         break;
@@ -843,9 +926,21 @@ bool DataObject::operator==(bool _value) const
     return *this == tmp;
 }
 
+DataObject& DataObject::operator=(size_t _value)
+{
+    setInt(_value);
+    return *this;
+}
+
 DataObject& DataObject::operator=(int _value)
 {
     setInt(_value);
+    return *this;
+}
+
+DataObject& DataObject::operator=(double _value)
+{
+    setDouble(_value);
     return *this;
 }
 

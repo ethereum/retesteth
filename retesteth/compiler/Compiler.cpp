@@ -210,7 +210,7 @@ string replaceCode(string const& _code, solContracts const& _preSolidity)
 
     utiles::checkHexHasEvenLength(compiledCode);
 
-    if (compiledCode == "0x")
+    if (compiledCode == "0x" && _code != ":raw 0x")
         ETH_WARNING("replaceCode returned empty bytecode `0x` trying to compile " + TestOutputHelper::get().testInfo().errorDebug() +  "\n" + _code);
 
     if (_code.size() > 0)

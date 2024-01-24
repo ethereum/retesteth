@@ -1,4 +1,5 @@
 #pragma once
+#ifdef DATA_YAML
 #include "DataObject.h"
 #include <yaml-cpp/yaml.h>
 
@@ -14,3 +15,4 @@ extern const std::string YML_INT_TAG;
 extern const std::string YML_BOOL_TAG;
 }
 }
+#endif
