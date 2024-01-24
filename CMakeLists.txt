@@ -84,7 +84,11 @@ endif()
 
 add_subdirectory(libdevcore)
 add_subdirectory(libdevcrypto)
+
+set(DATA_YAML ON)
+add_compile_definitions(DATA_YAML="${DATA_YAML}")
 add_subdirectory(libdataobj)
+
 if (${UNITTESTS})
     set(LIBSSZ ssz)
     add_subdirectory(libssz)

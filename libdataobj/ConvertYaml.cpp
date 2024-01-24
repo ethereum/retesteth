@@ -1,3 +1,4 @@
+#ifdef DATA_YAML
 #include "ConvertYaml.h"
 #include <iostream>
 using namespace std;
@@ -75,3 +76,4 @@ spDataObject ConvertYamlToData(YAML::Node const& _node, bool _sort)
 }
 
 }//namespace
+#endif
