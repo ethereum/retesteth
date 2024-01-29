@@ -29,7 +29,7 @@ BlockchainTestEnv* readBlockchainTestEnv(DataObject const& _data)
                     return new BlockchainTestEnvShanghai(_data);
             }
             else
-                return new BlockchainTestEnvMerge(_data);
+                return new BlockchainTestEnvParis(_data);
         }
         return new BlockchainTestEnv1559(_data);
     }

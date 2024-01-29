@@ -32,7 +32,7 @@ string const oewrap_config = R"({
     ],
     "exceptions" : {
       "InvalidStateRoot" : "",
-      "ExtraDataTooBig" : "Error importing raw rlp block: Header extraData > 32 bytes",
+      "ExtraDataTooBig" : "Header extraData > 32 bytes",
       "InvalidDifficulty" : "Invalid difficulty:",
       "InvalidDifficulty2" : "Error in field: difficulty",
       "InvalidDifficulty_TooLarge" : "Blockheader parse error: VALUE  >u256",

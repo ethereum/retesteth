@@ -19,9 +19,8 @@ void requireStateTestsFillerEnvScheme(spDataObject const& _data)
          {"currentTimestamp", {{DataType::String}, jsonField::Required}},
          {"currentBaseFee", {{DataType::String}, jsonField::Optional}},
          {"currentRandom", {{DataType::String}, jsonField::Optional}},
-         {c_currentExcessBlobGas, {{DataType::String}, jsonField::Optional}},
-         {c_currentBeaconRoot, {{DataType::String}, jsonField::Optional}},
-         {"previousHash", {{DataType::String}, jsonField::Optional}}});
+         {c_currentExcessBlobGas, {{DataType::String}, jsonField::Optional}}
+    });
 }
 
 void convertEnvDecFieldsToHex(spDataObject& _data)
@@ -80,7 +79,7 @@ void StateTestFillerEnv::initializeFields(spDataObject const& _data)
     if (_data->count("currentBaseFee"))
         m_currentBaseFee = sVALUE(_data->atKey("currentBaseFee"));
 
-    // Merge
+    // Paris
     auto const& difficulty = m_currentDifficulty->asString();
     m_currentRandom = sFH32(dev::toCompactHexPrefixed(dev::u256(difficulty), 32));
 

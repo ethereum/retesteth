@@ -33,7 +33,7 @@ namespace
 string const testInclude = R"(
 import pytest
 
-from ethereum_test_forks import Fork, Frontier, Homestead, Berlin, London, Shanghai, Merge, Cancun
+from ethereum_test_forks import Fork, Frontier, Homestead, Berlin, London, Shanghai, Paris, Cancun
 from ethereum_test_tools import Account, Code, Environment
 from ethereum_test_tools import StateTestFiller, TestAddress, Transaction
 from ethereum_test_tools.vm.opcode import Opcodes as Op
@@ -47,7 +47,7 @@ from typing import Any, Mapping, Optional
 
 import pytest
 
-from ethereum_test_forks import Fork, Frontier, Homestead, Berlin, London, Shanghai, Merge, Cancun
+from ethereum_test_forks import Fork, Frontier, Homestead, Berlin, London, Shanghai, Paris, Cancun
 from ethereum_test_tools import Account, Code, Environment
 from ethereum_test_tools import StateTestFiller, TestAddress, Transaction
 from ethereum_test_tools.vm.opcode import Opcodes as Op

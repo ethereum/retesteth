@@ -38,7 +38,7 @@ void ToolChainManager::_irb_verifyAndSetTransactions(dev::RLP const& _trsRLP)
             TransactionBlob const& blobtx = dynamic_cast<TransactionBlob const&>(spTr.getContent());
             blobCount += blobtx.blobs().size();
             if (blobCount >= 7)
-                throw test::UpwardsException("versioned hashes len exceeds, Block has invalid number of blobs in txs >=7! would exceed maximum");
+                throw test::UpwardsException("[retesteth]: versioned hashes len exceeds, Block has invalid number of blobs in txs >=7! would exceed maximum");
         }
         ETH_DC_MESSAGE(DC::RPC, spTr->asDataObject()->asJson());
         addPendingTransaction(spTr);
@@ -48,7 +48,7 @@ void ToolChainManager::_irb_verifyAndSetTransactions(dev::RLP const& _trsRLP)
 void ToolChainManager::_irb_verifyAndSetUncles(dev::RLP const& _unclsRLP, spBlockHeader const& _header)
 {
     if (_unclsRLP.toList().size() > 2)
-        throw test::UpwardsException("Too many uncles!");
+        throw test::UpwardsException("[retesteth]: Too many uncles!");
 
     for (auto const& unRLP : _unclsRLP.toList())
     {
@@ -56,10 +56,10 @@ void ToolChainManager::_irb_verifyAndSetUncles(dev::RLP const& _unclsRLP, spBloc
         verifyEthereumBlockHeader(un, currentChain());
         if (un->number() >= _header->number() ||
             un->number() + 7 <= _header->number())
-            throw test::UpwardsException("Uncle number is wrong!");
+            throw test::UpwardsException("[retesteth]: Uncle number is wrong!");
         for (auto const& pun : m_pendingBlock->uncles())
             if (pun->hash() == un->hash())
-                throw test::UpwardsException("Uncle is brother!");
+                throw test::UpwardsException("[retesteth]: Uncle is brother!");
         m_pendingBlock.getContent().addUncle(un);
     }
 }
@@ -115,18 +115,18 @@ FH32 ToolChainManager::importRawBlock(BYTES const& _rlp)
         mineBlocks(1, ToolChain::Mining::RequireValid);
         auto const importedHash = _irb_compareT8NBlockToRawRLP(header);
 
-        if (!isMergeChain())
+        if (!isParisChain())
             reorganizeChainForTotalDifficulty();
         reorganizePendingBlock();
         return importedHash;
     }
     catch (std::exception const& _ex)
     {
-        if (!isMergeChain())
+        if (!isParisChain())
             reorganizeChainForTotalDifficulty();
         m_currentChain = currentChainINDX;
         m_pendingBlock.getContent().clear();
-        static const string exception = "Error importing raw rlp block: ";
+        static const string exception = "[retesteth]: Error importing raw rlp block: ";
         throw test::UpwardsException(exception + _ex.what());
     }
 }

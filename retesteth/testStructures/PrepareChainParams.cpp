@@ -97,8 +97,8 @@ spDataObject prepareGenesisSubsection(StateTestEnvBase const& _env, ParamsContex
         if (knowLondon && compareFork(net, CMP::ge, FORK("London")))
             londify(genesis.getContent());
 
-        bool knowMerge = cfg.checkForkInProgression("Merge");
-        if (knowMerge && compareFork(net, CMP::ge, FORK("Merge")))
+        bool knowParis = cfg.checkForkInProgression("Paris");
+        if (knowParis && compareFork(net, CMP::ge, FORK("Paris")))
             mergify(genesis.getContent());
 
         bool knowShaghai = cfg.checkForkInProgression("Shanghai");
@@ -113,9 +113,9 @@ spDataObject prepareGenesisSubsection(StateTestEnvBase const& _env, ParamsContex
     {
         // Net Is Additional, probably special transition net.
         // Can't get rid of this hardcode configs :(((
-        if (_net == FORK("ArrowGlacierToMergeAtDiffC0000") || _net == FORK("ArrowGlacier"))
+        if (isArrowGlacierToParisAtDiffC0000(_net) || _net == FORK("ArrowGlacier"))
             londify(genesis.getContent());
-        else if (_net == FORK("MergeToShanghaiAtTime15k"))
+        else if (isParisToShanghaiAtTime15k(_net))
         {
             londify(genesis.getContent());
             mergify(genesis.getContent());

@@ -46,7 +46,7 @@ protected:
     spVALUE m_currentDifficulty;
     spVALUE m_currentBaseFee;
 
-    // Merge
+    // Paris
     spFH32 m_currentRandom;
 
     // Shaghai

@@ -89,7 +89,7 @@ BOOST_FIXTURE_TEST_SUITE(TestSuites, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(fill_StateTest_multisinglenet)
 {
-    const char* argv[] = {"./retesteth", "--", "--singlenet", ">=Merge", "--filltests"};
+    const char* argv[] = {"./retesteth", "--", "--singlenet", ">=Paris", "--filltests"};
     OPTIONS_OVERRIDE(argv);
 
     auto res = executeSample<StateTestSuite>(c_sampleStateTestFiller, Mode::FILL);
@@ -98,22 +98,22 @@ BOOST_AUTO_TEST_CASE(fill_StateTest_multisinglenet)
     BOOST_CHECK(!test.Post().count("Berlin"));
     BOOST_CHECK(!test.Post().count("London"));
     BOOST_CHECK(!test.Post().count("Berlin+1153"));
-    BOOST_CHECK(test.Post().count("Merge"));
+    BOOST_CHECK(test.Post().count("Paris"));
     BOOST_CHECK(test.Post().count("Shanghai"));
 
-    auto const mergePost = test.Post().at("Merge");
-    BOOST_CHECK(mergePost.size() == 1);
+    auto const parisPost = test.Post().at("Paris");
+    BOOST_CHECK(parisPost.size() == 1);
 
-    spDataObject mergePostData = mergePost.at(0).asDataObject();
-    BOOST_CHECK(mergePostData->count("indexes"));
-    BOOST_CHECK(mergePostData->count("hash"));
-    BOOST_CHECK(mergePostData->count("txbytes"));
-    BOOST_CHECK(mergePostData->count("logs"));
+    spDataObject parisPostData = parisPost.at(0).asDataObject();
+    BOOST_CHECK(parisPostData->count("indexes"));
+    BOOST_CHECK(parisPostData->count("hash"));
+    BOOST_CHECK(parisPostData->count("txbytes"));
+    BOOST_CHECK(parisPostData->count("logs"));
 }
 
 BOOST_AUTO_TEST_CASE(fill_StateTest_singlenet)
 {
-    const char* argv[] = {"./retesteth", "--", "--singlenet", "Merge", "--filltests"};
+    const char* argv[] = {"./retesteth", "--", "--singlenet", "Paris", "--filltests"};
     OPTIONS_OVERRIDE(argv);
     auto res = executeSample<StateTestSuite>(c_sampleStateTestFiller, Mode::FILL);
     BOOST_CHECK(!res.isEmpty());
@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(fill_StateTest_singlenet)
     BOOST_CHECK(!test.Post().count("Berlin"));
     BOOST_CHECK(!test.Post().count("London"));
     BOOST_CHECK(!test.Post().count("Berlin+1153"));
-    BOOST_CHECK(test.Post().count("Merge"));
+    BOOST_CHECK(test.Post().count("Paris"));
     BOOST_CHECK(!test.Post().count("Shanghai"));
 }
 
@@ -297,7 +297,7 @@ BOOST_AUTO_TEST_CASE(run_BlockchainTest_poststate)
 
 BOOST_AUTO_TEST_CASE(run_StateTest_multisinglenet)
 {
-    const char* argv[] = {"./retesteth", "--", "--singlenet", ">=Merge", "--verbosity", "5"};
+    const char* argv[] = {"./retesteth", "--", "--singlenet", ">=Paris", "--verbosity", "5"};
     OPTIONS_OVERRIDE(argv);
     interceptOutput();
     executeSample<StateTestSuite>(c_sampleStateTestFilled, Mode::RUN);
@@ -305,13 +305,13 @@ BOOST_AUTO_TEST_CASE(run_StateTest_multisinglenet)
 
     BOOST_CHECK(strCout.str().find("fork: Berlin") == string::npos);
     BOOST_CHECK(strCout.str().find("fork: London") == string::npos);
-    BOOST_CHECK(strCout.str().find("fork: Merge") != string::npos);
+    BOOST_CHECK(strCout.str().find("fork: Paris") != string::npos);
     BOOST_CHECK(strCout.str().find("fork: Shanghai") != string::npos);
 }
 
 BOOST_AUTO_TEST_CASE(run_StateTest_singlenet)
 {
-    const char* argv[] = {"./retesteth", "--", "--singlenet", "Merge", "--verbosity", "5"};
+    const char* argv[] = {"./retesteth", "--", "--singlenet", "Paris", "--verbosity", "5"};
     OPTIONS_OVERRIDE(argv);
     interceptOutput();
     executeSample<StateTestSuite>(c_sampleStateTestFilled, Mode::RUN);
@@ -319,7 +319,7 @@ BOOST_AUTO_TEST_CASE(run_StateTest_singlenet)
 
     BOOST_CHECK(strCout.str().find("fork: Berlin") == string::npos);
     BOOST_CHECK(strCout.str().find("fork: London") == string::npos);
-    BOOST_CHECK(strCout.str().find("fork: Merge") != string::npos);
+    BOOST_CHECK(strCout.str().find("fork: Paris") != string::npos);
     BOOST_CHECK(strCout.str().find("fork: Shanghai") == string::npos);
 }
 

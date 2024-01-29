@@ -14,16 +14,14 @@ void requireStateTestEnvScheme(DataObject const& _data)
 {
     REQUIRE_JSONFIELDS(_data, "StateTestEnv " + _data.getKey(),
         {{"currentCoinbase", {{DataType::String}, jsonField::Required}},
-            {"currentDifficulty", {{DataType::String}, jsonField::Required}},
-            {"currentBaseFee", {{DataType::String}, jsonField::Optional}},
-            {"currentRandom", {{DataType::String}, jsonField::Optional}},
+            {"currentDifficulty", {{DataType::String}, jsonField::Optional}},
             {"currentGasLimit", {{DataType::String}, jsonField::Required}},
             {"currentNumber", {{DataType::String}, jsonField::Required}},
             {"currentTimestamp", {{DataType::String}, jsonField::Required}},
-            {c_currentExcessBlobGas, {{DataType::String}, jsonField::Optional}},
-            {c_currentBeaconRoot, {{DataType::String}, jsonField::Optional}},
-            {"currentWithdrawalsRoot", {{DataType::String}, jsonField::Optional}},
-            {"previousHash", {{DataType::String}, jsonField::Optional}}});
+            {"currentBaseFee", {{DataType::String}, jsonField::Required}},
+            {"currentRandom", {{DataType::String}, jsonField::Required}},
+            {c_currentExcessBlobGas, {{DataType::String}, jsonField::Required}}
+        });
 }
 
 }  // namespace
@@ -57,7 +55,7 @@ void StateTestEnv::initializeFields(DataObject const& _data)
     if (_data.count("currentDifficulty"))
         m_currentDifficulty = sVALUE(_data.atKey("currentDifficulty"));
 
-    // Merge
+    // Paris
     m_currentRandom = spFH32(FH32::zero().copy());
     if (_data.count("currentRandom"))
         m_currentRandom = sFH32(_data.atKey("currentRandom"));

@@ -33,7 +33,7 @@ string const etctr_config = R"({
         "Istanbul",
         "Berlin",
         "London",
-        "Merge"
+        "Paris"
     ],
     "additionalForks" : [
     ],
@@ -50,7 +50,7 @@ string const etctr_config = R"({
       "InvalidS" : "rlp: expected input string or byte for *big.Int, decoding into (types.Transaction)(types.LegacyTx).S",
       "InvalidChainID" : "invalid chain id for signer",
       "ECRecoveryFail" : "recovery failed",
-      "ExtraDataTooBig" : "Error importing raw rlp block: Header extraData > 32 bytes",
+      "ExtraDataTooBig" : "Header extraData > 32 bytes",
       "InvalidData" : "rlp: expected input string or byte for []uint8, decoding into (types.Transaction)(types.LegacyTx).Data",
       "InvalidDifficulty" : "Invalid difficulty:",
       "InvalidDifficulty2" : "Error in field: difficulty",
@@ -225,7 +225,7 @@ string const etctr_config = R"({
       "2930AccessListStorageHashTooLong": "rlp: input string too long for common.Hash, decoding into (types.Transaction)(types.AccessListTx).AccessList[0].StorageKeys[0]",
       "3675PoWBlockRejected" : "Invalid block1559: Chain switched to PoS!",
       "3675PoSBlockRejected" : "Parent (transition) block has not reached TTD",
-      "3675PreMerge1559BlockRejected" : "Trying to import 1559 block on top of PoS block"
+      "3675PreParis1559BlockRejected" : "Trying to import 1559 block on top of PoS block"
     }
 })";
 

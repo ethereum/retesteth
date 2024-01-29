@@ -40,19 +40,19 @@ private:
 
 };
 
-struct BlockchainTestFillerEnvMerge : BlockchainTestFillerEnv
+struct BlockchainTestFillerEnvParis : BlockchainTestFillerEnv
 {
-    BlockchainTestFillerEnvMerge(spDataObjectMove _data, SealEngine _sEngine);
+    BlockchainTestFillerEnvParis(spDataObjectMove _data, SealEngine _sEngine);
     spDataObject asDataObject() const override;
 
 protected:
-    void initializeMergeFields(DataObject const&);
-    BlockchainTestFillerEnvMerge(){};
+    void initializeParisFields(DataObject const&);
+    BlockchainTestFillerEnvParis(){};
 private:
     void define() const override {}
 };
 
-struct BlockchainTestFillerEnvShanghai : BlockchainTestFillerEnvMerge
+struct BlockchainTestFillerEnvShanghai : BlockchainTestFillerEnvParis
 {
     BlockchainTestFillerEnvShanghai(spDataObjectMove _data, SealEngine _sEngine);
     spDataObject asDataObject() const override;
