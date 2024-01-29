@@ -97,13 +97,7 @@ string makePyScriptCMDArgs(fs::path const& _fillerTestFilePath, TestSuite::Absol
     string runcmd = specsScript.c_str();
 
     // SUITETYPE
-    auto const tArg = Options::get().rCurrentTestSuite;
-    if (tArg.find("GeneralStateTests") != string::npos)
-        runcmd += Options::get().fillchain ? " blockchain_tests" : " state_tests";
-    else if (tArg.find("BlokchainTests") != string::npos)
-        runcmd += " blockchain_tests";
-    else
-        runcmd += " /";
+    runcmd += Options::get().fillchain ? " blockchain_tests" : " state_tests";
 
     // SRCPATH
     runcmd += " " + _fillerTestFilePath.string();

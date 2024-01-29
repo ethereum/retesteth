@@ -140,6 +140,91 @@ void checkDoubleGeneratedTestNames()
     }
 }
 
+vector<string> getTestNamesFromJsonYaml(fs::path const& _filler)
+{
+    vector<string> generatedTestNames;
+    string fillerName = _filler.stem().string();
+    if (fillerName.find(c_fillerPostf) != string::npos)
+    {
+        fillerName = fillerName.substr(0, fillerName.length() - c_fillerPostf.size());
+        generatedTestNames.emplace_back(fillerName);
+    }
+    else if (fillerName.find(c_copierPostf) != string::npos)
+    {
+        fillerName = fillerName.substr(0, fillerName.length() - c_copierPostf.size());
+        generatedTestNames.emplace_back(fillerName);
+    }
+    else
+        ETH_WARNING("Skipping unsupported test file: " + _filler.string());
+    return generatedTestNames;
+}
+
+bool _checkPythonTestBlockchainOnly(string const& _pythonSrc, size_t _foundTestPos)
+{
+    size_t foundBlockchain = _pythonSrc.find("blockchain_test(", _foundTestPos);
+    if (foundBlockchain == string::npos)
+        return false;
+
+    size_t foundNextTestPos = _pythonSrc.find("def test_", _foundTestPos + 50);
+    if (foundNextTestPos == string::npos)
+        return true;
+
+    if (foundBlockchain < foundNextTestPos)
+        return true;
+
+    return false;
+}
+
+bool _checkPythonTestSkipped(string const& _pythonSrc, size_t _foundTestPos)
+{
+    size_t foundSkipPos = _pythonSrc.rfind("@pytest.mark.skip", _foundTestPos);
+    if (foundSkipPos == string::npos)
+        return false;
+
+    size_t foundPreviuosTest = _pythonSrc.rfind("def test_", _foundTestPos - 1);
+    if (foundPreviuosTest == string::npos)
+        return true;
+
+    if (foundPreviuosTest <= foundSkipPos)
+        return true;
+
+    return false;
+}
+
+// Get filled test names from .py filler
+vector<string> getTestNamesFromPython(fs::path const& _filler)
+{
+    vector<string> generatedTestNames;
+
+    size_t pos = 0;
+    string pythonSrc = dev::contentsString(_filler);
+    size_t foundTestPos = pythonSrc.find("def test_", pos);
+    while (foundTestPos != string::npos)
+    {
+        size_t testFunctionBegin = pythonSrc.find("(", foundTestPos);
+        if (testFunctionBegin != string::npos)
+        {
+            string pythonTestname = pythonSrc.substr(foundTestPos + 9, testFunctionBegin - foundTestPos - 9);
+            if (_checkPythonTestSkipped(pythonSrc, foundTestPos))
+            {
+                ETH_WARNING("Pyspec marked test as skipped: " + pythonTestname);
+            }
+            else
+            {
+                if (!Options::get().fillchain && _checkPythonTestBlockchainOnly(pythonSrc, foundTestPos))
+                {
+                    ETH_WARNING("Will skip python bc test " + pythonTestname);
+                }
+                else
+                    generatedTestNames.emplace_back(pythonTestname);
+            }
+        }
+        pos = foundTestPos + 1;
+        foundTestPos = pythonSrc.find("def test_", pos);
+    }
+    return generatedTestNames;
+}
+
 vector<string> const& getGeneratedTestNames(fs::path const& _filler)
 {
     std::lock_guard<std::mutex> lock(G_GeneratedTestsMap_Mutex);
@@ -148,57 +233,9 @@ vector<string> const& getGeneratedTestNames(fs::path const& _filler)
 
     vector<string> generatedTestNames;
     if (_filler.extension() == ".json" || _filler.extension() == ".yml")
-    {
-        string fillerName = _filler.stem().string();
-        if (fillerName.find(c_fillerPostf) != string::npos)
-        {
-            fillerName = fillerName.substr(0, fillerName.length() - c_fillerPostf.size());
-            generatedTestNames.emplace_back(fillerName);
-        }
-        else if (fillerName.find(c_copierPostf) != string::npos)
-        {
-            fillerName = fillerName.substr(0, fillerName.length() - c_copierPostf.size());
-            generatedTestNames.emplace_back(fillerName);
-        }
-        else
-            ETH_WARNING("Skipping unsupported test file: " + _filler.string());
-    }
+        generatedTestNames = getTestNamesFromJsonYaml(_filler);
     else if (_filler.extension() == ".py")
-    {
-        // Get filled test names from .py filler
-        size_t pos = 0;
-        string pythonSrc = dev::contentsString(_filler);
-        size_t foundPos = pythonSrc.find("def test_", pos);
-        while (foundPos != string::npos)
-        {
-            size_t endSelectionPos = pythonSrc.find("(", foundPos);
-            if (endSelectionPos != string::npos)
-            {
-                string pythonTestname = pythonSrc.substr(foundPos + 9, endSelectionPos - foundPos - 9);
-
-                size_t foundSkipPos = pythonSrc.rfind("@pytest.mark.skip", foundPos);
-                if (foundSkipPos != string::npos)
-                {
-                    size_t foundPreviuosTest = pythonSrc.rfind("def test_", foundPos - 1);
-                    if (foundPreviuosTest != string::npos)
-                    {
-                        if (foundPreviuosTest <= foundSkipPos)
-                        {
-                            ETH_WARNING("Pyspec marked test as skipped: " + pythonTestname);
-                        }
-                        else
-                            generatedTestNames.emplace_back(pythonTestname);
-                    }
-                    else
-                        ETH_WARNING("Pyspec marked test as skipped: " + pythonTestname);
-                }
-                else
-                    generatedTestNames.emplace_back(pythonTestname);
-            }
-            pos = foundPos + 1;
-            foundPos = pythonSrc.find("def test_", pos);
-        }
-    }
+        generatedTestNames = getTestNamesFromPython(_filler);
     else
     {
         ETH_ERROR_MESSAGE("getGeneratedTestNames:: unknown filler extension: \n" + _filler.string());
