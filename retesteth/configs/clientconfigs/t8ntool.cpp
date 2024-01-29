@@ -104,6 +104,7 @@ string const t8ntool_config = R"({
         "Berlin",
         "London",
         "Paris",
+        "Merge",
         "Shanghai",
         "Cancun"
     ],
@@ -419,6 +420,9 @@ if [ "$FORCER" != "null" ]; then
 fi
 if [ "$EXPRTCALL" != "null" ]; then
     ADDFLAGS="$ADDFLAGS --debug $EXPRTCALL/pyspec.log --t8n-dump-dir $EXPRTCALL"
+fi
+if [ "$SUITETYPE" != "blockchain_tests" ]; then
+    ADDFLAGS="$ADDFLAGS -m state_test"
 fi
 
 if [ -d $testout ]; then

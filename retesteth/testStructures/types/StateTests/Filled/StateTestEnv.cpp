@@ -18,9 +18,9 @@ void requireStateTestEnvScheme(DataObject const& _data)
             {"currentGasLimit", {{DataType::String}, jsonField::Required}},
             {"currentNumber", {{DataType::String}, jsonField::Required}},
             {"currentTimestamp", {{DataType::String}, jsonField::Required}},
-            {"currentBaseFee", {{DataType::String}, jsonField::Required}},
-            {"currentRandom", {{DataType::String}, jsonField::Required}},
-            {c_currentExcessBlobGas, {{DataType::String}, jsonField::Required}}
+            {"currentBaseFee", {{DataType::String}, jsonField::Optional}},
+            {"currentRandom", {{DataType::String}, jsonField::Optional}},
+            {c_currentExcessBlobGas, {{DataType::String}, jsonField::Optional}}
         });
 }
 
