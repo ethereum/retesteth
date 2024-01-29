@@ -69,7 +69,9 @@ bool hasSubfoldersWithFileTypes(fs::path const& _path, string const& _filemask)
     using fsIterator = fs::directory_iterator;
     for (fsIterator it(_path); it != fsIterator(); ++it)
     {
-        if (fs::is_directory(*it) && (*it).path().stem().string() != "__pycache__")
+        if (fs::is_directory(*it)
+            && (*it).path().stem().string() != "__pycache__"
+            && (*it).path().stem().string() != "point_evaluation_vectors")
         {
             bool foundTest = false;
             for (fsIterator subit(*it); subit != fsIterator(); ++subit)
@@ -109,7 +111,7 @@ test_unit_id registerNewTestCase(
 }
 
 void registerNewTestSuite(
-    vector<string>& allTestNames, FixtureToSuite const& _fixture, test_suite* _suite, fs::path const& _path)
+    vector<string>& allTestNames, FixtureToSuite const& _fixture, test_suite* _suite, fs::path const& _path, fs::path const& _fillerPath)
 {
     auto const& suiteName = _fixture.second;
     auto const subFolders = getSubfolders(_path);
@@ -122,16 +124,22 @@ void registerNewTestSuite(
 
     for (auto const& path : subFolders)
     {
+        bool isSuiteSecondLevel = hasSubfoldersWithFileTypes(path, ".py|Filler.json|Filler.yml");
         auto const casename = path.stem().string();
 
         FixtureToSuite fixToSuite;
         auto ptr = _fixture.first.get();
         uPtrTestFixtureBase uPtr(ptr->copy());
         fixToSuite.first = std::move(uPtr);
-        fixToSuite.first.get()->setAdditionalFillerFolder("/" + newSuiteName);
-        fixToSuite.second = fullSuiteName;
-        registerNewTestCase(allTestNames, fixToSuite, tsuite, casename);
 
+        fs::path newFillerPath = _fillerPath / newSuiteName;
+        fixToSuite.first.get()->setAdditionalFillerFolder(newFillerPath.c_str());
+        fixToSuite.second = fullSuiteName;
+
+        if (isSuiteSecondLevel)
+            registerNewTestSuite(allTestNames, fixToSuite, tsuite, path, newFillerPath);
+        else
+            registerNewTestCase(allTestNames, fixToSuite, tsuite, casename);
         g_dynamic_test_suite_fixtures.emplace_back(std::move(fixToSuite));
     }
     _suite->add(tsuite);
@@ -165,7 +173,7 @@ void test::DynamicTestsBoost(vector<string>& allTestNames)
                     if (caseid == INV_TEST_UNIT_ID && !g_exceptionNames.count(caseName))
                     {
                         if (hasSubfoldersWithFileTypes(*it, ".py|Filler.json|Filler.yml"))
-                            registerNewTestSuite(allTestNames, fixtureSuite, suite, *it);
+                            registerNewTestSuite(allTestNames, fixtureSuite, suite, *it, "/");
                         else
                             registerNewTestCase(allTestNames, fixtureSuite, suite, caseName);
                     }
