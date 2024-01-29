@@ -9,7 +9,7 @@ enum class BlockType
 {
     BlockHeaderLegacy,
     BlockHeader1559,
-    BlockHeaderMerge,
+    BlockHeaderParis,
     BlockHeaderShanghai,
     BlockHeader4844
 };

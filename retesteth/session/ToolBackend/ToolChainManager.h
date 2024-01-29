@@ -57,7 +57,7 @@ private:
     void reorganizeChainForParent(FH32 const& _parentHash);
     void reorganizeChainForTotalDifficulty();
     void reorganizePendingBlock();
-    bool isMergeChain() const;
+    bool isParisChain() const;
 
 
     std::map<size_t, spToolChain> m_chains;
@@ -71,7 +71,7 @@ private:
 private:
     void transitionPendingBlock(EthereumBlockState const&);
     void init1559PendingBlock(EthereumBlockState const&);
-    void initMergePendingBlock(EthereumBlockState const&);
+    void initParisPendingBlock(EthereumBlockState const&);
     void initShanghaiPendingBlock(EthereumBlockState const&);
     void initCancunPendingBlock(EthereumBlockState const&);
     bool isTerminalPoWBlock();

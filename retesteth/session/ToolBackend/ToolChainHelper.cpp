@@ -72,8 +72,9 @@ static std::map<FORK, FORK> RewardMapForToolBefore5 = {
     {"HomesteadToDaoAt5", "Homestead"},
     {"ByzantiumToConstantinopleFixAt5", "Byzantium"},
     {"BerlinToLondonAt5", "Berlin"},
+    {"ArrowGlacierToParisAtDiffC0000", "ArrowGlacier"},
     {"ArrowGlacierToMergeAtDiffC0000", "ArrowGlacier"},
-    {"MergeToShanghaiAtTime15k", "Merge"},
+    {"ParisToShanghaiAtTime15k", "Paris"},
     {"ShanghaiToCancunAtTime15k", "Shanghai"}
 };
 static std::map<FORK, FORK> RewardMapForToolAfter5 = {
@@ -83,8 +84,9 @@ static std::map<FORK, FORK> RewardMapForToolAfter5 = {
     {"HomesteadToDaoAt5", "Homestead"},
     {"ByzantiumToConstantinopleFixAt5", "ConstantinopleFix"},
     {"BerlinToLondonAt5", "London"},
-    {"ArrowGlacierToMergeAtDiffC0000", "Merge"},
-    {"MergeToShanghaiAtTime15k", "Shanghai"},
+    {"ArrowGlacierToParisAtDiffC0000", "Paris"},
+    {"ArrowGlacierToMergeAtDiffC0000", "Paris"},
+    {"ParisToShanghaiAtTime15k", "Shanghai"},
     {"ShanghaiToCancunAtTime15k", "Cancun"}
 };
 
@@ -93,20 +95,20 @@ std::tuple<VALUE, FORK> prepareReward(SealEngine _engine, FORK const& _fork, Eth
     if (_engine == SealEngine::Ethash)
         ETH_DC_MESSAGE(DC::LOWLOG, "t8ntool backend treat Ethash as NoProof!");
 
-    bool isMerge = false;
+    bool isParis = false;
     bool posTransitionDifficultyNotReached = false;
     bool timestampTransitionNotReached = false;
-    if (_fork.asString() == "ArrowGlacierToMergeAtDiffC0000")
+    if (isArrowGlacierToParisAtDiffC0000(_fork))
     {
-        isMerge = true;
+        isParis = true;
         // The TD here is the one before tool called for mining. so its like n-1 td.
         if (_curBlockRef.totalDifficulty() < VALUE(DataObject("0x0C0000")))
             posTransitionDifficultyNotReached = true;
     }
-    else if (_fork.asString() == "MergeToShanghaiAtTime15k"
+    else if ( isParisToShanghaiAtTime15k(_fork)
              || _fork.asString() == "ShanghaiToCancunAtTime15k")
     {
-        isMerge = true;
+        isParis = true;
         if (_curBlockRef.header()->timestamp() < 15000)
             timestampTransitionNotReached = true;
     }
@@ -132,7 +134,7 @@ std::tuple<VALUE, FORK> prepareReward(SealEngine _engine, FORK const& _fork, Eth
         return {rewards.at(fork).getCContent(), _fork};
     else
     {
-        if ((!isMerge && _curBlockRef.header()->number() < 5)
+        if ((!isParis && _curBlockRef.header()->number() < 5)
             || posTransitionDifficultyNotReached
             || timestampTransitionNotReached)
         {
@@ -220,7 +222,7 @@ VALUE calculateEthashDifficulty(
     const unsigned c_expDiffPeriod = 100000;
 
     if (_bi.number() == 0)
-        throw test::UpwardsException("calculateEthashDifficulty was called for block with number == 0");
+        throw test::UpwardsException("[retesteth]: calculateEthashDifficulty was called for block with number == 0");
 
     auto const& minimumDifficulty = _chainParams.minimumDifficulty;
     auto const& difficultyBoundDivisor = _chainParams.difficultyBoundDivisor;

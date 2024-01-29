@@ -107,7 +107,7 @@ void makeEnvOmmers(spDataObject& _envData, EthereumBlockState const& _currentBlo
         spDataObject uncle;
         int delta = (int)(_currentBlockRef.header()->number() - un->number()).asBigInt();
         if (delta < 1)
-            throw test::UpwardsException("Uncle header delta is < 1");
+            throw test::UpwardsException("[retesteth]: Uncle header delta is < 1");
         (*uncle)["delta"] = delta;
         (*uncle)["address"] = un->author().asString();
         (*_envData)["ommers"].addArrayObject(uncle);

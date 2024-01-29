@@ -63,9 +63,9 @@ void require1559BlockchainHeader(DataObject const& _data)
             {c_uncleHash, {{DataType::String}, jsonField::Optional}}});
 }
 
-void requireMergeBlockchainHeader(DataObject const& _data)
+void requireParisBlockchainHeader(DataObject const& _data)
 {
-    REQUIRE_JSONFIELDS(_data, "GenesisBlockHeader(BlockchainTestEnvMerge) " + _data.getKey(),
+    REQUIRE_JSONFIELDS(_data, "GenesisBlockHeader(BlockchainTestEnvParis) " + _data.getKey(),
         {{c_bloom, {{DataType::String}, jsonField::Optional}},
             {c_logsBloom, {{DataType::String}, jsonField::Optional}},
             {c_coinbase, {{DataType::String}, jsonField::Optional}},
@@ -169,7 +169,7 @@ void BlockchainTestEnvShanghai::initializeShanghaiFields(DataObject const& _data
     m_currentWithdrawalsRoot = sFH32(_data.atKey(c_withdrawalsRoot));
 }
 
-void BlockchainTestEnvMerge::initializeMergeFields(DataObject const& _data)
+void BlockchainTestEnvParis::initializeParisFields(DataObject const& _data)
 {
     m_currentBaseFee = sVALUE(_data.atKey(c_baseFeePerGas));
     m_currentRandom = sFH32(_data.atKey(c_mixHash));
@@ -213,26 +213,26 @@ BlockchainTestEnv1559::BlockchainTestEnv1559(DataObject const& _data)
     }
 }
 
-BlockchainTestEnvMerge::BlockchainTestEnvMerge(DataObject const& _data)
+BlockchainTestEnvParis::BlockchainTestEnvParis(DataObject const& _data)
 {
     try {
-        requireMergeBlockchainHeader(_data);
+        requireParisBlockchainHeader(_data);
         initializeCommonFields(_data);
-        initializeMergeFields(_data);
+        initializeParisFields(_data);
     }
     catch (std::exception const& _ex)
     {
-        throw UpwardsException(string("BlockchainTestEnv(Merge) convertion error: ") + _ex.what() + _data.asJson());
+        throw UpwardsException(string("BlockchainTestEnv(Paris) convertion error: ") + _ex.what() + _data.asJson());
     }
 }
 
 BlockchainTestEnvShanghai::BlockchainTestEnvShanghai(DataObject const& _data)
-  : BlockchainTestEnvMerge()
+  : BlockchainTestEnvParis()
 {
     try {
         requireShanghaiBlockchainHeader(_data);
         initializeCommonFields(_data);
-        initializeMergeFields(_data);
+        initializeParisFields(_data);
         initializeShanghaiFields(_data);
     }
     catch (std::exception const& _ex)
@@ -246,7 +246,7 @@ BlockchainTestEnv4844::BlockchainTestEnv4844(DataObject const& _data)
     try {
         require4844BlockchainHeader(_data);
         initializeCommonFields(_data);
-        initializeMergeFields(_data);
+        initializeParisFields(_data);
         initializeShanghaiFields(_data);
         initialize4844Fields(_data);
     }

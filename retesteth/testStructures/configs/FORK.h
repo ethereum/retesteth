@@ -37,4 +37,8 @@ bool compareFork(FORK const& _left, CMP _t, FORK const& _right);
 
 typedef GCP_SPointer<FORK> spFORK;
 
+bool isParisToShanghaiAtTime15k(FORK const& _fork);
+bool isArrowGlacierToParisAtDiffC0000(FORK const& _fork);
+
+
 }  // namespace teststruct

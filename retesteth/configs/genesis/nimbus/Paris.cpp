@@ -4,9 +4,9 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
-genMergeCfgNIMBUS::genMergeCfgNIMBUS()
+genParisCfgNIMBUS::genParisCfgNIMBUS()
 {
-const string nimbus_Merge_config = R"({
+const string nimbus_Paris_config = R"({
     "params" : {
         "fork" : "Merge",
         "terminalTotalDifficulty" : "0x00",
@@ -21,8 +21,8 @@ const string nimbus_Merge_config = R"({
 
     {
         spDataObject obj;
-        (*obj)["path"] = "nimbus/genesis/Merge.json";
-        (*obj)["content"] = nimbus_Merge_config;
+        (*obj)["path"] = "nimbus/genesis/Paris.json";
+        (*obj)["content"] = nimbus_Paris_config;
         map_configs.addArrayObject(obj);
     }
 }

@@ -40,7 +40,7 @@ ToolChainManager::ToolChainManager(
 spDataObject const ToolChainManager::mineBlocks(size_t _number, ToolChain::Mining _req)
 {
     if (_number > 1)
-        throw test::UpwardsException("ToolChainManager::mineBlocks number arg invalid: " + fto_string(_number));
+        throw test::UpwardsException("[retesteth]: ToolChainManager::mineBlocks number arg invalid: " + fto_string(_number));
     const spDataObject res = currentChainUnsafe().mineBlock(m_pendingBlock, currentChainUnsafe().lastBlock(), _req);
     reorganizePendingBlock();
     return res;
@@ -108,7 +108,7 @@ EthereumBlockState const& ToolChainManager::blockByHash(FH32 const& _hash) const
 void ToolChainManager::modifyTimestamp(VALUE const& _time)
 {
     m_pendingBlock.getContent().headerUnsafe().getContent().setTimestamp(_time);
-    if (currentChain().fork() == "MergeToShanghaiAtTime15k" && m_pendingBlock->header()->timestamp() >= 15000)
+    if (currentChain().fork() == "ParisToShanghaiAtTime15k" && m_pendingBlock->header()->timestamp() >= 15000)
         initShanghaiPendingBlock(m_pendingBlock);
     if (currentChain().fork() == "ShanghaiToCancunAtTime15k" && m_pendingBlock->header()->timestamp() >= 15000)
         initCancunPendingBlock(m_pendingBlock);
@@ -142,7 +142,7 @@ void ToolChainManager::reorganizeChainForParent(FH32 const& _parentHash)
             }
         }
     }
-    throw test::UpwardsException(string("ToolChainManager:: unknown parent hash ") + _parentHash.asString());
+    throw test::UpwardsException(string("[retesteth]: ToolChainManager:: unknown parent hash ") + _parentHash.asString());
 }
 
 void ToolChainManager::reorganizeChainForTotalDifficulty()
@@ -172,7 +172,7 @@ void ToolChainManager::registerWithdrawal(BYTES const& _wt)
     }
     catch(std::exception const& _ex)
     {
-        throw test::UpwardsException(string("Error importing rlp of withdrawal: ") + _ex.what());
+        throw test::UpwardsException(string("[retesteth]: Error importing rlp of withdrawal: ") + _ex.what());
     }
 }
 
@@ -214,9 +214,9 @@ bool ToolChainManager::isTerminalPoWBlock()
     return false;
 }
 
-void ToolChainManager::initMergePendingBlock(EthereumBlockState const& _lastBlock)
+void ToolChainManager::initParisPendingBlock(EthereumBlockState const& _lastBlock)
 {
-    // Switch default mining to Merge POS blocks
+    // Switch default mining to Paris POS blocks
     // https://eips.ethereum.org/EIPS/eip-3675
     spDataObject parentData = _lastBlock.header()->asDataObject();
     (*parentData)[c_uncleHash] = C_EMPTY_LIST_HASH;
@@ -224,7 +224,7 @@ void ToolChainManager::initMergePendingBlock(EthereumBlockState const& _lastBloc
     (*parentData)[c_mixHash] = C_FH32_ZERO.asString();
     (*parentData)[c_nonce] = C_FH8_ZERO.asString();
 
-    spBlockHeader newPending(new BlockHeaderMerge(parentData));
+    spBlockHeader newPending(new BlockHeaderParis(parentData));
     m_pendingBlock = spEthereumBlockState(new EthereumBlockState(newPending, _lastBlock.state(), _lastBlock.logHash()));
 }
 
@@ -262,17 +262,17 @@ void ToolChainManager::transitionPendingBlock(EthereumBlockState const& _bl)
         }
     }
 
-    if (currentChain().fork() == "MergeToShanghaiAtTime15k" && m_pendingBlock->header()->timestamp() >= 15000)
+    if (isParisToShanghaiAtTime15k(currentChain().fork()) && m_pendingBlock->header()->timestamp() >= 15000)
         initShanghaiPendingBlock(_bl);
     else if (currentChain().fork() == "ShanghaiToCancunAtTime15k" && m_pendingBlock->header()->timestamp() >= 15000)
         initCancunPendingBlock(_bl);
-    else if (currentChain().fork() == "ArrowGlacierToMergeAtDiffC0000" && isTerminalPoWBlock())
-        initMergePendingBlock(_bl);
+    else if (isArrowGlacierToParisAtDiffC0000(currentChain().fork()) && isTerminalPoWBlock())
+        initParisPendingBlock(_bl);
     else
         updatePending();
 }
 
-bool ToolChainManager::isMergeChain() const
+bool ToolChainManager::isParisChain() const
 {
     assert(m_chains.size() > 0);
 

@@ -37,7 +37,7 @@ string const evmone_config = R"({
         "Istanbul",
         "Berlin",
         "London",
-        "Merge",
+        "Paris",
         "Shanghai",
         "Cancun"
     ],
@@ -48,9 +48,9 @@ string const evmone_config = R"({
         "ByzantiumToConstantinopleFixAt5",
         "BerlinToLondonAt5",
         "ArrowGlacier",
-        "ArrowGlacierToMergeAtDiffC0000",
+        "ArrowGlacierToParisAtDiffC0000",
         "GrayGlacier",
-        "MergeToShanghaiAtTime15k",
+        "ParisToShanghaiAtTime15k",
         "ShanghaiToCancunAtTime15k"
     ],
     "fillerSkipForks" : [
@@ -70,7 +70,7 @@ string const evmone_config = R"({
       "InvalidS" : "rlp: expected input string or byte for *big.Int, decoding into (types.Transaction)(types.LegacyTx).S",
       "InvalidChainID" : "invalid chain id for signer",
       "ECRecoveryFail" : "recovery failed",
-      "ExtraDataTooBig" : "Error importing raw rlp block: Header extraData > 32 bytes",
+      "ExtraDataTooBig" : "Header extraData > 32 bytes",
       "InvalidData" : "rlp: expected input string or byte for []uint8, decoding into (types.Transaction)(types.LegacyTx).Data",
       "InvalidDifficulty" : "Invalid difficulty:",
       "InvalidDifficulty2" : "Error in field: difficulty",
@@ -253,7 +253,7 @@ string const evmone_config = R"({
       "2930AccessListStorageHashTooLong": "rlp: input string too long for common.Hash, decoding into (types.Transaction)(types.AccessListTx).AccessList[0].StorageKeys[0]",
       "3675PoWBlockRejected" : "Invalid block1559: Chain switched to PoS!",
       "3675PoSBlockRejected" : "Parent (transition) block has not reached TTD",
-      "3675PreMerge1559BlockRejected" : "Trying to import 1559 block on top of PoS block",
+      "3675PreParis1559BlockRejected" : "Trying to import 1559 block on top of PoS block",
       "INPUT_UNMARSHAL_ERROR" : "cannot unmarshal hex",
       "INPUT_UNMARSHAL_SIZE_ERROR" : "failed unmarshaling",
       "RLP_BODY_UNMARSHAL_ERROR" : "Rlp structure is wrong",
@@ -276,8 +276,8 @@ string const evmone_config = R"({
       "EOF_ZeroSectionSize": "err: zero_section_size",
       "EOF_NonEmptyStackOnTerminatingInstruction": "err: non_empty_stack_on_terminating_instruction",
       "EOF_InvalidSectionBodiesSize": "err: invalid_section_bodies_size",
-      "PostMergeUncleHashIsNotEmpty" : "block.uncleHash != empty",
-      "PostMergeDifficultyIsNot0" : "block.difficulty must be 0"
+      "PostParisUncleHashIsNotEmpty" : "block.uncleHash != empty",
+      "PostParisDifficultyIsNot0" : "block.difficulty must be 0"
     }
 })";
 

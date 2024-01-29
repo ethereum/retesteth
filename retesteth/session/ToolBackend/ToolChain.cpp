@@ -48,13 +48,13 @@ ToolChain::ToolChain(
         auto const genesisHeaderType = _genesis.header()->type();
         if (compareFork(m_fork, CMP::lt, FORK("London"))
             && genesisHeaderType == BlockType::BlockHeader1559)
-            throw test::UpwardsException("Constructing 1559 genesis on network which is lower London!");
+            throw test::UpwardsException("[retesteth]: Constructing 1559 genesis on network which is lower London!");
         if (compareFork(m_fork, CMP::ge, FORK("London"))
             && genesisHeaderType != BlockType::BlockHeader1559
-            && genesisHeaderType != BlockType::BlockHeaderMerge
+            && genesisHeaderType != BlockType::BlockHeaderParis
             && genesisHeaderType != BlockType::BlockHeaderShanghai
             && genesisHeaderType != BlockType::BlockHeader4844)
-            throw test::UpwardsException("Constructing legacy genesis on network which is higher London!");
+            throw test::UpwardsException("[retesteth]: Constructing legacy genesis on network which is higher London!");
     }
 
     EthereumBlockState genesisFixed(_genesis.header(), _genesis.state(), FH32::zero());
@@ -338,7 +338,7 @@ void ToolChain::additionalHeaderVerification(
 {
     // Require number from pending block to be equal to actual block number that is imported
     if (_pendingBlock.header()->number() != _pendingFixed.header()->number().asBigInt())
-        throw test::UpwardsException(string("Block Number from pending block != actual chain height! (") +
+        throw test::UpwardsException(string("[retesteth]: Block Number from pending block != actual chain height! (") +
                                      _pendingBlock.header()->number().asString() +
                                      " != " + _pendingFixed.header()->number().asString() + ")");
 
@@ -348,7 +348,7 @@ void ToolChain::additionalHeaderVerification(
         if (m_fork.getContent().asString() == "HomesteadToDaoAt5" && _pendingFixed.header()->number() > 4 &&
             _pendingFixed.header()->number() < 19 &&
             _pendingFixed.header()->extraData().asString() != "0x64616f2d686172642d666f726b")
-            throw test::UpwardsException("Dao Extra Data required!");
+            throw test::UpwardsException("[retesteth]: Dao Extra Data required!");
 
         spDataObject const pendingH = _pendingBlock.header()->asDataObject();
         spDataObject const pendingFixedH = _pendingFixed.header()->asDataObject();
@@ -356,7 +356,7 @@ void ToolChain::additionalHeaderVerification(
         {
             string errField;
             string const compare = compareBlockHeaders(pendingH, pendingFixedH, errField);
-            throw test::UpwardsException(string("Block from pending block != t8ntool constructed block!\n") +
+            throw test::UpwardsException(string("[retesteth]: Block from pending block != t8ntool constructed block!\n") +
                                          "Error in field: " + errField + "\n" +
                                          "rawRLP/Pending header  vs  t8ntool header \n" + compare);
         }
@@ -364,7 +364,7 @@ void ToolChain::additionalHeaderVerification(
 
     if (_pendingFixed.header()->transactionRoot() != _res.txRoot())
     {
-        ETH_ERROR_MESSAGE(string("ToolChain::mineBlock txRootHash is different to one ruturned by tool \n") +
+        ETH_ERROR_MESSAGE(string("[retesteth]: ToolChain::mineBlock txRootHash is different to one ruturned by tool \n") +
                           "constructedBlockHash: " + _pendingFixed.header()->transactionRoot().asString() +
                           "\n toolTransactionRoot: " + _res.txRoot().asString());
     }

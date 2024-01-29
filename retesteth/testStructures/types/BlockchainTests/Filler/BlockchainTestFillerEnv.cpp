@@ -63,9 +63,9 @@ void require1559BlockchainHeader(spDataObject const& _data)
             {c_uncleHash, {{DataType::String}, jsonField::Optional}}});
 }
 
-void requireMergeBlockchainHeader(spDataObject const& _data)
+void requireParisBlockchainHeader(spDataObject const& _data)
 {
-    REQUIRE_JSONFIELDS(_data, "GenesisBlockHeader(BlockchainTestFillerEnvMerge) " + _data->getKey(),
+    REQUIRE_JSONFIELDS(_data, "GenesisBlockHeader(BlockchainTestFillerEnvParis) " + _data->getKey(),
         {{c_bloom, {{DataType::String}, jsonField::Optional}},
             {c_logsBloom, {{DataType::String}, jsonField::Optional}},
             {c_coinbase, {{DataType::String}, jsonField::Optional}},
@@ -216,7 +216,7 @@ void BlockchainTestFillerEnvShanghai::initializeShanghaiFields(DataObject const&
     m_currentWithdrawalsRoot = sFH32(_data.atKey(c_withdrawalsRoot));
 }
 
-void BlockchainTestFillerEnvMerge::initializeMergeFields(DataObject const& _data)
+void BlockchainTestFillerEnvParis::initializeParisFields(DataObject const& _data)
 {
     m_currentBaseFee = sVALUE(_data.atKey(c_baseFeePerGas));
     m_currentRandom = sFH32(_data.atKey(c_mixHash));
@@ -240,7 +240,7 @@ BlockchainTestFillerEnv4844::BlockchainTestFillerEnv4844(spDataObjectMove _data,
         convertDecFieldsToHex(data);
         require4844BlockchainHeader(data);
         initializeCommonFields(data, _sEngine);
-        initializeMergeFields(data);
+        initializeParisFields(data);
         initializeShanghaiFields(data);
         initialize4844Fields(data);
     }
@@ -269,14 +269,14 @@ spDataObject BlockchainTestFillerEnv4844::asDataObject() const
 
 
 BlockchainTestFillerEnvShanghai::BlockchainTestFillerEnvShanghai(spDataObjectMove _data, SealEngine _sEngine)
-    : BlockchainTestFillerEnvMerge()
+    : BlockchainTestFillerEnvParis()
 {
     try {
         spDataObject data = _data.getPointer();
         requireShanghaiBlockchainHeader(data);
         convertDecFieldsToHex(data);
         initializeCommonFields(data, _sEngine);
-        initializeMergeFields(data);
+        initializeParisFields(data);
         initializeShanghaiFields(data);
     }
     catch (std::exception const& _ex)
@@ -299,22 +299,22 @@ spDataObject BlockchainTestFillerEnvShanghai::asDataObject() const
     return out;
 }
 
-BlockchainTestFillerEnvMerge::BlockchainTestFillerEnvMerge(spDataObjectMove _data, SealEngine _sEngine)
+BlockchainTestFillerEnvParis::BlockchainTestFillerEnvParis(spDataObjectMove _data, SealEngine _sEngine)
 {
     try {
         spDataObject data = _data.getPointer();
-        requireMergeBlockchainHeader(data);
+        requireParisBlockchainHeader(data);
         convertDecFieldsToHex(data);
         initializeCommonFields(data, _sEngine);
-        initializeMergeFields(data);
+        initializeParisFields(data);
     }
     catch (std::exception const& _ex)
     {
-        throw UpwardsException(string("BlockchainTestFillerEnv(Merge) convertion error: ") + _ex.what());
+        throw UpwardsException(string("BlockchainTestFillerEnv(Paris) convertion error: ") + _ex.what());
     }
 }
 
-spDataObject BlockchainTestFillerEnvMerge::asDataObject() const
+spDataObject BlockchainTestFillerEnvParis::asDataObject() const
 {
     spDataObject out;
     (*out)["currentCoinbase"] = m_currentCoinbase->asString();
@@ -399,7 +399,7 @@ BlockchainTestFillerEnv* readBlockchainFillerTestEnv(spDataObjectMove _data, Sea
                     return new BlockchainTestFillerEnvShanghai(_data, _sEngine);
             }
             else
-                return new BlockchainTestFillerEnvMerge(_data, _sEngine);
+                return new BlockchainTestFillerEnvParis(_data, _sEngine);
         }
     }
     return new BlockchainTestFillerEnvLegacy(_data, _sEngine);

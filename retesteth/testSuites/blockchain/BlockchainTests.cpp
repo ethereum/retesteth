@@ -189,7 +189,7 @@ BOOST_AUTO_TEST_CASE(bcFrontierToHomestead) {}
 BOOST_AUTO_TEST_CASE(bcHomesteadToDao) {}
 BOOST_AUTO_TEST_CASE(bcHomesteadToEIP150) {}
 BOOST_AUTO_TEST_CASE(bcBerlinToLondon) {}
-BOOST_AUTO_TEST_CASE(bcArrowGlacierToMerge) {}
+BOOST_AUTO_TEST_CASE(bcArrowGlacierToParis) {}
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()

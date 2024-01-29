@@ -15,9 +15,9 @@ extern std::string const t8ntool_start;
 
 #define DECLARE_T8NTOOL(X) \
   FOR_EACH(X, t8ntoolcfg, RewardsCfg, FrontierCfg, HomesteadCfg, EIP150Cfg, EIP158Cfg, ByzantiumCfg, \
-    ConstantinopleCfg, ConstantinopleFixCfg, IstanbulCfg, BerlinCfg, LondonCfg, MergeCfg, \
+    ConstantinopleCfg, ConstantinopleFixCfg, IstanbulCfg, BerlinCfg, LondonCfg, ParisCfg, \
     ShanghaiCfg, CancunCfg, \
-    ArrowGlacierCfg, GrayGlacierCfg, ArrowGlacierToMergeAtDiffC0000Cfg, MergeToShanghaiAtTime15kCfg, \
+    ArrowGlacierCfg, GrayGlacierCfg, ArrowGlacierToParisAtDiffC0000Cfg, ParisToShanghaiAtTime15kCfg, \
     ShanghaiToCancunAtTime15kCfg, \
     FrontierToHomesteadCfg, HomesteadToDaoCfg, HomesteadToEIP150Cfg, EIP158ToByzantiumCfg, \
     ByzantiumToConstantinopleFixCfg, BerlinToLondonCfg )
@@ -27,14 +27,14 @@ extern std::string const t8ntool_start;
     MystiqueCfgETC, Mystique2CfgETC, Mystique3CfgETC)
 
 #define DECLARE_NIMBUS(X) \
-  FOR_EACH(X, nimbuscfg, RewardsCfgNIMBUS, MergeCfgNIMBUS)
+  FOR_EACH(X, nimbuscfg, RewardsCfgNIMBUS, ParisCfgNIMBUS)
 
 #define DECLARE_PYT8N(X) \
   FOR_EACH(X, pyt8ncfg, RewardsCfgPYT8N, ConstantinopleFixCfgPYT8N)
 
 #define DECLARE_ETCTR(X) \
   FOR_EACH(X, etctranslatecfg, RewardsCfgETCTR, ByzantiumCfgETCTR, ConstantinopleCfgETCTR, ConstantinopleFixCfgETCTR, \
-    IstanbulCfgETCTR, BerlinCfgETCTR, LondonCfgETCTR, MergeCfgETCTR)
+    IstanbulCfgETCTR, BerlinCfgETCTR, LondonCfgETCTR, ParisCfgETCTR)
 
 #define DECLARE_ALETH(X) \
   FOR_EACH(X, alethcfg)
