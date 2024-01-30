@@ -108,7 +108,7 @@ EthereumBlockState const& ToolChainManager::blockByHash(FH32 const& _hash) const
 void ToolChainManager::modifyTimestamp(VALUE const& _time)
 {
     m_pendingBlock.getContent().headerUnsafe().getContent().setTimestamp(_time);
-    if (currentChain().fork() == "ParisToShanghaiAtTime15k" && m_pendingBlock->header()->timestamp() >= 15000)
+    if (isParisToShanghaiAtTime15k(currentChain().fork()) && m_pendingBlock->header()->timestamp() >= 15000)
         initShanghaiPendingBlock(m_pendingBlock);
     if (currentChain().fork() == "ShanghaiToCancunAtTime15k" && m_pendingBlock->header()->timestamp() >= 15000)
         initCancunPendingBlock(m_pendingBlock);
