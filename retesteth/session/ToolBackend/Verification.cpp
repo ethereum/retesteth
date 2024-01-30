@@ -216,7 +216,7 @@ void verifyShanghaiParent(spBlockHeader const& _header, spBlockHeader const& _pa
         verifyShanghaiBlock(_parent, _chain);
     else
     {
-        if (_header->timestamp() >= 15000 && _chain.fork() == "ParisToShanghaiAtTime15k")
+        if (_header->timestamp() >= 15000 && isParisToShanghaiAtTime15k(_chain.fork()))
         {
             if (_parent->type() != BlockType::BlockHeaderParis)
                 throw test::UpwardsException("[retesteth]: Trying to import Shanghai block on top of Paris block before transition!!");

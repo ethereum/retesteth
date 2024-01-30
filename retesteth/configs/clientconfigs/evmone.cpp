@@ -242,6 +242,7 @@ string const evmone_config = R"({
       "1559BlockImportImpossible_TargetGasHigh": "gasTarget increased too much",
       "1559BlockImportImpossible_InitialGasLimitInvalid": "Invalid block1559: Initial gasLimit must be",
       "MergeBlockImportImpossible" : "Trying to import Merge block on top of Shanghai block after transition",
+      "ParisBlockImportImpossible" : "Trying to import Paris block on top of Shanghai block after transition",
       "ShanghaiBlockImportImpossible" : "Trying to import Shanghai block on top of block that is not Shanghai!!",
       "TR_IntrinsicGas" : "intrinsic gas too low",
       "TR_NoFunds" : "insufficient funds for gas * price + value",

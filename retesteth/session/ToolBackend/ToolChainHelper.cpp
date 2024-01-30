@@ -75,6 +75,7 @@ static std::map<FORK, FORK> RewardMapForToolBefore5 = {
     {"ArrowGlacierToParisAtDiffC0000", "ArrowGlacier"},
     {"ArrowGlacierToMergeAtDiffC0000", "ArrowGlacier"},
     {"ParisToShanghaiAtTime15k", "Paris"},
+    {"MergeToShanghaiAtTime15k", "Paris"},
     {"ShanghaiToCancunAtTime15k", "Shanghai"}
 };
 static std::map<FORK, FORK> RewardMapForToolAfter5 = {
@@ -87,6 +88,7 @@ static std::map<FORK, FORK> RewardMapForToolAfter5 = {
     {"ArrowGlacierToParisAtDiffC0000", "Paris"},
     {"ArrowGlacierToMergeAtDiffC0000", "Paris"},
     {"ParisToShanghaiAtTime15k", "Shanghai"},
+    {"MergeToShanghaiAtTime15k", "Shanghai"},
     {"ShanghaiToCancunAtTime15k", "Cancun"}
 };
 
