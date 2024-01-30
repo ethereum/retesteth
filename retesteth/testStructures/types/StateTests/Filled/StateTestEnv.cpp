@@ -2,6 +2,7 @@
 #include <retesteth/EthChecks.h>
 #include <retesteth/testStructures/Common.h>
 #include <retesteth/Constants.h>
+#include "Options.h"
 
 using namespace std;
 using namespace dataobject;
@@ -12,16 +13,33 @@ namespace
 {
 void requireStateTestEnvScheme(DataObject const& _data)
 {
-    REQUIRE_JSONFIELDS(_data, "StateTestEnv " + _data.getKey(),
-        {{"currentCoinbase", {{DataType::String}, jsonField::Required}},
-            {"currentDifficulty", {{DataType::String}, jsonField::Optional}},
-            {"currentGasLimit", {{DataType::String}, jsonField::Required}},
-            {"currentNumber", {{DataType::String}, jsonField::Required}},
-            {"currentTimestamp", {{DataType::String}, jsonField::Required}},
-            {"currentBaseFee", {{DataType::String}, jsonField::Optional}},
-            {"currentRandom", {{DataType::String}, jsonField::Optional}},
-            {c_currentExcessBlobGas, {{DataType::String}, jsonField::Optional}}
-        });
+    if (test::Options::get().isLegacy())
+    {
+        REQUIRE_JSONFIELDS(_data, "StateTestEnv(Legacy) " + _data.getKey(),
+            {{"currentCoinbase", {{DataType::String}, jsonField::Required}},
+                {"currentDifficulty", {{DataType::String}, jsonField::Optional}},
+                {"currentGasLimit", {{DataType::String}, jsonField::Required}},
+                {"currentNumber", {{DataType::String}, jsonField::Required}},
+                {"currentTimestamp", {{DataType::String}, jsonField::Required}},
+                {"currentBaseFee", {{DataType::String}, jsonField::Optional}},
+                {"currentRandom", {{DataType::String}, jsonField::Optional}},
+                {c_currentExcessBlobGas, {{DataType::String}, jsonField::Optional}},
+                {"previousHash", {{DataType::String}, jsonField::Optional}}
+            });
+    }
+    else
+    {
+        REQUIRE_JSONFIELDS(_data, "StateTestEnv " + _data.getKey(),
+            {{"currentCoinbase", {{DataType::String}, jsonField::Required}},
+                {"currentDifficulty", {{DataType::String}, jsonField::Optional}},
+                {"currentGasLimit", {{DataType::String}, jsonField::Required}},
+                {"currentNumber", {{DataType::String}, jsonField::Required}},
+                {"currentTimestamp", {{DataType::String}, jsonField::Required}},
+                {"currentBaseFee", {{DataType::String}, jsonField::Optional}},
+                {"currentRandom", {{DataType::String}, jsonField::Optional}},
+                {c_currentExcessBlobGas, {{DataType::String}, jsonField::Optional}}
+            });
+    }
 }
 
 }  // namespace

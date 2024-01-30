@@ -131,10 +131,16 @@ string const t8ntool_config = R"({
       "TransactionException.TYPE_3_TX_INVALID_BLOB_VERSIONED_HASH" : "has invalid hash version",
       "TransactionException.TYPE_3_TX_PRE_FORK|TransactionException.TYPE_3_TX_ZERO_BLOBS" : "blob tx used but field env.ExcessBlobGas missing",
       "TransactionException.TYPE_3_TX_PRE_FORK" : "blob tx used but field env.ExcessBlobGas missing",
-      "TransactionException.TYPE_3_TX_BLOB_COUNT_EXCEEDED" : "would exceed maximum allowance",
+      "TransactionException.TYPE_3_TX_BLOB_COUNT_EXCEEDED" : "would exceed maximum",
+      "TransactionException.TYPE_3_TX_CONTRACT_CREATION" : "input string too short for common.Address",
+      "TransactionException.TYPE_3_TX_MAX_BLOB_GAS_ALLOWANCE_EXCEEDED" : "Block has invalid number of blobs in txs >=7! would exceed maximum",
       "TransactionException.INSUFFICIENT_MAX_FEE_PER_BLOB_GAS" : "blob tx used but field env.ExcessBlobGas missing",
       "TransactionException.INTRINSIC_GAS_TOO_LOW" : "intrinsic gas too low",
       "TransactionException.INITCODE_SIZE_EXCEEDED" : "max initcode size exceeded",
+      "BlockException.INCORRECT_EXCESS_BLOB_GAS" : "Error in field: excessBlobGas",
+      "BlockException.INCORRECT_BLOB_GAS_USED" : "Error in field: blobGasUsed",
+      "BlockException.BLOB_GAS_USED_ABOVE_LIMIT|BlockException.INCORRECT_BLOB_GAS_USED" : "Error in field: blobGasUsed",
+
 
       "Transaction without funds" : "insufficient funds for gas * price + value",
       "insufficient account balance" : "insufficient funds for gas * price + value",
