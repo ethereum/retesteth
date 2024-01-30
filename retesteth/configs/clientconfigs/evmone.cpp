@@ -58,8 +58,17 @@ string const evmone_config = R"({
     ],
     "exceptions" : {
       "PYSPECS_EXCEPTIONS" : "",
+      "TransactionException.INSUFFICIENT_ACCOUNT_FUNDS" : "insufficient funds for gas * price + value",
+      "TransactionException.INSUFFICIENT_MAX_FEE_PER_GAS" : "max fee per gas less than block base fee",
+      "TransactionException.TYPE_3_TX_ZERO_BLOBS" : "blob transaction missing blob hashes",
+      "TransactionException.TYPE_3_TX_INVALID_BLOB_VERSIONED_HASH" : "has invalid hash version",
+      "TransactionException.TYPE_3_TX_PRE_FORK|TransactionException.TYPE_3_TX_ZERO_BLOBS" : "blob tx used but field env.ExcessBlobGas missing",
+      "TransactionException.TYPE_3_TX_PRE_FORK" : "blob tx used but field env.ExcessBlobGas missing",
+      "TransactionException.TYPE_3_TX_BLOB_COUNT_EXCEEDED" : "would exceed maximum allowance",
+      "TransactionException.INSUFFICIENT_MAX_FEE_PER_BLOB_GAS" : "blob tx used but field env.ExcessBlobGas missing",
+      "TransactionException.INTRINSIC_GAS_TOO_LOW" : "intrinsic gas too low",
+      "TransactionException.INITCODE_SIZE_EXCEEDED" : "max initcode size exceeded",
       "Transaction without funds" : "insufficient funds for gas * price + value",
-
       "AddressTooShort" : "input string too short for common.Address",
       "AddressTooLong" : "rlp: input string too long for common.Address, decoding into (types.Transaction)(types.LegacyTx).To",
       "NonceMax" : "nonce exceeds 2^64-1",
