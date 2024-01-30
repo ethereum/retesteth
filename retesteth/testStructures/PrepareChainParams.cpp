@@ -72,7 +72,8 @@ spDataObject prepareGenesisSubsection(StateTestEnvBase const& _env, ParamsContex
         _genesis[c_baseFeePerGas] = calculateGenesisBaseFee(_env.currentBaseFee(), _context);
     };
 
-    auto mergify = [&_env](DataObject& _genesis){
+    auto mergify = [&_env, &londify](DataObject& _genesis){
+        londify(_genesis);
         _genesis.removeKey(c_difficulty);
         _genesis["currentRandom"] = _env.currentRandom().asString();
         auto const randomH32 = dev::toCompactHexPrefixed(dev::u256(_genesis["currentRandom"].asString()), 32);
@@ -125,6 +126,10 @@ spDataObject prepareGenesisSubsection(StateTestEnvBase const& _env, ParamsContex
             londify(genesis.getContent());
             mergify(genesis.getContent());
             shangfy(genesis.getContent());;
+        }
+        else if (_net == FORK("Merge"))
+        {
+            mergify(genesis.getContent());
         }
     }
     return genesis;

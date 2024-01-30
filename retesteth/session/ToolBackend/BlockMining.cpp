@@ -64,18 +64,49 @@ void makeEnvBasefee(spDataObject& _envData, spBlockHeader const& _parentBlockH, 
     }
 }
 
-void makeEnvExcessBlobGas(spDataObject& _envData, spBlockHeader const& _parentBlockH, spBlockHeader const& _currentBlockH, FORK const& _fork)
+void makeEnvExcessBlobGas(spDataObject& _envData, spBlockHeader const& _parentBlockH, spBlockHeader const& _currentBlockH, toolimpl::ToolChain const& _chain)
 {
     if (isBlockExportExcessBlobGas(_currentBlockH))
     {
         BlockHeader4844 const& ch4844 = BlockHeader4844::castFrom(_currentBlockH);
-        (*_envData)[c_parentBeaconBlockRoot] = ch4844.parentBeaconBlockRoot().asString();
+        auto const& beacon = ch4844.parentBeaconBlockRoot().asString();
+        if (ch4844.parentBeaconBlockRoot() == FH32::zero() && _currentBlockH->number() != 0)
+        {
+            // Detect beaconHash from the pre state, as new state test format env does not include it
+            bool foundPyspecStorageRecord = false;
+            string const beaconAccount = "0x000f3df6d732807ef1319fb7b8bb8522d0beac02";
+            auto const& currentStateAccounts = _chain.lastBlock().state()->accounts();
+            if (currentStateAccounts.count(beaconAccount))
+            {
+                const VALUE HISTORY_BUFFER_LENGTH = 8191;
+                const VALUE beaconAccountStorageKey = VALUE(
+                    ch4844.timestamp().asBigInt() % HISTORY_BUFFER_LENGTH.asBigInt() + HISTORY_BUFFER_LENGTH.asBigInt());
+                auto const& beaconAccountRecord = currentStateAccounts.at(beaconAccount);
+                if (beaconAccountRecord->storage().hasKey(beaconAccountStorageKey))
+                {
+                    foundPyspecStorageRecord = true;
+
+                    DataObject pyspecBeacon;
+                    pyspecBeacon = beaconAccountRecord->storage().atKey(beaconAccountStorageKey).asString();
+                    pyspecBeacon.performModifier(mod_valueToFH32);
+                    FH32 const beaconHash(pyspecBeacon.asString());
+                    (*_envData)[c_parentBeaconBlockRoot] = beaconHash.asString();
+                }
+            }
+            if (!foundPyspecStorageRecord)
+            {
+                ETH_DC_MESSAGE(DC::STATS2, "[retesteth]: parentBeaconRoot is 0x00, but unable to find it in pyspec's pre state!");
+                (*_envData)[c_parentBeaconBlockRoot] = beacon;
+            }
+        }
+        else
+            (*_envData)[c_parentBeaconBlockRoot] = beacon;
 
         if (_currentBlockH->number() != 0)
         {
             (*_envData).removeKey(c_currentExcessBlobGas);
             (*_envData).removeKey(c_currentBlobGasUsed);
-            if (_fork == "ShanghaiToCancunAtTime15k" && _parentBlockH->type() != BlockType::BlockHeader4844)
+            if (_chain.fork() == "ShanghaiToCancunAtTime15k" && _parentBlockH->type() != BlockType::BlockHeader4844)
             {
                 BlockHeader4844 const& h4844 = BlockHeader4844::castFrom(_currentBlockH);
                 (*_envData)[c_currentExcessBlobGas] = h4844.excessBlobGas().asString();
@@ -132,7 +163,7 @@ void BlockMining::prepareEnvFile()
         (*envData)["currentRandom"] = currentBlockH->mixHash().asString();
     makeEnvWithdrawals(envData, m_currentBlockRef);
     makeEnvBasefee(envData, parentBlockH, currentBlockH);
-    makeEnvExcessBlobGas(envData, parentBlockH, currentBlockH, m_chainRef.fork());
+    makeEnvExcessBlobGas(envData, parentBlockH, currentBlockH, m_chainRef);
     makeEnvOmmers(envData, m_currentBlockRef, m_chainRef);
 
 
