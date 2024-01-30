@@ -83,6 +83,7 @@ BlockchainTestBlock::BlockchainTestBlock(spDataObject& _data)
             m_hasRlpDecoded = true;
             REQUIRE_JSONFIELDS(rlpDecoded, "BlockchainTestBlock::rlp_decoded",
             {{"blockHeader", {{DataType::Object}, jsonField::Required}},
+             {"blocknumber", {{DataType::String}, jsonField::Optional}},
              {"transactions", {{DataType::Array}, jsonField::Required}},
              {"uncleHeaders", {{DataType::Array}, jsonField::Required}},
             {"withdrawals", {{DataType::Array}, jsonField::Required}}});
