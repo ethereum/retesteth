@@ -175,6 +175,22 @@ bool _checkPythonTestBlockchainOnly(string const& _pythonSrc, size_t _foundTestP
     return false;
 }
 
+bool _checkPythonTestStateTestOnly(string const& _pythonSrc, size_t _foundTestPos)
+{
+    size_t foundBlockchain = _pythonSrc.find("state_test_only(", _foundTestPos);
+    if (foundBlockchain == string::npos)
+        return false;
+
+    size_t foundNextTestPos = _pythonSrc.find("def test_", _foundTestPos + 50);
+    if (foundNextTestPos == string::npos)
+        return true;
+
+    if (foundBlockchain < foundNextTestPos)
+        return true;
+
+    return false;
+}
+
 bool _checkPythonTestSkipped(string const& _pythonSrc, size_t _foundTestPos)
 {
     size_t foundSkipPos = _pythonSrc.rfind("@pytest.mark.skip", _foundTestPos);
@@ -214,6 +230,10 @@ vector<string> getTestNamesFromPython(fs::path const& _filler)
                 if (!Options::get().fillchain && _checkPythonTestBlockchainOnly(pythonSrc, foundTestPos))
                 {
                     ETH_WARNING("Will skip python bc test " + pythonTestname);
+                }
+                else if (Options::get().fillchain && _checkPythonTestStateTestOnly(pythonSrc, foundTestPos))
+                {
+                    ETH_WARNING("Will skip python state only test " + pythonTestname);
                 }
                 else
                     generatedTestNames.emplace_back(pythonTestname);

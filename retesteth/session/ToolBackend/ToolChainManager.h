@@ -8,6 +8,12 @@
 namespace toolimpl
 {
 
+enum class AddPendingTransaction
+{
+    ALLOW_RETESTETH_TO_DROP,
+    PLAIN_INPUT
+};
+
 // Manage test blockchains for reorg
 // Manage pending block for eth_sendRawTransaction
 // Imports raw blocks (RLP) into apropriate chain, reorg if needed
@@ -15,7 +21,7 @@ class ToolChainManager : public GCP_SPointerBase
 {
 public:
     ToolChainManager(spSetChainParamsArgs const& _config, boost::filesystem::path const& _toolPath, boost::filesystem::path const& _tmpDir, ToolChainGenesis _genesisPolicy = ToolChainGenesis::CALCULATE);
-    void addPendingTransaction(spTransaction const& _tr) { m_pendingBlock.getContent().addTransaction(_tr); }
+    void addPendingTransaction(spTransaction const& _tr, AddPendingTransaction);
 
     ToolChain const& currentChain() const
     {
@@ -78,7 +84,7 @@ private:
 
 private:
     spBlockHeader _irb_verifyAndSetHeader(dev::RLP const&);
-    void _irb_verifyAndSetTransactions(dev::RLP const&);
+    void _irb_verifyAndSetTransactions(dev::RLP const&, spBlockHeader const&);
     void _irb_verifyAndSetUncles(dev::RLP const&, spBlockHeader const&);
     void _irb_verifyAndSetWithdrawals(dev::RLP const&, spBlockHeader const&);
     FH32 _irb_compareT8NBlockToRawRLP(spBlockHeader const&);

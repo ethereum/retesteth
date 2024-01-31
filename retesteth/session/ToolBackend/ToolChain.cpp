@@ -135,6 +135,15 @@ spDataObject const ToolChain::mineBlock(EthereumBlockState const& _pendingBlock,
 
     spDataObject miningResult;
     miningResult = coorectTransactionsByToolResponse(res, pendingFixed, _pendingBlock, _req);
+
+    for (auto const& [tr, error] : _pendingBlock.transactionsRejectedByRetesteth())
+    {
+        spDataObject rejectInfo;
+        (*rejectInfo)["hash"] = tr->hash().asString();
+        (*rejectInfo)["error"] = error;
+        (*miningResult)["rejectedTransactions"].addArrayObject(rejectInfo);
+    }
+
     for (auto const& wt : _pendingBlock.withdrawals())
         pendingFixed.addWithdrawal(wt);
     correctUncleHeaders(pendingFixed, _pendingBlock);

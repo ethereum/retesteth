@@ -7,6 +7,7 @@
 #include <retesteth/helpers/TestHelper.h>
 #include <retesteth/Options.h>
 #include <retesteth/Constants.h>
+#include <testStructures/types/Ethereum/Transactions/TransactionBlob.h>
 using namespace std;
 using namespace dev;
 using namespace test;
@@ -280,6 +281,30 @@ bool ToolChainManager::isParisChain() const
     assert(defaultChain.blocks().size() > 0);
     auto const& genesisDifficulty = defaultChain.blocks().at(0).header()->difficulty();
     return (genesisDifficulty == 0);
+}
+
+void ToolChainManager::addPendingTransaction(spTransaction const& _tr, AddPendingTransaction _mod)
+{
+    if (_mod == AddPendingTransaction::ALLOW_RETESTETH_TO_DROP &&
+        _tr->type() == TransactionType::BLOB)
+    {
+        auto const& block = currentChain().lastBlock();
+        if (block.header()->type() == BlockType::BlockHeader4844)
+        {
+            BlockHeader4844 const& h4844 = BlockHeader4844::castFrom(block.header());
+            int getblobgas = get_blob_gasprice(h4844);
+
+            TransactionBlob const& blobtx = dynamic_cast<TransactionBlob const&>(_tr.getCContent());
+            if (blobtx.maxFeePerBlobGas() < getblobgas)
+            {
+                string const exception = "[retesteth]: blobtx.maxFeePerBlobGas() < getblobgas(blockheader) ";
+                m_pendingBlock.getContent().rejectTransaction(_tr, exception);
+                ETH_WARNING("Retesteth pre drop transaction with exception: " + exception);
+                return;
+            }
+        }
+    }
+    m_pendingBlock.getContent().addTransaction(_tr);
 }
 
 }  // namespace toolimpl

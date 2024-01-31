@@ -26,7 +26,7 @@ spBlockHeader ToolChainManager::_irb_verifyAndSetHeader(dev::RLP const& _headerR
     return header;
 }
 
-void ToolChainManager::_irb_verifyAndSetTransactions(dev::RLP const& _trsRLP)
+void ToolChainManager::_irb_verifyAndSetTransactions(dev::RLP const& _trsRLP, spBlockHeader const& _header)
 {
     ETH_DC_MESSAGE(DC::RPC, "RLP transaction number: " + test::fto_string(_trsRLP.toList().size()));
     size_t blobCount = 0;
@@ -39,9 +39,17 @@ void ToolChainManager::_irb_verifyAndSetTransactions(dev::RLP const& _trsRLP)
             blobCount += blobtx.blobs().size();
             if (blobCount >= 7)
                 throw test::UpwardsException("[retesteth]: versioned hashes len exceeds, Block has invalid number of blobs in txs >=7! would exceed maximum");
+
+            if (_header->type() == BlockType::BlockHeader4844)
+            {
+                BlockHeader4844 const& h4844 = BlockHeader4844::castFrom(_header);
+                auto getblobgas = get_blob_gasprice(h4844);
+                if (blobtx.maxFeePerBlobGas() < getblobgas)
+                    throw test::UpwardsException("[retesteth]: importRLP: blobtx.maxFeePerBlobGas() < getblobgas(blockheader) ");
+            }
         }
         ETH_DC_MESSAGE(DC::RPC, spTr->asDataObject()->asJson());
-        addPendingTransaction(spTr);
+        addPendingTransaction(spTr, AddPendingTransaction::PLAIN_INPUT);
     }
 }
 
@@ -108,7 +116,7 @@ FH32 ToolChainManager::importRawBlock(BYTES const& _rlp)
         toolimpl::verifyBlockRLP(rlp);
 
         auto const header = _irb_verifyAndSetHeader(rlp[0]);
-        _irb_verifyAndSetTransactions(rlp[1]);
+        _irb_verifyAndSetTransactions(rlp[1], header);
         _irb_verifyAndSetUncles(rlp[2], header);
         _irb_verifyAndSetWithdrawals(rlp, header);
 
