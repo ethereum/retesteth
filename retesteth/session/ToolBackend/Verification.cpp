@@ -419,4 +419,26 @@ void verifyWithdrawalRecord(spWithdrawal const& _wtRecord)
         throw test::UpwardsException("[retesteth]: Withdrawals address field is not a valid address! " + address);
 }
 
+int fake_exponential(int _factor, bigint _numerator, int _denominator)
+{
+    int i = 1;
+    bigint output = 0;
+    bigint numerator_accum = _factor * _denominator;
+    while (numerator_accum > 0)
+    {
+        output += numerator_accum;
+        numerator_accum = (numerator_accum * _numerator) / (_denominator * i);
+        i += 1;
+    }
+    return (int) output / _denominator;
+}
+
+int get_blob_gasprice(BlockHeader4844 const& _header)
+{
+    return fake_exponential(
+        MIN_BLOB_GASPRICE,
+        _header.excessBlobGas().asBigInt(),
+        BLOB_GASPRICE_UPDATE_FRACTION);
+}
+
 }  // namespace toolimpl

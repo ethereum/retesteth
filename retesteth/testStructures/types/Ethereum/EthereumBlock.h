@@ -18,6 +18,7 @@ struct EthereumBlock : GCP_SPointerBase
 {
     EthereumBlock(spBlockHeader const& _header) : m_header(_header) {}
     void addTransaction(spTransaction const& _tr) { m_transactions.emplace_back(_tr); }
+    void rejectTransaction(spTransaction const& _tr, std::string const& _error) { m_transactionsRejectedByRetesteth.push_back({_tr, _error}); }
     void addUncle(spBlockHeader const& _header) { m_uncles.emplace_back(_header); }
     void addWithdrawal(spWithdrawal const& _withdrawal) { m_withdrawals.emplace_back(_withdrawal); }
     void replaceHeader(spBlockHeader const& _header) { m_header = readBlockHeader(_header->asDataObject()); }
@@ -30,6 +31,10 @@ struct EthereumBlock : GCP_SPointerBase
     spBlockHeader& headerUnsafe() { return m_header; }
     std::vector<spBlockHeader> const& uncles() const { return m_uncles; }
     std::vector<spTransaction> const& transactions() const { return m_transactions; }
+
+    typedef std::tuple<spTransaction, std::string> TransactionError;
+    std::vector<TransactionError> const& transactionsRejectedByRetesteth() const { return m_transactionsRejectedByRetesteth; }
+
     bool hasTransaction(FH32 const&) const;
     void clear() { m_transactions.clear(); m_withdrawals.clear(); m_uncles.clear(); }
     std::vector<spWithdrawal> const& withdrawals() const { return m_withdrawals; }
@@ -38,6 +43,7 @@ protected:
     EthereumBlock() {}
     spBlockHeader m_header;
     std::vector<spTransaction> m_transactions;
+    std::vector<TransactionError> m_transactionsRejectedByRetesteth;
     std::vector<spBlockHeader> m_uncles;
     std::vector<spWithdrawal> m_withdrawals;
 protected:
