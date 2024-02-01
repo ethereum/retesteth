@@ -140,7 +140,7 @@ string const t8ntool_config = R"({
       "BlockException.INCORRECT_EXCESS_BLOB_GAS" : "Error in field: excessBlobGas",
       "BlockException.INCORRECT_BLOB_GAS_USED" : "Error in field: blobGasUsed",
       "BlockException.BLOB_GAS_USED_ABOVE_LIMIT|BlockException.INCORRECT_BLOB_GAS_USED" : "Error in field: blobGasUsed",
-
+      "BlockException.INCORRECT_BLOCK_FORMAT" : "[retesteth]: Error importing raw rlp block: readBlockHeader(RLP): unknown block type!",
 
       "Transaction without funds" : "insufficient funds for gas * price + value",
       "insufficient account balance" : "insufficient funds for gas * price + value",
