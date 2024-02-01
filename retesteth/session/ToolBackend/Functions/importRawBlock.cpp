@@ -45,7 +45,7 @@ void ToolChainManager::_irb_verifyAndSetTransactions(dev::RLP const& _trsRLP, sp
                 BlockHeader4844 const& h4844 = BlockHeader4844::castFrom(_header);
                 auto getblobgas = get_blob_gasprice(h4844);
                 if (blobtx.maxFeePerBlobGas() < getblobgas)
-                    throw test::UpwardsException("[retesteth]: importRLP: blobtx.maxFeePerBlobGas() < getblobgas(blockheader) ");
+                    throw test::UpwardsException("[retesteth]: importRLP: blobtx.maxFeePerBlobGas() < getblobgas(blockheader) | Error in field: excessBlobGas");
             }
         }
         ETH_DC_MESSAGE(DC::RPC, spTr->asDataObject()->asJson());
