@@ -69,6 +69,7 @@ string const nimbus_config = R"({
       "BlockException.INCORRECT_EXCESS_BLOB_GAS" : "Error in field: excessBlobGas",
       "BlockException.INCORRECT_BLOB_GAS_USED" : "Error in field: blobGasUsed",
       "BlockException.BLOB_GAS_USED_ABOVE_LIMIT|BlockException.INCORRECT_BLOB_GAS_USED" : "Error in field: blobGasUsed",
+      "BlockException.INCORRECT_BLOCK_FORMAT" : "[retesteth]: Error importing raw rlp block: readBlockHeader(RLP): unknown block type!",
 
       "Transaction without funds" : "not enough cash",
       "intrinsic gas too low" : "not enough gas to perform calculation",
