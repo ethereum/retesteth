@@ -1,6 +1,7 @@
 #include "BlockchainTestBlock.h"
 #include <retesteth/EthChecks.h>
 #include <retesteth/testStructures/Common.h>
+#include <retesteth/helpers/TestOutputHelper.h>
 using namespace std;
 
 namespace test::teststruct
@@ -88,13 +89,23 @@ BlockchainTestBlock::BlockchainTestBlock(spDataObject& _data)
              {"uncleHeaders", {{DataType::Array}, jsonField::Required}},
             {"withdrawals", {{DataType::Array}, jsonField::Required}}});
 
-            m_blockHeader = readBlockHeader(rlpDecoded.atKey("blockHeader"));
-            for (auto& el : rlpDecoded.atKeyUnsafe("transactions").getSubObjectsUnsafe())
-                m_transactions.emplace_back(readTransaction(dataobject::move(el)));
-            for (auto const& el : rlpDecoded.atKey("uncleHeaders").getSubObjects())
-                m_uncles.emplace_back(readBlockHeader(el));
-            for (auto const& el : rlpDecoded.atKey("withdrawals").getSubObjects())
-                m_withdrawals.emplace_back(spWithdrawal(new Withdrawal(el)));
+            try
+            {
+                m_blockHeader = readBlockHeader(rlpDecoded.atKey("blockHeader"));
+                for (auto& el : rlpDecoded.atKeyUnsafe("transactions").getSubObjectsUnsafe())
+                    m_transactions.emplace_back(readTransaction(dataobject::move(el)));
+                for (auto const& el : rlpDecoded.atKey("uncleHeaders").getSubObjects())
+                    m_uncles.emplace_back(readBlockHeader(el));
+                for (auto const& el : rlpDecoded.atKey("withdrawals").getSubObjects())
+                    m_withdrawals.emplace_back(spWithdrawal(new Withdrawal(el)));
+                m_rlpDecodedValid = true;
+            }
+            catch (test::UpwardsException const& _ex)
+            {
+                m_rlpDecodedValid = false;
+                ETH_WARNING("Error constructing eth structures from rlp_decoded, invalid rlp validation will be skipped!"
+                            + TestOutputHelper::get().testInfo().errorDebug());
+            }
         }
     }
     catch (std::exception const& _ex)
