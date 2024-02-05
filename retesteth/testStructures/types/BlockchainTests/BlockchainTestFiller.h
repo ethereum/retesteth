@@ -18,6 +18,7 @@ struct BlockchainTestInFiller : GCP_SPointerBase
     BlockchainTestInFiller(spDataObject&);
     std::string const& testName() const { return m_name; }
     bool hasInfo() const { return !m_info.isEmpty(); }
+    bool hasEmptyAccount() const { return m_hasEmptyAccounts; }
     InfoIncomplete const& Info() const { return m_info; }
     SealEngine sealEngine() const { return m_sealEngine; }
     BlockchainTestFillerEnv const& Env() const { return m_env; }
@@ -45,6 +46,7 @@ private:
     std::vector<BlockchainTestFillerExpectSection> m_expects;
     std::vector<std::string> m_exceptions;
     bool m_hasAtLeastOneUncle;
+    bool m_hasEmptyAccounts;
 
     spDataObject m_verify;
 };

@@ -439,4 +439,15 @@ void mod_changeValueAnyToBigint00(DataObject& _el)
         _el.setString("0x:bigint 0x00");
 }
 
+bool checkEmptyAccounts(spState _state)
+{
+    for (auto const& [address, acc] : _state->accounts())
+    {
+        if (acc->nonce() == 0 && acc->balance() == 0 && acc->code().asString() == "0x")
+            return true;
+    }
+    return false;
+}
+
+
 }  // namespace teststruct
