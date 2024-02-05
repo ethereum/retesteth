@@ -28,6 +28,8 @@ BlockchainTestInFiller::BlockchainTestInFiller(spDataObject& _data)
             m_info = spInfoIncomplete(new InfoIncomplete(MOVE(_data, "_info")));
         convertDecStateToHex((*_data).atKeyPointerUnsafe("pre"));
         m_pre = spState(new State(MOVE(_data, "pre")));
+        m_hasEmptyAccounts = checkEmptyAccounts(m_pre);
+
 
         // Prepare nonce map for transaction 'auto' nonce parsing
         NonceMap nonceMap;

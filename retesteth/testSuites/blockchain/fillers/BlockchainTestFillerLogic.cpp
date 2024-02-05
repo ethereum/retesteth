@@ -36,6 +36,9 @@ spDataObject FillTest(BlockchainTestInFiller const& _test, TestSuite::TestSuiteO
             // if expect is for this network, generate the test
             if (expect.hasFork(net))
             {
+                if (compareFork(net, CMP::ge, FORK("Paris")) && _test.hasEmptyAccount())
+                    ETH_ERROR_MESSAGE("Test filler pre state has empty account which is not allowed after Paris" + TestOutputHelper::get().testInfo().errorDebug());
+
                 auto filledTest = filler.makeNewBCTestForNet(net);
                 auto testchain = filler.makeTestChainManager(net);
 
