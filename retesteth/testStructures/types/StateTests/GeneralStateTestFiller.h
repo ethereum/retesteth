@@ -17,6 +17,8 @@ struct StateTestInFiller : GCP_SPointerBase
     InfoIncomplete const& Info() const { return m_info; }
     StateTestFillerEnv const& Env() const { return m_env; }
     State const& Pre() const { return m_pre; }
+    bool hasEmptyAccount() const { return m_hasEmptyAccounts; }
+
     StateTestFillerTransaction const& GeneralTr() const { return m_transaction; }
     std::vector<StateTestFillerExpectSection> const& Expects() const { return m_expectSections; }
     std::set<FORK> getAllForksFromExpectSections() const;
@@ -36,6 +38,7 @@ private:
     spDataObject m_verify;
     spDataObject m_verifyBC;
     std::vector<std::string> m_exceptions;
+    bool m_hasEmptyAccounts;
 };
 
 struct GeneralStateTestFiller

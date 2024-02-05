@@ -83,6 +83,16 @@ GeneralStateTestFiller::GeneralStateTestFiller(spDataObject& _data)
     }
 }
 
+bool checkEmptyAccounts(spState _state)
+{
+    for (auto const& [address, acc] : _state->accounts())
+    {
+        if (acc->nonce() == 0 && acc->balance() == 0 && acc->code().asString() == "0x")
+            return true;
+    }
+    return false;
+}
+
 StateTestInFiller::StateTestInFiller(spDataObject& _data)
 {
     try
@@ -118,6 +128,9 @@ StateTestInFiller::StateTestInFiller(spDataObject& _data)
 
         convertDecStateToHex((*_data).atKeyPointerUnsafe("pre"), solidityCode); // "Pre" section
         m_pre = spState(new State(MOVE(_data, "pre")));
+        m_hasEmptyAccounts = checkEmptyAccounts(m_pre);
+
+
         m_transaction = spStateTestFillerTransaction(new StateTestFillerTransaction(MOVE(_data, "transaction")));
 
         string const c_expect = "expect";
