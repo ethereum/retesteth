@@ -227,11 +227,14 @@ vector<string> getTestNamesFromPython(fs::path const& _filler)
             }
             else
             {
-                if (!Options::get().fillchain && _checkPythonTestBlockchainOnly(pythonSrc, foundTestPos))
+                auto const& opt = Options::get();
+                bool OnBlockchainTest = opt.fillchain
+                                        || opt.rCurrentTestSuite.find("BCGeneralStateTests") != string::npos;
+                if (!OnBlockchainTest && _checkPythonTestBlockchainOnly(pythonSrc, foundTestPos))
                 {
                     ETH_WARNING("Will skip python bc test " + pythonTestname);
                 }
-                else if (Options::get().fillchain && _checkPythonTestStateTestOnly(pythonSrc, foundTestPos))
+                else if (OnBlockchainTest && _checkPythonTestStateTestOnly(pythonSrc, foundTestPos))
                 {
                     ETH_WARNING("Will skip python state only test " + pythonTestname);
                 }
