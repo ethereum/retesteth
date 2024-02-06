@@ -64,6 +64,18 @@ std::vector<fs::path> getSubfolders(fs::path const& _path)
     return subFolders;
 }
 
+std::vector<fs::path> getSubfiles(fs::path const& _path)
+{
+    std::vector<fs::path> subFiles;
+    using fsIterator = fs::directory_iterator;
+    for (fsIterator it(_path); it != fsIterator(); ++it)
+    {
+        if (fs::is_regular_file(*it))
+            subFiles.push_back(*it);
+    }
+    return subFiles;
+}
+
 bool hasSubfoldersWithFileTypes(fs::path const& _path, string const& _filemask)
 {
     using fsIterator = fs::directory_iterator;
@@ -93,6 +105,16 @@ bool hasSubfoldersWithFileTypes(fs::path const& _path, string const& _filemask)
     return false;
 }
 
+void checkRegularFile(fs::path const& _f)
+{
+    if (_f.stem().string() == "__init__")
+        return;
+
+    string const ext = _f.extension().string();
+    if (ext == ".py" || ext == ".json")
+        ETH_ERROR_MESSAGE("Found test file in suite subfolder won't be executed: " + _f.string());
+}
+
 test_unit_id registerNewTestCase(
     vector<string>& allTestNames, FixtureToSuite const& _fixture, test_suite* _suite, string const& _caseName)
 {
@@ -115,6 +137,10 @@ void registerNewTestSuite(
 {
     auto const& suiteName = _fixture.second;
     auto const subFolders = getSubfolders(_path);
+    auto const subFiles = getSubfiles(_path);
+    for (auto const& file : subFiles)
+        checkRegularFile(file);
+
 
     string const newSuiteName = _path.stem().string();
     string const fullSuiteName = string(suiteName) + "/" + newSuiteName;
@@ -140,6 +166,7 @@ void registerNewTestSuite(
             registerNewTestSuite(allTestNames, fixToSuite, tsuite, path, newFillerPath);
         else
             registerNewTestCase(allTestNames, fixToSuite, tsuite, casename);
+
         g_dynamic_test_suite_fixtures.emplace_back(std::move(fixToSuite));
     }
     _suite->add(tsuite);
@@ -177,6 +204,10 @@ void test::DynamicTestsBoost(vector<string>& allTestNames)
                         else
                             registerNewTestCase(allTestNames, fixtureSuite, suite, caseName);
                     }
+                }
+                else if (fs::is_regular_file(*it))
+                {
+                    checkRegularFile(*it);
                 }
             }
         }
