@@ -43,6 +43,20 @@ fs::path prepareOutputFileName(fs::path const& _file)
     return outPath;
 }
 
+void fixPyspecsTestNames(DataObject& _test, fs::path const& _pythonFiller)
+{
+    for (auto& test : _test.getSubObjectsUnsafe())
+    {
+        size_t subTestSeparator = test->getKey().find("::");
+        if (subTestSeparator == string::npos)
+            continue;
+
+        string key = test->getKey();
+        key.replace(0, subTestSeparator, _pythonFiller.string());
+        test.getContent().setKey(key);
+    }
+}
+
 void updatePythonTestInfo(TestFileData& _testData, fs::path const& _pythonFiller, fs::path const& _filledFolder)
 {
     auto const testNames = getGeneratedTestNames(_pythonFiller);
@@ -56,6 +70,7 @@ void updatePythonTestInfo(TestFileData& _testData, fs::path const& _pythonFiller
             continue;
         }
         spDataObject output = dataobject::ConvertJsoncppStringToData(res);
+        fixPyspecsTestNames(output.getContent(), _pythonFiller);
         bool update =
             addClientInfoIfUpdate(output.getContent(), _pythonFiller, _testData.hash, outputTestFilePath);
         if (update)
