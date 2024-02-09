@@ -231,9 +231,9 @@ void StateTestRunner::performValidations(TransactionInGeneralSection& _tr, State
 
         if (expectedBytesPtr->asString().find(calculated) == string::npos)
         {
-            string const msg = string("TxBytes mismatch: test transaction section does not match txbytes in post section (Signature ignored)! ") +
-                               "\n test txbytes: " + expectedBytesPtr->asString() + "\n vs \n " +
-                               tr->getRawBytes().asString();
+            string msg = string("TxBytes mismatch: test transaction section does not match txbytes in post section (Signature ignored)! ");
+            if (Debug::get().flag(DC::STATS2))
+                msg += "\n test txbytes: " + expectedBytesPtr->asString() + "\n vs \n " + tr->getRawBytes().asString();
             if (Options::get().chainid.initialized())
             {
                 ETH_DC_MESSAGE(DC::LOWLOG, msg);
