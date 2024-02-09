@@ -141,8 +141,8 @@ string const t8ntool_config = R"({
       "BlockException.INCORRECT_BLOB_GAS_USED" : "Error in field: blobGasUsed",
       "BlockException.BLOB_GAS_USED_ABOVE_LIMIT|BlockException.INCORRECT_BLOB_GAS_USED" : "Error in field: blobGasUsed",
       "BlockException.INCORRECT_BLOCK_FORMAT" : "[retesteth]: Error importing raw rlp block: readBlockHeader(RLP): unknown block type!",
-      "TransactionException.TYPE_3_TX_WITH_FULL_BLOBS|BlockException.RLP_ENCODING" : "BlobTransaction::fromRLP(RLP) expected to have exactly 14 elements!",
-      "TransactionException.TYPE_3_TX_CONTRACT_CREATION|BlockException.RLP_ENCODING" : "decoding into (types.Transaction)(types.BlobTx).To",
+      "TransactionException.TYPE_3_TX_WITH_FULL_BLOBS|BlockException.RLP_STRUCTURES_ENCODING" : "BlobTransaction::fromRLP(RLP) expected to have exactly 14 elements!",
+      "TransactionException.TYPE_3_TX_CONTRACT_CREATION|BlockException.RLP_STRUCTURES_ENCODING" : "decoding into (types.Transaction)(types.BlobTx).To",
 
       "Transaction without funds" : "insufficient funds for gas * price + value",
       "insufficient account balance" : "insufficient funds for gas * price + value",
