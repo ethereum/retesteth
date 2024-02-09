@@ -79,6 +79,8 @@ spDataObject readAutoDataWithoutOptions(boost::filesystem::path const& _file, bo
             return dataobject::ConvertJsoncppStringToData(s);
         else if (_file.extension() == ".yml")
             return dataobject::ConvertYamlToData(YAML::Load(s), _sort);
+        else if (_file.extension() == ".py")
+            return spDataObject(0);
         std::cerr << "Unknown test file: " << _file.string() << std::endl;
     }
     catch (std::exception const& _ex)

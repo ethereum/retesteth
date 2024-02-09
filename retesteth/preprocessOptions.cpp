@@ -238,7 +238,21 @@ void changeOptionsString(vector<string>& options, ParsedOptions const& optInfo)
             {
                 if (*it == optInfo.filenameArg)
                 {
-                    options.insert(it, "--testfile");
+                    size_t pyselector = (*it).find("::");
+                    if (pyselector != string::npos)
+                    {
+                        string const testfile = (*it).substr(0, pyselector);
+                        string const subtest = "/"+(*it).substr(pyselector+2);
+                        *it=testfile;
+
+                        options.insert(it, "--testfile");
+                        options.insert(it, subtest);
+                        options.insert(it, "--singletest");
+                    }
+                    else
+                    {
+                        options.insert(it, "--testfile");
+                    }
                     break;
                 }
             }
