@@ -102,8 +102,8 @@ RUN test -n "$NIMBUS" \
 RUN test -n "$ETHEREUMJS" \
      && wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash \
      && . ~/.nvm/nvm.sh \
-     && nvm install 19 && nvm alias default 19 && nvm use default \
-     && cp -r ~/.nvm/versions/node/v19*/* /usr \
+     && nvm install 20 && nvm alias default 20 && nvm use default \
+     && cp -r ~/.nvm/versions/node/v20*/* /usr \
      && git clone $ETEREUMJS_SRC /ethereumjs \
      && cd /ethereumjs && git fetch && git checkout $ETHEREUMJS && npm i && npm run build --workspaces \
     || echo "Ethereumjs is empty"
