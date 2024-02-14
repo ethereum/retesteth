@@ -288,6 +288,9 @@ void TestFixture<T, U>::_execute(std::set<TestExecution> const& _execFlags) cons
         return;
     }
 
+    if (casename == "__pycache__")
+        return;
+
     m_suite.runAllTestsInFolder(casename);
     test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
 }
