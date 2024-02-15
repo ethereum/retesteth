@@ -82,7 +82,7 @@ bool hasSubfoldersWithFileTypes(fs::path const& _path, string const& _filemask)
     for (fsIterator it(_path); it != fsIterator(); ++it)
     {
         if (fs::is_directory(*it)
-            && (*it).path().stem().string() != "__pycache__"
+            && (*it).path().stem().string().find("__") == string::npos      //"__pycache__"
             && (*it).path().stem().string() != "point_evaluation_vectors")
         {
             bool foundTest = false;
@@ -288,7 +288,7 @@ void TestFixture<T, U>::_execute(std::set<TestExecution> const& _execFlags) cons
         return;
     }
 
-    if (casename == "__pycache__")
+    if (casename.find("__") != string::npos)
         return;
 
     m_suite.runAllTestsInFolder(casename);
