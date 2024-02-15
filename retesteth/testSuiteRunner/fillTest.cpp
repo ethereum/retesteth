@@ -317,7 +317,9 @@ void TestSuite::runTestWithoutFiller(boost::filesystem::path const& _file) const
                 TestSuite::TestSuiteOptions _opt;
                 _opt.allowInvalidBlocks = true;
                 _opt.calculateRelativeSrcPath = false;
-                _fillTest(_opt, _file, outPath);
+                bool wereErrors = _fillTest(_opt, _file, outPath);
+                if (!wereErrors)
+                    runTestAfterFilling(_file, outPath);
             }
             else
                 _runTest(_file);

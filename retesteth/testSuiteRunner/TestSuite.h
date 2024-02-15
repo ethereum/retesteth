@@ -108,6 +108,7 @@ public:
 
     // Execute Filler.json or Copier.json test file in a given folder
     void executeTest(std::string const& _testFolder, boost::filesystem::path const& _jsonFileName) const;
+    void runTestAfterFilling(boost::filesystem::path const& _fillerTestFilePath, AbsoluteFilledTestPath const _filledTestPath) const;
 
     // Execute Test.json file
     void runTestWithoutFiller(boost::filesystem::path const& _file) const;
