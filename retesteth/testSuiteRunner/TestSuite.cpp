@@ -150,6 +150,61 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _fillerTe
     }
 }
 
+void TestSuite::runTestAfterFilling(fs::path const& _fillerTestFilePath, AbsoluteFilledTestPath const _filledTestPath) const
+{
+    bool disableSecondRun = false;
+    auto secondRun = [&_fillerTestFilePath](){
+        bool secondRun = true;
+        auto const& opt = Options::get();
+        secondRun = secondRun && opt.getGStateTransactionFilter().empty();
+        secondRun = secondRun && !opt.vmtrace.initialized();
+        secondRun = secondRun && !opt.singleTestNet.initialized();
+        secondRun = secondRun && !opt.poststate.initialized();
+        secondRun = secondRun && !opt.statediff.initialized();
+        secondRun = secondRun || (opt.filltests && _fillerTestFilePath.extension() == ".py");
+        return secondRun;
+    };
+    if (!secondRun() && Options::get().filltests)
+    {
+        ETH_WARNING("Test filter or log is set. Disabling generated test run!");
+        disableSecondRun = true;
+    }
+
+    TestOutputHelper::get().setPythonTestFlag(false);
+    if (!disableSecondRun)
+    {
+        auto const& opt = Options::get();
+        auto const generatedFiles = getGeneratedTestNames(_fillerTestFilePath);
+        if (_fillerTestFilePath.extension() == ".py" && opt.singletest.initialized()
+            && !opt.filltests)
+        {
+            // Select single test from python generated tests
+            if (opt.singletest.name == _fillerTestFilePath.stem())
+            {
+                for (auto const& name : generatedFiles)
+                {
+                    if (!opt.singletest.subname.empty())
+                    {
+                        // substract `test_` prefix
+                        string const pyFilledName = opt.singletest.subname.substr(5);
+                        if (name != pyFilledName)
+                            continue;
+                    }
+                    TestOutputHelper::get().setPythonTestFlag(true);
+                    _runTest(_filledTestPath.path().parent_path() / (name + ".json"));
+                }
+            }
+            else
+                _runTest(_filledTestPath.path().parent_path() / (opt.singletest.name + ".json"));
+        }
+        else
+        {
+            for (auto const& name : generatedFiles)
+                _runTest(_filledTestPath.path().parent_path() / (name + ".json"));
+        }
+    }
+}
+
 void TestSuite::_executeTest(string const& _testFolder, fs::path const& _fillerTestFilePath) const
 {
     TestOutputHelper::get().setCurrentTestInfo(TestInfo("TestSuite::executeTest"));
@@ -170,61 +225,12 @@ void TestSuite::_executeTest(string const& _testFolder, fs::path const& _fillerT
 
     bool wereFillerErrors = Options::get().filltests;
     TestSuite::TestSuiteOptions _opt;
+
     if (Options::get().filltests)
         wereFillerErrors = _fillTest(_opt, _fillerTestFilePath, filledTestPath.path());
 
-    bool disableSecondRun = false;
-    auto secondRun = [&_fillerTestFilePath](){
-        bool secondRun = true;
-        auto const& opt = Options::get();
-        secondRun = secondRun && opt.getGStateTransactionFilter().empty();
-        secondRun = secondRun && !opt.vmtrace.initialized();
-        secondRun = secondRun && !opt.singleTestNet.initialized();
-        secondRun = secondRun && !opt.poststate.initialized();
-        secondRun = secondRun && !opt.statediff.initialized();
-        secondRun = secondRun || (opt.filltests && _fillerTestFilePath.extension() == ".py");
-        return secondRun;
-    };
-    if (!secondRun() && Options::get().filltests)
-    {
-        ETH_WARNING("Test filter or log is set. Disabling generated test run!");
-        disableSecondRun = true;
-    }
-
-    TestOutputHelper::get().setPythonTestFlag(false);
-    if (!wereFillerErrors && !disableSecondRun)
-    {
-        auto const& opt = Options::get();
-        auto const generatedFiles = getGeneratedTestNames(_fillerTestFilePath);
-        if (_fillerTestFilePath.extension() == ".py" && opt.singletest.initialized()
-            && !opt.filltests)
-        {
-            // Select single test from python generated tests
-            if (opt.singletest.name == _fillerTestFilePath.stem())
-            {
-                for (auto const& name : generatedFiles)
-                {
-                    if (!opt.singletest.subname.empty())
-                    {
-                        // substract `test_` prefix
-                        string const pyFilledName = opt.singletest.subname.substr(5);
-                        if (name != pyFilledName)
-                            continue;
-                    }
-                    TestOutputHelper::get().setPythonTestFlag(true);
-                    _runTest(filledTestPath.path().parent_path() / (name + ".json"));
-                }
-            }
-            else
-                _runTest(filledTestPath.path().parent_path() / (opt.singletest.name + ".json"));
-        }
-        else
-        {
-
-            for (auto const& name : generatedFiles)
-                _runTest(filledTestPath.path().parent_path() / (name + ".json"));
-        }
-    }
+    if (!wereFillerErrors)
+        runTestAfterFilling(_fillerTestFilePath, filledTestPath);
 
     RPCSession::sessionEnd(TestOutputHelper::getThreadID(), RPCSession::SessionStatus::HasFinished);
 }
