@@ -174,17 +174,18 @@ void TestSuite::_executeTest(string const& _testFolder, fs::path const& _fillerT
         wereFillerErrors = _fillTest(_opt, _fillerTestFilePath, filledTestPath.path());
 
     bool disableSecondRun = false;
-    auto noSecondRunConditions = [](){
-        bool condition = true;
+    auto secondRun = [&_fillerTestFilePath](){
+        bool secondRun = true;
         auto const& opt = Options::get();
-        condition = condition && opt.getGStateTransactionFilter().empty();
-        condition = condition && !opt.vmtrace.initialized();
-        condition = condition && !opt.singleTestNet.initialized();
-        condition = condition && !opt.poststate.initialized();
-        condition = condition && !opt.statediff.initialized();
-        return !condition;
+        secondRun = secondRun && opt.getGStateTransactionFilter().empty();
+        secondRun = secondRun && !opt.vmtrace.initialized();
+        secondRun = secondRun && !opt.singleTestNet.initialized();
+        secondRun = secondRun && !opt.poststate.initialized();
+        secondRun = secondRun && !opt.statediff.initialized();
+        secondRun = secondRun || (opt.filltests && _fillerTestFilePath.extension() == ".py");
+        return secondRun;
     };
-    if (noSecondRunConditions() && Options::get().filltests)
+    if (!secondRun() && Options::get().filltests)
     {
         ETH_WARNING("Test filter or log is set. Disabling generated test run!");
         disableSecondRun = true;
@@ -219,6 +220,7 @@ void TestSuite::_executeTest(string const& _testFolder, fs::path const& _fillerT
         }
         else
         {
+
             for (auto const& name : generatedFiles)
                 _runTest(filledTestPath.path().parent_path() / (name + ".json"));
         }

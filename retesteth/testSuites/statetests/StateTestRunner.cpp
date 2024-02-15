@@ -128,7 +128,7 @@ void StateTestRunner::performTransactionOnResult(TransactionInGeneralSection& _t
 
 void StateTestRunner::performVMTrace(TransactionInGeneralSection& _tr, FH32 const& _remoteStateHash, FORK const& _network)
 {
-    if (Options::get().vmtrace && !Options::get().filltests)
+    if (Options::get().vmtrace)
     {
         auto const& trHash = _tr.reportedHash();
         string const testNameOut = makeFilename(_tr, _network);
