@@ -21,6 +21,7 @@ private:
 
 private:
     spDataObject m_aBlockchainTest;
+    spState m_statePre;
 
 };
 

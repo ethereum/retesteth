@@ -9,30 +9,32 @@ State::State(std::map<FH20, spAccountBase>& _accList)
 {
     // We certain that account provided for the state is full and not incomplete
     m_accounts = _accList;
-    m_raw = spDataObject();
     for (auto const& el : _accList)
     {
         ETH_ERROR_REQUIRE_MESSAGE(el.second->type() == AccountType::FullAccount, "State::State(std::map) provided account type is not of a FullAccount type!");
-        (*m_raw).atKeyPointer(el.first.asString()) = el.second->asDataObject();  // Recreate export data
     }
 }
 
 State::State(spDataObjectMove _data)
 {
+    spDataObject data = _data.getPointer();
     try
     {
-        m_raw = _data.getPointer();
-        for (auto& el : (*m_raw).getSubObjectsUnsafe())
+        for (auto& el : (*data).getSubObjectsUnsafe())
         {
             FH20 key(el->getKey());
+            if (m_accounts.count(key))
+            {
+                ETH_ERROR_MESSAGE("State::State(DataObject): State has dublicate key: `" + key.asString() + "`");
+            }
             m_accounts[key] = spAccountBase(new Account(el));
         }
-        if (m_raw->type() != DataType::Object)
+        if (data->type() != DataType::Object)
             ETH_ERROR_MESSAGE("State must be initialized from json type `Object`!");
     }
     catch (std::exception const& _ex)
     {
-        throw UpwardsException(string("State parse error: ") + _ex.what() + m_raw->asJson());
+        throw UpwardsException(string("State parse error: ") + _ex.what() + data->asJson());
     }
 }
 
@@ -52,11 +54,23 @@ bool State::hasAccount(FH20 const& _address) const
     return m_accounts.count(_address);
 }
 
-spDataObject const& State::asDataObject() const
+spDataObject State::asDataObject() const
 {
-    // As long as we guarantee unmutability of parsed data in the structure
-    // We can return the same data object as we got, not recalculating the whole thing
-    return m_raw;
+    spDataObject data;
+    for (auto const& [accKey, acc] : m_accounts)
+    {
+        (*data).atKeyPointer(accKey.asString()) = acc->asDataObject();
+    }
+    return data;
+}
+
+void State::addAccount(spAccountBase _acc)
+{
+    if (m_accounts.contains(_acc->address()))
+    {
+        ETH_ERROR_MESSAGE("State::addAccount: State has dublicate key: `" + _acc->address().asString() + "`");
+    }
+    m_accounts.emplace(_acc->address(), _acc);
 }
 
 }  // namespace teststruct

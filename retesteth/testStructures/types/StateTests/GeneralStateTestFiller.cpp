@@ -3,6 +3,9 @@
 #include <retesteth/helpers/TestOutputHelper.h>
 #include <retesteth/testStructures/Common.h>
 #include <retesteth/helpers/TestHelper.h>
+#include <retesteth/testStructures/configs/FORK.h>
+#include <retesteth/Constants.h>
+#include <retesteth/Options.h>
 
 using namespace std;
 using namespace test::teststruct;
@@ -10,6 +13,7 @@ using namespace test::compiler;
 using namespace test;
 
 namespace  {
+
 void checkCoinbaseInExpectSection(StateTestFillerExpectSection const& _expect, GCP_SPointer<StateTestFillerEnv> const& _env)
 {
     for (auto const& acc : _expect.result().accounts())
@@ -134,6 +138,10 @@ StateTestInFiller::StateTestInFiller(spDataObject& _data)
         }
         ETH_ERROR_REQUIRE_MESSAGE(m_expectSections.size() > 0, "StateTestFiller require expect sections!");
 
+        // If we are filling state test, the pre is shared and it is easier to insert beacon root here
+        if (!Options::get().fillchain)
+            _insertBeaconRootIntoTestFiller();
+
         m_name = _data->getKey();
         if (_data->count("verify"))
         {
@@ -161,3 +169,19 @@ std::set<FORK> StateTestInFiller::getAllForksFromExpectSections() const
             allForksMentionedInExpectSections.emplace(fork);
     return allForksMentionedInExpectSections;
 }
+
+void StateTestInFiller::_insertBeaconRootIntoTestFiller()
+{
+    auto const forks = getAllForksFromExpectSections();
+    for (auto const& el : forks)
+    {
+        if (compareFork(el, CMP::ge, FORK("Cancun"))
+            && !m_pre->hasAccount(C_FH20_BEACON))
+        {
+            ETH_DC_MESSAGE(test::debug::DC::RPC, "Retesteth inserts beacon root contract into a pre state!");
+            (*m_pre).addAccount(makeBeaconAccount());
+            break;
+        }
+    }
+}
+

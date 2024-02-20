@@ -6,6 +6,7 @@
 #include <retesteth/testSuites/Common.h>
 #include <retesteth/testStructures/PrepareChainParams.h>
 #include <retesteth/testSuites/blockchain/fillers/TestBlock.h>
+#include <retesteth/Constants.h>
 
 using namespace std;
 using namespace test;
@@ -22,16 +23,6 @@ StateTestChainRunner::StateTestChainRunner(StateTestInFiller const& _test)
   : StateTestFillerRunner(_test, RPCSession::instance(TestOutputHelper::getThreadID()))
 {
     TestOutputHelper::get().setCurrentTestName(_test.testName());
-
-    /*if (m_test.hasInfo())
-        (*m_filledTest).atKeyPointer("_info") = _test.Info().rawData();
-    (*m_filledTest).atKeyPointer("env") = _test.Env().asDataObject();
-    (*m_filledTest).atKeyPointer("pre") = _test.Pre().asDataObject();
-    (*m_filledTest).atKeyPointer("transaction") = _test.GeneralTr().asDataObject();
-
-    for (auto const& ex : _test.unitTestExceptions())
-        (*m_filledTest)["exceptions"].addArrayObject(spDataObject(new DataObject(ex)));
-*/
     m_txs = _test.GeneralTr().buildTransactions();
 }
 
@@ -39,8 +30,15 @@ void StateTestChainRunner::prepareChainParams(FORK const& _network)
 {
     TestInfo errorInfo("test_setChainParams: " + _network.asString(), m_test.testName());
     TestOutputHelper::get().setCurrentTestInfo(errorInfo);
-
-    auto const p = test::teststruct::prepareChainParams(_network, SealEngine::NoProof, m_test.Pre(), m_test.Env(), ParamsContext::StateTests);
+    if (compareFork(_network, CMP::ge, FORK("Cancun")) && !m_test.Pre().hasAccount(C_FH20_BEACON))
+    {
+        ETH_DC_MESSAGE(DC::RPC, "Retesteth inserts beacon root contract into pre!");
+        m_statePre = spState(new State(m_test.Pre()));
+        (*m_statePre).addAccount(makeBeaconAccount());
+    }
+    else
+        m_statePre.null();
+    auto const p = test::teststruct::prepareChainParams(_network, SealEngine::NoProof, m_statePre.isEmpty() ? m_test.Pre() : m_statePre, m_test.Env(), ParamsContext::StateTests);
     m_session.test_setChainParams(p);
 }
 
@@ -110,8 +108,7 @@ void StateTestChainRunner::performTransactionOnExpect(TransactionInGeneralSectio
 
 spStateIncomplete StateTestChainRunner::correctMiningReward(StateTestFillerExpectSection const& _expect, FORK const& _network)
 {
-    spDataObject expectCopy;
-    (*expectCopy).copyFrom(_expect.result().rawData());
+    spDataObject expectCopy = _expect.result().asDataObject();
     spStateIncomplete mexpect(new StateIncomplete(dataobject::move(expectCopy)));
     VALUE const& balanceCorrection = Options::getCurrentConfig().getRewardForFork(_network);
     (*mexpect).correctMiningReward(m_test.Env().currentCoinbase(), balanceCorrection);
@@ -125,7 +122,7 @@ void StateTestChainRunner::initBlockchainTestData()
         (*m_aBlockchainTest).atKeyPointer("_info") = m_test.Info().rawData();
     EthGetBlockBy genesisBlock(m_session.eth_getBlockByNumber(0, Request::FULLOBJECTS));
     (*m_aBlockchainTest).atKeyPointer("genesisBlockHeader") = genesisBlock.header()->asDataObject();
-    (*m_aBlockchainTest).atKeyPointer("pre") = m_test.Pre().asDataObject();
+    (*m_aBlockchainTest).atKeyPointer("pre") = m_statePre.isEmpty() ? m_test.Pre().asDataObject() : m_statePre->asDataObject();
     (*m_aBlockchainTest)["sealEngine"] = sealEngineToStr(SealEngine::NoProof);
     (*m_aBlockchainTest)["genesisRLP"] = genesisBlock.getRLPHeaderTransactions().asString();
 }

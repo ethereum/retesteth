@@ -45,6 +45,7 @@ spDataObject FillTestAsBlockchain(StateTestInFiller const& _test)
                     if (!expect.checkIndexes(tr.dataInd(), tr.gasInd(), tr.valueInd()))
                         continue;
 
+
                     runner.prepareChainParams(fork);
                     runner.initBlockchainTestData();
                     runner.performTransactionOnExpect(tr, expect, fork);

@@ -41,6 +41,7 @@ spDataObject FillTest(BlockchainTestInFiller const& _test, TestSuite::TestSuiteO
 
                 auto filledTest = filler.makeNewBCTestForNet(net);
                 auto testchain = filler.makeTestChainManager(net);
+                (*filledTest).atKeyPointer("pre") = testchain.getGenesisPre().asDataObject();
 
                 filler.makeGenesis(filledTest, testchain);
                 filler.setTestInfoAndExpectExceptions(net);

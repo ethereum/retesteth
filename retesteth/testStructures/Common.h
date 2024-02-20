@@ -78,5 +78,6 @@ spFH20 convertSecretToPublic(spFH32 const& _secret);
 spFH20 convertSecretToPublic(VALUE const& _secret);
 
 bool checkEmptyAccounts(spState _state);
+spAccountBase makeBeaconAccount();
 
 }  // namespace teststruct

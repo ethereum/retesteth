@@ -177,7 +177,8 @@ void BlockMining::prepareEnvFile()
 void BlockMining::prepareAllocFile()
 {
     m_allocPath = m_chainRef.tmpDir() / "alloc.json";
-    m_allocPathContent = m_currentBlockRef.state()->asDataObject()->asJsonNoFirstKey();
+    spDataObject preState = m_currentBlockRef.state()->asDataObject();
+    m_allocPathContent = preState->asJsonNoFirstKey();
     writeFile(m_allocPath.string(), m_allocPathContent);
 }
 

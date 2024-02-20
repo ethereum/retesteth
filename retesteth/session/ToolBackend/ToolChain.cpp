@@ -49,15 +49,14 @@ ToolChain::ToolChain(
         if (compareFork(m_fork, CMP::lt, FORK("London"))
             && genesisHeaderType == BlockType::BlockHeader1559)
             throw test::UpwardsException("[retesteth]: Constructing 1559 genesis on network which is lower London!");
-        if (compareFork(m_fork, CMP::ge, FORK("London"))
-            && genesisHeaderType != BlockType::BlockHeader1559
-            && genesisHeaderType != BlockType::BlockHeaderParis
-            && genesisHeaderType != BlockType::BlockHeaderShanghai
-            && genesisHeaderType != BlockType::BlockHeader4844)
+        if (compareFork(m_fork, CMP::ge, FORK("London")) && genesisHeaderType == BlockType::BlockHeaderLegacy)
             throw test::UpwardsException("[retesteth]: Constructing legacy genesis on network which is higher London!");
     }
 
     EthereumBlockState genesisFixed(_genesis.header(), _genesis.state(), FH32::zero());
+    if (compareFork(m_fork, CMP::ge, FORK("Cancun"))
+        && !_genesis.state()->accounts().contains(FH20("0x000f3df6d732807ef1319fb7b8bb8522d0beac02")))
+        throw test::UpwardsException("[retesteth]: Constructing Cancun pre state but missing beacon root account!");
 
     if (_genesisPolicy == ToolChainGenesis::CALCULATE)
     {
