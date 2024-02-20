@@ -5,6 +5,8 @@
 #include <retesteth/session/Session.h>
 #include <retesteth/Options.h>
 #include <retesteth/testSuites/Common.h>
+#include <retesteth/testStructures/Common.h>
+#include <retesteth/Constants.h>
 using namespace test;
 using namespace test::session;
 using namespace test::debug;
@@ -33,15 +35,23 @@ spDataObject BlockchainTestFillerRunner::makeNewBCTestForNet(FORK const& _net)
         (*_filledTest).atKeyPointer("_info") = m_test.Info().rawData();
     filledTest["sealEngine"] = sealEngineToStr(m_test.sealEngine());
     filledTest["network"] = _net.asString();
-    filledTest.atKeyPointer("pre") = m_test.Pre().asDataObject();
-
     return _filledTest;
 }
 
 TestBlockchainManager BlockchainTestFillerRunner::makeTestChainManager(teststruct::FORK const& _net)
 {
     ETH_DC_MESSAGEC(DC::RPC, "FILL GENESIS INFO: ", LogColor::LIME);
-    return TestBlockchainManager(m_test.Env(), m_test.Pre(), m_test.sealEngine(), _net);
+    std::vector<spAccountBase> additionalAccounts;
+
+    if (test::compareFork(_net, test::CMP::ge, FORK("Cancun"))
+        && !m_test.Pre().hasAccount(teststruct::C_FH20_BEACON))
+    {
+        ETH_DC_MESSAGE(DC::RPC, "Retesteth inserts beacon root account into the pre state!");
+        additionalAccounts.emplace_back(makeBeaconAccount());
+    }
+
+    auto blockchains = TestBlockchainManager(m_test.Env(), m_test.Pre(), m_test.sealEngine(), _net, additionalAccounts);
+    return blockchains;
 }
 
 void BlockchainTestFillerRunner::makeGenesis(spDataObject& _filledTest, TestBlockchainManager& _testchain) const

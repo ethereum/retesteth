@@ -387,5 +387,4 @@ bool networkSkip(FORK const& _net, string const& _testName)
     return false;
 }
 
-
 }  // namespace

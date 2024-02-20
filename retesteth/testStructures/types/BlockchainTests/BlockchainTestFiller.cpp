@@ -30,7 +30,6 @@ BlockchainTestInFiller::BlockchainTestInFiller(spDataObject& _data)
         m_pre = spState(new State(MOVE(_data, "pre")));
         m_hasEmptyAccounts = checkEmptyAccounts(m_pre);
 
-
         // Prepare nonce map for transaction 'auto' nonce parsing
         NonceMap nonceMap;
         for (auto const& acc : m_pre->accounts())

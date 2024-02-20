@@ -23,11 +23,11 @@ public:
     Account const& getAccount(FH20 const& _address) const;
     bool hasAccount(Account const& _account) const;
     bool hasAccount(FH20 const& _address) const;
+    void addAccount(spAccountBase _acc);
 
-    spDataObject const& asDataObject() const override;
+    spDataObject asDataObject() const override;
 
 private:
-    spDataObject m_raw;
     State() {}
 
 public:

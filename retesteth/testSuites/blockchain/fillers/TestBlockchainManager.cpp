@@ -11,7 +11,9 @@ namespace blockchainfiller
 // Initialize blockchain manager with first chain information
 // _env, _pre, _engine, _network
 TestBlockchainManager::TestBlockchainManager(
-    BlockchainTestFillerEnv const& _genesisEnv, State const& _genesisPre, SealEngine _engine, FORK const& _network)
+    BlockchainTestFillerEnv const& _genesisEnv,
+    State const& _genesisPre, SealEngine _engine, FORK const& _network,
+    std::vector<spAccountBase> const& _additionalPreAccounts)
   : m_session(RPCSession::instance(TestOutputHelper::getThreadID())),
     m_sDefaultChainName(BlockchainTestFillerBlock::defaultChainName()),
     m_genesisEnv(_genesisEnv),
@@ -19,12 +21,15 @@ TestBlockchainManager::TestBlockchainManager(
     m_sealEngine(_engine),
     m_sDefaultChainNet(_network)
 {
+    for (auto const& acc : _additionalPreAccounts)
+        m_genesisPre.addAccount(acc);
+
     m_wasAtLeastOneFork = false;
     // m_sCurrentChainName is unknown at this point. the first block of the test defines it
     // but we want genesis to be generated anyway before that
     m_sCurrentChainName = m_sDefaultChainName;
     m_mapOfKnownChain.emplace(m_sCurrentChainName,
-        TestBlockchain(_genesisEnv, _genesisPre, _engine, _network, m_sCurrentChainName, RegenerateGenesis::TRUE));
+        TestBlockchain(_genesisEnv, m_genesisPre, _engine, _network, m_sCurrentChainName, RegenerateGenesis::TRUE));
 }
 
 // Generate the block
