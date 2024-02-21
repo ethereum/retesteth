@@ -9,6 +9,20 @@ using namespace test::teststruct;
 using namespace test::teststruct::constnames;
 
 namespace  {
+string calculateGenesisExcessBlobGas(VALUE const& _currentExcessBlobGas, ParamsContext _context)
+{
+    if (_context == ParamsContext::StateTests)
+    {
+        // Reverse back one step the excessBlobGas calculation formula
+        // to get the value for genesis block
+        VALUE const TARGET_BLOB_GAS_PER_BLOCK(393216);
+        VALUE genesisExcessBlobGas = _currentExcessBlobGas + TARGET_BLOB_GAS_PER_BLOCK;
+        return genesisExcessBlobGas.asString();
+    }
+    else
+        return _currentExcessBlobGas.asString();
+}
+
 string calculateGenesisBaseFee(VALUE const& _currentBaseFee, ParamsContext _context)
 {
     if (_context == ParamsContext::StateTests)
@@ -85,10 +99,10 @@ spDataObject prepareGenesisSubsection(StateTestEnvBase const& _env, ParamsContex
         _genesis[c_withdrawalsRoot] = _env.currentWithdrawalsRoot().asString();
     };
 
-    auto cancunfy = [&_env, &shangfy](DataObject& _genesis){
+    auto cancunfy = [&_env, &shangfy, &_context](DataObject& _genesis){
         shangfy(_genesis);
         _genesis[c_currentBlobGasUsed] = _env.currentBlobGasUsed().asString();
-        _genesis[c_currentExcessBlobGas] = _env.currentExcessBlobGas().asString();
+        _genesis[c_currentExcessBlobGas] = calculateGenesisExcessBlobGas(_env.currentExcessBlobGas(), _context);
         _genesis[c_currentBeaconRoot] = _env.currentBeaconRoot().asString();
     };
 
