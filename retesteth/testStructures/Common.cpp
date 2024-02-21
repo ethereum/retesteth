@@ -449,6 +449,21 @@ bool checkEmptyAccounts(spState _state)
     return false;
 }
 
+void checkEmptyStorages(spState _state)
+{
+    for (auto const& [address, acc] : _state->accounts())
+    {
+        for (auto const& [str, record] : acc->storage().getKeys())
+        {
+            if (std::get<1>(record)->asBigInt() == 0)
+            {
+                ETH_ERROR_MESSAGE("Pre state has empty storage record in account: " + address.asString() + TestOutputHelper::get().testInfo().errorDebug());
+                return;
+            }
+        }
+    }
+}
+
 spAccountBase makeBeaconAccount()
 {
     spDataObject accountData;

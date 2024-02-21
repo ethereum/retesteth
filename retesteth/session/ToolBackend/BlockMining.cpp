@@ -121,8 +121,9 @@ void makeEnvExcessBlobGas(spDataObject& _envData, spBlockHeader const& _parentBl
         }
         else
         {
-            (*_envData).renameKey(c_currentExcessBlobGas, string(c_parentExcessBlobGas));
-            (*_envData).renameKey(c_currentBlobGasUsed, string(c_parentBlobGasUsed));
+            // TODO why??
+            //(*_envData).renameKey(c_currentExcessBlobGas, string(c_parentExcessBlobGas));
+            //(*_envData).renameKey(c_currentBlobGasUsed, string(c_parentBlobGasUsed));
         }
     }
 }

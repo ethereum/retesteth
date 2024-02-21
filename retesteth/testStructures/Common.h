@@ -77,6 +77,7 @@ void readExpectExceptions(DataObject const& _data, std::map<FORK, std::string>& 
 spFH20 convertSecretToPublic(spFH32 const& _secret);
 spFH20 convertSecretToPublic(VALUE const& _secret);
 
+void checkEmptyStorages(spState _state);
 bool checkEmptyAccounts(spState _state);
 spAccountBase makeBeaconAccount();
 
