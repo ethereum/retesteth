@@ -29,7 +29,6 @@ struct StateTestInFiller : GCP_SPointerBase
 
 private:
     StateTestInFiller() {}
-    void _insertBeaconRootIntoTestFiller();
     std::string m_name;
     GCP_SPointer<InfoIncomplete> m_info;
     GCP_SPointer<StateTestFillerEnv> m_env;
