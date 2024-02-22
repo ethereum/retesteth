@@ -54,10 +54,6 @@ ToolChain::ToolChain(
     }
 
     EthereumBlockState genesisFixed(_genesis.header(), _genesis.state(), FH32::zero());
-    if (compareFork(m_fork, CMP::ge, FORK("Cancun"))
-        && !_genesis.state()->accounts().contains(FH20("0x000f3df6d732807ef1319fb7b8bb8522d0beac02")))
-        throw test::UpwardsException("[retesteth]: Constructing Cancun pre state but missing beacon root account!");
-
     if (_genesisPolicy == ToolChainGenesis::CALCULATE)
     {
         // We yet don't know the state root of genesis. Ask the tool to calculate it

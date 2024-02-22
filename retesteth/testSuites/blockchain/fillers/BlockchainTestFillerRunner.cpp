@@ -41,17 +41,7 @@ spDataObject BlockchainTestFillerRunner::makeNewBCTestForNet(FORK const& _net)
 TestBlockchainManager BlockchainTestFillerRunner::makeTestChainManager(teststruct::FORK const& _net)
 {
     ETH_DC_MESSAGEC(DC::RPC, "FILL GENESIS INFO: ", LogColor::LIME);
-    std::vector<spAccountBase> additionalAccounts;
-
-    if (test::compareFork(_net, test::CMP::ge, FORK("Cancun"))
-        && !m_test.Pre().hasAccount(teststruct::C_FH20_BEACON))
-    {
-        ETH_DC_MESSAGE(DC::RPC, "Retesteth inserts beacon root account into the pre state!");
-        additionalAccounts.emplace_back(makeBeaconAccount());
-    }
-
-    auto blockchains = TestBlockchainManager(m_test.Env(), m_test.Pre(), m_test.sealEngine(), _net, additionalAccounts);
-    return blockchains;
+    return TestBlockchainManager(m_test.Env(), m_test.Pre(), m_test.sealEngine(), _net);
 }
 
 void BlockchainTestFillerRunner::makeGenesis(spDataObject& _filledTest, TestBlockchainManager& _testchain) const

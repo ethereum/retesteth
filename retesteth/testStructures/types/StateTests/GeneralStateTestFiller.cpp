@@ -139,10 +139,6 @@ StateTestInFiller::StateTestInFiller(spDataObject& _data)
         }
         ETH_ERROR_REQUIRE_MESSAGE(m_expectSections.size() > 0, "StateTestFiller require expect sections!");
 
-        // If we are filling state test, the pre is shared and it is easier to insert beacon root here
-        if (!Options::get().fillchain)
-            _insertBeaconRootIntoTestFiller();
-
         m_name = _data->getKey();
         if (_data->count("verify"))
         {
@@ -169,20 +165,5 @@ std::set<FORK> StateTestInFiller::getAllForksFromExpectSections() const
         for (auto const& fork : expectSection.forks())
             allForksMentionedInExpectSections.emplace(fork);
     return allForksMentionedInExpectSections;
-}
-
-void StateTestInFiller::_insertBeaconRootIntoTestFiller()
-{
-    auto const forks = getAllForksFromExpectSections();
-    for (auto const& el : forks)
-    {
-        if (compareFork(el, CMP::ge, FORK("Cancun"))
-            && !m_pre->hasAccount(C_FH20_BEACON))
-        {
-            ETH_DC_MESSAGE(test::debug::DC::RPC, "Retesteth inserts beacon root contract into a pre state!");
-            (*m_pre).addAccount(makeBeaconAccount());
-            break;
-        }
-    }
 }
 
