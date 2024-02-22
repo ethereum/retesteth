@@ -242,7 +242,9 @@ void changeOptionsString(vector<string>& options, ParsedOptions const& optInfo)
                     if (pyselector != string::npos)
                     {
                         string const testfile = (*it).substr(0, pyselector);
-                        string const subtest = "/"+(*it).substr(pyselector+2);
+                        string subtest = "/";
+                        subtest += (*it).substr(pyselector+2);
+
                         *it=testfile;
 
                         options.insert(it, "--testfile");
