@@ -62,6 +62,8 @@ BlockchainTestInFilled::BlockchainTestInFilled(spDataObject& _data)
 
         m_genesisRLP = spBYTES(new BYTES(_data->atKey("genesisRLP")));
         m_pre = spState(new State(MOVE(_data, "pre")));
+        checkEmptyStorages(m_pre);
+
         m_fork = spFORK(new FORK(_data->atKey("network")));
         m_sealEngine = SealEngine::NoProof;
         if (_data->count("sealEngine") && _data->atKey("sealEngine").asString() == sealEngineToStr(SealEngine::Ethash))
