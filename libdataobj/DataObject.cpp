@@ -429,16 +429,12 @@ void DataObject::removeKey(std::string const& _key)
     _assert(type() == DataType::Object, c_assert);
     auto& subObjects = getSubObjectsUnsafe();
     auto& subObjectKeys = _getSubObjectKeysUnsafe();
-    for (std::vector<spDataObject>::const_iterator it = subObjects.begin();
-         it != subObjects.end(); it++)
-    {
-        if ((*it)->getKey() == _key)
-        {
-            subObjects.erase(it);
-            subObjectKeys.erase(_key);
-            break;
-        }
-    }
+
+    subObjects.erase(std::remove_if(subObjects.begin(), subObjects.end(),
+                         [&_key](const spDataObject& _obj) {
+                             return _obj->getKey() == _key;
+                         }), subObjects.end());
+    subObjectKeys.erase(_key);
 }
 
 void DataObject::clear(DataType _type)

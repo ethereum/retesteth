@@ -84,18 +84,8 @@ StateTestInFilled::StateTestInFilled(spDataObject& _data)
     m_info = GCP_SPointer<Info>(new Info(_data->atKey("_info")));
     m_env = GCP_SPointer<StateTestEnv>(new StateTestEnv(_data->atKey("env")));
 
-    // -- Some tests has storage keys/values with leading zeros. Convert it to hex value
-    for (auto& spAcc : _data.getContent().atKeyUnsafe("pre").getSubObjectsUnsafe())
-    {
-        DataObject& acc = spAcc.getContent();
-        for (auto& rec : acc["storage"].getSubObjectsUnsafe())
-        {
-            rec.getContent().performModifier(mod_keyToCompactEvenHexPrefixed);
-            rec.getContent().performModifier(mod_valueToCompactEvenHexPrefixed);
-        }
-    }
-    // -- REMOVE THIS, FIX THE TESTS
     m_pre = spState(new State(MOVE(_data, "pre")));
+    checkEmptyStorages(m_pre);
 
     m_hasBigInt = _data->atKey("transaction").performSearch(src_findBigInt);
     m_transaction = GCP_SPointer<StateTestTransaction>(new StateTestTransaction(_data->atKey("transaction")));

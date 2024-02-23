@@ -311,12 +311,20 @@ void convertDecStateToHex(spDataObject& _data, solContracts const& _preSolidity,
             acc[c_balance].performModifier(mod_valueToCompactEvenHexPrefixed);
         if (acc.count(c_storage))
         {
+            std::vector<string> emptyKeys;
             for (auto& rec : acc[c_storage].getSubObjectsUnsafe())
             {
-                rec.getContent().performModifier(mod_keyToCompactEvenHexPrefixed);
                 rec.getContent().performModifier(mod_valueToCompactEvenHexPrefixed);
-                acc.performModifier(mod_keyToLowerCase);
+                if (rec->asString() == "0x00")
+                    emptyKeys.emplace_back(rec->getKey());
+                else
+                {
+                    rec.getContent().performModifier(mod_keyToCompactEvenHexPrefixed);
+                    acc.performModifier(mod_keyToLowerCase);
+                }
             }
+            for (auto const& key : emptyKeys)
+                acc[c_storage].removeKey(key);
         }
         acc.performModifier(mod_valueToLowerCase);
     }

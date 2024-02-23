@@ -121,10 +121,9 @@ StateTestInFiller::StateTestInFiller(spDataObject& _data)
             solidityCode = test::compiler::compileSolidity(_data->atKey("solidity").asString());
 
         convertDecStateToHex((*_data).atKeyPointerUnsafe("pre"), solidityCode); // "Pre" section
+
         m_pre = spState(new State(MOVE(_data, "pre")));
         m_hasEmptyAccounts = checkEmptyAccounts(m_pre);
-        checkEmptyStorages(m_pre);
-
 
         m_transaction = spStateTestFillerTransaction(new StateTestFillerTransaction(MOVE(_data, "transaction")));
 
