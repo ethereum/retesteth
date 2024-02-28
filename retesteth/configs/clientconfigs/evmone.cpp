@@ -39,7 +39,8 @@ string const evmone_config = R"({
         "London",
         "Paris",
         "Shanghai",
-        "Cancun"
+        "Cancun",
+        "Prague"
     ],
     "additionalForks" : [
         "FrontierToHomesteadAt5",
@@ -274,25 +275,41 @@ string const evmone_config = R"({
       "INPUT_UNMARSHAL_ERROR" : "cannot unmarshal hex",
       "INPUT_UNMARSHAL_SIZE_ERROR" : "failed unmarshaling",
       "RLP_BODY_UNMARSHAL_ERROR" : "Rlp structure is wrong",
-      "EOF_ConflictingStackHeight": "err: stack_height_mismatch",
-      "EOF_StackUnderflow" : "err: stack_underflow",
-      "EOF_InvalidCodeTermination" : "err: no_terminating_instruction",
-      "EOF_MaxStackHeightExceeded" : "err: max_stack_height_above_limit",
-      "EOF_UnreachableCode": "err: unreachable_instructions",
-      "EOF_InvalidCode": "err: invalid_code",
-      "EOF_TruncatedImmediate": "err: truncated_instruction",
-      "EOF_InvalidJumpDestination": "err: invalid_rjump_destination",
-      "EOF_InvalidJumpTableCount": "err: invalid_rjumpv_count",
+      "EOF_InvalidPrefix" : "err: invalid_prefix",
+      "EOF_UnknownVersion" : "err: eof_version_unknown",
+      "EOF_IncompleteSectionSize" : "err: incomplete_section_size",
+      "EOF_IncompleteSectionNumber": "err: incomplete_section_number",
+      "EOF_HeaderTerminatorMissing": "err: header_terminator_missing",
       "EOF_TypeSectionMissing": "err: type_section_missing",
       "EOF_CodeSectionMissing": "err: code_section_missing",
+      "EOF_DataSectionMissing": "err: data_section_missing",
+      "EOF_ZeroSectionSize": "err: zero_section_size",
+      "EOF_SectionHeadersNotTerminated": "err: section_headers_not_terminated",
+      "EOF_InvalidSectionBodiesSize": "err: invalid_section_bodies_size",
+      "EOF_UnreachableCodeSections" : "err: unreachable_code_sections",
+      "EOF_UndefinedInstruction": "err: undefined_instruction",
+      "EOF_TruncatedImmediate": "err: truncated_instruction",
+      "EOF_InvalidJumpDestination": "err: invalid_rjump_destination",
+      "EOF_TooManyCodeSections": "err: too_many_code_sections",
       "EOF_InvalidTypeSectionSize": "err: invalid_type_section_size",
       "EOF_InvalidFirstSectionType": "err: invalid_first_section_type",
-      "EOF_TooManyCodeSections": "err: too_many_code_sections",
+      "EOF_InvalidMaxStackHeight": "err: invalid_max_stack_height",
+      "EOF_InvalidCodeTermination": "err: no_terminating_instruction",
+      "EOF_ConflictingStackHeight": "err: stack_height_mismatch",
+      "EOF_InvalidNumberOfOutputs": "err: stack_higher_than_outputs_required",
+      "EOF_MaxStackHeightExceeded": "err: max_stack_height_above_limit",
+      "EOF_UnreachableCode": "err: unreachable_instructions",
+      "EOF_InputsOutputsNumAboveLimit": "err: inputs_outputs_num_above_limit",
+      "EOF_StackUnderflow": "err: stack_underflow",
+      "EOF_StackOverflow": "err: stack_overflow",
       "EOF_InvalidCodeSectionIndex": "err: invalid_code_section_index",
-      "EOF_UndefinedInstruction": "err: undefined_instruction",
-      "EOF_ZeroSectionSize": "err: zero_section_size",
-      "EOF_NonEmptyStackOnTerminatingInstruction": "err: non_empty_stack_on_terminating_instruction",
-      "EOF_InvalidSectionBodiesSize": "err: invalid_section_bodies_size",
+      "EOF_InvalidDataloadnIndex": "err: invalid_dataloadn_index",
+      "EOF_JumpfDestinationIncompatibleOutputs": "err: jumpf_destination_incompatible_outputs",
+      "EOF_CallfToNonReturningFunction": "err: callf_to_non_returning_function",
+      "EOF_TooManyContainerSections": "err: too_many_container_sections",
+      "EOF_InvalidContainerSectionIndex": "err: invalid_container_section_index",
+      "EOF_EofCreateWithTruncatedContainer": "err: eof_create_with_truncated_container",
+      "EOF_InvalidNonReturningFlag" : "err: invalid_non_returning_flag",
       "PostParisUncleHashIsNotEmpty" : "block.uncleHash != empty",
       "PostParisDifficultyIsNot0" : "block.difficulty must be 0"
     }
@@ -300,16 +317,24 @@ string const evmone_config = R"({
 
 string const evmone_start = R"(#!/bin/sh
 
-wevm=$(which evmone)
+wevm=$(which evmone-t8n)
 if [ -z $wevm ]; then
-   >&2 echo "Can't find EvmOne's 'evmone' executable alias in the system path!"
+   >&2 echo "Can't find EvmOne's 'evmone-t8n' executable alias in the system path!"
    exit 1
 fi
 
-if [ $1 = "eof" ] || [ $1 = "t8n" ] || [ $1 = "b11r" ]; then
-    evmone $1 $2 $3 $4 $5 $6 $7 $8 $9 $10 $11 $12 $13 $14 $15 $16 $17 $18 $19 $20 $21 $22 $23 $24 $25 $26
+if [ $1 = "t8n" ] || [ $1 = "b11r" ]; then
+    evmone-t8n $2 $3 $4 $5 $6 $7 $8 $9 $10 $11 $12 $13 $14 $15 $16 $17 $18 $19 $20 $21 $22 $23 $24 $25 $26
 elif [ $1 = "-v" ]; then
-    evmone -v
+    evmone-t8n -v
+elif [ $1 = "eof" ]; then
+    result=$(echo $5 | evmone-eofparse)
+    echo $result | grep "OK" > /dev/null
+    if [ $? -eq 0 ]; then
+      echo "ok."
+    else
+      echo "$result"
+    fi
 else
     stateProvided=0
     readErrorLog=0
@@ -332,12 +357,13 @@ else
     done
     if [ $stateProvided -eq 1 ]; then
         if [ -z $errorLogFile ]; then
-            evmone $cmdArgs --verbosity 2
+            evmone-t8n $cmdArgs --verbosity 2
         else
-            evmone $cmdArgs --verbosity 2 2> $errorLogFile
+            evmone-t8n $cmdArgs --verbosity 2 2> $errorLogFile
         fi
     else
-        evmone t9n $cmdArgs 2> $errorLogFile
+        echo "Error: evmone-t9n not supported"
+        exit 2
     fi
 fi
 )";
