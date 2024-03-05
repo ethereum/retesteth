@@ -15,7 +15,8 @@ public:
     // _env, _pre, _engine, _network
     TestBlockchainManager(
         BlockchainTestFillerEnv const& _genesisEnv,
-        State const& _genesisPre, SealEngine _engine, FORK const& _network);
+        State const& _genesisPre, SealEngine _engine, FORK const& _network,
+        std::vector<spAccountBase> const& _additionalPreAccounts);
 
     // Perform block generation logic by parsing the filler file section
     std::vector<spDataObject> parseBlockFromFiller(BlockchainTestFillerBlock const& _block, bool _generateUncles);

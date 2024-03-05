@@ -30,7 +30,16 @@ void StateTestChainRunner::prepareChainParams(FORK const& _network)
 {
     TestInfo errorInfo("test_setChainParams: " + _network.asString(), m_test.testName());
     TestOutputHelper::get().setCurrentTestInfo(errorInfo);
-    auto const p = test::teststruct::prepareChainParams(_network, SealEngine::NoProof, m_test.Pre(), m_test.Env(), ParamsContext::StateTests);
+    if (compareFork(_network, CMP::ge, FORK("Cancun"))
+        && !m_test.Pre().hasAccount(C_FH20_BEACON))
+    {
+        ETH_DC_MESSAGE(DC::RPC, "Retesteth inserts beacon root contract into pre!");
+        m_statePre = spState(new State(m_test.Pre()));
+        (*m_statePre).addAccount(makeBeaconAccount());
+    }
+    else
+        m_statePre.null();
+    auto const p = test::teststruct::prepareChainParams(_network, SealEngine::NoProof, m_statePre.isEmpty() ? m_test.Pre() : m_statePre, m_test.Env(), ParamsContext::StateTests);
     m_session.test_setChainParams(p);
 }
 
@@ -114,7 +123,7 @@ void StateTestChainRunner::initBlockchainTestData()
         (*m_aBlockchainTest).atKeyPointer("_info") = m_test.Info().rawData();
     EthGetBlockBy genesisBlock(m_session.eth_getBlockByNumber(0, Request::FULLOBJECTS));
     (*m_aBlockchainTest).atKeyPointer("genesisBlockHeader") = genesisBlock.header()->asDataObject();
-    (*m_aBlockchainTest).atKeyPointer("pre") = m_test.Pre().asDataObject();
+    (*m_aBlockchainTest).atKeyPointer("pre") = m_statePre.isEmpty() ? m_test.Pre().asDataObject() : m_statePre->asDataObject();
     (*m_aBlockchainTest)["sealEngine"] = sealEngineToStr(SealEngine::NoProof);
     (*m_aBlockchainTest)["genesisRLP"] = genesisBlock.getRLPHeaderTransactions().asString();
 }
