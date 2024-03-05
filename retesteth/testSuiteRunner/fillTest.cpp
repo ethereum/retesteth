@@ -302,7 +302,7 @@ void TestSuite::runTestWithoutFiller(boost::filesystem::path const& _file) const
         {
             Options::getDynamicOptions().setCurrentConfig(config);
 
-            ETH_DC_MESSAGE(DC::STATS,
+            ETH_DC_MESSAGE(DC::STATS2,
                 "Running tests for config '" + config.cfgFile().name() + "' " + test::fto_string(config.getId().id()));
             ETH_DC_MESSAGE(DC::TESTLOG, "Running " + _file.filename().string() + ": ");
 

@@ -11,14 +11,14 @@ RESULT=$3
 TYPE=$4
 BUILD="/evmone/build"
 
-retesteth -t $TYPE -- --testfile $BASE --clients evmone
-lcov --capture --directory $BUILD --output-file $BUILD/coverage.lcov --ignore-errors mismatch  --exclude="$HOME/.hunter/*" --exclude="$PWD/_deps/*"  --exclude="11"
+retesteth -t $TYPE -- --testfile $BASE --clients evmone --testpath /dev/null
+lcov --capture --directory $BUILD --output-file $BUILD/coverage.lcov --ignore-errors mismatch  --exclude="$HOME/.hunter/*" --exclude="$PWD/_deps/*"  --exclude="11" --exclude="state" --exclude="statetest"	--exclude="t8n"	--exclude="unittests" --exclude="utils"
 lcov --zerocounters --directory $BUILD
 genhtml $BUILD/coverage.lcov --output-directory $RESULT/BASE --title BASE_COVERAGE
 cp $BUILD/coverage.lcov $RESULT/coverage_base.lcov
 
-retesteth -t $TYPE -- --testfile $PATCH --clients evmone
-lcov --capture --directory $BUILD --output-file $BUILD/coverage.lcov --ignore-errors mismatch  --exclude="$HOME/.hunter/*" --exclude="$PWD/_deps/*"  --exclude="11"
+retesteth -t $TYPE -- --testfile $PATCH --clients evmone --testpath /dev/null
+lcov --capture --directory $BUILD --output-file $BUILD/coverage.lcov --ignore-errors mismatch  --exclude="$HOME/.hunter/*" --exclude="$PWD/_deps/*"  --exclude="11" --exclude="state" --exclude="statetest"	--exclude="t8n"	--exclude="unittests" --exclude="utils"
 lcov --zerocounters --directory $BUILD
 genhtml $BUILD/coverage.lcov --output-directory $RESULT/PATCH --title PATCH_COVERAGE
 cp $BUILD/coverage.lcov $RESULT/coverage_patch.lcov
