@@ -29,6 +29,7 @@ namespace
                     {"reference-spec-version", {{DataType::String}, jsonField::Optional}},
                     {"filling-rpc-server", {{DataType::String}, isPyspecs ? jsonField::Optional : jsonField::Required}},
                     {"filling-tool-version", {{DataType::String}, isPyspecs ? jsonField::Optional : jsonField::Required}},
+                    {"hash", {{DataType::String}, isPyspecs ? jsonField::Required : jsonField::Optional}},
                     {"lllcversion", {{DataType::String}, isPyspecs ? jsonField::Optional : jsonField::Required}},
                     {"solidity", {{DataType::String}, isPyspecs ? jsonField::Optional : jsonField::Required}},
                     {"generatedTestHash", {{DataType::String}, isPyspecs ? jsonField::Optional : jsonField::Required}},

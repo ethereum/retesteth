@@ -21,6 +21,7 @@ namespace fs = boost::filesystem;
 
 namespace
 {
+std::mutex g_fillPythonMutex;
 void checkFileIsFiller(fs::path const& _file)
 {
     string fileName = _file.stem().c_str();
@@ -171,6 +172,8 @@ string makePyScriptCMDArgs(fs::path const& _fillerTestFilePath, TestSuite::Absol
 
 bool TestSuite::_fillPython(TestFileData& _testData, fs::path const& _fillerTestFilePath, AbsoluteFilledTestPath const& _filledPath, fs::path const& _relativeFillerPath) const
 {
+    // Python has issues when filling multithread
+    std::lock_guard<std::mutex> lock(g_fillPythonMutex);
     bool wereErrors = false;
     auto const& currentConfig = Options::getCurrentConfig();
     auto const& specsScript = currentConfig.getPySpecsStartScript();
