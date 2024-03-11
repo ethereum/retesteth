@@ -21,13 +21,13 @@ struct DifficultyStatic
 };
 
 }
-DifficultyStatic const& prepareEthereumBlockStateTemplate();
+DifficultyStatic const prepareEthereumBlockStateTemplate();
 
 VALUE ToolChainManager::test_calculateDifficulty(FORK const& _fork, VALUE const& _blockNumber, VALUE const& _parentTimestamp,
     VALUE const& _parentDifficulty, VALUE const& _currentTimestamp, VALUE const& _uncleNumber,
     fs::path const& _toolPath, fs::path const& _tmpDir)
 {
-    DifficultyStatic const& data = prepareEthereumBlockStateTemplate();
+    DifficultyStatic const data = prepareEthereumBlockStateTemplate();
 
     // Constructor has serialization from data.blockA
     EthereumBlockState blockA(data.blockA, data.state, data.loghash);
@@ -56,11 +56,11 @@ VALUE ToolChainManager::test_calculateDifficulty(FORK const& _fork, VALUE const&
 }
 
 // Prepare data for ToolChainManager::test_calculateDifficulty
-DifficultyStatic const& prepareEthereumBlockStateTemplate()
+DifficultyStatic const prepareEthereumBlockStateTemplate()
 {
-    std::lock_guard<std::mutex> lock(g_DifficultyStatic_Access);
-    static DifficultyStatic data;
-    if (data.blockA.isEmpty())
+    //std::lock_guard<std::mutex> lock(g_DifficultyStatic_Access);
+    DifficultyStatic data;
+    if (data.state.isEmpty())
     {
         spDataObject accountData;
         (*accountData).setKey("0x1122334455667788991011121314151617181920");
