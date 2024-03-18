@@ -23,6 +23,36 @@ void correctHeaderByToolResponse(BlockHeader& _header, ToolResponse const& _res)
     _header.setLogsBloom(_res.logsBloom());
     _header.setStateRoot(_res.stateRoot());
 }
+
+bool checkStatesEqual(spState _stateA, spState _stateB)
+{
+    if (_stateA->accounts().size() != _stateB->accounts().size())
+        return false;
+    for (auto const& acc : _stateA->accounts())
+    {
+        if (!_stateB->hasAccount(acc.first))
+            return false;
+        auto const& accB = _stateB->getAccount(acc.first);
+        if (acc.second->storage().getKeys().size() != accB.storage().getKeys().size())
+            return false;
+        if (acc.second->nonce() != accB.nonce())
+            return false;
+        if (acc.second->code() != accB.code())
+            return false;
+        if (acc.second->balance() != accB.balance())
+            return false;
+        for (auto const& [str, record] : acc.second->storage().getKeys())
+        {
+            auto const& keyA = std::get<0>(record);
+            auto const& keyA_Value = std::get<1>(record);
+            if (!accB.storage().hasKey(keyA))
+                return false;
+            if (accB.storage().atKey(keyA) != keyA_Value)
+                return false;
+        }
+    }
+    return true;
+}
 }
 
 namespace toolimpl
@@ -61,6 +91,9 @@ ToolChain::ToolChain(
         genesisFixed.headerUnsafe().getContent().setStateRoot(res.stateRoot());
         genesisFixed.headerUnsafe().getContent().recalculateHash();
         genesisFixed.setTotalDifficulty(genesisFixed.header()->difficulty());
+
+        if (!checkStatesEqual(_genesis.state(), res.state()))
+            ETH_ERROR_MESSAGE("T8N changed genesis state when asked to calculated it's hash only!");
     }
 
     m_blocks.emplace_back(genesisFixed);

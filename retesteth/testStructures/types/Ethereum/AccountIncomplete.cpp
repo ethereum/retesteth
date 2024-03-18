@@ -15,7 +15,6 @@ AccountIncomplete::AccountIncomplete(spDataObject& _data)
             {"nonce", {{DataType::String}, jsonField::Optional}},
             {"code", {{DataType::String}, jsonField::Optional}}});
 
-    m_rawData = _data;
     m_address = spFH20(new FH20(_data->getKey()));
     m_shouldNotExist = _data->count("shouldnotexist");
     if (_data->count("storage"))
@@ -34,9 +33,19 @@ AccountIncomplete::AccountIncomplete(spDataObject& _data)
     ETH_ERROR_REQUIRE_MESSAGE(_data->getSubObjects().size() > 0, "AccountIncomplete must have at least one object!");
 }
 
-spDataObject const& AccountIncomplete::asDataObject() const
+spDataObject AccountIncomplete::asDataObject() const
 {
-    return m_rawData;
+    spDataObject data;
+    (*data).setKey(m_address->asString());
+    if (hasCode())
+        (*data)["code"] = m_code->asString();
+    if (hasNonce())
+        (*data)["nonce"] = m_nonce->asString();
+    if (hasBalance())
+        (*data)["balance"] = m_balance->asString();
+    if (hasStorage())
+        (*data).atKeyPointer("storage") = m_storage->asDataObject();
+    return data;
 }
 
 

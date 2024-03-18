@@ -38,6 +38,7 @@ spDataObject BlockchainTestFillerRunner::makeNewBCTestForNet(FORK const& _net)
     return _filledTest;
 }
 
+const int HISTORY_BUFFER_LENGTH = 8191;
 TestBlockchainManager BlockchainTestFillerRunner::makeTestChainManager(teststruct::FORK const& _net)
 {
     ETH_DC_MESSAGEC(DC::RPC, "FILL GENESIS INFO: ", LogColor::LIME);
@@ -47,7 +48,15 @@ TestBlockchainManager BlockchainTestFillerRunner::makeTestChainManager(teststruc
         && !m_test.Pre().hasAccount(teststruct::C_FH20_BEACON))
     {
         ETH_DC_MESSAGE(DC::RPC, "Retesteth inserts beacon root account into the pre state!");
-        additionalAccounts.emplace_back(makeBeaconAccount());
+        auto beaconAcc = makeBeaconAccount();
+        Storage& str = const_cast<Storage&>(beaconAcc->storage());
+
+        // header.timestamp % HISTORY_BUFFER_LENGTH to be header.timestamp
+        spVALUE key = sVALUE(m_test.Env().currentTimestamp().asBigInt() % HISTORY_BUFFER_LENGTH);
+        spVALUE val = sVALUE(m_test.Env().currentTimestamp().asBigInt());
+        str.addRecord({key, val});
+
+        additionalAccounts.emplace_back(beaconAcc);
     }
 
     auto blockchains = TestBlockchainManager(m_test.Env(), m_test.Pre(), m_test.sealEngine(), _net, additionalAccounts);

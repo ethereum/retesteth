@@ -38,7 +38,7 @@ public:
     {
         Account(spDataObject&);
         Account(FH20 const& _addr, spVALUE& _balance, spVALUE& _nonce, spBYTES& _code, spStorage& _storage);
-        spDataObject const& asDataObject() const override;
+        spDataObject asDataObject() const override;
         AccountType type() const override { return AccountType::FullAccount; }
 
     private:

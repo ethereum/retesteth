@@ -13,7 +13,7 @@ struct AccountIncomplete : AccountBase
 {
     AccountIncomplete(spDataObject&);
     void setBalance(VALUE const& _balance) { m_balance = spVALUE(new VALUE(_balance)); }
-    spDataObject const& asDataObject() const override;
+    spDataObject asDataObject() const override;
     AccountType type() const override { return AccountType::Incomplete; }
 };
 
