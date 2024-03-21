@@ -328,13 +328,13 @@ if [ $1 = "t8n" ] || [ $1 = "b11r" ]; then
 elif [ $1 = "-v" ]; then
     evmone-t8n -v
 elif [ $1 = "eof" ]; then
-    result=$(echo $5 | evmone-eofparse)
-    echo $result | grep "OK" > /dev/null
-    if [ $? -eq 0 ]; then
-      echo "ok."
-    else
-      echo "$result"
+    wevm=$(which evmone-eofparse)
+    if [ -z $wevm ]; then
+       >&2 echo "Can't find EvmOne's 'evmone-eofparse' executable alias in the system path!"
+       exit 1
     fi
+    result=$(echo $5 | evmone-eofparse)
+    echo "$result"
 else
     stateProvided=0
     readErrorLog=0
