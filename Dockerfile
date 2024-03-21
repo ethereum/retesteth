@@ -29,7 +29,7 @@ RUN apt-get update \
     && add-apt-repository -y ppa:ubuntu-toolchain-r/test \
     && add-apt-repository -y ppa:deadsnakes/ppa  \
     && add-apt-repository ppa:linuxuprising/java \
-    && apt-get install --yes jq lsof git cmake make perl psmisc curl wget gcc-11 g++-11 python3.10 python3.10-venv python3-pip python3-dev \
+    && apt-get install --yes jq lsof git make libssl-dev perl psmisc curl wget gcc-11 g++-11 python3.10 python3.10-venv python3-pip python3-dev \
     && apt-get install --yes libboost-filesystem-dev libboost-system-dev libboost-program-options-dev libboost-test-dev \
     && echo oracle-java17-installer shared/accepted-oracle-license-v1-3 select true | /usr/bin/debconf-set-selections  \
     && apt-get install --yes oracle-java17-installer oracle-java17-set-default \
@@ -39,6 +39,11 @@ RUN rm /usr/bin/python3 && ln -s /usr/bin/python3.10 /usr/bin/python3 \
     && rm /usr/bin/gcc && rm /usr/bin/g++ \
     && ln -s /usr/bin/gcc-11 /usr/bin/gcc \
     && ln -s /usr/bin/g++-11 /usr/bin/g++
+
+# CMAKE LATEST
+RUN wget https://github.com/Kitware/CMake/releases/download/v3.28.0/cmake-3.28.0.tar.gz \
+    && tar -zxvf cmake-3.28.0.tar.gz && cd cmake-3.28.0 \
+    && ./bootstrap && make && make install
 
 # Tests
 #RUN git clone --depth 1 -b master https://github.com/ethereum/tests /tests
