@@ -125,7 +125,8 @@ void compareTransactionException(spTransaction const& _tr, MineBlocksResult cons
 
 void compareEOFException(BYTES const& _code, std::string const& _mRes, std::string const& _testException)
 {
-    string const remoteException = _mRes == "ok." ? "" : _mRes;
+    bool const hasOk = (_mRes.find("ok.") != string::npos || _mRes.find("OK") != string::npos);
+    string const remoteException = hasOk ? "" : _mRes;
     if (!_testException.empty() && remoteException.empty())
         ETH_ERROR_MESSAGE("Client didn't reject EOF code: (" + _code.asString() + ")" +
                           "\nTest Expected: " + _testException);
