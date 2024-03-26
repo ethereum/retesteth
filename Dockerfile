@@ -29,7 +29,7 @@ RUN apt-get update \
     && add-apt-repository -y ppa:ubuntu-toolchain-r/test \
     && add-apt-repository -y ppa:deadsnakes/ppa  \
     && add-apt-repository ppa:linuxuprising/java \
-    && apt-get install --yes jq lsof git make libssl-dev perl psmisc curl wget gcc-11 g++-11 python3.10 python3.10-venv python3-pip python3-dev \
+    && apt-get install --yes jq lsof git make libssl-dev libgmp-dev perl psmisc curl wget gcc-11 g++-11 python3.10 python3.10-venv python3-pip python3-dev \
     && apt-get install --yes libboost-filesystem-dev libboost-system-dev libboost-program-options-dev libboost-test-dev \
     && echo oracle-java17-installer shared/accepted-oracle-license-v1-3 select true | /usr/bin/debconf-set-selections  \
     && apt-get install --yes oracle-java17-installer oracle-java17-set-default \
@@ -85,8 +85,8 @@ RUN test -n "$PYT8N" \
 RUN test -n "$GETH" \
      && git clone $GETH_SRC /geth \
      && cd /geth && git fetch && git checkout $GETH \
-     && wget https://dl.google.com/go/go1.20.linux-amd64.tar.gz \
-     && tar -xvf go1.20.linux-amd64.tar.gz \
+     && wget https://go.dev/dl/go1.21.8.linux-amd64.tar.gz \
+     && tar -xvf go1.21.8.linux-amd64.tar.gz \
      && mv go /usr/local && ln -s /usr/local/go/bin/go /bin/go \
      && go build ./cmd/evm  && cp evm /bin/evm \
      && rm -rf /geth && rm -rf /usr/local/go \
