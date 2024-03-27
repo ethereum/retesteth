@@ -10,8 +10,6 @@ namespace fs = boost::filesystem;
 
 namespace  {
 
-mutex g_DifficultyStatic_Access;
-
 // Prepare data for ToolChainManager::test_calculateDifficulty
 struct DifficultyStatic
 {
@@ -58,7 +56,6 @@ VALUE ToolChainManager::test_calculateDifficulty(FORK const& _fork, VALUE const&
 // Prepare data for ToolChainManager::test_calculateDifficulty
 DifficultyStatic const prepareEthereumBlockStateTemplate()
 {
-    //std::lock_guard<std::mutex> lock(g_DifficultyStatic_Access);
     DifficultyStatic data;
     if (data.state.isEmpty())
     {
