@@ -45,6 +45,8 @@ spDataObject AccountIncomplete::asDataObject() const
         (*data)["balance"] = m_balance->asString();
     if (hasStorage())
         (*data).atKeyPointer("storage") = m_storage->asDataObject();
+    if (shouldNotExist())
+        (*data)["shouldnotexist"] = "1";
     return data;
 }
 
