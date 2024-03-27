@@ -38,8 +38,20 @@ void runCustomTestFile()
     auto runSuite = [&opt](test::TestSuite* _suite) {
         if (opt.singleTestFile.initialized())
         {
-            boost::filesystem::path file(opt.singleTestFile);
-            _suite->runTestWithoutFiller(file);
+            if (fs::is_directory(opt.singleTestFile))
+            {
+                auto files = test::getFilesRecursive(opt.singleTestFile, {".json"});
+                for (auto const& file : files)
+                    _suite->runTestWithoutFiller(file);
+            }
+            else
+            {
+                boost::filesystem::path file(opt.singleTestFile);
+                if (file.parent_path().empty())
+                    _suite->runTestWithoutFiller(boost::filesystem::current_path() / file);
+                else
+                    _suite->runTestWithoutFiller(file);
+            }
         }
     };
 

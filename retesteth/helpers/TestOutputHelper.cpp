@@ -273,7 +273,7 @@ void _printTotalErrors()
 void _printTotalWarnings()
 {
     std::lock_guard<std::mutex> lock(g_warningTests);
-    if (s_warningTests.size())
+    if (s_warningTests.size() && debug::Debug::get().flag(DC::STATS2))
     {
         ETH_STDOUT_MESSAGE("\n--------");
         ETH_STDOUT_MESSAGE("*** TOTAL WARNINGS DETECTED: " + toString(s_warningTests.size()) +

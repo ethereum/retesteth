@@ -3,6 +3,9 @@
 #include <retesteth/helpers/TestOutputHelper.h>
 #include <retesteth/testStructures/Common.h>
 #include <retesteth/helpers/TestHelper.h>
+#include <retesteth/testStructures/configs/FORK.h>
+#include <retesteth/Constants.h>
+#include <retesteth/Options.h>
 
 using namespace std;
 using namespace test::teststruct;
@@ -10,6 +13,7 @@ using namespace test::compiler;
 using namespace test;
 
 namespace  {
+
 void checkCoinbaseInExpectSection(StateTestFillerExpectSection const& _expect, GCP_SPointer<StateTestFillerEnv> const& _env)
 {
     for (auto const& acc : _expect.result().accounts())
@@ -117,7 +121,10 @@ StateTestInFiller::StateTestInFiller(spDataObject& _data)
             solidityCode = test::compiler::compileSolidity(_data->atKey("solidity").asString());
 
         convertDecStateToHex((*_data).atKeyPointerUnsafe("pre"), solidityCode); // "Pre" section
+
         m_pre = spState(new State(MOVE(_data, "pre")));
+        m_hasEmptyAccounts = checkEmptyAccounts(m_pre);
+
         m_transaction = spStateTestFillerTransaction(new StateTestFillerTransaction(MOVE(_data, "transaction")));
 
         string const c_expect = "expect";
@@ -158,3 +165,4 @@ std::set<FORK> StateTestInFiller::getAllForksFromExpectSections() const
             allForksMentionedInExpectSections.emplace(fork);
     return allForksMentionedInExpectSections;
 }
+

@@ -61,8 +61,13 @@ public:
 
     struct TestSuiteOptions
     {
-        TestSuiteOptions() : doFilling(false), allowInvalidBlocks(false), isLegacyTests(false), calculateRelativeSrcPath(true)
+        TestSuiteOptions() :
+            doFilling(false),
+            allowInvalidBlocks(false),
+            isLegacyTests(false),
+            calculateRelativeSrcPath(true)
         {}
+        boost::filesystem::path pathToFiller;
         bool doFilling;           // pass the filling flag to doTest function
         bool allowInvalidBlocks;  // allow and check malicious blocks
         bool isLegacyTests;       // running old generated tests
@@ -103,6 +108,7 @@ public:
 
     // Execute Filler.json or Copier.json test file in a given folder
     void executeTest(std::string const& _testFolder, boost::filesystem::path const& _jsonFileName) const;
+    void runTestAfterFilling(boost::filesystem::path const& _fillerTestFilePath, AbsoluteFilledTestPath const _filledTestPath) const;
 
     // Execute Test.json file
     void runTestWithoutFiller(boost::filesystem::path const& _file) const;

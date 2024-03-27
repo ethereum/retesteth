@@ -4,10 +4,10 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
-genMergeToShanghaiAtTime15kCfg::genMergeToShanghaiAtTime15kCfg()
+genParisToShanghaiAtTime15kCfg::genParisToShanghaiAtTime15kCfg()
 {
 
-const string t8ntool_MergeToShanghaiAtTime15k_config = R"({
+const string t8ntool_ParisToShanghaiAtTime15k_config = R"({
     "params" : {
         "fork" : "MergeToShanghaiAtTime15k",
         "constantinopleForkBlock" : "0x00",
@@ -21,8 +21,8 @@ const string t8ntool_MergeToShanghaiAtTime15k_config = R"({
 })";
 
     spDataObject obj2(new DataObject());
-    (*obj2)["path"] = "default/genesis/MergeToShanghaiAtTime15k.json";
-    (*obj2)["content"] = t8ntool_MergeToShanghaiAtTime15k_config;
+    (*obj2)["path"] = "default/genesis/ParisToShanghaiAtTime15k.json";
+    (*obj2)["content"] = t8ntool_ParisToShanghaiAtTime15k_config;
     map_configs.addArrayObject(obj2);
 }
 }  // namespace retesteth::options

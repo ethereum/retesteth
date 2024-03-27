@@ -177,7 +177,7 @@ const spDataObject TransactionBlob::asDataObject(ExportOrder _order) const
     {
         (*out)["type"] = "0x3";
         (*out).performModifier(mod_removeLeadingZerosFromHexValues, DataObject::ModifierOption::RECURSIVE,
-            {"data", "to", "input", "address", "hash", "storageKeys", "sender"});
+            {"data", "to", "input", "address", "hash", "storageKeys", "sender", c_blobVersionedHashes});
     }
     (*out).performModifier(mod_removeBigIntHint);
     return out;

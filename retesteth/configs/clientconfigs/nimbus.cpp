@@ -30,7 +30,7 @@ string const nimbus_config = R"({
         "Istanbul",
         "Berlin",
         "London",
-        "Merge",
+        "Paris",
         "Shanghai",
         "Cancun"
     ],
@@ -42,22 +42,42 @@ string const nimbus_config = R"({
         "ByzantiumToConstantinopleFixAt5",
         "BerlinToLondonAt5",
         "ArrowGlacier",
-        "ArrowGlacierToMergeAtDiffC0000",
+        "ArrowGlacierToParisAtDiffC0000",
         "GrayGlacier",
-        "MergeToShanghaiAtTime15k",
-        "ShanghaiToCancunAtTime15k"
+        "ParisToShanghaiAtTime15k",
+        "ShanghaiToCancunAtTime15k",
+        "Merge"
     ],
     "fillerSkipForks" : [
-        "Merge+3540+3670",
-        "Merge+3860",
-        "Merge+3855"
+        "Paris+3540+3670",
+        "Paris+3860",
+        "Paris+3855"
     ],
     "exceptions" : {
       "PYSPECS EXCEPTIONS: ": "",
+      "TransactionException.INSUFFICIENT_ACCOUNT_FUNDS" : "invalid tx: not enough cash",
+      "TransactionException.INSUFFICIENT_MAX_FEE_PER_GAS" : "invalid tx: maxFee is smaller than baseFee",
+      "TransactionException.TYPE_3_TX_ZERO_BLOBS" : "invalid tx: there must be at least one blob",
+      "TransactionException.TYPE_3_TX_INVALID_BLOB_VERSIONED_HASH" : "invalid tx: one of blobVersionedHash has invalid version",
+      "TransactionException.TYPE_3_TX_PRE_FORK|TransactionException.TYPE_3_TX_ZERO_BLOBS" : "invalid tx: Eip4844 Tx type detected before Cancun",
+      "TransactionException.TYPE_3_TX_PRE_FORK" : "invalid tx: Eip4844 Tx type detected before Cancun",
+      "TransactionException.TYPE_3_TX_BLOB_COUNT_EXCEEDED" : "invalid tx: versioned hashes len exceeds MAX_BLOBS_PER_BLOCK",
+      "TransactionException.TYPE_3_TX_CONTRACT_CREATION" : "input string too short for common.Address",
+      "TransactionException.TYPE_3_TX_MAX_BLOB_GAS_ALLOWANCE_EXCEEDED" : "Block has invalid number of blobs in txs >=7! would exceed maximum",
+      "TransactionException.INSUFFICIENT_MAX_FEE_PER_BLOB_GAS" : "[retesteth]: blobtx.maxFeePerBlobGas() < getblobgas(blockheader) ",
+      "TransactionException.INTRINSIC_GAS_TOO_LOW" : "invalid tx: not enough gas to perform calculation",
+      "TransactionException.INITCODE_SIZE_EXCEEDED" : "invalid tx: initcode size exceeds maximum",
+      "BlockException.INCORRECT_EXCESS_BLOB_GAS" : "Error in field: excessBlobGas",
+      "BlockException.INCORRECT_BLOB_GAS_USED" : "Error in field: blobGasUsed",
+      "BlockException.BLOB_GAS_USED_ABOVE_LIMIT|BlockException.INCORRECT_BLOB_GAS_USED" : "Error in field: blobGasUsed",
+      "BlockException.INCORRECT_BLOCK_FORMAT" : "[retesteth]: Error importing raw rlp block: readBlockHeader(RLP): unknown block type!",
+      "TransactionException.TYPE_3_TX_WITH_FULL_BLOBS|BlockException.RLP_STRUCTURES_ENCODING" : "BlobTransaction::fromRLP(RLP) expected to have exactly 14 elements!",
+      "TransactionException.TYPE_3_TX_CONTRACT_CREATION|BlockException.RLP_STRUCTURES_ENCODING" : "decoding into (types.Transaction)(types.BlobTx).To",
+
+
       "Transaction without funds" : "not enough cash",
       "intrinsic gas too low" : "not enough gas to perform calculation",
       "max initcode size exceeded" : "initcode size exceeds maximum",
-
       "AddressTooShort" : "input string too short for common.Address",
       "AddressTooLong" : "rlp: input string too long for common.Address, decoding into (types.Transaction)(types.LegacyTx).To",
       "NonceMax" : "nonce exceeds 2^64-1",
@@ -68,7 +88,7 @@ string const nimbus_config = R"({
       "InvalidS" : "rlp: expected input string or byte for *big.Int, decoding into (types.Transaction)(types.LegacyTx).S",
       "InvalidChainID" : "invalid chain id for signer",
       "ECRecoveryFail" : "recovery failed",
-      "ExtraDataTooBig" : "Error importing raw rlp block: Header extraData > 32 bytes",
+      "ExtraDataTooBig" : "Header extraData > 32 bytes",
       "InvalidData" : "rlp: expected input string or byte for []uint8, decoding into (types.Transaction)(types.LegacyTx).Data",
       "InvalidDifficulty" : "Invalid difficulty:",
       "InvalidDifficulty2" : "Error in field: difficulty",
@@ -225,6 +245,7 @@ string const nimbus_config = R"({
       "1559BlockImportImpossible_TargetGasHigh": "gasTarget increased too much",
       "1559BlockImportImpossible_InitialGasLimitInvalid": "Invalid block1559: Initial gasLimit must be",
       "MergeBlockImportImpossible" : "Trying to import Merge block on top of Shanghai block after transition",
+      "ParisBlockImportImpossible" : "Trying to import Paris block on top of Shanghai block after transition",
       "ShanghaiBlockImportImpossible" : "Trying to import Shanghai block on top of block that is not Shanghai!!",
       "TR_IntrinsicGas" : "not enough gas to perform calculation",
       "TR_RLP_WRONGVALUE" : "Unsigned integer expected",
@@ -256,12 +277,12 @@ string const nimbus_config = R"({
       "2930AccessListStorageHashTooLong": "rlp: input string too long for common.Hash, decoding into (types.Transaction)(types.AccessListTx).AccessList[0].StorageKeys[0]",
       "3675PoWBlockRejected" : "Invalid block1559: Chain switched to PoS!",
       "3675PoSBlockRejected" : "Parent (transition) block has not reached TTD",
-      "3675PreMerge1559BlockRejected" : "Trying to import 1559 block on top of PoS block",
+      "3675PreParis1559BlockRejected" : "Trying to import 1559 block on top of PoS block",
       "INPUT_UNMARSHAL_ERROR" : "field >= 2**64",
       "INPUT_UNMARSHAL_ADDRESS_ERROR" : "not a valid address!",
       "RLP_BODY_UNMARSHAL_ERROR" : "Rlp structure is wrong",
-      "PostMergeUncleHashIsNotEmpty" : "block.uncleHash != empty",
-      "PostMergeDifficultyIsNot0" : "block.difficulty must be 0"
+      "PostParisUncleHashIsNotEmpty" : "block.uncleHash != empty",
+      "PostParisDifficultyIsNot0" : "block.difficulty must be 0"
     }
 })";
 

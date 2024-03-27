@@ -63,6 +63,15 @@ bool compareFork(FORK const& _left, CMP _t, FORK const& _right)
     return 0;
 }
 
+bool isParisToShanghaiAtTime15k(FORK const& _fork)
+{
+    return _fork == "ParisToShanghaiAtTime15k" || _fork == "MergeToShanghaiAtTime15k";
+}
+
+bool isArrowGlacierToParisAtDiffC0000(FORK const& _fork)
+{
+    return _fork == "ArrowGlacierToParisAtDiffC0000" || _fork == "ArrowGlacierToMergeAtDiffC0000";
+}
 
 }  // namespace teststruct
 }  // namespace test

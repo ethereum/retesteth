@@ -16,6 +16,12 @@ Storage::Storage(DataObject const& _data)
     }
 }
 
+void Storage::addRecord(StorageRecord const& record)
+{
+    auto const& key = std::get<0>(record);
+    m_map.emplace(key->asString(), record);
+}
+
 void Storage::merge(Storage const& _storage)
 {
     // same keys???

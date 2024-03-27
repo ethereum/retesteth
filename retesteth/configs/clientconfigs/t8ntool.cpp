@@ -62,7 +62,7 @@ else
         cmdArgs=$cmdArgs" "$index
     done
     if [ $stateProvided -eq 1 ]; then
-        evm t8n $cmdArgs --verbosity 2 2> $errorLogFile
+        evm --verbosity 2 t8n $cmdArgs 2> $errorLogFile
     else
         evm t9n $cmdArgs 2> $errorLogFile
     fi
@@ -89,7 +89,8 @@ string const t8ntool_config = R"({
     "defaultChainID" : 1,
     "customCompilers" : {
         ":yul" : "yul.sh",
-        ":mycompiler" : "mycompiler.sh"
+        ":mycompiler" : "mycompiler.sh",
+        ":pyopcode" : "pyopcode.sh"
     },
     "forks" : [
         "Frontier",
@@ -102,7 +103,7 @@ string const t8ntool_config = R"({
         "Istanbul",
         "Berlin",
         "London",
-        "Merge",
+        "Paris",
         "Shanghai",
         "Cancun"
     ],
@@ -114,15 +115,35 @@ string const t8ntool_config = R"({
         "ByzantiumToConstantinopleFixAt5",
         "BerlinToLondonAt5",
         "ArrowGlacier",
-        "ArrowGlacierToMergeAtDiffC0000",
+        "ArrowGlacierToParisAtDiffC0000",
         "GrayGlacier",
-        "MergeToShanghaiAtTime15k",
-        "ShanghaiToCancunAtTime15k"
+        "ParisToShanghaiAtTime15k",
+        "ShanghaiToCancunAtTime15k",
+        "Merge"
     ],
     "fillerSkipForks" : [
     ],
     "exceptions" : {
       "PYSPECS_EXCEPTIONS" : "",
+      "TransactionException.INSUFFICIENT_ACCOUNT_FUNDS" : "insufficient funds for gas * price + value",
+      "TransactionException.INSUFFICIENT_MAX_FEE_PER_GAS" : "max fee per gas less than block base fee",
+      "TransactionException.TYPE_3_TX_ZERO_BLOBS" : "blob transaction missing blob hashes",
+      "TransactionException.TYPE_3_TX_INVALID_BLOB_VERSIONED_HASH" : "has invalid hash version",
+      "TransactionException.TYPE_3_TX_PRE_FORK|TransactionException.TYPE_3_TX_ZERO_BLOBS" : "blob tx used but field env.ExcessBlobGas missing",
+      "TransactionException.TYPE_3_TX_PRE_FORK" : "blob tx used but field env.ExcessBlobGas missing",
+      "TransactionException.TYPE_3_TX_BLOB_COUNT_EXCEEDED" : "would exceed maximum",
+      "TransactionException.TYPE_3_TX_CONTRACT_CREATION" : "input string too short for common.Address",
+      "TransactionException.TYPE_3_TX_MAX_BLOB_GAS_ALLOWANCE_EXCEEDED" : "Block has invalid number of blobs in txs >=7! would exceed maximum",
+      "TransactionException.INSUFFICIENT_MAX_FEE_PER_BLOB_GAS" : "[retesteth]: blobtx.maxFeePerBlobGas() < getblobgas(blockheader) ",
+      "TransactionException.INTRINSIC_GAS_TOO_LOW" : "intrinsic gas too low",
+      "TransactionException.INITCODE_SIZE_EXCEEDED" : "max initcode size exceeded",
+      "BlockException.INCORRECT_EXCESS_BLOB_GAS" : "Error in field: excessBlobGas",
+      "BlockException.INCORRECT_BLOB_GAS_USED" : "Error in field: blobGasUsed",
+      "BlockException.BLOB_GAS_USED_ABOVE_LIMIT|BlockException.INCORRECT_BLOB_GAS_USED" : "Error in field: blobGasUsed",
+      "BlockException.INCORRECT_BLOCK_FORMAT" : "[retesteth]: Error importing raw rlp block: readBlockHeader(RLP): unknown block type!",
+      "TransactionException.TYPE_3_TX_WITH_FULL_BLOBS|BlockException.RLP_STRUCTURES_ENCODING" : "BlobTransaction::fromRLP(RLP) expected to have exactly 14 elements!",
+      "TransactionException.TYPE_3_TX_CONTRACT_CREATION|BlockException.RLP_STRUCTURES_ENCODING" : "decoding into (types.Transaction)(types.BlobTx).To",
+
       "Transaction without funds" : "insufficient funds for gas * price + value",
       "insufficient account balance" : "insufficient funds for gas * price + value",
       "invalid excess blob gas" : "Error in field: excessBlobGas",
@@ -131,7 +152,7 @@ string const t8ntool_config = R"({
       "invalid pre fork blob fields" : "unknown block type!",
       "blob fields missing post fork" : "unknown block type!",
       "invalid transaction" : "expected to have exactly 14 elements",
-      "invalid blob versioned hash" : "hash version mismatch",
+      "invalid blob versioned hash" : "invalid hash version",
       "zero blob tx" : "blob transaction missing blob hashes",
       "insufficient_account_balance" : "Error importing raw rlp block",
       "invalid_blob_count" : "Block has invalid number of blobs in txs >=7!",
@@ -152,7 +173,7 @@ string const t8ntool_config = R"({
       "InvalidS" : "rlp: expected input string or byte for *big.Int, decoding into (types.Transaction)(types.LegacyTx).S",
       "InvalidChainID" : "invalid chain id for signer",
       "ECRecoveryFail" : "recovery failed",
-      "ExtraDataTooBig" : "Error importing raw rlp block: Header extraData > 32 bytes",
+      "ExtraDataTooBig" : "Header extraData > 32 bytes",
       "InvalidData" : "rlp: expected input string or byte for []uint8, decoding into (types.Transaction)(types.LegacyTx).Data",
       "InvalidDifficulty" : "Invalid difficulty:",
       "InvalidDifficulty2" : "Error in field: difficulty",
@@ -309,6 +330,7 @@ string const t8ntool_config = R"({
       "1559BlockImportImpossible_TargetGasHigh": "gasTarget increased too much",
       "1559BlockImportImpossible_InitialGasLimitInvalid": "Invalid block1559: Initial gasLimit must be",
       "MergeBlockImportImpossible" : "Trying to import Merge block on top of Shanghai block after transition",
+      "ParisBlockImportImpossible" : "Trying to import Paris block on top of Shanghai block after transition",
       "ShanghaiBlockImportImpossible" : "Trying to import Shanghai block on top of block that is not Shanghai!!",
       "TR_IntrinsicGas" : "intrinsic gas too low:",
       "TR_RLP_WRONGVALUE" : "insufficient funds for gas",
@@ -330,8 +352,8 @@ string const t8ntool_config = R"({
       "TR_BlobDecodeError" : "expected List",
       "TR_EMPTYBLOB" : "blob transaction missing blob hashes",
       "TR_BLOBCREATE" : "rlp: input string too short for common.Address",
-      "TR_BLOBVERSION_INVALID" : "hash version mismatch",
-      "TR_BLOBLIST_OVERSIZE" : "would exceed maximum allowance",
+      "TR_BLOBVERSION_INVALID" : "invalid hash version",
+      "TR_BLOBLIST_OVERSIZE" : "would exceed maximum",
       "1559BaseFeeTooLarge": "TransactionBaseFee convertion error: VALUE  >u256",
       "1559PriorityFeeGreaterThanBaseFee": "maxFeePerGas \u003c maxPriorityFeePerGas",
       "2930AccessListAddressTooLong": "rlp: input string too long for common.Address, decoding into (types.Transaction)(types.AccessListTx).AccessList[0].Address",
@@ -342,12 +364,12 @@ string const t8ntool_config = R"({
       "2930AccessListStorageHashTooLong": "rlp: input string too long for common.Hash, decoding into (types.Transaction)(types.AccessListTx).AccessList[0].StorageKeys[0]",
       "3675PoWBlockRejected" : "Invalid block1559: Chain switched to PoS!",
       "3675PoSBlockRejected" : "Parent (transition) block has not reached TTD",
-      "3675PreMerge1559BlockRejected" : "Trying to import 1559 block on top of PoS block",
+      "3675PreParis1559BlockRejected" : "Trying to import 1559 block on top of PoS block",
       "INPUT_UNMARSHAL_ERROR" : "field >= 2**64",
       "INPUT_UNMARSHAL_ADDRESS_ERROR" : "not a valid address!",
       "RLP_BODY_UNMARSHAL_ERROR" : "Rlp structure is wrong",
-      "PostMergeUncleHashIsNotEmpty" : "block.uncleHash != empty",
-      "PostMergeDifficultyIsNot0" : "block.difficulty must be 0"
+      "PostParisUncleHashIsNotEmpty" : "block.uncleHash != empty",
+      "PostParisDifficultyIsNot0" : "block.difficulty must be 0"
     }
 })";
 
@@ -382,15 +404,17 @@ cd $PYSPECS_PATH
 python3 -m venv ./venv/
 source ./venv/bin/activate
 
-SRCPATH=$1
-FILLER=$2
-TESTCA=$3
-OUTPUT=$4
-EVMT8N=$5
-FORCER=$6
-DEBUG=$7
-FROMF=$8
-UNTIF=$9
+SUITETYPE=$1
+SRCPATH=$2
+FILLER=$3
+TESTCA=$4
+OUTPUT=$5
+EVMT8N=$6
+FORCER=$7
+DEBUG=$8
+FROMF=$9
+UNTIF=${10}
+EXPRTCALL=${11}
 
 mkdir "./tests/tmp"
 genUID=$(uuidgen)
@@ -414,6 +438,12 @@ fi
 if [ "$FORCER" != "null" ]; then
     ADDFLAGS="$ADDFLAGS"
 fi
+if [ "$EXPRTCALL" != "null" ]; then
+    ADDFLAGS="$ADDFLAGS --debug $EXPRTCALL/pyspec.log --t8n-dump-dir $EXPRTCALL"
+fi
+if [ "$SUITETYPE" != "blockchain_tests" ]; then
+    ADDFLAGS="$ADDFLAGS -m state_test"
+fi
 
 if [ -d $testout ]; then
     rm -r $testout
@@ -429,11 +459,31 @@ else
       exit 1
     fi
 fi
-cp -r $testout/* $OUTPUT
+
+if [ ! -d $OUTPUT ]; then
+    mkdir $OUTPUT
+fi
+
+cp -r $testout/$SUITETYPE/* $OUTPUT
 rm -r $testout
 rm -r $testdir
 rm -r "./tests/tmp"
 exit 0
+)";
+
+
+string const pyopcode_compiler_sh = R"(#!/bin/bash
+#if [ -z "$PYSPECS_PATH" ]
+#then
+#    >&2 echo "Error: env variable 'PYSPECS_PATH' is not set!"
+#    exit 1;
+#fi
+
+cd /home/wins/Ethereum/bytecodetopy/execution-spec-tests
+python3 -m venv ./venv/
+source ./venv/bin/activate
+echo $(evm_bytes_to_python $2)
+
 )";
 
     {
@@ -454,6 +504,13 @@ exit 0
         (*obj)["exec"] = true;
         (*obj)["path"] = "t8ntool/mycompiler.sh";
         (*obj)["content"] = t8ntool_customcompiler;
+        map_configs.addArrayObject(obj);
+    }
+    {
+        spDataObject obj;
+        (*obj)["exec"] = true;
+        (*obj)["path"] = "t8ntool/pyopcode.sh";
+        (*obj)["content"] = pyopcode_compiler_sh;
         map_configs.addArrayObject(obj);
     }
     {
@@ -488,6 +545,13 @@ exit 0
         (*obj)["exec"] = true;
         (*obj)["path"] = "default/mycompiler.sh";
         (*obj)["content"] = t8ntool_customcompiler;
+        map_configs.addArrayObject(obj);
+    }
+    {
+        spDataObject obj;
+        (*obj)["exec"] = true;
+        (*obj)["path"] = "default/pyopcode.sh";
+        (*obj)["content"] = pyopcode_compiler_sh;
         map_configs.addArrayObject(obj);
     }
     {

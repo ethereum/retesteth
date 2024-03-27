@@ -29,7 +29,7 @@ RUN apt-get update \
     && add-apt-repository -y ppa:ubuntu-toolchain-r/test \
     && add-apt-repository -y ppa:deadsnakes/ppa  \
     && add-apt-repository ppa:linuxuprising/java \
-    && apt-get install --yes jq lsof git cmake make perl psmisc curl wget gcc-11 g++-11 python3.10 python3.10-venv python3-pip python3-dev \
+    && apt-get install --yes jq lsof git make libssl-dev libgmp-dev perl psmisc curl wget gcc-11 g++-11 python3.10 python3.10-venv python3-pip python3-dev \
     && apt-get install --yes libboost-filesystem-dev libboost-system-dev libboost-program-options-dev libboost-test-dev \
     && echo oracle-java17-installer shared/accepted-oracle-license-v1-3 select true | /usr/bin/debconf-set-selections  \
     && apt-get install --yes oracle-java17-installer oracle-java17-set-default \
@@ -39,6 +39,11 @@ RUN rm /usr/bin/python3 && ln -s /usr/bin/python3.10 /usr/bin/python3 \
     && rm /usr/bin/gcc && rm /usr/bin/g++ \
     && ln -s /usr/bin/gcc-11 /usr/bin/gcc \
     && ln -s /usr/bin/g++-11 /usr/bin/g++
+
+# CMAKE LATEST
+RUN wget https://github.com/Kitware/CMake/releases/download/v3.28.0/cmake-3.28.0.tar.gz \
+    && tar -zxvf cmake-3.28.0.tar.gz && cd cmake-3.28.0 \
+    && ./bootstrap && make && make install
 
 # Tests
 #RUN git clone --depth 1 -b master https://github.com/ethereum/tests /tests
@@ -80,8 +85,8 @@ RUN test -n "$PYT8N" \
 RUN test -n "$GETH" \
      && git clone $GETH_SRC /geth \
      && cd /geth && git fetch && git checkout $GETH \
-     && wget https://dl.google.com/go/go1.20.linux-amd64.tar.gz \
-     && tar -xvf go1.20.linux-amd64.tar.gz \
+     && wget https://go.dev/dl/go1.21.8.linux-amd64.tar.gz \
+     && tar -xvf go1.21.8.linux-amd64.tar.gz \
      && mv go /usr/local && ln -s /usr/local/go/bin/go /bin/go \
      && go build ./cmd/evm  && cp evm /bin/evm \
      && rm -rf /geth && rm -rf /usr/local/go \
@@ -102,8 +107,8 @@ RUN test -n "$NIMBUS" \
 RUN test -n "$ETHEREUMJS" \
      && wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash \
      && . ~/.nvm/nvm.sh \
-     && nvm install 19 && nvm alias default 19 && nvm use default \
-     && cp -r ~/.nvm/versions/node/v19*/* /usr \
+     && nvm install 20 && nvm alias default 20 && nvm use default \
+     && cp -r ~/.nvm/versions/node/v20*/* /usr \
      && git clone $ETEREUMJS_SRC /ethereumjs \
      && cd /ethereumjs && git fetch && git checkout $ETHEREUMJS && npm i && npm run build --workspaces \
     || echo "Ethereumjs is empty"

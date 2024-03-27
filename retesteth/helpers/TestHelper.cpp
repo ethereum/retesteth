@@ -79,6 +79,8 @@ spDataObject readAutoDataWithoutOptions(boost::filesystem::path const& _file, bo
             return dataobject::ConvertJsoncppStringToData(s);
         else if (_file.extension() == ".yml")
             return dataobject::ConvertYamlToData(YAML::Load(s), _sort);
+        else if (_file.extension() == ".py")
+            return spDataObject(0);
         std::cerr << "Unknown test file: " << _file.string() << std::endl;
     }
     catch (std::exception const& _ex)
@@ -86,6 +88,27 @@ spDataObject readAutoDataWithoutOptions(boost::filesystem::path const& _file, bo
         std::cerr << string("\nError when parsing file (") + _file.c_str() + ") " + _ex.what() << std::endl;
     }
     return spDataObject(0);
+}
+vector<fs::path> getFilesRecursive(fs::path const& _dirPath, set<string> const& _extentionMask, string const& _particularFile)
+{
+    vector<fs::path> files;
+    if (!fs::exists(_dirPath))
+        return files;
+
+    for (auto const& file : getFiles(_dirPath, _extentionMask, _particularFile))
+        files.emplace_back(file);
+
+    using fsIterator = fs::directory_iterator;
+    for (fsIterator it(_dirPath); it != fsIterator(); ++it)
+    {
+        if (fs::is_directory(it->path()))
+        {
+            for (auto const& file : getFilesRecursive(*it, _extentionMask, _particularFile))
+                files.emplace_back(file);
+        }
+    }
+
+    return files;
 }
 
 vector<fs::path> getFiles(fs::path const& _dirPath, set<string> const& _extentionMask, string const& _particularFile)

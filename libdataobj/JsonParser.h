@@ -33,7 +33,14 @@ private:
     size_t skipSpaces(size_t const& _i) const;
     std::string parseKeyValue(size_t& _i) const;
     bool readBoolOrNull(size_t& _i, bool& _result, bool& _readNull) const;
-    bool readDigit(size_t& _i, int& _result) const;
+
+    enum class ReadDigitType
+    {
+        INT,
+        DOUBLE,
+        NONE
+    };
+    ReadDigitType readDigit(size_t& _i, int& _result, double& _doubleResult) const;
     void checkJsonCommaEnding(size_t& _i) const;
 private:
     std::string const& m_input;

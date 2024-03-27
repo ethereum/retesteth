@@ -27,6 +27,7 @@ const string t8ntooleip_correctMiningReward_config = R"({
     "YOLOv2" :           "2000000000000000000",
     "YOLOv3" :           "2000000000000000000",
     "Aleut"  :           "2000000000000000000",
+    "Paris"  :           "0",
     "Merge"  :           "0",
     "Merged"  :          "0",
     "Shanghai"  :          "0"

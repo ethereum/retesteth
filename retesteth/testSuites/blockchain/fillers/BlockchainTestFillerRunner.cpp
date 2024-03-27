@@ -5,6 +5,8 @@
 #include <retesteth/session/Session.h>
 #include <retesteth/Options.h>
 #include <retesteth/testSuites/Common.h>
+#include <retesteth/testStructures/Common.h>
+#include <retesteth/Constants.h>
 using namespace test;
 using namespace test::session;
 using namespace test::debug;
@@ -33,15 +35,32 @@ spDataObject BlockchainTestFillerRunner::makeNewBCTestForNet(FORK const& _net)
         (*_filledTest).atKeyPointer("_info") = m_test.Info().rawData();
     filledTest["sealEngine"] = sealEngineToStr(m_test.sealEngine());
     filledTest["network"] = _net.asString();
-    filledTest.atKeyPointer("pre") = m_test.Pre().asDataObject();
-
     return _filledTest;
 }
 
+const int HISTORY_BUFFER_LENGTH = 8191;
 TestBlockchainManager BlockchainTestFillerRunner::makeTestChainManager(teststruct::FORK const& _net)
 {
     ETH_DC_MESSAGEC(DC::RPC, "FILL GENESIS INFO: ", LogColor::LIME);
-    return TestBlockchainManager(m_test.Env(), m_test.Pre(), m_test.sealEngine(), _net);
+    std::vector<spAccountBase> additionalAccounts;
+
+    if (test::compareFork(_net, test::CMP::ge, FORK("Cancun"))
+        && !m_test.Pre().hasAccount(teststruct::C_FH20_BEACON))
+    {
+        ETH_DC_MESSAGE(DC::RPC, "Retesteth inserts beacon root account into the pre state!");
+        auto beaconAcc = makeBeaconAccount();
+        Storage& str = const_cast<Storage&>(beaconAcc->storage());
+
+        // header.timestamp % HISTORY_BUFFER_LENGTH to be header.timestamp
+        spVALUE key = sVALUE(m_test.Env().currentTimestamp().asBigInt() % HISTORY_BUFFER_LENGTH);
+        spVALUE val = sVALUE(m_test.Env().currentTimestamp().asBigInt());
+        str.addRecord({key, val});
+
+        additionalAccounts.emplace_back(beaconAcc);
+    }
+
+    auto blockchains = TestBlockchainManager(m_test.Env(), m_test.Pre(), m_test.sealEngine(), _net, additionalAccounts);
+    return blockchains;
 }
 
 void BlockchainTestFillerRunner::makeGenesis(spDataObject& _filledTest, TestBlockchainManager& _testchain) const

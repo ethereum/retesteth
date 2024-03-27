@@ -32,7 +32,9 @@ void RunTest(BlockchainTestInFilled const& _test, TestSuite::TestSuiteOptions co
 
         runner.incrementBlockAndSetTestInfo();
         runner.validateTransactionSequence(tblock);
-        runner.validateRlpDecodedInInvalidBlocks(tblock);
+
+        if (tblock.rlpDecodedValid())
+            runner.validateRlpDecodedInInvalidBlocks(tblock);
 
         auto const blHash = runner.mineBlock(tblock.rlp());
         if (runner.checkLastRPCBlockException(tblock))

@@ -31,7 +31,7 @@ spSetChainParamsArgsGenesis readGenesis(DataObject const& _data)
                     return spSetChainParamsArgsGenesis(new SetChainParamsArgsGenesisShanghai(_data));
             }
             else
-                return spSetChainParamsArgsGenesis(new SetChainParamsArgsGenesisMerge(_data));
+                return spSetChainParamsArgsGenesis(new SetChainParamsArgsGenesisParis(_data));
         }
         else
             return spSetChainParamsArgsGenesis(new SetChainParamsArgsGenesis1559(_data));
@@ -75,10 +75,10 @@ SetChainParamsArgsGenesis1559::SetChainParamsArgsGenesis1559(DataObject const& _
         });
 }
 
-SetChainParamsArgsGenesisMerge::SetChainParamsArgsGenesisMerge(DataObject const& _data)
+SetChainParamsArgsGenesisParis::SetChainParamsArgsGenesisParis(DataObject const& _data)
   : SetChainParamsArgsGenesis(_data, false)
 {
-    REQUIRE_JSONFIELDS(_data, "SetChainParamsArgs::genesis(Merge) ",
+    REQUIRE_JSONFIELDS(_data, "SetChainParamsArgs::genesis(Paris) ",
         {
             {"author", {{DataType::String}, jsonField::Required}},
             {"gasLimit", {{DataType::String}, jsonField::Required}},
@@ -219,7 +219,7 @@ spDataObject SetChainParamsArgsGenesis1559::_constructBlockHeader() const
     return header;
 }
 
-spDataObject SetChainParamsArgsGenesisMerge::_constructBlockHeader() const
+spDataObject SetChainParamsArgsGenesisParis::_constructBlockHeader() const
 {
     spDataObject header = buildCommonBlockHeader();
     (*header)[c_difficulty] = "0x00";

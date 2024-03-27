@@ -15,4 +15,4 @@ cd $PYSPECS_PATH
 python3 -m venv ./venv/
 source ./venv/bin/activate
 
-tf $args
+fill $args

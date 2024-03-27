@@ -73,7 +73,7 @@ FH32 ToolImpl::eth_sendRawTransaction(BYTES const& _rlp, VALUE const& _secret)
         spTransaction spTr = readTransaction(_rlp);
         spTr.getContent().setSecret(_secret);
         ETH_DC_MESSAGE(DC::RPC, spTr->asDataObject()->asJson());
-        m_toolChainManager.getContent().addPendingTransaction(spTr);
+        m_toolChainManager.getContent().addPendingTransaction(spTr, AddPendingTransaction::ALLOW_RETESTETH_TO_DROP);
         FH32 trHash = spTr.getContent().hash();
         ETH_DC_MESSAGE(DC::RPC, "Response: " + trHash.asString());
         return trHash;

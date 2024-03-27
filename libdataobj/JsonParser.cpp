@@ -221,20 +221,23 @@ JsonParser::RET JsonParser::tryParseArrayEnd(size_t& _i, bool _seenCommaBefore)
 
 JsonParser::RET JsonParser::tryParseDigitBoolNull(size_t& _i)
 {
+    double resDouble = 0.0;
     int resInt = 0;
     bool resBool = false;
     bool isReadBool = false;
     bool isReadNull = false;
-    const bool isReadDigit = readDigit(_i, resInt);
-    if (!isReadDigit)
+    const JsonParser::ReadDigitType isReadDigit = readDigit(_i, resInt, resDouble);
+    if (isReadDigit == JsonParser::ReadDigitType::NONE)
         isReadBool = readBoolOrNull(_i, resBool, isReadNull);
 
-    if (isReadDigit || isReadBool || isReadNull)
+    if (isReadDigit != JsonParser::ReadDigitType::NONE || isReadBool || isReadNull)
     {
         if (m_actualRoot->type() == DataType::Array)
         {
-            if (isReadDigit)
-                m_actualRoot->addArrayObject(sDataObject(resInt));
+            if (isReadDigit == JsonParser::ReadDigitType::INT)
+                m_actualRoot->addArrayObject(sDataObject(DataType::Integer, (int)resInt));
+            else if (isReadDigit == JsonParser::ReadDigitType::DOUBLE)
+                m_actualRoot->addArrayObject(sDataObject(DataType::Double, (double)resDouble));
             else if (isReadBool)
                 m_actualRoot->addArrayObject(sDataObject(DataType::Bool, resBool));
             else
@@ -242,8 +245,10 @@ JsonParser::RET JsonParser::tryParseDigitBoolNull(size_t& _i)
         }
         else
         {
-            if (isReadDigit)
+            if (isReadDigit == JsonParser::ReadDigitType::INT)
                 m_actualRoot->setInt(resInt);
+            else if (isReadDigit == JsonParser::ReadDigitType::DOUBLE)
+                m_actualRoot->setDouble(resDouble);
             else if (isReadBool)
                 m_actualRoot->setBool(resBool);
             else
@@ -326,8 +331,9 @@ bool JsonParser::readBoolOrNull(size_t& _i, bool& _result, bool& _readNull) cons
     return false;
 }
 
-bool JsonParser::readDigit(size_t& _i, int& _result) const
+JsonParser::ReadDigitType JsonParser::readDigit(size_t& _i, int& _result, double& _resultDouble) const
 {
+    bool readDouble = false;
     bool readMinus = false;
     auto const& e = m_input[_i];
     if (e == '-')
@@ -342,9 +348,19 @@ bool JsonParser::readDigit(size_t& _i, int& _result) const
     {
         auto const& e = m_input[_i];
         if (e == '0' || e == '1' || e == '2' || e == '3' || e == '4' || e == '5' || e == '6' ||
-            e == '7' || e == '8' || e == '9')
+            e == '7' || e == '8' || e == '9' || e == '.')
         {
+            if (e == '.' && readDouble)
+            {
+                _i++;
+                digit = false;
+                _i = skipSpaces(_i);
+                continue;
+            }
+
             readNumber += e;
+            if (e == '.')
+                readDouble = true;
             _i++;
         }
         else
@@ -355,12 +371,23 @@ bool JsonParser::readDigit(size_t& _i, int& _result) const
     }
     if (readNumber.size())
     {
-        _result = std::atoi(readNumber.c_str());
-        if (readMinus)
-            _result *= -1;
-        return true;
+        if (readDouble)
+        {
+            std::locale::global(std::locale("C"));
+            _resultDouble = std::stod(readNumber);
+            if (readMinus)
+                _resultDouble *= -1;
+            return JsonParser::ReadDigitType::DOUBLE;
+        }
+        else
+        {
+            _result = std::atoi(readNumber.c_str());
+            if (readMinus)
+                _result *= -1;
+            return JsonParser::ReadDigitType::INT;
+        }
     }
-    return false;
+    return JsonParser::ReadDigitType::NONE;
 }
 
 bool JsonParser::checkExcessiveComaBefore(size_t const& _i) const

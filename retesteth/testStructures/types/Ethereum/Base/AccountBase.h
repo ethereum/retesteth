@@ -27,21 +27,22 @@ struct AccountBase : GCP_SPointerBase
     VALUE const& nonce() const { return m_nonce; }
     Storage const& storage() const { return m_storage; }
     BYTES const& code() const { return m_code; }
+    std::string const& codeRaw() const { return m_codeRaw; }
     FH20 const& address() const { return m_address; }
 
-    virtual spDataObject const& asDataObject() const = 0;
+    virtual spDataObject asDataObject() const = 0;
     virtual AccountType type() const = 0;
     virtual ~AccountBase() {}
 
 protected:
     AccountBase() {}
-    mutable spDataObject m_rawData;
     bool m_shouldNotExist = false;
     spFH20 m_address;
     spVALUE m_balance;
     spVALUE m_nonce;
     spStorage m_storage;
     spBYTES m_code;
+    std::string m_codeRaw;
 };
 
 typedef GCP_SPointer<AccountBase> spAccountBase;

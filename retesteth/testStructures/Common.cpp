@@ -289,7 +289,18 @@ void convertDecStateToHex(spDataObject& _data, solContracts const& _preSolidity,
         {
             auto const& code = acc.atKey(c_code).asString();
             if (_compileCode == StateToHex::COMPILECODE)
+            {
+                if (Options::get().convertpy)
+                    acc["code_raw"] = code;
+
                 acc[c_code].setString(test::compiler::replaceCode(code, _preSolidity));
+
+                if (Options::get().convertpy)
+                {
+                    if (acc["code_raw"].asString() == acc[c_code].asString())
+                        acc.removeKey("code_raw");
+                }
+            }
             if (code.empty())
                 acc[c_code].asStringUnsafe().insert(0, "0x");
         }
@@ -300,12 +311,20 @@ void convertDecStateToHex(spDataObject& _data, solContracts const& _preSolidity,
             acc[c_balance].performModifier(mod_valueToCompactEvenHexPrefixed);
         if (acc.count(c_storage))
         {
+            std::vector<string> emptyKeys;
             for (auto& rec : acc[c_storage].getSubObjectsUnsafe())
             {
-                rec.getContent().performModifier(mod_keyToCompactEvenHexPrefixed);
                 rec.getContent().performModifier(mod_valueToCompactEvenHexPrefixed);
-                acc.performModifier(mod_keyToLowerCase);
+                if (rec->asString() == "0x00")
+                    emptyKeys.emplace_back(rec->getKey());
+                else
+                {
+                    rec.getContent().performModifier(mod_keyToCompactEvenHexPrefixed);
+                    acc.performModifier(mod_keyToLowerCase);
+                }
             }
+            for (auto const& key : emptyKeys)
+                acc[c_storage].removeKey(key);
         }
         acc.performModifier(mod_valueToLowerCase);
     }
@@ -426,6 +445,43 @@ void mod_changeValueAnyToBigint00(DataObject& _el)
 {
     if (_el.type() == DataType::String && _el.asString() == "ANY")
         _el.setString("0x:bigint 0x00");
+}
+
+bool checkEmptyAccounts(spState _state)
+{
+    for (auto const& [address, acc] : _state->accounts())
+    {
+        if (acc->nonce() == 0 && acc->balance() == 0 && acc->code().asString() == "0x")
+            return true;
+    }
+    return false;
+}
+
+void checkEmptyStorages(spState _state)
+{
+    for (auto const& [address, acc] : _state->accounts())
+    {
+        for (auto const& [str, record] : acc->storage().getKeys())
+        {
+            if (std::get<1>(record)->asBigInt() == 0)
+            {
+                ETH_ERROR_MESSAGE("Pre state has empty storage record in account: " + address.asString() + TestOutputHelper::get().testInfo().errorDebug());
+                return;
+            }
+        }
+    }
+}
+
+spAccountBase makeBeaconAccount()
+{
+    spDataObject accountData;
+    (*accountData).setKey(teststruct::C_FH20_BEACON.asString());
+    (*accountData)["balance"] = "0x00";
+    (*accountData)["code"] = "0x3373fffffffffffffffffffffffffffffffffffffffe14604d57602036146024575f5ffd5b5f35801560495762001fff810690815414603c575f5ffd5b62001fff01545f5260205ff35b5f5ffd5b62001fff42064281555f359062001fff015500";
+    (*accountData)["nonce"] = "0x01";
+    (*accountData).atKeyPointer("storage") = sDataObject(DataType::Object);
+    spAccountBase acc(new State::Account(accountData));
+    return  acc;
 }
 
 }  // namespace teststruct
