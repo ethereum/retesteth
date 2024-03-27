@@ -51,7 +51,8 @@ string const evmone_config = R"({
         "ArrowGlacierToParisAtDiffC0000",
         "GrayGlacier",
         "ParisToShanghaiAtTime15k",
-        "ShanghaiToCancunAtTime15k"
+        "ShanghaiToCancunAtTime15k",
+        "Merge"
     ],
     "fillerSkipForks" : [
         "HomesteadToDaoAt5"
