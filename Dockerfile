@@ -131,7 +131,7 @@ RUN test -n "$EVMONE" \
      && cd /evmone && git fetch && git checkout $evmone \
      && cmake -S . -B build -DEVMONE_TESTING=ON \
      && cmake --build build \
-     && ln -s /evmone/build/bin/evmone-t8n /usr/bin/evmone \
+     && ln -s /evmone/build/bin/evmone-t8n /usr/bin/evmone-t8n \
      && rm -rf /var/cache/* /root/.hunter/* \
     || echo "Evmone is empty"
 
