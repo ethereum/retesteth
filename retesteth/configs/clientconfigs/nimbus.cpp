@@ -64,7 +64,7 @@ string const nimbus_config = R"({
       "TransactionException.TYPE_3_TX_BLOB_COUNT_EXCEEDED" : "invalid tx: versioned hashes len exceeds MAX_BLOBS_PER_BLOCK",
       "TransactionException.TYPE_3_TX_CONTRACT_CREATION" : "input string too short for common.Address",
       "TransactionException.TYPE_3_TX_MAX_BLOB_GAS_ALLOWANCE_EXCEEDED" : "Block has invalid number of blobs in txs >=7! would exceed maximum",
-      "TransactionException.INSUFFICIENT_MAX_FEE_PER_BLOB_GAS" : "[retesteth]: blobtx.maxFeePerBlobGas() < getblobgas(blockheader) ",
+      "TransactionException.INSUFFICIENT_MAX_FEE_PER_BLOB_GAS" : "blobtx.maxFeePerBlobGas() < getblobgas(blockheader",
       "TransactionException.INTRINSIC_GAS_TOO_LOW" : "invalid tx: not enough gas to perform calculation",
       "TransactionException.INITCODE_SIZE_EXCEEDED" : "invalid tx: initcode size exceeds maximum",
       "BlockException.INCORRECT_EXCESS_BLOB_GAS" : "Error in field: excessBlobGas",
