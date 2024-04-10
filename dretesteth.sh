@@ -4,14 +4,15 @@ testpath="notfound"
 installImage() {
     SCRIPT=$(readlink -f "$0")              # Get the absolute path of the script
     SCRIPT_NAME=$(basename "$SCRIPT")       # Get the name of the script without the path
-    SCRIPT_NAME_LINK="${SCRIPT_NAME::-3}"
+    SCRIPT_NAME_LINK="${SCRIPT_NAME%.*}"     # Get the name of the bash script without extension
 
-    if [ "$SCRIPT" != "/usr/bin/$SCRIPT_NAME" ]; then
-      sudo ln -s "$SCRIPT" "/usr/bin/$SCRIPT_NAME_LINK"
-      echo "Added link /usr/bin/$SCRIPT_NAME_LINK >> $SCRIPT"
+    INSTALL_PATH="/usr/local/bin"
+    if [ "$SCRIPT" != "$INSTALL_PATH/$SCRIPT_NAME" ]; then
+      echo "Adding link $INSTALL_PATH/$SCRIPT_NAME_LINK >> $SCRIPT"
+      sudo ln -s "$SCRIPT" "$INSTALL_PATH/$SCRIPT_NAME_LINK"
       if [ "$SCRIPT_NAME" = "dretesteth.sh" ]; then
-        sudo ln -s "$SCRIPT" "/usr/bin/dr"
-        echo "Added link /usr/bin/dr >> $SCRIPT"
+        echo "Adding link $INSTALL_PATH/dr >> $SCRIPT"
+        sudo ln -s "$SCRIPT" "$INSTALL_PATH/dr"
       fi
     fi
     exit 0
