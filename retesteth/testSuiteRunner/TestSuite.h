@@ -106,6 +106,11 @@ public:
     // If the src test does not end up with either Filler.json or Copier.json an exception occurs.
     void runAllTestsInFolder(std::string const& _testFolder) const;
 
+    // Verify that filled folders has corresponding folders in the filler directory
+    void verifyFilledTestsFolders(
+        boost::filesystem::path const& _fillerPath = "",
+        boost::filesystem::path const& _filledPath = "") const;
+
     // Execute Filler.json or Copier.json test file in a given folder
     void executeTest(std::string const& _testFolder, boost::filesystem::path const& _jsonFileName) const;
     void runTestAfterFilling(boost::filesystem::path const& _fillerTestFilePath, AbsoluteFilledTestPath const _filledTestPath) const;
@@ -120,10 +125,10 @@ public:
     AbsoluteFilledTestPath getFullPathFilled(std::string const& _testFolder) const;
     void setFillerPathAdd(std::string&& _path) const { m_fillerPathAdd = std::move(_path); }
 
-    //
     static void runFunctionForAllClients(std::function<void()> _func);
 
 protected:
+
     // A folder of the test suite. like "VMTests". should be implemented for each test suite.
     virtual TestPath suiteFolder() const = 0;
 

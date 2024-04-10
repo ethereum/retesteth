@@ -192,7 +192,6 @@ BOOST_FIXTURE_TEST_SUITE(StateTests, EIPTestsFixture)
     using EIPStateTestsEOFFixture = TestFixture<EIPStateTestEOFSuite, DefaultFlags>;
     ETH_REGISTER_DYNAMIC_TEST_SEARCH(EIPStateTestsEOFFixture, "EIPTests/StateTests/stEOF")
     BOOST_FIXTURE_TEST_SUITE(stEOF, EIPStateTestsEOFFixture)
-        BOOST_AUTO_TEST_CASE(stEIP3540) {}
     BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
 
@@ -203,12 +202,9 @@ BOOST_FIXTURE_TEST_SUITE(BlockchainTests, BCEIPSuiteFixture)
     using BCEIPStateSuiteFixture = TestFixture<BCEIPStateTestsSuite, RequireOptionAllNotRefillable>;
     ETH_REGISTER_DYNAMIC_TEST_SEARCH(BCEIPStateSuiteFixture, "EIPTests/BlockchainTests/StateTests")
     BOOST_FIXTURE_TEST_SUITE(StateTests, BCEIPStateSuiteFixture)
-    BOOST_AUTO_TEST_CASE(stEIP3855) {}
-    BOOST_AUTO_TEST_CASE(stEIP3860) {}
         using BCEIPStateTestsEOFFixture = TestFixture<BCEIPStateTestsEOFSuite, RequireOptionAll>;
         ETH_REGISTER_DYNAMIC_TEST_SEARCH(BCEIPStateTestsEOFFixture, "EIPTests/BlockchainTests/StateTests/stEOF")
         BOOST_FIXTURE_TEST_SUITE(stEOF, BCEIPStateTestsEOFFixture)
-        BOOST_AUTO_TEST_CASE(stEIP3540) {}
         BOOST_AUTO_TEST_SUITE_END()
     BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()

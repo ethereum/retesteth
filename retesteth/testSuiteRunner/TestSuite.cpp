@@ -63,6 +63,46 @@ string getTestNameFromFillerFilename(fs::path const& _fillerTestFilePath)
 namespace test
 {
 
+bool findFolderInPath(fs::path const& _path, string const& _folderName)
+{
+    using fsIterator = fs::directory_iterator;
+    for (fsIterator it(_path); it != fsIterator(); ++it)
+    {
+        if ((*it).path().stem().string() == _folderName)
+            return true;
+    }
+    return false;
+}
+
+void TestSuite::verifyFilledTestsFolders(fs::path const& _fillerPath, fs::path const& _filledPath) const
+{
+    fs::path fillerPath = _fillerPath.empty() ? test::getTestPath() / suiteFillerFolder().path() : _fillerPath;
+    fs::path filledPath = _filledPath.empty() ? test::getTestPath() / suiteFolder().path() : _filledPath;
+    if (!fs::exists(filledPath) || fillerPath.string().empty() || filledPath.string().empty())
+        return;
+
+    bool skipEIPBCStateTests = false;
+    if (fillerPath.string().find("src/EIPTestsFiller/BlockchainTests") != string::npos)
+        skipEIPBCStateTests = true;
+
+    using fsIterator = fs::directory_iterator;
+    for (fsIterator it(filledPath); it != fsIterator(); ++it)
+    {
+        if (fs::is_directory(*it) && !(*it).path().empty())
+        {
+            string const filledFolder = (*it).path().stem().string();
+            if (skipEIPBCStateTests && filledFolder == "StateTests")
+                continue;
+            if (!findFolderInPath(fillerPath, filledFolder))
+                ETH_ERROR_MESSAGE("Filled folder contains folder without filler: " + (*it).path().string());
+            else
+            {
+                verifyFilledTestsFolders(fillerPath/filledFolder, filledPath/filledFolder);
+            }
+        }
+    }
+}
+
 void TestSuite::runAllTestsInFolder(string const& _testFolder) const
 {
     Options::getDynamicOptions().getClientConfigs();

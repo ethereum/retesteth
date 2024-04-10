@@ -291,6 +291,7 @@ void TestFixture<T, U>::_execute(std::set<TestExecution> const& _execFlags) cons
     if (casename.find("__") != string::npos)
         return;
 
+    m_suite.verifyFilledTestsFolders();
     m_suite.runAllTestsInFolder(casename);
     test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
 }
