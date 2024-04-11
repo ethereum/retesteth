@@ -28,6 +28,17 @@ bool Options::isLegacy()
     return isLegacy;
 }
 
+bool Options::isEIPTest()
+{
+    static bool isEIPTest = (boost::unit_test::framework::current_test_case().full_name().find("EIPTests") != string::npos);
+
+    // Current test case is dynamic if we run all tests. need to see if we hit EIPTests
+    if (Options::get().rCurrentTestSuite.empty())
+        isEIPTest = (boost::unit_test::framework::current_test_case().full_name().find("EIPTests") != string::npos);
+
+    return isEIPTest;
+}
+
 bool Options::Option::match(string const& _arg) const
 {
     if (m_argType == ARGS::ONEMERGED)

@@ -13,7 +13,8 @@ namespace
 {
 void requireStateTestEnvScheme(DataObject const& _data)
 {
-    if (test::Options::get().isLegacy())
+    auto const& opt = test::Options::get();
+    if (opt.isLegacy() || opt.isEIPTest())
     {
         REQUIRE_JSONFIELDS(_data, "StateTestEnv(Legacy) " + _data.getKey(),
             {{"currentCoinbase", {{DataType::String}, jsonField::Required}},

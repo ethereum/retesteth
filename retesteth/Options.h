@@ -255,6 +255,7 @@ public:
     bool_opt fullstate = false;
     bool_opt forceupdate = false;
     static bool isLegacy();
+    static bool isEIPTest();
 
 public:
     struct InvalidOption : public dev::Exception
