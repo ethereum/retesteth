@@ -51,7 +51,7 @@ Info::Info(DataObject const& _data)
     }
     catch (std::exception const& _ex)
     {
-        ETH_WARNING(string() + "Info section verification failed: " + _ex.what());
+        ETH_DC_MESSAGE(test::debug::DC::STATS2, string() + "Info section verification failed: " + _ex.what());
     }
 
     if (_data.count("labels"))
