@@ -233,18 +233,18 @@ void Options::vecaddr_opt::initArg(std::string const& _arg)
 void Options::singletest_opt::initArg(std::string const& _arg)
 {
     name = _arg;
-
-    size_t pos = name.find("Filler");
-    if (pos != std::string::npos)
-    {
-        name = name.substr(0, pos);
-        std::cout << "WARNING: Correcting filter to: `" + name + "`" << std::endl;
-    }
-    pos = name.find_last_of('/');
+    size_t pos = name.find_last_of('/');
     if (pos != std::string::npos)
     {
         subname = name.substr(pos + 1);
         name = name.substr(0, pos);
+    }
+
+    pos = name.find("Filler");
+    if (pos != std::string::npos)
+    {
+        name = name.substr(0, pos);
+        std::cout << "WARNING: Correcting filter to: `" + name + "`" << std::endl;
     }
 }
 
