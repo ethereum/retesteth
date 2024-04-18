@@ -280,8 +280,13 @@ string const evmone_config = R"({
       "INPUT_UNMARSHAL_ERROR" : "cannot unmarshal hex",
       "INPUT_UNMARSHAL_SIZE_ERROR" : "failed unmarshaling",
       "RLP_BODY_UNMARSHAL_ERROR" : "Rlp structure is wrong",
-      "EOF_InvalidPrefix" : "err: invalid_prefix",
+
+      "EOF_InvalidPrefix": "err: invalid_prefix",
+      "EOFException.INCOMPLETE_MAGIC": "err: invalid_prefix",
+      "EOFException.INVALID_MAGIC": "err: invalid_prefix",
+
       "EOF_UnknownVersion" : "err: eof_version_unknown",
+      "EOFException.INVALID_VERSION": "err: eof_version_unknown",
 
       "EOF_IncompleteSectionSize" : "err: incomplete_section_size",
       "EOFException.INCOMPLETE_SECTION_SIZE" : "err: incomplete_section_size",
@@ -290,18 +295,25 @@ string const evmone_config = R"({
       "EOFException.INCOMPLETE_SECTION_NUMBER": "err: incomplete_section_number",
 
       "EOF_HeaderTerminatorMissing": "err: header_terminator_missing",
+      "EOFException.MISSING_TERMINATOR": "err: header_terminator_missing",
+
       "EOF_TypeSectionMissing": "err: type_section_missing",
+      "EOFException.MISSING_TYPE_HEADER": "err: type_section_missing",
 
       "EOF_CodeSectionMissing": "err: code_section_missing",
       "EOFException.MISSING_CODE_HEADER": "err: code_section_missing",
 
       "EOF_DataSectionMissing": "err: data_section_missing",
+
       "EOF_ZeroSectionSize": "err: zero_section_size",
+      "EOFException.ZERO_SECTION_SIZE": "err: zero_section_size",
 
       "EOF_SectionHeadersNotTerminated": "err: section_headers_not_terminated",
-      "EOFException.MISSING_TERMINATOR": "err: section_headers_not_terminated",
+      "EOFException.MISSING_HEADERS_TERMINATOR": "err: section_headers_not_terminated",
 
       "EOF_InvalidSectionBodiesSize": "err: invalid_section_bodies_size",
+      "EOFException.INVALID_SECTION_BODIES_SIZE": "err: invalid_section_bodies_size",
+
       "EOF_UnreachableCodeSections" : "err: unreachable_code_sections",
       "EOF_UndefinedInstruction": "err: undefined_instruction",
       "EOF_TruncatedImmediate": "err: truncated_instruction",
@@ -311,6 +323,7 @@ string const evmone_config = R"({
       "EOFException.TOO_MANY_CODE_SECTIONS": "err: too_many_code_sections",
 
       "EOF_InvalidTypeSectionSize": "err: invalid_type_section_size",
+      "EOFException.INVALID_TYPE_SIZE": "err: invalid_type_section_size",
 
       "EOF_InvalidFirstSectionType": "err: invalid_first_section_type",
       "EOFException.INVALID_FIRST_SECTION_TYPE" : "err: invalid_first_section_type",
