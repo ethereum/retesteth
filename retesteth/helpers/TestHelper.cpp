@@ -80,7 +80,7 @@ spDataObject readAutoDataWithoutOptions(boost::filesystem::path const& _file, bo
         else if (_file.extension() == ".yml")
             return dataobject::ConvertYamlToData(YAML::Load(s), _sort);
         else if (_file.extension() == ".py")
-            return spDataObject(0);
+            return spDataObject(new DataObject(dev::contentsString(_file)));
         std::cerr << "Unknown test file: " << _file.string() << std::endl;
     }
     catch (std::exception const& _ex)
@@ -856,6 +856,36 @@ std::vector<std::string> parseArgsFromStringIntoArray(std::string const& _stream
     if (!arg.empty())
         args.emplace_back(arg);
     return args;
+}
+
+TestType getTestType(spDataObject _testData)
+{
+    if (_testData->getSubObjects().size() == 0)
+    {
+        if (_testData->asString().find("eof_test") != string::npos)
+            return TestType::EOFTest;
+        return TestType::StateTest;
+    }
+
+    auto isBlockChainTest = [](DataObject const& _el)
+    {
+        return (_el.getKey() == "blocks");
+    };
+    auto isStateTest = [](DataObject const& _el)
+    {
+        return (_el.getKey() == "env");
+    };
+    auto isEOFTest = [](DataObject const& _el)
+    {
+        return (_el.getSubObjects().size() == 2 && _el.count("code") && _el.count("results"));
+    };
+    if (_testData->performSearch(isBlockChainTest))
+        return TestType::BlockchainTest;
+    if (_testData->performSearch(isStateTest))
+        return TestType::StateTest;
+    if (_testData->performSearch(isEOFTest))
+        return TestType::EOFTest;
+    return TestType::StateTest;
 }
 
 }//namespace

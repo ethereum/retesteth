@@ -119,7 +119,8 @@ string const t8ntool_config = R"({
         "GrayGlacier",
         "ParisToShanghaiAtTime15k",
         "ShanghaiToCancunAtTime15k",
-        "Merge"
+        "Merge",
+        "Prague"
     ],
     "fillerSkipForks" : [
     ],
@@ -441,8 +442,11 @@ fi
 if [ "$EXPRTCALL" != "null" ]; then
     ADDFLAGS="$ADDFLAGS --debug $EXPRTCALL/pyspec.log --t8n-dump-dir $EXPRTCALL"
 fi
-if [ "$SUITETYPE" != "blockchain_tests" ]; then
-    ADDFLAGS="$ADDFLAGS -m state_test"
+if [ "$SUITETYPE" == "blockchain_tests" ]; then
+    ADDFLAGS="$ADDFLAGS -m blockchain_test"
+fi
+if [ "$SUITETYPE" == "state_tests eof_tests" ]; then
+    ADDFLAGS="$ADDFLAGS -m state_test -m eof_test"
 fi
 
 if [ -d $testout ]; then
@@ -464,7 +468,14 @@ if [ ! -d $OUTPUT ]; then
     mkdir $OUTPUT
 fi
 
-cp -r $testout/$SUITETYPE/* $OUTPUT
+>&2 ls -la $testout
+if [ "$SUITETYPE" == "state_tests eof_tests" ]; then
+    cp -r $testout/state_tests/* $OUTPUT
+    cp -r $testout/eof_tests/* $OUTPUT
+else
+    cp -r $testout/$SUITETYPE/* $OUTPUT
+fi
+
 rm -r $testout
 rm -r $testdir
 rm -r "./tests/tmp"

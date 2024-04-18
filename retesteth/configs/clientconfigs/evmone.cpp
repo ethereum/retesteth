@@ -39,8 +39,7 @@ string const evmone_config = R"({
         "London",
         "Paris",
         "Shanghai",
-        "Cancun",
-        "Prague"
+        "Cancun"
     ],
     "additionalForks" : [
         "FrontierToHomesteadAt5",
@@ -53,7 +52,8 @@ string const evmone_config = R"({
         "GrayGlacier",
         "ParisToShanghaiAtTime15k",
         "ShanghaiToCancunAtTime15k",
-        "Merge"
+        "Merge",
+        "Prague"
     ],
     "fillerSkipForks" : [
         "HomesteadToDaoAt5"
@@ -282,22 +282,39 @@ string const evmone_config = R"({
       "RLP_BODY_UNMARSHAL_ERROR" : "Rlp structure is wrong",
       "EOF_InvalidPrefix" : "err: invalid_prefix",
       "EOF_UnknownVersion" : "err: eof_version_unknown",
+
       "EOF_IncompleteSectionSize" : "err: incomplete_section_size",
+      "EOFException.INCOMPLETE_SECTION_SIZE" : "err: incomplete_section_size",
+
       "EOF_IncompleteSectionNumber": "err: incomplete_section_number",
+      "EOFException.INCOMPLETE_SECTION_NUMBER": "err: incomplete_section_number",
+
       "EOF_HeaderTerminatorMissing": "err: header_terminator_missing",
       "EOF_TypeSectionMissing": "err: type_section_missing",
+
       "EOF_CodeSectionMissing": "err: code_section_missing",
+      "EOFException.MISSING_CODE_HEADER": "err: code_section_missing",
+
       "EOF_DataSectionMissing": "err: data_section_missing",
       "EOF_ZeroSectionSize": "err: zero_section_size",
+
       "EOF_SectionHeadersNotTerminated": "err: section_headers_not_terminated",
+      "EOFException.MISSING_TERMINATOR": "err: section_headers_not_terminated",
+
       "EOF_InvalidSectionBodiesSize": "err: invalid_section_bodies_size",
       "EOF_UnreachableCodeSections" : "err: unreachable_code_sections",
       "EOF_UndefinedInstruction": "err: undefined_instruction",
       "EOF_TruncatedImmediate": "err: truncated_instruction",
       "EOF_InvalidJumpDestination": "err: invalid_rjump_destination",
+
       "EOF_TooManyCodeSections": "err: too_many_code_sections",
+      "EOFException.TOO_MANY_CODE_SECTIONS": "err: too_many_code_sections",
+
       "EOF_InvalidTypeSectionSize": "err: invalid_type_section_size",
+
       "EOF_InvalidFirstSectionType": "err: invalid_first_section_type",
+      "EOFException.INVALID_FIRST_SECTION_TYPE" : "err: invalid_first_section_type",
+
       "EOF_InvalidMaxStackHeight": "err: invalid_max_stack_height",
       "EOF_InvalidCodeTermination": "err: no_terminating_instruction",
       "EOF_ConflictingStackHeight": "err: stack_height_mismatch",

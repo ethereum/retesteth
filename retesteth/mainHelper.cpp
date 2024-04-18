@@ -13,6 +13,7 @@
 #include <retesteth/testSuites/TransactionTest.h>
 #include <retesteth/testSuites/blockchain/BlockchainTests.h>
 #include <retesteth/testSuites/statetests/StateTests.h>
+#include <retesteth/testSuites/EOFTest.h>
 
 #include <libdataobj/ConvertFile.h>
 #include <libdevcore/CommonIO.h>
@@ -91,6 +92,11 @@ void runCustomTestFile()
     else if (opt.rCurrentTestSuite.find("TransactionTests") != std::string::npos)
     {
         test::TransactionTestSuite suite;
+        runSuite(&suite);
+    }
+    else if (opt.rCurrentTestSuite.find("EOFTests") != std::string::npos)
+    {
+        test::EOFTestSuite suite;
         runSuite(&suite);
     }
     else

@@ -16,22 +16,15 @@ string getTestType(string const& _filename)
     string type = "GeneralStateTests";
     if (fs::exists(_filename))
     {
-        spDataObject res = readAutoDataWithoutOptions(_filename);
-        if (res.isEmpty())
+        spDataObject testData = readAutoDataWithoutOptions(_filename);
+        if (testData.isEmpty())
             return type;
-
-        auto isBlockChainTest = [](DataObject const& _el)
-        {
-            return (_el.getKey() == "blocks") ? true : false;
-        };
-        auto isStateTest = [](DataObject const& _el)
-        {
-            return (_el.getKey() == "env") ? true : false;
-        };
-        if (res->performSearch(isBlockChainTest))
-            return "BlockchainTests";
-        if (res->performSearch(isStateTest))
-            return "GeneralStateTests";
+        auto testType = test::getTestType(testData);
+        switch (testType) {
+        case TestType::BlockchainTest: return "BlockchainTests";
+        case TestType::StateTest: return "GeneralStateTests";
+        case TestType::EOFTest: return "EOFTests";
+        }
     }
     return type;
 }

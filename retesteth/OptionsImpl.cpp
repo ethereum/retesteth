@@ -39,6 +39,17 @@ bool Options::isEIPTest()
     return isEIPTest;
 }
 
+bool Options::isEOFTest()
+{
+    static bool isEOFTest = (boost::unit_test::framework::current_test_case().full_name().find("EOFTests") != string::npos);
+
+    // Current test case is dynamic if we run all tests. need to see if we hit EIPTests
+    if (Options::get().rCurrentTestSuite.empty())
+        isEOFTest = (boost::unit_test::framework::current_test_case().full_name().find("EOFTests") != string::npos);
+
+    return isEOFTest;
+}
+
 bool Options::Option::match(string const& _arg) const
 {
     if (m_argType == ARGS::ONEMERGED)

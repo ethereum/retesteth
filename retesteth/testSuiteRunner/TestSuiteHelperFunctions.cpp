@@ -30,14 +30,22 @@ TestFileData readFillerTestFile(fs::path const& _testFileName)
     {
         CJOptions opt { .jsonParse = CJOptions::JsonParse::ALLOW_COMMENTS, .autosort = bSortOnLoad,};
         testData.data = test::readJsonData(_testFileName, opt);
+        testData.testType = test::getTestType(testData.data);
     }
     else if (_testFileName.extension() == ".yml")
+    {
         testData.data = test::readYamlData(_testFileName, bSortOnLoad);
+        testData.testType = test::getTestType(testData.data);
+    }
     else if (_testFileName.extension() == ".py")
+    {
         testData.data = spDataObject(new DataObject(dev::contentsString(_testFileName)));
+    }
     else
         ETH_ERROR_MESSAGE("Unknown test format! \n" + _testFileName.string());
     ETH_DC_MESSAGE(DC::TESTLOG, "Read json structure finish");
+
+
 
     // Do not calculate the hash on Legacy tests unless --checkhash option provided
     if (isLegacy && !bSortOnLoad)

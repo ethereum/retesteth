@@ -154,4 +154,13 @@ private:
     std::string const* m_data = 0;
 };
 
+enum class TestType
+{
+    StateTest,
+    BlockchainTest,
+    EOFTest
+};
+
+TestType getTestType(spDataObject _testData);
+
 }  // namespace test
