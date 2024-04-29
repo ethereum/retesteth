@@ -53,11 +53,14 @@ string getTestTArg(fs::path const& _cwd, string const& arg)
             cwd = cwd / cArg;
     }
 
+
+    // Go upwards untill we find supported foldere structure
     while(!test::inArray(supportedSuites, cwd.stem().string()) && !cwd.empty())
     {
         tArg.insert(0, cwd.stem().string() + "/");
         cwd = cwd.parent_path();
     }
+
     if (!cwd.empty())
     {
         string headTestSuite = cwd.stem().string();
@@ -91,6 +94,18 @@ string getTestTArg(fs::path const& _cwd, string const& arg)
         tArg = "BlockchainTests/Retesteth/bcExpectSection";
     if (tArg == "GeneralStateTests/stExpectSection")
         tArg = "GeneralStateTests/Retesteth";
+
+    // Check Legacy tests as they have the same path but inside Legacy folder
+    if (cwd.parent_path().parent_path().stem().string() == "LegacyTests")
+    {
+        // Constantinople
+        tArg.insert(0, cwd.parent_path().stem().string() + "/");
+        cwd = cwd.parent_path();
+        // LegacyTests
+        tArg.insert(0, cwd.parent_path().stem().string() + "/");
+        cwd = cwd.parent_path();
+    }
+
     return tArg;
 }
 
