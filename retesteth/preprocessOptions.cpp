@@ -61,15 +61,21 @@ string getTestTArg(fs::path const& _cwd, string const& arg)
         cwd = cwd.parent_path();
     }
 
+
     if (!cwd.empty())
     {
         string headTestSuite = cwd.stem().string();
         size_t const pos = headTestSuite.find("Filler");
         if (pos != string::npos)
+        {
             headTestSuite = headTestSuite.erase(pos, 6);
+            if (cwd.parent_path().stem() == "Constantinople")
+                headTestSuite.insert(0, "LegacyTests/Constantinople/");
+        }
         else
         {
-            if (cwd.parent_path().stem() == "BlockchainTests" && headTestSuite == "GeneralStateTests")
+            if ((cwd.parent_path().stem() == "BlockchainTests" && headTestSuite == "GeneralStateTests")
+                || (cwd.parent_path().stem() == "BlockchainTestsFiller" && headTestSuite == "GeneralStateTests"))
             {
                 headTestSuite.insert(0, "BC");
                 if (cwd.parent_path().parent_path().stem() == "Constantinople")
@@ -77,10 +83,14 @@ string getTestTArg(fs::path const& _cwd, string const& arg)
             }
             else if ((cwd.parent_path().stem() == "EIPTests" || cwd.parent_path().stem() == "EIPTestsFiller")
                      && headTestSuite == "BlockchainTests")
+            {
                 headTestSuite.insert(0, "EIPTests/");
+            }
             else if (cwd.parent_path().stem() == "Constantinople")
                 headTestSuite.insert(0, "LegacyTests/Constantinople/");
         }
+
+
         if (stepinfolder)
             tArg.insert(0, headTestSuite);
         else
@@ -94,17 +104,6 @@ string getTestTArg(fs::path const& _cwd, string const& arg)
         tArg = "BlockchainTests/Retesteth/bcExpectSection";
     if (tArg == "GeneralStateTests/stExpectSection")
         tArg = "GeneralStateTests/Retesteth";
-
-    // Check Legacy tests as they have the same path but inside Legacy folder
-    if (cwd.parent_path().parent_path().stem().string() == "LegacyTests")
-    {
-        // Constantinople
-        tArg.insert(0, cwd.parent_path().stem().string() + "/");
-        cwd = cwd.parent_path();
-        // LegacyTests
-        tArg.insert(0, cwd.parent_path().stem().string() + "/");
-        cwd = cwd.parent_path();
-    }
 
     return tArg;
 }

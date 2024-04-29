@@ -2,6 +2,7 @@
 #include <retesteth/EthChecks.h>
 #include <retesteth/testStructures/Common.h>
 #include <retesteth/Constants.h>
+#include <retesteth/Options.h>
 
 using namespace std;
 using namespace dataobject;
@@ -11,16 +12,34 @@ namespace
 {
 void requireStateTestsFillerEnvScheme(spDataObject const& _data)
 {
-    REQUIRE_JSONFIELDS(_data, "StateTestFillerEnv " + _data->getKey(),
-        {{"currentCoinbase", {{DataType::String}, jsonField::Required}},
-         {"currentDifficulty", {{DataType::String}, jsonField::Optional}},
-         {"currentGasLimit", {{DataType::String}, jsonField::Required}},
-         {"currentNumber", {{DataType::String}, jsonField::Required}},
-         {"currentTimestamp", {{DataType::String}, jsonField::Required}},
-         {"currentBaseFee", {{DataType::String}, jsonField::Optional}},
-         {"currentRandom", {{DataType::String}, jsonField::Optional}},
-         {c_currentExcessBlobGas, {{DataType::String}, jsonField::Optional}}
-    });
+    auto const& opt = test::Options::get();
+    if (opt.isLegacy())
+    {
+        REQUIRE_JSONFIELDS(_data, "StateTestFillerEnv(Legacy) " + _data->getKey(),
+            {{"currentCoinbase", {{DataType::String}, jsonField::Required}},
+                {"currentDifficulty", {{DataType::String}, jsonField::Optional}},
+                {"currentGasLimit", {{DataType::String}, jsonField::Required}},
+                {"currentNumber", {{DataType::String}, jsonField::Required}},
+                {"currentTimestamp", {{DataType::String}, jsonField::Required}},
+                {"currentBaseFee", {{DataType::String}, jsonField::Optional}},
+                {"currentRandom", {{DataType::String}, jsonField::Optional}},
+                {"previousHash", {{DataType::String}, jsonField::Optional}},
+                {c_currentExcessBlobGas, {{DataType::String}, jsonField::Optional}}
+            });
+    }
+    else
+    {
+        REQUIRE_JSONFIELDS(_data, "StateTestFillerEnv " + _data->getKey(),
+            {{"currentCoinbase", {{DataType::String}, jsonField::Required}},
+             {"currentDifficulty", {{DataType::String}, jsonField::Optional}},
+             {"currentGasLimit", {{DataType::String}, jsonField::Required}},
+             {"currentNumber", {{DataType::String}, jsonField::Required}},
+             {"currentTimestamp", {{DataType::String}, jsonField::Required}},
+             {"currentBaseFee", {{DataType::String}, jsonField::Optional}},
+             {"currentRandom", {{DataType::String}, jsonField::Optional}},
+             {c_currentExcessBlobGas, {{DataType::String}, jsonField::Optional}}
+        });
+    }
 }
 
 void convertEnvDecFieldsToHex(spDataObject& _data)

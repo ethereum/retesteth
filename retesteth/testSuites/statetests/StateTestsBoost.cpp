@@ -2,6 +2,7 @@
 #include "retesteth/helpers/TestOutputHelper.h"
 #include "retesteth/testSuites/TestFixtures.h"
 #include "retesteth/testSuites/statetests/StateTests.h"
+#include <retesteth/EthChecks.h>
 #include "libdataobj/DataObject.h"
 #include <retesteth/Options.h>
 #include <functional>
@@ -50,6 +51,11 @@ EIPSUITE_FOLDER_OVERRIDE(EIPStateTestEOFSuite, "/StateTests/stEOF")
 // Legacy Constantinople
 TestSuite::TestPath LegacyConstantinopleStateTestSuite::suiteFolder() const
 {
+    if (Options::get().fillchain)
+    {
+        ETH_FAIL_MESSAGE("Use blockchain fillers to regenerate Legacy Constantinople BCStateTests: \n"
+            "/src/LegacyTests/Constantinople/BlockchainTestsFiller/GeneralStateTests/");
+    }
     return TestSuite::TestPath(fs::path("LegacyTests") / "Constantinople" / "GeneralStateTests");
 }
 
