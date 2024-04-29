@@ -281,6 +281,7 @@ string const evmone_config = R"({
       "INPUT_UNMARSHAL_SIZE_ERROR" : "failed unmarshaling",
       "RLP_BODY_UNMARSHAL_ERROR" : "Rlp structure is wrong",
 
+      "EOFException.MISSING_STOP_OPCODE" : "err: no_terminating_instruction",
       "EOF_InvalidPrefix": "err: invalid_prefix",
       "EOFException.INCOMPLETE_MAGIC": "err: invalid_prefix",
       "EOFException.INVALID_MAGIC": "err: invalid_prefix",

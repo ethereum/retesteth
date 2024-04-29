@@ -432,7 +432,7 @@ cp -r $parentpath/* $testdir
 cp $SRCPATH $testdir/$FILLER.py
 SRCPATH2="$testdir/$FILLER.py"
 
-ADDFLAGS=""
+ADDFLAGS=" --tb=short"
 if [ "$TESTCA" != "null" ]; then
     SRCPATH2="$SRCPATH2::$TESTCA"
 fi
