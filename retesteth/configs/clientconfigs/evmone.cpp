@@ -65,8 +65,8 @@ string const evmone_config = R"({
       "TransactionException.TYPE_3_TX_ZERO_BLOBS" : "empty blob hashes list",
       "TransactionException.TYPE_3_TX_INVALID_BLOB_VERSIONED_HASH" : "invalid blob hash version",
       "TransactionException.TYPE_3_TX_PRE_FORK|TransactionException.TYPE_3_TX_ZERO_BLOBS" : "transaction type not supported",
-      "TransactionException.TYPE_3_TX_PRE_FORK" : "blob tx used but field env.ExcessBlobGas missing",
-      "TransactionException.TYPE_3_TX_BLOB_COUNT_EXCEEDED" : "would exceed maximum",
+      "TransactionException.TYPE_3_TX_PRE_FORK" : "transaction type not supported",
+      "TransactionException.TYPE_3_TX_BLOB_COUNT_EXCEEDED" : "blob gas limit exceeded",
       "TransactionException.TYPE_3_TX_CONTRACT_CREATION" : "input string too short for common.Address",
       "TransactionException.TYPE_3_TX_MAX_BLOB_GAS_ALLOWANCE_EXCEEDED" : "Block has invalid number of blobs in txs >=7! would exceed maximum",
       "TransactionException.INSUFFICIENT_MAX_FEE_PER_BLOB_GAS" : "[retesteth]: blobtx.maxFeePerBlobGas() < getblobgas(blockheader",
@@ -316,16 +316,19 @@ string const evmone_config = R"({
       "EOFException.INVALID_SECTION_BODIES_SIZE": "err: invalid_section_bodies_size",
 
       "EOF_UnreachableCodeSections" : "err: unreachable_code_sections",
+      "EOFException.UNREACHABLE_CODE_SECTIONS" : "err: unreachable_code_sections",
       "EOF_UndefinedInstruction": "err: undefined_instruction",
-      "EOF_TruncatedImmediate": "err: truncated_instruction",
-      "EOF_InvalidJumpDestination": "err: invalid_rjump_destination",
+      "EOFException.UNDEFINED_INSTRUCTION": "err: undefined_instruction",
 
+      "EOF_TruncatedImmediate": "err: truncated_instruction",
+
+
+      "EOF_InvalidJumpDestination": "err: invalid_rjump_destination",
+      "EOFException.INVALID_RJUMP_DESTINATION" : "err: invalid_rjump_destination",
       "EOF_TooManyCodeSections": "err: too_many_code_sections",
       "EOFException.TOO_MANY_CODE_SECTIONS": "err: too_many_code_sections",
-
       "EOF_InvalidTypeSectionSize": "err: invalid_type_section_size",
-      "EOFException.INVALID_TYPE_SIZE": "err: invalid_type_section_size",
-
+      "EOFException.INVALID_TYPE_SECTION_SIZE": "err: invalid_type_section_size",
       "EOF_InvalidFirstSectionType": "err: invalid_first_section_type",
       "EOFException.INVALID_FIRST_SECTION_TYPE" : "err: invalid_first_section_type",
 
@@ -334,7 +337,10 @@ string const evmone_config = R"({
       "EOF_ConflictingStackHeight": "err: stack_height_mismatch",
       "EOF_InvalidNumberOfOutputs": "err: stack_higher_than_outputs_required",
       "EOF_MaxStackHeightExceeded": "err: max_stack_height_above_limit",
+
       "EOF_UnreachableCode": "err: unreachable_instructions",
+      "EOFException.UNREACHABLE_INSTRUCTIONS": "err: unreachable_instructions",
+
       "EOF_InputsOutputsNumAboveLimit": "err: inputs_outputs_num_above_limit",
       "EOF_StackUnderflow": "err: stack_underflow",
       "EOF_StackOverflow": "err: stack_overflow",
