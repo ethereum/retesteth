@@ -50,4 +50,9 @@ REGISTER_SUITE_OVERRIDE(LegacyConstantinopleBCGeneralStateTestsSuite, Blockchain
 REGISTER_SUITE_OVERRIDE(LegacyConstantinopleBlockchainInvalidTestSuite, BlockchainTestInvalidSuite, LEGACYFLAG)
 REGISTER_SUITE_OVERRIDE(LegacyConstantinopleBlockchainValidTestSuite, BlockchainTestValidSuite, LEGACYFLAG)
 
+REGISTER_SUITE_OVERRIDE(LegacyCancunBCGeneralStateTestsSuite, BlockchainTestInvalidSuite, LEGACYFLAG)
+REGISTER_SUITE_OVERRIDE(LegacyCancunBlockchainInvalidTestSuite, BlockchainTestInvalidSuite, LEGACYFLAG)
+REGISTER_SUITE_OVERRIDE(LegacyCancunBlockchainValidTestSuite, BlockchainTestValidSuite, LEGACYFLAG)
+REGISTER_SUITE_OVERRIDE(LegacyCancunBlockchainTransitionTestSuite, BlockchainTestTransitionSuite, LEGACYFLAG)
+
 }  // test

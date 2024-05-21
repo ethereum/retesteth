@@ -64,6 +64,16 @@ TestSuite::FillerPath LegacyConstantinopleStateTestSuite::suiteFillerFolder() co
     return TestSuite::FillerPath(fs::path("src") / "LegacyTests" / "Constantinople" / "GeneralStateTestsFiller");
 }
 
+// Legacy Cancun
+TestSuite::TestPath LegacyCancunStateTestSuite::suiteFolder() const
+{
+    return TestSuite::TestPath(fs::path("LegacyTests/Cancun/GeneralStateTests" + m_fillerPathAdd));
+}
+TestSuite::FillerPath LegacyCancunStateTestSuite::suiteFillerFolder() const
+{
+    return TestSuite::FillerPath(fs::path("src/LegacyTests/Cancun/GeneralStateTestsFiller" + m_fillerPathAdd));
+}
+
 
 // latest version StateTests
 using GeneralStateTestsFixture = TestFixture<StateTestSuite, DefaultFlags>;

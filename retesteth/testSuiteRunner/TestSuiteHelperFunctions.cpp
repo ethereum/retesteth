@@ -17,7 +17,7 @@ TestFileData readFillerTestFile(fs::path const& _testFileName)
 {
     // Legacy hash validation require to sort json data upon load, thats the old algo used to calculate hash
     // Avoid time consuming legacy tests hash validation if there is no --checkhash option
-    bool isLegacy = Options::isLegacy();
+    bool isLegacy = Options::isLegacyConstantinople();
     bool bSortOnLoad =
         isLegacy;  //(Options::get().checkhash && isLegacy); uncomment here if there would be too many legacy tests
 

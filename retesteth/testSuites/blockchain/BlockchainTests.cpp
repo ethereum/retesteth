@@ -51,12 +51,12 @@ BLOCKCHAINSUITE_FOLDER_OVERRIDE(BlockchainTestValidSuite, "/ValidBlocks", "/Bloc
 #define LEGACY_BLOCKCHAINSUITE_FOLDER_OVERRIDE(SUITE, FOLDER, FILLER)   \
     TestSuite::TestPath SUITE::suiteFolder() const       \
     {                                                    \
-        return TestSuite::TestPath(fs::path(string("LegacyTests" + string(FOLDER)))); \
+        return TestSuite::TestPath(fs::path(string("LegacyTests" + string(FOLDER) + m_fillerPathAdd))); \
     }                                                    \
                                                          \
     TestSuite::FillerPath SUITE::suiteFillerFolder() const   \
     {                                                    \
-        return TestSuite::FillerPath(fs::path(string("src/LegacyTests" + string(FILLER))));  \
+        return TestSuite::FillerPath(fs::path(string("src/LegacyTests" + string(FILLER) + m_fillerPathAdd)));  \
     }
 
 LEGACY_BLOCKCHAINSUITE_FOLDER_OVERRIDE(LegacyConstantinopleBCGeneralStateTestsSuite,
@@ -69,6 +69,18 @@ LEGACY_BLOCKCHAINSUITE_FOLDER_OVERRIDE(LegacyConstantinopleBlockchainValidTestSu
     "/Constantinople/BlockchainTests/ValidBlocks",
     "/Constantinople/BlockchainTestsFiller/ValidBlocks")
 
+LEGACY_BLOCKCHAINSUITE_FOLDER_OVERRIDE(LegacyCancunBCGeneralStateTestsSuite,
+    "/Cancun/BlockchainTests/GeneralStateTests",
+    "/Cancun/GeneralStateTestsFiller")
+LEGACY_BLOCKCHAINSUITE_FOLDER_OVERRIDE(LegacyCancunBlockchainInvalidTestSuite,
+    "/Cancun/BlockchainTests/InvalidBlocks",
+    "/Cancun/BlockchainTestsFiller/InvalidBlocks")
+LEGACY_BLOCKCHAINSUITE_FOLDER_OVERRIDE(LegacyCancunBlockchainValidTestSuite,
+    "/Cancun/BlockchainTests/ValidBlocks",
+    "/Cancun/BlockchainTestsFiller/ValidBlocks")
+LEGACY_BLOCKCHAINSUITE_FOLDER_OVERRIDE(LegacyCancunBlockchainTransitionTestSuite,
+    "/Cancun/BlockchainTests/TransitionTests",
+    "/Cancun/BlockchainTestsFiller/TransitionTests")
 
 #define BLOCKCHAINSUITE_DOTESTS_OVERRIDE(SUITE, FUNC)   \
     spDataObject SUITE::doTests(spDataObject& _input, TestSuiteOptions& _opt) const \
@@ -80,6 +92,8 @@ LEGACY_BLOCKCHAINSUITE_FOLDER_OVERRIDE(LegacyConstantinopleBlockchainValidTestSu
 BLOCKCHAINSUITE_DOTESTS_OVERRIDE(BlockchainTestTransitionSuite, _opt.allowInvalidBlocks = true;)
 BLOCKCHAINSUITE_DOTESTS_OVERRIDE(BlockchainTestInvalidSuite, _opt.allowInvalidBlocks = true;)
 BLOCKCHAINSUITE_DOTESTS_OVERRIDE(BlockchainTestValidSuite, _opt.allowInvalidBlocks = false;)
+
+// Legacy Constantinople
 BLOCKCHAINSUITE_DOTESTS_OVERRIDE(LegacyConstantinopleBlockchainInvalidTestSuite,
                                  _opt.allowInvalidBlocks = true;
                                  _opt.isLegacyTests = true;)
@@ -87,6 +101,21 @@ BLOCKCHAINSUITE_DOTESTS_OVERRIDE(LegacyConstantinopleBlockchainValidTestSuite,
                                  _opt.allowInvalidBlocks = false;
                                  _opt.isLegacyTests = true;)
 BLOCKCHAINSUITE_DOTESTS_OVERRIDE(LegacyConstantinopleBCGeneralStateTestsSuite, _opt.isLegacyTests = true;)
+
+
+// Legacy Cancun
+BLOCKCHAINSUITE_DOTESTS_OVERRIDE(LegacyCancunBlockchainTransitionTestSuite,
+                                 _opt.allowInvalidBlocks = true;
+                                 _opt.isLegacyTests = true;)
+BLOCKCHAINSUITE_DOTESTS_OVERRIDE(LegacyCancunBlockchainInvalidTestSuite,
+                                 _opt.allowInvalidBlocks = true;
+                                 _opt.isLegacyTests = true;)
+BLOCKCHAINSUITE_DOTESTS_OVERRIDE(LegacyCancunBlockchainValidTestSuite,
+                                 _opt.allowInvalidBlocks = false;
+                                 _opt.isLegacyTests = true;)
+BLOCKCHAINSUITE_DOTESTS_OVERRIDE(LegacyCancunBCGeneralStateTestsSuite,
+                                 _opt.allowInvalidBlocks = true;
+                                 _opt.isLegacyTests = true;)
 
 }  // Namespace Close
 

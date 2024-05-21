@@ -71,6 +71,8 @@ string getTestTArg(fs::path const& _cwd, string const& arg)
             headTestSuite = headTestSuite.erase(pos, 6);
             if (cwd.parent_path().stem() == "Constantinople")
                 headTestSuite.insert(0, "LegacyTests/Constantinople/");
+            else if (cwd.parent_path().stem() == "Cancun")
+                headTestSuite.insert(0, "LegacyTests/Cancun/");
         }
         else
         {
@@ -80,6 +82,8 @@ string getTestTArg(fs::path const& _cwd, string const& arg)
                 headTestSuite.insert(0, "BC");
                 if (cwd.parent_path().parent_path().stem() == "Constantinople")
                     headTestSuite.insert(0, "LegacyTests/Constantinople/");
+                else if (cwd.parent_path().parent_path().stem() == "Cancun")
+                    headTestSuite.insert(0, "LegacyTests/Cancun/");
             }
             else if ((cwd.parent_path().stem() == "EIPTests" || cwd.parent_path().stem() == "EIPTestsFiller")
                      && headTestSuite == "BlockchainTests")
@@ -88,6 +92,8 @@ string getTestTArg(fs::path const& _cwd, string const& arg)
             }
             else if (cwd.parent_path().stem() == "Constantinople")
                 headTestSuite.insert(0, "LegacyTests/Constantinople/");
+            else if (cwd.parent_path().stem() == "Cancun")
+                headTestSuite.insert(0, "LegacyTests/Cancun/");
         }
 
 

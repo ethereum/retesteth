@@ -315,6 +315,11 @@ REGISTER_TEMPLATE(LegacyConstantinopleBlockchainValidTestSuite, NotRefillable)
 REGISTER_TEMPLATE(LegacyConstantinopleBlockchainInvalidTestSuite, NotRefillable)
 REGISTER_TEMPLATE(LegacyConstantinopleBCGeneralStateTestsSuite, NotRefillable)
 REGISTER_TEMPLATE(LegacyConstantinopleStateTestSuite, NotRefillable)
+REGISTER_TEMPLATE(LegacyCancunBlockchainTransitionTestSuite, NotRefillable)
+REGISTER_TEMPLATE(LegacyCancunBlockchainValidTestSuite, NotRefillable)
+REGISTER_TEMPLATE(LegacyCancunBlockchainInvalidTestSuite, NotRefillable)
+REGISTER_TEMPLATE(LegacyCancunBCGeneralStateTestsSuite, NotRefillable)
+REGISTER_TEMPLATE(LegacyCancunStateTestSuite, NotRefillable)
 
 // BC links
 REGISTER_TEMPLATE(BCGeneralStateTestsSuite, RequireOptionAllNotRefillable)

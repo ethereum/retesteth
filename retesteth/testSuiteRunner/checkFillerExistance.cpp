@@ -32,7 +32,7 @@ string const getTestNameFilter()
 
 TestSuite::AbsoluteFilledTestPath createPathIfNotExist(TestSuite::AbsoluteFilledTestPath const& _path)
 {
-    if (!fs::exists(_path.path()))
+    if (!fs::exists(_path.path()) && Options::get().filltests)
     {
         ETH_DC_MESSAGE(
             DC::WARNING, "Tests folder does not exists, creating test folder: '" + string(_path.path().c_str()) + "'");
