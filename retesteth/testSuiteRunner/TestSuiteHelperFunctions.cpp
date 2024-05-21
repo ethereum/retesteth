@@ -237,7 +237,8 @@ vector<string> getTestNamesFromPython(fs::path const& _filler)
             {
                 auto const& opt = Options::get();
                 bool OnBlockchainTest = opt.fillchain
-                                        || opt.rCurrentTestSuite.find("BCGeneralStateTests") != string::npos;
+                                        || opt.rCurrentTestSuite.find("BCGeneralStateTests") != string::npos
+                                        || boost::unit_test::framework::current_test_case().full_name().find("BCGeneralStateTests") != string::npos;
                 if (!OnBlockchainTest && _checkPythonTestBlockchainOnly(pythonSrc, foundTestPos))
                 {
                     ETH_WARNING("Will skip python bc test " + pythonTestname);

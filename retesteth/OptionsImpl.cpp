@@ -30,12 +30,7 @@ bool Options::isLegacy()
 
 bool Options::isLegacyConstantinople()
 {
-    static bool isLegacyConstantinople = (boost::unit_test::framework::current_test_case().full_name().find("LegacyTests/Constantinople") != string::npos);
-
-    // Current test case is dynamic if we run all tests. need to see if we hit LegacyTests
-    if (Options::get().rCurrentTestSuite.empty())
-        isLegacyConstantinople = (boost::unit_test::framework::current_test_case().full_name().find("LegacyTests/Constantinople") != string::npos);
-
+    bool isLegacyConstantinople = (boost::unit_test::framework::current_test_case().full_name().find("LegacyTests/Constantinople") != string::npos);
     return isLegacyConstantinople;
 }
 
