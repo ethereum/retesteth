@@ -353,6 +353,16 @@ string selectRootPath(string const& _str, string const& _tArgument)
     return masterPrefix;
 }
 
+void correctFillerPathToSuiteName(string& _suitePath)
+{
+    // Correct Legacy src path
+    static string const search = "LegacyTests/Cancun/GeneralStateTestsFiller";
+    static string const replace = "LegacyTests/Cancun/GeneralStateTests";
+    size_t pos = _suitePath.find(search);
+    if (pos != string::npos)
+        _suitePath.replace(pos, search.length(), replace);
+}
+
 void checkUnfinishedTestFolders()
 {
     std::lock_guard<std::mutex> lock(g_finishedTestFoldersMapMutex);
@@ -394,7 +404,8 @@ void checkUnfinishedTestFolders()
             {
                 if (fs::is_directory(*it))
                 {
-                    string const suiteName = selectRootPath(it->path().string(), opt.rCurrentTestSuite);
+                    string suiteName = selectRootPath(it->path().string(), opt.rCurrentTestSuite);
+                    correctFillerPathToSuiteName(suiteName);
                     bool const isSuite = isBoostSuite(suiteName);
 
                     if (!isSuite)
