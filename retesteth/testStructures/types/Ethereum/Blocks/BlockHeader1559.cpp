@@ -98,7 +98,8 @@ inline bool isChild(BlockType _t)
     return _t != BlockType::BlockHeader1559 &&
            _t != BlockType::BlockHeaderParis &&
            _t != BlockType::BlockHeaderShanghai &&
-           _t != BlockType::BlockHeader4844;
+           _t != BlockType::BlockHeader4844 &&
+           _t != BlockType::BlockHeaderPrague;
 }
 }
 

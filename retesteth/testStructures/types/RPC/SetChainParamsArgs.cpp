@@ -128,6 +128,27 @@ SetChainParamsArgsGenesis4844::SetChainParamsArgsGenesis4844(DataObject const& _
         });
 }
 
+SetChainParamsArgsGenesisPrague::SetChainParamsArgsGenesisPrague(DataObject const& _data)
+  : SetChainParamsArgsGenesis(_data, false)
+{
+    REQUIRE_JSONFIELDS(_data, "SetChainParamsArgs::genesis(Prague) ",
+        {
+            {"author", {{DataType::String}, jsonField::Required}},
+            {"gasLimit", {{DataType::String}, jsonField::Required}},
+            {"baseFeePerGas", {{DataType::String}, jsonField::Required}},
+            {"currentRandom", {{DataType::String}, jsonField::Required}},
+            {"withdrawalsRoot", {{DataType::String}, jsonField::Required}},
+            {"extraData", {{DataType::String}, jsonField::Required}},
+            {"timestamp", {{DataType::String}, jsonField::Required}},
+            {"nonce", {{DataType::String}, jsonField::Required}},
+            {"mixHash", {{DataType::String}, jsonField::Required}},
+            {c_currentBlobGasUsed, {{DataType::String}, jsonField::Required}},
+            {c_currentExcessBlobGas, {{DataType::String}, jsonField::Required}},
+            {c_currentBeaconRoot, {{DataType::String}, jsonField::Required}}
+        });
+
+}
+
 SetChainParamsArgs::SetChainParamsArgs(spDataObject& _data)
 {
     requireSetChainParamsScheme(_data);
@@ -254,4 +275,17 @@ spDataObject SetChainParamsArgsGenesis4844::_constructBlockHeader() const
     return header;
 }
 
+spDataObject SetChainParamsArgsGenesisPrague::_constructBlockHeader() const
+{
+    spDataObject header = buildCommonBlockHeader();
+    (*header)[c_difficulty] = "0x00";
+    auto const curRandomU256 = dev::u256(m_dataRef.atKey("currentRandom").asString());
+    (*header)[c_mixHash] = dev::toCompactHexPrefixed(curRandomU256, 32);
+    (*header)[c_baseFeePerGas] = m_dataRef.atKey(c_baseFeePerGas).asString();
+    (*header)[c_withdrawalsRoot] = m_dataRef.atKey(c_withdrawalsRoot).asString();
+    (*header)[c_blobGasUsed] =  m_dataRef.atKey(c_currentBlobGasUsed).asString();
+    (*header)[c_excessBlobGas] = m_dataRef.atKey(c_currentExcessBlobGas).asString();
+    (*header)[c_parentBeaconBlockRoot] = m_dataRef.atKey(c_currentBeaconRoot).asString();
+    return header;
+}
 }  // namespace teststruct

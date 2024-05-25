@@ -4,6 +4,7 @@
 #include "BlockHeaderParis.h"
 #include "BlockHeaderShanghai.h"
 #include "BlockHeader4844.h"
+#include "BlockHeaderPrague.h"
 
 namespace test::teststruct
 {
