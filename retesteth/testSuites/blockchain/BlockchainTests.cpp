@@ -130,12 +130,8 @@ BOOST_FIXTURE_TEST_SUITE(ValidBlocks, BCValidSuiteFixture)
     BOOST_AUTO_TEST_CASE(bcExploitTest) {}
     BOOST_AUTO_TEST_CASE(bcForkStressTest) {}
     BOOST_AUTO_TEST_CASE(bcGasPricerTest) {}
-    BOOST_AUTO_TEST_CASE(bcMultiChainTest) {}
     BOOST_AUTO_TEST_CASE(bcRandomBlockhashTest) {}
     BOOST_AUTO_TEST_CASE(bcStateTests) {}
-    BOOST_AUTO_TEST_CASE(bcTotalDifficultyTest) {}
-    BOOST_AUTO_TEST_CASE(bcUncleSpecialTests) {}
-    BOOST_AUTO_TEST_CASE(bcUncleTest) {}
     BOOST_AUTO_TEST_CASE(bcValidBlockTest) {}
     BOOST_AUTO_TEST_CASE(bcWalletTest) {}
     BOOST_AUTO_TEST_CASE(bcExample) {}
@@ -150,10 +146,7 @@ BOOST_FIXTURE_TEST_SUITE(InvalidBlocks, BCInValidSuiteFixture)
 BOOST_AUTO_TEST_CASE(bcBlockGasLimitTest) {}
 BOOST_AUTO_TEST_CASE(bcForgedTest) {}
 BOOST_AUTO_TEST_CASE(bcInvalidHeaderTest) {}
-BOOST_AUTO_TEST_CASE(bcMultiChainTest) {}
 BOOST_AUTO_TEST_CASE(bcUncleHeaderValidity) {}
-BOOST_AUTO_TEST_CASE(bcUncleSpecialTests) {}
-BOOST_AUTO_TEST_CASE(bcUncleTest) {}
 BOOST_AUTO_TEST_CASE(bcEIP1559) {}
 BOOST_AUTO_TEST_CASE(bcEIP3675) {}
 BOOST_AUTO_TEST_SUITE_END()

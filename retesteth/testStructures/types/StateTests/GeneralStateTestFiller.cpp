@@ -161,8 +161,14 @@ std::set<FORK> StateTestInFiller::getAllForksFromExpectSections() const
 {
     std::set<FORK> allForksMentionedInExpectSections;
     for (auto const& expectSection : m_expectSections)
+    {
         for (auto const& fork : expectSection.forks())
+        {
+            //if (compareFork(fork, CMP::lt, FORK("Cancun")))
+            //    ETH_ERROR_MESSAGE("Test has fork <Cancun " + TestOutputHelper::get().testInfo().errorDebug());
             allForksMentionedInExpectSections.emplace(fork);
+        }
+    }
     return allForksMentionedInExpectSections;
 }
 

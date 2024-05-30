@@ -60,6 +60,8 @@ BlockchainTestInFiller::BlockchainTestInFiller(spDataObject& _data)
             {
                 if (knownForks.count(fork))
                     ETH_ERROR_MESSAGE("Blockchain test filler expect section contains multiple records of the same fork");
+                //if (compareFork(fork, CMP::lt, FORK("Cancun")))
+                //    ETH_ERROR_MESSAGE("Test has fork <Cancun " + TestOutputHelper::get().testInfo().errorDebug());
                 knownForks.insert(fork);
             }
         }
