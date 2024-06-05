@@ -61,7 +61,7 @@ string const nimbus_config = R"({
       "TransactionException.TYPE_3_TX_INVALID_BLOB_VERSIONED_HASH" : "invalid tx: one of blobVersionedHash has invalid version",
       "TransactionException.TYPE_3_TX_PRE_FORK|TransactionException.TYPE_3_TX_ZERO_BLOBS" : "invalid tx: Eip4844 Tx type detected before Cancun",
       "TransactionException.TYPE_3_TX_PRE_FORK" : "invalid tx: Eip4844 Tx type detected before Cancun",
-      "TransactionException.TYPE_3_TX_BLOB_COUNT_EXCEEDED" : "invalid tx: versioned hashes len exceeds MAX_BLOBS_PER_BLOCK",
+      "TransactionException.TYPE_3_TX_BLOB_COUNT_EXCEEDED" : "versioned hashes len exceeds",
       "TransactionException.TYPE_3_TX_CONTRACT_CREATION" : "input string too short for common.Address",
       "TransactionException.TYPE_3_TX_MAX_BLOB_GAS_ALLOWANCE_EXCEEDED" : "Block has invalid number of blobs in txs >=7! would exceed maximum",
       "TransactionException.INSUFFICIENT_MAX_FEE_PER_BLOB_GAS" : "blobtx.maxFeePerBlobGas() < getblobgas(blockheader",
@@ -71,8 +71,11 @@ string const nimbus_config = R"({
       "BlockException.INCORRECT_BLOB_GAS_USED" : "Error in field: blobGasUsed",
       "BlockException.BLOB_GAS_USED_ABOVE_LIMIT|BlockException.INCORRECT_BLOB_GAS_USED" : "Error in field: blobGasUsed",
       "BlockException.INCORRECT_BLOCK_FORMAT" : "[retesteth]: Error importing raw rlp block: readBlockHeader(RLP): unknown block type!",
+      "BlockException.RLP_STRUCTURES_ENCODING|TransactionException.TYPE_3_TX_CONTRACT_CREATION" : "invalid tx: destination must be not empty",
+      "BlockException.RLP_STRUCTURES_ENCODING|TransactionException.TYPE_3_TX_WITH_FULL_BLOBS" : "expected to have exactly 14 elements!",
       "TransactionException.TYPE_3_TX_WITH_FULL_BLOBS|BlockException.RLP_STRUCTURES_ENCODING" : "BlobTransaction::fromRLP(RLP) expected to have exactly 14 elements!",
       "TransactionException.TYPE_3_TX_CONTRACT_CREATION|BlockException.RLP_STRUCTURES_ENCODING" : "decoding into (types.Transaction)(types.BlobTx).To",
+
 
 
       "Transaction without funds" : "not enough cash",
@@ -250,7 +253,7 @@ string const nimbus_config = R"({
       "TR_IntrinsicGas" : "not enough gas to perform calculation",
       "TR_RLP_WRONGVALUE" : "Unsigned integer expected",
       "TR_NoFunds" : "not enough cash",
-      "TR_NoFundsX" : "larger than expected Int value",
+      "TR_NoFundsX" : "integer out of bounds",
       "TR_NoFundsValue" : "processTransaction failed",
       "TR_NoFundsOrGas" : "not enough gas to perform calculation",
       "TR_FeeCapLessThanBlocks" : "maxFee is smaller than baseFee",

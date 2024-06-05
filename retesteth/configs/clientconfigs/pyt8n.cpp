@@ -20,6 +20,7 @@ string const pyt8n_setup = R"(#!/bin/bash
     cd $PYT8N_PATH
     python3 -m venv venv
     source venv/bin/activate
+    pip install platformdirs
     pip install -e .
     sleep 5
 )";
