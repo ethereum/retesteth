@@ -554,11 +554,8 @@ fi
 if [ "$EXPRTCALL" != "null" ]; then
     ADDFLAGS="$ADDFLAGS --debug $EXPRTCALL/pyspec.log --t8n-dump-dir $EXPRTCALL"
 fi
-if [ "$SUITETYPE" == "blockchain_tests" ]; then
-    ADDFLAGS="$ADDFLAGS -m blockchain_test"
-fi
 if [ "$SUITETYPE" == "state_tests eof_tests" ]; then
-    ADDFLAGS="$ADDFLAGS -m state_test -m eof_test"
+    ADDFLAGS="$ADDFLAGS -m state_test"
 fi
 
 if [ -d $testout ]; then
@@ -568,11 +565,22 @@ mkdir $testout
 1>&2 echo "fill -v $SRCPATH2 --output "$testout" $ADDFLAGS --evm-bin $EVMT8N --flat-output --from=$FROMF --until=$UNTIF"
 if [ $DEBUG != "null" ]; then
     1>&2 fill -v $SRCPATH2 --output "$testout" $ADDFLAGS --evm-bin $EVMT8N --flat-output --from=$FROMF --until=$UNTIF
+    if [ "$SUITETYPE" == "state_tests eof_tests" ]; then
+        1>&2 fill -v $SRCPATH2 --output "$testout" $ADDFLAGS -m eof_test --evm-bin $EVMT8N --flat-output --from=$FROMF --until=$UNTIF
+    fi
 else
     out=$(fill -v $SRCPATH2 --output "$testout" $ADDFLAGS --evm-bin $EVMT8N --flat-output --from=$FROMF --until=$UNTIF 2>&1)
     if [[ "$out" == *" failed"* ]] || [[ "$out" == *"ERROR"* ]]; then
       1>&2 echo "./retesteth/pyspecsStart.sh Pyspec test generation failed (use --verbosity PYSPEC for details) "
       exit 1
+    fi
+
+    if [ "$SUITETYPE" == "state_tests eof_tests" ]; then
+        out=$(fill -v $SRCPATH2 --output "$testout" $ADDFLAGS -m eof_test --evm-bin $EVMT8N --flat-output --from=$FROMF --until=$UNTIF 2>&1)
+        if [[ "$out" == *" failed"* ]] || [[ "$out" == *"ERROR"* ]]; then
+          1>&2 echo "./retesteth/pyspecsStart.sh Pyspec test generation failed (use --verbosity PYSPEC for details) "
+          exit 1
+        fi
     fi
 fi
 
