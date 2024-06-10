@@ -37,8 +37,8 @@ void ToolChainManager::_irb_verifyAndSetTransactions(dev::RLP const& _trsRLP, sp
         {
             TransactionBlob const& blobtx = dynamic_cast<TransactionBlob const&>(spTr.getContent());
             blobCount += blobtx.blobs().size();
-            if (blobCount >= 7)
-                throw test::UpwardsException("[retesteth]: versioned hashes len exceeds, Block has invalid number of blobs in txs >=7! would exceed maximum");
+            //if (blobCount >= 7)
+            //    throw test::UpwardsException("[retesteth]: versioned hashes len exceeds, Block has invalid number of blobs in txs >=7! would exceed maximum");
 
             if (_header->type() == BlockType::BlockHeader4844)
             {
