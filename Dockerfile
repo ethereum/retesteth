@@ -28,11 +28,8 @@ RUN apt-get update \
     && apt install software-properties-common -y \
     && add-apt-repository -y ppa:ubuntu-toolchain-r/test \
     && add-apt-repository -y ppa:deadsnakes/ppa  \
-    && add-apt-repository ppa:linuxuprising/java \
     && apt-get install --yes jq lsof git make libssl-dev libgmp-dev perl psmisc curl wget gcc-11 g++-11 python3.10 python3.10-venv python3-pip python3-dev \
     && apt-get install --yes libboost-filesystem-dev libboost-system-dev libboost-program-options-dev libboost-test-dev \
-    && echo oracle-java17-installer shared/accepted-oracle-license-v1-3 select true | /usr/bin/debconf-set-selections  \
-    && apt-get install --yes oracle-java17-installer oracle-java17-set-default \
     && apt-get install --yes uuid-runtime \
     && rm -rf /var/lib/apt/lists/*
 RUN rm /usr/bin/python3 && ln -s /usr/bin/python3.10 /usr/bin/python3 \
@@ -115,11 +112,14 @@ RUN test -n "$ETHEREUMJS" \
 
 # Besu
 RUN test -n "$BESU" \
+     && apt-get install openjdk-21-jdk \
+     && export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64 \
+    || echo "Besu is empty"
+RUN test -n "$BESU" \
      && git clone $BESU_SRC /besu \
      && cd /besu && git fetch && git checkout $BESU \
      && ./gradlew build \
     || echo "Besu is empty"
-
 RUN test -n "$BESU" \
      && cd /besu && ./gradlew ethereum:evmtool:installDist \
      && ln -s /besu/ethereum/evmtool/build/install/evmtool/bin/evm /usr/bin/besuevm \
