@@ -112,8 +112,8 @@ RUN test -n "$ETHEREUMJS" \
 
 # Besu
 RUN test -n "$BESU" \
-     && apt-get install openjdk-21-jdk \
-     && export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64 \
+     && apt-get update \
+     && apt-get install --yes openjdk-21-jdk \
     || echo "Besu is empty"
 RUN test -n "$BESU" \
      && git clone $BESU_SRC /besu \

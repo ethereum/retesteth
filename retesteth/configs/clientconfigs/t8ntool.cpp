@@ -544,43 +544,32 @@ cp -r $parentpath/* $testdir
 cp $SRCPATH $testdir/$FILLER.py
 SRCPATH2="$testdir/$FILLER.py"
 
-ADDFLAGS=" --tb=short"
+ADDFLAGS=( --tb=short)
 if [ "$TESTCA" != "null" ]; then
     SRCPATH2="$SRCPATH2::$TESTCA"
 fi
 if [ "$FORCER" != "null" ]; then
-    ADDFLAGS="$ADDFLAGS"
+    ADDFLAGS+=()
 fi
 if [ "$EXPRTCALL" != "null" ]; then
-    ADDFLAGS="$ADDFLAGS --debug $EXPRTCALL/pyspec.log --t8n-dump-dir $EXPRTCALL"
+    ADDFLAGS+=( --debug $EXPRTCALL/pyspec.log --t8n-dump-dir $EXPRTCALL)
 fi
 if [ "$SUITETYPE" == "state_tests eof_tests" ]; then
-    ADDFLAGS="$ADDFLAGS -m state_test"
+    ADDFLAGS+=( -m "state_test or eof_test")
 fi
 
 if [ -d $testout ]; then
     rm -r $testout
 fi
 mkdir $testout
-1>&2 echo "fill -v $SRCPATH2 --output "$testout" $ADDFLAGS --evm-bin $EVMT8N --flat-output --from=$FROMF --until=$UNTIF"
+1>&2 echo "fill -v $SRCPATH2 --output "$testout" "${ADDFLAGS[@]}" --evm-bin $EVMT8N --flat-output --from=$FROMF --until=$UNTIF"
 if [ $DEBUG != "null" ]; then
-    1>&2 fill -v $SRCPATH2 --output "$testout" $ADDFLAGS --evm-bin $EVMT8N --flat-output --from=$FROMF --until=$UNTIF
-    if [ "$SUITETYPE" == "state_tests eof_tests" ]; then
-        1>&2 fill -v $SRCPATH2 --output "$testout" $ADDFLAGS -m eof_test --evm-bin $EVMT8N --flat-output --from=$FROMF --until=$UNTIF
-    fi
+    1>&2 fill -v $SRCPATH2 --output "$testout" "${ADDFLAGS[@]}" --evm-bin $EVMT8N --flat-output --from=$FROMF --until=$UNTIF
 else
-    out=$(fill -v $SRCPATH2 --output "$testout" $ADDFLAGS --evm-bin $EVMT8N --flat-output --from=$FROMF --until=$UNTIF 2>&1)
+    out=$(fill -v $SRCPATH2 --output "$testout" "${ADDFLAGS[@]}" --evm-bin $EVMT8N --flat-output --from=$FROMF --until=$UNTIF 2>&1)
     if [[ "$out" == *" failed"* ]] || [[ "$out" == *"ERROR"* ]]; then
       1>&2 echo "./retesteth/pyspecsStart.sh Pyspec test generation failed (use --verbosity PYSPEC for details) "
       exit 1
-    fi
-
-    if [ "$SUITETYPE" == "state_tests eof_tests" ]; then
-        out=$(fill -v $SRCPATH2 --output "$testout" $ADDFLAGS -m eof_test --evm-bin $EVMT8N --flat-output --from=$FROMF --until=$UNTIF 2>&1)
-        if [[ "$out" == *" failed"* ]] || [[ "$out" == *"ERROR"* ]]; then
-          1>&2 echo "./retesteth/pyspecsStart.sh Pyspec test generation failed (use --verbosity PYSPEC for details) "
-          exit 1
-        fi
     fi
 fi
 
