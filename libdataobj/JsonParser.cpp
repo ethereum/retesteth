@@ -66,10 +66,18 @@ void JsonParser::checkJsonCommaEnding(size_t& _i) const
             + "around: " + printDebug(_i);
 }
 
+bool JsonParser::isEscapeChar(size_t _i) const
+{
+    if (_i < 1)
+        return m_input.at(_i) == '\\';
+    if (m_input.at(_i) == '\\' && m_input.at(_i - 1) != '\\')
+        return true;
+    return false;
+}
+
 JsonParser::RET JsonParser::tryParseKeyValue(size_t& _i)
 {
-    const bool escapeChar = (_i > 0 && m_input.at(_i - 1) == '\\');
-    if (m_input.at(_i) == '"' && !escapeChar)
+    if (m_input.at(_i) == '"' && _i > 0 && !isEscapeChar(_i - 1))
     {
         spDataObject obj;
         string key = parseKeyValue(_i);
@@ -286,7 +294,7 @@ string JsonParser::parseKeyValue(size_t& _i) const
     {
         while (escapeChar)
         {
-            escapeChar = (m_input[endPos - 1] == '\\');
+            escapeChar = isEscapeChar(endPos - 1);
             if (escapeChar)
                 endPos = m_input.find('"', endPos + 1);
         }

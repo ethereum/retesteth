@@ -576,6 +576,7 @@ std::string DataObject::asJson(int level, bool pretty, bool nokey) const
         out << "]";
         break;
     case DataType::String:
+    {
         printLevel();
         if (!m_strKey.empty() && !nokey)
         {
@@ -586,22 +587,25 @@ std::string DataObject::asJson(int level, bool pretty, bool nokey) const
         }
 
         //  threat special chars
+        char ch_before = 0;
         for (auto const& ch: asString())
         {
             if (ch == 10)
                 buffer += "\\n";
             else if (ch == 9)
                 buffer += "\\t";
-            else if (ch == '"')
+            else if (ch == '"' && ch_before != '\\')
             {
                 buffer += "\\";
                 buffer += "\"";
             }
             else
                 buffer += ch;
+            ch_before = ch;
         }
         out << "\"" << buffer << "\"";
         break;
+    }
     case DataType::Double:
         printLevel();
         if (!m_strKey.empty() && !nokey)

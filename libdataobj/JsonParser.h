@@ -33,6 +33,7 @@ private:
     size_t skipSpaces(size_t const& _i) const;
     std::string parseKeyValue(size_t& _i) const;
     bool readBoolOrNull(size_t& _i, bool& _result, bool& _readNull) const;
+    bool isEscapeChar(size_t _i) const;
 
     enum class ReadDigitType
     {
