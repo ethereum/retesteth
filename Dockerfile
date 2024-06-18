@@ -118,7 +118,6 @@ RUN test -n "$BESU" \
 RUN test -n "$BESU" \
      && git clone $BESU_SRC /besu \
      && cd /besu && git fetch && git checkout $BESU \
-     && ./gradlew build \
     || echo "Besu is empty"
 RUN test -n "$BESU" \
      && cd /besu && ./gradlew ethereum:evmtool:installDist \
