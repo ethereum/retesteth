@@ -68,7 +68,7 @@ string const evmone_config = R"({
       "TransactionException.TYPE_3_TX_PRE_FORK" : "transaction type not supported",
       "TransactionException.TYPE_3_TX_BLOB_COUNT_EXCEEDED" : "blob gas limit exceeded",
       "TransactionException.TYPE_3_TX_CONTRACT_CREATION" : "blob transaction must not be a create transaction",
-      "TransactionException.TYPE_3_TX_MAX_BLOB_GAS_ALLOWANCE_EXCEEDED" : "Block has invalid number of blobs in txs >=7! would exceed maximum",
+      "TransactionException.TYPE_3_TX_MAX_BLOB_GAS_ALLOWANCE_EXCEEDED" : "blob gas limit exceeded",
       "TransactionException.INSUFFICIENT_MAX_FEE_PER_BLOB_GAS" : "blobtx.maxFeePerBlobGas() < getblobgas(blockheader",
       "TransactionException.INTRINSIC_GAS_TOO_LOW" : "intrinsic gas too low",
       "TransactionException.INITCODE_SIZE_EXCEEDED" : "max initcode size exceeded",
