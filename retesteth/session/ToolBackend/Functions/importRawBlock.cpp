@@ -1,6 +1,7 @@
 #include "../ToolChainManager.h"
 #include "../ToolImplHelper.h"
 #include "../Verification.h"
+#include <retesteth/Options.h>
 #include <retesteth/helpers/TestHelper.h>
 #include <retesteth/testStructures/types/Ethereum/Transactions/TransactionBlob.h>
 using namespace std;

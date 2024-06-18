@@ -67,6 +67,10 @@ TestSuite::FillerPath LegacyConstantinopleStateTestSuite::suiteFillerFolder() co
 // Legacy Cancun
 TestSuite::TestPath LegacyCancunStateTestSuite::suiteFolder() const
 {
+    if (Options::get().fillchain)
+    {
+        return TestSuite::TestPath(fs::path("LegacyTests/Cancun/BlockchainTests/GeneralStateTests" + m_fillerPathAdd));
+    }
     return TestSuite::TestPath(fs::path("LegacyTests/Cancun/GeneralStateTests" + m_fillerPathAdd));
 }
 TestSuite::FillerPath LegacyCancunStateTestSuite::suiteFillerFolder() const

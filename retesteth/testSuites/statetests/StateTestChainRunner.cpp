@@ -68,6 +68,8 @@ void StateTestChainRunner::performTransactionOnExpect(TransactionInGeneralSectio
     (*m_aBlockchainTest)["lastblockhash"] = remoteBlock.header()->hash().asString();
     spDataObject block;
     (*block)["rlp"] = remoteBlock.getRLPHeaderTransactions().asString();
+    if (_tr.transaction()->hasBigInt())
+        (*block)["hasBigInt"] = "true";
     (*block).atKeyPointer("blockHeader") = remoteBlock.header()->asDataObject();
     (*block).atKeyPointer("transactions") = spDataObject(new DataObject(DataType::Array));
     if (testException.empty())
@@ -90,6 +92,8 @@ void StateTestChainRunner::performTransactionOnExpect(TransactionInGeneralSectio
         (*trInfo)["exception"] = testException;
         (*block)["transactionSequence"].addArrayObject(trInfo);
         (*block)["expectException"] = testException;
+        if (_tr.transaction()->hasBigInt())
+            (*block)["hasBigInt"] = "true";
 
         EthereumBlock managedBlock(remoteBlock.header());
         managedBlock.addTransaction(_tr.transaction());

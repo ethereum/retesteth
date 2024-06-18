@@ -347,9 +347,12 @@ spDataObject ToolChain::coorectTransactionsByToolResponse(
             }
             else
             {
-                ETH_DC_MESSAGE(DC::RPC, "Transactions not allowed to fail!");
                 if (rejectedInfoFound)
+                {
+                    ETH_DC_MESSAGE(DC::RPC, "Transactions not allowed to fail! But t8n rejected it!");
                     throw test::UpwardsException((*miningResult)["rejectedTransactions"].atLastElement().atKey("error").asString());
+                }
+                ETH_DC_MESSAGE(DC::RPC, "Transactions not allowed to fail, t8n does not provide rejected info!");
                 throw test::UpwardsException(message);
             }
         }
