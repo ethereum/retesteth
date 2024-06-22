@@ -17,17 +17,16 @@ string const pyt8n_setup = R"(#!/bin/bash
       fi
     fi
 
-    cd $PYT8N_PATH
-    python3 -m venv venv
-    source venv/bin/activate
-    pip install platformdirs
-    pip install -e .
-    sleep 5
+    #cd $PYT8N_PATH
+    #python3 -m venv venv
+    #source venv/bin/activate
+    #pip install -e .
+    #sleep 5
 )";
 
 string const pyt8n_start = R"(#!/bin/bash
 
-SNAME=".retesteth/pyt8n/setup.sh"
+SNAME=".retesteth/pyt8n/start.sh"
 if [ -z "${PYT8N_PATH}" ]; then
   1>&2 echo "$SNAME ERROR: Env variable PYT8N_PATH is either empty or not set!"
 else

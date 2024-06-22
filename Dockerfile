@@ -75,7 +75,7 @@ RUN test -n "$PYT8N" \
      && cd /pyt8n && git fetch && git checkout $PYT8N \
      && python3 -m venv ./venv/ \
      && source ./venv/bin/activate \
-     && pip install -e . \
+     && pip install -e .[test] \
     || echo "Pyt8n is empty"
 
 # Geth
