@@ -137,7 +137,8 @@ RUN test -n "$EVMONE" \
 # Retesteth
 RUN test -n "$RETESTETH" \
     && git clone $RETESTETH_SRC /retesteth \
-    && cd /retesteth && git fetch && git checkout $RETESTETH && mkdir /build && cd /build \
+    && cd /retesteth && git submodule init \
+    && git fetch && git checkout $RETESTETH && git submodule update --recursive && mkdir /build && cd /build \
     && cmake /retesteth -DCMAKE_BUILD_TYPE=Release \
     && make -j2 \
     && cp /build/retesteth/retesteth /usr/bin/retesteth \
