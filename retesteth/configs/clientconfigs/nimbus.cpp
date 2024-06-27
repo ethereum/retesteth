@@ -61,7 +61,7 @@ string const nimbus_config = R"({
       "TransactionException.TYPE_3_TX_INVALID_BLOB_VERSIONED_HASH" : "invalid tx: one of blobVersionedHash has invalid version",
       "TransactionException.TYPE_3_TX_PRE_FORK|TransactionException.TYPE_3_TX_ZERO_BLOBS" : "invalid tx: Eip4844 Tx type detected before Cancun",
       "TransactionException.TYPE_3_TX_PRE_FORK" : "invalid tx: Eip4844 Tx type detected before Cancun",
-      "TransactionException.TYPE_3_TX_BLOB_COUNT_EXCEEDED" : "versioned hashes len exceeds",
+      "TransactionException.TYPE_3_TX_BLOB_COUNT_EXCEEDED" : "exceeds maximum allowance",
       "TransactionException.TYPE_3_TX_CONTRACT_CREATION" : "invalid tx: destination must be not empty",
       "TransactionException.TYPE_3_TX_MAX_BLOB_GAS_ALLOWANCE_EXCEEDED" : "Block has invalid number of blobs in txs >=7! would exceed maximum",
       "TransactionException.INSUFFICIENT_MAX_FEE_PER_BLOB_GAS" : "blobtx.maxFeePerBlobGas() < getblobgas(blockheader",
