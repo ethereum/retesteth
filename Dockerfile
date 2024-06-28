@@ -121,7 +121,7 @@ RUN test -n "$BESU" \
     || echo "Besu is empty"
 RUN test -n "$BESU" \
      && cd /besu && ./gradlew ethereum:evmtool:installDist \
-     && ln -s /besu/ethereum/evmtool/build/install/evmtool/bin/evm /usr/bin/besuevm \
+     && ln -s /besu/ethereum/evmtool/build/install/evmtool/bin/evmtool /usr/bin/besuevm \
     || echo "Besu is empty"
 
 # Evmone
