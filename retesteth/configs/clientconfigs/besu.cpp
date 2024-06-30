@@ -271,7 +271,7 @@ fi
 
 dir=$(pwd)
 cd $BESU_PATH
-ethereum/evmtool/build/install/evmtool/bin/evm t8n-server &> /dev/null &
+ethereum/evmtool/build/install/evmtool/bin/evmtool t8n-server &> /dev/null &
 cd $dir
 sleep 10
 if lsof -i :3000 | grep -q LISTEN; then
