@@ -105,7 +105,8 @@ string const t8ntool_config = R"({
         "London",
         "Paris",
         "Shanghai",
-        "Cancun"
+        "Cancun",
+        "Prague"
     ],
     "additionalForks" : [
         "FrontierToHomesteadAt5",
@@ -119,8 +120,7 @@ string const t8ntool_config = R"({
         "GrayGlacier",
         "ParisToShanghaiAtTime15k",
         "ShanghaiToCancunAtTime15k",
-        "Merge",
-        "Prague"
+        "Merge"
     ],
     "fillerSkipForks" : [
     ],
