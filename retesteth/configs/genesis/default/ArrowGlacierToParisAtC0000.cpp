@@ -4,10 +4,10 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
-genArrowGlacierToMergeAtDiffC0000Cfg::genArrowGlacierToMergeAtDiffC0000Cfg()
+genArrowGlacierToParisAtDiffC0000Cfg::genArrowGlacierToParisAtDiffC0000Cfg()
 {
 
-const string t8ntool_ArrowGlacierToMergeAtDiffC0000_config = R"({
+const string t8ntool_ArrowGlacierToParisAtDiffC0000_config = R"({
     "params" : {
         "fork" : "ArrowGlacierToMergeAtDiffC0000",
         "constantinopleForkBlock" : "0x00",
@@ -22,8 +22,8 @@ const string t8ntool_ArrowGlacierToMergeAtDiffC0000_config = R"({
 
 
     spDataObject obj2(new DataObject());
-    (*obj2)["path"] = "default/genesis/ArrowGlacierToMergeAtDiffC0000.json";
-    (*obj2)["content"] = t8ntool_ArrowGlacierToMergeAtDiffC0000_config;
+    (*obj2)["path"] = "default/genesis/ArrowGlacierToParisAtDiffC0000.json";
+    (*obj2)["content"] = t8ntool_ArrowGlacierToParisAtDiffC0000_config;
     map_configs.addArrayObject(obj2);
 }
 }  // namespace retesteth::options

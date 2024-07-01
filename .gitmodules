@@ -1,0 +1,3 @@
+[submodule "libdataobj"]
+	path = libdataobj
+	url = https://github.com/winsvega/libdataobj

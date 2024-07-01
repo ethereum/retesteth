@@ -180,4 +180,49 @@ BOOST_AUTO_TEST_SUITE(LegacyTests)
         BOOST_AUTO_TEST_SUITE_END()  // BlockchainTests
 
     BOOST_AUTO_TEST_SUITE_END()  // Constantinople
+
+    BOOST_AUTO_TEST_SUITE(Cancun)
+
+        using legacyCancunGeneralStateTests = TestFixture<LegacyCancunStateTestSuite, NotRefillable>;
+        ETH_REGISTER_DYNAMIC_TEST_SEARCH(legacyCancunGeneralStateTests, "LegacyTests/Cancun/GeneralStateTests")
+        BOOST_FIXTURE_TEST_SUITE(GeneralStateTests, legacyCancunGeneralStateTests)
+            BOOST_AUTO_TEST_CASE(stBadOpcode) {}
+            BOOST_AUTO_TEST_CASE(stBugs) {}
+            BOOST_AUTO_TEST_CASE(stCallCodes) {}
+        BOOST_AUTO_TEST_SUITE_END()  // GeneralStateTests
+
+        using legacyCancunBCGeneralStateTests = TestFixture<LegacyCancunBCGeneralStateTestsSuite, NotRefillable>;
+        ETH_REGISTER_DYNAMIC_TEST_SEARCH(legacyCancunBCGeneralStateTests, "LegacyTests/Cancun/BCGeneralStateTests")
+        BOOST_FIXTURE_TEST_SUITE(BCGeneralStateTests, legacyCancunBCGeneralStateTests)
+            BOOST_AUTO_TEST_CASE(stBadOpcode) {}
+            BOOST_AUTO_TEST_CASE(stBugs) {}
+            BOOST_AUTO_TEST_CASE(stCallCodes) {}
+        BOOST_AUTO_TEST_SUITE_END()  // BCGeneralStateTests
+
+        BOOST_AUTO_TEST_SUITE(BlockchainTests)
+            // Tests that contain only valid blocks and check that import is correct
+            using legacyCancunBCValidTetsts = TestFixture<LegacyCancunBlockchainValidTestSuite, NotRefillable>;
+            ETH_REGISTER_DYNAMIC_TEST_SEARCH(legacyCancunBCValidTetsts, "LegacyTests/Cancun/BlockchainTests/ValidBlocks")
+            BOOST_FIXTURE_TEST_SUITE(ValidBlocks, legacyCancunBCValidTetsts)
+                BOOST_AUTO_TEST_CASE(bcBlockGasLimitTest) {}
+                BOOST_AUTO_TEST_CASE(bcEIP1559) {}
+                BOOST_AUTO_TEST_CASE(bcEIP3675) {}
+            BOOST_AUTO_TEST_SUITE_END()  // ValidBlocks
+
+            using legacyCancunBCInvalidTetsts = TestFixture<LegacyCancunBlockchainInvalidTestSuite, NotRefillable>;
+            ETH_REGISTER_DYNAMIC_TEST_SEARCH(legacyCancunBCInvalidTetsts, "LegacyTests/Cancun/BlockchainTests/InvalidBlocks")
+            BOOST_FIXTURE_TEST_SUITE(InvalidBlocks, legacyCancunBCInvalidTetsts)
+                BOOST_AUTO_TEST_CASE(bcBlockGasLimitTest) {}
+                BOOST_AUTO_TEST_CASE(bcEIP1559) {}
+                BOOST_AUTO_TEST_CASE(bcEIP3675) {}
+            BOOST_AUTO_TEST_SUITE_END()  // InvalidBlocks
+
+            using legacyCancunBCTransitionTetsts = TestFixture<LegacyCancunBlockchainTransitionTestSuite, NotRefillable>;
+            ETH_REGISTER_DYNAMIC_TEST_SEARCH(legacyCancunBCTransitionTetsts, "LegacyTests/Cancun/BlockchainTests/TransitionTests")
+            BOOST_FIXTURE_TEST_SUITE(TransitionTests, legacyCancunBCTransitionTetsts)
+            BOOST_AUTO_TEST_CASE(bcArrowGlacierToParis) {}
+            BOOST_AUTO_TEST_SUITE_END()  // InvalidBlocks
+        BOOST_AUTO_TEST_SUITE_END()  // BlockchainTests
+
+    BOOST_AUTO_TEST_SUITE_END()  // Cancun
 BOOST_AUTO_TEST_SUITE_END()  // LegacyTests

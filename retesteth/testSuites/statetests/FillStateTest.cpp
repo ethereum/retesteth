@@ -48,6 +48,9 @@ spDataObject FillTest(StateTestInFiller const& _test)
                     if (!expectChekIndexes)
                         continue;
 
+                    if (compareFork(fork, CMP::ge, FORK("Paris")) && _test.hasEmptyAccount())
+                        ETH_ERROR_MESSAGE("Test filler pre state has empty account which is not allowed after Paris" + TestOutputHelper::get().testInfo().errorDebug());
+
                     expectFoundTransaction = true;
                     runner.performTransactionOnExpect(tr, expect, fork);
                 }

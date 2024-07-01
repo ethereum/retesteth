@@ -21,7 +21,8 @@ static std::vector<std::string> const c_timeConsumingTestSuites{
 
 static std::vector<std::string> const c_cpuIntenseTests{
     std::string{"CALLBlake2f_MaxRoundsFiller"},
-    std::string{"loopMulFiller"}
+    std::string{"loopMulFiller"},
+    std::string{"test_excess_blob_gas"}
 };
 
 class TestChecker

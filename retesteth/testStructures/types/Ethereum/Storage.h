@@ -14,6 +14,7 @@ struct Storage : GCP_SPointerBase
 
     std::map<std::string, StorageRecord> const& getKeys() const { return m_map; }
     bool hasKey(VALUE const& _key) const { return m_map.count(_key.asString()); }
+    void addRecord(StorageRecord const& record);
     VALUE const& atKey(VALUE const& _key) const
     {
         assert(m_map.count(_key.asString()));

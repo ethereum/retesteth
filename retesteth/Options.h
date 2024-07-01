@@ -247,6 +247,7 @@ public:
     bool_opt filloutdated = false;
     bool_opt fillvmtrace = false;
     bool_opt fillchain = false;
+    bool_opt convertpy = false;
     sizet_opt chainid = 1;
     bool_opt showhash = false;
     bool_opt checkhash = false;
@@ -254,6 +255,9 @@ public:
     bool_opt fullstate = false;
     bool_opt forceupdate = false;
     static bool isLegacy();
+    static bool isLegacyConstantinople();
+    static bool isEIPTest();
+    static bool isEOFTest();
 
 public:
     struct InvalidOption : public dev::Exception

@@ -53,6 +53,8 @@ spDataObject StateTestSuite::doTests(spDataObject& _input, TestSuiteOptions& _op
             filledTest = FillTestAsBlockchain(test);
         else
         {
+            if (Options::get().convertpy)
+                return ConvertpyTest(test, _opt);
             auto const filled = FillTest(test);
             if (filled->type() != DataType::Null)
                 (*filledTest).addSubObject(test.testName(), filled);

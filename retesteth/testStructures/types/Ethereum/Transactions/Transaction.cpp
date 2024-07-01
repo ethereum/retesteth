@@ -46,6 +46,7 @@ void Transaction::fromDataObject(DataObject const& _data)
     {
         checkDataScheme(_data);
         _fromData(_data);
+        m_hasBigInt = _data.performSearch(src_findBigInt);
         makeSignature(_data);
     }
     catch (std::exception const& _ex)

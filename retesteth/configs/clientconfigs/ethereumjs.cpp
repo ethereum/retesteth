@@ -25,7 +25,7 @@ string const ethereumjs_config = R"({
        "Istanbul",
        "Berlin",
        "London",
-       "Merge",
+       "Paris",
        "Shanghai",
        "Cancun"
     ],
@@ -37,13 +37,13 @@ string const ethereumjs_config = R"({
        "ByzantiumToConstantinopleFixAt5",
        "BerlinToLondonAt5",
        "ArrowGlacier",
-       "MergeToShanghaiAtTime15k",
+       "ParisToShanghaiAtTime15k",
        "ShanghaiToCancunAtTime15k"
     ],
     "fillerSkipForks" : [
-        "Merge+3540+3670",
-        "Merge+3860",
-        "Merge+3855"
+        "Paris+3540+3670",
+        "Paris+3860",
+        "Paris+3855"
     ],
     "exceptions":{
        "AddressTooShort":"",
@@ -234,7 +234,7 @@ string const ethereumjs_config = R"({
        "2930AccessListStorageHashTooShort":"",
        "3675PoWBlockRejected":"",
        "3675PoSBlockRejected":"",
-       "3675PreMerge1559BlockRejected":""
+       "3675PreParis1559BlockRejected":""
     }
 })";
 

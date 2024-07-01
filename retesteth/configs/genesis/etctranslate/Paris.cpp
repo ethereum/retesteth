@@ -4,16 +4,16 @@ using namespace dataobject;
 
 namespace retesteth::options
 {
-genMergeCfgNIMBUS::genMergeCfgNIMBUS()
+genParisCfgETCTR::genParisCfgETCTR()
 {
-const string nimbus_Merge_config = R"({
+const string t8ntool_Paris_config = R"({
     "params" : {
-        "fork" : "Merge",
+        "fork" : "ETC_Mystique",
         "terminalTotalDifficulty" : "0x00",
         "constantinopleForkBlock" : "0x00",
         "byzantiumForkBlock" : "0x00",
         "homesteadForkBlock" : "0x00",
-        "chainID" : "0x01"
+        "chainID" : "0x3d"
     },
     "accounts" : {
     }
@@ -21,8 +21,8 @@ const string nimbus_Merge_config = R"({
 
     {
         spDataObject obj;
-        (*obj)["path"] = "nimbus/genesis/Merge.json";
-        (*obj)["content"] = nimbus_Merge_config;
+        (*obj)["path"] = "etctranslate/genesis/Paris.json";
+        (*obj)["content"] = t8ntool_Paris_config;
         map_configs.addArrayObject(obj);
     }
 }

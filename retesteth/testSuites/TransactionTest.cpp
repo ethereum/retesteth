@@ -43,6 +43,9 @@ spDataObject FillTest(TransactionTestInFiller const& _test)
         if (networkSkip(fork, _test.testName()))
             continue;
 
+        TestInfo errorInfo("test_rawTransaction: " + fork.asString(), _test.testName());
+        TestOutputHelper::get().setCurrentTestInfo(errorInfo);
+
         TestRawTransaction res = session.test_rawTransaction(_test.transaction()->getRawBytes(), fork);
         compareTransactionException(_test.transaction(), res, _test.getExpectException(fork));
 

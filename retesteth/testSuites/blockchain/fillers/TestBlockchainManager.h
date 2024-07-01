@@ -14,13 +14,16 @@ public:
     // Initialize blockchain manager with first chain information
     // _env, _pre, _engine, _network
     TestBlockchainManager(
-        BlockchainTestFillerEnv const& _genesisEnv, State const& _genesisPre, SealEngine _engine, FORK const& _network);
+        BlockchainTestFillerEnv const& _genesisEnv,
+        State const& _genesisPre, SealEngine _engine, FORK const& _network,
+        std::vector<spAccountBase> const& _additionalPreAccounts);
 
     // Perform block generation logic by parsing the filler file section
     std::vector<spDataObject> parseBlockFromFiller(BlockchainTestFillerBlock const& _block, bool _generateUncles);
 
     // Return the last block from the current chain (not the top of all chains)
     TestBlock const& getLastBlock();
+    State& getGenesisPre() { return m_genesisPre; }
 
     // Import all generated blocks at the same order as they are in tests
     void syncOnRemoteClient(DataObject& _exportBlocksSection) const;

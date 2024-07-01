@@ -2,6 +2,7 @@
 #include <libdataobj/DataObject.h>
 #include <libdevcore/SHA3.h>
 #include <boost/filesystem/path.hpp>
+#include <retesteth/helpers/TestHelper.h>
 namespace test::testsuite
 {
 using namespace dataobject;
@@ -11,6 +12,7 @@ struct TestFileData
     spDataObject data;
     dev::h256 hash;
     bool hashCalculated = true;
+    test::TestType testType = test::TestType::StateTest;
 };
 
 

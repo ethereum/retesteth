@@ -7,21 +7,33 @@ namespace test::teststruct
 {
 StateIncomplete::StateIncomplete(spDataObjectMove _data)
 {
-    m_rawData = _data.getPointer();
+    spDataObject data = _data.getPointer();
     try
     {
-        for (auto& el : (*m_rawData).getSubObjectsUnsafe())
-            m_accounts[FH20(el->getKey())] = spAccountBase(new AccountIncomplete(el));
+        for (auto& el : (*data).getSubObjectsUnsafe())
+        {
+            FH20 const key(el->getKey());
+            if (m_accounts.count(key))
+            {
+                ETH_ERROR_MESSAGE("StateIncomplete::StateIncomplete(DataObject): State has dublicate key: `" + key.asString() + "`");
+            }
+            m_accounts[key] = spAccountBase(new AccountIncomplete(el));
+        }
     }
     catch (std::exception const& _ex)
     {
-        throw UpwardsException(string("StateIncomplete parse error: ") + _ex.what() + m_rawData->asJson());
+        throw UpwardsException(string("StateIncomplete parse error: ") + _ex.what() + data->asJson());
     }
 }
 
-spDataObject const& StateIncomplete::asDataObject() const
+spDataObject StateIncomplete::asDataObject() const
 {
-    return m_rawData;
+    spDataObject data;
+    for (auto const& [accKey, acc] : m_accounts)
+    {
+        (*data).atKeyPointer(accKey.asString()) = acc->asDataObject();
+    }
+    return data;
 }
 
 // Since we do not export StateIncomplete after correctMiningReward
@@ -36,7 +48,6 @@ void StateIncomplete::correctMiningReward(FH20 const& _coinbase, VALUE const& _r
             // We always assume that StateIncomplete is made of AccountIncomplete, but still
             AccountIncomplete& acc = dynamic_cast<AccountIncomplete&>(rec.getContent());
             acc.setBalance(acc.balance() + _reward);
-            (*m_rawData).atKeyUnsafe(_coinbase.asString()).atKeyUnsafe("balance").setString(string(acc.balance().asString()));
         }
     }
 }
