@@ -8,6 +8,7 @@ ARG GETH_SRC="https://github.com/ethereum/go-ethereum.git"
 ARG NIMBUS_SRC="https://github.com/status-im/nimbus-eth1.git"
 ARG EVMONE_SRC="https://github.com/ethereum/evmone.git"
 ARG PYT8N_SRC="https://github.com/ethereum/execution-specs.git"
+ARG NETHERMIND_SRC="https://github.com/NethermindEth/nethermind.git"
 
 # Leave empty to disable the build, can point to commit hash as well
 ARG BESU="main"
@@ -18,6 +19,7 @@ ARG RETESTETH="develop"
 ARG PYSPECS="main"
 ARG EVMONE="master"
 ARG PYT8N="master"
+ARG NETHERMIND="feature/t8n"
 
 SHELL ["/bin/bash", "-c"]
 ENV TZ=Etc/UTC
@@ -30,6 +32,7 @@ RUN apt-get update \
     && add-apt-repository -y ppa:deadsnakes/ppa  \
     && add-apt-repository ppa:linuxuprising/java \
     && apt-get install --yes jq lsof git cmake make perl psmisc curl wget gcc-11 g++-11 python3.10 python3.10-venv python3-pip python3-dev \
+    && curl -sSL https://packages.microsoft.com/repos/microsoft-dotnet/pool/main/dotnet-sdk-8.0.4-linux-x64.deb | apt-get install -y - \
     && apt-get install --yes libboost-filesystem-dev libboost-system-dev libboost-program-options-dev libboost-test-dev \
     && echo oracle-java17-installer shared/accepted-oracle-license-v1-3 select true | /usr/bin/debconf-set-selections  \
     && apt-get install --yes oracle-java17-installer oracle-java17-set-default \
@@ -58,7 +61,7 @@ RUN wget https://github.com/ethereum/solidity/releases/download/v0.8.21/solc-sta
    && chmod +x /bin/solc
 
 # Pyspecs
-RUN git clone $PYSPECS_SRC /execution-spec-tests 
+RUN git clone $PYSPECS_SRC /execution-spec-tests
 RUN cd /execution-spec-tests && git fetch && git checkout $PYSPECS \
     && python3 -m venv ./venv/ \
     && source ./venv/bin/activate \
@@ -86,6 +89,17 @@ RUN test -n "$GETH" \
      && go build ./cmd/evm  && cp evm /bin/evm \
      && rm -rf /geth && rm -rf /usr/local/go \
     || echo "Geth is empty"
+
+# Nethermind
+RUN test -n "$NETHERMIND" \
+&& git clone $NETHERMIND_SRC /nethermind \
+&& cd /nethermind && git fetch && git checkout $NETHERMIND \
+&& dotnet build ./src/Nethermind/Nethermind.sln \
+&& dotnet build ./src/Nethermind/EthereumTests.sln \
+&& dotnet build ./tools/evm/Evm.sln \
+&& cp ./tools/evm/bin/Debug/net8.0/Evm /usr/bin/nethermindevm \
+&& rm -rf ./tools/evm/bin && rm -rf ./tools/evm/obj && rm -rf ./src/Nethermind/artifacts \
+|| echo "Nethermind is empty"
 
 # Nimbus
 RUN test -n "$NIMBUS" \
