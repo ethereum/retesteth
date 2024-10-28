@@ -32,7 +32,7 @@ RUN apt-get update \
     && add-apt-repository -y ppa:deadsnakes/ppa  \
     && add-apt-repository ppa:linuxuprising/java \
     && apt-get install --yes jq lsof git cmake make perl psmisc curl wget gcc-11 g++-11 python3.10 python3.10-venv python3-pip python3-dev \
-    && curl -sSL https://packages.microsoft.com/repos/microsoft-dotnet/pool/main/dotnet-sdk-8.0.4-linux-x64.deb | apt-get install -y - \
+    && apt-get install -y dotnet-sdk-8.0 \
     && apt-get install --yes libboost-filesystem-dev libboost-system-dev libboost-program-options-dev libboost-test-dev \
     && echo oracle-java17-installer shared/accepted-oracle-license-v1-3 select true | /usr/bin/debconf-set-selections  \
     && apt-get install --yes oracle-java17-installer oracle-java17-set-default \
@@ -96,10 +96,9 @@ RUN test -n "$NETHERMIND" \
 && cd /nethermind && git fetch && git checkout $NETHERMIND \
 && dotnet build ./src/Nethermind/Nethermind.sln \
 && dotnet build ./src/Nethermind/EthereumTests.sln \
-&& dotnet build ./tools/evm/Evm.sln \
-&& cp ./tools/evm/bin/Debug/net8.0/Evm /usr/bin/nethermindevm \
-&& rm -rf ./tools/evm/bin && rm -rf ./tools/evm/obj && rm -rf ./src/Nethermind/artifacts \
+&& dotnet build ./tools/evm/Evm.sln \ 
 || echo "Nethermind is empty"
+# run the following command in order to run nethermind evm tool: /nethermind/tools/evm/bin/Debug/net8.0/Evm t8n [options]
 
 # Nimbus
 RUN test -n "$NIMBUS" \
