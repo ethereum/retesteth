@@ -16,7 +16,7 @@ extern std::string const t8ntool_start;
 #define DECLARE_T8NTOOL(X) \
   FOR_EACH(X, t8ntoolcfg, RewardsCfg, FrontierCfg, HomesteadCfg, EIP150Cfg, EIP158Cfg, ByzantiumCfg, \
     ConstantinopleCfg, ConstantinopleFixCfg, IstanbulCfg, BerlinCfg, LondonCfg, ParisCfg, MergeCfg, \
-    ShanghaiCfg, CancunCfg, PragueCfg, \
+    ShanghaiCfg, CancunCfg, PragueCfg, OsakaCfg, \
     ArrowGlacierCfg, GrayGlacierCfg, ArrowGlacierToParisAtDiffC0000Cfg, ParisToShanghaiAtTime15kCfg, \
     ShanghaiToCancunAtTime15kCfg, \
     FrontierToHomesteadCfg, HomesteadToDaoCfg, HomesteadToEIP150Cfg, EIP158ToByzantiumCfg, \

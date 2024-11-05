@@ -44,7 +44,7 @@ EOFTestVectorInFiller::EOFTestVectorInFiller(spDataObject& _data)
     REQUIRE_JSONFIELDS(_data, "EOFTestVector " + _data->getKey(),
         {{"data", {{DataType::String}, jsonField::Required}},
          {"expectException", {{DataType::Object}, jsonField::Optional}}});
-    m_dataPreview = _data->atKey("data").asString().substr(0, 17);
+    m_dataPreview = _data->atKey("data").asString().substr(0, 23);
     m_data = spBYTES(new BYTES(DataObject(compiler::replaceCode(_data->atKey("data").asString()))));
     if (_data->count("expectException"))
         readExpectExceptions(_data->atKey("expectException"), m_expectExceptions);

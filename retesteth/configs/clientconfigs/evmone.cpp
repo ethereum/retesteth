@@ -39,7 +39,9 @@ string const evmone_config = R"({
         "London",
         "Paris",
         "Shanghai",
-        "Cancun"
+        "Cancun",
+        "Prague",
+        "Osaka"
     ],
     "additionalForks" : [
         "FrontierToHomesteadAt5",
@@ -52,8 +54,7 @@ string const evmone_config = R"({
         "GrayGlacier",
         "ParisToShanghaiAtTime15k",
         "ShanghaiToCancunAtTime15k",
-        "Merge",
-        "Prague"
+        "Merge"
     ],
     "fillerSkipForks" : [
         "HomesteadToDaoAt5"
@@ -453,7 +454,8 @@ string const evmone_config = R"({
       "EOF_CallfToNonReturningFunction": "err: callf_to_non_returning_function",
       "EOF_TooManyContainerSections": "err: too_many_container_sections",
       "EOF_InvalidContainerSectionIndex": "err: invalid_container_section_index",
-      "EOF_EofCreateWithTruncatedContainer": "err: eof_create_with_truncated_container",
+      "EOF_EofCreateWithTruncatedContainer": "err: eofcreate_with_truncated_container",
+      "EOF_IncompatibleContainerType" : "err: incompatible_container_kind",
 
 
       "PostParisUncleHashIsNotEmpty" : "block.uncleHash != empty",
