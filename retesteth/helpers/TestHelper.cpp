@@ -384,6 +384,7 @@ string prepareSolidityVersionString()
         const string result = test::executeCmd(cmd, exitCode);
         const string cVersion  = "Version";
         const string::size_type pos = result.rfind(cVersion);
+
         if (pos != string::npos)
         {
             solcVersion = result.substr(pos, result.length());

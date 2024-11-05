@@ -56,7 +56,7 @@ bool State::hasAccount(FH20 const& _address) const
 
 spDataObject State::asDataObject() const
 {
-    spDataObject data;
+    spDataObject data = sDataObject(DataType::Object);
     for (auto const& [accKey, acc] : m_accounts)
     {
         (*data).atKeyPointer(accKey.asString()) = acc->asDataObject();

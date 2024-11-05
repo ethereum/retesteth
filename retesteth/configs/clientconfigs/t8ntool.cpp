@@ -38,7 +38,7 @@ if [ -z $wevm ]; then
 fi
 
 if [ $1 = "eof" ] || [ $1 = "t8n" ] || [ $1 = "b11r" ]; then
-    evm $1 $2 $3 $4 $5 $6 $7 $8 $9 $10 $11 $12 $13 $14 $15 $16 $17 $18 $19 $20 $21 $22 $23 $24 $25 $26
+    evm ${1} ${2} ${3} ${4} ${5} ${6} ${7} ${8} ${9} ${10} ${11} ${12} ${13} ${14} ${15} ${16} ${17} ${18} ${19} ${20} ${21} ${22} ${23} ${24} ${25} ${26}
 elif [ $1 = "-v" ]; then
     evm -v
 else
@@ -514,8 +514,8 @@ then
 fi
 
 cd $PYSPECS_PATH
-python3 -m venv ./venv/
-source ./venv/bin/activate
+#python3 -m venv ./venv/
+#source ./venv/bin/activate
 
 SUITETYPE=$1
 SRCPATH=$2
@@ -562,11 +562,11 @@ if [ -d $testout ]; then
     rm -r $testout
 fi
 mkdir $testout
-1>&2 echo "fill -v $SRCPATH2 --output "$testout" "${ADDFLAGS[@]}" --evm-bin $EVMT8N --flat-output --from=$FROMF --until=$UNTIF"
+1>&2 echo "uv run fill -v $SRCPATH2 --output "$testout" "${ADDFLAGS[@]}" --evm-bin $EVMT8N --flat-output --from=$FROMF --until=$UNTIF"
 if [ $DEBUG != "null" ]; then
-    1>&2 fill -v $SRCPATH2 --output "$testout" "${ADDFLAGS[@]}" --evm-bin $EVMT8N --flat-output --from=$FROMF --until=$UNTIF
+    1>&2 uv run fill -v $SRCPATH2 --output "$testout" "${ADDFLAGS[@]}" --evm-bin $EVMT8N --flat-output --from=$FROMF --until=$UNTIF
 else
-    out=$(fill -v $SRCPATH2 --output "$testout" "${ADDFLAGS[@]}" --evm-bin $EVMT8N --flat-output --from=$FROMF --until=$UNTIF 2>&1)
+    out=$(uv run fill -v $SRCPATH2 --output "$testout" "${ADDFLAGS[@]}" --evm-bin $EVMT8N --flat-output --from=$FROMF --until=$UNTIF 2>&1)
     if [[ "$out" == *" failed"* ]] || [[ "$out" == *"ERROR"* ]]; then
       1>&2 echo "./retesteth/pyspecsStart.sh Pyspec test generation failed (use --verbosity PYSPEC for details) "
       exit 1

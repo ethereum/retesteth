@@ -51,6 +51,7 @@ const string c_withdrawalsRoot = "withdrawalsRoot";
 const string c_parentBeaconBlockRoot = "parentBeaconBlockRoot";
 const string c_excessBlobGas = "excessBlobGas";
 const string c_blobGasUsed = "blobGasUsed";
+const string c_requestsRoot = "requestsRoot";
 const string c_currentExcessBlobGas = "currentExcessBlobGas";
 const string c_parentExcessBlobGas = "parentExcessBlobGas";
 const string c_currentBlobGasUsed = "currentBlobGasUsed";

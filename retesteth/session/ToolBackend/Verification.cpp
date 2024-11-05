@@ -421,11 +421,13 @@ void verifyWithdrawalRecord(spWithdrawal const& _wtRecord)
 
 int fake_exponential(int _factor, bigint _numerator, int _denominator)
 {
+    volatile size_t safe = 0;
     int i = 1;
     bigint output = 0;
     bigint numerator_accum = _factor * _denominator;
-    while (numerator_accum > 0)
+    while (numerator_accum > 0 && safe < 1000)
     {
+        safe = safe + 1;
         output += numerator_accum;
         numerator_accum = (numerator_accum * _numerator) / (_denominator * i);
         i += 1;

@@ -46,6 +46,7 @@ extern const std::string c_withdrawalsRoot;
 extern const std::string c_parentBeaconBlockRoot;
 extern const std::string c_excessBlobGas;
 extern const std::string c_blobGasUsed;
+extern const std::string c_requestsRoot;
 extern const std::string c_currentExcessBlobGas;
 extern const std::string c_currentBeaconRoot;
 extern const std::string c_parentExcessBlobGas;

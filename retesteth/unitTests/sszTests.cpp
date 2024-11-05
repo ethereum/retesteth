@@ -4,7 +4,7 @@
 #include <retesteth/helpers/TestHelper.h>
 #include <retesteth/helpers/TestOutputHelper.h>
 
-#if defined(UNITTESTS) || defined(__DEBUG__)
+#if defined(UNITTESTS)
 #include <libssz/ssz.h>
 
 
