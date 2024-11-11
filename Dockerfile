@@ -19,7 +19,7 @@ ARG RETESTETH="develop"
 ARG PYSPECS="main"
 ARG EVMONE="master"
 ARG PYT8N="master"
-ARG NETHERMIND="feature/t8n"
+ARG NETHERMIND="feature/t8n-test"
 
 SHELL ["/bin/bash", "-c"]
 ENV TZ=Etc/UTC
