@@ -96,9 +96,9 @@ RUN test -n "$NETHERMIND" \
 && cd /nethermind && git fetch && git checkout $NETHERMIND \
 && dotnet build ./src/Nethermind/Nethermind.sln \
 && dotnet build ./src/Nethermind/EthereumTests.sln \
-&& dotnet build ./tools/evm/Evm.sln \ 
+&& dotnet build ./tools/Evm/Evm.sln \ 
 || echo "Nethermind is empty"
-# run the following command in order to run nethermind evm tool: /nethermind/tools/evm/bin/Debug/net8.0/Evm t8n [options]
+# run the following command in order to run nethermind evm tool: /nethermind/tools/Evm/Evm/bin/Debug/net8.0/Evm t8n [options]
 
 # Nimbus
 RUN test -n "$NIMBUS" \
