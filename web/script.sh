@@ -106,6 +106,20 @@ if [ "$1" = "nimbus" ] || [ -z "$1" ]; then
     make t8n -j2
 fi
 
+if [ "$1" = "nethermind" ] || [ "$1" = "nethermindt8ntool" ] || [ -z "$1" ]; then
+    echo "Fetch nethermind: "
+    cd $BUILDPATH/nethermind
+    git reset --hard HEAD~1
+    git fetch origin
+    git checkout feature/t8n-test
+    git pull
+    rm ./src/Nethermind/artifacts
+    rm ./tools/Evm/Evm/bin
+    rm ./tools/Evm/Evm/obj
+    NETHERMIND_HEAD=$(git rev-parse HEAD | cut -c1-7)
+    echo "Build nethermind: "
+    make all
+fi
 
 #if [ "$1" = "oewrap" ] || [ -z "$1" ]; then
 #    echo "Fetch open-ethereum: "
@@ -151,6 +165,7 @@ cleanMem() {
  killall python
  killall node
  killall nimbus
+ killall nethermind
  sleep 10
 }
 
@@ -193,6 +208,9 @@ runCmd() {
    fi
    if [ "$client" = "nimbus" ]; then
      headinfo="Nimbus: #$NIMBUS_HEAD"
+   fi
+   if [ "$client" = "nethermind" ]; then
+     headinfo="Nethermind: #NETHERMIND_HEAD"
    fi
    if [ "$client" = "retesteth" ]; then
      clientcfg=""
@@ -273,6 +291,26 @@ if [ "$cname" = "t8ntool" ] || [ -z "$cname" ]; then
     sleep 10
     threads=2
     client="t8ntool"
+    CMD="-t GeneralStateTests -- --all -j$threads $arg2"
+    runCmd
+    CMD="-t BlockchainTests -- --all -j$threads $arg2"
+    runCmd
+    CMD="-t TransactionTests -- --all -j$threads $arg2"
+    runCmd
+    CMD="-t DifficultyTests -- --all -j$threads $arg2"
+    runCmd
+    if [ "$arg2" != "--filltests" ]; then
+        CMD="-t BCGeneralStateTests -- --all -j$threads $arg2"
+        runCmd
+        CMD="-t LegacyTests -- --all -j$threads $arg2"
+        runCmd
+    fi
+fi
+
+if [ "$cname" = "nethermind" ] || [ -z "$cname" ]; then
+    sleep 10
+    threads=2
+    client="nethermind"
     CMD="-t GeneralStateTests -- --all -j$threads $arg2"
     runCmd
     CMD="-t BlockchainTests -- --all -j$threads $arg2"
@@ -373,6 +411,8 @@ if [ "$cname" = "dretesteth" ] || [ -z "$cname" ]; then
     threads=1
     client="dretesteth"
     CMD="-t GeneralStateTests/stExample -- --singletest add11 --clients t8ntool -j$threads $arg2"
+    runCmd
+    CMD="-t GeneralStateTests/stExample -- --singletest add11 --clients nethermind -j$threads $arg2"
     runCmd
     CMD="-t GeneralStateTests/stExample -- --singletest add11 --clients besu -j$threads $arg2"
     runCmd

@@ -112,6 +112,9 @@ if [ "$SCRIPT_NAME" = "dtf.sh" ]; then
             if [ "$var" = "nimbus" ]; then
                 binpath="/bin/evm_nimbus"
             fi
+            if [ "$var" = "nethermind" ]; then
+                binpath="/nethermind/tools/Evm/Evm/bin/Debug/net8.0/Evm"
+            fi
             if [ "$var" = "besu" ]; then
                 binpath="/usr/bin/besuevm"
             fi
