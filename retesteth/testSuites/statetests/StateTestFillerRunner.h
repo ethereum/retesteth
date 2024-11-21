@@ -16,6 +16,7 @@ public:
     virtual void performTransactionOnExpect(TransactionInGeneralSection&, StateTestFillerExpectSection const&, FORK const&);
     spDataObject getFilledTest() const { return m_filledTest; }
     void registerForkResult();
+    bool checkBigintSkip();
 protected:
     StateTestFillerRunner(StateTestInFiller const& _test, test::session::SessionInterface& _session)
       : m_test(_test), m_session(_session) {}

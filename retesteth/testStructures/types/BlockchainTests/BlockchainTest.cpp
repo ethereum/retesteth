@@ -24,7 +24,12 @@ BlockchainTestEnv* readBlockchainTestEnv(DataObject const& _data)
             if (_data.count(c_withdrawalsRoot))
             {
                 if (_data.count(c_excessBlobGas))
-                    return new BlockchainTestEnv4844(_data);
+                {
+                    if (_data.count(c_requestsHash))
+                        return new BlockchainTestEnvPrague(_data);
+                    else
+                        return new BlockchainTestEnv4844(_data);
+                }
                 else
                     return new BlockchainTestEnvShanghai(_data);
             }

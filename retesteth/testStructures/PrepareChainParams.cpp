@@ -106,6 +106,11 @@ spDataObject prepareGenesisSubsection(StateTestEnvBase const& _env, ParamsContex
         _genesis[c_currentBeaconRoot] = _env.currentBeaconRoot().asString();
     };
 
+    auto praguefy = [&_env, &cancunfy](DataObject& _genesis){
+        cancunfy(_genesis);
+        _genesis[c_currentRequestsHash] = _env.currentRequestHash().asString();
+    };
+
     if (!netIsAdditional)
     {
         bool knowLondon = cfg.checkForkInProgression("London");
@@ -123,6 +128,10 @@ spDataObject prepareGenesisSubsection(StateTestEnvBase const& _env, ParamsContex
         bool knowCancun = cfg.checkForkInProgression("Cancun");
         if (knowCancun && compareFork(net, CMP::ge, FORK("Cancun")))
             cancunfy(genesis.getContent());
+
+        bool knowPrague = cfg.checkForkInProgression("Prague");
+        if (knowPrague && compareFork(net, CMP::ge, FORK("Prague")))
+            praguefy(genesis.getContent());
     }
     else
     {

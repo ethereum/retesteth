@@ -160,6 +160,7 @@ spDataObject const ToolChain::mineBlock(EthereumBlockState const& _pendingBlock,
     calculateAndCheckSetBaseFee(res.currentBasefee(), pendingFixedHeader, lastBlock().header());
     setWithdrawalsRoot(res.withdrawalsRoot(), pendingFixedHeader);
     setExcessBlobGasAndGasUsed(res, pendingFixedHeader);
+    setRequestsHash(res.requestsHash(), pendingFixedHeader);
 
     spDataObject miningResult;
     miningResult = coorectTransactionsByToolResponse(res, pendingFixed, _pendingBlock, _req);
@@ -273,6 +274,15 @@ void ToolChain::setExcessBlobGasAndGasUsed(ToolResponse const& _res, spBlockHead
         BlockHeader4844& pendingFixed4844Header = BlockHeader4844::castFrom(_pendingHeader.getContent());
         pendingFixed4844Header.setExcessBlobGas(_res.currentExcessBlobGas());
         pendingFixed4844Header.setBlobGasUsed(_res.currentBlobGasUsed());
+    }
+}
+
+void ToolChain::setRequestsHash(FH32 const& _hash, spBlockHeader& _pendingHeader)
+{
+    if (isBlockExportRequestHash(_pendingHeader))
+    {
+        BlockHeaderPrague& pendingFixedPragueHeader = BlockHeaderPrague::castFrom(_pendingHeader.getContent());
+        pendingFixedPragueHeader.setRequestsHash(_hash);
     }
 }
 

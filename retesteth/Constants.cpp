@@ -15,6 +15,7 @@ const FH8 C_FH8_ZERO("0x0000000000000000");
 const FH20 C_FH20_ZERO("0x0000000000000000000000000000000000000000");
 const FH20 C_FH20_BEACON("0x000f3df6d732807ef1319fb7b8bb8522d0beac02");
 const FH32 C_FH32_ZERO("0x0000000000000000000000000000000000000000000000000000000000000000");
+const FH32 C_FH32_DEFAULT_REQUESTS_HASH("0x6036c41849da9c076ed79654d434017387a88fb833c2856b32e18218b3341c5f");
 const FH256 C_FH256_ZERO(
     "0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
     "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
@@ -52,11 +53,14 @@ const string c_parentBeaconBlockRoot = "parentBeaconBlockRoot";
 const string c_excessBlobGas = "excessBlobGas";
 const string c_blobGasUsed = "blobGasUsed";
 const string c_requestsRoot = "requestsRoot";
+const string c_requestsHash = "requestsHash";
+const string c_requests = "requests";
 const string c_currentExcessBlobGas = "currentExcessBlobGas";
 const string c_parentExcessBlobGas = "parentExcessBlobGas";
 const string c_currentBlobGasUsed = "currentBlobGasUsed";
 const string c_parentBlobGasUsed = "parentBlobGasUsed";
 const string c_currentBeaconRoot = "currentBeaconRoot";
+const string c_currentRequestsHash = "currentRequestsHash";
 
 // Transactions
 const string c_data = "data";

@@ -112,7 +112,8 @@ namespace  {
 inline bool isChild(BlockType _t)
 {
     // Can't use compareFork function here because of EthereumClassic and custom fork names
-    return _t != BlockType::BlockHeader4844;
+    return _t != BlockType::BlockHeader4844
+           && _t != BlockType::BlockHeaderPrague;
 }
 }
 

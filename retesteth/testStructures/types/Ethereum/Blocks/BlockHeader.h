@@ -11,7 +11,8 @@ enum class BlockType
     BlockHeader1559,
     BlockHeaderParis,
     BlockHeaderShanghai,
-    BlockHeader4844
+    BlockHeader4844,
+    BlockHeaderPrague,
 };
 
 // Ethereum blockheader interface

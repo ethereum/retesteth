@@ -21,6 +21,7 @@ spDataObject FillTest(StateTestInFiller const& _test)
         return sDataObject(DataType::Null);
 
     StateTestFillerRunner runner(_test);
+    if (!runner.checkBigintSkip())
     for (auto const& fork : allforks)
     {
         if (runner.checkNetworkSkip(fork))

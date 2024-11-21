@@ -14,6 +14,7 @@ struct StateTestInFiller : GCP_SPointerBase
 
     std::string const& testName() const { return m_name; }
     bool hasInfo() const { return !m_info.isEmpty(); }
+    bool hasBigInt() const { return m_hasBigInt; }
     InfoIncomplete const& Info() const { return m_info; }
     StateTestFillerEnv const& Env() const { return m_env; }
     State const& Pre() const { return m_pre; }
@@ -37,6 +38,7 @@ private:
     std::vector<StateTestFillerExpectSection> m_expectSections;
     spDataObject m_verify;
     spDataObject m_verifyBC;
+    bool m_hasBigInt = false;
     std::vector<std::string> m_exceptions;
     bool m_hasEmptyAccounts;
 };

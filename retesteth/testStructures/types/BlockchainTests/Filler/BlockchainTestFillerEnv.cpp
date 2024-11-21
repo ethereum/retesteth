@@ -152,6 +152,39 @@ void require4844BlockchainHeader(spDataObject const& _data)
             {c_uncleHash, {{DataType::String}, jsonField::Optional}}});
 }
 
+void requirePragueBlockchainHeader(spDataObject const& _data)
+{
+    REQUIRE_JSONFIELDS(_data, "GenesisBlockHeader(BlockchainTestFillerEnvPrague) " + _data->getKey(),
+        {{c_bloom, {{DataType::String}, jsonField::Optional}},
+            {c_logsBloom, {{DataType::String}, jsonField::Optional}},
+            {c_coinbase, {{DataType::String}, jsonField::Optional}},
+            {c_author, {{DataType::String}, jsonField::Optional}},
+            {c_miner, {{DataType::String}, jsonField::Optional}},
+            {c_difficulty, {{DataType::String}, jsonField::Required}},
+            {c_extraData, {{DataType::String}, jsonField::Required}},
+            {c_gasLimit, {{DataType::String}, jsonField::Required}},
+            {c_baseFeePerGas, {{DataType::String}, jsonField::Required}},
+            {c_gasUsed, {{DataType::String}, jsonField::Required}},
+            {c_hash, {{DataType::String}, jsonField::Optional}},
+            {c_mixHash, {{DataType::String}, jsonField::Optional}},
+            {c_nonce, {{DataType::String}, jsonField::Optional}},
+            {c_number, {{DataType::String}, jsonField::Required}},
+            {c_parentHash, {{DataType::String}, jsonField::Required}},
+            {c_receiptTrie, {{DataType::String}, jsonField::Optional}},
+            {c_receiptsRoot, {{DataType::String}, jsonField::Optional}},
+            {c_stateRoot, {{DataType::String}, jsonField::Required}},
+            {c_timestamp, {{DataType::String}, jsonField::Required}},
+            {c_transactionsTrie, {{DataType::String}, jsonField::Optional}},
+            {c_transactionsRoot, {{DataType::String}, jsonField::Optional}},
+            {c_withdrawalsRoot, {{DataType::String}, jsonField::Required}},
+            {c_blobGasUsed, {{DataType::String}, jsonField::Required}},
+            {c_excessBlobGas, {{DataType::String}, jsonField::Required}},
+            {c_parentBeaconBlockRoot, {{DataType::String}, jsonField::Required}},
+            {c_requestsHash, {{DataType::String}, jsonField::Required}},
+            {c_sha3Uncles, {{DataType::String}, jsonField::Optional}},
+            {c_uncleHash, {{DataType::String}, jsonField::Optional}}});
+}
+
 void convertDecFieldsToHex(spDataObject& _data)
 {
     (*_data).atKeyUnsafe(c_coinbase).performModifier(mod_valueInsertZeroXPrefix);
@@ -201,6 +234,12 @@ void BlockchainTestFillerEnv::initializeCommonFields(spDataObject const& _data, 
     m_currentBlobGasUsed = sVALUE(DataObject("0x00"));
     m_currentExcessBlobGas = sVALUE(DataObject("0x00"));
     m_currentBeaconRoot = spFH32(FH32::zero().copy());
+    m_currentRequestsHash = spFH32(C_FH32_DEFAULT_REQUESTS_HASH.copy());
+}
+
+void BlockchainTestFillerEnvPrague::initializePragueFields(DataObject const& _data)
+{
+    m_currentRequestsHash = sFH32(_data.atKey(c_requestsHash));
 }
 
 void BlockchainTestFillerEnv4844::initialize4844Fields(DataObject const& _data)
@@ -248,6 +287,32 @@ BlockchainTestFillerEnv4844::BlockchainTestFillerEnv4844(spDataObjectMove _data,
     {
         throw UpwardsException(string("BlockchainTestFillerEnv(4844) convertion error: ") + _ex.what());
     }
+}
+
+BlockchainTestFillerEnvPrague::BlockchainTestFillerEnvPrague(spDataObjectMove _data, SealEngine _sEngine)
+{
+    try {
+        spDataObject data = _data.getPointer();
+        convertDecFieldsToHex(data);
+        requirePragueBlockchainHeader(data);
+        initializeCommonFields(data, _sEngine);
+        initializeParisFields(data);
+        initializeShanghaiFields(data);
+        initialize4844Fields(data);
+        initializePragueFields(data);
+    }
+    catch (std::exception const& _ex)
+    {
+        throw UpwardsException(string("BlockchainTestFillerEnv(Prague) convertion error: ") + _ex.what());
+    }
+}
+
+
+spDataObject BlockchainTestFillerEnvPrague::asDataObject() const
+{
+    spDataObject out = BlockchainTestFillerEnv4844::asDataObject();
+    (*out)["currentRequestsHash"] = m_currentRequestsHash->asString();
+    return out;
 }
 
 spDataObject BlockchainTestFillerEnv4844::asDataObject() const
@@ -394,7 +459,12 @@ BlockchainTestFillerEnv* readBlockchainFillerTestEnv(spDataObjectMove _data, Sea
             if (data->count(c_withdrawalsRoot))
             {
                 if (data->count(c_excessBlobGas))
-                    return new BlockchainTestFillerEnv4844(_data, _sEngine);
+                {
+                    if (data->count(c_requestsHash))
+                        return new BlockchainTestFillerEnvPrague(_data, _sEngine);
+                    else
+                       return new BlockchainTestFillerEnv4844(_data, _sEngine);
+                }
                 else
                     return new BlockchainTestFillerEnvShanghai(_data, _sEngine);
             }

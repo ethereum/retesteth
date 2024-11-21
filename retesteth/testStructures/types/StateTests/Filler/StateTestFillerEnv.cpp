@@ -119,6 +119,9 @@ void StateTestFillerEnv::initializeFields(spDataObject const& _data)
         m_currentBlobGasUsed = sVALUE(_data->atKey(c_parentBlobGasUsed));
     if (_data->count(c_currentBeaconRoot))
         m_currentBeaconRoot = sFH32(_data->atKey(c_currentBeaconRoot));
+
+    // Prague
+    m_currentRequestsHash = spFH32(C_FH32_DEFAULT_REQUESTS_HASH.copy());
 }
 
 }  // namespace teststruct

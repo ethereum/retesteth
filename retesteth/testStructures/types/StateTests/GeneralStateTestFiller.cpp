@@ -125,6 +125,7 @@ StateTestInFiller::StateTestInFiller(spDataObject& _data)
         m_pre = spState(new State(MOVE(_data, "pre")));
         m_hasEmptyAccounts = checkEmptyAccounts(m_pre);
 
+        m_hasBigInt = _data->atKey("transaction").performSearch(src_findBigInt);
         m_transaction = spStateTestFillerTransaction(new StateTestFillerTransaction(MOVE(_data, "transaction")));
 
         string const c_expect = "expect";

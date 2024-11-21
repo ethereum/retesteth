@@ -36,6 +36,19 @@ StateTestFillerRunner::StateTestFillerRunner(StateTestInFiller const& _test)
     fillInfoWithLabels();
 }
 
+bool StateTestFillerRunner::checkBigintSkip()
+{
+    bool bigIntSupport = Options::getCurrentConfig().cfgFile().supportBigint();
+    if (!bigIntSupport && m_test.hasBigInt())
+    {
+        ETH_ERROR_MESSAGE("Client does not support test that has bigint: " + m_test.testName());
+        for (TransactionInGeneralSection& tr : m_txs)
+            tr.markSkipped();
+        return true;
+    }
+    return false;
+}
+
 void StateTestFillerRunner::fillInfoWithLabels()
 {
     for (auto const& tx : m_txs)

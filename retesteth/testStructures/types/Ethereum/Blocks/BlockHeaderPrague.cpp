@@ -1,21 +1,22 @@
+#include "BlockHeaderPrague.h"
 #include <libdevcore/Address.h>
-#include <retesteth/EthChecks.h>
 #include <retesteth/helpers/TestHelper.h>
+#include <retesteth/EthChecks.h>
 #include <retesteth/testStructures/Common.h>
 #include <retesteth/Constants.h>
 
-using namespace dev;
 using namespace std;
+using namespace dev;
 using namespace test::debug;
 using namespace test::teststruct::constnames;
 
 namespace test::teststruct
 {
 
-void BlockHeader1559::checkDataScheme(DataObject const& _data) const
+void BlockHeaderPrague::checkDataScheme(DataObject const& _data) const
 {
     // Allowed fields for this structure
-    REQUIRE_JSONFIELDS(_data, "BlockHeader1559 " + _data.getKey(),
+    REQUIRE_JSONFIELDS(_data, "BlockHeaderPrague " + _data.getKey(),
         {
             {c_bloom, {{DataType::String}, jsonField::Optional}},
             {c_logsBloom, {{DataType::String}, jsonField::Optional}},
@@ -40,98 +41,102 @@ void BlockHeader1559::checkDataScheme(DataObject const& _data) const
             {c_transactionsRoot, {{DataType::String}, jsonField::Optional}},
             {c_sha3Uncles, {{DataType::String}, jsonField::Optional}},
             {c_uncleHash, {{DataType::String}, jsonField::Optional}},
+            {c_withdrawalsRoot, {{DataType::String}, jsonField::Required}},
+            {c_blobGasUsed, {{DataType::String}, jsonField::Required}},
+            {c_excessBlobGas, {{DataType::String}, jsonField::Required}},
+            {c_parentBeaconBlockRoot, {{DataType::String}, jsonField::Required}},
+            {c_requestsHash, {{DataType::String}, jsonField::Required}},
             {"rejectedTransactions", {{DataType::Array}, jsonField::Optional}},   // EthGetBlockBy test debug field
             {"seedHash", {{DataType::String}, jsonField::Optional}},         // EthGetBlockBy aleth field
             {"boundary", {{DataType::String}, jsonField::Optional}},         // EthGetBlockBy aleth field
             {"size", {{DataType::String}, jsonField::Optional}},             // EthGetBlockBy field
             {"totalDifficulty", {{DataType::String}, jsonField::Optional}},  // EthGetBlockBy field
             {"transactions", {{DataType::Array}, jsonField::Optional}},      // EthGetBlockBy field
-            {"uncles", {{DataType::Array}, jsonField::Optional}}             // EthGetBlockBy field
+            {"uncles", {{DataType::Array}, jsonField::Optional}},            // EthGetBlockBy field
+            {"withdrawals", {{DataType::Array}, jsonField::Optional}}        // EthGetBlockBy field
         });
 }
 
-void BlockHeader1559::_fromData(DataObject const& _data)
+void BlockHeaderPrague::_fromData(DataObject const& _data)
 {
-    BlockHeaderLegacy::_fromData(_data);
-    m_baseFee = sVALUE(_data.atKey(c_baseFeePerGas));
+    BlockHeader4844::_fromData(_data);
+    m_requestsHash = sFH32(_data.atKey(c_requestsHash));
 }
 
-size_t BlockHeader1559::_fromRLP(dev::RLP const& _rlp)
+size_t BlockHeaderPrague::_fromRLP(dev::RLP const& _rlp)
 {
-    // 0 - parentHash           // 8 - number
+    // 0 - parentHash           // 8 - number           // 20 - requestsHash
     // 1 - uncleHash            // 9 - gasLimit
     // 2 - coinbase             // 10 - gasUsed
     // 3 - stateRoot            // 11 - timestamp
     // 4 - transactionTrie      // 12 - extraData
     // 5 - receiptTrie          // 13 - mixHash
     // 6 - bloom                // 14 - nonce
-    // 7 - difficulty           // 15 - baseFee
-    size_t i = BlockHeaderLegacy::_fromRLP(_rlp);
-    m_baseFee = spVALUE(new VALUE(_rlp[i++]));
+    // 7 - difficulty            // 15 - baseFee
+    // 16 - withdrawals root    // 17 - excessBlobGas
+    // 18 - BlobGasUsed         // 19 - beaconRoot
+    size_t i = BlockHeader4844::_fromRLP(_rlp);
+    m_requestsHash = sFH32(_rlp[i++]);
     return i;
 }
 
-BlockHeader1559::BlockHeader1559(dev::RLP const& _rlp)
+BlockHeaderPrague::BlockHeaderPrague(dev::RLP const& _rlp)
 {
     _fromRLP(_rlp);
     recalculateHash();
 }
 
-spDataObject BlockHeader1559::asDataObject() const
+spDataObject BlockHeaderPrague::asDataObject() const
 {
-    spDataObject out = BlockHeaderLegacy::asDataObject();
-    (*out)[c_baseFeePerGas] = m_baseFee->asString();
+    spDataObject out = BlockHeader4844::asDataObject();
+    (*out)[c_requestsHash] = m_requestsHash->asString();
     return out;
 }
 
-const RLPStream BlockHeader1559::asRLPStream() const
+const RLPStream BlockHeaderPrague::asRLPStream() const
 {
-    RLPStream header = BlockHeaderLegacy::asRLPStream();
-    header << m_baseFee->asBigInt();
+    RLPStream header = BlockHeader4844::asRLPStream();
+    header << m_requestsHash->serializeRLP();
     return header;
 }
+
 
 namespace  {
 inline bool isChild(BlockType _t)
 {
     // Can't use compareFork function here because of EthereumClassic and custom fork names
-    return _t != BlockType::BlockHeader1559 &&
-           _t != BlockType::BlockHeaderParis &&
-           _t != BlockType::BlockHeaderShanghai &&
-           _t != BlockType::BlockHeader4844 &&
-           _t != BlockType::BlockHeaderPrague;
+    return _t != BlockType::BlockHeaderPrague;
 }
 }
 
-BlockHeader1559& BlockHeader1559::castFrom(BlockHeader& _from)
+BlockHeaderPrague& BlockHeaderPrague::castFrom(BlockHeader& _from)
 {
     try
     {
         if (isChild(_from.type()))
-            ETH_FAIL_MESSAGE("BlockHeader1559::castFrom() got wrong block type! `" + BlockHeader::BlockTypeToString(_from.type()));
-        return dynamic_cast<BlockHeader1559&>(_from);
+            ETH_FAIL_MESSAGE("BlockHeaderPrague::castFrom() got wrong block type!");
+        return dynamic_cast<BlockHeaderPrague&>(_from);
     }
     catch (...)
     {
-        ETH_FAIL_MESSAGE("BlockHeader1559::castFrom() failed!");
+        ETH_FAIL_MESSAGE("BlockHeaderPrague::castFrom() failed!");
     }
-    return dynamic_cast<BlockHeader1559&>(_from);
+    return dynamic_cast<BlockHeaderPrague&>(_from);
 }
 
-BlockHeader1559 const& BlockHeader1559::castFrom(spBlockHeader const& _from)
+BlockHeaderPrague const& BlockHeaderPrague::castFrom(spBlockHeader const& _from)
 {
     try
     {
         if (isChild(_from->type()))
-            ETH_FAIL_MESSAGE("BlockHeader1559::castFrom() got wrong block type! `" + BlockHeader::BlockTypeToString(_from->type())
-                + "\n" + _from->asDataObject()->asJson());
-        return dynamic_cast<BlockHeader1559 const&>(_from.getCContent());
+            ETH_FAIL_MESSAGE("BlockHeaderPrague::castFrom() got wrong block type!");
+        return dynamic_cast<BlockHeaderPrague const&>(_from.getCContent());
     }
     catch (...)
     {
-        ETH_FAIL_MESSAGE("BlockHeader1559::castFrom() failed!");
+        ETH_FAIL_MESSAGE("BlockHeaderPrague::castFrom() failed!");
     }
-    spBlockHeader1559 foo(new BlockHeader1559(DataObject()));
+    spBlockHeaderPrague foo(new BlockHeaderPrague(DataObject()));
     return foo.getCContent();
 }
 

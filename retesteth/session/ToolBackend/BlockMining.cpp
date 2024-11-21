@@ -115,6 +115,11 @@ void makeEnvOmmers(spDataObject& _envData, EthereumBlockState const& _currentBlo
         (*_envData)["ommers"].addArrayObject(uncle);
     }
 }
+
+void makeEnvRequestHash(spDataObject& , spBlockHeader const&, spBlockHeader const& )
+{
+    // t8n does not accept any additional parameters on Prague
+}
 }
 
 namespace toolimpl
@@ -136,6 +141,7 @@ void BlockMining::prepareEnvFile()
     makeEnvBasefee(envData, parentBlockH, currentBlockH);
     makeEnvExcessBlobGas(envData, parentBlockH, currentBlockH, m_chainRef);
     makeEnvOmmers(envData, m_currentBlockRef, m_chainRef);
+    makeEnvRequestHash(envData, parentBlockH, currentBlockH);
 
 
     // Options Hook

@@ -61,6 +61,12 @@ struct SetChainParamsArgsGenesis4844 : SetChainParamsArgsGenesis
 protected:
     virtual spDataObject _constructBlockHeader() const override;
 };
+struct SetChainParamsArgsGenesisPrague : SetChainParamsArgsGenesis
+{
+    SetChainParamsArgsGenesisPrague(DataObject const&);
+protected:
+    virtual spDataObject _constructBlockHeader() const override;
+};
 
 typedef GCP_SPointer<SetChainParamsArgs> spSetChainParamsArgs;
 typedef GCP_SPointer<SetChainParamsArgsGenesis> spSetChainParamsArgsGenesis;

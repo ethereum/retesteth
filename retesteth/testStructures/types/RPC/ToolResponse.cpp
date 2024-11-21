@@ -25,6 +25,8 @@ ToolResponse::ToolResponse(DataObject const& _data)
             {c_currentExcessBlobGas, {{DataType::String}, jsonField::Optional}},
             {c_blobGasUsed, {{DataType::String, DataType::Null}, jsonField::Optional}},
             {c_requestsRoot, {{DataType::String, DataType::Null}, jsonField::Optional}},
+            {c_requestsHash, {{DataType::String, DataType::Null}, jsonField::Optional}},
+            {c_requests, {{DataType::String, DataType::Array}, jsonField::Optional}},
             {"receipts", {{DataType::Array}, jsonField::Required}}});
 
     m_stateRoot = sFH32(_data.atKey(c_stateRoot));
@@ -64,6 +66,10 @@ ToolResponse::ToolResponse(DataObject const& _data)
     m_withdrawalsRoot = spFH32(C_FH32_ZERO.copy());
     if (_data.count(c_withdrawalsRoot))
         m_withdrawalsRoot = sFH32(_data.atKey(c_withdrawalsRoot));
+
+    m_requestsHash = spFH32(C_FH32_DEFAULT_REQUESTS_HASH.copy());
+    if (_data.count(c_requestsHash))
+        m_requestsHash = sFH32(_data.atKey(c_requestsHash));
 
     auto const& receipts = _data.atKey("receipts").getSubObjects();
     m_receipts.reserve(receipts.size());

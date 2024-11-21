@@ -63,7 +63,19 @@ struct BlockchainTestEnv4844 : BlockchainTestEnvShanghai
     BlockchainTestEnv4844(DataObject const& _data);
 
 protected:
+    BlockchainTestEnv4844(){};
     void initialize4844Fields(DataObject const&);
+
+private:
+    void define() const override {}
+};
+
+struct BlockchainTestEnvPrague : BlockchainTestEnv4844
+{
+    BlockchainTestEnvPrague(DataObject const& _data);
+
+protected:
+    void initializePragueFields(DataObject const&);
 
 private:
     void define() const override {}

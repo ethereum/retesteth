@@ -146,6 +146,22 @@ void verify4844Block(spBlockHeader const& _header, ToolChain const& _chain)
     }
 }
 
+void verifyPragueBlock(spBlockHeader const& _header, ToolChain const& _chain)
+{
+    (void)_chain;
+    check_blockType(_header->type(), BlockType::BlockHeaderPrague, "verifyPragueBlock");
+
+    verifyCommonParisRules(_header, "Prague");
+
+    /// Verify 4844 rules
+    if (_header->number() == 0)
+    {
+        BlockHeader4844 const& header = BlockHeader4844::castFrom(_header);
+        if (header.blobGasUsed().asBigInt() != 0)
+            throw test::UpwardsException("[retesteth]: Prague genesis block blobGasUsed != 0 \n" + header.asDataObject()->asJson());
+    }
+}
+
 void verifyParisBlock(spBlockHeader const& _header, ToolChain const& _chain)
 {
     (void)_chain;
@@ -223,6 +239,17 @@ void verifyShanghaiParent(spBlockHeader const& _header, spBlockHeader const& _pa
         }
         else
             throw test::UpwardsException("[retesteth]: Trying to import Shanghai block on top of block that is not Shanghai!!");
+    }
+}
+
+void verifyPragueParent(spBlockHeader const& _header, spBlockHeader const& _parent, ToolChain const& _chain)
+{
+    check_blockType(_header->type(), BlockType::BlockHeaderPrague, "verifyPragueParent");
+    if (_parent->type() == BlockType::BlockHeaderPrague)
+        verifyPragueBlock(_parent, _chain);
+    else
+    {
+        throw test::UpwardsException("[retesteth]: Trying to import Cancun block on top of block that is not Cancun!!");
     }
 }
 
@@ -348,6 +375,9 @@ void verifyBlockParent(spBlockHeader const& _header, ToolChain const& _chain)
             case BlockType::BlockHeader4844:
                 verify4844Parent(_header, parentBlock.header(), _chain);
                 break;
+            case BlockType::BlockHeaderPrague:
+                verifyPragueParent(_header, parentBlock.header(), _chain);
+                break;
             default:
                 throw test::UpwardsException("[retesteth]: verifyBlockParent::Unhandled block type check!");
             }
@@ -383,6 +413,9 @@ void verifyEthereumBlockHeader(spBlockHeader const& _header, ToolChain const& _c
         break;
     case BlockType::BlockHeader4844:
         verify4844Block(_header, _chain);
+        break;
+    case BlockType::BlockHeaderPrague:
+        verifyPragueBlock(_header, _chain);
         break;
     default:
         throw test::UpwardsException("[retesteth]: verifyEthereumBlockHeader::Unhandled block type check!");

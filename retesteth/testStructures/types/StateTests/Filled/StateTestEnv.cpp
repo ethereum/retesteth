@@ -38,7 +38,8 @@ void requireStateTestEnvScheme(DataObject const& _data)
                 {"currentTimestamp", {{DataType::String}, jsonField::Required}},
                 {"currentBaseFee", {{DataType::String}, jsonField::Optional}},
                 {"currentRandom", {{DataType::String}, jsonField::Optional}},
-                {c_currentExcessBlobGas, {{DataType::String}, jsonField::Optional}}
+                {c_currentExcessBlobGas, {{DataType::String}, jsonField::Optional}},
+                {c_currentRequestsHash, {{DataType::String}, jsonField::Optional}}
             });
     }
 }
@@ -93,6 +94,10 @@ void StateTestEnv::initializeFields(DataObject const& _data)
     m_currentBeaconRoot = spFH32(FH32::zero().copy());
     if (_data.count(c_currentBeaconRoot))
         m_currentBeaconRoot = sFH32(_data.atKey(c_currentBeaconRoot));
+
+    m_currentRequestsHash = spFH32(C_FH32_DEFAULT_REQUESTS_HASH.copy());
+    if (_data.count(c_currentRequestsHash))
+        m_currentRequestsHash = sFH32(_data.atKey(c_currentRequestsHash));
 }
 
 

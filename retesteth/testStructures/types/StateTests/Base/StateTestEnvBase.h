@@ -31,6 +31,8 @@ struct StateTestEnvBase : GCP_SPointerBase
     VALUE const& currentBlobGasUsed() const { return m_currentBlobGasUsed; }
     FH32 const& currentBeaconRoot() const { return m_currentBeaconRoot; }
 
+    FH32 const& currentRequestHash() const { return m_currentRequestsHash; }
+
 protected:
     StateTestEnvBase() {}
 
@@ -56,6 +58,9 @@ protected:
     spVALUE m_currentBlobGasUsed;
     spVALUE m_currentExcessBlobGas;
     spFH32 m_currentBeaconRoot;
+
+    // Prague
+    spFH32 m_currentRequestsHash;
 };
 
 

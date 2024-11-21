@@ -10,10 +10,16 @@ using namespace test::teststruct::constnames;
 
 namespace  {
 
+bool isHeaderPrague(DataObject const& _filledData)
+{
+    if (_filledData.count(c_requestsHash))
+        return true;
+    return false;
+}
 
 bool isHeader4844(DataObject const& _filledData)
 {
-    if (_filledData.count(c_excessBlobGas))
+    if (_filledData.count(c_excessBlobGas) && !_filledData.count(c_requestsHash))
         return true;
     return false;
 }
@@ -68,6 +74,11 @@ bool isHeaderShanghai(dev::RLP const& _rlp)
 bool isHeader4844(dev::RLP const& _rlp)
 {
     return (_rlp.itemCount() == 20);
+}
+
+bool isHeaderPrague(dev::RLP const& _rlp)
+{
+    return (_rlp.itemCount() == 21);
 }
 
 
@@ -127,6 +138,9 @@ spBlockHeader readBlockHeader(dev::RLP const& _rlp)
     if (isHeader4844(_rlp))
         return spBlockHeader(new BlockHeader4844(_rlp));
 
+    if (isHeaderPrague(_rlp))
+        return spBlockHeader(new BlockHeaderPrague(_rlp));
+
     throw test::UpwardsException("readBlockHeader(RLP): unknown block type! \n" + dev::asString(_rlp.toBytes()));
 }
 
@@ -147,6 +161,9 @@ spBlockHeader readBlockHeader(DataObject const& _filledData)
     if (isHeader4844(_filledData))
         return spBlockHeader(new BlockHeader4844(_filledData));
 
+    if (isHeaderPrague(_filledData))
+        return spBlockHeader(new BlockHeaderPrague(_filledData));
+
     ETH_ERROR_MESSAGE("readBlockHeader(DATA): unknown block type! \n" + _filledData.asJson());
     return spBlockHeader(new BlockHeaderLegacy(_filledData));
 }
@@ -160,18 +177,26 @@ bool isBlockExportCurrentRandom(BlockHeader const& _header)
 {
     return _header.type() == BlockType::BlockHeaderParis
            || _header.type() == BlockType::BlockHeaderShanghai
-           || _header.type() == BlockType::BlockHeader4844;
+           || _header.type() == BlockType::BlockHeader4844
+           || _header.type() == BlockType::BlockHeaderPrague;
+}
+
+bool isBlockExportRequestHash(BlockHeader const& _header)
+{
+    return _header.type() == BlockType::BlockHeaderPrague;
 }
 
 bool isBlockExportExcessBlobGas(BlockHeader const& _header)
 {
-    return _header.type() == BlockType::BlockHeader4844;
+    return _header.type() == BlockType::BlockHeader4844
+        || _header.type() == BlockType::BlockHeaderPrague;
 }
 
 bool isBlockExportWithdrawals(BlockHeader const& _header)
 {
     return _header.type() == BlockType::BlockHeaderShanghai
-           || _header.type() == BlockType::BlockHeader4844;
+            || _header.type() == BlockType::BlockHeader4844
+            || _header.type() == BlockType::BlockHeaderPrague;
 }
 
 bool isBlockExportBasefee(BlockHeader const& _header)
@@ -179,7 +204,8 @@ bool isBlockExportBasefee(BlockHeader const& _header)
     return _header.type() == BlockType::BlockHeader1559
            || _header.type() == BlockType::BlockHeaderParis
            || _header.type() == BlockType::BlockHeaderShanghai
-           || _header.type() == BlockType::BlockHeader4844;
+           || _header.type() == BlockType::BlockHeader4844
+           || _header.type() == BlockType::BlockHeaderPrague;
 }
 
 bool isBlockExportDifficulty(BlockHeader const& _header)

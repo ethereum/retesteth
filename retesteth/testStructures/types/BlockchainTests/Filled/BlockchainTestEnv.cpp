@@ -152,10 +152,48 @@ void require4844BlockchainHeader(DataObject const& _data)
             {c_uncleHash, {{DataType::String}, jsonField::Optional}}});
 }
 
+void requirePragueBlockchainHeader(DataObject const& _data)
+{
+    REQUIRE_JSONFIELDS(_data, "GenesisBlockHeader(BlockchainTestEnvPrague) " + _data.getKey(),
+        {{c_bloom, {{DataType::String}, jsonField::Optional}},
+            {c_logsBloom, {{DataType::String}, jsonField::Optional}},
+            {c_coinbase, {{DataType::String}, jsonField::Optional}},
+            {c_author, {{DataType::String}, jsonField::Optional}},
+            {c_miner, {{DataType::String}, jsonField::Optional}},
+            {c_difficulty, {{DataType::String}, jsonField::Required}},
+            {c_extraData, {{DataType::String}, jsonField::Required}},
+            {c_gasLimit, {{DataType::String}, jsonField::Required}},
+            {c_baseFeePerGas, {{DataType::String}, jsonField::Required}},
+            {c_gasUsed, {{DataType::String}, jsonField::Required}},
+            {c_hash, {{DataType::String}, jsonField::Optional}},
+            {c_mixHash, {{DataType::String}, jsonField::Optional}},
+            {c_nonce, {{DataType::String}, jsonField::Optional}},
+            {c_number, {{DataType::String}, jsonField::Required}},
+            {c_parentHash, {{DataType::String}, jsonField::Required}},
+            {c_receiptTrie, {{DataType::String}, jsonField::Optional}},
+            {c_receiptsRoot, {{DataType::String}, jsonField::Optional}},
+            {c_stateRoot, {{DataType::String}, jsonField::Required}},
+            {c_timestamp, {{DataType::String}, jsonField::Required}},
+            {c_transactionsTrie, {{DataType::String}, jsonField::Optional}},
+            {c_transactionsRoot, {{DataType::String}, jsonField::Optional}},
+            {c_withdrawalsRoot, {{DataType::String}, jsonField::Required}},
+            {c_blobGasUsed, {{DataType::String}, jsonField::Required}},
+            {c_excessBlobGas, {{DataType::String}, jsonField::Required}},
+            {c_parentBeaconBlockRoot, {{DataType::String}, jsonField::Required}},
+            {c_requestsHash, {{DataType::String}, jsonField::Required}},
+            {c_sha3Uncles, {{DataType::String}, jsonField::Optional}},
+            {c_uncleHash, {{DataType::String}, jsonField::Optional}}});
+}
+
 }
 
 namespace test::teststruct
 {
+
+void BlockchainTestEnvPrague::initializePragueFields(DataObject const& _data)
+{
+    m_currentRequestsHash = sFH32(_data.atKey(c_requestsHash));
+}
 
 void BlockchainTestEnv4844::initialize4844Fields(DataObject const& _data)
 {
@@ -253,6 +291,23 @@ BlockchainTestEnv4844::BlockchainTestEnv4844(DataObject const& _data)
     catch (std::exception const& _ex)
     {
         throw UpwardsException(string("BlockchainTestEnv(4844) convertion error: ") + _ex.what() + _data.asJson());
+    }
+}
+
+BlockchainTestEnvPrague::BlockchainTestEnvPrague(DataObject const& _data) :
+    BlockchainTestEnv4844()
+{
+    try {
+        requirePragueBlockchainHeader(_data);
+        initializeCommonFields(_data);
+        initializeParisFields(_data);
+        initializeShanghaiFields(_data);
+        initialize4844Fields(_data);
+        initializePragueFields(_data);
+    }
+    catch (std::exception const& _ex)
+    {
+        throw UpwardsException(string("BlockchainTestEnv(Prague) convertion error: ") + _ex.what() + _data.asJson());
     }
 }
 

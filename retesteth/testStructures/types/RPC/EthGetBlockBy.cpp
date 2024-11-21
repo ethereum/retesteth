@@ -34,7 +34,8 @@ EthGetBlockBy::EthGetBlockBy(spDataObject& _data)
                 {c_withdrawalsRoot, {{DataType::String}, jsonField::Optional}},        //Shanghai field
                 {c_excessBlobGas, {{DataType::String}, jsonField::Optional}},          //Cancun field
                 {c_blobGasUsed, {{DataType::String}, jsonField::Optional}},            //Cancun field
-                {c_parentBeaconBlockRoot, {{DataType::String}, jsonField::Optional}},             //Cancun field
+                {c_parentBeaconBlockRoot, {{DataType::String}, jsonField::Optional}},  //Cancun field
+                {c_requestsHash, {{DataType::String}, jsonField::Optional}},           //Prague field
                 {"sha3Uncles", {{DataType::String}, jsonField::Required}},
                 {"seedHash", {{DataType::String}, jsonField::Optional}},               //Aleth field
                 {"boundary", {{DataType::String}, jsonField::Optional}},               //Aleth field
