@@ -22,7 +22,7 @@ void requireStateTestsFillerEnvScheme(spDataObject const& _data)
          {c_parentExcessBlobGas, {{DataType::String}, jsonField::Optional}},
          {c_parentBlobGasUsed, {{DataType::String}, jsonField::Optional}},
          {c_currentBeaconRoot, {{DataType::String}, jsonField::Optional}},
-         {"previousHash", {{DataType::String}, jsonField::Required}}});
+         {"previousHash", {{DataType::String}, jsonField::Optional}}});
 }
 
 void convertEnvDecFieldsToHex(spDataObject& _data)
