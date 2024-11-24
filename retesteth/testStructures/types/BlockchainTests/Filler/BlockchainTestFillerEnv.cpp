@@ -178,7 +178,6 @@ spDataObject formatRawDataToRPCformat(spDataObject& _data)
     (*out).atKeyPointer("currentNumber") = (*_data).atKeyPointerUnsafe(c_number);
     (*out).atKeyPointer("currentTimestamp") = (*_data).atKeyPointerUnsafe(c_timestamp);
     (*out).atKeyPointer("currentGasLimit") = (*_data).atKeyPointerUnsafe(c_gasLimit);
-    (*out).atKeyPointer("previousHash") = (*_data).atKeyPointerUnsafe(c_parentHash);
     if (_data->count(c_baseFeePerGas))
         (*out).atKeyPointer("currentBaseFee") = (*_data).atKeyPointerUnsafe(c_baseFeePerGas);
     if (_data->count(c_excessBlobGas))
@@ -199,7 +198,6 @@ void BlockchainTestFillerEnv::initializeCommonFields(spDataObject const& _data, 
 {
     m_currentNumber = sVALUE(_data->atKey(c_number));
     m_currentTimestamp = sVALUE(_data->atKey(c_timestamp));
-    m_previousHash = sFH32(_data->atKey(c_parentHash));
     m_currentExtraData = sBYTES(_data->atKey(c_extraData));
     m_currentCoinbase = sFH20(_data->atKey(c_coinbase));
     m_currentGasLimit = sVALUE(_data->atKey(c_gasLimit));
