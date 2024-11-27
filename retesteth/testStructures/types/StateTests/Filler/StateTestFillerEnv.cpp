@@ -21,16 +21,14 @@ void requireStateTestsFillerEnvScheme(spDataObject const& _data)
          {"currentRandom", {{DataType::String}, jsonField::Optional}},
          {c_parentExcessBlobGas, {{DataType::String}, jsonField::Optional}},
          {c_parentBlobGasUsed, {{DataType::String}, jsonField::Optional}},
-         {c_currentBeaconRoot, {{DataType::String}, jsonField::Optional}},
-         {"previousHash", {{DataType::String}, jsonField::Required}}});
+         {c_currentBeaconRoot, {{DataType::String}, jsonField::Optional}}});
 }
 
 void convertEnvDecFieldsToHex(spDataObject& _data)
 {
     (*_data).performModifier(mod_valueToCompactEvenHexPrefixed, DataObject::ModifierOption::RECURSIVE,
-        {"currentCoinbase", "previousHash", "currentRandom"});
+        {"currentCoinbase", "currentRandom"});
     (*_data).atKeyUnsafe("currentCoinbase").performModifier(mod_valueInsertZeroXPrefix);
-    (*_data).atKeyUnsafe("previousHash").performModifier(mod_valueInsertZeroXPrefix);
     (*_data).performModifier(mod_valueToLowerCase);
 }
 }  // namespace
@@ -63,8 +61,6 @@ void StateTestFillerEnv::initializeFields(spDataObject const& _data)
     m_currentTimestamp = sVALUE(_data->atKey("currentTimestamp"));
     // Indicates zero block timestamp in StateTests
     m_genesisTimestamp = sVALUE(0);
-
-    m_previousHash = sFH32(_data->atKey("previousHash"));
 
     spDataObject tmpD(new DataObject("0x00"));  // State Tests extra data is 0x00
     m_currentExtraData = sBYTES(tmpD);
