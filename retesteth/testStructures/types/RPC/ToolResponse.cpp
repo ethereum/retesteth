@@ -26,7 +26,7 @@ ToolResponse::ToolResponse(DataObject const& _data)
             {c_blobGasUsed, {{DataType::String, DataType::Null}, jsonField::Optional}},
             {c_requestsRoot, {{DataType::String, DataType::Null}, jsonField::Optional}},
             {c_requestsHash, {{DataType::String, DataType::Null}, jsonField::Optional}},
-            {c_requests, {{DataType::String, DataType::Array}, jsonField::Optional}},
+            {c_requests, {{DataType::String, DataType::Array, DataType::Null}, jsonField::Optional}},
             {"receipts", {{DataType::Array}, jsonField::Required}}});
 
     m_stateRoot = sFH32(_data.atKey(c_stateRoot));
