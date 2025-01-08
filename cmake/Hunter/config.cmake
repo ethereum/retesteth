@@ -17,4 +17,9 @@ hunter_config(ethash VERSION 0.4.0
     SHA1 fd92ffadff2931877a3b68685dd8c53f0bdec539
 )
 
+hunter_config(Boost VERSION 1.79.1
+    URL "https://archives.boost.io/release/1.79.0/source/boost_1_79_0.tar.bz2"
+    SHA1 "31209dcff292bd6a64e5e08ceb3ce44a33615dc0"
+)
+
 hunter_config(CURL VERSION ${HUNTER_CURL_VERSION} CMAKE_ARGS HTTP_ONLY=ON CMAKE_USE_OPENSSL=OFF CMAKE_USE_LIBSSH2=OFF CURL_CA_PATH=none)
