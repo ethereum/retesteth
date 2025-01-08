@@ -123,7 +123,7 @@ ln -s /besu/ethereum/evmtool/build/install/evmtool/bin/evm /usr/bin/besuevm
 ln -s /evmone/build/bin/evmone-t8n /usr/bin/evmone
 ```
 
-Setup evn vars: 
+Setup env vars: 
 ```
 ETHEREUMJS_PATH env var is required for ethereumjs client
 PYSPECS_PATH env var to generate .py test fillers (https://github.com/ethereum/execution-spec-tests)
