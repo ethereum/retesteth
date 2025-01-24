@@ -5,42 +5,24 @@ using namespace dataobject;
 namespace retesteth::options
 {
 
-string const pyt8n_setup = R"(#!/bin/bash
-    SNAME=".retesteth/pyt8n/setup.sh"
-    if [ -z "${PYT8N_PATH}" ]; then
-      1>&2 echo "$SNAME ERROR: Env variable PYT8N_PATH is either empty or not set!"
-    else
-      if [ -d "${PYT8N_PATH}" ]; then
-        1>&2 echo "$SNAME Using pyt8n path: '$PYT8N_PATH'"
-      else
-        echo "$SNAME ERROR: Path '$PYT8N_PATH' does not exist in the file system"
-      fi
-    fi
-
-    #cd $PYT8N_PATH
-    #python3 -m venv venv
-    #source venv/bin/activate
-    #pip install -e .
-    #sleep 5
+string const eels_setup = R"(#!/bin/bash
+    SNAME=".retesteth/eels/setup.sh"
 )";
 
-string const pyt8n_start = R"(#!/bin/bash
+string const eels_start = R"(#!/bin/bash
 
-SNAME=".retesteth/pyt8n/start.sh"
+SNAME=".retesteth/eels/start.sh"
 
-if [ -z "${PYT8N_PATH}" ]; then
-  1>&2 echo "$SNAME ERROR: Env variable PYT8N_PATH is either empty or not set!"
+if [ -z "${PYSPECS_PATH}" ]; then
+  1>&2 echo "$SNAME ERROR: Env variable PYSPECS_PATH is either empty or not set!"
 else
-  if [ ! -d "${PYT8N_PATH}" ]; then
-    1>&2 echo "$SNAME ERROR: Path '$PYT8N_PATH' does not exist in the file system"
+  if [ ! -d "${PYSPECS_PATH}" ]; then
+    1>&2 echo "$SNAME ERROR: Path '$PYSPECS_PATH' does not exist in the file system"
   fi
 fi
 
-cd $PYT8N_PATH
-python3 -m venv venv
-source venv/bin/activate
-cmd="ethereum-spec-evm"
-#cmd="python3 -m evm_tools t8n"
+cd $PYSPECS_PATH
+cmd="uv run ethereum-spec-evm"
 
 if [ $1 = "t8n" ] || [ $1 = "b11r" ]; then
     $cmd ${1} ${2} ${3} ${4} ${5} ${6} ${7} ${8} ${9} ${10} ${11} ${12} ${13} ${14} ${15} ${16} ${17} ${18} ${19} ${20} ${21} ${22} ${23} ${24} ${25} ${26}
@@ -74,11 +56,11 @@ else
 fi
 )";
 
-genpyt8ncfg::genpyt8ncfg()
+geneelscfg::geneelscfg()
 {
 
-string const pyt8n_config = R"({
-    "name" : "Python EVM StateTool",
+string const eels_config = R"({
+    "name" : "EELS Python EVM StateTool",
     "socketType" : "tranition-tool",
     "socketAddress" : "start.sh",
     "initializeTime" : "0",
@@ -333,28 +315,21 @@ string const pyt8n_config = R"({
 
     {
         spDataObject obj;
-        (*obj)["path"] = "pyt8n/config";
-        (*obj)["content"] = pyt8n_config;
-        map_configs.addArrayObject(obj);
-    }
-    /*{
-        spDataObject obj;
-        (*obj)["exec"] = true;
-        (*obj)["path"] = "pyt8n/setup.sh";
-        (*obj)["content"] = pyt8n_setup;
-        map_configs.addArrayObject(obj);
-    }*/
-    {
-        spDataObject obj;
-        (*obj)["exec"] = true;
-        (*obj)["path"] = "pyt8n/start.sh";
-        (*obj)["content"] = pyt8n_start;
+        (*obj)["path"] = "eels/config";
+        (*obj)["content"] = eels_config;
         map_configs.addArrayObject(obj);
     }
     {
         spDataObject obj;
         (*obj)["exec"] = true;
-        (*obj)["path"] = "pyt8n/yul.sh";
+        (*obj)["path"] = "eels/start.sh";
+        (*obj)["content"] = eels_start;
+        map_configs.addArrayObject(obj);
+    }
+    {
+        spDataObject obj;
+        (*obj)["exec"] = true;
+        (*obj)["path"] = "eels/yul.sh";
         (*obj)["content"] = yul_compiler_sh;
         map_configs.addArrayObject(obj);
     }

@@ -81,13 +81,16 @@ bool hasSubfoldersWithFileTypes(fs::path const& _path, string const& _filemask)
     using fsIterator = fs::directory_iterator;
     for (fsIterator it(_path); it != fsIterator(); ++it)
     {
+        auto const dirName = (*it).path().stem().string();
         if (fs::is_directory(*it)
-            && (*it).path().stem().string().find("__") == string::npos      //"__pycache__"
-            && (*it).path().stem().string() != "point_evaluation_vectors")
+            && dirName.find("__") == string::npos      //"__pycache__"
+            && dirName != "point_evaluation_vectors")
         {
+            bool hasAtLeastOneSubElement = false;
             bool foundTest = false;
             for (fsIterator subit(*it); subit != fsIterator(); ++subit)
             {
+                hasAtLeastOneSubElement = true;
                 string const filename = (*subit).path().string();
                 auto const suffixes = test::explode(_filemask, '|');
                 for (auto const& suffix : suffixes)
@@ -99,6 +102,11 @@ bool hasSubfoldersWithFileTypes(fs::path const& _path, string const& _filemask)
                     }
                 }
             }
+
+            // Treat empty subfolders as folders with test files even if there are none
+            if (!hasAtLeastOneSubElement)
+                return true;
+
             return foundTest;
         }
     }

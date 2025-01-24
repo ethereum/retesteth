@@ -32,6 +32,10 @@ extern std::string const t8ntool_start;
 #define DECLARE_PYT8N(X) \
   FOR_EACH(X, pyt8ncfg, RewardsCfgPYT8N, ConstantinopleFixCfgPYT8N)
 
+#define DECLARE_EELS(X) \
+    FOR_EACH(X, eelscfg, RewardsCfgEELS, ConstantinopleFixCfgEELS)
+
+
 #define DECLARE_ETCTR(X) \
   FOR_EACH(X, etctranslatecfg, RewardsCfgETCTR, ByzantiumCfgETCTR, ConstantinopleCfgETCTR, ConstantinopleFixCfgETCTR, \
     IstanbulCfgETCTR, BerlinCfgETCTR, LondonCfgETCTR, ParisCfgETCTR)
@@ -68,6 +72,7 @@ DECLARE_OEWRAP(REGISTER)
 DECLARE_ETHJS(REGISTER)
 DECLARE_NIMBUS(REGISTER)
 DECLARE_PYT8N(REGISTER)
+DECLARE_EELS(REGISTER)
 
 // Example configs
 DECLARE_T8NTOOL_EIP(REGISTER)
@@ -88,6 +93,7 @@ public:
         DECLARE_ETHJS(INIT)
         DECLARE_NIMBUS(INIT)
         DECLARE_PYT8N(INIT)
+        DECLARE_EELS(INIT)
 
         DECLARE_T8NTOOL_EIP(INIT)
         DECLARE_ALETH(INIT)

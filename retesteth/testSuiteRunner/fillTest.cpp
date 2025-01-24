@@ -134,7 +134,13 @@ string makePyScriptCMDArgs(fs::path const& _fillerTestFilePath, TestSuite::Absol
     runcmd += " " + filledPath;
 
     // T8N start script
-    runcmd += " " + opt.getCurrentConfig().getStartScript().string();
+    if (Options::getCurrentConfig().cfgFile().path().parent_path().filename() == "eels")
+    {
+        // Default pyt8n is EELS bundled with pyspecs
+        runcmd += " null";
+    }
+    else
+        runcmd += " --evm-bin " + opt.getCurrentConfig().getStartScript().string();
 
     // Force test update
     if (opt.forceupdate)
@@ -163,6 +169,7 @@ string makePyScriptCMDArgs(fs::path const& _fillerTestFilePath, TestSuite::Absol
     // Export call
     if (!Options::get().t8ntoolcall.empty())
     {
+        std::cerr << "THEREIS EXPORT CALL" << std::endl;
         runcmd += " " + Options::get().t8ntoolcall;
     }
     else

@@ -557,16 +557,19 @@ fi
 if [ "$SUITETYPE" == "state_tests eof_tests" ]; then
     ADDFLAGS+=( -m "state_test or eof_test")
 fi
+if [ "$EVMT8N" != "null" ]; then
+    ADDFLAGS+=($EVMT8N)
+fi
 
 if [ -d $testout ]; then
     rm -r $testout
 fi
 mkdir $testout
-1>&2 echo "uv run fill -v $SRCPATH2 --output "$testout" "${ADDFLAGS[@]}" --evm-bin $EVMT8N --flat-output --from=$FROMF --until=$UNTIF"
+1>&2 echo "uv run fill -v $SRCPATH2 --output "$testout" "${ADDFLAGS[@]}" --flat-output --from=$FROMF --until=$UNTIF"
 if [ $DEBUG != "null" ]; then
-    1>&2 uv run fill -v $SRCPATH2 --output "$testout" "${ADDFLAGS[@]}" --evm-bin $EVMT8N --flat-output --from=$FROMF --until=$UNTIF
+    1>&2 uv run fill -v $SRCPATH2 --output "$testout" "${ADDFLAGS[@]}" --flat-output --from=$FROMF --until=$UNTIF
 else
-    out=$(uv run fill -v $SRCPATH2 --output "$testout" "${ADDFLAGS[@]}" --evm-bin $EVMT8N --flat-output --from=$FROMF --until=$UNTIF 2>&1)
+    out=$(uv run fill -v $SRCPATH2 --output "$testout" "${ADDFLAGS[@]}" --flat-output --from=$FROMF --until=$UNTIF 2>&1)
     if [[ "$out" == *" failed"* ]] || [[ "$out" == *"ERROR"* ]]; then
       1>&2 echo "./retesteth/pyspecsStart.sh Pyspec test generation failed (use --verbosity PYSPEC for details) "
       exit 1
