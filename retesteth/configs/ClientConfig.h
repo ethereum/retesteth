@@ -24,7 +24,7 @@ struct ClientConfigID
     }
 
 private:
-    unsigned m_id;
+    unsigned m_id = 100500;
 };
 
 // Replace fields according to the client configs if needed

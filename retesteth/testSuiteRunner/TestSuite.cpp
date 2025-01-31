@@ -106,6 +106,18 @@ void TestSuite::verifyFilledTestsFolders(fs::path const& _fillerPath, fs::path c
 void TestSuite::runAllTestsInFolder(string const& _testFolder) const
 {
     Options::getDynamicOptions().getClientConfigs();
+
+
+    // Set the first config for .py test verification (as we always use 1 config anyway)
+    if (!Options::getDynamicOptions().isConfigSet())
+    {
+        for (auto const& config : Options::getDynamicOptions().getClientConfigs())
+        {
+            Options::getDynamicOptions().setCurrentConfig(config);
+            break;
+        }
+    }
+
     CHECKEXIT
 
     clearGeneratedTestNamesMap();

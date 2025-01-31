@@ -169,15 +169,17 @@ vector<string> getTestNamesFromJsonYaml(fs::path const& _filler)
 
 bool _checkPythonTestBlockchainOnly(string const& _pythonSrc, size_t _foundTestPos)
 {
-    size_t foundBlockchain = _pythonSrc.find("blockchain_test(", _foundTestPos);
-    if (foundBlockchain == string::npos)
+    // Return true if found a blockchain test at _foundTestPos
+    size_t foundNotStateTest = _pythonSrc.find(": BlockchainTestFiller", _foundTestPos);
+
+    if (foundNotStateTest == string::npos)
         return false;
 
     size_t foundNextTestPos = _pythonSrc.find("def test_", _foundTestPos + 50);
     if (foundNextTestPos == string::npos)
         return true;
 
-    if (foundBlockchain < foundNextTestPos)
+    if (foundNotStateTest < foundNextTestPos)
         return true;
 
     return false;
@@ -185,15 +187,16 @@ bool _checkPythonTestBlockchainOnly(string const& _pythonSrc, size_t _foundTestP
 
 bool _checkPythonTestStateTestOnly(string const& _pythonSrc, size_t _foundTestPos)
 {
-    size_t foundBlockchain = _pythonSrc.find("state_test_only(", _foundTestPos);
-    if (foundBlockchain == string::npos)
+    // Return true if found a State test on _foundTestPos
+    size_t foundStateTestOnly = _pythonSrc.find("state_test_only(", _foundTestPos);
+    if (foundStateTestOnly == string::npos)
         return false;
 
     size_t foundNextTestPos = _pythonSrc.find("def test_", _foundTestPos + 50);
     if (foundNextTestPos == string::npos)
         return true;
 
-    if (foundBlockchain < foundNextTestPos)
+    if (foundStateTestOnly < foundNextTestPos)
         return true;
 
     return false;
@@ -210,6 +213,27 @@ bool _checkPythonTestSkipped(string const& _pythonSrc, size_t _foundTestPos)
         return true;
 
     if (foundPreviuosTest <= foundSkipPos)
+        return true;
+
+    return false;
+}
+
+bool _checkPythonTestTransitionToUnsupportedFork(string const& _pythonSrc, size_t _foundTestPos)
+{
+    string marker = "pytest.mark.valid_at_transition_to(\"";
+    size_t foundTransitionMarker = _pythonSrc.rfind(marker, _foundTestPos);
+    if (foundTransitionMarker == string::npos)
+        return false;
+
+    // Check if found test is not a supported transition test
+    size_t findMarkerClose = _pythonSrc.find("\"", foundTransitionMarker + marker.length());
+    string fork = _pythonSrc.substr(foundTransitionMarker + marker.length(), findMarkerClose - foundTransitionMarker - marker.length());
+
+    // ETH_WARNING("Transition test for "+ fork);
+    bool forkInProgression = Options::getCurrentConfig().checkForkInProgression(FORK(fork));
+
+    size_t foundNextTestPos_after_transition_marker = _pythonSrc.find("def test_", foundTransitionMarker);
+    if (_foundTestPos == foundNextTestPos_after_transition_marker && !forkInProgression)
         return true;
 
     return false;
@@ -243,9 +267,15 @@ vector<string> getTestNamesFromPython(fs::path const& _filler)
                 {
                     ETH_WARNING("Will skip python bc test " + pythonTestname);
                 }
-                else if (OnBlockchainTest && _checkPythonTestStateTestOnly(pythonSrc, foundTestPos))
+                else if (OnBlockchainTest)
                 {
-                    ETH_WARNING("Will skip python state only test " + pythonTestname);
+                    if (_checkPythonTestStateTestOnly(pythonSrc, foundTestPos))
+                        ETH_WARNING("Will skip python state only test " + pythonTestname);
+                    else
+                    if (_checkPythonTestTransitionToUnsupportedFork(pythonSrc, foundTestPos))
+                        ETH_WARNING("Will skip python bc transition test to unsupported fork " + pythonTestname);
+                    else
+                        generatedTestNames.emplace_back(pythonTestname);
                 }
                 else
                     generatedTestNames.emplace_back(pythonTestname);

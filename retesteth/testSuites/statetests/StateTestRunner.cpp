@@ -228,11 +228,13 @@ void StateTestRunner::performValidations(TransactionInGeneralSection& _tr, State
 
         auto signatureRlpLength = size_r + size_s + 2;
         calculated.erase(calculated.size() - signatureRlpLength, signatureRlpLength);
+        calculated = calculated.substr(6); // erase rlp header 0xrlpheader
 
         if (expectedBytesPtr->asString().find(calculated) == string::npos)
         {
             string msg = string("TxBytes mismatch: test transaction section does not match txbytes in post section (Signature ignored)! ");
-            if (Debug::get().flag(DC::STATS2))
+            msg += "(file: " + TestOutputHelper::get().testFile().string() + ")";
+            if (Debug::get().flag(DC::STATS2) || Debug::get().flag(DC::PYSPEC))
                 msg += "\n test txbytes: " + expectedBytesPtr->asString() + "\n vs \n " + tr->getRawBytes().asString();
             if (Options::get().chainid.initialized())
             {

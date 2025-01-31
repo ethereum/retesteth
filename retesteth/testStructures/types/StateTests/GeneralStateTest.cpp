@@ -72,6 +72,7 @@ StateTestInFilled::StateTestInFilled(spDataObject& _data)
             {"env", {{DataType::Object}, jsonField::Required}},
             {"post", {{DataType::Object}, jsonField::Required}},
             {"pre", {{DataType::Object}, jsonField::Required}},
+            {"config", {{DataType::Object}, jsonField::Optional}},
             {"transaction", {{DataType::Object}, jsonField::Required}}});
 
     // UnitTests

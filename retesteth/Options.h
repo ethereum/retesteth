@@ -270,6 +270,7 @@ public:
         DynamicOptions() {}
         std::vector<ClientConfig> const& getClientConfigs() const;
         ClientConfig const& getCurrentConfig() const;
+        bool isConfigSet() const;
         void setCurrentConfig(ClientConfig const& _config);
         void setTestsuiteRunning(bool _arg);
         bool testSuiteRunning() const;
