@@ -13,6 +13,7 @@ spDataObject StateTestEnvBase::asDataObject() const
     (*data)["currentDifficulty"] = m_currentDifficulty->asString();
     (*data)["currentBaseFee"] = m_currentBaseFee->asString();
     (*data)["currentExcessBlobGas"] = m_currentExcessBlobGas->asString();
+
     //(*data)["currentRequestsHash"] = m_currentRequestsHash->asString();
     return data;
 }

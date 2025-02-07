@@ -5,6 +5,7 @@
 #include "../StateTests/Filler/InfoIncomplete.h"
 #include "Filler/BlockchainTestFillerBlock.h"
 #include "Filler/BlockchainTestFillerEnv.h"
+#include "Filler/BlockchainTestFillerConfig.h"
 #include "Filler/BlockchainTestFillerExpectSection.h"
 
 #include <libdataobj/DataObject.h>
@@ -23,6 +24,9 @@ struct BlockchainTestInFiller : GCP_SPointerBase
     SealEngine sealEngine() const { return m_sealEngine; }
     BlockchainTestFillerEnv const& Env() const { return m_env; }
     State const& Pre() const { return m_pre; }
+
+    bool hasConfig() const { return !m_config.isEmpty(); }
+    BlockchainTestFillerConfig const& Config() const { return m_config; }
     std::vector<BlockchainTestFillerBlock> const& blocks() const { return m_blocks; }
     std::vector<BlockchainTestFillerExpectSection> const& expects() const { return m_expects; }
 
@@ -41,6 +45,7 @@ private:
     spInfoIncomplete m_info;
     SealEngine m_sealEngine;
     spBlockchainTestFillerEnv m_env;
+    spBlockchainTestFillerConfig m_config;
     spState m_pre;
     std::vector<BlockchainTestFillerBlock> m_blocks;
     std::vector<BlockchainTestFillerExpectSection> m_expects;

@@ -254,6 +254,7 @@ public:
     booloutpathselector_opt poststate = false;
     bool_opt fullstate = false;
     bool_opt forceupdate = false;
+    bool_opt nopython = false;
     static bool isLegacy();
     static bool isLegacyConstantinople();
     static bool isEIPTest();

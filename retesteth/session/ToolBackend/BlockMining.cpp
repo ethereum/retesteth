@@ -62,6 +62,12 @@ void makeEnvBasefee(spDataObject& _envData, spBlockHeader const& _parentBlockH, 
             (*_envData)["parentGasLimit"] = h1559.gasLimit().asString();
         }
     }
+    if (isBlockExportRequestHash(_currentBlockH))
+    {
+        // PYT8N Prague require
+        (*_envData).removeKey("currentRequestsHash"); // not really needed
+        (*_envData)["parentHash"] = _parentBlockH->hash().asString(); // why?
+    }
 }
 
 void makeEnvExcessBlobGas(spDataObject& _envData, spBlockHeader const& _parentBlockH, spBlockHeader const& _currentBlockH, toolimpl::ToolChain const& _chain)

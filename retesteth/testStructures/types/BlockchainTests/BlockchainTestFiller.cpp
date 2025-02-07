@@ -2,6 +2,7 @@
 #include <retesteth/EthChecks.h>
 #include <retesteth/helpers/TestOutputHelper.h>
 #include <retesteth/testStructures/Common.h>
+#include <Options.h>
 
 using namespace std;
 using namespace test::teststruct;
@@ -90,6 +91,15 @@ BlockchainTestInFiller::BlockchainTestInFiller(spDataObject& _data)
             m_blocks.emplace_back(BlockchainTestFillerBlock(el, nonceMap));
             if (m_blocks.at(m_blocks.size() - 1).uncles().size() > 0)
                 m_hasAtLeastOneUncle = true;
+        }
+
+        auto const& opt = Options::get();
+        if (opt.isLegacyConstantinople() || opt.isLegacy() || opt.isEIPTest() || opt.isEOFTest())
+        {}
+        else
+        {
+            auto const forks = getAllForksFromExpectSections();
+            m_config = GCP_SPointer<BlockchainTestFillerConfig>(new BlockchainTestFillerConfig(knownForks));
         }
     }
     catch (std::exception const& _ex)

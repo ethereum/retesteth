@@ -137,6 +137,8 @@ StateTestInFiller::StateTestInFiller(spDataObject& _data)
             checkCoinbaseInExpectSection(newSection, m_env);
             m_expectSections.emplace_back(newSection);
         }
+
+
         ETH_ERROR_REQUIRE_MESSAGE(m_expectSections.size() > 0, "StateTestFiller require expect sections!");
 
         m_name = _data->getKey();
@@ -149,6 +151,15 @@ StateTestInFiller::StateTestInFiller(spDataObject& _data)
         {
             spDataObjectMove m = MOVE(_data, "verifyBC");
             m_verifyBC = m.getPointer();
+        }
+
+        auto const& opt = Options::get();
+        if (opt.isLegacyConstantinople() || opt.isLegacy() || opt.isEIPTest() || opt.isEOFTest())
+        {}
+        else
+        {
+            auto const forks = getAllForksFromExpectSections();
+            m_config = GCP_SPointer<StateTestFillerConfig>(new StateTestFillerConfig(forks));
         }
     }
     catch (std::exception const& _ex)

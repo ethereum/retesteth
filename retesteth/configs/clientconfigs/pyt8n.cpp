@@ -17,11 +17,11 @@ string const pyt8n_setup = R"(#!/bin/bash
       fi
     fi
 
-    #cd $PYT8N_PATH
-    #python3 -m venv venv
-    #source venv/bin/activate
-    #pip install -e .
-    #sleep 5
+    cd $PYT8N_PATH
+    python3 -m venv venv
+    source venv/bin/activate
+    pip install -e .
+    sleep 5
 )";
 
 string const pyt8n_start = R"(#!/bin/bash
@@ -107,7 +107,8 @@ string const pyt8n_config = R"({
         "London",
         "Paris",
         "Shanghai",
-        "Cancun"
+        "Cancun",
+        "Prague"
     ],
     "additionalForks" : [
         "FrontierToHomesteadAt5",
@@ -125,9 +126,127 @@ string const pyt8n_config = R"({
     "fillerSkipForks" : [
     ],
     "exceptions" : {
-      "PYSPECS_EXCEPTIONS" : "",
-      "Transaction without funds" : "Failed transaction:",
+      "NEW PYSPECS EXCEPTIONS" : "==============================================",
+      "TransactionException.INSUFFICIENT_ACCOUNT_FUNDS" : "Failed transaction:",
+      "TransactionException.INSUFFICIENT_MAX_FEE_PER_GAS" : "Failed transaction:",
+      "TransactionException.TYPE_3_TX_ZERO_BLOBS" : "Failed transaction:",
+      "TransactionException.TYPE_3_TX_INVALID_BLOB_VERSIONED_HASH" : "Failed transaction:",
+      "TransactionException.TYPE_3_TX_PRE_FORK|TransactionException.TYPE_3_TX_ZERO_BLOBS" : "transaction",
+      "TransactionException.TYPE_3_TX_PRE_FORK" : "Failed to parse transaction",
+      "TransactionException.TYPE_3_TX_BLOB_COUNT_EXCEEDED" : "Failed transaction:",
+      "TransactionException.TYPE_3_TX_CONTRACT_CREATION" : "input string too short for common.Address",
+      "TransactionException.TYPE_3_TX_MAX_BLOB_GAS_ALLOWANCE_EXCEEDED" : "Failed transaction:",
+      "TransactionException.INSUFFICIENT_MAX_FEE_PER_BLOB_GAS" : "blobtx.maxFeePerBlobGas() < getblobgas(blockheader",
+      "TransactionException.INTRINSIC_GAS_TOO_LOW" : "Failed transaction:",
+      "TransactionException.INITCODE_SIZE_EXCEEDED" : "Failed transaction:",
+      "TransactionException.ADDRESS_TOO_SHORT" : "input string too short for common.Address",
+      "TransactionException.ADDRESS_TOO_LONG" : "rlp: input string too long for common.Address, decoding into (types.Transaction)(types.LegacyTx).To",
+      "TransactionException.GAS_ALLOWANCE_EXCEEDED" : "gas limit reached",
+      "TransactionException.TYPE_NOT_SUPPORTED" : "transaction type not supported",
 
+      "TransactionException.EC_RECOVERY_FAIL" : "recovery failed",
+      "TransactionException.NONCE_MISMATCH_TOO_HIGH" : "nonce too high",
+      "TransactionException.NONCE_MISMATCH_TOO_LOW" : "nonce too low",
+      "TransactionException.NONCE_TOO_BIG" : "nonce exceeds 2^64-1",
+      "TransactionException.NONCE_IS_MAX" : "nonce has max value:",
+      "TransactionException.NONCE_OVERFLOW" : "rlp: input string too long for uint64, decoding into (types.Transaction)(types.LegacyTx).Nonce",
+      "TransactionException.GASLIMIT_OVERFLOW" : "rlp: input string too long for uint64, decoding into (types.Transaction)(types.LegacyTx).Gas",
+      "TransactionException.VALUE_OVERFLOW" : "value exceeds 256 bits",
+      "TransactionException.GASPRICE_OVERFLOW" : "gasPrice exceeds 256 bits",
+      "TransactionException.PRIORITY_OVERFLOW" : "maxPriorityFeePerGas exceeds 256 bits",
+      "TransactionException.PRIORITY_GREATER_THAN_MAX_FEE_PER_GAS" : "max priority fee per gas higher than max fee per gas",
+      "TransactionException.PRIORITY_GREATER_THAN_MAX_FEE_PER_GAS_2" : "maxFeePerGas \u003c maxPriorityFeePerGas",
+      "TransactionException.GASLIMIT_PRICE_PRODUCT_OVERFLOW" : "gas * gasPrice exceeds 256 bits",
+      "TransactionException.SENDER_NOT_EOA" : "sender not an eoa:",
+      "TransactionException.SENDER_NOT_EOA|TransactionException.INSUFFICIENT_ACCOUNT_FUNDS" : "sender not an eoa:",
+      "TransactionException.INSUFFICIENT_ACCOUNT_FUNDS|TransactionException.INTRINSIC_GAS_TOO_LOW" : "insufficient funds for gas * price + value",
+      "TransactionException.INSUFFICIENT_ACCOUNT_FUNDS|TransactionException.GASLIMIT_PRICE_PRODUCT_OVERFLOW" : "insufficient funds for gas * price + value",
+      "TransactionException.INSUFFICIENT_MAX_FEE_PER_GAS|TransactionException.GAS_ALLOWANCE_EXCEEDED" : "max fee per gas less than block base fee",
+      "TransactionException.INSUFFICIENT_MAX_FEE_PER_GAS|TransactionException.INSUFFICIENT_ACCOUNT_FUNDS" : "max fee per gas less than block base fee",
+
+      "TransactionException.INVALID_CHAINID" : "invalid chain id for signer",
+      "TransactionException.INVALID_SIGNATURE_VRS" : "invalid transaction v, r, s values",
+      "TransactionException.RLP_INVALID_HEADER" : "expected List",
+      "TransactionException.RLP_INVALID_SIGNATURE_R" : "expected input string or byte for *big.Int, decoding into (types.Transaction)(types.LegacyTx).R",
+      "TransactionException.RLP_INVALID_SIGNATURE_S" : "rlp: expected input string or byte for *big.Int, decoding into (types.Transaction)(types.LegacyTx).S",
+      "TransactionException.RLP_INVALID_NONCE" : "rlp: expected input string or byte for uint64, decoding into (types.Transaction)(types.LegacyTx).Nonce",
+      "TransactionException.RLP_INVALID_DATA" : "rlp: expected input string or byte for []uint8, decoding into (types.Transaction)(types.LegacyTx).Data",
+      "TransactionException.RLP_INVALID_GASLIMIT" : "rlp: expected input string or byte for uint64, decoding into (types.Transaction)(types.LegacyTx).Gas",
+      "TransactionException.RLP_INVALID_TO" : "rlp: expected input string or byte for common.Address, decoding into (types.Transaction)(types.LegacyTx).To",
+      "TransactionException.RLP_INVALID_VALUE" : "insufficient funds for gas",
+      "TransactionException.RLP_INVALID_ACCESS_LIST_ADDRESS_TOO_LONG" : "rlp: input string too long for common.Address, decoding into (types.Transaction)(types.AccessListTx).AccessList[0].Address",
+      "TransactionException.RLP_INVALID_ACCESS_LIST_ADDRESS_TOO_SHORT" : "rlp: input string too short for common.Address, decoding into (types.Transaction)(types.AccessListTx).AccessList[0].Address",
+      "TransactionException.RLP_INVALID_ACCESS_LIST_STORAGE_TOO_LONG" : "rlp: input string too long for common.Hash, decoding into (types.Transaction)(types.AccessListTx).AccessList[0].StorageKeys[0]",
+      "TransactionException.RLP_INVALID_ACCESS_LIST_STORAGE_TOO_SHORT" : "rlp: input string too short for common.Hash, decoding into (types.Transaction)(types.AccessListTx).AccessList[0].StorageKeys[0]",
+
+      "TransactionException.RLP_LEADING_ZEROS_GASLIMIT" : "rlp: non-canonical integer (leading zero bytes) for uint64, decoding into (types.Transaction)(types.LegacyTx).Gas",
+      "TransactionException.RLP_LEADING_ZEROS_GASPRICE" : "rlp: non-canonical integer (leading zero bytes) for *big.Int, decoding into (types.Transaction)(types.LegacyTx).GasPrice",
+      "TransactionException.RLP_LEADING_ZEROS_VALUE" : "rlp: non-canonical integer (leading zero bytes) for *big.Int, decoding into (types.Transaction)(types.LegacyTx).Value",
+      "TransactionException.RLP_LEADING_ZEROS_NONCE" : "rlp: non-canonical integer (leading zero bytes) for uint64, decoding into (types.Transaction)(types.LegacyTx).Nonce",
+      "TransactionException.RLP_LEADING_ZEROS_R" : "rlp: non-canonical integer (leading zero bytes) for *big.Int, decoding into (types.Transaction)(types.LegacyTx).R",
+      "TransactionException.RLP_LEADING_ZEROS_S" : "rlp: non-canonical integer (leading zero bytes) for *big.Int, decoding into (types.Transaction)(types.LegacyTx).S",
+      "TransactionException.RLP_LEADING_ZEROS_V" : "rlp: non-canonical integer (leading zero bytes) for *big.Int, decoding into (types.Transaction)(types.LegacyTx).V",
+      "TransactionException.RLP_LEADING_ZEROS_DATA_SIZE" : "rlp: non-canonical size information for []uint8, decoding into (types.Transaction)(types.LegacyTx).Data",
+      "TransactionException.RLP_LEADING_ZEROS_NONCE_SIZE" : "rlp: non-canonical size information for uint64, decoding into (types.Transaction)(types.LegacyTx).Nonce",
+      "TransactionException.RLP_LEADING_ZEROS_BASEFEE" : "rlp: non-canonical integer (leading zero bytes) for *big.Int, decoding into (types.Transaction)(types.DynamicFeeTx).GasFeeCap",
+      "TransactionException.RLP_LEADING_ZEROS_PRIORITY_FEE" : "rlp: non-canonical integer (leading zero bytes) for *big.Int, decoding into (types.Transaction)(types.DynamicFeeTx).GasTipCap",
+      "TransactionException.RLP_TOO_FEW_ELEMENTS" : "rlp: too few elements",
+      "TransactionException.RLP_TOO_MANY_ELEMENTS" : "rlp: input list has too many elements ",
+      "TransactionException.RLP_ERROR_EOF" : "ERROR(11): unexpected EOF",
+      "TransactionException.RLP_ERROR_SIZE" : "ERROR(11): rlp: value size exceeds available input length",
+      "TransactionException.RLP_ERROR_SIZE_LEADING_ZEROS" : "ERROR(11): rlp: non-canonical size information",
+
+
+      "BlockException.EXTRA_DATA_TOO_BIG" : "Header extraData > 32 bytes",
+      "BlockException.EXTRA_DATA_INVALID_DAO" : "BlockHeader require Dao ExtraData!",
+      "BlockException.GASLIMIT_TOO_BIG" : "Header gasLimit > 0x7fffffffffffffff",
+      "BlockException.INVALID_BLOCK_NUMBER" : "BlockHeader number != parent.number + 1",
+      "BlockException.INVALID_DIFFICULTY" : "Invalid difficulty:",
+      "BlockException.INVALID_GASLIMIT" : "Invalid gaslimit:",
+      "BlockException.INVALID_BASEFEE_PER_GAS": "Error in field: baseFeePerGas",
+      "BlockException.INVALID_GAS_USED" : "Error in field: gasUsed",
+      "BlockException.INVALID_LOG_BLOOM" : "Error in field: bloom",
+      "BlockException.INVALID_STATE_ROOT" : "Error in field: stateRoot",
+      "BlockException.INVALID_RECEIPTS_ROOT" : "Error in field: receiptTrie",
+      "BlockException.INVALID_TRANSACTIONS_ROOT" : "Error in field: transactionsTrie",
+      "BlockException.INVALID_BLOCK_TIMESTAMP_OLDER_THAN_PARENT" : "BlockHeader timestamp is less or equal then it's parent block!",
+      "BlockException.INVALID_WITHDRAWALS_ROOT" : "Error in field: withdrawalsRoot",
+      "BlockException.INVALID_UNCLES_HASH" : "Error in field: uncleHash",
+      "BlockException.UNCLE_UNKNOWN_PARENT" : "Parent block hash not found:",
+      "BlockException.UNCLE_IN_CHAIN" : "Block is already in chain!",
+      "BlockException.UNCLE_IS_BROTHER" : "Uncle is brother!",
+      "BlockException.UNCLE_IS_ANCESTOR" : "Block is already in chain!",
+      "BlockException.UNCLE_PARENT_INCORRECT" : "Uncle number is wrong!",
+      "BlockException.TOO_MANY_UNCLES" : "Too many uncles!",
+
+      "BlockException.UNKNOWN_PARENT" : "unknown parent hash",
+      "BlockException.UNKNOWN_PARENT_ZERO" : "unknown parent hash",
+      "BlockException.INCORRECT_EXCESS_BLOB_GAS" : "Error in field: excessBlobGas",
+      "BlockException.INCORRECT_BLOB_GAS_USED" : "Error in field: blobGasUsed",
+      "BlockException.GAS_USED_OVERFLOW" : "Invalid gasUsed:",
+      "BlockException.BLOB_GAS_USED_ABOVE_LIMIT|BlockException.INCORRECT_BLOB_GAS_USED" : "Error in field: blobGasUsed",
+      "BlockException.INCORRECT_BLOCK_FORMAT" : "[retesteth]: Error importing raw rlp block: readBlockHeader(RLP): unknown block type!",
+      "BlockException.RLP_INVALID_FIELD_OVERFLOW_64" : "field >= 2**64",
+      "BlockException.RLP_INVALID_ADDRESS" : "not a valid address!",
+
+      "BlockException.RLP_STRUCTURES_ENCODING|BlockException.RLP_WITHDRAWALS_NOT_READ" : "Withdrawals RLP is expected to be list",
+      "BlockException.RLP_STRUCTURES_ENCODING|BlockException.RLP_INVALID_ADDRESS" : "not a valid address!",
+      "BlockException.RLP_STRUCTURES_ENCODING|BlockException.RLP_INVALID_FIELD_OVERFLOW_64" : "field >= 2**64",
+      "BlockException.RLP_STRUCTURES_ENCODING|TransactionException.TYPE_3_TX_WITH_FULL_BLOBS" : "BlobTransaction::fromRLP(RLP) expected to have exactly 14 elements!",
+      "BlockException.RLP_STRUCTURES_ENCODING|TransactionException.TYPE_3_TX_CONTRACT_CREATION" : "transaction",
+
+      "BlockException.IMPORT_IMPOSSIBLE_LEGACY" : "Legacy block import is impossible",
+      "BlockException.IMPORT_IMPOSSIBLE_SHANGHAI" : "Trying to import Shanghai block on top of block that is not Shanghai!!",
+      "BlockException.IMPORT_IMPOSSIBLE_LEGACY_WRONG_PARENT" : "Legacy block can only be on top of LegacyBlock",
+      "BlockException.IMPORT_IMPOSSIBLE_LONDON_WRONG_PARENT" : "1559 block must be on top of 1559",
+      "BlockException.IMPORT_IMPOSSIBLE_LONDON_OVER_PARIS" : "Trying to import 1559 block on top of PoS block",
+      "BlockException.IMPORT_IMPOSSIBLE_PARIS_WRONG_POW" : "Invalid block1559: Chain switched to PoS!",
+      "BlockException.IMPORT_IMPOSSIBLE_PARIS_WRONG_POS" : "Parent (transition) block has not reached TTD",
+      "BlockException.IMPORT_IMPOSSIBLE_PARIS_OVER_SHANGHAI" : "Trying to import Paris block on top of Shanghai block after transition",
+      "BlockException.IMPORT_IMPOSSIBLE_UNCLES_OVER_PARIS" : "block.uncleHash != empty",
+      "BlockException.IMPORT_IMPOSSIBLE_DIFFICULTY_OVER_PARIS" : "block.difficulty must be 0",
+
+      "Transaction without funds" : "Failed transaction:",
       "AddressTooShort" : "input string too short for common.Address",
       "AddressTooLong" : "rlp: input string too long for common.Address, decoding into (types.Transaction)(types.LegacyTx).To",
       "NonceMax" : "nonce exceeds 2^64-1",

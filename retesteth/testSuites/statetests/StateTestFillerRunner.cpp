@@ -27,6 +27,10 @@ StateTestFillerRunner::StateTestFillerRunner(StateTestInFiller const& _test)
         (*m_filledTest).atKeyPointer("_info") = _test.Info().rawData();
     (*m_filledTest).atKeyPointer("env") = _test.Env().asDataObject();
     (*m_filledTest).atKeyPointer("pre") = _test.Pre().asDataObject();
+
+    if (_test.hasConfig())
+        (*m_filledTest).atKeyPointer("config") = _test.Config().asDataObject(FORK("ALL"));
+
     (*m_filledTest).atKeyPointer("transaction") = _test.GeneralTr().asDataObject();
 
     for (auto const& ex : _test.unitTestExceptions())

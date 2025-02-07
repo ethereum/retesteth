@@ -3,6 +3,7 @@
 #include <retesteth/helpers/TestHelper.h>
 #include <retesteth/helpers/TestOutputHelper.h>
 #include <retesteth/testStructures/Common.h>
+#include <Options.h>
 
 using namespace std;
 namespace test::teststruct
@@ -102,6 +103,22 @@ StateTestInFilled::StateTestInFilled(spDataObject& _data)
         m_post[FORK(elFork->getKey())] = res;
     }
     m_name = _data->getKey();
+
+    auto const& opt = test::Options::get();
+    if (opt.isLegacy() || opt.isLegacyConstantinople() || opt.isEIPTest() || opt.isEOFTest())
+    {}
+    else
+    {
+        if (!_data->count("config"))
+        {
+            std::string const comment = "Expected field '" + string("config") + "' not found in config: " + "StateTestInFilled " + _data->getKey();
+            throw test::UpwardsException(comment + "\n" + _data->asJson());
+        }
+        std::set<FORK> allForks;
+        for (auto const& [fork, res] : Post())
+            allForks.emplace(fork);
+        m_config = GCP_SPointer<StateTestConfig>(new StateTestConfig(_data->atKey("config"), allForks));
+    }
 }
 
 }  // namespace teststruct

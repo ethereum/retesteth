@@ -35,6 +35,11 @@ spDataObject BlockchainTestFillerRunner::makeNewBCTestForNet(FORK const& _net)
         (*_filledTest).atKeyPointer("_info") = m_test.Info().rawData();
     filledTest["sealEngine"] = sealEngineToStr(m_test.sealEngine());
     filledTest["network"] = _net.asString();
+    if (m_test.hasConfig())
+    {
+        filledTest.atKeyPointer("config") = m_test.Config().asDataObject(_net);
+        filledTest["config"]["network"] = _net.asString();
+    }
     return _filledTest;
 }
 

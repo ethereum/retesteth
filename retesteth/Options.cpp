@@ -307,6 +307,9 @@ Options::Options(int argc, const char** argv)
     ADD_OPTION(forceupdate, "--forceupdate", [](){
         cout << setw(30) << "--forceupdate" << setw(25) << "Update generated test (_info) even if there are no changes\n";
     });
+    ADD_OPTION(nopython, "--nopython", [](){
+        cout << setw(30) << "--nopython" << setw(25) << "Do not generate .py tests\n";
+    });
 
 
     // Sanity check

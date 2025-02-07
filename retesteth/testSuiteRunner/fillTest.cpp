@@ -292,7 +292,11 @@ bool TestSuite::_fillTest(TestSuite::TestSuiteOptions& _opt, fs::path const& _fi
     bool const isPy = (_fillerTestFilePath.extension() == ".py");
     bool const isCopier = (_fillerTestFilePath.stem().string().rfind(c_copierPostf) != string::npos);
     if (isPy)
+    {
+        if (Options::get().nopython)
+            return true;
         return _fillPython(testData, _fillerTestFilePath, _outputTestFilePath, testFillerPathRelative);
+    }
 
     if (isCopier)
     {
