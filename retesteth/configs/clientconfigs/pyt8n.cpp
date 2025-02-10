@@ -173,7 +173,7 @@ string const pyt8n_config = R"({
       "TransactionException.RLP_INVALID_DATA" : "rlp: expected input string or byte for []uint8, decoding into (types.Transaction)(types.LegacyTx).Data",
       "TransactionException.RLP_INVALID_GASLIMIT" : "rlp: expected input string or byte for uint64, decoding into (types.Transaction)(types.LegacyTx).Gas",
       "TransactionException.RLP_INVALID_TO" : "rlp: expected input string or byte for common.Address, decoding into (types.Transaction)(types.LegacyTx).To",
-      "TransactionException.RLP_INVALID_VALUE" : "insufficient funds for gas",
+      "TransactionException.RLP_INVALID_VALUE" : "Failed to parse transaction 0:",
       "TransactionException.RLP_INVALID_ACCESS_LIST_ADDRESS_TOO_LONG" : "rlp: input string too long for common.Address, decoding into (types.Transaction)(types.AccessListTx).AccessList[0].Address",
       "TransactionException.RLP_INVALID_ACCESS_LIST_ADDRESS_TOO_SHORT" : "rlp: input string too short for common.Address, decoding into (types.Transaction)(types.AccessListTx).AccessList[0].Address",
       "TransactionException.RLP_INVALID_ACCESS_LIST_STORAGE_TOO_LONG" : "rlp: input string too long for common.Hash, decoding into (types.Transaction)(types.AccessListTx).AccessList[0].StorageKeys[0]",
