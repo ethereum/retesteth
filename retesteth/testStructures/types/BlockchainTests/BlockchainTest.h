@@ -5,6 +5,7 @@
 #include "../StateTests/Filled/Info.h"
 #include "Filled/BlockchainTestBlock.h"
 #include "Filled/BlockchainTestEnv.h"
+#include "Filled/BlockchainTestConfig.h"
 #include <libdataobj/DataObject.h>
 
 namespace test
@@ -39,6 +40,7 @@ private:
     SealEngine m_sealEngine;
     spFORK m_fork;
     spState m_pre;
+    spBlockchainTestConfig m_config;
     spBlockchainTestEnv m_env;
     // Genesis block header
     spBYTES m_genesisRLP;

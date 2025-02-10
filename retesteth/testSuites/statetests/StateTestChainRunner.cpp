@@ -67,7 +67,10 @@ void StateTestChainRunner::performTransactionOnExpect(TransactionInGeneralSectio
     (*m_aBlockchainTest)["postStateHash"] = remoteBlock.header()->stateRoot().asString();
     (*m_aBlockchainTest)["lastblockhash"] = remoteBlock.header()->hash().asString();
     if (m_test.hasConfig())
+    {
         (*m_aBlockchainTest).atKeyPointer("config") = m_test.Config().asDataObject(_network);
+        (*m_aBlockchainTest)["config"]["network"] = _network.asString();
+    }
 
 
     spDataObject block;

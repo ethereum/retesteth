@@ -4,6 +4,7 @@
 #include <retesteth/testStructures/Common.h>
 #include <retesteth/Constants.h>
 #include <boost/test/framework.hpp>
+#include <retesteth/Options.h>
 
 using namespace std;
 using namespace test::teststruct;
@@ -96,6 +97,19 @@ BlockchainTestInFilled::BlockchainTestInFilled(spDataObject& _data)
         {
             for (size_t i = _data->atKey("exceptions").getSubObjects().size(); i > 0; i--)
                 m_exceptions.emplace_back(_data->atKey("exceptions").getSubObjects().at(i - 1)->asString());
+        }
+
+        auto const& opt = test::Options::get();
+        if (opt.isLegacy() || opt.isLegacyConstantinople() || opt.isEIPTest() || opt.isEOFTest())
+        {}
+        else
+        {
+            if (!_data->count("config"))
+            {
+                std::string const comment = "Expected field '" + string("config") + "' not found in config: " + "BlockchainTestInFilled " + _data->getKey();
+                throw test::UpwardsException(comment + "\n" + _data->asJson());
+            }
+            m_config = GCP_SPointer<BlockchainTestConfig>(new BlockchainTestConfig(_data->atKey("config"), m_fork.getCContent()));
         }
     }
     catch (std::exception const& _ex)
