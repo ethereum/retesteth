@@ -3,6 +3,7 @@
 #include <Options.h>
 #include <retesteth/helpers/TestHelper.h>
 #include <testStructures/Common.h>
+#include <retesteth/testSuites/Common.h>
 
 using namespace dev;
 using namespace std;
@@ -93,7 +94,11 @@ ToolChain::ToolChain(
         genesisFixed.setTotalDifficulty(genesisFixed.header()->difficulty());
 
         if (!checkStatesEqual(_genesis.state(), res.state()))
+        {
+            ETH_WARNING("T8N changed genesis state when asked to calculated it's hash only!");
+            compareStates(_genesis.state(), res.state());
             ETH_ERROR_MESSAGE("T8N changed genesis state when asked to calculated it's hash only!");
+        }
     }
 
     m_blocks.emplace_back(genesisFixed);

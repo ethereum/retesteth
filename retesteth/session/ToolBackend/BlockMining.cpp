@@ -255,6 +255,7 @@ void BlockMining::executeTransition()
     if (m_currentBlockRef.transactions().size())
     {
         ETH_DC_MESSAGE(DC::RPC, "Txs:\n" + m_txsPathContent);
+        ETH_DC_MESSAGE(DC::RPC, "Decode:\n");
         for (auto const& tr : m_currentBlockRef.transactions())
             ETH_DC_MESSAGE(DC::RPC, tr->asDataObject()->asJson());
     }
