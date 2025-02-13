@@ -1,18 +1,21 @@
 #include "StateTestPostResult.h"
 #include <retesteth/testStructures/Common.h>
 #include <retesteth/Constants.h>
+#include <retesteth/Options.h>
 
 namespace test::teststruct
 {
 StateTestPostResult::StateTestPostResult(DataObject const& _data)
 {
+    auto const& opt = Options::get();
+    bool const isNewTest = !opt.isLegacy() && !opt.isLegacyConstantinople();
     REQUIRE_JSONFIELDS(_data, "StateTestPostResult " + _data.getKey(),
         {{"indexes", {{DataType::Object}, jsonField::Required}},
             {"hash", {{DataType::String}, jsonField::Required}},
-            {"postState", {{DataType::Object}, jsonField::Optional}},
+            {"post", {{DataType::Object}, jsonField::Optional}},
             {"txbytes", {{DataType::String}, jsonField::Optional}},
             {"txtrace", {{DataType::String}, jsonField::Optional}},
-            {"state", {{DataType::Object}, jsonField::Optional}},
+            {"state", {{DataType::Object}, isNewTest ? jsonField::Required : jsonField::Optional}},
             {"expectException", {{DataType::String}, jsonField::Optional}},
             {"logs", {{DataType::String}, jsonField::Optional}}});
 

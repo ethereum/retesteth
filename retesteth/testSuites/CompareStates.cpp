@@ -53,8 +53,8 @@ spState getRemoteState(SessionInterface& _session)
         for (auto const& el : range.addresses())
         {
             accountList.emplace_back(el);
-            if (!Options::get().fullstate && accountList.size() > 50)
-                throw StateTooBig();
+            //if (!Options::get().fullstate && accountList.size() > 100)
+            //    throw StateTooBig();
         }
         nextKey = range.nextKey();
     }
@@ -73,8 +73,8 @@ spState getRemoteState(SessionInterface& _session)
         {
             byteSize += remAccount->storage().getKeys().size() * 64;
             byteSize += remAccount->code().asString().size() / 2;
-            if (byteSize > 1048510) // 1MB
-                throw StateTooBig();
+            //if (byteSize > 1048510 * 2) // 2MB
+            //    throw StateTooBig();
         }
     }
     return spState(new State(stateAccountMap));

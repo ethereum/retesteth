@@ -131,8 +131,11 @@ void StateTestFillerRunner::performTransactionOnExpect(TransactionInGeneralSecti
     {
         auto const remState = getRemoteState(m_session);
         compareStates(_expect.result(), remState);
-        if (Options::get().poststate)
-            (*transactionResults).atKeyPointer("postState") = remState->asDataObject();
+
+        auto const& opt = Options::get();
+        bool const isLegacyTest = opt.isLegacy() || opt.isLegacyConstantinople();
+        if (!isLegacyTest)
+            (*transactionResults).atKeyPointer("state") = remState->asDataObject();
     }
     catch (StateTooBig const&)
     {
