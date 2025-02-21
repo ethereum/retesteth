@@ -13,7 +13,10 @@ namespace teststruct {
 
 extern const FH8 C_FH8_ZERO;
 extern const FH20 C_FH20_ZERO;
+
 extern const FH20 C_FH20_BEACON;
+extern const FH20 C_FH20_HISTORY;
+
 extern const FH32 C_FH32_ZERO;
 extern const FH32 C_FH32_DEFAULT_REQUESTS_HASH;
 extern const FH256 C_FH256_ZERO;

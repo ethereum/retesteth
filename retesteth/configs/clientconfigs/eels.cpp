@@ -89,7 +89,8 @@ string const eels_config = R"({
         "London",
         "Paris",
         "Shanghai",
-        "Cancun"
+        "Cancun",
+        "Prague"
     ],
     "additionalForks" : [
         "FrontierToHomesteadAt5",

@@ -484,4 +484,16 @@ spAccountBase makeBeaconAccount()
     return  acc;
 }
 
+spAccountBase makeHistoryAccount()
+{
+    spDataObject accountData;
+    (*accountData).setKey(teststruct::C_FH20_HISTORY.asString());
+    (*accountData)["balance"] = "0x00";
+    (*accountData)["code"] = "0x3373fffffffffffffffffffffffffffffffffffffffe14604657602036036042575f35600143038111604257611fff81430311604257611fff9006545f5260205ff35b5f5ffd5b5f35611fff60014303065500";
+    (*accountData)["nonce"] = "0x01";
+    (*accountData).atKeyPointer("storage") = sDataObject(DataType::Object);
+    spAccountBase acc(new State::Account(accountData));
+    return  acc;
+}
+
 }  // namespace teststruct

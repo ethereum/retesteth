@@ -30,16 +30,27 @@ void StateTestChainRunner::prepareChainParams(FORK const& _network)
 {
     TestInfo errorInfo("test_setChainParams: " + _network.asString(), m_test.testName());
     TestOutputHelper::get().setCurrentTestInfo(errorInfo);
+
+    bool modifyPre = false;
+    m_statePre = spState(new State(m_test.Pre()));
+
     if (compareFork(_network, CMP::ge, FORK("Cancun"))
         && !m_test.Pre().hasAccount(C_FH20_BEACON))
     {
+        modifyPre = true;
         ETH_DC_MESSAGE(DC::RPC, "Retesteth inserts beacon root contract into pre!");
-        m_statePre = spState(new State(m_test.Pre()));
         (*m_statePre).addAccount(makeBeaconAccount());
     }
-    else
-        m_statePre.null();
-    auto const p = test::teststruct::prepareChainParams(_network, SealEngine::NoProof, m_statePre.isEmpty() ? m_test.Pre() : m_statePre, m_test.Env(), ParamsContext::StateTests);
+
+    if (compareFork(_network, CMP::ge, FORK("Prague"))
+        && !m_test.Pre().hasAccount(C_FH20_HISTORY))
+    {
+        modifyPre = true;
+        ETH_DC_MESSAGE(DC::RPC, "Retesteth inserts history contract into pre!");
+        (*m_statePre).addAccount(makeHistoryAccount());
+    }
+
+    auto const p = test::teststruct::prepareChainParams(_network, SealEngine::NoProof, modifyPre ? m_statePre : m_test.Pre(), m_test.Env(), ParamsContext::StateTests);
     m_session.test_setChainParams(p);
 }
 

@@ -64,6 +64,14 @@ TestBlockchainManager BlockchainTestFillerRunner::makeTestChainManager(teststruc
         additionalAccounts.emplace_back(beaconAcc);
     }
 
+    if (test::compareFork(_net, test::CMP::ge, FORK("Prague"))
+        && !m_test.Pre().hasAccount(teststruct::C_FH20_HISTORY))
+    {
+        ETH_DC_MESSAGE(DC::RPC, "Retesteth inserts history contract account into the pre state!");
+        auto historyAcc = makeHistoryAccount();
+        additionalAccounts.emplace_back(historyAcc);
+    }
+
     auto blockchains = TestBlockchainManager(m_test.Env(), m_test.Pre(), m_test.sealEngine(), _net, additionalAccounts);
     return blockchains;
 }

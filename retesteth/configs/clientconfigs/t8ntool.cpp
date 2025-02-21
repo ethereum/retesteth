@@ -105,7 +105,8 @@ string const t8ntool_config = R"({
         "London",
         "Paris",
         "Shanghai",
-        "Cancun"
+        "Cancun",
+        "Prague"
     ],
     "additionalForks" : [
         "FrontierToHomesteadAt5",
@@ -119,8 +120,7 @@ string const t8ntool_config = R"({
         "GrayGlacier",
         "ParisToShanghaiAtTime15k",
         "ShanghaiToCancunAtTime15k",
-        "Merge",
-        "Prague"
+        "Merge"
     ],
     "fillerSkipForks" : [
     ],
@@ -137,6 +137,7 @@ string const t8ntool_config = R"({
       "TransactionException.TYPE_3_TX_MAX_BLOB_GAS_ALLOWANCE_EXCEEDED" : "would exceed maximum allowance",
       "TransactionException.INSUFFICIENT_MAX_FEE_PER_BLOB_GAS" : "blobtx.maxFeePerBlobGas() < getblobgas(blockheader",
       "TransactionException.INTRINSIC_GAS_TOO_LOW" : "intrinsic gas too low",
+      "TransactionException.INTRINSIC_NO_FLOOR_GAS" : "insufficient gas for floor data gas cost:",
       "TransactionException.INITCODE_SIZE_EXCEEDED" : "max initcode size exceeded",
       "TransactionException.ADDRESS_TOO_SHORT" : "input string too short for common.Address",
       "TransactionException.ADDRESS_TOO_LONG" : "rlp: input string too long for common.Address, decoding into (types.Transaction)(types.LegacyTx).To",
