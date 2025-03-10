@@ -96,6 +96,9 @@ string const c_sampleStateTestFilled = R"({
             "source" : "src/GeneralStateTestsFiller/stExample/add11Filler.json",
             "sourceHash" : "7b59a4d0c6180797011b0181ebe84680e9d18a6d38db8a740850a596cfc6b148"
         },
+        "config" : {
+            "chainid" : "0x01"
+        },
         "env" : {
             "currentBaseFee" : "0x0a",
             "currentCoinbase" : "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
@@ -114,6 +117,7 @@ string const c_sampleStateTestFilled = R"({
                         "gas" : 0,
                         "value" : 0
                     },
+                    "state" : {},
                     "logs" : "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
                     "txbytes" : "0xf863800a83061a8094095e7baea6a6c7c4c2dfeb977efac326af552d87830186a0801ba0ffb600e63115a7362e7811894a91d8ba4330e526f22121c994c4692035dfdfd5a06198379fcac8de3dbfac48b165df4bf88e2088f294b61efb9a65fe2281c76e16"
                 }
@@ -126,6 +130,7 @@ string const c_sampleStateTestFilled = R"({
                         "gas" : 0,
                         "value" : 0
                     },
+                    "state" : {},
                     "logs" : "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
                     "txbytes" : "0xf863800a83061a8094095e7baea6a6c7c4c2dfeb977efac326af552d87830186a0801ba0ffb600e63115a7362e7811894a91d8ba4330e526f22121c994c4692035dfdfd5a06198379fcac8de3dbfac48b165df4bf88e2088f294b61efb9a65fe2281c76e16"
                 }
@@ -138,6 +143,7 @@ string const c_sampleStateTestFilled = R"({
                         "gas" : 0,
                         "value" : 0
                     },
+                    "state" : {},
                     "logs" : "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
                     "txbytes" : "0xf863800a83061a8094095e7baea6a6c7c4c2dfeb977efac326af552d87830186a0801ba0ffb600e63115a7362e7811894a91d8ba4330e526f22121c994c4692035dfdfd5a06198379fcac8de3dbfac48b165df4bf88e2088f294b61efb9a65fe2281c76e16"
                 }
@@ -150,6 +156,7 @@ string const c_sampleStateTestFilled = R"({
                         "gas" : 0,
                         "value" : 0
                     },
+                    "state" : {},
                     "logs" : "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
                     "txbytes" : "0xf863800a83061a8094095e7baea6a6c7c4c2dfeb977efac326af552d87830186a0801ba0ffb600e63115a7362e7811894a91d8ba4330e526f22121c994c4692035dfdfd5a06198379fcac8de3dbfac48b165df4bf88e2088f294b61efb9a65fe2281c76e16"
                 }
@@ -325,6 +332,10 @@ string const c_sampleBlockchainTestFilled = R"({
             "solidity" : "Version: 0.8.17+commit.8df45f5f.Linux.g++",
             "source" : "src/BlockchainTestsFiller/ValidBlocks/bcExample/optionsTestFiller.json",
             "sourceHash" : "597e698ac9c1e9db44f024a52dd88a671c1c1d4885c9d13724faa5de45776fd2"
+        },
+        "config" : {
+            "network" : "London",
+            "chainid" : "0x01"
         },
         "blocks" : [
             {
@@ -566,6 +577,10 @@ string const c_sampleBlockchainTestFilled = R"({
             "source" : "src/BlockchainTestsFiller/ValidBlocks/bcExample/optionsTestFiller.json",
             "sourceHash" : "597e698ac9c1e9db44f024a52dd88a671c1c1d4885c9d13724faa5de45776fd2"
         },
+        "config" : {
+            "network" : "Paris",
+            "chainid" : "0x01"
+        },
         "blocks" : [
             {
                 "blockHeader" : {
@@ -805,6 +820,10 @@ string const c_sampleBlockchainTestFilled = R"({
             "solidity" : "Version: 0.8.17+commit.8df45f5f.Linux.g++",
             "source" : "src/BlockchainTestsFiller/ValidBlocks/bcExample/optionsTestFiller.json",
             "sourceHash" : "597e698ac9c1e9db44f024a52dd88a671c1c1d4885c9d13724faa5de45776fd2"
+        },
+        "config" : {
+            "network" : "Shanghai",
+            "chainid" : "0x01"
         },
         "blocks" : [
             {
