@@ -52,7 +52,7 @@ bool checkIfThereAreUpdatesToTheTest(spDataObject _oldFilledTestFile, spDataObje
 
 namespace test::testsuite
 {
-bool addClientInfoIfUpdate(DataObject& _newFilledTestData, fs::path const& _testSourcePath, dev::h256 const& _testSourceHash,
+bool addClientInfoIfUpdate(spDataObject _newFilledTestData, fs::path const& _testSourcePath, dev::h256 const& _testSourceHash,
     fs::path const& _existingFilledTest)
 {
     bool atLeastOneUpdate = false || Options::get().forceupdate;
@@ -62,7 +62,7 @@ bool addClientInfoIfUpdate(DataObject& _newFilledTestData, fs::path const& _test
         oldFilledTestFile = test::readJsonData(_existingFilledTest);
 
     session::SessionInterface& session = session::RPCSession::instance(TestOutputHelper::getThreadID());
-    for (spDataObject& newFilledTest : _newFilledTestData.getSubObjectsUnsafe())
+    for (spDataObject& newFilledTest : _newFilledTestData.getContent().getSubObjectsUnsafe())
     {
         spDataObject newTestClientInfo;
 
@@ -84,6 +84,18 @@ bool addClientInfoIfUpdate(DataObject& _newFilledTestData, fs::path const& _test
 
         (*newTestClientInfo)["filling-rpc-server"] = session.web3_clientVersion()->asString();
         (*newTestClientInfo)["filling-tool-version"] = test::prepareVersionString();
+
+        TestType const testType = test::getTestType(_newFilledTestData);
+        switch(testType)
+        {
+        case TestType::StateTest:
+            (*newTestClientInfo)["fixture-format"] = "state_test"; break;
+        case TestType::BlockchainTest:
+            (*newTestClientInfo)["fixture-format"] = "blockchain_test"; break;
+        case TestType::EOFTest:
+            (*newTestClientInfo)["fixture-format"] = "eof_test"; break;
+        }
+
         (*newTestClientInfo)["lllcversion"] = test::prepareLLLCVersionString();
         (*newTestClientInfo)["solidity"] = test::prepareSolidityVersionString();
 

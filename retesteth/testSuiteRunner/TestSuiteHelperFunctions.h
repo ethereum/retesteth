@@ -16,7 +16,7 @@ struct TestFileData
 };
 
 
-bool addClientInfoIfUpdate(DataObject& _filledTest, boost::filesystem::path const& _testSource, dev::h256 const& _testSourceHash,
+bool addClientInfoIfUpdate(spDataObject _filledTest, boost::filesystem::path const& _testSource, dev::h256 const& _testSourceHash,
     boost::filesystem::path const& _existingFilledTest);
 
 TestFileData readFillerTestFile(boost::filesystem::path const& _testFileName);

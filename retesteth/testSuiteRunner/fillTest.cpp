@@ -73,7 +73,7 @@ void updatePythonTestInfo(TestFileData& _testData, fs::path const& _pythonFiller
         spDataObject output = dataobject::ConvertJsoncppStringToData(res);
         fixPyspecsTestNames(output.getContent(), _pythonFiller);
         bool update =
-            addClientInfoIfUpdate(output.getContent(), _pythonFiller, _testData.hash, outputTestFilePath);
+            addClientInfoIfUpdate(output, _pythonFiller, _testData.hash, outputTestFilePath);
         if (update)
         {
             (*output).performModifier(mod_sortKeys, DataObject::ModifierOption::NONRECURSIVE);
@@ -223,7 +223,7 @@ void TestSuite::_fillCopier(
     ETH_DC_MESSAGE(DC::TESTLOG, "Copying " + _fillerTestFilePath.string());
     ETH_DC_MESSAGE(DC::TESTLOG, " TO " + _outputTestFilePath.path().string());
     assert(_fillerTestFilePath.string() != _outputTestFilePath.path().string());
-    addClientInfoIfUpdate(_testData.data.getContent(), _fillerTestFilePath, _testData.hash, _outputTestFilePath.path());
+    addClientInfoIfUpdate(_testData.data, _fillerTestFilePath, _testData.hash, _outputTestFilePath.path());
     writeFile(_outputTestFilePath.path(), asBytes(_testData.data->asJson()));
     ETH_FAIL_REQUIRE_MESSAGE(
         boost::filesystem::exists(_outputTestFilePath.path().string()), "Error when copying the test file!");
@@ -249,7 +249,7 @@ bool TestSuite::_fillJsonYml(TestFileData& _testData, fs::path const& _fillerTes
         if (output->type() != DataType::Null)
         {
             bool update =
-                addClientInfoIfUpdate(output.getContent(), _fillerTestFilePath, _testData.hash, _outputTestFilePath.path());
+                addClientInfoIfUpdate(output, _fillerTestFilePath, _testData.hash, _outputTestFilePath.path());
             if (update)
             {
                 (*output).performModifier(mod_sortKeys, DataObject::ModifierOption::NONRECURSIVE);

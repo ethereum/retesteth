@@ -27,6 +27,7 @@ namespace
                     {"filling-transition-tool", {{DataType::String}, isPyspecs ? jsonField::Required : jsonField::Optional}},
                     {"reference-spec", {{DataType::String}, jsonField::Optional}},
                     {"reference-spec-version", {{DataType::String}, jsonField::Optional}},
+                    {"fixture-format", {{DataType::String}, jsonField::Optional}},
                     {"filling-rpc-server", {{DataType::String}, isPyspecs ? jsonField::Optional : jsonField::Required}},
                     {"filling-tool-version", {{DataType::String}, isPyspecs ? jsonField::Optional : jsonField::Required}},
                     {"hash", {{DataType::String}, isPyspecs ? jsonField::Required : jsonField::Optional}},
