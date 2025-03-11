@@ -65,7 +65,4 @@ public:
 
 REGISTER_STATESUITE(StateTestVMSuite)
 REGISTER_STATESUITE(StateTestShanghaiSuite)
-REGISTER_STATESUITE(EIPStateTestSuite)
-REGISTER_STATESUITE(EIPStateTestEOFSuite)
-
 }  // namespace test

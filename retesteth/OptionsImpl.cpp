@@ -34,22 +34,11 @@ bool Options::isLegacyConstantinople()
     return isLegacyConstantinople;
 }
 
-bool Options::isEIPTest()
-{
-    static bool isEIPTest = (boost::unit_test::framework::current_test_case().full_name().find("EIPTests") != string::npos);
-
-    // Current test case is dynamic if we run all tests. need to see if we hit EIPTests
-    if (Options::get().rCurrentTestSuite.empty())
-        isEIPTest = (boost::unit_test::framework::current_test_case().full_name().find("EIPTests") != string::npos);
-
-    return isEIPTest;
-}
-
 bool Options::isEOFTest()
 {
     static bool isEOFTest = (boost::unit_test::framework::current_test_case().full_name().find("EOFTests") != string::npos);
 
-    // Current test case is dynamic if we run all tests. need to see if we hit EIPTests
+    // Current test case is dynamic if we run all tests. need to see if we hit EOFTests
     if (Options::get().rCurrentTestSuite.empty())
         isEOFTest = (boost::unit_test::framework::current_test_case().full_name().find("EOFTests") != string::npos);
 

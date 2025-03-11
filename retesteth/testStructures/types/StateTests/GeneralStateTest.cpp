@@ -105,7 +105,7 @@ StateTestInFilled::StateTestInFilled(spDataObject& _data)
     m_name = _data->getKey();
 
     auto const& opt = test::Options::get();
-    if (opt.isLegacy() || opt.isLegacyConstantinople() || opt.isEIPTest() || opt.isEOFTest())
+    if (opt.isLegacy() || opt.isLegacyConstantinople() || opt.isEOFTest())
     {}
     else
     {

@@ -8,7 +8,7 @@ namespace test::teststruct
 StateTestPostResult::StateTestPostResult(DataObject const& _data)
 {
     auto const& opt = Options::get();
-    bool const isNewTest = !opt.isLegacy() && !opt.isLegacyConstantinople() && !opt.isEIPTest();
+    bool const isNewTest = !opt.isLegacy() && !opt.isLegacyConstantinople();
     REQUIRE_JSONFIELDS(_data, "StateTestPostResult " + _data.getKey(),
         {{"indexes", {{DataType::Object}, jsonField::Required}},
             {"hash", {{DataType::String}, jsonField::Required}},

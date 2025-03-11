@@ -100,7 +100,7 @@ BlockchainTestInFilled::BlockchainTestInFilled(spDataObject& _data)
         }
 
         auto const& opt = test::Options::get();
-        if (opt.isLegacy() || opt.isLegacyConstantinople() || opt.isEIPTest() || opt.isEOFTest())
+        if (opt.isLegacy() || opt.isLegacyConstantinople() || opt.isEOFTest())
         {}
         else
         {

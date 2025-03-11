@@ -35,7 +35,6 @@ string getTestTArg(fs::path const& _cwd, string const& arg)
         "GeneralStateTests", "BlockchainTests",
         "GeneralStateTestsFiller", "BlockchainTestsFiller",
         "EOFTests", "EOFTestsFiller",
-        "EIPTests", "EIPTestsFiller",
         "TransactionTests", "TransactionTestsFiller",
         "LegacyTests"
     };
@@ -84,11 +83,6 @@ string getTestTArg(fs::path const& _cwd, string const& arg)
                     headTestSuite.insert(0, "LegacyTests/Constantinople/");
                 else if (cwd.parent_path().parent_path().stem() == "Cancun")
                     headTestSuite.insert(0, "LegacyTests/Cancun/");
-            }
-            else if ((cwd.parent_path().stem() == "EIPTests" || cwd.parent_path().stem() == "EIPTestsFiller")
-                     && headTestSuite == "BlockchainTests")
-            {
-                headTestSuite.insert(0, "EIPTests/");
             }
             else if (cwd.parent_path().stem() == "Constantinople")
                 headTestSuite.insert(0, "LegacyTests/Constantinople/");

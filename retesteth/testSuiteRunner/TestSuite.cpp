@@ -81,18 +81,12 @@ void TestSuite::verifyFilledTestsFolders(fs::path const& _fillerPath, fs::path c
     if (!fs::exists(filledPath) || fillerPath.string().empty() || filledPath.string().empty())
         return;
 
-    bool skipEIPBCStateTests = false;
-    if (fillerPath.string().find("src/EIPTestsFiller/BlockchainTests") != string::npos)
-        skipEIPBCStateTests = true;
-
     using fsIterator = fs::directory_iterator;
     for (fsIterator it(filledPath); it != fsIterator(); ++it)
     {
         if (fs::is_directory(*it) && !(*it).path().empty())
         {
             string const filledFolder = (*it).path().stem().string();
-            if (skipEIPBCStateTests && filledFolder == "StateTests")
-                continue;
             if (!findFolderInPath(fillerPath, filledFolder))
                 ETH_ERROR_MESSAGE("Filled folder contains folder without filler: " + (*it).path().string());
             else

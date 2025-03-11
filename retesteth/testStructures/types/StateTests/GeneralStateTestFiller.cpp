@@ -154,7 +154,7 @@ StateTestInFiller::StateTestInFiller(spDataObject& _data)
         }
 
         auto const& opt = Options::get();
-        if (opt.isLegacyConstantinople() || opt.isLegacy() || opt.isEIPTest() || opt.isEOFTest())
+        if (opt.isLegacyConstantinople() || opt.isLegacy() || opt.isEOFTest())
         {}
         else
         {

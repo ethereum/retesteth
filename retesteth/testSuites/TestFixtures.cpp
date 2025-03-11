@@ -331,9 +331,6 @@ REGISTER_TEMPLATE(LegacyCancunStateTestSuite, NotRefillable)
 
 // BC links
 REGISTER_TEMPLATE(BCGeneralStateTestsSuite, RequireOptionAllNotRefillable)
-REGISTER_TEMPLATE(BCEIPStateTestsSuite, RequireOptionAllNotRefillable)
-REGISTER_TEMPLATE(BCEIPStateTestsEOFSuite, RequireOptionAll)
-
 REGISTER_TEMPLATE(BCGeneralStateTestsVMSuite, RequireOptionAll)
 REGISTER_TEMPLATE(BCGeneralStateTestsShanghaiSuite, RequireOptionAll)
 
@@ -341,7 +338,6 @@ REGISTER_TEMPLATE(BlockchainTestTransitionSuite, DefaultFlags)
 REGISTER_TEMPLATE(BlockchainTestInvalidSuite, RequireOptionFill)
 REGISTER_TEMPLATE(BlockchainTestInvalidSuite, DefaultFlags)
 
-REGISTER_TEMPLATE(BlockchainTestEIPSuite, DefaultFlags)
 REGISTER_TEMPLATE(BlockchainTestValidSuite, DefaultFlags)
 
 // State link
@@ -350,8 +346,5 @@ REGISTER_TEMPLATE(StateTestSuite, DefaultFlags)
 REGISTER_TEMPLATE(EOFTestSuite, DefaultFlags)
 REGISTER_TEMPLATE(StateTestVMSuite, DefaultFlags)
 REGISTER_TEMPLATE(StateTestShanghaiSuite, DefaultFlags)
-
-REGISTER_TEMPLATE(EIPStateTestSuite, DefaultFlags)
-REGISTER_TEMPLATE(EIPStateTestEOFSuite, DefaultFlags)
 
 

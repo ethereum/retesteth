@@ -257,7 +257,6 @@ public:
     bool_opt nopython = false;
     static bool isLegacy();
     static bool isLegacyConstantinople();
-    static bool isEIPTest();
     static bool isEOFTest();
 
 public:

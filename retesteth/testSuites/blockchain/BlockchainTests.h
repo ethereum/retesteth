@@ -34,13 +34,9 @@ REGISTER_SUITE_OVERRIDE(BlockchainTestValidSuite, TestSuite,)
 REGISTER_SUITE_OVERRIDE(BlockchainTestInvalidSuite, TestSuite,)
 REGISTER_SUITE_OVERRIDE(BlockchainTestTransitionSuite, TestSuite,)
 
-REGISTER_SUITE(BlockchainTestEIPSuite, BlockchainTestInvalidSuite)
 REGISTER_SUITE(BCGeneralStateTestsSuite, BlockchainTestInvalidSuite)
 REGISTER_SUITE(BCGeneralStateTestsVMSuite, BCGeneralStateTestsSuite)
 REGISTER_SUITE(BCGeneralStateTestsShanghaiSuite, BCGeneralStateTestsSuite)
-
-REGISTER_SUITE(BCEIPStateTestsSuite, BlockchainTestValidSuite)
-REGISTER_SUITE(BCEIPStateTestsEOFSuite, BCEIPStateTestsSuite)
 
 #define LEGACYFLAG  \
     protected:      \
