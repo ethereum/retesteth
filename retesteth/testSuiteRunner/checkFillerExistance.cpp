@@ -141,7 +141,7 @@ void checkThatNoTestsWithoutFiller(std::vector<fs::path> const& _verifiedGenerat
 void removePythonTechnicalFiles(std::vector<fs::path>& _allTestFillers)
 {
     auto removed = std::remove_if(_allTestFillers.begin(), _allTestFillers.end(),
-        [](fs::path const& x) { return (x.stem() == "__init__");} );
+        [](fs::path const& x) { return (x.stem() == "__init__"); } );
     _allTestFillers.erase(removed, _allTestFillers.end());
 }
 

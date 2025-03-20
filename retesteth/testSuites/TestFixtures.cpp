@@ -83,7 +83,7 @@ bool hasSubfoldersWithFileTypes(fs::path const& _path, string const& _filemask)
     {
         auto const dirName = (*it).path().stem().string();
         if (fs::is_directory(*it)
-            && dirName.find("__") == string::npos      //"__pycache__"
+            && dirName.find("__") == string::npos      //  "__pycache__"
             && dirName != "point_evaluation_vectors")
         {
             bool hasAtLeastOneSubElement = false;

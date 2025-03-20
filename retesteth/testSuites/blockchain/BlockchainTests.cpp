@@ -160,15 +160,8 @@ BOOST_AUTO_TEST_SUITE_END()
 using BCTransitionFixture = TestFixture<BlockchainTestTransitionSuite, DefaultFlags>;
 ETH_REGISTER_DYNAMIC_TEST_SEARCH(BCTransitionFixture, "BlockchainTests/TransitionTests")
 BOOST_FIXTURE_TEST_SUITE(TransitionTests, BCTransitionFixture)
-BOOST_AUTO_TEST_CASE(bcByzantiumToConstantinopleFix) {}
-BOOST_AUTO_TEST_CASE(bcEIP158ToByzantium) {}
-BOOST_AUTO_TEST_CASE(bcFrontierToHomestead) {}
-BOOST_AUTO_TEST_CASE(bcHomesteadToDao) {}
-BOOST_AUTO_TEST_CASE(bcHomesteadToEIP150) {}
-BOOST_AUTO_TEST_CASE(bcBerlinToLondon) {}
-BOOST_AUTO_TEST_CASE(bcArrowGlacierToParis) {}
-BOOST_AUTO_TEST_SUITE_END()
 
+BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
 
 // General tests in form of blockchain tests

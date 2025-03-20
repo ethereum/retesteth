@@ -50,16 +50,12 @@ spDataObject StateTestSuite::doTests(spDataObject& _input, TestSuiteOptions& _op
         StateTestInFiller const& test = filler.tests().at(0);
         checkTestNameIsEqualToFileName(test.testName());
         if (Options::get().fillchain)
-            filledTest = FillTestAsBlockchain(test);
+            filledTest = FillTestAsBlockchain(test, _opt);
         else
         {
             if (Options::get().convertpy)
                 return ConvertpyTest(test, _opt);
-            auto const filled = FillTest(test);
-            if (filled->type() != DataType::Null)
-                (*filledTest).addSubObject(test.testName(), filled);
-            else
-                return filled;
+            filledTest = FillTest(test, _opt);
         }
 
         TestOutputHelper::get().registerTestRunSuccess();

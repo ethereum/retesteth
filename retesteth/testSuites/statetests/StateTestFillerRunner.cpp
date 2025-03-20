@@ -17,8 +17,9 @@ namespace fs = boost::filesystem;
 namespace test::statetests
 {
 
-StateTestFillerRunner::StateTestFillerRunner(StateTestInFiller const& _test)
-  : m_test(_test),
+StateTestFillerRunner::StateTestFillerRunner(StateTestInFiller const& _test, TestSuite::TestSuiteOptions const& _opt)
+  : m_testSuiteOpt(_opt),
+    m_test(_test),
     m_session(RPCSession::instance(TestOutputHelper::getThreadID()))
 {
     TestOutputHelper::get().setCurrentTestName(_test.testName());
@@ -218,6 +219,57 @@ void StateTestFillerRunner::registerForkResult()
     if (m_forkResults->getSubObjects().size() > 0)
         (*m_filledTest)["post"].addSubObject(m_forkResults);
     m_forkResults = spDataObject();
+}
+
+spDataObject StateTestFillerRunner::getFilledTest() const
+{
+    spDataObject result = sDataObject(DataType::Object);
+
+    string startFork;
+    string endFork;
+    auto setOfForks = m_test.getAllForksFromExpectSections();
+    for (auto const& fork : Options::getCurrentConfig().cfgFile().forks())
+    {
+        if (setOfForks.count(fork))
+        {
+            if (startFork.empty())
+            {
+                startFork = fork.asString();
+                endFork = fork.asString();
+            }
+            else
+                endFork = fork.asString();
+        }
+    }
+    assert(!startFork.empty() && !endFork.empty());
+
+
+    int dIndMax = m_test.GeneralTr().databoxVector().size() - 1;
+    int gIndMax = m_test.GeneralTr().gasLimitVector().size() - 1;
+    int vIndMax = m_test.GeneralTr().valueVector().size() - 1;
+    assert(dIndMax >= 0 && gIndMax >= 0 && vIndMax >= 0);
+
+    string dIndS = "d0";
+    string gIndS = "g0";
+    string vIndS = "v0";
+    if (dIndMax > 0)
+        dIndS = "d[0-" + std::to_string(dIndMax) + "]";
+    if (gIndMax > 0)
+        gIndS = "g[0-" + std::to_string(gIndMax) + "]";
+    if (vIndMax > 0)
+        vIndS = "v[0-" + std::to_string(vIndMax) + "]";
+
+    string testName = m_testSuiteOpt.relativePathToFilledTest.string();
+    testName += "::" + m_test.testName();
+    if (startFork != endFork)
+        testName += "-fork_[" + startFork + "-" + endFork + "]";
+    else
+        testName += "-fork_" + startFork;
+    testName += "-" + dIndS + gIndS + vIndS;
+    // <relative-path-of-fixture-json>::<fixture-name>-fork_<fork-name>-d<X>g<Y>v<Z>
+
+    (*result).addSubObject(testName, m_filledTest);
+    return result;
 }
 
 }

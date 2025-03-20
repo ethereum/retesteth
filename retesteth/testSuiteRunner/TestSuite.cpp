@@ -84,7 +84,9 @@ void TestSuite::verifyFilledTestsFolders(fs::path const& _fillerPath, fs::path c
     using fsIterator = fs::directory_iterator;
     for (fsIterator it(filledPath); it != fsIterator(); ++it)
     {
-        if (fs::is_directory(*it) && !(*it).path().empty())
+        if (fs::is_directory(*it)
+            && !(*it).path().empty()
+            && (*it).path().filename().c_str()[0] != '.') // hidden files
         {
             string const filledFolder = (*it).path().stem().string();
             if (!findFolderInPath(fillerPath, filledFolder))

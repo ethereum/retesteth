@@ -32,7 +32,8 @@ string const nimbus_config = R"({
         "London",
         "Paris",
         "Shanghai",
-        "Cancun"
+        "Cancun",
+        "Prague"
     ],
     "additionalForks" : [
         "FrontierToHomesteadAt5",
@@ -82,7 +83,7 @@ string const nimbus_config = R"({
       "TransactionException.VALUE_OVERFLOW" : "value exceeds 256 bits",
       "TransactionException.GASPRICE_OVERFLOW" : "gasPrice exceeds 256 bits",
       "TransactionException.PRIORITY_OVERFLOW" : "maxPriorityFeePerGas exceeds 256 bits",
-      "TransactionException.PRIORITY_GREATER_THAN_MAX_FEE_PER_GAS" : "invalid tx: maxFee is smaller than maPriorityFee",
+      "TransactionException.PRIORITY_GREATER_THAN_MAX_FEE_PER_GAS" : "invalid tx: maxFee is smaller than maxPriorityFee",
       "TransactionException.PRIORITY_GREATER_THAN_MAX_FEE_PER_GAS_2" : "maxFeePerGas \u003c maxPriorityFeePerGas",
       "TransactionException.GASLIMIT_PRICE_PRODUCT_OVERFLOW" : "gas * gasPrice exceeds 256 bits",
       "TransactionException.SENDER_NOT_EOA" : "invalid tx: sender is not an EOA",

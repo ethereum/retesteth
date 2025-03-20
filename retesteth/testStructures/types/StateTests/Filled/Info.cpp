@@ -33,7 +33,7 @@ namespace
                     {"hash", {{DataType::String}, isPyspecs ? jsonField::Required : jsonField::Optional}},
                     {"lllcversion", {{DataType::String}, isPyspecs ? jsonField::Optional : jsonField::Required}},
                     {"solidity", {{DataType::String}, isPyspecs ? jsonField::Optional : jsonField::Required}},
-                    {"generatedTestHash", {{DataType::String}, isPyspecs ? jsonField::Optional : jsonField::Required}},
+                    {"hash", {{DataType::String}, isPyspecs ? jsonField::Optional : jsonField::Required}},
                     {"source", {{DataType::String}, isPyspecs ? jsonField::Optional : jsonField::Required}},
                     {"sourceHash", {{DataType::String}, isPyspecs ? jsonField::Optional : jsonField::Required}},
                     {"labels", {{DataType::Object}, jsonField::Optional}}});

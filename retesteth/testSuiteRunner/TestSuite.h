@@ -68,6 +68,7 @@ public:
             calculateRelativeSrcPath(true)
         {}
         boost::filesystem::path pathToFiller;
+        boost::filesystem::path relativePathToFilledTest;
         bool doFilling;           // pass the filling flag to doTest function
         bool allowInvalidBlocks;  // allow and check malicious blocks
         bool isLegacyTests;       // running old generated tests

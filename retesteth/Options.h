@@ -243,6 +243,7 @@ public:
     bool_opt lowcpu = false;
 
     // Test Generation
+    bool_opt filleest = false;
     bool_opt filltests = false;
     bool_opt filloutdated = false;
     bool_opt fillvmtrace = false;

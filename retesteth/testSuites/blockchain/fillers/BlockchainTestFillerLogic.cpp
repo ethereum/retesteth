@@ -18,7 +18,7 @@ spDataObject FillTest(BlockchainTestInFiller const& _test, TestSuite::TestSuiteO
 {
     (void)_opt;
     spDataObject result;
-    BlockchainTestFillerRunner filler(_test);
+    BlockchainTestFillerRunner filler(_test, _opt);
     CHECKEXITR(result);
 
     auto const allForks = _test.getAllForksFromExpectSections();

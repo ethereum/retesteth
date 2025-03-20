@@ -19,11 +19,13 @@ namespace fs = boost::filesystem;
 namespace test::statetests
 {
 
-StateTestChainRunner::StateTestChainRunner(StateTestInFiller const& _test)
-  : StateTestFillerRunner(_test, RPCSession::instance(TestOutputHelper::getThreadID()))
+StateTestChainRunner::StateTestChainRunner(StateTestInFiller const& _test, TestSuite::TestSuiteOptions& _opt)
+  : StateTestFillerRunner(_test, RPCSession::instance(TestOutputHelper::getThreadID()), _opt),
+    m_testSuiteOpt(_opt)
 {
     TestOutputHelper::get().setCurrentTestName(_test.testName());
     m_txs = _test.GeneralTr().buildTransactions();
+    m_filledBlockchainTest = sDataObject(DataType::Object);
 }
 
 void StateTestChainRunner::prepareChainParams(FORK const& _network)
@@ -152,15 +154,33 @@ void StateTestChainRunner::initBlockchainTestData()
 
 void StateTestChainRunner::finalizeBlockchainTestData(TransactionInGeneralSection& _tr, FORK const& _network)
 {
-    string dataPostfix = "_d" + _tr.dataIndS() + "g" + _tr.gasIndS() + "v" + _tr.valueIndS();
-    dataPostfix += "_" + _network.asString();
-    if (m_filledTest->count(m_test.testName() + dataPostfix))
-        ETH_ERROR_MESSAGE("Test filler read redundant expect section: " + m_test.testName() +
-                          dataPostfix + " (" + _tr.transaction()->dataLabel() + ")");
+    string testName;
+    auto const& opt = Options::get();
+    if (opt.filleest || true)
+    {
+        testName = m_testSuiteOpt.relativePathToFilledTest.string();
+        testName += "::" + m_test.testName() + "-fork_" + _network.asString();
+        testName += "-d" + _tr.dataIndS() + "g" + _tr.gasIndS() + "v" + _tr.valueIndS();
+        // <relative-path-of-fixture-json>::<fixture-name>-fork_<fork-name>-d<X>g<Y>v<Z>
+    }
+    else
+    {
+        string dataPostfix = "_d" + _tr.dataIndS() + "g" + _tr.gasIndS() + "v" + _tr.valueIndS();
+        dataPostfix += "_" + _network.asString();
+        testName = m_test.testName() + dataPostfix;
+    }
+    if (m_filledBlockchainTest->count(testName))
+        ETH_ERROR_MESSAGE("Test filler read redundant expect section: " + testName +
+                          " (" + _tr.transaction()->dataLabel() + ")");
 
     verifyFilledTest(m_test.unitTestVerifyBC(), m_aBlockchainTest, _network);
-    (*m_filledTest).atKeyPointer(m_test.testName() + dataPostfix) = m_aBlockchainTest;
+    (*m_filledBlockchainTest).atKeyPointer(testName) = m_aBlockchainTest;
     m_session.test_rewindToBlock(0);
+}
+
+spDataObject StateTestChainRunner::getFilledTest() const
+{
+    return m_filledBlockchainTest;
 }
 
 

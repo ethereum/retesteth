@@ -237,6 +237,7 @@ bool TestSuite::_fillJsonYml(TestFileData& _testData, fs::path const& _fillerTes
     try
     {
         _opt.pathToFiller = _fillerTestFilePath;
+        _opt.relativePathToFilledTest = fs::relative(_outputTestFilePath.path(), getTestPath());
         spDataObject output = doTests(_testData.data, _opt);
         if (Options::get().convertpy)
         {

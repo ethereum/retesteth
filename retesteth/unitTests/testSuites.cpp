@@ -50,7 +50,7 @@ void fixInfoSection(spDataObject _test)
             auto& info = test.getContent().atKeyUnsafe("_info");
             info["filling-rpc-server"] = "test";
             info["filling-tool-version"] = "test";
-            info["generatedTestHash"] = "test";
+            info["hash"] = "test";
             info["lllcversion"] = "test";
             info["solidity"] = "test";
             info["source"] = "test";
