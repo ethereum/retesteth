@@ -79,7 +79,8 @@ spFH20 convertSecretToPublic(VALUE const& _secret);
 
 void checkEmptyStorages(spState _state);
 bool checkEmptyAccounts(spState _state);
-spAccountBase makeBeaconAccount();
-spAccountBase makeHistoryAccount();
+void makeCancunPrecompiledAccounts(State const&, VALUE const& _timestamp, std::vector<spAccountBase>&);
+void makePraguePrecompiledAccounts(State const&, std::vector<spAccountBase>&);
+
 
 }  // namespace teststruct

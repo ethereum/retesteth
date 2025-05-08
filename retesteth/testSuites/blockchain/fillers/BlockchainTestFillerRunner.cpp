@@ -44,34 +44,16 @@ spDataObject BlockchainTestFillerRunner::makeNewBCTestForNet(FORK const& _net)
     return _filledTest;
 }
 
-const int HISTORY_BUFFER_LENGTH = 8191;
 TestBlockchainManager BlockchainTestFillerRunner::makeTestChainManager(teststruct::FORK const& _net)
 {
     ETH_DC_MESSAGEC(DC::RPC, "FILL GENESIS INFO: ", LogColor::LIME);
+
     std::vector<spAccountBase> additionalAccounts;
+    if (test::compareFork(_net, test::CMP::ge, FORK("Cancun")))
+        makeCancunPrecompiledAccounts(m_test.Pre(), m_test.Env().currentTimestamp(), additionalAccounts);
 
-    if (test::compareFork(_net, test::CMP::ge, FORK("Cancun"))
-        && !m_test.Pre().hasAccount(teststruct::C_FH20_BEACON))
-    {
-        ETH_DC_MESSAGE(DC::RPC, "Retesteth inserts beacon root account into the pre state!");
-        auto beaconAcc = makeBeaconAccount();
-        Storage& str = const_cast<Storage&>(beaconAcc->storage());
-
-        // header.timestamp % HISTORY_BUFFER_LENGTH to be header.timestamp
-        spVALUE key = sVALUE(m_test.Env().currentTimestamp().asBigInt() % HISTORY_BUFFER_LENGTH);
-        spVALUE val = sVALUE(m_test.Env().currentTimestamp().asBigInt());
-        str.addRecord({key, val});
-
-        additionalAccounts.emplace_back(beaconAcc);
-    }
-
-    if (test::compareFork(_net, test::CMP::ge, FORK("Prague"))
-        && !m_test.Pre().hasAccount(teststruct::C_FH20_HISTORY))
-    {
-        ETH_DC_MESSAGE(DC::RPC, "Retesteth inserts history contract account into the pre state!");
-        auto historyAcc = makeHistoryAccount();
-        additionalAccounts.emplace_back(historyAcc);
-    }
+    if (test::compareFork(_net, test::CMP::ge, FORK("Prague")))
+        makePraguePrecompiledAccounts(m_test.Pre(), additionalAccounts);
 
     auto blockchains = TestBlockchainManager(m_test.Env(), m_test.Pre(), m_test.sealEngine(), _net, additionalAccounts);
     return blockchains;

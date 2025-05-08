@@ -33,26 +33,24 @@ void StateTestChainRunner::prepareChainParams(FORK const& _network)
     TestInfo errorInfo("test_setChainParams: " + _network.asString(), m_test.testName());
     TestOutputHelper::get().setCurrentTestInfo(errorInfo);
 
-    bool modifyPre = false;
-    m_statePre = spState(new State(m_test.Pre()));
 
-    if (compareFork(_network, CMP::ge, FORK("Cancun"))
-        && !m_test.Pre().hasAccount(C_FH20_BEACON))
+
+    std::vector<spAccountBase> additionalAccounts;
+    if (compareFork(_network, CMP::ge, FORK("Cancun")))
+        makeCancunPrecompiledAccounts(m_test.Pre(), m_test.Env().currentTimestamp(), additionalAccounts);
+
+    if (compareFork(_network, CMP::ge, FORK("Prague")))
+        makePraguePrecompiledAccounts(m_test.Pre(), additionalAccounts);
+
+    if (!additionalAccounts.empty())
     {
-        modifyPre = true;
-        ETH_DC_MESSAGE(DC::RPC, "Retesteth inserts beacon root contract into pre!");
-        (*m_statePre).addAccount(makeBeaconAccount());
+        m_statePreModified = spState(new State(m_test.Pre()));
+        for (auto account : additionalAccounts)
+            (*m_statePreModified).addAccount(account);
     }
 
-    if (compareFork(_network, CMP::ge, FORK("Prague"))
-        && !m_test.Pre().hasAccount(C_FH20_HISTORY))
-    {
-        modifyPre = true;
-        ETH_DC_MESSAGE(DC::RPC, "Retesteth inserts history contract into pre!");
-        (*m_statePre).addAccount(makeHistoryAccount());
-    }
 
-    auto const p = test::teststruct::prepareChainParams(_network, SealEngine::NoProof, modifyPre ? m_statePre : m_test.Pre(), m_test.Env(), ParamsContext::StateTests);
+    auto const p = test::teststruct::prepareChainParams(_network, SealEngine::NoProof, m_statePreModified.isEmpty() ? m_test.Pre() : m_statePreModified, m_test.Env(), ParamsContext::StateTests);
     m_session.test_setChainParams(p);
 }
 
@@ -147,7 +145,7 @@ void StateTestChainRunner::initBlockchainTestData()
         (*m_aBlockchainTest).atKeyPointer("_info") = m_test.Info().rawData();
     EthGetBlockBy genesisBlock(m_session.eth_getBlockByNumber(0, Request::FULLOBJECTS));
     (*m_aBlockchainTest).atKeyPointer("genesisBlockHeader") = genesisBlock.header()->asDataObject();
-    (*m_aBlockchainTest).atKeyPointer("pre") = m_statePre.isEmpty() ? m_test.Pre().asDataObject() : m_statePre->asDataObject();
+    (*m_aBlockchainTest).atKeyPointer("pre") = m_statePreModified.isEmpty() ? m_test.Pre().asDataObject() : m_statePreModified->asDataObject();
     (*m_aBlockchainTest)["sealEngine"] = sealEngineToStr(SealEngine::NoProof);
     (*m_aBlockchainTest)["genesisRLP"] = genesisBlock.getRLPHeaderTransactions().asString();
 }

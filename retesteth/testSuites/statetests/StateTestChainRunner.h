@@ -25,7 +25,7 @@ private:
     spDataObject m_filledBlockchainTest;
     TestSuite::TestSuiteOptions const& m_testSuiteOpt;
     spDataObject m_aBlockchainTest;
-    spState m_statePre;
+    spState m_statePreModified;
 };
 
 }
