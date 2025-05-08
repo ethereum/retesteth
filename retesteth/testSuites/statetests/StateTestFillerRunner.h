@@ -10,6 +10,7 @@ class StateTestFillerRunner
 {
 public:
     StateTestFillerRunner(StateTestInFiller const& _test, TestSuite::TestSuiteOptions const& _opt);
+    virtual ~StateTestFillerRunner() = default;
     std::vector<TransactionInGeneralSection>& txs() { return m_txs; }
     bool checkNetworkSkip(FORK const& _network);
     virtual void prepareChainParams(FORK const&);
