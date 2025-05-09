@@ -28,6 +28,7 @@ spDataObject readAutoDataWithoutOptions(boost::filesystem::path const& _file, bo
 
 /// Get files from directory
 std::vector<boost::filesystem::path> getFiles(boost::filesystem::path const& _dirPath, std::set<std::string> const& _extentionMask, std::string const& _particularFile = {});
+std::vector<boost::filesystem::path> getFilesRecursive(boost::filesystem::path const& _dirPath, std::set<std::string> const& _extentionMask, std::string const& _particularFile = {});
 
 /// Get test repo path from ETHEREUM_TEST_PATH environment variable
 boost::filesystem::path getTestPath();
@@ -152,5 +153,14 @@ private:
     size_t m_size;
     std::string const* m_data = 0;
 };
+
+enum class TestType
+{
+    StateTest,
+    BlockchainTest,
+    EOFTest
+};
+
+TestType getTestType(spDataObject _testData);
 
 }  // namespace test

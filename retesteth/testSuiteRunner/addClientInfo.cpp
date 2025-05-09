@@ -19,7 +19,7 @@ string calculateHashOfTheNewFilledTest(DataObject& _newFilledTestRef)
     _newFilledTestRef.removeKey("_info");
     _newFilledTestRef.performModifier(mod_sortKeys);
     string const newFilledTestHashStr = _newFilledTestRef.asJson(0, false);
-    return dev::toString(sha3(newFilledTestHashStr));
+    return "0x" + dev::toString(sha3(newFilledTestHashStr));
 }
 
 bool checkIfThereAreUpdatesToTheTest(spDataObject _oldFilledTestFile, spDataObject _newFilledTest,
@@ -29,11 +29,11 @@ bool checkIfThereAreUpdatesToTheTest(spDataObject _oldFilledTestFile, spDataObje
     if (_oldFilledTestFile->count(_newFilledTest->getKey()))
     {
         DataObject const& existingTest = _oldFilledTestFile->atKey(_newFilledTest->getKey());
-        if (!existingTest.atKey("_info").count("generatedTestHash"))
+        if (!existingTest.atKey("_info").count("hash"))
             return true;
         else
         {
-            string const& oldTestHash = existingTest.atKey("_info").atKey("generatedTestHash").asString();
+            string const& oldTestHash = existingTest.atKey("_info").atKey("hash").asString();
             if (oldTestHash != _newFilledTestHash)
                 return true;
 
@@ -52,7 +52,7 @@ bool checkIfThereAreUpdatesToTheTest(spDataObject _oldFilledTestFile, spDataObje
 
 namespace test::testsuite
 {
-bool addClientInfoIfUpdate(DataObject& _newFilledTestData, fs::path const& _testSourcePath, dev::h256 const& _testSourceHash,
+bool addClientInfoIfUpdate(spDataObject _newFilledTestData, fs::path const& _testSourcePath, dev::h256 const& _testSourceHash,
     fs::path const& _existingFilledTest)
 {
     bool atLeastOneUpdate = false || Options::get().forceupdate;
@@ -62,7 +62,7 @@ bool addClientInfoIfUpdate(DataObject& _newFilledTestData, fs::path const& _test
         oldFilledTestFile = test::readJsonData(_existingFilledTest);
 
     session::SessionInterface& session = session::RPCSession::instance(TestOutputHelper::getThreadID());
-    for (spDataObject& newFilledTest : _newFilledTestData.getSubObjectsUnsafe())
+    for (spDataObject& newFilledTest : _newFilledTestData.getContent().getSubObjectsUnsafe())
     {
         spDataObject newTestClientInfo;
 
@@ -71,10 +71,11 @@ bool addClientInfoIfUpdate(DataObject& _newFilledTestData, fs::path const& _test
         if (newFilledTestRef.count("_info"))
             newTestClientInfo.getContent().copyFrom(newFilledTestRef.atKey("_info"));
 
-        (*newTestClientInfo)["generatedTestHash"] = calculateHashOfTheNewFilledTest(newFilledTestRef);
-        (*newTestClientInfo)["sourceHash"] = toString(_testSourceHash);
+        (*newTestClientInfo)["repo"] = "ethereum/tests";
+        (*newTestClientInfo)["hash"] = calculateHashOfTheNewFilledTest(newFilledTestRef);
+        (*newTestClientInfo)["sourceHash"] = "0x" + toString(_testSourceHash);
 
-        string const& newHash = newTestClientInfo->atKey("generatedTestHash").asString();
+        string const& newHash = newTestClientInfo->atKey("hash").asString();
         string const& newSrcHash = newTestClientInfo->atKey("sourceHash").asString();
         atLeastOneUpdate =
             atLeastOneUpdate || checkIfThereAreUpdatesToTheTest(oldFilledTestFile, newFilledTest, newHash, newSrcHash);
@@ -84,6 +85,18 @@ bool addClientInfoIfUpdate(DataObject& _newFilledTestData, fs::path const& _test
 
         (*newTestClientInfo)["filling-rpc-server"] = session.web3_clientVersion()->asString();
         (*newTestClientInfo)["filling-tool-version"] = test::prepareVersionString();
+
+        TestType const testType = test::getTestType(_newFilledTestData);
+        switch(testType)
+        {
+        case TestType::StateTest:
+            (*newTestClientInfo)["fixture-format"] = "state_test"; break;
+        case TestType::BlockchainTest:
+            (*newTestClientInfo)["fixture-format"] = "blockchain_test"; break;
+        case TestType::EOFTest:
+            (*newTestClientInfo)["fixture-format"] = "eof_test"; break;
+        }
+
         (*newTestClientInfo)["lllcversion"] = test::prepareLLLCVersionString();
         (*newTestClientInfo)["solidity"] = test::prepareSolidityVersionString();
 

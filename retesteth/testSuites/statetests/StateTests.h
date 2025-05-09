@@ -44,6 +44,16 @@ public:
     TestSuite::FillerPath suiteFillerFolder() const override;
 };
 
+class LegacyCancunStateTestSuite : public StateTestSuite
+{
+protected:
+    bool legacyTestSuiteFlag() const override { return true; }
+
+public:
+    TestSuite::TestPath suiteFolder() const override;
+    TestSuite::FillerPath suiteFillerFolder() const override;
+};
+
 
 #define REGISTER_STATESUITE(NAME)           \
     class NAME : public StateTestSuite      \
@@ -55,7 +65,4 @@ public:
 
 REGISTER_STATESUITE(StateTestVMSuite)
 REGISTER_STATESUITE(StateTestShanghaiSuite)
-REGISTER_STATESUITE(EIPStateTestSuite)
-REGISTER_STATESUITE(EIPStateTestEOFSuite)
-
 }  // namespace test

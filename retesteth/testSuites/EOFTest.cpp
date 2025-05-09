@@ -66,26 +66,34 @@ spDataObject FillTest(EOFTestInFiller const& _test)
     return filledTest;
 }
 
-void RunTest(EOFTestInFilled const& _test)
+size_t RunTest(EOFTestInFilled const& _test)
 {
     if (ExitHandler::receivedExitSignal())
-        return;
+        return 0;
 
     TestOutputHelper::get().setCurrentTestName(_test.testName());
     SessionInterface& session = RPCSession::instance(TestOutputHelper::getThreadID());
 
+    size_t executedVectors = 0;
     for (auto const& [vectorName, vec] : _test.getVectors())
     {
+        auto const& singletest = Options::get().singletest;
+        if (singletest.initialized() && vectorName != singletest.subname && !singletest.subname.empty())
+            continue;
+
         for (auto const& [fork, exception] : vec.getResultForks())
         {
             if (networkSkip(fork, _test.testName()))
                 continue;
 
+            ETH_DC_MESSAGE(debug::DC::STATS2, "Running vector: " + vectorName);
             TestOutputHelper::get().setCurrentTestInfo(TestInfo(vectorName + "/" + fork.asString()));
             string const res = session.test_rawEOFCode(vec.data(), fork);
             compareEOFException(vec.data(), res, exception);
+            executedVectors++;
         }
     }
+    return executedVectors;
 }
 
 spDataObject EOFTestSuite::doTests(spDataObject& _input, TestSuiteOptions& _opt) const
@@ -119,8 +127,9 @@ spDataObject EOFTestSuite::doTests(spDataObject& _input, TestSuiteOptions& _opt)
 
         for (auto const& test : filledTest.tests())
         {
-            RunTest(test);
-            TestOutputHelper::get().registerTestRunSuccess();
+            size_t executedVectors = RunTest(test);
+            if (executedVectors != 0)
+                TestOutputHelper::get().registerTestRunSuccess();
         }
     }
     return spDataObject(0);

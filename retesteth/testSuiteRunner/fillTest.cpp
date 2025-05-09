@@ -21,10 +21,11 @@ namespace fs = boost::filesystem;
 
 namespace
 {
+std::mutex g_fillPythonMutex;
 void checkFileIsFiller(fs::path const& _file)
 {
     string fileName = _file.stem().c_str();
-    if (fileName.find("Filler") == string::npos)
+    if (fileName.find("Filler") == string::npos && _file.extension() != ".py")
         ETH_ERROR_MESSAGE("Trying to fill `" + string(_file.c_str()) + "`, but file does not have Filler suffix!");
 }
 
@@ -39,8 +40,22 @@ fs::path prepareOutputFileName(fs::path const& _file)
     if (Options::get().singleTestOutFile.initialized())
         outPath = fs::path(Options::get().singleTestOutFile);
     else
-        outPath = _file.parent_path() / fileName;
+        outPath = _file.parent_path() / "filled" / fileName;
     return outPath;
+}
+
+void fixPyspecsTestNames(DataObject& _test, fs::path const& _pythonFiller)
+{
+    for (auto& test : _test.getSubObjectsUnsafe())
+    {
+        size_t subTestSeparator = test->getKey().find("::");
+        if (subTestSeparator == string::npos)
+            continue;
+
+        string key = test->getKey();
+        key.replace(0, subTestSeparator, _pythonFiller.string());
+        test.getContent().setKey(key);
+    }
 }
 
 void updatePythonTestInfo(TestFileData& _testData, fs::path const& _pythonFiller, fs::path const& _filledFolder)
@@ -56,8 +71,9 @@ void updatePythonTestInfo(TestFileData& _testData, fs::path const& _pythonFiller
             continue;
         }
         spDataObject output = dataobject::ConvertJsoncppStringToData(res);
+        fixPyspecsTestNames(output.getContent(), _pythonFiller);
         bool update =
-            addClientInfoIfUpdate(output.getContent(), _pythonFiller, _testData.hash, outputTestFilePath);
+            addClientInfoIfUpdate(output, _pythonFiller, _testData.hash, outputTestFilePath);
         if (update)
         {
             (*output).performModifier(mod_sortKeys, DataObject::ModifierOption::NONRECURSIVE);
@@ -74,8 +90,97 @@ string const c_fillerPostf = "Filler";
 string const c_copierPostf = "Copier";
 string const c_pythonPostf = ".py";
 
+string makePyScriptCMDArgs(fs::path const& _fillerTestFilePath, TestSuite::AbsoluteFilledTestPath const& _filledPath)
+{
+    /*
+        SUITETYPE=$1
+        SRCPATH=$2
+        FILLER=$3
+        TESTCA=$4
+        OUTPUT=$5
+        EVMT8N=$6
+        FORCER=$7
+        DEBUG=$8
+        FROMF=$9
+        UNTIF=$10
+        EXPRTCALL=$11
+    */
+
+    auto const& opt = Options::get();
+    string const fillerName = _fillerTestFilePath.stem().string();
+    auto const& currentConfig = Options::getCurrentConfig();
+    auto const& specsScript = currentConfig.getPySpecsStartScript();
+    string runcmd = specsScript.c_str();
+
+    // SUITETYPE
+    runcmd += Options::get().fillchain ? " blockchain_tests" : " \"state_tests eof_tests\"";
+
+    // SRCPATH
+    runcmd += " " + _fillerTestFilePath.string();
+
+    // FILLER NAME
+    runcmd += " " + fillerName;
+
+    // TEST CASE NAME
+    if (opt.singletest.initialized() && !opt.singletest.subname.empty())
+        runcmd += " " + opt.singletest.subname;
+    else
+        runcmd += " null";
+
+    // OUTPATH
+    auto filledPath = _filledPath.path().parent_path().string();
+    if (filledPath.empty())
+        filledPath = _fillerTestFilePath.string();
+    runcmd += " " + filledPath;
+
+    // T8N start script
+    if (Options::getCurrentConfig().cfgFile().path().parent_path().filename() == "eels")
+    {
+        // Default pyt8n is EELS bundled with pyspecs
+        runcmd += " null";
+    }
+    else
+        runcmd += " --evm-bin " + opt.getCurrentConfig().getStartScript().string();
+
+    // Force test update
+    if (opt.forceupdate)
+        runcmd += " --force-refill";
+    else
+        runcmd += " null";
+
+    // Debugging
+    if (test::debug::Debug::get().flag(DC::PYSPEC))
+        runcmd += " --stderr";
+    else
+        runcmd += " null";
+
+    // Forks selector
+    if (Options::get().singleTestNet.initialized())
+    {
+        auto const& singlenet = Options::get().singleTestNet;
+        runcmd += " " + singlenet + " " + singlenet;
+    }
+    else
+    {
+        auto const& forks = Options::getCurrentConfig().cfgFile().forks();
+        runcmd += " " + forks.at(0).asString() + " " + forks.at(forks.size() - 1).asString();
+    }
+
+    // Export call
+    if (!Options::get().t8ntoolcall.empty())
+    {
+        std::cerr << "THEREIS EXPORT CALL" << std::endl;
+        runcmd += " " + Options::get().t8ntoolcall;
+    }
+    else
+        runcmd += " null";
+    return runcmd;
+}
+
 bool TestSuite::_fillPython(TestFileData& _testData, fs::path const& _fillerTestFilePath, AbsoluteFilledTestPath const& _filledPath, fs::path const& _relativeFillerPath) const
 {
+    // Python has issues when filling multithread
+    std::lock_guard<std::mutex> lock(g_fillPythonMutex);
     bool wereErrors = false;
     auto const& currentConfig = Options::getCurrentConfig();
     auto const& specsScript = currentConfig.getPySpecsStartScript();
@@ -84,46 +189,7 @@ bool TestSuite::_fillPython(TestFileData& _testData, fs::path const& _fillerTest
         string const fillerName = _fillerTestFilePath.stem().string();
         TestOutputHelper::get().setCurrentTestName(fillerName);
 
-        /*
-        SRCPATH=$1
-        FILLER=$2
-        TESTCA=$3
-        OUTPUT=$4
-        EVMT8N=$5
-        FORCER=$6
-        DEBUG=$7
-        */
-
-        auto const& opt = Options::get();
-        string runcmd = specsScript.c_str();
-        runcmd += " " + _fillerTestFilePath.string();                              // SRCPATH
-        runcmd += " " + fillerName;                                                // FILLER NAME
-        if (opt.singletest.initialized() && !opt.singletest.subname.empty())
-            runcmd += " " + opt.singletest.subname;
-        else
-            runcmd += " null";                                                     // TEST CASE NAME
-        runcmd += " " + _filledPath.path().parent_path().string();                 // OUTPATH
-        runcmd += " " + opt.getCurrentConfig().getStartScript().string();          // T8N start
-        if (opt.forceupdate)
-            runcmd += " --force-refill";
-        else
-            runcmd += " null";
-        if (test::debug::Debug::get().flag(DC::PYSPEC))
-            runcmd += " --stderr";
-        else
-            runcmd += " null";
-
-        // Forks selector
-        if (Options::get().singleTestNet.initialized())
-        {
-            auto const& singlenet = Options::get().singleTestNet;
-            runcmd += " " + singlenet + " " + singlenet;
-        }
-        else
-        {
-            auto const& forks = Options::getCurrentConfig().cfgFile().forks();
-            runcmd += " " + forks.at(0).asString() + " " + forks.at(forks.size() - 1).asString();
-        }
+        string runcmd = makePyScriptCMDArgs(_fillerTestFilePath, _filledPath);
 
         ETH_DC_MESSAGEC(DC::STATS, string("Generate Python test: ") + _fillerTestFilePath.stem().string(), LogColor::YELLOW);
         ETH_DC_MESSAGE(DC::RPC, string("Generate Python test: ") + runcmd);
@@ -157,7 +223,7 @@ void TestSuite::_fillCopier(
     ETH_DC_MESSAGE(DC::TESTLOG, "Copying " + _fillerTestFilePath.string());
     ETH_DC_MESSAGE(DC::TESTLOG, " TO " + _outputTestFilePath.path().string());
     assert(_fillerTestFilePath.string() != _outputTestFilePath.path().string());
-    addClientInfoIfUpdate(_testData.data.getContent(), _fillerTestFilePath, _testData.hash, _outputTestFilePath.path());
+    addClientInfoIfUpdate(_testData.data, _fillerTestFilePath, _testData.hash, _outputTestFilePath.path());
     writeFile(_outputTestFilePath.path(), asBytes(_testData.data->asJson()));
     ETH_FAIL_REQUIRE_MESSAGE(
         boost::filesystem::exists(_outputTestFilePath.path().string()), "Error when copying the test file!");
@@ -170,11 +236,21 @@ bool TestSuite::_fillJsonYml(TestFileData& _testData, fs::path const& _fillerTes
     removeComments(_testData.data);
     try
     {
+        _opt.pathToFiller = _fillerTestFilePath;
+        _opt.relativePathToFilledTest = fs::relative(_outputTestFilePath.path(), getTestPath());
         spDataObject output = doTests(_testData.data, _opt);
+        if (Options::get().convertpy)
+        {
+            auto testname = _fillerTestFilePath.stem().string();
+            testname.erase(testname.find("Filler"), 6);
+            auto pyFilename = testname + ".py";
+            writeFile(getTestPath() / _fillerTestFilePath.parent_path() / pyFilename, asBytes(output->asString()));
+        }
+
         if (output->type() != DataType::Null)
         {
             bool update =
-                addClientInfoIfUpdate(output.getContent(), _fillerTestFilePath, _testData.hash, _outputTestFilePath.path());
+                addClientInfoIfUpdate(output, _fillerTestFilePath, _testData.hash, _outputTestFilePath.path());
             if (update)
             {
                 (*output).performModifier(mod_sortKeys, DataObject::ModifierOption::NONRECURSIVE);
@@ -217,7 +293,11 @@ bool TestSuite::_fillTest(TestSuite::TestSuiteOptions& _opt, fs::path const& _fi
     bool const isPy = (_fillerTestFilePath.extension() == ".py");
     bool const isCopier = (_fillerTestFilePath.stem().string().rfind(c_copierPostf) != string::npos);
     if (isPy)
+    {
+        if (Options::get().nopython)
+            return true;
         return _fillPython(testData, _fillerTestFilePath, _outputTestFilePath, testFillerPathRelative);
+    }
 
     if (isCopier)
     {
@@ -237,7 +317,7 @@ void TestSuite::runTestWithoutFiller(boost::filesystem::path const& _file) const
         {
             Options::getDynamicOptions().setCurrentConfig(config);
 
-            ETH_DC_MESSAGE(DC::STATS,
+            ETH_DC_MESSAGE(DC::STATS2,
                 "Running tests for config '" + config.cfgFile().name() + "' " + test::fto_string(config.getId().id()));
             ETH_DC_MESSAGE(DC::TESTLOG, "Running " + _file.filename().string() + ": ");
 
@@ -252,7 +332,9 @@ void TestSuite::runTestWithoutFiller(boost::filesystem::path const& _file) const
                 TestSuite::TestSuiteOptions _opt;
                 _opt.allowInvalidBlocks = true;
                 _opt.calculateRelativeSrcPath = false;
-                _fillTest(_opt, _file, outPath);
+                bool wereErrors = _fillTest(_opt, _file, outPath);
+                if (!wereErrors)
+                    runTestAfterFilling(_file, outPath);
             }
             else
                 _runTest(_file);

@@ -79,6 +79,8 @@ spDataObject readAutoDataWithoutOptions(boost::filesystem::path const& _file, bo
             return dataobject::ConvertJsoncppStringToData(s);
         else if (_file.extension() == ".yml")
             return dataobject::ConvertYamlToData(YAML::Load(s), _sort);
+        else if (_file.extension() == ".py")
+            return spDataObject(new DataObject(dev::contentsString(_file)));
         std::cerr << "Unknown test file: " << _file.string() << std::endl;
     }
     catch (std::exception const& _ex)
@@ -86,6 +88,27 @@ spDataObject readAutoDataWithoutOptions(boost::filesystem::path const& _file, bo
         std::cerr << string("\nError when parsing file (") + _file.c_str() + ") " + _ex.what() << std::endl;
     }
     return spDataObject(0);
+}
+vector<fs::path> getFilesRecursive(fs::path const& _dirPath, set<string> const& _extentionMask, string const& _particularFile)
+{
+    vector<fs::path> files;
+    if (!fs::exists(_dirPath))
+        return files;
+
+    for (auto const& file : getFiles(_dirPath, _extentionMask, _particularFile))
+        files.emplace_back(file);
+
+    using fsIterator = fs::directory_iterator;
+    for (fsIterator it(_dirPath); it != fsIterator(); ++it)
+    {
+        if (fs::is_directory(it->path()))
+        {
+            for (auto const& file : getFilesRecursive(*it, _extentionMask, _particularFile))
+                files.emplace_back(file);
+        }
+    }
+
+    return files;
 }
 
 vector<fs::path> getFiles(fs::path const& _dirPath, set<string> const& _extentionMask, string const& _particularFile)
@@ -361,6 +384,7 @@ string prepareSolidityVersionString()
         const string result = test::executeCmd(cmd, exitCode);
         const string cVersion  = "Version";
         const string::size_type pos = result.rfind(cVersion);
+
         if (pos != string::npos)
         {
             solcVersion = result.substr(pos, result.length());
@@ -833,6 +857,36 @@ std::vector<std::string> parseArgsFromStringIntoArray(std::string const& _stream
     if (!arg.empty())
         args.emplace_back(arg);
     return args;
+}
+
+TestType getTestType(spDataObject _testData)
+{
+    if (_testData->getSubObjects().size() == 0)
+    {
+        if (_testData->asString().find("eof_test") != string::npos)
+            return TestType::EOFTest;
+        return TestType::StateTest;
+    }
+
+    auto isBlockChainTest = [](DataObject const& _el)
+    {
+        return (_el.getKey() == "blocks");
+    };
+    auto isStateTest = [](DataObject const& _el)
+    {
+        return (_el.getKey() == "env");
+    };
+    auto isEOFTest = [](DataObject const& _el)
+    {
+        return (_el.getSubObjects().size() == 2 && _el.count("code") && _el.count("results"));
+    };
+    if (_testData->performSearch(isBlockChainTest))
+        return TestType::BlockchainTest;
+    if (_testData->performSearch(isStateTest))
+        return TestType::StateTest;
+    if (_testData->performSearch(isEOFTest))
+        return TestType::EOFTest;
+    return TestType::StateTest;
 }
 
 }//namespace

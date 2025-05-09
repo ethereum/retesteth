@@ -91,6 +91,7 @@ private:
     void setWithdrawalsRoot(FH32 const&, spBlockHeader&);
     void setExcessBlobGasAndGasUsed(ToolResponse const&, spBlockHeader&);
     void setAndCheckDifficulty(VALUE const&, spBlockHeader&);
+    void setRequestsHash(FH32 const&, spBlockHeader&);
 
     spDataObject coorectTransactionsByToolResponse(ToolResponse const& _res, EthereumBlockState& _pendingFixed,
         EthereumBlockState const& _pendingBlock, Mining _miningReq);

@@ -26,12 +26,17 @@ spSetChainParamsArgsGenesis readGenesis(DataObject const& _data)
             if (_data.count(c_withdrawalsRoot))
             {
                 if (_data.count(c_currentExcessBlobGas))
-                    return spSetChainParamsArgsGenesis(new SetChainParamsArgsGenesis4844(_data));
+                {
+                    if (_data.count(c_currentRequestsHash))
+                        return spSetChainParamsArgsGenesis(new SetChainParamsArgsGenesisPrague(_data));
+                    else
+                        return spSetChainParamsArgsGenesis(new SetChainParamsArgsGenesis4844(_data));
+                }
                 else
                     return spSetChainParamsArgsGenesis(new SetChainParamsArgsGenesisShanghai(_data));
             }
             else
-                return spSetChainParamsArgsGenesis(new SetChainParamsArgsGenesisMerge(_data));
+                return spSetChainParamsArgsGenesis(new SetChainParamsArgsGenesisParis(_data));
         }
         else
             return spSetChainParamsArgsGenesis(new SetChainParamsArgsGenesis1559(_data));
@@ -75,10 +80,10 @@ SetChainParamsArgsGenesis1559::SetChainParamsArgsGenesis1559(DataObject const& _
         });
 }
 
-SetChainParamsArgsGenesisMerge::SetChainParamsArgsGenesisMerge(DataObject const& _data)
+SetChainParamsArgsGenesisParis::SetChainParamsArgsGenesisParis(DataObject const& _data)
   : SetChainParamsArgsGenesis(_data, false)
 {
-    REQUIRE_JSONFIELDS(_data, "SetChainParamsArgs::genesis(Merge) ",
+    REQUIRE_JSONFIELDS(_data, "SetChainParamsArgs::genesis(Paris) ",
         {
             {"author", {{DataType::String}, jsonField::Required}},
             {"gasLimit", {{DataType::String}, jsonField::Required}},
@@ -128,6 +133,27 @@ SetChainParamsArgsGenesis4844::SetChainParamsArgsGenesis4844(DataObject const& _
         });
 }
 
+SetChainParamsArgsGenesisPrague::SetChainParamsArgsGenesisPrague(DataObject const& _data)
+  : SetChainParamsArgsGenesis(_data, false)
+{
+    REQUIRE_JSONFIELDS(_data, "SetChainParamsArgs::genesis(Prague) ",
+        {
+            {"author", {{DataType::String}, jsonField::Required}},
+            {"gasLimit", {{DataType::String}, jsonField::Required}},
+            {"baseFeePerGas", {{DataType::String}, jsonField::Required}},
+            {"currentRandom", {{DataType::String}, jsonField::Required}},
+            {"withdrawalsRoot", {{DataType::String}, jsonField::Required}},
+            {"extraData", {{DataType::String}, jsonField::Required}},
+            {"timestamp", {{DataType::String}, jsonField::Required}},
+            {"nonce", {{DataType::String}, jsonField::Required}},
+            {"mixHash", {{DataType::String}, jsonField::Required}},
+            {c_currentBlobGasUsed, {{DataType::String}, jsonField::Required}},
+            {c_currentExcessBlobGas, {{DataType::String}, jsonField::Required}},
+            {c_currentBeaconRoot, {{DataType::String}, jsonField::Required}},
+            {c_currentRequestsHash, {{DataType::String}, jsonField::Required}}
+        });
+}
+
 SetChainParamsArgs::SetChainParamsArgs(spDataObject& _data)
 {
     requireSetChainParamsScheme(_data);
@@ -165,6 +191,11 @@ spDataObject SetChainParamsArgs::asDataObject() const
             (*out)["genesis"][c_currentExcessBlobGas] = newbl.excessBlobGas().asString();
             (*out)["genesis"][c_currentBlobGasUsed] = newbl.blobGasUsed().asString();
             (*out)["genesis"][c_currentBeaconRoot] = newbl.parentBeaconBlockRoot().asString();
+        }
+        if (isBlockExportRequestHash(m_genesis))
+        {
+            BlockHeaderPrague const& newbl = BlockHeaderPrague::castFrom(m_genesis);
+            (*out)["genesis"][c_currentRequestsHash] = newbl.requestsHash().asString();
         }
     }
 
@@ -219,7 +250,7 @@ spDataObject SetChainParamsArgsGenesis1559::_constructBlockHeader() const
     return header;
 }
 
-spDataObject SetChainParamsArgsGenesisMerge::_constructBlockHeader() const
+spDataObject SetChainParamsArgsGenesisParis::_constructBlockHeader() const
 {
     spDataObject header = buildCommonBlockHeader();
     (*header)[c_difficulty] = "0x00";
@@ -251,6 +282,21 @@ spDataObject SetChainParamsArgsGenesis4844::_constructBlockHeader() const
     (*header)[c_blobGasUsed] =  m_dataRef.atKey(c_currentBlobGasUsed).asString();
     (*header)[c_excessBlobGas] = m_dataRef.atKey(c_currentExcessBlobGas).asString();
     (*header)[c_parentBeaconBlockRoot] = m_dataRef.atKey(c_currentBeaconRoot).asString();
+    return header;
+}
+
+spDataObject SetChainParamsArgsGenesisPrague::_constructBlockHeader() const
+{
+    spDataObject header = buildCommonBlockHeader();
+    (*header)[c_difficulty] = "0x00";
+    auto const curRandomU256 = dev::u256(m_dataRef.atKey("currentRandom").asString());
+    (*header)[c_mixHash] = dev::toCompactHexPrefixed(curRandomU256, 32);
+    (*header)[c_baseFeePerGas] = m_dataRef.atKey(c_baseFeePerGas).asString();
+    (*header)[c_withdrawalsRoot] = m_dataRef.atKey(c_withdrawalsRoot).asString();
+    (*header)[c_blobGasUsed] =  m_dataRef.atKey(c_currentBlobGasUsed).asString();
+    (*header)[c_excessBlobGas] = m_dataRef.atKey(c_currentExcessBlobGas).asString();
+    (*header)[c_parentBeaconBlockRoot] = m_dataRef.atKey(c_currentBeaconRoot).asString();
+    (*header)[c_requestsHash] = m_dataRef.atKey(c_currentRequestsHash).asString();
     return header;
 }
 

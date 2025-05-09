@@ -64,16 +64,33 @@ std::vector<fs::path> getSubfolders(fs::path const& _path)
     return subFolders;
 }
 
+std::vector<fs::path> getSubfiles(fs::path const& _path)
+{
+    std::vector<fs::path> subFiles;
+    using fsIterator = fs::directory_iterator;
+    for (fsIterator it(_path); it != fsIterator(); ++it)
+    {
+        if (fs::is_regular_file(*it))
+            subFiles.push_back(*it);
+    }
+    return subFiles;
+}
+
 bool hasSubfoldersWithFileTypes(fs::path const& _path, string const& _filemask)
 {
     using fsIterator = fs::directory_iterator;
     for (fsIterator it(_path); it != fsIterator(); ++it)
     {
-        if (fs::is_directory(*it))
+        auto const dirName = (*it).path().stem().string();
+        if (fs::is_directory(*it)
+            && dirName.find("__") == string::npos      //  "__pycache__"
+            && dirName != "point_evaluation_vectors")
         {
+            bool hasAtLeastOneSubElement = false;
             bool foundTest = false;
             for (fsIterator subit(*it); subit != fsIterator(); ++subit)
             {
+                hasAtLeastOneSubElement = true;
                 string const filename = (*subit).path().string();
                 auto const suffixes = test::explode(_filemask, '|');
                 for (auto const& suffix : suffixes)
@@ -85,10 +102,25 @@ bool hasSubfoldersWithFileTypes(fs::path const& _path, string const& _filemask)
                     }
                 }
             }
+
+            // Treat empty subfolders as folders with test files even if there are none
+            if (!hasAtLeastOneSubElement)
+                return true;
+
             return foundTest;
         }
     }
     return false;
+}
+
+void checkRegularFile(fs::path const& _f)
+{
+    if (_f.stem().string() == "__init__")
+        return;
+
+    string const ext = _f.extension().string();
+    if (ext == ".py" || ext == ".json")
+        ETH_ERROR_MESSAGE("Found test file in suite subfolder won't be executed: " + _f.string());
 }
 
 test_unit_id registerNewTestCase(
@@ -109,10 +141,14 @@ test_unit_id registerNewTestCase(
 }
 
 void registerNewTestSuite(
-    vector<string>& allTestNames, FixtureToSuite const& _fixture, test_suite* _suite, fs::path const& _path)
+    vector<string>& allTestNames, FixtureToSuite const& _fixture, test_suite* _suite, fs::path const& _path, fs::path const& _fillerPath)
 {
     auto const& suiteName = _fixture.second;
     auto const subFolders = getSubfolders(_path);
+    auto const subFiles = getSubfiles(_path);
+    for (auto const& file : subFiles)
+        checkRegularFile(file);
+
 
     string const newSuiteName = _path.stem().string();
     string const fullSuiteName = string(suiteName) + "/" + newSuiteName;
@@ -122,15 +158,22 @@ void registerNewTestSuite(
 
     for (auto const& path : subFolders)
     {
+        bool isSuiteSecondLevel = hasSubfoldersWithFileTypes(path, ".py|Filler.json|Filler.yml");
         auto const casename = path.stem().string();
 
         FixtureToSuite fixToSuite;
         auto ptr = _fixture.first.get();
         uPtrTestFixtureBase uPtr(ptr->copy());
         fixToSuite.first = std::move(uPtr);
-        fixToSuite.first.get()->setAdditionalFillerFolder("/" + newSuiteName);
+
+        fs::path newFillerPath = _fillerPath / newSuiteName;
+        fixToSuite.first.get()->setAdditionalFillerFolder(newFillerPath.c_str());
         fixToSuite.second = fullSuiteName;
-        registerNewTestCase(allTestNames, fixToSuite, tsuite, casename);
+
+        if (isSuiteSecondLevel)
+            registerNewTestSuite(allTestNames, fixToSuite, tsuite, path, newFillerPath);
+        else
+            registerNewTestCase(allTestNames, fixToSuite, tsuite, casename);
 
         g_dynamic_test_suite_fixtures.emplace_back(std::move(fixToSuite));
     }
@@ -165,10 +208,14 @@ void test::DynamicTestsBoost(vector<string>& allTestNames)
                     if (caseid == INV_TEST_UNIT_ID && !g_exceptionNames.count(caseName))
                     {
                         if (hasSubfoldersWithFileTypes(*it, ".py|Filler.json|Filler.yml"))
-                            registerNewTestSuite(allTestNames, fixtureSuite, suite, *it);
+                            registerNewTestSuite(allTestNames, fixtureSuite, suite, *it, "/");
                         else
                             registerNewTestCase(allTestNames, fixtureSuite, suite, caseName);
                     }
+                }
+                else if (fs::is_regular_file(*it))
+                {
+                    checkRegularFile(*it);
                 }
             }
         }
@@ -249,6 +296,10 @@ void TestFixture<T, U>::_execute(std::set<TestExecution> const& _execFlags) cons
         return;
     }
 
+    if (casename.find("__") != string::npos)
+        return;
+
+    m_suite.verifyFilledTestsFolders();
     m_suite.runAllTestsInFolder(casename);
     test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
 }
@@ -272,36 +323,20 @@ REGISTER_TEMPLATE(LegacyConstantinopleBlockchainValidTestSuite, NotRefillable)
 REGISTER_TEMPLATE(LegacyConstantinopleBlockchainInvalidTestSuite, NotRefillable)
 REGISTER_TEMPLATE(LegacyConstantinopleBCGeneralStateTestsSuite, NotRefillable)
 REGISTER_TEMPLATE(LegacyConstantinopleStateTestSuite, NotRefillable)
+REGISTER_TEMPLATE(LegacyCancunBlockchainTransitionTestSuite, NotRefillable)
+REGISTER_TEMPLATE(LegacyCancunBlockchainValidTestSuite, NotRefillable)
+REGISTER_TEMPLATE(LegacyCancunBlockchainInvalidTestSuite, NotRefillable)
+REGISTER_TEMPLATE(LegacyCancunBCGeneralStateTestsSuite, NotRefillable)
+REGISTER_TEMPLATE(LegacyCancunStateTestSuite, NotRefillable)
 
 // BC links
 REGISTER_TEMPLATE(BCGeneralStateTestsSuite, RequireOptionAllNotRefillable)
-REGISTER_TEMPLATE(BCEIPStateTestsSuite, RequireOptionAllNotRefillable)
-REGISTER_TEMPLATE(BCEIPStateTestsEOFSuite, RequireOptionAll)
-
 REGISTER_TEMPLATE(BCGeneralStateTestsVMSuite, RequireOptionAll)
 REGISTER_TEMPLATE(BCGeneralStateTestsShanghaiSuite, RequireOptionAll)
 
 REGISTER_TEMPLATE(BlockchainTestTransitionSuite, DefaultFlags)
 REGISTER_TEMPLATE(BlockchainTestInvalidSuite, RequireOptionFill)
 REGISTER_TEMPLATE(BlockchainTestInvalidSuite, DefaultFlags)
-REGISTER_TEMPLATE(BlockchainTestPyspecSuite, DefaultFlags)
-    REGISTER_TEMPLATE(BlockchainTestPyspecSuite_frontier, DefaultFlags)
-    REGISTER_TEMPLATE(BlockchainTestPyspecSuite_homestead, DefaultFlags)
-    REGISTER_TEMPLATE(BlockchainTestPyspecSuite_istanbul, DefaultFlags)
-    REGISTER_TEMPLATE(BlockchainTestPyspecSuite_berlin, DefaultFlags)
-    REGISTER_TEMPLATE(BlockchainTestPyspecSuite_merge, DefaultFlags)
-    REGISTER_TEMPLATE(BlockchainTestPyspecSuite_shanghai, DefaultFlags)
-    REGISTER_TEMPLATE(BlockchainTestPyspecSuite_cancun, DefaultFlags)
-
-REGISTER_TEMPLATE(BlockchainTestEIPSuite, DefaultFlags)
-REGISTER_TEMPLATE(BlockchainTestEIPPyspecSuite, DefaultFlags)
-    REGISTER_TEMPLATE(BlockchainTestEIPPyspecSuite_frontier, DefaultFlags)
-    REGISTER_TEMPLATE(BlockchainTestEIPPyspecSuite_homestead, DefaultFlags)
-    REGISTER_TEMPLATE(BlockchainTestEIPPyspecSuite_istanbul, DefaultFlags)
-    REGISTER_TEMPLATE(BlockchainTestEIPPyspecSuite_berlin, DefaultFlags)
-    REGISTER_TEMPLATE(BlockchainTestEIPPyspecSuite_merge, DefaultFlags)
-    REGISTER_TEMPLATE(BlockchainTestEIPPyspecSuite_shanghai, DefaultFlags)
-    REGISTER_TEMPLATE(BlockchainTestEIPPyspecSuite_cancun, DefaultFlags)
 
 REGISTER_TEMPLATE(BlockchainTestValidSuite, DefaultFlags)
 
@@ -311,8 +346,5 @@ REGISTER_TEMPLATE(StateTestSuite, DefaultFlags)
 REGISTER_TEMPLATE(EOFTestSuite, DefaultFlags)
 REGISTER_TEMPLATE(StateTestVMSuite, DefaultFlags)
 REGISTER_TEMPLATE(StateTestShanghaiSuite, DefaultFlags)
-
-REGISTER_TEMPLATE(EIPStateTestSuite, DefaultFlags)
-REGISTER_TEMPLATE(EIPStateTestEOFSuite, DefaultFlags)
 
 

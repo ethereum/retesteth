@@ -17,8 +17,9 @@ namespace fs = boost::filesystem;
 namespace test::statetests
 {
 
-StateTestFillerRunner::StateTestFillerRunner(StateTestInFiller const& _test)
-  : m_test(_test),
+StateTestFillerRunner::StateTestFillerRunner(StateTestInFiller const& _test, TestSuite::TestSuiteOptions const& _opt)
+  : m_testSuiteOpt(_opt),
+    m_test(_test),
     m_session(RPCSession::instance(TestOutputHelper::getThreadID()))
 {
     TestOutputHelper::get().setCurrentTestName(_test.testName());
@@ -27,6 +28,10 @@ StateTestFillerRunner::StateTestFillerRunner(StateTestInFiller const& _test)
         (*m_filledTest).atKeyPointer("_info") = _test.Info().rawData();
     (*m_filledTest).atKeyPointer("env") = _test.Env().asDataObject();
     (*m_filledTest).atKeyPointer("pre") = _test.Pre().asDataObject();
+
+    if (_test.hasConfig())
+        (*m_filledTest).atKeyPointer("config") = _test.Config().asDataObject(FORK("ALL"));
+
     (*m_filledTest).atKeyPointer("transaction") = _test.GeneralTr().asDataObject();
 
     for (auto const& ex : _test.unitTestExceptions())
@@ -34,6 +39,19 @@ StateTestFillerRunner::StateTestFillerRunner(StateTestInFiller const& _test)
 
     m_txs = _test.GeneralTr().buildTransactions();
     fillInfoWithLabels();
+}
+
+bool StateTestFillerRunner::checkBigintSkip()
+{
+    bool bigIntSupport = Options::getCurrentConfig().cfgFile().supportBigint();
+    if (!bigIntSupport && m_test.hasBigInt())
+    {
+        ETH_ERROR_MESSAGE("Client does not support test that has bigint: " + m_test.testName());
+        for (TransactionInGeneralSection& tr : m_txs)
+            tr.markSkipped();
+        return true;
+    }
+    return false;
 }
 
 void StateTestFillerRunner::fillInfoWithLabels()
@@ -114,8 +132,11 @@ void StateTestFillerRunner::performTransactionOnExpect(TransactionInGeneralSecti
     {
         auto const remState = getRemoteState(m_session);
         compareStates(_expect.result(), remState);
-        if (Options::get().poststate)
-            (*transactionResults).atKeyPointer("postState") = remState->asDataObject();
+
+        auto const& opt = Options::get();
+        bool const isLegacyTest = opt.isLegacy() || opt.isLegacyConstantinople();
+        if (!isLegacyTest)
+            (*transactionResults).atKeyPointer("state") = remState->asDataObject();
     }
     catch (StateTooBig const&)
     {
@@ -198,6 +219,57 @@ void StateTestFillerRunner::registerForkResult()
     if (m_forkResults->getSubObjects().size() > 0)
         (*m_filledTest)["post"].addSubObject(m_forkResults);
     m_forkResults = spDataObject();
+}
+
+spDataObject StateTestFillerRunner::getFilledTest() const
+{
+    spDataObject result = sDataObject(DataType::Object);
+
+    string startFork;
+    string endFork;
+    auto setOfForks = m_test.getAllForksFromExpectSections();
+    for (auto const& fork : Options::getCurrentConfig().cfgFile().forks())
+    {
+        if (setOfForks.count(fork))
+        {
+            if (startFork.empty())
+            {
+                startFork = fork.asString();
+                endFork = fork.asString();
+            }
+            else
+                endFork = fork.asString();
+        }
+    }
+    assert(!startFork.empty() && !endFork.empty());
+
+
+    int dIndMax = m_test.GeneralTr().databoxVector().size() - 1;
+    int gIndMax = m_test.GeneralTr().gasLimitVector().size() - 1;
+    int vIndMax = m_test.GeneralTr().valueVector().size() - 1;
+    assert(dIndMax >= 0 && gIndMax >= 0 && vIndMax >= 0);
+
+    string dIndS = "d0";
+    string gIndS = "g0";
+    string vIndS = "v0";
+    if (dIndMax > 0)
+        dIndS = "d[0-" + std::to_string(dIndMax) + "]";
+    if (gIndMax > 0)
+        gIndS = "g[0-" + std::to_string(gIndMax) + "]";
+    if (vIndMax > 0)
+        vIndS = "v[0-" + std::to_string(vIndMax) + "]";
+
+    string testName = m_testSuiteOpt.relativePathToFilledTest.string();
+    testName += "::" + m_test.testName();
+    if (startFork != endFork)
+        testName += "-fork_[" + startFork + "-" + endFork + "]";
+    else
+        testName += "-fork_" + startFork;
+    testName += "-" + dIndS + gIndS + vIndS;
+    // <relative-path-of-fixture-json>::<fixture-name>-fork_<fork-name>-d<X>g<Y>v<Z>
+
+    (*result).addSubObject(testName, m_filledTest);
+    return result;
 }
 
 }

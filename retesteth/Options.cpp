@@ -263,7 +263,20 @@ Options::Options(int argc, const char** argv)
             filltests = true;
             vmtrace = true;
         });
+    ADD_OPTION(filleest, "--filleest", [](){
+        cout << setw(30) << "--filleest" << setw(0) << "Generate tests in EEST format\n";
+    });
 
+    ADD_OPTION(convertpy, "--convertpy", [](){
+        cout << setw(30) << "--convertpy" << setw(25) << "Convert state test fillers into .py\n";
+    });
+    convertpy.setValidator([this, stateTestOnly](){
+        stateTestOnly("--convertpy");
+        if (!filltests.initialized())
+        {
+            std::cout << "WARNING: `--convertpy` option provided without `--filltests`, activating `--filltests` (did you mean `--filltests`?)\n";
+            filltests = true;
+        }});
     ADD_OPTION(fillchain, "--fillchain", [](){
         cout << setw(30) << "--fillchain" << setw(25) << "When filling the state tests, fill tests as blockchain instead\n";
     });
@@ -296,6 +309,9 @@ Options::Options(int argc, const char** argv)
     });
     ADD_OPTION(forceupdate, "--forceupdate", [](){
         cout << setw(30) << "--forceupdate" << setw(25) << "Update generated test (_info) even if there are no changes\n";
+    });
+    ADD_OPTION(nopython, "--nopython", [](){
+        cout << setw(30) << "--nopython" << setw(25) << "Do not generate .py tests\n";
     });
 
 

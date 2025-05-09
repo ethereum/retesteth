@@ -1,4 +1,4 @@
-FROM ubuntu:20.04 as retesteth
+FROM ubuntu:20.04 AS retesteth
 
 ARG BESU_SRC="https://github.com/hyperledger/besu.git"
 ARG PYSPECS_SRC="https://github.com/ethereum/execution-spec-tests"
@@ -28,17 +28,19 @@ RUN apt-get update \
     && apt install software-properties-common -y \
     && add-apt-repository -y ppa:ubuntu-toolchain-r/test \
     && add-apt-repository -y ppa:deadsnakes/ppa  \
-    && add-apt-repository ppa:linuxuprising/java \
-    && apt-get install --yes jq lsof git cmake make perl psmisc curl wget gcc-11 g++-11 python3.10 python3.10-venv python3-pip python3-dev \
+    && apt-get install --yes jq lsof git make libssl-dev libgmp-dev perl psmisc curl wget gcc-11 g++-11 python3.10 python3.10-venv python3-pip python3-dev \
     && apt-get install --yes libboost-filesystem-dev libboost-system-dev libboost-program-options-dev libboost-test-dev \
-    && echo oracle-java17-installer shared/accepted-oracle-license-v1-3 select true | /usr/bin/debconf-set-selections  \
-    && apt-get install --yes oracle-java17-installer oracle-java17-set-default \
     && apt-get install --yes uuid-runtime \
     && rm -rf /var/lib/apt/lists/*
 RUN rm /usr/bin/python3 && ln -s /usr/bin/python3.10 /usr/bin/python3 \
     && rm /usr/bin/gcc && rm /usr/bin/g++ \
     && ln -s /usr/bin/gcc-11 /usr/bin/gcc \
     && ln -s /usr/bin/g++-11 /usr/bin/g++
+
+# CMAKE LATEST
+RUN wget https://github.com/Kitware/CMake/releases/download/v3.28.0/cmake-3.28.0.tar.gz \
+    && tar -zxvf cmake-3.28.0.tar.gz && cd cmake-3.28.0 \
+    && ./bootstrap && make && make install
 
 # Tests
 #RUN git clone --depth 1 -b master https://github.com/ethereum/tests /tests
@@ -60,9 +62,9 @@ RUN wget https://github.com/ethereum/solidity/releases/download/v0.8.21/solc-sta
 # Pyspecs
 RUN git clone $PYSPECS_SRC /execution-spec-tests 
 RUN cd /execution-spec-tests && git fetch && git checkout $PYSPECS \
-    && python3 -m venv ./venv/ \
-    && source ./venv/bin/activate \
-    && pip install -e . \
+    && curl -LsSf https://astral.sh/uv/install.sh | sh && source $HOME/.local/bin/env \
+    && uv sync --all-extras  \
+    && uv run solc-select use 0.8.24 --always-install\
     && wget https://raw.githubusercontent.com/ethereum/retesteth/develop/web/tfinit.sh \
     && cp tfinit.sh /usr/bin/tfinit.sh \
     && chmod +x /usr/bin/tfinit.sh
@@ -73,15 +75,15 @@ RUN test -n "$PYT8N" \
      && cd /pyt8n && git fetch && git checkout $PYT8N \
      && python3 -m venv ./venv/ \
      && source ./venv/bin/activate \
-     && pip install -e . \
+     && pip install -e .[test] \
     || echo "Pyt8n is empty"
 
 # Geth
 RUN test -n "$GETH" \
      && git clone $GETH_SRC /geth \
      && cd /geth && git fetch && git checkout $GETH \
-     && wget https://dl.google.com/go/go1.20.linux-amd64.tar.gz \
-     && tar -xvf go1.20.linux-amd64.tar.gz \
+     && wget https://go.dev/dl/go1.21.8.linux-amd64.tar.gz \
+     && tar -xvf go1.21.8.linux-amd64.tar.gz \
      && mv go /usr/local && ln -s /usr/local/go/bin/go /bin/go \
      && go build ./cmd/evm  && cp evm /bin/evm \
      && rm -rf /geth && rm -rf /usr/local/go \
@@ -102,22 +104,24 @@ RUN test -n "$NIMBUS" \
 RUN test -n "$ETHEREUMJS" \
      && wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash \
      && . ~/.nvm/nvm.sh \
-     && nvm install 19 && nvm alias default 19 && nvm use default \
-     && cp -r ~/.nvm/versions/node/v19*/* /usr \
+     && nvm install 20 && nvm alias default 20 && nvm use default \
+     && cp -r ~/.nvm/versions/node/v20*/* /usr \
      && git clone $ETEREUMJS_SRC /ethereumjs \
      && cd /ethereumjs && git fetch && git checkout $ETHEREUMJS && npm i && npm run build --workspaces \
     || echo "Ethereumjs is empty"
 
 # Besu
 RUN test -n "$BESU" \
+     && apt-get update \
+     && apt-get install --yes openjdk-21-jdk \
+    || echo "Besu is empty"
+RUN test -n "$BESU" \
      && git clone $BESU_SRC /besu \
      && cd /besu && git fetch && git checkout $BESU \
-     && ./gradlew build \
     || echo "Besu is empty"
-
 RUN test -n "$BESU" \
      && cd /besu && ./gradlew ethereum:evmtool:installDist \
-     && ln -s /besu/ethereum/evmtool/build/install/evmtool/bin/evm /usr/bin/besuevm \
+     && ln -s /besu/ethereum/evmtool/build/install/evmtool/bin/evmtool /usr/bin/besuevm \
     || echo "Besu is empty"
 
 # Evmone
@@ -126,14 +130,16 @@ RUN test -n "$EVMONE" \
      && cd /evmone && git fetch && git checkout $evmone \
      && cmake -S . -B build -DEVMONE_TESTING=ON \
      && cmake --build build \
-     && ln -s /evmone/build/bin/evmone-t8n /usr/bin/evmone \
+     && ln -s /evmone/build/bin/evmone-t8n /usr/bin/evmone-t8n \
      && rm -rf /var/cache/* /root/.hunter/* \
     || echo "Evmone is empty"
 
 # Retesteth
 RUN test -n "$RETESTETH" \
     && git clone $RETESTETH_SRC /retesteth \
-    && cd /retesteth && git fetch && git checkout $RETESTETH && mkdir /build && cd /build \
+    && cd /retesteth \
+    && git fetch && git checkout $RETESTETH && git submodule update --init --recursive \
+    && mkdir /build && cd /build \
     && cmake /retesteth -DCMAKE_BUILD_TYPE=Release \
     && make -j2 \
     && cp /build/retesteth/retesteth /usr/bin/retesteth \

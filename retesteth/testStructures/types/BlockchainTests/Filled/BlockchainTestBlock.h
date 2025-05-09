@@ -18,6 +18,7 @@ struct BlockchainTestBlock : GCP_SPointerBase
     bool hasRlpDecoded() const { return m_hasRlpDecoded; }
     spBlockHeader const& header() const { return m_blockHeader; }
     std::string const& getExpectException() const { return m_exception; }
+    bool rlpDecodedValid() const { return m_rlpDecodedValid; }
 
     std::vector<spBlockHeader> const& uncles() const { return m_uncles; }
     std::vector<spTransaction> const& transactions() const { return m_transactions; }
@@ -36,6 +37,7 @@ private:
     std::vector<spWithdrawal> m_withdrawals;
     std::vector<TransactionException> m_transactionSequence;
     spBYTES m_rlp;
+    bool m_rlpDecodedValid = false;
 };
 
 }  // namespace teststruct

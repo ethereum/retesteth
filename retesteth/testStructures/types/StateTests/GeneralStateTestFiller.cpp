@@ -3,6 +3,9 @@
 #include <retesteth/helpers/TestOutputHelper.h>
 #include <retesteth/testStructures/Common.h>
 #include <retesteth/helpers/TestHelper.h>
+#include <retesteth/testStructures/configs/FORK.h>
+#include <retesteth/Constants.h>
+#include <retesteth/Options.h>
 
 using namespace std;
 using namespace test::teststruct;
@@ -10,6 +13,7 @@ using namespace test::compiler;
 using namespace test;
 
 namespace  {
+
 void checkCoinbaseInExpectSection(StateTestFillerExpectSection const& _expect, GCP_SPointer<StateTestFillerEnv> const& _env)
 {
     for (auto const& acc : _expect.result().accounts())
@@ -117,7 +121,11 @@ StateTestInFiller::StateTestInFiller(spDataObject& _data)
             solidityCode = test::compiler::compileSolidity(_data->atKey("solidity").asString());
 
         convertDecStateToHex((*_data).atKeyPointerUnsafe("pre"), solidityCode); // "Pre" section
+
         m_pre = spState(new State(MOVE(_data, "pre")));
+        m_hasEmptyAccounts = checkEmptyAccounts(m_pre);
+
+        m_hasBigInt = _data->atKey("transaction").performSearch(src_findBigInt);
         m_transaction = spStateTestFillerTransaction(new StateTestFillerTransaction(MOVE(_data, "transaction")));
 
         string const c_expect = "expect";
@@ -129,6 +137,8 @@ StateTestInFiller::StateTestInFiller(spDataObject& _data)
             checkCoinbaseInExpectSection(newSection, m_env);
             m_expectSections.emplace_back(newSection);
         }
+
+
         ETH_ERROR_REQUIRE_MESSAGE(m_expectSections.size() > 0, "StateTestFiller require expect sections!");
 
         m_name = _data->getKey();
@@ -142,6 +152,15 @@ StateTestInFiller::StateTestInFiller(spDataObject& _data)
             spDataObjectMove m = MOVE(_data, "verifyBC");
             m_verifyBC = m.getPointer();
         }
+
+        auto const& opt = Options::get();
+        if (opt.isLegacyConstantinople() || opt.isLegacy() || opt.isEOFTest())
+        {}
+        else
+        {
+            auto const forks = getAllForksFromExpectSections();
+            m_config = GCP_SPointer<StateTestFillerConfig>(new StateTestFillerConfig(forks));
+        }
     }
     catch (std::exception const& _ex)
     {
@@ -154,7 +173,14 @@ std::set<FORK> StateTestInFiller::getAllForksFromExpectSections() const
 {
     std::set<FORK> allForksMentionedInExpectSections;
     for (auto const& expectSection : m_expectSections)
+    {
         for (auto const& fork : expectSection.forks())
+        {
+            //if (compareFork(fork, CMP::lt, FORK("Cancun")))
+            //    ETH_ERROR_MESSAGE("Test has fork <Cancun " + TestOutputHelper::get().testInfo().errorDebug());
             allForksMentionedInExpectSections.emplace(fork);
+        }
+    }
     return allForksMentionedInExpectSections;
 }
+

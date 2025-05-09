@@ -43,9 +43,9 @@ struct SetChainParamsArgsGenesis1559 : SetChainParamsArgsGenesis
 protected:
     virtual spDataObject _constructBlockHeader() const override;
 };
-struct SetChainParamsArgsGenesisMerge : SetChainParamsArgsGenesis
+struct SetChainParamsArgsGenesisParis : SetChainParamsArgsGenesis
 {
-    SetChainParamsArgsGenesisMerge(DataObject const&);
+    SetChainParamsArgsGenesisParis(DataObject const&);
 protected:
     virtual spDataObject _constructBlockHeader() const override;
 };
@@ -58,6 +58,12 @@ protected:
 struct SetChainParamsArgsGenesis4844 : SetChainParamsArgsGenesis
 {
     SetChainParamsArgsGenesis4844(DataObject const&);
+protected:
+    virtual spDataObject _constructBlockHeader() const override;
+};
+struct SetChainParamsArgsGenesisPrague : SetChainParamsArgsGenesis
+{
+    SetChainParamsArgsGenesisPrague(DataObject const&);
 protected:
     virtual spDataObject _constructBlockHeader() const override;
 };

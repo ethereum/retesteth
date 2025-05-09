@@ -80,7 +80,7 @@ BOOST_FIXTURE_TEST_SUITE(TestHelperSuite, Initializer)
 BOOST_AUTO_TEST_CASE(tostr_std)
 {
     for (size_t i = 0; i < 1000000; i++)
-        std::to_string(i);
+        std::string str = std::to_string(i);
 }
 
 BOOST_AUTO_TEST_CASE(tostr_dev)

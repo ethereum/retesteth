@@ -5,6 +5,8 @@
 #include <retesteth/session/Session.h>
 #include <retesteth/Options.h>
 #include <retesteth/testSuites/Common.h>
+#include <retesteth/testStructures/Common.h>
+#include <retesteth/Constants.h>
 using namespace test;
 using namespace test::session;
 using namespace test::debug;
@@ -12,8 +14,8 @@ using namespace teststruct;
 using namespace std;
 using namespace test::blockchainfiller;
 
-BlockchainTestFillerRunner::BlockchainTestFillerRunner(BlockchainTestInFiller const& _test)
-  : m_test(_test), m_session(RPCSession::instance(TestOutputHelper::getThreadID()))
+BlockchainTestFillerRunner::BlockchainTestFillerRunner(BlockchainTestInFiller const& _test, TestSuite::TestSuiteOptions const& _opt)
+  : m_testSuiteOptions(_opt), m_test(_test), m_session(RPCSession::instance(TestOutputHelper::getThreadID()))
 {
     ETH_DC_MESSAGE(DC::TESTLOG, "Filling " + _test.testName());
 }
@@ -25,7 +27,8 @@ spDataObject BlockchainTestFillerRunner::makeNewBCTestForNet(FORK const& _net)
     spDataObject _filledTest;
     DataObject& filledTest = _filledTest.getContent();
 
-    string const newtestname = m_test.testName() + "_" + _net.asString();
+    string const newtestname = m_testSuiteOptions.relativePathToFilledTest.string()
+                               + "::" + m_test.testName() + "_" + _net.asString();
     TestOutputHelper::get().setCurrentTestName(newtestname);
 
     filledTest.setKey(newtestname);
@@ -33,15 +36,27 @@ spDataObject BlockchainTestFillerRunner::makeNewBCTestForNet(FORK const& _net)
         (*_filledTest).atKeyPointer("_info") = m_test.Info().rawData();
     filledTest["sealEngine"] = sealEngineToStr(m_test.sealEngine());
     filledTest["network"] = _net.asString();
-    filledTest.atKeyPointer("pre") = m_test.Pre().asDataObject();
-
+    if (m_test.hasConfig())
+    {
+        filledTest.atKeyPointer("config") = m_test.Config().asDataObject(_net);
+        filledTest["config"]["network"] = _net.asString();
+    }
     return _filledTest;
 }
 
 TestBlockchainManager BlockchainTestFillerRunner::makeTestChainManager(teststruct::FORK const& _net)
 {
     ETH_DC_MESSAGEC(DC::RPC, "FILL GENESIS INFO: ", LogColor::LIME);
-    return TestBlockchainManager(m_test.Env(), m_test.Pre(), m_test.sealEngine(), _net);
+
+    std::vector<spAccountBase> additionalAccounts;
+    if (test::compareFork(_net, test::CMP::ge, FORK("Cancun")))
+        makeCancunPrecompiledAccounts(m_test.Pre(), m_test.Env().currentTimestamp(), additionalAccounts);
+
+    if (test::compareFork(_net, test::CMP::ge, FORK("Prague")))
+        makePraguePrecompiledAccounts(m_test.Pre(), additionalAccounts);
+
+    auto blockchains = TestBlockchainManager(m_test.Env(), m_test.Pre(), m_test.sealEngine(), _net, additionalAccounts);
+    return blockchains;
 }
 
 void BlockchainTestFillerRunner::makeGenesis(spDataObject& _filledTest, TestBlockchainManager& _testchain) const

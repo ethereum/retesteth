@@ -17,10 +17,10 @@ private:
 
 };
 
-
 struct BlockchainTestFillerEnvLegacy : BlockchainTestFillerEnv
 {
     BlockchainTestFillerEnvLegacy(spDataObjectMove _data, SealEngine _sEngine);
+    spDataObject asDataObject() const override;
 
 protected:
     void initializeLegacyFields(DataObject const&);
@@ -31,6 +31,7 @@ private:
 struct BlockchainTestFillerEnv1559 : BlockchainTestFillerEnv
 {
     BlockchainTestFillerEnv1559(spDataObjectMove _data, SealEngine _sEngine);
+    spDataObject asDataObject() const override;
 
 protected:
     void initialize1559Fields(DataObject const&);
@@ -39,20 +40,22 @@ private:
 
 };
 
-struct BlockchainTestFillerEnvMerge : BlockchainTestFillerEnv
+struct BlockchainTestFillerEnvParis : BlockchainTestFillerEnv
 {
-    BlockchainTestFillerEnvMerge(spDataObjectMove _data, SealEngine _sEngine);
+    BlockchainTestFillerEnvParis(spDataObjectMove _data, SealEngine _sEngine);
+    spDataObject asDataObject() const override;
 
 protected:
-    void initializeMergeFields(DataObject const&);
-    BlockchainTestFillerEnvMerge(){};
+    void initializeParisFields(DataObject const&);
+    BlockchainTestFillerEnvParis(){};
 private:
     void define() const override {}
 };
 
-struct BlockchainTestFillerEnvShanghai : BlockchainTestFillerEnvMerge
+struct BlockchainTestFillerEnvShanghai : BlockchainTestFillerEnvParis
 {
     BlockchainTestFillerEnvShanghai(spDataObjectMove _data, SealEngine _sEngine);
+    spDataObject asDataObject() const override;
 
 protected:
     void initializeShanghaiFields(DataObject const&);
@@ -64,13 +67,26 @@ private:
 struct BlockchainTestFillerEnv4844 : BlockchainTestFillerEnvShanghai
 {
     BlockchainTestFillerEnv4844(spDataObjectMove _data, SealEngine _sEngine);
+    spDataObject asDataObject() const override;
 
 protected:
     void initialize4844Fields(DataObject const&);
+    BlockchainTestFillerEnv4844(){};
 private:
     void define() const override {}
 };
 
+
+struct BlockchainTestFillerEnvPrague : BlockchainTestFillerEnv4844
+{
+    BlockchainTestFillerEnvPrague(spDataObjectMove _data, SealEngine _sEngine);
+    spDataObject asDataObject() const override;
+
+protected:
+    void initializePragueFields(DataObject const&);
+private:
+    void define() const override {}
+};
 
 
 typedef GCP_SPointer<BlockchainTestFillerEnv> spBlockchainTestFillerEnv;

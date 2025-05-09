@@ -31,7 +31,7 @@ defaults:
       name: "ConfigureMac"
       working_directory: ~/build
       command: |
-        cmake ../project -DCMAKE_BUILD_TYPE=$BUILD_TYPE $CMAKE_OPTIONS -DCMAKE_TOOLCHAIN_FILE=~/project/toolchain.cmake
+        cmake ../project -DCMAKE_BUILD_TYPE=$BUILD_TYPE $CMAKE_OPTIONS -DCMAKE_TOOLCHAIN_FILE=~/project/toolchain.cmake -DCMAKE_POLICY_VERSION_MINIMUM=3.5
 
   build: &build
     run:
@@ -44,8 +44,8 @@ defaults:
       name: "LinuxInstallGO and Tests"
       working_directory: ~/project
       command: |
-          curl -L --output go1.20.linux-amd64.tar.gz "https://dl.google.com/go/go1.20.linux-amd64.tar.gz"
-          tar -xf go1.20.linux-amd64.tar.gz
+          curl -L --output go1.21.8.linux-amd64.tar.gz "https://go.dev/dl/go1.21.8.linux-amd64.tar.gz"
+          tar -xf go1.21.8.linux-amd64.tar.gz
           sudo mv go /usr/local
           sudo ln -s /usr/local/go/bin/go /usr/local/bin/go
           git clone --depth 1 https://github.com/ethereum/go-ethereum.git
@@ -143,6 +143,12 @@ defaults:
         
   linux-steps: &linux-steps
     - checkout
+    - run:
+          name: Update Git Submodules
+          command: |
+            git submodule sync
+            git submodule update --init --recursive
+
     - *environment-info
     - *configure
 #    - *upload-hunter-cache
@@ -158,16 +164,23 @@ defaults:
   mac-steps: &mac-steps
       - checkout
       - run:
+          name: Update Git Submodules
+          command: |
+            git submodule sync
+            git submodule update --init --recursive
+
+      - run:
           name: "Install macOS dependencies"
           # Python3 and requests are needed for Hunter upload.
           command: |
-            HOMEBREW_NO_AUTO_UPDATE=1 brew install -q cmake ninja git
+            brew install -q cmake ninja git
             git clone --depth 1 https://github.com/ethereum/go-ethereum.git
             git clone --depth 1 https://github.com/ethereum/tests.git
 
-            curl -L https://go.dev/dl/go1.20.1.darwin-amd64.pkg -o go1.20.pkg
-            chmod +x go1.20.pkg
-            sudo installer -pkg go1.20.pkg -target /
+            sudo softwareupdate --install-rosetta --agree-to-license
+            curl -L https://go.dev/dl/go1.21.8.darwin-amd64.pkg -o go1.21.pkg
+            chmod +x go1.21.pkg
+            sudo installer -pkg go1.21.pkg -target /
             sudo ln -s /usr/local/go/bin/go /usr/local/bin
 
             cd go-ethereum

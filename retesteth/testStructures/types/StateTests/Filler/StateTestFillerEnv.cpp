@@ -2,6 +2,7 @@
 #include <retesteth/EthChecks.h>
 #include <retesteth/testStructures/Common.h>
 #include <retesteth/Constants.h>
+#include <retesteth/Options.h>
 
 using namespace std;
 using namespace dataobject;
@@ -11,18 +12,34 @@ namespace
 {
 void requireStateTestsFillerEnvScheme(spDataObject const& _data)
 {
-    REQUIRE_JSONFIELDS(_data, "StateTestFillerEnv " + _data->getKey(),
-        {{"currentCoinbase", {{DataType::String}, jsonField::Required}},
-         {"currentDifficulty", {{DataType::String}, jsonField::Optional}},
-         {"currentGasLimit", {{DataType::String}, jsonField::Required}},
-         {"currentNumber", {{DataType::String}, jsonField::Required}},
-         {"currentTimestamp", {{DataType::String}, jsonField::Required}},
-         {"currentBaseFee", {{DataType::String}, jsonField::Optional}},
-         {"currentRandom", {{DataType::String}, jsonField::Optional}},
-         {c_parentExcessBlobGas, {{DataType::String}, jsonField::Optional}},
-         {c_parentBlobGasUsed, {{DataType::String}, jsonField::Optional}},
-         {c_currentBeaconRoot, {{DataType::String}, jsonField::Optional}},
-         {"previousHash", {{DataType::String}, jsonField::Required}}});
+    auto const& opt = test::Options::get();
+    if (opt.isLegacy())
+    {
+        REQUIRE_JSONFIELDS(_data, "StateTestFillerEnv(Legacy) " + _data->getKey(),
+            {{"currentCoinbase", {{DataType::String}, jsonField::Required}},
+                {"currentDifficulty", {{DataType::String}, jsonField::Optional}},
+                {"currentGasLimit", {{DataType::String}, jsonField::Required}},
+                {"currentNumber", {{DataType::String}, jsonField::Required}},
+                {"currentTimestamp", {{DataType::String}, jsonField::Required}},
+                {"currentBaseFee", {{DataType::String}, jsonField::Optional}},
+                {"currentRandom", {{DataType::String}, jsonField::Optional}},
+                {"previousHash", {{DataType::String}, jsonField::Optional}},
+                {c_currentExcessBlobGas, {{DataType::String}, jsonField::Optional}}
+            });
+    }
+    else
+    {
+        REQUIRE_JSONFIELDS(_data, "StateTestFillerEnv " + _data->getKey(),
+            {{"currentCoinbase", {{DataType::String}, jsonField::Required}},
+             {"currentDifficulty", {{DataType::String}, jsonField::Optional}},
+             {"currentGasLimit", {{DataType::String}, jsonField::Required}},
+             {"currentNumber", {{DataType::String}, jsonField::Required}},
+             {"currentTimestamp", {{DataType::String}, jsonField::Required}},
+             {"currentBaseFee", {{DataType::String}, jsonField::Optional}},
+             {"currentRandom", {{DataType::String}, jsonField::Optional}},
+             {c_currentExcessBlobGas, {{DataType::String}, jsonField::Optional}}
+        });
+    }
 }
 
 void convertEnvDecFieldsToHex(spDataObject& _data)
@@ -30,7 +47,6 @@ void convertEnvDecFieldsToHex(spDataObject& _data)
     (*_data).performModifier(mod_valueToCompactEvenHexPrefixed, DataObject::ModifierOption::RECURSIVE,
         {"currentCoinbase", "previousHash", "currentRandom"});
     (*_data).atKeyUnsafe("currentCoinbase").performModifier(mod_valueInsertZeroXPrefix);
-    (*_data).atKeyUnsafe("previousHash").performModifier(mod_valueInsertZeroXPrefix);
     (*_data).performModifier(mod_valueToLowerCase);
 }
 }  // namespace
@@ -41,16 +57,16 @@ namespace test::teststruct
 
 StateTestFillerEnv::StateTestFillerEnv(spDataObjectMove _data)
 {
+    spDataObject data = _data.getPointer();
     try
     {
-        m_raw = _data.getPointer();
-        requireStateTestsFillerEnvScheme(m_raw);
-        convertEnvDecFieldsToHex(m_raw);
-        initializeFields(m_raw);
+        requireStateTestsFillerEnvScheme(data);
+        convertEnvDecFieldsToHex(data);
+        initializeFields(data);
     }
     catch (std::exception const& _ex)
     {
-        throw UpwardsException(string("StateTestFillerEnv parse error: ") + _ex.what() + m_raw->asJson());
+        throw UpwardsException(string("StateTestFillerEnv parse error: ") + _ex.what() + data->asJson());
     }
 }
 
@@ -63,8 +79,6 @@ void StateTestFillerEnv::initializeFields(spDataObject const& _data)
     m_currentTimestamp = sVALUE(_data->atKey("currentTimestamp"));
     // Indicates zero block timestamp in StateTests
     m_genesisTimestamp = sVALUE(0);
-
-    m_previousHash = sFH32(_data->atKey("previousHash"));
 
     spDataObject tmpD(new DataObject("0x00"));  // State Tests extra data is 0x00
     m_currentExtraData = sBYTES(tmpD);
@@ -84,7 +98,7 @@ void StateTestFillerEnv::initializeFields(spDataObject const& _data)
     if (_data->count("currentBaseFee"))
         m_currentBaseFee = sVALUE(_data->atKey("currentBaseFee"));
 
-    // Merge
+    // Paris
     auto const& difficulty = m_currentDifficulty->asString();
     m_currentRandom = sFH32(dev::toCompactHexPrefixed(dev::u256(difficulty), 32));
 
@@ -96,36 +110,18 @@ void StateTestFillerEnv::initializeFields(spDataObject const& _data)
 
     // Cancun
     m_currentBlobGasUsed = sVALUE(DataObject("0x00"));
-    m_currentExcessBlobGas = sVALUE(DataObject("0x00"));
     m_currentBeaconRoot = spFH32(FH32::zero().copy());
-    if (_data->count(c_parentExcessBlobGas))
-        m_currentExcessBlobGas = sVALUE(_data->atKey(c_parentExcessBlobGas));
+
+    m_currentExcessBlobGas = sVALUE(DataObject("0x00"));
+    if (_data->count(c_currentExcessBlobGas))
+        m_currentExcessBlobGas = sVALUE(_data->atKey(c_currentExcessBlobGas));
     if (_data->count(c_parentBlobGasUsed))
         m_currentBlobGasUsed = sVALUE(_data->atKey(c_parentBlobGasUsed));
     if (_data->count(c_currentBeaconRoot))
         m_currentBeaconRoot = sFH32(_data->atKey(c_currentBeaconRoot));
-}
 
-spDataObject const& StateTestFillerEnv::asDataObject() const
-{
-    spDataObject const& c_raw = StateTestEnvBase::asDataObject();
-    spDataObject& raw = const_cast<spDataObject&>(c_raw);
-    if (!raw->count("currentBaseFee"))
-        (*raw)["currentBaseFee"] = m_currentBaseFee.getCContent().asString();
-
-    if (!raw->count("currentRandom"))
-        (*raw)["currentRandom"] = m_currentRandom.getCContent().asString();
-
-    if (!raw->count("currentDifficulty"))
-        (*raw)["currentDifficulty"] = m_currentDifficulty.getCContent().asString();
-
-    if (!raw->count("currentWithdrawalsRoot"))
-        (*raw)["currentWithdrawalsRoot"] = m_currentWithdrawalsRoot.getCContent().asString();
-
-    if (!raw->count("currentBeaconRoot"))
-        (*raw)["currentBeaconRoot"] = m_currentBeaconRoot.getCContent().asString();
-
-    return raw;
+    // Prague
+    m_currentRequestsHash = spFH32(C_FH32_DEFAULT_REQUESTS_HASH.copy());
 }
 
 }  // namespace teststruct

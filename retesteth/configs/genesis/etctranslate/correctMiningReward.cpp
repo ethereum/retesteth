@@ -20,6 +20,7 @@ const string t8ntool_correctMiningReward_config = R"({
     "Berlin" :           "3200000000000000000",
     "London" :           "3200000000000000000",
     "Merge" :            "3200000000000000000",
+    "Paris" :            "3200000000000000000",
 
     "ETC_Atlantis" :     "4000000000000000000",
     "ETC_Agharta" :      "4000000000000000000",

@@ -4,6 +4,7 @@
 #include <retesteth/testStructures/Common.h>
 #include <retesteth/Constants.h>
 #include <boost/test/framework.hpp>
+#include <retesteth/Options.h>
 
 using namespace std;
 using namespace test::teststruct;
@@ -24,12 +25,17 @@ BlockchainTestEnv* readBlockchainTestEnv(DataObject const& _data)
             if (_data.count(c_withdrawalsRoot))
             {
                 if (_data.count(c_excessBlobGas))
-                    return new BlockchainTestEnv4844(_data);
+                {
+                    if (_data.count(c_requestsHash))
+                        return new BlockchainTestEnvPrague(_data);
+                    else
+                        return new BlockchainTestEnv4844(_data);
+                }
                 else
                     return new BlockchainTestEnvShanghai(_data);
             }
             else
-                return new BlockchainTestEnvMerge(_data);
+                return new BlockchainTestEnvParis(_data);
         }
         return new BlockchainTestEnv1559(_data);
     }
@@ -45,6 +51,7 @@ BlockchainTestInFilled::BlockchainTestInFilled(spDataObject& _data)
     {
         REQUIRE_JSONFIELDS(_data, "BlockchainTestInFilled " + _data->getKey(),
             {{"_info", {{DataType::Object}, jsonField::Required}},
+                {"config", {{DataType::Object}, jsonField::Optional}},
                 {"sealEngine", {{DataType::String}, jsonField::Optional}},
                 {"genesisBlockHeader", {{DataType::Object}, jsonField::Required}},
                 {"postState", {{DataType::Object}, jsonField::Optional}},
@@ -62,6 +69,8 @@ BlockchainTestInFilled::BlockchainTestInFilled(spDataObject& _data)
 
         m_genesisRLP = spBYTES(new BYTES(_data->atKey("genesisRLP")));
         m_pre = spState(new State(MOVE(_data, "pre")));
+        checkEmptyStorages(m_pre);
+
         m_fork = spFORK(new FORK(_data->atKey("network")));
         m_sealEngine = SealEngine::NoProof;
         if (_data->count("sealEngine") && _data->atKey("sealEngine").asString() == sealEngineToStr(SealEngine::Ethash))
@@ -88,6 +97,19 @@ BlockchainTestInFilled::BlockchainTestInFilled(spDataObject& _data)
         {
             for (size_t i = _data->atKey("exceptions").getSubObjects().size(); i > 0; i--)
                 m_exceptions.emplace_back(_data->atKey("exceptions").getSubObjects().at(i - 1)->asString());
+        }
+
+        auto const& opt = test::Options::get();
+        if (opt.isLegacy() || opt.isLegacyConstantinople() || opt.isEOFTest())
+        {}
+        else
+        {
+            if (!_data->count("config"))
+            {
+                std::string const comment = "Expected field '" + string("config") + "' not found in config: " + "BlockchainTestInFilled " + _data->getKey();
+                throw test::UpwardsException(comment + "\n" + _data->asJson());
+            }
+            m_config = GCP_SPointer<BlockchainTestConfig>(new BlockchainTestConfig(_data->atKey("config"), m_fork.getCContent()));
         }
     }
     catch (std::exception const& _ex)

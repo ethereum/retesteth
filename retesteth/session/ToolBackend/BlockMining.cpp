@@ -62,20 +62,27 @@ void makeEnvBasefee(spDataObject& _envData, spBlockHeader const& _parentBlockH, 
             (*_envData)["parentGasLimit"] = h1559.gasLimit().asString();
         }
     }
+    if (isBlockExportRequestHash(_currentBlockH))
+    {
+        // PYT8N Prague require
+        (*_envData).removeKey("currentRequestsHash"); // not really needed
+        (*_envData)["parentHash"] = _parentBlockH->hash().asString(); // why?
+    }
 }
 
-void makeEnvExcessBlobGas(spDataObject& _envData, spBlockHeader const& _parentBlockH, spBlockHeader const& _currentBlockH, FORK const& _fork)
+void makeEnvExcessBlobGas(spDataObject& _envData, spBlockHeader const& _parentBlockH, spBlockHeader const& _currentBlockH, toolimpl::ToolChain const& _chain)
 {
     if (isBlockExportExcessBlobGas(_currentBlockH))
     {
         BlockHeader4844 const& ch4844 = BlockHeader4844::castFrom(_currentBlockH);
-        (*_envData)[c_parentBeaconBlockRoot] = ch4844.parentBeaconBlockRoot().asString();
+        auto const& beacon = ch4844.parentBeaconBlockRoot().asString();
+        (*_envData)[c_parentBeaconBlockRoot] = beacon;
 
         if (_currentBlockH->number() != 0)
         {
             (*_envData).removeKey(c_currentExcessBlobGas);
             (*_envData).removeKey(c_currentBlobGasUsed);
-            if (_fork == "ShanghaiToCancunAtTime15k" && _parentBlockH->type() != BlockType::BlockHeader4844)
+            if (_chain.fork() == "ShanghaiToCancunAtTime15k" && _parentBlockH->type() != BlockType::BlockHeader4844)
             {
                 BlockHeader4844 const& h4844 = BlockHeader4844::castFrom(_currentBlockH);
                 (*_envData)[c_currentExcessBlobGas] = h4844.excessBlobGas().asString();
@@ -90,8 +97,9 @@ void makeEnvExcessBlobGas(spDataObject& _envData, spBlockHeader const& _parentBl
         }
         else
         {
-            (*_envData).renameKey(c_currentExcessBlobGas, string(c_parentExcessBlobGas));
-            (*_envData).renameKey(c_currentBlobGasUsed, string(c_parentBlobGasUsed));
+            // TODO why??
+            //(*_envData).renameKey(c_currentExcessBlobGas, string(c_parentExcessBlobGas));
+            //(*_envData).renameKey(c_currentBlobGasUsed, string(c_parentBlobGasUsed));
         }
     }
 }
@@ -107,11 +115,16 @@ void makeEnvOmmers(spDataObject& _envData, EthereumBlockState const& _currentBlo
         spDataObject uncle;
         int delta = (int)(_currentBlockRef.header()->number() - un->number()).asBigInt();
         if (delta < 1)
-            throw test::UpwardsException("Uncle header delta is < 1");
+            throw test::UpwardsException("[retesteth]: Uncle header delta is < 1");
         (*uncle)["delta"] = delta;
         (*uncle)["address"] = un->author().asString();
         (*_envData)["ommers"].addArrayObject(uncle);
     }
+}
+
+void makeEnvRequestHash(spDataObject& , spBlockHeader const&, spBlockHeader const& )
+{
+    // t8n does not accept any additional parameters on Prague
 }
 }
 
@@ -126,14 +139,15 @@ void BlockMining::prepareEnvFile()
 
     auto spHeader = currentBlockH->asDataObject();
     spBlockchainTestFillerEnv env(readBlockchainFillerTestEnv(dataobject::move(spHeader), m_chainRef.engine()));
-    spDataObject& envData = const_cast<spDataObject&>(env->asDataObject());
+    spDataObject envData = env->asDataObject();
     makeEnvDifficulty(envData, parentBlockH, currentBlockH);
     if (isBlockExportCurrentRandom(currentBlockH))
         (*envData)["currentRandom"] = currentBlockH->mixHash().asString();
     makeEnvWithdrawals(envData, m_currentBlockRef);
     makeEnvBasefee(envData, parentBlockH, currentBlockH);
-    makeEnvExcessBlobGas(envData, parentBlockH, currentBlockH, m_chainRef.fork());
+    makeEnvExcessBlobGas(envData, parentBlockH, currentBlockH, m_chainRef);
     makeEnvOmmers(envData, m_currentBlockRef, m_chainRef);
+    makeEnvRequestHash(envData, parentBlockH, currentBlockH);
 
 
     // Options Hook
@@ -146,7 +160,8 @@ void BlockMining::prepareEnvFile()
 void BlockMining::prepareAllocFile()
 {
     m_allocPath = m_chainRef.tmpDir() / "alloc.json";
-    m_allocPathContent = m_currentBlockRef.state()->asDataObject()->asJsonNoFirstKey();
+    spDataObject preState = m_currentBlockRef.state()->asDataObject();
+    m_allocPathContent = preState->asJsonNoFirstKey();
     writeFile(m_allocPath.string(), m_allocPathContent);
 }
 
@@ -240,6 +255,7 @@ void BlockMining::executeTransition()
     if (m_currentBlockRef.transactions().size())
     {
         ETH_DC_MESSAGE(DC::RPC, "Txs:\n" + m_txsPathContent);
+        ETH_DC_MESSAGE(DC::RPC, "Decode:\n");
         for (auto const& tr : m_currentBlockRef.transactions())
             ETH_DC_MESSAGE(DC::RPC, tr->asDataObject()->asJson());
     }

@@ -197,4 +197,48 @@ StateTestFillerTransaction::StateTestFillerTransaction(spDataObjectMove _data)
     }
 }
 
+spDataObject StateTestFillerTransaction::asDataObject(size_t _d, size_t _g, size_t _v) const
+{
+    // Serialize only selected index transaction as general transaction
+    spDataObject data = sDataObject(m_rawData->type());
+    (*data).setKey(m_rawData->getKey());
+
+    auto const& databox = m_databox.at(_d);
+
+    if (!databox.m_accessList.isEmpty())
+        (*data)[c_accessLists].addArrayObject(databox.m_accessList->asDataObject());
+\
+    spDataObject d = sDataObject(databox.m_data.asString());
+    (*data)[c_data].addArrayObject(d);
+    spDataObject g = sDataObject(m_gasLimit.at(_g).asString());
+    (*data)[c_gasLimit].addArrayObject(g);
+    spDataObject v = sDataObject(m_value.at(_v).asString());
+    (*data)[c_value].addArrayObject(v);
+
+    if (!m_maxFeePerGas.isEmpty())
+    {
+        (*data)[c_maxFeePerGas] = m_maxFeePerGas->asString();
+        (*data)[c_maxPriorityFeePerGas] = m_maxPriorityFeePerGas->asString();
+    }
+    else
+        (*data)[c_gasPrice] = m_gasPrice->asString();
+
+    (*data)[c_nonce] = m_nonce->asString();
+    (*data)[c_secretKey] = m_secretKey->asString();
+    (*data)[c_sender] = m_publicKey->asString();
+    (*data)[c_to] = m_creation ? "" : m_to->asString();
+
+    if (!m_maxFeePerBlobGas.isEmpty())
+    {
+        (*data)[c_maxFeePerBlobGas] = m_maxFeePerBlobGas->asString();
+        for (auto const& hash : m_blobVersionedHashes)
+        {
+            spDataObject spHash = sDataObject(hash.asString());
+            (*data)[c_blobVersionedHashes].addArrayObject(spHash);
+        }
+    }
+
+    return data;
+}
+
 }  // namespace teststruct

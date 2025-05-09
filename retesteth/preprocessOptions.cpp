@@ -16,22 +16,15 @@ string getTestType(string const& _filename)
     string type = "GeneralStateTests";
     if (fs::exists(_filename))
     {
-        spDataObject res = readAutoDataWithoutOptions(_filename);
-        if (res.isEmpty())
+        spDataObject testData = readAutoDataWithoutOptions(_filename);
+        if (testData.isEmpty())
             return type;
-
-        auto isBlockChainTest = [](DataObject const& _el)
-        {
-            return (_el.getKey() == "blocks") ? true : false;
-        };
-        auto isStateTest = [](DataObject const& _el)
-        {
-            return (_el.getKey() == "env") ? true : false;
-        };
-        if (res->performSearch(isBlockChainTest))
-            return "BlockchainTests";
-        if (res->performSearch(isStateTest))
-            return "GeneralStateTests";
+        auto testType = test::getTestType(testData);
+        switch (testType) {
+        case TestType::BlockchainTest: return "BlockchainTests";
+        case TestType::StateTest: return "GeneralStateTests";
+        case TestType::EOFTest: return "EOFTests";
+        }
     }
     return type;
 }
@@ -42,7 +35,6 @@ string getTestTArg(fs::path const& _cwd, string const& arg)
         "GeneralStateTests", "BlockchainTests",
         "GeneralStateTestsFiller", "BlockchainTestsFiller",
         "EOFTests", "EOFTestsFiller",
-        "EIPTests", "EIPTestsFiller",
         "TransactionTests", "TransactionTestsFiller",
         "LegacyTests"
     };
@@ -60,31 +52,45 @@ string getTestTArg(fs::path const& _cwd, string const& arg)
             cwd = cwd / cArg;
     }
 
+
+    // Go upwards untill we find supported foldere structure
     while(!test::inArray(supportedSuites, cwd.stem().string()) && !cwd.empty())
     {
         tArg.insert(0, cwd.stem().string() + "/");
         cwd = cwd.parent_path();
     }
+
+
     if (!cwd.empty())
     {
         string headTestSuite = cwd.stem().string();
         size_t const pos = headTestSuite.find("Filler");
         if (pos != string::npos)
+        {
             headTestSuite = headTestSuite.erase(pos, 6);
+            if (cwd.parent_path().stem() == "Constantinople")
+                headTestSuite.insert(0, "LegacyTests/Constantinople/");
+            else if (cwd.parent_path().stem() == "Cancun")
+                headTestSuite.insert(0, "LegacyTests/Cancun/");
+        }
         else
         {
-            if (cwd.parent_path().stem() == "BlockchainTests" && headTestSuite == "GeneralStateTests")
+            if ((cwd.parent_path().stem() == "BlockchainTests" && headTestSuite == "GeneralStateTests")
+                || (cwd.parent_path().stem() == "BlockchainTestsFiller" && headTestSuite == "GeneralStateTests"))
             {
                 headTestSuite.insert(0, "BC");
                 if (cwd.parent_path().parent_path().stem() == "Constantinople")
                     headTestSuite.insert(0, "LegacyTests/Constantinople/");
+                else if (cwd.parent_path().parent_path().stem() == "Cancun")
+                    headTestSuite.insert(0, "LegacyTests/Cancun/");
             }
-            else if ((cwd.parent_path().stem() == "EIPTests" || cwd.parent_path().stem() == "EIPTestsFiller")
-                     && headTestSuite == "BlockchainTests")
-                headTestSuite.insert(0, "EIPTests/");
             else if (cwd.parent_path().stem() == "Constantinople")
                 headTestSuite.insert(0, "LegacyTests/Constantinople/");
+            else if (cwd.parent_path().stem() == "Cancun")
+                headTestSuite.insert(0, "LegacyTests/Cancun/");
         }
+
+
         if (stepinfolder)
             tArg.insert(0, headTestSuite);
         else
@@ -98,6 +104,7 @@ string getTestTArg(fs::path const& _cwd, string const& arg)
         tArg = "BlockchainTests/Retesteth/bcExpectSection";
     if (tArg == "GeneralStateTests/stExpectSection")
         tArg = "GeneralStateTests/Retesteth";
+
     return tArg;
 }
 
@@ -163,7 +170,7 @@ std::tuple<OptionsVector, ParsedOptions> preparseOptions(int& _argc, const char*
     ParsedOptions optInfo;
     vector<string> options;
 
-    bool copyTestPathOption = false;
+    bool fileOptionParsed = false;
     optInfo.cwd = fs::path(fs::current_path());
     options.emplace_back(_argv[0]);
     for (short i = 1; i < _argc; i++)
@@ -173,39 +180,36 @@ std::tuple<OptionsVector, ParsedOptions> preparseOptions(int& _argc, const char*
         if (arg == "-t")
             optInfo.hasTArg = true;
 
-        // Copy "--testpath path" as is
-        if (arg == "--testpath" || copyTestPathOption)
+        if (!fileOptionParsed)
         {
-            if (arg == "--testpath")
-                copyTestPathOption = true;
-            else
-                copyTestPathOption = false;
-            options.emplace_back(arg);
-            continue;
-        }
+            bool isFile = (arg.find(".json") != string::npos || arg.find(".yml") != string::npos
+                           || arg.find(".py") != string::npos);
 
-        bool isFile = (arg.find(".json") != string::npos || arg.find(".yml") != string::npos
-                       || arg.find(".py") != string::npos);
+            if (isFile && string{_argv[i - 1]} != "--testfile")
+            {
+                fileOptionParsed = true;
+                optInfo.filenameArg = arg;
 
-        if (isFile && string{_argv[i - 1]} != "--testfile")
-        {
-            optInfo.filenameArg = arg;
+                size_t subtestPos = arg.find("::");
+                if (subtestPos != string::npos)
+                    optInfo.subtestArg = arg.substr(subtestPos + 2);
 
-            size_t subtestPos = arg.find("::");
-            if (subtestPos != string::npos)
-                optInfo.subtestArg = arg.substr(subtestPos + 2);
-
-            if (!testPath.empty() && fs::relative(optInfo.cwd, testPath).string().find("..") == string::npos)
-                optInfo.fileInsideTheTestRepo = true;
-        }
-        else if (fs::exists(optInfo.cwd / arg) && fs::is_directory(optInfo.cwd / arg))
-            optInfo.directoryArg = arg;
-        else if (fs::exists(arg) && fs::is_directory(arg))
-        {
-            auto const& argPath = fs::path(arg);
-            optInfo.cwd = argPath.parent_path();
-            optInfo.directoryArg = argPath.stem().string();
-            optInfo.directoryArgFull = arg;
+                if (!testPath.empty() && fs::relative(optInfo.cwd, testPath).string().find("..") == string::npos)
+                    optInfo.fileInsideTheTestRepo = true;
+            }
+            else if (fs::exists(optInfo.cwd / arg) && fs::is_directory(optInfo.cwd / arg))
+            {
+                optInfo.directoryArg = arg;
+                fileOptionParsed = true;
+            }
+            else if (fs::exists(arg) && fs::is_directory(arg))
+            {
+                fileOptionParsed = true;
+                auto const& argPath = fs::path(arg);
+                optInfo.cwd = argPath.parent_path();
+                optInfo.directoryArg = argPath.stem().string();
+                optInfo.directoryArgFull = arg;
+            }
         }
 
         options.emplace_back(arg);
@@ -241,7 +245,23 @@ void changeOptionsString(vector<string>& options, ParsedOptions const& optInfo)
             {
                 if (*it == optInfo.filenameArg)
                 {
-                    options.insert(it, "--testfile");
+                    size_t pyselector = (*it).find("::");
+                    if (pyselector != string::npos)
+                    {
+                        string const testfile = (*it).substr(0, pyselector);
+                        string subtest = "/";
+                        subtest += (*it).substr(pyselector+2);
+
+                        *it=testfile;
+
+                        options.insert(it, "--testfile");
+                        options.insert(it, subtest);
+                        options.insert(it, "--singletest");
+                    }
+                    else
+                    {
+                        options.insert(it, "--testfile");
+                    }
                     break;
                 }
             }

@@ -22,7 +22,8 @@ struct ToolResponse
     VALUE const& currentBasefee() const { return m_currentBasefee; }
     VALUE const& currentExcessBlobGas() const { return m_currentExcessBlobGas; }
     VALUE const& currentBlobGasUsed() const { return m_currentBlobGasUsed; }
-    FH32 const& withdrawalsRoot() const { return m_withdrawalsRoot;}
+    FH32 const& withdrawalsRoot() const { return m_withdrawalsRoot; }
+    FH32 const& requestsHash() const { return m_requestsHash; }
     VALUE totalGasUsed() const
     {
         VALUE totalGasUsed = 0;
@@ -51,6 +52,7 @@ private:
     spVALUE m_currentExcessBlobGas;
     spVALUE m_currentBlobGasUsed;
     spFH32 m_withdrawalsRoot;
+    spFH32 m_requestsHash;
     std::vector<ToolResponseReceipt> m_receipts;
     spState m_stateResponse;
     std::map<FH32, spDebugVMTrace> m_debugTrace;

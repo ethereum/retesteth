@@ -1,6 +1,7 @@
 #include "../ToolChainManager.h"
 #include "../ToolImplHelper.h"
 #include "../Verification.h"
+#include <retesteth/Options.h>
 #include <retesteth/helpers/TestHelper.h>
 #include <retesteth/testStructures/types/Ethereum/Transactions/TransactionBlob.h>
 using namespace std;
@@ -26,7 +27,7 @@ spBlockHeader ToolChainManager::_irb_verifyAndSetHeader(dev::RLP const& _headerR
     return header;
 }
 
-void ToolChainManager::_irb_verifyAndSetTransactions(dev::RLP const& _trsRLP)
+void ToolChainManager::_irb_verifyAndSetTransactions(dev::RLP const& _trsRLP, spBlockHeader const& _header)
 {
     ETH_DC_MESSAGE(DC::RPC, "RLP transaction number: " + test::fto_string(_trsRLP.toList().size()));
     size_t blobCount = 0;
@@ -37,18 +38,26 @@ void ToolChainManager::_irb_verifyAndSetTransactions(dev::RLP const& _trsRLP)
         {
             TransactionBlob const& blobtx = dynamic_cast<TransactionBlob const&>(spTr.getContent());
             blobCount += blobtx.blobs().size();
-            if (blobCount >= 7)
-                throw test::UpwardsException("versioned hashes len exceeds, Block has invalid number of blobs in txs >=7! would exceed maximum");
+            //if (blobCount >= 7)
+            //    throw test::UpwardsException("[retesteth]: versioned hashes len exceeds, Block has invalid number of blobs in txs >=7! would exceed maximum");
+
+            if (_header->type() == BlockType::BlockHeader4844)
+            {
+                BlockHeader4844 const& h4844 = BlockHeader4844::castFrom(_header);
+                auto getblobgas = get_blob_gasprice(h4844);
+                if (blobtx.maxFeePerBlobGas() < getblobgas)
+                    throw test::UpwardsException("[retesteth]: importRLP: blobtx.maxFeePerBlobGas() < getblobgas(blockheader) | Error in field: excessBlobGas");
+            }
         }
         ETH_DC_MESSAGE(DC::RPC, spTr->asDataObject()->asJson());
-        addPendingTransaction(spTr);
+        addPendingTransaction(spTr, AddPendingTransaction::PLAIN_INPUT);
     }
 }
 
 void ToolChainManager::_irb_verifyAndSetUncles(dev::RLP const& _unclsRLP, spBlockHeader const& _header)
 {
     if (_unclsRLP.toList().size() > 2)
-        throw test::UpwardsException("Too many uncles!");
+        throw test::UpwardsException("[retesteth]: Too many uncles!");
 
     for (auto const& unRLP : _unclsRLP.toList())
     {
@@ -56,10 +65,10 @@ void ToolChainManager::_irb_verifyAndSetUncles(dev::RLP const& _unclsRLP, spBloc
         verifyEthereumBlockHeader(un, currentChain());
         if (un->number() >= _header->number() ||
             un->number() + 7 <= _header->number())
-            throw test::UpwardsException("Uncle number is wrong!");
+            throw test::UpwardsException("[retesteth]: Uncle number is wrong!");
         for (auto const& pun : m_pendingBlock->uncles())
             if (pun->hash() == un->hash())
-                throw test::UpwardsException("Uncle is brother!");
+                throw test::UpwardsException("[retesteth]: Uncle is brother!");
         m_pendingBlock.getContent().addUncle(un);
     }
 }
@@ -108,25 +117,25 @@ FH32 ToolChainManager::importRawBlock(BYTES const& _rlp)
         toolimpl::verifyBlockRLP(rlp);
 
         auto const header = _irb_verifyAndSetHeader(rlp[0]);
-        _irb_verifyAndSetTransactions(rlp[1]);
+        _irb_verifyAndSetTransactions(rlp[1], header);
         _irb_verifyAndSetUncles(rlp[2], header);
         _irb_verifyAndSetWithdrawals(rlp, header);
 
         mineBlocks(1, ToolChain::Mining::RequireValid);
         auto const importedHash = _irb_compareT8NBlockToRawRLP(header);
 
-        if (!isMergeChain())
+        if (!isParisChain())
             reorganizeChainForTotalDifficulty();
         reorganizePendingBlock();
         return importedHash;
     }
     catch (std::exception const& _ex)
     {
-        if (!isMergeChain())
+        if (!isParisChain())
             reorganizeChainForTotalDifficulty();
         m_currentChain = currentChainINDX;
         m_pendingBlock.getContent().clear();
-        static const string exception = "Error importing raw rlp block: ";
+        static const string exception = "[retesteth]: Error importing raw rlp block: ";
         throw test::UpwardsException(exception + _ex.what());
     }
 }

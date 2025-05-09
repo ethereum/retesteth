@@ -17,7 +17,7 @@ TestFileData readFillerTestFile(fs::path const& _testFileName)
 {
     // Legacy hash validation require to sort json data upon load, thats the old algo used to calculate hash
     // Avoid time consuming legacy tests hash validation if there is no --checkhash option
-    bool isLegacy = Options::isLegacy();
+    bool isLegacy = Options::isLegacyConstantinople();
     bool bSortOnLoad =
         isLegacy;  //(Options::get().checkhash && isLegacy); uncomment here if there would be too many legacy tests
 
@@ -30,14 +30,22 @@ TestFileData readFillerTestFile(fs::path const& _testFileName)
     {
         CJOptions opt { .jsonParse = CJOptions::JsonParse::ALLOW_COMMENTS, .autosort = bSortOnLoad,};
         testData.data = test::readJsonData(_testFileName, opt);
+        testData.testType = test::getTestType(testData.data);
     }
     else if (_testFileName.extension() == ".yml")
+    {
         testData.data = test::readYamlData(_testFileName, bSortOnLoad);
+        testData.testType = test::getTestType(testData.data);
+    }
     else if (_testFileName.extension() == ".py")
+    {
         testData.data = spDataObject(new DataObject(dev::contentsString(_testFileName)));
+    }
     else
         ETH_ERROR_MESSAGE("Unknown test format! \n" + _testFileName.string());
     ETH_DC_MESSAGE(DC::TESTLOG, "Read json structure finish");
+
+
 
     // Do not calculate the hash on Legacy tests unless --checkhash option provided
     if (isLegacy && !bSortOnLoad)
@@ -140,6 +148,145 @@ void checkDoubleGeneratedTestNames()
     }
 }
 
+vector<string> getTestNamesFromJsonYaml(fs::path const& _filler)
+{
+    vector<string> generatedTestNames;
+    string fillerName = _filler.stem().string();
+    if (fillerName.find(c_fillerPostf) != string::npos)
+    {
+        fillerName = fillerName.substr(0, fillerName.length() - c_fillerPostf.size());
+        generatedTestNames.emplace_back(fillerName);
+    }
+    else if (fillerName.find(c_copierPostf) != string::npos)
+    {
+        fillerName = fillerName.substr(0, fillerName.length() - c_copierPostf.size());
+        generatedTestNames.emplace_back(fillerName);
+    }
+    else
+        ETH_WARNING("Skipping unsupported test file: " + _filler.string());
+    return generatedTestNames;
+}
+
+bool _checkPythonTestBlockchainOnly(string const& _pythonSrc, size_t _foundTestPos)
+{
+    // Return true if found a blockchain test at _foundTestPos
+    size_t foundNotStateTest = _pythonSrc.find(": BlockchainTestFiller", _foundTestPos);
+
+    if (foundNotStateTest == string::npos)
+        return false;
+
+    size_t foundNextTestPos = _pythonSrc.find("def test_", _foundTestPos + 50);
+    if (foundNextTestPos == string::npos)
+        return true;
+
+    if (foundNotStateTest < foundNextTestPos)
+        return true;
+
+    return false;
+}
+
+bool _checkPythonTestStateTestOnly(string const& _pythonSrc, size_t _foundTestPos)
+{
+    // Return true if found a State test on _foundTestPos
+    size_t foundStateTestOnly = _pythonSrc.find("state_test_only(", _foundTestPos);
+    if (foundStateTestOnly == string::npos)
+        return false;
+
+    size_t foundNextTestPos = _pythonSrc.find("def test_", _foundTestPos + 50);
+    if (foundNextTestPos == string::npos)
+        return true;
+
+    if (foundStateTestOnly < foundNextTestPos)
+        return true;
+
+    return false;
+}
+
+bool _checkPythonTestSkipped(string const& _pythonSrc, size_t _foundTestPos)
+{
+    size_t foundSkipPos = _pythonSrc.rfind("@pytest.mark.skip", _foundTestPos);
+    if (foundSkipPos == string::npos)
+        return false;
+
+    size_t foundPreviuosTest = _pythonSrc.rfind("def test_", _foundTestPos - 1);
+    if (foundPreviuosTest == string::npos)
+        return true;
+
+    if (foundPreviuosTest <= foundSkipPos)
+        return true;
+
+    return false;
+}
+
+bool _checkPythonTestTransitionToUnsupportedFork(string const& _pythonSrc, size_t _foundTestPos)
+{
+    string marker = "pytest.mark.valid_at_transition_to(\"";
+    size_t foundTransitionMarker = _pythonSrc.rfind(marker, _foundTestPos);
+    if (foundTransitionMarker == string::npos)
+        return false;
+
+    // Check if found test is not a supported transition test
+    size_t findMarkerClose = _pythonSrc.find("\"", foundTransitionMarker + marker.length());
+    string fork = _pythonSrc.substr(foundTransitionMarker + marker.length(), findMarkerClose - foundTransitionMarker - marker.length());
+
+    // ETH_WARNING("Transition test for "+ fork);
+    bool forkInProgression = Options::getCurrentConfig().checkForkInProgression(FORK(fork));
+
+    size_t foundNextTestPos_after_transition_marker = _pythonSrc.find("def test_", foundTransitionMarker);
+    if (_foundTestPos == foundNextTestPos_after_transition_marker && !forkInProgression)
+        return true;
+
+    return false;
+}
+
+// Get filled test names from .py filler
+vector<string> getTestNamesFromPython(fs::path const& _filler)
+{
+    vector<string> generatedTestNames;
+
+    size_t pos = 0;
+    string pythonSrc = dev::contentsString(_filler);
+    size_t foundTestPos = pythonSrc.find("def test_", pos);
+    while (foundTestPos != string::npos)
+    {
+        size_t testFunctionBegin = pythonSrc.find("(", foundTestPos);
+        if (testFunctionBegin != string::npos)
+        {
+            string pythonTestname = pythonSrc.substr(foundTestPos + 9, testFunctionBegin - foundTestPos - 9);
+            if (_checkPythonTestSkipped(pythonSrc, foundTestPos))
+            {
+                ETH_WARNING("Pyspec marked test as skipped: " + pythonTestname);
+            }
+            else
+            {
+                auto const& opt = Options::get();
+                bool OnBlockchainTest = opt.fillchain
+                                        || opt.rCurrentTestSuite.find("BCGeneralStateTests") != string::npos
+                                        || boost::unit_test::framework::current_test_case().full_name().find("BCGeneralStateTests") != string::npos;
+                if (!OnBlockchainTest && _checkPythonTestBlockchainOnly(pythonSrc, foundTestPos))
+                {
+                    ETH_WARNING("Will skip python bc test " + pythonTestname);
+                }
+                else if (OnBlockchainTest)
+                {
+                    if (_checkPythonTestStateTestOnly(pythonSrc, foundTestPos))
+                        ETH_WARNING("Will skip python state only test " + pythonTestname);
+                    else
+                    if (_checkPythonTestTransitionToUnsupportedFork(pythonSrc, foundTestPos))
+                        ETH_WARNING("Will skip python bc transition test to unsupported fork " + pythonTestname);
+                    else
+                        generatedTestNames.emplace_back(pythonTestname);
+                }
+                else
+                    generatedTestNames.emplace_back(pythonTestname);
+            }
+        }
+        pos = foundTestPos + 1;
+        foundTestPos = pythonSrc.find("def test_", pos);
+    }
+    return generatedTestNames;
+}
+
 vector<string> const& getGeneratedTestNames(fs::path const& _filler)
 {
     std::lock_guard<std::mutex> lock(G_GeneratedTestsMap_Mutex);
@@ -148,57 +295,9 @@ vector<string> const& getGeneratedTestNames(fs::path const& _filler)
 
     vector<string> generatedTestNames;
     if (_filler.extension() == ".json" || _filler.extension() == ".yml")
-    {
-        string fillerName = _filler.stem().string();
-        if (fillerName.find(c_fillerPostf) != string::npos)
-        {
-            fillerName = fillerName.substr(0, fillerName.length() - c_fillerPostf.size());
-            generatedTestNames.emplace_back(fillerName);
-        }
-        else if (fillerName.find(c_copierPostf) != string::npos)
-        {
-            fillerName = fillerName.substr(0, fillerName.length() - c_copierPostf.size());
-            generatedTestNames.emplace_back(fillerName);
-        }
-        else
-            ETH_WARNING("Skipping unsupported test file: " + _filler.string());
-    }
+        generatedTestNames = getTestNamesFromJsonYaml(_filler);
     else if (_filler.extension() == ".py")
-    {
-        // Get filled test names from .py filler
-        size_t pos = 0;
-        string pythonSrc = dev::contentsString(_filler);
-        size_t foundPos = pythonSrc.find("def test_", pos);
-        while (foundPos != string::npos)
-        {
-            size_t endSelectionPos = pythonSrc.find("(", foundPos);
-            if (endSelectionPos != string::npos)
-            {
-                string pythonTestname = pythonSrc.substr(foundPos + 9, endSelectionPos - foundPos - 9);
-
-                size_t foundSkipPos = pythonSrc.rfind("@pytest.mark.skip", foundPos);
-                if (foundSkipPos != string::npos)
-                {
-                    size_t foundPreviuosTest = pythonSrc.rfind("def test_", foundPos - 1);
-                    if (foundPreviuosTest != string::npos)
-                    {
-                        if (foundPreviuosTest <= foundSkipPos)
-                        {
-                            ETH_WARNING("Pyspec marked test as skipped: " + pythonTestname);
-                        }
-                        else
-                            generatedTestNames.emplace_back(pythonTestname);
-                    }
-                    else
-                        ETH_WARNING("Pyspec marked test as skipped: " + pythonTestname);
-                }
-                else
-                    generatedTestNames.emplace_back(pythonTestname);
-            }
-            pos = foundPos + 1;
-            foundPos = pythonSrc.find("def test_", pos);
-        }
-    }
+        generatedTestNames = getTestNamesFromPython(_filler);
     else
     {
         ETH_ERROR_MESSAGE("getGeneratedTestNames:: unknown filler extension: \n" + _filler.string());

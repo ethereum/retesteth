@@ -2,6 +2,7 @@
 #include "../Ethereum/State.h"
 #include "Filled/Info.h"
 #include "Filled/StateTestEnv.h"
+#include "Filled/StateTestConfig.h"
 #include "Filled/StateTestPostResult.h"
 #include "Filled/StateTestTransaction.h"
 #include <libdataobj/DataObject.h>
@@ -27,6 +28,7 @@ private:
     std::string m_name;
     GCP_SPointer<Info> m_info;
     GCP_SPointer<StateTestEnv> m_env;
+    GCP_SPointer<StateTestConfig> m_config;
     spState m_pre;
     GCP_SPointer<StateTestTransaction> m_transaction;
     bool m_hasBigInt = false;

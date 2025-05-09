@@ -2,6 +2,7 @@
 using namespace test;
 using namespace std;
 
+
 namespace test {
 
 const string C_WITHDRAWALS_EMPTY_ROOT = "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421";
@@ -13,7 +14,14 @@ namespace teststruct {
 
 const FH8 C_FH8_ZERO("0x0000000000000000");
 const FH20 C_FH20_ZERO("0x0000000000000000000000000000000000000000");
+const FH20 C_FH20_BEACON("0x000f3df6d732807ef1319fb7b8bb8522d0beac02");
+const FH20 C_FH20_HISTORY_2935("0x0000F90827F1C53a10cb7A02335B175320002935");
+const FH20 C_FH20_DEPOSITS_6110("0x00000000219ab540356cbb839cbe05303d7705fa");
+const FH20 C_FH20_WITHDRAWALS_7002("0x00000961ef480eb55e80d19ad83579a64c007002");
+const FH20 C_FH20_WITHDRAWALS_7251("0x0000BBdDc7CE488642fb579F8B00f3a590007251");
+
 const FH32 C_FH32_ZERO("0x0000000000000000000000000000000000000000000000000000000000000000");
+const FH32 C_FH32_DEFAULT_REQUESTS_HASH("0xe3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
 const FH256 C_FH256_ZERO(
     "0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
     "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
@@ -50,11 +58,15 @@ const string c_withdrawalsRoot = "withdrawalsRoot";
 const string c_parentBeaconBlockRoot = "parentBeaconBlockRoot";
 const string c_excessBlobGas = "excessBlobGas";
 const string c_blobGasUsed = "blobGasUsed";
+const string c_requestsRoot = "requestsRoot";
+const string c_requestsHash = "requestsHash";
+const string c_requests = "requests";
 const string c_currentExcessBlobGas = "currentExcessBlobGas";
 const string c_parentExcessBlobGas = "parentExcessBlobGas";
 const string c_currentBlobGasUsed = "currentBlobGasUsed";
 const string c_parentBlobGasUsed = "parentBlobGasUsed";
 const string c_currentBeaconRoot = "currentBeaconRoot";
+const string c_currentRequestsHash = "currentRequestsHash";
 
 // Transactions
 const string c_data = "data";

@@ -50,6 +50,7 @@ struct Transaction : GCP_SPointerBase
     VALUE const& getSecret() const { return m_secretKey; }
     void setChainID(VALUE const& _chainID);
     VALUE const& getChainID() const { return m_chainID; }
+    bool hasBigInt() const { return m_hasBigInt; }
 
 protected:
     // Potected transaction interface
@@ -86,6 +87,7 @@ protected:
     // Debug
     std::string m_dataRawPreview;  // Attached data raw preview before code compilation
     std::string m_dataLabel;       // Attached data Label from filler
+    bool m_hasBigInt = false;
 
     // Optimization
     spFH32 m_hash;

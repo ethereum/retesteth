@@ -1,5 +1,6 @@
 
 cmake_minimum_required(VERSION 3.9.3)
+
 set(CMAKE_TOOLCHAIN_FILE ${CMAKE_SOURCE_DIR}/toolchain.cmake)
 
 include("./cmake/Hunter/HunterGate.cmake")
@@ -23,10 +24,11 @@ HunterGate(
     SHA1 "908ddcb223f25fa155315baae64ce0ab48a38bf7"
     LOCAL
 )
+
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-project(retesteth VERSION 0.3.1)
-set(VERSION_SUFFIX "cancun")
+project(retesteth VERSION 0.3.2)
+set(VERSION_SUFFIX "legacy")
 
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)
@@ -84,7 +86,11 @@ endif()
 
 add_subdirectory(libdevcore)
 add_subdirectory(libdevcrypto)
+
+set(DATA_YAML ON)
+add_compile_definitions(DATA_YAML="${DATA_YAML}")
 add_subdirectory(libdataobj)
+
 if (${UNITTESTS})
     set(LIBSSZ ssz)
     add_subdirectory(libssz)

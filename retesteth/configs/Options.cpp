@@ -88,6 +88,11 @@ ClientConfig const& Options::DynamicOptions::getCurrentConfig() const
     return m_clientConfigs.at(0);
 }
 
+bool Options::DynamicOptions::isConfigSet() const
+{
+    return m_currentConfigID != test::ClientConfigID::null();
+}
+
 void Options::DynamicOptions::setCurrentConfig(ClientConfig const& _config)
 {
     auto const& opt = Options::get();

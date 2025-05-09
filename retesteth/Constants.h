@@ -13,7 +13,15 @@ namespace teststruct {
 
 extern const FH8 C_FH8_ZERO;
 extern const FH20 C_FH20_ZERO;
+
+extern const FH20 C_FH20_BEACON;
+extern const FH20 C_FH20_HISTORY_2935;
+extern const FH20 C_FH20_DEPOSITS_6110;
+extern const FH20 C_FH20_WITHDRAWALS_7002;
+extern const FH20 C_FH20_WITHDRAWALS_7251;
+
 extern const FH32 C_FH32_ZERO;
+extern const FH32 C_FH32_DEFAULT_REQUESTS_HASH;
 extern const FH256 C_FH256_ZERO;
 
 namespace constnames {
@@ -45,11 +53,15 @@ extern const std::string c_withdrawalsRoot;
 extern const std::string c_parentBeaconBlockRoot;
 extern const std::string c_excessBlobGas;
 extern const std::string c_blobGasUsed;
+extern const std::string c_requestsRoot;
+extern const std::string c_requestsHash;
+extern const std::string c_requests;
 extern const std::string c_currentExcessBlobGas;
 extern const std::string c_currentBeaconRoot;
 extern const std::string c_parentExcessBlobGas;
 extern const std::string c_currentBlobGasUsed;
 extern const std::string c_parentBlobGasUsed;
+extern const std::string c_currentRequestsHash;
 
 // Transactions
 extern const std::string c_data;

@@ -2,6 +2,7 @@
 #include <libdataobj/DataObject.h>
 #include <libdevcore/SHA3.h>
 #include <boost/filesystem/path.hpp>
+#include <retesteth/helpers/TestHelper.h>
 namespace test::testsuite
 {
 using namespace dataobject;
@@ -11,10 +12,11 @@ struct TestFileData
     spDataObject data;
     dev::h256 hash;
     bool hashCalculated = true;
+    test::TestType testType = test::TestType::StateTest;
 };
 
 
-bool addClientInfoIfUpdate(DataObject& _filledTest, boost::filesystem::path const& _testSource, dev::h256 const& _testSourceHash,
+bool addClientInfoIfUpdate(spDataObject _filledTest, boost::filesystem::path const& _testSource, dev::h256 const& _testSourceHash,
     boost::filesystem::path const& _existingFilledTest);
 
 TestFileData readFillerTestFile(boost::filesystem::path const& _testFileName);

@@ -128,7 +128,7 @@ void StateTestRunner::performTransactionOnResult(TransactionInGeneralSection& _t
 
 void StateTestRunner::performVMTrace(TransactionInGeneralSection& _tr, FH32 const& _remoteStateHash, FORK const& _network)
 {
-    if (Options::get().vmtrace && !Options::get().filltests)
+    if (Options::get().vmtrace)
     {
         auto const& trHash = _tr.reportedHash();
         string const testNameOut = makeFilename(_tr, _network);
@@ -222,18 +222,29 @@ void StateTestRunner::performValidations(TransactionInGeneralSection& _tr, State
     if (!expectedBytesPtr.isEmpty())
     {
         auto const& tr = _tr.transaction();
-        if (tr->getRawBytes().asString() != expectedBytesPtr->asString())
+        auto calculated = tr->getRawBytes().asString();
+        auto size_r = _tr.transaction()->r().asString().size();
+        auto size_s = _tr.transaction()->s().asString().size();
+
+        auto signatureRlpLength = size_r + size_s + 2;
+        calculated.erase(calculated.size() - signatureRlpLength, signatureRlpLength);
+        calculated = calculated.substr(6); // erase rlp header 0xrlpheader
+
+        if (expectedBytesPtr->asString().find(calculated) == string::npos)
         {
-            string const msg = string("TxBytes mismatch: test transaction section does not match txbytes in post section! ") +
-                               "\n Constructed: " + expectedBytesPtr->asString() + "\n vs \n " +
-                               tr->getRawBytes().asString();
+            string msg = string("TxBytes mismatch: test transaction section does not match txbytes in post section (Signature ignored)! ");
+            msg += "(file: " + TestOutputHelper::get().testFile().string() + ")";
+            if (Debug::get().flag(DC::STATS2) || Debug::get().flag(DC::PYSPEC))
+                msg += "\n test txbytes: " + expectedBytesPtr->asString() + "\n vs \n " + tr->getRawBytes().asString();
             if (Options::get().chainid.initialized())
             {
                 ETH_DC_MESSAGE(DC::LOWLOG, msg);
             }
             else
             {
-                ETH_ERROR_MESSAGE(msg);
+                // Because pyspecs can produce a signature with different length
+                // Even ignoring it still messes up rlp prefix, so we will get warnings sometimes
+                ETH_WARNING(msg);
             }
         }
     }

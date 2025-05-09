@@ -3,6 +3,7 @@
 #include <libdataobj/DataObject.h>
 #include <retesteth/testStructures/types/Ethereum/Blocks/BlockHeaderReader.h>
 #include <retesteth/testStructures/types/Ethereum/Transactions/TransactionReader.h>
+#include <retesteth/testStructures/types/Ethereum/State.h>
 #include <map>
 
 namespace test::teststruct
@@ -75,5 +76,11 @@ void readExpectExceptions(DataObject const& _data, std::map<FORK, std::string>& 
 // Convert Secret Key to Public eth key
 spFH20 convertSecretToPublic(spFH32 const& _secret);
 spFH20 convertSecretToPublic(VALUE const& _secret);
+
+void checkEmptyStorages(spState _state);
+bool checkEmptyAccounts(spState _state);
+void makeCancunPrecompiledAccounts(State const&, VALUE const& _timestamp, std::vector<spAccountBase>&);
+void makePraguePrecompiledAccounts(State const&, std::vector<spAccountBase>&);
+
 
 }  // namespace teststruct

@@ -16,13 +16,13 @@ namespace test::statetests
 {
 
 /// Generate a blockchain test from state test filler
-spDataObject FillTestAsBlockchain(StateTestInFiller const& _test)
+spDataObject FillTestAsBlockchain(StateTestInFiller const& _test, TestSuite::TestSuiteOptions& _opt)
 {
     auto const allforks = _test.getAllForksFromExpectSections();
     if (hasSkipFork(allforks))
         return sDataObject(DataType::Null);
 
-    StateTestChainRunner runner(_test);
+    StateTestChainRunner runner(_test, _opt);
     for (FORK const& fork : allforks)
     {
         if (runner.checkNetworkSkip(fork))
@@ -44,6 +44,7 @@ spDataObject FillTestAsBlockchain(StateTestInFiller const& _test)
                     // if expect section is for this transaction
                     if (!expect.checkIndexes(tr.dataInd(), tr.gasInd(), tr.valueInd()))
                         continue;
+
 
                     runner.prepareChainParams(fork);
                     runner.initBlockchainTestData();

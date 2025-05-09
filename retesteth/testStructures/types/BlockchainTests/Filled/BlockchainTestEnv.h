@@ -34,19 +34,19 @@ private:
     void define() const override {}
 };
 
-struct BlockchainTestEnvMerge : BlockchainTestEnv
+struct BlockchainTestEnvParis : BlockchainTestEnv
 {
-    BlockchainTestEnvMerge(DataObject const& _data);
+    BlockchainTestEnvParis(DataObject const& _data);
 
 protected:
-    void initializeMergeFields(DataObject const&);
-    BlockchainTestEnvMerge(){};
+    void initializeParisFields(DataObject const&);
+    BlockchainTestEnvParis(){};
 
 private:
     void define() const override {}
 };
 
-struct BlockchainTestEnvShanghai : BlockchainTestEnvMerge
+struct BlockchainTestEnvShanghai : BlockchainTestEnvParis
 {
     BlockchainTestEnvShanghai(DataObject const& _data);
 
@@ -63,7 +63,19 @@ struct BlockchainTestEnv4844 : BlockchainTestEnvShanghai
     BlockchainTestEnv4844(DataObject const& _data);
 
 protected:
+    BlockchainTestEnv4844(){};
     void initialize4844Fields(DataObject const&);
+
+private:
+    void define() const override {}
+};
+
+struct BlockchainTestEnvPrague : BlockchainTestEnv4844
+{
+    BlockchainTestEnvPrague(DataObject const& _data);
+
+protected:
+    void initializePragueFields(DataObject const&);
 
 private:
     void define() const override {}

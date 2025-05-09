@@ -1,12 +1,12 @@
 #pragma once
 #include <retesteth/testStructures/basetypes.h>
-#include "BlockHeaderMerge.h"
+#include "BlockHeaderParis.h"
 #include <libdevcore/RLP.h>
 #include <libdataobj/DataObject.h>
 
 namespace test::teststruct
 {
-struct BlockHeaderShanghai : BlockHeaderMerge
+struct BlockHeaderShanghai : BlockHeaderParis
 {
     BlockHeaderShanghai(DataObject const& _in) { fromData(_in); };
     BlockHeaderShanghai(dev::RLP const& _in);

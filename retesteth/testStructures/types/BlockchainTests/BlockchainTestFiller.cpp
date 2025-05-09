@@ -2,6 +2,7 @@
 #include <retesteth/EthChecks.h>
 #include <retesteth/helpers/TestOutputHelper.h>
 #include <retesteth/testStructures/Common.h>
+#include <Options.h>
 
 using namespace std;
 using namespace test::teststruct;
@@ -28,6 +29,7 @@ BlockchainTestInFiller::BlockchainTestInFiller(spDataObject& _data)
             m_info = spInfoIncomplete(new InfoIncomplete(MOVE(_data, "_info")));
         convertDecStateToHex((*_data).atKeyPointerUnsafe("pre"));
         m_pre = spState(new State(MOVE(_data, "pre")));
+        m_hasEmptyAccounts = checkEmptyAccounts(m_pre);
 
         // Prepare nonce map for transaction 'auto' nonce parsing
         NonceMap nonceMap;
@@ -59,6 +61,8 @@ BlockchainTestInFiller::BlockchainTestInFiller(spDataObject& _data)
             {
                 if (knownForks.count(fork))
                     ETH_ERROR_MESSAGE("Blockchain test filler expect section contains multiple records of the same fork");
+                //if (compareFork(fork, CMP::lt, FORK("Cancun")))
+                //    ETH_ERROR_MESSAGE("Test has fork <Cancun " + TestOutputHelper::get().testInfo().errorDebug());
                 knownForks.insert(fork);
             }
         }
@@ -87,6 +91,15 @@ BlockchainTestInFiller::BlockchainTestInFiller(spDataObject& _data)
             m_blocks.emplace_back(BlockchainTestFillerBlock(el, nonceMap));
             if (m_blocks.at(m_blocks.size() - 1).uncles().size() > 0)
                 m_hasAtLeastOneUncle = true;
+        }
+
+        auto const& opt = Options::get();
+        if (opt.isLegacyConstantinople() || opt.isLegacy() || opt.isEOFTest())
+        {}
+        else
+        {
+            auto const forks = getAllForksFromExpectSections();
+            m_config = GCP_SPointer<BlockchainTestFillerConfig>(new BlockchainTestFillerConfig(knownForks));
         }
     }
     catch (std::exception const& _ex)

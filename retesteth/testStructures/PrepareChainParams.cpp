@@ -9,6 +9,20 @@ using namespace test::teststruct;
 using namespace test::teststruct::constnames;
 
 namespace  {
+string calculateGenesisExcessBlobGas(VALUE const& _currentExcessBlobGas, ParamsContext _context)
+{
+    if (_context == ParamsContext::StateTests)
+    {
+        // Reverse back one step the excessBlobGas calculation formula
+        // to get the value for genesis block
+        VALUE const TARGET_BLOB_GAS_PER_BLOCK(393216);
+        VALUE genesisExcessBlobGas = _currentExcessBlobGas + TARGET_BLOB_GAS_PER_BLOCK;
+        return genesisExcessBlobGas.asString();
+    }
+    else
+        return _currentExcessBlobGas.asString();
+}
+
 string calculateGenesisBaseFee(VALUE const& _currentBaseFee, ParamsContext _context)
 {
     if (_context == ParamsContext::StateTests)
@@ -72,7 +86,8 @@ spDataObject prepareGenesisSubsection(StateTestEnvBase const& _env, ParamsContex
         _genesis[c_baseFeePerGas] = calculateGenesisBaseFee(_env.currentBaseFee(), _context);
     };
 
-    auto mergify = [&_env](DataObject& _genesis){
+    auto mergify = [&_env, &londify](DataObject& _genesis){
+        londify(_genesis);
         _genesis.removeKey(c_difficulty);
         _genesis["currentRandom"] = _env.currentRandom().asString();
         auto const randomH32 = dev::toCompactHexPrefixed(dev::u256(_genesis["currentRandom"].asString()), 32);
@@ -84,11 +99,16 @@ spDataObject prepareGenesisSubsection(StateTestEnvBase const& _env, ParamsContex
         _genesis[c_withdrawalsRoot] = _env.currentWithdrawalsRoot().asString();
     };
 
-    auto cancunfy = [&_env, &shangfy](DataObject& _genesis){
+    auto cancunfy = [&_env, &shangfy, &_context](DataObject& _genesis){
         shangfy(_genesis);
         _genesis[c_currentBlobGasUsed] = _env.currentBlobGasUsed().asString();
-        _genesis[c_currentExcessBlobGas] = _env.currentExcessBlobGas().asString();
+        _genesis[c_currentExcessBlobGas] = calculateGenesisExcessBlobGas(_env.currentExcessBlobGas(), _context);
         _genesis[c_currentBeaconRoot] = _env.currentBeaconRoot().asString();
+    };
+
+    auto praguefy = [&_env, &cancunfy](DataObject& _genesis){
+        cancunfy(_genesis);
+        _genesis[c_currentRequestsHash] = _env.currentRequestHash().asString();
     };
 
     if (!netIsAdditional)
@@ -97,8 +117,8 @@ spDataObject prepareGenesisSubsection(StateTestEnvBase const& _env, ParamsContex
         if (knowLondon && compareFork(net, CMP::ge, FORK("London")))
             londify(genesis.getContent());
 
-        bool knowMerge = cfg.checkForkInProgression("Merge");
-        if (knowMerge && compareFork(net, CMP::ge, FORK("Merge")))
+        bool knowParis = cfg.checkForkInProgression("Paris");
+        if (knowParis && compareFork(net, CMP::ge, FORK("Paris")))
             mergify(genesis.getContent());
 
         bool knowShaghai = cfg.checkForkInProgression("Shanghai");
@@ -108,14 +128,18 @@ spDataObject prepareGenesisSubsection(StateTestEnvBase const& _env, ParamsContex
         bool knowCancun = cfg.checkForkInProgression("Cancun");
         if (knowCancun && compareFork(net, CMP::ge, FORK("Cancun")))
             cancunfy(genesis.getContent());
+
+        bool knowPrague = cfg.checkForkInProgression("Prague");
+        if (knowPrague && compareFork(net, CMP::ge, FORK("Prague")))
+            praguefy(genesis.getContent());
     }
     else
     {
         // Net Is Additional, probably special transition net.
         // Can't get rid of this hardcode configs :(((
-        if (_net == FORK("ArrowGlacierToMergeAtDiffC0000") || _net == FORK("ArrowGlacier"))
+        if (isArrowGlacierToParisAtDiffC0000(_net) || _net == FORK("ArrowGlacier"))
             londify(genesis.getContent());
-        else if (_net == FORK("MergeToShanghaiAtTime15k"))
+        else if (isParisToShanghaiAtTime15k(_net))
         {
             londify(genesis.getContent());
             mergify(genesis.getContent());
@@ -125,6 +149,10 @@ spDataObject prepareGenesisSubsection(StateTestEnvBase const& _env, ParamsContex
             londify(genesis.getContent());
             mergify(genesis.getContent());
             shangfy(genesis.getContent());;
+        }
+        else if (_net == FORK("Merge"))
+        {
+            mergify(genesis.getContent());
         }
     }
     return genesis;

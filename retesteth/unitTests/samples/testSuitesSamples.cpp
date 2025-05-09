@@ -14,8 +14,7 @@ string const c_sampleStateTestFiller = R"({
              "currentDifficulty" : "0x20000",
              "currentGasLimit" : "0xFF112233445566",
              "currentNumber" : "1",
-             "currentTimestamp" : "1000",
-             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
+             "currentTimestamp" : "1000"
         },
        "expect" : [
        {
@@ -91,11 +90,14 @@ string const c_sampleStateTestFilled = R"({
             "comment" : "A test for (add 1 1) opcode result",
             "filling-rpc-server" : "evm version 1.11.4-unstable-e14043db-20230308",
             "filling-tool-version" : "retesteth-0.3.0-shanghai+commit.fd2c0a83.Linux.g++",
-            "generatedTestHash" : "b33fbe39b474b9d63fe4e2e493a997818c4d3b33c9dc085954d482ecf3db6da9",
+            "hash" : "b33fbe39b474b9d63fe4e2e493a997818c4d3b33c9dc085954d482ecf3db6da9",
             "lllcversion" : "Version: 0.5.14-develop.2022.7.30+commit.a096d7a9.Linux.g++",
             "solidity" : "Version: 0.8.17+commit.8df45f5f.Linux.g++",
             "source" : "src/GeneralStateTestsFiller/stExample/add11Filler.json",
             "sourceHash" : "7b59a4d0c6180797011b0181ebe84680e9d18a6d38db8a740850a596cfc6b148"
+        },
+        "config" : {
+            "chainid" : "0x01"
         },
         "env" : {
             "currentBaseFee" : "0x0a",
@@ -104,8 +106,7 @@ string const c_sampleStateTestFilled = R"({
             "currentGasLimit" : "0xff112233445566",
             "currentNumber" : "0x01",
             "currentRandom" : "0x0000000000000000000000000000000000000000000000000000000000020000",
-            "currentTimestamp" : "0x03e8",
-            "previousHash" : "0x5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
+            "currentTimestamp" : "0x03e8"
         },
         "post" : {
             "Berlin" : [
@@ -116,6 +117,7 @@ string const c_sampleStateTestFilled = R"({
                         "gas" : 0,
                         "value" : 0
                     },
+                    "state" : {},
                     "logs" : "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
                     "txbytes" : "0xf863800a83061a8094095e7baea6a6c7c4c2dfeb977efac326af552d87830186a0801ba0ffb600e63115a7362e7811894a91d8ba4330e526f22121c994c4692035dfdfd5a06198379fcac8de3dbfac48b165df4bf88e2088f294b61efb9a65fe2281c76e16"
                 }
@@ -128,11 +130,12 @@ string const c_sampleStateTestFilled = R"({
                         "gas" : 0,
                         "value" : 0
                     },
+                    "state" : {},
                     "logs" : "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
                     "txbytes" : "0xf863800a83061a8094095e7baea6a6c7c4c2dfeb977efac326af552d87830186a0801ba0ffb600e63115a7362e7811894a91d8ba4330e526f22121c994c4692035dfdfd5a06198379fcac8de3dbfac48b165df4bf88e2088f294b61efb9a65fe2281c76e16"
                 }
             ],
-            "Merge" : [
+            "Paris" : [
                 {
                     "hash" : "0xe8010ce590f401c9d61fef8ab05bea9bcec24281b795e5868809bc4e515aa530",
                     "indexes" : {
@@ -140,6 +143,7 @@ string const c_sampleStateTestFilled = R"({
                         "gas" : 0,
                         "value" : 0
                     },
+                    "state" : {},
                     "logs" : "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
                     "txbytes" : "0xf863800a83061a8094095e7baea6a6c7c4c2dfeb977efac326af552d87830186a0801ba0ffb600e63115a7362e7811894a91d8ba4330e526f22121c994c4692035dfdfd5a06198379fcac8de3dbfac48b165df4bf88e2088f294b61efb9a65fe2281c76e16"
                 }
@@ -152,6 +156,7 @@ string const c_sampleStateTestFilled = R"({
                         "gas" : 0,
                         "value" : 0
                     },
+                    "state" : {},
                     "logs" : "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
                     "txbytes" : "0xf863800a83061a8094095e7baea6a6c7c4c2dfeb977efac326af552d87830186a0801ba0ffb600e63115a7362e7811894a91d8ba4330e526f22121c994c4692035dfdfd5a06198379fcac8de3dbfac48b165df4bf88e2088f294b61efb9a65fe2281c76e16"
                 }
@@ -322,11 +327,15 @@ string const c_sampleBlockchainTestFilled = R"({
             "comment" : "",
             "filling-rpc-server" : "evm version 1.11.4-unstable-e14043db-20230308",
             "filling-tool-version" : "retesteth-0.3.0-shanghai+commit.fd2c0a83.Linux.g++",
-            "generatedTestHash" : "3759fd9502e035a8d70fc0ab6074767e6cd47de55ca0d0c36f1e4d0ddce042be",
+            "hash" : "3759fd9502e035a8d70fc0ab6074767e6cd47de55ca0d0c36f1e4d0ddce042be",
             "lllcversion" : "Version: 0.5.14-develop.2022.7.30+commit.a096d7a9.Linux.g++",
             "solidity" : "Version: 0.8.17+commit.8df45f5f.Linux.g++",
             "source" : "src/BlockchainTestsFiller/ValidBlocks/bcExample/optionsTestFiller.json",
             "sourceHash" : "597e698ac9c1e9db44f024a52dd88a671c1c1d4885c9d13724faa5de45776fd2"
+        },
+        "config" : {
+            "network" : "London",
+            "chainid" : "0x01"
         },
         "blocks" : [
             {
@@ -557,16 +566,20 @@ string const c_sampleBlockchainTestFilled = R"({
         },
         "sealEngine" : "NoProof"
     },
-    "optionsTest_Merge" : {
+    "optionsTest_Paris" : {
         "_info" : {
             "comment" : "",
             "filling-rpc-server" : "evm version 1.11.4-unstable-e14043db-20230308",
             "filling-tool-version" : "retesteth-0.3.0-shanghai+commit.fd2c0a83.Linux.g++",
-            "generatedTestHash" : "2adbef2ede48341192c4720ec8566f18573340ae31d9ae92373ea716599338d8",
+            "hash" : "2adbef2ede48341192c4720ec8566f18573340ae31d9ae92373ea716599338d8",
             "lllcversion" : "Version: 0.5.14-develop.2022.7.30+commit.a096d7a9.Linux.g++",
             "solidity" : "Version: 0.8.17+commit.8df45f5f.Linux.g++",
             "source" : "src/BlockchainTestsFiller/ValidBlocks/bcExample/optionsTestFiller.json",
             "sourceHash" : "597e698ac9c1e9db44f024a52dd88a671c1c1d4885c9d13724faa5de45776fd2"
+        },
+        "config" : {
+            "network" : "Paris",
+            "chainid" : "0x01"
         },
         "blocks" : [
             {
@@ -751,7 +764,7 @@ string const c_sampleBlockchainTestFilled = R"({
         },
         "genesisRLP" : "0xf901fdf901f8a00000000000000000000000000000000000000000000000000000000000000000a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347942adc25665018aa1fe0e6bc666dac8fc2697ff9baa0a82e8b1e48c59bbd435fb1d61d8be0068e05172dfb9681bc5e4c419401e23a29a056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421a056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421b90100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000008080887fffffffffffffff808203b642a0000000000000000000000000000000000000000000000000000000000002000088000000000000000010c0c0",
         "lastblockhash" : "0xccd015cba5de149a79912826ef05e0abc381ef872d9ff263ac253d211227ccd2",
-        "network" : "Merge",
+        "network" : "Paris",
         "postState" : {
             "0x2adc25665018aa1fe0e6bc666dac8fc2697ff9ba" : {
                 "balance" : "0x0184b27d",
@@ -802,11 +815,15 @@ string const c_sampleBlockchainTestFilled = R"({
             "comment" : "",
             "filling-rpc-server" : "evm version 1.11.4-unstable-e14043db-20230308",
             "filling-tool-version" : "retesteth-0.3.0-shanghai+commit.fd2c0a83.Linux.g++",
-            "generatedTestHash" : "8869ebbcb22f173bc8f1c2a75eeb83407c95eb8a26d72d7e3af1c6dd5f725b3d",
+            "hash" : "8869ebbcb22f173bc8f1c2a75eeb83407c95eb8a26d72d7e3af1c6dd5f725b3d",
             "lllcversion" : "Version: 0.5.14-develop.2022.7.30+commit.a096d7a9.Linux.g++",
             "solidity" : "Version: 0.8.17+commit.8df45f5f.Linux.g++",
             "source" : "src/BlockchainTestsFiller/ValidBlocks/bcExample/optionsTestFiller.json",
             "sourceHash" : "597e698ac9c1e9db44f024a52dd88a671c1c1d4885c9d13724faa5de45776fd2"
+        },
+        "config" : {
+            "network" : "Shanghai",
+            "chainid" : "0x01"
         },
         "blocks" : [
             {

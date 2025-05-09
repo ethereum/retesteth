@@ -55,7 +55,7 @@ void BlockHeaderShanghai::checkDataScheme(DataObject const& _data) const
 
 void BlockHeaderShanghai::_fromData(DataObject const& _data)
 {
-    BlockHeaderMerge::_fromData(_data);
+    BlockHeaderParis::_fromData(_data);
     m_withdrawalsRoot = sFH32(_data.atKey(c_withdrawalsRoot));
 }
 
@@ -70,7 +70,7 @@ size_t BlockHeaderShanghai::_fromRLP(dev::RLP const& _rlp)
     // 6 - bloom                // 14 - nonce
     // 7 - difficulty           // 15 - baseFee
     // 16 - withdrawals root
-    size_t i = BlockHeaderMerge::_fromRLP(_rlp);
+    size_t i = BlockHeaderParis::_fromRLP(_rlp);
     m_withdrawalsRoot = spFH32(new FH32(_rlp[i++]));
     return i;
 }
@@ -83,14 +83,14 @@ BlockHeaderShanghai::BlockHeaderShanghai(dev::RLP const& _rlp)
 
 spDataObject BlockHeaderShanghai::asDataObject() const
 {
-    spDataObject out = BlockHeaderMerge::asDataObject();
+    spDataObject out = BlockHeaderParis::asDataObject();
     (*out)[c_withdrawalsRoot] = m_withdrawalsRoot->asString();
     return out;
 }
 
 const RLPStream BlockHeaderShanghai::asRLPStream() const
 {
-    RLPStream header = BlockHeaderMerge::asRLPStream();
+    RLPStream header = BlockHeaderParis::asRLPStream();
     header << h256(m_withdrawalsRoot->asString());
     return header;
 }
@@ -100,7 +100,8 @@ inline bool isChild(BlockType _t)
 {
     // Can't use compareFork function here because of EthereumClassic and custom fork names
     return _t != BlockType::BlockHeaderShanghai &&
-           _t != BlockType::BlockHeader4844;
+           _t != BlockType::BlockHeader4844 &&
+           _t != BlockType::BlockHeaderPrague;
 }
 }
 

@@ -175,9 +175,21 @@ void DebugVMTrace::DebugVMTraceNice::print() const
         if ( inArray(callopcodes, el.opName) && el.stack.size() > 1)
             s_comment = "SUBCALL: " + el.stack.at(el.stack.size() - 2);
         if (el.opName == "SSTORE" && el.stack.size() > 1)
-            s_comment = stepw + "SSTORE [" + el.stack.at(el.stack.size() - 1) + "] = " + el.stack.at(el.stack.size() - 2);
+        {
+            auto key = el.stack.at(el.stack.size() - 1);
+            key = to_string(hexOrDecStringToInt(key));
+            auto val = el.stack.at(el.stack.size() - 2);
+            val = to_string(hexOrDecStringToInt(val));
+            s_comment = stepw + "SSTORE [" + key + "] = " + val;
+        }
         if (el.opName == "MSTORE" && el.stack.size() > 1)
-            s_comment = stepw + "MSTORE [" + el.stack.at(el.stack.size() - 1) + "] = " + el.stack.at(el.stack.size() - 2);
+        {
+            auto key = el.stack.at(el.stack.size() - 1);
+            key = to_string(hexOrDecStringToInt(key));
+            auto val = el.stack.at(el.stack.size() - 2);
+            val = to_string(hexOrDecStringToInt(val));
+            s_comment = stepw + "MSTORE [" + key + "] = " + val;
+        }
         if (el.opName == "RETURN")
             s_comment = stepw + "RETURN " + el.memory->asString();
     }

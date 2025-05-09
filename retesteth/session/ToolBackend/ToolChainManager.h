@@ -8,6 +8,12 @@
 namespace toolimpl
 {
 
+enum class AddPendingTransaction
+{
+    ALLOW_RETESTETH_TO_DROP,
+    PLAIN_INPUT
+};
+
 // Manage test blockchains for reorg
 // Manage pending block for eth_sendRawTransaction
 // Imports raw blocks (RLP) into apropriate chain, reorg if needed
@@ -15,7 +21,7 @@ class ToolChainManager : public GCP_SPointerBase
 {
 public:
     ToolChainManager(spSetChainParamsArgs const& _config, boost::filesystem::path const& _toolPath, boost::filesystem::path const& _tmpDir, ToolChainGenesis _genesisPolicy = ToolChainGenesis::CALCULATE);
-    void addPendingTransaction(spTransaction const& _tr) { m_pendingBlock.getContent().addTransaction(_tr); }
+    void addPendingTransaction(spTransaction const& _tr, AddPendingTransaction);
 
     ToolChain const& currentChain() const
     {
@@ -57,7 +63,7 @@ private:
     void reorganizeChainForParent(FH32 const& _parentHash);
     void reorganizeChainForTotalDifficulty();
     void reorganizePendingBlock();
-    bool isMergeChain() const;
+    bool isParisChain() const;
 
 
     std::map<size_t, spToolChain> m_chains;
@@ -71,14 +77,14 @@ private:
 private:
     void transitionPendingBlock(EthereumBlockState const&);
     void init1559PendingBlock(EthereumBlockState const&);
-    void initMergePendingBlock(EthereumBlockState const&);
+    void initParisPendingBlock(EthereumBlockState const&);
     void initShanghaiPendingBlock(EthereumBlockState const&);
     void initCancunPendingBlock(EthereumBlockState const&);
     bool isTerminalPoWBlock();
 
 private:
     spBlockHeader _irb_verifyAndSetHeader(dev::RLP const&);
-    void _irb_verifyAndSetTransactions(dev::RLP const&);
+    void _irb_verifyAndSetTransactions(dev::RLP const&, spBlockHeader const&);
     void _irb_verifyAndSetUncles(dev::RLP const&, spBlockHeader const&);
     void _irb_verifyAndSetWithdrawals(dev::RLP const&, spBlockHeader const&);
     FH32 _irb_compareT8NBlockToRawRLP(spBlockHeader const&);

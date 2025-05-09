@@ -63,9 +63,57 @@ string getTestNameFromFillerFilename(fs::path const& _fillerTestFilePath)
 namespace test
 {
 
+bool findFolderInPath(fs::path const& _path, string const& _folderName)
+{
+    using fsIterator = fs::directory_iterator;
+    for (fsIterator it(_path); it != fsIterator(); ++it)
+    {
+        if ((*it).path().stem().string() == _folderName)
+            return true;
+    }
+    return false;
+}
+
+void TestSuite::verifyFilledTestsFolders(fs::path const& _fillerPath, fs::path const& _filledPath) const
+{
+    fs::path fillerPath = _fillerPath.empty() ? test::getTestPath() / suiteFillerFolder().path() : _fillerPath;
+    fs::path filledPath = _filledPath.empty() ? test::getTestPath() / suiteFolder().path() : _filledPath;
+    if (!fs::exists(filledPath) || fillerPath.string().empty() || filledPath.string().empty())
+        return;
+
+    using fsIterator = fs::directory_iterator;
+    for (fsIterator it(filledPath); it != fsIterator(); ++it)
+    {
+        if (fs::is_directory(*it)
+            && !(*it).path().empty()
+            && (*it).path().filename().c_str()[0] != '.') // hidden files
+        {
+            string const filledFolder = (*it).path().stem().string();
+            if (!findFolderInPath(fillerPath, filledFolder))
+                ETH_ERROR_MESSAGE("Filled folder contains folder without filler: " + (*it).path().string());
+            else
+            {
+                verifyFilledTestsFolders(fillerPath/filledFolder, filledPath/filledFolder);
+            }
+        }
+    }
+}
+
 void TestSuite::runAllTestsInFolder(string const& _testFolder) const
 {
     Options::getDynamicOptions().getClientConfigs();
+
+
+    // Set the first config for .py test verification (as we always use 1 config anyway)
+    if (!Options::getDynamicOptions().isConfigSet())
+    {
+        for (auto const& config : Options::getDynamicOptions().getClientConfigs())
+        {
+            Options::getDynamicOptions().setCurrentConfig(config);
+            break;
+        }
+    }
+
     CHECKEXIT
 
     clearGeneratedTestNamesMap();
@@ -150,6 +198,61 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _fillerTe
     }
 }
 
+void TestSuite::runTestAfterFilling(fs::path const& _fillerTestFilePath, AbsoluteFilledTestPath const _filledTestPath) const
+{
+    bool disableSecondRun = false;
+    auto secondRun = [&_fillerTestFilePath](){
+        bool secondRun = true;
+        auto const& opt = Options::get();
+        secondRun = secondRun && opt.getGStateTransactionFilter().empty();
+        secondRun = secondRun && !opt.vmtrace.initialized();
+        secondRun = secondRun && !opt.singleTestNet.initialized();
+        secondRun = secondRun && !opt.poststate.initialized();
+        secondRun = secondRun && !opt.statediff.initialized();
+        secondRun = secondRun || (opt.filltests && _fillerTestFilePath.extension() == ".py");
+        return secondRun;
+    };
+    if (!secondRun() && Options::get().filltests)
+    {
+        ETH_WARNING("Test filter or log is set. Disabling generated test run!");
+        disableSecondRun = true;
+    }
+
+    TestOutputHelper::get().setPythonTestFlag(false);
+    if (!disableSecondRun)
+    {
+        auto const& opt = Options::get();
+        auto const generatedFiles = getGeneratedTestNames(_fillerTestFilePath);
+        if (_fillerTestFilePath.extension() == ".py" && opt.singletest.initialized()
+            && !opt.filltests)
+        {
+            // Select single test from python generated tests
+            if (opt.singletest.name == _fillerTestFilePath.stem())
+            {
+                for (auto const& name : generatedFiles)
+                {
+                    if (!opt.singletest.subname.empty())
+                    {
+                        // substract `test_` prefix
+                        string const pyFilledName = opt.singletest.subname.substr(5);
+                        if (name != pyFilledName)
+                            continue;
+                    }
+                    TestOutputHelper::get().setPythonTestFlag(true);
+                    _runTest(_filledTestPath.path().parent_path() / (name + ".json"));
+                }
+            }
+            else
+                _runTest(_filledTestPath.path().parent_path() / (opt.singletest.name + ".json"));
+        }
+        else
+        {
+            for (auto const& name : generatedFiles)
+                _runTest(_filledTestPath.path().parent_path() / (name + ".json"));
+        }
+    }
+}
+
 void TestSuite::_executeTest(string const& _testFolder, fs::path const& _fillerTestFilePath) const
 {
     TestOutputHelper::get().setCurrentTestInfo(TestInfo("TestSuite::executeTest"));
@@ -170,59 +273,12 @@ void TestSuite::_executeTest(string const& _testFolder, fs::path const& _fillerT
 
     bool wereFillerErrors = Options::get().filltests;
     TestSuite::TestSuiteOptions _opt;
+
     if (Options::get().filltests)
         wereFillerErrors = _fillTest(_opt, _fillerTestFilePath, filledTestPath.path());
 
-    bool disableSecondRun = false;
-    auto noSecondRunConditions = [](){
-        bool condition = true;
-        auto const& opt = Options::get();
-        condition = condition && opt.getGStateTransactionFilter().empty();
-        condition = condition && !opt.vmtrace.initialized();
-        condition = condition && !opt.singleTestNet.initialized();
-        condition = condition && !opt.poststate.initialized();
-        condition = condition && !opt.statediff.initialized();
-        return !condition;
-    };
-    if (noSecondRunConditions() && Options::get().filltests)
-    {
-        ETH_WARNING("Test filter or log is set. Disabling generated test run!");
-        disableSecondRun = true;
-    }
-
-    TestOutputHelper::get().setPythonTestFlag(false);
-    if (!wereFillerErrors && !disableSecondRun)
-    {
-        auto const& opt = Options::get();
-        auto const generatedFiles = getGeneratedTestNames(_fillerTestFilePath);
-        if (_fillerTestFilePath.extension() == ".py" && opt.singletest.initialized()
-            && !opt.filltests)
-        {
-            // Select single test from python generated tests
-            if (opt.singletest.name == _fillerTestFilePath.stem())
-            {
-                for (auto const& name : generatedFiles)
-                {
-                    if (!opt.singletest.subname.empty())
-                    {
-                        // substract `test_` prefix
-                        string const pyFilledName = opt.singletest.subname.substr(5);
-                        if (name != pyFilledName)
-                            continue;
-                    }
-                    TestOutputHelper::get().setPythonTestFlag(true);
-                    _runTest(filledTestPath.path().parent_path() / (name + ".json"));
-                }
-            }
-            else
-                _runTest(filledTestPath.path().parent_path() / (opt.singletest.name + ".json"));
-        }
-        else
-        {
-            for (auto const& name : generatedFiles)
-                _runTest(filledTestPath.path().parent_path() / (name + ".json"));
-        }
-    }
+    if (!wereFillerErrors)
+        runTestAfterFilling(_fillerTestFilePath, filledTestPath);
 
     RPCSession::sessionEnd(TestOutputHelper::getThreadID(), RPCSession::SessionStatus::HasFinished);
 }

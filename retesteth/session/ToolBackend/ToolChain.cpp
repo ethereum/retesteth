@@ -3,6 +3,7 @@
 #include <Options.h>
 #include <retesteth/helpers/TestHelper.h>
 #include <testStructures/Common.h>
+#include <retesteth/testSuites/Common.h>
 
 using namespace dev;
 using namespace std;
@@ -22,6 +23,36 @@ void correctHeaderByToolResponse(BlockHeader& _header, ToolResponse const& _res)
     _header.setTrReceiptsHash(_res.receiptRoot());
     _header.setLogsBloom(_res.logsBloom());
     _header.setStateRoot(_res.stateRoot());
+}
+
+bool checkStatesEqual(spState _stateA, spState _stateB)
+{
+    if (_stateA->accounts().size() != _stateB->accounts().size())
+        return false;
+    for (auto const& acc : _stateA->accounts())
+    {
+        if (!_stateB->hasAccount(acc.first))
+            return false;
+        auto const& accB = _stateB->getAccount(acc.first);
+        if (acc.second->storage().getKeys().size() != accB.storage().getKeys().size())
+            return false;
+        if (acc.second->nonce() != accB.nonce())
+            return false;
+        if (acc.second->code() != accB.code())
+            return false;
+        if (acc.second->balance() != accB.balance())
+            return false;
+        for (auto const& [str, record] : acc.second->storage().getKeys())
+        {
+            auto const& keyA = std::get<0>(record);
+            auto const& keyA_Value = std::get<1>(record);
+            if (!accB.storage().hasKey(keyA))
+                return false;
+            if (accB.storage().atKey(keyA) != keyA_Value)
+                return false;
+        }
+    }
+    return true;
 }
 }
 
@@ -48,17 +79,12 @@ ToolChain::ToolChain(
         auto const genesisHeaderType = _genesis.header()->type();
         if (compareFork(m_fork, CMP::lt, FORK("London"))
             && genesisHeaderType == BlockType::BlockHeader1559)
-            throw test::UpwardsException("Constructing 1559 genesis on network which is lower London!");
-        if (compareFork(m_fork, CMP::ge, FORK("London"))
-            && genesisHeaderType != BlockType::BlockHeader1559
-            && genesisHeaderType != BlockType::BlockHeaderMerge
-            && genesisHeaderType != BlockType::BlockHeaderShanghai
-            && genesisHeaderType != BlockType::BlockHeader4844)
-            throw test::UpwardsException("Constructing legacy genesis on network which is higher London!");
+            throw test::UpwardsException("[retesteth]: Constructing 1559 genesis on network which is lower London!");
+        if (compareFork(m_fork, CMP::ge, FORK("London")) && genesisHeaderType == BlockType::BlockHeaderLegacy)
+            throw test::UpwardsException("[retesteth]: Constructing legacy genesis on network which is higher London!");
     }
 
     EthereumBlockState genesisFixed(_genesis.header(), _genesis.state(), FH32::zero());
-
     if (_genesisPolicy == ToolChainGenesis::CALCULATE)
     {
         // We yet don't know the state root of genesis. Ask the tool to calculate it
@@ -66,6 +92,13 @@ ToolChain::ToolChain(
         genesisFixed.headerUnsafe().getContent().setStateRoot(res.stateRoot());
         genesisFixed.headerUnsafe().getContent().recalculateHash();
         genesisFixed.setTotalDifficulty(genesisFixed.header()->difficulty());
+
+        if (!checkStatesEqual(_genesis.state(), res.state()))
+        {
+            ETH_WARNING("T8N changed genesis state when asked to calculated it's hash only!");
+            compareStates(_genesis.state(), res.state());
+            ETH_ERROR_MESSAGE("T8N changed genesis state when asked to calculated it's hash only!");
+        }
     }
 
     m_blocks.emplace_back(genesisFixed);
@@ -132,9 +165,19 @@ spDataObject const ToolChain::mineBlock(EthereumBlockState const& _pendingBlock,
     calculateAndCheckSetBaseFee(res.currentBasefee(), pendingFixedHeader, lastBlock().header());
     setWithdrawalsRoot(res.withdrawalsRoot(), pendingFixedHeader);
     setExcessBlobGasAndGasUsed(res, pendingFixedHeader);
+    setRequestsHash(res.requestsHash(), pendingFixedHeader);
 
     spDataObject miningResult;
     miningResult = coorectTransactionsByToolResponse(res, pendingFixed, _pendingBlock, _req);
+
+    for (auto const& [tr, error] : _pendingBlock.transactionsRejectedByRetesteth())
+    {
+        spDataObject rejectInfo;
+        (*rejectInfo)["hash"] = tr->hash().asString();
+        (*rejectInfo)["error"] = error;
+        (*miningResult)["rejectedTransactions"].addArrayObject(rejectInfo);
+    }
+
     for (auto const& wt : _pendingBlock.withdrawals())
         pendingFixed.addWithdrawal(wt);
     correctUncleHeaders(pendingFixed, _pendingBlock);
@@ -239,6 +282,15 @@ void ToolChain::setExcessBlobGasAndGasUsed(ToolResponse const& _res, spBlockHead
     }
 }
 
+void ToolChain::setRequestsHash(FH32 const& _hash, spBlockHeader& _pendingHeader)
+{
+    if (isBlockExportRequestHash(_pendingHeader))
+    {
+        BlockHeaderPrague& pendingFixedPragueHeader = BlockHeaderPrague::castFrom(_pendingHeader.getContent());
+        pendingFixedPragueHeader.setRequestsHash(_hash);
+    }
+}
+
 void ToolChain::calculateAndCheckSetBaseFee(VALUE const& _toolBaseFee, spBlockHeader& _pendingHeader, spBlockHeader const& _parentHeader)
 {
     if (isBlockExportBasefee(_pendingHeader))
@@ -310,9 +362,12 @@ spDataObject ToolChain::coorectTransactionsByToolResponse(
             }
             else
             {
-                ETH_DC_MESSAGE(DC::RPC, "Transactions not allowed to fail!");
                 if (rejectedInfoFound)
+                {
+                    ETH_DC_MESSAGE(DC::RPC, "Transactions not allowed to fail! But t8n rejected it!");
                     throw test::UpwardsException((*miningResult)["rejectedTransactions"].atLastElement().atKey("error").asString());
+                }
+                ETH_DC_MESSAGE(DC::RPC, "Transactions not allowed to fail, t8n does not provide rejected info!");
                 throw test::UpwardsException(message);
             }
         }
@@ -338,7 +393,7 @@ void ToolChain::additionalHeaderVerification(
 {
     // Require number from pending block to be equal to actual block number that is imported
     if (_pendingBlock.header()->number() != _pendingFixed.header()->number().asBigInt())
-        throw test::UpwardsException(string("Block Number from pending block != actual chain height! (") +
+        throw test::UpwardsException(string("[retesteth]: Block Number from pending block != actual chain height! (") +
                                      _pendingBlock.header()->number().asString() +
                                      " != " + _pendingFixed.header()->number().asString() + ")");
 
@@ -348,7 +403,7 @@ void ToolChain::additionalHeaderVerification(
         if (m_fork.getContent().asString() == "HomesteadToDaoAt5" && _pendingFixed.header()->number() > 4 &&
             _pendingFixed.header()->number() < 19 &&
             _pendingFixed.header()->extraData().asString() != "0x64616f2d686172642d666f726b")
-            throw test::UpwardsException("Dao Extra Data required!");
+            throw test::UpwardsException("[retesteth]: Dao Extra Data required!");
 
         spDataObject const pendingH = _pendingBlock.header()->asDataObject();
         spDataObject const pendingFixedH = _pendingFixed.header()->asDataObject();
@@ -356,7 +411,7 @@ void ToolChain::additionalHeaderVerification(
         {
             string errField;
             string const compare = compareBlockHeaders(pendingH, pendingFixedH, errField);
-            throw test::UpwardsException(string("Block from pending block != t8ntool constructed block!\n") +
+            throw test::UpwardsException(string("[retesteth]: Block from pending block != t8ntool constructed block!\n") +
                                          "Error in field: " + errField + "\n" +
                                          "rawRLP/Pending header  vs  t8ntool header \n" + compare);
         }
@@ -364,7 +419,7 @@ void ToolChain::additionalHeaderVerification(
 
     if (_pendingFixed.header()->transactionRoot() != _res.txRoot())
     {
-        ETH_ERROR_MESSAGE(string("ToolChain::mineBlock txRootHash is different to one ruturned by tool \n") +
+        ETH_ERROR_MESSAGE(string("[retesteth]: ToolChain::mineBlock txRootHash is different to one ruturned by tool \n") +
                           "constructedBlockHash: " + _pendingFixed.header()->transactionRoot().asString() +
                           "\n toolTransactionRoot: " + _res.txRoot().asString());
     }

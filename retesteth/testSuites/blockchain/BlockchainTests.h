@@ -34,31 +34,9 @@ REGISTER_SUITE_OVERRIDE(BlockchainTestValidSuite, TestSuite,)
 REGISTER_SUITE_OVERRIDE(BlockchainTestInvalidSuite, TestSuite,)
 REGISTER_SUITE_OVERRIDE(BlockchainTestTransitionSuite, TestSuite,)
 
-REGISTER_SUITE(BlockchainTestEIPSuite, BlockchainTestInvalidSuite)
-REGISTER_SUITE(BlockchainTestPyspecSuite, BlockchainTestInvalidSuite)
-    REGISTER_SUITE(BlockchainTestPyspecSuite_frontier, BlockchainTestPyspecSuite)
-    REGISTER_SUITE(BlockchainTestPyspecSuite_homestead, BlockchainTestPyspecSuite)
-    REGISTER_SUITE(BlockchainTestPyspecSuite_istanbul, BlockchainTestPyspecSuite)
-    REGISTER_SUITE(BlockchainTestPyspecSuite_berlin, BlockchainTestPyspecSuite)
-    REGISTER_SUITE(BlockchainTestPyspecSuite_merge, BlockchainTestPyspecSuite)
-    REGISTER_SUITE(BlockchainTestPyspecSuite_shanghai, BlockchainTestPyspecSuite)
-    REGISTER_SUITE(BlockchainTestPyspecSuite_cancun, BlockchainTestPyspecSuite)
-
-REGISTER_SUITE(BlockchainTestEIPPyspecSuite, BlockchainTestInvalidSuite)
-    REGISTER_SUITE(BlockchainTestEIPPyspecSuite_frontier, BlockchainTestEIPPyspecSuite)
-    REGISTER_SUITE(BlockchainTestEIPPyspecSuite_homestead, BlockchainTestEIPPyspecSuite)
-    REGISTER_SUITE(BlockchainTestEIPPyspecSuite_istanbul, BlockchainTestEIPPyspecSuite)
-    REGISTER_SUITE(BlockchainTestEIPPyspecSuite_berlin, BlockchainTestEIPPyspecSuite)
-    REGISTER_SUITE(BlockchainTestEIPPyspecSuite_merge, BlockchainTestEIPPyspecSuite)
-    REGISTER_SUITE(BlockchainTestEIPPyspecSuite_shanghai, BlockchainTestEIPPyspecSuite)
-    REGISTER_SUITE(BlockchainTestEIPPyspecSuite_cancun, BlockchainTestEIPPyspecSuite)
-
 REGISTER_SUITE(BCGeneralStateTestsSuite, BlockchainTestInvalidSuite)
 REGISTER_SUITE(BCGeneralStateTestsVMSuite, BCGeneralStateTestsSuite)
 REGISTER_SUITE(BCGeneralStateTestsShanghaiSuite, BCGeneralStateTestsSuite)
-
-REGISTER_SUITE(BCEIPStateTestsSuite, BlockchainTestValidSuite)
-REGISTER_SUITE(BCEIPStateTestsEOFSuite, BCEIPStateTestsSuite)
 
 #define LEGACYFLAG  \
     protected:      \
@@ -67,5 +45,10 @@ REGISTER_SUITE(BCEIPStateTestsEOFSuite, BCEIPStateTestsSuite)
 REGISTER_SUITE_OVERRIDE(LegacyConstantinopleBCGeneralStateTestsSuite, BlockchainTestValidSuite, LEGACYFLAG)
 REGISTER_SUITE_OVERRIDE(LegacyConstantinopleBlockchainInvalidTestSuite, BlockchainTestInvalidSuite, LEGACYFLAG)
 REGISTER_SUITE_OVERRIDE(LegacyConstantinopleBlockchainValidTestSuite, BlockchainTestValidSuite, LEGACYFLAG)
+
+REGISTER_SUITE_OVERRIDE(LegacyCancunBCGeneralStateTestsSuite, BlockchainTestInvalidSuite, LEGACYFLAG)
+REGISTER_SUITE_OVERRIDE(LegacyCancunBlockchainInvalidTestSuite, BlockchainTestInvalidSuite, LEGACYFLAG)
+REGISTER_SUITE_OVERRIDE(LegacyCancunBlockchainValidTestSuite, BlockchainTestValidSuite, LEGACYFLAG)
+REGISTER_SUITE_OVERRIDE(LegacyCancunBlockchainTransitionTestSuite, BlockchainTestTransitionSuite, LEGACYFLAG)
 
 }  // test

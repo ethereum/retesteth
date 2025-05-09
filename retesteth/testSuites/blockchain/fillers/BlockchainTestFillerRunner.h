@@ -2,6 +2,7 @@
 #include <libdataobj/DataObject.h>
 #include <retesteth/session/SessionInterface.h>
 #include <retesteth/testStructures/types/BlockchainTests/BlockchainTestFiller.h>
+#include <retesteth/testSuiteRunner/TestSuite.h>
 #include "TestBlockchainManager.h"
 
 namespace test::blockchainfiller
@@ -9,7 +10,7 @@ namespace test::blockchainfiller
 class BlockchainTestFillerRunner
 {
 public:
-    BlockchainTestFillerRunner(teststruct::BlockchainTestInFiller const&);
+    BlockchainTestFillerRunner(teststruct::BlockchainTestInFiller const&, TestSuite::TestSuiteOptions const&);
     ~BlockchainTestFillerRunner() {};
     dataobject::spDataObject result() { return m_result; }
 
@@ -23,6 +24,7 @@ public:
     EthGetBlockBy getLastBlock();
 
 private:
+    TestSuite::TestSuiteOptions const& m_testSuiteOptions;
     test::teststruct::BlockchainTestInFiller const& m_test;
     test::session::SessionInterface& m_session;
     dataobject::spDataObject m_result;

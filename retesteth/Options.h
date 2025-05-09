@@ -243,17 +243,22 @@ public:
     bool_opt lowcpu = false;
 
     // Test Generation
+    bool_opt filleest = false;
     bool_opt filltests = false;
     bool_opt filloutdated = false;
     bool_opt fillvmtrace = false;
     bool_opt fillchain = false;
+    bool_opt convertpy = false;
     sizet_opt chainid = 1;
     bool_opt showhash = false;
     bool_opt checkhash = false;
     booloutpathselector_opt poststate = false;
     bool_opt fullstate = false;
     bool_opt forceupdate = false;
+    bool_opt nopython = false;
     static bool isLegacy();
+    static bool isLegacyConstantinople();
+    static bool isEOFTest();
 
 public:
     struct InvalidOption : public dev::Exception
@@ -266,6 +271,7 @@ public:
         DynamicOptions() {}
         std::vector<ClientConfig> const& getClientConfigs() const;
         ClientConfig const& getCurrentConfig() const;
+        bool isConfigSet() const;
         void setCurrentConfig(ClientConfig const& _config);
         void setTestsuiteRunning(bool _arg);
         bool testSuiteRunning() const;

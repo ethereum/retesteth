@@ -19,8 +19,7 @@ struct StateTestEnvBase : GCP_SPointerBase
     BYTES const& currentExtraData() const { return m_currentExtraData; }
     FH8 const& currentNonce() const { return m_currentNonce; }
     FH32 const& currentMixHash() const { return m_currentMixHash; }
-    FH32 const& previousHash() const { return m_previousHash; }
-    virtual spDataObject const& asDataObject() const;
+    virtual spDataObject asDataObject() const;
     virtual ~StateTestEnvBase() {}
 
     VALUE const& currentBaseFee() const { return m_currentBaseFee; }
@@ -32,15 +31,15 @@ struct StateTestEnvBase : GCP_SPointerBase
     VALUE const& currentBlobGasUsed() const { return m_currentBlobGasUsed; }
     FH32 const& currentBeaconRoot() const { return m_currentBeaconRoot; }
 
+    FH32 const& currentRequestHash() const { return m_currentRequestsHash; }
+
 protected:
     StateTestEnvBase() {}
-    spDataObject m_raw;
 
     spFH20 m_currentCoinbase;
     spVALUE m_currentGasLimit;
     spVALUE m_currentNumber;
     spVALUE m_currentTimestamp;
-    spFH32 m_previousHash;
     spBYTES m_currentExtraData;
     spFH8 m_currentNonce;
     spFH32 m_currentMixHash;
@@ -49,7 +48,7 @@ protected:
     spVALUE m_currentDifficulty;
     spVALUE m_currentBaseFee;
 
-    // Merge
+    // Paris
     spFH32 m_currentRandom;
 
     // Shaghai
@@ -59,6 +58,9 @@ protected:
     spVALUE m_currentBlobGasUsed;
     spVALUE m_currentExcessBlobGas;
     spFH32 m_currentBeaconRoot;
+
+    // Prague
+    spFH32 m_currentRequestsHash;
 };
 
 
