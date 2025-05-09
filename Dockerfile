@@ -1,4 +1,4 @@
-FROM ubuntu:20.04 as retesteth
+FROM ubuntu:20.04 AS retesteth
 
 ARG BESU_SRC="https://github.com/hyperledger/besu.git"
 ARG PYSPECS_SRC="https://github.com/ethereum/execution-spec-tests"
@@ -62,9 +62,9 @@ RUN wget https://github.com/ethereum/solidity/releases/download/v0.8.21/solc-sta
 # Pyspecs
 RUN git clone $PYSPECS_SRC /execution-spec-tests 
 RUN cd /execution-spec-tests && git fetch && git checkout $PYSPECS \
-    && python3 -m venv ./venv/ \
-    && source ./venv/bin/activate \
-    && pip install -e . \
+    && curl -LsSf https://astral.sh/uv/install.sh | sh && source $HOME/.local/bin/env \
+    && uv sync --all-extras  \
+    && uv run solc-select use 0.8.24 --always-install\
     && wget https://raw.githubusercontent.com/ethereum/retesteth/develop/web/tfinit.sh \
     && cp tfinit.sh /usr/bin/tfinit.sh \
     && chmod +x /usr/bin/tfinit.sh
